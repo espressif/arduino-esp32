@@ -3,6 +3,7 @@
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "esp_system.h"
@@ -26,7 +27,7 @@ namespace dl
     {
         /**
          * @brief Set memory zero.
-         * 
+         *
          * @param ptr pointer of memory
          * @param n   byte number
          */
@@ -34,8 +35,8 @@ namespace dl
 
         /**
          * @brief Set array value.
-         * 
-         * @tparam T supports all data type, sizeof(T) equals to 1, 2 and 4 will boost by instruction 
+         *
+         * @tparam T supports all data type, sizeof(T) equals to 1, 2 and 4 will boost by instruction
          * @param ptr   pointer of array
          * @param value value to set
          * @param len   length of array
@@ -59,7 +60,7 @@ namespace dl
 
         /**
          * @brief Copy memory.
-         * 
+         *
          * @param dst pointer of destination
          * @param src pointer of source
          * @param n   byte number
@@ -68,7 +69,7 @@ namespace dl
 
         /**
          * @brief Apply memory without initialized. Can use free_aligned() to free the memory.
-         * 
+         *
          * @param number number of elements
          * @param size   size of element
          * @param align  number of byte aligned, e.g., 16 means 16-byte aligned
@@ -76,7 +77,7 @@ namespace dl
          */
         inline void *malloc_aligned(int number, int size, int align = 4)
         {
-            assert((align > 0) && (((align & (align-1)) == 0)));
+            assert((align > 0) && (((align & (align - 1)) == 0)));
             int total_size = number * size;
 
             void *res = heap_caps_aligned_alloc(align, total_size, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
@@ -99,7 +100,7 @@ namespace dl
 
         /**
          * @brief Apply memory with zero-initialized. Can use free_aligned() to free the memory.
-         * 
+         *
          * @param number number of elements
          * @param size   size of element
          * @param align  number of byte aligned, e.g., 16 means 16-byte aligned
@@ -116,7 +117,7 @@ namespace dl
 
         /**
          * @brief Free the calloc_aligned() and malloc_aligned() memory
-         * 
+         *
          * @param address pointer of memory to free
          */
         inline void free_aligned(void *address)
@@ -129,7 +130,7 @@ namespace dl
 
         /**
          * @brief Apply memory without initialized in preference order: internal aligned, internal, external aligned
-         * 
+         *
          * @param number number of elements
          * @param size   size of element
          * @param align  number of byte aligned, e.g., 16 means 16-byte aligned
@@ -137,14 +138,16 @@ namespace dl
          */
         inline void *malloc_aligned_prefer(int number, int size, int align = 4)
         {
-            assert((align > 0) && (((align & (align-1)) == 0)));
+            assert((align > 0) && (((align & (align - 1)) == 0)));
             int total_size = number * size;
             void *res = heap_caps_aligned_alloc(align, total_size, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
-            if (NULL == res){
+            if (NULL == res)
+            {
                 res = heap_caps_malloc(total_size, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
             }
 #if DL_SPIRAM_SUPPORT
-            if (NULL == res){
+            if (NULL == res)
+            {
                 res = heap_caps_aligned_alloc(align, total_size, MALLOC_CAP_SPIRAM);
             }
 #endif
@@ -163,7 +166,7 @@ namespace dl
 
         /**
          * @brief Apply memory with zero-initialized in preference order: internal aligned, internal, external aligned
-         * 
+         *
          * @param number number of elements
          * @param size   size of element
          * @param align  number of byte aligned, e.g., 16 means 16-byte aligned
@@ -179,7 +182,7 @@ namespace dl
 
         /**
          * @brief Free the calloc_aligned_prefer() and malloc_aligned_prefer() memory
-         * 
+         *
          * @param address pointer of memory to free
          */
         inline void free_aligned_prefer(void *address)
@@ -192,7 +195,7 @@ namespace dl
 
         /**
          * @brief Truncate the input into int8_t range.
-         * 
+         *
          * @tparam T supports all integer types
          * @param output as an output
          * @param input  as an input
@@ -200,17 +203,12 @@ namespace dl
         template <typename T>
         void truncate(int8_t &output, T input)
         {
-            if (input >= DL_Q8_MAX)
-                output = DL_Q8_MAX;
-            else if (input <= DL_Q8_MIN)
-                output = DL_Q8_MIN;
-            else
-                output = input;
+            output = DL_CLIP(input, INT8_MIN, INT8_MAX);
         }
 
         /**
          * @brief Truncate the input into int16_t range.
-         * 
+         *
          * @tparam T supports all integer types
          * @param output as an output
          * @param input  as an input
@@ -218,17 +216,24 @@ namespace dl
         template <typename T>
         void truncate(int16_t &output, T input)
         {
-            if (input >= DL_Q16_MAX)
-                output = DL_Q16_MAX;
-            else if (input <= DL_Q16_MIN)
-                output = DL_Q16_MIN;
-            else
-                output = input;
+            output = DL_CLIP(input, INT16_MIN, INT16_MAX);
+        }
+
+        template <typename T>
+        void truncate(int32_t &output, T input)
+        {
+            output = DL_CLIP(input, INT32_MIN, INT32_MAX);
+        }
+
+        template <typename T>
+        void truncate(int64_t &output, T input)
+        {
+            output = DL_CLIP(input, INT64_MIN, INT64_MAX);
         }
 
         /**
          * @brief Calculate the exponent of quantizing 1/n into max_value range.
-         * 
+         *
          * @param n          1/n: value to be quantized
          * @param max_value  the max_range
          */
@@ -248,7 +253,7 @@ namespace dl
 
         /**
          * @brief Print vector in format "[x1, x2, ...]\n".
-         * 
+         *
          * @param array to print
          */
         inline void print_vector(std::vector<int> &array, const char *message = NULL)
@@ -266,7 +271,7 @@ namespace dl
 
         /**
          * @brief Get the cycle object
-         * 
+         *
          * @return cycle count
          */
         inline uint32_t get_cycle()
@@ -293,8 +298,8 @@ namespace dl
         public:
             /**
              * @brief Construct a new Latency object.
-             * 
-             * @param size 
+             *
+             * @param size
              */
             Latency(const uint32_t size = 1) : size(size),
                                                period(0),
@@ -307,7 +312,7 @@ namespace dl
 
             /**
              * @brief Destroy the Latency object.
-             * 
+             *
              */
             ~Latency()
             {
@@ -317,7 +322,7 @@ namespace dl
 
             /**
              * @brief Record the start timestamp.
-             * 
+             *
              */
             void start()
             {
@@ -330,7 +335,7 @@ namespace dl
 
             /**
              * @brief Record the period.
-             * 
+             *
              */
             void end()
             {
@@ -355,7 +360,7 @@ namespace dl
 
             /**
              * @brief Return the period.
-             * 
+             *
              * @return this->timestamp_end - this->timestamp
              */
             uint32_t get_period()
@@ -365,8 +370,8 @@ namespace dl
 
             /**
              * @brief Get the average period.
-             * 
-             * @return average latency 
+             *
+             * @return average latency
              */
             uint32_t get_average_period()
             {
@@ -375,7 +380,7 @@ namespace dl
 
             /**
              * @brief Clear the period
-             * 
+             *
              */
             void clear_period()
             {
@@ -396,7 +401,7 @@ namespace dl
 
             /**
              * @brief Print in format "{message}: {this->period} {unit}\n".
-             * 
+             *
              * @param message message of print
              */
             void print(const char *message)
@@ -410,7 +415,7 @@ namespace dl
 
             /**
              * @brief Print in format "{prefix}::{key}: {this->period} {unit}\n".
-             * 
+             *
              * @param prefix prefix of print
              * @param key    key of print
              */

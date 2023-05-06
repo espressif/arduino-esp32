@@ -442,7 +442,7 @@ static inline void psa_set_key_type(psa_key_attributes_t *attributes,
     }
     else
     {
-        /* Call the bigger function to free the old domain paramteres.
+        /* Call the bigger function to free the old domain parameters.
          * Ignore any errors which may arise due to type requiring
          * non-default domain parameters, since this function can't
          * report errors. */

@@ -75,7 +75,7 @@
   // TODO USB0 has 5, USB1 has 6
   #define TUP_DCD_ENDPOINT_MAX    6
 
-#elif TU_CHECK_MCU(OPT_MCU_MIMXRT10XX)
+#elif TU_CHECK_MCU(OPT_MCU_MIMXRT)
   #define TUP_USBIP_CHIPIDEA_HS
   #define TUP_USBIP_EHCI
 
@@ -109,6 +109,11 @@
 
 #elif TU_CHECK_MCU(OPT_MCU_PIC32MZ)
   #define TUP_DCD_ENDPOINT_MAX    8
+  #define TUP_DCD_ENDPOINT_EXCLUSIVE_NUMBER
+
+#elif TU_CHECK_MCU(OPT_MCU_PIC32MX, OPT_MCU_PIC32MM, OPT_MCU_PIC32MK) || \
+      TU_CHECK_MCU(OPT_MCU_PIC24, OPT_MCU_DSPIC33)
+  #define TUP_DCD_ENDPOINT_MAX    16
   #define TUP_DCD_ENDPOINT_EXCLUSIVE_NUMBER
 
 //------------- ST -------------//
@@ -183,6 +188,11 @@
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32WB)
   #define TUP_DCD_ENDPOINT_MAX    8
+
+#elif TU_CHECK_MCU(OPT_MCU_STM32U5)
+  #define TUP_USBIP_DWC2
+  #define TUP_USBIP_DWC2_STM32
+  #define TUP_DCD_ENDPOINT_MAX    6
 
 //------------- Sony -------------//
 #elif TU_CHECK_MCU(OPT_MCU_CXD56)
@@ -270,6 +280,10 @@
 //--------------------------------------------------------------------+
 // Default Values
 //--------------------------------------------------------------------+
+
+#ifndef TUP_MCU_MULTIPLE_CORE
+#define TUP_MCU_MULTIPLE_CORE 0
+#endif
 
 #ifndef TUP_DCD_ENDPOINT_MAX
   #warning "TUP_DCD_ENDPOINT_MAX is not defined for this MCU, default to 8"

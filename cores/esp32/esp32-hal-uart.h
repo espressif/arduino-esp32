@@ -25,6 +25,34 @@ extern "C" {
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
+#ifdef __cplusplus
+enum SerialConfig {
+SERIAL_5N1 = 0x8000010,
+SERIAL_6N1 = 0x8000014,
+SERIAL_7N1 = 0x8000018,
+SERIAL_8N1 = 0x800001c,
+SERIAL_5N2 = 0x8000030,
+SERIAL_6N2 = 0x8000034,
+SERIAL_7N2 = 0x8000038,
+SERIAL_8N2 = 0x800003c,
+SERIAL_5E1 = 0x8000012,
+SERIAL_6E1 = 0x8000016,
+SERIAL_7E1 = 0x800001a,
+SERIAL_8E1 = 0x800001e,
+SERIAL_5E2 = 0x8000032,
+SERIAL_6E2 = 0x8000036,
+SERIAL_7E2 = 0x800003a,
+SERIAL_8E2 = 0x800003e,
+SERIAL_5O1 = 0x8000013,
+SERIAL_6O1 = 0x8000017,
+SERIAL_7O1 = 0x800001b,
+SERIAL_8O1 = 0x800001f,
+SERIAL_5O2 = 0x8000033,
+SERIAL_6O2 = 0x8000037,
+SERIAL_7O2 = 0x800003b,
+SERIAL_8O2 = 0x800003f
+};
+#else
 #define SERIAL_5N1 0x8000010
 #define SERIAL_6N1 0x8000014
 #define SERIAL_7N1 0x8000018
@@ -49,6 +77,7 @@ extern "C" {
 #define SERIAL_6O2 0x8000037
 #define SERIAL_7O2 0x800003b
 #define SERIAL_8O2 0x800003f
+#endif // __cplusplus
 
 // These are Hardware Flow Contol possible usage
 // equivalent to UDF enum uart_hw_flowcontrol_t from 
@@ -69,6 +98,7 @@ void uartGetEventQueue(uart_t* uart, QueueHandle_t *q);
 
 uint32_t uartAvailable(uart_t* uart);
 uint32_t uartAvailableForWrite(uart_t* uart);
+size_t uartReadBytes(uart_t* uart, uint8_t *buffer, size_t size, uint32_t timeout_ms);
 uint8_t uartRead(uart_t* uart);
 uint8_t uartPeek(uart_t* uart);
 
@@ -82,20 +112,40 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
 void uartSetRxInvert(uart_t* uart, bool invert);
+void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout);
+void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull);
+void uartSetFastReading(uart_t* uart);
 
 void uartSetDebug(uart_t* uart);
 int uartGetDebug();
 
 bool uartIsDriverInstalled(uart_t* uart);
 
-// Negative Pin Number will keep it unmodified, thus this function can set individual pins
-void uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+// Negative Pin Number will keep it unmodified, thus this function can set/reset individual pins
+bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
 void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
+
+/*
+    These functions are for testing puspose only and can be used in Arduino Sketches
+    Those are used in the UART examples
+*/
+
+// Make sure UART's RX signal is connected to TX pin
+// This creates a loop that lets us receive anything we send on the UART
+void uart_internal_loopback(uint8_t uartNum, int8_t rxPin);
+
+// Routines that generate BREAK in the UART for testing purpose
+
+// Forces a BREAK in the line based on SERIAL_8N1 configuration at any baud rate
+void uart_send_break(uint8_t uartNum);
+// Sends a buffer and at the end of the stream, it generates BREAK in the line
+int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize);
 
 
 #ifdef __cplusplus

@@ -47,7 +47,7 @@ esp_err_t esp_lcd_panel_io_rx_param(esp_lcd_panel_io_handle_t io, int lcd_cmd, v
  *       this function will wait until they are finished and the queue is empty before sending the command(s).
  *
  * @param[in] io LCD panel IO handle, which is created by other factory API like `esp_lcd_new_panel_io_spi()`
- * @param[in] lcd_cmd The specific LCD command
+ * @param[in] lcd_cmd The specific LCD command (set to -1 if no command needed - only in SPI and I2C)
  * @param[in] param Buffer that holds the command specific parameters, set to NULL if no parameter is needed for the command
  * @param[in] param_size Size of `param` in memory, in bytes, set to zero if no parameter is needed for the command
  * @return
@@ -134,6 +134,10 @@ typedef struct {
  */
 esp_err_t esp_lcd_new_panel_io_spi(esp_lcd_spi_bus_handle_t bus, const esp_lcd_panel_io_spi_config_t *io_config, esp_lcd_panel_io_handle_t *ret_io);
 
+/**
+ * @brief Panel IO configuration structure, for I2C interface
+ *
+ */
 typedef struct {
     uint32_t dev_addr; /*!< I2C device address */
     esp_lcd_panel_io_color_trans_done_cb_t on_color_trans_done; /*!< Callback invoked when color data transfer has finished */
@@ -145,7 +149,7 @@ typedef struct {
     struct {
         unsigned int dc_low_on_data: 1;  /*!< If this flag is enabled, DC line = 0 means transfer data, DC line = 1 means transfer command; vice versa */
         unsigned int disable_control_phase: 1; /*!< If this flag is enabled, the control phase isn't used */
-    } flags;
+    } flags; /*!< Extra flags to fine-tune the I2C device */
 } esp_lcd_panel_io_i2c_config_t;
 
 /**
@@ -223,7 +227,7 @@ typedef struct {
         unsigned int swap_color_bytes: 1;   /*!< Swap adjacent two color bytes */
         unsigned int pclk_active_neg: 1;    /*!< The display will write data lines when there's a falling edge on WR signal (a.k.a the PCLK) */
         unsigned int pclk_idle_low: 1;      /*!< The WR signal (a.k.a the PCLK) stays at low level in IDLE phase */
-    } flags;
+    } flags;                                /*!< Panel IO config flags */
 } esp_lcd_panel_io_i80_config_t;
 
 /**

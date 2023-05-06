@@ -33,7 +33,7 @@ typedef int make_iso_compilers_happy;
 #include "common/tusb_compiler.h"
 
 #define TUSB_VERSION_MAJOR     0
-#define TUSB_VERSION_MINOR     13
+#define TUSB_VERSION_MINOR     14
 #define TUSB_VERSION_REVISION  0
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
@@ -84,6 +84,7 @@ typedef int make_iso_compilers_happy;
 #define OPT_MCU_STM32G0           310 ///< ST G0
 #define OPT_MCU_STM32G4           311 ///< ST G4
 #define OPT_MCU_STM32WB           312 ///< ST WB
+#define OPT_MCU_STM32U5           313 ///< ST U5
 
 // Sony
 #define OPT_MCU_CXD56             400 ///< SONY CXD56
@@ -98,7 +99,9 @@ typedef int make_iso_compilers_happy;
 #define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
 
 // NXP iMX RT
-#define OPT_MCU_MIMXRT10XX        700 ///< NXP iMX RT10xx
+#define OPT_MCU_MIMXRT            700             ///< NXP iMX RT Series
+#define OPT_MCU_MIMXRT10XX        OPT_MCU_MIMXRT  ///< RT10xx
+#define OPT_MCU_MIMXRT11XX        OPT_MCU_MIMXRT  ///< RT11xx
 
 // Nuvoton
 #define OPT_MCU_NUC121            800
@@ -144,6 +147,11 @@ typedef int make_iso_compilers_happy;
 
 // PIC
 #define OPT_MCU_PIC32MZ          1900 ///< MicroChip PIC32MZ family
+#define OPT_MCU_PIC32MM          1901 ///< MicroChip PIC32MM family
+#define OPT_MCU_PIC32MX          1902 ///< MicroChip PIC32MX family
+#define OPT_MCU_PIC32MK          1903 ///< MicroChip PIC32MK family
+#define OPT_MCU_PIC24            1910 ///< MicroChip PIC24 family
+#define OPT_MCU_DSPIC33          1911 ///< MicroChip DSPIC33 family
 
 // BridgeTek
 #define OPT_MCU_FT90X            2000 ///< BridgeTek FT90x
@@ -221,7 +229,7 @@ typedef int make_iso_compilers_happy;
 #define TUSB_OPT_DEVICE_ENABLED CFG_TUD_ENABLED
 
 // highspeed support indicator
-#define TUD_OPT_HIGH_SPEED    (CFG_TUD_MAX_SPEED ? CFG_TUD_MAX_SPEED : TUP_RHPORT_HIGHSPEED)
+#define TUD_OPT_HIGH_SPEED    (CFG_TUD_MAX_SPEED ? (CFG_TUD_MAX_SPEED & OPT_MODE_HIGH_SPEED) : TUP_RHPORT_HIGHSPEED)
 
 //------------- Roothub as Host -------------//
 
@@ -290,9 +298,6 @@ typedef int make_iso_compilers_happy;
 #ifndef CFG_TUSB_OS_INC_PATH
   #define CFG_TUSB_OS_INC_PATH
 #endif
-
-// mutex is only needed for RTOS TODO also required with multiple core MCUs
-#define TUSB_OPT_MUTEX      (CFG_TUSB_OS != OPT_OS_NONE)
 
 //--------------------------------------------------------------------
 // Device Options (Default)

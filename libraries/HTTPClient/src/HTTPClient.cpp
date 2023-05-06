@@ -619,7 +619,21 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
 
         // send Payload if needed
         if(payload && size > 0) {
-            if(_client->write(&payload[0], size) != size) {
+            size_t sent_bytes = 0;
+            while(sent_bytes < size){
+                size_t sent = _client->write(&payload[sent_bytes], size - sent_bytes);
+                if (sent == 0){
+                    log_w("Failed to send chunk! Lets wait a bit");
+                    delay(100);
+                    sent = _client->write(&payload[sent_bytes], size - sent_bytes);
+                    if (sent == 0){
+                        log_e("Failed to send chunk!");
+                        break;
+                    }
+                }
+                sent_bytes += sent;
+            }
+            if(sent_bytes != size){
                 return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
             }
         }
@@ -1551,8 +1565,6 @@ void HTTPClient::setCookie(String date, String headerValue)
     String value;
     int pos1, pos2;
 
-    headerValue.toLowerCase();
-
     struct tm tm;
     strptime(date.c_str(), HTTP_TIME_PATTERN, &tm);
     cookie.date = mktime(&tm);
@@ -1566,6 +1578,9 @@ void HTTPClient::setCookie(String date, String headerValue)
     } else {
         return;     // invalid cookie header
     }
+
+    // only Cookie Attributes are case insensitive from this point on
+    headerValue.toLowerCase();
 
     // expires
     if (headerValue.indexOf("expires=") >= 0){

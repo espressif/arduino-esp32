@@ -1,0 +1,19 @@
+{
+	"name":"Arduino on ESP32-S2",
+	"toolchainPrefix":"xtensa-esp32s2-elf",
+	"svdFile":"debug.svd",
+	"request":"attach",
+	"postAttachCommands":[
+		"set remote hardware-watchpoint-limit 2",
+		"monitor reset halt",
+		"monitor gdb_sync",
+		"thb setup",
+		"c"
+	],
+	"overrideRestartCommands":[
+		"monitor reset halt",
+		"monitor gdb_sync",
+		"thb setup",
+		"c"
+	]
+}

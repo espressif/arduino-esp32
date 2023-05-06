@@ -392,7 +392,7 @@ typedef enum
  * example, to create a privileged task at priority 2 the uxPriority parameter
  * should be set to ( 2 | portPRIVILEGE_BIT ).
  *
- * @param pvCreatedTask Used to pass back a handle by which the created task
+ * @param pxCreatedTask Used to pass back a handle by which the created task
  * can be referenced.
  *
  * @return pdPASS if the task was successfully created and added to a ready
@@ -538,7 +538,7 @@ typedef enum
  *
  * @param uxPriority The priority at which the task will run.
  *
- * @param pxStackBuffer Must point to a StackType_t array that has at least
+ * @param puxStackBuffer Must point to a StackType_t array that has at least
  * ulStackDepth indexes - the array will then be used as the task's stack,
  * removing the need for the stack to be allocated dynamically.
  *
@@ -2368,7 +2368,7 @@ uint32_t ulTaskGetIdleRunTimeCounter( void ) PRIVILEGED_FUNCTION;
  * notification value at that index being updated.  ulValue is not used and
  * xTaskNotifyIndexed() always returns pdPASS in this case.
  *
- * pulPreviousNotificationValue -
+ * @param pulPreviousNotificationValue -
  * Can be used to pass out the subject task's notification value before any
  * bits are modified by the notify function.
  *
@@ -2532,6 +2532,10 @@ BaseType_t xTaskGenericNotify( TaskHandle_t xTaskToNotify,
  * requested from an ISR is dependent on the port - see the documentation page
  * for the port in use.
  *
+ * @param pulPreviousNotificationValue -
+ * Can be used to pass out the subject task's notification value before any
+ * bits are modified by the notify function.
+ *
  * @return Dependent on the value of eAction.  See the description of the
  * eAction parameter.
  *
@@ -2651,12 +2655,13 @@ BaseType_t xTaskGenericNotifyFromISR( TaskHandle_t xTaskToNotify,
  * not have this parameter and always waits for notifications on index 0.
  *
  * @param ulBitsToClearOnEntry Bits that are set in ulBitsToClearOnEntry value
- * will be cleared in the calling task's notification value before the task
- * checks to see if any notifications are pending, and optionally blocks if no
- * notifications are pending.  Setting ulBitsToClearOnEntry to ULONG_MAX (if
- * limits.h is included) or 0xffffffffUL (if limits.h is not included) will have
- * the effect of resetting the task's notification value to 0.  Setting
- * ulBitsToClearOnEntry to 0 will leave the task's notification value unchanged.
+ * will be cleared in the calling task's notification value before the task is
+ * marked as waiting for a new notification (provided a notification is not
+ * already pending). Optionally blocks if no notifications are pending. Setting
+ * ulBitsToClearOnEntry to ULONG_MAX (if limits.h is included) or 0xffffffffUL
+ * (if limits.h is not included) will have the effect of resetting the task's
+ * notification value to 0. Setting ulBitsToClearOnEntry to 0 will leave the
+ * task's notification value unchanged.
  *
  * @param ulBitsToClearOnExit If a notification is pending or received before
  * the calling task exits the xTaskNotifyWait() function then the task's
@@ -2778,11 +2783,10 @@ BaseType_t xTaskGenericNotifyWait( UBaseType_t uxIndexToWaitOn,
  * @endcond
  * \ingroup TaskNotifications
  */
-#define xTaskNotifyGive( xTaskToNotify ) \
-    xTaskGenericNotify( ( xTaskToNotify ), ( tskDEFAULT_INDEX_TO_NOTIFY ), ( 0 ), eIncrement, NULL )
 #define xTaskNotifyGiveIndexed( xTaskToNotify, uxIndexToNotify ) \
     xTaskGenericNotify( ( xTaskToNotify ), ( uxIndexToNotify ), ( 0 ), eIncrement, NULL )
-
+#define xTaskNotifyGive( xTaskToNotify ) \
+    xTaskGenericNotify( ( xTaskToNotify ), ( tskDEFAULT_INDEX_TO_NOTIFY ), ( 0 ), eIncrement, NULL )
 /**
  * @cond !DOC_EXCLUDE_HEADER_SECTION
  * task. h
@@ -3363,6 +3367,25 @@ void vTaskPlaceOnUnorderedEventList( List_t * pxEventList,
 void vTaskPlaceOnEventListRestricted( List_t * const pxEventList,
                                       TickType_t xTicksToWait,
                                       const BaseType_t xWaitIndefinitely ) PRIVILEGED_FUNCTION;
+
+#ifdef ESP_PLATFORM
+/*
+ * THIS FUNCTION MUST NOT BE USED FROM APPLICATION CODE.  IT IS AN
+ * INTERFACE WHICH IS FOR THE EXCLUSIVE USE OF THE SCHEDULER.
+ *
+ * This function is a wrapper to take the "xTaskQueueMutex" spinlock of tasks.c.
+ * This lock is taken whenver any of the task lists or event lists are
+ * accessed/modified, such as when adding/removing tasks to/from the delayed
+ * task list or various event lists.
+ *
+ * This functions is meant to be called by xEventGroupSetBits() and
+ * vEventGroupDelete() as both those functions will access event lists (instead
+ * of delegating the entire responsibility to one of vTask...EventList()
+ * functions).
+ */
+void vTaskTakeEventListLock( void );
+void vTaskReleaseEventListLock( void );
+#endif //  ESP_PLATFORM
 
 /*
  * THIS FUNCTION MUST NOT BE USED FROM APPLICATION CODE.  IT IS AN

@@ -21,6 +21,31 @@ extern "C"
 {
 #endif
 
+/** @cond **/
+/** ESP RainMaker Event Base */
+ESP_EVENT_DECLARE_BASE(RMAKER_OTA_EVENT);
+/** @endcond **/
+
+/** ESP RainMaker Events */
+typedef enum {
+    /* Invalid event. Used for internal handling only */
+    RMAKER_OTA_EVENT_INVALID = 0,
+    /** RainMaker OTA is Starting */
+    RMAKER_OTA_EVENT_STARTING,
+    /** RainMaker OTA has Started */
+    RMAKER_OTA_EVENT_IN_PROGRESS,
+    /** RainMaker OTA Successful */
+    RMAKER_OTA_EVENT_SUCCESSFUL,
+    /** RainMaker OTA Failed */
+    RMAKER_OTA_EVENT_FAILED,
+    /** RainMaker OTA Rejected */
+    RMAKER_OTA_EVENT_REJECTED,
+    /** RainMaker OTA Delayed */
+    RMAKER_OTA_EVENT_DELAYED,
+    /** OTA Image has been flashed and active partition changed. Reboot is requested. Applicable only if Auto reboot is disabled **/
+    RMAKER_OTA_EVENT_REQ_FOR_REBOOT,
+} esp_rmaker_ota_event_t;
+
 /** Default ESP RainMaker OTA Server Certificate */
 extern const char *ESP_RMAKER_OTA_DEFAULT_SERVER_CERT;
 
@@ -56,10 +81,16 @@ typedef struct {
     /** Size of the OTA File. Can be 0 if the file size isn't received from
      * the ESP RainMaker Cloud */
     int filesize;
+    /** The firmware version of the OTA image **/
+    char *fw_version;
+    /** The OTA Job ID received from cloud **/
+    char *ota_job_id;
     /** The server certificate passed in esp_rmaker_enable_ota() */
     const char *server_cert;
     /** The private data passed in esp_rmaker_enable_ota() */
     char *priv;
+    /** OTA Metadata. Applicable only for OTA using Topics. Will be received (if applicable) from the backend, alongwith the OTA URL */
+    char *metadata;
 } esp_rmaker_ota_data_t;
 
 /** Function prototype for OTA Callback
@@ -170,6 +201,18 @@ esp_err_t esp_rmaker_ota_default_cb(esp_rmaker_ota_handle_t handle, esp_rmaker_o
  * @return error on failure
  */
 esp_err_t esp_rmaker_ota_fetch(void);
+
+/** Fetch OTA Info with a delay
+ *
+ * For OTA using Topics, this API can be used to explicitly ask the backend if an OTA is available
+ * after a delay (in seconds) passed as an argument.
+ *
+ * @param[in] time Delay (in seconds)
+ *
+ * @return ESP_OK if the OTA fetch timer was created.
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_ota_fetch_with_delay(int time);
 #ifdef __cplusplus
 }
 #endif

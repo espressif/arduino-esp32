@@ -47,7 +47,7 @@ static hw_timer_t timer_dev[4] = {
 // timer_init() will list thru all timers and return free timer handle)
 
 
-uint64_t inline timerRead(hw_timer_t *timer){
+inline uint64_t timerRead(hw_timer_t *timer){
 
     uint64_t value;
     timer_get_counter_value(timer->group, timer->num,&value);
@@ -221,11 +221,15 @@ bool IRAM_ATTR timerFnWrapper(void *arg){
     return false;
 }
 
-void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
+void timerAttachInterruptFlag(hw_timer_t *timer, void (*fn)(void), bool edge, int intr_alloc_flags){
     if(edge){
         log_w("EDGE timer interrupt is not supported! Setting to LEVEL...");
     }
-    timer_isr_callback_add(timer->group, timer->num, timerFnWrapper, fn, 0);
+    timer_isr_callback_add(timer->group, timer->num, timerFnWrapper, fn, intr_alloc_flags);
+}
+
+void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge){
+    timerAttachInterruptFlag(timer, fn, edge, 0);
 }
 
 void timerDetachInterrupt(hw_timer_t *timer){
