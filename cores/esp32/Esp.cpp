@@ -312,7 +312,6 @@ const char * EspClass::getChipModel(void)
     switch(chip_info.model){
         case CHIP_ESP32S3: return "ESP32-S3";
         case CHIP_ESP32C3: return "ESP32-C3";
-        case CHIP_ESP32H4: return "ESP32-H4";
         case CHIP_ESP32C2: return "ESP32-C2";
         case CHIP_ESP32C6: return "ESP32-C6";
         case CHIP_ESP32H2: return "ESP32-H2";
