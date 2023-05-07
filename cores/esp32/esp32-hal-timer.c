@@ -15,7 +15,11 @@
 #include "esp32-hal-timer.h"
 #include "driver/gptimer.h"
 #include "soc/soc_caps.h"
+#if defined __has_include && __has_include ("clk_tree.h")
 #include "clk_tree.h"
+#else
+#include "esp_clk_tree.h"
+#endif
 
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrArg)(void*);
@@ -81,7 +85,11 @@ hw_timer_t * timerBegin(uint32_t frequency){
     soc_periph_gptimer_clk_src_t gptimer_clks[] = SOC_GPTIMER_CLKS;
     for (size_t i = 0; i < sizeof(gptimer_clks) / sizeof(gptimer_clks[0]); i++){
         clk = gptimer_clks[i];
+#if defined __has_include && __has_include ("clk_tree.h")
         clk_tree_src_get_freq_hz(clk, CLK_TREE_SRC_FREQ_PRECISION_CACHED, &counter_src_hz);
+#else
+        esp_clk_tree_src_get_freq_hz(clk, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &counter_src_hz);
+#endif
         divider = counter_src_hz / frequency;
         if((divider >= 2) && (divider <= 65536)){
             break;
