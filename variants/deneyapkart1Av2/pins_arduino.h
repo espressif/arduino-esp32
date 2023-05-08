@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define USB_VID            0x303A
 #define USB_PID            0x8147
@@ -17,7 +18,7 @@
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
-static const uint8_t LED_BUILTIN = 48;
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48;
 #define BUILTIN_LED LED_BUILTIN
 #define LED_BUILTIN LED_BUILTIN
 #define RGB_BUILTIN LED_BUILTIN
