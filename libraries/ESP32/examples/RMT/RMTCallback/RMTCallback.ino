@@ -1,18 +1,38 @@
-#include "Arduino.h"
-#include "esp32-hal.h"
+// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * @brief This example demonstrate how to use a C++ Class to read several GPIO RMT signals
+ * calling a data processor when data is availble in background, using taks.
+ * 
+ * The output is the last RMT data read in the GPIO, just to ilustrate how it works.
+ * 
+ */
+
 
 extern "C" void receive_trampoline(uint32_t *data, size_t len, void * arg);
 
 class MyProcessor {
   private:
-    int8_t gpio = -1;
     uint32_t buff; // rolling buffer of most recent 32 bits.
     int at = 0;
-    EventGroupHandle_t events = NULL;
     size_t rx_num_symbols = RMT_MEM_NUM_BLOCKS_1 * RMT_SYMBOLS_PER_CHANNEL_BLOCK;
     rmt_data_t rx_symbols[RMT_MEM_NUM_BLOCKS_1 * RMT_SYMBOLS_PER_CHANNEL_BLOCK];
 
   public:
+    int8_t gpio = -1;
+
     MyProcessor(uint8_t pin, uint32_t rmtFreqHz) {
       if (!rmtInit(pin, RMT_RX_MODE, RMT_MEM_NUM_BLOCKS_1, rmtFreqHz))
       {
@@ -20,7 +40,6 @@ class MyProcessor {
         return;
       }
       gpio = pin;
-      events = xEventGroupCreate();
     }
 
     void begin() {
@@ -33,7 +52,7 @@ class MyProcessor {
 
       while(1) {
         // blocks until RMT has read data
-        rmtReadAsync(me->gpio, me->rx_symbols, &me->rx_num_symbols, me->events, true, portMAX_DELAY);
+        rmtRead(me->gpio, me->rx_symbols, &me->rx_num_symbols, RMT_WAIT_FOR_EVER);
         // process the data like a callback whenever there is data available
         process(me->rx_symbols, me->rx_num_symbols, me);
       }
@@ -78,6 +97,7 @@ void setup()
 
 void loop()
 {
-  Serial.printf("GPIO 4: %08lx 5: %08lx 10: %08lx\n", mp1.val(), mp2.val(), mp3.val());
+  // The reading values will come from the 3 tasks started by setup()
+  Serial.printf("GPIO %d: %08lx | %d: %08lx | %d: %08lx\n", mp1.gpio, mp1.val(), mp2.gpio, mp2.val(), mp3.gpio, mp3.val());
   delay(500);
 }

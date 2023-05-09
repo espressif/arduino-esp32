@@ -1,84 +1,90 @@
-/*
-  RMT_CPUFreq_test
+// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 
-  Demonstrates usage of RGB LED driven by RMT to verufy that RMT works on any CPU/APB Frequency.
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-  RGBLedWrite demonstrates control of each RMT channel:
-  void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
-*/
+/**
+ * @brief This example demonstrates usage of RGB LED driven by RMT to verify 
+ * that RMT works on any CPU/APB Frequency.
+ * 
+ * It uses an ESP32 Arduino builtin RGB NeoLED function based on RMT:
+ * void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
+ * 
+ * The output is a visual WS2812 RGB LED color change routine using each time a
+ * different CPU Frequency, just to ilustrate how it works.
+ * 
+ */
 
-//if not set by pins_arduino.h, define your own WS281x GPIO and default brightness
-//#define RGB_BRIGHTNESS 64 // Change white brightness (max 255)
-//#define RGB_BUILTIN 38 // S3 GPI 48 or 38
 
-// different frequencies for the CPU
-// ESP32C3 max freq is 160, but setting it to 240MHz will just fail and keep the last one
-const int bauds = 115200;
-uint8_t cpufreqs[] = {240, 160, 80, 40, 20, 10};
-uint32_t Freq = 0;
-int i = 0;
+// Default DevKit RGB LED GPIOs:
+#if CONFIG_IDF_TARGET_ESP32S2
+#define MY_LED_GPIO   18
+#elif CONFIG_IDF_TARGET_ESP32S3
+#define MY_LED_GPIO   48  // 48 or 38
+#elif CONFIG_IDF_TARGET_ESP32C3
+#define MY_LED_GPIO   8
+#else
+#define MY_LED_GPIO   21   // Any, ESP32 has no RGB LED - depends on circuit setup
+#endif
+
+// Set the correct GPIO to any necessary by changing RGB_LED_GPIO value
+#define RGB_LED_GPIO MY_LED_GPIO   // Any GPIO valid in the board
+
+// Change the RGB Brightness to any value from 0 (off) to 255 (max)
+#define BRIGHTNESS 20             // Change color brightness (max 255)
 
 void setup() {
-  Freq = getCpuFrequencyMhz();
-
-  Serial.begin(bauds);
+  Serial.begin(115200);
   delay(500);
+  Serial.printf("\nUsing GPIO %d attached to the RGB LED.\nInitial CPU setup:\n", RGB_LED_GPIO);
 
-  Freq = getCpuFrequencyMhz();
-  Serial.print("CPU Freq = ");
-  Serial.print(Freq);
-  Serial.println(" MHz");
-  Freq = getXtalFrequencyMhz();
-  Serial.print("XTAL Freq = ");
-  Serial.print(Freq);
-  Serial.println(" MHz");
-  Freq = getApbFrequency();
-  Serial.print("APB Freq = ");
-  Serial.print(Freq);
-  Serial.println(" Hz");
+  Serial.printf("CPU Freq = %lu MHz\n",  getCpuFrequencyMhz());
+  Serial.printf("XTAL Freq = %lu MHz\n", getXtalFrequencyMhz());
+  Serial.printf("APB Freq = %lu Hz\n",   getApbFrequency());
 }
 
 void loop() {
-
-  Serial.print("\nchange CPU freq to ");
-  Serial.println(cpufreqs[i]);
-  delay(250);
+  const uint8_t cpufreqs[] = {240, 160, 80, 40, 20, 10};
+  static uint8_t i = 0;
 
   setCpuFrequencyMhz(cpufreqs[i]);
-
-  Freq = getCpuFrequencyMhz();
-
-  Serial.end();
-  Serial.begin(bauds);
-
-  Serial.print("Sending to serial with baud rate = ");
-  Serial.println(bauds);
-  Serial.print("CPU Freq = ");
-  Serial.print(Freq);
-  Serial.println(" MHz");
-
+  // moves to the next CPU freq for the next loop
   i = (i + 1) % sizeof(cpufreqs);
 
-#ifdef RGB_BUILTIN
-  // Changes to the CPU Freq demand RMT to reset internal parameters for the Tick
-  // This is fixed by reinitializing the RMT peripheral
-  rmtInit(RGB_BUILTIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000); // 100ms Tick
+  // Changing the CPU Freq demands RMT to reset internals parameters setting it correctly
+  // This is fixed by reinitializing the RMT peripheral as done below
+  // 100ns RMT Tick for driving the NeoLED as in the code of esp32-hal-rgb-led.c (github)
+  rmtInit(RGB_LED_GPIO, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000);
 
-  neopixelWrite(RGB_BUILTIN, RGB_BRIGHTNESS, 0, 0); // Red
-  Serial.println("LED Red");
-  delay(1000);
-  neopixelWrite(RGB_BUILTIN, 0, RGB_BRIGHTNESS, 0); // Green
-  Serial.println("LED Green");
-  delay(1000);
-  neopixelWrite(RGB_BUILTIN, 0, 0, RGB_BRIGHTNESS); // Blue
-  Serial.println("LED Blue");
-  delay(1000);
-  neopixelWrite(RGB_BUILTIN, RGB_BRIGHTNESS, RGB_BRIGHTNESS, RGB_BRIGHTNESS); // White
+  // resets also UART to adapt to the new CPU Freq
+  Serial.updateBaudRate(115200);
+  Serial.printf("\n--changed CPU Frequency to %lu MHz\n", getCpuFrequencyMhz());
+
+  neopixelWrite(RGB_LED_GPIO, BRIGHTNESS, BRIGHTNESS, BRIGHTNESS); // White
   Serial.println("White");
   delay(1000);
-  neopixelWrite(RGB_BUILTIN, 0, 0, 0); // Off / black
+  neopixelWrite(RGB_LED_GPIO, 0, 0, 0); // Off
   Serial.println("Off");
   delay(1000);
-  
-#endif
+  neopixelWrite(RGB_LED_GPIO, BRIGHTNESS, 0, 0); // Red
+  Serial.println("Red");
+  delay(1000);
+  neopixelWrite(RGB_LED_GPIO, 0, BRIGHTNESS, 0); // Green
+  Serial.println("Green");
+  delay(1000);
+  neopixelWrite(RGB_LED_GPIO, 0, 0, BRIGHTNESS); // Blue
+  Serial.println("Blue");
+  delay(1000);
+  neopixelWrite(RGB_LED_GPIO, 0, 0, 0); // Off
+  Serial.println("Off");
+  delay(1000);
 }

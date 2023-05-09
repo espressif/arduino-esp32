@@ -1,9 +1,25 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "Arduino.h"
+// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 
-#include "esp32-hal.h"
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * @brief This example demonstrates usage of RMT for testing a circuit loopback
+ * using 2 GPIOs, one for sending RMT data and the other for receiving the data.
+ * Those 2 GPIO must be connected to each other.
+ * 
+ * The output is the RMT data comparing what was sent and received
+ * 
+ */
 
 #if CONFIG_IDF_TARGET_ESP32C3
 // ESP32 C3 has only 2 channels for RX and 2 for TX, thus MAX RMT_MEM is 128
@@ -57,15 +73,18 @@ void loop()
     }
     data[255].val = 0;
 
-    // Start receiving
+    // Start an async data read
     size_t rx_num_symbols = RMT_NUM_EXCHANGED_DATA;
-    rmtReadAsync(RMT_RX_PIN, my_data, &rx_num_symbols, events, false, 0);
+    rmtReadAsync(RMT_RX_PIN, my_data, &rx_num_symbols);
 
-    // Send in continous mode by calling it in a loop
-    rmtWrite(RMT_TX_PIN, data, RMT_NUM_EXCHANGED_DATA, false, false);
+    // Write blocking the data to the loopback
+    rmtWrite(RMT_TX_PIN, data, RMT_NUM_EXCHANGED_DATA, RMT_WAIT_FOR_EVER);
 
-    // Wait for data
-    xEventGroupWaitBits(events, RMT_FLAG_RX_DONE, 1, 1, portMAX_DELAY);
+    // Wait until data is read
+    while (!rmtReceiveCompleted(RMT_RX_PIN));
+    
+    // Once data is available, the number of RMT Symbols is stored in rx_num_symbols
+    // and the received data is copied to my_data
     Serial.printf("Got %d RMT symbols\n", rx_num_symbols);
     
     // Printout the received data plus the original values

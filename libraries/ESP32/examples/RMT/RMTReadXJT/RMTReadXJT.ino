@@ -1,9 +1,23 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "Arduino.h"
+// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 
-#include "esp32-hal.h"
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * @brief This example demonstrates usage of RMT for receiving XJT D12 data
+ * 
+ * The output is the RMT data read and processed
+ * 
+ */
 
 //
 // Note: This example uses a FrSKY device communication
@@ -171,7 +185,6 @@ void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels) {
 }
 
 #define RMT_GPIO 21
-static EventGroupHandle_t events;
 
 void setup()
 {
@@ -183,8 +196,6 @@ void setup()
     Serial.println("init receiver failed\n");
   }
   Serial.println("real tick set to: 1us");
-
-  events = xEventGroupCreate();
 }
 
 void loop()
@@ -192,14 +203,17 @@ void loop()
   static rmt_data_t data[RMT_MEM_NUM_BLOCKS_2 * RMT_SYMBOLS_PER_CHANNEL_BLOCK];
   static size_t data_symbols = RMT_MEM_NUM_BLOCKS_2 * RMT_SYMBOLS_PER_CHANNEL_BLOCK;
 
-  // Ask to start a blocking read with timeout of 500ms
-  rmtReadAsync(RMT_GPIO, data, &data_symbols, events, true, pdMS_TO_TICKS(500));
+  // Blocking read with timeout of 500ms
+  // If data is read, data_symbols will have the number of RMT symbols effectively read
+  // to check if something was read and it didn't just timeout, use rmtReceiveCompleted()
+  rmtRead(RMT_GPIO, data, &data_symbols, 500);
 
   // If read something, process the data
-  EventBits_t read_bit = xEventGroupGetBits(events);
-  if (read_bit & RMT_FLAG_RX_DONE) {
+  if (rmtReceiveCompleted(RMT_GPIO)) {
     Serial.printf("Got %d RMT Symbols. Parsing data...\n", data_symbols);
     parseRmt(data, data_symbols, channels);
+  } else {
+    Serial.println("No RMT data read...");
   }
 
   // printout some of the channels every 500ms

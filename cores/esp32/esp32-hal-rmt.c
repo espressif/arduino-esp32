@@ -20,6 +20,12 @@
 #include "esp32-hal-rmt.h"
 #include "esp32-hal-periman.h"
 
+// Arduino Task Handle indicates if the Arduino Task has been started already
+extern TaskHandle_t loopTaskHandle;
+
+// RMT Events
+#define RMT_FLAG_RX_DONE (1)
+#define RMT_FLAG_TX_DONE (2)
 
 /**
    Internal macros
@@ -37,20 +43,24 @@
 /**
    Typedefs for internal stuctures, enums
 */
-struct rmt_obj_s {
 
-  // general rmt information
+struct rmt_obj_s {
+  // general RMT information
   rmt_channel_handle_t rmt_channel_h;        // NULL value means channel not alocated
   rmt_encoder_handle_t rmt_copy_encoder_h;   // RMT simple copy encoder handle
 
   uint32_t signal_range_min_ns;              // RX Filter data - Low Pass pulse width
   uint32_t signal_range_max_ns;              // RX idle time that defines end of reading
 
-  EventGroupHandle_t rmt_rx_events;          // reading event user handle
+  EventGroupHandle_t rmt_events;             // read/write done event RMT callback handle
+  bool rmt_ch_is_looping;                    // RMT TX Channel is in LOOPING MODE?
   size_t *num_symbols_read;                  // number of RMT symbol read by IDF RMT RX Done
 
+#if !CONFIG_DISABLE_HAL_LOCKS
   xSemaphoreHandle g_rmt_objlocks;           // Channel Semaphore Lock
+#endif /* CONFIG_DISABLE_HAL_LOCKS */
 };
+
 typedef struct rmt_obj_s *rmt_bus_handle_t;
 
 /**
@@ -62,16 +72,26 @@ static xSemaphoreHandle g_rmt_block_lock = NULL;
    Internal method (private) declarations
 */
 
+// This is called from an IDF ISR code, therefore this code is part of an ISR
 static bool _rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *data, void *args)
 {
   BaseType_t high_task_wakeup = pdFALSE;
   rmt_bus_handle_t bus = (rmt_bus_handle_t) args;
+  // sets the returning number of RMT symbols effectively read 
   *bus->num_symbols_read = data->num_symbols;
-  // set RX event group
-  if (bus->rmt_rx_events != NULL) {
-    // signal the received RMT symbols of that channel
-    xEventGroupSetBitsFromISR(bus->rmt_rx_events, RMT_FLAG_RX_DONE, &high_task_wakeup);
-  }
+  // set RX event group and signal the received RMT symbols of that channel
+  xEventGroupSetBitsFromISR(bus->rmt_events, RMT_FLAG_RX_DONE, &high_task_wakeup);
+  // A "need to yield" is returned in order to execute portYIELD_FROM_ISR() in the main IDF RX ISR
+  return high_task_wakeup == pdTRUE;
+}
+
+// This is called from an IDF ISR code, therefore this code is part of an ISR
+static bool _rmt_tx_done_callback(rmt_channel_handle_t channel, const rmt_tx_done_event_data_t *data, void *args)
+{
+  BaseType_t high_task_wakeup = pdFALSE;
+  rmt_bus_handle_t bus = (rmt_bus_handle_t) args;
+  // set RX event group and signal the received RMT symbols of that channel
+  xEventGroupSetBitsFromISR(bus->rmt_events, RMT_FLAG_TX_DONE, &high_task_wakeup);
   // A "need to yield" is returned in order to execute portYIELD_FROM_ISR() in the main IDF RX ISR
   return high_task_wakeup == pdTRUE;
 }
@@ -115,7 +135,16 @@ static bool _rmtDetachBus(void *busptr)
 
   bool retCode = true;
   rmt_bus_handle_t bus = (rmt_bus_handle_t) busptr;
+  log_v("Detaching RMT GPIO Bus");
 
+  // lock it
+  while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
+
+  // free Event Group 
+  if (bus->rmt_events != NULL) {
+    vEventGroupDelete(bus->rmt_events);
+    bus->rmt_events = NULL;
+  }
   // deallocate the channel encoder
   if (bus->rmt_copy_encoder_h != NULL) {
     if (ESP_OK != rmt_del_encoder(bus->rmt_copy_encoder_h)) {
@@ -126,7 +155,6 @@ static bool _rmtDetachBus(void *busptr)
   // disable and deallocate RMT channal
   if (bus->rmt_channel_h != NULL) {
     // force stopping rmt TX/RX processing and unlock Power Management (APB Freq)
-    // it needs sdkconfig with CONFIG_PM_ENABLE set
     rmt_disable(bus->rmt_channel_h);
     if (ESP_OK != rmt_del_channel(bus->rmt_channel_h)) {
       log_w("RMT Channel Deletion has failed.");
@@ -141,6 +169,9 @@ static bool _rmtDetachBus(void *busptr)
 #endif
   // free the allocated bus data structure
   free(bus);
+
+  // release the mutex
+  xSemaphoreGive(g_rmt_block_lock);
   return retCode;
 }
 
@@ -148,7 +179,7 @@ static bool _rmtDetachBus(void *busptr)
    Public method definitions
 */
 
-// RX demodulation carrier or TX modulatin carrier
+// RX demodulation carrier or TX modulation carrier
 bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t frequency_Hz, float duty_percent)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
@@ -216,6 +247,7 @@ bool rmtSetRxThreshold(int pin, uint16_t value)
 
 bool rmtDeinit(int pin)
 {
+  log_v("Deiniting RMT GPIO %d", pin);
   if (_rmtGetBus(pin, __FUNCTION__) != NULL) {
     // release all allocated data
     return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
@@ -224,7 +256,7 @@ bool rmtDeinit(int pin)
   return false;
 }
 
-bool rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool blocking, bool loop)
+static bool _rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool blocking, bool loop, uint32_t timeout_ms)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -233,33 +265,69 @@ bool rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool blocking, 
   if (!_rmtCheckDirection(pin, RMT_TX_MODE, __FUNCTION__)) {
     return false;
   }
+  bool loopCancel = false;  // user wants to cancel the writing loop mode 
   if (data == NULL || num_rmt_symbols == 0) {
-    log_w("GPIO %d - RMT Write Data NULL pointer or size is zero.", pin);
+    if (!loop) {
+      log_w("GPIO %d - RMT Write Data NULL pointer or size is zero.", pin);
+      return false;
+    } else {
+      loopCancel = true;
+    }
+  }
+
+  log_v("GPIO: %d - Request: %d RMT Symbols - %s - Timeout: %d", pin, num_rmt_symbols, blocking ? "Blocking" : "Non-Blocking", timeout_ms);
+  log_v("GPIO: %d - Currently in Loop Mode: [%s] | Asked to Loop: %s, LoopCancel: %s", pin, bus->rmt_ch_is_looping ? "YES" : "NO", loop ? "YES" : "NO", loopCancel ? "YES" : "NO");
+
+  if ((xEventGroupGetBits(bus->rmt_events) & RMT_FLAG_TX_DONE) == 0) {
+    log_v("GPIO %d - RMT Write still pending to be completed.", pin);
     return false;
   }
-  
 
-  rmt_transmit_config_t transmit_cfg = {0};  // disable loop mode
-  if (loop) {
-    transmit_cfg.loop_count = 1;  // enable infinite loop mode
-  }
+  rmt_transmit_config_t transmit_cfg = {0};  // loop mode disabled
   bool retCode = true;
-  RMT_MUTEX_LOCK(bus);
 
-  if (ESP_OK != rmt_transmit(bus->rmt_channel_h, bus->rmt_copy_encoder_h,
-                             (const void *) data, num_rmt_symbols * sizeof(rmt_data_t), &transmit_cfg)) {
-    retCode = false;
-    log_w("GPIO %d - RMT Transmission failed.", pin);
+  RMT_MUTEX_LOCK(bus);
+  // wants to start in writing or looping over a previous looping --> resets the channel
+  if (bus->rmt_ch_is_looping == true) {
+    // must force stopping a previous loop transmission first
+    rmt_disable(bus->rmt_channel_h);
+    // enable it again for looping or writing
+    rmt_enable(bus->rmt_channel_h);
+    bus->rmt_ch_is_looping = false;  // not looping anymore
   }
-  if (blocking && ESP_OK != rmt_tx_wait_all_done(bus->rmt_channel_h, -1)) {
-    retCode = false;
-    log_w("GPIO %d - RMT Blocking TX Setup failed.", pin);
+  if (loopCancel) {
+    // just resets and releases the channel, maybe, already done above, then exits
+    bus->rmt_ch_is_looping = false;
+  } else { // new writing | looping request
+    // looping | Writing over a previous looping state is valid
+    if (loop) {
+      transmit_cfg.loop_count = -1;  // enable infinite loop mode
+    } else {
+      // looping mode never sets this flag (IDF 5.1) in the callback
+      xEventGroupClearBits(bus->rmt_events, RMT_FLAG_TX_DONE);
+    }
+    // transmits just once or looping data
+    if (ESP_OK != rmt_transmit(bus->rmt_channel_h, bus->rmt_copy_encoder_h,
+                               (const void *) data, num_rmt_symbols * sizeof(rmt_data_t), &transmit_cfg)) {
+      retCode = false;
+      log_w("GPIO %d - RMT Transmission failed.", pin);
+    } else {   // transmit OK
+      if (loop) {
+        bus->rmt_ch_is_looping = true; // for ever... until a channel canceling or new writing 
+      } else {
+        if (blocking) {
+          // wait for transmission confirmation | timeout
+          retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_TX_DONE, pdFALSE /* do not clear on exit */, 
+                     pdFALSE /* wait for all bits */, timeout_ms) & RMT_FLAG_TX_DONE) != 0;
+        }
+      }
+    }
   }
   RMT_MUTEX_UNLOCK(bus);
   return retCode;
 }
 
-bool rmtReadAsync(int pin, rmt_data_t* data, size_t *num_rmt_symbols, void* eventFlag, bool waitForData, uint32_t timeout_ms)
+static bool _rmtRead(int pin, rmt_data_t* data, size_t *num_rmt_symbols, bool waitForData, uint32_t timeout_ms)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -272,62 +340,87 @@ bool rmtReadAsync(int pin, rmt_data_t* data, size_t *num_rmt_symbols, void* even
     log_w("GPIO %d - RMT Read Data and/or Size NULL pointer.", pin);
     return false;
   }
-  
-  // Start a read task
+  log_v("GPIO: %d - Request: %d RMT Symbols - %s - Timeout: %d", pin, *num_rmt_symbols, waitForData ? "Blocking" : "Non-Blocking", timeout_ms);
+  bool retCode = true;
   RMT_MUTEX_LOCK(bus);
 
   // request reading RMT Channel Data
   rmt_receive_config_t receive_config;
   receive_config.signal_range_min_ns = bus->signal_range_min_ns;
   receive_config.signal_range_max_ns = bus->signal_range_max_ns;
-  if (eventFlag) {
-    xEventGroupClearBits(eventFlag, RMT_FLAG_RX_DONE);
-  }
 
-  bus->rmt_rx_events = eventFlag;
+  xEventGroupClearBits(bus->rmt_events, RMT_FLAG_RX_DONE);
   bus->num_symbols_read = num_rmt_symbols;
 
   rmt_receive(bus->rmt_channel_h, data, *num_rmt_symbols * sizeof(rmt_data_t), &receive_config);
+  // wait for data if requested
+  if (waitForData) {
+    retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_RX_DONE, pdFALSE /* do not clear on exit */, 
+              pdFALSE /* wait for all bits */, timeout_ms) & RMT_FLAG_RX_DONE) != 0;
+  }
+  
+  RMT_MUTEX_UNLOCK(bus);
+  return retCode;
+}
 
-  // wait for data if requested so
-  if (waitForData && eventFlag) {
-    xEventGroupWaitBits(eventFlag, RMT_FLAG_RX_DONE,
-                        pdTRUE /* clear on exit */, pdFALSE /* wait for all bits */, timeout_ms);
+
+bool rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t timeout_ms) {
+  return _rmtWrite(pin, data, num_rmt_symbols, true /*blocks*/, false /*looping*/, timeout_ms);
+}
+
+bool rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
+  return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, false /*looping*/, 0 /*N/A*/);
+}
+
+bool rmtWriteLooping(int pin, rmt_data_t* data, size_t num_rmt_symbols) {
+  return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, true /*looping*/, 0 /*N/A*/);
+}
+
+bool rmtTransmitCompleted(int pin) {
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_TX_MODE, __FUNCTION__)) {
+    return false;
   }
 
+  bool retCode = true;
+  RMT_MUTEX_LOCK(bus);
+  retCode = (xEventGroupGetBits(bus->rmt_events) & RMT_FLAG_TX_DONE) != 0;
   RMT_MUTEX_UNLOCK(bus);
+  return retCode;
+}
 
-  return true;
+bool rmtRead(int pin, rmt_data_t* data, size_t *num_rmt_symbols, uint32_t timeout_ms) {
+  return _rmtRead(pin, data, num_rmt_symbols, true /* blocking */, timeout_ms);
+}
+
+bool rmtReadAsync(int pin, rmt_data_t* data, size_t *num_rmt_symbols) {
+  return _rmtRead(pin, data, num_rmt_symbols, false /* non-blocking */, 0 /* N/A */);
+}
+
+bool rmtReceiveCompleted(int pin) {
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+
+  bool retCode = true;
+  RMT_MUTEX_LOCK(bus);
+  retCode = (xEventGroupGetBits(bus->rmt_events) & RMT_FLAG_RX_DONE) != 0;
+  RMT_MUTEX_UNLOCK(bus);
+  return retCode;
 }
 
 bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_size, uint32_t frequency_Hz)
 {
-  // check is pin is valid and in the right direction
-  if ((channel_direction == RMT_TX_MODE && !GPIO_IS_VALID_OUTPUT_GPIO(pin)) || (!GPIO_IS_VALID_GPIO(pin))) {
-    log_e("GPIO %d is not valid or can't be used for output in TX mode.", pin);
-    return false;
-  }
+  log_v("GPIO %d - %s - MemSize[%d] - Freq=%dHz", pin, channel_direction == RMT_RX_MODE ? "RX MODE" : "TX MODE", mem_size * RMT_SYMBOLS_PER_CHANNEL_BLOCK, frequency_Hz);
 
-  // set Peripheral Manager deInit Callback
-  perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_TX, _rmtDetachBus);
-  perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_RX, _rmtDetachBus);
-
-  // validate the RMT ticks by the requested frequency
-#if SOC_RMT_SUPPORT_XTAL  // ESP32-C3 and ESP32-S3 -- RMT works even with lower CPU Freq
-  // Based on 40Mhz using a divider of 8 bits (calculated as 1..256)  :: ESP32C3 and ESP32S3
-  if (frequency_Hz > 40000000 || frequency_Hz < 156250) {
-    log_e("GPIO %d - Bad RMT frequency resolution. Must be between 156.25KHz to 40MHz.", pin);
-    return false;
-  }
-#elif SOC_RMT_SUPPORT_APB   // ESP32 and ESP32-S2 -- TO DO: CPU Freq < 80MHz will affect RMT Tick
-  // Based on 80Mhz using a divider of 8 bits (calculated as 1..256) :: ESP32 and ESP32S2
-  if (frequency_Hz > 80000000 || frequency_Hz < 312500) {
-    log_e("GPIO %d - Bad RMT frequency resolution. Must be between 312.5KHz to 80MHz.", pin);
-    return false;
-  }
-#endif
-
-  // create common block mutex for protecting allocs from multiple threads
+  // create common block mutex for protecting allocs from multiple threads allocating RMT channels
   if (!g_rmt_block_lock) {
     g_rmt_block_lock = xSemaphoreCreateMutex();
     if (g_rmt_block_lock == NULL) {
@@ -335,39 +428,60 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
       return false;
     }
   }
-  // lock it
-  while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
 
-  // Try to dettach any previous bus or just keep it as not attached
-  if (perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT && !perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)) {
-    log_w("GPIO %d - Can't detach previous peripheral.", pin);
-    xSemaphoreGive(g_rmt_block_lock);
+  // set Peripheral Manager deInit Callback
+  perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_TX, _rmtDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_RX, _rmtDetachBus);
+
+  // check is pin is valid and in the right direction
+  if ((channel_direction == RMT_TX_MODE && !GPIO_IS_VALID_OUTPUT_GPIO(pin)) || (!GPIO_IS_VALID_GPIO(pin))) {
+    log_e("GPIO %d is not valid or can't be used for output in TX mode.", pin);
     return false;
   }
 
-  // allocate the rmt bus object
+  // validate the RMT ticks by the requested frequency
+  // Based on 80Mhz using a divider of 8 bits (calculated as 1..256)
+  if (frequency_Hz > 80000000 || frequency_Hz < 312500) {
+    log_e("GPIO %d - Bad RMT frequency resolution. Must be between 312.5KHz to 80MHz.", pin);
+    return false;
+  }
+
+  // Try to dettach any (Tx|Rx|Whatever) previous bus or just keep it as not attached
+  if (perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT && !perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)) {
+    log_w("GPIO %d - Can't detach previous peripheral.", pin);
+    return false;
+  }
+
+  // lock it
+  while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
+
+  // allocate the rmt bus object and sets all fields to NULL
   rmt_bus_handle_t bus = (rmt_bus_handle_t)heap_caps_calloc(1, sizeof(struct rmt_obj_s), MALLOC_CAP_DEFAULT);
   if (bus == NULL) {
     log_e("GPIO %d - Bus Memory allocation fault.", pin);
-    xSemaphoreGive(g_rmt_block_lock);
-    return false;
+    goto Err;
   }
 
   // pulses with width smaller than min_ns will be ignored (as a glitch)
   bus->signal_range_min_ns = 1000000000 / (frequency_Hz * 2); // 1/2 pulse width
   // RMT stops reading if the input stays idle for longer than max_ns
   bus->signal_range_max_ns = (1000000000 / frequency_Hz) * 10; // 10 pulses width
+  // creates the event group to control read_done and write_done
+  bus->rmt_events = xEventGroupCreate();
+  if (bus->rmt_events == NULL) {
+    log_e("GPIO %d - RMT Group Event allocation fault.", pin);
+    goto Err;
+  }
+
+  // Stating with Receive|Transmit DONE as true for allowing a new request from user
+  xEventGroupSetBits(bus->rmt_events, RMT_FLAG_RX_DONE | RMT_FLAG_TX_DONE);
 
   // channel particular configuration
   if (channel_direction == RMT_TX_MODE) {
     // TX Channel
     rmt_tx_channel_config_t tx_cfg;
     tx_cfg.gpio_num = pin;
-#if SOC_RMT_SUPPORT_XTAL
-    tx_cfg.clk_src = RMT_CLK_SRC_XTAL;
-#elif SOC_RMT_SUPPORT_APB
     tx_cfg.clk_src = RMT_CLK_SRC_APB;
-#endif
     tx_cfg.resolution_hz = frequency_Hz;
     tx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
     tx_cfg.trans_queue_depth = 10;   // maximum allowed
@@ -378,20 +492,21 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
 
     if (rmt_new_tx_channel(&tx_cfg, &bus->rmt_channel_h) != ESP_OK) {
       log_e("GPIO %d - RMT TX Initialization error.", pin);
-      // release the RMT object
-      _rmtDetachBus((void *)bus);
-      xSemaphoreGive(g_rmt_block_lock);
-      return false;
+      goto Err;
     }
+
+    // set TX Callback
+    rmt_tx_event_callbacks_t cbs = { .on_trans_done = _rmt_tx_done_callback };
+    if (ESP_OK != rmt_tx_register_event_callbacks(bus->rmt_channel_h, &cbs, bus)) {
+      log_e("GPIO %d RMT - Error registering TX Callback.", pin);
+      goto Err;
+    }
+
   } else {
     // RX Channel
     rmt_rx_channel_config_t rx_cfg;
     rx_cfg.gpio_num = pin;
-#if SOC_RMT_SUPPORT_XTAL
-    rx_cfg.clk_src = RMT_CLK_SRC_XTAL;
-#elif SOC_RMT_SUPPORT_APB
     rx_cfg.clk_src = RMT_CLK_SRC_APB;
-#endif
     rx_cfg.resolution_hz = frequency_Hz;
     rx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
     rx_cfg.flags.invert_in = 0;
@@ -400,20 +515,14 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     // try to allocate the RMT Channel
     if (ESP_OK != rmt_new_rx_channel(&rx_cfg, &bus->rmt_channel_h)) {
       log_e("GPIO %d RMT - RX Initialization error.", pin);
-      // release the RMT object
-      _rmtDetachBus((void *)bus);
-      xSemaphoreGive(g_rmt_block_lock);
-      return false;
+      goto Err;
     }
     
     // set RX Callback
     rmt_rx_event_callbacks_t cbs = { .on_recv_done = _rmt_rx_done_callback };
     if (ESP_OK != rmt_rx_register_event_callbacks(bus->rmt_channel_h, &cbs, bus)) {
       log_e("GPIO %d RMT - Error registering RX Callback.", pin);
-      // release the RMT object
-      _rmtDetachBus((void *)bus);
-      xSemaphoreGive(g_rmt_block_lock);
-      return false;
+      goto Err;
     }
   }
 
@@ -421,10 +530,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   rmt_copy_encoder_config_t copy_encoder_config = {};
   if (rmt_new_copy_encoder(&copy_encoder_config, &bus->rmt_copy_encoder_h) != ESP_OK) {
     log_e("GPIO %d - RMT Encoder Memory Allocation error.", pin);
-    // release the RMT object
-    _rmtDetachBus((void *)bus);
-    xSemaphoreGive(g_rmt_block_lock);
-    return false;
+    goto Err;
   }
 
   // create each channel Mutex for multi thread operations
@@ -432,27 +538,34 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   bus->g_rmt_objlocks = xSemaphoreCreateMutex();
   if (bus->g_rmt_objlocks == NULL) {
     log_e("GPIO %d - Failed creating RMT Channel Mutex.", pin);
-    // release the RMT object
-    _rmtDetachBus((void *)bus);
-    xSemaphoreGive(g_rmt_block_lock);
-    return false;
+    goto Err;
   }
 #endif
 
-  rmt_enable(bus->rmt_channel_h); // starts the channel
+  rmt_enable(bus->rmt_channel_h); // starts/enables the channel
 
   // Finally, allocate Peripheral Manager RMT bus and associate it to its GPIO
   peripheral_bus_type_t pinBusType =
     channel_direction == RMT_TX_MODE ? ESP32_BUS_TYPE_RMT_TX : ESP32_BUS_TYPE_RMT_RX;
   if (!perimanSetPinBus(pin, pinBusType, (void *) bus)) {
     log_e("Can't allocate the GPIO %d in the Peripheral Manager.", pin);
-    // release the RMT object
-    _rmtDetachBus((void *)bus);
-    xSemaphoreGive(g_rmt_block_lock);
-    return false;
+    goto Err;
   }
-
+  
+  // this delay is necessary when CPU frequency changes, but internal RMT setup is "old/wrong"
+  // The use case is related to the RMT_CPUFreq_Test example. The very first RMT Write
+  // goes in the wrong pace (frequency). The delay allows other IDF tasks to run to fix it. 
+  if (loopTaskHandle != NULL) {
+    // it can only run when Arduino task has been already started.
+    delay(1);
+  } // prevent panic when rmtInit() is executed within an C++ object constructor
   // release the mutex
   xSemaphoreGive(g_rmt_block_lock);
   return true;
+
+Err:
+  // release LOCK and the RMT object
+  xSemaphoreGive(g_rmt_block_lock);
+  _rmtDetachBus((void *)bus);
+  return false;
 }

@@ -15,9 +15,6 @@
 #ifndef MAIN_ESP32_HAL_RMT_H_
 #define MAIN_ESP32_HAL_RMT_H_
 
-// Rx Done Event
-#define RMT_FLAG_RX_DONE (1)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,13 +23,6 @@ typedef enum {
   RMT_RX_MODE = 0,  // false
   RMT_TX_MODE = 1,  // true
 } rmt_ch_dir_t;
-
-// Reading and Writing shall use as rmt_symbols_size this unit
-// ESP32 has 8 MEM BLOCKS in total shared with Reading and/or Writing
-// ESP32-S2 has 4 MEM BLOCKS in total shared with Reading and/or Writing
-// ESP32-S3 has 4 MEM BLOCKS for Reading and another 4 MEM BLOCKS for Writing
-// ESP32-C3 has 2 MEM BLOCKS for Reading and another 2 MEM BLOCKS for Writing
-#define RMT_SYMBOLS_PER_CHANNEL_BLOCK SOC_RMT_MEM_WORDS_PER_CHANNEL
 
 typedef enum {
   RMT_MEM_NUM_BLOCKS_1 = 1,
@@ -61,26 +51,123 @@ typedef union {
   uint32_t val;
 } rmt_data_t;
 
+// Reading and Writing shall use as rmt_symbols_size this unit
+// ESP32 has 8 MEM BLOCKS in total shared with Reading and/or Writing
+// ESP32-S2 has 4 MEM BLOCKS in total shared with Reading and/or Writing
+// ESP32-S3 has 4 MEM BLOCKS for Reading and another 4 MEM BLOCKS for Writing
+// ESP32-C3 has 2 MEM BLOCKS for Reading and another 2 MEM BLOCKS for Writing
+#define RMT_SYMBOLS_PER_CHANNEL_BLOCK SOC_RMT_MEM_WORDS_PER_CHANNEL
+
+// Used to tell rmtRead() to wait for ever until reading data from the RMT channel
+#define RMT_WAIT_FOR_EVER ((uint32_t)portMAX_DELAY)
+
+// Helper macro to calculate the number of RTM symbols in a array or type
+#define RMT_SYMBOLS_OF(x) (sizeof(x) / sizeof(rmt_data_t))
 
 /**
-     Initialize the object
+    Initialize the object
     
     New Parameters in Arduino Core 3: RMT tick is set in the rmtInit() function by the 
     frequency of the RMT channel. Example: 100ns tick => 10MHz, thus frequency will be 10,000,000 Hz
+    Returns true on execution success, false otherwise
 */
 bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t memsize, uint32_t frequency_Hz);
 
 /**
-     Sending data in one-go mode or continual mode
-     Blocking and non-blocking mode 
+     Sending data in Blocking Mode. 
+     <rmt_symbol> is a 32 bits structure as defined by rmt_data_t type.
+     It is possible to use the macro RMT_SYMBOLS_OF(data), if data is an array of rmt_data_t
+     
+     Blocking mode - only returns after sending all data or by timeout. 
+     If the writing operation takes longer than <timeout_ms> in milliseconds, it will end its
+     execution returning false.
+     Timeout can be set as undefined time by passing RMT_WAIT_FOR_EVER as <timeout_ms> parameter.
+     When the operation is timed out, rmtTransmitCompleted() will retrun false until the transmission
+     is finished, only when rmtTransmitCompleted() will return true.
+
+     Returns true when there is no error in the write operation, false otherwise, including when it
+     exits by timeout.
 */
-bool rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool blocking, bool loop);
+bool rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t timeout_ms);
 
 /**
-     Initiates async receive, event flag indicates data received
+     Sending data in Async Mode.
+     <rmt_symbol> is a 32 bits structure as defined by rmt_data_t type.
+     It is possible to use the macro RMT_SYMBOLS_OF(data), if data is an array of rmt_data_t
 
+     If more than one rmtWriteAsync() is executed in sequence, the previous is canceled and a 
+     new transmission is set up and enqueued to be executed. This is valis for ESP32C3, S2 and S3.
+     Note: There is an exception with ESP32 that can't stop an async transmission already started, 
+     resulting in a return code False that indicates that the rmtWriteAsync() call has failed. 
+     In such case, ESP32 will have to finish the previous transmission before starting a new one.
+     
+     Non-Blocking mode - returns right after execution
+     Returns true on execution success, false otherwise
+
+     <bool rmtTransmitCompleted(int pin)> will return true when all data is sent
 */
-bool rmtReadAsync(int pin, rmt_data_t* data, size_t *num_rmt_symbols, void* eventFlag, bool waitForData, uint32_t timeout_ms);
+bool rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols);
+
+/**
+     Writing data up to the reserved memsize, looping continuously
+     <rmt_symbol> is a 32 bits structure as defined by rmt_data_t type.
+     It is possible to use the macro RMT_SYMBOLS_OF(data), if data is an array of rmt_data_t
+
+     If *data or size_byte are NULL | Zero, it will disable the writing loop and stop transmission  
+
+     Non-Blocking mode - returns right after execution
+     Returns true on execution success, false otherwise
+
+     <bool rmtTransmitCompleted(int pin)> will return always false while its looping, given that 
+     the RMT transmission never ends.
+*/          
+bool rmtWriteLooping(int pin, rmt_data_t* data, size_t num_rmt_symbols);
+
+/**
+     Checks if transmission is completed and the rmtChannel ready for transmiting new data
+     Returns true when all data has been sent, false otherwise
+*/
+bool rmtTransmitCompleted(int pin);
+
+/**
+     Initiates blocking receive. Read data will be stored in a user provided buffer <*data>
+     It will read up to <num_rmt_symbols> RMT Symbols and the value of this variable will 
+     change to the effective number of symbols read.
+     <rmt_symbol> is a 32 bits structure as defined by rmt_data_t type.
+
+     If the reading operation takes longer than <timeout_ms> in milliseconds, it will end its
+     execution and the function will return false. In timeout case <num_rmt_symbols> won't change 
+     and rmtReceiveCompleted() can be used latter to check it there is data available.
+     Timeout can be set as undefined time by passing RMT_WAIT_FOR_EVER as <timeout_ms> parameter
+
+     Returns true when there is no error in the read operation, false otherwise, including when it
+     exits by timeout.
+     Returns, by value, the number of RMT Symbols read and copied to the user buffer <data> when
+     the read operation has success within the defined <timeout_ms>. If the function times out, it
+     will read RMT data latter asynchronously, affecting <*data> and <*num_rmt_symbols>. After tiemout,
+     the application can check if data is already available using <rmtReceiveCompleted(int pin)>
+*/
+bool rmtRead(int pin, rmt_data_t* data, size_t *num_rmt_symbols, uint32_t timeout_ms);
+
+/**
+     Initiates async (non-blocking) receive. It will return immediately after execution.
+     Read data will be stored in a user provided buffer <*data>
+     It will read up to <num_rmt_symbols> RMT Symbols and the value of this variable will 
+     change to the effective number of symbols read, whenever the read is completed.
+     <rmt_symbol> is a 32 bits structure as defined by rmt_data_t type.
+
+     Returns true when there is no error in the read operation, false otherwise. 
+     Returns asynchronously, by value, the number of RMT Symbols read, and also, it will copy 
+     the RMT received data to the user buffer <data> when the read operation happens.
+     The application can check if data is already available using <rmtReceiveCompleted(int pin)>
+*/
+bool rmtReadAsync(int pin, rmt_data_t* data, size_t *num_rmt_symbols);
+
+/**
+     Checks if a data reception is completed and the rmtChannel has new data for processing
+     Returns true when data has been received, false otherwise
+*/
+bool rmtReceiveCompleted(int pin);
 
 /**
    Setting threshold for Rx completed
