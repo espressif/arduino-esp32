@@ -40,17 +40,14 @@ static EventGroupHandle_t events;
 #define RMT_FREQ 10000000
 #define RMT_NUM_EXCHANGED_DATA 30
 
-void setup() 
-{
+void setup() {
     Serial.begin(115200);
     events = xEventGroupCreate();
     
-    if (!rmtInit(RMT_TX_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, RMT_FREQ))
-    {
-        Serial.println("init sender failed\n");
+    if (!rmtInit(RMT_TX_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, RMT_FREQ)) {
+     Serial.println("init sender failed\n");
     }
-    if (!rmtInit(RMT_RX_PIN, RMT_RX_MODE, RMT_MEM_RX, RMT_FREQ))
-    {
+    if (!rmtInit(RMT_RX_PIN, RMT_RX_MODE, RMT_MEM_RX, RMT_FREQ)) {
         Serial.println("init receiver failed\n");
     }
 
@@ -63,8 +60,7 @@ void setup()
     Serial.printf("\nPlease connect GPIO %d to GPIO %d, now.\n", RMT_TX_PIN, RMT_RX_PIN);
 }
 
-void loop() 
-{
+void loop() {
     // Init data
     int i;
     for (i=0; i<255; i++) {
@@ -88,12 +84,11 @@ void loop()
     Serial.printf("Got %d RMT symbols\n", rx_num_symbols);
     
     // Printout the received data plus the original values
-    for (i=0; i<60; i++)
-    {
+    for (i=0; i<60; i++) {
         Serial.printf("%08lx=%08lx ", my_data[i].val, data[i].val );
         if (!((i+1)%4)) Serial.println("");
     }
     Serial.println("\n");
 
-    delay(2000);
+    delay(500);
 }

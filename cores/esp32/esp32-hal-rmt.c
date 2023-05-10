@@ -46,15 +46,15 @@ extern TaskHandle_t loopTaskHandle;
 
 struct rmt_obj_s {
   // general RMT information
-  rmt_channel_handle_t rmt_channel_h;        // NULL value means channel not alocated
+  rmt_channel_handle_t rmt_channel_h;        // IDF RMT channel handler
   rmt_encoder_handle_t rmt_copy_encoder_h;   // RMT simple copy encoder handle
 
   uint32_t signal_range_min_ns;              // RX Filter data - Low Pass pulse width
   uint32_t signal_range_max_ns;              // RX idle time that defines end of reading
 
   EventGroupHandle_t rmt_events;             // read/write done event RMT callback handle
-  bool rmt_ch_is_looping;                    // RMT TX Channel is in LOOPING MODE?
-  size_t *num_symbols_read;                  // number of RMT symbol read by IDF RMT RX Done
+  bool rmt_ch_is_looping;                    // Is this RMT TX Channel in LOOPING MODE?
+  size_t *num_symbols_read;                  // Pointer to the number of RMT symbol read by IDF RMT RX Done
 
 #if !CONFIG_DISABLE_HAL_LOCKS
   xSemaphoreHandle g_rmt_objlocks;           // Channel Semaphore Lock
@@ -77,7 +77,7 @@ static bool _rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_don
 {
   BaseType_t high_task_wakeup = pdFALSE;
   rmt_bus_handle_t bus = (rmt_bus_handle_t) args;
-  // sets the returning number of RMT symbols effectively read 
+  // sets the returning number of RMT symbols (32 bits) effectively read 
   *bus->num_symbols_read = data->num_symbols;
   // set RX event group and signal the received RMT symbols of that channel
   xEventGroupSetBitsFromISR(bus->rmt_events, RMT_FLAG_RX_DONE, &high_task_wakeup);
@@ -152,7 +152,7 @@ static bool _rmtDetachBus(void *busptr)
       retCode = false;
     }
   }
-  // disable and deallocate RMT channal
+  // disable and deallocate RMT channel
   if (bus->rmt_channel_h != NULL) {
     // force stopping rmt TX/RX processing and unlock Power Management (APB Freq)
     rmt_disable(bus->rmt_channel_h);
@@ -162,7 +162,7 @@ static bool _rmtDetachBus(void *busptr)
     }
   }
 #if !CONFIG_DISABLE_HAL_LOCKS
-  // deallocate locker
+  // deallocate channel semaphore
   if (bus->g_rmt_objlocks != NULL) {
     vSemaphoreDelete(bus->g_rmt_objlocks);
   }
@@ -179,7 +179,6 @@ static bool _rmtDetachBus(void *busptr)
    Public method definitions
 */
 
-// RX demodulation carrier or TX modulation carrier
 bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t frequency_Hz, float duty_percent)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
@@ -208,7 +207,6 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
   return retCode;
 }
 
-//In receive mode, channel will ignore input pulse when the pulse width is smaller than <filter_pulse_ns>
 bool rmtSetFilter(int pin, bool filter_en, uint8_t filter_pulse_ns)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
@@ -226,8 +224,6 @@ bool rmtSetFilter(int pin, bool filter_en, uint8_t filter_pulse_ns)
   return true;
 }
 
-//In receive mode, when no edge is detected on the input signal for
-//longer than idle_thres channel clock cycles, the receive process is finished.
 bool rmtSetRxThreshold(int pin, uint16_t value)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
@@ -302,6 +298,7 @@ static bool _rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool bl
     // looping | Writing over a previous looping state is valid
     if (loop) {
       transmit_cfg.loop_count = -1;  // enable infinite loop mode
+      // keeps RMT_FLAG_TX_DONE set - it never changes 
     } else {
       // looping mode never sets this flag (IDF 5.1) in the callback
       xEventGroupClearBits(bus->rmt_events, RMT_FLAG_TX_DONE);

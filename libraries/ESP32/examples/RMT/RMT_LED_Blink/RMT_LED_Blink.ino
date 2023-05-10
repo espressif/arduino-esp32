@@ -18,7 +18,7 @@
  * necessary the regular Blink code in Arduino.
  * 
  * The output is the Blinking LED in the GPIO and a serial output describing what is 
- * going on along the execution.
+ * going on, along the execution.
  * 
  * The circuit is just a LED and a resistor of 270 ohms connected to the GPIO
  * GPIO ---> resistor 270 ohms ---> + LED - ---> GND
@@ -103,7 +103,7 @@ void RMT_Mixed_Write_Blink() {
     if (!rmtWriteAsync(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data) - 2)) {
       Serial.println("===> rmtWrite Blink 0.25s Error!");
     }
-    // wait (blocks) until all the data is transmited
+    // wait (blocks) until all the data is sent out
     while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking OFF for 1 seconds");
@@ -165,7 +165,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
     if (!rmtWriteAsync(BLINK_GPIO, blink_1s_rmt_data, RMT_SYMBOLS_OF(blink_1s_rmt_data) - 2)) {
       Serial.println("===> rmtWrite Blink 1s Error!");
     }
-    // wait (blocks) until all the data is transmited
+    // wait (blocks) until all the data is sent out
     while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking at 500ms on + 500ms off :: 5 blinks");
@@ -173,7 +173,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
     if (!rmtWriteAsync(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data) - 2)) {
       Serial.println("===> rmtWrite Blink 0.5s Error!");
     }
-    // wait (blocks) until all the data is transmited
+    // wait (blocks) until all the data is sent out
     while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking at 250ms on + 250ms off :: 5 blinks");
@@ -181,7 +181,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
     if (!rmtWriteAsync(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data) - 2)) {
       Serial.println("===> rmtWrite Blink 0.25s Error!");
     }
-    // wait (blocks) until all the data is transmited
+    // wait (blocks) until all the data is  sent out
     while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking OFF for 1 seconds");
@@ -193,7 +193,7 @@ void setup() {
   Serial.println("Starting Blink testing...");
   Serial.flush();
 
-  // 1 RMT Block has 64 x 2 RMT_SYMBOLS (ESP32|ESP32S2) or 48 x 2 RMT_SYMBOLS (ESP32C3|ESP32S3)
+  // 1 RMT Block has 64 RMT_SYMBOLS (ESP32|ESP32S2) or 48 RMT_SYMBOLS (ESP32C3|ESP32S3)
   if (!rmtInit(BLINK_GPIO, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 400000)) { //2.5us tick
     Serial.println("===> rmtInit Error!");
   } else {

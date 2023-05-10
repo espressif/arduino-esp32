@@ -60,24 +60,18 @@
 
 rmt_data_t led_data[NR_OF_ALL_BITS];
 
-void setup() 
-{
+void setup() {
     Serial.begin(115200);
-    
-    if (!rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000))
-    {
+    if (!rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
         Serial.println("init sender failed\n");
     }
-
     Serial.println("real tick set to: 100ns");
-
 }
 
 int color[] =  { 0x55, 0x11, 0x77 };  // Green Red Blue values
 int led_index = 0;
 
-void loop() 
-{
+void loop() {
     // Init data with only one led ON
     int led, col, bit;
     int i=0;
@@ -103,9 +97,7 @@ void loop()
     if ((++led_index)>=NR_OF_LEDS) {
         led_index = 0;
     }
-
-    // Send the data and wait until it is fully sent
+    // Send the data and wait until it is done
     rmtWrite(BUILTIN_RGBLED_PIN, led_data, NR_OF_ALL_BITS, RMT_WAIT_FOR_EVER);
-
     delay(100);
 }

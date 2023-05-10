@@ -184,22 +184,19 @@ void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels) {
   }
 }
 
+// Change the RMT reading GPIO here:
 #define RMT_GPIO 21
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
-
   // Initialize the channel to capture up to 64*2 or 48*2 items - 1us tick
-  if (!rmtInit(RMT_GPIO, RMT_RX_MODE, RMT_MEM_NUM_BLOCKS_2, 1000000))
-  {
+  if (!rmtInit(RMT_GPIO, RMT_RX_MODE, RMT_MEM_NUM_BLOCKS_2, 1000000)) {
     Serial.println("init receiver failed\n");
   }
   Serial.println("real tick set to: 1us");
 }
 
-void loop()
-{
+void loop() {
   static rmt_data_t data[RMT_MEM_NUM_BLOCKS_2 * RMT_SYMBOLS_PER_CHANNEL_BLOCK];
   static size_t data_symbols = RMT_MEM_NUM_BLOCKS_2 * RMT_SYMBOLS_PER_CHANNEL_BLOCK;
 

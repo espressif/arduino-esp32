@@ -21,8 +21,6 @@
  */
 
 
-extern "C" void receive_trampoline(uint32_t *data, size_t len, void * arg);
-
 class MyProcessor {
   private:
     uint32_t buff; // rolling buffer of most recent 32 bits.
@@ -55,8 +53,7 @@ class MyProcessor {
         rmtRead(me->gpio, me->rx_symbols, &me->rx_num_symbols, RMT_WAIT_FOR_EVER);
         // process the data like a callback whenever there is data available
         process(me->rx_symbols, me->rx_num_symbols, me);
-      }
-  
+      }  
       vTaskDelete(NULL);
     }
 
@@ -87,16 +84,14 @@ MyProcessor mp1 = MyProcessor(4, 1000000);
 MyProcessor mp2 = MyProcessor(5, 1000000);
 MyProcessor mp3 = MyProcessor(10, 2000000);
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   mp1.begin();
   mp2.begin();
   mp3.begin();
 }
 
-void loop()
-{
+void loop() {
   // The reading values will come from the 3 tasks started by setup()
   Serial.printf("GPIO %d: %08lx | %d: %08lx | %d: %08lx\n", mp1.gpio, mp1.val(), mp2.gpio, mp2.val(), mp3.gpio, mp3.val());
   delay(500);
