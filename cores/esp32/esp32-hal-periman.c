@@ -35,7 +35,7 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
 	}
 	otype = pins[pin].type;
 	obus = pins[pin].bus;
-	if(type == otype && bus == obus){
+	if(type != ESP32_BUS_TYPE_INIT && type == otype && bus == obus){
 		log_i("Bus already set");
 		return true;
 	}
