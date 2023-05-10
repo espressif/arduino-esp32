@@ -3,8 +3,10 @@
 export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespressif32"
 PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git"
 
-TOOLCHAIN_VERSION="8.4.0+2021r2-patch5"
-ESPTOOLPY_VERSION="~1.40400.0"
+TOOLCHAIN_VERSION="12.2.0+20230208"
+ESPTOOLPY_VERSION="~1.40501.0"
+FRAMEWORK_LIBS_REPOSITORY="https://github.com/espressif/esp32-arduino-libs.git"
+FRAMEWORK_LIBS_REVISION="1d21c0e389" # points to the "2004bf4e11" revision of IDF v5.1.0
 ESPRESSIF_ORGANIZATION_NAME="espressif"
 
 echo "Installing Python Wheel ..."
@@ -30,9 +32,10 @@ replace_script+="data['packages']['toolchain-riscv32-esp']['owner']='$ESPRESSIF_
 # Update versions to use the upstream
 replace_script+="data['packages']['toolchain-xtensa-esp32']['version']='$TOOLCHAIN_VERSION';"
 replace_script+="data['packages']['toolchain-xtensa-esp32s2']['version']='$TOOLCHAIN_VERSION';"
+replace_script+="data['packages']['toolchain-xtensa-esp32s3']['version']='$TOOLCHAIN_VERSION';"
 replace_script+="data['packages']['toolchain-riscv32-esp']['version']='$TOOLCHAIN_VERSION';"
-# Add ESP32-S3 Toolchain
-replace_script+="data['packages'].update({'toolchain-xtensa-esp32s3':{'type':'toolchain','optional':True,'owner':'$ESPRESSIF_ORGANIZATION_NAME','version':'$TOOLCHAIN_VERSION'}});"
+# Add new "framework-arduinoespressif32-libs" package
+replace_script+="data['packages'].update({'framework-arduinoespressif32-libs':{'type':'framework','optional':False,'version':'$FRAMEWORK_LIBS_REPOSITORY#$FRAMEWORK_LIBS_REVISION'}});"
 replace_script+="data['packages']['toolchain-xtensa-esp32'].update({'optional':False});"
 # esptool.py may require an upstream version (for now platformio is the owner)
 replace_script+="data['packages']['tool-esptoolpy']['version']='$ESPTOOLPY_VERSION';"
