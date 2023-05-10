@@ -8,7 +8,7 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
   uint8_t _pin = pin;
 #ifdef RGB_BUILTIN
   if(pin == RGB_BUILTIN){
-    _pin = RGB_BUILTIN-SOC_GPIO_PIN_COUNT;
+    _pin = RGB_BUILTIN - SOC_GPIO_PIN_COUNT;
   }
 #endif
 
@@ -40,5 +40,5 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
       i++;
     }
   }
-  rmtWrite(_pin, led_data, 24, RMT_WAIT_FOR_EVER);
+  rmtWrite(_pin, led_data, RMT_SYMBOLS_OF(led_data), RMT_WAIT_FOR_EVER);
 }
