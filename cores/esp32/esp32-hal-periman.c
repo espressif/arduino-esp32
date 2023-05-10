@@ -25,7 +25,7 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
 		log_e("Invalid pin: %u", pin);
 		return false;
 	}
-	if(type >= ESP32_BUS_TYPE_MAX) {
+	if(type >= ESP32_BUS_TYPE_MAX){
 		log_e("Invalid type: %u", (unsigned int)type);
 		return false;
 	}
@@ -33,7 +33,7 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
 		log_e("Bus is NULL");
 		return false;
 	}
-	if (type == ESP32_BUS_TYPE_INIT && bus != NULL) {
+	if (type == ESP32_BUS_TYPE_INIT && bus != NULL){
 		log_e("Can't set a Bus to INIT Type");
 		return false;
 	}	
