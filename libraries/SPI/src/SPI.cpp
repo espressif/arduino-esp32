@@ -20,6 +20,7 @@
  */
 
 #include "SPI.h"
+#include "io_pin_remap.h"
 #include "esp32-hal-log.h"
 
 #if !CONFIG_DISABLE_HAL_LOCKS

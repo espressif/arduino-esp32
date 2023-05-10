@@ -317,24 +317,24 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 int I2SClass::_applyPinSetting(){
   if(_driverInstalled){
     esp_i2s::i2s_pin_config_t pin_config = {
-      .bck_io_num = _sckPin,
-      .ws_io_num = _fsPin,
+      .bck_io_num = digitalPinToGPIONumber(_sckPin),
+      .ws_io_num = digitalPinToGPIONumber(_fsPin),
       .data_out_num = I2S_PIN_NO_CHANGE,
       .data_in_num = I2S_PIN_NO_CHANGE
     };
     if (_state == I2S_STATE_DUPLEX){ // duplex
-      pin_config.data_out_num = _outSdPin;
-      pin_config.data_in_num = _inSdPin;
+      pin_config.data_out_num = digitalPinToGPIONumber(_outSdPin);
+      pin_config.data_in_num = digitalPinToGPIONumber(_inSdPin);
     }else{ // simplex
       if(_state == I2S_STATE_RECEIVER){
         pin_config.data_out_num = I2S_PIN_NO_CHANGE;
-        pin_config.data_in_num = _sdPin;
+        pin_config.data_in_num = digitalPinToGPIONumber(_sdPin);
       }else if(_state == I2S_STATE_TRANSMITTER){
-        pin_config.data_out_num = _sdPin;
+        pin_config.data_out_num = digitalPinToGPIONumber(_sdPin);
         pin_config.data_in_num = I2S_PIN_NO_CHANGE;
       }else{
         pin_config.data_out_num = I2S_PIN_NO_CHANGE;
-        pin_config.data_in_num = _sdPin;
+        pin_config.data_in_num = digitalPinToGPIONumber(_sdPin);
       }
     }
     if(ESP_OK != esp_i2s::i2s_set_pin((esp_i2s::i2s_port_t) _deviceIndex, &pin_config)){
