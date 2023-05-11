@@ -78,7 +78,7 @@
 // LED FLASH setup
 #if CONFIG_LED_ILLUMINATOR_ENABLED
 
-#define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
+#define LED_LEDC_GPIO 22    //configure LED pin
 #define CONFIG_LED_MAX_INTENSITY 255
 
 int led_duty = 0;
@@ -290,7 +290,7 @@ void enable_led(bool en)
     {
         duty = CONFIG_LED_MAX_INTENSITY;
     }
-    ledcWrite(LED_LEDC_CHANNEL, duty);
+    ledcWrite(LED_LEDC_GPIO, duty);
     //ledc_set_duty(CONFIG_LED_LEDC_SPEED_MODE, CONFIG_LED_LEDC_CHANNEL, duty);
     //ledc_update_duty(CONFIG_LED_LEDC_SPEED_MODE, CONFIG_LED_LEDC_CHANNEL);
     log_i("Set LED intensity to %d", duty);
@@ -1390,8 +1390,7 @@ void startCameraServer()
 void setupLedFlash(int pin) 
 {
     #if CONFIG_LED_ILLUMINATOR_ENABLED
-    ledcSetup(LED_LEDC_CHANNEL, 5000, 8);
-    ledcAttachPin(pin, LED_LEDC_CHANNEL);
+    ledcAttach(pin, 5000, 8);
     #else
     log_i("LED flash is disabled -> CONFIG_LED_ILLUMINATOR_ENABLED = 0");
     #endif
