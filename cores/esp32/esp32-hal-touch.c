@@ -17,6 +17,7 @@
 
 #include "driver/touch_sensor.h"
 #include "esp32-hal-touch.h"
+#include "esp32-hal-periman.h"
 
 /*
     Internal Private Touch Data Structure and Functions
@@ -43,6 +44,10 @@ typedef struct {
 } TouchInterruptHandle_t;
 
 static TouchInterruptHandle_t __touchInterruptHandlers[SOC_TOUCH_SENSOR_NUM] = {0,};
+
+static uint8_t used_pads = 0;
+static bool initialized = false;
+static bool channels_initialized[SOC_TOUCH_SENSOR_NUM] = { false };
 
 static void ARDUINO_ISR_ATTR __touchISR(void * arg)
 {
@@ -99,11 +104,23 @@ static void __touchSetCycles(uint16_t measure, uint16_t sleep)
     touch_pad_set_measurement_interval(sleep);
 }
 
-
+static bool touchDetachBus(void * pin){
+    int8_t pad = digitalPinToTouchChannel((int)(pin-1));
+    channels_initialized[pad] = false;
+    used_pads--;
+    if (used_pads == 0) {
+        if (touch_pad_deinit() != ESP_OK) //deinit touch module, as no pads are used
+        {
+            log_e("Touch module deinit failed!");
+            return false;
+        }
+        initialized = false;
+    }
+    return true;
+}
 
 static void __touchInit()
 {
-    static bool initialized = false;
     if(initialized){
         return;
     }
@@ -163,8 +180,7 @@ err:
 
 static void __touchChannelInit(int pad)
 {
-   static bool channels_initialized[SOC_TOUCH_SENSOR_NUM] = { false };
-       if(channels_initialized[pad]){
+    if(channels_initialized[pad]){
         return;
     }
 
@@ -186,6 +202,7 @@ static void __touchChannelInit(int pad)
 #endif
 
     channels_initialized[pad] = true;
+    used_pads++;
     delay(20);  //delay needed before reading from touch channel after config
 }
 
@@ -197,8 +214,19 @@ static touch_value_t __touchRead(uint8_t pin)
         return 0;
     }
 
-    __touchInit();
-    __touchChannelInit(pad);
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_TOUCH) == NULL){
+        perimanSetBusDeinit(ESP32_BUS_TYPE_TOUCH, touchDetachBus);
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+            return 0;
+        }
+        __touchInit();
+        __touchChannelInit(pad);
+
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_TOUCH, (void *)(pin+1))){
+            touchDetachBus((void *)(pin+1));
+            return 0;
+        }
+    }
 
     touch_value_t touch_value;
     touch_pad_read_raw_data(pad, &touch_value);
@@ -280,9 +308,17 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold)
         log_e(" No touch pad on selected pin!");
         return;
     }
-    __touchInit();
-    __touchChannelInit(pad);
 
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_TOUCH) == NULL){
+        perimanSetBusDeinit(ESP32_BUS_TYPE_TOUCH, touchDetachBus);
+        __touchInit();
+        __touchChannelInit(pad);
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_TOUCH, (void *)(pin+1))){
+            log_e("Failed to set bus to Peripheral manager");
+            touchDetachBus((void *)(pin+1));
+            return;
+        }
+    }
     #if SOC_TOUCH_VERSION_1        // Only for ESP32 SoC
     touch_pad_set_thresh(pad, threshold);
    

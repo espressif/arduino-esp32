@@ -32,6 +32,7 @@ typedef struct {
 struct timer_struct_t {
     gptimer_handle_t timer_handle;
     interrupt_config_t interrupt_handle;
+    bool timer_started;
 };
 
 inline uint64_t timerRead(hw_timer_t * timer){
@@ -66,10 +67,12 @@ uint32_t timerGetFrequency(hw_timer_t * timer){
 
 void timerStart(hw_timer_t * timer){
     gptimer_start(timer->timer_handle);
+    timer->timer_started = true;
 }
 
 void timerStop(hw_timer_t * timer){
     gptimer_stop(timer->timer_handle);
+    timer->timer_started = false;
 }
 
 void timerRestart(hw_timer_t * timer){
@@ -119,11 +122,15 @@ hw_timer_t * timerBegin(uint32_t frequency){
     } 
     gptimer_enable(timer->timer_handle);
     gptimer_start(timer->timer_handle);
+    timer->timer_started = true;
     return timer;
 }
 
 void timerEnd(hw_timer_t * timer){
     esp_err_t err = ESP_OK;
+    if(timer->timer_started == true){
+        gptimer_stop(timer->timer_handle);
+    }
     gptimer_disable(timer->timer_handle);
     err = gptimer_del_timer(timer->timer_handle);
     if (err != ESP_OK){
@@ -155,14 +162,20 @@ void timerAttachInterruptFunctionalArg(hw_timer_t * timer, void (*userFunc)(void
     timer->interrupt_handle.fn = (voidFuncPtr)userFunc;
     timer->interrupt_handle.arg = arg;
 
+    if(timer->timer_started == true){
+        gptimer_stop(timer->timer_handle);
+    }
     gptimer_disable(timer->timer_handle);
     err = gptimer_register_event_callbacks(timer->timer_handle, &cbs, &timer->interrupt_handle);
     if (err != ESP_OK){
         log_e("Timer Attach Interrupt failed, error num=%d", err);
     } 
     gptimer_enable(timer->timer_handle);
-}
+    if(timer->timer_started == true){
+        gptimer_start(timer->timer_handle);
+    }
 
+}
 
 void timerAttachInterruptArg(hw_timer_t * timer, void (*userFunc)(void*), void * arg){
     timerAttachInterruptFunctionalArg(timer, userFunc, arg);

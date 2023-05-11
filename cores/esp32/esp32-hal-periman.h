@@ -52,6 +52,9 @@ typedef enum {
 #if SOC_SDMMC_HOST_SUPPORTED
 	ESP32_BUS_TYPE_SDMMC, 		// IO is used as SDMMC pin
 #endif
+#if SOC_TOUCH_SENSOR_SUPPORTED
+	ESP32_BUS_TYPE_TOUCH, 		// IO is used as TOUCH pin
+#endif
 	ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
 
