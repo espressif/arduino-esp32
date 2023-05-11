@@ -268,7 +268,6 @@ void analogWrite(uint8_t pin, int value) {
   if (pin < SOC_GPIO_PIN_COUNT) {
     ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus == NULL && perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
-
         if(ledcAttach(pin, analog_frequency, analog_resolution) == 0){
             log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
             return;

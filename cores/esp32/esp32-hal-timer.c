@@ -15,7 +15,11 @@
 #include "esp32-hal-timer.h"
 #include "driver/gptimer.h"
 #include "soc/soc_caps.h"
+#if defined __has_include && __has_include ("clk_tree.h")
 #include "clk_tree.h"
+#else
+#include "esp_clk_tree.h"
+#endif
 
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrArg)(void*);
@@ -28,6 +32,7 @@ typedef struct {
 struct timer_struct_t {
     gptimer_handle_t timer_handle;
     interrupt_config_t interrupt_handle;
+    bool timer_started;
 };
 
 inline uint64_t timerRead(hw_timer_t * timer){
@@ -62,10 +67,12 @@ uint32_t timerGetFrequency(hw_timer_t * timer){
 
 void timerStart(hw_timer_t * timer){
     gptimer_start(timer->timer_handle);
+    timer->timer_started = true;
 }
 
 void timerStop(hw_timer_t * timer){
     gptimer_stop(timer->timer_handle);
+    timer->timer_started = false;
 }
 
 void timerRestart(hw_timer_t * timer){
@@ -81,7 +88,11 @@ hw_timer_t * timerBegin(uint32_t frequency){
     soc_periph_gptimer_clk_src_t gptimer_clks[] = SOC_GPTIMER_CLKS;
     for (size_t i = 0; i < sizeof(gptimer_clks) / sizeof(gptimer_clks[0]); i++){
         clk = gptimer_clks[i];
+#if defined __has_include && __has_include ("clk_tree.h")
         clk_tree_src_get_freq_hz(clk, CLK_TREE_SRC_FREQ_PRECISION_CACHED, &counter_src_hz);
+#else
+        esp_clk_tree_src_get_freq_hz(clk, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &counter_src_hz);
+#endif
         divider = counter_src_hz / frequency;
         if((divider >= 2) && (divider <= 65536)){
             break;
@@ -111,11 +122,15 @@ hw_timer_t * timerBegin(uint32_t frequency){
     } 
     gptimer_enable(timer->timer_handle);
     gptimer_start(timer->timer_handle);
+    timer->timer_started = true;
     return timer;
 }
 
 void timerEnd(hw_timer_t * timer){
     esp_err_t err = ESP_OK;
+    if(timer->timer_started == true){
+        gptimer_stop(timer->timer_handle);
+    }
     gptimer_disable(timer->timer_handle);
     err = gptimer_del_timer(timer->timer_handle);
     if (err != ESP_OK){
@@ -147,14 +162,20 @@ void timerAttachInterruptFunctionalArg(hw_timer_t * timer, void (*userFunc)(void
     timer->interrupt_handle.fn = (voidFuncPtr)userFunc;
     timer->interrupt_handle.arg = arg;
 
+    if(timer->timer_started == true){
+        gptimer_stop(timer->timer_handle);
+    }
     gptimer_disable(timer->timer_handle);
     err = gptimer_register_event_callbacks(timer->timer_handle, &cbs, &timer->interrupt_handle);
     if (err != ESP_OK){
         log_e("Timer Attach Interrupt failed, error num=%d", err);
     } 
     gptimer_enable(timer->timer_handle);
-}
+    if(timer->timer_started == true){
+        gptimer_start(timer->timer_handle);
+    }
 
+}
 
 void timerAttachInterruptArg(hw_timer_t * timer, void (*userFunc)(void*), void * arg){
     timerAttachInterruptFunctionalArg(timer, userFunc, arg);

@@ -258,7 +258,7 @@ uint32_t EspClass::getFreeSketchSpace () {
     return _partition->size;
 }
 
-uint8_t EspClass::getChipRevision(void)
+uint16_t EspClass::getChipRevision(void)
 {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
@@ -306,10 +306,17 @@ const char * EspClass::getChipModel(void)
     default:
       return "ESP32-S2 (Unknown)";
     }
-#elif CONFIG_IDF_TARGET_ESP32S3
-    return "ESP32-S3";
-#elif CONFIG_IDF_TARGET_ESP32C3
-    return "ESP32-C3";
+#else
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    switch(chip_info.model){
+        case CHIP_ESP32S3: return "ESP32-S3";
+        case CHIP_ESP32C3: return "ESP32-C3";
+        case CHIP_ESP32C2: return "ESP32-C2";
+        case CHIP_ESP32C6: return "ESP32-C6";
+        case CHIP_ESP32H2: return "ESP32-H2";
+        default: return "UNKNOWN";
+    }
 #endif
 }
 
@@ -323,6 +330,11 @@ uint8_t EspClass::getChipCores(void)
 const char * EspClass::getSdkVersion(void)
 {
     return esp_get_idf_version();
+}
+
+const char * EspClass::getCoreVersion(void)
+{
+    return ESP_ARDUINO_VERSION_STR;
 }
 
 uint32_t ESP_getFlashChipId(void)
