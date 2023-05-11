@@ -39,6 +39,21 @@ Installation
 
 .. note:: If you use Arduino with ESP-IDF often, you can place the arduino folder into global components folder.
 
+If you're targeting the ESP32-S2 or ESP32-S3 and you want to use USBHID classes such as ``USBHID``, ``USBHIDConsumerControl``, ``USBHIDGamepad``, ``USBHIDKeyboard``, ``USBHIDMouse``, ``USBHIDSystemControl``, or ``USBHIDVendor``:
+
+1. Clone these nested repos somewhere:
+
+.. code-block:: bash
+
+    git clone https://github.com/espressif/esp32-arduino-lib-builder.git esp32-arduino-lib-builder && \
+    git clone https://github.com/hathach/tinyusb.git esp32-arduino-lib-builder/components/arduino_tinyusb/tinyusb
+
+2. In the project folder, edit ``CMakeLists.txt`` and add the following before the ``project()`` line:
+
+.. code-block:: bash
+
+    set(EXTRA_COMPONENT_DIRS <path to esp32-arduino-lib-builder/components/arduino_tinyusb>)
+
 Configuration
 -------------
 

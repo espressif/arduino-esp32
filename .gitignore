@@ -8,6 +8,7 @@ tools/esptool.exe
 tools/mkspiffs
 tools/mklittlefs
 tools/mkfatfs.exe
+tools/openocd-esp32
 
 # Ignore editor backup files and macOS system metadata
 .DS_Store
@@ -19,8 +20,8 @@ tools/mkfatfs.exe
 /build
  
 # Ignore files built by Visual Studio/Visual Micro
-[Dd]ebug*/
-[Rr]elease*/
+[Dd]ebug/
+[Rr]elease/
 .vs/
 __vm/
 *.vcxproj*
@@ -31,6 +32,11 @@ boards.sloeber.txt
 # Ignore docs build (Sphinx)
 docs/build
 docs/source/_build
+__pycache__/
+_build/
 
 # Test log files
 *.log
+debug.cfg
+debug.svd
+debug_custom.json

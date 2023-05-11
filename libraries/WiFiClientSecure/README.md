@@ -45,7 +45,7 @@ https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protoc
 5. before initiating the first SSL connection, call
    my_client.setCACertBundle(rootca_crt_bundle_start);
 
-To use this feature in Android IDE:
+To use this feature in Arduino IDE:
 If the Arduino IDE added support for embedding files in the meantime, then follow the instructions above.
 If not, you have three choices:
 1. convert your project to PlatformIO
@@ -107,3 +107,27 @@ const char *aws_protos[] = {"mqtt", NULL};
 ...
 wiFiClient.setAlpnProtocols(aws_protos);
 ```
+
+Examples
+--------
+#### WiFiClientInsecure
+Demonstrates usage of insecure connection using `WiFiClientSecure::setInsecure()`
+#### WiFiClientPSK
+Wifi secure connection example for ESP32 using a pre-shared key (PSK)
+This is useful with MQTT servers instead of using a self-signed cert, tested with mosquitto.
+Running on TLS 1.2 using mbedTLS
+#### WiFiClientSecure
+Wifi secure connection example for ESP32
+Running on TLS 1.2 using mbedTLS
+#### WiFiClientSecureEnterprise
+This example demonstrates a secure connection to a WiFi network using WPA/WPA2 Enterprise (for example eduroam),
+and establishing a secure HTTPS connection with an external server (for example arduino.php5.sk) using the defined anonymous identity, user identity, and password.
+
+.. note::
+  This example is outdated and might not work. For more examples see [https://github.com/martinius96/ESP32-eduroam](https://github.com/martinius96/ESP32-eduroam)
+
+#### WiFiClientShowPeerCredentials
+Example of a establishing a secure connection and then showing the fingerprint of the certificate.
+This can be useful in an IoT setting to know for sure that you are connecting to the right server.
+Especially in situations where you cannot hardcode a trusted root certificate for long
+periods of time (as they tend to get replaced more often than the lifecycle of IoT hardware).

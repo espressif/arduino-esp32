@@ -63,7 +63,8 @@ static const uint8_t MISO  = 37;
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
-
+#define TX1 TX
+#define RX1 RX
 
 static const uint8_t A0 = 17;
 static const uint8_t A1 = 18;

@@ -53,7 +53,7 @@ class BluetoothSerial: public Stream
         void end(void);
         void setTimeout(int timeoutMS);
         void onData(BluetoothSerialDataCb cb);
-        esp_err_t register_callback(esp_spp_cb_t * callback);
+        esp_err_t register_callback(esp_spp_cb_t callback);
         
         void onConfirmRequest(ConfirmRequestCb cb);
         void onAuthComplete(AuthCompleteCb cb);
@@ -85,6 +85,9 @@ class BluetoothSerial: public Stream
         const int MAX_INQ_TIME = (ESP_BT_GAP_MAX_INQ_LEN * INQ_TIME);
         
         operator bool() const;
+        void getBtAddress(uint8_t *mac);
+        BTAddress getBtAddressObject();
+        String getBtAddressString();
     private:
         String local_name;
         int timeoutTicks=0;
