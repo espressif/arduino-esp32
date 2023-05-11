@@ -54,7 +54,7 @@ void setup() {
     // End of transmission shall be detected when line is idle for 2us
     rmtSetRxThreshold(RMT_RX_PIN, 2000);
     // Disable Glitch  filter
-    rmtSetFilter(RMT_RX_PIN, false, 0);  
+    rmtSetFilter(RMT_RX_PIN, 0);  
 
     Serial.println("real tick set to: 100ns");
     Serial.printf("\nPlease connect GPIO %d to GPIO %d, now.\n", RMT_TX_PIN, RMT_RX_PIN);
