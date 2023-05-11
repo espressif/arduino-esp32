@@ -199,10 +199,10 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
 /**
    Function used to filter input noise in the RX channel.
    In receiving mode, channel will ignore any input pulse which width is smaller than <filter_pulse_ns>
-   <filter_en> is used to enable/disable the filter. <true> enables it, <false> disables.
+   If <filter_level> is Zero, it will to disable the filter.
    The function returns <true> if it is correctly executed, <false> otherwise.
 */
-bool rmtSetFilter(int pin, bool filter_en, uint8_t filter_level);
+bool rmtSetFilter(int pin, uint8_t filter_level);
 
 /**
    Deinitializes the driver and releases all allocated memory

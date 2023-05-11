@@ -207,7 +207,7 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
   return retCode;
 }
 
-bool rmtSetFilter(int pin, bool filter_en, uint8_t filter_pulse_ns)
+bool rmtSetFilter(int pin, uint8_t filter_pulse_ns)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -219,7 +219,7 @@ bool rmtSetFilter(int pin, bool filter_en, uint8_t filter_pulse_ns)
   }
 
   RMT_MUTEX_LOCK(bus);
-  bus->signal_range_min_ns = filter_en ? filter_pulse_ns : 0; // set as zero to disable it
+  bus->signal_range_min_ns = filter_pulse_ns; // set zero to disable it
   RMT_MUTEX_UNLOCK(bus);
   return true;
 }
@@ -470,7 +470,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     goto Err;
   }
 
-  // Stating with Receive|Transmit DONE as true for allowing a new request from user
+  // Starting with Receive|Transmit DONE bits set, for allowing a new request from user
   xEventGroupSetBits(bus->rmt_events, RMT_FLAG_RX_DONE | RMT_FLAG_TX_DONE);
 
   // channel particular configuration
