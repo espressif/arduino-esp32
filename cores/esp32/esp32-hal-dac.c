@@ -32,6 +32,9 @@ bool __dacWrite(uint8_t pin, uint8_t value)
     dac_oneshot_handle_t bus = (dac_oneshot_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT);
     if(bus == NULL){
         perimanSetBusDeinit(ESP32_BUS_TYPE_DAC_ONESHOT, dacDetachBus);
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+             return false;
+        }
         dac_channel_t channel = (pin == DAC_CHAN0_GPIO_NUM)?DAC_CHAN_0:DAC_CHAN_1;
         dac_oneshot_config_t config = {
             .chan_id = channel
