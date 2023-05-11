@@ -12265,6 +12265,198 @@ m5stack-core2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+m5stack-cores3.name=M5Stack-CoreS3
+m5stack-cores3.vid.0=0x303a
+m5stack-cores3.pid.0=0x1001
+
+m5stack-cores3.bootloader.tool=esptool_py
+m5stack-cores3.bootloader.tool.default=esptool_py
+
+m5stack-cores3.upload.tool=esptool_py
+m5stack-cores3.upload.tool.default=esptool_py
+m5stack-cores3.upload.tool.network=esp_ota
+
+m5stack-cores3.upload.maximum_size=1310720
+m5stack-cores3.upload.maximum_data_size=327680
+m5stack-cores3.upload.flags=
+m5stack-cores3.upload.extra_flags=
+m5stack-cores3.upload.use_1200bps_touch=false
+m5stack-cores3.upload.wait_for_upload_port=false
+
+m5stack-cores3.serial.disableDTR=false
+m5stack-cores3.serial.disableRTS=false
+
+m5stack-cores3.build.tarch=xtensa
+m5stack-cores3.build.bootloader_addr=0x0
+m5stack-cores3.build.target=esp32s3
+m5stack-cores3.build.mcu=esp32s3
+m5stack-cores3.build.core=esp32
+m5stack-cores3.build.variant=m5stack_cores3
+m5stack-cores3.build.board=M5STACK_CORES3
+
+m5stack-cores3.build.usb_mode=1
+m5stack-cores3.build.cdc_on_boot=0
+m5stack-cores3.build.msc_on_boot=0
+m5stack-cores3.build.dfu_on_boot=0
+m5stack-cores3.build.f_cpu=240000000L
+m5stack-cores3.build.flash_size=4MB
+m5stack-cores3.build.flash_freq=80m
+m5stack-cores3.build.flash_mode=dio
+m5stack-cores3.build.boot=qio
+m5stack-cores3.build.boot_freq=80m
+m5stack-cores3.build.partitions=default
+m5stack-cores3.build.defines=
+m5stack-cores3.build.loop_core=
+m5stack-cores3.build.event_core=
+m5stack-cores3.build.psram_type=qspi
+m5stack-cores3.build.memory_type={build.boot}_{build.psram_type}
+
+m5stack-cores3.menu.JTAGAdapter.default=Disabled
+m5stack-cores3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+m5stack-cores3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+m5stack-cores3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+m5stack-cores3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+m5stack-cores3.menu.JTAGAdapter.external=FTDI Adapter
+m5stack-cores3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+m5stack-cores3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+m5stack-cores3.menu.JTAGAdapter.bridge=ESP USB Bridge
+m5stack-cores3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+m5stack-cores3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+m5stack-cores3.menu.PSRAM.disabled=Disabled
+m5stack-cores3.menu.PSRAM.disabled.build.defines=
+m5stack-cores3.menu.PSRAM.disabled.build.psram_type=qspi
+m5stack-cores3.menu.PSRAM.enabled=QSPI PSRAM
+m5stack-cores3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack-cores3.menu.PSRAM.enabled.build.psram_type=qspi
+m5stack-cores3.menu.PSRAM.opi=OPI PSRAM
+m5stack-cores3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack-cores3.menu.PSRAM.opi.build.psram_type=opi
+
+m5stack-cores3.menu.FlashMode.qio=QIO 80MHz
+m5stack-cores3.menu.FlashMode.qio.build.flash_mode=dio
+m5stack-cores3.menu.FlashMode.qio.build.boot=qio
+m5stack-cores3.menu.FlashMode.qio.build.boot_freq=80m
+m5stack-cores3.menu.FlashMode.qio.build.flash_freq=80m
+m5stack-cores3.menu.FlashMode.qio120=QIO 120MHz
+m5stack-cores3.menu.FlashMode.qio120.build.flash_mode=dio
+m5stack-cores3.menu.FlashMode.qio120.build.boot=qio
+m5stack-cores3.menu.FlashMode.qio120.build.boot_freq=120m
+m5stack-cores3.menu.FlashMode.qio120.build.flash_freq=80m
+m5stack-cores3.menu.FlashMode.dio=DIO 80MHz
+m5stack-cores3.menu.FlashMode.dio.build.flash_mode=dio
+m5stack-cores3.menu.FlashMode.dio.build.boot=dio
+m5stack-cores3.menu.FlashMode.dio.build.boot_freq=80m
+m5stack-cores3.menu.FlashMode.dio.build.flash_freq=80m
+m5stack-cores3.menu.FlashMode.opi=OPI 80MHz
+m5stack-cores3.menu.FlashMode.opi.build.flash_mode=dout
+m5stack-cores3.menu.FlashMode.opi.build.boot=opi
+m5stack-cores3.menu.FlashMode.opi.build.boot_freq=80m
+m5stack-cores3.menu.FlashMode.opi.build.flash_freq=80m
+
+m5stack-cores3.menu.FlashSize.4M=4MB (32Mb)
+m5stack-cores3.menu.FlashSize.4M.build.flash_size=4MB
+m5stack-cores3.menu.FlashSize.8M=8MB (64Mb)
+m5stack-cores3.menu.FlashSize.8M.build.flash_size=8MB
+m5stack-cores3.menu.FlashSize.8M.build.partitions=default_8MB
+m5stack-cores3.menu.FlashSize.16M=16MB (128Mb)
+m5stack-cores3.menu.FlashSize.16M.build.flash_size=16MB
+#m5stack-cores3.menu.FlashSize.32M=32MB (256Mb)
+#m5stack-cores3.menu.FlashSize.32M.build.flash_size=32MB
+
+m5stack-cores3.menu.LoopCore.1=Core 1
+m5stack-cores3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+m5stack-cores3.menu.LoopCore.0=Core 0
+m5stack-cores3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+m5stack-cores3.menu.EventsCore.1=Core 1
+m5stack-cores3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+m5stack-cores3.menu.EventsCore.0=Core 0
+m5stack-cores3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+m5stack-cores3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+m5stack-cores3.menu.USBMode.hwcdc.build.usb_mode=1
+m5stack-cores3.menu.USBMode.default=USB-OTG (TinyUSB)
+m5stack-cores3.menu.USBMode.default.build.usb_mode=0
+
+m5stack-cores3.menu.CDCOnBoot.default=Disabled
+m5stack-cores3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+m5stack-cores3.menu.CDCOnBoot.cdc=Enabled
+m5stack-cores3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+m5stack-cores3.menu.MSCOnBoot.default=Disabled
+m5stack-cores3.menu.MSCOnBoot.default.build.msc_on_boot=0
+m5stack-cores3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+m5stack-cores3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+m5stack-cores3.menu.DFUOnBoot.default=Disabled
+m5stack-cores3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+m5stack-cores3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+m5stack-cores3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+m5stack-cores3.menu.UploadMode.default=UART0 / Hardware CDC
+m5stack-cores3.menu.UploadMode.default.upload.use_1200bps_touch=false
+m5stack-cores3.menu.UploadMode.default.upload.wait_for_upload_port=false
+m5stack-cores3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+m5stack-cores3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+m5stack-cores3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+m5stack-cores3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default.build.partitions=default
+m5stack-cores3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+m5stack-cores3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+m5stack-cores3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+m5stack-cores3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+m5stack-cores3.menu.CPUFreq.240=240MHz (WiFi)
+m5stack-cores3.menu.CPUFreq.240.build.f_cpu=240000000L
+m5stack-cores3.menu.CPUFreq.160=160MHz (WiFi)
+m5stack-cores3.menu.CPUFreq.160.build.f_cpu=160000000L
+m5stack-cores3.menu.CPUFreq.80=80MHz (WiFi)
+m5stack-cores3.menu.CPUFreq.80.build.f_cpu=80000000L
+m5stack-cores3.menu.CPUFreq.40=40MHz
+m5stack-cores3.menu.CPUFreq.40.build.f_cpu=40000000L
+m5stack-cores3.menu.CPUFreq.20=20MHz
+m5stack-cores3.menu.CPUFreq.20.build.f_cpu=20000000L
+m5stack-cores3.menu.CPUFreq.10=10MHz
+m5stack-cores3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+m5stack-cores3.menu.UploadSpeed.921600=921600
+m5stack-cores3.menu.UploadSpeed.921600.upload.speed=921600
+m5stack-cores3.menu.UploadSpeed.115200=115200
+m5stack-cores3.menu.UploadSpeed.115200.upload.speed=115200
+m5stack-cores3.menu.UploadSpeed.256000.windows=256000
+m5stack-cores3.menu.UploadSpeed.256000.upload.speed=256000
+m5stack-cores3.menu.UploadSpeed.230400.windows.upload.speed=256000
+m5stack-cores3.menu.UploadSpeed.230400=230400
+m5stack-cores3.menu.UploadSpeed.230400.upload.speed=230400
+m5stack-cores3.menu.UploadSpeed.460800.linux=460800
+m5stack-cores3.menu.UploadSpeed.460800.macosx=460800
+m5stack-cores3.menu.UploadSpeed.460800.upload.speed=460800
+m5stack-cores3.menu.UploadSpeed.512000.windows=512000
+m5stack-cores3.menu.UploadSpeed.512000.upload.speed=512000
+
+m5stack-cores3.menu.DebugLevel.none=None
+m5stack-cores3.menu.DebugLevel.none.build.code_debug=0
+m5stack-cores3.menu.DebugLevel.error=Error
+m5stack-cores3.menu.DebugLevel.error.build.code_debug=1
+m5stack-cores3.menu.DebugLevel.warn=Warn
+m5stack-cores3.menu.DebugLevel.warn.build.code_debug=2
+m5stack-cores3.menu.DebugLevel.info=Info
+m5stack-cores3.menu.DebugLevel.info.build.code_debug=3
+m5stack-cores3.menu.DebugLevel.debug=Debug
+m5stack-cores3.menu.DebugLevel.debug.build.code_debug=4
+m5stack-cores3.menu.DebugLevel.verbose=Verbose
+m5stack-cores3.menu.DebugLevel.verbose.build.code_debug=5
+
+m5stack-cores3.menu.EraseFlash.none=Disabled
+m5stack-cores3.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-cores3.menu.EraseFlash.all=Enabled
+m5stack-cores3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 m5stack-timer-cam.name=M5Stack-Timer-CAM
 
 m5stack-timer-cam.bootloader.tool=esptool_py
