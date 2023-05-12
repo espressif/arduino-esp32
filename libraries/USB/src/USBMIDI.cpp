@@ -67,7 +67,7 @@ void USBMIDI::noteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
 // Program Change
 void USBMIDI::programChange(uint8_t program, uint8_t channel) {
     midiEventPacket_t event = {MIDI_CIN_PROGRAM_CHANGE, STATUS(MIDI_CIN_PROGRAM_CHANGE, channel),
-                               _(program)};
+                               _(program), 0x0};
     writePacket(&event);
 }
 
@@ -88,7 +88,7 @@ void USBMIDI::polyPressure(uint8_t note, uint8_t pressure, uint8_t channel) {
 // Channel Pressure (Aftertouch)
 void USBMIDI::channelPressure(uint8_t pressure, uint8_t channel) {
     midiEventPacket_t event = {MIDI_CIN_CHANNEL_PRESSURE, STATUS(MIDI_CIN_CHANNEL_PRESSURE, channel),
-                               _(pressure)};
+                               _(pressure), 0x0};
     writePacket(&event);
 }
 
