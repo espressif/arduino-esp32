@@ -257,15 +257,6 @@ CONFIG_ARDUHAL_PARTITION_SCHEME="default"
 # end of Arduino TinyUSB
 
 #
-# ESP Speech Recognition
-#
-CONFIG_USE_AFE=y
-CONFIG_AFE_INTERFACE_V1=y
-# CONFIG_USE_WAKENET is not set
-# CONFIG_USE_MULTINET is not set
-# end of ESP Speech Recognition
-
-#
 # Compiler options
 #
 # CONFIG_COMPILER_OPTIMIZATION_DEFAULT is not set

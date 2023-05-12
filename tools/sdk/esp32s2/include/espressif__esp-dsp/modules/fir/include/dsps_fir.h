@@ -40,6 +40,7 @@ typedef struct fir_f32_s {
     int     pos;        /*!< Position in delay line.*/
     int     decim;      /*!< Decimation factor.*/
     int     d_pos;      /*!< Actual decimation counter.*/
+    int16_t use_delay;  /*!< The delay line was allocated by init function.*/
 } fir_f32_t;
 
 /**
@@ -70,14 +71,14 @@ typedef struct fir_s16_s{
  *
  * @param fir: pointer to fir filter structure, that must be preallocated
  * @param coeffs: array with FIR filter coefficients. Must be length N
- * @param delay: array for FIR filter delay line. Must be length N
- * @param N: FIR filter length. Length of coeffs and delay arrays.
+ * @param delay: array for FIR filter delay line. Must have a length = coeffs_len + 4
+ * @param coeffs_len: FIR filter length. Length of coeffs array. For esp32s3 length should be divided by 4 and aligned to 16.
  *
  * @return
  *      - ESP_OK on success
  *      - One of the error codes from DSP library
  */
-esp_err_t dsps_fir_init_f32(fir_f32_t *fir, float *coeffs, float *delay, int N);
+esp_err_t dsps_fir_init_f32(fir_f32_t *fir, float *coeffs, float *delay, int coeffs_len);
 
 /**
  * @brief   initialize structure for 32 bit Decimation FIR filter
@@ -199,6 +200,21 @@ esp_err_t dsps_fird_s16_aexx_free(fir_s16_t *fir);
 /**@}*/
 
 
+/**@}*/
+/**
+ * @brief   support arrays freeing function
+ *
+ * Function frees the delay line arrays, if it was allocated by the init functions. 
+ * 
+ * @param fir: pointer to fir filter structure, that must be initialized before
+ *
+ * @return
+ *      - ESP_OK on success
+ */
+esp_err_t dsps_fir_f32_free(fir_f32_t *fir);
+/**@}*/
+
+
 /**@{*/
 /**
  * @brief   Array reversal
@@ -224,6 +240,8 @@ esp_err_t dsps_16_array_rev(int16_t *arr, int16_t len);
 
     #if (dsps_fir_f32_ae32_enabled == 1)
     #define dsps_fir_f32 dsps_fir_f32_ae32
+    #elif (dsps_fir_f32_aes3_enabled == 1)
+    #define dsps_fir_f32 dsps_fir_f32_aes3
     #else
     #define dsps_fir_f32 dsps_fir_f32_ansi
     #endif
