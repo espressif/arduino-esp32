@@ -365,9 +365,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
                 }
             break;
 #endif
-            default:
-                log_e("Bad UART Number");
-                return;
         }
     }
 
