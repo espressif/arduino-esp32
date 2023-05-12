@@ -40,11 +40,15 @@ USBMIDI::USBMIDI() {
 void USBMIDI::begin() {}
 void USBMIDI::end() {}
 
-#define STATUS(CIN, CHANNEL) (((CIN & 0x7F) << 4) | (constrain(CHANNEL - 1, 0, 15) & 0x7F))
+// uint compatible version of constrain
+#define uconstrain(amt, low, high) ((amt) <= (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
+
+#define STATUS(CIN, CHANNEL)                                                                           \
+    static_cast<uint8_t>(((CIN & 0x7F) << 4) | (uconstrain(CHANNEL - 1, 0, 15) & 0x7F))
 
 // Note: All the user-level API calls do extensive input constraining to prevent easy to make mistakes.
 // (You can thank me later.)
-#define _(x) constrain(x, 0, 127)
+#define _(x) static_cast<uint8_t>(uconstrain(x, 0, 127))
 
 // Note On
 void USBMIDI::noteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
@@ -96,7 +100,7 @@ void USBMIDI::pitchBend(int16_t value, uint8_t channel) {
 
 // Pitch Bend Change [0,8192,16383]
 void USBMIDI::pitchBend(uint16_t value, uint8_t channel) {
-    uint16_t pitchBendValue = constrain(value, 0, 16383);
+    uint16_t pitchBendValue = static_cast<uint16_t>(uconstrain(value, 0, 16383));
     // Split the 14-bit integer into two 7-bit values
     uint8_t lsb = pitchBendValue & 0x7F;        // Lower 7 bits
     uint8_t msb = (pitchBendValue >> 7) & 0x7F; // Upper 7 bits
