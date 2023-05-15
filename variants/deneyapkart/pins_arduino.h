@@ -17,7 +17,6 @@ static const uint8_t LED_BUILTIN = 4;
 #define LEDB        LED_BUILTIN
 #define LEDR 3
 #define LEDG 1
-#define LEDB 4
 
 static const uint8_t GPKEY = 0;
 #define KEY_BUILTIN GPKEY

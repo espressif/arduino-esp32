@@ -54,7 +54,10 @@ class MDNSResponder {
 public:
   MDNSResponder();
   ~MDNSResponder();
-  bool begin(const char* hostName);
+  bool begin(const String& hostName);
+  bool begin(const char* hostName){
+    return begin(String(hostName));
+  }
   void end();
 
   void setInstanceName(String name);
