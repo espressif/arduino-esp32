@@ -3,8 +3,8 @@
 export PLATFORMIO_ESP32_PATH="$HOME/.platformio/packages/framework-arduinoespressif32"
 PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git"
 
-TOOLCHAIN_VERSION="8.4.0+2021r2-patch5"
-ESPTOOLPY_VERSION="~1.40400.0"
+TOOLCHAIN_VERSION="12.2.0+20230208"
+ESPTOOLPY_VERSION="~1.40501.0"
 ESPRESSIF_ORGANIZATION_NAME="espressif"
 
 echo "Installing Python Wheel ..."
@@ -30,9 +30,15 @@ replace_script+="data['packages']['toolchain-riscv32-esp']['owner']='$ESPRESSIF_
 # Update versions to use the upstream
 replace_script+="data['packages']['toolchain-xtensa-esp32']['version']='$TOOLCHAIN_VERSION';"
 replace_script+="data['packages']['toolchain-xtensa-esp32s2']['version']='$TOOLCHAIN_VERSION';"
+replace_script+="data['packages']['toolchain-xtensa-esp32s3']['version']='$TOOLCHAIN_VERSION';"
 replace_script+="data['packages']['toolchain-riscv32-esp']['version']='$TOOLCHAIN_VERSION';"
-# Add ESP32-S3 Toolchain
-replace_script+="data['packages'].update({'toolchain-xtensa-esp32s3':{'type':'toolchain','optional':True,'owner':'$ESPRESSIF_ORGANIZATION_NAME','version':'$TOOLCHAIN_VERSION'}});"
+# Add new "framework-arduinoespressif32-libs" package
+# Read "package_esp32_index.template.json" to extract a url to a zip package for "esp32-arduino-libs"
+replace_script+="fpackage=open(os.path.join('package', 'package_esp32_index.template.json'), 'r+');"
+replace_script+="package_data=json.load(fpackage);"
+replace_script+="fpackage.close();"
+replace_script+="libs_package_archive_url=next(next(system['url'] for system in tool['systems'] if system['host'] == 'x86_64-pc-linux-gnu') for tool in package_data['packages'][0]['tools'] if tool['name'] == 'esp32-arduino-libs');"
+replace_script+="data['packages'].update({'framework-arduinoespressif32-libs':{'type':'framework','optional':False,'version':libs_package_archive_url}});"
 replace_script+="data['packages']['toolchain-xtensa-esp32'].update({'optional':False});"
 # esptool.py may require an upstream version (for now platformio is the owner)
 replace_script+="data['packages']['tool-esptoolpy']['version']='$ESPTOOLPY_VERSION';"
