@@ -26,6 +26,7 @@
 #include "hal/i2c_hal.h"
 #include "hal/i2c_ll.h"
 #include "driver/i2c.h"
+#include "esp32-hal-periman.h"
 
 typedef volatile struct {
     bool initialized;
@@ -36,6 +37,21 @@ typedef volatile struct {
 } i2c_bus_t;
 
 static i2c_bus_t bus[SOC_I2C_NUM];
+
+bool i2cDetachBus(void * bus_i2c_num){
+    uint8_t i2c_num = (int)bus_i2c_num - 1;
+    if(!bus[i2c_num].initialized){
+        log_d("i2cDetachBus I2C%d not initialized", i2c_num);
+        return true;
+    }
+    log_d("i2cDetachBus I2C%d calling i2cDeinit()", i2c_num);
+    esp_err_t err = i2cDeinit(i2c_num);
+    if(err != ESP_OK){
+        log_e("i2cDeinit failed with error: %d", err);
+        return false;
+    }
+    return true;
+}
 
 bool i2cIsInit(uint8_t i2c_num){
     if(i2c_num >= SOC_I2C_NUM){
@@ -72,6 +88,12 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
     } else if(frequency > 1000000UL){
         frequency = 1000000UL;
     }
+
+    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL)){
+        return false;
+    }
+    perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_MASTER, i2cDetachBus);
+
     log_i("Initialising I2C Master: sda=%d scl=%d freq=%d", sda, scl, frequency);
 
     i2c_config_t conf = { };
@@ -95,6 +117,10 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
             bus[i2c_num].frequency = frequency;
             //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2
             i2c_set_timeout((i2c_port_t)i2c_num, I2C_LL_MAX_TIMEOUT);
+            if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_MASTER, (void *)(i2c_num+1)) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_MASTER, (void *)(i2c_num+1))){
+                i2cDetachBus((void *)(i2c_num+1));
+                return false;
+            }
         }
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -122,6 +148,9 @@ esp_err_t i2cDeinit(uint8_t i2c_num){
         err = i2c_driver_delete((i2c_port_t)i2c_num);
         if(err == ESP_OK){
             bus[i2c_num].initialized = false;
+            /*
+            Add perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL); for both pins -> add them to bus structure
+            */
         }
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
