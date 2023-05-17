@@ -33,6 +33,8 @@ typedef volatile struct {
     uint32_t frequency;
 #if !CONFIG_DISABLE_HAL_LOCKS
     SemaphoreHandle_t lock;
+    int8_t scl;
+    int8_t sda;
 #endif
 } i2c_bus_t;
 
@@ -115,6 +117,8 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
         } else {
             bus[i2c_num].initialized = true;
             bus[i2c_num].frequency = frequency;
+            bus[i2c_num].scl = scl;
+            bus[i2c_num].sda = sda;
             //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2
             i2c_set_timeout((i2c_port_t)i2c_num, I2C_LL_MAX_TIMEOUT);
             if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_MASTER, (void *)(i2c_num+1)) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_MASTER, (void *)(i2c_num+1))){
@@ -148,6 +152,10 @@ esp_err_t i2cDeinit(uint8_t i2c_num){
         err = i2c_driver_delete((i2c_port_t)i2c_num);
         if(err == ESP_OK){
             bus[i2c_num].initialized = false;
+            perimanSetPinBus(bus[i2c_num].scl, ESP32_BUS_TYPE_INIT, NULL);
+            perimanSetPinBus(bus[i2c_num].sda, ESP32_BUS_TYPE_INIT, NULL);
+            bus[i2c_num].scl = -1;
+            bus[i2c_num].sda = -1;
         }
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
