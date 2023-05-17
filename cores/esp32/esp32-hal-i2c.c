@@ -38,7 +38,7 @@ typedef volatile struct {
 
 static i2c_bus_t bus[SOC_I2C_NUM];
 
-bool i2cDetachBus(void * bus_i2c_num){
+static bool i2cDetachBus(void * bus_i2c_num){
     uint8_t i2c_num = (int)bus_i2c_num - 1;
     if(!bus[i2c_num].initialized){
         log_d("i2cDetachBus I2C%d not initialized", i2c_num);
@@ -89,10 +89,10 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
         frequency = 1000000UL;
     }
 
+    perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_MASTER, i2cDetachBus);
     if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
-    perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_MASTER, i2cDetachBus);
 
     log_i("Initialising I2C Master: sda=%d scl=%d freq=%d", sda, scl, frequency);
 
@@ -148,9 +148,6 @@ esp_err_t i2cDeinit(uint8_t i2c_num){
         err = i2c_driver_delete((i2c_port_t)i2c_num);
         if(err == ESP_OK){
             bus[i2c_num].initialized = false;
-            /*
-            Add perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL); for both pins -> add them to bus structure
-            */
         }
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
