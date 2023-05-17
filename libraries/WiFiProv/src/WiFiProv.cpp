@@ -166,7 +166,6 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
 
 // Copied from IDF example
 void  WiFiProvClass :: printQR(const char *name, const char *pop, const char *transport){
-#if __has_include("qrcode.h")
     if (!name || !transport) {
         log_w("Cannot generate QR code payload. Data missing.");
         return;
@@ -181,12 +180,13 @@ void  WiFiProvClass :: printQR(const char *name, const char *pop, const char *tr
                     ",\"transport\":\"%s\"}",
                     "v1", name, transport);
     }
+#if __has_include("qrcode.h")
     log_i("Scan this QR code from the provisioning application for Provisioning.");
     esp_qrcode_config_t cfg = ESP_QRCODE_CONFIG_DEFAULT();
     esp_qrcode_generate(&cfg, payload);
-    log_i("If QR code is not visible, copy paste the below URL in a browser.\n%s?data=%s", "https://espressif.github.io/esp-jumpstart/qrcode.html", payload);
 #else
-    log_e("This function is not implemented. If you are using Arduino as IDF component, install ESP Rainmaker\nhttps://github.com/espressif/esp-rainmaker");
+    log_i("If QR code is not visible, copy paste the below URL in a browser.\n%s?data=%s", "https://espressif.github.io/esp-jumpstart/qrcode.html", payload);
+    log_i("If you are using Arduino as IDF component, install ESP Rainmaker:\nhttps://github.com/espressif/esp-rainmaker");
 #endif
 }
 
