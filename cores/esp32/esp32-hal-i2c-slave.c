@@ -865,10 +865,8 @@ static bool i2cSlaveDetachBus(void * bus_i2c_num){
     uint8_t num = (int)bus_i2c_num - 1;
     i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
     if (i2c->scl == -1 && i2c->sda == -1) {
-        log_d("i2cSlaveDetachBus: I2C%d not initialized", num);
         return true;
     }
-    log_d("i2cSlaveDetachBus: I2C%d calling i2cSlaveDeinit()", num);
     esp_err_t err = i2cSlaveDeinit(num);
     if(err != ESP_OK){
         log_e("i2cSlaveDeinit failed with error: %d", err);

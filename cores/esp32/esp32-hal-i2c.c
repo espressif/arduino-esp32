@@ -43,10 +43,8 @@ static i2c_bus_t bus[SOC_I2C_NUM];
 static bool i2cDetachBus(void * bus_i2c_num){
     uint8_t i2c_num = (int)bus_i2c_num - 1;
     if(!bus[i2c_num].initialized){
-        log_d("i2cDetachBus I2C%d not initialized", i2c_num);
         return true;
     }
-    log_d("i2cDetachBus I2C%d calling i2cDeinit()", i2c_num);
     esp_err_t err = i2cDeinit(i2c_num);
     if(err != ESP_OK){
         log_e("i2cDeinit failed with error: %d", err);
