@@ -25,6 +25,7 @@ static const uint8_t MOSI  = 15;
 static const uint8_t MISO  = 16;
 static const uint8_t SCK   = 17;
 static const uint8_t SS    = 18;
+
 #define GDI_DISPLAY_FPC_INTERFACE
 #ifdef  GDI_DISPLAY_FPC_INTERFACE
 
