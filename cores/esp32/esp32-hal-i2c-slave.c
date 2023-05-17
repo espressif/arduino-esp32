@@ -377,9 +377,11 @@ esp_err_t i2cSlaveDeinit(uint8_t num){
     }
 #endif
     I2C_SLAVE_MUTEX_LOCK();
-    perimanSetPinBus(i2c->scl, ESP32_BUS_TYPE_INIT, NULL);
-    perimanSetPinBus(i2c->sda, ESP32_BUS_TYPE_INIT, NULL);
+    int scl = i2c->scl;
+    int sda = i2c->sda;
     i2c_slave_free_resources(i2c);
+    perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL);
     I2C_SLAVE_MUTEX_UNLOCK();
     return ESP_OK;
 }
