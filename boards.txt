@@ -10638,6 +10638,175 @@ adafruit_itsybitsy_esp32.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_itsybitsy_esp32.menu.EraseFlash.all=Enabled
 adafruit_itsybitsy_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
+##############################################################
+# Adafruit MatrixPortal ESP32-S3
+
+adafruit_matrixportal_esp32s3.name=Adafruit MatrixPortal ESP32-S3
+adafruit_matrixportal_esp32s3.vid.0=0x239A
+adafruit_matrixportal_esp32s3.pid.0=0x8125
+adafruit_matrixportal_esp32s3.vid.1=0x239A
+adafruit_matrixportal_esp32s3.pid.1=0x0125
+adafruit_matrixportal_esp32s3.vid.2=0x239A
+adafruit_matrixportal_esp32s3.pid.2=0x8126
+
+adafruit_matrixportal_esp32s3.bootloader.tool=esptool_py
+adafruit_matrixportal_esp32s3.bootloader.tool.default=esptool_py
+
+adafruit_matrixportal_esp32s3.upload.tool=esptool_py
+adafruit_matrixportal_esp32s3.upload.tool.default=esptool_py
+adafruit_matrixportal_esp32s3.upload.tool.network=esp_ota
+
+adafruit_matrixportal_esp32s3.upload.maximum_size=1310720
+adafruit_matrixportal_esp32s3.upload.maximum_data_size=327680
+adafruit_matrixportal_esp32s3.upload.flags=
+adafruit_matrixportal_esp32s3.upload.extra_flags=
+adafruit_matrixportal_esp32s3.upload.use_1200bps_touch=true
+adafruit_matrixportal_esp32s3.upload.wait_for_upload_port=true
+
+adafruit_matrixportal_esp32s3.serial.disableDTR=false
+adafruit_matrixportal_esp32s3.serial.disableRTS=false
+
+adafruit_matrixportal_esp32s3.build.tarch=xtensa
+adafruit_matrixportal_esp32s3.build.bootloader_addr=0x0
+adafruit_matrixportal_esp32s3.build.target=esp32s3
+adafruit_matrixportal_esp32s3.build.mcu=esp32s3
+adafruit_matrixportal_esp32s3.build.core=esp32
+adafruit_matrixportal_esp32s3.build.variant=adafruit_matrixportal_esp32s3
+adafruit_matrixportal_esp32s3.build.board=ADAFRUIT_MATRIXPORTAL_ESP32S3
+
+adafruit_matrixportal_esp32s3.build.usb_mode=0
+adafruit_matrixportal_esp32s3.build.cdc_on_boot=1
+adafruit_matrixportal_esp32s3.build.msc_on_boot=0
+adafruit_matrixportal_esp32s3.build.dfu_on_boot=0
+adafruit_matrixportal_esp32s3.build.f_cpu=240000000L
+adafruit_matrixportal_esp32s3.build.flash_size=8MB
+adafruit_matrixportal_esp32s3.build.flash_freq=80m
+adafruit_matrixportal_esp32s3.build.flash_mode=dio
+adafruit_matrixportal_esp32s3.build.boot=qio
+adafruit_matrixportal_esp32s3.build.partitions=default
+adafruit_matrixportal_esp32s3.build.defines=
+adafruit_matrixportal_esp32s3.build.loop_core=
+adafruit_matrixportal_esp32s3.build.event_core=
+adafruit_matrixportal_esp32s3.build.flash_type=qio
+adafruit_matrixportal_esp32s3.build.psram_type=qspi
+adafruit_matrixportal_esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
+
+adafruit_matrixportal_esp32s3.menu.LoopCore.1=Core 1
+adafruit_matrixportal_esp32s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+adafruit_matrixportal_esp32s3.menu.LoopCore.0=Core 0
+adafruit_matrixportal_esp32s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+adafruit_matrixportal_esp32s3.menu.EventsCore.1=Core 1
+adafruit_matrixportal_esp32s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+adafruit_matrixportal_esp32s3.menu.EventsCore.0=Core 0
+adafruit_matrixportal_esp32s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+adafruit_matrixportal_esp32s3.menu.USBMode.default=USB-OTG (TinyUSB)
+adafruit_matrixportal_esp32s3.menu.USBMode.default.build.usb_mode=0
+adafruit_matrixportal_esp32s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+adafruit_matrixportal_esp32s3.menu.USBMode.hwcdc.build.usb_mode=1
+
+adafruit_matrixportal_esp32s3.menu.CDCOnBoot.cdc=Enabled
+adafruit_matrixportal_esp32s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+adafruit_matrixportal_esp32s3.menu.CDCOnBoot.default=Disabled
+adafruit_matrixportal_esp32s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+adafruit_matrixportal_esp32s3.menu.MSCOnBoot.default=Disabled
+adafruit_matrixportal_esp32s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_matrixportal_esp32s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+adafruit_matrixportal_esp32s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+adafruit_matrixportal_esp32s3.menu.DFUOnBoot.default=Disabled
+adafruit_matrixportal_esp32s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_matrixportal_esp32s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+adafruit_matrixportal_esp32s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+adafruit_matrixportal_esp32s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+adafruit_matrixportal_esp32s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_matrixportal_esp32s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_matrixportal_esp32s3.menu.UploadMode.default=UART0 / Hardware CDC
+adafruit_matrixportal_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_matrixportal_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB-tinyuf2
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+adafruit_matrixportal_esp32s3.menu.CPUFreq.240=240MHz (WiFi)
+adafruit_matrixportal_esp32s3.menu.CPUFreq.240.build.f_cpu=240000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.160=160MHz (WiFi)
+adafruit_matrixportal_esp32s3.menu.CPUFreq.160.build.f_cpu=160000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.80=80MHz (WiFi)
+adafruit_matrixportal_esp32s3.menu.CPUFreq.80.build.f_cpu=80000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.40=40MHz
+adafruit_matrixportal_esp32s3.menu.CPUFreq.40.build.f_cpu=40000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.20=20MHz
+adafruit_matrixportal_esp32s3.menu.CPUFreq.20.build.f_cpu=20000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.10=10MHz
+adafruit_matrixportal_esp32s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio=QIO 80MHz
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio.build.flash_mode=dio
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio.build.boot=qio
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio.build.boot_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio.build.flash_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120=QIO 120MHz
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120.build.flash_mode=dio
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120.build.boot=qio
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120.build.boot_freq=120m
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120.build.flash_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio=DIO 80MHz
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio.build.flash_mode=dio
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio.build.boot=dio
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio.build.boot_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio.build.flash_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi=OPI 80MHz
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi.build.flash_mode=dout
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi.build.boot=opi
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi.build.boot_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi.build.flash_freq=80m
+
+adafruit_matrixportal_esp32s3.menu.FlashSize.8M=8MB (64Mb)
+adafruit_matrixportal_esp32s3.menu.FlashSize.8M.build.flash_size=8MB
+
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.921600=921600
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.921600.upload.speed=921600
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.115200=115200
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.115200.upload.speed=115200
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.256000.windows=256000
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.256000.upload.speed=256000
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.230400=230400
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.230400.upload.speed=230400
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.460800.linux=460800
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.460800.macosx=460800
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.460800.upload.speed=460800
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.512000.windows=512000
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.512000.upload.speed=512000
+
+adafruit_matrixportal_esp32s3.menu.DebugLevel.none=None
+adafruit_matrixportal_esp32s3.menu.DebugLevel.none.build.code_debug=0
+adafruit_matrixportal_esp32s3.menu.DebugLevel.error=Error
+adafruit_matrixportal_esp32s3.menu.DebugLevel.error.build.code_debug=1
+adafruit_matrixportal_esp32s3.menu.DebugLevel.warn=Warn
+adafruit_matrixportal_esp32s3.menu.DebugLevel.warn.build.code_debug=2
+adafruit_matrixportal_esp32s3.menu.DebugLevel.info=Info
+adafruit_matrixportal_esp32s3.menu.DebugLevel.info.build.code_debug=3
+adafruit_matrixportal_esp32s3.menu.DebugLevel.debug=Debug
+adafruit_matrixportal_esp32s3.menu.DebugLevel.debug.build.code_debug=4
+adafruit_matrixportal_esp32s3.menu.DebugLevel.verbose=Verbose
+adafruit_matrixportal_esp32s3.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_matrixportal_esp32s3.menu.EraseFlash.none=Disabled
+adafruit_matrixportal_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_matrixportal_esp32s3.menu.EraseFlash.all=Enabled
+adafruit_matrixportal_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 
 ##############################################################
 
