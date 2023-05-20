@@ -81,6 +81,8 @@ typedef union {
 	};
 }ehci_link_t;
 
+TU_VERIFY_STATIC( sizeof(ehci_link_t) == 4, "size is not correct" );
+
 /// Queue Element Transfer Descriptor
 /// Qtd is used to declare overlay in ehci_qhd_t -> cannot be declared with TU_ATTR_ALIGNED(32)
 typedef struct
@@ -162,11 +164,12 @@ typedef struct TU_ATTR_ALIGNED(32)
 	uint8_t pid;
 	uint8_t interval_ms; // polling interval in frames (or millisecond)
 
-	uint16_t total_xferred_bytes; // number of bytes xferred until a qtd with ioc bit set
-	uint8_t reserved2[2];
+	uint8_t TU_RESERVED[4];
 
-	ehci_qtd_t * volatile p_qtd_list_head;	// head of the scheduled TD list
-	ehci_qtd_t * volatile p_qtd_list_tail;	// tail of the scheduled TD list
+  // Attached TD management, note usbh will only queue 1 TD per QHD.
+  // buffer for dcache invalidate since td's buffer is modified by HC and finding initial buffer address is not trivial
+  uint32_t attached_buffer;
+	ehci_qtd_t * volatile attached_qtd;
 } ehci_qhd_t;
 
 TU_VERIFY_STATIC( sizeof(ehci_qhd_t) == 64, "size is not correct" );
@@ -245,14 +248,6 @@ typedef struct TU_ATTR_ALIGNED(32)
 	/// Word 4-5: Buffer Pointer List
 	uint32_t buffer[2];		// buffer[1] TP: Transaction Position - T-Count: Transaction Count
 
-// 	union{
-// 		uint32_t BufferPointer1;
-// 		struct  {
-// 			volatile uint32_t TCount : 3;
-// 			volatile uint32_t TPosition : 2;
-// 		};
-// 	};
-
 	/*---------- Word 6 ----------*/
 	ehci_link_t back;
 
@@ -268,6 +263,7 @@ TU_VERIFY_STATIC( sizeof(ehci_sitd_t) == 32, "size is not correct" );
 // EHCI Operational Register
 //--------------------------------------------------------------------+
 enum {
+  // Bit 0-5 has maskable in interrupt enabled register
   EHCI_INT_MASK_USB                   = TU_BIT(0),
   EHCI_INT_MASK_ERROR                 = TU_BIT(1),
   EHCI_INT_MASK_PORT_CHANGE           = TU_BIT(2),
@@ -276,6 +272,12 @@ enum {
   EHCI_INT_MASK_ASYNC_ADVANCE         = TU_BIT(5),
 
   EHCI_INT_MASK_NXP_SOF               = TU_BIT(7),
+
+  EHCI_INT_MASK_HC_HALTED             = TU_BIT(12),
+  EHCI_INT_MASK_RECLAIMATION          = TU_BIT(13),
+  EHCI_INT_MASK_PERIODIC_SCHED_STATUS = TU_BIT(14),
+  EHCI_INT_MASK_ASYNC_SCHED_STATUS    = TU_BIT(15),
+
   EHCI_INT_MASK_NXP_ASYNC             = TU_BIT(18),
   EHCI_INT_MASK_NXP_PERIODIC          = TU_BIT(19),
 
@@ -306,7 +308,7 @@ enum {
   EHCI_PORTSC_MASK_PORT_RESET             = TU_BIT(8),
   ECHI_PORTSC_MASK_PORT_POWER             = TU_BIT(12),
 
-  EHCI_PORTSC_MASK_CHANGE_ALL =
+  EHCI_PORTSC_MASK_W1C =
     EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE |
     EHCI_PORTSC_MASK_PORT_ENABLE_CHANGE |
     EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE

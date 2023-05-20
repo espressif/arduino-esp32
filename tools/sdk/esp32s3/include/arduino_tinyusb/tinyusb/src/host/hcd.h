@@ -39,8 +39,10 @@
 // Configuration
 //--------------------------------------------------------------------+
 
+// Max number of endpoints per device
+// TODO optimize memory usage
 #ifndef CFG_TUH_ENDPOINT_MAX
-  #define CFG_TUH_ENDPOINT_MAX   (CFG_TUH_HUB + CFG_TUH_HID*2 + CFG_TUH_MSC*2 + CFG_TUH_CDC*3)
+  #define CFG_TUH_ENDPOINT_MAX   16
 //  #ifdef TUP_HCD_ENDPOINT_MAX
 //    #define CFG_TUH_ENDPPOINT_MAX   TUP_HCD_ENDPOINT_MAX
 //  #else
@@ -103,6 +105,22 @@ typedef struct
 } hcd_devtree_info_t;
 
 //--------------------------------------------------------------------+
+// Memory API
+//--------------------------------------------------------------------+
+
+// clean/flush data cache: write cache -> memory.
+// Required before an DMA TX transfer to make sure data is in memory
+void hcd_dcache_clean(void* addr, uint32_t data_size) TU_ATTR_WEAK;
+
+// invalidate data cache: mark cache as invalid, next read will read from memory
+// Required BOTH before and after an DMA RX transfer
+void hcd_dcache_invalidate(void* addr, uint32_t data_size) TU_ATTR_WEAK;
+
+// clean and invalidate data cache
+// Required before an DMA transfer where memory is both read/write by DMA
+void hcd_dcache_clean_invalidate(void* addr, uint32_t data_size) TU_ATTR_WEAK;
+
+//--------------------------------------------------------------------+
 // Controller API
 //--------------------------------------------------------------------+
 
@@ -157,7 +175,7 @@ bool hcd_edpt_xfer(uint8_t rhport, uint8_t dev_addr, uint8_t ep_addr, uint8_t * 
 bool hcd_setup_send(uint8_t rhport, uint8_t dev_addr, uint8_t const setup_packet[8]);
 
 // clear stall, data toggle is also reset to DATA0
-bool hcd_edpt_clear_stall(uint8_t dev_addr, uint8_t ep_addr);
+bool hcd_edpt_clear_stall(uint8_t daddr, uint8_t ep_addr);
 
 //--------------------------------------------------------------------+
 // USBH implemented API
@@ -182,6 +200,7 @@ void hcd_event_device_attach(uint8_t rhport, bool in_isr)
   event.event_id            = HCD_EVENT_DEVICE_ATTACH;
   event.connection.hub_addr = 0;
   event.connection.hub_port = 0;
+
   hcd_event_handler(&event, in_isr);
 }
 
@@ -211,7 +230,6 @@ void hcd_event_xfer_complete(uint8_t dev_addr, uint8_t ep_addr, uint32_t xferred
   event.xfer_complete.ep_addr = ep_addr;
   event.xfer_complete.result = result;
   event.xfer_complete.len = xferred_bytes;
-
 
   hcd_event_handler(&event, in_isr);
 }
