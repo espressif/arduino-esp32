@@ -56,11 +56,15 @@ Solution
 
 Here are some steps that you can try to:
 
-* Check your USB cable and try a new one.
-* Change the USB port.
+* Check your USB cable and try a new one (some cables are only for charging and there is no data connection).
+* Change the USB port - prefer direct connection to computer and avoid USB hubs. Some USB ports may share power source with other ports used for example for charging phone.
 * Check your power supply.
+* Make sure that nothing is connected to pins labeled **TX** and **RX**.
 * In some instances, you must keep **GPIO0** LOW during the uploading process via the serial interface.
 * Hold down the **“BOOT”** button in your ESP32 board while uploading/flashing.
+* Solder a **10uF** capacitor in parallel with **RST** and **GND**.
+* If you bought your dev board from questionable seller they might have scammed you and send ESP8266 instead of ESP32.
+* If you are using external power connected to pins it is easy to confuse pins **CMD** (which is usually next to the 5V pin) and **GND**.
 
 In some development boards, you can try adding the reset delay circuit, as described in the *Power-on Sequence* section on the `ESP32 Hardware Design Guidelines <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ in order to get into the download mode automatically.
 
@@ -68,7 +72,7 @@ Hardware
 --------
 
 Why is my computer not detecting my board?
-**************************************************
+******************************************
 
 If your board is not being detected after connecting to the USB, you can try to:
 
@@ -119,3 +123,74 @@ Sample code to check SDK WPA3 support at compile time:
     #ifndef CONFIG_ESP32_WIFI_ENABLE_WPA3_SAE
     #warning "No WPA3 support."
     #endif
+
+ESP32-S3 is rebooting even with bare minimum sketch
+***************************************************
+Some ESP32-S3 are equipped with Quad SPI (QSPI) or Octal SPI (OPI) PSRAM and if you upload such board with default settings for ESP32-S3 it will result in rebooting with message similar to this:
+
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-guides/flash_psram_config.html
+
+.. code-block:: bash
+
+    E (124) esp_core_dump_flash: Core dump flash config is corrupted! CRC=0x7bd5c66f instead of 0x0
+    Rebooting...
+    ⸮⸮⸮ESP-ROM:esp32s3-20210327
+    Build:Mar 27 2021
+    rst:0xc (RTC_SW_CPU_RST),boot:0x18 (SPI_FAST_FLASH_BOOT)
+    Saved PC:0x40376af0
+    SPIWP:0xee
+    Octal Flash Mode Enabled
+    For OPI Flash, Use Default Flash Boot Mode
+    mode:SLOW_RD, clock div:1
+    load:0x3fce3808,len:0x44c
+    load:0x403c9700,len:0xbec
+    load:0x403cc700,len:0x2920
+    entry 0x403c98d8
+
+    assert failed: do_core_init startup.c:326 (flash_ret == ESP_OK)
+
+To fix the issue, you will need to find out the precise module you are using and set **PSRAM** in the Arduino IDE Tools according to the following table.
+
+How to determine the module version:
+------------------------------------
+
+* First determine if you have a `WROOM-1 <https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-1_wroom-1u_datasheet_en.pdf>`_ or `WROOM-2 <https://www.espressif.com/sites/default/files/documentation/esp32-s3-wroom-2_datasheet_en.pdf>`_ module - this is written on the module shielding almost at the top, right under the ESP logo and company name (Espresif) right after the ESP32-S3 - for example ESP32-S3-WROOM-2.
+* Then locate the version code on left bottom corner on the module shielding. The markings are very small and it might be really difficult to read with naked eyes - try using a camera with careful lighting.
+
+With this knowledge find your module in the table and note what is written in the **PSRAM** column.
+
+- If the results is empty (-) you don't need to change anything
+- For QSPI go to Tools > PSRAM > QSPI PSRAM
+- For OPI go to Tools > PSRAM > OPI PSRAM
+
+Note that WROOM-2 has always OPI.
+
++---------+--------+------------+-------+
+| Module  | Code   | Flash Mode | PSRAM |
++=========+========+============+=======+
+| WROOM-1 | N4     | QSPI       | -     |
++---------+--------+------------+-------+
+| WROOM-1 | N8     | QSPI       | -     |
++---------+--------+------------+-------+
+| WROOM-1 | N16    | QSPI       | -     |
++---------+--------+------------+-------+
+| WROOM-1 | H4     | QSPI       | -     |
++---------+--------+------------+-------+
+| WROOM-1 | N4R2   | QSPI       | QSPI  |
++---------+--------+------------+-------+
+| WROOM-1 | N8R2   | QSPI       | QSPI  |
++---------+--------+------------+-------+
+| WROOM-1 | N16R2  | QSPI       | QSPI  |
++---------+--------+------------+-------+
+| WROOM-1 | N4R8   | QSPI       | OPI   |
++---------+--------+------------+-------+
+| WROOM-1 | N8R8   | QSPI       | OPI   |
++---------+--------+------------+-------+
+| WROOM-1 | N16R8  | QSPI       | OPI   |
++---------+--------+------------+-------+
+| WROOM-2 | N16R8V | OPI        | OPI   |
++---------+--------+------------+-------+
+| WROOM-2 | N16R8V | OPI        | OPI   |
++---------+--------+------------+-------+
+| WROOM-2 | N32R8V | OPI        | OPI   |
++---------+--------+------------+-------+
