@@ -195,6 +195,7 @@ void HWCDC::end()
     intr_handle = NULL;
     if(tx_lock != NULL) {
         vSemaphoreDelete(tx_lock);
+        tx_lock = NULL;
     }
     setRxBufferSize(0);
     setTxBufferSize(0);
