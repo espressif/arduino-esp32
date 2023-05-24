@@ -124,6 +124,27 @@ Sample code to check SDK WPA3 support at compile time:
     #warning "No WPA3 support."
     #endif
 
+SPIFFS mount failed
+-------------------
+When you come across and error like this:
+
+.. code-block:: shell
+
+   E (588) SPIFFS: mount failed, -10025
+   [E][SPIFFS.cpp:47] begin(): Mounting SPIFFS failed! Error: -1
+
+Try enforcing format on fail in your code by adding ``true`` in the ``begin`` method such as this:
+
+.. code-block:: c++
+
+   SPIFFS.begin(true);
+
+See the method prototype for reference: ``bool begin(bool formatOnFail=false, const char * basePath="/spiffs", uint8_t maxOpenFiles=10, const char * partitionLabel=NULL);``
+
+SD card mount fail
+------------------
+TODO
+
 ESP32-S3 is rebooting even with bare minimum sketch
 ***************************************************
 Some ESP32-S3 are equipped with Quad SPI (QSPI) or Octal SPI (OPI) PSRAM and if you upload such board with default settings for ESP32-S3 it will result in rebooting with message similar to this:
