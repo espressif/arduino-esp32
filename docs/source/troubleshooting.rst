@@ -33,7 +33,7 @@ Solution
 To avoid this error, you can install the ``python-is-python3`` package to create the symbolic links.
 
 .. code-block:: bash
-    
+
     sudo apt install python-is-python3
 
 If you are not using Ubuntu, you can check if you have the Python correctly installed or the presence of the symbolic links/environment variables.
@@ -44,7 +44,7 @@ Flashing
 Why is my board not flashing/uploading when I try to upload my sketch?
 **********************************************************************
 
-To be able to upload the sketch via serial interface, the ESP32 must be in the download mode. The download mode allows you to upload the sketch over the serial port and to get into it, you need to keep the **GPIO0** in LOW while a resetting (**EN** pin) cycle.
+To be able to upload the sketch via the serial interface, the ESP32 must be in the download mode. The download mode allows you to upload the sketch over the serial port, and to get into it, you need to keep the **GPIO0** in LOW while resetting (**EN** pin) the cycle.
 If you are trying to upload a new sketch and your board is not responding, there are some possible reasons.
 
 Possible fatal error message from the Arduino IDE:
@@ -54,19 +54,19 @@ Possible fatal error message from the Arduino IDE:
 Solution
 ^^^^^^^^
 
-Here are some steps that you can try to:
+Here are some steps that you can try:
 
 * Check your USB cable and try a new one (some cables are only for charging and there is no data connection).
-* Change the USB port - prefer direct connection to computer and avoid USB hubs. Some USB ports may share power source with other ports used for example for charging phone.
+* Change the USB port - prefer direct connection to the computer and avoid USB hubs. Some USB ports may share the power source with other ports used, for example, for charging a phone.
 * Check your power supply.
 * Make sure that nothing is connected to pins labeled **TX** and **RX**.
 * In some instances, you must keep **GPIO0** LOW during the uploading process via the serial interface.
-* Hold down the **“BOOT”** button in your ESP32 board while uploading/flashing.
+* Hold down the **“BOOT”** button on your ESP32 board while uploading/flashing.
 * Solder a **10uF** capacitor in parallel with **RST** and **GND**.
-* If you bought your dev board from questionable seller they might have scammed you and send ESP8266 instead of ESP32.
-* If you are using external power connected to pins it is easy to confuse pins **CMD** (which is usually next to the 5V pin) and **GND**.
+* If you bought your dev board from a questionable seller, they might have scammed you and sent ESP8266 instead of ESP32.
+* If you are using external power connected to pins, it is easy to confuse pins **CMD** (which is usually next to the 5V pin) and **GND**.
 
-In some development boards, you can try adding the reset delay circuit, as described in the *Power-on Sequence* section on the `ESP32 Hardware Design Guidelines <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ in order to get into the download mode automatically.
+In some development boards, you can try adding the reset delay circuit, as described in the *Power-on Sequence* section on the `ESP32 Hardware Design Guidelines <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ to get into the download mode automatically.
 
 Hardware
 --------
@@ -74,7 +74,7 @@ Hardware
 Why is my computer not detecting my board?
 ******************************************
 
-If your board is not being detected after connecting to the USB, you can try to:
+If your board is not being detected after connecting to the USB, you can try the following:
 
 Solution
 ^^^^^^^^
@@ -91,8 +91,8 @@ Wi-Fi
 Why does the board not connect to WEP/WPA-"encrypted" Wi-Fi?
 ************************************************************
 
-Please note that WEP/WPA has significant security vulnerabilities and its use is strongly discouraged.
-The support may therefore be removed in the future. Please migrate to WPA2 or newer.
+Please note that WEP/WPA has significant security vulnerabilities, and its use is strongly discouraged.
+The support may, therefore, be removed in the future. Please migrate to WPA2 or newer.
 
 Solution
 ^^^^^^^^
@@ -108,7 +108,7 @@ Nevertheless, it may be necessary to connect to insecure networks. To do this, t
 Why does the board not connect to WPA3-encrypted Wi-Fi?
 *******************************************************
 
-WPA3 support is resource intensive and may not be compiled into the used SDK.
+WPA3 support is resource-intensive and may not be compiled into the used SDK.
 
 Solution
 ^^^^^^^^
@@ -126,7 +126,7 @@ Sample code to check SDK WPA3 support at compile time:
 
 SPIFFS mount failed
 -------------------
-When you come across and error like this:
+When you come across an error like this:
 
 .. code-block:: shell
 
@@ -143,11 +143,27 @@ See the method prototype for reference: ``bool begin(bool formatOnFail=false, co
 
 SD card mount fail
 ------------------
-TODO
+Even though you made sure that the pins are correctly connected, and not using restricted pins, you may still get an error such as this:
 
-ESP32-S3 is rebooting even with bare minimum sketch
-***************************************************
-Some ESP32-S3 are equipped with Quad SPI (QSPI) or Octal SPI (OPI) PSRAM and if you upload such board with default settings for ESP32-S3 it will result in rebooting with message similar to this:
+.. code-block:: shell
+
+  [ 1065][E][sd_diskio.cpp:807] sdcard_mount(): f_mount failed: (3) The physical drive cannot work
+
+Most of the problems originate from a poor connection caused by Dupont cables, and one of the best solutions is to **solder all the connections** or use good quality connectors.
+
+If you want to try the software approach before soldering, try manually specifying SPI pins, like this:
+
+.. code-block:: c++
+
+  int SD_CS_PIN = 19;
+  SPI.begin(18, 36, 26, SD_CS_PIN);
+  SPI.setDataMode(SPI_MODE0);
+  SD.begin(SD_CS_PIN);
+
+
+ESP32-S3 is rebooting even with a bare minimum sketch
+*****************************************************
+Some ESP32-S3 boards are equipped with Quad SPI (QSPI) or Octal SPI (OPI) PSRAM. If you upload such a board with default settings for ESP32-S3, it will result in rebooting with a message similar to this:
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-guides/flash_psram_config.html
 
@@ -169,6 +185,7 @@ https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-guides/flash_p
     entry 0x403c98d8
 
     assert failed: do_core_init startup.c:326 (flash_ret == ESP_OK)
+
 
 To fix the issue, you will need to find out the precise module you are using and set **PSRAM** in the Arduino IDE Tools according to the following table.
 
@@ -215,3 +232,9 @@ Note that WROOM-2 has always OPI.
 +---------+--------+------------+-------+
 | WROOM-2 | N32R8V | OPI        | OPI   |
 +---------+--------+------------+-------+
+
+
+Further Help
+------------
+
+If you encounter any other issues or need further assistance, please consult the `ESP32 Arduino Core <https://github.com/espressif/arduino-esp32>`_ documentation or seek help from the `ESP32 community forums <https://esp32.com>`_.
