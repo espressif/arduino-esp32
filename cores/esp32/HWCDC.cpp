@@ -28,7 +28,7 @@ ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 
 static RingbufHandle_t tx_ring_buf = NULL;
 static xQueueHandle rx_queue = NULL;
-static uint8_t rx_data_buf[64];
+static uint8_t rx_data_buf[64] = {0};
 static intr_handle_t intr_handle = NULL;
 static volatile bool initial_empty = false;
 static xSemaphoreHandle tx_lock = NULL;
