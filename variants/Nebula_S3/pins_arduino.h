@@ -6,9 +6,13 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-// #define EXTERNAL_NUM_INTERRUPTS 46
+#define EXTERNAL_NUM_INTERRUPTS 20
 #define NUM_DIGITAL_PINS        20
 #define NUM_ANALOG_INPUTS       6
+
+#define analogInputToDigitalPin(p)  (((p)<6)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<20)?(p):-1)
+#define digitalPinHasPWM(p)         (p < 20)
 
 
 static const uint8_t LED_BUILTIN = 45;
@@ -20,12 +24,8 @@ static const uint8_t LED_BUILTIN = 45;
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
-static const uint8_t SDA = 02;
-static const uint8_t SCL = 01;
-
-static const uint8_t ACC_SDA = 12;
-static const uint8_t ACC_SCL = 13;
-
+static const uint8_t SDA = 12;
+static const uint8_t SCL = 13;
 
 static const uint8_t SS    = 41;
 static const uint8_t MOSI  = 40;
