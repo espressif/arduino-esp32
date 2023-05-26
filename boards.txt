@@ -23359,10 +23359,10 @@ nebulas3.menu.USBMode.hwcdc.build.usb_mode=1
 nebulas3.menu.USBMode.default=USB-OTG (TinyUSB)
 nebulas3.menu.USBMode.default.build.usb_mode=0
 
-nebulas3.menu.CDCOnBoot.default=Disabled
-nebulas3.menu.CDCOnBoot.default.build.cdc_on_boot=0
-nebulas3.menu.CDCOnBoot.cdc=Enabled
-nebulas3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+nebulas3.menu.CDCOnBoot.default= Enabled
+nebulas3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+nebulas3.menu.CDCOnBoot.cdc=Disabled
+nebulas3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
 
 nebulas3.menu.MSCOnBoot.default=Disabled
 nebulas3.menu.MSCOnBoot.default.build.msc_on_boot=0
