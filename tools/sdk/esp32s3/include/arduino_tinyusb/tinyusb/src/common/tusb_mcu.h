@@ -59,14 +59,6 @@
   #define TUP_USBIP_OHCI
   #define TUP_OHCI_RHPORTS        2
 
-#elif TU_CHECK_MCU(OPT_MCU_LPC18XX, OPT_MCU_LPC43XX)
-  // TODO USB0 has 6, USB1 has 4
-  #define TUP_USBIP_CHIPIDEA_HS
-  #define TUP_USBIP_EHCI
-
-  #define TUP_DCD_ENDPOINT_MAX    6
-  #define TUP_RHPORT_HIGHSPEED    1 // Port0 HS, Port1 FS
-
 #elif TU_CHECK_MCU(OPT_MCU_LPC51UXX)
    #define TUP_DCD_ENDPOINT_MAX   5
 
@@ -78,12 +70,28 @@
   // TODO USB0 has 5, USB1 has 6
   #define TUP_DCD_ENDPOINT_MAX    6
 
+#elif TU_CHECK_MCU(OPT_MCU_LPC18XX, OPT_MCU_LPC43XX)
+  // USB0 has 6 with HS PHY, USB1 has 4 only FS
+  #define TUP_USBIP_CHIPIDEA_HS
+  #define TUP_USBIP_EHCI
+
+  #define TUP_DCD_ENDPOINT_MAX    6
+  #define TUP_RHPORT_HIGHSPEED    1
+
+#elif TU_CHECK_MCU(OPT_MCU_MCXN9)
+  // NOTE: MCXN943 port 1 use chipidea HS, port 0 use chipidea FS
+  #define TUP_USBIP_CHIPIDEA_HS
+  #define TUP_USBIP_EHCI
+
+  #define TUP_DCD_ENDPOINT_MAX    8
+  #define TUP_RHPORT_HIGHSPEED    1
+
 #elif TU_CHECK_MCU(OPT_MCU_MIMXRT)
   #define TUP_USBIP_CHIPIDEA_HS
   #define TUP_USBIP_EHCI
 
   #define TUP_DCD_ENDPOINT_MAX    8
-  #define TUP_RHPORT_HIGHSPEED    1 // Port0 HS, Port1 HS
+  #define TUP_RHPORT_HIGHSPEED    1
 
 #elif TU_CHECK_MCU(OPT_MCU_KINETIS_KL, OPT_MCU_KINETIS_K32)
   #define TUP_USBIP_CHIPIDEA_FS

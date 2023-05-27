@@ -32,9 +32,11 @@
 
 static const ci_hs_controller_t _ci_controller[] =
 {
-  { .reg_base = LPC_USB0_BASE, .irqnum = USB0_IRQn, .ep_count = 6 },
-  { .reg_base = LPC_USB1_BASE, .irqnum = USB1_IRQn, .ep_count = 4 }
+  { .reg_base = LPC_USB0_BASE, .irqnum = USB0_IRQn },
+  { .reg_base = LPC_USB1_BASE, .irqnum = USB1_IRQn }
 };
+
+#define CI_HS_REG(_port)        ((ci_hs_regs_t*) _ci_controller[_port].reg_base)
 
 #define CI_DCD_INT_ENABLE(_p)   NVIC_EnableIRQ (_ci_controller[_p].irqnum)
 #define CI_DCD_INT_DISABLE(_p)  NVIC_DisableIRQ(_ci_controller[_p].irqnum)
