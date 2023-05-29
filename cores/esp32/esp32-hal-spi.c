@@ -163,12 +163,6 @@ static spi_t _spi_bus_array[] = {
 };
 #endif
 
-typedef struct spi_bus_t {
-    uint8_t spi_num;
-    spi_pin_type_t pin_type;
-} *spi_bus_t;
-
-//V2 - detach all used pins. ADD check to each DetachFunction to not detach multiple times.
 static bool spiDetachBus(void * bus){
     uint8_t spi_num = (int)bus - 1;
     spi_t * spi = &_spi_bus_array[spi_num];
@@ -235,7 +229,7 @@ bool spiAttachSCK(spi_t * spi, int8_t sck)
         return false;
 #endif
     }
-    spi_bus_t bus = (spi_bus_t)perimanGetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER);
+    uint8_t bus = (uint8_t)perimanGetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER);
     if(bus != NULL && !perimanSetPinBus(sck, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
@@ -285,7 +279,7 @@ bool spiAttachMISO(spi_t * spi, int8_t miso)
         return false;
 #endif
     }
-    spi_bus_t bus = (spi_bus_t)perimanGetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER);
+    uint8_t bus = (uint8_t)perimanGetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER);
     if(bus != NULL && !perimanSetPinBus(miso, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
@@ -337,7 +331,7 @@ bool spiAttachMOSI(spi_t * spi, int8_t mosi)
         return false;
 #endif
     }
-    spi_bus_t bus = (spi_bus_t)perimanGetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER);
+    uint8_t bus = (uint8_t)perimanGetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER);
     if(bus != NULL && !perimanSetPinBus(mosi, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
@@ -508,7 +502,7 @@ bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
         return false;
 #endif
     }
-    spi_bus_t bus = (spi_bus_t)perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER);
+    uint8_t bus = (uint8_t)perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER);
     if(bus != NULL && !perimanSetPinBus(ss, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
