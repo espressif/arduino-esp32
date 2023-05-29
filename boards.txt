@@ -23272,7 +23272,7 @@ nebulas3.build.target=esp32s3
 nebulas3.build.mcu=esp32s3
 nebulas3.build.core=esp32
 nebulas3.build.variant=Nebula_S3
-nebulas3.build.board=ESP32S3_DEV
+nebulas3.build.board=NebulaS3
 
 nebulas3.build.usb_mode=1
 nebulas3.build.cdc_on_boot=0
@@ -23342,7 +23342,6 @@ nebulas3.menu.FlashSize.8M.build.flash_size=8MB
 nebulas3.menu.FlashSize.8M.build.partitions=default_8MB
 nebulas3.menu.FlashSize.16M=16MB (128Mb)
 nebulas3.menu.FlashSize.16M.build.flash_size=16MB
-
 
 nebulas3.menu.LoopCore.1=Core 1
 nebulas3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
