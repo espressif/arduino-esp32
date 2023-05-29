@@ -66,16 +66,16 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
 void spiStopBus(spi_t * spi);
 
 //Attach/Detach Signal Pins
-void spiAttachSCK(spi_t * spi, int8_t sck);
-void spiAttachMISO(spi_t * spi, int8_t miso);
-void spiAttachMOSI(spi_t * spi, int8_t mosi);
-void spiDetachSCK(spi_t * spi, int8_t sck);
-void spiDetachMISO(spi_t * spi, int8_t miso);
-void spiDetachMOSI(spi_t * spi, int8_t mosi);
+bool spiAttachSCK(spi_t * spi, int8_t sck);
+bool spiAttachMISO(spi_t * spi, int8_t miso);
+bool spiAttachMOSI(spi_t * spi, int8_t mosi);
+bool spiDetachSCK(spi_t * spi, int8_t sck);
+bool spiDetachMISO(spi_t * spi, int8_t miso);
+bool spiDetachMOSI(spi_t * spi, int8_t mosi);
 
 //Attach/Detach SS pin to SPI_CSx signal
-void spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss);
-void spiDetachSS(spi_t * spi, int8_t ss);
+bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss);
+bool spiDetachSS(spi_t * spi, int8_t ss);
 
 //Enable/Disable SPI_CSx pins
 void spiEnableSSPins(spi_t * spi, uint8_t cs_mask);
