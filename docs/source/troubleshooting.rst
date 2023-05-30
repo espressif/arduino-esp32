@@ -151,6 +151,8 @@ Even though you made sure that the pins are correctly connected, and not using r
 
 Most of the problems originate from a poor connection caused by Dupont cables, and one of the best solutions is to **solder all the connections** or use good quality connectors.
 
+Note that with SD_MMC lib all the data pins need to be pulled up with an external 10k to 3.3V. This applies especially to card's D3 which needs to be pulled up even when using 1-bit line connection and the D3 is not used.
+
 If you want to try the software approach before soldering, try manually specifying SPI pins, like this:
 
 .. code-block:: c++
