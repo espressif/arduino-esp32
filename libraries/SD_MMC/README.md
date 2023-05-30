@@ -47,6 +47,8 @@ GPIO38        | D1          | not used in 1-line SD mode; 10k pullup in 4-line m
 GPIO33        | D2          | not used in 1-line SD mode; 10k pullup in 4-line mode
 GPIO34        | D3          | not used in 1-line SD mode, but card's D3 pin must have a 10k pullup
 
+On some ESP32-S3 boards, the default pins are used for OPI and this will result in problems - please reassign the pins elsewhere using the mentioned command `setPins`.
+
 ### 4-line and 1-line SD modes
 
 By default, this library uses 4-bit line mode, utilizing 6 pins: CLK, CMD, D0 - D3 and 2 power lines (3.3V and GND). It is possible to use 1-bit line mode (CLK, CMD, D0, 3.3V, GND) by passing the second argument `mode1bit==true`:
