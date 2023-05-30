@@ -11,6 +11,9 @@
  *    VSS      GND
  *    D0       2  (add 1K pull up after flashing)
  *    D1       4
+ *
+ *    For more info see file README.md in this library or on URL:
+ *    https://github.com/espressif/arduino-esp32/tree/master/libraries/SD_MMC
  */
 
 #include "FS.h"
@@ -172,6 +175,17 @@ void testFileIO(fs::FS &fs, const char * path){
 
 void setup(){
     Serial.begin(115200);
+    /*
+    // If you want to change the pin assigment on ESP32-S3 uncomment this block and the appropriate
+    // line depending if you want to use 1-bit or 4-bit line.
+    // Please note that ESP32 does not allow pin change and will always fail.
+    //if(! setPins(int clk, int cmd, int d0)){
+    //if(! setPins(int clk, int cmd, int d0, int d1, int d2, int d3)){
+        Serial.println("Pin change failed!");
+        return;
+    }
+    */
+
     if(!SD_MMC.begin()){
         Serial.println("Card Mount Failed");
         return;
