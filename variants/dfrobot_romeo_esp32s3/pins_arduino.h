@@ -43,7 +43,9 @@ static const uint8_t SS    = 18;
 #define GDI_SDA       SDA
 #define GDI_INT       13
 #define GDI_BUSY_TE   14
+
 #endif /* GDI_DISPLAY_FPC_INTERFACE */
+
 // CAM
 #define CAM_DVP_INTERFACE
 #ifdef  CAM_DVP_INTERFACE
