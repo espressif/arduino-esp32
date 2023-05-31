@@ -42,6 +42,7 @@
 #include "hal/clk_gate_ll.h"
 #include "esp32-hal-log.h"
 #include "esp32-hal-i2c-slave.h"
+#include "esp32-hal-periman.h"
 
 #define I2C_SLAVE_USE_RX_QUEUE 0 // 1: Queue, 0: RingBuffer
 
@@ -194,7 +195,7 @@ static bool i2c_slave_handle_rx_fifo_full(i2c_slave_struct_t * i2c, uint32_t len
 static size_t i2c_slave_read_rx(i2c_slave_struct_t * i2c, uint8_t * data, size_t len);
 static void i2c_slave_isr_handler(void* arg);
 static void i2c_slave_task(void *pv_args);
-
+static bool i2cSlaveDetachBus(void * bus_i2c_num);
 
 //=====================================================================================================================
 //-------------------------------------- Public Functions -------------------------------------------------------------
@@ -229,6 +230,11 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
         frequency = 100000;
     } else if(frequency > 1000000){
         frequency = 1000000;
+    }
+
+    perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_SLAVE, i2cSlaveDetachBus);
+    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL)){
+        return false;
     }
 
     log_i("Initialising I2C Slave: sda=%d scl=%d freq=%d, addr=0x%x", sda, scl, frequency, slaveID);
@@ -344,6 +350,10 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     i2c_ll_slave_enable_rx_it(i2c->dev);
     i2c_ll_set_stretch(i2c->dev, 0x3FF);
     i2c_ll_update(i2c->dev);
+    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_SLAVE, (void *)(i2c->num+1)) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_SLAVE, (void *)(i2c->num+1))){
+        i2cSlaveDetachBus((void *)(i2c->num+1));
+        ret = ESP_FAIL;
+    }
     I2C_SLAVE_MUTEX_UNLOCK();
     return ret;
 
@@ -367,7 +377,11 @@ esp_err_t i2cSlaveDeinit(uint8_t num){
     }
 #endif
     I2C_SLAVE_MUTEX_LOCK();
+    int scl = i2c->scl;
+    int sda = i2c->sda;
     i2c_slave_free_resources(i2c);
+    perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL);
     I2C_SLAVE_MUTEX_UNLOCK();
     return ESP_OK;
 }
@@ -845,4 +859,18 @@ static void i2c_slave_task(void *pv_args)
         }
     }
     vTaskDelete(NULL);
+}
+
+static bool i2cSlaveDetachBus(void * bus_i2c_num){
+    uint8_t num = (int)bus_i2c_num - 1;
+    i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
+    if (i2c->scl == -1 && i2c->sda == -1) {
+        return true;
+    }
+    esp_err_t err = i2cSlaveDeinit(num);
+    if(err != ESP_OK){
+        log_e("i2cSlaveDeinit failed with error: %d", err);
+        return false;
+    }
+    return true;
 }
