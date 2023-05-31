@@ -352,7 +352,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     i2c_ll_update(i2c->dev);
     if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_SLAVE, (void *)(i2c->num+1)) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_SLAVE, (void *)(i2c->num+1))){
         i2cSlaveDetachBus((void *)(i2c->num+1));
-        return false;
+        ret = ESP_FAIL;
     }
     I2C_SLAVE_MUTEX_UNLOCK();
     return ret;
