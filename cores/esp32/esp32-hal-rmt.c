@@ -444,7 +444,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   }
 
   // Try to dettach any (Tx|Rx|Whatever) previous bus or just keep it as not attached
-  if (perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT && !perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)) {
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)) {
     log_w("GPIO %d - Can't detach previous peripheral.", pin);
     return false;
   }
