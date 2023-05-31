@@ -6,9 +6,29 @@ Please note that SD_MMC is only available for ESP32 and ESP32-S3. For other SoCs
 
 ## Wiring:
 
-![MMC pins](https://commons.wikimedia.org/wiki/File:15-04-29-MMC-Karte-dscf4734-e.jpg)
+![SD cards pins](https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/MMC-SD-miniSD-microSD-Color-Numbers-Names.gif/330px-MMC-SD-miniSD-microSD-Color-Numbers-Names.gif)
+
+Image source: [Wikipedia](https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/MMC-SD-miniSD-microSD-Color-Numbers-Names.gif/330px-MMC-SD-miniSD-microSD-Color-Numbers-Names.gif)
+
+![SD and MMC pins](https://upload.wikimedia.org/wikipedia/commons/f/ff/15-04-29-MMC-Karte-dscf4734-e.jpg)
 
 Image source: [Wikipedia](https://commons.wikimedia.org/wiki/File:15-04-29-MMC-Karte-dscf4734-e.jpg)
+
+pin number (refer to the picture) | micro SD - SD mode | micro SD - SPI mode | mini SD - SD mode | mini SD - SPI mode | SD - SD mode | SD - SPI mode | MMC (MMC3) - MMC mode | MMC (MMC3) - SPI mode | MMCplus / MMCmobile (MMC4) - MMC mode | MMCplus / MMCmobile (MMC4) - SPI mode
+----------------------------------|--------------------|---------------------|-------------------|--------------------|--------------|---------------|-----------------------|-----------------------|---------------------------------------|
+1                                 | D2                 | not used            | D3                | CS                 | D3           | CS            | RES                   | CS                    | D3                                    | CS
+2                                 | D3                 | CS                  | CMD               | DI                 | CMD          | DI            | CMD                   | DI                    | CMD                                   | DI
+3                                 | CMD                | DI                  | VSS1 (GND)        | VSS1 (GND)         | VSS1 (GND)   | VSS1 (GND)    | VSS1 (GND)            | VSS1 (GND)            | VSS1 (GND)                            | VSS1 (GND)
+4                                 | VDD (3.3V)         | VDD (3.3V)          | VDD (3.3V)        | VDD (3.3V)         | VDD (3.3V)   | VDD (3.3V)    | VDD (3.3V)            | VDD (3.3V)            | VDD (3.3V)                            | VDD (3.3V)
+5                                 | CLK                | SCLK                | CLK               | SCLK               | CLK          | SCLK          | CLK                   | SCLK                  | CLK                                   | SCLK
+6                                 | VSS (GND)          | VSS (GND)           | VSS2 (GND)        | VSS2 (GND)         | VSS2 (GND)   | VSS2 (GND)    | VSS2 (GND)            | VSS2 (GND)            | VSS2 (GND)                            | VSS2 (GND)
+7                                 | D0                 | DO                  | D0                | DO                 | D0           | DO            | DAT                   | DO                    | D0                                    | DO
+8                                 | D1                 | not used            | D1                | not used           | D1           | not used      | -                     | -                     | D1                                    | not used
+9                                 | -                  | -                   | D2                | not used           | D2           | not used      | -                     | -                     | D2                                    | not used
+10                                | -                  | -                   | For future use    | For future use     | -            | -             | -                     | -                     | D3                                    | not used
+11                                | -                  | -                   | For future use    | For future use     | -            | -             | -                     | -                     | D4                                    | not used
+12                                | -                  | -                   | -                 | -                  | -            | -             | -                     | -                     | D5                                    | not used
+13                                | -                  | -                   |  -                | -                  | -            | -             | -                     | -                     | D6                                    | not used
 
 ### Pin assignments for ESP32
 
@@ -28,7 +48,7 @@ GPIO13 (MTCK) | D3          | not used in 1-line SD mode, but card's D3 pin must
 
 ### Pin assignments for ESP32-S3
 
-On ESP32-S3, SDMMC peripheral is connected to GPIO pins using GPIO matrix. This allows arbitrary GPIOs to be used to connect an SD card or MMC. The GPIOs can be configured based on
+On ESP32-S3, SDMMC peripheral is connected to GPIO pins using GPIO matrix. This allows arbitrary GPIOs to be used to connect an SD card or MMC. The GPIOs can be configured with the following commands:
 ```
   setPins(int clk, int cmd, int d0))
   setPins(int clk, int cmd, int d0, int d1, int d2, int d3))
@@ -49,7 +69,7 @@ GPIO34        | D3          | not used in 1-line SD mode, but card's D3 pin must
 
 Warning: ESP32-S3-WROOM-2 is using most of the default GPIOs (33-37) to interface with on-board OPI flash. If the SD_MMC is initialized with default pins it will result in rebooting loop - please reassign the pins elsewhere using the mentioned command `setPins`.
 
-Note that ESP32-S3-DevKitC-1 v1.1 does NOT have GPIOs 33 and 34 broken out, so it will be necessary to change at least the pin for D2 and D3.
+> **Note:**  ESP32-S3-DevKitC-1 v1.1 does NOT have GPIOs 33 and 34 broken out, so it will be necessary to change at least the pin for D2 and D3.
 
 ### 4-line and 1-line SD modes
 
@@ -58,7 +78,7 @@ By default, this library uses 4-bit line mode, utilizing 6 pins: CLK, CMD, D0 - 
   SD_MMC.begin("/sdcard", true);
 ```
 
-Note that even if card's D3 line is not connected to the ESP chip, it still has to be pulled up, otherwise the card will go into SPI protocol mode.
+> **Note:**  Even if card's D3 line is not connected to the ESP chip, it still has to be pulled up, otherwise the card will go into SPI protocol mode.
 
 ### Note about GPIO2 (ESP32 only)
 
@@ -72,14 +92,14 @@ GPIO12 is used as a bootstrapping pin to select output voltage of an internal re
 
 ## FAQ:
 
-**Do I need any additional modules**, like **the **Arduino**** SD module**?**
+#### Do I need any additional modules, like the Arduino SD module?
 
 No, just wire your SD card directly to ESP32.
 
 Tip: If you are using a microSD card and have a spare adapter to full-sized SD, you can solder Dupont pins on the adapter.
 
 
-**What is the difference between SD and SD_MMC libraries?**
+#### What is the difference between SD and SD_MMC libraries?
 
 SD runs on SPI, and SD_MMC uses the SDMMC hardware bus on the ESP32.
 The SPI uses 4 communication pins + 2 power connections and operates on up to 80MHz. The SPI option offers flexibility on pin connection because the data connections can be routed through GPIO matrix to any data pin.
