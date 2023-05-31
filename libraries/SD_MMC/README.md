@@ -47,7 +47,9 @@ GPIO38        | D1          | not used in 1-line SD mode; 10k pullup in 4-line m
 GPIO33        | D2          | not used in 1-line SD mode; 10k pullup in 4-line mode
 GPIO34        | D3          | not used in 1-line SD mode, but card's D3 pin must have a 10k pullup
 
-On some ESP32-S3 boards, the default pins are used for OPI and this will result in problems - please reassign the pins elsewhere using the mentioned command `setPins`.
+Warning: ESP32-S3-WROOM-2 is using most of the default GPIOs (33-37) to interface with on-board OPI flash. If the SD_MMC is initialized with default pins it will result in rebooting loop - please reassign the pins elsewhere using the mentioned command `setPins`.
+
+Note that ESP32-S3-DevKitC-1 v1.1 does NOT have GPIOs 33 and 34 broken out, so it will be necessary to change at least the pin for D2 and D3.
 
 ### 4-line and 1-line SD modes
 

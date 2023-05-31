@@ -20,6 +20,10 @@
 #include "SD_MMC.h"
 
 // Default pins for ESP-S3
+// Warning: ESP32-S3-WROOM-2 is using most of the default GPIOs (33-37) to interface with on-board OPI flash.
+//   If the SD_MMC is initialized with default pins it will result in rebooting loop - please
+//   reassign the pins elsewhere using the mentioned command `setPins`.
+// Note: ESP32-S3-WROOM-1 does not have GPIO 33 and 34 broken out.
 // Note: if it's ok to use default pins, you do not need to call the setPins
 int clk = 36;
 int cmd = 35;
