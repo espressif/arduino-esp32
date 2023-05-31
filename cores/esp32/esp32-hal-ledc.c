@@ -63,6 +63,7 @@ static bool ledcDetachBus(void * bus){
     ledc_channel_handle_t handle = (ledc_channel_handle_t)bus;
     ledc_handle.used_channels &= ~(1UL << handle->channel);
     pinMatrixOutDetach(handle->pin, false, false);
+    free(handle);
     return true;
 }
 
