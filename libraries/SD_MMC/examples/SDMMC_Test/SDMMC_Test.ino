@@ -19,6 +19,15 @@
 #include "FS.h"
 #include "SD_MMC.h"
 
+// Default pins for ESP-S3
+// Note: if it's ok to use default pins, you do not need to call the setPins
+int clk = 36;
+int cmd = 35;
+int d0  = 37;
+int d1  = 38;
+int d2  = 33;
+int d3  = 39; // GPIO 34 is not broken-out on ESP32-S3-DevKitC-1 v1.1
+
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\n", dirname);
 
@@ -179,8 +188,8 @@ void setup(){
     // If you want to change the pin assigment on ESP32-S3 uncomment this block and the appropriate
     // line depending if you want to use 1-bit or 4-bit line.
     // Please note that ESP32 does not allow pin change and will always fail.
-    //if(! setPins(int clk, int cmd, int d0)){
-    //if(! setPins(int clk, int cmd, int d0, int d1, int d2, int d3)){
+    //if(! setPins(clk, cmd, d0)){
+    //if(! setPins(clk, cmd, d0, d1, d2, d3)){
         Serial.println("Pin change failed!");
         return;
     }
