@@ -90,7 +90,7 @@ This function is used to setup the LEDC channel to 50 % PWM tone on selected fre
 * ``freq`` select frequency of pwm signal.
 
 This function will return ``frequency`` set for channel.
-If ``0`` is returned, error occurs and ledc cahnnel was not configured.
+If ``0`` is returned, error occurs and ledc channel was not configured.
 
 ledcWriteNote
 *************
