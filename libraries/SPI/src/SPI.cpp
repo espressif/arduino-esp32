@@ -106,9 +106,13 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
         _ss = ss;
     }
 
-    spiAttachSCK(_spi, _sck);
-    spiAttachMISO(_spi, _miso);
-    spiAttachMOSI(_spi, _mosi);
+    if(!spiAttachSCK(_spi, _sck)){ goto err; }
+    if(!spiAttachMISO(_spi, _miso)){ goto err; }
+    if(!spiAttachMOSI(_spi, _mosi)){ goto err; }
+    return;
+
+err:
+    log_e("Attaching pins to SPI failed.");
 
 }
 
