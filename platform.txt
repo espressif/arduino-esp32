@@ -173,6 +173,10 @@ recipe.hooks.objcopy.postobjcopy.1.pattern_args={build.path} {build.project_name
 recipe.hooks.objcopy.postobjcopy.1.pattern=bash -c "[ ! -d "{build.path}"/libraries/Insights ] || {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
 recipe.hooks.objcopy.postobjcopy.1.pattern.windows=cmd /c if exist "{build.path}\libraries\Insights" {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}
 
+## Copy ESP_SR Model
+recipe.hooks.objcopy.postobjcopy.2.pattern=bash -c "[ ! -d "{build.path}"/libraries/ESP_SR ] || [ ! -f "{compiler.sdk.path}"/esp_sr/srmodels.bin ] || cp -f "{compiler.sdk.path}"/esp_sr/srmodels.bin "{build.path}"/srmodels.bin"
+recipe.hooks.objcopy.postobjcopy.2.pattern.windows=cmd /c if exist "{build.path}\libraries\ESP_SR" if exist "{compiler.sdk.path}\esp_sr\srmodels.bin" COPY /y "{compiler.sdk.path}\esp_sr\srmodels.bin" "{build.path}\srmodels.bin"
+
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin
 recipe.output.save_file={build.project_name}.{build.variant}.bin
