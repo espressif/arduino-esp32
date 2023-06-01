@@ -55,6 +55,9 @@ typedef enum {
 #if SOC_TOUCH_SENSOR_SUPPORTED
 	ESP32_BUS_TYPE_TOUCH, 		// IO is used as TOUCH pin
 #endif
+#if SOC_USB_SERIAL_JTAG_SUPPORTED || SOC_USB_OTG_SUPPORTED
+	ESP32_BUS_TYPE_USB, 		// IO is used as USB pin
+#endif
 	ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
 
@@ -71,6 +74,9 @@ peripheral_bus_type_t perimanGetPinBusType(uint8_t pin);
 
 // Sets the peripheral destructor callback. Used to destroy bus when pin is assigned another function
 bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t cb);
+
+// Check if given pin is a valid GPIO number 
+bool perimanPinIsValid(uint8_t pin);
 
 #ifdef __cplusplus
 }
