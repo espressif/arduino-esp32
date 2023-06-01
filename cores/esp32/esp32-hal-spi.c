@@ -198,46 +198,16 @@ static bool spiDetachBus(void * bus){
 
 bool spiAttachSCK(spi_t * spi, int8_t sck)
 {
-    if(!spi) {
+    if(!spi || sck < 0) {
         return false;
-    }
-    if(sck < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
-        if(spi->num == FSPI) {
-            sck = 36;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S2!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            sck = 12;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S3!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32
-        if(spi->num == HSPI) {
-            sck = 14;
-        } else if(spi->num == VSPI) {
-            sck = 18;
-        } else {
-            sck = 6;
-        }
-#elif CONFIG_IDF_TARGET_ESP32C3
-        log_e("SPI Does not have default pins on ESP32C3!");
-        return false;
-#endif
     }
     void * bus = perimanGetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER);
     if(bus != NULL && !perimanSetPinBus(sck, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
-
     pinMode(sck, OUTPUT);
     pinMatrixOutAttach(sck, SPI_CLK_IDX(spi->num), false, false);
     spi->sck = sck;
-
     if(!perimanSetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER, (void *)(spi->num+1))){
         spiDetachBus((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", sck);
@@ -248,48 +218,18 @@ bool spiAttachSCK(spi_t * spi, int8_t sck)
 
 bool spiAttachMISO(spi_t * spi, int8_t miso)
 {
-    if(!spi) {
+    if(!spi || miso < 0) {
         return false;
-    }
-    if(miso < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
-        if(spi->num == FSPI) {
-            miso = 37;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S2!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            miso = 13;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S3!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32
-        if(spi->num == HSPI) {
-            miso = 12;
-        } else if(spi->num == VSPI) {
-            miso = 19;
-        } else {
-            miso = 7;
-        }
-#elif CONFIG_IDF_TARGET_ESP32C3
-        log_e("SPI Does not have default pins on ESP32C3!");
-        return false;
-#endif
     }
     void * bus = perimanGetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER);
     if(bus != NULL && !perimanSetPinBus(miso, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
-
     SPI_MUTEX_LOCK();
     pinMode(miso, INPUT);
     pinMatrixInAttach(miso, SPI_MISO_IDX(spi->num), false);
     spi->miso = miso;
     SPI_MUTEX_UNLOCK();
-
     if(!perimanSetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER, (void *)(spi->num+1))){
         spiDetachBus((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", miso);
@@ -300,46 +240,16 @@ bool spiAttachMISO(spi_t * spi, int8_t miso)
 
 bool spiAttachMOSI(spi_t * spi, int8_t mosi)
 {
-    if(!spi) {
+    if(!spi || mosi < 0) {
         return false;
-    }
-    if(mosi < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            mosi = 35;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S2!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            mosi = 11;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S3!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32
-        if(spi->num == HSPI) {
-            mosi = 13;
-        } else if(spi->num == VSPI) {
-            mosi = 23;
-        } else {
-            mosi = 8;
-        }
-#elif CONFIG_IDF_TARGET_ESP32C3
-        log_e("SPI Does not have default pins on ESP32C3!");
-        return false;
-#endif
     }
     void * bus = perimanGetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER);
     if(bus != NULL && !perimanSetPinBus(mosi, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
-
     pinMode(mosi, OUTPUT);
     pinMatrixOutAttach(mosi, SPI_MOSI_IDX(spi->num), false, false);
     spi->mosi = mosi;
-
     if(!perimanSetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER, (void *)(spi->num+1))){
         spiDetachBus((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", mosi);
@@ -350,36 +260,8 @@ bool spiAttachMOSI(spi_t * spi, int8_t mosi)
 
 bool spiDetachSCK(spi_t * spi, int8_t sck)
 {
-    if(!spi) {
+    if(!spi || sck < 0) {
         return false;
-    }
-    if(sck < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            sck = 36;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S2!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            sck = 12;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S3!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32
-        if(spi->num == HSPI) {
-            sck = 14;
-        } else if(spi->num == VSPI) {
-            sck = 18;
-        } else {
-            sck = 6;
-        }
-#elif CONFIG_IDF_TARGET_ESP32C3
-        log_e("SPI Does not have default pins on ESP32C3!");
-        return false;
-#endif
     }
     pinMatrixOutDetach(sck, false, false);
     spi->sck = -1;
@@ -389,36 +271,8 @@ bool spiDetachSCK(spi_t * spi, int8_t sck)
 
 bool spiDetachMISO(spi_t * spi, int8_t miso)
 {
-    if(!spi) {
+    if(!spi || miso < 0) {
         return false;
-    }
-    if(miso < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            miso = 37;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S2!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            miso = 13;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S3!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32
-        if(spi->num == HSPI) {
-            miso = 12;
-        } else if(spi->num == VSPI) {
-            miso = 19;
-        } else {
-            miso = 7;
-        }
-#elif CONFIG_IDF_TARGET_ESP32C3
-        log_e("SPI Does not have default pins on ESP32C3!");
-        return false;
-#endif
     }
     pinMatrixInDetach(SPI_MISO_IDX(spi->num), false, false);
     spi->miso = -1;
@@ -428,36 +282,8 @@ bool spiDetachMISO(spi_t * spi, int8_t miso)
 
 bool spiDetachMOSI(spi_t * spi, int8_t mosi)
 {
-    if(!spi) {
+    if(!spi || mosi < 0) {
         return false;
-    }
-    if(mosi < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            mosi = 35;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S2!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            mosi = 11;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S3!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32
-        if(spi->num == HSPI) {
-            mosi = 13;
-        } else if(spi->num == VSPI) {
-            mosi = 23;
-        } else {
-            mosi = 8;
-        }
-#elif CONFIG_IDF_TARGET_ESP32C3
-        log_e("SPI Does not have default pins on ESP32C3!");
-        return false;
-#endif
     }
     pinMatrixOutDetach(mosi, false, false);
     spi->mosi = -1;
@@ -467,51 +293,17 @@ bool spiDetachMOSI(spi_t * spi, int8_t mosi)
 
 bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
 {
-    if(!spi) {
+    if(!spi || ss < 0 || cs_num > 2) {
         return false;
-    }
-    if(cs_num > 2) {
-        return false;
-    }
-    if(ss < 0) {
-        cs_num = 0;
-#if CONFIG_IDF_TARGET_ESP32S2
-        if(spi->num == FSPI) {
-            ss = 34;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S2!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            ss = 10;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S3!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32
-        if(spi->num == HSPI) {
-            ss = 15;
-        } else if(spi->num == VSPI) {
-            ss = 5;
-        } else {
-            ss = 11;
-        }
-#elif CONFIG_IDF_TARGET_ESP32C3
-        log_e("SPI Does not have default pins on ESP32C3!");
-        return false;
-#endif
     }
     void * bus = perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER);
     if(bus != NULL && !perimanSetPinBus(ss, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
-
     pinMode(ss, OUTPUT);
     pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, cs_num), false, false);
     spiEnableSSPins(spi, (1 << cs_num));
     spi->ss = ss;
-
     if(!perimanSetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER, (void *)(spi->num+1))){
         spiDetachBus((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", ss);
@@ -522,36 +314,8 @@ bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
 
 bool spiDetachSS(spi_t * spi, int8_t ss)
 {
-    if(!spi) {
+    if(!spi || ss < 0) {
         return false;
-    }
-    if(ss < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2
-        if(spi->num == FSPI) {
-            ss = 34;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S2!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32S3
-        if(spi->num == FSPI) {
-            ss = 10;
-        } else {
-            log_e("HSPI Does not have default pins on ESP32S3!");
-            return false;
-        }
-#elif CONFIG_IDF_TARGET_ESP32
-        if(spi->num == HSPI) {
-            ss = 15;
-        } else if(spi->num == VSPI) {
-            ss = 5;
-        } else {
-            ss = 11;
-        }
-#elif CONFIG_IDF_TARGET_ESP32C3
-        log_e("SPI Does not have default pins on ESP32C3!");
-        return false;
-#endif
     }
     pinMatrixOutDetach(ss, false, false);
     spi->ss = -1;

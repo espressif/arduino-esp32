@@ -107,8 +107,8 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     }
 
     if(!spiAttachSCK(_spi, _sck)){ goto err; }
-    if(!spiAttachMISO(_spi, _miso)){ goto err; }
-    if(!spiAttachMOSI(_spi, _mosi)){ goto err; }
+    if(_miso >= 0 && !spiAttachMISO(_spi, _miso)){ goto err; }
+    if(_mosi >= 0 && !spiAttachMOSI(_spi, _mosi)){ goto err; }
     return;
 
 err:
@@ -122,8 +122,12 @@ void SPIClass::end()
         return;
     }
     spiDetachSCK(_spi, _sck);
-    spiDetachMISO(_spi, _miso);
-    spiDetachMOSI(_spi, _mosi);
+    if(_miso >= 0){
+        spiDetachMISO(_spi, _miso);
+    }
+    if(_mosi >= 0){
+        spiDetachMOSI(_spi, _mosi);
+    }
     setHwCs(false);
     spiStopBus(_spi);
     _spi = NULL;
@@ -131,6 +135,9 @@ void SPIClass::end()
 
 void SPIClass::setHwCs(bool use)
 {
+    if(_ss < 0){
+        return;
+    }
     if(use && !_use_hw_ss) {
         spiAttachSS(_spi, 0, _ss);
         spiSSEnable(_spi);
