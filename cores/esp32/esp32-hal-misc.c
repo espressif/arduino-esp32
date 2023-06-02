@@ -209,8 +209,9 @@ bool verifyRollbackLater() { return false; }
 #endif
 
 #ifdef CONFIG_BT_ENABLED
-//from esp32-hal-bt.c
-extern bool btInUse();
+//overwritten in esp32-hal-bt.c
+bool btInUse() __attribute__((weak));
+bool btInUse(){ return false; }
 #endif
 
 void initArduino()

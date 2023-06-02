@@ -15,20 +15,3 @@ How to compile libs with different debug level?
 -----------------------------------------------
 
 The short answer is ``esp32-arduino-lib-builder/configs/defconfig.common:44``. A guide explaining the process can be found here <guides/core_debug>
-
-SPIFFS mount failed
--------------------
-When you come across and error like this:
-
-.. code-block:: shell
-
-   E (588) SPIFFS: mount failed, -10025
-   [E][SPIFFS.cpp:47] begin(): Mounting SPIFFS failed! Error: -1
-
-Try enforcing format on fail in your code by adding ``true`` in the ``begin`` method such as this:
-
-.. code-block:: c++
-
-   SPIFFS.begin(true);
-
-See the method prototype for reference: ``bool begin(bool formatOnFail=false, const char * basePath="/spiffs", uint8_t maxOpenFiles=10, const char * partitionLabel=NULL);``

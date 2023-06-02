@@ -14,4 +14,3 @@
 
 #pragma once
 #include "soc/efuse_reg.h"
-#include "soc/efuse_struct.h"
