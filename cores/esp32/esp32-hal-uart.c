@@ -160,16 +160,13 @@ bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t
 }
 
 // 
-bool uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
+void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
     if(uart == NULL) {
-        return false;
+        return;
     }
     // IDF will issue corresponding error message when mode or threshold are wrong and prevent crashing
     // IDF will check (mode > HW_FLOWCTRL_CTS_RTS || threshold >= SOC_UART_FIFO_LEN)
-    UART_MUTEX_LOCK();
-    bool retCode = (ESP_OK == uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold));
-    UART_MUTEX_UNLOCK();  
-    return retCode;
+    uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold);
 }
 
 
@@ -247,28 +244,26 @@ void uartSetFastReading(uart_t* uart)
 }
 
 
-bool uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout)
+void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout)
 {
     if(uart == NULL) {
-        return false;
+        return;
     }
 
     UART_MUTEX_LOCK();
-    bool retCode = (ESP_OK == uart_set_rx_timeout(uart->num, numSymbTimeout));
+    uart_set_rx_timeout(uart->num, numSymbTimeout);
     UART_MUTEX_UNLOCK();
-    return retCode;
 }
 
-bool uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull)
+void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull)
 {
     if(uart == NULL) {
-        return false;
+        return;
     }
 
     UART_MUTEX_LOCK();
-    bool retCode = (ESP_OK == uart_set_rx_full_threshold(uart->num, numBytesFIFOFull));
+    uart_set_rx_full_threshold(uart->num, numBytesFIFOFull);
     UART_MUTEX_UNLOCK();
-    return retCode;
 }
 
 void uartEnd(uart_t* uart)
@@ -521,21 +516,6 @@ void uart_install_putc()
         ets_install_putc1(NULL);
         break;
     }
-}
-
-// Routines that take care of UART mode in the HardwareSerial Class code
-// used to set UART_MODE_RS485_HALF_DUPLEX auto RTS for TXD for ESP32 chips
-bool uartSetMode(uart_t *uart, uint8_t mode)
-{
-    if (uart == NULL || uart->num >= SOC_UART_NUM)
-    {
-        return false;
-    }
-    
-    UART_MUTEX_LOCK();
-    bool retCode = (ESP_OK == uart_set_mode(uart->num, mode));
-    UART_MUTEX_UNLOCK();
-    return retCode;
 }
 
 void uartSetDebug(uart_t* uart)

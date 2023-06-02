@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -10,7 +10,6 @@
 #include <stdbool.h>
 #include "ets_sys.h"
 #include "rsa_pss.h"
-#include "esp_assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,7 +80,7 @@ struct ets_secure_boot_sig_block {
     uint8_t _padding[16];
 };
 
-ESP_STATIC_ASSERT(sizeof(ets_secure_boot_sig_block_t) == 1216, "ets_secure_boot_sig_block_t should occupy 1216 Bytes in memory");
+_Static_assert(sizeof(ets_secure_boot_sig_block_t) == 1216, "ets_secure_boot_sig_block_t should occupy 1216 Bytes in memory");
 
 #define SECURE_BOOT_NUM_BLOCKS 3
 
@@ -91,7 +90,7 @@ struct ets_secure_boot_signature {
     uint8_t _padding[4096 - (sizeof(ets_secure_boot_sig_block_t) * SECURE_BOOT_NUM_BLOCKS)];
 };
 
-ESP_STATIC_ASSERT(sizeof(ets_secure_boot_signature_t) == 4096, "ets_secure_boot_signature_t should occupy 4096 Bytes in memory");
+_Static_assert(sizeof(ets_secure_boot_signature_t) == 4096, "ets_secure_boot_signature_t should occupy 4096 Bytes in memory");
 
 #define MAX_KEY_DIGESTS 3
 

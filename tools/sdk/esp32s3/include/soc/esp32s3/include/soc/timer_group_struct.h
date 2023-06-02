@@ -552,9 +552,7 @@ typedef struct {
 extern timg_dev_t TIMERG0;
 extern timg_dev_t TIMERG1;
 
-#ifndef __cplusplus
 _Static_assert(sizeof(timg_dev_t) == 0x100, "Invalid size of timg_dev_t structure");
-#endif
 
 #ifdef __cplusplus
 }

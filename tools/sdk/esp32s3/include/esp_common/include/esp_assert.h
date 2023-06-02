@@ -16,21 +16,15 @@
 
 #include "assert.h"
 
-#ifndef __cplusplus
-    #define ESP_STATIC_ASSERT _Static_assert
-#else // __cplusplus
-    #define ESP_STATIC_ASSERT static_assert
-#endif // __cplusplus
-
 /* Assert at compile time if possible, runtime otherwise */
 #ifndef __cplusplus
 /* __builtin_choose_expr() is only in C, makes this a lot cleaner */
 #define TRY_STATIC_ASSERT(CONDITION, MSG) do {                                                              \
-            ESP_STATIC_ASSERT(__builtin_choose_expr(__builtin_constant_p(CONDITION), (CONDITION), 1), #MSG);   \
+            _Static_assert(__builtin_choose_expr(__builtin_constant_p(CONDITION), (CONDITION), 1), #MSG);   \
             assert(#MSG && (CONDITION));                                                                    \
         } while(0)
 #else
-/* for C++, use __attribute__((error)) - works almost as well as ESP_STATIC_ASSERT */
+/* for C++, use __attribute__((error)) - works almost as well as _Static_assert */
 #define TRY_STATIC_ASSERT(CONDITION, MSG) do {                                                              \
             if (__builtin_constant_p(CONDITION) && !(CONDITION)) {          \
                 extern __attribute__((error(#MSG))) void failed_compile_time_assert(void);      \
