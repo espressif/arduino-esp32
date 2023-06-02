@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -61,6 +61,13 @@
   #define TU_VERIFY_STATIC(const_expr, _mess) enum { TU_XSTRCAT(_verify_static_, _TU_COUNTER_) = 1/(!!(const_expr)) }
 #endif
 
+/* --------------------- Fuzzing types -------------------------------------- */
+#ifdef _FUZZ
+  #define tu_static static __thread
+#else
+  #define tu_static static
+#endif
+
 // for declaration of reserved field, make use of _TU_COUNTER_
 #define TU_RESERVED           TU_XSTRCAT(reserved, _TU_COUNTER_)
 
@@ -76,9 +83,9 @@
  * - ##__VA_ARGS__ is used to deal with 0 paramerter (swallows comma)
  *------------------------------------------------------------------*/
 #if !defined(__CCRX__)
-#define TU_ARGS_NUM(...)   _TU_NARG(_0, ##__VA_ARGS__,_RSEQ_N())
+#define TU_ARGS_NUM(...)   _TU_NARG(_0, ##__VA_ARGS__, _RSEQ_N())
 #else
-#define TU_ARGS_NUM(...)   _TU_NARG(_0, __VA_ARGS__,_RSEQ_N())
+#define TU_ARGS_NUM(...)   _TU_NARG(_0, __VA_ARGS__, _RSEQ_N())
 #endif
 
 #define _TU_NARG(...)      _GET_NTH_ARG(__VA_ARGS__)
@@ -189,7 +196,7 @@
   #define TU_ATTR_DEPRECATED(mess)      __attribute__ ((deprecated(mess))) // warn if function with this attribute is used
   #define TU_ATTR_UNUSED                __attribute__ ((unused))           // Function/Variable is meant to be possibly unused
   #define TU_ATTR_USED                  __attribute__ ((used))             // Function/Variable is meant to be used
-  #define TU_ATTR_FALLTHROUGH           __attribute__((fallthrough))
+  #define TU_ATTR_FALLTHROUGH           do {} while (0)  /* fallthrough */
 
   #define TU_ATTR_PACKED_BEGIN
   #define TU_ATTR_PACKED_END
@@ -232,7 +239,7 @@
   #define TU_BSWAP16(u16) ((unsigned short)_builtin_revw((unsigned long)u16))
   #define TU_BSWAP32(u32) (_builtin_revl(u32))
 
-#else 
+#else
   #error "Compiler attribute porting is required"
 #endif
 

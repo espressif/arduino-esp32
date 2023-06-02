@@ -41,16 +41,6 @@
 /** \defgroup ClassDriver_CDC_Common Common Definitions
  *  @{ */
 
-// TODO remove
-/// CDC Pipe ID, used to indicate which pipe the API is addressing to (Notification, Out, In)
-typedef enum
-{
-  CDC_PIPE_NOTIFICATION , ///< Notification pipe
-  CDC_PIPE_DATA_IN      , ///< Data in pipe
-  CDC_PIPE_DATA_OUT     , ///< Data out pipe
-  CDC_PIPE_ERROR        , ///< Invalid Pipe ID
-}cdc_pipeid_t;
-
 //--------------------------------------------------------------------+
 // CDC Communication Interface Class
 //--------------------------------------------------------------------+
@@ -191,6 +181,28 @@ typedef enum
 
   CDC_REQUEST_MDLM_SEMANTIC_MODEL                          = 0x60,
 }cdc_management_request_t;
+
+enum
+{
+  CDC_CONTROL_LINE_STATE_DTR = 0x01,
+  CDC_CONTROL_LINE_STATE_RTS = 0x02,
+};
+
+enum
+{
+  CDC_LINE_CONDING_STOP_BITS_1   = 0, // 1   bit
+  CDC_LINE_CONDING_STOP_BITS_1_5 = 1, // 1.5 bits
+  CDC_LINE_CONDING_STOP_BITS_2   = 2, // 2   bits
+};
+
+enum
+{
+  CDC_LINE_CODING_PARITY_NONE  = 0,
+  CDC_LINE_CODING_PARITY_ODD   = 1,
+  CDC_LINE_CODING_PARITY_EVEN  = 2,
+  CDC_LINE_CODING_PARITY_MARK  = 3,
+  CDC_LINE_CODING_PARITY_SPACE = 4,
+};
 
 //--------------------------------------------------------------------+
 // Management Element Notification (Notification Endpoint)
@@ -365,7 +377,9 @@ typedef struct TU_ATTR_PACKED
     uint32_t incoming_distinctive   : 1; ///< 0 : Reports only incoming ringing. 1 : Reports incoming distinctive ringing patterns.
     uint32_t dual_tone_multi_freq   : 1; ///< 0 : Cannot report dual tone multi-frequency (DTMF) digits input remotely over the telephone line. 1 : Can report DTMF digits input remotely over the telephone line.
     uint32_t line_state_change      : 1; ///< 0 : Does not support line state change notification. 1 : Does support line state change notification
-    uint32_t TU_RESERVED            : 26;
+    uint32_t TU_RESERVED0           : 2;
+    uint32_t TU_RESERVED1           : 16;
+    uint32_t TU_RESERVED2           : 8;
   } bmCapabilities;
 }cdc_desc_func_telephone_call_state_reporting_capabilities_t;
 
@@ -390,9 +404,10 @@ TU_VERIFY_STATIC(sizeof(cdc_line_coding_t) == 7, "size is not correct");
 
 typedef struct TU_ATTR_PACKED
 {
-  uint16_t dte_is_present : 1; ///< Indicates to DCE if DTE is presentor not. This signal corresponds to V.24 signal 108/2 and RS-232 signal DTR.
-  uint16_t half_duplex_carrier_control : 1;
-  uint16_t : 14;
+  uint16_t dtr : 1;
+  uint16_t rts : 1;
+  uint16_t : 6;
+  uint16_t : 8;
 } cdc_line_control_state_t;
 
 TU_VERIFY_STATIC(sizeof(cdc_line_control_state_t) == 2, "size is not correct");

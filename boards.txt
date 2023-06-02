@@ -7479,8 +7479,8 @@ dfrobot_firebeetle2_esp32e.menu.EraseFlash.all.upload.erase_cmd=-e
 dfrobot_firebeetle2_esp32s3.name=DFRobot Firebeetle 2 ESP32-S3
 #dfrobot_firebeetle2_esp32s3.vid.0=0x3343
 #dfrobot_firebeetle2_esp32s3.pid.0=0x83CF
-dfrobot_beetle_esp32c3.vid.0=0x303a
-dfrobot_beetle_esp32c3.pid.0=0x1001
+dfrobot_firebeetle2_esp32s3.vid.0=0x303a
+dfrobot_firebeetle2_esp32s3.pid.0=0x1001
 
 dfrobot_firebeetle2_esp32s3.bootloader.tool=esptool_py
 dfrobot_firebeetle2_esp32s3.bootloader.tool.default=esptool_py
@@ -7690,6 +7690,198 @@ dfrobot_firebeetle2_esp32s3.menu.EraseFlash.none=Disabled
 dfrobot_firebeetle2_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
 dfrobot_firebeetle2_esp32s3.menu.EraseFlash.all=Enabled
 dfrobot_firebeetle2_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+# dfrobot Romeo ESP32-S3
+dfrobot_romeo_esp32s3.name=DFRobot Romeo ESP32-S3
+dfrobot_romeo_esp32s3.vid.0=0x303a
+dfrobot_romeo_esp32s3.pid.0=0x1001
+
+dfrobot_romeo_esp32s3.bootloader.tool=esptool_py
+dfrobot_romeo_esp32s3.bootloader.tool.default=esptool_py
+
+dfrobot_romeo_esp32s3.upload.tool=esptool_py
+dfrobot_romeo_esp32s3.upload.tool.default=esptool_py
+dfrobot_romeo_esp32s3.upload.tool.network=esp_ota
+
+dfrobot_romeo_esp32s3.upload.maximum_size=1310720
+dfrobot_romeo_esp32s3.upload.maximum_data_size=327680
+dfrobot_romeo_esp32s3.upload.flags=
+dfrobot_romeo_esp32s3.upload.extra_flags=
+dfrobot_romeo_esp32s3.upload.use_1200bps_touch=false
+dfrobot_romeo_esp32s3.upload.wait_for_upload_port=false
+
+dfrobot_romeo_esp32s3.serial.disableDTR=false
+dfrobot_romeo_esp32s3.serial.disableRTS=false
+
+dfrobot_romeo_esp32s3.build.tarch=xtensa
+dfrobot_romeo_esp32s3.build.bootloader_addr=0x0
+dfrobot_romeo_esp32s3.build.target=esp32s3
+dfrobot_romeo_esp32s3.build.mcu=esp32s3
+dfrobot_romeo_esp32s3.build.core=esp32
+dfrobot_romeo_esp32s3.build.variant=dfrobot_romeo_esp32s3
+dfrobot_romeo_esp32s3.build.board=DFROBOT_ROMEO_ESP32S3
+
+
+dfrobot_romeo_esp32s3.build.usb_mode=1
+dfrobot_romeo_esp32s3.build.cdc_on_boot=0
+dfrobot_romeo_esp32s3.build.msc_on_boot=0
+dfrobot_romeo_esp32s3.build.dfu_on_boot=0
+dfrobot_romeo_esp32s3.build.f_cpu=240000000L
+dfrobot_romeo_esp32s3.build.flash_size=16MB
+dfrobot_romeo_esp32s3.build.flash_freq=80m
+dfrobot_romeo_esp32s3.build.flash_mode=qio
+dfrobot_romeo_esp32s3.build.boot=qio
+dfrobot_romeo_esp32s3.build.boot_freq=80m
+dfrobot_romeo_esp32s3.build.partitions=default
+dfrobot_romeo_esp32s3.build.defines=
+dfrobot_romeo_esp32s3.build.loop_core=
+dfrobot_romeo_esp32s3.build.event_core=
+dfrobot_romeo_esp32s3.build.flash_type=qio
+dfrobot_romeo_esp32s3.build.psram_type=qspi
+dfrobot_romeo_esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
+
+dfrobot_romeo_esp32s3.menu.PSRAM.opi=OPI PSRAM
+dfrobot_romeo_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+dfrobot_romeo_esp32s3.menu.PSRAM.opi.build.psram_type=opi
+dfrobot_romeo_esp32s3.menu.PSRAM.disabled=Disabled
+dfrobot_romeo_esp32s3.menu.PSRAM.disabled.build.defines=
+dfrobot_romeo_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
+dfrobot_romeo_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
+dfrobot_romeo_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+dfrobot_romeo_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
+
+
+dfrobot_romeo_esp32s3.menu.FlashMode.qio=QIO 80MHz
+dfrobot_romeo_esp32s3.menu.FlashMode.qio.build.flash_mode=dio
+dfrobot_romeo_esp32s3.menu.FlashMode.qio.build.boot=qio
+dfrobot_romeo_esp32s3.menu.FlashMode.qio.build.boot_freq=80m
+dfrobot_romeo_esp32s3.menu.FlashMode.qio.build.flash_freq=80m
+dfrobot_romeo_esp32s3.menu.FlashMode.qio.build.flash_type=qio
+dfrobot_romeo_esp32s3.menu.FlashMode.qio120=QIO 120MHz
+dfrobot_romeo_esp32s3.menu.FlashMode.qio120.build.flash_mode=dio
+dfrobot_romeo_esp32s3.menu.FlashMode.qio120.build.boot=qio
+dfrobot_romeo_esp32s3.menu.FlashMode.qio120.build.boot_freq=120m
+dfrobot_romeo_esp32s3.menu.FlashMode.qio120.build.flash_freq=80m
+dfrobot_romeo_esp32s3.menu.FlashMode.qio120.build.flash_type=qio
+dfrobot_romeo_esp32s3.menu.FlashMode.dio=DIO 80MHz
+dfrobot_romeo_esp32s3.menu.FlashMode.dio.build.flash_mode=dio
+dfrobot_romeo_esp32s3.menu.FlashMode.dio.build.boot=dio
+dfrobot_romeo_esp32s3.menu.FlashMode.dio.build.boot_freq=80m
+dfrobot_romeo_esp32s3.menu.FlashMode.dio.build.flash_freq=80m
+dfrobot_romeo_esp32s3.menu.FlashMode.dio.build.flash_type=qio
+dfrobot_romeo_esp32s3.menu.FlashMode.opi=OPI 80MHz
+dfrobot_romeo_esp32s3.menu.FlashMode.opi.build.flash_mode=dout
+dfrobot_romeo_esp32s3.menu.FlashMode.opi.build.boot=opi
+dfrobot_romeo_esp32s3.menu.FlashMode.opi.build.boot_freq=80m
+dfrobot_romeo_esp32s3.menu.FlashMode.opi.build.flash_freq=80m
+dfrobot_romeo_esp32s3.menu.FlashMode.opi.build.flash_type=opi
+
+dfrobot_romeo_esp32s3.menu.FlashSize.16M=16MB (128Mb)
+dfrobot_romeo_esp32s3.menu.FlashSize.16M.build.flash_size=16MB
+
+
+dfrobot_romeo_esp32s3.menu.LoopCore.1=Core 1
+dfrobot_romeo_esp32s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+dfrobot_romeo_esp32s3.menu.LoopCore.0=Core 0
+dfrobot_romeo_esp32s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+dfrobot_romeo_esp32s3.menu.EventsCore.1=Core 1
+dfrobot_romeo_esp32s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+dfrobot_romeo_esp32s3.menu.EventsCore.0=Core 0
+dfrobot_romeo_esp32s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+dfrobot_romeo_esp32s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+dfrobot_romeo_esp32s3.menu.USBMode.hwcdc.build.usb_mode=1
+dfrobot_romeo_esp32s3.menu.USBMode.default=USB-OTG (TinyUSB)
+dfrobot_romeo_esp32s3.menu.USBMode.default.build.usb_mode=0
+
+dfrobot_romeo_esp32s3.menu.CDCOnBoot.cdc=Enabled
+dfrobot_romeo_esp32s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+dfrobot_romeo_esp32s3.menu.CDCOnBoot.default=Disabled
+dfrobot_romeo_esp32s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+
+dfrobot_romeo_esp32s3.menu.MSCOnBoot.default=Disabled
+dfrobot_romeo_esp32s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+dfrobot_romeo_esp32s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+dfrobot_romeo_esp32s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+dfrobot_romeo_esp32s3.menu.DFUOnBoot.default=Disabled
+dfrobot_romeo_esp32s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+dfrobot_romeo_esp32s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+dfrobot_romeo_esp32s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+dfrobot_romeo_esp32s3.menu.UploadMode.default=UART0 / Hardware CDC
+dfrobot_romeo_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+dfrobot_romeo_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+dfrobot_romeo_esp32s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+dfrobot_romeo_esp32s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+dfrobot_romeo_esp32s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+dfrobot_romeo_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+dfrobot_romeo_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+dfrobot_romeo_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+dfrobot_romeo_esp32s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+dfrobot_romeo_esp32s3.menu.PartitionScheme.fatflash.build.partitions=ffat
+dfrobot_romeo_esp32s3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+dfrobot_romeo_esp32s3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+dfrobot_romeo_esp32s3.menu.PartitionScheme.minimal.build.partitions=minimal
+dfrobot_romeo_esp32s3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+dfrobot_romeo_esp32s3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+dfrobot_romeo_esp32s3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+dfrobot_romeo_esp32s3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+dfrobot_romeo_esp32s3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+dfrobot_romeo_esp32s3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+dfrobot_romeo_esp32s3.menu.PartitionScheme.rainmaker=RainMaker
+dfrobot_romeo_esp32s3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+dfrobot_romeo_esp32s3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+dfrobot_romeo_esp32s3.menu.CPUFreq.240=240MHz (WiFi)
+dfrobot_romeo_esp32s3.menu.CPUFreq.240.build.f_cpu=240000000L
+dfrobot_romeo_esp32s3.menu.CPUFreq.160=160MHz (WiFi)
+dfrobot_romeo_esp32s3.menu.CPUFreq.160.build.f_cpu=160000000L
+dfrobot_romeo_esp32s3.menu.CPUFreq.80=80MHz (WiFi)
+dfrobot_romeo_esp32s3.menu.CPUFreq.80.build.f_cpu=80000000L
+dfrobot_romeo_esp32s3.menu.CPUFreq.40=40MHz
+dfrobot_romeo_esp32s3.menu.CPUFreq.40.build.f_cpu=40000000L
+dfrobot_romeo_esp32s3.menu.CPUFreq.20=20MHz
+dfrobot_romeo_esp32s3.menu.CPUFreq.20.build.f_cpu=20000000L
+dfrobot_romeo_esp32s3.menu.CPUFreq.10=10MHz
+dfrobot_romeo_esp32s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+dfrobot_romeo_esp32s3.menu.UploadSpeed.921600=921600
+dfrobot_romeo_esp32s3.menu.UploadSpeed.921600.upload.speed=921600
+dfrobot_romeo_esp32s3.menu.UploadSpeed.115200=115200
+dfrobot_romeo_esp32s3.menu.UploadSpeed.115200.upload.speed=115200
+dfrobot_romeo_esp32s3.menu.UploadSpeed.256000.windows=256000
+dfrobot_romeo_esp32s3.menu.UploadSpeed.256000.upload.speed=256000
+dfrobot_romeo_esp32s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+dfrobot_romeo_esp32s3.menu.UploadSpeed.230400=230400
+dfrobot_romeo_esp32s3.menu.UploadSpeed.230400.upload.speed=230400
+dfrobot_romeo_esp32s3.menu.UploadSpeed.460800.linux=460800
+dfrobot_romeo_esp32s3.menu.UploadSpeed.460800.macosx=460800
+dfrobot_romeo_esp32s3.menu.UploadSpeed.460800.upload.speed=460800
+dfrobot_romeo_esp32s3.menu.UploadSpeed.512000.windows=512000
+dfrobot_romeo_esp32s3.menu.UploadSpeed.512000.upload.speed=512000
+
+dfrobot_romeo_esp32s3.menu.DebugLevel.none=None
+dfrobot_romeo_esp32s3.menu.DebugLevel.none.build.code_debug=0
+dfrobot_romeo_esp32s3.menu.DebugLevel.error=Error
+dfrobot_romeo_esp32s3.menu.DebugLevel.error.build.code_debug=1
+dfrobot_romeo_esp32s3.menu.DebugLevel.warn=Warn
+dfrobot_romeo_esp32s3.menu.DebugLevel.warn.build.code_debug=2
+dfrobot_romeo_esp32s3.menu.DebugLevel.info=Info
+dfrobot_romeo_esp32s3.menu.DebugLevel.info.build.code_debug=3
+dfrobot_romeo_esp32s3.menu.DebugLevel.debug=Debug
+dfrobot_romeo_esp32s3.menu.DebugLevel.debug.build.code_debug=4
+dfrobot_romeo_esp32s3.menu.DebugLevel.verbose=Verbose
+dfrobot_romeo_esp32s3.menu.DebugLevel.verbose.build.code_debug=5
+
+dfrobot_romeo_esp32s3.menu.EraseFlash.none=Disabled
+dfrobot_romeo_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
+dfrobot_romeo_esp32s3.menu.EraseFlash.all=Enabled
+dfrobot_romeo_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -10638,6 +10830,185 @@ adafruit_itsybitsy_esp32.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_itsybitsy_esp32.menu.EraseFlash.all=Enabled
 adafruit_itsybitsy_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
+##############################################################
+# Adafruit MatrixPortal ESP32-S3
+
+adafruit_matrixportal_esp32s3.name=Adafruit MatrixPortal ESP32-S3
+adafruit_matrixportal_esp32s3.vid.0=0x239A
+adafruit_matrixportal_esp32s3.pid.0=0x8125
+adafruit_matrixportal_esp32s3.vid.1=0x239A
+adafruit_matrixportal_esp32s3.pid.1=0x0125
+adafruit_matrixportal_esp32s3.vid.2=0x239A
+adafruit_matrixportal_esp32s3.pid.2=0x8126
+
+adafruit_matrixportal_esp32s3.bootloader.tool=esptool_py
+adafruit_matrixportal_esp32s3.bootloader.tool.default=esptool_py
+
+adafruit_matrixportal_esp32s3.upload.tool=esptool_py
+adafruit_matrixportal_esp32s3.upload.tool.default=esptool_py
+adafruit_matrixportal_esp32s3.upload.tool.network=esp_ota
+
+adafruit_matrixportal_esp32s3.upload.maximum_size=1310720
+adafruit_matrixportal_esp32s3.upload.maximum_data_size=327680
+adafruit_matrixportal_esp32s3.upload.flags=
+adafruit_matrixportal_esp32s3.upload.extra_flags=
+adafruit_matrixportal_esp32s3.upload.use_1200bps_touch=true
+adafruit_matrixportal_esp32s3.upload.wait_for_upload_port=true
+
+adafruit_matrixportal_esp32s3.serial.disableDTR=false
+adafruit_matrixportal_esp32s3.serial.disableRTS=false
+
+adafruit_matrixportal_esp32s3.build.tarch=xtensa
+adafruit_matrixportal_esp32s3.build.bootloader_addr=0x0
+adafruit_matrixportal_esp32s3.build.target=esp32s3
+adafruit_matrixportal_esp32s3.build.mcu=esp32s3
+adafruit_matrixportal_esp32s3.build.core=esp32
+adafruit_matrixportal_esp32s3.build.variant=adafruit_matrixportal_esp32s3
+adafruit_matrixportal_esp32s3.build.board=ADAFRUIT_MATRIXPORTAL_ESP32S3
+
+adafruit_matrixportal_esp32s3.build.usb_mode=0
+adafruit_matrixportal_esp32s3.build.cdc_on_boot=1
+adafruit_matrixportal_esp32s3.build.msc_on_boot=0
+adafruit_matrixportal_esp32s3.build.dfu_on_boot=0
+adafruit_matrixportal_esp32s3.build.f_cpu=240000000L
+adafruit_matrixportal_esp32s3.build.flash_size=8MB
+adafruit_matrixportal_esp32s3.build.flash_freq=80m
+adafruit_matrixportal_esp32s3.build.flash_mode=dio
+adafruit_matrixportal_esp32s3.build.boot=qio
+adafruit_matrixportal_esp32s3.build.partitions=default
+adafruit_matrixportal_esp32s3.build.defines=
+adafruit_matrixportal_esp32s3.build.loop_core=
+adafruit_matrixportal_esp32s3.build.event_core=
+adafruit_matrixportal_esp32s3.build.flash_type=qio
+adafruit_matrixportal_esp32s3.build.psram_type=qspi
+adafruit_matrixportal_esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
+
+adafruit_matrixportal_esp32s3.menu.LoopCore.1=Core 1
+adafruit_matrixportal_esp32s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+adafruit_matrixportal_esp32s3.menu.LoopCore.0=Core 0
+adafruit_matrixportal_esp32s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+adafruit_matrixportal_esp32s3.menu.EventsCore.1=Core 1
+adafruit_matrixportal_esp32s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+adafruit_matrixportal_esp32s3.menu.EventsCore.0=Core 0
+adafruit_matrixportal_esp32s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+adafruit_matrixportal_esp32s3.menu.USBMode.default=USB-OTG (TinyUSB)
+adafruit_matrixportal_esp32s3.menu.USBMode.default.build.usb_mode=0
+adafruit_matrixportal_esp32s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+adafruit_matrixportal_esp32s3.menu.USBMode.hwcdc.build.usb_mode=1
+
+adafruit_matrixportal_esp32s3.menu.CDCOnBoot.cdc=Enabled
+adafruit_matrixportal_esp32s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+adafruit_matrixportal_esp32s3.menu.CDCOnBoot.default=Disabled
+adafruit_matrixportal_esp32s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+adafruit_matrixportal_esp32s3.menu.MSCOnBoot.default=Disabled
+adafruit_matrixportal_esp32s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+adafruit_matrixportal_esp32s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+adafruit_matrixportal_esp32s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+adafruit_matrixportal_esp32s3.menu.DFUOnBoot.default=Disabled
+adafruit_matrixportal_esp32s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+adafruit_matrixportal_esp32s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+adafruit_matrixportal_esp32s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+adafruit_matrixportal_esp32s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+adafruit_matrixportal_esp32s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+adafruit_matrixportal_esp32s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+adafruit_matrixportal_esp32s3.menu.UploadMode.default=UART0 / Hardware CDC
+adafruit_matrixportal_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+adafruit_matrixportal_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+adafruit_matrixportal_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
+adafruit_matrixportal_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_matrixportal_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
+adafruit_matrixportal_esp32s3.menu.PSRAM.disabled=Disabled
+adafruit_matrixportal_esp32s3.menu.PSRAM.disabled.build.defines=
+adafruit_matrixportal_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
+adafruit_matrixportal_esp32s3.menu.PSRAM.opi=OPI PSRAM
+adafruit_matrixportal_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_matrixportal_esp32s3.menu.PSRAM.opi.build.psram_type=opi
+
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB-tinyuf2
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+adafruit_matrixportal_esp32s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+adafruit_matrixportal_esp32s3.menu.CPUFreq.240=240MHz (WiFi)
+adafruit_matrixportal_esp32s3.menu.CPUFreq.240.build.f_cpu=240000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.160=160MHz (WiFi)
+adafruit_matrixportal_esp32s3.menu.CPUFreq.160.build.f_cpu=160000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.80=80MHz (WiFi)
+adafruit_matrixportal_esp32s3.menu.CPUFreq.80.build.f_cpu=80000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.40=40MHz
+adafruit_matrixportal_esp32s3.menu.CPUFreq.40.build.f_cpu=40000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.20=20MHz
+adafruit_matrixportal_esp32s3.menu.CPUFreq.20.build.f_cpu=20000000L
+adafruit_matrixportal_esp32s3.menu.CPUFreq.10=10MHz
+adafruit_matrixportal_esp32s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio=QIO 80MHz
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio.build.flash_mode=dio
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio.build.boot=qio
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio.build.boot_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio.build.flash_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120=QIO 120MHz
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120.build.flash_mode=dio
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120.build.boot=qio
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120.build.boot_freq=120m
+adafruit_matrixportal_esp32s3.menu.FlashMode.qio120.build.flash_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio=DIO 80MHz
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio.build.flash_mode=dio
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio.build.boot=dio
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio.build.boot_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.dio.build.flash_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi=OPI 80MHz
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi.build.flash_mode=dout
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi.build.boot=opi
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi.build.boot_freq=80m
+adafruit_matrixportal_esp32s3.menu.FlashMode.opi.build.flash_freq=80m
+
+adafruit_matrixportal_esp32s3.menu.FlashSize.8M=8MB (64Mb)
+adafruit_matrixportal_esp32s3.menu.FlashSize.8M.build.flash_size=8MB
+
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.921600=921600
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.921600.upload.speed=921600
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.115200=115200
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.115200.upload.speed=115200
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.256000.windows=256000
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.256000.upload.speed=256000
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.230400=230400
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.230400.upload.speed=230400
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.460800.linux=460800
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.460800.macosx=460800
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.460800.upload.speed=460800
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.512000.windows=512000
+adafruit_matrixportal_esp32s3.menu.UploadSpeed.512000.upload.speed=512000
+
+adafruit_matrixportal_esp32s3.menu.DebugLevel.none=None
+adafruit_matrixportal_esp32s3.menu.DebugLevel.none.build.code_debug=0
+adafruit_matrixportal_esp32s3.menu.DebugLevel.error=Error
+adafruit_matrixportal_esp32s3.menu.DebugLevel.error.build.code_debug=1
+adafruit_matrixportal_esp32s3.menu.DebugLevel.warn=Warn
+adafruit_matrixportal_esp32s3.menu.DebugLevel.warn.build.code_debug=2
+adafruit_matrixportal_esp32s3.menu.DebugLevel.info=Info
+adafruit_matrixportal_esp32s3.menu.DebugLevel.info.build.code_debug=3
+adafruit_matrixportal_esp32s3.menu.DebugLevel.debug=Debug
+adafruit_matrixportal_esp32s3.menu.DebugLevel.debug.build.code_debug=4
+adafruit_matrixportal_esp32s3.menu.DebugLevel.verbose=Verbose
+adafruit_matrixportal_esp32s3.menu.DebugLevel.verbose.build.code_debug=5
+
+adafruit_matrixportal_esp32s3.menu.EraseFlash.none=Disabled
+adafruit_matrixportal_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
+adafruit_matrixportal_esp32s3.menu.EraseFlash.all=Enabled
+adafruit_matrixportal_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 
 ##############################################################
 
@@ -12262,6 +12633,198 @@ m5stack-core2.menu.EraseFlash.none=Disabled
 m5stack-core2.menu.EraseFlash.none.upload.erase_cmd=
 m5stack-core2.menu.EraseFlash.all=Enabled
 m5stack-core2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+m5stack-cores3.name=M5Stack-CoreS3
+m5stack-cores3.vid.0=0x303a
+m5stack-cores3.pid.0=0x1001
+
+m5stack-cores3.bootloader.tool=esptool_py
+m5stack-cores3.bootloader.tool.default=esptool_py
+
+m5stack-cores3.upload.tool=esptool_py
+m5stack-cores3.upload.tool.default=esptool_py
+m5stack-cores3.upload.tool.network=esp_ota
+
+m5stack-cores3.upload.maximum_size=1310720
+m5stack-cores3.upload.maximum_data_size=327680
+m5stack-cores3.upload.flags=
+m5stack-cores3.upload.extra_flags=
+m5stack-cores3.upload.use_1200bps_touch=false
+m5stack-cores3.upload.wait_for_upload_port=false
+
+m5stack-cores3.serial.disableDTR=false
+m5stack-cores3.serial.disableRTS=false
+
+m5stack-cores3.build.tarch=xtensa
+m5stack-cores3.build.bootloader_addr=0x0
+m5stack-cores3.build.target=esp32s3
+m5stack-cores3.build.mcu=esp32s3
+m5stack-cores3.build.core=esp32
+m5stack-cores3.build.variant=m5stack_cores3
+m5stack-cores3.build.board=M5STACK_CORES3
+
+m5stack-cores3.build.usb_mode=1
+m5stack-cores3.build.cdc_on_boot=0
+m5stack-cores3.build.msc_on_boot=0
+m5stack-cores3.build.dfu_on_boot=0
+m5stack-cores3.build.f_cpu=240000000L
+m5stack-cores3.build.flash_size=4MB
+m5stack-cores3.build.flash_freq=80m
+m5stack-cores3.build.flash_mode=dio
+m5stack-cores3.build.boot=qio
+m5stack-cores3.build.boot_freq=80m
+m5stack-cores3.build.partitions=default
+m5stack-cores3.build.defines=
+m5stack-cores3.build.loop_core=
+m5stack-cores3.build.event_core=
+m5stack-cores3.build.psram_type=qspi
+m5stack-cores3.build.memory_type={build.boot}_{build.psram_type}
+
+m5stack-cores3.menu.JTAGAdapter.default=Disabled
+m5stack-cores3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+m5stack-cores3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+m5stack-cores3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+m5stack-cores3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+m5stack-cores3.menu.JTAGAdapter.external=FTDI Adapter
+m5stack-cores3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+m5stack-cores3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+m5stack-cores3.menu.JTAGAdapter.bridge=ESP USB Bridge
+m5stack-cores3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+m5stack-cores3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+m5stack-cores3.menu.PSRAM.disabled=Disabled
+m5stack-cores3.menu.PSRAM.disabled.build.defines=
+m5stack-cores3.menu.PSRAM.disabled.build.psram_type=qspi
+m5stack-cores3.menu.PSRAM.enabled=QSPI PSRAM
+m5stack-cores3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack-cores3.menu.PSRAM.enabled.build.psram_type=qspi
+m5stack-cores3.menu.PSRAM.opi=OPI PSRAM
+m5stack-cores3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack-cores3.menu.PSRAM.opi.build.psram_type=opi
+
+m5stack-cores3.menu.FlashMode.qio=QIO 80MHz
+m5stack-cores3.menu.FlashMode.qio.build.flash_mode=dio
+m5stack-cores3.menu.FlashMode.qio.build.boot=qio
+m5stack-cores3.menu.FlashMode.qio.build.boot_freq=80m
+m5stack-cores3.menu.FlashMode.qio.build.flash_freq=80m
+m5stack-cores3.menu.FlashMode.qio120=QIO 120MHz
+m5stack-cores3.menu.FlashMode.qio120.build.flash_mode=dio
+m5stack-cores3.menu.FlashMode.qio120.build.boot=qio
+m5stack-cores3.menu.FlashMode.qio120.build.boot_freq=120m
+m5stack-cores3.menu.FlashMode.qio120.build.flash_freq=80m
+m5stack-cores3.menu.FlashMode.dio=DIO 80MHz
+m5stack-cores3.menu.FlashMode.dio.build.flash_mode=dio
+m5stack-cores3.menu.FlashMode.dio.build.boot=dio
+m5stack-cores3.menu.FlashMode.dio.build.boot_freq=80m
+m5stack-cores3.menu.FlashMode.dio.build.flash_freq=80m
+m5stack-cores3.menu.FlashMode.opi=OPI 80MHz
+m5stack-cores3.menu.FlashMode.opi.build.flash_mode=dout
+m5stack-cores3.menu.FlashMode.opi.build.boot=opi
+m5stack-cores3.menu.FlashMode.opi.build.boot_freq=80m
+m5stack-cores3.menu.FlashMode.opi.build.flash_freq=80m
+
+m5stack-cores3.menu.FlashSize.4M=4MB (32Mb)
+m5stack-cores3.menu.FlashSize.4M.build.flash_size=4MB
+m5stack-cores3.menu.FlashSize.8M=8MB (64Mb)
+m5stack-cores3.menu.FlashSize.8M.build.flash_size=8MB
+m5stack-cores3.menu.FlashSize.8M.build.partitions=default_8MB
+m5stack-cores3.menu.FlashSize.16M=16MB (128Mb)
+m5stack-cores3.menu.FlashSize.16M.build.flash_size=16MB
+#m5stack-cores3.menu.FlashSize.32M=32MB (256Mb)
+#m5stack-cores3.menu.FlashSize.32M.build.flash_size=32MB
+
+m5stack-cores3.menu.LoopCore.1=Core 1
+m5stack-cores3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+m5stack-cores3.menu.LoopCore.0=Core 0
+m5stack-cores3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+m5stack-cores3.menu.EventsCore.1=Core 1
+m5stack-cores3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+m5stack-cores3.menu.EventsCore.0=Core 0
+m5stack-cores3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+m5stack-cores3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+m5stack-cores3.menu.USBMode.hwcdc.build.usb_mode=1
+m5stack-cores3.menu.USBMode.default=USB-OTG (TinyUSB)
+m5stack-cores3.menu.USBMode.default.build.usb_mode=0
+
+m5stack-cores3.menu.CDCOnBoot.default=Disabled
+m5stack-cores3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+m5stack-cores3.menu.CDCOnBoot.cdc=Enabled
+m5stack-cores3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+m5stack-cores3.menu.MSCOnBoot.default=Disabled
+m5stack-cores3.menu.MSCOnBoot.default.build.msc_on_boot=0
+m5stack-cores3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+m5stack-cores3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+m5stack-cores3.menu.DFUOnBoot.default=Disabled
+m5stack-cores3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+m5stack-cores3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+m5stack-cores3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+m5stack-cores3.menu.UploadMode.default=UART0 / Hardware CDC
+m5stack-cores3.menu.UploadMode.default.upload.use_1200bps_touch=false
+m5stack-cores3.menu.UploadMode.default.upload.wait_for_upload_port=false
+m5stack-cores3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+m5stack-cores3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+m5stack-cores3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+m5stack-cores3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default.build.partitions=default
+m5stack-cores3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+m5stack-cores3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+m5stack-cores3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+m5stack-cores3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+m5stack-cores3.menu.CPUFreq.240=240MHz (WiFi)
+m5stack-cores3.menu.CPUFreq.240.build.f_cpu=240000000L
+m5stack-cores3.menu.CPUFreq.160=160MHz (WiFi)
+m5stack-cores3.menu.CPUFreq.160.build.f_cpu=160000000L
+m5stack-cores3.menu.CPUFreq.80=80MHz (WiFi)
+m5stack-cores3.menu.CPUFreq.80.build.f_cpu=80000000L
+m5stack-cores3.menu.CPUFreq.40=40MHz
+m5stack-cores3.menu.CPUFreq.40.build.f_cpu=40000000L
+m5stack-cores3.menu.CPUFreq.20=20MHz
+m5stack-cores3.menu.CPUFreq.20.build.f_cpu=20000000L
+m5stack-cores3.menu.CPUFreq.10=10MHz
+m5stack-cores3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+m5stack-cores3.menu.UploadSpeed.921600=921600
+m5stack-cores3.menu.UploadSpeed.921600.upload.speed=921600
+m5stack-cores3.menu.UploadSpeed.115200=115200
+m5stack-cores3.menu.UploadSpeed.115200.upload.speed=115200
+m5stack-cores3.menu.UploadSpeed.256000.windows=256000
+m5stack-cores3.menu.UploadSpeed.256000.upload.speed=256000
+m5stack-cores3.menu.UploadSpeed.230400.windows.upload.speed=256000
+m5stack-cores3.menu.UploadSpeed.230400=230400
+m5stack-cores3.menu.UploadSpeed.230400.upload.speed=230400
+m5stack-cores3.menu.UploadSpeed.460800.linux=460800
+m5stack-cores3.menu.UploadSpeed.460800.macosx=460800
+m5stack-cores3.menu.UploadSpeed.460800.upload.speed=460800
+m5stack-cores3.menu.UploadSpeed.512000.windows=512000
+m5stack-cores3.menu.UploadSpeed.512000.upload.speed=512000
+
+m5stack-cores3.menu.DebugLevel.none=None
+m5stack-cores3.menu.DebugLevel.none.build.code_debug=0
+m5stack-cores3.menu.DebugLevel.error=Error
+m5stack-cores3.menu.DebugLevel.error.build.code_debug=1
+m5stack-cores3.menu.DebugLevel.warn=Warn
+m5stack-cores3.menu.DebugLevel.warn.build.code_debug=2
+m5stack-cores3.menu.DebugLevel.info=Info
+m5stack-cores3.menu.DebugLevel.info.build.code_debug=3
+m5stack-cores3.menu.DebugLevel.debug=Debug
+m5stack-cores3.menu.DebugLevel.debug.build.code_debug=4
+m5stack-cores3.menu.DebugLevel.verbose=Verbose
+m5stack-cores3.menu.DebugLevel.verbose.build.code_debug=5
+
+m5stack-cores3.menu.EraseFlash.none=Disabled
+m5stack-cores3.menu.EraseFlash.none.upload.erase_cmd=
+m5stack-cores3.menu.EraseFlash.all=Enabled
+m5stack-cores3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -23049,5 +23612,226 @@ crabik_slot_esp32_s3.menu.EraseFlash.none=Disabled
 crabik_slot_esp32_s3.menu.EraseFlash.none.upload.erase_cmd=
 crabik_slot_esp32_s3.menu.EraseFlash.all=Enabled
 crabik_slot_esp32_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+
+nebulas3.name=Nebula S3
+nebulas3.vid.0=0x303a
+nebulas3.pid.0=0x1001
+
+nebulas3.bootloader.tool=esptool_py
+nebulas3.bootloader.tool.default=esptool_py
+
+nebulas3.upload.tool=esptool_py
+nebulas3.upload.tool.default=esptool_py
+nebulas3.upload.tool.network=esp_ota
+
+nebulas3.upload.maximum_size=1310720
+nebulas3.upload.maximum_data_size=327680
+nebulas3.upload.flags=
+nebulas3.upload.extra_flags=
+nebulas3.upload.use_1200bps_touch=false
+nebulas3.upload.wait_for_upload_port=false
+
+nebulas3.serial.disableDTR=false
+nebulas3.serial.disableRTS=false
+
+nebulas3.build.tarch=xtensa
+nebulas3.build.bootloader_addr=0x0
+nebulas3.build.target=esp32s3
+nebulas3.build.mcu=esp32s3
+nebulas3.build.core=esp32
+nebulas3.build.variant=Nebula_S3
+nebulas3.build.board=NEBULAS3
+
+nebulas3.build.usb_mode=1
+nebulas3.build.cdc_on_boot=0
+nebulas3.build.msc_on_boot=0
+nebulas3.build.dfu_on_boot=0
+nebulas3.build.f_cpu=240000000L
+nebulas3.build.flash_size=4MB
+nebulas3.build.flash_freq=80m
+nebulas3.build.flash_mode=dio
+nebulas3.build.boot=qio
+nebulas3.build.boot_freq=80m
+nebulas3.build.partitions=default
+nebulas3.build.defines=
+nebulas3.build.loop_core=
+nebulas3.build.event_core=
+nebulas3.build.psram_type=qspi
+nebulas3.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+nebulas3.menu.JTAGAdapter.default=Disabled
+nebulas3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+nebulas3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+nebulas3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+nebulas3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+nebulas3.menu.JTAGAdapter.external=FTDI Adapter
+nebulas3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+nebulas3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+nebulas3.menu.JTAGAdapter.bridge=ESP USB Bridge
+nebulas3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+nebulas3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+nebulas3.menu.PSRAM.disabled=Disabled
+nebulas3.menu.PSRAM.disabled.build.defines=
+nebulas3.menu.PSRAM.disabled.build.psram_type=qspi
+nebulas3.menu.PSRAM.enabled=QSPI PSRAM
+nebulas3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+nebulas3.menu.PSRAM.enabled.build.psram_type=qspi
+nebulas3.menu.PSRAM.opi=OPI PSRAM
+nebulas3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+nebulas3.menu.PSRAM.opi.build.psram_type=opi
+
+nebulas3.menu.FlashMode.qio=QIO 80MHz
+nebulas3.menu.FlashMode.qio.build.flash_mode=dio
+nebulas3.menu.FlashMode.qio.build.boot=qio
+nebulas3.menu.FlashMode.qio.build.boot_freq=80m
+nebulas3.menu.FlashMode.qio.build.flash_freq=80m
+nebulas3.menu.FlashMode.qio120=QIO 120MHz
+nebulas3.menu.FlashMode.qio120.build.flash_mode=dio
+nebulas3.menu.FlashMode.qio120.build.boot=qio
+nebulas3.menu.FlashMode.qio120.build.boot_freq=120m
+nebulas3.menu.FlashMode.qio120.build.flash_freq=80m
+nebulas3.menu.FlashMode.dio=DIO 80MHz
+nebulas3.menu.FlashMode.dio.build.flash_mode=dio
+nebulas3.menu.FlashMode.dio.build.boot=dio
+nebulas3.menu.FlashMode.dio.build.boot_freq=80m
+nebulas3.menu.FlashMode.dio.build.flash_freq=80m
+nebulas3.menu.FlashMode.opi=OPI 80MHz
+nebulas3.menu.FlashMode.opi.build.flash_mode=dout
+nebulas3.menu.FlashMode.opi.build.boot=opi
+nebulas3.menu.FlashMode.opi.build.boot_freq=80m
+nebulas3.menu.FlashMode.opi.build.flash_freq=80m
+
+nebulas3.menu.FlashSize.4M=4MB (32Mb)
+nebulas3.menu.FlashSize.4M.build.flash_size=4MB
+nebulas3.menu.FlashSize.8M=8MB (64Mb)
+nebulas3.menu.FlashSize.8M.build.flash_size=8MB
+nebulas3.menu.FlashSize.8M.build.partitions=default_8MB
+nebulas3.menu.FlashSize.16M=16MB (128Mb)
+nebulas3.menu.FlashSize.16M.build.flash_size=16MB
+
+nebulas3.menu.LoopCore.1=Core 1
+nebulas3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+nebulas3.menu.LoopCore.0=Core 0
+nebulas3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+nebulas3.menu.EventsCore.1=Core 1
+nebulas3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+nebulas3.menu.EventsCore.0=Core 0
+nebulas3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+nebulas3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+nebulas3.menu.USBMode.hwcdc.build.usb_mode=1
+nebulas3.menu.USBMode.default=USB-OTG (TinyUSB)
+nebulas3.menu.USBMode.default.build.usb_mode=0
+
+nebulas3.menu.CDCOnBoot.default= Enabled
+nebulas3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+nebulas3.menu.CDCOnBoot.cdc=Disabled
+nebulas3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+nebulas3.menu.MSCOnBoot.default=Disabled
+nebulas3.menu.MSCOnBoot.default.build.msc_on_boot=0
+nebulas3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+nebulas3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+nebulas3.menu.DFUOnBoot.default=Disabled
+nebulas3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+nebulas3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+nebulas3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+nebulas3.menu.UploadMode.default=UART0 / Hardware CDC
+nebulas3.menu.UploadMode.default.upload.use_1200bps_touch=false
+nebulas3.menu.UploadMode.default.upload.wait_for_upload_port=false
+nebulas3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+nebulas3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+nebulas3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+nebulas3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+nebulas3.menu.PartitionScheme.default.build.partitions=default
+nebulas3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+nebulas3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+nebulas3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+nebulas3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+nebulas3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+nebulas3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+nebulas3.menu.PartitionScheme.minimal.build.partitions=minimal
+nebulas3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+nebulas3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+nebulas3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+nebulas3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+nebulas3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+nebulas3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+nebulas3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+nebulas3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+nebulas3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+nebulas3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+nebulas3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+nebulas3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+nebulas3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+nebulas3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+nebulas3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+nebulas3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+nebulas3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+nebulas3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+nebulas3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+nebulas3.menu.PartitionScheme.fatflash.build.partitions=ffat
+nebulas3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+nebulas3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+nebulas3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+nebulas3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+nebulas3.menu.PartitionScheme.rainmaker=RainMaker
+nebulas3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+nebulas3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+nebulas3.menu.CPUFreq.240=240MHz (WiFi)
+nebulas3.menu.CPUFreq.240.build.f_cpu=240000000L
+nebulas3.menu.CPUFreq.160=160MHz (WiFi)
+nebulas3.menu.CPUFreq.160.build.f_cpu=160000000L
+nebulas3.menu.CPUFreq.80=80MHz (WiFi)
+nebulas3.menu.CPUFreq.80.build.f_cpu=80000000L
+nebulas3.menu.CPUFreq.40=40MHz
+nebulas3.menu.CPUFreq.40.build.f_cpu=40000000L
+nebulas3.menu.CPUFreq.20=20MHz
+nebulas3.menu.CPUFreq.20.build.f_cpu=20000000L
+nebulas3.menu.CPUFreq.10=10MHz
+nebulas3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+nebulas3.menu.UploadSpeed.921600=921600
+nebulas3.menu.UploadSpeed.921600.upload.speed=921600
+nebulas3.menu.UploadSpeed.115200=115200
+nebulas3.menu.UploadSpeed.115200.upload.speed=115200
+nebulas3.menu.UploadSpeed.256000.windows=256000
+nebulas3.menu.UploadSpeed.256000.upload.speed=256000
+nebulas3.menu.UploadSpeed.230400.windows.upload.speed=256000
+nebulas3.menu.UploadSpeed.230400=230400
+nebulas3.menu.UploadSpeed.230400.upload.speed=230400
+nebulas3.menu.UploadSpeed.460800.linux=460800
+nebulas3.menu.UploadSpeed.460800.macosx=460800
+nebulas3.menu.UploadSpeed.460800.upload.speed=460800
+nebulas3.menu.UploadSpeed.512000.windows=512000
+nebulas3.menu.UploadSpeed.512000.upload.speed=512000
+
+nebulas3.menu.DebugLevel.none=None
+nebulas3.menu.DebugLevel.none.build.code_debug=0
+nebulas3.menu.DebugLevel.error=Error
+nebulas3.menu.DebugLevel.error.build.code_debug=1
+nebulas3.menu.DebugLevel.warn=Warn
+nebulas3.menu.DebugLevel.warn.build.code_debug=2
+nebulas3.menu.DebugLevel.info=Info
+nebulas3.menu.DebugLevel.info.build.code_debug=3
+nebulas3.menu.DebugLevel.debug=Debug
+nebulas3.menu.DebugLevel.debug.build.code_debug=4
+nebulas3.menu.DebugLevel.verbose=Verbose
+nebulas3.menu.DebugLevel.verbose.build.code_debug=5
+
+nebulas3.menu.EraseFlash.none=Disabled
+nebulas3.menu.EraseFlash.none.upload.erase_cmd=
+nebulas3.menu.EraseFlash.all=Enabled
+nebulas3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################

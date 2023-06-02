@@ -32,12 +32,20 @@ typedef struct {
     char *mqtt_host;
     /** Client ID */
     char *client_id;
-    /** Client Certificate in NULL terminated PEM format */
+    /** Client Certificate in DER format or NULL-terminated PEM format */
     char *client_cert;
-    /** Client Key in NULL terminated PEM format */
+    /** Client Certificate length */
+    size_t client_cert_len;
+    /** Client Key in DER format or NULL-terminated PEM format */
     char *client_key;
-    /** Server Certificate in NULL terminated PEM format */
+    /** Client Key length */
+    size_t client_key_len;
+    /** Server Certificate in DER format or NULL-terminated PEM format */
     char *server_cert;
+    /** Server Certificate length */
+    size_t server_cert_len;
+    /** Pointer for digital signature peripheral context */
+    void *ds_data;
 } esp_rmaker_mqtt_conn_params_t;
 
 /** MQTT Get Connection Parameters function prototype

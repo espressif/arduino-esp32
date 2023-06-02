@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -167,6 +167,12 @@ void dcd_edpt_stall           (uint8_t rhport, uint8_t ep_addr);
 // This API never calls with control endpoints, since it is auto cleared when receiving setup packet
 void dcd_edpt_clear_stall     (uint8_t rhport, uint8_t ep_addr);
 
+// Allocate packet buffer used by ISO endpoints
+// Some MCU need manual packet buffer allocation, we allocation largest size to avoid clustering
+TU_ATTR_WEAK bool dcd_edpt_iso_alloc(uint8_t rhport, uint8_t ep_addr, uint16_t largest_packet_size);
+
+// Configure and enable an ISO endpoint according to descriptor
+TU_ATTR_WEAK bool dcd_edpt_iso_activate(uint8_t rhport,  tusb_desc_endpoint_t const * p_endpoint_desc);
 //--------------------------------------------------------------------+
 // Event API (implemented by stack)
 //--------------------------------------------------------------------+
@@ -193,7 +199,7 @@ TU_ATTR_ALWAYS_INLINE static inline  void dcd_event_bus_reset (uint8_t rhport, t
 TU_ATTR_ALWAYS_INLINE static inline void dcd_event_setup_received(uint8_t rhport, uint8_t const * setup, bool in_isr)
 {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_SETUP_RECEIVED };
-  memcpy(&event.setup_received, setup, 8);
+  memcpy(&event.setup_received, setup, sizeof(tusb_control_request_t));
 
   dcd_event_handler(&event, in_isr);
 }

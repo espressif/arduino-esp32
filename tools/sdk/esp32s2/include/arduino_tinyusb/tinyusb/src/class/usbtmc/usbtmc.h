@@ -262,14 +262,14 @@ typedef struct TU_ATTR_PACKED
 
   struct TU_ATTR_PACKED
   {
-    unsigned int listenOnly :1;
-    unsigned int talkOnly :1;
-    unsigned int supportsIndicatorPulse :1;
+    uint8_t listenOnly :1;
+    uint8_t talkOnly :1;
+    uint8_t supportsIndicatorPulse :1;
   } bmIntfcCapabilities;
 
   struct TU_ATTR_PACKED
   {
-    unsigned int canEndBulkInOnTermChar :1;
+    uint8_t canEndBulkInOnTermChar :1;
   } bmDevCapabilities;
 
   uint8_t _reserved2[6];
@@ -277,17 +277,17 @@ typedef struct TU_ATTR_PACKED
 
   struct TU_ATTR_PACKED
   {
-    unsigned int is488_2 :1;
-    unsigned int supportsREN_GTL_LLO :1;
-    unsigned int supportsTrigger :1;
+    uint8_t supportsTrigger :1;
+    uint8_t supportsREN_GTL_LLO :1;
+    uint8_t is488_2 :1;
   } bmIntfcCapabilities488;
 
   struct TU_ATTR_PACKED
   {
-    unsigned int SCPI :1;
-    unsigned int SR1 :1;
-    unsigned int RL1 :1;
-    unsigned int DT1 :1;
+    uint8_t DT1 :1;
+    uint8_t RL1 :1;
+    uint8_t SR1 :1;
+    uint8_t SCPI :1;
   } bmDevCapabilities488;
   uint8_t _reserved3[8];
 } usbtmc_response_capabilities_488_t;
@@ -316,4 +316,3 @@ typedef struct TU_ATTR_PACKED
 TU_VERIFY_STATIC(sizeof(usbtmc_read_stb_interrupt_488_t) == 2u, "struct wrong length");
 
 #endif
-

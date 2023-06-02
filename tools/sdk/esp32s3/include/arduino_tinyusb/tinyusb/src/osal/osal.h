@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -44,7 +44,7 @@ typedef void (*osal_task_func_t)( void * );
 // Mutex is required when using a preempted RTOS or MCU has multiple cores
 #if (CFG_TUSB_OS == OPT_OS_NONE) && !TUP_MCU_MULTIPLE_CORE
   #define OSAL_MUTEX_REQUIRED   0
-  #define OSAL_MUTEX_DEF(_name)
+  #define OSAL_MUTEX_DEF(_name) uint8_t :0
 #else
   #define OSAL_MUTEX_REQUIRED   1
   #define OSAL_MUTEX_DEF(_name) osal_mutex_def_t _name

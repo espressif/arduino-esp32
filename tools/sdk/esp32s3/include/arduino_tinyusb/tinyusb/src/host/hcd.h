@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -106,7 +106,7 @@ typedef struct
 // Controller API
 //--------------------------------------------------------------------+
 
-// optional hcd configuration, called by tuh_config()
+// optional hcd configuration, called by tuh_configure()
 bool hcd_configure(uint8_t rhport, uint32_t cfg_id, const void* cfg_param) TU_ATTR_WEAK;
 
 // Initialize controller to host mode
