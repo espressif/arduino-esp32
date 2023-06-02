@@ -96,4 +96,6 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
 	return true;
 }
 
-
+bool perimanPinIsValid(uint8_t pin){
+	return !(GPIO_NOT_VALID(pin));
+}

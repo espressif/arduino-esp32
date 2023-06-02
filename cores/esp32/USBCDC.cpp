@@ -210,6 +210,8 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
                     arduino_usb_cdc_event_data_t p;
                     arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
                 }
+            // } else if(lineState == CDC_LINE_2){//esptool.js
+            //     lineState++;
             } else {
                 lineState = CDC_LINE_IDLE;
             }
@@ -222,6 +224,8 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
         } else if(dtr && !rts){
             if(lineState == CDC_LINE_2){
                 lineState++;
+            // } else if(lineState == CDC_LINE_IDLE){//esptool.js
+            //     lineState++;
             } else {
                 lineState = CDC_LINE_IDLE;
             }
