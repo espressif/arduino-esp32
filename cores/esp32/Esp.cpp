@@ -155,7 +155,7 @@ uint32_t EspClass::getMaxAllocHeap(void)
 uint32_t EspClass::getPsramSize(void)
 {
 	if(psramFound()){
-	    return heap_caps_get_total_size(MALLOC_CAP_SPIRAM)
+	    return heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
 	}
 	return 0;
 }
