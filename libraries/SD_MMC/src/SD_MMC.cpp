@@ -24,9 +24,9 @@
 #include "sdmmc_cmd.h"
 #include "soc/sdmmc_pins.h"
 #include "ff.h"
+#include "esp32-hal-periman.h"
 
 using namespace fs;
-
 
 SDMMCFS::SDMMCFS(FSImplPtr impl)
     : FS(impl), _card(nullptr)
@@ -41,6 +41,14 @@ SDMMCFS::SDMMCFS(FSImplPtr impl)
     _pin_d3 = SDMMC_D3;
 #endif // BOARD_HAS_1BIT_SDMMC
 #endif // defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC)
+}
+
+bool SDMMCFS::sdmmcDetachBus(void * bus_pointer){
+    SDMMCFS *bus = (SDMMCFS *) bus_pointer;
+    if(bus->_card) {
+        bus->end();
+    }
+    return true;
 }
 
 bool SDMMCFS::setPins(int clk, int cmd, int d0)
@@ -89,17 +97,28 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     if(_card) {
         return true;
     }
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC, SDMMCFS::sdmmcDetachBus);
+
     //mount
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
     // SoC supports SDMMC pin configuration via GPIO matrix.
-    // Chech that the pins have been set either in the constructor or setPins function.
+    // Check that the pins have been set either in the constructor or setPins function.
     if (_pin_cmd == -1 || _pin_clk == -1 || _pin_d0 == -1
         || (!mode1bit && (_pin_d1 == -1 || _pin_d2 == -1 || _pin_d3 == -1))) {
         log_e("SDMMCFS: some SD pins are not set");
         return false;
     }
 
+    if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if(!mode1bit) {
+        if(!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    }
+    
     slot_config.clk = (gpio_num_t) _pin_clk;
     slot_config.cmd = (gpio_num_t) _pin_cmd;
     slot_config.d0 = (gpio_num_t) _pin_d0;
@@ -115,6 +134,8 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
 #ifdef BOARD_HAS_1BIT_SDMMC
     mode1bit = true;
 #endif
+    _mode1bit = mode1bit;
+    
     if(mode1bit) {
         host.flags = SDMMC_HOST_FLAG_1BIT; //use 1-line SD mode
         slot_config.width = 1;
@@ -142,7 +163,21 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
         return false;
     }
     _impl->mountpoint(mountpoint);
+
+    if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+    if(!mode1bit) {
+        if(!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+    }
     return true;
+
+err:
+    log_e("Failed to set all pins bus to SDMMC");
+    SDMMCFS::sdmmcDetachBus((void *)(this));
+    return false;
 }
 
 void SDMMCFS::end()
@@ -151,6 +186,14 @@ void SDMMCFS::end()
         esp_vfs_fat_sdcard_unmount(_impl->mountpoint(), _card);
         _impl->mountpoint(NULL);
         _card = NULL;
+        perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_INIT, NULL);
+        perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_INIT, NULL);
+        perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_INIT, NULL);
+        if(!_mode1bit) {
+            perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_INIT, NULL);
+            perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_INIT, NULL);
+            perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_INIT, NULL);
+        }
     }
 }
 

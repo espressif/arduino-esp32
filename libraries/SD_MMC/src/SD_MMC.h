@@ -45,6 +45,7 @@ protected:
     int8_t _pin_d2 = -1;
     int8_t _pin_d3 = -1;
 #endif
+    bool _mode1bit = false;
 
 public:
     SDMMCFS(FSImplPtr impl);
@@ -56,6 +57,9 @@ public:
     uint64_t cardSize();
     uint64_t totalBytes();
     uint64_t usedBytes();
+    
+private:
+    static bool sdmmcDetachBus(void * bus_pointer);
 };
 
 }
