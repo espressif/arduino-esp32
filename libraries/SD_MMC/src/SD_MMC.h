@@ -36,15 +36,12 @@ class SDMMCFS : public FS
 {
 protected:
     sdmmc_card_t* _card;
-
-#ifdef SOC_SDMMC_USE_GPIO_MATRIX
     int8_t _pin_clk = -1;
     int8_t _pin_cmd = -1;
     int8_t _pin_d0 = -1;
     int8_t _pin_d1 = -1;
     int8_t _pin_d2 = -1;
     int8_t _pin_d3 = -1;
-#endif
     bool _mode1bit = false;
 
 public:

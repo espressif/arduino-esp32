@@ -40,7 +40,17 @@ SDMMCFS::SDMMCFS(FSImplPtr impl)
     _pin_d2 = SDMMC_D2;
     _pin_d3 = SDMMC_D3;
 #endif // BOARD_HAS_1BIT_SDMMC
-#endif // defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC)
+
+#elif SOC_SDMMC_USE_IOMUX
+    _pin_clk = SDMMC_SLOT1_IOMUX_PIN_NUM_CLK;
+    _pin_cmd = SDMMC_SLOT1_IOMUX_PIN_NUM_CMD;
+    _pin_d0 = SDMMC_SLOT1_IOMUX_PIN_NUM_D0;
+#ifndef BOARD_HAS_1BIT_SDMMC
+    _pin_d1 = SDMMC_SLOT1_IOMUX_PIN_NUM_D1;
+    _pin_d2 = SDMMC_SLOT1_IOMUX_PIN_NUM_D2;
+    _pin_d3 = SDMMC_SLOT1_IOMUX_PIN_NUM_D3;
+#endif // BOARD_HAS_1BIT_SDMMC
+#endif
 }
 
 bool SDMMCFS::sdmmcDetachBus(void * bus_pointer){
@@ -76,12 +86,12 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3)
     // Since SDMMCFS::begin hardcodes the usage of slot 1, only check if
     // the pins match slot 1 pins.
     bool pins_ok = (clk == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CLK) &&
-        (cmd == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CMD) &&
-        (d0 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D0) &&
-        (((d1 == -1) && (d2 == -1) && (d3 == -1)) ||
-         ((d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D1) &&
-         (d2 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D2) &&
-         (d3 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D3)));
+                   (cmd == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CMD) &&
+                   (d0 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D0) &&
+                   (((d1 == -1) && (d2 == -1) && (d3 == -1)) ||
+                   ((d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D1) &&
+                   (d2 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D2) &&
+                   (d3 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D3)));
     if (!pins_ok) {
         log_e("SDMMCFS: specified pins are not supported by this chip.");
         return false;
@@ -110,6 +120,15 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
         return false;
     }
 
+    slot_config.clk = (gpio_num_t) _pin_clk;
+    slot_config.cmd = (gpio_num_t) _pin_cmd;
+    slot_config.d0 = (gpio_num_t) _pin_d0;
+    slot_config.d1 = (gpio_num_t) _pin_d1;
+    slot_config.d2 = (gpio_num_t) _pin_d2;
+    slot_config.d3 = (gpio_num_t) _pin_d3;
+    slot_config.width = 4;
+#endif // SOC_SDMMC_USE_GPIO_MATRIX
+
     if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
     if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
     if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
@@ -119,14 +138,6 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
         if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
     }
     
-    slot_config.clk = (gpio_num_t) _pin_clk;
-    slot_config.cmd = (gpio_num_t) _pin_cmd;
-    slot_config.d0 = (gpio_num_t) _pin_d0;
-    slot_config.d1 = (gpio_num_t) _pin_d1;
-    slot_config.d2 = (gpio_num_t) _pin_d2;
-    slot_config.d3 = (gpio_num_t) _pin_d3;
-    slot_config.width = 4;
-#endif // SOC_SDMMC_USE_GPIO_MATRIX
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
     host.flags = SDMMC_HOST_FLAG_4BIT;
     host.slot = SDMMC_HOST_SLOT_1;
@@ -134,12 +145,11 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
 #ifdef BOARD_HAS_1BIT_SDMMC
     mode1bit = true;
 #endif
-    _mode1bit = mode1bit;
-    
     if(mode1bit) {
         host.flags = SDMMC_HOST_FLAG_1BIT; //use 1-line SD mode
         slot_config.width = 1;
     }
+    _mode1bit = mode1bit;
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = format_if_mount_failed,
