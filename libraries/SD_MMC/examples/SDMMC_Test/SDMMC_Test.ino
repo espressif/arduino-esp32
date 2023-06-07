@@ -217,12 +217,13 @@ void setup(){
     pinMode(10, INPUT);
     pinMode(9, INPUT);
 
-    // If you need to reassign pins, uncomment the block at the top of this example containing the define statement of REASIGN_PINS
+    // If you are using any other ESP32-S3 board than ESP32-S3-USB-OTG which has preset default pins, you will
+    //    need to specify the pins with the following example of SD_MMC.setPins()
     // If you want to use only 1-bit mode, you can use the line with only one data pin (d0) begin changed.
     // Please note that ESP32 does not allow pin change and will always fail.
-#ifdef SOC_SDMMC_USE_GPIO_MATRIX
-    //if(! SD_MMC.setPins(clk, cmd, d0)){
-    if(! SD_MMC.setPins(clk, cmd, d0, d1, d2, d3)){
+#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && not defined(BOARD_HAS_SDMMC)
+    //if(! SD_MMC.setPins(clk, cmd, d0)){ // 1-bit line version
+    if(! SD_MMC.setPins(clk, cmd, d0, d1, d2, d3)){ // 4-bit line version
         Serial.println("Pin change failed!");
         return;
     }
@@ -235,7 +236,12 @@ void setup(){
     }
 
     if(!SD_MMC.begin("/sdcard", use_1_bit_mode)){
-        Serial.println("Card Mount Failed");
+        Serial.println("Card Mount Failed.");
+        Serial.println("Increase log level to see more info: Tools > Core Debug Level > Verbose");
+        Serial.println("Make sure that all data pins have 10 kOhm pull-up resistor");
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+        Serial.println("Make sure that when using generic ESP32-S3 board the pins are setup using SD_MMC.setPins()");
+#endif
         return;
     }
     uint8_t cardType = SD_MMC.cardType();
