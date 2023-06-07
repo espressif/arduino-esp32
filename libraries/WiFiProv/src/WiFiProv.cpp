@@ -26,6 +26,9 @@
 #include <esp_wifi.h>
 #include <esp_event.h>
 #include <esp32-hal.h>
+#if __has_include("qrcode.h")
+  #include "qrcode.h"
+#endif
 
 #include <nvs_flash.h>
 #if CONFIG_BLUEDROID_ENABLED
@@ -66,7 +69,7 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
 #endif
 }
 
-void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
+void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid, bool reset_provisioned)
 {
     bool provisioned = false;
     static char service_name_temp[32];
@@ -107,10 +110,13 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
     	log_e("wifi_prov_mgr_init failed!");
     	return;
     }
-    if(wifi_prov_mgr_is_provisioned(&provisioned) != ESP_OK){
-    	log_e("wifi_prov_mgr_is_provisioned failed!");
-    	wifi_prov_mgr_deinit();
-    	return;
+    if(reset_provisioned){
+      log_i("Resetting provisioned data.");
+      wifi_prov_mgr_reset_provisioning();
+    }else if(wifi_prov_mgr_is_provisioned(&provisioned) != ESP_OK){
+      log_e("wifi_prov_mgr_is_provisioned failed!");
+      wifi_prov_mgr_deinit();
+      return;
     }
     if(provisioned == false) {
 #if CONFIG_BLUEDROID_ENABLED
@@ -156,6 +162,32 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
         wifi_prov_mgr_deinit();
         WiFi.begin();
     }
+}
+
+// Copied from IDF example
+void  WiFiProvClass :: printQR(const char *name, const char *pop, const char *transport){
+    if (!name || !transport) {
+        log_w("Cannot generate QR code payload. Data missing.");
+        return;
+    }
+    char payload[150] = {0};
+    if (pop) {
+        snprintf(payload, sizeof(payload), "{\"ver\":\"%s\",\"name\":\"%s\"" \
+                    ",\"pop\":\"%s\",\"transport\":\"%s\"}",
+                    "v1", name, pop, transport);
+    } else {
+        snprintf(payload, sizeof(payload), "{\"ver\":\"%s\",\"name\":\"%s\"" \
+                    ",\"transport\":\"%s\"}",
+                    "v1", name, transport);
+    }
+#if __has_include("qrcode.h")
+    log_i("Scan this QR code from the provisioning application for Provisioning.");
+    esp_qrcode_config_t cfg = ESP_QRCODE_CONFIG_DEFAULT();
+    esp_qrcode_generate(&cfg, payload);
+#else
+    log_i("If QR code is not visible, copy paste the below URL in a browser.\n%s?data=%s", "https://espressif.github.io/esp-jumpstart/qrcode.html", payload);
+    log_i("If you are using Arduino as IDF component, install ESP Rainmaker:\nhttps://github.com/espressif/esp-rainmaker");
+#endif
 }
 
 WiFiProvClass WiFiProv;

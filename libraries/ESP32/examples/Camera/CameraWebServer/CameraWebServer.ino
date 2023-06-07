@@ -28,7 +28,8 @@
 //#define CAMERA_MODEL_ESP32_CAM_BOARD
 //#define CAMERA_MODEL_ESP32S2_CAM_BOARD
 //#define CAMERA_MODEL_ESP32S3_CAM_LCD
-
+//#define CAMERA_MODEL_DFRobot_FireBeetle2_ESP32S3 // Has PSRAM
+//#define CAMERA_MODEL_DFRobot_Romeo_ESP32S3 // Has PSRAM
 #include "camera_pins.h"
 
 // ===========================
