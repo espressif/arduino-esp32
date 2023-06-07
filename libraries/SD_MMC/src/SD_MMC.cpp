@@ -84,6 +84,60 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3)
 #endif
 }
 
+int SDMMCFS::getClkPin()
+{
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+    return _pin_clk;
+#elif CONFIG_IDF_TARGET_ESP32
+    return SDMMC_SLOT1_IOMUX_PIN_NUM_CLK;
+#endif
+}
+
+int SDMMCFS::getCmdPin()
+{
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+    return _pin_cmd;
+#elif CONFIG_IDF_TARGET_ESP32
+    return SDMMC_SLOT1_IOMUX_PIN_NUM_CMD;
+#endif
+}
+
+int SDMMCFS::getD0Pin()
+{
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+    return _pin_d0;
+#elif CONFIG_IDF_TARGET_ESP32
+    return SDMMC_SLOT1_IOMUX_PIN_NUM_D0;
+#endif
+}
+
+int SDMMCFS::getD1Pin()
+{
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+    return _pin_d1;
+#elif CONFIG_IDF_TARGET_ESP32
+    return SDMMC_SLOT1_IOMUX_PIN_NUM_D1;
+#endif
+}
+
+int SDMMCFS::getD2Pin()
+{
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+    return _pin_d2;
+#elif CONFIG_IDF_TARGET_ESP32
+    return SDMMC_SLOT1_IOMUX_PIN_NUM_D2;
+#endif
+}
+
+int SDMMCFS::getD3Pin()
+{
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+    return _pin_d3;
+#elif CONFIG_IDF_TARGET_ESP32
+    return SDMMC_SLOT1_IOMUX_PIN_NUM_D3;
+#endif
+}
+
 bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount_failed, int sdmmc_frequency, uint8_t maxOpenFiles)
 {
     if(_card) {
