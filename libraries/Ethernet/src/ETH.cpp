@@ -655,8 +655,6 @@ String ETHClass::macAddress(void)
 
 void ETHClass::end(void)
 {
-    esp_err_t err = ESP_OK;
-    // stop Ethernet driver
     if(esp_eth_stop(eth_handle) != ESP_OK) {
         log_e("Failed to stop Ehternet");
         return;
