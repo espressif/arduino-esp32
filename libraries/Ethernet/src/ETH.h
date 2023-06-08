@@ -66,10 +66,14 @@ class ETHClass {
         esp_netif_t *esp_netif;
 
     protected:
-        bool started;
+        bool _started;
+        int8_t _pin_mcd = -1;
+        int8_t _pin_mdio = -1;
+        int8_t _pin_power = -1;
+        int8_t _pin_rmii_clock = -1;
         static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 #else
-        bool started;
+        bool _started;
         eth_config_t eth_config;
 #endif
     public:
@@ -102,8 +106,13 @@ class ETHClass {
         uint8_t * macAddress(uint8_t* mac);
         String macAddress();
 
+        void end();
+
         friend class WiFiClient;
         friend class WiFiServer;
+
+    private:
+        static bool ethDetachBus(void * bus_pointer);
 };
 
 extern ETHClass ETH;
