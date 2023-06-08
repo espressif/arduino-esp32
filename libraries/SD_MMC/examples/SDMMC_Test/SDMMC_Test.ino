@@ -35,13 +35,12 @@
 // Warning: ESP32-S3-WROOM-2 is using most of the default GPIOs (33-37) to interface with on-board OPI flash.
 //   If the SD_MMC is initialized with default pins it will result in rebooting loop - please
 //   reassign the pins elsewhere using the mentioned command `setPins`.
-//   The easiest option is to uncomment the definitions below.
 // Note: ESP32-S3-WROOM-1 does not have GPIO 33 and 34 broken out.
-// Note: If it's ok to use default pins, you do not need to call the setPins
+// Note: The board SP32-S3-USB-OTG has predefined default pins and the following definitions with the setPins() call will not be compiled.
 // Note: Pins in this definition block are ordered from top down in order in which they are on the full-sized SD card
 //       from left to right when facing the pins down (when connected to a breadboard)
 
-#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && not defined(BOARD_HAS_SDMMC)
     int d1  = 21; // SD pin 8 - add 10k Pullup to 3.3V if using 4-bit mode (use_1_bit_mode = false)
     int d0  = 47; // SD pin 7 - add 10k Pullup
     //     GND pin - SD pin 6
@@ -213,9 +212,6 @@ void setup(){
     Serial.begin(115200);
     while(!Serial) { delay(10); }
     Serial.println("SDMMC_Test.ino starting!");
-    pinMode(12, INPUT);
-    pinMode(10, INPUT);
-    pinMode(9, INPUT);
 
     // If you are using any other ESP32-S3 board than ESP32-S3-USB-OTG which has preset default pins, you will
     //    need to specify the pins with the following example of SD_MMC.setPins()
