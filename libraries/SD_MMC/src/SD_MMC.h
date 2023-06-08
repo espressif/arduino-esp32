@@ -48,6 +48,12 @@ public:
     SDMMCFS(FSImplPtr impl);
     bool setPins(int clk, int cmd, int d0);
     bool setPins(int clk, int cmd, int d0, int d1, int d2, int d3);
+    int getClkPin();
+    int getCmdPin();
+    int getD0Pin();
+    int getD1Pin();
+    int getD2Pin();
+    int getD3Pin();
     bool begin(const char * mountpoint="/sdcard", bool mode1bit=false, bool format_if_mount_failed=false, int sdmmc_frequency=BOARD_MAX_SDMMC_FREQ, uint8_t maxOpenFiles = 5);
     void end();
     sdcard_type_t cardType();
