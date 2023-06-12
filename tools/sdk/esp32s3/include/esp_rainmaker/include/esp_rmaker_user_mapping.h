@@ -79,7 +79,6 @@ esp_err_t esp_rmaker_user_mapping_endpoint_register(void);
  * @return error on failure.
  */
 esp_err_t esp_rmaker_start_user_node_mapping(char *user_id, char *secret_key);
-
 #ifdef __cplusplus
 }
 #endif

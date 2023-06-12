@@ -48,7 +48,7 @@
 /* PSA requires several types which C99 provides in stdint.h. */
 #include <stdint.h>
 
-#if ( defined(__ARMCC_VERSION) || defined(_MSC_VER) ) && \
+#if (defined(__ARMCC_VERSION) || defined(_MSC_VER)) && \
     !defined(inline) && !defined(__cplusplus)
 #define inline __inline
 #endif
@@ -60,8 +60,8 @@
  *
  * The function psa_its_identifier_of_slot() in psa_crypto_storage.c that
  * translates a key identifier to a key storage file name assumes that
- * mbedtls_key_owner_id_t is an 32 bits integer. This function thus needs
- * reworking if mbedtls_key_owner_id_t is not defined as a 32 bits integer
+ * mbedtls_key_owner_id_t is a 32-bit integer. This function thus needs
+ * reworking if mbedtls_key_owner_id_t is not defined as a 32-bit integer
  * here anymore.
  */
 typedef int32_t mbedtls_key_owner_id_t;
@@ -73,10 +73,10 @@ typedef int32_t mbedtls_key_owner_id_t;
  *
  * \return Non-zero if the two key owner identifiers are equal, zero otherwise.
  */
-static inline int mbedtls_key_owner_id_equal( mbedtls_key_owner_id_t id1,
-                                              mbedtls_key_owner_id_t id2 )
+static inline int mbedtls_key_owner_id_equal(mbedtls_key_owner_id_t id1,
+                                             mbedtls_key_owner_id_t id2)
 {
-    return( id1 == id2 );
+    return id1 == id2;
 }
 
 #endif /* MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER */

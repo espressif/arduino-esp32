@@ -36,6 +36,10 @@ extern "C" {
 
 #define RUSB2_REG_BASE (0x40090000)
 
+#if defined(__ICCARM__)
+  #define __builtin_ctz(x)             __iar_builtin_CLZ(__iar_builtin_RBIT(x))
+#endif
+
 TU_ATTR_ALWAYS_INLINE static inline void rusb2_int_enable(uint8_t rhport)
 {
   (void) rhport;

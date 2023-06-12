@@ -111,6 +111,14 @@ void esp_rmaker_create_mqtt_topic(char *buf, size_t buf_size, const char *topic_
  */
 bool esp_rmaker_mqtt_is_budget_available(void);
 
+/**
+ * @brief Check if device is connected to MQTT Server
+ *
+ * @return true if device is connected
+ * @return false if device is not connected
+ *
+ */
+bool esp_rmaker_is_mqtt_connected();
 #ifdef __cplusplus
 }
 #endif

@@ -945,6 +945,18 @@ esp_err_t esp_rmaker_ota_enable_default(void);
  * @return error on failure
  */
 esp_err_t esp_rmaker_test_cmd_resp(const void *cmd, size_t cmd_len, void *priv_data);
+
+/** This API signs the challenge with RainMaker private key.
+* 
+* @param[in] challenge Pointer to the data to be signed
+* @param[in] inlen Length of the challenge
+* @param[out] response Pointer to the signature.
+* @param[out] outlen   Length of the signature
+*
+* @return ESP_OK on success. response is dynamically allocated, free the response on success.
+* @return Apt error on failure.
+*/
+esp_err_t esp_rmaker_node_auth_sign_msg(const void *challenge, size_t inlen, void **response, size_t *outlen);
 #ifdef __cplusplus
 }
 #endif
