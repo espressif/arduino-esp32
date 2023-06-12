@@ -138,10 +138,14 @@
   #define TU_ATTR_BIT_FIELD_ORDER_BEGIN
   #define TU_ATTR_BIT_FIELD_ORDER_END
 
-  #if __has_attribute(__fallthrough__)
-    #define TU_ATTR_FALLTHROUGH         __attribute__((fallthrough))
-  #else
+  #if __GNUC__ < 5
     #define TU_ATTR_FALLTHROUGH         do {} while (0)  /* fallthrough */
+  #else
+    #if __has_attribute(__fallthrough__)
+      #define TU_ATTR_FALLTHROUGH         __attribute__((fallthrough))
+    #else
+      #define TU_ATTR_FALLTHROUGH         do {} while (0)  /* fallthrough */
+    #endif
   #endif
 
   // Endian conversion use well-known host to network (big endian) naming
@@ -151,8 +155,17 @@
     #define TU_BYTE_ORDER TU_BIG_ENDIAN
   #endif
 
-  #define TU_BSWAP16(u16) (__builtin_bswap16(u16))
-  #define TU_BSWAP32(u32) (__builtin_bswap32(u32))
+  // Unfortunately XC16 doesn't provide builtins for 32bit endian conversion
+  #if defined(__XC16)
+    #define TU_BSWAP16(u16) (__builtin_swap(u16))
+    #define TU_BSWAP32(u32) ((((u32) & 0xff000000) >> 24) |  \
+                            (((u32) & 0x00ff0000) >> 8)  |  \
+                            (((u32) & 0x0000ff00) << 8)  |  \
+                            (((u32) & 0x000000ff) << 24))
+  #else
+    #define TU_BSWAP16(u16) (__builtin_bswap16(u16))
+    #define TU_BSWAP32(u32) (__builtin_bswap32(u32))
+  #endif
 
 	#ifndef __ARMCC_VERSION
   // List of obsolete callback function that is renamed and should not be defined.

@@ -81,6 +81,8 @@ typedef union {
 	};
 }ehci_link_t;
 
+TU_VERIFY_STATIC( sizeof(ehci_link_t) == 4, "size is not correct" );
+
 /// Queue Element Transfer Descriptor
 /// Qtd is used to declare overlay in ehci_qhd_t -> cannot be declared with TU_ATTR_ALIGNED(32)
 typedef struct
@@ -162,11 +164,12 @@ typedef struct TU_ATTR_ALIGNED(32)
 	uint8_t pid;
 	uint8_t interval_ms; // polling interval in frames (or millisecond)
 
-	uint16_t total_xferred_bytes; // number of bytes xferred until a qtd with ioc bit set
-	uint8_t reserved2[2];
+	uint8_t TU_RESERVED[4];
 
-	ehci_qtd_t * volatile p_qtd_list_head;	// head of the scheduled TD list
-	ehci_qtd_t * volatile p_qtd_list_tail;	// tail of the scheduled TD list
+  // Attached TD management, note usbh will only queue 1 TD per QHD.
+  // buffer for dcache invalidate since td's buffer is modified by HC and finding initial buffer address is not trivial
+  uint32_t attached_buffer;
+	ehci_qtd_t * volatile attached_qtd;
 } ehci_qhd_t;
 
 TU_VERIFY_STATIC( sizeof(ehci_qhd_t) == 64, "size is not correct" );
@@ -245,14 +248,6 @@ typedef struct TU_ATTR_ALIGNED(32)
 	/// Word 4-5: Buffer Pointer List
 	uint32_t buffer[2];		// buffer[1] TP: Transaction Position - T-Count: Transaction Count
 
-// 	union{
-// 		uint32_t BufferPointer1;
-// 		struct  {
-// 			volatile uint32_t TCount : 3;
-// 			volatile uint32_t TPosition : 2;
-// 		};
-// 	};
-
 	/*---------- Word 6 ----------*/
 	ehci_link_t back;
 
@@ -267,15 +262,21 @@ TU_VERIFY_STATIC( sizeof(ehci_sitd_t) == 32, "size is not correct" );
 //--------------------------------------------------------------------+
 // EHCI Operational Register
 //--------------------------------------------------------------------+
-enum ehci_interrupt_mask_{
+enum {
+  // Bit 0-5 has maskable in interrupt enabled register
   EHCI_INT_MASK_USB                   = TU_BIT(0),
   EHCI_INT_MASK_ERROR                 = TU_BIT(1),
   EHCI_INT_MASK_PORT_CHANGE           = TU_BIT(2),
-
   EHCI_INT_MASK_FRAMELIST_ROLLOVER    = TU_BIT(3),
   EHCI_INT_MASK_PCI_HOST_SYSTEM_ERROR = TU_BIT(4),
   EHCI_INT_MASK_ASYNC_ADVANCE         = TU_BIT(5),
+
   EHCI_INT_MASK_NXP_SOF               = TU_BIT(7),
+
+  EHCI_INT_MASK_HC_HALTED             = TU_BIT(12),
+  EHCI_INT_MASK_RECLAIMATION          = TU_BIT(13),
+  EHCI_INT_MASK_PERIODIC_SCHED_STATUS = TU_BIT(14),
+  EHCI_INT_MASK_ASYNC_SCHED_STATUS    = TU_BIT(15),
 
   EHCI_INT_MASK_NXP_ASYNC             = TU_BIT(18),
   EHCI_INT_MASK_NXP_PERIODIC          = TU_BIT(19),
@@ -287,7 +288,7 @@ enum ehci_interrupt_mask_{
       EHCI_INT_MASK_NXP_ASYNC | EHCI_INT_MASK_NXP_PERIODIC
 };
 
-enum ehci_usbcmd_pos_ {
+enum {
   EHCI_USBCMD_POS_RUN_STOP               = 0,
   EHCI_USBCMD_POS_FRAMELIST_SIZE         = 2,
   EHCI_USBCMD_POS_PERIOD_ENABLE          = 4,
@@ -296,24 +297,27 @@ enum ehci_usbcmd_pos_ {
   EHCI_USBCMD_POS_INTERRUPT_THRESHOLD    = 16
 };
 
-enum ehci_portsc_change_mask_{
+enum {
   EHCI_PORTSC_MASK_CURRENT_CONNECT_STATUS = TU_BIT(0),
   EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE  = TU_BIT(1),
   EHCI_PORTSC_MASK_PORT_EANBLED           = TU_BIT(2),
-  EHCI_PORTSC_MASK_PORT_ENABLE_CHAGNE     = TU_BIT(3),
+  EHCI_PORTSC_MASK_PORT_ENABLE_CHANGE     = TU_BIT(3),
   EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE    = TU_BIT(5),
+  EHCI_PORTSC_MASK_FORCE_RESUME           = TU_BIT(6),
+  EHCI_PORTSC_MASK_PORT_SUSPEND           = TU_BIT(7),
   EHCI_PORTSC_MASK_PORT_RESET             = TU_BIT(8),
+  ECHI_PORTSC_MASK_PORT_POWER             = TU_BIT(12),
 
-  EHCI_PORTSC_MASK_ALL =
-      EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE |
-      EHCI_PORTSC_MASK_PORT_ENABLE_CHAGNE |
-      EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE
+  EHCI_PORTSC_MASK_W1C =
+    EHCI_PORTSC_MASK_CONNECT_STATUS_CHANGE |
+    EHCI_PORTSC_MASK_PORT_ENABLE_CHANGE |
+    EHCI_PORTSC_MASK_OVER_CURRENT_CHANGE
 };
 
 typedef volatile struct
 {
   union {
-    uint32_t command;
+    uint32_t command; // 0x00
 
     struct {
       uint32_t run_stop               : 1 ; ///< 1=Run. 0=Stop
@@ -333,7 +337,7 @@ typedef volatile struct
   };
 
   union {
-    uint32_t status;
+    uint32_t status; // 0x04
 
     struct {
       uint32_t usb                   : 1  ; ///< qTD with IOC is retired
@@ -357,7 +361,7 @@ typedef volatile struct
   };
 
   union{
-    uint32_t inten;
+    uint32_t inten; // 0x08
 
     struct {
       uint32_t usb                   : 1  ;
@@ -375,43 +379,87 @@ typedef volatile struct
     }inten_bm;
   };
 
-  uint32_t frame_index        ; ///< Micro frame counter
-  uint32_t ctrl_ds_seg        ; ///< Control Data Structure Segment
-  uint32_t periodic_list_base ; ///< Beginning address of perodic frame list
-  uint32_t async_list_addr    ; ///< Address of next async QHD to be executed
+  uint32_t frame_index        ; ///< 0x0C Micro frame counter
+  uint32_t ctrl_ds_seg        ; ///< 0x10 Control Data Structure Segment
+  uint32_t periodic_list_base ; ///< 0x14 Beginning address of perodic frame list
+  uint32_t async_list_addr    ; ///< 0x18 Address of next async QHD to be executed
   uint32_t nxp_tt_control     ; ///< nxp embedded transaction translator (reserved by EHCI specs)
   uint32_t reserved[8]        ;
-  uint32_t config_flag        ; ///< not used by NXP
+  uint32_t config_flag        ; ///< 0x40 not used by NXP
 
   union {
-    uint32_t portsc             ; ///< port status and control
-    struct {
-      uint32_t current_connect_status      : 1; ///< 0: No device, 1: Device is present on port
-      uint32_t connect_status_change       : 1; ///< Change in Current Connect Status
-      uint32_t port_enabled                : 1; ///< Ports can only be enabled by HC as a part of the reset and enable. SW can write 0 to disable
-      uint32_t port_enable_change          : 1; ///< Port Enabled has changed
-      uint32_t over_current_active         : 1; ///< Port has an over-current condition
-      uint32_t over_current_change         : 1; ///< Change to Over-current Active
-      uint32_t force_port_resume           : 1; ///< Resume detected/driven on port. This functionality defined for manipulating this bit depends on the value of the Suspend bit.
-      uint32_t suspend                     : 1; ///< Port in suspend state
-      uint32_t port_reset                  : 1; ///< 1=Port is in Reset. 0=Port is not in Reset
-      uint32_t nxp_highspeed_status        : 1; ///< NXP customized: 0=connected to the port is not in High-speed mode, 1=connected to the port is in High-speed mode
-      uint32_t line_status                 : 2; ///< D+/D- state: 00: SE0, 10: J-state, 01: K-state
-      uint32_t port_power                  : 1; ///< 0= power off, 1= power on
-      uint32_t port_owner                  : 1; ///< not used by NXP
-      uint32_t port_indicator_control      : 2; ///< 00b: off, 01b: Amber, 10b: green, 11b: undefined
-      uint32_t port_test_control           : 4; ///< Port test mode, not used by tinyusb
-      uint32_t wake_on_connect_enable      : 1; ///< Enables device connects as wake-up events
-      uint32_t wake_on_disconnect_enable   : 1; ///< Enables device disconnects as wake-up events
-      uint32_t wake_on_over_current_enable : 1; ///< Enables over-current conditions as wake-up events
-      uint32_t nxp_phy_clock_disable       : 1; ///< NXP customized: the PHY can be put into Low Power Suspend – Clock Disable when the downstream device has been put into suspend mode or when no downstream device is connected. Low power suspend is completely under the control of software. 0: enable PHY clock, 1: disable PHY clock
-      uint32_t nxp_port_force_fullspeed    : 1; ///< NXP customized: Writing this bit to a 1 will force the port to only connect at Full Speed. It disables the chirp sequence that allowsthe port to identify itself as High Speed. This is useful for testing FS configurations with a HS host, hub or device.
-      uint32_t TU_RESERVED                 : 1;
-      uint32_t nxp_port_speed              : 2; ///< NXP customized: This register field indicates the speed atwhich the port is operating. For HS mode operation in the host controllerand HS/FS operation in the device controller the port routing steers data to the Protocol engine. For FS and LS mode operation in the host controller, the port routing steers data to the Protocol Engine w/ Embedded Transaction Translator. 0x0: Fullspeed, 0x1: Lowspeed, 0x2: Highspeed
+    // mixed with RW and R/WC bits, care should be taken when writing to this register
+    uint32_t portsc           ; ///< 0x44 port status and control
+    const struct {
+      uint32_t current_connect_status      : 1; ///< 00: 0: No device, 1: Device is present on port
+      uint32_t connect_status_change       : 1; ///< 01: [R/WC] Change in Current Connect Status
+      uint32_t port_enabled                : 1; ///< 02: Ports can only be enabled by HC as a part of the reset and enable. SW can write 0 to disable
+      uint32_t port_enable_change          : 1; ///< 03: [R/WC] Port Enabled has changed
+      uint32_t over_current_active         : 1; ///< 04: Port has an over-current condition
+      uint32_t over_current_change         : 1; ///< 05: [R/WC] Change to Over-current Active
+      uint32_t force_port_resume           : 1; ///< 06: Resume detected/driven on port. This functionality defined for manipulating this bit depends on the value of the Suspend bit.
+      uint32_t suspend                     : 1; ///< 07: Port in suspend state
+      uint32_t port_reset                  : 1; ///< 08: 1=Port is in Reset. 0=Port is not in Reset
+      uint32_t nxp_highspeed_status        : 1; ///< 09: NXP customized: 0=connected to the port is not in High-speed mode, 1=connected to the port is in High-speed mode
+      uint32_t line_status                 : 2; ///< 10-11: D+/D- state: 00: SE0, 10: J-state, 01: K-state
+      uint32_t port_power                  : 1; ///< 12: 0= power off, 1= power on
+      uint32_t port_owner                  : 1; ///< 13: not used by NXP
+      uint32_t port_indicator_control      : 2; ///< 14-15: 00b: off, 01b: Amber, 10b: green, 11b: undefined
+      uint32_t port_test_control           : 4; ///< 16-19: Port test mode, not used by tinyusb
+      uint32_t wake_on_connect_enable      : 1; ///< 20: Enables device connects as wake-up events
+      uint32_t wake_on_disconnect_enable   : 1; ///< 21: Enables device disconnects as wake-up events
+      uint32_t wake_on_over_current_enable : 1; ///< 22: Enables over-current conditions as wake-up events
+      uint32_t nxp_phy_clock_disable       : 1; ///< 23: NXP customized: the PHY can be put into Low Power Suspend – Clock Disable when the downstream device has been put into suspend mode or when no downstream device is connected. Low power suspend is completely under the control of software. 0: enable PHY clock, 1: disable PHY clock
+      uint32_t nxp_port_force_fullspeed    : 1; ///< 24: NXP customized: Writing this bit to a 1 will force the port to only connect at Full Speed. It disables the chirp sequence that allowsthe port to identify itself as High Speed. This is useful for testing FS configurations with a HS host, hub or device.
+      uint32_t TU_RESERVED                 : 1; ///< 25
+      uint32_t nxp_port_speed              : 2; ///< 26-27: NXP customized: This register field indicates the speed atwhich the port is operating. For HS mode operation in the host controllerand HS/FS operation in the device controller the port routing steers data to the Protocol engine. For FS and LS mode operation in the host controller, the port routing steers data to the Protocol Engine w/ Embedded Transaction Translator. 0x0: Fullspeed, 0x1: Lowspeed, 0x2: Highspeed
       uint32_t TU_RESERVED                 : 4;
     }portsc_bm;
   };
-}ehci_registers_t;
+} ehci_registers_t;
+
+//--------------------------------------------------------------------+
+// Capability Registers
+//--------------------------------------------------------------------+
+typedef volatile struct {
+  uint8_t caplength;   // 0x00
+  uint8_t TU_RESERVED; // 0x01
+  uint16_t hciversion; // 0x02
+
+  union {
+    uint32_t hcsparams; // 0x04
+    struct {
+      uint32_t num_ports          : 4; // [00:03]
+      uint32_t port_power_control : 1; // [04]
+      uint32_t TU_RESERVED        : 2; // [05:06]
+      uint32_t port_route_rule    : 1; // [07]
+      uint32_t n_pcc              : 4; // [08:11] Number of Ports per Companion Controller
+      uint32_t n_cc               : 4; // [12:15] Number of Companion Controllers
+      uint32_t port_ind           : 1; // [16] Port Indicators
+      uint32_t TU_RESERVED        : 3; // [17:19]
+      uint32_t n_ptt              : 4; // [20:23] ChipIdea: Number of Ports per Transaction Translator
+      uint32_t n_tt               : 4; // [24:27] ChipIdea: Number of Transaction Translators
+      uint32_t TU_RESERVED        : 4; // [28:31]
+    } hcsparams_bm;
+  };
+
+  union {
+    uint32_t hccparams; // 0x08
+    struct {
+      uint32_t addr_64bit                   : 1; // [00] 64-bit Addressing Capability
+      uint32_t programmable_frame_list_flag : 1; // [01] Programmable Frame List Flag
+      uint32_t async_park_cap               : 1; // [02] Asynchronous Schedule Park Capability
+      uint32_t TU_RESERVED                  : 1; // [03]
+      uint32_t iso_schedule_threshold       : 4; // [4:7] Isochronous Scheduling Threshold
+      uint32_t eecp                         : 8; // [8:15] EHCI Extended Capabilities Pointer
+      uint32_t TU_RESERVED                  : 16;// [16:31]
+    } hccparams_bm;
+  };
+
+  uint32_t hcsp_portroute; // 0x0C HCSP Port Route Register
+} ehci_cap_registers_t;
+
+TU_VERIFY_STATIC(sizeof(ehci_cap_registers_t) == 16, "size is not correct");
 
 #ifdef __cplusplus
  }

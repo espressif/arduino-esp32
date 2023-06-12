@@ -117,6 +117,8 @@ typedef enum {
     WIFI_REASON_CONNECTION_FAIL                    = 205,
     WIFI_REASON_AP_TSF_RESET                       = 206,
     WIFI_REASON_ROAMING                            = 207,
+    WIFI_REASON_ASSOC_COMEBACK_TIME_TOO_LONG       = 208,
+    WIFI_REASON_SA_QUERY_TIMEOUT                   = 209,
 } wifi_err_reason_t;
 
 typedef enum {
@@ -347,6 +349,19 @@ typedef enum {
 } wifi_vendor_ie_id_t;
 
 #define WIFI_VENDOR_IE_ELEMENT_ID 0xDD
+
+/**
+  * @brief     Operation Phymode
+  */
+typedef enum
+{
+    WIFI_PHY_MODE_LR,   /**< PHY mode for Low Rate */
+    WIFI_PHY_MODE_11B,  /**< PHY mode for 11b */
+    WIFI_PHY_MODE_11G,  /**< PHY mode for 11g */
+    WIFI_PHY_MODE_HT20, /**< PHY mode for Bandwidth HT20 */
+    WIFI_PHY_MODE_HT40, /**< PHY mode for Bandwidth HT40 */
+    WIFI_PHY_MODE_HE20, /**< PHY mode for Bandwidth HE20 */
+} wifi_phy_mode_t;
 
 /**
  * @brief Vendor Information Element header

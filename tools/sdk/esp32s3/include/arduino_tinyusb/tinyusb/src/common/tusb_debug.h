@@ -46,6 +46,7 @@
 #if CFG_TUSB_DEBUG >= 2
 extern char const* const tu_str_speed[];
 extern char const* const tu_str_std_request[];
+extern char const* const tu_str_xfer_result[];
 #endif
 
 void tu_print_mem(void const *buf, uint32_t count, uint8_t indent);

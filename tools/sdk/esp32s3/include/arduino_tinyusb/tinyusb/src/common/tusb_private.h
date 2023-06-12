@@ -148,21 +148,26 @@ uint32_t tu_edpt_stream_read_xfer(tu_edpt_stream_t* s);
 
 // Must be called in the transfer complete callback
 TU_ATTR_ALWAYS_INLINE static inline
-void tu_edpt_stream_read_xfer_complete(tu_edpt_stream_t* s, uint32_t xferred_bytes)
-{
+void tu_edpt_stream_read_xfer_complete(tu_edpt_stream_t* s, uint32_t xferred_bytes) {
   tu_fifo_write_n(&s->ff, s->ep_buf, (uint16_t) xferred_bytes);
+}
+
+// Same as tu_edpt_stream_read_xfer_complete but skip the first n bytes
+TU_ATTR_ALWAYS_INLINE static inline
+void tu_edpt_stream_read_xfer_complete_offset(tu_edpt_stream_t* s, uint32_t xferred_bytes, uint32_t skip_offset) {
+  if (skip_offset < xferred_bytes) {
+    tu_fifo_write_n(&s->ff, s->ep_buf + skip_offset, (uint16_t) (xferred_bytes - skip_offset));
+  }
 }
 
 // Get the number of bytes available for reading
 TU_ATTR_ALWAYS_INLINE static inline
-uint32_t tu_edpt_stream_read_available(tu_edpt_stream_t* s)
-{
+uint32_t tu_edpt_stream_read_available(tu_edpt_stream_t* s) {
   return (uint32_t) tu_fifo_count(&s->ff);
 }
 
 TU_ATTR_ALWAYS_INLINE static inline
-bool tu_edpt_stream_peek(tu_edpt_stream_t* s, uint8_t* ch)
-{
+bool tu_edpt_stream_peek(tu_edpt_stream_t* s, uint8_t* ch) {
   return tu_fifo_peek(&s->ff, ch);
 }
 
