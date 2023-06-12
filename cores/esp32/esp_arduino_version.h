@@ -23,7 +23,7 @@ extern "C" {
 /** Minor version number (x.X.x) */
 #define ESP_ARDUINO_VERSION_MINOR   0
 /** Patch version number (x.x.X) */
-#define ESP_ARDUINO_VERSION_PATCH   9
+#define ESP_ARDUINO_VERSION_PATCH   10
 
 /**
  * Macro to convert ARDUINO version number into an integer
