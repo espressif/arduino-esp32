@@ -291,13 +291,6 @@ void esp_diag_task_snapshot_dump(void);
  */
 uint32_t esp_diag_meta_crc_get(void);
 
-/**
- * @brief Get CRC of diagnostics data structures' size
- *
- * @return crc
- */
-uint32_t esp_diag_data_size_get_crc(void);
-
 #ifdef __cplusplus
 }
 #endif
