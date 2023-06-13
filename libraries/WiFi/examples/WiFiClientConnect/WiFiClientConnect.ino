@@ -8,9 +8,10 @@
    
 */
 #include <WiFi.h>
+#include "secrets.h"
 
-const char* ssid     = "your-ssid";
-const char* password = "your-password";
+const char* ssid     = SECRETS_WIFI_SSID_1;
+const char* password = SECRETS_WIFI_PASSWORD_1;
 
 int btnGPIO = 0;
 int btnState = false;

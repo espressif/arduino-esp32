@@ -1,7 +1,8 @@
 #include "WiFi.h"
+#include "secrets.h"
 
-#define STA_SSID "**********"
-#define STA_PASS "**********"
+const char* ssid     = SECRETS_WIFI_SSID_1;
+const char* password = SECRETS_WIFI_PASSWORD_1;
 #define AP_SSID  "esp32-v6"
 
 static volatile bool wifi_connected = false;
@@ -19,7 +20,7 @@ void wifiOnConnect(){
 void wifiOnDisconnect(){
     Serial.println("STA Disconnected");
     delay(1000);
-    WiFi.begin(STA_SSID, STA_PASS);
+    WiFi.begin(ssid, password);
 }
 
 void wifiConnectedLoop(){
@@ -109,7 +110,7 @@ void setup(){
     WiFi.onEvent(WiFiEvent);
     WiFi.mode(WIFI_MODE_APSTA);
     WiFi.softAP(AP_SSID);
-    WiFi.begin(STA_SSID, STA_PASS);
+    WiFi.begin(ssid, password);
 }
 
 void loop(){

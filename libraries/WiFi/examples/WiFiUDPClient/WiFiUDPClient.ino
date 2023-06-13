@@ -4,10 +4,11 @@
  */
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include "secrets.h"
 
-// WiFi network name and password:
-const char * networkName = "your-ssid";
-const char * networkPswd = "your-password";
+// WiFi network name (SSID) and password:
+const char* ssid     = SECRETS_WIFI_SSID_1;
+const char* password = SECRETS_WIFI_PASSWORD_1;
 
 //IP address to send UDP data to:
 // either use the ip address of the server or 
@@ -26,7 +27,7 @@ void setup(){
   Serial.begin(115200);
   
   //Connect to the WiFi network
-  connectToWiFi(networkName, networkPswd);
+  connectToWiFi(ssid, password);
 }
 
 void loop(){

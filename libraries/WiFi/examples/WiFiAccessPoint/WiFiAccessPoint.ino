@@ -14,12 +14,13 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WiFiAP.h>
+#include "secrets.h"
 
 #define LED_BUILTIN 2   // Set the GPIO pin where you connected your test LED or comment this line out if your dev board has a built-in LED
 
 // Set these to your desired credentials.
-const char *ssid = "yourAP";
-const char *password = "yourPassword";
+const char* ssid     = SECRETS_WIFI_SSID_1;
+const char* password = SECRETS_WIFI_PASSWORD_1;
 
 WiFiServer server(80);
 

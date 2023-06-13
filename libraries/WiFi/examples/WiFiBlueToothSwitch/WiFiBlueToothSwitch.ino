@@ -16,8 +16,11 @@
 // Button is attached between GPIO 0 and GND and modes are switched with each press
 
 #include "WiFi.h"
-#define STA_SSID "your-ssid"
-#define STA_PASS "your-pass"
+#include "secrets.h"
+
+const char* ssid     = SECRETS_WIFI_SSID_1;
+const char* password = SECRETS_WIFI_PASSWORD_1;
+
 #define AP_SSID  "esp32"
 
 enum { STEP_BTON, STEP_BTOFF, STEP_STA, STEP_AP, STEP_AP_STA, STEP_OFF, STEP_BT_STA, STEP_END };
@@ -35,7 +38,7 @@ void onButton(){
     break;
     case STEP_STA://STA Only
       Serial.println("** Starting STA");
-      WiFi.begin(STA_SSID, STA_PASS);
+      WiFi.begin(ssid, password);
     break;
     case STEP_AP://AP Only
       Serial.println("** Stopping STA");
@@ -45,7 +48,7 @@ void onButton(){
     break;
     case STEP_AP_STA://AP+STA
       Serial.println("** Starting STA");
-      WiFi.begin(STA_SSID, STA_PASS);
+      WiFi.begin(ssid, password);
     break;
     case STEP_OFF://All Off
       Serial.println("** Stopping WiFi");
@@ -53,7 +56,7 @@ void onButton(){
     break;
     case STEP_BT_STA://BT+STA
       Serial.println("** Starting STA+BT");
-      WiFi.begin(STA_SSID, STA_PASS);
+      WiFi.begin(ssid, password);
       btStart();
     break;
     case STEP_END://All Off

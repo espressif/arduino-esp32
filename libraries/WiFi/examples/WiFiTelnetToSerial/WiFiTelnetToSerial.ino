@@ -20,13 +20,14 @@
 */
 #include <WiFi.h>
 #include <WiFiMulti.h>
+#include "secrets.h"
 
 WiFiMulti wifiMulti;
 
 //how many clients should be able to telnet to this ESP32
 #define MAX_SRV_CLIENTS 1
-const char* ssid = "**********";
-const char* password = "**********";
+const char* ssid     = SECRETS_WIFI_SSID_1;
+const char* password = SECRETS_WIFI_PASSWORD_1;
 
 WiFiServer server(23);
 WiFiClient serverClients[MAX_SRV_CLIENTS];

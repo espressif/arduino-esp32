@@ -5,6 +5,7 @@
 
 #include <WiFi.h>
 #include <WiFiMulti.h>
+#include "secrets.h"
 
 WiFiMulti WiFiMulti;
 
@@ -14,7 +15,7 @@ void setup()
     delay(10);
 
     // We start by connecting to a WiFi network
-    WiFiMulti.addAP("SSID", "passpasspass");
+    WiFiMulti.addAP(SECRETS_WIFI_SSID_1, SECRETS_WIFI_PASSWORD_1);
 
     Serial.println();
     Serial.println();

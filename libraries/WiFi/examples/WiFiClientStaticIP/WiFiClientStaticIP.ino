@@ -5,9 +5,10 @@
 */
 
 #include <WiFi.h>
+#include "secrets.h"
 
-const char* ssid     = "your_network_name";
-const char* password = "your_network_password";
+const char* ssid     = SECRETS_WIFI_SSID_1;
+const char* password = SECRETS_WIFI_PASSWORD_1;
 const char* host     = "example.com";
 const char* url      = "/index.html";
 
