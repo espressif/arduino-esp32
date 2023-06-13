@@ -197,9 +197,16 @@
   #define TUP_DCD_ENDPOINT_MAX    9
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32G4)
+  // Device controller
   #define TUP_USBIP_FSDEV
   #define TUP_USBIP_FSDEV_STM32
+
+  // TypeC controller
+  #define TUP_USBIP_TYPEC_STM32
+
   #define TUP_DCD_ENDPOINT_MAX    8
+
+  #define TUP_TYPEC_RHPORTS_NUM 1
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32G0)
   #define TUP_USBIP_FSDEV
