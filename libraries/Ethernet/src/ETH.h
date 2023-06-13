@@ -26,6 +26,14 @@
 #include "esp_eth.h"
 #include "esp_netif.h"
 
+//Dedicated GPIOs for RMII
+#define ETH_RMII_TX_EN  21
+#define ETH_RMII_TX0    19
+#define ETH_RMII_TX1    22
+#define ETH_RMII_RX0    25
+#define ETH_RMII_RX1_EN 26
+#define ETH_RMII_CRS_DV 27
+
 #ifndef ETH_PHY_ADDR
 #define ETH_PHY_ADDR 0
 #endif
