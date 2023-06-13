@@ -166,6 +166,8 @@ void setup() {
   HWSerial.begin(115200);
   HWSerial.setDebugOutput(true);
   
+  pinMode(buttonPin, INPUT_PULLUP);
+  
   USB.onEvent(usbEventCallback);
   USBSerial.onEvent(usbEventCallback);
   MSC_Update.onEvent(usbEventCallback);
