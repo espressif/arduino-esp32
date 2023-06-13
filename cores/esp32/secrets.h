@@ -5,3 +5,5 @@
 
 #define SECRETS_WIFI_SSID_2 "example-SSID2"
 #define SECRETS_WIFI_PASSWORD_2 "example-password-2"
+
+// TODO array
