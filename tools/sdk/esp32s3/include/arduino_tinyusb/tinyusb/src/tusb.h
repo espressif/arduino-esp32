@@ -42,7 +42,7 @@
 
 //------------- TypeC -------------//
 #if CFG_TUC_ENABLED
-  #include "typec/utcd.h"
+  #include "typec/usbc.h"
 #endif
 
 //------------- HOST -------------//
