@@ -675,7 +675,7 @@ void ETHClass::end(void)
         return;
     }
     if(esp_eth_driver_uninstall(eth_handle) != ESP_OK) {
-        log_e("Failed to stop Ehternet");
+        log_e("Failed to stop Ethernet");
         return;
     }
     _started = false;
