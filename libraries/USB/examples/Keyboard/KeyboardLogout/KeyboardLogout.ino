@@ -41,16 +41,18 @@ USBHIDKeyboard Keyboard;
 // change this to match your platform:
 int platform = OSX;
 
+const int buttonPin = 0;          // input pin for pushbutton
+
 void setup() {
   // make pin 0 an input and turn on the pull-up resistor so it goes high unless
   // connected to ground:
-  pinMode(0, INPUT_PULLUP);
+  pinMode(buttonPin, INPUT_PULLUP);
   Keyboard.begin();
   USB.begin();
 }
 
 void loop() {
-  while (digitalRead(0) == HIGH) {
+  while (digitalRead(buttonPin) == HIGH) {
     // do nothing until pin 2 goes low
     delay(500);
   }

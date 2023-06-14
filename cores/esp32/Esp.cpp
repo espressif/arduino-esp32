@@ -134,9 +134,7 @@ void EspClass::restart(void)
 
 uint32_t EspClass::getHeapSize(void)
 {
-    multi_heap_info_t info;
-    heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
-    return info.total_free_bytes + info.total_allocated_bytes;
+    return heap_caps_get_total_size(MALLOC_CAP_INTERNAL);
 }
 
 uint32_t EspClass::getFreeHeap(void)
@@ -157,9 +155,7 @@ uint32_t EspClass::getMaxAllocHeap(void)
 uint32_t EspClass::getPsramSize(void)
 {
 	if(psramFound()){
-	    multi_heap_info_t info;
-	    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
-	    return info.total_free_bytes + info.total_allocated_bytes;
+	    return heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
 	}
 	return 0;
 }
