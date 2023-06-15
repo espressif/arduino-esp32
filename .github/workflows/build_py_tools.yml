@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
     - 'tools/get.py'
+    - 'tools/espota.py'
+    - 'tools/gen_esp32part.py'
+    - 'tools/gen_insights_package.py'
 
 jobs:
   find-changed-tools:
@@ -26,6 +29,9 @@ jobs:
           since_last_remote_commit: 'true'
           files: |
             tools/get.py
+            tools/espota.py
+            tools/gen_esp32part.py
+            tools/gen_insights_package.py
       - name: List all changed files
         shell: bash
         run: |
@@ -69,8 +75,17 @@ jobs:
       - name: List all changed files
         shell: bash
         run: |
+          CHANGED_FILES=()
           for file in ${{ needs.find-changed-tools.outputs.all_changed_files }}; do
-            echo "$file was changed"
+              echo "$file got changed"
+              file="${file#*\/}"
+              file="${file%\.*}"
+              CHANGED_FILES+=("$file")
+          done
+          CHANGED_FILES="${CHANGED_FILES[@]}"
+          echo "CHANGED_TOOLS=$CHANGED_FILES" >> "$GITHUB_ENV"
+          for tool in ${{ env.CHANGED_TOOLS }}; do
+            echo "tool $tool was changed"
           done
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -87,30 +102,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller requests
       - name: Build with PyInstaller
-        run: |
-          pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/get.py
-      - name: Sign binaries
-        if: matrix.os == 'windows-latest'
-        env:
-          CERTIFICATE: ${{ secrets.CERTIFICATE }}
-          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
-        shell: pwsh
-        run: |
-          ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/get.exe
-      - name: Test binaries
         shell: bash
         run: |
-          ./${{ env.DISTPATH }}/get${{ matrix.EXTEN }} -h
-      # Commit and push changed files.
-      - name: Push binary to tools
-        if: matrix.os == 'windows-latest'
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        run: |
-          cp -Force ./${{ env.DISTPATH }}/get.exe tools/get.exe
-          bash .github/scripts/upload_py_tools.sh
-      - name: Archive artifact
-        uses: actions/upload-artifact@master
-        with:
-          name: ${{ env.DISTPATH }}
-          path: ${{ env.DISTPATH }}
+          for tool in ${{ env.CHANGED_TOOLS }}; do
+            echo "pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/$tool.py"
+          done
+      #     pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/get.py
+      # - name: Sign binaries
+      #   if: matrix.os == 'windows-latest'
+      #   env:
+      #     CERTIFICATE: ${{ secrets.CERTIFICATE }}
+      #     CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+      #   shell: pwsh
+      #   run: |
+      #     if exist ./${{ env.DISTPATH }}/get.exe ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/get.exe
+      # - name: Test binaries
+      #   shell: bash
+      #   run: |
+      #     ./${{ env.DISTPATH }}/get${{ matrix.EXTEN }} -h
+      # - name: Push binary to tools
+      #   if: matrix.os == 'windows-latest'
+      #   env:
+      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      #   run: |
+      #     cp -Force ./${{ env.DISTPATH }}/get.exe tools/get.exe
+      #     bash .github/scripts/upload_py_tools.sh
+      # - name: Archive artifact
+      #   uses: actions/upload-artifact@master
+      #   with:
+      #     name: ${{ env.DISTPATH }}
+      #     path: ${{ env.DISTPATH }}
