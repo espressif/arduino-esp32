@@ -59,11 +59,10 @@ Here are some steps that you can try:
 * Check your USB cable and try a new one (some cables are only for charging and there is no data connection).
 * Change the USB port - prefer direct connection to the computer and avoid USB hubs. Some USB ports may share the power source with other ports used, for example, for charging a phone.
 * Check your power supply.
-* Make sure that nothing is connected to pins labeled **TX** and **RX**.
+* Make sure that nothing is connected to pins labeled **TX** and **RX**. Please refer to the pin layout table - some TX and RX pins may not be labeled on the dev board.
 * In some instances, you must keep **GPIO0** LOW during the uploading process via the serial interface.
 * Hold down the **“BOOT”** button on your ESP32 board while uploading/flashing.
 * Solder a **10uF** capacitor in parallel with **RST** and **GND**.
-* If you bought your dev board from a questionable seller, they might have scammed you and sent ESP8266 instead of ESP32.
 * If you are using external power connected to pins, it is easy to confuse pins **CMD** (which is usually next to the 5V pin) and **GND**.
 
 In some development boards, you can try adding the reset delay circuit, as described in the *Power-on Sequence* section on the `ESP32 Hardware Design Guidelines <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ to get into the download mode automatically.
@@ -149,7 +148,7 @@ Even though you made sure that the pins are correctly connected, and not using r
 
   [ 1065][E][sd_diskio.cpp:807] sdcard_mount(): f_mount failed: (3) The physical drive cannot work
 
-Most of the problems originate from a poor connection caused by Dupont cables, and one of the best solutions is to **solder all the connections** or use good quality connectors.
+Most of the problems originate from a poor connection caused by prototyping cables/wires, and one of the best solutions is to **solder all the connections** or use good quality connectors.
 
 Note that with SD_MMC lib all the data pins need to be pulled up with an external 10k to 3.3V. This applies especially to card's D3 which needs to be pulled up even when using 1-bit line connection and the D3 is not used.
 

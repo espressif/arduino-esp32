@@ -46,7 +46,7 @@ The SPI uses 4 communication pins + 2 power connections and operates on up to 80
 SD-SPI speed is approximately half of the SD-MMC even when used on 1-bit line.
 You can read more about SD SPI in the [documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/sdspi_host.html)
 
-SD_MMC is supported only by ESP32 and ESP320S3 and can be connected only to dedicated pins. SD_MMC allows to use of 1, 4 or 8 data pins + 2 additional communication pins and 2 power pins. The data pins need to be pulled up externally.
+SD_MMC is supported only by ESP32 and ESP32-S3 and can be connected only to dedicated pins. SD_MMC allows to use of 1, 4 or 8 data pins + 2 additional communication pins and 2 power pins. The data pins need to be pulled up externally.
 You can read more about SD_MMC in the [documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/sdmmc_host.html)
 1-bit: SD_MMC_ speed is approximately two-times faster than SPI mode
 4-bit: SD_MMC speed is approximately three-times faster than SPI mode.
