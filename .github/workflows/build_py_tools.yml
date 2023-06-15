@@ -72,12 +72,11 @@ jobs:
       DISTPATH: pytools-${{ matrix.TARGET }}
       PIP_EXTRA_INDEX_URL: "https://dl.espressif.com/pypi"
     steps:
-      - name: List all changed files
+      - name: List changed tools
         shell: bash
         run: |
           CHANGED_FILES=()
           for file in ${{ needs.find-changed-tools.outputs.all_changed_files }}; do
-              echo "$file got changed"
               file="${file#*\/}"
               file="${file%\.*}"
               CHANGED_FILES+=("$file")
@@ -119,7 +118,6 @@ jobs:
           {
             ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/$node.exe
           }
-        # if exist ./${{ env.DISTPATH }}/get.exe ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/get.exe
       - name: Test binaries
         shell: bash
         run: |

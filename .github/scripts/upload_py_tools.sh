@@ -5,7 +5,7 @@ git config --global github.user "$GITHUB_ACTOR"
 git config --global user.name "$GITHUB_ACTOR"
 git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
 for tool in $CHANGED_FILES; do
-	echo "git add tools/$tool.exe"
+	git add tools/$tool.exe
 done
 git commit -m "Push binary to tools"
 git push
