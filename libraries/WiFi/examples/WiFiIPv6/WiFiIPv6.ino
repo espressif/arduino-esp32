@@ -1,5 +1,5 @@
 #include "WiFi.h"
-#include "secrets.h"
+#include "secrets.h" // Read more at https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/guides/secrets.html
 
 const char* ssid     = SECRETS_WIFI_SSID_1;
 const char* password = SECRETS_WIFI_PASSWORD_1;

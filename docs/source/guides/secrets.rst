@@ -9,6 +9,9 @@ Why?
 
 How it works - your SSIDs and passwords are #defined as a plain text constants in a header file located in sketch folder (after you manually create it). This header file can be included in any sketch and the passwords used in there hidden with the constant name.
 
+.. note::
+
+    You can still use the traditional way of hard-coded WiFi credentials if you want to. Using `secrets` only something extra on top of that.
 
 Setup:
 ------

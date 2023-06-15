@@ -4,7 +4,7 @@
  */
 #include <WiFi.h>
 #include <WiFiUdp.h>
-#include "secrets.h"
+#include "secrets.h" // Read more at https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/guides/secrets.html
 
 // WiFi network name (SSID) and password:
 const char* ssid     = SECRETS_WIFI_SSID_1;
