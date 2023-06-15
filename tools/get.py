@@ -238,3 +238,4 @@ if __name__ == '__main__':
         else:
             get_tool(tool)
     print('Platform Tools Installed')
+
