@@ -105,9 +105,8 @@ jobs:
         shell: bash
         run: |
           for tool in ${{ env.CHANGED_TOOLS }}; do
-            echo "pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/$tool.py"
+            pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/$tool.py
           done
-      #     pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/get.py
       # - name: Sign binaries
       #   if: matrix.os == 'windows-latest'
       #   env:
@@ -116,19 +115,25 @@ jobs:
       #   shell: pwsh
       #   run: |
       #     if exist ./${{ env.DISTPATH }}/get.exe ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/get.exe
-      # - name: Test binaries
-      #   shell: bash
-      #   run: |
-      #     ./${{ env.DISTPATH }}/get${{ matrix.EXTEN }} -h
-      # - name: Push binary to tools
-      #   if: matrix.os == 'windows-latest'
-      #   env:
-      #     GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      #   run: |
-      #     cp -Force ./${{ env.DISTPATH }}/get.exe tools/get.exe
-      #     bash .github/scripts/upload_py_tools.sh
-      # - name: Archive artifact
-      #   uses: actions/upload-artifact@master
-      #   with:
-      #     name: ${{ env.DISTPATH }}
-      #     path: ${{ env.DISTPATH }}
+      - name: Test binaries
+        shell: bash
+        run: |
+          for tool in ${{ env.CHANGED_TOOLS }}; do
+            ./${{ env.DISTPATH }}/$tool${{ matrix.EXTEN }} -h
+          done
+      - name: Push binary to tools
+        if: matrix.os == 'windows-latest'
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        shell: bash
+        run: |
+          for tool in ${{ env.CHANGED_TOOLS }}; do
+            cp -f ./${{ env.DISTPATH }}/$tool.exe tools/$tool.exe
+          done
+          # cp -Force ./${{ env.DISTPATH }}/get.exe tools/get.exe
+          bash .github/scripts/upload_py_tools.sh "${{ env.CHANGED_TOOLS }}"
+      - name: Archive artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: ${{ env.DISTPATH }}
+          path: ${{ env.DISTPATH }}
