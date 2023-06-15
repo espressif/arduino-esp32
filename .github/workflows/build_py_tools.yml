@@ -89,14 +89,14 @@ jobs:
       - name: Build with PyInstaller
         run: |
           pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/get.py
-      # - name: Sign binaries
-      #   if: matrix.os == 'windows-latest'
-      #   env:
-      #     CERTIFICATE: ${{ secrets.CERTIFICATE }}
-      #     CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
-      #   shell: pwsh
-      #   run: |
-      #     ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/get.exe
+      - name: Sign binaries
+        if: matrix.os == 'windows-latest'
+        env:
+          CERTIFICATE: ${{ secrets.CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        shell: pwsh
+        run: |
+          ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/get.exe
       - name: Test binaries
         shell: bash
         run: |

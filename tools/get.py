@@ -225,10 +225,15 @@ def identify_platform():
     return arduino_platform_names[sys_name][bits]
 
 if __name__ == '__main__':
+    is_test = (len(sys.argv) > 1 and sys.argv[1] == '-h')
+    if is_test:
+        print('Test run!')
     identified_platform = identify_platform()
     print('Platform: {0}'.format(identified_platform))
     tools_to_download = load_tools_list(current_dir + '/../package/package_esp32_index.template.json', identified_platform)
     is_test = (len(sys.argv) > 1 and sys.argv[1] == '-h')
+    if is_test:
+        print('Would install: {0}'.format(tool['archiveFileName']))
     mkdir_p(dist_dir)
     for tool in tools_to_download:
         if is_test:
