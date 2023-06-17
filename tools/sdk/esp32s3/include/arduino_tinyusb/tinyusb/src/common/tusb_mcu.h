@@ -79,14 +79,18 @@
   #define TUP_RHPORT_HIGHSPEED    1
 
 #elif TU_CHECK_MCU(OPT_MCU_MCXN9)
-  // NOTE: MCXN943 port 1 use chipidea HS, port 0 use chipidea FS
+  // USB0 is chipidea FS
+  #define TUP_USBIP_CHIPIDEA_FS
+  #define TUP_USBIP_CHIPIDEA_FS_MCX
+
+  // USB1 is chipidea HS
   #define TUP_USBIP_CHIPIDEA_HS
   #define TUP_USBIP_EHCI
 
   #define TUP_DCD_ENDPOINT_MAX    8
   #define TUP_RHPORT_HIGHSPEED    1
 
-#elif TU_CHECK_MCU(OPT_MCU_MIMXRT)
+#elif TU_CHECK_MCU(OPT_MCU_MIMXRT1XXX)
   #define TUP_USBIP_CHIPIDEA_HS
   #define TUP_USBIP_EHCI
 
