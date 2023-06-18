@@ -146,10 +146,6 @@ _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
 #endif
-//,_rxPin(-1) 
-//,_txPin(-1)
-//,_ctsPin(-1)
-//,_rtsPin(-1)
 {
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(_lock == NULL){
