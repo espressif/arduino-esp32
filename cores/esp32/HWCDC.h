@@ -42,6 +42,9 @@ typedef union {
 
 class HWCDC: public Stream
 {
+private:
+    static bool deinit(void * busptr);
+    
 public:
     HWCDC();
     ~HWCDC();
