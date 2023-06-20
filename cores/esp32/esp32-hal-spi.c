@@ -27,6 +27,9 @@
 #include "esp32-hal-periman.h"
 
 #include "esp_system.h"
+
+#ifndef CONFIG_IDF_TARGET_ESP32C6
+
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "soc/dport_reg.h"
@@ -46,6 +49,10 @@
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/ets_sys.h"
 #include "esp32c3/rom/gpio.h"
+#include "esp_intr_alloc.h"
+#elif CONFIG_IDF_TARGET_ESP32C6
+#include "esp32c6/rom/ets_sys.h"
+#include "esp32c6/rom/gpio.h"
 #include "esp_intr_alloc.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
@@ -1421,3 +1428,5 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
     }
     return bestReg.value;
 }
+
+#endif

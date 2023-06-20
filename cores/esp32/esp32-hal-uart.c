@@ -192,7 +192,11 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
     uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
     uart_config.baud_rate = baudrate;
+#if CONFIG_IDF_TARGET_ESP32C6
+    uart_config.source_clk = UART_SCLK_DEFAULT;
+#else
     uart_config.source_clk = UART_SCLK_APB;
+#endif
     ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
@@ -270,13 +274,13 @@ void uartSetRxInvert(uart_t* uart, bool invert)
 {
     if (uart == NULL)
         return;
-#if 0
+#if CONFIG_IDF_TARGET_ESP32C6
     // POTENTIAL ISSUE :: original code only set/reset rxd_inv bit 
     // IDF or LL set/reset the whole inv_mask!
-    if (invert)
-        ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_RXD_INV));
-    else
-        ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_INV_DISABLE));
+    // if (invert)
+    //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_RXD_INV));
+    // else
+    //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_INV_DISABLE));
     
 #else
     // this implementation is better over IDF API because it only affects RXD
@@ -677,7 +681,7 @@ void uartStartDetectBaudrate(uart_t *uart) {
         return;
     }
 
-#ifdef CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
     
     // ESP32-C3 requires further testing
     // Baud rate detection returns wrong values 
@@ -748,7 +752,7 @@ uartDetectBaudrate(uart_t *uart)
 
     return default_rates[i];
 #else
-#ifdef CONFIG_IDF_TARGET_ESP32C3 
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
     log_e("ESP32-C3 baud rate detection is not supported.");
 #else
     log_e("ESP32-S3 baud rate detection is not supported.");
