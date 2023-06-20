@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "USB.h"
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if SOC_USB_SERIAL_JTAG_SUPPORTED
 
 #include "esp32-hal.h"
 #include "HWCDC.h"
@@ -405,4 +405,4 @@ HWCDC USBSerial;
 #endif
 #endif
 
-#endif /* CONFIG_TINYUSB_CDC_ENABLED */
+#endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */
