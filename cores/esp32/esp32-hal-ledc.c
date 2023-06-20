@@ -270,7 +270,7 @@ static IRAM_ATTR bool ledcFnWrapper(const ledc_cb_param_t *param, void *user_arg
     return true;
 }
 
-static void ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg){
+static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg){
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
         
@@ -280,14 +280,14 @@ static void ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
                 bus->lock = xSemaphoreCreateBinary();
                 if(bus->lock == NULL){
                     log_e("xSemaphoreCreateBinary failed");
-                    return;
+                    return false;
                 }
                 xSemaphoreGive(bus->lock);
             }
             //acquire lock
             if(xSemaphoreTake(bus->lock, 0) != pdTRUE){
                 log_e("LEDC Fade is still running on pin %u! SoC does not support stopping fade.", pin);
-                return;
+                return false;
             }
         #endif
     #endif
@@ -323,29 +323,33 @@ static void ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 
         if(ledc_set_duty_and_update(group, channel, start_duty, 0) != ESP_OK){
             log_e("ledc_set_duty_and_update failed");
+            return false;
         }
         // Wait for LEDCs next PWM cycle to update duty (~ 1-2 ms)
         while(ledc_get_duty(group,channel) != start_duty);
 
         if(ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK){
             log_e("ledc_set_fade_time_and_start failed");
+            return false;
         }
     }
     else {
         log_e("Pin %u is not attached to LEDC. Call ledcAttach first!", pin);
+        return false;
     }
+    return true;
 }
 
-void ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int fade_time_ms){
-    ledcFadeConfig(pin, start_duty, target_duty, fade_time_ms, NULL, NULL);
+bool ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms){
+    return ledcFadeConfig(pin, start_duty, target_duty, max_fade_time_ms, NULL, NULL);
 }
 
-void ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int fade_time_ms, voidFuncPtr userFunc){
-    ledcFadeConfig(pin, start_duty, target_duty, fade_time_ms, (voidFuncPtrArg)userFunc, NULL);
+bool ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, voidFuncPtr userFunc){
+    return ledcFadeConfig(pin, start_duty, target_duty, max_fade_time_ms, (voidFuncPtrArg)userFunc, NULL);
 }
 
-void ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int fade_time_ms, void (*userFunc)(void*), void * arg){
-    ledcFadeConfig(pin, start_duty, target_duty, fade_time_ms, userFunc, arg);
+bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg){
+    return ledcFadeConfig(pin, start_duty, target_duty, max_fade_time_ms, userFunc, arg);
 }
 
 static uint8_t analog_resolution = 8;

@@ -51,9 +51,9 @@ bool        ledcDetach(uint8_t pin);
 uint32_t    ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution);
 
 //Fade functions
-void ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int fade_time_ms);
-void ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int fade_time_ms, void (*userFunc)(void));
-void ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int fade_time_ms, void (*userFunc)(void*), void * arg);
+bool ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms);
+bool ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void));
+bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg);
 
 #ifdef __cplusplus
 }
