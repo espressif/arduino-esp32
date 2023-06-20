@@ -259,7 +259,6 @@ static IRAM_ATTR bool ledcFnWrapper(const ledc_cb_param_t *param, void *user_arg
         xSemaphoreGiveFromISR(bus->lock, &xTaskWoken);
         #endif
         if(bus->fn) {
-            uint8_t group=(bus->channel/8), channel=(bus->channel%8);
             if(bus->arg){
                 ((voidFuncPtrArg)bus->fn)(bus->arg);
             } else {
