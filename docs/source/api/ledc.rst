@@ -244,7 +244,7 @@ Example Applications
 
 LEDC fade example:
 
-.. literalinclude:: ../../../libraries/ESP32/examples/AnalogOut/LEDCSoftwareFade/LEDCFade.ino
+.. literalinclude:: ../../../libraries/ESP32/examples/AnalogOut/LEDCFade/LEDCFade.ino
     :language: arduino
 
 LEDC software fade example:
