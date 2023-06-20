@@ -14,9 +14,17 @@ void setup()
     Serial.begin(115200);
     delay(10);
 
+#ifdef SECRETS_WIFI_ARRAY_MAX
     for(int i = 0; i < SECRETS_WIFI_ARRAY_MAX; ++i){
         wifiMulti.addAP(SECRET_WIFI_SSID_ARRAY[i], SECRET_WIFI_PASSWORD_ARRAY[i]);
     }
+#else
+    // Traditional way
+    wifiMulti.addAP("example-SSID1", "example-password-1");
+    wifiMulti.addAP("example-SSID2", "example-password-2");
+    wifiMulti.addAP("example-SSID3", "example-password-3");
+#endif
+
     Serial.println("Connecting Wifi...");
     if(wifiMulti.run() == WL_CONNECTED) {
         Serial.println("");

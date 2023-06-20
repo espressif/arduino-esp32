@@ -10,8 +10,17 @@
 #include <WiFi.h>
 #include "secrets.h" // Read more at https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/guides/secrets.html
 
+#ifdef SECRETS_WIFI_SSID_1
 const char* ssid     = SECRETS_WIFI_SSID_1;
+#else
+const char* ssid     = "example-SSID1"; // Traditional way
+#endif
+
+#ifdef SECRETS_WIFI_PASSWORD_1
 const char* password = SECRETS_WIFI_PASSWORD_1;
+#else
+const char* password = "example-password-1"; // Traditional way
+#endif
 
 int btnGPIO = 0;
 int btnState = false;

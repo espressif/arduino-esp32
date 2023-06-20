@@ -9,13 +9,25 @@
 
 WiFiMulti WiFiMulti;
 
+#ifdef SECRETS_WIFI_SSID_1
+const char* ssid     = SECRETS_WIFI_SSID_1;
+#else
+const char* ssid     = "example-SSID1"; // Traditional way
+#endif
+
+#ifdef SECRETS_WIFI_PASSWORD_1
+const char* password = SECRETS_WIFI_PASSWORD_1;
+#else
+const char* password = "example-password-1"; // Traditional way
+#endif
+
 void setup()
 {
     Serial.begin(115200);
     delay(10);
 
     // We start by connecting to a WiFi network
-    WiFiMulti.addAP(SECRETS_WIFI_SSID_1, SECRETS_WIFI_PASSWORD_1);
+    WiFiMulti.addAP(ssid, password);
 
     Serial.println();
     Serial.println();
