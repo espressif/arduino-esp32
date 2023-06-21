@@ -92,7 +92,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 "esp32s3")
                     fqbn="espressif:esp32:esp32s3:${options:-$esp32s3_opts}"
                 ;;
-                "esp32c3")
+                "esp32c6")
                     fqbn="espressif:esp32:esp32c6:${options:-$esp32c6_opts}"
                 ;;
             esac
