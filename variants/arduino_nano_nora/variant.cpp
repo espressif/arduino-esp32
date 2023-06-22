@@ -1,10 +1,11 @@
-#include "Arduino.h"
+// Enable pin remapping in this file, so pin constants are meaningful
+#undef ARDUINO_CORE_BUILD
 
+#include "Arduino.h"
 
 extern "C" {
     void initVariant() {
     }
-    // TODO: provide override for functions with pin numbers
 }
 
 // defines an "Update" object accessed only by this translation unit

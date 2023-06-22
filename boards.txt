@@ -24154,7 +24154,7 @@ nano_nora.build.flash_mode=dio
 nano_nora.build.boot=qio
 nano_nora.build.boot_freq=80m
 nano_nora.build.partitions=app3M_fat9M_fact512k_16MB
-nano_nora.build.defines=-DBOARD_HAS_PSRAM
+nano_nora.build.defines=-DBOARD_HAS_PIN_REMAP -DBOARD_HAS_PSRAM
 nano_nora.build.loop_core=-DARDUINO_RUNNING_CORE=1
 nano_nora.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 nano_nora.build.psram_type=opi
