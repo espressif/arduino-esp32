@@ -2,8 +2,22 @@
 #include "time.h"
 #include "sntp.h"
 
-const char* ssid       = "YOUR_SSID";
-const char* password   = "YOUR_PASS";
+// To use secrets please read the documentation at https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/guides/secrets.html
+#if __has_include("secrets.h")
+  #include "secrets.h"
+#endif
+
+#ifdef SECRETS_WIFI_SSID_1
+const char* ssid     = SECRETS_WIFI_SSID_1;
+#else
+const char* ssid     = "example-SSID1"; // Traditional way
+#endif
+
+#ifdef SECRETS_WIFI_PASSWORD_1
+const char* password = SECRETS_WIFI_PASSWORD_1;
+#else
+const char* password = "example-password-1"; // Traditional way
+#endif
 
 const char* ntpServer1 = "pool.ntp.org";
 const char* ntpServer2 = "time.nist.gov";

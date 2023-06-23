@@ -4,6 +4,23 @@
 #include <time.h> 
 #include <WiFi.h>
 
+// To use secrets please read the documentation at https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/guides/secrets.html
+#if __has_include("secrets.h")
+  #include "secrets.h"
+#endif
+
+#ifdef SECRETS_WIFI_SSID_1
+const char* ssid     = SECRETS_WIFI_SSID_1;
+#else
+const char* ssid     = "example-SSID1"; // Traditional way
+#endif
+
+#ifdef SECRETS_WIFI_PASSWORD_1
+const char* password = SECRETS_WIFI_PASSWORD_1;
+#else
+const char* password = "example-password-1"; // Traditional way
+#endif
+
 #define SPIFFS LittleFS
 
 /* This examples uses "quick re-define" of SPIFFS to run 
@@ -14,9 +31,6 @@
    https://github.com/lorol/arduino-esp32littlefs-plugin */
    
 #define FORMAT_LITTLEFS_IF_FAILED true
-
-const char* ssid     = "yourssid";
-const char* password = "yourpass";
 
 long timezone = 1; 
 byte daysavetime = 1;

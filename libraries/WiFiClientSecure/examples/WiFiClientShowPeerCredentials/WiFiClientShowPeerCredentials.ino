@@ -14,12 +14,21 @@
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 
-#ifndef WIFI_NETWORK
-#define WIFI_NETWORK "MyWifiNetwork"
+// To use secrets please read the documentation at https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/guides/secrets.html
+#if __has_include("secrets.h")
+  #include "secrets.h"
 #endif
 
-#ifndef WIFI_PASSWD
-#define WIFI_PASSWD "MySecretWifiPassword"
+#ifdef SECRETS_WIFI_SSID_1
+const char* ssid     = SECRETS_WIFI_SSID_1;
+#else
+const char* ssid     = "example-SSID1"; // Traditional way
+#endif
+
+#ifdef SECRETS_WIFI_PASSWORD_1
+const char* password = SECRETS_WIFI_PASSWORD_1;
+#else
+const char* password = "example-password-1"; // Traditional way
 #endif
 
 #define URL "https://arduino.cc"
@@ -77,7 +86,7 @@ void setup() {
   Serial.println("Started " __FILE__ " build " __DATE__ " " __TIME__);
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_NETWORK, WIFI_PASSWD);
+  WiFi.begin(ssid, password);
 
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
     Serial.println("Wifi fail - rebooting");

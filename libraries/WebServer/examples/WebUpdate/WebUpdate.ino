@@ -8,9 +8,24 @@
 #include <ESPmDNS.h>
 #include <Update.h>
 
+// To use secrets please read the documentation at https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/guides/secrets.html
+#if __has_include("secrets.h")
+  #include "secrets.h"
+#endif
+
+#ifdef SECRETS_WIFI_SSID_1
+const char* ssid     = SECRETS_WIFI_SSID_1;
+#else
+const char* ssid     = "example-SSID1"; // Traditional way
+#endif
+
+#ifdef SECRETS_WIFI_PASSWORD_1
+const char* password = SECRETS_WIFI_PASSWORD_1;
+#else
+const char* password = "example-password-1"; // Traditional way
+#endif
+
 const char* host = "esp32-webupdate";
-const char* ssid = "........";
-const char* password = "........";
 
 WebServer server(80);
 const char* serverIndex = "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
