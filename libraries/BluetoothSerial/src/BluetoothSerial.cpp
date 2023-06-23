@@ -54,7 +54,7 @@ static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
 static EventGroupHandle_t _bt_event_group = NULL;
 static boolean secondConnectionAttempt;
-static esp_spp_cb_t * custom_spp_callback = NULL;
+static esp_spp_cb_t custom_spp_callback = NULL;
 static BluetoothSerialDataCb custom_data_callback = NULL;
 static esp_bd_addr_t current_bd_addr;
 static ConfirmRequestCb confirm_request_callback = NULL;
@@ -661,8 +661,6 @@ static bool _init_bt(const char *deviceName)
         }
     }
 
-    // Why only master need this?  Slave need this during pairing as well
-//    if (_isMaster && esp_bt_gap_register_callback(esp_bt_gap_cb) != ESP_OK) {
     if (esp_bt_gap_register_callback(esp_bt_gap_cb) != ESP_OK) {
         log_e("gap register failed");
         return false;
@@ -840,6 +838,7 @@ int BluetoothSerial::read()
  */
 void BluetoothSerial::setTimeout(int timeoutMS)
 {
+    Stream::setTimeout(timeoutMS);
     this->timeoutTicks=timeoutMS / portTICK_PERIOD_MS;
 }
 
@@ -886,7 +885,7 @@ void BluetoothSerial::confirmReply(boolean confirm)
 }
 
 
-esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t * callback)
+esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t callback)
 {
     custom_spp_callback = callback;
     return ESP_OK;
@@ -1183,4 +1182,31 @@ std::map<int, std::string> BluetoothSerial::getChannels(const BTAddress &remoteA
     return sdpRecords;
 }
 
+/**
+ * @brief      Gets the MAC address of local BT device in byte array.
+ *
+ * @param      mac [out]  The mac
+ */
+void BluetoothSerial::getBtAddress(uint8_t *mac) {
+    const uint8_t *dev_mac = esp_bt_dev_get_address();
+    memcpy(mac, dev_mac, ESP_BD_ADDR_LEN);
+}
+/**
+ * @brief      Gets the MAC address of local BT device as BTAddress object.
+ *
+ * @return     The BTAddress object.
+ */
+BTAddress BluetoothSerial::getBtAddressObject() {
+    uint8_t mac_arr[ESP_BD_ADDR_LEN];
+    getBtAddress(mac_arr);
+    return BTAddress(mac_arr);
+}
+/**
+ * @brief      Gets the MAC address of local BT device as string.
+ *
+ * @return     The BT MAC address string.
+ */
+String BluetoothSerial::getBtAddressString() {
+    return getBtAddressObject().toString(true);
+}
 #endif

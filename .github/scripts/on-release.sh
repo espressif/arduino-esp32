@@ -171,20 +171,22 @@ mkdir -p "$PKG_DIR/tools"
 
 # Copy all core files to the package folder
 echo "Copying files for packaging ..."
-cp -f  "$GITHUB_WORKSPACE/boards.txt"              "$PKG_DIR/"
-cp -f  "$GITHUB_WORKSPACE/package.json"            "$PKG_DIR/"
-cp -f  "$GITHUB_WORKSPACE/programmers.txt"         "$PKG_DIR/"
-cp -Rf "$GITHUB_WORKSPACE/cores"                   "$PKG_DIR/"
-cp -Rf "$GITHUB_WORKSPACE/libraries"               "$PKG_DIR/"
-cp -Rf "$GITHUB_WORKSPACE/variants"                "$PKG_DIR/"
-cp -f  "$GITHUB_WORKSPACE/tools/espota.exe"        "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/espota.py"         "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.py"  "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.exe" "$PKG_DIR/tools/"
-cp -Rf "$GITHUB_WORKSPACE/tools/partitions"        "$PKG_DIR/tools/"
-cp -Rf "$GITHUB_WORKSPACE/tools/ide-debug"         "$PKG_DIR/tools/"
-cp -Rf "$GITHUB_WORKSPACE/tools/sdk"               "$PKG_DIR/tools/"
-cp -f $GITHUB_WORKSPACE/tools/platformio-build*.py "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/boards.txt"                       "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/package.json"                     "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/programmers.txt"                  "$PKG_DIR/"
+cp -Rf "$GITHUB_WORKSPACE/cores"                            "$PKG_DIR/"
+cp -Rf "$GITHUB_WORKSPACE/libraries"                        "$PKG_DIR/"
+cp -Rf "$GITHUB_WORKSPACE/variants"                         "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/tools/espota.exe"                 "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/espota.py"                  "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.py"           "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.exe"          "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/gen_insights_package.py"    "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/gen_insights_package.exe"   "$PKG_DIR/tools/"
+cp -Rf "$GITHUB_WORKSPACE/tools/partitions"                 "$PKG_DIR/tools/"
+cp -Rf "$GITHUB_WORKSPACE/tools/ide-debug"                  "$PKG_DIR/tools/"
+cp -Rf "$GITHUB_WORKSPACE/tools/sdk"                        "$PKG_DIR/tools/"
+cp -f $GITHUB_WORKSPACE/tools/platformio-build*.py          "$PKG_DIR/tools/"
 
 # Remove unnecessary files in the package folder
 echo "Cleaning up folders ..."
@@ -195,10 +197,10 @@ find "$PKG_DIR" -name '*.git*' -type f -delete
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
 sed "s/version=.*/version=$ver$extent/g" | \
-sed 's/runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf//g' | \
-sed 's/runtime.tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf//g' | \
-sed 's/runtime.tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s3-elf//g' | \
-sed 's/runtime.tools.riscv32-esp-elf-gcc.path={runtime.platform.path}\/tools\/riscv32-esp-elf//g' | \
+sed 's/tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf/tools.xtensa-esp32-elf-gcc.path=\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
+sed 's/tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf/tools.xtensa-esp32s2-elf-gcc.path=\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
+sed 's/tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s3-elf/tools.xtensa-esp32s3-elf-gcc.path=\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
+sed 's/tools.riscv32-esp-elf-gcc.path={runtime.platform.path}\/tools\/riscv32-esp-elf/tools.riscv32-esp-elf-gcc.path=\{runtime.tools.riscv32-esp-elf-gcc.path\}/g' | \
 sed 's/tools.esptool_py.path={runtime.platform.path}\/tools\/esptool/tools.esptool_py.path=\{runtime.tools.esptool_py.path\}/g' | \
 sed 's/debug.server.openocd.path={runtime.platform.path}\/tools\/openocd-esp32\/bin\/openocd/debug.server.openocd.path=\{runtime.tools.openocd-esp32.path\}\/bin\/openocd/g' | \
 sed 's/debug.server.openocd.scripts_dir={runtime.platform.path}\/tools\/openocd-esp32\/share\/openocd\/scripts\//debug.server.openocd.scripts_dir=\{runtime.tools.openocd-esp32.path\}\/share\/openocd\/scripts\//g' | \
