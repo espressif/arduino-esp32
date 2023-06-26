@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include "esp32-hal-touch.h"
+#include "soc/soc_caps.h"
 
 #if SOC_TOUCH_SENSOR_SUPPORTED
 #include "driver/touch_sensor.h"
+#include "esp32-hal-touch.h"
 #include "esp32-hal-periman.h"
 
 /*

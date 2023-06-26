@@ -1,4 +1,4 @@
-#include "esp32-hal-tinyusb.h"
+#include "soc/soc_caps.h"
 
 #if SOC_USB_OTG_SUPPORTED
 #include "sdkconfig.h"
@@ -35,6 +35,7 @@
 
 #include "esp32-hal.h"
 
+#include "esp32-hal-tinyusb.h"
 #if CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/usb/usb_persist.h"
 #include "esp32s2/rom/usb/usb_dc.h"

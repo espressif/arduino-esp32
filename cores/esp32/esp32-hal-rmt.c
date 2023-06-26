@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp32-hal-rmt.h"
+#include "soc/soc_caps.h"
 
 #if SOC_RMT_SUPPORTED
 #include "esp32-hal.h"
@@ -20,6 +20,7 @@
 #include "driver/rmt_tx.h"
 #include "driver/rmt_rx.h"
 
+#include "esp32-hal-rmt.h"
 #include "esp32-hal-periman.h"
 
 // Arduino Task Handle indicates if the Arduino Task has been started already
