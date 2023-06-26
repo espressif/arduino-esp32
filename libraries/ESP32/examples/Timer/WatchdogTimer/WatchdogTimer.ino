@@ -1,8 +1,9 @@
 #include "esp_system.h"
+#include "rom/ets_sys.h"
 
 const int button = 0;         //gpio to use to trigger delay
 const int wdtTimeout = 3000;  //time in ms to trigger the watchdog
-hw_timer_t *timer = NULL;
+hw_timer_t * timer = NULL;
 
 void ARDUINO_ISR_ATTR resetModule() {
   ets_printf("reboot\n");
@@ -14,11 +15,10 @@ void setup() {
   Serial.println();
   Serial.println("running setup");
 
-  pinMode(button, INPUT_PULLUP);                    //init control pin
-  timer = timerBegin(0, 80, true);                  //timer 0, div 80
-  timerAttachInterrupt(timer, &resetModule, true);  //attach callback
-  timerAlarmWrite(timer, wdtTimeout * 1000, false); //set time in us
-  timerAlarmEnable(timer);                          //enable interrupt
+  pinMode(button, INPUT_PULLUP);                       //init control pin
+  timer = timerBegin(1000000);                   //timer 1Mhz resolution
+  timerAttachInterrupt(timer, &resetModule);           //attach callback
+  timerAlarm(timer, wdtTimeout * 1000, false, 0); //set time in us
 }
 
 void loop() {

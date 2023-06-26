@@ -1,15 +1,29 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "Arduino.h"
+// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 
-#include "esp32-hal.h"
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * @brief This example demonstrates usage of RGB LED driven by RMT
+ * 
+ * The output is a visual WS2812 RGB LED color moving in a 8 x 4 LED matrix
+ * Parameters can be changed by the user. In a single LED circuit, it will just blink.
+ */
 
 // The effect seen in ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
 #if CONFIG_IDF_TARGET_ESP32S2
 #define BUILTIN_RGBLED_PIN   18
 #elif CONFIG_IDF_TARGET_ESP32S3
-#define BUILTIN_RGBLED_PIN   48
+#define BUILTIN_RGBLED_PIN   48  // 48 or 38
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define BUILTIN_RGBLED_PIN   8
 #else
@@ -46,27 +60,18 @@
 
 rmt_data_t led_data[NR_OF_ALL_BITS];
 
-rmt_obj_t* rmt_send = NULL;
-
-void setup() 
-{
+void setup() {
     Serial.begin(115200);
-    
-    if ((rmt_send = rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_64)) == NULL)
-    {
+    if (!rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
         Serial.println("init sender failed\n");
     }
-
-    float realTick = rmtSetTick(rmt_send, 100);
-    Serial.printf("real tick set to: %fns\n", realTick);
-
+    Serial.println("real tick set to: 100ns");
 }
 
-int color[] =  { 0x55, 0x11, 0x77 };  // RGB value
+int color[] =  { 0x55, 0x11, 0x77 };  // Green Red Blue values
 int led_index = 0;
 
-void loop() 
-{
+void loop() {
     // Init data with only one led ON
     int led, col, bit;
     int i=0;
@@ -92,9 +97,7 @@ void loop()
     if ((++led_index)>=NR_OF_LEDS) {
         led_index = 0;
     }
-
-    // Send the data
-    rmtWrite(rmt_send, led_data, NR_OF_ALL_BITS);
-
+    // Send the data and wait until it is done
+    rmtWrite(BUILTIN_RGBLED_PIN, led_data, NR_OF_ALL_BITS, RMT_WAIT_FOR_EVER);
     delay(100);
 }

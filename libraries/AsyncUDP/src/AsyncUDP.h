@@ -8,9 +8,19 @@
 #include <functional>
 extern "C" {
 #include "esp_netif.h"
+#include "lwip/ip_addr.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 }
+
+// This enum and it's uses are copied and adapted for compatibility from ESP-IDF 4-
+typedef enum {
+    TCPIP_ADAPTER_IF_STA = 0,     /**< Wi-Fi STA (station) interface */
+    TCPIP_ADAPTER_IF_AP,          /**< Wi-Fi soft-AP interface */
+    TCPIP_ADAPTER_IF_ETH,         /**< Ethernet interface */
+    TCPIP_ADAPTER_IF_PPP,         /**< PPP interface */
+    TCPIP_ADAPTER_IF_MAX
+} tcpip_adapter_if_t;
 
 class AsyncUDP;
 class AsyncUDPPacket;

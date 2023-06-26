@@ -49,9 +49,13 @@
                     /*<! 0: detect by one-stage which is less accurate but faster(without keypoints). */
 
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
+#pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #include "face_recognition_tool.hpp"
 #include "face_recognition_112_v1_s16.hpp"
 #include "face_recognition_112_v1_s8.hpp"
+#pragma GCC diagnostic error "-Wformat"
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
 
 #define QUANT_TYPE 0 //if set to 1 => very large firmware, very slow, reboots when streaming...
 
@@ -74,7 +78,7 @@
 // LED FLASH setup
 #if CONFIG_LED_ILLUMINATOR_ENABLED
 
-#define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
+#define LED_LEDC_GPIO 22    //configure LED pin
 #define CONFIG_LED_MAX_INTENSITY 255
 
 int led_duty = 0;
@@ -286,7 +290,7 @@ void enable_led(bool en)
     {
         duty = CONFIG_LED_MAX_INTENSITY;
     }
-    ledcWrite(LED_LEDC_CHANNEL, duty);
+    ledcWrite(LED_LEDC_GPIO, duty);
     //ledc_set_duty(CONFIG_LED_LEDC_SPEED_MODE, CONFIG_LED_LEDC_CHANNEL, duty);
     //ledc_update_duty(CONFIG_LED_LEDC_SPEED_MODE, CONFIG_LED_LEDC_CHANNEL);
     log_i("Set LED intensity to %d", duty);
@@ -313,7 +317,7 @@ static esp_err_t bmp_handler(httpd_req_t *req)
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     char ts[32];
-    snprintf(ts, 32, "%ld.%06ld", fb->timestamp.tv_sec, fb->timestamp.tv_usec);
+    snprintf(ts, 32, "%lld.%06ld", fb->timestamp.tv_sec, fb->timestamp.tv_usec);
     httpd_resp_set_hdr(req, "X-Timestamp", (const char *)ts);
 
 
@@ -379,7 +383,7 @@ static esp_err_t capture_handler(httpd_req_t *req)
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     char ts[32];
-    snprintf(ts, 32, "%ld.%06ld", fb->timestamp.tv_sec, fb->timestamp.tv_usec);
+    snprintf(ts, 32, "%lld.%06ld", fb->timestamp.tv_sec, fb->timestamp.tv_usec);
     httpd_resp_set_hdr(req, "X-Timestamp", (const char *)ts);
 
 #if CONFIG_ESP_FACE_DETECT_ENABLED
@@ -1386,8 +1390,7 @@ void startCameraServer()
 void setupLedFlash(int pin) 
 {
     #if CONFIG_LED_ILLUMINATOR_ENABLED
-    ledcSetup(LED_LEDC_CHANNEL, 5000, 8);
-    ledcAttachPin(pin, LED_LEDC_CHANNEL);
+    ledcAttach(pin, 5000, 8);
     #else
     log_i("LED flash is disabled -> CONFIG_LED_ILLUMINATOR_ENABLED = 0");
     #endif

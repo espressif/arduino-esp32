@@ -9,11 +9,9 @@
  */
  
 // Set up the rgb led names
-uint8_t ledR = 2;
-uint8_t ledG = 4;
-uint8_t ledB = 5; 
-
-uint8_t ledArray[3] = {1, 2, 3}; // three led channels
+uint8_t ledR = 0;
+uint8_t ledG = 2;
+uint8_t ledB = 4; 
 
 const boolean invert = true; // set true if common anode, false if common cathode
 
@@ -27,16 +25,11 @@ void setup()
   Serial.begin(115200);
   delay(10); 
   
-  ledcAttachPin(ledR, 1); // assign RGB led pins to channels
-  ledcAttachPin(ledG, 2);
-  ledcAttachPin(ledB, 3);
-  
-  // Initialize channels 
-  // channels 0-15, resolution 1-16 bits, freq limits depend on resolution
-  // ledcSetup(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
-  ledcSetup(1, 12000, 8); // 12 kHz PWM, 8-bit resolution
-  ledcSetup(2, 12000, 8);
-  ledcSetup(3, 12000, 8);
+  // Initialize pins as LEDC channels 
+  // resolution 1-16 bits, freq limits depend on resolution
+  ledcAttach(ledR, 12000, 8); // 12 kHz PWM, 8-bit resolution
+  ledcAttach(ledG, 12000, 8);
+  ledcAttach(ledB, 12000, 8);
 }
 
 // void loop runs over and over again
@@ -45,14 +38,14 @@ void loop()
   Serial.println("Send all LEDs a 255 and wait 2 seconds.");
   // If your RGB LED turns off instead of on here you should check if the LED is common anode or cathode.
   // If it doesn't fully turn off and is common anode try using 256.
-  ledcWrite(1, 255);
-  ledcWrite(2, 255);
-  ledcWrite(3, 255);
+  ledcWrite(ledR, 255);
+  ledcWrite(ledG, 255);
+  ledcWrite(ledB, 255);
   delay(2000);
   Serial.println("Send all LEDs a 0 and wait 2 seconds.");
-  ledcWrite(1, 0);
-  ledcWrite(2, 0);
-  ledcWrite(3, 0);
+  ledcWrite(ledR, 0);
+  ledcWrite(ledG, 0);
+  ledcWrite(ledB, 0);
   delay(2000);
  
   Serial.println("Starting color fade loop.");
@@ -62,9 +55,9 @@ void loop()
   hueToRGB(color, brightness);  // call function to convert hue to RGB
 
   // write the RGB values to the pins
-  ledcWrite(1, R); // write red component to channel 1, etc.
-  ledcWrite(2, G);   
-  ledcWrite(3, B); 
+  ledcWrite(ledR, R); // write red component to channel 1, etc.
+  ledcWrite(ledG, G);   
+  ledcWrite(ledB, B); 
  
   delay(100); // full cycle of rgb over 256 colors takes 26 seconds
  }

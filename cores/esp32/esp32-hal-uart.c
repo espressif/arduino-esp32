@@ -23,6 +23,8 @@
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
 #include "soc/uart_periph.h"
+#include "rom/ets_sys.h"
+#include "rom/gpio.h"
 
 #include "driver/gpio.h"
 #include "hal/gpio_hal.h"
@@ -108,19 +110,6 @@ void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int
     UART_MUTEX_UNLOCK();  
 }
 
-// solves issue https://github.com/espressif/arduino-esp32/issues/6032
-// baudrate must be multiplied when CPU Frequency is lower than APB 80MHz
-uint32_t _get_effective_baudrate(uint32_t baudrate) 
-{
-    uint32_t Freq = getApbFrequency()/1000000;
-    if (Freq < 80) {
-        return 80 / Freq * baudrate;
-     }
-    else {
-        return baudrate;
-    }
-}
-
 // Routines that take care of UART events will be in the HardwareSerial Class code
 void uartGetEventQueue(uart_t* uart, QueueHandle_t *q)
 {
@@ -160,13 +149,16 @@ bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t
 }
 
 // 
-void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
+bool uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
     if(uart == NULL) {
-        return;
+        return false;
     }
     // IDF will issue corresponding error message when mode or threshold are wrong and prevent crashing
     // IDF will check (mode > HW_FLOWCTRL_CTS_RTS || threshold >= SOC_UART_FIFO_LEN)
-    uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold);
+    UART_MUTEX_LOCK();
+    bool retCode = (ESP_OK == uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold));
+    UART_MUTEX_UNLOCK();  
+    return retCode;
 }
 
 
@@ -199,14 +191,8 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.stop_bits = (config & 0x30) >> 4;
     uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
     uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
-#if SOC_UART_SUPPORT_XTAL_CLK
-    // works independently of APB frequency
-    uart_config.source_clk = UART_SCLK_XTAL; // ESP32C3, ESP32S3
     uart_config.baud_rate = baudrate;
-#else
-    uart_config.source_clk = UART_SCLK_APB;  // ESP32, ESP32S2
-    uart_config.baud_rate = _get_effective_baudrate(baudrate);
-#endif
+    uart_config.source_clk = UART_SCLK_APB;
     ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
     ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
     ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
@@ -244,26 +230,28 @@ void uartSetFastReading(uart_t* uart)
 }
 
 
-void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout)
+bool uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout)
 {
     if(uart == NULL) {
-        return;
+        return false;
     }
 
     UART_MUTEX_LOCK();
-    uart_set_rx_timeout(uart->num, numSymbTimeout);
+    bool retCode = (ESP_OK == uart_set_rx_timeout(uart->num, numSymbTimeout));
     UART_MUTEX_UNLOCK();
+    return retCode;
 }
 
-void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull)
+bool uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull)
 {
     if(uart == NULL) {
-        return;
+        return false;
     }
 
     UART_MUTEX_LOCK();
-    uart_set_rx_full_threshold(uart->num, numBytesFIFOFull);
+    bool retCode = (ESP_OK == uart_set_rx_full_threshold(uart->num, numBytesFIFOFull));
     UART_MUTEX_UNLOCK();
+    return retCode;
 }
 
 void uartEnd(uart_t* uart)
@@ -458,18 +446,26 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
-    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate));
+    uint32_t sclk_freq;
+    if(uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK){
+        uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate, sclk_freq);
+    }
     UART_MUTEX_UNLOCK();
 }
 
 uint32_t uartGetBaudRate(uart_t* uart)
 {
+    uint32_t baud_rate = 0;
+    uint32_t sclk_freq;
+
     if(uart == NULL) {
         return 0;
     }
 
     UART_MUTEX_LOCK();
-    uint32_t baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num));
+    if(uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK){
+        baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num), sclk_freq);
+    }
     UART_MUTEX_UNLOCK();
     return baud_rate;
 }
@@ -516,6 +512,21 @@ void uart_install_putc()
         ets_install_putc1(NULL);
         break;
     }
+}
+
+// Routines that take care of UART mode in the HardwareSerial Class code
+// used to set UART_MODE_RS485_HALF_DUPLEX auto RTS for TXD for ESP32 chips
+bool uartSetMode(uart_t *uart, uint8_t mode)
+{
+    if (uart == NULL || uart->num >= SOC_UART_NUM)
+    {
+        return false;
+    }
+    
+    UART_MUTEX_LOCK();
+    bool retCode = (ESP_OK == uart_set_mode(uart->num, mode));
+    UART_MUTEX_UNLOCK();
+    return retCode;
 }
 
 void uartSetDebug(uart_t* uart)
@@ -786,7 +797,7 @@ void uart_send_break(uint8_t uartNum)
   // This is very sensetive timing... it works fine for SERIAL_8N1
   uint32_t breakTime = (uint32_t) (10.0 * (1000000.0 / currentBaudrate));
   uart_set_line_inverse(uartNum, UART_SIGNAL_TXD_INV);
-  ets_delay_us(breakTime);
+  esp_rom_delay_us(breakTime);
   uart_set_line_inverse(uartNum, UART_SIGNAL_INV_DISABLE);
 }
 

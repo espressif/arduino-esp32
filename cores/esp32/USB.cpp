@@ -20,6 +20,8 @@
 #include "esp32-hal-tinyusb.h"
 #include "common/tusb_common.h"
 #include "StreamString.h"
+#include "rom/ets_sys.h"
+#include "esp_mac.h"
 
 #ifndef USB_VID
 #define USB_VID USB_ESPRESSIF_VID

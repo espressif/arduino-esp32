@@ -359,7 +359,7 @@ std::string BLEUUID::toString() {
 
 	if (m_uuid.len == ESP_UUID_LEN_32) {  // If the UUID is 32bit, pad correctly.
 		char hex[9];
-		snprintf(hex, sizeof(hex), "%08x", m_uuid.uuid.uuid32);
+		snprintf(hex, sizeof(hex), "%08lx", m_uuid.uuid.uuid32);
 		return std::string(hex) + "-0000-1000-8000-00805f9b34fb";
 	} // End 32bit UUID
 

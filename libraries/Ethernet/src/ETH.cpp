@@ -39,6 +39,11 @@
 #endif
 #include "lwip/err.h"
 #include "lwip/dns.h"
+#include "esp_mac.h"
+#include "esp_netif.h"
+#include "esp_netif_types.h"
+#include "esp_netif_defaults.h"
+#include "esp_eth_phy.h"
 
 extern void tcpipInit();
 extern void add_esp_interface_netif(esp_interface_t interface, esp_netif_t* esp_netif); /* from WiFiGeneric */
@@ -230,6 +235,10 @@ ETHClass::~ETHClass()
 bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode, bool use_mac_from_efuse)
 {
 #if ESP_IDF_VERSION_MAJOR > 3
+    if(esp_netif != NULL){
+        return true;
+    }
+
     eth_clock_mode = clock_mode;
     tcpipInit();
 
@@ -240,10 +249,10 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         esp_base_mac_addr_set(p);
     }
 
-    tcpip_adapter_set_default_eth_handlers();
+    //tcpip_adapter_set_default_eth_handlers();
     
     esp_netif_config_t cfg = ESP_NETIF_DEFAULT_ETH();
-    esp_netif_t *eth_netif = esp_netif_new(&cfg);
+    esp_netif = esp_netif_new(&cfg);
 
     esp_eth_mac_t *eth_mac = NULL;
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -252,13 +261,16 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     } else {
 #endif
 #if CONFIG_ETH_USE_ESP32_EMAC
-        eth_mac_config_t mac_config = ETH_MAC_DEFAULT_CONFIG();
+        eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
         mac_config.clock_config.rmii.clock_mode = (eth_clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
         mac_config.clock_config.rmii.clock_gpio = (1 == eth_clock_mode) ? EMAC_APPL_CLK_OUT_GPIO : (2 == eth_clock_mode) ? EMAC_CLK_OUT_GPIO : (3 == eth_clock_mode) ? EMAC_CLK_OUT_180_GPIO : EMAC_CLK_IN_GPIO;
         mac_config.smi_mdc_gpio_num = mdc;
         mac_config.smi_mdio_gpio_num = mdio;
-        mac_config.sw_reset_timeout_ms = 1000;
-        eth_mac = esp_eth_mac_new_esp32(&mac_config);
+
+        eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
+        eth_mac_config.sw_reset_timeout_ms = 1000;
+
+        eth_mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
     }
@@ -275,7 +287,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     esp_eth_phy_t *eth_phy = NULL;
     switch(type){
         case ETH_PHY_LAN8720:
-            eth_phy = esp_eth_phy_new_lan8720(&phy_config);
+            eth_phy = esp_eth_phy_new_lan87xx(&phy_config);
             break;
         case ETH_PHY_TLK110:
             eth_phy = esp_eth_phy_new_ip101(&phy_config);
@@ -293,14 +305,14 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 #endif
         case ETH_PHY_KSZ8041:
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4,4,0)
-            eth_phy = esp_eth_phy_new_ksz8041(&phy_config);
+            eth_phy = esp_eth_phy_new_ksz80xx(&phy_config);
 #else
             log_e("unsupported ethernet type 'ETH_PHY_KSZ8041'");
 #endif
             break;
         case ETH_PHY_KSZ8081:
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4,4,0)
-            eth_phy = esp_eth_phy_new_ksz8081(&phy_config);
+            eth_phy = esp_eth_phy_new_ksz80xx(&phy_config);
 #else
             log_e("unsupported ethernet type 'ETH_PHY_KSZ8081'");
 #endif
@@ -323,13 +335,13 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     }
     
     /* attach Ethernet driver to TCP/IP stack */
-    if(esp_netif_attach(eth_netif, esp_eth_new_netif_glue(eth_handle)) != ESP_OK){
+    if(esp_netif_attach(esp_netif, esp_eth_new_netif_glue(eth_handle)) != ESP_OK){
         log_e("esp_netif_attach failed");
         return false;
     }
 
     /* attach to WiFiGeneric to receive events */
-    add_esp_interface_netif(ESP_IF_ETH, eth_netif);
+    add_esp_interface_netif(ESP_IF_ETH, esp_netif);
 
     if(esp_eth_start(eth_handle) != ESP_OK){
         log_e("esp_eth_start failed");
@@ -406,7 +418,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
 bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
     esp_err_t err = ESP_OK;
-    tcpip_adapter_ip_info_t info;
+    esp_netif_ip_info_t info;
 
     if(static_cast<uint32_t>(local_ip) != 0){
         info.ip.addr = static_cast<uint32_t>(local_ip);
@@ -418,42 +430,42 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
         info.netmask.addr = 0;
 	}
 
-    err = tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_ETH);
-    if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STOPPED){
+    err = esp_netif_dhcpc_stop(esp_netif);
+    if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
         log_e("DHCP could not be stopped! Error: %d", err);
         return false;
     }
 
-    err = tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_ETH, &info);
+    err = esp_netif_set_ip_info(esp_netif, &info);
     if(err != ERR_OK){
-        log_e("STA IP could not be configured! Error: %d", err);
+        log_e("ETH IP could not be configured! Error: %d", err);
         return false;
     }
     
     if(info.ip.addr){
         staticIP = true;
     } else {
-        err = tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_ETH);
-        if(err != ESP_OK && err != ESP_ERR_TCPIP_ADAPTER_DHCP_ALREADY_STARTED){
+        err = esp_netif_dhcpc_start(esp_netif);
+        if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STARTED){
             log_w("DHCP could not be started! Error: %d", err);
             return false;
         }
         staticIP = false;
     }
 
-    ip_addr_t d;
-    d.type = IPADDR_TYPE_V4;
+    esp_netif_dns_info_t d;
+    d.ip.type = IPADDR_TYPE_V4;
 
     if(static_cast<uint32_t>(dns1) != 0) {
         // Set DNS1-Server
-        d.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
-        dns_setserver(0, &d);
+        d.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
+        esp_netif_set_dns_info(esp_netif, ESP_NETIF_DNS_MAIN, &d);
     }
 
     if(static_cast<uint32_t>(dns2) != 0) {
         // Set DNS2-Server
-        d.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
-        dns_setserver(1, &d);
+        d.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
+        esp_netif_set_dns_info(esp_netif, ESP_NETIF_DNS_BACKUP, &d);
     }
 
     return true;
@@ -461,8 +473,8 @@ bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, I
 
 IPAddress ETHClass::localIP()
 {
-    tcpip_adapter_ip_info_t ip;
-    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+    esp_netif_ip_info_t ip;
+    if(esp_netif_get_ip_info(esp_netif, &ip)){
         return IPAddress();
     }
     return IPAddress(ip.ip.addr);
@@ -470,8 +482,8 @@ IPAddress ETHClass::localIP()
 
 IPAddress ETHClass::subnetMask()
 {
-    tcpip_adapter_ip_info_t ip;
-    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+    esp_netif_ip_info_t ip;
+    if(esp_netif_get_ip_info(esp_netif, &ip)){
         return IPAddress();
     }
     return IPAddress(ip.netmask.addr);
@@ -479,8 +491,8 @@ IPAddress ETHClass::subnetMask()
 
 IPAddress ETHClass::gatewayIP()
 {
-    tcpip_adapter_ip_info_t ip;
-    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+    esp_netif_ip_info_t ip;
+    if(esp_netif_get_ip_info(esp_netif, &ip)){
         return IPAddress();
     }
     return IPAddress(ip.gw.addr);
@@ -488,14 +500,17 @@ IPAddress ETHClass::gatewayIP()
 
 IPAddress ETHClass::dnsIP(uint8_t dns_no)
 {
-    const ip_addr_t * dns_ip = dns_getserver(dns_no);
-    return IPAddress(dns_ip->u_addr.ip4.addr);
+    esp_netif_dns_info_t d;
+    if(esp_netif_get_dns_info(esp_netif, dns_no?ESP_NETIF_DNS_BACKUP:ESP_NETIF_DNS_MAIN, &d) != ESP_OK){
+        return IPAddress();
+    }
+    return IPAddress(d.ip.u_addr.ip4.addr);
 }
 
 IPAddress ETHClass::broadcastIP()
 {
-    tcpip_adapter_ip_info_t ip;
-    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+    esp_netif_ip_info_t ip;
+    if(esp_netif_get_ip_info(esp_netif, &ip)){
         return IPAddress();
     }
     return WiFiGenericClass::calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
@@ -503,8 +518,8 @@ IPAddress ETHClass::broadcastIP()
 
 IPAddress ETHClass::networkID()
 {
-    tcpip_adapter_ip_info_t ip;
-    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+    esp_netif_ip_info_t ip;
+    if(esp_netif_get_ip_info(esp_netif, &ip)){
         return IPAddress();
     }
     return WiFiGenericClass::calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
@@ -512,8 +527,8 @@ IPAddress ETHClass::networkID()
 
 uint8_t ETHClass::subnetCIDR()
 {
-    tcpip_adapter_ip_info_t ip;
-    if(tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_ETH, &ip)){
+    esp_netif_ip_info_t ip;
+    if(esp_netif_get_ip_info(esp_netif, &ip)){
         return (uint8_t)0;
     }
     return WiFiGenericClass::calculateSubnetCIDR(IPAddress(ip.netmask.addr));
@@ -522,7 +537,7 @@ uint8_t ETHClass::subnetCIDR()
 const char * ETHClass::getHostname()
 {
     const char * hostname;
-    if(tcpip_adapter_get_hostname(TCPIP_ADAPTER_IF_ETH, &hostname)){
+    if(esp_netif_get_hostname(esp_netif, &hostname)){
         return NULL;
     }
     return hostname;
@@ -530,7 +545,7 @@ const char * ETHClass::getHostname()
 
 bool ETHClass::setHostname(const char * hostname)
 {
-    return tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_ETH, hostname) == 0;
+    return esp_netif_set_hostname(esp_netif, hostname) == 0;
 }
 
 bool ETHClass::fullDuplex()
@@ -566,13 +581,13 @@ uint8_t ETHClass::linkSpeed()
 
 bool ETHClass::enableIpV6()
 {
-    return tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_ETH) == 0;
+    return esp_netif_create_ip6_linklocal(esp_netif) == 0;
 }
 
 IPv6Address ETHClass::localIPv6()
 {
-    static ip6_addr_t addr;
-    if(tcpip_adapter_get_ip6_linklocal(TCPIP_ADAPTER_IF_ETH, &addr)){
+    static esp_ip6_addr_t addr;
+    if(esp_netif_get_ip6_linklocal(esp_netif, &addr)){
         return IPv6Address();
     }
     return IPv6Address(addr.addr);

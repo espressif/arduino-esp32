@@ -95,7 +95,7 @@ public:
 
   String uri() { return _currentUri; }
   HTTPMethod method() { return _currentMethod; }
-  virtual WiFiClient client() { return _currentClient; }
+  virtual WiFiClient & client() { return _currentClient; }
   HTTPUpload& upload() { return *_currentUpload; }
 
   String pathArg(unsigned int i); // get request path argument by number

@@ -34,6 +34,8 @@ void loop(){}
 #include "USBHIDKeyboard.h"
 USBHIDKeyboard Keyboard;
 
+const int buttonPin = 0;          // input pin for pushbutton
+
 // use this option for OSX.
 // Comment it out if using Windows or Linux:
 char ctrlKey = KEY_LEFT_GUI;
@@ -45,14 +47,14 @@ char ctrlKey = KEY_LEFT_GUI;
 void setup() {
   // make pin 0 an input and turn on the pull-up resistor so it goes high unless
   // connected to ground:
-  pinMode(0, INPUT_PULLUP);
+  pinMode(buttonPin, INPUT_PULLUP);
   // initialize control over the keyboard:
   Keyboard.begin();
   USB.begin();
 }
 
 void loop() {
-  while (digitalRead(0) == HIGH) {
+  while (digitalRead(buttonPin) == HIGH) {
     // do nothing until pin 0 goes low
     delay(500);
   }

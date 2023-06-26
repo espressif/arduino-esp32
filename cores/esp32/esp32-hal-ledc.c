@@ -15,6 +15,7 @@
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
 #include "driver/ledc.h"
+#include "esp32-hal-periman.h"
 
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
 #define LEDC_CHANNELS           (SOC_LEDC_CHANNEL_NUM<<1)
@@ -30,7 +31,11 @@
 #define LEDC_DEFAULT_CLK        LEDC_AUTO_CLK
 #endif
 
-#define LEDC_MAX_BIT_WIDTH      SOC_LEDC_TIMER_BIT_WIDE_NUM
+#define LEDC_MAX_BIT_WIDTH      SOC_LEDC_TIMER_BIT_WIDTH
+
+typedef struct {
+    int used_channels : LEDC_CHANNELS;              // Used channels as a bits
+} ledc_periph_t;
 
 /*
  * LEDC Chan to Group/Channel/Timer Mapping
@@ -52,102 +57,157 @@
 ** ledc: 15 => Group: 1, Channel: 7, Timer: 3
 */
 
-uint8_t channels_resolution[LEDC_CHANNELS] = {0};
+ledc_periph_t ledc_handle;
 
-uint32_t ledcSetup(uint8_t chan, uint32_t freq, uint8_t bit_num)
+static bool ledcDetachBus(void * bus){
+    ledc_channel_handle_t handle = (ledc_channel_handle_t)bus;
+    ledc_handle.used_channels &= ~(1UL << handle->channel);
+    pinMatrixOutDetach(handle->pin, false, false);
+    free(handle);
+    return true;
+}
+
+bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
 {
-    if(chan >= LEDC_CHANNELS || bit_num > LEDC_MAX_BIT_WIDTH){
+    int free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
+    if (free_channel == 0 || resolution > LEDC_MAX_BIT_WIDTH)
+    {
         log_e("No more LEDC channels available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
-        return 0;
+        return false;
     }
 
-    uint8_t group=(chan/8), timer=((chan/2)%4);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_LEDC, ledcDetachBus);
+    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL && !perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+        return false;
+    }
+
+    int channel = log2(free_channel & -free_channel);
+    uint8_t group=(channel/8), timer=((channel/2)%4);
 
     ledc_timer_config_t ledc_timer = {
         .speed_mode       = group,
         .timer_num        = timer,
-        .duty_resolution  = bit_num,
+        .duty_resolution  = resolution,
         .freq_hz          = freq,
         .clk_cfg          = LEDC_DEFAULT_CLK
     };
     if(ledc_timer_config(&ledc_timer) != ESP_OK)
     {
         log_e("ledc setup failed!");
-        return 0;
-    }
-    channels_resolution[chan] = bit_num;
-    return ledc_get_freq(group,timer);
-}
-
-void ledcWrite(uint8_t chan, uint32_t duty)
-{
-    if(chan >= LEDC_CHANNELS){
-        return;
-    }
-    uint8_t group=(chan/8), channel=(chan%8);
-
-    //Fixing if all bits in resolution is set = LEDC FULL ON
-    uint32_t max_duty = (1 << channels_resolution[chan]) - 1;
-
-    if((duty == max_duty) && (max_duty != 1)){
-        duty = max_duty + 1;
+        return false;
     }
 
-    ledc_set_duty(group, channel, duty);
-    ledc_update_duty(group, channel);
-}
+    uint32_t duty = ledc_get_duty(group,channel);
 
-uint32_t ledcRead(uint8_t chan)
-{
-    if(chan >= LEDC_CHANNELS){
-        return 0;
-    }
-    uint8_t group=(chan/8), channel=(chan%8);
-    return ledc_get_duty(group,channel);
-}
-
-uint32_t ledcReadFreq(uint8_t chan)
-{
-    if(!ledcRead(chan)){
-        return 0;
-    }
-    uint8_t group=(chan/8), timer=((chan/2)%4);
-    return ledc_get_freq(group,timer);
-}
-
-uint32_t ledcWriteTone(uint8_t chan, uint32_t freq)
-{
-    if(chan >= LEDC_CHANNELS){
-        return 0;
-    }
-    if(!freq){
-        ledcWrite(chan, 0);
-        return 0;
-    }
-
-    uint8_t group=(chan/8), timer=((chan/2)%4);
-
-    ledc_timer_config_t ledc_timer = {
-        .speed_mode       = group,
-        .timer_num        = timer,
-        .duty_resolution  = 10,
-        .freq_hz          = freq, 
-        .clk_cfg          = LEDC_DEFAULT_CLK
+    ledc_channel_config_t ledc_channel = {
+        .speed_mode     = group,
+        .channel        = (channel%8),
+        .timer_sel      = timer,
+        .intr_type      = LEDC_INTR_DISABLE,
+        .gpio_num       = pin,
+        .duty           = duty,
+        .hpoint         = 0
     };
+    ledc_channel_config(&ledc_channel);
 
-    if(ledc_timer_config(&ledc_timer) != ESP_OK)
-    {
-        log_e("ledcSetup failed!");
-        return 0;
+    ledc_channel_handle_t handle = malloc(sizeof(ledc_channel_handle_t));
+
+    handle->pin = pin,
+    handle->channel = channel,
+    handle->channel_resolution = resolution,
+
+    ledc_handle.used_channels |= 1UL << channel;
+
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_LEDC, (void *)handle)){
+        ledcDetachBus((void *)handle);
+        return false;
     }
-    channels_resolution[chan] = 10;
 
-    uint32_t res_freq = ledc_get_freq(group,timer);
-    ledcWrite(chan, 0x1FF);
-    return res_freq;
+    return true;
+}
+bool ledcWrite(uint8_t pin, uint32_t duty)
+{
+    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL){
+
+        uint8_t group=(bus->channel/8), channel=(bus->channel%8);
+
+        //Fixing if all bits in resolution is set = LEDC FULL ON
+        uint32_t max_duty = (1 << bus->channel_resolution) - 1;
+
+        if((duty == max_duty) && (max_duty != 1)){
+            duty = max_duty + 1;
+        }
+
+        ledc_set_duty(group, channel, duty);
+        ledc_update_duty(group, channel);
+
+        return true;
+    }
+    return false;
 }
 
-uint32_t ledcWriteNote(uint8_t chan, note_t note, uint8_t octave){
+uint32_t ledcRead(uint8_t pin)
+{
+    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL){
+
+        uint8_t group=(bus->channel/8), channel=(bus->channel%8);
+        return ledc_get_duty(group,channel);
+    }
+    return 0;   
+}
+
+uint32_t ledcReadFreq(uint8_t pin)
+{
+    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL){
+        if(!ledcRead(pin)){
+            return 0;
+        }
+        uint8_t group=(bus->channel/8), timer=((bus->channel/2)%4);
+        return ledc_get_freq(group,timer);
+        }
+    return 0;  
+}
+
+
+uint32_t ledcWriteTone(uint8_t pin, uint32_t freq)
+{
+    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL){
+
+        if(!freq){
+            ledcWrite(pin, 0);
+            return 0;
+        }
+
+        uint8_t group=(bus->channel/8), timer=((bus->channel/2)%4);
+
+        ledc_timer_config_t ledc_timer = {
+            .speed_mode       = group,
+            .timer_num        = timer,
+            .duty_resolution  = 10,
+            .freq_hz          = freq, 
+            .clk_cfg          = LEDC_DEFAULT_CLK
+        };
+
+        if(ledc_timer_config(&ledc_timer) != ESP_OK)
+        {
+            log_e("ledcWriteTone configuration failed!");
+            return 0;
+        }
+        bus->channel_resolution = 10;
+
+        uint32_t res_freq = ledc_get_freq(group,timer);
+        ledcWrite(pin, 0x1FF);
+        return res_freq;
+    }
+    return 0;
+}
+
+uint32_t ledcWriteNote(uint8_t pin, note_t note, uint8_t octave){
     const uint16_t noteFrequencyBase[12] = {
     //   C        C#       D        Eb       E        F       F#        G       G#        A       Bb        B
         4186,    4435,    4699,    4978,    5274,    5588,    5920,    6272,    6645,    7040,    7459,    7902
@@ -157,116 +217,79 @@ uint32_t ledcWriteNote(uint8_t chan, note_t note, uint8_t octave){
         return 0;
     }
     uint32_t noteFreq =  (uint32_t)noteFrequencyBase[note] / (uint32_t)(1 << (8-octave));
-    return ledcWriteTone(chan, noteFreq);
+    return ledcWriteTone(pin, noteFreq);
 }
 
-void ledcAttachPin(uint8_t pin, uint8_t chan)
+bool ledcDetach(uint8_t pin)
 {
-    if(chan >= LEDC_CHANNELS){
-        return;
+    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL){
+        // will call ledcDetachBus
+        return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
+    } else {
+        log_e("pin %u is not attached to LEDC", pin);
     }
-    uint8_t group=(chan/8), channel=(chan%8), timer=((chan/2)%4);
-    uint32_t duty = ledc_get_duty(group,channel);
-
-    ledc_channel_config_t ledc_channel = {
-        .speed_mode     = group,
-        .channel        = channel,
-        .timer_sel      = timer,
-        .intr_type      = LEDC_INTR_DISABLE,
-        .gpio_num       = pin,
-        .duty           = duty,
-        .hpoint         = 0
-    };
-    ledc_channel_config(&ledc_channel);
+    return false;
 }
 
-void ledcDetachPin(uint8_t pin)
+uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution)
 {
-    pinMatrixOutDetach(pin, false, false);
+    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL){
+
+        if(resolution > LEDC_MAX_BIT_WIDTH){
+            log_e("LEDC resolution too big (maximum %u)", LEDC_MAX_BIT_WIDTH);
+            return 0;
+        }
+        uint8_t group=(bus->channel/8), timer=((bus->channel/2)%4);
+
+        ledc_timer_config_t ledc_timer = {
+            .speed_mode       = group,
+            .timer_num        = timer,
+            .duty_resolution  = resolution,
+            .freq_hz          = freq, 
+            .clk_cfg          = LEDC_DEFAULT_CLK
+        };
+
+        if(ledc_timer_config(&ledc_timer) != ESP_OK)
+        {
+            log_e("ledcChangeFrequency failed!");
+            return 0;
+        }
+        bus->channel_resolution = resolution;
+        return ledc_get_freq(group,timer);
+    }
+    return 0;
 }
 
-uint32_t ledcChangeFrequency(uint8_t chan, uint32_t freq, uint8_t bit_num)
-{
-    if(chan >= LEDC_CHANNELS || bit_num > LEDC_MAX_BIT_WIDTH){
-        log_e("LEDC channel not available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
-        return 0;
-    }
-    uint8_t group=(chan/8), timer=((chan/2)%4);
-
-    ledc_timer_config_t ledc_timer = {
-        .speed_mode       = group,
-        .timer_num        = timer,
-        .duty_resolution  = bit_num,
-        .freq_hz          = freq, 
-        .clk_cfg          = LEDC_DEFAULT_CLK
-    };
-
-    if(ledc_timer_config(&ledc_timer) != ESP_OK)
-    {
-        log_e("ledcChangeFrequency failed!");
-        return 0;
-    }
-    channels_resolution[chan] = bit_num;
-    return ledc_get_freq(group,timer);
-}
-
-static int8_t pin_to_channel[SOC_GPIO_PIN_COUNT] = { 0 };
-static int cnt_channel = LEDC_CHANNELS;
 static uint8_t analog_resolution = 8;
 static int analog_frequency = 1000;
 void analogWrite(uint8_t pin, int value) {
-    // Use ledc hardware for internal pins
-    if (pin < SOC_GPIO_PIN_COUNT) {
-        int8_t channel = -1;
-        if (pin_to_channel[pin] == 0) {
-            if (!cnt_channel) {
-                log_e("No more analogWrite channels available! You can have maximum %u", LEDC_CHANNELS);
-                return;
-            }
-            cnt_channel--;
-            channel = cnt_channel;
-        } else {
-            channel = analogGetChannel(pin);
-        }
-        log_v("GPIO %d - Using Channel %d, Value = %d", pin, channel, value);
-        if(ledcSetup(channel, analog_frequency, analog_resolution) == 0){
+  // Use ledc hardware for internal pins
+  if (pin < SOC_GPIO_PIN_COUNT) {
+    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus == NULL && perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+        if(ledcAttach(pin, analog_frequency, analog_resolution) == 0){
             log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
             return;
         }
-        ledcAttachPin(pin, channel);
-        pin_to_channel[pin] = channel;
-        ledcWrite(channel, value);
     }
+    ledcWrite(pin, value);
+  }
 }
 
-int8_t analogGetChannel(uint8_t pin) {
-    return pin_to_channel[pin];
-}
-
-void analogWriteFrequency(uint32_t freq) {
-    if (cnt_channel != LEDC_CHANNELS) {
-        for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
-            if (ledcChangeFrequency(channel, freq, analog_resolution) == 0){
-                log_e("analogWrite frequency cant be set due to selected resolution! Try to adjust resolution first");
-                return;
-            }
-        }
+void analogWriteFrequency(uint8_t pin, uint32_t freq) {
+    if (ledcChangeFrequency(pin, freq, analog_resolution) == 0){
+        log_e("analogWrite frequency cant be set due to selected resolution! Try to adjust resolution first");
+        return;
     }
     analog_frequency = freq;
 }
 
-void analogWriteResolution(uint8_t bits) {
-    if(bits > LEDC_MAX_BIT_WIDTH) {
-        log_w("analogWrite resolution width too big! Setting to maximum %u bits)", LEDC_MAX_BIT_WIDTH);
-        bits = LEDC_MAX_BIT_WIDTH;
+void analogWriteResolution(uint8_t pin, uint8_t resolution) {
+    if (ledcChangeFrequency(pin, analog_frequency, resolution) == 0){
+        log_e("analogWrite resolution cant be set due to selected frequency! Try to adjust frequency first");
+        return;
     }
-    if (cnt_channel != LEDC_CHANNELS) {
-        for (int channel = LEDC_CHANNELS - 1; channel >= cnt_channel; channel--) {
-            if (ledcChangeFrequency(channel, analog_frequency, bits) == 0){
-                log_e("analogWrite resolution cant be set due to selected frequency! Try to adjust frequency first");
-                return;
-            }
-        }
-    }
-    analog_resolution = bits;
+    analog_resolution = resolution;
 }

@@ -40,13 +40,13 @@
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/rtc.h"
-#include "driver/temp_sensor.h"
+#include "driver/temperature_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/rtc.h"
-#include "driver/temp_sensor.h"
+#include "driver/temperature_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
-#include "driver/temp_sensor.h"
+#include "driver/temperature_sensor.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -64,14 +64,38 @@ float temperatureRead()
     return (temprature_sens_read() - 32) / 1.8;
 }
 #else
+static temperature_sensor_handle_t temp_sensor = NULL;
+
+static bool temperatureReadInit()
+{
+    static volatile bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        //Install temperature sensor, expected temp ranger range: 10~50 ℃
+        temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
+        if(temperature_sensor_install(&temp_sensor_config, &temp_sensor) != ESP_OK){
+            initialized = false;
+            temp_sensor = NULL;
+            log_e("temperature_sensor_install failed");
+        }
+        else if(temperature_sensor_enable(temp_sensor) != ESP_OK){
+            temperature_sensor_uninstall(temp_sensor);
+            initialized = false;
+            temp_sensor = NULL;
+            log_e("temperature_sensor_enable failed");
+        }
+    }
+    return initialized;
+}
+
 float temperatureRead()
 {
     float result = NAN;
-    temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
-    temp_sensor_set_config(tsens);
-    temp_sensor_start();
-    temp_sensor_read_celsius(&result); 
-    temp_sensor_stop();
+    if(temperatureReadInit()){
+        if(temperature_sensor_get_celsius(temp_sensor, &result) != ESP_OK){
+            log_e("temperature_sensor_get_celsius failed");
+        }
+    }
     return result;
 }
 #endif

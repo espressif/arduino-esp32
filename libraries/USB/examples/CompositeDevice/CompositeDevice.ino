@@ -67,7 +67,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
         HWSerial.printf("CDC LINE STATE: dtr: %u, rts: %u\n", data->line_state.dtr, data->line_state.rts);
         break;
       case ARDUINO_USB_CDC_LINE_CODING_EVENT:
-        HWSerial.printf("CDC LINE CODING: bit_rate: %u, data_bits: %u, stop_bits: %u, parity: %u\n", data->line_coding.bit_rate, data->line_coding.data_bits, data->line_coding.stop_bits, data->line_coding.parity);
+        HWSerial.printf("CDC LINE CODING: bit_rate: %lu, data_bits: %u, stop_bits: %u, parity: %u\n", data->line_coding.bit_rate, data->line_coding.data_bits, data->line_coding.stop_bits, data->line_coding.parity);
         break;
       case ARDUINO_USB_CDC_RX_EVENT:
         HWSerial.printf("CDC RX [%u]:", data->rx.len);
@@ -165,6 +165,8 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
 void setup() {
   HWSerial.begin(115200);
   HWSerial.setDebugOutput(true);
+  
+  pinMode(buttonPin, INPUT_PULLUP);
   
   USB.onEvent(usbEventCallback);
   USBSerial.onEvent(usbEventCallback);

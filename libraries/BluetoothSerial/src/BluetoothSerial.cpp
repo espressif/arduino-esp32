@@ -54,7 +54,7 @@ static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
 static EventGroupHandle_t _bt_event_group = NULL;
 static boolean secondConnectionAttempt;
-static esp_spp_cb_t custom_spp_callback = NULL;
+static esp_spp_cb_t * custom_spp_callback = NULL;
 static BluetoothSerialDataCb custom_data_callback = NULL;
 static esp_bd_addr_t current_bd_addr;
 static ConfirmRequestCb confirm_request_callback = NULL;
@@ -671,7 +671,9 @@ static bool _init_bt(const char *deviceName)
         return false;
     }
 
-    if (esp_spp_init(ESP_SPP_MODE_CB) != ESP_OK){
+    esp_spp_cfg_t cfg = BT_SPP_DEFAULT_CONFIG();
+    cfg.mode = ESP_SPP_MODE_CB;
+    if (esp_spp_enhanced_init(&cfg) != ESP_OK){
         log_e("spp init failed");
         return false;
     }
@@ -885,7 +887,7 @@ void BluetoothSerial::confirmReply(boolean confirm)
 }
 
 
-esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t callback)
+esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t * callback)
 {
     custom_spp_callback = callback;
     return ESP_OK;
