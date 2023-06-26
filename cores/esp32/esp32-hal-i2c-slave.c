@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "esp32-hal-i2c-slave.h"
+
+#if SOC_I2C_SUPPORT_SLAVE
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -41,7 +44,6 @@
 #include "hal/i2c_ll.h"
 #include "hal/clk_gate_ll.h"
 #include "esp32-hal-log.h"
-#include "esp32-hal-i2c-slave.h"
 #include "esp32-hal-periman.h"
 
 #define I2C_SLAVE_USE_RX_QUEUE 0 // 1: Queue, 0: RingBuffer
@@ -874,3 +876,5 @@ static bool i2cSlaveDetachBus(void * bus_i2c_num){
     }
     return true;
 }
+
+#endif /* SOC_I2C_SUPPORT_SLAVE */

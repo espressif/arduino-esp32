@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "esp32-hal-ledc.h"
+
+#if SOC_LEDC_SUPPORTED
 #include "esp32-hal.h"
-#include "soc/soc_caps.h"
 #include "driver/ledc.h"
 #include "esp32-hal-periman.h"
 
@@ -293,3 +295,5 @@ void analogWriteResolution(uint8_t pin, uint8_t resolution) {
     }
     analog_resolution = resolution;
 }
+
+#endif /* SOC_LEDC_SUPPORTED */

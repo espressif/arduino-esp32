@@ -1,4 +1,6 @@
+#include "esp32-hal-tinyusb.h"
 
+#if SOC_USB_OTG_SUPPORTED
 #include "sdkconfig.h"
 #if CONFIG_TINYUSB_ENABLED
 #include <stdlib.h>
@@ -33,7 +35,6 @@
 
 #include "esp32-hal.h"
 
-#include "esp32-hal-tinyusb.h"
 #if CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/usb/usb_persist.h"
 #include "esp32s2/rom/usb/usb_dc.h"
@@ -781,3 +782,4 @@ uint8_t tinyusb_get_free_out_endpoint(void){
 }
 
 #endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

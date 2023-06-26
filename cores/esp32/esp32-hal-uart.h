@@ -15,6 +15,9 @@
 #ifndef MAIN_ESP32_HAL_UART_H_
 #define MAIN_ESP32_HAL_UART_H_
 
+#include "soc/soc_caps.h"
+#if SOC_UART_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -165,4 +168,5 @@ int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize);
 }
 #endif
 
+#endif /* SOC_UART_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_UART_H_ */

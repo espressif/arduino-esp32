@@ -11,10 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "USBCDC.h"
+
+#if SOC_USB_OTG_SUPPORTED
 #include "USB.h"
 #if CONFIG_TINYUSB_CDC_ENABLED
 
-#include "USBCDC.h"
+
 #include "esp32-hal-tinyusb.h"
 #include "rom/ets_sys.h"
 
@@ -456,3 +460,4 @@ USBCDC Serial(0);
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

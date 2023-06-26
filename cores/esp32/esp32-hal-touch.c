@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "soc/soc_caps.h"
-#if SOC_TOUCH_SENSOR_NUM > 0
-
-#include "driver/touch_sensor.h"
 #include "esp32-hal-touch.h"
+
+#if SOC_TOUCH_SENSOR_SUPPORTED
+#include "driver/touch_sensor.h"
 #include "esp32-hal-periman.h"
 
 /*
@@ -336,4 +335,4 @@ extern void touchAttachInterruptArg(uint8_t, voidArgFuncPtr, void *, touch_value
 extern void touchDetachInterrupt(uint8_t) __attribute__ ((weak, alias("__touchDettachInterrupt")));
 extern void touchSetCycles(uint16_t, uint16_t) __attribute__ ((weak, alias("__touchSetCycles")));
 
-#endif      // #if SOC_TOUCH_SENSOR_NUM > 0
+#endif /* SOC_TOUCH_SENSOR_SUPPORTED */

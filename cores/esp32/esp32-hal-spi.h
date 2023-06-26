@@ -15,6 +15,9 @@
 #ifndef MAIN_ESP32_HAL_SPI_H_
 #define MAIN_ESP32_HAL_SPI_H_
 
+#include "soc/soc_caps.h"
+#if SOC_GPSPI_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -146,4 +149,5 @@ uint32_t spiClockDivToFrequency(uint32_t freq);
 }
 #endif
 
+#endif /* SOC_GPSPI_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_SPI_H_ */

@@ -20,14 +20,14 @@
 #ifndef MAIN_ESP32_HAL_TOUCH_H_
 #define MAIN_ESP32_HAL_TOUCH_H_
 
+#include "soc/soc_caps.h"
+#if SOC_TOUCH_SENSOR_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "soc/soc_caps.h"
 #include "esp32-hal.h"
-
-#if SOC_TOUCH_SENSOR_NUM > 0
 
 #if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
 #error Touch IDF driver Not supported!
@@ -94,9 +94,9 @@ bool touchInterruptGetLastStatus(uint8_t pin);
  **/
 void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold);
 
-#endif // SOC_TOUCH_SENSOR_NUM > 0
-
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SOC_TOUCH_SENSOR_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_TOUCH_H_ */

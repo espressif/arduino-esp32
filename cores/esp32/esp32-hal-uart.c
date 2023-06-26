@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "esp32-hal-uart.h"
+
+#if SOC_UART_SUPPORTED
 #include "esp32-hal.h"
 
 #include "freertos/FreeRTOS.h"
@@ -807,3 +809,5 @@ int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize)
   // 12 bits long BREAK for 8N1
   return uart_write_bytes_with_break(uartNum, (const void *)msg, msgSize, 12);
 }
+
+#endif /* SOC_UART_SUPPORTED */
