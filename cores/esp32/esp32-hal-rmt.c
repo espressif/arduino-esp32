@@ -16,6 +16,7 @@
 #include "driver/gpio.h"
 #include "driver/rmt_tx.h"
 #include "driver/rmt_rx.h"
+#include "hal/rmt_ll.h"
 
 #include "esp32-hal-rmt.h"
 #include "esp32-hal-periman.h"
@@ -55,6 +56,7 @@ struct rmt_obj_s {
   EventGroupHandle_t rmt_events;             // read/write done event RMT callback handle
   bool rmt_ch_is_looping;                    // Is this RMT TX Channel in LOOPING MODE?
   size_t *num_symbols_read;                  // Pointer to the number of RMT symbol read by IDF RMT RX Done
+  uint32_t frequency_Hz;                     // RMT Frequency
 
 #if !CONFIG_DISABLE_HAL_LOCKS
   xSemaphoreHandle g_rmt_objlocks;           // Channel Semaphore Lock
@@ -207,7 +209,7 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
   return retCode;
 }
 
-bool rmtSetFilter(int pin, uint8_t filter_pulse_ns)
+bool rmtSetFilter(int pin, uint32_t filter_pulse_ns)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -215,6 +217,12 @@ bool rmtSetFilter(int pin, uint8_t filter_pulse_ns)
   }
 
   if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
+    return false;
+  }
+
+  uint32_t filter_reg_value = (1000000000 / bus->frequency_Hz) * RMT_LL_MAX_FILTER_VALUE;
+  if (filter_pulse_ns >= filter_reg_value) {
+    log_e("filter_pulse_ns is too big. Max = %d", filter_reg_value);
     return false;
   }
 
@@ -224,7 +232,7 @@ bool rmtSetFilter(int pin, uint8_t filter_pulse_ns)
   return true;
 }
 
-bool rmtSetRxThreshold(int pin, uint16_t value)
+bool rmtSetRxThreshold(int pin, uint32_t idle_thres_ns)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -235,8 +243,14 @@ bool rmtSetRxThreshold(int pin, uint16_t value)
     return false;
   }
 
+  uint32_t idle_reg_value = (1000000000 / bus->frequency_Hz) * RMT_LL_MAX_IDLE_VALUE;
+  if (idle_thres_ns >= idle_reg_value) {
+    log_e("idle_thres_ns is too big. Max = %ld", idle_reg_value);
+    return false;
+  }
+
   RMT_MUTEX_LOCK(bus);
-  bus->signal_range_max_ns = value; // set as zero to disable it
+  bus->signal_range_max_ns = idle_thres_ns;
   RMT_MUTEX_UNLOCK(bus);
   return true;
 }
@@ -459,10 +473,12 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     goto Err;
   }
 
+  // store the RMT Freq to check Filter and Idle valid values in the RMT API
+  bus->frequency_Hz = frequency_Hz;
   // pulses with width smaller than min_ns will be ignored (as a glitch)
-  bus->signal_range_min_ns = 1000000000 / (frequency_Hz * 2); // 1/2 pulse width
+  bus->signal_range_min_ns = 0; // disabled
   // RMT stops reading if the input stays idle for longer than max_ns
-  bus->signal_range_max_ns = (1000000000 / frequency_Hz) * 10; // 10 pulses width
+  bus->signal_range_max_ns = (1000000000 / frequency_Hz) * RMT_LL_MAX_IDLE_VALUE; // maximum possible
   // creates the event group to control read_done and write_done
   bus->rmt_events = xEventGroupCreate();
   if (bus->rmt_events == NULL) {
@@ -478,7 +494,11 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     // TX Channel
     rmt_tx_channel_config_t tx_cfg;
     tx_cfg.gpio_num = pin;
+#if CONFIG_IDF_TARGET_ESP32C6
+    tx_cfg.clk_src = RMT_CLK_SRC_DEFAULT;
+#else
     tx_cfg.clk_src = RMT_CLK_SRC_APB;
+#endif
     tx_cfg.resolution_hz = frequency_Hz;
     tx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
     tx_cfg.trans_queue_depth = 10;   // maximum allowed
@@ -503,7 +523,11 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     // RX Channel
     rmt_rx_channel_config_t rx_cfg;
     rx_cfg.gpio_num = pin;
+#if CONFIG_IDF_TARGET_ESP32C6
+    rx_cfg.clk_src = RMT_CLK_SRC_DEFAULT;
+#else
     rx_cfg.clk_src = RMT_CLK_SRC_APB;
+#endif
     rx_cfg.resolution_hz = frequency_Hz;
     rx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
     rx_cfg.flags.invert_in = 0;
