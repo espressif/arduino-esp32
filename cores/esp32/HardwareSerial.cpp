@@ -21,94 +21,17 @@
 #define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE -1
 #endif
 
-#ifndef SOC_RX0
-#if CONFIG_IDF_TARGET_ESP32
-#define SOC_RX0 3
-#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-#define SOC_RX0 44
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define SOC_RX0 20
-#elif CONFIG_IDF_TARGET_ESP32C6
-#define SOC_RX0 17
-#elif CONFIG_IDF_TARGET_ESP32H2
-#define SOC_RX0 23
-#endif
-#endif
-
-#ifndef SOC_TX0
-#if CONFIG_IDF_TARGET_ESP32
-#define SOC_TX0 1
-#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-#define SOC_TX0 43
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define SOC_TX0 21
-#elif CONFIG_IDF_TARGET_ESP32C6
-#define SOC_TX0 16
-#elif CONFIG_IDF_TARGET_ESP32H2
-#define SOC_TX0 24
-#endif
-#endif
-
 void serialEvent(void) __attribute__((weak));
 void serialEvent(void) {}
 
 #if SOC_UART_NUM > 1
-
-#ifndef RX1
-#if CONFIG_IDF_TARGET_ESP32
-#define RX1 9
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define RX1 18
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define RX1 18
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define RX1 15
-#elif CONFIG_IDF_TARGET_ESP32C6
-#define RX1 5
-#elif CONFIG_IDF_TARGET_ESP32H2
-#define RX1 0
-#endif
-#endif
-
-#ifndef TX1
-#if CONFIG_IDF_TARGET_ESP32
-#define TX1 10
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define TX1 17
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define TX1 19
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define TX1 16
-#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-#define TX1 4
-#elif CONFIG_IDF_TARGET_ESP32H2
-#define TX1 1
-#endif
-#endif
-
-void serialEvent1(void) __attribute__((weak));
-void serialEvent1(void) {}
+  void serialEvent1(void) __attribute__((weak));
+  void serialEvent1(void) {}
 #endif /* SOC_UART_NUM > 1 */
 
 #if SOC_UART_NUM > 2
-#ifndef RX2
-#if CONFIG_IDF_TARGET_ESP32
-#define RX2 16
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define RX2 19 
-#endif
-#endif
-
-#ifndef TX2
-#if CONFIG_IDF_TARGET_ESP32
-#define TX2 17
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define TX2 20
-#endif
-#endif
-
-void serialEvent2(void) __attribute__((weak));
-void serialEvent2(void) {}
+  void serialEvent2(void) __attribute__((weak));
+  void serialEvent2(void) {}
 #endif /* SOC_UART_NUM > 2 */
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
