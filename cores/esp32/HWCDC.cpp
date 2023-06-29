@@ -218,10 +218,10 @@ void HWCDC::setTxTimeoutMs(uint32_t timeout){
 
 size_t HWCDC::setTxBufferSize(size_t tx_queue_len){
     if(tx_ring_buf){
-        if(!tx_queue_len){
-            vRingbufferDelete(tx_ring_buf);
-            tx_ring_buf = NULL;
-        }
+        vRingbufferDelete(tx_ring_buf);
+        tx_ring_buf = NULL;
+    }
+    if(!tx_queue_len){
         return 0;
     }
     tx_ring_buf = xRingbufferCreate(tx_queue_len, RINGBUF_TYPE_BYTEBUF);
@@ -319,18 +319,15 @@ void HWCDC::flush(void)
 
 size_t HWCDC::setRxBufferSize(size_t rx_queue_len){
     if(rx_queue){
-        if(!rx_queue_len){
-            vQueueDelete(rx_queue);
-            rx_queue = NULL;
-        }
+        vQueueDelete(rx_queue);
+        rx_queue = NULL;
+    }
+    if(!rx_queue_len){
         return 0;
     }
     rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
     if(!rx_queue){
         return 0;
-    }
-    if(!tx_ring_buf){
-        tx_ring_buf = xRingbufferCreate(rx_queue_len, RINGBUF_TYPE_BYTEBUF);
     }
     return rx_queue_len;
 }
