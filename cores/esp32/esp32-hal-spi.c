@@ -640,7 +640,11 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
     spi->dev->user.doutdin = 1;
     int i;
     for(i=0; i<16; i++) {
-        ((uint32_t*)spi->dev->data_buf)[i] = 0x00000000;
+    #if CONFIG_IDF_TARGET_ESP32C6
+        spi->dev->data_buf[i].val = 0x00000000;
+    #else
+        spi->dev->data_buf[i] = 0x00000000;
+    #endif
     }
     SPI_MUTEX_UNLOCK();
 
@@ -686,7 +690,11 @@ void spiWrite(spi_t * spi, const uint32_t *data, uint8_t len)
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
     for(i=0; i<len; i++) {
-        ((uint32_t*)spi->dev->data_buf)[i] = data[i];
+#if CONFIG_IDF_TARGET_ESP32C6
+        spi->dev->data_buf[i].val = data[i];
+#else
+        spi->dev->data_buf[i] = data[i];
+#endif
     }
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
@@ -710,7 +718,11 @@ void spiTransfer(spi_t * spi, uint32_t *data, uint8_t len)
     spi->dev->mosi_dlen.usr_mosi_dbitlen = (len * 32) - 1;
     spi->dev->miso_dlen.usr_miso_dbitlen = (len * 32) - 1;
     for(i=0; i<len; i++) {
-        ((uint32_t*)spi->dev->data_buf)[i] = data[i];
+#if CONFIG_IDF_TARGET_ESP32C6
+        spi->dev->data_buf[i].val = data[i];
+#else
+        spi->dev->data_buf[i] = data[i];
+#endif
     }
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
@@ -719,7 +731,11 @@ void spiTransfer(spi_t * spi, uint32_t *data, uint8_t len)
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
     for(i=0; i<len; i++) {
-        data[i] = ((uint32_t*)spi->dev->data_buf)[i];
+#if CONFIG_IDF_TARGET_ESP32C6
+       data[i] = spi->dev->data_buf[i].val;
+#else
+       data[i] = spi->dev->data_buf[i];
+#endif
     }
     SPI_MUTEX_UNLOCK();
 }
@@ -734,7 +750,12 @@ void spiWriteByte(spi_t * spi, uint8_t data)
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
+
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
@@ -752,14 +773,22 @@ uint8_t spiTransferByte(spi_t * spi, uint8_t data)
     SPI_MUTEX_LOCK();
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 7;
     spi->dev->miso_dlen.usr_miso_dbitlen = 7;
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
 #endif
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = ((uint32_t*)spi->dev->data_buf)[0] & 0xFF;
+#if CONFIG_IDF_TARGET_ESP32C6
+    data = spi->dev->data_buf[0].val & 0xFF;
+#else
+    data = spi->dev->data_buf[0] & 0xFF;
+#endif
     SPI_MUTEX_UNLOCK();
     return data;
 }
@@ -787,7 +816,11 @@ void spiWriteWord(spi_t * spi, uint16_t data)
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
@@ -808,14 +841,22 @@ uint16_t spiTransferWord(spi_t * spi, uint16_t data)
     SPI_MUTEX_LOCK();
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
     spi->dev->miso_dlen.usr_miso_dbitlen = 15;
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
 #endif
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = ((uint32_t*)spi->dev->data_buf)[0];
+#if CONFIG_IDF_TARGET_ESP32C6
+    data = spi->dev->data_buf[0].val;
+#else
+    data = spi->dev->data_buf[0];
+#endif
     SPI_MUTEX_UNLOCK();
     if(!spi->dev->ctrl.rd_bit_order){
         data = (data >> 8) | (data << 8);
@@ -836,7 +877,11 @@ void spiWriteLong(spi_t * spi, uint32_t data)
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
@@ -857,14 +902,22 @@ uint32_t spiTransferLong(spi_t * spi, uint32_t data)
     SPI_MUTEX_LOCK();
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
     spi->dev->miso_dlen.usr_miso_dbitlen = 31;
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
 #endif
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = ((uint32_t*)spi->dev->data_buf)[0];
+#if CONFIG_IDF_TARGET_ESP32C6
+    data = spi->dev->data_buf[0].val;
+#else
+    data = spi->dev->data_buf[0];
+#endif
     SPI_MUTEX_UNLOCK();
     if(!spi->dev->ctrl.rd_bit_order){
         data = __spiTranslate32(data);
@@ -898,7 +951,11 @@ static void __spiTransferBytes(spi_t * spi, const uint8_t * data, uint8_t * out,
     spi->dev->miso_dlen.usr_miso_dbitlen = ((bytes * 8) - 1);
 
     for(i=0; i<words; i++) {
-        ((uint32_t*)spi->dev->data_buf)[i] = wordsBuf[i];    //copy buffer to spi fifo
+    #if CONFIG_IDF_TARGET_ESP32C6
+        spi->dev->data_buf[i].val = wordsBuf[i];    //copy buffer to spi fifo
+    #else
+        spi->dev->data_buf[i] = wordsBuf[i];    //copy buffer to spi fifo
+    #endif
     }
 
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
@@ -911,7 +968,11 @@ static void __spiTransferBytes(spi_t * spi, const uint8_t * data, uint8_t * out,
 
     if(out) {
         for(i=0; i<words; i++) {
-            wordsBuf[i] = ((uint32_t*)spi->dev->data_buf)[i];//copy spi fifo to buffer
+        #if CONFIG_IDF_TARGET_ESP32C6
+            wordsBuf[i] = spi->dev->data_buf[i].val;//copy spi fifo to buffer
+        #else
+            wordsBuf[i] = spi->dev->data_buf[i];//copy spi fifo to buffer
+        #endif
         }
         memcpy(out, bytesBuf, bytes);//copy buffer to output
     }
@@ -1036,7 +1097,11 @@ void ARDUINO_ISR_ATTR spiWriteByteNL(spi_t * spi, uint8_t data)
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
@@ -1052,14 +1117,22 @@ uint8_t spiTransferByteNL(spi_t * spi, uint8_t data)
     }
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 7;
     spi->dev->miso_dlen.usr_miso_dbitlen = 7;
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
 #endif
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = ((uint32_t*)spi->dev->data_buf)[0] & 0xFF;
+#if CONFIG_IDF_TARGET_ESP32C6
+    data = spi->dev->data_buf[0].val & 0xFF;
+#else
+    data = spi->dev->data_buf[0] & 0xFF;
+#endif
     return data;
 }
 
@@ -1075,7 +1148,11 @@ void ARDUINO_ISR_ATTR spiWriteShortNL(spi_t * spi, uint16_t data)
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
@@ -1094,14 +1171,22 @@ uint16_t spiTransferShortNL(spi_t * spi, uint16_t data)
     }
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 15;
     spi->dev->miso_dlen.usr_miso_dbitlen = 15;
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
 #endif
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = ((uint32_t*)spi->dev->data_buf)[0] & 0xFFFF;
+#if CONFIG_IDF_TARGET_ESP32C6
+    data = spi->dev->data_buf[0].val & 0xFFFF;
+#else
+    data = spi->dev->data_buf[0] & 0xFFFF;
+#endif
     if(!spi->dev->ctrl.rd_bit_order){
         MSB_16_SET(data, data);
     }
@@ -1120,7 +1205,11 @@ void ARDUINO_ISR_ATTR spiWriteLongNL(spi_t * spi, uint32_t data)
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
@@ -1139,14 +1228,22 @@ uint32_t spiTransferLongNL(spi_t * spi, uint32_t data)
     }
     spi->dev->mosi_dlen.usr_mosi_dbitlen = 31;
     spi->dev->miso_dlen.usr_miso_dbitlen = 31;
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
 #endif
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = ((uint32_t*)spi->dev->data_buf)[0];
+ #if CONFIG_IDF_TARGET_ESP32C6
+    data = spi->dev->data_buf[0].val;
+#else
+    data = spi->dev->data_buf[0];
+#endif
     if(!spi->dev->ctrl.rd_bit_order){
         MSB_32_SET(data, data);
     }
@@ -1173,7 +1270,11 @@ void spiWriteNL(spi_t * spi, const void * data_in, uint32_t len){
     spi->dev->miso_dlen.usr_miso_dbitlen = 0;
 #endif
         for (size_t i=0; i<c_longs; i++) {
-            ((uint32_t*)spi->dev->data_buf)[i] = data[i];
+        #if CONFIG_IDF_TARGET_ESP32C6
+            spi->dev->data_buf[i].val = data[i];
+        #else
+            spi->dev->data_buf[i] = data[i];
+        #endif
         }
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
         spi->dev->cmd.update = 1;
@@ -1208,11 +1309,19 @@ void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, u
         spi->dev->miso_dlen.usr_miso_dbitlen = (c_len*8)-1;
         if(data){
             for (size_t i=0; i<c_longs; i++) {
-                ((uint32_t*)spi->dev->data_buf)[i] = data[i];
+            #if CONFIG_IDF_TARGET_ESP32C6
+                spi->dev->data_buf[i].val = data[i];
+            #else
+                spi->dev->data_buf[i] = data[i];
+            #endif
             }
         } else {
             for (size_t i=0; i<c_longs; i++) {
-                ((uint32_t*)spi->dev->data_buf)[i] = 0xFFFFFFFF;
+            #if CONFIG_IDF_TARGET_ESP32C6
+                spi->dev->data_buf[i].val = 0xFFFFFFFF;
+            #else
+                spi->dev->data_buf[i] = 0xFFFFFFFF;
+            #endif
             }
         }
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
@@ -1224,9 +1333,17 @@ void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, u
         if(result){
             if(c_len & 3){
                 for (size_t i=0; i<(c_longs-1); i++) {
-                    result[i] = ((uint32_t*)spi->dev->data_buf)[i];
+                #if CONFIG_IDF_TARGET_ESP32C6
+                    result[i] = spi->dev->data_buf[i].val;
+                #else
+                    result[i] = spi->dev->data_buf[i];
+                #endif
                 }
-                uint32_t last_data = ((uint32_t*)spi->dev->data_buf)[c_longs-1];
+                #if CONFIG_IDF_TARGET_ESP32C6
+                    uint32_t last_data = spi->dev->data_buf[c_longs-1].val;
+                #else
+                    uint32_t last_data = spi->dev->data_buf[c_longs-1];
+                #endif
                 uint8_t * last_out8 = (uint8_t *)&result[c_longs-1];
                 uint8_t * last_data8 = (uint8_t *)&last_data;
                 for (size_t i=0; i<(c_len & 3); i++) {
@@ -1234,7 +1351,11 @@ void spiTransferBytesNL(spi_t * spi, const void * data_in, uint8_t * data_out, u
                 }
             } else {
                 for (size_t i=0; i<c_longs; i++) {
-                    result[i] = ((uint32_t*)spi->dev->data_buf)[i];
+                #if CONFIG_IDF_TARGET_ESP32C6
+                    result[i] = spi->dev->data_buf[i].val;
+                #else
+                    result[i] = spi->dev->data_buf[i];
+                #endif
                 }
             }
         }
@@ -1273,14 +1394,22 @@ void spiTransferBitsNL(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits)
 
     spi->dev->mosi_dlen.usr_mosi_dbitlen = (bits - 1);
     spi->dev->miso_dlen.usr_miso_dbitlen = (bits - 1);
-    ((uint32_t*)spi->dev->data_buf)[0] = data;
+#if CONFIG_IDF_TARGET_ESP32C6
+    spi->dev->data_buf[0].val = data;
+#else
+    spi->dev->data_buf[0] = data;
+#endif
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
 #endif
     spi->dev->cmd.usr = 1;
     while(spi->dev->cmd.usr);
-    data = ((uint32_t*)spi->dev->data_buf)[0];
+ #if CONFIG_IDF_TARGET_ESP32C6
+    data = spi->dev->data_buf[0].val;
+#else
+    data = spi->dev->data_buf[0];
+#endif
     if(out) {
         *out = data;
         if(!spi->dev->ctrl.rd_bit_order){
@@ -1317,15 +1446,31 @@ void ARDUINO_ISR_ATTR spiWritePixelsNL(spi_t * spi, const void * data_in, uint32
             if(msb){
                 if(l_bytes && i == (c_longs - 1)){
                     if(l_bytes == 2){
-                        MSB_16_SET(((uint32_t*)spi->dev->data_buf)[i], data[i]);
+                    #if CONFIG_IDF_TARGET_ESP32C6
+                        MSB_16_SET(spi->dev->data_buf[i].val, data[i]);
+                    #else
+                        MSB_16_SET(spi->dev->data_buf[i], data[i]);
+                    #endif
                     } else {
-                        ((uint32_t*)spi->dev->data_buf)[i] = data[i] & 0xFF;
+                    #if CONFIG_IDF_TARGET_ESP32C6
+                        spi->dev->data_buf[i].val = data[i] & 0xFF;
+                    #else
+                        spi->dev->data_buf[i] = data[i] & 0xFF;
+                    #endif
                     }
                 } else {
-                    MSB_PIX_SET(((uint32_t*)spi->dev->data_buf)[i], data[i]);
+                    #if CONFIG_IDF_TARGET_ESP32C6
+                        MSB_PIX_SET(spi->dev->data_buf[i].val, data[i]);
+                    #else
+                        MSB_PIX_SET(spi->dev->data_buf[i], data[i]);
+                    #endif
                 }
             } else {
-                ((uint32_t*)spi->dev->data_buf)[i] = data[i];
+            #if CONFIG_IDF_TARGET_ESP32C6
+                spi->dev->data_buf[i].val = data[i];
+            #else
+                spi->dev->data_buf[i] = data[i];
+            #endif
             }
         }
 #if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C6
