@@ -23,7 +23,6 @@
 #if ESP_IDF_VERSION_MAJOR > 3
     #include "esp_event.h"
     #include "esp_eth.h"
-    #include "esp_eth_phy.h"
     #include "esp_eth_mac.h"
     #include "esp_eth_com.h"
 #if CONFIG_IDF_TARGET_ESP32
@@ -32,6 +31,7 @@
     //#include "soc/io_mux_reg.h"
     //#include "hal/gpio_hal.h"
 #endif
+    #include "esp32-hal-periman.h"
 #else
     #include "eth_phy/phy.h"
     #include "eth_phy/phy_tlk110.h"
@@ -225,12 +225,20 @@ ETHClass::ETHClass()
 #if ESP_IDF_VERSION_MAJOR > 3
      ,eth_handle(NULL)
 #endif
-     ,started(false)
+     ,_started(false)
 {
 }
 
 ETHClass::~ETHClass()
 {}
+
+bool ETHClass::ethDetachBus(void * bus_pointer){
+    ETHClass *bus = (ETHClass *) bus_pointer;
+    if(bus->_started) {
+        bus->end();
+    }
+    return true;
+}
 
 bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_type_t type, eth_clock_mode_t clock_mode, bool use_mac_from_efuse)
 {
@@ -238,6 +246,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     if(esp_netif != NULL){
         return true;
     }
+    perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET, ETHClass::ethDetachBus);
 
     eth_clock_mode = clock_mode;
     tcpipInit();
@@ -267,10 +276,25 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         mac_config.smi_mdc_gpio_num = mdc;
         mac_config.smi_mdio_gpio_num = mdio;
 
+        _pin_mcd = mdc;
+        _pin_mdio = mdio;
+        _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
+
+        if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(_pin_mdio,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+
         eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
         eth_mac_config.sw_reset_timeout_ms = 1000;
 
         eth_mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
+
+        if(!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(ETH_RMII_TX1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanSetPinBus(ETH_RMII_CRS_DV, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
     }
@@ -281,9 +305,15 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         return false;
     }
 
+    _pin_power = power;
+    if(_pin_power != -1){
+        if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    }
+
     eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
     phy_config.phy_addr = phy_addr;
     phy_config.reset_gpio_num = power;
+
     esp_eth_phy_t *eth_phy = NULL;
     switch(type){
         case ETH_PHY_LAN8720:
@@ -347,6 +377,22 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         log_e("esp_eth_start failed");
         return false;
     }
+    _started = true;
+
+    if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_mdio,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+
+    if(!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_TX1,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_CRS_DV,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+
+    if(_pin_power != -1){
+        if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    }
 #else
     esp_err_t err;
     if(initialized){
@@ -355,7 +401,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
             log_e("esp_eth_enable error: %d", err);
             return false;
         }
-        started = true;
+        _started = true;
         return true;
     }
     _eth_phy_mdc_pin = mdc;
@@ -401,7 +447,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         if(err){
             log_e("esp_eth_enable error: %d", err);
         } else {
-            started = true;
+            _started = true;
             return true;
         }
     } else {
@@ -413,6 +459,11 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
     delay(50);
 
     return true;
+
+err:
+    log_e("Failed to set all pins bus to ETHERNET");
+    ETHClass::ethDetachBus((void *)(this));
+    return false;
 }
 
 bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
@@ -614,5 +665,37 @@ String ETHClass::macAddress(void)
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     return String(macStr);
 }
+
+#if ESP_IDF_VERSION_MAJOR > 3
+
+void ETHClass::end(void)
+{
+    if(esp_eth_stop(eth_handle) != ESP_OK) {
+        log_e("Failed to stop Ehternet");
+        return;
+    }
+    if(esp_eth_driver_uninstall(eth_handle) != ESP_OK) {
+        log_e("Failed to stop Ethernet");
+        return;
+    }
+    _started = false;
+
+    perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(_pin_mdio, ESP32_BUS_TYPE_INIT, NULL);
+
+    perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(ETH_RMII_TX1, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(ETH_RMII_CRS_DV, ESP32_BUS_TYPE_INIT, NULL);
+
+    if(_pin_power != -1){
+        perimanSetPinBus(_pin_power, ESP32_BUS_TYPE_INIT, NULL);
+    }
+}
+
+#endif
 
 ETHClass ETH;

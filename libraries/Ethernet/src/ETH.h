@@ -26,6 +26,14 @@
 #include "esp_eth.h"
 #include "esp_netif.h"
 
+//Dedicated GPIOs for RMII
+#define ETH_RMII_TX_EN  21
+#define ETH_RMII_TX0    19
+#define ETH_RMII_TX1    22
+#define ETH_RMII_RX0    25
+#define ETH_RMII_RX1_EN 26
+#define ETH_RMII_CRS_DV 27
+
 #ifndef ETH_PHY_ADDR
 #define ETH_PHY_ADDR 0
 #endif
@@ -66,10 +74,14 @@ class ETHClass {
         esp_netif_t *esp_netif;
 
     protected:
-        bool started;
+        bool _started;
+        int8_t _pin_mcd = -1;
+        int8_t _pin_mdio = -1;
+        int8_t _pin_power = -1;
+        int8_t _pin_rmii_clock = -1;
         static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 #else
-        bool started;
+        bool _started;
         eth_config_t eth_config;
 #endif
     public:
@@ -102,8 +114,13 @@ class ETHClass {
         uint8_t * macAddress(uint8_t* mac);
         String macAddress();
 
+        void end();
+
         friend class WiFiClient;
         friend class WiFiServer;
+
+    private:
+        static bool ethDetachBus(void * bus_pointer);
 };
 
 extern ETHClass ETH;
