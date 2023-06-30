@@ -26,6 +26,9 @@
 #ifndef TwoWire_h
 #define TwoWire_h
 
+#include "soc/soc_caps.h"
+#if SOC_I2C_SUPPORTED
+
 #include <esp32-hal.h>
 #if !CONFIG_DISABLE_HAL_LOCKS
 #include "freertos/FreeRTOS.h"
@@ -69,10 +72,12 @@ protected:
 #endif
 private:
     bool is_slave;
+#if SOC_I2C_SUPPORT_SLAVE
     void (*user_onRequest)(void);
     void (*user_onReceive)(int);
     static void onRequestService(uint8_t, void *);
     static void onReceiveService(uint8_t, uint8_t*, size_t, bool, void *);
+#endif /* SOC_I2C_SUPPORT_SLAVE */
     bool initPins(int sdaPin, int sclPin);
     bool allocateWireBuffer(void);
     void freeWireBuffer(void);
@@ -153,13 +158,15 @@ public:
     {
         return write((uint8_t)n);
     }
-
+#if SOC_I2C_SUPPORT_SLAVE
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
     size_t slaveWrite(const uint8_t *, size_t);
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 };
 
 extern TwoWire Wire;
 extern TwoWire Wire1;
 
-#endif
+#endif /* SOC_I2C_SUPPORTED */
+#endif /* TwoWire_h */

@@ -7,6 +7,9 @@
 
 #ifndef MAIN_BLEDevice_H_
 #define MAIN_BLEDevice_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h> // ESP32 BLE
@@ -97,5 +100,6 @@ public:
 
 }; // class BLE
 
-#endif // CONFIG_BLUEDROID_ENABLED
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* MAIN_BLEDevice_H_ */

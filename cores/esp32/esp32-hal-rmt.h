@@ -15,6 +15,9 @@
 #ifndef MAIN_ESP32_HAL_RMT_H_
 #define MAIN_ESP32_HAL_RMT_H_
 
+#include "soc/soc_caps.h"
+#if SOC_RMT_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -214,4 +217,5 @@ bool rmtDeinit(int pin);
 }
 #endif
 
+#endif /* SOC_RMT_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_RMT_H_ */

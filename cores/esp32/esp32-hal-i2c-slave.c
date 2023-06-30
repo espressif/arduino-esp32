@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "soc/soc_caps.h"
+
+#if SOC_I2C_SUPPORT_SLAVE
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -874,3 +877,5 @@ static bool i2cSlaveDetachBus(void * bus_i2c_num){
     }
     return true;
 }
+
+#endif /* SOC_I2C_SUPPORT_SLAVE */

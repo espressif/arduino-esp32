@@ -15,6 +15,9 @@
 #ifndef _ESP32_HAL_LEDC_H_
 #define _ESP32_HAL_LEDC_H_
 
+#include "soc/soc_caps.h"
+#if SOC_LEDC_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -59,4 +62,5 @@ bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_
 }
 #endif
 
+#endif /* SOC_LEDC_SUPPORTED */
 #endif /* _ESP32_HAL_LEDC_H_ */

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "soc/soc_caps.h"
+
+#if SOC_RMT_SUPPORTED
 #include "esp32-hal.h"
 #include "driver/gpio.h"
 #include "driver/rmt_tx.h"
@@ -568,3 +571,5 @@ Err:
   _rmtDetachBus((void *)bus);
   return false;
 }
+
+#endif /* SOC_RMT_SUPPORTED */

@@ -13,6 +13,9 @@
 // limitations under the License.
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include "esp32-hal.h"
 
 #if CONFIG_TINYUSB_ENABLED
@@ -104,3 +107,4 @@ uint8_t tinyusb_get_free_out_endpoint(void);
 #endif
 
 #endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

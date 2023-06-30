@@ -1,4 +1,6 @@
+#include "soc/soc_caps.h"
 
+#if SOC_USB_OTG_SUPPORTED
 #include "sdkconfig.h"
 #if CONFIG_TINYUSB_ENABLED
 #include <stdlib.h>
@@ -794,3 +796,4 @@ uint8_t tinyusb_get_free_out_endpoint(void){
 }
 
 #endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

@@ -20,6 +20,8 @@
  */
 
 #include "SPI.h"
+#if SOC_GPSPI_SUPPORTED
+
 #include "esp32-hal-log.h"
 
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -360,3 +362,4 @@ SPIClass SPI(VSPI);
 SPIClass SPI(FSPI);
 #endif
 
+#endif /* SOC_GPSPI_SUPPORTED */

@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "esp32-hal-spi.h"
+
+#if SOC_GPSPI_SUPPORTED
 #include "esp32-hal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -1577,3 +1579,5 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq)
     }
     return bestReg.value;
 }
+
+#endif /* SOC_GPSPI_SUPPORTED */

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "USBVendor.h"
+#if SOC_USB_OTG_SUPPORTED
 
 #if CONFIG_TINYUSB_VENDOR_ENABLED
 
@@ -214,3 +215,4 @@ size_t USBVendor::read(uint8_t *buffer, size_t size){
 void USBVendor::flush(void){}
 
 #endif /* CONFIG_TINYUSB_VENDOR_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

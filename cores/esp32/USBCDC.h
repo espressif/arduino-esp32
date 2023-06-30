@@ -13,6 +13,9 @@
 // limitations under the License.
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include "sdkconfig.h"
 #if CONFIG_TINYUSB_CDC_ENABLED
 
@@ -143,3 +146,4 @@ extern USBCDC Serial;
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */
