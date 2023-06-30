@@ -27,6 +27,8 @@
 #include "esp32c3/rom/gpio.h"
 #elif CONFIG_IDF_TARGET_ESP32C6
 #include "esp32c6/rom/gpio.h"
+#elif CONFIG_IDF_TARGET_ESP32H2
+#include "esp32h2/rom/gpio.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
