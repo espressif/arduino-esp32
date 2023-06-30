@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "USBHID.h"
+#if SOC_USB_OTG_SUPPORTED
 
 #if CONFIG_TINYUSB_HID_ENABLED
 
@@ -117,5 +118,5 @@ bool USBHIDGamepad::send(int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int
     return write();
 }
 
-
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */
