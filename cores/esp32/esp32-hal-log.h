@@ -90,6 +90,8 @@ void log_print_buf(const uint8_t *b, size_t len);
 #define ARDUHAL_SHORT_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
 #define ARDUHAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long) (esp_timer_get_time() / 1000ULL), pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
+//esp_rom_printf(DRAM_STR("ST:%d\n"), frame_pos);
+
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 #ifndef USE_ESP_IDF_LOG
 #define log_v(format, ...) log_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)

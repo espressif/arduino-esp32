@@ -34,6 +34,7 @@
 #include "esp_rom_gpio.h"
 
 #include "esp32-hal.h"
+#include "esp32-hal-periman.h"
 
 #include "esp32-hal-tinyusb.h"
 #if CONFIG_IDF_TARGET_ESP32S2
@@ -58,6 +59,11 @@ typedef struct {
     bool external_phy;
 } tinyusb_config_t;
 
+static bool usb_otg_deinit(void * busptr) {
+    // Once USB OTG is initialized, its GPIOs are assigned and it shall never be deinited
+    return false;
+}
+
 static void configure_pins(usb_hal_context_t *usb)
 {
     for (const usb_iopin_dsc_t *iopin = usb_periph_iopins; iopin->pin != -1; ++iopin) {
@@ -77,6 +83,13 @@ static void configure_pins(usb_hal_context_t *usb)
     if (!usb->use_external_phy) {
         gpio_set_drive_capability(USBPHY_DM_NUM, GPIO_DRIVE_CAP_3);
         gpio_set_drive_capability(USBPHY_DP_NUM, GPIO_DRIVE_CAP_3);
+        if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB, usb_otg_deinit)) {
+            // Bus Pointer is not used anyway - once the USB GPIOs are assigned, they can't be detached
+            perimanSetPinBus(USBPHY_DM_NUM, ESP32_BUS_TYPE_USB, (void *) usb);
+            perimanSetPinBus(USBPHY_DP_NUM, ESP32_BUS_TYPE_USB, (void *) usb);
+        } else {
+            log_e("USB OTG Pins can't be set into Peripheral Manager.");
+        }
     }
 }
 

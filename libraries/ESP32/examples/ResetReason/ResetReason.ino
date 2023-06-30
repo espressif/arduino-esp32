@@ -12,7 +12,6 @@
 *  Evandro Luis Copercini - 2017
 */
 
-#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
@@ -21,11 +20,10 @@
 #include "esp32c3/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32C6
+#include "esp32c6/rom/rtc.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
-#endif
-#else // ESP32 Before IDF 4.0
-#include "rom/rtc.h"
 #endif
 
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */

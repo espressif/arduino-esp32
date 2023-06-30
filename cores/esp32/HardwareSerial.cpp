@@ -28,6 +28,8 @@
 #define SOC_RX0 44
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define SOC_RX0 20
+#elif CONFIG_IDF_TARGET_ESP32C6
+#define SOC_RX0 17
 #endif
 #endif
 
@@ -38,6 +40,8 @@
 #define SOC_TX0 43
 #elif CONFIG_IDF_TARGET_ESP32C3
 #define SOC_TX0 21
+#elif CONFIG_IDF_TARGET_ESP32C6
+#define SOC_TX0 16
 #endif
 #endif
 
@@ -55,6 +59,8 @@ void serialEvent(void) {}
 #define RX1 18
 #elif CONFIG_IDF_TARGET_ESP32S3
 #define RX1 15
+#elif CONFIG_IDF_TARGET_ESP32C6
+#define RX1 5
 #endif
 #endif
 
@@ -67,6 +73,8 @@ void serialEvent(void) {}
 #define TX1 19
 #elif CONFIG_IDF_TARGET_ESP32S3
 #define TX1 16
+#elif CONFIG_IDF_TARGET_ESP32C6
+#define TX1 4
 #endif
 #endif
 
@@ -146,10 +154,6 @@ _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
 #endif
-,_rxPin(-1) 
-,_txPin(-1)
-,_ctsPin(-1)
-,_rtsPin(-1)
 {
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(_lock == NULL){
@@ -420,9 +424,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
       _rxFIFOFull = fifoFull;
     }
 
-    _rxPin = rxPin;
-    _txPin = txPin;
-
     HSERIAL_MUTEX_UNLOCK();
 }
 
@@ -441,15 +442,12 @@ void HardwareSerial::end(bool fullyTerminate)
         if (uartGetDebug() == _uart_nr) {
             uartSetDebug(0);
         }
-
         _rxFIFOFull = 0; 
-
-        uartDetachPins(_uart, _rxPin, _txPin, _ctsPin, _rtsPin);
-        _rxPin = _txPin = _ctsPin = _rtsPin = -1;
-
+        uartEnd(_uart);  // fully detach all pins and delete the UART driver
+    } else {
+      // do not invalidate callbacks, detach pins, invalidate DBG output 
+      uart_driver_delete(_uart_nr);
     }
-    delay(10);
-    uartEnd(_uart);
     _uart = 0;
     _destroyEventTask();
 }
@@ -555,16 +553,11 @@ bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t r
     }
 
     // uartSetPins() checks if pins are valid for each function and for the SoC
-    bool retCode = uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
-    if (retCode) {
-        _txPin = _txPin >= 0 ? txPin : _txPin;
-        _rxPin = _rxPin >= 0 ? rxPin : _rxPin;
-        _rtsPin = _rtsPin >= 0 ? rtsPin : _rtsPin;
-        _ctsPin = _ctsPin >= 0 ? ctsPin : _ctsPin;
+    if (uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin)) {
+        return true;
     } else {
-        log_e("Error when setting Serial port Pins. Invalid Pin.\n");
+        return false;
     }
-    return retCode;
 }
 
 // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
