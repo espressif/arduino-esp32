@@ -22,6 +22,8 @@
 #include "esp32s3/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32C6
 #include "esp32c6/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32H2
+#include "esp32h2/rom/rtc.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -87,15 +89,17 @@ void setup() {
   print_reset_reason(rtc_get_reset_reason(1));
   verbose_print_reset_reason(rtc_get_reset_reason(1));
 
+#ifndef CONFIG_IDF_TARGET_ESP32H2
   // Set ESP32 to go to deep sleep to see a variation
   // in the reset reason. Device will sleep for 5 seconds.
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32H2
   esp_sleep_pd_config(ESP_PD_DOMAIN_RC_FAST, ESP_PD_OPTION_OFF);
 #else
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
 #endif
   Serial.println("Going to sleep");
   esp_deep_sleep(5 * uS_TO_S_FACTOR);
+#endif
 }
 
 void loop() {

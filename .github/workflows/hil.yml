@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
     steps:
       - name: Checkout Repository
@@ -76,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
     container:
       image: python:3.10.1-bullseye

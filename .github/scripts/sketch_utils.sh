@@ -75,6 +75,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
             esp32c3_opts="PartitionScheme=huge_app"
             esp32c6_opts="PartitionScheme=huge_app"
+            esp32h2_opts="PartitionScheme=huge_app"
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
@@ -94,6 +95,9 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 ;;
                 "esp32c6")
                     fqbn="espressif:esp32:esp32c6:${options:-$esp32c6_opts}"
+                ;;
+                "esp32h2")
+                    fqbn="espressif:esp32:esp32h2:${options:-$esp32h2_opts}"
                 ;;
             esac
 
