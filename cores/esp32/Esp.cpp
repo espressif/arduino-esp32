@@ -54,6 +54,9 @@ extern "C" {
 #elif CONFIG_IDF_TARGET_ESP32C6
 #include "esp32c6/rom/spi_flash.h"
 #define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32c6 is located at 0x0000
+#elif CONFIG_IDF_TARGET_ESP32H2
+#include "esp32h2/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32h2 is located at 0x0000
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -363,7 +366,11 @@ FlashMode_t EspClass::getFlashChipMode(void)
    #if CONFIG_IDF_TARGET_ESP32S2
    uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
    #else
+   #if CONFIG_IDF_TARGET_ESP32H2
+   uint32_t spi_ctrl = REG_READ(DR_REG_SPI0_BASE + 0x8);
+   #else
    uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
+   #endif
    #endif
    /* Not all of the following constants are already defined in older versions of spi_reg.h, so do it manually for now*/
    if (spi_ctrl & BIT(24)) { //SPI_FREAD_QIO
