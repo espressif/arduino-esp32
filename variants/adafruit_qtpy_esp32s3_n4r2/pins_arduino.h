@@ -5,9 +5,9 @@
 #include "soc/soc_caps.h"
 
 #define USB_VID            0x239A
-#define USB_PID            0x8119
+#define USB_PID            0x8143
 #define USB_MANUFACTURER   "Adafruit"
-#define USB_PRODUCT        "QT Py ESP32-S3 No PSRAM"
+#define USB_PRODUCT        "QT Py ESP32-S3 (4MB Flash 2MB PSRAM)"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
 #define EXTERNAL_NUM_INTERRUPTS 46
