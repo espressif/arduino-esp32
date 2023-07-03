@@ -1,7 +1,7 @@
 /* HW Timer test */
 #include <unity.h>
 
-#define TIMER_FREQUENCY           5000000
+#define TIMER_FREQUENCY           4000000
 #define TIMER_FREQUENCY_XTAL_CLK  1000
 
 /*
@@ -74,8 +74,8 @@ void timer_divider_test(void){
   delay(1000);        
   comp_time_val = timerRead(timer);
     
-  TEST_ASSERT_INT_WITHIN(5000, 5000000, time_val);
-  TEST_ASSERT_INT_WITHIN(10000, 10000000, comp_time_val);
+  TEST_ASSERT_INT_WITHIN(4000, 4000000, time_val);
+  TEST_ASSERT_INT_WITHIN(8000, 8000000, comp_time_val);
 
   // divider is 256, value should be 2^4
   timerEnd(timer);
@@ -88,8 +88,8 @@ void timer_divider_test(void){
   delay(1000);       
   comp_time_val = timerRead(timer);
 
-  TEST_ASSERT_INT_WITHIN(5000, 5000000, time_val);
-  TEST_ASSERT_INT_WITHIN(3125, 312500, comp_time_val);
+  TEST_ASSERT_INT_WITHIN(4000, 4000000, time_val);
+  TEST_ASSERT_INT_WITHIN(2500, 250000, comp_time_val);
 }
 
 void timer_read_test(void){
