@@ -25,6 +25,7 @@ endif()
 set(CORE_SRCS
   cores/esp32/base64.cpp
   cores/esp32/cbuf.cpp
+  cores/esp32/chip-debug-report.cpp
   cores/esp32/esp32-hal-adc.c
   cores/esp32/esp32-hal-bt.c
   cores/esp32/esp32-hal-cpu.c
