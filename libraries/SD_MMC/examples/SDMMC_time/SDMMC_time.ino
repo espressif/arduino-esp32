@@ -228,11 +228,14 @@ void setup(){
     }
 #endif
 
+/*
+// This is waiting for implementation in peripheral manager (periman)
     if(use_1_bit_mode){
         Serial.printf("Begin in 1-bit mode; pins: CLK=%d, CMD=%d, D0=%d\n", SD_MMC.getClkPin(), SD_MMC.getCmdPin(), SD_MMC.getD0Pin());
     }else{
         Serial.printf("Begin in 4-bit mode; pins: CLK=%d, CMD=%d, D0=%d, D1=%d, D2=%d, D3=%d\n", SD_MMC.getClkPin(), SD_MMC.getCmdPin(), SD_MMC.getD0Pin(), SD_MMC.getD1Pin(), SD_MMC.getD2Pin(), SD_MMC.getD3Pin());
     }
+*/
 
     if(!SD_MMC.begin("/sdcard", use_1_bit_mode)){
         Serial.println("Card Mount Failed.");
