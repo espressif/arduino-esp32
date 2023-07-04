@@ -16,7 +16,8 @@
 
 #ifdef CONFIG_BT_ENABLED
 
-bool btInUse(){ return true; }
+// user may want to change it to free resources
+__attribute__((weak)) bool btInUse(){ return true; }
 
 #include "esp_bt.h"
 
