@@ -659,11 +659,15 @@ int log_printfv(const char *format, va_list arg)
     }
 #endif
     
+#if CONFIG_IDF_TARGET_ESP32C3
+    vsnprintf(temp, len+1, format, arg);
+    ets_printf("%s", temp);
+#else
     int wlen = vsnprintf(temp, len+1, format, arg);
-    //ets_printf("%s", temp);
     for (int i = 0; i < wlen; i++) {
         ets_write_char_uart(temp[i]);
     }
+#endif
 
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
