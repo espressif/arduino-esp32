@@ -24140,7 +24140,7 @@ nano_nora.build.target=esp32s3
 nano_nora.build.mcu=esp32s3
 nano_nora.build.core=esp32
 nano_nora.build.variant=arduino_nano_nora
-nano_nora.build.board=ARDUINO_NANO_NORA
+nano_nora.build.board=NANO_ESP32
 nano_nora.build.code_debug=0
 
 nano_nora.build.usb_mode=0
@@ -24154,7 +24154,7 @@ nano_nora.build.flash_mode=dio
 nano_nora.build.boot=qio
 nano_nora.build.boot_freq=80m
 nano_nora.build.partitions=app3M_fat9M_fact512k_16MB
-nano_nora.build.defines=-DBOARD_HAS_PIN_REMAP -DBOARD_HAS_PSRAM
+nano_nora.build.defines=-DBOARD_HAS_PIN_REMAP -DBOARD_HAS_PSRAM '-DUSB_MANUFACTURER="Arduino"' '-DUSB_PRODUCT="Nano ESP32"'
 nano_nora.build.loop_core=-DARDUINO_RUNNING_CORE=1
 nano_nora.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 nano_nora.build.psram_type=opi
