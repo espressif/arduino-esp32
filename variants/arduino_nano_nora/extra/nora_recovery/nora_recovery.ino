@@ -27,11 +27,13 @@ void pulse_led() {
 #include <esp_partition.h>
 #include <esp_flash_partitions.h>
 #include <esp_image_format.h>
-bool load_previous_firmware() {
-	// if user flashed this recovery sketch to an OTA partition, stay here
+const esp_partition_t *find_previous_firmware() {
 	extern bool _recovery_active;
-	if (!_recovery_active)
-		return false;
+	if (!_recovery_active) {
+		// user flashed this recovery sketch to an OTA partition
+		// stay here and wait for a proper firmware
+		return NULL;
+	}
 
 	// booting from factory partition, look for a valid OTA image
 	esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
@@ -42,24 +44,29 @@ bool load_previous_firmware() {
 			esp_image_metadata_t meta;
 			if (esp_image_verify(ESP_IMAGE_VERIFY_SILENT, &candidate, &meta) == ESP_OK) {
 				// found, use it
-				esp_ota_set_boot_partition(part);
-				return true;
+				return part;
 			}
 		}
 	}
 
-	return false;
+	return NULL;
 }
 
+const esp_partition_t *user_part = NULL;
+
 void setup() {
+	user_part = find_previous_firmware();
+	if (user_part)
+		esp_ota_set_boot_partition(user_part);
+
 	extern bool _recovery_marker_found;
-	if (!_recovery_marker_found) {
-		// marker not found, probable cold start
+	if (!_recovery_marker_found && user_part) {
+		// recovery marker not found, probable cold start
 		// try starting previous firmware immediately
-		if (load_previous_firmware())
-			esp_restart();
+		esp_restart();
 	}
 
+	// recovery marker found, or nothing else to load
 	printf("Recovery firmware started, waiting for USB\r\n");
 }
 
@@ -79,8 +86,8 @@ void loop() {
 	if (elapsed_ms > USB_TIMEOUT_MS) {
 		elapsed_ms = 0;
 		// timed out, try loading previous firmware
-		if (load_previous_firmware()) {
-			// found a valid FW image, load it
+		if (user_part) {
+			// there was a valid FW image, load it
 			analogWrite(LED_GREEN, 255);
 			printf("Leaving recovery firmware\r\n");
 			delay(200);
