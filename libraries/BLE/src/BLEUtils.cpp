@@ -1967,8 +1967,8 @@ std::string BLEUtils::gattStatusToString(esp_gatt_status_t status) {
 			return "ESP_GATT_INVALID_CFG";
 		case ESP_GATT_SERVICE_STARTED:
 			return "ESP_GATT_SERVICE_STARTED";
-		case ESP_GATT_ENCRYPED_NO_MITM:
-			return "ESP_GATT_ENCRYPED_NO_MITM";
+		case ESP_GATT_ENCRYPTED_NO_MITM:
+			return "ESP_GATT_ENCRYPTED_NO_MITM";
 		case ESP_GATT_NOT_ENCRYPTED:
 			return "ESP_GATT_NOT_ENCRYPTED";
 		case ESP_GATT_CONGESTED:
