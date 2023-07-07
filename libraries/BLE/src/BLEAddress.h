@@ -8,6 +8,7 @@
 #ifndef COMPONENTS_CPP_UTILS_BLEADDRESS_H_
 #define COMPONENTS_CPP_UTILS_BLEADDRESS_H_
 #include "soc/soc_caps.h"
+#include "WString.h"
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
