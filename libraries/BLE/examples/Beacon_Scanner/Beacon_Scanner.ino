@@ -86,8 +86,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
           BLEEddystoneTLM EddystoneTLM(&advertisedDevice);
           Serial.printf("Reported battery voltage: %dmV\n", EddystoneTLM.getVolt());
           Serial.printf("Reported temperature: %.2f°C (raw data=0x%04X)\n", EddystoneTLM.getTemp(), EddystoneTLM.getRawTemp());
-          Serial.printf("Reported advertise count: %d\n", EddystoneTLM.getCount());
-          Serial.printf("Reported time since last reboot: %ds\n", EddystoneTLM.getTime());
+          Serial.printf("Reported advertise count: %lu\n", EddystoneTLM.getCount());
+          Serial.printf("Reported time since last reboot: %lus\n", EddystoneTLM.getTime());
           Serial.println("\n");
           Serial.print(EddystoneTLM.toString().c_str());
           Serial.println("\n");
