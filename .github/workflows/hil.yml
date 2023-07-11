@@ -72,6 +72,7 @@ jobs:
       - ESP32-S3
       - ESP32-C3
       - ESP32-C6
+      - ESP32-H2
 
     strategy:
       fail-fast: false
@@ -95,7 +96,7 @@ jobs:
        - name: Install dependencies
          run: |
            pip install -U pip
-           pip install -r tests/requirements.txt
+           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
            apt update && apt install -y -qq jq
 
        - name: Run Tests
