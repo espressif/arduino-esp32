@@ -859,7 +859,7 @@ uartDetectBaudrate(uart_t *uart)
 }
 
 /*
-    These functions are for testing puspose only and can be used in Arduino Sketches
+    These functions are for testing purpose only and can be used in Arduino Sketches
     Those are used in the UART examples
 */
 
@@ -869,19 +869,23 @@ uartDetectBaudrate(uart_t *uart)
     This code "replaces" the physical wiring for connecting TX <--> RX in a loopback
 */
 
-// gets the right TX SIGNAL, based on the UART number
+// gets the right TX or RX SIGNAL, based on the UART number from gpio_sig_map.h
 #if SOC_UART_NUM > 2
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+  #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+  #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : (uartNumber == UART_NUM_1 ? U1RXD_IN_IDX : U2RXD_IN_IDX))
 #else
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+  #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+  #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : U1RXD_IN_IDX)
 #endif
 /*
-   Make sure UART's RX signal is connected to TX pin
-   This creates a loop that lets us receive anything we send on the UART
+   This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
+   This creates a loop that lets us receive anything we send on the UART without external wires.
 */
 void uart_internal_loopback(uint8_t uartNum, int8_t rxPin)
 {
+  //log_d("uartNum=%d (SOC_UART_NUM=%d); rxPin=%d; GPIO_IS_VALID_GPIO(rxPin)=%d", uartNum, SOC_UART_NUM, rxPin, GPIO_IS_VALID_GPIO(rxPin));
   if (uartNum > SOC_UART_NUM - 1 || !GPIO_IS_VALID_GPIO(rxPin)) return;
+  //log_d("call esp_rom_gpio_connect_out_signal(rxPin=%d, UART_TX_SIGNAL(uartNum=%d)=%d, false, false);", rxPin, uartNum, UART_TX_SIGNAL(uartNum));
   esp_rom_gpio_connect_out_signal(rxPin, UART_TX_SIGNAL(uartNum), false, false);
 }
 
