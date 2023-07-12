@@ -179,9 +179,10 @@ int dsps_fird_f32_ae32(fir_f32_t *fir, const float *input, float *output, int le
 int32_t dsps_fird_s16_ansi(fir_s16_t *fir, const int16_t *input, int16_t *output, int32_t len);
 int32_t dsps_fird_s16_ae32(fir_s16_t *fir, const int16_t *input, int16_t *output, int32_t len);
 int32_t dsps_fird_s16_aes3(fir_s16_t *fir, const int16_t *input, int16_t *output, int32_t len);
-
-
 /**@}*/
+
+
+/**@{*/
 /**
  * @brief   support arrays freeing function
  *
@@ -200,7 +201,7 @@ esp_err_t dsps_fird_s16_aexx_free(fir_s16_t *fir);
 /**@}*/
 
 
-/**@}*/
+/**@{*/
 /**
  * @brief   support arrays freeing function
  *
@@ -222,14 +223,14 @@ esp_err_t dsps_fir_f32_free(fir_f32_t *fir);
  * Function reverses 16-bit long array members for the purpose of the dsps_fird_s16_aes3 implementation
  * The function has to be called either during the fir struct initialization or every time the coefficients change
  *
- * @param fir: pointer to the array to be reversed
+ * @param arr: pointer to the array to be reversed
  * @param len: length of the array to be reversed
  *
  * @return
  *      - ESP_OK on success
  */
 esp_err_t dsps_16_array_rev(int16_t *arr, int16_t len); 
-/**@{*/
+/**@}*/
 
 #ifdef __cplusplus
 }

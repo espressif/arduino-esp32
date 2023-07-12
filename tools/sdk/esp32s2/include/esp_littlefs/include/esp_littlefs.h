@@ -2,16 +2,22 @@
 #define ESP_LITTLEFS_H__
 
 #include "esp_err.h"
+#include "esp_idf_version.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ESP_LITTLEFS_VERSION_NUMBER "1.5.5"
+#define ESP_LITTLEFS_VERSION_NUMBER "1.6.0"
 #define ESP_LITTLEFS_VERSION_MAJOR 1
-#define ESP_LITTLEFS_VERSION_MINOR 5
-#define ESP_LITTLEFS_VERSION_PATCH 5
+#define ESP_LITTLEFS_VERSION_MINOR 6
+#define ESP_LITTLEFS_VERSION_PATCH 0
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 2) && CONFIG_VFS_SUPPORT_DIR
+#define ESP_LITTLEFS_ENABLE_FTRUNCATE
+#endif // ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 2)
+
 
 /**
  *Configuration structure for esp_vfs_littlefs_register.

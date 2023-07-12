@@ -22,38 +22,79 @@
 #include <stdint.h>
 #include <mat.h>
 
+/**
+ * The ekf is a base class for Extended Kalman Filter.
+ * It contains main matrix operations and define the processing flow.
+ */
 class ekf {
 public:
-    // x - amount of states in EKF. x[n] = F*x[n-1] + G*u + W. Size of matrix F
-    // w - amount of control measurements and noise inputs. Size of matrix G
 
+    /**
+     * Constructor of EKF.
+     * THe constructor allocate main memory for the matrixes.
+     * @param[in] x: - amount of states in EKF. x[n] = F*x[n-1] + G*u + W. Size of matrix F
+     * @param[in] w: - amount of control measurements and noise inputs. Size of matrix G
+    */
     ekf(int x, int w);
-
+    
+    
+    /**
+     * Distructor of EKF
+    */
     virtual ~ekf();
+    /**
+     * Main processing method of the EKF.
+     * 
+     * @param[in] u: - input measurements
+     * @param[in] dt: - time difference from the last call in seconds
+    */
     virtual void Process(float *u, float dt);
 
-    virtual void Init() = 0;
-    // x[n] = F*x[n-1] + G*u + W
-    int NUMX; // number of states, X is the state vector (size of F matrix)
-    int NUMW; // size of G matrix
 
-    // System state vector
+    /**
+     * Initialization of EKF.
+     * The method should be called befare the first use of the filter.
+    */
+    virtual void Init() = 0;
+    /**
+     * x[n] = F*x[n-1] + G*u + W
+     * Number of states, X is the state vector (size of F matrix)
+    */
+    int NUMX; 
+    /**
+     * x[n] = F*x[n-1] + G*u + W
+     * The size of G matrix
+    */
+    int NUMW; 
+
+    /**
+     * System state vector
+    */
     dspm::Mat &X;
 
-    // linearized system matrices
+    /**
+     * Linearized system matrices F, where x[n] = F*x[n-1] + G*u + W
+    */
     dspm::Mat &F;
+    /**
+     * Linearized system matrices G, where x[n] = F*x[n-1] + G*u + W
+    */
     dspm::Mat &G;
 
-    // covariance matrix and state vector
+    /**
+    * Covariance matrix and state vector
+    */
     dspm::Mat &P;
 
-    // input noise and measurement noise variances
+    /**
+     * Input noise and measurement noise variances
+    */
     dspm::Mat &Q;
 
     /**
      * Runge-Kutta state update method.
 	 * The method calculates derivatives of input vector x and control measurements u
-     * Re
+     * 
      * @param[in] x: state vector
      * @param[in] u: control measurement
      * @param[in] dt: time interval from last update in seconds
@@ -109,8 +150,13 @@ public:
      */
     virtual void UpdateRef(dspm::Mat &H, float *measured, float *expected, float *R);
 
-
+    /**
+     * Matrix for intermidieve calculations
+    */
     float *HP;
+    /**
+     * Matrix for intermidieve calculations
+    */
     float *Km;
 
 public:
@@ -135,7 +181,7 @@ public:
 
     /**
      * Convert quaternion to Euler angels.
-     * @param[in] R: quaternion
+     * @param[in] q: quaternion
      *
      * @return
      *      - Euler angels 3x1
