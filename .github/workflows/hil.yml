@@ -71,7 +71,7 @@ jobs:
       matrix:
         chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
-    runs-on: ${{matrix.chip}}
+    runs-on: [arduino, "${{matrix.chip}}"]
     container:
       image: python:3.10.1-bullseye
       options: --privileged
