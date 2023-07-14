@@ -18,6 +18,14 @@ Removed APIs
 * ``adcAttachPin``
 * ``analogSetVRefPin``
 
+BLE
+---
+
+Changes in APIs
+***************
+
+* Changed APIs return and parameter type from ``std::string`` to Arduino style ``String``.
+* Changed UUID data type from ``uint16_t`` to ``BLEUUID`` class.
 
 Hall Sensor
 -----------
