@@ -459,7 +459,7 @@ uint8_t uartRead(uart_t* uart)
       c = uart->peek_byte;
     } else {
 
-        int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_RATE_MS);
+        int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_PERIOD_MS);
         if (len <= 0) { // includes negative return from IDF in case of error
             c  = 0;
         }
@@ -481,7 +481,7 @@ uint8_t uartPeek(uart_t* uart)
     if (uart->has_peek) {
       c = uart->peek_byte;
     } else {
-        int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_RATE_MS);
+        int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_PERIOD_MS);
         if (len <= 0) { // includes negative return from IDF in case of error
             c  = 0;
         } else {
