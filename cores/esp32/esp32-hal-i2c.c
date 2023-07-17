@@ -184,7 +184,7 @@ esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t* buff, size_
     }
     
     //short implementation does not support zero size writes (example when scanning) PR in IDF?
-    //ret =  i2c_master_write_to_device((i2c_port_t)i2c_num, address, buff, size, timeOutMillis / portTICK_RATE_MS);
+    //ret =  i2c_master_write_to_device((i2c_port_t)i2c_num, address, buff, size, timeOutMillis / portTICK_PERIOD_MS);
 
     ret = ESP_OK;
     uint8_t cmd_buff[I2C_LINK_RECOMMENDED_SIZE(1)] = { 0 };
@@ -207,7 +207,7 @@ esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t* buff, size_
     if (ret != ESP_OK) {
         goto end;
     }
-    ret = i2c_master_cmd_begin((i2c_port_t)i2c_num, cmd, timeOutMillis / portTICK_RATE_MS);
+    ret = i2c_master_cmd_begin((i2c_port_t)i2c_num, cmd, timeOutMillis / portTICK_PERIOD_MS);
 
 end:
     if(cmd != NULL){
@@ -235,7 +235,7 @@ esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t* buff, size_t size,
     if(!bus[i2c_num].initialized){
         log_e("bus is not initialized");
     } else {
-        ret = i2c_master_read_from_device((i2c_port_t)i2c_num, address, buff, size, timeOutMillis / portTICK_RATE_MS);
+        ret = i2c_master_read_from_device((i2c_port_t)i2c_num, address, buff, size, timeOutMillis / portTICK_PERIOD_MS);
         if(ret == ESP_OK){
             *readCount = size;
         } else {
@@ -264,7 +264,7 @@ esp_err_t i2cWriteReadNonStop(uint8_t i2c_num, uint16_t address, const uint8_t* 
     if(!bus[i2c_num].initialized){
         log_e("bus is not initialized");
     } else {
-        ret = i2c_master_write_read_device((i2c_port_t)i2c_num, address, wbuff, wsize, rbuff, rsize, timeOutMillis / portTICK_RATE_MS);
+        ret = i2c_master_write_read_device((i2c_port_t)i2c_num, address, wbuff, wsize, rbuff, rsize, timeOutMillis / portTICK_PERIOD_MS);
         if(ret == ESP_OK){
             *readCount = rsize;
         } else {

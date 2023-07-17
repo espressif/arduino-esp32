@@ -296,7 +296,7 @@ static void set_esp_netif_hostname(const char * name){
 	}
 }
 
-static xQueueHandle _arduino_event_queue;
+static QueueHandle_t _arduino_event_queue;
 static TaskHandle_t _arduino_event_task_handle = NULL;
 static EventGroupHandle_t _arduino_event_group = NULL;
 

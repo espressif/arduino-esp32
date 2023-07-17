@@ -60,7 +60,7 @@ struct rmt_obj_s {
   size_t *num_symbols_read;                  // Pointer to the number of RMT symbol read by IDF RMT RX Done
 
 #if !CONFIG_DISABLE_HAL_LOCKS
-  xSemaphoreHandle g_rmt_objlocks;           // Channel Semaphore Lock
+  SemaphoreHandle_t g_rmt_objlocks;           // Channel Semaphore Lock
 #endif /* CONFIG_DISABLE_HAL_LOCKS */
 };
 
@@ -69,7 +69,7 @@ typedef struct rmt_obj_s *rmt_bus_handle_t;
 /**
    Internal variables used in RMT API
 */
-static xSemaphoreHandle g_rmt_block_lock = NULL;
+static SemaphoreHandle_t g_rmt_block_lock = NULL;
 
 /**
    Internal method (private) declarations

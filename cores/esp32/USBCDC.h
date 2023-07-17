@@ -135,8 +135,8 @@ protected:
     bool     rts;
     bool     connected;
     bool     reboot_enable;
-    xQueueHandle rx_queue;
-    xSemaphoreHandle tx_lock;
+    QueueHandle_t rx_queue;
+    SemaphoreHandle_t tx_lock;
     uint32_t tx_timeout_ms;
     
 };

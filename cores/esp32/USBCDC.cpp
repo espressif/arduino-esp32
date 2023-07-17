@@ -123,7 +123,7 @@ size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
             uxQueueSpacesAvailable(rx_queue) + uxQueueMessagesWaiting(rx_queue) : 0;
 
     if (rx_queue_len != currentQueueSize) {
-        xQueueHandle new_rx_queue = NULL;
+        QueueHandle_t new_rx_queue = NULL;
         if (rx_queue_len) {
             new_rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
             if(!new_rx_queue){

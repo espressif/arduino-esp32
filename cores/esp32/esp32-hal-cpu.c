@@ -60,7 +60,7 @@ typedef struct apb_change_cb_s {
 
 
 static apb_change_t * apb_change_callbacks = NULL;
-static xSemaphoreHandle apb_change_lock = NULL;
+static SemaphoreHandle_t apb_change_lock = NULL;
 
 static void initApbChangeCallback(){
     static volatile bool initialized = false;
