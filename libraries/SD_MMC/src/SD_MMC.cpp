@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "pins_arduino.h"
+#include "io_pin_remap.h"
 #include "SD_MMC.h"
 #ifdef SOC_SDMMC_HOST_SUPPORTED
 #include "vfs_api.h"
@@ -54,6 +55,15 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3)
         log_e("SD_MMC.setPins must be called before SD_MMC.begin");
         return false;
     }
+
+    // map logical pins to GPIO numbers
+    clk = digitalPinToGPIONumber(clk);
+    cmd = digitalPinToGPIONumber(cmd);
+    d0 = digitalPinToGPIONumber(d0);
+    d1 = digitalPinToGPIONumber(d1);
+    d2 = digitalPinToGPIONumber(d2);
+    d3 = digitalPinToGPIONumber(d3);
+
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
     // SoC supports SDMMC pin configuration via GPIO matrix. Save the pins for later use in SDMMCFS::begin.
     _pin_clk = (int8_t) clk;
