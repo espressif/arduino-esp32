@@ -23,11 +23,13 @@
 //#define CAMERA_MODEL_M5STACK_UNITCAM // No PSRAM
 //#define CAMERA_MODEL_AI_THINKER // Has PSRAM
 //#define CAMERA_MODEL_TTGO_T_JOURNAL // No PSRAM
+//#define CAMERA_MODEL_XIAO_ESP32S3 // Has PSRAM
 // ** Espressif Internal Boards **
 //#define CAMERA_MODEL_ESP32_CAM_BOARD
 //#define CAMERA_MODEL_ESP32S2_CAM_BOARD
 //#define CAMERA_MODEL_ESP32S3_CAM_LCD
-
+//#define CAMERA_MODEL_DFRobot_FireBeetle2_ESP32S3 // Has PSRAM
+//#define CAMERA_MODEL_DFRobot_Romeo_ESP32S3 // Has PSRAM
 #include "camera_pins.h"
 
 // ===========================
@@ -59,8 +61,8 @@ void setup() {
   config.pin_pclk = PCLK_GPIO_NUM;
   config.pin_vsync = VSYNC_GPIO_NUM;
   config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
+  config.pin_sccb_sda = SIOD_GPIO_NUM;
+  config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;

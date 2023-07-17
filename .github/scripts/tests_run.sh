@@ -15,7 +15,8 @@ function run_test() {
     fi
 
     if [ $len -eq 1 ]; then
-      build_dir="tests/$sketchname/build"
+      # build_dir="tests/$sketchname/build"
+      build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
       report_file="tests/$sketchname/$sketchname.xml"
     fi
 
@@ -27,7 +28,8 @@ function run_test() {
         fi
 
         if [ $len -ne 1 ]; then
-            build_dir="tests/$sketchname/build$i"
+            # build_dir="tests/$sketchname/build$i"
+            build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
             report_file="tests/$sketchname/$sketchname$i.xml"
         fi
 

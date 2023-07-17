@@ -45,6 +45,7 @@ public:
     virtual FileImplPtr openNextFile(const char* mode) = 0;
     virtual boolean seekDir(long position);
     virtual String getNextFileName(void);
+    virtual String getNextFileName(bool *isDir);
     virtual void rewindDirectory(void) = 0;
     virtual operator bool() = 0;
 };

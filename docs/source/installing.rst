@@ -25,11 +25,11 @@ This is the way to install Arduino-ESP32 directly from the Arduino IDE.
 
 - Stable release link::
 
-   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+   https://espressif.github.io/arduino-esp32/package_esp32_index.json
 
 - Development release link::
 
-   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json
+   https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json
 
 
 .. note::
