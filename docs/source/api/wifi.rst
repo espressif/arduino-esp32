@@ -222,6 +222,15 @@ Get the softAP subnet CIDR.
 
     uint8_t softAPSubnetCIDR();
 
+softAPSubnetMask
+****************
+
+Get the softAP subnet mask.
+
+.. code-block:: arduino
+
+    IPAddress softAPSubnetMask();
+
 softAPenableIpV6
 ****************
 
