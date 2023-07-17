@@ -11755,7 +11755,7 @@ esp32-gateway.menu.Revision.RevC=Revision C or older
 esp32-gateway.menu.Revision.RevC.build.board=ESP32_GATEWAY_C
 esp32-gateway.menu.Revision.RevE=Revision E
 esp32-gateway.menu.Revision.RevE.build.board=ESP32_GATEWAY_E
-esp32-gateway.menu.Revision.RevF=Revision F
+esp32-gateway.menu.Revision.RevF=Revision F or newer
 esp32-gateway.menu.Revision.RevF.build.board=ESP32_GATEWAY_F
 
 esp32-gateway.build.f_cpu=240000000L
@@ -11770,6 +11770,8 @@ esp32-gateway.menu.FlashFreq.80.build.flash_freq=80m
 esp32-gateway.menu.FlashFreq.40=40MHz
 esp32-gateway.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32-gateway.menu.UploadSpeed.921600=921600
+esp32-gateway.menu.UploadSpeed.921600.upload.speed=921600
 esp32-gateway.menu.UploadSpeed.115200=115200
 esp32-gateway.menu.UploadSpeed.115200.upload.speed=115200
 
