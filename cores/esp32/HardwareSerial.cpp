@@ -4,6 +4,7 @@
 #include <inttypes.h>
 
 #include "pins_arduino.h"
+#include "io_pin_remap.h"
 #include "HardwareSerial.h"
 #include "soc/soc_caps.h"
 #include "driver/uart.h"
@@ -370,6 +371,10 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         }
     }
 
+    // map logical pins to GPIO numbers
+    rxPin = digitalPinToGPIONumber(rxPin);
+    txPin = digitalPinToGPIONumber(txPin);
+
     if(_uart) {
         // in this case it is a begin() over a previous begin() - maybe to change baud rate
         // thus do not disable debug output
@@ -553,6 +558,12 @@ bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t r
         log_e("setPins() shall be called after begin() - nothing done\n");
         return false;
     }
+
+    // map logical pins to GPIO numbers
+    rxPin = digitalPinToGPIONumber(rxPin);
+    txPin = digitalPinToGPIONumber(txPin);
+    ctsPin = digitalPinToGPIONumber(ctsPin);
+    rtsPin = digitalPinToGPIONumber(rtsPin);
 
     // uartSetPins() checks if pins are valid for each function and for the SoC
     bool retCode = uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
