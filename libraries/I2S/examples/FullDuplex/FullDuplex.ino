@@ -2,16 +2,16 @@
  This example is only for ESP
  This example demonstrates simultaneous usage of microphone and speaker using single I2S module.
  The application transfers data from input to output.
- You will need I2S microphone I2S decoder + headphones / speakerI2S microphone
+ You will need I2S microphone I2S decoder + headphones or speaker to be plugged into the I2S decoder.
 
-  | Pin  | ESP32 | ESP32-S2, ESP32-C3, ESP32-S3 |
-  | -----|-------|------------------------------|
-  | GND  |  GND  |            GND               |
-  | VIN  |  5V   |             5V               |
-  | SCK  |  18   |             18               |
-  | FS   |  19   |             19               |
-  | DOUT |  21   |              4               |
-  | DIN  |  22   |              5               |
+  | Pin      | ESP32 | ESP32-S2, ESP32-C3, ESP32-S3 |
+  | -------- |-------|------------------------------|
+  | GND      |  GND  |            GND               |
+  | VIN      |  5V   |             5V               |
+  | SCK      |  18   |             18               |
+  | FS       |  19   |             19               |
+  | SD(DOUT) |  21   |              4               |
+  | DIN      |  34   |              5               |
 
  created 8 October 2021
  by Tomas Pilny
@@ -24,7 +24,7 @@ uint8_t *buffer;
 
 void setup() {
   Serial.begin(115200);
-  //I2S.setAllPins(19, 21, 23, 22); // you can change default pins; order of pins = (CLK, WS, IN, OUT)
+  //I2S.setAllPins(18, 19, 21, 21, 34); // you can change default pins; order of pins = (CLK, WS, SD, SDIN, SDOUT)
   if(!I2S.setDuplex()){
     Serial.println("ERROR - could not set duplex");
     while(true){
@@ -48,9 +48,9 @@ void setup() {
 }
 
 void loop() {
-  //I2S.write(I2S.read()); // primitive implementation sample-by-sample
+  //I2S.write(I2S.read()); // Primitive implementation sample-by-sample is discouraged
 
-  // Buffer based implementation
+  // Buffer based implementation which is strongly advised
   I2S.read(buffer, I2S.getDMABufferByteSize());
   I2S.write(buffer, I2S.getDMABufferByteSize());
 }

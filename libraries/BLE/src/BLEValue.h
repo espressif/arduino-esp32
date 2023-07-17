@@ -7,6 +7,7 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLEVALUE_H_
 #define COMPONENTS_CPP_UTILS_BLEVALUE_H_
+#include <Arduino.h>
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string>
@@ -17,22 +18,22 @@
 class BLEValue {
 public:
 	BLEValue();
-	void		addPart(std::string part);
+	void		addPart(String part);
 	void		addPart(uint8_t* pData, size_t length);
 	void		cancel();
 	void		commit();
 	uint8_t*	getData();
 	size_t	  getLength();
 	uint16_t	getReadOffset();
-	std::string getValue();
+	String getValue();
 	void        setReadOffset(uint16_t readOffset);
-	void        setValue(std::string value);
+	void        setValue(String value);
 	void        setValue(uint8_t* pData, size_t length);
 
 private:
-	std::string m_accumulation;
+	String m_accumulation;
 	uint16_t    m_readOffset;
-	std::string m_value;
+	String m_value;
 
 };
 #endif // CONFIG_BLUEDROID_ENABLED

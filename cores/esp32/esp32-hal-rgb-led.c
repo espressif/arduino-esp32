@@ -2,6 +2,7 @@
 
 
 void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val){
+  log_d("light it up to %d", red_val);
   rmt_data_t led_data[24];
   static rmt_obj_t* rmt_send = NULL;
   static bool initialized = false;

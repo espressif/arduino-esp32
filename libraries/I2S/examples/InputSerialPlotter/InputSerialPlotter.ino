@@ -31,7 +31,7 @@ void setup() {
   }
 
   // start I2S at 8 kHz with 32-bits per sample
-  if (!I2S.begin(I2S_PHILIPS_MODE, 8000, 32)) {
+  if (!I2S.begin(I2S_PHILIPS_MODE, 32000, 32)) {
     Serial.println("Failed to initialize I2S!");
     while (1); // do nothing
   }
@@ -39,9 +39,13 @@ void setup() {
 
 void loop() {
   int sample;
-  sample = I2S.read(); // read a sample
+  int available = I2S.available();
+  //Serial.printf("avail %d\n", available);
+  if(available){
+    sample = I2S.read(); // read a sample
 
-  if(sample){
-    Serial.println(sample);
+    //if(abs(sample) > 2){
+      Serial.println(sample);
+    //}
   }
 }

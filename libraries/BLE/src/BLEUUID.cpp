@@ -64,6 +64,7 @@ static void memrcpy(uint8_t* target, uint8_t* source, uint32_t size) {
  * @param [in] value The string to build a UUID from.
  */
 BLEUUID::BLEUUID(std::string value) {
+	Serial.printf("BLEUUID string constructor- input=\"%s\"\n", value.c_str());
 	m_valueSet = true;
 	if (value.length() == 4) {
 		m_uuid.len         = ESP_UUID_LEN_16;
@@ -117,7 +118,6 @@ BLEUUID::BLEUUID(std::string value) {
 		m_valueSet = false;
 	}
 } //BLEUUID(std::string)
-
 
 /**
  * @brief Create a UUID from 16 bytes of memory.

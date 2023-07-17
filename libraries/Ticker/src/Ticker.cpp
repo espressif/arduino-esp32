@@ -31,9 +31,9 @@ Ticker::~Ticker() {
   detach();
 }
 
-void Ticker::_attach_ms(uint32_t milliseconds, bool repeat, callback_with_arg_t callback, uint32_t arg) {
+void Ticker::_attach_ms(uint32_t milliseconds, bool repeat, callback_with_arg_t callback) {
   esp_timer_create_args_t _timerConfig;
-  _timerConfig.arg = reinterpret_cast<void*>(arg);
+  _timerConfig.arg = NULL;
   _timerConfig.callback = callback;
   _timerConfig.dispatch_method = ESP_TIMER_TASK;
   _timerConfig.name = "Ticker";

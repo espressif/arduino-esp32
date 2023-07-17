@@ -297,6 +297,7 @@ void BLEAdvertisementData::addData(std::string data) {
 	if ((m_payload.length() + data.length()) > ESP_BLE_ADV_DATA_LEN_MAX) {
 		return;
 	}
+	log_d("Appending 0x%X", data.c_str());
 	m_payload.append(data);
 } // addData
 

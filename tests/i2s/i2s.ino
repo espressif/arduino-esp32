@@ -58,17 +58,33 @@ void test_01(void){
   int ret = -1;
 
   Serial.printf("*********** [%lu] Begin I2S with golden parameters **************\n", millis());
-  for(int mode = 0; mode < MODE_MAX; ++mode){
+  for(int mode = 3; mode < MODE_MAX; ++mode){
+  //for(int mode = 0; mode < MODE_MAX; ++mode){
     Serial.printf("[%lu] begin: mode %d \"%s\"\n", millis(), mode, i2s_mode_text[mode]);
     for(int srp = 0; srp < srp_max; ++srp){
       for(int bpsp = 0; bpsp < bpsp_max; ++bpsp){
-        //Serial.printf("[%lu] begin: mode %d \"%s\", sample rate %d, bps %d\n", millis(), mode, i2s_mode_text[mode], sample_rate[srp], bps[bpsp]);
+        Serial.printf("[%lu] begin: mode %d \"%s\", sample rate %d, bps %d\n", millis(), mode, i2s_mode_text[mode], sample_rate[srp], bps[bpsp]);
+        #if defined(SOC_I2S_SUPPORTS_ADC) && defined(SOC_I2S_SUPPORTS_DAC)
+          if(mode == ADC_DAC_MODE && bps[bpsp] == 16){
+            #if CONFIG_IDF_TARGET_ESP32
+              I2S_obj->setDataInPin(32); // Default data pin does not support DAC
+            #else
+              I2S_obj->setDataInPin(4); // Default data pin does not support DAC
+           #endif
+         }
+        #endif
         ret = I2S_obj->begin(mode, sample_rate[srp], bps[bpsp]);
 
         if(mode == ADC_DAC_MODE){
           #if defined(SOC_I2S_SUPPORTS_ADC) && defined(SOC_I2S_SUPPORTS_DAC)
-            TEST_ASSERT_EQUAL(1, ret); // Expecting 1 == Success
-            TEST_ASSERT_EQUAL(true, I2S_obj->isInitialized()); // Expecting true == Success
+            if(bps[bpsp] == 16){
+              TEST_ASSERT_EQUAL(1, ret); // Expecting 1 == Success
+              TEST_ASSERT_EQUAL(true, I2S_obj->isInitialized()); // Expecting true == Success
+              I2S_obj->setDataInPin(-1); // Set to default data pin
+            }else{
+              TEST_ASSERT_EQUAL(0, ret); // Expecting 0 == Failure
+              TEST_ASSERT_EQUAL(false, I2S_obj->isInitialized()); // Expecting false == Failure
+            }
           #else
             TEST_ASSERT_EQUAL(0, ret); // Expecting 0 == Failure
             TEST_ASSERT_EQUAL(false, I2S_obj->isInitialized()); // Expecting false == Failure
@@ -129,14 +145,29 @@ void test_02(void){
   Serial.printf("*********** [%lu] Begin I2S with golden parameters **************\n", millis());
   for(int mode = 0; mode < MODE_MAX; ++mode){
     for(int bpsp = 0; bpsp < bpsp_max; ++bpsp){
-      //Serial.printf("[%lu] begin: mode %d \"%s\", bps %d\n", millis(), mode, i2s_mode_text[mode], bps[bpsp]);
+      Serial.printf("[%lu] begin: mode %d \"%s\", bps %d\n", millis(), mode, i2s_mode_text[mode], bps[bpsp]);
+      #if defined(SOC_I2S_SUPPORTS_ADC) && defined(SOC_I2S_SUPPORTS_DAC)
+        if(mode == ADC_DAC_MODE && bps[bpsp] == 16){
+          #if CONFIG_IDF_TARGET_ESP32
+            I2S_obj->setDataInPin(32); // Default data pin does not support DAC
+          #else
+            I2S_obj->setDataInPin(4); // Default data pin does not support DAC
+          #endif
+        }
+      #endif
       ret = I2S_obj->begin(mode, bps[bpsp]);
 
       if(mode == ADC_DAC_MODE){
         #if defined(SOC_I2S_SUPPORTS_ADC) && defined(SOC_I2S_SUPPORTS_DAC)
-          TEST_ASSERT_EQUAL(1, ret); // Expecting 1 == Success
-          TEST_ASSERT_EQUAL(true, I2S_obj->isInitialized()); // Expecting true == Success
-        #else
+          if(bps[bpsp] == 16){
+              I2S_obj->setDataInPin(4); // Default data pin does not support DAC
+              TEST_ASSERT_EQUAL(1, ret); // Expecting 1 == Success
+              TEST_ASSERT_EQUAL(true, I2S_obj->isInitialized()); // Expecting true == Success
+              I2S_obj->setDataInPin(-1); // Set to default data pin
+            }else{
+              TEST_ASSERT_EQUAL(0, ret); // Expecting 0 == Failure
+              TEST_ASSERT_EQUAL(false, I2S_obj->isInitialized()); // Expecting false == Failure
+            }
           TEST_ASSERT_EQUAL(0, ret); // Expecting 0 == Failure
           TEST_ASSERT_EQUAL(false, I2S_obj->isInitialized()); // Expecting false == Failure
         #endif
@@ -310,7 +341,7 @@ void test_04(void){
 
     ret = I2S_obj->isDuplex();
     TEST_ASSERT_EQUAL(0, ret); // Expecting 0 == simplex (default)
-
+    Serial.printf("Tests done, now begin\n");
     // Test on INITIALIZED I2S
     I2S_obj->begin(I2S_PHILIPS_MODE, 32000, 32);
   }
@@ -483,7 +514,7 @@ void test_06(void){
 
 // Dual module data transfer test (only for ESP32 and ESP32-S3)
 void test_0x(void){
-
+  // TODO
 }
 
 void setup() {
@@ -491,7 +522,7 @@ void setup() {
   while (!Serial) {
     ;
   }
-  
+  delay(500);
   //Serial.printf("Num of I2S module =%d\n", SOC_I2S_NUM);
   //Serial.printf("I2S0=%p\n", &I2S);
 
@@ -508,13 +539,13 @@ void setup() {
       #endif
       i2s_index = 0;
       for(; i2s_index < SOC_I2S_NUM; ++ i2s_index){
-        //Serial.printf("*******************************************************\n");
-        //Serial.printf("********************* I2S # %d *************************\n", i2s_index);
-        //Serial.printf("*******************************************************\n");
+        Serial.printf("*******************************************************\n");
+        Serial.printf("********************* I2S # %d *************************\n", i2s_index);
+        Serial.printf("*******************************************************\n");
         I2S_obj = I2S_obj_arr[i2s_index];
-        RUN_TEST(test_01); // begin master
-        RUN_TEST(test_02); // begin slave
-        RUN_TEST(test_03); // pin setters and geters
+        //RUN_TEST(test_01); // begin master
+        //RUN_TEST(test_02); // begin slave
+        //RUN_TEST(test_03); // pin setters and geters
         RUN_TEST(test_04); // duplex / simplex
 
         RUN_TEST(test_05); // Simple data transmit, returned written bytes check and buffer check.

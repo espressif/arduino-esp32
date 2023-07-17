@@ -140,11 +140,11 @@ typedef intr_handle_t i2s_isr_handle_t;         // for backward compatible
  */
 typedef enum {
     I2S_EVENT_DMA_ERROR,
-    I2S_EVENT_TX_DONE,     /*!< I2S DMA finish sent 1 buffer*/
-    I2S_EVENT_RX_DONE,     /*!< I2S DMA finish received 1 buffer*/
-    I2S_EVENT_TX_Q_OVF,    /*!< I2S DMA sent queue overflow*/
-    I2S_EVENT_RX_Q_OVF,    /*!< I2S DMA receive queue overflow*/
-    I2S_EVENT_MAX,         /*!< I2S event max index*/
+    I2S_EVENT_TX_DONE,     /*!< 1 I2S DMA finish sent 1 buffer*/
+    I2S_EVENT_RX_DONE,     /*!< 2 I2S DMA finish received 1 buffer*/
+    I2S_EVENT_TX_Q_OVF,    /*!< 3 I2S DMA sent queue overflow*/
+    I2S_EVENT_RX_Q_OVF,    /*!< 4 I2S DMA receive queue overflow*/
+    I2S_EVENT_MAX,         /*!< 5 I2S event max index*/
 } i2s_event_type_t;
 
 /**

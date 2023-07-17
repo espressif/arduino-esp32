@@ -20,8 +20,26 @@ BLEEddystoneURL::BLEEddystoneURL() {
 	memset(m_eddystoneData.url, 0, sizeof(m_eddystoneData.url));
 } // BLEEddystoneURL
 
-std::string BLEEddystoneURL::getData() {
-	return std::string((char*) &m_eddystoneData, sizeof(m_eddystoneData));
+
+BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice){
+	uint8_t *payLoad = advertisedDevice->getPayload();
+	beaconUUID = 0xFEAA;
+	m_eddystoneData.frameType = EDDYSTONE_URL_FRAME_TYPE;
+	if(payload[11] != 0x10){ // Not Eddystone URL!
+		log_e("Failed to interpret Advertised Device as Eddystone URL!");
+		lengthURL = 0;
+		m_eddystoneData.advertisedTxPower = 0;
+		memset(m_eddystoneData.url, 0, sizeof(m_eddystoneData.url));
+	}
+		lengthURL = payload[7] - 6; // Subtracting 6 Bytes containing header and other data which are not actual URL data
+		//setData(String((char*)payLoad+11, lengthURL));
+		m_eddystoneData.advertisedTxPower = payload[12];
+		log_d("using data from [14]=0x%02X=%c up to [%d]=0x%02X=%c", payload[14], payload[14], lengthURL, payload[14+lengthURL], payload[14+lengthURL]);
+		memcpy(m_eddystoneData.url, payload[14], lengthURL);
+}
+
+String BLEEddystoneURL::getData() {
+	return String((char*) &m_eddystoneData, sizeof(m_eddystoneData));
 } // getData
 
 BLEUUID BLEEddystoneURL::getUUID() {
@@ -32,13 +50,14 @@ int8_t BLEEddystoneURL::getPower() {
 	return m_eddystoneData.advertisedTxPower;
 } // getPower
 
-std::string BLEEddystoneURL::getURL() {
-	return std::string((char*) &m_eddystoneData.url, sizeof(m_eddystoneData.url));
+String BLEEddystoneURL::getURL() {
+	return String((char*) &m_eddystoneData.url, sizeof(m_eddystoneData.url));
 } // getURL
 
-std::string BLEEddystoneURL::getDecodedURL() {
-	std::string decodedURL = "";
-
+String BLEEddystoneURL::getDecodedURL() {
+	String decodedURL = "";
+  log_d("prefix = m_eddystoneData.url[0] 0x%02X",m_eddystoneData.url[0]);
+  log_e("prefix type m_eddystoneData.url[0]=%d", m_eddystoneData.url[0]); // this is actually debug
 	switch (m_eddystoneData.url[0]) {
 		case 0x00:
 			decodedURL += "http://www.";
@@ -60,6 +79,7 @@ std::string BLEEddystoneURL::getDecodedURL() {
 		if (m_eddystoneData.url[i] > 33 && m_eddystoneData.url[i] < 127) {
 			decodedURL += m_eddystoneData.url[i];
 		} else {
+  		log_d("suffix = m_eddystoneData.url[%d] 0x%02X", i, m_eddystoneData.url[i]);
 			switch (m_eddystoneData.url[i]) {
 				case 0x00:
 					decodedURL += ".com/";
@@ -116,7 +136,7 @@ std::string BLEEddystoneURL::getDecodedURL() {
 /**
  * Set the raw data for the beacon record.
  */
-void BLEEddystoneURL::setData(std::string data) {
+void BLEEddystoneURL::setData(String data) {
 	if (data.length() > sizeof(m_eddystoneData)) {
 		log_e("Unable to set the data ... length passed in was %d and max expected %d", data.length(), sizeof(m_eddystoneData));
 		return;
@@ -134,7 +154,7 @@ void BLEEddystoneURL::setPower(int8_t advertisedTxPower) {
 	m_eddystoneData.advertisedTxPower = advertisedTxPower;
 } // setPower
 
-void BLEEddystoneURL::setURL(std::string url) {
+void BLEEddystoneURL::setURL(String url) {
   if (url.length() > sizeof(m_eddystoneData.url)) {
 	log_e("Unable to set the url ... length passed in was %d and max expected %d", url.length(), sizeof(m_eddystoneData.url));
 	return;

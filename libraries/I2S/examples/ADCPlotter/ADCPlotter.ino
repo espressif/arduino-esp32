@@ -72,8 +72,7 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  // start I2S at 8 kHz with 32-bits per sample
-  if (!I2S.begin(ADC_DAC_MODE, 8000, 16)) {
+  if (!I2S.begin(ADC_DAC_MODE, 44100, 16)) {
     Serial.println("Failed to initialize I2S!");
     while (1); // do nothing
   }

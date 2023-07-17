@@ -97,6 +97,7 @@ int I2SClass::_installDriver(){
     log_e("(I2S#%d) I2S driver is already installed", _deviceIndex);
     return 0; // ERR
   }
+  log_d("(I2S#%d) I2S driver install...", _deviceIndex);
 
   if(_deviceIndex >= SOC_I2S_NUM){
     log_e("Max allowed I2S device number is %d but requested %d", SOC_I2S_NUM-1, _deviceIndex);
@@ -792,6 +793,7 @@ size_t I2SClass::write(const void *buffer, size_t size){
 // This version of write will wait indefinitely to write requested samples
 // into output buffer
 size_t I2SClass::write_blocking(const void *buffer, size_t size){
+  //log_d("(I2S#%d) ...", _deviceIndex);
   if(!_take_mux()){ return 0; /* ERR */ }
   if(_initialized){
     if(!_enableTransmitter()){
@@ -1252,6 +1254,7 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
 
   size_t _bytes_written;
   esp_err_t ret = esp_i2s::i2s_write((esp_i2s::i2s_port_t) _deviceIndex, buff, buff_size, &_bytes_written, 0);
+  log_d("written %d/%d", _bytes_written,buff_size);
   if(ret != ESP_OK){
     log_e("(I2S#%d) Error: writing data to i2s - function returned with err code %d", _deviceIndex, ret);
   }
@@ -1269,6 +1272,13 @@ void I2SClass::_fix_and_write(void *output, size_t size, size_t *bytes_written, 
     *actual_bytes_written = _bytes_written;
   }
 }
+
+// TODO change to usage of
+/*
+int8_t digitalPinToTouchChannel(uint8_t pin);
+int8_t digitalPinToAnalogChannel(uint8_t pin);
+int8_t analogChannelToDigitalPin(uint8_t channel);
+*/
 
 #if (SOC_I2S_SUPPORTS_ADC && SOC_I2S_SUPPORTS_DAC)
 int I2SClass::_gpioToAdcUnit(gpio_num_t gpio_num, esp_i2s::adc_unit_t* adc_unit){

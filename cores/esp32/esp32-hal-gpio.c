@@ -135,7 +135,9 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
     #ifdef RGB_BUILTIN
+    log_d("RGB_BUILTIN is defined");
         if(pin == RGB_BUILTIN){
+            log_d("and its the target");
             //use RMT to set all channels on/off
             const uint8_t comm_val = val != 0 ? RGB_BRIGHTNESS : 0;
             neopixelWrite(RGB_BUILTIN, comm_val, comm_val, comm_val);

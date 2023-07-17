@@ -51,6 +51,7 @@ int8_t BLEBeacon::getSignalPower() {
  * Set the raw data for the beacon record.
  */
 void BLEBeacon::setData(std::string data) {
+	log_d("getting data of length %d", data.length());
 	if (data.length() != sizeof(m_beaconData)) {
 		log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_beaconData));
 		return;
