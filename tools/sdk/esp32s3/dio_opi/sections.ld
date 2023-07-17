@@ -1,6 +1,6 @@
 /* Automatically generated file; DO NOT EDIT */
 /* Espressif IoT Development Framework Linker Script */
-/* Generated from: /Users/ficeto/Desktop/ESP32/ESP32S2/esp-idf-public/components/esp_system/ld/esp32s3/sections.ld.in */
+/* Generated from: /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/esp_system/ld/esp32s3/sections.ld.in */
 
 /*
  * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
@@ -80,7 +80,7 @@ SECTIONS
     *(.rtc.data .rtc.data.*)
     *(.rtc.rodata .rtc.rodata.*)
 
-    *rtc_wake_stub*.*(.data .rodata .data.* .rodata.* .bss .bss.*)
+    *rtc_wake_stub*.*(.data .rodata .data.* .rodata.*)
     _rtc_data_end = ABSOLUTE(.);
   } > rtc_data_location
 
@@ -398,8 +398,8 @@ SECTIONS
     *(.ext_ram.bss*)
 
     *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) .bss EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) .bss.*)
-    *(.dynbss .dynsbss .gnu.linkonce.b .gnu.linkonce.b.* .gnu.linkonce.sb .gnu.linkonce.sb.* .gnu.linkonce.sb2 .gnu.linkonce.sb2.* .sbss .sbss.* .sbss2 .sbss2.* .scommon .share.mem)
     *(.ext_ram.bss .ext_ram.bss.*)
+    *(.dynbss .dynsbss .gnu.linkonce.b .gnu.linkonce.b.* .gnu.linkonce.sb .gnu.linkonce.sb.* .gnu.linkonce.sb2 .gnu.linkonce.sb2.* .sbss .sbss.* .sbss2 .sbss2.* .scommon .share.mem)
     *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) COMMON)
     . = ALIGN(4);
     _bt_bss_start = ABSOLUTE(.);

@@ -39,15 +39,30 @@ public:
     virtual dspm::Mat StateXdot(dspm::Mat &x, float *u);
     virtual void LinearizeFG(dspm::Mat &x, float *u);
 
-    // Methods for tests only.
+    /**
+    *     Method for development and tests only.
+    */
     void Test();
+    /**
+    *     Method for development and tests only.
+    * 
+    * @param[in] enable_att - enable attitude as input reference value
+    */
     void TestFull(bool enable_att);
 
-    // Initial reference valies magnetometer and accelerometer
+    /**
+    *     Initial reference valie for magnetometer.
+    */
     dspm::Mat mag0;
+    /**
+    *     Initial reference valie for accelerometer.
+    */
     dspm::Mat accel0;
 
-    int NUMU; // number of control measurements
+    /**
+    * number of control measurements
+    */
+    int NUMU; 
 
     /**
      * Update part of system state by reference measurements accelerometer and magnetometer.

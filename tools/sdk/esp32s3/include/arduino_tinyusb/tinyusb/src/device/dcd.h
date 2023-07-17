@@ -108,15 +108,15 @@ typedef struct TU_ATTR_ALIGNED(4)
 
 // clean/flush data cache: write cache -> memory.
 // Required before an DMA TX transfer to make sure data is in memory
-void dcd_dcache_clean(void* addr, uint32_t data_size) TU_ATTR_WEAK;
+void dcd_dcache_clean(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
 
 // invalidate data cache: mark cache as invalid, next read will read from memory
 // Required BOTH before and after an DMA RX transfer
-void dcd_dcache_invalidate(void* addr, uint32_t data_size) TU_ATTR_WEAK;
+void dcd_dcache_invalidate(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
 
 // clean and invalidate data cache
 // Required before an DMA transfer where memory is both read/write by DMA
-void dcd_dcache_clean_invalidate(void* addr, uint32_t data_size) TU_ATTR_WEAK;
+void dcd_dcache_clean_invalidate(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
 
 //--------------------------------------------------------------------+
 // Controller API
@@ -189,6 +189,7 @@ TU_ATTR_WEAK bool dcd_edpt_iso_alloc(uint8_t rhport, uint8_t ep_addr, uint16_t l
 
 // Configure and enable an ISO endpoint according to descriptor
 TU_ATTR_WEAK bool dcd_edpt_iso_activate(uint8_t rhport,  tusb_desc_endpoint_t const * p_endpoint_desc);
+
 //--------------------------------------------------------------------+
 // Event API (implemented by stack)
 //--------------------------------------------------------------------+

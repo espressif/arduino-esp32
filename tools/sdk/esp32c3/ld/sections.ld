@@ -1,6 +1,6 @@
 /* Automatically generated file; DO NOT EDIT */
 /* Espressif IoT Development Framework Linker Script */
-/* Generated from: /Users/ficeto/Desktop/ESP32/ESP32S2/esp-idf-public/components/esp_system/ld/esp32c3/sections.ld.in */
+/* Generated from: /home/runner/work/esp32-arduino-lib-builder/esp32-arduino-lib-builder/esp-idf/components/esp_system/ld/esp32c3/sections.ld.in */
 
 /*
  * SPDX-FileCopyrightText: 2021 Espressif Systems (Shanghai) CO LTD
@@ -69,7 +69,7 @@ SECTIONS
     *(.rtc.data .rtc.data.*)
     *(.rtc.rodata .rtc.rodata.*)
 
-    *rtc_wake_stub*.*(.data .rodata .data.* .rodata.* .bss .bss.*)
+    *rtc_wake_stub*.*(.data .rodata .data.* .rodata.* .srodata.*)
     _rtc_data_end = ABSOLUTE(.);
   } > rtc_data_location
 
@@ -77,7 +77,7 @@ SECTIONS
   .rtc.bss (NOLOAD) :
   {
     _rtc_bss_start = ABSOLUTE(.);
-    *rtc_wake_stub*.*(.bss .bss.*)
+    *rtc_wake_stub*.*(.bss .bss.* .sbss .sbss.*)
     *rtc_wake_stub*.*(COMMON)
 
     *(.rtc.bss)
