@@ -223,7 +223,7 @@ bool rmtSetRxMinThreshold(int pin, uint8_t filter_pulse_ticks)
     return false;
   }
 
-  uint32_t filter_pulse_ns = (1000000000 / bus->frequency_Hz) * filter_pulse_ticks
+  uint32_t filter_pulse_ns = (1000000000 / bus->frequency_Hz) * filter_pulse_ticks;
   // RMT_LL_MAX_FILTER_VALUE is 255 for ESP32, S2, S3, C3, C6 and H2;
   // filter_pulse_ticks is 8 bits, thus it will not exceed 255
 #if 0 // for the future, in case some other SoC has different limit
