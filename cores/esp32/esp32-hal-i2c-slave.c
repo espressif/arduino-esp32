@@ -76,16 +76,16 @@ typedef struct i2c_slave_struct_t {
     void * arg;
     intr_handle_t intr_handle;
     TaskHandle_t task_handle;
-    xQueueHandle event_queue;
+    QueueHandle_t event_queue;
 #if I2C_SLAVE_USE_RX_QUEUE
-    xQueueHandle rx_queue;
+    QueueHandle_t rx_queue;
 #else
     RingbufHandle_t rx_ring_buf;
 #endif
-    xQueueHandle tx_queue;
+    QueueHandle_t tx_queue;
     uint32_t rx_data_count;
 #if !CONFIG_DISABLE_HAL_LOCKS
-    xSemaphoreHandle lock;
+    SemaphoreHandle_t lock;
 #endif
 } i2c_slave_struct_t;
 
@@ -431,7 +431,7 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
                 to_queue = len;
             }
             for (size_t i = 0; i < to_queue; i++) {
-                if (xQueueSend(i2c->tx_queue, &buf[i], timeout_ms / portTICK_RATE_MS) != pdTRUE) {
+                if (xQueueSend(i2c->tx_queue, &buf[i], timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
                     xQueueReset(i2c->tx_queue);
                     to_queue = 0;
                     break;

@@ -1,11 +1,11 @@
 #if ARDUINO_USB_MODE
-#warning This sketch should be used when USB is in OTG mode
-void setup(){}
-void loop(){}
+  #warning This sketch should be used when USB is in OTG mode
+  void setup(){}
+  void loop(){}
 #else
-#include "USB.h"
-#include "USBHID.h"
-USBHID HID;
+  #include "USB.h"
+  #include "USBHID.h"
+  USBHID HID;
 
 static const uint8_t report_descriptor[] = { // 8 axis
     0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
@@ -55,7 +55,6 @@ public:
 };
 
 CustomHIDDevice Device;
-#endif /* ARDUINO_USB_MODE */
 
 const int buttonPin = 0;
 int previousButtonState = HIGH;
@@ -83,3 +82,4 @@ void loop() {
     delay(100);
   }
 }
+#endif /* ARDUINO_USB_MODE */

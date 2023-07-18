@@ -145,7 +145,7 @@ typedef struct {
         struct netif * netif;
 } lwip_event_packet_t;
 
-static xQueueHandle _udp_queue;
+static QueueHandle_t _udp_queue;
 static volatile TaskHandle_t _udp_task_handle = NULL;
 
 static void _udp_task(void *pvParameters){

@@ -104,7 +104,7 @@ class AsyncUDP : public Print
 {
 protected:
     udp_pcb *_pcb;
-    //xSemaphoreHandle _lock;
+    //SemaphoreHandle_t _lock;
     bool _connected;
 	esp_err_t _lastErr;
     AuPacketHandlerFunction _handler;

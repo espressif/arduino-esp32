@@ -23,7 +23,7 @@ esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, 
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
 
 static USBVendor * _Vendor = NULL;
-static xQueueHandle rx_queue = NULL;
+static QueueHandle_t rx_queue = NULL;
 static uint8_t USB_VENDOR_ENDPOINT_SIZE = 64;
 
 uint16_t tusb_vendor_load_descriptor(uint8_t * dst, uint8_t * itf)

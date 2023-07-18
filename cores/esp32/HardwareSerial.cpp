@@ -298,7 +298,7 @@ void HardwareSerial::_uartEventTask(void *args)
     if (uartEventQueue != NULL) {
         for(;;) {
             //Waiting for UART event.
-            if(xQueueReceive(uartEventQueue, (void * )&event, (portTickType)portMAX_DELAY)) {
+            if(xQueueReceive(uartEventQueue, (void * )&event, (TickType_t)portMAX_DELAY)) {
                 hardwareSerial_error_t currentErr = UART_NO_ERROR;
                 switch(event.type) {
                     case UART_DATA:

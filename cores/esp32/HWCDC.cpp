@@ -32,11 +32,11 @@
 ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 
 static RingbufHandle_t tx_ring_buf = NULL;
-static xQueueHandle rx_queue = NULL;
+static QueueHandle_t rx_queue = NULL;
 static uint8_t rx_data_buf[64] = {0};
 static intr_handle_t intr_handle = NULL;
 static volatile bool initial_empty = false;
-static xSemaphoreHandle tx_lock = NULL;
+static SemaphoreHandle_t tx_lock = NULL;
 
 // workaround for when USB CDC is not connected
 static uint32_t tx_timeout_ms = 0;

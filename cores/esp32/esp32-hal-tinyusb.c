@@ -406,7 +406,7 @@ static void hw_cdc_reset_handler(void *arg) {
     usb_serial_jtag_ll_clr_intsts_mask(usbjtag_intr_status);
     
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
-        xSemaphoreGiveFromISR((xSemaphoreHandle)arg, &xTaskWoken);
+        xSemaphoreGiveFromISR((SemaphoreHandle_t)arg, &xTaskWoken);
     }
 
     if (xTaskWoken == pdTRUE) {
@@ -441,7 +441,7 @@ static void usb_switch_to_cdc_jtag(){
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
     intr_handle_t intr_handle = NULL;
-    xSemaphoreHandle reset_sem = xSemaphoreCreateBinary();
+    SemaphoreHandle_t reset_sem = xSemaphoreCreateBinary();
     if(reset_sem){
         if(esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_reset_handler, reset_sem, &intr_handle) != ESP_OK){
             vSemaphoreDelete(reset_sem);

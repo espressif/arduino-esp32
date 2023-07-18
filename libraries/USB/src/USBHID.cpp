@@ -36,8 +36,8 @@ static tinyusb_hid_device_t tinyusb_hid_devices[USB_HID_DEVICES_MAX];
 
 static uint8_t tinyusb_hid_devices_num = 0;
 static bool tinyusb_hid_devices_is_initialized = false;
-static xSemaphoreHandle tinyusb_hid_device_input_sem = NULL;
-static xSemaphoreHandle tinyusb_hid_device_input_mutex = NULL;
+static SemaphoreHandle_t tinyusb_hid_device_input_sem = NULL;
+static SemaphoreHandle_t tinyusb_hid_device_input_mutex = NULL;
 
 static bool tinyusb_hid_is_initialized = false;
 static uint8_t tinyusb_loaded_hid_devices_num = 0;
