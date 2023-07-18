@@ -209,7 +209,7 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
   return retCode;
 }
 
-bool rmtSetFilter(int pin, uint32_t filter_pulse_ns)
+bool rmtSetRxMinThreshold(int pin, uint8_t filter_pulse_ticks)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -220,11 +220,15 @@ bool rmtSetFilter(int pin, uint32_t filter_pulse_ns)
     return false;
   }
 
-  uint32_t filter_reg_value = (1000000000 / bus->frequency_Hz) * RMT_LL_MAX_FILTER_VALUE;
-  if (filter_pulse_ns >= filter_reg_value) {
-    log_e("filter_pulse_ns is too big. Max = %d", filter_reg_value);
+  uint32_t filter_pulse_ns = (1000000000 / bus->frequency_Hz) * filter_pulse_ticks
+  // RMT_LL_MAX_FILTER_VALUE is 255 for ESP32, S2, S3, C3, C6 and H2;
+  // filter_pulse_ticks is 8 bits, thus it will not exceed 255
+#if 0 // for the future, in case some other SoC has different limit
+  if (filter_pulse_ticks > RMT_LL_MAX_FILTER_VALUE) {
+    log_e("filter_pulse_ticks is too big. Max = %d", RMT_LL_MAX_FILTER_VALUE);
     return false;
   }
+#endif
 
   RMT_MUTEX_LOCK(bus);
   bus->signal_range_min_ns = filter_pulse_ns; // set zero to disable it
@@ -232,7 +236,7 @@ bool rmtSetFilter(int pin, uint32_t filter_pulse_ns)
   return true;
 }
 
-bool rmtSetRxThreshold(int pin, uint32_t idle_thres_ns)
+bool rmtSetRxMaxThreshold(int pin, uint16_t idle_thres_ticks)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -243,11 +247,14 @@ bool rmtSetRxThreshold(int pin, uint32_t idle_thres_ns)
     return false;
   }
 
-  uint32_t idle_reg_value = (1000000000 / bus->frequency_Hz) * RMT_LL_MAX_IDLE_VALUE;
-  if (idle_thres_ns >= idle_reg_value) {
-    log_e("idle_thres_ns is too big. Max = %ld", idle_reg_value);
+  uint32_t idle_thres_ns = (1000000000 / bus->frequency_Hz) * idle_thres_ticks;
+  // RMT_LL_MAX_IDLE_VALUE is 65535 for ESP32,S2 and 32767 for S3, C3, C6 and H2
+#if RMT_LL_MAX_IDLE_VALUE < 65535 // idle_thres_ticks is 16 bits anyway - save some bytes
+  if (idle_thres_ticks > RMT_LL_MAX_IDLE_VALUE) {
+    log_e("idle_thres_ticks is too big. Max = %ld", RMT_LL_MAX_IDLE_VALUE);
     return false;
   }
+#endif
 
   RMT_MUTEX_LOCK(bus);
   bus->signal_range_max_ns = idle_thres_ns;
@@ -494,7 +501,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     // TX Channel
     rmt_tx_channel_config_t tx_cfg;
     tx_cfg.gpio_num = pin;
-    tx_cfg.clk_src = RMT_CLK_SRC_APB;
+    tx_cfg.clk_src = RMT_CLK_SRC_DEFAULT;
     tx_cfg.resolution_hz = frequency_Hz;
     tx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
     tx_cfg.trans_queue_depth = 10;   // maximum allowed
@@ -519,7 +526,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     // RX Channel
     rmt_rx_channel_config_t rx_cfg;
     rx_cfg.gpio_num = pin;
-    rx_cfg.clk_src = RMT_CLK_SRC_APB;
+    rx_cfg.clk_src = RMT_CLK_SRC_DEFAULT;
     rx_cfg.resolution_hz = frequency_Hz;
     rx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
     rx_cfg.flags.invert_in = 0;
