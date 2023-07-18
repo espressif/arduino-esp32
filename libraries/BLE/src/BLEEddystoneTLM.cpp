@@ -9,6 +9,9 @@
  *  Fixes based on EddystoneTLM frame specification https://github.com/google/eddystone/blob/master/eddystone-tlm/tlm-plain.md
  * 
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string.h>
@@ -161,3 +164,4 @@ void BLEEddystoneTLM::setTime(uint32_t tmil) {
 } // setTime
 
 #endif
+#endif /* SOC_BLE_SUPPORTED */

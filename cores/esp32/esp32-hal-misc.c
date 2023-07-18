@@ -29,27 +29,37 @@
 #endif //CONFIG_BT_ENABLED
 #include <sys/time.h>
 #include "soc/rtc.h"
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "soc/rtc_cntl_reg.h"
 #include "soc/apb_ctrl_reg.h"
+#endif
 #include "esp_task_wdt.h"
 #include "esp32-hal.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/rtc.h"
-#include "driver/temperature_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/rtc.h"
-#include "driver/temperature_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
-#include "driver/temperature_sensor.h"
+#elif CONFIG_IDF_TARGET_ESP32C6
+#include "esp32c6/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32H2
+#include "esp32h2/rom/rtc.h"
+
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
+
+#if SOC_TEMP_SENSOR_SUPPORTED
+#include "driver/temperature_sensor.h"
+#endif
+
 #else // ESP32 Before IDF 4.0
 #include "rom/rtc.h"
 #endif
@@ -63,7 +73,7 @@ float temperatureRead()
 {
     return (temprature_sens_read() - 32) / 1.8;
 }
-#else
+#elif SOC_TEMP_SENSOR_SUPPORTED
 static temperature_sensor_handle_t temp_sensor = NULL;
 
 static bool temperatureReadInit()

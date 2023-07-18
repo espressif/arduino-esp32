@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "soc/soc_caps.h"
+
+#if SOC_I2C_SUPPORT_SLAVE
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -73,16 +76,16 @@ typedef struct i2c_slave_struct_t {
     void * arg;
     intr_handle_t intr_handle;
     TaskHandle_t task_handle;
-    xQueueHandle event_queue;
+    QueueHandle_t event_queue;
 #if I2C_SLAVE_USE_RX_QUEUE
-    xQueueHandle rx_queue;
+    QueueHandle_t rx_queue;
 #else
     RingbufHandle_t rx_ring_buf;
 #endif
-    xQueueHandle tx_queue;
+    QueueHandle_t tx_queue;
     uint32_t rx_data_count;
 #if !CONFIG_DISABLE_HAL_LOCKS
-    xSemaphoreHandle lock;
+    SemaphoreHandle_t lock;
 #endif
 } i2c_slave_struct_t;
 
@@ -165,7 +168,7 @@ static inline void i2c_ll_stretch_clr(i2c_dev_t *hw)
 
 static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw)
 {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
     return hw->sr.slave_addressed;
 #else
     return hw->status_reg.slave_addressed;
@@ -174,7 +177,7 @@ static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw)
 
 static inline bool i2c_ll_slave_rw(i2c_dev_t *hw)//not exposed by hal_ll
 {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
     return hw->sr.slave_rw;
 #else
     return hw->status_reg.slave_rw;
@@ -428,7 +431,7 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
                 to_queue = len;
             }
             for (size_t i = 0; i < to_queue; i++) {
-                if (xQueueSend(i2c->tx_queue, &buf[i], timeout_ms / portTICK_RATE_MS) != pdTRUE) {
+                if (xQueueSend(i2c->tx_queue, &buf[i], timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
                     xQueueReset(i2c->tx_queue);
                     to_queue = 0;
                     break;
@@ -874,3 +877,5 @@ static bool i2cSlaveDetachBus(void * bus_i2c_num){
     }
     return true;
 }
+
+#endif /* SOC_I2C_SUPPORT_SLAVE */

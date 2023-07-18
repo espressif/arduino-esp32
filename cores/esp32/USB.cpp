@@ -11,8 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include "USB.h"
 
+#if SOC_USB_OTG_SUPPORTED
 #if CONFIG_TINYUSB_ENABLED
 
 #include "pins_arduino.h"
@@ -357,3 +359,4 @@ const char * ESPUSB::webUSBURL(void){
 ESPUSB USB;
 
 #endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

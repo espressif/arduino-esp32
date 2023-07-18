@@ -7,7 +7,7 @@
 
    author: chegewara
 */
-#ifndef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#ifndef SOC_BLE_50_SUPPORTED
 #warning "Not compatible hardware"
 #else
 #include <BLEDevice.h>
@@ -46,4 +46,4 @@ void loop() {
   // put your main code here, to run repeatedly:
   delay(2000);
 }
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#endif // SOC_BLE_50_SUPPORTED

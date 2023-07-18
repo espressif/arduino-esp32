@@ -19,6 +19,14 @@
     {
       "name": "esp32s3",
       "fqbn": ["espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app"]
+    },
+    {
+      "name": "esp32c6",
+      "fqbn": ["espressif:esp32:esp32c6:PartitionScheme=huge_app"]
+    },
+    {
+      "name": "esp32h2",
+      "fqbn": ["espressif:esp32:esp32h2:PartitionScheme=huge_app"]
     }
   ]
 }

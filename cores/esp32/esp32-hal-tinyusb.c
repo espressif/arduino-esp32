@@ -1,4 +1,6 @@
+#include "soc/soc_caps.h"
 
+#if SOC_USB_OTG_SUPPORTED
 #include "sdkconfig.h"
 #if CONFIG_TINYUSB_ENABLED
 #include <stdlib.h>
@@ -32,6 +34,7 @@
 #include "esp_rom_gpio.h"
 
 #include "esp32-hal.h"
+#include "esp32-hal-periman.h"
 
 #include "esp32-hal-tinyusb.h"
 #if CONFIG_IDF_TARGET_ESP32S2
@@ -56,6 +59,11 @@ typedef struct {
     bool external_phy;
 } tinyusb_config_t;
 
+static bool usb_otg_deinit(void * busptr) {
+    // Once USB OTG is initialized, its GPIOs are assigned and it shall never be deinited
+    return false;
+}
+
 static void configure_pins(usb_hal_context_t *usb)
 {
     for (const usb_iopin_dsc_t *iopin = usb_periph_iopins; iopin->pin != -1; ++iopin) {
@@ -75,6 +83,13 @@ static void configure_pins(usb_hal_context_t *usb)
     if (!usb->use_external_phy) {
         gpio_set_drive_capability(USBPHY_DM_NUM, GPIO_DRIVE_CAP_3);
         gpio_set_drive_capability(USBPHY_DP_NUM, GPIO_DRIVE_CAP_3);
+        if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB, usb_otg_deinit)) {
+            // Bus Pointer is not used anyway - once the USB GPIOs are assigned, they can't be detached
+            perimanSetPinBus(USBPHY_DM_NUM, ESP32_BUS_TYPE_USB, (void *) usb);
+            perimanSetPinBus(USBPHY_DP_NUM, ESP32_BUS_TYPE_USB, (void *) usb);
+        } else {
+            log_e("USB OTG Pins can't be set into Peripheral Manager.");
+        }
     }
 }
 
@@ -391,7 +406,7 @@ static void hw_cdc_reset_handler(void *arg) {
     usb_serial_jtag_ll_clr_intsts_mask(usbjtag_intr_status);
     
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
-        xSemaphoreGiveFromISR((xSemaphoreHandle)arg, &xTaskWoken);
+        xSemaphoreGiveFromISR((SemaphoreHandle_t)arg, &xTaskWoken);
     }
 
     if (xTaskWoken == pdTRUE) {
@@ -426,7 +441,7 @@ static void usb_switch_to_cdc_jtag(){
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
     intr_handle_t intr_handle = NULL;
-    xSemaphoreHandle reset_sem = xSemaphoreCreateBinary();
+    SemaphoreHandle_t reset_sem = xSemaphoreCreateBinary();
     if(reset_sem){
         if(esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_reset_handler, reset_sem, &intr_handle) != ESP_OK){
             vSemaphoreDelete(reset_sem);
@@ -781,3 +796,4 @@ uint8_t tinyusb_get_free_out_endpoint(void){
 }
 
 #endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

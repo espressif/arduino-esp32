@@ -13,8 +13,9 @@
 // limitations under the License.
 
 #include "esp32-hal-timer.h"
+
+#if SOC_GPTIMER_SUPPORTED
 #include "driver/gptimer.h"
-#include "soc/soc_caps.h"
 #if defined __has_include && __has_include ("clk_tree.h")
 #include "clk_tree.h"
 #else
@@ -212,3 +213,5 @@ double timerReadSeconds(hw_timer_t * timer){
     uint32_t frequency = timerGetFrequency(timer);
     return (double)timer_val / frequency;
 }
+
+#endif /* SOC_GPTIMER_SUPPORTED */

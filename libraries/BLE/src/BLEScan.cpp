@@ -7,9 +7,11 @@
  * 	Update: April, 2021
  * 		add BLE5 support
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
-
 
 #include <esp_err.h>
 
@@ -146,7 +148,7 @@ void BLEScan::handleGAPEvent(
 
 			break;
 		} // ESP_GAP_BLE_SCAN_RESULT_EVT
-#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#ifdef SOC_BLE_50_SUPPORTED
 		case ESP_GAP_BLE_EXT_ADV_REPORT_EVT: {
 			if (param->ext_adv_report.params.event_type & ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY) {
 				log_v("legacy adv, adv type 0x%x data len %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len);
@@ -237,7 +239,7 @@ void BLEScan::handleGAPEvent(
 			}
 			break;
 
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#endif // SOC_BLE_50_SUPPORTED
 
 		default: {
 			break;
@@ -273,7 +275,7 @@ void BLEScan::setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks* pAdvert
 	m_shouldParse = shouldParse;
 } // setAdvertisedDeviceCallbacks
 
-#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#ifdef SOC_BLE_50_SUPPORTED
 
 void BLEScan::setExtendedScanCallback(BLEExtAdvertisingCallbacks* cb)
 {
@@ -355,7 +357,7 @@ void BLEScan::setPeriodicScanCallback(BLEPeriodicScanCallbacks* cb)
 	m_pPeriodicScanCb = cb;
 }
 
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#endif // SOC_BLE_50_SUPPORTED
 /**
  * @brief Set the interval to scan.
  * @param [in] The interval in msecs.
@@ -510,3 +512,4 @@ void BLEScan::clearResults() {
 }
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

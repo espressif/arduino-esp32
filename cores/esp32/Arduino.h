@@ -200,6 +200,9 @@ uint16_t makeWord(uint8_t h, uint8_t l);
 size_t getArduinoLoopTaskStackSize(void);
 #define SET_LOOP_TASK_STACK_SIZE(sz) size_t getArduinoLoopTaskStackSize() { return sz;}
 
+bool shouldPrintChipDebugReport(void);
+#define ENABLE_CHIP_DEBUG_REPORT bool shouldPrintChipDebugReport(void){return true;}
+
 // allows user to bypass esp_spiram_test()
 bool esp_psram_extram_test(void);
 #define BYPASS_SPIRAM_TEST(bypass) bool testSPIRAM(void) { if (bypass) return true; else return esp_psram_extram_test(); }

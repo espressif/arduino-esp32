@@ -11,8 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include "USBMSC.h"
 
+#if SOC_USB_OTG_SUPPORTED
 #if CONFIG_TINYUSB_MSC_ENABLED
 
 #include "esp32-hal-tinyusb.h"
@@ -258,3 +260,4 @@ void USBMSC::mediaPresent(bool media_present){
 }
 
 #endif /* CONFIG_TINYUSB_MSC_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

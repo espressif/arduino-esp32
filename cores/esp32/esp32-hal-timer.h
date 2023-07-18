@@ -19,6 +19,9 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_GPTIMER_SUPPORTED
+
 #include "esp32-hal.h"
 #include "driver/gptimer_types.h"
 
@@ -53,3 +56,5 @@ void timerAlarm(hw_timer_t * timer, uint64_t alarm_value, bool autoreload, uint6
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SOC_GPTIMER_SUPPORTED */

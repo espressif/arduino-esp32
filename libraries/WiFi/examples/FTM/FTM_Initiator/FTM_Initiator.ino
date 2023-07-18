@@ -23,7 +23,7 @@ const uint8_t FTM_FRAME_COUNT = 16;
 const uint16_t FTM_BURST_PERIOD = 2;
 
 // Semaphore to signal when FTM Report has been received
-xSemaphoreHandle ftmSemaphore;
+SemaphoreHandle_t ftmSemaphore;
 // Status of the received FTM Report
 bool ftmSuccess = true;
 

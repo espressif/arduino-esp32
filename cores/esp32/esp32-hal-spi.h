@@ -15,6 +15,9 @@
 #ifndef MAIN_ESP32_HAL_SPI_H_
 #define MAIN_ESP32_HAL_SPI_H_
 
+#include "soc/soc_caps.h"
+#if SOC_GPSPI_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,7 +28,7 @@ extern "C" {
 
 #define SPI_HAS_TRANSACTION
 
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32S3
 #define FSPI  0
 #define HSPI  1
 #else
@@ -146,4 +149,5 @@ uint32_t spiClockDivToFrequency(uint32_t freq);
 }
 #endif
 
+#endif /* SOC_GPSPI_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_SPI_H_ */

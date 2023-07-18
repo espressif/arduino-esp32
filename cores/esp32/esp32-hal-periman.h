@@ -58,6 +58,9 @@ typedef enum {
 #if SOC_USB_SERIAL_JTAG_SUPPORTED || SOC_USB_OTG_SUPPORTED
 	ESP32_BUS_TYPE_USB, 		// IO is used as USB pin
 #endif
+#if SOC_GPSPI_SUPPORTED
+	ESP32_BUS_TYPE_ETHERNET,	// IO is used as ETHERNET-RMII pin
+#endif
 	ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
 

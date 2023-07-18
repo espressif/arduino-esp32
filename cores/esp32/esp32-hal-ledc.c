@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2023 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp32-hal.h"
 #include "soc/soc_caps.h"
+
+#if SOC_LEDC_SUPPORTED
+#include "esp32-hal.h"
+#include "esp32-hal-ledc.h"
 #include "driver/ledc.h"
 #include "esp32-hal-periman.h"
 
@@ -37,33 +40,19 @@ typedef struct {
     int used_channels : LEDC_CHANNELS;              // Used channels as a bits
 } ledc_periph_t;
 
-/*
- * LEDC Chan to Group/Channel/Timer Mapping
-** ledc: 0  => Group: 0, Channel: 0, Timer: 0
-** ledc: 1  => Group: 0, Channel: 1, Timer: 0
-** ledc: 2  => Group: 0, Channel: 2, Timer: 1
-** ledc: 3  => Group: 0, Channel: 3, Timer: 1
-** ledc: 4  => Group: 0, Channel: 4, Timer: 2
-** ledc: 5  => Group: 0, Channel: 5, Timer: 2
-** ledc: 6  => Group: 0, Channel: 6, Timer: 3
-** ledc: 7  => Group: 0, Channel: 7, Timer: 3
-** ledc: 8  => Group: 1, Channel: 0, Timer: 0
-** ledc: 9  => Group: 1, Channel: 1, Timer: 0
-** ledc: 10 => Group: 1, Channel: 2, Timer: 1
-** ledc: 11 => Group: 1, Channel: 3, Timer: 1
-** ledc: 12 => Group: 1, Channel: 4, Timer: 2
-** ledc: 13 => Group: 1, Channel: 5, Timer: 2
-** ledc: 14 => Group: 1, Channel: 6, Timer: 3
-** ledc: 15 => Group: 1, Channel: 7, Timer: 3
-*/
-
 ledc_periph_t ledc_handle;
 
+static bool fade_initialized = false;
+
 static bool ledcDetachBus(void * bus){
-    ledc_channel_handle_t handle = (ledc_channel_handle_t)bus;
+    ledc_channel_handle_t *handle = (ledc_channel_handle_t*)bus;
     ledc_handle.used_channels &= ~(1UL << handle->channel);
     pinMatrixOutDetach(handle->pin, false, false);
     free(handle);
+    if(ledc_handle.used_channels == 0){
+        ledc_fade_func_uninstall();
+        fade_initialized = false;
+    }
     return true;
 }
 
@@ -77,7 +66,7 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
     }
 
     perimanSetBusDeinit(ESP32_BUS_TYPE_LEDC, ledcDetachBus);
-    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL && !perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
         return false;
     }
@@ -111,12 +100,14 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
     };
     ledc_channel_config(&ledc_channel);
 
-    ledc_channel_handle_t handle = malloc(sizeof(ledc_channel_handle_t));
+    ledc_channel_handle_t *handle = (ledc_channel_handle_t *)malloc(sizeof(ledc_channel_handle_t));
 
-    handle->pin = pin,
-    handle->channel = channel,
-    handle->channel_resolution = resolution,
-
+    handle->pin = pin;
+    handle->channel = channel;
+    handle->channel_resolution = resolution;
+    #ifndef SOC_LEDC_SUPPORT_FADE_STOP
+    handle->lock = NULL;         
+    #endif
     ledc_handle.used_channels |= 1UL << channel;
 
     if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_LEDC, (void *)handle)){
@@ -128,7 +119,7 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
 }
 bool ledcWrite(uint8_t pin, uint32_t duty)
 {
-    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
 
         uint8_t group=(bus->channel/8), channel=(bus->channel%8);
@@ -150,7 +141,7 @@ bool ledcWrite(uint8_t pin, uint32_t duty)
 
 uint32_t ledcRead(uint8_t pin)
 {
-    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
 
         uint8_t group=(bus->channel/8), channel=(bus->channel%8);
@@ -161,7 +152,7 @@ uint32_t ledcRead(uint8_t pin)
 
 uint32_t ledcReadFreq(uint8_t pin)
 {
-    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
         if(!ledcRead(pin)){
             return 0;
@@ -175,7 +166,7 @@ uint32_t ledcReadFreq(uint8_t pin)
 
 uint32_t ledcWriteTone(uint8_t pin, uint32_t freq)
 {
-    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
 
         if(!freq){
@@ -222,7 +213,7 @@ uint32_t ledcWriteNote(uint8_t pin, note_t note, uint8_t octave){
 
 bool ledcDetach(uint8_t pin)
 {
-    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
         // will call ledcDetachBus
         return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
@@ -234,7 +225,7 @@ bool ledcDetach(uint8_t pin)
 
 uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution)
 {
-    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
 
         if(resolution > LEDC_MAX_BIT_WIDTH){
@@ -262,12 +253,113 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution)
     return 0;
 }
 
+static IRAM_ATTR bool ledcFnWrapper(const ledc_cb_param_t *param, void *user_arg)
+{
+    if (param->event == LEDC_FADE_END_EVT) {
+        ledc_channel_handle_t *bus = (ledc_channel_handle_t*)user_arg;
+        #ifndef SOC_LEDC_SUPPORT_FADE_STOP
+        portBASE_TYPE xTaskWoken = 0;
+        xSemaphoreGiveFromISR(bus->lock, &xTaskWoken);
+        #endif
+        if(bus->fn) {
+            if(bus->arg){
+                ((voidFuncPtrArg)bus->fn)(bus->arg);
+            } else {
+                bus->fn();
+            }
+        }
+    }
+    return true;
+}
+
+static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg){
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL){
+        
+    #ifndef SOC_LEDC_SUPPORT_FADE_STOP
+        #if !CONFIG_DISABLE_HAL_LOCKS
+            if(bus->lock == NULL){
+                bus->lock = xSemaphoreCreateBinary();
+                if(bus->lock == NULL){
+                    log_e("xSemaphoreCreateBinary failed");
+                    return false;
+                }
+                xSemaphoreGive(bus->lock);
+            }
+            //acquire lock
+            if(xSemaphoreTake(bus->lock, 0) != pdTRUE){
+                log_e("LEDC Fade is still running on pin %u! SoC does not support stopping fade.", pin);
+                return false;
+            }
+        #endif
+    #endif
+        uint8_t group=(bus->channel/8), channel=(bus->channel%8);
+
+        // Initialize fade service.
+        if(!fade_initialized){
+            ledc_fade_func_install(0);
+            fade_initialized = true;
+        }
+
+        bus->fn = (voidFuncPtr)userFunc;
+        bus->arg = arg;
+
+        ledc_cbs_t callbacks = {
+            .fade_cb = ledcFnWrapper
+        };
+        ledc_cb_register(group, channel, &callbacks, (void *) bus);
+        
+        //Fixing if all bits in resolution is set = LEDC FULL ON
+        uint32_t max_duty = (1 << bus->channel_resolution) - 1;
+
+        if((target_duty == max_duty) && (max_duty != 1)){
+            target_duty = max_duty + 1;
+        }
+        else if((start_duty == max_duty) && (max_duty != 1)){
+            start_duty = max_duty + 1;
+        }
+
+    #if SOC_LEDC_SUPPORT_FADE_STOP
+        ledc_fade_stop(group, channel);
+    #endif
+
+        if(ledc_set_duty_and_update(group, channel, start_duty, 0) != ESP_OK){
+            log_e("ledc_set_duty_and_update failed");
+            return false;
+        }
+        // Wait for LEDCs next PWM cycle to update duty (~ 1-2 ms)
+        while(ledc_get_duty(group,channel) != start_duty);
+
+        if(ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK){
+            log_e("ledc_set_fade_time_and_start failed");
+            return false;
+        }
+    }
+    else {
+        log_e("Pin %u is not attached to LEDC. Call ledcAttach first!", pin);
+        return false;
+    }
+    return true;
+}
+
+bool ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms){
+    return ledcFadeConfig(pin, start_duty, target_duty, max_fade_time_ms, NULL, NULL);
+}
+
+bool ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, voidFuncPtr userFunc){
+    return ledcFadeConfig(pin, start_duty, target_duty, max_fade_time_ms, (voidFuncPtrArg)userFunc, NULL);
+}
+
+bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg){
+    return ledcFadeConfig(pin, start_duty, target_duty, max_fade_time_ms, userFunc, arg);
+}
+
 static uint8_t analog_resolution = 8;
 static int analog_frequency = 1000;
 void analogWrite(uint8_t pin, int value) {
   // Use ledc hardware for internal pins
   if (pin < SOC_GPIO_PIN_COUNT) {
-    ledc_channel_handle_t bus = (ledc_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus == NULL && perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
         if(ledcAttach(pin, analog_frequency, analog_resolution) == 0){
             log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
@@ -293,3 +385,5 @@ void analogWriteResolution(uint8_t pin, uint8_t resolution) {
     }
     analog_resolution = resolution;
 }
+
+#endif /* SOC_LEDC_SUPPORTED */
