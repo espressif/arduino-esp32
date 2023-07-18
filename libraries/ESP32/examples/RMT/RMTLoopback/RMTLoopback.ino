@@ -37,7 +37,7 @@ rmt_data_t data[256];
 
 static EventGroupHandle_t events;
 
-#define RMT_FREQ 10000000
+#define RMT_FREQ 10000000          // tick time is 100ns
 #define RMT_NUM_EXCHANGED_DATA 30
 
 void setup() {
@@ -51,10 +51,10 @@ void setup() {
         Serial.println("init receiver failed\n");
     }
 
-    // End of transmission shall be detected when line is idle for 2us
-    rmtSetRxThreshold(RMT_RX_PIN, 2000);
+    // End of transmission shall be detected when line is idle for 2us = 20*100ns
+    rmtSetRxMaxThreshold(RMT_RX_PIN, 20);
     // Disable Glitch  filter
-    rmtSetFilter(RMT_RX_PIN, 0);  
+    rmtSetRxMinThreshold(RMT_RX_PIN, 0);  
 
     Serial.println("real tick set to: 100ns");
     Serial.printf("\nPlease connect GPIO %d to GPIO %d, now.\n", RMT_TX_PIN, RMT_RX_PIN);
