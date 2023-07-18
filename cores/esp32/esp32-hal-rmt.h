@@ -184,7 +184,7 @@ bool rmtReceiveCompleted(int pin);
    define how many low/high bits are read at the end of the received data.
    The function returns <true> if it is correctly executed, <false> otherwise.
 */
-bool rmtSetRxMaxThreshold(int pin, uint16_t idle_thres_ticks)
+bool rmtSetRxMaxThreshold(int pin, uint16_t idle_thres_ticks);
 
 /**
    Parameters changed in Arduino Core 3: low and high (ticks) are now expressed in Carrier Freq in Hz and
@@ -206,7 +206,7 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
    If <filter_pulse_ns> is Zero, it will to disable the filter.
    The function returns <true> if it is correctly executed, <false> otherwise.
 */
-bool rmtSetRxMinThreshold(int pin, uint8_t filter_pulse_ticks)
+bool rmtSetRxMinThreshold(int pin, uint8_t filter_pulse_ticks);
 
 /**
    Deinitializes the driver and releases all allocated memory
