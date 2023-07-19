@@ -78,6 +78,12 @@ TU_ATTR_ALWAYS_INLINE static inline void imxrt_dcache_clean(void const* addr, ui
 TU_ATTR_ALWAYS_INLINE static inline void imxrt_dcache_invalidate(void const* addr, uint32_t data_size) {
   const uintptr_t addr32 = (uintptr_t) addr;
   if (imxrt_is_cache_mem(addr32)) {
+    // Invalidating does not push cached changes back to RAM so we need to be
+    // *very* careful when we do it. If we're not aligned, then we risk resetting
+    // values back to their RAM state.
+    // if (addr32 % 32 != 0) {
+    //   TU_BREAKPOINT();
+    // }
     SCB_InvalidateDCache_by_Addr((void*) addr32, (int32_t) data_size);
   }
 }

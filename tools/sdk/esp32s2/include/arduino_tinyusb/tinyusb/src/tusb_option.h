@@ -431,7 +431,11 @@
 
 // Attribute to align memory for host controller
 #ifndef CFG_TUH_MEM_ALIGN
-  #define CFG_TUH_MEM_ALIGN   TU_ATTR_ALIGNED(4)
+  #ifdef CFG_TUSB_MEM_ALIGN
+    #define CFG_TUH_MEM_ALIGN   CFG_TUSB_MEM_ALIGN
+  #else
+    #define CFG_TUH_MEM_ALIGN   TU_ATTR_ALIGNED(4)
+  #endif
 #endif
 
 //------------- CLASS -------------//

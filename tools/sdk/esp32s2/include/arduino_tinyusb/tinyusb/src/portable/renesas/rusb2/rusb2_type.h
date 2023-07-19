@@ -1568,6 +1568,7 @@ TU_ATTR_BIT_FIELD_ORDER_END
 #define RUSB2_PIPE_CTR_PID_NAK          (0U << RUSB2_PIPE_CTR_PID_Pos)    /* NAK response */
 #define RUSB2_PIPE_CTR_PID_BUF          (1U << RUSB2_PIPE_CTR_PID_Pos)    /* BUF response (depends buffer state) */
 #define RUSB2_PIPE_CTR_PID_STALL        (2U << RUSB2_PIPE_CTR_PID_Pos)    /* STALL response */
+#define RUSB2_PIPE_CTR_PID_STALL2       (3U << RUSB2_PIPE_CTR_PID_Pos)    /* Also STALL response */
 
 #define RUSB2_DVSTCTR0_RHST_LS          (1U << RUSB2_DVSTCTR0_RHST_Pos)   /*  Low-speed connection */
 #define RUSB2_DVSTCTR0_RHST_FS          (2U << RUSB2_DVSTCTR0_RHST_Pos)   /*  Full-speed connection */
