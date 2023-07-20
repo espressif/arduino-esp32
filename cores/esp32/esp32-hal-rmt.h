@@ -177,14 +177,14 @@ bool rmtReadAsync(int pin, rmt_data_t* data, size_t *num_rmt_symbols);
 bool rmtReceiveCompleted(int pin);
 
 /**
-   Function used to set a threshold for the time used to consider that a data reception has ended.
-   In receive mode, when no edge is detected on the input signal for longer than idle_thres 
-   channel clock cycles, the receiving process is finished and the Data is made available by 
+   Function used to set a threshold (in ticks) used to consider that a data reception has ended.
+   In receive mode, when no edge is detected on the input signal for longer than idle_thres_ticks 
+   time, the receiving process is finished and the Data is made available by 
    the rmtRead/Async functions. Note that this time (in RMT channel frequency cycles) will also
-   define how many low bits are read at the end of the received data.
+   define how many low/high bits are read at the end of the received data.
    The function returns <true> if it is correctly executed, <false> otherwise.
 */
-bool rmtSetRxThreshold(int pin, uint16_t value);
+bool rmtSetRxMaxThreshold(int pin, uint16_t idle_thres_ticks);
 
 /**
    Parameters changed in Arduino Core 3: low and high (ticks) are now expressed in Carrier Freq in Hz and
@@ -201,11 +201,12 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
 
 /**
    Function used to filter input noise in the RX channel.
-   In receiving mode, channel will ignore any input pulse which width is smaller than <filter_pulse_ns>
-   If <filter_level> is Zero, it will to disable the filter.
+   In receiving mode, channel will ignore any input pulse which width (high or low) 
+   is smaller than <filter_pulse_ticks>
+   If <filter_pulse_ns> is Zero, it will to disable the filter.
    The function returns <true> if it is correctly executed, <false> otherwise.
 */
-bool rmtSetFilter(int pin, uint8_t filter_level);
+bool rmtSetRxMinThreshold(int pin, uint8_t filter_pulse_ticks);
 
 /**
    Deinitializes the driver and releases all allocated memory

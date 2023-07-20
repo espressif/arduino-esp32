@@ -19,6 +19,7 @@
 #include "driver/gpio.h"
 #include "driver/rmt_tx.h"
 #include "driver/rmt_rx.h"
+#include "hal/rmt_ll.h"
 
 #include "esp32-hal-rmt.h"
 #include "esp32-hal-periman.h"
@@ -58,6 +59,7 @@ struct rmt_obj_s {
   EventGroupHandle_t rmt_events;             // read/write done event RMT callback handle
   bool rmt_ch_is_looping;                    // Is this RMT TX Channel in LOOPING MODE?
   size_t *num_symbols_read;                  // Pointer to the number of RMT symbol read by IDF RMT RX Done
+  uint32_t frequency_Hz;                     // RMT Frequency
 
 #if !CONFIG_DISABLE_HAL_LOCKS
   SemaphoreHandle_t g_rmt_objlocks;           // Channel Semaphore Lock
@@ -210,7 +212,7 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
   return retCode;
 }
 
-bool rmtSetFilter(int pin, uint8_t filter_pulse_ns)
+bool rmtSetRxMinThreshold(int pin, uint8_t filter_pulse_ticks)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -220,6 +222,16 @@ bool rmtSetFilter(int pin, uint8_t filter_pulse_ns)
   if (!_rmtCheckDirection(pin, RMT_RX_MODE, __FUNCTION__)) {
     return false;
   }
+
+  uint32_t filter_pulse_ns = (1000000000 / bus->frequency_Hz) * filter_pulse_ticks;
+  // RMT_LL_MAX_FILTER_VALUE is 255 for ESP32, S2, S3, C3, C6 and H2;
+  // filter_pulse_ticks is 8 bits, thus it will not exceed 255
+#if 0 // for the future, in case some other SoC has different limit
+  if (filter_pulse_ticks > RMT_LL_MAX_FILTER_VALUE) {
+    log_e("filter_pulse_ticks is too big. Max = %d", RMT_LL_MAX_FILTER_VALUE);
+    return false;
+  }
+#endif
 
   RMT_MUTEX_LOCK(bus);
   bus->signal_range_min_ns = filter_pulse_ns; // set zero to disable it
@@ -227,7 +239,7 @@ bool rmtSetFilter(int pin, uint8_t filter_pulse_ns)
   return true;
 }
 
-bool rmtSetRxThreshold(int pin, uint16_t value)
+bool rmtSetRxMaxThreshold(int pin, uint16_t idle_thres_ticks)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -238,8 +250,17 @@ bool rmtSetRxThreshold(int pin, uint16_t value)
     return false;
   }
 
+  uint32_t idle_thres_ns = (1000000000 / bus->frequency_Hz) * idle_thres_ticks;
+  // RMT_LL_MAX_IDLE_VALUE is 65535 for ESP32,S2 and 32767 for S3, C3, C6 and H2
+#if RMT_LL_MAX_IDLE_VALUE < 65535 // idle_thres_ticks is 16 bits anyway - save some bytes
+  if (idle_thres_ticks > RMT_LL_MAX_IDLE_VALUE) {
+    log_e("idle_thres_ticks is too big. Max = %ld", RMT_LL_MAX_IDLE_VALUE);
+    return false;
+  }
+#endif
+
   RMT_MUTEX_LOCK(bus);
-  bus->signal_range_max_ns = value; // set as zero to disable it
+  bus->signal_range_max_ns = idle_thres_ns;
   RMT_MUTEX_UNLOCK(bus);
   return true;
 }
@@ -462,10 +483,12 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     goto Err;
   }
 
+  // store the RMT Freq to check Filter and Idle valid values in the RMT API
+  bus->frequency_Hz = frequency_Hz;
   // pulses with width smaller than min_ns will be ignored (as a glitch)
-  bus->signal_range_min_ns = 1000000000 / (frequency_Hz * 2); // 1/2 pulse width
+  bus->signal_range_min_ns = 0; // disabled
   // RMT stops reading if the input stays idle for longer than max_ns
-  bus->signal_range_max_ns = (1000000000 / frequency_Hz) * 10; // 10 pulses width
+  bus->signal_range_max_ns = (1000000000 / frequency_Hz) * RMT_LL_MAX_IDLE_VALUE; // maximum possible
   // creates the event group to control read_done and write_done
   bus->rmt_events = xEventGroupCreate();
   if (bus->rmt_events == NULL) {
