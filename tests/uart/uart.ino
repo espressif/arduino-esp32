@@ -1,4 +1,7 @@
-/* UART test */
+/* UART test
+ * This test is using UART0 (Serial) only for reporting test status and is not part of the test.
+ * UART1 (Serial1) and UART2 (Serial2) where available are used for testing with loopback.
+ */
 #include <unity.h>
 #include "HardwareSerial.h"
 #include "esp_rom_gpio.h"
@@ -34,35 +37,29 @@
  * Done:
  * move definition of constants "SOC_TX0" from HardwareSerial.cpp to the .h
  *
- * For 1 UART:
- *
- *          terminal
- *         |       ^
- *         v UART0 |
- *         RX<--->TX
- *
  * For 2 UARTS:
  *
- *          terminal
- *         |       ^
- *         v UART0 |
- *         RX    TX
- *          ^
- *          |
- *         TX    RX
- *           UART1
+ *           terminal
+ *          |       ^
+ *          v UART0 |
+ *          RX  ^  TX
+ *              |
+ *        report status
+ *              |
+ *         TX <---> RX
+ *            UART1
  *
  * For 3 UARTS:
  *
- *          terminal
- *         |       ^
- *         v UART0 |
- *         RX /   TX
- *           /
- *          /
- *         /
- *     TX /________  RX
- *  UART2 RX      TX UART1
+ *     =====terminal======
+ *      ^  |       ^    ^
+ *      |  v UART0 |    |
+ *      |  RX    TX     |
+ *      |               |
+ *      ^ report status ^
+ *      |               |
+ *      | TX ---> RX    |
+ *  UART2 RX <--- TX UART1
  *
  */
 
@@ -74,22 +71,18 @@ void tearDown(void){
 }
 
 void uart_test_01(void){
-  log_d("Send string from UART0 to terminal");
-  Serial.println("Hello from Serial (UART0) >>>  to >>> terminal");
-  Serial.flush();
-  delay(2500);
   #if SOC_UART_NUM == 2
-    log_d("Send string from UART1 to UART0");
-    Serial1.println("Hello from Serial1 (UART1) >>>  to >>> Serial (UART0)");
+    log_d("Send string in loopback from and to UART1");
+    Serial1.print("Hello from Serial1 (UART1) >>>  via loopback >>> Serial1 (UART1)");
     Serial1.flush();
   #endif
   #if SOC_UART_NUM == 3
     log_d("Send string from UART1 to UART2");
-    Serial1.println("Hello from Serial1 (UART1) >>>  to >>> Serial2 (UART2)");
+    Serial1.print("Hello from Serial1 (UART1) >>>  to >>> Serial2 (UART2)");
     Serial1.flush();
-    delay(2500);
+    delay(100);
     log_d("Send string from UART2 to UART0");
-    Serial2.println("Hello from Serial2 (UART2) >>>  to >>> Serial0 (UART0)");
+    Serial2.print("Hello from Serial2 (UART2) >>>  to >>> Serial1 (UART1)");
     Serial2.flush();
   #endif
 }
@@ -112,112 +105,82 @@ const char *uartErrorStrings[] = {
   "UART_PARITY_ERROR"
 };
 
-void onReceiveError(hardwareSerial_error_t err){
+void onReceiveError1(hardwareSerial_error_t err){
   // This is a callback function that will be activated on UART RX events
   log_d("Function triggered with code onReceiveError [ERR#%d:%s] \n", err, uartErrorStrings[err]);
 }
 
-void onReceiveFunction0() {
+void onReceiveError2(hardwareSerial_error_t err){
   // This is a callback function that will be activated on UART RX events
-  size_t available = Serial.available();
-  log_d("Function triggered with %d B", available);
-  Serial.printf("onReceive Callback0:: There are %d bytes available: {", available);
+  log_d("Function triggered with code onReceiveError [ERR#%d:%s] \n", err, uartErrorStrings[err]);
+}
+
+// This is a callback function that will be activated on UART RX events
+void onReceiveFunction(HardwareSerial &mySerial){
+  int8_t uart_num = -1;
+  if (&mySerial == &Serial) {
+    uart_num = 0;
+#if SOC_UART_NUM > 1
+  } else if (&mySerial == &Serial1) {
+    uart_num = 1;
+#endif
+#if SOC_UART_NUM > 2
+  } else if (&mySerial == &Serial2) {
+    uart_num = 2;
+#endif
+  }
+
+  size_t available = mySerial.available();
+  Serial.printf("UART %d: onReceiveFunction: There are %d bytes available:\n", uart_num, available);
+  char c;
+  int i = 0;
   while (available --) {
-    Serial.print((char)Serial.read());
+    c = (char)mySerial.read();
+    Serial.printf("[%d] '%c' = 0x%1x = %d\n", i++, c, c, c);
   }
   Serial.println("}");
   Serial.flush();
 }
 
-#if SOC_UART_NUM > 1
-void onReceiveFunction1() {
-  // This is a callback function that will be activated on UART RX events
-  size_t available = Serial1.available();
-  log_d("Function triggered with %d B", available);
-  Serial1.printf("onReceive Callback1:: There are %d bytes available: {", available);
-  while (available --) {
-    Serial1.print((char)Serial1.read());
-  }
-  Serial1.println("}");
-  Serial1.flush();
-}
-#endif
-
-#if SOC_UART_NUM > 2
-void onReceiveFunction2() {
-  // This is a callback function that will be activated on UART RX events
-  size_t available = Serial2.available();
-  log_d("Function triggered with %d B", available);
-  Serial2.printf("onReceive Callback2:: There are %d bytes available: {", available);
-  while (available --) {
-    Serial2.print((char)Serial2.read());
-  }
-  Serial2.println("}");
-  Serial2.flush();
-}
-#endif
-
 void setup(){
   Serial.begin(115200);
-  while(!Serial){ delay(1); }
+  while(!Serial){ delay(10); }
   log_d("SOC_UART_NUM=%d", SOC_UART_NUM);
 
   #if SOC_UART_NUM > 1
+    log_d("Setup Serial 1");
     Serial1.begin(115200);
-    while(!Serial1){ delay(1); }
+    while(!Serial1){ Serial.print("."); delay(100); }
+    Serial.println("");
   #endif
 
   #if SOC_UART_NUM > 2
+    log_d("Setup Serial 2");
     Serial2.begin(115200);
-    while(!Serial2){ delay(1); }
+    while(!Serial2){ delay(10); }
   #endif
 
-  Serial.onReceive(onReceiveFunction0);
-  Serial.onReceiveError(onReceiveError);
-
-#if SOC_UART_NUM == 1
-  // Setup loopback on UART0 (U0_TX -> U0_RX)
-  // UART0 TX -> UART1 RX
-  uart_internal_loopback(0, RX1);
-#endif
-
 #if SOC_UART_NUM == 2
-  Serial1.onReceive(onReceiveFunction1);
-  Serial1.onReceiveError(onReceiveError);
-  log_d("Setup internal loop-back from Serial1 (UART1) >> Serial (UART0)");
-  // Setup internal loop-back from Serial1 (UART1) >> Serial (UART0)
-  // UART0 TX -> UART1 RX
-  //uart_internal_loopback(0, RX1);
+  log_d("Setup internal loop-back from and back to Serial1 (UART1) TX >> Serial1 (UART1) RX");
+  Serial1.onReceive([]() {onReceiveFunction(Serial1);});
+  Serial1.onReceiveError(onReceiveError1);
 
   //UART1 TX -> UART0 RX
   uart_internal_loopback(1, SOC_RX0);
 #endif
 
 #if SOC_UART_NUM == 3
-  log_d("Setup internal loop-back from Serial1 (UART1) >> Serial2 (UART2) >> Serial (UART0)");
-  // Setup internal loop-back from Serial1 (UART1) >> Serial2 (UART2) >> Serial (UART0)
-  Serial1.onReceive(onReceiveFunction1);
-  Serial2.onReceive(onReceiveFunction2);
+  log_d("Setup internal loop-back between Serial1 (UART1) <<--->> Serial2 (UART2)");
+  Serial1.onReceive([]() {onReceiveFunction(Serial1);});
+  Serial2.onReceive([]() {onReceiveFunction(Serial2);});
 
-   Serial1.onReceiveError(onReceiveError);
-   Serial2.onReceiveError(onReceiveError);
-  // UART0 TX -> UART1 RX
-  //uart_internal_loopback(0, RX1);
-
-  // UART1 TX -> UART2 RX
-  //uart_internal_loopback(1, RX2);
-  esp_rom_gpio_connect_out_signal(RX2, U1TXD_OUT_IDX, false, false);
-  esp_rom_gpio_connect_in_signal(RX2, U2RXD_IN_IDX, false);
-
-  // UART2 TX -> UART0 RX
-  //uart_internal_loopback(2, SOC_RX0);  // this does not work! :(
-  //esp_rom_gpio_connect_out_signal(SOC_RX0, U2TXD_OUT_IDX, false, false); // this does not work! :(
-  //esp_rom_gpio_connect_in_signal(SOC_RX0, U0RXD_IN_IDX, false);
-
-  //esp_rom_gpio_connect_out_signal(TX2, U2TXD_OUT_IDX, false, false); // this does not work! :(
-  //esp_rom_gpio_connect_in_signal(TX2, U0RXD_IN_IDX, false);
-  // ???
+  Serial1.onReceiveError(onReceiveError1);
+  Serial2.onReceiveError(onReceiveError2);
+  uart_internal_loopback(1, RX2);
+  uart_internal_loopback(2, RX1);
 #endif
+
+  log_d("Setup done, start tests");
 
   UNITY_BEGIN();
   RUN_TEST(uart_test_01);
