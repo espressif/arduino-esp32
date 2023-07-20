@@ -39,7 +39,6 @@ typedef struct fir_f32_s {
     int     N;          /*!< FIR filter coefficients amount.*/
     int     pos;        /*!< Position in delay line.*/
     int     decim;      /*!< Decimation factor.*/
-    int     d_pos;      /*!< Actual decimation counter.*/
     int16_t use_delay;  /*!< The delay line was allocated by init function.*/
 } fir_f32_t;
 
@@ -90,13 +89,12 @@ esp_err_t dsps_fir_init_f32(fir_f32_t *fir, float *coeffs, float *delay, int coe
  * @param delay: array for FIR filter delay line. Must be length N
  * @param N: FIR filter length. Length of coeffs and delay arrays.
  * @param decim: decimation factor.
- * @param start_pos: initial value of decimation counter. Must be [0..d)
  *
  * @return
  *      - ESP_OK on success
  *      - One of the error codes from DSP library
  */
-esp_err_t dsps_fird_init_f32(fir_f32_t *fir, float *coeffs, float *delay, int N, int decim, int start_pos);
+esp_err_t dsps_fird_init_f32(fir_f32_t *fir, float *coeffs, float *delay, int N, int decim);
 
 /**
  * @brief   initialize structure for 16 bit Decimation FIR filter
@@ -151,13 +149,14 @@ esp_err_t dsps_fir_f32_aes3(fir_f32_t *fir, const float *input, float *output, i
  * @param fir: pointer to fir filter structure, that must be initialized before
  * @param input: input array
  * @param output: array with the result of FIR filter
- * @param len: length of input and result arrays
+ * @param len: length of result array
  *
  * @return: function returns the number of samples stored in the output array
  *          depends on the previous state value could be [0..len/decimation]
  */
 int dsps_fird_f32_ansi(fir_f32_t *fir, const float *input, float *output, int len);
 int dsps_fird_f32_ae32(fir_f32_t *fir, const float *input, float *output, int len);
+int dsps_fird_f32_aes3(fir_f32_t *fir, const float *input, float *output, int len);
 /**@}*/
 
 /**@{*/
@@ -179,9 +178,10 @@ int dsps_fird_f32_ae32(fir_f32_t *fir, const float *input, float *output, int le
 int32_t dsps_fird_s16_ansi(fir_s16_t *fir, const int16_t *input, int16_t *output, int32_t len);
 int32_t dsps_fird_s16_ae32(fir_s16_t *fir, const int16_t *input, int16_t *output, int32_t len);
 int32_t dsps_fird_s16_aes3(fir_s16_t *fir, const int16_t *input, int16_t *output, int32_t len);
-
-
 /**@}*/
+
+
+/**@{*/
 /**
  * @brief   support arrays freeing function
  *
@@ -200,7 +200,7 @@ esp_err_t dsps_fird_s16_aexx_free(fir_s16_t *fir);
 /**@}*/
 
 
-/**@}*/
+/**@{*/
 /**
  * @brief   support arrays freeing function
  *
@@ -222,14 +222,14 @@ esp_err_t dsps_fir_f32_free(fir_f32_t *fir);
  * Function reverses 16-bit long array members for the purpose of the dsps_fird_s16_aes3 implementation
  * The function has to be called either during the fir struct initialization or every time the coefficients change
  *
- * @param fir: pointer to the array to be reversed
+ * @param arr: pointer to the array to be reversed
  * @param len: length of the array to be reversed
  *
  * @return
  *      - ESP_OK on success
  */
 esp_err_t dsps_16_array_rev(int16_t *arr, int16_t len); 
-/**@{*/
+/**@}*/
 
 #ifdef __cplusplus
 }
@@ -246,7 +246,9 @@ esp_err_t dsps_16_array_rev(int16_t *arr, int16_t len);
     #define dsps_fir_f32 dsps_fir_f32_ansi
     #endif
 
-    #if (dsps_fird_f32_ae32_enabled == 1)
+    #if (dsps_fird_f32_aes3_enabled == 1)
+    #define dsps_fird_f32 dsps_fird_f32_aes3
+    #elif (dsps_fird_f32_ae32_enabled == 1)
     #define dsps_fird_f32 dsps_fird_f32_ae32
     #else
     #define dsps_fird_f32 dsps_fird_f32_ansi

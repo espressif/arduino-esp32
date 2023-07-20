@@ -79,21 +79,25 @@
   #define TUP_RHPORT_HIGHSPEED    1
 
 #elif TU_CHECK_MCU(OPT_MCU_MCXN9)
-  // NOTE: MCXN943 port 1 use chipidea HS, port 0 use chipidea FS
+  // USB0 is chipidea FS
+  #define TUP_USBIP_CHIPIDEA_FS
+  #define TUP_USBIP_CHIPIDEA_FS_MCX
+
+  // USB1 is chipidea HS
   #define TUP_USBIP_CHIPIDEA_HS
   #define TUP_USBIP_EHCI
 
   #define TUP_DCD_ENDPOINT_MAX    8
   #define TUP_RHPORT_HIGHSPEED    1
 
-#elif TU_CHECK_MCU(OPT_MCU_MIMXRT)
+#elif TU_CHECK_MCU(OPT_MCU_MIMXRT1XXX)
   #define TUP_USBIP_CHIPIDEA_HS
   #define TUP_USBIP_EHCI
 
   #define TUP_DCD_ENDPOINT_MAX    8
   #define TUP_RHPORT_HIGHSPEED    1
 
-#elif TU_CHECK_MCU(OPT_MCU_KINETIS_KL, OPT_MCU_KINETIS_K32)
+#elif TU_CHECK_MCU(OPT_MCU_KINETIS_KL, OPT_MCU_KINETIS_K32L)
   #define TUP_USBIP_CHIPIDEA_FS
   #define TUP_USBIP_CHIPIDEA_FS_KINETIS
   #define TUP_DCD_ENDPOINT_MAX    16
@@ -197,9 +201,16 @@
   #define TUP_DCD_ENDPOINT_MAX    9
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32G4)
+  // Device controller
   #define TUP_USBIP_FSDEV
   #define TUP_USBIP_FSDEV_STM32
+
+  // TypeC controller
+  #define TUP_USBIP_TYPEC_STM32
+
   #define TUP_DCD_ENDPOINT_MAX    8
+
+  #define TUP_TYPEC_RHPORTS_NUM 1
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32G0)
   #define TUP_USBIP_FSDEV

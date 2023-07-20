@@ -97,9 +97,9 @@
 #define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
 
 // NXP iMX RT
-#define OPT_MCU_MIMXRT            700             ///< NXP iMX RT Series
-#define OPT_MCU_MIMXRT10XX        OPT_MCU_MIMXRT  ///< RT10xx
-#define OPT_MCU_MIMXRT11XX        OPT_MCU_MIMXRT  ///< RT11xx
+#define OPT_MCU_MIMXRT1XXX        700                 ///< NXP iMX RT1xxx Series
+#define OPT_MCU_MIMXRT10XX        OPT_MCU_MIMXRT1XXX  ///< RT10xx
+#define OPT_MCU_MIMXRT11XX        OPT_MCU_MIMXRT1XXX  ///< RT11xx
 
 // Nuvoton
 #define OPT_MCU_NUC121            800
@@ -119,7 +119,8 @@
 
 // NXP Kinetis
 #define OPT_MCU_KINETIS_KL       1200 ///< NXP KL series
-#define OPT_MCU_KINETIS_K32      1201 ///< NXP K32 series
+#define OPT_MCU_KINETIS_K32L     1201 ///< NXP K32L series
+#define OPT_MCU_KINETIS_K32      1201 ///< Alias to K32L
 
 #define OPT_MCU_MKL25ZXX         1200 ///< Alias to KL (obsolete)
 #define OPT_MCU_K32L2BXX         1201 ///< Alias to K32 (obsolete)
@@ -430,7 +431,11 @@
 
 // Attribute to align memory for host controller
 #ifndef CFG_TUH_MEM_ALIGN
-  #define CFG_TUH_MEM_ALIGN   TU_ATTR_ALIGNED(4)
+  #ifdef CFG_TUSB_MEM_ALIGN
+    #define CFG_TUH_MEM_ALIGN   CFG_TUSB_MEM_ALIGN
+  #else
+    #define CFG_TUH_MEM_ALIGN   TU_ATTR_ALIGNED(4)
+  #endif
 #endif
 
 //------------- CLASS -------------//
@@ -482,6 +487,16 @@
 #define CFG_TUD_RPI_PIO_USB 0
 #endif
 
+
+//--------------------------------------------------------------------+
+// TypeC Options (Default)
+//--------------------------------------------------------------------+
+
+#ifndef CFG_TUC_ENABLED
+#define CFG_TUC_ENABLED 0
+
+#define tuc_int_handler(_p)
+#endif
 
 //------------------------------------------------------------------
 // Configuration Validation
