@@ -1,7 +1,12 @@
 /*
   ESP32 eeprom_extra example with EEPROM library
 
-  This simple example demonstrates using other EEPROM library resources
+  This simple example demonstrates using other EEPROM library resources.
+  
+  You need to define AT LEAST a flash partition for EEPROM  with the name below
+  eeprom, data, 0x99, "start address", 0x1000
+  
+  Note: For this Arduino sketch, "eeprom" is already defined in ./eeprom_extra/partitions.csv
 
   Created for arduino-esp32 on 25 Dec, 2017
   by Elochukwu Ifediora (fedy0)
@@ -13,7 +18,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("\nTesting EEPROM Library\n");
-  if (!EEPROM.begin(1000)) {
+  if (!EEPROM.begin(0x1000)) {                      // Default Size = 4KB 
     Serial.println("Failed to initialise EEPROM");
     Serial.println("Restarting...");
     delay(1000);
@@ -22,7 +27,7 @@ void setup() {
 
   int address = 0;
 
-  EEPROM.writeByte(address, -128);                  // -2^7
+  EEPROM.writeByte(address, 128);                   // 2^7
   address += sizeof(byte);
 
   EEPROM.writeChar(address, 'A');                   // Same as writyByte and readByte
@@ -49,11 +54,11 @@ void setup() {
   EEPROM.writeULong(address, 4294967295);           // Same as writeUInt and readUInt
   address += sizeof(unsigned long);
 
-  int64_t value = -1223372036854775808LL;             // -2^63
+  int64_t value = -9223372036854775808;             // -2^63
   EEPROM.writeLong64(address, value);
   address += sizeof(int64_t);
 
-  uint64_t  Value = 18446744073709551615ULL;           // 2^64 - 1
+  uint64_t  Value = 18446744073709551615;           // 2^64 - 1
   EEPROM.writeULong64(address, Value);
   address += sizeof(uint64_t);
 
@@ -75,6 +80,7 @@ void setup() {
   address += 21;
 
   // See also the general purpose writeBytes() and readBytes() for BLOB in EEPROM library
+  
   EEPROM.commit();
   address = 0;
   
@@ -127,10 +133,9 @@ void setup() {
   address += sizeof(bool);
 
   Serial.println(EEPROM.readString(address));
-  address += sentence.length() + 1;
+  address += sentence.length() + 1;                 // To skip NULL termination in the string
 
   Serial.println(EEPROM.readString(address));
-  address += 21;
 }
 
 void loop() {
