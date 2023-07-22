@@ -35,7 +35,13 @@ else:
 if 'Windows' in platform.system():
     import requests
 
-current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
+# determine if application is a script file or frozen exe
+if getattr(sys, 'frozen', False):
+    current_dir = os.path.dirname(os.path.realpath(unicode(sys.executable)))
+elif __file__:
+    current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
+
+#current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
 dist_dir = current_dir + '/dist/'
 
 def sha256sum(filename, blocksize=65536):
@@ -88,6 +94,8 @@ def unpack(filename, destination):
 
     # a little trick to rename tool directories so they don't contain version number
     rename_to = re.match(r'^([a-z][^\-]*\-*)+', dirname).group(0).strip('-')
+    if rename_to == dirname and dirname.startswith('esp32-arduino-libs-'):
+        rename_to = 'esp32-arduino-libs'
     if rename_to != dirname:
         print('Renaming {0} to {1} ...'.format(dirname, rename_to))
         if os.path.isdir(rename_to):
@@ -217,10 +225,16 @@ def identify_platform():
     return arduino_platform_names[sys_name][bits]
 
 if __name__ == '__main__':
+    is_test = (len(sys.argv) > 1 and sys.argv[1] == '-h')
+    if is_test:
+        print('Test run!')
     identified_platform = identify_platform()
     print('Platform: {0}'.format(identified_platform))
     tools_to_download = load_tools_list(current_dir + '/../package/package_esp32_index.template.json', identified_platform)
     mkdir_p(dist_dir)
     for tool in tools_to_download:
-        get_tool(tool)
+        if is_test:
+            print('Would install: {0}'.format(tool['archiveFileName']))
+        else:
+            get_tool(tool)
     print('Platform Tools Installed')
