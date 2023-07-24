@@ -24,7 +24,7 @@
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 #ifdef ARDUINO_ARCH_ESP32
-#include "esp32-hal-log.h"
+  #include "esp32-hal-log.h"
 #endif
 
 #include "BluetoothSerial.h"
@@ -567,8 +567,16 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             log_i("ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
             break;
 
+        case ESP_BT_GAP_READ_RSSI_DELTA_EVT:
+            log_i("ESP_BT_GAP_READ_RSSI_DELTA_EVT Read rssi event");
+            break;
+
         case ESP_BT_GAP_CONFIG_EIR_DATA_EVT:
             log_i("ESP_BT_GAP_CONFIG_EIR_DATA_EVT: stat:%d num:%d", param->config_eir_data.stat, param->config_eir_data.eir_type_num);
+            break;
+
+        case ESP_BT_GAP_SET_AFH_CHANNELS_EVT:
+            log_i("ESP_BT_GAP_SET_AFH_CHANNELS_EVT Set AFH channels event");
             break;
 
         case ESP_BT_GAP_READ_REMOTE_NAME_EVT:
@@ -581,6 +589,22 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
 
         case ESP_BT_GAP_MODE_CHG_EVT:
             log_i("ESP_BT_GAP_MODE_CHG_EVT: mode: %d", param->mode_chg.mode);
+            break;
+
+        case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT:
+            log_i("ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT remove bond device complete event");
+            break;
+
+        case ESP_BT_GAP_QOS_CMPL_EVT:
+            log_i("ESP_BT_GAP_QOS_CMPL_EVT QOS complete event");
+            break;
+
+        case ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT:
+            log_i("ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT ACL connection complete status event");
+            break;
+
+        case ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT:
+            log_i("ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT ACL disconnection complete status event");
             break;
 
         default:
@@ -893,7 +917,7 @@ esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t * callback)
     return ESP_OK;
 }
 
-//Simple Secure Pairing
+// Simple Secure Pairing
 void BluetoothSerial::enableSSP() {
     _enableSSP = true;
 }
@@ -1211,4 +1235,5 @@ BTAddress BluetoothSerial::getBtAddressObject() {
 String BluetoothSerial::getBtAddressString() {
     return getBtAddressObject().toString(true);
 }
-#endif
+
+#endif // defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
