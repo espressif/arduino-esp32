@@ -88,6 +88,7 @@ class BluetoothSerial: public Stream
         void getBtAddress(uint8_t *mac);
         BTAddress getBtAddressObject();
         String getBtAddressString();
+        void dropCache();
     private:
         String local_name;
         int timeoutTicks=0;
