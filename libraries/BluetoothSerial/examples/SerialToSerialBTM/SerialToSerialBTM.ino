@@ -18,10 +18,15 @@
 #define USE_NAME // Comment this to use MAC address instead of a slaveName
 const char *pin = "1234"; // Change this to reflect the pin expected by the real slave BT device
 
-#if !defined(CONFIG_BT_SPP_ENABLED)
-#error Serial Bluetooth not available or not enabled. It is only available for the ESP32 chip.
+// Check if BlueTooth is available
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+  #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
 
+// Check Serial Port Profile
+#if !defined(CONFIG_BT_SPP_ENABLED)
+  #error Serial Port Profile for BlueTooth is not available or not enabled. It is only available for the ESP32 chip.
+#endif
 BluetoothSerial SerialBT;
 
 #ifdef USE_NAME
@@ -38,6 +43,7 @@ void setup() {
   Serial.begin(115200);
 
   SerialBT.begin(myName, true);
+  //SerialBT.dropCache();
   Serial.printf("The device \"%s\" started in master mode, make sure slave BT device is on!\n", myName.c_str());
 
   #ifndef USE_NAME

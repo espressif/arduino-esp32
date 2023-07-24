@@ -956,8 +956,8 @@ bool BluetoothSerial::connect(String remoteName)
     disconnect();
     _doConnect = true;
     _isRemoteAddressSet = false;
-	_sec_mask = ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE;
-	_role = ESP_SPP_ROLE_MASTER;
+    _sec_mask = ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE;
+    _role = ESP_SPP_ROLE_MASTER;
     strncpy(_remote_name, remoteName.c_str(), ESP_BT_GAP_MAX_BDNAME_LEN);
     _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN] = 0;
     log_i("master : remoteName");
@@ -998,8 +998,8 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_
     _doConnect = true;
     _remote_name[0] = 0;
     _isRemoteAddressSet = true;
-	_sec_mask = sec_mask;
-	_role = role;
+    _sec_mask = sec_mask;
+    _role = role;
     memcpy(_peer_bd_addr, remoteAddress, ESP_BD_ADDR_LEN);
     log_i("master : remoteAddress");
     xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
@@ -1011,7 +1011,7 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_
             channel);
 #endif
         if(esp_spp_connect(sec_mask, role, channel, _peer_bd_addr) != ESP_OK ) {
-			log_e("spp connect failed");
+            log_e("spp connect failed");
       retval = false;
     } else {
       retval = waitForConnect(READY_TIMEOUT);
@@ -1236,4 +1236,51 @@ String BluetoothSerial::getBtAddressString() {
     return getBtAddressObject().toString(true);
 }
 
+void BluetoothSerial::dropCache(){
+    if(!isReady(false, READY_TIMEOUT)){
+        log_w("Attempted to drop cache for uninitialized driver. First call begin()");
+        return;
+    }
+
+    int expected_dev_num = esp_bt_gap_get_bond_device_num();
+    if(expected_dev_num == 0){
+        log_i("No devices in cache.");
+        return;
+    }else{
+        log_d("Found %d bonded devices", expected_dev_num);
+    }
+    esp_err_t ret;
+
+    // typedef uint8_t esp_bd_addr_t[ESP_BD_ADDR_LEN] // ESP_BD_ADDR_LEN = 6
+    esp_bd_addr_t *dev_list = NULL;
+    log_d("Allocate buffer: sizeof(esp_bd_addr_t)=%d * expected_dev_num=%d", sizeof(esp_bd_addr_t), expected_dev_num);
+    dev_list = (esp_bd_addr_t*) malloc(sizeof(esp_bd_addr_t) * expected_dev_num);
+    if(dev_list == NULL){
+        log_e("Could not allocated BT device buffer!");
+        return;
+    }
+    //uint8_t dev_list [20][6];
+
+    int dev_num;
+    ret = esp_bt_gap_get_bond_device_list(&dev_num, dev_list);
+    log_d("esp_bt_gap_get_bond_device_list ret = %d", ret);
+    if(ret == ESP_OK){
+        if(dev_num != expected_dev_num){
+            log_w("Inconsistent number of bonded devices. Expected %d; returned %d",expected_dev_num, dev_num);
+        }
+        for(int i=0; i<dev_num; ++i){
+            ret = esp_bt_gap_remove_bond_device(dev_list[i]);
+            log_d("esp_bt_gap_remove_bond_device ret = %d", ret);
+            if(ret == ESP_OK){
+                log_d("Removed bonded device #%d", i);
+            }else{
+                log_w("Failed to removed bonded device #%d", i);
+            }
+            //btc_storage_remove_bonded_device(dev_list[i]);
+        }
+        log_d("device num after delete = %d", esp_bt_gap_get_bond_device_num());
+    }else{
+        log_w("Function esp_bt_gap_get_bond_device_list() returned code %d", ret);
+    }
+}
 #endif // defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
