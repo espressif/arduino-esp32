@@ -4,6 +4,9 @@
  *  Created on: Jun 21, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string.h>
@@ -359,7 +362,7 @@ std::string BLEUUID::toString() {
 
 	if (m_uuid.len == ESP_UUID_LEN_32) {  // If the UUID is 32bit, pad correctly.
 		char hex[9];
-		snprintf(hex, sizeof(hex), "%08x", m_uuid.uuid.uuid32);
+		snprintf(hex, sizeof(hex), "%08lx", m_uuid.uuid.uuid32);
 		return std::string(hex) + "-0000-1000-8000-00805f9b34fb";
 	} // End 32bit UUID
 
@@ -384,3 +387,4 @@ std::string BLEUUID::toString() {
 } // toString
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

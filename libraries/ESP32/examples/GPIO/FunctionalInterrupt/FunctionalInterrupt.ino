@@ -34,17 +34,17 @@ public:
     detachInterrupt(PIN);
   }
 
-  void ARDUINO_ISR_ATTR isr(){
-    numberKeyPresses += 1;
-    pressed = true;
-  }
+	void ARDUINO_ISR_ATTR isr() {
+		numberKeyPresses = numberKeyPresses + 1;
+		pressed = true;
+	}
 
-  void checkPressed(){
-    if (pressed) {
-      Serial.printf("Button on pin %u has been pressed %u times\n", PIN, numberKeyPresses);
-      pressed = false;
-    }
-  }
+	void checkPressed() {
+		if (pressed) {
+			Serial.printf("Button on pin %u has been pressed %lu times\n", PIN, numberKeyPresses);
+			pressed = false;
+		}
+	}
 
 private:
     const uint8_t PIN;

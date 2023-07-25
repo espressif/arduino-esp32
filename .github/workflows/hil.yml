@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
     steps:
       - name: Checkout Repository
@@ -66,17 +66,12 @@ jobs:
   Test:
     needs: [gen_chunks, Build]
     name: ${{matrix.chip}}-Test#${{matrix.chunks}}
-    runs-on:
-      - ESP32
-      - ESP32-S2
-      - ESP32-S3
-      - ESP32-C3
-
     strategy:
       fail-fast: false
       matrix:
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
+    runs-on: [arduino, "${{matrix.chip}}"]
     container:
       image: python:3.10.1-bullseye
       options: --privileged
@@ -94,7 +89,7 @@ jobs:
        - name: Install dependencies
          run: |
            pip install -U pip
-           pip install -r tests/requirements.txt
+           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
            apt update && apt install -y -qq jq
 
        - name: Run Tests

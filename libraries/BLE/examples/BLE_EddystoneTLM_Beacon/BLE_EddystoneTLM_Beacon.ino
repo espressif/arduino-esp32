@@ -86,8 +86,8 @@ void setup()
   Serial.begin(115200);
   gettimeofday(&nowTimeStruct, NULL);
 
-  Serial.printf("Starting ESP32. Bootcount = %d\n", bootcount++);
-  Serial.printf("Deep sleep (%lds since last reset, %lds since last boot)\n", nowTimeStruct.tv_sec, nowTimeStruct.tv_sec - last);
+  Serial.printf("Starting ESP32. Bootcount = %lu\n", bootcount++);
+  Serial.printf("Deep sleep (%llds since last reset, %llds since last boot)\n", nowTimeStruct.tv_sec, nowTimeStruct.tv_sec - last);
 
   last = nowTimeStruct.tv_sec;
   lastTenth = nowTimeStruct.tv_sec * 10; // Time since last reset as 0.1 second resolution counter

@@ -7,6 +7,9 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_
 #define COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 
@@ -83,5 +86,7 @@ private:
 	// We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
 	std::map<std::string, BLERemoteDescriptor*> m_descriptorMap;
 }; // BLERemoteCharacteristic
+
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_ */

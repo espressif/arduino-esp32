@@ -23,7 +23,7 @@ const uint8_t FTM_FRAME_COUNT = 16;
 const uint16_t FTM_BURST_PERIOD = 2;
 
 // Semaphore to signal when FTM Report has been received
-xSemaphoreHandle ftmSemaphore;
+SemaphoreHandle_t ftmSemaphore;
 // Status of the received FTM Report
 bool ftmSuccess = true;
 
@@ -35,7 +35,7 @@ void onFtmReport(arduino_event_t *event) {
   ftmSuccess = report->status == FTM_STATUS_SUCCESS;
   if (ftmSuccess) {
     // The estimated distance in meters may vary depending on some factors (see README file)
-    Serial.printf("FTM Estimate: Distance: %.2f m, Return Time: %u ns\n", (float)report->dist_est / 100.0, report->rtt_est);
+    Serial.printf("FTM Estimate: Distance: %.2f m, Return Time: %lu ns\n", (float)report->dist_est / 100.0, report->rtt_est);
     // Pointer to FTM Report with multiple entries, should be freed after use
     free(report->ftm_report_data);
   } else {

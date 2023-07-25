@@ -15,6 +15,28 @@ extern "C" {
 
 #include "lwip/priv/tcpip_priv.h"
 
+static const char * netif_ifkeys[TCPIP_ADAPTER_IF_MAX] = {
+    "WIFI_STA_DEF", "WIFI_AP_DEF", "ETH_DEF", "PPP_DEF"
+};
+
+static esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void ** netif){
+    *netif = NULL;
+    if(tcpip_if < TCPIP_ADAPTER_IF_MAX){
+        esp_netif_t *esp_netif = esp_netif_get_handle_from_ifkey(netif_ifkeys[tcpip_if]);
+        if(esp_netif == NULL){
+            return ESP_FAIL;
+        }
+        int netif_index = esp_netif_get_netif_impl_index(esp_netif);
+        if(netif_index < 0){
+            return ESP_FAIL;
+        }
+        *netif = (void*)netif_get_by_index(netif_index);
+    } else {
+        *netif = netif_default;
+    }
+    return (*netif != NULL)?ESP_OK:ESP_FAIL;
+}
+
 typedef struct {
     struct tcpip_api_call_data call;
     udp_pcb * pcb;
@@ -123,7 +145,7 @@ typedef struct {
         struct netif * netif;
 } lwip_event_packet_t;
 
-static xQueueHandle _udp_queue;
+static QueueHandle_t _udp_queue;
 static volatile TaskHandle_t _udp_task_handle = NULL;
 
 static void _udp_task(void *pvParameters){

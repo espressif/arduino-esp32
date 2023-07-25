@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "soc/soc_caps.h"
+
+#if SOC_I2C_SUPPORT_SLAVE
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -36,12 +39,13 @@
 #include "freertos/ringbuf.h"
 
 #include "esp_intr_alloc.h"
-#include "driver/periph_ctrl.h"
 #include "soc/i2c_reg.h"
 #include "soc/i2c_struct.h"
 #include "hal/i2c_ll.h"
+#include "hal/clk_gate_ll.h"
 #include "esp32-hal-log.h"
 #include "esp32-hal-i2c-slave.h"
+#include "esp32-hal-periman.h"
 
 #define I2C_SLAVE_USE_RX_QUEUE 0 // 1: Queue, 0: RingBuffer
 
@@ -72,16 +76,16 @@ typedef struct i2c_slave_struct_t {
     void * arg;
     intr_handle_t intr_handle;
     TaskHandle_t task_handle;
-    xQueueHandle event_queue;
+    QueueHandle_t event_queue;
 #if I2C_SLAVE_USE_RX_QUEUE
-    xQueueHandle rx_queue;
+    QueueHandle_t rx_queue;
 #else
     RingbufHandle_t rx_ring_buf;
 #endif
-    xQueueHandle tx_queue;
+    QueueHandle_t tx_queue;
     uint32_t rx_data_count;
 #if !CONFIG_DISABLE_HAL_LOCKS
-    xSemaphoreHandle lock;
+    SemaphoreHandle_t lock;
 #endif
 } i2c_slave_struct_t;
 
@@ -164,7 +168,7 @@ static inline void i2c_ll_stretch_clr(i2c_dev_t *hw)
 
 static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw)
 {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
     return hw->sr.slave_addressed;
 #else
     return hw->status_reg.slave_addressed;
@@ -173,7 +177,7 @@ static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw)
 
 static inline bool i2c_ll_slave_rw(i2c_dev_t *hw)//not exposed by hal_ll
 {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
     return hw->sr.slave_rw;
 #else
     return hw->status_reg.slave_rw;
@@ -194,7 +198,7 @@ static bool i2c_slave_handle_rx_fifo_full(i2c_slave_struct_t * i2c, uint32_t len
 static size_t i2c_slave_read_rx(i2c_slave_struct_t * i2c, uint8_t * data, size_t len);
 static void i2c_slave_isr_handler(void* arg);
 static void i2c_slave_task(void *pv_args);
-
+static bool i2cSlaveDetachBus(void * bus_i2c_num);
 
 //=====================================================================================================================
 //-------------------------------------- Public Functions -------------------------------------------------------------
@@ -229,6 +233,11 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
         frequency = 100000;
     } else if(frequency > 1000000){
         frequency = 1000000;
+    }
+
+    perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_SLAVE, i2cSlaveDetachBus);
+    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL)){
+        return false;
     }
 
     log_i("Initialising I2C Slave: sda=%d scl=%d freq=%d, addr=0x%x", sda, scl, frequency, slaveID);
@@ -292,10 +301,10 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     frequency = (frequency * 5) / 4;
 
     if (i2c->num == 0) {
-        periph_module_enable(PERIPH_I2C0_MODULE);
+        periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
 #if SOC_I2C_NUM > 1
     } else {
-        periph_module_enable(PERIPH_I2C1_MODULE);
+        periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
 #endif
     }
     
@@ -320,7 +329,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     }
 
     i2c_ll_disable_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
-    i2c_ll_clr_intsts_mask(i2c->dev, I2C_LL_INTR_MASK);
+    i2c_ll_clear_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
     i2c_ll_set_fifo_mode(i2c->dev, true);
 
     if (!i2c->intr_handle) {
@@ -344,6 +353,10 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     i2c_ll_slave_enable_rx_it(i2c->dev);
     i2c_ll_set_stretch(i2c->dev, 0x3FF);
     i2c_ll_update(i2c->dev);
+    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_SLAVE, (void *)(i2c->num+1)) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_SLAVE, (void *)(i2c->num+1))){
+        i2cSlaveDetachBus((void *)(i2c->num+1));
+        ret = ESP_FAIL;
+    }
     I2C_SLAVE_MUTEX_UNLOCK();
     return ret;
 
@@ -367,7 +380,11 @@ esp_err_t i2cSlaveDeinit(uint8_t num){
     }
 #endif
     I2C_SLAVE_MUTEX_LOCK();
+    int scl = i2c->scl;
+    int sda = i2c->sda;
     i2c_slave_free_resources(i2c);
+    perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL);
+    perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL);
     I2C_SLAVE_MUTEX_UNLOCK();
     return ESP_OK;
 }
@@ -377,7 +394,7 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
         log_e("Invalid port num: %u", num);
         return 0;
     }
-    size_t to_queue = 0, to_fifo = 0;
+    uint32_t to_queue = 0, to_fifo = 0;
     i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(!i2c->lock){
@@ -391,35 +408,39 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
     I2C_SLAVE_MUTEX_LOCK();
 #if CONFIG_IDF_TARGET_ESP32
     i2c_ll_slave_disable_tx_it(i2c->dev);
-    if (i2c_ll_get_txfifo_len(i2c->dev) < SOC_I2C_FIFO_LEN) {
+    uint32_t txfifo_len = 0;
+    i2c_ll_get_txfifo_len(i2c->dev, &txfifo_len);
+    if (txfifo_len < SOC_I2C_FIFO_LEN) {
         i2c_ll_txfifo_rst(i2c->dev);
     }
 #endif
-    to_fifo = i2c_ll_get_txfifo_len(i2c->dev);
-    if(len < to_fifo){
-        to_fifo = len;
-    }
-    i2c_ll_write_txfifo(i2c->dev, (uint8_t*)buf, to_fifo);
-    buf += to_fifo;
-    len -= to_fifo;
-    //reset tx_queue
-    xQueueReset(i2c->tx_queue);
-    //write the rest of the bytes to the queue
-    if(len){
-        to_queue = uxQueueSpacesAvailable(i2c->tx_queue);
-        if(len < to_queue){
-            to_queue = len;
+    i2c_ll_get_txfifo_len(i2c->dev, &to_fifo);
+    if(to_fifo){
+        if(len < to_fifo){
+            to_fifo = len;
         }
-        for (size_t i = 0; i < to_queue; i++) {
-            if (xQueueSend(i2c->tx_queue, &buf[i], timeout_ms / portTICK_RATE_MS) != pdTRUE) {
-                xQueueReset(i2c->tx_queue);
-                to_queue = 0;
-                break;
+        i2c_ll_write_txfifo(i2c->dev, (uint8_t*)buf, to_fifo);
+        buf += to_fifo;
+        len -= to_fifo;
+        //reset tx_queue
+        xQueueReset(i2c->tx_queue);
+        //write the rest of the bytes to the queue
+        if(len){
+            to_queue = uxQueueSpacesAvailable(i2c->tx_queue);
+            if(len < to_queue){
+                to_queue = len;
             }
-        }
-        //no need to enable TX_EMPTY if tx_queue is empty
-        if(to_queue){
-            i2c_ll_slave_enable_tx_it(i2c->dev);
+            for (size_t i = 0; i < to_queue; i++) {
+                if (xQueueSend(i2c->tx_queue, &buf[i], timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
+                    xQueueReset(i2c->tx_queue);
+                    to_queue = 0;
+                    break;
+                }
+            }
+            //no need to enable TX_EMPTY if tx_queue is empty
+            if(to_queue){
+                i2c_ll_slave_enable_tx_it(i2c->dev);
+            }
         }
     }
     I2C_SLAVE_MUTEX_UNLOCK();
@@ -434,7 +455,7 @@ static void i2c_slave_free_resources(i2c_slave_struct_t * i2c){
     i2c_slave_detach_gpio(i2c);
     i2c_ll_set_slave_addr(i2c->dev, 0, false);
     i2c_ll_disable_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
-    i2c_ll_clr_intsts_mask(i2c->dev, I2C_LL_INTR_MASK);
+    i2c_ll_clear_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
 
     if (i2c->intr_handle) {
         esp_intr_free(i2c->intr_handle);
@@ -485,13 +506,13 @@ static bool i2c_slave_set_frequency(i2c_slave_struct_t * i2c, uint32_t clk_speed
     uint32_t a = (clk_speed / 50000L) + 2;
     log_d("Fifo thresholds: rx_fifo_full = %d, tx_fifo_empty = %d", SOC_I2C_FIFO_LEN - a, a);
 
-    i2c_clk_cal_t clk_cal;
+    i2c_hal_clk_config_t clk_cal;
 #if SOC_I2C_SUPPORT_APB
     i2c_ll_cal_bus_clk(APB_CLK_FREQ, clk_speed, &clk_cal);
-    i2c_ll_set_source_clk(i2c->dev, I2C_SCLK_APB);            /*!< I2C source clock from APB, 80M*/
+    i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_APB);            /*!< I2C source clock from APB, 80M*/
 #elif SOC_I2C_SUPPORT_XTAL
     i2c_ll_cal_bus_clk(XTAL_CLK_FREQ, clk_speed, &clk_cal);
-    i2c_ll_set_source_clk(i2c->dev, I2C_SCLK_XTAL);           /*!< I2C source clock from XTAL, 40M */
+    i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_XTAL);           /*!< I2C source clock from XTAL, 40M */
 #endif
     i2c_ll_set_txfifo_empty_thr(i2c->dev, a);
     i2c_ll_set_rxfifo_full_thr(i2c->dev, SOC_I2C_FIFO_LEN - a);
@@ -630,7 +651,8 @@ static bool i2c_slave_send_event(i2c_slave_struct_t * i2c, i2c_slave_queue_event
 static bool i2c_slave_handle_tx_fifo_empty(i2c_slave_struct_t * i2c)
 {
     bool pxHigherPriorityTaskWoken = false;
-    uint32_t d = 0, moveCnt = i2c_ll_get_txfifo_len(i2c->dev);
+    uint32_t d = 0, moveCnt = 0;
+    i2c_ll_get_txfifo_len(i2c->dev, &moveCnt);
     while (moveCnt > 0) { // read tx queue until Fifo is full or queue is empty
         if(xQueueReceiveFromISR(i2c->tx_queue, &d, (BaseType_t * const)&pxHigherPriorityTaskWoken) == pdTRUE){
             i2c_ll_write_txfifo(i2c->dev, (uint8_t*)&d, 1);
@@ -680,9 +702,11 @@ static void i2c_slave_isr_handler(void* arg)
     bool pxHigherPriorityTaskWoken = false;
     i2c_slave_struct_t * i2c = (i2c_slave_struct_t *) arg; // recover data
 
-    uint32_t activeInt = i2c_ll_get_intsts_mask(i2c->dev);
-    i2c_ll_clr_intsts_mask(i2c->dev, activeInt);
-    uint8_t rx_fifo_len = i2c_ll_get_rxfifo_cnt(i2c->dev);
+    uint32_t activeInt = 0;
+    i2c_ll_get_intr_mask(i2c->dev, &activeInt);
+    i2c_ll_clear_intr_mask(i2c->dev, activeInt);
+    uint32_t rx_fifo_len = 0;
+    i2c_ll_get_rxfifo_cnt(i2c->dev, &rx_fifo_len);
     bool slave_rw = i2c_ll_slave_rw(i2c->dev);
 
     if(activeInt & I2C_RXFIFO_WM_INT_ENA){ // RX FiFo Full
@@ -839,3 +863,19 @@ static void i2c_slave_task(void *pv_args)
     }
     vTaskDelete(NULL);
 }
+
+static bool i2cSlaveDetachBus(void * bus_i2c_num){
+    uint8_t num = (int)bus_i2c_num - 1;
+    i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
+    if (i2c->scl == -1 && i2c->sda == -1) {
+        return true;
+    }
+    esp_err_t err = i2cSlaveDeinit(num);
+    if(err != ESP_OK){
+        log_e("i2cSlaveDeinit failed with error: %d", err);
+        return false;
+    }
+    return true;
+}
+
+#endif /* SOC_I2C_SUPPORT_SLAVE */

@@ -36,6 +36,8 @@ jobs:
           - esp32s2
           - esp32c3
           - esp32s3
+          - esp32c6
+          - esp32h2
 
         include:
           - target: esp32
@@ -46,6 +48,10 @@ jobs:
             fqbn: espressif:esp32:esp32c3
           - target: esp32s3
             fqbn: espressif:esp32:esp32s3
+          - target: esp32c6
+            fqbn: espressif:esp32:esp32c6
+          - target: esp32h2
+            fqbn: espressif:esp32:esp32h2
 
 
     steps:

@@ -11,11 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "USBCDC.h"
+
+#if SOC_USB_OTG_SUPPORTED
 #include "USB.h"
 #if CONFIG_TINYUSB_CDC_ENABLED
 
-#include "USBCDC.h"
+
 #include "esp32-hal-tinyusb.h"
+#include "rom/ets_sys.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_CDC_EVENTS);
 esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
@@ -118,7 +123,7 @@ size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
             uxQueueSpacesAvailable(rx_queue) + uxQueueMessagesWaiting(rx_queue) : 0;
 
     if (rx_queue_len != currentQueueSize) {
-        xQueueHandle new_rx_queue = NULL;
+        QueueHandle_t new_rx_queue = NULL;
         if (rx_queue_len) {
             new_rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
             if(!new_rx_queue){
@@ -209,6 +214,8 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
                     arduino_usb_cdc_event_data_t p;
                     arduino_usb_event_post(ARDUINO_USB_CDC_EVENTS, ARDUINO_USB_CDC_DISCONNECTED_EVENT, &p, sizeof(arduino_usb_cdc_event_data_t), portMAX_DELAY);
                 }
+            // } else if(lineState == CDC_LINE_2){//esptool.js
+            //     lineState++;
             } else {
                 lineState = CDC_LINE_IDLE;
             }
@@ -221,6 +228,8 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
         } else if(dtr && !rts){
             if(lineState == CDC_LINE_2){
                 lineState++;
+            // } else if(lineState == CDC_LINE_IDLE){//esptool.js
+            //     lineState++;
             } else {
                 lineState = CDC_LINE_IDLE;
             }
@@ -451,3 +460,4 @@ USBCDC Serial(0);
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

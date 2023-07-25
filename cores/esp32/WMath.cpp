@@ -28,6 +28,7 @@ extern "C" {
 #include "esp_system.h"
 }
 #include "esp32-hal-log.h"
+#include "esp_random.h"
 
 // Allows the user to choose between Real Hardware
 // or Software Pseudo random generators for the

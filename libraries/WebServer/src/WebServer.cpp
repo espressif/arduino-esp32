@@ -24,6 +24,7 @@
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include <libb64/cencode.h>
+#include "esp_random.h"
 #include "WiFiServer.h"
 #include "WiFiClient.h"
 #include "WebServer.h"
@@ -127,9 +128,9 @@ static String md5str(String &in){
     return String(out);
   memset(_buf, 0x00, 16);
   mbedtls_md5_init(&_ctx);
-  mbedtls_md5_starts_ret(&_ctx);
-  mbedtls_md5_update_ret(&_ctx, (const uint8_t *)in.c_str(), in.length());
-  mbedtls_md5_finish_ret(&_ctx, _buf);
+  mbedtls_md5_starts(&_ctx);
+  mbedtls_md5_update(&_ctx, (const uint8_t *)in.c_str(), in.length());
+  mbedtls_md5_finish(&_ctx, _buf);
   for(i = 0; i < 16; i++) {
     sprintf(out + (i * 2), "%02x", _buf[i]);
   }
@@ -230,7 +231,7 @@ String WebServer::_getRandomHexString() {
   char buffer[33];  // buffer to hold 32 Hex Digit + /0
   int i;
   for(i = 0; i < 4; i++) {
-    sprintf (buffer + (i*8), "%08x", esp_random());
+    sprintf (buffer + (i*8), "%08lx", esp_random());
   }
   return String(buffer);
 }
@@ -285,17 +286,16 @@ void WebServer::serveStatic(const char* uri, FS& fs, const char* path, const cha
 
 void WebServer::handleClient() {
   if (_currentStatus == HC_NONE) {
-    WiFiClient client = _server.available();
-    if (!client) {
+    _currentClient = _server.available();
+    if (!_currentClient) {
       if (_nullDelay) {
         delay(1);
       }
       return;
     }
 
-    log_v("New client: client.localIP()=%s", client.localIP().toString().c_str());
+    log_v("New client: client.localIP()=%s", _currentClient.localIP().toString().c_str());
 
-    _currentClient = client;
     _currentStatus = HC_WAIT_READ;
     _statusChange = millis();
   }

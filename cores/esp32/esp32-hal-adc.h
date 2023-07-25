@@ -17,8 +17,10 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef MAIN_ESP32_HAL_ADC_H_
-#define MAIN_ESP32_HAL_ADC_H_
+#pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_ADC_SUPPORTED
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,13 +56,6 @@ uint32_t analogReadMilliVolts(uint8_t pin);
 void analogReadResolution(uint8_t bits);
 
 /*
- * Set the divider for the ADC clock.
- * Default is 1
- * Range is 1 - 255
- * */
-void analogSetClockDiv(uint8_t clockDiv);
-
-/*
  * Set the attenuation for all channels
  * Default is 11db
  * */
@@ -72,11 +67,6 @@ void analogSetAttenuation(adc_attenuation_t attenuation);
  * */
 void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation);
 
-/*
- * Attach pin to ADC (will also clear any other analog mode that could be on)
- * */
-bool adcAttachPin(uint8_t pin);
-
 #if CONFIG_IDF_TARGET_ESP32
 /*
  * Sets the sample bits and read resolution
@@ -85,20 +75,10 @@ bool adcAttachPin(uint8_t pin);
  * */
 void analogSetWidth(uint8_t bits);
 
-/*
- * Set pin to use for ADC calibration if the esp is not already calibrated (25, 26 or 27)
- * */
-void analogSetVRefPin(uint8_t pin);
-
-/*
- * Get value for HALL sensor (without LNA)
- * connected to pins 36(SVP) and 39(SVN)
- * */
-int hallRead();
 #endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MAIN_ESP32_HAL_ADC_H_ */
+#endif /* SOC_ADC_SUPPORTED */
