@@ -53,6 +53,8 @@
 #define U32_TO_U8S_LE(_u32)   TU_U32_BYTE0(_u32), TU_U32_BYTE1(_u32), TU_U32_BYTE2(_u32), TU_U32_BYTE3(_u32)
 
 #define TU_BIT(n)             (1UL << (n))
+
+// Generate a mask with bit from high (31) to low (0) set, e.g TU_GENMASK(3, 0) = 0b1111
 #define TU_GENMASK(h, l)      ( (UINT32_MAX << (l)) & (UINT32_MAX >> (31 - (h))) )
 
 //--------------------------------------------------------------------+
@@ -99,10 +101,9 @@ TU_ATTR_WEAK extern void* tusb_app_phys_to_virt(void *phys_addr);
 #define tu_varclr(_var)          tu_memclr(_var, sizeof(*(_var)))
 
 // This is a backport of memset_s from c11
-TU_ATTR_ALWAYS_INLINE static inline int tu_memset_s(void *dest, size_t destsz, int ch, size_t count)
-{
+TU_ATTR_ALWAYS_INLINE static inline int tu_memset_s(void *dest, size_t destsz, int ch, size_t count) {
   // TODO may check if desst and src is not NULL
-  if (count > destsz) {
+  if ( count > destsz ) {
     return -1;
   }
   memset(dest, ch, count);
@@ -110,10 +111,9 @@ TU_ATTR_ALWAYS_INLINE static inline int tu_memset_s(void *dest, size_t destsz, i
 }
 
 // This is a backport of memcpy_s from c11
-TU_ATTR_ALWAYS_INLINE static inline int tu_memcpy_s(void *dest, size_t destsz, const void * src, size_t count )
-{
+TU_ATTR_ALWAYS_INLINE static inline int tu_memcpy_s(void *dest, size_t destsz, const void *src, size_t count) {
   // TODO may check if desst and src is not NULL
-  if (count > destsz) {
+  if ( count > destsz ) {
     return -1;
   }
   memcpy(dest, src, count);
@@ -168,6 +168,9 @@ TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align16 (uint32_t value) { retur
 TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align32 (uint32_t value) { return (value & 0xFFFFFFE0UL); }
 TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_align4k (uint32_t value) { return (value & 0xFFFFF000UL); }
 TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_offset4k(uint32_t value) { return (value & 0xFFFUL); }
+
+TU_ATTR_ALWAYS_INLINE static inline bool tu_is_aligned32(uint32_t value) { return (value & 0x1FUL) == 0; }
+TU_ATTR_ALWAYS_INLINE static inline bool tu_is_aligned64(uint64_t value) { return (value & 0x3FUL) == 0; }
 
 //------------- Mathematics -------------//
 TU_ATTR_ALWAYS_INLINE static inline uint32_t tu_div_ceil(uint32_t v, uint32_t d) { return (v + d -1)/d; }

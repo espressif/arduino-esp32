@@ -110,15 +110,15 @@ typedef struct
 
 // clean/flush data cache: write cache -> memory.
 // Required before an DMA TX transfer to make sure data is in memory
-void hcd_dcache_clean(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
+bool hcd_dcache_clean(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
 
 // invalidate data cache: mark cache as invalid, next read will read from memory
 // Required BOTH before and after an DMA RX transfer
-void hcd_dcache_invalidate(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
+bool hcd_dcache_invalidate(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
 
 // clean and invalidate data cache
 // Required before an DMA transfer where memory is both read/write by DMA
-void hcd_dcache_clean_invalidate(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
+bool hcd_dcache_clean_invalidate(void const* addr, uint32_t data_size) TU_ATTR_WEAK;
 
 //--------------------------------------------------------------------+
 // Controller API
@@ -170,6 +170,10 @@ bool hcd_edpt_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_endpoint_t const 
 
 // Submit a transfer, when complete hcd_event_xfer_complete() must be invoked
 bool hcd_edpt_xfer(uint8_t rhport, uint8_t dev_addr, uint8_t ep_addr, uint8_t * buffer, uint16_t buflen);
+
+// Abort a queued transfer. Note: it can only abort transfer that has not been started
+// Return true if a queued transfer is aborted, false if there is no transfer to abort
+bool hcd_edpt_abort_xfer(uint8_t rhport, uint8_t dev_addr, uint8_t ep_addr);
 
 // Submit a special transfer to send 8-byte Setup Packet, when complete hcd_event_xfer_complete() must be invoked
 bool hcd_setup_send(uint8_t rhport, uint8_t dev_addr, uint8_t const setup_packet[8]);

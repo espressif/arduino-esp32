@@ -68,31 +68,34 @@ TU_ATTR_ALWAYS_INLINE static inline bool imxrt_is_cache_mem(uintptr_t addr) {
   return !(0x20000000 <= addr && addr < 0x20100000);
 }
 
-TU_ATTR_ALWAYS_INLINE static inline void imxrt_dcache_clean(void const* addr, uint32_t data_size) {
+TU_ATTR_ALWAYS_INLINE static inline bool imxrt_dcache_clean(void const* addr, uint32_t data_size) {
   const uintptr_t addr32 = (uintptr_t) addr;
   if (imxrt_is_cache_mem(addr32)) {
+    TU_ASSERT(tu_is_aligned32(addr32));
     SCB_CleanDCache_by_Addr((uint32_t *) addr32, (int32_t) data_size);
   }
+  return true;
 }
 
-TU_ATTR_ALWAYS_INLINE static inline void imxrt_dcache_invalidate(void const* addr, uint32_t data_size) {
+TU_ATTR_ALWAYS_INLINE static inline bool imxrt_dcache_invalidate(void const* addr, uint32_t data_size) {
   const uintptr_t addr32 = (uintptr_t) addr;
   if (imxrt_is_cache_mem(addr32)) {
     // Invalidating does not push cached changes back to RAM so we need to be
     // *very* careful when we do it. If we're not aligned, then we risk resetting
     // values back to their RAM state.
-    // if (addr32 % 32 != 0) {
-    //   TU_BREAKPOINT();
-    // }
+    TU_ASSERT(tu_is_aligned32(addr32));
     SCB_InvalidateDCache_by_Addr((void*) addr32, (int32_t) data_size);
   }
+  return true;
 }
 
-TU_ATTR_ALWAYS_INLINE static inline void imxrt_dcache_clean_invalidate(void const* addr, uint32_t data_size) {
+TU_ATTR_ALWAYS_INLINE static inline bool imxrt_dcache_clean_invalidate(void const* addr, uint32_t data_size) {
   const uintptr_t addr32 = (uintptr_t) addr;
   if (imxrt_is_cache_mem(addr32)) {
+    TU_ASSERT(tu_is_aligned32(addr32));
     SCB_CleanInvalidateDCache_by_Addr((uint32_t *) addr32, (int32_t) data_size);
   }
+  return true;
 }
 
 #endif

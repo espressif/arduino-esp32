@@ -172,8 +172,12 @@ bool tuh_control_xfer(tuh_xfer_t* xfer);
 //  - sync : blocking if complete callback is NULL.
 bool tuh_edpt_xfer(tuh_xfer_t* xfer);
 
-// Open an non-control endpoint
-bool tuh_edpt_open(uint8_t dev_addr, tusb_desc_endpoint_t const * desc_ep);
+// Open a non-control endpoint
+bool tuh_edpt_open(uint8_t daddr, tusb_desc_endpoint_t const * desc_ep);
+
+// Abort a queued transfer. Note: it can only abort transfer that has not been started
+// Return true if a queued transfer is aborted, false if there is no transfer to abort
+bool tuh_edpt_abort_xfer(uint8_t daddr, uint8_t ep_addr);
 
 // Set Configuration (control transfer)
 // config_num = 0 will un-configure device. Note: config_num = config_descriptor_index + 1
