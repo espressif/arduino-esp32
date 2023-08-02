@@ -24159,7 +24159,7 @@ lionbits3.build.event_core=
 lionbits3.build.psram_type=qspi
 lionbits3.build.memory_type={build.boot}_{build.psram_type}
 
-
+## IDE 2.0 Seems to not update the value
 lionbits3.menu.JTAGAdapter.default=Disabled
 lionbits3.menu.JTAGAdapter.default.build.copy_jtag_files=0
 lionbits3.menu.JTAGAdapter.builtin=Integrated USB JTAG
