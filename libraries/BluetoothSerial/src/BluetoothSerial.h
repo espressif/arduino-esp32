@@ -29,6 +29,7 @@
 
 typedef std::function<void(const uint8_t *buffer, size_t size)> BluetoothSerialDataCb;
 typedef std::function<void(uint32_t num_val)> ConfirmRequestCb;
+typedef std::function<void()> KeyRequestCb;
 typedef std::function<void(boolean success)> AuthCompleteCb;
 typedef std::function<void(BTAdvertisedDevice* pAdvertisedDevice)> BTAdvertisedDeviceCb;
 
@@ -56,15 +57,18 @@ class BluetoothSerial: public Stream
         esp_err_t register_callback(esp_spp_cb_t * callback);
         
         void onConfirmRequest(ConfirmRequestCb cb);
+        void onKeyRequest(KeyRequestCb cb);
+        void respondPasskey(uint32_t passkey);
         void onAuthComplete(AuthCompleteCb cb);
         void confirmReply(boolean confirm);
 
         void enableSSP();
-        bool setPin(const char *pin);
+        void enableSSP(bool inputCapability, bool outputCapability);
+        void disableSSP();
         bool connect(String remoteName);
         bool connect(uint8_t remoteAddress[], int channel=0, esp_spp_sec_t sec_mask=(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE), esp_spp_role_t role=ESP_SPP_ROLE_MASTER);
         bool connect(const BTAddress &remoteAddress, int channel=0, esp_spp_sec_t sec_mask=(ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE), esp_spp_role_t role=ESP_SPP_ROLE_MASTER) {
-			return connect(*remoteAddress.getNative(), channel, sec_mask); };
+            return connect(*remoteAddress.getNative(), channel, sec_mask); };
         bool connect();
         bool connected(int timeout=0);
         bool isClosed();

@@ -16,7 +16,6 @@
 #include "BluetoothSerial.h"
 
 #define USE_NAME // Comment this to use MAC address instead of a slaveName
-const char *pin = "1234"; // Change this to reflect the pin expected by the real slave BT device
 
 // Check if BlueTooth is available
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
@@ -43,7 +42,7 @@ void setup() {
   Serial.begin(115200);
 
   SerialBT.begin(myName, true);
-  //SerialBT.dropCache();
+  //SerialBT.dropCache(); // Uncomment this to delete paired devices; Must be called after begin
   Serial.printf("The device \"%s\" started in master mode, make sure slave BT device is on!\n", myName.c_str());
 
   #ifndef USE_NAME
