@@ -1,8 +1,9 @@
-//This example code is in the Public Domain (or CC0 licensed, at your option.)
-//By Evandro Copercini - 2018
+// This example code is in the Public Domain (or CC0 licensed, at your option.)
+// By Evandro Copercini - 2018
 //
-//This example creates a bridge between Serial and Classical Bluetooth (SPP)
-//and also demonstrate that SerialBT have the same functionalities of a normal Serial
+// This example creates a bridge between Serial and Classical Bluetooth (SPP)
+// and also demonstrate that SerialBT have the same functionalities of a normal Serial
+// Note: Pairing is authenticated automatically by this device
 
 #include "BluetoothSerial.h"
 
@@ -22,7 +23,6 @@ BluetoothSerial SerialBT;
 
 void setup() {
   Serial.begin(115200);
-  SerialBT.enableSSP(true, false);
   SerialBT.begin(device_name); //Bluetooth device name
   //SerialBT.dropCache(); // Uncomment this to delete paired devices; Must be called after begin
   Serial.printf("The device with name \"%s\" is started.\nNow you can pair it with Bluetooth!\n", device_name.c_str());
