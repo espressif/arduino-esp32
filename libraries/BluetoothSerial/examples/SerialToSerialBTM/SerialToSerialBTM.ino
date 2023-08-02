@@ -1,17 +1,19 @@
 // This example code is in the Public Domain (or CC0 licensed, at your option.)
 // By Victor Tchistiak - 2019
 //
-// This example demonstrates master mode Bluetooth connection to a slave BT device using PIN (password)
-// defined either by String "slaveName" by default "OBDII" or by MAC address
+// This example demonstrates master mode Bluetooth connection to a slave BT device
+// defined either by String "slaveName" by default "ESP32-BT-Slave" or by MAC address
 //
 // This example creates a bridge between Serial and Classical Bluetooth (SPP)
 // This is an extension of the SerialToSerialBT example by Evandro Copercini - 2018
 //
 // DO NOT try to connect to phone or laptop - they are master
-// devices, same as the ESP using this code - it will NOT work!
+// devices, same as the ESP using this code - you will be able
+// to pair, but the serial communication will NOT work!
 //
 // You can try to flash a second ESP32 with the example SerialToSerialBT - it should
 // automatically pair with ESP32 running this code
+// Note: Pairing is authenticated automatically by this device
 
 #include "BluetoothSerial.h"
 
