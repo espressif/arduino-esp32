@@ -30,11 +30,13 @@
 const char * deviceName = "ESP32_SSP_example";
 
 // The following lines defines the method of pairing
-// When both Input and Output are false only the other device authenticates pairing without any pin.
+When both Input and Output are false only the other device authenticates pairing without any pin.
 // When Output is true and Input is false only the other device authenticates pairing without any pin.
 // When both Input and Output are true both devices display randomly generated code and if they match authenticate pairing on both devices
-//   - On ESP must be implemented by calling creating callback via onConfirmRequest() and in this callback request user input and call SerialBT.confirmReply(true); if the authenticated.
-// When Input is true and Output is false User will be required to input the passkey (displayed on the other device) to the ESP32 device to authenticate.
+//   - This must be implemented by registering callback via onConfirmRequest() and in this callback request user input and call confirmReply(true); if the authenticated
+//      otherwise call `confirmReply(false)` to reject the pairing.
+// When Input is true and Output is false User will be required to input the passkey to the ESP32 device to authenticate.
+//   - This must be implemented by registering callback via onKeyRequest() and in this callback the entered passkey will be responded via respondPasskey(passkey);
 const bool INUPT_CAPABILITY = false; // Defines if ESP32 device has input method (Serial terminal, keyboard or similar)
 const bool OUTPUT_CAPABILITY = true; // Defines if ESP32 device has output method (Serial terminal, display or similar)
 

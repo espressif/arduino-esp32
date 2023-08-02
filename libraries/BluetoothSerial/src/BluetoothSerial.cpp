@@ -937,9 +937,10 @@ void BluetoothSerial::enableSSP() {
 // When both Input and Output are false only the other device authenticates pairing without any pin.
 // When Output is true and Input is false only the other device authenticates pairing without any pin.
 // When both Input and Output are true both devices display randomly generated code and if they match authenticate pairing on both devices
-//   - On ESP must be implemented by calling creating callback via onConfirmRequest() and in this callback request user input and call SerialBT.confirmReply(true); if the authenticated.
+//   - This must be implemented by registering callback via onConfirmRequest() and in this callback request user input and call confirmReply(true); if the authenticated
+//      otherwise call `confirmReply(false)` to reject the pairing.
 // When Input is true and Output is false User will be required to input the passkey to the ESP32 device to authenticate.
-//   - This must be implemented by user - register callback: onKeyRequest() in which call SerialBT.respondPasskey(passkey);
+//   - This must be implemented by registering callback via onKeyRequest() and in this callback the entered passkey will be responded via respondPasskey(passkey);
 void BluetoothSerial::enableSSP(bool inputCpability, bool outputCapability) {
     log_i("Enabling SSP: input capability=%d; output capability=%d", inputCpability, outputCapability);
     _enableSSP = true;
