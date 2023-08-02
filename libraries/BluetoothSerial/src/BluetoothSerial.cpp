@@ -58,6 +58,7 @@ static esp_spp_cb_t * custom_spp_callback = NULL;
 static BluetoothSerialDataCb custom_data_callback = NULL;
 static esp_bd_addr_t current_bd_addr;
 static ConfirmRequestCb confirm_request_callback = NULL;
+static KeyRequestCb key_request_callback = NULL;
 static AuthCompleteCb auth_complete_callback = NULL;
 
 #define INQ_LEN 0x10
@@ -68,10 +69,9 @@ static esp_bd_addr_t _peer_bd_addr;
 static char _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
 static bool _isRemoteAddressSet;
 static bool _isMaster;
-static esp_bt_pin_code_t _pin_code;
-static int _pin_len;
-static bool _isPinSet;
 static bool _enableSSP;
+static bool _IO_CAP_INPUT;
+static bool _IO_CAP_OUTPUT;
 static esp_spp_sec_t _sec_mask;
 static esp_spp_role_t _role;
 // start connect on ESP_SPP_DISCOVERY_COMP_EVT or save entry for getChannels
@@ -135,22 +135,6 @@ static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len)
         bdname[rmt_bdname_len] = 0;
         *bdname_len = rmt_bdname_len;
         return true;
-    }
-    return false;
-}
-
-static bool btSetPin() {
-    esp_bt_pin_type_t pin_type;
-    if (_isPinSet) {
-        if (_pin_len) {
-            log_i("pin set");
-            pin_type = ESP_BT_PIN_TYPE_FIXED;
-        } else {
-            _isPinSet = false;
-            log_i("pin reset");
-            pin_type = ESP_BT_PIN_TYPE_VARIABLE; // pin_code would be ignored (default)
-        }
-        return (esp_bt_gap_set_pin(pin_type, _pin_len, _pin_code) == ESP_OK);        
     }
     return false;
 }
@@ -525,7 +509,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                     auth_complete_callback(true);
                 }
             } else {
-                log_e("authentication failed, status:%d", param->auth_cmpl.stat);
+                log_e("authentication failed for connecting with \"%s\", status:%d", param->auth_cmpl.device_name, param->auth_cmpl.stat);
                 if (auth_complete_callback) {
                     auth_complete_callback(false);
                 }
@@ -555,7 +539,8 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                 confirm_request_callback(param->cfm_req.num_val);
             }
             else {
-                esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true);
+                log_w("ESP_BT_GAP_CFM_REQ_EVT: confirm_request_callback does not exist - refusing pairing");
+                esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, false);
             }
             break;
 
@@ -565,6 +550,14 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
 
         case ESP_BT_GAP_KEY_REQ_EVT:
             log_i("ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
+            if (key_request_callback) {
+                memcpy(current_bd_addr, param->cfm_req.bda, sizeof(esp_bd_addr_t));
+                key_request_callback();
+            }
+            else {
+                log_w("ESP_BT_GAP_KEY_REQ_EVT: key_request_callback does not exist - refuseing pairing");
+                esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, false);
+            }
             break;
 
         case ESP_BT_GAP_READ_RSSI_DELTA_EVT:
@@ -604,7 +597,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             break;
 
         case ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT:
-            log_i("ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT ACL disconnection complete status event");
+            log_i("ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT ACL disconnection complete status event: reason %d, handle %d", param->acl_disconn_cmpl_stat.reason, param->acl_disconn_cmpl_stat.handle);
             break;
 
         default:
@@ -702,22 +695,22 @@ static bool _init_bt(const char *deviceName)
         return false;
     }
 
-    // if (esp_bt_sleep_disable() != ESP_OK){
-    //     log_e("esp_bt_sleep_disable failed");
-    // }
-
     log_i("device name set");
     esp_bt_dev_set_device_name(deviceName);
-
-    if (_isPinSet) {
-        log_i("pin set");
-        btSetPin();
-    }
 
     if (_enableSSP) {
         log_i("Simple Secure Pairing");
         esp_bt_sp_param_t param_type = ESP_BT_SP_IOCAP_MODE;
-        esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_IO;
+        esp_bt_io_cap_t iocap;
+        if(_IO_CAP_INPUT && _IO_CAP_OUTPUT){
+            iocap = ESP_BT_IO_CAP_IO; // Display with prompt
+        }else if(!_IO_CAP_INPUT && _IO_CAP_OUTPUT){
+            iocap = ESP_BT_IO_CAP_OUT; // DisplayOnly
+        }else if(_IO_CAP_INPUT && !_IO_CAP_OUTPUT){
+            iocap = ESP_BT_IO_CAP_IN; // Input only
+        }else if(!_IO_CAP_INPUT && !_IO_CAP_OUTPUT){
+            iocap = ESP_BT_IO_CAP_NONE; // No input/output
+        }
         esp_bt_gap_set_security_param(param_type, &iocap, sizeof(uint8_t));
     }
 
@@ -900,6 +893,15 @@ void BluetoothSerial::onConfirmRequest(ConfirmRequestCb cb)
     confirm_request_callback = cb;
 }
 
+void BluetoothSerial::onKeyRequest(KeyRequestCb cb)
+{
+    key_request_callback = cb;
+}
+
+void BluetoothSerial::respondPasskey(uint32_t passkey){
+    esp_bt_gap_ssp_passkey_reply(current_bd_addr, true, passkey);
+}
+
 void BluetoothSerial::onAuthComplete(AuthCompleteCb cb)
 {
     auth_complete_callback = cb;
@@ -907,7 +909,7 @@ void BluetoothSerial::onAuthComplete(AuthCompleteCb cb)
 
 void BluetoothSerial::confirmReply(boolean confirm)
 {
-    esp_bt_gap_ssp_confirm_reply(current_bd_addr, confirm);  
+    esp_bt_gap_ssp_confirm_reply(current_bd_addr, confirm);
 }
 
 
@@ -917,31 +919,38 @@ esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t * callback)
     return ESP_OK;
 }
 
-// Simple Secure Pairing
+// Enable Simple Secure Pairing (using generated PIN)
+// This must be called before calling begin, otherwise has no effect!
 void BluetoothSerial::enableSSP() {
+    if(isReady(false, READY_TIMEOUT)){
+        log_i("Attempted to enable SSP for already initialized driver. Restart to take effect with end() followed by begin()");
+        return;
+    }
     _enableSSP = true;
+    _IO_CAP_INPUT = true;
+    _IO_CAP_OUTPUT = true;
 }
-/*
-     * Set default parameters for Legacy Pairing
-     * Use fixed pin code
-*/
-bool BluetoothSerial::setPin(const char *pin) {
-    log_i("pin: %s", pin);
-    bool isEmpty =  !(pin  && *pin);
-    if (isEmpty && !_isPinSet) {
-        return true; // nothing to do
-    } else if (!isEmpty){
-        _pin_len = strlen(pin);
-        memcpy(_pin_code, pin, _pin_len);
-    } else {
-        _pin_len = 0; // resetting pin to none (default)
-    }
-    _pin_code[_pin_len] = 0;
-    _isPinSet = true;
-    if (isReady(false, READY_TIMEOUT)) {
-        btSetPin();
-    }
-    return true;
+
+// Enable Simple Secure Pairing (using generated PIN)
+// This must be called before calling begin, otherwise has no effect!
+// Behavior description:
+// When both Input and Output are false only the other device authenticates pairing without any pin.
+// When Output is true and Input is false only the other device authenticates pairing without any pin.
+// When both Input and Output are true both devices display randomly generated code and if they match authenticate pairing on both devices
+//   - On ESP must be implemented by calling creating callback via onConfirmRequest() and in this callback request user input and call SerialBT.confirmReply(true); if the authenticated.
+// When Input is true and Output is false User will be required to input the passkey to the ESP32 device to authenticate.
+//   - This must be implemented by user - register callback: onKeyRequest() in which call SerialBT.respondPasskey(passkey);
+void BluetoothSerial::enableSSP(bool inputCpability, bool outputCapability) {
+    log_i("Enabling SSP: input capability=%d; output capability=%d", inputCpability, outputCapability);
+    _enableSSP = true;
+    _IO_CAP_INPUT = inputCpability;
+    _IO_CAP_OUTPUT = outputCapability;
+}
+
+// Disable Simple Secure Pairing (using generated PIN)
+// This must be called before calling begin, otherwise has no effect!
+void BluetoothSerial::disableSSP() {
+    _enableSSP = false;
 }
 
 bool BluetoothSerial::connect(String remoteName)
