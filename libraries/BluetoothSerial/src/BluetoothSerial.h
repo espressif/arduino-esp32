@@ -92,7 +92,14 @@ class BluetoothSerial: public Stream
         void getBtAddress(uint8_t *mac);
         BTAddress getBtAddressObject();
         String getBtAddressString();
-        void dropCache();
+        //void dropCache(); // To be replaced
+        void requestRemoteName(uint8_t *remoteAddress);
+        bool readRemoteName(char rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1]);
+        void invalidateRemoteName();
+        int getNumberOfBondedDevices();
+        int getBondedDevices(uint dev_num, esp_bd_addr_t *dev_list);
+        bool deleteBondedDevice(uint8_t *remoteAddress);
+        void deleteAllBondedDevices();
     private:
         String local_name;
         int timeoutTicks=0;

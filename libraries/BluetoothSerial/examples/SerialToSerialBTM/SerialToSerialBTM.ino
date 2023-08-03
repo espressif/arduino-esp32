@@ -44,7 +44,7 @@ void setup() {
   Serial.begin(115200);
 
   SerialBT.begin(myName, true);
-  //SerialBT.dropCache(); // Uncomment this to delete paired devices; Must be called after begin
+  //SerialBT.deleteAllBondedDevices(); // Uncomment this to delete paired devices; Must be called after begin
   Serial.printf("The device \"%s\" started in master mode, make sure slave BT device is on!\n", myName.c_str());
 
   #ifndef USE_NAME

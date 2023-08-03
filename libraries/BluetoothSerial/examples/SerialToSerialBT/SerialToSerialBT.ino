@@ -24,7 +24,7 @@ BluetoothSerial SerialBT;
 void setup() {
   Serial.begin(115200);
   SerialBT.begin(device_name); //Bluetooth device name
-  //SerialBT.dropCache(); // Uncomment this to delete paired devices; Must be called after begin
+  //SerialBT.deleteAllBondedDevices(); // Uncomment this to delete paired devices; Must be called after begin
   Serial.printf("The device with name \"%s\" is started.\nNow you can pair it with Bluetooth!\n", device_name.c_str());
 }
 
