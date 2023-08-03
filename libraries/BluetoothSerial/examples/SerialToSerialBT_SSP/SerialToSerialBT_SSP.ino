@@ -30,14 +30,14 @@
 const char * deviceName = "ESP32_SSP_example";
 
 // The following lines defines the method of pairing
-When both Input and Output are false only the other device authenticates pairing without any pin.
+// When both Input and Output are false only the other device authenticates pairing without any pin.
 // When Output is true and Input is false only the other device authenticates pairing without any pin.
 // When both Input and Output are true both devices display randomly generated code and if they match authenticate pairing on both devices
 //   - This must be implemented by registering callback via onConfirmRequest() and in this callback request user input and call confirmReply(true); if the authenticated
 //      otherwise call `confirmReply(false)` to reject the pairing.
 // When Input is true and Output is false User will be required to input the passkey to the ESP32 device to authenticate.
 //   - This must be implemented by registering callback via onKeyRequest() and in this callback the entered passkey will be responded via respondPasskey(passkey);
-const bool INUPT_CAPABILITY = false; // Defines if ESP32 device has input method (Serial terminal, keyboard or similar)
+const bool INPUT_CAPABILITY = false; // Defines if ESP32 device has input method (Serial terminal, keyboard or similar)
 const bool OUTPUT_CAPABILITY = true; // Defines if ESP32 device has output method (Serial terminal, display or similar)
 
 BluetoothSerial SerialBT;
@@ -109,20 +109,20 @@ void serial_response(){
 
 void setup(){
   Serial.begin(115200);
-  SerialBT.enableSSP(INUPT_CAPABILITY, OUTPUT_CAPABILITY); // Must be called before begin
+  SerialBT.enableSSP(INPUT_CAPABILITY, OUTPUT_CAPABILITY); // Must be called before begin
   SerialBT.onConfirmRequest(BTConfirmRequestCallback);
   SerialBT.onKeyRequest(BTKeyRequestCallback);
   SerialBT.onAuthComplete(BTAuthCompleteCallback);
   SerialBT.begin(deviceName); // Initiate Bluetooth device with name in parameter
-  //SerialBT.dropCache(); // Uncomment this to delete paired devices; Must be called after begin
+  //SerialBT.deleteAllBondedDevices(); // Uncomment this to delete paired devices; Must be called after begin
   Serial.printf("The device started with name \"%s\", now you can pair it with Bluetooth!\n", deviceName);
-  if(INUPT_CAPABILITY and OUTPUT_CAPABILITY){
+  if(INPUT_CAPABILITY and OUTPUT_CAPABILITY){
     Serial.println("Both devices will display randomly generated code and if they match authenticate pairing on both devices");
-  }else if(not INUPT_CAPABILITY and not OUTPUT_CAPABILITY){
+  }else if(not INPUT_CAPABILITY and not OUTPUT_CAPABILITY){
     Serial.println("Authenticate pairing on the other device. No PIN is used");
-  }else if(not INUPT_CAPABILITY and OUTPUT_CAPABILITY){
+  }else if(not INPUT_CAPABILITY and OUTPUT_CAPABILITY){
     Serial.println("Authenticate pairing on the other device. No PIN is used");
-  }else if(INUPT_CAPABILITY and not OUTPUT_CAPABILITY){
+  }else if(INPUT_CAPABILITY and not OUTPUT_CAPABILITY){
     Serial.println("After pairing is initiated you will be required to enter the passkey to the ESP32 device to authenticate\n > The Passkey will displayed on the other device");
   }
 }

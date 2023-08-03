@@ -60,6 +60,8 @@ static esp_bd_addr_t current_bd_addr;
 static ConfirmRequestCb confirm_request_callback = NULL;
 static KeyRequestCb key_request_callback = NULL;
 static AuthCompleteCb auth_complete_callback = NULL;
+static bool _rmt_name_valid = false;
+static uint8_t _rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1] = {0};
 
 #define INQ_LEN 0x10
 #define INQ_NUM_RSPS 20
@@ -575,6 +577,8 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         case ESP_BT_GAP_READ_REMOTE_NAME_EVT:
             if (param->read_rmt_name.stat == ESP_BT_STATUS_SUCCESS ) {
                 log_i("ESP_BT_GAP_READ_REMOTE_NAME_EVT: %s", param->read_rmt_name.rmt_name);
+                memcpy(_rmt_name, param->read_rmt_name.rmt_name, ESP_BT_GAP_MAX_BDNAME_LEN + 1);
+                _rmt_name_valid = true;
             } else {
                 log_i("ESP_BT_GAP_READ_REMOTE_NAME_EVT: no success stat:%d", param->read_rmt_name.stat);
             }
@@ -1122,7 +1126,7 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
 
 /**
  * @brief           RemoteName or address are not allowed to be set during discovery
- *                  (otherwhise it might connect automatically and stop discovery)
+ *                  (otherwise it might connect automatically and stop discovery)
  * @param[in]       timeoutMs can range from MIN_INQ_TIME to MAX_INQ_TIME
  * @return          in case of Error immediately Empty ScanResults.
  */
@@ -1146,11 +1150,11 @@ BTScanResults* BluetoothSerial::discover(int timeoutMs) {
 
 /**
  * @brief           RemoteName or address are not allowed to be set during discovery
- *                  (otherwhise it might connect automatically and stop discovery)
+ *                  (otherwise it might connect automatically and stop discovery)
  * @param[in]       cb called when a [b]new[/b] device has been discovered
  * @param[in]       timeoutMs can be 0 or range from MIN_INQ_TIME to MAX_INQ_TIME
  *
- * @return          Wheter start was successfull or problems with params
+ * @return          Whether start was successful or problems with params
  */
 bool BluetoothSerial::discoverAsync(BTAdvertisedDeviceCb cb, int timeoutMs) {
     scanResults.clear();
@@ -1173,7 +1177,7 @@ void BluetoothSerial::discoverAsyncStop() {
     advertisedDeviceCb = nullptr;
 }
 
-/** @brief      Clears scanresult entries */
+/** @brief      Clears scanResult entries */
 void BluetoothSerial::discoverClear() {
     scanResults.clear();
 }
@@ -1246,7 +1250,63 @@ String BluetoothSerial::getBtAddressString() {
     return getBtAddressObject().toString(true);
 }
 
-void BluetoothSerial::dropCache(){
+// Send a request to the remote device defined by the remoteAddress to send back its name.
+// The name will be read by background task and stored. It can be later read with radRemoteName()
+void BluetoothSerial::requestRemoteName(uint8_t remoteAddress[]){
+    if(isReady(false, READY_TIMEOUT)){
+        esp_bt_gap_read_remote_name(remoteAddress);
+    }
+}
+
+// If remote name is valid (was already received) this function will copy the name to the aprameter rmt_name
+// The buffer must have size at least ESP_BT_GAP_MAX_BDNAME_LEN + 1
+// If the name is valid the function will return true
+// If the name is not valid (was not read yet) returns false
+bool BluetoothSerial::readRemoteName(char rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1]){
+    if(_rmt_name_valid){
+        memcpy(rmt_name, _rmt_name, ESP_BT_GAP_MAX_BDNAME_LEN + 1);
+        return true;
+    }
+    return false;
+}
+
+// Set validity of remote name before reading name from different device
+void BluetoothSerial::invalidateRemoteName(){
+    _rmt_name_valid = false;
+}
+
+int BluetoothSerial::getNumberOfBondedDevices(){
+    return esp_bt_gap_get_bond_device_num();
+}
+
+// Accepts the maximum number of devices that can fit in given array dev_list.
+// Create you list this way: esp_bd_addr_t dev_list[dev_num];
+// Returns number of retrieved devices (on error returns 0)
+int BluetoothSerial::getBondedDevices(uint dev_num, esp_bd_addr_t *dev_list){
+    // typedef uint8_t esp_bd_addr_t[ESP_BD_ADDR_LEN]
+    if(dev_list == NULL){
+        log_e("Device list is NULL");
+        return 0;
+    }
+    if(dev_num == 0){
+        log_e("Device number must be larger than 0!");
+        return 0;
+    }
+    int _dev_num = dev_num;
+    esp_bt_gap_get_bond_device_list(&_dev_num, dev_list);
+    return _dev_num;
+}
+
+bool BluetoothSerial::deleteBondedDevice(uint8_t *remoteAddress){
+    esp_err_t ret = esp_bt_gap_remove_bond_device(remoteAddress);
+    if(ret == ESP_OK){
+        return true;
+    }else{
+        return false;
+    }
+}
+
+void BluetoothSerial::deleteAllBondedDevices(){
     if(!isReady(false, READY_TIMEOUT)){
         log_w("Attempted to drop cache for uninitialized driver. First call begin()");
         return;
