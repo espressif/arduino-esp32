@@ -259,6 +259,10 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         xEventGroupSetBits(_spp_event_group, SPP_RUNNING);
         break;
 
+    case ESP_SPP_UNINIT_EVT:
+        log_i("ESP_SPP_UNINIT_EVT: SPP is deinitialized");
+        break;
+
     case ESP_SPP_SRV_OPEN_EVT://Server connection open
         if (param->srv_open.status == ESP_SPP_SUCCESS) {
             log_i("ESP_SPP_SRV_OPEN_EVT: %u", _spp_client);
@@ -392,7 +396,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         break;
 
     default:
-        log_i("ESP_SPP_* event unhandled %d", event);
+        log_i("ESP_SPP_* event #%d unhandled", event);
         break;
     }
     if(custom_spp_callback)(*custom_spp_callback)(event, param);
