@@ -245,7 +245,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
     switch (event)
     {
-    case ESP_SPP_INIT_EVT:
+    case ESP_SPP_INIT_EVT: // Enum 0 - When SPP is initialized
         log_i("ESP_SPP_INIT_EVT");
 #ifdef ESP_IDF_VERSION_MAJOR
         esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
@@ -259,84 +259,11 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         xEventGroupSetBits(_spp_event_group, SPP_RUNNING);
         break;
 
-    case ESP_SPP_UNINIT_EVT:
+    case ESP_SPP_UNINIT_EVT: // Enum 1 - When SPP is deinitialized
         log_i("ESP_SPP_UNINIT_EVT: SPP is deinitialized");
         break;
 
-    case ESP_SPP_SRV_OPEN_EVT://Server connection open
-        if (param->srv_open.status == ESP_SPP_SUCCESS) {
-            log_i("ESP_SPP_SRV_OPEN_EVT: %u", _spp_client);
-            if (!_spp_client){
-                _spp_client = param->srv_open.handle;
-                _spp_tx_buffer_len = 0;
-            } else {
-                secondConnectionAttempt = true;
-                esp_spp_disconnect(param->srv_open.handle);
-            }
-            xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
-            xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
-        } else {
-            log_e("ESP_SPP_SRV_OPEN_EVT Failed!, status:%d", param->srv_open.status);
-        }
-        break;
-
-    case ESP_SPP_CLOSE_EVT://Client connection closed
-        if ((param->close.async == false && param->close.status == ESP_SPP_SUCCESS) || param->close.async) {
-            log_i("ESP_SPP_CLOSE_EVT status:%d handle:%d close_by_remote:%d attempt %u", param->close.status,
-                 param->close.handle, param->close.async, secondConnectionAttempt);
-            if(secondConnectionAttempt) {
-                secondConnectionAttempt = false;
-            } else {
-                _spp_client = 0;
-                xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
-                xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
-                xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
-                xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
-            }        
-        } else {
-            log_e("ESP_SPP_CLOSE_EVT failed!, status:%d", param->close.status);
-        }
-        break;
-
-    case ESP_SPP_CONG_EVT://connection congestion status changed
-        if(param->cong.cong){
-            xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
-        } else {
-            xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
-        }
-        log_v("ESP_SPP_CONG_EVT: %s", param->cong.cong?"CONGESTED":"FREE");
-        break;
-
-    case ESP_SPP_WRITE_EVT://write operation completed
-        if (param->write.status == ESP_SPP_SUCCESS) {
-            if(param->write.cong){
-                xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
-            }
-            log_v("ESP_SPP_WRITE_EVT: %u %s", param->write.len, param->write.cong?"CONGESTED":"");
-        } else {
-            log_e("ESP_SPP_WRITE_EVT failed!, status:%d", param->write.status);
-        }
-        xSemaphoreGive(_spp_tx_done);//we can try to send another packet
-        break;
-
-    case ESP_SPP_DATA_IND_EVT://connection received data
-        log_v("ESP_SPP_DATA_IND_EVT len=%d handle=%d", param->data_ind.len, param->data_ind.handle);
-        //esp_log_buffer_hex("",param->data_ind.data,param->data_ind.len); //for low level debug
-        //ets_printf("r:%u\n", param->data_ind.len);
-
-        if(custom_data_callback){
-            custom_data_callback(param->data_ind.data, param->data_ind.len);
-        } else if (_spp_rx_queue != NULL){
-            for (int i = 0; i < param->data_ind.len; i++){
-                if(xQueueSend(_spp_rx_queue, param->data_ind.data + i, (TickType_t)0) != pdTRUE){
-                    log_e("RX Full! Discarding %u bytes", param->data_ind.len - i);
-                    break;
-                }
-            }
-        }
-        break;
-
-    case ESP_SPP_DISCOVERY_COMP_EVT://discovery complete
+    case ESP_SPP_DISCOVERY_COMP_EVT: // Enum 8 - When SDP discovery complete
         log_i("ESP_SPP_DISCOVERY_COMP_EVT num=%d", param->disc_comp.scn_num);
         if (param->disc_comp.status == ESP_SPP_SUCCESS) {
             for(int i=0; i < param->disc_comp.scn_num; i++) {
@@ -370,7 +297,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         xEventGroupSetBits(_bt_event_group, BT_SDP_COMPLETED);
         break;
 
-    case ESP_SPP_OPEN_EVT://Client connection open
+    case ESP_SPP_OPEN_EVT: // Enum 26 - When SPP Client connection open
         log_i("ESP_SPP_OPEN_EVT");
         if (!_spp_client){
                 _spp_client = param->open.handle;
@@ -383,16 +310,101 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
         xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
         break;
 
-    case ESP_SPP_START_EVT://server started
+    case ESP_SPP_CLOSE_EVT: // Enum 27 - When SPP connection closed
+        if ((param->close.async == false && param->close.status == ESP_SPP_SUCCESS) || param->close.async) {
+            log_i("ESP_SPP_CLOSE_EVT status:%d handle:%d close_by_remote:%d attempt %u", param->close.status,
+                 param->close.handle, param->close.async, secondConnectionAttempt);
+            if(secondConnectionAttempt) {
+                secondConnectionAttempt = false;
+            } else {
+                _spp_client = 0;
+                xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
+                xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
+                xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
+                xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
+            }
+        } else {
+            log_e("ESP_SPP_CLOSE_EVT failed!, status:%d", param->close.status);
+        }
+        break;
+
+    case ESP_SPP_START_EVT: // Enum 28 - When SPP server started
         log_i("ESP_SPP_START_EVT");
         break;
 
-    case ESP_SPP_CL_INIT_EVT://client initiated a connection
+    case ESP_SPP_CL_INIT_EVT: // Enum 29 - When SPP client initiated a connection
         if (param->cl_init.status == ESP_SPP_SUCCESS) {
             log_i("ESP_SPP_CL_INIT_EVT handle:%d sec_id:%d", param->cl_init.handle, param->cl_init.sec_id);
         } else {
             log_i("ESP_SPP_CL_INIT_EVT status:%d", param->cl_init.status);
         }
+        break;
+
+    case ESP_SPP_DATA_IND_EVT: // Enum 30 - When SPP connection received data, only for ESP_SPP_MODE_CB
+        log_v("ESP_SPP_DATA_IND_EVT len=%d handle=%d", param->data_ind.len, param->data_ind.handle);
+        //esp_log_buffer_hex("",param->data_ind.data,param->data_ind.len); //for low level debug
+        //ets_printf("r:%u\n", param->data_ind.len);
+
+        if(custom_data_callback){
+            custom_data_callback(param->data_ind.data, param->data_ind.len);
+        } else if (_spp_rx_queue != NULL){
+            for (int i = 0; i < param->data_ind.len; i++){
+                if(xQueueSend(_spp_rx_queue, param->data_ind.data + i, (TickType_t)0) != pdTRUE){
+                    log_e("RX Full! Discarding %u bytes", param->data_ind.len - i);
+                    break;
+                }
+            }
+        }
+        break;
+
+    case ESP_SPP_CONG_EVT: // Enum 31 - When SPP connection congestion status changed, only for ESP_SPP_MODE_CB
+        if(param->cong.cong){
+            xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
+        } else {
+            xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
+        }
+        log_v("ESP_SPP_CONG_EVT: %s", param->cong.cong?"CONGESTED":"FREE");
+        break;
+
+    case ESP_SPP_WRITE_EVT: // Enum 33 - When SPP write operation completes, only for ESP_SPP_MODE_CB
+        if (param->write.status == ESP_SPP_SUCCESS) {
+            if(param->write.cong){
+                xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
+            }
+            log_v("ESP_SPP_WRITE_EVT: %u %s", param->write.len, param->write.cong?"CONGESTED":"");
+        } else {
+            log_e("ESP_SPP_WRITE_EVT failed!, status:%d", param->write.status);
+        }
+        xSemaphoreGive(_spp_tx_done);//we can try to send another packet
+        break;
+
+    case ESP_SPP_SRV_OPEN_EVT: // Enum 34 - When SPP Server connection open
+        if (param->srv_open.status == ESP_SPP_SUCCESS) {
+            log_i("ESP_SPP_SRV_OPEN_EVT: %u", _spp_client);
+            if (!_spp_client){
+                _spp_client = param->srv_open.handle;
+                _spp_tx_buffer_len = 0;
+            } else {
+                secondConnectionAttempt = true;
+                esp_spp_disconnect(param->srv_open.handle);
+            }
+            xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
+            xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
+        } else {
+            log_e("ESP_SPP_SRV_OPEN_EVT Failed!, status:%d", param->srv_open.status);
+        }
+        break;
+
+    case ESP_SPP_SRV_STOP_EVT: // Enum 35 - When SPP server stopped
+        log_i("ESP_SPP_SRV_STOP_EVT");
+        break;
+
+    case ESP_SPP_VFS_REGISTER_EVT: // Enum 36 - When SPP VFS register
+        log_i("ESP_SPP_VFS_REGISTER_EVT");
+        break;
+
+    case ESP_SPP_VFS_UNREGISTER_EVT: // Enum 37 - When SPP VFS unregister
+        log_i("ESP_SPP_VFS_UNREGISTER_EVT");
         break;
 
     default:
@@ -406,10 +418,11 @@ void BluetoothSerial::onData(BluetoothSerialDataCb cb){
     custom_data_callback = cb;
 }
 
+
 static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 {
     switch(event){
-        case ESP_BT_GAP_DISC_RES_EVT: {
+        case ESP_BT_GAP_DISC_RES_EVT: { // Enum 0 - Device discovery result event
             log_i("ESP_BT_GAP_DISC_RES_EVT properties=%d", param->disc_res.num_prop);
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
             char bda_str[18];
@@ -420,7 +433,44 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
             for (int i = 0; i < param->disc_res.num_prop; i++) {
                 switch(param->disc_res.prop[i].type) {
-                    case ESP_BT_GAP_DEV_PROP_EIR:  
+                    case ESP_BT_GAP_DEV_PROP_BDNAME: // Enum 1 - Bluetooth device name, value type is int8_t []
+                        peer_bdname_len = param->disc_res.prop[i].len;
+                        memcpy(peer_bdname, param->disc_res.prop[i].val, peer_bdname_len);
+                        peer_bdname_len--; // len includes 0 terminator
+                        log_v("ESP_BT_GAP_DISC_RES_EVT : BDNAME :  %s : %d", peer_bdname, peer_bdname_len);
+                        if (strlen(_remote_name) == peer_bdname_len
+                            && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
+                            log_i("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_BDNAME : %s", peer_bdname);
+                            _isRemoteAddressSet = true;
+                            memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
+                            esp_bt_gap_cancel_discovery();
+                            esp_spp_start_discovery(_peer_bd_addr);
+                        }
+                        break;
+
+                    case ESP_BT_GAP_DEV_PROP_COD: // Enum 2 - Class of Device, value type is uint32_t
+                        if (param->disc_res.prop[i].len <= sizeof(int)) {
+                            uint32_t cod = 0;
+                            memcpy(&cod, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
+                            advertisedDevice.setCOD(cod);
+                            log_d("ESP_BT_GAP_DEV_PROP_COD 0x%x", cod);
+                        } else {
+                            log_d("ESP_BT_GAP_DEV_PROP_COD invalid COD: Value size larger than integer");
+                        }
+                        break;
+
+                    case ESP_BT_GAP_DEV_PROP_RSSI: // Enum 3 - Received Signal strength Indication, value type is int8_t, ranging from -128 to 127
+                        if (param->disc_res.prop[i].len <= sizeof(int)) {
+                            uint8_t rssi = 0;
+                            memcpy(&rssi, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
+                            log_d("ESP_BT_GAP_DEV_PROP_RSSI %d", rssi);
+                            advertisedDevice.setRSSI(rssi);
+                        } else {
+                            log_d("ESP_BT_GAP_DEV_PROP_RSSI invalid RSSI: Value size larger than integer");
+                        }
+                        break;
+
+                    case ESP_BT_GAP_DEV_PROP_EIR: // Enum 4 - Extended Inquiry Response, value type is uint8_t []
                         if (get_name_from_eir((uint8_t*)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)) {
                             log_i("ESP_BT_GAP_DISC_RES_EVT : EIR : %s : %d", peer_bdname, peer_bdname_len);
                             if (strlen(_remote_name) == peer_bdname_len
@@ -434,43 +484,6 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                         }
                         break;
 
-                    case ESP_BT_GAP_DEV_PROP_BDNAME:
-                        peer_bdname_len = param->disc_res.prop[i].len;
-                        memcpy(peer_bdname, param->disc_res.prop[i].val, peer_bdname_len);
-                        peer_bdname_len--; // len includes 0 terminator
-                        log_v("ESP_BT_GAP_DISC_RES_EVT : BDNAME :  %s : %d", peer_bdname, peer_bdname_len);
-                        if (strlen(_remote_name) == peer_bdname_len
-                            && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
-                            log_i("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_BDNAME : %s", peer_bdname);
-                            _isRemoteAddressSet = true;
-                            memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
-                            esp_bt_gap_cancel_discovery();
-                            esp_spp_start_discovery(_peer_bd_addr);
-                        } 
-                        break;
-
-                    case ESP_BT_GAP_DEV_PROP_COD:
-                        if (param->disc_res.prop[i].len <= sizeof(int)) {
-                            uint32_t cod = 0;
-                            memcpy(&cod, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
-                            advertisedDevice.setCOD(cod);
-                            log_d("ESP_BT_GAP_DEV_PROP_COD 0x%x", cod);
-                        } else {
-                            log_d("ESP_BT_GAP_DEV_PROP_COD invalid COD: Value size larger than integer");
-                        }
-                        break;
-
-                    case ESP_BT_GAP_DEV_PROP_RSSI:
-                        if (param->disc_res.prop[i].len <= sizeof(int)) {
-                            uint8_t rssi = 0;
-                            memcpy(&rssi, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
-                            log_d("ESP_BT_GAP_DEV_PROP_RSSI %d", rssi);
-                            advertisedDevice.setRSSI(rssi);
-                        } else {
-                            log_d("ESP_BT_GAP_DEV_PROP_RSSI invalid RSSI: Value size larger than integer");
-                        }
-                        break;
-                        
                     default:
                         log_i("ESP_BT_GAP_DISC_RES_EVT unknown property [%d]:type:%d", i, param->disc_res.prop[i].type);
                         break;
@@ -488,7 +501,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         }
         break;
 
-        case ESP_BT_GAP_DISC_STATE_CHANGED_EVT:
+        case ESP_BT_GAP_DISC_STATE_CHANGED_EVT: // Enum 1 - Discovery state changed event
             if (param->disc_st_chg.state == ESP_BT_GAP_DISCOVERY_STOPPED) {
                 log_i("ESP_BT_GAP_DISC_STATE_CHANGED_EVT stopped");
                 xEventGroupClearBits(_bt_event_group, BT_DISCOVERY_RUNNING);
@@ -500,15 +513,15 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             }
             break;
 
-        case ESP_BT_GAP_RMT_SRVCS_EVT:
+        case ESP_BT_GAP_RMT_SRVCS_EVT: // Enum 2 - Get remote services event
             log_i( "ESP_BT_GAP_RMT_SRVCS_EVT: status = %d, num_uuids = %d", param->rmt_srvcs.stat, param->rmt_srvcs.num_uuids);
             break;
 
-        case ESP_BT_GAP_RMT_SRVC_REC_EVT:
+        case ESP_BT_GAP_RMT_SRVC_REC_EVT: // Enum 3 - Get remote service record event
             log_i("ESP_BT_GAP_RMT_SRVC_REC_EVT: status = %d", param->rmt_srvc_rec.stat);
             break;
 
-        case ESP_BT_GAP_AUTH_CMPL_EVT:
+        case ESP_BT_GAP_AUTH_CMPL_EVT: // Enum 4 - Authentication complete event
             if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {
                 log_v("authentication success: %s", param->auth_cmpl.device_name);
                 if (auth_complete_callback) {
@@ -521,8 +534,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
                 }
             }
             break;
-
-        case ESP_BT_GAP_PIN_REQ_EVT:
+        case ESP_BT_GAP_PIN_REQ_EVT: // Enum 5 - Legacy Pairing Pin code request
             // default pairing pins
             log_i("ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", param->pin_req.min_16_digit);
             if (param->pin_req.min_16_digit) {
@@ -538,7 +550,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             }
             break;
        
-        case ESP_BT_GAP_CFM_REQ_EVT:
+        case ESP_BT_GAP_CFM_REQ_EVT: // Enum 6 - Security Simple Pairing User Confirmation request.
             log_i("ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
             if (confirm_request_callback) {
                 memcpy(current_bd_addr, param->cfm_req.bda, sizeof(esp_bd_addr_t));
@@ -550,11 +562,11 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             }
             break;
 
-        case ESP_BT_GAP_KEY_NOTIF_EVT:
+        case ESP_BT_GAP_KEY_NOTIF_EVT: // Enum 7 - Security Simple Pairing Passkey Notification
             log_i("ESP_BT_GAP_KEY_NOTIF_EVT passkey:%d", param->key_notif.passkey);
             break;
 
-        case ESP_BT_GAP_KEY_REQ_EVT:
+        case ESP_BT_GAP_KEY_REQ_EVT: // Enum 8 - Security Simple Pairing Passkey request
             log_i("ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
             if (key_request_callback) {
                 memcpy(current_bd_addr, param->cfm_req.bda, sizeof(esp_bd_addr_t));
@@ -566,19 +578,18 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             }
             break;
 
-        case ESP_BT_GAP_READ_RSSI_DELTA_EVT:
+        case ESP_BT_GAP_READ_RSSI_DELTA_EVT: // Enum 9 - Read rssi event
             log_i("ESP_BT_GAP_READ_RSSI_DELTA_EVT Read rssi event");
             break;
-
-        case ESP_BT_GAP_CONFIG_EIR_DATA_EVT:
+        case ESP_BT_GAP_CONFIG_EIR_DATA_EVT: // Enum 10 - Config EIR data event
             log_i("ESP_BT_GAP_CONFIG_EIR_DATA_EVT: stat:%d num:%d", param->config_eir_data.stat, param->config_eir_data.eir_type_num);
             break;
 
-        case ESP_BT_GAP_SET_AFH_CHANNELS_EVT:
+        case ESP_BT_GAP_SET_AFH_CHANNELS_EVT: // Enum 11 - Set AFH channels event
             log_i("ESP_BT_GAP_SET_AFH_CHANNELS_EVT Set AFH channels event");
             break;
 
-        case ESP_BT_GAP_READ_REMOTE_NAME_EVT:
+        case ESP_BT_GAP_READ_REMOTE_NAME_EVT: // Enum 12 - Read Remote Name event
             if (param->read_rmt_name.stat == ESP_BT_STATUS_SUCCESS ) {
                 log_i("ESP_BT_GAP_READ_REMOTE_NAME_EVT: %s", param->read_rmt_name.rmt_name);
                 memcpy(_rmt_name, param->read_rmt_name.rmt_name, ESP_BT_GAP_MAX_BDNAME_LEN + 1);
@@ -588,23 +599,24 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             }
             break;
 
-        case ESP_BT_GAP_MODE_CHG_EVT:
+
+        case ESP_BT_GAP_MODE_CHG_EVT: // Enum 13
             log_i("ESP_BT_GAP_MODE_CHG_EVT: mode: %d", param->mode_chg.mode);
             break;
 
-        case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT:
+        case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT: // Enum - 14 remove bond device complete event
             log_i("ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT remove bond device complete event");
             break;
 
-        case ESP_BT_GAP_QOS_CMPL_EVT:
+        case ESP_BT_GAP_QOS_CMPL_EVT: // Enum 15 - QOS complete event
             log_i("ESP_BT_GAP_QOS_CMPL_EVT QOS complete event");
             break;
 
-        case ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT:
+        case ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT: // Enum 16 - ACL connection complete status event
             log_i("ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT ACL connection complete status event");
             break;
 
-        case ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT:
+        case ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT: // Enum 17 - ACL disconnection complete status event
             log_i("ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT ACL disconnection complete status event: reason %d, handle %d", param->acl_disconn_cmpl_stat.reason, param->acl_disconn_cmpl_stat.handle);
             break;
 
