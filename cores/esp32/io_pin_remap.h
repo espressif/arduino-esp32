@@ -18,7 +18,7 @@ int8_t digitalPinFromGPIONumber(int8_t gpioPin);
 #define pulseInLong(pin, state, timeout)    pulseInLong(digitalPinToGPIONumber(pin), state, timeout)
 #define pulseIn(pin, state, timeout)        pulseIn(digitalPinToGPIONumber(pin), state, timeout)
 #define noTone(_pin)                        noTone(digitalPinToGPIONumber(_pin))
-#define tone(_pin, frequency, duration)     tone(digitalPinToGPIONumber(_pin), frequency, duration)
+#define tone(_pin, args...)                 tone(digitalPinToGPIONumber(_pin), args)
 
 // cores/esp32/esp32-hal.h
 #define analogGetChannel(pin)       analogGetChannel(digitalPinToGPIONumber(pin))

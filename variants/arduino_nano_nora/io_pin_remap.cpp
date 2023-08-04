@@ -1,4 +1,20 @@
-#ifndef BOARD_USES_HW_GPIO_NUMBERS
+#if defined(BOARD_HAS_PIN_REMAP) && !defined(ARDUINO_CORE_BUILD)
+// -DARDUINO_CORE_BUILD must be set for core files only, to avoid extra
+// remapping steps that would create all sorts of issues in the core.
+// Removing -DBOARD_HAS_PIN_REMAP at least does correctly restore the
+// use of GPIO numbers in the API.
+#error This build system is not supported. Please rebuild without BOARD_HAS_PIN_REMAP.
+#endif
+
+#if !defined(BOARD_HAS_PIN_REMAP)
+// This board uses pin mapping but the build system has disabled it
+#warning The build system forces the Arduino API to use GPIO numbers on a board that has custom pin mapping.
+#elif defined(BOARD_USES_HW_GPIO_NUMBERS)
+// The user has chosen to disable pin mappin.
+#warning The Arduino API will use GPIO numbers for this build.
+#endif
+
+#if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
 
 #include "Arduino.h"
 
