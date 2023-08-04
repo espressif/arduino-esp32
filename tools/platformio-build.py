@@ -172,6 +172,10 @@ SConscript(
 # Target: Build Core Library
 #
 
+# Set -DARDUINO_CORE_BUILD only for the core library
+corelib_env = env.Clone()
+corelib_env.Append(CPPDEFINES=["ARDUINO_CORE_BUILD"])
+
 libs = []
 
 variants_dir = join(FRAMEWORK_DIR, "variants")
@@ -181,13 +185,14 @@ if "build.variants_dir" in board_config:
 
 if "build.variant" in board_config:
     env.Append(CPPPATH=[join(variants_dir, board_config.get("build.variant"))])
-    env.BuildSources(
+    corelib_env.Append(CPPPATH=[join(variants_dir, board_config.get("build.variant"))])
+    corelib_env.BuildSources(
         join("$BUILD_DIR", "FrameworkArduinoVariant"),
         join(variants_dir, board_config.get("build.variant")),
     )
 
 libs.append(
-    env.BuildLibrary(
+    corelib_env.BuildLibrary(
         join("$BUILD_DIR", "FrameworkArduino"),
         join(FRAMEWORK_DIR, "cores", board_config.get("build.core")),
     )
