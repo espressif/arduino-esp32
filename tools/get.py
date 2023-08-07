@@ -22,6 +22,7 @@ import sys
 import tarfile
 import zipfile
 import re
+import time
 
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
@@ -58,25 +59,116 @@ def mkdir_p(path):
         if exc.errno != errno.EEXIST or not os.path.isdir(path):
             raise
 
-def report_progress(count, blockSize, totalSize):
+def report_progress(block_count, block_size, total_size):
+    downloaded_size = block_count * block_size
+    current_speed = downloaded_size / (time.time() - start_time)
+    time_elapsed = time.time() - start_time
+
     if sys.stdout.isatty():
-        if totalSize > 0:
-            percent = int(count*blockSize*100/totalSize)
-            percent = min(100, percent)
-            sys.stdout.write("\r%d%%" % percent)
-        else:
-            sofar = (count*blockSize) / 1024
-            if sofar >= 1000:
-                sofar /= 1024
-                sys.stdout.write("\r%dMB  " % (sofar))
-            else:
-                sys.stdout.write("\r%dKB" % (sofar))
+        if total_size > 0:
+            percent_complete = min((downloaded_size / total_size) * 100, 100)
+            sys.stdout.write(f"\rDownloading... {percent_complete:.2f}% - {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {time_elapsed:.2f} seconds - Speed: {current_speed / 1024 / 1024:.2f} MB/s")
         sys.stdout.flush()
+
+def format_time(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    return "{:02}:{:05.2f}".format(int(minutes), seconds)
+
+def verify_files(filename, destination, rename_to):
+    # Set the path of the extracted directory
+    extracted_dir_path = destination
+
+    t1 = time.time()
+
+    if filename.endswith(".zip"):
+        try:
+            with zipfile.ZipFile(filename, 'r') as archive:
+                first_dir = archive.namelist()[0].split('/')[0]
+                total_files = len(archive.namelist())
+                for i, zipped_file in enumerate(archive.namelist(), 1):
+                    local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
+                    if not os.path.exists(local_path):
+                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+                        return False
+                    #print(f'\rVerification progress: {i/total_files*100:.2f}%', end='')
+                    if sys.stdout.isatty():
+                        sys.stdout.write(f'\rVerification progress: {i/total_files*100:.2f}%')
+                        sys.stdout.flush()
+        except zipfile.BadZipFile:
+            print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+            return False
+    elif filename.endswith(".tar.gz"):
+        try:
+            with tarfile.open(filename, 'r:gz') as archive:
+                first_dir = archive.getnames()[0].split('/')[0]
+                total_files = len(archive.getnames())
+                for i, zipped_file in enumerate(archive.getnames(), 1):
+                    local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
+                    if not os.path.exists(local_path):
+                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+                        return False
+                    #print(f'\rVerification progress: {i/total_files*100:.2f}%', end='')
+                    if sys.stdout.isatty():
+                        sys.stdout.write(f'\rVerification progress: {i/total_files*100:.2f}%')
+                        sys.stdout.flush()
+        except tarfile.ReadError:
+            print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+            return False
+    elif filename.endswith(".tar.xz"):
+        try:
+            with tarfile.open(filename, 'r:xz') as archive:
+                first_dir = archive.getnames()[0].split('/')[0]
+                total_files = len(archive.getnames())
+                for i, zipped_file in enumerate(archive.getnames(), 1):
+                    local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
+                    if not os.path.exists(local_path):
+                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+                        return False
+                    #print(f'\rVerification progress: {i/total_files*100:.2f}%', end='')
+                    if sys.stdout.isatty():
+                        sys.stdout.write(f'\rVerification progress: {i/total_files*100:.2f}%')
+                        sys.stdout.flush()
+        except tarfile.ReadError:
+            print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+            return False
+    else:
+        raise NotImplementedError('Unsupported archive type')
+
+    if(verobse):
+        print(f"\nVerification passed; completed in {format_time(time.time() - t1)}")
+
+    return True
 
 def unpack(filename, destination):
     dirname = ''
-    print('Extracting {0} ...'.format(os.path.basename(filename)))
-    sys.stdout.flush()
+    print(' > Verify... ')
+
+    if filename.endswith('tar.gz'):
+        tfile = tarfile.open(filename, 'r:gz')
+        dirname = tfile.getnames()[0]
+    elif filename.endswith('tar.xz'):
+        tfile = tarfile.open(filename, 'r:xz')
+        dirname = tfile.getnames()[0]
+    elif filename.endswith('zip'):
+        zfile = zipfile.ZipFile(filename)
+        dirname = zfile.namelist()[0]
+    else:
+        raise NotImplementedError('Unsupported archive type')
+
+    # A little trick to rename tool directories so they don't contain version number
+    rename_to = re.match(r'^([a-z][^\-]*\-*)+', dirname).group(0).strip('-')
+    if rename_to == dirname and dirname.startswith('esp32-arduino-libs-'):
+        rename_to = 'esp32-arduino-libs'
+
+    if(verify_files(filename, destination, rename_to)):
+        print(" Files ok. Skipping Extraction")
+        return
+    else:
+        print(" Failed. extracting")
+
     if filename.endswith('tar.gz'):
         tfile = tarfile.open(filename, 'r:gz')
         tfile.extractall(destination)
@@ -92,10 +184,6 @@ def unpack(filename, destination):
     else:
         raise NotImplementedError('Unsupported archive type')
 
-    # a little trick to rename tool directories so they don't contain version number
-    rename_to = re.match(r'^([a-z][^\-]*\-*)+', dirname).group(0).strip('-')
-    if rename_to == dirname and dirname.startswith('esp32-arduino-libs-'):
-        rename_to = 'esp32-arduino-libs'
     if rename_to != dirname:
         print('Renaming {0} to {1} ...'.format(dirname, rename_to))
         if os.path.isdir(rename_to):
@@ -225,6 +313,7 @@ def identify_platform():
     return arduino_platform_names[sys_name][bits]
 
 if __name__ == '__main__':
+    verbose = "-v" in sys.argv
     is_test = (len(sys.argv) > 1 and sys.argv[1] == '-h')
     if is_test:
         print('Test run!')
