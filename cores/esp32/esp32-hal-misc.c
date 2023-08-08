@@ -249,6 +249,14 @@ extern bool btInUse();
 
 void initArduino()
 {
+    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
+    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
+#ifdef F_CPU
+    setCpuFrequencyMhz(F_CPU/1000000);
+#endif
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
+    psramInit();
+#endif
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
     if(!verifyRollbackLater()){
         const esp_partition_t *running = esp_ota_get_running_partition();
@@ -264,14 +272,6 @@ void initArduino()
             }
         }
     }
-#endif
-    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
-    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
-#ifdef F_CPU
-    setCpuFrequencyMhz(F_CPU/1000000);
-#endif
-#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
-    psramInit();
 #endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
     esp_err_t err = nvs_flash_init();
