@@ -19,9 +19,6 @@
         "name": "ESP32Servo",
         "exclude_targets": [],
         "sketch_path": [
-            "~/Arduino/libraries/ESP32Servo/examples/Knob/Knob.ino",
-            "~/Arduino/libraries/ESP32Servo/examples/Sweep/Sweep.ino",
-            "~/Arduino/libraries/ESP32Servo/examples/PWMExample/PWMExample.ino",
             "~/Arduino/libraries/ESP32Servo/examples/Multiple-Servo-Example-Arduino/Multiple-Servo-Example-Arduino.ino"
         ]
     },
@@ -50,6 +47,20 @@
         "exclude_targets": [],
         "sketch_path": [
             "~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino"
+        ]
+    },
+    {
+        "name": "MFRC522",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/MFRC522/examples/ReadUidMultiReader/ReadUidMultiReader.ino"
+        ]
+    },
+    {
+        "name": "WS2812FX",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/WS2812FX/examples/ws2812fx_spi/ws2812fx_spi.ino"
         ]
     }
 ]
