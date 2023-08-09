@@ -34,7 +34,11 @@ Using 3rd party Serial BT module will require to study the documentation of the 
 
 ### Pairing options
 
-There are two major options - with and without Secure Simple Pairing (SSP).
+There are two easy options and one difficult.
+
+The easy options can be used as usual. These offer pairing with and without Secure Simple Pairing (SSP).
+
+The difficult option offers legacy pairing (using fixed PIN) however this must be compiled with Arduino as an IDF component with disabled sdkconfig option `CONFIG_BT_SSP_ENABLED`.
 
 #### Without SSP
 
@@ -63,5 +67,12 @@ Both options must be called before `begin()` or if it is called after `begin()` 
 * **inputCapability=false and outputCapability=true**
     * Only the other device authenticates pairing without any pin.
 * **inputCapability=true and outputCapability=false**
-    * User will be required to input the passkey to the ESP32 device to authenticate.
-    * This must be implemented by registering callback via `onKeyRequest()` and in this callback the entered passkey will be responded via `respondPasskey(passkey)`
+    * The user will be required to input the passkey to the ESP32 device to authenticate.
+    * This must be implemented by registering a callback via `onKeyRequest`()` and in this callback the entered passkey will be responded via `respondPasskey(passkey)`
+
+### Legacy Pairing (IDF component)
+
+To use Legacy pairing you will have to use [Arduino as an IDF component](https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/esp-idf_component.html) and disable option `CONFIG_BT_SSP_ENABLED`.
+Please refer to the documentation on how to setup Arduino as an IDF component and when you are done, run `idf.py menuconfig` navigate to `Component Config -> Bluetooth -> Bluedroid -> [ ] Secure Simple Pairing` and disable it.
+While in the menuconfig you will also need to change partition scheme `Partition Table -> Partition Table -> (X) Single Factory app (large), no OTA`.
+After these changes save & quit menuconfig a you are ready to go: `idf.py  monitor flash`.
