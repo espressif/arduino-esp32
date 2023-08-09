@@ -87,7 +87,6 @@ void BTKeyRequestCallback(){
 }
 
 void BTAuthCompleteCallback(boolean success){
-  Serial.printf("BTAuthCompleteCallback(boolean success=%d)", success);
   if (success){
     confirmRequestDone = true;
     Serial.println("Pairing success!!");
