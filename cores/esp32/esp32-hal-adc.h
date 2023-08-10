@@ -94,7 +94,7 @@ typedef struct {
 bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
 
 /*
- * Get ADC continuous readings
+ * Read ADC continuous conversion data
  * */
 bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms);
 
