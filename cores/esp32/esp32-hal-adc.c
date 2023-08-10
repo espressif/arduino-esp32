@@ -507,7 +507,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
     adc_handle[adc_unit].buffer_size = adc_handle[adc_unit].conversion_frame_size * 2;
 
     //Conversion frame size buffer cant be bigger than 4092 bytes
-    if(adc_handle[adc_unit].conversion_frame_size < 4092){
+    if(adc_handle[adc_unit].conversion_frame_size > 4092){
         log_e("Buffers are too big. Please set lower conversions per pin.");
         return ESP_FAIL;
     }
