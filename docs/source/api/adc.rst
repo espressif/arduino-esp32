@@ -16,8 +16,8 @@ ADCs are very useful in control and monitoring applications since most sensors
 Arduino-ESP32 ADC API
 ---------------------
 
-ADC common API
-**************
+ADC OneShot mode
+****************
 
 analogRead
 ^^^^^^^^^^
@@ -135,12 +135,11 @@ This function is used to set the attenuation for a specific pin/ADC channel. For
 
 * ``pin`` selects specific pin for attenuation settings.
 * ``attenuation`` sets the attenuation.
-      
-ADC API specific for ESP32 chip
-*******************************
 
 analogSetWidth
 ^^^^^^^^^^^^^^
+
+.. note:: This function is only available for ESP32 chip.
 
 This function is used to set the hardware sample bits and read resolution.
 Default is 12bit (0 - 4095).
@@ -149,13 +148,141 @@ Range is 9 - 12.
 .. code-block:: arduino
 
     void analogSetWidth(uint8_t bits);
+
+ADC Continuous mode
+*******************
+
+analogContinuous
+^^^^^^^^^^^^^^^^
+
+This function is used to configure ADC continuous peripheral on selected pins.
+
+.. code-block:: arduino
+
+    bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
+
+* ``pins[]`` array of pins to be set up
+* ``pins_count`` count of pins in array
+* ``conversions_per_pin`` sets how many conversions per pin will run each ADC cycle
+* ``sampling_freq_hz`` sets sampling frequency of ADC in Hz
+* ``userFunc`` sets callback function to be called after adc conversion is done (can be set to ``NULL``)
   
+This function will return ``true`` if configuration is successful.
+If ``false`` is returned, error occurs and ADC continuous was not configured.
+
+analogContinuous
+^^^^^^^^^^^^^^^^
+
+This function is used to set up ADC continuous mode on selected pins.
+
+.. code-block:: arduino
+
+    bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
+
+* ``pins[]`` array of pins to be set up
+* ``pins_count`` count of pins in array
+* ``conversions_per_pin`` sets how many conversions per pin will run each ADC cycle
+* ``sampling_freq_hz`` sets sampling frequency of ADC in Hz
+* ``userFunc`` sets callback function to be called after adc conversion is done (can be set to ``NULL``)
+  
+This function will return ``true`` if configuration is successful.
+If ``false`` is returned, error occurs and ADC continuous was not configured.
+
+analogContinuousRead
+^^^^^^^^^^^^^^^^^^^^
+
+This function is used to read ADC continuous data to the result buffer. The result buffer is an array of adc_continuos_data_t.
+
+.. code-block:: arduino
+
+    typedef struct {
+        uint8_t pin;           /*!<ADC pin */
+        uint8_t channel;       /*!<ADC channel */
+        int avg_read_raw;      /*!<ADC average raw data */
+        int avg_read_mvolts;   /*!<ADC average voltage in mV */
+    } adc_continuos_data_t;
+
+.. code-block:: arduino
+
+    bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms);
+
+* ``buffer`` conversion result buffer to read from ADC in adc_continuos_data_t format. 
+* ``timeout_ms`` time to wait for data in milliseconds.
+  
+This function will return ``true`` if reading is successful and ``buffer`` is filled with data.
+If ``false`` is returned, reading has failed and ``buffer`` is set to NULL.
+
+analogContinuousStart
+^^^^^^^^^^^^^^^^^^^^^
+
+This function is used to start ADC continuous conversions.
+
+.. code-block:: arduino
+
+    bool analogContinuousStart();
+  
+This function will return ``true`` if ADC continuous is succesfully started.
+If ``false`` is returned, starting ADC continuous has failed.
+
+analogContinuousStop
+^^^^^^^^^^^^^^^^^^^^
+
+This function is used to stop ADC continuous conversions.
+
+.. code-block:: arduino
+
+    bool analogContinuousStop();
+  
+This function will return ``true`` if ADC continuous is succesfully stopped.
+If ``false`` is returned, stopping ADC continuous has failed.
+
+analogContinuousDeinit
+^^^^^^^^^^^^^^^^^^^^^^
+
+This function is used to deinitialize ADC continuous peripheral.
+
+.. code-block:: arduino
+
+    bool analogContinuousDeinit();
+  
+This function will return ``true`` if ADC continuous is succesfully deinitialized.
+If ``false`` is returned, deinitilization of ADC continuous has failed.
+
+analogContinuousSetAtten
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function is used to set the attenuation for ADC continuous peripheral. For more informations refer to `analogSetAttenuation`_.
+
+.. code-block:: arduino
+
+    void analogContinuousSetAtten(adc_attenuation_t attenuation);
+
+* ``attenuation`` sets the attenuation (default is 11db).
+
+analogContinuousSetWidth
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function is used to set the hardware resolution bits.
+Default value for all chips is 12bit (0 - 4095).
+
+.. note:: This function will take effect only for ESP32 chip, as it allows to set resolution in range 9-12 bits.
+
+.. code-block:: arduino
+
+    void analogContinuousSetWidth(uint8_t bits);
+
+* ``bits`` sets resolution bits.
+
+
 Example Applications
 ********************
 
-Here is an example of how to use the ADC.
+Here is an example of how to use the ADC in OneShot mode or you can run Arduino example 01.Basics -> AnalogReadSerial.
 
 .. literalinclude:: ../../../libraries/ESP32/examples/AnalogRead/AnalogRead.ino
     :language: arduino
 
-Or you can run Arduino example 01.Basics -> AnalogReadSerial.
+Here is an example of how to use the ADC in Continuous mode.
+
+.. literalinclude:: ../../../libraries/ESP32/examples/AnalogReadContinuous/AnalogReadContinuous.ino
+    :language: arduino
