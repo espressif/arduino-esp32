@@ -64,29 +64,22 @@ def mkdir_p(path):
         if exc.errno != errno.EEXIST or not os.path.isdir(path):
             raise
 
-def report_progress(block_count, block_size, total_size):
-    global start_time
+def format_time(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    return "{:02}:{:05.2f}".format(int(minutes), seconds)
+
+def report_progress(block_count, block_size, total_size, start_time):
     downloaded_size = block_count * block_size
     time_elapsed = time.time() - start_time
     current_speed = downloaded_size / (time_elapsed)
-    elapsed = timedelta(seconds=time_elapsed)
-
-    hours, remainder = divmod(time_elapsed, 3600)  # 3600 seconds in an hour
-    minutes, remainder = divmod(remainder, 60)
-    seconds, milliseconds = divmod(remainder, 1)
-    formatted_time = "{:02}:{:02}:{:02}.{:03}".format(int(hours), int(minutes), int(seconds), int(milliseconds*1000))
 
     if sys.stdout.isatty():
         if total_size > 0:
             percent_complete = min((downloaded_size / total_size) * 100, 100)
-            sys.stdout.write(f"\rDownloading... {percent_complete:.2f}% - {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {formatted_time} - Speed: {current_speed / 1024 / 1024:.2f} MB/s")
+            sys.stdout.write(f"\rDownloading... {percent_complete:.2f}% - {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {format_time(time_elapsed)} - Speed: {current_speed / 1024 / 1024:.2f} MB/s")
         else:
-            sys.stdout.write(f"\rDownloading... {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {formatted_time} - Speed: {current_speed / 1024 / 1024:.2f} MB/s")
+            sys.stdout.write(f"\rDownloading... {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {format_time(time_elapsed)} - Speed: {current_speed / 1024 / 1024:.2f} MB/s")
         sys.stdout.flush()
-
-def format_time(seconds):
-    minutes, seconds = divmod(seconds, 60)
-    return "{:02}:{:05.2f}".format(int(minutes), seconds)
 
 def print_verification_progress(total_files, i, t1):
     if sys.stdout.isatty():
@@ -106,7 +99,7 @@ def verify_files(filename, destination, rename_to):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
                         #print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
-                        print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+                        print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
                         return False
                     print_verification_progress(total_files, i , t1)
         except zipfile.BadZipFile:
@@ -154,7 +147,7 @@ def unpack(filename, destination, force_extract):
     dirname = ''
     file_is_corrupted=False
     if(not force_extract):
-        print(f' > Verify... ', end="", flush=True)
+        print(f' > Verify archive... ', end="", flush=True)
 
     try:
         if filename.endswith('tar.gz'):
@@ -197,12 +190,11 @@ def unpack(filename, destination, force_extract):
         rename_to = 'esp32-arduino-libs'
 
     if not force_extract:
-        now = time.time()
-        if(verify_files(filename, destination, rename_to, now)):
+        if(verify_files(filename, destination, rename_to)):
             print(" Files ok. Skipping Extraction")
             return True
         else:
-            print(" Failed. extracting")
+            print(" Extracting archive...")
     else:
         print(" Forcing extraction")
 
@@ -224,7 +216,9 @@ def unpack(filename, destination, force_extract):
             shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
 
-def download_file_with_progress(url,filename):
+    return True
+
+def download_file_with_progress(url,filename, start_time):
     import ssl
     import contextlib
     ctx = ssl.create_default_context()
@@ -239,14 +233,14 @@ def download_file_with_progress(url,filename):
             with open(filename,'wb') as out_file:
                 out_file.write(block)
                 block_count += 1
-                report_progress(block_count, block_size, total_size)
+                report_progress(block_count, block_size, total_size, start_time)
                 while True:
                     block = fp.read(block_size)
                     if not block:
                         break
                     out_file.write(block)
                     block_count += 1
-                    report_progress(block_count, block_size, total_size)
+                    report_progress(block_count, block_size, total_size, start_time)
         else:
             raise Exception('Non-existing file or connection error')
 
@@ -271,7 +265,6 @@ def download_file(url,filename):
             raise Exception ('Non-existing file or connection error')
 
 def get_tool(tool, force_download, force_extract):
-    global start_time
     sys_name = platform.system()
     archive_name = tool['archiveFileName']
     local_path = dist_dir + archive_name
@@ -302,7 +295,7 @@ def get_tool(tool, force_download, force_extract):
                 try:
                     urlretrieve(url, local_path, report_progress)
                 except:
-                    download_file_with_progress(url, local_path)
+                    download_file_with_progress(url, local_path, start_time)
                 sys.stdout.write(" - Done\n")
                 sys.stdout.flush()
     else:
@@ -390,6 +383,6 @@ if __name__ == '__main__':
             if(not get_tool(tool, force_download, force_extract)):
                 if(verbose):
                     print(f"Tool {tool['archiveFileName']} was corrupted. Re-downloading...\n")
-                if(not get_tool(tool, force_download, force_extract)): # Corrupted file was renamed, will not be found and will be re-downloaded
-                    print(f"Tool {tool} was corrupted, but re-downloading did not help!\n")
+                if(not get_tool(tool, True, force_extract)): # Corrupted file was renamed, will not be found and will be re-downloaded
+                    print(f"Tool {tool['archiveFileName']} was corrupted, but re-downloading did not help!\n")
     print('Platform Tools Installed')
