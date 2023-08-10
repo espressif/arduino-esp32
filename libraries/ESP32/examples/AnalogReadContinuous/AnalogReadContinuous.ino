@@ -35,7 +35,7 @@ void setup() {
 
     // Setup ADC Continuous with following input:
     // array of pins, count of the pins, how many conversions per pin in one cycle will happen, sampling frequency, callback function
-    analogContinuous(adc_pins, adc_pins_count, CONVERSIONS_PER_PIN, 83000, &adcComplete);
+    analogContinuous(adc_pins, adc_pins_count, CONVERSIONS_PER_PIN, 20000, &adcComplete);
 
     // Start ADC Continuous conversions
     analogContinuousStart();
