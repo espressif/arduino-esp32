@@ -59,7 +59,7 @@ void loop() {
         }
     }
     else {
-        Serial.println("Error occured during reading data. Set Core Debug Level to error or lower for more informations.");s
+        Serial.println("Error occured during reading data. Set Core Debug Level to error or lower for more informations.");
     }
 
     // Delay for better readability of ADC data
