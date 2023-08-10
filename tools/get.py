@@ -23,6 +23,11 @@ import tarfile
 import zipfile
 import re
 import time
+from datetime import timedelta
+import functools
+
+# Initialize start_time globally
+start_time = -1
 
 if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
@@ -60,26 +65,38 @@ def mkdir_p(path):
             raise
 
 def report_progress(block_count, block_size, total_size):
+    global start_time
     downloaded_size = block_count * block_size
-    current_speed = downloaded_size / (time.time() - start_time)
     time_elapsed = time.time() - start_time
+    current_speed = downloaded_size / (time_elapsed)
+    elapsed = timedelta(seconds=time_elapsed)
+
+    hours, remainder = divmod(time_elapsed, 3600)  # 3600 seconds in an hour
+    minutes, remainder = divmod(remainder, 60)
+    seconds, milliseconds = divmod(remainder, 1)
+    formatted_time = "{:02}:{:02}:{:02}.{:03}".format(int(hours), int(minutes), int(seconds), int(milliseconds*1000))
 
     if sys.stdout.isatty():
         if total_size > 0:
             percent_complete = min((downloaded_size / total_size) * 100, 100)
-            sys.stdout.write(f"\rDownloading... {percent_complete:.2f}% - {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {time_elapsed:.2f} seconds - Speed: {current_speed / 1024 / 1024:.2f} MB/s")
+            sys.stdout.write(f"\rDownloading... {percent_complete:.2f}% - {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {formatted_time} - Speed: {current_speed / 1024 / 1024:.2f} MB/s")
+        else:
+            sys.stdout.write(f"\rDownloading... {downloaded_size / 1024 / 1024:.2f} MB downloaded - Elapsed Time: {formatted_time} - Speed: {current_speed / 1024 / 1024:.2f} MB/s")
         sys.stdout.flush()
 
 def format_time(seconds):
     minutes, seconds = divmod(seconds, 60)
     return "{:02}:{:05.2f}".format(int(minutes), seconds)
 
+def print_verification_progress(total_files, i, t1):
+    if sys.stdout.isatty():
+        sys.stdout.write(f'\rElapsed time {format_time(time.time() - t1)}')
+        sys.stdout.flush()
+
 def verify_files(filename, destination, rename_to):
     # Set the path of the extracted directory
     extracted_dir_path = destination
-
     t1 = time.time()
-
     if filename.endswith(".zip"):
         try:
             with zipfile.ZipFile(filename, 'r') as archive:
@@ -88,15 +105,12 @@ def verify_files(filename, destination, rename_to):
                 for i, zipped_file in enumerate(archive.namelist(), 1):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
-                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        #print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
                         print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
                         return False
-                    #print(f'\rVerification progress: {i/total_files*100:.2f}%', end='')
-                    if sys.stdout.isatty():
-                        sys.stdout.write(f'\rVerification progress: {i/total_files*100:.2f}%')
-                        sys.stdout.flush()
+                    print_verification_progress(total_files, i , t1)
         except zipfile.BadZipFile:
-            print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+            print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
             return False
     elif filename.endswith(".tar.gz"):
         try:
@@ -106,15 +120,12 @@ def verify_files(filename, destination, rename_to):
                 for i, zipped_file in enumerate(archive.getnames(), 1):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
-                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
-                        print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+                        #print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
                         return False
-                    #print(f'\rVerification progress: {i/total_files*100:.2f}%', end='')
-                    if sys.stdout.isatty():
-                        sys.stdout.write(f'\rVerification progress: {i/total_files*100:.2f}%')
-                        sys.stdout.flush()
+                    print_verification_progress(total_files, i , t1)
         except tarfile.ReadError:
-            print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+            print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
             return False
     elif filename.endswith(".tar.xz"):
         try:
@@ -124,63 +135,86 @@ def verify_files(filename, destination, rename_to):
                 for i, zipped_file in enumerate(archive.getnames(), 1):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
-                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
-                        print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+                        #print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
                         return False
-                    #print(f'\rVerification progress: {i/total_files*100:.2f}%', end='')
-                    if sys.stdout.isatty():
-                        sys.stdout.write(f'\rVerification progress: {i/total_files*100:.2f}%')
-                        sys.stdout.flush()
+                    print_verification_progress(total_files, i , t1)
         except tarfile.ReadError:
-            print(f"\nVerification failed; aborted in {format_time(time.time() - t1)}")
+            print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
             return False
     else:
         raise NotImplementedError('Unsupported archive type')
 
-    if(verobse):
-        print(f"\nVerification passed; completed in {format_time(time.time() - t1)}")
-
+    #if(verbose):
+        #print(f"\nVerification passed; completed in {format_time(time.time() - t1)}")
     return True
 
-def unpack(filename, destination):
-    dirname = ''
-    print(' > Verify... ')
 
-    if filename.endswith('tar.gz'):
-        tfile = tarfile.open(filename, 'r:gz')
-        dirname = tfile.getnames()[0]
-    elif filename.endswith('tar.xz'):
-        tfile = tarfile.open(filename, 'r:xz')
-        dirname = tfile.getnames()[0]
-    elif filename.endswith('zip'):
-        zfile = zipfile.ZipFile(filename)
-        dirname = zfile.namelist()[0]
-    else:
-        raise NotImplementedError('Unsupported archive type')
+def unpack(filename, destination, force_extract):
+    dirname = ''
+    file_is_corrupted=False
+    if(not force_extract):
+        print(f' > Verify... ', end="", flush=True)
+
+    try:
+        if filename.endswith('tar.gz'):
+            if tarfile.is_tarfile(filename):
+                tfile = tarfile.open(filename, 'r:gz')
+                dirname = tfile.getnames()[0]
+            else:
+                print('File corrupted!')
+                file_is_corrupted=True
+        elif filename.endswith('tar.xz'):
+            if tarfile.is_tarfile(filename):
+                tfile = tarfile.open(filename, 'r:xz')
+                dirname = tfile.getnames()[0]
+            else:
+                print('File corrupted!')
+                file_is_corrupted=True
+        elif filename.endswith('zip'):
+            if zipfile.is_zipfile(filename):
+                zfile = zipfile.ZipFile(filename)
+                dirname = zfile.namelist()[0]
+            else:
+                print('File corrupted!')
+                file_is_corrupted=True
+        else:
+            raise NotImplementedError('Unsupported archive type')
+    except EOFError:
+        print(f'File corrupted or incomplete!')
+        file_is_corrupted=True
+
+    if(file_is_corrupted):
+        corrupted_filename = filename + ".corrupted"
+        os.rename(filename, corrupted_filename)
+        if(verbose):
+            print(f'Renaming corrupted archive to {corrupted_filename}')
+        return False
 
     # A little trick to rename tool directories so they don't contain version number
     rename_to = re.match(r'^([a-z][^\-]*\-*)+', dirname).group(0).strip('-')
     if rename_to == dirname and dirname.startswith('esp32-arduino-libs-'):
         rename_to = 'esp32-arduino-libs'
 
-    if(verify_files(filename, destination, rename_to)):
-        print(" Files ok. Skipping Extraction")
-        return
+    if not force_extract:
+        now = time.time()
+        if(verify_files(filename, destination, rename_to, now)):
+            print(" Files ok. Skipping Extraction")
+            return True
+        else:
+            print(" Failed. extracting")
     else:
-        print(" Failed. extracting")
+        print(" Forcing extraction")
 
     if filename.endswith('tar.gz'):
         tfile = tarfile.open(filename, 'r:gz')
         tfile.extractall(destination)
-        dirname = tfile.getnames()[0]
     elif filename.endswith('tar.xz'):
         tfile = tarfile.open(filename, 'r:xz')
         tfile.extractall(destination)
-        dirname = tfile.getnames()[0]
     elif filename.endswith('zip'):
         zfile = zipfile.ZipFile(filename)
         zfile.extractall(destination)
-        dirname = zfile.namelist()[0]
     else:
         raise NotImplementedError('Unsupported archive type')
 
@@ -214,7 +248,7 @@ def download_file_with_progress(url,filename):
                     block_count += 1
                     report_progress(block_count, block_size, total_size)
         else:
-            raise Exception ('nonexisting file or connection error')
+            raise Exception('Non-existing file or connection error')
 
 def download_file(url,filename):
     import ssl
@@ -234,15 +268,20 @@ def download_file(url,filename):
                         break
                     out_file.write(block)
         else:
-            raise Exception ('nonexisting file or connection error')
+            raise Exception ('Non-existing file or connection error')
 
-def get_tool(tool):
+def get_tool(tool, force_download, force_extract):
+    global start_time
     sys_name = platform.system()
     archive_name = tool['archiveFileName']
     local_path = dist_dir + archive_name
     url = tool['url']
-    if not os.path.isfile(local_path):
-        print('Downloading ' + archive_name + ' ...')
+    start_time = time.time()
+    if not os.path.isfile(local_path) or force_download:
+        if verbose:
+            print('Downloading \'' + archive_name + '\' to \'' + local_path + '\'')
+        else:
+            print('Downloading \'' + archive_name + '\' ...')
         sys.stdout.flush()
         if 'CYGWIN_NT' in sys_name:
             import ssl
@@ -264,12 +303,12 @@ def get_tool(tool):
                     urlretrieve(url, local_path, report_progress)
                 except:
                     download_file_with_progress(url, local_path)
-                sys.stdout.write("\rDone   \n")
+                sys.stdout.write(" - Done\n")
                 sys.stdout.flush()
     else:
         print('Tool {0} already downloaded'.format(archive_name))
         sys.stdout.flush()
-    unpack(local_path, '.')
+    return unpack(local_path, '.', force_extract)
 
 def load_tools_list(filename, platform):
     tools_info = json.load(open(filename))['packages'][0]['tools']
@@ -312,11 +351,34 @@ def identify_platform():
     print('System: %s, Bits: %d, Info: %s' % (sys_name, bits, sys_platform))
     return arduino_platform_names[sys_name][bits]
 
+def print_help():
+    print("TODO help")
+
 if __name__ == '__main__':
+    option_print_help = "-h" in sys.argv
     verbose = "-v" in sys.argv
-    is_test = (len(sys.argv) > 1 and sys.argv[1] == '-h')
+    force_download = "-d" in sys.argv
+    force_extract = "-e" in sys.argv
+    force_all =  "-f" in sys.argv
+    is_test =  "-t" in sys.argv
+
+    print(f'Debug: options values: option_print_help={option_print_help}; verbose={verbose}; force_download={force_download}; force_extract={force_extract}; force_all={force_all}; is_test={is_test};')
+    if option_print_help:
+        print_help()
+        sys.exit()
+
+    if is_test and (force_download or force_extract or force_all):
+        print('Cannot combine test (-t) and forced execution (-d | -e | -f)')
+        print_help()
+        sys.exit()
+
     if is_test:
         print('Test run!')
+
+    if force_all:
+        force_download = True
+        force_extract = True
+
     identified_platform = identify_platform()
     print('Platform: {0}'.format(identified_platform))
     tools_to_download = load_tools_list(current_dir + '/../package/package_esp32_index.template.json', identified_platform)
@@ -325,5 +387,9 @@ if __name__ == '__main__':
         if is_test:
             print('Would install: {0}'.format(tool['archiveFileName']))
         else:
-            get_tool(tool)
+            if(not get_tool(tool, force_download, force_extract)):
+                if(verbose):
+                    print(f"Tool {tool['archiveFileName']} was corrupted. Re-downloading...\n")
+                if(not get_tool(tool, force_download, force_extract)): # Corrupted file was renamed, will not be found and will be re-downloaded
+                    print(f"Tool {tool} was corrupted, but re-downloading did not help!\n")
     print('Platform Tools Installed')
