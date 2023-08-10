@@ -591,6 +591,7 @@ bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
             else {
                 log_e("Reading data failed with error: %X", err);
             }
+            *buffer == NULL;
             return ESP_FAIL;
         }
 
@@ -602,6 +603,7 @@ bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
             /* Check the channel number validation, the data is invalid if the channel num exceed the maximum channel */
             if(chan_num >= SOC_ADC_CHANNEL_NUM(0)){
                 log_e("Invalid data [%d_%d]", chan_num, data);
+                *buffer == NULL;
                 return ESP_FAIL;
             }
             if(data >= (1 << SOC_ADC_DIGI_MAX_BITWIDTH))
