@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2023 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -399,11 +399,14 @@ static bool adcContinuousDetachBus(void * adc_unit_number){
 
 bool IRAM_ATTR adcFnWrapper(adc_continuous_handle_t handle, const adc_continuous_evt_data_t *edata, void *args){
     interrupt_config_t * isr = (interrupt_config_t*)args;
-    if(isr->fn) {
-        if(isr->arg){
-            ((voidFuncPtrArg)isr->fn)(isr->arg);
-        } else {
-            isr->fn();
+    //Check if edata->size matches conversion_frame_size, else just return from ISR
+    if(edata->size == adc_handle[0].conversion_frame_size){
+        if(isr->fn) {
+            if(isr->arg){
+                ((voidFuncPtrArg)isr->fn)(isr->arg);
+            } else {
+                isr->fn();
+            }
         }
     }
     return false;
@@ -428,7 +431,6 @@ esp_err_t __analogContinuousInit(adc_channel_t *channel, uint8_t channel_num, ad
         .conv_mode = ADC_CONV_SINGLE_UNIT_1,
         .format = ADC_OUTPUT_TYPE,
     };
-
     adc_digi_pattern_config_t adc_pattern[SOC_ADC_PATT_LEN_MAX] = {0};
     dig_cfg.pattern_num = channel_num;
     for (int i = 0; i < channel_num; i++) {
@@ -502,7 +504,13 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
     }
 #endif
 
-    adc_handle[adc_unit].buffer_size = adc_handle[adc_unit].conversion_frame_size;
+    adc_handle[adc_unit].buffer_size = adc_handle[adc_unit].conversion_frame_size * 2;
+
+    //Conversion frame size buffer cant be bigger than 4092 bytes
+    if(adc_handle[adc_unit].conversion_frame_size < 4092){
+        log_e("Buffers are too big. Please set lower conversions per pin.");
+        return ESP_FAIL;
+    }
 
     //Initialize continuous handle and pins
     err = __analogContinuousInit(channel, sizeof(channel) / sizeof(adc_channel_t), adc_unit, sampling_freq_hz);
@@ -514,6 +522,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
     //Setup callbacks for complete event
     adc_continuous_evt_cbs_t cbs = {
         .on_conv_done = adcFnWrapper,
+        //.on_pool_ovf can be used in future
     };
     adc_handle[adc_unit].adc_interrupt_handle.fn = (voidFuncPtr)userFunc;
     err = adc_continuous_register_event_callbacks(adc_handle[adc_unit].adc_continuous_handle, &cbs, &adc_handle[adc_unit].adc_interrupt_handle);
@@ -568,9 +577,11 @@ bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
     if(adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL){
         uint32_t bytes_read = 0;
         uint32_t read_raw[used_adc_channels];
+        uint32_t read_count[used_adc_channels];
         uint8_t adc_read[adc_handle[ADC_UNIT_1].conversion_frame_size];
         memset(adc_read, 0xcc, sizeof(adc_read));
         memset(read_raw, 0, sizeof(read_raw));
+        memset(read_count, 0, sizeof(read_count));
 
         esp_err_t err = adc_continuous_read(adc_handle[ADC_UNIT_1].adc_continuous_handle, adc_read, adc_handle[0].conversion_frame_size, &bytes_read, timeout_ms);
         if(err != ESP_OK){
@@ -602,16 +613,20 @@ bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
             for(int j = 0; j < used_adc_channels; j++){
                 if(adc_result[j].channel == chan_num){
                     read_raw[j] += data;
-                    //log_d("Pin: %d, Channel: %d, Value: %d", adc_result[j].pin, chan_num, data);
+                    read_count[j] += 1;
                     break;
                 }
             }
         }
 
         for (int j = 0; j < used_adc_channels; j++){
-            //log_d("Pin: %d, read_raw[]: %d, bytes_read: %d, used_adc_channels: %d" , adc_result[j].pin, read_raw[j], bytes_read, used_adc_channels);
-            adc_result[j].avg_read_raw = read_raw[j] / (bytes_read / (SOC_ADC_DIGI_RESULT_BYTES * used_adc_channels));
-            adc_cali_raw_to_voltage(adc_handle[ADC_UNIT_1].adc_cali_handle, adc_result[j].avg_read_raw, &adc_result[j].avg_read_mvolts);
+            if (read_count[j] != 0){
+                adc_result[j].avg_read_raw = read_raw[j] / read_count[j];
+                adc_cali_raw_to_voltage(adc_handle[ADC_UNIT_1].adc_cali_handle, adc_result[j].avg_read_raw, &adc_result[j].avg_read_mvolts);
+            }
+            else {
+                log_w("No data read for pin %d", adc_result[j].pin);
+            }
         }
 
         *buffer = adc_result;
