@@ -210,7 +210,7 @@ uint32_t ledcChangeFrequency(uint8_t chan, uint32_t freq, uint8_t bit_num)
     return ledc_get_freq(group,timer);
 }
 
-static int8_t pin_to_channel[SOC_GPIO_PIN_COUNT] = { 0 };
+static int8_t pin_to_channel[SOC_GPIO_PIN_COUNT] = { -1 };
 static int cnt_channel = LEDC_CHANNELS;
 static uint8_t analog_resolution = 8;
 static int analog_frequency = 1000;
@@ -218,7 +218,7 @@ void analogWrite(uint8_t pin, int value) {
     // Use ledc hardware for internal pins
     if (pin < SOC_GPIO_PIN_COUNT) {
         int8_t channel = -1;
-        if (pin_to_channel[pin] == 0) {
+        if (pin_to_channel[pin] == -1) {
             if (!cnt_channel) {
                 log_e("No more analogWrite channels available! You can have maximum %u", LEDC_CHANNELS);
                 return;
