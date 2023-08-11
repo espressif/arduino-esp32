@@ -122,7 +122,8 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 String ssid_scan;
                 int32_t rssi_scan;
                 uint8_t sec_scan;
-                uint8_t* BSSID_scan;
+                uint8_t BSSID_raw[6];
+                uint8_t* BSSID_scan = BSSID_raw;
                 int32_t chan_scan;
 
                 WiFi.getNetworkInfo(i, ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan);
@@ -146,7 +147,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 }
 
                 if(known) {
-                    log_d(" --->   %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
+                    log_d(" --->  %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
                 } else {
                     log_d("       %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
                 }
