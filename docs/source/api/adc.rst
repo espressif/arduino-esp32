@@ -11,13 +11,15 @@ to a digital form so that it can be read and processed by a microcontroller.
 ADCs are very useful in control and monitoring applications since most sensors 
 (e.g., temperature, pressure, force) produce analogue output voltages.
 
-.. note:: Each SoC or module has a different number of ADC's with a different number of channels and pins availible. Refer to datasheet of each board for more info.
+.. note:: Each SoC or module has a different number of ADC's with a different number of channels and pins available. Refer to datasheet of each board for more info.
 
 Arduino-ESP32 ADC API
 ---------------------
 
 ADC OneShot mode
 ****************
+
+ADC OneShot mode API is fully compatible with the Arduino's ``analogRead``. When you call ``analogRead`` or ``analogReadMillivolts`` funtion will return a result of a single conversion on requested pin.
 
 analogRead
 ^^^^^^^^^^
@@ -82,7 +84,7 @@ The measurable input voltage differs for each chip, see table below for detailed
       ``ADC_ATTEN_DB_0``     100 mV ~ 950 mV
       ``ADC_ATTEN_DB_2_5``   100 mV ~ 1250 mV
       ``ADC_ATTEN_DB_6``     150 mV ~ 1750 mV
-      ``ADC_ATTEN_DB_11``    150 mV ~ 2450 mV
+      ``ADC_ATTEN_DB_11``    150 mV ~ 3100 mV
       =====================  ===========================================
 
    .. tab:: ESP32-S2
@@ -152,6 +154,10 @@ Range is 9 - 12.
 ADC Continuous mode
 *******************
 
+ADC Continuous mode is a new API for doing analog conversions on multiple pins in background and get a callback when those conversions are done to read the results.
+You can specify how many conversions per pin will be done in only cycle and it's sampling rate. The result from ``analogContinuousRead`` is an array of ``adc_continuos_data_t``
+structure which hold raw average value and average value in milivolts for each pin.
+
 analogContinuous
 ^^^^^^^^^^^^^^^^
 
@@ -170,28 +176,10 @@ This function is used to configure ADC continuous peripheral on selected pins.
 This function will return ``true`` if configuration is successful.
 If ``false`` is returned, error occurs and ADC continuous was not configured.
 
-analogContinuous
-^^^^^^^^^^^^^^^^
-
-This function is used to set up ADC continuous mode on selected pins.
-
-.. code-block:: arduino
-
-    bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
-
-* ``pins[]`` array of pins to be set up
-* ``pins_count`` count of pins in array
-* ``conversions_per_pin`` sets how many conversions per pin will run each ADC cycle
-* ``sampling_freq_hz`` sets sampling frequency of ADC in Hz
-* ``userFunc`` sets callback function to be called after adc conversion is done (can be set to ``NULL``)
-  
-This function will return ``true`` if configuration is successful.
-If ``false`` is returned, error occurs and ADC continuous was not configured.
-
 analogContinuousRead
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to read ADC continuous data to the result buffer. The result buffer is an array of adc_continuos_data_t.
+This function is used to read ADC continuous data to the result buffer. The result buffer is an array of ``adc_continuos_data_t``.
 
 .. code-block:: arduino
 
