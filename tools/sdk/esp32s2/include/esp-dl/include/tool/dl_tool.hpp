@@ -393,9 +393,9 @@ namespace dl
             void print()
             {
 #if DL_LOG_LATENCY_UNIT
-                printf("latency: %15u cycle\n", this->get_average_period());
+                printf("latency: %15lu cycle\n", this->get_average_period());
 #else
-                printf("latency: %15u us\n", this->get_average_period());
+                printf("latency: %15lu us\n", this->get_average_period());
 #endif
             }
 
@@ -407,9 +407,9 @@ namespace dl
             void print(const char *message)
             {
 #if DL_LOG_LATENCY_UNIT
-                printf("%s: %15u cycle\n", message, this->get_average_period());
+                printf("%s: %15lu cycle\n", message, this->get_average_period());
 #else
-                printf("%s: %15u us\n", message, this->get_average_period());
+                printf("%s: %15lu us\n", message, this->get_average_period());
 #endif
             }
 
@@ -422,9 +422,9 @@ namespace dl
             void print(const char *prefix, const char *key)
             {
 #if DL_LOG_LATENCY_UNIT
-                printf("%s::%s: %u cycle\n", prefix, key, this->get_average_period());
+                printf("%s::%s: %lu cycle\n", prefix, key, this->get_average_period());
 #else
-                printf("%s::%s: %u us\n", prefix, key, this->get_average_period());
+                printf("%s::%s: %lu us\n", prefix, key, this->get_average_period());
 #endif
             }
         };

@@ -47,27 +47,59 @@ extern "C" {
 #pragma GCC diagnostic pop
 #endif
 
-#define RUSB2_REG_BASE (0x40090000)
-
+// IAR does not have __builtin_ctz
 #if defined(__ICCARM__)
-  #define __builtin_ctz(x)             __iar_builtin_CLZ(__iar_builtin_RBIT(x))
+  #define __builtin_ctz(x)   __iar_builtin_CLZ(__iar_builtin_RBIT(x))
 #endif
 
-TU_ATTR_ALWAYS_INLINE static inline void rusb2_int_enable(uint8_t rhport)
-{
-  (void) rhport;
-  NVIC_EnableIRQ(TU_IRQn);
+//--------------------------------------------------------------------+
+//
+//--------------------------------------------------------------------+
+
+typedef struct {
+  uint32_t reg_base;
+  int32_t irqnum;
+}rusb2_controller_t;
+
+#if defined(BSP_MCU_GROUP_RA6M5) || defined(BSP_MCU_GROUP_RA6M3) || (BSP_CFG_MCU_PART_SERIES == 8)
+  #define RUSB2_SUPPORT_HIGHSPEED
+  #define RUSB2_CONTROLLER_COUNT 2
+
+  #define rusb2_is_highspeed_rhport(_p)  (_p == 1)
+  #define rusb2_is_highspeed_reg(_reg)   (_reg == RUSB2_REG(1))
+#else
+  #define RUSB2_CONTROLLER_COUNT 1
+
+  #define rusb2_is_highspeed_rhport(_p)  (false)
+  #define rusb2_is_highspeed_reg(_reg)   (false)
+#endif
+
+extern rusb2_controller_t rusb2_controller[];
+#define RUSB2_REG(_p)      ((rusb2_reg_t*) rusb2_controller[_p].reg_base)
+
+//--------------------------------------------------------------------+
+// RUSB2 API
+//--------------------------------------------------------------------+
+
+TU_ATTR_ALWAYS_INLINE static inline void rusb2_module_start(uint8_t rhport, bool start) {
+  uint32_t const mask = 1U << (11+rhport);
+  if (start) {
+    R_MSTP->MSTPCRB &= ~mask;
+  }else {
+    R_MSTP->MSTPCRB |= mask;
+  }
 }
 
-TU_ATTR_ALWAYS_INLINE static inline void rusb2_int_disable(uint8_t rhport)
-{
-  (void) rhport;
-  NVIC_DisableIRQ(TU_IRQn);
+TU_ATTR_ALWAYS_INLINE static inline void rusb2_int_enable(uint8_t rhport) {
+  NVIC_EnableIRQ(rusb2_controller[rhport].irqnum);
+}
+
+TU_ATTR_ALWAYS_INLINE static inline void rusb2_int_disable(uint8_t rhport) {
+  NVIC_DisableIRQ(rusb2_controller[rhport].irqnum);
 }
 
 // MCU specific PHY init
-TU_ATTR_ALWAYS_INLINE static inline void rusb2_phy_init(void)
-{
+TU_ATTR_ALWAYS_INLINE static inline void rusb2_phy_init(void) {
 }
 
 #ifdef __cplusplus

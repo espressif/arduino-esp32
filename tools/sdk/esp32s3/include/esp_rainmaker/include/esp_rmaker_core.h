@@ -65,6 +65,8 @@ typedef struct {
     char *model;
     /** Subtype (Optional). */
     char *subtype;
+    /** An array of digests read from efuse. Should be freed after use*/
+    char **secure_boot_digest;
 } esp_rmaker_node_info_t;
 
 /** ESP RainMaker Configuration */

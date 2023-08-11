@@ -34,10 +34,16 @@
 
 //------------- Unaligned Memory Access -------------//
 
-// ARMv7+ (M3-M7, M23-M33) can access unaligned memory
-#if (defined(__ARM_ARCH) && (__ARM_ARCH >= 7))
-  #define TUP_ARCH_STRICT_ALIGN   0
+#ifdef __ARM_ARCH
+  // ARM Architecture set __ARM_FEATURE_UNALIGNED to 1 for mcu supports unaligned access
+  #if defined(__ARM_FEATURE_UNALIGNED) && __ARM_FEATURE_UNALIGNED == 1
+    #define TUP_ARCH_STRICT_ALIGN   0
+  #else
+    #define TUP_ARCH_STRICT_ALIGN   1
+  #endif
 #else
+  // TODO default to strict align for others
+  // Should investigate other architecture such as risv, xtensa, mips for optimal setting
   #define TUP_ARCH_STRICT_ALIGN   1
 #endif
 
@@ -52,6 +58,7 @@
 // NXP
 //--------------------------------------------------------------------+
 #if   TU_CHECK_MCU(OPT_MCU_LPC11UXX, OPT_MCU_LPC13XX, OPT_MCU_LPC15XX)
+  #define TUP_USBIP_IP3511
   #define TUP_DCD_ENDPOINT_MAX    5
 
 #elif TU_CHECK_MCU(OPT_MCU_LPC175X_6X, OPT_MCU_LPC177X_8X, OPT_MCU_LPC40XX)
@@ -60,14 +67,17 @@
   #define TUP_OHCI_RHPORTS        2
 
 #elif TU_CHECK_MCU(OPT_MCU_LPC51UXX)
+   #define TUP_USBIP_IP3511
    #define TUP_DCD_ENDPOINT_MAX   5
 
-#elif TU_CHECK_MCU(OPT_MCU_LPC54XXX)
+#elif TU_CHECK_MCU(OPT_MCU_LPC54)
   // TODO USB0 has 5, USB1 has 6
+  #define TUP_USBIP_IP3511
   #define TUP_DCD_ENDPOINT_MAX    6
 
-#elif TU_CHECK_MCU(OPT_MCU_LPC55XX)
+#elif TU_CHECK_MCU(OPT_MCU_LPC55)
   // TODO USB0 has 5, USB1 has 6
+  #define TUP_USBIP_IP3511
   #define TUP_DCD_ENDPOINT_MAX    6
 
 #elif TU_CHECK_MCU(OPT_MCU_LPC18XX, OPT_MCU_LPC43XX)
@@ -327,6 +337,7 @@
 // Renesas
 //--------------------------------------------------------------------+
 #elif TU_CHECK_MCU(OPT_MCU_RX63X, OPT_MCU_RX65X, OPT_MCU_RX72N, OPT_MCU_RAXXX)
+  #define TUP_USBIP_RUSB2
   #define TUP_DCD_ENDPOINT_MAX    10
 
 //--------------------------------------------------------------------+
