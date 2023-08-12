@@ -366,7 +366,7 @@ FlashMode_t EspClass::getFlashChipMode(void)
    #if CONFIG_IDF_TARGET_ESP32S2
    uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
    #else
-   #if CONFIG_IDF_TARGET_ESP32H2
+   #if CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6
    uint32_t spi_ctrl = REG_READ(DR_REG_SPI0_BASE + 0x8);
    #else
    uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
