@@ -51,8 +51,11 @@
 #define OPT_MCU_LPC40XX             7 ///< NXP LPC40xx
 #define OPT_MCU_LPC43XX             8 ///< NXP LPC43xx
 #define OPT_MCU_LPC51UXX            9 ///< NXP LPC51U6x
-#define OPT_MCU_LPC54XXX           10 ///< NXP LPC54xxx
-#define OPT_MCU_LPC55XX            11 ///< NXP LPC55xx
+#define OPT_MCU_LPC54              10 ///< NXP LPC54
+#define OPT_MCU_LPC55              11 ///< NXP LPC55
+// legacy naming
+#define OPT_MCU_LPC54XXX           OPT_MCU_LPC54
+#define OPT_MCU_LPC55XX            OPT_MCU_LPC55
 
 // NRF
 #define OPT_MCU_NRF5X             100 ///< Nordic nRF5x series
@@ -97,9 +100,9 @@
 #define OPT_MCU_VALENTYUSB_EPTRI  600 ///< Fomu eptri config
 
 // NXP iMX RT
-#define OPT_MCU_MIMXRT            700             ///< NXP iMX RT Series
-#define OPT_MCU_MIMXRT10XX        OPT_MCU_MIMXRT  ///< RT10xx
-#define OPT_MCU_MIMXRT11XX        OPT_MCU_MIMXRT  ///< RT11xx
+#define OPT_MCU_MIMXRT1XXX        700                 ///< NXP iMX RT1xxx Series
+#define OPT_MCU_MIMXRT10XX        OPT_MCU_MIMXRT1XXX  ///< RT10xx
+#define OPT_MCU_MIMXRT11XX        OPT_MCU_MIMXRT1XXX  ///< RT11xx
 
 // Nuvoton
 #define OPT_MCU_NUC121            800
@@ -119,7 +122,8 @@
 
 // NXP Kinetis
 #define OPT_MCU_KINETIS_KL       1200 ///< NXP KL series
-#define OPT_MCU_KINETIS_K32      1201 ///< NXP K32 series
+#define OPT_MCU_KINETIS_K32L     1201 ///< NXP K32L series
+#define OPT_MCU_KINETIS_K32      1201 ///< Alias to K32L
 
 #define OPT_MCU_MKL25ZXX         1200 ///< Alias to KL (obsolete)
 #define OPT_MCU_K32L2BXX         1201 ///< Alias to K32 (obsolete)
@@ -294,15 +298,14 @@
   #define CFG_TUSB_DEBUG 0
 #endif
 
-// TODO MEM_SECTION can be different for host and device controller
-// should use CFG_TUD_MEM_SECTION, CFG_TUH_MEM_SECTION
+// Memory section for placing buffer used for usb transferring. If MEM_SECTION is different for
+// host and device use: CFG_TUD_MEM_SECTION, CFG_TUH_MEM_SECTION instead
 #ifndef CFG_TUSB_MEM_SECTION
   #define CFG_TUSB_MEM_SECTION
 #endif
 
-// alignment requirement of buffer used for endpoint transferring
-// TODO MEM_ALIGN can be different for host and device controller
-// should use CFG_TUD_MEM_ALIGN, CFG_TUH_MEM_ALIGN
+// Alignment requirement of buffer used for usb transferring. if MEM_ALIGN is different for
+// host and device controller use: CFG_TUD_MEM_ALIGN, CFG_TUH_MEM_ALIGN instead
 #ifndef CFG_TUSB_MEM_ALIGN
   #define CFG_TUSB_MEM_ALIGN      TU_ATTR_ALIGNED(4)
 #endif
@@ -320,24 +323,14 @@
 // Device Options (Default)
 //--------------------------------------------------------------------
 
-// Attribute to place data in accessible RAM for device controller
-// default to CFG_TUSB_MEM_SECTION for backward-compatible
+// Attribute to place data in accessible RAM for device controller (default: CFG_TUSB_MEM_SECTION)
 #ifndef CFG_TUD_MEM_SECTION
-  #ifdef CFG_TUSB_MEM_SECTION
-    #define CFG_TUD_MEM_SECTION   CFG_TUSB_MEM_SECTION
-  #else
-    #define CFG_TUD_MEM_SECTION
-  #endif
+  #define CFG_TUD_MEM_SECTION     CFG_TUSB_MEM_SECTION
 #endif
 
-// Attribute to align memory for device controller
-// default to CFG_TUSB_MEM_ALIGN for backward-compatible
+// Attribute to align memory for device controller (default: CFG_TUSB_MEM_ALIGN)
 #ifndef CFG_TUD_MEM_ALIGN
-  #ifdef CFG_TUSB_MEM_ALIGN
-    #define CFG_TUD_MEM_ALIGN   CFG_TUSB_MEM_ALIGN
-  #else
-    #define CFG_TUD_MEM_ALIGN   TU_ATTR_ALIGNED(4)
-  #endif
+  #define CFG_TUD_MEM_ALIGN       CFG_TUSB_MEM_ALIGN
 #endif
 
 #ifndef CFG_TUD_ENDPOINT0_SIZE
@@ -418,19 +411,14 @@
   #endif
 #endif // CFG_TUH_ENABLED
 
-// Attribute to place data in accessible RAM for host controller
-// default to CFG_TUSB_MEM_SECTION for backward-compatible
+// Attribute to place data in accessible RAM for host controller (default: CFG_TUSB_MEM_SECTION)
 #ifndef CFG_TUH_MEM_SECTION
-  #ifdef CFG_TUSB_MEM_SECTION
-    #define CFG_TUH_MEM_SECTION   CFG_TUSB_MEM_SECTION
-  #else
-    #define CFG_TUH_MEM_SECTION
-  #endif
+  #define CFG_TUH_MEM_SECTION   CFG_TUSB_MEM_SECTION
 #endif
 
 // Attribute to align memory for host controller
 #ifndef CFG_TUH_MEM_ALIGN
-  #define CFG_TUH_MEM_ALIGN   TU_ATTR_ALIGNED(4)
+  #define CFG_TUH_MEM_ALIGN     CFG_TUSB_MEM_ALIGN
 #endif
 
 //------------- CLASS -------------//
@@ -482,6 +470,16 @@
 #define CFG_TUD_RPI_PIO_USB 0
 #endif
 
+
+//--------------------------------------------------------------------+
+// TypeC Options (Default)
+//--------------------------------------------------------------------+
+
+#ifndef CFG_TUC_ENABLED
+#define CFG_TUC_ENABLED 0
+
+#define tuc_int_handler(_p)
+#endif
 
 //------------------------------------------------------------------
 // Configuration Validation

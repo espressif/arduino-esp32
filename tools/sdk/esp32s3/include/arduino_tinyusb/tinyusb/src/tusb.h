@@ -40,6 +40,11 @@
 
 #include "class/hid/hid.h"
 
+//------------- TypeC -------------//
+#if CFG_TUC_ENABLED
+  #include "typec/usbc.h"
+#endif
+
 //------------- HOST -------------//
 #if CFG_TUH_ENABLED
   #include "host/usbh.h"

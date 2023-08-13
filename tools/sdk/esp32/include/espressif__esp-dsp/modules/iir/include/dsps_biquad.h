@@ -54,13 +54,19 @@ esp_err_t dsps_biquad_f32_aes3(const float *input, float *output, int len, float
 #endif
 
 #if CONFIG_DSP_OPTIMIZED
+
 #if (dsps_biquad_f32_ae32_enabled == 1)
 #define dsps_biquad_f32 dsps_biquad_f32_ae32
+#elif (dsps_biquad_f32_aes3_enabled == 1)
+#define dsps_biquad_f32 dsps_biquad_f32_aes3
 #else
 #define dsps_biquad_f32 dsps_biquad_f32_ansi
 #endif
+
 #else // CONFIG_DSP_OPTIMIZED
+
 #define dsps_biquad_f32 dsps_biquad_f32_ansi
+
 #endif // CONFIG_DSP_OPTIMIZED
 
 

@@ -35,6 +35,13 @@
  extern "C" {
 #endif
 
+// Level where CFG_TUSB_DEBUG must be at least for USBH is logged
+#ifndef CFG_TUH_LOG_LEVEL
+  #define CFG_TUH_LOG_LEVEL   2
+#endif
+
+#define TU_LOG_USBH(...)   TU_LOG(CFG_TUH_LOG_LEVEL, __VA_ARGS__)
+
 enum {
   USBH_EPSIZE_BULK_MAX = (TUH_OPT_HIGH_SPEED ? TUSB_EPSIZE_BULK_HS : TUSB_EPSIZE_BULK_FS)
 };
