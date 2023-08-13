@@ -11755,7 +11755,7 @@ esp32-gateway.menu.Revision.RevC=Revision C or older
 esp32-gateway.menu.Revision.RevC.build.board=ESP32_GATEWAY_C
 esp32-gateway.menu.Revision.RevE=Revision E
 esp32-gateway.menu.Revision.RevE.build.board=ESP32_GATEWAY_E
-esp32-gateway.menu.Revision.RevF=Revision F
+esp32-gateway.menu.Revision.RevF=Revision F or newer
 esp32-gateway.menu.Revision.RevF.build.board=ESP32_GATEWAY_F
 
 esp32-gateway.build.f_cpu=240000000L
@@ -11770,6 +11770,8 @@ esp32-gateway.menu.FlashFreq.80.build.flash_freq=80m
 esp32-gateway.menu.FlashFreq.40=40MHz
 esp32-gateway.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32-gateway.menu.UploadSpeed.921600=921600
+esp32-gateway.menu.UploadSpeed.921600.upload.speed=921600
 esp32-gateway.menu.UploadSpeed.115200=115200
 esp32-gateway.menu.UploadSpeed.115200.upload.speed=115200
 
@@ -13406,6 +13408,81 @@ stamp-s3.menu.EraseFlash.none=Disabled
 stamp-s3.menu.EraseFlash.none.upload.erase_cmd=
 stamp-s3.menu.EraseFlash.all=Enabled
 stamp-s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+###############################################################
+
+m5stamp-pico.name=M5Stamp-Pico
+
+m5stamp-pico.bootloader.tool=esptool_py
+m5stamp-pico.bootloader.tool.default=esptool_py
+
+m5stamp-pico.upload.tool=esptool_py
+m5stamp-pico.upload.tool.default=esptool_py
+m5stamp-pico.upload.tool.network=esp_ota
+
+m5stamp-pico.upload.maximum_size=1310720
+m5stamp-pico.upload.maximum_data_size=327680
+m5stamp-pico.upload.wait_for_upload_port=true
+m5stamp-pico.upload.flags=
+m5stamp-pico.upload.extra_flags=
+
+m5stamp-pico.serial.disableDTR=true
+m5stamp-pico.serial.disableRTS=true
+
+m5stamp-pico.build.tarch=xtensa
+m5stamp-pico.build.bootloader_addr=0x1000
+m5stamp-pico.build.target=esp32
+m5stamp-pico.build.mcu=esp32
+m5stamp-pico.build.core=esp32
+m5stamp-pico.build.variant=m5stack_stamp_pico
+m5stamp-pico.build.board=M5Stamp_Pico
+
+m5stamp-pico.build.f_cpu=240000000L
+m5stamp-pico.build.flash_size=4MB
+m5stamp-pico.build.flash_freq=80m
+m5stamp-pico.build.flash_mode=dio
+m5stamp-pico.build.boot=dio
+m5stamp-pico.build.partitions=default
+m5stamp-pico.build.defines=
+
+m5stamp-pico.menu.PartitionScheme.default=Default
+m5stamp-pico.menu.PartitionScheme.default.build.partitions=default
+m5stamp-pico.menu.PartitionScheme.no_ota=No OTA (Large APP)
+m5stamp-pico.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stamp-pico.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+m5stamp-pico.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+m5stamp-pico.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stamp-pico.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+
+m5stamp-pico.menu.UploadSpeed.1500000=1500000
+m5stamp-pico.menu.UploadSpeed.1500000.upload.speed=1500000
+m5stamp-pico.menu.UploadSpeed.750000=750000
+m5stamp-pico.menu.UploadSpeed.750000.upload.speed=750000
+m5stamp-pico.menu.UploadSpeed.500000=500000
+m5stamp-pico.menu.UploadSpeed.500000.upload.speed=500000
+m5stamp-pico.menu.UploadSpeed.250000=250000
+m5stamp-pico.menu.UploadSpeed.250000.upload.speed=250000
+m5stamp-pico.menu.UploadSpeed.115200=115200
+m5stamp-pico.menu.UploadSpeed.115200.upload.speed=115200
+
+m5stamp-pico.menu.DebugLevel.none=None
+m5stamp-pico.menu.DebugLevel.none.build.code_debug=0
+m5stamp-pico.menu.DebugLevel.error=Error
+m5stamp-pico.menu.DebugLevel.error.build.code_debug=1
+m5stamp-pico.menu.DebugLevel.warn=Warn
+m5stamp-pico.menu.DebugLevel.warn.build.code_debug=2
+m5stamp-pico.menu.DebugLevel.info=Info
+m5stamp-pico.menu.DebugLevel.info.build.code_debug=3
+m5stamp-pico.menu.DebugLevel.debug=Debug
+m5stamp-pico.menu.DebugLevel.debug.build.code_debug=4
+m5stamp-pico.menu.DebugLevel.verbose=Verbose
+m5stamp-pico.menu.DebugLevel.verbose.build.code_debug=5
+
+m5stamp-pico.menu.EraseFlash.none=Disabled
+m5stamp-pico.menu.EraseFlash.none.upload.erase_cmd=
+m5stamp-pico.menu.EraseFlash.all=Enabled
+m5stamp-pico.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
