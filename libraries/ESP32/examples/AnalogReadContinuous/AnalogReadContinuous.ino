@@ -44,28 +44,28 @@ void setup() {
 void loop() {
     // Check if conversion is done and try to read data
     if (adc_coversion_done == true) {
-    adc_coversion_done = false;
+        // Set ISR flag back to false
+        adc_coversion_done = false;
+        // Read data from ADC
+        if (analogContinuousRead(&result, 0)) {
 
-    // Read data from ADC
-    if (!analogContinuousRead(&result, 0)) {
+            // Optional: Stop ADC Continuous conversions to have more time to process (print) the data
+            analogContinuousStop();
 
-        // Optional: Stop ADC Continuous conversions and process the data
-        analogContinuousStop();
+            for (int i = 0; i < adc_pins_count; i++) {
+            Serial.printf("\nADC PIN %d data:", result[i].pin);
+            Serial.printf("\n   Avg raw value = %d", result[i].avg_read_raw);
+            Serial.printf("\n   Avg milivolts value = %d", result[i].avg_read_mvolts);
+            }
 
-        for (int i = 0; i < adc_pins_count; i++) {
-        Serial.printf("\nADC PIN %d data:", result[i].pin);
-        Serial.printf("\n   Avg raw value = %d", result[i].avg_read_raw);
-        Serial.printf("\n   Avg milivolts value = %d", result[i].avg_read_mvolts);
+            // Delay for better readability of ADC data
+            delay(1000);
+
+            // Optional: If ADC was stopped, start ADC conversions and wait for callback function to set adc_coversion_done flag to true
+            analogContinuousStart();
         }
-    }
-    else {
-        Serial.println("Error occured during reading data. Set Core Debug Level to error or lower for more informations.");
-    }
-
-    // Delay for better readability of ADC data
-    delay(1000);
-
-    // Optional: Start ADC conversions and wait for callback function to set adc_coversion_done to true
-    analogContinuousStart();
+        else {
+            Serial.println("Error occured during reading data. Set Core Debug Level to error or lower for more informations.");
+        }
     }
 }
