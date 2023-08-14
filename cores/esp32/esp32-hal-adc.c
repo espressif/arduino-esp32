@@ -462,35 +462,35 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
         err = adc_continuous_io_to_channel(pins[i], &adc_unit, &channel[i]);
         if(err != ESP_OK){
             log_e("Pin %u is not ADC pin!", pins[i]);
-            return ESP_FAIL;
+            return false;
         }
         if(adc_unit != 0){
             log_e("Only ADC1 pins are supported in continuous mode!");
-            return ESP_FAIL;
+            return false;
         }
     }
 
     //Check if Oneshot and Continous handle exists
     if(adc_handle[adc_unit].adc_oneshot_handle != NULL){
         log_e("ADC%d is running in oneshot mode. Aborting.", adc_unit+1);
-        return ESP_FAIL;
+        return false;
     }
     if(adc_handle[adc_unit].adc_continuous_handle != NULL){
         log_e("ADC%d continuous is already initialized. To reconfigure call analogContinuousDeinit() first.", adc_unit+1);
-        return ESP_FAIL;
+        return false;
     }
 
     //Check sampling frequency
     if((sampling_freq_hz < SOC_ADC_SAMPLE_FREQ_THRES_LOW) || (sampling_freq_hz > SOC_ADC_SAMPLE_FREQ_THRES_HIGH)){
         log_e("Sampling frequency is out of range. Supported sampling frequencies are %d - %d", SOC_ADC_SAMPLE_FREQ_THRES_LOW, SOC_ADC_SAMPLE_FREQ_THRES_HIGH);
-        return ESP_FAIL;
+        return false;
     }
 
     //Set periman deinit function and reset all pins to init state.
     perimanSetBusDeinit(ESP32_BUS_TYPE_ADC_CONT, adcContinuousDetachBus);
     for(int j = 0; j < pins_count; j++){
         if(!perimanSetPinBus(pins[j], ESP32_BUS_TYPE_INIT, NULL)){
-            return ESP_FAIL;
+            return false;
         }
     }
 
@@ -509,14 +509,14 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
     //Conversion frame size buffer cant be bigger than 4092 bytes
     if(adc_handle[adc_unit].conversion_frame_size > 4092){
         log_e("Buffers are too big. Please set lower conversions per pin.");
-        return ESP_FAIL;
+        return false;
     }
 
     //Initialize continuous handle and pins
     err = __analogContinuousInit(channel, sizeof(channel) / sizeof(adc_channel_t), adc_unit, sampling_freq_hz);
     if(err != ESP_OK){
         log_e("Analog initialization failed!");
-        return ESP_FAIL;
+        return false;
     }
 
     //Setup callbacks for complete event
@@ -528,7 +528,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
     err = adc_continuous_register_event_callbacks(adc_handle[adc_unit].adc_continuous_handle, &cbs, &adc_handle[adc_unit].adc_interrupt_handle);
     if(err != ESP_OK){
         log_e("adc_continuous_register_event_callbacks failed!");
-        return ESP_FAIL;
+        return false;
     }
 
     //Allocate and prepare result structure for adc readings
@@ -558,7 +558,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
         #endif
         if(err != ESP_OK){
             log_e("adc_cali_create_scheme_x failed!");
-            return ESP_FAIL;
+            return false;
         }
     }
 
@@ -566,11 +566,11 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
         if(!perimanSetPinBus(pins[k], ESP32_BUS_TYPE_ADC_CONT, (void *)(adc_unit+1))){
             log_e("perimanSetPinBus to ADC Continuous failed!");
             adcContinuousDetachBus((void *)(adc_unit+1));
-            return ESP_FAIL;
+            return false;
         }
     }
 
-    return ESP_OK;
+    return true;
 }
 
 bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
@@ -592,7 +592,7 @@ bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
                 log_e("Reading data failed with error: %X", err);
             }
             *buffer = NULL;
-            return ESP_FAIL;
+            return false;
         }
 
         for (int i = 0; i < bytes_read; i += SOC_ADC_DIGI_RESULT_BYTES) {
@@ -604,7 +604,7 @@ bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
             if(chan_num >= SOC_ADC_CHANNEL_NUM(0)){
                 log_e("Invalid data [%d_%d]", chan_num, data);
                 *buffer = NULL;
-                return ESP_FAIL;
+                return false;
             }
             if(data >= (1 << SOC_ADC_DIGI_MAX_BITWIDTH))
             {
@@ -632,49 +632,49 @@ bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
         }
 
         *buffer = adc_result;
-        return ESP_OK;
+        return true;
 
     }
     else {
         log_e("ADC Continuous is not initialized!");
-        return ESP_FAIL;
+        return false;
     }
 }
 
 bool analogContinuousStart(){
     if(adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL){
         if(adc_continuous_start(adc_handle[ADC_UNIT_1].adc_continuous_handle) == ESP_OK){
-            return ESP_OK;
+            return true;
         }
     } else {
         log_e("ADC Continuous is not initialized!");
     }
-    return ESP_FAIL;
+    return false;
 }
 
 bool analogContinuousStop(){
     if(adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL){
         if(adc_continuous_stop(adc_handle[ADC_UNIT_1].adc_continuous_handle) == ESP_OK){
-            return ESP_OK;
+            return true;
         }
     } else {
         log_e("ADC Continuous is not initialized!");
     }
-    return ESP_FAIL;
+    return false;
 }
 
 bool analogContinuousDeinit(){
     if(adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL){
         esp_err_t err = adc_continuous_deinit(adc_handle[ADC_UNIT_1].adc_continuous_handle);
         if (err != ESP_OK){
-            return ESP_FAIL;
+            return false;
         }
         free(adc_result);
         adc_handle[ADC_UNIT_1].adc_continuous_handle = NULL;
     } else {
         log_i("ADC Continuous was not initialized");
     }
-    return ESP_OK;
+    return true;
 }
 
 void analogContinuousSetAtten(adc_attenuation_t attenuation){
