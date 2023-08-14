@@ -17,6 +17,7 @@ menu.EventsCore=Events Run On
 menu.MemoryType=Memory Type
 menu.EraseFlash=Erase All Flash Before Sketch Upload
 menu.JTAGAdapter=JTAG Adapter
+menu.PinNumbers=Pin Numbering
 
 # Custom options
 menu.Revision=Board Revision
@@ -24154,12 +24155,17 @@ nano_nora.build.flash_mode=dio
 nano_nora.build.boot=qio
 nano_nora.build.boot_freq=80m
 nano_nora.build.partitions=app3M_fat9M_fact512k_16MB
-nano_nora.build.defines=-DBOARD_HAS_PIN_REMAP -DBOARD_HAS_PSRAM '-DUSB_MANUFACTURER="Arduino"' '-DUSB_PRODUCT="Nano ESP32"'
+nano_nora.build.defines=-DBOARD_HAS_PIN_REMAP {build.disable_pin_remap} -DBOARD_HAS_PSRAM '-DUSB_MANUFACTURER="Arduino"' '-DUSB_PRODUCT="Nano ESP32"'
 nano_nora.build.loop_core=-DARDUINO_RUNNING_CORE=1
 nano_nora.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 nano_nora.build.psram_type=opi
 nano_nora.build.memory_type={build.boot}_{build.psram_type}
+nano_nora.build.disable_pin_remap=
 
 nano_nora.tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0xf70000 "{build.variant.path}/extra/nora_recovery/nora_recovery.ino.bin" 0x10000 "{build.path}/{build.project_name}.bin"
+
+nano_nora.menu.PinNumbers.default=By Arduino pin (default)
+nano_nora.menu.PinNumbers.byGPIONumber=By GPIO number (legacy)
+nano_nora.menu.PinNumbers.byGPIONumber.build.disable_pin_remap=-DBOARD_USES_HW_GPIO_NUMBERS
 
 ##############################################################
