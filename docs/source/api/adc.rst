@@ -19,7 +19,9 @@ Arduino-ESP32 ADC API
 ADC OneShot mode
 ****************
 
-ADC OneShot mode API is fully compatible with the Arduino's ``analogRead``. When you call ``analogRead`` or ``analogReadMillivolts`` funtion will return a result of a single conversion on requested pin.
+
+The ADC OneShot mode API is fully compatible with Arduino's ``analogRead`` function. 
+When you call the ``analogRead`` or ``analogReadMillivolts`` function, it returns the result of a single conversion on the requested pin.
 
 analogRead
 ^^^^^^^^^^
@@ -154,9 +156,12 @@ Range is 9 - 12.
 ADC Continuous mode
 *******************
 
-ADC Continuous mode is a new API for doing analog conversions on multiple pins in background and get a callback when those conversions are done to read the results.
-You can specify how many conversions per pin will be done in only cycle and it's sampling rate. The result from ``analogContinuousRead`` is an array of ``adc_continuos_data_t``
-structure which hold raw average value and average value in milivolts for each pin.
+ADC Continuous mode is an API designed for performing analog conversions on multiple pins in the background, 
+with the feature of receiving a callback upon completion of these conversions to access the results.
+
+This API allows you to specify the desired number of conversions per pin within a single cycle, along with its corresponding sampling rate. 
+The outcome of the ``analogContinuousRead`` function is an array of ``adc_continuous_data_t`` structures. 
+These structures hold both the raw average value and the average value in millivolts for each pin.
 
 analogContinuous
 ^^^^^^^^^^^^^^^^
