@@ -1006,7 +1006,7 @@ bool BluetoothSerial::connect(String remoteName)
     }
     disconnect();
     _doConnect = true;
-    _isRemoteAddressSet = false;
+    _isRemoteAddressSet = true;
     _sec_mask = ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE;
     _role = ESP_SPP_ROLE_MASTER;
     strncpy(_remote_name, remoteName.c_str(), ESP_BT_GAP_MAX_BDNAME_LEN);
@@ -1169,8 +1169,10 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
  */
 BTScanResults* BluetoothSerial::discover(int timeoutMs) {
     scanResults.clear();
-    if (timeoutMs < MIN_INQ_TIME || timeoutMs > MAX_INQ_TIME || strlen(_remote_name) || _isRemoteAddressSet)
+    if (timeoutMs < MIN_INQ_TIME || timeoutMs > MAX_INQ_TIME){
+        log_e("Timeout out of bounds: MIN=%d; MAX=%d; requested=%d", MIN_INQ_TIME, MAX_INQ_TIME, timeoutMs);
         return nullptr;
+    }
     int timeout = timeoutMs / INQ_TIME;
     log_i("discover::disconnect");
     disconnect();
