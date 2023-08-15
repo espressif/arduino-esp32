@@ -24112,3 +24112,160 @@ nebulas3.menu.EraseFlash.all=Enabled
 nebulas3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+gen4-ESP32-S3R8n16.name=4D Systems gen4-ESP32 16MB Modules (ESP32-S3R8n16)
+gen4-ESP32-S3R8n16.vid.0=0x303a
+gen4-ESP32-S3R8n16.pid.0=0x1001
+
+gen4-ESP32-S3R8n16.bootloader.tool=esptool_py
+gen4-ESP32-S3R8n16.bootloader.tool.default=esptool_py
+
+gen4-ESP32-S3R8n16.upload.tool=esptool_py
+gen4-ESP32-S3R8n16.upload.tool.default=esptool_py
+gen4-ESP32-S3R8n16.upload.tool.network=esp_ota
+
+gen4-ESP32-S3R8n16.upload.maximum_size=1310720
+gen4-ESP32-S3R8n16.upload.maximum_data_size=327680
+gen4-ESP32-S3R8n16.upload.flags=
+gen4-ESP32-S3R8n16.upload.extra_flags=
+gen4-ESP32-S3R8n16.upload.use_1200bps_touch=false
+gen4-ESP32-S3R8n16.upload.wait_for_upload_port=false
+
+gen4-ESP32-S3R8n16.serial.disableDTR=false
+gen4-ESP32-S3R8n16.serial.disableRTS=false
+
+gen4-ESP32-S3R8n16.build.tarch=xtensa
+gen4-ESP32-S3R8n16.build.bootloader_addr=0x0
+gen4-ESP32-S3R8n16.build.target=esp32s3
+gen4-ESP32-S3R8n16.build.mcu=esp32s3
+gen4-ESP32-S3R8n16.build.core=esp32
+gen4-ESP32-S3R8n16.build.variant=esp32_s3r8n16
+gen4-ESP32-S3R8n16.build.board=ESP32_S3R8N16
+
+gen4-ESP32-S3R8n16.build.usb_mode=1
+gen4-ESP32-S3R8n16.build.cdc_on_boot=1
+gen4-ESP32-S3R8n16.build.msc_on_boot=0
+gen4-ESP32-S3R8n16.build.dfu_on_boot=0
+gen4-ESP32-S3R8n16.build.f_cpu=240000000L
+gen4-ESP32-S3R8n16.build.flash_size=16MB (128Mb)
+gen4-ESP32-S3R8n16.build.flash_freq=80m
+gen4-ESP32-S3R8n16.build.flash_mode=dio
+gen4-ESP32-S3R8n16.build.boot=qio
+gen4-ESP32-S3R8n16.build.boot_freq=80m
+gen4-ESP32-S3R8n16.build.partitions=default
+gen4-ESP32-S3R8n16.build.defines=-DBOARD_HAS_PSRAM
+gen4-ESP32-S3R8n16.build.loop_core=
+gen4-ESP32-S3R8n16.build.event_core=
+gen4-ESP32-S3R8n16.build.psram_type=opi
+gen4-ESP32-S3R8n16.build.memory_type={build.boot}_{build.psram_type}
+
+gen4-ESP32-S3R8n16.menu.PSRAM.opi=OPI PSRAM
+gen4-ESP32-S3R8n16.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+gen4-ESP32-S3R8n16.menu.PSRAM.opi.build.psram_type=opi
+
+gen4-ESP32-S3R8n16.menu.FlashMode.qio=QIO 80MHz
+gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.flash_mode=dio
+gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.boot=qio
+gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.boot_freq=80m
+gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.flash_freq=80m
+
+gen4-ESP32-S3R8n16.menu.FlashSize.16M=16MB (128Mb)
+gen4-ESP32-S3R8n16.menu.FlashSize.16M.build.flash_size=16MB
+
+gen4-ESP32-S3R8n16.menu.LoopCore.1=Core 1
+gen4-ESP32-S3R8n16.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+gen4-ESP32-S3R8n16.menu.LoopCore.0=Core 0
+gen4-ESP32-S3R8n16.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+gen4-ESP32-S3R8n16.menu.EventsCore.1=Core 1
+gen4-ESP32-S3R8n16.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+gen4-ESP32-S3R8n16.menu.EventsCore.0=Core 0
+gen4-ESP32-S3R8n16.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+gen4-ESP32-S3R8n16.menu.USBMode.default=Hardware CDC and JTAG
+gen4-ESP32-S3R8n16.menu.USBMode.default.build.usb_mode=1
+gen4-ESP32-S3R8n16.menu.USBMode.hwcdc=USB-OTG (TinyUSB)
+gen4-ESP32-S3R8n16.menu.USBMode.hwcdc.build.usb_mode=0
+
+gen4-ESP32-S3R8n16.menu.CDCOnBoot.cdc=Enabled
+gen4-ESP32-S3R8n16.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+gen4-ESP32-S3R8n16.menu.CDCOnBoot.default=Disabled
+gen4-ESP32-S3R8n16.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+gen4-ESP32-S3R8n16.menu.MSCOnBoot.default=Disabled
+gen4-ESP32-S3R8n16.menu.MSCOnBoot.default.build.msc_on_boot=0
+gen4-ESP32-S3R8n16.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+gen4-ESP32-S3R8n16.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+gen4-ESP32-S3R8n16.menu.DFUOnBoot.default=Disabled
+gen4-ESP32-S3R8n16.menu.DFUOnBoot.default.build.dfu_on_boot=0
+gen4-ESP32-S3R8n16.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+gen4-ESP32-S3R8n16.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+gen4-ESP32-S3R8n16.menu.UploadMode.default=UART0 / Hardware CDC
+gen4-ESP32-S3R8n16.menu.UploadMode.default.upload.use_1200bps_touch=false
+gen4-ESP32-S3R8n16.menu.UploadMode.default.upload.wait_for_upload_port=false
+gen4-ESP32-S3R8n16.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+gen4-ESP32-S3R8n16.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+gen4-ESP32-S3R8n16.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme1=Small App w/ OTA + Huge FS (2MB APP/2MB OTA/12MB SPIFFS)
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme1.build.custom_partitions=gen4esp32_2MBapp_2MBota_12MBspiffs
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme1.upload.maximum_size=2097152
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme2=Medium App w/ OTA + Large FS (4MB APP/4MB OTA/7MB SPIFFS)
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme2.build.custom_partitions=gen4esp32_4MBapp_4MBota_7MBspiffs
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme2.upload.maximum_size=4718592
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme3=Large App w/ OTA (8MB APP/8MB OTA)
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme3.build.custom_partitions=gen4esp32_8MBapp_8MBota
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme3.upload.maximum_size=8323072
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme4=Huge App (16MB APP)
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme4.build.custom_partitions=gen4esp32_16MBapp
+gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme4.upload.maximum_size=16646144
+
+gen4-ESP32-S3R8n16.menu.CPUFreq.240=240MHz (WiFi)
+gen4-ESP32-S3R8n16.menu.CPUFreq.240.build.f_cpu=240000000L
+gen4-ESP32-S3R8n16.menu.CPUFreq.160=160MHz (WiFi)
+gen4-ESP32-S3R8n16.menu.CPUFreq.160.build.f_cpu=160000000L
+gen4-ESP32-S3R8n16.menu.CPUFreq.80=80MHz (WiFi)
+gen4-ESP32-S3R8n16.menu.CPUFreq.80.build.f_cpu=80000000L
+gen4-ESP32-S3R8n16.menu.CPUFreq.40=40MHz
+gen4-ESP32-S3R8n16.menu.CPUFreq.40.build.f_cpu=40000000L
+gen4-ESP32-S3R8n16.menu.CPUFreq.20=20MHz
+gen4-ESP32-S3R8n16.menu.CPUFreq.20.build.f_cpu=20000000L
+gen4-ESP32-S3R8n16.menu.CPUFreq.10=10MHz
+gen4-ESP32-S3R8n16.menu.CPUFreq.10.build.f_cpu=10000000L
+
+gen4-ESP32-S3R8n16.menu.UploadSpeed.921600=921600
+gen4-ESP32-S3R8n16.menu.UploadSpeed.921600.upload.speed=921600
+gen4-ESP32-S3R8n16.menu.UploadSpeed.115200=115200
+gen4-ESP32-S3R8n16.menu.UploadSpeed.115200.upload.speed=115200
+gen4-ESP32-S3R8n16.menu.UploadSpeed.256000.windows=256000
+gen4-ESP32-S3R8n16.menu.UploadSpeed.256000.upload.speed=256000
+gen4-ESP32-S3R8n16.menu.UploadSpeed.230400.windows.upload.speed=256000
+gen4-ESP32-S3R8n16.menu.UploadSpeed.230400=230400
+gen4-ESP32-S3R8n16.menu.UploadSpeed.230400.upload.speed=230400
+gen4-ESP32-S3R8n16.menu.UploadSpeed.460800.linux=460800
+gen4-ESP32-S3R8n16.menu.UploadSpeed.460800.macosx=460800
+gen4-ESP32-S3R8n16.menu.UploadSpeed.460800.upload.speed=460800
+gen4-ESP32-S3R8n16.menu.UploadSpeed.512000.windows=512000
+gen4-ESP32-S3R8n16.menu.UploadSpeed.512000.upload.speed=512000
+
+gen4-ESP32-S3R8n16.menu.DebugLevel.none=None
+gen4-ESP32-S3R8n16.menu.DebugLevel.none.build.code_debug=0
+gen4-ESP32-S3R8n16.menu.DebugLevel.error=Error
+gen4-ESP32-S3R8n16.menu.DebugLevel.error.build.code_debug=1
+gen4-ESP32-S3R8n16.menu.DebugLevel.warn=Warn
+gen4-ESP32-S3R8n16.menu.DebugLevel.warn.build.code_debug=2
+gen4-ESP32-S3R8n16.menu.DebugLevel.info=Info
+gen4-ESP32-S3R8n16.menu.DebugLevel.info.build.code_debug=3
+gen4-ESP32-S3R8n16.menu.DebugLevel.debug=Debug
+gen4-ESP32-S3R8n16.menu.DebugLevel.debug.build.code_debug=4
+gen4-ESP32-S3R8n16.menu.DebugLevel.verbose=Verbose
+gen4-ESP32-S3R8n16.menu.DebugLevel.verbose.build.code_debug=5
+
+gen4-ESP32-S3R8n16.menu.EraseFlash.none=Disabled
+gen4-ESP32-S3R8n16.menu.EraseFlash.none.upload.erase_cmd=
+gen4-ESP32-S3R8n16.menu.EraseFlash.all=Enabled
+gen4-ESP32-S3R8n16.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
