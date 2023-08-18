@@ -508,7 +508,6 @@ int WiFiClient::available()
 // Though flushing means to send all pending data,
 // seems that in Arduino it also means to clear RX
 void WiFiClient::flush() {
-#ifdef ARDUINO_DEBUG_LEVEL
     _rxBuffer->flush();
 }
 
