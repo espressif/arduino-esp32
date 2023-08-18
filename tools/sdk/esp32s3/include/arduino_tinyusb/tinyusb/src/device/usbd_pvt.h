@@ -59,7 +59,7 @@ typedef struct
 } usbd_class_driver_t;
 
 // Invoked when initializing device stack to get additional class drivers.
-// Can optionally implemented by application to extend/overwrite class driver support.
+// Can be implemented by application to extend/overwrite class driver support.
 // Note: The drivers array must be accessible at all time when stack is active
 usbd_class_driver_t const* usbd_app_driver_get_cb(uint8_t* driver_count) TU_ATTR_WEAK;
 

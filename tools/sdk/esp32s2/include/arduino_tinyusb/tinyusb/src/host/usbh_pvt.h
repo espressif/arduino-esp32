@@ -62,6 +62,11 @@ typedef struct {
   void (* const close      )(uint8_t dev_addr);
 } usbh_class_driver_t;
 
+// Invoked when initializing host stack to get additional class drivers.
+// Can be implemented by application to extend/overwrite class driver support.
+// Note: The drivers array must be accessible at all time when stack is active
+usbh_class_driver_t const* usbh_app_driver_get_cb(uint8_t* driver_count) TU_ATTR_WEAK;
+
 // Call by class driver to tell USBH that it has complete the enumeration
 void usbh_driver_set_config_complete(uint8_t dev_addr, uint8_t itf_num);
 
