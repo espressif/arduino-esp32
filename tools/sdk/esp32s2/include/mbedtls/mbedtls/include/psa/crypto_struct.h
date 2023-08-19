@@ -35,8 +35,8 @@
  * GCC and Clang initialize the whole structure to 0 (at the time of writing),
  * but MSVC and CompCert don't.
  *
- * In Mbed Crypto, multipart operation structures live independently from
- * the key. This allows Mbed Crypto to free the key objects when destroying
+ * In Mbed TLS, multipart operation structures live independently from
+ * the key. This allows Mbed TLS to free the key objects when destroying
  * a key slot. If a multipart operation needs to remember the key after
  * the setup function returns, the operation structure needs to contain a
  * copy of the key.
