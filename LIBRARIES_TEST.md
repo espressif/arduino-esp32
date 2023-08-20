@@ -12,5 +12,5 @@ MFRC522|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :whi
 WS2812FX|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: 
 
 
-Generated on: Aug-13-2023 04:10:42
-/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/5845204255)
+Generated on: Aug-20-2023 04:10:33
+/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/5915256922)
