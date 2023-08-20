@@ -11227,8 +11227,8 @@ adafruit_camera_esp32s3.upload.tool=esptool_py
 adafruit_camera_esp32s3.upload.tool.default=esptool_py
 adafruit_camera_esp32s3.upload.tool.network=esp_ota
 
-adafruit_camera_esp32s3.upload.maximum_size=1310720
-adafruit_camera_esp32s3.upload.maximum_data_size=327680
+adafruit_camera_esp32s3.upload.maximum_size=327680
+adafruit_camera_esp32s3.upload.maximum_data_size=1310720
 adafruit_camera_esp32s3.upload.flags=
 adafruit_camera_esp32s3.upload.extra_flags=
 adafruit_camera_esp32s3.upload.use_1200bps_touch=true
