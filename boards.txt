@@ -8360,15 +8360,15 @@ adafruit_metro_esp32s3.menu.UploadMode.default=UART0 / Hardware CDC
 adafruit_metro_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_metro_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
+adafruit_metro_esp32s3.menu.PSRAM.opi=OPI PSRAM
+adafruit_metro_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_metro_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 adafruit_metro_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
 adafruit_metro_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_metro_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
 adafruit_metro_esp32s3.menu.PSRAM.disabled=Disabled
 adafruit_metro_esp32s3.menu.PSRAM.disabled.build.defines=
 adafruit_metro_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
-adafruit_metro_esp32s3.menu.PSRAM.opi=OPI PSRAM
-adafruit_metro_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-adafruit_metro_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
 adafruit_metro_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FATFS)
 adafruit_metro_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
