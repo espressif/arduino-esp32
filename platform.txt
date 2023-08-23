@@ -224,7 +224,7 @@ pluggable_monitor.required.serial=builtin:serial-monitor
 debug.executable={build.path}/{build.project_name}.elf
 debug.toolchain=gcc
 debug.toolchain.path={tools.{build.tarch}-esp-elf-gdb.path}/bin/
-debug.toolchain.prefix={build.tarch}-{build.target}-elf
+debug.toolchain.prefix={build.tarch}-{build.target}-elf-
 debug.server=openocd
 debug.server.openocd.script=debug.cfg
 
