@@ -24173,4 +24173,11 @@ nano_nora.menu.PinNumbers.default=By Arduino pin (default)
 nano_nora.menu.PinNumbers.byGPIONumber=By GPIO number (legacy)
 nano_nora.menu.PinNumbers.byGPIONumber.build.disable_pin_remap=-DBOARD_USES_HW_GPIO_NUMBERS
 
+nano_nora.menu.USBMode.default=Normal mode (TinyUSB)
+nano_nora.menu.USBMode.hwcdc=Debug mode (Hardware CDC)
+nano_nora.menu.USBMode.hwcdc.build.usb_mode=1
+nano_nora.menu.USBMode.hwcdc.build.copy_jtag_files=1
+nano_nora.menu.USBMode.hwcdc.build.openocdscript=esp32s3-builtin.cfg
+nano_nora.menu.USBMode.hwcdc.build.debugconfig=esp32s3-arduino.json
+
 ##############################################################
