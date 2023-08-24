@@ -6,7 +6,7 @@ Note: Since version 3.0.0 this library does not support legacy pairing (using fi
 
 ### How to use it?
 
-There are 3 basic use cases: phone, other ESP32 or any MCU with BT serial module
+There are 3 basic use cases: phone, other ESP32 or any MCU with a Bluetooth serial module
 
 #### Phone
 
@@ -28,9 +28,9 @@ There are 3 basic use cases: phone, other ESP32 or any MCU with BT serial module
 You can flash one of the ESP32 with the example [`SerialToSerialBTM`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBTM/SerialToSerialBTM.ino) (the Master) and another ESP32 with [`SerialToSerialBT`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino) (the Slave).
 Those examples are preset to work out-of-the-box but they should be scalable to connect multiple Slaves to the Master.
 
-#### 3rd party Serial BT module
+#### 3rd party Serial Bluetooth module
 
-Using 3rd party Serial BT module will require to study the documentation of the particular module in order to make it work, however, one side can utilize the mentioned [`SerialToSerialBTM`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBTM/SerialToSerialBTM.ino) (the Master) or [`SerialToSerialBT`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino) (the Slave).
+Using a 3rd party Serial Bluetooth module will require to study the documentation of the particular module in order to make it work, however, one side can utilize the mentioned [`SerialToSerialBTM`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBTM/SerialToSerialBTM.ino) (the Master) or [`SerialToSerialBT`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino) (the Slave).
 
 ### Pairing options
 
@@ -48,8 +48,7 @@ This method will authenticate automatically any attempt to pair and should not b
 
 The usage of SSP provides a secure connection. This option is demonstrated in the example `SerialToSerialBT_SSP``](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT_SSP/SerialToSerialBT_SSP.ino)
 
-The Secure Simple Pairing is enabled by calling method `enableSSP` which has two variants - one is backward compatible without parameter `enableSSP()` and second with parameters `enableSSP(bool inputCapability, bool outputCapability)`.
-Alternatively, the SSP can be disabled by `disableSSP()`
+The Secure Simple Pairing is enabled by calling method `enableSSP` which has two variants - one is backward compatible without parameter `enableSSP()` and second with parameters `enableSSP(bool inputCapability, bool outputCapability)`. Similarly, the SSP can be disabled by calling `disableSSP()`.
 
 Both options must be called before `begin()` or if it is called after `begin()` the driver needs to be restarted (call `end()` followed by `begin()`) in order to take in effect enabling or disabling the SSP.
 

@@ -43,7 +43,7 @@ void setup(){
   int count = SerialBT.getNumberOfBondedDevices();
   if(!count){
     Serial.println("No bonded devices found.");
-  }else{
+  } else {
     Serial.printf("Bonded device count: %d\n", count);
     if(PAIR_MAX_DEVICES < count){
       count = PAIR_MAX_DEVICES;
@@ -62,7 +62,7 @@ void setup(){
         if(REMOVE_BONDED_DEVICES){
           if(SerialBT.deleteBondedDevice(pairedDeviceBtAddr[i])){
             Serial.printf("Removed bonded device # %d\n", i);
-          }else{
+          } else {
             Serial.printf("Failed to remove bonded device # %d", i);
           } // if(ESP_OK == tError)
         } // if(REMOVE_BONDED_DEVICES)
