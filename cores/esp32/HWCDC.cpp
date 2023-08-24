@@ -200,9 +200,18 @@ void HWCDC::begin(unsigned long baud)
     if(tx_lock == NULL) {
         tx_lock = xSemaphoreCreateMutex();
     }
-    setRxBufferSize(256);//default if not preset
-    setTxBufferSize(256);//default if not preset
-
+    //RX Buffer default has 256 bytes if not preset
+    if(rx_queue == NULL) {
+        if (!setRxBufferSize(256)) {
+            log_e("HW CDC RX Buffer error");
+        }
+    }
+    //TX Buffer default has 256 bytes if not preset
+    if (tx_ring_buf == NULL) {
+        if (!setTxBufferSize(256)) {
+            log_e("HW CDC TX Buffer error");
+        }    
+    }
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);

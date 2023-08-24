@@ -573,8 +573,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
             if (key_request_callback) {
                 memcpy(current_bd_addr, param->cfm_req.bda, sizeof(esp_bd_addr_t));
                 key_request_callback();
-            }
-            else {
+            } else {
                 log_w("ESP_BT_GAP_KEY_REQ_EVT: key_request_callback does not exist - refuseing pairing");
                 esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, false);
             }
@@ -1355,7 +1354,7 @@ void BluetoothSerial::deleteAllBondedDevices(){
     if(expected_dev_num == 0){
         log_i("No devices in cache.");
         return;
-    }else{
+    } else {
         log_d("Found %d bonded devices", expected_dev_num);
     }
     esp_err_t ret;
@@ -1382,7 +1381,7 @@ void BluetoothSerial::deleteAllBondedDevices(){
             log_d("esp_bt_gap_remove_bond_device ret = %d", ret);
             if(ret == ESP_OK){
                 log_d("Removed bonded device #%d", i);
-            }else{
+            } else {
                 log_w("Failed to removed bonded device #%d", i);
             }
             //btc_storage_remove_bonded_device(dev_list[i]);

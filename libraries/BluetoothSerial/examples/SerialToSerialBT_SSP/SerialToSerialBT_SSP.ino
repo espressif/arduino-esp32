@@ -12,19 +12,19 @@
 
 //#define AUTO_PAIR // Uncomment to automatically authenticate ESP32 side
 
-// Check if BlueTooth is available
+// Check if Bluetooth is available
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
   #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
 
 // Check Serial Port Profile
 #if !defined(CONFIG_BT_SPP_ENABLED)
-  #error Serial Port Profile for BlueTooth is not available or not enabled. It is only available for the ESP32 chip.
+  #error Serial Port Profile for Bluetooth is not available or not enabled. It is only available for the ESP32 chip.
 #endif
 
 // Check Simple Secure Pairing
 #if !defined(CONFIG_BT_SSP_ENABLED)
-  #error Simple Secure Pairing for BlueTooth is not available or not enabled.
+  #error Simple Secure Pairing for Bluetooth is not available or not enabled.
 #endif
 
 const char * deviceName = "ESP32_SSP_example";
@@ -48,17 +48,17 @@ void BTConfirmRequestCallback(uint32_t numVal){
 #ifndef AUTO_PAIR
   Serial.printf("The PIN is: %06lu. If it matches number displayed on the other device write \'Y\' or \'y\':\n", numVal); // Note the formatting "%06lu" - PIN can start with zero(s) which would be ignored with simple "%lu"
   while (!Serial.available()) {
-      delay(1); // Feed the watchdog
-      // Wait until data is available on the Serial port.
-    }
-    Serial.printf("Oh you sent %d Bytes, lets see...", Serial.available());
-    int dat = Serial.read();
-    if (dat == 'Y' || dat == 'y'){
-      SerialBT.confirmReply(true);
-    }
-    else{
-      SerialBT.confirmReply(false);
-    }
+    delay(1); // Feed the watchdog
+    // Wait until data is available on the Serial port.
+  }
+  Serial.printf("Oh you sent %d Bytes, lets see...", Serial.available());
+  int dat = Serial.read();
+  if (dat == 'Y' || dat == 'y'){
+    SerialBT.confirmReply(true);
+  }
+  else{
+    SerialBT.confirmReply(false);
+  }
 #else
   SerialBT.confirmReply(true);
 #endif
@@ -90,20 +90,19 @@ void BTAuthCompleteCallback(boolean success){
   if (success){
     confirmRequestDone = true;
     Serial.println("Pairing success!!");
-  }
-  else{
+  } else {
     Serial.println("Pairing failed, rejected by user!!");
   }
 }
 
 void serial_response(){
   if (Serial.available()){
-      SerialBT.write(Serial.read());
-    }
-    if (SerialBT.available()){
-      Serial.write(SerialBT.read());
-    }
-    delay(20);
+    SerialBT.write(Serial.read());
+  }
+  if (SerialBT.available()){
+    Serial.write(SerialBT.read());
+  }
+  delay(20);
 }
 
 void setup(){
@@ -129,7 +128,7 @@ void setup(){
 void loop(){
   if (confirmRequestDone){
     serial_response();
-  }else{
+  } else {
     delay(1); // Feed the watchdog
   }
 }
