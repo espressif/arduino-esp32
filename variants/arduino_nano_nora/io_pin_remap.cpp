@@ -14,37 +14,72 @@
 #warning The Arduino API will use GPIO numbers for this build.
 #endif
 
-#if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
-
 #include "Arduino.h"
 
-static const int8_t TO_GPIO_NUMBER[NUM_DIGITAL_PINS] = {
-    [D0]        = 44, // RX
-    [D1]        = 43, // TX
-    [D2]        = 5,
-    [D3]        = 6,  // CTS
-    [D4]        = 7,  // DSR
-    [D5]        = 8,
-    [D6]        = 9,
-    [D7]        = 10,
-    [D8]        = 17,
-    [D9]        = 18,
-    [D10]       = 21, // SS
-    [D11]       = 38, // MOSI
-    [D12]       = 47, // MISO
-    [D13]       = 48, // SCK, LED_BUILTIN
-    [LED_RED]   = 46,
-    [LED_GREEN] = 0,
-    [LED_BLUE]  = 45, // RTS
-    [A0]        = 1,  // DTR
-    [A1]        = 2,
-    [A2]        = 3,
-    [A3]        = 4,
-    [A4]        = 11, // SDA
-    [A5]        = 12, // SCL
-    [A6]        = 13,
-    [A7]        = 14,
+// NOTE: This must match with the remapped pin sequence in pins_arduino.h
+static const int8_t TO_GPIO_NUMBER[] = {
+    44, // [ 0] D0, RX
+    43, // [ 1] D1, TX
+    5,  // [ 2] D2
+    6,  // [ 3] D3, CTS
+    7,  // [ 4] D4, DSR
+    8,  // [ 5] D5
+    9,  // [ 6] D6
+    10, // [ 7] D7
+    17, // [ 8] D8
+    18, // [ 9] D9
+    21, // [10] D10, SS
+    38, // [11] D11, MOSI
+    47, // [12] D12, MISO
+    48, // [13] D13, SCK, LED_BUILTIN
+    46, // [14] LED_RED
+    0,  // [15] LED_GREEN
+    45, // [16] LED_BLUE, RTS
+    1,  // [17] A0, DTR
+    2,  // [18] A1
+    3,  // [19] A2
+    4,  // [20] A3
+    11, // [21] A4, SDA
+    12, // [22] A5, SCL
+    13, // [23] A6
+    14, // [24] A7
 };
+
+void _nano_nora_reset_gpio_matrix(void)
+{
+    // In this core file pin mapping is _not_ applied, so the API is
+    // always GPIO-based, but the constants can be either.
+    for (int pin = 0; pin < sizeof(TO_GPIO_NUMBER); ++pin) {
+        int gpio = TO_GPIO_NUMBER[pin];
+#if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
+        // Pin remapping in effect, constants = indexes
+        switch (pin) {
+#else
+        // Pin remapping disabled, constants = GPIO numbers
+        switch (gpio) {
+#endif
+            case LED_RED:
+            case LED_GREEN:
+            case LED_BLUE:
+                // set RGB pins to dig outputs, HIGH=off
+                pinMode(gpio, OUTPUT);
+                digitalWrite(gpio, HIGH);
+                break;
+
+            case TX:
+            case RX:
+                // leave UART pins alone
+                break;
+
+            default:
+                // initialize other pins to dig inputs
+                pinMode(gpio, INPUT);
+                break;
+        }
+    }
+}
+
+#if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
 
 int8_t digitalPinToGPIONumber(int8_t digitalPin)
 {

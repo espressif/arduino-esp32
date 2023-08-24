@@ -9,30 +9,13 @@
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
 
+// defined in io_pin_remap.cpp
+extern void _nano_nora_reset_gpio_matrix(void);
+
 extern "C" {
     void initVariant() {
         // FIXME: fix issues with GPIO matrix not being soft reset properly
-        for (int pin = 0; pin<NUM_DIGITAL_PINS; ++pin) {
-            switch (pin) {
-                case LED_RED:
-                case LED_GREEN:
-                case LED_BLUE:
-                    // set RGB pins to dig outputs, HIGH=off
-                    pinMode(pin, OUTPUT);
-                    digitalWrite(pin, HIGH);
-                    break;
-
-                case TX:
-                case RX:
-                    // leave UART pins alone
-                    break;
-
-                default:
-                    // initialize other pins to dig inputs
-                    pinMode(pin, INPUT);
-                    break;
-            }
-        }
+        _nano_nora_reset_gpio_matrix();
     }
 }
 
