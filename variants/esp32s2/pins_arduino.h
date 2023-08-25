@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
+#define NUM_DIGITAL_PINS        47    // GPIO 0..46
+#define NUM_ANALOG_INPUTS       20    // GPIO 1..20
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS // All GPIOs
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+18; // GPIO pin for Saola-1 & DevKitM-1 = 18
 //static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+45; // GPIO pin for Kaluga = 45
@@ -15,9 +15,9 @@ static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+18; // GPIO pin for Saola-
 #define RGB_BUILTIN LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
