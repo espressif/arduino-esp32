@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-#define NUM_DIGITAL_PINS        40    // GPIO 0..39
-#define NUM_ANALOG_INPUTS       16    // ESP32 has 16 ADC pins
-#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS // All GPIOs
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..39
+#define NUM_ANALOG_INPUTS       16                    // ESP32 has 16 ADC pins
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
 #define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)

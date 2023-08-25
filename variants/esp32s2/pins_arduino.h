@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define NUM_DIGITAL_PINS        47    // GPIO 0..46
-#define NUM_ANALOG_INPUTS       20    // GPIO 1..20
-#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS // All GPIOs
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..46
+#define NUM_ANALOG_INPUTS       20                    // GPIO 1..20
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+18; // GPIO pin for Saola-1 & DevKitM-1 = 18
 //static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+45; // GPIO pin for Kaluga = 45

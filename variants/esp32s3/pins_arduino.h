@@ -7,9 +7,9 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-#define NUM_DIGITAL_PINS        49    // GPIO 0..48
-#define NUM_ANALOG_INPUTS       20    // GPIO 1..20
-#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS // All GPIOs
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..48
+#define NUM_ANALOG_INPUTS       20                    // GPIO 1..20
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
 // Some boards have too low voltage on this pin (board design bug)
 // Use different pin with 3V and connect with 48
