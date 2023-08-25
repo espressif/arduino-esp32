@@ -19,8 +19,8 @@
  *                  |                                  █/
  *                  |__▍___▊___█___█___█___█___█___█___/
  *
- * Note:  that SPI pins can be configured by using `SPI.begin(sck, miso, mosi, cs);`
- *        alternatively you can change only the CS pin with `SD.begin(CSpin)`
+ * Note:  The SPI pins can be manually configured by using `SPI.begin(sck, miso, mosi, cs).`
+ *        Alternatively, you can change the CS pin and use the other default settings by using `SD.begin(cs)`.
  *
  * +--------------+---------+-------+----------+----------+----------+
  * | SPI Pin Name | ESP8266 | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
@@ -43,7 +43,7 @@
 #include "SPI.h"
 
 /*
-Uncomment and setup pins you want to use for the SPI communication
+Uncomment and set up if you want to use custom pins for the SPI communication
 #define REASSIGN_PINS
 int sck = -1;
 int miso = -1;

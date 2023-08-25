@@ -22,7 +22,7 @@
  *                  |                                  █/
  *                  |__▍___▊___█___█___█___█___█___█___/
  * WARNING: ALL data pins must be pulled up to 3.3V with external 10k Ohm resistor!
- * Note to ESP32 pin 2 (D0) : add 1K pull up after flashing
+ * Note to ESP32 pin 2 (D0): Add 1K Ohm pull-up resistor to 3.3V after flashing
  *
  * For more info see file README.md in this library or on URL:
  * https://github.com/espressif/arduino-esp32/tree/master/libraries/SD_MMC
@@ -45,20 +45,20 @@ byte daysavetime = 1;
 //   If the SD_MMC is initialized with default pins it will result in rebooting loop - please
 //   reassign the pins elsewhere using the mentioned command `setPins`.
 // Note: ESP32-S3-WROOM-1 does not have GPIO 33 and 34 broken out.
-// Note: The board SP32-S3-USB-OTG has predefined default pins and the following definitions with the setPins() call will not be compiled.
+// Note: The board ESP32-S3-USB-OTG has predefined default pins and the following definitions with the setPins() call will not be compiled.
 // Note: Pins in this definition block are ordered from top down in order in which they are on the full-sized SD card
-//       from left to right when facing the pins down (when connected to a breadboard)
+//   from left to right when facing the pins down (when connected to a breadboard)
 
 #if defined(SOC_SDMMC_USE_GPIO_MATRIX) && not defined(BOARD_HAS_SDMMC)
-    int d1  = 21; // SD pin 8 - add 10k Pullup to 3.3V if using 4-bit mode (use_1_bit_mode = false)
-    int d0  = 47; // SD pin 7 - add 10k Pullup
+    int d1  = 21; // SD pin 8 - Add a 10k Ohm pull-up resistor to 3.3V if using 4-bit mode (use_1_bit_mode = false)
+    int d0  = 47; // SD pin 7 - Add a 10k Ohm pull-up resistor to 3.3V
     //     GND pin - SD pin 6
-    int clk = 39; // SD pin 5 - add 10k Pullup
+    int clk = 39; // SD pin 5 - Add a 10k Ohm pull-up resistor to 3.3V
     //    3.3V pin - SD pin 4
     //     GND pin - SD pin 3
-    int cmd = 40; // SD pin 2 - add 10k Pullup
-    int d3  = 41; // SD pin 1 - add 10k Pullup to card's pin even when using 1-bit mode
-    int d2  = 42; // SD pin 9 - add 10k Pullup to 3.3V if using 4-bit mode (use_1_bit_mode = false)
+    int cmd = 40; // SD pin 2 - Add a 10k Ohm pull-up resistor to 3.3V
+    int d3  = 41; // SD pin 1 - Add a 10k Ohm pull-up resistor to 3.3V to card's pin even when using 1-bit mode
+    int d2  = 42; // SD pin 9 - Add a 10k Ohm pull-up resistor to 3.3V if using 4-bit mode (use_1_bit_mode = false)
 #endif
 
 bool use_1_bit_mode = false; // Change the value to `true` to use 1-bit mode instead of the 4-bit mode
@@ -211,16 +211,16 @@ void setup(){
     Serial.println("");
     
     // If you are using any other ESP32-S3 board than ESP32-S3-USB-OTG which has preset default pins, you will
-    //    need to specify the pins with the following example of SD_MMC.setPins()
+    // need to specify the pins with the following example of SD_MMC.setPins()
     // If you want to use only 1-bit mode, you can use the line with only one data pin (d0) begin changed.
-    // Please note that ESP32 does not allow pin change and will fail unless you enter the same pin config as is the hardwired.
+    // Please note that ESP32 does not allow pin changes and will fail unless you enter the same pin config as is the hardwired.
 #if defined(SOC_SDMMC_USE_GPIO_MATRIX) && not defined(BOARD_HAS_SDMMC)
     if(use_1_bit_mode){
       if(! SD_MMC.setPins(clk, cmd, d0)){ // 1-bit line version
         Serial.println("Pin change failed!");
         return;
       }
-    }else{
+    } else {
       if(! SD_MMC.setPins(clk, cmd, d0, d1, d2, d3)){ // 4-bit line version
         Serial.println("Pin change failed!");
         return;
@@ -228,19 +228,10 @@ void setup(){
     }
 #endif
 
-/*
-// This is waiting for implementation in peripheral manager (periman)
-    if(use_1_bit_mode){
-        Serial.printf("Begin in 1-bit mode; pins: CLK=%d, CMD=%d, D0=%d\n", SD_MMC.getClkPin(), SD_MMC.getCmdPin(), SD_MMC.getD0Pin());
-    }else{
-        Serial.printf("Begin in 4-bit mode; pins: CLK=%d, CMD=%d, D0=%d, D1=%d, D2=%d, D3=%d\n", SD_MMC.getClkPin(), SD_MMC.getCmdPin(), SD_MMC.getD0Pin(), SD_MMC.getD1Pin(), SD_MMC.getD2Pin(), SD_MMC.getD3Pin());
-    }
-*/
-
     if(!SD_MMC.begin("/sdcard", use_1_bit_mode)){
         Serial.println("Card Mount Failed.");
         Serial.println("Increase log level to see more info: Tools > Core Debug Level > Verbose");
-        Serial.println("Make sure that all data pins have 10 kOhm pull-up resistor");
+        Serial.println("Make sure that all data pins have a 10k Ohm pull-up resistor to 3.3V");
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
         Serial.println("Make sure that when using generic ESP32-S3 board the pins are setup using SD_MMC.setPins()");
 #endif
