@@ -136,7 +136,7 @@ recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\boo
 
 # Check if custom build options exist in the sketch folder
 recipe.hooks.prebuild.5.pattern=bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
-recipe.hooks.prebuild.6.pattern=bash -c "[ -f "{build.path}"/build_opt.h ] || touch "{build.path}"/build_opt.h"
+recipe.hooks.prebuild.6.pattern=bash -c "[ -f "{build.path}"/build_opt.h ] || : > "{build.path}"/build_opt.h"
 
 recipe.hooks.prebuild.5.pattern.windows=cmd /c if exist "{build.source.path}\build_opt.h" COPY /y "{build.source.path}\build_opt.h" "{build.path}\build_opt.h"
 recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.path}\build_opt.h" type nul > "{build.path}\build_opt.h"
