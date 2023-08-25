@@ -15,7 +15,7 @@ static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+8;
 #define RGB_BRIGHTNESS 64
 
 #define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUP)
 #define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
 
 static const uint8_t TX = 21;
