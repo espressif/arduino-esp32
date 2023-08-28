@@ -140,6 +140,7 @@ An example of the PartitionScheme listing using the ESP32S3 Dev Module as a refe
 **Custom Partition - CSV file in /variants/custom_esp32s3/ folder**
 
 .. code-block::
+
     esp32s3.build.variant=custom_esp32s3
     --
     esp32s3.menu.PartitionScheme.huge_app=Custom Huge APP (3MB No OTA/1MB SPIFFS)
