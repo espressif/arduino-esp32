@@ -22,27 +22,27 @@ static const uint8_t BT_LED = 37;
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 //-------------------------------------------------------------------
-static const uint8_t U1RX = 9;  //I/O  U1RX     GPIO9
-static const uint8_t U1TX = 10; //I/O  U1TX     GPIO10
+static const uint8_t U1RX = 9;  //IO,  U1RX,GPIO9
+static const uint8_t U1TX = 10; //IO,  U1TX, GPIO10
 /* LionBits3 pin setup */
-static const uint8_t D0 = 3;    //RX,           GPIO3,                      MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D1 = 1;    //TX,           GPIO1,                      MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D2 = 9;    //I/O   U1RX    GPIO9,  TOUCH9, ADC1_CH8,   MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D3 = 10;   //I/O   U1TX    GPIO10, TOUCH10,ADC1_CH9,   MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM 
-static const uint8_t D4 = 11;   //I/O   U2RX    GPIO11, TOUCH11,ADC2_CH0,   MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D5 = 12;   //I/O   U2TX    GPIO12, TOUCH12,ADC2_CH1,   MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D6 = 13;   //I/O   SDA     GPIO13, TOUCH13,ADC2_CH2,   MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D7 = 14;   //I/O   SCl     GPIO14, TOUCH14,ADC2_CH3,   MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D8 = 15;   //I/O           GPIO15,                     MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D9 = 16;   //I/O           GPIO16,                     MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D10 = 17;  //I/O           GPIO17,         ADC2C_H6    MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D11 = 18;  //I/O           GPIO18,         ADC2C_H7    MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D12 = 8;   //I/O           GPIO8,                      MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D13 = 39;  //I/O           GPIO39,                     MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D14 = 40;  //I/O           GPIO40,                     MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D15 = 41;  //I/O           GPIO41,                     MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D16 = 48;  //I/O           GPIO48,                     MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t D17 = 21;  //I/O           GPIO21,                     MCPWM,  U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
+static const uint8_t D0 = 3;    //RX,GPIO3,MCPWM 
+static const uint8_t D1 = 1;    //TX,GPIO1, MCPWM
+static const uint8_t D2 = 9;    //IO, U1RX,GPIO9,  TOUCH9, ADC1_CH8,MCPWM  
+static const uint8_t D3 = 10;   //IO, U1TX,GPIO10, TOUCH10,ADC1_CH9,MCPWM  
+static const uint8_t D4 = 11;   //IO, U2RX,GPIO11, TOUCH11,ADC2_CH0, MCPWM  
+static const uint8_t D5 = 12;   //IO, U2TX, GPIO12, TOUCH12,ADC2_CH1, MCPWM 
+static const uint8_t D6 = 13;   //IO, SDA,  GPIO13, TOUCH13,ADC2_CH2, MCPWM 
+static const uint8_t D7 = 14;   //IO, SCl, GPIO14, TOUCH14,ADC2_CH3,  MCPWM  
+static const uint8_t D8 = 15;   //IO, GPIO15,MCPWM  
+static const uint8_t D9 = 16;   //IO,  GPIO16, MCPWM 
+static const uint8_t D10 = 17;  //IO,  GPIO17,ADC2C_H6 MCPWM  
+static const uint8_t D11 = 18;  //IO, GPIO18, ADC2C_H7MCPWM  
+static const uint8_t D12 = 8;   //IO, GPIO8, MCPWM  
+static const uint8_t D13 = 39;  //IO, GPIO39,  MCPWM   
+static const uint8_t D14 = 40;  //IO,GPIO40,MCPWM  
+static const uint8_t D15 = 41;  //IO, GPIO41, MCPWM   
+static const uint8_t D16 = 48;  //IO, GPIO48,MCPWM   
+static const uint8_t D17 = 21;  //IO,  GPIO21,  MCPWM  
 
 //Other pins.
 static const uint8_t BUZZER = 21;    
@@ -51,13 +51,13 @@ static const uint8_t LDR = 7;
 static const uint8_t RGBLED = 48;
 
 // Analog to Digital Converter (Support 5V) ADC2 pins not recommended while using Wifi
-static const uint8_t A0  = 2;   //I/O,  GPIO2,    TOUCH2, ADC1_CH1, */MAX 5V,   U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM 
-static const uint8_t A1  = 1;   //I/O,  GPIO1,    TOUCH1, ADC1_CH0, */MAX 5V,   U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t A2  = 3;   //I/O,  GPIO3,    TOUCH3, ADC1_CH2, */MAX 5V,   U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM 
-static const uint8_t A3  = 4;   //I/O,  GPIO4,    TOUCH4, ADC1_CH3, */MAX 5V,   U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t A4  = 5;   //I/O,  GPIO5,    TOUCH5, ADC1_CH4, */MAX 5V,   U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM  
-static const uint8_t A5  = 6;   //I/O,  GPIO6,    TOUCH6, ADC1_CH5, */MAX 5V,   U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
-static const uint8_t AD1 = 7;   //I/O,  GPIO7,    TOUCH6, ADC1_CH5, */MAX 5V,   U0RXD_in,U0CTS_in,U0DSR_in,U0TXD_out,UoRTS_out,U1RXD_in,U1CTS_in,U1DSR_in,U1TXD_out,U1RTS_out,U1DTR_out,U2RXD_in,U2CTS_in,U2DSR_in,U2TXD_out,U2RTS_out,U2DTR_out,LEDPWM
+static const uint8_t A0  = 2;   //IO,  GPIO2,    TOUCH2, ADC1_CH1, */MAX 5V
+static const uint8_t A1  = 1;   //IO,  GPIO1,    TOUCH1, ADC1_CH0, */MAX 5V  
+static const uint8_t A2  = 3;   //IO,  GPIO3,    TOUCH3, ADC1_CH2, */MAX 5V 
+static const uint8_t A3  = 4;   //IO,  GPIO4,    TOUCH4, ADC1_CH3, */MAX 5V 
+static const uint8_t A4  = 5;   //IO,  GPIO5,    TOUCH5, ADC1_CH4, */MAX 5V    
+static const uint8_t A5  = 6;   //IO,  GPIO6,    TOUCH6, ADC1_CH5, */MAX 5V   
+static const uint8_t AD1 = 7;   //IO,  GPIO7,    TOUCH6, ADC1_CH5, */MAX 5V    
 
 // Inbuilt Display Unit 128*128 ST7735 Driver New
 
@@ -91,19 +91,10 @@ static const uint8_t cs = 42;
 static const uint8_t dc = 37; 
 static const uint8_t mosi = 36; 
 
-//--------------------
 //Digital to Analog Converter 
-#define DA1               (25)  //I/O GPIO25, DAC_1, ADC2_CH8, RTC_GPIO6, EMAC_RXD0
-#define DA2               (26)  //I/O GPIO26, DAC_2, ADC2_CH9, RTC_GPIO7, EMAC_RXD1
-
-//-------------------------------------------------------------------
-
- #define VP 36  //  GPIO36, ADC1_CH0, RTC_GPIO0
- #define VN 39  //  GPIO39, ADC1_CH3, RTC_GPIO3
-
-
-//-------------------------------------------------------------------
-
- 
+#define DA1               (25)  //IO GPIO25, DAC_1, ADC2_CH8, RTC_GPIO6 
+#define DA2               (26)  //IO GPIO26, DAC_2, ADC2_CH9, RTC_GPIO7 
+#define VP 36  //  GPIO36, ADC1_CH0, RTC_GPIO0
+#define VN 39  //  GPIO39, ADC1_CH3, RTC_GPIO3
 
 #endif /* Pins_Arduino_h */

@@ -24163,13 +24163,13 @@ lionbits3.build.memory_type={build.boot}_{build.psram_type}
 lionbits3.menu.JTAGAdapter.default=Disabled
 lionbits3.menu.JTAGAdapter.default.build.copy_jtag_files=0
 lionbits3.menu.JTAGAdapter.builtin=Integrated USB JTAG
-lionbits3.menu.JTAGAdapter.builtin.build.openocdscript=lionbits3-builtin.cfg
+lionbits3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
 lionbits3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
 lionbits3.menu.JTAGAdapter.external=FTDI Adapter
-lionbits3.menu.JTAGAdapter.external.build.openocdscript=lionbits3-ftdi.cfg
+lionbits3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
 lionbits3.menu.JTAGAdapter.external.build.copy_jtag_files=1
 lionbits3.menu.JTAGAdapter.bridge=ESP USB Bridge
-lionbits3.menu.JTAGAdapter.bridge.build.openocdscript=lionbits3-bridge.cfg
+lionbits3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 lionbits3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 lionbits3.menu.PSRAM.disabled=Disabled
