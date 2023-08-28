@@ -122,6 +122,9 @@ esp32h2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32h2.menu.PartitionScheme.rainmaker=RainMaker
 esp32h2.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32h2.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32h2.menu.PartitionScheme.custom=Custom
+esp32h2.menu.PartitionScheme.custom.build.partitions=
+esp32h2.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32h2.menu.FlashMode.qio=QIO
 esp32h2.menu.FlashMode.qio.build.flash_mode=dio
@@ -278,6 +281,9 @@ esp32c6.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32c6.menu.PartitionScheme.rainmaker=RainMaker
 esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32c6.menu.PartitionScheme.custom=Custom
+esp32c6.menu.PartitionScheme.custom.build.partitions=
+esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32c6.menu.CPUFreq.160=160MHz (WiFi)
 esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -525,6 +531,9 @@ esp32s3.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODE
 esp32s3.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 esp32s3.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
 esp32s3.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+esp32s3.menu.PartitionScheme.custom=Custom
+esp32s3.menu.PartitionScheme.custom.build.partitions=
+esp32s3.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32s3.menu.CPUFreq.240=240MHz (WiFi)
 esp32s3.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -666,6 +675,9 @@ esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32c3.menu.PartitionScheme.rainmaker=RainMaker
 esp32c3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32c3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32c3.menu.PartitionScheme.custom=Custom
+esp32c3.menu.PartitionScheme.custom.build.partitions=
+esp32c3.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32c3.menu.CPUFreq.160=160MHz (WiFi)
 esp32c3.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -855,6 +867,9 @@ esp32s2.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32s2.menu.PartitionScheme.rainmaker=RainMaker
 esp32s2.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32s2.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32s2.menu.PartitionScheme.custom=Custom
+esp32s2.menu.PartitionScheme.custom.build.partitions=
+esp32s2.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32s2.menu.CPUFreq.240=240MHz (WiFi)
 esp32s2.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -1021,6 +1036,9 @@ esp32.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32.menu.PartitionScheme.rainmaker=RainMaker
 esp32.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32.menu.PartitionScheme.custom=Custom
+esp32.menu.PartitionScheme.custom.build.partitions=
+esp32.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32.menu.CPUFreq.240=240MHz (WiFi/BT)
 esp32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -1184,6 +1202,9 @@ esp32da.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32da.menu.PartitionScheme.rainmaker=RainMaker
 esp32da.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32da.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32da.menu.PartitionScheme.custom=Custom
+esp32da.menu.PartitionScheme.custom.build.partitions=
+esp32da.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32da.menu.CPUFreq.240=240MHz (WiFi/BT)
 esp32da.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -1340,6 +1361,9 @@ esp32wrover.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 esp32wrover.menu.PartitionScheme.rainmaker=RainMaker
 esp32wrover.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32wrover.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32wrover.menu.PartitionScheme.custom=Custom
+esp32wrover.menu.PartitionScheme.custom.build.partitions=
+esp32wrover.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32wrover.menu.FlashMode.qio=QIO
 esp32wrover.menu.FlashMode.qio.build.flash_mode=dio
@@ -1435,6 +1459,9 @@ pico32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 pico32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 pico32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 pico32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+pico32.menu.PartitionScheme.custom=Custom
+pico32.menu.PartitionScheme.custom.build.partitions=
+pico32.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 pico32.menu.UploadSpeed.921600=921600
 pico32.menu.UploadSpeed.921600.upload.speed=921600
@@ -1545,6 +1572,9 @@ esp32s3box.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB M
 esp32s3box.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 esp32s3box.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
 esp32s3box.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+esp32s3box.menu.PartitionScheme.custom=Custom
+esp32s3box.menu.PartitionScheme.custom.build.partitions=
+esp32s3box.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32s3box.menu.DebugLevel.none=None
 esp32s3box.menu.DebugLevel.none.build.code_debug=0
@@ -1656,6 +1686,9 @@ esp32s3usbotg.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32s3usbotg.menu.PartitionScheme.custom=Custom
+esp32s3usbotg.menu.PartitionScheme.custom.build.partitions=
+esp32s3usbotg.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32s3usbotg.menu.DebugLevel.none=None
 esp32s3usbotg.menu.DebugLevel.none.build.code_debug=0
