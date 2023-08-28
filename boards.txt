@@ -2976,8 +2976,11 @@ lilygo_t_display.bootloader.tool.default=esptool_py
 lilygo_t_display.serial.disableDTR=true
 lilygo_t_display.serial.disableRTS=true
 
+lilygo_t_display.build.tarch=xtensa
+lilygo_t_display.build.bootloader_addr=0x1000
 lilygo_t_display.build.mcu=esp32
 lilygo_t_display.build.core=esp32
+lilygo_t_display.build.target=esp32
 lilygo_t_display.build.variant=lilygo_t_display
 lilygo_t_display.build.board=LILYGO_T_DISPLAY
 
