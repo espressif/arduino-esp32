@@ -2280,6 +2280,7 @@ tinys2.menu.EraseFlash.all=Enabled
 tinys2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
 rmp.name=UM RMP
 rmp.vid.0=0x303a
 rmp.pid.0=0x80F6
@@ -2413,6 +2414,159 @@ rmp.menu.EraseFlash.all=Enabled
 rmp.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+nanos3.name=UM NanoS3
+nanos3.vid.0=0x303a
+nanos3.pid.0=0x8179
+
+nanos3.bootloader.tool=esptool_py
+nanos3.bootloader.tool.default=esptool_py
+
+nanos3.upload.tool=esptool_py
+nanos3.upload.tool.default=esptool_py
+nanos3.upload.tool.network=esp_ota
+
+nanos3.upload.maximum_size=1310720
+nanos3.upload.maximum_data_size=327680
+nanos3.upload.flags=
+nanos3.upload.extra_flags=
+nanos3.upload.use_1200bps_touch=false
+nanos3.upload.wait_for_upload_port=false
+
+nanos3.serial.disableDTR=false
+nanos3.serial.disableRTS=false
+
+nanos3.build.tarch=xtensa
+nanos3.build.bootloader_addr=0x0
+nanos3.build.target=esp32s3
+nanos3.build.mcu=esp32s3
+nanos3.build.core=esp32
+nanos3.build.variant=um_nanos3
+nanos3.build.board=NANOS3
+
+nanos3.build.usb_mode=1
+nanos3.build.cdc_on_boot=0
+nanos3.build.msc_on_boot=0
+nanos3.build.dfu_on_boot=0
+nanos3.build.f_cpu=240000000L
+nanos3.build.flash_size=8MB
+nanos3.build.flash_freq=80m
+nanos3.build.flash_mode=dio
+nanos3.build.boot=qio
+nanos3.build.partitions=default
+nanos3.build.defines=
+nanos3.build.loop_core=
+nanos3.build.event_core=
+nanos3.build.flash_type=qio
+nanos3.build.psram_type=qspi
+nanos3.build.memory_type=qio_qspi
+
+nanos3.menu.LoopCore.1=Core 1
+nanos3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+nanos3.menu.LoopCore.0=Core 0
+nanos3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+nanos3.menu.EventsCore.1=Core 1
+nanos3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+nanos3.menu.EventsCore.0=Core 0
+nanos3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+nanos3.menu.USBMode.default=USB-OTG (TinyUSB)
+nanos3.menu.USBMode.default.build.usb_mode=0
+nanos3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+nanos3.menu.USBMode.hwcdc.build.usb_mode=1
+
+nanos3.menu.CDCOnBoot.cdc=Enabled
+nanos3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+nanos3.menu.CDCOnBoot.default=Disabled
+nanos3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+nanos3.menu.MSCOnBoot.default=Disabled
+nanos3.menu.MSCOnBoot.default.build.msc_on_boot=0
+nanos3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+nanos3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+nanos3.menu.DFUOnBoot.default=Disabled
+nanos3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+nanos3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+nanos3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+nanos3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+nanos3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+nanos3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+nanos3.menu.UploadMode.default=UART0 / Hardware CDC
+nanos3.menu.UploadMode.default.upload.use_1200bps_touch=false
+nanos3.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+nanos3.menu.PSRAM.enabled=Enabled
+nanos3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+nanos3.menu.PSRAM.disabled=Disabled
+nanos3.menu.PSRAM.disabled.build.defines=
+
+nanos3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+nanos3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+nanos3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+nanos3.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/3.7MB FFAT)
+nanos3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+nanos3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions_tinyuf2
+nanos3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+nanos3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+
+nanos3.menu.CPUFreq.240=240MHz (WiFi)
+nanos3.menu.CPUFreq.240.build.f_cpu=240000000L
+nanos3.menu.CPUFreq.160=160MHz (WiFi)
+nanos3.menu.CPUFreq.160.build.f_cpu=160000000L
+nanos3.menu.CPUFreq.80=80MHz (WiFi)
+nanos3.menu.CPUFreq.80.build.f_cpu=80000000L
+nanos3.menu.CPUFreq.40=40MHz
+nanos3.menu.CPUFreq.40.build.f_cpu=40000000L
+nanos3.menu.CPUFreq.20=20MHz
+nanos3.menu.CPUFreq.20.build.f_cpu=20000000L
+nanos3.menu.CPUFreq.10=10MHz
+nanos3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+nanos3.menu.FlashMode.qio=QIO
+nanos3.menu.FlashMode.qio.build.flash_mode=dio
+nanos3.menu.FlashMode.qio.build.boot=qio
+nanos3.menu.FlashMode.dio=DIO
+nanos3.menu.FlashMode.dio.build.flash_mode=dio
+nanos3.menu.FlashMode.dio.build.boot=dio
+
+nanos3.menu.UploadSpeed.921600=921600
+nanos3.menu.UploadSpeed.921600.upload.speed=921600
+nanos3.menu.UploadSpeed.115200=115200
+nanos3.menu.UploadSpeed.115200.upload.speed=115200
+nanos3.menu.UploadSpeed.256000.windows=256000
+nanos3.menu.UploadSpeed.256000.upload.speed=256000
+nanos3.menu.UploadSpeed.230400.windows.upload.speed=256000
+nanos3.menu.UploadSpeed.230400=230400
+nanos3.menu.UploadSpeed.230400.upload.speed=230400
+nanos3.menu.UploadSpeed.460800.linux=460800
+nanos3.menu.UploadSpeed.460800.macosx=460800
+nanos3.menu.UploadSpeed.460800.upload.speed=460800
+nanos3.menu.UploadSpeed.512000.windows=512000
+nanos3.menu.UploadSpeed.512000.upload.speed=512000
+
+nanos3.menu.DebugLevel.none=None
+nanos3.menu.DebugLevel.none.build.code_debug=0
+nanos3.menu.DebugLevel.error=Error
+nanos3.menu.DebugLevel.error.build.code_debug=1
+nanos3.menu.DebugLevel.warn=Warn
+nanos3.menu.DebugLevel.warn.build.code_debug=2
+nanos3.menu.DebugLevel.info=Info
+nanos3.menu.DebugLevel.info.build.code_debug=3
+nanos3.menu.DebugLevel.debug=Debug
+nanos3.menu.DebugLevel.debug.build.code_debug=4
+nanos3.menu.DebugLevel.verbose=Verbose
+nanos3.menu.DebugLevel.verbose.build.code_debug=5
+
+nanos3.menu.EraseFlash.none=Disabled
+nanos3.menu.EraseFlash.none.upload.erase_cmd=
+nanos3.menu.EraseFlash.all=Enabled
+nanos3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 tinys3.name=UM TinyS3
 tinys3.vid.0=0x303a
 tinys3.pid.0=0x80D0
