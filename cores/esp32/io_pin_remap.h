@@ -7,7 +7,7 @@
 
 // Pin remapping functions
 int8_t digitalPinToGPIONumber(int8_t digitalPin);
-int8_t digitalPinFromGPIONumber(int8_t gpioPin);
+int8_t digitalPinFromGPIONumber(int8_t gpioNumber);
 
 // Apply pin remapping to API only when building libraries and user sketch
 #ifndef ARDUINO_CORE_BUILD
@@ -15,10 +15,10 @@ int8_t digitalPinFromGPIONumber(int8_t gpioPin);
 // Override APIs requiring pin remapping
 
 // cores/esp32/Arduino.h
-#define pulseInLong(pin, state, timeout)    pulseInLong(digitalPinToGPIONumber(pin), state, timeout)
-#define pulseIn(pin, state, timeout)        pulseIn(digitalPinToGPIONumber(pin), state, timeout)
-#define noTone(_pin)                        noTone(digitalPinToGPIONumber(_pin))
-#define tone(_pin, args...)                 tone(digitalPinToGPIONumber(_pin), args)
+#define pulseInLong(pin, args...)   pulseInLong(digitalPinToGPIONumber(pin), args)
+#define pulseIn(pin, args...)       pulseIn(digitalPinToGPIONumber(pin), args)
+#define noTone(_pin)                noTone(digitalPinToGPIONumber(_pin))
+#define tone(_pin, args...)         tone(digitalPinToGPIONumber(_pin), args)
 
 // cores/esp32/esp32-hal.h
 #define analogGetChannel(pin)       analogGetChannel(digitalPinToGPIONumber(pin))
