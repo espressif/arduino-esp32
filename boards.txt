@@ -12989,6 +12989,16 @@ m5stack-atom.build.boot=dio
 m5stack-atom.build.partitions=default
 m5stack-atom.build.defines=
 
+m5stack-atom.menu.LoopCore.1=Core 1
+m5stack-atom.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+m5stack-atom.menu.LoopCore.0=Core 0
+m5stack-atom.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+m5stack-atom.menu.EventsCore.1=Core 1
+m5stack-atom.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+m5stack-atom.menu.EventsCore.0=Core 0
+m5stack-atom.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
 m5stack-atom.menu.PartitionScheme.default=Default
 m5stack-atom.menu.PartitionScheme.default.build.partitions=default
 m5stack-atom.menu.PartitionScheme.no_ota=No OTA (Large APP)
