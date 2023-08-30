@@ -1794,8 +1794,8 @@ aventen_s3_sync.build.bootloader_addr=0x0
 aventen_s3_sync.build.target=esp32s3
 aventen_s3_sync.build.mcu=esp32s3
 aventen_s3_sync.build.core=esp32
-aventen_s3_sync.build.variant=aventen_s3_sync
-aventen_s3_sync.build.board=Aventen_S3_Sync
+aventen_s3_sync.build.variant=Aventen_S3_Sync
+aventen_s3_sync.build.board=AVENTEN_S3_SYNC
 
 aventen_s3_sync.build.usb_mode=1
 aventen_s3_sync.build.cdc_on_boot=0
