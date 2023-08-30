@@ -17,13 +17,13 @@
 
 // Arduino style definitions (API uses Dx)
 
-#define analogInputToDigitalPin(p)  (p)
-#define digitalPinToInterrupt(p)    ((((uint8_t)digitalPinToGPIONumber(p)) < 48)? digitalPinToGPIONumber(p) : -1)
-#define digitalPinHasPWM(p)         (((uint8_t)digitalPinToGPIONumber(p)) < 46)
+#define NUM_DIGITAL_PINS        25                    // 25 I/O lines exported
+#define NUM_ANALOG_INPUTS       20                    // 20 CPU ADC inputs, not all exported
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        25
-#define NUM_ANALOG_INPUTS       8
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 static constexpr uint8_t D0         = 0; // also RX
 static constexpr uint8_t D1         = 1; // also TX
@@ -56,13 +56,13 @@ static constexpr uint8_t A7         = 24;
 
 // ESP32-style definitions (API uses GPIOx)
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..48, not all exported
+#define NUM_ANALOG_INPUTS       20                    // GPIO 1..20, not all exported
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 static constexpr uint8_t D0         = 44; // also RX
 static constexpr uint8_t D1         = 43; // also TX
