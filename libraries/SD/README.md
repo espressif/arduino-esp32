@@ -1,6 +1,6 @@
 # SD library
 
-This library provides the integration of ESP32 and SD (Secure Digital) and MMC (Multi Media Card) cards without additional modules. This library is using SPI to interface with the cards. Please not that SPI mode is slower than the intended SD or MMC mode, however, provides more flexibility as the SPI module is available on all ESP SoCs and can be routed to any GPIO through GPIO matrix.
+This library provides the integration of ESP32 and SD (Secure Digital) and MMC (Multi Media Card) cards without additional modules. This library is using SPI to interface with the cards. Please note that SPI mode is slower than the intended SD or MMC mode, however, provides more flexibility as the SPI module is available on all ESP SoCs and can be routed to any GPIO through GPIO matrix.
 
 ## Sample wiring diagram:
 
@@ -16,7 +16,7 @@ Image source: [Wikipedia](https://upload.wikimedia.org/wikipedia/commons/thumb/a
 Some ESP32 modules have different pin outs!
 
 ## Default SPI pins:
-Note that SPI pins can be configured by using `SPI.begin(sck, miso, mosi, cs);` alternatively you can change only the CS pin with `SD.begin(CSpin)`
+Note that SPI pins can be configured by using `SPI.begin(sck, miso, mosi, cs);` alternatively, you can change only the CS pin with `SD.begin(CSpin)`
 
 +--------------+---------+-------+----------+----------+----------+
 | SPI Pin Name | ESP8266 | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
