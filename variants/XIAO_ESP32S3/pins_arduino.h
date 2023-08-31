@@ -13,7 +13,6 @@
 
 static const uint8_t LED_BUILTIN = 21;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
 
 #define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)

@@ -80,6 +80,5 @@ static const uint8_t RGB_PWR = 2;
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = (RGB_DATA + SOC_GPIO_PIN_COUNT);
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
 
 #endif /* Pins_Arduino_h */

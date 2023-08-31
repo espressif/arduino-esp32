@@ -16,7 +16,6 @@
 // and change this setup for the chosen pin (for example 38)
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
 #define BOARD_HAS_NEOPIXEL
 #define LED_BRIGHTNESS 64
 

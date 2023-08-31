@@ -19,7 +19,6 @@
 
 static const uint8_t LED_BUILTIN = 35;
 #define BUILTIN_LED LED_BUILTIN
-#define LED_BUILTIN LED_BUILTIN
 #define LEDB        LED_BUILTIN
 #define LEDR 34
 #define LEDG 33

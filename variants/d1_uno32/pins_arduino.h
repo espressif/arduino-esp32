@@ -34,7 +34,6 @@ static const uint8_t A5 = 39;
 
 static const uint8_t LED_BUILTIN = 2;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
 
 #define PIN_WIRE_SDA SDA // backward compatibility
 #define PIN_WIRE_SCL SCL // backward compatibility

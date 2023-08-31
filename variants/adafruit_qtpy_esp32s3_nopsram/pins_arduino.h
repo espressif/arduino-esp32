@@ -25,7 +25,6 @@
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+PIN_NEOPIXEL;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN  LED_BUILTIN
 #define RGB_BUILTIN  LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
