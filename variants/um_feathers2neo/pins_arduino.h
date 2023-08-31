@@ -67,9 +67,8 @@ static const uint8_t NEOPIXEL_PWR = 39;
 #define RGB_BUILTIN (NEOPIXEL_DATA + SOC_GPIO_PIN_COUNT)  
 #define RGB_BRIGHTNESS 64
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = (NEOPIXEL_DATA + SOC_GPIO_PIN_COUNT);
+static const uint8_t LED_BUILTIN = RGB_BUILTIN;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
 
 static const uint8_t VBAT_SENSE = 2;
 static const uint8_t VBUS_SENSE = 34;
