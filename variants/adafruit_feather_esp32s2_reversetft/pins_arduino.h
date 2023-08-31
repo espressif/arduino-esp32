@@ -10,18 +10,21 @@
 #define USB_PRODUCT        "Feather ESP32-S2 Reverse TFT"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..46
+#define NUM_ANALOG_INPUTS       20                    // GPIO 1..20
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 #define LED_BUILTIN     13
+#define PIN_NEOPIXEL    33
 
-#define PIN_NEOPIXEL        33
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
+#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)   
+#define RGB_BRIGHTNESS 64
+
 #define NEOPIXEL_NUM        1     // number of neopixels
 #define NEOPIXEL_POWER      21    // power pin
 #define NEOPIXEL_POWER_ON   HIGH  // power pin state when on
