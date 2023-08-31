@@ -3,18 +3,17 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 20
-#define NUM_DIGITAL_PINS        21
-#define NUM_ANALOG_INPUTS       9
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..39
+#define NUM_ANALOG_INPUTS       16                    // ESP32 has 16 ADC pins
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < 34)  // PWM only for GPIO0..33 - NOT GPIO 34,35,36 and 39
 
 // LED
 static const uint8_t LED_BUILTIN = 13;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
 
 // UART
 static const uint8_t TX = 10;

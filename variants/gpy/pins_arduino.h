@@ -3,13 +3,13 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
-#define NUM_ANALOG_INPUTS       18
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..39
+#define NUM_ANALOG_INPUTS       16                    // ESP32 has 16 ADC pins
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-#define analogInputToDigitalPin(p)  (((p)<40)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < 34)  // PWM only for GPIO0..33 - NOT GPIO 34,35,36 and 39
 
 // Sequans Monarch LTE Cat M1/NB1 modem
 // NOTE: The Pycom pinout as well as spec sheet block diagram / pin details
@@ -22,9 +22,13 @@
 #define LTE_WAKE 27 // GPIO27 - Sequans modem wake-up interrupt
 #define LTE_BAUD 921600
 
-static const uint8_t LED_BUILTIN = 0; // ->2812 RGB !!!
+// Neopixel
+#define PIN_NEOPIXEL 0 // ->2812 RGB !!!
+static const uint8_t LED_BUILTIN = PIN_NEOPIXEL; 
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
+#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
+#define RGB_BRIGHTNESS 64
 
 #define ANT_SELECT 21   // GPIO21 - WiFi external / internal antenna switch
 

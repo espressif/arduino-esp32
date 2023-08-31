@@ -3,13 +3,13 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 34
-#define NUM_DIGITAL_PINS        34
-#define NUM_ANALOG_INPUTS       2
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..39
+#define NUM_ANALOG_INPUTS       16                    // ESP32 has 16 ADC pins
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-#define analogInputToDigitalPin(p)  (((p)<2)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<34)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < 34)  // PWM only for GPIO0..33 - NOT GPIO 34,35,36 and 39
 
 //Programming and Debugging Port
 static const uint8_t TXD = 43;

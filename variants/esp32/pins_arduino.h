@@ -11,6 +11,9 @@
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
 #define digitalPinHasPWM(p)         (p < 34)  // PWM only for GPIO0..33 - NOT GPIO 34,35,36 and 39
 
+static const uint8_t LED_BUILTIN = (uint8_t) -1;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
