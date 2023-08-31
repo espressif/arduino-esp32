@@ -18,11 +18,14 @@
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
 #define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
-#define LED_BUILTIN     13
-#define PIN_NEOPIXEL    33
-
+// Neopixel
+#define PIN_NEOPIXEL 33
+// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
+static const uint8_t LED_BUILTIN = (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT);
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)   
+#define RGB_BUILTIN LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
 #define NEOPIXEL_NUM        1     // number of neopixels
