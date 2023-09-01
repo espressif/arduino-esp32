@@ -21,6 +21,8 @@
 #ifndef _ETH_H_
 #define _ETH_H_
 
+#ifdef CONFIG_ETH_ENABLED
+
 #include "WiFi.h"
 #include "esp_system.h"
 #include "esp_eth.h"
@@ -105,5 +107,7 @@ class ETHClass {
 };
 
 extern ETHClass ETH;
+
+#endif  //  CONFIG_ETH_ENABLED
 
 #endif /* _ETH_H_ */

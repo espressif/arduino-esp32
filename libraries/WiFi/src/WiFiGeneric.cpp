@@ -426,6 +426,7 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
 	/*
 	 * ETH
 	 * */
+#ifdef CONFIG_ETH_ENABLED
 	} else if (event_base == ETH_EVENT && event_id == ETHERNET_EVENT_CONNECTED) {
 		log_v("Ethernet Link Up");
     	arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
@@ -446,6 +447,7 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     	#endif
         arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
     	memcpy(&arduino_event.event_info.got_ip, event_data, sizeof(ip_event_got_ip_t));
+#endif  //  CONFIG_ETH_ENABLED
 
 	/*
 	 * IPv6
@@ -594,10 +596,12 @@ static bool _start_network_event_task(){
         return false;
     }
 
+#ifdef CONFIG_ETH_ENABLED
     if(esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)){
         log_e("event_handler_instance_register for ETH_EVENT Failed!");
         return false;
     }
+#endif  //  CONFIG_ETH_ENABLED
 
     if(esp_event_handler_instance_register(WIFI_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)){
         log_e("event_handler_instance_register for WIFI_PROV_EVENT Failed!");
