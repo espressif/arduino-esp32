@@ -17,7 +17,8 @@
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
 #define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
-#define PIN_NEOPIXEL        33
+#define PIN_NEOPIXEL        4
+#define NEOPIXEL_PIN        4
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+PIN_NEOPIXEL;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
@@ -26,6 +27,10 @@ static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+PIN_NEOPIXEL;
 #define RGB_BRIGHTNESS 64
 
 #define NEOPIXEL_NUM        1
+#define PIN_LIGHTSENSOR     A5
+
+#define PIN_BUTTON_UP       6
+#define PIN_BUTTON_DOWN     7
 
 static const uint8_t TX = 18;
 static const uint8_t RX = 8;
