@@ -8,9 +8,11 @@
 #define NUM_ANALOG_INPUTS       20                    // GPIO 1..20
 #define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-static const uint8_t LED_BUILTIN = (SOC_GPIO_PIN_COUNT+18); // GPIO pin for Saola-1 & DevKitM-1 = 18
-//static const uint8_t LED_BUILTIN = (SOC_GPIO_PIN_COUNT+45); // GPIO pin for Kaluga = 45
+#define PIN_NEOPIXEL 18 // GPIO pin for Saola-1 & DevKitM-1 = 18 & GPIO pin for Kaluga = 45
+// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+PIN_NEOPIXEL;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
 #define RGB_BUILTIN LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 

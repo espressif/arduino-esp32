@@ -6,19 +6,18 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       18
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..48
+#define NUM_ANALOG_INPUTS       20                    // GPIO 1..20
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 static const uint8_t LED_BUILTIN = 38;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define RGB_BUILTIN LED_BUILTIN
 #define RGB_BRIGHTNESS 64
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

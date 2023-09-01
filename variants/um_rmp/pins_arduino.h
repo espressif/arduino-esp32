@@ -6,16 +6,16 @@
 #define USB_VID 0x303A
 #define USB_PID 0x8001
 #define USB_MANUFACTURER "Unexpected Maker"
-#define USB_PRODUCT "RM Pro"
+#define USB_PRODUCT "RM Pro"   // ESP32-S2
 #define USB_SERIAL ""
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..46
+#define NUM_ANALOG_INPUTS       20                    // GPIO 1..20
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -75,4 +75,10 @@ static const uint8_t VBUS_SENSE = 21;
 static const uint8_t RGB_DATA = 1;
 static const uint8_t RGB_PWR = 2;
 
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
+#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)  
+#define RGB_BRIGHTNESS 64
+// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
+static const uint8_t LED_BUILTIN = RGB_BUILTIN;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #endif /* Pins_Arduino_h */

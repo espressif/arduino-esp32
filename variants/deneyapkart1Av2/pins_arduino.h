@@ -10,13 +10,13 @@
 #define USB_PRODUCT        "DENEYAP KART 1A v2"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
-#define EXTERNAL_NUM_INTERRUPTS	46
-#define NUM_DIGITAL_PINS	48
-#define NUM_ANALOG_INPUTS	20
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..48
+#define NUM_ANALOG_INPUTS       20                    // GPIO 1..20
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48;
 #define BUILTIN_LED LED_BUILTIN
