@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define USB_VID 0x303a
 #define USB_PID 0x814D // for user apps (https://github.com/espressif/usb-pids/pull/77)

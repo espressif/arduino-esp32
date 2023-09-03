@@ -1,6 +1,8 @@
 #ifndef _D32_CORE_H_
 #define _D32_CORE_H_
 
+#include "soc/soc_caps.h"
+
 #define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..39
 #define NUM_ANALOG_INPUTS       16                    // ESP32 has 16 ADC pins
 #define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs

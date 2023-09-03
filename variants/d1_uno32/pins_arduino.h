@@ -4,7 +4,7 @@
 // Board Pinmap: https://www.botnroll.com/en/esp/3639-wemos-d1-r32-w-esp32-uno-r3-pinout.html
 
 #include <stdint.h>
-
+#include "soc/soc_caps.h"
 
 #define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..39
 #define NUM_ANALOG_INPUTS       16                    // ESP32 has 16 ADC pins

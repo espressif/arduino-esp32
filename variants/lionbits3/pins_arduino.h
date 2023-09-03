@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..48
 #define NUM_ANALOG_INPUTS       20                    // GPIO 1..20

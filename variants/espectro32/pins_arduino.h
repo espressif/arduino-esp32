@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #ifndef ESPECTRO32_VERSION
 #define ESPECTRO32_VERSION 1

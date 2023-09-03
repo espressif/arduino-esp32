@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define Wireless_Stick true
 #define DISPLAY_HEIGHT 32

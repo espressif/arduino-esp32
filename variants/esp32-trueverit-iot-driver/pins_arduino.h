@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 static const uint8_t LED_BUILTIN = 18;
 #define BUILTIN_LED LED_BUILTIN // backward compatibility
