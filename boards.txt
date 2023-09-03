@@ -23097,7 +23097,7 @@ unphone8.build.partitions=default_8MB
 unphone8.build.defines=-DBOARD_HAS_PSRAM -DUNPHONE_SPIN=8
 unphone8.build.loop_core=-DARDUINO_RUNNING_CORE=1
 unphone8.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-unphone8.build.flash_type=qspi
+unphone8.build.flash_type=qio
 unphone8.build.psram_type=qspi
 unphone8.build.memory_type={build.flash_type}_{build.psram_type}
 
@@ -23201,11 +23201,6 @@ unphone8.menu.DebugLevel.debug=Debug
 unphone8.menu.DebugLevel.debug.build.code_debug=4
 unphone8.menu.DebugLevel.verbose=Verbose
 unphone8.menu.DebugLevel.verbose.build.code_debug=5
-
-unphone8.menu.EraseFlash.none=Disabled
-unphone8.menu.EraseFlash.none.upload.erase_cmd=
-unphone8.menu.EraseFlash.all=Enabled
-unphone8.menu.EraseFlash.all.upload.erase_cmd=-e
 
 #############################################################
 

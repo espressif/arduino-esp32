@@ -15,7 +15,7 @@
 #define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
 #define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
-#define LED_BUILTIN         (13)
+#define LED_BUILTIN         13
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
 static const uint8_t TX = 37;
