@@ -15,7 +15,7 @@
 // Neopixel
 #define PIN_NEOPIXEL 0 // ->2812 RGB !!!
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT) 
+static const uint8_t LED_BUILTIN = (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT);
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
 #define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
