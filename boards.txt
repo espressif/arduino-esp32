@@ -23202,6 +23202,11 @@ unphone8.menu.DebugLevel.debug.build.code_debug=4
 unphone8.menu.DebugLevel.verbose=Verbose
 unphone8.menu.DebugLevel.verbose.build.code_debug=5
 
+unphone8.menu.EraseFlash.none=Disabled
+unphone8.menu.EraseFlash.none.upload.erase_cmd=
+unphone8.menu.EraseFlash.all=Enabled
+unphone8.menu.EraseFlash.all.upload.erase_cmd=-e
+
 #############################################################
 
 unphone9.name=unPhone 9
