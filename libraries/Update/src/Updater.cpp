@@ -414,4 +414,6 @@ bool UpdateClass::_chkDataInBlock(const uint8_t *data, size_t len) const {
     return false;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
 UpdateClass Update;
+#endif
