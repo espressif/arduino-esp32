@@ -8,7 +8,7 @@
 #define NUM_ANALOG_INPUTS       2
 
 #define analogInputToDigitalPin(p)  (((p)<2)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<34)?(p):-1)
+#define digitalPinToInterrupt(p)    (((p)<49)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
 
 //Programming and Debugging Port
