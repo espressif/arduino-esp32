@@ -9,8 +9,8 @@
 #define USB_PRODUCT        "MatrixPortal ESP32-S3"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
+#define EXTERNAL_NUM_INTERRUPTS 49
+#define NUM_DIGITAL_PINS        49
 #define NUM_ANALOG_INPUTS       6
 
 #define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
@@ -19,8 +19,13 @@
 
 #define LED_BUILTIN         13
 
-#define PIN_NEOPIXEL        33
+#define PIN_NEOPIXEL        4
+#define NEOPIXEL_PIN        4
 #define NEOPIXEL_NUM        1
+#define PIN_LIGHTSENSOR     A5
+
+#define PIN_BUTTON_UP       6
+#define PIN_BUTTON_DOWN     7
 
 static const uint8_t TX = 18;
 static const uint8_t RX = 8;
