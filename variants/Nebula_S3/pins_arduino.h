@@ -11,7 +11,7 @@
 #define NUM_ANALOG_INPUTS       6
 
 #define analogInputToDigitalPin(p)  (((p)<6)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<20)?(p):-1)
+#define digitalPinToInterrupt(p)    (((p)<49)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 20)
 
 

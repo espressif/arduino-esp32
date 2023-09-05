@@ -7,8 +7,8 @@
 #define USB_VID 0x2886
 #define USB_PID 0x0056
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
+#define EXTERNAL_NUM_INTERRUPTS 49
+#define NUM_DIGITAL_PINS        49
 #define NUM_ANALOG_INPUTS       20
 
 static const uint8_t LED_BUILTIN = 21;
