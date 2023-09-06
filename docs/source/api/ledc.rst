@@ -130,8 +130,8 @@ This function is used to detach the pin from LEDC.
 
 * ``pin`` select LEDC pin.
 
-This function will return ``true`` if detaching is successful.
-If ``false`` is returned, error occurs and pin is not detached.
+This function returns ``true`` if detaching was successful.
+If ``false`` is returned, an error occurred and the pin was not detached.
 
 ledcChangeFrequency
 *******************
