@@ -26,7 +26,7 @@ Arduino-ESP32 SigmaDelta API
 sigmaDeltaAttach
 ****************
 
-This function is used to setup the SigmaDelta channel with selected frequency and attach it to selected pin.
+This function is used to set up the SigmaDelta channel with the selected frequency and attach it to the selected pin.
 
 .. code-block:: arduino
 
@@ -37,8 +37,8 @@ This function is used to setup the SigmaDelta channel with selected frequency an
 
   * range is 1-14 bits (1-20 bits for ESP32).
   
-This function will return ``true`` if configuration is successful.
-If ``false`` is returned, error occurs and the SigmaDelta channel was not configured.
+This function returns ``true`` if the configuration was successful.
+If ``false`` is returned, an error occurred and the SigmaDelta channel was not configured.
 
 sigmaDeltaWrite
 ***************
@@ -49,16 +49,16 @@ This function is used to set duty for the SigmaDelta pin.
 
     bool sigmaDeltaWrite(uint8_t pin, uint8_t duty);
 
-* ``pin`` select GPIO pin.
-* ``duty`` select duty to be set for selected pin.
+* ``pin`` selects the GPIO pin.
+* ``duty`` selects the duty to be set for selected pin.
 
-This function will return ``true`` if setting duty is successful.
+This function returns ``true`` if setting the duty was successful.
 If ``false`` is returned, error occurs and duty was not set.
 
 sigmaDeltaDetach
 ****************
 
-This function is used to detach pin from SigmaDelta and deinit the channel that was attached to the pin.
+This function is used to detach a pin from SigmaDelta and deinit the channel that was attached to the pin.
 
 .. code-block:: arduino
 
@@ -66,8 +66,8 @@ This function is used to detach pin from SigmaDelta and deinit the channel that 
 
 * ``pin`` select GPIO pin.
 
-This function will return ``true`` if detaching is successful.
-If ``false`` is returned, error occurs and pin is not detached.
+This function returns ``true`` if detaching was successful.
+If ``false`` is returned, an error occurred and pin was not detached.
 
 Example Applications
 ********************
