@@ -554,10 +554,16 @@ void HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t r
 
     // uartSetPins() checks if pins are valid for each function and for the SoC 
     if (uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin)) {
-        _txPin = _txPin >= 0 ? txPin : _txPin;
-        _rxPin = _rxPin >= 0 ? rxPin : _rxPin;
-        _rtsPin = _rtsPin >= 0 ? rtsPin : _rtsPin;
-        _ctsPin = _ctsPin >= 0 ? ctsPin : _ctsPin;
+	// detach previous attached UART pins if not set as same as before
+	if (_rxPin >= 0 && _rxPin != rxPin) uartDetachPins(_uart, _rxPin, -1, -1, -1);
+	if (_txPin >= 0 && _txPin != txPin) uartDetachPins(_uart, -1, _txPin, -1, -1);
+	if (_ctsPin >= 0 && _ctsPin != ctsPin) uartDetachPins(_uart, -1, -1, _ctsPin, -1);
+	if (_rtsPin >= 0 && _rtsPin != rtsPin) uartDetachPins(_uart, -1, -1, -1, _rtsPin);
+	// set new pins for a future end() or a setPins()    
+        _txPin = txPin >= 0 ? txPin : _txPin;
+        _rxPin = rxPin >= 0 ? rxPin : _rxPin;
+        _rtsPin = rtsPin >= 0 ? rtsPin : _rtsPin;
+        _ctsPin = ctsPin >= 0 ? ctsPin : _ctsPin;
     } else {
         log_e("Error when setting Serial port Pins. Invalid Pin.\n");
     }
