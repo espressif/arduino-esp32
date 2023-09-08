@@ -71,7 +71,9 @@ typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 class HardwareSerial: public Stream
 {
 public:
-    HardwareSerial(int uart_nr);
+    // UART0 (cosole) has its RX/TX pins initialized in boot
+    // it shall set default pins when user calls HardwareSerial.end() with no previous begin()
+    HardwareSerial(int uart_nr, int8_t rxPin = -1, int8_t txPin = -1);
     ~HardwareSerial();
 
     // setRxTimeout sets the timeout after which onReceive callback will be called (after receiving data, it waits for this time of UART rx inactivity to call the callback fnc)
