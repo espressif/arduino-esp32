@@ -79,8 +79,12 @@ static uart_t _uart_bus_array[] = {
 // be seen in the previous pins and new pins as well. 
 // Valid pin UART_PIN_NO_CHANGE is defined to (-1)
 // Negative Pin Number will keep it unmodified, thus this function can detach individual pins
-void uartDetachPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
+    if(uart == NULL) {
+        return false;
+    }
+
     UART_MUTEX_LOCK();
     if (txPin >= 0) {
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
