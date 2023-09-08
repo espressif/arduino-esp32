@@ -82,7 +82,7 @@ static uart_t _uart_bus_array[] = {
 void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(uart == NULL) {
-        return false;
+        return;
     }
 
     UART_MUTEX_LOCK();
