@@ -442,7 +442,7 @@ void HardwareSerial::end(bool fullyTerminate)
 
         _rxFIFOFull = 0; 
 
-        uartDetachPins(_rxPin, _txPin, _ctsPin, _rtsPin);
+        uartDetachPins(_uart, _rxPin, _txPin, _ctsPin, _rtsPin);
         _rxPin = _txPin = _ctsPin = _rtsPin = -1;
 
     }
