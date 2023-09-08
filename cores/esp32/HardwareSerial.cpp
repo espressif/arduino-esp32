@@ -97,14 +97,18 @@ void serialEvent2(void) {}
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
-HardwareSerial Serial0(0);
+// sets UART0 (default console) RX/TX default pins already configured in boot
+HardwareSerial Serial0(0, SOC_RX0, SOC_TX0);
 #else
-HardwareSerial Serial(0);
+// sets UART0 (default console) RX/TX default pins already configured in boot
+HardwareSerial Serial(0, SOC_RX0, SOC_TX0);
 #endif
 #if SOC_UART_NUM > 1
+// UART1 is not initialized in boot
 HardwareSerial Serial1(1);
 #endif
 #if SOC_UART_NUM > 2
+// UART2 is not initialized in boot
 HardwareSerial Serial2(2);
 #endif
 
@@ -132,7 +136,11 @@ void serialEventRun(void)
 #define HSERIAL_MUTEX_UNLOCK()  
 #endif
 
-HardwareSerial::HardwareSerial(int uart_nr) : 
+// Adds the default rxPin and txPin whenever it is already initialized in Boot Time (UART0)
+// default values are -1, -1 for UART1 and UART2
+// This will allow user to call HardwareSerial::end() with no previous HardwareSerial::begin()
+// detahing RX and TX attached in boot time. It also shall detach console pins when using HardwareSerial::setPins()
+HardwareSerial::HardwareSerial(int uart_nr, int8_t rxPin, int8_t txPin) : 
 _uart_nr(uart_nr), 
 _uart(NULL),
 _rxBufferSize(256),
@@ -146,8 +154,8 @@ _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
 #endif
-,_rxPin(-1) 
-,_txPin(-1)
+,_rxPin(rxPin) 
+,_txPin(txPin)
 ,_ctsPin(-1)
 ,_rtsPin(-1)
 {
