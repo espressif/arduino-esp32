@@ -348,28 +348,36 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 #endif
 
     HSERIAL_MUTEX_LOCK();
+    // make sure that if rxPin|txPin has changed, the previous GPIOs (_rxPin|_txPin) are detached
+    // Example: Serial.begin(115200); Serial.begin(115200, 2, 5); ==> second begin() shall detach RX/TX from first one
+    if (_uart != NULL && rxPin >= 0 && rxPin != _rxPin) {
+        uartDetachPins(_uart, _rxPin, -1, -1, -1);
+    }
+    if (_uart != NULL && txPin >= 0 && txPin != _txPin) {
+        uartDetachPins(_uart, -1, _txPin, -1, -1);
+    }
     // First Time or after end() --> set default Pins
     if (!uartIsDriverInstalled(_uart)) {
         switch (_uart_nr) {
             case UART_NUM_0:
                 if (rxPin < 0 && txPin < 0) {
-                    rxPin = SOC_RX0;
-                    txPin = SOC_TX0;
+                    rxPin = _rxPin < 0 ? SOC_RX0 : _rxPin;
+                    txPin = _txPin < 0 ? SOC_TX0 : _txPin;
                 }
             break;
 #if SOC_UART_NUM > 1                   // may save some flash bytes...
             case UART_NUM_1:
                if (rxPin < 0 && txPin < 0) {
-                    rxPin = RX1;
-                    txPin = TX1;
+                    rxPin = _rxPin < 0 ? RX1 : _rxPin;
+                    txPin = _txPin < 0 ? TX1 : _txPin;
                 }
             break;
 #endif
 #if SOC_UART_NUM > 2                   // may save some flash bytes...
             case UART_NUM_2:
                if (rxPin < 0 && txPin < 0) {
-                    rxPin = RX2;
-                    txPin = TX2;
+                    rxPin = _rxPin < 0 ? RX2 : _rxPin;
+                    txPin = _txPin < 0 ? TX2 : _txPin;
                 }
             break;
 #endif
@@ -425,10 +433,11 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
       uartSetRxFIFOFull(_uart, fifoFull);
       _rxFIFOFull = fifoFull;
     }
-
-    _rxPin = rxPin;
-    _txPin = txPin;
-
+    // all fine, set the new pins
+    if (_uart != NULL) {
+        _rxPin = rxPin >= 0 ? rxPin : _rxPin;
+        _txPin = txPin >= 0 ? txPin : _txPin;
+    }
     HSERIAL_MUTEX_UNLOCK();
 }
 
