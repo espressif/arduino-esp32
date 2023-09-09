@@ -473,6 +473,7 @@ esp_err_t esp_ble_gatts_stop_service(uint16_t service_handle);
 /**
  * @brief           Send indicate or notify to GATT client.
  *                  Set param need_confirm as false will send notification, otherwise indication.
+ *                  Note: the size of indicate or notify data need less than MTU size,see "esp_ble_gattc_send_mtu_req".
  *
  * @param[in]       gatts_if: GATT server access interface
  * @param[in]       conn_id - connection id to indicate.
@@ -580,6 +581,16 @@ esp_err_t esp_ble_gatts_close(esp_gatt_if_t gatts_if, uint16_t conn_id);
  *
  */
 esp_err_t esp_ble_gatts_send_service_change_indication(esp_gatt_if_t gatts_if, esp_bd_addr_t remote_bda);
+
+/**
+ * @brief           Print local database (GATT service table)
+ *
+ * @return
+ *                  - ESP_OK : success
+ *                  - other  : failed
+ *
+ */
+esp_err_t esp_ble_gatts_show_local_database(void);
 
 #ifdef __cplusplus
 }
