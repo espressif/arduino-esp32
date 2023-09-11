@@ -19169,9 +19169,9 @@ uPesy_edu_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-upesy_c3_basic.name=LOLIN C3 Mini
+upesy_c3_basic.name=uPesy ESP32C3 Basic
 upesy_c3_basic.vid.0=0x303a
-upesy_c3_basic.pid.0=0x1001
+upesy_c3_basic.pid.0=0x8195
 
 upesy_c3_basic.bootloader.tool=esptool_py
 upesy_c3_basic.bootloader.tool.default=esptool_py
