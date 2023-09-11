@@ -19169,6 +19169,123 @@ uPesy_edu_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+upesy_c3_basic.name=LOLIN C3 Mini
+upesy_c3_basic.vid.0=0x303a
+upesy_c3_basic.pid.0=0x1001
+
+upesy_c3_basic.bootloader.tool=esptool_py
+upesy_c3_basic.bootloader.tool.default=esptool_py
+
+upesy_c3_basic.upload.tool=esptool_py
+upesy_c3_basic.upload.tool.default=esptool_py
+upesy_c3_basic.upload.tool.network=esp_ota
+
+upesy_c3_basic.upload.maximum_size=1310720
+upesy_c3_basic.upload.maximum_data_size=327680
+upesy_c3_basic.upload.flags=
+upesy_c3_basic.upload.extra_flags=
+upesy_c3_basic.upload.use_1200bps_touch=false
+upesy_c3_basic.upload.wait_for_upload_port=false
+
+upesy_c3_basic.serial.disableDTR=true
+upesy_c3_basic.serial.disableRTS=true
+
+upesy_c3_basic.build.tarch=riscv32
+upesy_c3_basic.build.target=esp
+upesy_c3_basic.build.mcu=esp32c3
+upesy_c3_basic.build.core=esp32
+upesy_c3_basic.build.variant=uPesy_c3_basic
+upesy_c3_basic.build.board=uPesy_C3_BASIC
+upesy_c3_basic.build.bootloader_addr=0x0
+
+upesy_c3_basic.build.cdc_on_boot=1
+upesy_c3_basic.build.f_cpu=160000000L
+upesy_c3_basic.build.flash_size=4MB
+upesy_c3_basic.build.flash_freq=80m
+upesy_c3_basic.build.flash_mode=dio
+upesy_c3_basic.build.boot=qio
+upesy_c3_basic.build.partitions=default
+upesy_c3_basic.build.defines=
+
+upesy_c3_basic.menu.CDCOnBoot.default=Enabled
+upesy_c3_basic.menu.CDCOnBoot.default.build.cdc_on_boot=1
+upesy_c3_basic.menu.CDCOnBoot.dis_cdc=Disabled
+upesy_c3_basic.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+upesy_c3_basic.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+upesy_c3_basic.menu.PartitionScheme.default.build.partitions=default
+upesy_c3_basic.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+upesy_c3_basic.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+upesy_c3_basic.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+upesy_c3_basic.menu.PartitionScheme.no_ota.build.partitions=no_ota
+upesy_c3_basic.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+upesy_c3_basic.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+upesy_c3_basic.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+upesy_c3_basic.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+upesy_c3_basic.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+upesy_c3_basic.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+upesy_c3_basic.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+upesy_c3_basic.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+upesy_c3_basic.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+upesy_c3_basic.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+upesy_c3_basic.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+upesy_c3_basic.menu.PartitionScheme.huge_app.build.partitions=huge_app
+upesy_c3_basic.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+
+upesy_c3_basic.menu.CPUFreq.160=160MHz (WiFi)
+upesy_c3_basic.menu.CPUFreq.160.build.f_cpu=160000000L
+upesy_c3_basic.menu.CPUFreq.80=80MHz (WiFi)
+upesy_c3_basic.menu.CPUFreq.80.build.f_cpu=80000000L
+upesy_c3_basic.menu.CPUFreq.40=40MHz
+upesy_c3_basic.menu.CPUFreq.40.build.f_cpu=40000000L
+upesy_c3_basic.menu.CPUFreq.20=20MHz
+upesy_c3_basic.menu.CPUFreq.20.build.f_cpu=20000000L
+upesy_c3_basic.menu.CPUFreq.10=10MHz
+upesy_c3_basic.menu.CPUFreq.10.build.f_cpu=10000000L
+
+
+
+upesy_c3_basic.menu.FlashFreq.80=80MHz
+upesy_c3_basic.menu.FlashFreq.80.build.flash_freq=80m
+upesy_c3_basic.menu.FlashFreq.40=40MHz
+upesy_c3_basic.menu.FlashFreq.40.build.flash_freq=40m
+
+upesy_c3_basic.menu.UploadSpeed.921600=921600
+upesy_c3_basic.menu.UploadSpeed.921600.upload.speed=921600
+upesy_c3_basic.menu.UploadSpeed.115200=115200
+upesy_c3_basic.menu.UploadSpeed.115200.upload.speed=115200
+upesy_c3_basic.menu.UploadSpeed.256000.windows=256000
+upesy_c3_basic.menu.UploadSpeed.256000.upload.speed=256000
+upesy_c3_basic.menu.UploadSpeed.230400.windows.upload.speed=256000
+upesy_c3_basic.menu.UploadSpeed.230400=230400
+upesy_c3_basic.menu.UploadSpeed.230400.upload.speed=230400
+upesy_c3_basic.menu.UploadSpeed.460800.linux=460800
+upesy_c3_basic.menu.UploadSpeed.460800.macosx=460800
+upesy_c3_basic.menu.UploadSpeed.460800.upload.speed=460800
+upesy_c3_basic.menu.UploadSpeed.512000.windows=512000
+upesy_c3_basic.menu.UploadSpeed.512000.upload.speed=512000
+
+upesy_c3_basic.menu.DebugLevel.none=None
+upesy_c3_basic.menu.DebugLevel.none.build.code_debug=0
+upesy_c3_basic.menu.DebugLevel.error=Error
+upesy_c3_basic.menu.DebugLevel.error.build.code_debug=1
+upesy_c3_basic.menu.DebugLevel.warn=Warn
+upesy_c3_basic.menu.DebugLevel.warn.build.code_debug=2
+upesy_c3_basic.menu.DebugLevel.info=Info
+upesy_c3_basic.menu.DebugLevel.info.build.code_debug=3
+upesy_c3_basic.menu.DebugLevel.debug=Debug
+upesy_c3_basic.menu.DebugLevel.debug.build.code_debug=4
+upesy_c3_basic.menu.DebugLevel.verbose=Verbose
+upesy_c3_basic.menu.DebugLevel.verbose.build.code_debug=5
+
+upesy_c3_basic.menu.EraseFlash.none=Disabled
+upesy_c3_basic.menu.EraseFlash.none.upload.erase_cmd=
+upesy_c3_basic.menu.EraseFlash.all=Enabled
+upesy_c3_basic.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 kb32.name=KB32-FT
 
 kb32.bootloader.tool=esptool_py
