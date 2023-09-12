@@ -147,8 +147,6 @@ _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
 #endif
-,_rxPin(-1) 
-,_txPin(-1)
 ,_ctsPin(-1)
 ,_rtsPin(-1)
 {
@@ -161,6 +159,14 @@ _eventTask(NULL)
         }
     }
 #endif
+    // sets UART0 (default console) RX/TX pins as already configured in boot
+    if (uart_nr == 0) {    
+        _rxPin = SOC_RX0;
+        _txPin = SOC_TX0;
+    } else {
+        _rxPin = -1;
+        _txPin = -1;
+    }
 }
 
 HardwareSerial::~HardwareSerial()
@@ -348,23 +354,26 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         switch (_uart_nr) {
             case UART_NUM_0:
                 if (rxPin < 0 && txPin < 0) {
-                    rxPin = SOC_RX0;
-                    txPin = SOC_TX0;
+                    // do not change RX0/TX0 if it has already been set before
+                    rxPin = _rxPin < 0 ? SOC_RX0 : _rxPin;
+                    txPin = _txPin < 0 ? SOC_TX0 : _txPin;
                 }
             break;
 #if SOC_UART_NUM > 1                   // may save some flash bytes...
             case UART_NUM_1:
                if (rxPin < 0 && txPin < 0) {
-                    rxPin = RX1;
-                    txPin = TX1;
+                    // do not change RX1/TX1 if it has already been set before
+                    rxPin = _rxPin < 0 ? RX1 : _rxPin;
+                    txPin = _txPin < 0 ? TX1 : _txPin;
                 }
             break;
 #endif
 #if SOC_UART_NUM > 2                   // may save some flash bytes...
             case UART_NUM_2:
                if (rxPin < 0 && txPin < 0) {
-                    rxPin = RX2;
-                    txPin = TX2;
+                    // do not change RX2/TX2 if it has already been set before
+                    rxPin = _rxPin < 0 ? RX2 : _rxPin;
+                    txPin = _txPin < 0 ? TX2 : _txPin;
                 }
             break;
 #endif
@@ -424,9 +433,17 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
       uartSetRxFIFOFull(_uart, fifoFull);
       _rxFIFOFull = fifoFull;
     }
-
-    _rxPin = rxPin;
-    _txPin = txPin;
+    // detach previous attached RX/TX pins when it has changed
+    if (_uart != NULL) {
+        if (rxPin >= 0 && rxPin != _rxPin) {
+            uartDetachPins(_uart, _rxPin, -1, -1, -1);
+            _rxPin = rxPin;
+        }
+        if (txPin >= 0 && txPin != _txPin) {
+            uartDetachPins(_uart, -1, _txPin, -1, -1);
+            _txPin = txPin;
+        }        
+    }    
 
     HSERIAL_MUTEX_UNLOCK();
 }
