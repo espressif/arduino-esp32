@@ -18,6 +18,7 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "sdkconfig.h"
 #ifdef CONFIG_ETH_ENABLED
 
 #include "ETH.h"

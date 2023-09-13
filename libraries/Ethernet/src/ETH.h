@@ -21,6 +21,7 @@
 #ifndef _ETH_H_
 #define _ETH_H_
 
+#include "sdkconfig.h"
 #ifdef CONFIG_ETH_ENABLED
 
 #include "WiFi.h"
