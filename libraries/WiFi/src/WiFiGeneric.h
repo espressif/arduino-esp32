@@ -92,7 +92,9 @@ typedef union {
 	ip_event_got_ip_t got_ip;
 	ip_event_got_ip6_t got_ip6;
 	smartconfig_event_got_ssid_pswd_t sc_got_ssid_pswd;
+#ifdef CONFIG_ETH_ENABLED
 	esp_eth_handle_t eth_connected;
+#endif
 	wifi_sta_config_t prov_cred_recv;
 	wifi_prov_sta_fail_reason_t prov_fail_reason;
 } arduino_event_info_t;
