@@ -216,7 +216,7 @@ find "$PKG_DIR" -name '*.git*' -type f -delete
 # Replace tools locations in platform.txt
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
-sed "s/version=.*/version=$ver$extent/g" | \
+sed "s/version=.*/version=$RELEASE_TAG/g" | \
 sed 's/tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf/tools.xtensa-esp32-elf-gcc.path=\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf/tools.xtensa-esp32s2-elf-gcc.path=\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s3-elf/tools.xtensa-esp32s3-elf-gcc.path=\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
