@@ -71,7 +71,7 @@ typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 class HardwareSerial: public Stream
 {
 public:
-    HardwareSerial(int uart_nr);
+    HardwareSerial(uint8_t uart_nr);
     ~HardwareSerial();
 
     // setRxTimeout sets the timeout after which onReceive callback will be called (after receiving data, it waits for this time of UART rx inactivity to call the callback fnc)
@@ -170,7 +170,7 @@ public:
     size_t setTxBufferSize(size_t new_size);
 
 protected:
-    int _uart_nr;
+    uint8_t _uart_nr;
     uart_t* _uart;
     size_t _rxBufferSize;
     size_t _txBufferSize;

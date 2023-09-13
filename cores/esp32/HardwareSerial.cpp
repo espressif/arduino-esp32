@@ -133,7 +133,7 @@ void serialEventRun(void)
 #define HSERIAL_MUTEX_UNLOCK()  
 #endif
 
-HardwareSerial::HardwareSerial(int uart_nr) : 
+HardwareSerial::HardwareSerial(uint8_t uart_nr) : 
 _uart_nr(uart_nr), 
 _uart(NULL),
 _rxBufferSize(256),
@@ -336,7 +336,7 @@ void HardwareSerial::_uartEventTask(void *args)
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
-    if(0 > _uart_nr || _uart_nr >= SOC_UART_NUM) {
+    if(_uart_nr >= SOC_UART_NUM) {
         log_e("Serial number is invalid, please use numers from 0 to %u", SOC_UART_NUM - 1);
         return;
     }
@@ -436,11 +436,11 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     // detach previous attached RX/TX pins when it has changed
     if (_uart != NULL) {
         if (rxPin >= 0 && rxPin != _rxPin) {
-            uartDetachPins(_uart, _rxPin, -1, -1, -1);
+            uartDetachPins(_uart_nr, _rxPin, -1, -1, -1);
             _rxPin = rxPin;
         }
         if (txPin >= 0 && txPin != _txPin) {
-            uartDetachPins(_uart, -1, _txPin, -1, -1);
+            uartDetachPins(_uart_nr, -1, _txPin, -1, -1);
             _txPin = txPin;
         }        
     }    
@@ -466,7 +466,7 @@ void HardwareSerial::end(bool fullyTerminate)
 
         _rxFIFOFull = 0; 
 
-        uartDetachPins(_uart, _rxPin, _txPin, _ctsPin, _rtsPin);
+        uartDetachPins(_uart_nr, _rxPin, _txPin, _ctsPin, _rtsPin);
         _rxPin = _txPin = _ctsPin = _rtsPin = -1;
 
     }
@@ -571,11 +571,6 @@ void HardwareSerial::setRxInvert(bool invert)
 // negative Pin value will keep it unmodified
 bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
-    if(_uart == NULL) {
-        log_e("setPins() shall be called after begin() - nothing done\n");
-        return false;
-    }
-
     // map logical pins to GPIO numbers
     rxPin = digitalPinToGPIONumber(rxPin);
     txPin = digitalPinToGPIONumber(txPin);
@@ -583,13 +578,13 @@ bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t r
     rtsPin = digitalPinToGPIONumber(rtsPin);
 
     // uartSetPins() checks if pins are valid for each function and for the SoC
-    bool retCode = uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin);
+    bool retCode = uartSetPins(_uart_nr, rxPin, txPin, ctsPin, rtsPin);
     if (retCode) {
  	    // detach previous attached UART pins if not set as same as before
-	    if (_rxPin >= 0 && _rxPin != rxPin) uartDetachPins(_uart, _rxPin, -1, -1, -1);
-	    if (_txPin >= 0 && _txPin != txPin) uartDetachPins(_uart, -1, _txPin, -1, -1);
-	    if (_ctsPin >= 0 && _ctsPin != ctsPin) uartDetachPins(_uart, -1, -1, _ctsPin, -1);
-	    if (_rtsPin >= 0 && _rtsPin != rtsPin) uartDetachPins(_uart, -1, -1, -1, _rtsPin);
+	    if (_rxPin >= 0 && _rxPin != rxPin) uartDetachPins(_uart_nr, _rxPin, -1, -1, -1);
+	    if (_txPin >= 0 && _txPin != txPin) uartDetachPins(_uart_nr, -1, _txPin, -1, -1);
+	    if (_ctsPin >= 0 && _ctsPin != ctsPin) uartDetachPins(_uart_nr, -1, -1, _ctsPin, -1);
+	    if (_rtsPin >= 0 && _rtsPin != rtsPin) uartDetachPins(_uart_nr, -1, -1, -1, _rtsPin);
 	    // set new pins for a future end() or a setPins()    
         _txPin = txPin >= 0 ? txPin : _txPin;
         _rxPin = rxPin >= 0 ? rxPin : _rxPin;
