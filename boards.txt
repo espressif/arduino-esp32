@@ -13687,12 +13687,12 @@ m5stack-cores3.menu.PartitionScheme.large_spiffs=16MB with Large SPIFFS (2x 4MB 
 m5stack-cores3.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
 m5stack-cores3.menu.PartitionScheme.large_spiffs.upload.maximum_size=4685824
 m5stack-cores3.menu.PartitionScheme.factory_4apps=16MB+Factory (4x 3MB APP/2MB SPIFFS)
-m5stack-cores3.menu.PartitionScheme.factory_4apps.build.custom_partitions=partitions-16MB-factory-4-apps
-m5stack-cores3.menu.PartitionScheme.factory_4apps.upload.extra_flags=0xc10000 "{runtime.platform.path}/variants/{build.variant}/firmware.bin"
+m5stack-cores3.menu.PartitionScheme.factory_4apps.build.custom_partitions=partitions_16MB_factory_4_apps
+# m5stack-cores3.menu.PartitionScheme.factory_4apps.upload.extra_flags=0xc10000 "{runtime.platform.path}/variants/{build.variant}/firmware.bin"
 m5stack-cores3.menu.PartitionScheme.factory_4apps.upload.maximum_size=3145728
 m5stack-cores3.menu.PartitionScheme.factory_6apps=16MB+Factory (6x 2MB APP/2MB SPIFFS)
-m5stack-cores3.menu.PartitionScheme.factory_6apps.build.custom_partitions=partitions-16MB-factory-6-apps
-m5stack-cores3.menu.PartitionScheme.factory_6apps.upload.extra_flags=0xc10000 "{runtime.platform.path}/variants/{build.variant}/firmware.bin"
+m5stack-cores3.menu.PartitionScheme.factory_6apps.build.custom_partitions=partitions_16MB_factory_6_apps
+# m5stack-cores3.menu.PartitionScheme.factory_6apps.upload.extra_flags=0xc10000 "{runtime.platform.path}/variants/{build.variant}/firmware.bin"
 m5stack-cores3.menu.PartitionScheme.factory_6apps.upload.maximum_size=2097152
 
 m5stack-cores3.menu.CPUFreq.240=240MHz (WiFi)
@@ -25600,4 +25600,4 @@ namino_arancio.menu.EraseFlash.all=Enabled
 namino_arancio.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
- 
+
