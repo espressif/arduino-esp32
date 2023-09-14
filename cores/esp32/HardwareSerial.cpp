@@ -446,7 +446,7 @@ void HardwareSerial::end(bool fullyTerminate)
         _rxPin = _txPin = _ctsPin = _rtsPin = -1;
 
     }
-    delay(10);
+
     uartEnd(_uart);
     _uart = 0;
     _destroyEventTask();
