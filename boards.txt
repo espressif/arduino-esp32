@@ -13578,6 +13578,7 @@ m5stack-cores3.upload.tool.network=esp_ota
 
 m5stack-cores3.upload.maximum_size=1310720
 m5stack-cores3.upload.maximum_data_size=327680
+m5stack-cores3.upload.speed=921600
 m5stack-cores3.upload.flags=
 m5stack-cores3.upload.extra_flags=
 m5stack-cores3.upload.use_1200bps_touch=false
@@ -13595,21 +13596,20 @@ m5stack-cores3.build.variant=m5stack_cores3
 m5stack-cores3.build.board=M5STACK_CORES3
 
 m5stack-cores3.build.usb_mode=1
-m5stack-cores3.build.cdc_on_boot=0
+m5stack-cores3.build.cdc_on_boot=1
 m5stack-cores3.build.msc_on_boot=0
 m5stack-cores3.build.dfu_on_boot=0
 m5stack-cores3.build.f_cpu=240000000L
-m5stack-cores3.build.flash_size=4MB
+m5stack-cores3.build.flash_size=16MB
 m5stack-cores3.build.flash_freq=80m
 m5stack-cores3.build.flash_mode=dio
 m5stack-cores3.build.boot=qio
-m5stack-cores3.build.boot_freq=80m
-m5stack-cores3.build.partitions=default
-m5stack-cores3.build.defines=
-m5stack-cores3.build.loop_core=
-m5stack-cores3.build.event_core=
+m5stack-cores3.build.partitions=default_16MB
+m5stack-cores3.build.defines=-DBOARD_HAS_PSRAM
 m5stack-cores3.build.psram_type=qspi
-m5stack-cores3.build.memory_type={build.boot}_{build.psram_type}
+m5stack-cores3.build.memory_type=qio_qspi
+m5stack-cores3.build.loop_core=-DARDUINO_RUNNING_CORE=1
+m5stack-cores3.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 
 m5stack-cores3.menu.JTAGAdapter.default=Disabled
 m5stack-cores3.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -13623,46 +13623,14 @@ m5stack-cores3.menu.JTAGAdapter.bridge=ESP USB Bridge
 m5stack-cores3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack-cores3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-m5stack-cores3.menu.PSRAM.disabled=Disabled
-m5stack-cores3.menu.PSRAM.disabled.build.defines=
-m5stack-cores3.menu.PSRAM.disabled.build.psram_type=qspi
-m5stack-cores3.menu.PSRAM.enabled=QSPI PSRAM
-m5stack-cores3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-m5stack-cores3.menu.PSRAM.enabled.build.psram_type=qspi
-m5stack-cores3.menu.PSRAM.opi=OPI PSRAM
-m5stack-cores3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-m5stack-cores3.menu.PSRAM.opi.build.psram_type=opi
-
-m5stack-cores3.menu.FlashMode.qio=QIO 80MHz
-m5stack-cores3.menu.FlashMode.qio.build.flash_mode=dio
-m5stack-cores3.menu.FlashMode.qio.build.boot=qio
-m5stack-cores3.menu.FlashMode.qio.build.boot_freq=80m
-m5stack-cores3.menu.FlashMode.qio.build.flash_freq=80m
-m5stack-cores3.menu.FlashMode.qio120=QIO 120MHz
-m5stack-cores3.menu.FlashMode.qio120.build.flash_mode=dio
-m5stack-cores3.menu.FlashMode.qio120.build.boot=qio
-m5stack-cores3.menu.FlashMode.qio120.build.boot_freq=120m
-m5stack-cores3.menu.FlashMode.qio120.build.flash_freq=80m
-m5stack-cores3.menu.FlashMode.dio=DIO 80MHz
-m5stack-cores3.menu.FlashMode.dio.build.flash_mode=dio
-m5stack-cores3.menu.FlashMode.dio.build.boot=dio
-m5stack-cores3.menu.FlashMode.dio.build.boot_freq=80m
-m5stack-cores3.menu.FlashMode.dio.build.flash_freq=80m
-m5stack-cores3.menu.FlashMode.opi=OPI 80MHz
-m5stack-cores3.menu.FlashMode.opi.build.flash_mode=dout
-m5stack-cores3.menu.FlashMode.opi.build.boot=opi
-m5stack-cores3.menu.FlashMode.opi.build.boot_freq=80m
-m5stack-cores3.menu.FlashMode.opi.build.flash_freq=80m
-
+m5stack-cores3.menu.FlashSize.16M=16MB (128Mb)
+m5stack-cores3.menu.FlashSize.16M.build.flash_size=16MB
+m5stack-cores3.menu.FlashSize.16M.build.partitions=default_16MB
 m5stack-cores3.menu.FlashSize.4M=4MB (32Mb)
 m5stack-cores3.menu.FlashSize.4M.build.flash_size=4MB
 m5stack-cores3.menu.FlashSize.8M=8MB (64Mb)
 m5stack-cores3.menu.FlashSize.8M.build.flash_size=8MB
 m5stack-cores3.menu.FlashSize.8M.build.partitions=default_8MB
-m5stack-cores3.menu.FlashSize.16M=16MB (128Mb)
-m5stack-cores3.menu.FlashSize.16M.build.flash_size=16MB
-#m5stack-cores3.menu.FlashSize.32M=32MB (256Mb)
-#m5stack-cores3.menu.FlashSize.32M.build.flash_size=32MB
 
 m5stack-cores3.menu.LoopCore.1=Core 1
 m5stack-cores3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -13676,13 +13644,17 @@ m5stack-cores3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 m5stack-cores3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 m5stack-cores3.menu.USBMode.hwcdc.build.usb_mode=1
-m5stack-cores3.menu.USBMode.default=USB-OTG (TinyUSB)
+m5stack-cores3.menu.USBMode.hwcdc.upload.use_1200bps_touch=false
+m5stack-cores3.menu.USBMode.hwcdc.upload.wait_for_upload_port=false
+m5stack-cores3.menu.USBMode.default=USB-OTG
 m5stack-cores3.menu.USBMode.default.build.usb_mode=0
+m5stack-cores3.menu.USBMode.default.upload.use_1200bps_touch=true
+m5stack-cores3.menu.USBMode.default.upload.wait_for_upload_port=true
 
-m5stack-cores3.menu.CDCOnBoot.default=Disabled
-m5stack-cores3.menu.CDCOnBoot.default.build.cdc_on_boot=0
 m5stack-cores3.menu.CDCOnBoot.cdc=Enabled
 m5stack-cores3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+m5stack-cores3.menu.CDCOnBoot.default=Disabled
+m5stack-cores3.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
 m5stack-cores3.menu.MSCOnBoot.default=Disabled
 m5stack-cores3.menu.MSCOnBoot.default.build.msc_on_boot=0
@@ -13701,13 +13673,27 @@ m5stack-cores3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 m5stack-cores3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 m5stack-cores3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
-m5stack-cores3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default_16MB=Default 16MB with spiffs (2x 6.5 MB APP/3.6MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+m5stack-cores3.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+m5stack-cores3.menu.PartitionScheme.default=4MB with spiffs (2x 1.2MB APP/1.5MB SPIFFS)
 m5stack-cores3.menu.PartitionScheme.default.build.partitions=default
-m5stack-cores3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+m5stack-cores3.menu.PartitionScheme.defaultffat=4MB with ffat (2x 1.2MB APP/1.5MB FATFS)
 m5stack-cores3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack-cores3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default_8MB=8M with spiffs (2x 3MB APP/1.5MB SPIFFS)
 m5stack-cores3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 m5stack-cores3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+m5stack-cores3.menu.PartitionScheme.large_spiffs=16MB with Large SPIFFS (2x 4MB APP/7MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+m5stack-cores3.menu.PartitionScheme.large_spiffs.upload.maximum_size=4685824
+m5stack-cores3.menu.PartitionScheme.factory_4apps=16MB+Factory (4x 3MB APP/2MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.factory_4apps.build.custom_partitions=partitions_16MB_factory_4_apps
+# m5stack-cores3.menu.PartitionScheme.factory_4apps.upload.extra_flags=0xc10000 "{runtime.platform.path}/variants/{build.variant}/firmware.bin"
+m5stack-cores3.menu.PartitionScheme.factory_4apps.upload.maximum_size=3145728
+m5stack-cores3.menu.PartitionScheme.factory_6apps=16MB+Factory (6x 2MB APP/2MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.factory_6apps.build.custom_partitions=partitions_16MB_factory_6_apps
+# m5stack-cores3.menu.PartitionScheme.factory_6apps.upload.extra_flags=0xc10000 "{runtime.platform.path}/variants/{build.variant}/firmware.bin"
+m5stack-cores3.menu.PartitionScheme.factory_6apps.upload.maximum_size=2097152
 
 m5stack-cores3.menu.CPUFreq.240=240MHz (WiFi)
 m5stack-cores3.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -13736,6 +13722,8 @@ m5stack-cores3.menu.UploadSpeed.460800.macosx=460800
 m5stack-cores3.menu.UploadSpeed.460800.upload.speed=460800
 m5stack-cores3.menu.UploadSpeed.512000.windows=512000
 m5stack-cores3.menu.UploadSpeed.512000.upload.speed=512000
+m5stack-cores3.menu.UploadSpeed.1500000=1500000
+m5stack-cores3.menu.UploadSpeed.1500000.upload.speed=1500000
 
 m5stack-cores3.menu.DebugLevel.none=None
 m5stack-cores3.menu.DebugLevel.none.build.code_debug=0
@@ -25612,4 +25600,4 @@ namino_arancio.menu.EraseFlash.all=Enabled
 namino_arancio.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
- 
+
