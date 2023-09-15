@@ -1081,7 +1081,7 @@ void HTTPClient::collectHeaders(const char* headerKeys[], const size_t headerKey
 String HTTPClient::header(const char* name)
 {
     for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if(_currentHeaders[i].key == name) {
+        if(_currentHeaders[i].key.equalsIgnoreCase(name)) {
             return _currentHeaders[i].value;
         }
     }
@@ -1112,7 +1112,7 @@ int HTTPClient::headers()
 bool HTTPClient::hasHeader(const char* name)
 {
     for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if((_currentHeaders[i].key == name) && (_currentHeaders[i].value.length() > 0)) {
+        if((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0)) {
             return true;
         }
     }
