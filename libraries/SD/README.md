@@ -18,17 +18,12 @@ Some ESP32 modules have different pin outs!
 ## Default SPI pins:
 Note that SPI pins can be configured by using `SPI.begin(sck, miso, mosi, cs);` alternatively, you can change only the CS pin with `SD.begin(CSpin)`
 
-+--------------+---------+-------+----------+----------+----------+
 | SPI Pin Name | ESP8266 | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
-+==============+=========+=======+==========+==========+==========+
+|--------------|---------|-------|----------|----------|----------|
 | CS (SS)      | GPIO15  | GPIO5 | GPIO5    | GPIO13   | GPIO13   |
-+--------------+---------+-------+----------+----------+----------+
 | DI (MOSI)    | GPIO13  | GPIO23| GPIO24   | GPIO14   | GPIO14   |
-+--------------+---------+-------+----------+----------+----------+
 | DO (MISO)    | GPIO12  | GPIO19| GPIO25   | GPIO15   | GPIO15   |
-+--------------+---------+-------+----------+----------+----------+
 | SCK (SCLK)   | GPIO14  | GPIO18| GPIO19   | GPIO16   | GPIO16   |
-+--------------+---------+-------+----------+----------+----------+
 
 ## FAQ:
 
