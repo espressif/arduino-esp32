@@ -19,24 +19,23 @@
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
-#define LED_BUILTIN   1
+static const uint8_t PIN_NEOPIXEL = 1;
+static const uint8_t NEOPIXEL_PIN = 1;
 
-static const uint8_t PIN_NEOPIXEL = 21;
-
-static const uint8_t TFT_BACKLIGHT = 41;
+//static const uint8_t TFT_BACKLIGHT = 41;
 static const uint8_t TFT_DC        = 40;
 static const uint8_t TFT_CS        = 39;
 static const uint8_t TFT_RESET     = 38;
 static const uint8_t TFT_RST       = 38;
 
-static const uint8_t SD_CS          = 2;
-static const uint8_t SD_CHIP_SELECT = 2;
-static const uint8_t SPEAKER        = 45;
+static const uint8_t SD_CS          = 48;
+static const uint8_t SD_CHIP_SELECT = 48;
+static const uint8_t SPEAKER        = 41;
 
 static const uint8_t SDA = 33;
 static const uint8_t SCL = 34;
 
-static const uint8_t SS    = 39;
+static const uint8_t SS    = 48;
 static const uint8_t MOSI  = 35;
 static const uint8_t SCK   = 36;
 static const uint8_t MISO  = 37;
