@@ -234,13 +234,13 @@ void analogWrite(uint8_t pin, int value) {
             return;
         }
         ledcAttachPin(pin, channel);
-        pin_to_channel[pin] = channel;
+        pin_to_channel[pin] = channel + 1;
         ledcWrite(channel, value);
     }
 }
 
 int8_t analogGetChannel(uint8_t pin) {
-    return pin_to_channel[pin];
+    return pin_to_channel[pin] - 1;
 }
 
 void analogWriteFrequency(uint32_t freq) {
