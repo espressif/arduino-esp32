@@ -50,8 +50,7 @@ void tud_task_ext(uint32_t timeout_ms, bool in_isr);
 
 // Task function should be called in main/rtos loop
 TU_ATTR_ALWAYS_INLINE static inline
-void tud_task (void)
-{
+void tud_task (void) {
   tud_task_ext(UINT32_MAX, false);
 }
 
@@ -80,8 +79,7 @@ bool tud_suspended(void);
 
 // Check if device is ready to transfer
 TU_ATTR_ALWAYS_INLINE static inline
-bool tud_ready(void)
-{
+bool tud_ready(void) {
   return tud_mounted() && !tud_suspended();
 }
 

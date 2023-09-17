@@ -24,8 +24,8 @@
  * This file is part of the TinyUSB stack.
  */
 
-#ifndef _TUSB_USBH_CLASSDRIVER_H_
-#define _TUSB_USBH_CLASSDRIVER_H_
+#ifndef _TUSB_USBH_PVT_H_
+#define _TUSB_USBH_PVT_H_
 
 #include "osal/osal.h"
 #include "common/tusb_fifo.h"
@@ -76,6 +76,8 @@ uint8_t* usbh_get_enum_buf(void);
 
 void usbh_int_set(bool enabled);
 
+void usbh_defer_func(osal_task_func_t func, void *param, bool in_isr);
+
 //--------------------------------------------------------------------+
 // USBH Endpoint API
 //--------------------------------------------------------------------+
@@ -85,11 +87,9 @@ bool usbh_edpt_xfer_with_callback(uint8_t dev_addr, uint8_t ep_addr, uint8_t * b
                                   tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 TU_ATTR_ALWAYS_INLINE
-static inline bool usbh_edpt_xfer(uint8_t dev_addr, uint8_t ep_addr, uint8_t * buffer, uint16_t total_bytes)
-{
+static inline bool usbh_edpt_xfer(uint8_t dev_addr, uint8_t ep_addr, uint8_t * buffer, uint16_t total_bytes) {
   return usbh_edpt_xfer_with_callback(dev_addr, ep_addr, buffer, total_bytes, NULL, 0);
 }
-
 
 // Claim an endpoint before submitting a transfer.
 // If caller does not make any transfer, it must release endpoint for others.
