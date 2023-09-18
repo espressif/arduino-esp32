@@ -309,7 +309,7 @@ After that, you can use the following structure to include the image in the docs
 
 .. code-block::
 
-    .. figure:: ../_static/arduino_i2c_master.png
+    .. figure:: ../../_static/arduino_i2c_master.png
         :align: center
         :width: 720
         :figclass: align-center

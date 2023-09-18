@@ -21,16 +21,16 @@ The ESP32 is divided by family:
 * ESP32-S
     * Wi-Fi only
 * ESP32-C
-    * Wi-Fi and BLE 5
+    * Wi-Fi, BLE 5 and IEEE 802.15.4 (Zigbee and Thread) - C6 only
 * ESP32-H
-    * BLE and IEEE 802.15.4  
+    * BLE and IEEE 802.15.4 (Zigbee and Thread)
 
 For each family, we have SoC variants with some differentiation. The differences are more about the embedded flash and its size and the number of the cores (dual or single).
 
 The modules use the SoC internally, including the external flash, PSRAM (in some models) and other essential electronic components. Essentially, all
 modules from the same family use the same SoC.
 
-.. figure:: ../_static/soc-module.png
+.. figure:: ../../_static/soc-module.png
     :align: center
     :width: 250
     :alt: ESP32 SoC and Module (click to enlarge)
@@ -60,7 +60,7 @@ Before buying: Keep in mind that for some "must have" features when choosing the
 Espressif
 ---------
 
-.. figure:: ../_static/logo_espressif.png
+.. figure:: ../../_static/logo_espressif.png
     :align: center
     :width: 250
     :alt: Espressif Logo

@@ -21,7 +21,7 @@ Working as AP
 In this mode, the ESP32 is configured as an Access Point (AP) and it's capable of receiving incoming connections from other devices (stations) by providing
 a Wi-Fi network.
 
-.. figure:: ../_static/wifi_esp32_ap.png
+.. figure:: ../../_static/wifi_esp32_ap.png
     :align: center
     :width: 520
     :figclass: align-center
@@ -33,7 +33,7 @@ Working as STA
 
 The STA mode is used to connect the ESP32 to a Wi-Fi network, provided by an Access Point.
 
-.. figure:: ../_static/wifi_esp32_sta.png
+.. figure:: ../../_static/wifi_esp32_sta.png
     :align: center
     :width: 520
     :figclass: align-center
@@ -643,7 +643,7 @@ Loads all infos from a scanned wifi in to the ptr parameters.
 
     bool getNetworkInfo(uint8_t networkItem, String &ssid, uint8_t &encryptionType, int32_t &RSSI, uint8_t* &BSSID, int32_t &channel);
 
-To see how to use the ``WiFiScan``, take a look at the ``WiFiScan.ino`` or ``WiFiScanAsync.ino`` example available.
+To see how to use the ``WiFiScan``, take a look at the ``WiFiScan.ino`` example available.
 
 Examples
 --------
@@ -665,6 +665,9 @@ Wi-Fi STA Example
 
 .. literalinclude:: ../../../libraries/WiFi/examples/WiFiClient/WiFiClient.ino
     :language: arduino
+
+References
+----------
 
 .. _events example:
 

@@ -104,7 +104,7 @@ You can check the results in `LIBRARIES_TEST.md`_.
 
 The results file example:
 
-.. image:: _static/external_library_test_schedule.png
+.. image:: ../_static/external_library_test_schedule.png
   :width: 600
 
 Pull Request test result
@@ -113,18 +113,18 @@ Pull Request test result
 If the test run on Pull Request, it will compile all libraries and sketches 2 times (before/after changes in PR) to see, if the PR is breaking/fixing libraries.
 In the table the results are in order ``BEFORE -> AFTER``.
 
-.. image:: _static/external_library_test_pr.png
+.. image:: ../_static/external_library_test_pr.png
   :width: 600
 
-.. |success| image:: _static/green_checkmark.png
+.. |success| image:: ../_static/green_checkmark.png
    :height: 2ex
    :class: no-scaled-link
 
-.. |warning| image:: _static/warning.png
+.. |warning| image:: ../_static/warning.png
    :height: 2ex
    :class: no-scaled-link
 
-.. |fail| image:: _static/cross.png
+.. |fail| image:: ../_static/cross.png
    :height: 2ex
    :class: no-scaled-link
 
