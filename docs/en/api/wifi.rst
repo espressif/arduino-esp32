@@ -21,7 +21,7 @@ Working as AP
 In this mode, the ESP32 is configured as an Access Point (AP) and it's capable of receiving incoming connections from other devices (stations) by providing
 a Wi-Fi network.
 
-.. figure:: ../_static/wifi_esp32_ap.png
+.. figure:: ../../_static/wifi_esp32_ap.png
     :align: center
     :width: 520
     :figclass: align-center
@@ -33,7 +33,7 @@ Working as STA
 
 The STA mode is used to connect the ESP32 to a Wi-Fi network, provided by an Access Point.
 
-.. figure:: ../_static/wifi_esp32_sta.png
+.. figure:: ../../_static/wifi_esp32_sta.png
     :align: center
     :width: 520
     :figclass: align-center

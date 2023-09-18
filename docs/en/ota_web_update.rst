@@ -36,14 +36,14 @@ Prepare the sketch and configuration for initial upload with a serial port
 - Update ssid and pass in the sketch so the module can join your Wi-Fi network
 - Open File > Preferences, look for “Show verbose output during:” and check out “compilation” option
 
-.. figure:: _static/ota_esp32_verbose.png
+.. figure:: ../_static/ota_esp32_verbose.png
     :align: center
     :figclass: align-center
 
 - Upload sketch (Ctrl+U)
 - Now open web browser and enter the url, i.e. http://esp32.local. Once entered, browser should display a form
 
-.. figure:: _static/ota_esp32_login.png
+.. figure:: ../_static/ota_esp32_login.png
     :align: center
     :figclass: align-center
 
@@ -56,7 +56,7 @@ Prepare the sketch and configuration for initial upload with a serial port
 
 Now click on the Login button and browser will display an upload form
 
-.. figure:: _static/ota_esp32_upload.png
+.. figure:: ../_static/ota_esp32_upload.png
     :align: center
     :figclass: align-center
 
@@ -67,7 +67,7 @@ Exporting Binary file of the Firmware (Code)
 - Open up the Code, for Exporting up Binary file
 - Now go to Sketch > export compiled Binary
 
-.. figure:: _static/ota_export_to_binary.png
+.. figure:: ../_static/ota_export_to_binary.png
     :align: center
     :figclass: align-center
 
