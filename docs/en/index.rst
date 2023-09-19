@@ -1,8 +1,8 @@
-#############################################
-Welcome to {IDF_TARGET_NAME} Arduino Core's documentation
-#############################################
+#######################################
+Welcome to Arduino Core's documentation
+#######################################
 
-Here you will find all the relevant information about the project.
+Here you will find all the relevant information about the project based on the {IDF_TARGET_NAME}.
 
 .. note::
    This is a work in progress documentation and we will appreciate your help! We are looking for contributors! 
