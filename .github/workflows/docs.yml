@@ -1,4 +1,4 @@
-name: ReadTheDocs CI
+name: Documentation Build CI
 
 on:
   push:
@@ -16,7 +16,7 @@ on:
 jobs:
 
   build-docs:
-    name: Build ReadTheDocs
+    name: Build ESP-Docs
     runs-on: ubuntu-22.04
     defaults:
       run:
