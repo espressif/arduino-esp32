@@ -1,5 +1,5 @@
 #############################################
-Welcome to ESP32 Arduino Core's documentation
+Welcome to {IDF_TARGET_NAME} Arduino Core's documentation
 #############################################
 
 Here you will find all the relevant information about the project.

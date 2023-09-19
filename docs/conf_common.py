@@ -33,7 +33,26 @@ ESP32_DOCS = [
     "index.rst",
 ]
 
+ESP32S2_DOCS = ESP32_DOCS
+
+ESP32C3_DOCS = ESP32S2_DOCS
+
+ESP32S3_DOCS = ESP32S2_DOCS
+
+ESP32C6_DOCS = ESP32S2_DOCS
+
+ESP32H2_DOCS = ESP32S2_DOCS
+
+conditional_include_dict = {
+    "esp32": ESP32_DOCS,
+    "esp32s2": ESP32S2_DOCS,
+    "esp32c3": ESP32C3_DOCS,
+    "esp32s3": ESP32S3_DOCS,
+    "esp32c6": ESP32C6_DOCS,
+    "esp32h2": ESP32H2_DOCS,
+}
+
 # Extra options required by sphinx_idf_theme
 project_slug = "arduino-esp32"
 
-versions_url = "./_static/arduino-esp32_versions.js"
+versions_url = "./_static/docs_version.js"
