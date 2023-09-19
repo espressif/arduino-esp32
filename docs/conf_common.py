@@ -4,6 +4,8 @@ from esp_docs.conf_docs import *  # noqa: F403,F401
 
 languages = ["en"]
 
+
+
 # link roles config
 github_repo = "espressif/arduino-esp32"
 
