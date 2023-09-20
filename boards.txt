@@ -1767,6 +1767,222 @@ esp32wroverkit.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+aventen_s3_sync.name=Aventen S3 Sync
+aventen_s3_sync.vid.0=0x303a
+aventen_s3_sync.pid.0=0x1001
+## Based upon ESP32-S3 Dev Board
+
+aventen_s3_sync.bootloader.tool=esptool_py
+aventen_s3_sync.bootloader.tool.default=esptool_py
+
+aventen_s3_sync.upload.tool=esptool_py
+aventen_s3_sync.upload.tool.default=esptool_py
+aventen_s3_sync.upload.tool.network=esp_ota
+
+aventen_s3_sync.upload.maximum_size=1310720
+aventen_s3_sync.upload.maximum_data_size=327680
+aventen_s3_sync.upload.flags=
+aventen_s3_sync.upload.extra_flags=
+aventen_s3_sync.upload.use_1200bps_touch=false
+aventen_s3_sync.upload.wait_for_upload_port=false
+
+aventen_s3_sync.serial.disableDTR=false
+aventen_s3_sync.serial.disableRTS=false
+
+aventen_s3_sync.build.tarch=xtensa
+aventen_s3_sync.build.bootloader_addr=0x0
+aventen_s3_sync.build.target=esp32s3
+aventen_s3_sync.build.mcu=esp32s3
+aventen_s3_sync.build.core=esp32
+aventen_s3_sync.build.variant=Aventen_S3_Sync
+aventen_s3_sync.build.board=AVENTEN_S3_SYNC
+
+aventen_s3_sync.build.usb_mode=1
+aventen_s3_sync.build.cdc_on_boot=0
+aventen_s3_sync.build.msc_on_boot=0
+aventen_s3_sync.build.dfu_on_boot=0
+aventen_s3_sync.build.f_cpu=240000000L
+aventen_s3_sync.build.flash_size=16MB
+aventen_s3_sync.build.flash_freq=80m
+aventen_s3_sync.build.flash_mode=dio
+aventen_s3_sync.build.boot=qio
+aventen_s3_sync.build.boot_freq=80m
+aventen_s3_sync.build.partitions=default
+aventen_s3_sync.build.defines=
+aventen_s3_sync.build.loop_core=
+aventen_s3_sync.build.event_core=
+aventen_s3_sync.build.psram_type=qspi
+aventen_s3_sync.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0
+aventen_s3_sync.menu.JTAGAdapter.default=Disabled
+aventen_s3_sync.menu.JTAGAdapter.default.build.copy_jtag_files=0
+aventen_s3_sync.menu.JTAGAdapter.builtin=Integrated USB JTAG
+aventen_s3_sync.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+aventen_s3_sync.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+aventen_s3_sync.menu.JTAGAdapter.external=FTDI Adapter
+aventen_s3_sync.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+aventen_s3_sync.menu.JTAGAdapter.external.build.copy_jtag_files=1
+aventen_s3_sync.menu.JTAGAdapter.bridge=ESP USB Bridge
+aventen_s3_sync.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+aventen_s3_sync.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+aventen_s3_sync.menu.PSRAM.disabled=Disabled
+aventen_s3_sync.menu.PSRAM.disabled.build.defines=
+aventen_s3_sync.menu.PSRAM.disabled.build.psram_type=qspi
+aventen_s3_sync.menu.PSRAM.enabled=QSPI PSRAM
+aventen_s3_sync.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+aventen_s3_sync.menu.PSRAM.enabled.build.psram_type=qspi
+aventen_s3_sync.menu.PSRAM.opi=OPI PSRAM
+aventen_s3_sync.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+aventen_s3_sync.menu.PSRAM.opi.build.psram_type=opi
+
+aventen_s3_sync.menu.FlashMode.qio=QIO 80MHz
+aventen_s3_sync.menu.FlashMode.qio.build.flash_mode=dio
+aventen_s3_sync.menu.FlashMode.qio.build.boot=qio
+aventen_s3_sync.menu.FlashMode.qio.build.boot_freq=80m
+aventen_s3_sync.menu.FlashMode.qio.build.flash_freq=80m
+aventen_s3_sync.menu.FlashMode.qio120=QIO 120MHz
+aventen_s3_sync.menu.FlashMode.qio120.build.flash_mode=dio
+aventen_s3_sync.menu.FlashMode.qio120.build.boot=qio
+aventen_s3_sync.menu.FlashMode.qio120.build.boot_freq=120m
+aventen_s3_sync.menu.FlashMode.qio120.build.flash_freq=80m
+aventen_s3_sync.menu.FlashMode.dio=DIO 80MHz
+aventen_s3_sync.menu.FlashMode.dio.build.flash_mode=dio
+aventen_s3_sync.menu.FlashMode.dio.build.boot=dio
+aventen_s3_sync.menu.FlashMode.dio.build.boot_freq=80m
+aventen_s3_sync.menu.FlashMode.dio.build.flash_freq=80m
+aventen_s3_sync.menu.FlashMode.opi=OPI 80MHz
+aventen_s3_sync.menu.FlashMode.opi.build.flash_mode=dout
+aventen_s3_sync.menu.FlashMode.opi.build.boot=opi
+aventen_s3_sync.menu.FlashMode.opi.build.boot_freq=80m
+aventen_s3_sync.menu.FlashMode.opi.build.flash_freq=80m
+
+aventen_s3_sync.menu.FlashSize.16M=16MB (128Mb)
+aventen_s3_sync.menu.FlashSize.16M.build.flash_size=16MB
+
+aventen_s3_sync.menu.LoopCore.1=Core 1
+aventen_s3_sync.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+aventen_s3_sync.menu.LoopCore.0=Core 0
+aventen_s3_sync.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+aventen_s3_sync.menu.EventsCore.1=Core 1
+aventen_s3_sync.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+aventen_s3_sync.menu.EventsCore.0=Core 0
+aventen_s3_sync.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+aventen_s3_sync.menu.USBMode.hwcdc=Hardware CDC and JTAG
+aventen_s3_sync.menu.USBMode.hwcdc.build.usb_mode=1
+aventen_s3_sync.menu.USBMode.default=USB-OTG (TinyUSB)
+aventen_s3_sync.menu.USBMode.default.build.usb_mode=0
+
+aventen_s3_sync.menu.CDCOnBoot.default=Disabled
+aventen_s3_sync.menu.CDCOnBoot.default.build.cdc_on_boot=0
+aventen_s3_sync.menu.CDCOnBoot.cdc=Enabled
+aventen_s3_sync.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+aventen_s3_sync.menu.MSCOnBoot.default=Disabled
+aventen_s3_sync.menu.MSCOnBoot.default.build.msc_on_boot=0
+aventen_s3_sync.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+aventen_s3_sync.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+aventen_s3_sync.menu.DFUOnBoot.default=Disabled
+aventen_s3_sync.menu.DFUOnBoot.default.build.dfu_on_boot=0
+aventen_s3_sync.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+aventen_s3_sync.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+aventen_s3_sync.menu.UploadMode.default=UART0 / Hardware CDC
+aventen_s3_sync.menu.UploadMode.default.upload.use_1200bps_touch=false
+aventen_s3_sync.menu.UploadMode.default.upload.wait_for_upload_port=false
+aventen_s3_sync.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+aventen_s3_sync.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+aventen_s3_sync.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+aventen_s3_sync.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+aventen_s3_sync.menu.PartitionScheme.default.build.partitions=default
+aventen_s3_sync.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+aventen_s3_sync.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+aventen_s3_sync.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+aventen_s3_sync.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+aventen_s3_sync.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+aventen_s3_sync.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+aventen_s3_sync.menu.PartitionScheme.minimal.build.partitions=minimal
+aventen_s3_sync.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+aventen_s3_sync.menu.PartitionScheme.no_ota.build.partitions=no_ota
+aventen_s3_sync.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+aventen_s3_sync.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+aventen_s3_sync.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+aventen_s3_sync.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+aventen_s3_sync.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+aventen_s3_sync.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+aventen_s3_sync.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+aventen_s3_sync.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+aventen_s3_sync.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+aventen_s3_sync.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+aventen_s3_sync.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+aventen_s3_sync.menu.PartitionScheme.huge_app.build.partitions=huge_app
+aventen_s3_sync.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+aventen_s3_sync.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+aventen_s3_sync.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+aventen_s3_sync.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+aventen_s3_sync.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+aventen_s3_sync.menu.PartitionScheme.fatflash.build.partitions=ffat
+aventen_s3_sync.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+aventen_s3_sync.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+aventen_s3_sync.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+aventen_s3_sync.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+aventen_s3_sync.menu.PartitionScheme.rainmaker=RainMaker
+aventen_s3_sync.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+aventen_s3_sync.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+aventen_s3_sync.menu.CPUFreq.240=240MHz (WiFi)
+aventen_s3_sync.menu.CPUFreq.240.build.f_cpu=240000000L
+aventen_s3_sync.menu.CPUFreq.160=160MHz (WiFi)
+aventen_s3_sync.menu.CPUFreq.160.build.f_cpu=160000000L
+aventen_s3_sync.menu.CPUFreq.80=80MHz (WiFi)
+aventen_s3_sync.menu.CPUFreq.80.build.f_cpu=80000000L
+aventen_s3_sync.menu.CPUFreq.40=40MHz
+aventen_s3_sync.menu.CPUFreq.40.build.f_cpu=40000000L
+aventen_s3_sync.menu.CPUFreq.20=20MHz
+aventen_s3_sync.menu.CPUFreq.20.build.f_cpu=20000000L
+aventen_s3_sync.menu.CPUFreq.10=10MHz
+aventen_s3_sync.menu.CPUFreq.10.build.f_cpu=10000000L
+
+aventen_s3_sync.menu.UploadSpeed.921600=921600
+aventen_s3_sync.menu.UploadSpeed.921600.upload.speed=921600
+aventen_s3_sync.menu.UploadSpeed.115200=115200
+aventen_s3_sync.menu.UploadSpeed.115200.upload.speed=115200
+aventen_s3_sync.menu.UploadSpeed.256000.windows=256000
+aventen_s3_sync.menu.UploadSpeed.256000.upload.speed=256000
+aventen_s3_sync.menu.UploadSpeed.230400.windows.upload.speed=256000
+aventen_s3_sync.menu.UploadSpeed.230400=230400
+aventen_s3_sync.menu.UploadSpeed.230400.upload.speed=230400
+aventen_s3_sync.menu.UploadSpeed.460800.linux=460800
+aventen_s3_sync.menu.UploadSpeed.460800.macosx=460800
+aventen_s3_sync.menu.UploadSpeed.460800.upload.speed=460800
+aventen_s3_sync.menu.UploadSpeed.512000.windows=512000
+aventen_s3_sync.menu.UploadSpeed.512000.upload.speed=512000
+
+aventen_s3_sync.menu.DebugLevel.none=None
+aventen_s3_sync.menu.DebugLevel.none.build.code_debug=0
+aventen_s3_sync.menu.DebugLevel.error=Error
+aventen_s3_sync.menu.DebugLevel.error.build.code_debug=1
+aventen_s3_sync.menu.DebugLevel.warn=Warn
+aventen_s3_sync.menu.DebugLevel.warn.build.code_debug=2
+aventen_s3_sync.menu.DebugLevel.info=Info
+aventen_s3_sync.menu.DebugLevel.info.build.code_debug=3
+aventen_s3_sync.menu.DebugLevel.debug=Debug
+aventen_s3_sync.menu.DebugLevel.debug.build.code_debug=4
+aventen_s3_sync.menu.DebugLevel.verbose=Verbose
+aventen_s3_sync.menu.DebugLevel.verbose.build.code_debug=5
+
+aventen_s3_sync.menu.EraseFlash.none=Disabled
+aventen_s3_sync.menu.EraseFlash.none.upload.erase_cmd=
+aventen_s3_sync.menu.EraseFlash.all=Enabled
+aventen_s3_sync.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 tinypico.name=UM TinyPICO
 
 tinypico.bootloader.tool=esptool_py
@@ -13362,6 +13578,7 @@ m5stack-cores3.upload.tool.network=esp_ota
 
 m5stack-cores3.upload.maximum_size=1310720
 m5stack-cores3.upload.maximum_data_size=327680
+m5stack-cores3.upload.speed=921600
 m5stack-cores3.upload.flags=
 m5stack-cores3.upload.extra_flags=
 m5stack-cores3.upload.use_1200bps_touch=false
@@ -13379,21 +13596,20 @@ m5stack-cores3.build.variant=m5stack_cores3
 m5stack-cores3.build.board=M5STACK_CORES3
 
 m5stack-cores3.build.usb_mode=1
-m5stack-cores3.build.cdc_on_boot=0
+m5stack-cores3.build.cdc_on_boot=1
 m5stack-cores3.build.msc_on_boot=0
 m5stack-cores3.build.dfu_on_boot=0
 m5stack-cores3.build.f_cpu=240000000L
-m5stack-cores3.build.flash_size=4MB
+m5stack-cores3.build.flash_size=16MB
 m5stack-cores3.build.flash_freq=80m
 m5stack-cores3.build.flash_mode=dio
 m5stack-cores3.build.boot=qio
-m5stack-cores3.build.boot_freq=80m
-m5stack-cores3.build.partitions=default
-m5stack-cores3.build.defines=
-m5stack-cores3.build.loop_core=
-m5stack-cores3.build.event_core=
+m5stack-cores3.build.partitions=default_16MB
+m5stack-cores3.build.defines=-DBOARD_HAS_PSRAM
 m5stack-cores3.build.psram_type=qspi
-m5stack-cores3.build.memory_type={build.boot}_{build.psram_type}
+m5stack-cores3.build.memory_type=qio_qspi
+m5stack-cores3.build.loop_core=-DARDUINO_RUNNING_CORE=1
+m5stack-cores3.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 
 m5stack-cores3.menu.JTAGAdapter.default=Disabled
 m5stack-cores3.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -13407,46 +13623,14 @@ m5stack-cores3.menu.JTAGAdapter.bridge=ESP USB Bridge
 m5stack-cores3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack-cores3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-m5stack-cores3.menu.PSRAM.disabled=Disabled
-m5stack-cores3.menu.PSRAM.disabled.build.defines=
-m5stack-cores3.menu.PSRAM.disabled.build.psram_type=qspi
-m5stack-cores3.menu.PSRAM.enabled=QSPI PSRAM
-m5stack-cores3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-m5stack-cores3.menu.PSRAM.enabled.build.psram_type=qspi
-m5stack-cores3.menu.PSRAM.opi=OPI PSRAM
-m5stack-cores3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-m5stack-cores3.menu.PSRAM.opi.build.psram_type=opi
-
-m5stack-cores3.menu.FlashMode.qio=QIO 80MHz
-m5stack-cores3.menu.FlashMode.qio.build.flash_mode=dio
-m5stack-cores3.menu.FlashMode.qio.build.boot=qio
-m5stack-cores3.menu.FlashMode.qio.build.boot_freq=80m
-m5stack-cores3.menu.FlashMode.qio.build.flash_freq=80m
-m5stack-cores3.menu.FlashMode.qio120=QIO 120MHz
-m5stack-cores3.menu.FlashMode.qio120.build.flash_mode=dio
-m5stack-cores3.menu.FlashMode.qio120.build.boot=qio
-m5stack-cores3.menu.FlashMode.qio120.build.boot_freq=120m
-m5stack-cores3.menu.FlashMode.qio120.build.flash_freq=80m
-m5stack-cores3.menu.FlashMode.dio=DIO 80MHz
-m5stack-cores3.menu.FlashMode.dio.build.flash_mode=dio
-m5stack-cores3.menu.FlashMode.dio.build.boot=dio
-m5stack-cores3.menu.FlashMode.dio.build.boot_freq=80m
-m5stack-cores3.menu.FlashMode.dio.build.flash_freq=80m
-m5stack-cores3.menu.FlashMode.opi=OPI 80MHz
-m5stack-cores3.menu.FlashMode.opi.build.flash_mode=dout
-m5stack-cores3.menu.FlashMode.opi.build.boot=opi
-m5stack-cores3.menu.FlashMode.opi.build.boot_freq=80m
-m5stack-cores3.menu.FlashMode.opi.build.flash_freq=80m
-
+m5stack-cores3.menu.FlashSize.16M=16MB (128Mb)
+m5stack-cores3.menu.FlashSize.16M.build.flash_size=16MB
+m5stack-cores3.menu.FlashSize.16M.build.partitions=default_16MB
 m5stack-cores3.menu.FlashSize.4M=4MB (32Mb)
 m5stack-cores3.menu.FlashSize.4M.build.flash_size=4MB
 m5stack-cores3.menu.FlashSize.8M=8MB (64Mb)
 m5stack-cores3.menu.FlashSize.8M.build.flash_size=8MB
 m5stack-cores3.menu.FlashSize.8M.build.partitions=default_8MB
-m5stack-cores3.menu.FlashSize.16M=16MB (128Mb)
-m5stack-cores3.menu.FlashSize.16M.build.flash_size=16MB
-#m5stack-cores3.menu.FlashSize.32M=32MB (256Mb)
-#m5stack-cores3.menu.FlashSize.32M.build.flash_size=32MB
 
 m5stack-cores3.menu.LoopCore.1=Core 1
 m5stack-cores3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -13460,13 +13644,17 @@ m5stack-cores3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 m5stack-cores3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 m5stack-cores3.menu.USBMode.hwcdc.build.usb_mode=1
-m5stack-cores3.menu.USBMode.default=USB-OTG (TinyUSB)
+m5stack-cores3.menu.USBMode.hwcdc.upload.use_1200bps_touch=false
+m5stack-cores3.menu.USBMode.hwcdc.upload.wait_for_upload_port=false
+m5stack-cores3.menu.USBMode.default=USB-OTG
 m5stack-cores3.menu.USBMode.default.build.usb_mode=0
+m5stack-cores3.menu.USBMode.default.upload.use_1200bps_touch=true
+m5stack-cores3.menu.USBMode.default.upload.wait_for_upload_port=true
 
-m5stack-cores3.menu.CDCOnBoot.default=Disabled
-m5stack-cores3.menu.CDCOnBoot.default.build.cdc_on_boot=0
 m5stack-cores3.menu.CDCOnBoot.cdc=Enabled
 m5stack-cores3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+m5stack-cores3.menu.CDCOnBoot.default=Disabled
+m5stack-cores3.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
 m5stack-cores3.menu.MSCOnBoot.default=Disabled
 m5stack-cores3.menu.MSCOnBoot.default.build.msc_on_boot=0
@@ -13485,13 +13673,27 @@ m5stack-cores3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 m5stack-cores3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 m5stack-cores3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
-m5stack-cores3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default_16MB=Default 16MB with spiffs (2x 6.5 MB APP/3.6MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+m5stack-cores3.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+m5stack-cores3.menu.PartitionScheme.default=4MB with spiffs (2x 1.2MB APP/1.5MB SPIFFS)
 m5stack-cores3.menu.PartitionScheme.default.build.partitions=default
-m5stack-cores3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+m5stack-cores3.menu.PartitionScheme.defaultffat=4MB with ffat (2x 1.2MB APP/1.5MB FATFS)
 m5stack-cores3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack-cores3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.default_8MB=8M with spiffs (2x 3MB APP/1.5MB SPIFFS)
 m5stack-cores3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 m5stack-cores3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+m5stack-cores3.menu.PartitionScheme.large_spiffs=16MB with Large SPIFFS (2x 4MB APP/7MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+m5stack-cores3.menu.PartitionScheme.large_spiffs.upload.maximum_size=4685824
+m5stack-cores3.menu.PartitionScheme.factory_4apps=16MB+Factory (4x 3MB APP/2MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.factory_4apps.build.custom_partitions=partitions_16MB_factory_4_apps
+# m5stack-cores3.menu.PartitionScheme.factory_4apps.upload.extra_flags=0xc10000 "{runtime.platform.path}/variants/{build.variant}/firmware.bin"
+m5stack-cores3.menu.PartitionScheme.factory_4apps.upload.maximum_size=3145728
+m5stack-cores3.menu.PartitionScheme.factory_6apps=16MB+Factory (6x 2MB APP/2MB SPIFFS)
+m5stack-cores3.menu.PartitionScheme.factory_6apps.build.custom_partitions=partitions_16MB_factory_6_apps
+# m5stack-cores3.menu.PartitionScheme.factory_6apps.upload.extra_flags=0xc10000 "{runtime.platform.path}/variants/{build.variant}/firmware.bin"
+m5stack-cores3.menu.PartitionScheme.factory_6apps.upload.maximum_size=2097152
 
 m5stack-cores3.menu.CPUFreq.240=240MHz (WiFi)
 m5stack-cores3.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -13520,6 +13722,8 @@ m5stack-cores3.menu.UploadSpeed.460800.macosx=460800
 m5stack-cores3.menu.UploadSpeed.460800.upload.speed=460800
 m5stack-cores3.menu.UploadSpeed.512000.windows=512000
 m5stack-cores3.menu.UploadSpeed.512000.upload.speed=512000
+m5stack-cores3.menu.UploadSpeed.1500000=1500000
+m5stack-cores3.menu.UploadSpeed.1500000.upload.speed=1500000
 
 m5stack-cores3.menu.DebugLevel.none=None
 m5stack-cores3.menu.DebugLevel.none.build.code_debug=0
@@ -24624,6 +24828,230 @@ nebulas3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+lionbits3.name=Lion:Bit S3 STEM Dev Board
+lionbits3.vid.0=0x303a
+lionbits3.pid.0=0x1001
+
+lionbits3.bootloader.tool=esptool_py
+lionbits3.bootloader.tool.default=esptool_py
+
+lionbits3.upload.tool=esptool_py
+lionbits3.upload.tool.default=esptool_py
+lionbits3.upload.tool.network=esp_ota
+
+lionbits3.upload.maximum_size=1310720
+lionbits3.upload.maximum_data_size=327680
+lionbits3.upload.flags=
+lionbits3.upload.extra_flags=
+lionbits3.upload.use_1200bps_touch=false
+lionbits3.upload.wait_for_upload_port=false
+
+lionbits3.serial.disableDTR=false
+lionbits3.serial.disableRTS=false
+
+lionbits3.build.tarch=xtensa
+lionbits3.build.bootloader_addr=0x0
+lionbits3.build.target=esp32s3
+lionbits3.build.mcu=esp32s3
+lionbits3.build.core=esp32
+lionbits3.build.variant=lionbits3
+lionbits3.build.board=LIONBITS3_DEV
+
+
+lionbits3.build.usb_mode=1
+lionbits3.build.cdc_on_boot=0
+lionbits3.build.msc_on_boot=0
+lionbits3.build.dfu_on_boot=0
+lionbits3.build.f_cpu=240000000L
+lionbits3.build.flash_size=4MB
+lionbits3.build.flash_freq=80m
+lionbits3.build.flash_mode=dio
+lionbits3.build.boot=qio
+lionbits3.build.boot_freq=80m
+lionbits3.build.partitions=default
+lionbits3.build.defines=
+lionbits3.build.loop_core=
+lionbits3.build.event_core=
+lionbits3.build.psram_type=qspi
+lionbits3.build.memory_type={build.boot}_{build.psram_type}
+
+
+lionbits3.menu.JTAGAdapter.default=Disabled
+lionbits3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+lionbits3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+lionbits3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+lionbits3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+lionbits3.menu.JTAGAdapter.external=FTDI Adapter
+lionbits3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+lionbits3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+lionbits3.menu.JTAGAdapter.bridge=ESP USB Bridge
+lionbits3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+lionbits3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+lionbits3.menu.PSRAM.disabled=Disabled
+lionbits3.menu.PSRAM.disabled.build.defines=
+lionbits3.menu.PSRAM.disabled.build.psram_type=qspi
+lionbits3.menu.PSRAM.enabled=QSPI PSRAM
+lionbits3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+lionbits3.menu.PSRAM.enabled.build.psram_type=qspi
+lionbits3.menu.PSRAM.opi=OPI PSRAM
+lionbits3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+lionbits3.menu.PSRAM.opi.build.psram_type=opi
+
+lionbits3.menu.FlashMode.qio=QIO 80MHz
+lionbits3.menu.FlashMode.qio.build.flash_mode=dio
+lionbits3.menu.FlashMode.qio.build.boot=qio
+lionbits3.menu.FlashMode.qio.build.boot_freq=80m
+lionbits3.menu.FlashMode.qio.build.flash_freq=80m
+lionbits3.menu.FlashMode.qio120=QIO 120MHz
+lionbits3.menu.FlashMode.qio120.build.flash_mode=dio
+lionbits3.menu.FlashMode.qio120.build.boot=qio
+lionbits3.menu.FlashMode.qio120.build.boot_freq=120m
+lionbits3.menu.FlashMode.qio120.build.flash_freq=80m
+lionbits3.menu.FlashMode.dio=DIO 80MHz
+lionbits3.menu.FlashMode.dio.build.flash_mode=dio
+lionbits3.menu.FlashMode.dio.build.boot=dio
+lionbits3.menu.FlashMode.dio.build.boot_freq=80m
+lionbits3.menu.FlashMode.dio.build.flash_freq=80m
+lionbits3.menu.FlashMode.opi=OPI 80MHz
+lionbits3.menu.FlashMode.opi.build.flash_mode=dout
+lionbits3.menu.FlashMode.opi.build.boot=opi
+lionbits3.menu.FlashMode.opi.build.boot_freq=80m
+lionbits3.menu.FlashMode.opi.build.flash_freq=80m
+
+lionbits3.menu.FlashSize.4M=4MB (32Mb)
+lionbits3.menu.FlashSize.4M.build.flash_size=4MB
+lionbits3.menu.FlashSize.8M=8MB (64Mb)
+lionbits3.menu.FlashSize.8M.build.flash_size=8MB
+lionbits3.menu.FlashSize.8M.build.partitions=default_8MB
+lionbits3.menu.FlashSize.16M=16MB (128Mb)
+lionbits3.menu.FlashSize.16M.build.flash_size=16MB
+#lionbits3.menu.FlashSize.32M=32MB (256Mb)
+#lionbits3.menu.FlashSize.32M.build.flash_size=32MB
+
+lionbits3.menu.LoopCore.1=Core 1
+lionbits3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lionbits3.menu.LoopCore.0=Core 0
+lionbits3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lionbits3.menu.EventsCore.1=Core 1
+lionbits3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lionbits3.menu.EventsCore.0=Core 0
+lionbits3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lionbits3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+lionbits3.menu.USBMode.hwcdc.build.usb_mode=1
+lionbits3.menu.USBMode.default=USB-OTG (TinyUSB)
+lionbits3.menu.USBMode.default.build.usb_mode=0
+
+lionbits3.menu.CDCOnBoot.default=Disabled
+lionbits3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+lionbits3.menu.CDCOnBoot.cdc=Enabled
+lionbits3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+lionbits3.menu.MSCOnBoot.default=Disabled
+lionbits3.menu.MSCOnBoot.default.build.msc_on_boot=0
+lionbits3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+lionbits3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lionbits3.menu.DFUOnBoot.default=Disabled
+lionbits3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lionbits3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+lionbits3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lionbits3.menu.UploadMode.default=UART0 / Hardware CDC
+lionbits3.menu.UploadMode.default.upload.use_1200bps_touch=false
+lionbits3.menu.UploadMode.default.upload.wait_for_upload_port=false
+lionbits3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+lionbits3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+lionbits3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+lionbits3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+lionbits3.menu.PartitionScheme.default.build.partitions=default
+lionbits3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+lionbits3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+lionbits3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+lionbits3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+lionbits3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+lionbits3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+lionbits3.menu.PartitionScheme.minimal.build.partitions=minimal
+lionbits3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+lionbits3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lionbits3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lionbits3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+lionbits3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+lionbits3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+lionbits3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+lionbits3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+lionbits3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+lionbits3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+lionbits3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+lionbits3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+lionbits3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+lionbits3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+lionbits3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+lionbits3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+lionbits3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+lionbits3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+lionbits3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+lionbits3.menu.PartitionScheme.fatflash.build.partitions=ffat
+lionbits3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+lionbits3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+lionbits3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lionbits3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+lionbits3.menu.PartitionScheme.rainmaker=RainMaker
+lionbits3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+lionbits3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+lionbits3.menu.CPUFreq.240=240MHz (WiFi)
+lionbits3.menu.CPUFreq.240.build.f_cpu=240000000L
+lionbits3.menu.CPUFreq.160=160MHz (WiFi)
+lionbits3.menu.CPUFreq.160.build.f_cpu=160000000L
+lionbits3.menu.CPUFreq.80=80MHz (WiFi)
+lionbits3.menu.CPUFreq.80.build.f_cpu=80000000L
+lionbits3.menu.CPUFreq.40=40MHz
+lionbits3.menu.CPUFreq.40.build.f_cpu=40000000L
+lionbits3.menu.CPUFreq.20=20MHz
+lionbits3.menu.CPUFreq.20.build.f_cpu=20000000L
+lionbits3.menu.CPUFreq.10=10MHz
+lionbits3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+lionbits3.menu.UploadSpeed.921600=921600
+lionbits3.menu.UploadSpeed.921600.upload.speed=921600
+lionbits3.menu.UploadSpeed.115200=115200
+lionbits3.menu.UploadSpeed.115200.upload.speed=115200
+lionbits3.menu.UploadSpeed.256000.windows=256000
+lionbits3.menu.UploadSpeed.256000.upload.speed=256000
+lionbits3.menu.UploadSpeed.230400.windows.upload.speed=256000
+lionbits3.menu.UploadSpeed.230400=230400
+lionbits3.menu.UploadSpeed.230400.upload.speed=230400
+lionbits3.menu.UploadSpeed.460800.linux=460800
+lionbits3.menu.UploadSpeed.460800.macosx=460800
+lionbits3.menu.UploadSpeed.460800.upload.speed=460800
+lionbits3.menu.UploadSpeed.512000.windows=512000
+lionbits3.menu.UploadSpeed.512000.upload.speed=512000
+
+lionbits3.menu.DebugLevel.none=None
+lionbits3.menu.DebugLevel.none.build.code_debug=0
+lionbits3.menu.DebugLevel.error=Error
+lionbits3.menu.DebugLevel.error.build.code_debug=1
+lionbits3.menu.DebugLevel.warn=Warn
+lionbits3.menu.DebugLevel.warn.build.code_debug=2
+lionbits3.menu.DebugLevel.info=Info
+lionbits3.menu.DebugLevel.info.build.code_debug=3
+lionbits3.menu.DebugLevel.debug=Debug
+lionbits3.menu.DebugLevel.debug.build.code_debug=4
+lionbits3.menu.DebugLevel.verbose=Verbose
+lionbits3.menu.DebugLevel.verbose.build.code_debug=5
+
+lionbits3.menu.EraseFlash.none=Disabled
+lionbits3.menu.EraseFlash.none.upload.erase_cmd=
+lionbits3.menu.EraseFlash.all=Enabled
+lionbits3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+
 gen4-ESP32-S3R8n16.name=4D Systems gen4-ESP32 16MB Modules (ESP32-S3R8n16)
 gen4-ESP32-S3R8n16.vid.0=0x303a
 gen4-ESP32-S3R8n16.pid.0=0x1001
@@ -25172,3 +25600,4 @@ namino_arancio.menu.EraseFlash.all=Enabled
 namino_arancio.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+

@@ -93,7 +93,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
     // SoC supports SDMMC pin configuration via GPIO matrix.
-    // Chech that the pins have been set either in the constructor or setPins function.
+    // Check that the pins have been set either in the constructor or setPins function.
     if (_pin_cmd == -1 || _pin_clk == -1 || _pin_d0 == -1
         || (!mode1bit && (_pin_d1 == -1 || _pin_d2 == -1 || _pin_d3 == -1))) {
         log_e("SDMMCFS: some SD pins are not set");
