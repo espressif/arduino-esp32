@@ -16,6 +16,13 @@
         ]
     },
     {
+        "name": "esp-io-expander",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/esp-io-expander/examples/test/test.ino"
+        ]
+    },
+    {
         "name": "ESP32Servo",
         "exclude_targets": [],
         "sketch_path": [
