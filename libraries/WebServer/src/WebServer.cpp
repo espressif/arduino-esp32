@@ -29,7 +29,7 @@
 #include "WebServer.h"
 #include "FS.h"
 #include "detail/RequestHandlersImpl.h"
-#include "mbedtls/md5.h"
+#include "MD5Builder.h"
 
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
@@ -119,23 +119,11 @@ String WebServer::_extractParam(String& authReq,const String& param,const char d
 }
 
 static String md5str(String &in){
-  char out[33] = {0};
-  mbedtls_md5_context _ctx;
-  uint8_t i;
-  uint8_t * _buf = (uint8_t*)malloc(16);
-  if(_buf == NULL)
-    return String(out);
-  memset(_buf, 0x00, 16);
-  mbedtls_md5_init(&_ctx);
-  mbedtls_md5_starts_ret(&_ctx);
-  mbedtls_md5_update_ret(&_ctx, (const uint8_t *)in.c_str(), in.length());
-  mbedtls_md5_finish_ret(&_ctx, _buf);
-  for(i = 0; i < 16; i++) {
-    sprintf(out + (i * 2), "%02x", _buf[i]);
-  }
-  out[32] = 0;
-  free(_buf);
-  return String(out);
+  MD5Builder md5 = MD5Builder();
+  md5.begin();
+  md5.add(in);
+  md5.calculate();
+  return md5.toString();
 }
 
 bool WebServer::authenticate(const char * username, const char * password){
