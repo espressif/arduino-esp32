@@ -12026,10 +12026,10 @@ adafruit_camera_esp32s3.menu.PSRAM.opi=OPI PSRAM
 adafruit_camera_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 adafruit_camera_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
-adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (2.6MB APP/960KB FATFS)
 adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-4MB-tinyuf2
-adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-4MB-1ota
+adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2883584
 adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_camera_esp32s3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_camera_esp32s3.menu.PartitionScheme.default.build.partitions=default
