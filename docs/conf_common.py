@@ -34,13 +34,9 @@ ESP32_DOCS = [
 ]
 
 ESP32S2_DOCS = ESP32_DOCS
-
 ESP32C3_DOCS = ESP32S2_DOCS
-
 ESP32S3_DOCS = ESP32S2_DOCS
-
 ESP32C6_DOCS = ESP32S2_DOCS
-
 ESP32H2_DOCS = ESP32S2_DOCS
 
 conditional_include_dict = {
@@ -55,4 +51,4 @@ conditional_include_dict = {
 # Extra options required by sphinx_idf_theme
 project_slug = "arduino-esp32"
 
-versions_url = "./_static/docs_version.js"
+versions_url = "./_static/arduino_versions.js"
