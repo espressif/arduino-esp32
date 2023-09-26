@@ -37,6 +37,7 @@ extern "C" {
 #include <esp_wifi.h>
 #include <esp_event.h>
 #include <esp_mac.h>
+#include <esp_netif.h>
 #include "lwip/ip_addr.h"
 #include "lwip/opt.h"
 #include "lwip/err.h"
@@ -1559,6 +1560,22 @@ static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, v
     xEventGroupSetBits(_arduino_event_group, WIFI_DNS_DONE_BIT);
 }
 
+typedef struct gethostbynameParameters {
+    const char *hostname;
+    ip_addr_t addr;
+    void *callback_arg;
+} gethostbynameParameters_t;
+
+/**
+ * Callback to execute dns_gethostbyname in lwIP's TCP/IP context
+ * @param param Parameters for dns_gethostbyname call
+ */
+static esp_err_t wifi_gethostbyname_tcpip_ctx(void *param)
+{
+    gethostbynameParameters_t *parameters = static_cast<gethostbynameParameters_t *>(param);
+    return dns_gethostbyname(parameters->hostname, &parameters->addr, &wifi_dns_found_callback, parameters->callback_arg);
+}
+
 /**
  * Resolve the given hostname to an IP address. If passed hostname is an IP address, it will be parsed into IPAddress structure.
  * @param aHostname     Name to be resolved or string containing IP address
@@ -1570,13 +1587,15 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
 {
     if (!aResult.fromString(aHostname))
     {
-        ip_addr_t addr;
+        gethostbynameParameters_t params;
+        params.hostname = aHostname;
+        params.callback_arg = &aResult;
         aResult = static_cast<uint32_t>(0);
         waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
         clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
-        err_t err = dns_gethostbyname(aHostname, &addr, &wifi_dns_found_callback, &aResult);
-        if(err == ERR_OK && addr.u_addr.ip4.addr) {
-            aResult = addr.u_addr.ip4.addr;
+        err_t err = esp_netif_tcpip_exec(wifi_gethostbyname_tcpip_ctx, &params);
+        if(err == ERR_OK && params.addr.u_addr.ip4.addr) {
+            aResult = params.addr.u_addr.ip4.addr;
         } else if(err == ERR_INPROGRESS) {
             waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
             clearStatusBits(WIFI_DNS_DONE_BIT);
