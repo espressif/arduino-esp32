@@ -51,6 +51,8 @@ typedef enum {
     RMAKER_EVENT_LOCAL_CTRL_STARTED,
     /* User reset request successfully sent to ESP RainMaker Cloud */
     RMAKER_EVENT_USER_NODE_MAPPING_RESET,
+    /** Local control stopped. */
+    RMAKER_EVENT_LOCAL_CTRL_STOPPED
 } esp_rmaker_event_t;
 
 /** ESP RainMaker Node information */
@@ -959,6 +961,27 @@ esp_err_t esp_rmaker_test_cmd_resp(const void *cmd, size_t cmd_len, void *priv_d
 * @return Apt error on failure.
 */
 esp_err_t esp_rmaker_node_auth_sign_msg(const void *challenge, size_t inlen, void **response, size_t *outlen);
+/*
+ * @brief Enable Local Control Service.
+ *
+ * This enables local control service, which allows users to
+ * control their device without internet connection.
+ *
+ * @return ESP_OK on success
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_local_ctrl_enable(void);
+
+/*
+ * @brief Disable Local Control Service.
+ *
+ * This will free the memory used by local control service and remove
+ * local control service from the node.
+ *
+ * @return ESP_OK on success
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_local_ctrl_disable(void);
 #ifdef __cplusplus
 }
 #endif

@@ -131,7 +131,7 @@ bool hcd_configure(uint8_t rhport, uint32_t cfg_id, const void* cfg_param) TU_AT
 bool hcd_init(uint8_t rhport);
 
 // Interrupt Handler
-void hcd_int_handler(uint8_t rhport);
+void hcd_int_handler(uint8_t rhport, bool in_isr);
 
 // Enable USB interrupt
 void hcd_int_enable (uint8_t rhport);

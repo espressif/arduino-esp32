@@ -75,8 +75,6 @@
 #include "tusb_types.h"
 #include "tusb_debug.h"
 
-#include "tusb_timeout.h" // TODO remove
-
 //--------------------------------------------------------------------+
 // Optional API implemented by application if needed
 // TODO move to a more ovious place/file

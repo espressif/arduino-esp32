@@ -124,11 +124,16 @@ void tuh_task(void) {
 bool tuh_task_event_ready(void);
 
 #ifndef _TUSB_HCD_H_
-extern void hcd_int_handler(uint8_t rhport);
+extern void hcd_int_handler(uint8_t rhport, bool in_isr);
 #endif
 
-// Interrupt handler, name alias to HCD
-#define tuh_int_handler   hcd_int_handler
+// Interrupt handler alias to HCD with in_isr as optional parameter
+// - tuh_int_handler(rhport) --> hcd_int_handler(rhport, true)
+// - tuh_int_handler(rhport, in_isr) --> hcd_int_handler(rhport, in_isr)
+// Note: this is similar to TU_VERIFY(), _GET_3RD_ARG() is defined in tusb_verify.h
+#define _tuh_int_handler_1arg(_rhport)            hcd_int_handler(_rhport, true)
+#define _tuh_int_hanlder_2arg(_rhport, _in_isr)   hcd_int_handler(_rhport, _in_isr)
+#define tuh_int_handler(...)   _GET_3RD_ARG(__VA_ARGS__, _tuh_int_hanlder_2arg, _tuh_int_handler_1arg, _dummy)(__VA_ARGS__)
 
 // Check if roothub port is initialized and active as a host
 bool tuh_rhport_is_active(uint8_t rhport);

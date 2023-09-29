@@ -66,7 +66,7 @@
   #endif
 #else
   #ifndef tuh_int_handler
-  #define tuh_int_handler(_x)
+  #define tuh_int_handler(...)
   #endif
 #endif
 
@@ -123,7 +123,7 @@
   #endif
 #else
   #ifndef tud_int_handler
-  #define tud_int_handler(_x)
+  #define tud_int_handler(...)
   #endif
 #endif
 

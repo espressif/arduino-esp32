@@ -424,11 +424,11 @@
 //------------- CLASS -------------//
 
 #ifndef CFG_TUH_HUB
-#define CFG_TUH_HUB    0
+  #define CFG_TUH_HUB    0
 #endif
 
 #ifndef CFG_TUH_CDC
-#define CFG_TUH_CDC    0
+  #define CFG_TUH_CDC    0
 #endif
 
 #ifndef CFG_TUH_CDC_FTDI
@@ -442,34 +442,38 @@
 #endif
 
 #ifndef CFG_TUH_HID
-#define CFG_TUH_HID    0
+  #define CFG_TUH_HID    0
 #endif
 
 #ifndef CFG_TUH_MIDI
-#define CFG_TUH_MIDI   0
+  #define CFG_TUH_MIDI   0
 #endif
 
 #ifndef CFG_TUH_MSC
-#define CFG_TUH_MSC    0
+  #define CFG_TUH_MSC    0
 #endif
 
 #ifndef CFG_TUH_VENDOR
-#define CFG_TUH_VENDOR 0
+  #define CFG_TUH_VENDOR 0
 #endif
 
 #ifndef CFG_TUH_API_EDPT_XFER
-#define CFG_TUH_API_EDPT_XFER 0
+  #define CFG_TUH_API_EDPT_XFER 0
 #endif
 
 // Enable PIO-USB software host controller
 #ifndef CFG_TUH_RPI_PIO_USB
-#define CFG_TUH_RPI_PIO_USB 0
+  #define CFG_TUH_RPI_PIO_USB 0
 #endif
 
 #ifndef CFG_TUD_RPI_PIO_USB
-#define CFG_TUD_RPI_PIO_USB 0
+  #define CFG_TUD_RPI_PIO_USB 0
 #endif
 
+// MAX3421 Host controller option
+#ifndef CFG_TUH_MAX3421
+  #define CFG_TUH_MAX3421  0
+#endif
 
 //--------------------------------------------------------------------+
 // TypeC Options (Default)
