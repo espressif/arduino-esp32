@@ -51,7 +51,7 @@ extern "C" {
 #define PULLDOWN          0x08
 #define INPUT_PULLDOWN    0x09
 #define OPEN_DRAIN        0x10
-#define OUTPUT_OPEN_DRAIN 0x12
+#define OUTPUT_OPEN_DRAIN 0x13
 #define ANALOG            0xC0
 
 //Interrupt Modes
