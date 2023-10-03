@@ -72,7 +72,7 @@ ETHClass::~ETHClass()
 
 bool ETHClass::ethDetachBus(void * bus_pointer){
     ETHClass *bus = (ETHClass *) bus_pointer;
-    if(bus->_eth_started) {
+    if(bus->_eth_started){
         bus->end();
     }
     return true;
@@ -158,7 +158,7 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     _eth_handle = NULL;
     esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(mac, phy);
     ret = esp_eth_driver_install(&eth_config, &_eth_handle);
-    if (ret != ESP_OK) {
+    if(ret != ESP_OK){
         log_e("SPI Ethernet driver install failed: %d", ret);
         return false;
     }
@@ -399,7 +399,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
             .quadhd_io_num = -1,
         };
         ret = spi_bus_initialize(spi_host, &buscfg, SPI_DMA_CH_AUTO);
-        if (ret != ESP_OK) {
+        if(ret != ESP_OK){
             log_e("SPI bus initialize failed: %d", ret);
             return false;
         }
@@ -409,7 +409,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 
     // Install GPIO ISR handler to be able to service SPI Eth modules interrupts
     ret = gpio_install_isr_service(0);
-    if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE) {
+    if(ret != ESP_OK && ret != ESP_ERR_INVALID_STATE){
         log_e("GPIO ISR handler install failed: %d", ret);
         return false;
     }
@@ -492,7 +492,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     // Init Ethernet driver to default and install it
     esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(mac, phy);
     ret = esp_eth_driver_install(&eth_config, &_eth_handle);
-    if (ret != ESP_OK) {
+    if(ret != ESP_OK){
         log_e("SPI Ethernet driver install failed: %d", ret);
         return false;
     }
@@ -504,7 +504,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     // Derive a new MAC address for this interface
     uint8_t base_mac_addr[ETH_ADDR_LEN];
     ret = esp_efuse_mac_get_default(base_mac_addr);
-    if (ret != ESP_OK) {
+    if(ret != ESP_OK){
         log_e("Get EFUSE MAC failed: %d", ret);
         return false;
     }
@@ -513,7 +513,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     esp_derive_local_mac(mac_addr, base_mac_addr);
 
     ret = esp_eth_ioctl(_eth_handle, ETH_CMD_S_MAC_ADDR, mac_addr);
-    if (ret != ESP_OK) {
+    if(ret != ESP_OK){
         log_e("SPI Ethernet MAC address config failed: %d", ret);
         return false;
     }
@@ -551,7 +551,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     }
 
     ret = esp_netif_attach(_esp_netif, new_netif_glue);
-    if (ret != ESP_OK) {
+    if(ret != ESP_OK){
         log_e("esp_netif_attach failed: %d", ret);
         return false;
     }
@@ -561,7 +561,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 
     // Start Ethernet driver state machine
     ret = esp_eth_start(_eth_handle);
-    if (ret != ESP_OK) {
+    if(ret != ESP_OK){
         log_e("esp_eth_start failed: %d", ret);
         return false;
     }
@@ -625,11 +625,11 @@ void ETHClass::end(void)
     }
 
     if(_eth_handle != NULL){
-        if(esp_eth_stop(_eth_handle) != ESP_OK) {
+        if(esp_eth_stop(_eth_handle) != ESP_OK){
             log_e("Failed to stop Ethernet");
             return;
         }
-        if(esp_eth_driver_uninstall(_eth_handle) != ESP_OK) {
+        if(esp_eth_driver_uninstall(_eth_handle) != ESP_OK){
             log_e("Failed to stop Ethernet");
             return;
         }
@@ -688,15 +688,6 @@ void ETHClass::end(void)
         _pin_rst = -1;
     }
 }
-
-
-
-
-
-
-
-
-
 
 bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
@@ -990,47 +981,47 @@ String ETHClass::macAddress(void)
 }
 
 void ETHClass::printInfo(Print & out){
-  out.print(desc());
-  out.print(":");
-  if (linkUp()) {
-    out.print(" <UP");
-  } else {
-    out.print(" <DOWN");
-  }
-  out.print(",");
-  out.print(linkSpeed());
-  out.print("M");
-  if (fullDuplex()) {
-    out.print(",FULL_DUPLEX");
-  }
-  if (autoNegotiation()) {
-    out.print(",AUTO");
-  }
-  out.println(">");
-  
-  out.print("      ");
-  out.print("ether ");
-  out.print(macAddress());
-  out.printf(" phy 0x%lX", phyAddr());
-  out.println();
-  
-  out.print("      ");
-  out.print("inet ");
-  out.print(localIP());
-  out.print(" netmask ");
-  out.print(subnetMask());
-  out.print(" broadcast ");
-  out.print(broadcastIP());
-  out.println();
+    out.print(desc());
+    out.print(":");
+    if(linkUp()){
+        out.print(" <UP");
+    } else {
+        out.print(" <DOWN");
+    }
+    out.print(",");
+    out.print(linkSpeed());
+    out.print("M");
+    if(fullDuplex()){
+        out.print(",FULL_DUPLEX");
+    }
+    if(autoNegotiation()){
+        out.print(",AUTO");
+    }
+    out.println(">");
 
-  out.print("      ");
-  out.print("gateway ");
-  out.print(gatewayIP());
-  out.print(" dns ");
-  out.print(dnsIP());
-  out.println();
-  
-  out.println();
+    out.print("      ");
+    out.print("ether ");
+    out.print(macAddress());
+    out.printf(" phy 0x%lX", phyAddr());
+    out.println();
+
+    out.print("      ");
+    out.print("inet ");
+    out.print(localIP());
+    out.print(" netmask ");
+    out.print(subnetMask());
+    out.print(" broadcast ");
+    out.print(broadcastIP());
+    out.println();
+
+    out.print("      ");
+    out.print("gateway ");
+    out.print(gatewayIP());
+    out.print(" dns ");
+    out.print(dnsIP());
+    out.println();
+
+    out.println();
 }
 
 ETHClass ETH;
