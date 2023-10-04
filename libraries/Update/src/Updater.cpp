@@ -167,7 +167,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     //initialize
     _buffer = new (std::nothrow) uint8_t[SPI_FLASH_SEC_SIZE];
     if (!_buffer) {
-        log_e("malloc failed");
+        log_e("_buffer allocation failed");
         return false;
     }
     _size = size;
