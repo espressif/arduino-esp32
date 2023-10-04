@@ -15,7 +15,7 @@ Image source: [Wikipedia](https://upload.wikimedia.org/wikipedia/commons/thumb/a
 Image source: [Wikipedia](https://commons.wikimedia.org/wiki/File:15-04-29-MMC-Karte-dscf4734-e.jpg)
 
 pin number (refer to the picture) | micro SD - SD mode | micro SD - SPI mode | mini SD - SD mode | mini SD - SPI mode | SD - SD mode | SD - SPI mode | MMC (MMC3) - MMC mode | MMC (MMC3) - SPI mode | MMCplus / MMCmobile (MMC4) - MMC mode | MMCplus / MMCmobile (MMC4) - SPI mode
-----------------------------------|--------------------|---------------------|-------------------|--------------------|--------------|---------------|-----------------------|-----------------------|---------------------------------------|
+----------------------------------|--------------------|---------------------|-------------------|--------------------|--------------|---------------|-----------------------|-----------------------|-----------------------------------------|--------------------------------------
 1                                 | D2                 | not used            | D3                | CS                 | D3           | CS            | RES                   | CS                    | D3                                    | CS
 2                                 | D3                 | CS                  | CMD               | DI                 | CMD          | DI            | CMD                   | DI                    | CMD                                   | DI
 3                                 | CMD                | DI                  | VSS1 (GND)        | VSS1 (GND)         | VSS1 (GND)   | VSS1 (GND)    | VSS1 (GND)            | VSS1 (GND)            | VSS1 (GND)                            | VSS1 (GND)
