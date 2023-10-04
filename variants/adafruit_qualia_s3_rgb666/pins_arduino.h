@@ -51,26 +51,25 @@ static const uint8_t T11 = 11;
 static const uint8_t T12 = 12;
 
 
-static const uint8_t 
-  TFT_R1 = 11,
-  TFT_R2 = 10,
-  TFT_R3 = 9,
-  TFT_R4 = 46,
-  TFT_R5 = 3,
-  TFT_G0 = 48,
-  TFT_G1 = 47,
-  TFT_G2 = 21,
-  TFT_G3 = 14,
-  TFT_G4 = 13,
-  TFT_G5 = 12,
-  TFT_B1 = 40,
-  TFT_B2 = 39,
-  TFT_B3 = 38,
-  TFT_B4 = 0,
-  TFT_B5 = 45,
-  TFT_PCLK = 1,
-  TFT_DE = 2,
-  TFT_HSYNC = 41,
-  TFT_VSYNC = 42;
+ static const uint8_t TFT_R1 = 11;
+ static const uint8_t TFT_R2 = 10;
+ static const uint8_t TFT_R3 = 9;
+ static const uint8_t TFT_R4 = 46;
+ static const uint8_t TFT_R5 = 3;
+ static const uint8_t TFT_G0 = 48;
+ static const uint8_t TFT_G1 = 47;
+ static const uint8_t TFT_G2 = 21;
+ static const uint8_t TFT_G3 = 14;
+ static const uint8_t TFT_G4 = 13;
+ static const uint8_t TFT_G5 = 12;
+ static const uint8_t TFT_B1 = 40;
+ static const uint8_t TFT_B2 = 39;
+ static const uint8_t TFT_B3 = 38;
+ static const uint8_t TFT_B4 = 0;
+ static const uint8_t TFT_B5 = 45;
+ static const uint8_t TFT_PCLK = 1;
+ static const uint8_t TFT_DE = 2;
+ static const uint8_t TFT_HSYNC = 41;
+ static const uint8_t TFT_VSYNC = 42;
 
 #endif /* Pins_Arduino_h */
