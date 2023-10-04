@@ -1158,8 +1158,10 @@ pico32.menu.EraseFlash.all.upload.erase_cmd=-e
 esp32s3-octal.name=ESP32S3 Dev Module Octal (WROOM2)
 esp32s3-octal.vid.0=0x303a
 esp32s3-octal.pid.0=0x1001
+
 esp32s3-octal.bootloader.tool=esptool_py
 esp32s3-octal.bootloader.tool.default=esptool_py
+
 esp32s3-octal.upload.tool=esptool_py
 esp32s3-octal.upload.tool.default=esptool_py
 esp32s3-octal.upload.tool.network=esp_ota
@@ -1169,8 +1171,10 @@ esp32s3-octal.upload.flags=
 esp32s3-octal.upload.extra_flags=
 esp32s3-octal.upload.use_1200bps_touch=false
 esp32s3-octal.upload.wait_for_upload_port=false
+
 esp32s3-octal.serial.disableDTR=false
 esp32s3-octal.serial.disableRTS=false
+
 esp32s3-octal.build.tarch=xtensa
 esp32s3-octal.build.bootloader_addr=0x0
 esp32s3-octal.build.target=esp32s3
@@ -1178,6 +1182,7 @@ esp32s3-octal.build.mcu=esp32s3
 esp32s3-octal.build.core=esp32
 esp32s3-octal.build.variant=esp32s3
 esp32s3-octal.build.board=ESP32S3_DEV
+
 esp32s3-octal.build.usb_mode=1
 esp32s3-octal.build.cdc_on_boot=0
 esp32s3-octal.build.msc_on_boot=0
@@ -1186,6 +1191,7 @@ esp32s3-octal.build.f_cpu=240000000L
 esp32s3-octal.build.flash_size=4MB
 esp32s3-octal.build.flash_freq=80m
 esp32s3-octal.build.flash_mode=dio
+
 esp32s3-octal.build.boot=opi
 esp32s3-octal.build.boot_freq=80m
 esp32s3-octal.build.partitions=default
@@ -1194,6 +1200,7 @@ esp32s3-octal.build.loop_core=
 esp32s3-octal.build.event_core=
 esp32s3-octal.build.psram_type=opi
 esp32s3-octal.build.memory_type={build.boot}_{build.psram_type}
+
 esp32s3-octal.menu.JTAGAdapter.default=Disabled
 esp32s3-octal.menu.JTAGAdapter.default.build.copy_jtag_files=0
 esp32s3-octal.menu.JTAGAdapter.builtin=Integrated USB JTAG
@@ -1205,6 +1212,7 @@ esp32s3-octal.menu.JTAGAdapter.external.build.copy_jtag_files=1
 esp32s3-octal.menu.JTAGAdapter.bridge=ESP USB Bridge
 esp32s3-octal.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 esp32s3-octal.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
 esp32s3-octal.menu.PSRAM.opi=OPI PSRAM
 esp32s3-octal.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 esp32s3-octal.menu.PSRAM.opi.build.psram_type=opi
@@ -1214,6 +1222,7 @@ esp32s3-octal.menu.PSRAM.enabled.build.psram_type=qspi
 esp32s3-octal.menu.PSRAM.disabled=Disabled
 esp32s3-octal.menu.PSRAM.disabled.build.defines=
 esp32s3-octal.menu.PSRAM.disabled.build.psram_type=qspi
+
 esp32s3-octal.menu.FlashMode.opi=OPI 80MHz
 esp32s3-octal.menu.FlashMode.opi.build.flash_mode=dout
 esp32s3-octal.menu.FlashMode.opi.build.boot=opi
@@ -1234,6 +1243,7 @@ esp32s3-octal.menu.FlashMode.dio.build.flash_mode=dio
 esp32s3-octal.menu.FlashMode.dio.build.boot=dio
 esp32s3-octal.menu.FlashMode.dio.build.boot_freq=80m
 esp32s3-octal.menu.FlashMode.dio.build.flash_freq=80m
+
 esp32s3-octal.menu.FlashSize.16M=16MB (128Mb)
 esp32s3-octal.menu.FlashSize.4M=4MB (32Mb)
 esp32s3-octal.menu.FlashSize.4M.build.flash_size=4MB
@@ -1245,36 +1255,44 @@ esp32s3-octal.menu.FlashSize.16M.build.flash_size=16MB
 esp32s3-octal.menu.FlashSize.32M=32MB (256Mb)
 esp32s3-octal.menu.FlashSize.32M.build.flash_size=32MB
 esp32s3-octal.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
+
 esp32s3-octal.menu.LoopCore.1=Core 1
 esp32s3-octal.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
 esp32s3-octal.menu.LoopCore.0=Core 0
 esp32s3-octal.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
 esp32s3-octal.menu.EventsCore.1=Core 1
 esp32s3-octal.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 esp32s3-octal.menu.EventsCore.0=Core 0
 esp32s3-octal.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
 esp32s3-octal.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32s3-octal.menu.USBMode.hwcdc.build.usb_mode=1
 esp32s3-octal.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32s3-octal.menu.USBMode.default.build.usb_mode=0
+
 esp32s3-octal.menu.CDCOnBoot.default=Disabled
 esp32s3-octal.menu.CDCOnBoot.default.build.cdc_on_boot=0
 esp32s3-octal.menu.CDCOnBoot.cdc=Enabled
 esp32s3-octal.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
 esp32s3-octal.menu.MSCOnBoot.default=Disabled
 esp32s3-octal.menu.MSCOnBoot.default.build.msc_on_boot=0
 esp32s3-octal.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
 esp32s3-octal.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
 esp32s3-octal.menu.DFUOnBoot.default=Disabled
 esp32s3-octal.menu.DFUOnBoot.default.build.dfu_on_boot=0
 esp32s3-octal.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 esp32s3-octal.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
 esp32s3-octal.menu.UploadMode.default=UART0 / Hardware CDC
 esp32s3-octal.menu.UploadMode.default.upload.use_1200bps_touch=false
 esp32s3-octal.menu.UploadMode.default.upload.wait_for_upload_port=false
 esp32s3-octal.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 esp32s3-octal.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 esp32s3-octal.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
 esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 esp32s3-octal.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32s3-octal.menu.PartitionScheme.default.build.partitions=default
@@ -1318,6 +1336,7 @@ esp32s3-octal.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
 esp32s3-octal.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
 esp32s3-octal.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
 esp32s3-octal.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+
 esp32s3-octal.menu.CPUFreq.240=240MHz (WiFi)
 esp32s3-octal.menu.CPUFreq.240.build.f_cpu=240000000L
 esp32s3-octal.menu.CPUFreq.160=160MHz (WiFi)
@@ -1330,6 +1349,7 @@ esp32s3-octal.menu.CPUFreq.20=20MHz
 esp32s3-octal.menu.CPUFreq.20.build.f_cpu=20000000L
 esp32s3-octal.menu.CPUFreq.10=10MHz
 esp32s3-octal.menu.CPUFreq.10.build.f_cpu=10000000L
+
 esp32s3-octal.menu.UploadSpeed.921600=921600
 esp32s3-octal.menu.UploadSpeed.921600.upload.speed=921600
 esp32s3-octal.menu.UploadSpeed.115200=115200
@@ -1344,6 +1364,7 @@ esp32s3-octal.menu.UploadSpeed.460800.macosx=460800
 esp32s3-octal.menu.UploadSpeed.460800.upload.speed=460800
 esp32s3-octal.menu.UploadSpeed.512000.windows=512000
 esp32s3-octal.menu.UploadSpeed.512000.upload.speed=512000
+
 esp32s3-octal.menu.DebugLevel.none=None
 esp32s3-octal.menu.DebugLevel.none.build.code_debug=0
 esp32s3-octal.menu.DebugLevel.error=Error
