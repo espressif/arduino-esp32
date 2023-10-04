@@ -107,7 +107,7 @@ static inline psa_algorithm_t psa_get_key_enrollment_algorithm(
  *         indicates the slot number that contains it.
  * \retval #PSA_ERROR_NOT_PERMITTED
  *         The caller is not permitted to query the slot number.
- *         Mbed Crypto currently does not return this error.
+ *         Mbed TLS currently does not return this error.
  * \retval #PSA_ERROR_INVALID_ARGUMENT
  *         The key is not located in a secure element.
  */
@@ -219,7 +219,7 @@ void mbedtls_psa_crypto_free(void);
  * resource consumption related to the PSA keystore.
  *
  * \note The content of this structure is not part of the stable API and ABI
- *       of Mbed Crypto and may change arbitrarily from version to version.
+ *       of Mbed TLS and may change arbitrarily from version to version.
  */
 typedef struct mbedtls_psa_stats_s {
     /** Number of slots containing key material for a volatile key. */
@@ -248,7 +248,7 @@ typedef struct mbedtls_psa_stats_s {
 /** \brief Get statistics about
  * resource consumption related to the PSA keystore.
  *
- * \note When Mbed Crypto is built as part of a service, with isolation
+ * \note When Mbed TLS is built as part of a service, with isolation
  *       between the application and the keystore, the service may or
  *       may not expose this function.
  */

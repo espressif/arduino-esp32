@@ -130,6 +130,19 @@ esp_err_t esp_rmaker_cmd_register(uint16_t cmd, uint8_t access, esp_rmaker_cmd_h
  */
 esp_err_t esp_rmaker_cmd_deregister(uint16_t cmd);
 
+/* Prepare an empty command response
+ *
+ * This can be used to populate the request to be sent to get all pending commands
+ *
+ * @param[in] out_data Pointer to output data. This function will allocate memory and set this pointer
+ * accordingly.
+ * @param[out] out_len Length of output generated.
+ *
+ * @return ESP_OK on success.
+ * @return error on failure.
+ */
+ esp_err_t esp_rmaker_cmd_prepare_empty_response(void **output, size_t *output_len);
+
 /** Prototype for Command sending function (TESTING only)
  *
  * @param[in] data Pointer to the data to be sent.

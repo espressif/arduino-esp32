@@ -5,7 +5,7 @@
  *
  * This header declares alternative names for macro and functions.
  * New application code should not use these names.
- * These names may be removed in a future version of Mbed Crypto.
+ * These names may be removed in a future version of Mbed TLS.
  *
  * \note This file may not be included directly. Applications must
  * include psa/crypto.h.

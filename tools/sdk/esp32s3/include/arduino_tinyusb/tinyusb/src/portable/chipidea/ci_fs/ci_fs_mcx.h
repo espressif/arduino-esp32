@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Ha Thach (tinyusb.org)
+ * Copyright (c) 2023 Ha Thach (tinyusb.org)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,57 +24,24 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup Group_Common Common Files
- *  \defgroup Group_TimeoutTimer timeout timer
- *  @{ */
+#ifndef _CI_FS_MCX_H
+#define _CI_FS_MCX_H
 
-#ifndef _TUSB_TIMEOUT_H_
-#define _TUSB_TIMEOUT_H_
+#include "fsl_device_registers.h"
 
-#include <stdbool.h>
-#include <stdint.h>
+#define CI_FS_REG(_port)        ((ci_fs_regs_t*) USBFS0_BASE)
+#define CI_REG                  CI_FS_REG(0)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-typedef struct {
-  uint32_t start;
-  uint32_t interval;
-}tu_timeout_t;
-
-#if 0
-
-extern uint32_t tusb_hal_millis(void);
-
-static inline void tu_timeout_set(tu_timeout_t* tt, uint32_t msec)
+void dcd_int_enable(uint8_t rhport)
 {
-  tt->interval = msec;
-  tt->start    = tusb_hal_millis();
+  (void) rhport;
+  NVIC_EnableIRQ(USB0_FS_IRQn);
 }
 
-static inline bool tu_timeout_expired(tu_timeout_t* tt)
+void dcd_int_disable(uint8_t rhport)
 {
-  return ( tusb_hal_millis() - tt->start ) >= tt->interval;
-}
-
-// For used with periodic event to prevent drift
-static inline void tu_timeout_reset(tu_timeout_t* tt)
-{
-  tt->start += tt->interval;
-}
-
-static inline void tu_timeout_restart(tu_timeout_t* tt)
-{
-  tt->start = tusb_hal_millis();
+  (void) rhport;
+  NVIC_DisableIRQ(USB0_FS_IRQn);
 }
 
 #endif
-
-#ifdef __cplusplus
- }
-#endif
-
-#endif /* _TUSB_TIMEOUT_H_ */
-
-/** @} */

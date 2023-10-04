@@ -53,7 +53,7 @@ enum {
 };
 
 /// \brief MassStorage Protocol.
-/// \details CBI only approved to use with full-speed floopy disk & should not used with highspeed or device other than floopy
+/// \details CBI only approved to use with full-speed floppy disk & should not used with highspeed or device other than floppy
 typedef enum
 {
   MSC_PROTOCOL_CBI              = 0 ,  ///< Control/Bulk/Interrupt protocol (with command completion interrupt)
@@ -97,7 +97,7 @@ typedef struct TU_ATTR_PACKED
 {
   uint32_t signature    ; ///< Signature that helps identify this data packet as a CSW. The signature field shall contain the value 53425355h (little endian), indicating CSW.
   uint32_t tag          ; ///< The device shall set this field to the value received in the dCBWTag of the associated CBW.
-  uint32_t data_residue ; ///< For Data-Out the device shall report in the dCSWDataResiduethe difference between the amount of data expected as stated in the dCBWDataTransferLength, and the actual amount of data processed by the device. For Data-In the device shall report in the dCSWDataResiduethe difference between the amount of data expected as stated in the dCBWDataTransferLengthand the actual amount of relevant data sent by the device
+  uint32_t data_residue ; ///< For Data-Out the device shall report in the dCSWDataResidue the difference between the amount of data expected as stated in the dCBWDataTransferLength, and the actual amount of data processed by the device. For Data-In the device shall report in the dCSWDataResiduethe difference between the amount of data expected as stated in the dCBWDataTransferLengthand the actual amount of relevant data sent by the device
   uint8_t  status       ; ///< indicates the success or failure of the command. Values from \ref msc_csw_status_t
 }msc_csw_t;
 
@@ -120,14 +120,14 @@ typedef enum
   SCSI_CMD_REQUEST_SENSE                = 0x03, ///< The SCSI Request Sense command is part of the SCSI computer protocol standard. This command is used to obtain sense data -- status/error information -- from a target device.
   SCSI_CMD_READ_FORMAT_CAPACITY         = 0x23, ///< The command allows the Host to request a list of the possible format capacities for an installed writable media. This command also has the capability to report the writable capacity for a media when it is installed
   SCSI_CMD_READ_10                      = 0x28, ///< The READ (10) command requests that the device server read the specified logical block(s) and transfer them to the data-in buffer.
-  SCSI_CMD_WRITE_10                     = 0x2A, ///< The WRITE (10) command requests thatthe device server transfer the specified logical block(s) from the data-out buffer and write them.
+  SCSI_CMD_WRITE_10                     = 0x2A, ///< The WRITE (10) command requests that the device server transfer the specified logical block(s) from the data-out buffer and write them.
 }scsi_cmd_type_t;
 
 /// SCSI Sense Key
 typedef enum
 {
   SCSI_SENSE_NONE            = 0x00, ///< no specific Sense Key. This would be the case for a successful command
-  SCSI_SENSE_RECOVERED_ERROR = 0x01, ///< ndicates the last command completed successfully with some recovery action performed by the disc drive.
+  SCSI_SENSE_RECOVERED_ERROR = 0x01, ///< Indicates the last command completed successfully with some recovery action performed by the disc drive.
   SCSI_SENSE_NOT_READY       = 0x02, ///< Indicates the logical unit addressed cannot be accessed.
   SCSI_SENSE_MEDIUM_ERROR    = 0x03, ///< Indicates the command terminated with a non-recovered error condition.
   SCSI_SENSE_HARDWARE_ERROR  = 0x04, ///< Indicates the disc drive detected a nonrecoverable hardware failure while performing the command or during a self test.
@@ -138,7 +138,7 @@ typedef enum
   SCSI_SENSE_ABORTED_COMMAND = 0x0b, ///< Indicates the disc drive aborted the command.
   SCSI_SENSE_EQUAL           = 0x0c, ///< Indicates a SEARCH DATA command has satisfied an equal comparison.
   SCSI_SENSE_VOLUME_OVERFLOW = 0x0d, ///< Indicates a buffered peripheral device has reached the end of medium partition and data remains in the buffer that has not been written to the medium.
-  SCSI_SENSE_MISCOMPARE      = 0x0e  ///< ndicates that the source data did not match the data read from the medium.
+  SCSI_SENSE_MISCOMPARE      = 0x0e  ///< Indicates that the source data did not match the data read from the medium.
 }scsi_sense_key_type_t;
 
 //--------------------------------------------------------------------+
