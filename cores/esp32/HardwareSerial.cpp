@@ -148,7 +148,7 @@ void serialEventRun(void)
 #define HSERIAL_MUTEX_UNLOCK()
 #endif
 
-HardwareSerial::HardwareSerial(int uart_nr) :
+HardwareSerial::HardwareSerial(uint8_t uart_nr) :
 _uart_nr(uart_nr),
 _uart(NULL),
 _rxBufferSize(256),
@@ -172,6 +172,12 @@ _eventTask(NULL)
         }
     }
 #endif
+    // sets UART0 (default console) RX/TX pins as already configured in boot
+    if (uart_nr == 0) {
+        setPins(SOC_RX0, SOC_TX0);
+    }
+    // set deinit function in the Peripheral Manager
+    uart_init_PeriMan();
 }
 
 HardwareSerial::~HardwareSerial()
@@ -341,8 +347,8 @@ void HardwareSerial::_uartEventTask(void *args)
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
-    if(0 > _uart_nr || _uart_nr >= SOC_UART_NUM) {
-        log_e("Serial number is invalid, please use numers from 0 to %u", SOC_UART_NUM - 1);
+    if(_uart_nr >= SOC_UART_NUM) {
+        log_e("Serial number is invalid, please use a number from 0 to %u", SOC_UART_NUM - 1);
         return;
     }
 
@@ -356,26 +362,32 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     HSERIAL_MUTEX_LOCK();
     // First Time or after end() --> set default Pins
     if (!uartIsDriverInstalled(_uart)) {
+        // get previously used RX/TX pins, if any.
+        int8_t _rxPin = uart_get_RxPin(_uart_nr);
+        int8_t _txPin = uart_get_TxPin(_uart_nr);
         switch (_uart_nr) {
             case UART_NUM_0:
                 if (rxPin < 0 && txPin < 0) {
-                    rxPin = SOC_RX0;
-                    txPin = SOC_TX0;
+                    // do not change RX0/TX0 if it has already been set before
+                    rxPin = _rxPin < 0 ? SOC_RX0 : _rxPin;
+                    txPin = _txPin < 0 ? SOC_TX0 : _txPin;
                 }
             break;
 #if SOC_UART_NUM > 1                   // may save some flash bytes...
             case UART_NUM_1:
                if (rxPin < 0 && txPin < 0) {
-                    rxPin = RX1;
-                    txPin = TX1;
+                    // do not change RX1/TX1 if it has already been set before
+                    rxPin = _rxPin < 0 ? RX1 : _rxPin;
+                    txPin = _txPin < 0 ? TX1 : _txPin;
                 }
             break;
 #endif
 #if SOC_UART_NUM > 2                   // may save some flash bytes...
             case UART_NUM_2:
                if (rxPin < 0 && txPin < 0) {
-                    rxPin = RX2;
-                    txPin = TX2;
+                    // do not change RX2/TX2 if it has already been set before
+                    rxPin = _rxPin < 0 ? RX2 : _rxPin;
+                    txPin = _txPin < 0 ? TX2 : _txPin;
                 }
             break;
 #endif
@@ -389,6 +401,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
 
     // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
+    // it will detach previous UART attached pins
     _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
     if (!baud) {
         // using baud rate as zero, forces it to try to detect the current baud rate in place
@@ -451,7 +464,7 @@ void HardwareSerial::end(bool fullyTerminate)
             uartSetDebug(0);
         }
         _rxFIFOFull = 0;
-        uartEnd(_uart);  // fully detach all pins and delete the UART driver
+        uartEnd(_uart_nr);  // fully detach all pins and delete the UART driver
     } else {
       // do not invalidate callbacks, detach pins, invalidate DBG output
       uart_driver_delete(_uart_nr);
@@ -537,8 +550,8 @@ size_t HardwareSerial::write(const uint8_t *buffer, size_t size)
     uartWriteBuf(_uart, buffer, size);
     return size;
 }
-uint32_t  HardwareSerial::baudRate()
 
+uint32_t  HardwareSerial::baudRate()
 {
   return uartGetBaudRate(_uart);
 }
@@ -553,19 +566,11 @@ void HardwareSerial::setRxInvert(bool invert)
 }
 
 // negative Pin value will keep it unmodified
+// can be called after or before begin()
 bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
-    if(_uart == NULL) {
-        log_e("setPins() shall be called after begin() - nothing done\n");
-        return false;
-    }
-
-    // uartSetPins() checks if pins are valid for each function and for the SoC
-    if (uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin)) {
-        return true;
-    } else {
-        return false;
-    }
+    // uartSetPins() checks if pins are valid and, if necessary, detaches the previous ones
+    return uartSetPins(_uart_nr, rxPin, txPin, ctsPin, rtsPin);
 }
 
 // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
