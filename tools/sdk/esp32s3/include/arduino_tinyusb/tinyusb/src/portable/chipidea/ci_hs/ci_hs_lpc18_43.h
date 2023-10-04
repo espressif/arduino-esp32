@@ -27,8 +27,17 @@
 #ifndef _CI_HS_LPC18_43_H_
 #define _CI_HS_LPC18_43_H_
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 // LPCOpen for 18xx & 43xx
 #include "chip.h"
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 static const ci_hs_controller_t _ci_controller[] =
 {

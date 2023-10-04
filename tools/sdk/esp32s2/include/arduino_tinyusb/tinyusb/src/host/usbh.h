@@ -47,8 +47,7 @@ typedef void (*tuh_xfer_cb_t)(tuh_xfer_t* xfer);
 // it is advised to initialize it using member name
 // Note2: not all field is available/meaningful in callback,
 // some info is not saved by usbh to save SRAM
-struct tuh_xfer_s
-{
+struct tuh_xfer_s {
   uint8_t daddr;
   uint8_t ep_addr;
   uint8_t TU_RESERVED;      // reserved
@@ -56,8 +55,7 @@ struct tuh_xfer_s
 
   uint32_t actual_len;      // excluding setup packet
 
-  union
-  {
+  union {
     tusb_control_request_t const* setup; // setup packet pointer if control transfer
     uint32_t buflen;                     // expected length if not control transfer (not available in callback)
   };
@@ -70,15 +68,13 @@ struct tuh_xfer_s
 };
 
 // Subject to change
-typedef struct
-{
+typedef struct {
   uint8_t daddr;
   tusb_desc_interface_t desc;
 } tuh_itf_info_t;
 
 // ConfigID for tuh_config()
-enum
-{
+enum {
   TUH_CFGID_RPI_PIO_USB_CONFIGURATION = OPT_MCU_RP2040 << 8 // cfg_param: pio_usb_configuration_t
 };
 
@@ -105,12 +101,12 @@ TU_ATTR_WEAK void tuh_umount_cb(uint8_t daddr);
 // Should be called before tuh_init()
 // - cfg_id   : configure ID (TBD)
 // - cfg_param: configure data, structure depends on the ID
-bool tuh_configure(uint8_t controller_id, uint32_t cfg_id, const void* cfg_param);
+bool tuh_configure(uint8_t rhport, uint32_t cfg_id, const void* cfg_param);
 
 // Init host stack
-bool tuh_init(uint8_t controller_id);
+bool tuh_init(uint8_t rhport);
 
-// Check if host stack is already initialized
+// Check if host stack is already initialized with any roothub ports
 bool tuh_inited(void);
 
 // Task function should be called in main/rtos loop, extended version of tuh_task()
@@ -120,8 +116,7 @@ void tuh_task_ext(uint32_t timeout_ms, bool in_isr);
 
 // Task function should be called in main/rtos loop
 TU_ATTR_ALWAYS_INLINE static inline
-void tuh_task(void)
-{
+void tuh_task(void) {
   tuh_task_ext(UINT32_MAX, false);
 }
 
@@ -129,14 +124,31 @@ void tuh_task(void)
 bool tuh_task_event_ready(void);
 
 #ifndef _TUSB_HCD_H_
-extern void hcd_int_handler(uint8_t rhport);
+extern void hcd_int_handler(uint8_t rhport, bool in_isr);
 #endif
 
-// Interrupt handler, name alias to HCD
-#define tuh_int_handler   hcd_int_handler
+// Interrupt handler alias to HCD with in_isr as optional parameter
+// - tuh_int_handler(rhport) --> hcd_int_handler(rhport, true)
+// - tuh_int_handler(rhport, in_isr) --> hcd_int_handler(rhport, in_isr)
+// Note: this is similar to TU_VERIFY(), _GET_3RD_ARG() is defined in tusb_verify.h
+#define _tuh_int_handler_1arg(_rhport)            hcd_int_handler(_rhport, true)
+#define _tuh_int_hanlder_2arg(_rhport, _in_isr)   hcd_int_handler(_rhport, _in_isr)
+#define tuh_int_handler(...)   _GET_3RD_ARG(__VA_ARGS__, _tuh_int_hanlder_2arg, _tuh_int_handler_1arg, _dummy)(__VA_ARGS__)
 
+// Check if roothub port is initialized and active as a host
+bool tuh_rhport_is_active(uint8_t rhport);
+
+// Assert/de-assert Bus Reset signal to roothub port. USB specs: it should last 10-50ms
+bool tuh_rhport_reset_bus(uint8_t rhport, bool active);
+
+//--------------------------------------------------------------------+
+// Device API
+//--------------------------------------------------------------------+
+
+// Get VID/PID of device
 bool tuh_vid_pid_get(uint8_t daddr, uint16_t* vid, uint16_t* pid);
 
+// Get speed of device
 tusb_speed_t tuh_speed_get(uint8_t daddr);
 
 // Check if device is connected and configured
@@ -144,8 +156,7 @@ bool tuh_mounted(uint8_t daddr);
 
 // Check if device is suspended
 TU_ATTR_ALWAYS_INLINE static inline
-bool tuh_suspended(uint8_t daddr)
-{
+bool tuh_suspended(uint8_t daddr) {
   // TODO implement suspend & resume on host
   (void) daddr;
   return false;
@@ -153,8 +164,7 @@ bool tuh_suspended(uint8_t daddr)
 
 // Check if device is ready to communicate with
 TU_ATTR_ALWAYS_INLINE static inline
-bool tuh_ready(uint8_t daddr)
-{
+bool tuh_ready(uint8_t daddr) {
   return tuh_mounted(daddr) && !tuh_suspended(daddr);
 }
 
@@ -172,8 +182,12 @@ bool tuh_control_xfer(tuh_xfer_t* xfer);
 //  - sync : blocking if complete callback is NULL.
 bool tuh_edpt_xfer(tuh_xfer_t* xfer);
 
-// Open an non-control endpoint
-bool tuh_edpt_open(uint8_t dev_addr, tusb_desc_endpoint_t const * desc_ep);
+// Open a non-control endpoint
+bool tuh_edpt_open(uint8_t daddr, tusb_desc_endpoint_t const * desc_ep);
+
+// Abort a queued transfer. Note: it can only abort transfer that has not been started
+// Return true if a queued transfer is aborted, false if there is no transfer to abort
+bool tuh_edpt_abort_xfer(uint8_t daddr, uint8_t ep_addr);
 
 // Set Configuration (control transfer)
 // config_num = 0 will un-configure device. Note: config_num = config_descriptor_index + 1

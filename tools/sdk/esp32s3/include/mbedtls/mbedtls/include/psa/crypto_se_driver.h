@@ -137,7 +137,7 @@ typedef psa_status_t (*psa_drv_se_init_t)(psa_drv_se_context_t *drv_context,
                                           psa_key_location_t location);
 
 #if defined(__DOXYGEN_ONLY__) || !defined(MBEDTLS_PSA_CRYPTO_SE_C)
-/* Mbed Crypto with secure element support enabled defines this type in
+/* Mbed TLS with secure element support enabled defines this type in
  * crypto_types.h because it is also visible to applications through an
  * implementation-specific extension.
  * For the PSA Cryptography specification, this type is only visible
@@ -836,7 +836,7 @@ typedef enum {
      * and #PSA_ERROR_DOES_NOT_EXIST if the driver can determine that there
      * is no key with the specified slot number.
      *
-     * This is an Mbed Crypto extension.
+     * This is an Mbed TLS extension.
      */
     PSA_KEY_CREATION_REGISTER,
 #endif

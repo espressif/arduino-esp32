@@ -23,8 +23,8 @@
  *
  * This file is part of the TinyUSB stack.
  */
-#ifndef USBD_PVT_H_
-#define USBD_PVT_H_
+#ifndef _TUSB_USBD_PVT_H_
+#define _TUSB_USBD_PVT_H_
 
 #include "osal/osal.h"
 #include "common/tusb_fifo.h"
@@ -33,13 +33,19 @@
  extern "C" {
 #endif
 
+// Level where CFG_TUSB_DEBUG must be at least for USBD is logged
+#ifndef CFG_TUD_LOG_LEVEL
+#define CFG_TUD_LOG_LEVEL   2
+#endif
+
+#define TU_LOG_USBD(...)   TU_LOG(CFG_TUD_LOG_LEVEL, __VA_ARGS__)
+
 //--------------------------------------------------------------------+
 // Class Driver API
 //--------------------------------------------------------------------+
 
-typedef struct
-{
-  #if CFG_TUSB_DEBUG >= 2
+typedef struct {
+  #if CFG_TUSB_DEBUG >= CFG_TUD_LOG_LEVEL
   char const* name;
   #endif
 
@@ -52,7 +58,7 @@ typedef struct
 } usbd_class_driver_t;
 
 // Invoked when initializing device stack to get additional class drivers.
-// Can optionally implemented by application to extend/overwrite class driver support.
+// Can be implemented by application to extend/overwrite class driver support.
 // Note: The drivers array must be accessible at all time when stack is active
 usbd_class_driver_t const* usbd_app_driver_get_cb(uint8_t* driver_count) TU_ATTR_WEAK;
 
@@ -104,8 +110,7 @@ bool usbd_edpt_iso_activate(uint8_t rhport,  tusb_desc_endpoint_t const * p_endp
 
 // Check if endpoint is ready (not busy and not stalled)
 TU_ATTR_ALWAYS_INLINE static inline
-bool usbd_edpt_ready(uint8_t rhport, uint8_t ep_addr)
-{
+bool usbd_edpt_ready(uint8_t rhport, uint8_t ep_addr) {
   return !usbd_edpt_busy(rhport, ep_addr) && !usbd_edpt_stalled(rhport, ep_addr);
 }
 
@@ -117,11 +122,10 @@ void usbd_sof_enable(uint8_t rhport, bool en);
  *------------------------------------------------------------------*/
 
 bool usbd_open_edpt_pair(uint8_t rhport, uint8_t const* p_desc, uint8_t ep_count, uint8_t xfer_type, uint8_t* ep_out, uint8_t* ep_in);
-void usbd_defer_func( osal_task_func_t func, void* param, bool in_isr );
-
+void usbd_defer_func(osal_task_func_t func, void *param, bool in_isr);
 
 #ifdef __cplusplus
  }
 #endif
 
-#endif /* USBD_PVT_H_ */
+#endif

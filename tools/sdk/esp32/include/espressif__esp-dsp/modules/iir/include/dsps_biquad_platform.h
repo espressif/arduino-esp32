@@ -12,6 +12,13 @@
 #define dsps_biquad_f32_ae32_enabled  1
 
 #endif
+
+#if CONFIG_IDF_TARGET_ESP32S3
+#define dsps_biquad_f32_aes3_enabled 1
+#else
+#define dsps_biquad_f32_aes3_enabled 0
+#endif
+
 #endif // __XTENSA__
 
 

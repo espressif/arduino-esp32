@@ -57,7 +57,8 @@ typedef enum adc_hal_dma_desc_status_t {
  */
 typedef struct adc_hal_config_t {
     void                *dev;               ///< DMA peripheral address
-    uint32_t            desc_max_num;       ///< Number of the descriptors linked once
+    uint32_t            eof_desc_num;       ///< Number of dma descriptors that is eof
+    uint32_t            eof_step;           ///< Number of linked descriptors that is one eof
     uint32_t            dma_chan;           ///< DMA channel to be used
     uint32_t            eof_num;            ///< Bytes between 2 in_suc_eof interrupts
 } adc_hal_config_t;
@@ -75,7 +76,8 @@ typedef struct adc_hal_context_t {
 
     /**< these need to be configured by `adc_hal_config_t` via driver layer*/
     void                *dev;               ///< DMA address
-    uint32_t            desc_max_num;       ///< Number of the descriptors linked once
+    uint32_t            eof_desc_num;       ///< Number of dma descriptors that is eof
+    uint32_t            eof_step;           ///< Number of linked descriptors that is one eof
     uint32_t            dma_chan;           ///< DMA channel to be used
     uint32_t            eof_num;            ///< Words between 2 in_suc_eof interrupts
 } adc_hal_context_t;
@@ -94,13 +96,6 @@ typedef struct adc_hal_digi_ctrlr_cfg_t {
 /*---------------------------------------------------------------
                     Common setting
 ---------------------------------------------------------------*/
-/**
- * Set ADC module power management.
- *
- * @prarm manage Set ADC power status.
- */
-#define adc_hal_set_power_manage(manage) adc_ll_set_power_manage(manage)
-
 void adc_hal_set_controller(adc_ll_num_t unit, adc_hal_work_mode_t work_mode);
 
 #if SOC_ADC_ARBITER_SUPPORTED
@@ -224,11 +219,12 @@ bool adc_hal_check_event(adc_hal_context_t *hal, uint32_t mask);
  *
  * @param      hal           Context of the HAL
  * @param      eof_desc_addr The last descriptor that is finished by HW. Should be got from DMA
- * @param[out] cur_desc      The descriptor with ADC reading result (from the 1st one to the last one (``eof_desc_addr``))
+ * @param[out] buffer        ADC reading result buffer
+ * @param[out] len           ADC reading result len
  *
  * @return                   See ``adc_hal_dma_desc_status_t``
  */
-adc_hal_dma_desc_status_t adc_hal_get_reading_result(adc_hal_context_t *hal, const intptr_t eof_desc_addr, dma_descriptor_t **cur_desc);
+adc_hal_dma_desc_status_t adc_hal_get_reading_result(adc_hal_context_t *hal, const intptr_t eof_desc_addr, uint8_t **buffer, uint32_t *len);
 
 /**
  * @brief Clear interrupt
