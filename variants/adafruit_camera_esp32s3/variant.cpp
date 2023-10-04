@@ -29,10 +29,8 @@
 extern "C" {
 
 // Initialize variant/board, called before setup()
-void initVariant(void) {
-  // default SD_CS to input pullup (we cannot have built in pullup since its
-  // a strapping pin!)
-  pinMode(SS, INPUT_PULLUP);
-}
+void initVariant(void)
+{
 
+}
 }
