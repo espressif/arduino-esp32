@@ -201,7 +201,7 @@ bool UpdateClass::_writeBuffer(){
         skip = ENCRYPTED_BLOCK_SIZE;
         _skipBuffer = new (std::nothrow) uint8_t[skip];
         if (!_skipBuffer) {
-            log_e("malloc failed");
+            log_e("_skipBuffer allocation failed");
             return false;
         }
         memcpy(_skipBuffer, _buffer, skip);
