@@ -470,7 +470,7 @@ void HardwareSerial::end(bool fullyTerminate)
       uart_driver_delete(_uart_nr);
     }
 
-    uartEnd(_uart);
+    uartEnd(_uart_nr);
     _uart = 0;
     _destroyEventTask();
 }
