@@ -52,6 +52,9 @@ static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;
 
 static const uint8_t NEOPIXEL_MATRIX_DATA = 21;
+static const uint8_t NEOPIXEL_MATRIX_PWR = 4;
+
+static const uint8_t NEOPIXEL_DATA = 40;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
 #define RGB_BUILTIN (NEOPIXEL_DATA + SOC_GPIO_PIN_COUNT)  
 #define RGB_BRIGHTNESS 64
@@ -59,9 +62,6 @@ static const uint8_t NEOPIXEL_MATRIX_DATA = 21;
 static const uint8_t LED_BUILTIN = RGB_BUILTIN;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
-static const uint8_t NEOPIXEL_MATRIX_PWR = 4;
-
-static const uint8_t NEOPIXEL_DATA = 40;
 static const uint8_t NEOPIXEL_PWR = 39;
 
 static const uint8_t VBAT_SENSE = 2;

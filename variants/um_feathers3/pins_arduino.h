@@ -62,7 +62,6 @@ static const uint8_t LED_BUILTIN = RGB_BUILTIN;
 
 static const uint8_t RGB_PWR = 39;
 static const uint8_t LDO2 = 39;
-static const uint8_t LED_BUILTIN = 13;
 static const uint8_t LED = 13;
 
 #endif /* Pins_Arduino_h */
