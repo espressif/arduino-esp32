@@ -10,13 +10,14 @@
 #define USB_PRODUCT        "EPD MagTag 2.9\" ESP32-S2"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
+// User LED 
+#define LED_BUILTIN 13
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+
 // Neopixel
 #define PIN_NEOPIXEL        1    // D1
-// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT); // Only 1 NeoPixel will be affected
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN LED_BUILTIN
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
+#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 #define NEOPIXEL_NUM        4    // number of neopixels

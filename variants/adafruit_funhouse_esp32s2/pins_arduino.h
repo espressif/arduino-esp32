@@ -11,6 +11,7 @@
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
 #define LED_BUILTIN   37
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
 #define PIN_BUTTON1   3
 #define PIN_BUTTON2   4

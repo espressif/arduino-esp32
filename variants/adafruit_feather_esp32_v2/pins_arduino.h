@@ -4,15 +4,6 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-// Neopixel
-#define PIN_NEOPIXEL 0
-// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT);
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN LED_BUILTIN
-#define RGB_BRIGHTNESS 64
-
 static const uint8_t TX = 8;
 static const uint8_t RX = 7;
 #define TX1 TX
@@ -48,8 +39,16 @@ static const uint8_t A13 = 35;
 // internal switch
 #define BUTTON 38
 
+// User LED 
+static const uint8_t LED_BUILTIN = 13;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+
 // Neopixel
 #define PIN_NEOPIXEL 0
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
+#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BRIGHTNESS 64
 
 // Neopixel & I2C power
 #define NEOPIXEL_I2C_POWER 2
