@@ -157,20 +157,12 @@ Changes in APIs
 UART
 ----
 
-TODO:
-For more information about the new API, check `UART API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/rmt.html>`_.
-
 Removed APIs
 ************
 
-TODO:
-
-New APIs
-********
-
-TODO:
+* ``uartDetachPins``
 
 Changes in APIs
 ***************
 
-TODO:
+* ``uartSetPins`` first input parameter ``uint8_t uart_num`` has been changed to ``uart_t* uart``.
