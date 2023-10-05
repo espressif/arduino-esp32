@@ -137,6 +137,22 @@ void arduino_phy_init();
 void initArduino();
 #endif
 
+typedef struct {
+    int core;                   // core which triggered panic
+    const char* reason;         // exception string
+    const void* pc;             // instruction address that triggered the exception
+    bool backtrace_corrupt;     // if backtrace is corrupt
+    bool backtrace_continues;   // if backtrace continues, but did not fit
+    unsigned int backtrace_len; // number of backtrace addresses
+    unsigned int backtrace[60]; // backtrace addresses array
+} arduino_panic_info_t;
+
+typedef void (*arduino_panic_handler_t)(arduino_panic_info_t * info, void * arg);
+
+void set_arduino_panic_handler(arduino_panic_handler_t handler, void * arg);
+arduino_panic_handler_t * get_arduino_panic_handler(void);
+void * get_arduino_panic_handler_arg(void);
+
 #ifdef __cplusplus
 }
 #endif
