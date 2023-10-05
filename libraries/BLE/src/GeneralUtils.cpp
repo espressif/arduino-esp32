@@ -18,6 +18,7 @@
 #include <esp_wifi.h>
 #include <esp_heap_caps.h>
 #include <esp_system.h>
+#include "esp_chip_info.h"
 #include "esp32-hal-log.h"
 
 static const char kBase64Alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

@@ -42,6 +42,7 @@ License (MIT license):
 #include "WiFi.h"
 #include <functional>
 #include "esp_wifi.h"
+#include "esp_wifi_types.h"
 
 // Add quotes around defined value
 #ifdef __IN_ECLIPSE__

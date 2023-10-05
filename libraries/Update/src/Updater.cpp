@@ -1,6 +1,6 @@
 #include "Update.h"
 #include "Arduino.h"
-#include "esp_spi_flash.h"
+#include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 

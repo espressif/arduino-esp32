@@ -22,6 +22,8 @@
   Modified Nov 2017 by Chuck Todd (ctodd@cableone.net) - ESP32 ISR Support
   Modified Nov 2021 by Hristo Gochkov <Me-No-Dev> to support ESP-IDF API
  */
+#include "soc/soc_caps.h"
+#if SOC_I2C_SUPPORTED
 
 extern "C" {
 #include <stdlib.h>
@@ -224,6 +226,7 @@ size_t TwoWire::setBufferSize(size_t bSize)
     return bSize;
 }
 
+#if SOC_I2C_SUPPORT_SLAVE
 // Slave Begin
 bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
 {
@@ -273,6 +276,7 @@ end:
 #endif
     return started;
 }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 
 // Master Begin
 bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
@@ -642,6 +646,8 @@ uint8_t TwoWire::endTransmission(void)
     return endTransmission(true);
 }
 
+#if SOC_I2C_SUPPORT_SLAVE
+
 size_t TwoWire::slaveWrite(const uint8_t * buffer, size_t len)
 {
     return i2cSlaveWrite(num, buffer, len, _timeOutMillis);
@@ -693,6 +699,9 @@ void TwoWire::onRequest( void (*function)(void) )
   user_onRequest = function;
 }
 
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 
 TwoWire Wire = TwoWire(0);
 TwoWire Wire1 = TwoWire(1);
+
+#endif /* SOC_I2C_SUPPORTED */
