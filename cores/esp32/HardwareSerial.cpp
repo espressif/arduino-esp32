@@ -64,7 +64,7 @@ void serialEvent(void) {}
 #elif CONFIG_IDF_TARGET_ESP32S3
 #define RX1 15
 #elif CONFIG_IDF_TARGET_ESP32C6
-#define RX1 5
+#define RX1 4
 #elif CONFIG_IDF_TARGET_ESP32H2
 #define RX1 0
 #endif
@@ -80,7 +80,7 @@ void serialEvent(void) {}
 #elif CONFIG_IDF_TARGET_ESP32S3
 #define TX1 16
 #elif CONFIG_IDF_TARGET_ESP32C6
-#define TX1 4
+#define TX1 5
 #elif CONFIG_IDF_TARGET_ESP32H2
 #define TX1 1
 #endif
@@ -456,6 +456,8 @@ void HardwareSerial::end(bool fullyTerminate)
       // do not invalidate callbacks, detach pins, invalidate DBG output
       uart_driver_delete(_uart_nr);
     }
+
+    uartEnd(_uart);
     _uart = 0;
     _destroyEventTask();
 }
