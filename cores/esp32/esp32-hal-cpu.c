@@ -19,8 +19,10 @@
 #include "esp_attr.h"
 #include "esp_log.h"
 #include "soc/rtc.h"
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "soc/rtc_cntl_reg.h"
 #include "soc/apb_ctrl_reg.h"
+#endif
 #include "soc/efuse_reg.h"
 #include "esp32-hal.h"
 #include "esp32-hal-cpu.h"
@@ -38,6 +40,10 @@
 #include "esp32s3/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32C6
+#include "esp32c6/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32H2
+#include "esp32h2/rom/rtc.h"
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -54,7 +60,7 @@ typedef struct apb_change_cb_s {
 
 
 static apb_change_t * apb_change_callbacks = NULL;
-static xSemaphoreHandle apb_change_lock = NULL;
+static SemaphoreHandle_t apb_change_lock = NULL;
 
 static void initApbChangeCallback(){
     static volatile bool initialized = false;
@@ -147,7 +153,7 @@ bool removeApbChangeCallback(void * arg, apb_change_cb_t cb){
 }
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t * conf){
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
 	return APB_CLK_FREQ;
 #else
     if(conf->freq_mhz >= 80){
@@ -163,7 +169,9 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     rtc_cpu_freq_config_t conf, cconf;
     uint32_t capb, apb;
     //Get XTAL Frequency and calculate min CPU MHz
+#ifndef CONFIG_IDF_TARGET_ESP32H2
     rtc_xtal_freq_t xtal = rtc_clk_xtal_freq_get();
+#endif
 #if CONFIG_IDF_TARGET_ESP32
     if(xtal > RTC_XTAL_FREQ_AUTO){
         if(xtal < RTC_XTAL_FREQ_40M) {
@@ -177,6 +185,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         }
     }
 #endif
+#ifndef CONFIG_IDF_TARGET_ESP32H2
     if(cpu_freq_mhz > xtal && cpu_freq_mhz != 240 && cpu_freq_mhz != 160 && cpu_freq_mhz != 80){
         if(xtal >= RTC_XTAL_FREQ_40M){
             log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2, xtal/4);
@@ -185,6 +194,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         }
         return false;
     }
+#endif
 #if CONFIG_IDF_TARGET_ESP32
     //check if cpu supports the frequency
     if(cpu_freq_mhz == 240){
@@ -218,6 +228,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     }
     //Make the frequency change
     rtc_clk_cpu_freq_set_config_fast(&conf);
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
     if(capb != apb){
         //Update REF_TICK (uncomment if REF_TICK is different than 1MHz)
         //if(conf.freq_mhz < 80){
@@ -228,8 +239,9 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
         //Update esp_timer divisor
         esp_timer_impl_update_apb_freq(apb / MHZ);
     }
+#endif
     //Update FreeRTOS Tick Divisor
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
 
 #elif CONFIG_IDF_TARGET_ESP32S3
 
@@ -241,7 +253,11 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     if(apb_change_callbacks){
         triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
     }
+#ifdef SOC_CLK_APLL_SUPPORTED
     log_d("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_APLL)?"APLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+#else
+    log_d("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL)?"PLL":((conf.source == RTC_CPU_FREQ_SRC_XTAL)?"XTAL":"17.5M"), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+#endif
     return true;
 }
 

@@ -160,9 +160,9 @@ void setup()
   Serial.begin(115200);
   gettimeofday(&now, NULL);
 
-  Serial.printf("start ESP32 %d\n", bootcount++);
+  Serial.printf("start ESP32 %lu\n", bootcount++);
 
-  Serial.printf("deep sleep (%lds since last reset, %lds since last boot)\n", now.tv_sec, now.tv_sec - last);
+  Serial.printf("deep sleep (%llds since last reset, %llds since last boot)\n", now.tv_sec, now.tv_sec - last);
 
   last = now.tv_sec;
 

@@ -214,7 +214,6 @@ void printDirectory() {
   dir.rewindDirectory();
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send(200, "text/json", "");
-  WiFiClient client = server.client();
 
   server.sendContent("[");
   for (int cnt = 0; true; ++cnt) {

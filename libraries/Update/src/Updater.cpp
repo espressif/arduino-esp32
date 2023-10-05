@@ -1,6 +1,6 @@
 #include "Update.h"
 #include "Arduino.h"
-#include "esp_spi_flash.h"
+#include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 
@@ -414,4 +414,6 @@ bool UpdateClass::_chkDataInBlock(const uint8_t *data, size_t len) const {
     return false;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
 UpdateClass Update;
+#endif
