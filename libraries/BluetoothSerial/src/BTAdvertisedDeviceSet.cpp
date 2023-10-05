@@ -42,7 +42,7 @@ std::string BTAdvertisedDeviceSet::toString() {
 	std::string res = "Name: " + getName() + ", Address: " + std::string(getAddress().toString().c_str(), getAddress().toString().length());
 	if (haveCOD()) {
 		char val[7]; //6 hex digits + null
-		snprintf(val, sizeof(val), "%06x", getCOD() & 0xFFFFFF);
+		snprintf(val, sizeof(val), "%06lx", getCOD() & 0xFFFFFF);
 		res += ", cod: 0x";
 		res += val;
 	}
