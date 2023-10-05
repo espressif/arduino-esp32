@@ -456,6 +456,8 @@ void HardwareSerial::end(bool fullyTerminate)
       // do not invalidate callbacks, detach pins, invalidate DBG output
       uart_driver_delete(_uart_nr);
     }
+
+    uartEnd(_uart);
     _uart = 0;
     _destroyEventTask();
 }

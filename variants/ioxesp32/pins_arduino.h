@@ -3,19 +3,19 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x1A86
-#define USB_PID 0x55D4
-#define USB_MANUFACTURER "Lilygo"
-#define USB_PRODUCT "T-Display"
-#define USB_SERIAL ""
-
 #define EXTERNAL_NUM_INTERRUPTS 16
 #define NUM_DIGITAL_PINS        40
 #define NUM_ANALOG_INPUTS       16
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 34)
+
+static const uint8_t LED_BUILTIN = 5;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN
+
+static const uint8_t KEY_BUILTIN = 0;
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
@@ -58,10 +58,5 @@ static const uint8_t T9 = 32;
 
 static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
-
-static const uint8_t VBAT = 34;
-
-static const uint8_t RIGHT_BUTTON = 35;
-static const uint8_t LEFT_BUTTON = 0;
 
 #endif /* Pins_Arduino_h */

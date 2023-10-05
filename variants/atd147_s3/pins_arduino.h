@@ -9,29 +9,33 @@
 
 #define EXTERNAL_NUM_INTERRUPTS 46
 #define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       18
+#define NUM_ANALOG_INPUTS       20
 
-
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+38;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
-#define RGB_BRIGHTNESS 64
-
-#define analogInputToDigitalPin(p)  (((p)<18)?(analogChannelToDigitalPin(p)):-1)
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
 #define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
-static const uint8_t SDA = 42;
-static const uint8_t SCL = 41;
+static const uint8_t SDA = 8;
+static const uint8_t SCL = 9;
 
 static const uint8_t SS    = 10;
 static const uint8_t MOSI  = 11;
 static const uint8_t MISO  = 13;
 static const uint8_t SCK   = 12;
+
+#define LCD_CS SS
+#define LCD_SCK SCK
+#define LCD_SDA MOSI
+static const uint8_t LCD_DC = 21;
+static const uint8_t LCD_RES = 14;
+
+static const uint8_t BTN_A = 4;
+static const uint8_t BTN_B = 5;
+static const uint8_t BTN_C = 45;
+#define KEY_BUILTIN BTN_A
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -51,6 +55,8 @@ static const uint8_t A14 = 15;
 static const uint8_t A15 = 16;
 static const uint8_t A16 = 17;
 static const uint8_t A17 = 18;
+static const uint8_t A18 = 19;
+static const uint8_t A19 = 20;
 
 static const uint8_t T1 = 1;
 static const uint8_t T2 = 2;
