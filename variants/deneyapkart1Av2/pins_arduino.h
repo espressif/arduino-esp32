@@ -10,7 +10,7 @@
 #define USB_PRODUCT        "DENEYAP KART 1A v2"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48;
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48; //D9
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 #define RGB_BUILTIN LED_BUILTIN

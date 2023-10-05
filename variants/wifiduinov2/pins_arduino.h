@@ -2,15 +2,10 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-#include "soc/soc_caps.h"
 
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+13;
+static const uint8_t LED_BUILTIN = 13;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
-#define RGB_BRIGHTNESS 64
-#define BOARD_HAS_NEOPIXEL
-#define LED_BRIGHTNESS 64
 
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;

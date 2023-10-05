@@ -2,7 +2,6 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-#include "soc/soc_caps.h"
 
 #define WIFI_LoRa_32_V3 true
 #define DISPLAY_HEIGHT 64
