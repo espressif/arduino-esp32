@@ -150,7 +150,7 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
 {
     if(uart_num >= SOC_UART_NUM) {
         log_e("Serial number is invalid, please use numers from 0 to %u", SOC_UART_NUM - 1);
-        return;
+        return false;
     }
 
     // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
