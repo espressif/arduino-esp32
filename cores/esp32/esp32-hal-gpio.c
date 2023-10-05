@@ -196,6 +196,9 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
 {
     static bool interrupt_initialized = false;
 
+    // makes sure that pin -1 (255) will never work -- this follows Arduino standard
+    if (pin >= SOC_GPIO_PIN_COUNT) return;
+
     if(!interrupt_initialized) {
     	esp_err_t err = gpio_install_isr_service((int)ARDUINO_ISR_FLAG);
     	interrupt_initialized = (err == ESP_OK) || (err == ESP_ERR_INVALID_STATE);

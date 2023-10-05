@@ -10,15 +10,6 @@
 #define USB_PRODUCT        "Funhouse ESP32-S2"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
-
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
 #define LED_BUILTIN   37
 
 #define PIN_BUTTON1   3
