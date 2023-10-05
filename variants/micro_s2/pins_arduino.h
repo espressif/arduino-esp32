@@ -62,7 +62,8 @@ static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;
 
 static const uint8_t LED_BUILTIN =  21;
-#define BUILTIN_LED  LED_BUILTIN    // backward compatibility
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t PIXEL_BUILTIN = 33;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()

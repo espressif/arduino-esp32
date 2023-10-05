@@ -19,6 +19,7 @@ static const uint8_t LED_BLUE = 5;
 
 static const uint8_t LED_BUILTIN = LED_WARM;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 // Standard ESP32-C3 GPIOs
 static const uint8_t TX = 21;

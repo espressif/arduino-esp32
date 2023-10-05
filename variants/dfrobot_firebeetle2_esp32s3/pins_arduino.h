@@ -41,6 +41,8 @@ static const uint8_t D13 = 21;
 static const uint8_t D14 = 47;
 
 static const uint8_t LED_BUILTIN = D13;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 
 static const uint8_t T1 = 1;

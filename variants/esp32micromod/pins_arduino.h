@@ -63,6 +63,7 @@ static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
 
 static const uint8_t LED_BUILTIN = 2;
-#define BUILTIN_LED LED_BUILTIN // backward compatibility
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 #endif /* Pins_Arduino_h */

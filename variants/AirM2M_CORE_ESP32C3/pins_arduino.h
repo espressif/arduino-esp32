@@ -4,7 +4,9 @@
 #include <stdint.h>
 
 static const uint8_t LED_BUILTIN     = 12;
-#define BUILTIN_LED  LED_BUILTIN
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+
 static const uint8_t LED_BUILTIN_AUX = 13;
 
 static const uint8_t TX = 21;

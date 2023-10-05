@@ -8,7 +8,8 @@
 #define USB_PID 0x1001
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + 35;
-#define BUILTIN_LED    LED_BUILTIN  // backward compatibility
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 #define RGB_BUILTIN    LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
