@@ -136,13 +136,13 @@ static uint8_t msc_disk[DISK_SECTOR_COUNT][DISK_SECTOR_SIZE] =
 };
 
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize){
-  HWSerial.printf("MSC WRITE: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
+  HWSerial.printf("MSC WRITE: lba: %lu, offset: %lu, bufsize: %lu\n", lba, offset, bufsize);
   memcpy(msc_disk[lba] + offset, buffer, bufsize);
   return bufsize;
 }
 
 static int32_t onRead(uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize){
-  HWSerial.printf("MSC READ: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
+  HWSerial.printf("MSC READ: lba: %lu, offset: %lu, bufsize: %lu\n", lba, offset, bufsize);
   memcpy(buffer, msc_disk[lba] + offset, bufsize);
   return bufsize;
 }

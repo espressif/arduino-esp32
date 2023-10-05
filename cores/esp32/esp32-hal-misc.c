@@ -29,27 +29,37 @@
 #endif //CONFIG_BT_ENABLED
 #include <sys/time.h>
 #include "soc/rtc.h"
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "soc/rtc_cntl_reg.h"
 #include "soc/apb_ctrl_reg.h"
+#endif
 #include "esp_task_wdt.h"
 #include "esp32-hal.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/rtc.h"
-#include "driver/temp_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/rtc.h"
-#include "driver/temp_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
-#include "driver/temp_sensor.h"
+#elif CONFIG_IDF_TARGET_ESP32C6
+#include "esp32c6/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32H2
+#include "esp32h2/rom/rtc.h"
+
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
+
+#if SOC_TEMP_SENSOR_SUPPORTED
+#include "driver/temperature_sensor.h"
+#endif
+
 #else // ESP32 Before IDF 4.0
 #include "rom/rtc.h"
 #endif
@@ -63,15 +73,39 @@ float temperatureRead()
 {
     return (temprature_sens_read() - 32) / 1.8;
 }
-#else
+#elif SOC_TEMP_SENSOR_SUPPORTED
+static temperature_sensor_handle_t temp_sensor = NULL;
+
+static bool temperatureReadInit()
+{
+    static volatile bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        //Install temperature sensor, expected temp ranger range: 10~50 ℃
+        temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
+        if(temperature_sensor_install(&temp_sensor_config, &temp_sensor) != ESP_OK){
+            initialized = false;
+            temp_sensor = NULL;
+            log_e("temperature_sensor_install failed");
+        }
+        else if(temperature_sensor_enable(temp_sensor) != ESP_OK){
+            temperature_sensor_uninstall(temp_sensor);
+            initialized = false;
+            temp_sensor = NULL;
+            log_e("temperature_sensor_enable failed");
+        }
+    }
+    return initialized;
+}
+
 float temperatureRead()
 {
     float result = NAN;
-    temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
-    temp_sensor_set_config(tsens);
-    temp_sensor_start();
-    temp_sensor_read_celsius(&result); 
-    temp_sensor_stop();
+    if(temperatureReadInit()){
+        if(temperature_sensor_get_celsius(temp_sensor, &result) != ESP_OK){
+            log_e("temperature_sensor_get_celsius failed");
+        }
+    }
     return result;
 }
 #endif
@@ -221,6 +255,14 @@ extern bool btInUse();
 
 void initArduino()
 {
+    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
+    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
+#ifdef F_CPU
+    setCpuFrequencyMhz(F_CPU/1000000);
+#endif
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
+    psramInit();
+#endif
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
     if(!verifyRollbackLater()){
         const esp_partition_t *running = esp_ota_get_running_partition();
@@ -236,14 +278,6 @@ void initArduino()
             }
         }
     }
-#endif
-    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
-    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
-#ifdef F_CPU
-    setCpuFrequencyMhz(F_CPU/1000000);
-#endif
-#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
-    psramInit();
 #endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
     esp_err_t err = nvs_flash_init();

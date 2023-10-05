@@ -4,6 +4,9 @@
  *  Created on: Jun 22, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <sstream>
@@ -289,3 +292,4 @@ void BLEDescriptorCallbacks::onWrite(BLEDescriptor* pDescriptor) {
 
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

@@ -37,6 +37,7 @@ partitions_name = board_config.get(
 )
 
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
+FRAMEWORK_LIBS_DIR = platform.get_package_dir("framework-arduinoespressif32-libs")
 assert isdir(FRAMEWORK_DIR)
 
 
@@ -84,9 +85,7 @@ def get_bootloader_image(variants_dir):
         if isfile(env.subst(variant_bootloader))
         else generate_bootloader_image(
             join(
-                FRAMEWORK_DIR,
-                "tools",
-                "sdk",
+                FRAMEWORK_LIBS_DIR,
                 build_mcu,
                 "bin",
                 "bootloader_${__get_board_boot_mode(__env__)}_${__get_board_f_flash(__env__)}.elf",
@@ -160,11 +159,9 @@ def add_tinyuf2_extra_image():
 
 SConscript(
     join(
-        DefaultEnvironment()
-        .PioPlatform()
-        .get_package_dir("framework-arduinoespressif32"),
-        "tools",
-        "platformio-build-%s.py" % build_mcu,
+        FRAMEWORK_LIBS_DIR,
+        build_mcu,
+        "platformio-build.py",
     )
 )
 

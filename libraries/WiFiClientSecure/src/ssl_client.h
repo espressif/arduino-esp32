@@ -5,7 +5,7 @@
 #ifndef ARD_SSL_H
 #define ARD_SSL_H
 #include "mbedtls/platform.h"
-#include "mbedtls/net.h"
+#include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"

@@ -236,7 +236,7 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
 std::string FreeRTOS::Semaphore::toString() {
 	char hex[9];
 	std::string res = "name: " + m_name + " (0x";
-	snprintf(hex, sizeof(hex), "%08x", (uint32_t)m_semaphore);
+	snprintf(hex, sizeof(hex), "%08lx", (uint32_t)m_semaphore);
 	res += hex;
 	res += "), owner: " + m_owner;
 	return res;
