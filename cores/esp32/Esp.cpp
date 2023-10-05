@@ -20,7 +20,7 @@
 #include "Arduino.h"
 #include "Esp.h"
 #include "esp_sleep.h"
-#include "esp_spi_flash.h"
+#include "spi_flash_mmap.h"
 #include <memory>
 #include <soc/soc.h>
 #include <esp_partition.h>
@@ -32,6 +32,9 @@ extern "C" {
 
 #include "soc/spi_reg.h"
 #include "esp_system.h"
+#include "esp_chip_info.h"
+#include "esp_mac.h"
+#include "esp_flash.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/spi_flash.h"
@@ -48,6 +51,12 @@ extern "C" {
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/spi_flash.h"
 #define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32c3 is located at 0x0000
+#elif CONFIG_IDF_TARGET_ESP32C6
+#include "esp32c6/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32c6 is located at 0x0000
+#elif CONFIG_IDF_TARGET_ESP32H2
+#include "esp32h2/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32h2 is located at 0x0000
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -131,9 +140,7 @@ void EspClass::restart(void)
 
 uint32_t EspClass::getHeapSize(void)
 {
-    multi_heap_info_t info;
-    heap_caps_get_info(&info, MALLOC_CAP_INTERNAL);
-    return info.total_free_bytes + info.total_allocated_bytes;
+    return heap_caps_get_total_size(MALLOC_CAP_INTERNAL);
 }
 
 uint32_t EspClass::getFreeHeap(void)
@@ -154,9 +161,7 @@ uint32_t EspClass::getMaxAllocHeap(void)
 uint32_t EspClass::getPsramSize(void)
 {
 	if(psramFound()){
-	    multi_heap_info_t info;
-	    heap_caps_get_info(&info, MALLOC_CAP_SPIRAM);
-	    return info.total_free_bytes + info.total_allocated_bytes;
+	    return heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
 	}
 	return 0;
 }
@@ -255,7 +260,7 @@ uint32_t EspClass::getFreeSketchSpace () {
     return _partition->size;
 }
 
-uint8_t EspClass::getChipRevision(void)
+uint16_t EspClass::getChipRevision(void)
 {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
@@ -265,7 +270,7 @@ uint8_t EspClass::getChipRevision(void)
 const char * EspClass::getChipModel(void)
 {
 #if CONFIG_IDF_TARGET_ESP32
-    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
     uint32_t pkg_ver = chip_ver & 0x7;
     switch (pkg_ver) {
         case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6 :
@@ -303,10 +308,17 @@ const char * EspClass::getChipModel(void)
     default:
       return "ESP32-S2 (Unknown)";
     }
-#elif CONFIG_IDF_TARGET_ESP32S3
-    return "ESP32-S3";
-#elif CONFIG_IDF_TARGET_ESP32C3
-    return "ESP32-C3";
+#else
+    esp_chip_info_t chip_info;
+    esp_chip_info(&chip_info);
+    switch(chip_info.model){
+        case CHIP_ESP32S3: return "ESP32-S3";
+        case CHIP_ESP32C3: return "ESP32-C3";
+        case CHIP_ESP32C2: return "ESP32-C2";
+        case CHIP_ESP32C6: return "ESP32-C6";
+        case CHIP_ESP32H2: return "ESP32-H2";
+        default: return "UNKNOWN";
+    }
 #endif
 }
 
@@ -320,6 +332,11 @@ uint8_t EspClass::getChipCores(void)
 const char * EspClass::getSdkVersion(void)
 {
     return esp_get_idf_version();
+}
+
+const char * EspClass::getCoreVersion(void)
+{
+    return ESP_ARDUINO_VERSION_STR;
 }
 
 uint32_t ESP_getFlashChipId(void)
@@ -338,7 +355,7 @@ uint32_t EspClass::getFlashChipSize(void)
 uint32_t EspClass::getFlashChipSpeed(void)
 {
     esp_image_header_t fhdr;
-    if(flashRead(ESP_FLASH_IMAGE_BASE, (uint32_t*)&fhdr, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
+    if(esp_flash_read(esp_flash_default_chip, (void*)&fhdr, ESP_FLASH_IMAGE_BASE, sizeof(esp_image_header_t)) && fhdr.magic != ESP_IMAGE_HEADER_MAGIC) {
         return 0;
     }
     return magicFlashChipSpeed(fhdr.spi_speed);
@@ -349,7 +366,11 @@ FlashMode_t EspClass::getFlashChipMode(void)
    #if CONFIG_IDF_TARGET_ESP32S2
    uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
    #else
+   #if CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6
+   uint32_t spi_ctrl = REG_READ(DR_REG_SPI0_BASE + 0x8);
+   #else
    uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
+   #endif
    #endif
    /* Not all of the following constants are already defined in older versions of spi_reg.h, so do it manually for now*/
    if (spi_ctrl & BIT(24)) { //SPI_FREAD_QIO
@@ -413,18 +434,18 @@ FlashMode_t EspClass::magicFlashChipMode(uint8_t byte)
 
 bool EspClass::flashEraseSector(uint32_t sector)
 {
-    return spi_flash_erase_sector(sector) == ESP_OK;
+    return esp_flash_erase_region(esp_flash_default_chip, sector * SPI_FLASH_SEC_SIZE, SPI_FLASH_SEC_SIZE) == ESP_OK;
 }
 
 // Warning: These functions do not work with encrypted flash
 bool EspClass::flashWrite(uint32_t offset, uint32_t *data, size_t size)
 {
-    return spi_flash_write(offset, (uint32_t*) data, size) == ESP_OK;
+    return esp_flash_write(esp_flash_default_chip, (const void*) data, offset, size) == ESP_OK;
 }
 
 bool EspClass::flashRead(uint32_t offset, uint32_t *data, size_t size)
 {
-    return spi_flash_read(offset, (uint32_t*) data, size) == ESP_OK;
+    return esp_flash_read(esp_flash_default_chip, (void*) data, offset, size) == ESP_OK;
 }
 
 bool EspClass::partitionEraseRange(const esp_partition_t *partition, uint32_t offset, size_t size) 

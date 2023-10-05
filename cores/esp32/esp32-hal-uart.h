@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2023 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
 
 #ifndef MAIN_ESP32_HAL_UART_H_
 #define MAIN_ESP32_HAL_UART_H_
+
+#include "soc/soc_caps.h"
+#if SOC_UART_SUPPORTED
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,6 +90,15 @@ SERIAL_8O2 = 0x800003f
 #define HW_FLOWCTRL_CTS       0x2       // use only CTS PIN for HW Flow Control
 #define HW_FLOWCTRL_CTS_RTS   0x3       // use both CTS and RTS PIN for HW Flow Control
 
+// These are Hardware Uart Modes possible usage
+// equivalent to UDF enum uart_mode_t from
+// https://github.com/espressif/esp-idf/blob/master/components/hal/include/hal/uart_types.h#L34-L40
+#define MODE_UART 0x00                   // mode: regular UART mode
+#define MODE_RS485_HALF_DUPLEX 0x01      // mode: half duplex RS485 UART mode control by RTS pin
+#define MODE_IRDA 0x02                   // mode: IRDA  UART mode
+#define MODE_RS485_COLLISION_DETECT 0x03 // mode: RS485 collision detection UART mode (used for test purposes)
+#define MODE_RS485_APP_CTRL 0x04
+
 struct uart_struct_t;
 typedef struct uart_struct_t uart_t;
 
@@ -112,8 +124,8 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t* uart);
 
 void uartSetRxInvert(uart_t* uart, bool invert);
-void uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout);
-void uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull);
+bool uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout);
+bool uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull);
 void uartSetFastReading(uart_t* uart);
 
 void uartSetDebug(uart_t* uart);
@@ -123,10 +135,13 @@ bool uartIsDriverInstalled(uart_t* uart);
 
 // Negative Pin Number will keep it unmodified, thus this function can set/reset individual pins
 bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
-void uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
-void uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);
+bool uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);
+
+// Used to set RS485 function -- needs to disable HW Flow Control and set RTS pin to use
+// RTS pin becomes RS485 half duplex RE/DE
+bool uartSetMode(uart_t *uart, uint8_t mode);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
@@ -152,4 +167,5 @@ int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize);
 }
 #endif
 
+#endif /* SOC_UART_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_UART_H_ */

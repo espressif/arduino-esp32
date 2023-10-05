@@ -51,7 +51,9 @@ void i2sInit(){
     .dma_buf_len = I2S_DMA_BUF_LEN,
     .use_apll = false,
     .tx_desc_auto_clear = false,
-    .fixed_mclk = 0
+    .fixed_mclk = 0,
+    .mclk_multiple = I2S_MCLK_MULTIPLE_128,
+    .bits_per_chan = I2S_BITS_PER_CHAN_DEFAULT
   };
   Serial.printf("Attempting to setup I2S ADC with sampling frequency %d Hz\n", I2S_SAMPLE_RATE);
   if(ESP_OK != i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL)){
@@ -80,13 +82,14 @@ void setup() {
 #ifdef GENERATE_PWM
   // PWM setup
   Serial.printf("Setting up PWM: frequency = %d; resolution bits %d; Duty cycle = %d; duty value = %d, Output pin = %d\n", PWM_FREQUENCY, PWM_RESOLUTION_BITS, PWM_DUTY_PERCENT, PWM_DUTY_VALUE, OUTPUT_PIN);
-  uint32_t freq = ledcSetup(0, PWM_FREQUENCY, PWM_RESOLUTION_BITS);
+  ledcAttach(OUTPUT_PIN, PWM_FREQUENCY, PWM_RESOLUTION_BITS);
+  uint32_t freq = ledcReadFreq(OUTPUT_PIN);
+  
   if(freq != PWM_FREQUENCY){
     Serial.printf("Error setting up PWM. Halt!");
     while(1);
   }
-  ledcAttachPin(OUTPUT_PIN, 0);
-  ledcWrite(0, PWM_DUTY_VALUE);
+  ledcWrite(OUTPUT_PIN, PWM_DUTY_VALUE);
   Serial.printf("PWM setup ok\n");
 #endif
 
@@ -120,7 +123,7 @@ void loop(){
       if(read_counter == AVERAGE_EVERY_N_SAMPLES){
         averaged_reading = read_sum / AVERAGE_EVERY_N_SAMPLES;
         //Serial.printf("averaged_reading = %d over %d samples\n", averaged_reading, read_counter); // Print with additional info
-        Serial.printf("Averaged_signal:%d", averaged_reading); // Print compatible with Arduino Plotter
+        Serial.printf("Averaged_signal:%ld", averaged_reading); // Print compatible with Arduino Plotter
         read_counter = 0;
         read_sum = 0;
       }

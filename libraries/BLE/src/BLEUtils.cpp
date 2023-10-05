@@ -4,6 +4,9 @@
  *  Created on: Mar 25, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include "BLEAddress.h"
@@ -1964,8 +1967,8 @@ std::string BLEUtils::gattStatusToString(esp_gatt_status_t status) {
 			return "ESP_GATT_INVALID_CFG";
 		case ESP_GATT_SERVICE_STARTED:
 			return "ESP_GATT_SERVICE_STARTED";
-		case ESP_GATT_ENCRYPED_NO_MITM:
-			return "ESP_GATT_ENCRYPED_NO_MITM";
+		case ESP_GATT_ENCRYPTED_NO_MITM:
+			return "ESP_GATT_ENCRYPTED_NO_MITM";
 		case ESP_GATT_NOT_ENCRYPTED:
 			return "ESP_GATT_NOT_ENCRYPTED";
 		case ESP_GATT_CONGESTED:
@@ -2037,4 +2040,5 @@ const char* BLEUtils::searchEventTypeToString(esp_gap_search_evt_t searchEvt) {
 	}
 } // searchEventTypeToString
 
-#endif // CONFIG_BLUEDROID_ENABLED
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

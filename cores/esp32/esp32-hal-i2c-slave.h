@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_I2C_SUPPORT_SLAVE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,3 +36,5 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SOC_I2C_SUPPORT_SLAVE */

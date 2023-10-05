@@ -1,5 +1,28 @@
 /*
- * Connect the SD card to the following pins:
+ * pin 1 - D2                |  Micro SD card     |
+ * pin 2 - D3                |                   /
+ * pin 3 - CMD               |                  |__
+ * pin 4 - VDD (3.3V)        |                    |
+ * pin 5 - CLK               | 8 7 6 5 4 3 2 1   /
+ * pin 6 - VSS (GND)         | ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄  /
+ * pin 7 - D0                | ▀ ▀ █ ▀ █ ▀ ▀ ▀ |
+ * pin 8 - D1                |_________________|
+ *                             ║ ║ ║ ║ ║ ║ ║ ║
+ *                     ╔═══════╝ ║ ║ ║ ║ ║ ║ ╚═════════╗
+ *                     ║         ║ ║ ║ ║ ║ ╚══════╗    ║
+ *                     ║   ╔═════╝ ║ ║ ║ ╚═════╗  ║    ║
+ * Connections for     ║   ║   ╔═══╩═║═║═══╗   ║  ║    ║
+ * full-sized          ║   ║   ║   ╔═╝ ║   ║   ║  ║    ║
+ * SD card             ║   ║   ║   ║   ║   ║   ║  ║    ║
+ * ESP32-S3 DevKit  | 21  47  GND  39 3V3 GND  40 41  42  |
+ * ESP32-S3-USB-OTG | 38  37  GND  36 3V3 GND  35 34  33  |
+ * ESP32            |  4   2  GND  14 3V3 GND  15 13  12  |
+ * Pin name         | D1  D0  VSS CLK VDD VSS CMD D3  D2  |
+ * SD pin number    |  8   7   6   5   4   3   2   1   9 /
+ *                  |                                  █/
+ *                  |__▍___▊___█___█___█___█___█___█___/
+ * WARNING: ALL data pins must be pulled up to 3.3V with an external 10k Ohm resistor!
+ * Note to ESP32 pin 2 (D0): Add a 1K Ohm pull-up resistor to 3.3V after flashing
  *
  * SD Card | ESP32
  *    D2       12
@@ -163,7 +186,7 @@ void testFileIO(fs::FS &fs, const char * path){
             len -= toRead;
         }
         end = millis() - start;
-        Serial.printf("%u bytes read for %u ms\n", flen, end);
+        Serial.printf("%u bytes read for %lu ms\n", flen, end);
         file.close();
     } else {
         Serial.println("Failed to open file for reading");
@@ -182,7 +205,7 @@ void testFileIO(fs::FS &fs, const char * path){
         file.write(buf, 512);
     }
     end = millis() - start;
-    Serial.printf("%u bytes written for %u ms\n", 2048 * 512, end);
+    Serial.printf("%u bytes written for %lu ms\n", 2048 * 512, end);
     file.close();
 }
 

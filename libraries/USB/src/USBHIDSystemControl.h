@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include "USBHID.h"
 #if CONFIG_TINYUSB_HID_ENABLED
 
@@ -36,4 +40,5 @@ public:
     uint16_t _onGetDescriptor(uint8_t* buffer);
 };
 
-#endif
+#endif /* CONFIG_TINYUSB_HID_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

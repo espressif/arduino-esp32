@@ -7,6 +7,9 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLEBEACON_H_
 #define COMPONENTS_CPP_UTILS_BLEBEACON_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "BLEUUID.h"
 /**
  * @brief Representation of a beacon.
@@ -40,4 +43,5 @@ public:
 	void        setSignalPower(int8_t signalPower);
 }; // BLEBeacon
 
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEBEACON_H_ */
