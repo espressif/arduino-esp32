@@ -340,7 +340,7 @@ void set_arduino_panic_handler(arduino_panic_handler_t handler, void * arg){
     _panic_handler_arg = arg;
 }
 
-arduino_panic_handler_t * get_arduino_panic_handler(void){
+arduino_panic_handler_t get_arduino_panic_handler(void){
     return _panic_handler;
 }
 

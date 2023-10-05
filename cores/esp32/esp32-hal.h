@@ -150,7 +150,7 @@ typedef struct {
 typedef void (*arduino_panic_handler_t)(arduino_panic_info_t * info, void * arg);
 
 void set_arduino_panic_handler(arduino_panic_handler_t handler, void * arg);
-arduino_panic_handler_t * get_arduino_panic_handler(void);
+arduino_panic_handler_t get_arduino_panic_handler(void);
 void * get_arduino_panic_handler_arg(void);
 
 #ifdef __cplusplus
