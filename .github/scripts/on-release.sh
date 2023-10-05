@@ -23,7 +23,6 @@ RELEASE_PRE=`echo $EVENT_JSON | jq -r '.release.prerelease'`
 RELEASE_TAG=`echo $EVENT_JSON | jq -r '.release.tag_name'`
 RELEASE_BRANCH=`echo $EVENT_JSON | jq -r '.release.target_commitish'`
 RELEASE_ID=`echo $EVENT_JSON | jq -r '.release.id'`
-RELEASE_BODY=`echo $EVENT_JSON | jq -r '.release.body'`
 
 OUTPUT_DIR="$GITHUB_WORKSPACE/build"
 PACKAGE_NAME="esp32-$RELEASE_TAG"
@@ -195,7 +194,7 @@ find "$PKG_DIR" -name '*.git*' -type f -delete
 # Replace tools locations in platform.txt
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
-sed "s/version=.*/version=$ver$extent/g" | \
+sed "s/version=.*/version=$RELEASE_TAG/g" | \
 sed 's/tools.esp32-arduino-libs.path={runtime.platform.path}\/tools\/esp32-arduino-libs/tools.esp32-arduino-libs.path=\{runtime.tools.esp32-arduino-libs.path\}/g' | \
 sed 's/tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf/tools.xtensa-esp32-elf-gcc.path=\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf/tools.xtensa-esp32s2-elf-gcc.path=\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
@@ -330,20 +329,12 @@ if [ $? -ne 0 ]; then echo "ERROR: Get Releases Failed! ($?)"; exit 1; fi
 set +e
 prev_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false)) | sort_by(.published_at | - fromdateiso8601) | .[0].tag_name")
 prev_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false)) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
-prev_branch_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
-prev_branch_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
 shopt -s nocasematch
 if [ "$prev_release" == "$RELEASE_TAG" ]; then
     prev_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false)) | sort_by(.published_at | - fromdateiso8601) | .[1].tag_name")
 fi
 if [ "$prev_any_release" == "$RELEASE_TAG" ]; then
     prev_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false)) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
-fi
-if [ "$prev_branch_release" == "$RELEASE_TAG" ]; then
-    prev_branch_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
-fi
-if [ "$prev_branch_any_release" == "$RELEASE_TAG" ]; then
-    prev_branch_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
 fi
 shopt -u nocasematch
 set -e
