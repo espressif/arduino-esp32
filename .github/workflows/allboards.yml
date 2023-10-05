@@ -32,7 +32,11 @@ jobs:
       test-chunks: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.client_payload.branch }}
+
       - run: npm install
       - name: Setup jq
         uses: dcarbone/install-jq-action@v1.0.1
@@ -63,6 +67,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.client_payload.branch }}
 
       - name: Echo FQBNS to file
         run:

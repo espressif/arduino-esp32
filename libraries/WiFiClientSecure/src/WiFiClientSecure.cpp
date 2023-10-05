@@ -272,6 +272,7 @@ void WiFiClientSecure::setInsecure()
 void WiFiClientSecure::setCACert (const char *rootCA)
 {
     _CA_cert = rootCA;
+    _use_insecure = false;
 }
 
  void WiFiClientSecure::setCACertBundle(const uint8_t * bundle)

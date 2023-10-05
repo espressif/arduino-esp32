@@ -365,9 +365,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
                 }
             break;
 #endif
-            default:
-                log_e("Bad UART Number");
-                return;
         }
     }
 
@@ -449,7 +446,7 @@ void HardwareSerial::end(bool fullyTerminate)
         _rxPin = _txPin = _ctsPin = _rtsPin = -1;
 
     }
-    delay(10);
+
     uartEnd(_uart);
     _uart = 0;
     _destroyEventTask();

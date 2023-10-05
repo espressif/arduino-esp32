@@ -616,6 +616,9 @@ unknown_card:
 
 DSTATUS ff_sd_status(uint8_t pdrv)
 {
+    ardu_sdcard_t * card = s_cards[pdrv];
+    AcquireSPI lock(card);
+    
     if(sdTransaction(pdrv, SEND_STATUS, 0, NULL))
     {
         log_e("Check status failed");

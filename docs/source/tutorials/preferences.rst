@@ -233,9 +233,9 @@ Like so:
 
 .. code-block:: arduino
 
-   String myString = myPreferences.getString("myStringKey");
+   float myFloat = myPreferences.getFloat("pi");
 
-This will retrieve the String value from the namespace key ``"myStringKey"`` and assign it to the String type variable ``myString``. 
+This will retrieve the float value from the namespace key ``"pi"`` and assign it to the float type variable ``myFloat``.
 
 
 Summary
@@ -277,9 +277,10 @@ When started, the system has no way of knowing which of the above conditions is 
       // not the complete setup(), but in setup(), include this...
    
       stcPrefs.begin("STCPrefs", RO_MODE);           // Open our namespace (or create it
-                                                     //  if it doesn't exist) in in RO mode.
+                                                     //  if it doesn't exist) in RO mode.
       
-      bool tpInit = stcPrefs.isKey("nvsInit");       // Test for the existence of the "already initialized" key.
+      bool tpInit = stcPrefs.isKey("nvsInit");       // Test for the existence
+                                                     // of the "already initialized" key.
 
       if (tpInit == false) {
          // If tpInit is 'false', the key "nvsInit" does not yet exist therefore this 
@@ -289,13 +290,15 @@ When started, the system has no way of knowing which of the above conditions is 
        
 
          // The .begin() method created the "STCPrefs" namespace and since this is our 
-         //  first-time run we will create our keys and store the initial "factory default" values.
+         //  first-time run we will create
+         //  our keys and store the initial "factory default" values.
          stcPrefs.putUChar("curBright", 10);
          stcPrefs.putString("talChan", "one");
          stcPrefs.putLong("talMax", -220226);
          stcPrefs.putBool("ctMde", true);
          
-         stcPrefs.putBool("nvsInit", true);          // Create the "already initialized" key and store a value.
+         stcPrefs.putBool("nvsInit", true);          // Create the "already initialized"
+                                                     //  key and store a value.
          
          // The "factory defaults" are created and stored so...
          stcPrefs.end();                             // Close the namespace in RW mode and...
@@ -456,10 +459,12 @@ This is best explained with an example. Here the ``Bytes`` methods are used to s
        Serial.begin(115200);
        delay(250);
     
-       mySketchPrefs.begin("myPrefs", RW_MODE);   // open (or create) the namespace "myPrefs" in RW mode
+       mySketchPrefs.begin("myPrefs", RW_MODE);   // open (or create) the namespace
+                                                  //  "myPrefs" in RW mode
        mySketchPrefs.clear();                     // delete any previous keys in this namespace
     
-       // Create an array of test values. We're using hex numbers throughout to better show how the bytes move around.
+       // Create an array of test values. We're using hex numbers
+       //  throughout to better show how the bytes move around.
        int16_t myArray[] = { 0x1112, 0x2122, 0x3132, 0x4142, 0x5152, 0x6162, 0x7172 };
     
        Serial.println("Printing myArray...");
@@ -468,22 +473,28 @@ This is best explained with an example. Here the ``Bytes`` methods are used to s
        }
        Serial.println("\r\n");
     
-       // In the next statement, the second sizeof() needs to match the data type of the elements of myArray
-       Serial.print("The number of elements in myArray is: "); Serial.println( sizeof(myArray) / sizeof(int16_t) );
-       Serial.print("But the size of myArray in bytes is: "); Serial.println( sizeof(myArray) );
+       // In the next statement, the second sizeof() needs
+       //  to match the data type of the elements of myArray
+       Serial.print("The number of elements in myArray is: ");
+       Serial.println( sizeof(myArray) / sizeof(int16_t) );
+       Serial.print("But the size of myArray in bytes is: ");
+       Serial.println( sizeof(myArray) );
        Serial.println("");
     
-       Serial.println("Storing myArray into the Preferences namespace \"myPrefs\" against the key \"myPrefsBytes\".");
+       Serial.println(
+         "Storing myArray into the Preferences namespace \"myPrefs\" against the key \"myPrefsBytes\".");
        // Note: in the next statement, to store the entire array, we must use the 
        //  size of the arrray in bytes, not the number of elements in the array.
        mySketchPrefs.putBytes( "myPrefsBytes", myArray, sizeof(myArray) );
-       Serial.print("The size of \"myPrefsBytes\" is (in bytes): "); Serial.println( mySketchPrefs.getBytesLength("myPrefsBytes") );
+       Serial.print("The size of \"myPrefsBytes\" is (in bytes): ");
+       Serial.println( mySketchPrefs.getBytesLength("myPrefsBytes") );
        Serial.println("");
     
-       int16_t myIntBuffer[20] = {};   // No magic about 20. Just making a buffer (array) big enough.
+       int16_t myIntBuffer[20] = {}; // No magic about 20. Just making a buffer (array) big enough.
        Serial.println("Retrieving the value of myPrefsBytes into myIntBuffer.");
        Serial.println("   - Note the data type of myIntBuffer matches that of myArray");
-       mySketchPrefs.getBytes( "myPrefsBytes", myIntBuffer, mySketchPrefs.getBytesLength("myPrefsBytes") );
+       mySketchPrefs.getBytes("myPrefsBytes", myIntBuffer,
+                              mySketchPrefs.getBytesLength("myPrefsBytes"));
     
        Serial.println("Printing myIntBuffer...");
        // In the next statement, sizeof() needs to match the data type of the elements of myArray
@@ -492,9 +503,11 @@ This is best explained with an example. Here the ``Bytes`` methods are used to s
        }
        Serial.println("\r\n");
 
-       Serial.println("We can see how the data from myArray is actually stored in the namespace as follows.");
-       uint8_t myByteBuffer[40] = {};  // No magic about 40. Just making a buffer (array) big enough.
-       mySketchPrefs.getBytes( "myPrefsBytes", myByteBuffer, mySketchPrefs.getBytesLength("myPrefsBytes") );
+       Serial.println(
+         "We can see how the data from myArray is actually stored in the namespace as follows.");
+       uint8_t myByteBuffer[40] = {}; // No magic about 40. Just making a buffer (array) big enough.
+       mySketchPrefs.getBytes("myPrefsBytes", myByteBuffer,
+                              mySketchPrefs.getBytesLength("myPrefsBytes"));
     
        Serial.println("Printing myByteBuffer...");
        for (int i = 0; i < mySketchPrefs.getBytesLength("myPrefsBytes"); i++) {

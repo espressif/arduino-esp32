@@ -35,6 +35,7 @@ To use this functionality, we must be aware of some precautions:
 * Some of the GPIOs are **INPUT** only.
 * Some peripherals have output signals and must be used on GPIO's capable to be configured as **OUTPUT**.
 * Some peripherals, mostly the high speed ones, ADC, DAC, Touch, and JTAG use dedicated GPIOs pins.
+* Some pins are used to connect flash memory on the module - this prevents them from any other use - if a peripheral is routed to one of these pins the device will not be able to boot.
 
 .. warning::
     Before assigning the peripheral pins in your design, double check if the pins you're using are appropriate.
