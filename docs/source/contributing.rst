@@ -135,4 +135,4 @@ Legal Part
 
 Before a contribution can be accepted, you will need to sign our contributor agreement. You will be prompted for this automatically as part of the Pull Request process.
 
-.. _Arduino style guide: https://www.arduino.cc/en/Reference/StyleGuide
+.. _Arduino style guide: https://docs.arduino.cc/learn/contributions/arduino-writing-style-guide

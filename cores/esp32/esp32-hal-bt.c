@@ -14,6 +14,7 @@
 
 #include "esp32-hal-bt.h"
 
+#if SOC_BT_SUPPORTED
 #ifdef CONFIG_BT_ENABLED
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -101,5 +102,6 @@ bool btStop()
     return false;
 }
 
-#endif // CONFIG_BT_ENABLED
+#endif /* CONFIG_BT_ENABLED */
 
+#endif /* SOC_BT_SUPPORTED */

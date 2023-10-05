@@ -11,13 +11,13 @@ struct Button {
 
 void isr(void* param) {
   struct Button *button = (struct Button*) param;
-  button->numberKeyPresses += 1;
+  button->numberKeyPresses = button->numberKeyPresses + 1;
   button->pressed = 1;
 }
 
 void checkPressed(struct Button* button) {
   if(button->pressed) {
-    Serial.printf("Button on pin %u has been pressed %u times\n", button->PIN, button->numberKeyPresses);
+    Serial.printf("Button on pin %u has been pressed %lu times\n", button->PIN, button->numberKeyPresses);
     button->pressed = 0;
   }
 }

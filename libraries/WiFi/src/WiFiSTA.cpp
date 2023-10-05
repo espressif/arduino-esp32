@@ -43,6 +43,7 @@ extern "C" {
 #include <esp_smartconfig.h>
 #include <esp_netif.h>
 #include "esp_wpa2.h"
+#include "esp_mac.h"
 }
 
 // -----------------------------------------------------------------------------------------------------------------------

@@ -9,7 +9,7 @@
 #define __BTADVERTISEDDEVICE_H__
 
 #include "BTAddress.h"
-
+#include <string>
 
 class BTAdvertisedDevice {
 public:

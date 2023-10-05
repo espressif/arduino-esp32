@@ -30,12 +30,12 @@ This function is used to get the ADC raw value for a given pin/ADC channel.
 
 * ``pin`` GPIO pin to read analog value
   
-This function will return analog raw value.
+This function will return analog raw value (non-calibrated).
 
 analogReadMillivolts
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to get ADC value for a given pin/ADC channel in millivolts.
+This function is used to get ADC raw value for a given pin/ADC channel and convert it to calibrated result in millivolts.
 
 .. code-block:: arduino
 
@@ -43,7 +43,7 @@ This function is used to get ADC value for a given pin/ADC channel in millivolts
 
 * ``pin`` GPIO pin to read analog value
 
-This function will return analog value in millivolts.
+This function will return analog value in millivolts (calibrated).
 
 analogReadResolution
 ^^^^^^^^^^^^^^^^^^^^
@@ -61,19 +61,6 @@ Range is 1 - 16 .The default value will be used, if this function is not used.
     void analogReadResolution(uint8_t bits);
 
 * ``bits`` sets analog read resolution
-
-analogSetClockDiv
-^^^^^^^^^^^^^^^^^
-
-This function is used to set the divider for the ADC clock.
-
-Range is 1 - 255. Default value is 1.
-
-.. code-block:: arduino
-
-    void analogSetClockDiv(uint8_t clockDiv);
-
-* ``clockDiv`` sets the divider for ADC clock.
 
 analogSetAttenuation
 ^^^^^^^^^^^^^^^^^^^^
@@ -149,17 +136,6 @@ This function is used to set the attenuation for a specific pin/ADC channel. For
 * ``pin`` selects specific pin for attenuation settings.
 * ``attenuation`` sets the attenuation.
       
-adcAttachPin
-^^^^^^^^^^^^
-
-This function is used to attach the pin to ADC (it will also clear any other analog mode that could be on)
-
-.. code-block:: arduino
-
-    bool adcAttachPin(uint8_t pin);
-
-This function will return ``true`` if configuration is successful. Else returns ``false``.
-
 ADC API specific for ESP32 chip
 *******************************
 
@@ -173,30 +149,7 @@ Range is 9 - 12.
 .. code-block:: arduino
 
     void analogSetWidth(uint8_t bits);
- 
-analogSetVRefPin
-^^^^^^^^^^^^^^^^
-
-This function is used to set pin to use for ADC calibration if the esp is not already calibrated (pins 25, 26 or 27).
-
-.. code-block:: arduino
-
-    void analogSetVRefPin(uint8_t pin);
-
-* ``pin`` GPIO pin to set VRefPin for ADC calibration
   
-hallRead
-^^^^^^^^
-
-This function is used to get the ADC value of the HALL sensor conneted to pins 36(SVP) and 39(SVN).
-
-.. code-block:: arduino
-
-    int hallRead();
-    
-This function will return the hall sensor value.
-
-
 Example Applications
 ********************
 

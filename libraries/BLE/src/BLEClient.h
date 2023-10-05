@@ -8,6 +8,9 @@
 #ifndef MAIN_BLEDEVICE_H_
 #define MAIN_BLEDEVICE_H_
 
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 
@@ -100,5 +103,6 @@ public:
 	virtual void onDisconnect(BLEClient *pClient) = 0;
 };
 
-#endif // CONFIG_BLUEDROID_ENABLED
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* MAIN_BLEDEVICE_H_ */
