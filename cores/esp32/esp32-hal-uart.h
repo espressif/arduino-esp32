@@ -103,7 +103,7 @@ struct uart_struct_t;
 typedef struct uart_struct_t uart_t;
 
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted, uint8_t rxfifo_full_thrhd);
-void uartEnd(uart_t* uart);
+void uartEnd(uint8_t uart_num);
 
 // This is used to retrieve the Event Queue pointer from a UART IDF Driver in order to allow user to deal with its events
 void uartGetEventQueue(uart_t* uart, QueueHandle_t *q); 
@@ -133,8 +133,16 @@ int uartGetDebug();
 
 bool uartIsDriverInstalled(uart_t* uart);
 
-// Negative Pin Number will keep it unmodified, thus this function can set/reset individual pins
-bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+// Negative Pin Number will keep it unmodified, thus this function can set individual pins
+// When pins are changed, it will detach the previous ones
+// Can be called before or after begin()
+bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin);
+
+// helper functions
+int8_t uart_get_RxPin(uint8_t uart_num);
+int8_t uart_get_TxPin(uint8_t uart_num);
+void uart_init_PeriMan(void);
+
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
 bool uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold);

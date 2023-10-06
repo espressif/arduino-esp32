@@ -71,7 +71,7 @@ typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 class HardwareSerial: public Stream
 {
 public:
-    HardwareSerial(int uart_nr);
+    HardwareSerial(uint8_t uart_nr);
     ~HardwareSerial();
 
     // setRxTimeout sets the timeout after which onReceive callback will be called (after receiving data, it waits for this time of UART rx inactivity to call the callback fnc)
@@ -106,6 +106,11 @@ public:
     // eventQueueReset clears all events in the queue (the events that trigger onReceive and onReceiveError) - maybe usefull in some use cases
     void eventQueueReset();
  
+    // When pins are changed, it will detach the previous ones
+    // if pin is negative, it won't be set/changed and will be kept as is
+    // timeout_ms is used in baudrate detection (ESP32, ESP32S2 only)
+    // invert will invert RX/TX polarity
+    // rxfifo_full_thrhd if the UART Flow Control Threshold in the UART FIFO (max 127)
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
     void end(bool fullyTerminate = true);
     void updateBaudRate(unsigned long baud);
@@ -160,7 +165,8 @@ public:
     void setRxInvert(bool);
 
     // Negative Pin Number will keep it unmodified, thus this function can set individual pins
-    // SetPins shall be called after Serial begin()
+    // setPins() can be called after or before begin()
+    // When pins are changed, it will detach the previous ones
     bool setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
     // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
     bool setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
@@ -170,7 +176,7 @@ public:
     size_t setTxBufferSize(size_t new_size);
 
 protected:
-    int _uart_nr;
+    uint8_t _uart_nr;
     uart_t* _uart;
     size_t _rxBufferSize;
     size_t _txBufferSize;
