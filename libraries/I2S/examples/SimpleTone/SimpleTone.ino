@@ -35,7 +35,7 @@ const int bps = 16;
 
 const int halfWavelength = (sampleRate / frequency); // half wavelength of square wave
 
-short sample = amplitude; // current sample value
+int32_t sample = amplitude; // current sample value
 int count = 0;
 
 i2s_mode_t mode = I2S_PHILIPS_MODE; // I2S decoder is needed

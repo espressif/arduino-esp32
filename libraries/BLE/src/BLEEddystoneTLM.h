@@ -7,6 +7,9 @@
 
 #ifndef _BLEEddystoneTLM_H_
 #define _BLEEddystoneTLM_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "BLEUUID.h"
 
 #define EDDYSTONE_TLM_FRAME_TYPE 0x20
@@ -53,4 +56,5 @@ private:
 
 }; // BLEEddystoneTLM
 
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* _BLEEddystoneTLM_H_ */

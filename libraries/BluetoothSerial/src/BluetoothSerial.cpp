@@ -47,14 +47,14 @@ const char * _spp_server_name = "ESP32SPP";
 #define SPP_CONGESTED_TIMEOUT 1000
 
 static uint32_t _spp_client = 0;
-static xQueueHandle _spp_rx_queue = NULL;
-static xQueueHandle _spp_tx_queue = NULL;
+static QueueHandle_t _spp_rx_queue = NULL;
+static QueueHandle_t _spp_tx_queue = NULL;
 static SemaphoreHandle_t _spp_tx_done = NULL;
 static TaskHandle_t _spp_task_handle = NULL;
 static EventGroupHandle_t _spp_event_group = NULL;
 static EventGroupHandle_t _bt_event_group = NULL;
 static boolean secondConnectionAttempt;
-static esp_spp_cb_t custom_spp_callback = NULL;
+static esp_spp_cb_t * custom_spp_callback = NULL;
 static BluetoothSerialDataCb custom_data_callback = NULL;
 static esp_bd_addr_t current_bd_addr;
 static ConfirmRequestCb confirm_request_callback = NULL;
@@ -671,7 +671,9 @@ static bool _init_bt(const char *deviceName, bt_mode mode)
         return false;
     }
 
-    if (esp_spp_init(ESP_SPP_MODE_CB) != ESP_OK){
+    esp_spp_cfg_t cfg = BT_SPP_DEFAULT_CONFIG();
+    cfg.mode = ESP_SPP_MODE_CB;
+    if (esp_spp_enhanced_init(&cfg) != ESP_OK){
         log_e("spp init failed");
         return false;
     }
@@ -893,7 +895,7 @@ void BluetoothSerial::confirmReply(boolean confirm)
 }
 
 
-esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t callback)
+esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t * callback)
 {
     custom_spp_callback = callback;
     return ESP_OK;

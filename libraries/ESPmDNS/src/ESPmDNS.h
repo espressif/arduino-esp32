@@ -44,6 +44,7 @@ License (MIT license):
 #include "Arduino.h"
 #include "IPv6Address.h"
 #include "mdns.h"
+#include "esp_interface.h"
 
 //this should be defined at build time
 #ifndef ARDUINO_VARIANT
@@ -54,7 +55,10 @@ class MDNSResponder {
 public:
   MDNSResponder();
   ~MDNSResponder();
-  bool begin(const char* hostName);
+  bool begin(const String& hostName);
+  bool begin(const char* hostName){
+    return begin(String(hostName));
+  }
   void end();
 
   void setInstanceName(String name);
