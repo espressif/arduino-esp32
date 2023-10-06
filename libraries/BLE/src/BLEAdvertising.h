@@ -28,17 +28,17 @@ public:
 	void setAppearance(uint16_t appearance);
 	void setCompleteServices(BLEUUID uuid);
 	void setFlags(uint8_t);
-	void setManufacturerData(std::string data);
-	void setName(std::string name);
+	void setManufacturerData(String data);
+	void setName(String name);
 	void setPartialServices(BLEUUID uuid);
-	void setServiceData(BLEUUID uuid, std::string data);
-	void setShortName(std::string name);
-	void addData(std::string data);         // Add data to the payload.
-	std::string getPayload();               // Retrieve the current advert payload.
+	void setServiceData(BLEUUID uuid, String data);
+	void setShortName(String name);
+	void addData(String data);         // Add data to the payload.
+	String getPayload();               // Retrieve the current advert payload.
 
 private:
 	friend class BLEAdvertising;
-	std::string m_payload;   // The payload of the advertisement.
+	String m_payload;   // The payload of the advertisement.
 };   // BLEAdvertisementData
 
 
