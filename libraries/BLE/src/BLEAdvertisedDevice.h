@@ -7,6 +7,8 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
 #define COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gattc_api.h>
@@ -125,7 +127,7 @@ public:
 	virtual void onResult(BLEAdvertisedDevice advertisedDevice) = 0;
 };
 
-#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#ifdef SOC_BLE_50_SUPPORTED
 class BLEExtAdvertisingCallbacks {
 public:
 	virtual ~BLEExtAdvertisingCallbacks() {}
@@ -137,8 +139,9 @@ public:
 	 */
 	virtual void onResult(esp_ble_gap_ext_adv_reprot_t report) = 0;
 };
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#endif // SOC_BLE_50_SUPPORTED
 
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_ */

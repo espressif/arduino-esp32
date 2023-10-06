@@ -4,6 +4,9 @@
  *  Created on: Mar 22, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_bt.h>
@@ -593,5 +596,5 @@ std::string BLEClient::toString() {
 	return res;
 } // toString
 
-
-#endif // CONFIG_BLUEDROID_ENABLED
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
