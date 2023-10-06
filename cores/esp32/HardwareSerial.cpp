@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+#include <ctime>
 
 #include "pins_arduino.h"
 #include "HardwareSerial.h"
