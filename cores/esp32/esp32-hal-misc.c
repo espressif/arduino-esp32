@@ -322,3 +322,93 @@ const char * ARDUINO_ISR_ATTR pathToFileName(const char * path)
     return path+pos;
 }
 
+#include "esp_rom_sys.h"
+#include "esp_debug_helpers.h"
+#if CONFIG_IDF_TARGET_ARCH_XTENSA
+#include "esp_cpu_utils.h"
+#else
+#include "riscv/rvruntime-frames.h"
+#endif
+#include "esp_memory_utils.h"
+#include "esp_private/panic_internal.h"
+
+static arduino_panic_handler_t _panic_handler = NULL;
+static void * _panic_handler_arg = NULL;
+
+void set_arduino_panic_handler(arduino_panic_handler_t handler, void * arg){
+    _panic_handler = handler;
+    _panic_handler_arg = arg;
+}
+
+arduino_panic_handler_t get_arduino_panic_handler(void){
+    return _panic_handler;
+}
+
+void * get_arduino_panic_handler_arg(void){
+    return _panic_handler_arg;
+}
+
+static void handle_custom_backtrace(panic_info_t* info){
+    arduino_panic_info_t p_info;
+    p_info.reason = info->reason;
+    p_info.core = info->core;
+    p_info.pc = info->addr;
+    p_info.backtrace_len = 0;
+    p_info.backtrace_corrupt = false;
+    p_info.backtrace_continues = false;
+
+#if CONFIG_IDF_TARGET_ARCH_XTENSA
+    XtExcFrame *xt_frame = (XtExcFrame *) info->frame;
+    esp_backtrace_frame_t stk_frame = {.pc = xt_frame->pc, .sp = xt_frame->a1, .next_pc = xt_frame->a0, .exc_frame = xt_frame};
+    uint32_t i = 100, pc_ptr = esp_cpu_process_stack_pc(stk_frame.pc);
+    p_info.backtrace[p_info.backtrace_len++] = pc_ptr;
+
+    bool corrupted = !(esp_stack_ptr_is_sane(stk_frame.sp) &&
+                      (esp_ptr_executable((void *)esp_cpu_process_stack_pc(stk_frame.pc)) ||
+                      /* Ignore the first corrupted PC in case of InstrFetchProhibited */
+                      (stk_frame.exc_frame && ((XtExcFrame *)stk_frame.exc_frame)->exccause == EXCCAUSE_INSTR_PROHIBITED)));
+
+    while (i-- > 0 && stk_frame.next_pc != 0 && !corrupted) {
+        if (!esp_backtrace_get_next_frame(&stk_frame)) {
+            corrupted = true;
+        }
+        pc_ptr = esp_cpu_process_stack_pc(stk_frame.pc);
+        if(esp_ptr_executable((void *)pc_ptr)){
+            p_info.backtrace[p_info.backtrace_len++] = pc_ptr;
+            if(p_info.backtrace_len == 60){
+                break;
+            }
+        }
+    }
+
+    if (corrupted) {
+        p_info.backtrace_corrupt = true;
+    } else if (stk_frame.next_pc != 0) {
+        p_info.backtrace_continues = true;
+    }
+#elif CONFIG_IDF_TARGET_ARCH_RISCV
+    uint32_t sp = (uint32_t)((RvExcFrame *)info->frame)->sp;
+    p_info.backtrace[p_info.backtrace_len++] = sp;
+    uint32_t *spptr = (uint32_t *)(sp);
+    for (int i = 0; i < 256; i++){
+        if(esp_ptr_executable((void *)spptr[i])){
+            p_info.backtrace[p_info.backtrace_len++] = spptr[i];
+            if(p_info.backtrace_len == 60){
+                if(i < 255){
+                    p_info.backtrace_continues = true;
+                }
+                break;
+            }
+        }
+    }
+#endif
+    _panic_handler(&p_info, _panic_handler_arg);
+}
+
+void __real_esp_panic_handler(panic_info_t*);
+void __wrap_esp_panic_handler(panic_info_t* info) {
+    if(_panic_handler != NULL){
+        handle_custom_backtrace(info);
+    }
+    __real_esp_panic_handler(info);
+}

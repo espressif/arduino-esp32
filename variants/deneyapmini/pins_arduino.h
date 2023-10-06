@@ -9,17 +9,9 @@
 #define USB_PRODUCT        "DENEYAP MINI"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
 static const uint8_t LED_BUILTIN = 35;
-#define BUILTIN_LED LED_BUILTIN
-#define LED_BUILTIN LED_BUILTIN
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 #define LEDB        LED_BUILTIN
 #define LEDR 34
 #define LEDG 33

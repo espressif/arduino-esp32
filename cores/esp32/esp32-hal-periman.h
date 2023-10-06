@@ -17,7 +17,10 @@ extern "C"
 typedef enum {
 	ESP32_BUS_TYPE_INIT, 		// IO has not been attached to a bus yet
 	ESP32_BUS_TYPE_GPIO, 		// IO is used as GPIO
-	ESP32_BUS_TYPE_UART, 		// IO is used as UART pin
+	ESP32_BUS_TYPE_UART_RX,  	// IO is used as UART RX pin
+	ESP32_BUS_TYPE_UART_TX, 	// IO is used as UART TX pin
+	ESP32_BUS_TYPE_UART_CTS,	// IO is used as UART CTS pin
+	ESP32_BUS_TYPE_UART_RTS,	// IO is used as UART RTS pin
 #if SOC_SDM_SUPPORTED
 	ESP32_BUS_TYPE_SIGMADELTA, 	// IO is used as SigmeDelta output
 #endif
