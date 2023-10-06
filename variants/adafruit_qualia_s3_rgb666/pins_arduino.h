@@ -10,14 +10,6 @@
 #define USB_PRODUCT        "Qualia ESP32-S3 RGB666"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       2
-
-#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<EXTERNAL_NUM_INTERRUPTS)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
 static const uint8_t PCA_TFT_SCK = 0;
 static const uint8_t PCA_TFT_CS = 1;
 static const uint8_t PCA_TFT_RESET = 2;
