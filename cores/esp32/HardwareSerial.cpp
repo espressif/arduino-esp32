@@ -576,14 +576,20 @@ bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t r
     return uartSetPins(_uart_nr, rxPin, txPin, ctsPin, rtsPin);
 }
 
-// Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
-bool HardwareSerial::setHwFlowCtrlMode(uint8_t mode, uint8_t threshold)
+// Enables or disables Hardware Flow Control using RTS and/or CTS pins 
+// must use setAllPins() in order to set RTS/CTS pins
+// SerialHwFlowCtrl = UART_HW_FLOWCTRL_DISABLE, UART_HW_FLOWCTRL_RTS, 
+//                    UART_HW_FLOWCTRL_CTS, UART_HW_FLOWCTRL_CTS_RTS
+bool HardwareSerial::setHwFlowCtrlMode(SerialHwFlowCtrl mode, uint8_t threshold)
 {
     return uartSetHwFlowCtrlMode(_uart, mode, threshold);
 }
 
-// Sets the uart mode in the esp32 uart for use with RS485 modes (HwFlowCtrl must be disabled and RTS pin set)
-bool HardwareSerial::setMode(uint8_t mode)
+// Sets the uart mode in the esp32 uart for use with RS485 modes 
+// HwFlowCtrl must be disabled and RTS pin set
+// SerialMode = UART_MODE_UART, UART_MODE_RS485_HALF_DUPLEX, UART_MODE_IRDA, 
+// or testing mode: UART_MODE_RS485_COLLISION_DETECT, UART_MODE_RS485_APP_CTRL 
+bool HardwareSerial::setMode(SerialMode mode)
 {
     return uartSetMode(_uart, mode);
 }

@@ -56,6 +56,36 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 
+enum SerialConfig {
+    SERIAL_5N1 = 0x8000010,
+    SERIAL_6N1 = 0x8000014,
+    SERIAL_7N1 = 0x8000018,
+    SERIAL_8N1 = 0x800001c,
+    SERIAL_5N2 = 0x8000030,
+    SERIAL_6N2 = 0x8000034,
+    SERIAL_7N2 = 0x8000038,
+    SERIAL_8N2 = 0x800003c,
+    SERIAL_5E1 = 0x8000012,
+    SERIAL_6E1 = 0x8000016,
+    SERIAL_7E1 = 0x800001a,
+    SERIAL_8E1 = 0x800001e,
+    SERIAL_5E2 = 0x8000032,
+    SERIAL_6E2 = 0x8000036,
+    SERIAL_7E2 = 0x800003a,
+    SERIAL_8E2 = 0x800003e,
+    SERIAL_5O1 = 0x8000013,
+    SERIAL_6O1 = 0x8000017,
+    SERIAL_7O1 = 0x800001b,
+    SERIAL_8O1 = 0x800001f,
+    SERIAL_5O2 = 0x8000033,
+    SERIAL_6O2 = 0x8000037,
+    SERIAL_7O2 = 0x800003b,
+    SERIAL_8O2 = 0x800003f
+};
+
+typedef uart_mode_t SerialMode;
+typedef uart_hw_flowcontrol_t SerialHwFlowCtrl;
+
 typedef enum {
     UART_NO_ERROR,
     UART_BREAK_ERROR,
@@ -169,9 +199,18 @@ public:
     // When pins are changed, it will detach the previous ones
     bool setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
     // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
-    bool setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
+    //    UART_HW_FLOWCTRL_DISABLE = 0x0   disable hardware flow control
+    //    UART_HW_FLOWCTRL_RTS     = 0x1   enable RX hardware flow control (rts)
+    //    UART_HW_FLOWCTRL_CTS     = 0x2   enable TX hardware flow control (cts)
+    //    UART_HW_FLOWCTRL_CTS_RTS = 0x3   enable hardware flow control
+    bool setHwFlowCtrlMode(SerialHwFlowCtrl mode = UART_HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
     // Used to set RS485 modes such as UART_MODE_RS485_HALF_DUPLEX for Auto RTS function on ESP32
-    bool setMode(uint8_t mode);
+    //    UART_MODE_UART                   = 0x00    mode: regular UART mode
+    //    UART_MODE_RS485_HALF_DUPLEX      = 0x01    mode: half duplex RS485 UART mode control by RTS pin
+    //    UART_MODE_IRDA                   = 0x02    mode: IRDA  UART mode
+    //    UART_MODE_RS485_COLLISION_DETECT = 0x03    mode: RS485 collision detection UART mode (used for test purposes)
+    //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
+    bool setMode(SerialMode mode);
     size_t setRxBufferSize(size_t new_size);
     size_t setTxBufferSize(size_t new_size);
 

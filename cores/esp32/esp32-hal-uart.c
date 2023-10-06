@@ -335,14 +335,14 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
 }
 
 // 
-bool uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
+bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t threshold) {
     if(uart == NULL) {
         return false;
     }
     // IDF will issue corresponding error message when mode or threshold are wrong and prevent crashing
     // IDF will check (mode > HW_FLOWCTRL_CTS_RTS || threshold >= SOC_UART_FIFO_LEN)
     UART_MUTEX_LOCK();
-    bool retCode = (ESP_OK == uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold));
+    bool retCode = (ESP_OK == uart_set_hw_flow_ctrl(uart->num, mode, threshold));
     UART_MUTEX_UNLOCK();  
     return retCode;
 }
@@ -716,7 +716,7 @@ void uart_install_putc()
 
 // Routines that take care of UART mode in the HardwareSerial Class code
 // used to set UART_MODE_RS485_HALF_DUPLEX auto RTS for TXD for ESP32 chips
-bool uartSetMode(uart_t *uart, uint8_t mode)
+bool uartSetMode(uart_t *uart, uart_mode_t mode)
 {
     if (uart == NULL || uart->num >= SOC_UART_NUM)
     {
