@@ -254,7 +254,7 @@ LIBS_PACKAGE_SRC_URL=`cat $PACKAGE_JSON_TEMPLATE | jq -r ".packages[0].tools[] |
 
 # Download the libs package
 echo "Downloading the libs archive ..."
-# curl -o "$LIBS_PACKAGE_SRC_ZIP" -LJO --url "$LIBS_PACKAGE_SRC_URL" || exit 1
+curl -o "$LIBS_PACKAGE_SRC_ZIP" -LJO --url "$LIBS_PACKAGE_SRC_URL" || exit 1
 
 # Extract the libs package
 echo "Extracting the archive ..."
