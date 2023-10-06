@@ -108,13 +108,12 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         else if (*payLoad == 0x20)
         {
           Serial.println("Found an EddystoneTLM beacon!");
- 
           BLEEddystoneTLM eddystoneTLM;
           eddystoneTLM.setData(std::string((char*)payLoad, 14));
           Serial.printf("Reported battery voltage: %dmV\n", eddystoneTLM.getVolt());
           Serial.printf("Reported temperature: %.2f°C (raw data=0x%04X)\n", eddystoneTLM.getTemp(), eddystoneTLM.getRawTemp());
-          Serial.printf("Reported advertise count: %d\n", eddystoneTLM.getCount());
-          Serial.printf("Reported time since last reboot: %ds\n", eddystoneTLM.getTime());
+          Serial.printf("Reported advertise count: %lu\n", eddystoneTLM.getCount());
+          Serial.printf("Reported time since last reboot: %lus\n", eddystoneTLM.getTime());
           Serial.println("\n");
           Serial.print(eddystoneTLM.toString().c_str());
           Serial.println("\n");

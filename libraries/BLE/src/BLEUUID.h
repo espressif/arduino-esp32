@@ -7,6 +7,9 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLEUUID_H_
 #define COMPONENTS_CPP_UTILS_BLEUUID_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #include <string>
 #if CONFIG_BLUEDROID_ENABLED
@@ -35,5 +38,7 @@ private:
 	esp_bt_uuid_t m_uuid;       		// The underlying UUID structure that this class wraps.
 	bool          m_valueSet = false;   // Is there a value set for this instance.
 }; // BLEUUID
+
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEUUID_H_ */

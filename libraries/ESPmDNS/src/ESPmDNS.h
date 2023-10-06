@@ -44,6 +44,7 @@ License (MIT license):
 #include "Arduino.h"
 #include "IPv6Address.h"
 #include "mdns.h"
+#include "esp_interface.h"
 
 //this should be defined at build time
 #ifndef ARDUINO_VARIANT

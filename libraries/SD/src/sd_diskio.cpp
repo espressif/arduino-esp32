@@ -809,7 +809,9 @@ bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format
               log_e("alloc for f_mkfs failed");
               return false;
             }
-            res = f_mkfs(drv, FM_ANY, 0, work, sizeof(work));
+            //FRESULT f_mkfs (const TCHAR* path, const MKFS_PARM* opt, void* work, UINT len);
+            const MKFS_PARM opt = {(BYTE)FM_ANY, 0, 0, 0, 0};
+            res = f_mkfs(drv, &opt, work, sizeof(work));
             free(work);
             if (res != FR_OK) {
                 log_e("f_mkfs failed: %s", fferr2str[res]);
