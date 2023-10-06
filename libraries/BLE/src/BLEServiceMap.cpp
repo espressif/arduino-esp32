@@ -56,7 +56,7 @@ BLEService* BLEServiceMap::getByHandle(uint16_t handle) {
  * @return N/A.
  */
 void BLEServiceMap::setByUUID(BLEUUID uuid, BLEService* service) {
-	m_uuidMap.insert(std::pair<BLEService*, std::string>(service, uuid.toString()));
+	m_uuidMap.insert(std::pair<BLEService*, String>(service, uuid.toString()));
 } // setByUUID
 
 
@@ -75,8 +75,8 @@ void BLEServiceMap::setByHandle(uint16_t handle, BLEService* service) {
  * @brief Return a string representation of the service map.
  * @return A string representation of the service map.
  */
-std::string BLEServiceMap::toString() {
-	std::string res;
+String BLEServiceMap::toString() {
+	String res;
 	char hex[5];
 	for (auto &myPair: m_handleMap) {
 		res += "handle: 0x";
