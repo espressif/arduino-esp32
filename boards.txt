@@ -3678,6 +3678,8 @@ lilygo_t_display.upload.maximum_size=1310720
 lilygo_t_display.upload.maximum_data_size=327680
 lilygo_t_display.upload.wait_for_upload_port=true
 lilygo_t_display.upload.speed=460800
+lilygo_t_display.upload.flags=
+lilygo_t_display.upload.extra_flags=
 
 lilygo_t_display.bootloader.tool=esptool_py
 lilygo_t_display.bootloader.tool.default=esptool_py
