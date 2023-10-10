@@ -97,14 +97,14 @@ Changes in APIs
 * In all functions, input parameter ``rmt_obj_t* rmt`` has been changed to ``int pin``.
 * ``rmtInit`` return parameter changed to bool.
 * ``rmtInit`` input parameter ``bool tx_not_rx`` has been changed to ``rmt_ch_dir_t channel_direction``.
-* ``rmtInit`` new input parameter ``uint32_t frequency_Hz`` to set frequency of RMT channel as function ``rmtSetTick`` was removed.
-* ``rmtWrite`` now sending data in blocking mode - only returns after sending all data or by timeout. For Async mode use new ``rmtWriteAsync`` function.
+* ``rmtInit`` new input parameter ``uint32_t frequency_Hz`` to set frequency of RMT channel (as function ``rmtSetTick`` was removed).
+* ``rmtWrite`` now sending data in blocking mode. It only returns after sending all data or through a timeout. For Async mode use the new ``rmtWriteAsync`` function.
 * ``rmtWrite`` new input parameter ``uint32_t timeout_ms``.
 * ``rmtLoop`` renamed to ``rmtWriteLooping``.
 * ``rmtRead`` input parameters changed to ``int pin, rmt_data_t* data, size_t *num_rmt_symbols, uint32_t timeout_ms``.
 * ``rmtReadAsync`` input parameters changed to ``int pin, rmt_data_t* data, size_t *num_rmt_symbols``.
 * ``rmtSetRxThreshold`` renamed to ``rmtSetRxMaxThreshold`` and input parameter ``uint32_t value`` has been changed to ``uint16_t idle_thres_ticks``.
-* ``rmtSetCarrier`` input parameters ``uint32_t low, uint32_t high`` has been changed to ``uint32_t frequency_Hz, float duty_percent``.
+* ``rmtSetCarrier`` input parameters ``uint32_t low, uint32_t high`` have been changed to ``uint32_t frequency_Hz, float duty_percent``.
 
 SigmaDelta
 ----------
