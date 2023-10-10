@@ -2,7 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-
+#include "soc/soc_caps.h"
 
 #define USB_VID            0x239A
 #define USB_PID            0x8117
@@ -11,16 +11,18 @@
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
 static const uint8_t PIN_NEOPIXEL = 1;
 static const uint8_t NEOPIXEL_PIN = 1;
+
+//By making LED_BUILTIN have the same value of RGB_BUILTIN
+//NeoPixel LED can also be used as LED_BUILTIN with digitalMode() + digitalWrite()
+static const uint8_t LED_BUILTIN = PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
+#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BRIGHTNESS 64
+
 
 //static const uint8_t TFT_BACKLIGHT = 41;
 static const uint8_t TFT_DC        = 40;

@@ -24,7 +24,7 @@ BLEValue::BLEValue() {
  * The accumulation is a growing set of data that is added to until a commit or cancel.
  * @param [in] part A message part being added.
  */
-void BLEValue::addPart(std::string part) {
+void BLEValue::addPart(String part) {
 	log_v(">> addPart: length=%d", part.length());
 	m_accumulation += part;
 } // addPart
@@ -38,7 +38,7 @@ void BLEValue::addPart(std::string part) {
  */
 void BLEValue::addPart(uint8_t* pData, size_t length) {
 	log_v(">> addPart: length=%d", length);
-	m_accumulation += std::string((char*) pData, length);
+	m_accumulation += String((char*) pData, length);
 } // addPart
 
 
@@ -73,7 +73,7 @@ void BLEValue::commit() {
  * @return A pointer to the data.
  */
 uint8_t* BLEValue::getData() {
-	return (uint8_t*) m_value.data();
+	return (uint8_t*) m_value.c_str();
 }
 
 
@@ -98,7 +98,7 @@ uint16_t BLEValue::getReadOffset() {
 /**
  * @brief Get the current value.
  */
-std::string BLEValue::getValue() {
+String BLEValue::getValue() {
 	return m_value;
 } // getValue
 
@@ -115,7 +115,7 @@ void BLEValue::setReadOffset(uint16_t readOffset) {
 /**
  * @brief Set the current value.
  */
-void BLEValue::setValue(std::string value) {
+void BLEValue::setValue(String value) {
 	m_value = value;
 } // setValue
 
@@ -126,7 +126,7 @@ void BLEValue::setValue(std::string value) {
  * @param [in] The length of the new current value.
  */
 void BLEValue::setValue(uint8_t* pData, size_t length) {
-	m_value = std::string((char*) pData, length);
+	m_value = String((char*) pData, length);
 } // setValue
 
 
