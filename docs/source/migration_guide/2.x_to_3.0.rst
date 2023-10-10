@@ -41,13 +41,13 @@ I2S
 ---
 
 The I2S driver has been completely redesigned and refactored to use the new ESP-IDF driver. 
-For more information about the new API, check `I2S API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/i2s.html>`_.
+For more information about the new API, check :doc:`/api/i2s`.
 
 LEDC
 ----
 
 The LEDC API has been changed in order to support the Peripheral Manager and make it easier to use, as LEDC channels are now automatically assigned to pins.
-For more information about the new API, check `LEDC API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/ledc.html>`_.
+For more information about the new API, check :doc:`/api/ledc`.
 
 Removed APIs
 ************
@@ -71,29 +71,46 @@ Changes in APIs
 RMT
 ---
 
-TODO:
-For more information about the new API, check `RMT API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/rmt.html>`_.
+For more information about the new API, check :doc:`/api/rmt`.
 
 Removed APIs
 ************
 
-TODO:
+* ``_rmtDumpStatus``
+* ``rmtSetTick``
+* ``rmtWriteBlocking``
+* ``rmtEnd``
+* ``rmtBeginReceive``
+* ``rmtReadData``
 
 New APIs
 ********
 
-TODO:
+* ``rmtWriteAsync``
+* ``rmtTransmitCompleted``
+* ``rmtSetRxMinThreshold``
+
 
 Changes in APIs
 ***************
 
-TODO:
+* In all functions, input parameter ``rmt_obj_t* rmt`` has been changed to ``int pin``.
+* ``rmtInit`` return parameter changed to bool.
+* ``rmtInit`` input parameter ``bool tx_not_rx`` has been changed to ``rmt_ch_dir_t channel_direction``.
+* ``rmtInit`` new input parameter ``uint32_t frequency_Hz`` to set frequency of RMT channel as function ``rmtSetTick`` was removed.
+* ``rmtWrite`` now sending data in blocking mode - only returns after sending all data or by timeout. For Async mode use new ``rmtWriteAsync`` function.
+* ``rmtWrite`` new input parameter ``uint32_t timeout_ms``.
+* ``rmtLoop`` renamed to ``rmtWriteLooping``.
+* ``rmtRead`` input parameters changed to ``int pin, rmt_data_t* data, size_t *num_rmt_symbols, uint32_t timeout_ms``.
+* ``rmtReadAsync`` input parameters changed to ``int pin, rmt_data_t* data, size_t *num_rmt_symbols``.
+* ``rmtSetRxThreshold`` renamed to ``rmtSetRxMaxThreshold`` and input parameter ``uint32_t value`` has been changed to ``uint16_t idle_thres_ticks``.
+* ``rmtSetCarrier`` input parameters ``uint32_t low, uint32_t high`` has been changed to ``uint32_t frequency_Hz, float duty_percent``.
 
 SigmaDelta
 ----------
 
 SigmaDelta has been refactored to use the new ESP-IDF driver.
-For more information about the new API, check `SigmaDelta API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/sigmadelta.html>`_.
+For more information about the new API, check :doc:`/api/sigmadelta`.
 
 Removed APIs
 ************
@@ -117,8 +134,7 @@ Changes in APIs
 Timer
 -----
 
-Timer has been refactored to use the new ESP-IDF driver and its API got simplified. For more information about the new API check
-`TIMER API <https://docs.espressif.com/projects/arduino-esp32/en/latest/api/timer.html>`_.
+Timer has been refactored to use the new ESP-IDF driver and its API got simplified. For more information about the new API check :doc:`/api/timer`.
 
 Removed APIs
 ************
@@ -161,8 +177,16 @@ Removed APIs
 ************
 
 * ``uartDetachPins``
+  
+New APIs
+********
+
+* ``uart_get_RxPin`` used to get UART RX pin number.
+* ``uart_get_TxPin`` used to get UART TX pin number.
 
 Changes in APIs
 ***************
 
-* ``uartSetPins`` first input parameter ``uint8_t uart_num`` has been changed to ``uart_t* uart``.
+* ``uartEnd`` input parameter ``uart_t* uart`` has been changed to ``uint8_t uart_num``.
+* ``uartSetMode`` input parameter ``uint8_t mode`` has been changed to ``uart_mode_t mode``.
+* ``uartSetHwFlowCtrlMode`` input parameter ``uint8_t mode`` has been changed to ``uart_hw_flowcontrol_t mode``.
