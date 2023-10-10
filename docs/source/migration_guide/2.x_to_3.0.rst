@@ -170,23 +170,23 @@ Changes in APIs
   to achieve the selected frequency.
 * ``timerAttachInterrupt`` has now only 2 parameters. The ``edge`` parameter has been removed.
 
-UART
-----
-
-Removed APIs
-************
-
-* ``uartDetachPins``
-  
-New APIs
-********
-
-* ``uart_get_RxPin`` used to get UART RX pin number.
-* ``uart_get_TxPin`` used to get UART TX pin number.
+UART (HardwareSerial)
+---------------------
 
 Changes in APIs
 ***************
 
-* ``uartEnd`` input parameter ``uart_t* uart`` has been changed to ``uint8_t uart_num``.
-* ``uartSetMode`` input parameter ``uint8_t mode`` has been changed to ``uart_mode_t mode``.
-* ``uartSetHwFlowCtrlMode`` input parameter ``uint8_t mode`` has been changed to ``uart_hw_flowcontrol_t mode``.
+* ``setHwFlowCtrlMode`` input parameter ``uint8_t mode`` has been changed to ``SerialHwFlowCtrl mode``.
+* ``setMode`` input parameter ``uint8_t mode`` has been changed to ``SerialMode mode``.
+
+Functional changes
+******************
+
+* It is now possible to detach UART0 pins by calling ``end()`` with no previous call of ``begin()``.
+* It is now possible to call ``setPins()`` before ``begin()`` or in any order.
+* ``setPins(``) will detach any previous pins that have been changed.
+* ``begin(baud, rx, tx)`` will detach any previous attached pins.
+* ``setPins()`` or ``begin(baud, rx, tx)`` when called at first, will detach console RX0/TX0, attached in boot.
+* Any pin set as -1 in ``begin()`` or ``setPins()`` won't be changed nor detached.
+* ``begin(baud)`` will not change any pins that have been set before this call, through a previous ``begin(baud, rx, tx)`` or ``setPin()``.
+* If the application only uses RX or TX, ``begin(baud, -1, tx)`` or ``begin(baud, rx)`` will change only the assigned pin and keep the other unchanged.
