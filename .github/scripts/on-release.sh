@@ -191,6 +191,12 @@ echo "Cleaning up folders ..."
 find "$PKG_DIR" -name '*.DS_Store' -exec rm -f {} \;
 find "$PKG_DIR" -name '*.git*' -type f -delete
 
+##
+## TEMP WORKAROUND FOR RV32 LONG PATH ON WINDOWS
+##
+RVTC_NAME="riscv32-esp-elf-gcc"
+RVTC_NEW_NAME="esp-rv32"
+
 # Replace tools locations in platform.txt
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
@@ -200,7 +206,7 @@ sed 's/tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-es
 sed 's/tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf/tools.xtensa-esp32s2-elf-gcc.path=\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s3-elf/tools.xtensa-esp32s3-elf-gcc.path=\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp-elf-gdb.path={runtime.platform.path}\/tools\/xtensa-esp-elf-gdb/tools.xtensa-esp-elf-gdb.path=\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
-sed 's/tools.riscv32-esp-elf-gcc.path={runtime.platform.path}\/tools\/riscv32-esp-elf/tools.riscv32-esp-elf-gcc.path=\{runtime.tools.riscv32-esp-elf-gcc.path\}/g' | \
+sed "s/tools.riscv32-esp-elf-gcc.path={runtime.platform.path}\\/tools\\/riscv32-esp-elf/tools.riscv32-esp-elf-gcc.path=\\{runtime.tools.$RVTC_NEW_NAME.path\\}/g" | \
 sed 's/tools.riscv32-esp-elf-gdb.path={runtime.platform.path}\/tools\/riscv32-esp-elf-gdb/tools.riscv32-esp-elf-gdb.path=\{runtime.tools.riscv32-esp-elf-gdb.path\}/g' | \
 sed 's/tools.esptool_py.path={runtime.platform.path}\/tools\/esptool/tools.esptool_py.path=\{runtime.tools.esptool_py.path\}/g' | \
 sed 's/debug.server.openocd.path={runtime.platform.path}\/tools\/openocd-esp32\/bin\/openocd/debug.server.openocd.path=\{runtime.tools.openocd-esp32.path\}\/bin\/openocd/g' | \
@@ -301,6 +307,19 @@ libs_jq_arg="\
 cat "$PACKAGE_JSON_TEMPLATE" | jq "$libs_jq_arg" > "$OUTPUT_DIR/package-$LIBS_PROJ_NAME.json"
 # Overwrite the template location with the newly edited one
 PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME.json"
+
+##
+## TEMP WORKAROUND FOR RV32 LONG PATH ON WINDOWS
+##
+RVTC_VERSION=`cat $PACKAGE_JSON_TEMPLATE | jq -r ".packages[0].platforms[0].toolsDependencies[] | select(.name == \"$RVTC_NAME\") | .version" | cut -d '_' -f 2`
+RVTC_VERSION=`date -j -f '%Y%m%d' "$RVTC_VERSION" '+%y%m'`
+rvtc_jq_arg="\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$RVTC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$RVTC_NAME\")).name = \"$RVTC_NEW_NAME\" |\
+    (.packages[0].tools[] | select(.name==\"$RVTC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].tools[] | select(.name==\"$RVTC_NAME\")).name = \"$RVTC_NEW_NAME\""
+cat "$PACKAGE_JSON_TEMPLATE" | jq "$rvtc_jq_arg" > "$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
+PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
 
 ##
 ## PACKAGE JSON
