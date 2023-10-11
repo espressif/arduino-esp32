@@ -16063,7 +16063,10 @@ heltec_wireless_tracker.menu.FlashMode.opi.build.flash_mode=dout
 heltec_wireless_tracker.menu.FlashMode.opi.build.boot=opi
 heltec_wireless_tracker.menu.FlashMode.opi.build.boot_freq=80m
 heltec_wireless_tracker.menu.FlashMode.opi.build.flash_freq=80m
+heltec_wireless_tracker.build.defines=-D{build.band} {build.psram_val} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+heltec_wireless_tracker.build.extra_libs=-lheltec_{build.cdc_on_boot}
 
+heltec_wireless_tracker.menu.EraseFlash.none=Disabled
 heltec_wireless_tracker.menu.FlashSize.4M=4MB (32Mb)
 heltec_wireless_tracker.menu.FlashSize.4M.build.flash_size=4MB
 heltec_wireless_tracker.menu.FlashSize.8M=8MB (64Mb)
