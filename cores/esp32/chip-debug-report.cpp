@@ -253,7 +253,10 @@ static void printPerimanInfo(void){
     chip_report_printf("  %17u : ", i);
     switch(type){
       case ESP32_BUS_TYPE_GPIO: chip_report_printf("GPIO\n"); break;
-      case ESP32_BUS_TYPE_UART: chip_report_printf("UART\n"); break;
+      case ESP32_BUS_TYPE_UART_RX: chip_report_printf("UART_RX\n"); break;
+      case ESP32_BUS_TYPE_UART_TX: chip_report_printf("UART_TX\n"); break;
+      case ESP32_BUS_TYPE_UART_CTS: chip_report_printf("UART_CTS\n"); break;
+      case ESP32_BUS_TYPE_UART_RTS: chip_report_printf("UART_RTS\n"); break;
 #if SOC_SDM_SUPPORTED
       case ESP32_BUS_TYPE_SIGMADELTA: chip_report_printf("SIGMADELTA\n"); break;
 #endif

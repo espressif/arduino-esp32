@@ -1,24 +1,16 @@
 //
-// Copyright (c) 2023 Namino Team, version: 1.0.19 @ 2023-07-24
+// Copyright (c) 2023 Namino Team, version: 1.0.20 @ 2023-10-06
 //
 //
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 
 #include <stdint.h>
-#include "soc/soc_caps.h"
 
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
 #define NAMINO_ARANCIO_BOARD
-
-#define NUM_DIGITAL_PINS            SOC_GPIO_PIN_COUNT    // GPIO 0..48
-#define NUM_ANALOG_INPUTS           20                    // GPIO 1..20
-#define EXTERNAL_NUM_INTERRUPTS     NUM_DIGITAL_PINS      // All GPIOs
-#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
-#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 /* Begin Pins on ESP32-S3-WROOM-1U-N4R8 */
 static const uint8_t GPIO4       = 4;
