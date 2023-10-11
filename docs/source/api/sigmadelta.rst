@@ -58,7 +58,7 @@ If ``false`` is returned, error occurs and duty was not set.
 sigmaDeltaDetach
 ****************
 
-This function is used to detach a pin from SigmaDelta and deinit the channel that was attached to the pin.
+This function is used to detach a pin from SigmaDelta and deinitialize the channel that was attached to the pin.
 
 .. code-block:: arduino
 
