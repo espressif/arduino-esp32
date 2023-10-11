@@ -35,13 +35,13 @@ public:
 	BLECharacteristic* getByHandle(uint16_t handle);
 	BLECharacteristic* getFirst();
 	BLECharacteristic* getNext();
-	std::string toString();
+	String toString();
 	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 
 private:
-	std::map<BLECharacteristic*, std::string> m_uuidMap;
+	std::map<BLECharacteristic*, String> m_uuidMap;
 	std::map<uint16_t, BLECharacteristic*> m_handleMap;
-	std::map<BLECharacteristic*, std::string>::iterator m_iterator;
+	std::map<BLECharacteristic*, String>::iterator m_iterator;
 };
 
 
@@ -63,7 +63,7 @@ public:
 	BLEServer*         getServer();
 	void               start();
 	void			   stop();
-	std::string        toString();
+	String        toString();
 	uint16_t           getHandle();
 	uint8_t			   m_instId = 0;
 

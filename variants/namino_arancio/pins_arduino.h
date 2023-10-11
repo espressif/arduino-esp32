@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2023 Namino Team, version: 1.0.19 @ 2023-07-24
+// Copyright (c) 2023 Namino Team, version: 1.0.20 @ 2023-10-06
 //
 //
 #ifndef Pins_Arduino_h

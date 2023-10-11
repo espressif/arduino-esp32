@@ -1,27 +1,33 @@
 // This example code is in the Public Domain (or CC0 licensed, at your option.)
 // By Victor Tchistiak - 2019
 //
-// This example demonstrates master mode Bluetooth connection to a slave BT device using PIN (password)
-// defined either by String "slaveName" by default "OBDII" or by MAC address
+// This example demonstrates master mode Bluetooth connection to a slave BT device
+// defined either by String "slaveName" by default "ESP32-BT-Slave" or by MAC address
 //
 // This example creates a bridge between Serial and Classical Bluetooth (SPP)
 // This is an extension of the SerialToSerialBT example by Evandro Copercini - 2018
 //
 // DO NOT try to connect to phone or laptop - they are master
-// devices, same as the ESP using this code - it will NOT work!
+// devices, same as the ESP using this code - you will be able
+// to pair, but the serial communication will NOT work!
 //
 // You can try to flash a second ESP32 with the example SerialToSerialBT - it should
 // automatically pair with ESP32 running this code
+// Note: Pairing is authenticated automatically by this device
 
 #include "BluetoothSerial.h"
 
 #define USE_NAME // Comment this to use MAC address instead of a slaveName
-const char *pin = "1234"; // Change this to reflect the pin expected by the real slave BT device
 
-#if !defined(CONFIG_BT_SPP_ENABLED)
-#error Serial Bluetooth not available or not enabled. It is only available for the ESP32 chip.
+// Check if Bluetooth is available
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+  #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
 
+// Check Serial Port Profile
+#if !defined(CONFIG_BT_SPP_ENABLED)
+  #error Serial Port Profile for Bluetooth is not available or not enabled. It is only available for the ESP32 chip.
+#endif
 BluetoothSerial SerialBT;
 
 #ifdef USE_NAME
@@ -38,6 +44,7 @@ void setup() {
   Serial.begin(115200);
 
   SerialBT.begin(myName, true);
+  //SerialBT.deleteAllBondedDevices(); // Uncomment this to delete paired devices; Must be called after begin
   Serial.printf("The device \"%s\" started in master mode, make sure slave BT device is on!\n", myName.c_str());
 
   #ifndef USE_NAME
