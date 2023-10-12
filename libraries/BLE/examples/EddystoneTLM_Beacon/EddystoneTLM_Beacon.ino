@@ -28,6 +28,7 @@
 #include "esp_sleep.h"
 
 #define GPIO_DEEP_SLEEP_DURATION 10     // sleep x seconds and then wake up
+#define BEACON_POWER ESP_PWR_LVL_N12
 RTC_DATA_ATTR static time_t last;    // remember last boot in RTC Memory
 RTC_DATA_ATTR static uint32_t bootcount; // remember number of boots in RTC Memory
 
@@ -46,37 +47,18 @@ time_t lastTenth;
 // for the temperature value. It is a 8.8 fixed-point notation
 void setBeacon()
 {
-  char beacon_data[25];
-  uint16_t beconUUID = 0xFEAA;
-  uint16_t volt = random(2800, 3700); // 3300mV = 3.3V
-  float tempFloat = random(-3000, 3000) / 100.0f;
-  Serial.printf("Random temperature is %.2f°C\n", tempFloat);
-  int temp = (int)(tempFloat * 256);
-  Serial.printf("Converted to 8.8 format %0X%0X\n", (temp >> 8) & 0xFF, (temp & 0xFF)); 
+  BLEEddystoneTLM EddystoneTLM;
+  EddystoneTLM.setVolt((uint16_t)random(2800, 3700)); // 3300mV = 3.3V
+  EddystoneTLM.setTemp(random(-3000, 3000) / 100.0f); // 3000 = 30.00 ˚C
+  Serial.printf("Random Battery voltage is %d mV = 0x%04X\n", EddystoneTLM.getVolt(), EddystoneTLM.getVolt());
+  Serial.printf("Random temperature is %.2f°C\n", EddystoneTLM.getTemp());
+  Serial.printf("Converted to 8.8 format: 0x%04X\n", EddystoneTLM.getRawTemp());
 
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
+  oScanResponseData.setServiceData(BLEUUID((uint16_t)0xFEAA), String(EddystoneTLM.getData().c_str(), EddystoneTLM.getData().length()));
 
-  oScanResponseData.setFlags(0x06); // GENERAL_DISC_MODE 0x02 | BR_EDR_NOT_SUPPORTED 0x04
-  oScanResponseData.setCompleteServices(BLEUUID(beconUUID));
-
-  beacon_data[0] = 0x20;                // Eddystone Frame Type (Unencrypted Eddystone-TLM)
-  beacon_data[1] = 0x00;                // TLM version
-  beacon_data[2] = (volt >> 8);           // Battery voltage, 1 mV/bit i.e. 0xCE4 = 3300mV = 3.3V
-  beacon_data[3] = (volt & 0xFF);           //
-  beacon_data[4] = (temp >> 8);           // Beacon temperature
-  beacon_data[5] = (temp & 0xFF);           //
-  beacon_data[6] = ((bootcount & 0xFF000000) >> 24);  // Advertising PDU count
-  beacon_data[7] = ((bootcount & 0xFF0000) >> 16);  //
-  beacon_data[8] = ((bootcount & 0xFF00) >> 8);   //
-  beacon_data[9] = (bootcount & 0xFF);        //
-  beacon_data[10] = ((lastTenth & 0xFF000000) >> 24); // Time since power-on or reboot as 0.1 second resolution counter
-  beacon_data[11] = ((lastTenth & 0xFF0000) >> 16);   //
-  beacon_data[12] = ((lastTenth & 0xFF00) >> 8);    //
-  beacon_data[13] = (lastTenth & 0xFF);       //
-
-  oScanResponseData.setServiceData(BLEUUID(beconUUID), std::string(beacon_data, 14));
-  oAdvertisementData.setName("TLMBeacon");
+  oAdvertisementData.setName("ESP32 TLM Beacon");
   pAdvertising->setAdvertisementData(oAdvertisementData);
   pAdvertising->setScanResponseData(oScanResponseData);
 }
@@ -95,7 +77,7 @@ void setup()
   // Create the BLE Device
   BLEDevice::init("TLMBeacon");
 
-  BLEDevice::setPower(ESP_PWR_LVL_N12);
+  BLEDevice::setPower(BEACON_POWER);
 
   pAdvertising = BLEDevice::getAdvertising();
 

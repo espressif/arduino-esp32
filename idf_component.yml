@@ -23,3 +23,7 @@ files:
     - "Kconfig.projbuild"
   exclude:
     - "**/*"
+dependencies:
+  idf: ">=5.1"
+  mdns: "^1.1.0"
+  chmorgan/esp-libhelix-mp3: "1.0.3"
