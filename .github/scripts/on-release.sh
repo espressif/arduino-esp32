@@ -312,7 +312,8 @@ PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME.json"
 ## TEMP WORKAROUND FOR RV32 LONG PATH ON WINDOWS
 ##
 RVTC_VERSION=`cat $PACKAGE_JSON_TEMPLATE | jq -r ".packages[0].platforms[0].toolsDependencies[] | select(.name == \"$RVTC_NAME\") | .version" | cut -d '_' -f 2`
-RVTC_VERSION=`date -j -f '%Y%m%d' "$RVTC_VERSION" '+%y%m'`
+# RVTC_VERSION=`date -j -f '%Y%m%d' "$RVTC_VERSION" '+%y%m'` # MacOS
+RVTC_VERSION=`date -d "$RVTC_VERSION" '+%y%m'`
 rvtc_jq_arg="\
     (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$RVTC_NAME\")).version = \"$RVTC_VERSION\" |\
     (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$RVTC_NAME\")).name = \"$RVTC_NEW_NAME\" |\
