@@ -47,9 +47,9 @@ void setup() {
   WiFi.disconnect(true);  //disconnect form wifi to set new wifi connection
   WiFi.mode(WIFI_STA); //init wifi mode
 #if __has_include ("esp_eap_client.h")
-  esp_eap_clien_set_identity((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide identity
-  esp_eap_clien_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide username
-  esp_eap_clien_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD)); //provide password
+  esp_eap_client_set_identity((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide identity
+  esp_eap_client_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide username
+  esp_eap_client_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD)); //provide password
   esp_wifi_sta_enterprise_enable();
 #else
   esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide identity
