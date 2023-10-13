@@ -64,6 +64,8 @@
 #define ETH_SPI_SUPPORTS_CUSTOM 1
 
 #include "WiFi.h"
+#include "ESP_Network_Interface.h"
+
 #if ETH_SPI_SUPPORTS_CUSTOM
 #include "SPI.h"
 #endif
@@ -103,7 +105,7 @@ typedef enum {
     ETH_PHY_MAX 
 } eth_phy_type_t;
 
-class ETHClass {
+class ETHClass: public ESP_Network_Interface {
     public:
         ETHClass(uint8_t eth_index=0);
         ~ETHClass();
@@ -133,42 +135,18 @@ class ETHClass {
 
         void end();
 
-        // Netif APIs
-        esp_netif_t * netif(void){ return _esp_netif; }
-        bool config(IPAddress local_ip = (uint32_t)0x00000000, IPAddress gateway = (uint32_t)0x00000000, IPAddress subnet = (uint32_t)0x00000000, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
-        const char * getHostname();
-        bool setHostname(const char * hostname);
-        IPAddress localIP();
-        IPAddress subnetMask();
-        IPAddress gatewayIP();
-        IPAddress dnsIP(uint8_t dns_no = 0);
-        IPAddress broadcastIP();
-        IPAddress networkID();
-        uint8_t subnetCIDR();
-        bool enableIpV6();
-        IPv6Address localIPv6();
-        const char * ifkey(void);
-        const char * desc(void);
-        String impl_name(void);
-
         // Event based getters
         bool connected();
         bool hasIP();
 
         // ETH Handle APIs
-        uint8_t * macAddress(uint8_t* mac);
-        String macAddress();
         bool fullDuplex();
-        bool linkUp();
         uint8_t linkSpeed();
         bool autoNegotiation();
         uint32_t phyAddr();
 
         // Info APIs
         void printInfo(Print & out);
-
-        friend class WiFiClient;
-        friend class WiFiServer;
 
 #if ETH_SPI_SUPPORTS_CUSTOM
         static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
@@ -181,12 +159,12 @@ class ETHClass {
         esp_err_t eth_spi_write(uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
 #endif
 
+        void getMac(uint8_t* mac);
         static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
     private:
         bool _eth_started;
         esp_eth_handle_t _eth_handle;
-        esp_netif_t *_esp_netif;
         uint8_t _eth_index;
         eth_phy_type_t _phy_type;
 #if ETH_SPI_SUPPORTS_CUSTOM

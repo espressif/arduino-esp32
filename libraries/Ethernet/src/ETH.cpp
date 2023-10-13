@@ -46,7 +46,6 @@ extern void add_esp_interface_netif(esp_interface_t interface, esp_netif_t* esp_
 ETHClass::ETHClass(uint8_t eth_index)
     :_eth_started(false)
     ,_eth_handle(NULL)
-    ,_esp_netif(NULL)
     ,_eth_index(eth_index)
     ,_phy_type(ETH_PHY_MAX)
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -619,10 +618,7 @@ void ETHClass::end(void)
 {
     _eth_started = false;
 
-    if(_esp_netif != NULL){
-        esp_netif_destroy(_esp_netif);
-        _esp_netif = NULL;
-    }
+    destroyNetif();
 
     if(_eth_handle != NULL){
         if(esp_eth_stop(_eth_handle) != ESP_OK){
@@ -689,218 +685,6 @@ void ETHClass::end(void)
     }
 }
 
-bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
-{
-    if(_esp_netif == NULL){
-        return false;
-    }
-    esp_err_t err = ESP_OK;
-    esp_netif_ip_info_t info;
-    esp_netif_dns_info_t d1;
-    esp_netif_dns_info_t d2;
-    d1.ip.type = IPADDR_TYPE_V4;
-    d2.ip.type = IPADDR_TYPE_V4;
-
-    if(static_cast<uint32_t>(local_ip) != 0){
-        info.ip.addr = static_cast<uint32_t>(local_ip);
-        info.gw.addr = static_cast<uint32_t>(gateway);
-        info.netmask.addr = static_cast<uint32_t>(subnet);
-        d1.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
-        d2.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
-    } else {
-        info.ip.addr = 0;
-        info.gw.addr = 0;
-        info.netmask.addr = 0;
-        d1.ip.u_addr.ip4.addr = 0;
-        d2.ip.u_addr.ip4.addr = 0;
-	}
-
-    // Stop DHCPC
-    err = esp_netif_dhcpc_stop(_esp_netif);
-    if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
-        log_e("DHCP could not be stopped! Error: %d", err);
-        return false;
-    }
-
-    // Set IPv4, Netmask, Gateway
-    err = esp_netif_set_ip_info(_esp_netif, &info);
-    if(err != ERR_OK){
-        log_e("ETH IP could not be configured! Error: %d", err);
-        return false;
-    }
-    
-    // Set DNS1-Server
-    esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d1);
-
-    // Set DNS2-Server
-    esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_BACKUP, &d2);
-
-    // Start DHCPC if static IP was set
-    if(info.ip.addr == 0){
-        err = esp_netif_dhcpc_start(_esp_netif);
-        if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STARTED){
-            log_w("DHCP could not be started! Error: %d", err);
-            return false;
-        }
-    }
-
-    return true;
-}
-
-IPAddress ETHClass::localIP()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return IPAddress(ip.ip.addr);
-}
-
-IPAddress ETHClass::subnetMask()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return IPAddress(ip.netmask.addr);
-}
-
-IPAddress ETHClass::gatewayIP()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return IPAddress(ip.gw.addr);
-}
-
-IPAddress ETHClass::dnsIP(uint8_t dns_no)
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_dns_info_t d;
-    if(esp_netif_get_dns_info(_esp_netif, dns_no?ESP_NETIF_DNS_BACKUP:ESP_NETIF_DNS_MAIN, &d) != ESP_OK){
-        return IPAddress();
-    }
-    return IPAddress(d.ip.u_addr.ip4.addr);
-}
-
-IPAddress ETHClass::broadcastIP()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return WiFiGenericClass::calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
-}
-
-IPAddress ETHClass::networkID()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return WiFiGenericClass::calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
-}
-
-uint8_t ETHClass::subnetCIDR()
-{
-    if(_esp_netif == NULL){
-        return (uint8_t)0;
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return (uint8_t)0;
-    }
-    return WiFiGenericClass::calculateSubnetCIDR(IPAddress(ip.netmask.addr));
-}
-
-const char * ETHClass::getHostname()
-{
-    if(_esp_netif == NULL){
-        return "";
-    }
-    const char * hostname;
-    if(esp_netif_get_hostname(_esp_netif, &hostname)){
-        return NULL;
-    }
-    return hostname;
-}
-
-bool ETHClass::setHostname(const char * hostname)
-{
-    if(_esp_netif == NULL){
-        return false;
-    }
-    return esp_netif_set_hostname(_esp_netif, hostname) == 0;
-}
-
-bool ETHClass::enableIpV6()
-{
-    if(_esp_netif == NULL){
-        return false;
-    }
-    return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
-}
-
-IPv6Address ETHClass::localIPv6()
-{
-    if(_esp_netif == NULL){
-        return IPv6Address();
-    }
-    static esp_ip6_addr_t addr;
-    if(esp_netif_get_ip6_linklocal(_esp_netif, &addr)){
-        return IPv6Address();
-    }
-    return IPv6Address(addr.addr);
-}
-
-const char * ETHClass::ifkey(void)
-{
-    if(_esp_netif == NULL){
-        return "";
-    }
-    return esp_netif_get_ifkey(_esp_netif);
-}
-
-const char * ETHClass::desc(void)
-{
-    if(_esp_netif == NULL){
-        return "";
-    }
-    return esp_netif_get_desc(_esp_netif);
-}
-
-String ETHClass::impl_name(void)
-{
-    if(_esp_netif == NULL){
-        return String("");
-    }
-    char netif_name[8];
-    esp_err_t err = esp_netif_get_netif_impl_name(_esp_netif, netif_name);
-    if(err != ESP_OK){
-        log_e("Failed to get netif impl_name: %d", err);
-        return String("");
-    }
-    return String(netif_name);
-}
-
 bool ETHClass::connected()
 {
     return WiFiGenericClass::getStatusBits() & ETH_CONNECTED_BIT;
@@ -909,14 +693,6 @@ bool ETHClass::connected()
 bool ETHClass::hasIP()
 {
     return WiFiGenericClass::getStatusBits() & ETH_HAS_IP_BIT;
-}
-
-bool ETHClass::linkUp()
-{
-    if(_esp_netif == NULL){
-        return false;
-    }
-    return esp_netif_is_netif_up(_esp_netif);
 }
 
 bool ETHClass::fullDuplex()
@@ -959,25 +735,11 @@ uint8_t ETHClass::linkSpeed()
     return (link_speed == ETH_SPEED_10M)?10:100;
 }
 
-uint8_t * ETHClass::macAddress(uint8_t* mac)
+void ETHClass::getMac(uint8_t* mac)
 {
-    if(_eth_handle == NULL){
-        return NULL;
+    if(_eth_handle != NULL && mac != NULL){
+        esp_eth_ioctl(_eth_handle, ETH_CMD_G_MAC_ADDR, mac);
     }
-    if(!mac){
-        return NULL;
-    }
-    esp_eth_ioctl(_eth_handle, ETH_CMD_G_MAC_ADDR, mac);
-    return mac;
-}
-
-String ETHClass::macAddress(void)
-{
-    uint8_t mac[6] = {0,0,0,0,0,0};
-    char macStr[18] = { 0 };
-    macAddress(mac);
-    sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    return String(macStr);
 }
 
 void ETHClass::printInfo(Print & out){

@@ -934,9 +934,9 @@ int WiFiGenericClass::waitStatusBits(int bits, uint32_t timeout_ms){
     return xEventGroupWaitBits(
         _arduino_event_group,    // The event group being tested.
         bits,  // The bits within the event group to wait for.
-        pdFALSE,         // BIT_0 and BIT_4 should be cleared before returning.
-        pdTRUE,        // Don't wait for both bits, either bit will do.
-        timeout_ms / portTICK_PERIOD_MS ) & bits; // Wait a maximum of 100ms for either bit to be set.
+        pdFALSE,         // bits should be cleared before returning.
+        pdTRUE,        // Don't wait for all bits, any bit will do.
+        timeout_ms / portTICK_PERIOD_MS ) & bits; // Wait a maximum of timeout_ms for any bit to be set.
 }
 
 /**
