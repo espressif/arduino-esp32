@@ -16232,9 +16232,10 @@ heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.0.build.LORAWAN_PREAMBLE_LE
 heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.1=16(For M00 and M00L)
 heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_LENGTH=16
 
-heltec_wireless_tracker.build.defines=-D{build.band} {build.psram_val} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
-heltec_wireless_tracker.build.extra_libs=-lheltec_{build.cdc_on_boot}
-
+heltec_wireless_tracker.menu.EraseFlash.none=Disabled
+heltec_wireless_tracker.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wireless_tracker.menu.EraseFlash.all=Enabled
+heltec_wireless_tracker.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
