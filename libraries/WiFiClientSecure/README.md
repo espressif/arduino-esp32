@@ -34,7 +34,7 @@ certificate for a given server. This allows the client to connect to all public 
 
 To use this feature in PlatformIO:
 1. create a certificate bundle as described in the document below, or obtain a pre-built one you trust:
-https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_crt_bundle.htm 
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_crt_bundle.html 
 (gen_crt_bundle.py can be found in the /tools folder)
    a. note: the full bundle will take up around 64k of flash space, but has minimal RAM usage, as only
       the index of the certificates is kept in RAM

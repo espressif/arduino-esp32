@@ -7,6 +7,9 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
 #define COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h>
@@ -25,17 +28,17 @@ public:
 	void setAppearance(uint16_t appearance);
 	void setCompleteServices(BLEUUID uuid);
 	void setFlags(uint8_t);
-	void setManufacturerData(std::string data);
-	void setName(std::string name);
+	void setManufacturerData(String data);
+	void setName(String name);
 	void setPartialServices(BLEUUID uuid);
-	void setServiceData(BLEUUID uuid, std::string data);
-	void setShortName(std::string name);
-	void addData(std::string data);         // Add data to the payload.
-	std::string getPayload();               // Retrieve the current advert payload.
+	void setServiceData(BLEUUID uuid, String data);
+	void setShortName(String name);
+	void addData(String data);         // Add data to the payload.
+	String getPayload();               // Retrieve the current advert payload.
 
 private:
 	friend class BLEAdvertising;
-	std::string m_payload;   // The payload of the advertisement.
+	String m_payload;   // The payload of the advertisement.
 };   // BLEAdvertisementData
 
 
@@ -79,7 +82,7 @@ private:
 
 };
 
-#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#ifdef SOC_BLE_50_SUPPORTED
 
 class BLEMultiAdvertising
 {
@@ -107,7 +110,8 @@ public:
 	bool startPeriodicAdvertising(uint8_t instance);
 };
 
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#endif // SOC_BLE_50_SUPPORTED
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISING_H_ */

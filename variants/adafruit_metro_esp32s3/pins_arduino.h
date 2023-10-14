@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define USB_VID            0x239A
 #define USB_PID            0x8145
@@ -9,18 +10,15 @@
 #define USB_PRODUCT        "Metro ESP32-S3"
 #define USB_SERIAL         ""   // Empty string for MAC adddress
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
 #define LED_BUILTIN     13
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
+// Neopixel
 #define PIN_NEOPIXEL    45
-#define NEOPIXEL_PIN    45
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
+#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BRIGHTNESS 64
+
 #define NEOPIXEL_NUM    1
 
 #define PIN_BUTTON1     0  // BOOT0 switch

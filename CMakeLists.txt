@@ -5,8 +5,8 @@
 #   export ARDUINO_SKIP_IDF_VERSION_CHECK=1
 #   idf.py build
 
-set(min_supported_idf_version "4.4.0")
-set(max_supported_idf_version "4.4.99")
+set(min_supported_idf_version "5.1.0")
+set(max_supported_idf_version "5.1.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -25,6 +25,7 @@ endif()
 set(CORE_SRCS
   cores/esp32/base64.cpp
   cores/esp32/cbuf.cpp
+  cores/esp32/chip-debug-report.cpp
   cores/esp32/esp32-hal-adc.c
   cores/esp32/esp32-hal-bt.c
   cores/esp32/esp32-hal-cpu.c
@@ -35,6 +36,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-ledc.c
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
+  cores/esp32/esp32-hal-periman.c
   cores/esp32/esp32-hal-psram.c
   cores/esp32/esp32-hal-rgb-led.c
   cores/esp32/esp32-hal-sigmadelta.c
@@ -122,7 +124,6 @@ set(LIBRARY_SRCS
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
   libraries/WiFiClientSecure/src/ssl_client.cpp
-  libraries/WiFiClientSecure/src/esp_crt_bundle.c
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
   libraries/WiFi/src/WiFiAP.cpp
   libraries/WiFi/src/WiFiClient.cpp
@@ -208,8 +209,8 @@ set(includedirs
 
 set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash mbedtls mdns esp_adc_cal wifi_provisioning nghttp wpa_supplicant)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc esp_hid)
+set(requires spi_flash mbedtls wifi_provisioning wpa_supplicant esp_adc esp_eth http_parser)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid)
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
@@ -252,6 +253,9 @@ endfunction()
 
 maybe_add_component(esp-dsp)
 
+if(CONFIG_ESP_INSIGHTS_ENABLED)
+    maybe_add_component(esp_insights)
+endif()
 if(CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK)
     maybe_add_component(esp_rainmaker)
     maybe_add_component(qrcode)

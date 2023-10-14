@@ -26,6 +26,7 @@ jobs:
     name: Arduino ${{ matrix.chunk }} on ubuntu-latest
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
@@ -52,6 +53,7 @@ jobs:
     name: Arduino on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, macOS-latest]
 
@@ -68,6 +70,7 @@ jobs:
     name: PlatformIO on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
@@ -88,8 +91,8 @@ jobs:
         # See https://hub.docker.com/r/espressif/idf/tags and
         # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
         # for details.
-        idf_ver: ["release-v4.4"]
-        idf_target: ["esp32", "esp32s2", "esp32s3", "esp32c3"]
+        idf_ver: ["release-v5.1"]
+        idf_target: ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6", "esp32h2"]
     container: espressif/idf:${{ matrix.idf_ver }}
     steps:
       - name: Check out arduino-esp32 as a component

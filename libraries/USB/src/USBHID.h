@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "sdkconfig.h"
@@ -77,3 +81,4 @@ public:
 };
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

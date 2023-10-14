@@ -23,7 +23,6 @@ RELEASE_PRE=`echo $EVENT_JSON | jq -r '.release.prerelease'`
 RELEASE_TAG=`echo $EVENT_JSON | jq -r '.release.tag_name'`
 RELEASE_BRANCH=`echo $EVENT_JSON | jq -r '.release.target_commitish'`
 RELEASE_ID=`echo $EVENT_JSON | jq -r '.release.id'`
-RELEASE_BODY=`echo $EVENT_JSON | jq -r '.release.body'`
 
 OUTPUT_DIR="$GITHUB_WORKSPACE/build"
 PACKAGE_NAME="esp32-$RELEASE_TAG"
@@ -185,22 +184,30 @@ cp -f  "$GITHUB_WORKSPACE/tools/gen_insights_package.py"    "$PKG_DIR/tools/"
 cp -f  "$GITHUB_WORKSPACE/tools/gen_insights_package.exe"   "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/partitions"                 "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/ide-debug"                  "$PKG_DIR/tools/"
-cp -Rf "$GITHUB_WORKSPACE/tools/sdk"                        "$PKG_DIR/tools/"
-cp -f $GITHUB_WORKSPACE/tools/platformio-build*.py          "$PKG_DIR/tools/"
+cp -f  "$GITHUB_WORKSPACE/tools/platformio-build.py"        "$PKG_DIR/tools/"
 
 # Remove unnecessary files in the package folder
 echo "Cleaning up folders ..."
 find "$PKG_DIR" -name '*.DS_Store' -exec rm -f {} \;
 find "$PKG_DIR" -name '*.git*' -type f -delete
 
+##
+## TEMP WORKAROUND FOR RV32 LONG PATH ON WINDOWS
+##
+RVTC_NAME="riscv32-esp-elf-gcc"
+RVTC_NEW_NAME="esp-rv32"
+
 # Replace tools locations in platform.txt
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
-sed "s/version=.*/version=$ver$extent/g" | \
+sed "s/version=.*/version=$RELEASE_TAG/g" | \
+sed 's/tools.esp32-arduino-libs.path={runtime.platform.path}\/tools\/esp32-arduino-libs/tools.esp32-arduino-libs.path=\{runtime.tools.esp32-arduino-libs.path\}/g' | \
 sed 's/tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf/tools.xtensa-esp32-elf-gcc.path=\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf/tools.xtensa-esp32s2-elf-gcc.path=\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
 sed 's/tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s3-elf/tools.xtensa-esp32s3-elf-gcc.path=\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
-sed 's/tools.riscv32-esp-elf-gcc.path={runtime.platform.path}\/tools\/riscv32-esp-elf/tools.riscv32-esp-elf-gcc.path=\{runtime.tools.riscv32-esp-elf-gcc.path\}/g' | \
+sed 's/tools.xtensa-esp-elf-gdb.path={runtime.platform.path}\/tools\/xtensa-esp-elf-gdb/tools.xtensa-esp-elf-gdb.path=\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
+sed "s/tools.riscv32-esp-elf-gcc.path={runtime.platform.path}\\/tools\\/riscv32-esp-elf/tools.riscv32-esp-elf-gcc.path=\\{runtime.tools.$RVTC_NEW_NAME.path\\}/g" | \
+sed 's/tools.riscv32-esp-elf-gdb.path={runtime.platform.path}\/tools\/riscv32-esp-elf-gdb/tools.riscv32-esp-elf-gdb.path=\{runtime.tools.riscv32-esp-elf-gdb.path\}/g' | \
 sed 's/tools.esptool_py.path={runtime.platform.path}\/tools\/esptool/tools.esptool_py.path=\{runtime.tools.esptool_py.path\}/g' | \
 sed 's/debug.server.openocd.path={runtime.platform.path}\/tools\/openocd-esp32\/bin\/openocd/debug.server.openocd.path=\{runtime.tools.openocd-esp32.path\}\/bin\/openocd/g' | \
 sed 's/debug.server.openocd.scripts_dir={runtime.platform.path}\/tools\/openocd-esp32\/share\/openocd\/scripts\//debug.server.openocd.scripts_dir=\{runtime.tools.openocd-esp32.path\}\/share\/openocd\/scripts\//g' | \
@@ -240,6 +247,82 @@ echo "Download URL: $PACKAGE_URL"
 echo
 
 ##
+## LIBS PACKAGE ZIP
+##
+
+LIBS_PROJ_NAME="esp32-arduino-libs"
+LIBS_PKG_DIR="$OUTPUT_DIR/$LIBS_PROJ_NAME"
+LIBS_PACKAGE_ZIP="$LIBS_PROJ_NAME-$RELEASE_TAG.zip"
+
+# Get the libs package URL from the template
+LIBS_PACKAGE_SRC_ZIP="$OUTPUT_DIR/src-$LIBS_PROJ_NAME.zip"
+LIBS_PACKAGE_SRC_URL=`cat $PACKAGE_JSON_TEMPLATE | jq -r ".packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\") | .systems[0].url"`
+
+# Download the libs package
+echo "Downloading the libs archive ..."
+curl -o "$LIBS_PACKAGE_SRC_ZIP" -LJO --url "$LIBS_PACKAGE_SRC_URL" || exit 1
+
+# Extract the libs package
+echo "Extracting the archive ..."
+unzip -q -d "$OUTPUT_DIR" "$LIBS_PACKAGE_SRC_ZIP" || exit 1
+EXTRACTED_DIR=`ls "$OUTPUT_DIR" | grep "^$LIBS_PROJ_NAME"`
+mv "$OUTPUT_DIR/$EXTRACTED_DIR" "$LIBS_PKG_DIR" || exit 1
+
+# Remove unnecessary files in the package folder
+echo "Cleaning up folders ..."
+find "$LIBS_PKG_DIR" -name '*.DS_Store' -exec rm -f {} \;
+find "$LIBS_PKG_DIR" -name '*.git*' -type f -delete
+
+# Compress package folder
+echo "Creating ZIP ..."
+pushd "$OUTPUT_DIR" >/dev/null
+zip -qr "$LIBS_PACKAGE_ZIP" "$LIBS_PROJ_NAME"
+if [ $? -ne 0 ]; then echo "ERROR: Failed to create $LIBS_PACKAGE_ZIP ($?)"; exit 1; fi
+
+# Calculate SHA-256
+echo "Calculating SHA sum ..."
+LIBS_PACKAGE_PATH="$OUTPUT_DIR/$LIBS_PACKAGE_ZIP"
+LIBS_PACKAGE_SHA=`shasum -a 256 "$LIBS_PACKAGE_ZIP" | cut -f 1 -d ' '`
+LIBS_PACKAGE_SIZE=`get_file_size "$LIBS_PACKAGE_ZIP"`
+popd >/dev/null
+rm -rf "$LIBS_PKG_DIR"
+echo "'$LIBS_PACKAGE_ZIP' Created! Size: $LIBS_PACKAGE_SIZE, SHA-256: $LIBS_PACKAGE_SHA"
+echo
+
+# Upload package to release page
+echo "Uploading libs package to release page ..."
+LIBS_PACKAGE_URL=`git_safe_upload_asset "$LIBS_PACKAGE_PATH"`
+echo "Libs Package Uploaded"
+echo "Libs Download URL: $LIBS_PACKAGE_URL"
+echo
+
+# Construct JQ argument with libs package data
+libs_jq_arg="\
+    (.packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\")).systems[].url = \"$LIBS_PACKAGE_URL\" |\
+    (.packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\")).systems[].archiveFileName = \"$LIBS_PACKAGE_ZIP\" |\
+    (.packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\")).systems[].size = \"$LIBS_PACKAGE_SIZE\" |\
+    (.packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\")).systems[].checksum = \"SHA-256:$LIBS_PACKAGE_SHA\""
+
+# Update template values for the libs package and store it in the build folder
+cat "$PACKAGE_JSON_TEMPLATE" | jq "$libs_jq_arg" > "$OUTPUT_DIR/package-$LIBS_PROJ_NAME.json"
+# Overwrite the template location with the newly edited one
+PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME.json"
+
+##
+## TEMP WORKAROUND FOR RV32 LONG PATH ON WINDOWS
+##
+RVTC_VERSION=`cat $PACKAGE_JSON_TEMPLATE | jq -r ".packages[0].platforms[0].toolsDependencies[] | select(.name == \"$RVTC_NAME\") | .version" | cut -d '_' -f 2`
+# RVTC_VERSION=`date -j -f '%Y%m%d' "$RVTC_VERSION" '+%y%m'` # MacOS
+RVTC_VERSION=`date -d "$RVTC_VERSION" '+%y%m'`
+rvtc_jq_arg="\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$RVTC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$RVTC_NAME\")).name = \"$RVTC_NEW_NAME\" |\
+    (.packages[0].tools[] | select(.name==\"$RVTC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].tools[] | select(.name==\"$RVTC_NAME\")).name = \"$RVTC_NEW_NAME\""
+cat "$PACKAGE_JSON_TEMPLATE" | jq "$rvtc_jq_arg" > "$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
+PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
+
+##
 ## PACKAGE JSON
 ##
 
@@ -266,20 +349,12 @@ if [ $? -ne 0 ]; then echo "ERROR: Get Releases Failed! ($?)"; exit 1; fi
 set +e
 prev_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false)) | sort_by(.published_at | - fromdateiso8601) | .[0].tag_name")
 prev_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false)) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
-prev_branch_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
-prev_branch_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[0].tag_name")
 shopt -s nocasematch
 if [ "$prev_release" == "$RELEASE_TAG" ]; then
     prev_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false)) | sort_by(.published_at | - fromdateiso8601) | .[1].tag_name")
 fi
 if [ "$prev_any_release" == "$RELEASE_TAG" ]; then
     prev_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false)) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
-fi
-if [ "$prev_branch_release" == "$RELEASE_TAG" ]; then
-    prev_branch_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .prerelease == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
-fi
-if [ "$prev_branch_any_release" == "$RELEASE_TAG" ]; then
-    prev_branch_any_release=$(echo "$releasesJson" | jq -e -r ". | map(select(.draft == false and .target_commitish == \"$RELEASE_BRANCH\")) | sort_by(.published_at | - fromdateiso8601)  | .[1].tag_name")
 fi
 shopt -u nocasematch
 set -e
@@ -313,97 +388,6 @@ if [ "$RELEASE_PRE" == "false" ]; then
     echo
 fi
 
-##
-## RELEASE NOTES
-##
-
-# Create release notes
-echo "Preparing release notes ..."
-releaseNotes=""
-
-# Process annotated tags
-relNotesRaw=`git -C "$GITHUB_WORKSPACE" show -s --format=%b $RELEASE_TAG`
-readarray -t msgArray <<<"$relNotesRaw"
-arrLen=${#msgArray[@]}
-if [ $arrLen > 3 ] && [ "${msgArray[0]:0:3}" == "tag" ]; then
-    ind=3
-    while [ $ind -lt $arrLen ]; do
-        if [ $ind -eq 3 ]; then
-            releaseNotes="#### ${msgArray[ind]}"
-            releaseNotes+=$'\r\n'
-        else
-            oneLine="$(echo -e "${msgArray[ind]}" | sed -e 's/^[[:space:]]*//')"
-            if [ ${#oneLine} -gt 0 ]; then
-                if [ "${oneLine:0:2}" == "* " ]; then oneLine=$(echo ${oneLine/\*/-}); fi
-                if [ "${oneLine:0:2}" != "- " ]; then releaseNotes+="- "; fi
-                releaseNotes+="$oneLine"
-                releaseNotes+=$'\r\n'
-            fi
-        fi
-        let ind=$ind+1
-    done
-fi
-
-# Append Commit Messages
-echo
-echo "Previous Branch Release: $prev_branch_release"
-echo "Previous Branch (any)release: $prev_branch_any_release"
-echo
-commitFile="$OUTPUT_DIR/commits.txt"
-COMMITS_SINCE_RELEASE="$prev_branch_any_release"
-if [ "$RELEASE_PRE" == "false" ]; then
-    COMMITS_SINCE_RELEASE="$prev_branch_release"
-fi
-if [ ! -z "$COMMITS_SINCE_RELEASE" ] && [ "$COMMITS_SINCE_RELEASE" != "null" ]; then
-    echo "Getting commits since $COMMITS_SINCE_RELEASE ..."
-    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 "$COMMITS_SINCE_RELEASE..HEAD" > "$commitFile"
-elif [ "$RELEASE_BRANCH" != "master" ]; then
-    echo "Getting all commits on branch '$RELEASE_BRANCH' ..."
-    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 --cherry-pick --left-only --no-merges HEAD...origin/master > "$commitFile"
-else
-    echo "Getting all commits on master ..."
-    git -C "$GITHUB_WORKSPACE" log --oneline -n 500 --no-merges > "$commitFile"
-fi
-releaseNotes+=$'\r\n##### Commits\r\n'
-IFS=$'\n'
-for next in `cat $commitFile`
-do
-    IFS=' ' read -r commitId commitMsg <<< "$next"
-    commitLine="- [$commitId](https://github.com/$GITHUB_REPOSITORY/commit/$commitId) $commitMsg"
-    releaseNotes+="$commitLine"
-    releaseNotes+=$'\r\n'
-done
-rm -f $commitFile
-
-# Prepend the original release body
-if [ "${RELEASE_BODY: -1}" == $'\r' ]; then
-    RELEASE_BODY="${RELEASE_BODY:0:-1}"
-else
-    RELEASE_BODY="$RELEASE_BODY"
-fi
-RELEASE_BODY+=$'\r\n'
-releaseNotes="$RELEASE_BODY$releaseNotes"
-
-# Update release page
-echo "Updating release notes ..."
-releaseNotes=$(printf '%s' "$releaseNotes" | python -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
-releaseNotes=${releaseNotes:1:-1}
-curlData="{\"body\": \"$releaseNotes\"}"
-releaseData=`curl --data "$curlData" "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID?access_token=$GITHUB_TOKEN" 2>/dev/null`
-if [ $? -ne 0 ]; then echo "ERROR: Updating Release Failed: $?"; exit 1; fi
-echo "Release notes successfully updated"
-echo
-
-##
-## SUBMODULE VERSIONS
-##
-
-# Upload submodules versions
-echo "Generating submodules.txt ..."
-git -C "$GITHUB_WORKSPACE" submodule status > "$OUTPUT_DIR/submodules.txt"
-echo "Uploading submodules.txt ..."
-echo "Download URL: "`git_safe_upload_asset "$OUTPUT_DIR/submodules.txt"`
-echo ""
 set +e
 
 ##

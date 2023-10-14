@@ -7,6 +7,9 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLESCAN_H_
 #define COMPONENTS_CPP_UTILS_BLESCAN_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h>
@@ -50,7 +53,7 @@ public:
 
 private:
 	friend BLEScan;
-	std::map<std::string, BLEAdvertisedDevice*> m_vectorAdvertisedDevices;
+	std::map<String, BLEAdvertisedDevice*> m_vectorAdvertisedDevices;
 };
 
 /**
@@ -74,7 +77,7 @@ public:
 	BLEScanResults getResults();
 	void			clearResults();
 
-#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#ifdef SOC_BLE_50_SUPPORTED
 	void setExtendedScanCallback(BLEExtAdvertisingCallbacks* cb);
 	void setPeriodicScanCallback(BLEPeriodicScanCallbacks* cb);
 
@@ -85,7 +88,7 @@ public:
 private:
 	BLEExtAdvertisingCallbacks* m_pExtendedScanCb = nullptr;
 	BLEPeriodicScanCallbacks* m_pPeriodicScanCb = nullptr;
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#endif // SOC_BLE_50_SUPPORTED
 
 private:
 	BLEScan();   // One doesn't create a new instance instead one asks the BLEDevice for the singleton.
@@ -119,4 +122,5 @@ public:
 };
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLESCAN_H_ */
