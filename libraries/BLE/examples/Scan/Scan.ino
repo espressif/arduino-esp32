@@ -31,9 +31,9 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  BLEScanResults foundDevices = pBLEScan->start(scanTime, false);
+  BLEScanResults *foundDevices = pBLEScan->start(scanTime, false);
   Serial.print("Devices found: ");
-  Serial.println(foundDevices.getCount());
+  Serial.println(foundDevices->getCount());
   Serial.println("Scan done!");
   pBLEScan->clearResults();   // delete results fromBLEScan buffer to release memory
   delay(2000);
