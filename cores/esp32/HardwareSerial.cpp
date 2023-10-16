@@ -183,7 +183,7 @@ _eventTask(NULL)
 
 HardwareSerial::~HardwareSerial()
 {
-    end();
+    end(true); // explicit Full UART termination
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(_lock != NULL){
         vSemaphoreDelete(_lock);
@@ -398,7 +398,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     if(_uart) {
         // in this case it is a begin() over a previous begin() - maybe to change baud rate
         // thus do not disable debug output
-        end(false);
+        end(false);  // disables IDF UART driver and UART event Task + sets _uart to NULL
     }
 
     // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
@@ -413,7 +413,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
             yield();
         }
 
-        end(false);
+        end(false);  // disables IDF UART driver and UART event Task + sets _uart to NULL
 
         if(detectedBaudRate) {
             delay(100); // Give some time...
@@ -470,10 +470,8 @@ void HardwareSerial::end(bool fullyTerminate)
       // do not invalidate callbacks, detach pins, invalidate DBG output
       uart_driver_delete(_uart_nr);
     }
-
-    uartEnd(_uart_nr);
-    _uart = 0;
-    _destroyEventTask();
+    _destroyEventTask(); // when IDF uart driver is deleted, _eventTask must finish too
+    _uart = NULL;
 }
 
 void HardwareSerial::setDebugOutput(bool en)

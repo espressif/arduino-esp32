@@ -426,11 +426,11 @@ bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), b
  * @param [in] duration The duration in seconds for which to scan.
  * @return The BLEScanResults.
  */
-BLEScanResults BLEScan::start(uint32_t duration, bool is_continue) {
+BLEScanResults* BLEScan::start(uint32_t duration, bool is_continue) {
 	if(start(duration, nullptr, is_continue)) {
 		m_semaphoreScanEnd.wait("start");   // Wait for the semaphore to release.
 	}
-	return m_scanResults;
+	return &m_scanResults;
 } // start
 
 
@@ -500,8 +500,8 @@ BLEAdvertisedDevice BLEScanResults::getDevice(uint32_t i) {
 	return dev;
 }
 
-BLEScanResults BLEScan::getResults() {
-	return m_scanResults;
+BLEScanResults* BLEScan::getResults() {
+	return &m_scanResults;
 }
 
 void BLEScan::clearResults() {
