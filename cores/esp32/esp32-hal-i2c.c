@@ -370,7 +370,7 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
         i2c_hal_context_t hal;
         hal.dev = I2C_LL_GET_HW(i2c_num);
 #if SOC_I2C_SUPPORT_RTC
-        if(src_clk == I2C_SCLK_REF_TICK){
+        if(src_clk == I2C_SCLK_RTC){
             periph_rtc_dig_clk8m_enable();
         }
 #endif
