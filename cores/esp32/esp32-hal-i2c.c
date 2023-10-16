@@ -30,6 +30,13 @@
 #include "driver/i2c.h"
 #include "esp32-hal-periman.h"
 
+#if SOC_I2C_SUPPORT_APB || SOC_I2C_SUPPORT_XTAL
+#include "esp_private/esp_clk.h"
+#endif
+#if SOC_I2C_SUPPORT_RTC
+#include "clk_ctrl_os.h"
+#endif
+
 typedef volatile struct {
     bool initialized;
     uint32_t frequency;
@@ -303,11 +310,6 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
     } else if(frequency > 1000000UL){
         frequency = 1000000UL;
     }
-    // Freq limitation when using different clock sources
-    #define I2C_CLK_LIMIT_REF_TICK            (1 * 1000 * 1000 / 20)    /*!< Limited by REF_TICK, no more than REF_TICK/20*/
-    #define I2C_CLK_LIMIT_APB                 (80 * 1000 * 1000 / 20)   /*!< Limited by APB, no more than APB/20*/
-    #define I2C_CLK_LIMIT_RTC                 (20 * 1000 * 1000 / 20)   /*!< Limited by RTC, no more than RTC/20*/
-    #define I2C_CLK_LIMIT_XTAL                (40 * 1000 * 1000 / 20)   /*!< Limited by RTC, no more than XTAL/20*/
 
     typedef struct {
         soc_module_clk_t clk;       /*!< I2C source clock */
@@ -332,22 +334,22 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
     } i2c_sclk_t;
 
     // i2c clock characteristic, The order is the same as i2c_sclk_t.
-    static i2c_clk_alloc_t i2c_clk_alloc[I2C_SCLK_MAX] = {
+    i2c_clk_alloc_t i2c_clk_alloc[I2C_SCLK_MAX] = {
         {0, 0},
     #if SOC_I2C_SUPPORT_APB
-        {SOC_MOD_CLK_APB, I2C_CLK_LIMIT_APB},          /*!< I2C APB clock characteristic*/
+        {SOC_MOD_CLK_APB, esp_clk_apb_freq()},          /*!< I2C APB clock characteristic*/
     #endif
     #if SOC_I2C_SUPPORT_XTAL
-        {SOC_MOD_CLK_XTAL, I2C_CLK_LIMIT_XTAL},        /*!< I2C XTAL characteristic*/
+        {SOC_MOD_CLK_XTAL, esp_clk_xtal_freq()},        /*!< I2C XTAL characteristic*/
     #endif
     #if SOC_I2C_SUPPORT_RTC
-        {SOC_MOD_CLK_RC_FAST, I2C_CLK_LIMIT_RTC},      /*!< I2C 20M RTC characteristic*/
+        {SOC_MOD_CLK_RC_FAST, periph_rtc_dig_clk8m_get_freq()},      /*!< I2C 20M RTC characteristic*/
     #endif
     #if SOC_I2C_SUPPORT_REF_TICK
-        {SOC_MOD_CLK_REF_TICK, I2C_CLK_LIMIT_REF_TICK},/*!< I2C REF_TICK characteristic*/
+        {SOC_MOD_CLK_REF_TICK, REF_CLK_FREQ},/*!< I2C REF_TICK characteristic*/
     #endif
     };
-
+    
     i2c_sclk_t src_clk = I2C_SCLK_DEFAULT;
     ret = ESP_OK;
     for (i2c_sclk_t clk = I2C_SCLK_DEFAULT + 1; clk < I2C_SCLK_MAX; clk++) {
@@ -367,6 +369,11 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
     } else {
         i2c_hal_context_t hal;
         hal.dev = I2C_LL_GET_HW(i2c_num);
+#if SOC_I2C_SUPPORT_RTC
+        if(src_clk == I2C_SCLK_RTC){
+            periph_rtc_dig_clk8m_enable();
+        }
+#endif
         i2c_hal_set_bus_timing(&(hal), frequency, i2c_clk_alloc[src_clk].clk, i2c_clk_alloc[src_clk].clk_freq);
         bus[i2c_num].frequency = frequency;
         //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2
