@@ -1,10 +1,11 @@
 #include "ESP_I2S.h"
+#include "esp32-hal-periman.h"
 #include "wav_header.h"
 #include "mp3dec.h"
 
 #define I2S_READ_CHUNK_SIZE 1920
 
-#define I2S_STD_DEFAULT_CFG() { \
+#define I2S_DEFAULT_CFG() { \
     .id = I2S_NUM_AUTO,         \
     .role = I2S_ROLE_MASTER,    \
     .dma_desc_num = 6,          \
@@ -29,6 +30,86 @@
             },                                                                       \
         },                                                                           \
     }
+
+#define I2S_TDM_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode, _mask)                  \
+    {                                                                                       \
+        .clk_cfg = I2S_TDM_CLK_DEFAULT_CONFIG(_sample_rate),                                \
+        .slot_cfg = I2S_TDM_PHILIP_SLOT_DEFAULT_CONFIG(_data_bit_width, _slot_mode, _mask), \
+        .gpio_cfg = {                                                                       \
+            .mclk = (gpio_num_t)_mclk,                                                      \
+            .bclk = (gpio_num_t)_bclk,                                                      \
+            .ws   = (gpio_num_t)_ws,                                                        \
+            .dout = (gpio_num_t)_dout,                                                      \
+            .din  = (gpio_num_t)_din,                                                       \
+            .invert_flags = {                                                               \
+                .mclk_inv = _mclk_inv,                                                      \
+                .bclk_inv = _bclk_inv,                                                      \
+                .ws_inv = _ws_inv,                                                          \
+            },                                                                              \
+        },                                                                                  \
+    }
+
+#if (SOC_I2S_PDM_MAX_TX_LINES > 1)
+    #define I2S_PDM_TX_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode)               \
+        {                                                                                \
+            .clk_cfg = I2S_PDM_TX_CLK_DEFAULT_CONFIG(_sample_rate),                      \
+            .slot_cfg = I2S_PDM_TX_SLOT_DEFAULT_CONFIG(_data_bit_width, _slot_mode),     \
+            .gpio_cfg = {                                                                \
+                .clk = (gpio_num_t)_tx_clk,                                              \
+                .dout = (gpio_num_t)_tx_dout0,                                           \
+                .dout2  = (gpio_num_t)_tx_dout1,                                         \
+                .invert_flags = {                                                        \
+                    .clk_inv = _tx_clk_inv,                                              \
+                },                                                                       \
+            },                                                                           \
+        }
+#else
+    #define I2S_PDM_TX_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode)               \
+        {                                                                                \
+            .clk_cfg = I2S_PDM_TX_CLK_DEFAULT_CONFIG(_sample_rate),                      \
+            .slot_cfg = I2S_PDM_TX_SLOT_DEFAULT_CONFIG(_data_bit_width, _slot_mode),     \
+            .gpio_cfg = {                                                                \
+                .clk = (gpio_num_t)_tx_clk,                                              \
+                .dout = (gpio_num_t)_tx_dout0,                                           \
+                .invert_flags = {                                                        \
+                    .clk_inv = _tx_clk_inv,                                              \
+                },                                                                       \
+            },                                                                           \
+        }
+#endif
+
+#if (SOC_I2S_PDM_MAX_RX_LINES > 1)
+    #define I2S_PDM_RX_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode)               \
+        {                                                                                \
+            .clk_cfg = I2S_PDM_RX_CLK_DEFAULT_CONFIG(_sample_rate),                      \
+            .slot_cfg = I2S_PDM_RX_SLOT_DEFAULT_CONFIG(_data_bit_width, _slot_mode),     \
+            .gpio_cfg = {                                                                \
+                .clk = (gpio_num_t)_rx_clk,                                              \
+                .dins = {                                                                \
+                    (gpio_num_t)_rx_din0,                                                \
+                    (gpio_num_t)_rx_din1,                                                \
+                    (gpio_num_t)_rx_din2,                                                \
+                    (gpio_num_t)_rx_din3,                                                \
+                },                                                                       \
+                .invert_flags = {                                                        \
+                    .clk_inv = _rx_clk_inv,                                              \
+                },                                                                       \
+            },                                                                           \
+        }
+#else
+    #define I2S_PDM_RX_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode)               \
+        {                                                                                \
+            .clk_cfg = I2S_PDM_RX_CLK_DEFAULT_CONFIG(_sample_rate),                      \
+            .slot_cfg = I2S_PDM_RX_SLOT_DEFAULT_CONFIG(_data_bit_width, _slot_mode),     \
+            .gpio_cfg = {                                                                \
+                .clk = (gpio_num_t)_rx_clk,                                              \
+                .din = (gpio_num_t)_rx_din0,                                             \
+                .invert_flags = {                                                        \
+                    .clk_inv = _rx_clk_inv,                                              \
+                },                                                                       \
+            },                                                                           \
+        }
+#endif
 
 #define I2S_ERROR_CHECK_RETURN(x,r) do { last_error = (x); if(unlikely(last_error != ESP_OK)){ log_e("ERROR: %s", esp_err_to_name(last_error)); return (r); } } while(0)
 #define I2S_ERROR_CHECK_RETURN_FALSE(x) I2S_ERROR_CHECK_RETURN(x,false)
@@ -110,12 +191,33 @@ I2SClass::I2SClass(){
     _mclk_inv = false;
     _bclk_inv = false;
     _ws_inv = false;
+
+    _tx_clk = -1;
+    _tx_dout0 = -1;
+    _tx_dout1 = -1;
+    _tx_clk_inv = false;
+
+    _rx_clk = -1;
+    _rx_din0 = -1;
+    _rx_din1 = -1;
+    _rx_din2 = -1;
+    _rx_din3 = -1;
+    _rx_clk_inv = false;
 }
 
 I2SClass::~I2SClass(){
   end();
 }
 
+bool I2SClass::i2sDetachBus(void * bus_pointer){
+    I2SClass *bus = (I2SClass *) bus_pointer;
+    if(bus->tx_chan != NULL || bus->tx_chan != NULL){
+        bus->end();
+    }
+    return true;
+}
+
+// Set pins for STD and TDM mode
 void I2SClass::setPins(int8_t bclk, int8_t ws, int8_t dout, int8_t din, int8_t mclk){
     _mclk = mclk;
     _bclk = bclk;
@@ -130,45 +232,229 @@ void I2SClass::setInverted(bool bclk, bool ws, bool mclk){
     _ws_inv = ws;
 }
 
-bool I2SClass::begin(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+// Set pins for PDM TX mode
+void I2SClass::setPinsPdmTx(int8_t clk, int8_t dout0, int8_t dout1){
+    _tx_clk = clk;
+    _tx_dout0 = dout0;
+#if (SOC_I2S_PDM_MAX_TX_LINES > 1)
+    _tx_dout1 = dout1;
+#endif
+}
+
+// Set pins for PDM RX mode
+void I2SClass::setPinsPdmRx(int8_t clk, int8_t din0, int8_t din1, int8_t din2, int8_t din3){
+    _rx_clk = clk;
+    _rx_din0 = din0;
+#if (SOC_I2S_PDM_MAX_RX_LINES > 1)
+    _rx_din1 = din1;
+    _rx_din2 = din2;
+    _rx_din3 = din3;
+#endif
+}
+
+void I2SClass::setInvertedPdm(bool clk){
+    _tx_clk_inv = clk;
+    _rx_clk_inv = clk;
+}
+
+bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
     /* Setup I2S peripheral */
-    i2s_chan_config_t chan_cfg = I2S_STD_DEFAULT_CFG();
-    chan_cfg.auto_clear = true; // Auto clear the legacy data in the DMA buffer
 
-    if(_dout >= 0 && _din >= 0){
-        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
-    } else if(_dout >= 0){
-        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
-    } else if(_din >= 0){
-        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
+    if (mode > I2S_MODE_PDM_RX){
+        log_e("Invalid I2S mode selected.");
+        return false;
+    }
+    i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+    _mode = mode;
+
+    //already in default config
+    //chan_cfg.auto_clear = true; // Auto clear the legacy data in the DMA buffer
+
+    switch (_mode){
+        case I2S_MODE_STD: case I2S_MODE_TDM:
+            if(!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            if(!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            if(!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            if(_dout >= 0){
+                if(!perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            }
+            if(_din >= 0){
+                if(!perimanSetPinBus(_din, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            }
+            break;
+        case I2S_MODE_PDM_TX:
+            if(!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            if(_tx_dout0 >= 0){
+                if(!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            }
+            if(_tx_dout1 >= 0){
+                if(!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            }
+            break;
+        case I2S_MODE_PDM_RX:
+            if(!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            if(_rx_din0 >= 0){
+                if(!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            }
+            if(_rx_din1 >= 0){
+                if(!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            }
+            if(_rx_din2 >= 0){
+                if(!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            }
+            if(_rx_din3 >= 0){
+                if(!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+            }
+            break;
     }
 
-    i2s_std_config_t i2s_config = I2S_STD_CHAN_CFG(rate, bits_cfg, ch);
-    /* Setup I2S channels */
-    if (tx_chan != NULL) {
-        tx_sample_rate = rate;
-        tx_data_bit_width = bits_cfg;
-        tx_slot_mode = ch;
-        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(tx_chan, &i2s_config));
-        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
+    switch (_mode){
+        case I2S_MODE_STD: case I2S_MODE_TDM:
+            if(_dout >= 0 && _din >= 0){
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
+            } else if(_dout >= 0){
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
+            } else if(_din >= 0){
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
+            }
+            break;
+        case I2S_MODE_PDM_TX:
+            I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
+            break;
+        case I2S_MODE_PDM_RX:
+            I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
+            break;
     }
-    if (rx_chan != NULL) {
-        rx_sample_rate = rate;
-        rx_data_bit_width = bits_cfg;
-        rx_slot_mode = ch;
-        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(rx_chan, &i2s_config));
-        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+
+    switch (_mode){
+        case I2S_MODE_STD:
+        {
+            i2s_std_config_t i2s_config = I2S_STD_CHAN_CFG(rate, bits_cfg, ch);
+            if (tx_chan != NULL) {
+                tx_sample_rate = rate;
+                tx_data_bit_width = bits_cfg;
+                tx_slot_mode = ch;
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(tx_chan, &i2s_config));
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
+            }
+            if (rx_chan != NULL) {
+                rx_sample_rate = rate;
+                rx_data_bit_width = bits_cfg;
+                rx_slot_mode = ch;
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(rx_chan, &i2s_config));
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+            }
+            break;
+        }
+        case I2S_MODE_TDM:
+        {
+            i2s_tdm_config_t i2s_tdm_config = I2S_TDM_CHAN_CFG(rate, bits_cfg, ch, I2S_TDM_SLOT0);
+            if (tx_chan != NULL) {
+                tx_sample_rate = rate;
+                tx_data_bit_width = bits_cfg;
+                tx_slot_mode = ch;
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_tdm_mode(tx_chan, &i2s_tdm_config));
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
+            }
+            if (rx_chan != NULL) {
+                rx_sample_rate = rate;
+                rx_data_bit_width = bits_cfg;
+                rx_slot_mode = ch;
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_tdm_mode(rx_chan, &i2s_tdm_config));
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+            }
+            break;
+        }
+        case I2S_MODE_PDM_TX:
+        {
+            i2s_pdm_tx_config_t i2s_pdm_tx_config = I2S_PDM_TX_CHAN_CFG(rate, bits_cfg, ch);
+            if (tx_chan != NULL) {
+                tx_sample_rate = rate;
+                tx_data_bit_width = bits_cfg;
+                tx_slot_mode = ch;
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_pdm_tx_mode(tx_chan, &i2s_pdm_tx_config));
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
+            }
+            break;
+        }
+        case I2S_MODE_PDM_RX:
+        {
+            i2s_pdm_rx_config_t i2s_pdf_rx_config = I2S_PDM_RX_CHAN_CFG(rate, bits_cfg, ch);
+            if (rx_chan != NULL) {
+                rx_sample_rate = rate;
+                rx_data_bit_width = bits_cfg;
+                rx_slot_mode = ch;
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_pdm_rx_mode(rx_chan, &i2s_pdf_rx_config));
+                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+            }
+            break;
+        }
+    }
+
+    switch (mode){
+        case I2S_MODE_STD:
+            if(!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+            if(!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+            if(!perimanSetPinBus(_ws,  ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+            if(_dout >= 0){
+                if(!perimanSetPinBus(_dout,  ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+            }
+            if(_din >= 0){
+                if(!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+            }
+            break;
+        case I2S_MODE_TDM:
+            if(!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+            if(!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+            if(!perimanSetPinBus(_ws,  ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+            if(_dout >= 0){
+                if(!perimanSetPinBus(_dout,  ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+            }
+            if(_din >= 0){
+                if(!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+            }
+            break;
+        case I2S_MODE_PDM_TX:
+            if(!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+            if(_tx_dout0 >= 0){
+                if(!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+            }
+            if(_tx_dout1 >= 0){
+                if(!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+            }
+            break;
+        case I2S_MODE_PDM_RX:
+            if(!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+            if(_rx_din0 >= 0){
+                if(!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+            }
+            if(_rx_din1 >= 0){
+                if(!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+            }
+            if(_rx_din2 >= 0){
+                if(!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+            }
+            if(_rx_din3 >= 0){
+                if(!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+            }
+            break;
     }
     return true;
+
+err:
+    log_e("Failed to set all pins bus to I2S");
+    I2SClass::i2sDetachBus((void *)(this));
+    return false;
+
 }
 
 bool I2SClass::end(){
-    if (tx_chan != NULL) {
+    if (tx_chan != NULL){
         I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_disable(tx_chan));
         I2S_ERROR_CHECK_RETURN_FALSE(i2s_del_channel(tx_chan));
         tx_chan = NULL;
     }
-    if (rx_chan != NULL) {
+    if (rx_chan != NULL){
         I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_disable(rx_chan));
         I2S_ERROR_CHECK_RETURN_FALSE(i2s_del_channel(rx_chan));
         rx_chan = NULL;
@@ -177,6 +463,45 @@ bool I2SClass::end(){
         free(rx_transform_buf);
         rx_transform_buf = NULL;
         rx_transform_buf_len = 0;
+    }
+
+    //Periman deinit pins
+    switch (_mode){
+        case I2S_MODE_STD: case I2S_MODE_TDM:
+            perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL);
+            perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL);
+            perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL);
+            if(_dout >= 0){
+                perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL);
+            }
+            if(_din >= 0){
+                perimanSetPinBus(_din, ESP32_BUS_TYPE_INIT, NULL);
+            }
+            break;
+        case I2S_MODE_PDM_TX:
+            perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_INIT, NULL);
+            if(_tx_dout0 >= 0){
+                perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL);
+            }
+            if(_tx_dout1 >= 0){
+                perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_INIT, NULL);
+            }
+            break;
+        case I2S_MODE_PDM_RX:
+            perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_INIT, NULL);
+            if(_rx_din0 >= 0){
+                perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL);
+            }
+            if(_rx_din1 >= 0){
+                perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_INIT, NULL);
+            }
+            if(_rx_din2 >= 0){
+                perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_INIT, NULL);
+            }
+            if(_rx_din3 >= 0){
+                perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_INIT, NULL);
+            }
+            break;
     }
     return true;
 }
