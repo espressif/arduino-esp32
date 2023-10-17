@@ -305,7 +305,7 @@ err:
     return false;
 }
 
-bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_tdm_slot_mask_t slot_mask){
+bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask){
     // Peripheral manager deinit previous peripheral if pin was used
     if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
     if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
@@ -323,7 +323,7 @@ bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
         I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
     }
 
-    i2s_tdm_config_t i2s_tdm_config = I2S_TDM_CHAN_CFG(rate, bits_cfg, ch, slot_mask);
+    i2s_tdm_config_t i2s_tdm_config = I2S_TDM_CHAN_CFG(rate, bits_cfg, ch, (i2s_tdm_slot_mask_t)slot_mask);
     if (tx_chan != NULL) {
         tx_sample_rate = rate;
         tx_data_bit_width = bits_cfg;
@@ -419,7 +419,7 @@ err:
     return false;
 }
 
-bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_tdm_slot_mask_t slot_mask){
+bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask){
     /* Setup I2S peripheral */
 
     if (mode > I2S_MODE_PDM_RX){
