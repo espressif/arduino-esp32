@@ -257,195 +257,203 @@ void I2SClass::setInvertedPdm(bool clk){
     _rx_clk_inv = clk;
 }
 
-bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+bool initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+    // Peripheral manager deinit previous peripheral if pin was used
+    if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_din >= 0)  if (!perimanSetPinBus(_din, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+
+    // I2S configuration
+    i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+    if (_dout >= 0 && _din >= 0) {
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
+    } else if (_dout >= 0) {
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
+    } else if (_din >= 0) {
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
+    }
+
+    i2s_std_config_t i2s_config = I2S_STD_CHAN_CFG(rate, bits_cfg, ch);
+    if (tx_chan != NULL) {
+        tx_sample_rate = rate;
+        tx_data_bit_width = bits_cfg;
+        tx_slot_mode = ch;
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(tx_chan, &i2s_config));
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
+    }
+    if (rx_chan != NULL) {
+        rx_sample_rate = rate;
+        rx_data_bit_width = bits_cfg;
+        rx_slot_mode = ch;
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(rx_chan, &i2s_config));
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+    }
+
+    // Peripheral manager set bus type to I2S
+    if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+    if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+    if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+    if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+
+    return true;
+err:
+    log_e("Failed to set all pins bus to I2S_STD");
+    I2SClass::i2sDetachBus((void *)(this));
+    return false;
+}
+
+bool initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_tdm_slot_mask_t slot_mask){
+    // Peripheral manager deinit previous peripheral if pin was used
+    if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_din >= 0)  if (!perimanSetPinBus(_din, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+
+    // I2S configuration
+    i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+    if (_dout >= 0 && _din >= 0) {
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
+    } else if (_dout >= 0) {
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
+    } else if (_din >= 0) {
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
+    }
+
+    i2s_tdm_config_t i2s_tdm_config = I2S_TDM_CHAN_CFG(rate, bits_cfg, ch, slot_mask);
+    if (tx_chan != NULL) {
+        tx_sample_rate = rate;
+        tx_data_bit_width = bits_cfg;
+        tx_slot_mode = ch;
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_tdm_mode(tx_chan, &i2s_tdm_config));
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
+    }
+    if (rx_chan != NULL) {
+        rx_sample_rate = rate;
+        rx_data_bit_width = bits_cfg;
+        rx_slot_mode = ch;
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_tdm_mode(rx_chan, &i2s_tdm_config));
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+    }
+
+    // Peripheral manager set bus type to I2S
+    if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+    if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+    if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+    if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+   
+    return true;
+err:
+    log_e("Failed to set all pins bus to I2S_TDM");
+    I2SClass::i2sDetachBus((void *)(this));
+    return false;
+}
+
+bool initPDMtx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+    // Peripheral manager deinit previous peripheral if pin was used
+    if (!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_tx_dout0 >= 0) if (!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_tx_dout1 >= 0) if (!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+
+    // I2S configuration
+    i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+    I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
+
+    i2s_pdm_tx_config_t i2s_pdm_tx_config = I2S_PDM_TX_CHAN_CFG(rate, bits_cfg, ch);
+    if (tx_chan != NULL) {
+        tx_sample_rate = rate;
+        tx_data_bit_width = bits_cfg;
+        tx_slot_mode = ch;
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_pdm_tx_mode(tx_chan, &i2s_pdm_tx_config));
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
+    }
+
+    // Peripheral manager set bus type to I2S
+    if (!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+    if (_tx_dout0 >= 0) if (!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+    if (_tx_dout1 >= 0) if (!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+
+    return true;
+err:
+    log_e("Failed to set all pins bus to I2S_TDM");
+    I2SClass::i2sDetachBus((void *)(this));
+    return false;
+}
+
+bool initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+    // Peripheral manager deinit previous peripheral if pin was used
+    if (!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_rx_din0 >= 0) if (!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_rx_din1 >= 0) if (!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_rx_din2 >= 0) if (!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_rx_din3 >= 0) if (!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+
+    // I2S configuration
+    i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+    I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
+
+    i2s_pdm_rx_config_t i2s_pdf_rx_config = I2S_PDM_RX_CHAN_CFG(rate, bits_cfg, ch);
+    if (rx_chan != NULL) {
+        rx_sample_rate = rate;
+        rx_data_bit_width = bits_cfg;
+        rx_slot_mode = ch;
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_pdm_rx_mode(rx_chan, &i2s_pdf_rx_config));
+        I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+    }
+
+    // Peripheral manager set bus type to I2S
+    if (!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+    if (_rx_din0 >= 0) if (!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+    if (_rx_din1 >= 0) if (!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+    if (_rx_din2 >= 0) if (!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+    if (_rx_din3 >= 0) if (!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
+
+    return true;
+err:
+    log_e("Failed to set all pins bus to I2S_TDM");
+    I2SClass::i2sDetachBus((void *)(this));
+    return false;
+}
+
+bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_tdm_slot_mask_t slot_mask){
     /* Setup I2S peripheral */
 
     if (mode > I2S_MODE_PDM_RX){
         log_e("Invalid I2S mode selected.");
         return false;
     }
-    i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
     _mode = mode;
 
+    //i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
     //already in default config
     //chan_cfg.auto_clear = true; // Auto clear the legacy data in the DMA buffer
 
-    switch (_mode){
-        case I2S_MODE_STD: case I2S_MODE_TDM:
-            if(!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            if(!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            if(!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            if(_dout >= 0){
-                if(!perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            }
-            if(_din >= 0){
-                if(!perimanSetPinBus(_din, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            }
-            break;
-        case I2S_MODE_PDM_TX:
-            if(!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            if(_tx_dout0 >= 0){
-                if(!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            }
-            if(_tx_dout1 >= 0){
-                if(!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            }
-            break;
-        case I2S_MODE_PDM_RX:
-            if(!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            if(_rx_din0 >= 0){
-                if(!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            }
-            if(_rx_din1 >= 0){
-                if(!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            }
-            if(_rx_din2 >= 0){
-                if(!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            }
-            if(_rx_din3 >= 0){
-                if(!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-            }
-            break;
-    }
-
-    switch (_mode){
-        case I2S_MODE_STD: case I2S_MODE_TDM:
-            if(_dout >= 0 && _din >= 0){
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
-            } else if(_dout >= 0){
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
-            } else if(_din >= 0){
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
-            }
-            break;
-        case I2S_MODE_PDM_TX:
-            I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
-            break;
-        case I2S_MODE_PDM_RX:
-            I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
-            break;
-    }
-
+    bool init = false;
     switch (_mode){
         case I2S_MODE_STD:
-        {
-            i2s_std_config_t i2s_config = I2S_STD_CHAN_CFG(rate, bits_cfg, ch);
-            if (tx_chan != NULL) {
-                tx_sample_rate = rate;
-                tx_data_bit_width = bits_cfg;
-                tx_slot_mode = ch;
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(tx_chan, &i2s_config));
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
-            }
-            if (rx_chan != NULL) {
-                rx_sample_rate = rate;
-                rx_data_bit_width = bits_cfg;
-                rx_slot_mode = ch;
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(rx_chan, &i2s_config));
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
-            }
+            init = initSTD(rate, bits_cfg, ch);
             break;
-        }
         case I2S_MODE_TDM:
-        {
-            i2s_tdm_config_t i2s_tdm_config = I2S_TDM_CHAN_CFG(rate, bits_cfg, ch, I2S_TDM_SLOT0);
-            if (tx_chan != NULL) {
-                tx_sample_rate = rate;
-                tx_data_bit_width = bits_cfg;
-                tx_slot_mode = ch;
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_tdm_mode(tx_chan, &i2s_tdm_config));
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
-            }
-            if (rx_chan != NULL) {
-                rx_sample_rate = rate;
-                rx_data_bit_width = bits_cfg;
-                rx_slot_mode = ch;
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_tdm_mode(rx_chan, &i2s_tdm_config));
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
-            }
+            init = initTDM(rate, bits_cfg, ch, slot_mask);
             break;
-        }
         case I2S_MODE_PDM_TX:
-        {
-            i2s_pdm_tx_config_t i2s_pdm_tx_config = I2S_PDM_TX_CHAN_CFG(rate, bits_cfg, ch);
-            if (tx_chan != NULL) {
-                tx_sample_rate = rate;
-                tx_data_bit_width = bits_cfg;
-                tx_slot_mode = ch;
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_pdm_tx_mode(tx_chan, &i2s_pdm_tx_config));
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
-            }
+            init = initPDMtx(rate, bits_cfg, ch);
             break;
-        }
         case I2S_MODE_PDM_RX:
-        {
-            i2s_pdm_rx_config_t i2s_pdf_rx_config = I2S_PDM_RX_CHAN_CFG(rate, bits_cfg, ch);
-            if (rx_chan != NULL) {
-                rx_sample_rate = rate;
-                rx_data_bit_width = bits_cfg;
-                rx_slot_mode = ch;
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_pdm_rx_mode(rx_chan, &i2s_pdf_rx_config));
-                I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
-            }
+            init = initPDMrx(rate, bits_cfg, ch);
             break;
-        }
     }
 
-    switch (mode){
-        case I2S_MODE_STD:
-            if(!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-            if(!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-            if(!perimanSetPinBus(_ws,  ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-            if(_dout >= 0){
-                if(!perimanSetPinBus(_dout,  ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-            }
-            if(_din >= 0){
-                if(!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-            }
-            break;
-        case I2S_MODE_TDM:
-            if(!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-            if(!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-            if(!perimanSetPinBus(_ws,  ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-            if(_dout >= 0){
-                if(!perimanSetPinBus(_dout,  ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-            }
-            if(_din >= 0){
-                if(!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-            }
-            break;
-        case I2S_MODE_PDM_TX:
-            if(!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
-            if(_tx_dout0 >= 0){
-                if(!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
-            }
-            if(_tx_dout1 >= 0){
-                if(!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
-            }
-            break;
-        case I2S_MODE_PDM_RX:
-            if(!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
-            if(_rx_din0 >= 0){
-                if(!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
-            }
-            if(_rx_din1 >= 0){
-                if(!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
-            }
-            if(_rx_din2 >= 0){
-                if(!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
-            }
-            if(_rx_din3 >= 0){
-                if(!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_I2S_PDM, (void *)(this))){ goto err; }
-            }
-            break;
+    //error check
+    if (init == false){
+        log_e("I2S initialization failed.");
+        return false;
     }
     return true;
-
-err:
-    log_e("Failed to set all pins bus to I2S");
-    I2SClass::i2sDetachBus((void *)(this));
-    return false;
-
 }
 
 bool I2SClass::end(){
@@ -465,42 +473,26 @@ bool I2SClass::end(){
         rx_transform_buf_len = 0;
     }
 
-    //Periman deinit pins
+    //Peripheral manager deinit used pins
     switch (_mode){
         case I2S_MODE_STD: case I2S_MODE_TDM:
             perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL);
             perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL);
             perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL);
-            if(_dout >= 0){
-                perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL);
-            }
-            if(_din >= 0){
-                perimanSetPinBus(_din, ESP32_BUS_TYPE_INIT, NULL);
-            }
+            if (_dout >= 0) perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL);
+            if (_din >= 0)  perimanSetPinBus(_din, ESP32_BUS_TYPE_INIT, NULL);
             break;
         case I2S_MODE_PDM_TX:
-            perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_INIT, NULL);
-            if(_tx_dout0 >= 0){
-                perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL);
-            }
-            if(_tx_dout1 >= 0){
-                perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_INIT, NULL);
-            }
+            perimanSetPinBus(_tx_clk, ESP32_BUS_TYPE_INIT, NULL);
+            if (_tx_dout0 >= 0) perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL);
+            if (_tx_dout1 >= 0) perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_INIT, NULL);
             break;
         case I2S_MODE_PDM_RX:
-            perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_INIT, NULL);
-            if(_rx_din0 >= 0){
-                perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL);
-            }
-            if(_rx_din1 >= 0){
-                perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_INIT, NULL);
-            }
-            if(_rx_din2 >= 0){
-                perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_INIT, NULL);
-            }
-            if(_rx_din3 >= 0){
-                perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_INIT, NULL);
-            }
+            perimanSetPinBus(_rx_clk, ESP32_BUS_TYPE_INIT, NULL);
+            if (_rx_din0 >= 0) perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL);
+            if (_rx_din1 >= 0) perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_INIT, NULL);
+            if (_rx_din2 >= 0) perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_INIT, NULL);
+            if (_rx_din3 >= 0) perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_INIT, NULL);
             break;
     }
     return true;
