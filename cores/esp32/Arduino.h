@@ -129,6 +129,18 @@
 #define NOT_AN_INTERRUPT -1
 #define NOT_ON_TIMER 0
 
+// some defines generic for all SoC moved from variants/board_name/pins_arduino.h
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT                                // All GPIOs
+#if SOC_ADC_PERIPH_NUM == 1
+#define NUM_ANALOG_INPUTS       (SOC_ADC_CHANNEL_NUM(0))                          // Depends on the SoC (ESP32C6, ESP32H2, ESP32C2, ESP32P4)
+#elif SOC_ADC_PERIPH_NUM == 2
+#define NUM_ANALOG_INPUTS       (SOC_ADC_CHANNEL_NUM(0)+SOC_ADC_CHANNEL_NUM(1))   // Depends on the SoC (ESP32, ESP32S2, ESP32S3, ESP32C3)
+#endif
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS                                  // All GPIOs
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         ((p)<NUM_DIGITAL_PINS)
+
 typedef bool boolean;
 typedef uint8_t byte;
 typedef unsigned int word;
@@ -183,7 +195,6 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "Udp.h"
 #include "HardwareSerial.h"
 #include "Esp.h"
-#include "esp32/spiram.h"
 
 // Use float-compatible stl abs() and round(), we don't use Arduino macros to avoid issues with the C++ libraries
 using std::abs;
@@ -201,8 +212,12 @@ uint16_t makeWord(uint8_t h, uint8_t l);
 size_t getArduinoLoopTaskStackSize(void);
 #define SET_LOOP_TASK_STACK_SIZE(sz) size_t getArduinoLoopTaskStackSize() { return sz;}
 
+bool shouldPrintChipDebugReport(void);
+#define ENABLE_CHIP_DEBUG_REPORT bool shouldPrintChipDebugReport(void){return true;}
+
 // allows user to bypass esp_spiram_test()
-#define BYPASS_SPIRAM_TEST(bypass) bool testSPIRAM(void) { if (bypass) return true; else return esp_spiram_test(); }
+bool esp_psram_extram_test(void);
+#define BYPASS_SPIRAM_TEST(bypass) bool testSPIRAM(void) { if (bypass) return true; else return esp_psram_extram_test(); }
 
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);

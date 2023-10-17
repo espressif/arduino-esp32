@@ -4,6 +4,9 @@
  *  Created on: Jan 03, 2018
  *      Author: chegewara
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 
@@ -86,7 +89,7 @@ BLECharacteristic* BLEHIDDevice::manufacturer() {
  * @brief Set manufacturer name
  * @param [in] name manufacturer name
  */
-void BLEHIDDevice::manufacturer(std::string name) {
+void BLEHIDDevice::manufacturer(String name) {
 	m_manufacturerCharacteristic->setValue(name);
 }
 
@@ -243,5 +246,5 @@ BLEService* BLEHIDDevice::batteryService() {
 	return m_batteryService;
 }
 
-#endif // CONFIG_BLUEDROID_ENABLED
-
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

@@ -15,7 +15,11 @@
 
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
+#if __has_include ("esp_eap_client.h")
+#include "esp_eap_client.h"
+#else
 #include "esp_wpa2.h"
+#endif
 #include <Wire.h>
 #define EAP_ANONYMOUS_IDENTITY "anonymous@example.com" //anonymous identity
 #define EAP_IDENTITY "id@example.com"                  //user identity
@@ -64,10 +68,17 @@ void setup() {
   Serial.println(ssid);
   WiFi.disconnect(true);  //disconnect form wifi to set new wifi connection
   WiFi.mode(WIFI_STA); //init wifi mode
+#if __has_include ("esp_eap_client.h")
+  esp_eap_client_set_identity((uint8_t *)EAP_ANONYMOUS_IDENTITY, strlen(EAP_ANONYMOUS_IDENTITY)); //provide identity
+  esp_eap_client_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide username
+  esp_eap_client_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD)); //provide password
+  esp_wifi_sta_enterprise_enable();
+#else
   esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)EAP_ANONYMOUS_IDENTITY, strlen(EAP_ANONYMOUS_IDENTITY)); //provide identity
   esp_wifi_sta_wpa2_ent_set_username((uint8_t *)EAP_IDENTITY, strlen(EAP_IDENTITY)); //provide username
   esp_wifi_sta_wpa2_ent_set_password((uint8_t *)EAP_PASSWORD, strlen(EAP_PASSWORD)); //provide password
   esp_wifi_sta_wpa2_ent_enable();
+#endif
   WiFi.begin(ssid); //connect to wifi
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);

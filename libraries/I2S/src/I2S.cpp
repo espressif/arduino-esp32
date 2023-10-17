@@ -144,7 +144,20 @@ int I2SClass::_installDriver(){
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL2,
     .dma_buf_count = _I2S_DMA_BUFFER_COUNT,
     .dma_buf_len = _i2s_dma_buffer_size,
-    .use_apll = false
+    .use_apll = false,
+    #warning The following values are new and need to be checked
+    .tx_desc_auto_clear = true,
+    .fixed_mclk = 0,
+    .mclk_multiple = esp_i2s::I2S_MCLK_MULTIPLE_128,
+    .bits_per_chan = esp_i2s::I2S_BITS_PER_CHAN_DEFAULT
+#if SOC_I2S_SUPPORTS_TDM
+    ,.chan_mask = esp_i2s::I2S_CHANNEL_STEREO,
+    .total_chan = 2,
+    .left_align = false,
+    .big_edin = false,
+    .bit_order_msb = false,
+    .skip_msk = false
+#endif // SOC_I2S_SUPPORTS_TDM
   };
 
   if(_driveClock == false){
@@ -317,6 +330,7 @@ int I2SClass::begin(int mode, int sampleRate, int bitsPerSample, bool driveClock
 int I2SClass::_applyPinSetting(){
   if(_driverInstalled){
     esp_i2s::i2s_pin_config_t pin_config = {
+      .mck_io_num = I2S_PIN_NO_CHANGE,
       .bck_io_num = _sckPin,
       .ws_io_num = _fsPin,
       .data_out_num = I2S_PIN_NO_CHANGE,
