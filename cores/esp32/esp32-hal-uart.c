@@ -884,12 +884,18 @@ void uartStartDetectBaudrate(uart_t *uart) {
         return;
     }
 
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
+// Baud rate detection only works for ESP32 and ESP32S2
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+    hw->auto_baud.glitch_filt = 0x08;
+    hw->auto_baud.en = 0;
+    hw->auto_baud.en = 1;
+#else
     
     // ESP32-C3 requires further testing
     // Baud rate detection returns wrong values 
    
-    log_e("ESP32-C3 baud rate detection is not supported.");
+    log_e("baud rate detection for this SoC is not supported.");
     return;
 
     // Code bellow for C3 kept for future recall
@@ -897,19 +903,10 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->rx_filt.glitch_filt_en = 1;
     //hw->conf0.autobaud_en = 0;
     //hw->conf0.autobaud_en = 1;
-#elif CONFIG_IDF_TARGET_ESP32S3
-    log_e("ESP32-S3 baud rate detection is not supported.");
-    return;
-#else
-    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->auto_baud.glitch_filt = 0x08;
-    hw->auto_baud.en = 0;
-    hw->auto_baud.en = 1;
 #endif
 }
  
-unsigned long
-uartDetectBaudrate(uart_t *uart)
+unsigned long uartDetectBaudrate(uart_t *uart)
 {
     if(uart == NULL) {
         return 0;
@@ -955,11 +952,7 @@ uartDetectBaudrate(uart_t *uart)
 
     return default_rates[i];
 #else
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    log_e("ESP32-C3 baud rate detection is not supported.");
-#else
-    log_e("ESP32-S3 baud rate detection is not supported.");
-#endif
+    log_e("baud rate detection this SoC is not supported.");
     return 0;
 #endif
 }
