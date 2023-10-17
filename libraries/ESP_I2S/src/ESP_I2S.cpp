@@ -257,7 +257,7 @@ void I2SClass::setInvertedPdm(bool clk){
     _rx_clk_inv = clk;
 }
 
-bool initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
     // Peripheral manager deinit previous peripheral if pin was used
     if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
     if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
@@ -305,7 +305,7 @@ err:
     return false;
 }
 
-bool initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_tdm_slot_mask_t slot_mask){
+bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_tdm_slot_mask_t slot_mask){
     // Peripheral manager deinit previous peripheral if pin was used
     if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
     if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
@@ -353,7 +353,7 @@ err:
     return false;
 }
 
-bool initPDMtx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+bool I2SClass::initPDMtx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
     // Peripheral manager deinit previous peripheral if pin was used
     if (!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
     if (_tx_dout0 >= 0) if (!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
@@ -384,7 +384,7 @@ err:
     return false;
 }
 
-bool initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+bool I2SClass::initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
     // Peripheral manager deinit previous peripheral if pin was used
     if (!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
     if (_rx_din0 >= 0) if (!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
