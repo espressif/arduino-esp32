@@ -190,7 +190,6 @@ set(includedirs
   libraries/HTTPUpdate/src
   libraries/LittleFS/src
   libraries/Insights/src
-  libraries/I2S/src
   libraries/NetBIOS/src
   libraries/Preferences/src
   libraries/RainMaker/src
