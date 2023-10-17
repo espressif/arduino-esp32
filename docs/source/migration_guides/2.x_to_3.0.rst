@@ -5,8 +5,11 @@ Migration from 2.x to 3.0
 Introduction
 ------------
 
-This is a guide to highlight breaking changes in the API and to help the migration of projects from versions 2.X to version 3.0 of the Arduino ESP32 core. 
-For more information about the changes and new features, check `RELEASE NOTES <https://github.com/espressif/arduino-esp32/releases>`_.
+This is a guide to highlight **breaking changes** in the API and to help the migration of projects from versions 2.X (based on ESP-IDF 4.4) to version 3.0 (based on ESP-IDF 5.1) of the Arduino ESP32 core.
+
+All the examples on the version 3.0.0 were updated to be compatible to the new API. The old examples from the versions below 3.0.0 will be not compatible with the version 3.0.0 or newer releases.
+
+For more information about all changes and new features, check project `RELEASE NOTES <https://github.com/espressif/arduino-esp32/releases>`_.
 
 ADC
 ---
@@ -26,6 +29,7 @@ Changes in APIs
 
 * Changed APIs return and parameter type from ``std::string`` to Arduino style ``String``.
 * Changed UUID data type from ``uint16_t`` to ``BLEUUID`` class.
+* ``BLEScan::start`` and ``BLEScan::getResults`` methods return type changed from ``BLEScanResults`` to ``BLEScanResults*``.
 
 Hall Sensor
 -----------

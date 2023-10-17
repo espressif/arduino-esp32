@@ -16,7 +16,7 @@ Here you will find all the relevant information about the project.
    Guides <guides/guides>
    Tutorials <tutorials/tutorials>
    Advanced Utilities <advanced_utils>
-   Migration Guide <migration_guide/migration_guide>
+   Migration Guides <migration_guides/migration_guides>
    FAQ <faq>
    Troubleshooting <troubleshooting>
    Contributing <contributing>
