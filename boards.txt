@@ -19727,7 +19727,7 @@ uPesy_wrover.build.target=esp32
 uPesy_wrover.build.mcu=esp32
 uPesy_wrover.build.core=esp32
 uPesy_wrover.build.variant=uPesy_esp32_wrover_devkit
-uPesy_wrover.build.board=uPesy_WROVER
+uPesy_wrover.build.board=UPESY_WROVER
 
 uPesy_wrover.build.f_cpu=240000000L
 uPesy_wrover.build.flash_size=4MB
@@ -19844,7 +19844,7 @@ uPesy_wroom.build.target=esp32
 uPesy_wroom.build.mcu=esp32
 uPesy_wroom.build.core=esp32
 uPesy_wroom.build.variant=uPesy_esp32_wroom_devkit
-uPesy_wroom.build.board=uPesy_WROOM
+uPesy_wroom.build.board=UPESY_WROOM
 
 uPesy_wroom.build.f_cpu=240000000L
 uPesy_wroom.build.flash_size=4MB
@@ -19954,7 +19954,7 @@ uPesy_edu_esp32.build.target=esp32
 uPesy_edu_esp32.build.mcu=esp32
 uPesy_edu_esp32.build.core=esp32
 uPesy_edu_esp32.build.variant=uPesy_edu_esp32
-uPesy_edu_esp32.build.board=uPesy_EDU_ESP32
+uPesy_edu_esp32.build.board=UPESY_EDU_ESP32
 
 uPesy_edu_esp32.build.f_cpu=240000000L
 uPesy_edu_esp32.build.flash_size=4MB
@@ -20067,7 +20067,7 @@ upesy_esp32c3_basic.build.target=esp
 upesy_esp32c3_basic.build.mcu=esp32c3
 upesy_esp32c3_basic.build.core=esp32
 upesy_esp32c3_basic.build.variant=uPesy_esp32c3_basic
-upesy_esp32c3_basic.build.board=uPesy_ESP32C3_basic
+upesy_esp32c3_basic.build.board=UPESY_ESP32C3_BASIC
 upesy_esp32c3_basic.build.bootloader_addr=0x0
 
 upesy_esp32c3_basic.build.cdc_on_boot=1
@@ -20183,7 +20183,7 @@ upesy_esp32c3_mini.build.target=esp
 upesy_esp32c3_mini.build.mcu=esp32c3
 upesy_esp32c3_mini.build.core=esp32
 upesy_esp32c3_mini.build.variant=uPesy_esp32c3_mini
-upesy_esp32c3_mini.build.board=uPesy_ESP32C3_MINI
+upesy_esp32c3_mini.build.board=UPESY_ESP32C3_MINI
 upesy_esp32c3_mini.build.bootloader_addr=0x0
 
 upesy_esp32c3_mini.build.cdc_on_boot=1
@@ -20301,7 +20301,7 @@ upesy_esp32s3_basic.build.target=esp32s3
 upesy_esp32s3_basic.build.mcu=esp32s3
 upesy_esp32s3_basic.build.core=esp32
 upesy_esp32s3_basic.build.variant=uPesy_esp32s3_basic
-upesy_esp32s3_basic.build.board=uPesy_ESP32S3_BASIC
+upesy_esp32s3_basic.build.board=UPESY_ESP32S3_BASIC
 
 upesy_esp32s3_basic.build.usb_mode=1
 upesy_esp32s3_basic.build.cdc_on_boot=0
