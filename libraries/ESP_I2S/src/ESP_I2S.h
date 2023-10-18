@@ -1,18 +1,29 @@
 #pragma once
 #include "Arduino.h"
 #include "esp_err.h"
-#include "driver/i2s_std.h"
-#include "driver/i2s_tdm.h"
-#include "driver/i2s_pdm.h"
 #include "soc/soc_caps.h"
+#include "driver/i2s_std.h"
+#if SOC_I2S_SUPPORTS_TDM
+#include "driver/i2s_tdm.h"
+#endif
+#if SOC_I2S_SUPPORTS_PDM_TX || SOC_I2S_SUPPORTS_PDM_RX
+#include "driver/i2s_pdm.h"
+#endif
 
 typedef esp_err_t (*i2s_channel_read_fn)(i2s_chan_handle_t handle, char * tmp_buf, void *dest, size_t size, size_t *bytes_read, uint32_t timeout_ms);
 
 typedef enum {
     I2S_MODE_STD,
+#if SOC_I2S_SUPPORTS_TDM
     I2S_MODE_TDM,
+#endif
+#if SOC_I2S_SUPPORTS_PDM_TX
     I2S_MODE_PDM_TX,
-    I2S_MODE_PDM_RX
+#endif
+#if SOC_I2S_SUPPORTS_PDM_RX
+    I2S_MODE_PDM_RX,
+#endif
+    I2S_MODE_MAX
 } i2s_mode_t;
 
 typedef enum {
@@ -32,11 +43,21 @@ class I2SClass: public Stream {
     void setInverted(bool bclk, bool ws, bool mclk=false);
 
     //PDM TX + PDM RX mode
+#if SOC_I2S_SUPPORTS_PDM_TX
     void setPinsPdmTx(int8_t clk, int8_t dout0, int8_t dout1=-1);
+#endif
+#if SOC_I2S_SUPPORTS_PDM_RX
     void setPinsPdmRx(int8_t clk, int8_t din0, int8_t din1=-1, int8_t din2=-1, int8_t din3=-1);
+#endif
+#if SOC_I2S_SUPPORTS_PDM_TX || SOC_I2S_SUPPORTS_PDM_RX
     void setInvertedPdm(bool clk);
+#endif
 
-    bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask=-1);
+    bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch
+#if SOC_I2S_SUPPORTS_TDM
+      , int8_t slot_mask=-1
+#endif
+    );
     bool configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch);
     bool configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform=I2S_RX_TRANSFORM_NONE);
     bool end();
@@ -93,17 +114,27 @@ class I2SClass: public Stream {
     bool _mclk_inv, _bclk_inv, _ws_inv;
 
     //PDM mode
+#if SOC_I2S_SUPPORTS_PDM_RX
     int8_t _rx_clk, _rx_din0, _rx_din1, _rx_din2, _rx_din3; //TODO: soc_caps.h 1/4
     bool _rx_clk_inv;
+#endif
+#if SOC_I2S_SUPPORTS_PDM_TX
     int8_t _tx_clk, _tx_dout0, _tx_dout1;
     bool _tx_clk_inv;
+#endif
 
     bool allocTranformRX(size_t buf_len);
     bool transformRX(i2s_rx_transform_t transform);
 
     static bool i2sDetachBus(void * bus_pointer);
     bool initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch);
+#if SOC_I2S_SUPPORTS_TDM
     bool initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask);
+#endif
+#if SOC_I2S_SUPPORTS_PDM_TX
     bool initPDMtx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch);
+#endif
+#if SOC_I2S_SUPPORTS_PDM_RX
     bool initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch);
+#endif
 };
