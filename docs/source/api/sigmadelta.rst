@@ -14,66 +14,60 @@ ESP32 SoC Number of SigmaDelta channels
 ========= =============================
 ESP32     8
 ESP32-S2  8
-ESP32-C3  4
 ESP32-S3  8
+ESP32-C3  4
+ESP32-C6  4
+ESP32-H2  4
 ========= =============================
 
 Arduino-ESP32 SigmaDelta API
 ----------------------------
 
-sigmaDeltaSetup
-***************
+sigmaDeltaAttach
+****************
 
-This function is used to setup the SigmaDelta channel frequency and resolution.
+This function is used to set up the SigmaDelta channel with the selected frequency and attach it to the selected pin.
 
 .. code-block:: arduino
 
-    uint32_t sigmaDeltaSetup(uint8_t pin, uint8_t channel, uint32_t freq);
+    bool sigmaDeltaAttach(uint8_t pin, uint32_t freq);
 
 * ``pin`` select GPIO pin.
-* ``channel`` select SigmaDelta channel.
 * ``freq`` select frequency.
 
   * range is 1-14 bits (1-20 bits for ESP32).
   
-This function will return ``frequency`` configured for the SigmaDelta channel.
-If ``0`` is returned, error occurs and the SigmaDelta channel was not configured.
+This function returns ``true`` if the configuration was successful.
+If ``false`` is returned, an error occurred and the SigmaDelta channel was not configured.
 
 sigmaDeltaWrite
 ***************
 
-This function is used to set duty for the SigmaDelta channel.
+This function is used to set duty for the SigmaDelta pin.
 
 .. code-block:: arduino
 
-    void sigmaDeltaWrite(uint8_t channel, uint8_t duty);
+    bool sigmaDeltaWrite(uint8_t pin, uint8_t duty);
 
-* ``channel`` select SigmaDelta channel.
-* ``duty`` select duty to be set for selected channel.
+* ``pin`` selects the GPIO pin.
+* ``duty`` selects the duty to be set for selected pin.
 
-sigmaDeltaRead
-**************
+This function returns ``true`` if setting the duty was successful.
+If ``false`` is returned, error occurs and duty was not set.
 
-This function is used to get configured duty for the SigmaDelta channel.
+sigmaDeltaDetach
+****************
 
-.. code-block:: arduino
-
-    uint8_t sigmaDeltaRead(uint8_t channel)
-
-* ``channnel`` select SigmaDelta channel.
-
-This function will return ``duty`` configured for the selected SigmaDelta channel.
-
-sigmaDeltaDetachPin
-*******************
-
-This function is used to detach pin from SigmaDelta.
+This function is used to detach a pin from SigmaDelta and deinitialize the channel that was attached to the pin.
 
 .. code-block:: arduino
 
-    void sigmaDeltaDetachPin(uint8_t pin);
+    bool sigmaDeltaDetach(uint8_t pin);
 
 * ``pin`` select GPIO pin.
+
+This function returns ``true`` if detaching was successful.
+If ``false`` is returned, an error occurred and pin was not detached.
 
 Example Applications
 ********************
