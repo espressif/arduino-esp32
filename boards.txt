@@ -20104,7 +20104,6 @@ upesy_esp32c3_basic.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFF
 upesy_esp32c3_basic.menu.PartitionScheme.huge_app.build.partitions=huge_app
 upesy_esp32c3_basic.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 
-
 upesy_esp32c3_basic.menu.CPUFreq.160=160MHz (WiFi)
 upesy_esp32c3_basic.menu.CPUFreq.160.build.f_cpu=160000000L
 upesy_esp32c3_basic.menu.CPUFreq.80=80MHz (WiFi)
@@ -20115,7 +20114,6 @@ upesy_esp32c3_basic.menu.CPUFreq.20=20MHz
 upesy_esp32c3_basic.menu.CPUFreq.20.build.f_cpu=20000000L
 upesy_esp32c3_basic.menu.CPUFreq.10=10MHz
 upesy_esp32c3_basic.menu.CPUFreq.10.build.f_cpu=10000000L
-
 
 upesy_esp32c3_basic.menu.FlashFreq.80=80MHz
 upesy_esp32c3_basic.menu.FlashFreq.80.build.flash_freq=80m
@@ -20220,7 +20218,6 @@ upesy_esp32c3_mini.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS
 upesy_esp32c3_mini.menu.PartitionScheme.huge_app.build.partitions=huge_app
 upesy_esp32c3_mini.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 
-
 upesy_esp32c3_mini.menu.CPUFreq.160=160MHz (WiFi)
 upesy_esp32c3_mini.menu.CPUFreq.160.build.f_cpu=160000000L
 upesy_esp32c3_mini.menu.CPUFreq.80=80MHz (WiFi)
@@ -20231,8 +20228,6 @@ upesy_esp32c3_mini.menu.CPUFreq.20=20MHz
 upesy_esp32c3_mini.menu.CPUFreq.20.build.f_cpu=20000000L
 upesy_esp32c3_mini.menu.CPUFreq.10=10MHz
 upesy_esp32c3_mini.menu.CPUFreq.10.build.f_cpu=10000000L
-
-
 
 upesy_esp32c3_mini.menu.FlashFreq.80=80MHz
 upesy_esp32c3_mini.menu.FlashFreq.80.build.flash_freq=80m
@@ -20387,7 +20382,6 @@ upesy_esp32s3_basic.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 
 upesy_esp32s3_basic.menu.CPUFreq.240=240MHz (WiFi)
 upesy_esp32s3_basic.menu.CPUFreq.240.build.f_cpu=240000000L
