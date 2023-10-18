@@ -4,10 +4,6 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
-#define NUM_ANALOG_INPUTS       16
-
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
