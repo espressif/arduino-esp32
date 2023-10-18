@@ -9,10 +9,6 @@
 #define USB_PRODUCT "uPesy ESP32C3 Mini"
 #define USB_SERIAL ""
 
-#define EXTERNAL_NUM_INTERRUPTS 22
-#define NUM_DIGITAL_PINS        22
-#define NUM_ANALOG_INPUTS       6
-
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
 
