@@ -20066,7 +20066,7 @@ upesy_esp32c3_basic.build.tarch=riscv32
 upesy_esp32c3_basic.build.target=esp
 upesy_esp32c3_basic.build.mcu=esp32c3
 upesy_esp32c3_basic.build.core=esp32
-upesy_esp32c3_basic.build.variant=upesy_esp32c3_basic
+upesy_esp32c3_basic.build.variant=uPesy_esp32c3_basic
 upesy_esp32c3_basic.build.board=uPesy_ESP32C3_basic
 upesy_esp32c3_basic.build.bootloader_addr=0x0
 
@@ -20300,7 +20300,7 @@ upesy_esp32s3_basic.build.bootloader_addr=0x0
 upesy_esp32s3_basic.build.target=esp32s3
 upesy_esp32s3_basic.build.mcu=esp32s3
 upesy_esp32s3_basic.build.core=esp32
-upesy_esp32s3_basic.build.variant=upesy_esp32s3_basic
+upesy_esp32s3_basic.build.variant=uPesy_esp32s3_basic
 upesy_esp32s3_basic.build.board=uPesy_ESP32S3_BASIC
 
 upesy_esp32s3_basic.build.usb_mode=1
