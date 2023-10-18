@@ -93,6 +93,7 @@ set(LIBRARY_SRCS
   libraries/Insights/src/Insights.cpp
   libraries/I2S/src/I2S.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
+  libraries/Networking/src/ESP_Network_Interface.cpp
   libraries/Preferences/src/Preferences.cpp
   libraries/RainMaker/src/RMaker.cpp
   libraries/RainMaker/src/RMakerNode.cpp
@@ -190,6 +191,7 @@ set(includedirs
   libraries/Insights/src
   libraries/I2S/src
   libraries/NetBIOS/src
+  libraries/Networking/src
   libraries/Preferences/src
   libraries/RainMaker/src
   libraries/SD_MMC/src
