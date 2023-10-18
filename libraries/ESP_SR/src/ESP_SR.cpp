@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
 #include "sdkconfig.h"
-#if CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S3 && (CONFIG_USE_WAKENET || CONFIG_USE_MULTINET)
 #include "ESP_SR.h"
 
 static esp_err_t on_sr_fill(void * arg, void * out, size_t len, size_t *bytes_read, uint32_t timeout_ms){
