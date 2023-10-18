@@ -1,4 +1,7 @@
 #include "ESP_I2S.h"
+
+#if SOC_I2S_SUPPORTED
+
 #include "esp32-hal-periman.h"
 #include "wav_header.h"
 #include "mp3dec.h"
@@ -800,3 +803,5 @@ bool I2SClass::playMP3(uint8_t *src, size_t src_len)
     MP3FreeDecoder(decoder);
     return true;
 }
+
+#endif /* SOC_I2S_SUPPORTED */

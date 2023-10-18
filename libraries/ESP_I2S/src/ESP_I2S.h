@@ -1,7 +1,10 @@
 #pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_I2S_SUPPORTED
+
 #include "Arduino.h"
 #include "esp_err.h"
-#include "soc/soc_caps.h"
 #include "driver/i2s_std.h"
 #if SOC_I2S_SUPPORTS_TDM
 #include "driver/i2s_tdm.h"
@@ -138,3 +141,5 @@ class I2SClass: public Stream {
     bool initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch);
 #endif
 };
+
+#endif /* SOC_I2S_SUPPORTED */
