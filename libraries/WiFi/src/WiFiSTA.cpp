@@ -26,7 +26,6 @@
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
 
-extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -42,8 +41,13 @@ extern "C" {
 #include "lwip/dns.h"
 #include <esp_smartconfig.h>
 #include <esp_netif.h>
+#include "esp_mac.h"
+
+#if __has_include ("esp_eap_client.h")
+#include "esp_eap_client.h"
+#else
 #include "esp_wpa2.h"
-}
+#endif
 
 // -----------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------- Private functions ------------------------------------------------
@@ -192,19 +196,40 @@ wl_status_t WiFiSTAClass::begin(const char* wpa2_ssid, wpa2_auth_method_t method
     }
 
     if(ca_pem) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_ca_cert((uint8_t *)ca_pem, strlen(ca_pem));
+#else
         esp_wifi_sta_wpa2_ent_set_ca_cert((uint8_t *)ca_pem, strlen(ca_pem));
+#endif
     }
 
     if(client_crt) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_certificate_and_key((uint8_t *)client_crt, strlen(client_crt), (uint8_t *)client_key, strlen(client_key), NULL, 0);
+#else
         esp_wifi_sta_wpa2_ent_set_cert_key((uint8_t *)client_crt, strlen(client_crt), (uint8_t *)client_key, strlen(client_key), NULL, 0);
+#endif
     }
 
+#if __has_include ("esp_eap_client.h")
+    esp_eap_client_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
+#else
     esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
+#endif
     if(method == WPA2_AUTH_PEAP || method == WPA2_AUTH_TTLS) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
+        esp_eap_client_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
+#else
         esp_wifi_sta_wpa2_ent_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
         esp_wifi_sta_wpa2_ent_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
+#endif
     }
+#if __has_include ("esp_eap_client.h")
+    esp_wifi_sta_enterprise_enable(); //set config settings to enable function
+#else
     esp_wifi_sta_wpa2_ent_enable(); //set config settings to enable function
+#endif
     WiFi.begin(wpa2_ssid); //connect to wifi
 
     return status();

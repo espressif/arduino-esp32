@@ -1,6 +1,6 @@
 #include "Update.h"
 #include "Arduino.h"
-#include "esp_spi_flash.h"
+#include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 
@@ -76,9 +76,15 @@ UpdateClass& UpdateClass::onProgress(THandlerFunction_Progress fn) {
 }
 
 void UpdateClass::_reset() {
-    if (_buffer)
+    if (_buffer) {
         delete[] _buffer;
-    _buffer = 0;
+    }
+    if (_skipBuffer) {
+        delete[] _skipBuffer;
+    }
+
+    _buffer = nullptr;
+    _skipBuffer = nullptr;
     _bufferLen = 0;
     _progress = 0;
     _size = 0;
@@ -159,9 +165,9 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     }
 
     //initialize
-    _buffer = (uint8_t*)malloc(SPI_FLASH_SEC_SIZE);
-    if(!_buffer){
-        log_e("malloc failed");
+    _buffer = new (std::nothrow) uint8_t[SPI_FLASH_SEC_SIZE];
+    if (!_buffer) {
+        log_e("_buffer allocation failed");
         return false;
     }
     _size = size;
@@ -193,10 +199,10 @@ bool UpdateClass::_writeBuffer(){
         //not written at this point so that partially written firmware
         //will not be bootable
         skip = ENCRYPTED_BLOCK_SIZE;
-        _skipBuffer = (uint8_t*)malloc(skip);
-        if(!_skipBuffer){
-            log_e("malloc failed");
-        return false;
+        _skipBuffer = new (std::nothrow) uint8_t[skip];
+        if (!_skipBuffer) {
+            log_e("_skipBuffer allocation failed");
+            return false;
         }
         memcpy(_skipBuffer, _buffer, skip);
     }

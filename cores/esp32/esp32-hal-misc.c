@@ -29,27 +29,37 @@
 #endif //CONFIG_BT_ENABLED
 #include <sys/time.h>
 #include "soc/rtc.h"
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "soc/rtc_cntl_reg.h"
 #include "soc/apb_ctrl_reg.h"
+#endif
 #include "esp_task_wdt.h"
 #include "esp32-hal.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
+
 #if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/rtc.h"
-#include "driver/temp_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/rtc.h"
-#include "driver/temp_sensor.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
-#include "driver/temp_sensor.h"
+#elif CONFIG_IDF_TARGET_ESP32C6
+#include "esp32c6/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32H2
+#include "esp32h2/rom/rtc.h"
+
 #else 
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
+
+#if SOC_TEMP_SENSOR_SUPPORTED
+#include "driver/temperature_sensor.h"
+#endif
+
 #else // ESP32 Before IDF 4.0
 #include "rom/rtc.h"
 #endif
@@ -63,15 +73,39 @@ float temperatureRead()
 {
     return (temprature_sens_read() - 32) / 1.8;
 }
-#else
+#elif SOC_TEMP_SENSOR_SUPPORTED
+static temperature_sensor_handle_t temp_sensor = NULL;
+
+static bool temperatureReadInit()
+{
+    static volatile bool initialized = false;
+    if(!initialized){
+        initialized = true;
+        //Install temperature sensor, expected temp ranger range: 10~50 ℃
+        temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
+        if(temperature_sensor_install(&temp_sensor_config, &temp_sensor) != ESP_OK){
+            initialized = false;
+            temp_sensor = NULL;
+            log_e("temperature_sensor_install failed");
+        }
+        else if(temperature_sensor_enable(temp_sensor) != ESP_OK){
+            temperature_sensor_uninstall(temp_sensor);
+            initialized = false;
+            temp_sensor = NULL;
+            log_e("temperature_sensor_enable failed");
+        }
+    }
+    return initialized;
+}
+
 float temperatureRead()
 {
     float result = NAN;
-    temp_sensor_config_t tsens = TSENS_CONFIG_DEFAULT();
-    temp_sensor_set_config(tsens);
-    temp_sensor_start();
-    temp_sensor_read_celsius(&result); 
-    temp_sensor_stop();
+    if(temperatureReadInit()){
+        if(temperature_sensor_get_celsius(temp_sensor, &result) != ESP_OK){
+            log_e("temperature_sensor_get_celsius failed");
+        }
+    }
     return result;
 }
 #endif
@@ -221,6 +255,14 @@ extern bool btInUse();
 
 void initArduino()
 {
+    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
+    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
+#ifdef F_CPU
+    setCpuFrequencyMhz(F_CPU/1000000);
+#endif
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
+    psramInit();
+#endif
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
     if(!verifyRollbackLater()){
         const esp_partition_t *running = esp_ota_get_running_partition();
@@ -236,14 +278,6 @@ void initArduino()
             }
         }
     }
-#endif
-    //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
-    //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
-#ifdef F_CPU
-    setCpuFrequencyMhz(F_CPU/1000000);
-#endif
-#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
-    psramInit();
 #endif
     esp_log_level_set("*", CONFIG_LOG_DEFAULT_LEVEL);
     esp_err_t err = nvs_flash_init();
@@ -288,3 +322,93 @@ const char * ARDUINO_ISR_ATTR pathToFileName(const char * path)
     return path+pos;
 }
 
+#include "esp_rom_sys.h"
+#include "esp_debug_helpers.h"
+#if CONFIG_IDF_TARGET_ARCH_XTENSA
+#include "esp_cpu_utils.h"
+#else
+#include "riscv/rvruntime-frames.h"
+#endif
+#include "esp_memory_utils.h"
+#include "esp_private/panic_internal.h"
+
+static arduino_panic_handler_t _panic_handler = NULL;
+static void * _panic_handler_arg = NULL;
+
+void set_arduino_panic_handler(arduino_panic_handler_t handler, void * arg){
+    _panic_handler = handler;
+    _panic_handler_arg = arg;
+}
+
+arduino_panic_handler_t get_arduino_panic_handler(void){
+    return _panic_handler;
+}
+
+void * get_arduino_panic_handler_arg(void){
+    return _panic_handler_arg;
+}
+
+static void handle_custom_backtrace(panic_info_t* info){
+    arduino_panic_info_t p_info;
+    p_info.reason = info->reason;
+    p_info.core = info->core;
+    p_info.pc = info->addr;
+    p_info.backtrace_len = 0;
+    p_info.backtrace_corrupt = false;
+    p_info.backtrace_continues = false;
+
+#if CONFIG_IDF_TARGET_ARCH_XTENSA
+    XtExcFrame *xt_frame = (XtExcFrame *) info->frame;
+    esp_backtrace_frame_t stk_frame = {.pc = xt_frame->pc, .sp = xt_frame->a1, .next_pc = xt_frame->a0, .exc_frame = xt_frame};
+    uint32_t i = 100, pc_ptr = esp_cpu_process_stack_pc(stk_frame.pc);
+    p_info.backtrace[p_info.backtrace_len++] = pc_ptr;
+
+    bool corrupted = !(esp_stack_ptr_is_sane(stk_frame.sp) &&
+                      (esp_ptr_executable((void *)esp_cpu_process_stack_pc(stk_frame.pc)) ||
+                      /* Ignore the first corrupted PC in case of InstrFetchProhibited */
+                      (stk_frame.exc_frame && ((XtExcFrame *)stk_frame.exc_frame)->exccause == EXCCAUSE_INSTR_PROHIBITED)));
+
+    while (i-- > 0 && stk_frame.next_pc != 0 && !corrupted) {
+        if (!esp_backtrace_get_next_frame(&stk_frame)) {
+            corrupted = true;
+        }
+        pc_ptr = esp_cpu_process_stack_pc(stk_frame.pc);
+        if(esp_ptr_executable((void *)pc_ptr)){
+            p_info.backtrace[p_info.backtrace_len++] = pc_ptr;
+            if(p_info.backtrace_len == 60){
+                break;
+            }
+        }
+    }
+
+    if (corrupted) {
+        p_info.backtrace_corrupt = true;
+    } else if (stk_frame.next_pc != 0) {
+        p_info.backtrace_continues = true;
+    }
+#elif CONFIG_IDF_TARGET_ARCH_RISCV
+    uint32_t sp = (uint32_t)((RvExcFrame *)info->frame)->sp;
+    p_info.backtrace[p_info.backtrace_len++] = sp;
+    uint32_t *spptr = (uint32_t *)(sp);
+    for (int i = 0; i < 256; i++){
+        if(esp_ptr_executable((void *)spptr[i])){
+            p_info.backtrace[p_info.backtrace_len++] = spptr[i];
+            if(p_info.backtrace_len == 60){
+                if(i < 255){
+                    p_info.backtrace_continues = true;
+                }
+                break;
+            }
+        }
+    }
+#endif
+    _panic_handler(&p_info, _panic_handler_arg);
+}
+
+void __real_esp_panic_handler(panic_info_t*);
+void __wrap_esp_panic_handler(panic_info_t* info) {
+    if(_panic_handler != NULL){
+        handle_custom_backtrace(info);
+    }
+    __real_esp_panic_handler(info);
+}

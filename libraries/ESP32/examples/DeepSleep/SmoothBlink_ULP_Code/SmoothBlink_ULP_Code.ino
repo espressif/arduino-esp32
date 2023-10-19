@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #include "esp32/ulp.h"
 #include "driver/rtc_io.h"
+#include "soc/rtc_io_reg.h"
 
 // RTC Memory used for ULP internal variable and Sketch interfacing
 #define RTC_dutyMeter 0
@@ -143,7 +144,7 @@ void setup() {
   while (!Serial) {}  // wait for Serial to start
 
   ulp_setup(); // it really only runs on the first ESP32 boot
-  Serial.printf("\nStarted smooth blink with delay %d\n", *fadeCycleDelay);
+  Serial.printf("\nStarted smooth blink with delay %ld\n", *fadeCycleDelay);
 
   // *fadeCycleDelay resides in RTC_SLOW_MEM and persists along deep sleep waking up
   // it is used as a delay time parameter for smooth blinking, in the ULP processing code

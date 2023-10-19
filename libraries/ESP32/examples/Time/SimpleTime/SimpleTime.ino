@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include "time.h"
-#include "sntp.h"
+#include "esp_sntp.h"
 
 const char* ssid       = "YOUR_SSID";
 const char* password   = "YOUR_PASS";
@@ -43,8 +43,8 @@ void setup()
    * otherwise SNTP option 42 would be rejected by default.
    * NOTE: configTime() function call if made AFTER DHCP-client run
    * will OVERRIDE aquired NTP server address
-   */
-  sntp_servermode_dhcp(1);    // (optional)
+   */ 
+  esp_sntp_servermode_dhcp(1);// (optional)
 
   /**
    * This will set configured ntp servers and constant TimeZone/daylightOffset

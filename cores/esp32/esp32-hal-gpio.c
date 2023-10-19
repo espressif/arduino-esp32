@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "esp32-hal-gpio.h"
+#include "esp32-hal-periman.h"
 #include "hal/gpio_hal.h"
 #include "soc/soc_caps.h"
 
@@ -89,6 +90,10 @@ static InterruptHandle_t __pinInterruptHandlers[SOC_GPIO_PIN_COUNT] = {0,};
 
 #include "driver/rtc_io.h"
 
+static bool gpioDetachBus(void * bus){
+    return true;
+}
+
 extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
 #ifdef RGB_BUILTIN
@@ -98,9 +103,17 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
 #endif
 
-    if (!GPIO_IS_VALID_GPIO(pin)) {
+    if (pin >= SOC_GPIO_PIN_COUNT) {
         log_e("Invalid pin selected");
         return;
+    }
+
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
+        perimanSetBusDeinit(ESP32_BUS_TYPE_GPIO, gpioDetachBus);
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+            log_e("Deinit of previous bus failed");
+            return;
+        }
     }
     
     gpio_hal_context_t gpiohal;
@@ -130,6 +143,12 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
         log_e("GPIO config failed");
         return;
     }
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_GPIO, (void *)(pin+1))){
+            //gpioDetachBus((void *)(pin+1));
+            return;
+        }
+    }
 }
 
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
@@ -142,12 +161,22 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
             return;
         }
     #endif
-	gpio_set_level((gpio_num_t)pin, val);
+        if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL){
+            gpio_set_level((gpio_num_t)pin, val);
+        } else {
+            log_e("Pin is not set as GPIO.");
+        }
 }
 
 extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin)
 {
-	return gpio_get_level((gpio_num_t)pin);
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL){
+        return gpio_get_level((gpio_num_t)pin);
+    }
+    else {
+        log_e("Pin is not set as GPIO.");
+        return 0;
+    }
 }
 
 static void ARDUINO_ISR_ATTR __onPinInterrupt(void * arg) {
@@ -166,6 +195,9 @@ extern void cleanupFunctional(void* arg);
 extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type, bool functional)
 {
     static bool interrupt_initialized = false;
+
+    // makes sure that pin -1 (255) will never work -- this follows Arduino standard
+    if (pin >= SOC_GPIO_PIN_COUNT) return;
 
     if(!interrupt_initialized) {
     	esp_err_t err = gpio_install_isr_service((int)ARDUINO_ISR_FLAG);

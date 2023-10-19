@@ -7,6 +7,9 @@
 
 #include "BLERemoteCharacteristic.h"
 
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 
@@ -184,7 +187,7 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
 			// At this point, we have determined that the event is for us, so now we save the value
 			// and unlock the semaphore to ensure that the requestor of the data can continue.
 			if (evtParam->read.status == ESP_GATT_OK) {
-				m_value = std::string((char*) evtParam->read.value, evtParam->read.value_len);
+				m_value = String((char*) evtParam->read.value, evtParam->read.value_len);
 				if(m_rawData != nullptr) free(m_rawData);
 				m_rawData = (uint8_t*) calloc(evtParam->read.value_len, sizeof(uint8_t));
 				memcpy(m_rawData, evtParam->read.value, evtParam->read.value_len);
@@ -301,7 +304,7 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
 			this
 		);
 
-		m_descriptorMap.insert(std::pair<std::string, BLERemoteDescriptor*>(pNewRemoteDescriptor->getUUID().toString(), pNewRemoteDescriptor));
+		m_descriptorMap.insert(std::pair<String, BLERemoteDescriptor*>(pNewRemoteDescriptor->getUUID().toString(), pNewRemoteDescriptor));
 
 		offset++;
 	} // while true
@@ -313,7 +316,7 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
 /**
  * @brief Retrieve the map of descriptors keyed by UUID.
  */
-std::map<std::string, BLERemoteDescriptor*>* BLERemoteCharacteristic::getDescriptors() {
+std::map<String, BLERemoteDescriptor*>* BLERemoteCharacteristic::getDescriptors() {
 	return &m_descriptorMap;
 } // getDescriptors
 
@@ -336,7 +339,7 @@ uint16_t BLERemoteCharacteristic::getHandle() {
  */
 BLERemoteDescriptor* BLERemoteCharacteristic::getDescriptor(BLEUUID uuid) {
 	log_v(">> getDescriptor: uuid: %s", uuid.toString().c_str());
-	std::string v = uuid.toString();
+	String v = uuid.toString();
 	for (auto &myPair : m_descriptorMap) {
 		if (myPair.first == v) {
 			log_v("<< getDescriptor: found");
@@ -371,9 +374,9 @@ BLEUUID BLERemoteCharacteristic::getUUID() {
  * @return The unsigned 16 bit value.
  */
 uint16_t BLERemoteCharacteristic::readUInt16() {
-	std::string value = readValue();
+	String value = readValue();
 	if (value.length() >= 2) {
-		return *(uint16_t*)(value.data());
+		return *(uint16_t*)(value.c_str());
 	}
 	return 0;
 } // readUInt16
@@ -384,9 +387,9 @@ uint16_t BLERemoteCharacteristic::readUInt16() {
  * @return the unsigned 32 bit value.
  */
 uint32_t BLERemoteCharacteristic::readUInt32() {
-	std::string value = readValue();
+	String value = readValue();
 	if (value.length() >= 4) {
-		return *(uint32_t*)(value.data());
+		return *(uint32_t*)(value.c_str());
 	}
 	return 0;
 } // readUInt32
@@ -397,7 +400,7 @@ uint32_t BLERemoteCharacteristic::readUInt32() {
  * @return The value as a byte
  */
 uint8_t BLERemoteCharacteristic::readUInt8() {
-	std::string value = readValue();
+	String value = readValue();
 	if (value.length() >= 1) {
 		return (uint8_t)value[0];
 	}
@@ -409,9 +412,9 @@ uint8_t BLERemoteCharacteristic::readUInt8() {
  * @return the float value.
  */
 float BLERemoteCharacteristic::readFloat() {
-	std::string value = readValue();
+	String value = readValue();
 	if (value.length() >= 4) {
-		return *(float*)(value.data());
+		return *(float*)(value.c_str());
 	}
 	return 0.0;
 } // readFloat
@@ -420,13 +423,13 @@ float BLERemoteCharacteristic::readFloat() {
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
  */
-std::string BLERemoteCharacteristic::readValue() {
+String BLERemoteCharacteristic::readValue() {
 	log_v(">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
 
 	// Check to see that we are connected.
 	if (!getRemoteService()->getClient()->isConnected()) {
 		log_e("Disconnected");
-		return std::string();
+		return String();
 	}
 
 	m_semaphoreReadCharEvt.take("readValue");
@@ -445,7 +448,7 @@ std::string BLERemoteCharacteristic::readValue() {
 		return "";
 	}
 
-	// Block waiting for the event that indicates that the read has completed.  When it has, the std::string found
+	// Block waiting for the event that indicates that the read has completed.  When it has, the String found
 	// in m_value will contain our data.
 	m_semaphoreReadCharEvt.wait("readValue");
 
@@ -528,8 +531,8 @@ void BLERemoteCharacteristic::removeDescriptors() {
  * @brief Convert a BLERemoteCharacteristic to a string representation;
  * @return a String representation.
  */
-std::string BLERemoteCharacteristic::toString() {
-	std::string res = "Characteristic: uuid: " + m_uuid.toString();
+String BLERemoteCharacteristic::toString() {
+	String res = "Characteristic: uuid: " + m_uuid.toString();
 	char val[6];
 	res += ", handle: ";
 	snprintf(val, sizeof(val), "%d", getHandle());
@@ -548,8 +551,8 @@ std::string BLERemoteCharacteristic::toString() {
  * @param [in] response Do we expect a response?
  * @return N/A.
  */
-void BLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
-	writeValue((uint8_t*)newValue.data(), newValue.length(), response);
+void BLERemoteCharacteristic::writeValue(String newValue, bool response) {
+	writeValue((uint8_t*)newValue.c_str(), newValue.length(), response);
 } // writeValue
 
 
@@ -573,7 +576,7 @@ void BLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
  * @param [in] response Whether we require a response from the write.
  */
 void BLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool response) {
-	// writeValue(std::string((char*)data, length), response);
+	// writeValue(String((char*)data, length), response);
 	log_v(">> writeValue(), length: %d", length);
 
 	// Check to see that we are connected.
@@ -621,3 +624,4 @@ void BLERemoteCharacteristic::setAuth(esp_gatt_auth_req_t auth) {
 }
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
