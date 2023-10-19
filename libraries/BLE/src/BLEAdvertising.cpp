@@ -89,7 +89,7 @@ bool BLEAdvertising::removeServiceUUID(int index) {
 	// advertised services, return false
 	if(index > m_serviceUUIDs.size()) return false;
 	
-	m_serviceUUIDs.erase(m_serviceUUIDs.begin() + i);
+	m_serviceUUIDs.erase(m_serviceUUIDs.begin() + index);
 	return true;
 }
 	
