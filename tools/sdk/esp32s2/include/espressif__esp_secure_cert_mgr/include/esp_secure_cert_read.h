@@ -6,6 +6,7 @@
 #pragma once
 #include "esp_err.h"
 
+#include "esp_secure_cert_tlv_config.h"
 #include "soc/soc_caps.h"
 #ifdef CONFIG_ESP_SECURE_CERT_DS_PERIPHERAL
 #include "rsa_sign_alt.h"
@@ -37,6 +38,26 @@ typedef enum key_type {
  */
 esp_err_t esp_secure_cert_init_nvs_partition(void);
 
+/*
+ *  Get the flash address of the data of a TLV entry
+ *
+ * Note: This API also validates the crc of the respective tlv before returning the offset. The offset is not the physical address but the address where it is mapped in the memory space.
+ * @input
+ *     type                 Type of the TLV entry
+ *     subtype              Subtype of the TLV entry (index)
+ *     buffer               Pointer to the buffer to store the data address
+ *     len                  Pointer to store the length of the data
+ *
+ * Note: If tlv type = ESP_SECURE_CERT_TLV_END then the address returned shall be the end address of current tlv formatted data.
+ * If tlv subtype = ESP_SECURE_CERT_SUBTYPE_MAX then the the address of tlv of given type and highest subtype found shall be returned.
+ * @return
+ *
+ *      - ESP_OK    On success
+ *      - ESP_FAIL/other relevant esp error code
+ *                  On failure
+ */
+esp_err_t esp_secure_cert_tlv_get_addr(esp_secure_cert_tlv_type_t type, esp_secure_cert_tlv_subtype_t subtype, char **buffer, uint32_t *len);
+
 /* @info
  *  Get the device cert from the esp_secure_cert partition
  *
@@ -46,6 +67,7 @@ esp_err_t esp_secure_cert_init_nvs_partition(void);
  *       The pointer can be freed in this case (NVS) using respective free API
  *
  *       In case of cust_flash partition, a read only flash pointer shall be returned here. This pointer should not be freed
+ *       This API shall provide latest entry of the given type. Latest entry shall be considered as the entry with given type and highest value of subtype field.
  *
  * @params
  *      - buffer(out)       This value shall be filled with the device cert address
@@ -85,6 +107,7 @@ esp_err_t esp_secure_cert_free_device_cert(char *buffer);
  *
  *      The esp_secure_cert_free_ca_cert API needs to be called in order to free the memory.
  *      The API shall only free the memory if it has been dynamically allocated.
+ *      This API shall provide latest entry of the given type. Latest entry shall be considered as the entry with given type and highest value of subtype field.
  *
  * @params
  *      - buffer(out)       This value shall be filled with the ca cert address
@@ -127,6 +150,7 @@ esp_err_t esp_secure_cert_free_ca_cert(char *buffer);
  *      The API shall only free the memory if it has been dynamically allocated.
  *
  *      The private key(buffer) shall be returned as NULL when private key type is ESP_SECURE_CERT_ECDSA_PERIPHERAL_KEY.
+ *      This API shall provide latest entry of the given type. Latest entry shall be considered as the entry with given type and highest value of subtype field.
  *
  * @params
  *      - buffer(out)       This value shall be filled with the private key address
@@ -178,12 +202,13 @@ void esp_secure_cert_free_ds_ctx(esp_ds_data_ctx_t *ds_ctx);
 
 /* @info
  *  Get the private key type from the esp_secure_cert partition
+ *  This API shall provide latest entry of the given type. Latest entry shall be considered as the entry with given type and highest value of subtype field.
  *
  * @note
  *      The API is only supported for the TLV format
  *
  * @params
- *      - priv_key_type(in/out)    Pointer to store the obtained key type
+ *      - priv_key_type(out)    Pointer to store the obtained key type
  * @return
  *      - ESP_OK    On success
  *      - ESP_FAIL/other relevant esp error code
@@ -192,19 +217,19 @@ void esp_secure_cert_free_ds_ctx(esp_ds_data_ctx_t *ds_ctx);
 esp_err_t esp_secure_cert_get_priv_key_type(esp_secure_cert_key_type_t *priv_key_type);
 
 /* @info
- *  Get the efuse key block id in which the private key is stored.
+ *  Get the efuse block id in which the private key is stored.
  * @note
  *      The API is only supported for the TLV format.
- *      For now only ECDSA type of private key can be stored in the eFuse key blocks
+ *      For now only ECDSA type of private key can be stored in the efuse block
  *
  * @params
- *      - efuse_key_id(in/out)    Pointer to store the obtained key id
+ *      - efuse_block_id(out)    Pointer to store the obtained efuse block id
  * @return
  *      - ESP_OK    On success
  *      - ESP_FAIL/other relevant esp error code
  *                  On failure
  */
-esp_err_t esp_secure_cert_get_priv_key_efuse_id(uint8_t *efuse_key_id);
+esp_err_t esp_secure_cert_get_priv_key_efuse_id(uint8_t *efuse_block_id);
 #endif
 
 #ifdef __cplusplus
