@@ -147,7 +147,7 @@ protected:
 #define Serial USBSerial
 #endif
 // USBSerial is always available to be used
-extern USBCDC USBSerial(0);
+extern USBCDC USBSerial;
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
