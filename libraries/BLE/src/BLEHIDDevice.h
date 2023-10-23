@@ -44,7 +44,7 @@ public:
 	BLEService* batteryService();
 
 	BLECharacteristic* 	manufacturer();
-	void 	manufacturer(std::string name);
+	void 	manufacturer(String name);
 	//BLECharacteristic* 	pnp();
 	void	pnp(uint8_t sig, uint16_t vid, uint16_t pid, uint16_t version);
 	//BLECharacteristic*	hidInfo();

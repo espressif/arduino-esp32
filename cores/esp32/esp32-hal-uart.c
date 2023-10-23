@@ -65,8 +65,8 @@ static uart_t _uart_bus_array[] = {
 
 #else
 
-#define UART_MUTEX_LOCK()    do {} while (xSemaphoreTake(uart->lock, portMAX_DELAY) != pdPASS)
-#define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
+#define UART_MUTEX_LOCK()    if(uart->lock != NULL) do {} while (xSemaphoreTake(uart->lock, portMAX_DELAY) != pdPASS)
+#define UART_MUTEX_UNLOCK()  if(uart->lock != NULL) xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
     {NULL, 0, false, 0, NULL, -1, -1, -1, -1},
@@ -80,35 +80,178 @@ static uart_t _uart_bus_array[] = {
 
 #endif
 
-// IDF UART has no detach function. As consequence, after ending a UART, the previous pins continue
-// to work as RX/TX. It can be verified by changing the UART pins and writing to the UART. Output can 
-// be seen in the previous pins and new pins as well. 
-// Valid pin UART_PIN_NO_CHANGE is defined to (-1)
 // Negative Pin Number will keep it unmodified, thus this function can detach individual pins
-static void _uartDetachPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+// This function will also unset the pins in the Peripheral Manager and set the pin to -1 after detaching
+static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
-    if(uart == NULL) {
-        return;
+    if(uart_num >= SOC_UART_NUM) {
+        log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+        return false;
     }
-    if (txPin >= 0) {
+    // get UART information
+    uart_t* uart = &_uart_bus_array[uart_num];
+    bool retCode = true;
+    //log_v("detaching UART%d pins: prev,pin RX(%d,%d) TX(%d,%d) CTS(%d,%d) RTS(%d,%d)", uart_num, 
+    //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+
+    // detaches pins and sets Peripheral Manager and UART information
+    if (rxPin >= 0 && uart->_rxPin == rxPin && perimanGetPinBusType(rxPin) == ESP32_BUS_TYPE_UART_RX) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
+        uart->_rxPin = -1;  // -1 means unassigned/detached
+        if (!perimanSetPinBus(rxPin, ESP32_BUS_TYPE_INIT, NULL)) {
+            retCode = false;
+            log_e("UART%d failed to detach RX pin %d", uart_num, rxPin);
+        }
+    }
+    if (txPin >= 0 && uart->_txPin == txPin && perimanGetPinBusType(txPin) == ESP32_BUS_TYPE_UART_TX) {
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_out_signal(txPin, SIG_GPIO_OUT_IDX, false, false);
+        uart->_txPin = -1;  // -1 means unassigned/detached
+        if (!perimanSetPinBus(txPin, ESP32_BUS_TYPE_INIT, NULL)) {
+            retCode = false;
+            log_e("UART%d failed to detach TX pin %d", uart_num, txPin);
+        }
     }
-
-    if (rxPin >= 0) {
-        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
-        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart->num, SOC_UART_RX_PIN_IDX), false);
+    if (ctsPin >= 0 && uart->_ctsPin == ctsPin && perimanGetPinBusType(ctsPin) == ESP32_BUS_TYPE_UART_CTS) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_CTS_PIN_IDX), false);
+        uart->_ctsPin = -1;  // -1 means unassigned/detached
+        if (!perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_INIT, NULL)) {
+            retCode = false;
+            log_e("UART%d failed to detach CTS pin %d", uart_num, ctsPin);
+        }
     }
-
-    if (rtsPin >= 0) {
+    if (rtsPin >= 0 && uart->_rtsPin == rtsPin && perimanGetPinBusType(rtsPin) == ESP32_BUS_TYPE_UART_RTS) {
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
+        uart->_rtsPin = -1;  // -1 means unassigned/detached
+        if (!perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_INIT, NULL)) {
+            retCode = false;
+            log_e("UART%d failed to detach RTS pin %d", uart_num, rtsPin);
+        }
     }
+    return retCode;
+}
 
-    if (ctsPin >= 0) {
-        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
-        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart->num, SOC_UART_CTS_PIN_IDX), false);
+// Peripheral Manager detach callback for each specific UART PIN
+static bool _uartDetachBus_RX(void *busptr)
+{
+  // sanity check - it should never happen
+  assert(busptr && "_uartDetachBus_RX bus NULL pointer.");
+  uart_t* bus = (uart_t*) busptr;
+  return _uartDetachPins(bus->num, bus->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+}
+
+static bool _uartDetachBus_TX(void *busptr)
+{
+  // sanity check - it should never happen
+  assert(busptr && "_uartDetachBus_TX bus NULL pointer.");
+  uart_t* bus = (uart_t*) busptr;
+  return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+}
+
+
+static bool _uartDetachBus_CTS(void *busptr)
+{
+  // sanity check - it should never happen
+  assert(busptr && "_uartDetachBus_CTS bus NULL pointer.");
+  uart_t* bus = (uart_t*) busptr;
+  return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, bus->_ctsPin, UART_PIN_NO_CHANGE);
+}
+
+static bool _uartDetachBus_RTS(void *busptr)
+{
+  // sanity check - it should never happen
+  assert(busptr && "_uartDetachBus_RTS bus NULL pointer.");
+  uart_t* bus = (uart_t*) busptr;
+  return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, bus->_rtsPin);
+}
+
+// Attach function for UART 
+// connects the IO Pad, set Paripheral Manager and internal UART structure data
+static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+{
+    if(uart_num >= SOC_UART_NUM) {
+        log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+        return false;
     }
+    // get UART information
+    uart_t* uart = &_uart_bus_array[uart_num];
+    //log_v("attaching UART%d pins: prev,new RX(%d,%d) TX(%d,%d) CTS(%d,%d) RTS(%d,%d)", uart_num, 
+    //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+
+
+    bool retCode = true;
+    if (rxPin >= 0) {
+        // connect RX Pad
+        bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+        if (ret) {
+            ret &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void *)uart);
+            if (ret) uart->_rxPin = rxPin;
+        }
+        if (!ret) {
+            log_e("UART%d failed to attach RX pin %d", uart_num, rxPin);
+        }
+        retCode &= ret;
+    }
+    if (txPin >= 0) {
+        // connect TX Pad
+        bool ret = ESP_OK == uart_set_pin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+        if (ret) {
+            ret &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void *)uart);
+            if (ret) uart->_txPin = txPin;
+        }
+        if (!ret) {
+            log_e("UART%d failed to attach TX pin %d", uart_num, txPin);
+        }
+        retCode &= ret;
+    }
+    if (ctsPin >= 0) {
+        // connect CTS Pad
+        bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
+        if (ret) {
+            ret &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART_CTS, (void *)uart);
+            if (ret) uart->_ctsPin = ctsPin;
+        }
+        if (!ret) {
+            log_e("UART%d failed to attach CTS pin %d", uart_num, ctsPin);
+        }
+        retCode &= ret;
+    }
+    if (rtsPin >= 0) {
+        // connect RTS Pad
+        bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
+        if (ret) {
+            ret &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART_RTS, (void *)uart);
+            if (ret) uart->_rtsPin = rtsPin;
+        }
+        if (!ret) {
+            log_e("UART%d failed to attach RTS pin %d", uart_num, rtsPin);
+        }
+        retCode &= ret;
+    }
+    return retCode;
+}
+
+// just helper functions
+int8_t uart_get_RxPin(uint8_t uart_num)
+{
+    return _uart_bus_array[uart_num]._rxPin;
+}
+
+int8_t uart_get_TxPin(uint8_t uart_num)
+{
+    return _uart_bus_array[uart_num]._txPin;
+}
+
+void uart_init_PeriMan(void)
+{
+    // set Peripheral Manager deInit Callback for each UART pin
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, _uartDetachBus_RX);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_TX, _uartDetachBus_TX);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_CTS, _uartDetachBus_CTS);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RTS, _uartDetachBus_RTS);
 }
 
 // Routines that take care of UART events will be in the HardwareSerial Class code
@@ -135,111 +278,71 @@ bool uartIsDriverInstalled(uart_t* uart)
     return false;
 }
 
-// Peripheral Manager detach callback
-static bool _uartDetachBus(void *busptr)
-{
-  // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus bus NULL pointer.");
-
-  bool retCode = true;
-  uart_t* bus = (uart_t*) busptr;
-
-  if (bus->_rxPin > 0 && perimanGetPinBusType(bus->_rxPin) == ESP32_BUS_TYPE_UART) {
-    int8_t oldPinNum = bus->_rxPin;
-    _uartDetachPins(bus, bus->_rxPin, -1, -1, -1);
-    bus->_rxPin = -1;
-    retCode &= perimanSetPinBus(oldPinNum, ESP32_BUS_TYPE_INIT, NULL);
-  }
-  if (retCode && bus->_txPin > 0  && perimanGetPinBusType(bus->_txPin) == ESP32_BUS_TYPE_UART) {
-    int8_t oldPinNum = bus->_txPin;
-    _uartDetachPins(bus, -1, bus->_txPin, -1, -1);
-    bus->_txPin = -1;
-    retCode &= perimanSetPinBus(oldPinNum, ESP32_BUS_TYPE_INIT, NULL);
-  }
-  if (retCode && bus->_ctsPin > 0 && perimanGetPinBusType(bus->_ctsPin) == ESP32_BUS_TYPE_UART) {
-    int8_t oldPinNum = bus->_ctsPin;
-    _uartDetachPins(bus, -1, -1, bus->_ctsPin, -1);
-    bus->_ctsPin = -1;
-    retCode &= perimanSetPinBus(oldPinNum, ESP32_BUS_TYPE_INIT, NULL);
-  }
-  if (retCode && bus->_rtsPin > 0 && perimanGetPinBusType(bus->_rtsPin) == ESP32_BUS_TYPE_UART) {
-    int8_t oldPinNum = bus->_rtsPin;
-    _uartDetachPins(bus, -1, -1, -1, bus->_rtsPin);
-    bus->_rtsPin = -1;
-    retCode &= perimanSetPinBus(oldPinNum, ESP32_BUS_TYPE_INIT, NULL);
-  }
-  if(retCode && uart_is_driver_installed(bus->num)) {
-    retCode &= ESP_OK == uart_driver_delete(bus->num);
-  }
-
-  return retCode;
-}
-
-// Valid pin UART_PIN_NO_CHANGE is defined to (-1)
 // Negative Pin Number will keep it unmodified, thus this function can set individual pins
-bool uartSetPins(uart_t* uart, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+// When pins are changed, it will detach the previous one
+bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
-    if(uart == NULL) {
+    if(uart_num >= SOC_UART_NUM) {
+        log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
         return false;
     }
+    // get UART information
+    uart_t* uart = &_uart_bus_array[uart_num];
 
     bool retCode = true;
     UART_MUTEX_LOCK();
-    if (rxPin > 0) {
-        // detachs previous UART pin
-        if (uart->_rxPin > 0  && rxPin != uart->_rxPin) _uartDetachPins(uart, uart->_rxPin, -1, -1, -1);
-        //assign the new one
-        retCode &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART, (void *)uart);
-        if (retCode) {
-            uart->_rxPin = rxPin;
-        }
-    }
-    if (retCode && txPin > 0) {
-        // detachs previous UART pin
-        if (uart->_txPin > 0  && txPin != uart->_txPin) _uartDetachPins(uart, -1, uart->_txPin, -1, -1);
-        //assign the new one
-        retCode &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART, (void *)uart);
-        if (retCode) {
-            uart->_txPin = txPin;
-        }
-    }
-    if (retCode && ctsPin > 0)  {
-        // detachs previous UART pin
-        if (uart->_ctsPin > 0  && ctsPin != uart->_ctsPin) _uartDetachPins(uart, -1, -1, uart->_ctsPin, -1);
-        //assign the new one
-        retCode &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART, (void *)uart);
-        if (retCode) {
-            uart->_ctsPin = ctsPin;
-        }
-    }
-    if (retCode && rtsPin > 0) {
-        // detachs previous UART pin
-        if (uart->_rtsPin > 0  && rtsPin != uart->_rtsPin) _uartDetachPins(uart, -1, -1, -1, uart->_rtsPin);
-        //assign the new one
-        retCode &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART, (void *)uart);
-        if (retCode) {
-            uart->_rtsPin = rtsPin;
-        }
-    }
-    // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
-    if (retCode) retCode &= ESP_OK == uart_set_pin(uart->num, txPin, rxPin, rtsPin, ctsPin); 
 
+    //log_v("setting UART%d pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num, 
+    //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+
+    // First step: detachs all previous UART pins
+    bool rxPinChanged = rxPin >= 0 && rxPin != uart->_rxPin;
+    if (rxPinChanged) {
+        retCode &= _uartDetachPins(uart_num, uart->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    bool txPinChanged = txPin >= 0 && txPin != uart->_txPin;
+    if (txPinChanged) {
+        retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, uart->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    bool ctsPinChanged = ctsPin >= 0 && ctsPin != uart->_ctsPin;
+    if (ctsPinChanged) {
+        retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, uart->_ctsPin, UART_PIN_NO_CHANGE);
+    }
+    bool rtsPinChanged = rtsPin >= 0 && rtsPin != uart->_rtsPin;
+    if (rtsPinChanged) {
+        retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, uart->_rtsPin);
+    }
+
+    // Second step: attach all UART new pins
+    if (rxPinChanged) {
+        retCode &= _uartAttachPins(uart_num, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    if (txPinChanged) {
+        retCode &= _uartAttachPins(uart_num, UART_PIN_NO_CHANGE, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    if (ctsPinChanged) {
+        retCode &= _uartAttachPins(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin, UART_PIN_NO_CHANGE);
+    }
+    if (rtsPinChanged) {
+        retCode &= _uartAttachPins(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin);
+    }
     UART_MUTEX_UNLOCK();  
 
-    // if it fails at any point ... detachs UART
-    if (!retCode) _uartDetachBus((void *) uart);
+    if (!retCode) {
+        log_e("UART%d set pins failed.");
+    }
     return retCode;
 }
 
 // 
-bool uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
+bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t threshold) {
     if(uart == NULL) {
         return false;
     }
     // IDF will issue corresponding error message when mode or threshold are wrong and prevent crashing
     // IDF will check (mode > HW_FLOWCTRL_CTS_RTS || threshold >= SOC_UART_FIFO_LEN)
     UART_MUTEX_LOCK();
-    bool retCode = (ESP_OK == uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold));
+    bool retCode = (ESP_OK == uart_set_hw_flow_ctrl(uart->num, mode, threshold));
     UART_MUTEX_UNLOCK();  
     return retCode;
 }
@@ -251,11 +354,8 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     }
     uart_t* uart = &_uart_bus_array[uart_nr];
 
-    // set Peripheral Manager deInit Callback
-    perimanSetBusDeinit(ESP32_BUS_TYPE_UART, _uartDetachBus);
-
     if (uart_is_driver_installed(uart_nr)) {
-        _uartDetachBus((void *) uart);
+        uartEnd(uart_nr);
     }
 
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -288,12 +388,12 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     }
     
     UART_MUTEX_UNLOCK();
-
-    if (retCode) retCode &= uartSetPins(uart, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    // uartSetPins detaches previous pins if new ones are used over a previous begin()
+    if (retCode) retCode &= uartSetPins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 
     if (retCode) uartFlush(uart);
     else {
-        _uartDetachBus((void *) uart);
+        uartEnd(uart_nr);
         uart = NULL;
         log_e("UART%d initialization error.", uart->num);
     }
@@ -348,14 +448,20 @@ bool uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull)
 }
 
 
-void uartEnd(uart_t* uart)
+void uartEnd(uint8_t uart_num)
 {
-    if(uart == NULL) {
+    if(uart_num >= SOC_UART_NUM) {
+        log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
         return;
     }
+    // get UART information
+    uart_t* uart = &_uart_bus_array[uart_num];
    
     UART_MUTEX_LOCK();
-    _uartDetachBus((void *) uart);
+    _uartDetachPins(uart_num, uart->_rxPin, uart->_txPin, uart->_ctsPin, uart->_rtsPin);
+    if(uart_is_driver_installed(uart_num)) {
+        uart_driver_delete(uart_num);
+    }
     UART_MUTEX_UNLOCK();
 }
 
@@ -610,7 +716,7 @@ void uart_install_putc()
 
 // Routines that take care of UART mode in the HardwareSerial Class code
 // used to set UART_MODE_RS485_HALF_DUPLEX auto RTS for TXD for ESP32 chips
-bool uartSetMode(uart_t *uart, uint8_t mode)
+bool uartSetMode(uart_t *uart, uart_mode_t mode)
 {
     if (uart == NULL || uart->num >= SOC_UART_NUM)
     {
@@ -778,12 +884,18 @@ void uartStartDetectBaudrate(uart_t *uart) {
         return;
     }
 
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
+// Baud rate detection only works for ESP32 and ESP32S2
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+    hw->auto_baud.glitch_filt = 0x08;
+    hw->auto_baud.en = 0;
+    hw->auto_baud.en = 1;
+#else
     
     // ESP32-C3 requires further testing
     // Baud rate detection returns wrong values 
    
-    log_e("ESP32-C3 baud rate detection is not supported.");
+    log_e("baud rate detection for this SoC is not supported.");
     return;
 
     // Code bellow for C3 kept for future recall
@@ -791,19 +903,10 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->rx_filt.glitch_filt_en = 1;
     //hw->conf0.autobaud_en = 0;
     //hw->conf0.autobaud_en = 1;
-#elif CONFIG_IDF_TARGET_ESP32S3
-    log_e("ESP32-S3 baud rate detection is not supported.");
-    return;
-#else
-    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->auto_baud.glitch_filt = 0x08;
-    hw->auto_baud.en = 0;
-    hw->auto_baud.en = 1;
 #endif
 }
  
-unsigned long
-uartDetectBaudrate(uart_t *uart)
+unsigned long uartDetectBaudrate(uart_t *uart)
 {
     if(uart == NULL) {
         return 0;
@@ -849,11 +952,7 @@ uartDetectBaudrate(uart_t *uart)
 
     return default_rates[i];
 #else
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    log_e("ESP32-C3 baud rate detection is not supported.");
-#else
-    log_e("ESP32-S3 baud rate detection is not supported.");
-#endif
+    log_e("baud rate detection this SoC is not supported.");
     return 0;
 #endif
 }

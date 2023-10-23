@@ -1,0 +1,196 @@
+#########################
+Migration from 2.x to 3.0
+#########################
+
+Introduction
+------------
+
+This is a guide to highlight **breaking changes** in the API and to help the migration of projects from versions 2.X (based on ESP-IDF 4.4) to version 3.0 (based on ESP-IDF 5.1) of the Arduino ESP32 core.
+
+All the examples on the version 3.0.0 were updated to be compatible to the new API. The old examples from the versions below 3.0.0 will be not compatible with the version 3.0.0 or newer releases.
+
+For more information about all changes and new features, check project `RELEASE NOTES <https://github.com/espressif/arduino-esp32/releases>`_.
+
+ADC
+---
+
+Removed APIs
+************
+
+* ``analogSetClockDiv``
+* ``adcAttachPin``
+* ``analogSetVRefPin``
+
+BLE
+---
+
+Changes in APIs
+***************
+
+* Changed APIs return and parameter type from ``std::string`` to Arduino style ``String``.
+* Changed UUID data type from ``uint16_t`` to ``BLEUUID`` class.
+* ``BLEScan::start`` and ``BLEScan::getResults`` methods return type changed from ``BLEScanResults`` to ``BLEScanResults*``.
+
+Hall Sensor
+-----------
+
+Hall sensor is no longer supported.
+
+Removed APIs
+************
+
+* ``hallRead``
+
+I2S
+---
+
+The I2S driver has been completely redesigned and refactored to use the new ESP-IDF driver. 
+For more information about the new API, check :doc:`/api/i2s`.
+
+LEDC
+----
+
+The LEDC API has been changed in order to support the Peripheral Manager and make it easier to use, as LEDC channels are now automatically assigned to pins.
+For more information about the new API, check :doc:`/api/ledc`.
+
+Removed APIs
+************
+
+* ``ledcSetup``
+* ``ledcAttachPin``
+
+New APIs
+********
+
+* ``ledcAttach`` used to set up the LEDC pin (merged ``ledcSetup`` and ``ledcAttachPin`` functions).
+* ``timerGetFrequency`` used to get the actual frequency of the timer.
+* ``timerAttachInterruptArg`` used to attach the interrupt to a timer using arguments.
+
+Changes in APIs
+***************
+
+* ``ledcDetachPin`` renamed to ``ledcDetach``.
+* In all functions, input parameter ``channel`` has been changed to ``pin``.
+
+RMT
+---
+
+For more information about the new API, check :doc:`/api/rmt`.
+
+Removed APIs
+************
+
+* ``_rmtDumpStatus``
+* ``rmtSetTick``
+* ``rmtWriteBlocking``
+* ``rmtEnd``
+* ``rmtBeginReceive``
+* ``rmtReadData``
+
+New APIs
+********
+
+* ``rmtWriteAsync``
+* ``rmtTransmitCompleted``
+* ``rmtSetRxMinThreshold``
+
+
+Changes in APIs
+***************
+
+* In all functions, input parameter ``rmt_obj_t* rmt`` has been changed to ``int pin``.
+* ``rmtInit`` return parameter changed to bool.
+* ``rmtInit`` input parameter ``bool tx_not_rx`` has been changed to ``rmt_ch_dir_t channel_direction``.
+* ``rmtInit`` new input parameter ``uint32_t frequency_Hz`` to set frequency of RMT channel (as function ``rmtSetTick`` was removed).
+* ``rmtWrite`` now sending data in blocking mode. It only returns after sending all data or through a timeout. For Async mode use the new ``rmtWriteAsync`` function.
+* ``rmtWrite`` new input parameter ``uint32_t timeout_ms``.
+* ``rmtLoop`` renamed to ``rmtWriteLooping``.
+* ``rmtRead`` input parameters changed to ``int pin, rmt_data_t* data, size_t *num_rmt_symbols, uint32_t timeout_ms``.
+* ``rmtReadAsync`` input parameters changed to ``int pin, rmt_data_t* data, size_t *num_rmt_symbols``.
+* ``rmtSetRxThreshold`` renamed to ``rmtSetRxMaxThreshold`` and input parameter ``uint32_t value`` has been changed to ``uint16_t idle_thres_ticks``.
+* ``rmtSetCarrier`` input parameters ``uint32_t low, uint32_t high`` have been changed to ``uint32_t frequency_Hz, float duty_percent``.
+
+SigmaDelta
+----------
+
+SigmaDelta has been refactored to use the new ESP-IDF driver.
+For more information about the new API, check :doc:`/api/sigmadelta`.
+
+Removed APIs
+************
+
+* ``sigmaDeltaSetup``
+* ``sigmaDeltaRead``
+
+New APIs
+********
+
+* ``sigmaDeltaAttach`` used to set up the SigmaDelta pin (channel is acquired automatically).
+* ``timerGetFrequency`` used to get the actual frequency of the timer.
+* ``timerAttachInterruptArg`` used to attach the interrupt to a timer using arguments.
+
+Changes in APIs
+***************
+
+* ``sigmaDeltaDetachPin`` renamed to ``sigmaDeltaDetach``.
+* ``sigmaDeltaWrite`` input parameter ``channel`` has been changed to ``pin``.
+
+Timer
+-----
+
+Timer has been refactored to use the new ESP-IDF driver and its API got simplified. For more information about the new API check :doc:`/api/timer`.
+
+Removed APIs
+************
+
+* ``timerGetConfig``
+* ``timerSetConfig``
+* ``timerSetDivider``
+* ``timerSetCountUp``
+* ``timerSetAutoReload``
+* ``timerGetDivider``
+* ``timerGetCountUp``
+* ``timerGetAutoReload``
+* ``timerAlarmEnable``
+* ``timerAlarmDisable``
+* ``timerAlarmWrite``
+* ``timerAlarmEnabled``
+* ``timerAlarmRead``
+* ``timerAlarmReadMicros``
+* ``timerAlarmReadSeconds``
+* ``timerAttachInterruptFlag``
+
+New APIs
+********
+
+* ``timerAlarm`` used to set up Alarm for the timer and enable it automatically (merged ``timerAlarmWrite`` and ``timerAlarmEnable`` functions).
+* ``timerGetFrequency`` used to get the actual frequency of the timer.
+* ``timerAttachInterruptArg`` used to attach the interrupt to a timer using arguments.
+
+Changes in APIs
+***************
+
+* ``timerBegin`` has now only 1 parameter (frequency). There is an automatic calculation of the divider using different clock sources
+  to achieve the selected frequency.
+* ``timerAttachInterrupt`` has now only 2 parameters. The ``edge`` parameter has been removed.
+
+UART (HardwareSerial)
+---------------------
+
+Changes in APIs
+***************
+
+* ``setHwFlowCtrlMode`` input parameter ``uint8_t mode`` has been changed to ``SerialHwFlowCtrl mode``.
+* ``setMode`` input parameter ``uint8_t mode`` has been changed to ``SerialMode mode``.
+
+Functional changes
+******************
+
+* It is now possible to detach UART0 pins by calling ``end()`` with no previous call of ``begin()``.
+* It is now possible to call ``setPins()`` before ``begin()`` or in any order.
+* ``setPins(``) will detach any previous pins that have been changed.
+* ``begin(baud, rx, tx)`` will detach any previous attached pins.
+* ``setPins()`` or ``begin(baud, rx, tx)`` when called at first, will detach console RX0/TX0, attached in boot.
+* Any pin set as -1 in ``begin()`` or ``setPins()`` won't be changed nor detached.
+* ``begin(baud)`` will not change any pins that have been set before this call, through a previous ``begin(baud, rx, tx)`` or ``setPin()``.
+* If the application only uses RX or TX, ``begin(baud, -1, tx)`` or ``begin(baud, rx)`` will change only the assigned pin and keep the other unchanged.

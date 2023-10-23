@@ -53,7 +53,7 @@ public:
 
 private:
 	friend BLEScan;
-	std::map<std::string, BLEAdvertisedDevice*> m_vectorAdvertisedDevices;
+	std::map<String, BLEAdvertisedDevice*> m_vectorAdvertisedDevices;
 };
 
 /**
@@ -71,10 +71,10 @@ public:
 	void           setInterval(uint16_t intervalMSecs);
 	void           setWindow(uint16_t windowMSecs);
 	bool           start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue = false);
-	BLEScanResults start(uint32_t duration, bool is_continue = false);
+	BLEScanResults* start(uint32_t duration, bool is_continue = false);
 	void           stop();
 	void 		   erase(BLEAddress address);
-	BLEScanResults getResults();
+	BLEScanResults* getResults();
 	void			clearResults();
 
 #ifdef SOC_BLE_50_SUPPORTED

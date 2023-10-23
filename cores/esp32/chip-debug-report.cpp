@@ -253,7 +253,10 @@ static void printPerimanInfo(void){
     chip_report_printf("  %17u : ", i);
     switch(type){
       case ESP32_BUS_TYPE_GPIO: chip_report_printf("GPIO\n"); break;
-      case ESP32_BUS_TYPE_UART: chip_report_printf("UART\n"); break;
+      case ESP32_BUS_TYPE_UART_RX: chip_report_printf("UART_RX\n"); break;
+      case ESP32_BUS_TYPE_UART_TX: chip_report_printf("UART_TX\n"); break;
+      case ESP32_BUS_TYPE_UART_CTS: chip_report_printf("UART_CTS\n"); break;
+      case ESP32_BUS_TYPE_UART_RTS: chip_report_printf("UART_RTS\n"); break;
 #if SOC_SDM_SUPPORTED
       case ESP32_BUS_TYPE_SIGMADELTA: chip_report_printf("SIGMADELTA\n"); break;
 #endif
@@ -275,8 +278,9 @@ static void printPerimanInfo(void){
 #endif
 #if SOC_I2S_SUPPORTED
       case ESP32_BUS_TYPE_I2S_STD: chip_report_printf("I2S_STD\n"); break;
-      case ESP32_BUS_TYPE_I2S_PDM: chip_report_printf("I2S_PDM\n"); break;
       case ESP32_BUS_TYPE_I2S_TDM: chip_report_printf("I2S_TDM\n"); break;
+      case ESP32_BUS_TYPE_I2S_PDM_TX: chip_report_printf("I2S_PDM_TX\n"); break;
+      case ESP32_BUS_TYPE_I2S_PDM_RX: chip_report_printf("I2S_PDM_RX\n"); break;
 #endif
 #if SOC_I2C_SUPPORTED
       case ESP32_BUS_TYPE_I2C_MASTER: chip_report_printf("I2C_MASTER\n"); break;

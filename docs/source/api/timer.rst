@@ -14,8 +14,10 @@ ESP32 SoC Number of timers
 ========= ================
 ESP32     4
 ESP32-S2  4
-ESP32-C3  2
 ESP32-S3  4
+ESP32-C3  2
+ESP32-C6  2
+ESP32-H2  2
 ========= ================
 
 Arduino-ESP32 Timer API
