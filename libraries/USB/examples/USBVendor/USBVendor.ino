@@ -6,11 +6,7 @@ void loop(){}
 #include "USB.h"
 #include "USBVendor.h"
 
-#if ARDUINO_USB_CDC_ON_BOOT
 #define HWSerial Serial0
-#else
-#define HWSerial Serial
-#endif
 
 USBVendor Vendor;
 const int buttonPin = 0;

@@ -6,13 +6,7 @@ void loop(){}
 #include "USB.h"
 #include "USBMSC.h"
 
-#if ARDUINO_USB_CDC_ON_BOOT
 #define HWSerial Serial0
-#define USBSerial Serial
-#else
-#define HWSerial Serial
-USBCDC USBSerial;
-#endif
 
 USBMSC MSC;
 

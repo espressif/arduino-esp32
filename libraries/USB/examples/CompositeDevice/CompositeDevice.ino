@@ -15,13 +15,7 @@ void loop(){}
 #if !ARDUINO_USB_MSC_ON_BOOT
 FirmwareMSC MSC_Update;
 #endif
-#if ARDUINO_USB_CDC_ON_BOOT
 #define HWSerial Serial0
-#define USBSerial Serial
-#else
-#define HWSerial Serial
-USBCDC USBSerial;
-#endif
 
 USBHID HID;
 USBHIDKeyboard Keyboard;

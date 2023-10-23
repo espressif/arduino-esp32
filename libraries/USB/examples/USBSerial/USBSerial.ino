@@ -5,13 +5,7 @@ void loop(){}
 #else
 #include "USB.h"
 
-#if ARDUINO_USB_CDC_ON_BOOT
 #define HWSerial Serial0
-#define USBSerial Serial
-#else
-#define HWSerial Serial
-USBCDC USBSerial;
-#endif
 
 static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
   if(event_base == ARDUINO_USB_EVENTS){
