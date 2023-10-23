@@ -108,7 +108,7 @@ public:
 // When using CDC on Boot, Arduino Serial is the USB device
 #define Serial USBSerial
 #endif
-// USBSerial is always available to used
+// USBSerial is always available to be used
 extern HWCDC USBSerial;
 #endif
 

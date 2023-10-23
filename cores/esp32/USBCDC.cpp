@@ -456,7 +456,7 @@ USBCDC::operator bool() const
 }
 
 #if !ARDUINO_USB_MODE         // Native USB CDC selected
-// USBSerial is always available to used
+// USBSerial is always available to be used
 USBCDC USBSerial;
 #endif
 

@@ -146,8 +146,8 @@ protected:
 // When using CDC on Boot, Arduino Serial is the USB device
 #define Serial USBSerial
 #endif
-// USBSerial is always available to used
-extern USBCDC USBSerial;
+// USBSerial is always available to be used
+extern USBCDC USBSerial(0);
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
