@@ -1727,6 +1727,7 @@ esp32s3-octal.menu.DebugLevel.debug=Debug
 esp32s3-octal.menu.DebugLevel.debug.build.code_debug=4
 esp32s3-octal.menu.DebugLevel.verbose=Verbose
 esp32s3-octal.menu.DebugLevel.verbose.build.code_debug=5
+
 esp32s3-octal.menu.EraseFlash.none=Disabled
 esp32s3-octal.menu.EraseFlash.none.upload.erase_cmd=
 esp32s3-octal.menu.EraseFlash.all=Enabled
