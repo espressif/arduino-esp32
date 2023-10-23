@@ -20316,17 +20316,17 @@ upesy_esp32s3_basic.build.psram_type=opi
 upesy_esp32s3_basic.build.memory_type={build.boot}_{build.psram_type}
 
 ## IDE 2.0 Seems to not update the value
-esp32s3.menu.JTAGAdapter.default=Disabled
-esp32s3.menu.JTAGAdapter.default.build.copy_jtag_files=0
-esp32s3.menu.JTAGAdapter.builtin=Integrated USB JTAG
-esp32s3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
-esp32s3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
-esp32s3.menu.JTAGAdapter.external=FTDI Adapter
-esp32s3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
-esp32s3.menu.JTAGAdapter.external.build.copy_jtag_files=1
-esp32s3.menu.JTAGAdapter.bridge=ESP USB Bridge
-esp32s3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
-esp32s3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+upesy_esp32s3_basic.menu.JTAGAdapter.default=Disabled
+upesy_esp32s3_basic.menu.JTAGAdapter.default.build.copy_jtag_files=0
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin=Integrated USB JTAG
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+upesy_esp32s3_basic.menu.JTAGAdapter.external=FTDI Adapter
+upesy_esp32s3_basic.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.external.build.copy_jtag_files=1
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge=ESP USB Bridge
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 upesy_esp32s3_basic.menu.FlashMode.qio=QIO 80MHz
 upesy_esp32s3_basic.menu.FlashMode.qio.build.flash_mode=dio
