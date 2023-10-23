@@ -113,11 +113,8 @@ void serialEvent2(void) {}
 #endif /* SOC_UART_NUM > 2 */
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
-#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+// There is always Seria0 for UART0
 HardwareSerial Serial0(0);
-#else
-HardwareSerial Serial(0);
-#endif
 #if SOC_UART_NUM > 1
 HardwareSerial Serial1(1);
 #endif
@@ -127,11 +124,8 @@ HardwareSerial Serial2(2);
 
 void serialEventRun(void)
 {
-#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
-    if(Serial0.available()) serialEvent();
-#else
+    // Serial is always defined as something (UART0 or USBSerial)
     if(Serial.available()) serialEvent();
-#endif
 #if SOC_UART_NUM > 1
     if(Serial1.available()) serialEvent1();
 #endif

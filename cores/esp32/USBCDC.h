@@ -141,8 +141,13 @@ protected:
     
 };
 
-#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE //Serial used for USB CDC
-extern USBCDC Serial;
+#if !ARDUINO_USB_MODE        // Native USB CDC selected
+#if ARDUINO_USB_CDC_ON_BOOT  //Serial used for USB CDC
+// When using CDC on Boot, Arduino Serial is the USB device
+#define Serial USBSerial
+#endif
+// USBSerial is always available to used
+extern USBCDC USBSerial;
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */

@@ -103,12 +103,13 @@ public:
 
 };
 
-#if ARDUINO_USB_MODE
-#if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
-extern HWCDC Serial;
-#else
+#if ARDUINO_USB_MODE         // Hardware JTAG CDC selected
+#if ARDUINO_USB_CDC_ON_BOOT  //Serial used for USB CDC
+// When using CDC on Boot, Arduino Serial is the USB device
+#define Serial USBSerial
+#endif
+// USBSerial is always available to used
 extern HWCDC USBSerial;
 #endif
-#endif
 
-#endif /* CONFIG_IDF_TARGET_ESP32C3 */
+#endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */

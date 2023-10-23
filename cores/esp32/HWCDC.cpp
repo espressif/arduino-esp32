@@ -436,12 +436,9 @@ void HWCDC::setDebugOutput(bool en)
     }
 }
 
-#if ARDUINO_USB_MODE
-#if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
-HWCDC Serial;
-#else
+#if ARDUINO_USB_MODE         // Hardware JTAG CDC selected
+// USBSerial is always available to used
 HWCDC USBSerial;
-#endif
 #endif
 
 #endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */

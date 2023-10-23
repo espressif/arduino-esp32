@@ -51,6 +51,7 @@
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
 #include "HWCDC.h"
+#include "USBCDC.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -240,15 +241,14 @@ extern void serialEventRun(void) __attribute__((weak));
 #ifndef ARDUINO_USB_CDC_ON_BOOT
 #define ARDUINO_USB_CDC_ON_BOOT 0
 #endif
-#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
-#if !ARDUINO_USB_MODE
-#include "USB.h"
-#include "USBCDC.h"
+#if !ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
+// if not using CDC on Boot, Arduino Serial is the UART0 device
+#define Serial Serial0 
 #endif
+
+// There is always Seria0 for UART0
 extern HardwareSerial Serial0;
-#else
-extern HardwareSerial Serial;
-#endif
+
 #if SOC_UART_NUM > 1
 extern HardwareSerial Serial1;
 #endif
