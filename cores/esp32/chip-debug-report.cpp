@@ -278,8 +278,9 @@ static void printPerimanInfo(void){
 #endif
 #if SOC_I2S_SUPPORTED
       case ESP32_BUS_TYPE_I2S_STD: chip_report_printf("I2S_STD\n"); break;
-      case ESP32_BUS_TYPE_I2S_PDM: chip_report_printf("I2S_PDM\n"); break;
       case ESP32_BUS_TYPE_I2S_TDM: chip_report_printf("I2S_TDM\n"); break;
+      case ESP32_BUS_TYPE_I2S_PDM_TX: chip_report_printf("I2S_PDM_TX\n"); break;
+      case ESP32_BUS_TYPE_I2S_PDM_RX: chip_report_printf("I2S_PDM_RX\n"); break;
 #endif
 #if SOC_I2C_SUPPORTED
       case ESP32_BUS_TYPE_I2C_MASTER: chip_report_printf("I2C_MASTER\n"); break;

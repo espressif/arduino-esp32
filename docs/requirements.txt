@@ -2,5 +2,6 @@
 # pip install --user -r requirements.txt
 #
 # matplotlib is currently required only by the script generate_chart.py
-sphinx-copybutton==0.3.0
+sphinx-rtd-theme
+sphinx-copybutton==0.5.0
 sphinx-tabs==3.2.0
