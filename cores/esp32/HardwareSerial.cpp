@@ -122,10 +122,27 @@ HardwareSerial Serial1(1);
 HardwareSerial Serial2(2);
 #endif
 
+#if HWCDC_SERIAL_IS_DEFINED == 1        // Hardware JTAG CDC Event
+extern void HWCDCSerialEvent (void)__attribute__((weak));
+void HWCDCSerialEvent(void) {} 
+#endif 
+
+#if USB_SERIAL_IS_DEFINED == 1          // Native USB CDC Event
+// Used by Hardware Serial for USB CDC events
+extern void USBSerialEvent (void)__attribute__((weak));
+void USBSerialEvent(void) {} 
+#endif 
+
 void serialEventRun(void)
 {
-    // Serial is always defined as something (UART0 or USBSerial)
-    if(Serial.available()) serialEvent();
+#if HWCDC_SERIAL_IS_DEFINED == 1        // Hardware JTAG CDC Event
+    if(HWCDCSerial.available()) HWCDCSerialEvent();
+#endif    
+#if USB_SERIAL_IS_DEFINED == 1          // Native USB CDC Event
+    if(USBSerial.available()) USBSerialEvent();
+#endif    
+    // UART0 is default serialEvent()
+    if(Serial0.available()) serialEvent();
 #if SOC_UART_NUM > 1
     if(Serial1.available()) serialEvent1();
 #endif

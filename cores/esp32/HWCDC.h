@@ -102,14 +102,12 @@ public:
     uint32_t baudRate(){return 115200;}
 
 };
-
-#if ARDUINO_USB_MODE         // Hardware JTAG CDC selected
-#if ARDUINO_USB_CDC_ON_BOOT  //Serial used for USB CDC
-// When using CDC on Boot, Arduino Serial is the USB device
-#define Serial USBSerial
+#if ARDUINO_USB_MODE  // Hardware JTAG CDC selected
+#ifndef HWCDC_SERIAL_IS_DEFINED
+#define HWCDC_SERIAL_IS_DEFINED 1
 #endif
-// USBSerial is always available to be used
-extern HWCDC USBSerial;
+// HWCDCSerial is always available to be used
+extern HWCDC HWCDCSerial;
 #endif
 
 #endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */
