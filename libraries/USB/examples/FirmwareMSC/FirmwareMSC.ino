@@ -9,23 +9,22 @@ void loop(){}
 #if !ARDUINO_USB_MSC_ON_BOOT
 FirmwareMSC MSC_Update;
 #endif
-#define HWSerial Serial0
 
 static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
   if(event_base == ARDUINO_USB_EVENTS){
     arduino_usb_event_data_t * data = (arduino_usb_event_data_t*)event_data;
     switch (event_id){
       case ARDUINO_USB_STARTED_EVENT:
-        HWSerial.println("USB PLUGGED");
+        Serial.println("USB PLUGGED");
         break;
       case ARDUINO_USB_STOPPED_EVENT:
-        HWSerial.println("USB UNPLUGGED");
+        Serial.println("USB UNPLUGGED");
         break;
       case ARDUINO_USB_SUSPEND_EVENT:
-        HWSerial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
+        Serial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
         break;
       case ARDUINO_USB_RESUME_EVENT:
-        HWSerial.println("USB RESUMED");
+        Serial.println("USB RESUMED");
         break;
       
       default:
@@ -35,20 +34,20 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
     arduino_firmware_msc_event_data_t * data = (arduino_firmware_msc_event_data_t*)event_data;
     switch (event_id){
       case ARDUINO_FIRMWARE_MSC_START_EVENT:
-        HWSerial.println("MSC Update Start");
+        Serial.println("MSC Update Start");
         break;
       case ARDUINO_FIRMWARE_MSC_WRITE_EVENT:
-        //HWSerial.printf("MSC Update Write %u bytes at offset %u\n", data->write.size, data->write.offset);
-        HWSerial.print(".");
+        //Serial.printf("MSC Update Write %u bytes at offset %u\n", data->write.size, data->write.offset);
+        Serial.print(".");
         break;
       case ARDUINO_FIRMWARE_MSC_END_EVENT:
-        HWSerial.printf("\nMSC Update End: %u bytes\n", data->end.size);
+        Serial.printf("\nMSC Update End: %u bytes\n", data->end.size);
         break;
       case ARDUINO_FIRMWARE_MSC_ERROR_EVENT:
-        HWSerial.printf("MSC Update ERROR! Progress: %u bytes\n", data->error.size);
+        Serial.printf("MSC Update ERROR! Progress: %u bytes\n", data->error.size);
         break;
       case ARDUINO_FIRMWARE_MSC_POWER_EVENT:
-        HWSerial.printf("MSC Update Power: power: %u, start: %u, eject: %u", data->power.power_condition, data->power.start, data->power.load_eject);
+        Serial.printf("MSC Update Power: power: %u, start: %u, eject: %u", data->power.power_condition, data->power.start, data->power.load_eject);
         break;
       
       default:
@@ -58,8 +57,8 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
 }
 
 void setup() {
-  HWSerial.begin(115200);
-  HWSerial.setDebugOutput(true);
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
 
   USB.onEvent(usbEventCallback);
   MSC_Update.onEvent(usbEventCallback);
