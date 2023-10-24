@@ -95,6 +95,107 @@ typedef enum {
     UART_PARITY_ERROR
 } hardwareSerial_error_t;
 
+
+#ifndef ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+  #define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE 2048
+#endif
+
+#ifndef ARDUINO_SERIAL_EVENT_TASK_PRIORITY
+  #define ARDUINO_SERIAL_EVENT_TASK_PRIORITY (configMAX_PRIORITIES-1)
+#endif
+
+#ifndef ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+  #define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE -1
+#endif
+
+// UART0 pins are defined by default by the bootloader.
+// The definitions for SOC_* should not be changed unless the bootloader pins
+// have changed and you know what you are doing.
+
+#ifndef SOC_RX0
+  #if CONFIG_IDF_TARGET_ESP32
+    #define SOC_RX0 (gpio_num_t)3
+  #elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    #define SOC_RX0 (gpio_num_t)44
+  #elif CONFIG_IDF_TARGET_ESP32C3
+    #define SOC_RX0 (gpio_num_t)20
+  #elif CONFIG_IDF_TARGET_ESP32C6
+    #define SOC_RX0 (gpio_num_t)17
+  #elif CONFIG_IDF_TARGET_ESP32H2
+    #define SOC_RX0 (gpio_num_t)23
+  #endif
+#endif
+
+#ifndef SOC_TX0
+  #if CONFIG_IDF_TARGET_ESP32
+    #define SOC_TX0 (gpio_num_t)1
+  #elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    #define SOC_TX0 (gpio_num_t)43
+  #elif CONFIG_IDF_TARGET_ESP32C3
+    #define SOC_TX0 (gpio_num_t)21
+  #elif CONFIG_IDF_TARGET_ESP32C6
+    #define SOC_TX0 (gpio_num_t)16
+  #elif CONFIG_IDF_TARGET_ESP32H2
+    #define SOC_TX0 (gpio_num_t)24
+  #endif
+#endif
+
+// Default pins for UART1 are arbitrary, and defined here for convenience.
+
+#if SOC_UART_NUM > 1
+  #ifndef RX1
+    #if CONFIG_IDF_TARGET_ESP32
+      #define RX1 (gpio_num_t)26
+    #elif CONFIG_IDF_TARGET_ESP32S2
+      #define RX1 (gpio_num_t)4
+    #elif CONFIG_IDF_TARGET_ESP32C3
+      #define RX1 (gpio_num_t)18
+    #elif CONFIG_IDF_TARGET_ESP32S3
+      #define RX1 (gpio_num_t)15
+    #elif CONFIG_IDF_TARGET_ESP32C6
+      #define RX1 (gpio_num_t)4
+    #elif CONFIG_IDF_TARGET_ESP32H2
+      #define RX1 (gpio_num_t)0
+    #endif
+  #endif
+
+  #ifndef TX1
+    #if CONFIG_IDF_TARGET_ESP32
+      #define TX1 (gpio_num_t)27
+    #elif CONFIG_IDF_TARGET_ESP32S2
+      #define TX1 (gpio_num_t)5
+    #elif CONFIG_IDF_TARGET_ESP32C3
+      #define TX1 (gpio_num_t)19
+    #elif CONFIG_IDF_TARGET_ESP32S3
+      #define TX1 (gpio_num_t)16
+    #elif CONFIG_IDF_TARGET_ESP32C6
+      #define TX1 (gpio_num_t)5
+    #elif CONFIG_IDF_TARGET_ESP32H2
+      #define TX1 (gpio_num_t)1
+    #endif
+  #endif
+#endif /* SOC_UART_NUM > 1 */
+
+// Default pins for UART2 are arbitrary, and defined here for convenience.
+
+#if SOC_UART_NUM > 2
+  #ifndef RX2
+    #if CONFIG_IDF_TARGET_ESP32
+      #define RX2 (gpio_num_t)4
+    #elif CONFIG_IDF_TARGET_ESP32S3
+      #define RX2 (gpio_num_t)19
+    #endif
+  #endif
+
+  #ifndef TX2
+    #if CONFIG_IDF_TARGET_ESP32
+      #define TX2 (gpio_num_t)25
+    #elif CONFIG_IDF_TARGET_ESP32S3
+      #define TX2 (gpio_num_t)20
+    #endif
+  #endif
+#endif /* SOC_UART_NUM > 2 */
+
 typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 
@@ -207,7 +308,7 @@ public:
     // Used to set RS485 modes such as UART_MODE_RS485_HALF_DUPLEX for Auto RTS function on ESP32
     //    UART_MODE_UART                   = 0x00    mode: regular UART mode
     //    UART_MODE_RS485_HALF_DUPLEX      = 0x01    mode: half duplex RS485 UART mode control by RTS pin
-    //    UART_MODE_IRDA                   = 0x02    mode: IRDA  UART mode
+    //    UART_MODE_IRDA                   = 0x02    mode: IRDA UART mode
     //    UART_MODE_RS485_COLLISION_DETECT = 0x03    mode: RS485 collision detection UART mode (used for test purposes)
     //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
     bool setMode(SerialMode mode);
