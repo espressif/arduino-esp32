@@ -19727,7 +19727,7 @@ uPesy_wrover.build.target=esp32
 uPesy_wrover.build.mcu=esp32
 uPesy_wrover.build.core=esp32
 uPesy_wrover.build.variant=uPesy_esp32_wrover_devkit
-uPesy_wrover.build.board=uPesy_WROVER
+uPesy_wrover.build.board=UPESY_WROVER
 
 uPesy_wrover.build.f_cpu=240000000L
 uPesy_wrover.build.flash_size=4MB
@@ -19844,7 +19844,7 @@ uPesy_wroom.build.target=esp32
 uPesy_wroom.build.mcu=esp32
 uPesy_wroom.build.core=esp32
 uPesy_wroom.build.variant=uPesy_esp32_wroom_devkit
-uPesy_wroom.build.board=uPesy_WROOM
+uPesy_wroom.build.board=UPESY_WROOM
 
 uPesy_wroom.build.f_cpu=240000000L
 uPesy_wroom.build.flash_size=4MB
@@ -19928,6 +19928,506 @@ uPesy_wroom.menu.EraseFlash.none=Disabled
 uPesy_wroom.menu.EraseFlash.none.upload.erase_cmd=
 uPesy_wroom.menu.EraseFlash.all=Enabled
 uPesy_wroom.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+uPesy_edu_esp32.name=uPesy EDU ESP32
+
+uPesy_edu_esp32.bootloader.tool=esptool_py
+uPesy_edu_esp32.bootloader.tool.default=esptool_py
+
+uPesy_edu_esp32.upload.tool=esptool_py
+uPesy_edu_esp32.upload.tool.default=esptool_py
+uPesy_edu_esp32.upload.tool.network=esp_ota
+
+uPesy_edu_esp32.upload.maximum_size=1310720
+uPesy_edu_esp32.upload.maximum_data_size=327680
+uPesy_edu_esp32.upload.flags=
+uPesy_edu_esp32.upload.extra_flags=
+
+uPesy_edu_esp32.serial.disableDTR=true
+uPesy_edu_esp32.serial.disableRTS=true
+
+uPesy_edu_esp32.build.tarch=xtensa
+uPesy_edu_esp32.build.bootloader_addr=0x1000
+uPesy_edu_esp32.build.target=esp32
+uPesy_edu_esp32.build.mcu=esp32
+uPesy_edu_esp32.build.core=esp32
+uPesy_edu_esp32.build.variant=uPesy_edu_esp32
+uPesy_edu_esp32.build.board=UPESY_EDU_ESP32
+
+uPesy_edu_esp32.build.f_cpu=240000000L
+uPesy_edu_esp32.build.flash_size=4MB
+uPesy_edu_esp32.build.flash_freq=80m
+uPesy_edu_esp32.build.flash_mode=dio
+uPesy_edu_esp32.build.boot=dio
+uPesy_edu_esp32.build.partitions=default
+uPesy_edu_esp32.build.defines=
+
+uPesy_edu_esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.default.build.partitions=default
+uPesy_edu_esp32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+uPesy_edu_esp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+uPesy_edu_esp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.minimal.build.partitions=minimal
+uPesy_edu_esp32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+uPesy_edu_esp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+uPesy_edu_esp32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+uPesy_edu_esp32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+uPesy_edu_esp32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+uPesy_edu_esp32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+uPesy_edu_esp32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+uPesy_edu_esp32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+uPesy_edu_esp32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+uPesy_edu_esp32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+uPesy_edu_esp32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+uPesy_edu_esp32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+uPesy_edu_esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+uPesy_edu_esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+uPesy_edu_esp32.menu.CPUFreq.240=240MHz
+uPesy_edu_esp32.menu.CPUFreq.240.build.f_cpu=240000000L
+uPesy_edu_esp32.menu.CPUFreq.160=160MHz
+uPesy_edu_esp32.menu.CPUFreq.160.build.f_cpu=160000000L
+
+uPesy_edu_esp32.menu.UploadSpeed.921600=921600
+uPesy_edu_esp32.menu.UploadSpeed.921600.upload.speed=921600
+uPesy_edu_esp32.menu.UploadSpeed.512000.windows=512000
+uPesy_edu_esp32.menu.UploadSpeed.512000.upload.speed=512000
+uPesy_edu_esp32.menu.UploadSpeed.460800.linux=460800
+uPesy_edu_esp32.menu.UploadSpeed.460800.macosx=460800
+uPesy_edu_esp32.menu.UploadSpeed.460800.upload.speed=460800
+uPesy_edu_esp32.menu.UploadSpeed.256000.windows=256000
+uPesy_edu_esp32.menu.UploadSpeed.256000.upload.speed=256000
+uPesy_edu_esp32.menu.UploadSpeed.230400.windows.upload.speed=256000
+uPesy_edu_esp32.menu.UploadSpeed.230400=230400
+uPesy_edu_esp32.menu.UploadSpeed.230400.upload.speed=230400
+uPesy_edu_esp32.menu.UploadSpeed.115200=115200
+uPesy_edu_esp32.menu.UploadSpeed.115200.upload.speed=115200
+
+uPesy_edu_esp32.menu.FlashMode.qio=QIO
+uPesy_edu_esp32.menu.FlashMode.qio.build.flash_mode=dio
+uPesy_edu_esp32.menu.FlashMode.qio.build.boot=qio
+uPesy_edu_esp32.menu.FlashMode.dio=DIO
+uPesy_edu_esp32.menu.FlashMode.dio.build.flash_mode=dio
+uPesy_edu_esp32.menu.FlashMode.dio.build.boot=dio
+
+uPesy_edu_esp32.menu.FlashFreq.80=80MHz
+uPesy_edu_esp32.menu.FlashFreq.80.build.flash_freq=80m
+uPesy_edu_esp32.menu.FlashFreq.40=40MHz
+uPesy_edu_esp32.menu.FlashFreq.40.build.flash_freq=40m
+
+uPesy_edu_esp32.menu.DebugLevel.none=None
+uPesy_edu_esp32.menu.DebugLevel.none.build.code_debug=0
+uPesy_edu_esp32.menu.DebugLevel.error=Error
+uPesy_edu_esp32.menu.DebugLevel.error.build.code_debug=1
+uPesy_edu_esp32.menu.DebugLevel.warn=Warn
+uPesy_edu_esp32.menu.DebugLevel.warn.build.code_debug=2
+uPesy_edu_esp32.menu.DebugLevel.info=Info
+uPesy_edu_esp32.menu.DebugLevel.info.build.code_debug=3
+uPesy_edu_esp32.menu.DebugLevel.debug=Debug
+uPesy_edu_esp32.menu.DebugLevel.debug.build.code_debug=4
+uPesy_edu_esp32.menu.DebugLevel.verbose=Verbose
+uPesy_edu_esp32.menu.DebugLevel.verbose.build.code_debug=5
+
+uPesy_edu_esp32.menu.EraseFlash.none=Disabled
+uPesy_edu_esp32.menu.EraseFlash.none.upload.erase_cmd=
+uPesy_edu_esp32.menu.EraseFlash.all=Enabled
+uPesy_edu_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+upesy_esp32c3_basic.name=uPesy ESP32C3 Basic
+upesy_esp32c3_basic.vid.0=0x303a
+upesy_esp32c3_basic.pid.0=0x8195
+
+upesy_esp32c3_basic.bootloader.tool=esptool_py
+upesy_esp32c3_basic.bootloader.tool.default=esptool_py
+
+upesy_esp32c3_basic.upload.tool=esptool_py
+upesy_esp32c3_basic.upload.tool.default=esptool_py
+upesy_esp32c3_basic.upload.tool.network=esp_ota
+
+upesy_esp32c3_basic.upload.maximum_size=1310720
+upesy_esp32c3_basic.upload.maximum_data_size=327680
+upesy_esp32c3_basic.upload.flags=
+upesy_esp32c3_basic.upload.extra_flags=
+upesy_esp32c3_basic.upload.use_1200bps_touch=false
+upesy_esp32c3_basic.upload.wait_for_upload_port=false
+
+upesy_esp32c3_basic.serial.disableDTR=true
+upesy_esp32c3_basic.serial.disableRTS=true
+
+upesy_esp32c3_basic.build.tarch=riscv32
+upesy_esp32c3_basic.build.target=esp
+upesy_esp32c3_basic.build.mcu=esp32c3
+upesy_esp32c3_basic.build.core=esp32
+upesy_esp32c3_basic.build.variant=uPesy_esp32c3_basic
+upesy_esp32c3_basic.build.board=UPESY_ESP32C3_BASIC
+upesy_esp32c3_basic.build.bootloader_addr=0x0
+
+upesy_esp32c3_basic.build.cdc_on_boot=1
+upesy_esp32c3_basic.build.f_cpu=160000000L
+upesy_esp32c3_basic.build.flash_size=4MB
+upesy_esp32c3_basic.build.flash_freq=80m
+upesy_esp32c3_basic.build.flash_mode=dio
+upesy_esp32c3_basic.build.boot=qio
+upesy_esp32c3_basic.build.partitions=default
+upesy_esp32c3_basic.build.defines=
+
+upesy_esp32c3_basic.menu.CDCOnBoot.default=Enabled
+upesy_esp32c3_basic.menu.CDCOnBoot.default.build.cdc_on_boot=1
+upesy_esp32c3_basic.menu.CDCOnBoot.dis_cdc=Disabled
+upesy_esp32c3_basic.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+upesy_esp32c3_basic.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+upesy_esp32c3_basic.menu.PartitionScheme.default.build.partitions=default
+upesy_esp32c3_basic.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+upesy_esp32c3_basic.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+upesy_esp32c3_basic.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+upesy_esp32c3_basic.menu.PartitionScheme.no_ota.build.partitions=no_ota
+upesy_esp32c3_basic.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+upesy_esp32c3_basic.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+upesy_esp32c3_basic.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+upesy_esp32c3_basic.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+upesy_esp32c3_basic.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+upesy_esp32c3_basic.menu.PartitionScheme.huge_app.build.partitions=huge_app
+upesy_esp32c3_basic.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+upesy_esp32c3_basic.menu.CPUFreq.160=160MHz (WiFi)
+upesy_esp32c3_basic.menu.CPUFreq.160.build.f_cpu=160000000L
+upesy_esp32c3_basic.menu.CPUFreq.80=80MHz (WiFi)
+upesy_esp32c3_basic.menu.CPUFreq.80.build.f_cpu=80000000L
+upesy_esp32c3_basic.menu.CPUFreq.40=40MHz
+upesy_esp32c3_basic.menu.CPUFreq.40.build.f_cpu=40000000L
+upesy_esp32c3_basic.menu.CPUFreq.20=20MHz
+upesy_esp32c3_basic.menu.CPUFreq.20.build.f_cpu=20000000L
+upesy_esp32c3_basic.menu.CPUFreq.10=10MHz
+upesy_esp32c3_basic.menu.CPUFreq.10.build.f_cpu=10000000L
+
+upesy_esp32c3_basic.menu.FlashFreq.80=80MHz
+upesy_esp32c3_basic.menu.FlashFreq.80.build.flash_freq=80m
+upesy_esp32c3_basic.menu.FlashFreq.40=40MHz
+upesy_esp32c3_basic.menu.FlashFreq.40.build.flash_freq=40m
+
+upesy_esp32c3_basic.menu.UploadSpeed.921600=921600
+upesy_esp32c3_basic.menu.UploadSpeed.921600.upload.speed=921600
+upesy_esp32c3_basic.menu.UploadSpeed.115200=115200
+upesy_esp32c3_basic.menu.UploadSpeed.115200.upload.speed=115200
+upesy_esp32c3_basic.menu.UploadSpeed.256000.windows=256000
+upesy_esp32c3_basic.menu.UploadSpeed.256000.upload.speed=256000
+upesy_esp32c3_basic.menu.UploadSpeed.230400.windows.upload.speed=256000
+upesy_esp32c3_basic.menu.UploadSpeed.230400=230400
+upesy_esp32c3_basic.menu.UploadSpeed.230400.upload.speed=230400
+upesy_esp32c3_basic.menu.UploadSpeed.460800.linux=460800
+upesy_esp32c3_basic.menu.UploadSpeed.460800.macosx=460800
+upesy_esp32c3_basic.menu.UploadSpeed.460800.upload.speed=460800
+upesy_esp32c3_basic.menu.UploadSpeed.512000.windows=512000
+upesy_esp32c3_basic.menu.UploadSpeed.512000.upload.speed=512000
+
+upesy_esp32c3_basic.menu.DebugLevel.none=None
+upesy_esp32c3_basic.menu.DebugLevel.none.build.code_debug=0
+upesy_esp32c3_basic.menu.DebugLevel.error=Error
+upesy_esp32c3_basic.menu.DebugLevel.error.build.code_debug=1
+upesy_esp32c3_basic.menu.DebugLevel.warn=Warn
+upesy_esp32c3_basic.menu.DebugLevel.warn.build.code_debug=2
+upesy_esp32c3_basic.menu.DebugLevel.info=Info
+upesy_esp32c3_basic.menu.DebugLevel.info.build.code_debug=3
+upesy_esp32c3_basic.menu.DebugLevel.debug=Debug
+upesy_esp32c3_basic.menu.DebugLevel.debug.build.code_debug=4
+upesy_esp32c3_basic.menu.DebugLevel.verbose=Verbose
+upesy_esp32c3_basic.menu.DebugLevel.verbose.build.code_debug=5
+
+upesy_esp32c3_basic.menu.EraseFlash.none=Disabled
+upesy_esp32c3_basic.menu.EraseFlash.none.upload.erase_cmd=
+upesy_esp32c3_basic.menu.EraseFlash.all=Enabled
+upesy_esp32c3_basic.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+upesy_esp32c3_mini.name=uPesy ESP32C3 Mini
+upesy_esp32c3_mini.vid.0=0x303a
+upesy_esp32c3_mini.pid.0=0x819B
+
+upesy_esp32c3_mini.bootloader.tool=esptool_py
+upesy_esp32c3_mini.bootloader.tool.default=esptool_py
+
+upesy_esp32c3_mini.upload.tool=esptool_py
+upesy_esp32c3_mini.upload.tool.default=esptool_py
+upesy_esp32c3_mini.upload.tool.network=esp_ota
+
+upesy_esp32c3_mini.upload.maximum_size=1310720
+upesy_esp32c3_mini.upload.maximum_data_size=327680
+upesy_esp32c3_mini.upload.flags=
+upesy_esp32c3_mini.upload.extra_flags=
+upesy_esp32c3_mini.upload.use_1200bps_touch=false
+upesy_esp32c3_mini.upload.wait_for_upload_port=false
+
+upesy_esp32c3_mini.serial.disableDTR=true
+upesy_esp32c3_mini.serial.disableRTS=true
+
+upesy_esp32c3_mini.build.tarch=riscv32
+upesy_esp32c3_mini.build.target=esp
+upesy_esp32c3_mini.build.mcu=esp32c3
+upesy_esp32c3_mini.build.core=esp32
+upesy_esp32c3_mini.build.variant=uPesy_esp32c3_mini
+upesy_esp32c3_mini.build.board=UPESY_ESP32C3_MINI
+upesy_esp32c3_mini.build.bootloader_addr=0x0
+
+upesy_esp32c3_mini.build.cdc_on_boot=1
+upesy_esp32c3_mini.build.f_cpu=160000000L
+upesy_esp32c3_mini.build.flash_size=4MB
+upesy_esp32c3_mini.build.flash_freq=80m
+upesy_esp32c3_mini.build.flash_mode=dio
+upesy_esp32c3_mini.build.boot=qio
+upesy_esp32c3_mini.build.partitions=default
+upesy_esp32c3_mini.build.defines=
+
+upesy_esp32c3_mini.menu.CDCOnBoot.default=Enabled
+upesy_esp32c3_mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
+upesy_esp32c3_mini.menu.CDCOnBoot.dis_cdc=Disabled
+upesy_esp32c3_mini.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+upesy_esp32c3_mini.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+upesy_esp32c3_mini.menu.PartitionScheme.default.build.partitions=default
+upesy_esp32c3_mini.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+upesy_esp32c3_mini.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+upesy_esp32c3_mini.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+upesy_esp32c3_mini.menu.PartitionScheme.no_ota.build.partitions=no_ota
+upesy_esp32c3_mini.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+upesy_esp32c3_mini.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+upesy_esp32c3_mini.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+upesy_esp32c3_mini.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+upesy_esp32c3_mini.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+upesy_esp32c3_mini.menu.PartitionScheme.huge_app.build.partitions=huge_app
+upesy_esp32c3_mini.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+upesy_esp32c3_mini.menu.CPUFreq.160=160MHz (WiFi)
+upesy_esp32c3_mini.menu.CPUFreq.160.build.f_cpu=160000000L
+upesy_esp32c3_mini.menu.CPUFreq.80=80MHz (WiFi)
+upesy_esp32c3_mini.menu.CPUFreq.80.build.f_cpu=80000000L
+upesy_esp32c3_mini.menu.CPUFreq.40=40MHz
+upesy_esp32c3_mini.menu.CPUFreq.40.build.f_cpu=40000000L
+upesy_esp32c3_mini.menu.CPUFreq.20=20MHz
+upesy_esp32c3_mini.menu.CPUFreq.20.build.f_cpu=20000000L
+upesy_esp32c3_mini.menu.CPUFreq.10=10MHz
+upesy_esp32c3_mini.menu.CPUFreq.10.build.f_cpu=10000000L
+
+upesy_esp32c3_mini.menu.FlashFreq.80=80MHz
+upesy_esp32c3_mini.menu.FlashFreq.80.build.flash_freq=80m
+upesy_esp32c3_mini.menu.FlashFreq.40=40MHz
+upesy_esp32c3_mini.menu.FlashFreq.40.build.flash_freq=40m
+
+upesy_esp32c3_mini.menu.UploadSpeed.921600=921600
+upesy_esp32c3_mini.menu.UploadSpeed.921600.upload.speed=921600
+upesy_esp32c3_mini.menu.UploadSpeed.115200=115200
+upesy_esp32c3_mini.menu.UploadSpeed.115200.upload.speed=115200
+upesy_esp32c3_mini.menu.UploadSpeed.256000.windows=256000
+upesy_esp32c3_mini.menu.UploadSpeed.256000.upload.speed=256000
+upesy_esp32c3_mini.menu.UploadSpeed.230400.windows.upload.speed=256000
+upesy_esp32c3_mini.menu.UploadSpeed.230400=230400
+upesy_esp32c3_mini.menu.UploadSpeed.230400.upload.speed=230400
+upesy_esp32c3_mini.menu.UploadSpeed.460800.linux=460800
+upesy_esp32c3_mini.menu.UploadSpeed.460800.macosx=460800
+upesy_esp32c3_mini.menu.UploadSpeed.460800.upload.speed=460800
+upesy_esp32c3_mini.menu.UploadSpeed.512000.windows=512000
+upesy_esp32c3_mini.menu.UploadSpeed.512000.upload.speed=512000
+
+upesy_esp32c3_mini.menu.DebugLevel.none=None
+upesy_esp32c3_mini.menu.DebugLevel.none.build.code_debug=0
+upesy_esp32c3_mini.menu.DebugLevel.error=Error
+upesy_esp32c3_mini.menu.DebugLevel.error.build.code_debug=1
+upesy_esp32c3_mini.menu.DebugLevel.warn=Warn
+upesy_esp32c3_mini.menu.DebugLevel.warn.build.code_debug=2
+upesy_esp32c3_mini.menu.DebugLevel.info=Info
+upesy_esp32c3_mini.menu.DebugLevel.info.build.code_debug=3
+upesy_esp32c3_mini.menu.DebugLevel.debug=Debug
+upesy_esp32c3_mini.menu.DebugLevel.debug.build.code_debug=4
+upesy_esp32c3_mini.menu.DebugLevel.verbose=Verbose
+upesy_esp32c3_mini.menu.DebugLevel.verbose.build.code_debug=5
+
+upesy_esp32c3_mini.menu.EraseFlash.none=Disabled
+upesy_esp32c3_mini.menu.EraseFlash.none.upload.erase_cmd=
+upesy_esp32c3_mini.menu.EraseFlash.all=Enabled
+upesy_esp32c3_mini.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+upesy_esp32s3_basic.name=uPesy ESP32S3 Basic
+upesy_esp32s3_basic.vid.0=0x303a
+upesy_esp32s3_basic.pid.0=0x8192
+
+upesy_esp32s3_basic.bootloader.tool=esptool_py
+upesy_esp32s3_basic.bootloader.tool.default=esptool_py
+
+upesy_esp32s3_basic.upload.tool=esptool_py
+upesy_esp32s3_basic.upload.tool.default=esptool_py
+upesy_esp32s3_basic.upload.tool.network=esp_ota
+
+upesy_esp32s3_basic.upload.maximum_size=1310720
+upesy_esp32s3_basic.upload.maximum_data_size=327680
+upesy_esp32s3_basic.upload.flags=
+upesy_esp32s3_basic.upload.extra_flags=
+upesy_esp32s3_basic.upload.use_1200bps_touch=false
+upesy_esp32s3_basic.upload.wait_for_upload_port=false
+
+upesy_esp32s3_basic.serial.disableDTR=false
+upesy_esp32s3_basic.serial.disableRTS=false
+
+upesy_esp32s3_basic.build.tarch=xtensa
+upesy_esp32s3_basic.build.bootloader_addr=0x0
+upesy_esp32s3_basic.build.target=esp32s3
+upesy_esp32s3_basic.build.mcu=esp32s3
+upesy_esp32s3_basic.build.core=esp32
+upesy_esp32s3_basic.build.variant=uPesy_esp32s3_basic
+upesy_esp32s3_basic.build.board=UPESY_ESP32S3_BASIC
+
+upesy_esp32s3_basic.build.usb_mode=1
+upesy_esp32s3_basic.build.cdc_on_boot=0
+upesy_esp32s3_basic.build.msc_on_boot=0
+upesy_esp32s3_basic.build.dfu_on_boot=0
+upesy_esp32s3_basic.build.f_cpu=240000000L
+upesy_esp32s3_basic.build.flash_size=16MB
+upesy_esp32s3_basic.build.flash_freq=80m
+upesy_esp32s3_basic.build.flash_mode=dio
+upesy_esp32s3_basic.build.boot=qio
+upesy_esp32s3_basic.build.boot_freq=80m
+upesy_esp32s3_basic.build.partitions=default
+upesy_esp32s3_basic.build.defines=-DBOARD_HAS_PSRAM
+upesy_esp32s3_basic.build.loop_core=
+upesy_esp32s3_basic.build.event_core=
+upesy_esp32s3_basic.build.psram_type=opi
+upesy_esp32s3_basic.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+upesy_esp32s3_basic.menu.JTAGAdapter.default=Disabled
+upesy_esp32s3_basic.menu.JTAGAdapter.default.build.copy_jtag_files=0
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin=Integrated USB JTAG
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+upesy_esp32s3_basic.menu.JTAGAdapter.external=FTDI Adapter
+upesy_esp32s3_basic.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.external.build.copy_jtag_files=1
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge=ESP USB Bridge
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+upesy_esp32s3_basic.menu.FlashMode.qio=QIO 80MHz
+upesy_esp32s3_basic.menu.FlashMode.qio.build.flash_mode=dio
+upesy_esp32s3_basic.menu.FlashMode.qio.build.boot=qio
+upesy_esp32s3_basic.menu.FlashMode.qio.build.boot_freq=80m
+upesy_esp32s3_basic.menu.FlashMode.qio.build.flash_freq=80m
+upesy_esp32s3_basic.menu.FlashMode.qio120=QIO 120MHz
+upesy_esp32s3_basic.menu.FlashMode.qio120.build.flash_mode=dio
+upesy_esp32s3_basic.menu.FlashMode.qio120.build.boot=qio
+upesy_esp32s3_basic.menu.FlashMode.qio120.build.boot_freq=120m
+upesy_esp32s3_basic.menu.FlashMode.qio120.build.flash_freq=80m
+
+upesy_esp32s3_basic.menu.LoopCore.1=Core 1
+upesy_esp32s3_basic.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+upesy_esp32s3_basic.menu.LoopCore.0=Core 0
+upesy_esp32s3_basic.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+upesy_esp32s3_basic.menu.EventsCore.1=Core 1
+upesy_esp32s3_basic.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+upesy_esp32s3_basic.menu.EventsCore.0=Core 0
+upesy_esp32s3_basic.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+upesy_esp32s3_basic.menu.USBMode.hwcdc=Hardware CDC and JTAG
+upesy_esp32s3_basic.menu.USBMode.hwcdc.build.usb_mode=1
+upesy_esp32s3_basic.menu.USBMode.default=USB-OTG (TinyUSB)
+upesy_esp32s3_basic.menu.USBMode.default.build.usb_mode=0
+
+upesy_esp32s3_basic.menu.CDCOnBoot.default=Disabled
+upesy_esp32s3_basic.menu.CDCOnBoot.default.build.cdc_on_boot=0
+upesy_esp32s3_basic.menu.CDCOnBoot.cdc=Enabled
+upesy_esp32s3_basic.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+upesy_esp32s3_basic.menu.MSCOnBoot.default=Disabled
+upesy_esp32s3_basic.menu.MSCOnBoot.default.build.msc_on_boot=0
+upesy_esp32s3_basic.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+upesy_esp32s3_basic.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+upesy_esp32s3_basic.menu.DFUOnBoot.default=Disabled
+upesy_esp32s3_basic.menu.DFUOnBoot.default.build.dfu_on_boot=0
+upesy_esp32s3_basic.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+upesy_esp32s3_basic.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+upesy_esp32s3_basic.menu.UploadMode.default=UART0 / Hardware CDC
+upesy_esp32s3_basic.menu.UploadMode.default.upload.use_1200bps_touch=false
+upesy_esp32s3_basic.menu.UploadMode.default.upload.wait_for_upload_port=false
+upesy_esp32s3_basic.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+upesy_esp32s3_basic.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+upesy_esp32s3_basic.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+upesy_esp32s3_basic.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+upesy_esp32s3_basic.menu.PartitionScheme.fatflash.build.partitions=ffat
+upesy_esp32s3_basic.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+upesy_esp32s3_basic.menu.CPUFreq.240=240MHz (WiFi)
+upesy_esp32s3_basic.menu.CPUFreq.240.build.f_cpu=240000000L
+upesy_esp32s3_basic.menu.CPUFreq.160=160MHz (WiFi)
+upesy_esp32s3_basic.menu.CPUFreq.160.build.f_cpu=160000000L
+upesy_esp32s3_basic.menu.CPUFreq.80=80MHz (WiFi)
+upesy_esp32s3_basic.menu.CPUFreq.80.build.f_cpu=80000000L
+upesy_esp32s3_basic.menu.CPUFreq.40=40MHz
+upesy_esp32s3_basic.menu.CPUFreq.40.build.f_cpu=40000000L
+upesy_esp32s3_basic.menu.CPUFreq.20=20MHz
+upesy_esp32s3_basic.menu.CPUFreq.20.build.f_cpu=20000000L
+upesy_esp32s3_basic.menu.CPUFreq.10=10MHz
+upesy_esp32s3_basic.menu.CPUFreq.10.build.f_cpu=10000000L
+
+upesy_esp32s3_basic.menu.UploadSpeed.921600=921600
+upesy_esp32s3_basic.menu.UploadSpeed.921600.upload.speed=921600
+upesy_esp32s3_basic.menu.UploadSpeed.115200=115200
+upesy_esp32s3_basic.menu.UploadSpeed.115200.upload.speed=115200
+upesy_esp32s3_basic.menu.UploadSpeed.256000.windows=256000
+upesy_esp32s3_basic.menu.UploadSpeed.256000.upload.speed=256000
+upesy_esp32s3_basic.menu.UploadSpeed.230400.windows.upload.speed=256000
+upesy_esp32s3_basic.menu.UploadSpeed.230400=230400
+upesy_esp32s3_basic.menu.UploadSpeed.230400.upload.speed=230400
+upesy_esp32s3_basic.menu.UploadSpeed.460800.linux=460800
+upesy_esp32s3_basic.menu.UploadSpeed.460800.macosx=460800
+upesy_esp32s3_basic.menu.UploadSpeed.460800.upload.speed=460800
+upesy_esp32s3_basic.menu.UploadSpeed.512000.windows=512000
+upesy_esp32s3_basic.menu.UploadSpeed.512000.upload.speed=512000
+
+upesy_esp32s3_basic.menu.DebugLevel.none=None
+upesy_esp32s3_basic.menu.DebugLevel.none.build.code_debug=0
+upesy_esp32s3_basic.menu.DebugLevel.error=Error
+upesy_esp32s3_basic.menu.DebugLevel.error.build.code_debug=1
+upesy_esp32s3_basic.menu.DebugLevel.warn=Warn
+upesy_esp32s3_basic.menu.DebugLevel.warn.build.code_debug=2
+upesy_esp32s3_basic.menu.DebugLevel.info=Info
+upesy_esp32s3_basic.menu.DebugLevel.info.build.code_debug=3
+upesy_esp32s3_basic.menu.DebugLevel.debug=Debug
+upesy_esp32s3_basic.menu.DebugLevel.debug.build.code_debug=4
+upesy_esp32s3_basic.menu.DebugLevel.verbose=Verbose
+upesy_esp32s3_basic.menu.DebugLevel.verbose.build.code_debug=5
+
+upesy_esp32s3_basic.menu.EraseFlash.none=Disabled
+upesy_esp32s3_basic.menu.EraseFlash.none.upload.erase_cmd=
+upesy_esp32s3_basic.menu.EraseFlash.all=Enabled
+upesy_esp32s3_basic.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
