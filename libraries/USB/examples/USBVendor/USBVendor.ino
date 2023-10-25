@@ -1,16 +1,12 @@
-#if ARDUINO_USB_MODE
+#ifndef ARDUINO_USB_MODE
+#error This ESP32 SoC has no Native USB interface
+#elif ARDUINO_USB_MODE == 1
 #warning This sketch should be used when USB is in OTG mode
 void setup(){}
 void loop(){}
 #else
 #include "USB.h"
 #include "USBVendor.h"
-
-#if ARDUINO_USB_CDC_ON_BOOT
-#define HWSerial Serial0
-#else
-#define HWSerial Serial
-#endif
 
 USBVendor Vendor;
 const int buttonPin = 0;
@@ -39,16 +35,16 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
     arduino_usb_event_data_t * data = (arduino_usb_event_data_t*)event_data;
     switch (event_id) {
       case ARDUINO_USB_STARTED_EVENT:
-        HWSerial.println("USB PLUGGED");
+        Serial.println("USB PLUGGED");
         break;
       case ARDUINO_USB_STOPPED_EVENT:
-        HWSerial.println("USB UNPLUGGED");
+        Serial.println("USB UNPLUGGED");
         break;
       case ARDUINO_USB_SUSPEND_EVENT:
-        HWSerial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
+        Serial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
         break;
       case ARDUINO_USB_RESUME_EVENT:
-        HWSerial.println("USB RESUMED");
+        Serial.println("USB RESUMED");
         break;
 
       default:
@@ -58,11 +54,11 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
     arduino_usb_vendor_event_data_t * data = (arduino_usb_vendor_event_data_t*)event_data;
     switch (event_id) {
       case ARDUINO_USB_VENDOR_DATA_EVENT:
-        HWSerial.printf("Vendor RX: len:%u\n", data->data.len);
+        Serial.printf("Vendor RX: len:%u\n", data->data.len);
         for (uint16_t i = 0; i < data->data.len; i++) {
-          HWSerial.write(Vendor.read());
+          Serial.write(Vendor.read());
         }
-        HWSerial.println();
+        Serial.println();
         break;
 
       default:
@@ -78,7 +74,7 @@ static const char * strRequestStages[] = {"SETUP", "DATA", "ACK"};
 
 //Handle USB requests to the vendor interface
 bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_control_request_t const * request) {
-  HWSerial.printf("Vendor Request: Stage: %5s, Direction: %3s, Type: %8s, Recipient: %9s, bRequest: 0x%02x, wValue: 0x%04x, wIndex: %u, wLength: %u\n", 
+  Serial.printf("Vendor Request: Stage: %5s, Direction: %3s, Type: %8s, Recipient: %9s, bRequest: 0x%02x, wValue: 0x%04x, wIndex: %u, wLength: %u\n", 
     strRequestStages[requestStage],
     strRequestDirections[request->bmRequestDirection],
     strRequestTypes[request->bmRequestType],
@@ -113,7 +109,7 @@ bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_con
             result = Vendor.sendResponse(rhport, request, (void*) &vendor_line_coding, sizeof(request_line_coding_t));
           } else if (requestStage == REQUEST_STAGE_ACK) {
             //In the ACK stage the response is complete
-            HWSerial.printf("Vendor Line Coding: bit_rate: %lu, data_bits: %u, stop_bits: %u, parity: %u\n", vendor_line_coding.bit_rate, vendor_line_coding.data_bits, vendor_line_coding.stop_bits, vendor_line_coding.parity);
+            Serial.printf("Vendor Line Coding: bit_rate: %lu, data_bits: %u, stop_bits: %u, parity: %u\n", vendor_line_coding.bit_rate, vendor_line_coding.data_bits, vendor_line_coding.stop_bits, vendor_line_coding.parity);
           }
           result = true;
           break;
@@ -143,7 +139,7 @@ bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_con
             //In the ACK stage the response is complete
             bool dtr = (vendor_line_state & 1) != 0;
             bool rts = (vendor_line_state & 2) != 0;
-            HWSerial.printf("Vendor Line State: dtr: %u, rts: %u\n", dtr, rts);
+            Serial.printf("Vendor Line State: dtr: %u, rts: %u\n", dtr, rts);
           }
           result = true;
           break;
@@ -159,8 +155,8 @@ bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_con
 
 void setup() {
   pinMode(buttonPin, INPUT_PULLUP);
-  HWSerial.begin(115200);
-  HWSerial.setDebugOutput(true);
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
 
   Vendor.onEvent(usbEventCallback);
   Vendor.onRequest(vendorRequestCallback);
@@ -178,19 +174,19 @@ void loop() {
   if (buttonState != previousButtonState) {
     previousButtonState = buttonState;
     if (buttonState == LOW) {
-      HWSerial.println("Button Pressed");
+      Serial.println("Button Pressed");
       Vendor.println("Button Pressed");
     } else {
       Vendor.println("Button Released");
-      HWSerial.println("Button Released");
+      Serial.println("Button Released");
     }
     delay(100);
   }
 
-  while (HWSerial.available()) {
-    size_t l = HWSerial.available();
+  while (Serial.available()) {
+    size_t l = Serial.available();
     uint8_t b[l];
-    l = HWSerial.read(b, l);
+    l = Serial.read(b, l);
     Vendor.write(b, l);
   }
 }
