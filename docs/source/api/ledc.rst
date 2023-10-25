@@ -17,6 +17,7 @@ ESP32-S2  8
 ESP32-S3  8
 ESP32-C3  6
 ESP32-C6  6
+ESP32-H2  6
 ========= =======================
 
 Arduino-ESP32 LEDC API
@@ -125,9 +126,12 @@ This function is used to detach the pin from LEDC.
 
 .. code-block:: arduino
 
-    void ledcDetach(uint8_t pin);
+    bool ledcDetach(uint8_t pin);
 
 * ``pin`` select LEDC pin.
+
+This function returns ``true`` if detaching was successful.
+If ``false`` is returned, an error occurred and the pin was not detached.
 
 ledcChangeFrequency
 *******************
