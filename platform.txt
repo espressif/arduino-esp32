@@ -277,3 +277,11 @@ tools.esp_ota.upload.protocol=network
 tools.esp_ota.upload.field.password=Password
 tools.esp_ota.upload.field.password.secret=true
 tools.esp_ota.upload.pattern={cmd} -i {upload.port.address} -p {upload.port.properties.port} --auth={upload.field.password} -f "{build.path}/{build.project_name}.bin"
+
+## Upload Sketch Through DFU OTA
+## -------------------------------------------
+tools.dfu-util.path={runtime.tools.dfu-util-0.11.0-arduino5.path}
+tools.dfu-util.cmd=dfu-util
+tools.dfu-util.upload.params.verbose=-d
+tools.dfu-util.upload.params.quiet=
+tools.dfu-util.upload.pattern="{path}/{cmd}" --device {vid.0}:{pid.0} -D "{build.path}/{build.project_name}.bin" -Q
