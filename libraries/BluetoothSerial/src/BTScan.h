@@ -22,9 +22,9 @@ class BTScanResults {
 public:
     virtual ~BTScanResults() = default;
 
-    virtual void                dump(Print *print = nullptr);
-    virtual int                 getCount();
-    virtual BTAdvertisedDevice* getDevice(int i);
+    virtual void                dump(Print *print = nullptr) = 0;
+    virtual int                 getCount() = 0;
+    virtual BTAdvertisedDevice* getDevice(int i) = 0;
 };
 
 class BTScanResultsSet : public BTScanResults {
