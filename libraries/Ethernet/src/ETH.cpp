@@ -454,6 +454,14 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
             .sclk_io_num = _pin_sck,
             .quadwp_io_num = -1,
             .quadhd_io_num = -1,
+            .data4_io_num = -1,
+            .data5_io_num = -1,
+            .data6_io_num = -1,
+            .data7_io_num = -1,
+            .max_transfer_sz = -1,
+            .flags = 0,
+            .isr_cpu_id = INTR_CPU_ID_AUTO,
+            .intr_flags = 0,
         };
         ret = spi_bus_initialize(spi_host, &buscfg, SPI_DMA_CH_AUTO);
         if(ret != ESP_OK){
@@ -487,11 +495,21 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 
     // Configure SPI interface for specific SPI module
     spi_device_interface_config_t spi_devcfg = {
+        .command_bits = 0,
+        .address_bits = 0,
+        .dummy_bits = 0,
         .mode = 0,
+        .clock_source = SPI_CLK_SRC_DEFAULT,
+        .duty_cycle_pos = 0,
+        .cs_ena_pretrans = 0,
+        .cs_ena_posttrans = 0,
         .clock_speed_hz = _spi_freq_mhz * 1000 * 1000,
         .input_delay_ns = 20,
         .spics_io_num = _pin_cs,
+        .flags = 0,
         .queue_size = 20,
+        .pre_cb = NULL,
+        .post_cb = NULL,
     };
 
     esp_eth_mac_t *mac = NULL;
