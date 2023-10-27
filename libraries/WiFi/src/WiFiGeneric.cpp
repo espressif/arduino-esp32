@@ -24,6 +24,7 @@
 
 #include "WiFi.h"
 #include "WiFiGeneric.h"
+#if SOC_WIFI_SUPPORTED
 
 extern "C" {
 #include <stdint.h>
@@ -1343,3 +1344,5 @@ int WiFiGenericClass::getStatusBits(){
 int WiFiGenericClass::waitStatusBits(int bits, uint32_t timeout_ms){
     return Network.waitStatusBits(bits, timeout_ms);
 }
+
+#endif /* SOC_WIFI_SUPPORTED */

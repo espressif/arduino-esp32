@@ -20,8 +20,10 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef ESP32WIFIGENERIC_H_
-#define ESP32WIFIGENERIC_H_
+#pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_WIFI_SUPPORTED
 
 #include "esp_err.h"
 #include "esp_event.h"
@@ -141,4 +143,4 @@ class WiFiGenericClass
     friend class WiFiAPClass;
 };
 
-#endif /* ESP32WIFIGENERIC_H_ */
+#endif /* SOC_WIFI_SUPPORTED */

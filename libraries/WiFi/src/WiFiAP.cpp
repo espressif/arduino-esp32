@@ -25,6 +25,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiAP.h"
+#if SOC_WIFI_SUPPORTED
 
 extern "C" {
 #include <stdint.h>
@@ -415,3 +416,5 @@ IPv6Address WiFiAPClass::softAPIPv6()
     }
     return IPv6Address(addr.addr);
 }
+
+#endif /* SOC_WIFI_SUPPORTED */

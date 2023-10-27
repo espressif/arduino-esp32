@@ -20,9 +20,10 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef ESP32WIFISTA_H_
-#define ESP32WIFISTA_H_
+#pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_WIFI_SUPPORTED
 
 #include "WiFiType.h"
 #include "WiFiGeneric.h"
@@ -124,4 +125,4 @@ protected:
 };
 
 
-#endif /* ESP32WIFISTA_H_ */
+#endif /* SOC_WIFI_SUPPORTED */

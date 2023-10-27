@@ -24,6 +24,7 @@
  */
 
 #include "WiFiMulti.h"
+#if SOC_WIFI_SUPPORTED
 #include <limits.h>
 #include <string.h>
 #include <esp32-hal.h>
@@ -202,3 +203,5 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
 
     return status;
 }
+
+#endif /* SOC_WIFI_SUPPORTED */

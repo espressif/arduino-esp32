@@ -19,8 +19,10 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef WiFi_h
-#define WiFi_h
+#pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_WIFI_SUPPORTED
 
 #include <stdint.h>
 
@@ -72,4 +74,4 @@ public:
 
 extern WiFiClass WiFi;
 
-#endif
+#endif /* SOC_WIFI_SUPPORTED */

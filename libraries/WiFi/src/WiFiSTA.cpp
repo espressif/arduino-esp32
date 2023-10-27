@@ -25,6 +25,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
+#if SOC_WIFI_SUPPORTED
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -854,3 +855,5 @@ bool WiFiSTAClass::smartConfigDone() {
 
     return _smartConfigDone;
 }
+
+#endif /* SOC_WIFI_SUPPORTED */

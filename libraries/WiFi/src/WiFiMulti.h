@@ -23,8 +23,10 @@
  *
  */
 
-#ifndef WIFICLIENTMULTI_H_
-#define WIFICLIENTMULTI_H_
+#pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_WIFI_SUPPORTED
 
 #include "WiFi.h"
 #include <vector>
@@ -48,4 +50,4 @@ private:
     std::vector<WifiAPlist_t> APlist;
 };
 
-#endif /* WIFICLIENTMULTI_H_ */
+#endif /* SOC_WIFI_SUPPORTED */
