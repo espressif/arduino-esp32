@@ -39,13 +39,66 @@
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
 
-extern void tcpipInit();
-extern void add_esp_interface_netif(esp_interface_t interface, esp_netif_t* esp_netif); /* from WiFiGeneric */
+// extern void add_esp_interface_netif(esp_interface_t interface, esp_netif_t* esp_netif); /* from WiFiGeneric */
 
+static ETHClass * _ethernets[3] = { NULL, NULL, NULL };
+static esp_event_handler_instance_t _eth_ev_instance = NULL;
+
+static void _eth_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+
+    if (event_base == ETH_EVENT){
+        esp_eth_handle_t eth_handle = *((esp_eth_handle_t*)event_data);
+        for(int i = 0; i < 3; ++i){
+            if(_ethernets[i] != NULL && _ethernets[i]->handle() == eth_handle){
+                _ethernets[i]->_onEthEvent(event_id, event_data);
+            }
+        }
+    }
+}
+
+esp_eth_handle_t ETHClass::handle(){
+    return _eth_handle;
+}
+
+bool ETHClass::connected()
+{
+    return Network.getStatusBits() & ETH_CONNECTED_BIT(_eth_index);
+}
+
+bool ETHClass::started()
+{
+    return Network.getStatusBits() & ETH_STARTED_BIT(_eth_index);
+}
+
+void ETHClass::_onEthEvent(int32_t event_id, void* event_data){
+    arduino_event_t arduino_event;
+    arduino_event.event_id = ARDUINO_EVENT_MAX;
+    
+    if (event_id == ETHERNET_EVENT_CONNECTED) {
+        log_v("%s Connected", desc());
+        arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
+        Network.setStatusBits(ETH_CONNECTED_BIT(_eth_index));
+    } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
+        log_v("%s Disconnected", desc());
+        arduino_event.event_id = ARDUINO_EVENT_ETH_DISCONNECTED;
+        Network.clearStatusBits(ETH_CONNECTED_BIT(_eth_index) | ETH_HAS_IP_BIT(_eth_index) | ETH_HAS_IP6_BIT(_eth_index));
+    } else if (event_id == ETHERNET_EVENT_START) {
+        log_v("%s Started", desc());
+        arduino_event.event_id = ARDUINO_EVENT_ETH_START;
+        Network.setStatusBits(ETH_STARTED_BIT(_eth_index));
+    } else if (event_id == ETHERNET_EVENT_STOP) {
+        log_v("%s Stopped", desc());
+        arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
+        Network.clearStatusBits(ETH_STARTED_BIT(_eth_index) | ETH_CONNECTED_BIT(_eth_index) | ETH_HAS_IP_BIT(_eth_index) | ETH_HAS_IP6_BIT(_eth_index));
+    }
+
+    if(arduino_event.event_id < ARDUINO_EVENT_MAX){
+        Network.postEvent(&arduino_event);
+    }
+}
 
 ETHClass::ETHClass(uint8_t eth_index)
-    :_eth_started(false)
-    ,_eth_handle(NULL)
+    :_eth_handle(NULL)
     ,_eth_index(eth_index)
     ,_phy_type(ETH_PHY_MAX)
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -71,9 +124,7 @@ ETHClass::~ETHClass()
 
 bool ETHClass::ethDetachBus(void * bus_pointer){
     ETHClass *bus = (ETHClass *) bus_pointer;
-    if(bus->_eth_started){
-        bus->end();
-    }
+    bus->end();
     return true;
 }
 
@@ -81,12 +132,20 @@ bool ETHClass::ethDetachBus(void * bus_pointer){
 bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clock_mode)
 {
     esp_err_t ret = ESP_OK;
+    if(_eth_index > 2){
+        return false;
+    }
     if(_esp_netif != NULL){
         return true;
     }
     perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET, ETHClass::ethDetachBus);
 
-    tcpipInit();
+    Network.begin();
+    _ethernets[_eth_index] = this;
+    if(_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)){
+        log_e("event_handler_instance_register for ETH_EVENT Failed!");
+        return false;
+    }
 
     eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
     mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
@@ -193,15 +252,14 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
         return false;
     }
 
-    /* attach to WiFiGeneric to receive events */
-    add_esp_interface_netif(ESP_IF_ETH, _esp_netif);
+    /* attach to receive events */
+    initNetif((ESP_Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
     ret = esp_eth_start(_eth_handle);
     if(ret != ESP_OK){
         log_e("esp_eth_start failed: %d", ret);
         return false;
     }
-    _eth_started = true;
 
     if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
     if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
@@ -337,7 +395,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz){
     esp_err_t ret = ESP_OK;
 
-    if(_eth_started || _esp_netif != NULL || _eth_handle != NULL){
+    if(_esp_netif != NULL || _eth_handle != NULL){
         log_w("ETH Already Started");
         return true;
     }
@@ -404,7 +462,13 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
         }
     }
 
-    tcpipInit();
+    Network.begin();
+    _ethernets[_eth_index] = this;
+    if(_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)){
+        log_e("event_handler_instance_register for ETH_EVENT Failed!");
+        return false;
+    }
+
 
     // Install GPIO ISR handler to be able to service SPI Eth modules interrupts
     ret = gpio_install_isr_service(0);
@@ -555,8 +619,8 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
         return false;
     }
 
-    // attach to WiFiGeneric to receive events
-    add_esp_interface_netif(ESP_IF_ETH, _esp_netif);
+    /* attach to receive events */
+    initNetif((ESP_Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
     // Start Ethernet driver state machine
     ret = esp_eth_start(_eth_handle);
@@ -564,8 +628,6 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
         log_e("esp_eth_start failed: %d", ret);
         return false;
     }
-
-    _eth_started = true;
 
     // If Arduino's SPI is used, cs pin is in GPIO mode
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -616,8 +678,6 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, int
 
 void ETHClass::end(void)
 {
-    _eth_started = false;
-
     destroyNetif();
 
     if(_eth_handle != NULL){
@@ -685,16 +745,6 @@ void ETHClass::end(void)
     }
 }
 
-bool ETHClass::connected()
-{
-    return WiFiGenericClass::getStatusBits() & ETH_CONNECTED_BIT;
-}
-
-bool ETHClass::hasIP()
-{
-    return WiFiGenericClass::getStatusBits() & ETH_HAS_IP_BIT;
-}
-
 bool ETHClass::fullDuplex()
 {
     if(_eth_handle == NULL){
@@ -735,21 +785,14 @@ uint8_t ETHClass::linkSpeed()
     return (link_speed == ETH_SPEED_10M)?10:100;
 }
 
-void ETHClass::getMac(uint8_t* mac)
-{
-    if(_eth_handle != NULL && mac != NULL){
-        esp_eth_ioctl(_eth_handle, ETH_CMD_G_MAC_ADDR, mac);
-    }
-}
+// void ETHClass::getMac(uint8_t* mac)
+// {
+//     if(_eth_handle != NULL && mac != NULL){
+//         esp_eth_ioctl(_eth_handle, ETH_CMD_G_MAC_ADDR, mac);
+//     }
+// }
 
-void ETHClass::printInfo(Print & out){
-    out.print(desc());
-    out.print(":");
-    if(linkUp()){
-        out.print(" <UP");
-    } else {
-        out.print(" <DOWN");
-    }
+void ETHClass::printDriverInfo(Print & out){
     out.print(",");
     out.print(linkSpeed());
     out.print("M");
@@ -759,31 +802,7 @@ void ETHClass::printInfo(Print & out){
     if(autoNegotiation()){
         out.print(",AUTO");
     }
-    out.println(">");
-
-    out.print("      ");
-    out.print("ether ");
-    out.print(macAddress());
-    out.printf(" phy 0x%lX", phyAddr());
-    out.println();
-
-    out.print("      ");
-    out.print("inet ");
-    out.print(localIP());
-    out.print(" netmask ");
-    out.print(subnetMask());
-    out.print(" broadcast ");
-    out.print(broadcastIP());
-    out.println();
-
-    out.print("      ");
-    out.print("gateway ");
-    out.print(gatewayIP());
-    out.print(" dns ");
-    out.print(dnsIP());
-    out.println();
-
-    out.println();
+    out.printf(",ADDR:0x%lX", phyAddr());
 }
 
 ETHClass ETH;

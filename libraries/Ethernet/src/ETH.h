@@ -63,8 +63,8 @@
 // This will be uncommented once custom SPI support is available in ESP-IDF
 #define ETH_SPI_SUPPORTS_CUSTOM 1
 
-#include "WiFi.h"
-#include "ESP_Network_Interface.h"
+// #include "WiFi.h"
+#include "Networking.h"
 
 #if ETH_SPI_SUPPORTS_CUSTOM
 #include "SPI.h"
@@ -137,7 +137,7 @@ class ETHClass: public ESP_Network_Interface {
 
         // Event based getters
         bool connected();
-        bool hasIP();
+        bool started();
 
         // ETH Handle APIs
         bool fullDuplex();
@@ -145,8 +145,7 @@ class ETHClass: public ESP_Network_Interface {
         bool autoNegotiation();
         uint32_t phyAddr();
 
-        // Info APIs
-        void printInfo(Print & out);
+        esp_eth_handle_t handle();
 
 #if ETH_SPI_SUPPORTS_CUSTOM
         static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
@@ -159,11 +158,14 @@ class ETHClass: public ESP_Network_Interface {
         esp_err_t eth_spi_write(uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
 #endif
 
-        void getMac(uint8_t* mac);
+        // void getMac(uint8_t* mac);
+        void printDriverInfo(Print & out);
         static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
+    public:
+        void _onEthEvent(int32_t event_id, void* event_data);
+
     private:
-        bool _eth_started;
         esp_eth_handle_t _eth_handle;
         uint8_t _eth_index;
         eth_phy_type_t _phy_type;

@@ -18,7 +18,7 @@
 */
 
 #include "WiFiClient.h"
-#include "WiFi.h"
+#include "ESP_Network_Manager.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 #include <errno.h>
@@ -302,7 +302,7 @@ int WiFiClient::connect(const char *host, uint16_t port)
 int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
 {
     IPAddress srv((uint32_t)0);
-    if(!WiFiGenericClass::hostByName(host, srv)){
+    if(!Network.hostByName(host, srv)){
         return 0;
     }
     return connect(srv, port, timeout_ms);

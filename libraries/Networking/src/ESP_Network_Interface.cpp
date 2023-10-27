@@ -6,9 +6,141 @@
 #include "lwip/err.h"
 #include "esp32-hal-log.h"
 
-ESP_Network_Interface::ESP_Network_Interface():_esp_netif(NULL){}
-ESP_Network_Interface::ESP_Network_Interface(ESP_Network_Interface & _if){ _esp_netif = _if.netif(); }
-ESP_Network_Interface::~ESP_Network_Interface(){ destroyNetif(); }
+static ESP_Network_Interface * _interfaces[ESP_NETIF_ID_MAX] = { NULL, NULL, NULL, NULL, NULL, NULL};
+static esp_event_handler_instance_t _ip_ev_instance = NULL;
+
+static ESP_Network_Interface * getNetifByEspNetif(esp_netif_t *esp_netif){
+    for (int i = 0; i < ESP_NETIF_ID_MAX; ++i){
+        if(_interfaces[i] != NULL && _interfaces[i]->netif() == esp_netif){
+            return _interfaces[i];
+        }
+    }
+    return NULL;
+}
+
+static ESP_Network_Interface * getNetifByID(ESP_Network_Interface_ID id){
+    if(id < ESP_NETIF_ID_MAX){
+        return _interfaces[id];
+    }
+    return NULL;
+}
+
+static void _ip_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    if (event_base == IP_EVENT){
+        ESP_Network_Interface * netif = NULL;
+        if(event_id == IP_EVENT_STA_GOT_IP || event_id == IP_EVENT_ETH_GOT_IP || event_id == IP_EVENT_PPP_GOT_IP){
+            ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+            netif = getNetifByEspNetif(event->esp_netif);
+        } else if(event_id == IP_EVENT_STA_LOST_IP || event_id == IP_EVENT_PPP_LOST_IP || event_id == IP_EVENT_ETH_LOST_IP){
+            ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+            netif = getNetifByEspNetif(event->esp_netif);
+        } else if(event_id == IP_EVENT_GOT_IP6){
+            ip_event_got_ip6_t* event = (ip_event_got_ip6_t*) event_data;
+            netif = getNetifByEspNetif(event->esp_netif);
+        } else if(event_id == IP_EVENT_AP_STAIPASSIGNED){
+            ip_event_ap_staipassigned_t* event = (ip_event_ap_staipassigned_t*) event_data;
+            netif = getNetifByEspNetif(event->esp_netif);
+        }
+        if(netif != NULL){
+            netif->_onIpEvent(event_id, event_data);
+        }
+    }
+}
+
+void ESP_Network_Interface::_onIpEvent(int32_t event_id, void* event_data){
+    arduino_event_t arduino_event;
+    arduino_event.event_id = ARDUINO_EVENT_MAX;
+    if(event_id == _got_ip_event_id){
+        _has_ip = true;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        log_v("%s Got %sIP: " IPSTR " MASK: " IPSTR " GW: " IPSTR, desc(), event->ip_changed?"New ":"Same ", IP2STR(&event->ip_info.ip), IP2STR(&event->ip_info.netmask), IP2STR(&event->ip_info.gw));
+#endif
+        memcpy(&arduino_event.event_info.got_ip, event_data, sizeof(ip_event_got_ip_t));
+#if SOC_WIFI_SUPPORTED
+        if(_interface_id == ESP_NETIF_ID_STA){
+            arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP;
+            Network.setStatusBits(STA_HAS_IP_BIT);
+        } else
+#endif
+        if(_interface_id == ESP_NETIF_ID_PPP){
+            arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP;
+            Network.setStatusBits(PPP_HAS_IP_BIT);
+        } else if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
+            arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
+            Network.setStatusBits(ETH_HAS_IP_BIT(_interface_id - ESP_NETIF_ID_ETH));
+        }
+    } else if(event_id == _lost_ip_event_id){
+        _has_ip = false;
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+        log_v("%s Lost IP", desc());
+#endif
+#if SOC_WIFI_SUPPORTED
+        if(_interface_id == ESP_NETIF_ID_STA){
+            arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_LOST_IP;
+            Network.clearStatusBits(STA_HAS_IP_BIT);
+        } else 
+#endif
+        if(_interface_id == ESP_NETIF_ID_PPP){
+            arduino_event.event_id = ARDUINO_EVENT_PPP_LOST_IP;
+            Network.clearStatusBits(PPP_HAS_IP_BIT);
+        } else if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
+            arduino_event.event_id = ARDUINO_EVENT_ETH_LOST_IP;
+            Network.clearStatusBits(ETH_HAS_IP_BIT(_interface_id - ESP_NETIF_ID_ETH));
+        }
+    } else if(event_id == IP_EVENT_GOT_IP6){
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+        ip_event_got_ip6_t* event = (ip_event_got_ip6_t*) event_data;
+        log_v("%s Got IPv6: IP Index: %d, Zone: %d, " IPV6STR, desc(), event->ip_index, event->ip6_info.ip.zone, IPV62STR(event->ip6_info.ip));
+#endif
+        memcpy(&arduino_event.event_info.got_ip6, event_data, sizeof(ip_event_got_ip6_t));
+#if SOC_WIFI_SUPPORTED
+        if(_interface_id == ESP_NETIF_ID_STA){
+            arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP6;
+            Network.setStatusBits(STA_HAS_IP6_BIT);
+        } else if(_interface_id == ESP_NETIF_ID_AP){
+            arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_GOT_IP6;
+            Network.setStatusBits(AP_HAS_IP6_BIT);
+        } else 
+#endif
+        if(_interface_id == ESP_NETIF_ID_PPP){
+            arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP6;
+            Network.setStatusBits(PPP_HAS_IP6_BIT);
+        } else if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
+            arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP6;
+            Network.setStatusBits(ETH_HAS_IP6_BIT(_interface_id - ESP_NETIF_ID_ETH));
+        }
+#if SOC_WIFI_SUPPORTED
+    } else if(event_id == IP_EVENT_AP_STAIPASSIGNED && _interface_id == ESP_NETIF_ID_AP){
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+        ip_event_ap_staipassigned_t* event = (ip_event_ap_staipassigned_t*) event_data;
+        log_v("%s Assigned IP: " IPSTR " to MAC: %02X:%02X:%02X:%02X:%02X:%02X", desc(), IP2STR(&event->ip), event->mac[0], event->mac[1], event->mac[2], event->mac[3], event->mac[4], event->mac[5]);
+#endif
+        arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED;
+        memcpy(&arduino_event.event_info.wifi_ap_staipassigned, event_data, sizeof(ip_event_ap_staipassigned_t));
+#endif
+    }
+    
+    if(arduino_event.event_id < ARDUINO_EVENT_MAX){
+        Network.postEvent(&arduino_event);
+    }
+}
+
+ESP_Network_Interface::ESP_Network_Interface()
+    : _esp_netif(NULL)
+    , _got_ip_event_id(-1)
+    , _lost_ip_event_id(-1)
+    , _interface_id(ESP_NETIF_ID_MAX)
+    , _has_ip(false)
+{}
+
+ESP_Network_Interface::~ESP_Network_Interface(){
+    destroyNetif();
+}
+
+bool ESP_Network_Interface::hasIP(){
+    return _has_ip;
+}
 
 IPAddress ESP_Network_Interface::calculateNetworkID(IPAddress ip, IPAddress subnet) {
 	IPAddress networkID;
@@ -53,14 +185,30 @@ uint8_t ESP_Network_Interface::calculateSubnetCIDR(IPAddress subnetMask) {
 	return CIDR;
 }
 
-void ESP_Network_Interface::destroyNetif(void){
+void ESP_Network_Interface::destroyNetif(){
     if(_esp_netif != NULL){
         esp_netif_destroy(_esp_netif);
         _esp_netif = NULL;
     }
 }
 
-bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
+bool ESP_Network_Interface::initNetif(ESP_Network_Interface_ID interface_id){
+    if(_esp_netif == NULL || interface_id >= ESP_NETIF_ID_MAX){
+        return false;
+    }
+    _interface_id = interface_id;
+    _got_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_GOT_IP);
+    _lost_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_LOST_IP);
+    _interfaces[_interface_id] = this;
+
+    if(_ip_ev_instance == NULL && esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &_ip_event_cb, NULL, &_ip_ev_instance)){
+        log_e("event_handler_instance_register for IP_EVENT Failed!");
+        return false;
+    }
+    return true;
+}
+
+bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2, IPAddress dns3)
 {
     if(_esp_netif == NULL){
         return false;
@@ -69,8 +217,10 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
     esp_netif_ip_info_t info;
     esp_netif_dns_info_t d1;
     esp_netif_dns_info_t d2;
+    esp_netif_dns_info_t d3;
     d1.ip.type = IPADDR_TYPE_V4;
     d2.ip.type = IPADDR_TYPE_V4;
+    d3.ip.type = IPADDR_TYPE_V4;
 
     if(static_cast<uint32_t>(local_ip) != 0){
         info.ip.addr = static_cast<uint32_t>(local_ip);
@@ -78,12 +228,14 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
         info.netmask.addr = static_cast<uint32_t>(subnet);
         d1.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
         d2.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
+        d3.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns3);
     } else {
         info.ip.addr = 0;
         info.gw.addr = 0;
         info.netmask.addr = 0;
         d1.ip.u_addr.ip4.addr = 0;
         d2.ip.u_addr.ip4.addr = 0;
+        d3.ip.u_addr.ip4.addr = 0;
 	}
 
     // Stop DHCPC
@@ -100,11 +252,10 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
         return false;
     }
     
-    // Set DNS1-Server
+    // Set DNS Servers
     esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d1);
-
-    // Set DNS2-Server
     esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_BACKUP, &d2);
+    esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_FALLBACK, &d3);
 
     // Start DHCPC if static IP was set
     if(info.ip.addr == 0){
@@ -113,6 +264,8 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
             log_w("DHCP could not be started! Error: %d", err);
             return false;
         }
+    } else {
+        _has_ip = true;
     }
 
     return true;
@@ -186,10 +339,15 @@ String ESP_Network_Interface::impl_name(void)
 
 uint8_t * ESP_Network_Interface::macAddress(uint8_t* mac)
 {
-    if(!mac){
+    if(!mac || _esp_netif == NULL){
         return NULL;
     }
-    getMac(mac);
+    esp_err_t err = esp_netif_get_mac(_esp_netif, mac);
+    if(err != ESP_OK){
+        log_e("Failed to get netif mac: %d", err);
+        return NULL;
+    }
+    // getMac(mac);
     return mac;
 }
 
@@ -296,4 +454,44 @@ IPv6Address ESP_Network_Interface::localIPv6()
         return IPv6Address();
     }
     return IPv6Address(addr.addr);
+}
+
+void ESP_Network_Interface::printInfo(Print & out){
+    out.print(desc());
+    out.print(":");
+    if(linkUp()){
+        out.print(" <UP");
+    } else {
+        out.print(" <DOWN");
+    }
+    printDriverInfo(out);
+    out.println(">");
+
+    out.print("      ");
+    out.print("ether ");
+    out.print(macAddress());
+    out.println();
+
+    out.print("      ");
+    out.print("inet ");
+    out.print(localIP());
+    out.print(" netmask ");
+    out.print(subnetMask());
+    out.print(" broadcast ");
+    out.print(broadcastIP());
+    out.println();
+
+    out.print("      ");
+    out.print("gateway ");
+    out.print(gatewayIP());
+    out.print(" dns ");
+    out.print(dnsIP());
+    out.println();
+
+    out.print("      ");
+    out.print("inet6 ");
+    out.print(localIPv6());
+    out.println();
+
+    out.println();
 }

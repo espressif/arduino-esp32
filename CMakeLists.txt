@@ -96,6 +96,8 @@ set(LIBRARY_SRCS
   libraries/Insights/src/Insights.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Networking/src/ESP_Network_Interface.cpp
+  libraries/Networking/src/ESP_Network_Events.cpp
+  libraries/Networking/src/ESP_Network_Manager.cpp
   libraries/Preferences/src/Preferences.cpp
   libraries/RainMaker/src/RMaker.cpp
   libraries/RainMaker/src/RMakerNode.cpp

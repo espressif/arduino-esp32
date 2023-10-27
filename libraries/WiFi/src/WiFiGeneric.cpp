@@ -296,41 +296,6 @@ static void set_esp_netif_hostname(const char * name){
 	}
 }
 
-static QueueHandle_t _arduino_event_queue;
-static TaskHandle_t _arduino_event_task_handle = NULL;
-static EventGroupHandle_t _arduino_event_group = NULL;
-
-static void _arduino_event_task(void * arg){
-	arduino_event_t *data = NULL;
-    for (;;) {
-        if(xQueueReceive(_arduino_event_queue, &data, portMAX_DELAY) == pdTRUE){
-            WiFiGenericClass::_eventCallback(data);
-            free(data);
-            data = NULL;
-        }
-    }
-    vTaskDelete(NULL);
-    _arduino_event_task_handle = NULL;
-}
-
-esp_err_t postArduinoEvent(arduino_event_t *data)
-{
-	if(data == NULL){
-        return ESP_FAIL;
-	}
-	arduino_event_t * event = (arduino_event_t*)malloc(sizeof(arduino_event_t));
-	if(event == NULL){
-        log_e("Arduino Event Malloc Failed!");
-        return ESP_FAIL;
-	}
-	memcpy(event, data, sizeof(arduino_event_t));
-    if (xQueueSend(_arduino_event_queue, &event, portMAX_DELAY) != pdPASS) {
-        log_e("Arduino Event Send Failed!");
-        return ESP_FAIL;
-    }
-    return ESP_OK;
-}
-
 static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
 	arduino_event_t arduino_event;
 	arduino_event.event_id = ARDUINO_EVENT_MAX;
@@ -426,33 +391,6 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     	memcpy(&arduino_event.event_info.wifi_ap_staipassigned, event_data, sizeof(ip_event_ap_staipassigned_t));
 
 	/*
-	 * ETH
-	 * */
-	} else if (event_base == ETH_EVENT && event_id == ETHERNET_EVENT_CONNECTED) {
-		log_v("Ethernet Link Up");
-    	arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
-    	memcpy(&arduino_event.event_info.eth_connected, event_data, sizeof(esp_eth_handle_t));
-	} else if (event_base == ETH_EVENT && event_id == ETHERNET_EVENT_DISCONNECTED) {
-		log_v("Ethernet Link Down");
-    	arduino_event.event_id = ARDUINO_EVENT_ETH_DISCONNECTED;
-	} else if (event_base == ETH_EVENT && event_id == ETHERNET_EVENT_START) {
-		log_v("Ethernet Started");
-    	arduino_event.event_id = ARDUINO_EVENT_ETH_START;
-	} else if (event_base == ETH_EVENT && event_id == ETHERNET_EVENT_STOP) {
-		log_v("Ethernet Stopped");
-    	arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
-    } else if (event_base == IP_EVENT && event_id == IP_EVENT_ETH_GOT_IP) {
-        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-            ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-            log_v("Ethernet got %sip:" IPSTR, event->ip_changed?"new ":"", IP2STR(&event->ip_info.ip));
-    	#endif
-        arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
-    	memcpy(&arduino_event.event_info.got_ip, event_data, sizeof(ip_event_got_ip_t));
-    } else if (event_base == ETH_EVENT && event_id == IP_EVENT_ETH_LOST_IP) {
-        log_v("Ethernet Lost IP");
-        arduino_event.event_id = ARDUINO_EVENT_ETH_LOST_IP;
-
-	/*
 	 * IPv6
 	 * */
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_GOT_IP6) {
@@ -464,8 +402,6 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
         	arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP6;
     	} else if(iface == ESP_IF_WIFI_AP){
         	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_GOT_IP6;
-    	} else if(iface == ESP_IF_ETH){
-        	arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP6;
     	}
 
 	/*
@@ -549,41 +485,13 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     }
     
 	if(arduino_event.event_id < ARDUINO_EVENT_MAX){
-		postArduinoEvent(&arduino_event);
+        // temporary only while reworking
+        WiFiGenericClass::_eventCallback(&arduino_event);
+		Network.postEvent(&arduino_event);
 	}
 }
 
-static bool _start_network_event_task(){
-    if(!_arduino_event_group){
-        _arduino_event_group = xEventGroupCreate();
-        if(!_arduino_event_group){
-            log_e("Network Event Group Create Failed!");
-            return false;
-        }
-        xEventGroupSetBits(_arduino_event_group, WIFI_DNS_IDLE_BIT);
-    }
-    if(!_arduino_event_queue){
-    	_arduino_event_queue = xQueueCreate(32, sizeof(arduino_event_t*));
-        if(!_arduino_event_queue){
-            log_e("Network Event Queue Create Failed!");
-            return false;
-        }
-    }
-
-    esp_err_t err = esp_event_loop_create_default();
-    if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
-    	log_e("esp_event_loop_create_default failed!");
-        return err;
-    }
-
-    if(!_arduino_event_task_handle){
-        xTaskCreateUniversal(_arduino_event_task, "arduino_events", 4096, NULL, ESP_TASKD_EVENT_PRIO - 1, &_arduino_event_task_handle, ARDUINO_EVENT_RUNNING_CORE);
-        if(!_arduino_event_task_handle){
-            log_e("Network Event Task Start Failed!");
-            return false;
-        }
-    }
-
+static bool initWiFiEvents(){
     if(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)){
         log_e("event_handler_instance_register for WIFI_EVENT Failed!");
         return false;
@@ -599,37 +507,12 @@ static bool _start_network_event_task(){
         return false;
     }
 
-    if(esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)){
-        log_e("event_handler_instance_register for ETH_EVENT Failed!");
-        return false;
-    }
-
     if(esp_event_handler_instance_register(WIFI_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)){
         log_e("event_handler_instance_register for WIFI_PROV_EVENT Failed!");
         return false;
     }
 
     return true;
-}
-
-bool tcpipInit(){
-    static bool initialized = false;
-    if(!initialized){
-        initialized = true;
-#if CONFIG_IDF_TARGET_ESP32
-        uint8_t mac[8];
-        if(esp_efuse_mac_get_default(mac) == ESP_OK){
-            esp_base_mac_addr_set(mac);
-        }
-#endif
-        initialized = esp_netif_init() == ESP_OK;
-        if(initialized){
-        	initialized = _start_network_event_task();
-        } else {
-        	log_e("esp_netif_init failed!");
-        }
-    }
-    return initialized;
 }
 
 /*
@@ -658,10 +541,11 @@ extern "C" void phy_bbpll_en_usb(bool en);
 bool wifiLowLevelInit(bool persistent){
     if(!lowLevelInitDone){
         lowLevelInitDone = true;
-        if(!tcpipInit()){
+        if(!Network.begin()){
         	lowLevelInitDone = false;
         	return lowLevelInitDone;
         }
+        initWiFiEvents();
         if(esp_netifs[ESP_IF_WIFI_AP] == NULL){
             esp_netifs[ESP_IF_WIFI_AP] = esp_netif_create_default_wifi_ap();
         }
@@ -696,7 +580,7 @@ bool wifiLowLevelInit(bool persistent){
         if(lowLevelInitDone){
 			arduino_event_t arduino_event;
 			arduino_event.event_id = ARDUINO_EVENT_WIFI_READY;
-			postArduinoEvent(&arduino_event);
+			Network.postEvent(&arduino_event);
         }
     }
     return lowLevelInitDone;
@@ -743,22 +627,6 @@ static bool espWiFiStop(){
 // -----------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------- Generic WiFi function -----------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
-
-typedef struct WiFiEventCbList {
-    static wifi_event_id_t current_id;
-    wifi_event_id_t id;
-    WiFiEventCb cb;
-    WiFiEventFuncCb fcb;
-    WiFiEventSysCb scb;
-    arduino_event_id_t event;
-
-    WiFiEventCbList() : id(current_id++), cb(NULL), fcb(NULL), scb(NULL), event(ARDUINO_EVENT_WIFI_READY) {}
-} WiFiEventCbList_t;
-wifi_event_id_t WiFiEventCbList::current_id = 1;
-
-
-// arduino dont like std::vectors move static here
-static std::vector<WiFiEventCbList_t> cbEventList;
 
 bool WiFiGenericClass::_persistent = true;
 bool WiFiGenericClass::_long_range = false;
@@ -906,129 +774,6 @@ bool WiFiGenericClass::setHostname(const char * hostname)
     return true;
 }
 
-int WiFiGenericClass::setStatusBits(int bits){
-    if(!_arduino_event_group){
-        return 0;
-    }
-    return xEventGroupSetBits(_arduino_event_group, bits);
-}
-
-int WiFiGenericClass::clearStatusBits(int bits){
-    if(!_arduino_event_group){
-        return 0;
-    }
-    return xEventGroupClearBits(_arduino_event_group, bits);
-}
-
-int WiFiGenericClass::getStatusBits(){
-    if(!_arduino_event_group){
-        return 0;
-    }
-    return xEventGroupGetBits(_arduino_event_group);
-}
-
-int WiFiGenericClass::waitStatusBits(int bits, uint32_t timeout_ms){
-    if(!_arduino_event_group){
-        return 0;
-    }
-    return xEventGroupWaitBits(
-        _arduino_event_group,    // The event group being tested.
-        bits,  // The bits within the event group to wait for.
-        pdFALSE,         // bits should be cleared before returning.
-        pdTRUE,        // Don't wait for all bits, any bit will do.
-        timeout_ms / portTICK_PERIOD_MS ) & bits; // Wait a maximum of timeout_ms for any bit to be set.
-}
-
-/**
- * set callback function
- * @param cbEvent WiFiEventCb
- * @param event optional filter (WIFI_EVENT_MAX is all events)
- */
-wifi_event_id_t WiFiGenericClass::onEvent(WiFiEventCb cbEvent, arduino_event_id_t event)
-{
-    if(!cbEvent) {
-        return 0;
-    }
-    WiFiEventCbList_t newEventHandler;
-    newEventHandler.cb = cbEvent;
-    newEventHandler.fcb = NULL;
-    newEventHandler.scb = NULL;
-    newEventHandler.event = event;
-    cbEventList.push_back(newEventHandler);
-    return newEventHandler.id;
-}
-
-wifi_event_id_t WiFiGenericClass::onEvent(WiFiEventFuncCb cbEvent, arduino_event_id_t event)
-{
-    if(!cbEvent) {
-        return 0;
-    }
-    WiFiEventCbList_t newEventHandler;
-    newEventHandler.cb = NULL;
-    newEventHandler.fcb = cbEvent;
-    newEventHandler.scb = NULL;
-    newEventHandler.event = event;
-    cbEventList.push_back(newEventHandler);
-    return newEventHandler.id;
-}
-
-wifi_event_id_t WiFiGenericClass::onEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event)
-{
-    if(!cbEvent) {
-        return 0;
-    }
-    WiFiEventCbList_t newEventHandler;
-    newEventHandler.cb = NULL;
-    newEventHandler.fcb = NULL;
-    newEventHandler.scb = cbEvent;
-    newEventHandler.event = event;
-    cbEventList.push_back(newEventHandler);
-    return newEventHandler.id;
-}
-
-/**
- * removes a callback form event handler
- * @param cbEvent WiFiEventCb
- * @param event optional filter (WIFI_EVENT_MAX is all events)
- */
-void WiFiGenericClass::removeEvent(WiFiEventCb cbEvent, arduino_event_id_t event)
-{
-    if(!cbEvent) {
-        return;
-    }
-
-    for(uint32_t i = 0; i < cbEventList.size(); i++) {
-        WiFiEventCbList_t entry = cbEventList[i];
-        if(entry.cb == cbEvent && entry.event == event) {
-            cbEventList.erase(cbEventList.begin() + i);
-        }
-    }
-}
-
-void WiFiGenericClass::removeEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event)
-{
-    if(!cbEvent) {
-        return;
-    }
-
-    for(uint32_t i = 0; i < cbEventList.size(); i++) {
-        WiFiEventCbList_t entry = cbEventList[i];
-        if(entry.scb == cbEvent && entry.event == event) {
-            cbEventList.erase(cbEventList.begin() + i);
-        }
-    }
-}
-
-void WiFiGenericClass::removeEvent(wifi_event_id_t id)
-{
-    for(uint32_t i = 0; i < cbEventList.size(); i++) {
-        WiFiEventCbList_t entry = cbEventList[i];
-        if(entry.id == id) {
-            cbEventList.erase(cbEventList.begin() + i);
-        }
-    }
-}
-
 /**
  * callback for WiFi events
  * @param arg
@@ -1105,10 +850,8 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
             gw[0], gw[1], gw[2], gw[3]);
 #endif
         WiFiSTAClass::_setStatus(WL_CONNECTED);
-        setStatusBits(STA_HAS_IP_BIT | STA_CONNECTED_BIT);
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_LOST_IP) {
         WiFiSTAClass::_setStatus(WL_IDLE_STATUS);
-        clearStatusBits(STA_HAS_IP_BIT);
 
     } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_START) {
         setStatusBits(AP_STARTED_BIT);
@@ -1122,34 +865,6 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
             clearStatusBits(AP_HAS_CLIENT_BIT);
         }
 
-    } else if(event->event_id == ARDUINO_EVENT_ETH_START) {
-        setStatusBits(ETH_STARTED_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_ETH_STOP) {
-        clearStatusBits(ETH_STARTED_BIT | ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_ETH_CONNECTED) {
-        setStatusBits(ETH_CONNECTED_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_ETH_DISCONNECTED) {
-        clearStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_ETH_GOT_IP) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-        uint8_t * ip = (uint8_t *)&(event->event_info.got_ip.ip_info.ip.addr);
-        uint8_t * mask = (uint8_t *)&(event->event_info.got_ip.ip_info.netmask.addr);
-        uint8_t * gw = (uint8_t *)&(event->event_info.got_ip.ip_info.gw.addr);
-        log_d("ETH IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u",
-            ip[0], ip[1], ip[2], ip[3],
-            mask[0], mask[1], mask[2], mask[3],
-            gw[0], gw[1], gw[2], gw[3]);
-#endif
-        setStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_ETH_LOST_IP) {
-        clearStatusBits(ETH_HAS_IP_BIT);
-
-    } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_GOT_IP6) {
-    	setStatusBits(STA_CONNECTED_BIT | STA_HAS_IP6_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_GOT_IP6) {
-    	setStatusBits(AP_HAS_IP6_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_ETH_GOT_IP6) {
-    	setStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP6_BIT);
     } else if(event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
     	WiFi.begin(
 			(const char *)event->event_info.sc_got_ssid_pswd.ssid,
@@ -1160,21 +875,6 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
     } else if(event->event_id == ARDUINO_EVENT_SC_SEND_ACK_DONE) {
     	esp_smartconfig_stop();
     	WiFiSTAClass::_smartConfigDone = true;
-    }
-
-    for(uint32_t i = 0; i < cbEventList.size(); i++) {
-        WiFiEventCbList_t entry = cbEventList[i];
-        if(entry.cb || entry.fcb || entry.scb) {
-            if(entry.event == (arduino_event_id_t) event->event_id || entry.event == ARDUINO_EVENT_MAX) {
-                if(entry.cb) {
-                    entry.cb((arduino_event_id_t) event->event_id);
-                } else if(entry.fcb) {
-                    entry.fcb((arduino_event_id_t) event->event_id, (arduino_event_info_t) event->event_info);
-                } else {
-                    entry.scb(event);
-                }
-            }
-        }
     }
     return ESP_OK;
 }
@@ -1546,57 +1246,17 @@ set_ant:
 // ------------------------------------------------ Generic Network function ---------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
-/**
- * DNS callback
- * @param name
- * @param ipaddr
- * @param callback_arg
- */
-static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
-{
-    if(ipaddr) {
-        (*reinterpret_cast<IPAddress*>(callback_arg)) = ipaddr->u_addr.ip4.addr;
-    }
-    xEventGroupSetBits(_arduino_event_group, WIFI_DNS_DONE_BIT);
-}
-
-/**
- * Resolve the given hostname to an IP address. If passed hostname is an IP address, it will be parsed into IPAddress structure.
- * @param aHostname     Name to be resolved or string containing IP address
- * @param aResult       IPAddress structure to store the returned IP address
- * @return 1 if aIPAddrString was successfully converted to an IP address,
- *          else error code
- */
-int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
-{
-    if (!aResult.fromString(aHostname))
-    {
-        ip_addr_t addr;
-        aResult = static_cast<uint32_t>(0);
-        waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
-        clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
-        err_t err = dns_gethostbyname(aHostname, &addr, &wifi_dns_found_callback, &aResult);
-        if(err == ERR_OK && addr.u_addr.ip4.addr) {
-            aResult = addr.u_addr.ip4.addr;
-        } else if(err == ERR_INPROGRESS) {
-            waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
-            clearStatusBits(WIFI_DNS_DONE_BIT);
-        }
-        setStatusBits(WIFI_DNS_IDLE_BIT);
-        if((uint32_t)aResult == 0){
-            log_e("DNS Failed for %s", aHostname);
-        }
-    }
-    return (uint32_t)aResult != 0;
-}
+/*
+ * Deprecated Methods
+*/
 
 IPAddress WiFiGenericClass::calculateNetworkID(IPAddress ip, IPAddress subnet) {
-	IPAddress networkID;
+    IPAddress networkID;
 
-	for (size_t i = 0; i < 4; i++)
-		networkID[i] = subnet[i] & ip[i];
+    for (size_t i = 0; i < 4; i++)
+        networkID[i] = subnet[i] & ip[i];
 
-	return networkID;
+    return networkID;
 }
 
 IPAddress WiFiGenericClass::calculateBroadcast(IPAddress ip, IPAddress subnet) {
@@ -1609,26 +1269,77 @@ IPAddress WiFiGenericClass::calculateBroadcast(IPAddress ip, IPAddress subnet) {
 }
 
 uint8_t WiFiGenericClass::calculateSubnetCIDR(IPAddress subnetMask) {
-	uint8_t CIDR = 0;
+    uint8_t CIDR = 0;
 
-	for (uint8_t i = 0; i < 4; i++) {
-		if (subnetMask[i] == 0x80)  // 128
-			CIDR += 1;
-		else if (subnetMask[i] == 0xC0)  // 192
-			CIDR += 2;
-		else if (subnetMask[i] == 0xE0)  // 224
-			CIDR += 3;
-		else if (subnetMask[i] == 0xF0)  // 242
-			CIDR += 4;
-		else if (subnetMask[i] == 0xF8)  // 248
-			CIDR += 5;
-		else if (subnetMask[i] == 0xFC)  // 252
-			CIDR += 6;
-		else if (subnetMask[i] == 0xFE)  // 254
-			CIDR += 7;
-		else if (subnetMask[i] == 0xFF)  // 255
-			CIDR += 8;
-	}
+    for (uint8_t i = 0; i < 4; i++) {
+        if (subnetMask[i] == 0x80)  // 128
+            CIDR += 1;
+        else if (subnetMask[i] == 0xC0)  // 192
+            CIDR += 2;
+        else if (subnetMask[i] == 0xE0)  // 224
+            CIDR += 3;
+        else if (subnetMask[i] == 0xF0)  // 242
+            CIDR += 4;
+        else if (subnetMask[i] == 0xF8)  // 248
+            CIDR += 5;
+        else if (subnetMask[i] == 0xFC)  // 252
+            CIDR += 6;
+        else if (subnetMask[i] == 0xFE)  // 254
+            CIDR += 7;
+        else if (subnetMask[i] == 0xFF)  // 255
+            CIDR += 8;
+    }
 
-	return CIDR;
+    return CIDR;
+}
+
+int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
+{
+    return Network.hostByName(aHostname, aResult);
+}
+
+wifi_event_id_t WiFiGenericClass::onEvent(WiFiEventCb cbEvent, arduino_event_id_t event)
+{
+    return Network.onEvent(cbEvent, event);
+}
+
+wifi_event_id_t WiFiGenericClass::onEvent(WiFiEventFuncCb cbEvent, arduino_event_id_t event)
+{
+    return Network.onEvent(cbEvent, event);
+}
+
+wifi_event_id_t WiFiGenericClass::onEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event)
+{
+    return Network.onEvent(cbEvent, event);
+}
+
+void WiFiGenericClass::removeEvent(WiFiEventCb cbEvent, arduino_event_id_t event)
+{
+    Network.removeEvent(cbEvent, event);
+}
+
+void WiFiGenericClass::removeEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event)
+{
+    Network.removeEvent(cbEvent, event);
+}
+
+void WiFiGenericClass::removeEvent(wifi_event_id_t id)
+{
+    Network.removeEvent(id);
+}
+
+int WiFiGenericClass::setStatusBits(int bits){
+    return Network.setStatusBits(bits);
+}
+
+int WiFiGenericClass::clearStatusBits(int bits){
+    return Network.clearStatusBits(bits);
+}
+
+int WiFiGenericClass::getStatusBits(){
+    return Network.getStatusBits();
+}
+
+int WiFiGenericClass::waitStatusBits(int bits, uint32_t timeout_ms){
+    return Network.waitStatusBits(bits, timeout_ms);
 }

@@ -89,7 +89,7 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
-  WiFi.onEvent(onEvent);
+  Network.onEvent(onEvent);
   ETH.begin(ETH_TYPE, ETH_ADDR, ETH_CS, ETH_IRQ, ETH_RST, ETH_SPI_HOST, ETH_SPI_SCK, ETH_SPI_MISO, ETH_SPI_MOSI);
 #if USE_TWO_ETH_PORTS
   // Since SPI bus is shared, we should skip the SPI pins when calling ETH1.begin()
