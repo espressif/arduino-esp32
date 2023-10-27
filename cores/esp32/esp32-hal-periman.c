@@ -26,37 +26,38 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
 		return false;
 	}
 	if(type >= ESP32_BUS_TYPE_MAX){
-		log_e("Invalid type: %u", (unsigned int)type);
+		log_e("Invalid type: %u when setting pin %u", (unsigned int)type, pin);
 		return false;
 	}
 	if(type > ESP32_BUS_TYPE_GPIO && bus == NULL){
-		log_e("Bus is NULL");
+		log_e("Bus is NULL for pin %u with type %u", pin, (unsigned int)type);
 		return false;
 	}
 	if (type == ESP32_BUS_TYPE_INIT && bus != NULL){
-		log_e("Can't set a Bus to INIT Type");
+		log_e("Can't set a Bus to INIT Type (pin %u)", pin);
 		return false;
-	}	
+	}
 	otype = pins[pin].type;
 	obus = pins[pin].bus;
 	if(type == otype && bus == obus){
 		if (type != ESP32_BUS_TYPE_INIT) {
-		        log_i("Bus already set");
+		    log_i("Pin %u already has type %u with bus %p", pin, (unsigned int)type, bus);
 		}
 		return true;
 	}
 	if(obus != NULL){
 		if(deinit_functions[otype] == NULL){
-			log_e("Bus does not have deinit function set");
+			log_e("No deinit function for type %u (pin %u)", (unsigned int)otype, pin);
 			return false;
 		}
 		if(!deinit_functions[otype](obus)){
-			log_e("Previous bus failed to deinit");
+			log_e("Deinit function for previous bus type %u failed (pin %u)", (unsigned int)otype, pin);
 			return false;
 		}
 	}
 	pins[pin].type = type;
 	pins[pin].bus = bus;
+	log_v("Pin %u successfully set to type %u with bus %p", pin, (unsigned int)type, bus);
 	return true;
 }
 
@@ -66,7 +67,7 @@ void * perimanGetPinBus(uint8_t pin, peripheral_bus_type_t type){
 		return NULL;
 	}
 	if(type >= ESP32_BUS_TYPE_MAX  || type  == ESP32_BUS_TYPE_INIT){
-		log_e("Invalid type: %u", (unsigned int)type);
+		log_e("Invalid type (%u) for pin %u", (unsigned int)type, pin);
 		return NULL;
 	}
 	if(pins[pin].type == type){
@@ -89,10 +90,11 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
 		return false;
 	}
 	if(cb == NULL){
-		log_e("Callback is NULL");
+		log_e("Callback is NULL when setting deinit function for type %u", (unsigned int)type);
 		return false;
 	}
 	deinit_functions[type] = cb;
+	log_v("Deinit function for type %u successfully set to %p", (unsigned int)type, cb);
 	return true;
 }
 
