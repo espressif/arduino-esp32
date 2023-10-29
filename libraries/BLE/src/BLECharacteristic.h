@@ -7,6 +7,9 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_
 #define COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string>
@@ -33,14 +36,14 @@ public:
 	BLEDescriptor* getByUUID(const char* uuid);
 	BLEDescriptor* getByUUID(BLEUUID uuid);
 	BLEDescriptor* getByHandle(uint16_t handle);
-	std::string	toString();
+	String	toString();
 	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 	BLEDescriptor* getFirst();
 	BLEDescriptor* getNext();
 private:
-	std::map<BLEDescriptor*, std::string> m_uuidMap;
+	std::map<BLEDescriptor*, String> m_uuidMap;
 	std::map<uint16_t, BLEDescriptor*> m_handleMap;
-	std::map<BLEDescriptor*, std::string>::iterator m_iterator;
+	std::map<BLEDescriptor*, String>::iterator m_iterator;
 };
 
 
@@ -60,7 +63,7 @@ public:
 	BLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
 	BLEDescriptor* getDescriptorByUUID(BLEUUID descriptorUUID);
 	BLEUUID        getUUID();
-	std::string    getValue();
+	String         getValue();
 	uint8_t*       getData();
 	size_t         getLength();
 
@@ -72,7 +75,7 @@ public:
 	void setNotifyProperty(bool value);
 	void setReadProperty(bool value);
 	void setValue(uint8_t* data, size_t size);
-	void setValue(std::string value);
+	void setValue(String value);
 	void setValue(uint16_t& data16);
 	void setValue(uint32_t& data32);
 	void setValue(int& data32);
@@ -80,7 +83,7 @@ public:
 	void setValue(double& data64); 
 	void setWriteProperty(bool value);
 	void setWriteNoResponseProperty(bool value);
-	std::string toString();
+	String toString();
 	uint16_t getHandle();
 	void setAccessPermissions(esp_gatt_perm_t perm);
 
@@ -185,5 +188,7 @@ public:
 	 */
 	virtual void onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code);
 };
+
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_ */

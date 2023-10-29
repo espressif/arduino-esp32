@@ -8,14 +8,6 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 22
-#define NUM_DIGITAL_PINS        22
-#define NUM_ANALOG_INPUTS       6
-
-#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
-#define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
-
 // User LEDs are also connected to USB D- and D+
 static const uint8_t LED_WARM = 18;
 static const uint8_t LED_COLD = 19;
@@ -27,6 +19,7 @@ static const uint8_t LED_BLUE = 5;
 
 static const uint8_t LED_BUILTIN = LED_WARM;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 // Standard ESP32-C3 GPIOs
 static const uint8_t TX = 21;

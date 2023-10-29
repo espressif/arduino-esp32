@@ -1,20 +1,55 @@
 /*
- * Connect the SD card to the following pins:
+ * pin 1 - not used          |  Micro SD card     |
+ * pin 2 - CS (SS)           |                   /
+ * pin 3 - DI (MOSI)         |                  |__
+ * pin 4 - VDD (3.3V)        |                    |
+ * pin 5 - SCK (SCLK)        | 8 7 6 5 4 3 2 1   /
+ * pin 6 - VSS (GND)         | ▄ ▄ ▄ ▄ ▄ ▄ ▄ ▄  /
+ * pin 7 - DO (MISO)         | ▀ ▀ █ ▀ █ ▀ ▀ ▀ |
+ * pin 8 - not used          |_________________|
+ *                             ║ ║ ║ ║ ║ ║ ║ ║
+ *                     ╔═══════╝ ║ ║ ║ ║ ║ ║ ╚═════════╗
+ *                     ║         ║ ║ ║ ║ ║ ╚══════╗    ║
+ *                     ║   ╔═════╝ ║ ║ ║ ╚═════╗  ║    ║
+ * Connections for     ║   ║   ╔═══╩═║═║═══╗   ║  ║    ║
+ * full-sized          ║   ║   ║   ╔═╝ ║   ║   ║  ║    ║
+ * SD card             ║   ║   ║   ║   ║   ║   ║  ║    ║
+ * Pin name         |  -  DO  VSS SCK VDD VSS DI CS    -  |
+ * SD pin number    |  8   7   6   5   4   3   2   1   9 /
+ *                  |                                  █/
+ *                  |__▍___▊___█___█___█___█___█___█___/
  *
- * SD Card | ESP32
- *    D2       -
- *    D3       SS
- *    CMD      MOSI
- *    VSS      GND
- *    VDD      3.3V
- *    CLK      SCK
- *    VSS      GND
- *    D0       MISO
- *    D1       -
+ * Note:  The SPI pins can be manually configured by using `SPI.begin(sck, miso, mosi, cs).`
+ *        Alternatively, you can change the CS pin and use the other default settings by using `SD.begin(cs)`.
+ *
+ * +--------------+---------+-------+----------+----------+----------+
+ * | SPI Pin Name | ESP8266 | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
+ * +==============+=========+=======+==========+==========+==========+
+ * | CS (SS)      | GPIO15  | GPIO5 | GPIO5    | GPIO13   | GPIO13   |
+ * +--------------+---------+-------+----------+----------+----------+
+ * | DI (MOSI)    | GPIO13  | GPIO23| GPIO24   | GPIO14   | GPIO14   |
+ * +--------------+---------+-------+----------+----------+----------+
+ * | DO (MISO)    | GPIO12  | GPIO19| GPIO25   | GPIO15   | GPIO15   |
+ * +--------------+---------+-------+----------+----------+----------+
+ * | SCK (SCLK)   | GPIO14  | GPIO18| GPIO19   | GPIO16   | GPIO16   |
+ * +--------------+---------+-------+----------+----------+----------+
+ *
+ * For more info see file README.md in this library or on URL:
+ * https://github.com/espressif/arduino-esp32/tree/master/libraries/SD
  */
+
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+
+/*
+Uncomment and set up if you want to use custom pins for the SPI communication
+#define REASSIGN_PINS
+int sck = -1;
+int miso = -1;
+int mosi = -1;
+int cs = -1;
+*/
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\n", dirname);
@@ -150,7 +185,7 @@ void testFileIO(fs::FS &fs, const char * path){
             len -= toRead;
         }
         end = millis() - start;
-        Serial.printf("%u bytes read for %u ms\n", flen, end);
+        Serial.printf("%u bytes read for %lu ms\n", flen, end);
         file.close();
     } else {
         Serial.println("Failed to open file for reading");
@@ -169,12 +204,18 @@ void testFileIO(fs::FS &fs, const char * path){
         file.write(buf, 512);
     }
     end = millis() - start;
-    Serial.printf("%u bytes written for %u ms\n", 2048 * 512, end);
+    Serial.printf("%u bytes written for %lu ms\n", 2048 * 512, end);
     file.close();
 }
 
 void setup(){
     Serial.begin(115200);
+    while(!Serial) { delay (10); }
+
+#ifdef REASSIGN_PINS
+    SPI.begin(sck, miso, mosi, cs);
+#endif
+    //if(!SD.begin(cs)){ //Change to this function to manually change CS pin
     if(!SD.begin()){
         Serial.println("Card Mount Failed");
         return;

@@ -5,6 +5,8 @@ targets:
   - esp32s2
   - esp32s3
   - esp32c3
+  - esp32c6
+  - esp32h2
 tags:
   - arduino
 files:
@@ -14,8 +16,14 @@ files:
     - "variants/esp32s2/**/*"
     - "variants/esp32s3/**/*"
     - "variants/esp32c3/**/*"
+    - "variants/esp32c6/**/*"
+    - "variants/esp32h2/**/*"
     - "libraries/**/*"
     - "CMakeLists.txt"
     - "Kconfig.projbuild"
   exclude:
     - "**/*"
+dependencies:
+  idf: ">=5.1"
+  mdns: "^1.1.0"
+  chmorgan/esp-libhelix-mp3: "1.0.3"

@@ -11,6 +11,8 @@
  *  Created on: Jul 3, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <sstream>
@@ -70,7 +72,7 @@ uint16_t BLEAdvertisedDevice::getAppearance() {
  * @brief Get the manufacturer data.
  * @return The manufacturer data of the advertised device.
  */
-std::string BLEAdvertisedDevice::getManufacturerData() {
+String BLEAdvertisedDevice::getManufacturerData() {
 	return m_manufacturerData;
 } // getManufacturerData
 
@@ -79,7 +81,7 @@ std::string BLEAdvertisedDevice::getManufacturerData() {
  * @brief Get the name.
  * @return The name of the advertised device.
  */
-std::string BLEAdvertisedDevice::getName() {
+String BLEAdvertisedDevice::getName() {
 	return m_name;
 } // getName
 
@@ -113,15 +115,15 @@ int BLEAdvertisedDevice::getServiceDataCount() {
  * @brief Get the service data.
  * @return The ServiceData of the advertised device.
  */
-std::string BLEAdvertisedDevice::getServiceData() {
-	return m_serviceData.empty() ? std::string() : m_serviceData.front();
+String BLEAdvertisedDevice::getServiceData() {
+	return m_serviceData.empty() ? String() : m_serviceData.front();
 } //getServiceData
 
 /**
  * @brief Get the service data.
  * @return The ServiceData of the advertised device.
  */
-std::string BLEAdvertisedDevice::getServiceData(int i) {
+String BLEAdvertisedDevice::getServiceData(int i) {
 	return m_serviceData[i];
 } //getServiceData
 
@@ -294,7 +296,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 
 			switch(ad_type) {
 				case ESP_BLE_AD_TYPE_NAME_CMPL: {   // Adv Data Type: 0x09
-					setName(std::string(reinterpret_cast<char*>(payload), length));
+					setName(String(reinterpret_cast<char*>(payload), length));
 					break;
 				} // ESP_BLE_AD_TYPE_NAME_CMPL
 
@@ -341,7 +343,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 
 				// See CSS Part A 1.4 Manufacturer Specific Data
 				case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE: {
-					setManufacturerData(std::string(reinterpret_cast<char*>(payload), length));
+					setManufacturerData(String(reinterpret_cast<char*>(payload), length));
 					break;
 				} // ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE
 
@@ -353,7 +355,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 					uint16_t uuid = *(uint16_t*)payload;
 					setServiceDataUUID(BLEUUID(uuid));
 					if (length > 2) {
-						setServiceData(std::string(reinterpret_cast<char*>(payload + 2), length - 2));
+						setServiceData(String(reinterpret_cast<char*>(payload + 2), length - 2));
 					}
 					break;
 				} //ESP_BLE_AD_TYPE_SERVICE_DATA
@@ -366,7 +368,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 					uint32_t uuid = *(uint32_t*) payload;
 					setServiceDataUUID(BLEUUID(uuid));
 					if (length > 4) {
-						setServiceData(std::string(reinterpret_cast<char*>(payload + 4), length - 4));
+						setServiceData(String(reinterpret_cast<char*>(payload + 4), length - 4));
 					}
 					break;
 				} //ESP_BLE_AD_TYPE_32SERVICE_DATA
@@ -379,7 +381,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, size_t total_len)
 
 					setServiceDataUUID(BLEUUID(payload, (size_t)16, false));
 					if (length > 16) {
-						setServiceData(std::string(reinterpret_cast<char*>(payload + 16), length - 16));
+						setServiceData(String(reinterpret_cast<char*>(payload + 16), length - 16));
 					}
 					break;
 				} //ESP_BLE_AD_TYPE_32SERVICE_DATA
@@ -442,10 +444,10 @@ void BLEAdvertisedDevice::setAppearance(uint16_t appearance) {
  * @brief Set the manufacturer data for this device.
  * @param [in] The discovered manufacturer data.
  */
-void BLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
+void BLEAdvertisedDevice::setManufacturerData(String manufacturerData) {
 	m_manufacturerData     = manufacturerData;
 	m_haveManufacturerData = true;
-	char* pHex = BLEUtils::buildHexData(nullptr, (uint8_t*) m_manufacturerData.data(), (uint8_t) m_manufacturerData.length());
+	char* pHex = BLEUtils::buildHexData(nullptr, (uint8_t*) m_manufacturerData.c_str(), (uint8_t) m_manufacturerData.length());
 	log_d("- manufacturer data: %s", pHex);
 	free(pHex);
 } // setManufacturerData
@@ -455,7 +457,7 @@ void BLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
  * @brief Set the name for this device.
  * @param [in] name The discovered name.
  */
-void BLEAdvertisedDevice::setName(std::string name) {
+void BLEAdvertisedDevice::setName(String name) {
 	m_name     = name;
 	m_haveName = true;
 	log_d("- setName(): name: %s", m_name.c_str());
@@ -505,7 +507,7 @@ void BLEAdvertisedDevice::setServiceUUID(BLEUUID serviceUUID) {
  * @brief Set the ServiceData value.
  * @param [in] data ServiceData value.
  */
-void BLEAdvertisedDevice::setServiceData(std::string serviceData) {
+void BLEAdvertisedDevice::setServiceData(String serviceData) {
 	m_serviceData.push_back(serviceData); // Save the service data that we received.
 } //setServiceData
 
@@ -535,8 +537,8 @@ void BLEAdvertisedDevice::setTXPower(int8_t txPower) {
  * @brief Create a string representation of this device.
  * @return A string representation of this device.
  */
-std::string BLEAdvertisedDevice::toString() {
-	std::string res = "Name: " + getName() + ", Address: " + getAddress().toString();
+String BLEAdvertisedDevice::toString() {
+	String res = "Name: " + getName() + ", Address: " + getAddress().toString();
 	if (haveAppearance()) {
 		char val[6];
 		snprintf(val, sizeof(val), "%d", getAppearance());
@@ -544,7 +546,7 @@ std::string BLEAdvertisedDevice::toString() {
 		res += val;
 	}
 	if (haveManufacturerData()) {
-		char *pHex = BLEUtils::buildHexData(nullptr, (uint8_t*)getManufacturerData().data(), getManufacturerData().length());
+		char *pHex = BLEUtils::buildHexData(nullptr, (uint8_t*)getManufacturerData().c_str(), getManufacturerData().length());
 		res += ", manufacturer data: ";
 		res += pHex;
 		free(pHex);
@@ -582,6 +584,22 @@ esp_ble_addr_type_t BLEAdvertisedDevice::getAddressType() {
 	return m_addressType;
 }
 
+ble_frame_type_t BLEAdvertisedDevice::getFrameType(){
+  for(int i = 0; i < m_payloadLength; ++i){
+    log_d("check [%d]=0x%02X", i, m_payload[i]);
+    if(m_payload[i] == 0x16 && m_payloadLength >= i+3 && m_payload[i+1] == 0xAA && m_payload[i+2] == 0xFE && m_payload[i+3] == 0x00){
+      return BLE_EDDYSTONE_UUID_FRAME;
+    }
+    if(m_payload[i] == 0x16 && m_payloadLength >= i+3 && m_payload[i+1] == 0xAA && m_payload[i+2] == 0xFE && m_payload[i+3] == 0x10){
+      return BLE_EDDYSTONE_URL_FRAME;
+    }
+    if(m_payload[i] == 0x16 && m_payloadLength >= i+3 && m_payload[i+1] == 0xAA && m_payload[i+2] == 0xFE && m_payload[i+3] == 0x20){
+      return BLE_EDDYSTONE_TLM_FRAME;
+    }
+  }
+  return BLE_UNKNOWN_FRAME;
+}
+
 void BLEAdvertisedDevice::setAddressType(esp_ble_addr_type_t type) {
 	m_addressType = type;
 }
@@ -591,4 +609,4 @@ size_t BLEAdvertisedDevice::getPayloadLength() {
 }
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
-
+#endif /* SOC_BLE_SUPPORTED */

@@ -3,14 +3,6 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        9
-#define NUM_ANALOG_INPUTS       7
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
 // Renaming few signals
 #define SPI_CLK	SCK			// IO14
 #define SPI_MISO	MISO			// IO12
@@ -22,8 +14,8 @@
 
 /* LED_BUILTIN is kept for compatibility reason; mapped to LED2 on the LogSens V1.1 Board */
 static const uint8_t LED_BUILTIN = 33;
-#define BUILTIN_LED  LED_BUILTIN 	// backward compatibility
-#define LED_BUILTIN LED_BUILTIN
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 /* UART0: Serial Port for Programming and Debugging on the LogSens V1.1 Board */
 static const uint8_t TX = 1;
