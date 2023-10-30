@@ -100,11 +100,7 @@ public:
     {
         return begin(addr, -1, -1, 0);
     }
-    inline bool begin(int addr)
-    {
-        return begin(static_cast<uint8_t>(addr), -1, -1, 0);
-    }
-    bool end();
+	bool end();
 
     size_t setBufferSize(size_t bSize);
 
