@@ -39,10 +39,8 @@ License (MIT license):
 #endif
 
 #include "ESPmDNS.h"
-#include "WiFi.h"
 #include <functional>
-#include "esp_wifi.h"
-#include "esp_wifi_types.h"
+#include "esp_mac.h"
 
 // Add quotes around defined value
 #ifdef __IN_ECLIPSE__
@@ -115,7 +113,7 @@ void MDNSResponder::disableArduino(){
 void MDNSResponder::enableWorkstation(esp_interface_t interface){
     char winstance[21+_hostname.length()];
     uint8_t mac[6];
-    esp_wifi_get_mac((wifi_interface_t)interface, mac);
+    esp_base_mac_addr_get(mac);
     sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     if(mdns_service_add(NULL, "_workstation", "_tcp", 9, NULL, 0)) {

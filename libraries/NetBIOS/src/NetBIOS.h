@@ -2,7 +2,7 @@
 #ifndef __ESPNBNS_h__
 #define __ESPNBNS_h__
 
-#include <WiFi.h>
+#include "Arduino.h"
 #include "AsyncUDP.h"
 
 class NetBIOS

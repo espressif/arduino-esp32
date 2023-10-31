@@ -30,7 +30,7 @@
 #include <esp32-hal-log.h>  
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
-#include <WiFi.h>
+#include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #endif
 

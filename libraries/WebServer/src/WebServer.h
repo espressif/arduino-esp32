@@ -26,7 +26,7 @@
 
 #include <functional>
 #include <memory>
-#include <WiFi.h>
+#include "Networking.h"
 #include "HTTP_Method.h"
 #include "Uri.h"
 

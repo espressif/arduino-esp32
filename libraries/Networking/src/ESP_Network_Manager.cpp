@@ -3,9 +3,7 @@
 #include "lwip/ip_addr.h"
 #include "lwip/dns.h"
 #include "esp32-hal-log.h"
-#if CONFIG_IDF_TARGET_ESP32
 #include "esp_mac.h"
-#endif
 
 ESP_Network_Manager::ESP_Network_Manager(){
 
@@ -38,8 +36,7 @@ bool ESP_Network_Manager::begin(){
  * @param ipaddr
  * @param callback_arg
  */
-static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
-{
+static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg){
     if(ipaddr) {
         (*reinterpret_cast<IPAddress*>(callback_arg)) = ipaddr->u_addr.ip4.addr;
     }
@@ -53,8 +50,7 @@ static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, v
  * @return 1 if aIPAddrString was successfully converted to an IP address,
  *          else error code
  */
-int ESP_Network_Manager::hostByName(const char* aHostname, IPAddress& aResult)
-{
+int ESP_Network_Manager::hostByName(const char* aHostname, IPAddress& aResult){
     if (!aResult.fromString(aHostname))
     {
         ip_addr_t addr;
@@ -74,6 +70,19 @@ int ESP_Network_Manager::hostByName(const char* aHostname, IPAddress& aResult)
         }
     }
     return (uint32_t)aResult != 0;
+}
+
+uint8_t * ESP_Network_Manager::macAddress(uint8_t * mac){
+    esp_base_mac_addr_get(mac);
+    return mac;
+}
+
+String ESP_Network_Manager::macAddress(void){
+    uint8_t mac[6];
+    char macStr[18] = { 0 };
+    macAddress(mac);
+    sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    return String(macStr);
 }
 
 ESP_Network_Manager Network;

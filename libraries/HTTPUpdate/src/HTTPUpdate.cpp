@@ -191,8 +191,11 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     http.setFollowRedirects(_followRedirects);
     http.setUserAgent("ESP32-http-Update");
     http.addHeader("Cache-Control", "no-cache");
+    http.addHeader("x-ESP32-BASE-MAC", Network.macAddress());
+#if SOC_WIFI_SUPPORTED
     http.addHeader("x-ESP32-STA-MAC", WiFi.macAddress());
     http.addHeader("x-ESP32-AP-MAC", WiFi.softAPmacAddress());
+#endif
     http.addHeader("x-ESP32-free-space", String(ESP.getFreeSketchSpace()));
     http.addHeader("x-ESP32-sketch-size", String(ESP.getSketchSize()));
     String sketchMD5 = ESP.getSketchMD5();

@@ -130,7 +130,7 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *CA_cert, 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *CA_cert, const char *cert, const char *private_key)
 {
     IPAddress address;
-    if (!WiFi.hostByName(host, address))
+    if (!Network.hostByName(host, address))
         return 0;
 
     return connect(address, port, host, CA_cert, cert, private_key);
@@ -157,7 +157,7 @@ int WiFiClientSecure::connect(const char *host, uint16_t port, const char *pskId
     log_v("start_ssl_client with PSK");
 
     IPAddress address;
-    if (!WiFi.hostByName(host, address))
+    if (!Network.hostByName(host, address))
         return 0;
 
     int ret = start_ssl_client(sslclient, address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);

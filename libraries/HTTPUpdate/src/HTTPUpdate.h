@@ -27,9 +27,7 @@
 #define ___HTTP_UPDATE_H___
 
 #include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <WiFiUdp.h>
+#include <Networking.h>
 #include <HTTPClient.h>
 #include <Update.h>
 

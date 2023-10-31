@@ -1,9 +1,9 @@
 #ifndef __ARDUINO_OTA_H
 #define __ARDUINO_OTA_H
 
-#include <WiFi.h>
-#include <functional>
+#include "Networking.h"
 #include "Update.h"
+#include <functional>
 
 #define INT_BUFFER_SIZE 16
 

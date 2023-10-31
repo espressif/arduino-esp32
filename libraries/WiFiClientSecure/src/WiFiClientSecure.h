@@ -22,7 +22,7 @@
 #define WiFiClientSecure_h
 #include "Arduino.h"
 #include "IPAddress.h"
-#include <WiFi.h>
+#include "Networking.h"
 #include "ssl_client.h"
 
 class WiFiClientSecure : public WiFiClient
