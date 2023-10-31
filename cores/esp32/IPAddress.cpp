@@ -20,62 +20,62 @@
 #include <Arduino.h>
 #include <IPAddress.h>
 #include <Print.h>
+#include <algorithm>
 
-IPAddress::IPAddress()
-{
-    _address.dword = 0;
-}
+// IPAddress::IPAddress()
+// {
+//     _address.dword = 0;
+// }
 
 IPAddress::IPAddress(uint8_t first_octet, uint8_t second_octet, uint8_t third_octet, uint8_t fourth_octet)
-{
-    _address.bytes[0] = first_octet;
-    _address.bytes[1] = second_octet;
-    _address.bytes[2] = third_octet;
-    _address.bytes[3] = fourth_octet;
-}
+	: _address({first_octet,
+				second_octet,
+    			third_octet,
+    			fourth_octet})
+{}
 
 IPAddress::IPAddress(uint32_t address)
 {
-    _address.dword = address;
+    uint32_t& addressRef = reinterpret_cast<uint32_t&>(_address.front());
+	addressRef = address;
 }
 
-IPAddress::IPAddress(const uint8_t *address)
-{
-    memcpy(_address.bytes, address, sizeof(_address.bytes));
-}
+IPAddress::IPAddress(const uint8_t *address) : _address({address[0], address[1], address[2], address[3]})
+{}
 
 IPAddress& IPAddress::operator=(const uint8_t *address)
 {
-    memcpy(_address.bytes, address, sizeof(_address.bytes));
+	std::copy(address, address + _address.size(), _address.begin());
     return *this;
 }
 
 IPAddress& IPAddress::operator=(uint32_t address)
 {
-    _address.dword = address;
+    uint32_t& addressRef = reinterpret_cast<uint32_t&>(_address.front());
+	addressRef = address;
     return *this;
 }
 
 bool IPAddress::operator==(const uint8_t* addr) const
 {
-    return memcmp(addr, _address.bytes, sizeof(_address.bytes)) == 0;
+    return std::equal(_address.begin(), _address.end(), addr);
 }
 
 size_t IPAddress::printTo(Print& p) const
 {
     size_t n = 0;
     for(int i = 0; i < 3; i++) {
-        n += p.print(_address.bytes[i], DEC);
+        n += p.print(_address[i], DEC);
         n += p.print('.');
     }
-    n += p.print(_address.bytes[3], DEC);
+    n += p.print(_address[3], DEC);
     return n;
 }
 
 String IPAddress::toString() const
 {
     char szRet[16];
-    sprintf(szRet,"%u.%u.%u.%u", _address.bytes[0], _address.bytes[1], _address.bytes[2], _address.bytes[3]);
+    sprintf(szRet,"%u.%u.%u.%u", _address[0], _address[1], _address[2], _address[3]);
     return String(szRet);
 }
 
@@ -103,7 +103,7 @@ bool IPAddress::fromString(const char *address)
                 // Too much dots (there must be 3 dots)
                 return false;
             }
-            _address.bytes[dots++] = acc;
+            _address[dots++] = acc;
             acc = 0;
         }
         else
@@ -117,7 +117,7 @@ bool IPAddress::fromString(const char *address)
         // Too few dots (there must be 3 dots)
         return false;
     }
-    _address.bytes[3] = acc;
+    _address[3] = acc;
     return true;
 }
 
