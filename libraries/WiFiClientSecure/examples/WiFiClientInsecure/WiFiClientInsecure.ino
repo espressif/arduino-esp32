@@ -1,4 +1,5 @@
 #include <WiFiClientSecure.h>
+#include <WiFi.h>
 
 const char* ssid     = "your-ssid";     // your network SSID (name of wifi network)
 const char* password = "your-password"; // your network password

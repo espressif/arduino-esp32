@@ -11,6 +11,7 @@
 */
 
 #include <WiFiClientSecure.h>
+#include <WiFi.h>
 
 #if 0
 const char* ssid     = "your-ssid";     // your network SSID (name of wifi network)

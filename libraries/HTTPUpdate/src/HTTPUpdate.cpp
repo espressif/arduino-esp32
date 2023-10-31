@@ -25,6 +25,9 @@
 
 #include "HTTPUpdate.h"
 #include <StreamString.h>
+#if SOC_WIFI_SUPPORTED
+#include "WiFi.h"
+#endif
 
 #include <esp_partition.h>
 #include <esp_ota_ops.h>                // get running partition
