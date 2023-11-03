@@ -34,26 +34,68 @@
 #define MOUSE_FORWARD   0x10
 #define MOUSE_ALL       0x1F
 
-class USBHIDMouse: public USBHIDDevice {
-private:
-    USBHID hid;
-    uint8_t _buttons;
-    void buttons(uint8_t b);
-    bool write(int8_t x, int8_t y, int8_t vertical, int8_t horizontal);
+#include "./tusb_hid_mouse.h"
+
+enum MousePositioning_t
+{
+  HID_MOUSE_RELATIVE,
+  HID_MOUSE_ABSOLUTE
+};
+
+struct HIDMouseType_t
+{
+  MousePositioning_t positioning;
+  const uint8_t* report_descriptor;
+  size_t descriptor_size;
+  size_t report_size;
+};
+
+extern HIDMouseType_t HIDMouseRel;
+extern HIDMouseType_t HIDMouseAbs;
+
+
+class USBHIDMouseBase: public USBHIDDevice {
 public:
-    USBHIDMouse(void);
+    USBHIDMouseBase(HIDMouseType_t *type);
     void begin(void);
     void end(void);
-
-    void click(uint8_t b = MOUSE_LEFT);
-    void move(int8_t x, int8_t y, int8_t wheel = 0, int8_t pan = 0); 
     void press(uint8_t b = MOUSE_LEFT);   // press LEFT by default
     void release(uint8_t b = MOUSE_LEFT); // release LEFT by default
     bool isPressed(uint8_t b = MOUSE_LEFT); // check LEFT by default
-
+    template <typename T> bool sendReport(T report) { return hid.SendReport( HID_REPORT_ID_MOUSE, &report, _type->report_size ); };
     // internal use
     uint16_t _onGetDescriptor(uint8_t* buffer);
+    virtual void buttons(uint8_t b);
+protected:
+    USBHID hid;
+    uint8_t _buttons;
+    HIDMouseType_t *_type;
 };
+
+
+class USBHIDRelativeMouse: public USBHIDMouseBase {
+public:
+    USBHIDRelativeMouse(void): USBHIDMouseBase(&HIDMouseRel) { }
+    void move(int8_t x, int8_t y, int8_t wheel = 0, int8_t pan = 0);
+    void click(uint8_t b = MOUSE_LEFT);
+    void buttons(uint8_t b) override;
+};
+
+
+class USBHIDAbsoluteMouse: public USBHIDMouseBase {
+public:
+    USBHIDAbsoluteMouse(void): USBHIDMouseBase(&HIDMouseAbs) { }
+    void move(int16_t x, int16_t y, int8_t wheel = 0, int8_t pan = 0);
+    void click(uint8_t b = MOUSE_LEFT);
+    void buttons(uint8_t b) override;
+private:
+    int16_t _lastx = 0;
+    int16_t _lasty = 0;
+};
+
+
+// don't break examples and old sketches
+typedef USBHIDRelativeMouse USBHIDMouse;
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */
