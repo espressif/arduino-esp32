@@ -30,7 +30,7 @@
 class IPAddress: public Printable
 {
 private:
-	std::array<uint8_t,4> _address{}; // IPv4 address
+	alignas(alignof(uint32_t)) std::array<uint8_t,4> _address{}; // IPv4 address
 
     // Access the raw byte array containing the address.  Because this returns a pointer
     // to the internal structure rather than a copy of the address this function should only
