@@ -703,12 +703,6 @@ esp32c3.menu.FlashMode.qio.build.boot=qio
 esp32c3.menu.FlashMode.dio=DIO
 esp32c3.menu.FlashMode.dio.build.flash_mode=dio
 esp32c3.menu.FlashMode.dio.build.boot=dio
-esp32c3.menu.FlashMode.qout=QOUT
-esp32c3.menu.FlashMode.qout.build.flash_mode=dout
-esp32c3.menu.FlashMode.qout.build.boot=qout
-esp32c3.menu.FlashMode.dout=DOUT
-esp32c3.menu.FlashMode.dout.build.flash_mode=dout
-esp32c3.menu.FlashMode.dout.build.boot=dout
 
 esp32c3.menu.FlashFreq.80=80MHz
 esp32c3.menu.FlashFreq.80.build.flash_freq=80m
@@ -897,12 +891,6 @@ esp32s2.menu.FlashMode.qio.build.boot=qio
 esp32s2.menu.FlashMode.dio=DIO
 esp32s2.menu.FlashMode.dio.build.flash_mode=dio
 esp32s2.menu.FlashMode.dio.build.boot=dio
-esp32s2.menu.FlashMode.qout=QOUT
-esp32s2.menu.FlashMode.qout.build.flash_mode=dout
-esp32s2.menu.FlashMode.qout.build.boot=qout
-esp32s2.menu.FlashMode.dout=DOUT
-esp32s2.menu.FlashMode.dout.build.flash_mode=dout
-esp32s2.menu.FlashMode.dout.build.boot=dout
 
 esp32s2.menu.FlashFreq.80=80MHz
 esp32s2.menu.FlashFreq.80.build.flash_freq=80m
@@ -1070,12 +1058,6 @@ esp32.menu.FlashMode.qio.build.boot=qio
 esp32.menu.FlashMode.dio=DIO
 esp32.menu.FlashMode.dio.build.flash_mode=dio
 esp32.menu.FlashMode.dio.build.boot=dio
-esp32.menu.FlashMode.qout=QOUT
-esp32.menu.FlashMode.qout.build.flash_mode=dout
-esp32.menu.FlashMode.qout.build.boot=qout
-esp32.menu.FlashMode.dout=DOUT
-esp32.menu.FlashMode.dout.build.flash_mode=dout
-esp32.menu.FlashMode.dout.build.boot=dout
 
 esp32.menu.FlashFreq.80=80MHz
 esp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -1236,12 +1218,6 @@ esp32da.menu.FlashMode.qio.build.boot=qio
 esp32da.menu.FlashMode.dio=DIO
 esp32da.menu.FlashMode.dio.build.flash_mode=dio
 esp32da.menu.FlashMode.dio.build.boot=dio
-esp32da.menu.FlashMode.qout=QOUT
-esp32da.menu.FlashMode.qout.build.flash_mode=dout
-esp32da.menu.FlashMode.qout.build.boot=qout
-esp32da.menu.FlashMode.dout=DOUT
-esp32da.menu.FlashMode.dout.build.flash_mode=dout
-esp32da.menu.FlashMode.dout.build.boot=dout
 
 esp32da.menu.FlashFreq.80=80MHz
 esp32da.menu.FlashFreq.80.build.flash_freq=80m
@@ -1378,12 +1354,6 @@ esp32wrover.menu.FlashMode.qio.build.boot=qio
 esp32wrover.menu.FlashMode.dio=DIO
 esp32wrover.menu.FlashMode.dio.build.flash_mode=dio
 esp32wrover.menu.FlashMode.dio.build.boot=dio
-esp32wrover.menu.FlashMode.qout=QOUT
-esp32wrover.menu.FlashMode.qout.build.flash_mode=dout
-esp32wrover.menu.FlashMode.qout.build.boot=qout
-esp32wrover.menu.FlashMode.dout=DOUT
-esp32wrover.menu.FlashMode.dout.build.flash_mode=dout
-esp32wrover.menu.FlashMode.dout.build.boot=dout
 
 esp32wrover.menu.FlashFreq.80=80MHz
 esp32wrover.menu.FlashFreq.80.build.flash_freq=80m
@@ -1502,6 +1472,236 @@ pico32.menu.EraseFlash.none=Disabled
 pico32.menu.EraseFlash.none.upload.erase_cmd=
 pico32.menu.EraseFlash.all=Enabled
 pico32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+esp32s3-octal.name=ESP32S3 Dev Module Octal (WROOM2)
+esp32s3-octal.vid.0=0x303a
+esp32s3-octal.pid.0=0x1001
+
+esp32s3-octal.bootloader.tool=esptool_py
+esp32s3-octal.bootloader.tool.default=esptool_py
+
+esp32s3-octal.upload.tool=esptool_py
+esp32s3-octal.upload.tool.default=esptool_py
+esp32s3-octal.upload.tool.network=esp_ota
+esp32s3-octal.upload.maximum_size=1310720
+esp32s3-octal.upload.maximum_data_size=327680
+esp32s3-octal.upload.flags=
+esp32s3-octal.upload.extra_flags=
+esp32s3-octal.upload.use_1200bps_touch=false
+esp32s3-octal.upload.wait_for_upload_port=false
+
+esp32s3-octal.serial.disableDTR=false
+esp32s3-octal.serial.disableRTS=false
+
+esp32s3-octal.build.tarch=xtensa
+esp32s3-octal.build.bootloader_addr=0x0
+esp32s3-octal.build.target=esp32s3
+esp32s3-octal.build.mcu=esp32s3
+esp32s3-octal.build.core=esp32
+esp32s3-octal.build.variant=esp32s3
+esp32s3-octal.build.board=ESP32S3_DEV
+
+esp32s3-octal.build.usb_mode=1
+esp32s3-octal.build.cdc_on_boot=0
+esp32s3-octal.build.msc_on_boot=0
+esp32s3-octal.build.dfu_on_boot=0
+esp32s3-octal.build.f_cpu=240000000L
+esp32s3-octal.build.flash_size=4MB
+esp32s3-octal.build.flash_freq=80m
+esp32s3-octal.build.flash_mode=dio
+
+esp32s3-octal.build.boot=opi
+esp32s3-octal.build.boot_freq=80m
+esp32s3-octal.build.partitions=default
+esp32s3-octal.build.defines=
+esp32s3-octal.build.loop_core=
+esp32s3-octal.build.event_core=
+esp32s3-octal.build.psram_type=opi
+esp32s3-octal.build.memory_type={build.boot}_{build.psram_type}
+
+esp32s3-octal.menu.JTAGAdapter.default=Disabled
+esp32s3-octal.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp32s3-octal.menu.JTAGAdapter.builtin=Integrated USB JTAG
+esp32s3-octal.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+esp32s3-octal.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+esp32s3-octal.menu.JTAGAdapter.external=FTDI Adapter
+esp32s3-octal.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+esp32s3-octal.menu.JTAGAdapter.external.build.copy_jtag_files=1
+esp32s3-octal.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32s3-octal.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+esp32s3-octal.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+esp32s3-octal.menu.PSRAM.opi=OPI PSRAM
+esp32s3-octal.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+esp32s3-octal.menu.PSRAM.opi.build.psram_type=opi
+esp32s3-octal.menu.PSRAM.enabled=QSPI PSRAM
+esp32s3-octal.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3-octal.menu.PSRAM.enabled.build.psram_type=qspi
+esp32s3-octal.menu.PSRAM.disabled=Disabled
+esp32s3-octal.menu.PSRAM.disabled.build.defines=
+esp32s3-octal.menu.PSRAM.disabled.build.psram_type=qspi
+
+esp32s3-octal.menu.FlashMode.opi=OPI 80MHz
+esp32s3-octal.menu.FlashMode.opi.build.flash_mode=dout
+esp32s3-octal.menu.FlashMode.opi.build.boot=opi
+esp32s3-octal.menu.FlashMode.opi.build.boot_freq=80m
+esp32s3-octal.menu.FlashMode.opi.build.flash_freq=80m
+esp32s3-octal.menu.FlashMode.qio=QIO 80MHz
+esp32s3-octal.menu.FlashMode.qio.build.flash_mode=dio
+esp32s3-octal.menu.FlashMode.qio.build.boot=qio
+esp32s3-octal.menu.FlashMode.qio.build.boot_freq=80m
+esp32s3-octal.menu.FlashMode.qio.build.flash_freq=80m
+esp32s3-octal.menu.FlashMode.qio120=QIO 120MHz
+esp32s3-octal.menu.FlashMode.qio120.build.flash_mode=dio
+esp32s3-octal.menu.FlashMode.qio120.build.boot=qio
+esp32s3-octal.menu.FlashMode.qio120.build.boot_freq=120m
+esp32s3-octal.menu.FlashMode.qio120.build.flash_freq=80m
+esp32s3-octal.menu.FlashMode.dio=DIO 80MHz
+esp32s3-octal.menu.FlashMode.dio.build.flash_mode=dio
+esp32s3-octal.menu.FlashMode.dio.build.boot=dio
+esp32s3-octal.menu.FlashMode.dio.build.boot_freq=80m
+esp32s3-octal.menu.FlashMode.dio.build.flash_freq=80m
+
+esp32s3-octal.menu.FlashSize.16M=16MB (128Mb)
+esp32s3-octal.menu.FlashSize.4M=4MB (32Mb)
+esp32s3-octal.menu.FlashSize.4M.build.flash_size=4MB
+esp32s3-octal.menu.FlashSize.8M=8MB (64Mb)
+esp32s3-octal.menu.FlashSize.8M.build.flash_size=8MB
+esp32s3-octal.menu.FlashSize.8M.build.partitions=default_8MB
+esp32s3-octal.menu.FlashSize.16M=16MB (128Mb)
+esp32s3-octal.menu.FlashSize.16M.build.flash_size=16MB
+esp32s3-octal.menu.FlashSize.32M=32MB (256Mb)
+esp32s3-octal.menu.FlashSize.32M.build.flash_size=32MB
+esp32s3-octal.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
+
+esp32s3-octal.menu.LoopCore.1=Core 1
+esp32s3-octal.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+esp32s3-octal.menu.LoopCore.0=Core 0
+esp32s3-octal.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+esp32s3-octal.menu.EventsCore.1=Core 1
+esp32s3-octal.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+esp32s3-octal.menu.EventsCore.0=Core 0
+esp32s3-octal.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+esp32s3-octal.menu.USBMode.hwcdc=Hardware CDC and JTAG
+esp32s3-octal.menu.USBMode.hwcdc.build.usb_mode=1
+esp32s3-octal.menu.USBMode.default=USB-OTG (TinyUSB)
+esp32s3-octal.menu.USBMode.default.build.usb_mode=0
+
+esp32s3-octal.menu.CDCOnBoot.default=Disabled
+esp32s3-octal.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32s3-octal.menu.CDCOnBoot.cdc=Enabled
+esp32s3-octal.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32s3-octal.menu.MSCOnBoot.default=Disabled
+esp32s3-octal.menu.MSCOnBoot.default.build.msc_on_boot=0
+esp32s3-octal.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+esp32s3-octal.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+esp32s3-octal.menu.DFUOnBoot.default=Disabled
+esp32s3-octal.menu.DFUOnBoot.default.build.dfu_on_boot=0
+esp32s3-octal.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+esp32s3-octal.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+esp32s3-octal.menu.UploadMode.default=UART0 / Hardware CDC
+esp32s3-octal.menu.UploadMode.default.upload.use_1200bps_touch=false
+esp32s3-octal.menu.UploadMode.default.upload.wait_for_upload_port=false
+esp32s3-octal.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+esp32s3-octal.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+esp32s3-octal.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32s3-octal.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32s3-octal.menu.PartitionScheme.default.build.partitions=default
+esp32s3-octal.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32s3-octal.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32s3-octal.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32s3-octal.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32s3-octal.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32s3-octal.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32s3-octal.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32s3-octal.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32s3-octal.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32s3-octal.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32s3-octal.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32s3-octal.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32s3-octal.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32s3-octal.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32s3-octal.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32s3-octal.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32s3-octal.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32s3-octal.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32s3-octal.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+esp32s3-octal.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32s3-octal.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32s3-octal.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32s3-octal.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32s3-octal.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32s3-octal.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32s3-octal.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp32s3-octal.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32s3-octal.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32s3-octal.menu.PartitionScheme.rainmaker=RainMaker
+esp32s3-octal.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32s3-octal.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32s3-octal.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+esp32s3-octal.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+esp32s3-octal.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+esp32s3-octal.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+esp32s3-octal.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+esp32s3-octal.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+
+esp32s3-octal.menu.CPUFreq.240=240MHz (WiFi)
+esp32s3-octal.menu.CPUFreq.240.build.f_cpu=240000000L
+esp32s3-octal.menu.CPUFreq.160=160MHz (WiFi)
+esp32s3-octal.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32s3-octal.menu.CPUFreq.80=80MHz (WiFi)
+esp32s3-octal.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32s3-octal.menu.CPUFreq.40=40MHz
+esp32s3-octal.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32s3-octal.menu.CPUFreq.20=20MHz
+esp32s3-octal.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32s3-octal.menu.CPUFreq.10=10MHz
+esp32s3-octal.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32s3-octal.menu.UploadSpeed.921600=921600
+esp32s3-octal.menu.UploadSpeed.921600.upload.speed=921600
+esp32s3-octal.menu.UploadSpeed.115200=115200
+esp32s3-octal.menu.UploadSpeed.115200.upload.speed=115200
+esp32s3-octal.menu.UploadSpeed.256000.windows=256000
+esp32s3-octal.menu.UploadSpeed.256000.upload.speed=256000
+esp32s3-octal.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32s3-octal.menu.UploadSpeed.230400=230400
+esp32s3-octal.menu.UploadSpeed.230400.upload.speed=230400
+esp32s3-octal.menu.UploadSpeed.460800.linux=460800
+esp32s3-octal.menu.UploadSpeed.460800.macosx=460800
+esp32s3-octal.menu.UploadSpeed.460800.upload.speed=460800
+esp32s3-octal.menu.UploadSpeed.512000.windows=512000
+esp32s3-octal.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32s3-octal.menu.DebugLevel.none=None
+esp32s3-octal.menu.DebugLevel.none.build.code_debug=0
+esp32s3-octal.menu.DebugLevel.error=Error
+esp32s3-octal.menu.DebugLevel.error.build.code_debug=1
+esp32s3-octal.menu.DebugLevel.warn=Warn
+esp32s3-octal.menu.DebugLevel.warn.build.code_debug=2
+esp32s3-octal.menu.DebugLevel.info=Info
+esp32s3-octal.menu.DebugLevel.info.build.code_debug=3
+esp32s3-octal.menu.DebugLevel.debug=Debug
+esp32s3-octal.menu.DebugLevel.debug.build.code_debug=4
+esp32s3-octal.menu.DebugLevel.verbose=Verbose
+esp32s3-octal.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s3-octal.menu.EraseFlash.none=Disabled
+esp32s3-octal.menu.EraseFlash.none.upload.erase_cmd=
+esp32s3-octal.menu.EraseFlash.all=Enabled
+esp32s3-octal.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -2053,12 +2253,6 @@ esp32wroverkit.menu.FlashMode.qio.build.boot=qio
 esp32wroverkit.menu.FlashMode.dio=DIO
 esp32wroverkit.menu.FlashMode.dio.build.flash_mode=dio
 esp32wroverkit.menu.FlashMode.dio.build.boot=dio
-esp32wroverkit.menu.FlashMode.qout=QOUT
-esp32wroverkit.menu.FlashMode.qout.build.flash_mode=dout
-esp32wroverkit.menu.FlashMode.qout.build.boot=qout
-esp32wroverkit.menu.FlashMode.dout=DOUT
-esp32wroverkit.menu.FlashMode.dout.build.flash_mode=dout
-esp32wroverkit.menu.FlashMode.dout.build.boot=dout
 esp32wroverkit.menu.FlashFreq.80=80MHz
 esp32wroverkit.menu.FlashFreq.80.build.flash_freq=80m
 esp32wroverkit.menu.FlashFreq.40=40MHz
@@ -3772,12 +3966,6 @@ lilygo_t_display.menu.FlashMode.qio.build.boot=qio
 lilygo_t_display.menu.FlashMode.dio=DIO
 lilygo_t_display.menu.FlashMode.dio.build.flash_mode=dio
 lilygo_t_display.menu.FlashMode.dio.build.boot=dio
-lilygo_t_display.menu.FlashMode.qout=QOUT
-lilygo_t_display.menu.FlashMode.qout.build.flash_mode=dout
-lilygo_t_display.menu.FlashMode.qout.build.boot=qout
-lilygo_t_display.menu.FlashMode.dout=DOUT
-lilygo_t_display.menu.FlashMode.dout.build.flash_mode=dout
-lilygo_t_display.menu.FlashMode.dout.build.boot=dout
 
 lilygo_t_display.menu.FlashFreq.80=80MHz
 lilygo_t_display.menu.FlashFreq.80.build.flash_freq=80m
@@ -4379,12 +4567,6 @@ ttgo-t1.menu.FlashMode.qio.build.boot=qio
 ttgo-t1.menu.FlashMode.dio=DIO
 ttgo-t1.menu.FlashMode.dio.build.flash_mode=dio
 ttgo-t1.menu.FlashMode.dio.build.boot=dio
-ttgo-t1.menu.FlashMode.qout=QOUT
-ttgo-t1.menu.FlashMode.qout.build.flash_mode=dout
-ttgo-t1.menu.FlashMode.qout.build.boot=qout
-ttgo-t1.menu.FlashMode.dout=DOUT
-ttgo-t1.menu.FlashMode.dout.build.flash_mode=dout
-ttgo-t1.menu.FlashMode.dout.build.boot=dout
 
 ttgo-t1.menu.FlashFreq.80=80MHz
 ttgo-t1.menu.FlashFreq.80.build.flash_freq=80m
@@ -4517,12 +4699,6 @@ ttgo-t7-v13-mini32.menu.FlashMode.qio.build.boot=qio
 ttgo-t7-v13-mini32.menu.FlashMode.dio=DIO
 ttgo-t7-v13-mini32.menu.FlashMode.dio.build.flash_mode=dio
 ttgo-t7-v13-mini32.menu.FlashMode.dio.build.boot=dio
-ttgo-t7-v13-mini32.menu.FlashMode.qout=QOUT
-ttgo-t7-v13-mini32.menu.FlashMode.qout.build.flash_mode=dout
-ttgo-t7-v13-mini32.menu.FlashMode.qout.build.boot=qout
-ttgo-t7-v13-mini32.menu.FlashMode.dout=DOUT
-ttgo-t7-v13-mini32.menu.FlashMode.dout.build.flash_mode=dout
-ttgo-t7-v13-mini32.menu.FlashMode.dout.build.boot=dout
 
 ttgo-t7-v13-mini32.menu.FlashFreq.80=80MHz
 ttgo-t7-v13-mini32.menu.FlashFreq.80.build.flash_freq=80m
@@ -4649,12 +4825,6 @@ ttgo-t7-v14-mini32.menu.FlashMode.qio.build.boot=qio
 ttgo-t7-v14-mini32.menu.FlashMode.dio=DIO
 ttgo-t7-v14-mini32.menu.FlashMode.dio.build.flash_mode=dio
 ttgo-t7-v14-mini32.menu.FlashMode.dio.build.boot=dio
-ttgo-t7-v14-mini32.menu.FlashMode.qout=QOUT
-ttgo-t7-v14-mini32.menu.FlashMode.qout.build.flash_mode=dout
-ttgo-t7-v14-mini32.menu.FlashMode.qout.build.boot=qout
-ttgo-t7-v14-mini32.menu.FlashMode.dout=DOUT
-ttgo-t7-v14-mini32.menu.FlashMode.dout.build.flash_mode=dout
-ttgo-t7-v14-mini32.menu.FlashMode.dout.build.boot=dout
 
 ttgo-t7-v14-mini32.menu.FlashFreq.80=80MHz
 ttgo-t7-v14-mini32.menu.FlashFreq.80.build.flash_freq=80m
@@ -4775,12 +4945,6 @@ ttgo-t-oi-plus.menu.FlashMode.qio.build.boot=qio
 ttgo-t-oi-plus.menu.FlashMode.dio=DIO
 ttgo-t-oi-plus.menu.FlashMode.dio.build.flash_mode=dio
 ttgo-t-oi-plus.menu.FlashMode.dio.build.boot=dio
-ttgo-t-oi-plus.menu.FlashMode.qout=QOUT
-ttgo-t-oi-plus.menu.FlashMode.qout.build.flash_mode=dout
-ttgo-t-oi-plus.menu.FlashMode.qout.build.boot=qout
-ttgo-t-oi-plus.menu.FlashMode.dout=DOUT
-ttgo-t-oi-plus.menu.FlashMode.dout.build.flash_mode=dout
-ttgo-t-oi-plus.menu.FlashMode.dout.build.boot=dout
 
 ttgo-t-oi-plus.menu.FlashFreq.80=80MHz
 ttgo-t-oi-plus.menu.FlashFreq.80.build.flash_freq=80m
@@ -4863,12 +5027,6 @@ cw02.menu.FlashMode.qio.build.boot=qio
 cw02.menu.FlashMode.dio=DIO
 cw02.menu.FlashMode.dio.build.flash_mode=dio
 cw02.menu.FlashMode.dio.build.boot=dio
-cw02.menu.FlashMode.qout=QOUT
-cw02.menu.FlashMode.qout.build.flash_mode=dout
-cw02.menu.FlashMode.qout.build.boot=qout
-cw02.menu.FlashMode.dout=DOUT
-cw02.menu.FlashMode.dout.build.flash_mode=dout
-cw02.menu.FlashMode.dout.build.boot=dout
 
 cw02.menu.FlashFreq.80=80MHz
 cw02.menu.FlashFreq.80.build.flash_freq=80m
@@ -5270,12 +5428,6 @@ sparkfun_esp32s2_thing_plus.menu.FlashMode.qio.build.boot=qio
 sparkfun_esp32s2_thing_plus.menu.FlashMode.dio=DIO
 sparkfun_esp32s2_thing_plus.menu.FlashMode.dio.build.flash_mode=dio
 sparkfun_esp32s2_thing_plus.menu.FlashMode.dio.build.boot=dio
-sparkfun_esp32s2_thing_plus.menu.FlashMode.qout=QOUT
-sparkfun_esp32s2_thing_plus.menu.FlashMode.qout.build.flash_mode=dout
-sparkfun_esp32s2_thing_plus.menu.FlashMode.qout.build.boot=qout
-sparkfun_esp32s2_thing_plus.menu.FlashMode.dout=DOUT
-sparkfun_esp32s2_thing_plus.menu.FlashMode.dout.build.flash_mode=dout
-sparkfun_esp32s2_thing_plus.menu.FlashMode.dout.build.boot=dout
 
 sparkfun_esp32s2_thing_plus.menu.FlashFreq.80=80MHz
 sparkfun_esp32s2_thing_plus.menu.FlashFreq.80.build.flash_freq=80m
@@ -5424,12 +5576,6 @@ esp32micromod.menu.FlashMode.qio.build.boot=qio
 esp32micromod.menu.FlashMode.dio=DIO
 esp32micromod.menu.FlashMode.dio.build.flash_mode=dio
 esp32micromod.menu.FlashMode.dio.build.boot=dio
-esp32micromod.menu.FlashMode.qout=QOUT
-esp32micromod.menu.FlashMode.qout.build.flash_mode=dout
-esp32micromod.menu.FlashMode.qout.build.boot=qout
-esp32micromod.menu.FlashMode.dout=DOUT
-esp32micromod.menu.FlashMode.dout.build.flash_mode=dout
-esp32micromod.menu.FlashMode.dout.build.boot=dout
 
 esp32micromod.menu.FlashFreq.80=80MHz
 esp32micromod.menu.FlashFreq.80.build.flash_freq=80m
@@ -5531,12 +5677,6 @@ sparkfun_lora_gateway_1-channel.menu.FlashMode.qio.build.boot=qio
 sparkfun_lora_gateway_1-channel.menu.FlashMode.dio=DIO
 sparkfun_lora_gateway_1-channel.menu.FlashMode.dio.build.flash_mode=dio
 sparkfun_lora_gateway_1-channel.menu.FlashMode.dio.build.boot=dio
-sparkfun_lora_gateway_1-channel.menu.FlashMode.qout=QOUT
-sparkfun_lora_gateway_1-channel.menu.FlashMode.qout.build.flash_mode=dout
-sparkfun_lora_gateway_1-channel.menu.FlashMode.qout.build.boot=qout
-sparkfun_lora_gateway_1-channel.menu.FlashMode.dout=DOUT
-sparkfun_lora_gateway_1-channel.menu.FlashMode.dout.build.flash_mode=dout
-sparkfun_lora_gateway_1-channel.menu.FlashMode.dout.build.boot=dout
 
 sparkfun_lora_gateway_1-channel.menu.FlashFreq.80=80MHz
 sparkfun_lora_gateway_1-channel.menu.FlashFreq.80.build.flash_freq=80m
@@ -5683,12 +5823,6 @@ sparkfun_esp32_iot_redboard.menu.FlashMode.qio.build.boot=qio
 sparkfun_esp32_iot_redboard.menu.FlashMode.dio=DIO
 sparkfun_esp32_iot_redboard.menu.FlashMode.dio.build.flash_mode=dio
 sparkfun_esp32_iot_redboard.menu.FlashMode.dio.build.boot=dio
-sparkfun_esp32_iot_redboard.menu.FlashMode.qout=QOUT
-sparkfun_esp32_iot_redboard.menu.FlashMode.qout.build.flash_mode=dout
-sparkfun_esp32_iot_redboard.menu.FlashMode.qout.build.boot=qout
-sparkfun_esp32_iot_redboard.menu.FlashMode.dout=DOUT
-sparkfun_esp32_iot_redboard.menu.FlashMode.dout.build.flash_mode=dout
-sparkfun_esp32_iot_redboard.menu.FlashMode.dout.build.boot=dout
 
 sparkfun_esp32_iot_redboard.menu.FlashFreq.80=80MHz
 sparkfun_esp32_iot_redboard.menu.FlashFreq.80.build.flash_freq=80m
@@ -8291,12 +8425,6 @@ dfrobot_beetle_esp32c3.menu.FlashMode.qio.build.boot=qio
 dfrobot_beetle_esp32c3.menu.FlashMode.dio=DIO
 dfrobot_beetle_esp32c3.menu.FlashMode.dio.build.flash_mode=dio
 dfrobot_beetle_esp32c3.menu.FlashMode.dio.build.boot=dio
-dfrobot_beetle_esp32c3.menu.FlashMode.qout=QOUT
-dfrobot_beetle_esp32c3.menu.FlashMode.qout.build.flash_mode=dout
-dfrobot_beetle_esp32c3.menu.FlashMode.qout.build.boot=qout
-dfrobot_beetle_esp32c3.menu.FlashMode.dout=DOUT
-dfrobot_beetle_esp32c3.menu.FlashMode.dout.build.flash_mode=dout
-dfrobot_beetle_esp32c3.menu.FlashMode.dout.build.boot=dout
 
 dfrobot_beetle_esp32c3.menu.FlashFreq.80=80MHz
 dfrobot_beetle_esp32c3.menu.FlashFreq.80.build.flash_freq=80m
@@ -8339,6 +8467,153 @@ dfrobot_beetle_esp32c3.menu.EraseFlash.none.upload.erase_cmd=
 dfrobot_beetle_esp32c3.menu.EraseFlash.all=Enabled
 dfrobot_beetle_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 
+##############################################################
+
+dfrobot_beetle_esp32c6.name=DFRobot Beetle ESP32-C6
+dfrobot_beetle_esp32c6.vid.0=0x303a
+dfrobot_beetle_esp32c6.pid.0=0x1001
+
+dfrobot_beetle_esp32c6.bootloader.tool=esptool_py
+dfrobot_beetle_esp32c6.bootloader.tool.default=esptool_py
+
+dfrobot_beetle_esp32c6.upload.tool=esptool_py
+dfrobot_beetle_esp32c6.upload.tool.default=esptool_py
+dfrobot_beetle_esp32c6.upload.tool.network=esp_ota
+
+dfrobot_beetle_esp32c6.upload.maximum_size=1310720
+dfrobot_beetle_esp32c6.upload.maximum_data_size=327680
+dfrobot_beetle_esp32c6.upload.flags=
+dfrobot_beetle_esp32c6.upload.extra_flags=
+dfrobot_beetle_esp32c6.upload.use_1200bps_touch=false
+dfrobot_beetle_esp32c6.upload.wait_for_upload_port=false
+
+dfrobot_beetle_esp32c6.serial.disableDTR=false
+dfrobot_beetle_esp32c6.serial.disableRTS=false
+
+dfrobot_beetle_esp32c6.build.tarch=riscv32
+dfrobot_beetle_esp32c6.build.target=esp
+dfrobot_beetle_esp32c6.build.mcu=esp32c6
+dfrobot_beetle_esp32c6.build.core=esp32
+dfrobot_beetle_esp32c6.build.variant=dfrobot_beetle_esp32c6
+dfrobot_beetle_esp32c6.build.board=DFROBOT_BEETLE_ESP32C6
+dfrobot_beetle_esp32c6.build.bootloader_addr=0x0
+
+dfrobot_beetle_esp32c6.build.cdc_on_boot=0
+dfrobot_beetle_esp32c6.build.f_cpu=160000000L
+dfrobot_beetle_esp32c6.build.flash_size=4MB
+dfrobot_beetle_esp32c6.build.flash_freq=80m
+dfrobot_beetle_esp32c6.build.flash_mode=qio
+dfrobot_beetle_esp32c6.build.boot=qio
+dfrobot_beetle_esp32c6.build.partitions=default
+dfrobot_beetle_esp32c6.build.defines=
+
+## IDE 2.0 Seems to not update the value
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.default=Disabled
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.default.build.copy_jtag_files=0
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.builtin=Integrated USB JTAG
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.builtin.build.openocdscript=esp32c6-builtin.cfg
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.external=FTDI Adapter
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.external.build.openocdscript=esp32c6-ftdi.cfg
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.external.build.copy_jtag_files=1
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.bridge=ESP USB Bridge
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
+dfrobot_beetle_esp32c6.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+dfrobot_beetle_esp32c6.menu.CDCOnBoot.default=Disabled
+dfrobot_beetle_esp32c6.menu.CDCOnBoot.default.build.cdc_on_boot=0
+dfrobot_beetle_esp32c6.menu.CDCOnBoot.cdc=Enabled
+dfrobot_beetle_esp32c6.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+dfrobot_beetle_esp32c6.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.default.build.partitions=default
+dfrobot_beetle_esp32c6.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+dfrobot_beetle_esp32c6.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.minimal.build.partitions=minimal
+dfrobot_beetle_esp32c6.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.no_ota.build.partitions=no_ota
+dfrobot_beetle_esp32c6.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+dfrobot_beetle_esp32c6.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+dfrobot_beetle_esp32c6.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.huge_app.build.partitions=huge_app
+dfrobot_beetle_esp32c6.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+dfrobot_beetle_esp32c6.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+dfrobot_beetle_esp32c6.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+dfrobot_beetle_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker=RainMaker
+dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+dfrobot_beetle_esp32c6.menu.PartitionScheme.custom=Custom
+dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.build.partitions=
+dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+dfrobot_beetle_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
+dfrobot_beetle_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
+dfrobot_beetle_esp32c6.menu.CPUFreq.80=80MHz (WiFi)
+dfrobot_beetle_esp32c6.menu.CPUFreq.80.build.f_cpu=80000000L
+dfrobot_beetle_esp32c6.menu.CPUFreq.40=40MHz
+dfrobot_beetle_esp32c6.menu.CPUFreq.40.build.f_cpu=40000000L
+dfrobot_beetle_esp32c6.menu.CPUFreq.20=20MHz
+dfrobot_beetle_esp32c6.menu.CPUFreq.20.build.f_cpu=20000000L
+dfrobot_beetle_esp32c6.menu.CPUFreq.10=10MHz
+dfrobot_beetle_esp32c6.menu.CPUFreq.10.build.f_cpu=10000000L
+
+dfrobot_beetle_esp32c6.menu.FlashMode.qio=QIO
+dfrobot_beetle_esp32c6.menu.FlashMode.qio.build.flash_mode=dio
+dfrobot_beetle_esp32c6.menu.FlashMode.qio.build.boot=qio
+dfrobot_beetle_esp32c6.menu.FlashMode.dio=DIO
+dfrobot_beetle_esp32c6.menu.FlashMode.dio.build.flash_mode=dio
+dfrobot_beetle_esp32c6.menu.FlashMode.dio.build.boot=dio
+
+dfrobot_beetle_esp32c6.menu.FlashFreq.80=80MHz
+dfrobot_beetle_esp32c6.menu.FlashFreq.80.build.flash_freq=80m
+dfrobot_beetle_esp32c6.menu.FlashFreq.40=40MHz
+dfrobot_beetle_esp32c6.menu.FlashFreq.40.build.flash_freq=40m
+
+dfrobot_beetle_esp32c6.menu.FlashSize.4M=4MB (32Mb)
+dfrobot_beetle_esp32c6.menu.FlashSize.4M.build.flash_size=4MB
+
+dfrobot_beetle_esp32c6.menu.UploadSpeed.921600=921600
+dfrobot_beetle_esp32c6.menu.UploadSpeed.921600.upload.speed=921600
+dfrobot_beetle_esp32c6.menu.UploadSpeed.115200=115200
+dfrobot_beetle_esp32c6.menu.UploadSpeed.115200.upload.speed=115200
+dfrobot_beetle_esp32c6.menu.UploadSpeed.256000.windows=256000
+dfrobot_beetle_esp32c6.menu.UploadSpeed.256000.upload.speed=256000
+dfrobot_beetle_esp32c6.menu.UploadSpeed.230400.windows.upload.speed=256000
+dfrobot_beetle_esp32c6.menu.UploadSpeed.230400=230400
+dfrobot_beetle_esp32c6.menu.UploadSpeed.230400.upload.speed=230400
+dfrobot_beetle_esp32c6.menu.UploadSpeed.460800.linux=460800
+dfrobot_beetle_esp32c6.menu.UploadSpeed.460800.macosx=460800
+dfrobot_beetle_esp32c6.menu.UploadSpeed.460800.upload.speed=460800
+dfrobot_beetle_esp32c6.menu.UploadSpeed.512000.windows=512000
+dfrobot_beetle_esp32c6.menu.UploadSpeed.512000.upload.speed=512000
+
+dfrobot_beetle_esp32c6.menu.DebugLevel.none=None
+dfrobot_beetle_esp32c6.menu.DebugLevel.none.build.code_debug=0
+dfrobot_beetle_esp32c6.menu.DebugLevel.error=Error
+dfrobot_beetle_esp32c6.menu.DebugLevel.error.build.code_debug=1
+dfrobot_beetle_esp32c6.menu.DebugLevel.warn=Warn
+dfrobot_beetle_esp32c6.menu.DebugLevel.warn.build.code_debug=2
+dfrobot_beetle_esp32c6.menu.DebugLevel.info=Info
+dfrobot_beetle_esp32c6.menu.DebugLevel.info.build.code_debug=3
+dfrobot_beetle_esp32c6.menu.DebugLevel.debug=Debug
+dfrobot_beetle_esp32c6.menu.DebugLevel.debug.build.code_debug=4
+dfrobot_beetle_esp32c6.menu.DebugLevel.verbose=Verbose
+dfrobot_beetle_esp32c6.menu.DebugLevel.verbose.build.code_debug=5
+
+dfrobot_beetle_esp32c6.menu.EraseFlash.none=Disabled
+dfrobot_beetle_esp32c6.menu.EraseFlash.none.upload.erase_cmd=
+dfrobot_beetle_esp32c6.menu.EraseFlash.all=Enabled
+dfrobot_beetle_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -8439,12 +8714,6 @@ dfrobot_firebeetle2_esp32e.menu.FlashMode.qio.build.boot=qio
 dfrobot_firebeetle2_esp32e.menu.FlashMode.dio=DIO
 dfrobot_firebeetle2_esp32e.menu.FlashMode.dio.build.flash_mode=dio
 dfrobot_firebeetle2_esp32e.menu.FlashMode.dio.build.boot=dio
-dfrobot_firebeetle2_esp32e.menu.FlashMode.qout=QOUT
-dfrobot_firebeetle2_esp32e.menu.FlashMode.qout.build.flash_mode=dout
-dfrobot_firebeetle2_esp32e.menu.FlashMode.qout.build.boot=qout
-dfrobot_firebeetle2_esp32e.menu.FlashMode.dout=DOUT
-dfrobot_firebeetle2_esp32e.menu.FlashMode.dout.build.flash_mode=dout
-dfrobot_firebeetle2_esp32e.menu.FlashMode.dout.build.boot=dout
 
 dfrobot_firebeetle2_esp32e.menu.FlashFreq.80=80MHz
 dfrobot_firebeetle2_esp32e.menu.FlashFreq.80.build.flash_freq=80m
@@ -8723,6 +8992,155 @@ dfrobot_firebeetle2_esp32s3.menu.EraseFlash.all=Enabled
 dfrobot_firebeetle2_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+dfrobot_firebeetle2_esp32c6.name=DFRobot FireBeetle 2 ESP32-C6
+dfrobot_firebeetle2_esp32c6.vid.0=0x303a
+dfrobot_firebeetle2_esp32c6.pid.0=0x1001
+
+dfrobot_firebeetle2_esp32c6.bootloader.tool=esptool_py
+dfrobot_firebeetle2_esp32c6.bootloader.tool.default=esptool_py
+
+dfrobot_firebeetle2_esp32c6.upload.tool=esptool_py
+dfrobot_firebeetle2_esp32c6.upload.tool.default=esptool_py
+dfrobot_firebeetle2_esp32c6.upload.tool.network=esp_ota
+
+dfrobot_firebeetle2_esp32c6.upload.maximum_size=1310720
+dfrobot_firebeetle2_esp32c6.upload.maximum_data_size=327680
+dfrobot_firebeetle2_esp32c6.upload.flags=
+dfrobot_firebeetle2_esp32c6.upload.extra_flags=
+dfrobot_firebeetle2_esp32c6.upload.use_1200bps_touch=false
+dfrobot_firebeetle2_esp32c6.upload.wait_for_upload_port=false
+
+dfrobot_firebeetle2_esp32c6.serial.disableDTR=false
+dfrobot_firebeetle2_esp32c6.serial.disableRTS=false
+
+dfrobot_firebeetle2_esp32c6.build.tarch=riscv32
+dfrobot_firebeetle2_esp32c6.build.target=esp
+dfrobot_firebeetle2_esp32c6.build.mcu=esp32c6
+dfrobot_firebeetle2_esp32c6.build.core=esp32
+dfrobot_firebeetle2_esp32c6.build.variant=dfrobot_firebeetle2_esp32c6
+dfrobot_firebeetle2_esp32c6.build.board=DFROBOT_FIREBEETLE_2_ESP32C6
+dfrobot_firebeetle2_esp32c6.build.bootloader_addr=0x0
+
+dfrobot_firebeetle2_esp32c6.build.cdc_on_boot=0
+dfrobot_firebeetle2_esp32c6.build.f_cpu=160000000L
+dfrobot_firebeetle2_esp32c6.build.flash_size=4MB
+dfrobot_firebeetle2_esp32c6.build.flash_freq=80m
+dfrobot_firebeetle2_esp32c6.build.flash_mode=qio
+dfrobot_firebeetle2_esp32c6.build.boot=qio
+dfrobot_firebeetle2_esp32c6.build.partitions=default
+dfrobot_firebeetle2_esp32c6.build.defines=
+
+## IDE 2.0 Seems to not update the value
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.default=Disabled
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.default.build.copy_jtag_files=0
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.builtin=Integrated USB JTAG
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.builtin.build.openocdscript=esp32c6-builtin.cfg
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.external=FTDI Adapter
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.external.build.openocdscript=esp32c6-ftdi.cfg
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.external.build.copy_jtag_files=1
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.bridge=ESP USB Bridge
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
+dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+dfrobot_firebeetle2_esp32c6.menu.CDCOnBoot.default=Disabled
+dfrobot_firebeetle2_esp32c6.menu.CDCOnBoot.default.build.cdc_on_boot=0
+dfrobot_firebeetle2_esp32c6.menu.CDCOnBoot.cdc=Enabled
+dfrobot_firebeetle2_esp32c6.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.default.build.partitions=default
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.minimal.build.partitions=minimal
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.no_ota.build.partitions=no_ota
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.huge_app.build.partitions=huge_app
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker=RainMaker
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom=Custom
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.build.partitions=
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.80=80MHz (WiFi)
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.80.build.f_cpu=80000000L
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.40=40MHz
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.40.build.f_cpu=40000000L
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.20=20MHz
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.20.build.f_cpu=20000000L
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.10=10MHz
+dfrobot_firebeetle2_esp32c6.menu.CPUFreq.10.build.f_cpu=10000000L
+
+dfrobot_firebeetle2_esp32c6.menu.FlashMode.qio=QIO
+dfrobot_firebeetle2_esp32c6.menu.FlashMode.qio.build.flash_mode=dio
+dfrobot_firebeetle2_esp32c6.menu.FlashMode.qio.build.boot=qio
+dfrobot_firebeetle2_esp32c6.menu.FlashMode.dio=DIO
+dfrobot_firebeetle2_esp32c6.menu.FlashMode.dio.build.flash_mode=dio
+dfrobot_firebeetle2_esp32c6.menu.FlashMode.dio.build.boot=dio
+
+dfrobot_firebeetle2_esp32c6.menu.FlashFreq.80=80MHz
+dfrobot_firebeetle2_esp32c6.menu.FlashFreq.80.build.flash_freq=80m
+dfrobot_firebeetle2_esp32c6.menu.FlashFreq.40=40MHz
+dfrobot_firebeetle2_esp32c6.menu.FlashFreq.40.build.flash_freq=40m
+
+dfrobot_firebeetle2_esp32c6.menu.FlashSize.4M=4MB (32Mb)
+dfrobot_firebeetle2_esp32c6.menu.FlashSize.4M.build.flash_size=4MB
+
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.921600=921600
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.921600.upload.speed=921600
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.115200=115200
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.115200.upload.speed=115200
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.256000.windows=256000
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.256000.upload.speed=256000
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.230400.windows.upload.speed=256000
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.230400=230400
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.230400.upload.speed=230400
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.460800.linux=460800
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.460800.macosx=460800
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.460800.upload.speed=460800
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.512000.windows=512000
+dfrobot_firebeetle2_esp32c6.menu.UploadSpeed.512000.upload.speed=512000
+
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.none=None
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.none.build.code_debug=0
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.error=Error
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.error.build.code_debug=1
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.warn=Warn
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.warn.build.code_debug=2
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.info=Info
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.info.build.code_debug=3
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.debug=Debug
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.debug.build.code_debug=4
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.verbose=Verbose
+dfrobot_firebeetle2_esp32c6.menu.DebugLevel.verbose.build.code_debug=5
+
+dfrobot_firebeetle2_esp32c6.menu.EraseFlash.none=Disabled
+dfrobot_firebeetle2_esp32c6.menu.EraseFlash.none.upload.erase_cmd=
+dfrobot_firebeetle2_esp32c6.menu.EraseFlash.all=Enabled
+dfrobot_firebeetle2_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 # dfrobot Romeo ESP32-S3
 dfrobot_romeo_esp32s3.name=DFRobot Romeo ESP32-S3
 dfrobot_romeo_esp32s3.vid.0=0x303a
@@ -9253,12 +9671,6 @@ adafruit_metro_esp32s2.menu.FlashMode.qio.build.boot=qio
 adafruit_metro_esp32s2.menu.FlashMode.dio=DIO
 adafruit_metro_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_metro_esp32s2.menu.FlashMode.dio.build.boot=dio
-adafruit_metro_esp32s2.menu.FlashMode.qout=QOUT
-adafruit_metro_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_metro_esp32s2.menu.FlashMode.qout.build.boot=qout
-adafruit_metro_esp32s2.menu.FlashMode.dout=DOUT
-adafruit_metro_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_metro_esp32s2.menu.FlashMode.dout.build.boot=dout
 
 adafruit_metro_esp32s2.menu.FlashFreq.80=80MHz
 adafruit_metro_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
@@ -9609,12 +10021,6 @@ adafruit_magtag29_esp32s2.menu.FlashMode.qio.build.boot=qio
 adafruit_magtag29_esp32s2.menu.FlashMode.dio=DIO
 adafruit_magtag29_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_magtag29_esp32s2.menu.FlashMode.dio.build.boot=dio
-adafruit_magtag29_esp32s2.menu.FlashMode.qout=QOUT
-adafruit_magtag29_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_magtag29_esp32s2.menu.FlashMode.qout.build.boot=qout
-adafruit_magtag29_esp32s2.menu.FlashMode.dout=DOUT
-adafruit_magtag29_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_magtag29_esp32s2.menu.FlashMode.dout.build.boot=dout
 
 adafruit_magtag29_esp32s2.menu.FlashFreq.80=80MHz
 adafruit_magtag29_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
@@ -9780,12 +10186,6 @@ adafruit_funhouse_esp32s2.menu.FlashMode.qio.build.boot=qio
 adafruit_funhouse_esp32s2.menu.FlashMode.dio=DIO
 adafruit_funhouse_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_funhouse_esp32s2.menu.FlashMode.dio.build.boot=dio
-adafruit_funhouse_esp32s2.menu.FlashMode.qout=QOUT
-adafruit_funhouse_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_funhouse_esp32s2.menu.FlashMode.qout.build.boot=qout
-adafruit_funhouse_esp32s2.menu.FlashMode.dout=DOUT
-adafruit_funhouse_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_funhouse_esp32s2.menu.FlashMode.dout.build.boot=dout
 
 adafruit_funhouse_esp32s2.menu.FlashFreq.80=80MHz
 adafruit_funhouse_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
@@ -10189,12 +10589,6 @@ adafruit_feather_esp32s2.menu.FlashMode.qio.build.boot=qio
 adafruit_feather_esp32s2.menu.FlashMode.dio=DIO
 adafruit_feather_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_feather_esp32s2.menu.FlashMode.dio.build.boot=dio
-adafruit_feather_esp32s2.menu.FlashMode.qout=QOUT
-adafruit_feather_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_feather_esp32s2.menu.FlashMode.qout.build.boot=qout
-adafruit_feather_esp32s2.menu.FlashMode.dout=DOUT
-adafruit_feather_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_feather_esp32s2.menu.FlashMode.dout.build.boot=dout
 
 adafruit_feather_esp32s2.menu.FlashFreq.80=80MHz
 adafruit_feather_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
@@ -10360,12 +10754,6 @@ adafruit_feather_esp32s2_tft.menu.FlashMode.qio.build.boot=qio
 adafruit_feather_esp32s2_tft.menu.FlashMode.dio=DIO
 adafruit_feather_esp32s2_tft.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_feather_esp32s2_tft.menu.FlashMode.dio.build.boot=dio
-adafruit_feather_esp32s2_tft.menu.FlashMode.qout=QOUT
-adafruit_feather_esp32s2_tft.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_feather_esp32s2_tft.menu.FlashMode.qout.build.boot=qout
-adafruit_feather_esp32s2_tft.menu.FlashMode.dout=DOUT
-adafruit_feather_esp32s2_tft.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_feather_esp32s2_tft.menu.FlashMode.dout.build.boot=dout
 
 adafruit_feather_esp32s2_tft.menu.FlashFreq.80=80MHz
 adafruit_feather_esp32s2_tft.menu.FlashFreq.80.build.flash_freq=80m
@@ -10531,12 +10919,6 @@ adafruit_feather_esp32s2_reversetft.menu.FlashMode.qio.build.boot=qio
 adafruit_feather_esp32s2_reversetft.menu.FlashMode.dio=DIO
 adafruit_feather_esp32s2_reversetft.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_feather_esp32s2_reversetft.menu.FlashMode.dio.build.boot=dio
-adafruit_feather_esp32s2_reversetft.menu.FlashMode.qout=QOUT
-adafruit_feather_esp32s2_reversetft.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_feather_esp32s2_reversetft.menu.FlashMode.qout.build.boot=qout
-adafruit_feather_esp32s2_reversetft.menu.FlashMode.dout=DOUT
-adafruit_feather_esp32s2_reversetft.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_feather_esp32s2_reversetft.menu.FlashMode.dout.build.boot=dout
 
 adafruit_feather_esp32s2_reversetft.menu.FlashFreq.80=80MHz
 adafruit_feather_esp32s2_reversetft.menu.FlashFreq.80.build.flash_freq=80m
@@ -11547,12 +11929,6 @@ adafruit_qtpy_esp32c3.menu.FlashMode.qio.build.boot=qio
 adafruit_qtpy_esp32c3.menu.FlashMode.dio=DIO
 adafruit_qtpy_esp32c3.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_qtpy_esp32c3.menu.FlashMode.dio.build.boot=dio
-adafruit_qtpy_esp32c3.menu.FlashMode.qout=QOUT
-adafruit_qtpy_esp32c3.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_qtpy_esp32c3.menu.FlashMode.qout.build.boot=qout
-adafruit_qtpy_esp32c3.menu.FlashMode.dout=DOUT
-adafruit_qtpy_esp32c3.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_qtpy_esp32c3.menu.FlashMode.dout.build.boot=dout
 
 adafruit_qtpy_esp32c3.menu.FlashFreq.80=80MHz
 adafruit_qtpy_esp32c3.menu.FlashFreq.80.build.flash_freq=80m
@@ -11718,12 +12094,6 @@ adafruit_qtpy_esp32s2.menu.FlashMode.qio.build.boot=qio
 adafruit_qtpy_esp32s2.menu.FlashMode.dio=DIO
 adafruit_qtpy_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
 adafruit_qtpy_esp32s2.menu.FlashMode.dio.build.boot=dio
-adafruit_qtpy_esp32s2.menu.FlashMode.qout=QOUT
-adafruit_qtpy_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
-adafruit_qtpy_esp32s2.menu.FlashMode.qout.build.boot=qout
-adafruit_qtpy_esp32s2.menu.FlashMode.dout=DOUT
-adafruit_qtpy_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
-adafruit_qtpy_esp32s2.menu.FlashMode.dout.build.boot=dout
 
 adafruit_qtpy_esp32s2.menu.FlashFreq.80=80MHz
 adafruit_qtpy_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
@@ -13598,12 +13968,6 @@ esp32-DevKitLipo.menu.FlashMode.qio.build.boot=qio
 esp32-DevKitLipo.menu.FlashMode.dio=DIO
 esp32-DevKitLipo.menu.FlashMode.dio.build.flash_mode=dio
 esp32-DevKitLipo.menu.FlashMode.dio.build.boot=dio
-esp32-DevKitLipo.menu.FlashMode.qout=QOUT
-esp32-DevKitLipo.menu.FlashMode.qout.build.flash_mode=dout
-esp32-DevKitLipo.menu.FlashMode.qout.build.boot=qout
-esp32-DevKitLipo.menu.FlashMode.dout=DOUT
-esp32-DevKitLipo.menu.FlashMode.dout.build.flash_mode=dout
-esp32-DevKitLipo.menu.FlashMode.dout.build.boot=dout
 
 esp32-DevKitLipo.menu.FlashFreq.80=80MHz
 esp32-DevKitLipo.menu.FlashFreq.80.build.flash_freq=80m
@@ -13755,12 +14119,6 @@ m5stack-core-esp32.menu.FlashMode.qio.build.boot=qio
 m5stack-core-esp32.menu.FlashMode.dio=DIO
 m5stack-core-esp32.menu.FlashMode.dio.build.flash_mode=dio
 m5stack-core-esp32.menu.FlashMode.dio.build.boot=dio
-m5stack-core-esp32.menu.FlashMode.qout=QOUT
-m5stack-core-esp32.menu.FlashMode.qout.build.flash_mode=dout
-m5stack-core-esp32.menu.FlashMode.qout.build.boot=qout
-m5stack-core-esp32.menu.FlashMode.dout=DOUT
-m5stack-core-esp32.menu.FlashMode.dout.build.flash_mode=dout
-m5stack-core-esp32.menu.FlashMode.dout.build.boot=dout
 
 m5stack-core-esp32.menu.FlashFreq.80=80MHz
 m5stack-core-esp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -15124,12 +15482,6 @@ odroid_esp32.menu.FlashMode.qio.build.boot=qio
 odroid_esp32.menu.FlashMode.dio=DIO
 odroid_esp32.menu.FlashMode.dio.build.flash_mode=dio
 odroid_esp32.menu.FlashMode.dio.build.boot=dio
-odroid_esp32.menu.FlashMode.qout=QOUT
-odroid_esp32.menu.FlashMode.qout.build.flash_mode=dout
-odroid_esp32.menu.FlashMode.qout.build.boot=qout
-odroid_esp32.menu.FlashMode.dout=DOUT
-odroid_esp32.menu.FlashMode.dout.build.flash_mode=dout
-odroid_esp32.menu.FlashMode.dout.build.boot=dout
 
 odroid_esp32.menu.FlashFreq.80=80MHz
 odroid_esp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -16026,12 +16378,6 @@ espectro32.menu.FlashMode.qio.build.boot=qio
 espectro32.menu.FlashMode.dio=DIO
 espectro32.menu.FlashMode.dio.build.flash_mode=dio
 espectro32.menu.FlashMode.dio.build.boot=dio
-espectro32.menu.FlashMode.qout=QOUT
-espectro32.menu.FlashMode.qout.build.flash_mode=dout
-espectro32.menu.FlashMode.qout.build.boot=qout
-espectro32.menu.FlashMode.dout=DOUT
-espectro32.menu.FlashMode.dout.build.flash_mode=dout
-espectro32.menu.FlashMode.dout.build.boot=dout
 
 espectro32.menu.FlashFreq.80=80MHz
 espectro32.menu.FlashFreq.80.build.flash_freq=80m
@@ -16261,12 +16607,6 @@ alksesp32.menu.FlashMode.qio.build.boot=qio
 alksesp32.menu.FlashMode.dio=DIO
 alksesp32.menu.FlashMode.dio.build.flash_mode=dio
 alksesp32.menu.FlashMode.dio.build.boot=dio
-alksesp32.menu.FlashMode.qout=QOUT
-alksesp32.menu.FlashMode.qout.build.flash_mode=dout
-alksesp32.menu.FlashMode.qout.build.boot=qout
-alksesp32.menu.FlashMode.dout=DOUT
-alksesp32.menu.FlashMode.dout.build.flash_mode=dout
-alksesp32.menu.FlashMode.dout.build.boot=dout
 
 alksesp32.menu.FlashFreq.80=80MHz
 alksesp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -17371,12 +17711,6 @@ frogboard.menu.FlashMode.qio.build.boot=qio
 frogboard.menu.FlashMode.dio=DIO
 frogboard.menu.FlashMode.dio.build.flash_mode=dio
 frogboard.menu.FlashMode.dio.build.boot=dio
-frogboard.menu.FlashMode.qout=QOUT
-frogboard.menu.FlashMode.qout.build.flash_mode=dout
-frogboard.menu.FlashMode.qout.build.boot=qout
-frogboard.menu.FlashMode.dout=DOUT
-frogboard.menu.FlashMode.dout.build.flash_mode=dout
-frogboard.menu.FlashMode.dout.build.boot=dout
 frogboard.menu.FlashFreq.80=80MHz
 frogboard.menu.FlashFreq.80.build.flash_freq=80m
 frogboard.menu.FlashFreq.40=40MHz
@@ -17476,12 +17810,6 @@ esp32cam.menu.FlashMode.qio.build.boot=qio
 esp32cam.menu.FlashMode.dio=DIO
 esp32cam.menu.FlashMode.dio.build.flash_mode=dio
 esp32cam.menu.FlashMode.dio.build.boot=dio
-esp32cam.menu.FlashMode.qout=QOUT
-esp32cam.menu.FlashMode.qout.build.flash_mode=dout
-esp32cam.menu.FlashMode.qout.build.boot=qout
-esp32cam.menu.FlashMode.dout=DOUT
-esp32cam.menu.FlashMode.dout.build.flash_mode=dout
-esp32cam.menu.FlashMode.dout.build.boot=dout
 
 esp32cam.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 esp32cam.menu.PartitionScheme.huge_app.build.partitions=huge_app
@@ -18182,12 +18510,6 @@ mgbot-iotik32a.menu.FlashMode.qio.build.boot=qio
 mgbot-iotik32a.menu.FlashMode.dio=DIO
 mgbot-iotik32a.menu.FlashMode.dio.build.flash_mode=dio
 mgbot-iotik32a.menu.FlashMode.dio.build.boot=dio
-mgbot-iotik32a.menu.FlashMode.qout=QOUT
-mgbot-iotik32a.menu.FlashMode.qout.build.flash_mode=dout
-mgbot-iotik32a.menu.FlashMode.qout.build.boot=qout
-mgbot-iotik32a.menu.FlashMode.dout=DOUT
-mgbot-iotik32a.menu.FlashMode.dout.build.flash_mode=dout
-mgbot-iotik32a.menu.FlashMode.dout.build.boot=dout
 
 mgbot-iotik32a.menu.FlashFreq.80=80MHz
 mgbot-iotik32a.menu.FlashFreq.80.build.flash_freq=80m
@@ -18337,12 +18659,6 @@ mgbot-iotik32b.menu.FlashMode.qio.build.boot=qio
 mgbot-iotik32b.menu.FlashMode.dio=DIO
 mgbot-iotik32b.menu.FlashMode.dio.build.flash_mode=dio
 mgbot-iotik32b.menu.FlashMode.dio.build.boot=dio
-mgbot-iotik32b.menu.FlashMode.qout=QOUT
-mgbot-iotik32b.menu.FlashMode.qout.build.flash_mode=dout
-mgbot-iotik32b.menu.FlashMode.qout.build.boot=qout
-mgbot-iotik32b.menu.FlashMode.dout=DOUT
-mgbot-iotik32b.menu.FlashMode.dout.build.flash_mode=dout
-mgbot-iotik32b.menu.FlashMode.dout.build.boot=dout
 
 mgbot-iotik32b.menu.FlashFreq.80=80MHz
 mgbot-iotik32b.menu.FlashFreq.80.build.flash_freq=80m
@@ -18782,12 +19098,6 @@ mPython.menu.FlashMode.qio.build.boot=qio
 mPython.menu.FlashMode.dio=DIO
 mPython.menu.FlashMode.dio.build.flash_mode=dio
 mPython.menu.FlashMode.dio.build.boot=dio
-mPython.menu.FlashMode.qout=QOUT
-mPython.menu.FlashMode.qout.build.flash_mode=dout
-mPython.menu.FlashMode.qout.build.boot=qout
-mPython.menu.FlashMode.dout=DOUT
-mPython.menu.FlashMode.dout.build.flash_mode=dout
-mPython.menu.FlashMode.dout.build.boot=dout
 
 mPython.menu.FlashFreq.80=80MHz
 mPython.menu.FlashFreq.80.build.flash_freq=80m
@@ -19084,12 +19394,6 @@ wifiduino32c3.menu.FlashMode.qio.build.boot=qio
 wifiduino32c3.menu.FlashMode.dio=DIO
 wifiduino32c3.menu.FlashMode.dio.build.flash_mode=dio
 wifiduino32c3.menu.FlashMode.dio.build.boot=dio
-wifiduino32c3.menu.FlashMode.qout=QOUT
-wifiduino32c3.menu.FlashMode.qout.build.flash_mode=dout
-wifiduino32c3.menu.FlashMode.qout.build.boot=qout
-wifiduino32c3.menu.FlashMode.dout=DOUT
-wifiduino32c3.menu.FlashMode.dout.build.flash_mode=dout
-wifiduino32c3.menu.FlashMode.dout.build.boot=dout
 
 wifiduino32c3.menu.FlashFreq.80=80MHz
 wifiduino32c3.menu.FlashFreq.80.build.flash_freq=80m
@@ -19727,7 +20031,7 @@ uPesy_wrover.build.target=esp32
 uPesy_wrover.build.mcu=esp32
 uPesy_wrover.build.core=esp32
 uPesy_wrover.build.variant=uPesy_esp32_wrover_devkit
-uPesy_wrover.build.board=uPesy_WROVER
+uPesy_wrover.build.board=UPESY_WROVER
 
 uPesy_wrover.build.f_cpu=240000000L
 uPesy_wrover.build.flash_size=4MB
@@ -19844,7 +20148,7 @@ uPesy_wroom.build.target=esp32
 uPesy_wroom.build.mcu=esp32
 uPesy_wroom.build.core=esp32
 uPesy_wroom.build.variant=uPesy_esp32_wroom_devkit
-uPesy_wroom.build.board=uPesy_WROOM
+uPesy_wroom.build.board=UPESY_WROOM
 
 uPesy_wroom.build.f_cpu=240000000L
 uPesy_wroom.build.flash_size=4MB
@@ -19928,6 +20232,506 @@ uPesy_wroom.menu.EraseFlash.none=Disabled
 uPesy_wroom.menu.EraseFlash.none.upload.erase_cmd=
 uPesy_wroom.menu.EraseFlash.all=Enabled
 uPesy_wroom.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+uPesy_edu_esp32.name=uPesy EDU ESP32
+
+uPesy_edu_esp32.bootloader.tool=esptool_py
+uPesy_edu_esp32.bootloader.tool.default=esptool_py
+
+uPesy_edu_esp32.upload.tool=esptool_py
+uPesy_edu_esp32.upload.tool.default=esptool_py
+uPesy_edu_esp32.upload.tool.network=esp_ota
+
+uPesy_edu_esp32.upload.maximum_size=1310720
+uPesy_edu_esp32.upload.maximum_data_size=327680
+uPesy_edu_esp32.upload.flags=
+uPesy_edu_esp32.upload.extra_flags=
+
+uPesy_edu_esp32.serial.disableDTR=true
+uPesy_edu_esp32.serial.disableRTS=true
+
+uPesy_edu_esp32.build.tarch=xtensa
+uPesy_edu_esp32.build.bootloader_addr=0x1000
+uPesy_edu_esp32.build.target=esp32
+uPesy_edu_esp32.build.mcu=esp32
+uPesy_edu_esp32.build.core=esp32
+uPesy_edu_esp32.build.variant=uPesy_edu_esp32
+uPesy_edu_esp32.build.board=UPESY_EDU_ESP32
+
+uPesy_edu_esp32.build.f_cpu=240000000L
+uPesy_edu_esp32.build.flash_size=4MB
+uPesy_edu_esp32.build.flash_freq=80m
+uPesy_edu_esp32.build.flash_mode=dio
+uPesy_edu_esp32.build.boot=dio
+uPesy_edu_esp32.build.partitions=default
+uPesy_edu_esp32.build.defines=
+
+uPesy_edu_esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.default.build.partitions=default
+uPesy_edu_esp32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+uPesy_edu_esp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+uPesy_edu_esp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.minimal.build.partitions=minimal
+uPesy_edu_esp32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+uPesy_edu_esp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+uPesy_edu_esp32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+uPesy_edu_esp32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+uPesy_edu_esp32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+uPesy_edu_esp32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+uPesy_edu_esp32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+uPesy_edu_esp32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+uPesy_edu_esp32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+uPesy_edu_esp32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+uPesy_edu_esp32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+uPesy_edu_esp32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+uPesy_edu_esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+uPesy_edu_esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+uPesy_edu_esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+uPesy_edu_esp32.menu.CPUFreq.240=240MHz
+uPesy_edu_esp32.menu.CPUFreq.240.build.f_cpu=240000000L
+uPesy_edu_esp32.menu.CPUFreq.160=160MHz
+uPesy_edu_esp32.menu.CPUFreq.160.build.f_cpu=160000000L
+
+uPesy_edu_esp32.menu.UploadSpeed.921600=921600
+uPesy_edu_esp32.menu.UploadSpeed.921600.upload.speed=921600
+uPesy_edu_esp32.menu.UploadSpeed.512000.windows=512000
+uPesy_edu_esp32.menu.UploadSpeed.512000.upload.speed=512000
+uPesy_edu_esp32.menu.UploadSpeed.460800.linux=460800
+uPesy_edu_esp32.menu.UploadSpeed.460800.macosx=460800
+uPesy_edu_esp32.menu.UploadSpeed.460800.upload.speed=460800
+uPesy_edu_esp32.menu.UploadSpeed.256000.windows=256000
+uPesy_edu_esp32.menu.UploadSpeed.256000.upload.speed=256000
+uPesy_edu_esp32.menu.UploadSpeed.230400.windows.upload.speed=256000
+uPesy_edu_esp32.menu.UploadSpeed.230400=230400
+uPesy_edu_esp32.menu.UploadSpeed.230400.upload.speed=230400
+uPesy_edu_esp32.menu.UploadSpeed.115200=115200
+uPesy_edu_esp32.menu.UploadSpeed.115200.upload.speed=115200
+
+uPesy_edu_esp32.menu.FlashMode.qio=QIO
+uPesy_edu_esp32.menu.FlashMode.qio.build.flash_mode=dio
+uPesy_edu_esp32.menu.FlashMode.qio.build.boot=qio
+uPesy_edu_esp32.menu.FlashMode.dio=DIO
+uPesy_edu_esp32.menu.FlashMode.dio.build.flash_mode=dio
+uPesy_edu_esp32.menu.FlashMode.dio.build.boot=dio
+
+uPesy_edu_esp32.menu.FlashFreq.80=80MHz
+uPesy_edu_esp32.menu.FlashFreq.80.build.flash_freq=80m
+uPesy_edu_esp32.menu.FlashFreq.40=40MHz
+uPesy_edu_esp32.menu.FlashFreq.40.build.flash_freq=40m
+
+uPesy_edu_esp32.menu.DebugLevel.none=None
+uPesy_edu_esp32.menu.DebugLevel.none.build.code_debug=0
+uPesy_edu_esp32.menu.DebugLevel.error=Error
+uPesy_edu_esp32.menu.DebugLevel.error.build.code_debug=1
+uPesy_edu_esp32.menu.DebugLevel.warn=Warn
+uPesy_edu_esp32.menu.DebugLevel.warn.build.code_debug=2
+uPesy_edu_esp32.menu.DebugLevel.info=Info
+uPesy_edu_esp32.menu.DebugLevel.info.build.code_debug=3
+uPesy_edu_esp32.menu.DebugLevel.debug=Debug
+uPesy_edu_esp32.menu.DebugLevel.debug.build.code_debug=4
+uPesy_edu_esp32.menu.DebugLevel.verbose=Verbose
+uPesy_edu_esp32.menu.DebugLevel.verbose.build.code_debug=5
+
+uPesy_edu_esp32.menu.EraseFlash.none=Disabled
+uPesy_edu_esp32.menu.EraseFlash.none.upload.erase_cmd=
+uPesy_edu_esp32.menu.EraseFlash.all=Enabled
+uPesy_edu_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+upesy_esp32c3_basic.name=uPesy ESP32C3 Basic
+upesy_esp32c3_basic.vid.0=0x303a
+upesy_esp32c3_basic.pid.0=0x8195
+
+upesy_esp32c3_basic.bootloader.tool=esptool_py
+upesy_esp32c3_basic.bootloader.tool.default=esptool_py
+
+upesy_esp32c3_basic.upload.tool=esptool_py
+upesy_esp32c3_basic.upload.tool.default=esptool_py
+upesy_esp32c3_basic.upload.tool.network=esp_ota
+
+upesy_esp32c3_basic.upload.maximum_size=1310720
+upesy_esp32c3_basic.upload.maximum_data_size=327680
+upesy_esp32c3_basic.upload.flags=
+upesy_esp32c3_basic.upload.extra_flags=
+upesy_esp32c3_basic.upload.use_1200bps_touch=false
+upesy_esp32c3_basic.upload.wait_for_upload_port=false
+
+upesy_esp32c3_basic.serial.disableDTR=true
+upesy_esp32c3_basic.serial.disableRTS=true
+
+upesy_esp32c3_basic.build.tarch=riscv32
+upesy_esp32c3_basic.build.target=esp
+upesy_esp32c3_basic.build.mcu=esp32c3
+upesy_esp32c3_basic.build.core=esp32
+upesy_esp32c3_basic.build.variant=uPesy_esp32c3_basic
+upesy_esp32c3_basic.build.board=UPESY_ESP32C3_BASIC
+upesy_esp32c3_basic.build.bootloader_addr=0x0
+
+upesy_esp32c3_basic.build.cdc_on_boot=1
+upesy_esp32c3_basic.build.f_cpu=160000000L
+upesy_esp32c3_basic.build.flash_size=4MB
+upesy_esp32c3_basic.build.flash_freq=80m
+upesy_esp32c3_basic.build.flash_mode=dio
+upesy_esp32c3_basic.build.boot=qio
+upesy_esp32c3_basic.build.partitions=default
+upesy_esp32c3_basic.build.defines=
+
+upesy_esp32c3_basic.menu.CDCOnBoot.default=Enabled
+upesy_esp32c3_basic.menu.CDCOnBoot.default.build.cdc_on_boot=1
+upesy_esp32c3_basic.menu.CDCOnBoot.dis_cdc=Disabled
+upesy_esp32c3_basic.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+upesy_esp32c3_basic.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+upesy_esp32c3_basic.menu.PartitionScheme.default.build.partitions=default
+upesy_esp32c3_basic.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+upesy_esp32c3_basic.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+upesy_esp32c3_basic.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+upesy_esp32c3_basic.menu.PartitionScheme.no_ota.build.partitions=no_ota
+upesy_esp32c3_basic.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+upesy_esp32c3_basic.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+upesy_esp32c3_basic.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+upesy_esp32c3_basic.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+upesy_esp32c3_basic.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+upesy_esp32c3_basic.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+upesy_esp32c3_basic.menu.PartitionScheme.huge_app.build.partitions=huge_app
+upesy_esp32c3_basic.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+upesy_esp32c3_basic.menu.CPUFreq.160=160MHz (WiFi)
+upesy_esp32c3_basic.menu.CPUFreq.160.build.f_cpu=160000000L
+upesy_esp32c3_basic.menu.CPUFreq.80=80MHz (WiFi)
+upesy_esp32c3_basic.menu.CPUFreq.80.build.f_cpu=80000000L
+upesy_esp32c3_basic.menu.CPUFreq.40=40MHz
+upesy_esp32c3_basic.menu.CPUFreq.40.build.f_cpu=40000000L
+upesy_esp32c3_basic.menu.CPUFreq.20=20MHz
+upesy_esp32c3_basic.menu.CPUFreq.20.build.f_cpu=20000000L
+upesy_esp32c3_basic.menu.CPUFreq.10=10MHz
+upesy_esp32c3_basic.menu.CPUFreq.10.build.f_cpu=10000000L
+
+upesy_esp32c3_basic.menu.FlashFreq.80=80MHz
+upesy_esp32c3_basic.menu.FlashFreq.80.build.flash_freq=80m
+upesy_esp32c3_basic.menu.FlashFreq.40=40MHz
+upesy_esp32c3_basic.menu.FlashFreq.40.build.flash_freq=40m
+
+upesy_esp32c3_basic.menu.UploadSpeed.921600=921600
+upesy_esp32c3_basic.menu.UploadSpeed.921600.upload.speed=921600
+upesy_esp32c3_basic.menu.UploadSpeed.115200=115200
+upesy_esp32c3_basic.menu.UploadSpeed.115200.upload.speed=115200
+upesy_esp32c3_basic.menu.UploadSpeed.256000.windows=256000
+upesy_esp32c3_basic.menu.UploadSpeed.256000.upload.speed=256000
+upesy_esp32c3_basic.menu.UploadSpeed.230400.windows.upload.speed=256000
+upesy_esp32c3_basic.menu.UploadSpeed.230400=230400
+upesy_esp32c3_basic.menu.UploadSpeed.230400.upload.speed=230400
+upesy_esp32c3_basic.menu.UploadSpeed.460800.linux=460800
+upesy_esp32c3_basic.menu.UploadSpeed.460800.macosx=460800
+upesy_esp32c3_basic.menu.UploadSpeed.460800.upload.speed=460800
+upesy_esp32c3_basic.menu.UploadSpeed.512000.windows=512000
+upesy_esp32c3_basic.menu.UploadSpeed.512000.upload.speed=512000
+
+upesy_esp32c3_basic.menu.DebugLevel.none=None
+upesy_esp32c3_basic.menu.DebugLevel.none.build.code_debug=0
+upesy_esp32c3_basic.menu.DebugLevel.error=Error
+upesy_esp32c3_basic.menu.DebugLevel.error.build.code_debug=1
+upesy_esp32c3_basic.menu.DebugLevel.warn=Warn
+upesy_esp32c3_basic.menu.DebugLevel.warn.build.code_debug=2
+upesy_esp32c3_basic.menu.DebugLevel.info=Info
+upesy_esp32c3_basic.menu.DebugLevel.info.build.code_debug=3
+upesy_esp32c3_basic.menu.DebugLevel.debug=Debug
+upesy_esp32c3_basic.menu.DebugLevel.debug.build.code_debug=4
+upesy_esp32c3_basic.menu.DebugLevel.verbose=Verbose
+upesy_esp32c3_basic.menu.DebugLevel.verbose.build.code_debug=5
+
+upesy_esp32c3_basic.menu.EraseFlash.none=Disabled
+upesy_esp32c3_basic.menu.EraseFlash.none.upload.erase_cmd=
+upesy_esp32c3_basic.menu.EraseFlash.all=Enabled
+upesy_esp32c3_basic.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+upesy_esp32c3_mini.name=uPesy ESP32C3 Mini
+upesy_esp32c3_mini.vid.0=0x303a
+upesy_esp32c3_mini.pid.0=0x819B
+
+upesy_esp32c3_mini.bootloader.tool=esptool_py
+upesy_esp32c3_mini.bootloader.tool.default=esptool_py
+
+upesy_esp32c3_mini.upload.tool=esptool_py
+upesy_esp32c3_mini.upload.tool.default=esptool_py
+upesy_esp32c3_mini.upload.tool.network=esp_ota
+
+upesy_esp32c3_mini.upload.maximum_size=1310720
+upesy_esp32c3_mini.upload.maximum_data_size=327680
+upesy_esp32c3_mini.upload.flags=
+upesy_esp32c3_mini.upload.extra_flags=
+upesy_esp32c3_mini.upload.use_1200bps_touch=false
+upesy_esp32c3_mini.upload.wait_for_upload_port=false
+
+upesy_esp32c3_mini.serial.disableDTR=true
+upesy_esp32c3_mini.serial.disableRTS=true
+
+upesy_esp32c3_mini.build.tarch=riscv32
+upesy_esp32c3_mini.build.target=esp
+upesy_esp32c3_mini.build.mcu=esp32c3
+upesy_esp32c3_mini.build.core=esp32
+upesy_esp32c3_mini.build.variant=uPesy_esp32c3_mini
+upesy_esp32c3_mini.build.board=UPESY_ESP32C3_MINI
+upesy_esp32c3_mini.build.bootloader_addr=0x0
+
+upesy_esp32c3_mini.build.cdc_on_boot=1
+upesy_esp32c3_mini.build.f_cpu=160000000L
+upesy_esp32c3_mini.build.flash_size=4MB
+upesy_esp32c3_mini.build.flash_freq=80m
+upesy_esp32c3_mini.build.flash_mode=dio
+upesy_esp32c3_mini.build.boot=qio
+upesy_esp32c3_mini.build.partitions=default
+upesy_esp32c3_mini.build.defines=
+
+upesy_esp32c3_mini.menu.CDCOnBoot.default=Enabled
+upesy_esp32c3_mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
+upesy_esp32c3_mini.menu.CDCOnBoot.dis_cdc=Disabled
+upesy_esp32c3_mini.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+upesy_esp32c3_mini.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+upesy_esp32c3_mini.menu.PartitionScheme.default.build.partitions=default
+upesy_esp32c3_mini.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+upesy_esp32c3_mini.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+upesy_esp32c3_mini.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+upesy_esp32c3_mini.menu.PartitionScheme.no_ota.build.partitions=no_ota
+upesy_esp32c3_mini.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+upesy_esp32c3_mini.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+upesy_esp32c3_mini.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+upesy_esp32c3_mini.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+upesy_esp32c3_mini.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+upesy_esp32c3_mini.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+upesy_esp32c3_mini.menu.PartitionScheme.huge_app.build.partitions=huge_app
+upesy_esp32c3_mini.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+upesy_esp32c3_mini.menu.CPUFreq.160=160MHz (WiFi)
+upesy_esp32c3_mini.menu.CPUFreq.160.build.f_cpu=160000000L
+upesy_esp32c3_mini.menu.CPUFreq.80=80MHz (WiFi)
+upesy_esp32c3_mini.menu.CPUFreq.80.build.f_cpu=80000000L
+upesy_esp32c3_mini.menu.CPUFreq.40=40MHz
+upesy_esp32c3_mini.menu.CPUFreq.40.build.f_cpu=40000000L
+upesy_esp32c3_mini.menu.CPUFreq.20=20MHz
+upesy_esp32c3_mini.menu.CPUFreq.20.build.f_cpu=20000000L
+upesy_esp32c3_mini.menu.CPUFreq.10=10MHz
+upesy_esp32c3_mini.menu.CPUFreq.10.build.f_cpu=10000000L
+
+upesy_esp32c3_mini.menu.FlashFreq.80=80MHz
+upesy_esp32c3_mini.menu.FlashFreq.80.build.flash_freq=80m
+upesy_esp32c3_mini.menu.FlashFreq.40=40MHz
+upesy_esp32c3_mini.menu.FlashFreq.40.build.flash_freq=40m
+
+upesy_esp32c3_mini.menu.UploadSpeed.921600=921600
+upesy_esp32c3_mini.menu.UploadSpeed.921600.upload.speed=921600
+upesy_esp32c3_mini.menu.UploadSpeed.115200=115200
+upesy_esp32c3_mini.menu.UploadSpeed.115200.upload.speed=115200
+upesy_esp32c3_mini.menu.UploadSpeed.256000.windows=256000
+upesy_esp32c3_mini.menu.UploadSpeed.256000.upload.speed=256000
+upesy_esp32c3_mini.menu.UploadSpeed.230400.windows.upload.speed=256000
+upesy_esp32c3_mini.menu.UploadSpeed.230400=230400
+upesy_esp32c3_mini.menu.UploadSpeed.230400.upload.speed=230400
+upesy_esp32c3_mini.menu.UploadSpeed.460800.linux=460800
+upesy_esp32c3_mini.menu.UploadSpeed.460800.macosx=460800
+upesy_esp32c3_mini.menu.UploadSpeed.460800.upload.speed=460800
+upesy_esp32c3_mini.menu.UploadSpeed.512000.windows=512000
+upesy_esp32c3_mini.menu.UploadSpeed.512000.upload.speed=512000
+
+upesy_esp32c3_mini.menu.DebugLevel.none=None
+upesy_esp32c3_mini.menu.DebugLevel.none.build.code_debug=0
+upesy_esp32c3_mini.menu.DebugLevel.error=Error
+upesy_esp32c3_mini.menu.DebugLevel.error.build.code_debug=1
+upesy_esp32c3_mini.menu.DebugLevel.warn=Warn
+upesy_esp32c3_mini.menu.DebugLevel.warn.build.code_debug=2
+upesy_esp32c3_mini.menu.DebugLevel.info=Info
+upesy_esp32c3_mini.menu.DebugLevel.info.build.code_debug=3
+upesy_esp32c3_mini.menu.DebugLevel.debug=Debug
+upesy_esp32c3_mini.menu.DebugLevel.debug.build.code_debug=4
+upesy_esp32c3_mini.menu.DebugLevel.verbose=Verbose
+upesy_esp32c3_mini.menu.DebugLevel.verbose.build.code_debug=5
+
+upesy_esp32c3_mini.menu.EraseFlash.none=Disabled
+upesy_esp32c3_mini.menu.EraseFlash.none.upload.erase_cmd=
+upesy_esp32c3_mini.menu.EraseFlash.all=Enabled
+upesy_esp32c3_mini.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+upesy_esp32s3_basic.name=uPesy ESP32S3 Basic
+upesy_esp32s3_basic.vid.0=0x303a
+upesy_esp32s3_basic.pid.0=0x8192
+
+upesy_esp32s3_basic.bootloader.tool=esptool_py
+upesy_esp32s3_basic.bootloader.tool.default=esptool_py
+
+upesy_esp32s3_basic.upload.tool=esptool_py
+upesy_esp32s3_basic.upload.tool.default=esptool_py
+upesy_esp32s3_basic.upload.tool.network=esp_ota
+
+upesy_esp32s3_basic.upload.maximum_size=1310720
+upesy_esp32s3_basic.upload.maximum_data_size=327680
+upesy_esp32s3_basic.upload.flags=
+upesy_esp32s3_basic.upload.extra_flags=
+upesy_esp32s3_basic.upload.use_1200bps_touch=false
+upesy_esp32s3_basic.upload.wait_for_upload_port=false
+
+upesy_esp32s3_basic.serial.disableDTR=false
+upesy_esp32s3_basic.serial.disableRTS=false
+
+upesy_esp32s3_basic.build.tarch=xtensa
+upesy_esp32s3_basic.build.bootloader_addr=0x0
+upesy_esp32s3_basic.build.target=esp32s3
+upesy_esp32s3_basic.build.mcu=esp32s3
+upesy_esp32s3_basic.build.core=esp32
+upesy_esp32s3_basic.build.variant=uPesy_esp32s3_basic
+upesy_esp32s3_basic.build.board=UPESY_ESP32S3_BASIC
+
+upesy_esp32s3_basic.build.usb_mode=1
+upesy_esp32s3_basic.build.cdc_on_boot=0
+upesy_esp32s3_basic.build.msc_on_boot=0
+upesy_esp32s3_basic.build.dfu_on_boot=0
+upesy_esp32s3_basic.build.f_cpu=240000000L
+upesy_esp32s3_basic.build.flash_size=16MB
+upesy_esp32s3_basic.build.flash_freq=80m
+upesy_esp32s3_basic.build.flash_mode=dio
+upesy_esp32s3_basic.build.boot=qio
+upesy_esp32s3_basic.build.boot_freq=80m
+upesy_esp32s3_basic.build.partitions=default
+upesy_esp32s3_basic.build.defines=-DBOARD_HAS_PSRAM
+upesy_esp32s3_basic.build.loop_core=
+upesy_esp32s3_basic.build.event_core=
+upesy_esp32s3_basic.build.psram_type=opi
+upesy_esp32s3_basic.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+upesy_esp32s3_basic.menu.JTAGAdapter.default=Disabled
+upesy_esp32s3_basic.menu.JTAGAdapter.default.build.copy_jtag_files=0
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin=Integrated USB JTAG
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+upesy_esp32s3_basic.menu.JTAGAdapter.external=FTDI Adapter
+upesy_esp32s3_basic.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.external.build.copy_jtag_files=1
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge=ESP USB Bridge
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+upesy_esp32s3_basic.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+upesy_esp32s3_basic.menu.FlashMode.qio=QIO 80MHz
+upesy_esp32s3_basic.menu.FlashMode.qio.build.flash_mode=dio
+upesy_esp32s3_basic.menu.FlashMode.qio.build.boot=qio
+upesy_esp32s3_basic.menu.FlashMode.qio.build.boot_freq=80m
+upesy_esp32s3_basic.menu.FlashMode.qio.build.flash_freq=80m
+upesy_esp32s3_basic.menu.FlashMode.qio120=QIO 120MHz
+upesy_esp32s3_basic.menu.FlashMode.qio120.build.flash_mode=dio
+upesy_esp32s3_basic.menu.FlashMode.qio120.build.boot=qio
+upesy_esp32s3_basic.menu.FlashMode.qio120.build.boot_freq=120m
+upesy_esp32s3_basic.menu.FlashMode.qio120.build.flash_freq=80m
+
+upesy_esp32s3_basic.menu.LoopCore.1=Core 1
+upesy_esp32s3_basic.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+upesy_esp32s3_basic.menu.LoopCore.0=Core 0
+upesy_esp32s3_basic.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+upesy_esp32s3_basic.menu.EventsCore.1=Core 1
+upesy_esp32s3_basic.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+upesy_esp32s3_basic.menu.EventsCore.0=Core 0
+upesy_esp32s3_basic.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+upesy_esp32s3_basic.menu.USBMode.hwcdc=Hardware CDC and JTAG
+upesy_esp32s3_basic.menu.USBMode.hwcdc.build.usb_mode=1
+upesy_esp32s3_basic.menu.USBMode.default=USB-OTG (TinyUSB)
+upesy_esp32s3_basic.menu.USBMode.default.build.usb_mode=0
+
+upesy_esp32s3_basic.menu.CDCOnBoot.default=Disabled
+upesy_esp32s3_basic.menu.CDCOnBoot.default.build.cdc_on_boot=0
+upesy_esp32s3_basic.menu.CDCOnBoot.cdc=Enabled
+upesy_esp32s3_basic.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+upesy_esp32s3_basic.menu.MSCOnBoot.default=Disabled
+upesy_esp32s3_basic.menu.MSCOnBoot.default.build.msc_on_boot=0
+upesy_esp32s3_basic.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+upesy_esp32s3_basic.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+upesy_esp32s3_basic.menu.DFUOnBoot.default=Disabled
+upesy_esp32s3_basic.menu.DFUOnBoot.default.build.dfu_on_boot=0
+upesy_esp32s3_basic.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+upesy_esp32s3_basic.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+upesy_esp32s3_basic.menu.UploadMode.default=UART0 / Hardware CDC
+upesy_esp32s3_basic.menu.UploadMode.default.upload.use_1200bps_touch=false
+upesy_esp32s3_basic.menu.UploadMode.default.upload.wait_for_upload_port=false
+upesy_esp32s3_basic.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+upesy_esp32s3_basic.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+upesy_esp32s3_basic.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+upesy_esp32s3_basic.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+upesy_esp32s3_basic.menu.PartitionScheme.fatflash.build.partitions=ffat
+upesy_esp32s3_basic.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+upesy_esp32s3_basic.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+upesy_esp32s3_basic.menu.CPUFreq.240=240MHz (WiFi)
+upesy_esp32s3_basic.menu.CPUFreq.240.build.f_cpu=240000000L
+upesy_esp32s3_basic.menu.CPUFreq.160=160MHz (WiFi)
+upesy_esp32s3_basic.menu.CPUFreq.160.build.f_cpu=160000000L
+upesy_esp32s3_basic.menu.CPUFreq.80=80MHz (WiFi)
+upesy_esp32s3_basic.menu.CPUFreq.80.build.f_cpu=80000000L
+upesy_esp32s3_basic.menu.CPUFreq.40=40MHz
+upesy_esp32s3_basic.menu.CPUFreq.40.build.f_cpu=40000000L
+upesy_esp32s3_basic.menu.CPUFreq.20=20MHz
+upesy_esp32s3_basic.menu.CPUFreq.20.build.f_cpu=20000000L
+upesy_esp32s3_basic.menu.CPUFreq.10=10MHz
+upesy_esp32s3_basic.menu.CPUFreq.10.build.f_cpu=10000000L
+
+upesy_esp32s3_basic.menu.UploadSpeed.921600=921600
+upesy_esp32s3_basic.menu.UploadSpeed.921600.upload.speed=921600
+upesy_esp32s3_basic.menu.UploadSpeed.115200=115200
+upesy_esp32s3_basic.menu.UploadSpeed.115200.upload.speed=115200
+upesy_esp32s3_basic.menu.UploadSpeed.256000.windows=256000
+upesy_esp32s3_basic.menu.UploadSpeed.256000.upload.speed=256000
+upesy_esp32s3_basic.menu.UploadSpeed.230400.windows.upload.speed=256000
+upesy_esp32s3_basic.menu.UploadSpeed.230400=230400
+upesy_esp32s3_basic.menu.UploadSpeed.230400.upload.speed=230400
+upesy_esp32s3_basic.menu.UploadSpeed.460800.linux=460800
+upesy_esp32s3_basic.menu.UploadSpeed.460800.macosx=460800
+upesy_esp32s3_basic.menu.UploadSpeed.460800.upload.speed=460800
+upesy_esp32s3_basic.menu.UploadSpeed.512000.windows=512000
+upesy_esp32s3_basic.menu.UploadSpeed.512000.upload.speed=512000
+
+upesy_esp32s3_basic.menu.DebugLevel.none=None
+upesy_esp32s3_basic.menu.DebugLevel.none.build.code_debug=0
+upesy_esp32s3_basic.menu.DebugLevel.error=Error
+upesy_esp32s3_basic.menu.DebugLevel.error.build.code_debug=1
+upesy_esp32s3_basic.menu.DebugLevel.warn=Warn
+upesy_esp32s3_basic.menu.DebugLevel.warn.build.code_debug=2
+upesy_esp32s3_basic.menu.DebugLevel.info=Info
+upesy_esp32s3_basic.menu.DebugLevel.info.build.code_debug=3
+upesy_esp32s3_basic.menu.DebugLevel.debug=Debug
+upesy_esp32s3_basic.menu.DebugLevel.debug.build.code_debug=4
+upesy_esp32s3_basic.menu.DebugLevel.verbose=Verbose
+upesy_esp32s3_basic.menu.DebugLevel.verbose.build.code_debug=5
+
+upesy_esp32s3_basic.menu.EraseFlash.none=Disabled
+upesy_esp32s3_basic.menu.EraseFlash.none.upload.erase_cmd=
+upesy_esp32s3_basic.menu.EraseFlash.all=Enabled
+upesy_esp32s3_basic.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -20033,12 +20837,6 @@ kb32.menu.FlashMode.qio.build.boot=qio
 kb32.menu.FlashMode.dio=DIO
 kb32.menu.FlashMode.dio.build.flash_mode=dio
 kb32.menu.FlashMode.dio.build.boot=dio
-kb32.menu.FlashMode.qout=QOUT
-kb32.menu.FlashMode.qout.build.flash_mode=dout
-kb32.menu.FlashMode.qout.build.boot=qout
-kb32.menu.FlashMode.dout=DOUT
-kb32.menu.FlashMode.dout.build.flash_mode=dout
-kb32.menu.FlashMode.dout.build.boot=dout
 
 kb32.menu.FlashFreq.80=80MHz
 kb32.menu.FlashFreq.80.build.flash_freq=80m
@@ -20213,12 +21011,6 @@ deneyapkart.menu.FlashMode.qio.build.boot=qio
 deneyapkart.menu.FlashMode.dio=DIO
 deneyapkart.menu.FlashMode.dio.build.flash_mode=dio
 deneyapkart.menu.FlashMode.dio.build.boot=dio
-deneyapkart.menu.FlashMode.qout=QOUT
-deneyapkart.menu.FlashMode.qout.build.flash_mode=dout
-deneyapkart.menu.FlashMode.qout.build.boot=qout
-deneyapkart.menu.FlashMode.dout=DOUT
-deneyapkart.menu.FlashMode.dout.build.flash_mode=dout
-deneyapkart.menu.FlashMode.dout.build.boot=dout
 
 deneyapkart.menu.FlashFreq.80=80MHz
 deneyapkart.menu.FlashFreq.80.build.flash_freq=80m
@@ -20393,12 +21185,6 @@ deneyapkart1A.menu.FlashMode.qio.build.boot=qio
 deneyapkart1A.menu.FlashMode.dio=DIO
 deneyapkart1A.menu.FlashMode.dio.build.flash_mode=dio
 deneyapkart1A.menu.FlashMode.dio.build.boot=dio
-deneyapkart1A.menu.FlashMode.qout=QOUT
-deneyapkart1A.menu.FlashMode.qout.build.flash_mode=dout
-deneyapkart1A.menu.FlashMode.qout.build.boot=qout
-deneyapkart1A.menu.FlashMode.dout=DOUT
-deneyapkart1A.menu.FlashMode.dout.build.flash_mode=dout
-deneyapkart1A.menu.FlashMode.dout.build.boot=dout
 
 deneyapkart1A.menu.FlashFreq.80=80MHz
 deneyapkart1A.menu.FlashFreq.80.build.flash_freq=80m
@@ -20818,12 +21604,6 @@ deneyapmini.menu.FlashMode.qio.build.boot=qio
 deneyapmini.menu.FlashMode.dio=DIO
 deneyapmini.menu.FlashMode.dio.build.flash_mode=dio
 deneyapmini.menu.FlashMode.dio.build.boot=dio
-deneyapmini.menu.FlashMode.qout=QOUT
-deneyapmini.menu.FlashMode.qout.build.flash_mode=dout
-deneyapmini.menu.FlashMode.qout.build.boot=qout
-deneyapmini.menu.FlashMode.dout=DOUT
-deneyapmini.menu.FlashMode.dout.build.flash_mode=dout
-deneyapmini.menu.FlashMode.dout.build.boot=dout
 
 deneyapmini.menu.FlashFreq.80=80MHz
 deneyapmini.menu.FlashFreq.80.build.flash_freq=80m
@@ -21010,12 +21790,6 @@ deneyapminiv2.menu.FlashMode.qio.build.boot=qio
 deneyapminiv2.menu.FlashMode.dio=DIO
 deneyapminiv2.menu.FlashMode.dio.build.flash_mode=dio
 deneyapminiv2.menu.FlashMode.dio.build.boot=dio
-deneyapminiv2.menu.FlashMode.qout=QOUT
-deneyapminiv2.menu.FlashMode.qout.build.flash_mode=dout
-deneyapminiv2.menu.FlashMode.qout.build.boot=qout
-deneyapminiv2.menu.FlashMode.dout=DOUT
-deneyapminiv2.menu.FlashMode.dout.build.flash_mode=dout
-deneyapminiv2.menu.FlashMode.dout.build.boot=dout
 
 deneyapminiv2.menu.FlashFreq.80=80MHz
 deneyapminiv2.menu.FlashFreq.80.build.flash_freq=80m
@@ -21179,12 +21953,6 @@ deneyapkartg.menu.FlashMode.qio.build.boot=qio
 deneyapkartg.menu.FlashMode.dio=DIO
 deneyapkartg.menu.FlashMode.dio.build.flash_mode=dio
 deneyapkartg.menu.FlashMode.dio.build.boot=dio
-deneyapkartg.menu.FlashMode.qout=QOUT
-deneyapkartg.menu.FlashMode.qout.build.flash_mode=dout
-deneyapkartg.menu.FlashMode.qout.build.boot=qout
-deneyapkartg.menu.FlashMode.dout=DOUT
-deneyapkartg.menu.FlashMode.dout.build.flash_mode=dout
-deneyapkartg.menu.FlashMode.dout.build.boot=dout
 
 deneyapkartg.menu.FlashFreq.80=80MHz
 deneyapkartg.menu.FlashFreq.80.build.flash_freq=80m
@@ -21492,12 +22260,6 @@ atmegazero_esp32s2.menu.FlashMode.qio.build.boot=qio
 atmegazero_esp32s2.menu.FlashMode.dio=DIO
 atmegazero_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
 atmegazero_esp32s2.menu.FlashMode.dio.build.boot=dio
-atmegazero_esp32s2.menu.FlashMode.qout=QOUT
-atmegazero_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
-atmegazero_esp32s2.menu.FlashMode.qout.build.boot=qout
-atmegazero_esp32s2.menu.FlashMode.dout=DOUT
-atmegazero_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
-atmegazero_esp32s2.menu.FlashMode.dout.build.boot=dout
 
 atmegazero_esp32s2.menu.FlashFreq.80=80MHz
 atmegazero_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
@@ -22046,12 +22808,6 @@ dpu_esp32.menu.FlashMode.qio.build.boot=qio
 dpu_esp32.menu.FlashMode.dio=DIO
 dpu_esp32.menu.FlashMode.dio.build.flash_mode=dio
 dpu_esp32.menu.FlashMode.dio.build.boot=dio
-dpu_esp32.menu.FlashMode.qout=QOUT
-dpu_esp32.menu.FlashMode.qout.build.flash_mode=dout
-dpu_esp32.menu.FlashMode.qout.build.boot=qout
-dpu_esp32.menu.FlashMode.dout=DOUT
-dpu_esp32.menu.FlashMode.dout.build.flash_mode=dout
-dpu_esp32.menu.FlashMode.dout.build.boot=dout
 
 dpu_esp32.menu.FlashFreq.80=80MHz
 dpu_esp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -22155,12 +22911,6 @@ sonoff_dualr3.menu.FlashMode.qio.build.boot=qio
 sonoff_dualr3.menu.FlashMode.dio=DIO
 sonoff_dualr3.menu.FlashMode.dio.build.flash_mode=dio
 sonoff_dualr3.menu.FlashMode.dio.build.boot=dio
-sonoff_dualr3.menu.FlashMode.qout=QOUT
-sonoff_dualr3.menu.FlashMode.qout.build.flash_mode=dout
-sonoff_dualr3.menu.FlashMode.qout.build.boot=qout
-sonoff_dualr3.menu.FlashMode.dout=DOUT
-sonoff_dualr3.menu.FlashMode.dout.build.flash_mode=dout
-sonoff_dualr3.menu.FlashMode.dout.build.boot=dout
 
 sonoff_dualr3.menu.FlashFreq.80=80MHz
 sonoff_dualr3.menu.FlashFreq.80.build.flash_freq=80m
@@ -22301,12 +23051,6 @@ lionbit.menu.FlashMode.dio.build.boot=dio
 lionbit.menu.FlashMode.qio=QIO
 lionbit.menu.FlashMode.qio.build.flash_mode=dio
 lionbit.menu.FlashMode.qio.build.boot=qio
-lionbit.menu.FlashMode.qout=QOUT
-lionbit.menu.FlashMode.qout.build.flash_mode=dout
-lionbit.menu.FlashMode.qout.build.boot=qout
-lionbit.menu.FlashMode.dout=DOUT
-lionbit.menu.FlashMode.dout.build.flash_mode=dout
-lionbit.menu.FlashMode.dout.build.boot=dout
 
 lionbit.menu.FlashFreq.80=80MHz
 lionbit.menu.FlashFreq.80.build.flash_freq=80m
@@ -22649,11 +23393,6 @@ XIAO_ESP32C3.menu.FlashMode.qio.build.boot=qio
 XIAO_ESP32C3.menu.FlashMode.dio=DIO
 XIAO_ESP32C3.menu.FlashMode.dio.build.flash_mode=dio
 XIAO_ESP32C3.menu.FlashMode.dio.build.boot=dio
-XIAO_ESP32C3.menu.FlashMode.qout=QOUT
-XIAO_ESP32C3.menu.FlashMode.qout.build.flash_mode=dout
-XIAO_ESP32C3.menu.FlashMode.qout.build.boot=qout
-XIAO_ESP32C3.menu.FlashMode.dout=DOUT
-XIAO_ESP32C3.menu.FlashMode.dout.build.flash_mode=dout
 
 XIAO_ESP32C3.menu.FlashFreq.80=80MHz
 XIAO_ESP32C3.menu.FlashFreq.80.build.flash_freq=80m
@@ -23197,12 +23936,6 @@ department_of_alchemy_minimain_esp32s2.menu.FlashMode.qio.build.boot=qio
 department_of_alchemy_minimain_esp32s2.menu.FlashMode.dio=DIO
 department_of_alchemy_minimain_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
 department_of_alchemy_minimain_esp32s2.menu.FlashMode.dio.build.boot=dio
-department_of_alchemy_minimain_esp32s2.menu.FlashMode.qout=QOUT
-department_of_alchemy_minimain_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
-department_of_alchemy_minimain_esp32s2.menu.FlashMode.qout.build.boot=qout
-department_of_alchemy_minimain_esp32s2.menu.FlashMode.dout=DOUT
-department_of_alchemy_minimain_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
-department_of_alchemy_minimain_esp32s2.menu.FlashMode.dout.build.boot=dout
 
 department_of_alchemy_minimain_esp32s2.menu.FlashFreq.80=80MHz
 department_of_alchemy_minimain_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
@@ -24782,12 +25515,6 @@ roboheart_hercules.menu.FlashMode.qio.build.boot=qio
 roboheart_hercules.menu.FlashMode.dio=DIO
 roboheart_hercules.menu.FlashMode.dio.build.flash_mode=dio
 roboheart_hercules.menu.FlashMode.dio.build.boot=dio
-roboheart_hercules.menu.FlashMode.qout=QOUT
-roboheart_hercules.menu.FlashMode.qout.build.flash_mode=dout
-roboheart_hercules.menu.FlashMode.qout.build.boot=qout
-roboheart_hercules.menu.FlashMode.dout=DOUT
-roboheart_hercules.menu.FlashMode.dout.build.flash_mode=dout
-roboheart_hercules.menu.FlashMode.dout.build.boot=dout
 
 roboheart_hercules.menu.FlashFreq.80=80MHz
 roboheart_hercules.menu.FlashFreq.80.build.flash_freq=80m
@@ -24925,11 +25652,6 @@ VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.qio.build.boot=qio
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.dio=DIO
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.dio.build.flash_mode=dio
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.dio.build.boot=dio
-VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.qout=QOUT
-VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.qout.build.flash_mode=dout
-VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.qout.build.boot=qout
-VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.dout=DOUT
-VALTRACK_V4_VTS_ESP32_C3.menu.FlashMode.dout.build.flash_mode=dout
 
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashFreq.80=80MHz
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashFreq.80.build.flash_freq=80m
@@ -25079,11 +25801,6 @@ VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.qio.build.boot=qio
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.dio=DIO
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.dio.build.flash_mode=dio
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.dio.build.boot=dio
-VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.qout=QOUT
-VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.qout.build.flash_mode=dout
-VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.qout.build.boot=qout
-VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.dout=DOUT
-VALTRACK_V4_MFW_ESP32_C3.menu.FlashMode.dout.build.flash_mode=dout
 
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashFreq.80=80MHz
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashFreq.80.build.flash_freq=80m

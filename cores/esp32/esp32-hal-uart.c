@@ -329,7 +329,7 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
     UART_MUTEX_UNLOCK();  
 
     if (!retCode) {
-        log_e("UART%d set pins failed.");
+        log_e("UART%d set pins failed.", uart_num);
     }
     return retCode;
 }
@@ -884,12 +884,18 @@ void uartStartDetectBaudrate(uart_t *uart) {
         return;
     }
 
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
+// Baud rate detection only works for ESP32 and ESP32S2
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+    hw->auto_baud.glitch_filt = 0x08;
+    hw->auto_baud.en = 0;
+    hw->auto_baud.en = 1;
+#else
     
     // ESP32-C3 requires further testing
     // Baud rate detection returns wrong values 
    
-    log_e("ESP32-C3 baud rate detection is not supported.");
+    log_e("baud rate detection for this SoC is not supported.");
     return;
 
     // Code bellow for C3 kept for future recall
@@ -897,19 +903,10 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->rx_filt.glitch_filt_en = 1;
     //hw->conf0.autobaud_en = 0;
     //hw->conf0.autobaud_en = 1;
-#elif CONFIG_IDF_TARGET_ESP32S3
-    log_e("ESP32-S3 baud rate detection is not supported.");
-    return;
-#else
-    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->auto_baud.glitch_filt = 0x08;
-    hw->auto_baud.en = 0;
-    hw->auto_baud.en = 1;
 #endif
 }
  
-unsigned long
-uartDetectBaudrate(uart_t *uart)
+unsigned long uartDetectBaudrate(uart_t *uart)
 {
     if(uart == NULL) {
         return 0;
@@ -955,17 +952,13 @@ uartDetectBaudrate(uart_t *uart)
 
     return default_rates[i];
 #else
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    log_e("ESP32-C3 baud rate detection is not supported.");
-#else
-    log_e("ESP32-S3 baud rate detection is not supported.");
-#endif
+    log_e("baud rate detection this SoC is not supported.");
     return 0;
 #endif
 }
 
 /*
-    These functions are for testing puspose only and can be used in Arduino Sketches
+    These functions are for testing purpose only and can be used in Arduino Sketches
     Those are used in the UART examples
 */
 
@@ -975,15 +968,17 @@ uartDetectBaudrate(uart_t *uart)
     This code "replaces" the physical wiring for connecting TX <--> RX in a loopback
 */
 
-// gets the right TX SIGNAL, based on the UART number
+// gets the right TX or RX SIGNAL, based on the UART number from gpio_sig_map.h
 #if SOC_UART_NUM > 2
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+  #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+  #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : (uartNumber == UART_NUM_1 ? U1RXD_IN_IDX : U2RXD_IN_IDX))
 #else
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+  #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+  #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : U1RXD_IN_IDX)
 #endif
 /*
-   Make sure UART's RX signal is connected to TX pin
-   This creates a loop that lets us receive anything we send on the UART
+   This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
+   This creates a loop that lets us receive anything we send on the UART without external wires.
 */
 void uart_internal_loopback(uint8_t uartNum, int8_t rxPin)
 {

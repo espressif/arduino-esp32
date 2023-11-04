@@ -42,8 +42,9 @@ typedef enum {
 #endif
 #if SOC_I2S_SUPPORTED
 	ESP32_BUS_TYPE_I2S_STD, 	// IO is used as I2S STD pin
-	ESP32_BUS_TYPE_I2S_PDM, 	// IO is used as I2S PDM pin
 	ESP32_BUS_TYPE_I2S_TDM, 	// IO is used as I2S TDM pin
+	ESP32_BUS_TYPE_I2S_PDM_TX, 	// IO is used as I2S PDM pin
+	ESP32_BUS_TYPE_I2S_PDM_RX, 	// IO is used as I2S PDM pin
 #endif
 #if SOC_I2C_SUPPORTED
 	ESP32_BUS_TYPE_I2C_MASTER, 	// IO is used as I2C master pin
