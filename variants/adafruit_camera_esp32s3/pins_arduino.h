@@ -34,8 +34,8 @@ static const uint8_t SD_CS          = 48;
 static const uint8_t SD_CHIP_SELECT = 48;
 static const uint8_t SPEAKER        = 46;
 
-static const uint8_t SDA = 33;
-static const uint8_t SCL = 34;
+static const uint8_t SCL = 33;
+static const uint8_t SDA = 34;
 
 static const uint8_t SS    = 48;
 static const uint8_t MOSI  = 35;
