@@ -24,7 +24,7 @@ void apMode() {
   WiFi.mode(WIFI_AP);
   char ssid[13];
   char passwd[11];
-  uint32_t espmac = ESP.getEfuseMac() & 0xFFFFFF;
+  uint32_t espmac = ESP.getEfuseMac() >> 16; 
   snprintf(ssid, 13, SSID_FORMAT, espmac);
 #ifdef PASSWORD
   snprintf(passwd, 11, PASSWORD);
