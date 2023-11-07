@@ -4,7 +4,7 @@
 void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val){
   rmt_data_t led_data[24];
   if (!rmtInit(pin, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
-    log_e("RGB LED driver initialization failed!");
+    log_e("RGB LED driver initialization failed for GPIO%d!", pin);
     return;
   }
 
