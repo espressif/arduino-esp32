@@ -70,6 +70,8 @@ typedef enum {
 
 typedef bool (*peripheral_bus_deinit_cb_t)(void * bus);
 
+const char* perimanGetTypeName(peripheral_bus_type_t type);
+
 // Sets the bus type and bus handle for given pin.
 bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus);
 
