@@ -21,15 +21,21 @@ Latest Stable Release  [![Release Version](https://img.shields.io/github/release
 
 Latest Development Release  [![Release Version](https://img.shields.io/github/release/espressif/arduino-esp32/all.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/) [![Release Date](https://img.shields.io/github/release-date-pre/espressif/arduino-esp32.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/) [![Downloads](https://img.shields.io/github/downloads-pre/espressif/arduino-esp32/latest/total.svg?style=plastic)](https://github.com/espressif/arduino-esp32/releases/)
 
+#### Release support Schedule
+
+WIP - graphic
+
 ### Development Planning
 
 Our Development is fully tracked on this public **[Roadmap 🎉](https://github.com/orgs/espressif/projects/3)**
 
-For even more information you can take a look at [Sprint Meeting notes](https://github.com/espressif/arduino-esp32/discussions/categories/sprints-meeting-notes) or join [Monthly Community Meetings 🔔](https://github.com/espressif/arduino-esp32/discussions/categories/monthly-community-meetings)
+For even more information you can join our **[Monthly Community Meetings 🔔](https://github.com/espressif/arduino-esp32/discussions/categories/monthly-community-meetings).**
 
 ### Documentation
 
 You can use the [Arduino-ESP32 Online Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/) to get all information about this project.
+
+**Migration guide from version 2.x to 3.x is available [here](https://docs.espressif.com/projects/arduino-esp32/en/latest/migration_guides/2.x_to_3.0.html).**
 
 * [Getting Started](https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html)
 * [Installing (Windows, Linux and macOS)](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html)
@@ -39,6 +45,23 @@ You can use the [Arduino-ESP32 Online Documentation](https://docs.espressif.com/
 * [Troubleshooting](https://docs.espressif.com/projects/arduino-esp32/en/latest/troubleshooting.html)
 
 ### Supported Chips
+
+Here are the ESP32 series supported by the Arduino-ESP32 project:
+
+======== ====== =========== ===================================
+SoC      Stable Development Datasheet
+======== ====== =========== ===================================
+ESP32    Yes    Yes         `ESP32`_
+ESP32-S2 Yes    Yes         `ESP32-S2`_
+ESP32-C3 Yes    Yes         `ESP32-C3`_
+ESP32-S3 Yes    Yes         `ESP32-S3`_
+ESP32-C6 No     Yes         `ESP32-C6`_
+ESP32-H2 No     Yes         `ESP32-H2`_
+ESP32-P4 No     No
+======== ====== =========== ===================================
+
+See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
+
 
 Visit the [supported chips](https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html#supported-soc-s) documentation to see the list of current supported ESP32 SoCs.
 
