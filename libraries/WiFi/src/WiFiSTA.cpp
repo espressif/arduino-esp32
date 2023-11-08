@@ -373,6 +373,7 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
     wifi_sta_config(&conf);
 
     if(WiFi.getMode() & WIFI_MODE_STA){
+        _useStaticIp = false;
         if(eraseap){
             if(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf)){
                 log_e("clear config failed!");
