@@ -98,7 +98,7 @@ public:
     String SSID() const;
     String psk() const;
 
-    uint8_t * BSSID();
+    uint8_t * BSSID(uint8_t* bssid = NULL);
     String BSSIDstr();
 
     int8_t RSSI();
