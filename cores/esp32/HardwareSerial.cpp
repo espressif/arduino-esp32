@@ -107,10 +107,6 @@ _eventTask(NULL)
         }
     }
 #endif
-    // sets UART0 (default console) RX/TX pins as already configured in boot
-    if (uart_nr == 0) {
-        setPins(SOC_RX0, SOC_TX0);
-    }
     // set deinit function in the Peripheral Manager
     uart_init_PeriMan();
 }
