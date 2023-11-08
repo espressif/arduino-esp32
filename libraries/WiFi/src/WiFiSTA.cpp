@@ -123,7 +123,7 @@ wifi_auth_mode_t WiFiSTAClass::_minSecurity = WIFI_AUTH_WPA2_PSK;
 wifi_scan_method_t WiFiSTAClass::_scanMethod = WIFI_FAST_SCAN;
 wifi_sort_method_t WiFiSTAClass::_sortMethod = WIFI_CONNECT_AP_BY_SIGNAL;
 
-static wl_status_t _sta_status = WL_NO_SHIELD;
+static wl_status_t _sta_status = WL_STOPPED;
 static EventGroupHandle_t _sta_status_group = NULL;
 
 void WiFiSTAClass::_setStatus(wl_status_t status)
