@@ -17,7 +17,7 @@ menu.EventsCore=Events Run On
 menu.MemoryType=Memory Type
 menu.EraseFlash=Erase All Flash Before Sketch Upload
 menu.JTAGAdapter=JTAG Adapter
-menu.Zigbee=Zigbee Mode
+menu.ZigbeeMode=Zigbee Mode
 
 # Custom options
 menu.Revision=Board Revision
@@ -194,18 +194,18 @@ esp32h2.menu.EraseFlash.none.upload.erase_cmd=
 esp32h2.menu.EraseFlash.all=Enabled
 esp32h2.menu.EraseFlash.all.upload.erase_cmd=-e
 
-esp32h2.menu.Zigbee.default=Disabled
-esp32h2.menu.Zigbee.default.build.zigbee_mode=
-esp32h2.menu.Zigbee.default.build.extra_libs=
-esp32h2.menu.Zigbee.ed=Zigbee ED (end device)
-esp32h2.menu.Zigbee.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-esp32h2.menu.Zigbee.ed.build.extra_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
-esp32h2.menu.Zigbee.zczr=Zigbee ZCZR (coordinator)
-esp32h2.menu.Zigbee.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32h2.menu.Zigbee.zczr.build.extra_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
-esp32h2.menu.Zigbee.rcp=Zigbee RCP (radio co-processor)
-esp32h2.menu.Zigbee.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
-esp32h2.menu.Zigbee.rcp.build.extra_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
+esp32h2.menu.ZigbeeMode.default=Disabled
+esp32h2.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32h2.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32h2.menu.ZigbeeMode.ed=Zigbee ED (end device)
+esp32h2.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32h2.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
+esp32h2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+esp32h2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32h2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32h2.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+esp32h2.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+esp32h2.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 
 ##############################################################
@@ -379,18 +379,18 @@ esp32c6.menu.EraseFlash.none.upload.erase_cmd=
 esp32c6.menu.EraseFlash.all=Enabled
 esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
 
-esp32c6.menu.Zigbee.default=Disabled
-esp32c6.menu.Zigbee.default.build.zigbee_mode=
-esp32c6.menu.Zigbee.default.build.extra_libs=
-esp32c6.menu.Zigbee.ed=Zigbee ED (end device)
-esp32c6.menu.Zigbee.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-esp32c6.menu.Zigbee.ed.build.extra_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
-esp32c6.menu.Zigbee.zczr=Zigbee ZCZR (coordinator)
-esp32c6.menu.Zigbee.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32c6.menu.Zigbee.zczr.build.extra_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
-esp32c6.menu.Zigbee.rcp=Zigbee RCP (radio co-processor)
-esp32c6.menu.Zigbee.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
-esp32c6.menu.Zigbee.rcp.build.extra_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
+esp32c6.menu.ZigbeeMode.default=Disabled
+esp32c6.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32c6.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+esp32c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
+esp32c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32c6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+esp32c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -631,12 +631,12 @@ esp32s3.menu.EraseFlash.none.upload.erase_cmd=
 esp32s3.menu.EraseFlash.all=Enabled
 esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
-esp32s3.menu.Zigbee.default=Disabled
-esp32s3.menu.Zigbee.default.build.zigbee_mode=
-esp32s3.menu.Zigbee.default.build.extra_libs=
-esp32s3.menu.Zigbee.zczr=Zigbee ZCZR (coordinator)
-esp32s3.menu.Zigbee.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32s3.menu.Zigbee.zczr.build.extra_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32s3.menu.ZigbeeMode.default=Disabled
+esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
@@ -806,12 +806,12 @@ esp32c3.menu.EraseFlash.none.upload.erase_cmd=
 esp32c3.menu.EraseFlash.all=Enabled
 esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 
-esp32c3.menu.Zigbee.default=Disabled
-esp32c3.menu.Zigbee.default.build.zigbee_mode=
-esp32c3.menu.Zigbee.default.build.extra_libs=
-esp32c3.menu.Zigbee.zczr=Zigbee ZCZR (coordinator)
-esp32c3.menu.Zigbee.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32c3.menu.Zigbee.zczr.build.extra_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32c3.menu.ZigbeeMode.default=Disabled
+esp32c3.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32c3.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32c3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+esp32c3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32c3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 ##############################################################
 
 esp32s2.name=ESP32S2 Dev Module
@@ -1003,12 +1003,12 @@ esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 esp32s2.menu.EraseFlash.all=Enabled
 esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
-esp32s2.menu.Zigbee.default=Disabled
-esp32s2.menu.Zigbee.default.build.zigbee_mode=
-esp32s2.menu.Zigbee.default.build.extra_libs=
-esp32s2.menu.Zigbee.zczr=Zigbee ZCZR (coordinator)
-esp32s2.menu.Zigbee.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32s2.menu.Zigbee.zczr.build.extra_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32s2.menu.ZigbeeMode.default=Disabled
+esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
@@ -1190,12 +1190,12 @@ esp32.menu.EraseFlash.none.upload.erase_cmd=
 esp32.menu.EraseFlash.all=Enabled
 esp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
-esp32.menu.Zigbee.default=Disabled
-esp32.menu.Zigbee.default.build.zigbee_mode=
-esp32.menu.Zigbee.default.build.extra_libs=
-esp32.menu.Zigbee.zczr=Zigbee ZCZR (coordinator)
-esp32.menu.Zigbee.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32.menu.Zigbee.zczr.build.extra_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32.menu.ZigbeeMode.default=Disabled
+esp32.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+esp32.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
