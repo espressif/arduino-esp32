@@ -1,4 +1,4 @@
-######
+ation######
 Boards
 ######
 
@@ -74,7 +74,7 @@ Espressif
     ESP32-C3-DevKitM-1 <ESP32-C3-DevKitM-1>
 
 .. note:: 
-   Not all the boards are explained in this documnetation page, for more information take a look on [HW reference section](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/index.html) in ESP-IDF Programming Guide.
+   Just few boards are described in this documentation page, for more information about other Espressif boards please refer to [HW reference section](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/index.html) in ESP-IDF Programming Guide.
 
 Third Party
 -----------
