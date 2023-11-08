@@ -431,6 +431,19 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
 }
 
 /**
+ * Change DNS server for static IP configuration
+ * @param dns1       Static DNS server 1
+ * @param dns2       Static DNS server 2 (optional)
+ */
+bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL)
+        return false;
+    esp_err_t err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
+    return err == ESP_OK;
+}
+
+/**
  * is STA interface connected?
  * @return true if STA is connected to an AP
  */
