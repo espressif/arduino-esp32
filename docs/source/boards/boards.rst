@@ -73,6 +73,9 @@ Espressif
     ESP32-S2-Saola-1 <ESP32-S2-Saola-1>
     ESP32-C3-DevKitM-1 <ESP32-C3-DevKitM-1>
 
+.. note:: 
+   Not all the boards are explained in this documnetation page, for more information take a look on [HW reference section](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/index.html) in ESP-IDF Programming Guide.
+
 Third Party
 -----------
 
