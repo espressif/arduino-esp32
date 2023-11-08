@@ -22,6 +22,8 @@ The ESP32 is divided by family:
     * Wi-Fi only
 * ESP32-C
     * Wi-Fi and BLE 5
+* ESP32-H
+    * BLE and IEEE 802.15.4  
 
 For each family, we have SoC variants with some differentiation. The differences are more about the embedded flash and its size and the number of the cores (dual or single).
 
