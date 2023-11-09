@@ -184,6 +184,8 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
 
     bool retCode = true;
     if (rxPin >= 0) {
+        // forces a clean detaching from a previous peripheral
+        if (perimanGetPinBusType(rxPin) != ESP32_BUS_TYPE_INIT) perimanSetPinBus(rxPin, ESP32_BUS_TYPE_INIT, NULL);
         // connect RX Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         if (ret) {
@@ -196,6 +198,8 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         retCode &= ret;
     }
     if (txPin >= 0) {
+        // forces a clean detaching from a previous peripheral
+        if (perimanGetPinBusType(txPin) != ESP32_BUS_TYPE_INIT) perimanSetPinBus(txPin, ESP32_BUS_TYPE_INIT, NULL);
         // connect TX Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         if (ret) {
@@ -208,6 +212,8 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         retCode &= ret;
     }
     if (ctsPin >= 0) {
+        // forces a clean detaching from a previous peripheral
+        if (perimanGetPinBusType(ctsPin) != ESP32_BUS_TYPE_INIT) perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_INIT, NULL);
         // connect CTS Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
         if (ret) {
@@ -220,6 +226,8 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         retCode &= ret;
     }
     if (rtsPin >= 0) {
+        // forces a clean detaching from a previous peripheral
+        if (perimanGetPinBusType(rtsPin) != ESP32_BUS_TYPE_INIT) perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_INIT, NULL);
         // connect RTS Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
         if (ret) {
@@ -759,12 +767,14 @@ int log_printfv(const char *format, va_list arg)
             return 0;
         }
     }
+/*
+// This causes dead locks with logging in specific cases and also with C++ constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY);
     }
 #endif
-    
+*/
 #if CONFIG_IDF_TARGET_ESP32C3
     vsnprintf(temp, len+1, format, arg);
     ets_printf("%s", temp);
@@ -774,15 +784,19 @@ int log_printfv(const char *format, va_list arg)
         ets_write_char_uart(temp[i]);
     }
 #endif
-
+/*
+// This causes dead locks with logging and also with constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
     }
 #endif
+*/
     if(len >= sizeof(loc_buf)){
         free(temp);
     }
+    // flushes TX - make sure that the log message is completely sent.
+    if(s_uart_debug_nr != -1) while(!uart_ll_is_tx_idle(UART_LL_GET_HW(s_uart_debug_nr)));
     return len;
 }
 
