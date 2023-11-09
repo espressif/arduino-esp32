@@ -671,7 +671,7 @@ static bool _init_bt(const char *deviceName)
     }
 
     if(!_spp_task_handle){
-        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, 10, &_spp_task_handle, 0);
+        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, configMAX_PRIORITIES-1, &_spp_task_handle, 0);
         if(!_spp_task_handle){
             log_e("Network Event Task Start Failed!");
             return false;
