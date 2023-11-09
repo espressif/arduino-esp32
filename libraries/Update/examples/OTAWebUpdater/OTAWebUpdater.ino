@@ -5,7 +5,7 @@
 #include <Ticker.h>
 #include "html.h"
 
-#define SSID_FORMAT "ESP32-%06X"   // 12 chars total
+#define SSID_FORMAT "ESP32-%06lX"   // 12 chars total
 //#define PASSWORD "test123456"    // generate if remarked
 
 WebServer server(80);
@@ -21,16 +21,16 @@ String generatePass(uint8_t str_len) {
 }
 
 void apMode() {
-  WiFi.mode(WIFI_AP);
   char ssid[13];
   char passwd[11];
-  uint32_t espmac = ESP.getEfuseMac() >> 24; 
+  long unsigned int espmac = ESP.getEfuseMac() >> 24; 
   snprintf(ssid, 13, SSID_FORMAT, espmac);
 #ifdef PASSWORD
   snprintf(passwd, 11, PASSWORD);
 #else
-  snprintf(passwd, 11, "%s", generatePass(10).c_str());
+  snprintf(passwd, 11, generatePass(10).c_str());
 #endif   
+  WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, passwd); // Set up the SoftAP
   MDNS.begin("esp32");
   Serial.printf("AP: %s, PASS: %s\n", ssid, passwd);
@@ -82,7 +82,7 @@ void webServerInit() {
   });
   server.onNotFound([]() {server.send(200, "text/html", indexHtml);});
   server.begin();
-  Serial.printf("Web Server ready at http://esp32.local or http://%s\n", WiFi.softAPIP().toString());
+  Serial.printf("Web Server ready at http://esp32.local or http://%s\n", WiFi.softAPIP().toString().c_str());
 }
 
 void everySecond() {
