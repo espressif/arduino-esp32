@@ -4,7 +4,6 @@
       "name": "esp32",
       "fqbn":[
         "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio",
-        "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dout",
         "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=qio"
       ]
     },

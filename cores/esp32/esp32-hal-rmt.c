@@ -513,6 +513,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     tx_cfg.flags.with_dma = 0;
     tx_cfg.flags.io_loop_back = 0;
     tx_cfg.flags.io_od_mode = 0;
+    tx_cfg.intr_priority = 0;
 
     if (rmt_new_tx_channel(&tx_cfg, &bus->rmt_channel_h) != ESP_OK) {
       log_e("GPIO %d - RMT TX Initialization error.", pin);
