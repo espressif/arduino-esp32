@@ -74,7 +74,7 @@ Espressif
     ESP32-C3-DevKitM-1 <ESP32-C3-DevKitM-1>
 
 .. note:: 
-   Only a few development boards are described on this documentation page. For more information about other Espressif development boards please refer to the [Espressif website](https://www.espressif.com/en/products/devkits).
+   Only a few development boards are described on this documentation page. For more information about other Espressif development boards please refer to the `Espressif website <https://www.espressif.com/en/products/devkits>`_.
 
 Third Party
 -----------
