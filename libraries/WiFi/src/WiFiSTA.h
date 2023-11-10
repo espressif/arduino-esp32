@@ -57,6 +57,7 @@ public:
     wl_status_t begin();
 
     bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
+    bool setDNS(IPAddress dns1, IPAddress dns2 = (uint32_t)0x00000000);  // sets DNS IP for all network interfaces
 
     bool reconnect();
     bool disconnect(bool wifioff = false, bool eraseap = false);
@@ -99,7 +100,7 @@ public:
     String SSID() const;
     String psk() const;
 
-    uint8_t * BSSID();
+    uint8_t * BSSID(uint8_t* bssid = NULL);
     String BSSIDstr();
 
     int8_t RSSI();

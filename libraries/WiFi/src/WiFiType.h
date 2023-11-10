@@ -42,6 +42,7 @@
 
 typedef enum {
     WL_NO_SHIELD        = 255,   // for compatibility with WiFi Shield library
+    WL_STOPPED          = 254,
     WL_IDLE_STATUS      = 0,
     WL_NO_SSID_AVAIL    = 1,
     WL_SCAN_COMPLETED   = 2,
