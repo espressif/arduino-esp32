@@ -25,7 +25,7 @@ files:
     - "**/*"
 dependencies:
   idf: ">=5.1"
-  mdns: "^1.1.0"
+  mdns: "1.2.1"
   chmorgan/esp-libhelix-mp3:
     version: "1.0.3"
     require: public
