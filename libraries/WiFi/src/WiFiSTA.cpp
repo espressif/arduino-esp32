@@ -717,14 +717,23 @@ String WiFiSTAClass::psk() const
  * Return the current bssid / mac associated with the network if configured
  * @return bssid uint8_t *
  */
-uint8_t* WiFiSTAClass::BSSID(void)
+uint8_t* WiFiSTAClass::BSSID(uint8_t* buff)
 {
     static uint8_t bssid[6];
     wifi_ap_record_t info;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return NULL;
     }
-    if(!esp_wifi_sta_get_ap_info(&info)) {
+    esp_err_t err = esp_wifi_sta_get_ap_info(&info);
+    if (buff != NULL) {
+        if(err) {
+          memset(buff, 0, 6);
+        } else {
+          memcpy(buff, info.bssid, 6);
+        }
+        return  buff;
+    }
+    if(!err) {
         memcpy(bssid, info.bssid, 6);
         return reinterpret_cast<uint8_t*>(bssid);
     }
