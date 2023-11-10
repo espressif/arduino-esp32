@@ -29,6 +29,8 @@ class ESP_Network_Interface {
         const char * getHostname();
         bool setHostname(const char * hostname);
 
+        virtual bool started() = 0;
+        virtual bool connected() = 0;
         bool linkUp();
         bool hasIP();
         const char * ifkey();

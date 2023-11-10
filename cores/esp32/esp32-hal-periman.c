@@ -67,6 +67,9 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
 #if SOC_USB_SERIAL_JTAG_SUPPORTED || SOC_USB_OTG_SUPPORTED
 		case ESP32_BUS_TYPE_USB: return "USB";
 #endif
+#if SOC_GPSPI_SUPPORTED || SOC_EMAC_SUPPORTED
+		case ESP32_BUS_TYPE_ETHERNET: return "ETHERNET";
+#endif
 		default: return "UNKNOWN";
     }
 }

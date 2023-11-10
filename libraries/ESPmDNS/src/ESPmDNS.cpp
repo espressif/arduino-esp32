@@ -50,6 +50,25 @@ License (MIT license):
 #define STR(tok) tok
 #endif
 
+// static void addInterface(ESP_Network_Interface * iface){
+// #if defined(CONFIG_MDNS_ADD_CUSTOM_NETIF) && !defined(CONFIG_MDNS_PREDEF_NETIF_STA) && !defined(CONFIG_MDNS_PREDEF_NETIF_ETH)
+//     /* Demonstration of adding a custom netif to mdns service, but we're adding the default example one,
+//      * so we must disable all predefined interfaces (PREDEF_NETIF_STA, AP and ETH) first
+//      */
+//     ESP_ERROR_CHECK(mdns_register_netif(iface->netif()));
+//     /* It is not enough to just register the interface, we have to enable is manually.
+//      * This is typically performed in "GOT_IP" event handler, but we call it here directly
+//      * since the `EXAMPLE_INTERFACE` netif is connected already, to keep the example simple.
+//      */
+//     ESP_ERROR_CHECK(mdns_netif_action(iface->netif(), MDNS_EVENT_ENABLE_IP4 | MDNS_EVENT_ENABLE_IP6));
+//     ESP_ERROR_CHECK(mdns_netif_action(iface->netif(), MDNS_EVENT_ANNOUNCE_IP4 | MDNS_EVENT_ANNOUNCE_IP6));
+
+// #if defined(CONFIG_MDNS_RESPOND_REVERSE_QUERIES)
+//     ESP_ERROR_CHECK(mdns_netif_action(iface->netif(), MDNS_EVENT_IP4_REVERSE_LOOKUP | MDNS_EVENT_IP6_REVERSE_LOOKUP));
+// #endif
+// #endif // CONFIG_MDNS_ADD_CUSTOM_NETIF
+// }
+
 // static void _on_sys_event(arduino_event_t *event){
 //     mdns_handle_system_event(NULL, event);
 // }
