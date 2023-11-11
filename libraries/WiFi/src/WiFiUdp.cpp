@@ -204,6 +204,11 @@ size_t WiFiUDP::write(const uint8_t *buffer, size_t size){
   return i;
 }
 
+void WiFiUDP::flush()
+{
+
+}
+
 int WiFiUDP::parsePacket(){
   if(rx_buffer)
     return 0;
@@ -267,7 +272,7 @@ int WiFiUDP::peek(){
   return rx_buffer->peek();
 }
 
-void WiFiUDP::flush(){
+void WiFiUDP::clear(){
   if(!rx_buffer) return;
   cbuf *b = rx_buffer;
   rx_buffer = 0;

@@ -50,7 +50,7 @@ void wifiConnectedLoop(){
     if(packetLength >= NTP_PACKET_SIZE){
       ntpClient.read(ntpPacketBuffer, NTP_PACKET_SIZE);
     }
-    ntpClient.flush();
+    ntpClient.clear();
     uint32_t secsSince1900 = (uint32_t)ntpPacketBuffer[40] << 24 | (uint32_t)ntpPacketBuffer[41] << 16 | (uint32_t)ntpPacketBuffer[42] << 8 | ntpPacketBuffer[43];
     //Serial.printf("Seconds since Jan 1 1900: %u\n", secsSince1900);
     uint32_t epoch = secsSince1900 - 2208988800UL;
