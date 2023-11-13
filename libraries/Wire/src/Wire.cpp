@@ -53,9 +53,11 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,nonStopTask(NULL)
     ,lock(NULL)
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
     ,is_slave(false)
     ,user_onRequest(NULL)
     ,user_onReceive(NULL)
+#endif
 {}
 
 TwoWire::~TwoWire()
@@ -338,10 +340,12 @@ bool TwoWire::end()
         }
 #endif
         if(is_slave){
+#if SOC_I2C_SUPPORT_SLAVE
             err = i2cSlaveDeinit(num);
             if(err == ESP_OK){
                 is_slave = false;
             }
+#endif
         } else if(i2cIsInit(num)){
             err = i2cDeinit(num);
         }

@@ -48,6 +48,9 @@ extern "C" {
 #include "esp32s3/rom/spi_flash.h"
 #include "soc/efuse_reg.h"
 #define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32s3 is located at 0x0000
+#elif CONFIG_IDF_TARGET_ESP32C2
+#include "esp32c2/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32c2 is located at 0x0000
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/spi_flash.h"
 #define ESP_FLASH_IMAGE_BASE 0x0000     // Esp32c3 is located at 0x0000
@@ -366,7 +369,7 @@ FlashMode_t EspClass::getFlashChipMode(void)
    #if CONFIG_IDF_TARGET_ESP32S2
    uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
    #else
-   #if CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6
+   #if CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
    uint32_t spi_ctrl = REG_READ(DR_REG_SPI0_BASE + 0x8);
    #else
    uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
@@ -391,36 +394,106 @@ FlashMode_t EspClass::getFlashChipMode(void)
 
 uint32_t EspClass::magicFlashChipSize(uint8_t byte)
 {
+/*
+    FLASH_SIZES = {
+        "1MB": 0x00,
+        "2MB": 0x10,
+        "4MB": 0x20,
+        "8MB": 0x30,
+        "16MB": 0x40,
+        "32MB": 0x50,
+        "64MB": 0x60,
+        "128MB": 0x70,
+    }
+*/
     switch(byte & 0x0F) {
-    case 0x0: // 8 MBit (1MB)
-        return (1_MB);
-    case 0x1: // 16 MBit (2MB)
-        return (2_MB);
-    case 0x2: // 32 MBit (4MB)
-        return (4_MB);
-    case 0x3: // 64 MBit (8MB)
-        return (8_MB);
-    case 0x4: // 128 MBit (16MB)
-        return (16_MB);
-    default: // fail?
+      case 0x0: return (1_MB);   // 8 MBit (1MB)
+      case 0x1: return (2_MB);   // 16 MBit (2MB)
+      case 0x2: return (4_MB);   // 32 MBit (4MB)
+      case 0x3: return (8_MB);   // 64 MBit (8MB)
+      case 0x4: return (16_MB);  // 128 MBit (16MB)
+      case 0x5: return (32_MB);  // 256 MBit (32MB)
+      case 0x6: return (64_MB);  // 512 MBit (64MB)
+      case 0x7: return (128_MB); // 1 GBit (128MB)
+      default: // fail?
         return 0;
     }
 }
 
 uint32_t EspClass::magicFlashChipSpeed(uint8_t byte)
 {
+#if CONFIG_IDF_TARGET_ESP32C2
+/*
+    FLASH_FREQUENCY = {
+        "60m": 0xF,
+        "30m": 0x0,
+        "20m": 0x1,
+        "15m": 0x2,
+    }
+*/
     switch(byte & 0x0F) {
-    case 0x0: // 40 MHz
-        return (40_MHz);
-    case 0x1: // 26 MHz
-        return (26_MHz);
-    case 0x2: // 20 MHz
-        return (20_MHz);
-    case 0xf: // 80 MHz
-        return (80_MHz);
-    default: // fail?
+      case 0xF: return (60_MHz);
+      case 0x0: return (30_MHz);
+      case 0x1: return (20_MHz);
+      case 0x2: return (15_MHz);
+      default: // fail?
         return 0;
     }
+
+
+#elif CONFIG_IDF_TARGET_ESP32C6
+/*
+   FLASH_FREQUENCY = {
+        "80m": 0x0,  # workaround for wrong mspi HS div value in ROM
+        "40m": 0x0,
+        "20m": 0x2,
+    }
+*/
+    switch(byte & 0x0F) {
+      case 0x0: return (80_MHz);
+      case 0x2: return (20_MHz);
+      default: // fail?
+        return 0;
+    }
+
+#elif CONFIG_IDF_TARGET_ESP32H2
+
+/*
+    FLASH_FREQUENCY = {
+        "48m": 0xF,
+        "24m": 0x0,
+        "16m": 0x1,
+        "12m": 0x2,
+    }
+*/
+    switch(byte & 0x0F) {
+      case 0xF: return (48_MHz);
+      case 0x0: return (24_MHz);
+      case 0x1: return (16_MHz);
+      case 0x2: return (12_MHz);
+      default: // fail?
+        return 0;
+    }
+
+
+#else
+/*
+    FLASH_FREQUENCY = {
+        "80m": 0xF,
+        "40m": 0x0,
+        "26m": 0x1,
+        "20m": 0x2,
+    }
+*/
+    switch(byte & 0x0F) {
+      case 0xF: return (80_MHz);
+      case 0x0: return (40_MHz);
+      case 0x1: return (26_MHz);
+      case 0x2: return (20_MHz);
+      default: // fail?
+        return 0;
+    }
+#endif
 }
 
 FlashMode_t EspClass::magicFlashChipMode(uint8_t byte)
