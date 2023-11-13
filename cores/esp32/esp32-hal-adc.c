@@ -21,6 +21,14 @@
 #include "esp_adc/adc_continuous.h"
 #include "esp_adc/adc_cali_scheme.h"
 
+// ESP32-C2 does not define those two for some reason
+#ifndef SOC_ADC_DIGI_RESULT_BYTES
+#define SOC_ADC_DIGI_RESULT_BYTES               (4)
+#endif
+#ifndef SOC_ADC_DIGI_DATA_BYTES_PER_CONV
+#define SOC_ADC_DIGI_DATA_BYTES_PER_CONV        (4)
+#endif
+
 static uint8_t __analogAttenuation = ADC_11db;
 static uint8_t __analogWidth = SOC_ADC_RTC_MAX_BITWIDTH; 
 static uint8_t __analogReturnedWidth = SOC_ADC_RTC_MAX_BITWIDTH;
