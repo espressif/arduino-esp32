@@ -38,5 +38,6 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
   }
   rmtWrite(pin, led_data, RMT_SYMBOLS_OF(led_data), RMT_WAIT_FOR_EVER);
 }
-
+#else
+log_e("No RMT supported");
 #endif /* SOC_RMT_SUPPORTED */
