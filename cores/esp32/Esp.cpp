@@ -496,6 +496,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte)
 #endif
 }
 
+
 FlashMode_t EspClass::magicFlashChipMode(uint8_t byte)
 {
     FlashMode_t mode = (FlashMode_t) byte;
