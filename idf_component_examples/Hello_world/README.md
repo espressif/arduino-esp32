@@ -12,7 +12,7 @@ To create a ESP-IDF project from this example with the latest relase of Arduino-
 ESP-IDF will download all dependencies needed from the component registry and setup the project for you.
 
 If you want to use cloned Arduino-esp32 repository, you can build this example directly.
-Go to the `arduino-esp32/idf_component_examples/Hello_world` folder and run command: `idf.py build`.
+Go to the example folder `arduino-esp32/idf_component_examples/Hello_world` and run command: `idf.py build`.
 
 ## Example folder contents
 
@@ -35,11 +35,25 @@ Below is short explanation of remaining files in the project folder.
 ## How to add Arduino libraries
 
 In the project create folder `components/` and clone the library there.
-In the library folder create new CMakeLists.txt file an
+In the library folder create new CMakeLists.txt file, add lines shown below to the file and edit the SRCS to match the library source files.
 
-idf_component_register(SRCS "new_library.cpp" "another_source.c"
+```
+idf_component_register(SRCS "user_library.cpp" "another_source.c"
                       INCLUDE_DIRS "."
                       REQUIRES arduino-esp32
                       )
+```
 
-For more informations check [Documentation - Adding arduino library](https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/esp-idf_component.html#adding-arduino-library)
+Below is structure of the project folder with the Arduino libraries.
+
+```
+├── CMakeLists.txt
+├── components
+│   ├── user_library
+│   │   ├── CMakeLists.txt     This needs to be added
+│   │   ├── ...
+├── main
+│   ├── CMakeLists.txt
+│   └── main.cpp
+└── README.md                  This is the file you are currently reading
+```
