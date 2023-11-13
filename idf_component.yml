@@ -39,4 +39,6 @@ dependencies:
     version: "^1.4.2"
     rules:
       - if: "target in [esp32s3]"
+examples:
+  - path: ../idf_component_examples/
 
