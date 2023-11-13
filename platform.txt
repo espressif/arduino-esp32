@@ -80,7 +80,7 @@ compiler.libraries.ldflags=
 build.extra_flags.esp32=-DARDUINO_USB_CDC_ON_BOOT=0
 build.extra_flags.esp32s3=-DARDUINO_USB_MODE={build.usb_mode} -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
 build.extra_flags.esp32s2=-DARDUINO_USB_MODE=0 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
-build.extra_flags.esp32c2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
+build.extra_flags.esp32c2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT=0
 build.extra_flags.esp32c3=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
@@ -108,7 +108,6 @@ build.copy_jtag_files=0
 build.openocdscript.esp32=esp32-wrover-kit-3.3v.cfg
 build.openocdscript.esp32s2=esp32s2-kaluga-1.cfg
 build.openocdscript.esp32s3=esp32s3-builtin.cfg
-build.openocdscript.esp32c2=esp32c2-builtin.cfg
 build.openocdscript.esp32c3=esp32c3-builtin.cfg
 build.openocdscript.esp32c6=esp32c6-builtin.cfg
 build.openocdscript.esp32c6=esp32h2-builtin.cfg
