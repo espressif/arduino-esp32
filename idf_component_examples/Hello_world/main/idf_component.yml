@@ -3,4 +3,3 @@ dependencies:
   espressif/arduino-esp32:
     version: '>=3.0.0-aplha2'
     override_path: '../../../'
-  idf: ">=5.1"
