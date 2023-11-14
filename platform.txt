@@ -86,6 +86,8 @@ build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.
 build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 
 # This can be overriden in boards.txt
+build.zigbee_mode=
+build.zigbee_libs=
 build.flash_size=4MB
 build.flash_mode=dio
 build.flash_freq=80m
