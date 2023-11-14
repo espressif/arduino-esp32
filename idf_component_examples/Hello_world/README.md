@@ -12,7 +12,9 @@ To create a ESP-IDF project from this example with the latest relase of Arduino-
 ESP-IDF will download all dependencies needed from the component registry and setup the project for you.
 
 If you want to use cloned Arduino-esp32 repository, you can build this example directly.
-Go to the example folder `arduino-esp32/idf_component_examples/Hello_world` and run command: `idf.py build`.
+Go to the example folder `arduino-esp32/idf_component_examples/Hello_world`.
+First you need to comment line 6 `pre_release: true` in examples `/main/idf_component.yml`.
+Then just run command: `idf.py build`.
 
 ## Example folder contents
 
@@ -28,6 +30,7 @@ Below is short explanation of remaining files in the project folder.
 ├── CMakeLists.txt
 ├── main
 │   ├── CMakeLists.txt
+│   ├── idf_component.yml
 │   └── main.cpp
 └── README.md                  This is the file you are currently reading
 ```
@@ -54,6 +57,7 @@ Below is structure of the project folder with the Arduino libraries.
 │   │   ├── ...
 ├── main
 │   ├── CMakeLists.txt
+│   ├── idf_component.yml
 │   └── main.cpp
 └── README.md                  This is the file you are currently reading
 ```
