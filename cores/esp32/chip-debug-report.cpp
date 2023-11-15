@@ -252,7 +252,7 @@ static void printPerimanInfo(void){
     }
     const char* extra_type = perimanGetPinBusExtraType(i);
     chip_report_printf("  %17u : ", i);
-    if(extra_type =! NULL){
+    if(extra_type){
       chip_report_printf("%s\n", extra_type);
     }
     else {
