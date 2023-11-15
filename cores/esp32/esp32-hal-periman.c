@@ -10,6 +10,7 @@
 
 typedef struct {
 	peripheral_bus_type_t type;
+	const char* extra_type;
 	void * bus;
 } peripheral_pin_item_t;
 
@@ -145,7 +146,22 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
 	}
 	pins[pin].type = type;
 	pins[pin].bus = bus;
+	pins[pin].extra_type = NULL;
 	log_v("Pin %u successfully set to type %s (%u) with bus %p", pin, perimanGetTypeName(type), (unsigned int)type, bus);
+	return true;
+}
+
+bool perimanSetPinBusExtraType(uint8_t pin, const char* extra_type){
+	if(GPIO_NOT_VALID(pin)){
+		log_e("Invalid pin: %u", pin);
+		return false;
+	}
+	if (pins[pin].type == ESP32_BUS_TYPE_INIT) {
+		log_e("Can't set extra type for Bus INIT Type (pin %u)", pin);
+		return false;
+	}
+	pins[pin].extra_type = extra_type;
+	log_v("Successfully set extra_type %s for pin %u", extra_type, pin);
 	return true;
 }
 
@@ -170,6 +186,14 @@ peripheral_bus_type_t perimanGetPinBusType(uint8_t pin){
 		return ESP32_BUS_TYPE_MAX;
 	}
 	return pins[pin].type;
+}
+
+const char* perimanGetPinBusExtraType(uint8_t pin){
+	if(GPIO_NOT_VALID(pin)){
+		log_e("Invalid pin: %u", pin);
+		return NULL;
+	}
+	return pins[pin].extra_type;
 }
 
 bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t cb){

@@ -122,6 +122,12 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
 // Check if given pin is a valid GPIO number 
 bool perimanPinIsValid(uint8_t pin);
 
+// Sets extratype for non Init bus
+bool perimanSetPinBusExtraType(uint8_t pin, const char* extra_type);
+
+// Returns the extra tyoe of the bus for given pin if set. NULL otherwise
+const char* perimanGetPinBusExtraType(uint8_t pin);
+
 #ifdef __cplusplus
 }
 #endif
