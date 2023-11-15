@@ -250,7 +250,7 @@ static void printPerimanInfo(void){
     if(type == ESP32_BUS_TYPE_INIT){
       continue;//unused pin
     }
-    const char* extra_type = perimanGetExtraType(i);
+    const char* extra_type = perimanGetPinBusExtraType(i);
     chip_report_printf("  %17u : ", i);
     if(extra_type =! NULL){
       chip_report_printf("%s\n", extra_type);
