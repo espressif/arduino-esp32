@@ -217,9 +217,7 @@
 
   // TypeC controller
   #define TUP_USBIP_TYPEC_STM32
-
   #define TUP_DCD_ENDPOINT_MAX    8
-
   #define TUP_TYPEC_RHPORTS_NUM 1
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32G0)
@@ -261,13 +259,20 @@
 #elif TU_CHECK_MCU(OPT_MCU_STM32U5)
   #define TUP_USBIP_DWC2
   #define TUP_USBIP_DWC2_STM32
-  #define TUP_DCD_ENDPOINT_MAX    6
+
+  // U59x/5Ax/5Fx/5Gx are highspeed with built-in HS PHY
+  #if defined(STM32U595xx) || defined(STM32U599xx) || defined(STM32U5A5xx) || defined(STM32U5A9xx) || \
+      defined(STM32U5F7xx) || defined(STM32U5F9xx) || defined(STM32U5G7xx) || defined(STM32U5G9xx)
+    #define TUP_DCD_ENDPOINT_MAX  9
+    #define TUP_RHPORT_HIGHSPEED  1
+  #else
+    #define TUP_DCD_ENDPOINT_MAX  6
+  #endif
 
 #elif TU_CHECK_MCU(OPT_MCU_STM32L5)
   #define TUP_USBIP_FSDEV
   #define TUP_USBIP_FSDEV_STM32
   #define TUP_DCD_ENDPOINT_MAX    8
-
 
 //--------------------------------------------------------------------+
 // Sony

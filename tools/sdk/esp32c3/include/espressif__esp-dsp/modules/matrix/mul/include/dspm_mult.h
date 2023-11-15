@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2018-2023 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -132,6 +132,32 @@ esp_err_t dspm_mult_s16_ae32(const int16_t *A, const int16_t *B, int16_t *C, int
 esp_err_t dspm_mult_s16_aes3(const int16_t *A, const int16_t *B, int16_t *C, int m, int n, int k, int shift);
 /**@}*/
 
+/**@{*/
+/**
+ * @brief   Matrix subset multiplication
+ *
+ * One or all of the matrices are matrix subsets, described with pointers and strides
+ * Matrix multiplication for two floating point matrices: C[m][k] = A[m][n] * B[n][k]
+ * The extension (_ansi) use ANSI C and could be compiled and run on any platform.
+ * The extension (_ae32) is optimized for ESP32 chip.
+ *
+ * @param[in]  A  input matrix A[m][n]
+ * @param[in]  B  input matrix B[n][k]
+ * @param[out] C  result matrix C[m][k]
+ * @param[in]  m  matrix dimension
+ * @param[in]  n  matrix dimension
+ * @param[in]  k  matrix dimension
+ * @param[in]  A_padd  input matrix A padding
+ * @param[in]  B_padd  input matrix B padding
+ * @param[in]  C_padd  result matrix C padding
+ * @return
+ *      - ESP_OK on success
+ *      - One of the error codes from DSP library
+ */
+esp_err_t dspm_mult_ex_f32_ansi(const float *A, const float *B, float *C, int m, int n, int k, int A_padd, int B_padd, int C_padd);
+esp_err_t dspm_mult_ex_f32_ae32(const float *A, const float *B, float *C, int m, int n, int k, int A_padd, int B_padd, int C_padd);
+esp_err_t dspm_mult_ex_f32_aes3(const float *A, const float *B, float *C, int m, int n, int k, int A_padd, int B_padd, int C_padd);
+
 #ifdef __cplusplus
 }
 #endif
@@ -149,10 +175,13 @@ esp_err_t dspm_mult_s16_aes3(const int16_t *A, const int16_t *B, int16_t *C, int
 
     #if (dspm_mult_f32_aes3_enabled == 1)
         #define dspm_mult_f32 dspm_mult_f32_aes3
+        #define dspm_mult_ex_f32 dspm_mult_ex_f32_aes3
     #elif (dspm_mult_f32_ae32_enabled == 1)
         #define dspm_mult_f32 dspm_mult_f32_ae32
+        #define dspm_mult_ex_f32 dspm_mult_ex_f32_ae32
     #else
         #define dspm_mult_f32 dspm_mult_f32_ansi
+        #define dspm_mult_ex_f32 dspm_mult_ex_f32_ansi
     #endif
 
     #if (dspm_mult_3x3x1_f32_ae32_enabled == 1)
@@ -186,6 +215,7 @@ esp_err_t dspm_mult_s16_aes3(const int16_t *A, const int16_t *B, int16_t *C, int
     #define dsps_sub_f32 dsps_sub_f32_ansi
     #define dsps_add_f32 dsps_add_f32_ansi
     #define dspm_mult_4x4x4_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 4, 4, 4)
+    #define dspm_mult_ex_f32 dspm_mult_ex_f32_ansi
 #endif // CONFIG_DSP_OPTIMIZED
 
 
