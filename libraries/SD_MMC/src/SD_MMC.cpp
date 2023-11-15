@@ -107,8 +107,14 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     if(_card) {
         return true;
     }
-    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC, SDMMCFS::sdmmcDetachBus);
-
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_CLK, SDMMCFS::sdmmcDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_CMD, SDMMCFS::sdmmcDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_D0, SDMMCFS::sdmmcDetachBus);
+    if(!mode1bit) {
+        perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_D1, SDMMCFS::sdmmcDetachBus);
+        perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_D2, SDMMCFS::sdmmcDetachBus);
+        perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_D3, SDMMCFS::sdmmcDetachBus);
+    }
     //mount
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
@@ -174,13 +180,13 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     }
     _impl->mountpoint(mountpoint);
 
-    if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC_CMD, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_SDMMC_CLK, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_SDMMC_D0, (void *)(this))){ goto err; }
     if(!mode1bit) {
-        if(!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
-        if(!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
-        if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_SDMMC_D1, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_SDMMC_D2, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_SDMMC_D3, (void *)(this))){ goto err; }
     }
     return true;
 

@@ -83,10 +83,10 @@ static void configure_pins(usb_hal_context_t *usb)
     if (!usb->use_external_phy) {
         gpio_set_drive_capability(USBPHY_DM_NUM, GPIO_DRIVE_CAP_3);
         gpio_set_drive_capability(USBPHY_DP_NUM, GPIO_DRIVE_CAP_3);
-        if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB, usb_otg_deinit)) {
+        if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, usb_otg_deinit) && perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, usb_otg_deinit)){
             // Bus Pointer is not used anyway - once the USB GPIOs are assigned, they can't be detached
-            perimanSetPinBus(USBPHY_DM_NUM, ESP32_BUS_TYPE_USB, (void *) usb);
-            perimanSetPinBus(USBPHY_DP_NUM, ESP32_BUS_TYPE_USB, (void *) usb);
+            perimanSetPinBus(USBPHY_DM_NUM, ESP32_BUS_TYPE_USB_DM, (void *) usb);
+            perimanSetPinBus(USBPHY_DP_NUM, ESP32_BUS_TYPE_USB_DP, (void *) usb);
         } else {
             log_e("USB OTG Pins can't be set into Peripheral Manager.");
         }
