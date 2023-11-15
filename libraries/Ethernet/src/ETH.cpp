@@ -392,6 +392,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     if(_spi != NULL){
         pinMode(_pin_cs, OUTPUT);
         digitalWrite(_pin_cs, HIGH);
+        perimanSetPinBusExtraType(_pin_cs, "ETH_CS");
     }
 #endif
 
