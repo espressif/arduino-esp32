@@ -124,7 +124,8 @@ Sample code to check SDK WPA3 support at compile time:
     #endif
 
 Serial not printing
--------------------
+*******************
+
 I have uploaded firmware to the ESP32 device, but I don't see any response from a Serial.print (HardwareSerial).
 
 Solution
