@@ -241,6 +241,7 @@ static void printBoardInfo(void){
 
 static void printPerimanInfo(void){
   chip_report_printf("GPIO Info:\n");
+  chip_report_printf("PIN number : BUS_TYPE[bus_num/unit][channel]\n");
   chip_report_printf("------------------------------------------\n");
   for(uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++){
     if(!perimanPinIsValid(i)){
@@ -253,11 +254,20 @@ static void printPerimanInfo(void){
     const char* extra_type = perimanGetPinBusExtraType(i);
     chip_report_printf("  %17u : ", i);
     if(extra_type){
-      chip_report_printf("%s\n", extra_type);
+      chip_report_printf("%s", extra_type);
     }
     else {
-      chip_report_printf("%s\n", perimanGetTypeName(type));
+      chip_report_printf("%s", perimanGetTypeName(type));
     }
+    int8_t bus_number = perimanGetPinBusNum(i);
+    if (bus_number != -1){
+      chip_report_printf("[%u]", bus_number);
+    }
+    int8_t bus_channel = perimanGetPinBusChannel(i);
+    if (bus_channel != -1){
+      chip_report_printf("[%u]", bus_channel);
+    }
+    chip_report_printf("\n");
   }
 }
 
