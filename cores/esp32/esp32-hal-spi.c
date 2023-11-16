@@ -206,13 +206,13 @@ bool spiAttachSCK(spi_t * spi, int8_t sck)
         return false;
     }
     void * bus = perimanGetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER_SCK);
-    if(bus != NULL && !perimanDetachPin(sck){
+    if(bus != NULL && !perimanDetachPin(sck)){
         return false;
     }
     pinMode(sck, OUTPUT);
     pinMatrixOutAttach(sck, SPI_CLK_IDX(spi->num), false, false);
     spi->sck = sck;
-    if(!perimanSetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER_SCK, (void *)(spi->num+1))){
+    if(!perimanSetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER_SCK, (void *)(spi->num+1), spi->num, -1)){
         spiDetachBus((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", sck);
         return false;
@@ -226,7 +226,7 @@ bool spiAttachMISO(spi_t * spi, int8_t miso)
         return false;
     }
     void * bus = perimanGetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER_MISO);
-    if(bus != NULL && !perimanDetachPin(miso){
+    if(bus != NULL && !perimanDetachPin(miso)){
         return false;
     }
     SPI_MUTEX_LOCK();
@@ -234,7 +234,7 @@ bool spiAttachMISO(spi_t * spi, int8_t miso)
     pinMatrixInAttach(miso, SPI_MISO_IDX(spi->num), false);
     spi->miso = miso;
     SPI_MUTEX_UNLOCK();
-    if(!perimanSetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER_MISO, (void *)(spi->num+1))){
+    if(!perimanSetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER_MISO, (void *)(spi->num+1), spi->num, -1)){
         spiDetachBus((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", miso);
         return false;
@@ -248,13 +248,13 @@ bool spiAttachMOSI(spi_t * spi, int8_t mosi)
         return false;
     }
     void * bus = perimanGetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER_MOSI);
-    if(bus != NULL && !perimanDetachPin(mosi){
+    if(bus != NULL && !perimanDetachPin(mosi)){
         return false;
     }
     pinMode(mosi, OUTPUT);
     pinMatrixOutAttach(mosi, SPI_MOSI_IDX(spi->num), false, false);
     spi->mosi = mosi;
-    if(!perimanSetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER_MOSI, (void *)(spi->num+1))){
+    if(!perimanSetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER_MOSI, (void *)(spi->num+1), spi->num, -1)){
         spiDetachBus((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", mosi);
         return false;
@@ -301,14 +301,14 @@ bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
         return false;
     }
     void * bus = perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS);
-    if(bus != NULL && !perimanDetachPin(ss){
+    if(bus != NULL && !perimanDetachPin(ss)){
         return false;
     }
     pinMode(ss, OUTPUT);
     pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, cs_num), false, false);
     spiEnableSSPins(spi, (1 << cs_num));
     spi->ss = ss;
-    if(!perimanSetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS, (void *)(spi->num+1))){
+    if(!perimanSetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS, (void *)(spi->num+1), spi->num, -1)){
         spiDetachBus((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", ss);
         return false;

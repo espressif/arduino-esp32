@@ -8,12 +8,12 @@
 #include "esp32-hal-periman.h"
 #include "esp_bit_defs.h"
 
-typedef struct  __atribute__ ((__packed__)) {
+typedef struct ATTR_PACKED {
 	peripheral_bus_type_t type;
 	const char* extra_type;
 	void * bus;
 	int8_t bus_num;
-	int8_t channel;
+	int8_t bus_channel;
 } peripheral_pin_item_t;
 
 static peripheral_bus_deinit_cb_t deinit_functions[ESP32_BUS_TYPE_MAX];

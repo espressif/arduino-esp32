@@ -222,8 +222,8 @@ void HWCDC::begin(unsigned long baud)
     }
     if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit) && perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit)) {
         // Setting USB D+ D- pins
-        perimanSetPinBus(USB_DM_GPIO_NUM, ESP32_BUS_TYPE_USB_DM, (void *) this);
-        perimanSetPinBus(USB_DP_GPIO_NUM, ESP32_BUS_TYPE_USB_DP, (void *) this);
+        perimanSetPinBus(USB_DM_GPIO_NUM, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1);
+        perimanSetPinBus(USB_DP_GPIO_NUM, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1);
     } else {
         log_e("Serial JTAG Pins can't be set into Peripheral Manager.");
     }

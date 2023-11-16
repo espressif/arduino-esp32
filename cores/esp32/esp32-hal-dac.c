@@ -44,7 +44,7 @@ bool __dacWrite(uint8_t pin, uint8_t value)
             log_e("dac_oneshot_new_channel failed with error: %d", err);
             return false;
         }
-        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT, (void *)bus)){
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT, (void *)bus, -1, channel)){
             dacDetachBus((void *)bus);
             return false;
         }

@@ -101,7 +101,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
     perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_MASTER_SDA, i2cDetachBus);
     perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_MASTER_SCL, i2cDetachBus);
 
-    if(!perimanDetachPin(sda) || !perimanDetachPin(scl){
+    if(!perimanDetachPin(sda) || !perimanDetachPin(scl)){
         return false;
     }
 
@@ -130,7 +130,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
             bus[i2c_num].sda = sda;
             //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2
             i2c_set_timeout((i2c_port_t)i2c_num, I2C_LL_MAX_TIMEOUT);
-            if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_MASTER_SDA, (void *)(i2c_num+1)) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_MASTER_SCL, (void *)(i2c_num+1))){
+            if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_MASTER_SDA, (void *)(i2c_num+1), i2c_num, -1) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_MASTER_SCL, (void *)(i2c_num+1), i2c_num, -1)){
                 i2cDetachBus((void *)(i2c_num+1));
                 return false;
             }

@@ -14,6 +14,8 @@ extern "C"
 #include <stdbool.h>
 #include <stddef.h>
 
+#define perimanDetachPin(p) perimanSetPinBus(p, ESP32_BUS_TYPE_INIT, NULL, -1, -1)
+
 typedef enum {
 	ESP32_BUS_TYPE_INIT, 		// IO has not been attached to a bus yet
 	ESP32_BUS_TYPE_GPIO, 		// IO is used as GPIO

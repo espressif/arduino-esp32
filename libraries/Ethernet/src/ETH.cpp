@@ -210,19 +210,19 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     }
     _eth_started = true;
 
-    if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET_MCD, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(_pin_mdio,  ESP32_BUS_TYPE_ETHERNET_MDIO, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET_MCD, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(_pin_mdio,  ESP32_BUS_TYPE_ETHERNET_MDIO, (void *)(this), -1, -1)){ goto err; }
 
-    if(!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_TX1,  ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_CRS_DV,  ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_TX1,  ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_CRS_DV,  ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
 
     if(_pin_power != -1){
-        if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)){ goto err; }
     }
     // holds a few milliseconds to let DHCP start and enter into a good state
     // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
@@ -579,23 +579,23 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 #if ETH_SPI_SUPPORTS_CUSTOM
     if(_spi == NULL){
 #endif
-        if(!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
 #if ETH_SPI_SUPPORTS_CUSTOM
     }
 #endif
-    if(!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
 
     if(_pin_sck != -1){
-        if(!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
     if(_pin_miso != -1){
-        if(!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
     if(_pin_mosi != -1){
-        if(!perimanSetPinBus(_pin_mosi,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_mosi,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
     if(_pin_rst != -1){
-        if(!perimanSetPinBus(_pin_rst,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_rst,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
 
     return true;
