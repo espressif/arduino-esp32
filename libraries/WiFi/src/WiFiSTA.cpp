@@ -123,7 +123,7 @@ wifi_auth_mode_t WiFiSTAClass::_minSecurity = WIFI_AUTH_WPA2_PSK;
 wifi_scan_method_t WiFiSTAClass::_scanMethod = WIFI_FAST_SCAN;
 wifi_sort_method_t WiFiSTAClass::_sortMethod = WIFI_CONNECT_AP_BY_SIGNAL;
 
-static wl_status_t _sta_status = WL_NO_SHIELD;
+static wl_status_t _sta_status = WL_STOPPED;
 static EventGroupHandle_t _sta_status_group = NULL;
 
 void WiFiSTAClass::_setStatus(wl_status_t status)
@@ -373,6 +373,7 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
     wifi_sta_config(&conf);
 
     if(WiFi.getMode() & WIFI_MODE_STA){
+        _useStaticIp = false;
         if(eraseap){
             if(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf)){
                 log_e("clear config failed!");
@@ -427,6 +428,19 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
     	err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
     }
     _useStaticIp = err == ESP_OK;
+    return err == ESP_OK;
+}
+
+/**
+ * Change DNS server for static IP configuration
+ * @param dns1       Static DNS server 1
+ * @param dns2       Static DNS server 2 (optional)
+ */
+bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL)
+        return false;
+    esp_err_t err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
     return err == ESP_OK;
 }
 
@@ -716,14 +730,23 @@ String WiFiSTAClass::psk() const
  * Return the current bssid / mac associated with the network if configured
  * @return bssid uint8_t *
  */
-uint8_t* WiFiSTAClass::BSSID(void)
+uint8_t* WiFiSTAClass::BSSID(uint8_t* buff)
 {
     static uint8_t bssid[6];
     wifi_ap_record_t info;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return NULL;
     }
-    if(!esp_wifi_sta_get_ap_info(&info)) {
+    esp_err_t err = esp_wifi_sta_get_ap_info(&info);
+    if (buff != NULL) {
+        if(err) {
+          memset(buff, 0, 6);
+        } else {
+          memcpy(buff, info.bssid, 6);
+        }
+        return  buff;
+    }
+    if(!err) {
         memcpy(bssid, info.bssid, 6);
         return reinterpret_cast<uint8_t*>(bssid);
     }
