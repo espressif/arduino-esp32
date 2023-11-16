@@ -91,10 +91,10 @@ typedef enum {
 	ESP32_BUS_TYPE_USB_DP, 		// IO is used as USB DP (-) pin
 #endif
 #if SOC_GPSPI_SUPPORTED
-	ESP32_BUS_TYPE_ETHERNET_SPI,	// IO is used as dedicated ETHERNET-RMII pin
+	ESP32_BUS_TYPE_ETHERNET_SPI,	// IO is used as ETHERNET SPI pin
 #endif
 #if CONFIG_ETH_USE_ESP32_EMAC
-	ESP32_BUS_TYPE_ETHERNET_RMII,	// IO is used as dedicated ETHERNET-RMII pin
+	ESP32_BUS_TYPE_ETHERNET_RMII,	// IO is used as ETHERNET RMII pin
 	ESP32_BUS_TYPE_ETHERNET_CLK,	// IO is used as ETHERNET CLK pin
 	ESP32_BUS_TYPE_ETHERNET_MCD,	// IO is used as ETHERNET MCD pin
 	ESP32_BUS_TYPE_ETHERNET_MDIO,	// IO is used as ETHERNET MDIO pin
@@ -107,14 +107,20 @@ typedef bool (*peripheral_bus_deinit_cb_t)(void * bus);
 
 const char* perimanGetTypeName(peripheral_bus_type_t type);
 
-// Sets the bus type and bus handle for given pin.
-bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus);
+// Sets the bus type, bus handle, bus number and bus channel for given pin.
+bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus, int8_t bus_num, int8_t bus_channel);
 
 // Returns handle of the bus for the given pin if type of bus matches. NULL otherwise
 void * perimanGetPinBus(uint8_t pin, peripheral_bus_type_t type);
 
 // Returns the type of the bus for the given pin if attached. ESP32_BUS_TYPE_MAX otherwise
 peripheral_bus_type_t perimanGetPinBusType(uint8_t pin);
+
+// Returns the bus number or unit of the bus for the given pin if set. -1 otherwise
+int8_t perimanGetPinBusNum(uint8_t pin);
+
+// Returns the bus channel of the bus for the given pin if set. -1 otherwise
+int8_t perimanGetPinBusChannel(uint8_t pin);
 
 // Sets the peripheral destructor callback. Used to destroy bus when pin is assigned another function
 bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t cb);

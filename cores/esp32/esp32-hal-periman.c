@@ -8,16 +8,19 @@
 #include "esp32-hal-periman.h"
 #include "esp_bit_defs.h"
 
-typedef struct {
+typedef struct  __atribute__ ((__packed__)) {
 	peripheral_bus_type_t type;
 	const char* extra_type;
 	void * bus;
+	int8_t bus_num;
+	int8_t channel;
 } peripheral_pin_item_t;
 
 static peripheral_bus_deinit_cb_t deinit_functions[ESP32_BUS_TYPE_MAX];
 static peripheral_pin_item_t pins[SOC_GPIO_PIN_COUNT];
 
 #define GPIO_NOT_VALID(p) ((p >= SOC_GPIO_PIN_COUNT) || ((SOC_GPIO_VALID_GPIO_MASK & (1ULL << p)) == 0))
+#define perimanDetachPin(p) perimanSetPinBus(p, ESP32_BUS_TYPE_INIT, NULL, -1, -1)
 
 const char* perimanGetTypeName(peripheral_bus_type_t type) {
 	switch(type) {
@@ -107,7 +110,7 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
     }
 }
 
-bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
+bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus, int8_t bus_num, int8_t bus_channel){
 	peripheral_bus_type_t otype = ESP32_BUS_TYPE_INIT;
 	void * obus = NULL;
 	if(GPIO_NOT_VALID(pin)){
@@ -146,6 +149,8 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void * bus){
 	}
 	pins[pin].type = type;
 	pins[pin].bus = bus;
+	pins[pin].bus_num = bus_num;
+	pins[pin].bus_channel = bus_channel;
 	pins[pin].extra_type = NULL;
 	log_v("Pin %u successfully set to type %s (%u) with bus %p", pin, perimanGetTypeName(type), (unsigned int)type, bus);
 	return true;
@@ -194,6 +199,22 @@ const char* perimanGetPinBusExtraType(uint8_t pin){
 		return NULL;
 	}
 	return pins[pin].extra_type;
+}
+
+int8_t perimanGetPinBusNum(uint8_t pin){
+	if(GPIO_NOT_VALID(pin)){
+		log_e("Invalid pin: %u", pin);
+		return -1;
+	}
+	return pins[pin].bus_num;
+}
+
+int8_t perimanGetPinBusChannel(uint8_t pin){
+	if(GPIO_NOT_VALID(pin)){
+		log_e("Invalid pin: %u", pin);
+		return -1;
+	}
+	return pins[pin].bus_channel;
 }
 
 bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t cb){
