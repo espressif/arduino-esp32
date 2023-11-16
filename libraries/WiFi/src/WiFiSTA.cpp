@@ -423,12 +423,32 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
     if(!WiFi.enableSTA(true)) {
         return false;
     }
+    // handle Arduino ordering of parameters: ip, dns, gw, subnet
+    if (local_ip != INADDR_NONE && subnet[0] != 255) {
+        IPAddress tmp = dns1;
+        dns1 = gateway;
+        gateway = subnet;
+        subnet = (tmp != INADDR_NONE) ? tmp : IPAddress(255, 255, 255, 0);
+    }
     err = set_esp_interface_ip(ESP_IF_WIFI_STA, local_ip, gateway, subnet);
     if(err == ESP_OK){
     	err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
     }
     _useStaticIp = err == ESP_OK;
     return err == ESP_OK;
+}
+
+bool WiFiSTAClass::config(IPAddress local_ip, IPAddress dns) {
+
+    if (local_ip == INADDR_NONE)
+        return config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+
+    IPAddress gw(local_ip);
+    gw[3] = 1;
+    if (dns == INADDR_NONE) {
+        dns = gw;
+    }
+    return config(local_ip, gw, IPAddress(255, 255, 255, 0), dns);
 }
 
 /**
