@@ -101,7 +101,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
     perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_MASTER_SDA, i2cDetachBus);
     perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_MASTER_SCL, i2cDetachBus);
 
-    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL)){
+    if(!perimanDetachPin(sda) || !perimanDetachPin(scl){
         return false;
     }
 
@@ -161,8 +161,8 @@ esp_err_t i2cDeinit(uint8_t i2c_num){
         err = i2c_driver_delete((i2c_port_t)i2c_num);
         if(err == ESP_OK){
             bus[i2c_num].initialized = false;
-            perimanSetPinBus(bus[i2c_num].scl, ESP32_BUS_TYPE_INIT, NULL);
-            perimanSetPinBus(bus[i2c_num].sda, ESP32_BUS_TYPE_INIT, NULL);
+            perimanDetachPin(bus[i2c_num].scl);
+            perimanDetachPin(bus[i2c_num].sda);
             bus[i2c_num].scl = -1;
             bus[i2c_num].sda = -1;
         }

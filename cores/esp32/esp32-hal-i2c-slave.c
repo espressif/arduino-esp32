@@ -238,7 +238,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_SLAVE_SDA, i2cSlaveDetachBus);
     perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_SLAVE_SCL, i2cSlaveDetachBus);
 
-    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL)){
+    if(!perimanDetachPin(sda) || !perimanDetachPin(scl){
         return false;
     }
 
@@ -385,8 +385,8 @@ esp_err_t i2cSlaveDeinit(uint8_t num){
     int scl = i2c->scl;
     int sda = i2c->sda;
     i2c_slave_free_resources(i2c);
-    perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL);
-    perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL);
+    perimanDetachPin(scl);
+    perimanDetachPin(sda);
     I2C_SLAVE_MUTEX_UNLOCK();
     return ESP_OK;
 }

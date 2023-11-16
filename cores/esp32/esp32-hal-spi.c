@@ -206,7 +206,7 @@ bool spiAttachSCK(spi_t * spi, int8_t sck)
         return false;
     }
     void * bus = perimanGetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER_SCK);
-    if(bus != NULL && !perimanSetPinBus(sck, ESP32_BUS_TYPE_INIT, NULL)){
+    if(bus != NULL && !perimanDetachPin(sck){
         return false;
     }
     pinMode(sck, OUTPUT);
@@ -226,7 +226,7 @@ bool spiAttachMISO(spi_t * spi, int8_t miso)
         return false;
     }
     void * bus = perimanGetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER_MISO);
-    if(bus != NULL && !perimanSetPinBus(miso, ESP32_BUS_TYPE_INIT, NULL)){
+    if(bus != NULL && !perimanDetachPin(miso){
         return false;
     }
     SPI_MUTEX_LOCK();
@@ -248,7 +248,7 @@ bool spiAttachMOSI(spi_t * spi, int8_t mosi)
         return false;
     }
     void * bus = perimanGetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER_MOSI);
-    if(bus != NULL && !perimanSetPinBus(mosi, ESP32_BUS_TYPE_INIT, NULL)){
+    if(bus != NULL && !perimanDetachPin(mosi){
         return false;
     }
     pinMode(mosi, OUTPUT);
@@ -269,7 +269,7 @@ bool spiDetachSCK(spi_t * spi, int8_t sck)
     }
     pinMatrixOutDetach(sck, false, false);
     spi->sck = -1;
-    perimanSetPinBus(sck, ESP32_BUS_TYPE_INIT, NULL);
+    perimanDetachPin(sck);
     return true;
 }
 
@@ -280,7 +280,7 @@ bool spiDetachMISO(spi_t * spi, int8_t miso)
     }
     pinMatrixInDetach(SPI_MISO_IDX(spi->num), false, false);
     spi->miso = -1;
-    perimanSetPinBus(miso, ESP32_BUS_TYPE_INIT, NULL);
+    perimanDetachPin(miso);
     return true;
 }
 
@@ -291,7 +291,7 @@ bool spiDetachMOSI(spi_t * spi, int8_t mosi)
     }
     pinMatrixOutDetach(mosi, false, false);
     spi->mosi = -1;
-    perimanSetPinBus(mosi, ESP32_BUS_TYPE_INIT, NULL);
+    perimanDetachPin(mosi);
     return true;
 }
 
@@ -301,7 +301,7 @@ bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
         return false;
     }
     void * bus = perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS);
-    if(bus != NULL && !perimanSetPinBus(ss, ESP32_BUS_TYPE_INIT, NULL)){
+    if(bus != NULL && !perimanDetachPin(ss){
         return false;
     }
     pinMode(ss, OUTPUT);
@@ -323,7 +323,7 @@ bool spiDetachSS(spi_t * spi, int8_t ss)
     }
     pinMatrixOutDetach(ss, false, false);
     spi->ss = -1;
-    perimanSetPinBus(ss, ESP32_BUS_TYPE_INIT, NULL);
+    perimanDetachPin(ss);
     return true;
 }
 

@@ -215,7 +215,7 @@ static touch_value_t __touchRead(uint8_t pin)
 
     if(perimanGetPinBus(pin, ESP32_BUS_TYPE_TOUCH) == NULL){
         perimanSetBusDeinit(ESP32_BUS_TYPE_TOUCH, touchDetachBus);
-        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+        if(!perimanDetachPin(pin){
             return 0;
         }
         __touchInit();

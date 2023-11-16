@@ -28,7 +28,7 @@ bool sigmaDeltaAttach(uint8_t pin, uint32_t freq) //freq 1220-312500
 {
     perimanSetBusDeinit(ESP32_BUS_TYPE_SIGMADELTA, sigmaDeltaDetachBus);
     sdm_channel_handle_t bus = (sdm_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
-    if(bus != NULL && !perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+    if(bus != NULL && !perimanDetachPin(pin){
         return false;
     }
     bus = NULL;
@@ -81,7 +81,7 @@ bool sigmaDeltaDetach(uint8_t pin)
     void * bus = perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
     if(bus != NULL){
         // will call sigmaDeltaDetachBus
-        return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
+        return perimanDetachPin(pin);
     } else {
         log_e("pin %u is not attached to SigmaDelta", pin);
     }

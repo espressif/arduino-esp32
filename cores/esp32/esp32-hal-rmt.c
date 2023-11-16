@@ -270,7 +270,7 @@ bool rmtDeinit(int pin)
   log_v("Deiniting RMT GPIO %d", pin);
   if (_rmtGetBus(pin, __FUNCTION__) != NULL) {
     // release all allocated data
-    return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
+    return perimanDetachPin(pin);
   }
   log_e("GPIO %d - No RMT channel associated.", pin);
   return false;
@@ -468,7 +468,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   }
 
   // Try to dettach any (Tx|Rx|Whatever) previous bus or just keep it as not attached
-  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)) {
+  if (!perimanDetachPin(pin) {
     log_w("GPIO %d - Can't detach previous peripheral.", pin);
     return false;
   }

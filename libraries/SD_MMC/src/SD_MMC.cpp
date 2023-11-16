@@ -135,13 +135,13 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     slot_config.width = 4;
 #endif // SOC_SDMMC_USE_GPIO_MATRIX
 
-    if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if(!perimanDetachPin(_pin_cmd)){ return false; }
+    if(!perimanDetachPin(_pin_clk)){ return false; }
+    if(!perimanDetachPin(_pin_d0)){ return false; }
     if(!mode1bit) {
-        if(!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-        if(!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-        if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanDetachPin(_pin_d1)){ return false; }
+        if(!perimanDetachPin(_pin_d2)){ return false; }
+        if(!perimanDetachPin(_pin_d3)){ return false; }
     }
     
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
@@ -202,13 +202,13 @@ void SDMMCFS::end()
         esp_vfs_fat_sdcard_unmount(_impl->mountpoint(), _card);
         _impl->mountpoint(NULL);
         _card = NULL;
-        perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_INIT, NULL);
+        perimanDetachPin(_pin_cmd);
+        perimanDetachPin(_pin_clk);
+        perimanDetachPin(_pin_d0);
         if(!_mode1bit) {
-            perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_INIT, NULL);
-            perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_INIT, NULL);
-            perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_INIT, NULL);
+            perimanDetachPin(_pin_d1);
+            perimanDetachPin(_pin_d2);
+            perimanDetachPin(_pin_d3);
         }
     }
 }
