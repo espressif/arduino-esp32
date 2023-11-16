@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define USB_VID 0x303A
-#define USB_PID 0x81B5
+#define USB_PID 0x81B8
 #define USB_MANUFACTURER "senseBox"
 #define USB_PRODUCT "MCU-S2 ESP32S2"
 #define USB_SERIAL "" // Empty string for MAC adddress
@@ -42,12 +42,23 @@ static const uint8_t MOSI = 35;
 static const uint8_t SCK = 36;
 static const uint8_t MISO = 37;
 
+// XBEE Pins 
+#define PIN_XBEE_ENABLE 41
 #define PIN_XBEE_INT 33
 #define PIN_XBEE_CS 34
 #define PIN_XBEE_MOSI 35
 #define PIN_XBEE_SCLK 36
 #define PIN_XBEE_MISO 37
 #define PIN_XBEE_RESET 38
+
+// Alias XB1
+#define PIN_XB1_ENABLE 41
+#define PIN_XB1_INT 33
+#define PIN_XB1_CS 34
+#define PIN_XB1_MOSI 35
+#define PIN_XB1_SCLK 36
+#define PIN_XB1_MISO 37
+#define PIN_XB1_RESET 38
 
 // IO Pins
 #define PIN_LED 1
@@ -85,10 +96,6 @@ static const uint8_t RX1 = 18;
 // PD-Sensor
 #define PD_SENSE 14
 #define PD_ENABLE 21
-
-// XBee
-#define PIN_XB1_CS 34
-#define PIN_XB1_ENABLE 41
 
 // SD-Card
 #define VSPI_MISO 13

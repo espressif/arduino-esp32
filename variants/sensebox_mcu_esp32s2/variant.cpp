@@ -42,6 +42,10 @@ void initVariant(void)
     //enable XBEE by default
     pinMode(PIN_XB1_ENABLE, OUTPUT);
     digitalWrite(PIN_XB1_ENABLE, LOW);
+ 
+    //enable UART by default
+    pinMode(PIN_UART_ENABLE, OUTPUT);
+    digitalWrite(PIN_UART_ENABLE, LOW);
 
     //enable PD-Sensor by default
     pinMode(PD_ENABLE, OUTPUT);

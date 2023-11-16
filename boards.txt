@@ -27779,7 +27779,11 @@ atd147_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 sensebox_mcu_esp32s2.name=senseBox MCU-S2 ESP32-S2
 sensebox_mcu_esp32s2.vid.0=0x303A
-sensebox_mcu_esp32s2.pid.0=0x81B5
+sensebox_mcu_esp32s2.pid.0=0x81B8
+sensebox_mcu_esp32s2.vid.1=0x303A
+sensebox_mcu_esp32s2.pid.1=0x81B9
+sensebox_mcu_esp32s2.vid.2=0x303A
+sensebox_mcu_esp32s2.pid.2=0x81BA
 
 sensebox_mcu_esp32s2.bootloader.tool=esptool_py
 sensebox_mcu_esp32s2.bootloader.tool.default=esptool_py
@@ -27822,10 +27826,10 @@ sensebox_mcu_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 sensebox_mcu_esp32s2.menu.CDCOnBoot.default=Disabled
 sensebox_mcu_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
-sensebox_mcu_esp32s2.menu.MSCOnBoot.default=Disabled
-sensebox_mcu_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
 sensebox_mcu_esp32s2.menu.MSCOnBoot.msc=Enabled
 sensebox_mcu_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+sensebox_mcu_esp32s2.menu.MSCOnBoot.default=Disabled
+sensebox_mcu_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
 
 sensebox_mcu_esp32s2.menu.DFUOnBoot.default=Disabled
 sensebox_mcu_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
@@ -27940,4 +27944,5 @@ sensebox_mcu_esp32s2.menu.EraseFlash.none=Disabled
 sensebox_mcu_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 sensebox_mcu_esp32s2.menu.EraseFlash.all=Enabled
 sensebox_mcu_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
 
