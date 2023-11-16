@@ -28352,8 +28352,8 @@ esp32s3_powerfeather.upload.maximum_size=1310720
 esp32s3_powerfeather.upload.maximum_data_size=327680
 esp32s3_powerfeather.upload.flags=
 esp32s3_powerfeather.upload.extra_flags=
-esp32s3_powerfeather.upload.use_1200bps_touch=true
-esp32s3_powerfeather.upload.wait_for_upload_port=true
+esp32s3_powerfeather.upload.use_1200bps_touch=false
+esp32s3_powerfeather.upload.wait_for_upload_port=false
 
 esp32s3_powerfeather.serial.disableDTR=false
 esp32s3_powerfeather.serial.disableRTS=false
@@ -28366,8 +28366,8 @@ esp32s3_powerfeather.build.core=esp32
 esp32s3_powerfeather.build.variant=esp32s3_powerfeather
 esp32s3_powerfeather.build.board=ESP32S3_POWERFEATHER
 
-esp32s3_powerfeather.build.usb_mode=0
-esp32s3_powerfeather.build.cdc_on_boot=1
+esp32s3_powerfeather.build.usb_mode=1
+esp32s3_powerfeather.build.cdc_on_boot=0
 esp32s3_powerfeather.build.msc_on_boot=0
 esp32s3_powerfeather.build.dfu_on_boot=0
 esp32s3_powerfeather.build.f_cpu=240000000L
@@ -28375,13 +28375,36 @@ esp32s3_powerfeather.build.flash_size=8MB
 esp32s3_powerfeather.build.flash_freq=80m
 esp32s3_powerfeather.build.flash_mode=dio
 esp32s3_powerfeather.build.boot=qio
-esp32s3_powerfeather.build.partitions=default
+esp32s3_powerfeather.build.boot_freq=80m
+esp32s3_powerfeather.build.partitions=default_8MB
 esp32s3_powerfeather.build.defines=
 esp32s3_powerfeather.build.loop_core=
 esp32s3_powerfeather.build.event_core=
-esp32s3_powerfeather.build.flash_type=qio
 esp32s3_powerfeather.build.psram_type=qspi
-esp32s3_powerfeather.build.memory_type={build.flash_type}_{build.psram_type}
+esp32s3_powerfeather.build.memory_type={build.boot}_{build.psram_type}
+
+esp32s3_powerfeather.menu.PSRAM.disabled=Disabled
+esp32s3_powerfeather.menu.PSRAM.disabled.build.defines=
+esp32s3_powerfeather.menu.PSRAM.disabled.build.psram_type=qspi
+esp32s3_powerfeather.menu.PSRAM.enabled=QSPI PSRAM
+esp32s3_powerfeather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3_powerfeather.menu.PSRAM.enabled.build.psram_type=qspi
+
+esp32s3_powerfeather.menu.FlashMode.qio=QIO 80MHz
+esp32s3_powerfeather.menu.FlashMode.qio.build.flash_mode=dio
+esp32s3_powerfeather.menu.FlashMode.qio.build.boot=qio
+esp32s3_powerfeather.menu.FlashMode.qio.build.boot_freq=80m
+esp32s3_powerfeather.menu.FlashMode.qio.build.flash_freq=80m
+esp32s3_powerfeather.menu.FlashMode.qio120=QIO 120MHz
+esp32s3_powerfeather.menu.FlashMode.qio120.build.flash_mode=dio
+esp32s3_powerfeather.menu.FlashMode.qio120.build.boot=qio
+esp32s3_powerfeather.menu.FlashMode.qio120.build.boot_freq=120m
+esp32s3_powerfeather.menu.FlashMode.qio120.build.flash_freq=80m
+esp32s3_powerfeather.menu.FlashMode.dio=DIO 80MHz
+esp32s3_powerfeather.menu.FlashMode.dio.build.flash_mode=dio
+esp32s3_powerfeather.menu.FlashMode.dio.build.boot=dio
+esp32s3_powerfeather.menu.FlashMode.dio.build.boot_freq=80m
+esp32s3_powerfeather.menu.FlashMode.dio.build.flash_freq=80m
 
 esp32s3_powerfeather.menu.LoopCore.1=Core 1
 esp32s3_powerfeather.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -28393,15 +28416,15 @@ esp32s3_powerfeather.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_
 esp32s3_powerfeather.menu.EventsCore.0=Core 0
 esp32s3_powerfeather.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-esp32s3_powerfeather.menu.USBMode.default=USB-OTG (TinyUSB)
-esp32s3_powerfeather.menu.USBMode.default.build.usb_mode=0
 esp32s3_powerfeather.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32s3_powerfeather.menu.USBMode.hwcdc.build.usb_mode=1
+esp32s3_powerfeather.menu.USBMode.default=USB-OTG (TinyUSB)
+esp32s3_powerfeather.menu.USBMode.default.build.usb_mode=0
 
-esp32s3_powerfeather.menu.CDCOnBoot.cdc=Enabled
-esp32s3_powerfeather.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 esp32s3_powerfeather.menu.CDCOnBoot.default=Disabled
 esp32s3_powerfeather.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32s3_powerfeather.menu.CDCOnBoot.cdc=Enabled
+esp32s3_powerfeather.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 
 esp32s3_powerfeather.menu.MSCOnBoot.default=Disabled
 esp32s3_powerfeather.menu.MSCOnBoot.default.build.msc_on_boot=0
@@ -28413,19 +28436,12 @@ esp32s3_powerfeather.menu.DFUOnBoot.default.build.dfu_on_boot=0
 esp32s3_powerfeather.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 esp32s3_powerfeather.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-esp32s3_powerfeather.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
-esp32s3_powerfeather.menu.UploadMode.cdc.upload.use_1200bps_touch=true
-esp32s3_powerfeather.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 esp32s3_powerfeather.menu.UploadMode.default=UART0 / Hardware CDC
 esp32s3_powerfeather.menu.UploadMode.default.upload.use_1200bps_touch=false
 esp32s3_powerfeather.menu.UploadMode.default.upload.wait_for_upload_port=false
-
-esp32s3_powerfeather.menu.PSRAM.enabled=QSPI PSRAM
-esp32s3_powerfeather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-esp32s3_powerfeather.menu.PSRAM.enabled.build.psram_type=qspi
-esp32s3_powerfeather.menu.PSRAM.disabled=Disabled
-esp32s3_powerfeather.menu.PSRAM.disabled.build.defines=
-esp32s3_powerfeather.menu.PSRAM.disabled.build.psram_type=qspi
+esp32s3_powerfeather.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+esp32s3_powerfeather.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+esp32s3_powerfeather.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 esp32s3_powerfeather.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32s3_powerfeather.menu.PartitionScheme.default.build.partitions=default
@@ -28473,25 +28489,6 @@ esp32s3_powerfeather.menu.CPUFreq.20=20MHz
 esp32s3_powerfeather.menu.CPUFreq.20.build.f_cpu=20000000L
 esp32s3_powerfeather.menu.CPUFreq.10=10MHz
 esp32s3_powerfeather.menu.CPUFreq.10.build.f_cpu=10000000L
-
-esp32s3_powerfeather.menu.FlashMode.qio=QIO 80MHz
-esp32s3_powerfeather.menu.FlashMode.qio.build.flash_mode=dio
-esp32s3_powerfeather.menu.FlashMode.qio.build.boot=qio
-esp32s3_powerfeather.menu.FlashMode.qio.build.boot_freq=80m
-esp32s3_powerfeather.menu.FlashMode.qio.build.flash_freq=80m
-esp32s3_powerfeather.menu.FlashMode.qio120=QIO 120MHz
-esp32s3_powerfeather.menu.FlashMode.qio120.build.flash_mode=dio
-esp32s3_powerfeather.menu.FlashMode.qio120.build.boot=qio
-esp32s3_powerfeather.menu.FlashMode.qio120.build.boot_freq=120m
-esp32s3_powerfeather.menu.FlashMode.qio120.build.flash_freq=80m
-esp32s3_powerfeather.menu.FlashMode.dio=DIO 80MHz
-esp32s3_powerfeather.menu.FlashMode.dio.build.flash_mode=dio
-esp32s3_powerfeather.menu.FlashMode.dio.build.boot=dio
-esp32s3_powerfeather.menu.FlashMode.dio.build.boot_freq=80m
-esp32s3_powerfeather.menu.FlashMode.dio.build.flash_freq=80m
-
-esp32s3_powerfeather.menu.FlashSize.8M=8MB (64Mb)
-esp32s3_powerfeather.menu.FlashSize.8M.build.flash_size=8MB
 
 esp32s3_powerfeather.menu.UploadSpeed.921600=921600
 esp32s3_powerfeather.menu.UploadSpeed.921600.upload.speed=921600
