@@ -9920,6 +9920,13 @@ adafruit_metro_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_metro_esp32s2.menu.EraseFlash.all=Enabled
 adafruit_metro_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_metro_esp32s2.menu.ZigbeeMode.default=Disabled
+adafruit_metro_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_metro_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_metro_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit Metro ESP32-S3
 
@@ -10105,6 +10112,13 @@ adafruit_metro_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_metro_esp32s3.menu.EraseFlash.all=Enabled
 adafruit_metro_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_metro_esp32s3.menu.ZigbeeMode.default=Disabled
+adafruit_metro_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_metro_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_metro_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_metro_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_metro_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit MagTag 2.9"
 
@@ -10269,6 +10283,13 @@ adafruit_magtag29_esp32s2.menu.EraseFlash.none=Disabled
 adafruit_magtag29_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_magtag29_esp32s2.menu.EraseFlash.all=Enabled
 adafruit_magtag29_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_magtag29_esp32s2.menu.ZigbeeMode.default=Disabled
+adafruit_magtag29_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_magtag29_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_magtag29_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_magtag29_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_magtag29_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit FunHouse
@@ -10435,6 +10456,13 @@ adafruit_funhouse_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_funhouse_esp32s2.menu.EraseFlash.all=Enabled
 adafruit_funhouse_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_funhouse_esp32s2.menu.ZigbeeMode.default=Disabled
+adafruit_funhouse_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_funhouse_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_funhouse_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_funhouse_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_funhouse_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit ESP32 Feather
 
@@ -10562,6 +10590,13 @@ featheresp32.menu.EraseFlash.none.upload.erase_cmd=
 featheresp32.menu.EraseFlash.all=Enabled
 featheresp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
+featheresp32.menu.ZigbeeMode.default=Disabled
+featheresp32.menu.ZigbeeMode.default.build.zigbee_mode=
+featheresp32.menu.ZigbeeMode.default.build.zigbee_libs=
+featheresp32.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+featheresp32.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+featheresp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit Feather ESP32 V2
 
@@ -10672,6 +10707,13 @@ adafruit_feather_esp32_v2.menu.EraseFlash.none=Disabled
 adafruit_feather_esp32_v2.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_feather_esp32_v2.menu.EraseFlash.all=Enabled
 adafruit_feather_esp32_v2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_feather_esp32_v2.menu.ZigbeeMode.default=Disabled
+adafruit_feather_esp32_v2.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_feather_esp32_v2.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_feather_esp32_v2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_feather_esp32_v2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_feather_esp32_v2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S2
@@ -10838,6 +10880,13 @@ adafruit_feather_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_feather_esp32s2.menu.EraseFlash.all=Enabled
 adafruit_feather_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_feather_esp32s2.menu.ZigbeeMode.default=Disabled
+adafruit_feather_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_feather_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_feather_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_feather_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_feather_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit Feather ESP32-S2 TFT
 
@@ -11003,6 +11052,13 @@ adafruit_feather_esp32s2_tft.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_feather_esp32s2_tft.menu.EraseFlash.all=Enabled
 adafruit_feather_esp32s2_tft.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_feather_esp32s2_tft.menu.ZigbeeMode.default=Disabled
+adafruit_feather_esp32s2_tft.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_feather_esp32s2_tft.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_feather_esp32s2_tft.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_feather_esp32s2_tft.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_feather_esp32s2_tft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit Feather ESP32-S2 Reverse TFT
 
@@ -11167,6 +11223,13 @@ adafruit_feather_esp32s2_reversetft.menu.EraseFlash.none=Disabled
 adafruit_feather_esp32s2_reversetft.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_feather_esp32s2_reversetft.menu.EraseFlash.all=Enabled
 adafruit_feather_esp32s2_reversetft.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.default=Disabled
+adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S3 2MB PSRAM
@@ -11368,6 +11431,13 @@ adafruit_feather_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_feather_esp32s3.menu.EraseFlash.all=Enabled
 adafruit_feather_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_feather_esp32s3.menu.ZigbeeMode.default=Disabled
+adafruit_feather_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_feather_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_feather_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_feather_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_feather_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit Feather ESP32-S3 No PSRAM
 
@@ -11536,6 +11606,13 @@ adafruit_feather_esp32s3_nopsram.menu.EraseFlash.none=Disabled
 adafruit_feather_esp32s3_nopsram.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_feather_esp32s3_nopsram.menu.EraseFlash.all=Enabled
 adafruit_feather_esp32s3_nopsram.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.default=Disabled
+adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S3 TFT
@@ -11737,6 +11814,13 @@ adafruit_feather_esp32s3_tft.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_feather_esp32s3_tft.menu.EraseFlash.all=Enabled
 adafruit_feather_esp32s3_tft.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_feather_esp32s3_tft.menu.ZigbeeMode.default=Disabled
+adafruit_feather_esp32s3_tft.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_feather_esp32s3_tft.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_feather_esp32s3_tft.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_feather_esp32s3_tft.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_feather_esp32s3_tft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit Feather ESP32-S3 Reverse TFT
 
@@ -11937,6 +12021,13 @@ adafruit_feather_esp32s3_reversetft.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_feather_esp32s3_reversetft.menu.EraseFlash.all=Enabled
 adafruit_feather_esp32s3_reversetft.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.default=Disabled
+adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit QT Py ESP32
 
@@ -12047,6 +12138,13 @@ adafruit_qtpy_esp32_pico.menu.EraseFlash.none=Disabled
 adafruit_qtpy_esp32_pico.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_qtpy_esp32_pico.menu.EraseFlash.all=Enabled
 adafruit_qtpy_esp32_pico.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_qtpy_esp32_pico.menu.ZigbeeMode.default=Disabled
+adafruit_qtpy_esp32_pico.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_qtpy_esp32_pico.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32-C3
@@ -12177,6 +12275,13 @@ adafruit_qtpy_esp32c3.menu.EraseFlash.none=Disabled
 adafruit_qtpy_esp32c3.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_qtpy_esp32c3.menu.EraseFlash.all=Enabled
 adafruit_qtpy_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_qtpy_esp32c3.menu.ZigbeeMode.default=Disabled
+adafruit_qtpy_esp32c3.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_qtpy_esp32c3.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_qtpy_esp32c3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_qtpy_esp32c3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_qtpy_esp32c3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32-S2
@@ -12342,6 +12447,13 @@ adafruit_qtpy_esp32s2.menu.EraseFlash.none=Disabled
 adafruit_qtpy_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_qtpy_esp32s2.menu.EraseFlash.all=Enabled
 adafruit_qtpy_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_qtpy_esp32s2.menu.ZigbeeMode.default=Disabled
+adafruit_qtpy_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_qtpy_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_qtpy_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_qtpy_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_qtpy_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32-S3 No PSRAM
@@ -12511,6 +12623,13 @@ adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.none=Disabled
 adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.all=Enabled
 adafruit_qtpy_esp32s3_nopsram.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.default=Disabled
+adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32-S3 (4M Flash 2M PSRAM)
@@ -12712,6 +12831,13 @@ adafruit_qtpy_esp32s3_n4r2.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_qtpy_esp32s3_n4r2.menu.EraseFlash.all=Enabled
 adafruit_qtpy_esp32s3_n4r2.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.default=Disabled
+adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 # Adafruit ItsyBitsy ESP32
 
@@ -12822,6 +12948,13 @@ adafruit_itsybitsy_esp32.menu.EraseFlash.none=Disabled
 adafruit_itsybitsy_esp32.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_itsybitsy_esp32.menu.EraseFlash.all=Enabled
 adafruit_itsybitsy_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_itsybitsy_esp32.menu.ZigbeeMode.default=Disabled
+adafruit_itsybitsy_esp32.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_itsybitsy_esp32.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_itsybitsy_esp32.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_itsybitsy_esp32.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_itsybitsy_esp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit MatrixPortal ESP32-S3
@@ -13001,6 +13134,13 @@ adafruit_matrixportal_esp32s3.menu.EraseFlash.none=Disabled
 adafruit_matrixportal_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_matrixportal_esp32s3.menu.EraseFlash.all=Enabled
 adafruit_matrixportal_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_matrixportal_esp32s3.menu.ZigbeeMode.default=Disabled
+adafruit_matrixportal_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_matrixportal_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_matrixportal_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_matrixportal_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_matrixportal_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Camera ESP32-S3
@@ -13202,6 +13342,12 @@ adafruit_camera_esp32s3.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_camera_esp32s3.menu.EraseFlash.all=Enabled
 adafruit_camera_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
+adafruit_camera_esp32s3.menu.ZigbeeMode.default=Disabled
+adafruit_camera_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_camera_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_camera_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_camera_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_camera_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Qualia ESP32-S3 RGB666
@@ -13387,6 +13533,13 @@ adafruit_qualia_s3_rgb666.menu.EraseFlash.none=Disabled
 adafruit_qualia_s3_rgb666.menu.EraseFlash.none.upload.erase_cmd=
 adafruit_qualia_s3_rgb666.menu.EraseFlash.all=Enabled
 adafruit_qualia_s3_rgb666.menu.EraseFlash.all.upload.erase_cmd=-e
+
+adafruit_qualia_s3_rgb666.menu.ZigbeeMode.default=Disabled
+adafruit_qualia_s3_rgb666.menu.ZigbeeMode.default.build.zigbee_mode=
+adafruit_qualia_s3_rgb666.menu.ZigbeeMode.default.build.zigbee_libs=
+adafruit_qualia_s3_rgb666.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+adafruit_qualia_s3_rgb666.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+adafruit_qualia_s3_rgb666.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
