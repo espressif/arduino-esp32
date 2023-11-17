@@ -61,7 +61,12 @@ typedef struct {
 
 static bool usb_otg_deinit(void * busptr) {
     // Once USB OTG is initialized, its GPIOs are assigned and it shall never be deinited
+    // except when S3 swithicng usb from cdc to jtag while resetting to bootrom
+#if CONFIG_IDF_TARGET_ESP32S3
+    return true;
+#else
     return false;
+#endif
 }
 
 static void configure_pins(usb_hal_context_t *usb)
