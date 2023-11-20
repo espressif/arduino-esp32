@@ -181,8 +181,8 @@ bool HWCDC::deinit(void * busptr)
     running = true; 
     // Setting USB D+ D- pins
     bool retCode = true;
-    retCode &= perimanDetachPin(USB_DM_GPIO_NUM);
-    retCode &= perimanDetachPin(USB_DP_GPIO_NUM);
+    retCode &= perimanClearPinBus(USB_DM_GPIO_NUM);
+    retCode &= perimanClearPinBus(USB_DP_GPIO_NUM);
     if (retCode) {
         // Force the host to re-enumerate (BUS_RESET)
         pinMode(USB_DM_GPIO_NUM, OUTPUT_OPEN_DRAIN);

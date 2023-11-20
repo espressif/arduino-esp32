@@ -206,7 +206,7 @@ bool spiAttachSCK(spi_t * spi, int8_t sck)
         return false;
     }
     void * bus = perimanGetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER_SCK);
-    if(bus != NULL && !perimanDetachPin(sck)){
+    if(bus != NULL && !perimanClearPinBus(sck)){
         return false;
     }
     pinMode(sck, OUTPUT);
@@ -226,7 +226,7 @@ bool spiAttachMISO(spi_t * spi, int8_t miso)
         return false;
     }
     void * bus = perimanGetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER_MISO);
-    if(bus != NULL && !perimanDetachPin(miso)){
+    if(bus != NULL && !perimanClearPinBus(miso)){
         return false;
     }
     SPI_MUTEX_LOCK();
@@ -248,7 +248,7 @@ bool spiAttachMOSI(spi_t * spi, int8_t mosi)
         return false;
     }
     void * bus = perimanGetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER_MOSI);
-    if(bus != NULL && !perimanDetachPin(mosi)){
+    if(bus != NULL && !perimanClearPinBus(mosi)){
         return false;
     }
     pinMode(mosi, OUTPUT);
@@ -269,7 +269,7 @@ bool spiDetachSCK(spi_t * spi, int8_t sck)
     }
     pinMatrixOutDetach(sck, false, false);
     spi->sck = -1;
-    perimanDetachPin(sck);
+    perimanClearPinBus(sck);
     return true;
 }
 
@@ -280,7 +280,7 @@ bool spiDetachMISO(spi_t * spi, int8_t miso)
     }
     pinMatrixInDetach(SPI_MISO_IDX(spi->num), false, false);
     spi->miso = -1;
-    perimanDetachPin(miso);
+    perimanClearPinBus(miso);
     return true;
 }
 
@@ -291,7 +291,7 @@ bool spiDetachMOSI(spi_t * spi, int8_t mosi)
     }
     pinMatrixOutDetach(mosi, false, false);
     spi->mosi = -1;
-    perimanDetachPin(mosi);
+    perimanClearPinBus(mosi);
     return true;
 }
 
@@ -301,7 +301,7 @@ bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
         return false;
     }
     void * bus = perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS);
-    if(bus != NULL && !perimanDetachPin(ss)){
+    if(bus != NULL && !perimanClearPinBus(ss)){
         return false;
     }
     pinMode(ss, OUTPUT);
@@ -323,7 +323,7 @@ bool spiDetachSS(spi_t * spi, int8_t ss)
     }
     pinMatrixOutDetach(ss, false, false);
     spi->ss = -1;
-    perimanDetachPin(ss);
+    perimanClearPinBus(ss);
     return true;
 }
 

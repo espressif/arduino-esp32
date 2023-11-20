@@ -110,7 +110,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 
     if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
         perimanSetBusDeinit(ESP32_BUS_TYPE_GPIO, gpioDetachBus);
-        if(!perimanDetachPin(pin)){
+        if(!perimanClearPinBus(pin)){
             log_e("Deinit of previous bus failed");
             return;
         }

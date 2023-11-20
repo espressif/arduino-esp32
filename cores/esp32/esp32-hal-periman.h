@@ -14,7 +14,7 @@ extern "C"
 #include <stdbool.h>
 #include <stddef.h>
 
-#define perimanDetachPin(p) perimanSetPinBus(p, ESP32_BUS_TYPE_INIT, NULL, -1, -1)
+#define perimanClearPinBus(p) perimanSetPinBus(p, ESP32_BUS_TYPE_INIT, NULL, -1, -1)
 
 typedef enum {
 	ESP32_BUS_TYPE_INIT, 		// IO has not been attached to a bus yet
@@ -130,10 +130,10 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
 // Check if given pin is a valid GPIO number 
 bool perimanPinIsValid(uint8_t pin);
 
-// Sets extratype for non Init bus
+// Sets the extra type for non Init bus. Used to customise pin bus name which can be printed by printPerimanInfo().
 bool perimanSetPinBusExtraType(uint8_t pin, const char* extra_type);
 
-// Returns the extra tyoe of the bus for given pin if set. NULL otherwise
+// Returns the extra type of the bus for given pin if set. NULL otherwise
 const char* perimanGetPinBusExtraType(uint8_t pin);
 
 #ifdef __cplusplus

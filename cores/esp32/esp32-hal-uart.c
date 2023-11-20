@@ -99,7 +99,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
         uart->_rxPin = -1;  // -1 means unassigned/detached
-        if (!perimanDetachPin(rxPin)) {
+        if (!perimanClearPinBus(rxPin)) {
             retCode = false;
             log_e("UART%d failed to detach RX pin %d", uart_num, rxPin);
         }
@@ -108,7 +108,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_out_signal(txPin, SIG_GPIO_OUT_IDX, false, false);
         uart->_txPin = -1;  // -1 means unassigned/detached
-        if (!perimanDetachPin(txPin)) {
+        if (!perimanClearPinBus(txPin)) {
             retCode = false;
             log_e("UART%d failed to detach TX pin %d", uart_num, txPin);
         }
@@ -117,7 +117,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_CTS_PIN_IDX), false);
         uart->_ctsPin = -1;  // -1 means unassigned/detached
-        if (!perimanDetachPin(ctsPin)) {
+        if (!perimanClearPinBus(ctsPin)) {
             retCode = false;
             log_e("UART%d failed to detach CTS pin %d", uart_num, ctsPin);
         }
@@ -126,7 +126,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
         uart->_rtsPin = -1;  // -1 means unassigned/detached
-        if (!perimanDetachPin(rtsPin)) {
+        if (!perimanClearPinBus(rtsPin)) {
             retCode = false;
             log_e("UART%d failed to detach RTS pin %d", uart_num, rtsPin);
         }
@@ -185,7 +185,7 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     bool retCode = true;
     if (rxPin >= 0) {
         // forces a clean detaching from a previous peripheral
-        if (perimanGetPinBusType(rxPin) != ESP32_BUS_TYPE_INIT) perimanDetachPin(rxPin);
+        if (perimanGetPinBusType(rxPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(rxPin);
         // connect RX Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         if (ret) {
@@ -199,7 +199,7 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     }
     if (txPin >= 0) {
         // forces a clean detaching from a previous peripheral
-        if (perimanGetPinBusType(txPin) != ESP32_BUS_TYPE_INIT) perimanDetachPin(txPin);
+        if (perimanGetPinBusType(txPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(txPin);
         // connect TX Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         if (ret) {
@@ -213,7 +213,7 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     }
     if (ctsPin >= 0) {
         // forces a clean detaching from a previous peripheral
-        if (perimanGetPinBusType(ctsPin) != ESP32_BUS_TYPE_INIT) perimanDetachPin(ctsPin);
+        if (perimanGetPinBusType(ctsPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(ctsPin);
         // connect CTS Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
         if (ret) {
@@ -227,7 +227,7 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     }
     if (rtsPin >= 0) {
         // forces a clean detaching from a previous peripheral
-        if (perimanGetPinBusType(rtsPin) != ESP32_BUS_TYPE_INIT) perimanDetachPin(rtsPin);
+        if (perimanGetPinBusType(rtsPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(rtsPin);
         // connect RTS Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
         if (ret) {

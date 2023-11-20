@@ -67,7 +67,7 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
 
     perimanSetBusDeinit(ESP32_BUS_TYPE_LEDC, ledcDetachBus);
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
-    if(bus != NULL && !perimanDetachPin(pin)){
+    if(bus != NULL && !perimanClearPinBus(pin)){
         return false;
     }
 
@@ -216,7 +216,7 @@ bool ledcDetach(uint8_t pin)
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
         // will call ledcDetachBus
-        return perimanDetachPin(pin);
+        return perimanClearPinBus(pin);
     } else {
         log_e("pin %u is not attached to LEDC", pin);
     }
@@ -360,7 +360,7 @@ void analogWrite(uint8_t pin, int value) {
   // Use ledc hardware for internal pins
   if (pin < SOC_GPIO_PIN_COUNT) {
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
-    if(bus == NULL && perimanDetachPin(pin)){
+    if(bus == NULL && perimanClearPinBus(pin)){
         if(ledcAttach(pin, analog_frequency, analog_resolution) == 0){
             log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
             return;
