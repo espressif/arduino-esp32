@@ -20,7 +20,6 @@ static peripheral_bus_deinit_cb_t deinit_functions[ESP32_BUS_TYPE_MAX];
 static peripheral_pin_item_t pins[SOC_GPIO_PIN_COUNT];
 
 #define GPIO_NOT_VALID(p) ((p >= SOC_GPIO_PIN_COUNT) || ((SOC_GPIO_VALID_GPIO_MASK & (1ULL << p)) == 0))
-#define perimanDetachPin(p) perimanSetPinBus(p, ESP32_BUS_TYPE_INIT, NULL, -1, -1)
 
 const char* perimanGetTypeName(peripheral_bus_type_t type) {
 	switch(type) {
