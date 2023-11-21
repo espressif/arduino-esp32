@@ -92,6 +92,7 @@ public:
     uint8_t subnetCIDR();
     
     bool enableIpV6();
+    bool IPv6(bool state);
     IPv6Address localIPv6();
 
     // STA WiFi info
