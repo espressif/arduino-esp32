@@ -168,7 +168,7 @@ void WiFiUDP::stop(){
       for (netif* intf = netif_list; intf != nullptr; intf = intf->next) {
         mreq.ipv6mr_interface = intf->num + 1;
         if (intf->name[0] != 'l' || intf->name[1] != 'o') {   // skip 'lo' local interface
-          int ret = setsockopt(udp_server, IPPROTO_IPV6, IPV6_LEAVE_GROUP, &mreq, sizeof(mreq));
+          setsockopt(udp_server, IPPROTO_IPV6, IPV6_LEAVE_GROUP, &mreq, sizeof(mreq));
         }
       }
     } else
