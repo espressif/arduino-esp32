@@ -34,7 +34,8 @@ typedef enum esp_secure_cert_tlv_type {
     ESP_SECURE_CERT_USER_DATA_3 = 53,
     ESP_SECURE_CERT_USER_DATA_4 = 54,
     ESP_SECURE_CERT_USER_DATA_5 = 54,
-    ESP_SECURE_CERT_TLV_MAX = 255,
+    ESP_SECURE_CERT_TLV_MAX = 254, /* Max TLV entry identifier (should not be assigned to a TLV entry) */
+    ESP_SECURE_CERT_TLV_INVALID = 255, /* Invalid TLV type */
 } esp_secure_cert_tlv_type_t;
 
 typedef enum esp_secure_cert_tlv_subtype {
@@ -55,5 +56,6 @@ typedef enum esp_secure_cert_tlv_subtype {
     ESP_SECURE_CERT_SUBTYPE_14 = 14,
     ESP_SECURE_CERT_SUBTYPE_15 = 15,
     ESP_SECURE_CERT_SUBTYPE_16 = 16,
-    ESP_SECURE_CERT_SUBTYPE_MAX = 255,
+    ESP_SECURE_CERT_SUBTYPE_MAX = 254, /* Max Subtype entry identifier (should not be assigned to a TLV entry) */
+    ESP_SECURE_CERT_SUBTYPE_INVALID = 255, /* Invalid TLV subtype */
 } esp_secure_cert_tlv_subtype_t;

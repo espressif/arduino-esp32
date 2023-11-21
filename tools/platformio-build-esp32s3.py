@@ -333,7 +333,7 @@ env.Append(
         "UNITY_INCLUDE_CONFIG_H",
         "WITH_POSIX",
         "_GNU_SOURCE",
-        ("IDF_VER", '\\"v4.4.6-179-g27cf25e42c-dirty\\"'),
+        ("IDF_VER", '\\"v4.4.6-198-g5c2142eedb-dirty\\"'),
         "ESP_PLATFORM",
         "_POSIX_READER_WRITER_LOCKS",
         "ARDUINO_ARCH_ESP32",
