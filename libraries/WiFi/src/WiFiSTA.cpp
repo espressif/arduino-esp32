@@ -817,6 +817,19 @@ bool WiFiSTAClass::enableIpV6()
 }
 
 /**
+ * Enable IPv6 support on the station interface.
+ * @return true on success
+ */
+bool WiFiSTAClass::IPv6(bool state)
+{
+   if (state)
+       WiFiGenericClass::setStatusBits(WIFI_WANT_IP6_BIT);
+   else
+       WiFiGenericClass::clearStatusBits(WIFI_WANT_IP6_BIT);
+   return true;
+}
+
+/**
  * Get the station interface IPv6 address.
  * @return IPv6Address
  */
