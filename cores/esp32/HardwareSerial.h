@@ -154,7 +154,7 @@ typedef enum {
     #elif CONFIG_IDF_TARGET_ESP32S2
       #define RX1 (gpio_num_t)4
     #elif CONFIG_IDF_TARGET_ESP32C2
-      #define RX1 (gpio_num_t)9
+      #define RX1 (gpio_num_t)10
     #elif CONFIG_IDF_TARGET_ESP32C3
       #define RX1 (gpio_num_t)18
     #elif CONFIG_IDF_TARGET_ESP32S3
@@ -172,7 +172,7 @@ typedef enum {
     #elif CONFIG_IDF_TARGET_ESP32S2
       #define TX1 (gpio_num_t)5
     #elif CONFIG_IDF_TARGET_ESP32C2
-      #define TX1 (gpio_num_t)10
+      #define TX1 (gpio_num_t)18
     #elif CONFIG_IDF_TARGET_ESP32C3
       #define TX1 (gpio_num_t)19
     #elif CONFIG_IDF_TARGET_ESP32S3
