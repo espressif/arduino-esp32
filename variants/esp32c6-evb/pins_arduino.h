@@ -23,16 +23,16 @@ static const uint8_t BUT_BUILTIN = 9;
 #define	DIN4	15
 
 // available at UEXT and pUEXT +
-	static const uint8_t TX1 = 5;
-	static const uint8_t RX1 = 4;
+static const uint8_t TX1 = 5;
+static const uint8_t RX1 = 4;
 
-	static const uint8_t SDA = 6;
-	static const uint8_t SCL = 7;
+static const uint8_t SDA = 6;
+static const uint8_t SCL = 7;
 
-	static const uint8_t SS    = 21;
-	static const uint8_t MOSI  = 18;
-	static const uint8_t MISO  = 20;
-	static const uint8_t SCK   = 19;
+static const uint8_t SS    = 21;
+static const uint8_t MOSI  = 18;
+static const uint8_t MISO  = 20;
+static const uint8_t SCK   = 19;
 // available at UEXT and pUEXT -
 
 static const uint8_t TX = 16;

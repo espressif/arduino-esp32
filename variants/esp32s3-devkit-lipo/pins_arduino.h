@@ -19,19 +19,16 @@ static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
 // available at pUEXT +
-	// UART
-	static const uint8_t TX1 = 17;
-	static const uint8_t RX1 = 18;
+static const uint8_t TX1 = 17;
+static const uint8_t RX1 = 18;
 
-	// I2C
-	static const uint8_t SDA = 48;
-	static const uint8_t SCL = 47;
+static const uint8_t SDA = 48;
+static const uint8_t SCL = 47;
 
-	// SPI
-	static const uint8_t SS    = 10;
-	static const uint8_t MOSI  = 11;
-	static const uint8_t MISO  = 13;
-	static const uint8_t SCK   = 12;
+static const uint8_t SS    = 10;
+static const uint8_t MOSI  = 11;
+static const uint8_t MISO  = 13;
+static const uint8_t SCK   = 12;
 // available at pUEXT -
 
 // external power sense

@@ -16,14 +16,14 @@ static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
 // define I2C pins 
-//static const uint8_t SDA = 8;
-//static const uint8_t SCL = 9;
+static const uint8_t SDA = 8;
+static const uint8_t SCL = 9;
 
 // define SPI pins
-//static const uint8_t SS    = 34;
-//static const uint8_t MOSI  = 35;
-//static const uint8_t MISO  = 37;
-//static const uint8_t SCK   = 36;
+static const uint8_t SS    = 34;
+static const uint8_t MOSI  = 35;
+static const uint8_t MISO  = 37;
+static const uint8_t SCK   = 36;
 
 // external power sense - disabled by default - check the schematic
 //static const uint8_t PWR_SENSE = 7;
