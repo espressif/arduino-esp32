@@ -81,7 +81,7 @@ uint8_t WiFiUDP::begin(IPAddress address, uint16_t port){
     sock_size = sizeof(sockaddr_in6);
   } else
 #endif
-  if (1) {
+  {
     struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serveraddr;
     memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
     tmpaddr->sin_family = AF_INET;
@@ -127,7 +127,7 @@ uint8_t WiFiUDP::beginMulticast(IPAddress a, uint16_t p){
         }
       } else
 #endif
-      if (1) {
+      {
         struct ip_mreq mreq;
         mreq.imr_multiaddr.s_addr = (in_addr_t)a;
         mreq.imr_interface.s_addr = INADDR_ANY;
@@ -173,7 +173,7 @@ void WiFiUDP::stop(){
       }
     } else
 #endif
-    if (1) {
+    {
       struct ip_mreq mreq;
       mreq.imr_multiaddr.s_addr = (in_addr_t)multicast_ip;
       mreq.imr_interface.s_addr = (in_addr_t)0;
