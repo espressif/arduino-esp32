@@ -131,7 +131,5 @@ static const uint8_t T7 = PIN_IO7;
 static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;
 
-// Alias Serial to SerialUSB
-#define Serial SerialUSB
 
 #endif /* Pins_Arduino_h */
