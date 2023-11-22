@@ -28,7 +28,6 @@ IPAddress::IPAddress() {
 #else
   _ip = *IP_ADDR_ANY;
 #endif
-    // _ip = *IP_ANY_TYPE; // lwIP's v4-or-v6 generic address
 }
 
 IPAddress::IPAddress(const IPAddress& from)
@@ -80,9 +79,9 @@ IPAddress::IPAddress(IPType type, const uint8_t *address, uint8_t zone) {
         setZone(zone);
     } else {
 #if LWIP_IPV6
-  _ip = *IP6_ADDR_ANY;
+        _ip = *IP6_ADDR_ANY;
 #else
-  _ip = *IP_ADDR_ANY;
+        _ip = *IP_ADDR_ANY;
 #endif
     }
 
