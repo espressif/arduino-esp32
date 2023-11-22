@@ -9,14 +9,6 @@
 #define USB_PRODUCT        "ESP32-S3 PowerFeather"
 #define USB_SERIAL         ""
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        23
-#define NUM_ANALOG_INPUTS       13
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
 static const uint8_t ALARM = 7;
 static const uint8_t INT =   5;
 
@@ -28,6 +20,7 @@ static const uint8_t TX =    44;
 static const uint8_t RX =    42;
 static const uint8_t TX0 =   43;
 
+static const uint8_t SS =    -1;
 static const uint8_t MISO =  41;
 static const uint8_t MOSI =  40;
 static const uint8_t SCK =   39;
@@ -49,5 +42,8 @@ static const uint8_t D10 =   18;
 static const uint8_t D11 =   45;
 static const uint8_t D12 =   12;
 static const uint8_t D13 =   11;
+
+#define LED_BUILTIN 46
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
 #endif /* Pins_Arduino_h */
