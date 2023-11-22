@@ -185,7 +185,7 @@ public:
 protected:
     bool fromString6(const char *address);
 
-#else
+#else /* !LWIP_IPV6 */
 
     // allow portable code when IPv6 is not enabled
 
