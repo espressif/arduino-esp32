@@ -14226,8 +14226,20 @@ esp32-evb.menu.FlashFreq.80.build.flash_freq=80m
 esp32-evb.menu.FlashFreq.40=40MHz
 esp32-evb.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32-evb.menu.UploadSpeed.921600=921600
+esp32-evb.menu.UploadSpeed.921600.upload.speed=921600
 esp32-evb.menu.UploadSpeed.115200=115200
 esp32-evb.menu.UploadSpeed.115200.upload.speed=115200
+esp32-evb.menu.UploadSpeed.256000.windows=256000
+esp32-evb.menu.UploadSpeed.256000.upload.speed=256000
+esp32-evb.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32-evb.menu.UploadSpeed.230400=230400
+esp32-evb.menu.UploadSpeed.230400.upload.speed=230400
+esp32-evb.menu.UploadSpeed.460800.linux=460800
+esp32-evb.menu.UploadSpeed.460800.macosx=460800
+esp32-evb.menu.UploadSpeed.460800.upload.speed=460800
+esp32-evb.menu.UploadSpeed.512000.windows=512000
+esp32-evb.menu.UploadSpeed.512000.upload.speed=512000
 
 esp32-evb.menu.PartitionScheme.default=Default
 esp32-evb.menu.PartitionScheme.default.build.partitions=default
@@ -14372,8 +14384,20 @@ esp32-poe.menu.FlashFreq.80.build.flash_freq=80m
 esp32-poe.menu.FlashFreq.40=40MHz
 esp32-poe.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32-poe.menu.UploadSpeed.921600=921600
+esp32-poe.menu.UploadSpeed.921600.upload.speed=921600
 esp32-poe.menu.UploadSpeed.115200=115200
 esp32-poe.menu.UploadSpeed.115200.upload.speed=115200
+esp32-poe.menu.UploadSpeed.256000.windows=256000
+esp32-poe.menu.UploadSpeed.256000.upload.speed=256000
+esp32-poe.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32-poe.menu.UploadSpeed.230400=230400
+esp32-poe.menu.UploadSpeed.230400.upload.speed=230400
+esp32-poe.menu.UploadSpeed.460800.linux=460800
+esp32-poe.menu.UploadSpeed.460800.macosx=460800
+esp32-poe.menu.UploadSpeed.460800.upload.speed=460800
+esp32-poe.menu.UploadSpeed.512000.windows=512000
+esp32-poe.menu.UploadSpeed.512000.upload.speed=512000
 
 esp32-poe.menu.PartitionScheme.default=Default
 esp32-poe.menu.PartitionScheme.default.build.partitions=default
@@ -14441,8 +14465,20 @@ esp32-poe-iso.menu.FlashFreq.80.build.flash_freq=80m
 esp32-poe-iso.menu.FlashFreq.40=40MHz
 esp32-poe-iso.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32-poe-iso.menu.UploadSpeed.921600=921600
+esp32-poe-iso.menu.UploadSpeed.921600.upload.speed=921600
 esp32-poe-iso.menu.UploadSpeed.115200=115200
 esp32-poe-iso.menu.UploadSpeed.115200.upload.speed=115200
+esp32-poe-iso.menu.UploadSpeed.256000.windows=256000
+esp32-poe-iso.menu.UploadSpeed.256000.upload.speed=256000
+esp32-poe-iso.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32-poe-iso.menu.UploadSpeed.230400=230400
+esp32-poe-iso.menu.UploadSpeed.230400.upload.speed=230400
+esp32-poe-iso.menu.UploadSpeed.460800.linux=460800
+esp32-poe-iso.menu.UploadSpeed.460800.macosx=460800
+esp32-poe-iso.menu.UploadSpeed.460800.upload.speed=460800
+esp32-poe-iso.menu.UploadSpeed.512000.windows=512000
+esp32-poe-iso.menu.UploadSpeed.512000.upload.speed=512000
 
 esp32-poe-iso.menu.PartitionScheme.default=Default
 esp32-poe-iso.menu.PartitionScheme.default.build.partitions=default
@@ -14473,99 +14509,1057 @@ esp32-poe-iso.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-esp32-DevKitLipo.name=OLIMEX ESP32-DevKit-LiPo
+esp32-devkitlipo.name=OLIMEX ESP32-DevKit-LiPo
 
-esp32-DevKitLipo.bootloader.tool=esptool_py
-esp32-DevKitLipo.bootloader.tool.default=esptool_py
+esp32-devkitlipo.bootloader.tool=esptool_py
+esp32-devkitlipo.bootloader.tool.default=esptool_py
 
-esp32-DevKitLipo.upload.tool=esptool_py
-esp32-DevKitLipo.upload.tool.default=esptool_py
-esp32-DevKitLipo.upload.tool.network=esp_ota
+esp32-devkitlipo.upload.tool=esptool_py
+esp32-devkitlipo.upload.tool.default=esptool_py
+esp32-devkitlipo.upload.tool.network=esp_ota
 
-esp32-DevKitLipo.upload.maximum_size=1310720
-esp32-DevKitLipo.upload.maximum_data_size=327680
-esp32-DevKitLipo.upload.flags=
-esp32-DevKitLipo.upload.extra_flags=
+esp32-devkitlipo.upload.maximum_size=1310720
+esp32-devkitlipo.upload.maximum_data_size=327680
+esp32-devkitlipo.upload.flags=
+esp32-devkitlipo.upload.extra_flags=
 
-esp32-DevKitLipo.serial.disableDTR=true
-esp32-DevKitLipo.serial.disableRTS=true
+esp32-devkitlipo.serial.disableDTR=true
+esp32-devkitlipo.serial.disableRTS=true
 
-esp32-DevKitLipo.build.tarch=xtensa
-esp32-DevKitLipo.build.bootloader_addr=0x1000
-esp32-DevKitLipo.build.target=esp32
-esp32-DevKitLipo.build.mcu=esp32
-esp32-DevKitLipo.build.core=esp32
-esp32-DevKitLipo.build.variant=esp32-devkit-lipo
-esp32-DevKitLipo.build.board=ESP32_DEVKIT_LIPO
+esp32-devkitlipo.build.tarch=xtensa
+esp32-devkitlipo.build.bootloader_addr=0x1000
+esp32-devkitlipo.build.target=esp32
+esp32-devkitlipo.build.mcu=esp32
+esp32-devkitlipo.build.core=esp32
+esp32-devkitlipo.build.variant=esp32-devkit-lipo
+esp32-devkitlipo.build.board=ESP32_DEVKIT_LIPO
 
-esp32-DevKitLipo.build.f_cpu=240000000L
-esp32-DevKitLipo.build.flash_size=4MB
-esp32-DevKitLipo.build.flash_freq=40m
-esp32-DevKitLipo.build.flash_mode=dio
-esp32-DevKitLipo.build.boot=dio
-esp32-DevKitLipo.build.partitions=default
-esp32-DevKitLipo.build.defines=
+esp32-devkitlipo.build.f_cpu=240000000L
+esp32-devkitlipo.build.flash_size=4MB
+esp32-devkitlipo.build.flash_freq=40m
+esp32-devkitlipo.build.flash_mode=dio
+esp32-devkitlipo.build.boot=dio
+esp32-devkitlipo.build.partitions=default
+esp32-devkitlipo.build.defines=
 
-esp32-DevKitLipo.menu.PartitionScheme.default=Default
-esp32-DevKitLipo.menu.PartitionScheme.default.build.partitions=default
-esp32-DevKitLipo.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
-esp32-DevKitLipo.menu.PartitionScheme.minimal.build.partitions=minimal
-esp32-DevKitLipo.menu.PartitionScheme.no_ota=No OTA (Large APP)
-esp32-DevKitLipo.menu.PartitionScheme.no_ota.build.partitions=no_ota
-esp32-DevKitLipo.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-esp32-DevKitLipo.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA)
-esp32-DevKitLipo.menu.PartitionScheme.huge_app.build.partitions=huge_app
-esp32-DevKitLipo.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-esp32-DevKitLipo.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
-esp32-DevKitLipo.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-esp32-DevKitLipo.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32-DevKitLipo.menu.PartitionScheme.fatflash=16M Fat
-esp32-DevKitLipo.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32-devkitlipo.menu.PartitionScheme.default=Default
+esp32-devkitlipo.menu.PartitionScheme.default.build.partitions=default
+esp32-devkitlipo.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
+esp32-devkitlipo.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32-devkitlipo.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32-devkitlipo.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32-devkitlipo.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32-devkitlipo.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA)
+esp32-devkitlipo.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32-devkitlipo.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32-devkitlipo.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32-devkitlipo.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32-devkitlipo.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32-devkitlipo.menu.PartitionScheme.fatflash=16M Fat
+esp32-devkitlipo.menu.PartitionScheme.fatflash.build.partitions=ffat
 
-esp32-DevKitLipo.menu.FlashMode.qio=QIO
-esp32-DevKitLipo.menu.FlashMode.qio.build.flash_mode=dio
-esp32-DevKitLipo.menu.FlashMode.qio.build.boot=qio
-esp32-DevKitLipo.menu.FlashMode.dio=DIO
-esp32-DevKitLipo.menu.FlashMode.dio.build.flash_mode=dio
-esp32-DevKitLipo.menu.FlashMode.dio.build.boot=dio
+esp32-devkitlipo.menu.FlashMode.qio=QIO
+esp32-devkitlipo.menu.FlashMode.qio.build.flash_mode=dio
+esp32-devkitlipo.menu.FlashMode.qio.build.boot=qio
+esp32-devkitlipo.menu.FlashMode.dio=DIO
+esp32-devkitlipo.menu.FlashMode.dio.build.flash_mode=dio
+esp32-devkitlipo.menu.FlashMode.dio.build.boot=dio
 
-esp32-DevKitLipo.menu.FlashFreq.80=80MHz
-esp32-DevKitLipo.menu.FlashFreq.80.build.flash_freq=80m
-esp32-DevKitLipo.menu.FlashFreq.40=40MHz
-esp32-DevKitLipo.menu.FlashFreq.40.build.flash_freq=40m
+esp32-devkitlipo.menu.FlashFreq.80=80MHz
+esp32-devkitlipo.menu.FlashFreq.80.build.flash_freq=80m
+esp32-devkitlipo.menu.FlashFreq.40=40MHz
+esp32-devkitlipo.menu.FlashFreq.40.build.flash_freq=40m
 
-esp32-DevKitLipo.menu.UploadSpeed.921600=921600
-esp32-DevKitLipo.menu.UploadSpeed.921600.upload.speed=921600
-esp32-DevKitLipo.menu.UploadSpeed.115200=115200
-esp32-DevKitLipo.menu.UploadSpeed.115200.upload.speed=115200
-esp32-DevKitLipo.menu.UploadSpeed.256000.windows=256000
-esp32-DevKitLipo.menu.UploadSpeed.256000.upload.speed=256000
-esp32-DevKitLipo.menu.UploadSpeed.230400.windows.upload.speed=256000
-esp32-DevKitLipo.menu.UploadSpeed.230400=230400
-esp32-DevKitLipo.menu.UploadSpeed.230400.upload.speed=230400
-esp32-DevKitLipo.menu.UploadSpeed.460800.linux=460800
-esp32-DevKitLipo.menu.UploadSpeed.460800.macosx=460800
-esp32-DevKitLipo.menu.UploadSpeed.460800.upload.speed=460800
-esp32-DevKitLipo.menu.UploadSpeed.512000.windows=512000
-esp32-DevKitLipo.menu.UploadSpeed.512000.upload.speed=512000
+esp32-devkitlipo.menu.UploadSpeed.921600=921600
+esp32-devkitlipo.menu.UploadSpeed.921600.upload.speed=921600
+esp32-devkitlipo.menu.UploadSpeed.115200=115200
+esp32-devkitlipo.menu.UploadSpeed.115200.upload.speed=115200
+esp32-devkitlipo.menu.UploadSpeed.256000.windows=256000
+esp32-devkitlipo.menu.UploadSpeed.256000.upload.speed=256000
+esp32-devkitlipo.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32-devkitlipo.menu.UploadSpeed.230400=230400
+esp32-devkitlipo.menu.UploadSpeed.230400.upload.speed=230400
+esp32-devkitlipo.menu.UploadSpeed.460800.linux=460800
+esp32-devkitlipo.menu.UploadSpeed.460800.macosx=460800
+esp32-devkitlipo.menu.UploadSpeed.460800.upload.speed=460800
+esp32-devkitlipo.menu.UploadSpeed.512000.windows=512000
+esp32-devkitlipo.menu.UploadSpeed.512000.upload.speed=512000
 
-esp32-DevKitLipo.menu.DebugLevel.none=None
-esp32-DevKitLipo.menu.DebugLevel.none.build.code_debug=0
-esp32-DevKitLipo.menu.DebugLevel.error=Error
-esp32-DevKitLipo.menu.DebugLevel.error.build.code_debug=1
-esp32-DevKitLipo.menu.DebugLevel.warn=Warn
-esp32-DevKitLipo.menu.DebugLevel.warn.build.code_debug=2
-esp32-DevKitLipo.menu.DebugLevel.info=Info
-esp32-DevKitLipo.menu.DebugLevel.info.build.code_debug=3
-esp32-DevKitLipo.menu.DebugLevel.debug=Debug
-esp32-DevKitLipo.menu.DebugLevel.debug.build.code_debug=4
-esp32-DevKitLipo.menu.DebugLevel.verbose=Verbose
-esp32-DevKitLipo.menu.DebugLevel.verbose.build.code_debug=5
+esp32-devkitlipo.menu.DebugLevel.none=None
+esp32-devkitlipo.menu.DebugLevel.none.build.code_debug=0
+esp32-devkitlipo.menu.DebugLevel.error=Error
+esp32-devkitlipo.menu.DebugLevel.error.build.code_debug=1
+esp32-devkitlipo.menu.DebugLevel.warn=Warn
+esp32-devkitlipo.menu.DebugLevel.warn.build.code_debug=2
+esp32-devkitlipo.menu.DebugLevel.info=Info
+esp32-devkitlipo.menu.DebugLevel.info.build.code_debug=3
+esp32-devkitlipo.menu.DebugLevel.debug=Debug
+esp32-devkitlipo.menu.DebugLevel.debug.build.code_debug=4
+esp32-devkitlipo.menu.DebugLevel.verbose=Verbose
+esp32-devkitlipo.menu.DebugLevel.verbose.build.code_debug=5
 
-esp32-DevKitLipo.menu.EraseFlash.none=Disabled
-esp32-DevKitLipo.menu.EraseFlash.none.upload.erase_cmd=
-esp32-DevKitLipo.menu.EraseFlash.all=Enabled
-esp32-DevKitLipo.menu.EraseFlash.all.upload.erase_cmd=-e
+esp32-devkitlipo.menu.EraseFlash.none=Disabled
+esp32-devkitlipo.menu.EraseFlash.none.upload.erase_cmd=
+esp32-devkitlipo.menu.EraseFlash.all=Enabled
+esp32-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+esp32s2-devkitlipo.name=OLIMEX ESP32-S2-DevKit-Lipo
+esp32s2-devkitlipo.vid.0=0x303a
+esp32s2-devkitlipo.pid.0=0x0002
+
+esp32s2-devkitlipo.bootloader.tool=esptool_py
+esp32s2-devkitlipo.bootloader.tool.default=esptool_py
+
+esp32s2-devkitlipo.upload.tool=esptool_py
+esp32s2-devkitlipo.upload.tool.default=esptool_py
+esp32s2-devkitlipo.upload.tool.network=esp_ota
+
+esp32s2-devkitlipo.upload.maximum_size=1310720
+esp32s2-devkitlipo.upload.maximum_data_size=327680
+esp32s2-devkitlipo.upload.flags=
+esp32s2-devkitlipo.upload.extra_flags=
+esp32s2-devkitlipo.upload.use_1200bps_touch=false
+esp32s2-devkitlipo.upload.wait_for_upload_port=false
+
+esp32s2-devkitlipo.serial.disableDTR=false
+esp32s2-devkitlipo.serial.disableRTS=false
+
+esp32s2-devkitlipo.build.tarch=xtensa
+esp32s2-devkitlipo.build.bootloader_addr=0x1000
+esp32s2-devkitlipo.build.target=esp32s2
+esp32s2-devkitlipo.build.mcu=esp32s2
+esp32s2-devkitlipo.build.core=esp32
+esp32s2-devkitlipo.build.variant=esp32s2-devkit-lipo
+esp32s2-devkitlipo.build.board=ESP32S2_DEVKIT_LIPO
+
+esp32s2-devkitlipo.build.cdc_on_boot=0
+esp32s2-devkitlipo.build.msc_on_boot=0
+esp32s2-devkitlipo.build.dfu_on_boot=0
+esp32s2-devkitlipo.build.f_cpu=240000000L
+esp32s2-devkitlipo.build.flash_size=4MB
+esp32s2-devkitlipo.build.flash_freq=80m
+esp32s2-devkitlipo.build.flash_mode=dio
+esp32s2-devkitlipo.build.boot=qio
+esp32s2-devkitlipo.build.partitions=default
+esp32s2-devkitlipo.build.defines=
+
+esp32s2-devkitlipo.menu.JTAGAdapter.default=Disabled
+esp32s2-devkitlipo.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp32s2-devkitlipo.menu.JTAGAdapter.external=FTDI Adapter
+esp32s2-devkitlipo.menu.JTAGAdapter.external.build.openocdscript=esp32s2-kaluga-1.cfg
+esp32s2-devkitlipo.menu.JTAGAdapter.external.build.copy_jtag_files=1
+esp32s2-devkitlipo.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32s2-devkitlipo.menu.JTAGAdapter.bridge.build.openocdscript=esp32s2-bridge.cfg
+esp32s2-devkitlipo.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+esp32s2-devkitlipo.menu.CDCOnBoot.default=Disabled
+esp32s2-devkitlipo.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32s2-devkitlipo.menu.CDCOnBoot.cdc=Enabled
+esp32s2-devkitlipo.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32s2-devkitlipo.menu.MSCOnBoot.default=Disabled
+esp32s2-devkitlipo.menu.MSCOnBoot.default.build.msc_on_boot=0
+esp32s2-devkitlipo.menu.MSCOnBoot.msc=Enabled
+esp32s2-devkitlipo.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+esp32s2-devkitlipo.menu.DFUOnBoot.default=Disabled
+esp32s2-devkitlipo.menu.DFUOnBoot.default.build.dfu_on_boot=0
+esp32s2-devkitlipo.menu.DFUOnBoot.dfu=Enabled
+esp32s2-devkitlipo.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+esp32s2-devkitlipo.menu.UploadMode.default=UART0
+esp32s2-devkitlipo.menu.UploadMode.default.upload.use_1200bps_touch=false
+esp32s2-devkitlipo.menu.UploadMode.default.upload.wait_for_upload_port=false
+esp32s2-devkitlipo.menu.UploadMode.cdc=Internal USB
+esp32s2-devkitlipo.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+esp32s2-devkitlipo.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+esp32s2-devkitlipo.menu.PSRAM.disabled=Disabled (WROOM)
+esp32s2-devkitlipo.menu.PSRAM.disabled.build.defines=
+esp32s2-devkitlipo.menu.PSRAM.enabled=Enabled (WROVER)
+esp32s2-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+esp32s2-devkitlipo.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32s2-devkitlipo.menu.PartitionScheme.default.build.partitions=default
+esp32s2-devkitlipo.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32s2-devkitlipo.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32s2-devkitlipo.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32s2-devkitlipo.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32s2-devkitlipo.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32s2-devkitlipo.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32s2-devkitlipo.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32s2-devkitlipo.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32s2-devkitlipo.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32s2-devkitlipo.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32s2-devkitlipo.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32s2-devkitlipo.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32s2-devkitlipo.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32s2-devkitlipo.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32s2-devkitlipo.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32s2-devkitlipo.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32s2-devkitlipo.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32s2-devkitlipo.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32s2-devkitlipo.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+esp32s2-devkitlipo.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32s2-devkitlipo.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32s2-devkitlipo.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32s2-devkitlipo.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32s2-devkitlipo.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32s2-devkitlipo.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32s2-devkitlipo.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp32s2-devkitlipo.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32s2-devkitlipo.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32s2-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32s2-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32s2-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32s2-devkitlipo.menu.PartitionScheme.rainmaker=RainMaker
+esp32s2-devkitlipo.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32s2-devkitlipo.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32s2-devkitlipo.menu.PartitionScheme.custom=Custom
+esp32s2-devkitlipo.menu.PartitionScheme.custom.build.partitions=
+esp32s2-devkitlipo.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+esp32s2-devkitlipo.menu.CPUFreq.240=240MHz (WiFi)
+esp32s2-devkitlipo.menu.CPUFreq.240.build.f_cpu=240000000L
+esp32s2-devkitlipo.menu.CPUFreq.160=160MHz (WiFi)
+esp32s2-devkitlipo.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32s2-devkitlipo.menu.CPUFreq.80=80MHz (WiFi)
+esp32s2-devkitlipo.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32s2-devkitlipo.menu.CPUFreq.40=40MHz
+esp32s2-devkitlipo.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32s2-devkitlipo.menu.CPUFreq.20=20MHz
+esp32s2-devkitlipo.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32s2-devkitlipo.menu.CPUFreq.10=10MHz
+esp32s2-devkitlipo.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32s2-devkitlipo.menu.FlashMode.qio=QIO
+esp32s2-devkitlipo.menu.FlashMode.qio.build.flash_mode=dio
+esp32s2-devkitlipo.menu.FlashMode.qio.build.boot=qio
+esp32s2-devkitlipo.menu.FlashMode.dio=DIO
+esp32s2-devkitlipo.menu.FlashMode.dio.build.flash_mode=dio
+esp32s2-devkitlipo.menu.FlashMode.dio.build.boot=dio
+esp32s2-devkitlipo.menu.FlashMode.qout=QOUT
+esp32s2-devkitlipo.menu.FlashMode.qout.build.flash_mode=dout
+esp32s2-devkitlipo.menu.FlashMode.qout.build.boot=qout
+esp32s2-devkitlipo.menu.FlashMode.dout=DOUT
+esp32s2-devkitlipo.menu.FlashMode.dout.build.flash_mode=dout
+esp32s2-devkitlipo.menu.FlashMode.dout.build.boot=dout
+
+esp32s2-devkitlipo.menu.FlashFreq.80=80MHz
+esp32s2-devkitlipo.menu.FlashFreq.80.build.flash_freq=80m
+esp32s2-devkitlipo.menu.FlashFreq.40=40MHz
+esp32s2-devkitlipo.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32s2-devkitlipo.menu.FlashSize.4M=4MB (32Mb)
+esp32s2-devkitlipo.menu.FlashSize.4M.build.flash_size=4MB
+esp32s2-devkitlipo.menu.FlashSize.8M=8MB (64Mb)
+esp32s2-devkitlipo.menu.FlashSize.8M.build.flash_size=8MB
+esp32s2-devkitlipo.menu.FlashSize.8M.build.partitions=default_8MB
+esp32s2-devkitlipo.menu.FlashSize.2M=2MB (16Mb)
+esp32s2-devkitlipo.menu.FlashSize.2M.build.flash_size=2MB
+esp32s2-devkitlipo.menu.FlashSize.2M.build.partitions=minimal
+esp32s2-devkitlipo.menu.FlashSize.16M=16MB (128Mb)
+esp32s2-devkitlipo.menu.FlashSize.16M.build.flash_size=16MB
+
+esp32s2-devkitlipo.menu.UploadSpeed.921600=921600
+esp32s2-devkitlipo.menu.UploadSpeed.921600.upload.speed=921600
+esp32s2-devkitlipo.menu.UploadSpeed.115200=115200
+esp32s2-devkitlipo.menu.UploadSpeed.115200.upload.speed=115200
+esp32s2-devkitlipo.menu.UploadSpeed.256000.windows=256000
+esp32s2-devkitlipo.menu.UploadSpeed.256000.upload.speed=256000
+esp32s2-devkitlipo.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32s2-devkitlipo.menu.UploadSpeed.230400=230400
+esp32s2-devkitlipo.menu.UploadSpeed.230400.upload.speed=230400
+esp32s2-devkitlipo.menu.UploadSpeed.460800.linux=460800
+esp32s2-devkitlipo.menu.UploadSpeed.460800.macosx=460800
+esp32s2-devkitlipo.menu.UploadSpeed.460800.upload.speed=460800
+esp32s2-devkitlipo.menu.UploadSpeed.512000.windows=512000
+esp32s2-devkitlipo.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32s2-devkitlipo.menu.DebugLevel.none=None
+esp32s2-devkitlipo.menu.DebugLevel.none.build.code_debug=0
+esp32s2-devkitlipo.menu.DebugLevel.error=Error
+esp32s2-devkitlipo.menu.DebugLevel.error.build.code_debug=1
+esp32s2-devkitlipo.menu.DebugLevel.warn=Warn
+esp32s2-devkitlipo.menu.DebugLevel.warn.build.code_debug=2
+esp32s2-devkitlipo.menu.DebugLevel.info=Info
+esp32s2-devkitlipo.menu.DebugLevel.info.build.code_debug=3
+esp32s2-devkitlipo.menu.DebugLevel.debug=Debug
+esp32s2-devkitlipo.menu.DebugLevel.debug.build.code_debug=4
+esp32s2-devkitlipo.menu.DebugLevel.verbose=Verbose
+esp32s2-devkitlipo.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s2-devkitlipo.menu.EraseFlash.none=Disabled
+esp32s2-devkitlipo.menu.EraseFlash.none.upload.erase_cmd=
+esp32s2-devkitlipo.menu.EraseFlash.all=Enabled
+esp32s2-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+esp32s2-devkitlipo-usb.name=OLIMEX ESP32-S2-DevKit-Lipo-USB
+esp32s2-devkitlipo-usb.vid.0=0x303a
+esp32s2-devkitlipo-usb.pid.0=0x0002
+
+esp32s2-devkitlipo-usb.bootloader.tool=esptool_py
+esp32s2-devkitlipo-usb.bootloader.tool.default=esptool_py
+
+esp32s2-devkitlipo-usb.upload.tool=esptool_py
+esp32s2-devkitlipo-usb.upload.tool.default=esptool_py
+esp32s2-devkitlipo-usb.upload.tool.network=esp_ota
+
+esp32s2-devkitlipo-usb.upload.maximum_size=1310720
+esp32s2-devkitlipo-usb.upload.maximum_data_size=327680
+esp32s2-devkitlipo-usb.upload.flags=
+esp32s2-devkitlipo-usb.upload.extra_flags=
+esp32s2-devkitlipo-usb.upload.use_1200bps_touch=false
+esp32s2-devkitlipo-usb.upload.wait_for_upload_port=false
+
+esp32s2-devkitlipo-usb.serial.disableDTR=false
+esp32s2-devkitlipo-usb.serial.disableRTS=false
+
+esp32s2-devkitlipo-usb.build.tarch=xtensa
+esp32s2-devkitlipo-usb.build.bootloader_addr=0x1000
+esp32s2-devkitlipo-usb.build.target=esp32s2
+esp32s2-devkitlipo-usb.build.mcu=esp32s2
+esp32s2-devkitlipo-usb.build.core=esp32
+esp32s2-devkitlipo-usb.build.variant=esp32s2-devkit-lipo-usb
+esp32s2-devkitlipo-usb.build.board=ESP32S2_DEVKIT_LIPO_USB
+
+esp32s2-devkitlipo-usb.build.cdc_on_boot=0
+esp32s2-devkitlipo-usb.build.msc_on_boot=0
+esp32s2-devkitlipo-usb.build.dfu_on_boot=0
+esp32s2-devkitlipo-usb.build.f_cpu=240000000L
+esp32s2-devkitlipo-usb.build.flash_size=4MB
+esp32s2-devkitlipo-usb.build.flash_freq=80m
+esp32s2-devkitlipo-usb.build.flash_mode=dio
+esp32s2-devkitlipo-usb.build.boot=qio
+esp32s2-devkitlipo-usb.build.partitions=default
+esp32s2-devkitlipo-usb.build.defines=
+
+esp32s2-devkitlipo-usb.menu.JTAGAdapter.default=Disabled
+esp32s2-devkitlipo-usb.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp32s2-devkitlipo-usb.menu.JTAGAdapter.external=FTDI Adapter
+esp32s2-devkitlipo-usb.menu.JTAGAdapter.external.build.openocdscript=esp32s2-kaluga-1.cfg
+esp32s2-devkitlipo-usb.menu.JTAGAdapter.external.build.copy_jtag_files=1
+esp32s2-devkitlipo-usb.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32s2-devkitlipo-usb.menu.JTAGAdapter.bridge.build.openocdscript=esp32s2-bridge.cfg
+esp32s2-devkitlipo-usb.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+esp32s2-devkitlipo-usb.menu.CDCOnBoot.default=Enabled
+esp32s2-devkitlipo-usb.menu.CDCOnBoot.default.build.cdc_on_boot=1
+esp32s2-devkitlipo-usb.menu.CDCOnBoot.cdc=Disabled
+esp32s2-devkitlipo-usb.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+esp32s2-devkitlipo-usb.menu.MSCOnBoot.default=Disabled
+esp32s2-devkitlipo-usb.menu.MSCOnBoot.default.build.msc_on_boot=0
+esp32s2-devkitlipo-usb.menu.MSCOnBoot.msc=Enabled
+esp32s2-devkitlipo-usb.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+esp32s2-devkitlipo-usb.menu.DFUOnBoot.default=Enabled
+esp32s2-devkitlipo-usb.menu.DFUOnBoot.default.build.dfu_on_boot=1
+esp32s2-devkitlipo-usb.menu.DFUOnBoot.dfu=Disabled
+esp32s2-devkitlipo-usb.menu.DFUOnBoot.dfu.build.dfu_on_boot=0
+
+esp32s2-devkitlipo-usb.menu.UploadMode.default=Internal USB
+esp32s2-devkitlipo-usb.menu.UploadMode.default.upload.use_1200bps_touch=true
+esp32s2-devkitlipo-usb.menu.UploadMode.default.upload.wait_for_upload_port=true
+esp32s2-devkitlipo-usb.menu.UploadMode.UART0=UART0
+esp32s2-devkitlipo-usb.menu.UploadMode.UART0.upload.use_1200bps_touch=false
+esp32s2-devkitlipo-usb.menu.UploadMode.UART0.upload.wait_for_upload_port=false
+
+esp32s2-devkitlipo-usb.menu.PSRAM.disabled=Disabled (WROOM)
+esp32s2-devkitlipo-usb.menu.PSRAM.disabled.build.defines=
+esp32s2-devkitlipo-usb.menu.PSRAM.enabled=Enabled (WROVER)
+esp32s2-devkitlipo-usb.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+esp32s2-devkitlipo-usb.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.default.build.partitions=default
+esp32s2-devkitlipo-usb.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32s2-devkitlipo-usb.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32s2-devkitlipo-usb.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32s2-devkitlipo-usb.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32s2-devkitlipo-usb.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32s2-devkitlipo-usb.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32s2-devkitlipo-usb.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+esp32s2-devkitlipo-usb.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32s2-devkitlipo-usb.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32s2-devkitlipo-usb.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32s2-devkitlipo-usb.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32s2-devkitlipo-usb.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32s2-devkitlipo-usb.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32s2-devkitlipo-usb.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32s2-devkitlipo-usb.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32s2-devkitlipo-usb.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32s2-devkitlipo-usb.menu.PartitionScheme.rainmaker=RainMaker
+esp32s2-devkitlipo-usb.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32s2-devkitlipo-usb.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32s2-devkitlipo-usb.menu.PartitionScheme.custom=Custom
+esp32s2-devkitlipo-usb.menu.PartitionScheme.custom.build.partitions=
+esp32s2-devkitlipo-usb.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+esp32s2-devkitlipo-usb.menu.CPUFreq.240=240MHz (WiFi)
+esp32s2-devkitlipo-usb.menu.CPUFreq.240.build.f_cpu=240000000L
+esp32s2-devkitlipo-usb.menu.CPUFreq.160=160MHz (WiFi)
+esp32s2-devkitlipo-usb.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32s2-devkitlipo-usb.menu.CPUFreq.80=80MHz (WiFi)
+esp32s2-devkitlipo-usb.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32s2-devkitlipo-usb.menu.CPUFreq.40=40MHz
+esp32s2-devkitlipo-usb.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32s2-devkitlipo-usb.menu.CPUFreq.20=20MHz
+esp32s2-devkitlipo-usb.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32s2-devkitlipo-usb.menu.CPUFreq.10=10MHz
+esp32s2-devkitlipo-usb.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32s2-devkitlipo-usb.menu.FlashMode.qio=QIO
+esp32s2-devkitlipo-usb.menu.FlashMode.qio.build.flash_mode=dio
+esp32s2-devkitlipo-usb.menu.FlashMode.qio.build.boot=qio
+esp32s2-devkitlipo-usb.menu.FlashMode.dio=DIO
+esp32s2-devkitlipo-usb.menu.FlashMode.dio.build.flash_mode=dio
+esp32s2-devkitlipo-usb.menu.FlashMode.dio.build.boot=dio
+esp32s2-devkitlipo-usb.menu.FlashMode.qout=QOUT
+esp32s2-devkitlipo-usb.menu.FlashMode.qout.build.flash_mode=dout
+esp32s2-devkitlipo-usb.menu.FlashMode.qout.build.boot=qout
+esp32s2-devkitlipo-usb.menu.FlashMode.dout=DOUT
+esp32s2-devkitlipo-usb.menu.FlashMode.dout.build.flash_mode=dout
+esp32s2-devkitlipo-usb.menu.FlashMode.dout.build.boot=dout
+
+esp32s2-devkitlipo-usb.menu.FlashFreq.80=80MHz
+esp32s2-devkitlipo-usb.menu.FlashFreq.80.build.flash_freq=80m
+esp32s2-devkitlipo-usb.menu.FlashFreq.40=40MHz
+esp32s2-devkitlipo-usb.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32s2-devkitlipo-usb.menu.FlashSize.4M=4MB (32Mb)
+esp32s2-devkitlipo-usb.menu.FlashSize.4M.build.flash_size=4MB
+esp32s2-devkitlipo-usb.menu.FlashSize.8M=8MB (64Mb)
+esp32s2-devkitlipo-usb.menu.FlashSize.8M.build.flash_size=8MB
+esp32s2-devkitlipo-usb.menu.FlashSize.8M.build.partitions=default_8MB
+esp32s2-devkitlipo-usb.menu.FlashSize.2M=2MB (16Mb)
+esp32s2-devkitlipo-usb.menu.FlashSize.2M.build.flash_size=2MB
+esp32s2-devkitlipo-usb.menu.FlashSize.2M.build.partitions=minimal
+esp32s2-devkitlipo-usb.menu.FlashSize.16M=16MB (128Mb)
+esp32s2-devkitlipo-usb.menu.FlashSize.16M.build.flash_size=16MB
+
+esp32s2-devkitlipo-usb.menu.UploadSpeed.921600=921600
+esp32s2-devkitlipo-usb.menu.UploadSpeed.921600.upload.speed=921600
+esp32s2-devkitlipo-usb.menu.UploadSpeed.115200=115200
+esp32s2-devkitlipo-usb.menu.UploadSpeed.115200.upload.speed=115200
+esp32s2-devkitlipo-usb.menu.UploadSpeed.256000.windows=256000
+esp32s2-devkitlipo-usb.menu.UploadSpeed.256000.upload.speed=256000
+esp32s2-devkitlipo-usb.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32s2-devkitlipo-usb.menu.UploadSpeed.230400=230400
+esp32s2-devkitlipo-usb.menu.UploadSpeed.230400.upload.speed=230400
+esp32s2-devkitlipo-usb.menu.UploadSpeed.460800.linux=460800
+esp32s2-devkitlipo-usb.menu.UploadSpeed.460800.macosx=460800
+esp32s2-devkitlipo-usb.menu.UploadSpeed.460800.upload.speed=460800
+esp32s2-devkitlipo-usb.menu.UploadSpeed.512000.windows=512000
+esp32s2-devkitlipo-usb.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32s2-devkitlipo-usb.menu.DebugLevel.none=None
+esp32s2-devkitlipo-usb.menu.DebugLevel.none.build.code_debug=0
+esp32s2-devkitlipo-usb.menu.DebugLevel.error=Error
+esp32s2-devkitlipo-usb.menu.DebugLevel.error.build.code_debug=1
+esp32s2-devkitlipo-usb.menu.DebugLevel.warn=Warn
+esp32s2-devkitlipo-usb.menu.DebugLevel.warn.build.code_debug=2
+esp32s2-devkitlipo-usb.menu.DebugLevel.info=Info
+esp32s2-devkitlipo-usb.menu.DebugLevel.info.build.code_debug=3
+esp32s2-devkitlipo-usb.menu.DebugLevel.debug=Debug
+esp32s2-devkitlipo-usb.menu.DebugLevel.debug.build.code_debug=4
+esp32s2-devkitlipo-usb.menu.DebugLevel.verbose=Verbose
+esp32s2-devkitlipo-usb.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s2-devkitlipo-usb.menu.EraseFlash.none=Disabled
+esp32s2-devkitlipo-usb.menu.EraseFlash.none.upload.erase_cmd=
+esp32s2-devkitlipo-usb.menu.EraseFlash.all=Enabled
+esp32s2-devkitlipo-usb.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+esp32s3-devkitlipo.name=OLIMEX ESP32-S3-DevKit-Lipo
+esp32s3-devkitlipo.vid.0=0x303a
+esp32s3-devkitlipo.pid.0=0x1001
+
+esp32s3-devkitlipo.bootloader.tool=esptool_py
+esp32s3-devkitlipo.bootloader.tool.default=esptool_py
+
+esp32s3-devkitlipo.upload.tool=esptool_py
+esp32s3-devkitlipo.upload.tool.default=esptool_py
+esp32s3-devkitlipo.upload.tool.network=esp_ota
+
+esp32s3-devkitlipo.upload.maximum_size=1310720
+esp32s3-devkitlipo.upload.maximum_data_size=327680
+esp32s3-devkitlipo.upload.flags=
+esp32s3-devkitlipo.upload.extra_flags=
+esp32s3-devkitlipo.upload.use_1200bps_touch=false
+esp32s3-devkitlipo.upload.wait_for_upload_port=false
+
+esp32s3-devkitlipo.serial.disableDTR=false
+esp32s3-devkitlipo.serial.disableRTS=false
+
+esp32s3-devkitlipo.build.tarch=xtensa
+esp32s3-devkitlipo.build.bootloader_addr=0x0
+esp32s3-devkitlipo.build.target=esp32s3
+esp32s3-devkitlipo.build.mcu=esp32s3
+esp32s3-devkitlipo.build.core=esp32
+esp32s3-devkitlipo.build.variant=esp32s3-devkit-lipo
+esp32s3-devkitlipo.build.board=ESP32S3_DEVKIT_LIPO
+
+esp32s3-devkitlipo.build.usb_mode=1
+esp32s3-devkitlipo.build.cdc_on_boot=0
+esp32s3-devkitlipo.build.msc_on_boot=0
+esp32s3-devkitlipo.build.dfu_on_boot=0
+esp32s3-devkitlipo.build.f_cpu=240000000L
+esp32s3-devkitlipo.build.flash_size=4MB
+esp32s3-devkitlipo.build.flash_freq=80m
+esp32s3-devkitlipo.build.flash_mode=dio
+esp32s3-devkitlipo.build.boot=qio
+esp32s3-devkitlipo.build.boot_freq=80m
+esp32s3-devkitlipo.build.partitions=default
+esp32s3-devkitlipo.build.defines=
+esp32s3-devkitlipo.build.loop_core=
+esp32s3-devkitlipo.build.event_core=
+esp32s3-devkitlipo.build.psram_type=qspi
+esp32s3-devkitlipo.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+esp32s3-devkitlipo.menu.JTAGAdapter.default=Disabled
+esp32s3-devkitlipo.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp32s3-devkitlipo.menu.JTAGAdapter.builtin=Integrated USB JTAG
+esp32s3-devkitlipo.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+esp32s3-devkitlipo.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+esp32s3-devkitlipo.menu.JTAGAdapter.external=FTDI Adapter
+esp32s3-devkitlipo.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+esp32s3-devkitlipo.menu.JTAGAdapter.external.build.copy_jtag_files=1
+esp32s3-devkitlipo.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32s3-devkitlipo.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+esp32s3-devkitlipo.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+esp32s3-devkitlipo.menu.PSRAM.disabled=Disabled
+esp32s3-devkitlipo.menu.PSRAM.disabled.build.defines=
+esp32s3-devkitlipo.menu.PSRAM.disabled.build.psram_type=qspi
+esp32s3-devkitlipo.menu.PSRAM.enabled=QSPI PSRAM
+esp32s3-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3-devkitlipo.menu.PSRAM.enabled.build.psram_type=qspi
+esp32s3-devkitlipo.menu.PSRAM.opi=OPI PSRAM
+esp32s3-devkitlipo.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+esp32s3-devkitlipo.menu.PSRAM.opi.build.psram_type=opi
+
+esp32s3-devkitlipo.menu.FlashMode.qio=QIO 80MHz
+esp32s3-devkitlipo.menu.FlashMode.qio.build.flash_mode=dio
+esp32s3-devkitlipo.menu.FlashMode.qio.build.boot=qio
+esp32s3-devkitlipo.menu.FlashMode.qio.build.boot_freq=80m
+esp32s3-devkitlipo.menu.FlashMode.qio.build.flash_freq=80m
+esp32s3-devkitlipo.menu.FlashMode.qio120=QIO 120MHz
+esp32s3-devkitlipo.menu.FlashMode.qio120.build.flash_mode=dio
+esp32s3-devkitlipo.menu.FlashMode.qio120.build.boot=qio
+esp32s3-devkitlipo.menu.FlashMode.qio120.build.boot_freq=120m
+esp32s3-devkitlipo.menu.FlashMode.qio120.build.flash_freq=80m
+esp32s3-devkitlipo.menu.FlashMode.dio=DIO 80MHz
+esp32s3-devkitlipo.menu.FlashMode.dio.build.flash_mode=dio
+esp32s3-devkitlipo.menu.FlashMode.dio.build.boot=dio
+esp32s3-devkitlipo.menu.FlashMode.dio.build.boot_freq=80m
+esp32s3-devkitlipo.menu.FlashMode.dio.build.flash_freq=80m
+esp32s3-devkitlipo.menu.FlashMode.opi=OPI 80MHz
+esp32s3-devkitlipo.menu.FlashMode.opi.build.flash_mode=dout
+esp32s3-devkitlipo.menu.FlashMode.opi.build.boot=opi
+esp32s3-devkitlipo.menu.FlashMode.opi.build.boot_freq=80m
+esp32s3-devkitlipo.menu.FlashMode.opi.build.flash_freq=80m
+
+esp32s3-devkitlipo.menu.FlashSize.4M=4MB (32Mb)
+esp32s3-devkitlipo.menu.FlashSize.4M.build.flash_size=4MB
+esp32s3-devkitlipo.menu.FlashSize.8M=8MB (64Mb)
+esp32s3-devkitlipo.menu.FlashSize.8M.build.flash_size=8MB
+esp32s3-devkitlipo.menu.FlashSize.8M.build.partitions=default_8MB
+esp32s3-devkitlipo.menu.FlashSize.16M=16MB (128Mb)
+esp32s3-devkitlipo.menu.FlashSize.16M.build.flash_size=16MB
+esp32s3-devkitlipo.menu.FlashSize.32M=32MB (256Mb)
+esp32s3-devkitlipo.menu.FlashSize.32M.build.flash_size=32MB
+esp32s3-devkitlipo.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
+
+esp32s3-devkitlipo.menu.LoopCore.1=Core 1
+esp32s3-devkitlipo.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+esp32s3-devkitlipo.menu.LoopCore.0=Core 0
+esp32s3-devkitlipo.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+esp32s3-devkitlipo.menu.EventsCore.1=Core 1
+esp32s3-devkitlipo.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+esp32s3-devkitlipo.menu.EventsCore.0=Core 0
+esp32s3-devkitlipo.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+esp32s3-devkitlipo.menu.USBMode.hwcdc=Hardware CDC and JTAG
+esp32s3-devkitlipo.menu.USBMode.hwcdc.build.usb_mode=1
+esp32s3-devkitlipo.menu.USBMode.default=USB-OTG (TinyUSB)
+esp32s3-devkitlipo.menu.USBMode.default.build.usb_mode=0
+
+esp32s3-devkitlipo.menu.CDCOnBoot.default=Disabled
+esp32s3-devkitlipo.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32s3-devkitlipo.menu.CDCOnBoot.cdc=Enabled
+esp32s3-devkitlipo.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32s3-devkitlipo.menu.MSCOnBoot.default=Disabled
+esp32s3-devkitlipo.menu.MSCOnBoot.default.build.msc_on_boot=0
+esp32s3-devkitlipo.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+esp32s3-devkitlipo.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+esp32s3-devkitlipo.menu.DFUOnBoot.default=Disabled
+esp32s3-devkitlipo.menu.DFUOnBoot.default.build.dfu_on_boot=0
+esp32s3-devkitlipo.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+esp32s3-devkitlipo.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+esp32s3-devkitlipo.menu.UploadMode.default=UART0 / Hardware CDC
+esp32s3-devkitlipo.menu.UploadMode.default.upload.use_1200bps_touch=false
+esp32s3-devkitlipo.menu.UploadMode.default.upload.wait_for_upload_port=false
+esp32s3-devkitlipo.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+esp32s3-devkitlipo.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+esp32s3-devkitlipo.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+esp32s3-devkitlipo.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32s3-devkitlipo.menu.PartitionScheme.default.build.partitions=default
+esp32s3-devkitlipo.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32s3-devkitlipo.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32s3-devkitlipo.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32s3-devkitlipo.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32s3-devkitlipo.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32s3-devkitlipo.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32s3-devkitlipo.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32s3-devkitlipo.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32s3-devkitlipo.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32s3-devkitlipo.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32s3-devkitlipo.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32s3-devkitlipo.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32s3-devkitlipo.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32s3-devkitlipo.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32s3-devkitlipo.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32s3-devkitlipo.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32s3-devkitlipo.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32s3-devkitlipo.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32s3-devkitlipo.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+esp32s3-devkitlipo.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32s3-devkitlipo.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32s3-devkitlipo.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32s3-devkitlipo.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32s3-devkitlipo.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32s3-devkitlipo.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32s3-devkitlipo.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp32s3-devkitlipo.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32s3-devkitlipo.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32s3-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32s3-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32s3-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32s3-devkitlipo.menu.PartitionScheme.rainmaker=RainMaker
+esp32s3-devkitlipo.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32s3-devkitlipo.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32s3-devkitlipo.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+esp32s3-devkitlipo.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+esp32s3-devkitlipo.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+esp32s3-devkitlipo.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+esp32s3-devkitlipo.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+esp32s3-devkitlipo.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+esp32s3-devkitlipo.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+esp32s3-devkitlipo.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+esp32s3-devkitlipo.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+esp32s3-devkitlipo.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+esp32s3-devkitlipo.menu.PartitionScheme.custom=Custom
+esp32s3-devkitlipo.menu.PartitionScheme.custom.build.partitions=
+esp32s3-devkitlipo.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+esp32s3-devkitlipo.menu.CPUFreq.240=240MHz (WiFi)
+esp32s3-devkitlipo.menu.CPUFreq.240.build.f_cpu=240000000L
+esp32s3-devkitlipo.menu.CPUFreq.160=160MHz (WiFi)
+esp32s3-devkitlipo.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32s3-devkitlipo.menu.CPUFreq.80=80MHz (WiFi)
+esp32s3-devkitlipo.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32s3-devkitlipo.menu.CPUFreq.40=40MHz
+esp32s3-devkitlipo.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32s3-devkitlipo.menu.CPUFreq.20=20MHz
+esp32s3-devkitlipo.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32s3-devkitlipo.menu.CPUFreq.10=10MHz
+esp32s3-devkitlipo.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32s3-devkitlipo.menu.UploadSpeed.921600=921600
+esp32s3-devkitlipo.menu.UploadSpeed.921600.upload.speed=921600
+esp32s3-devkitlipo.menu.UploadSpeed.115200=115200
+esp32s3-devkitlipo.menu.UploadSpeed.115200.upload.speed=115200
+esp32s3-devkitlipo.menu.UploadSpeed.256000.windows=256000
+esp32s3-devkitlipo.menu.UploadSpeed.256000.upload.speed=256000
+esp32s3-devkitlipo.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32s3-devkitlipo.menu.UploadSpeed.230400=230400
+esp32s3-devkitlipo.menu.UploadSpeed.230400.upload.speed=230400
+esp32s3-devkitlipo.menu.UploadSpeed.460800.linux=460800
+esp32s3-devkitlipo.menu.UploadSpeed.460800.macosx=460800
+esp32s3-devkitlipo.menu.UploadSpeed.460800.upload.speed=460800
+esp32s3-devkitlipo.menu.UploadSpeed.512000.windows=512000
+esp32s3-devkitlipo.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32s3-devkitlipo.menu.DebugLevel.none=None
+esp32s3-devkitlipo.menu.DebugLevel.none.build.code_debug=0
+esp32s3-devkitlipo.menu.DebugLevel.error=Error
+esp32s3-devkitlipo.menu.DebugLevel.error.build.code_debug=1
+esp32s3-devkitlipo.menu.DebugLevel.warn=Warn
+esp32s3-devkitlipo.menu.DebugLevel.warn.build.code_debug=2
+esp32s3-devkitlipo.menu.DebugLevel.info=Info
+esp32s3-devkitlipo.menu.DebugLevel.info.build.code_debug=3
+esp32s3-devkitlipo.menu.DebugLevel.debug=Debug
+esp32s3-devkitlipo.menu.DebugLevel.debug.build.code_debug=4
+esp32s3-devkitlipo.menu.DebugLevel.verbose=Verbose
+esp32s3-devkitlipo.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s3-devkitlipo.menu.EraseFlash.none=Disabled
+esp32s3-devkitlipo.menu.EraseFlash.none.upload.erase_cmd=
+esp32s3-devkitlipo.menu.EraseFlash.all=Enabled
+esp32s3-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
+     
+##############################################################
+
+esp32c3-devkitlipo.name=OLIMEX ESP32-C3-DevKit-Lipo
+esp32c3-devkitlipo.vid.0=0x303a
+esp32c3-devkitlipo.pid.0=0x1001
+
+esp32c3-devkitlipo.bootloader.tool=esptool_py
+esp32c3-devkitlipo.bootloader.tool.default=esptool_py
+
+esp32c3-devkitlipo.upload.tool=esptool_py
+esp32c3-devkitlipo.upload.tool.default=esptool_py
+esp32c3-devkitlipo.upload.tool.network=esp_ota
+
+esp32c3-devkitlipo.upload.maximum_size=1310720
+esp32c3-devkitlipo.upload.maximum_data_size=327680
+esp32c3-devkitlipo.upload.flags=
+esp32c3-devkitlipo.upload.extra_flags=
+esp32c3-devkitlipo.upload.use_1200bps_touch=false
+esp32c3-devkitlipo.upload.wait_for_upload_port=false
+
+esp32c3-devkitlipo.serial.disableDTR=false
+esp32c3-devkitlipo.serial.disableRTS=false
+
+esp32c3-devkitlipo.build.tarch=riscv32
+esp32c3-devkitlipo.build.target=esp
+esp32c3-devkitlipo.build.mcu=esp32c3
+esp32c3-devkitlipo.build.core=esp32
+esp32c3-devkitlipo.build.variant=esp32c3-devkit-lipo
+esp32c3-devkitlipo.build.board=ESP32C3_DEVKIT_LIPO
+esp32c3-devkitlipo.build.bootloader_addr=0x0
+
+esp32c3-devkitlipo.build.cdc_on_boot=0
+esp32c3-devkitlipo.build.f_cpu=160000000L
+esp32c3-devkitlipo.build.flash_size=4MB
+esp32c3-devkitlipo.build.flash_freq=80m
+esp32c3-devkitlipo.build.flash_mode=qio
+esp32c3-devkitlipo.build.boot=qio
+esp32c3-devkitlipo.build.partitions=default
+esp32c3-devkitlipo.build.defines=
+
+## IDE 2.0 Seems to not update the value
+esp32c3-devkitlipo.menu.JTAGAdapter.default=Disabled
+esp32c3-devkitlipo.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp32c3-devkitlipo.menu.JTAGAdapter.builtin=Integrated USB JTAG
+esp32c3-devkitlipo.menu.JTAGAdapter.builtin.build.openocdscript=esp32c3-builtin.cfg
+esp32c3-devkitlipo.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+esp32c3-devkitlipo.menu.JTAGAdapter.external=FTDI Adapter
+esp32c3-devkitlipo.menu.JTAGAdapter.external.build.openocdscript=esp32c3-ftdi.cfg
+esp32c3-devkitlipo.menu.JTAGAdapter.external.build.copy_jtag_files=1
+esp32c3-devkitlipo.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32c3-devkitlipo.menu.JTAGAdapter.bridge.build.openocdscript=esp32c3-bridge.cfg
+esp32c3-devkitlipo.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+esp32c3-devkitlipo.menu.CDCOnBoot.default=Disabled
+esp32c3-devkitlipo.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32c3-devkitlipo.menu.CDCOnBoot.cdc=Enabled
+esp32c3-devkitlipo.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32c3-devkitlipo.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32c3-devkitlipo.menu.PartitionScheme.default.build.partitions=default
+esp32c3-devkitlipo.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32c3-devkitlipo.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32c3-devkitlipo.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32c3-devkitlipo.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32c3-devkitlipo.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32c3-devkitlipo.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32c3-devkitlipo.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32c3-devkitlipo.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32c3-devkitlipo.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32c3-devkitlipo.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32c3-devkitlipo.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32c3-devkitlipo.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32c3-devkitlipo.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32c3-devkitlipo.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32c3-devkitlipo.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32c3-devkitlipo.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32c3-devkitlipo.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32c3-devkitlipo.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32c3-devkitlipo.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+esp32c3-devkitlipo.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32c3-devkitlipo.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32c3-devkitlipo.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32c3-devkitlipo.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32c3-devkitlipo.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32c3-devkitlipo.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32c3-devkitlipo.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp32c3-devkitlipo.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32c3-devkitlipo.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32c3-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32c3-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32c3-devkitlipo.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32c3-devkitlipo.menu.PartitionScheme.rainmaker=RainMaker
+esp32c3-devkitlipo.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32c3-devkitlipo.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32c3-devkitlipo.menu.PartitionScheme.custom=Custom
+esp32c3-devkitlipo.menu.PartitionScheme.custom.build.partitions=
+esp32c3-devkitlipo.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+esp32c3-devkitlipo.menu.CPUFreq.160=160MHz (WiFi)
+esp32c3-devkitlipo.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32c3-devkitlipo.menu.CPUFreq.80=80MHz (WiFi)
+esp32c3-devkitlipo.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32c3-devkitlipo.menu.CPUFreq.40=40MHz
+esp32c3-devkitlipo.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32c3-devkitlipo.menu.CPUFreq.20=20MHz
+esp32c3-devkitlipo.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32c3-devkitlipo.menu.CPUFreq.10=10MHz
+esp32c3-devkitlipo.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32c3-devkitlipo.menu.FlashMode.qio=QIO
+esp32c3-devkitlipo.menu.FlashMode.qio.build.flash_mode=dio
+esp32c3-devkitlipo.menu.FlashMode.qio.build.boot=qio
+esp32c3-devkitlipo.menu.FlashMode.dio=DIO
+esp32c3-devkitlipo.menu.FlashMode.dio.build.flash_mode=dio
+esp32c3-devkitlipo.menu.FlashMode.dio.build.boot=dio
+esp32c3-devkitlipo.menu.FlashMode.qout=QOUT
+esp32c3-devkitlipo.menu.FlashMode.qout.build.flash_mode=dout
+esp32c3-devkitlipo.menu.FlashMode.qout.build.boot=qout
+esp32c3-devkitlipo.menu.FlashMode.dout=DOUT
+esp32c3-devkitlipo.menu.FlashMode.dout.build.flash_mode=dout
+esp32c3-devkitlipo.menu.FlashMode.dout.build.boot=dout
+
+esp32c3-devkitlipo.menu.FlashFreq.80=80MHz
+esp32c3-devkitlipo.menu.FlashFreq.80.build.flash_freq=80m
+esp32c3-devkitlipo.menu.FlashFreq.40=40MHz
+esp32c3-devkitlipo.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32c3-devkitlipo.menu.FlashSize.4M=4MB (32Mb)
+esp32c3-devkitlipo.menu.FlashSize.4M.build.flash_size=4MB
+esp32c3-devkitlipo.menu.FlashSize.8M=8MB (64Mb)
+esp32c3-devkitlipo.menu.FlashSize.8M.build.flash_size=8MB
+esp32c3-devkitlipo.menu.FlashSize.8M.build.partitions=default_8MB
+esp32c3-devkitlipo.menu.FlashSize.2M=2MB (16Mb)
+esp32c3-devkitlipo.menu.FlashSize.2M.build.flash_size=2MB
+esp32c3-devkitlipo.menu.FlashSize.2M.build.partitions=minimal
+esp32c3-devkitlipo.menu.FlashSize.16M=16MB (128Mb)
+esp32c3-devkitlipo.menu.FlashSize.16M.build.flash_size=16MB
+
+esp32c3-devkitlipo.menu.UploadSpeed.921600=921600
+esp32c3-devkitlipo.menu.UploadSpeed.921600.upload.speed=921600
+esp32c3-devkitlipo.menu.UploadSpeed.115200=115200
+esp32c3-devkitlipo.menu.UploadSpeed.115200.upload.speed=115200
+esp32c3-devkitlipo.menu.UploadSpeed.256000.windows=256000
+esp32c3-devkitlipo.menu.UploadSpeed.256000.upload.speed=256000
+esp32c3-devkitlipo.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32c3-devkitlipo.menu.UploadSpeed.230400=230400
+esp32c3-devkitlipo.menu.UploadSpeed.230400.upload.speed=230400
+esp32c3-devkitlipo.menu.UploadSpeed.460800.linux=460800
+esp32c3-devkitlipo.menu.UploadSpeed.460800.macosx=460800
+esp32c3-devkitlipo.menu.UploadSpeed.460800.upload.speed=460800
+esp32c3-devkitlipo.menu.UploadSpeed.512000.windows=512000
+esp32c3-devkitlipo.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32c3-devkitlipo.menu.DebugLevel.none=None
+esp32c3-devkitlipo.menu.DebugLevel.none.build.code_debug=0
+esp32c3-devkitlipo.menu.DebugLevel.error=Error
+esp32c3-devkitlipo.menu.DebugLevel.error.build.code_debug=1
+esp32c3-devkitlipo.menu.DebugLevel.warn=Warn
+esp32c3-devkitlipo.menu.DebugLevel.warn.build.code_debug=2
+esp32c3-devkitlipo.menu.DebugLevel.info=Info
+esp32c3-devkitlipo.menu.DebugLevel.info.build.code_debug=3
+esp32c3-devkitlipo.menu.DebugLevel.debug=Debug
+esp32c3-devkitlipo.menu.DebugLevel.debug.build.code_debug=4
+esp32c3-devkitlipo.menu.DebugLevel.verbose=Verbose
+esp32c3-devkitlipo.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32c3-devkitlipo.menu.EraseFlash.none=Disabled
+esp32c3-devkitlipo.menu.EraseFlash.none.upload.erase_cmd=
+esp32c3-devkitlipo.menu.EraseFlash.all=Enabled
+esp32c3-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+esp32c6-evb.name=OLIMEX ESP32-C6-EVB
+esp32c6-evb.vid.0=0x303a
+esp32c6-evb.pid.0=0x1001
+
+esp32c6-evb.bootloader.tool=esptool_py
+esp32c6-evb.bootloader.tool.default=esptool_py
+
+esp32c6-evb.upload.tool=esptool_py
+esp32c6-evb.upload.tool.default=esptool_py
+esp32c6-evb.upload.tool.network=esp_ota
+
+esp32c6-evb.upload.maximum_size=1310720
+esp32c6-evb.upload.maximum_data_size=327680
+esp32c6-evb.upload.flags=
+esp32c6-evb.upload.extra_flags=
+esp32c6-evb.upload.use_1200bps_touch=false
+esp32c6-evb.upload.wait_for_upload_port=false
+
+esp32c6-evb.serial.disableDTR=false
+esp32c6-evb.serial.disableRTS=false
+
+esp32c6-evb.build.tarch=riscv32
+esp32c6-evb.build.target=esp
+esp32c6-evb.build.mcu=esp32c6
+esp32c6-evb.build.core=esp32
+esp32c6-evb.build.variant=esp32c6-evb
+esp32c6-evb.build.board=ESP32C6_EVB
+esp32c6-evb.build.bootloader_addr=0x0
+
+esp32c6-evb.build.cdc_on_boot=0
+esp32c6-evb.build.f_cpu=160000000L
+esp32c6-evb.build.flash_size=4MB
+esp32c6-evb.build.flash_freq=80m
+esp32c6-evb.build.flash_mode=qio
+esp32c6-evb.build.boot=qio
+esp32c6-evb.build.partitions=default
+esp32c6-evb.build.defines=
+
+## IDE 2.0 Seems to not update the value
+esp32c6-evb.menu.JTAGAdapter.default=Disabled
+esp32c6-evb.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp32c6-evb.menu.JTAGAdapter.builtin=Integrated USB JTAG
+esp32c6-evb.menu.JTAGAdapter.builtin.build.openocdscript=esp32c6-builtin.cfg
+esp32c6-evb.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+esp32c6-evb.menu.JTAGAdapter.external=FTDI Adapter
+esp32c6-evb.menu.JTAGAdapter.external.build.openocdscript=esp32c6-ftdi.cfg
+esp32c6-evb.menu.JTAGAdapter.external.build.copy_jtag_files=1
+esp32c6-evb.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32c6-evb.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
+esp32c6-evb.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+esp32c6-evb.menu.CDCOnBoot.default=Disabled
+esp32c6-evb.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32c6-evb.menu.CDCOnBoot.cdc=Enabled
+esp32c6-evb.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32c6-evb.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32c6-evb.menu.PartitionScheme.default.build.partitions=default
+esp32c6-evb.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32c6-evb.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32c6-evb.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32c6-evb.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32c6-evb.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32c6-evb.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32c6-evb.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32c6-evb.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32c6-evb.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32c6-evb.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32c6-evb.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32c6-evb.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32c6-evb.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32c6-evb.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32c6-evb.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32c6-evb.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32c6-evb.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32c6-evb.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32c6-evb.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+esp32c6-evb.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32c6-evb.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32c6-evb.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32c6-evb.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32c6-evb.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32c6-evb.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32c6-evb.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp32c6-evb.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32c6-evb.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32c6-evb.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32c6-evb.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32c6-evb.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32c6-evb.menu.PartitionScheme.rainmaker=RainMaker
+esp32c6-evb.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32c6-evb.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32c6-evb.menu.PartitionScheme.custom=Custom
+esp32c6-evb.menu.PartitionScheme.custom.build.partitions=
+esp32c6-evb.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+esp32c6-evb.menu.CPUFreq.160=160MHz (WiFi)
+esp32c6-evb.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32c6-evb.menu.CPUFreq.80=80MHz (WiFi)
+esp32c6-evb.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32c6-evb.menu.CPUFreq.40=40MHz
+esp32c6-evb.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32c6-evb.menu.CPUFreq.20=20MHz
+esp32c6-evb.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32c6-evb.menu.CPUFreq.10=10MHz
+esp32c6-evb.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32c6-evb.menu.FlashMode.qio=QIO
+esp32c6-evb.menu.FlashMode.qio.build.flash_mode=dio
+esp32c6-evb.menu.FlashMode.qio.build.boot=qio
+esp32c6-evb.menu.FlashMode.dio=DIO
+esp32c6-evb.menu.FlashMode.dio.build.flash_mode=dio
+esp32c6-evb.menu.FlashMode.dio.build.boot=dio
+
+esp32c6-evb.menu.FlashFreq.80=80MHz
+esp32c6-evb.menu.FlashFreq.80.build.flash_freq=80m
+esp32c6-evb.menu.FlashFreq.40=40MHz
+esp32c6-evb.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32c6-evb.menu.FlashSize.4M=4MB (32Mb)
+esp32c6-evb.menu.FlashSize.4M.build.flash_size=4MB
+esp32c6-evb.menu.FlashSize.8M=8MB (64Mb)
+esp32c6-evb.menu.FlashSize.8M.build.flash_size=8MB
+esp32c6-evb.menu.FlashSize.8M.build.partitions=default_8MB
+esp32c6-evb.menu.FlashSize.2M=2MB (16Mb)
+esp32c6-evb.menu.FlashSize.2M.build.flash_size=2MB
+esp32c6-evb.menu.FlashSize.2M.build.partitions=minimal
+esp32c6-evb.menu.FlashSize.16M=16MB (128Mb)
+esp32c6-evb.menu.FlashSize.16M.build.flash_size=16MB
+
+esp32c6-evb.menu.UploadSpeed.921600=921600
+esp32c6-evb.menu.UploadSpeed.921600.upload.speed=921600
+esp32c6-evb.menu.UploadSpeed.115200=115200
+esp32c6-evb.menu.UploadSpeed.115200.upload.speed=115200
+esp32c6-evb.menu.UploadSpeed.256000.windows=256000
+esp32c6-evb.menu.UploadSpeed.256000.upload.speed=256000
+esp32c6-evb.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32c6-evb.menu.UploadSpeed.230400=230400
+esp32c6-evb.menu.UploadSpeed.230400.upload.speed=230400
+esp32c6-evb.menu.UploadSpeed.460800.linux=460800
+esp32c6-evb.menu.UploadSpeed.460800.macosx=460800
+esp32c6-evb.menu.UploadSpeed.460800.upload.speed=460800
+esp32c6-evb.menu.UploadSpeed.512000.windows=512000
+esp32c6-evb.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32c6-evb.menu.DebugLevel.none=None
+esp32c6-evb.menu.DebugLevel.none.build.code_debug=0
+esp32c6-evb.menu.DebugLevel.error=Error
+esp32c6-evb.menu.DebugLevel.error.build.code_debug=1
+esp32c6-evb.menu.DebugLevel.warn=Warn
+esp32c6-evb.menu.DebugLevel.warn.build.code_debug=2
+esp32c6-evb.menu.DebugLevel.info=Info
+esp32c6-evb.menu.DebugLevel.info.build.code_debug=3
+esp32c6-evb.menu.DebugLevel.debug=Debug
+esp32c6-evb.menu.DebugLevel.debug.build.code_debug=4
+esp32c6-evb.menu.DebugLevel.verbose=Verbose
+esp32c6-evb.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32c6-evb.menu.EraseFlash.none=Disabled
+esp32c6-evb.menu.EraseFlash.none.upload.erase_cmd=
+esp32c6-evb.menu.EraseFlash.all=Enabled
+esp32c6-evb.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
