@@ -37,7 +37,6 @@ typedef struct {
 class WiFiMulti
 {
 public:
-    WiFiMulti();
     ~WiFiMulti();
 
     bool addAP(const char* ssid, const char *passphrase = NULL);
@@ -47,7 +46,6 @@ public:
 
 private:
     std::vector<WifiAPlist_t> APlist;
-    bool ipv6_support;
 };
 
 #endif /* WIFICLIENTMULTI_H_ */
