@@ -168,7 +168,7 @@ static inline void i2c_ll_stretch_clr(i2c_dev_t *hw)
 
 static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw)
 {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
     return hw->sr.slave_addressed;
 #else
     return hw->status_reg.slave_addressed;
@@ -177,7 +177,7 @@ static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw)
 
 static inline bool i2c_ll_slave_rw(i2c_dev_t *hw)//not exposed by hal_ll
 {
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
     return hw->sr.slave_rw;
 #else
     return hw->status_reg.slave_rw;
