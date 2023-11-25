@@ -19,15 +19,11 @@
  * Parameters can be changed by the user. In a single LED circuit, it will just blink.
  */
 
-// The effect seen in ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
-#if CONFIG_IDF_TARGET_ESP32S2
-#define BUILTIN_RGBLED_PIN   18
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define BUILTIN_RGBLED_PIN   48  // 48 or 38
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define BUILTIN_RGBLED_PIN   8
+// The effect seen in (Espressif devkits) ESP32C6, ESP32H2, ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
+#ifdef PIN_NEOPIXEL
+#define BUILTIN_RGBLED_PIN   PIN_NEOPIXEL
 #else
-#define BUILTIN_RGBLED_PIN   21   // ESP32 has no builtin RGB LED
+#define BUILTIN_RGBLED_PIN   21   // ESP32 has no builtin RGB LED (PIN_NEOPIXEL)
 #endif
 
 #define NR_OF_LEDS   8*4

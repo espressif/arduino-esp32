@@ -42,7 +42,7 @@ public:
     String SSID(uint8_t networkItem);
     wifi_auth_mode_t encryptionType(uint8_t networkItem);
     int32_t RSSI(uint8_t networkItem);
-    uint8_t * BSSID(uint8_t networkItem);
+    uint8_t * BSSID(uint8_t networkItem, uint8_t* bssid = NULL);
     String BSSIDstr(uint8_t networkItem);
     int32_t channel(uint8_t networkItem);
     static void * getScanInfoByIndex(int i) { return _getScanInfoByIndex(i); }; 
