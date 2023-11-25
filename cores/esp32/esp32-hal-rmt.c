@@ -270,7 +270,7 @@ bool rmtDeinit(int pin)
   log_v("Deiniting RMT GPIO %d", pin);
   if (_rmtGetBus(pin, __FUNCTION__) != NULL) {
     // release all allocated data
-    return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
+    return perimanClearPinBus(pin);
   }
   log_e("GPIO %d - No RMT channel associated.", pin);
   return false;
@@ -468,7 +468,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   }
 
   // Try to dettach any (Tx|Rx|Whatever) previous bus or just keep it as not attached
-  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)) {
+  if (!perimanClearPinBus(pin)) {
     log_w("GPIO %d - Can't detach previous peripheral.", pin);
     return false;
   }
@@ -574,7 +574,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   // Finally, allocate Peripheral Manager RMT bus and associate it to its GPIO
   peripheral_bus_type_t pinBusType =
     channel_direction == RMT_TX_MODE ? ESP32_BUS_TYPE_RMT_TX : ESP32_BUS_TYPE_RMT_RX;
-  if (!perimanSetPinBus(pin, pinBusType, (void *) bus)) {
+  if (!perimanSetPinBus(pin, pinBusType, (void *) bus, -1, -1)) {
     log_e("Can't allocate the GPIO %d in the Peripheral Manager.", pin);
     goto Err;
   }
