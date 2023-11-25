@@ -192,6 +192,11 @@ WiFiClient::WiFiClient(int fd):_connected(true),_timeout(WIFI_CLIENT_DEF_CONN_TI
     _rxBuffer.reset(new WiFiClientRxBuffer(fd));
 }
 
+WiFiClient::WiFiClient(WiFiClient& other)
+{
+  *this = other;
+}
+
 WiFiClient::~WiFiClient()
 {
     stop();

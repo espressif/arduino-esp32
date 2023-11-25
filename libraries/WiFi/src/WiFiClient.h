@@ -48,6 +48,7 @@ public:
     WiFiClient *next;
     WiFiClient();
     WiFiClient(int fd);
+    WiFiClient(WiFiClient& other);
     ~WiFiClient();
     int connect(IPAddress ip, uint16_t port);
     int connect(IPAddress ip, uint16_t port, int32_t timeout_ms);
