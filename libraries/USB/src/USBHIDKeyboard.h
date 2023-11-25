@@ -58,6 +58,7 @@ typedef union {
 #define KEY_RIGHT_SHIFT 0x85
 #define KEY_RIGHT_ALT   0x86
 #define KEY_RIGHT_GUI   0x87
+#define KEY_SPACE       0x20
 
 #define KEY_UP_ARROW    0xDA
 #define KEY_DOWN_ARROW  0xD9
