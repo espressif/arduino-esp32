@@ -39,6 +39,10 @@ size_t WiFiServer::write(const uint8_t *data, size_t len){
 void WiFiServer::stopAll(){}
 
 WiFiClient WiFiServer::available(){
+  return accept();
+}
+
+WiFiClient WiFiServer::accept(){
   if(!_listening)
     return WiFiClient();
   int client_sock;
