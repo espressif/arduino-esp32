@@ -29,6 +29,8 @@ esp_mac_type_t values:
     
 */
 
+#include "esp_mac.h" // required - exposes esp_mac_type_t values
+
 void setup() {
   
   Serial.begin(115200);
