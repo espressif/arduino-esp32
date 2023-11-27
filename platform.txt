@@ -8,10 +8,6 @@ tools.xtensa-esp-elf-gdb.path={runtime.platform.path}/tools/xtensa-esp-elf-gdb
 tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
 tools.riscv32-esp-elf-gdb.path={runtime.platform.path}/tools/riscv32-esp-elf-gdb
 
-debug.server.openocd.path={runtime.platform.path}/tools/openocd-esp32/bin/openocd
-debug.server.openocd.scripts_dir={runtime.platform.path}/tools/openocd-esp32/share/openocd/scripts/
-debug.server.openocd.scripts_dir.windows={runtime.platform.path}\tools\openocd-esp32\share\openocd\scripts\
-
 tools.esptool_py.path={runtime.platform.path}/tools/esptool
 tools.esptool_py.cmd=esptool
 tools.esptool_py.cmd.linux=esptool.py
@@ -152,17 +148,6 @@ build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core
 build.extra_libs=
 build.memory_type={build.boot}_qspi
 
-# OpenOCD default configs
-build.copy_jtag_files=0
-build.openocdscript.esp32=esp32-wrover-kit-3.3v.cfg
-build.openocdscript.esp32s2=esp32s2-kaluga-1.cfg
-build.openocdscript.esp32s3=esp32s3-builtin.cfg
-build.openocdscript.esp32c3=esp32c3-builtin.cfg
-build.openocdscript={build.openocdscript.{build.mcu}}
-
-# Debug plugin configuration
-build.debugconfig={build.mcu}.json
-
 # Custom build options
 build.opt.name=build_opt.h
 build.opt.path={build.path}/{build.opt.name}
@@ -198,18 +183,6 @@ recipe.hooks.core.postbuild.set_core_build_flag.pattern=/usr/bin/env bash -c ": 
 recipe.hooks.prebuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
 recipe.hooks.core.prebuild.set_core_build_flag.pattern.windows=cmd /c echo "-DARDUINO_CORE_BUILD" > "{file_opts.path}"
 recipe.hooks.core.postbuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
-
-# Generate debug.cfg (must be postbuild)
-recipe.hooks.postbuild.1.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{debug.server.openocd.scripts_dir}"board/{build.openocdscript} "{build.source.path}"/debug.cfg"
-recipe.hooks.postbuild.1.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{debug.server.openocd.scripts_dir}board\{build.openocdscript}" "{build.source.path}\debug.cfg"
-
-# Generate debug_custom.json
-recipe.hooks.postbuild.2.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/{build.debugconfig} "{build.source.path}"/debug_custom.json"
-recipe.hooks.postbuild.2.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\{build.debugconfig}" "{build.source.path}\debug_custom.json"
-
-# Generate chip.svd
-recipe.hooks.postbuild.3.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/svd/{build.mcu}.svd "{build.source.path}"/debug.svd"
-recipe.hooks.postbuild.3.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\svd\{build.mcu}.svd" "{build.source.path}\debug.svd"
 
 ## Compile c files
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {compiler.c.extra_flags} {build.extra_flags} "@{build.opt.path}" "@{file_opts.path}" {includes} "{source_file}" -o "{object_file}"
@@ -259,16 +232,74 @@ pluggable_monitor.required.serial=builtin:serial-monitor
 ## Upload/Debug tools
 ## ------------------
 
-# Debugger configuration (general options)
-# ----------------------------------------
-# EXPERIMENTAL feature:
-#  - this is alpha and may be subject to change without notice
+# Debugger configuration
+# ----------------------
+
+# ESP32 debug configuration
+debug_script.esp32=esp32-wrover-kit-3.3v.cfg
+debug_config.esp32.cortex-debug.custom.name=Arduino on ESP32
+debug_config.esp32.cortex-debug.custom.postAttachCommands.0=set remote hardware-watchpoint-limit 2
+debug_config.esp32.cortex-debug.custom.postAttachCommands.1=monitor reset halt
+debug_config.esp32.cortex-debug.custom.postAttachCommands.2=monitor gdb_sync
+debug_config.esp32.cortex-debug.custom.postAttachCommands.3=thb setup
+debug_config.esp32.cortex-debug.custom.postAttachCommands.4=c
+debug_config.esp32.cortex-debug.custom.overrideRestartCommands.0=monitor reset halt
+debug_config.esp32.cortex-debug.custom.overrideRestartCommands.1=monitor gdb_sync
+debug_config.esp32.cortex-debug.custom.overrideRestartCommands.2=thb setup
+debug_config.esp32.cortex-debug.custom.overrideRestartCommands.3=c
+
+# ESP32-S2 debug configuration
+debug_script.esp32s2=esp32s2-kaluga-1.cfg
+debug_config.esp32s2.cortex-debug.custom.name=Arduino on ESP32-S2
+debug_config.esp32s2.cortex-debug.custom.postAttachCommands.0=set remote hardware-watchpoint-limit 2
+debug_config.esp32s2.cortex-debug.custom.postAttachCommands.1=monitor reset halt
+debug_config.esp32s2.cortex-debug.custom.postAttachCommands.2=monitor gdb_sync
+debug_config.esp32s2.cortex-debug.custom.postAttachCommands.3=thb setup
+debug_config.esp32s2.cortex-debug.custom.postAttachCommands.4=c
+debug_config.esp32s2.cortex-debug.custom.overrideRestartCommands.0=monitor reset halt
+debug_config.esp32s2.cortex-debug.custom.overrideRestartCommands.1=monitor gdb_sync
+debug_config.esp32s2.cortex-debug.custom.overrideRestartCommands.2=thb setup
+debug_config.esp32s2.cortex-debug.custom.overrideRestartCommands.3=c
+
+# ESP32-S3 debug configuration
+debug_script.esp32s3=esp32s3-builtin.cfg
+debug_config.esp32s3.cortex-debug.custom.name=Arduino on ESP32-S3
+debug_config.esp32s3.cortex-debug.custom.overrideAttachCommands.0=set remote hardware-watchpoint-limit 2
+debug_config.esp32s3.cortex-debug.custom.overrideAttachCommands.1=monitor reset halt
+debug_config.esp32s3.cortex-debug.custom.overrideAttachCommands.2=monitor gdb_sync
+debug_config.esp32s3.cortex-debug.custom.overrideAttachCommands.3=thb setup
+debug_config.esp32s3.cortex-debug.custom.overrideAttachCommands.4=c
+debug_config.esp32s3.cortex-debug.custom.overrideRestartCommands.0=monitor reset halt
+debug_config.esp32s3.cortex-debug.custom.overrideRestartCommands.1=monitor gdb_sync
+
+# ESP32-C3 debug configuration
+debug_script.esp32c3=esp32c3-builtin.cfg
+debug_config.esp32c3.cortex-debug.custom.name=Arduino on ESP32-C3
+debug_config.esp32c3.cortex-debug.custom.serverArgs.0=-d3
+debug_config.esp32c3.cortex-debug.custom.overrideAttachCommands.0=set remote hardware-watchpoint-limit 8
+debug_config.esp32c3.cortex-debug.custom.overrideAttachCommands.1=monitor reset
+debug_config.esp32c3.cortex-debug.custom.overrideAttachCommands.2=monitor halt
+debug_config.esp32c3.cortex-debug.custom.overrideAttachCommands.3=monitor gdb_sync
+debug_config.esp32c3.cortex-debug.custom.overrideAttachCommands.4=thb setup
+debug_config.esp32c3.cortex-debug.custom.overrideRestartCommands.0=monitor reset
+debug_config.esp32c3.cortex-debug.custom.overrideRestartCommands.1=monitor halt
+debug_config.esp32c3.cortex-debug.custom.overrideRestartCommands.2=monitor gdb_sync
+debug_config.esp32c3.cortex-debug.custom.overrideRestartCommands.3=thb setup
+
+# Debug API variable definitions
 debug.executable={build.path}/{build.project_name}.elf
 debug.toolchain=gcc
 debug.toolchain.path={tools.{build.tarch}-esp-elf-gdb.path}/bin/
-debug.toolchain.prefix={build.tarch}-{build.target}-elf-
+debug.toolchain.prefix={build.tarch}-{build.target}-elf
 debug.server=openocd
-debug.server.openocd.script=debug.cfg
+debug.server.openocd.path={runtime.platform.path}/tools/openocd-esp32/bin/openocd
+debug.server.openocd.scripts_dir={runtime.platform.path}/tools/openocd-esp32/share/openocd/scripts/
+debug.server.openocd.scripts_dir.windows={runtime.platform.path}\tools\openocd-esp32\share\openocd\scripts\
+debug.server.openocd.scripts.0=board/{debug_script.{build.mcu}}
+debug.svd_file={runtime.platform.path}/tools/ide-debug/svd/{build.mcu}.svd
+
+debug.cortex-debug.custom.request=attach
+debug.additional_config=debug_config.{build.mcu}
 
 ##
 ## ESPTool
