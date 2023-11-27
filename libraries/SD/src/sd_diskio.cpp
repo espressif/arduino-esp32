@@ -13,6 +13,8 @@
 // limitations under the License.
 #include "sd_diskio.h"
 #include "esp_system.h"
+#include "esp32-hal-periman.h"
+
 extern "C" {
     #include "ff.h"
     #include "diskio.h"
@@ -748,6 +750,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
 
     pinMode(card->ssPin, OUTPUT);
     digitalWrite(card->ssPin, HIGH);
+    perimanSetPinBusExtraType(card->ssPin, "SD_SS");
 
     s_cards[pdrv] = card;
 

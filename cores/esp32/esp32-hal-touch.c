@@ -215,13 +215,13 @@ static touch_value_t __touchRead(uint8_t pin)
 
     if(perimanGetPinBus(pin, ESP32_BUS_TYPE_TOUCH) == NULL){
         perimanSetBusDeinit(ESP32_BUS_TYPE_TOUCH, touchDetachBus);
-        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+        if(!perimanClearPinBus(pin)){
             return 0;
         }
         __touchInit();
         __touchChannelInit(pad);
 
-        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_TOUCH, (void *)(pin+1))){
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_TOUCH, (void *)(pin+1), -1, pad)){
             touchDetachBus((void *)(pin+1));
             return 0;
         }
@@ -312,7 +312,7 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold)
         perimanSetBusDeinit(ESP32_BUS_TYPE_TOUCH, touchDetachBus);
         __touchInit();
         __touchChannelInit(pad);
-        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_TOUCH, (void *)(pin+1))){
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_TOUCH, (void *)(pin+1), -1, pad)){
             log_e("Failed to set bus to Peripheral manager");
             touchDetachBus((void *)(pin+1));
             return;

@@ -274,7 +274,7 @@ void WebServer::serveStatic(const char* uri, FS& fs, const char* path, const cha
 
 void WebServer::handleClient() {
   if (_currentStatus == HC_NONE) {
-    _currentClient = _server.available();
+    _currentClient = _server.accept();
     if (!_currentClient) {
       if (_nullDelay) {
         delay(1);
