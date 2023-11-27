@@ -138,7 +138,13 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     if(_esp_netif != NULL){
         return true;
     }
-    perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET, ETHClass::ethDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, ETHClass::ethDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, ETHClass::ethDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, ETHClass::ethDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MDIO, ETHClass::ethDetachBus);
+    if(power != -1){
+        perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_PWR, ETHClass::ethDetachBus);
+    }
 
     Network.begin();
     _ethernets[_eth_index] = this;
@@ -158,17 +164,17 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
     _pin_power = power;
 
-    if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(_pin_mdio,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(ETH_RMII_TX1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(ETH_RMII_CRS_DV, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if(!perimanClearPinBus(_pin_rmii_clock)){ return false; }
+    if(!perimanClearPinBus(_pin_mcd)){ return false; }
+    if(!perimanClearPinBus(_pin_mdio)){ return false; }
+    if(!perimanClearPinBus(ETH_RMII_TX_EN)){ return false; }
+    if(!perimanClearPinBus(ETH_RMII_TX0)){ return false; }
+    if(!perimanClearPinBus(ETH_RMII_TX1)){ return false; }
+    if(!perimanClearPinBus(ETH_RMII_RX0)){ return false; }
+    if(!perimanClearPinBus(ETH_RMII_RX1_EN)){ return false; }
+    if(!perimanClearPinBus(ETH_RMII_CRS_DV)){ return false; }
     if(_pin_power != -1){
-        if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanClearPinBus(_pin_power)){ return false; }
     }
 
     eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
@@ -265,19 +271,19 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
         return false;
     }
 
-    if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(_pin_mdio,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET_MCD, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(_pin_mdio,  ESP32_BUS_TYPE_ETHERNET_MDIO, (void *)(this), -1, -1)){ goto err; }
 
-    if(!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_TX1,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(ETH_RMII_CRS_DV,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_TX1,  ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(ETH_RMII_CRS_DV,  ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)){ goto err; }
 
     if(_pin_power != -1){
-        if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)){ goto err; }
     }
     // holds a few milliseconds to let DHCP start and enter into a good state
     // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
@@ -408,25 +414,25 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
         return false;
     }
 
-    perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET, ETHClass::ethDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_SPI, ETHClass::ethDetachBus);
 
     if(_pin_cs != -1){
-        if(!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanClearPinBus(_pin_cs)){ return false; }
     }
     if(_pin_rst != -1){
-        if(!perimanSetPinBus(_pin_rst, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanClearPinBus(_pin_rst)){ return false; }
     }
     if(_pin_irq != -1){
-        if(!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanClearPinBus(_pin_irq)){ return false; }
     }
     if(_pin_sck != -1){
-        if(!perimanSetPinBus(_pin_sck,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanClearPinBus(_pin_sck)){ return false; }
     }
     if(_pin_miso != -1){
-        if(!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanClearPinBus(_pin_miso)){ return false; }
     }
     if(_pin_mosi != -1){
-        if(!perimanSetPinBus(_pin_mosi, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanClearPinBus(_pin_mosi)){ return false; }
     }
 
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -447,6 +453,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     if(_spi != NULL){
         pinMode(_pin_cs, OUTPUT);
         digitalWrite(_pin_cs, HIGH);
+        perimanSetPinBusExtraType(_pin_cs, "ETH_CS");
     }
 #endif
 
@@ -659,23 +666,23 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 #if ETH_SPI_SUPPORTS_CUSTOM
     if(_spi == NULL){
 #endif
-        if(!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
 #if ETH_SPI_SUPPORTS_CUSTOM
     }
 #endif
-    if(!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
 
     if(_pin_sck != -1){
-        if(!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
     if(_pin_miso != -1){
-        if(!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
     if(_pin_mosi != -1){
-        if(!perimanSetPinBus(_pin_mosi,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_mosi,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
     if(_pin_rst != -1){
-        if(!perimanSetPinBus(_pin_rst,  ESP32_BUS_TYPE_ETHERNET, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_rst,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
 
     return true;
@@ -724,16 +731,16 @@ void ETHClass::end(void)
 
 #if CONFIG_ETH_USE_ESP32_EMAC
     if(_pin_rmii_clock != -1 && _pin_mcd != -1 && _pin_mdio != -1){
-        perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(_pin_mdio, ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_rmii_clock);
+        perimanClearPinBus(_pin_mcd);
+        perimanClearPinBus(_pin_mdio);
 
-        perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(ETH_RMII_TX1, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(ETH_RMII_CRS_DV, ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(ETH_RMII_TX_EN);
+        perimanClearPinBus(ETH_RMII_TX0);
+        perimanClearPinBus(ETH_RMII_TX1);
+        perimanClearPinBus(ETH_RMII_RX0);
+        perimanClearPinBus(ETH_RMII_RX1_EN);
+        perimanClearPinBus(ETH_RMII_CRS_DV);
 
         _pin_rmii_clock = -1;
         _pin_mcd = -1;
@@ -741,32 +748,32 @@ void ETHClass::end(void)
     }
 
     if(_pin_power != -1){
-        perimanSetPinBus(_pin_power, ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_power);
         _pin_power = -1;
     }
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
     if(_pin_cs != -1){
-        perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_cs);
         _pin_cs = -1;
     }
     if(_pin_irq != -1){
-        perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_irq);
         _pin_irq = -1;
     }
     if(_pin_sck != -1){
-        perimanSetPinBus(_pin_sck,  ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_sck);
         _pin_sck = -1;
     }
     if(_pin_miso != -1){
-        perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_miso);
         _pin_miso = -1;
     }
     if(_pin_mosi != -1){
-        perimanSetPinBus(_pin_mosi, ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_mosi);
         _pin_mosi = -1;
     }
     if(_pin_rst != -1){
-        perimanSetPinBus(_pin_rst, ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_rst);
         _pin_rst = -1;
     }
 }
