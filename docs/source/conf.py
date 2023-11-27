@@ -67,3 +67,6 @@ html_static_path = ['_static']
 
 # Style
 # pygments_style = "sphinx"
+
+# Tracking ID for Google Analytics
+google_analytics_id = 'G-F58JM78930'
