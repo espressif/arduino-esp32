@@ -262,6 +262,7 @@ debug.server.openocd.scripts_dir.windows={runtime.platform.path}\tools\openocd-e
 debug.server.openocd.scripts.0=board/{debug_script.{build.mcu}}
 debug.svd_file={runtime.platform.path}/tools/ide-debug/svd/{build.mcu}.svd
 
+debug.cortex-debug.custom.objdumpPath={compiler.path}{compiler.prefix}objdump
 debug.cortex-debug.custom.request=attach
 debug.additional_config=debug_config.{build.mcu}
 
