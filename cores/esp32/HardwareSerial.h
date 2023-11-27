@@ -118,6 +118,8 @@ typedef enum {
     #define SOC_RX0 (gpio_num_t)3
   #elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
     #define SOC_RX0 (gpio_num_t)44
+  #elif CONFIG_IDF_TARGET_ESP32C2
+    #define SOC_RX0 (gpio_num_t)19
   #elif CONFIG_IDF_TARGET_ESP32C3
     #define SOC_RX0 (gpio_num_t)20
   #elif CONFIG_IDF_TARGET_ESP32C6
@@ -132,6 +134,8 @@ typedef enum {
     #define SOC_TX0 (gpio_num_t)1
   #elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
     #define SOC_TX0 (gpio_num_t)43
+  #elif CONFIG_IDF_TARGET_ESP32C2
+    #define SOC_TX0 (gpio_num_t)20
   #elif CONFIG_IDF_TARGET_ESP32C3
     #define SOC_TX0 (gpio_num_t)21
   #elif CONFIG_IDF_TARGET_ESP32C6
@@ -149,6 +153,8 @@ typedef enum {
       #define RX1 (gpio_num_t)26
     #elif CONFIG_IDF_TARGET_ESP32S2
       #define RX1 (gpio_num_t)4
+    #elif CONFIG_IDF_TARGET_ESP32C2
+      #define RX1 (gpio_num_t)10
     #elif CONFIG_IDF_TARGET_ESP32C3
       #define RX1 (gpio_num_t)18
     #elif CONFIG_IDF_TARGET_ESP32S3
@@ -165,6 +171,8 @@ typedef enum {
       #define TX1 (gpio_num_t)27
     #elif CONFIG_IDF_TARGET_ESP32S2
       #define TX1 (gpio_num_t)5
+    #elif CONFIG_IDF_TARGET_ESP32C2
+      #define TX1 (gpio_num_t)18
     #elif CONFIG_IDF_TARGET_ESP32C3
       #define TX1 (gpio_num_t)19
     #elif CONFIG_IDF_TARGET_ESP32S3
