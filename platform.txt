@@ -80,11 +80,14 @@ compiler.libraries.ldflags=
 build.extra_flags.esp32=-DARDUINO_USB_CDC_ON_BOOT=0
 build.extra_flags.esp32s3=-DARDUINO_USB_MODE={build.usb_mode} -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
 build.extra_flags.esp32s2=-DARDUINO_USB_MODE=0 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
+build.extra_flags.esp32c2=-DARDUINO_USB_CDC_ON_BOOT=0
 build.extra_flags.esp32c3=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 
 # This can be overriden in boards.txt
+build.zigbee_mode=
+build.zigbee_libs=
 build.flash_size=4MB
 build.flash_mode=dio
 build.flash_freq=80m
@@ -98,7 +101,7 @@ build.code_debug=0
 build.defines=
 build.loop_core=
 build.event_core=
-build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}}
+build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}} {build.zigbee_mode}
 build.extra_libs=
 build.memory_type={build.boot}_qspi
 
@@ -163,7 +166,7 @@ recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.S.extra_flags} {c
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{archive_file_path}" "{object_file}"
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {build.extra_libs} {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {build.extra_libs} {build.zigbee_libs} {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
 
 ## Create partitions.bin
 recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
