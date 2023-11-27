@@ -23,6 +23,7 @@
 
 #include "esp32-hal-rmt.h"
 #include "esp32-hal-periman.h"
+#include "esp_idf_version.h"
 
 // Arduino Task Handle indicates if the Arduino Task has been started already
 extern TaskHandle_t loopTaskHandle;
@@ -513,7 +514,9 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     tx_cfg.flags.with_dma = 0;
     tx_cfg.flags.io_loop_back = 0;
     tx_cfg.flags.io_od_mode = 0;
-    //tx_cfg.intr_priority = 0;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
+    tx_cfg.intr_priority = 0;
+#endif
 
     if (rmt_new_tx_channel(&tx_cfg, &bus->rmt_channel_h) != ESP_OK) {
       log_e("GPIO %d - RMT TX Initialization error.", pin);
@@ -538,7 +541,9 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     rx_cfg.flags.invert_in = 0;
     rx_cfg.flags.with_dma = 0;
     rx_cfg.flags.io_loop_back = 0;
-    //rx_cfg.intr_priority = 0;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
+    rx_cfg.intr_priority = 0;
+#endif
     // try to allocate the RMT Channel
     if (ESP_OK != rmt_new_rx_channel(&rx_cfg, &bus->rmt_channel_h)) {
       log_e("GPIO %d RMT - RX Initialization error.", pin);
