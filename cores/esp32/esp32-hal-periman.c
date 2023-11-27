@@ -105,9 +105,6 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
 		case ESP32_BUS_TYPE_ETHERNET_MDIO: return "ETHERNET_MDIO";
 		case ESP32_BUS_TYPE_ETHERNET_PWR: return "ETHERNET_PWR";
 #endif
-#if SOC_GPSPI_SUPPORTED || SOC_EMAC_SUPPORTED
-		case ESP32_BUS_TYPE_ETHERNET: return "ETHERNET";
-#endif
 		default: return "UNKNOWN";
     }
 }

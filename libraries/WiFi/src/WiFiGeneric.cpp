@@ -556,12 +556,12 @@ bool wifiLowLevelInit(bool persistent){
 
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 
-	if(!WiFiGenericClass::useStaticBuffers()) {
-	    cfg.static_tx_buf_num = 0;
+        if(!WiFiGenericClass::useStaticBuffers()) {
+            cfg.static_tx_buf_num = 0;
             cfg.dynamic_tx_buf_num = 32;
-	    cfg.tx_buf_type = 1;
+            cfg.tx_buf_type = 1;
             cfg.cache_tx_buf_num = 4;  // can't be zero!
-	    cfg.static_rx_buf_num = 4;
+            cfg.static_rx_buf_num = 4;
             cfg.dynamic_rx_buf_num = 32;
         }
 
@@ -573,7 +573,7 @@ bool wifiLowLevelInit(bool persistent){
         }
 // Temporary fix to ensure that CDC+JTAG stay on on ESP32-C3
 #if CONFIG_IDF_TARGET_ESP32C3
-	phy_bbpll_en_usb(true);
+        phy_bbpll_en_usb(true);
 #endif
         if(!persistent){
         	lowLevelInitDone = esp_wifi_set_storage(WIFI_STORAGE_RAM) == ESP_OK;

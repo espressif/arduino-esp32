@@ -46,11 +46,14 @@ public:
 
     bool softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start = (uint32_t) 0);
     bool softAPdisconnect(bool wifioff = false);
-
     uint8_t softAPgetStationNum();
+    String softAPSSID(void) const;
+
+
+
+
 
     IPAddress softAPIP();
-
     IPAddress softAPBroadcastIP();
     IPAddress softAPNetworkID();
     IPAddress softAPSubnetMask();
@@ -65,7 +68,6 @@ public:
     uint8_t* softAPmacAddress(uint8_t* mac);
     String softAPmacAddress(void);
 
-    String softAPSSID(void) const;
 
 protected:
 
