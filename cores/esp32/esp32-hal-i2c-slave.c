@@ -235,8 +235,10 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
         frequency = 1000000;
     }
 
-    perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_SLAVE, i2cSlaveDetachBus);
-    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL)){
+    perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_SLAVE_SDA, i2cSlaveDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_I2C_SLAVE_SCL, i2cSlaveDetachBus);
+
+    if(!perimanClearPinBus(sda) || !perimanClearPinBus(scl)){
         return false;
     }
 
@@ -353,7 +355,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     i2c_ll_slave_enable_rx_it(i2c->dev);
     i2c_ll_set_stretch(i2c->dev, 0x3FF);
     i2c_ll_update(i2c->dev);
-    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_SLAVE, (void *)(i2c->num+1)) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_SLAVE, (void *)(i2c->num+1))){
+    if(!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_SLAVE_SDA, (void *)(i2c->num+1), i2c->num, -1) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_SLAVE_SCL, (void *)(i2c->num+1), i2c->num, -1)){
         i2cSlaveDetachBus((void *)(i2c->num+1));
         ret = ESP_FAIL;
     }
@@ -383,8 +385,8 @@ esp_err_t i2cSlaveDeinit(uint8_t num){
     int scl = i2c->scl;
     int sda = i2c->sda;
     i2c_slave_free_resources(i2c);
-    perimanSetPinBus(scl, ESP32_BUS_TYPE_INIT, NULL);
-    perimanSetPinBus(sda, ESP32_BUS_TYPE_INIT, NULL);
+    perimanClearPinBus(scl);
+    perimanClearPinBus(sda);
     I2C_SLAVE_MUTEX_UNLOCK();
     return ESP_OK;
 }
