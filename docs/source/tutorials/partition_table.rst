@@ -131,7 +131,21 @@ Here is an example you can use for a custom partition table:
 
 This partition will use about 12MB of the 16MB flash. The offset will be automatically calculated after the first application partition and the units are in K and M.
 
-A alternative is to create the new partition table as a new file in the `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder and edit the `boards.txt <https://github.com/espressif/arduino-esp32/tree/master/boards.txt>`_ file to add your custom partition table.
+An alternative is to create the new partition table as a new file in the `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder and edit the `boards.txt <https://github.com/espressif/arduino-esp32/tree/master/boards.txt>`_ file to add your custom partition table.
+
+Another alternative is to create the new partition table as a new file, and place it in the `variants <https://github.com/espressif/arduino-esp32/tree/master/variants>`_ folder under your boards folder, and edit the `boards.txt <https://github.com/espressif/arduino-esp32/tree/master/boards.txt>`_ file to add your custom partition table, noting that in order for the compiler to find your custom partition table file you must use the '.build.custom_partitions=' option in the boards.txt file, rather than the standard '.build.partitions=' option. The '.build.variant=' option has the name of the folder holding your custom partition table in the variants folder.
+
+An example of the PartitionScheme listing using the ESP32S3 Dev Module as a reference, would be to have the following:
+
+**Custom Partition - CSV file in /variants/custom_esp32s3/ folder**
+
+.. code-block::
+
+    esp32s3.build.variant=custom_esp32s3
+    --
+    esp32s3.menu.PartitionScheme.huge_app=Custom Huge APP (3MB No OTA/1MB SPIFFS)
+    esp32s3.menu.PartitionScheme.huge_app.build.custom_partitions=custom_huge_app
+    esp32s3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 
 Examples
 --------

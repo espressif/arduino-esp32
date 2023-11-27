@@ -18,11 +18,11 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = 'Arduino-ESP32'
-copyright = '2022, Espressif'
+copyright = '2023, Espressif'
 author = 'Espressif'
 
 # The full version, including alpha/beta/rc tags
-release = '2.0.6'
+release = '2.0.14'
 
 # -- General configuration ---------------------------------------------------
 
@@ -30,6 +30,7 @@ release = '2.0.6'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx_rtd_theme',
     'sphinx_copybutton',
     'sphinx_tabs.tabs'
 ]
@@ -56,7 +57,7 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'default'
+html_theme = "sphinx_rtd_theme"
 html_logo = '_static/logo_espressif.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -66,3 +67,6 @@ html_static_path = ['_static']
 
 # Style
 # pygments_style = "sphinx"
+
+# Tracking ID for Google Analytics
+google_analytics_id = 'G-F58JM78930'

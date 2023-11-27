@@ -14,10 +14,15 @@
 
 #include "esp32-hal-bt.h"
 
+#if SOC_BT_SUPPORTED
 #ifdef CONFIG_BT_ENABLED
 
+#if CONFIG_IDF_TARGET_ESP32
+bool btInUse(){ return true; }
+#else
 // user may want to change it to free resources
 __attribute__((weak)) bool btInUse(){ return true; }
+#endif
 
 #include "esp_bt.h"
 
@@ -97,5 +102,6 @@ bool btStop()
     return false;
 }
 
-#endif // CONFIG_BT_ENABLED
+#endif /* CONFIG_BT_ENABLED */
 
+#endif /* SOC_BT_SUPPORTED */

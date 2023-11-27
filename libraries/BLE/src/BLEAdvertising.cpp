@@ -16,6 +16,9 @@
  * set in the data will be advertised.
  *
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include "BLEAdvertising.h"
@@ -152,7 +155,7 @@ void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWh
 void BLEAdvertising::setAdvertisementData(BLEAdvertisementData& advertisementData) {
 	log_v(">> setAdvertisementData");
 	esp_err_t errRc = ::esp_ble_gap_config_adv_data_raw(
-		(uint8_t*)advertisementData.getPayload().data(),
+		(uint8_t*)advertisementData.getPayload().c_str(),
 		advertisementData.getPayload().length());
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gap_config_adv_data_raw: %d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -169,7 +172,7 @@ void BLEAdvertising::setAdvertisementData(BLEAdvertisementData& advertisementDat
 void BLEAdvertising::setScanResponseData(BLEAdvertisementData& advertisementData) {
 	log_v(">> setScanResponseData");
 	esp_err_t errRc = ::esp_ble_gap_config_scan_rsp_data_raw(
-		(uint8_t*)advertisementData.getPayload().data(),
+		(uint8_t*)advertisementData.getPayload().c_str(),
 		advertisementData.getPayload().length());
 	if (errRc != ESP_OK) {
 		log_e("esp_ble_gap_config_scan_rsp_data_raw: %d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -293,11 +296,11 @@ void BLEAdvertising::setDeviceAddress(esp_bd_addr_t addr, esp_ble_addr_type_t ty
  * @brief Add data to the payload to be advertised.
  * @param [in] data The data to be added to the payload.
  */
-void BLEAdvertisementData::addData(std::string data) {
+void BLEAdvertisementData::addData(String data) {
 	if ((m_payload.length() + data.length()) > ESP_BLE_ADV_DATA_LEN_MAX) {
 		return;
 	}
-	m_payload.append(data);
+	m_payload.concat(data);
 } // addData
 
 
@@ -312,7 +315,7 @@ void BLEAdvertisementData::setAppearance(uint16_t appearance) {
 	char cdata[2];
 	cdata[0] = 3;
 	cdata[1] = ESP_BLE_AD_TYPE_APPEARANCE; // 0x19
-	addData(std::string(cdata, 2) + std::string((char*) &appearance, 2));
+	addData(String(cdata, 2) + String((char*) &appearance, 2));
 } // setAppearance
 
 
@@ -327,7 +330,7 @@ void BLEAdvertisementData::setCompleteServices(BLEUUID uuid) {
 			// [Len] [0x02] [LL] [HH]
 			cdata[0] = 3;
 			cdata[1] = ESP_BLE_AD_TYPE_16SRV_CMPL;  // 0x03
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid16, 2));
+			addData(String(cdata, 2) + String((char*) &uuid.getNative()->uuid.uuid16, 2));
 			break;
 		}
 
@@ -335,7 +338,7 @@ void BLEAdvertisementData::setCompleteServices(BLEUUID uuid) {
 			// [Len] [0x04] [LL] [LL] [HH] [HH]
 			cdata[0] = 5;
 			cdata[1] = ESP_BLE_AD_TYPE_32SRV_CMPL;  // 0x05
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid32, 4));
+			addData(String(cdata, 2) + String((char*) &uuid.getNative()->uuid.uuid32, 4));
 			break;
 		}
 
@@ -343,7 +346,7 @@ void BLEAdvertisementData::setCompleteServices(BLEUUID uuid) {
 			// [Len] [0x04] [0] [1] ... [15]
 			cdata[0] = 17;
 			cdata[1] = ESP_BLE_AD_TYPE_128SRV_CMPL;  // 0x07
-			addData(std::string(cdata, 2) + std::string((char*) uuid.getNative()->uuid.uuid128, 16));
+			addData(String(cdata, 2) + String((char*) uuid.getNative()->uuid.uuid128, 16));
 			break;
 		}
 
@@ -369,7 +372,7 @@ void BLEAdvertisementData::setFlags(uint8_t flag) {
 	cdata[0] = 2;
 	cdata[1] = ESP_BLE_AD_TYPE_FLAG;  // 0x01
 	cdata[2] = flag;
-	addData(std::string(cdata, 3));
+	addData(String(cdata, 3));
 } // setFlag
 
 
@@ -378,12 +381,12 @@ void BLEAdvertisementData::setFlags(uint8_t flag) {
  * @brief Set manufacturer specific data.
  * @param [in] data Manufacturer data.
  */
-void BLEAdvertisementData::setManufacturerData(std::string data) {
+void BLEAdvertisementData::setManufacturerData(String data) {
 	log_d("BLEAdvertisementData", ">> setManufacturerData");
 	char cdata[2];
 	cdata[0] = data.length() + 1;
 	cdata[1] = ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE;  // 0xff
-	addData(std::string(cdata, 2) + data);
+	addData(String(cdata, 2) + data);
 	log_d("BLEAdvertisementData", "<< setManufacturerData");
 } // setManufacturerData
 
@@ -392,12 +395,12 @@ void BLEAdvertisementData::setManufacturerData(std::string data) {
  * @brief Set the name.
  * @param [in] The complete name of the device.
  */
-void BLEAdvertisementData::setName(std::string name) {
+void BLEAdvertisementData::setName(String name) {
 	log_d("BLEAdvertisementData", ">> setName: %s", name.c_str());
 	char cdata[2];
 	cdata[0] = name.length() + 1;
 	cdata[1] = ESP_BLE_AD_TYPE_NAME_CMPL;  // 0x09
-	addData(std::string(cdata, 2) + name);
+	addData(String(cdata, 2) + name);
 	log_d("BLEAdvertisementData", "<< setName");
 } // setName
 
@@ -413,7 +416,7 @@ void BLEAdvertisementData::setPartialServices(BLEUUID uuid) {
 			// [Len] [0x02] [LL] [HH]
 			cdata[0] = 3;
 			cdata[1] = ESP_BLE_AD_TYPE_16SRV_PART;  // 0x02
-			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->uuid.uuid16, 2));
+			addData(String(cdata, 2) + String((char *) &uuid.getNative()->uuid.uuid16, 2));
 			break;
 		}
 
@@ -421,7 +424,7 @@ void BLEAdvertisementData::setPartialServices(BLEUUID uuid) {
 			// [Len] [0x04] [LL] [LL] [HH] [HH]
 			cdata[0] = 5;
 			cdata[1] = ESP_BLE_AD_TYPE_32SRV_PART; // 0x04
-			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->uuid.uuid32, 4));
+			addData(String(cdata, 2) + String((char *) &uuid.getNative()->uuid.uuid32, 4));
 			break;
 		}
 
@@ -429,7 +432,7 @@ void BLEAdvertisementData::setPartialServices(BLEUUID uuid) {
 			// [Len] [0x04] [0] [1] ... [15]
 			cdata[0] = 17;
 			cdata[1] = ESP_BLE_AD_TYPE_128SRV_PART;  // 0x06
-			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->uuid.uuid128, 16));
+			addData(String(cdata, 2) + String((char *) &uuid.getNative()->uuid.uuid128, 16));
 			break;
 		}
 
@@ -444,14 +447,14 @@ void BLEAdvertisementData::setPartialServices(BLEUUID uuid) {
  * @param [in] uuid The UUID to set with the service data.  Size of UUID will be used.
  * @param [in] data The data to be associated with the service data advert.
  */
-void BLEAdvertisementData::setServiceData(BLEUUID uuid, std::string data) {
+void BLEAdvertisementData::setServiceData(BLEUUID uuid, String data) {
 	char cdata[2];
 	switch (uuid.bitSize()) {
 		case 16: {
 			// [Len] [0x16] [UUID16] data
 			cdata[0] = data.length() + 3;
 			cdata[1] = ESP_BLE_AD_TYPE_SERVICE_DATA;  // 0x16
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid16, 2) + data);
+			addData(String(cdata, 2) + String((char*) &uuid.getNative()->uuid.uuid16, 2) + data);
 			break;
 		}
 
@@ -459,7 +462,7 @@ void BLEAdvertisementData::setServiceData(BLEUUID uuid, std::string data) {
 			// [Len] [0x20] [UUID32] data
 			cdata[0] = data.length() + 5;
 			cdata[1] = ESP_BLE_AD_TYPE_32SERVICE_DATA; // 0x20
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid32, 4) + data);
+			addData(String(cdata, 2) + String((char*) &uuid.getNative()->uuid.uuid32, 4) + data);
 			break;
 		}
 
@@ -467,7 +470,7 @@ void BLEAdvertisementData::setServiceData(BLEUUID uuid, std::string data) {
 			// [Len] [0x21] [UUID128] data
 			cdata[0] = data.length() + 17;
 			cdata[1] = ESP_BLE_AD_TYPE_128SERVICE_DATA;  // 0x21
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid128, 16) + data);
+			addData(String(cdata, 2) + String((char*) &uuid.getNative()->uuid.uuid128, 16) + data);
 			break;
 		}
 
@@ -481,12 +484,12 @@ void BLEAdvertisementData::setServiceData(BLEUUID uuid, std::string data) {
  * @brief Set the short name.
  * @param [in] The short name of the device.
  */
-void BLEAdvertisementData::setShortName(std::string name) {
+void BLEAdvertisementData::setShortName(String name) {
 	log_d("BLEAdvertisementData", ">> setShortName: %s", name.c_str());
 	char cdata[2];
 	cdata[0] = name.length() + 1;
 	cdata[1] = ESP_BLE_AD_TYPE_NAME_SHORT;  // 0x08
-	addData(std::string(cdata, 2) + name);
+	addData(String(cdata, 2) + name);
 	log_d("BLEAdvertisementData", "<< setShortName");
 } // setShortName
 
@@ -495,7 +498,7 @@ void BLEAdvertisementData::setShortName(std::string name) {
  * @brief Retrieve the payload that is to be advertised.
  * @return The payload that is to be advertised.
  */
-std::string BLEAdvertisementData::getPayload() {
+String BLEAdvertisementData::getPayload() {
 	return m_payload;
 } // getPayload
 
@@ -528,7 +531,7 @@ void BLEAdvertising::handleGAPEvent(
 	}
 }
 
-#ifdef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#ifdef SOC_BLE_50_SUPPORTED
 
 /**
 * @brief           Creator
@@ -763,7 +766,7 @@ void BLEMultiAdvertising::setDuration(uint8_t instance, int duration, int max_ev
 	ext_adv[instance] = { instance, duration, max_events };
 }
 
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
-
+#endif // SOC_BLE_50_SUPPORTED
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

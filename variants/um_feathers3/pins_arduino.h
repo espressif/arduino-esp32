@@ -2,20 +2,13 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define USB_VID 0x303A
 #define USB_PID 0x80D6
 #define USB_MANUFACTURER "Unexpected Maker"
 #define USB_PRODUCT "FeatherS3"
 #define USB_SERIAL ""
-
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        21
-#define NUM_ANALOG_INPUTS       13
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -59,10 +52,17 @@ static const uint8_t T14 = 14;
 static const uint8_t VBAT_SENSE = 2;
 static const uint8_t VBUS_SENSE = 34;
 
+// User LED 
+#define LED_BUILTIN 13
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+
 static const uint8_t RGB_DATA = 40;
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
+#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)  
+#define RGB_BRIGHTNESS 64
+
 static const uint8_t RGB_PWR = 39;
 static const uint8_t LDO2 = 39;
-static const uint8_t LED_BUILTIN = 13;
 static const uint8_t LED = 13;
 
 #endif /* Pins_Arduino_h */

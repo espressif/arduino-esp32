@@ -84,7 +84,7 @@ void onReceiveErrorFunction(hardwareSerial_error_t err) {
 void onReceiveFunction() {
   // This is a callback function that will be activated on UART RX events
   size_t available = Serial1.available();
-  received_bytes += available;
+  received_bytes = received_bytes + available;
   Serial.printf("onReceive Callback:: There are %d bytes available: {", available);
   while (available --) {
     Serial.print((char)Serial1.read());
