@@ -21,6 +21,14 @@
 #include "esp_adc/adc_continuous.h"
 #include "esp_adc/adc_cali_scheme.h"
 
+// ESP32-C2 does not define those two for some reason
+#ifndef SOC_ADC_DIGI_RESULT_BYTES
+#define SOC_ADC_DIGI_RESULT_BYTES               (4)
+#endif
+#ifndef SOC_ADC_DIGI_DATA_BYTES_PER_CONV
+#define SOC_ADC_DIGI_DATA_BYTES_PER_CONV        (4)
+#endif
+
 static uint8_t __analogAttenuation = ADC_11db;
 static uint8_t __analogWidth = SOC_ADC_RTC_MAX_BITWIDTH; 
 static uint8_t __analogReturnedWidth = SOC_ADC_RTC_MAX_BITWIDTH;
@@ -213,7 +221,7 @@ esp_err_t __analogInit(uint8_t pin, adc_channel_t channel, adc_unit_t adc_unit){
         }
     }
 
-    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT, (void *)(pin+1))){
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT, (void *)(pin+1), adc_unit, channel)){
         adcDetachBus((void *)(pin+1));
         return err;
     }
@@ -388,7 +396,7 @@ static bool adcContinuousDetachBus(void * adc_unit_number){
             int io_pin;
             adc_oneshot_channel_to_io(adc_unit, channel, &io_pin);
             if(perimanGetPinBusType(io_pin) == ESP32_BUS_TYPE_ADC_CONT){
-                if(!perimanSetPinBus(io_pin, ESP32_BUS_TYPE_INIT, NULL)){
+                if(!perimanClearPinBus(io_pin)){
                     return false;
                 }
             }
@@ -489,7 +497,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
     //Set periman deinit function and reset all pins to init state.
     perimanSetBusDeinit(ESP32_BUS_TYPE_ADC_CONT, adcContinuousDetachBus);
     for(int j = 0; j < pins_count; j++){
-        if(!perimanSetPinBus(pins[j], ESP32_BUS_TYPE_INIT, NULL)){
+        if(!perimanClearPinBus(pins[j])){
             return false;
         }
     }
@@ -563,7 +571,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
     }
 
     for(int k = 0; k < pins_count; k++){
-        if(!perimanSetPinBus(pins[k], ESP32_BUS_TYPE_ADC_CONT, (void *)(adc_unit+1))){
+        if(!perimanSetPinBus(pins[k], ESP32_BUS_TYPE_ADC_CONT, (void *)(adc_unit+1), adc_unit, channel[k])){
             log_e("perimanSetPinBus to ADC Continuous failed!");
             adcContinuousDetachBus((void *)(adc_unit+1));
             return false;

@@ -130,7 +130,7 @@ void BLEScan::handleGAPEvent(
 						m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
 					} 
 					if (!m_wantDuplicates && !found) {   // if no callback and not want duplicate, and not already in vector, record it
-						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
+						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<String, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
 						shouldDelete = false;
 					}
 					if (shouldDelete) {
@@ -386,7 +386,7 @@ void BLEScan::setWindow(uint16_t windowMSecs) {
 bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue) {
 	log_v(">> start(duration=%d)", duration);
 
-	m_semaphoreScanEnd.take(std::string("start"));
+	m_semaphoreScanEnd.take(String("start"));
 	m_scanCompleteCB = scanCompleteCB;                  // Save the callback to be invoked when the scan completes.
 
 	//  if we are connecting to devices that are advertising even after being connected, multiconnecting peripherals
@@ -426,11 +426,11 @@ bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), b
  * @param [in] duration The duration in seconds for which to scan.
  * @return The BLEScanResults.
  */
-BLEScanResults BLEScan::start(uint32_t duration, bool is_continue) {
+BLEScanResults* BLEScan::start(uint32_t duration, bool is_continue) {
 	if(start(duration, nullptr, is_continue)) {
 		m_semaphoreScanEnd.wait("start");   // Wait for the semaphore to release.
 	}
-	return m_scanResults;
+	return &m_scanResults;
 } // start
 
 
@@ -500,8 +500,8 @@ BLEAdvertisedDevice BLEScanResults::getDevice(uint32_t i) {
 	return dev;
 }
 
-BLEScanResults BLEScan::getResults() {
-	return m_scanResults;
+BLEScanResults* BLEScan::getResults() {
+	return &m_scanResults;
 }
 
 void BLEScan::clearResults() {

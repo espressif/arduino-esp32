@@ -243,11 +243,20 @@ int32_t WiFiScanClass::RSSI(uint8_t i)
 /**
  * return MAC / BSSID of scanned wifi
  * @param i specify from which network item want to get the information
+ * @param buff optional buffer for the result uint8_t array with length 6
  * @return uint8_t * MAC / BSSID of scanned wifi
  */
-uint8_t * WiFiScanClass::BSSID(uint8_t i)
+uint8_t * WiFiScanClass::BSSID(uint8_t i, uint8_t* buff)
 {
     wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
+    if(buff != NULL) {
+        if(!it) {
+            memset(buff, 0, 6);
+        } else {
+            memcpy(buff, it->bssid, 6);
+        }
+        return buff;
+    }
     if(!it) {
         return 0;
     }

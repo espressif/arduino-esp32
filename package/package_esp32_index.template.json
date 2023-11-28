@@ -39,7 +39,7 @@
             {
               "packager": "esp32",
               "name": "esp32-arduino-libs",
-              "version": "idf-release_v5.1-f0437b945f"
+              "version": "idf-release_v5.1-b6a66b7d8c"
             },
             {
               "packager": "esp32",
@@ -74,7 +74,7 @@
             {
               "packager": "esp32",
               "name": "openocd-esp32",
-              "version": "v0.12.0-esp32-20230419"
+              "version": "v0.12.0-esp32-20230921"
             },
             {
               "packager": "esp32",
@@ -97,63 +97,63 @@
       "tools": [
         {
           "name": "esp32-arduino-libs",
-          "version": "idf-release_v5.1-f0437b945f",
+          "version": "idf-release_v5.1-b6a66b7d8c",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-libs/releases/download/0.0.0-alpha/esp32-arduino-libs-0.0.0-alpha.zip",
-              "archiveFileName": "esp32-arduino-libs-0.0.0-alpha.zip",
-              "checksum": "SHA-256:096aa276bfe07375f1701f84d05039cb439f48ba1a607676fe27d2807037389a",
-              "size": "333176544"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a",
+              "archiveFileName": "esp32-arduino-libs-9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a.zip",
+              "checksum": "SHA-256:a7ba8799757ab5c59501895f936ce77cdb0b2599c3a63b437f9a2ca686207abe",
+              "size": "367803590"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-libs/releases/download/0.0.0-alpha/esp32-arduino-libs-0.0.0-alpha.zip",
-              "archiveFileName": "esp32-arduino-libs-0.0.0-alpha.zip",
-              "checksum": "SHA-256:096aa276bfe07375f1701f84d05039cb439f48ba1a607676fe27d2807037389a",
-              "size": "333176544"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a",
+              "archiveFileName": "esp32-arduino-libs-9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a.zip",
+              "checksum": "SHA-256:a7ba8799757ab5c59501895f936ce77cdb0b2599c3a63b437f9a2ca686207abe",
+              "size": "367803590"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-libs/releases/download/0.0.0-alpha/esp32-arduino-libs-0.0.0-alpha.zip",
-              "archiveFileName": "esp32-arduino-libs-0.0.0-alpha.zip",
-              "checksum": "SHA-256:096aa276bfe07375f1701f84d05039cb439f48ba1a607676fe27d2807037389a",
-              "size": "333176544"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a",
+              "archiveFileName": "esp32-arduino-libs-9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a.zip",
+              "checksum": "SHA-256:a7ba8799757ab5c59501895f936ce77cdb0b2599c3a63b437f9a2ca686207abe",
+              "size": "367803590"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-libs/releases/download/0.0.0-alpha/esp32-arduino-libs-0.0.0-alpha.zip",
-              "archiveFileName": "esp32-arduino-libs-0.0.0-alpha.zip",
-              "checksum": "SHA-256:096aa276bfe07375f1701f84d05039cb439f48ba1a607676fe27d2807037389a",
-              "size": "333176544"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a",
+              "archiveFileName": "esp32-arduino-libs-9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a.zip",
+              "checksum": "SHA-256:a7ba8799757ab5c59501895f936ce77cdb0b2599c3a63b437f9a2ca686207abe",
+              "size": "367803590"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-libs/releases/download/0.0.0-alpha/esp32-arduino-libs-0.0.0-alpha.zip",
-              "archiveFileName": "esp32-arduino-libs-0.0.0-alpha.zip",
-              "checksum": "SHA-256:096aa276bfe07375f1701f84d05039cb439f48ba1a607676fe27d2807037389a",
-              "size": "333176544"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a",
+              "archiveFileName": "esp32-arduino-libs-9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a.zip",
+              "checksum": "SHA-256:a7ba8799757ab5c59501895f936ce77cdb0b2599c3a63b437f9a2ca686207abe",
+              "size": "367803590"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-libs/releases/download/0.0.0-alpha/esp32-arduino-libs-0.0.0-alpha.zip",
-              "archiveFileName": "esp32-arduino-libs-0.0.0-alpha.zip",
-              "checksum": "SHA-256:096aa276bfe07375f1701f84d05039cb439f48ba1a607676fe27d2807037389a",
-              "size": "333176544"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a",
+              "archiveFileName": "esp32-arduino-libs-9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a.zip",
+              "checksum": "SHA-256:a7ba8799757ab5c59501895f936ce77cdb0b2599c3a63b437f9a2ca686207abe",
+              "size": "367803590"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-libs/releases/download/0.0.0-alpha/esp32-arduino-libs-0.0.0-alpha.zip",
-              "archiveFileName": "esp32-arduino-libs-0.0.0-alpha.zip",
-              "checksum": "SHA-256:096aa276bfe07375f1701f84d05039cb439f48ba1a607676fe27d2807037389a",
-              "size": "333176544"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a",
+              "archiveFileName": "esp32-arduino-libs-9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a.zip",
+              "checksum": "SHA-256:a7ba8799757ab5c59501895f936ce77cdb0b2599c3a63b437f9a2ca686207abe",
+              "size": "367803590"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/esp32-arduino-libs/releases/download/0.0.0-alpha/esp32-arduino-libs-0.0.0-alpha.zip",
-              "archiveFileName": "esp32-arduino-libs-0.0.0-alpha.zip",
-              "checksum": "SHA-256:096aa276bfe07375f1701f84d05039cb439f48ba1a607676fe27d2807037389a",
-              "size": "333176544"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a",
+              "archiveFileName": "esp32-arduino-libs-9ceb4a6f9bf33c9b72c95b647ad67d45f25fd01a.zip",
+              "checksum": "SHA-256:a7ba8799757ab5c59501895f936ce77cdb0b2599c3a63b437f9a2ca686207abe",
+              "size": "367803590"
             }
           ]
         },
@@ -163,45 +163,45 @@
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz",
-              "checksum": "SHA-256:4d2e02ef47f1a93a4dcfdbaecd486adfaab4c0e26deea2c18d6385527f39f864",
-              "size": "67006496"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:e8d35938385447cf9c34735fee2a3b2b61cca6be07db77a45856a1c2a347e423",
+              "size": "111766903"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-aarch64-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-aarch64-linux-gnu.tar.xz",
-              "checksum": "SHA-256:9e211a182b6ea0396a41c78f52f51d964e7875fe274ea9c81111bf0dbc90c516",
-              "size": "60751692"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-aarch64-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-aarch64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:569988acfc2673369f222037c64bac96990cee08cebeebc4f8860e0d984f8bd9",
+              "size": "106473247"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-arm-linux-gnueabi.tar.xz",
-              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-arm-linux-gnueabi.tar.xz",
-              "checksum": "SHA-256:2ddd91fb98b79b30042b7918eef60cf10c7bd5b1da853e83b65f293b96dec800",
-              "size": "56720952"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-arm-linux-gnueabi.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-arm-linux-gnueabi.tar.gz",
+              "checksum": "SHA-256:6a844f16021e936cc9b87b203978356f57ab2144554f6f2a0f73ffa3d3d316c5",
+              "size": "105576049"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-i686-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-i686-linux-gnu.tar.xz",
-              "checksum": "SHA-256:292b19ea6186508a923fb6fd0103977e001d4eb8e77836c7e3d6ce6e5fa7d305",
-              "size": "69446616"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-i686-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-i686-linux-gnu.tar.gz",
+              "checksum": "SHA-256:743d6f03a89329bb09f9550d27fcab677f5cf06b4720793bbcef7883a932681d",
+              "size": "114870843"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-x86_64-apple-darwin.tar.xz",
-              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-x86_64-apple-darwin.tar.xz",
-              "checksum": "SHA-256:b09d87fdb1dc32cd1d718935065ef931b101a14df6b17be56748e52640955bff",
-              "size": "65895468"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-x86_64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:4d32d764e984f3a570aacfb2f4957619540fb4629534d969b2e83997901334c3",
+              "size": "119424029"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-aarch64-apple-darwin.tar.xz",
-              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-aarch64-apple-darwin.tar.xz",
-              "checksum": "SHA-256:f50acab2b216e9475dc5313b3e4b424cbc70d0abd23ba1818aff4a019165da8e",
-              "size": "57168044"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32-elf-12.2.0_20230208-aarch64-apple-darwin.tar.gz",
+              "archiveFileName": "xtensa-esp32-elf-12.2.0_20230208-aarch64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:dc8fa7f4933bf5cb08e83bacce6160cc9dfe93d7aad1e8f92599bb81ff5b2e28",
+              "size": "106136827"
             },
             {
               "host": "i686-mingw32",
@@ -225,45 +225,45 @@
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz",
-              "checksum": "SHA-256:a1bd8f0252aae02cff2c289f742fbdbaa2c24644cc30e883d118253ea4df1799",
-              "size": "64374532"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:2ff838520a5003d2768b275f5bb5ead69dd2388c3b7cd9043cb59891ba43147f",
+              "size": "112199211"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-aarch64-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-aarch64-linux-gnu.tar.xz",
-              "checksum": "SHA-256:48e88053e92bab1bf8d6dbad7ddb4d140c537159d607a36e73e74e1f5f23c892",
-              "size": "58021880"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-aarch64-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-aarch64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:6d79d5b14fc7129a9b8208d54e19b05dedb565f50f7a96264c9df84b06ad3be0",
+              "size": "106953064"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-arm-linux-gnueabi.tar.xz",
-              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-arm-linux-gnueabi.tar.xz",
-              "checksum": "SHA-256:37cdd619fa56ce884570cedd00dd2f4a5eb9a1fce3755a2f4b9279d1136e47c1",
-              "size": "59627080"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-arm-linux-gnueabi.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-arm-linux-gnueabi.tar.gz",
+              "checksum": "SHA-256:e5bd03b6ad19179b015a93ada9992adc3610036ebf6aeb0835a09c9aadb50a14",
+              "size": "106026829"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-i686-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-i686-linux-gnu.tar.xz",
-              "checksum": "SHA-256:d9b79e9e3204fa8e40f9942ea1197a83ae1527e3711a45bc17171ff5fec43e54",
-              "size": "69013172"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-i686-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-i686-linux-gnu.tar.gz",
+              "checksum": "SHA-256:fb45943557b2d201bbb1bdc7514a1872f9bb96c2dfb48b95abdba281cc792f75",
+              "size": "115288662"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-x86_64-apple-darwin.tar.xz",
-              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-x86_64-apple-darwin.tar.xz",
-              "checksum": "SHA-256:e7b2fbacd8186b24d1b1264ad6cf639f476d51f5d908fb79504abfe6281d3c8c",
-              "size": "65634524"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-x86_64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:e965236cb80e45282d16f40184af183e013b63b177bd1884736c463eac636564",
+              "size": "119711811"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-aarch64-apple-darwin.tar.xz",
-              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-aarch64-apple-darwin.tar.xz",
-              "checksum": "SHA-256:d2c997ce5f43a93c3787c224aa8742b0cd87443794514ab2153cd629665506f0",
-              "size": "57290936"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s2-elf-12.2.0_20230208-aarch64-apple-darwin.tar.gz",
+              "archiveFileName": "xtensa-esp32s2-elf-12.2.0_20230208-aarch64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:78a55eec18650b21378d97494989ffe208748e0f49bb2b2d6756b264e1863919",
+              "size": "106540817"
             },
             {
               "host": "i686-mingw32",
@@ -287,45 +287,45 @@
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz",
-              "checksum": "SHA-256:29b5ea6b30d98231f0c17f2327404109e0abf59b48d0f2890d9d9899678a89a3",
-              "size": "67512340"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:61495ffe575e00c6998ae7274ff917658c04bded62ece0937c7042d6dcbf46de",
+              "size": "111971129"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-aarch64-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-aarch64-linux-gnu.tar.xz",
-              "checksum": "SHA-256:30a1fed3ab6341feb1ae986ee55f227df6a594293ced13c65a0136eb4681087d",
-              "size": "60207516"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-aarch64-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-aarch64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:9008d395be46fcfe68c7de6edc850fc1595f28323a28e7922e5c085bd310cb90",
+              "size": "106616800"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-arm-linux-gnueabi.tar.xz",
-              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-arm-linux-gnueabi.tar.xz",
-              "checksum": "SHA-256:c180836bf43b90b4b7c24166a3bd4156c74c8e58bb85761aa58da98d076e6f48",
-              "size": "57151040"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-arm-linux-gnueabi.tar.gz",
+              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-arm-linux-gnueabi.tar.gz",
+              "checksum": "SHA-256:568857bdac7dea389dffc7fbc6871b4af299150a8ecf1bf965f224d2a1655edb",
+              "size": "105700326"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-i686-linux-gnu.tar.xz",
-              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-i686-linux-gnu.tar.xz",
-              "checksum": "SHA-256:9a968f58085c66b41ca13af8d652e5250df0f8d8e17988e34846be9c76672cab",
-              "size": "68403124"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-i686-linux-gnu.tar.gz",
+              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-i686-linux-gnu.tar.gz",
+              "checksum": "SHA-256:d122738bcc6c2f52d05fa89b2fb1afe6a7894cda8a07a1879aca867a31507ed0",
+              "size": "115098400"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-x86_64-apple-darwin.tar.xz",
-              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-x86_64-apple-darwin.tar.xz",
-              "checksum": "SHA-256:30375231847a9070e4e0acb3102b7d35a60448a55536bfa113c677c449da3eef",
-              "size": "68227240"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-x86_64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:7defcddb98788b0991416ad2e0cb6a3b248b8030f22d5d76b8832117cc1494ca",
+              "size": "119883189"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-aarch64-apple-darwin.tar.xz",
-              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-aarch64-apple-darwin.tar.xz",
-              "checksum": "SHA-256:ae9a1a3e12c0b6f6f28a3878f5964e91a410350248586c90db94f8bdaeef7695",
-              "size": "57080804"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/xtensa-esp32s3-elf-12.2.0_20230208-aarch64-apple-darwin.tar.gz",
+              "archiveFileName": "xtensa-esp32s3-elf-12.2.0_20230208-aarch64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:b59e076f8e4b9ca99535d449f9fc4cbb443188051dce4ad934e38f16b095f8d9",
+              "size": "106464677"
             },
             {
               "host": "i686-mingw32",
@@ -411,45 +411,45 @@
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-x86_64-linux-gnu.tar.xz",
-              "checksum": "SHA-256:21694e5ee506f5e52908b12c6b5be7044d87cf34bb4dfcd151d0a10ea09dedc1",
-              "size": "131410024"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-x86_64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:1eb0d65990547ee9706b90406600cbc3638814d5feb7c1f7b44bb5416478a5bd",
+              "size": "257615266"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-aarch64-linux-gnu.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-aarch64-linux-gnu.tar.xz",
-              "checksum": "SHA-256:aefbf1e6f2c91a10e8995399d2003502e167e8c95e77f40957309e843700906a",
-              "size": "125863404"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-aarch64-linux-gnu.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-aarch64-linux-gnu.tar.gz",
+              "checksum": "SHA-256:921fcdc170c7fe5d6a0a30470ed1875c8926d910c19739fc950c8d1836e4c1c5",
+              "size": "253094184"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-arm-linux-gnueabi.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-arm-linux-gnueabi.tar.xz",
-              "checksum": "SHA-256:9740cbddb4cb5e05382991c83d8c96a5fb7d87046449e77791b3b0de29a3ddd8",
-              "size": "121040676"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-arm-linux-gnueabi.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-arm-linux-gnueabi.tar.gz",
+              "checksum": "SHA-256:f66e06312b58251c2121c1b1df1102565708573b86b2a9fe0c03ea1b0e9a7511",
+              "size": "252558021"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-i686-linux-gnu.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-i686-linux-gnu.tar.xz",
-              "checksum": "SHA-256:9207fe3d1413cf29fad6dc4bdc9a35f538b0b2c48a70e9a89d2f0e930c346aed",
-              "size": "133871120"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-i686-linux-gnu.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-i686-linux-gnu.tar.gz",
+              "checksum": "SHA-256:8abcac0331ef8973d1c705e77523364ebec7e98b37640d4a1d036912f3cbe946",
+              "size": "261248375"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-x86_64-apple-darwin.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-x86_64-apple-darwin.tar.xz",
-              "checksum": "SHA-256:78cd1afe458fceb7c2657fe346edb0ecfde3b8743ccf7a7a7509c456cad9de9a",
-              "size": "135635672"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-x86_64-apple-darwin.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-x86_64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:76a334bc75a4e3891c222c84d7968817f2d0699d2976fc2a1658e56395283bec",
+              "size": "268987133"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-aarch64-apple-darwin.tar.xz",
-              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-aarch64-apple-darwin.tar.xz",
-              "checksum": "SHA-256:6c0a4151afb258766911fc7bcfe5f4fee6ee2cd9a5ff25542bc1228c1203a3f9",
-              "size": "119346172"
+              "url": "https://github.com/espressif/crosstool-NG/releases/download/esp-12.2.0_20230208/riscv32-esp-elf-12.2.0_20230208-aarch64-apple-darwin.tar.gz",
+              "archiveFileName": "riscv32-esp-elf-12.2.0_20230208-aarch64-apple-darwin.tar.gz",
+              "checksum": "SHA-256:f30571945b257a10a26901bba3c5892e07c192aacf9ed6e8fcd11ca36ed827d2",
+              "size": "252159713"
             },
             {
               "host": "i686-mingw32",
@@ -531,56 +531,56 @@
         },
         {
           "name": "openocd-esp32",
-          "version": "v0.12.0-esp32-20230419",
+          "version": "v0.12.0-esp32-20230921",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230419/openocd-esp32-linux-amd64-0.12.0-esp32-20230419.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-amd64-0.12.0-esp32-20230419.tar.gz",
-              "checksum": "SHA-256:5144e7516cd75a2152b35ecae0a400f7d3d4424c2488fbacc49433564f54c70d",
-              "size": "2126949"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230921/openocd-esp32-linux-amd64-0.12.0-esp32-20230921.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-amd64-0.12.0-esp32-20230921.tar.gz",
+              "checksum": "SHA-256:61e38e0a13a5c1664624ec1c397d7f7d6868554b0d345d3fb1f7294cce38cc4b",
+              "size": "2193783"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230419/openocd-esp32-linux-arm64-0.12.0-esp32-20230419.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-arm64-0.12.0-esp32-20230419.tar.gz",
-              "checksum": "SHA-256:1c4d900c738fe00730c6033abb6cf1cc6587717dbeee291d5908272d153d329a",
-              "size": "1989161"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230921/openocd-esp32-linux-arm64-0.12.0-esp32-20230921.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-arm64-0.12.0-esp32-20230921.tar.gz",
+              "checksum": "SHA-256:6430315dc1b926541c93cef63d2b08982543ad3f9fe6e0d7107c8a518ef20432",
+              "size": "2062058"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230419/openocd-esp32-linux-armel-0.12.0-esp32-20230419.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-armel-0.12.0-esp32-20230419.tar.gz",
-              "checksum": "SHA-256:293258fd67618dd352e1096137ad9f2b801926eaf74ffcd570540ae94ad8ee5c",
-              "size": "2129727"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230921/openocd-esp32-linux-armel-0.12.0-esp32-20230921.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-armel-0.12.0-esp32-20230921.tar.gz",
+              "checksum": "SHA-256:5df16d8a91f013a547f6b3b914c655a9d267996a3b6503031b335ac04a4f8d15",
+              "size": "2206666"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230419/openocd-esp32-macos-0.12.0-esp32-20230419.tar.gz",
-              "archiveFileName": "openocd-esp32-macos-0.12.0-esp32-20230419.tar.gz",
-              "checksum": "SHA-256:621aad7d011c6817cde9570dfea42c7bcc699458bf43c37706cb4c2f6475a247",
-              "size": "2237976"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230921/openocd-esp32-macos-0.12.0-esp32-20230921.tar.gz",
+              "archiveFileName": "openocd-esp32-macos-0.12.0-esp32-20230921.tar.gz",
+              "checksum": "SHA-256:0a4f764934f488af18cdac2a0d152dd36b4870f3bec1a2d4e25b6b3b7a5258a0",
+              "size": "2305832"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230419/openocd-esp32-macos-arm64-0.12.0-esp32-20230419.tar.gz",
-              "archiveFileName": "openocd-esp32-macos-arm64-0.12.0-esp32-20230419.tar.gz",
-              "checksum": "SHA-256:3af7eac3a7de3939731ec4c13fb5d72a8e6ce5e5d274bb9697f5d93039561e42",
-              "size": "2270699"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230921/openocd-esp32-macos-arm64-0.12.0-esp32-20230921.tar.gz",
+              "archiveFileName": "openocd-esp32-macos-arm64-0.12.0-esp32-20230921.tar.gz",
+              "checksum": "SHA-256:6dce89048f642eb0559a915b6e514f90feb2a95afe21b84f0b0ebf2b27824816",
+              "size": "2341406"
             },
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230419/openocd-esp32-win32-0.12.0-esp32-20230419.zip",
-              "archiveFileName": "openocd-esp32-win32-0.12.0-esp32-20230419.zip",
-              "checksum": "SHA-256:f2cb3d9cacfe789c20d3272af846d726a062ce8f2e4ee142bddb27501d7dd7a7",
-              "size": "2619680"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230921/openocd-esp32-win32-0.12.0-esp32-20230921.zip",
+              "archiveFileName": "openocd-esp32-win32-0.12.0-esp32-20230921.zip",
+              "checksum": "SHA-256:ac9d522a63b0816f64d921547bd55c031788035ced85c067d8e7c2862cb1bd0d",
+              "size": "2710475"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230419/openocd-esp32-win32-0.12.0-esp32-20230419.zip",
-              "archiveFileName": "openocd-esp32-win32-0.12.0-esp32-20230419.zip",
-              "checksum": "SHA-256:f2cb3d9cacfe789c20d3272af846d726a062ce8f2e4ee142bddb27501d7dd7a7",
-              "size": "2619680"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20230921/openocd-esp32-win32-0.12.0-esp32-20230921.zip",
+              "archiveFileName": "openocd-esp32-win32-0.12.0-esp32-20230921.zip",
+              "checksum": "SHA-256:ac9d522a63b0816f64d921547bd55c031788035ced85c067d8e7c2862cb1bd0d",
+              "size": "2710475"
             }
           ]
         },

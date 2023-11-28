@@ -181,8 +181,8 @@ bool HWCDC::deinit(void * busptr)
     running = true; 
     // Setting USB D+ D- pins
     bool retCode = true;
-    retCode &= perimanSetPinBus(USB_DM_GPIO_NUM, ESP32_BUS_TYPE_INIT, NULL);
-    retCode &= perimanSetPinBus(USB_DP_GPIO_NUM, ESP32_BUS_TYPE_INIT, NULL);
+    retCode &= perimanClearPinBus(USB_DM_GPIO_NUM);
+    retCode &= perimanClearPinBus(USB_DP_GPIO_NUM);
     if (retCode) {
         // Force the host to re-enumerate (BUS_RESET)
         pinMode(USB_DM_GPIO_NUM, OUTPUT_OPEN_DRAIN);
@@ -220,10 +220,10 @@ void HWCDC::begin(unsigned long baud)
         end();
         return;
     }
-    if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB, HWCDC::deinit)) {
+    if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit) && perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit)) {
         // Setting USB D+ D- pins
-        perimanSetPinBus(USB_DM_GPIO_NUM, ESP32_BUS_TYPE_USB, (void *) this);
-        perimanSetPinBus(USB_DP_GPIO_NUM, ESP32_BUS_TYPE_USB, (void *) this);
+        perimanSetPinBus(USB_DM_GPIO_NUM, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1);
+        perimanSetPinBus(USB_DP_GPIO_NUM, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1);
     } else {
         log_e("Serial JTAG Pins can't be set into Peripheral Manager.");
     }
@@ -436,12 +436,9 @@ void HWCDC::setDebugOutput(bool en)
     }
 }
 
-#if ARDUINO_USB_MODE
-#if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
-HWCDC Serial;
-#else
-HWCDC USBSerial;
-#endif
+#if ARDUINO_USB_MODE  // Hardware JTAG CDC selected
+// USBSerial is always available to be used
+HWCDC HWCDCSerial;
 #endif
 
 #endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */
