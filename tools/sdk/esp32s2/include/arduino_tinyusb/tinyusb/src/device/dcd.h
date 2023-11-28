@@ -47,8 +47,7 @@
 // MACRO CONSTANT TYPEDEF PROTYPES
 //--------------------------------------------------------------------+
 
-typedef enum
-{
+typedef enum {
   DCD_EVENT_INVALID = 0,
   DCD_EVENT_BUS_RESET,
   DCD_EVENT_UNPLUGGED,
@@ -65,13 +64,11 @@ typedef enum
   DCD_EVENT_COUNT
 } dcd_eventid_t;
 
-typedef struct TU_ATTR_ALIGNED(4)
-{
+typedef struct TU_ATTR_ALIGNED(4) {
   uint8_t rhport;
   uint8_t event_id;
 
-  union
-  {
+  union {
     // BUS RESET
     struct {
       tusb_speed_t speed;
@@ -123,7 +120,7 @@ void dcd_dcache_clean_invalidate(void const* addr, uint32_t data_size) TU_ATTR_W
 //--------------------------------------------------------------------+
 
 // Initialize controller to device mode
-void dcd_init       (uint8_t rhport);
+void dcd_init(uint8_t rhport);
 
 // Interrupt Handler
 void dcd_int_handler(uint8_t rhport);
@@ -184,11 +181,11 @@ void dcd_edpt_stall           (uint8_t rhport, uint8_t ep_addr);
 void dcd_edpt_clear_stall     (uint8_t rhport, uint8_t ep_addr);
 
 // Allocate packet buffer used by ISO endpoints
-// Some MCU need manual packet buffer allocation, we allocation largest size to avoid clustering
+// Some MCU need manual packet buffer allocation, we allocate the largest size to avoid clustering
 TU_ATTR_WEAK bool dcd_edpt_iso_alloc(uint8_t rhport, uint8_t ep_addr, uint16_t largest_packet_size);
 
 // Configure and enable an ISO endpoint according to descriptor
-TU_ATTR_WEAK bool dcd_edpt_iso_activate(uint8_t rhport,  tusb_desc_endpoint_t const * p_endpoint_desc);
+TU_ATTR_WEAK bool dcd_edpt_iso_activate(uint8_t rhport, tusb_desc_endpoint_t const * p_endpoint_desc);
 
 //--------------------------------------------------------------------+
 // Event API (implemented by stack)
@@ -198,23 +195,20 @@ TU_ATTR_WEAK bool dcd_edpt_iso_activate(uint8_t rhport,  tusb_desc_endpoint_t co
 extern void dcd_event_handler(dcd_event_t const * event, bool in_isr);
 
 // helper to send bus signal event
-TU_ATTR_ALWAYS_INLINE static inline void dcd_event_bus_signal (uint8_t rhport, dcd_eventid_t eid, bool in_isr)
-{
+TU_ATTR_ALWAYS_INLINE static inline void dcd_event_bus_signal (uint8_t rhport, dcd_eventid_t eid, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = eid };
   dcd_event_handler(&event, in_isr);
 }
 
 // helper to send bus reset event
-TU_ATTR_ALWAYS_INLINE static inline  void dcd_event_bus_reset (uint8_t rhport, tusb_speed_t speed, bool in_isr)
-{
+TU_ATTR_ALWAYS_INLINE static inline  void dcd_event_bus_reset (uint8_t rhport, tusb_speed_t speed, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_BUS_RESET };
   event.bus_reset.speed = speed;
   dcd_event_handler(&event, in_isr);
 }
 
 // helper to send setup received
-TU_ATTR_ALWAYS_INLINE static inline void dcd_event_setup_received(uint8_t rhport, uint8_t const * setup, bool in_isr)
-{
+TU_ATTR_ALWAYS_INLINE static inline void dcd_event_setup_received(uint8_t rhport, uint8_t const * setup, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_SETUP_RECEIVED };
   memcpy(&event.setup_received, setup, sizeof(tusb_control_request_t));
 
@@ -222,8 +216,7 @@ TU_ATTR_ALWAYS_INLINE static inline void dcd_event_setup_received(uint8_t rhport
 }
 
 // helper to send transfer complete event
-TU_ATTR_ALWAYS_INLINE static inline void dcd_event_xfer_complete (uint8_t rhport, uint8_t ep_addr, uint32_t xferred_bytes, uint8_t result, bool in_isr)
-{
+TU_ATTR_ALWAYS_INLINE static inline void dcd_event_xfer_complete (uint8_t rhport, uint8_t ep_addr, uint32_t xferred_bytes, uint8_t result, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_XFER_COMPLETE };
 
   event.xfer_complete.ep_addr = ep_addr;
@@ -233,8 +226,7 @@ TU_ATTR_ALWAYS_INLINE static inline void dcd_event_xfer_complete (uint8_t rhport
   dcd_event_handler(&event, in_isr);
 }
 
-static inline void dcd_event_sof(uint8_t rhport, uint32_t frame_count, bool in_isr)
-{
+TU_ATTR_ALWAYS_INLINE static inline void dcd_event_sof(uint8_t rhport, uint32_t frame_count, bool in_isr) {
   dcd_event_t event = { .rhport = rhport, .event_id = DCD_EVENT_SOF };
   event.sof.frame_count = frame_count;
   dcd_event_handler(&event, in_isr);

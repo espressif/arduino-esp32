@@ -30,7 +30,7 @@
 #include "common/tusb_compiler.h"
 
 #define TUSB_VERSION_MAJOR     0
-#define TUSB_VERSION_MINOR     15
+#define TUSB_VERSION_MINOR     16
 #define TUSB_VERSION_REVISION  0
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
@@ -169,6 +169,7 @@
 
 // WCH
 #define OPT_MCU_CH32V307         2200 ///< WCH CH32V307
+#define OPT_MCU_CH32F20X         2210 ///< WCH CH32F20x
 
 
 // NXP LPC MCX
@@ -341,6 +342,15 @@
   #define CFG_TUD_INTERFACE_MAX   16
 #endif
 
+//------------- Device Class Driver -------------//
+#ifndef CFG_TUD_BTH
+  #define CFG_TUD_BTH             0
+#endif
+
+#if CFG_TUD_BTH && !defined(CFG_TUD_BTH_ISO_ALT_COUNT)
+#error CFG_TUD_BTH_ISO_ALT_COUNT must be defined to tell Bluetooth driver the number of ISO endpoints to use
+#endif
+
 #ifndef CFG_TUD_CDC
   #define CFG_TUD_CDC             0
 #endif
@@ -379,10 +389,6 @@
 
 #ifndef CFG_TUD_DFU
   #define CFG_TUD_DFU             0
-#endif
-
-#ifndef CFG_TUD_BTH
-  #define CFG_TUD_BTH             0
 #endif
 
 #ifndef CFG_TUD_ECM_RNDIS

@@ -36,8 +36,15 @@
 #ifndef CFG_TUD_BTH_EVENT_EPSIZE
 #define CFG_TUD_BTH_EVENT_EPSIZE     16
 #endif
+
 #ifndef CFG_TUD_BTH_DATA_EPSIZE
 #define CFG_TUD_BTH_DATA_EPSIZE      64
+#endif
+
+// Allow BTH class to work in historically compatibility mode where the bRequest is always 0xe0.
+// See Bluetooth Core v5.3, Vol. 4, Part B, Section 2.2
+#ifndef CFG_TUD_BTH_HISTORICAL_COMPATIBLE
+#define CFG_TUD_BTH_HISTORICAL_COMPATIBLE 0
 #endif
 
 typedef struct TU_ATTR_PACKED

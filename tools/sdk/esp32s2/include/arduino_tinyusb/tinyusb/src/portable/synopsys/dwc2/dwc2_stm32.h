@@ -145,6 +145,22 @@ static inline void dwc2_phy_init(dwc2_regs_t* dwc2, uint8_t hs_phy_type) {
   if (hs_phy_type == HS_PHY_TYPE_NONE) {
     // Enable on-chip FS PHY
     dwc2->stm32_gccfg |= STM32_GCCFG_PWRDWN;
+
+    // https://community.st.com/t5/stm32cubemx-mcus/why-stm32h743-usb-fs-doesn-t-work-if-freertos-tickless-idle/m-p/349480#M18867
+    // H7 running on full-speed phy need to disable ULPI clock in sleep mode.
+    // Otherwise, USB won't work when mcu executing WFI/WFE instruction i.e tick-less RTOS.
+    // Note: there may be other family that is affected by this, but only H7 is tested so far
+    #if defined(USB_OTG_FS_PERIPH_BASE) && defined(RCC_AHB1LPENR_USB2OTGFSULPILPEN)
+    if ( USB_OTG_FS_PERIPH_BASE == (uint32_t) dwc2 ) {
+      RCC->AHB1LPENR &= ~RCC_AHB1LPENR_USB2OTGFSULPILPEN;
+    }
+    #endif
+
+    #if defined(USB_OTG_HS_PERIPH_BASE) && defined(RCC_AHB1LPENR_USB1OTGHSULPILPEN)
+    if ( USB_OTG_HS_PERIPH_BASE == (uint32_t) dwc2 ) {
+      RCC->AHB1LPENR &= ~RCC_AHB1LPENR_USB1OTGHSULPILPEN;
+    }
+    #endif
   } else {
 #if CFG_TUSB_MCU != OPT_MCU_STM32U5
     // Disable FS PHY, TODO on U5A5 (dwc2 4.11a) 16th bit is 'Host CDP behavior enable'

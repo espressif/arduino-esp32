@@ -97,6 +97,10 @@ uint8_t tuh_hid_parse_report_descriptor(tuh_hid_report_info_t* reports_info_arr,
 //       Application can use set_protocol() to switch back to Report protocol.
 uint8_t tuh_hid_get_protocol(uint8_t dev_addr, uint8_t idx);
 
+// Device by default is enumerated in Boot protocol for simplicity. Application
+// can use this to modify the default protocol for next enumeration.
+void tuh_hid_set_default_protocol(uint8_t protocol);
+
 // Set protocol to HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
 // This function is only supported by Boot interface (tuh_n_hid_interface_protocol() != NONE)
 bool tuh_hid_set_protocol(uint8_t dev_addr, uint8_t idx, uint8_t protocol);
