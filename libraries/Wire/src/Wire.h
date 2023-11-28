@@ -45,8 +45,10 @@
 #ifndef I2C_BUFFER_LENGTH
     #define I2C_BUFFER_LENGTH 128  // Default size, if none is set using Wire::setBuffersize(size_t)
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
 typedef void(*user_onRequest)(void);
 typedef void(*user_onReceive)(uint8_t*, int);
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 
 class TwoWire: public Stream
 {
@@ -71,8 +73,8 @@ protected:
     SemaphoreHandle_t lock;
 #endif
 private:
-    bool is_slave;
 #if SOC_I2C_SUPPORT_SLAVE
+    bool is_slave;
     void (*user_onRequest)(void);
     void (*user_onReceive)(int);
     static void onRequestService(uint8_t, void *);
@@ -90,12 +92,15 @@ public:
     bool setPins(int sda, int scl);
     
     bool begin(int sda, int scl, uint32_t frequency=0); // returns true, if successful init of i2c bus
+#if SOC_I2C_SUPPORT_SLAVE
     bool begin(uint8_t slaveAddr, int sda, int scl, uint32_t frequency);
+#endif /* SOC_I2C_SUPPORT_SLAVE */
     // Explicit Overload for Arduino MainStream API compatibility
     inline bool begin()
     {
         return begin(-1, -1, static_cast<uint32_t>(0));
     }
+#if SOC_I2C_SUPPORT_SLAVE
     inline bool begin(uint8_t addr)
     {
         return begin(addr, -1, -1, 0);
@@ -104,6 +109,7 @@ public:
     {
         return begin(static_cast<uint8_t>(addr), -1, -1, 0);
     }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
     bool end();
 
     size_t setBufferSize(size_t bSize);
