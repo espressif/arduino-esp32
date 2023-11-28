@@ -7,8 +7,8 @@
 
    author: chegewara
 */
-#ifndef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
-#warning "Not compatible hardware"
+#ifndef SOC_BLE_50_SUPPORTED
+#warning "This SoC does not support BLE5. Try using ESP32-C3, or ESP32-S3"
 #else
 #include <BLEDevice.h>
 #include <BLEUtils.h>
@@ -21,6 +21,7 @@ static esp_ble_gap_periodic_adv_sync_params_t periodic_adv_sync_params = {
     .filter_policy = 0,
     .sid = 0,
     .addr_type = BLE_ADDR_TYPE_RANDOM,
+    .addr = {0,0,0,0,0,0},
     .skip = 10,
     .sync_timeout = 1000, // timeout: 1000 * 10ms
 };
@@ -104,4 +105,4 @@ void loop()
   delay(2000);
 }
 
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#endif // SOC_BLE_50_SUPPORTED

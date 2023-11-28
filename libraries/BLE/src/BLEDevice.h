@@ -7,6 +7,9 @@
 
 #ifndef MAIN_BLEDevice_H_
 #define MAIN_BLEDevice_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_ble_api.h> // ESP32 BLE
@@ -35,11 +38,11 @@ public:
 	static BLEServer*  createServer();    // Cretae a new BLE server.
 	static BLEAddress  getAddress();      // Retrieve our own local BD address.
 	static BLEScan*    getScan();         // Get the scan object
-	static std::string getValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID);	  // Get the value of a characteristic of a service on a server.
-	static void        init(std::string deviceName);   // Initialize the local BLE environment.
+	static String getValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID);	  // Get the value of a characteristic of a service on a server.
+	static void        init(String deviceName);   // Initialize the local BLE environment.
 	static void        setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);  // Set our power level.
-	static void        setValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID, std::string value);   // Set the value of a characteristic on a service on a server.
-	static std::string toString();        // Return a string representation of our device.
+	static void        setValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID, String value);   // Set the value of a characteristic on a service on a server.
+	static String toString();        // Return a string representation of our device.
 	static void        whiteListAdd(BLEAddress address);    // Add an entry to the BLE white list.
 	static void        whiteListRemove(BLEAddress address); // Remove an entry from the BLE white list.
 	static void		   setEncryptionLevel(esp_ble_sec_act_t level);
@@ -97,5 +100,6 @@ public:
 
 }; // class BLE
 
-#endif // CONFIG_BLUEDROID_ENABLED
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* MAIN_BLEDevice_H_ */
