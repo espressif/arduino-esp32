@@ -332,7 +332,7 @@ end:
 
 }
 
-bool TwoWire::end()
+void TwoWire::end()
 {
     esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
