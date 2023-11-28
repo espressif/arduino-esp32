@@ -1,3 +1,6 @@
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "ESP_I2S.h"
 
 #if SOC_I2S_SUPPORTED
