@@ -379,18 +379,19 @@ static bool adcContinuousDetachBus(void * adc_unit_number){
             return false;
         }
         adc_handle[adc_unit].adc_continuous_handle = NULL;
-
-    #if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED        
-        err = adc_cali_delete_scheme_curve_fitting(adc_handle[adc_unit].adc_cali_handle);
-        if(err != ESP_OK){
-            return false;
-        }
+        if(adc_handle[adc_unit].adc_cali_handle != NULL){
+    #if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED  
+            err = adc_cali_delete_scheme_curve_fitting(adc_handle[adc_unit].adc_cali_handle);
+            if(err != ESP_OK){
+                return false;
+            }
     #elif !defined(CONFIG_IDF_TARGET_ESP32H2)
-        err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
-        if(err != ESP_OK){
-            return false;
-        }
+            err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
+            if(err != ESP_OK){
+                return false;
+            }
     #endif
+        }
         adc_handle[adc_unit].adc_cali_handle = NULL;
 
         //set all used pins to INIT state
