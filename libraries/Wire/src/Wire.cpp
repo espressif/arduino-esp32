@@ -388,7 +388,7 @@ uint32_t TwoWire::getClock()
     return frequency;
 }
 
-bool TwoWire::setClock(uint32_t frequency)
+void TwoWire::setClock(uint32_t frequency)
 {
     esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -411,7 +411,6 @@ bool TwoWire::setClock(uint32_t frequency)
     //release lock
     xSemaphoreGive(lock);
 #endif
-    return (err == ESP_OK);
 }
 
 void TwoWire::setTimeOut(uint16_t timeOutMillis)
