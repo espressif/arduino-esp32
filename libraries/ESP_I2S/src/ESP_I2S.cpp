@@ -1,3 +1,6 @@
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "ESP_I2S.h"
 
 #if SOC_I2S_SUPPORTED
@@ -230,11 +233,11 @@ bool I2SClass::i2sDetachBus(void * bus_pointer){
 
 // Set pins for STD and TDM mode
 void I2SClass::setPins(int8_t bclk, int8_t ws, int8_t dout, int8_t din, int8_t mclk){
-    _mclk = mclk;
-    _bclk = bclk;
-    _ws = ws;
-    _dout = dout;
-    _din = din;
+    _mclk = digitalPinToGPIONumber(mclk);
+    _bclk = digitalPinToGPIONumber(bclk);
+    _ws = digitalPinToGPIONumber(ws);
+    _dout = digitalPinToGPIONumber(dout);
+    _din = digitalPinToGPIONumber(din);
 }
 
 void I2SClass::setInverted(bool bclk, bool ws, bool mclk){
@@ -246,10 +249,10 @@ void I2SClass::setInverted(bool bclk, bool ws, bool mclk){
 // Set pins for PDM TX mode
 #if SOC_I2S_SUPPORTS_PDM_TX
 void I2SClass::setPinsPdmTx(int8_t clk, int8_t dout0, int8_t dout1){
-    _tx_clk = clk;
-    _tx_dout0 = dout0;
+    _tx_clk = digitalPinToGPIONumber(clk);
+    _tx_dout0 = digitalPinToGPIONumber(dout0);
 #if (SOC_I2S_PDM_MAX_TX_LINES > 1)
-    _tx_dout1 = dout1;
+    _tx_dout1 = digitalPinToGPIONumber(dout1);
 #endif
 }
 #endif
@@ -257,12 +260,12 @@ void I2SClass::setPinsPdmTx(int8_t clk, int8_t dout0, int8_t dout1){
 // Set pins for PDM RX mode
 #if SOC_I2S_SUPPORTS_PDM_RX
 void I2SClass::setPinsPdmRx(int8_t clk, int8_t din0, int8_t din1, int8_t din2, int8_t din3){
-    _rx_clk = clk;
-    _rx_din0 = din0;
+    _rx_clk = digitalPinToGPIONumber(clk);
+    _rx_din0 = digitalPinToGPIONumber(din0);
 #if (SOC_I2S_PDM_MAX_RX_LINES > 1)
-    _rx_din1 = din1;
-    _rx_din2 = din2;
-    _rx_din3 = din3;
+    _rx_din1 = digitalPinToGPIONumber(din1);
+    _rx_din2 = digitalPinToGPIONumber(din2);
+    _rx_din3 = digitalPinToGPIONumber(din3);
 #endif
 }
 #endif

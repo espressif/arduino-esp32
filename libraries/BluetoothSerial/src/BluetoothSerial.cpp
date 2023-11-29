@@ -626,7 +626,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
     }
 }
 
-static bool _init_bt(const char *deviceName)
+static bool _init_bt(const char *deviceName, bt_mode mode)
 {
     if(!_bt_event_group){
         _bt_event_group = xEventGroupCreate();
@@ -678,7 +678,7 @@ static bool _init_bt(const char *deviceName)
         }
     }
 
-    if (!btStarted() && !btStart()){
+    if (!btStarted() && !btStartMode(mode)){
         log_e("initialize controller failed");
         return false;
     }
@@ -815,11 +815,10 @@ static bool waitForSDPRecord(int timeout) {
     return (xEventGroupWaitBits(_bt_event_group, BT_SDP_COMPLETED, pdFALSE, pdTRUE, xTicksToWait) & BT_SDP_COMPLETED) != 0;
 }
 
-/*
+/**
  * Serial Bluetooth Arduino
  *
- * */
-
+ */
 BluetoothSerial::BluetoothSerial()
 {
     local_name = "ESP32"; //default bluetooth name
@@ -831,15 +830,16 @@ BluetoothSerial::~BluetoothSerial(void)
 }
 
 /**
- * @Param isMaster set to true if you want to connect to an other device
+ * @param isMaster set to true if you want to connect to an other device
+ * @param disableBLE if BLE is not used, its ram can be freed to get +10kB free ram
  */
-bool BluetoothSerial::begin(String localName, bool isMaster)
+bool BluetoothSerial::begin(String localName, bool isMaster, bool disableBLE)
 {
     _isMaster = isMaster;
     if (localName.length()){
         local_name = localName;
     }
-    return _init_bt(local_name.c_str());
+    return _init_bt(local_name.c_str(), disableBLE ? BT_MODE_CLASSIC_BT : BT_MODE_BTDM);
 }
 
 int BluetoothSerial::available(void)
@@ -908,6 +908,14 @@ void BluetoothSerial::flush()
 void BluetoothSerial::end()
 {
     _stop_bt();
+}
+
+/**
+ * free additional ~30kB ram, reset is required to enable BT again
+ */
+void BluetoothSerial::memrelease()
+{
+    esp_bt_mem_release(ESP_BT_MODE_BTDM);
 }
 
 #ifdef CONFIG_BT_SSP_ENABLED
@@ -1026,11 +1034,13 @@ bool BluetoothSerial::connect(String remoteName)
 }
 
 /**
- * @Param channel: specify channel or 0 for auto-detect
- * @Param sec_mask:
+ * Connect to an other bluetooth device
+ *
+ * @param channel specify channel or 0 for auto-detect
+ * @param sec_mask
  *           ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE
  *           ESP_SPP_SEC_NONE
- * @Param role:
+ * @param role
  *           ESP_SPP_ROLE_MASTER   master can handle up to 7 connections to slaves
  *           ESP_SPP_ROLE_SLAVE    can only have one connection to a master
  */

@@ -33,6 +33,9 @@
             },
             {
               "name": "ESP32-C3 Dev Board"
+            },
+            {
+              "name": "Arduino Nano ESP32"
             }
           ],
           "toolsDependencies": [
@@ -90,6 +93,11 @@
               "packager": "esp32",
               "name": "mklittlefs",
               "version": "3.0.0-gnu12-dc7f933"
+            },
+            {
+              "packager": "arduino",
+              "name": "dfu-util",
+              "version": "0.11.0-arduino5"
             }
           ]
         }

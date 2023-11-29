@@ -18,6 +18,7 @@ menu.MemoryType=Memory Type
 menu.EraseFlash=Erase All Flash Before Sketch Upload
 menu.JTAGAdapter=JTAG Adapter
 menu.ZigbeeMode=Zigbee Mode
+menu.PinNumbers=Pin Numbering
 
 # Custom options
 menu.Revision=Board Revision
@@ -29687,5 +29688,73 @@ sensebox_mcu_esp32s2.menu.EraseFlash.none=Disabled
 sensebox_mcu_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 sensebox_mcu_esp32s2.menu.EraseFlash.all=Enabled
 sensebox_mcu_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+nano_nora.name=Arduino Nano ESP32
+nano_nora.vid.0=0x2341
+nano_nora.pid.0=0x0070
+nano_nora.upload_port.0.vid=0x2341
+nano_nora.upload_port.0.pid=0x0070
+
+nano_nora.bootloader.tool=esptool_py
+nano_nora.bootloader.tool.default=esptool_py
+
+nano_nora.upload.tool=dfu-util
+nano_nora.upload.tool.default=dfu-util
+nano_nora.upload.tool.network=esp_ota
+nano_nora.upload.protocol=serial
+nano_nora.upload.maximum_size=3145728
+nano_nora.upload.maximum_data_size=327680
+nano_nora.upload.use_1200bps_touch=false
+nano_nora.upload.wait_for_upload_port=false
+
+nano_nora.serial.disableDTR=false
+nano_nora.serial.disableRTS=false
+
+nano_nora.build.tarch=xtensa
+nano_nora.build.bootloader_addr=0x0
+nano_nora.build.target=esp32s3
+nano_nora.build.mcu=esp32s3
+nano_nora.build.core=esp32
+nano_nora.build.variant=arduino_nano_nora
+nano_nora.build.board=NANO_ESP32
+nano_nora.build.code_debug=0
+
+nano_nora.build.usb_mode=0
+nano_nora.build.cdc_on_boot=1
+nano_nora.build.msc_on_boot=0
+nano_nora.build.dfu_on_boot=1
+nano_nora.build.f_cpu=240000000L
+nano_nora.build.flash_size=16MB
+nano_nora.build.flash_freq=80m
+nano_nora.build.flash_mode=dio
+nano_nora.build.boot=qio
+nano_nora.build.boot_freq=80m
+nano_nora.build.partitions=app3M_fat9M_fact512k_16MB
+nano_nora.build.defines=-DBOARD_HAS_PIN_REMAP {build.disable_pin_remap} -DBOARD_HAS_PSRAM '-DUSB_MANUFACTURER="Arduino"' '-DUSB_PRODUCT="Nano ESP32"'
+nano_nora.build.loop_core=-DARDUINO_RUNNING_CORE=1
+nano_nora.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+nano_nora.build.psram_type=opi
+nano_nora.build.memory_type={build.boot}_{build.psram_type}
+nano_nora.build.disable_pin_remap=
+
+nano_nora.tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0xf70000 "{build.variant.path}/extra/nora_recovery/nora_recovery.ino.bin" 0x10000 "{build.path}/{build.project_name}.bin"
+nano_nora.tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset erase_flash
+
+nano_nora.menu.PartitionScheme.default=With FAT partition (default)
+nano_nora.menu.PartitionScheme.spiffs=With SPIFFS partition (advanced)
+nano_nora.menu.PartitionScheme.spiffs.build.partitions=app3M_spiffs9M_fact512k_16MB
+
+nano_nora.menu.PinNumbers.default=By Arduino pin (default)
+nano_nora.menu.PinNumbers.byGPIONumber=By GPIO number (legacy)
+nano_nora.menu.PinNumbers.byGPIONumber.build.disable_pin_remap=-DBOARD_USES_HW_GPIO_NUMBERS
+
+nano_nora.menu.USBMode.default=Normal mode (TinyUSB)
+nano_nora.menu.USBMode.hwcdc=Debug mode (Hardware CDC)
+nano_nora.menu.USBMode.hwcdc.build.usb_mode=1
+nano_nora.menu.USBMode.hwcdc.build.copy_jtag_files=1
+nano_nora.menu.USBMode.hwcdc.build.openocdscript=esp32s3-builtin.cfg
+nano_nora.menu.USBMode.hwcdc.build.debugconfig=esp32s3-arduino.json
 
 ##############################################################
