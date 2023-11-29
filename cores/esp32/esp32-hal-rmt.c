@@ -23,6 +23,7 @@
 
 #include "esp32-hal-rmt.h"
 #include "esp32-hal-periman.h"
+#include "esp_idf_version.h"
 
 // Arduino Task Handle indicates if the Arduino Task has been started already
 extern TaskHandle_t loopTaskHandle;
@@ -270,7 +271,7 @@ bool rmtDeinit(int pin)
   log_v("Deiniting RMT GPIO %d", pin);
   if (_rmtGetBus(pin, __FUNCTION__) != NULL) {
     // release all allocated data
-    return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
+    return perimanClearPinBus(pin);
   }
   log_e("GPIO %d - No RMT channel associated.", pin);
   return false;
@@ -468,7 +469,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   }
 
   // Try to dettach any (Tx|Rx|Whatever) previous bus or just keep it as not attached
-  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)) {
+  if (!perimanClearPinBus(pin)) {
     log_w("GPIO %d - Can't detach previous peripheral.", pin);
     return false;
   }
@@ -513,6 +514,9 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     tx_cfg.flags.with_dma = 0;
     tx_cfg.flags.io_loop_back = 0;
     tx_cfg.flags.io_od_mode = 0;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
+    tx_cfg.intr_priority = 0;
+#endif
 
     if (rmt_new_tx_channel(&tx_cfg, &bus->rmt_channel_h) != ESP_OK) {
       log_e("GPIO %d - RMT TX Initialization error.", pin);
@@ -537,7 +541,9 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     rx_cfg.flags.invert_in = 0;
     rx_cfg.flags.with_dma = 0;
     rx_cfg.flags.io_loop_back = 0;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
     rx_cfg.intr_priority = 0;
+#endif
     // try to allocate the RMT Channel
     if (ESP_OK != rmt_new_rx_channel(&rx_cfg, &bus->rmt_channel_h)) {
       log_e("GPIO %d RMT - RX Initialization error.", pin);
@@ -573,7 +579,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   // Finally, allocate Peripheral Manager RMT bus and associate it to its GPIO
   peripheral_bus_type_t pinBusType =
     channel_direction == RMT_TX_MODE ? ESP32_BUS_TYPE_RMT_TX : ESP32_BUS_TYPE_RMT_RX;
-  if (!perimanSetPinBus(pin, pinBusType, (void *) bus)) {
+  if (!perimanSetPinBus(pin, pinBusType, (void *) bus, -1, -1)) {
     log_e("Can't allocate the GPIO %d in the Peripheral Manager.", pin);
     goto Err;
   }

@@ -141,9 +141,14 @@ protected:
     
 };
 
-#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE //Serial used for USB CDC
-extern USBCDC Serial;
+#if !ARDUINO_USB_MODE        // Native USB CDC selected
+#ifndef USB_SERIAL_IS_DEFINED
+#define USB_SERIAL_IS_DEFINED 1
+#endif 
+// USBSerial is always available to be used
+extern USBCDC USBSerial;
 #endif
+
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */

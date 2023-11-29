@@ -80,11 +80,14 @@ compiler.libraries.ldflags=
 build.extra_flags.esp32=-DARDUINO_USB_CDC_ON_BOOT=0
 build.extra_flags.esp32s3=-DARDUINO_USB_MODE={build.usb_mode} -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
 build.extra_flags.esp32s2=-DARDUINO_USB_MODE=0 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
+build.extra_flags.esp32c2=-DARDUINO_USB_CDC_ON_BOOT=0
 build.extra_flags.esp32c3=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 
 # This can be overriden in boards.txt
+build.zigbee_mode=
+build.zigbee_libs=
 build.flash_size=4MB
 build.flash_mode=dio
 build.flash_freq=80m
@@ -98,7 +101,7 @@ build.code_debug=0
 build.defines=
 build.loop_core=
 build.event_core=
-build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}}
+build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}} {build.zigbee_mode}
 build.extra_libs=
 build.memory_type={build.boot}_qspi
 
@@ -111,6 +114,9 @@ build.openocdscript.esp32c3=esp32c3-builtin.cfg
 build.openocdscript.esp32c6=esp32c6-builtin.cfg
 build.openocdscript.esp32c6=esp32h2-builtin.cfg
 build.openocdscript={build.openocdscript.{build.mcu}}
+
+# Debug plugin configuration
+build.debugconfig={build.mcu}.json
 
 # Custom build options
 build.opt.name=build_opt.h
@@ -133,37 +139,47 @@ recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\boo
 
 # Check if custom build options exist in the sketch folder
 recipe.hooks.prebuild.5.pattern=bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
-recipe.hooks.prebuild.6.pattern=bash -c "[ -f "{build.path}"/build_opt.h ] || touch "{build.path}"/build_opt.h"
+recipe.hooks.prebuild.6.pattern=bash -c "[ -f "{build.path}"/build_opt.h ] || : > "{build.path}"/build_opt.h"
 
 recipe.hooks.prebuild.5.pattern.windows=cmd /c if exist "{build.source.path}\build_opt.h" COPY /y "{build.source.path}\build_opt.h" "{build.path}\build_opt.h"
 recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.path}\build_opt.h" type nul > "{build.path}\build_opt.h"
+
+# Set -DARDUINO_CORE_BUILD only on core file compilation
+file_opts.path={build.path}/file_opts
+recipe.hooks.prebuild.set_core_build_flag.pattern=bash -c ": > '{file_opts.path}'"
+recipe.hooks.core.prebuild.set_core_build_flag.pattern=bash -c "echo '-DARDUINO_CORE_BUILD' > '{file_opts.path}'"
+recipe.hooks.core.postbuild.set_core_build_flag.pattern=bash -c ": > '{file_opts.path}'"
+
+recipe.hooks.prebuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
+recipe.hooks.core.prebuild.set_core_build_flag.pattern.windows=cmd /c echo "-DARDUINO_CORE_BUILD" > "{file_opts.path}"
+recipe.hooks.core.postbuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
 
 # Generate debug.cfg (must be postbuild)
 recipe.hooks.postbuild.1.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{debug.server.openocd.scripts_dir}"board/{build.openocdscript} "{build.source.path}"/debug.cfg"
 recipe.hooks.postbuild.1.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{debug.server.openocd.scripts_dir}board\{build.openocdscript}" "{build.source.path}\debug.cfg"
 
 # Generate debug_custom.json
-recipe.hooks.postbuild.2.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/{build.mcu}.json "{build.source.path}"/debug_custom.json"
-recipe.hooks.postbuild.2.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\{build.mcu}.json" "{build.source.path}\debug_custom.json"
+recipe.hooks.postbuild.2.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/{build.debugconfig} "{build.source.path}"/debug_custom.json"
+recipe.hooks.postbuild.2.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\{build.debugconfig}" "{build.source.path}\debug_custom.json"
 
 # Generate chip.svd
 recipe.hooks.postbuild.3.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/svd/{build.mcu}.svd "{build.source.path}"/debug.svd"
 recipe.hooks.postbuild.3.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\svd\{build.mcu}.svd" "{build.source.path}\debug.svd"
 
 ## Compile c files
-recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.extra_flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "{source_file}" -o "{object_file}"
+recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.extra_flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "@{file_opts.path}" "{source_file}" -o "{object_file}"
 
 ## Compile c++ files
-recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.extra_flags} {compiler.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "{source_file}" -o "{object_file}"
+recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.extra_flags} {compiler.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "@{file_opts.path}" "{source_file}" -o "{object_file}"
 
 ## Compile S files
-recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.S.extra_flags} {compiler.S.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "{source_file}" -o "{object_file}"
+recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.S.extra_flags} {compiler.S.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "@{file_opts.path}" "{source_file}" -o "{object_file}"
 
 ## Create archives
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{archive_file_path}" "{object_file}"
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {build.extra_libs} {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {build.extra_libs} {build.zigbee_libs} {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
 
 ## Create partitions.bin
 recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
@@ -208,7 +224,7 @@ pluggable_monitor.required.serial=builtin:serial-monitor
 debug.executable={build.path}/{build.project_name}.elf
 debug.toolchain=gcc
 debug.toolchain.path={tools.{build.tarch}-esp-elf-gdb.path}/bin/
-debug.toolchain.prefix={build.tarch}-{build.target}-elf
+debug.toolchain.prefix={build.tarch}-{build.target}-elf-
 debug.server=openocd
 debug.server.openocd.script=debug.cfg
 
@@ -261,3 +277,11 @@ tools.esp_ota.upload.protocol=network
 tools.esp_ota.upload.field.password=Password
 tools.esp_ota.upload.field.password.secret=true
 tools.esp_ota.upload.pattern={cmd} -i {upload.port.address} -p {upload.port.properties.port} --auth={upload.field.password} -f "{build.path}/{build.project_name}.bin"
+
+## Upload Sketch Through DFU OTA
+## -------------------------------------------
+tools.dfu-util.path={runtime.tools.dfu-util-0.11.0-arduino5.path}
+tools.dfu-util.cmd=dfu-util
+tools.dfu-util.upload.params.verbose=-d
+tools.dfu-util.upload.params.quiet=
+tools.dfu-util.upload.pattern="{path}/{cmd}" --device {vid.0}:{pid.0} -D "{build.path}/{build.project_name}.bin" -Q

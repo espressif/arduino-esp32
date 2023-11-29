@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "pins_arduino.h"
+#include "io_pin_remap.h"
 #include "SD_MMC.h"
 #ifdef SOC_SDMMC_HOST_SUPPORTED
 #include "vfs_api.h"
@@ -72,6 +76,15 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3)
         log_e("SD_MMC.setPins must be called before SD_MMC.begin");
         return false;
     }
+
+    // map logical pins to GPIO numbers
+    clk = digitalPinToGPIONumber(clk);
+    cmd = digitalPinToGPIONumber(cmd);
+    d0 = digitalPinToGPIONumber(d0);
+    d1 = digitalPinToGPIONumber(d1);
+    d2 = digitalPinToGPIONumber(d2);
+    d3 = digitalPinToGPIONumber(d3);
+
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
     // SoC supports SDMMC pin configuration via GPIO matrix. Save the pins for later use in SDMMCFS::begin.
     _pin_clk = (int8_t) clk;
@@ -107,8 +120,14 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     if(_card) {
         return true;
     }
-    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC, SDMMCFS::sdmmcDetachBus);
-
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_CLK, SDMMCFS::sdmmcDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_CMD, SDMMCFS::sdmmcDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_D0, SDMMCFS::sdmmcDetachBus);
+    if(!mode1bit) {
+        perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_D1, SDMMCFS::sdmmcDetachBus);
+        perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_D2, SDMMCFS::sdmmcDetachBus);
+        perimanSetBusDeinit(ESP32_BUS_TYPE_SDMMC_D3, SDMMCFS::sdmmcDetachBus);
+    }
     //mount
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
@@ -129,13 +148,13 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     slot_config.width = 4;
 #endif // SOC_SDMMC_USE_GPIO_MATRIX
 
-    if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if(!perimanClearPinBus(_pin_cmd)){ return false; }
+    if(!perimanClearPinBus(_pin_clk)){ return false; }
+    if(!perimanClearPinBus(_pin_d0)){ return false; }
     if(!mode1bit) {
-        if(!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-        if(!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-        if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+        if(!perimanClearPinBus(_pin_d1)){ return false; }
+        if(!perimanClearPinBus(_pin_d2)){ return false; }
+        if(!perimanClearPinBus(_pin_d3)){ return false; }
     }
     
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
@@ -174,13 +193,13 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     }
     _impl->mountpoint(mountpoint);
 
-    if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
-    if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+    if(!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC_CMD, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_SDMMC_CLK, (void *)(this), -1, -1)){ goto err; }
+    if(!perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_SDMMC_D0, (void *)(this), -1, -1)){ goto err; }
     if(!mode1bit) {
-        if(!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
-        if(!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
-        if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_SDMMC, (void *)(this))){ goto err; }
+        if(!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_SDMMC_D1, (void *)(this), -1, -1)){ goto err; }
+        if(!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_SDMMC_D2, (void *)(this), -1, -1)){ goto err; }
+        if(!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_SDMMC_D3, (void *)(this), -1, -1)){ goto err; }
     }
     return true;
 
@@ -196,13 +215,13 @@ void SDMMCFS::end()
         esp_vfs_fat_sdcard_unmount(_impl->mountpoint(), _card);
         _impl->mountpoint(NULL);
         _card = NULL;
-        perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_INIT, NULL);
-        perimanSetPinBus(_pin_d0,  ESP32_BUS_TYPE_INIT, NULL);
+        perimanClearPinBus(_pin_cmd);
+        perimanClearPinBus(_pin_clk);
+        perimanClearPinBus(_pin_d0);
         if(!_mode1bit) {
-            perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_INIT, NULL);
-            perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_INIT, NULL);
-            perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_INIT, NULL);
+            perimanClearPinBus(_pin_d1);
+            perimanClearPinBus(_pin_d2);
+            perimanClearPinBus(_pin_d3);
         }
     }
 }

@@ -1,3 +1,6 @@
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "ESP_I2S.h"
 
 #if SOC_I2S_SUPPORTED
@@ -230,11 +233,11 @@ bool I2SClass::i2sDetachBus(void * bus_pointer){
 
 // Set pins for STD and TDM mode
 void I2SClass::setPins(int8_t bclk, int8_t ws, int8_t dout, int8_t din, int8_t mclk){
-    _mclk = mclk;
-    _bclk = bclk;
-    _ws = ws;
-    _dout = dout;
-    _din = din;
+    _mclk = digitalPinToGPIONumber(mclk);
+    _bclk = digitalPinToGPIONumber(bclk);
+    _ws = digitalPinToGPIONumber(ws);
+    _dout = digitalPinToGPIONumber(dout);
+    _din = digitalPinToGPIONumber(din);
 }
 
 void I2SClass::setInverted(bool bclk, bool ws, bool mclk){
@@ -246,10 +249,10 @@ void I2SClass::setInverted(bool bclk, bool ws, bool mclk){
 // Set pins for PDM TX mode
 #if SOC_I2S_SUPPORTS_PDM_TX
 void I2SClass::setPinsPdmTx(int8_t clk, int8_t dout0, int8_t dout1){
-    _tx_clk = clk;
-    _tx_dout0 = dout0;
+    _tx_clk = digitalPinToGPIONumber(clk);
+    _tx_dout0 = digitalPinToGPIONumber(dout0);
 #if (SOC_I2S_PDM_MAX_TX_LINES > 1)
-    _tx_dout1 = dout1;
+    _tx_dout1 = digitalPinToGPIONumber(dout1);
 #endif
 }
 #endif
@@ -257,12 +260,12 @@ void I2SClass::setPinsPdmTx(int8_t clk, int8_t dout0, int8_t dout1){
 // Set pins for PDM RX mode
 #if SOC_I2S_SUPPORTS_PDM_RX
 void I2SClass::setPinsPdmRx(int8_t clk, int8_t din0, int8_t din1, int8_t din2, int8_t din3){
-    _rx_clk = clk;
-    _rx_din0 = din0;
+    _rx_clk = digitalPinToGPIONumber(clk);
+    _rx_din0 = digitalPinToGPIONumber(din0);
 #if (SOC_I2S_PDM_MAX_RX_LINES > 1)
-    _rx_din1 = din1;
-    _rx_din2 = din2;
-    _rx_din3 = din3;
+    _rx_din1 = digitalPinToGPIONumber(din1);
+    _rx_din2 = digitalPinToGPIONumber(din2);
+    _rx_din3 = digitalPinToGPIONumber(din3);
 #endif
 }
 #endif
@@ -280,14 +283,18 @@ void I2SClass::setInvertedPdm(bool clk){
 
 bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
     // Peripheral manager deinit previous peripheral if pin was used
-    if (_mclk >= 0) if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_bclk >= 0) if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_ws >= 0)   if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_mclk >= 0) if (!perimanClearPinBus(_mclk)){ return false; }
+    if (_bclk >= 0) if (!perimanClearPinBus(_bclk)){ return false; }
+    if (_ws >= 0)   if (!perimanClearPinBus(_ws))  { return false; }
+    if (_dout >= 0) if (!perimanClearPinBus(_dout)){ return false; }
+    if (_din >= 0)  if (!perimanClearPinBus(_din)) { return false; }
 
     // Set peripheral manager detach function for I2S
-    perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_STD, I2SClass::i2sDetachBus);
+    if (_mclk >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_STD_MCLK, I2SClass::i2sDetachBus); }
+    if (_bclk >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_STD_BCLK, I2SClass::i2sDetachBus); }
+    if (_ws >= 0)   { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_STD_WS,   I2SClass::i2sDetachBus); }
+    if (_dout >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_STD_DOUT, I2SClass::i2sDetachBus); }
+    if (_din >= 0)  { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_STD_DIN,  I2SClass::i2sDetachBus); }
 
     // I2S configuration
     i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
@@ -316,11 +323,11 @@ bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
     }
 
     // Peripheral manager set bus type to I2S
-    if (_mclk >= 0) if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-    if (_bclk >= 0) if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-    if (_ws >= 0)   if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
-    if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_STD, (void *)(this))){ goto err; }
+    if (_mclk >= 0) if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_STD_MCLK, (void *)(this), -1, -1)){ goto err; }
+    if (_bclk >= 0) if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_STD_BCLK, (void *)(this), -1, -1)){ goto err; }
+    if (_ws >= 0)   if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_I2S_STD_WS,   (void *)(this), -1, -1)){ goto err; }
+    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_I2S_STD_DOUT, (void *)(this), -1, -1)){ goto err; }
+    if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_STD_DIN,  (void *)(this), -1, -1)){ goto err; }
 
     return true;
 err:
@@ -332,14 +339,18 @@ err:
 #if SOC_I2S_SUPPORTS_TDM
 bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask){
     // Peripheral manager deinit previous peripheral if pin was used
-    if (_mclk >= 0) if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_bclk >= 0) if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_ws >= 0)   if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_mclk >= 0) if (!perimanClearPinBus(_mclk)){ return false; }
+    if (_bclk >= 0) if (!perimanClearPinBus(_bclk)){ return false; }
+    if (_ws >= 0)   if (!perimanClearPinBus(_ws))  { return false; }
+    if (_dout >= 0) if (!perimanClearPinBus(_dout)){ return false; }
+    if (_din >= 0)  if (!perimanClearPinBus(_din)) { return false; }
 
     // Set peripheral manager detach function for I2S
-    perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_TDM, I2SClass::i2sDetachBus);
+    if (_mclk >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_TDM_MCLK, I2SClass::i2sDetachBus); }
+    if (_bclk >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_TDM_BCLK, I2SClass::i2sDetachBus); }
+    if (_ws >= 0)   { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_TDM_WS,   I2SClass::i2sDetachBus); }
+    if (_dout >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_TDM_DOUT, I2SClass::i2sDetachBus); }
+    if (_din >= 0)  { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_TDM_DIN,  I2SClass::i2sDetachBus); }
 
     // I2S configuration
     i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
@@ -368,11 +379,11 @@ bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
     }
 
     // Peripheral manager set bus type to I2S
-    if (_mclk >= 0) if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-    if (_bclk >= 0) if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-    if (_ws >= 0)   if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
-    if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_TDM, (void *)(this))){ goto err; }
+    if (_mclk >= 0) if (!perimanSetPinBus(_mclk, ESP32_BUS_TYPE_I2S_TDM_MCLK, (void *)(this), -1, -1)){ goto err; }
+    if (_bclk >= 0) if (!perimanSetPinBus(_bclk, ESP32_BUS_TYPE_I2S_TDM_BCLK, (void *)(this), -1, -1)){ goto err; }
+    if (_ws >= 0)   if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_I2S_TDM_WS,   (void *)(this), -1, -1)){ goto err; }
+    if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_I2S_TDM_DOUT, (void *)(this), -1, -1)){ goto err; }
+    if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_TDM_DIN,  (void *)(this), -1, -1)){ goto err; }
    
     return true;
 err:
@@ -385,12 +396,14 @@ err:
 #if SOC_I2S_SUPPORTS_PDM_TX
 bool I2SClass::initPDMtx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
     // Peripheral manager deinit previous peripheral if pin was used
-    if (_tx_clk >= 0)   if (!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_tx_dout0 >= 0) if (!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_tx_dout1 >= 0) if (!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_tx_clk >= 0)   if (!perimanClearPinBus(_tx_clk))  { return false; }
+    if (_tx_dout0 >= 0) if (!perimanClearPinBus(_tx_dout0)){ return false; }
+    if (_tx_dout1 >= 0) if (!perimanClearPinBus(_tx_dout1)){ return false; }
 
     // Set peripheral manager detach function for I2S
-    perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_TX, I2SClass::i2sDetachBus);
+    if (_tx_clk >= 0)   { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_TX_CLK,   I2SClass::i2sDetachBus); }
+    if (_tx_dout0 >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_TX_DOUT0, I2SClass::i2sDetachBus); }
+    if (_tx_dout1 >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_TX_DOUT1, I2SClass::i2sDetachBus); }
 
     // I2S configuration
     i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
@@ -406,9 +419,9 @@ bool I2SClass::initPDMtx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_
     }
 
     // Peripheral manager set bus type to I2S
-    if (_tx_clk >= 0)   if (!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_I2S_PDM_TX, (void *)(this))){ goto err; }
-    if (_tx_dout0 >= 0) if (!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_I2S_PDM_TX, (void *)(this))){ goto err; }
-    if (_tx_dout1 >= 0) if (!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_I2S_PDM_TX, (void *)(this))){ goto err; }
+    if (_tx_clk >= 0)   if (!perimanSetPinBus(_tx_clk,   ESP32_BUS_TYPE_I2S_PDM_TX_CLK,   (void *)(this), -1, -1)){ goto err; }
+    if (_tx_dout0 >= 0) if (!perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_I2S_PDM_TX_DOUT0, (void *)(this), -1, -1)){ goto err; }
+    if (_tx_dout1 >= 0) if (!perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_I2S_PDM_TX_DOUT1, (void *)(this), -1, -1)){ goto err; }
 
     return true;
 err:
@@ -421,14 +434,18 @@ err:
 #if SOC_I2S_SUPPORTS_PDM_RX
 bool I2SClass::initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
     // Peripheral manager deinit previous peripheral if pin was used
-    if (_rx_clk >= 0)  if (!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_rx_din0 >= 0) if (!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_rx_din1 >= 0) if (!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_rx_din2 >= 0) if (!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
-    if (_rx_din3 >= 0) if (!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_INIT, NULL)){ return false; }
+    if (_rx_clk >= 0)  if (!perimanClearPinBus(_rx_clk)) { return false; }
+    if (_rx_din0 >= 0) if (!perimanClearPinBus(_rx_din0)){ return false; }
+    if (_rx_din1 >= 0) if (!perimanClearPinBus(_rx_din1)){ return false; }
+    if (_rx_din2 >= 0) if (!perimanClearPinBus(_rx_din2)){ return false; }
+    if (_rx_din3 >= 0) if (!perimanClearPinBus(_rx_din3)){ return false; }
 
     // Set peripheral manager detach function for I2S
-    perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_RX, I2SClass::i2sDetachBus);
+    if (_rx_clk >= 0)  { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_RX_CLK,  I2SClass::i2sDetachBus); }
+    if (_rx_din0 >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_RX_DIN0, I2SClass::i2sDetachBus); }
+    if (_rx_din1 >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_RX_DIN1, I2SClass::i2sDetachBus); }
+    if (_rx_din2 >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_RX_DIN2, I2SClass::i2sDetachBus); }
+    if (_rx_din3 >= 0) { perimanSetBusDeinit(ESP32_BUS_TYPE_I2S_PDM_RX_DIN3, I2SClass::i2sDetachBus); }
 
     // I2S configuration
     i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
@@ -444,11 +461,11 @@ bool I2SClass::initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_
     }
 
     // Peripheral manager set bus type to I2S
-    if (_rx_clk >= 0)  if (!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_I2S_PDM_RX, (void *)(this))){ goto err; }
-    if (_rx_din0 >= 0) if (!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_I2S_PDM_RX, (void *)(this))){ goto err; }
-    if (_rx_din1 >= 0) if (!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_I2S_PDM_RX, (void *)(this))){ goto err; }
-    if (_rx_din2 >= 0) if (!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_I2S_PDM_RX, (void *)(this))){ goto err; }
-    if (_rx_din3 >= 0) if (!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_I2S_PDM_RX, (void *)(this))){ goto err; }
+    if (_rx_clk >= 0)  if (!perimanSetPinBus(_rx_clk,  ESP32_BUS_TYPE_I2S_PDM_RX_CLK,  (void *)(this), -1, -1)){ goto err; }
+    if (_rx_din0 >= 0) if (!perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_I2S_PDM_RX_DIN0, (void *)(this), -1, -1)){ goto err; }
+    if (_rx_din1 >= 0) if (!perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_I2S_PDM_RX_DIN1, (void *)(this), -1, -1)){ goto err; }
+    if (_rx_din2 >= 0) if (!perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_I2S_PDM_RX_DIN2, (void *)(this), -1, -1)){ goto err; }
+    if (_rx_din3 >= 0) if (!perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_I2S_PDM_RX_DIN3, (void *)(this), -1, -1)){ goto err; }
 
     return true;
 err:
@@ -524,26 +541,26 @@ bool I2SClass::end(){
 #if SOC_I2S_SUPPORTS_TDM
         case I2S_MODE_TDM:
 #endif
-            perimanSetPinBus(_mclk, ESP32_BUS_TYPE_INIT, NULL);
-            perimanSetPinBus(_bclk, ESP32_BUS_TYPE_INIT, NULL);
-            perimanSetPinBus(_ws,   ESP32_BUS_TYPE_INIT, NULL);
-            if (_dout >= 0) perimanSetPinBus(_dout, ESP32_BUS_TYPE_INIT, NULL);
-            if (_din >= 0)  perimanSetPinBus(_din, ESP32_BUS_TYPE_INIT, NULL);
+            perimanClearPinBus(_mclk);
+            perimanClearPinBus(_bclk);
+            perimanClearPinBus(_ws);
+            if (_dout >= 0) perimanClearPinBus(_dout);
+            if (_din >= 0)  perimanClearPinBus(_din);
             break;
 #if SOC_I2S_SUPPORTS_PDM_TX
         case I2S_MODE_PDM_TX:
-            perimanSetPinBus(_tx_clk, ESP32_BUS_TYPE_INIT, NULL);
-            if (_tx_dout0 >= 0) perimanSetPinBus(_tx_dout0, ESP32_BUS_TYPE_INIT, NULL);
-            if (_tx_dout1 >= 0) perimanSetPinBus(_tx_dout1, ESP32_BUS_TYPE_INIT, NULL);
+            perimanClearPinBus(_tx_clk);
+            if (_tx_dout0 >= 0) perimanClearPinBus(_tx_dout0);
+            if (_tx_dout1 >= 0) perimanClearPinBus(_tx_dout1);
             break;
 #endif
 #if SOC_I2S_SUPPORTS_PDM_RX
         case I2S_MODE_PDM_RX:
-            perimanSetPinBus(_rx_clk, ESP32_BUS_TYPE_INIT, NULL);
-            if (_rx_din0 >= 0) perimanSetPinBus(_rx_din0, ESP32_BUS_TYPE_INIT, NULL);
-            if (_rx_din1 >= 0) perimanSetPinBus(_rx_din1, ESP32_BUS_TYPE_INIT, NULL);
-            if (_rx_din2 >= 0) perimanSetPinBus(_rx_din2, ESP32_BUS_TYPE_INIT, NULL);
-            if (_rx_din3 >= 0) perimanSetPinBus(_rx_din3, ESP32_BUS_TYPE_INIT, NULL);
+            perimanClearPinBus(_rx_clk);
+            if (_rx_din0 >= 0) perimanClearPinBus(_rx_din0);
+            if (_rx_din1 >= 0) perimanClearPinBus(_rx_din1);
+            if (_rx_din2 >= 0) perimanClearPinBus(_rx_din2);
+            if (_rx_din3 >= 0) perimanClearPinBus(_rx_din3);
             break;
 #endif
         default:

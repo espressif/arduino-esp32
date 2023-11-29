@@ -99,7 +99,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
         uart->_rxPin = -1;  // -1 means unassigned/detached
-        if (!perimanSetPinBus(rxPin, ESP32_BUS_TYPE_INIT, NULL)) {
+        if (!perimanClearPinBus(rxPin)) {
             retCode = false;
             log_e("UART%d failed to detach RX pin %d", uart_num, rxPin);
         }
@@ -108,7 +108,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_out_signal(txPin, SIG_GPIO_OUT_IDX, false, false);
         uart->_txPin = -1;  // -1 means unassigned/detached
-        if (!perimanSetPinBus(txPin, ESP32_BUS_TYPE_INIT, NULL)) {
+        if (!perimanClearPinBus(txPin)) {
             retCode = false;
             log_e("UART%d failed to detach TX pin %d", uart_num, txPin);
         }
@@ -117,7 +117,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_CTS_PIN_IDX), false);
         uart->_ctsPin = -1;  // -1 means unassigned/detached
-        if (!perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_INIT, NULL)) {
+        if (!perimanClearPinBus(ctsPin)) {
             retCode = false;
             log_e("UART%d failed to detach CTS pin %d", uart_num, ctsPin);
         }
@@ -126,7 +126,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
         uart->_rtsPin = -1;  // -1 means unassigned/detached
-        if (!perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_INIT, NULL)) {
+        if (!perimanClearPinBus(rtsPin)) {
             retCode = false;
             log_e("UART%d failed to detach RTS pin %d", uart_num, rtsPin);
         }
@@ -184,10 +184,12 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
 
     bool retCode = true;
     if (rxPin >= 0) {
+        // forces a clean detaching from a previous peripheral
+        if (perimanGetPinBusType(rxPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(rxPin);
         // connect RX Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         if (ret) {
-            ret &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void *)uart);
+            ret &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void *)uart, uart_num, -1);
             if (ret) uart->_rxPin = rxPin;
         }
         if (!ret) {
@@ -196,10 +198,12 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         retCode &= ret;
     }
     if (txPin >= 0) {
+        // forces a clean detaching from a previous peripheral
+        if (perimanGetPinBusType(txPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(txPin);
         // connect TX Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         if (ret) {
-            ret &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void *)uart);
+            ret &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void *)uart, uart_num, -1);
             if (ret) uart->_txPin = txPin;
         }
         if (!ret) {
@@ -208,10 +212,12 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         retCode &= ret;
     }
     if (ctsPin >= 0) {
+        // forces a clean detaching from a previous peripheral
+        if (perimanGetPinBusType(ctsPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(ctsPin);
         // connect CTS Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
         if (ret) {
-            ret &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART_CTS, (void *)uart);
+            ret &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART_CTS, (void *)uart, uart_num, -1);
             if (ret) uart->_ctsPin = ctsPin;
         }
         if (!ret) {
@@ -220,10 +226,12 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
         retCode &= ret;
     }
     if (rtsPin >= 0) {
+        // forces a clean detaching from a previous peripheral
+        if (perimanGetPinBusType(rtsPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(rtsPin);
         // connect RTS Pad
         bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
         if (ret) {
-            ret &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART_RTS, (void *)uart);
+            ret &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART_RTS, (void *)uart, uart_num, -1);
             if (ret) uart->_rtsPin = rtsPin;
         }
         if (!ret) {
@@ -329,7 +337,7 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
     UART_MUTEX_UNLOCK();  
 
     if (!retCode) {
-        log_e("UART%d set pins failed.");
+        log_e("UART%d set pins failed.", uart_num);
     }
     return retCode;
 }
@@ -759,12 +767,14 @@ int log_printfv(const char *format, va_list arg)
             return 0;
         }
     }
+/*
+// This causes dead locks with logging in specific cases and also with C++ constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY);
     }
 #endif
-    
+*/
 #if CONFIG_IDF_TARGET_ESP32C3
     vsnprintf(temp, len+1, format, arg);
     ets_printf("%s", temp);
@@ -774,15 +784,19 @@ int log_printfv(const char *format, va_list arg)
         ets_write_char_uart(temp[i]);
     }
 #endif
-
+/*
+// This causes dead locks with logging and also with constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
     }
 #endif
+*/
     if(len >= sizeof(loc_buf)){
         free(temp);
     }
+    // flushes TX - make sure that the log message is completely sent.
+    if(s_uart_debug_nr != -1) while(!uart_ll_is_tx_idle(UART_LL_GET_HW(s_uart_debug_nr)));
     return len;
 }
 
@@ -958,7 +972,7 @@ unsigned long uartDetectBaudrate(uart_t *uart)
 }
 
 /*
-    These functions are for testing puspose only and can be used in Arduino Sketches
+    These functions are for testing purpose only and can be used in Arduino Sketches
     Those are used in the UART examples
 */
 
@@ -968,15 +982,17 @@ unsigned long uartDetectBaudrate(uart_t *uart)
     This code "replaces" the physical wiring for connecting TX <--> RX in a loopback
 */
 
-// gets the right TX SIGNAL, based on the UART number
+// gets the right TX or RX SIGNAL, based on the UART number from gpio_sig_map.h
 #if SOC_UART_NUM > 2
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+  #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+  #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : (uartNumber == UART_NUM_1 ? U1RXD_IN_IDX : U2RXD_IN_IDX))
 #else
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+  #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+  #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : U1RXD_IN_IDX)
 #endif
 /*
-   Make sure UART's RX signal is connected to TX pin
-   This creates a loop that lets us receive anything we send on the UART
+   This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
+   This creates a loop that lets us receive anything we send on the UART without external wires.
 */
 void uart_internal_loopback(uint8_t uartNum, int8_t rxPin)
 {
