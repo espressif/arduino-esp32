@@ -71,16 +71,6 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
 #define pinMatrixOutAttach(pin, function, invertOut, invertEnable)  pinMatrixOutAttach(digitalPinToGPIONumber(pin), function, invertOut, invertEnable)
 #define pinMatrixOutDetach(pin, invertOut, invertEnable)            pinMatrixOutDetach(digitalPinToGPIONumber(pin), invertOut, invertEnable)
 
-// cores/esp32/esp32-hal-periman.h
-#define perimanSetPinBus(pin, type, bus, bus_num, bus_channel)      perimanSetPinBus(digitalPinToGPIONumber(pin), type, bus, bus_num, bus_channel)
-#define perimanGetPinBus(pin, type)                                 perimanGetPinBus(digitalPinToGPIONumber(pin), type)
-#define perimanGetPinBusType(pin)                                   perimanGetPinBusType(digitalPinToGPIONumber(pin))
-#define perimanGetPinBusNum(pin)                                    perimanGetPinBusNum(digitalPinToGPIONumber(pin))
-#define perimanGetPinBusChannel(pin)                                perimanGetPinBusChannel(digitalPinToGPIONumber(pin))
-#define perimanPinIsValid(pin)                                      perimanPinIsValid(digitalPinToGPIONumber(pin))
-#define perimanSetPinBusExtraType(pin, extra_type)                  perimanSetPinBusExtraType(digitalPinToGPIONumber(pin), extra_type)
-#define perimanGetPinBusExtraType(pin)                              perimanGetPinBusExtraType(digitalPinToGPIONumber(pin))
-
 // cores/esp32/esp32-hal-rgb-led.h
 #define neopixelWrite(pin, red_val, green_val, blue_val)    neopixelWrite(digitalPinToGPIONumber(pin), red_val, green_val, blue_val)
 
