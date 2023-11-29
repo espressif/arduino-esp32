@@ -13,6 +13,7 @@
 */
 
 #include <HardwareSerial.h>
+#include "hal/uart_types.h"
 
 #define RS485_RX_PIN 16
 #define RS485_TX_PIN 5
@@ -29,7 +30,11 @@ void setup() {
     Serial.print("Failed to set RS485 pins");
   }
 
-  if(!RS485.setMode(MODE_RS485_HALF_DUPLEX)) {
+  // Certain versions of Arduino core don't define MODE_RS485_HALF_DUPLEX and so fail to compile.
+  // By using UART_MODE_RS485_HALF_DUPLEX defined in hal/uart_types.h we work around this problem.
+  // If using a newer IDF and Arduino core you can ommit including hal/uart_types.h and use MODE_RS485_HALF_DUPLEX
+  // defined in esp32-hal-uart.h (included during other build steps) instead.
+  if(!RS485.setMode(UART_MODE_RS485_HALF_DUPLEX)) {
    Serial.print("Failed to set RS485 mode");
   }
 }
