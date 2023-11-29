@@ -25,11 +25,11 @@ This is the way to install Arduino-ESP32 directly from the Arduino IDE.
 
 - Stable release link::
 
-   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+   https://espressif.github.io/arduino-esp32/package_esp32_index.json
 
 - Development release link::
 
-   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_dev_index.json
+   https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json
 
 
 .. note::
@@ -72,6 +72,8 @@ Installing using PlatformIO
    :figclass: align-center
 
 PlatformIO is a professional collaborative platform for embedded development. It has out-of-the-box support for ESP32 SoCs and allows working with Arduino ESP32 as well as ESP-IDF from Espressif without changing your development environment. PlatformIO includes lots of instruments for the most common development tasks such as debugging, unit testing, and static code analysis.
+
+.. warning:: Integration of the Arduino Core ESP32 project in PlatformIO is maintained by PlatformIO developers. Arduino Core ESP32 Project Team cannot support PlatformIO-specific issues. Please report these issues in official `PlatformIO repositories <https://github.com/platformio>`_.
 
 A detailed overview of the PlatformIO ecosystem and its philosophy can be found in `the official documentation <https://docs.platformio.org/en/latest/core/index.html>`_.
 

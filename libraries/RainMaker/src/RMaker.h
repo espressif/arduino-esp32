@@ -36,6 +36,7 @@ class RMakerClass
         esp_err_t enableTZService();
         esp_err_t enableOTA(ota_type_t type, const char *cert = ESP_RMAKER_OTA_DEFAULT_SERVER_CERT);
         esp_err_t enableScenes();
+        esp_err_t enableSystemService(uint16_t flags, int8_t reboot_seconds = 2, int8_t reset_seconds = 2, int8_t reset_reboot_seconds = 2);
         esp_err_t start();
         esp_err_t stop();
 };

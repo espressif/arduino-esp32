@@ -1,0 +1,41 @@
+name: External Libraries Results
+
+on:
+  workflow_run:
+    workflows: [External Libraries Test]
+    types:
+      - completed
+
+  workflow_dispatch:
+env:
+  # It's convenient to set variables for values used multiple times in the workflow
+  SKETCHES_REPORTS_PATH: artifacts/libraries-report
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  PR_EVENT_PATH: artifacts/Event File/event.json
+
+jobs:
+  lib-test-results:
+    name: External Libraries Test Results
+    runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Download and Extract Artifacts
+        run: |
+          mkdir -p artifacts && cd artifacts
+          artifacts_url=${{ github.event.workflow_run.artifacts_url }}
+          gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
+          do
+            IFS=$'\t' read name url <<< "$artifact"
+            gh api $url > "$name.zip"
+            unzip -d "$name" "$name.zip"
+          done
+    
+      - name: Report results
+        uses: P-R-O-C-H-Y/report-size-deltas@main
+        with:
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          github-token: ${{ env.GITHUB_TOKEN }}
+          pr-event-path: ${{ env.PR_EVENT_PATH }}

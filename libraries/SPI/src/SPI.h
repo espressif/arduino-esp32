@@ -21,6 +21,9 @@
 #ifndef _SPI_H_INCLUDED
 #define _SPI_H_INCLUDED
 
+#include "soc/soc_caps.h"
+#if SOC_GPSPI_SUPPORTED
+
 #include <stdlib.h>
 #include "pins_arduino.h"
 #include "esp32-hal-spi.h"
@@ -94,4 +97,5 @@ public:
 
 extern SPIClass SPI;
 
-#endif
+#endif /* SOC_GPSPI_SUPPORTED */
+#endif /* _SPI_H_INCLUDED */

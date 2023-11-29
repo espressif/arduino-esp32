@@ -13,8 +13,10 @@
 // limitations under the License.
 #pragma once
 
-#include "sdkconfig.h"
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
 
+#include "sdkconfig.h"
 #if CONFIG_TINYUSB_ENABLED
 
 #include "esp_event.h"
@@ -116,4 +118,6 @@ class ESPUSB {
 
 extern ESPUSB USB;
 
+
 #endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

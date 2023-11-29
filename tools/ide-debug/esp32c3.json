@@ -1,7 +1,7 @@
 {
 	"name":"Arduino on ESP32-C3",
 	"toolchainPrefix":"riscv32-esp-elf",
-	"svdFile":"esp32c3.svd",
+	"svdFile":"debug.svd",
 	"request":"attach",
 	"serverArgs":[
 		"-d3"
