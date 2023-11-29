@@ -3,15 +3,6 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        20
-#define NUM_ANALOG_INPUTS       16
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
-
 // Motor driver pins 
 #define MOTOR_A_IN1 25  //  PHASE/IN1
 #define MOTOR_A_IN2 26  //  ENABLE/IN2

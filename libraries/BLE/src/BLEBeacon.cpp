@@ -4,9 +4,11 @@
  *  Created on: Jan 4, 2018
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
-#include <string.h>
 #include "BLEBeacon.h"
 #include "esp32-hal-log.h"
 
@@ -23,8 +25,8 @@ BLEBeacon::BLEBeacon() {
 	memset(m_beaconData.proximityUUID, 0, sizeof(m_beaconData.proximityUUID));
 } // BLEBeacon
 
-std::string BLEBeacon::getData() {
-	return std::string((char*) &m_beaconData, sizeof(m_beaconData));
+String BLEBeacon::getData() {
+	return String((char*) &m_beaconData, sizeof(m_beaconData));
 } // getData
 
 uint16_t BLEBeacon::getMajor() {
@@ -50,12 +52,12 @@ int8_t BLEBeacon::getSignalPower() {
 /**
  * Set the raw data for the beacon record.
  */
-void BLEBeacon::setData(std::string data) {
+void BLEBeacon::setData(String data) {
 	if (data.length() != sizeof(m_beaconData)) {
 		log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_beaconData));
 		return;
 	}
-	memcpy(&m_beaconData, data.data(), sizeof(m_beaconData));
+	memcpy(&m_beaconData, data.c_str(), sizeof(m_beaconData));
 } // setData
 
 void BLEBeacon::setMajor(uint16_t major) {
@@ -81,3 +83,4 @@ void BLEBeacon::setSignalPower(int8_t signalPower) {
 
 
 #endif
+#endif /* SOC_BLE_SUPPORTED */
