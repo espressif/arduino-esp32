@@ -80,6 +80,41 @@ void BLEAdvertising::addServiceUUID(const char* serviceUUID) {
 
 
 /**
+ * @brief Remove a service uuid to exposed list of services.
+ * @param [in] index The index of the service to stop exposing.
+ */
+bool BLEAdvertising::removeServiceUUID(int index) {
+	
+	// If index is larger than the size of the
+	// advertised services, return false
+	if(index > m_serviceUUIDs.size()) return false;
+	
+	m_serviceUUIDs.erase(m_serviceUUIDs.begin() + index);
+	return true;
+}
+	
+/**
+ * @brief Remove a service uuid to exposed list of services.
+ * @param [in] serviceUUID The BLEUUID of the service to stop exposing.
+ */
+bool BLEAdvertising::removeServiceUUID(BLEUUID serviceUUID) {
+	for(int i = 0; i < m_serviceUUIDs.size(); i++) {
+		if(m_serviceUUIDs.at(i).equals(serviceUUID)) {
+			return removeServiceUUID(i);
+		}
+	}
+	return false;
+}
+	
+/**
+ * @brief Remove a service uuid to exposed list of services.
+ * @param [in] serviceUUID The string of the service to stop exposing.
+ */
+bool BLEAdvertising::removeServiceUUID(const char* serviceUUID) {
+	return removeServiceUUID(BLEUUID(serviceUUID));
+}
+
+/**
  * @brief Set the device appearance in the advertising data.
  * The appearance attribute is of type 0x19.  The codes for distinct appearances can be found here:
  * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.gap.appearance.xml.

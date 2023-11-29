@@ -22,6 +22,7 @@
 #include "SPI.h"
 #if SOC_GPSPI_SUPPORTED
 
+#include "io_pin_remap.h"
 #include "esp32-hal-log.h"
 
 #if !CONFIG_DISABLE_HAL_LOCKS
