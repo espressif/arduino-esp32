@@ -7,9 +7,10 @@
 
    author: chegewara
 */
-#ifndef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
-#warning "Not compatible hardware"
+#ifndef SOC_BLE_50_SUPPORTED
+#warning "This SoC does not support BLE5. Try using ESP32-C3, or ESP32-S3"
 #else
+
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEScan.h>
@@ -17,26 +18,6 @@
 
 uint32_t scanTime = 100; //In 10ms (1000ms)
 BLEScan* pBLEScan;
-
-/**
-* @brief extend adv report parameters
-*/
-//typedef struct {
-//    esp_ble_gap_adv_type_t event_type;              /*!< extend advertising type */
-//    uint8_t addr_type;                              /*!< extend advertising address type */
-//    esp_bd_addr_t addr;                             /*!< extend advertising address */
-//    esp_ble_gap_pri_phy_t primary_phy;              /*!< extend advertising primary phy */
-//    esp_ble_gap_phy_t secondly_phy;                 /*!< extend advertising secondary phy */
-//    uint8_t sid;                                    /*!< extend advertising sid */
-//    uint8_t tx_power;                               /*!< extend advertising tx power */
-//    int8_t rssi;                                    /*!< extend advertising rssi */
-//    uint16_t per_adv_interval;                      /*!< periodic advertising interval */
-//    uint8_t dir_addr_type;                          /*!< direct address type */
-//    esp_bd_addr_t dir_addr;                         /*!< direct address */
-//    esp_ble_gap_ext_adv_data_status_t data_status;  /*!< data type */
-//    uint8_t adv_data_len;                           /*!< extend advertising data length */
-//    uint8_t adv_data[251];                          /*!< extend advertising data */
-//} esp_ble_gap_ext_adv_reprot_t;
 
 class MyBLEExtAdvertisingCallbacks: public BLEExtAdvertisingCallbacks {
     void onResult(esp_ble_gap_ext_adv_reprot_t report) {
@@ -66,4 +47,4 @@ void loop() {
   // put your main code here, to run repeatedly:
   delay(2000);
 }
-#endif // CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#endif // SOC_BLE_50_SUPPORTED

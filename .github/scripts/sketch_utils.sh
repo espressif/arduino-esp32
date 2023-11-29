@@ -74,6 +74,8 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app"
             esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
             esp32c3_opts="PartitionScheme=huge_app"
+            esp32c6_opts="PartitionScheme=huge_app"
+            esp32h2_opts="PartitionScheme=huge_app"
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
@@ -90,6 +92,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 ;;
                 "esp32s3")
                     fqbn="espressif:esp32:esp32s3:${options:-$esp32s3_opts}"
+                ;;
+                "esp32c6")
+                    fqbn="espressif:esp32:esp32c6:${options:-$esp32c6_opts}"
+                ;;
+                "esp32h2")
+                    fqbn="espressif:esp32:esp32h2:${options:-$esp32h2_opts}"
                 ;;
             esac
 
@@ -117,12 +125,14 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     #  3. Created at the sketch level as "buildX" where X is the number
     #     of configuration built in case of a multiconfiguration test.
 
+    sketchname=$(basename $sketchdir)
+    
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
     elif [ $len -eq 1 ]; then
         # build_dir="$sketchdir/build"
-        build_dir="$HOME/.arduino/build.tmp"
+        build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
     fi
 
     mkdir -p "$ARDUINO_CACHE_DIR"
@@ -130,13 +140,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     do
         if [ $len -ne 1 ]; then
           # build_dir="$sketchdir/build$i"
-          build_dir="$HOME/.arduino/build$i.tmp"
+          build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
         fi
         rm -rf $build_dir
         mkdir -p $build_dir
 
         currfqbn=`echo $fqbn | jq -r --argjson i $i '.[$i]'`
-        sketchname=$(basename $sketchdir)
 
         if [ -f "$ide_path/arduino-cli" ]; then
             echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
@@ -152,6 +161,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 $xtra_opts "${sketchdir}"
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
+            echo "Build path = $build_dir"
 
             $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
                 -fqbn=\"$currfqbn\" \

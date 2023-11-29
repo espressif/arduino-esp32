@@ -13,13 +13,13 @@ Examples
 ESP-NOW Master
 **************
 
-.. literalinclude:: ../../../libraries/ESP32/examples/ESPNow/Basic/Master/Master.ino
+.. literalinclude:: ../../../libraries/ESP32/examples/ESPNow/ESPNow_Basic_Master/ESPNow_Basic_Master.ino
     :language: arduino
 
 ESP-NOW Slave
 *************
 
-.. literalinclude:: ../../../libraries/ESP32/examples/ESPNow/Basic/Slave/Slave.ino
+.. literalinclude:: ../../../libraries/ESP32/examples/ESPNow/ESPNow_Basic_Slave/ESPNow_Basic_Slave.ino
     :language: arduino
 
 Resources

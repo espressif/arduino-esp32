@@ -44,13 +44,11 @@ size_t Print::write(const uint8_t *buffer, size_t size)
     return n;
 }
 
-size_t Print::printf(const char *format, ...)
+size_t Print::vprintf(const char *format, va_list arg)
 {
     char loc_buf[64];
     char * temp = loc_buf;
-    va_list arg;
     va_list copy;
-    va_start(arg, format);
     va_copy(copy, arg);
     int len = vsnprintf(temp, sizeof(loc_buf), format, copy);
     va_end(copy);
@@ -74,9 +72,23 @@ size_t Print::printf(const char *format, ...)
     return len;
 }
 
-size_t Print::print(const __FlashStringHelper *ifsh)
+size_t Print::printf(const __FlashStringHelper *ifsh, ...)
 {
-    return print(reinterpret_cast<const char *>(ifsh));
+   va_list arg;
+   va_start(arg, ifsh);
+   const char * format = (reinterpret_cast<const char *>(ifsh));
+   size_t ret = vprintf(format, arg);
+   va_end(arg);
+   return ret;
+}
+
+size_t Print::printf(const char *format, ...)
+{
+    va_list arg;
+    va_start(arg, format);
+    size_t ret = vprintf(format, arg);
+    va_end(arg);
+    return ret;
 }
 
 size_t Print::print(const String &s)
@@ -150,13 +162,6 @@ size_t Print::print(unsigned long long n, int base)
 size_t Print::print(double n, int digits)
 {
     return printFloat(n, digits);
-}
-
-size_t Print::println(const __FlashStringHelper *ifsh)
-{
-    size_t n = print(ifsh);
-    n += println();
-    return n;
 }
 
 size_t Print::print(const Printable& x)

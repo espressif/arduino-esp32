@@ -41,6 +41,8 @@ ESP32    Yes    Yes         `ESP32`_
 ESP32-S2 Yes    Yes         `ESP32-S2`_
 ESP32-C3 Yes    Yes         `ESP32-C3`_
 ESP32-S3 Yes    Yes         `ESP32-S3`_
+ESP32-C6 No     Yes         `ESP32-C6`_
+ESP32-H2 No     Yes         `ESP32-H2`_
 ======== ====== =========== ===================================
 
 See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
@@ -133,6 +135,7 @@ in the examples menu or inside each library folder.
 
     https://github.com/espressif/arduino-esp32/tree/master/libraries
 
+There is also a `list of examples <https://techtutorialsx.com/category/esp32/>`_ managed outside of Espressif, so check them out.
 
 .. include:: common/datasheet.inc
 
