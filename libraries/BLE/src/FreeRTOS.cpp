@@ -30,8 +30,8 @@ void FreeRTOS::sleep(uint32_t ms) {
  * @param[in] param An optional parameter to be passed to the started task.
  * @param[in] stackSize An optional paremeter supplying the size of the stack in which to run the task.
  */
-void FreeRTOS::startTask(void task(void*), std::string taskName, void* param, uint32_t stackSize) {
-	::xTaskCreate(task, taskName.data(), stackSize, param, 5, NULL);
+void FreeRTOS::startTask(void task(void*), String taskName, void* param, uint32_t stackSize) {
+	::xTaskCreate(task, taskName.c_str(), stackSize, param, 5, NULL);
 } // startTask
 
 
@@ -59,7 +59,7 @@ uint32_t FreeRTOS::getTimeSinceStart() {
  * @param [in] owner A debug tag.
  * @return The value associated with the semaphore.
  */
-uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
+uint32_t FreeRTOS::Semaphore::wait(String owner) {
 	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
 	
 	if (m_usePthreads) {
@@ -85,7 +85,7 @@ uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
  * @param [in] timeoutMs timeout to wait in ms.
  * @return True if we took the semaphore within timeframe.
  */
-bool FreeRTOS::Semaphore::timedWait(std::string owner, uint32_t timeoutMs) {
+bool FreeRTOS::Semaphore::timedWait(String owner, uint32_t timeoutMs) {
 	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
 
 	if (m_usePthreads && timeoutMs != portMAX_DELAY) {
@@ -111,7 +111,7 @@ bool FreeRTOS::Semaphore::timedWait(std::string owner, uint32_t timeoutMs) {
 } // wait
 
 
-FreeRTOS::Semaphore::Semaphore(std::string name) {
+FreeRTOS::Semaphore::Semaphore(String name) {
 	m_usePthreads = false;   	// Are we using pThreads or FreeRTOS?
 	if (m_usePthreads) {
 		pthread_mutex_init(&m_pthread_mutex, nullptr);
@@ -121,7 +121,7 @@ FreeRTOS::Semaphore::Semaphore(std::string name) {
 	}
 
 	m_name      = name;
-	m_owner     = std::string("<N/A>");
+	m_owner     = String("<N/A>");
 	m_value     = 0;
 }
 
@@ -141,7 +141,7 @@ FreeRTOS::Semaphore::~Semaphore() {
  */
 void FreeRTOS::Semaphore::give() {
 	log_v("Semaphore giving: %s", toString().c_str());
-	m_owner = std::string("<N/A>");
+	m_owner = String("<N/A>");
 	
 	if (m_usePthreads) {
 		pthread_mutex_unlock(&m_pthread_mutex);
@@ -185,7 +185,7 @@ void FreeRTOS::Semaphore::giveFromISR() {
  * @param [in] owner The new owner (for debugging)
  * @return True if we took the semaphore.
  */
-bool FreeRTOS::Semaphore::take(std::string owner) {
+bool FreeRTOS::Semaphore::take(String owner) {
 	log_v("Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
 	bool rc = false;
 	if (m_usePthreads) {
@@ -210,7 +210,7 @@ bool FreeRTOS::Semaphore::take(std::string owner) {
  * @param [in] owner The new owner (for debugging)
  * @return True if we took the semaphore.
  */
-bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
+bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, String owner) {
 	log_v("Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
 	bool rc = false;
 	if (m_usePthreads) {
@@ -233,10 +233,10 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
  * @brief Create a string representation of the semaphore.
  * @return A string representation of the semaphore.
  */
-std::string FreeRTOS::Semaphore::toString() {
+String FreeRTOS::Semaphore::toString() {
 	char hex[9];
-	std::string res = "name: " + m_name + " (0x";
-	snprintf(hex, sizeof(hex), "%08x", (uint32_t)m_semaphore);
+	String res = "name: " + m_name + " (0x";
+	snprintf(hex, sizeof(hex), "%08lx", (uint32_t)m_semaphore);
 	res += hex;
 	res += "), owner: " + m_owner;
 	return res;
@@ -247,7 +247,7 @@ std::string FreeRTOS::Semaphore::toString() {
  * @brief Set the name of the semaphore.
  * @param [in] name The name of the semaphore.
  */
-void FreeRTOS::Semaphore::setName(std::string name) {
+void FreeRTOS::Semaphore::setName(String name) {
 	m_name = name;
 } // setName
 

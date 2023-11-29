@@ -163,3 +163,88 @@ Compilation Errors
 ------------------
 
 As commits are made to esp-idf and submodules, the codebases can develop incompatibilities that cause compilation errors.  If you have problems compiling, follow the instructions in `Issue #1142 <https://github.com/espressif/arduino-esp32/issues/1142>`_ to roll esp-idf back to a different version.
+
+Adding arduino library
+----------------------
+
+There are few approaches:
+
+1. Add global library to ``components/arduino-esp32/libraries/new_library``
+2. Add local project library to ``examples/your_project/main/libraries/new_library``
+
+1 Adding global library
+***********************
+
+Download the library:
+
+.. code-block:: bash
+
+    cd ~/esp/esp-idf/components/arduino-esp32/
+    git clone --recursive git@github.com:Author/new_library.git libraries/new_library
+
+
+Edit file ``components/arduino-esp32/CMakeLists.txt``
+
+Get the source file list with shell command:
+
+.. code-block:: bash
+
+    find libraries/new_library/src/ -name '*.c' -o -name '*.cpp'
+      libraries/new_library/src/new_library.cpp
+      libraries/new_library/src/new_library_extra_file.c
+
+Locate block which starts with ``set(LIBRARY_SRCS`` and copy the list there. Now it should look something like this:
+
+.. code-block:: bash
+
+    set(LIBRARY_SRCS
+      libraries/ArduinoOTA/src/ArduinoOTA.cpp
+      libraries/AsyncUDP/src/AsyncUDP.cpp
+      libraries/new_library/src/new_library.cpp
+      libraries/new_library/src/new_library_extra_file.c
+
+
+After this add the library path to block which starts with ``set(includedirs``. It should look like this:
+
+.. code-block:: bash
+
+    set(includedirs
+      variants/${CONFIG_ARDUINO_VARIANT}/
+      cores/esp32/
+      libraries/ArduinoOTA/src
+      libraries/AsyncUDP/src
+      libraries/new_library/src
+
+
+2 Adding local library
+**********************
+
+Download the library:
+
+.. code-block:: bash
+
+    cd ~/esp/esp-idf/examples/your_project
+    mkdir components
+    git clone --recursive git@github.com:Author/new_library.git components/new_library
+
+Create new CMakeists.txt in the library folder: ``components/new_library/CMakeLists.txt``
+
+.. code-block:: bash
+
+    idf_component_register(SRCS "new_library.cpp" "another_source.c"
+                          INCLUDE_DIRS "."
+                          REQUIRES arduino-esp32
+                          )
+
+You can read more about CMakeLists in the IDF documentation regarding the `Build System <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html>`_
+
+Tip
+---
+
+If you want to use arduino-esp32 both as an ESP-IDF component and with Arduino IDE you can simply create a symlink:
+
+.. code-block:: bash
+
+    ln -s ~/Arduino/hardware/espressif/esp32  ~/esp/esp-idf/components/arduino-esp32
+
+This will allow you to install new libraries as usual with Arduino IDE. To use them with IDF component, use ``add_lib.sh -e ~/Arduino/libraries/New_lib``
