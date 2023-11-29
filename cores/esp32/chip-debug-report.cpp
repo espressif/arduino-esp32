@@ -242,7 +242,11 @@ static void printBoardInfo(void){
 static void printPerimanInfo(void){
   chip_report_printf("GPIO Info:\n");
   chip_report_printf("------------------------------------------\n");
+#if defined(BOARD_HAS_PIN_REMAP)
+  chip_report_printf("  DPIN|GPIO : BUS_TYPE[bus/unit][chan]\n");
+#else
   chip_report_printf("  GPIO : BUS_TYPE[bus/unit][chan]\n");
+#endif
   chip_report_printf("  --------------------------------------  \n");
   for(uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++){
     if(!perimanPinIsValid(i)){
@@ -252,8 +256,17 @@ static void printPerimanInfo(void){
     if(type == ESP32_BUS_TYPE_INIT){
       continue;//unused pin
     }
-    const char* extra_type = perimanGetPinBusExtraType(i);
+#if defined(BOARD_HAS_PIN_REMAP)
+    int dpin = gpioNumberToDigitalPin(i);
+    if (dpin < 0) {
+      continue;//pin is not exported
+    } else {
+      chip_report_printf("  D%-3d|%4u : ", dpin, i);
+    }
+#else
     chip_report_printf("  %4u : ", i);
+#endif
+    const char* extra_type = perimanGetPinBusExtraType(i);
     if(extra_type){
       chip_report_printf("%s", extra_type);
     }
