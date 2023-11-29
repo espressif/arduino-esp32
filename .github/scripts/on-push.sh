@@ -4,6 +4,9 @@ set -e
 
 export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
 
+# Relative path test
+export PATH="./bin:$PATH"
+
 function build(){
     local target=$1
     local fqbn=$2
