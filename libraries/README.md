@@ -33,6 +33,7 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
   * GPIO
   * HallSensor
   * I2S
+  * MacAddress
   * ResetReason
   * RMT
   * Time

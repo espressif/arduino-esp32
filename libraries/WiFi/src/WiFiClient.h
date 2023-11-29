@@ -89,6 +89,7 @@ public:
 
     int setSocketOption(int option, char* value, size_t len);
     int setSocketOption(int level, int option, const void* value, size_t len);
+    int getSocketOption(int level, int option, const void* value, size_t size);
     int setOption(int option, int *value);
     int getOption(int option, int *value);
     int setTimeout(uint32_t seconds);

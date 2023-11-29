@@ -432,6 +432,26 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
 }
 
 /**
+ * Sets the working bandwidth of the STA mode
+ * @param m wifi_bandwidth_t
+ */
+bool WiFiSTAClass::bandwidth(wifi_bandwidth_t bandwidth) {
+    if(!WiFi.enableSTA(true)) {
+        log_e("STA enable failed!");
+        return false;
+    }
+
+    esp_err_t err;
+    err = esp_wifi_set_bandwidth((wifi_interface_t)ESP_IF_WIFI_STA, bandwidth);
+    if(err){
+        log_e("Could not set STA bandwidth!");
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * Change DNS server for static IP configuration
  * @param dns1       Static DNS server 1
  * @param dns2       Static DNS server 2 (optional)
