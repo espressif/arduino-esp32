@@ -926,7 +926,6 @@ int32_t WiFiGenericClass::channel(void)
     return primaryChan;
 }
 
-
 /**
  * store WiFi config in SDK flash area
  * @param persistent

@@ -83,6 +83,22 @@ public:
         _ledOn = ledOn;
     }
 
+    void setMD5sum(const String &md5Sum) 
+    {
+        _md5Sum = md5Sum;
+    }
+    
+    void setAuthorization(const String& user, const String& password) 
+    {
+        _user = user;
+        _password = password;
+    }
+  
+    void setAuthorization(const String& auth)
+    {
+        _auth = auth;
+    }
+
     t_httpUpdate_return update(WiFiClient& client, const String& url, const String& currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
     t_httpUpdate_return update(WiFiClient& client, const String& host, uint16_t port, const String& uri = "/",
@@ -121,6 +137,10 @@ protected:
 private:
     int _httpClientTimeout;
     followRedirects_t _followRedirects;
+    String _user;
+    String _password;
+    String _auth;
+    String _md5Sum;
 
     // Callbacks
     HTTPUpdateStartCB    _cbStart;
