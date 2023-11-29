@@ -38,18 +38,48 @@ bool btStarted(){
     return (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED);
 }
 
-bool btStart(){
+bool btStart() {
+    return btStartMode(BT_MODE);
+}
+
+bool btStartMode(bt_mode mode){
+    esp_bt_mode_t esp_bt_mode;
     esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+#if CONFIG_IDF_TARGET_ESP32
+    switch(mode) {
+        case BT_MODE_BLE: esp_bt_mode=ESP_BT_MODE_BLE;
+        break;
+        case BT_MODE_CLASSIC_BT: esp_bt_mode=ESP_BT_MODE_CLASSIC_BT;
+        break;
+        case BT_MODE_BTDM: esp_bt_mode=ESP_BT_MODE_BTDM;
+        break;
+        default: esp_bt_mode=BT_MODE;
+        break;
+    }
+    // esp_bt_controller_enable(MODE) This mode must be equal as the mode in “cfg” of esp_bt_controller_init().
+    cfg.mode=esp_bt_mode;
+    if(cfg.mode == ESP_BT_MODE_CLASSIC_BT) {
+        esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
+    }
+#else
+// other esp variants dont support BT-classic / DM.
+    esp_bt_mode=BT_MODE;
+#endif
+
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
         return true;
     }
+    esp_err_t ret;
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE){
-        esp_bt_controller_init(&cfg);
+        if((ret = esp_bt_controller_init(&cfg)) != ESP_OK) {
+            log_e("initialize controller failed: %s", esp_err_to_name(ret));
+            return false;
+        }
         while(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE){}
     }
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_INITED){
-        if (esp_bt_controller_enable(BT_MODE)) {
-            log_e("BT Enable failed");
+        if((ret = esp_bt_controller_enable(esp_bt_mode)) != ESP_OK) {
+            log_e("BT Enable mode=%d failed %s", BT_MODE, esp_err_to_name(ret));
             return false;
         }
     }

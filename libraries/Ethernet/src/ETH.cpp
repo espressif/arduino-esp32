@@ -18,6 +18,9 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "ETH.h"
 #include "esp_system.h"
 #include "esp_event.h"
@@ -98,13 +101,13 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
     mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
     mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode) ? EMAC_APPL_CLK_OUT_GPIO : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO : EMAC_CLK_IN_GPIO;
-    mac_config.smi_mdc_gpio_num = mdc;
-    mac_config.smi_mdio_gpio_num = mdio;
+    mac_config.smi_mdc_gpio_num = digitalPinToGPIONumber(mdc);
+    mac_config.smi_mdio_gpio_num = digitalPinToGPIONumber(mdio);
 
-    _pin_mcd = mdc;
-    _pin_mdio = mdio;
+    _pin_mcd = digitalPinToGPIONumber(mdc);
+    _pin_mdio = digitalPinToGPIONumber(mdio);
     _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
-    _pin_power = power;
+    _pin_power = digitalPinToGPIONumber(power);
 
     if(!perimanClearPinBus(_pin_rmii_clock)){ return false; }
     if(!perimanClearPinBus(_pin_mcd)){ return false; }
@@ -130,7 +133,7 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
 
     eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
     phy_config.phy_addr = phy_addr;
-    phy_config.reset_gpio_num = power;
+    phy_config.reset_gpio_num = _pin_power;
 
     esp_eth_phy_t *phy = NULL;
     switch(type){
@@ -381,12 +384,12 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
         _spi_freq_mhz = spi_freq_mhz;
     }
     _phy_type = type;
-    _pin_cs = cs;
-    _pin_irq = irq;
-    _pin_rst = rst;
-    _pin_sck = sck;
-    _pin_miso = miso;
-    _pin_mosi = mosi;
+    _pin_cs = digitalPinToGPIONumber(cs);
+    _pin_irq = digitalPinToGPIONumber(irq);
+    _pin_rst = digitalPinToGPIONumber(rst);
+    _pin_sck = digitalPinToGPIONumber(sck);
+    _pin_miso = digitalPinToGPIONumber(miso);
+    _pin_mosi = digitalPinToGPIONumber(mosi);
 
 #if ETH_SPI_SUPPORTS_CUSTOM
     if(_spi != NULL){
