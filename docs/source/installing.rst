@@ -73,7 +73,7 @@ Installing using PlatformIO
 
 PlatformIO is a professional collaborative platform for embedded development. It has out-of-the-box support for ESP32 SoCs and allows working with Arduino ESP32 as well as ESP-IDF from Espressif without changing your development environment. PlatformIO includes lots of instruments for the most common development tasks such as debugging, unit testing, and static code analysis.
 
-.. warning:: PlatformIO is not officially supported by Espressif. Please report any issues with PlatformIO directly to its developers on the official `PlatformIO repositories <https://github.com/platformio>`_.
+.. warning:: Integration of the Arduino Core ESP32 project in PlatformIO is maintained by PlatformIO developers. Arduino Core ESP32 Project Team cannot support PlatformIO-specific issues. Please report these issues in official `PlatformIO repositories <https://github.com/platformio>`_.
 
 A detailed overview of the PlatformIO ecosystem and its philosophy can be found in `the official documentation <https://docs.platformio.org/en/latest/core/index.html>`_.
 

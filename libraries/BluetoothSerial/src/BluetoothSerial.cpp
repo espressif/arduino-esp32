@@ -257,10 +257,8 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 #else
         esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
 #endif
-        if (!_isMaster) {
-            log_i("ESP_SPP_INIT_EVT: slave: start");
-            esp_spp_start_srv(ESP_SPP_SEC_NONE, ESP_SPP_ROLE_SLAVE, 0, _spp_server_name);
-        }
+        log_i("ESP_SPP_INIT_EVT: %s: start", _isMaster ? "master" : "slave");
+        esp_spp_start_srv(ESP_SPP_SEC_NONE, _isMaster ? ESP_SPP_ROLE_MASTER : ESP_SPP_ROLE_SLAVE, 0, _spp_server_name);
         xEventGroupSetBits(_spp_event_group, SPP_RUNNING);
         break;
 
@@ -673,7 +671,7 @@ static bool _init_bt(const char *deviceName, bt_mode mode)
     }
 
     if(!_spp_task_handle){
-        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, 10, &_spp_task_handle, 0);
+        xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, configMAX_PRIORITIES-1, &_spp_task_handle, 0);
         if(!_spp_task_handle){
             log_e("Network Event Task Start Failed!");
             return false;

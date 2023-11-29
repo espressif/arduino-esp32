@@ -1049,7 +1049,7 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
             log_e("esp_wifi_set_ps failed");
         }
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_STOP) {
-        WiFiSTAClass::_setStatus(WL_NO_SHIELD);
+        WiFiSTAClass::_setStatus(WL_STOPPED);
         clearStatusBits(STA_STARTED_BIT | STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
         WiFiSTAClass::_setStatus(WL_IDLE_STATUS);
@@ -1224,7 +1224,6 @@ int32_t WiFiGenericClass::channel(void)
     esp_wifi_get_channel(&primaryChan, &secondChan);
     return primaryChan;
 }
-
 
 /**
  * store WiFi config in SDK flash area

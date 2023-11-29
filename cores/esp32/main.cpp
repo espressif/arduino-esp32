@@ -45,6 +45,10 @@ __attribute__((weak)) bool shouldPrintChipDebugReport(void) {
 
 void loopTask(void *pvParameters)
 {
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
+    // sets UART0 (default console) RX/TX pins as already configured in boot or as defined in variants/pins_arduino.h
+    Serial0.setPins(SOC_RX0, SOC_TX0);
+#endif
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
     printBeforeSetupInfo();
 #else
