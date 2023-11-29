@@ -58,6 +58,8 @@ public:
     bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
     bool setDNS(IPAddress dns1, IPAddress dns2 = (uint32_t)0x00000000);  // sets DNS IP for all network interfaces
 
+    bool bandwidth(wifi_bandwidth_t bandwidth);
+
     bool reconnect();
     bool disconnect(bool wifioff = false, bool eraseap = false);
     bool eraseAP(void);

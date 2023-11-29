@@ -322,6 +322,16 @@ int WiFiClient::setSocketOption(int level, int option, const void* value, size_t
     return res;
 }
 
+int WiFiClient::getSocketOption(int level, int option, const void* value, size_t size)
+{
+    int res = getsockopt(fd(), level, option, (char *)value, (socklen_t*)&size);
+    if(res < 0) {
+        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
+    }
+    return res;
+}
+
+
 int WiFiClient::setTimeout(uint32_t seconds)
 {
     Client::setTimeout(seconds * 1000); // This should be here?
