@@ -42,7 +42,7 @@ class BluetoothSerial: public Stream
         BluetoothSerial(void);
         ~BluetoothSerial(void);
 
-        bool begin(String localName=String(), bool isMaster=false);
+        bool begin(String localName=String(), bool isMaster=false, bool disableBLE=false);
         bool begin(unsigned long baud){//compatibility
             return begin();
         }
@@ -54,6 +54,7 @@ class BluetoothSerial: public Stream
         size_t write(const uint8_t *buffer, size_t size);
         void flush();
         void end(void);
+        void memrelease();
         void setTimeout(int timeoutMS);
         void onData(BluetoothSerialDataCb cb);
         esp_err_t register_callback(esp_spp_cb_t * callback);
