@@ -7,9 +7,10 @@
   mode with collision detection as described in
   https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/uart.html#circuit-a-collision-detection-circuit
 
+  To use the script open the Arduino serial monitor (or alternative serial monitor on the Arduino port). Then,
+  using an RS485 tranciver, connect another serial monitor to the RS485 port. Entering data on one terminal
+  should be displayed on the other terminal.
 */
-
-// Open the Serial Monitor with testing baud start typing and sending caracters
 
 #include <HardwareSerial.h>
 
