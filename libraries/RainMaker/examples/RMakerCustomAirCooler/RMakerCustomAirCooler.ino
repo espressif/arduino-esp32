@@ -2,7 +2,6 @@
 #include "RMaker.h"
 #include "WiFi.h"
 #include "WiFiProv.h"
-#include "led_strip.h"
 
 #define DEFAULT_POWER_MODE true
 #define DEFAULT_SWING false

@@ -22,6 +22,8 @@
   Modified Nov 2017 by Chuck Todd (ctodd@cableone.net) - ESP32 ISR Support
   Modified Nov 2021 by Hristo Gochkov <Me-No-Dev> to support ESP-IDF API
  */
+#include "soc/soc_caps.h"
+#if SOC_I2C_SUPPORTED
 
 extern "C" {
 #include <stdlib.h>
@@ -30,7 +32,9 @@ extern "C" {
 }
 
 #include "esp32-hal-i2c.h"
+#if SOC_I2C_SUPPORT_SLAVE
 #include "esp32-hal-i2c-slave.h"
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 #include "Wire.h"
 #include "Arduino.h"
 
@@ -48,12 +52,14 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,_timeOutMillis(50)
     ,nonStop(false)
 #if !CONFIG_DISABLE_HAL_LOCKS
-    ,nonStopTask(NULL)
+    ,currentTaskHandle(NULL)
     ,lock(NULL)
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
     ,is_slave(false)
     ,user_onRequest(NULL)
     ,user_onReceive(NULL)
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 {}
 
 TwoWire::~TwoWire()
@@ -224,6 +230,7 @@ size_t TwoWire::setBufferSize(size_t bSize)
     return bSize;
 }
 
+#if SOC_I2C_SUPPORT_SLAVE
 // Slave Begin
 bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
 {
@@ -273,6 +280,7 @@ end:
 #endif
     return started;
 }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 
 // Master Begin
 bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
@@ -293,10 +301,12 @@ bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
         return false;
     }
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus already started in Slave Mode.");
         goto end;
     }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
     if(i2cIsInit(num)){
         log_w("Bus already started in Master Mode.");
         started = true;
@@ -333,12 +343,15 @@ bool TwoWire::end()
             return false;
         }
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
         if(is_slave){
             err = i2cSlaveDeinit(num);
             if(err == ESP_OK){
                 is_slave = false;
             }
-        } else if(i2cIsInit(num)){
+        } else
+#endif /* SOC_I2C_SUPPORT_SLAVE */
+        if(i2cIsInit(num)){
             err = i2cDeinit(num);
         }
         freeWireBuffer();
@@ -359,9 +372,12 @@ uint32_t TwoWire::getClock()
         log_e("could not acquire lock");
     } else {
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
         if(is_slave){
             log_e("Bus is in Slave Mode");
-        } else {
+        } else 
+#endif /* SOC_I2C_SUPPORT_SLAVE */
+        {
             i2cGetClock(num, &frequency);
         }
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -382,10 +398,13 @@ bool TwoWire::setClock(uint32_t frequency)
         return false;
     }
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
         err = ESP_FAIL;
-    } else {
+    } else 
+#endif /* SOC_I2C_SUPPORT_SLAVE */
+    {
         err = i2cSetClock(num, frequency);
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -407,20 +426,22 @@ uint16_t TwoWire::getTimeOut()
 
 void TwoWire::beginTransmission(uint16_t address)
 {
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
         return;
     }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 #if !CONFIG_DISABLE_HAL_LOCKS
-    if(nonStop && nonStopTask == xTaskGetCurrentTaskHandle()){
-        log_e("Unfinished Repeated Start transaction! Expected requestFrom, not beginTransmission! Clearing...");
-        //release lock
-        xSemaphoreGive(lock);
-    }
-    //acquire lock
-    if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
-        log_e("could not acquire lock");
-        return;
+    TaskHandle_t task = xTaskGetCurrentTaskHandle();
+    if (currentTaskHandle != task)
+    {
+        //acquire lock
+        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+            log_e("could not acquire lock");
+            return;
+        }
+        currentTaskHandle = task;
     }
 #endif
     nonStop = false;
@@ -440,10 +461,12 @@ endTransmission() returns:
 */
 uint8_t TwoWire::endTransmission(bool sendStop)
 {
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
         return 4;
     }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
     if (txBuffer == NULL){
         log_e("NULL TX buffer pointer");
         return 4;
@@ -452,15 +475,13 @@ uint8_t TwoWire::endTransmission(bool sendStop)
     if(sendStop){
         err = i2cWrite(num, txAddress, txBuffer, txLength, _timeOutMillis);
 #if !CONFIG_DISABLE_HAL_LOCKS
+        currentTaskHandle = NULL;
         //release lock
         xSemaphoreGive(lock);
 #endif
     } else {
         //mark as non-stop
         nonStop = true;
-#if !CONFIG_DISABLE_HAL_LOCKS
-        nonStopTask = xTaskGetCurrentTaskHandle();
-#endif
     }
     switch(err){
         case ESP_OK: return 0;
@@ -473,22 +494,37 @@ uint8_t TwoWire::endTransmission(bool sendStop)
 
 size_t TwoWire::requestFrom(uint16_t address, size_t size, bool sendStop)
 {
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
         return 0;
     }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
     if (rxBuffer == NULL || txBuffer == NULL){
         log_e("NULL buffer pointer");
         return 0;
     }
     esp_err_t err = ESP_OK;
-    if(nonStop
 #if !CONFIG_DISABLE_HAL_LOCKS
-    && nonStopTask == xTaskGetCurrentTaskHandle()
-#endif
-    ){
+    TaskHandle_t task = xTaskGetCurrentTaskHandle();
+    if (currentTaskHandle != task)
+    {
+        //acquire lock
+        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+            log_e("could not acquire lock");
+            return 0;
+        }
+        currentTaskHandle = task;
+    }
+#endif  
+    if(nonStop){
         if(address != txAddress){
             log_e("Unfinished Repeated Start transaction! Expected address do not match! %u != %u", address, txAddress);
+#if !CONFIG_DISABLE_HAL_LOCKS
+            currentTaskHandle = NULL;
+            //release lock
+            xSemaphoreGive(lock);
+#endif
             return 0;
         }
         nonStop = false;
@@ -499,13 +535,6 @@ size_t TwoWire::requestFrom(uint16_t address, size_t size, bool sendStop)
             log_e("i2cWriteReadNonStop returned Error %d", err);
         }
     } else {
-#if !CONFIG_DISABLE_HAL_LOCKS
-        //acquire lock
-        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
-            log_e("could not acquire lock");
-            return 0;
-        }
-#endif
         rxIndex = 0;
         rxLength = 0;
         err = i2cRead(num, address, rxBuffer, size, _timeOutMillis, &rxLength);
@@ -514,6 +543,7 @@ size_t TwoWire::requestFrom(uint16_t address, size_t size, bool sendStop)
         }
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
+    currentTaskHandle = NULL;
     //release lock
     xSemaphoreGive(lock);
 #endif
@@ -642,6 +672,8 @@ uint8_t TwoWire::endTransmission(void)
     return endTransmission(true);
 }
 
+#if SOC_I2C_SUPPORT_SLAVE
+
 size_t TwoWire::slaveWrite(const uint8_t * buffer, size_t len)
 {
     return i2cSlaveWrite(num, buffer, len, _timeOutMillis);
@@ -693,6 +725,9 @@ void TwoWire::onRequest( void (*function)(void) )
   user_onRequest = function;
 }
 
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 
 TwoWire Wire = TwoWire(0);
 TwoWire Wire1 = TwoWire(1);
+
+#endif /* SOC_I2C_SUPPORTED */

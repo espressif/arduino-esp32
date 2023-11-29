@@ -15,6 +15,8 @@ env:
   SKETCHES_REPORTS_ARTIFACT_NAME: libraries-report
   RESULT_LIBRARY_TEST_FILE: LIBRARIES_TEST.md
   JSON_LIBRARY_LIST_FILE: .github/workflows/lib.json
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
 jobs:
   compile-sketch:
     if: |
@@ -34,6 +36,8 @@ jobs:
           - esp32s2
           - esp32c3
           - esp32s3
+          - esp32c6
+          - esp32h2
 
         include:
           - target: esp32
@@ -44,6 +48,10 @@ jobs:
             fqbn: espressif:esp32:esp32c3
           - target: esp32s3
             fqbn: espressif:esp32:esp32s3
+          - target: esp32c6
+            fqbn: espressif:esp32:esp32c6
+          - target: esp32h2
+            fqbn: espressif:esp32:esp32h2
 
 
     steps:
@@ -80,6 +88,13 @@ jobs:
       # Check out repository
       - name: Checkout repository    
         uses: actions/checkout@v3
+        with:
+          token: ${{ env.GITHUB_TOKEN }}
+          fetch-depth: '0'
+
+      - name: Switch branch
+        run:
+          git checkout remotes/origin/gh-pages
 
       # This step is needed to get the size data produced by the compile jobs
       - name: Download sketches reports artifact
@@ -95,12 +110,8 @@ jobs:
           destination-file: ${{ env.RESULT_LIBRARY_TEST_FILE }}
 
       - name: Append file with action URL
-        uses: DamianReeves/write-file-action@master
-        with:
-          path: ${{ env.RESULT_LIBRARY_TEST_FILE }}
-          contents: |
-            / [GitHub Action Link](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})
-          write-mode: append
+        run:
+          echo "/ [GitHub Action Link](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})" >> ${{ env.RESULT_LIBRARY_TEST_FILE }}
 
       - name: Push to github repo
         run: |
@@ -108,8 +119,8 @@ jobs:
           git config user.email github-actions@github.com
           git add ${{ env.RESULT_LIBRARY_TEST_FILE }}
           git commit -m "Generated External Libraries Test Results"
-          git push
-
+          git push origin HEAD:gh-pages
+          
   event_file:
     name: "Event File"
     if: |

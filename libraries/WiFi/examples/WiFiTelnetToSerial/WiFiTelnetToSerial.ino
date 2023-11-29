@@ -78,7 +78,7 @@ void loop() {
         //find free/disconnected spot
         if (!serverClients[i] || !serverClients[i].connected()){
           if(serverClients[i]) serverClients[i].stop();
-          serverClients[i] = server.available();
+          serverClients[i] = server.accept();
           if (!serverClients[i]) Serial.println("available broken");
           Serial.print("New client: ");
           Serial.print(i); Serial.print(' ');
@@ -88,7 +88,7 @@ void loop() {
       }
       if (i >= MAX_SRV_CLIENTS) {
         //no free/disconnected spot so reject
-        server.available().stop();
+        server.accept().stop();
       }
     }
     //check clients for data

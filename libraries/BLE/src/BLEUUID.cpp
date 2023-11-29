@@ -4,6 +4,9 @@
  *  Created on: Jun 21, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <string.h>
@@ -63,7 +66,8 @@ static void memrcpy(uint8_t* target, uint8_t* source, uint32_t size) {
  *
  * @param [in] value The string to build a UUID from.
  */
-BLEUUID::BLEUUID(std::string value) {
+BLEUUID::BLEUUID(String value) {
+	//Serial.printf("BLEUUID constructor from String=\"%s\"\n", value.c_str());
 	m_valueSet = true;
 	if (value.length() == 4) {
 		m_uuid.len         = ESP_UUID_LEN_16;
@@ -91,11 +95,12 @@ BLEUUID::BLEUUID(std::string value) {
 			i+=2;
 		}		
 	}
-	else if (value.length() == 16) {  // how we can have 16 byte length string reprezenting 128 bit uuid??? needs to be investigated (lack of time)
+	else if (value.length() == 16) {  // How we can have 16 byte length string representing 128 bit uuid??? needs to be investigated (lack of time) - maybe raw data encoded as String (128b==16B)?
 		m_uuid.len = ESP_UUID_LEN_128;
-		memrcpy(m_uuid.uuid.uuid128, (uint8_t*)value.data(), 16);
+		memrcpy(m_uuid.uuid.uuid128, (uint8_t*)value.c_str(), 16);
 	}
 	else if (value.length() == 36) {
+		//log_d("36 characters:");
 		// If the length of the string is 36 bytes then we will assume it is a long hex string in
 		// UUID format.
 		m_uuid.len = ESP_UUID_LEN_128;
@@ -116,8 +121,13 @@ BLEUUID::BLEUUID(std::string value) {
 		log_e("ERROR: UUID value not 2, 4, 16 or 36 bytes");
 		m_valueSet = false;
 	}
-} //BLEUUID(std::string)
+} //BLEUUID(String)
 
+/*
+BLEUUID::BLEUUID(String value) {
+	this.BLEUUID(String(value.c_str(), value.length()));
+} //BLEUUID(String)
+*/
 
 /**
  * @brief Create a UUID from 16 bytes of memory.
@@ -245,7 +255,7 @@ bool BLEUUID::equals(BLEUUID uuid) {
  * NNNNNNNN
  * <UUID>
  */
-BLEUUID BLEUUID::fromString(std::string _uuid) {
+BLEUUID BLEUUID::fromString(String _uuid) {
 	uint8_t start = 0;
 	if (strstr(_uuid.c_str(), "0x") != nullptr) { // If the string starts with 0x, skip those characters.
 		start = 2;
@@ -253,10 +263,10 @@ BLEUUID BLEUUID::fromString(std::string _uuid) {
 	uint8_t len = _uuid.length() - start; // Calculate the length of the string we are going to use.
 
 	if(len == 4) {
-		uint16_t x = strtoul(_uuid.substr(start, len).c_str(), NULL, 16);
+		uint16_t x = strtoul(_uuid.substring(start, start+len).c_str(), NULL, 16);
 		return BLEUUID(x);
 	} else if (len == 8) {
-		uint32_t x = strtoul(_uuid.substr(start, len).c_str(), NULL, 16);
+		uint32_t x = strtoul(_uuid.substring(start, start+len).c_str(), NULL, 16);
 		return BLEUUID(x);
 	} else if (len == 36) {
 		return BLEUUID(_uuid);
@@ -347,20 +357,20 @@ BLEUUID BLEUUID::to128() {
  *
  * @return A string representation of the UUID.
  */
-std::string BLEUUID::toString() {
+String BLEUUID::toString() {
 	if (!m_valueSet) return "<NULL>";   // If we have no value, nothing to format.
 	// If the UUIDs are 16 or 32 bit, pad correctly.
 
 	if (m_uuid.len == ESP_UUID_LEN_16) {  // If the UUID is 16bit, pad correctly.
 		char hex[9];
 		snprintf(hex, sizeof(hex), "%08x", m_uuid.uuid.uuid16);
-		return std::string(hex) + "-0000-1000-8000-00805f9b34fb";
+		return String(hex) + "-0000-1000-8000-00805f9b34fb";
 	} // End 16bit UUID
 
 	if (m_uuid.len == ESP_UUID_LEN_32) {  // If the UUID is 32bit, pad correctly.
 		char hex[9];
-		snprintf(hex, sizeof(hex), "%08x", m_uuid.uuid.uuid32);
-		return std::string(hex) + "-0000-1000-8000-00805f9b34fb";
+		snprintf(hex, sizeof(hex), "%08lx", m_uuid.uuid.uuid32);
+		return String(hex) + "-0000-1000-8000-00805f9b34fb";
 	} // End 32bit UUID
 
 	// The UUID is not 16bit or 32bit which means that it is 128bit.
@@ -378,9 +388,10 @@ std::string BLEUUID::toString() {
 			m_uuid.uuid.uuid128[5], m_uuid.uuid.uuid128[4],
 			m_uuid.uuid.uuid128[3], m_uuid.uuid.uuid128[2],
 			m_uuid.uuid.uuid128[1], m_uuid.uuid.uuid128[0]);
-	std::string res(hex);
+	String res(hex);
 	free(hex);
 	return res;
 } // toString
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

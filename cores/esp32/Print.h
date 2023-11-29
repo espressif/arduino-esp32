@@ -21,6 +21,7 @@
 #define Print_h
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stddef.h>
 
 #include "WString.h"
@@ -72,7 +73,10 @@ public:
         return write((const uint8_t *) buffer, size);
     }
 
+    size_t vprintf(const char *format, va_list arg);
+
     size_t printf(const char * format, ...)  __attribute__ ((format (printf, 2, 3)));
+    size_t printf(const __FlashStringHelper *ifsh, ...);
 
     // add availableForWrite to make compatible with Arduino Print.h
     // default to zero, meaning "a single write may block"
