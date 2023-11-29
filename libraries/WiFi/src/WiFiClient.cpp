@@ -324,7 +324,7 @@ int WiFiClient::setSocketOption(int level, int option, const void* value, size_t
 
 int WiFiClient::getSocketOption(int level, int option, const void* value, size_t size)
 {
-    int res = getsockopt(fd(), level, option, (char *)value, &size);
+    int res = getsockopt(fd(), level, option, (char *)value, (socklen_t*)&size);
     if(res < 0) {
         log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
