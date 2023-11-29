@@ -123,9 +123,9 @@ build.opt.name=build_opt.h
 build.opt.path={build.path}/{build.opt.name}
 
 # Check if custom partitions exist: source > variant > build.partitions
-recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
-recipe.hooks.prebuild.2.pattern=bash -c "[ -f "{build.path}"/partitions.csv ] || [ ! -f "{build.variant.path}"/{build.custom_partitions}.csv ] || cp "{build.variant.path}"/{build.custom_partitions}.csv "{build.path}"/partitions.csv"
-recipe.hooks.prebuild.3.pattern=bash -c "[ -f "{build.path}"/partitions.csv ] || cp "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.1.pattern=/usr/bin/env bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.2.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/partitions.csv ] || [ ! -f "{build.variant.path}"/{build.custom_partitions}.csv ] || cp "{build.variant.path}"/{build.custom_partitions}.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.3.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/partitions.csv ] || cp "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv "{build.path}"/partitions.csv"
 
 recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" COPY /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
 recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" if exist "{build.variant.path}\{build.custom_partitions}.csv" COPY "{build.variant.path}\{build.custom_partitions}.csv" "{build.path}\partitions.csv"
@@ -133,37 +133,37 @@ recipe.hooks.prebuild.3.pattern.windows=cmd /c if not exist "{build.path}\partit
 
 # Check if custom bootloader exist: source > variant > build.boot
 recipe.hooks.prebuild.4.pattern_args=--chip {build.mcu} elf2image --flash_mode {build.flash_mode} --flash_freq {build.img_freq} --flash_size {build.flash_size} -o
-recipe.hooks.prebuild.4.pattern=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
-recipe.hooks.prebuild.4.pattern.linux=bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || python3 "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
+recipe.hooks.prebuild.4.pattern=/usr/bin/env bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
+recipe.hooks.prebuild.4.pattern.linux=/usr/bin/env bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || python3 "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
 recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\{build.custom_bootloader}.bin" ( COPY "{build.variant.path}\{build.custom_bootloader}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.prebuild.4.pattern_args} "{build.path}\{build.project_name}.bootloader.bin" "{compiler.sdk.path}\bin\bootloader_{build.boot}_{build.boot_freq}.elf" ) )
 
 # Check if custom build options exist in the sketch folder
-recipe.hooks.prebuild.5.pattern=bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
-recipe.hooks.prebuild.6.pattern=bash -c "[ -f "{build.path}"/build_opt.h ] || : > "{build.path}"/build_opt.h"
+recipe.hooks.prebuild.5.pattern=/usr/bin/env bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
+recipe.hooks.prebuild.6.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/build_opt.h ] || : > "{build.path}"/build_opt.h"
 
 recipe.hooks.prebuild.5.pattern.windows=cmd /c if exist "{build.source.path}\build_opt.h" COPY /y "{build.source.path}\build_opt.h" "{build.path}\build_opt.h"
 recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.path}\build_opt.h" type nul > "{build.path}\build_opt.h"
 
 # Set -DARDUINO_CORE_BUILD only on core file compilation
 file_opts.path={build.path}/file_opts
-recipe.hooks.prebuild.set_core_build_flag.pattern=bash -c ": > '{file_opts.path}'"
-recipe.hooks.core.prebuild.set_core_build_flag.pattern=bash -c "echo '-DARDUINO_CORE_BUILD' > '{file_opts.path}'"
-recipe.hooks.core.postbuild.set_core_build_flag.pattern=bash -c ": > '{file_opts.path}'"
+recipe.hooks.prebuild.set_core_build_flag.pattern=/usr/bin/env bash -c ": > '{file_opts.path}'"
+recipe.hooks.core.prebuild.set_core_build_flag.pattern=/usr/bin/env bash -c "echo '-DARDUINO_CORE_BUILD' > '{file_opts.path}'"
+recipe.hooks.core.postbuild.set_core_build_flag.pattern=/usr/bin/env bash -c ": > '{file_opts.path}'"
 
 recipe.hooks.prebuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
 recipe.hooks.core.prebuild.set_core_build_flag.pattern.windows=cmd /c echo "-DARDUINO_CORE_BUILD" > "{file_opts.path}"
 recipe.hooks.core.postbuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
 
 # Generate debug.cfg (must be postbuild)
-recipe.hooks.postbuild.1.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{debug.server.openocd.scripts_dir}"board/{build.openocdscript} "{build.source.path}"/debug.cfg"
+recipe.hooks.postbuild.1.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{debug.server.openocd.scripts_dir}"board/{build.openocdscript} "{build.source.path}"/debug.cfg"
 recipe.hooks.postbuild.1.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{debug.server.openocd.scripts_dir}board\{build.openocdscript}" "{build.source.path}\debug.cfg"
 
 # Generate debug_custom.json
-recipe.hooks.postbuild.2.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/{build.debugconfig} "{build.source.path}"/debug_custom.json"
+recipe.hooks.postbuild.2.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/{build.debugconfig} "{build.source.path}"/debug_custom.json"
 recipe.hooks.postbuild.2.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\{build.debugconfig}" "{build.source.path}\debug_custom.json"
 
 # Generate chip.svd
-recipe.hooks.postbuild.3.pattern=bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/svd/{build.mcu}.svd "{build.source.path}"/debug.svd"
+recipe.hooks.postbuild.3.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/svd/{build.mcu}.svd "{build.source.path}"/debug.svd"
 recipe.hooks.postbuild.3.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\svd\{build.mcu}.svd" "{build.source.path}\debug.svd"
 
 ## Compile c files
@@ -191,11 +191,11 @@ recipe.objcopy.bin.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool
 
 ## Create Insights Firmware Package
 recipe.hooks.objcopy.postobjcopy.1.pattern_args={build.path} {build.project_name} "{build.source.path}"
-recipe.hooks.objcopy.postobjcopy.1.pattern=bash -c "[ ! -d "{build.path}"/libraries/Insights ] || {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
+recipe.hooks.objcopy.postobjcopy.1.pattern=/usr/bin/env bash -c "[ ! -d "{build.path}"/libraries/Insights ] || {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
 recipe.hooks.objcopy.postobjcopy.1.pattern.windows=cmd /c if exist "{build.path}\libraries\Insights" {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}
 
 ## Copy ESP_SR Model
-recipe.hooks.objcopy.postobjcopy.2.pattern=bash -c "[ ! -d "{build.path}"/libraries/ESP_SR ] || [ ! -f "{compiler.sdk.path}"/esp_sr/srmodels.bin ] || cp -f "{compiler.sdk.path}"/esp_sr/srmodels.bin "{build.path}"/srmodels.bin"
+recipe.hooks.objcopy.postobjcopy.2.pattern=/usr/bin/env bash -c "[ ! -d "{build.path}"/libraries/ESP_SR ] || [ ! -f "{compiler.sdk.path}"/esp_sr/srmodels.bin ] || cp -f "{compiler.sdk.path}"/esp_sr/srmodels.bin "{build.path}"/srmodels.bin"
 recipe.hooks.objcopy.postobjcopy.2.pattern.windows=cmd /c if exist "{build.path}\libraries\ESP_SR" if exist "{compiler.sdk.path}\esp_sr\srmodels.bin" COPY /y "{compiler.sdk.path}\esp_sr\srmodels.bin" "{build.path}\srmodels.bin"
 
 ## Save bin
