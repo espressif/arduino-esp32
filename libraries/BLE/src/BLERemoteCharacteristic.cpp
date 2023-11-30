@@ -522,7 +522,7 @@ void BLERemoteCharacteristic::removeDescriptors() {
 	for (auto &myPair : m_descriptorMap) {
 	   delete myPair.second;
 	}
-	m_descriptorMap.clear();   // Technically not neeeded, but just to be sure.
+	m_descriptorMap.clear();
 } // removeCharacteristics
 
 
