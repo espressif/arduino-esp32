@@ -281,7 +281,7 @@ void I2SClass::setInvertedPdm(bool clk){
 }
 #endif
 
-bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask){
     // Peripheral manager deinit previous peripheral if pin was used
     if (_mclk >= 0) if (!perimanClearPinBus(_mclk)){ return false; }
     if (_bclk >= 0) if (!perimanClearPinBus(_bclk)){ return false; }
@@ -307,6 +307,9 @@ bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
     }
 
     i2s_std_config_t i2s_config = I2S_STD_CHAN_CFG(rate, bits_cfg, ch);
+    if(slot_mask >= 0 && (i2s_std_slot_mask_t)slot_mask <= I2S_STD_SLOT_BOTH){
+        i2s_config.slot_cfg.slot_mask = (i2s_std_slot_mask_t)slot_mask;
+    }
     if (tx_chan != NULL) {
         tx_sample_rate = rate;
         tx_data_bit_width = bits_cfg;
@@ -475,11 +478,7 @@ err:
 }
 #endif
 
-bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch
-#if SOC_I2S_SUPPORTS_TDM
-    , int8_t slot_mask
-#endif
-){
+bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask){
     /* Setup I2S peripheral */
     if (mode >= I2S_MODE_MAX){
         log_e("Invalid I2S mode selected.");
@@ -490,7 +489,7 @@ bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_c
     bool init = false;
     switch (_mode){
         case I2S_MODE_STD:
-            init = initSTD(rate, bits_cfg, ch);
+            init = initSTD(rate, bits_cfg, ch, slot_mask);
             break;
 #if SOC_I2S_SUPPORTS_TDM
         case I2S_MODE_TDM:
@@ -569,13 +568,16 @@ bool I2SClass::end(){
     return true;
 }
 
-bool I2SClass::configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch){
+bool I2SClass::configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask){
     /* Setup I2S channels */
     if (tx_chan != NULL) {
         if(tx_sample_rate == rate && tx_data_bit_width == bits_cfg && tx_slot_mode == ch){
             return true;
         }
         i2s_std_config_t i2s_config = I2S_STD_CHAN_CFG(rate, bits_cfg, ch);
+        if(slot_mask >= 0 && (i2s_std_slot_mask_t)slot_mask <= I2S_STD_SLOT_BOTH){
+            i2s_config.slot_cfg.slot_mask = (i2s_std_slot_mask_t)slot_mask;
+        }
         I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_disable(tx_chan));
         I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_reconfig_std_clock(tx_chan, &i2s_config.clk_cfg));
         tx_sample_rate = rate;

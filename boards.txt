@@ -16275,7 +16275,7 @@ m5stack-core2.build.f_cpu=240000000L
 m5stack-core2.build.flash_size=16MB
 m5stack-core2.build.flash_freq=80m
 m5stack-core2.build.flash_mode=dio
-m5stack-core2.build.boot=dio
+m5stack-core2.build.boot=qio
 m5stack-core2.build.partitions=default_16MB
 m5stack-core2.build.defines=
 
