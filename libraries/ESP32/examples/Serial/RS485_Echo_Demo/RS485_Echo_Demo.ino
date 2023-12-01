@@ -19,7 +19,7 @@
 #define RS485_TX_PIN 5
 #define RS485_RTS_PIN 37
 
-HardwareSerial RS485(2);
+#define RS485 Serial1
 
 void setup() {
   Serial.begin(9600);
