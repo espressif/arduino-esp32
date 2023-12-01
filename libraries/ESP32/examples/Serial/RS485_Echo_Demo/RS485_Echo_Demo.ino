@@ -26,6 +26,7 @@ void setup() {
   while(!Serial) { delay(10); }
 
   RS485.begin(9600, SERIAL_8N1, RS485_RX_PIN, RS485_TX_PIN);
+  while(!RS485) { delay(10); }
   if(!RS485.setPins(-1, -1, -1, RS485_RTS_PIN)){
     Serial.print("Failed to set RS485 pins");
   }
