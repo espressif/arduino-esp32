@@ -1,4 +1,5 @@
 #include "USBMIDI.h"
+#if SOC_USB_OTG_SUPPORTED
 
 #if CONFIG_TINYUSB_MIDI_ENABLED
 
@@ -137,4 +138,5 @@ size_t USBMIDI::write(uint8_t c) {
     return tud_midi_packet_write((uint8_t *)&packet);
 }
 
-#endif // CONFIG_TINYUSB_MIDI_ENABLED
+#endif /* CONFIG_TINYUSB_MIDI_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

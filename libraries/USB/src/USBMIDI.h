@@ -1,4 +1,5 @@
-
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
 #include "esp32-hal-tinyusb.h"
 #include "sdkconfig.h"
 
@@ -32,9 +33,8 @@ public:
     void begin(void);
     void end(void);
 
-    //////////////////////////
-    ///// User-level API /////
-    //
+    /* User-level API */
+
     // Note On
     void noteOn(uint8_t note, uint8_t velocity = 0, uint8_t channel = 1);
     // Note Off
@@ -54,19 +54,18 @@ public:
     // Pitch Bend Change [-1.0,0,1.0]
     void pitchBend(double pitchBendValue, uint8_t channel = 1);
 
-    //////////////////////////////////
-    ///// USB MIDI 1.0 interface /////
-    //
+    /* USB MIDI 1.0 interface */
+
     // Attempt to read a USB MIDI packet from the USB Bus
     bool readPacket(midiEventPacket_t *packet);
     // Attempt to write a USB MIDI packet to the USB Bus
     bool writePacket(midiEventPacket_t *packet);
 
-    /////////////////////////////////////
-    ///// Serial MIDI 1.0 interface /////
-    //
+    /* Serial MIDI 1.0 interface */
+
     // Write a Serial MIDI byte (status or data) to the USB Bus
     size_t write(uint8_t c);
 };
 
-#endif // CONFIG_TINYUSB_MIDI_ENABLED
+#endif /* CONFIG_TINYUSB_MIDI_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */
