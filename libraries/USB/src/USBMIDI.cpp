@@ -6,6 +6,9 @@
 #include "Arduino.h"
 #include "esp32-hal-tinyusb.h"
 
+// Default Cable Number (for simplified APIs that do not expose this)
+#define DEFAULT_CN 0
+
 static bool tinyusb_midi_descriptor_loaded = false;
 static bool tinyusb_midi_interface_enabled = false;
 
@@ -126,9 +129,6 @@ bool USBMIDI::readPacket(midiEventPacket_t *packet) {
 bool USBMIDI::writePacket(midiEventPacket_t *packet) {
     return tud_midi_packet_write((uint8_t *)packet);
 }
-
-// Default Cable Number (for simplified APIs that do not expose this)
-#define DEFAULT_CN 0
 
 size_t USBMIDI::write(uint8_t c) {
     // MIDI_CIN_1BYTE_DATA => Verbatim MIDI byte-stream copy
