@@ -23,7 +23,7 @@
 
 void setup() {
   Serial.begin(9600);
-  delay(2000);
+  while(!Serial) { delay(10); }
 
   RS485.begin(9600, SERIAL_8N1, RS485_RX_PIN, RS485_TX_PIN);
   if(!RS485.setPins(-1, -1, -1, RS485_RTS_PIN)){
