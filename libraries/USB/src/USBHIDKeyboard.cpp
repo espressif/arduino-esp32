@@ -33,7 +33,7 @@ static const uint8_t report_descriptor[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_REPORT_ID_KEYBOARD))
 };
 
-USBHIDKeyboard::USBHIDKeyboard(): hid(){
+USBHIDKeyboard::USBHIDKeyboard(): hid(HID_ITF_PROTOCOL_KEYBOARD), shiftKeyReports(true){
     static bool initialized = false;
     if(!initialized){
         initialized = true;
@@ -76,6 +76,11 @@ void USBHIDKeyboard::sendReport(KeyReport* keys)
     report.modifier = keys->modifiers;
     memcpy(report.keycode, keys->keys, 6);
     hid.SendReport(HID_REPORT_ID_KEYBOARD, &report, sizeof(report));
+}
+
+void USBHIDKeyboard::setShiftKeyReports(bool set)
+{
+    shiftKeyReports = set;
 }
 
 #define SHIFT 0x80
@@ -283,7 +288,12 @@ size_t USBHIDKeyboard::press(uint8_t k)
             return 0;
         }
         if (k & 0x80) {                     // it's a capital letter or other character reached with shift
-            _keyReport.modifiers |= 0x02;   // the left shift modifier
+            // At boot, some PCs need a separate report with the shift key down like a real keyboard.
+            if (shiftKeyReports) {
+                pressRaw(HID_KEY_SHIFT_LEFT);
+            } else {
+                _keyReport.modifiers |= 0x02;   // the left shift modifier
+            }
             k &= 0x7F;
         }
     }
@@ -306,8 +316,13 @@ size_t USBHIDKeyboard::release(uint8_t k)
             return 0;
         }
         if (k & 0x80) {                         // it's a capital letter or other character reached with shift
-            _keyReport.modifiers &= ~(0x02);    // the left shift modifier
-            k &= 0x7F;
+            if (shiftKeyReports) {
+                releaseRaw(k & 0x7F);           // Release key without shift modifier
+                k = HID_KEY_SHIFT_LEFT;         // Below, release shift modifier
+            } else {
+                _keyReport.modifiers &= ~(0x02);    // the left shift modifier
+                k &= 0x7F;
+            }
         }
     }
     return releaseRaw(k);
