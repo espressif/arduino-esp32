@@ -47,7 +47,7 @@ jobs:
 
       - name: Check if build.board is uppercase
         run: |
-          board_name=$(echo "espressif:pltf:esp32" | awk -F':' '{print $NF}')
+          board_name=$(echo ${{ matrix.fqbn }} | awk -F':' '{print $NF}')
           if grep -q "^$board_name.build.board=[A-Z0-9_]*$" boards.txt; then
             echo "$board_name.build.board is valid.";
           else
