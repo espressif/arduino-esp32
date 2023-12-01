@@ -7,16 +7,6 @@
 
 #pragma once
 
-// Patch MIDI definition bug pending update/pull from upstream tinyusb repo.
-// See also:
-//            - https://github.com/hathach/tinyusb/pull/1920
-//            - https://github.com/espressif/arduino-esp32/pull/8117
-//
-#undef MIDI_CIN_NOTE_ON
-#define MIDI_CIN_NOTE_ON 9
-#undef MIDI_CIN_NOTE_OFF
-#define MIDI_CIN_NOTE_OFF 8
-
 #define MIDI_EP_HEADER_CN_GET(x) (x >> 4)
 #define MIDI_EP_HEADER_CIN_GET(x) ((midi_code_index_number_t)((x)&0xF))
 
