@@ -11,7 +11,6 @@
 #define ETH_MDIO_PIN        18
 #define ETH_POWER_PIN       17
 #define ETH_CLK_MODE        ETH_CLOCK_GPIO0_IN
-#define ETH_MAC_FROM_EFUSE  1
 
 static bool eth_connected = false;
 
@@ -74,7 +73,7 @@ void setup()
 {
   Serial.begin(115200);
   WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
-  ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE, ETH_MAC_FROM_EFUSE);
+  ETH.begin(ETH_TYPE, ETH_ADDR, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_POWER_PIN, ETH_CLK_MODE);
 }
 
 
