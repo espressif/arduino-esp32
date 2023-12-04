@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "USB.h"
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if SOC_USB_SERIAL_JTAG_SUPPORTED
 
 #include "esp32-hal.h"
+#include "esp32-hal-periman.h"
 #include "HWCDC.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
@@ -22,16 +23,20 @@
 #include "freertos/ringbuf.h"
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
+#include "soc/io_mux_reg.h"
+#pragma GCC diagnostic ignored "-Wvolatile"
 #include "hal/usb_serial_jtag_ll.h"
+#pragma GCC diagnostic warning "-Wvolatile"
+#include "rom/ets_sys.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 
 static RingbufHandle_t tx_ring_buf = NULL;
-static xQueueHandle rx_queue = NULL;
-static uint8_t rx_data_buf[64];
+static QueueHandle_t rx_queue = NULL;
+static uint8_t rx_data_buf[64] = {0};
 static intr_handle_t intr_handle = NULL;
 static volatile bool initial_empty = false;
-static xSemaphoreHandle tx_lock = NULL;
+static SemaphoreHandle_t tx_lock = NULL;
 
 // workaround for when USB CDC is not connected
 static uint32_t tx_timeout_ms = 0;
@@ -168,14 +173,45 @@ void HWCDC::onEvent(arduino_hw_cdc_event_t event, esp_event_handler_t callback){
     arduino_hw_cdc_event_handler_register_with(ARDUINO_HW_CDC_EVENTS, event, callback, this);
 }
 
+bool HWCDC::deinit(void * busptr) 
+{
+    // avoid any recursion issue with Peripheral Manager perimanSetPinBus() call
+    static bool running = false;
+    if (running) return true;
+    running = true; 
+    // Setting USB D+ D- pins
+    bool retCode = true;
+    retCode &= perimanClearPinBus(USB_DM_GPIO_NUM);
+    retCode &= perimanClearPinBus(USB_DP_GPIO_NUM);
+    if (retCode) {
+        // Force the host to re-enumerate (BUS_RESET)
+        pinMode(USB_DM_GPIO_NUM, OUTPUT_OPEN_DRAIN);
+        pinMode(USB_DP_GPIO_NUM, OUTPUT_OPEN_DRAIN);
+        digitalWrite(USB_DM_GPIO_NUM, LOW);
+        digitalWrite(USB_DP_GPIO_NUM, LOW);
+    }
+    // release the flag
+    running = false;
+    return retCode;
+}
+
 void HWCDC::begin(unsigned long baud)
 {
     if(tx_lock == NULL) {
         tx_lock = xSemaphoreCreateMutex();
     }
-    setRxBufferSize(256);//default if not preset
-    setTxBufferSize(256);//default if not preset
-
+    //RX Buffer default has 256 bytes if not preset
+    if(rx_queue == NULL) {
+        if (!setRxBufferSize(256)) {
+            log_e("HW CDC RX Buffer error");
+        }
+    }
+    //TX Buffer default has 256 bytes if not preset
+    if (tx_ring_buf == NULL) {
+        if (!setTxBufferSize(256)) {
+            log_e("HW CDC TX Buffer error");
+        }    
+    }
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
@@ -184,6 +220,14 @@ void HWCDC::begin(unsigned long baud)
         end();
         return;
     }
+    if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit) && perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit)) {
+        // Setting USB D+ D- pins
+        perimanSetPinBus(USB_DM_GPIO_NUM, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1);
+        perimanSetPinBus(USB_DP_GPIO_NUM, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1);
+    } else {
+        log_e("Serial JTAG Pins can't be set into Peripheral Manager.");
+    }
+
     usb_serial_jtag_ll_txfifo_flush();
 }
 
@@ -195,6 +239,7 @@ void HWCDC::end()
     intr_handle = NULL;
     if(tx_lock != NULL) {
         vSemaphoreDelete(tx_lock);
+        tx_lock = NULL;
     }
     setRxBufferSize(0);
     setTxBufferSize(0);
@@ -202,6 +247,7 @@ void HWCDC::end()
         esp_event_loop_delete(arduino_hw_cdc_event_loop_handle);
         arduino_hw_cdc_event_loop_handle = NULL;
     }
+    HWCDC::deinit(this);
 }
 
 void HWCDC::setTxTimeoutMs(uint32_t timeout){
@@ -217,10 +263,10 @@ void HWCDC::setTxTimeoutMs(uint32_t timeout){
 
 size_t HWCDC::setTxBufferSize(size_t tx_queue_len){
     if(tx_ring_buf){
-        if(!tx_queue_len){
-            vRingbufferDelete(tx_ring_buf);
-            tx_ring_buf = NULL;
-        }
+        vRingbufferDelete(tx_ring_buf);
+        tx_ring_buf = NULL;
+    }
+    if(!tx_queue_len){
         return 0;
     }
     tx_ring_buf = xRingbufferCreate(tx_queue_len, RINGBUF_TYPE_BYTEBUF);
@@ -318,18 +364,15 @@ void HWCDC::flush(void)
 
 size_t HWCDC::setRxBufferSize(size_t rx_queue_len){
     if(rx_queue){
-        if(!rx_queue_len){
-            vQueueDelete(rx_queue);
-            rx_queue = NULL;
-        }
+        vQueueDelete(rx_queue);
+        rx_queue = NULL;
+    }
+    if(!rx_queue_len){
         return 0;
     }
     rx_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
     if(!rx_queue){
         return 0;
-    }
-    if(!tx_ring_buf){
-        tx_ring_buf = xRingbufferCreate(rx_queue_len, RINGBUF_TYPE_BYTEBUF);
     }
     return rx_queue_len;
 }
@@ -393,12 +436,9 @@ void HWCDC::setDebugOutput(bool en)
     }
 }
 
-#if ARDUINO_USB_MODE
-#if ARDUINO_USB_CDC_ON_BOOT//Serial used for USB CDC
-HWCDC Serial;
-#else
-HWCDC USBSerial;
-#endif
+#if ARDUINO_USB_MODE  // Hardware JTAG CDC selected
+// USBSerial is always available to be used
+HWCDC HWCDCSerial;
 #endif
 
-#endif /* CONFIG_TINYUSB_CDC_ENABLED */
+#endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */

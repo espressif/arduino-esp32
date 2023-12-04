@@ -300,6 +300,14 @@ bool FS::rmdir(const String &path)
     return rmdir(path.c_str());
 }
 
+const char * FS::mountpoint()
+{
+    if (!_impl) {
+        return NULL;
+    }
+    return _impl->mountpoint();
+}
+
 
 void FSImpl::mountpoint(const char * mp)
 {

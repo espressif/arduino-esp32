@@ -92,7 +92,7 @@ void TaskBlink(void *pvParameters){  // This is a task.
 void TaskAnalogRead(void *pvParameters){  // This is a task.
   (void) pvParameters;
   // Check if the given analog pin is usable - if not - delete this task
-  if(!adcAttachPin(ANALOG_INPUT_PIN)){
+  if(digitalPinToAnalogChannel(ANALOG_INPUT_PIN) == -1){
     Serial.printf("TaskAnalogRead cannot work because the given pin %d cannot be used for ADC - the task will delete itself.\n", ANALOG_INPUT_PIN);
     analog_read_task_handle = NULL; // Prevent calling vTaskDelete on non-existing task
     vTaskDelete(NULL); // Delete this task

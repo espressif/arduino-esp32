@@ -26,7 +26,6 @@
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
 
-extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -42,8 +41,13 @@ extern "C" {
 #include "lwip/dns.h"
 #include <esp_smartconfig.h>
 #include <esp_netif.h>
+#include "esp_mac.h"
+
+#if __has_include ("esp_eap_client.h")
+#include "esp_eap_client.h"
+#else
 #include "esp_wpa2.h"
-}
+#endif
 
 // -----------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------- Private functions ------------------------------------------------
@@ -119,7 +123,7 @@ wifi_auth_mode_t WiFiSTAClass::_minSecurity = WIFI_AUTH_WPA2_PSK;
 wifi_scan_method_t WiFiSTAClass::_scanMethod = WIFI_FAST_SCAN;
 wifi_sort_method_t WiFiSTAClass::_sortMethod = WIFI_CONNECT_AP_BY_SIGNAL;
 
-static wl_status_t _sta_status = WL_NO_SHIELD;
+static wl_status_t _sta_status = WL_STOPPED;
 static EventGroupHandle_t _sta_status_group = NULL;
 
 void WiFiSTAClass::_setStatus(wl_status_t status)
@@ -192,19 +196,40 @@ wl_status_t WiFiSTAClass::begin(const char* wpa2_ssid, wpa2_auth_method_t method
     }
 
     if(ca_pem) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_ca_cert((uint8_t *)ca_pem, strlen(ca_pem));
+#else
         esp_wifi_sta_wpa2_ent_set_ca_cert((uint8_t *)ca_pem, strlen(ca_pem));
+#endif
     }
 
     if(client_crt) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_certificate_and_key((uint8_t *)client_crt, strlen(client_crt), (uint8_t *)client_key, strlen(client_key), NULL, 0);
+#else
         esp_wifi_sta_wpa2_ent_set_cert_key((uint8_t *)client_crt, strlen(client_crt), (uint8_t *)client_key, strlen(client_key), NULL, 0);
+#endif
     }
 
+#if __has_include ("esp_eap_client.h")
+    esp_eap_client_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
+#else
     esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
+#endif
     if(method == WPA2_AUTH_PEAP || method == WPA2_AUTH_TTLS) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
+        esp_eap_client_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
+#else
         esp_wifi_sta_wpa2_ent_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
         esp_wifi_sta_wpa2_ent_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
+#endif
     }
+#if __has_include ("esp_eap_client.h")
+    esp_wifi_sta_enterprise_enable(); //set config settings to enable function
+#else
     esp_wifi_sta_wpa2_ent_enable(); //set config settings to enable function
+#endif
     WiFi.begin(wpa2_ssid); //connect to wifi
 
     return status();
@@ -348,6 +373,7 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
     wifi_sta_config(&conf);
 
     if(WiFi.getMode() & WIFI_MODE_STA){
+        _useStaticIp = false;
         if(eraseap){
             if(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf)){
                 log_e("clear config failed!");
@@ -364,6 +390,22 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
     }
 
     return false;
+}
+
+/**
+ * @brief  Reset WiFi settings in NVS to default values.
+ * @return true if erase succeeded
+ * @note: Resets SSID, password, protocol, mode, etc.
+ * These settings are maintained by WiFi driver in IDF.
+ * WiFi driver must be initialized.
+ */
+bool WiFiSTAClass::eraseAP(void) {
+    if(WiFi.getMode()==WIFI_MODE_NULL) {
+        if(!WiFi.enableSTA(true))
+            return false;
+    }
+
+    return esp_wifi_restore()==ESP_OK;
 }
 
 /**
@@ -386,6 +428,39 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
     	err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
     }
     _useStaticIp = err == ESP_OK;
+    return err == ESP_OK;
+}
+
+/**
+ * Sets the working bandwidth of the STA mode
+ * @param m wifi_bandwidth_t
+ */
+bool WiFiSTAClass::bandwidth(wifi_bandwidth_t bandwidth) {
+    if(!WiFi.enableSTA(true)) {
+        log_e("STA enable failed!");
+        return false;
+    }
+
+    esp_err_t err;
+    err = esp_wifi_set_bandwidth((wifi_interface_t)ESP_IF_WIFI_STA, bandwidth);
+    if(err){
+        log_e("Could not set STA bandwidth!");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Change DNS server for static IP configuration
+ * @param dns1       Static DNS server 1
+ * @param dns2       Static DNS server 2 (optional)
+ */
+bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL)
+        return false;
+    esp_err_t err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
     return err == ESP_OK;
 }
 
@@ -675,14 +750,23 @@ String WiFiSTAClass::psk() const
  * Return the current bssid / mac associated with the network if configured
  * @return bssid uint8_t *
  */
-uint8_t* WiFiSTAClass::BSSID(void)
+uint8_t* WiFiSTAClass::BSSID(uint8_t* buff)
 {
     static uint8_t bssid[6];
     wifi_ap_record_t info;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return NULL;
     }
-    if(!esp_wifi_sta_get_ap_info(&info)) {
+    esp_err_t err = esp_wifi_sta_get_ap_info(&info);
+    if (buff != NULL) {
+        if(err) {
+          memset(buff, 0, 6);
+        } else {
+          memcpy(buff, info.bssid, 6);
+        }
+        return  buff;
+    }
+    if(!err) {
         memcpy(bssid, info.bssid, 6);
         return reinterpret_cast<uint8_t*>(bssid);
     }
