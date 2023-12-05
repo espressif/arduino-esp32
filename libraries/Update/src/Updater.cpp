@@ -277,7 +277,7 @@ bool UpdateClass::setMD5(const char * expected_md5){
     {
         return false;
     }
-    _target_md5 = expected_md5;
+    _target_md5 = expected_md5.toLowerCase();
     return true;
 }
 
