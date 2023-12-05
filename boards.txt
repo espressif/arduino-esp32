@@ -17110,7 +17110,7 @@ heltec_wifi_kit_32.build.target=esp32
 heltec_wifi_kit_32.build.mcu=esp32
 heltec_wifi_kit_32.build.core=esp32
 heltec_wifi_kit_32.build.variant=heltec_wifi_kit_32
-heltec_wifi_kit_32.build.board=heltec_wifi_kit_32
+heltec_wifi_kit_32.build.board=HELTEC_WIFI_KIT_32
 
 heltec_wifi_kit_32.build.f_cpu=240000000L
 heltec_wifi_kit_32.build.flash_size=4MB
@@ -17199,7 +17199,7 @@ heltec_wifi_kit_32_V3.build.target=esp32s3
 heltec_wifi_kit_32_V3.build.mcu=esp32s3
 heltec_wifi_kit_32_V3.build.core=esp32
 heltec_wifi_kit_32_V3.build.variant=heltec_wifi_kit_32_V3
-heltec_wifi_kit_32_V3.build.board=heltec_wifi_kit_32_V3
+heltec_wifi_kit_32_V3.build.board=HELTEC_WIFI_KIT_32_V3
 
 heltec_wifi_kit_32_V3.build.usb_mode=1
 heltec_wifi_kit_32_V3.build.cdc_on_boot=0
@@ -17298,7 +17298,7 @@ heltec_wifi_lora_32.build.target=esp32
 heltec_wifi_lora_32.build.mcu=esp32
 heltec_wifi_lora_32.build.core=esp32
 heltec_wifi_lora_32.build.variant=heltec_wifi_lora_32
-heltec_wifi_lora_32.build.board=heltec_wifi_lora_32
+heltec_wifi_lora_32.build.board=HELTEC_WIFI_LORA_32
 
 heltec_wifi_lora_32.build.f_cpu=240000000L
 heltec_wifi_lora_32.build.flash_size=4MB
@@ -17435,7 +17435,7 @@ heltec_wifi_lora_32_V2.build.target=esp32
 heltec_wifi_lora_32_V2.build.mcu=esp32
 heltec_wifi_lora_32_V2.build.core=esp32
 heltec_wifi_lora_32_V2.build.variant=heltec_wifi_lora_32_V2
-heltec_wifi_lora_32_V2.build.board=heltec_wifi_lora_32_V2
+heltec_wifi_lora_32_V2.build.board=HELTEC_WIFI_LORA_32_V2
 
 heltec_wifi_lora_32_V2.build.f_cpu=240000000L
 heltec_wifi_lora_32_V2.build.flash_size=8MB
@@ -17551,7 +17551,7 @@ heltec_wifi_lora_32_V3.build.target=esp32s3
 heltec_wifi_lora_32_V3.build.mcu=esp32s3
 heltec_wifi_lora_32_V3.build.core=esp32
 heltec_wifi_lora_32_V3.build.variant=heltec_wifi_lora_32_V3
-heltec_wifi_lora_32_V3.build.board=heltec_wifi_32_lora_V3
+heltec_wifi_lora_32_V3.build.board=HELTEC_WIFI_LORA_32_V3
 
 heltec_wifi_lora_32_V3.build.usb_mode=1
 heltec_wifi_lora_32_V3.build.cdc_on_boot=0
@@ -17693,7 +17693,7 @@ heltec_wireless_stick.build.target=esp32
 heltec_wireless_stick.build.mcu=esp32
 heltec_wireless_stick.build.core=esp32
 heltec_wireless_stick.build.variant=heltec_wireless_stick
-heltec_wireless_stick.build.board=heltec_wireless_stick
+heltec_wireless_stick.build.board=HELTEC_WIRELESS_STICK
 
 heltec_wireless_stick.build.f_cpu=240000000L
 heltec_wireless_stick.build.flash_size=8MB
@@ -17806,7 +17806,7 @@ heltec_wireless_stick_lite.build.target=esp32
 heltec_wireless_stick_lite.build.mcu=esp32
 heltec_wireless_stick_lite.build.core=esp32
 heltec_wireless_stick_lite.build.variant=heltec_wireless_stick_lite
-heltec_wireless_stick_lite.build.board=heltec_wireless_stick_LITE
+heltec_wireless_stick_lite.build.board=HELTEC_WIRELESS_STICK_LITE
 
 heltec_wireless_stick_lite.build.f_cpu=240000000L
 heltec_wireless_stick_lite.build.flash_size=4MB
