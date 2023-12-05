@@ -73,6 +73,7 @@ void onButton(){
   delay(100);
 }
 
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
 void WiFiEvent(WiFiEvent_t event){
     switch(event) {
         case ARDUINO_EVENT_WIFI_AP_START:
@@ -112,7 +113,7 @@ void WiFiEvent(WiFiEvent_t event){
 void setup() {
     Serial.begin(115200);
     pinMode(0, INPUT_PULLUP);
-    WiFi.onEvent(WiFiEvent);
+    WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
     Serial.print("ESP32 SDK: ");
     Serial.println(ESP.getSdkVersion());
     Serial.println("Press the button to select the next mode");
