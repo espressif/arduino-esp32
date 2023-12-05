@@ -430,6 +430,8 @@ esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 esp32c6.menu.CPUFreq.160=160MHz (WiFi)
 esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32c6.menu.CPUFreq.120=120MHz (WiFi)
+esp32c6.menu.CPUFreq.120.build.f_cpu=120000000L
 esp32c6.menu.CPUFreq.80=80MHz (WiFi)
 esp32c6.menu.CPUFreq.80.build.f_cpu=80000000L
 esp32c6.menu.CPUFreq.40=40MHz
