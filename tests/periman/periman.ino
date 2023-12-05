@@ -288,6 +288,7 @@ void setup() {
   dac_test();
   touch_test();
 
+  // Print to Serial1 to avoid buffering issues
   Serial1.println("Peripheral Manager test done");
 }
 
