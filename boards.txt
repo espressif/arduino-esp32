@@ -26049,6 +26049,7 @@ nano_nora.tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{seri
 nano_nora.tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset erase_flash
 
 nano_nora.programmer.default=esptool
+nano_nora.debug.executable=
 
 nano_nora.menu.PartitionScheme.default=With FAT partition (default)
 nano_nora.menu.PartitionScheme.spiffs=With SPIFFS partition (advanced)
@@ -26061,6 +26062,7 @@ nano_nora.menu.PinNumbers.byGPIONumber.build.disable_pin_remap=-DBOARD_USES_HW_G
 nano_nora.menu.USBMode.default=Normal mode (TinyUSB)
 nano_nora.menu.USBMode.hwcdc=Debug mode (Hardware CDC)
 nano_nora.menu.USBMode.hwcdc.build.usb_mode=1
+nano_nora.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.elf
 
 ##############################################################
 
