@@ -100,7 +100,9 @@ void teardown_test(void) {
 }
 
 /* Test functions */
-/* These functions must only init the peripheral on the same pins and update "current_test" */
+/* These functions must call "setup_test" and "teardown_test" and set "test_executed" to true
+ * if the test is executed
+ */
 
 void gpio_test(void) {
   setup_test("GPIO");
