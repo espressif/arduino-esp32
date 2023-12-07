@@ -2,7 +2,7 @@
 Welcome to Arduino Core's documentation
 #######################################
 
-Here you will find all the relevant information about the project based on the {IDF_TARGET_NAME}.
+Here you will find all the relevant information about the project based on the Arduino Core ESP32.
 
 .. note::
    This is a work in progress documentation and we will appreciate your help! We are looking for contributors! 

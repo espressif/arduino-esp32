@@ -1,16 +1,15 @@
 name: Documentation Deploy CI
 
+// Deploy to production on each merge to master
 on:
-  workflow_dispatch:
-  release:
-    types:
-      - created
+  push:
+    branches:
+      - master
     paths:
     - 'docs/**'
     - '.github/workflows/docs_deploy.yml'
 
 jobs:
-
   deploy-preview-docs:
     name: Deploy Documentation
     runs-on: ubuntu-22.04
@@ -26,8 +25,16 @@ jobs:
         python-version: '3.10'
     - name: Deploy Preview
       env:
+        # Deploy to production server
+        # DOCS_BUILD_DIR: "./docs/_build/"
+        # DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_DEPLOY_KEY }}
+        # DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_SERVER }}
+        # DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_SERVER_USER }}
+        # DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PATH }}
+        # DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_URL }}
+        # Deploy to preview server
         DOCS_BUILD_DIR: "./docs/_build/"
-        DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_DEPLOY_KEY }}
+        DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_PREV_DEPLOY_KEY }}
         DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_PREV_SERVER }}
         DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_PREV_SERVER_USER }}
         DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PREV_PATH }}
