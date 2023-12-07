@@ -129,4 +129,4 @@ In the table the results are in order ``BEFORE -> AFTER``.
    :class: no-scaled-link
 
 .. _LIBRARIES_TEST.md: https://github.com/espressif/arduino-esp32/blob/gh-pages/LIBRARIES_TEST.md
-.. _lib.json: https://github.com/espressif/arduino-esp32/.github/workflow/lib.json
+.. _lib.json: https://github.com/espressif/arduino-esp32/blob/master/.github/workflows/lib.json
