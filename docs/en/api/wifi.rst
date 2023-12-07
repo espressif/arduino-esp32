@@ -50,6 +50,102 @@ Common API
 
 Here are the common APIs that are used for both modes, AP and STA.
 
+onEvent (and removeEvent)
+*************************
+
+Registers a caller-supplied function to be called when WiFi events
+occur. Several forms are available.
+
+Function pointer callback taking the event ID:
+
+.. code-block:: arduino
+
+    typedef void (*WiFiEventCb)(arduino_event_id_t);
+    wifi_event_id_t onEvent(WiFiEventCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
+
+Function pointer callback taking an event-ID-and-info struct:
+
+.. code-block:: arduino
+
+    typedef struct{
+        arduino_event_id_t event_id;
+        arduino_event_info_t event_info;
+    } arduino_event_t;
+
+    typedef void (*WiFiEventSysCb)(arduino_event_t *);
+    wifi_event_id_t onEvent(WiFiEventSysCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
+
+Callback using ``std::function`` taking event ID and info separately:
+
+.. code-block:: arduino
+
+    typedef std::function<void(arduino_event_id_t, arduino_event_info_t)> WiFiEventFuncCb;
+    wifi_event_id_t onEvent(WiFiEventFuncCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
+
+A similar set of functions are available to remove callbacks:
+
+.. code-block:: arduino
+
+    void removeEvent(WiFiEventCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
+    void removeEvent(WiFiEventSysCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
+    void removeEvent(wifi_event_id_t = ARDUINO_EVENT_MAX);
+
+In all cases, the subscribing function accepts an optional event type to
+invoke the callback only for that specific event; with the default
+``ARDUINO_EVENT_MAX``, the callback will be invoked for all WiFi events.
+
+Any callback function is given the event type in a parameter.
+Some of the possible callback function formats also take an
+``arduino_event_info_t`` (or use ``arduino_event_t`` which includes both
+ID and info) which is a union of structs with additional information
+about different event types.
+
+See
+`WiFiGeneric.h <https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/src/WiFiGeneric.h>`_
+for the list of event types and "info" substructures, and also see a full
+example of event handling: `events example`_.
+
+.. warning::
+
+    Event callback functions are invoked on a separate
+    `thread <https://en.wikipedia.org/wiki/Thread_(computing)>`_
+    (`FreeRTOS task <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/freertos_idf.html#tasks>`_)
+    independent of the main application thread that runs ``setup()`` and
+    ``loop()``. Callback functions must therefore be
+    `thread-safe <https://en.wikipedia.org/wiki/Thread_safety>`_;
+    they must not access shared/global variables directly without locking,
+    and must only call similarly thread-safe functions.
+
+    Some core operations like ``Serial.print()`` are thread-safe but many
+    functions are not. Notably, ``WiFi.onEvent()`` and ``WiFi.removeEvent()``
+    are not thread-safe and should never be invoked from a callback thread.
+
+setHostname (and getHostname)
+*****************************
+
+Sets the name the DHCP client uses to identify itself. In a typical network
+setup this will be the name that shows up in the Wi-Fi router's device list.
+The hostname must be no longer than 32 characters.
+
+.. code-block:: arduino
+
+    setHostname(const char *hostname);
+
+If the hostname is never specified, a default one will be assigned based
+on the chip type and MAC address. The current hostname (default or custom)
+may be retrieved:
+
+.. code-block:: arduino
+
+    const char *getHostname();
+
+.. warning::
+
+    The ``setHostname()`` function must be called BEFORE WiFi is started with
+    ``WiFi.begin()``, ``WiFi.softAP()``, ``WiFi.mode()``, or ``WiFi.run()``.
+    To change the name, reset WiFi with ``WiFi.mode(WIFI_MODE_NULL)``,
+    then proceed with ``WiFi.setHostname(...)`` and restart WiFi from scratch.
+
 useStaticBuffers
 ****************
 
@@ -552,6 +648,8 @@ To see how to use the ``WiFiScan``, take a look at the ``WiFiScan.ino`` example 
 Examples
 --------
 
+`Complete list of WiFi examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi/examples>`_.
+
 .. _ap example:
 
 Wi-Fi AP Example
@@ -568,5 +666,10 @@ Wi-Fi STA Example
 .. literalinclude:: ../../../libraries/WiFi/examples/WiFiClient/WiFiClient.ino
     :language: arduino
 
-References
-----------
+.. _events example:
+
+Wi-Fi Events Example
+********************
+
+.. literalinclude:: ../../../libraries/WiFi/examples/WiFiClientEvents/WiFiClientEvents.ino
+    :language: arduino

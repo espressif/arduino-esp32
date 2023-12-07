@@ -22,6 +22,9 @@ The ESP32 is divided by family:
     * Wi-Fi only
 * ESP32-C
     * Wi-Fi and BLE 5
+    * IEEE 802.15.4 (only in ESP32-C6)
+* ESP32-H
+    * BLE and IEEE 802.15.4  
 
 For each family, we have SoC variants with some differentiation. The differences are more about the embedded flash and its size and the number of the cores (dual or single).
 
@@ -70,6 +73,9 @@ Espressif
     ESP32-DevKitC <ESP32-DevKitC-1>
     ESP32-S2-Saola-1 <ESP32-S2-Saola-1>
     ESP32-C3-DevKitM-1 <ESP32-C3-DevKitM-1>
+
+.. note:: 
+   Only a few development boards are described on this documentation page. For more information about other Espressif development boards please refer to the `Espressif website <https://www.espressif.com/en/products/devkits>`_.
 
 Third Party
 -----------

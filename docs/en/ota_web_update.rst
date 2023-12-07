@@ -8,6 +8,9 @@ OTAWebUpdate is done with a web browser that can be useful in the following typi
 - after deployment if user is unable to expose Firmware for OTA from external update server
 - provide updates after deployment to small quantity of modules when setting an update server is not practicable
 
+For more information about the update process, please refer to the `OTA API reference <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/ota.html>`_
+section of the ESP-IDF documentation.
+
 Requirements
 ------------
 
