@@ -36,7 +36,7 @@ jobs:
         # Update the path to include them and run.
         cd ./docs
         PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
-        PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en -t esp32 esp32s2 esp32s3 esp32c6 esp32h2
+        PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en
     - name: Archive Docs
       uses: actions/upload-artifact@v2
       with:

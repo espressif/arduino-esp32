@@ -4,16 +4,6 @@ var DOCUMENTATION_VERSIONS = {
               },
     VERSIONS: [
       { name: "latest", has_targets: true, supported_targets: [ "esp32", "esp32s2", "esp32s3", "esp32c3", "esp32h2", "esp32c6"  ] },
-      // 2.0.14
-      { name: "release-3.0.0-alpha1", has_targets: true, supported_targets: [ "esp32", "esp32s2", "esp32s3", "esp32c3", "esp32h2", "esp32c6"  ] },
-      // 2.0.14
-      { name: "release-3.0.0-alpha1", has_targets: true, supported_targets: [ "esp32", "esp32s2", "esp32s3", "esp32c3", "esp32h2", "esp32c6"  ] },
-      // 2.0.14
-      { name: "release-3.0.0-alpha1", has_targets: true, supported_targets: [ "esp32", "esp32s2", "esp32s3", "esp32c3", "esp32h2", "esp32c6"  ] },
-      // 2.0.14
-      { name: "release-2.0.14", has_targets: true, supported_targets: [ "esp32", "esp32s2", "esp32s3", "esp32c3" ] },
-      // 2.0.13
-      { name: "release-2.0.13", has_targets: true, supported_targets: [ "esp32", "esp32s2", "esp32s3", "esp32c3" ] },
     ],
     IDF_TARGETS: [
        { text: "ESP32", value: "esp32"},
