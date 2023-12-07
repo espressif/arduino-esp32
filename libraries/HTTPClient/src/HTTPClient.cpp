@@ -740,7 +740,7 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
         return returnError(HTTPC_ERROR_SEND_HEADER_FAILED);
     }
 
-    int buff_size = HTTP_TCP_BUFFER_SIZE;
+    int buff_size = HTTP_TCP_TX_BUFFER_SIZE;
 
     int len = size;
     int bytesWritten = 0;
@@ -749,8 +749,8 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
         len = -1;
     }
 
-    // if possible create smaller buffer then HTTP_TCP_BUFFER_SIZE
-    if((len > 0) && (len < HTTP_TCP_BUFFER_SIZE)) {
+    // if possible create smaller buffer then HTTP_TCP_TX_BUFFER_SIZE
+    if((len > 0) && (len < buff_size)) {
         buff_size = len;
     }
 
@@ -843,7 +843,7 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
         }
 
     } else {
-        log_d("too less ram! need %d", HTTP_TCP_BUFFER_SIZE);
+        log_d("too less ram! need %d", buff_size);
         return returnError(HTTPC_ERROR_TOO_LESS_RAM);
     }
 
@@ -933,7 +933,7 @@ int HTTPClient::writeToStream(Stream * stream)
             // read size of chunk
             len = (uint32_t) strtol((const char *) chunkHeader.c_str(), NULL, 16);
             size += len;
-            log_d(" read chunk len: %d", len);
+            log_v(" read chunk len: %d", len);
 
             // data left?
             if(len > 0) {
@@ -1081,7 +1081,7 @@ void HTTPClient::collectHeaders(const char* headerKeys[], const size_t headerKey
 String HTTPClient::header(const char* name)
 {
     for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if(_currentHeaders[i].key == name) {
+        if(_currentHeaders[i].key.equalsIgnoreCase(name)) {
             return _currentHeaders[i].value;
         }
     }
@@ -1112,7 +1112,7 @@ int HTTPClient::headers()
 bool HTTPClient::hasHeader(const char* name)
 {
     for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if((_currentHeaders[i].key == name) && (_currentHeaders[i].value.length() > 0)) {
+        if((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0)) {
             return true;
         }
     }
@@ -1364,12 +1364,12 @@ int HTTPClient::handleHeaderResponse()
  */
 int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
 {
-    int buff_size = HTTP_TCP_BUFFER_SIZE;
+    int buff_size = HTTP_TCP_RX_BUFFER_SIZE;
     int len = size;
     int bytesWritten = 0;
 
-    // if possible create smaller buffer then HTTP_TCP_BUFFER_SIZE
-    if((len > 0) && (len < HTTP_TCP_BUFFER_SIZE)) {
+    // if possible create smaller buffer then HTTP_TCP_RX_BUFFER_SIZE
+    if((len > 0) && (len < buff_size)) {
         buff_size = len;
     }
 
@@ -1381,7 +1381,10 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
         while(connected() && (len > 0 || len == -1)) {
 
             // get available data size
-            size_t sizeAvailable = _client->available();
+            size_t sizeAvailable = buff_size;
+            if(len < 0){
+                sizeAvailable = _client->available();
+            }
 
             if(sizeAvailable) {
 
@@ -1457,7 +1460,7 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
 
         free(buff);
 
-        log_d("connection closed or file end (written: %d).", bytesWritten);
+        log_v("connection closed or file end (written: %d).", bytesWritten);
 
         if((size > 0) && (size != bytesWritten)) {
             log_d("bytesWritten %d and size %d mismatch!.", bytesWritten, size);
@@ -1465,7 +1468,7 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
         }
 
     } else {
-        log_w("too less ram! need %d", HTTP_TCP_BUFFER_SIZE);
+        log_w("too less ram! need %d", buff_size);
         return HTTPC_ERROR_TOO_LESS_RAM;
     }
 

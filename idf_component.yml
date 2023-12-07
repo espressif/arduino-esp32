@@ -4,7 +4,10 @@ targets:
   - esp32
   - esp32s2
   - esp32s3
+  - esp32c2
   - esp32c3
+  - esp32c6
+  - esp32h2
 tags:
   - arduino
 files:
@@ -13,9 +16,55 @@ files:
     - "variants/esp32/**/*"
     - "variants/esp32s2/**/*"
     - "variants/esp32s3/**/*"
+    - "variants/esp32c2/**/*"
     - "variants/esp32c3/**/*"
+    - "variants/esp32c6/**/*"
+    - "variants/esp32h2/**/*"
     - "libraries/**/*"
     - "CMakeLists.txt"
     - "Kconfig.projbuild"
   exclude:
     - "**/*"
+dependencies:
+  idf: ">=5.1"
+  # mdns 1.2.1 is necessary to build H2 with no WiFi
+  mdns: "1.2.1"
+  chmorgan/esp-libhelix-mp3:
+    version: "1.0.3"
+    require: public
+  espressif/esp-zboss-lib:
+    version: "^1.0.1"
+    rules:
+      - if: "target != esp32c2"
+  espressif/esp-zigbee-lib:
+    version: "^1.0.1"
+    rules:
+      - if: "target != esp32c2"
+  esp-dsp:
+    version: "^1.3.4"
+    rules:
+      - if: "target != esp32c2"
+  espressif/esp_rainmaker:
+    version: "^1.0.0"
+    rules:
+      - if: "target != esp32c2"
+  espressif/rmaker_common:
+    version: "^1.4.3"
+    rules:
+      - if: "target != esp32c2"
+  espressif/esp_insights:
+    version: "^1.0.1"
+    rules:
+      - if: "target != esp32c2"
+  espressif/qrcode:
+    version: "^0.1.0~1"
+    rules:
+      - if: "target != esp32c2"
+  joltwallet/littlefs: "^1.10.2"
+  espressif/esp-sr:
+    version: "^1.4.2"
+    rules:
+      - if: "target in [esp32s3]"
+examples:
+  - path: idf_component_examples/
+

@@ -16,16 +16,6 @@
 // This makes the code transparent to what SoC is used.
 #include "soc/soc_caps.h"
 
-// In case that the target has USB CDC and it has being selected to be enable on boot, 
-// the console output will into USB (Serial).
-// Otherwise the output will be sent to UART0 (Serial) and we have to redefine Serial0
-#ifndef ARDUINO_USB_CDC_ON_BOOT
-#define ARDUINO_USB_CDC_ON_BOOT 0
-#endif
-#if ARDUINO_USB_CDC_ON_BOOT == 0 // No USB CDC
-#define Serial0 Serial   // redefine the symbol Serial0 to the default Arduino
-#endif
-
 // This example shall use UART1 or UART2 for testing and UART0 for console messages
 // If UART0 is used for testing, it is necessary to manually send data to it, using the Serial Monitor/Terminal
 // In case that USB CDC is available, it may be used as console for messages.

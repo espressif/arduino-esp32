@@ -27,6 +27,7 @@
 #include <functional>
 #include <memory>
 #include <WiFi.h>
+#include <FS.h>
 #include "HTTP_Method.h"
 #include "Uri.h"
 
@@ -95,7 +96,7 @@ public:
 
   String uri() { return _currentUri; }
   HTTPMethod method() { return _currentMethod; }
-  virtual WiFiClient client() { return _currentClient; }
+  virtual WiFiClient & client() { return _currentClient; }
   HTTPUpload& upload() { return *_currentUpload; }
 
   String pathArg(unsigned int i); // get request path argument by number
@@ -130,6 +131,8 @@ public:
   void enableDelay(boolean value);
   void enableCORS(boolean value = true);
   void enableCrossOrigin(boolean value = true);
+  typedef std::function<String(FS &fs, const String &fName)> ETagFunction;
+  void enableETag(bool enable, ETagFunction fn = nullptr);
 
   void setContentLength(const size_t contentLength);
   void sendHeader(const String& name, const String& value, bool first = false);
@@ -145,6 +148,9 @@ public:
     _streamFileCore(file.size(), file.name(), contentType, code);
     return _currentClient.write(file);
   }
+
+  bool             _eTagEnabled = false;
+  ETagFunction     _eTagFunction = nullptr;
 
 protected:
   virtual size_t _currentClientWrite(const char* b, size_t l) { return _currentClient.write( b, l ); }

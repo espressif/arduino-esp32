@@ -46,7 +46,8 @@ while [ ! -z "$1" ]; do
     shift
 done
 
-source ${SCRIPTS_DIR}/install-arduino-ide.sh
+#source ${SCRIPTS_DIR}/install-arduino-ide.sh
+source ${SCRIPTS_DIR}/install-arduino-cli.sh
 source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
 args="-ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH"

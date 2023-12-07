@@ -2,20 +2,13 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define USB_VID 0x239A
 #define USB_PID 0x80B4
 #define USB_MANUFACTURER "Unexpected Maker"
 #define USB_PRODUCT "FeatherS2 Neo"
 #define USB_SERIAL ""
-
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        22
-#define NUM_ANALOG_INPUTS       11
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -62,6 +55,14 @@ static const uint8_t NEOPIXEL_MATRIX_DATA = 21;
 static const uint8_t NEOPIXEL_MATRIX_PWR = 4;
 
 static const uint8_t NEOPIXEL_DATA = 40;
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
+#define RGB_BUILTIN (NEOPIXEL_DATA + SOC_GPIO_PIN_COUNT)  
+#define RGB_BRIGHTNESS 64
+// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
+static const uint8_t LED_BUILTIN = RGB_BUILTIN;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+
 static const uint8_t NEOPIXEL_PWR = 39;
 
 static const uint8_t VBAT_SENSE = 2;
