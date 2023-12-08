@@ -70,8 +70,10 @@ jobs:
         DOCS_BUILD_DIR: "${CI_PROJECT_DIR}/docs/_build/"
         DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_KEY }}
         DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PATH }}
-        DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_SERVER }}
+        # DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_SERVER }}
+        DOCS_DEPLOY_SERVER: "preview-docs.espressif.com"
         DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_URL }}
+        # DOCS_DEPLOY_URL_BASE: "https://docs.espressif.com/projects/arduino-esp32"
         DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_USER }}
       run: |
         sudo apt update
