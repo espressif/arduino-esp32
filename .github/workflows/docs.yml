@@ -68,16 +68,16 @@ jobs:
         # Deploy to preview server
         
         DOCS_BUILD_DIR: "./docs/_build/"
-        DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_KEY }}
-        DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PATH }}
-        DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_SERVER }}
-        DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_URL }}
-        DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_USER }}
+        DOCS_PREVIEW_PRIVATEKEY: ${{ secrets.DOCS_KEY }}
+        DOCS_PREVIEW_PATH: ${{ secrets.DOCS_PATH }}
+        DOCS_PREVIEW_SERVER: ${{ secrets.DOCS_SERVER }}
+        DOCS_PREVIEW_URL_BASE: ${{ secrets.DOCS_URL }}
+        DOCS_PREVIEW_USER: ${{ secrets.DOCS_USER }}
       run: |
         sudo apt update
         sudo apt install python3-pip python3-setuptools
         source ./docs/utils.sh
-        add_doc_server_ssh_keys $DOCS_DEPLOY_PRIVATEKEY $DOCS_DEPLOY_SERVER $DOCS_DEPLOY_SERVER_USER
+        add_doc_server_ssh_keys $DOCS_PREVIEW_PRIVATEKEY $DOCS_PREVIEW_SERVER $DOCS_PREVIEW_USER
         export GIT_VER=$(git describe --always)
         echo "PIP install requirements..."
         pip3 install --user -r ./docs/requirements.txt
