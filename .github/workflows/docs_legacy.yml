@@ -1,0 +1,38 @@
+name: Build the Docs Legacy ReadTheDocs CI
+
+on:
+  push:
+    branches:
+    - master
+    - release/*
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs_legacy.yml'
+  pull_request:
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs_legacy.yml'
+
+jobs:
+
+  build-docs:
+    name: Build ReadTheDocs
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Build
+      run: |
+        sudo apt update
+        sudo apt install python3-pip python3-setuptools
+        # GitHub CI installs pip3 and setuptools outside the path.
+        # Update the path to include them and run.
+        PATH=/home/runner/.local/bin:$PATH pip3 install --user -r ./docs/requirements.txt
+        cd ./docs && PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" make html
