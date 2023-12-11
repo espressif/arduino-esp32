@@ -643,7 +643,7 @@ Loads all infos from a scanned wifi in to the ptr parameters.
 
     bool getNetworkInfo(uint8_t networkItem, String &ssid, uint8_t &encryptionType, int32_t &RSSI, uint8_t* &BSSID, int32_t &channel);
 
-To see how to use the ``WiFiScan``, take a look at the ``WiFiScan.ino`` example available.
+To see how to use the ``WiFiScan``, take a look at the ``WiFiScan.ino`` or ``WiFiScanAsync.ino`` example available.
 
 Examples
 --------
