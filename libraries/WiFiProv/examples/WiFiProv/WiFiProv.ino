@@ -11,13 +11,13 @@ Note: This sketch takes up a lot of space for the app and may not be able to fla
 #include "WiFiProv.h"
 #include "WiFi.h"
 
-// #define USE_SOFT_AP // Uncomment if you want to enforce using Soft AP method instead of BLE
-
-const char * pop = "abcd1234"; // Proof of possession - otherwise called a PIN - string provided by the device, entered by user in the phone app
+// #define USE_SOFT_AP // Uncomment if you want to enforce using the Soft AP method instead of BLE
+const char * pop = "abcd1234"; // Proof of possession - otherwise called a PIN - string provided by the device, entered by the user in the phone app
 const char * service_name = "PROV_123"; // Name of your device (the Espressif apps expects by default device name starting with "Prov_")
 const char * service_key = NULL; // Password used for SofAP method (NULL = no password needed)
 bool reset_provisioned = true; // When true the library will automatically delete previously provisioned data.
 
+// WARNING: SysProvEvent is called from a separate FreeRTOS task (thread)!
 void SysProvEvent(arduino_event_t *sys_event)
 {
     switch (sys_event->event_id) {

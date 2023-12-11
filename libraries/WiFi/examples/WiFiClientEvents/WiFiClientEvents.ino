@@ -41,7 +41,7 @@
 const char* ssid     = "your-ssid";
 const char* password = "your-password";
 
-
+// WARNING: This function is called from a separate FreeRTOS task (thread)!
 void WiFiEvent(WiFiEvent_t event)
 {
     Serial.printf("[WiFi-event] event: %d\n", event);
@@ -132,6 +132,7 @@ void WiFiEvent(WiFiEvent_t event)
         default: break;
     }}
 
+// WARNING: This function is called from a separate FreeRTOS task (thread)!
 void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info)
 {
     Serial.println("WiFi connected");
@@ -148,7 +149,8 @@ void setup()
 
     delay(1000);
 
-    // Examples of different ways to register wifi events
+    // Examples of different ways to register wifi events;
+    // these handlers will be called from another thread.
     WiFi.onEvent(WiFiEvent);
     WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
     WiFiEventId_t eventID = WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){

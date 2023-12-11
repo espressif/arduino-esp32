@@ -45,6 +45,8 @@ public:
     bool softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start = (uint32_t) 0);
     bool softAPdisconnect(bool wifioff = false);
 
+    bool softAPbandwidth(wifi_bandwidth_t bandwidth);
+
     uint8_t softAPgetStationNum();
 
     IPAddress softAPIP();

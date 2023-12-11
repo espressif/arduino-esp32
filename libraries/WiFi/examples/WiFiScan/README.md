@@ -6,8 +6,8 @@ This example demonstrates how to use the WiFi library to scan available WiFi net
 
 Currently this example supports the following targets.
 
-| Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- | -------- |
+| Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 | ESP32-C6 |
+| ----------------- | ----- | -------- | -------- | -------- | -------- |
 
 ## How to Use Example
 
@@ -61,4 +61,5 @@ Before creating a new issue, be sure to try the Troubleshooting and to check if 
 * ESP32 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)
 * ESP32-S2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf)
 * ESP32-C3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf)
+* ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)

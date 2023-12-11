@@ -11,8 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "sd_diskio.h"
 #include "esp_system.h"
+#include "esp32-hal-periman.h"
+
 extern "C" {
     #include "ff.h"
     #include "diskio.h"
@@ -740,7 +746,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
     card->base_path = NULL;
     card->frequency = hz;
     card->spi = spi;
-    card->ssPin = cs;
+    card->ssPin = digitalPinToGPIONumber(cs);
 
     card->supports_crc = true;
     card->type = CARD_NONE;
@@ -748,6 +754,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
 
     pinMode(card->ssPin, OUTPUT);
     digitalWrite(card->ssPin, HIGH);
+    perimanSetPinBusExtraType(card->ssPin, "SD_SS");
 
     s_cards[pdrv] = card;
 

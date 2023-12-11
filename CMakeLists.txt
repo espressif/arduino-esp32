@@ -115,6 +115,7 @@ set(LIBRARY_SRCS
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
   libraries/USB/src/USBHID.cpp
+  libraries/USB/src/USBMIDI.cpp
   libraries/USB/src/USBHIDMouse.cpp
   libraries/USB/src/USBHIDKeyboard.cpp
   libraries/USB/src/USBHIDGamepad.cpp
@@ -254,21 +255,9 @@ function(maybe_add_component component_name)
     endif()
 endfunction()
 
-maybe_add_component(esp-dsp)
-
-if(CONFIG_ESP_INSIGHTS_ENABLED)
-    maybe_add_component(esp_insights)
-endif()
-if(CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK)
-    maybe_add_component(esp_rainmaker)
-    maybe_add_component(qrcode)
-endif()
 if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
     maybe_add_component(arduino_tinyusb)
 endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
     maybe_add_component(esp_https_ota)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LITTLEFS)
-    maybe_add_component(esp_littlefs)
 endif()
