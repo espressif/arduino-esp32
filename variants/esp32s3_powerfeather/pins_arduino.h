@@ -9,12 +9,12 @@
 #define USB_PRODUCT        "ESP32-S3 PowerFeather"
 #define USB_SERIAL         ""
 
-static const uint8_t ALARM = 7;
+static const uint8_t ALARM = 21;
 static const uint8_t INT =   5;
 
 static const uint8_t LED =   46;
 static const uint8_t BTN =   0;
-static const uint8_t EN =    13;
+static const uint8_t EN =    7;
 
 static const uint8_t TX =    44;
 static const uint8_t RX =    42;
@@ -37,6 +37,8 @@ static const uint8_t A5 =    1;
 
 static const uint8_t D5 =    15;
 static const uint8_t D6 =    16;
+static const uint8_t D7 =    37;
+static const uint8_t D8 =    6;
 static const uint8_t D9 =    17;
 static const uint8_t D10 =   18;
 static const uint8_t D11 =   45;
