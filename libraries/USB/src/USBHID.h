@@ -70,7 +70,7 @@ public:
 class USBHID
 {
 public:
-    USBHID(void);
+    USBHID(hid_interface_protocol_enum_t itf_protocol = HID_ITF_PROTOCOL_NONE);
     void begin(void);
     void end(void);
     bool ready(void);

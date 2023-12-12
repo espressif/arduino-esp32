@@ -15,5 +15,5 @@ To get started with Reset Reason, you can try:
 Reset Reason
 ************
 
-.. literalinclude:: ../../../libraries/ESP32/examples/ResetReason/ResetReason.ino
+.. literalinclude:: ../../../libraries/ESP32/examples/ResetReason/ResetReason/ResetReason.ino
     :language: arduino
