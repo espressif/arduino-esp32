@@ -71,10 +71,10 @@ static const uint8_t T14 = 14;
 #define SDMMC_POWER 43 // Controls SDMMC Power
 #define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_DEFAULT
 
-// 240x240 LCD
+// 320x240 LCD
 #define BOARD_HAS_SPI_LCD
 #define LCD_MODEL  ST7789
-#define LCD_WIDTH	 240
+#define LCD_WIDTH  240
 #define LCD_HEIGHT 320 // *RAM height is actually 320!
 #define LCD_MISO    -1 // LCD Does not use MISO.
 #define LCD_DC       4 // Used to switch data and command status.
