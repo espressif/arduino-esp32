@@ -46,7 +46,7 @@ static const uint8_t T14 = 14;
 #define TFT_CS      5
 #define TFT_MOSI    6
 #define TFT_CLK     7
-#define TFT_MISO    0
+#define TFT_MISO    -1
 #define TFT_BL     47
 #define TFT_RST    48
 
@@ -59,5 +59,30 @@ static const uint8_t T14 = 14;
 #define PA_PIN     46 //Audio Amp Power
 #define MUTE_PIN    1 //MUTE Button
 #define TS_IRQ      3 //Touch Screen IRQ
+
+// SDCARD Slot
+#define BOARD_HAS_SDMMC
+#define SDMMC_D0     9 // SDMMC Data0 /   SDCard SPI MISO
+#define SDMMC_D1    13 // SDMMC Data1
+#define SDMMC_D2    42 // SDMMC Data2
+#define SDMMC_D3    12 // SDMMC Data3 / SDCard SPI CS
+#define SDMMC_CMD   14 // SDMMC CMD   / SDCard SPI MOSI
+#define SDMMC_CLK   11 // SDMMC CLK   / SDCard SPI SCK
+#define SDMMC_POWER 43 // Controls SDMMC Power
+#define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_DEFAULT
+
+// 240x240 LCD
+#define BOARD_HAS_SPI_LCD
+#define LCD_MODEL  ST7789
+#define LCD_WIDTH	 240
+#define LCD_HEIGHT 320 // *RAM height is actually 320!
+#define LCD_MISO    -1 // LCD Does not use MISO.
+#define LCD_DC       4 // Used to switch data and command status.
+#define LCD_CS       5 // used to enable LCD, low level to enable.
+#define LCD_MOSI     6 // LCD SPI MOSI.
+#define LCD_CLK      7 // LCD SPI Clock.
+#define LCD_RST     48 // used to reset LCD, low level to reset.
+#define LCD_BL      47 // LCD backlight control.
+
 
 #endif /* Pins_Arduino_h */
