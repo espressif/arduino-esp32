@@ -419,6 +419,9 @@ int WiFiClientSecure::setTimeout(uint32_t seconds)
 }
 
 int WiFiClientSecure::fd() const
+{
+    return sslclient->socket;
+}
 
 int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
 {
