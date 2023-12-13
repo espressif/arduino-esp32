@@ -422,9 +422,3 @@ int WiFiClientSecure::fd() const
 {
     return sslclient->socket;
 }
-
-int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
-{
-    return sslclient->socket;
-}
-
