@@ -33,8 +33,7 @@ void setup(void) {
     Serial.println("WiFi failed, retrying.");
   }
 
-  MDNS.begin(host);
-  if (MDNS.begin("esp32")) {
+  if (MDNS.begin(host)) {
     Serial.println("mDNS responder started");
   }
 

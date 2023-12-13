@@ -4,6 +4,9 @@
  *  Created on: Jul 2, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 
@@ -39,7 +42,7 @@ BLEAddress::BLEAddress(esp_bd_addr_t address) {
  *
  * @param [in] stringAddress The hex representation of the address.
  */
-BLEAddress::BLEAddress(std::string stringAddress) {
+BLEAddress::BLEAddress(String stringAddress) {
 	if (stringAddress.length() != 17) return;
 
 	int data[6];
@@ -106,12 +109,14 @@ esp_bd_addr_t *BLEAddress::getNative() {
  *
  * @return The string representation of the address.
  */
-std::string BLEAddress::toString() {
+String BLEAddress::toString() {
 	auto size = 18;
 	char *res = (char*)malloc(size);
 	snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
-	std::string ret(res);
+	String ret(res);
 	free(res);
 	return ret;
 } // toString
+
 #endif
+#endif /* SOC_BLE_SUPPORTED */

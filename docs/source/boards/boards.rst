@@ -8,7 +8,7 @@ Development Boards
 You will need a development board or a custom board with the ESP32 (see Supported SoC's) to start playing.
 There is a bunch of different types and models widely available on the Internet. You need to choose one that covers all your requirements.
 
-To help you on this selection, we point out some facts about choosing the proper boardsto help you to save money and time.
+To help you on this selection, we point out some facts about choosing the proper boards to help you to save money and time.
 
 **One ESP32 to rule them all!**
 
@@ -22,6 +22,8 @@ The ESP32 is divided by family:
     * Wi-Fi only
 * ESP32-C
     * Wi-Fi and BLE 5
+* ESP32-H
+    * BLE and IEEE 802.15.4  
 
 For each family, we have SoC variants with some differentiation. The differences are more about the embedded flash and its size and the number of the cores (dual or single).
 
@@ -70,6 +72,9 @@ Espressif
     ESP32-DevKitC <ESP32-DevKitC-1>
     ESP32-S2-Saola-1 <ESP32-S2-Saola-1>
     ESP32-C3-DevKitM-1 <ESP32-C3-DevKitM-1>
+
+.. note:: 
+   Only a few development boards are described on this documentation page. For more information about other Espressif development boards please refer to the `Espressif website <https://www.espressif.com/en/products/devkits>`_.
 
 Third Party
 -----------

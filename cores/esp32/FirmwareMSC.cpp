@@ -18,9 +18,11 @@
 #include <cstring>
 #include "esp_partition.h"
 #include "esp_ota_ops.h"
+#include "esp_image_format.h"
 #include "esp32-hal.h"
 #include "pins_arduino.h"
 #include "firmware_msc_fat.h"
+#include "spi_flash_mmap.h"
 
 #ifndef USB_FW_MSC_VENDOR_ID
 #define USB_FW_MSC_VENDOR_ID "ESP32" //max 8 chars

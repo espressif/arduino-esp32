@@ -20,14 +20,14 @@
 #ifndef MAIN_ESP32_HAL_TOUCH_H_
 #define MAIN_ESP32_HAL_TOUCH_H_
 
+#include "soc/soc_caps.h"
+#if SOC_TOUCH_SENSOR_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "soc/soc_caps.h"
 #include "esp32-hal.h"
-
-#if SOC_TOUCH_SENSOR_NUM > 0
 
 #if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
 #error Touch IDF driver Not supported!
@@ -49,7 +49,8 @@ typedef uint32_t touch_value_t;
 void touchSetCycles(uint16_t measure, uint16_t sleep);
 
 /*
- * Read touch pad (values close to 0 mean touch detected)
+ * Read touch pad (for ESP32 values close to 0 mean touch detected /
+ * for ESP32-S2/S3 higher values mean touch detected)
  * You can use this method to chose a good threshold value
  * to use as value for touchAttachInterrupt
  * */
@@ -88,9 +89,14 @@ void touchInterruptSetThresholdDirection(bool mustbeLower);
 bool touchInterruptGetLastStatus(uint8_t pin);
 #endif
 
-#endif // SOC_TOUCH_SENSOR_NUM > 0
+/*
+ * Setup touch pad wake up from deep sleep with given threshold.
+ **/
+void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold);
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SOC_TOUCH_SENSOR_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_TOUCH_H_ */

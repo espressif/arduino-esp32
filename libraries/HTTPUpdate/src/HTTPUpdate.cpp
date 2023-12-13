@@ -33,61 +33,64 @@
 // To do extern "C" uint32_t _SPIFFS_end;
 
 HTTPUpdate::HTTPUpdate(void)
-        : _httpClientTimeout(8000), _ledPin(-1)
+        : HTTPUpdate(8000)
 {
-    _followRedirects = HTTPC_DISABLE_FOLLOW_REDIRECTS;
 }
 
 HTTPUpdate::HTTPUpdate(int httpClientTimeout)
         : _httpClientTimeout(httpClientTimeout), _ledPin(-1)
 {
     _followRedirects = HTTPC_DISABLE_FOLLOW_REDIRECTS;
+    _md5Sum = String();
+    _user = String();
+    _password = String();
+    _auth = String();
 }
 
 HTTPUpdate::~HTTPUpdate(void)
 {
 }
 
-HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, url))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, false);
+    return handleUpdate(http, currentVersion, false, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
-    return handleUpdate(httpClient, currentVersion, true);
+    return handleUpdate(httpClient, currentVersion, true, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, url))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, true);
+    return handleUpdate(http, currentVersion, true, requestCB);
 }
 
 HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient,
-        const String& currentVersion)
+        const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
-    return handleUpdate(httpClient, currentVersion, false);
+    return handleUpdate(httpClient, currentVersion, false, requestCB);
 }
 
 HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& host, uint16_t port, const String& uri,
-        const String& currentVersion)
+        const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, host, port, uri))
     {
         return HTTP_UPDATE_FAILED;
     }
-    return handleUpdate(http, currentVersion, false);
+    return handleUpdate(http, currentVersion, false, requestCB);
 }
 
 /**
@@ -180,7 +183,7 @@ String getSketchSHA256() {
  * @param currentVersion const char *
  * @return HTTPUpdateResult
  */
-HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs)
+HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs, HTTPUpdateRequestCB requestCB)
 {
 
     HTTPUpdateResult ret = HTTP_UPDATE_FAILED;
@@ -216,6 +219,17 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     if(currentVersion && currentVersion[0] != 0x00) {
         http.addHeader("x-ESP32-version", currentVersion);
     }
+    if (requestCB) {
+        requestCB(&http);
+    }
+
+    if (!_user.isEmpty() && !_password.isEmpty()) {
+        http.setAuthorization(_user.c_str(), _password.c_str());
+    }
+
+    if (!_auth.isEmpty()) {
+        http.setAuthorization(_auth.c_str());
+    }
 
     const char * headerkeys[] = { "x-MD5" };
     size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
@@ -240,8 +254,14 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     log_d(" - code: %d\n", code);
     log_d(" - len: %d\n", len);
 
-    if(http.hasHeader("x-MD5")) {
-        log_d(" - MD5: %s\n", http.header("x-MD5").c_str());
+    String md5;
+    if (_md5Sum.length()) {
+        md5 = _md5Sum; 
+    } else if(http.hasHeader("x-MD5")) {
+        md5 = http.header("x-MD5");
+    }
+    if(md5.length()) {
+        log_d(" - MD5: %s\n",md5.c_str());
     }
 
     log_d("ESP32 info:\n");
@@ -338,7 +358,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                     }
 */
                 }
-                if(runUpdate(*tcp, len, http.header("x-MD5"), command)) {
+                if(runUpdate(*tcp, len, md5, command)) {
                     ret = HTTP_UPDATE_OK;
                     log_d("Update ok\n");
                     http.end();

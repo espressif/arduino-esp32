@@ -80,7 +80,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
   //reset header value
   for (int i = 0; i < _headerKeysCount; ++i) {
     _currentHeaders[i].value =String();
-   }
+  }
 
   // First line of HTTP request looks like "GET /path HTTP/1.1"
   // Retrieve the "/path" part by finding the spaces
@@ -103,6 +103,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
   }
   _currentUri = url;
   _chunked = false;
+  _clientContentLength = 0;  // not known yet, or invalid
 
   HTTPMethod method = HTTP_ANY;
   size_t num_methods = sizeof(_http_method_str) / sizeof(const char *);
@@ -136,7 +137,6 @@ bool WebServer::_parseRequest(WiFiClient& client) {
     String headerValue;
     bool isForm = false;
     bool isEncoded = false;
-    uint32_t contentLength = 0;
     //parse headers
     while(1){
       req = client.readStringUntil('\r');
@@ -167,7 +167,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
           isForm = true;
         }
       } else if (headerName.equalsIgnoreCase(F("Content-Length"))){
-        contentLength = headerValue.toInt();
+        _clientContentLength = headerValue.toInt();
       } else if (headerName.equalsIgnoreCase(F("Host"))){
         _hostHeader = headerValue;
       }
@@ -175,12 +175,12 @@ bool WebServer::_parseRequest(WiFiClient& client) {
 
     if (!isForm){
       size_t plainLength;
-      char* plainBuf = readBytesWithTimeout(client, contentLength, plainLength, HTTP_MAX_POST_WAIT);
-      if (plainLength < contentLength) {
+      char* plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
+      if (plainLength < _clientContentLength) {
       	free(plainBuf);
       	return false;
       }
-      if (contentLength > 0) {
+      if (_clientContentLength > 0) {
         if(isEncoded){
           //url encoded form
           if (searchStr != "") searchStr += '&';
@@ -200,11 +200,10 @@ bool WebServer::_parseRequest(WiFiClient& client) {
         // No content - but we can still have arguments in the URL.
         _parseArguments(searchStr);
       }
-    }
-
-    if (isForm){
+    } else {
+      // it IS a form
       _parseArguments(searchStr);
-      if (!_parseForm(client, boundaryStr, contentLength)) {
+      if (!_parseForm(client, boundaryStr, _clientContentLength)) {
         return false;
       }
     }

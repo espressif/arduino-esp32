@@ -71,6 +71,9 @@ public:
     const char* name() const override;
     time_t      getLastWrite()  override;
     boolean     isDirectory(void) override;
+    boolean     seekDir(long position) override;
+    String      getNextFileName(void) override;
+    String      getNextFileName(bool *isDir) override;
     FileImplPtr openNextFile(const char* mode) override;
     void        rewindDirectory(void) override;
     operator    bool();

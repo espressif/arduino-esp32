@@ -1,6 +1,6 @@
 #include "Update.h"
 #include "Arduino.h"
-#include "esp_spi_flash.h"
+#include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 
@@ -76,9 +76,15 @@ UpdateClass& UpdateClass::onProgress(THandlerFunction_Progress fn) {
 }
 
 void UpdateClass::_reset() {
-    if (_buffer)
+    if (_buffer) {
         delete[] _buffer;
-    _buffer = 0;
+    }
+    if (_skipBuffer) {
+        delete[] _skipBuffer;
+    }
+
+    _buffer = nullptr;
+    _skipBuffer = nullptr;
     _bufferLen = 0;
     _progress = 0;
     _size = 0;
@@ -159,9 +165,9 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     }
 
     //initialize
-    _buffer = (uint8_t*)malloc(SPI_FLASH_SEC_SIZE);
-    if(!_buffer){
-        log_e("malloc failed");
+    _buffer = new (std::nothrow) uint8_t[SPI_FLASH_SEC_SIZE];
+    if (!_buffer) {
+        log_e("_buffer allocation failed");
         return false;
     }
     _size = size;
@@ -193,24 +199,33 @@ bool UpdateClass::_writeBuffer(){
         //not written at this point so that partially written firmware
         //will not be bootable
         skip = ENCRYPTED_BLOCK_SIZE;
-        _skipBuffer = (uint8_t*)malloc(skip);
-        if(!_skipBuffer){
-            log_e("malloc failed");
-        return false;
+        _skipBuffer = new (std::nothrow) uint8_t[skip];
+        if (!_skipBuffer) {
+            log_e("_skipBuffer allocation failed");
+            return false;
         }
         memcpy(_skipBuffer, _buffer, skip);
     }
     if (!_progress && _progress_callback) {
         _progress_callback(0, _size);
     }
-    if(!ESP.partitionEraseRange(_partition, _progress, SPI_FLASH_SEC_SIZE)){
-        _abort(UPDATE_ERROR_ERASE);
-        return false;
+    size_t offset = _partition->address + _progress;
+    bool block_erase = (_size - _progress >= SPI_FLASH_BLOCK_SIZE) && (offset % SPI_FLASH_BLOCK_SIZE == 0);             // if it's the block boundary, than erase the whole block from here
+    bool part_head_sectors = _partition->address % SPI_FLASH_BLOCK_SIZE && offset < (_partition->address / SPI_FLASH_BLOCK_SIZE + 1) * SPI_FLASH_BLOCK_SIZE;    // sector belong to unaligned partition heading block
+    bool part_tail_sectors = offset >= (_partition->address + _size) / SPI_FLASH_BLOCK_SIZE * SPI_FLASH_BLOCK_SIZE;     // sector belong to unaligned partition tailing block
+    if (block_erase || part_head_sectors || part_tail_sectors){
+        if(!ESP.partitionEraseRange(_partition, _progress, block_erase ? SPI_FLASH_BLOCK_SIZE : SPI_FLASH_SEC_SIZE)){
+            _abort(UPDATE_ERROR_ERASE);
+            return false;
+        }
     }
-    if (!ESP.partitionWrite(_partition, _progress + skip, (uint32_t*)_buffer + skip/sizeof(uint32_t), _bufferLen - skip)) {
+
+    // try to skip empty blocks on unecrypted partitions
+    if ((_partition->encrypted || _chkDataInBlock(_buffer + skip/sizeof(uint32_t), _bufferLen - skip)) && !ESP.partitionWrite(_partition, _progress + skip, (uint32_t*)_buffer + skip/sizeof(uint32_t), _bufferLen - skip)) {
         _abort(UPDATE_ERROR_WRITE);
         return false;
     }
+
     //restore magic or md5 will fail
     if(!_progress && _command == U_FLASH){
         _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
@@ -263,6 +278,7 @@ bool UpdateClass::setMD5(const char * expected_md5){
         return false;
     }
     _target_md5 = expected_md5;
+    _target_md5.toLowerCase();
     return true;
 }
 
@@ -389,4 +405,22 @@ const char * UpdateClass::errorString(){
     return _err2str(_error);
 }
 
+bool UpdateClass::_chkDataInBlock(const uint8_t *data, size_t len) const {
+    // check 32-bit aligned blocks only
+    if (!len || len % sizeof(uint32_t))
+        return true;
+
+    size_t dwl = len / sizeof(uint32_t);
+
+    do {
+        if (*(uint32_t*)data ^ 0xffffffff)      // for SPI NOR flash empty blocks are all one's, i.e. filled with 0xff byte
+            return true;
+
+        data += sizeof(uint32_t);
+    } while (--dwl);
+    return false;
+}
+
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
 UpdateClass Update;
+#endif

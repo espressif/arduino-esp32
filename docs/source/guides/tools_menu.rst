@@ -196,6 +196,14 @@ Events Run On
 
 This function is also used to select the core that runs the Arduino events. This is only valid if the target SoC has 2 cores.
 
+Erase All Flash Before Sketch Upload
+************************************
+
+This option selects the flash memory region to be erased before uploading the new sketch.
+
+* **Disabled** - Upload the sketch without erasing all flash contents. (Default)
+* **Enabled** - Erase all flash contents before uploading the sketch.
+
 Port
 ****
 

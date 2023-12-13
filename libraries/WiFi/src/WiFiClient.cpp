@@ -153,6 +153,13 @@ public:
     size_t available(){
         return _fill - _pos + r_available();
     }
+
+    void flush(){
+        if(r_available()){
+            fillBuffer();
+        }
+        _pos = _fill;
+    }
 };
 
 class WiFiClientSocketHandle {
@@ -175,7 +182,7 @@ public:
     }
 };
 
-WiFiClient::WiFiClient():_connected(false),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
+WiFiClient::WiFiClient():_rxBuffer(nullptr),_connected(false),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
 {
 }
 
@@ -210,9 +217,9 @@ int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
     return connect(ip,port,_timeout);
 }
-int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
+int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms)
 {
-    _timeout = timeout;
+    _timeout = timeout_ms;
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         log_e("socket: %d", errno);
@@ -231,7 +238,7 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
     FD_ZERO(&fdset);
     FD_SET(sockfd, &fdset);
     tv.tv_sec = _timeout / 1000;
-    tv.tv_usec = 0;
+    tv.tv_usec = (_timeout  % 1000) * 1000;
 
 #ifdef ESP_IDF_VERSION_MAJOR
     int res = lwip_connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
@@ -292,23 +299,38 @@ int WiFiClient::connect(const char *host, uint16_t port)
     return connect(host,port,_timeout);
 }
 
-int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout)
+int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
 {
     IPAddress srv((uint32_t)0);
     if(!WiFiGenericClass::hostByName(host, srv)){
         return 0;
     }
-    return connect(srv, port, timeout);
+    return connect(srv, port, timeout_ms);
 }
 
 int WiFiClient::setSocketOption(int option, char* value, size_t len)
 {
-    int res = setsockopt(fd(), SOL_SOCKET, option, value, len);
+    return setSocketOption(SOL_SOCKET, option, (const void*)value, len);
+}
+
+int WiFiClient::setSocketOption(int level, int option, const void* value, size_t len)
+{
+    int res = setsockopt(fd(), level, option, value, len);
     if(res < 0) {
-        log_e("%X : %d", option, errno);
+        log_e("fail on %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
 }
+
+int WiFiClient::getSocketOption(int level, int option, const void* value, size_t size)
+{
+    int res = getsockopt(fd(), level, option, (char *)value, (socklen_t*)&size);
+    if(res < 0) {
+        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
+    }
+    return res;
+}
+
 
 int WiFiClient::setTimeout(uint32_t seconds)
 {
@@ -330,11 +352,7 @@ int WiFiClient::setTimeout(uint32_t seconds)
 
 int WiFiClient::setOption(int option, int *value)
 {
-    int res = setsockopt(fd(), IPPROTO_TCP, option, (char *) value, sizeof(int));
-    if(res < 0) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
-    }
-    return res;
+    return setSocketOption(IPPROTO_TCP, option, (const void*)value, sizeof(int));
 }
 
 int WiFiClient::getOption(int option, int *value)
@@ -500,26 +518,9 @@ int WiFiClient::available()
 // Though flushing means to send all pending data,
 // seems that in Arduino it also means to clear RX
 void WiFiClient::flush() {
-    int res;
-    size_t a = available(), toRead = 0;
-    if(!a){
-        return;//nothing to flush
+    if (_rxBuffer != nullptr) {
+        _rxBuffer->flush();
     }
-    uint8_t * buf = (uint8_t *)malloc(WIFI_CLIENT_FLUSH_BUFFER_SIZE);
-    if(!buf){
-        return;//memory error
-    }
-    while(a){
-        toRead = (a>WIFI_CLIENT_FLUSH_BUFFER_SIZE)?WIFI_CLIENT_FLUSH_BUFFER_SIZE:a;
-        res = recv(fd(), buf, toRead, MSG_DONTWAIT);
-        if(res < 0) {
-            log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
-            stop();
-            break;
-        }
-        a -= res;
-    }
-    free(buf);
 }
 
 uint8_t WiFiClient::connected()

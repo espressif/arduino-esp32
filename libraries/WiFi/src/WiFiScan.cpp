@@ -141,17 +141,17 @@ void * WiFiScanClass::_getScanInfoByIndex(int i)
  */
 int16_t WiFiScanClass::scanComplete()
 {
-    if (WiFiScanClass::_scanStarted && (millis()-WiFiScanClass::_scanStarted) > WiFiScanClass::_scanTimeout) { //Check is scan was started and if the delay expired, return WIFI_SCAN_FAILED in this case 
-    	WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
-	return WIFI_SCAN_FAILED;
-    }
-
     if(WiFiGenericClass::getStatusBits() & WIFI_SCAN_DONE_BIT) {
         return WiFiScanClass::_scanCount;
     }
 
     if(WiFiGenericClass::getStatusBits() & WIFI_SCANNING_BIT) {
         return WIFI_SCAN_RUNNING;
+    }
+    // last one to avoid time affecting Async mode
+    if (WiFiScanClass::_scanStarted && (millis()-WiFiScanClass::_scanStarted) > WiFiScanClass::_scanTimeout) { //Check is scan was started and if the delay expired, return WIFI_SCAN_FAILED in this case 
+    	WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
+	return WIFI_SCAN_FAILED;
     }
 
     return WIFI_SCAN_FAILED;
@@ -243,11 +243,20 @@ int32_t WiFiScanClass::RSSI(uint8_t i)
 /**
  * return MAC / BSSID of scanned wifi
  * @param i specify from which network item want to get the information
+ * @param buff optional buffer for the result uint8_t array with length 6
  * @return uint8_t * MAC / BSSID of scanned wifi
  */
-uint8_t * WiFiScanClass::BSSID(uint8_t i)
+uint8_t * WiFiScanClass::BSSID(uint8_t i, uint8_t* buff)
 {
     wifi_ap_record_t* it = reinterpret_cast<wifi_ap_record_t*>(_getScanInfoByIndex(i));
+    if(buff != NULL) {
+        if(!it) {
+            memset(buff, 0, 6);
+        } else {
+            memcpy(buff, it->bssid, 6);
+        }
+        return buff;
+    }
     if(!it) {
         return 0;
     }

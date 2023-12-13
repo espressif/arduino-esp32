@@ -27,6 +27,7 @@
 #include <functional>
 #include <memory>
 #include <WiFi.h>
+#include <FS.h>
 #include "HTTP_Method.h"
 #include "Uri.h"
 
@@ -95,7 +96,7 @@ public:
 
   String uri() { return _currentUri; }
   HTTPMethod method() { return _currentMethod; }
-  virtual WiFiClient client() { return _currentClient; }
+  virtual WiFiClient & client() { return _currentClient; }
   HTTPUpload& upload() { return *_currentUpload; }
 
   String pathArg(unsigned int i); // get request path argument by number
@@ -105,11 +106,13 @@ public:
   int args();                     // get arguments count
   bool hasArg(String name);       // check if argument exists
   void collectHeaders(const char* headerKeys[], const size_t headerKeysCount); // set the request headers to collect
-  String header(String name);      // get request header value by name
-  String header(int i);              // get request header value by number
-  String headerName(int i);          // get request header name by number
-  int headers();                     // get header count
-  bool hasHeader(String name);       // check if header exists
+  String header(String name);     // get request header value by name
+  String header(int i);           // get request header value by number
+  String headerName(int i);       // get request header name by number
+  int headers();                  // get header count
+  bool hasHeader(String name);    // check if header exists
+
+  int clientContentLength() { return _clientContentLength; }      // return "content-length" of incoming HTTP header from "_currentClient"
 
   String hostHeader();            // get request host header if available or empty String if not
 
@@ -128,6 +131,8 @@ public:
   void enableDelay(boolean value);
   void enableCORS(boolean value = true);
   void enableCrossOrigin(boolean value = true);
+  typedef std::function<String(FS &fs, const String &fName)> ETagFunction;
+  void enableETag(bool enable, ETagFunction fn = nullptr);
 
   void setContentLength(const size_t contentLength);
   void sendHeader(const String& name, const String& value, bool first = false);
@@ -143,6 +148,9 @@ public:
     _streamFileCore(file.size(), file.name(), contentType, code);
     return _currentClient.write(file);
   }
+
+  bool             _eTagEnabled = false;
+  ETagFunction     _eTagFunction = nullptr;
 
 protected:
   virtual size_t _currentClientWrite(const char* b, size_t l) { return _currentClient.write( b, l ); }
@@ -198,6 +206,7 @@ protected:
   int              _headerKeysCount;
   RequestArgument* _currentHeaders;
   size_t           _contentLength;
+  int              _clientContentLength;	// "Content-Length" from header of incoming POST or GET request
   String           _responseHeaders;
 
   String           _hostHeader;

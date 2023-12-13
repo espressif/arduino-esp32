@@ -124,12 +124,21 @@ int WiFiClientSecure::connect(const char *host, uint16_t port, int32_t timeout){
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *CA_cert, const char *cert, const char *private_key)
 {
-    return connect(ip.toString().c_str(), port, CA_cert, cert, private_key);
+    return connect(ip, port, NULL, CA_cert, cert, private_key);
 }
 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *CA_cert, const char *cert, const char *private_key)
 {
-    int ret = start_ssl_client(sslclient, host, port, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
+    IPAddress address;
+    if (!WiFi.hostByName(host, address))
+        return 0;
+
+    return connect(address, port, host, CA_cert, cert, private_key);
+}
+
+int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *host, const char *CA_cert, const char *cert, const char *private_key)
+{
+    int ret = start_ssl_client(sslclient, ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
     _lastError = ret;
     if (ret < 0) {
         log_e("start_ssl_client: %d", ret);
@@ -146,7 +155,12 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *pskIdent,
 
 int WiFiClientSecure::connect(const char *host, uint16_t port, const char *pskIdent, const char *psKey) {
     log_v("start_ssl_client with PSK");
-    int ret = start_ssl_client(sslclient, host, port, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
+
+    IPAddress address;
+    if (!WiFi.hostByName(host, address))
+        return 0;
+
+    int ret = start_ssl_client(sslclient, address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
     _lastError = ret;
     if (ret < 0) {
         log_e("start_ssl_client: %d", ret);
@@ -258,13 +272,14 @@ void WiFiClientSecure::setInsecure()
 void WiFiClientSecure::setCACert (const char *rootCA)
 {
     _CA_cert = rootCA;
+    _use_insecure = false;
 }
 
  void WiFiClientSecure::setCACertBundle(const uint8_t * bundle)
  {
     if (bundle != NULL)
     {
-        esp_crt_bundle_set(bundle);
+        esp_crt_bundle_set(bundle, sizeof(bundle));
         _use_ca_bundle = true;
     } else {
         esp_crt_bundle_detach(NULL);
@@ -376,11 +391,9 @@ int WiFiClientSecure::setTimeout(uint32_t seconds)
         return 0;
     }
 }
-int WiFiClientSecure::setSocketOption(int option, char* value, size_t len)
+
+int WiFiClientSecure::fd() const
 {
-    int res = setsockopt(sslclient->socket, SOL_SOCKET, option, value, len);
-    if(res < 0) {
-        log_e("%X : %d", option, errno);
-    }
-    return res;
+    return sslclient->socket;
 }
+

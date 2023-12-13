@@ -136,12 +136,6 @@ void wifi_softap_config(wifi_config_t *wifi_config, const char * ssid=NULL, cons
 bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder)
 {
 
-    if(!WiFi.enableAP(true)) {
-        // enable AP failed
-        log_e("enable AP first!");
-        return false;
-    }
-
     if(!ssid || *ssid == 0) {
         // fail SSID missing
         log_e("SSID missing!");
@@ -151,6 +145,13 @@ bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, 
     if(passphrase && (strlen(passphrase) > 0 && strlen(passphrase) < 8)) {
         // fail passphrase too short
         log_e("passphrase too short!");
+        return false;
+    }
+
+    // last step after checking the SSID and password
+    if(!WiFi.enableAP(true)) {
+        // enable AP failed
+        log_e("enable AP first!");
         return false;
     }
 
@@ -234,6 +235,25 @@ bool WiFiAPClass::softAPdisconnect(bool wifioff)
     return ret;
 }
 
+/**
+ * Sets the working bandwidth of the AP mode
+ * @param m wifi_bandwidth_t
+ */
+bool WiFiAPClass::softAPbandwidth(wifi_bandwidth_t bandwidth) {   
+    if(!WiFi.enableAP(true)) {
+        log_e("AP enable failed!");
+        return false;
+    }
+
+    esp_err_t err;
+    err = esp_wifi_set_bandwidth((wifi_interface_t)ESP_IF_WIFI_AP, bandwidth);
+    if(err){
+        log_e("Could not set AP bandwidth!");
+        return false;
+    }
+
+    return true;
+}
 
 /**
  * Get the count of the Station / client that are connected to the softAP interface
@@ -303,20 +323,29 @@ IPAddress WiFiAPClass::softAPNetworkID()
 }
 
 /**
+ * Get the softAP subnet mask.
+ * @return IPAddress subnetMask
+ */
+IPAddress WiFiAPClass::softAPSubnetMask()
+{
+    esp_netif_ip_info_t ip;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress();
+    }
+    if(esp_netif_get_ip_info(get_esp_interface_netif(ESP_IF_WIFI_AP), &ip) != ESP_OK){
+        log_e("Netif Get IP Failed!");
+        return IPAddress();
+    }
+    return IPAddress(ip.netmask.addr);
+}
+
+/**
  * Get the softAP subnet CIDR.
  * @return uint8_t softAP subnetCIDR
  */
 uint8_t WiFiAPClass::softAPSubnetCIDR()
 {
-	esp_netif_ip_info_t ip;
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return IPAddress();
-    }
-    if(esp_netif_get_ip_info(get_esp_interface_netif(ESP_IF_WIFI_AP), &ip) != ESP_OK){
-    	log_e("Netif Get IP Failed!");
-    	return IPAddress();
-    }
-    return WiFiGenericClass::calculateSubnetCIDR(IPAddress(ip.netmask.addr));
+    return WiFiGenericClass::calculateSubnetCIDR(softAPSubnetMask());
 }
 
 /**

@@ -24,12 +24,13 @@
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include <libb64/cencode.h>
+#include "esp_random.h"
 #include "WiFiServer.h"
 #include "WiFiClient.h"
 #include "WebServer.h"
 #include "FS.h"
 #include "detail/RequestHandlersImpl.h"
-#include "mbedtls/md5.h"
+#include "MD5Builder.h"
 
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
@@ -37,6 +38,7 @@ static const char qop_auth[] PROGMEM = "qop=auth";
 static const char qop_auth_quoted[] PROGMEM = "qop=\"auth\"";
 static const char WWW_Authenticate[] = "WWW-Authenticate";
 static const char Content_Length[] = "Content-Length";
+static const char ETAG_HEADER[] = "If-None-Match";
 
 
 WebServer::WebServer(IPAddress addr, int port)
@@ -57,6 +59,7 @@ WebServer::WebServer(IPAddress addr, int port)
 , _headerKeysCount(0)
 , _currentHeaders(nullptr)
 , _contentLength(0)
+, _clientContentLength(0)
 , _chunked(false)
 {
   log_v("WebServer::Webserver(addr=%s, port=%d)", addr.toString().c_str(), port);
@@ -80,6 +83,7 @@ WebServer::WebServer(int port)
 , _headerKeysCount(0)
 , _currentHeaders(nullptr)
 , _contentLength(0)
+, _clientContentLength(0)
 , _chunked(false)
 {
   log_v("WebServer::Webserver(port=%d)", port);
@@ -117,23 +121,11 @@ String WebServer::_extractParam(String& authReq,const String& param,const char d
 }
 
 static String md5str(String &in){
-  char out[33] = {0};
-  mbedtls_md5_context _ctx;
-  uint8_t i;
-  uint8_t * _buf = (uint8_t*)malloc(16);
-  if(_buf == NULL)
-    return String(out);
-  memset(_buf, 0x00, 16);
-  mbedtls_md5_init(&_ctx);
-  mbedtls_md5_starts_ret(&_ctx);
-  mbedtls_md5_update_ret(&_ctx, (const uint8_t *)in.c_str(), in.length());
-  mbedtls_md5_finish_ret(&_ctx, _buf);
-  for(i = 0; i < 16; i++) {
-    sprintf(out + (i * 2), "%02x", _buf[i]);
-  }
-  out[32] = 0;
-  free(_buf);
-  return String(out);
+  MD5Builder md5 = MD5Builder();
+  md5.begin();
+  md5.add(in);
+  md5.calculate();
+  return md5.toString();
 }
 
 bool WebServer::authenticate(const char * username, const char * password){
@@ -143,26 +135,26 @@ bool WebServer::authenticate(const char * username, const char * password){
       authReq = authReq.substring(6);
       authReq.trim();
       char toencodeLen = strlen(username)+strlen(password)+1;
-      char *toencode = new char[toencodeLen + 1];
+      char *toencode = (char *)malloc[toencodeLen + 1];
       if(toencode == NULL){
         authReq = "";
         return false;
       }
-      char *encoded = new char[base64_encode_expected_len(toencodeLen)+1];
+      char *encoded = (char *)malloc(base64_encode_expected_len(toencodeLen)+1);
       if(encoded == NULL){
         authReq = "";
-        delete[] toencode;
+        free(toencode);
         return false;
       }
       sprintf(toencode, "%s:%s", username, password);
       if(base64_encode_chars(toencode, toencodeLen, encoded) > 0 && authReq.equalsConstantTime(encoded)) {
         authReq = "";
-        delete[] toencode;
-        delete[] encoded;
+        free(toencode);
+        free(encoded);
         return true;
       }
-      delete[] toencode;
-      delete[] encoded;
+      free(toencode);
+      free(encoded);;
     } else if(authReq.startsWith(F("Digest"))) {
       authReq = authReq.substring(7);
       log_v("%s", authReq.c_str());
@@ -228,7 +220,7 @@ String WebServer::_getRandomHexString() {
   char buffer[33];  // buffer to hold 32 Hex Digit + /0
   int i;
   for(i = 0; i < 4; i++) {
-    sprintf (buffer + (i*8), "%08x", esp_random());
+    sprintf (buffer + (i*8), "%08lx", esp_random());
   }
   return String(buffer);
 }
@@ -283,17 +275,16 @@ void WebServer::serveStatic(const char* uri, FS& fs, const char* path, const cha
 
 void WebServer::handleClient() {
   if (_currentStatus == HC_NONE) {
-    WiFiClient client = _server.available();
-    if (!client) {
+    _currentClient = _server.accept();
+    if (!_currentClient) {
       if (_nullDelay) {
         delay(1);
       }
       return;
     }
 
-    log_v("New client: client.localIP()=%s", client.localIP().toString().c_str());
+    log_v("New client: client.localIP()=%s", _currentClient.localIP().toString().c_str());
 
-    _currentClient = client;
     _currentStatus = HC_WAIT_READ;
     _statusChange = millis();
   }
@@ -389,6 +380,11 @@ void WebServer::enableCORS(boolean value) {
 
 void WebServer::enableCrossOrigin(boolean value) {
   enableCORS(value);
+}
+
+void WebServer::enableETag(bool enable, ETagFunction fn) {
+  _eTagEnabled = enable;
+  _eTagFunction = fn;
 }
 
 void WebServer::_prepareHeader(String& response, int code, const char* content_type, size_t contentLength) {
@@ -595,13 +591,14 @@ String WebServer::header(String name) {
 }
 
 void WebServer::collectHeaders(const char* headerKeys[], const size_t headerKeysCount) {
-  _headerKeysCount = headerKeysCount + 1;
+  _headerKeysCount = headerKeysCount + 2;
   if (_currentHeaders)
      delete[]_currentHeaders;
   _currentHeaders = new RequestArgument[_headerKeysCount];
   _currentHeaders[0].key = FPSTR(AUTHORIZATION_HEADER);
-  for (int i = 1; i < _headerKeysCount; i++){
-    _currentHeaders[i].key = headerKeys[i-1];
+  _currentHeaders[1].key = FPSTR(ETAG_HEADER);
+  for (int i = 2; i < _headerKeysCount; i++){
+    _currentHeaders[i].key = headerKeys[i-2];
   }
 }
 
