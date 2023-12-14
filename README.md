@@ -37,6 +37,10 @@ You can use the [Arduino-ESP32 Online Documentation](https://docs.espressif.com/
 
 ---
 
+**APIs compatibility with ESP8266 and Arduino-CORE (Arduino.cc) is available [here](https://docs.espressif.com/projects/arduino-esp32/en/latest/libraries.html#apis).**
+
+---
+
 * [Getting Started](https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html)
 * [Installing (Windows, Linux and macOS)](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html)
 * [Libraries](https://docs.espressif.com/projects/arduino-esp32/en/latest/libraries.html)
