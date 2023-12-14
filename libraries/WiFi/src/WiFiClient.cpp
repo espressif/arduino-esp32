@@ -348,6 +348,11 @@ int WiFiClient::getOption(int option, int *value)
     return res;
 }
 
+void WiFiClient::setConnectionTimeout(uint32_t milliseconds)
+{
+    _timeout = milliseconds;
+}
+
 int WiFiClient::setNoDelay(bool nodelay)
 {
     int flag = nodelay;
