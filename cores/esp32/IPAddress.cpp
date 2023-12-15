@@ -89,12 +89,23 @@ IPAddress::IPAddress(IPType ip_type, const uint8_t *address)
     }
 }
 
+IPAddress::IPAddress(const char *address)
+{
+    fromString(address);
+}
+
 IPAddress& IPAddress::operator=(const uint8_t *address)
 {
     // IPv4 only conversion from byte pointer
     _type = IPv4;
     memset(_address.bytes, 0, sizeof(_address.bytes));
     memcpy(&_address.bytes[IPADDRESS_V4_BYTES_INDEX], address, sizeof(uint32_t));
+    return *this;
+}
+
+IPAddress& IPAddress::operator=(const char *address)
+{
+    fromString(address);
     return *this;
 }
 
@@ -200,20 +211,28 @@ size_t IPAddress::printTo(Print& p) const
     return n;
 }
 
+String IPAddress::toString4() const
+{
+    char szRet[16];
+    snprintf(szRet, sizeof(szRet), "%u.%u.%u.%u", _address.bytes[IPADDRESS_V4_BYTES_INDEX], _address.bytes[IPADDRESS_V4_BYTES_INDEX + 1], _address.bytes[IPADDRESS_V4_BYTES_INDEX + 2], _address.bytes[IPADDRESS_V4_BYTES_INDEX + 3]);
+    return String(szRet);
+}
+
+String IPAddress::toString6() const
+{
+    StreamString s;
+    s.reserve(40);
+    printTo(s);
+    return s;
+}
+
 String IPAddress::toString() const
 {
-    if (_type == IPv6)
-    {
-        StreamString s;
-        s.reserve(40);
-        printTo(s);
-        return s;
+    if (_type == IPv4) {
+        return toString4();
+    } else {
+        return toString6();
     }
-
-    // IPv4
-    char szRet[16];
-    sprintf(szRet,"%u.%u.%u.%u", _address.bytes[0], _address.bytes[1], _address.bytes[2], _address.bytes[3]);
-    return String(szRet);
 }
 
 bool IPAddress::fromString(const char *address)

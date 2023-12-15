@@ -62,6 +62,8 @@ public:
     IPAddress(uint32_t address);
     IPAddress(const uint8_t *address);
     IPAddress(IPType ip_type, const uint8_t *address);
+    // If IPv4 fails tries IPv6 see fromString function
+    IPAddress(const char *address);
     virtual ~IPAddress() {}
 
     bool fromString(const char *address);
@@ -84,11 +86,13 @@ public:
     // Overloaded copy operators to allow initialisation of IPAddress objects from other types
     IPAddress& operator=(const uint8_t *address);
     IPAddress& operator=(uint32_t address);
+    // If IPv4 fails tries IPv6 see fromString function
+    IPAddress& operator=(const char *address);
 
     virtual size_t printTo(Print& p) const;
     String toString() const;
 
-    IPType type() { return _type; }
+    IPType type() const { return _type; }
 
     friend class EthernetClass;
     friend class UDP;
@@ -100,6 +104,8 @@ public:
 protected:
     bool fromString4(const char *address);
     bool fromString6(const char *address);
+    String toString4() const;
+    String toString6() const;
 };
 
 // changed to extern because const declaration creates copies in BSS of INADDR_NONE for each CPP unit that includes it
