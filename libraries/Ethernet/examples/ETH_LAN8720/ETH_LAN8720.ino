@@ -16,12 +16,14 @@
 
 static bool eth_connected = false;
 
-void onEvent(arduino_event_id_t event, arduino_event_info_t info)
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
+void WiFiEvent(WiFiEvent_t event)
 {
   switch (event) {
     case ARDUINO_EVENT_ETH_START:
       Serial.println("ETH Started");
-      //set eth hostname here
+      // The hostname must be set after the interface is started, but needs
+      // to be set before DHCP, so set it from the event handler thread.
       ETH.setHostname("esp32-ethernet");
       break;
     case ARDUINO_EVENT_ETH_CONNECTED:
@@ -75,7 +77,6 @@ void setup()
   Network.onEvent(onEvent);
   ETH.begin();
 }
-
 
 void loop()
 {

@@ -28,6 +28,7 @@ SemaphoreHandle_t ftmSemaphore;
 bool ftmSuccess = true;
 
 // FTM report handler with the calculated data from the round trip
+// WARNING: This function is called from a separate FreeRTOS task (thread)!
 void onFtmReport(arduino_event_t *event) {
   const char * status_str[5] = {"SUCCESS", "UNSUPPORTED", "CONF_REJECTED", "NO_RESPONSE", "FAIL"};
   wifi_event_ftm_report_t * report = &event->event_info.wifi_ftm_report;
@@ -62,7 +63,7 @@ void setup() {
   // Create binary semaphore (initialized taken and can be taken/given from any thread/ISR)
   ftmSemaphore = xSemaphoreCreateBinary();
   
-  // Listen for FTM Report events
+  // Will call onFtmReport() from another thread with FTM Report events.
   WiFi.onEvent(onFtmReport, ARDUINO_EVENT_WIFI_FTM_REPORT);
   
   // Connect to AP that has FTM Enabled

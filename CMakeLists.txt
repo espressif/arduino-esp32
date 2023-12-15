@@ -121,6 +121,7 @@ set(LIBRARY_SRCS
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
   libraries/USB/src/USBHID.cpp
+  libraries/USB/src/USBMIDI.cpp
   libraries/USB/src/USBHIDMouse.cpp
   libraries/USB/src/USBHIDKeyboard.cpp
   libraries/USB/src/USBHIDGamepad.cpp

@@ -130,6 +130,8 @@ public:
   void enableDelay(boolean value);
   void enableCORS(boolean value = true);
   void enableCrossOrigin(boolean value = true);
+  typedef std::function<String(FS &fs, const String &fName)> ETagFunction;
+  void enableETag(bool enable, ETagFunction fn = nullptr);
 
   void setContentLength(const size_t contentLength);
   void sendHeader(const String& name, const String& value, bool first = false);
@@ -145,6 +147,9 @@ public:
     _streamFileCore(file.size(), file.name(), contentType, code);
     return _currentClient.write(file);
   }
+
+  bool             _eTagEnabled = false;
+  ETagFunction     _eTagFunction = nullptr;
 
 protected:
   virtual size_t _currentClientWrite(const char* b, size_t l) { return _currentClient.write( b, l ); }
