@@ -40,6 +40,11 @@ typedef enum {
 uint16_t analogRead(uint8_t pin);
 
 /*
+ * Get ADC value in default resolution for pin
+ * */
+uint16_t analogReadRaw(uint8_t pin);
+
+/*
  * Get MilliVolts value for pin
  * */
 uint32_t analogReadMilliVolts(uint8_t pin);
