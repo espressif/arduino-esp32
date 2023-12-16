@@ -299,6 +299,16 @@
   #define CFG_TUSB_DEBUG 0
 #endif
 
+// Level where CFG_TUSB_DEBUG must be at least for USBH is logged
+#ifndef CFG_TUH_LOG_LEVEL
+  #define CFG_TUH_LOG_LEVEL   2
+#endif
+
+// Level where CFG_TUSB_DEBUG must be at least for USBD is logged
+#ifndef CFG_TUD_LOG_LEVEL
+  #define CFG_TUD_LOG_LEVEL   2
+#endif
+
 // Memory section for placing buffer used for usb transferring. If MEM_SECTION is different for
 // host and device use: CFG_TUD_MEM_SECTION, CFG_TUH_MEM_SECTION instead
 #ifndef CFG_TUSB_MEM_SECTION
@@ -442,9 +452,21 @@
   #define CFG_TUH_CDC_FTDI 0
 #endif
 
+#ifndef CFG_TUH_CDC_FTDI_PID_LIST
+  // List of product IDs that can use the FTDI CDC driver
+  #define CFG_TUH_CDC_FTDI_PID_LIST \
+    0x6001, 0x6006, 0x6010, 0x6011, 0x6014, 0x6015, 0x8372, 0xFBFA, 0xCD18
+#endif
+
 #ifndef CFG_TUH_CDC_CP210X
   // CP210X is not part of CDC class, only to re-use CDC driver API
   #define CFG_TUH_CDC_CP210X 0
+#endif
+
+#ifndef CFG_TUH_CDC_CP210X_PID_LIST
+  // List of product IDs that can use the CP210X CDC driver
+  #define CFG_TUH_CDC_CP210X_PID_LIST \
+    0xEA60, 0xEA70
 #endif
 
 #ifndef CFG_TUH_HID
