@@ -614,7 +614,7 @@ IPAddress WiFiClient::remoteIP(int fd) const
     if (((struct sockaddr*)&addr)->sa_family == AF_INET6) {
         struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
         if (IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
-            return IPAddress(IPv4, (uint8_t*)saddr6->sin6_addr.s6_addr+12);
+            return IPAddress(IPv4, (uint8_t*)saddr6->sin6_addr.s6_addr+IPADDRESS_V4_BYTES_INDEX);
         } else {
             return IPAddress(IPv6, (uint8_t*)(saddr6->sin6_addr.s6_addr), saddr6->sin6_scope_id);
         }
