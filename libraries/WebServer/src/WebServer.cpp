@@ -135,26 +135,26 @@ bool WebServer::authenticate(const char * username, const char * password){
       authReq = authReq.substring(6);
       authReq.trim();
       char toencodeLen = strlen(username)+strlen(password)+1;
-      char *toencode = new char[toencodeLen + 1];
+      char *toencode = (char *)malloc(toencodeLen + 1);
       if(toencode == NULL){
         authReq = "";
         return false;
       }
-      char *encoded = new char[base64_encode_expected_len(toencodeLen)+1];
+      char *encoded = (char *)malloc(base64_encode_expected_len(toencodeLen)+1);
       if(encoded == NULL){
         authReq = "";
-        delete[] toencode;
+        free(toencode);
         return false;
       }
       sprintf(toencode, "%s:%s", username, password);
       if(base64_encode_chars(toencode, toencodeLen, encoded) > 0 && authReq.equalsConstantTime(encoded)) {
         authReq = "";
-        delete[] toencode;
-        delete[] encoded;
+        free(toencode);
+        free(encoded);
         return true;
       }
-      delete[] toencode;
-      delete[] encoded;
+      free(toencode);
+      free(encoded);;
     } else if(authReq.startsWith(F("Digest"))) {
       authReq = authReq.substring(7);
       log_v("%s", authReq.c_str());
@@ -303,7 +303,7 @@ void WebServer::handleClient() {
         if (_parseRequest(_currentClient)) {
           // because HTTP_MAX_SEND_WAIT is expressed in milliseconds,
           // it must be divided by 1000
-          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT / 1000);
+          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
           _contentLength = CONTENT_LENGTH_NOT_SET;
           _handleRequest();
 
