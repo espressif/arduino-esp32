@@ -1546,10 +1546,12 @@ set_ant:
 // ------------------------------------------------ Generic Network function ---------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
-struct dns_api_msg6 {
-    ip_addr_t ip_addr;
+typedef struct gethostbynameParameters {
+    const char *hostname;
+    ip_addr_t addr;
+    uint8_t addr_type;
     int result;
-};
+} gethostbynameParameters_t;
 
 /**
  * DNS callback
@@ -1559,17 +1561,17 @@ struct dns_api_msg6 {
  */
 static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
 {
+    gethostbynameParameters_t *parameters = static_cast<gethostbynameParameters_t *>(callback_arg);
     if(ipaddr) {
-        (*reinterpret_cast<IPAddress*>(callback_arg)) = ipaddr->u_addr.ip4.addr;
+        if(parameters->result == 0){
+            memcpy(&(parameters->addr), ipaddr, sizeof(ip_addr_t));
+            parameters->result = 1;
+        }
+    } else {
+        parameters->result = -1;
     }
     xEventGroupSetBits(_arduino_event_group, WIFI_DNS_DONE_BIT);
 }
-
-typedef struct gethostbynameParameters {
-    const char *hostname;
-    ip_addr_t addr;
-    void *callback_arg;
-} gethostbynameParameters_t;
 
 /**
  * Callback to execute dns_gethostbyname in lwIP's TCP/IP context
@@ -1578,26 +1580,7 @@ typedef struct gethostbynameParameters {
 static esp_err_t wifi_gethostbyname_tcpip_ctx(void *param)
 {
     gethostbynameParameters_t *parameters = static_cast<gethostbynameParameters_t *>(param);
-    return dns_gethostbyname(parameters->hostname, &parameters->addr, &wifi_dns_found_callback, parameters->callback_arg);
-}
-
-/**
- * IPv6 compatible DNS callback
- * @param name
- * @param ipaddr
- * @param callback_arg
- */
-static void wifi_dns6_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
-{
-    struct dns_api_msg6 *msg = (struct dns_api_msg6 *)callback_arg;
-
-    if(ipaddr && !msg->result) {
-        msg->ip_addr = *ipaddr;
-        msg->result = 1;
-    } else {
-        msg->result = -1;
-    }
-    xEventGroupSetBits(_arduino_event_group, WIFI_DNS_DONE_BIT);
+    return dns_gethostbyname_addrtype(parameters->hostname, &parameters->addr, &wifi_dns_found_callback, parameters, parameters->addr_type);
 }
 
 /**
@@ -1607,60 +1590,39 @@ static void wifi_dns6_found_callback(const char *name, const ip_addr_t *ipaddr, 
  * @return 1 if aIPAddrString was successfully converted to an IP address,
  *          else error code
  */
-int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
+int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult, bool preferV6)
 {
-    if (!aResult.fromString(aHostname))
-    {
-        gethostbynameParameters_t params;
-        params.hostname = aHostname;
-        params.callback_arg = &aResult;
-        aResult = static_cast<uint32_t>(0);
+    err_t err = ERR_OK;
+    gethostbynameParameters_t params;
+
+    aResult = static_cast<uint32_t>(0);
+    params.hostname = aHostname;
+    params.addr_type = preferV6?LWIP_DNS_ADDRTYPE_IPV6_IPV4:LWIP_DNS_ADDRTYPE_IPV4_IPV6;
+    params.result = 0;
+    aResult.to_ip_addr_t(&(params.addr));
+
+    if (!aResult.fromString(aHostname)) {
         waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
         clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
-        err_t err = esp_netif_tcpip_exec(wifi_gethostbyname_tcpip_ctx, &params);
-        if(err == ERR_OK && params.addr.u_addr.ip4.addr) {
-            aResult = params.addr.u_addr.ip4.addr;
-        } else if(err == ERR_INPROGRESS) {
+
+        err = esp_netif_tcpip_exec(wifi_gethostbyname_tcpip_ctx, &params);
+        if (err == ERR_OK) {
+            aResult.from_ip_addr_t(&(params.addr));
+        } else if (err == ERR_INPROGRESS) {
             waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
             clearStatusBits(WIFI_DNS_DONE_BIT);
+            if (params.result == 1) {
+                aResult.from_ip_addr_t(&(params.addr));
+                err = ERR_OK;
+            }
         }
         setStatusBits(WIFI_DNS_IDLE_BIT);
-        if((uint32_t)aResult == 0){
-            log_e("DNS Failed for %s", aHostname);
-        }
     }
-    return (uint32_t)aResult != 0;
-}
-
-/**
- * Resolve the given hostname to an IP6 address.
- * @param aHostname     Name to be resolved
- * @param aResult       IPv6Address structure to store the returned IP address
- * @return 1 if aHostname was successfully converted to an IP address,
- *          else error code
- */
-int WiFiGenericClass::hostByName6(const char* aHostname, ip_addr_t& aResult)
-{
-    ip_addr_t addr;
-    struct dns_api_msg6 arg;
-
-    memset(&arg, 0x0, sizeof(arg));
-    waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
-    clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
-
-    err_t err = dns_gethostbyname_addrtype(aHostname, &addr, &wifi_dns6_found_callback,
-                &arg, LWIP_DNS_ADDRTYPE_IPV6_IPV4);
-    if(err == ERR_OK) {
-        aResult = addr;
-    } else if(err == ERR_INPROGRESS) {
-        waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
-        clearStatusBits(WIFI_DNS_DONE_BIT);
-        if (arg.result == 1) {
-            aResult = arg.ip_addr;
-        }
+    if (err == ERR_OK) {
+        return 1;
     }
-    setStatusBits(WIFI_DNS_IDLE_BIT);
-    return (uint32_t)err == ERR_OK || (err == ERR_INPROGRESS && arg.result == 1);
+    log_e("DNS Failed for '%s' with error '%d' and result '%d'", aHostname, err, params.result);
+    return err;
 }
 
 IPAddress WiFiGenericClass::calculateNetworkID(IPAddress ip, IPAddress subnet) {

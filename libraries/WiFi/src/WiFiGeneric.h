@@ -198,7 +198,6 @@ class WiFiGenericClass
     static const char * getHostname();
     static bool setHostname(const char * hostname);
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
-    static int hostByName6(const char *aHostname, ip_addr_t& aResult);
 
     static esp_err_t _eventCallback(arduino_event_t *event);
     
@@ -219,7 +218,7 @@ class WiFiGenericClass
     static bool _isReconnectableReason(uint8_t reason);
 
   public:
-    static int hostByName(const char *aHostname, IPAddress &aResult);
+    static int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
 
     static IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet);
     static IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet);
