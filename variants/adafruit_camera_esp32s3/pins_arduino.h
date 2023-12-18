@@ -24,7 +24,7 @@ static const uint8_t LED_BUILTIN = PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT;
 #define RGB_BRIGHTNESS 64
 
 
-//static const uint8_t TFT_BACKLIGHT = 41;
+static const uint8_t TFT_BACKLIGHT = 45;
 static const uint8_t TFT_DC        = 40;
 static const uint8_t TFT_CS        = 39;
 static const uint8_t TFT_RESET     = 38;
