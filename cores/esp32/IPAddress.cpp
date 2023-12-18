@@ -20,6 +20,7 @@
 #include "IPAddress.h"
 #include "Print.h"
 #include "lwip/netif.h"
+#include "StreamString.h"
 
 IPAddress::IPAddress() : IPAddress(IPv4) {}
 
@@ -103,31 +104,11 @@ IPAddress::IPAddress(const IPAddress& address)
     *this = address;
 }
 
-String IPAddress::toString4() const
-{
-    char szRet[16];
-    snprintf(szRet, sizeof(szRet), "%u.%u.%u.%u", _address.bytes[IPADDRESS_V4_BYTES_INDEX], _address.bytes[IPADDRESS_V4_BYTES_INDEX + 1], _address.bytes[IPADDRESS_V4_BYTES_INDEX + 2], _address.bytes[IPADDRESS_V4_BYTES_INDEX + 3]);
-    return String(szRet);
-}
-
-String IPAddress::toString6() const
-{
-    char szRet[40];
-    snprintf(szRet, sizeof(szRet), "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
-            _address.bytes[0], _address.bytes[1], _address.bytes[2], _address.bytes[3],
-            _address.bytes[4], _address.bytes[5], _address.bytes[6], _address.bytes[7],
-            _address.bytes[8], _address.bytes[9], _address.bytes[10], _address.bytes[11],
-            _address.bytes[12], _address.bytes[13], _address.bytes[14], _address.bytes[15]);
-    return String(szRet);
-}
-
 String IPAddress::toString() const
 {
-    if (_type == IPv4) {
-        return toString4();
-    } else {
-        return toString6();
-    }
+    StreamString s;
+    printTo(s);
+    return String(s);
 }
 
 bool IPAddress::fromString(const char *address) {
@@ -373,6 +354,13 @@ size_t IPAddress::printTo(Print& p) const
                 n += p.print(':');
             }
         }
+        // add a zone if zone-id is non-zero
+        if(_zone > 0){
+            n += p.print('%');
+            char if_name[NETIF_NAMESIZE];
+            netif_index_to_name(_zone, if_name);
+            n += p.print(if_name);
+        }
         return n;
     }
 
@@ -400,6 +388,23 @@ void IPAddress::to_ip_addr_t(ip_addr_t* addr){
         addr->type = IPADDR_TYPE_V4;
         addr->u_addr.ip4.addr = _address.dword[IPADDRESS_V4_DWORD_INDEX];
     }
+}
+
+IPAddress& IPAddress::from_ip_addr_t(ip_addr_t* addr){
+    if(addr->type == IPADDR_TYPE_V6){
+        _type = IPv6;
+        _address.dword[0] = addr->u_addr.ip6.addr[0];
+        _address.dword[1] = addr->u_addr.ip6.addr[1];
+        _address.dword[2] = addr->u_addr.ip6.addr[2];
+        _address.dword[3] = addr->u_addr.ip6.addr[3];
+#if LWIP_IPV6_SCOPES
+        _zone = addr->u_addr.ip6.zone;
+#endif /* LWIP_IPV6_SCOPES */
+    } else {
+        _type = IPv4;
+        _address.dword[IPADDRESS_V4_DWORD_INDEX] = addr->u_addr.ip4.addr;
+    }
+    return *this;
 }
 
 const IPAddress IN6ADDR_ANY(IPv6);

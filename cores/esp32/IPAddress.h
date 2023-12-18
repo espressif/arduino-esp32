@@ -97,8 +97,11 @@ public:
 
     IPType type() const { return _type; }
 
-    void to_ip_addr_t(ip_addr_t* addr);
     uint8_t zone() const { return (type() == IPv6)?_zone:0; }
+
+    // LwIP conversions
+    void to_ip_addr_t(ip_addr_t* addr);
+    IPAddress& from_ip_addr_t(ip_addr_t* addr);
 
     friend class UDP;
     friend class Client;
@@ -107,8 +110,6 @@ public:
 protected:
     bool fromString4(const char *address);
     bool fromString6(const char *address);
-    String toString4() const;
-    String toString6() const;
 };
 
 extern const IPAddress IN6ADDR_ANY;
