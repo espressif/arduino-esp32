@@ -32,6 +32,7 @@
 #include "esp_netif_types.h"
 #include "esp_eth_driver.h"
 #include "wifi_provisioning/manager.h"
+#include "lwip/ip_addr.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);
 
@@ -154,11 +155,6 @@ typedef enum {
 	WIFI_TX_ANT1,
 	WIFI_TX_ANT_AUTO
 } wifi_tx_ant_t;
-
-struct dns_api_msg {
-    ip_addr_t ip_addr;
-    int result;
-};
 
 class WiFiGenericClass
 {

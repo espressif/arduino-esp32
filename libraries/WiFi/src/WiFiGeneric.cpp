@@ -1546,6 +1546,11 @@ set_ant:
 // ------------------------------------------------ Generic Network function ---------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
+struct dns_api_msg6 {
+    ip_addr_t ip_addr;
+    int result;
+};
+
 /**
  * DNS callback
  * @param name
@@ -1584,7 +1589,7 @@ static esp_err_t wifi_gethostbyname_tcpip_ctx(void *param)
  */
 static void wifi_dns6_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
 {
-    struct dns_api_msg *msg = (struct dns_api_msg *)callback_arg;
+    struct dns_api_msg6 *msg = (struct dns_api_msg6 *)callback_arg;
 
     if(ipaddr && !msg->result) {
         msg->ip_addr = *ipaddr;
@@ -1637,7 +1642,7 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
 int WiFiGenericClass::hostByName6(const char* aHostname, ip_addr_t& aResult)
 {
     ip_addr_t addr;
-    struct dns_api_msg arg;
+    struct dns_api_msg6 arg;
 
     memset(&arg, 0x0, sizeof(arg));
     waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);

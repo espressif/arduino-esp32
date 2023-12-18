@@ -52,7 +52,7 @@ uint8_t WiFiUDP::begin(IPAddress address, uint16_t port){
   tx_buffer_len = 0;
 
 #if LWIP_IPV6
-  if ((udp_server=socket(address.isV6() ? AF_INET6 : AF_INET, SOCK_DGRAM, 0)) == -1){
+  if ((udp_server=socket((address.type() == IPv6) ? AF_INET6 : AF_INET, SOCK_DGRAM, 0)) == -1){
 #else
   if ((udp_server=socket(AF_INET, SOCK_DGRAM, 0)) == -1){
 #endif
@@ -70,19 +70,20 @@ uint8_t WiFiUDP::begin(IPAddress address, uint16_t port){
   struct sockaddr_storage serveraddr = {};
   size_t sock_size = 0;
 #if LWIP_IPV6
-  if (address.isV6()) {
+  if (address.type() == IPv6) {
     struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
-    ip_addr_t * ip_addr = (ip_addr_t*) address;
+    ip_addr_t addr;
+    address.to_ip_addr_t(&addr);
     memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
     tmpaddr->sin6_family = AF_INET6;
     tmpaddr->sin6_port = htons(server_port);
-    tmpaddr->sin6_scope_id = ip_addr->u_addr.ip6.zone;
-    inet6_addr_from_ip6addr(&tmpaddr->sin6_addr, ip_2_ip6(ip_addr));
+    tmpaddr->sin6_scope_id = addr.u_addr.ip6.zone;
+    inet6_addr_from_ip6addr(&tmpaddr->sin6_addr, ip_2_ip6(&addr));
     tmpaddr->sin6_flowinfo = 0;
     sock_size = sizeof(sockaddr_in6);
   } else
 #endif
-  if (1) {
+  {
     struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serveraddr;
     memset((char *) tmpaddr, 0, sizeof(struct sockaddr_in));
     tmpaddr->sin_family = AF_INET;
@@ -103,15 +104,16 @@ uint8_t WiFiUDP::begin(uint16_t p){
   return begin(IPAddress(), p);
 }
 
-uint8_t WiFiUDP::beginMulticast(IPAddress a, uint16_t p){
+uint8_t WiFiUDP::beginMulticast(IPAddress address, uint16_t p){
   if(begin(IPAddress(), p)){
-    ip_addr_t * ip_addr = (ip_addr_t*) a;
-    if (ip_addr_ismulticast(ip_addr)) {
+    ip_addr_t addr;
+    address.to_ip_addr_t(&addr);
+    if (ip_addr_ismulticast(&addr)) {
 #if LWIP_IPV6
-      if (IP_IS_V6_VAL(*ip_addr)) {
+      if (address.type() == IPv6) {
         struct ipv6_mreq mreq;
         bool joined = false;
-        inet6_addr_from_ip6addr(&mreq.ipv6mr_multiaddr, ip_2_ip6(ip_addr));
+        inet6_addr_from_ip6addr(&mreq.ipv6mr_multiaddr, ip_2_ip6(&addr));
 
         // iterate on each interface
         for (netif* intf = netif_list; intf != nullptr; intf = intf->next) {
@@ -128,9 +130,9 @@ uint8_t WiFiUDP::beginMulticast(IPAddress a, uint16_t p){
         }
       } else
 #endif
-      if (1) {
+      {
         struct ip_mreq mreq;
-        mreq.imr_multiaddr.s_addr = (in_addr_t)a;
+        mreq.imr_multiaddr.s_addr = (in_addr_t)address;
         mreq.imr_interface.s_addr = INADDR_ANY;
         if (setsockopt(udp_server, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
             log_e("could not join igmp: %d", errno);
@@ -138,7 +140,7 @@ uint8_t WiFiUDP::beginMulticast(IPAddress a, uint16_t p){
             return 0;
         }
       }
-      multicast_ip = a;
+      multicast_ip = address;
       return 1;
     }
   }
@@ -158,12 +160,13 @@ void WiFiUDP::stop(){
   }
   if(udp_server == -1)
     return;
-  ip_addr_t * mcast_addr = (ip_addr_t*) multicast_ip;
-  if (!ip_addr_isany(mcast_addr)) {
+  ip_addr_t addr;
+  multicast_ip.to_ip_addr_t(&addr);
+  if (!ip_addr_isany(&addr)) {
 #if LWIP_IPV6
-    if (IP_IS_V6(mcast_addr)) {
+    if (multicast_ip.type() == IPv6) {
       struct ipv6_mreq mreq;
-      inet6_addr_from_ip6addr(&mreq.ipv6mr_multiaddr, ip_2_ip6(mcast_addr));
+      inet6_addr_from_ip6addr(&mreq.ipv6mr_multiaddr, ip_2_ip6(&addr));
 
       // iterate on each interface
       for (netif* intf = netif_list; intf != nullptr; intf = intf->next) {
@@ -174,7 +177,7 @@ void WiFiUDP::stop(){
       }
     } else
 #endif
-    if (1) {
+    {
       struct ip_mreq mreq;
       mreq.imr_multiaddr.s_addr = (in_addr_t)multicast_ip;
       mreq.imr_interface.s_addr = (in_addr_t)0;
@@ -240,8 +243,10 @@ int WiFiUDP::beginPacket(const char *host, uint16_t port){
 }
 
 int WiFiUDP::endPacket(){
+  ip_addr_t addr;
+  remote_ip.to_ip_addr_t(&addr);
 
-  if (remote_ip.isV4()) {
+  if (remote_ip.type() == IPv4) {
     struct sockaddr_in recipient;
     recipient.sin_addr.s_addr = (uint32_t)remote_ip;
     recipient.sin_family = AF_INET;
@@ -254,7 +259,7 @@ int WiFiUDP::endPacket(){
   } else {
     struct sockaddr_in6 recipient;
     recipient.sin6_flowinfo = 0;
-    recipient.sin6_addr = *(in6_addr*)(ip_addr_t*)remote_ip;
+    recipient.sin6_addr = *(in6_addr*)(ip_addr_t*)(&addr);
     recipient.sin6_family = AF_INET6;
     recipient.sin6_port = htons(remote_port);
     recipient.sin6_scope_id = remote_ip.zone();
@@ -310,17 +315,18 @@ int WiFiUDP::parsePacket(){
   else if (si_other_storage.ss_family == AF_INET6) {
     struct sockaddr_in6 &si_other = (sockaddr_in6&) si_other_storage;
     remote_ip = IPAddress(IPv6, (uint8_t*)&si_other.sin6_addr, si_other.sin6_scope_id);   // force IPv6
-    ip_addr_t *ip_addr = (ip_addr_t*) remote_ip;
+    ip_addr_t addr;
+    remote_ip.to_ip_addr_t(&addr);
     /* Dual-stack: Unmap IPv4 mapped IPv6 addresses */
-    if (IP_IS_V6_VAL(*ip_addr) && ip6_addr_isipv4mappedipv6(ip_2_ip6(ip_addr))) {
-      unmap_ipv4_mapped_ipv6(ip_2_ip4(ip_addr), ip_2_ip6(ip_addr));
-      IP_SET_TYPE_VAL(*ip_addr, IPADDR_TYPE_V4);
+    if (remote_ip.type() == IPv6 && ip6_addr_isipv4mappedipv6(ip_2_ip6(&addr))) {
+      unmap_ipv4_mapped_ipv6(ip_2_ip4(&addr), ip_2_ip6(&addr));
+      IP_SET_TYPE_VAL(addr, IPADDR_TYPE_V4);
     }
     remote_port = ntohs(si_other.sin6_port);
   }
 #endif // LWIP_IPV6=1
   else {
-    remote_ip = *IP_ADDR_ANY;
+    remote_ip = ip_addr_any.u_addr.ip4.addr;
     remote_port = 0;
   }
   if (len > 0) {
