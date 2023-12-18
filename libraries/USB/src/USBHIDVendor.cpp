@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "USBHID.h"
+#if SOC_USB_OTG_SUPPORTED
 
 #if CONFIG_TINYUSB_HID_ENABLED
 
@@ -59,7 +60,7 @@ esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, i
 // max size is 64 and we need one byte for the report ID
 static uint8_t HID_VENDOR_REPORT_SIZE = 63;
 static uint8_t feature[64];
-static xQueueHandle rx_queue = NULL;
+static QueueHandle_t rx_queue = NULL;
 static bool prepend_size = false;
 
 USBHIDVendor::USBHIDVendor(uint8_t report_size, bool prepend): hid(){
@@ -234,3 +235,4 @@ void USBHIDVendor::flush(void){}
 
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

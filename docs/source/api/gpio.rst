@@ -87,7 +87,7 @@ The GPIO peripheral on the ESP32 supports interruptions.
 attachInterrupt
 ***************
 
-The function ``attachInterruptArg`` is used to attach the interrupt to the defined pin.
+The function ``attachInterrupt`` is used to attach the interrupt to the defined pin.
 
 .. code-block:: arduino
 

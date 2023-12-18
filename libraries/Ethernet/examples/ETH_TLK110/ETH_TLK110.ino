@@ -5,37 +5,36 @@
 
 #include <ETH.h>
 
-#define ETH_ADDR        31
-#define ETH_POWER_PIN   17
-#define ETH_MDC_PIN     23
-#define ETH_MDIO_PIN    18
-#define ETH_TYPE        ETH_PHY_TLK110
+#define ETH_TYPE            ETH_PHY_TLK110
+#define ETH_ADDR            31
+#define ETH_MDC_PIN         23
+#define ETH_MDIO_PIN        18
+#define ETH_POWER_PIN       17
+#define ETH_CLK_MODE        ETH_CLOCK_GPIO0_IN
 
 static bool eth_connected = false;
 
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
 void WiFiEvent(WiFiEvent_t event)
 {
   switch (event) {
     case ARDUINO_EVENT_ETH_START:
       Serial.println("ETH Started");
-      //set eth hostname here
+      // The hostname must be set after the interface is started, but needs
+      // to be set before DHCP, so set it from the event handler thread.
       ETH.setHostname("esp32-ethernet");
       break;
     case ARDUINO_EVENT_ETH_CONNECTED:
       Serial.println("ETH Connected");
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
-      Serial.print("ETH MAC: ");
-      Serial.print(ETH.macAddress());
-      Serial.print(", IPv4: ");
-      Serial.print(ETH.localIP());
-      if (ETH.fullDuplex()) {
-        Serial.print(", FULL_DUPLEX");
-      }
-      Serial.print(", ");
-      Serial.print(ETH.linkSpeed());
-      Serial.println("Mbps");
+      Serial.println("ETH Got IP");
+      ETH.printInfo(Serial);
       eth_connected = true;
+      break;
+    case ARDUINO_EVENT_ETH_LOST_IP:
+      Serial.println("ETH Lost IP");
+      eth_connected = false;
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       Serial.println("ETH Disconnected");
@@ -73,8 +72,8 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
-  WiFi.onEvent(WiFiEvent);
-  ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE);
+  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
+  ETH.begin(ETH_TYPE, ETH_ADDR, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_POWER_PIN, ETH_CLK_MODE);
 }
 
 
