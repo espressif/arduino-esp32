@@ -111,7 +111,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
         perimanSetBusDeinit(ESP32_BUS_TYPE_GPIO, gpioDetachBus);
         if(!perimanClearPinBus(pin)){
-            log_e("Deinit of previous bus from GPIO %i failed", pin);
+            log_e("Deinit of previous bus from pin %i failed", pin);
             return;
         }
     }
@@ -140,7 +140,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
     if(gpio_config(&conf) != ESP_OK)
     {
-        log_e("GPIO %i config failed", pin);
+        log_e("Pin %i config failed", pin);
         return;
     }
     if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
@@ -204,7 +204,7 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
     	interrupt_initialized = (err == ESP_OK) || (err == ESP_ERR_INVALID_STATE);
     }
     if(!interrupt_initialized) {
-    	log_e("GPIO %i ISR Service Failed To Start", pin);
+    	log_e("IO %i ISR Service Failed To Start", pin);
     	return;
     }
 
