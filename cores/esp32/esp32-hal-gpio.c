@@ -256,6 +256,14 @@ extern void __detachInterrupt(uint8_t pin)
     gpio_set_intr_type((gpio_num_t)pin, GPIO_INTR_DISABLE);
 }
 
+extern void enableInterrupt(uint8_t pin) {
+    gpio_intr_enable((gpio_num_t)pin);
+}
+
+extern void disableInterrupt(uint8_t pin) {
+    gpio_intr_disable((gpio_num_t)pin);
+}
+
 
 extern void pinMode(uint8_t pin, uint8_t mode) __attribute__ ((weak, alias("__pinMode")));
 extern void digitalWrite(uint8_t pin, uint8_t val) __attribute__ ((weak, alias("__digitalWrite")));
