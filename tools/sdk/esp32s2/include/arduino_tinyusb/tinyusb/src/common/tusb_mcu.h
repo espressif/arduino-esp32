@@ -210,6 +210,11 @@
 
   #define TUP_DCD_ENDPOINT_MAX    9
 
+#elif TU_CHECK_MCU(OPT_MCU_STM32H5)
+  #define TUP_USBIP_FSDEV
+  #define TUP_USBIP_FSDEV_STM32
+  #define TUP_DCD_ENDPOINT_MAX    8
+
 #elif TU_CHECK_MCU(OPT_MCU_STM32G4)
   // Device controller
   #define TUP_USBIP_FSDEV
