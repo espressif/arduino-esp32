@@ -104,14 +104,14 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 #endif
 
     if (pin >= SOC_GPIO_PIN_COUNT) {
-        log_e("Invalid pin (%i) selected", pin);
+        log_e("Invalid IO %i selected", pin);
         return;
     }
 
     if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
         perimanSetBusDeinit(ESP32_BUS_TYPE_GPIO, gpioDetachBus);
         if(!perimanClearPinBus(pin)){
-            log_e("Deinit of previous bus from pin %i failed", pin);
+            log_e("Deinit of previous bus from IO %i failed", pin);
             return;
         }
     }
@@ -140,7 +140,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
     if(gpio_config(&conf) != ESP_OK)
     {
-        log_e("Pin %i config failed", pin);
+        log_e("IO %i config failed", pin);
         return;
     }
     if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
@@ -164,7 +164,7 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
         if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL){
             gpio_set_level((gpio_num_t)pin, val);
         } else {
-            log_e("Pin %i is not set as GPIO.", pin);
+            log_e("IO %i is not set as GPIO.", pin);
         }
 }
 
@@ -174,7 +174,7 @@ extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin)
         return gpio_get_level((gpio_num_t)pin);
     }
     else {
-        log_e("Pin %i is not set as GPIO.", pin);
+        log_e("IO %i is not set as GPIO.", pin);
         return 0;
     }
 }
