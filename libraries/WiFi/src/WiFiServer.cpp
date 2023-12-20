@@ -23,6 +23,59 @@
 #undef write
 #undef close
 
+#if !CONFIG_DISABLE_HAL_LOCKS
+#define WIFISERVER_MUTEX_LOCK()    do {} while (xSemaphoreTake(_lock, portMAX_DELAY) != pdPASS)
+#define WIFISERVER_MUTEX_UNLOCK()  xSemaphoreGive(_lock)
+#else
+#define WIFISERVER_MUTEX_LOCK()
+#define WIFISERVER_MUTEX_UNLOCK()
+#endif
+
+WiFiServer::WiFiServer(uint16_t port, uint8_t max_clients) :
+    sockfd(-1), _accepted_sockfd(-1), _addr(), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false)
+#if !CONFIG_DISABLE_HAL_LOCKS
+        , _lock(NULL)
+#endif
+{
+  log_v("WiFiServer::WiFiServer(port=%d, ...)", port);
+#if !CONFIG_DISABLE_HAL_LOCKS
+  if (_lock == NULL) {
+    _lock = xSemaphoreCreateMutex();
+    if (_lock == NULL) {
+      log_e("xSemaphoreCreateMutex failed");
+      return;
+    }
+  }
+#endif
+}
+
+WiFiServer::WiFiServer(const IPAddress &addr, uint16_t port, uint8_t max_clients) :
+    sockfd(-1), _accepted_sockfd(-1), _addr(addr), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false)
+#if !CONFIG_DISABLE_HAL_LOCKS
+        , _lock(NULL)
+#endif
+{
+  log_v("WiFiServer::WiFiServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
+#if !CONFIG_DISABLE_HAL_LOCKS
+  if (_lock == NULL) {
+    _lock = xSemaphoreCreateMutex();
+    if (_lock == NULL) {
+      log_e("xSemaphoreCreateMutex failed");
+      return;
+    }
+  }
+#endif
+}
+
+WiFiServer::~WiFiServer() {
+  end();
+#if !CONFIG_DISABLE_HAL_LOCKS
+  if (_lock != NULL) {
+    vSemaphoreDelete(_lock);
+  }
+#endif
+}
+
 int WiFiServer::setTimeout(uint32_t seconds){
   struct timeval tv;
   tv.tv_sec = seconds;
@@ -33,13 +86,49 @@ int WiFiServer::setTimeout(uint32_t seconds){
 }
 
 size_t WiFiServer::write(const uint8_t *data, size_t len){
-  return 0;
+  WIFISERVER_MUTEX_LOCK();
+  static uint32_t lastCheck;
+  uint32_t m = millis();
+  if (m - lastCheck > 100) {
+    lastCheck = m;
+    acceptClients();
+  }
+  size_t ret = 0;
+  if (len > 0) {
+    for (uint8_t i = 0; i < SERVER_MAX_MONITORED_CLIENTS; i++) {
+      if (connectedClients[i].connected()) {
+        ret += connectedClients[i].write(data, len);
+      }
+    }
+  }
+  WIFISERVER_MUTEX_UNLOCK();
+  return ret;
 }
 
 void WiFiServer::stopAll(){}
 
-WiFiClient WiFiServer::available(){
-  return accept();
+// https://www.arduino.cc/en/Reference/WiFiServerAvailable
+WiFiClient WiFiServer::available() {
+  WIFISERVER_MUTEX_LOCK();
+
+  acceptClients();
+
+  WiFiClient ret;
+
+  // find next client with data available
+  for (uint8_t i = 0; i < SERVER_MAX_MONITORED_CLIENTS; i++) {
+    if (index == SERVER_MAX_MONITORED_CLIENTS) {
+      index = 0;
+    }
+    WiFiClient& client = connectedClients[index];
+    index++;
+    if (client.available()) {
+      ret = client;
+      break;
+    }
+  }
+  WIFISERVER_MUTEX_UNLOCK();
+  return ret;
 }
 
 WiFiClient WiFiServer::accept(){
@@ -138,6 +227,14 @@ void WiFiServer::end(){
 #endif
   sockfd = -1;
   _listening = false;
+
+  WIFISERVER_MUTEX_LOCK();
+  for (uint8_t i = 0; i < SERVER_MAX_MONITORED_CLIENTS; i++) {
+    if (connectedClients[i]) {
+      connectedClients[i].stop();
+    }
+  }
+  WIFISERVER_MUTEX_UNLOCK();
 }
 
 void WiFiServer::close(){
@@ -147,3 +244,13 @@ void WiFiServer::close(){
 void WiFiServer::stop(){
   end();
 }
+
+void WiFiServer::acceptClients() {
+  for (uint8_t i = 0; i < SERVER_MAX_MONITORED_CLIENTS; i++) {
+    WiFiClient& client = connectedClients[i];
+    if (!client.connected() && !client.available()) {
+      client = accept();
+    }
+  }
+}
+

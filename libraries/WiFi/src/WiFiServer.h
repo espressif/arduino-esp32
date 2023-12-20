@@ -24,6 +24,10 @@
 #include "WiFiClient.h"
 #include "IPAddress.h"
 
+#ifndef SERVER_MAX_MONITORED_CLIENTS
+#define SERVER_MAX_MONITORED_CLIENTS CONFIG_LWIP_MAX_SOCKETS
+#endif
+
 class WiFiServer : public Server {
   private:
     int sockfd;
@@ -33,17 +37,23 @@ class WiFiServer : public Server {
     uint8_t _max_clients;
     bool _listening;
     bool _noDelay = false;
+    
+    WiFiClient connectedClients[SERVER_MAX_MONITORED_CLIENTS];
+    uint8_t index = 0;
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+    SemaphoreHandle_t _lock;
+#endif
+
+    void acceptClients();
 
   public:
     void listenOnLocalhost(){}
 
-    WiFiServer(uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
-      log_v("WiFiServer::WiFiServer(port=%d, ...)", port);
-    }
-    WiFiServer(const IPAddress& addr, uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(addr),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
-      log_v("WiFiServer::WiFiServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
-    }
-    ~WiFiServer(){ end();}
+    WiFiServer(uint16_t port=80, uint8_t max_clients=4);
+    WiFiServer(const IPAddress& addr, uint16_t port=80, uint8_t max_clients=4);
+    ~WiFiServer();
+
     WiFiClient available();
     WiFiClient accept();
     void begin(uint16_t port=0);
