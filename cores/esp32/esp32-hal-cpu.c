@@ -188,11 +188,11 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     }
 #endif
 #ifndef CONFIG_IDF_TARGET_ESP32H2
-    if(cpu_freq_mhz > xtal && cpu_freq_mhz != 240 && cpu_freq_mhz != 160 && cpu_freq_mhz != 80){
+    if(cpu_freq_mhz > xtal && cpu_freq_mhz != 240 && cpu_freq_mhz != 160 && cpu_freq_mhz != 120 && cpu_freq_mhz != 80){
         if(xtal >= RTC_XTAL_FREQ_40M){
-            log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2, xtal/4);
+            log_e("Bad frequency: %u MHz! Options are: 240, 160, 120, 80, %u, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2, xtal/4);
         } else {
-            log_e("Bad frequency: %u MHz! Options are: 240, 160, 80, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2);
+            log_e("Bad frequency: %u MHz! Options are: 240, 160, 120, 80, %u and %u MHz", cpu_freq_mhz, xtal, xtal/2);
         }
         return false;
     }
