@@ -74,7 +74,7 @@ void tud_cdc_tx_complete_cb(uint8_t itf){
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c){
     if(devices[0] != NULL){
-        devices[0]->write(c);
+        tud_cdc_n_write_char(0, c);
     }
 }
 
