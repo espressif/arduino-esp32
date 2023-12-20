@@ -33,7 +33,7 @@ class ESPLwIPClient : public Client
 public:
         virtual int connect(IPAddress ip, uint16_t port, int32_t timeout) = 0;
         virtual int connect(const char *host, uint16_t port, int32_t timeout) = 0;
-        virtual int setTimeout(uint32_t seconds) = 0;
+        virtual void setConnectionTimeout(uint32_t milliseconds) = 0;
 };
 
 class WiFiClient : public ESPLwIPClient
@@ -43,6 +43,8 @@ protected:
     std::shared_ptr<WiFiClientRxBuffer> _rxBuffer;
     bool _connected;
     int _timeout;
+    int _lastWriteTimeout;
+    int _lastReadTimeout;
 
 public:
     WiFiClient *next;
@@ -91,7 +93,7 @@ public:
     int getSocketOption(int level, int option, const void* value, size_t size);
     int setOption(int option, int *value);
     int getOption(int option, int *value);
-    int setTimeout(uint32_t seconds);
+    void setConnectionTimeout(uint32_t milliseconds);
     int setNoDelay(bool nodelay);
     bool getNoDelay();
 
