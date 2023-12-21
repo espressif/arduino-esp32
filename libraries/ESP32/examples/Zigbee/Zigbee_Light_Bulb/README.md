@@ -1,7 +1,8 @@
 # Arduino-ESP32 Zigbee Light Bulb Example
 
 This example shows how to configure the Zigbee end device and use it as a HA on/off light bulb.
-This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_on_off_light.
+
+**This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_on_off_light.**
 
 # Supported Targets
 

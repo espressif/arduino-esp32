@@ -19,8 +19,10 @@
  * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator.
  * Button switch and Zigbee runs in separate tasks.
  * 
- * Please check the README.md for more detailed description.
+ * Proper Zigbee mode must be selected in Tools->Zigbee mode 
+ * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  * 
+ * Please check the README.md for instructions and more detailed description.
  */
 
 #ifndef ZIGBEE_MODE_ZCZR
@@ -279,9 +281,6 @@ static void switch_button_detected(void *arg)
 
 /********************* Arduino functions **************************/
 void setup() {
-    Serial.begin(115200);
-    while(!Serial);
-
     // Init Zigbee
     esp_zb_platform_config_t config = {
         .radio_config = ESP_ZB_DEFAULT_RADIO_CONFIG(),

@@ -1,7 +1,8 @@
 # Arduino-ESP32 Zigbee Light Switch Example
 
 This example shows how to configure Zigbee Coordinator and use it as an HA on/off light switch.
-This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_on_off_switch.
+
+**This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_on_off_switch.**
 
 # Supported Targets
 
