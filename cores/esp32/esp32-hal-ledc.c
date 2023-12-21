@@ -56,12 +56,11 @@ static bool ledcDetachBus(void * bus){
     return true;
 }
 
-bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
+bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, int channel)
 {
-    int free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
-    if (free_channel == 0 || resolution > LEDC_MAX_BIT_WIDTH)
+    if (channel > LEDC_CHANNELS || resolution > LEDC_MAX_BIT_WIDTH)
     {
-        log_e("No more LEDC channels available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
+        log_e("Channel %u is not available! (maximum %u) or bit width too big (maximum %u)", channel, LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
         return false;
     }
 
@@ -71,7 +70,6 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
         return false;
     }
 
-    int channel = log2(free_channel & -free_channel);
     uint8_t group=(channel/8), timer=((channel/2)%4);
 
     ledc_timer_config_t ledc_timer = {
@@ -117,6 +115,19 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
 
     return true;
 }
+
+bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
+{
+    int free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
+    if (free_channel == 0 || resolution > LEDC_MAX_BIT_WIDTH){
+        log_e("No more LEDC channels available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
+        return false;
+    }
+    int channel = log2(free_channel & -free_channel);
+
+    return ledcAttachChannel(pin, freq, resolution, channel);
+}
+
 bool ledcWrite(uint8_t pin, uint32_t duty)
 {
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
