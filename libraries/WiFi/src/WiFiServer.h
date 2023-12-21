@@ -45,7 +45,7 @@ class WiFiServer : public Server {
       log_v("WiFiServer::WiFiServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
     }
     ~WiFiServer(){ end();}
-    WiFiClient available() __attribute__((deprecated("Renamed to accept().")));
+    WiFiClient available();
     WiFiClient accept();
     void begin(uint16_t port=0);
     void begin(uint16_t port, int reuse_enable);
