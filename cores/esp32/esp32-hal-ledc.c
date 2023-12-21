@@ -58,7 +58,7 @@ static bool ledcDetachBus(void * bus){
 
 bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, int channel)
 {
-    if (channel > LEDC_CHANNELS || resolution > LEDC_MAX_BIT_WIDTH)
+    if (channel >= LEDC_CHANNELS || resolution > LEDC_MAX_BIT_WIDTH)
     {
         log_e("Channel %u is not available! (maximum %u) or bit width too big (maximum %u)", channel, LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
         return false;
