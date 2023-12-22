@@ -677,7 +677,10 @@ int String::lastIndexOf(char ch, unsigned int fromIndex) const {
     wbuffer()[fromIndex + 1] = tempchar;
     if(temp == NULL)
         return -1;
-    return temp - buffer();
+    const int rv = temp - buffer();
+    if(rv >= len())
+        return -1;
+    return rv;
 }
 
 int String::lastIndexOf(const String &s2) const {
