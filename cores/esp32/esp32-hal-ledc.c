@@ -56,7 +56,7 @@ static bool ledcDetachBus(void * bus){
     return true;
 }
 
-bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, int channel)
+bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel)
 {
     if (channel >= LEDC_CHANNELS || resolution > LEDC_MAX_BIT_WIDTH)
     {
@@ -113,12 +113,13 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, int chann
         return false;
     }
 
+    log_i("LEDC attached to pin %u (channel %u, resolution %u)", pin, channel, resolution);
     return true;
 }
 
 bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
 {
-    int free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
+    uint8_t free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
     if (free_channel == 0 || resolution > LEDC_MAX_BIT_WIDTH){
         log_e("No more LEDC channels available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
         return false;
