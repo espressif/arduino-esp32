@@ -29760,3 +29760,119 @@ nano_nora.menu.USBMode.hwcdc.build.openocdscript=esp32s3-builtin.cfg
 nano_nora.menu.USBMode.hwcdc.build.debugconfig=esp32s3-arduino.json
 
 ##############################################################
+
+makergo_c3_supermini.name=MakerGO ESP32 C3 SuperMini
+makergo_c3_supermini.vid.0=0x303a
+makergo_c3_supermini.pid.0=0x1001
+
+makergo_c3_supermini.bootloader.tool=esptool_py
+makergo_c3_supermini.bootloader.tool.default=esptool_py
+
+makergo_c3_supermini.upload.tool=esptool_py
+makergo_c3_supermini.upload.tool.default=esptool_py
+makergo_c3_supermini.upload.tool.network=esp_ota
+
+makergo_c3_supermini.upload.maximum_size=1310720
+makergo_c3_supermini.upload.maximum_data_size=327680
+makergo_c3_supermini.upload.flags=
+makergo_c3_supermini.upload.extra_flags=
+makergo_c3_supermini.upload.use_1200bps_touch=false
+makergo_c3_supermini.upload.wait_for_upload_port=false
+
+makergo_c3_supermini.serial.disableDTR=true
+makergo_c3_supermini.serial.disableRTS=true
+
+makergo_c3_supermini.build.tarch=riscv32
+makergo_c3_supermini.build.target=esp
+makergo_c3_supermini.build.mcu=esp32c3
+makergo_c3_supermini.build.core=esp32
+makergo_c3_supermini.build.variant=makergo_c3_supermini
+makergo_c3_supermini.build.board=MAKERGO_C3_SUPERMINI
+makergo_c3_supermini.build.bootloader_addr=0x0
+
+makergo_c3_supermini.build.cdc_on_boot=1
+makergo_c3_supermini.build.f_cpu=160000000L
+makergo_c3_supermini.build.flash_size=4MB
+makergo_c3_supermini.build.flash_freq=80m
+makergo_c3_supermini.build.flash_mode=dio
+makergo_c3_supermini.build.boot=qio
+makergo_c3_supermini.build.partitions=default
+makergo_c3_supermini.build.defines=
+
+makergo_c3_supermini.menu.CDCOnBoot.default=Enabled
+makergo_c3_supermini.menu.CDCOnBoot.default.build.cdc_on_boot=1
+makergo_c3_supermini.menu.CDCOnBoot.dis_cdc=Disabled
+makergo_c3_supermini.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+makergo_c3_supermini.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+makergo_c3_supermini.menu.PartitionScheme.default.build.partitions=default
+makergo_c3_supermini.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+makergo_c3_supermini.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+makergo_c3_supermini.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+makergo_c3_supermini.menu.PartitionScheme.no_ota.build.partitions=no_ota
+makergo_c3_supermini.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+makergo_c3_supermini.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+makergo_c3_supermini.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+makergo_c3_supermini.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+makergo_c3_supermini.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+makergo_c3_supermini.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+makergo_c3_supermini.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+makergo_c3_supermini.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+makergo_c3_supermini.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+makergo_c3_supermini.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+makergo_c3_supermini.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+makergo_c3_supermini.menu.PartitionScheme.huge_app.build.partitions=huge_app
+makergo_c3_supermini.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+
+makergo_c3_supermini.menu.CPUFreq.160=160MHz (WiFi)
+makergo_c3_supermini.menu.CPUFreq.160.build.f_cpu=160000000L
+makergo_c3_supermini.menu.CPUFreq.80=80MHz (WiFi)
+makergo_c3_supermini.menu.CPUFreq.80.build.f_cpu=80000000L
+makergo_c3_supermini.menu.CPUFreq.40=40MHz
+makergo_c3_supermini.menu.CPUFreq.40.build.f_cpu=40000000L
+makergo_c3_supermini.menu.CPUFreq.20=20MHz
+makergo_c3_supermini.menu.CPUFreq.20.build.f_cpu=20000000L
+makergo_c3_supermini.menu.CPUFreq.10=10MHz
+makergo_c3_supermini.menu.CPUFreq.10.build.f_cpu=10000000L
+
+
+makergo_c3_supermini.menu.FlashFreq.80=80MHz
+makergo_c3_supermini.menu.FlashFreq.80.build.flash_freq=80m
+makergo_c3_supermini.menu.FlashFreq.40=40MHz
+makergo_c3_supermini.menu.FlashFreq.40.build.flash_freq=40m
+
+makergo_c3_supermini.menu.UploadSpeed.921600=921600
+makergo_c3_supermini.menu.UploadSpeed.921600.upload.speed=921600
+makergo_c3_supermini.menu.UploadSpeed.115200=115200
+makergo_c3_supermini.menu.UploadSpeed.115200.upload.speed=115200
+makergo_c3_supermini.menu.UploadSpeed.256000.windows=256000
+makergo_c3_supermini.menu.UploadSpeed.256000.upload.speed=256000
+makergo_c3_supermini.menu.UploadSpeed.230400.windows.upload.speed=256000
+makergo_c3_supermini.menu.UploadSpeed.230400=230400
+makergo_c3_supermini.menu.UploadSpeed.230400.upload.speed=230400
+makergo_c3_supermini.menu.UploadSpeed.460800.linux=460800
+makergo_c3_supermini.menu.UploadSpeed.460800.macosx=460800
+makergo_c3_supermini.menu.UploadSpeed.460800.upload.speed=460800
+makergo_c3_supermini.menu.UploadSpeed.512000.windows=512000
+makergo_c3_supermini.menu.UploadSpeed.512000.upload.speed=512000
+
+makergo_c3_supermini.menu.DebugLevel.none=None
+makergo_c3_supermini.menu.DebugLevel.none.build.code_debug=0
+makergo_c3_supermini.menu.DebugLevel.error=Error
+makergo_c3_supermini.menu.DebugLevel.error.build.code_debug=1
+makergo_c3_supermini.menu.DebugLevel.warn=Warn
+makergo_c3_supermini.menu.DebugLevel.warn.build.code_debug=2
+makergo_c3_supermini.menu.DebugLevel.info=Info
+makergo_c3_supermini.menu.DebugLevel.info.build.code_debug=3
+makergo_c3_supermini.menu.DebugLevel.debug=Debug
+makergo_c3_supermini.menu.DebugLevel.debug.build.code_debug=4
+makergo_c3_supermini.menu.DebugLevel.verbose=Verbose
+makergo_c3_supermini.menu.DebugLevel.verbose.build.code_debug=5
+
+makergo_c3_supermini.menu.EraseFlash.none=Disabled
+makergo_c3_supermini.menu.EraseFlash.none.upload.erase_cmd=
+makergo_c3_supermini.menu.EraseFlash.all=Enabled
+makergo_c3_supermini.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
