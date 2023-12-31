@@ -26885,7 +26885,7 @@ esp32s3_powerfeather.build.variant=esp32s3_powerfeather
 esp32s3_powerfeather.build.board=ESP32S3_POWERFEATHER
 
 esp32s3_powerfeather.build.usb_mode=1
-esp32s3_powerfeather.build.cdc_on_boot=0
+esp32s3_powerfeather.build.cdc_on_boot=1
 esp32s3_powerfeather.build.msc_on_boot=0
 esp32s3_powerfeather.build.dfu_on_boot=0
 esp32s3_powerfeather.build.f_cpu=240000000L
@@ -26898,8 +26898,9 @@ esp32s3_powerfeather.build.partitions=default_8MB
 esp32s3_powerfeather.build.defines=
 esp32s3_powerfeather.build.loop_core=
 esp32s3_powerfeather.build.event_core=
+esp32s3_powerfeather.build.flash_type=qio
 esp32s3_powerfeather.build.psram_type=qspi
-esp32s3_powerfeather.build.memory_type={build.boot}_{build.psram_type}
+esp32s3_powerfeather.build.memory_type={build.flash_type}_{build.psram_type}
 
 esp32s3_powerfeather.menu.PSRAM.disabled=Disabled
 esp32s3_powerfeather.menu.PSRAM.disabled.build.defines=
@@ -26939,10 +26940,10 @@ esp32s3_powerfeather.menu.USBMode.hwcdc.build.usb_mode=1
 esp32s3_powerfeather.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32s3_powerfeather.menu.USBMode.default.build.usb_mode=0
 
-esp32s3_powerfeather.menu.CDCOnBoot.default=Disabled
-esp32s3_powerfeather.menu.CDCOnBoot.default.build.cdc_on_boot=0
 esp32s3_powerfeather.menu.CDCOnBoot.cdc=Enabled
 esp32s3_powerfeather.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+esp32s3_powerfeather.menu.CDCOnBoot.default=Disabled
+esp32s3_powerfeather.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
 esp32s3_powerfeather.menu.MSCOnBoot.default=Disabled
 esp32s3_powerfeather.menu.MSCOnBoot.default.build.msc_on_boot=0
