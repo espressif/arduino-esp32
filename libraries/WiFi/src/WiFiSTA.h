@@ -61,7 +61,8 @@ public:
     bool bandwidth(wifi_bandwidth_t bandwidth);
 
     bool reconnect();
-    bool disconnect(bool wifioff = false, bool eraseap = false);
+    bool disconnectAsync(bool wifioff = false, bool eraseap = false);
+    bool disconnect(bool wifioff = false, bool eraseap = false, unsigned long timeoutLength = 100);
     bool eraseAP(void);
 
     bool isConnected();

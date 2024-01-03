@@ -367,7 +367,7 @@ bool WiFiSTAClass::reconnect()
  * @param eraseap `true` to erase the AP configuration from the NVS memory.
  * @return `true` when successful.
  */
-bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
+bool WiFiSTAClass::disconnectAsync(bool wifioff, bool eraseap)
 {
     wifi_config_t conf;
     wifi_sta_config(&conf);
@@ -389,6 +389,31 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
     }
 
     return false;
+}
+
+/**
+ * Disconnect from the network.
+ * @param wifioff `true` to turn the Wi-Fi radio off.
+ * @param eraseap `true` to erase the AP configuration from the NVS memory.
+ * @param timeoutLength timeout to wait for status change
+ * @return `true` when successful.
+ */
+bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap, unsigned long timeoutLength)
+{
+    if (!disconnectAsync(wifioff, eraseap)) {
+        return false;
+    }
+    if (!timeoutLength) {
+        return true;
+    }
+    const unsigned long start = millis();
+    while ((WiFiGenericClass::getStatusBits() & STA_CONNECTED_BIT) != 0) {
+        if((millis() - start) >= timeoutLength){
+            return false;
+        }
+        delay(2);
+    }
+    return true;
 }
 
 /**
