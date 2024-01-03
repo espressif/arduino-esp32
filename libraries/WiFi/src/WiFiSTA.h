@@ -108,12 +108,20 @@ public:
 
     static void _setStatus(wl_status_t status);
     
+    void setBeginTimeout(unsigned long timeout) {
+        beginTimeout = timeout;
+    }
+    void setBeginAsync() {
+        beginTimeout = 0;
+    }
+
 protected:
     static bool _useStaticIp;
     static bool _autoReconnect;
     static wifi_auth_mode_t _minSecurity;
     static wifi_scan_method_t _scanMethod;
     static wifi_sort_method_t _sortMethod;
+    unsigned long beginTimeout = 60000;
 
 public: 
     bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char* crypt_key = NULL);

@@ -305,6 +305,9 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 		}
     }
 
+    if (beginTimeout) {
+        return (wl_status_t) waitForConnectResult(beginTimeout);
+    }
     return status();
 }
 
@@ -344,6 +347,9 @@ wl_status_t WiFiSTAClass::begin()
     	}
     }
 
+    if (beginTimeout) {
+        return (wl_status_t) waitForConnectResult(beginTimeout);
+    }
     return status();
 }
 
