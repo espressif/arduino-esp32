@@ -5,6 +5,9 @@
    author: chegewara
 */
 
+#ifndef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+  #error "This SoC does not support BLE5. Try using ESP32-C3, or ESP32-S3"
+#else
 #include <BLEDevice.h>
 #include <BLEAdvertising.h>
 
@@ -15,7 +18,10 @@ esp_ble_gap_ext_adv_params_t ext_adv_params_2M = {
     .interval_max = 0x40,
     .channel_map = ADV_CHNL_ALL,
     .own_addr_type = BLE_ADDR_TYPE_RANDOM,
+    .peer_addr_type = BLE_ADDR_TYPE_RANDOM,
+    .peer_addr = {0,0,0,0,0,0},
     .filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
+    .tx_power = EXT_ADV_TX_PWR_NO_PREFERENCE,
     .primary_phy = ESP_BLE_GAP_PHY_1M,
     .max_skip = 0,
     .secondary_phy = ESP_BLE_GAP_PHY_2M,
@@ -70,3 +76,4 @@ void setup() {
 void loop() {
   delay(2000);
 }
+#endif

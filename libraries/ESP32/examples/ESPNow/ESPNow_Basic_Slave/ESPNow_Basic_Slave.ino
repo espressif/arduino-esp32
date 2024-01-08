@@ -78,10 +78,10 @@ void setup() {
 }
 
 // callback when data is recv from Master
-void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
+void OnDataRecv(const esp_now_recv_info_t * info, const uint8_t *data, int data_len) {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
-           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+           info->src_addr[0], info->src_addr[1], info->src_addr[2], info->src_addr[3], info->src_addr[4], info->src_addr[5]);
   Serial.print("Last Packet Recv from: "); Serial.println(macStr);
   Serial.print("Last Packet Recv Data: "); Serial.println(*data);
   Serial.println("");

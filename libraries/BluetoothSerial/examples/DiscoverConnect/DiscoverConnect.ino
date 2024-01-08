@@ -19,19 +19,18 @@
 #include <BluetoothSerial.h>
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+  #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
 
 #if !defined(CONFIG_BT_SPP_ENABLED)
-#error Serial Bluetooth not available or not enabled. It is only available for the ESP32 chip.
+  #error Serial Bluetooth not available or not enabled. It is only available for the ESP32 chip.
 #endif
 
 BluetoothSerial SerialBT;
 
-
 #define BT_DISCOVER_TIME  10000
-esp_spp_sec_t sec_mask=ESP_SPP_SEC_NONE; // or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE to request pincode confirmation
-esp_spp_role_t role=ESP_SPP_ROLE_SLAVE; // or ESP_SPP_ROLE_MASTER
+esp_spp_sec_t sec_mask = ESP_SPP_SEC_NONE; // or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE to request pincode confirmation
+esp_spp_role_t role = ESP_SPP_ROLE_SLAVE; // or ESP_SPP_ROLE_MASTER
 
 // std::map<BTAddress, BTAdvertisedDeviceSet> btDeviceList;
 

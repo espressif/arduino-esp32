@@ -2,7 +2,6 @@
 #include "RMaker.h"
 #include "WiFi.h"
 #include "WiFiProv.h"
-#include "led_strip.h"
 
 #define DEFAULT_POWER_MODE true
 #define DEFAULT_SWING false
@@ -41,6 +40,7 @@ bool power_state = true;
 // But, you can also define custom devices using the 'Device' base class object, as shown here
 static Device *my_device = NULL;
 
+// WARNING: sysProvEvent is called from a separate FreeRTOS task (thread)!
 void sysProvEvent(arduino_event_t *sys_event)
 {
     switch (sys_event->event_id) {
@@ -171,7 +171,7 @@ void setup()
 
     RMaker.start();
 
-    WiFi.onEvent(sysProvEvent);
+    WiFi.onEvent(sysProvEvent);  // Will call sysProvEvent() from another thread.
 #if CONFIG_IDF_TARGET_ESP32S2
     WiFiProv.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE, WIFI_PROV_SECURITY_1, pop, service_name);
 #else

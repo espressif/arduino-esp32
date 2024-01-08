@@ -42,15 +42,7 @@ extern "C" {
 #endif
 
 #ifndef F_CPU
-#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
-#define F_CPU (CONFIG_ESP32_DEFAULT_CPU_FREQ_MHZ * 1000000U)
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define F_CPU (CONFIG_ESP32C3_DEFAULT_CPU_FREQ_MHZ * 1000000U)
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define F_CPU (CONFIG_ESP32S2_DEFAULT_CPU_FREQ_MHZ * 1000000U)
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define F_CPU (CONFIG_ESP32S3_DEFAULT_CPU_FREQ_MHZ * 1000000U)
-#endif
+#define F_CPU (CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ * 1000000U)
 #endif
 
 #if CONFIG_ARDUINO_ISR_IRAM
@@ -96,9 +88,8 @@ void yield(void);
 #include "esp32-hal-cpu.h"
 
 void analogWrite(uint8_t pin, int value);
-int8_t analogGetChannel(uint8_t pin);
-void analogWriteFrequency(uint32_t freq);
-void analogWriteResolution(uint8_t bits);
+void analogWriteFrequency(uint8_t pin, uint32_t freq);
+void analogWriteResolution(uint8_t pin, uint8_t bits);
 
 //returns chip temperature in Celsius
 float temperatureRead();
@@ -145,6 +136,22 @@ void arduino_phy_init();
 #if !CONFIG_AUTOSTART_ARDUINO
 void initArduino();
 #endif
+
+typedef struct {
+    int core;                   // core which triggered panic
+    const char* reason;         // exception string
+    const void* pc;             // instruction address that triggered the exception
+    bool backtrace_corrupt;     // if backtrace is corrupt
+    bool backtrace_continues;   // if backtrace continues, but did not fit
+    unsigned int backtrace_len; // number of backtrace addresses
+    unsigned int backtrace[60]; // backtrace addresses array
+} arduino_panic_info_t;
+
+typedef void (*arduino_panic_handler_t)(arduino_panic_info_t * info, void * arg);
+
+void set_arduino_panic_handler(arduino_panic_handler_t handler, void * arg);
+arduino_panic_handler_t get_arduino_panic_handler(void);
+void * get_arduino_panic_handler_arg(void);
 
 #ifdef __cplusplus
 }
