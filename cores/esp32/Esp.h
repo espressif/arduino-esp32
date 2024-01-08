@@ -83,7 +83,7 @@ public:
     inline uint32_t getCycleCount() __attribute__((always_inline));
     const char * getSdkVersion();
 
-    void deepSleep(uint32_t time_us);
+    void deepSleep(uint64_t time_us);
 
     uint32_t getFlashChipSize();
     uint32_t getFlashChipSpeed();
