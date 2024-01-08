@@ -233,7 +233,7 @@ char sdWriteBytes(uint8_t pdrv, const char* buffer, char token)
     ardu_sdcard_t * card = s_cards[pdrv];
     unsigned short crc = (card->supports_crc)?CRC16(buffer, 512):0xFFFF;
     if (!sdWait(pdrv, 500)) {
-        return false;
+        return 0;
     }
 
     card->spi->write(token);
@@ -424,7 +424,7 @@ unsigned long sdGetSectorsCount(uint8_t pdrv)
 {
     for (int f = 0; f < 3; f++) {
         if(!sdSelectCard(pdrv)) {
-            return false;
+            return 0;
         }
 
         if (!sdCommand(pdrv, SEND_CSD, 0, NULL)) {

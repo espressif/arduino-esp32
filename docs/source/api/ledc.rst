@@ -27,6 +27,7 @@ ledcAttach
 **********
 
 This function is used to setup LEDC pin with given frequency and resolution.
+LEDC channel will be selected automatically.
 
 .. code-block:: arduino
 
@@ -35,6 +36,25 @@ This function is used to setup LEDC pin with given frequency and resolution.
 * ``pin`` select LEDC pin.
 * ``freq`` select frequency of pwm.
 * ``resolution`` select resolution for LEDC channel. 
+ 
+  * range is 1-14 bits (1-20 bits for ESP32).
+  
+This function will return ``true`` if configuration is successful.
+If ``false`` is returned, error occurs and LEDC channel was not configured.
+
+ledcAttachChannel
+*****************
+
+This function is used to setup LEDC pin with given frequency, resolution and channel.
+
+.. code-block:: arduino
+
+    bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel);
+
+* ``pin`` select LEDC pin.
+* ``freq`` select frequency of pwm.
+* ``resolution`` select resolution for LEDC channel. 
+* ``channel`` select LEDC channel.
  
   * range is 1-14 bits (1-20 bits for ESP32).
   
