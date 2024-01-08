@@ -3,14 +3,6 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 22
-#define NUM_DIGITAL_PINS        22
-#define NUM_ANALOG_INPUTS       6
-
-#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
-#define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
-
 #define TX1 0
 #define RX1 1
 
@@ -39,3 +31,4 @@ static const uint8_t A4 = 4;
 static const uint8_t A5 = 5;
 
 #endif /* Pins_Arduino_h */
+
