@@ -1,8 +1,3 @@
-#if 1
-// bodge to get this example to compile in the default install.
-void setup() {};
-void loop() {};
-#else
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
@@ -135,7 +130,7 @@ String * checkOTP(HTTPAuthMethod mode, String username, String params[]) {
   //
   for (int i = -2 ; i <= 2; i++) {
     String * otp = TOTP::currentOTP(time(NULL) + i * TOTP::RFC6238_DEFAULT_interval, *seed);
-    
+
     if (!params[0].startsWith(*otp))
       continue;
 
@@ -159,6 +154,7 @@ String * checkOTP(HTTPAuthMethod mode, String username, String params[]) {
 
 void setup() {
   Serial.begin(115200);
+  while (!Serial) { delay(10); }
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {
@@ -224,4 +220,3 @@ void loop() {
     delete otp;
   }
 }
-#endif

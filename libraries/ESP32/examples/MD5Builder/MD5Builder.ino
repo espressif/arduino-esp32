@@ -12,7 +12,7 @@
 //
 void setup() {
   Serial.begin(115200);
-  delay(100);
+  while (!Serial) { delay(10); }
   Serial.println("\n\n\nStart.");
 
   // Check if a password obfuscated in an MD5 actually
@@ -85,13 +85,12 @@ void setup() {
                       };
     uint8_t res[16];
     md.getBytes(res);
-    if (memcmp(raw, res, 16)) 
-      Serial.println("Odd - failing MD5 on byte array when compared as bytes"); 
+    if (memcmp(raw, res, 16))
+      Serial.println("Odd - failing MD5 on byte array when compared as bytes");
     else
       Serial.println("OK!");
 
   }
 }
 
-void loop() {
-}
+void loop() {}

@@ -51,7 +51,7 @@ String * check_bearer_or_auth(HTTPAuthMethod mode, String authReq, String params
   // we expect authReq to be "bearer some-secret"
   //
   String lcAuthReq = authReq;
-  lcAuthReq.toLowerCase();                      
+  lcAuthReq.toLowerCase();
   if (mode == OTHER_AUTH && (lcAuthReq.startsWith("bearer "))) {
     String secret = authReq.substring(7);
     secret.trim();
@@ -71,6 +71,7 @@ return server.authenticateBasicSHA1(www_username_hex, www_password_hex) ?
 
 void setup() {
   Serial.begin(115200);
+  while (!Serial) { delay(10); }
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {
@@ -91,7 +92,7 @@ void setup() {
       Serial.println("No/failed authentication");
       return server.requestAuthentication();
     }
-    server.send(200, "text/plain", "Login okOK");
+    server.send(200, "text/plain", "Login OK");
     return;
   });
 

@@ -77,6 +77,7 @@ const int digits = 6; // length (default is 0)
 
 void setup() {
   Serial.begin(115200);
+  while (!Serial) { delay(10); }
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {
@@ -92,7 +93,7 @@ void setup() {
 
   server.on("/", []() {
     if (!server.authenticate([](HTTPAuthMethod mode, String username, String params[]) -> String * {
-    if (username == demouser) 
+    if (username == demouser)
         return TOTP::currentOTP(seed);
       return NULL;
     }))

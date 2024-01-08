@@ -100,7 +100,7 @@ public:
    *                    param[1]                authentication URI
    *
    * To return - the password of which the digest will be based on for comparison. Or NULL
-   * to fail.      
+   * to fail.
    *
    * OTHER_AUTH         enteredUsernameOrReq    rest of the auth line.
    *                    params                  empty array
@@ -117,7 +117,7 @@ public:
 
   typedef std::function<void(void)> THandlerFunction;
   void on(const Uri &uri, THandlerFunction fn);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn); 
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
   void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn); //ufn handles file uploads
   void addHandler(RequestHandler* handler);
   void serveStatic(const char* uri, fs::FS& fs, const char* path, const char* cache_header = NULL );
