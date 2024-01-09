@@ -17,33 +17,32 @@
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
-static const uint8_t SDA = 32;
-static const uint8_t SCL = 33;
+static const uint8_t SDA = 25;
+static const uint8_t SCL = 32;
 
-static const uint8_t SS    = 9;
-static const uint8_t MOSI  = 23;
-static const uint8_t MISO  = 34;
-static const uint8_t SCK   = 18;
+static const uint8_t SS    = 15;
+static const uint8_t MOSI  = 12;
+static const uint8_t MISO  = 13;
+static const uint8_t SCK   = 14;
+
+static const uint8_t G25 = 25;
+static const uint8_t G32 = 32;
 
 static const uint8_t G26 = 26;
-static const uint8_t G36 = 36;
-static const uint8_t G25 = 25;
-
-static const uint8_t G32 = 32;
 static const uint8_t G33 = 33;
+
+static const uint8_t G18 = 18;
+static const uint8_t G19 = 19;
 
 static const uint8_t G21 = 21;
 static const uint8_t G22 = 22;
 
-static const uint8_t G13 = 13;
-static const uint8_t G14 = 14;
-
-static const uint8_t G12 = 12;
-static const uint8_t G19 = 19;
-
-static const uint8_t G5 = 5;
-static const uint8_t G10 = 10;
+static const uint8_t G36 = 36;
 static const uint8_t G2 = 2;
+static const uint8_t G4 = 4;
+static const uint8_t G5 = 5;
+static const uint8_t G23 = 23;
+
 static const uint8_t G37 = 37;
 static const uint8_t G38 = 38;
 static const uint8_t G39 = 39;
