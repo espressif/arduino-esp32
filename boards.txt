@@ -17942,7 +17942,6 @@ heltec_wireless_tracker.build.event_core=
 heltec_wireless_tracker.build.psram_type=qspi
 heltec_wireless_tracker.build.memory_type={build.boot}_{build.psram_type}
 
-
 heltec_wireless_tracker.menu.LoopCore.1=Core 1
 heltec_wireless_tracker.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
 heltec_wireless_tracker.menu.LoopCore.0=Core 0
@@ -18021,11 +18020,6 @@ heltec_wireless_tracker.menu.DebugLevel.debug.build.code_debug=4
 heltec_wireless_tracker.menu.DebugLevel.verbose=Verbose
 heltec_wireless_tracker.menu.DebugLevel.verbose.build.code_debug=5
 
-heltec_wireless_tracker.menu.EraseFlash.none=Disabled
-heltec_wireless_tracker.menu.EraseFlash.none.upload.erase_cmd=
-heltec_wireless_tracker.menu.EraseFlash.all=Enabled
-heltec_wireless_tracker.menu.EraseFlash.all.upload.erase_cmd=-e
-
 heltec_wireless_tracker.menu.LORAWAN_REGION.0=REGION_EU868
 heltec_wireless_tracker.menu.LORAWAN_REGION.0.build.band=REGION_EU868
 heltec_wireless_tracker.menu.LORAWAN_REGION.1=REGION_EU433
@@ -18067,6 +18061,11 @@ heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.1=16(For M00 and M00L)
 heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_LENGTH=16
 
 heltec_wireless_tracker.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+
+heltec_wireless_tracker.menu.EraseFlash.none=Disabled
+heltec_wireless_tracker.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wireless_tracker.menu.EraseFlash.all=Enabled
+heltec_wireless_tracker.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
