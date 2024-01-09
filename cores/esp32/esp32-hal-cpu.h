@@ -41,6 +41,15 @@ uint32_t getCpuFrequencyMhz();  // In MHz
 uint32_t getXtalFrequencyMhz(); // In MHz
 uint32_t getApbFrequency();     // In Hz
 
+/**
+ * @brief Set automatic light sleep state. CPU will fo into light sleep if no ongoing activity (active task, peripheral activity etc.)
+ * @param enabled true to enable automatic lightSleep
+ * @return
+ *      - ESP_OK on success
+ *      - ESP_ERR_NOT_SUPPORTED if CONFIG_PM_ENABLE is not enabled in sdkconfig
+ */
+bool setAutomaticLightSleep(bool enabled);
+
 #ifdef __cplusplus
 }
 #endif

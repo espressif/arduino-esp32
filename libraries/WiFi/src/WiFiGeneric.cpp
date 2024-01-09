@@ -1393,6 +1393,27 @@ bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType)
     return false;
 }
 
+bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType, uint16_t listenInterval)
+{
+    if (!setSleep(sleepType))
+        return false;
+    
+    wifi_config_t current_conf;
+    if(esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK){
+        log_e("setSleep(wifi_ps_type_t sleepType, uint16_t listenInterval) failed: get current config failed!");
+        return false;
+    }
+
+    current_conf.sta.listen_interval = listenInterval;
+
+    if(esp_wifi_set_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK){
+        log_e("setSleep(wifi_ps_type_t sleepType, uint16_t listenInterval) failed: set wifi config failed!");
+        return false;
+    }
+
+    return true;
+}
+
 /**
  * get modem sleep enabled
  * @return true if modem sleep is enabled

@@ -182,6 +182,16 @@ class WiFiGenericClass
 
     bool setSleep(bool enabled);
     bool setSleep(wifi_ps_type_t sleepType);
+
+    /**
+    * @brief Set modem sleep state
+    * @param sleepType Modem sleep type, one of WIFI_PS_NONE, WIFI_PS_MIN_MODEM, WIFI_PS_MAX_MODEM
+	* @param listenInterval Listen interval for ESP32 station to receive beacon when WIFI_PS_MAX_MODEM is set. Units: AP beacon intervals. Defaults to 3 if set to 0.
+    * @return
+    *      - true on success
+    *      - false on internal error when parameters combination is not valid
+    */
+    bool setSleep(wifi_ps_type_t sleepType, uint16_t listenInterval);
     wifi_ps_type_t getSleep();
 
     bool setTxPower(wifi_power_t power);

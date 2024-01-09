@@ -18,6 +18,7 @@
 #include "freertos/task.h"
 #include "esp_attr.h"
 #include "esp_log.h"
+#include "esp_pm.h"
 #include "soc/rtc.h"
 #if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "soc/rtc_cntl_reg.h"
@@ -277,4 +278,17 @@ uint32_t getApbFrequency(){
     rtc_cpu_freq_config_t conf;
     rtc_clk_cpu_freq_get_config(&conf);
     return calculateApb(&conf);
+}
+
+bool setAutomaticLightSleep(bool enabled)
+{
+    uint32_t cpuFreq = getCpuFrequencyMhz();
+
+    esp_pm_config_t pm_config = {
+        .max_freq_mhz = cpuFreq,
+        .min_freq_mhz = cpuFreq,
+        .light_sleep_enable = enabled,
+    };
+
+    return esp_pm_configure(&pm_config) == ESP_OK;
 }
