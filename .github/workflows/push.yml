@@ -110,4 +110,5 @@ jobs:
           idf.py create-project test
           echo CONFIG_FREERTOS_HZ=1000 > test/sdkconfig.defaults
           echo CONFIG_PM_ENABLE=y >> test/sdkconfig.defaults
+          echo CONFIG_FREERTOS_USE_TICKLESS_IDLE=y >> test/sdkconfig.defaults
           idf.py -C test -DEXTRA_COMPONENT_DIRS=$PWD/components build
