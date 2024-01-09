@@ -43,7 +43,6 @@ static const char WWW_Authenticate[] = "WWW-Authenticate";
 static const char Content_Length[] = "Content-Length";
 static const char ETAG_HEADER[] = "If-None-Match";
 
-
 WebServer::WebServer(IPAddress addr, int port)
 : _corsEnabled(false)
 , _server(addr, port)
@@ -151,7 +150,6 @@ bool WebServer::authenticateBasicSHA1(const char * _username, const char * _sha1
             // we can either decode _sha1base64orHex and then compare the 20 bytes;
             // or encode the sha we calculated. We pick the latter as encoding of a
             // fixed array of 20 bytes s safer than operating on something external.
-            //
             #define _H2D(x) (((x)>='0' && ((x) <='9')) ? ((x)-'0') : (((x)>='a' && (x)<='f') ? ((x)-'a'+10) : 0))
             #define H2D(x) (_H2D(tolower((x))))
             if (strlen(_sha1Base64orHex) == 20 * 2) {
@@ -216,7 +214,6 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     log_v("%s", authReq.c_str());
 
     // extracting required parameters for RFC 2069 simpler Digest
-    //
     String _username = _extractParam(authReq,F("username=\""),'\"');
     String _realm    = _extractParam(authReq, F("realm=\""),'\"');
     String _uri      = _extractParam(authReq, F("uri=\""),'\"');
@@ -239,14 +236,13 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     String _response = _extractParam(authReq, F("response=\""),'\"');
     String _opaque   = _extractParam(authReq, F("opaque=\""),'\"');
 
-    if((!_realm.length()) || (!_nonce.length()) || (!_uri.length()) || (!_response.length()) || (!_opaque.length())) 
+    if((!_realm.length()) || (!_nonce.length()) || (!_uri.length()) || (!_response.length()) || (!_opaque.length()))
       goto exf;
 
-    if((_opaque != _sopaque) || (_nonce != _snonce) || (_realm != _srealm)) 
+    if((_opaque != _sopaque) || (_nonce != _snonce) || (_realm != _srealm))
       goto exf;
 
     // parameters for the RFC 2617 newer Digest
-    //
     String _nc,_cnonce;
     if(authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
       _nc = _extractParam(authReq, F("nc="), ',');

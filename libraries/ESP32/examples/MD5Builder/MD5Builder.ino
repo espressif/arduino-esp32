@@ -9,7 +9,7 @@
 // has been phased out as insecure eons ago) by letting you create an
 // MD5 of the data the user entered; and then compare this to an MD5
 // string that you have put in your code.
-//
+
 void setup() {
   Serial.begin(115200);
   while (!Serial) { delay(10); }
@@ -19,7 +19,6 @@ void setup() {
   // matches the original string.
   //
   // echo -n "Hello World" | openssl md5
-  //
   {
     String md5 = "b10a8db164e0754105b7a99be72e3fe5";
     String password = "Hello World";
@@ -37,6 +36,7 @@ void setup() {
     else
       Serial.println("OK!");
   }
+
   // Check that this also work if we add the password not as
   // a normal string - but as a string with the HEX values.
   {
@@ -60,6 +60,7 @@ void setup() {
       Serial.println("OK!");
 
   }
+
   // Check that this also work if we add the password as
   // an unsigned byte array.
   {
@@ -79,7 +80,6 @@ void setup() {
       Serial.println("OK!");
 
     // And also check that we can compare this as pure, raw, bytes
-    //
     uint8_t raw[16] = {   0xb1, 0x0a, 0x8d, 0xb1, 0x64, 0xe0, 0x75, 0x41,
                           0x05, 0xb7, 0xa9, 0x9b, 0xe7, 0x2e, 0x3f, 0xe5
                       };

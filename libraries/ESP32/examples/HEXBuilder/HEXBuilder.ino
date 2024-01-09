@@ -6,7 +6,6 @@ void setup() {
   Serial.println("\n\n\nStart.");
 
   // Convert a HEX string like 6c6c6f20576f726c64 to a binary buffer
-  //
   {
     const char * out = "Hello World";
     const char * hexin = "48656c6c6f20576f726c6400"; // As the string above is \0 terminated too
@@ -21,7 +20,6 @@ void setup() {
       Serial.println("Odd - decode 1 went wrong");
 
     // Safe to print this binary buffer -- as we've included a \0 in the hex sequence.
-    //
     Serial.printf("IN: <%s>\nOUT <%s\\0>\n", hexin, buff);
   };
 
@@ -49,7 +47,6 @@ void setup() {
       Serial.println("Odd - length 3 is wrong");
 
     // we need to ignore case - as a hex string can be spelled in uppercase and lowercase
-    //
     if (!out.equalsIgnoreCase(helloHEX)) {
       Serial.println("Odd - decode 3 went wrong");
     }
@@ -65,7 +62,6 @@ void setup() {
       Serial.println("Odd - length 4 is wrong");
 
     // we need to ignore case - as a hex string can be spelled in uppercase and lowercase
-    //
     if (strcasecmp(buff, helloHex))
       Serial.println("Odd - decode 4 went wrong");
   }

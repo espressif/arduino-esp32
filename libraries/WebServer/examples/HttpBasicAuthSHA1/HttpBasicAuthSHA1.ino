@@ -15,23 +15,19 @@ WebServer server(80);
 
 // Passwords as plaintext - human readable and easily visible in
 // the sourcecode and in the firmware/binary.
-//
 const char* www_username = "admin";
 const char* www_password = "esp32";
 
 // The sha1 of 'esp32' (without the trailing \0) expressed as 20
 // bytes of hex. Created by for example 'echo -n esp32 | openssl sha1'
 // or http://www.sha1-online.com.
-//
 const char* www_username_hex = "hexadmin";
 const char* www_password_hex = "8cb124f8c277c16ec0b2ee00569fd151a08e342b";
 
 // The same; but now expressed as a base64 string (e.g. as commonly used
 // by webservers). Created by ` echo -n esp32 | openssl sha1 -binary | openssl base64`
-//
 const char* www_username_base64 = "base64admin";
 const char* www_password_base64 = "jLEk+MJ3wW7Asu4AVp/RUaCONCs=";
-
 
 void setup() {
   Serial.begin(115200);
