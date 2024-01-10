@@ -76,6 +76,12 @@ static constexpr uint8_t A7         = 14;
 
 #endif
 
+// Aliases
+
+static constexpr uint8_t LEDR = LED_RED;
+static constexpr uint8_t LEDG = LED_GREEN;
+static constexpr uint8_t LEDB = LED_BLUE;
+
 // alternate pin functions
 
 static constexpr uint8_t LED_BUILTIN = D13;
