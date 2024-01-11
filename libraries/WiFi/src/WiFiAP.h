@@ -56,7 +56,7 @@ public:
     IPAddress softAPSubnetMask();
     uint8_t softAPSubnetCIDR();
 
-    bool softAPenableIpV6();
+    bool softAPenableIPv6();
     IPAddress softAPIPv6();
 
     const char * softAPgetHostname();

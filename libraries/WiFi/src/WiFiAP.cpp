@@ -411,7 +411,7 @@ bool WiFiAPClass::softAPsetHostname(const char * hostname)
  * Enable IPv6 on the softAP interface.
  * @return true on success
  */
-bool WiFiAPClass::softAPenableIpV6()
+bool WiFiAPClass::softAPenableIPv6()
 {
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return false;
