@@ -42,7 +42,7 @@ uint32_t getXtalFrequencyMhz(); // In MHz
 uint32_t getApbFrequency();     // In Hz
 
 /**
- * @brief Set automatic light sleep state. CPU will fo into light sleep if no ongoing activity (active task, peripheral activity etc.)
+ * @brief Set automatic light sleep state. CPU will go into light sleep if no ongoing activity (active task, peripheral activity etc.)
  * @param enabled true to enable automatic lightSleep
  * @return
  *      - ESP_OK on success
