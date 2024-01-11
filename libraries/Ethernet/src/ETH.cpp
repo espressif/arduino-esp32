@@ -401,13 +401,13 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 
     // Init SPI bus
     if(_pin_sck >= 0 && _pin_miso >= 0 && _pin_mosi >= 0){
-        spi_bus_config_t buscfg = {
-            .mosi_io_num = _pin_mosi,
-            .miso_io_num = _pin_miso,
-            .sclk_io_num = _pin_sck,
-            .quadwp_io_num = -1,
-            .quadhd_io_num = -1,
-        };
+        spi_bus_config_t buscfg;
+        memset(&buscfg, 0, sizeof(spi_bus_config_t));
+        buscfg.mosi_io_num = _pin_mosi;
+        buscfg.miso_io_num = _pin_miso;
+        buscfg.sclk_io_num = _pin_sck;
+        buscfg.quadwp_io_num = -1;
+        buscfg.quadhd_io_num = -1;
         ret = spi_bus_initialize(spi_host, &buscfg, SPI_DMA_CH_AUTO);
         if(ret != ESP_OK){
             log_e("SPI bus initialize failed: %d", ret);
@@ -433,13 +433,13 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     phy_config.reset_gpio_num = _pin_rst;
 
     // Configure SPI interface for specific SPI module
-    spi_device_interface_config_t spi_devcfg = {
-        .mode = 0,
-        .clock_speed_hz = _spi_freq_mhz * 1000 * 1000,
-        .input_delay_ns = 20,
-        .spics_io_num = _pin_cs,
-        .queue_size = 20,
-    };
+    spi_device_interface_config_t spi_devcfg;
+    memset(&spi_devcfg, 0, sizeof(spi_device_interface_config_t));
+    spi_devcfg.mode = 0;
+    spi_devcfg.clock_speed_hz = _spi_freq_mhz * 1000 * 1000;
+    spi_devcfg.input_delay_ns = 20;
+    spi_devcfg.spics_io_num = _pin_cs;
+    spi_devcfg.queue_size = 20;
 
     esp_eth_mac_t *mac = NULL;
     esp_eth_phy_t *phy = NULL;
@@ -863,15 +863,16 @@ bool ETHClass::setHostname(const char * hostname)
 
 bool ETHClass::enableIPv6(bool en)
 {
-    if(_esp_netif == NULL){
-        return false;
+    // if(_esp_netif == NULL){
+    //     return false;
+    // }
+    // return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
+    if (en) {
+        WiFiGenericClass::setStatusBits(ETH_WANT_IP6_BIT);
+    } else {
+        WiFiGenericClass::clearStatusBits(ETH_WANT_IP6_BIT);
     }
-    return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
-   // if (en)
-   //     WiFiGenericClass::setStatusBits(ETH_WANT_IP6_BIT);
-   // else
-   //     WiFiGenericClass::clearStatusBits(ETH_WANT_IP6_BIT);
-   // return true;
+    return true;
 }
 
 IPAddress ETHClass::localIPv6()
@@ -1048,7 +1049,7 @@ void ETHClass::printInfo(Print & out){
     out.print(dnsIP());
     out.println();
 
-    const char * types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
+    static const char * types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
     esp_ip6_addr_t if_ip6[5];
     int v6addrs = esp_netif_get_all_ip6(_esp_netif, if_ip6);
     for (int i = 0; i < v6addrs; ++i){

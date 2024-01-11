@@ -355,12 +355,12 @@ size_t IPAddress::printTo(Print& p) const
             }
         }
         // add a zone if zone-id is non-zero
-        if(_zone > 0){
-            n += p.print('%');
-            char if_name[NETIF_NAMESIZE];
-            netif_index_to_name(_zone, if_name);
-            n += p.print(if_name);
-        }
+        // if(_zone > 0){
+        //     n += p.print('%');
+        //     char if_name[NETIF_NAMESIZE];
+        //     netif_index_to_name(_zone, if_name);
+        //     n += p.print(if_name);
+        // }
         return n;
     }
 

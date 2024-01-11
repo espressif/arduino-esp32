@@ -334,7 +334,7 @@ Function used to enable the IPv6 support.
 
 .. code-block:: arduino
 
-    bool softAPenableIPv6();
+    bool softAPenableIPv6(bool enable=true);
 
 The function will return ``true`` if the configuration is successful.
 

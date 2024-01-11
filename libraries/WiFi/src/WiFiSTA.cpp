@@ -812,11 +812,12 @@ int8_t WiFiSTAClass::RSSI(void)
  */
 bool WiFiSTAClass::enableIPv6(bool en)
 {
-   if (en)
-       WiFiGenericClass::setStatusBits(STA_WANT_IP6_BIT);
-   else
-       WiFiGenericClass::clearStatusBits(STA_WANT_IP6_BIT);
-   return true;
+    if (en) {
+        WiFiGenericClass::setStatusBits(STA_WANT_IP6_BIT);
+    } else {
+        WiFiGenericClass::clearStatusBits(STA_WANT_IP6_BIT);
+    }
+    return true;
 }
 
 /**
