@@ -19,8 +19,8 @@ Taras Shcherban <shcherban91@gmail.com>
 #include <WiFi.h>
 #include <HTTPClient.h>
 
-const char *wifi_ssid = "kriegsmaschine";
-const char *wifi_password = "ap3NhxtcmszTdok36ijka";
+const char *wifi_ssid = "";
+const char *wifi_password = "";
 
 void doHttpRequest();
 
