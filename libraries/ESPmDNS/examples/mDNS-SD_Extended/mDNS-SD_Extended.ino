@@ -70,7 +70,7 @@ void browseService(const char * service, const char * proto){
             Serial.print(": ");
             Serial.print(MDNS.hostname(i));
             Serial.print(" (");
-            Serial.print(MDNS.IP(i));
+            Serial.print(MDNS.address(i));
             Serial.print(":");
             Serial.print(MDNS.port(i));
             Serial.println(")");

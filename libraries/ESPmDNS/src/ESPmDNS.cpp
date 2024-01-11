@@ -265,7 +265,7 @@ String MDNSResponder::hostname(int idx) {
     return String(result->hostname);
 }
 
-IPAddress MDNSResponder::IP(int idx) {
+IPAddress MDNSResponder::address(int idx) {
     mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
@@ -281,7 +281,7 @@ IPAddress MDNSResponder::IP(int idx) {
     return IPAddress();
 }
 
-IPAddress MDNSResponder::IPv6(int idx) {
+IPAddress MDNSResponder::addressV6(int idx) {
     mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
