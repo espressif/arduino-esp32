@@ -207,6 +207,6 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
     return status;
 }
 
-void WiFiMulti::IPv6(bool state) {
+void WiFiMulti::enableIPv6(bool state) {
     ipv6_support = state;
 }

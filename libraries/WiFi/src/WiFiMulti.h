@@ -42,7 +42,7 @@ public:
 
     bool addAP(const char* ssid, const char *passphrase = NULL);
 
-    void IPv6(bool state);
+    void enableIPv6(bool state);
     uint8_t run(uint32_t connectTimeout=5000);
 
 private:
