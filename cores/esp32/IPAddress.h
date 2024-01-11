@@ -93,7 +93,8 @@ public:
     IPAddress& operator=(const IPAddress& address);
 
     virtual size_t printTo(Print& p) const;
-    String toString() const;
+    size_t printTo(Print& p, bool includeZone) const;
+    String toString(bool includeZone = false) const;
 
     IPType type() const { return _type; }
 

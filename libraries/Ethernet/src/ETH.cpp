@@ -1055,7 +1055,7 @@ void ETHClass::printInfo(Print & out){
     for (int i = 0; i < v6addrs; ++i){
         out.print("      ");
         out.print("inet6 ");
-        IPAddress(IPv6, (const uint8_t *)if_ip6[i].addr, if_ip6[i].zone).printTo(out);
+        IPAddress(IPv6, (const uint8_t *)if_ip6[i].addr, if_ip6[i].zone).printTo(out, true);
         out.print(" type ");
         out.print(types[esp_netif_ip6_get_addr_type(&if_ip6[i])]);
         out.println();

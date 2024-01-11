@@ -67,6 +67,7 @@ IPAddress::IPAddress(uint32_t address)
 {
     // IPv4 only
     _type = IPv4;
+    _zone = IP6_NO_ZONE;
     memset(_address.bytes, 0, sizeof(_address.bytes));
     _address.dword[IPADDRESS_V4_DWORD_INDEX] = address;
 
@@ -104,10 +105,10 @@ IPAddress::IPAddress(const IPAddress& address)
     *this = address;
 }
 
-String IPAddress::toString() const
+String IPAddress::toString(bool includeZone) const
 {
     StreamString s;
-    printTo(s);
+    printTo(s, includeZone);
     return String(s);
 }
 
@@ -304,6 +305,11 @@ uint8_t& IPAddress::operator[](int index) {
 
 size_t IPAddress::printTo(Print& p) const
 {
+    return printTo(p, false);
+}
+
+size_t IPAddress::printTo(Print& p, bool includeZone) const
+{
     size_t n = 0;
 
     if (_type == IPv6) {
@@ -355,12 +361,12 @@ size_t IPAddress::printTo(Print& p) const
             }
         }
         // add a zone if zone-id is non-zero
-        // if(_zone > 0){
-        //     n += p.print('%');
-        //     char if_name[NETIF_NAMESIZE];
-        //     netif_index_to_name(_zone, if_name);
-        //     n += p.print(if_name);
-        // }
+        if(_zone > 0 && includeZone){
+            n += p.print('%');
+            char if_name[NETIF_NAMESIZE];
+            netif_index_to_name(_zone, if_name);
+            n += p.print(if_name);
+        }
         return n;
     }
 
