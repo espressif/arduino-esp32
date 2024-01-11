@@ -16,6 +16,7 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+
 #include <Arduino.h>
 #include <HEXBuilder.h>
 #include <MD5Builder.h>
@@ -26,14 +27,14 @@ void MD5Builder::begin(void)
     esp_rom_md5_init(&_ctx);
 }
 
-void MD5Builder::add(uint8_t * data, uint16_t len)
+void MD5Builder::add(uint8_t * data, size_t len)
 {
     esp_rom_md5_update(&_ctx, data, len);
 }
 
 void MD5Builder::addHexString(const char * data)
 {
-    uint16_t len = strlen(data);
+    size_t len = strlen(data);
     uint8_t * tmp = (uint8_t*)malloc(len/2);
     if(tmp == NULL) {
         return;
