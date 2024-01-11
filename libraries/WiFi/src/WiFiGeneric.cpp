@@ -1601,15 +1601,6 @@ static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, v
             memcpy(&(parameters->addr), ipaddr, sizeof(ip_addr_t));
             parameters->result = 1;
         }
-        IPAddress addr;
-        addr.from_ip_addr_t((ip_addr_t *)ipaddr);
-        Serial.print("dns_found ");
-        addr.printTo(Serial);
-        if(ipaddr->type == IPADDR_TYPE_V6){
-            Serial.print(" type ");
-            Serial.print((int)esp_netif_ip6_get_addr_type((esp_ip6_addr_t*)&(ipaddr->u_addr.ip6)));
-        }
-        Serial.println();
     } else {
         parameters->result = -1;
     }
@@ -1662,13 +1653,6 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult, bool
         err = esp_netif_tcpip_exec(wifi_gethostbyname_tcpip_ctx, &params);
         if (err == ERR_OK) {
             aResult.from_ip_addr_t(&(params.addr));
-            Serial.print("dns_cache ");
-            aResult.printTo(Serial);
-            if(params.addr.type == IPADDR_TYPE_V6){
-                Serial.print(" type ");
-                Serial.print((int)esp_netif_ip6_get_addr_type((esp_ip6_addr_t*)&(params.addr.u_addr.ip6)));
-            }
-            Serial.println();
         } else if (err == ERR_INPROGRESS) {
             waitStatusBits(NET_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
             clearStatusBits(NET_DNS_DONE_BIT);
