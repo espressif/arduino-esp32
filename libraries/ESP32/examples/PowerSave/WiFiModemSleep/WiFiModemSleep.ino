@@ -1,5 +1,5 @@
 /*
-Cpu automatic LightSleep
+WiFi automatic LightSleep
 =====================================
 This code displays how to use automatic light sleep with an active WiFi connection
 and tune WiFi modem sleep modes
