@@ -100,7 +100,7 @@ public:
     uint8_t zone() const { return (type() == IPv6)?_zone:0; }
 
     // LwIP conversions
-    void to_ip_addr_t(ip_addr_t* addr);
+    void to_ip_addr_t(ip_addr_t* addr) const;
     IPAddress& from_ip_addr_t(ip_addr_t* addr);
 
     friend class UDP;
