@@ -42,7 +42,6 @@ License (MIT license):
 #define ESP32MDNS_H
 
 #include "Arduino.h"
-#include "IPv6Address.h"
 #include "mdns.h"
 #include "esp_interface.h"
 
@@ -109,7 +108,7 @@ public:
 
   String hostname(int idx);
   IPAddress IP(int idx);
-  IPv6Address IPv6(int idx);
+  IPAddress IPv6(int idx);
   uint16_t port(int idx);
   int numTxt(int idx);
   bool hasTxt(int idx, const char * key);

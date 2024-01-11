@@ -93,9 +93,9 @@ public:
     IPAddress networkID();
     uint8_t subnetCIDR();
     
-    bool enableIpV6();
-    bool IPv6(bool state);
-    IPv6Address localIPv6();
+    bool enableIPv6(bool en=true);
+    IPAddress localIPv6();
+    IPAddress globalIPv6();
 
     // STA WiFi info
     static wl_status_t status();

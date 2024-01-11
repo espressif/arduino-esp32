@@ -1051,12 +1051,13 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         }
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_STOP) {
         WiFiSTAClass::_setStatus(WL_STOPPED);
-        clearStatusBits(STA_STARTED_BIT | STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
+        clearStatusBits(STA_STARTED_BIT | STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT | STA_HAS_IP6_GLOBAL_BIT);
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
+        if (getStatusBits() & STA_WANT_IP6_BIT){
+            esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA));
+        }
         WiFiSTAClass::_setStatus(WL_IDLE_STATUS);
         setStatusBits(STA_CONNECTED_BIT);
-        if (getStatusBits() & WIFI_WANT_IP6_BIT)
-            esp_netif_create_ip6_linklocal(esp_netifs[ESP_IF_WIFI_STA]);
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
         uint8_t reason = event->event_info.wifi_sta_disconnected.reason;
         // Reason 0 causes crash, use reason 1 (UNSPECIFIED) instead
@@ -1074,7 +1075,7 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         } else {
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
-        clearStatusBits(STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
+        clearStatusBits(STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT | STA_HAS_IP6_GLOBAL_BIT);
 
         bool DoReconnect = false;
         if(reason == WIFI_REASON_ASSOC_LEAVE) {                                     //Voluntarily disconnected. Don't reconnect!
@@ -1126,11 +1127,14 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
     } else if(event->event_id == ARDUINO_EVENT_ETH_START) {
         setStatusBits(ETH_STARTED_BIT);
     } else if(event->event_id == ARDUINO_EVENT_ETH_STOP) {
-        clearStatusBits(ETH_STARTED_BIT | ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT);
+        clearStatusBits(ETH_STARTED_BIT | ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT | ETH_HAS_IP6_GLOBAL_BIT);
     } else if(event->event_id == ARDUINO_EVENT_ETH_CONNECTED) {
+        if (getStatusBits() & ETH_WANT_IP6_BIT){
+            esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_ETH));
+        }
         setStatusBits(ETH_CONNECTED_BIT);
     } else if(event->event_id == ARDUINO_EVENT_ETH_DISCONNECTED) {
-        clearStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT);
+        clearStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT | ETH_HAS_IP6_GLOBAL_BIT);
     } else if(event->event_id == ARDUINO_EVENT_ETH_GOT_IP) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
         uint8_t * ip = (uint8_t *)&(event->event_info.got_ip.ip_info.ip.addr);
@@ -1147,10 +1151,16 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
 
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_GOT_IP6) {
     	setStatusBits(STA_CONNECTED_BIT | STA_HAS_IP6_BIT);
+        if(esp_netif_ip6_get_addr_type((esp_ip6_addr_t*)&(event->event_info.got_ip6.ip6_info.ip)) == ESP_IP6_ADDR_IS_GLOBAL){
+            setStatusBits(STA_HAS_IP6_GLOBAL_BIT);
+        }
     } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_GOT_IP6) {
     	setStatusBits(AP_HAS_IP6_BIT);
     } else if(event->event_id == ARDUINO_EVENT_ETH_GOT_IP6) {
     	setStatusBits(ETH_CONNECTED_BIT | ETH_HAS_IP6_BIT);
+        if(esp_netif_ip6_get_addr_type((esp_ip6_addr_t*)&(event->event_info.got_ip6.ip6_info.ip)) == ESP_IP6_ADDR_IS_GLOBAL){
+            setStatusBits(ETH_HAS_IP6_GLOBAL_BIT);
+        }
     } else if(event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
     	WiFi.begin(
 			(const char *)event->event_info.sc_got_ssid_pswd.ssid,
@@ -1567,6 +1577,15 @@ static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, v
             memcpy(&(parameters->addr), ipaddr, sizeof(ip_addr_t));
             parameters->result = 1;
         }
+        IPAddress addr;
+        addr.from_ip_addr_t((ip_addr_t *)ipaddr);
+        Serial.print("dns_found ");
+        addr.printTo(Serial);
+        if(ipaddr->type == IPADDR_TYPE_V6){
+            Serial.print(" type ");
+            Serial.print((int)esp_netif_ip6_get_addr_type((esp_ip6_addr_t*)&(ipaddr->u_addr.ip6)));
+        }
+        Serial.println();
     } else {
         parameters->result = -1;
     }
@@ -1595,9 +1614,20 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult, bool
     err_t err = ERR_OK;
     gethostbynameParameters_t params;
 
+    // This should generally check if we have a global address assigned to one of the interfaces.
+    // If such address is not assigned, there is no point in trying to get V6 from DNS as we will not be able to reach it.
+    // That is of course, if 'preferV6' is not set to true
+    static bool hasGlobalV6 = false;
+    bool hasGlobalV6Now = (getStatusBits() & NET_HAS_IP6_GLOBAL_BIT) != 0;
+    if(hasGlobalV6 != hasGlobalV6Now){
+        hasGlobalV6 = hasGlobalV6Now;
+        dns_clear_cache();
+        log_d("Clearing DNS cache");
+    }
+
     aResult = static_cast<uint32_t>(0);
     params.hostname = aHostname;
-    params.addr_type = preferV6?LWIP_DNS_ADDRTYPE_IPV6_IPV4:LWIP_DNS_ADDRTYPE_IPV4_IPV6;
+    params.addr_type = (preferV6 || hasGlobalV6)?LWIP_DNS_ADDRTYPE_IPV6_IPV4:LWIP_DNS_ADDRTYPE_IPV4;
     params.result = 0;
     aResult.to_ip_addr_t(&(params.addr));
 
@@ -1608,6 +1638,13 @@ int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult, bool
         err = esp_netif_tcpip_exec(wifi_gethostbyname_tcpip_ctx, &params);
         if (err == ERR_OK) {
             aResult.from_ip_addr_t(&(params.addr));
+            Serial.print("dns_cache ");
+            aResult.printTo(Serial);
+            if(params.addr.type == IPADDR_TYPE_V6){
+                Serial.print(" type ");
+                Serial.print((int)esp_netif_ip6_get_addr_type((esp_ip6_addr_t*)&(params.addr.u_addr.ip6)));
+            }
+            Serial.println();
         } else if (err == ERR_INPROGRESS) {
             waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
             clearStatusBits(WIFI_DNS_DONE_BIT);

@@ -320,7 +320,7 @@ int WiFiClient::connect(const char *host, uint16_t port)
 int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
 {
     IPAddress srv((uint32_t)0);
-    if(!WiFiGenericClass::hostByName(host, srv, (WiFiGenericClass::getStatusBits() & WIFI_WANT_IP6_BIT))){
+    if(!WiFiGenericClass::hostByName(host, srv)){
         return 0;
     }
     return connect(srv, port, timeout_ms);

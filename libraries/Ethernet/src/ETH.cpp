@@ -861,24 +861,41 @@ bool ETHClass::setHostname(const char * hostname)
     return esp_netif_set_hostname(_esp_netif, hostname) == 0;
 }
 
-bool ETHClass::enableIpV6()
+bool ETHClass::enableIPv6(bool en)
 {
     if(_esp_netif == NULL){
         return false;
     }
     return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
+   // if (en)
+   //     WiFiGenericClass::setStatusBits(ETH_WANT_IP6_BIT);
+   // else
+   //     WiFiGenericClass::clearStatusBits(ETH_WANT_IP6_BIT);
+   // return true;
 }
 
-IPv6Address ETHClass::localIPv6()
+IPAddress ETHClass::localIPv6()
 {
     if(_esp_netif == NULL){
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
     static esp_ip6_addr_t addr;
     if(esp_netif_get_ip6_linklocal(_esp_netif, &addr)){
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
-    return IPv6Address(addr.addr);
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
+}
+
+IPAddress ETHClass::globalIPv6()
+{
+    if(_esp_netif == NULL){
+        return IPAddress(IPv6);
+    }
+    static esp_ip6_addr_t addr;
+    if(esp_netif_get_ip6_global(_esp_netif, &addr)){
+        return IPAddress(IPv6);
+    }
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
 const char * ETHClass::ifkey(void)
@@ -1030,6 +1047,28 @@ void ETHClass::printInfo(Print & out){
     out.print(" dns ");
     out.print(dnsIP());
     out.println();
+
+    const char * types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
+    esp_ip6_addr_t if_ip6[5];
+    int v6addrs = esp_netif_get_all_ip6(_esp_netif, if_ip6);
+    for (int i = 0; i < v6addrs; ++i){
+        out.print("      ");
+        out.print("inet6 ");
+        IPAddress(IPv6, (const uint8_t *)if_ip6[i].addr, if_ip6[i].zone).printTo(out);
+        out.print(" type ");
+        out.print(types[esp_netif_ip6_get_addr_type(&if_ip6[i])]);
+        out.println();
+    }
+
+    // out.print("      ");
+    // out.print("inet6 ");
+    // localIPv6().printTo(out);
+    // out.println();
+
+    // out.print("      ");
+    // out.print("inet6 ");
+    // globalIPv6().printTo(out);
+    // out.println();
 
     out.println();
 }

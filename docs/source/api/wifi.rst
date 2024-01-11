@@ -345,9 +345,9 @@ Function to get the IPv6 address.
 
 .. code-block:: arduino
 
-    IPv6Address softAPIPv6();
+    IPAddress softAPIPv6();
 
-The function will return the AP IPv6 address in ``IPv6Address`` format.
+The function will return the AP IPv6 address in ``IPAddress`` format.
 
 softAPgetHostname
 *****************
