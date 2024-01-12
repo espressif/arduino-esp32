@@ -1050,7 +1050,7 @@ void ETHClass::printInfo(Print & out){
     out.println();
 
     static const char * types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
-    esp_ip6_addr_t if_ip6[5];
+    esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
     int v6addrs = esp_netif_get_all_ip6(_esp_netif, if_ip6);
     for (int i = 0; i < v6addrs; ++i){
         out.print("      ");
