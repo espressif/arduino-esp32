@@ -14,7 +14,6 @@
 
 #include "esp32-hal-uart.h"
 
-#define SOC_UART_SUPPORTED 1
 #if SOC_UART_SUPPORTED
 #include "esp32-hal.h"
 #include "esp32-hal-periman.h"
@@ -104,7 +103,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     // detaches pins and sets Peripheral Manager and UART information
     if (rxPin >= 0 && uart->_rxPin == rxPin && perimanGetPinBusType(rxPin) == ESP32_BUS_TYPE_UART_RX) {
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
-        // avoids cause BREAK in the UART line
+        // avoids causing BREAK in the UART line
         if (uart->_inverted) {
             esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
         } else {

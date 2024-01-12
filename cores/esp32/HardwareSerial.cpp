@@ -337,6 +337,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         _destroyEventTask(); // when IDF uart driver must be restarted, _eventTask must finish too
     }
 
+    // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
+    // it will detach previous UART attached pins
     _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
     if (_uart == NULL) {
         log_e("UART driver failed to start. Please check the logs.");
