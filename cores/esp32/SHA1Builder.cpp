@@ -101,26 +101,26 @@ void SHA1Builder::process(const uint8_t* data)
 #define sha1_F(x,y,z) (z ^ (x & (y ^ z)))
 #define sha1_K 0x5A827999
 
-    sha1_P( A, B, C, D, E, W[0]  );
-    sha1_P( E, A, B, C, D, W[1]  );
-    sha1_P( D, E, A, B, C, W[2]  );
-    sha1_P( C, D, E, A, B, W[3]  );
-    sha1_P( B, C, D, E, A, W[4]  );
-    sha1_P( A, B, C, D, E, W[5]  );
-    sha1_P( E, A, B, C, D, W[6]  );
-    sha1_P( D, E, A, B, C, W[7]  );
-    sha1_P( C, D, E, A, B, W[8]  );
-    sha1_P( B, C, D, E, A, W[9]  );
-    sha1_P( A, B, C, D, E, W[10] );
-    sha1_P( E, A, B, C, D, W[11] );
-    sha1_P( D, E, A, B, C, W[12] );
-    sha1_P( C, D, E, A, B, W[13] );
-    sha1_P( B, C, D, E, A, W[14] );
-    sha1_P( A, B, C, D, E, W[15] );
-    sha1_P( E, A, B, C, D, sha1_R(16) );
-    sha1_P( D, E, A, B, C, sha1_R(17) );
-    sha1_P( C, D, E, A, B, sha1_R(18) );
-    sha1_P( B, C, D, E, A, sha1_R(19) );
+    sha1_P(A, B, C, D, E, W[0]);
+    sha1_P(E, A, B, C, D, W[1]);
+    sha1_P(D, E, A, B, C, W[2]);
+    sha1_P(C, D, E, A, B, W[3]);
+    sha1_P(B, C, D, E, A, W[4]);
+    sha1_P(A, B, C, D, E, W[5]);
+    sha1_P(E, A, B, C, D, W[6]);
+    sha1_P(D, E, A, B, C, W[7]);
+    sha1_P(C, D, E, A, B, W[8]);
+    sha1_P(B, C, D, E, A, W[9]);
+    sha1_P(A, B, C, D, E, W[10]);
+    sha1_P(E, A, B, C, D, W[11]);
+    sha1_P(D, E, A, B, C, W[12]);
+    sha1_P(C, D, E, A, B, W[13]);
+    sha1_P(B, C, D, E, A, W[14]);
+    sha1_P(A, B, C, D, E, W[15]);
+    sha1_P(E, A, B, C, D, sha1_R(16));
+    sha1_P(D, E, A, B, C, sha1_R(17));
+    sha1_P(C, D, E, A, B, sha1_R(18));
+    sha1_P(B, C, D, E, A, sha1_R(19));
 
 #undef sha1_K
 #undef sha1_F
@@ -128,26 +128,26 @@ void SHA1Builder::process(const uint8_t* data)
 #define sha1_F(x,y,z) (x ^ y ^ z)
 #define sha1_K 0x6ED9EBA1
 
-    sha1_P( A, B, C, D, E, sha1_R(20) );
-    sha1_P( E, A, B, C, D, sha1_R(21) );
-    sha1_P( D, E, A, B, C, sha1_R(22) );
-    sha1_P( C, D, E, A, B, sha1_R(23) );
-    sha1_P( B, C, D, E, A, sha1_R(24) );
-    sha1_P( A, B, C, D, E, sha1_R(25) );
-    sha1_P( E, A, B, C, D, sha1_R(26) );
-    sha1_P( D, E, A, B, C, sha1_R(27) );
-    sha1_P( C, D, E, A, B, sha1_R(28) );
-    sha1_P( B, C, D, E, A, sha1_R(29) );
-    sha1_P( A, B, C, D, E, sha1_R(30) );
-    sha1_P( E, A, B, C, D, sha1_R(31) );
-    sha1_P( D, E, A, B, C, sha1_R(32) );
-    sha1_P( C, D, E, A, B, sha1_R(33) );
-    sha1_P( B, C, D, E, A, sha1_R(34) );
-    sha1_P( A, B, C, D, E, sha1_R(35) );
-    sha1_P( E, A, B, C, D, sha1_R(36) );
-    sha1_P( D, E, A, B, C, sha1_R(37) );
-    sha1_P( C, D, E, A, B, sha1_R(38) );
-    sha1_P( B, C, D, E, A, sha1_R(39) );
+    sha1_P(A, B, C, D, E, sha1_R(20));
+    sha1_P(E, A, B, C, D, sha1_R(21));
+    sha1_P(D, E, A, B, C, sha1_R(22));
+    sha1_P(C, D, E, A, B, sha1_R(23));
+    sha1_P(B, C, D, E, A, sha1_R(24));
+    sha1_P(A, B, C, D, E, sha1_R(25));
+    sha1_P(E, A, B, C, D, sha1_R(26));
+    sha1_P(D, E, A, B, C, sha1_R(27));
+    sha1_P(C, D, E, A, B, sha1_R(28));
+    sha1_P(B, C, D, E, A, sha1_R(29));
+    sha1_P(A, B, C, D, E, sha1_R(30));
+    sha1_P(E, A, B, C, D, sha1_R(31));
+    sha1_P(D, E, A, B, C, sha1_R(32));
+    sha1_P(C, D, E, A, B, sha1_R(33));
+    sha1_P(B, C, D, E, A, sha1_R(34));
+    sha1_P(A, B, C, D, E, sha1_R(35));
+    sha1_P(E, A, B, C, D, sha1_R(36));
+    sha1_P(D, E, A, B, C, sha1_R(37));
+    sha1_P(C, D, E, A, B, sha1_R(38));
+    sha1_P(B, C, D, E, A, sha1_R(39));
 
 #undef sha1_K
 #undef sha1_F
@@ -155,26 +155,26 @@ void SHA1Builder::process(const uint8_t* data)
 #define sha1_F(x,y,z) ((x & y) | (z & (x | y)))
 #define sha1_K 0x8F1BBCDC
 
-    sha1_P( A, B, C, D, E, sha1_R(40) );
-    sha1_P( E, A, B, C, D, sha1_R(41) );
-    sha1_P( D, E, A, B, C, sha1_R(42) );
-    sha1_P( C, D, E, A, B, sha1_R(43) );
-    sha1_P( B, C, D, E, A, sha1_R(44) );
-    sha1_P( A, B, C, D, E, sha1_R(45) );
-    sha1_P( E, A, B, C, D, sha1_R(46) );
-    sha1_P( D, E, A, B, C, sha1_R(47) );
-    sha1_P( C, D, E, A, B, sha1_R(48) );
-    sha1_P( B, C, D, E, A, sha1_R(49) );
-    sha1_P( A, B, C, D, E, sha1_R(50) );
-    sha1_P( E, A, B, C, D, sha1_R(51) );
-    sha1_P( D, E, A, B, C, sha1_R(52) );
-    sha1_P( C, D, E, A, B, sha1_R(53) );
-    sha1_P( B, C, D, E, A, sha1_R(54) );
-    sha1_P( A, B, C, D, E, sha1_R(55) );
-    sha1_P( E, A, B, C, D, sha1_R(56) );
-    sha1_P( D, E, A, B, C, sha1_R(57) );
-    sha1_P( C, D, E, A, B, sha1_R(58) );
-    sha1_P( B, C, D, E, A, sha1_R(59) );
+    sha1_P(A, B, C, D, E, sha1_R(40));
+    sha1_P(E, A, B, C, D, sha1_R(41));
+    sha1_P(D, E, A, B, C, sha1_R(42));
+    sha1_P(C, D, E, A, B, sha1_R(43));
+    sha1_P(B, C, D, E, A, sha1_R(44));
+    sha1_P(A, B, C, D, E, sha1_R(45));
+    sha1_P(E, A, B, C, D, sha1_R(46));
+    sha1_P(D, E, A, B, C, sha1_R(47));
+    sha1_P(C, D, E, A, B, sha1_R(48));
+    sha1_P(B, C, D, E, A, sha1_R(49));
+    sha1_P(A, B, C, D, E, sha1_R(50));
+    sha1_P(E, A, B, C, D, sha1_R(51));
+    sha1_P(D, E, A, B, C, sha1_R(52));
+    sha1_P(C, D, E, A, B, sha1_R(53));
+    sha1_P(B, C, D, E, A, sha1_R(54));
+    sha1_P(A, B, C, D, E, sha1_R(55));
+    sha1_P(E, A, B, C, D, sha1_R(56));
+    sha1_P(D, E, A, B, C, sha1_R(57));
+    sha1_P(C, D, E, A, B, sha1_R(58));
+    sha1_P(B, C, D, E, A, sha1_R(59));
 
 #undef sha1_K
 #undef sha1_F
@@ -182,26 +182,26 @@ void SHA1Builder::process(const uint8_t* data)
 #define sha1_F(x,y,z) (x ^ y ^ z)
 #define sha1_K 0xCA62C1D6
 
-    sha1_P( A, B, C, D, E, sha1_R(60) );
-    sha1_P( E, A, B, C, D, sha1_R(61) );
-    sha1_P( D, E, A, B, C, sha1_R(62) );
-    sha1_P( C, D, E, A, B, sha1_R(63) );
-    sha1_P( B, C, D, E, A, sha1_R(64) );
-    sha1_P( A, B, C, D, E, sha1_R(65) );
-    sha1_P( E, A, B, C, D, sha1_R(66) );
-    sha1_P( D, E, A, B, C, sha1_R(67) );
-    sha1_P( C, D, E, A, B, sha1_R(68) );
-    sha1_P( B, C, D, E, A, sha1_R(69) );
-    sha1_P( A, B, C, D, E, sha1_R(70) );
-    sha1_P( E, A, B, C, D, sha1_R(71) );
-    sha1_P( D, E, A, B, C, sha1_R(72) );
-    sha1_P( C, D, E, A, B, sha1_R(73) );
-    sha1_P( B, C, D, E, A, sha1_R(74) );
-    sha1_P( A, B, C, D, E, sha1_R(75) );
-    sha1_P( E, A, B, C, D, sha1_R(76) );
-    sha1_P( D, E, A, B, C, sha1_R(77) );
-    sha1_P( C, D, E, A, B, sha1_R(78) );
-    sha1_P( B, C, D, E, A, sha1_R(79) );
+    sha1_P(A, B, C, D, E, sha1_R(60));
+    sha1_P(E, A, B, C, D, sha1_R(61));
+    sha1_P(D, E, A, B, C, sha1_R(62));
+    sha1_P(C, D, E, A, B, sha1_R(63));
+    sha1_P(B, C, D, E, A, sha1_R(64));
+    sha1_P(A, B, C, D, E, sha1_R(65));
+    sha1_P(E, A, B, C, D, sha1_R(66));
+    sha1_P(D, E, A, B, C, sha1_R(67));
+    sha1_P(C, D, E, A, B, sha1_R(68));
+    sha1_P(B, C, D, E, A, sha1_R(69));
+    sha1_P(A, B, C, D, E, sha1_R(70));
+    sha1_P(E, A, B, C, D, sha1_R(71));
+    sha1_P(D, E, A, B, C, sha1_R(72));
+    sha1_P(C, D, E, A, B, sha1_R(73));
+    sha1_P(B, C, D, E, A, sha1_R(74));
+    sha1_P(A, B, C, D, E, sha1_R(75));
+    sha1_P(E, A, B, C, D, sha1_R(76));
+    sha1_P(D, E, A, B, C, sha1_R(77));
+    sha1_P(C, D, E, A, B, sha1_R(78));
+    sha1_P(B, C, D, E, A, sha1_R(79));
 
 #undef sha1_K
 #undef sha1_F
