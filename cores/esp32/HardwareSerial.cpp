@@ -114,7 +114,7 @@ _eventTask(NULL)
 
 HardwareSerial::~HardwareSerial()
 {
-    end(true); // explicit Full UART termination
+    end(); // explicit Full UART termination
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(_lock != NULL){
         vSemaphoreDelete(_lock);
@@ -329,16 +329,20 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     // map logical pins to GPIO numbers
     rxPin = digitalPinToGPIONumber(rxPin);
     txPin = digitalPinToGPIONumber(txPin);
-
-    if(_uart) {
-        // in this case it is a begin() over a previous begin() - maybe to change baud rate
-        // thus do not disable debug output
-        end(false);  // disables IDF UART driver and UART event Task + sets _uart to NULL
-    }
-
     // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
     // it will detach previous UART attached pins
+
+    // indicates that uartbegin() has to initilize a new IDF driver
+    if (_testUartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd)) {
+        _destroyEventTask(); // when IDF uart driver must be restarted, _eventTask must finish too
+    }
+
     _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
+    if (_uart == NULL) {
+        log_e("UART driver failed to start. Please check the logs.");
+        HSERIAL_MUTEX_UNLOCK();
+        return;
+    }
     if (!baud) {
         // using baud rate as zero, forces it to try to detect the current baud rate in place
         uartStartDetectBaudrate(_uart);
@@ -348,11 +352,14 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
             yield();
         }
 
-        end(false);  // disables IDF UART driver and UART event Task + sets _uart to NULL
-
         if(detectedBaudRate) {
             delay(100); // Give some time...
             _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
+            if (_uart == NULL) {
+                log_e("UART driver failed to start. Please check the logs.");
+                HSERIAL_MUTEX_UNLOCK();
+                return;
+            }
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;
@@ -389,22 +396,17 @@ void HardwareSerial::updateBaudRate(unsigned long baud)
   uartSetBaudRate(_uart, baud);
 }
 
-void HardwareSerial::end(bool fullyTerminate)
+void HardwareSerial::end()
 {
     // default Serial.end() will completely disable HardwareSerial,
     // including any tasks or debug message channel (log_x()) - but not for IDF log messages!
-    if(fullyTerminate) {
-        _onReceiveCB = NULL;
-        _onReceiveErrorCB = NULL;
-        if (uartGetDebug() == _uart_nr) {
-            uartSetDebug(0);
-        }
-        _rxFIFOFull = 0;
-        uartEnd(_uart_nr);  // fully detach all pins and delete the UART driver
-    } else {
-      // do not invalidate callbacks, detach pins, invalidate DBG output
-      uart_driver_delete(_uart_nr);
+    _onReceiveCB = NULL;
+    _onReceiveErrorCB = NULL;
+    if (uartGetDebug() == _uart_nr) {
+        uartSetDebug(0);
     }
+    _rxFIFOFull = 0;
+    uartEnd(_uart_nr);  // fully detach all pins and delete the UART driver
     _destroyEventTask(); // when IDF uart driver is deleted, _eventTask must finish too
     _uart = NULL;
 }
@@ -564,3 +566,4 @@ size_t HardwareSerial::setTxBufferSize(size_t new_size) {
     _txBufferSize = new_size;
     return _txBufferSize;
 }
+
