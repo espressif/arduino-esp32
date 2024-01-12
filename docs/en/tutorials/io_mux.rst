@@ -23,7 +23,7 @@ GPIO Matrix and Pin Mux
 The ESP32 architecture includes the capability of configuring some peripherals to any of the GPIOs pins, managed by the `IO MUX GPIO`_.
 Essentially, this capability means that we can route the internal peripheral into a different physical pin using the IO MUX and the GPIO Matrix.
 
-.. figure:: ../_static/tutorials/peripherals/tutorial_peripheral_diagram.png
+.. figure:: ../../_static/tutorials/peripherals/tutorial_peripheral_diagram.png
     :align: center
     :width: 600
     :figclass: align-center

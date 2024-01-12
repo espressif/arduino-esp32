@@ -97,7 +97,7 @@ If everything is ok, you will see some output logs similar to this one:
     writing output... [100%] tutorials/tutorials                                                                                                                                                                                                                                                              
     generating indices...  genindexdone
     writing additional pages...  searchdone
-    copying images... [100%] tutorials/../_static/tutorials/peripherals/tutorial_peripheral_diagram.png                                                                                                                                                                                                       
+    copying images... [100%] tutorials/../../_static/tutorials/peripherals/tutorial_peripheral_diagram.png                                                                                                                                                                                                       
     copying static files... ... done
     copying extra files... done
     dumping search index in English (code: en)... done
@@ -309,7 +309,7 @@ After that, you can use the following structure to include the image in the docs
 
 .. code-block::
 
-    .. figure:: ../_static/arduino_i2c_master.png
+    .. figure:: ../../_static/arduino_i2c_master.png
         :align: center
         :width: 720
         :figclass: align-center
