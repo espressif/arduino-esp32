@@ -5,7 +5,7 @@ function add_ssh_keys() {
   mkdir -p ~/.ssh
   chmod 700 ~/.ssh
   echo -n "${key_string}" >~/.ssh/id_rsa_base64
-  base64 -w 0 ~/.ssh/id_rsa_base64 | base64 -di >~/.ssh/id_rsa
+  base64 --decode --ignore-garbage ~/.ssh/id_rsa_base64 >~/.ssh/id_rsa
   chmod 600 ~/.ssh/id_rsa
 }
 

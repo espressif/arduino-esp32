@@ -1,22 +1,15 @@
-name: Build the Docs Legacy ReadTheDocs CI
+name: Documentation Build and Deploy CI
 
 on:
-  push:
-    branches:
-    - master
-    - release/*
-    paths:
-    - 'docs/**'
-    - '.github/workflows/docs_legacy.yml'
   pull_request:
     paths:
     - 'docs/**'
-    - '.github/workflows/docs_legacy.yml'
+    - '.github/workflows/docs.yml'
 
 jobs:
 
   build-docs:
-    name: Build ReadTheDocs
+    name: Build Documentation
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -34,5 +27,11 @@ jobs:
         sudo apt install python3-pip python3-setuptools
         # GitHub CI installs pip3 and setuptools outside the path.
         # Update the path to include them and run.
-        PATH=/home/runner/.local/bin:$PATH pip3 install --user -r ./docs/requirements.txt
-        cd ./docs && PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" make html
+        cd ./docs
+        PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
+        PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en
+    - name: Archive Docs
+      uses: actions/upload-artifact@v2
+      with:
+        name: docs
+        path: docs
