@@ -37,7 +37,7 @@ void timerSetConfig(hw_timer_t *timer, uint32_t config);
 uint32_t timerGetConfig(hw_timer_t *timer);
 
 void timerAttachInterruptFlag(hw_timer_t *timer, void (*fn)(void), bool edge, int intr_alloc_flags);
-void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge);
+void timerAttachInterrupt(hw_timer_t *timer, void (*fn)(void), bool edge = false);
 void timerDetachInterrupt(hw_timer_t *timer);
 
 void timerStart(hw_timer_t *timer);
