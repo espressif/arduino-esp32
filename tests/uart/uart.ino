@@ -466,7 +466,7 @@ void auto_baudrate_test(void) {
     selected_serial = &Serial2;
   #endif
 
-  selected_serial->end(false);
+  //selected_serial->end(false);
 
   log_d("Starting delayed task to send message");
 
