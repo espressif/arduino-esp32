@@ -777,6 +777,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
     if(uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK){
         uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate, sclk_freq);
     }
+    uart->_baudrate = baud_rate;
     UART_MUTEX_UNLOCK();
 }
 
