@@ -78,11 +78,11 @@ void start_serial(unsigned long baudrate = 115200) {
 // This function stops all the available test UARTs
 void stop_serial(bool hard_stop = false) {
   #if SOC_UART_NUM >= 2
-    Serial1.end(hard_stop);
+    Serial1.end(/*hard_stop*/);
   #endif
 
   #if SOC_UART_NUM >= 3
-    Serial2.end(hard_stop);
+    Serial2.end(/*hard_stop*/);
   #endif
 }
 
@@ -139,6 +139,19 @@ void task_delayed_msg(void *pvParameters) {
 // This function is automatically called by unity before each test is run
 void setUp(void) {
   start_serial(115200);
+#if SOC_UART_NUM == 2
+  log_d("Setup internal loop-back from and back to Serial1 (UART1) TX >> Serial1 (UART1) RX");
+
+  Serial1.onReceive([]() {onReceive_cb(Serial1);});
+  uart_internal_loopback(1, RX1);
+#elif SOC_UART_NUM == 3
+  log_d("Setup internal loop-back between Serial1 (UART1) <<--->> Serial2 (UART2)");
+
+  Serial1.onReceive([]() {onReceive_cb(Serial1);});
+  Serial2.onReceive([]() {onReceive_cb(Serial2);});
+  uart_internal_loopback(1, RX2);
+  uart_internal_loopback(2, RX1);
+#endif
 }
 
 // This function is automatically called by unity after each test is run
@@ -393,7 +406,7 @@ void disabled_uart_calls_test(void) {
 
 // This test checks if the pins can be changed and if the message can be transmitted and received correctly after the change
 void change_pins_test(void) {
-  stop_serial();
+  //stop_serial();
 
   log_d("Disabling UART loopback");
 
