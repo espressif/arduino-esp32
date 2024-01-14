@@ -55,8 +55,7 @@ void ssl_init(sslclient_context *ssl_client)
 
 int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_t port, const char* hostname, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
 {
-    char buf[512];
-    int ret, flags;
+    int ret;
     int enable = 1;
     log_v("Free internal heap before TLS %u", ESP.getFreeHeap());
 
@@ -417,7 +416,7 @@ int peek_net_receive(sslclient_context *ssl_client, int timeout) {
     fd_set fdset;
     FD_SET(ssl_client->socket, &fdset);
 
-    int ret = select(ssl_client->socket + 1, &fdset, nullptr, nullptr, ssl_client->socket_timeout<0 ? nullptr : &tv);
+    int ret = select(ssl_client->socket + 1, &fdset, nullptr, nullptr, timeout<0 ? nullptr : &tv);
     if (ret < 0) {
         log_e("select on read fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
         lwip_close(ssl_client->socket);
