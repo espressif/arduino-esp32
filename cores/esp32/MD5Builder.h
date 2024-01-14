@@ -32,24 +32,16 @@ private:
     uint8_t _buf[ESP_ROM_MD5_DIGEST_LEN];
 public:
     void begin(void);
-    void add(uint8_t * data, uint16_t len);
+    void add(const uint8_t * data, uint16_t len);
     void add(const char * data)
     {
-        add((uint8_t*)data, strlen(data));
-    }
-    void add(char * data)
-    {
-        add((const char*)data);
+        add((const uint8_t*)data, strlen(data));
     }
     void add(String data)
     {
         add(data.c_str());
     }
     void addHexString(const char * data);
-    void addHexString(char * data)
-    {
-        addHexString((const char*)data);
-    }
     void addHexString(String data)
     {
         addHexString(data.c_str());
