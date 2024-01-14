@@ -225,6 +225,9 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_
         return -1;
     }
 
+    // Note - this check for BOTH key and cert is relied on
+    // later during cleanup.
+    //
     if (!insecure && cli_cert != NULL && cli_key != NULL) {
         mbedtls_x509_crt_init(&ssl_client->client_cert);
         mbedtls_pk_init(&ssl_client->client_key);
@@ -286,7 +289,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client)
     }
 
 
-    if ((ssl_client->client_cert.pk.pk_ctx) && (ssl_client->client_key.pk_ctx)) {
+    if (ssl_client->client_cert.version) {
         log_d("Protocol is %s Ciphersuite is %s", mbedtls_ssl_get_version(&ssl_client->ssl_ctx), mbedtls_ssl_get_ciphersuite(&ssl_client->ssl_ctx));
         if ((ret = mbedtls_ssl_get_record_expansion(&ssl_client->ssl_ctx)) >= 0) {
             log_d("Record expansion is %d", ret);
@@ -306,15 +309,16 @@ int ssl_starttls_handshake(sslclient_context *ssl_client)
         log_v("Certificate verified.");
     }
     
-    if (&ssl_client->ca_cert.pk.pk_ctx) {
+    if (&ssl_client->ca_cert.version) {
         mbedtls_x509_crt_free(&ssl_client->ca_cert);
     }
 
-    if (&ssl_client->client_cert.pk.pk_ctx) {
+    // we know that we always have a client cert/key pair -- and we
+    // cannot look into the prviate client_key pk struct for newer
+    //versions of mbedtls. So rely on a public field of the cert
+    // and infer that there is a key too.
+    if (&ssl_client->client_cert.version) {
         mbedtls_x509_crt_free(&ssl_client->client_cert);
-    }
-
-    if (&ssl_client->client_key.pk_ctx) {
         mbedtls_pk_free(&ssl_client->client_key);
     }    
 
