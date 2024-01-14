@@ -417,7 +417,7 @@ IPAddress& IPAddress::from_ip_addr_t(const ip_addr_t* addr){
     return *this;
 }
 
-esp_ip6_addr_type_t IPAddress::addr_type(){
+esp_ip6_addr_type_t IPAddress::addr_type() const {
     if(_type != IPv6){
         return ESP_IP6_ADDR_IS_UNKNOWN;
     }
