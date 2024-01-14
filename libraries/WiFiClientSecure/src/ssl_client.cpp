@@ -309,7 +309,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client)
         log_v("Certificate verified.");
     }
     
-    if (&ssl_client->ca_cert.version) {
+    if (ssl_client->ca_cert.version) {
         mbedtls_x509_crt_free(&ssl_client->ca_cert);
     }
 
@@ -317,7 +317,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client)
     // cannot look into the prviate client_key pk struct for newer
     //versions of mbedtls. So rely on a public field of the cert
     // and infer that there is a key too.
-    if (&ssl_client->client_cert.version) {
+    if (ssl_client->client_cert.version) {
         mbedtls_x509_crt_free(&ssl_client->client_cert);
         mbedtls_pk_free(&ssl_client->client_key);
     }    
