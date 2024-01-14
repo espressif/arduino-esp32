@@ -23,6 +23,7 @@
 #include "Printable.h"
 #include "WString.h"
 #include "lwip/ip_addr.h"
+#include "esp_netif_ip_addr.h"
 
 #define IPADDRESS_V4_BYTES_INDEX 12
 #define IPADDRESS_V4_DWORD_INDEX 3
@@ -93,16 +94,17 @@ public:
     IPAddress& operator=(const IPAddress& address);
 
     virtual size_t printTo(Print& p) const;
-    size_t printTo(Print& p, bool includeZone) const;
     String toString(bool includeZone = false) const;
 
     IPType type() const { return _type; }
 
-    uint8_t zone() const { return (type() == IPv6)?_zone:0; }
-
-    // LwIP conversions
+    // Espresif LwIP conversions
+    IPAddress(const ip_addr_t *addr);
     void to_ip_addr_t(ip_addr_t* addr) const;
-    IPAddress& from_ip_addr_t(ip_addr_t* addr);
+    IPAddress& from_ip_addr_t(const ip_addr_t* addr);
+    esp_ip6_addr_type_t addr_type();
+    uint8_t zone() const { return (type() == IPv6)?_zone:0; }
+    size_t printTo(Print& p, bool includeZone) const;
 
     friend class UDP;
     friend class Client;

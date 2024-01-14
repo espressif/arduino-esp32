@@ -380,6 +380,10 @@ size_t IPAddress::printTo(Print& p, bool includeZone) const
     return n;
 }
 
+IPAddress::IPAddress(const ip_addr_t *addr){
+    from_ip_addr_t(addr);
+}
+
 void IPAddress::to_ip_addr_t(ip_addr_t* addr) const {
     if(_type == IPv6){
         addr->type = IPADDR_TYPE_V6;
@@ -396,7 +400,7 @@ void IPAddress::to_ip_addr_t(ip_addr_t* addr) const {
     }
 }
 
-IPAddress& IPAddress::from_ip_addr_t(ip_addr_t* addr){
+IPAddress& IPAddress::from_ip_addr_t(const ip_addr_t* addr){
     if(addr->type == IPADDR_TYPE_V6){
         _type = IPv6;
         _address.dword[0] = addr->u_addr.ip6.addr[0];
@@ -411,6 +415,15 @@ IPAddress& IPAddress::from_ip_addr_t(ip_addr_t* addr){
         _address.dword[IPADDRESS_V4_DWORD_INDEX] = addr->u_addr.ip4.addr;
     }
     return *this;
+}
+
+esp_ip6_addr_type_t IPAddress::addr_type(){
+    if(_type != IPv6){
+        return ESP_IP6_ADDR_IS_UNKNOWN;
+    }
+    ip_addr_t addr;
+    to_ip_addr_t(&addr);
+    return esp_netif_ip6_get_addr_type((esp_ip6_addr_t*)(&(addr.u_addr.ip6)));
 }
 
 const IPAddress IN6ADDR_ANY(IPv6);
