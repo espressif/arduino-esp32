@@ -36,7 +36,7 @@ public:
     void begin() override;
 
     using HashBuilder::add;
-    void add(uint8_t* data, size_t len) override;
+    void add(const uint8_t* data, size_t len) override;
 
     using HashBuilder::addHexString;
     void addHexString(const char* data) override;

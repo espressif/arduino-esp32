@@ -26,10 +26,10 @@ public:
     virtual ~HashBuilder() {}
     virtual void begin() = 0;
 
-    virtual void add(uint8_t* data, size_t len) = 0;
+    virtual void add(const uint8_t* data, size_t len) = 0;
     virtual void add(const char* data)
     {
-        add((uint8_t*)data, strlen(data));
+        add((const uint8_t*)data, strlen(data));
     }
     virtual void add(char* data)
     {
