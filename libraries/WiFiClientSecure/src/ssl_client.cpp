@@ -287,7 +287,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client)
     }
 
 
-    if ((&ssl_client->client_cert) && (&ssl_client->client_key)) {
+    if ((ssl_client->client_cert.pk.pk_ctx) && (ssl_client->client_key.pk_ctx)) {
         log_d("Protocol is %s Ciphersuite is %s", mbedtls_ssl_get_version(&ssl_client->ssl_ctx), mbedtls_ssl_get_ciphersuite(&ssl_client->ssl_ctx));
         if ((ret = mbedtls_ssl_get_record_expansion(&ssl_client->ssl_ctx)) >= 0) {
             log_d("Record expansion is %d", ret);
@@ -307,15 +307,15 @@ int ssl_starttls_handshake(sslclient_context *ssl_client)
         log_v("Certificate verified.");
     }
     
-    if (&ssl_client->ca_cert) {
+    if (&ssl_client->ca_cert.pk.pk_ctx) {
         mbedtls_x509_crt_free(&ssl_client->ca_cert);
     }
 
-    if (&ssl_client->client_cert) {
+    if (&ssl_client->client_cert.pk.pk_ctx) {
         mbedtls_x509_crt_free(&ssl_client->client_cert);
     }
 
-    if (&ssl_client->client_key) {
+    if (&ssl_client->client_key.pk_ctx) {
         mbedtls_pk_free(&ssl_client->client_key);
     }    
 
@@ -402,7 +402,7 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
 // handling before the handshake starts; but after setting up the TLS
 // connection.
 //
-int peek_net_receive(sslclient_context *ssl_client, uint32_t timeout) {
+int peek_net_receive(sslclient_context *ssl_client, int timeout) {
 #if MBEDTLS_FIXED_LINKING_NET_POLL
     int ret = mbedtls_net_poll((mbedtls_net_context*)ssl_client, MBEDTLS_NET_POLL_READ, timeout);
     ret == MBEDTLS_NET_POLL_READ ? 1 : ret;

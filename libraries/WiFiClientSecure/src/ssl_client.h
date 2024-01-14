@@ -38,7 +38,7 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
 int get_ssl_receive(sslclient_context *ssl_client, uint8_t *data, int length);
 int send_net_data(sslclient_context *ssl_client, const uint8_t *data, size_t len);
 int get_net_receive(sslclient_context *ssl_client, uint8_t *data, int length);
-int peek_net_receive(sslclient_context *ssl_client, uint32_t timeout);
+int peek_net_receive(sslclient_context *ssl_client, int timeout);
 bool verify_ssl_fingerprint(sslclient_context *ssl_client, const char* fp, const char* domain_name);
 bool verify_ssl_dn(sslclient_context *ssl_client, const char* domain_name);
 bool get_peer_fingerprint(sslclient_context *ssl_client, uint8_t sha256[32]);

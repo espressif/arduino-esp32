@@ -145,7 +145,7 @@ int WiFiClientSecure::connect(IPAddress ip, uint16_t port, const char *host, con
     int ret = start_ssl_client(sslclient, ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
 
     if (ret >=0 && ! _stillinPlainStart)
-	ret = ssl_starttls_handshake(sslclient);
+        ret = ssl_starttls_handshake(sslclient);
     else
         log_i("Actual TLS start posponed.");
 
@@ -173,7 +173,7 @@ int WiFiClientSecure::startTLS()
         };
         _stillinPlainStart = false;
     } else 
-        log_i("startTLS: ignoring StartTLS - as we should be secure already");
+        log_e("startTLS: ignoring StartTLS - as we should be secure already");
     return 1;
 }
 
@@ -226,7 +226,7 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
     }
 
     if (_stillinPlainStart) 
-	return send_net_data(sslclient, buf, size);
+        return send_net_data(sslclient, buf, size);
 
     if(_lastWriteTimeout != _timeout){
         struct timeval timeout_tv;
@@ -239,7 +239,7 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
     }
     int res = send_ssl_data(sslclient, buf, size);
     if (res < 0) {
-	log_e("Closing connection on failed write");
+        log_e("Closing connection on failed write");
         stop();
         res = 0;
     }
@@ -249,7 +249,7 @@ size_t WiFiClientSecure::write(const uint8_t *buf, size_t size)
 int WiFiClientSecure::read(uint8_t *buf, size_t size)
 {
     if(_stillinPlainStart) 
-	return  get_net_receive(sslclient, buf, size);
+        return  get_net_receive(sslclient, buf, size);
 
     if(_lastReadTimeout != _timeout){
         if(fd() >= 0){
@@ -285,7 +285,7 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
         res = get_ssl_receive(sslclient, buf, size);
 
     if (res < 0) {
-	log_d("Closing connection on failed read");
+        log_d("Closing connection on failed read");
         stop();
         return peeked?peeked:res;
     }
@@ -295,7 +295,7 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
 int WiFiClientSecure::available()
 {
     if (_stillinPlainStart) 
-	return peek_net_receive(sslclient,0);
+        return peek_net_receive(sslclient,0);
 
     int peeked = (_peek >= 0), res = -1;
     if (!_connected) {
@@ -304,7 +304,7 @@ int WiFiClientSecure::available()
     res = data_to_read(sslclient);
 
     if (res < 0 && !_stillinPlainStart) {
-	log_e("Closing connection on failed avail check");
+        log_e("Closing connection on failed avail check");
         stop();
         return peeked?peeked:res;
     }
@@ -434,23 +434,6 @@ void WiFiClientSecure::setHandshakeTimeout(unsigned long handshake_timeout)
 void WiFiClientSecure::setAlpnProtocols(const char **alpn_protos)
 {
     _alpn_protos = alpn_protos;
-}
-
-int WiFiClientSecure::setTimeout(uint32_t seconds)
-{
-    _timeout = seconds * 1000;
-    if (sslclient->socket >= 0) {
-        struct timeval tv;
-        tv.tv_sec = seconds;
-        tv.tv_usec = 0;
-        if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-            return -1;
-        }
-        return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
-    }
-    else {
-        return 0;
-    }
 }
 
 int WiFiClientSecure::fd() const
