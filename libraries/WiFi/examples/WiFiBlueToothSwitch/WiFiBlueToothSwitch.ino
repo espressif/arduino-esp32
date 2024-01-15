@@ -89,7 +89,6 @@ void WiFiEvent(WiFiEvent_t event){
             break;
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
             Serial.println("STA Connected");
-            WiFi.enableIpV6();
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
             Serial.print("STA IPv6: ");
@@ -114,6 +113,7 @@ void setup() {
     Serial.begin(115200);
     pinMode(0, INPUT_PULLUP);
     WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
+    WiFi.enableIPv6();
     Serial.print("ESP32 SDK: ");
     Serial.println(ESP.getSdkVersion());
     Serial.println("Press the button to select the next mode");
