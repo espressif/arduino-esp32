@@ -1,6 +1,10 @@
 name: Documentation Build and Deploy CI
 
 on:
+  pull_request:
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs.yml'
   push:
     branches:
     - master
