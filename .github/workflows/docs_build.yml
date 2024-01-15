@@ -1,6 +1,13 @@
 name: Documentation Build and Deploy CI
 
 on:
+  push:
+    branches:
+    - master
+    - release/*
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs.yml'
   pull_request:
     paths:
     - 'docs/**'
@@ -9,7 +16,7 @@ on:
 jobs:
 
   build-docs:
-    name: Build Documentation
+    name: Build ESP-Docs
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -35,3 +42,4 @@ jobs:
       with:
         name: docs
         path: docs
+        
