@@ -1066,7 +1066,10 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         clearStatusBits(STA_STARTED_BIT | STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT | STA_HAS_IP6_GLOBAL_BIT);
     } else if(event->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
         if (getStatusBits() & STA_WANT_IP6_BIT){
-            esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA));
+            esp_err_t err = esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA));
+            if(err != ESP_OK){
+                log_e("Failed to enable IPv6 Link Local on STA: [%d] %s", err, esp_err_to_name(err));
+            }
         }
         WiFiSTAClass::_setStatus(WL_IDLE_STATUS);
         setStatusBits(STA_CONNECTED_BIT);
@@ -1127,7 +1130,10 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
     } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_START) {
         setStatusBits(AP_STARTED_BIT);
         if (getStatusBits() & AP_WANT_IP6_BIT){
-            esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_AP));
+            esp_err_t err = esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_AP));
+            if(err != ESP_OK){
+                log_e("Failed to enable IPv6 Link Local on AP: [%d] %s", err, esp_err_to_name(err));
+            }
         }
     } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_STOP) {
         clearStatusBits(AP_STARTED_BIT | AP_HAS_CLIENT_BIT);
@@ -1145,7 +1151,10 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
         clearStatusBits(ETH_STARTED_BIT | ETH_CONNECTED_BIT | ETH_HAS_IP_BIT | ETH_HAS_IP6_BIT | ETH_HAS_IP6_GLOBAL_BIT);
     } else if(event->event_id == ARDUINO_EVENT_ETH_CONNECTED) {
         if (getStatusBits() & ETH_WANT_IP6_BIT){
-            esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_ETH));
+            esp_err_t err = esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_ETH));
+            if(err != ESP_OK){
+                log_e("Failed to enable IPv6 Link Local on ETH: [%d] %s", err, esp_err_to_name(err));
+            }
         }
         setStatusBits(ETH_CONNECTED_BIT);
     } else if(event->event_id == ARDUINO_EVENT_ETH_DISCONNECTED) {

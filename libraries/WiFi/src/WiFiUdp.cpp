@@ -321,6 +321,7 @@ int WiFiUDP::parsePacket(){
     if (remote_ip.type() == IPv6 && ip6_addr_isipv4mappedipv6(ip_2_ip6(&addr))) {
       unmap_ipv4_mapped_ipv6(ip_2_ip4(&addr), ip_2_ip6(&addr));
       IP_SET_TYPE_VAL(addr, IPADDR_TYPE_V4);
+      remote_ip.from_ip_addr_t(&addr);
     }
     remote_port = ntohs(si_other.sin6_port);
   }
