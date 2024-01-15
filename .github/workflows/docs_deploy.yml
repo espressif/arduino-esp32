@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - release/*
+    - master
     paths:
     - 'docs/**'
     - '.github/workflows/docs.yml'
@@ -27,12 +28,11 @@ jobs:
       env:
         # Deploy to production server
         # DOCS_BUILD_DIR: "./docs/_build/"
-        DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_PROD_PRIVATEKEY }}
-        DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PROD_PATH }}
+        DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_KEY }}
+        DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PATH }}
         DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_SERVER }}
-        DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_PROD_USER }}
-        DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_PROD_URL_BASE }}
-        # Deploy to preview server
+        DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_USER }}
+        DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_URL }}
       run: |
         sudo apt update
         sudo apt install python3-pip python3-setuptools
