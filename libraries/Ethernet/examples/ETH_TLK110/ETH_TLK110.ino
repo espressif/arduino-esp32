@@ -5,21 +5,23 @@
 
 #include <ETH.h>
 
-#define ETH_TYPE        ETH_PHY_TLK110
-#define ETH_ADDR        31
-#define ETH_MDC_PIN     23
-#define ETH_MDIO_PIN    18
-#define ETH_POWER_PIN   17
-#define ETH_CLK_MODE    ETH_CLOCK_GPIO0_IN
+#define ETH_TYPE            ETH_PHY_TLK110
+#define ETH_ADDR            31
+#define ETH_MDC_PIN         23
+#define ETH_MDIO_PIN        18
+#define ETH_POWER_PIN       17
+#define ETH_CLK_MODE        ETH_CLOCK_GPIO0_IN
 
 static bool eth_connected = false;
 
-void onEvent(arduino_event_id_t event, arduino_event_info_t info)
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
+void WiFiEvent(WiFiEvent_t event)
 {
   switch (event) {
     case ARDUINO_EVENT_ETH_START:
       Serial.println("ETH Started");
-      //set eth hostname here
+      // The hostname must be set after the interface is started, but needs
+      // to be set before DHCP, so set it from the event handler thread.
       ETH.setHostname("esp32-ethernet");
       break;
     case ARDUINO_EVENT_ETH_CONNECTED:
@@ -70,7 +72,7 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
-  WiFi.onEvent(onEvent);
+  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
   ETH.begin(ETH_TYPE, ETH_ADDR, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_POWER_PIN, ETH_CLK_MODE);
 }
 

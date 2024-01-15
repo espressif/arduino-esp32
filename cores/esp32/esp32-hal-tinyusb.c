@@ -61,7 +61,12 @@ typedef struct {
 
 static bool usb_otg_deinit(void * busptr) {
     // Once USB OTG is initialized, its GPIOs are assigned and it shall never be deinited
+    // except when S3 swithicng usb from cdc to jtag while resetting to bootrom
+#if CONFIG_IDF_TARGET_ESP32S3
+    return true;
+#else
     return false;
+#endif
 }
 
 static void configure_pins(usb_hal_context_t *usb)
@@ -83,10 +88,10 @@ static void configure_pins(usb_hal_context_t *usb)
     if (!usb->use_external_phy) {
         gpio_set_drive_capability(USBPHY_DM_NUM, GPIO_DRIVE_CAP_3);
         gpio_set_drive_capability(USBPHY_DP_NUM, GPIO_DRIVE_CAP_3);
-        if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB, usb_otg_deinit)) {
+        if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, usb_otg_deinit) && perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, usb_otg_deinit)){
             // Bus Pointer is not used anyway - once the USB GPIOs are assigned, they can't be detached
-            perimanSetPinBus(USBPHY_DM_NUM, ESP32_BUS_TYPE_USB, (void *) usb);
-            perimanSetPinBus(USBPHY_DP_NUM, ESP32_BUS_TYPE_USB, (void *) usb);
+            perimanSetPinBus(USBPHY_DM_NUM, ESP32_BUS_TYPE_USB_DM, (void *) usb, -1, -1);
+            perimanSetPinBus(USBPHY_DP_NUM, ESP32_BUS_TYPE_USB_DP, (void *) usb, -1, -1);
         } else {
             log_e("USB OTG Pins can't be set into Peripheral Manager.");
         }
@@ -673,7 +678,11 @@ static void usb_device_task(void *param) {
 #endif
 static bool tinyusb_is_initialized = false;
 
-esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb)
+esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb){
+    return tinyusb_enable_interface2(interface, descriptor_len, cb, false);
+}
+
+esp_err_t tinyusb_enable_interface2(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb, bool reserve_endpoints)
 {
     if(tinyusb_is_initialized){
         log_e("TinyUSB has already started! Interface %s not enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
@@ -682,6 +691,13 @@ esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descr
     if((interface >= USB_INTERFACE_MAX) || (tinyusb_loaded_interfaces_mask & (1U << interface))){
         log_e("Interface %s invalid or already enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
         return ESP_FAIL;
+    }
+    if(interface == USB_INTERFACE_HID && reserve_endpoints){
+        // Some simple PC BIOS requires specific endpoint addresses for keyboard at boot
+        if(!tinyusb_reserve_out_endpoint(1) ||!tinyusb_reserve_in_endpoint(1)){
+            log_e("HID Reserve Endpoints Failed");
+            return ESP_FAIL;
+        }
     }
     if(interface == USB_INTERFACE_CDC){
         if(!tinyusb_reserve_out_endpoint(3) ||!tinyusb_reserve_in_endpoint(4) || !tinyusb_reserve_in_endpoint(5)){

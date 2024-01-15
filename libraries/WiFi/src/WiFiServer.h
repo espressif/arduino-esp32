@@ -37,7 +37,6 @@ class WiFiServer : public Server {
   public:
     void listenOnLocalhost(){}
 
-    // _addr(INADDR_ANY) is the same as _addr() ==> 0.0.0.0
     WiFiServer(uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
       log_v("WiFiServer::WiFiServer(port=%d, ...)", port);
     }
@@ -46,7 +45,7 @@ class WiFiServer : public Server {
     }
     ~WiFiServer(){ end();}
     WiFiClient available();
-    WiFiClient accept(){return available();}
+    WiFiClient accept();
     void begin(uint16_t port=0);
     void begin(uint16_t port, int reuse_enable);
     void setNoDelay(bool nodelay);

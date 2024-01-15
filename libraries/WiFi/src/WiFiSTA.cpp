@@ -123,7 +123,7 @@ wifi_auth_mode_t WiFiSTAClass::_minSecurity = WIFI_AUTH_WPA2_PSK;
 wifi_scan_method_t WiFiSTAClass::_scanMethod = WIFI_FAST_SCAN;
 wifi_sort_method_t WiFiSTAClass::_sortMethod = WIFI_CONNECT_AP_BY_SIGNAL;
 
-static wl_status_t _sta_status = WL_NO_SHIELD;
+static wl_status_t _sta_status = WL_STOPPED;
 static EventGroupHandle_t _sta_status_group = NULL;
 
 void WiFiSTAClass::_setStatus(wl_status_t status)
@@ -431,6 +431,39 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
 }
 
 /**
+ * Sets the working bandwidth of the STA mode
+ * @param m wifi_bandwidth_t
+ */
+bool WiFiSTAClass::bandwidth(wifi_bandwidth_t bandwidth) {
+    if(!WiFi.enableSTA(true)) {
+        log_e("STA enable failed!");
+        return false;
+    }
+
+    esp_err_t err;
+    err = esp_wifi_set_bandwidth((wifi_interface_t)ESP_IF_WIFI_STA, bandwidth);
+    if(err){
+        log_e("Could not set STA bandwidth!");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Change DNS server for static IP configuration
+ * @param dns1       Static DNS server 1
+ * @param dns2       Static DNS server 2 (optional)
+ */
+bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL)
+        return false;
+    esp_err_t err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
+    return err == ESP_OK;
+}
+
+/**
  * is STA interface connected?
  * @return true if STA is connected to an AP
  */
@@ -716,14 +749,23 @@ String WiFiSTAClass::psk() const
  * Return the current bssid / mac associated with the network if configured
  * @return bssid uint8_t *
  */
-uint8_t* WiFiSTAClass::BSSID(void)
+uint8_t* WiFiSTAClass::BSSID(uint8_t* buff)
 {
     static uint8_t bssid[6];
     wifi_ap_record_t info;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return NULL;
     }
-    if(!esp_wifi_sta_get_ap_info(&info)) {
+    esp_err_t err = esp_wifi_sta_get_ap_info(&info);
+    if (buff != NULL) {
+        if(err) {
+          memset(buff, 0, 6);
+        } else {
+          memcpy(buff, info.bssid, 6);
+        }
+        return  buff;
+    }
+    if(!err) {
         memcpy(bssid, info.bssid, 6);
         return reinterpret_cast<uint8_t*>(bssid);
     }
@@ -763,30 +805,50 @@ int8_t WiFiSTAClass::RSSI(void)
 
 /**
  * Enable IPv6 on the station interface.
+ * Should be called before WiFi.begin()
+ * 
  * @return true on success
  */
-bool WiFiSTAClass::enableIpV6()
+bool WiFiSTAClass::enableIPv6(bool en)
 {
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return false;
+    if (en) {
+        WiFiGenericClass::setStatusBits(STA_WANT_IP6_BIT);
+    } else {
+        WiFiGenericClass::clearStatusBits(STA_WANT_IP6_BIT);
     }
-    return esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA)) == ESP_OK;
+    return true;
 }
 
 /**
- * Get the station interface IPv6 address.
- * @return IPv6Address
+ * Get the station interface link-local IPv6 address.
+ * @return IPAddress
  */
-IPv6Address WiFiSTAClass::localIPv6()
+IPAddress WiFiSTAClass::localIPv6()
 {
-	esp_ip6_addr_t addr;
+    static esp_ip6_addr_t addr;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
-    if(esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
-        return IPv6Address();
+    if(esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)){
+        return IPAddress(IPv6);
     }
-    return IPv6Address(addr.addr);
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
+}
+
+/**
+ * Get the station interface global IPv6 address.
+ * @return IPAddress
+ */
+IPAddress WiFiSTAClass::globalIPv6()
+{
+    static esp_ip6_addr_t addr;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress(IPv6);
+    }
+    if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)){
+        return IPAddress(IPv6);
+    }
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
 

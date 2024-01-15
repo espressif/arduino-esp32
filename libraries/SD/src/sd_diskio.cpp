@@ -11,8 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "sd_diskio.h"
 #include "esp_system.h"
+#include "esp32-hal-periman.h"
+
 extern "C" {
     #include "ff.h"
     #include "diskio.h"
@@ -227,7 +233,7 @@ char sdWriteBytes(uint8_t pdrv, const char* buffer, char token)
     ardu_sdcard_t * card = s_cards[pdrv];
     unsigned short crc = (card->supports_crc)?CRC16(buffer, 512):0xFFFF;
     if (!sdWait(pdrv, 500)) {
-        return false;
+        return 0;
     }
 
     card->spi->write(token);
@@ -418,7 +424,7 @@ unsigned long sdGetSectorsCount(uint8_t pdrv)
 {
     for (int f = 0; f < 3; f++) {
         if(!sdSelectCard(pdrv)) {
-            return false;
+            return 0;
         }
 
         if (!sdCommand(pdrv, SEND_CSD, 0, NULL)) {
@@ -740,7 +746,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
     card->base_path = NULL;
     card->frequency = hz;
     card->spi = spi;
-    card->ssPin = cs;
+    card->ssPin = digitalPinToGPIONumber(cs);
 
     card->supports_crc = true;
     card->type = CARD_NONE;
@@ -748,6 +754,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
 
     pinMode(card->ssPin, OUTPUT);
     digitalWrite(card->ssPin, HIGH);
+    perimanSetPinBusExtraType(card->ssPin, "SD_SS");
 
     s_cards[pdrv] = card;
 
@@ -811,7 +818,7 @@ bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format
             }
             //FRESULT f_mkfs (const TCHAR* path, const MKFS_PARM* opt, void* work, UINT len);
             const MKFS_PARM opt = {(BYTE)FM_ANY, 0, 0, 0, 0};
-            res = f_mkfs(drv, &opt, work, sizeof(work));
+            res = f_mkfs(drv, &opt, work, sizeof(BYTE) * FF_MAX_SS);
             free(work);
             if (res != FR_OK) {
                 log_e("f_mkfs failed: %s", fferr2str[res]);

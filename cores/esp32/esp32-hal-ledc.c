@@ -56,22 +56,20 @@ static bool ledcDetachBus(void * bus){
     return true;
 }
 
-bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
+bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel)
 {
-    int free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
-    if (free_channel == 0 || resolution > LEDC_MAX_BIT_WIDTH)
+    if (channel >= LEDC_CHANNELS || resolution > LEDC_MAX_BIT_WIDTH)
     {
-        log_e("No more LEDC channels available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
+        log_e("Channel %u is not available! (maximum %u) or bit width too big (maximum %u)", channel, LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
         return false;
     }
 
     perimanSetBusDeinit(ESP32_BUS_TYPE_LEDC, ledcDetachBus);
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
-    if(bus != NULL && !perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+    if(bus != NULL && !perimanClearPinBus(pin)){
         return false;
     }
 
-    int channel = log2(free_channel & -free_channel);
     uint8_t group=(channel/8), timer=((channel/2)%4);
 
     ledc_timer_config_t ledc_timer = {
@@ -110,13 +108,27 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
     #endif
     ledc_handle.used_channels |= 1UL << channel;
 
-    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_LEDC, (void *)handle)){
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_LEDC, (void *)handle, group, channel)){
         ledcDetachBus((void *)handle);
         return false;
     }
 
+    log_i("LEDC attached to pin %u (channel %u, resolution %u)", pin, channel, resolution);
     return true;
 }
+
+bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
+{
+    uint8_t free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
+    if (free_channel == 0 || resolution > LEDC_MAX_BIT_WIDTH){
+        log_e("No more LEDC channels available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
+        return false;
+    }
+    int channel = log2(free_channel & -free_channel);
+
+    return ledcAttachChannel(pin, freq, resolution, channel);
+}
+
 bool ledcWrite(uint8_t pin, uint32_t duty)
 {
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
@@ -216,7 +228,7 @@ bool ledcDetach(uint8_t pin)
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
         // will call ledcDetachBus
-        return perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL);
+        return perimanClearPinBus(pin);
     } else {
         log_e("pin %u is not attached to LEDC", pin);
     }
@@ -360,7 +372,7 @@ void analogWrite(uint8_t pin, int value) {
   // Use ledc hardware for internal pins
   if (pin < SOC_GPIO_PIN_COUNT) {
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
-    if(bus == NULL && perimanSetPinBus(pin, ESP32_BUS_TYPE_INIT, NULL)){
+    if(bus == NULL && perimanClearPinBus(pin)){
         if(ledcAttach(pin, analog_frequency, analog_resolution) == 0){
             log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
             return;

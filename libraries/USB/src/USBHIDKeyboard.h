@@ -63,6 +63,7 @@ typedef union {
 #define KEY_DOWN_ARROW  0xD9
 #define KEY_LEFT_ARROW  0xD8
 #define KEY_RIGHT_ARROW 0xD7
+#define KEY_SPACE       0x20
 #define KEY_BACKSPACE   0xB2
 #define KEY_TAB         0xB3
 #define KEY_RETURN      0xB0
@@ -118,6 +119,7 @@ class USBHIDKeyboard: public USBHIDDevice, public Print
 private:
     USBHID hid;
     KeyReport _keyReport;
+    bool shiftKeyReports;
 public:
     USBHIDKeyboard(void);
     void begin(void);
@@ -128,6 +130,7 @@ public:
     size_t release(uint8_t k);
     void releaseAll(void);
     void sendReport(KeyReport* keys);
+    void setShiftKeyReports(bool set);
 
     //raw functions work with TinyUSB's HID_KEY_* macros
     size_t pressRaw(uint8_t k);

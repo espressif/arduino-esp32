@@ -45,6 +45,8 @@ public:
     bool softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start = (uint32_t) 0);
     bool softAPdisconnect(bool wifioff = false);
 
+    bool softAPbandwidth(wifi_bandwidth_t bandwidth);
+
     uint8_t softAPgetStationNum();
 
     IPAddress softAPIP();
@@ -54,8 +56,8 @@ public:
     IPAddress softAPSubnetMask();
     uint8_t softAPSubnetCIDR();
 
-    bool softAPenableIpV6();
-    IPv6Address softAPIPv6();
+    bool softAPenableIPv6(bool enable=true);
+    IPAddress softAPIPv6();
 
     const char * softAPgetHostname();
     bool softAPsetHostname(const char * hostname);

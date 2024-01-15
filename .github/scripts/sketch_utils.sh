@@ -126,6 +126,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     #     of configuration built in case of a multiconfiguration test.
 
     sketchname=$(basename $sketchdir)
+
+    if [[ -n $target ]] && [[ -f "$sketchdir/.skip.$target" ]]; then
+        echo "Skipping $sketchname for target $target"
+        exit 0
+    fi
     
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
@@ -159,6 +164,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 --build-cache-path "$ARDUINO_CACHE_DIR" \
                 --build-path "$build_dir" \
                 $xtra_opts "${sketchdir}"
+            
+            exit_status=$?
+            if [ $exit_status -ne 0 ]; then
+                echo ""ERROR: Compilation failed with error code $exit_status""
+                exit $exit_status
+            fi
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
             echo "Build path = $build_dir"
@@ -173,6 +184,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 -build-path "$build_dir" \
                 $xtra_opts "${sketchdir}/${sketchname}.ino"
 
+            exit_status=$?
+            if [ $exit_status -ne 0 ]; then
+                echo ""ERROR: Compilation failed with error code $exit_status""
+                exit $exit_status
+            fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
             #     -warnings="all" \

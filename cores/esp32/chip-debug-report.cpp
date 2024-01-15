@@ -242,6 +242,12 @@ static void printBoardInfo(void){
 static void printPerimanInfo(void){
   chip_report_printf("GPIO Info:\n");
   chip_report_printf("------------------------------------------\n");
+#if defined(BOARD_HAS_PIN_REMAP)
+  chip_report_printf("  DPIN|GPIO : BUS_TYPE[bus/unit][chan]\n");
+#else
+  chip_report_printf("  GPIO : BUS_TYPE[bus/unit][chan]\n");
+#endif
+  chip_report_printf("  --------------------------------------  \n");
   for(uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++){
     if(!perimanPinIsValid(i)){
       continue;//invalid pin
@@ -250,55 +256,32 @@ static void printPerimanInfo(void){
     if(type == ESP32_BUS_TYPE_INIT){
       continue;//unused pin
     }
-    chip_report_printf("  %17u : ", i);
-    switch(type){
-      case ESP32_BUS_TYPE_GPIO: chip_report_printf("GPIO\n"); break;
-      case ESP32_BUS_TYPE_UART_RX: chip_report_printf("UART_RX\n"); break;
-      case ESP32_BUS_TYPE_UART_TX: chip_report_printf("UART_TX\n"); break;
-      case ESP32_BUS_TYPE_UART_CTS: chip_report_printf("UART_CTS\n"); break;
-      case ESP32_BUS_TYPE_UART_RTS: chip_report_printf("UART_RTS\n"); break;
-#if SOC_SDM_SUPPORTED
-      case ESP32_BUS_TYPE_SIGMADELTA: chip_report_printf("SIGMADELTA\n"); break;
-#endif
-#if SOC_ADC_SUPPORTED
-      case ESP32_BUS_TYPE_ADC_ONESHOT: chip_report_printf("ADC_ONESHOT\n"); break;
-      case ESP32_BUS_TYPE_ADC_CONT: chip_report_printf("ADC_CONT\n"); break;
-#endif
-#if SOC_DAC_SUPPORTED
-      case ESP32_BUS_TYPE_DAC_ONESHOT: chip_report_printf("DAC_ONESHOT\n"); break;
-      case ESP32_BUS_TYPE_DAC_CONT: chip_report_printf("DAC_CONT\n"); break;
-      case ESP32_BUS_TYPE_DAC_COSINE: chip_report_printf("DAC_COSINE\n"); break;
-#endif
-#if SOC_LEDC_SUPPORTED
-      case ESP32_BUS_TYPE_LEDC: chip_report_printf("LEDC\n"); break;
-#endif
-#if SOC_RMT_SUPPORTED
-      case ESP32_BUS_TYPE_RMT_TX: chip_report_printf("RMT_TX\n"); break;
-      case ESP32_BUS_TYPE_RMT_RX: chip_report_printf("RMT_RX\n"); break;
-#endif
-#if SOC_I2S_SUPPORTED
-      case ESP32_BUS_TYPE_I2S_STD: chip_report_printf("I2S_STD\n"); break;
-      case ESP32_BUS_TYPE_I2S_PDM: chip_report_printf("I2S_PDM\n"); break;
-      case ESP32_BUS_TYPE_I2S_TDM: chip_report_printf("I2S_TDM\n"); break;
-#endif
-#if SOC_I2C_SUPPORTED
-      case ESP32_BUS_TYPE_I2C_MASTER: chip_report_printf("I2C_MASTER\n"); break;
-      case ESP32_BUS_TYPE_I2C_SLAVE: chip_report_printf("I2C_SLAVE\n"); break;
-#endif
-#if SOC_GPSPI_SUPPORTED
-      case ESP32_BUS_TYPE_SPI_MASTER: chip_report_printf("SPI_MASTER\n"); break;
-#endif
-#if SOC_SDMMC_HOST_SUPPORTED
-      case ESP32_BUS_TYPE_SDMMC: chip_report_printf("SDMMC\n"); break;
-#endif
-#if SOC_TOUCH_SENSOR_SUPPORTED
-      case ESP32_BUS_TYPE_TOUCH: chip_report_printf("TOUCH\n"); break;
-#endif
-#if SOC_USB_SERIAL_JTAG_SUPPORTED || SOC_USB_OTG_SUPPORTED
-      case ESP32_BUS_TYPE_USB: chip_report_printf("USB\n"); break;
-#endif
-      default: chip_report_printf("%d\n", type); break;
+#if defined(BOARD_HAS_PIN_REMAP)
+    int dpin = gpioNumberToDigitalPin(i);
+    if (dpin < 0) {
+      continue;//pin is not exported
+    } else {
+      chip_report_printf("  D%-3d|%4u : ", dpin, i);
     }
+#else
+    chip_report_printf("  %4u : ", i);
+#endif
+    const char* extra_type = perimanGetPinBusExtraType(i);
+    if(extra_type){
+      chip_report_printf("%s", extra_type);
+    }
+    else {
+      chip_report_printf("%s", perimanGetTypeName(type));
+    }
+    int8_t bus_number = perimanGetPinBusNum(i);
+    if (bus_number != -1){
+      chip_report_printf("[%u]", bus_number);
+    }
+    int8_t bus_channel = perimanGetPinBusChannel(i);
+    if (bus_channel != -1){
+      chip_report_printf("[%u]", bus_channel);
+    }
+    chip_report_printf("\n");
   }
 }
 

@@ -79,7 +79,7 @@ void tud_cdc_tx_complete_cb(uint8_t itf){
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c){
     if(devices[0] != NULL){
-        devices[0]->write(c);
+        tud_cdc_n_write_char(0, c);
     }
 }
 
@@ -455,8 +455,9 @@ USBCDC::operator bool() const
     return connected;
 }
 
-#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE //Serial used for USB CDC
-USBCDC Serial(0);
+#if !ARDUINO_USB_MODE         // Native USB CDC selected
+// USBSerial is always available to be used
+USBCDC USBSerial(0);
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */

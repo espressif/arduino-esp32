@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 2
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Verify Python Tools Changed
-        uses: tj-actions/changed-files@v36
+        uses: tj-actions/changed-files@v41
         id: verify-changed-files
         with:
           fetch_depth: '2'
