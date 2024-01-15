@@ -87,12 +87,10 @@ void WiFiServer::begin(uint16_t port, int enable){
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
   server.sin6_family = AF_INET6;
   if (_addr.type() == IPv4) {
-    // log_e("---------------- IPv4");
     memcpy(server.sin6_addr.s6_addr+11, (uint8_t*)&_addr[0], 4);
     server.sin6_addr.s6_addr[10] = 0xFF;
     server.sin6_addr.s6_addr[11] = 0xFF;
   } else {
-    // log_e("---------------- IPv6");
     memcpy(server.sin6_addr.s6_addr, (uint8_t*)&_addr[0], 16);
   }
   memset(server.sin6_addr.s6_addr, 0x0, 16);
