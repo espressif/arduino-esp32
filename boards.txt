@@ -17897,6 +17897,178 @@ heltec_wireless_stick_lite.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+heltec_wireless_tracker.name=Heltec Wireless Tracker
+heltec_wireless_tracker.vid.0=0x303a
+heltec_wireless_tracker.pid.0=0x1001
+
+heltec_wireless_tracker.bootloader.tool=esptool_py
+heltec_wireless_tracker.bootloader.tool.default=esptool_py
+
+heltec_wireless_tracker.upload.tool=esptool_py
+heltec_wireless_tracker.upload.tool.default=esptool_py
+heltec_wireless_tracker.upload.tool.network=esp_ota
+
+heltec_wireless_tracker.upload.maximum_size=3342336
+heltec_wireless_tracker.upload.maximum_data_size=327680
+heltec_wireless_tracker.upload.flags=
+heltec_wireless_tracker.upload.extra_flags=
+heltec_wireless_tracker.upload.use_1200bps_touch=false
+heltec_wireless_tracker.upload.wait_for_upload_port=false
+
+heltec_wireless_tracker.serial.disableDTR=false
+heltec_wireless_tracker.serial.disableRTS=false
+
+heltec_wireless_tracker.build.tarch=xtensa
+heltec_wireless_tracker.build.bootloader_addr=0x0
+heltec_wireless_tracker.build.target=esp32s3
+heltec_wireless_tracker.build.mcu=esp32s3
+heltec_wireless_tracker.build.core=esp32
+heltec_wireless_tracker.build.variant=heltec_wireless_tracker
+heltec_wireless_tracker.build.board=HELTEC_WIRELESS_TRACKER
+
+heltec_wireless_tracker.build.usb_mode=1
+heltec_wireless_tracker.build.cdc_on_boot=0
+heltec_wireless_tracker.build.msc_on_boot=0
+heltec_wireless_tracker.build.dfu_on_boot=0
+heltec_wireless_tracker.build.f_cpu=240000000L
+heltec_wireless_tracker.build.flash_size=8MB
+heltec_wireless_tracker.build.flash_freq=80m
+heltec_wireless_tracker.build.flash_mode=dio
+heltec_wireless_tracker.build.boot=qio
+heltec_wireless_tracker.build.boot_freq=80m
+heltec_wireless_tracker.build.partitions=default_8MB
+heltec_wireless_tracker.build.loop_core=
+heltec_wireless_tracker.build.event_core=
+heltec_wireless_tracker.build.psram_type=qspi
+heltec_wireless_tracker.build.memory_type={build.boot}_{build.psram_type}
+
+heltec_wireless_tracker.menu.LoopCore.1=Core 1
+heltec_wireless_tracker.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+heltec_wireless_tracker.menu.LoopCore.0=Core 0
+heltec_wireless_tracker.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+heltec_wireless_tracker.menu.EventsCore.1=Core 1
+heltec_wireless_tracker.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+heltec_wireless_tracker.menu.EventsCore.0=Core 0
+heltec_wireless_tracker.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+heltec_wireless_tracker.menu.USBMode.hwcdc=Hardware CDC and JTAG
+heltec_wireless_tracker.menu.USBMode.hwcdc.build.usb_mode=1
+heltec_wireless_tracker.menu.USBMode.default=USB-OTG (TinyUSB)
+heltec_wireless_tracker.menu.USBMode.default.build.usb_mode=0
+
+heltec_wireless_tracker.menu.CDCOnBoot.default=Enabled
+heltec_wireless_tracker.menu.CDCOnBoot.default.build.cdc_on_boot=1
+heltec_wireless_tracker.menu.CDCOnBoot.cdc=Enabled
+heltec_wireless_tracker.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+heltec_wireless_tracker.menu.MSCOnBoot.default=Disabled
+heltec_wireless_tracker.menu.MSCOnBoot.default.build.msc_on_boot=0
+heltec_wireless_tracker.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+heltec_wireless_tracker.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+heltec_wireless_tracker.menu.DFUOnBoot.default=Disabled
+heltec_wireless_tracker.menu.DFUOnBoot.default.build.dfu_on_boot=0
+heltec_wireless_tracker.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+heltec_wireless_tracker.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+heltec_wireless_tracker.menu.UploadMode.default=UART0 / Hardware CDC
+heltec_wireless_tracker.menu.UploadMode.default.upload.use_1200bps_touch=false
+heltec_wireless_tracker.menu.UploadMode.default.upload.wait_for_upload_port=false
+heltec_wireless_tracker.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+heltec_wireless_tracker.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+heltec_wireless_tracker.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+heltec_wireless_tracker.menu.CPUFreq.240=240MHz (WiFi)
+heltec_wireless_tracker.menu.CPUFreq.240.build.f_cpu=240000000L
+heltec_wireless_tracker.menu.CPUFreq.160=160MHz (WiFi)
+heltec_wireless_tracker.menu.CPUFreq.160.build.f_cpu=160000000L
+heltec_wireless_tracker.menu.CPUFreq.80=80MHz (WiFi)
+heltec_wireless_tracker.menu.CPUFreq.80.build.f_cpu=80000000L
+heltec_wireless_tracker.menu.CPUFreq.40=40MHz
+heltec_wireless_tracker.menu.CPUFreq.40.build.f_cpu=40000000L
+heltec_wireless_tracker.menu.CPUFreq.20=20MHz
+heltec_wireless_tracker.menu.CPUFreq.20.build.f_cpu=20000000L
+heltec_wireless_tracker.menu.CPUFreq.10=10MHz
+heltec_wireless_tracker.menu.CPUFreq.10.build.f_cpu=10000000L
+
+heltec_wireless_tracker.menu.UploadSpeed.921600=921600
+heltec_wireless_tracker.menu.UploadSpeed.921600.upload.speed=921600
+heltec_wireless_tracker.menu.UploadSpeed.115200=115200
+heltec_wireless_tracker.menu.UploadSpeed.115200.upload.speed=115200
+heltec_wireless_tracker.menu.UploadSpeed.256000.windows=256000
+heltec_wireless_tracker.menu.UploadSpeed.256000.upload.speed=256000
+heltec_wireless_tracker.menu.UploadSpeed.230400.windows.upload.speed=256000
+heltec_wireless_tracker.menu.UploadSpeed.230400=230400
+heltec_wireless_tracker.menu.UploadSpeed.230400.upload.speed=230400
+heltec_wireless_tracker.menu.UploadSpeed.460800.linux=460800
+heltec_wireless_tracker.menu.UploadSpeed.460800.macosx=460800
+heltec_wireless_tracker.menu.UploadSpeed.460800.upload.speed=460800
+heltec_wireless_tracker.menu.UploadSpeed.512000.windows=512000
+heltec_wireless_tracker.menu.UploadSpeed.512000.upload.speed=512000
+
+heltec_wireless_tracker.menu.DebugLevel.none=None
+heltec_wireless_tracker.menu.DebugLevel.none.build.code_debug=0
+heltec_wireless_tracker.menu.DebugLevel.error=Error
+heltec_wireless_tracker.menu.DebugLevel.error.build.code_debug=1
+heltec_wireless_tracker.menu.DebugLevel.warn=Warn
+heltec_wireless_tracker.menu.DebugLevel.warn.build.code_debug=2
+heltec_wireless_tracker.menu.DebugLevel.info=Info
+heltec_wireless_tracker.menu.DebugLevel.info.build.code_debug=3
+heltec_wireless_tracker.menu.DebugLevel.debug=Debug
+heltec_wireless_tracker.menu.DebugLevel.debug.build.code_debug=4
+heltec_wireless_tracker.menu.DebugLevel.verbose=Verbose
+heltec_wireless_tracker.menu.DebugLevel.verbose.build.code_debug=5
+
+heltec_wireless_tracker.menu.LORAWAN_REGION.0=REGION_EU868
+heltec_wireless_tracker.menu.LORAWAN_REGION.0.build.band=REGION_EU868
+heltec_wireless_tracker.menu.LORAWAN_REGION.1=REGION_EU433
+heltec_wireless_tracker.menu.LORAWAN_REGION.1.build.band=REGION_EU433
+heltec_wireless_tracker.menu.LORAWAN_REGION.2=REGION_CN470
+heltec_wireless_tracker.menu.LORAWAN_REGION.2.build.band=REGION_CN470
+heltec_wireless_tracker.menu.LORAWAN_REGION.3=REGION_US915
+heltec_wireless_tracker.menu.LORAWAN_REGION.3.build.band=REGION_US915
+heltec_wireless_tracker.menu.LORAWAN_REGION.4=REGION_AU915
+heltec_wireless_tracker.menu.LORAWAN_REGION.4.build.band=REGION_AU915
+heltec_wireless_tracker.menu.LORAWAN_REGION.5=REGION_CN779
+heltec_wireless_tracker.menu.LORAWAN_REGION.5.build.band=REGION_CN779
+heltec_wireless_tracker.menu.LORAWAN_REGION.6=REGION_AS923
+heltec_wireless_tracker.menu.LORAWAN_REGION.6.build.band=REGION_AS923
+heltec_wireless_tracker.menu.LORAWAN_REGION.7=REGION_KR920
+heltec_wireless_tracker.menu.LORAWAN_REGION.7.build.band=REGION_KR920
+heltec_wireless_tracker.menu.LORAWAN_REGION.8=REGION_IN865
+heltec_wireless_tracker.menu.LORAWAN_REGION.8.build.band=REGION_IN865
+heltec_wireless_tracker.menu.LORAWAN_REGION.9=REGION_US915_HYBRID
+heltec_wireless_tracker.menu.LORAWAN_REGION.9.build.band=REGION_US915_HYBRID
+
+heltec_wireless_tracker.menu.LoRaWanDebugLevel.0=None
+heltec_wireless_tracker.menu.LoRaWanDebugLevel.0.build.LoRaWanDebugLevel=0
+heltec_wireless_tracker.menu.LoRaWanDebugLevel.1=Freq
+heltec_wireless_tracker.menu.LoRaWanDebugLevel.1.build.LoRaWanDebugLevel=1
+heltec_wireless_tracker.menu.LoRaWanDebugLevel.2=Freq && DIO
+heltec_wireless_tracker.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
+heltec_wireless_tracker.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
+heltec_wireless_tracker.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
+
+heltec_wireless_tracker.menu.LORAWAN_DEVEUI.0=CUSTOM
+heltec_wireless_tracker.menu.LORAWAN_DEVEUI.0.build.LORAWAN_DEVEUI_AUTO=0
+heltec_wireless_tracker.menu.LORAWAN_DEVEUI.1=Generate By ChipID
+heltec_wireless_tracker.menu.LORAWAN_DEVEUI.1.build.LORAWAN_DEVEUI_AUTO=1
+
+heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.0=8(default)
+heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.0.build.LORAWAN_PREAMBLE_LENGTH=8
+heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.1=16(For M00 and M00L)
+heltec_wireless_tracker.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_LENGTH=16
+
+heltec_wireless_tracker.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+
+heltec_wireless_tracker.menu.EraseFlash.none=Disabled
+heltec_wireless_tracker.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wireless_tracker.menu.EraseFlash.all=Enabled
+heltec_wireless_tracker.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 espectro32.name=ESPectro32
 
 espectro32.bootloader.tool=esptool_py
