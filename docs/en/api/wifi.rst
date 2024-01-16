@@ -21,7 +21,7 @@ Working as AP
 In this mode, the ESP32 is configured as an Access Point (AP) and it's capable of receiving incoming connections from other devices (stations) by providing
 a Wi-Fi network.
 
-.. figure:: ../_static/wifi_esp32_ap.png
+.. figure:: ../../_static/wifi_esp32_ap.png
     :align: center
     :width: 520
     :figclass: align-center
@@ -33,7 +33,7 @@ Working as STA
 
 The STA mode is used to connect the ESP32 to a Wi-Fi network, provided by an Access Point.
 
-.. figure:: ../_static/wifi_esp32_sta.png
+.. figure:: ../../_static/wifi_esp32_sta.png
     :align: center
     :width: 520
     :figclass: align-center
@@ -327,14 +327,14 @@ Get the softAP subnet mask.
 
     IPAddress softAPSubnetMask();
 
-softAPenableIpV6
+softAPenableIPv6
 ****************
 
 Function used to enable the IPv6 support.
 
 .. code-block:: arduino
 
-    bool softAPenableIpV6();
+    bool softAPenableIPv6(bool enable=true);
 
 The function will return ``true`` if the configuration is successful.
 
@@ -345,9 +345,9 @@ Function to get the IPv6 address.
 
 .. code-block:: arduino
 
-    IPv6Address softAPIPv6();
+    IPAddress softAPIPv6();
 
-The function will return the AP IPv6 address in ``IPv6Address`` format.
+The function will return the AP IPv6 address in ``IPAddress`` format.
 
 softAPgetHostname
 *****************

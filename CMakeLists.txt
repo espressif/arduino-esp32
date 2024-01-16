@@ -52,7 +52,6 @@ set(CORE_SRCS
   cores/esp32/HardwareSerial.cpp
   cores/esp32/HEXBuilder.cpp
   cores/esp32/IPAddress.cpp
-  cores/esp32/IPv6Address.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
   cores/esp32/main.cpp
