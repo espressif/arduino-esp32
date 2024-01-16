@@ -49,7 +49,6 @@ void initVariant(void)
 
     //enable PD-Sensor by default
     pinMode(PD_ENABLE, OUTPUT);
-    analogReadResolution(12);
     digitalWrite(PD_ENABLE, HIGH);
 
 }
