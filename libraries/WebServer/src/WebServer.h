@@ -86,12 +86,12 @@ public:
   const String AuthTypeDigest = F("Digest");
   const String AuthTypeBasic = F("Basic");
 
-  /* Callbackhandler for authentication. The extra parameters depend on the 
+  /* Callbackhandler for authentication. The extra parameters depend on the
    * HTTPAuthMethod mode:
    *
-   * BASIC_AUTH		enteredUsernameOrReq	contains the username entered by the user
-   *                    param[0]		password entered (in the clear)
-   *                    param[1]		authentication realm.
+   * BASIC_AUTH         enteredUsernameOrReq	contains the username entered by the user
+   *                    param[0]		          password entered (in the clear)
+   *                    param[1]		          authentication realm.
    *
    * To return - the password the user entered password is compared to. Or Null on fail.
    *
