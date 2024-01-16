@@ -71,7 +71,6 @@ public:
     {
         return connected();
     }
-    WiFiClient & operator=(const WiFiClient &other);
     bool operator==(const bool value)
     {
         return bool() == value;

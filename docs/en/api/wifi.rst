@@ -327,14 +327,14 @@ Get the softAP subnet mask.
 
     IPAddress softAPSubnetMask();
 
-softAPenableIpV6
+softAPenableIPv6
 ****************
 
 Function used to enable the IPv6 support.
 
 .. code-block:: arduino
 
-    bool softAPenableIpV6();
+    bool softAPenableIPv6(bool enable=true);
 
 The function will return ``true`` if the configuration is successful.
 
@@ -345,9 +345,9 @@ Function to get the IPv6 address.
 
 .. code-block:: arduino
 
-    IPv6Address softAPIPv6();
+    IPAddress softAPIPv6();
 
-The function will return the AP IPv6 address in ``IPv6Address`` format.
+The function will return the AP IPv6 address in ``IPAddress`` format.
 
 softAPgetHostname
 *****************

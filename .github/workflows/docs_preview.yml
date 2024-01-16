@@ -1,4 +1,4 @@
-name: Documentation Build and Deploy CI
+name: Documentation Build and Preview Deploy CI
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 jobs:
 
   deploy-preview-docs:
-    name: Deploy Documentation Preview
+    name: Deploy Documentation
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -26,12 +26,12 @@ jobs:
     - name: Deploy Preview
       env:
         # Deploy to preview server
-        DOCS_BUILD_DIR: "${CI_PROJECT_DIR}/docs/_build/"
+        # DOCS_BUILD_DIR: "./docs/_build"
         DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_KEY }}
         DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PATH }}
         DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_SERVER }}
-        DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_URL }}
         DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_USER }}
+        DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_URL }}
       run: |
         sudo apt update
         sudo apt install python3-pip python3-setuptools
@@ -43,4 +43,6 @@ jobs:
         echo "Building the Docs..."
         cd ./docs && build-docs -l en
         echo "Deploy the Docs..."
+        export DOCS_BUILD_DIR=$GITHUB_WORKSPACE/docs/
+        cd $GITHUB_WORKSPACE/docs
         deploy-docs
