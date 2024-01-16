@@ -201,17 +201,15 @@ RVTC_NEW_NAME="esp-rv32"
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
 sed "s/version=.*/version=$RELEASE_TAG/g" | \
-sed 's/tools.esp32-arduino-libs.path={runtime.platform.path}\/tools\/esp32-arduino-libs/tools.esp32-arduino-libs.path=\{runtime.tools.esp32-arduino-libs.path\}/g' | \
-sed 's/tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf/tools.xtensa-esp32-elf-gcc.path=\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
-sed 's/tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf/tools.xtensa-esp32s2-elf-gcc.path=\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
-sed 's/tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s3-elf/tools.xtensa-esp32s3-elf-gcc.path=\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
-sed 's/tools.xtensa-esp-elf-gdb.path={runtime.platform.path}\/tools\/xtensa-esp-elf-gdb/tools.xtensa-esp-elf-gdb.path=\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
-sed "s/tools.riscv32-esp-elf-gcc.path={runtime.platform.path}\\/tools\\/riscv32-esp-elf/tools.riscv32-esp-elf-gcc.path=\\{runtime.tools.$RVTC_NEW_NAME.path\\}/g" | \
-sed 's/tools.riscv32-esp-elf-gdb.path={runtime.platform.path}\/tools\/riscv32-esp-elf-gdb/tools.riscv32-esp-elf-gdb.path=\{runtime.tools.riscv32-esp-elf-gdb.path\}/g' | \
-sed 's/tools.esptool_py.path={runtime.platform.path}\/tools\/esptool/tools.esptool_py.path=\{runtime.tools.esptool_py.path\}/g' | \
-sed 's/debug.server.openocd.path={runtime.platform.path}\/tools\/openocd-esp32\/bin\/openocd/debug.server.openocd.path=\{runtime.tools.openocd-esp32.path\}\/bin\/openocd/g' | \
-sed 's/debug.server.openocd.scripts_dir={runtime.platform.path}\/tools\/openocd-esp32\/share\/openocd\/scripts\//debug.server.openocd.scripts_dir=\{runtime.tools.openocd-esp32.path\}\/share\/openocd\/scripts\//g' | \
-sed 's/debug.server.openocd.scripts_dir.windows={runtime.platform.path}\\tools\\openocd-esp32\\share\\openocd\\scripts\\/debug.server.openocd.scripts_dir.windows=\{runtime.tools.openocd-esp32.path\}\\share\\openocd\\scripts\\/g' \
+sed 's/{runtime\.platform\.path}.tools.esp32-arduino-libs/\{runtime.tools.esp32-arduino-libs.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.xtensa-esp-elf-gdb/\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.xtensa-esp32-elf/\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.xtensa-esp32s2-elf/\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.xtensa-esp32s3-elf/\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.riscv32-esp-elf-gdb/\{runtime.tools.riscv32-esp-elf-gdb.path\}/g' | \
+sed "s/{runtime\.platform\.path}.tools.riscv32-esp-elf/\\{runtime.tools.$RVTC_NEW_NAME.path\\}/g" | \
+sed 's/{runtime\.platform\.path}.tools.esptool/\{runtime.tools.esptool_py.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.openocd-esp32/\{runtime.tools.openocd-esp32.path\}/g' \
  > "$PKG_DIR/platform.txt"
 
 # Add header with version information
