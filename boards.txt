@@ -17924,7 +17924,7 @@ heltec_wireless_tracker.build.target=esp32s3
 heltec_wireless_tracker.build.mcu=esp32s3
 heltec_wireless_tracker.build.core=esp32
 heltec_wireless_tracker.build.variant=heltec_wireless_tracker
-heltec_wireless_tracker.build.board=heltec_wireless_tracker
+heltec_wireless_tracker.build.board=HELTEC_WIRELESS_TRACKER
 
 heltec_wireless_tracker.build.usb_mode=1
 heltec_wireless_tracker.build.cdc_on_boot=0
@@ -17941,6 +17941,8 @@ heltec_wireless_tracker.build.loop_core=
 heltec_wireless_tracker.build.event_core=
 heltec_wireless_tracker.build.psram_type=qspi
 heltec_wireless_tracker.build.memory_type={build.boot}_{build.psram_type}
+heltec_wireless_tracker.build.defines=-D{build.band} {build.psram_val} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+heltec_wireless_tracker.build.extra_libs=-lheltec_{build.cdc_on_boot}
 
 heltec_wireless_tracker.menu.PSRAM.disabled=Disabled
 heltec_wireless_tracker.menu.PSRAM.disabled.build.psram_val=
@@ -17972,10 +17974,7 @@ heltec_wireless_tracker.menu.FlashMode.opi.build.flash_mode=dout
 heltec_wireless_tracker.menu.FlashMode.opi.build.boot=opi
 heltec_wireless_tracker.menu.FlashMode.opi.build.boot_freq=80m
 heltec_wireless_tracker.menu.FlashMode.opi.build.flash_freq=80m
-heltec_wireless_tracker.build.defines=-D{build.band} {build.psram_val} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
-heltec_wireless_tracker.build.extra_libs=-lheltec_{build.cdc_on_boot}
 
-heltec_wireless_tracker.menu.EraseFlash.none=Disabled
 heltec_wireless_tracker.menu.FlashSize.4M=4MB (32Mb)
 heltec_wireless_tracker.menu.FlashSize.4M.build.flash_size=4MB
 heltec_wireless_tracker.menu.FlashSize.8M=8MB (64Mb)
