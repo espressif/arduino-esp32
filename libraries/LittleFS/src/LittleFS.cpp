@@ -81,7 +81,9 @@ bool LittleFSFS::begin(bool formatOnFail, const char * basePath, uint8_t maxOpen
     esp_vfs_littlefs_conf_t conf = {
       .base_path = basePath,
       .partition_label = partitionLabel_,
+      .partition = NULL,
       .format_if_mount_failed = false,
+      .read_only = false,
       .dont_mount = false,
       .grow_on_mount = true
     };

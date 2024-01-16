@@ -100,7 +100,7 @@ No.  Name  Type   Function
 Pin Layout
 ----------
 
-.. figure:: ../_static/esp32-s2_saola1_pinlayout.png
+.. figure:: ../../_static/esp32-s2_saola1_pinlayout.png
     :align: center
     :width: 600
     :alt: ESP32-S2-Saola-1 (click to enlarge)
