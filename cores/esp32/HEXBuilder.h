@@ -15,39 +15,20 @@
   You should have received a copy of the GNU Lesser General Public
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-  Modified 10 Jan 2024 by Lucas Saavedra Vaz (Use abstract class HashBuilder)
 */
-#ifndef MD5Builder_h
-#define MD5Builder_h
+
+#ifndef HEXBuilder_h
+#define HEXBuilder_h
 
 #include <WString.h>
 #include <Stream.h>
 
-#include "esp_system.h"
-#include "esp_rom_md5.h"
-
-#include "HashBuilder.h"
-
-class MD5Builder : public HashBuilder
-{
-private:
-    md5_context_t _ctx;
-    uint8_t _buf[ESP_ROM_MD5_DIGEST_LEN];
+class HEXBuilder {
 public:
-    void begin(void) override;
+	static size_t hex2bytes(unsigned char * out, size_t maxlen, String & in);
+	static size_t hex2bytes(unsigned char * out, size_t maxlen, const char * in);
 
-    using HashBuilder::add;
-    void add(uint8_t * data, size_t len) override;
-
-    using HashBuilder::addHexString;
-    void addHexString(const char * data) override;
-
-    bool addStream(Stream & stream, const size_t maxLen) override;
-    void calculate(void) override;
-    void getBytes(uint8_t * output) override;
-    void getChars(char * output) override;
-    String toString(void) override;
+	static String bytes2hex(const unsigned char * in, size_t len);
+	static size_t bytes2hex(char * out, size_t maxlen, const unsigned char * in, size_t len);
 };
-
 #endif
