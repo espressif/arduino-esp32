@@ -130,7 +130,7 @@ static String md5str(String &in){
 }
 
 bool WebServer::authenticateBasicSHA1(const char * _username, const char * _sha1Base64orHex) {
-	return WebServer::authenticate([_username,_sha1Base64orHex](HTTPAuthMethod mode, String username, String params[])->String * {
+  return WebServer::authenticate([_username,_sha1Base64orHex](HTTPAuthMethod mode, String username, String params[])->String * {
     // rather than work on a password to compare with; we take the sha1 of the
     // password received over the wire and compare that to the base64 encoded
     // sha1 passed as _sha1base64. That way there is no need to have a
@@ -173,11 +173,11 @@ bool WebServer::authenticateBasicSHA1(const char * _username, const char * _sha1
             (String((char*)sha1calc).equalsConstantTime(_sha1Base64orHex)) &&
             (mode == BASIC_AUTH) /* to keep things somewhat time constant. */
             ) ? new String(params[0]) : NULL;
-});
+  });
 }
 
-bool WebServer::authenticate(const char * _username, const char * _password){
-	return WebServer::authenticate([_username,_password](HTTPAuthMethod mode, String username, String params[])->String * {
+bool WebServer::authenticate(const char * _username, const char * _password) {
+  return WebServer::authenticate([_username,_password](HTTPAuthMethod mode, String username, String params[])->String * {
     return username.equalsConstantTime(_username) ? new String(_password) : NULL;
   });
 }
@@ -638,9 +638,9 @@ String WebServer::pathArg(unsigned int i) {
 
 String WebServer::arg(String name) {
   for (int j = 0; j < _postArgsLen; ++j) {
-	    if ( _postArgs[j].key == name )
-	      return _postArgs[j].value;
-	  }
+    if ( _postArgs[j].key == name )
+      return _postArgs[j].value;
+  }
   for (int i = 0; i < _currentArgCount; ++i) {
     if ( _currentArgs[i].key == name )
       return _currentArgs[i].value;
@@ -666,9 +666,9 @@ int WebServer::args() {
 
 bool WebServer::hasArg(String  name) {
   for (int j = 0; j < _postArgsLen; ++j) {
-	    if (_postArgs[j].key == name)
-	      return true;
-	  }
+    if (_postArgs[j].key == name)
+      return true;
+  }
   for (int i = 0; i < _currentArgCount; ++i) {
     if (_currentArgs[i].key == name)
       return true;
