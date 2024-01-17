@@ -177,6 +177,45 @@ Arduino-esp32 Preferences API
    
    **Note** 
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
+  
+  
+``isKey``
+*************
+
+   Check if a key-value pair from the currently open namespace exists.
+   
+   .. code-block:: arduino
+   
+       bool isKey(const char * key)
+   ..
+
+   **Parameters**
+      * ``key`` (Required)
+         -  the name of the key to be checked. 
+   
+   **Returns**
+      * ``true`` if key-value pair exists; ``false`` otherwise.
+   
+   **Note** 
+      * Attempting to check a key without a namespace being open will return false.
+  
+  
+``getType``
+*************
+
+   Returns the type of a key-value pair from the currently open namespace.
+   
+   .. code-block:: arduino
+   
+       PreferenceType getType(const char * key)
+   ..
+
+   **Parameters**
+      * ``key`` (Required)
+         -  the name of the key to be checked. 
+   
+   **Returns**
+      * PreferenceType element contaning the type of the key-value pair or PT_INVALID on error.
 
 
 ``putChar, putUChar``
