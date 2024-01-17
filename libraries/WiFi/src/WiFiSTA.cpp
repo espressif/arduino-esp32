@@ -805,30 +805,50 @@ int8_t WiFiSTAClass::RSSI(void)
 
 /**
  * Enable IPv6 on the station interface.
+ * Should be called before WiFi.begin()
+ * 
  * @return true on success
  */
-bool WiFiSTAClass::enableIpV6()
+bool WiFiSTAClass::enableIPv6(bool en)
 {
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return false;
+    if (en) {
+        WiFiGenericClass::setStatusBits(STA_WANT_IP6_BIT);
+    } else {
+        WiFiGenericClass::clearStatusBits(STA_WANT_IP6_BIT);
     }
-    return esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA)) == ESP_OK;
+    return true;
 }
 
 /**
- * Get the station interface IPv6 address.
- * @return IPv6Address
+ * Get the station interface link-local IPv6 address.
+ * @return IPAddress
  */
-IPv6Address WiFiSTAClass::localIPv6()
+IPAddress WiFiSTAClass::localIPv6()
 {
-	esp_ip6_addr_t addr;
+    static esp_ip6_addr_t addr;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
-    if(esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
-        return IPv6Address();
+    if(esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)){
+        return IPAddress(IPv6);
     }
-    return IPv6Address(addr.addr);
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
+}
+
+/**
+ * Get the station interface global IPv6 address.
+ * @return IPAddress
+ */
+IPAddress WiFiSTAClass::globalIPv6()
+{
+    static esp_ip6_addr_t addr;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress(IPv6);
+    }
+    if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)){
+        return IPAddress(IPv6);
+    }
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
 
