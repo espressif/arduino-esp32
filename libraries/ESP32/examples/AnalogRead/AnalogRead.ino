@@ -2,7 +2,7 @@ void setup() {
   // initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
   
-  //set the resolution to 12 bits (0-4096)
+  //set the resolution to 12 bits (0-4095)
   analogReadResolution(12);
 }
 
