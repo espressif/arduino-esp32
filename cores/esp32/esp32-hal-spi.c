@@ -186,18 +186,10 @@ static bool spiDetachBus(void * bus){
         log_d("Stopping SPI bus");
         spiStopBus(spi);
 
-        if(spi->sck != -1){
-            spiDetachSCK(spi);
-        }
-        if(spi->miso != -1){
-            spiDetachMISO(spi);
-        }
-        if(spi->mosi != -1){
-            spiDetachMOSI(spi);
-        }
-        if(spi->ss != -1){
-            spiDetachSS(spi);
-        }
+        spiDetachSCK(spi);
+        spiDetachMISO(spi);
+        spiDetachMOSI(spi);
+        spiDetachSS(spi);
         spi = NULL;
         return true;
     }
