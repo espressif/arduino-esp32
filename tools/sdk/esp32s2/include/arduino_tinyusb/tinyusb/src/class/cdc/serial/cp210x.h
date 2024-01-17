@@ -29,8 +29,6 @@
 // https://www.silabs.com/documents/public/application-notes/AN571.pdf
 
 #define TU_CP210X_VID 0x10C4
-#define TU_CP210X_PID_LIST \
-  0xEA60, 0xEA70
 
 /* Config request codes */
 #define CP210X_IFC_ENABLE      0x00

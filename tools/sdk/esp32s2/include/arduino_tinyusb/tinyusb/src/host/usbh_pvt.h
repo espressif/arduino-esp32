@@ -35,11 +35,6 @@
  extern "C" {
 #endif
 
-// Level where CFG_TUSB_DEBUG must be at least for USBH is logged
-#ifndef CFG_TUH_LOG_LEVEL
-  #define CFG_TUH_LOG_LEVEL   2
-#endif
-
 #define TU_LOG_USBH(...)   TU_LOG(CFG_TUH_LOG_LEVEL, __VA_ARGS__)
 
 enum {
@@ -51,7 +46,7 @@ enum {
 //--------------------------------------------------------------------+
 
 typedef struct {
-  #if CFG_TUSB_DEBUG >= 2
+  #if CFG_TUSB_DEBUG >= CFG_TUH_LOG_LEVEL
   char const* name;
   #endif
 

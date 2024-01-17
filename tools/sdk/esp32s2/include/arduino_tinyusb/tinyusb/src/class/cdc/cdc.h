@@ -182,21 +182,23 @@ typedef enum
   CDC_REQUEST_MDLM_SEMANTIC_MODEL                          = 0x60,
 }cdc_management_request_t;
 
-enum
-{
+enum {
   CDC_CONTROL_LINE_STATE_DTR = 0x01,
   CDC_CONTROL_LINE_STATE_RTS = 0x02,
 };
 
-enum
-{
-  CDC_LINE_CONDING_STOP_BITS_1   = 0, // 1   bit
-  CDC_LINE_CONDING_STOP_BITS_1_5 = 1, // 1.5 bits
-  CDC_LINE_CONDING_STOP_BITS_2   = 2, // 2   bits
+enum {
+  CDC_LINE_CODING_STOP_BITS_1   = 0, // 1   bit
+  CDC_LINE_CODING_STOP_BITS_1_5 = 1, // 1.5 bits
+  CDC_LINE_CODING_STOP_BITS_2   = 2, // 2   bits
 };
 
-enum
-{
+// TODO Backward compatible for typos. Maybe removed in the future release
+#define CDC_LINE_CONDING_STOP_BITS_1   CDC_LINE_CODING_STOP_BITS_1
+#define CDC_LINE_CONDING_STOP_BITS_1_5 CDC_LINE_CODING_STOP_BITS_1_5
+#define CDC_LINE_CONDING_STOP_BITS_2   CDC_LINE_CODING_STOP_BITS_2
+
+enum {
   CDC_LINE_CODING_PARITY_NONE  = 0,
   CDC_LINE_CODING_PARITY_ODD   = 1,
   CDC_LINE_CODING_PARITY_EVEN  = 2,
