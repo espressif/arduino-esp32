@@ -1,6 +1,8 @@
 name: Documentation Build and Production Deploy CI
 
 on:
+  release:
+    types: [published]
   push:
     branches:
     - release/*
