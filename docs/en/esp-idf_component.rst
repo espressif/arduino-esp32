@@ -73,16 +73,17 @@ After the setup you can save and exit:
 - Close confirmation window [Enter] or [Space] or [Esc]
 - Quit [Q]
 
+As the Arduino libraries use C++ features, you will need to swap some file extensions from ``.c`` to ``.cpp``:
+
+- In main folder rename file `main.c` to `main.cpp`.
+- In main folder open file `CMakeLists.txt` and change `main.c` to `main.cpp` as described below.
+
 Option 1. Using Arduino setup() and loop()
 ******************************************
 
-- In main folder rename file `main.c` to `main.cpp`.
+Your main.cpp should be formatted like any other sketch. Don't forget to include ``Arduino.h``.
 
-- In main folder open file `CMakeList.txt` and change `main.c` to `main.cpp` as described below.
-
-- Your main.cpp should be formatted like any other sketch.
-
-.. code-block:: c
+.. code-block:: cpp
 
     //file: main.cpp
     #include "Arduino.h"
@@ -102,14 +103,14 @@ Option 1. Using Arduino setup() and loop()
 Option 2. Using ESP-IDF appmain()
 *********************************
 
-In main.c or main.cpp you need to implement ``app_main()`` and call ``initArduino();`` in it.
+In main.cpp you need to implement ``app_main()`` and call ``initArduino();`` in it.
 
 Keep in mind that setup() and loop() will not be called in this case.
 Furthermore the ``app_main()`` is single execution as a normal function so if you need an infinite loop as in Arduino place it there.
 
 .. code-block:: cpp
 
-    //file: main.c or main.cpp
+    //file: main.cpp
     #include "Arduino.h"
 
     extern "C" void app_main()
@@ -141,7 +142,7 @@ Build, flash and monitor
 
   - After a successful flash, you may need to press the RST button again
 
-  - To terminate the serial monitor press [Ctrl] + [ ] ]
+  - To terminate the serial monitor press ``Ctrl`` + ``]``
 
 Logging To Serial
 -----------------
@@ -179,7 +180,7 @@ Download the library:
 
 .. code-block:: bash
 
-    cd ~/esp/esp-idf/components/arduino-esp32/
+    cd ~/esp/esp-idf/components/arduino/
     git clone --recursive git@github.com:Author/new_library.git libraries/new_library
 
 
