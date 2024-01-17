@@ -97,6 +97,7 @@ typedef enum {
 typedef uint16_t (*tinyusb_descriptor_cb_t)(uint8_t * dst, uint8_t * itf);
 
 esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb);
+esp_err_t tinyusb_enable_interface2(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb, bool reserve_endpoints);
 uint8_t tinyusb_add_string_descriptor(const char * str);
 uint8_t tinyusb_get_free_duplex_endpoint(void);
 uint8_t tinyusb_get_free_in_endpoint(void);

@@ -70,7 +70,7 @@ protected:
     uint32_t _timeOutMillis;
     bool nonStop;
 #if !CONFIG_DISABLE_HAL_LOCKS
-    TaskHandle_t nonStopTask;
+    TaskHandle_t currentTaskHandle;
     SemaphoreHandle_t lock;
 #endif
 private:

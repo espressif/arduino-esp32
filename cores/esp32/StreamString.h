@@ -21,7 +21,8 @@
 
 #ifndef STREAMSTRING_H_
 #define STREAMSTRING_H_
-
+#include "Stream.h"
+#include "WString.h"
 
 class StreamString: public Stream, public String
 {

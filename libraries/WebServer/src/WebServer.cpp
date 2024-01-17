@@ -23,6 +23,7 @@
 
 #include <Arduino.h>
 #include <esp32-hal-log.h>
+#include <libb64/cdecode.h>
 #include <libb64/cencode.h>
 #include "esp_random.h"
 #include "WiFiServer.h"
@@ -31,14 +32,15 @@
 #include "FS.h"
 #include "detail/RequestHandlersImpl.h"
 #include "MD5Builder.h"
-
+#include "SHA1Builder.h"
+#include "base64.h"
 
 static const char AUTHORIZATION_HEADER[] = "Authorization";
 static const char qop_auth[] PROGMEM = "qop=auth";
 static const char qop_auth_quoted[] PROGMEM = "qop=\"auth\"";
 static const char WWW_Authenticate[] = "WWW-Authenticate";
 static const char Content_Length[] = "Content-Length";
-
+static const char ETAG_HEADER[] = "If-None-Match";
 
 WebServer::WebServer(IPAddress addr, int port)
 : _corsEnabled(false)
@@ -127,91 +129,185 @@ static String md5str(String &in){
   return md5.toString();
 }
 
-bool WebServer::authenticate(const char * username, const char * password){
-  if(hasHeader(FPSTR(AUTHORIZATION_HEADER))) {
-    String authReq = header(FPSTR(AUTHORIZATION_HEADER));
-    if(authReq.startsWith(F("Basic"))){
-      authReq = authReq.substring(6);
-      authReq.trim();
-      char toencodeLen = strlen(username)+strlen(password)+1;
-      char *toencode = new char[toencodeLen + 1];
-      if(toencode == NULL){
-        authReq = "";
-        return false;
-      }
-      char *encoded = new char[base64_encode_expected_len(toencodeLen)+1];
-      if(encoded == NULL){
-        authReq = "";
-        delete[] toencode;
-        return false;
-      }
-      sprintf(toencode, "%s:%s", username, password);
-      if(base64_encode_chars(toencode, toencodeLen, encoded) > 0 && authReq.equalsConstantTime(encoded)) {
-        authReq = "";
-        delete[] toencode;
-        delete[] encoded;
-        return true;
-      }
-      delete[] toencode;
-      delete[] encoded;
-    } else if(authReq.startsWith(F("Digest"))) {
-      authReq = authReq.substring(7);
-      log_v("%s", authReq.c_str());
-      String _username = _extractParam(authReq,F("username=\""),'\"');
-      if(!_username.length() || _username != String(username)) {
-        authReq = "";
-        return false;
-      }
-      // extracting required parameters for RFC 2069 simpler Digest
-      String _realm    = _extractParam(authReq, F("realm=\""),'\"');
-      String _nonce    = _extractParam(authReq, F("nonce=\""),'\"');
-      String _uri      = _extractParam(authReq, F("uri=\""),'\"');
-      String _response = _extractParam(authReq, F("response=\""),'\"');
-      String _opaque   = _extractParam(authReq, F("opaque=\""),'\"');
+bool WebServer::authenticateBasicSHA1(const char * _username, const char * _sha1Base64orHex) {
+  return WebServer::authenticate([_username,_sha1Base64orHex](HTTPAuthMethod mode, String username, String params[])->String * {
+    // rather than work on a password to compare with; we take the sha1 of the
+    // password received over the wire and compare that to the base64 encoded
+    // sha1 passed as _sha1base64. That way there is no need to have a
+    // plaintext password in the code/binary (though note that SHA1 is well
+    // past its retirement age). When that matches - we `cheat' by returning
+    // the password we got in the first place; so the normal BasicAuth
+    // can be completed. Note that this cannot work for a digest auth -
+    // as there the password in the clear is part of the calculation.
 
-      if((!_realm.length()) || (!_nonce.length()) || (!_uri.length()) || (!_response.length()) || (!_opaque.length())) {
+    if (params == nullptr) {
+      log_e("Something went wrong. params is NULL");
+      return NULL;
+    }
+
+    uint8_t sha1[20];
+    char sha1calc[48]; // large enough for base64 and Hex represenation
+    String ret;
+    SHA1Builder sha_builder;
+    base64 b64;
+
+    log_v("Trying to authenticate user %s using SHA1.", username.c_str());
+    sha_builder.begin();
+    sha_builder.add((uint8_t*) params[0].c_str(), params[0].length());
+    sha_builder.calculate();
+    sha_builder.getBytes(sha1);
+
+    // we can either decode _sha1base64orHex and then compare the 20 bytes;
+    // or encode the sha we calculated. We pick the latter as encoding of a
+    // fixed array of 20 bytes is safer than operating on something external.
+    if (strlen(_sha1Base64orHex) == 20 * 2) { // 2 chars per byte
+      sha_builder.bytes2hex(sha1calc, sizeof(sha1calc), sha1, sizeof(sha1));
+      log_v("Calculated SHA1 in hex: %s", sha1calc);
+    } else {
+      ret = b64.encode(sha1, sizeof(sha1));
+      ret.toCharArray(sha1calc, sizeof(sha1calc));
+      log_v("Calculated SHA1 in base64: %s", sha1calc);
+    }
+
+    return ((username.equalsConstantTime(_username)) &&
+            (String((char*)sha1calc).equalsConstantTime(_sha1Base64orHex)) &&
+            (mode == BASIC_AUTH) /* to keep things somewhat time constant. */
+            ) ? new String(params[0]) : NULL;
+  });
+}
+
+bool WebServer::authenticate(const char * _username, const char * _password) {
+  return WebServer::authenticate([_username,_password](HTTPAuthMethod mode, String username, String params[])->String * {
+    return username.equalsConstantTime(_username) ? new String(_password) : NULL;
+  });
+}
+
+bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
+  if (!hasHeader(FPSTR(AUTHORIZATION_HEADER))) {
+    return false;
+  }
+
+  String authReq = header(FPSTR(AUTHORIZATION_HEADER));
+  if (authReq.startsWith(AuthTypeBasic)) {
+    log_v("Trying to authenticate using Basic Auth");
+    bool ret = false;
+
+    authReq = authReq.substring(6); // length of AuthTypeBasic including the space at the end.
+    authReq.trim();
+
+    /* base64 encoded string is always shorter (or equal) in length */
+    char* decoded = (authReq.length() < HTTP_MAX_BASIC_AUTH_LEN) ? new char[authReq.length()] : NULL;
+    if (decoded) {
+      char* p;
+      if (base64_decode_chars(authReq.c_str(), authReq.length(), decoded) && (p = index(decoded, ':')) && p) {
         authReq = "";
-        return false;
+        /* Note: rfc7617 guarantees that there will not be an escaped colon in the username itself.
+         * Note:  base64_decode_chars() guarantees a terminating \0
+         */
+        *p = '\0';
+        char * _username = decoded, * _password = p + 1;
+        String params[] = {
+          _password,
+          _srealm
+        };
+        String* password = fn(BASIC_AUTH, _username, params);
+
+        if (password) {
+          ret = password->equalsConstantTime(_password);
+          // we're more concerned about the password; as the attacker already
+          // knows the _pasword. Arduino's string handling is simple; it reallocs
+          // even when smaller; so a memset is enough (no capacity/size).
+          memset((void *)password->c_str(), 0, password->length());
+          delete password;
+        }
       }
-      if((_opaque != _sopaque) || (_nonce != _snonce) || (_realm != _srealm)) {
-        authReq = "";
-        return false;
-      }
-      // parameters for the RFC 2617 newer Digest
-      String _nc,_cnonce;
-      if(authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
-        _nc = _extractParam(authReq, F("nc="), ',');
-        _cnonce = _extractParam(authReq, F("cnonce=\""),'\"');
-      }
-      String _H1 = md5str(String(username) + ':' + _realm + ':' + String(password));
-      log_v("Hash of user:realm:pass=%s", _H1.c_str());
-      String _H2 = "";
-      if(_currentMethod == HTTP_GET){
-          _H2 = md5str(String(F("GET:")) + _uri);
-      }else if(_currentMethod == HTTP_POST){
-          _H2 = md5str(String(F("POST:")) + _uri);
-      }else if(_currentMethod == HTTP_PUT){
-          _H2 = md5str(String(F("PUT:")) + _uri);
-      }else if(_currentMethod == HTTP_DELETE){
-          _H2 = md5str(String(F("DELETE:")) + _uri);
-      }else{
-          _H2 = md5str(String(F("GET:")) + _uri);
-      }
-      log_v("Hash of GET:uri=%s", _H2.c_str());
-      String _responsecheck = "";
-      if(authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
-          _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _nc + ':' + _cnonce + F(":auth:") + _H2);
-      } else {
-          _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _H2);
-      }
-      log_v("The Proper response=%s", _responsecheck.c_str());
-      if(_response == _responsecheck){
-        authReq = "";
-        return true;
-      }
+      delete[] decoded;
     }
     authReq = "";
+    log_v("Authentication %s", ret ? "Success" : "Failed");
+    return ret;
+  } else if (authReq.startsWith(AuthTypeDigest)) {
+    log_v("Trying to authenticate using Digest Auth");
+    authReq = authReq.substring(7);
+    log_v("%s", authReq.c_str());
+
+    // extracting required parameters for RFC 2069 simpler Digest
+    String _username = _extractParam(authReq, F("username=\""), '\"');
+    String _realm = _extractParam(authReq, F("realm=\""), '\"');
+    String _uri = _extractParam(authReq, F("uri=\""), '\"');
+    if (!_username.length())
+      goto exf;
+
+    String params[] = {
+      _realm,
+      _uri
+    };
+    String* password = fn(DIGEST_AUTH, _username, params);
+    if (!password)
+      goto exf;
+
+    String _H1 = md5str(String(_username) + ':' + _realm + ':' + * password);
+    // we're extra concerned; as digest request us to know the password
+    // in the clear.
+    memset((void *) password->c_str(), 0, password->length());
+    delete password;
+    _username = "";
+
+    String _nonce = _extractParam(authReq, F("nonce=\""), '\"');
+    String _response = _extractParam(authReq, F("response=\""), '\"');
+    String _opaque = _extractParam(authReq, F("opaque=\""), '\"');
+
+    if ((!_realm.length()) || (!_nonce.length()) || (!_uri.length()) || (!_response.length()) || (!_opaque.length()))
+      goto exf;
+
+    if ((_opaque != _sopaque) || (_nonce != _snonce) || (_realm != _srealm))
+      goto exf;
+
+    // parameters for the RFC 2617 newer Digest
+    String _nc, _cnonce;
+    if (authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
+      _nc = _extractParam(authReq, F("nc="), ',');
+      _cnonce = _extractParam(authReq, F("cnonce=\""), '\"');
+    }
+
+    log_v("Hash of user:realm:pass=%s", _H1.c_str());
+    String _H2 = "";
+    if (_currentMethod == HTTP_GET) {
+      _H2 = md5str(String(F("GET:")) + _uri);
+    } else if (_currentMethod == HTTP_POST) {
+      _H2 = md5str(String(F("POST:")) + _uri);
+    } else if (_currentMethod == HTTP_PUT) {
+      _H2 = md5str(String(F("PUT:")) + _uri);
+    } else if (_currentMethod == HTTP_DELETE) {
+      _H2 = md5str(String(F("DELETE:")) + _uri);
+    } else {
+      _H2 = md5str(String(F("GET:")) + _uri);
+    }
+    log_v("Hash of GET:uri=%s", _H2.c_str());
+    String _responsecheck = "";
+    if (authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
+      _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _nc + ':' + _cnonce + F(":auth:") + _H2);
+    } else {
+      _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _H2);
+    }
+    authReq = "";
+
+    log_v("The Proper response=%s", _responsecheck.c_str());
+    bool ret = _response == _responsecheck;
+    log_v("Authentication %s", ret ? "Success" : "Failed");
+    return ret;
+  } else if (authReq.length()) {
+    // OTHER_AUTH
+    log_v("Trying to authenticate using Other Auth, authReq=%s", authReq.c_str());
+    String* ret = fn(OTHER_AUTH, authReq, {});
+    if (ret) {
+      log_v("Authentication Success");
+      return true;
+    }
   }
+exf:
+  authReq = "";
+  log_v("Authentication Failed");
   return false;
 }
 
@@ -231,11 +327,11 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char* realm, co
     _srealm = String(realm);
   }
   if(mode == BASIC_AUTH) {
-    sendHeader(String(FPSTR(WWW_Authenticate)), String(F("Basic realm=\"")) + _srealm + String(F("\"")));
+    sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeBasic + String(F(" realm=\"")) + _srealm + String(F("\"")));
   } else {
     _snonce=_getRandomHexString();
     _sopaque=_getRandomHexString();
-    sendHeader(String(FPSTR(WWW_Authenticate)), String(F("Digest realm=\"")) +_srealm + String(F("\", qop=\"auth\", nonce=\"")) + _snonce + String(F("\", opaque=\"")) + _sopaque + String(F("\"")));
+    sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeDigest + String(F(" realm=\"")) +_srealm + String(F("\", qop=\"auth\", nonce=\"")) + _snonce + String(F("\", opaque=\"")) + _sopaque + String(F("\"")));
   }
   using namespace mime;
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
@@ -302,7 +398,7 @@ void WebServer::handleClient() {
         if (_parseRequest(_currentClient)) {
           // because HTTP_MAX_SEND_WAIT is expressed in milliseconds,
           // it must be divided by 1000
-          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT / 1000);
+          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
           _contentLength = CONTENT_LENGTH_NOT_SET;
           _handleRequest();
 
@@ -381,6 +477,11 @@ void WebServer::enableCrossOrigin(boolean value) {
   enableCORS(value);
 }
 
+void WebServer::enableETag(bool enable, ETagFunction fn) {
+  _eTagEnabled = enable;
+  _eTagFunction = fn;
+}
+
 void WebServer::_prepareHeader(String& response, int code, const char* content_type, size_t contentLength) {
     response = String(F("HTTP/1.")) + String(_currentVersion) + ' ';
     response += String(code);
@@ -405,8 +506,8 @@ void WebServer::_prepareHeader(String& response, int code, const char* content_t
     }
     if (_corsEnabled) {
         sendHeader(String(FPSTR("Access-Control-Allow-Origin")), String("*"));
-	sendHeader(String(FPSTR("Access-Control-Allow-Methods")), String("*"));
-	sendHeader(String(FPSTR("Access-Control-Allow-Headers")), String("*"));
+        sendHeader(String(FPSTR("Access-Control-Allow-Methods")), String("*"));
+        sendHeader(String(FPSTR("Access-Control-Allow-Headers")), String("*"));
     }
     sendHeader(String(F("Connection")), String(F("close")));
 
@@ -537,9 +638,9 @@ String WebServer::pathArg(unsigned int i) {
 
 String WebServer::arg(String name) {
   for (int j = 0; j < _postArgsLen; ++j) {
-	    if ( _postArgs[j].key == name )
-	      return _postArgs[j].value;
-	  }
+    if ( _postArgs[j].key == name )
+      return _postArgs[j].value;
+  }
   for (int i = 0; i < _currentArgCount; ++i) {
     if ( _currentArgs[i].key == name )
       return _currentArgs[i].value;
@@ -565,9 +666,9 @@ int WebServer::args() {
 
 bool WebServer::hasArg(String  name) {
   for (int j = 0; j < _postArgsLen; ++j) {
-	    if (_postArgs[j].key == name)
-	      return true;
-	  }
+    if (_postArgs[j].key == name)
+      return true;
+  }
   for (int i = 0; i < _currentArgCount; ++i) {
     if (_currentArgs[i].key == name)
       return true;
@@ -585,13 +686,14 @@ String WebServer::header(String name) {
 }
 
 void WebServer::collectHeaders(const char* headerKeys[], const size_t headerKeysCount) {
-  _headerKeysCount = headerKeysCount + 1;
+  _headerKeysCount = headerKeysCount + 2;
   if (_currentHeaders)
      delete[]_currentHeaders;
   _currentHeaders = new RequestArgument[_headerKeysCount];
   _currentHeaders[0].key = FPSTR(AUTHORIZATION_HEADER);
-  for (int i = 1; i < _headerKeysCount; i++){
-    _currentHeaders[i].key = headerKeys[i-1];
+  _currentHeaders[1].key = FPSTR(ETAG_HEADER);
+  for (int i = 2; i < _headerKeysCount; i++){
+    _currentHeaders[i].key = headerKeys[i-2];
   }
 }
 

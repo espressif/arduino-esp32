@@ -52,7 +52,7 @@ TwoWire::TwoWire(uint8_t bus_num)
     ,_timeOutMillis(50)
     ,nonStop(false)
 #if !CONFIG_DISABLE_HAL_LOCKS
-    ,nonStopTask(NULL)
+    ,currentTaskHandle(NULL)
     ,lock(NULL)
 #endif
 #if SOC_I2C_SUPPORT_SLAVE
@@ -432,15 +432,15 @@ void TwoWire::beginTransmission(uint8_t address)
     }
 #endif /* SOC_I2C_SUPPORT_SLAVE */
 #if !CONFIG_DISABLE_HAL_LOCKS
-    if(nonStop && nonStopTask == xTaskGetCurrentTaskHandle()){
-        log_e("Unfinished Repeated Start transaction! Expected requestFrom, not beginTransmission! Clearing...");
-        //release lock
-        xSemaphoreGive(lock);
-    }
-    //acquire lock
-    if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
-        log_e("could not acquire lock");
-        return;
+    TaskHandle_t task = xTaskGetCurrentTaskHandle();
+    if (currentTaskHandle != task)
+    {
+        //acquire lock
+        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+            log_e("could not acquire lock");
+            return;
+        }
+        currentTaskHandle = task;
     }
 #endif
     nonStop = false;
@@ -474,15 +474,13 @@ uint8_t TwoWire::endTransmission(bool sendStop)
     if(sendStop){
         err = i2cWrite(num, txAddress, txBuffer, txLength, _timeOutMillis);
 #if !CONFIG_DISABLE_HAL_LOCKS
+        currentTaskHandle = NULL;
         //release lock
         xSemaphoreGive(lock);
 #endif
     } else {
         //mark as non-stop
         nonStop = true;
-#if !CONFIG_DISABLE_HAL_LOCKS
-        nonStopTask = xTaskGetCurrentTaskHandle();
-#endif
     }
     switch(err){
         case ESP_OK: return 0;
@@ -506,13 +504,26 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
         return 0;
     }
     esp_err_t err = ESP_OK;
-    if(nonStop
 #if !CONFIG_DISABLE_HAL_LOCKS
-    && nonStopTask == xTaskGetCurrentTaskHandle()
-#endif
-    ){
+    TaskHandle_t task = xTaskGetCurrentTaskHandle();
+    if (currentTaskHandle != task)
+    {
+        //acquire lock
+        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+            log_e("could not acquire lock");
+            return 0;
+        }
+        currentTaskHandle = task;
+    }
+#endif  
+    if(nonStop){
         if(address != txAddress){
             log_e("Unfinished Repeated Start transaction! Expected address do not match! %u != %u", address, txAddress);
+#if !CONFIG_DISABLE_HAL_LOCKS
+            currentTaskHandle = NULL;
+            //release lock
+            xSemaphoreGive(lock);
+#endif
             return 0;
         }
         nonStop = false;
@@ -523,13 +534,6 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
             log_e("i2cWriteReadNonStop returned Error %d", err);
         }
     } else {
-#if !CONFIG_DISABLE_HAL_LOCKS
-        //acquire lock
-        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
-            log_e("could not acquire lock");
-            return 0;
-        }
-#endif
         rxIndex = 0;
         rxLength = 0;
         err = i2cRead(num, address, rxBuffer, size, _timeOutMillis, &rxLength);
@@ -538,6 +542,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
         }
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
+    currentTaskHandle = NULL;
     //release lock
     xSemaphoreGive(lock);
 #endif

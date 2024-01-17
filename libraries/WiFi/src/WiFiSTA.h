@@ -58,6 +58,8 @@ public:
     bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
     bool setDNS(IPAddress dns1, IPAddress dns2 = (uint32_t)0x00000000);  // sets DNS IP for all network interfaces
 
+    bool bandwidth(wifi_bandwidth_t bandwidth);
+
     bool reconnect();
     bool disconnect(bool wifioff = false, bool eraseap = false);
     bool eraseAP(void);
@@ -91,8 +93,9 @@ public:
     IPAddress networkID();
     uint8_t subnetCIDR();
     
-    bool enableIpV6();
-    IPv6Address localIPv6();
+    bool enableIPv6(bool en=true);
+    IPAddress localIPv6();
+    IPAddress globalIPv6();
 
     // STA WiFi info
     static wl_status_t status();

@@ -18,6 +18,9 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "ETH.h"
 #include "esp_system.h"
 #include "esp_event.h"
@@ -98,13 +101,13 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
     mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
     mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode) ? EMAC_APPL_CLK_OUT_GPIO : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO : EMAC_CLK_IN_GPIO;
-    mac_config.smi_mdc_gpio_num = mdc;
-    mac_config.smi_mdio_gpio_num = mdio;
+    mac_config.smi_mdc_gpio_num = digitalPinToGPIONumber(mdc);
+    mac_config.smi_mdio_gpio_num = digitalPinToGPIONumber(mdio);
 
-    _pin_mcd = mdc;
-    _pin_mdio = mdio;
+    _pin_mcd = digitalPinToGPIONumber(mdc);
+    _pin_mdio = digitalPinToGPIONumber(mdio);
     _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
-    _pin_power = power;
+    _pin_power = digitalPinToGPIONumber(power);
 
     if(!perimanClearPinBus(_pin_rmii_clock)){ return false; }
     if(!perimanClearPinBus(_pin_mcd)){ return false; }
@@ -130,7 +133,7 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
 
     eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
     phy_config.phy_addr = phy_addr;
-    phy_config.reset_gpio_num = power;
+    phy_config.reset_gpio_num = _pin_power;
 
     esp_eth_phy_t *phy = NULL;
     switch(type){
@@ -381,12 +384,12 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
         _spi_freq_mhz = spi_freq_mhz;
     }
     _phy_type = type;
-    _pin_cs = cs;
-    _pin_irq = irq;
-    _pin_rst = rst;
-    _pin_sck = sck;
-    _pin_miso = miso;
-    _pin_mosi = mosi;
+    _pin_cs = digitalPinToGPIONumber(cs);
+    _pin_irq = digitalPinToGPIONumber(irq);
+    _pin_rst = digitalPinToGPIONumber(rst);
+    _pin_sck = digitalPinToGPIONumber(sck);
+    _pin_miso = digitalPinToGPIONumber(miso);
+    _pin_mosi = digitalPinToGPIONumber(mosi);
 
 #if ETH_SPI_SUPPORTS_CUSTOM
     if(_spi != NULL){
@@ -398,13 +401,13 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 
     // Init SPI bus
     if(_pin_sck >= 0 && _pin_miso >= 0 && _pin_mosi >= 0){
-        spi_bus_config_t buscfg = {
-            .mosi_io_num = _pin_mosi,
-            .miso_io_num = _pin_miso,
-            .sclk_io_num = _pin_sck,
-            .quadwp_io_num = -1,
-            .quadhd_io_num = -1,
-        };
+        spi_bus_config_t buscfg;
+        memset(&buscfg, 0, sizeof(spi_bus_config_t));
+        buscfg.mosi_io_num = _pin_mosi;
+        buscfg.miso_io_num = _pin_miso;
+        buscfg.sclk_io_num = _pin_sck;
+        buscfg.quadwp_io_num = -1;
+        buscfg.quadhd_io_num = -1;
         ret = spi_bus_initialize(spi_host, &buscfg, SPI_DMA_CH_AUTO);
         if(ret != ESP_OK){
             log_e("SPI bus initialize failed: %d", ret);
@@ -430,13 +433,13 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     phy_config.reset_gpio_num = _pin_rst;
 
     // Configure SPI interface for specific SPI module
-    spi_device_interface_config_t spi_devcfg = {
-        .mode = 0,
-        .clock_speed_hz = _spi_freq_mhz * 1000 * 1000,
-        .input_delay_ns = 20,
-        .spics_io_num = _pin_cs,
-        .queue_size = 20,
-    };
+    spi_device_interface_config_t spi_devcfg;
+    memset(&spi_devcfg, 0, sizeof(spi_device_interface_config_t));
+    spi_devcfg.mode = 0;
+    spi_devcfg.clock_speed_hz = _spi_freq_mhz * 1000 * 1000;
+    spi_devcfg.input_delay_ns = 20;
+    spi_devcfg.spics_io_num = _pin_cs;
+    spi_devcfg.queue_size = 20;
 
     esp_eth_mac_t *mac = NULL;
     esp_eth_phy_t *phy = NULL;
@@ -858,24 +861,42 @@ bool ETHClass::setHostname(const char * hostname)
     return esp_netif_set_hostname(_esp_netif, hostname) == 0;
 }
 
-bool ETHClass::enableIpV6()
+bool ETHClass::enableIPv6(bool en)
 {
-    if(_esp_netif == NULL){
-        return false;
+    // if(_esp_netif == NULL){
+    //     return false;
+    // }
+    // return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
+    if (en) {
+        WiFiGenericClass::setStatusBits(ETH_WANT_IP6_BIT);
+    } else {
+        WiFiGenericClass::clearStatusBits(ETH_WANT_IP6_BIT);
     }
-    return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
+    return true;
 }
 
-IPv6Address ETHClass::localIPv6()
+IPAddress ETHClass::localIPv6()
 {
     if(_esp_netif == NULL){
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
     static esp_ip6_addr_t addr;
     if(esp_netif_get_ip6_linklocal(_esp_netif, &addr)){
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
-    return IPv6Address(addr.addr);
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
+}
+
+IPAddress ETHClass::globalIPv6()
+{
+    if(_esp_netif == NULL){
+        return IPAddress(IPv6);
+    }
+    static esp_ip6_addr_t addr;
+    if(esp_netif_get_ip6_global(_esp_netif, &addr)){
+        return IPAddress(IPv6);
+    }
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
 const char * ETHClass::ifkey(void)
@@ -1027,6 +1048,28 @@ void ETHClass::printInfo(Print & out){
     out.print(" dns ");
     out.print(dnsIP());
     out.println();
+
+    static const char * types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
+    esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
+    int v6addrs = esp_netif_get_all_ip6(_esp_netif, if_ip6);
+    for (int i = 0; i < v6addrs; ++i){
+        out.print("      ");
+        out.print("inet6 ");
+        IPAddress(IPv6, (const uint8_t *)if_ip6[i].addr, if_ip6[i].zone).printTo(out, true);
+        out.print(" type ");
+        out.print(types[esp_netif_ip6_get_addr_type(&if_ip6[i])]);
+        out.println();
+    }
+
+    // out.print("      ");
+    // out.print("inet6 ");
+    // localIPv6().printTo(out);
+    // out.println();
+
+    // out.print("      ");
+    // out.print("inet6 ");
+    // globalIPv6().printTo(out);
+    // out.println();
 
     out.println();
 }

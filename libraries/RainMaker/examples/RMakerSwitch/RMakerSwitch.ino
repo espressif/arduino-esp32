@@ -25,6 +25,7 @@ bool switch_state = true;
 // fan, temperaturesensor.
 static Switch *my_switch = NULL;
 
+// WARNING: sysProvEvent is called from a separate FreeRTOS task (thread)!
 void sysProvEvent(arduino_event_t *sys_event)
 {
     switch (sys_event->event_id) {
@@ -107,7 +108,7 @@ void setup()
 
     RMaker.start();
 
-    WiFi.onEvent(sysProvEvent);
+    WiFi.onEvent(sysProvEvent);  // Will call sysProvEvent() from another thread.
 #if CONFIG_IDF_TARGET_ESP32S2
     WiFiProv.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE,
                             WIFI_PROV_SECURITY_1, pop, service_name);

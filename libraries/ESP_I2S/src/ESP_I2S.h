@@ -56,12 +56,8 @@ class I2SClass: public Stream {
     void setInvertedPdm(bool clk);
 #endif
 
-    bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch
-#if SOC_I2S_SUPPORTS_TDM
-      , int8_t slot_mask=-1
-#endif
-    );
-    bool configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch);
+    bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask=-1);
+    bool configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask=-1);
     bool configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform=I2S_RX_TRANSFORM_NONE);
     bool end();
 
@@ -130,7 +126,7 @@ class I2SClass: public Stream {
     bool transformRX(i2s_rx_transform_t transform);
 
     static bool i2sDetachBus(void * bus_pointer);
-    bool initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch);
+    bool initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask);
 #if SOC_I2S_SUPPORTS_TDM
     bool initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask);
 #endif
