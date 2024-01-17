@@ -7,11 +7,11 @@ on:
     - release/*
     paths:
     - 'docs/**'
-    - '.github/workflows/docs.yml'
+    - '.github/workflows/docs_build.yml'
   pull_request:
     paths:
     - 'docs/**'
-    - '.github/workflows/docs.yml'
+    - '.github/workflows/docs_build.yml'
 
 jobs:
 
