@@ -30,6 +30,7 @@
 #if SOC_I2C_SUPPORTED
 
 #include <esp32-hal.h>
+#include <esp32-hal-log.h>
 #if !CONFIG_DISABLE_HAL_LOCKS
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -94,9 +95,16 @@ public:
         begin(-1, -1);
     }
 
+	/**
+	 * Fixme: it is necessary to determine whether it is possible to use without SOC_I2C_SUPPORT_SLAVE? !!!
+	 */
     void begin(uint8_t address) override final
     {
+#if SOC_I2C_SUPPORT_SLAVE
         begin(address, -1, -1, 0);
+#else
+        log_e("I2C slave is not supported by you SoC!!!");
+#endif
     }
 
 
