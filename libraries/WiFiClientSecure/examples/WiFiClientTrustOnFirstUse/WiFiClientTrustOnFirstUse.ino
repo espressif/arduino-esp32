@@ -60,8 +60,7 @@ const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired to GPIO 4 */
 /* Set aside some persistant memory (i.e. memory that is preserved on reboots and
   power cycling; and will generally survive software updates as well.
 */
-EEPROMClass  TOFU("tofu0");
-
+EEPROMClass TOFU("tofu0");
 
 // Utility function; checks if a given buffer is entirly
 // with with 0 bytes over its full length. Returns 0 on
