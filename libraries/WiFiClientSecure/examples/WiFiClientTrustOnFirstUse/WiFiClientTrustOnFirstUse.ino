@@ -50,7 +50,7 @@
 
 const char* ssid = WIFI_NETWORK;     // your network SSID (name of wifi network)
 const char* password = WIFI_PASSWD; // your network password
-const char*  server = "www.howsmyssl.com";  // Server to test with.
+const char* server = "www.howsmyssl.com";  // Server to test with.
 
 const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired to GPIO 4 */
 
