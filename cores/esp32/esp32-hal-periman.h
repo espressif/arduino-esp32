@@ -77,7 +77,7 @@ typedef enum {
 	ESP32_BUS_TYPE_SPI_MASTER_SCK, 	// IO is used as SPI master SCK pin
 	ESP32_BUS_TYPE_SPI_MASTER_MISO, // IO is used as SPI master MISO pin
 	ESP32_BUS_TYPE_SPI_MASTER_MOSI, // IO is used as SPI master MOSI pin
-	ESP32_BUS_TYPE_SPI_MASTER_CS, 	// IO is used as SPI master CS pin
+	ESP32_BUS_TYPE_SPI_MASTER_SS, 	// IO is used as SPI master SS pin
 #endif
 #if SOC_SDMMC_HOST_SUPPORTED
 	ESP32_BUS_TYPE_SDMMC_CLK, 		// IO is used as SDMMC CLK pin

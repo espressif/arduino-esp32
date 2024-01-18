@@ -340,20 +340,20 @@ bool spiDetachMOSI(spi_t * spi)
     return true;
 }
 
-bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
+bool spiAttachSS(spi_t * spi, uint8_t ss_num, int8_t ss)
 {
-    if(!spi || ss < 0 || cs_num > 2) {
+    if(!spi || ss < 0 || ss_num > 2) {
         return false;
     }
-    void * bus = perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS);
+    void * bus = perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_SS);
     if(bus != NULL && !perimanClearPinBus(ss)){
         return false;
     }
     pinMode(ss, OUTPUT);
-    pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, cs_num), false, false);
-    spiEnableSSPins(spi, (1 << cs_num));
+    pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, ss_num), false, false);
+    spiEnableSSPins(spi, (1 << ss_num));
     spi->ss = ss;
-    if(!perimanSetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS, (void *)(spi->num+1), spi->num, -1)){
+    if(!perimanSetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_SS, (void *)(spi->num+1), spi->num, -1)){
         spiDetachBus_SS((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", ss);
         return false;
@@ -375,30 +375,30 @@ bool spiDetachSS(spi_t * spi)
     return true;
 }
 
-void spiEnableSSPins(spi_t * spi, uint8_t cs_mask)
+void spiEnableSSPins(spi_t * spi, uint8_t ss_mask)
 {
     if(!spi) {
         return;
     }
     SPI_MUTEX_LOCK();
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    spi->dev->misc.val &= ~(cs_mask & SPI_CS_MASK_ALL);
+    spi->dev->misc.val &= ~(ss_mask & SPI_SS_MASK_ALL);
 #else
-    spi->dev->pin.val &= ~(cs_mask & SPI_CS_MASK_ALL);
+    spi->dev->pin.val &= ~(ss_mask & SPI_SS_MASK_ALL);
 #endif
     SPI_MUTEX_UNLOCK();
 }
 
-void spiDisableSSPins(spi_t * spi, uint8_t cs_mask)
+void spiDisableSSPins(spi_t * spi, uint8_t ss_mask)
 {
     if(!spi) {
         return;
     }
     SPI_MUTEX_LOCK();
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    spi->dev->misc.val |= (cs_mask & SPI_CS_MASK_ALL);
+    spi->dev->misc.val |= (ss_mask & SPI_SS_MASK_ALL);
 #else
-    spi->dev->pin.val |= (cs_mask & SPI_CS_MASK_ALL);
+    spi->dev->pin.val |= (ss_mask & SPI_SS_MASK_ALL);
 #endif
     SPI_MUTEX_UNLOCK();
 }
@@ -622,7 +622,7 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
     perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_SCK, spiDetachBus_SCK);
     perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_MISO, spiDetachBus_MISO);
     perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_MOSI, spiDetachBus_MOSI);
-    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_CS, spiDetachBus_SS);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_SS, spiDetachBus_SS);
 
     spi_t * spi = &_spi_bus_array[spi_num];
 
