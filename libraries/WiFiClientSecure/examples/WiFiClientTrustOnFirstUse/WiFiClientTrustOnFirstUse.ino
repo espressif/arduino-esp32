@@ -1,6 +1,6 @@
 /* For any secure connection - it is (at least) essential for the
    the client to verify that it is talking with the server it
-   things it is talking to. And not some (invisible) man in the middle.
+   thinks it is talking to. And not some (invisible) man in the middle.
 
    See https://en.wikipedia.org/wiki/Man-in-the-middle_attack,
    https://www.ai.rug.nl/mas/finishedprojects/2011/TLS/hermsencomputerservices.nl/mas/mitm.html or
@@ -50,7 +50,7 @@
 
 const char* ssid = WIFI_NETWORK;     // your network SSID (name of wifi network)
 const char* password = WIFI_PASSWD; // your network password
-const char*  server = "www.howsmyssl.com";  // Server to test with.
+const char* server = "www.howsmyssl.com";  // Server to test with.
 
 const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 and GND (pulldown) */
 
@@ -60,8 +60,7 @@ const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 an
 /* Set aside some persistant memory (i.e. memory that is preserved on reboots and
   power cycling; and will generally survive software updates as well.
 */
-EEPROMClass  TOFU("tofu0");
-
+EEPROMClass TOFU("tofu0");
 
 // Utility function; checks if a given buffer is entirly
 // with with 0 bytes over its full length. Returns 0 on
@@ -71,6 +70,7 @@ static int memcmpzero(unsigned char * ptr, size_t len) {
   while (len--) if (0xff != *ptr++) return -1;
   return 0;
 };
+
 static void printSHA256(unsigned char * ptr) {
   for (int i = 0; i < 32; i++) Serial.printf("%s%02x", i ? ":" : "", ptr[i]);
   Serial.println("");
@@ -170,7 +170,7 @@ bool get_tofu() {
   // verification.
   const mbedtls_x509_crt* peer = client.getPeerCertificate();
   char buf[1024];
-  int l = mbedtls_x509_crt_info (buf, sizeof(buf), "", peer);
+  int l = mbedtls_x509_crt_info(buf, sizeof(buf), "", peer);
   if (l <= 0) {
     Serial.println("Peer conversion to printable buffer failed");
     client.stop();
@@ -210,7 +210,6 @@ bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu) {
   // As we're not using a (CA) certificate to check the
   // connection; but the hash of the peer - we need to initially
   // allow the connection to be set up without the CA check.
-  //
   client.setInsecure();//skip verification
 
   if (!client.connect(server, 443)) {
@@ -223,7 +222,6 @@ bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu) {
   // end to end trust - by comparing the fingerprint we (now)
   // see (of the server certificate) to the one we have stored
   // in our EEPROM as part of an earlier trust-on-first use.
-  //
   uint8_t fingerprint_remote[32];
   if (!client.getFingerprintSHA256(fingerprint_remote)) {
     Serial.println("Failed to get the fingerprint of the server");
