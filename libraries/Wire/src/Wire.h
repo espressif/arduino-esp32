@@ -89,12 +89,13 @@ public:
     TwoWire(uint8_t bus_num);
     ~TwoWire();
 
-    void begin() override final{
+    void begin() override final
+    {
         begin(-1, -1);
     }
 
     void begin(uint8_t address) override final
-	{
+    {
         begin(address, -1, -1, 0);
     }
 
