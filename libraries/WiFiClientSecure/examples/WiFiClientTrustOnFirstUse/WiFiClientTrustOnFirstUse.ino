@@ -210,7 +210,6 @@ bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu) {
   // As we're not using a (CA) certificate to check the
   // connection; but the hash of the peer - we need to initially
   // allow the connection to be set up without the CA check.
-  //
   client.setInsecure();//skip verification
 
   if (!client.connect(server, 443)) {
