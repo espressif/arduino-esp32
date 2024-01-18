@@ -340,7 +340,7 @@ void TwoWire::end()
         //acquire lock
         if(xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
             log_e("could not acquire lock");
-            return false;
+            return;
         }
 #endif
 #if SOC_I2C_SUPPORT_SLAVE
@@ -360,7 +360,7 @@ void TwoWire::end()
         xSemaphoreGive(lock);
     }
 #endif
-    return (err == ESP_OK);
+    return;
 }
 
 uint32_t TwoWire::getClock()
@@ -395,7 +395,7 @@ void TwoWire::setClock(uint32_t frequency)
     //acquire lock
     if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
         log_e("could not acquire lock");
-        return false;
+        return;
     }
 #endif
 #if SOC_I2C_SUPPORT_SLAVE
