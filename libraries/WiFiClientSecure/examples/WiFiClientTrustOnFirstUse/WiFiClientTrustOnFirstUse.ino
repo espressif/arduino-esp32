@@ -170,7 +170,7 @@ bool get_tofu() {
   // verification.
   const mbedtls_x509_crt* peer = client.getPeerCertificate();
   char buf[1024];
-  int l = mbedtls_x509_crt_info (buf, sizeof(buf), "", peer);
+  int l = mbedtls_x509_crt_info(buf, sizeof(buf), "", peer);
   if (l <= 0) {
     Serial.println("Peer conversion to printable buffer failed");
     client.stop();
