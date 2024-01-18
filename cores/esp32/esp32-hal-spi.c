@@ -265,11 +265,9 @@ bool spiAttachMISO(spi_t * spi, int8_t miso)
     if(bus != NULL && !perimanClearPinBus(miso)){
         return false;
     }
-    SPI_MUTEX_LOCK();
     pinMode(miso, INPUT);
     pinMatrixInAttach(miso, SPI_MISO_IDX(spi->num), false);
     spi->miso = miso;
-    SPI_MUTEX_UNLOCK();
     if(!perimanSetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER_MISO, (void *)(spi->num+1), spi->num, -1)){
         spiDetachBus_MISO((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", miso);
