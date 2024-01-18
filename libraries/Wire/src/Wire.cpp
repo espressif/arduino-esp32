@@ -390,7 +390,6 @@ uint32_t TwoWire::getClock()
 
 void TwoWire::setClock(uint32_t frequency)
 {
-    esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
     //acquire lock
     if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
@@ -401,11 +400,10 @@ void TwoWire::setClock(uint32_t frequency)
 #if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
-        err = ESP_FAIL;
     } else 
 #endif /* SOC_I2C_SUPPORT_SLAVE */
     {
-        err = i2cSetClock(num, frequency);
+        i2cSetClock(num, frequency);
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
