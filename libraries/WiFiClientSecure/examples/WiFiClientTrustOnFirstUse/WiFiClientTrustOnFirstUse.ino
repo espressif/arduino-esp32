@@ -1,6 +1,6 @@
 /* For any secure connection - it is (at least) essential for the
    the client to verify that it is talking with the server it
-   things it is talking to. And not some (invisible) man in the middle.
+   thinks it is talking to. And not some (invisible) man in the middle.
 
    See https://en.wikipedia.org/wiki/Man-in-the-middle_attack,
    https://www.ai.rug.nl/mas/finishedprojects/2011/TLS/hermsencomputerservices.nl/mas/mitm.html or
