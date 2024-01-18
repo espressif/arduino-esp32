@@ -222,7 +222,6 @@ bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu) {
   // end to end trust - by comparing the fingerprint we (now)
   // see (of the server certificate) to the one we have stored
   // in our EEPROM as part of an earlier trust-on-first use.
-  //
   uint8_t fingerprint_remote[32];
   if (!client.getFingerprintSHA256(fingerprint_remote)) {
     Serial.println("Failed to get the fingerprint of the server");
