@@ -616,13 +616,17 @@ void TwoWire::flush()
 
 void TwoWire::onReceive( void (*function)(int) )
 {
+#if SOC_I2C_SUPPORT_SLAVE
   user_onReceive = function;
+#endif
 }
 
 // sets function called on slave read
 void TwoWire::onRequest( void (*function)(void) )
 {
+#if SOC_I2C_SUPPORT_SLAVE
   user_onRequest = function;
+#endif
 }
 
 #if SOC_I2C_SUPPORT_SLAVE
