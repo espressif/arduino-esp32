@@ -1,12 +1,11 @@
 #include <WiFiClientSecure.h>
 
 /* This is a very INSECURE approach.
- *
  * If for some reason the secure, proper example WiFiClientSecure
- * does not work for you; then you may want to * check the 
- * WiFiClientTrustOnFirstUse first. It * is less secure than WiFiClientSecure,
- * but a lot better than this totally insecure approach shown below.
- *
+ * does not work for you; then you may want to check the 
+ * WiFiClientTrustOnFirstUse example first. It is less secure than 
+ * WiFiClientSecure, but a lot better than this totally insecure
+ * approach shown below.
  */
 
 const char* ssid     = "your-ssid";     // your network SSID (name of wifi network)
