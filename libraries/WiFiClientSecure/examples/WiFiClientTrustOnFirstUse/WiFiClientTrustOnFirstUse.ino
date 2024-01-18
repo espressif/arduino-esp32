@@ -52,7 +52,7 @@ const char* ssid = WIFI_NETWORK;     // your network SSID (name of wifi network)
 const char* password = WIFI_PASSWD; // your network password
 const char*  server = "www.howsmyssl.com";  // Server to test with.
 
-const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired to GPIO 4 */
+const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 and GND (pulldown) */
 
 #include <WiFiClientSecure.h>
 #include <EEPROM.h>
@@ -68,7 +68,7 @@ EEPROMClass  TOFU("tofu0");
 // succes; a non zero value on fail.
 //
 static int memcmpzero(unsigned char * ptr, size_t len) {
-  while (len--) if (*ptr++) return -1;
+  while (len--) if (0xff != *ptr++) return -1;
   return 0;
 };
 static void printSHA256(unsigned char * ptr) {
@@ -252,7 +252,7 @@ bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu) {
   bool inhdr = true;
   while (client.connected()) {
     String line = client.readStringUntil('\n');
-    Serial.print(line);
+    Serial.println(line);
     if (inhdr && line == "\r") {
       inhdr = false;
       Serial.println("-- headers received. Payload follows\n\n");
