@@ -31,20 +31,12 @@ public:
     {
         add((const uint8_t*)data, strlen(data));
     }
-    virtual void add(char* data)
-    {
-        add((const char*)data);
-    }
     virtual void add(String data)
     {
         add(data.c_str());
     }
 
     virtual void addHexString(const char* data) = 0;
-    virtual void addHexString(char* data)
-    {
-        addHexString((const char*)data);
-    }
     virtual void addHexString(String data)
     {
         addHexString(data.c_str());
