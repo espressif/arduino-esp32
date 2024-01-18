@@ -125,12 +125,8 @@ void SPIClass::end()
         return;
     }
     spiDetachSCK(_spi);
-    if(_miso >= 0){
-        spiDetachMISO(_spi);
-    }
-    if(_mosi >= 0){
-        spiDetachMOSI(_spi);
-    }
+    spiDetachMISO(_spi);
+    spiDetachMOSI(_spi);
     setHwCs(false);
     if(spiGetClockDiv(_spi) != 0) {
         spiStopBus(_spi);
