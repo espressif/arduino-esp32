@@ -334,7 +334,6 @@ end:
 
 void TwoWire::end()
 {
-    esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(lock != NULL){
         //acquire lock
@@ -345,14 +344,14 @@ void TwoWire::end()
 #endif
 #if SOC_I2C_SUPPORT_SLAVE
         if(is_slave){
-            err = i2cSlaveDeinit(num);
+            esp_err_t err = i2cSlaveDeinit(num);
             if(err == ESP_OK){
                 is_slave = false;
             }
         } else
 #endif /* SOC_I2C_SUPPORT_SLAVE */
         if(i2cIsInit(num)){
-            err = i2cDeinit(num);
+            i2cDeinit(num);
         }
         freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
