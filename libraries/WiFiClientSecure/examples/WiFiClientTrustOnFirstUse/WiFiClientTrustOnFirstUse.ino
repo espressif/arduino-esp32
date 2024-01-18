@@ -70,6 +70,7 @@ static int memcmpzero(unsigned char * ptr, size_t len) {
   while (len--) if (*ptr++) return -1;
   return 0;
 };
+
 static void printSHA256(unsigned char * ptr) {
   for (int i = 0; i < 32; i++) Serial.printf("%s%02x", i ? ":" : "", ptr[i]);
   Serial.println("");
