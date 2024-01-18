@@ -91,15 +91,12 @@ WiFiClientSecure &WiFiClientSecure::operator=(const WiFiClientSecure &other)
 
 void WiFiClientSecure::stop()
 {
-    if (sslclient->socket >= 0) {
-        close(sslclient->socket);
-        sslclient->socket = -1;
-        _connected = false;
-        _peek = -1;
-        _lastReadTimeout = 0;
-        _lastWriteTimeout = 0;
-    }
     stop_ssl_socket(sslclient, _CA_cert, _cert, _private_key);
+
+    _connected = false;
+    _peek = -1;
+    _lastReadTimeout = 0;
+    _lastWriteTimeout = 0;
 }
 
 int WiFiClientSecure::connect(IPAddress ip, uint16_t port)
