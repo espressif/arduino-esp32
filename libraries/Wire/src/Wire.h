@@ -95,9 +95,6 @@ public:
         begin(-1, -1);
     }
 
-	/**
-	 * Fixme: it is necessary to determine whether it is possible to use without SOC_I2C_SUPPORT_SLAVE? !!!
-	 */
     void begin(uint8_t address) override final
     {
 #if SOC_I2C_SUPPORT_SLAVE
