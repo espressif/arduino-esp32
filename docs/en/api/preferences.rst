@@ -198,24 +198,6 @@ Arduino-esp32 Preferences API
    
    **Note** 
       * Attempting to check a key without a namespace being open will return false.
-  
-  
-``getType``
-*************
-
-   Returns the type of a key-value pair from the currently open namespace.
-   
-   .. code-block:: arduino
-   
-       PreferenceType getType(const char * key)
-   ..
-
-   **Parameters**
-      * ``key`` (Required)
-         -  the name of the key to be checked. 
-   
-   **Returns**
-      * PreferenceType element contaning the type of the key-value pair or PT_INVALID on error.
 
 
 ``putChar, putUChar``

@@ -3,14 +3,14 @@
 
 #include <stdint.h>
 
-static const uint8_t LED_BUILTIN = 2;
+static const uint8_t LED_BUILTIN = 4;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
-static const uint8_t SDA = 4;
-static const uint8_t SCL = 13;
+static const uint8_t SDA = 17;
+static const uint8_t SCL = 16;
 
 static const uint8_t SS   = 5;
 static const uint8_t MOSI = 23;
