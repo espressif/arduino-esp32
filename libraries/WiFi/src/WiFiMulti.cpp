@@ -125,7 +125,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
         int32_t bestIndex = 0;
         WifiAPlist_t bestNetwork { NULL, NULL, false };
         int bestNetworkDb = INT_MIN;
-        int bestNetworkSec;
+        int bestNetworkSec = WIFI_AUTH_MAX;
         uint8_t bestBSSID[6];
         int32_t bestChannel = 0;
 
