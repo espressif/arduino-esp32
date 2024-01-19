@@ -15661,7 +15661,7 @@ m5stack_core.build.target=esp32
 m5stack_core.build.mcu=esp32
 m5stack_core.build.core=esp32
 m5stack_core.build.variant=m5stack_core
-m5stack_core.build.board=m5stack_core
+m5stack_core.build.board=M5STACK_CORE
 
 m5stack_core.build.f_cpu=240000000L
 m5stack_core.build.flash_size=4MB
@@ -15820,7 +15820,7 @@ m5stack_fire.build.target=esp32
 m5stack_fire.build.mcu=esp32
 m5stack_fire.build.core=esp32
 m5stack_fire.build.variant=m5stack_fire
-m5stack_fire.build.board=m5stack_fire
+m5stack_fire.build.board=M5STACK_FIRE
 
 m5stack_fire.build.f_cpu=240000000L
 m5stack_fire.build.flash_size=16MB
@@ -15988,7 +15988,7 @@ m5stack_core2.build.target=esp32
 m5stack_core2.build.mcu=esp32
 m5stack_core2.build.core=esp32
 m5stack_core2.build.variant=m5stack_core2
-m5stack_core2.build.board=m5stack_core2
+m5stack_core2.build.board=M5STACK_CORE2
 
 m5stack_core2.build.f_cpu=240000000L
 m5stack_core2.build.flash_size=16MB
@@ -16156,7 +16156,7 @@ m5stack_tough.build.target=esp32
 m5stack_tough.build.mcu=esp32
 m5stack_tough.build.core=esp32
 m5stack_tough.build.variant=m5stack_tough
-m5stack_tough.build.board=m5stack_tough
+m5stack_tough.build.board=M5STACK_TOUGH
 
 m5stack_tough.build.f_cpu=240000000L
 m5stack_tough.build.flash_size=16MB
@@ -16324,7 +16324,7 @@ m5stack_station.build.target=esp32
 m5stack_station.build.mcu=esp32
 m5stack_station.build.core=esp32
 m5stack_station.build.variant=m5stack_station
-m5stack_station.build.board=m5stack_station
+m5stack_station.build.board=M5STACK_STATION
 
 m5stack_station.build.f_cpu=240000000L
 m5stack_station.build.flash_size=16MB
@@ -16485,7 +16485,7 @@ m5stack_stickc.build.target=esp32
 m5stack_stickc.build.mcu=esp32
 m5stack_stickc.build.core=esp32
 m5stack_stickc.build.variant=m5stack_stickc
-m5stack_stickc.build.board=m5stack_stickc
+m5stack_stickc.build.board=M5STACK_STICKC
 
 m5stack_stickc.build.f_cpu=240000000L
 m5stack_stickc.build.flash_size=4MB
@@ -16636,7 +16636,7 @@ m5stack_stickc_plus.build.target=esp32
 m5stack_stickc_plus.build.mcu=esp32
 m5stack_stickc_plus.build.core=esp32
 m5stack_stickc_plus.build.variant=m5stack_stickc_plus
-m5stack_stickc_plus.build.board=m5stack_stickc_plus
+m5stack_stickc_plus.build.board=M5STACK_STICKC_PLUS
 
 m5stack_stickc_plus.build.f_cpu=240000000L
 m5stack_stickc_plus.build.flash_size=4MB
@@ -16789,7 +16789,7 @@ m5stack_stickc_plus2.build.target=esp32
 m5stack_stickc_plus2.build.mcu=esp32
 m5stack_stickc_plus2.build.core=esp32
 m5stack_stickc_plus2.build.variant=m5stack_stickc_plus2
-m5stack_stickc_plus2.build.board=m5stack_stickc_plus2
+m5stack_stickc_plus2.build.board=M5STACK_STICKC_PLUS2
 
 m5stack_stickc_plus2.build.f_cpu=240000000L
 m5stack_stickc_plus2.build.flash_size=8MB
@@ -16948,7 +16948,7 @@ m5stack_atom.build.target=esp32
 m5stack_atom.build.mcu=esp32
 m5stack_atom.build.core=esp32
 m5stack_atom.build.variant=m5stack_atom
-m5stack_atom.build.board=m5stack_atom
+m5stack_atom.build.board=M5STACK_ATOM
 
 m5stack_atom.build.f_cpu=240000000L
 m5stack_atom.build.flash_size=4MB
@@ -17102,7 +17102,7 @@ m5stack_atoms3.build.target=esp32s3
 m5stack_atoms3.build.mcu=esp32s3
 m5stack_atoms3.build.core=esp32
 m5stack_atoms3.build.variant=m5stack_atoms3
-m5stack_atoms3.build.board=m5stack_atoms3
+m5stack_atoms3.build.board=M5STACK_ATOMS3
 
 m5stack_atoms3.build.usb_mode=1
 m5stack_atoms3.build.cdc_on_boot=1
@@ -17331,7 +17331,7 @@ m5stack_cores3.build.target=esp32s3
 m5stack_cores3.build.mcu=esp32s3
 m5stack_cores3.build.core=esp32
 m5stack_cores3.build.variant=m5stack_cores3
-m5stack_cores3.build.board=m5stack_cores3
+m5stack_cores3.build.board=M5STACK_CORES3
 
 m5stack_cores3.build.usb_mode=1
 m5stack_cores3.build.cdc_on_boot=1
@@ -17566,7 +17566,7 @@ m5stack_timer_cam.build.target=esp32
 m5stack_timer_cam.build.mcu=esp32
 m5stack_timer_cam.build.core=esp32
 m5stack_timer_cam.build.variant=m5stack_timer_cam
-m5stack_timer_cam.build.board=m5stack_timer_cam
+m5stack_timer_cam.build.board=M5STACK_TIMER_CAM
 
 m5stack_timer_cam.build.f_cpu=240000000L
 m5stack_timer_cam.build.flash_size=4MB
@@ -17718,7 +17718,7 @@ m5stack_unit_cam.build.target=esp32
 m5stack_unit_cam.build.mcu=esp32
 m5stack_unit_cam.build.core=esp32
 m5stack_unit_cam.build.variant=m5stack_unit_cam
-m5stack_unit_cam.build.board=m5stack_unit_cam
+m5stack_unit_cam.build.board=M5STACK_UNIT_CAM
 
 m5stack_unit_cam.build.f_cpu=240000000L
 m5stack_unit_cam.build.flash_size=4MB
@@ -17870,7 +17870,7 @@ m5stack_unit_cams3.build.target=esp32s3
 m5stack_unit_cams3.build.mcu=esp32s3
 m5stack_unit_cams3.build.core=esp32
 m5stack_unit_cams3.build.variant=m5stack_unit_cams3
-m5stack_unit_cams3.build.board=m5stack_unit_cams3
+m5stack_unit_cams3.build.board=M5STACK_UNIT_CAMS3
 
 m5stack_unit_cams3.build.usb_mode=1
 m5stack_unit_cams3.build.cdc_on_boot=1
@@ -18099,7 +18099,7 @@ m5stack_poe_cam.build.target=esp32
 m5stack_poe_cam.build.mcu=esp32
 m5stack_poe_cam.build.core=esp32
 m5stack_poe_cam.build.variant=m5stack_poe_cam
-m5stack_poe_cam.build.board=m5stack_poe_cam
+m5stack_poe_cam.build.board=M5STACK_POE_CAM
 
 m5stack_poe_cam.build.f_cpu=240000000L
 m5stack_poe_cam.build.flash_size=4MB
@@ -18249,7 +18249,7 @@ m5stack_paper.build.target=esp32
 m5stack_paper.build.mcu=esp32
 m5stack_paper.build.core=esp32
 m5stack_paper.build.variant=m5stack_paper
-m5stack_paper.build.board=m5stack_paper
+m5stack_paper.build.board=M5STACK_PAPER
 
 m5stack_paper.build.f_cpu=240000000L
 m5stack_paper.build.flash_size=16MB
@@ -18418,7 +18418,7 @@ m5stack_coreink.build.target=esp32
 m5stack_coreink.build.mcu=esp32
 m5stack_coreink.build.core=esp32
 m5stack_coreink.build.variant=m5stack_coreink
-m5stack_coreink.build.board=m5stack_coreink
+m5stack_coreink.build.board=M5STACK_COREINK
 
 m5stack_coreink.build.f_cpu=240000000L
 m5stack_coreink.build.flash_size=4MB
@@ -18570,7 +18570,7 @@ m5stack_stamp_pico.build.target=esp32
 m5stack_stamp_pico.build.mcu=esp32
 m5stack_stamp_pico.build.core=esp32
 m5stack_stamp_pico.build.variant=m5stack_stamp_pico
-m5stack_stamp_pico.build.board=m5stack_stamp_pico
+m5stack_stamp_pico.build.board=M5STACK_STAMP_PICO
 
 m5stack_stamp_pico.build.f_cpu=240000000L
 m5stack_stamp_pico.build.flash_size=4MB
@@ -18724,7 +18724,7 @@ m5stack_stamp_c3.build.target=esp
 m5stack_stamp_c3.build.mcu=esp32c3
 m5stack_stamp_c3.build.core=esp32
 m5stack_stamp_c3.build.variant=m5stack_stamp_c3
-m5stack_stamp_c3.build.board=m5stack_stamp_c3
+m5stack_stamp_c3.build.board=M5STACK_STAMP_C3
 m5stack_stamp_c3.build.bootloader_addr=0x0
 
 m5stack_stamp_c3.build.cdc_on_boot=1
@@ -18873,7 +18873,7 @@ m5stack_stamp_s3.build.target=esp32s3
 m5stack_stamp_s3.build.mcu=esp32s3
 m5stack_stamp_s3.build.core=esp32
 m5stack_stamp_s3.build.variant=m5stack_stamp_s3
-m5stack_stamp_s3.build.board=m5stack_stamp_s3
+m5stack_stamp_s3.build.board=M5STACK_STAMP_S3
 
 m5stack_stamp_s3.build.usb_mode=1
 m5stack_stamp_s3.build.cdc_on_boot=1
@@ -19109,7 +19109,7 @@ m5stack_capsule.build.target=esp32s3
 m5stack_capsule.build.mcu=esp32s3
 m5stack_capsule.build.core=esp32
 m5stack_capsule.build.variant=m5stack_capsule
-m5stack_capsule.build.board=m5stack_capsule
+m5stack_capsule.build.board=M5STACK_CAPSULE
 
 m5stack_capsule.build.usb_mode=1
 m5stack_capsule.build.cdc_on_boot=1
@@ -19347,7 +19347,7 @@ m5stack_cardputer.build.target=esp32s3
 m5stack_cardputer.build.mcu=esp32s3
 m5stack_cardputer.build.core=esp32
 m5stack_cardputer.build.variant=m5stack_cardputer
-m5stack_cardputer.build.board=m5stack_cardputer
+m5stack_cardputer.build.board=M5STACK_CARDPUTER
 
 m5stack_cardputer.build.usb_mode=1
 m5stack_cardputer.build.cdc_on_boot=1
@@ -19582,7 +19582,7 @@ m5stack_dial.build.target=esp32s3
 m5stack_dial.build.mcu=esp32s3
 m5stack_dial.build.core=esp32
 m5stack_dial.build.variant=m5stack_dial
-m5stack_dial.build.board=m5stack_dial
+m5stack_dial.build.board=M5STACK_DIAL
 
 m5stack_dial.build.usb_mode=1
 m5stack_dial.build.cdc_on_boot=1
