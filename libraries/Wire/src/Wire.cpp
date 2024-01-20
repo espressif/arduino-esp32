@@ -488,6 +488,11 @@ uint8_t TwoWire::endTransmission(bool sendStop)
     return 4;
 }
 
+uint8_t TwoWire::endTransmission()
+{
+    return endTransmission(true);
+}
+
 size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
 {
 #if SOC_I2C_SUPPORT_SLAVE
