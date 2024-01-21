@@ -26,14 +26,10 @@ public:
     virtual ~HashBuilder() {}
     virtual void begin() = 0;
 
-    virtual void add(uint8_t* data, size_t len) = 0;
+    virtual void add(const uint8_t* data, size_t len) = 0;
     virtual void add(const char* data)
     {
-        add((uint8_t*)data, strlen(data));
-    }
-    virtual void add(char* data)
-    {
-        add((const char*)data);
+        add((const uint8_t*)data, strlen(data));
     }
     virtual void add(String data)
     {
@@ -41,10 +37,6 @@ public:
     }
 
     virtual void addHexString(const char* data) = 0;
-    virtual void addHexString(char* data)
-    {
-        addHexString((const char*)data);
-    }
     virtual void addHexString(String data)
     {
         addHexString(data.c_str());

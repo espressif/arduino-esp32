@@ -27,7 +27,7 @@ void MD5Builder::begin(void)
     esp_rom_md5_init(&_ctx);
 }
 
-void MD5Builder::add(uint8_t * data, size_t len)
+void MD5Builder::add(const uint8_t * data, size_t len)
 {
     esp_rom_md5_update(&_ctx, data, len);
 }

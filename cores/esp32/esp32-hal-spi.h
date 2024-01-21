@@ -54,10 +54,10 @@ extern "C" {
 #define SPI_MODE2 2
 #define SPI_MODE3 3
 
-#define SPI_CS0 0
-#define SPI_CS1 1
-#define SPI_CS2 2
-#define SPI_CS_MASK_ALL 0x7
+#define SPI_SS0 0
+#define SPI_SS1 1
+#define SPI_SS2 2
+#define SPI_SS_MASK_ALL 0x7
 
 #define SPI_LSBFIRST 0
 #define SPI_MSBFIRST 1
@@ -72,25 +72,25 @@ void spiStopBus(spi_t * spi);
 bool spiAttachSCK(spi_t * spi, int8_t sck);
 bool spiAttachMISO(spi_t * spi, int8_t miso);
 bool spiAttachMOSI(spi_t * spi, int8_t mosi);
-bool spiDetachSCK(spi_t * spi, int8_t sck);
-bool spiDetachMISO(spi_t * spi, int8_t miso);
-bool spiDetachMOSI(spi_t * spi, int8_t mosi);
+bool spiDetachSCK(spi_t * spi);
+bool spiDetachMISO(spi_t * spi);
+bool spiDetachMOSI(spi_t * spi);
 
-//Attach/Detach SS pin to SPI_CSx signal
-bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss);
-bool spiDetachSS(spi_t * spi, int8_t ss);
+//Attach/Detach SS pin to SPI_SSx signal
+bool spiAttachSS(spi_t * spi, uint8_t ss_num, int8_t ss);
+bool spiDetachSS(spi_t * spi);
 
-//Enable/Disable SPI_CSx pins
-void spiEnableSSPins(spi_t * spi, uint8_t cs_mask);
-void spiDisableSSPins(spi_t * spi, uint8_t cs_mask);
+//Enable/Disable SPI_SSx pins
+void spiEnableSSPins(spi_t * spi, uint8_t ss_mask);
+void spiDisableSSPins(spi_t * spi, uint8_t ss_mask);
 
-//Enable/Disable hardware control of SPI_CSx pins
+//Enable/Disable hardware control of SPI_SSx pins
 void spiSSEnable(spi_t * spi);
 void spiSSDisable(spi_t * spi);
 
-//Activate enabled SPI_CSx pins
+//Activate enabled SPI_SSx pins
 void spiSSSet(spi_t * spi);
-//Deactivate enabled SPI_CSx pins
+//Deactivate enabled SPI_SSx pins
 void spiSSClear(spi_t * spi);
 
 void spiWaitReady(spi_t * spi);
