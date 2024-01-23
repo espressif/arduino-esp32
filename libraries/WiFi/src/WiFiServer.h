@@ -24,7 +24,7 @@
 #include "WiFiClient.h"
 #include "IPAddress.h"
 
-class WiFiServer : public Server {
+class WiFiServer {
   private:
     int sockfd;
     int _accepted_sockfd = -1;
@@ -51,18 +51,12 @@ class WiFiServer : public Server {
     void setNoDelay(bool nodelay);
     bool getNoDelay();
     bool hasClient();
-    size_t write(const uint8_t *data, size_t len);
-    size_t write(uint8_t data){
-      return write(&data, 1);
-    }
-    using Print::write;
 
     void end();
     void close();
     void stop();
     operator bool(){return _listening;}
     int setTimeout(uint32_t seconds);
-    void stopAll();
 };
 
 #endif /* _WIFISERVER_H_ */
