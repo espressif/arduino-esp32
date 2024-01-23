@@ -41,6 +41,7 @@ fi
 if [ ! -d "$ARDUINO_IDE_PATH" ] || [ ! -f "$ARDUINO_IDE_PATH/arduino-cli" ]; then
     echo "Installing Arduino CLI on $OS_NAME ..."
     mkdir -p "$ARDUINO_IDE_PATH"
-    curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$ARDUINO_IDE_PATH" sh
+    #curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$ARDUINO_IDE_PATH" sh
+    cat "./.github/scripts/arduino.cc-install-cli.sh" | BINDIR="$ARDUINO_IDE_PATH" sh
 fi
 
