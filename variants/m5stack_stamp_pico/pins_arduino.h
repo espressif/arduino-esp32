@@ -9,6 +9,11 @@ static const uint8_t RX = 3;
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
+static const uint8_t SS    = 19;
+static const uint8_t MOSI  = 26;
+static const uint8_t MISO  = 36;
+static const uint8_t SCK   = 18;
+
 static const uint8_t G26 = 26;
 static const uint8_t G36 = 36;
 static const uint8_t G18 = 18;
@@ -22,10 +27,5 @@ static const uint8_t G0 = 0;
 
 static const uint8_t G32 = 32;
 static const uint8_t G33 = 33;
-
-static const uint8_t SS    = 19;
-static const uint8_t MOSI  = 26;
-static const uint8_t MISO  = 36;
-static const uint8_t SCK   = 18;
 
 #endif /* Pins_Arduino_h */

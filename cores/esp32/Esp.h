@@ -86,7 +86,7 @@ public:
     const char * getSdkVersion(); //version of ESP-IDF
     const char * getCoreVersion();//version of this core
 
-    void deepSleep(uint32_t time_us);
+    void deepSleep(uint64_t time_us);
 
     uint32_t getFlashChipSize();
     uint32_t getFlashChipSpeed();

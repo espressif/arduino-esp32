@@ -78,7 +78,7 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
 		case ESP32_BUS_TYPE_SPI_MASTER_SCK: return "SPI_MASTER_SCK";
 		case ESP32_BUS_TYPE_SPI_MASTER_MISO: return "SPI_MASTER_MISO";
 		case ESP32_BUS_TYPE_SPI_MASTER_MOSI: return "SPI_MASTER_MOSI";
-		case ESP32_BUS_TYPE_SPI_MASTER_CS: return "SPI_MASTER_CS";
+		case ESP32_BUS_TYPE_SPI_MASTER_SS: return "SPI_MASTER_SS";
 #endif
 #if SOC_SDMMC_HOST_SUPPORTED
 		case ESP32_BUS_TYPE_SDMMC_CLK: return "SDMMC_CLK";

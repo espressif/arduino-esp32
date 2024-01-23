@@ -37,7 +37,6 @@ class WiFiServer {
   public:
     void listenOnLocalhost(){}
 
-    // _addr(INADDR_ANY) is the same as _addr() ==> 0.0.0.0
     WiFiServer(uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
       log_v("WiFiServer::WiFiServer(port=%d, ...)", port);
     }
@@ -45,7 +44,7 @@ class WiFiServer {
       log_v("WiFiServer::WiFiServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
     }
     ~WiFiServer(){ end();}
-    WiFiClient available() __attribute__((deprecated("Renamed to accept().")));
+    WiFiClient available();
     WiFiClient accept();
     void begin(uint16_t port=0);
     void begin(uint16_t port, int reuse_enable);

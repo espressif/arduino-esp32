@@ -131,7 +131,7 @@ unsigned long long operator"" _GB(unsigned long long x)
 
 EspClass ESP;
 
-void EspClass::deepSleep(uint32_t time_us)
+void EspClass::deepSleep(uint64_t time_us)
 {
     esp_deep_sleep(time_us);
 }
@@ -225,30 +225,31 @@ String EspClass::getSketchMD5()
     const esp_partition_t *running = esp_ota_get_running_partition();
     if (!running) {
         log_e("Partition could not be found");
-
         return String();
     }
+
     const size_t bufSize = SPI_FLASH_SEC_SIZE;
-    std::unique_ptr<uint8_t[]> buf(new uint8_t[bufSize]);
-    uint32_t offset = 0;
-    if(!buf.get()) {
+    uint8_t *pb = (uint8_t *)malloc(bufSize);
+    if(!pb) {
         log_e("Not enough memory to allocate buffer");
-
         return String();
     }
+    uint32_t offset = 0;
+
     MD5Builder md5;
     md5.begin();
-    while( lengthLeft > 0) {
+    while(lengthLeft > 0) {
         size_t readBytes = (lengthLeft < bufSize) ? lengthLeft : bufSize;
-        if (!ESP.flashRead(running->address + offset, reinterpret_cast<uint32_t*>(buf.get()), (readBytes + 3) & ~3)) {
+        if (!ESP.flashRead(running->address + offset, (uint32_t *)pb, (readBytes + 3) & ~3)) {
+            free(pb);
             log_e("Could not read buffer from flash");
-
             return String();
         }
-        md5.add(buf.get(), readBytes);
+        md5.add(pb, readBytes);
         lengthLeft -= readBytes;
         offset += readBytes;
     }
+    free(pb);
     md5.calculate();
     result = md5.toString();
     return result;
