@@ -32,12 +32,6 @@ int WiFiServer::setTimeout(uint32_t seconds){
   return setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
 }
 
-size_t WiFiServer::write(const uint8_t *data, size_t len){
-  return 0;
-}
-
-void WiFiServer::stopAll(){}
-
 WiFiClient WiFiServer::available(){
   return accept();
 }
