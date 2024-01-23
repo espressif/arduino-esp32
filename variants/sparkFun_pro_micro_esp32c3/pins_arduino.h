@@ -45,5 +45,4 @@ static const uint8_t PIN_I2S_SD_DOUT = 7;  // data out
 static const uint8_t PIN_I2S_SD_IN = 5;   // data in
 static const uint8_t PIN_I2S_FS = 10;  // frame select 
 
-
 #endif /* Pins_Arduino_h */
