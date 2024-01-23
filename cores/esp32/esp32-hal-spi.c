@@ -177,35 +177,64 @@ static spi_t _spi_bus_array[] = {
 static bool spiDetachBus(void * bus){
     uint8_t spi_num = (int)bus - 1;
     spi_t * spi = &_spi_bus_array[spi_num];
-    if(spi->dev->clock.val != 0){
-        log_d("Stopping SPI BUS");
+
+    if(spi->dev->clock.val == 0){
+        log_d("SPI bus already stopped");
+        return true;
+    }
+    else if(spi->sck == -1 || (spi->miso == -1 && spi->mosi == -1)){
+        log_d("Stopping SPI bus");
         spiStopBus(spi);
-    }
-    if(spi->sck != -1){
-        log_d("SPI detach SCK pin %d",spi->sck);
-        spiDetachSCK(spi,spi->sck);
-    }
-    if(spi->miso != -1){
-        log_d("SPI detach MISO pin %d",spi->miso);
-        spiDetachMISO(spi,spi->miso);
-    }
-    if(spi->mosi != -1){
-        log_d("SPI detach MOSI pin %d",spi->mosi);
-        spiDetachMOSI(spi,spi->mosi);
-    }
-    if(spi->ss != -1){
-        log_d("SPI detach SS pin %d",spi->ss);
-        spiDetachSS(spi,spi->ss);
-    }
-    //set SPI to NULL, as all pins are already detached
-    if(spi->sck == -1 && spi->miso == -1 && spi->mosi == -1 && spi->ss == -1){
-        log_d("Set spi handle to NULL");
+
+        spiDetachSCK(spi);
+        spiDetachMISO(spi);
+        spiDetachMOSI(spi);
+        spiDetachSS(spi);
         spi = NULL;
         return true;
     }
-    return false;
+    return true;
 }
 
+static bool spiDetachBus_SCK(void * bus){
+    uint8_t spi_num = (int)bus - 1;
+    spi_t * spi = &_spi_bus_array[spi_num];
+    if(spi->sck != -1){
+        spiDetachSCK(spi);
+        spiDetachBus(bus);
+    }
+    return true;
+}
+
+static bool spiDetachBus_MISO(void * bus){
+    uint8_t spi_num = (int)bus - 1;
+    spi_t * spi = &_spi_bus_array[spi_num];
+    if(spi->miso != -1){
+        spiDetachMISO(spi);
+        spiDetachBus(bus);
+    }
+    return true;
+}
+
+static bool spiDetachBus_MOSI(void * bus){
+    uint8_t spi_num = (int)bus - 1;
+    spi_t * spi = &_spi_bus_array[spi_num];
+    if(spi->mosi != -1){
+        spiDetachMOSI(spi);
+        spiDetachBus(bus);
+    }
+    return true;
+}
+
+static bool spiDetachBus_SS(void * bus){
+    uint8_t spi_num = (int)bus - 1;
+    spi_t * spi = &_spi_bus_array[spi_num];
+    if(spi->ss != -1){
+        spiDetachSS(spi);
+        spiDetachBus(bus);
+    }
+    return true;
+}
 
 bool spiAttachSCK(spi_t * spi, int8_t sck)
 {
@@ -220,7 +249,7 @@ bool spiAttachSCK(spi_t * spi, int8_t sck)
     pinMatrixOutAttach(sck, SPI_CLK_IDX(spi->num), false, false);
     spi->sck = sck;
     if(!perimanSetPinBus(sck, ESP32_BUS_TYPE_SPI_MASTER_SCK, (void *)(spi->num+1), spi->num, -1)){
-        spiDetachBus((void *)(spi->num+1));
+        spiDetachBus_SCK((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", sck);
         return false;
     }
@@ -236,13 +265,11 @@ bool spiAttachMISO(spi_t * spi, int8_t miso)
     if(bus != NULL && !perimanClearPinBus(miso)){
         return false;
     }
-    SPI_MUTEX_LOCK();
     pinMode(miso, INPUT);
     pinMatrixInAttach(miso, SPI_MISO_IDX(spi->num), false);
     spi->miso = miso;
-    SPI_MUTEX_UNLOCK();
     if(!perimanSetPinBus(miso, ESP32_BUS_TYPE_SPI_MASTER_MISO, (void *)(spi->num+1), spi->num, -1)){
-        spiDetachBus((void *)(spi->num+1));
+        spiDetachBus_MISO((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", miso);
         return false;
     }
@@ -262,102 +289,114 @@ bool spiAttachMOSI(spi_t * spi, int8_t mosi)
     pinMatrixOutAttach(mosi, SPI_MOSI_IDX(spi->num), false, false);
     spi->mosi = mosi;
     if(!perimanSetPinBus(mosi, ESP32_BUS_TYPE_SPI_MASTER_MOSI, (void *)(spi->num+1), spi->num, -1)){
-        spiDetachBus((void *)(spi->num+1));
+        spiDetachBus_MOSI((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", mosi);
         return false;
     }
     return true;
 }
 
-bool spiDetachSCK(spi_t * spi, int8_t sck)
+bool spiDetachSCK(spi_t * spi)
 {
-    if(!spi || sck < 0) {
+    if(!spi) {
         return false;
     }
-    pinMatrixOutDetach(sck, false, false);
-    spi->sck = -1;
-    perimanClearPinBus(sck);
+    int8_t sck = spi->sck;
+    if(sck != -1) {
+        pinMatrixOutDetach(sck, false, false);
+        spi->sck = -1;
+        perimanClearPinBus(sck);
+    }
     return true;
 }
 
-bool spiDetachMISO(spi_t * spi, int8_t miso)
+bool spiDetachMISO(spi_t * spi)
 {
-    if(!spi || miso < 0) {
+    if(!spi) {
         return false;
     }
-    pinMatrixInDetach(SPI_MISO_IDX(spi->num), false, false);
-    spi->miso = -1;
-    perimanClearPinBus(miso);
+    int8_t miso = spi->miso;
+    if(miso != -1) {
+        pinMatrixInDetach(SPI_MISO_IDX(spi->num), false, false);
+        spi->miso = -1;
+        perimanClearPinBus(miso);
+    }
     return true;
 }
 
-bool spiDetachMOSI(spi_t * spi, int8_t mosi)
+bool spiDetachMOSI(spi_t * spi)
 {
-    if(!spi || mosi < 0) {
+    if(!spi) {
         return false;
     }
-    pinMatrixOutDetach(mosi, false, false);
-    spi->mosi = -1;
-    perimanClearPinBus(mosi);
+    int8_t mosi = spi->mosi;
+    if(mosi != -1) {
+        pinMatrixOutDetach(mosi, false, false);
+        spi->mosi = -1;
+        perimanClearPinBus(mosi);
+    }
     return true;
 }
 
-bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss)
+bool spiAttachSS(spi_t * spi, uint8_t ss_num, int8_t ss)
 {
-    if(!spi || ss < 0 || cs_num > 2) {
+    if(!spi || ss < 0 || ss_num > 2) {
         return false;
     }
-    void * bus = perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS);
+    void * bus = perimanGetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_SS);
     if(bus != NULL && !perimanClearPinBus(ss)){
         return false;
     }
     pinMode(ss, OUTPUT);
-    pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, cs_num), false, false);
-    spiEnableSSPins(spi, (1 << cs_num));
+    pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, ss_num), false, false);
+    spiEnableSSPins(spi, (1 << ss_num));
     spi->ss = ss;
-    if(!perimanSetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_CS, (void *)(spi->num+1), spi->num, -1)){
-        spiDetachBus((void *)(spi->num+1));
+    if(!perimanSetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_SS, (void *)(spi->num+1), spi->num, -1)){
+        spiDetachBus_SS((void *)(spi->num+1));
         log_e("Failed to set pin bus to SPI for pin %d", ss);
         return false;
     }
     return true;
 }
 
-bool spiDetachSS(spi_t * spi, int8_t ss)
+bool spiDetachSS(spi_t * spi)
 {
-    if(!spi || ss < 0) {
+    if(!spi) {
         return false;
     }
-    pinMatrixOutDetach(ss, false, false);
-    spi->ss = -1;
-    perimanClearPinBus(ss);
+    int8_t ss = spi->ss;
+    if(ss != -1) {
+        pinMatrixOutDetach(ss, false, false);
+        spi->ss = -1;
+        perimanClearPinBus(ss);
+    }
     return true;
 }
 
-void spiEnableSSPins(spi_t * spi, uint8_t cs_mask)
+void spiEnableSSPins(spi_t * spi, uint8_t ss_mask)
 {
     if(!spi) {
         return;
     }
     SPI_MUTEX_LOCK();
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    spi->dev->misc.val &= ~(cs_mask & SPI_CS_MASK_ALL);
+    spi->dev->misc.val &= ~(ss_mask & SPI_SS_MASK_ALL);
 #else
-    spi->dev->pin.val &= ~(cs_mask & SPI_CS_MASK_ALL);
+    spi->dev->pin.val &= ~(ss_mask & SPI_SS_MASK_ALL);
 #endif
     SPI_MUTEX_UNLOCK();
 }
 
-void spiDisableSSPins(spi_t * spi, uint8_t cs_mask)
+void spiDisableSSPins(spi_t * spi, uint8_t ss_mask)
 {
     if(!spi) {
         return;
     }
     SPI_MUTEX_LOCK();
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    spi->dev->misc.val |= (cs_mask & SPI_CS_MASK_ALL);
+    spi->dev->misc.val |= (ss_mask & SPI_SS_MASK_ALL);
 #else
-    spi->dev->pin.val |= (cs_mask & SPI_CS_MASK_ALL);
+    spi->dev->pin.val |= (ss_mask & SPI_SS_MASK_ALL);
 #endif
     SPI_MUTEX_UNLOCK();
 }
@@ -578,10 +617,10 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
         return NULL;
     }
 
-    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_SCK, spiDetachBus);
-    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_MISO, spiDetachBus);
-    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_MOSI, spiDetachBus);
-    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_CS, spiDetachBus);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_SCK, spiDetachBus_SCK);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_MISO, spiDetachBus_MISO);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_MOSI, spiDetachBus_MOSI);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SPI_MASTER_SS, spiDetachBus_SS);
 
     spi_t * spi = &_spi_bus_array[spi_num];
 

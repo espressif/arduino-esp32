@@ -50,12 +50,14 @@ set(CORE_SRCS
   cores/esp32/Esp.cpp
   cores/esp32/FunctionalInterrupt.cpp
   cores/esp32/HardwareSerial.cpp
+  cores/esp32/HEXBuilder.cpp
   cores/esp32/IPAddress.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
   cores/esp32/main.cpp
   cores/esp32/MD5Builder.cpp
   cores/esp32/Print.cpp
+  cores/esp32/SHA1Builder.cpp
   cores/esp32/stdlib_noniso.c
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp

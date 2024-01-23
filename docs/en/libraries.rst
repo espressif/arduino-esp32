@@ -24,7 +24,7 @@ Currently, the Arduino ESP32 supports the following peripherals with Arduino API
 +---------------+---------------+---------------+---------------+---------------+-----+------------------------+
 | GPIO          | Yes           | Yes           | Yes           | Yes           |     |                        |
 +---------------+---------------+---------------+---------------+---------------+-----+------------------------+
-| Hall Sensor   | Yes           | Not Supported | Not Supported | Not Supported |     |                        |
+| Hall Sensor   | Not Supported | Not Supported | Not Supported | Not Supported |     |                        |
 +---------------+---------------+---------------+---------------+---------------+-----+------------------------+
 | I2C           | Yes           | Yes           | Yes           | Yes           |     |                        |
 +---------------+---------------+---------------+---------------+---------------+-----+------------------------+
@@ -70,6 +70,11 @@ APIs
 ----
 
 The Arduino ESP32 offers some unique APIs, described in this section:
+
+.. note:: 
+    Please be advised that we cannot ensure continuous compatibility between the Arduino Core ESP32 APIs and ESP8266 APIs, as well as Arduino-Core APIs (Arduino.cc).
+    While our aim is to maintain harmony, the addition of new features may result in occasional divergence. We strive to achieve the best possible integration but acknowledge
+    that perfect compatibility might not always be feasible. Please refer to the documentation for any specific considerations.
 
 .. toctree::
     :maxdepth: 1
