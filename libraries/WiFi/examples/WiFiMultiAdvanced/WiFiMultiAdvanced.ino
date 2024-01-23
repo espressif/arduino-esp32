@@ -15,7 +15,7 @@ bool testConnection(){
   HTTPClient http;
   http.begin("http://www.espressif.com");
   int httpCode = http.GET();
-  // we expect to get a 301 because it will ask to use HTTPS intead of HTTP
+  // we expect to get a 301 because it will ask to use HTTPS instead of HTTP
   if (httpCode == HTTP_CODE_MOVED_PERMANENTLY) return true;
   return false;
 }
