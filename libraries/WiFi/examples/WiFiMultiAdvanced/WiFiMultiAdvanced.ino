@@ -6,67 +6,18 @@
 
 #include <WiFi.h>
 #include <WiFiMulti.h>
+#include <HTTPClient.h>
 
 WiFiMulti wifiMulti;
 
-// This is used to test the Internet connection of connected the AP
-// Use a non-302 status code to ensure we bypass captive portals.  Can be any text in the webpage. 
-String _testResp = "301 Moved"; // usually http:// is moves to https:// by a 301 code
-// You can also set this to a simple test page on your own server to ensure you can reach it, 
-// like "http://www.mysite.com/test.html"
-String _testURL = "http://www.espressif.com"; // Must include "http://" if testing a HTTP host
-const int _testPort = 80;  // HTTP port
-
+// callback used to check Internet connectivity
 bool testConnection(){
-    //parse url
-    int8_t split = _testURL.indexOf('/',7);
-    String host = _testURL.substring(7, split);
-    String url = (split < 0) ? "/":_testURL.substring(split,_testURL.length());
-    log_i("Testing Connection to %s.  Test Respponse is \"%s\"",_testURL.c_str(), _testResp.c_str());
-    // Use WiFiClient class to create TCP connections
-    WiFiClient client;
-    if (!client.connect(host.c_str(), _testPort)) {
-        log_e("Connection failed");
-        return false;
-    } else {
-        log_i("Connected to test host");
-    }
-
-    // This will send the request to the server
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Connection: close\r\n\r\n");
-    unsigned long timeout = millis();
-    while (client.available() == 0) {
-        if (millis() - timeout > 5000) {
-            log_e(">>>Client timeout!");
-            client.stop();
-            return false;
-        }
-    }
-
-    bool bSuccess = false;
-    timeout = millis();
-    while(client.available()) {
-        if (millis() - timeout < 5000) {
-           String line = client.readStringUntil('\r');
-           Serial.println("=============HTTP RESPONSE=============");
-           Serial.print(line);
-           Serial.println("\n=======================================");
-
-            bSuccess = client.find(_testResp.c_str());
-            if (bSuccess){
-                log_i("Success. Found test response");
-            } else {
-                log_e("Failed.  Can't find test response");
-            }
-            return bSuccess;
-        } else {
-            log_e("Test Response checking has timed out!");
-            break;
-        }
-    }
-    return false; // timeout
+  HTTPClient http;
+  http.begin("http://www.espressif.com");
+  int httpCode = http.GET();
+  // we expect to get a 301 because it will ask to use HTTPS intead of HTTP
+  if (httpCode == HTTP_CODE_MOVED_PERMANENTLY) return true;
+  return false;
 }
 
 void setup()
