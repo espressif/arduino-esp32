@@ -34,6 +34,7 @@
 #include "esp_netif_types.h"
 #include "esp_eth_driver.h"
 #include "wifi_provisioning/manager.h"
+#include "lwip/ip_addr.h"
 
 #include "Networking.h"
 
@@ -41,6 +42,34 @@
 #define WiFiEventFuncCb NetworkEventFuncCb
 #define WiFiEventSysCb NetworkEventSysCb
 #define wifi_event_id_t network_event_handle_t
+
+// General Flags
+static const int NET_DNS_IDLE_BIT       = BIT0;
+static const int NET_DNS_DONE_BIT       = BIT1;
+// WiFi Scan Flags
+static const int WIFI_SCANNING_BIT      = BIT2;
+static const int WIFI_SCAN_DONE_BIT     = BIT3;
+// AP Flags
+static const int AP_STARTED_BIT         = BIT4;
+static const int AP_HAS_IP6_BIT         = BIT5;
+static const int AP_HAS_CLIENT_BIT      = BIT6;
+static const int AP_WANT_IP6_BIT        = BIT7;
+// STA Flags
+static const int STA_STARTED_BIT        = BIT8;
+static const int STA_CONNECTED_BIT      = BIT9;
+static const int STA_HAS_IP_BIT         = BIT10;
+static const int STA_HAS_IP6_BIT        = BIT11;
+static const int STA_HAS_IP6_GLOBAL_BIT = BIT12;
+static const int STA_WANT_IP6_BIT       = BIT13;
+// ETH Flags
+static const int ETH_STARTED_BIT        = BIT14;
+static const int ETH_CONNECTED_BIT      = BIT15;
+static const int ETH_HAS_IP_BIT         = BIT16;
+static const int ETH_HAS_IP6_BIT        = BIT17;
+static const int ETH_HAS_IP6_GLOBAL_BIT = BIT18;
+static const int ETH_WANT_IP6_BIT       = BIT19;
+// Masks
+static const int NET_HAS_IP6_GLOBAL_BIT = STA_HAS_IP6_GLOBAL_BIT | ETH_HAS_IP6_GLOBAL_BIT;
 
 typedef enum {
     WIFI_POWER_19_5dBm = 78,// 19.5dBm
@@ -131,7 +160,7 @@ class WiFiGenericClass
     static bool _isReconnectableReason(uint8_t reason);
 
   public:
-    static int hostByName(const char *aHostname, IPAddress &aResult);
+    static int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
 
     static IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet);
     static IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet);
@@ -141,6 +170,7 @@ class WiFiGenericClass
     friend class WiFiSTAClass;
     friend class WiFiScanClass;
     friend class WiFiAPClass;
+    friend class ETHClass;
 };
 
 #endif /* SOC_WIFI_SUPPORTED */

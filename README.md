@@ -1,7 +1,6 @@
 # Arduino core for the ESP32, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6 and ESP32-H2
 
-![Build Status](https://github.com/espressif/arduino-esp32/workflows/ESP32%20Arduino%20CI/badge.svg) [![Documentation Status](https://readthedocs.com/projects/espressif-arduino-esp32/badge/?version=latest)](https://docs.espressif.com/projects/arduino-esp32/en/latest/?badge=latest)
-[![External Libraries Test](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=master&event=schedule)](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml?link=http://https://github.com/espressif/arduino-esp32/blob/master/LIBRARIES_TEST.md)
+![Build Status](https://github.com/espressif/arduino-esp32/workflows/ESP32%20Arduino%20CI/badge.svg) [![External Libraries Test](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=master&event=schedule)](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml?link=http://https://github.com/espressif/arduino-esp32/blob/master/LIBRARIES_TEST.md)
 
 ### Need help or have a question? Join the chat at [Gitter](https://gitter.im/espressif/arduino-esp32) or [open a new Discussion](https://github.com/espressif/arduino-esp32/discussions)
 
@@ -34,6 +33,10 @@ You can use the [Arduino-ESP32 Online Documentation](https://docs.espressif.com/
 ---
 
 **Migration guide from version 2.x to 3.x is available [here](https://docs.espressif.com/projects/arduino-esp32/en/latest/migration_guides/2.x_to_3.0.html).**
+
+---
+
+**APIs compatibility with ESP8266 and Arduino-CORE (Arduino.cc) is explained [here](https://docs.espressif.com/projects/arduino-esp32/en/latest/libraries.html#apis).**
 
 ---
 

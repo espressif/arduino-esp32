@@ -61,7 +61,8 @@ public:
     bool bandwidth(wifi_bandwidth_t bandwidth);
 
     bool reconnect();
-    bool disconnect(bool wifioff = false, bool eraseap = false);
+    bool disconnectAsync(bool wifioff = false, bool eraseap = false);
+    bool disconnect(bool wifioff = false, bool eraseap = false, unsigned long timeoutLength = 100);
     bool eraseAP(void);
 
     bool isConnected();
@@ -107,8 +108,9 @@ public:
     IPAddress networkID();
     uint8_t subnetCIDR();
     
-    bool enableIpV6();
-    IPv6Address localIPv6();
+    bool enableIPv6(bool en=true);
+    IPAddress localIPv6();
+    IPAddress globalIPv6();
 
     static void _setStatus(wl_status_t status);
     

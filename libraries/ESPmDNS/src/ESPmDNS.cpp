@@ -282,7 +282,7 @@ String MDNSResponder::hostname(int idx) {
     return String(result->hostname);
 }
 
-IPAddress MDNSResponder::IP(int idx) {
+IPAddress MDNSResponder::address(int idx) {
     mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
@@ -298,20 +298,20 @@ IPAddress MDNSResponder::IP(int idx) {
     return IPAddress();
 }
 
-IPv6Address MDNSResponder::IPv6(int idx) {
+IPAddress MDNSResponder::addressV6(int idx) {
     mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
     mdns_ip_addr_t * addr = result->addr;
     while(addr){
         if(addr->addr.type == MDNS_IP_PROTOCOL_V6){
-            return IPv6Address(addr->addr.u_addr.ip6.addr);
+            return IPAddress(IPv6, (const uint8_t *)addr->addr.u_addr.ip6.addr, addr->addr.u_addr.ip6.zone);
         }
         addr = addr->next;
     }
-    return IPv6Address();
+    return IPAddress(IPv6);
 }
 
 uint16_t MDNSResponder::port(int idx) {

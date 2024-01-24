@@ -233,7 +233,7 @@ char sdWriteBytes(uint8_t pdrv, const char* buffer, char token)
     ardu_sdcard_t * card = s_cards[pdrv];
     unsigned short crc = (card->supports_crc)?CRC16(buffer, 512):0xFFFF;
     if (!sdWait(pdrv, 500)) {
-        return false;
+        return 0;
     }
 
     card->spi->write(token);
@@ -424,7 +424,7 @@ unsigned long sdGetSectorsCount(uint8_t pdrv)
 {
     for (int f = 0; f < 3; f++) {
         if(!sdSelectCard(pdrv)) {
-            return false;
+            return 0;
         }
 
         if (!sdCommand(pdrv, SEND_CSD, 0, NULL)) {
@@ -818,7 +818,7 @@ bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format
             }
             //FRESULT f_mkfs (const TCHAR* path, const MKFS_PARM* opt, void* work, UINT len);
             const MKFS_PARM opt = {(BYTE)FM_ANY, 0, 0, 0, 0};
-            res = f_mkfs(drv, &opt, work, sizeof(work));
+            res = f_mkfs(drv, &opt, work, sizeof(BYTE) * FF_MAX_SS);
             free(work);
             if (res != FR_OK) {
                 log_e("f_mkfs failed: %s", fferr2str[res]);

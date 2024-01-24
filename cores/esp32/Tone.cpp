@@ -95,6 +95,7 @@ void noTone(uint8_t pin){
         .frequency = 0, // Ignored
         .duration = 0, // Ignored
       };
+      xQueueReset(_tone_queue); // clear queue
       xQueueSend(_tone_queue, &tone_msg, portMAX_DELAY);
     }
   }

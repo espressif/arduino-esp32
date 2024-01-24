@@ -412,28 +412,36 @@ bool WiFiAPClass::softAPsetHostname(const char * hostname)
  * Enable IPv6 on the softAP interface.
  * @return true on success
  */
-bool WiFiAPClass::softAPenableIpV6()
+bool WiFiAPClass::softAPenableIPv6(bool enable)
 {
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return false;
+    if (enable) {
+        WiFiGenericClass::setStatusBits(AP_WANT_IP6_BIT);
+    } else {
+        WiFiGenericClass::clearStatusBits(AP_WANT_IP6_BIT);
     }
-    return esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_AP)) == ESP_OK;
+    return true;
+    // if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    //     return false;
+    // }
+    // return esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_AP)) == ESP_OK;
 }
 
 /**
  * Get the softAP interface IPv6 address.
- * @return IPv6Address softAP IPv6
+ * @return IPAddress softAP IPv6
  */
-IPv6Address WiFiAPClass::softAPIPv6()
+
+IPAddress WiFiAPClass::softAPIPv6()
 {
-	esp_ip6_addr_t addr;
+    static esp_ip6_addr_t addr;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
-    if(esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_AP), &addr)) {
-        return IPv6Address();
+
+    if(esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)){
+        return IPAddress(IPv6);
     }
-    return IPv6Address(addr.addr);
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
 #endif /* SOC_WIFI_SUPPORTED */

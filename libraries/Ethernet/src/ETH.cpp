@@ -462,21 +462,18 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 
     // Init SPI bus
     if(_pin_sck >= 0 && _pin_miso >= 0 && _pin_mosi >= 0){
-        spi_bus_config_t buscfg = {
-            .mosi_io_num = _pin_mosi,
-            .miso_io_num = _pin_miso,
-            .sclk_io_num = _pin_sck,
-            .quadwp_io_num = -1,
-            .quadhd_io_num = -1,
-            .data4_io_num = -1,
-            .data5_io_num = -1,
-            .data6_io_num = -1,
-            .data7_io_num = -1,
-            .max_transfer_sz = -1,
-            .flags = 0,
-            .isr_cpu_id = INTR_CPU_ID_AUTO,
-            .intr_flags = 0,
-        };
+        spi_bus_config_t buscfg;
+        memset(&buscfg, 0, sizeof(spi_bus_config_t));
+        buscfg.mosi_io_num = _pin_mosi;
+        buscfg.miso_io_num = _pin_miso;
+        buscfg.sclk_io_num = _pin_sck;
+        buscfg.quadwp_io_num = -1;
+        buscfg.quadhd_io_num = -1;
+        buscfg.data4_io_num = -1;
+        buscfg.data5_io_num = -1;
+        buscfg.data6_io_num = -1;
+        buscfg.data7_io_num = -1;
+        buscfg.max_transfer_sz = -1;
         ret = spi_bus_initialize(spi_host, &buscfg, SPI_DMA_CH_AUTO);
         if(ret != ESP_OK){
             log_e("SPI bus initialize failed: %d", ret);
@@ -508,23 +505,13 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     phy_config.reset_gpio_num = _pin_rst;
 
     // Configure SPI interface for specific SPI module
-    spi_device_interface_config_t spi_devcfg = {
-        .command_bits = 0,
-        .address_bits = 0,
-        .dummy_bits = 0,
-        .mode = 0,
-        .clock_source = SPI_CLK_SRC_DEFAULT,
-        .duty_cycle_pos = 0,
-        .cs_ena_pretrans = 0,
-        .cs_ena_posttrans = 0,
-        .clock_speed_hz = _spi_freq_mhz * 1000 * 1000,
-        .input_delay_ns = 20,
-        .spics_io_num = _pin_cs,
-        .flags = 0,
-        .queue_size = 20,
-        .pre_cb = NULL,
-        .post_cb = NULL,
-    };
+    spi_device_interface_config_t spi_devcfg;
+    memset(&spi_devcfg, 0, sizeof(spi_device_interface_config_t));
+    spi_devcfg.mode = 0;
+    spi_devcfg.clock_speed_hz = _spi_freq_mhz * 1000 * 1000;
+    spi_devcfg.input_delay_ns = 20;
+    spi_devcfg.spics_io_num = _pin_cs;
+    spi_devcfg.queue_size = 20;
 
     esp_eth_mac_t *mac = NULL;
     esp_eth_phy_t *phy = NULL;
