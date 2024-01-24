@@ -24,98 +24,102 @@
 #include <string.h>
 #include <esp_err.h>
 #include <esp_wifi.h>
-#include <esp_event_loop.h>
+#include <esp_event.h>
 #include <esp32-hal.h>
+#if __has_include("qrcode.h")
+  #include "qrcode.h"
+#endif
 
-#include <wifi_provisioning/scheme_ble.h>
+#include <nvs_flash.h>
+#if CONFIG_BLUEDROID_ENABLED
+#include "wifi_provisioning/scheme_ble.h"
+#endif
 #include <wifi_provisioning/scheme_softap.h>
 #include <wifi_provisioning/manager.h>
 #undef IPADDR_NONE
 #include "WiFiProv.h"
+#if CONFIG_IDF_TARGET_ESP32
 #include "SimpleBLE.h"
+#endif
 
-extern esp_err_t postToSysQueue(system_prov_event_t *);
+bool wifiLowLevelInit(bool persistent);
 
-static wifi_prov_mgr_config_t config;
-static scheme_t prov_scheme;
+#if CONFIG_BLUEDROID_ENABLED
 static const uint8_t custom_service_uuid[16] = {  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
                                                   0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02, };
+#endif
 
 #define SERV_NAME_PREFIX_PROV "PROV_"
 
-void provSchemeBLE()
+static void get_device_service_name(prov_scheme_t prov_scheme, char *service_name, size_t max)
 {
-    prov_scheme = WIFI_PROV_SCHEME_BLE;
-    config.scheme = wifi_prov_scheme_ble;    
+    uint8_t eth_mac[6] = {0,0,0,0,0,0};
+    if(esp_wifi_get_mac((wifi_interface_t)WIFI_IF_STA, eth_mac) != ESP_OK){
+    	log_e("esp_wifi_get_mac failed!");
+    	return;
+    }
+#if CONFIG_IDF_TARGET_ESP32 && defined(CONFIG_BLUEDROID_ENABLED)
+    if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
+        snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
+    } else {
+#endif
+         snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
+#if CONFIG_IDF_TARGET_ESP32 && defined(CONFIG_BLUEDROID_ENABLED)
+    }
+#endif
 }
 
-void provSchemeSoftAP()
+void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid, bool reset_provisioned)
 {
-    prov_scheme = WIFI_PROV_SCHEME_SOFTAP;
-    config.scheme = wifi_prov_scheme_softap;
-}
-
-static void prov_event_handler(void *user_data, wifi_prov_cb_event_t event, void *event_data)
-{
-    if (!event) {
-         return;
-     }
-
-     system_prov_event_t *sys_prov = (system_prov_event_t *)malloc(sizeof(system_prov_event_t));
-     if(sys_prov == NULL) {
-         log_e("Malloc Failed");
-         return;
-     }
-
-     sys_prov->prov_event = (wifi_prov_event_t *)malloc(sizeof(wifi_prov_event_t));
-     if(sys_prov->prov_event == NULL) {
-         log_e("Malloc Failed");
-         free(sys_prov);
-         return;
-     }
-
-     sys_prov->sys_event = (system_event_t *)malloc(sizeof(system_event_t));
-     if(sys_prov->sys_event == NULL) {
-         log_e("Malloc Failed");
-         free(sys_prov->prov_event);
-         free(sys_prov);
-         return;
-     }
-
-     sys_prov->prov_event->event = event;
-     sys_prov->prov_event->event_data = event_data;
-     sys_prov->sys_event->event_id = SYSTEM_EVENT_MAX;
-     esp_err_t check = postToSysQueue(sys_prov);
-     if(check == ESP_FAIL) {
-         log_e("Provisioning event not send to queue");
-         free(sys_prov->sys_event);
-         free(sys_prov->prov_event);
-         free(sys_prov);
-     }
-}
-
-static void get_device_service_name(char *service_name, size_t max)
-{
-    uint8_t eth_mac[6];
-    WiFi.macAddress(eth_mac);
-    snprintf(service_name, max, "%s%02X%02X%02X",SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
-}
-
-void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handler_t scheme_event_handler, wifi_prov_security_t security, const char * pop, const char *service_name, const char *service_key, uint8_t * uuid)
-{
-    WiFi.enableProv(true);
     bool provisioned = false;
-    scheme_cb();
-    config.scheme_event_handler = scheme_event_handler;
-    config.app_event_handler = {
-            .event_cb = prov_event_handler,
-            .user_data = NULL
-            };
- 
-    wifi_prov_mgr_init(config);
-    WiFi.mode(WIFI_MODE_AP);
-    wifi_prov_mgr_is_provisioned(&provisioned);
+    static char service_name_temp[32];
+
+    wifi_prov_mgr_config_t config;
+#if CONFIG_BLUEDROID_ENABLED
+    if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
+        config.scheme = wifi_prov_scheme_ble;
+    } else {
+#endif
+    	config.scheme = wifi_prov_scheme_softap;
+#if CONFIG_BLUEDROID_ENABLED
+    }
+
+    if(scheme_handler == WIFI_PROV_SCHEME_HANDLER_NONE){
+#endif
+    	wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE;
+    	memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
+#if CONFIG_BLUEDROID_ENABLED
+    } else if(scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BTDM){
+    	wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
+    	memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
+    } else if(scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BT){
+    	wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BT;
+    	memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
+    } else if(scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BLE){
+    	wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BLE;
+    	memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
+    } else {
+    	log_e("Unknown scheme handler!");
+    	return;
+    }
+#endif
+    config.app_event_handler.event_cb = NULL;
+    config.app_event_handler.user_data = NULL;
+    wifiLowLevelInit(true);
+    if(wifi_prov_mgr_init(config) != ESP_OK){
+    	log_e("wifi_prov_mgr_init failed!");
+    	return;
+    }
+    if(reset_provisioned){
+      log_i("Resetting provisioned data.");
+      wifi_prov_mgr_reset_provisioning();
+    }else if(wifi_prov_mgr_is_provisioned(&provisioned) != ESP_OK){
+      log_e("wifi_prov_mgr_is_provisioned failed!");
+      wifi_prov_mgr_deinit();
+      return;
+    }
     if(provisioned == false) {
+#if CONFIG_BLUEDROID_ENABLED
         if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
             service_key = NULL;
             if(uuid == NULL) {
@@ -123,37 +127,67 @@ void WiFiProvClass :: beginProvision(void (*scheme_cb)(), wifi_prov_event_handle
             }
             wifi_prov_scheme_ble_set_service_uuid(uuid);
         }
+#endif
 
         if(service_name == NULL) {
-            char service_name_temp[12];
-            get_device_service_name(service_name_temp,sizeof(service_name_temp));
+            get_device_service_name(prov_scheme, service_name_temp, 32);
             service_name = (const char *)service_name_temp;
         }
 
+#if CONFIG_BLUEDROID_ENABLED
         if(prov_scheme == WIFI_PROV_SCHEME_BLE) {
-            log_i("Starting AP using BLE\n service_name : %s\n pop : %s",service_name,pop);
-
+            log_i("Starting AP using BLE. service_name : %s, pop : %s",service_name,pop);
         } else {
-            if(service_key == NULL) {
-               log_i("Starting AP using SOFTAP\n service_name : %s\n pop : %s",service_name,pop); 
-            } else { 
-               log_i("Starting AP using SOFTAP\n service_name : %s\n password : %s\n pop : %s",service_name,service_key,pop); 
-            }
-        }
-           
-        wifi_prov_mgr_start_provisioning(security,pop,service_name,service_key);
-
-    } else {
-        wifi_prov_mgr_deinit();
-        WiFi.mode(WIFI_MODE_STA);
-        log_i("Already Provisioned, starting Wi-Fi STA");
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-        wifi_config_t conf;
-        esp_wifi_get_config(WIFI_IF_STA,&conf);
-        log_i("SSID : %s\n",conf.sta.ssid);
 #endif
-        log_i("CONNECTING TO THE ACCESS POINT : ");
-        WiFi.begin(); 
+            if(service_key == NULL) {
+               log_i("Starting provisioning AP using SOFTAP. service_name : %s, pop : %s",service_name,pop);
+            } else {
+               log_i("Starting provisioning AP using SOFTAP. service_name : %s, password : %s, pop : %s",service_name,service_key,pop);
+            }
+#if CONFIG_BLUEDROID_ENABLED
+        }
+#endif
+        if(wifi_prov_mgr_start_provisioning(security, pop, service_name, service_key) != ESP_OK){
+        	log_e("wifi_prov_mgr_start_provisioning failed!");
+        	return;
+        }
+    } else {
+        log_i("Already Provisioned");
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+        static wifi_config_t conf;
+        esp_wifi_get_config((wifi_interface_t)WIFI_IF_STA,&conf);
+        log_i("Attempting connect to AP: %s\n",conf.sta.ssid);
+#endif
+        esp_wifi_start();        
+        wifi_prov_mgr_deinit();
+        WiFi.begin();
     }
 }
+
+// Copied from IDF example
+void  WiFiProvClass :: printQR(const char *name, const char *pop, const char *transport){
+    if (!name || !transport) {
+        log_w("Cannot generate QR code payload. Data missing.");
+        return;
+    }
+    char payload[150] = {0};
+    if (pop) {
+        snprintf(payload, sizeof(payload), "{\"ver\":\"%s\",\"name\":\"%s\"" \
+                    ",\"pop\":\"%s\",\"transport\":\"%s\"}",
+                    "v1", name, pop, transport);
+    } else {
+        snprintf(payload, sizeof(payload), "{\"ver\":\"%s\",\"name\":\"%s\"" \
+                    ",\"transport\":\"%s\"}",
+                    "v1", name, transport);
+    }
+#if __has_include("qrcode.h")
+    log_i("Scan this QR code from the provisioning application for Provisioning.");
+    esp_qrcode_config_t cfg = ESP_QRCODE_CONFIG_DEFAULT();
+    esp_qrcode_generate(&cfg, payload);
+#else
+    log_i("If QR code is not visible, copy paste the below URL in a browser.\n%s?data=%s", "https://espressif.github.io/esp-jumpstart/qrcode.html", payload);
+    log_i("If you are using Arduino as IDF component, install ESP Rainmaker:\nhttps://github.com/espressif/esp-rainmaker");
+#endif
+}
+
 WiFiProvClass WiFiProv;

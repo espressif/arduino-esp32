@@ -11,27 +11,27 @@
 #include "EEPROM.h"
 
 // Instantiate eeprom objects with parameter/argument names and sizes
-EEPROMClass  NAMES("eeprom0", 0x500);
-EEPROMClass  HEIGHT("eeprom1", 0x200);
-EEPROMClass  AGE("eeprom2", 0x100);
+EEPROMClass  NAMES("eeprom0");
+EEPROMClass  HEIGHT("eeprom1");
+EEPROMClass  AGE("eeprom2");
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("Testing EEPROMClass\n");
-  if (!NAMES.begin(NAMES.length())) {
+  if (!NAMES.begin(0x500)) {
     Serial.println("Failed to initialise NAMES");
     Serial.println("Restarting...");
     delay(1000);
     ESP.restart();
   }
-  if (!HEIGHT.begin(HEIGHT.length())) {
+  if (!HEIGHT.begin(0x200)) {
     Serial.println("Failed to initialise HEIGHT");
     Serial.println("Restarting...");
     delay(1000);
     ESP.restart();
   }
-  if (!AGE.begin(AGE.length())) {
+  if (!AGE.begin(0x100)) {
     Serial.println("Failed to initialise AGE");
     Serial.println("Restarting...");
     delay(1000);
@@ -53,10 +53,10 @@ void setup() {
   Serial.println("------------------------------------\n");
 
   // Clear variables
-  name = '\0';
+  rname[0] = '\0';
   height = 0;
   age = 0;
-  Serial.print("name: ");   Serial.println(name);
+  Serial.print("name: ");   Serial.println(rname);
   Serial.print("height: "); Serial.println(height);
   Serial.print("age: ");    Serial.println(age);
   Serial.println("------------------------------------\n");

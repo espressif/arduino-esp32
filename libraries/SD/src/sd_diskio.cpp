@@ -11,11 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "sd_diskio.h"
+#include "esp_system.h"
+#include "esp32-hal-periman.h"
+
 extern "C" {
-    #include "diskio.h"
-    #include "ffconf.h"
     #include "ff.h"
+    #include "diskio.h"
+#if ESP_IDF_VERSION_MAJOR > 3
+    #include "diskio_impl.h"
+#endif
     //#include "esp_vfs.h"
     #include "esp_vfs_fat.h"
     char CRC7(const char* data, int length);
@@ -59,6 +68,31 @@ typedef struct {
 
 static ardu_sdcard_t* s_cards[FF_VOLUMES] = { NULL };
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+const char * fferr2str[] = {
+    "(0) Succeeded",
+    "(1) A hard error occurred in the low level disk I/O layer",
+    "(2) Assertion failed",
+    "(3) The physical drive cannot work",
+    "(4) Could not find the file",
+    "(5) Could not find the path",
+    "(6) The path name format is invalid",
+    "(7) Access denied due to prohibited access or directory full",
+    "(8) Access denied due to prohibited access",
+    "(9) The file/directory object is invalid",
+    "(10) The physical drive is write protected",
+    "(11) The logical drive number is invalid",
+    "(12) The volume has no work area",
+    "(13) There is no valid FAT volume",
+    "(14) The f_mkfs() aborted due to any problem",
+    "(15) Could not get a grant to access the volume within defined period",
+    "(16) The operation is rejected according to the file sharing policy",
+    "(17) LFN working buffer could not be allocated",
+    "(18) Number of open files > FF_FS_LOCK",
+    "(19) Given parameter is invalid"
+};
+#endif
+
 /*
  * SD SPI
  * */
@@ -72,6 +106,9 @@ bool sdWait(uint8_t pdrv, int timeout)
         resp = s_cards[pdrv]->spi->transfer(0xFF);
     } while (resp == 0x00 && (millis() - start) < (unsigned int)timeout);
 
+    if (!resp) {
+        log_w("Wait Failed");
+    }
     return (resp > 0x00);
 }
 
@@ -90,7 +127,12 @@ bool sdSelectCard(uint8_t pdrv)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
     digitalWrite(card->ssPin, LOW);
-    sdWait(pdrv, 300);
+    bool s = sdWait(pdrv, 500);
+    if (!s) {
+        log_e("Select Failed");
+        digitalWrite(card->ssPin, HIGH);
+        return false;
+    }
     return true;
 }
 
@@ -104,10 +146,11 @@ char sdCommand(uint8_t pdrv, char cmd, unsigned int arg, unsigned int* resp)
             token = sdCommand(pdrv, APP_CMD, 0, NULL);
             sdDeselectCard(pdrv);
             if (token > 1) {
-                return token;
+                break;
             }
             if(!sdSelectCard(pdrv)) {
-                return 0xFF;
+                token = 0xFF;
+                break;
             }
         }
 
@@ -158,7 +201,10 @@ char sdCommand(uint8_t pdrv, char cmd, unsigned int arg, unsigned int* resp)
 
         break;
     }
-
+    if (token == 0xFF) {
+        log_e("Card Failed! cmd: 0x%02x", cmd);
+        card->status = STA_NOINIT;
+    }
     return token;
 }
 
@@ -187,7 +233,7 @@ char sdWriteBytes(uint8_t pdrv, const char* buffer, char token)
     ardu_sdcard_t * card = s_cards[pdrv];
     unsigned short crc = (card->supports_crc)?CRC16(buffer, 512):0xFFFF;
     if (!sdWait(pdrv, 500)) {
-        return false;
+        return 0;
     }
 
     card->spi->write(token);
@@ -214,7 +260,7 @@ bool sdReadSector(uint8_t pdrv, char* buffer, unsigned long long sector)
 {
     for (int f = 0; f < 3; f++) {
         if(!sdSelectCard(pdrv)) {
-            break;
+            return false;
         }
         if (!sdCommand(pdrv, READ_BLOCK_SINGLE, (s_cards[pdrv]->type == CARD_SDHC) ? sector : sector << 9, NULL)) {
             bool success = sdReadBytes(pdrv, buffer, 512);
@@ -234,7 +280,7 @@ bool sdReadSectors(uint8_t pdrv, char* buffer, unsigned long long sector, int co
 {
     for (int f = 0; f < 3;) {
         if(!sdSelectCard(pdrv)) {
-            break;
+            return false;
         }
 
         if (!sdCommand(pdrv, READ_BLOCK_MULTIPLE, (s_cards[pdrv]->type == CARD_SDHC) ? sector : sector << 9, NULL)) {
@@ -270,7 +316,7 @@ bool sdWriteSector(uint8_t pdrv, const char* buffer, unsigned long long sector)
 {
     for (int f = 0; f < 3; f++) {
         if(!sdSelectCard(pdrv)) {
-            break;
+            return false;
         }
         if (!sdCommand(pdrv, WRITE_BLOCK_SINGLE, (s_cards[pdrv]->type == CARD_SDHC) ? sector : sector << 9, NULL)) {
             char token = sdWriteBytes(pdrv, buffer, 0xFE);
@@ -306,12 +352,12 @@ bool sdWriteSectors(uint8_t pdrv, const char* buffer, unsigned long long sector,
     for (int f = 0; f < 3;) {
         if (card->type != CARD_MMC) {
             if (sdTransaction(pdrv, SET_WR_BLK_ERASE_COUNT, currentCount, NULL)) {
-                break;
+                return false;
             }
         }
 
         if(!sdSelectCard(pdrv)) {
-            break;
+            return false;
         }
 
         if (!sdCommand(pdrv, WRITE_BLOCK_MULTIPLE, (card->type == CARD_SDHC) ? currentSector : currentSector << 9, NULL)) {
@@ -343,9 +389,8 @@ bool sdWriteSectors(uint8_t pdrv, const char* buffer, unsigned long long sector,
                     break;
                 }
 
-                sdDeselectCard(pdrv);
-
                 if (token == 0x0A) {
+                    sdDeselectCard(pdrv);
                     unsigned int writtenBlocks = 0;
                     if (card->type != CARD_MMC && sdSelectCard(pdrv)) {
                         if (!sdCommand(pdrv, SEND_NUM_WR_BLOCKS, 0, NULL)) {
@@ -364,7 +409,7 @@ bool sdWriteSectors(uint8_t pdrv, const char* buffer, unsigned long long sector,
                     currentCount = count - writtenBlocks;
                     continue;
                 } else {
-                    return false;
+                    break;
                 }
             }
         } else {
@@ -379,7 +424,7 @@ unsigned long sdGetSectorsCount(uint8_t pdrv)
 {
     for (int f = 0; f < 3; f++) {
         if(!sdSelectCard(pdrv)) {
-            break;
+            return 0;
         }
 
         if (!sdCommand(pdrv, SEND_CSD, 0, NULL)) {
@@ -467,10 +512,17 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
         card->spi->transfer(0XFF);
     }
 
-    if (sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL) != 1) {
+    // Fix mount issue - sdWait fail ignored before command GO_IDLE_STATE
+    digitalWrite(card->ssPin, LOW);
+    if(!sdWait(pdrv, 500)){
+        log_w("sdWait fail ignored, card initialize continues");
+    }
+    if (sdCommand(pdrv, GO_IDLE_STATE, 0, NULL) != 1){
+        sdDeselectCard(pdrv);
         log_w("GO_IDLE_STATE failed");
         goto unknown_card;
     }
+    sdDeselectCard(pdrv);
 
     token = sdTransaction(pdrv, CRC_ON_OFF, 1, NULL);
     if (token == 0x5) {
@@ -570,6 +622,14 @@ unknown_card:
 
 DSTATUS ff_sd_status(uint8_t pdrv)
 {
+    ardu_sdcard_t * card = s_cards[pdrv];
+    AcquireSPI lock(card);
+    
+    if(sdTransaction(pdrv, SEND_STATUS, 0, NULL))
+    {
+        log_e("Check status failed");
+        return STA_NOINIT;
+    }
     return s_cards[pdrv]->status;
 }
 
@@ -638,6 +698,15 @@ DRESULT ff_sd_ioctl(uint8_t pdrv, uint8_t cmd, void* buff)
     return RES_PARERR;
 }
 
+bool sd_read_raw(uint8_t pdrv, uint8_t* buffer, DWORD sector)
+{
+    return ff_sd_read(pdrv, buffer, sector, 1) == ESP_OK;
+}
+
+bool sd_write_raw(uint8_t pdrv, uint8_t* buffer, DWORD sector)
+{
+    return ff_sd_write(pdrv, buffer, sector, 1) == ESP_OK;
+}
 
 /*
  * Public methods
@@ -655,6 +724,7 @@ uint8_t sdcard_uninit(uint8_t pdrv)
     esp_err_t err = ESP_OK;
     if (card->base_path) {
         err = esp_vfs_fat_unregister_path(card->base_path);
+        free(card->base_path);
     }
     free(card);
     return err;
@@ -676,7 +746,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
     card->base_path = NULL;
     card->frequency = hz;
     card->spi = spi;
-    card->ssPin = cs;
+    card->ssPin = digitalPinToGPIONumber(cs);
 
     card->supports_crc = true;
     card->type = CARD_NONE;
@@ -684,6 +754,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
 
     pinMode(card->ssPin, OUTPUT);
     digitalWrite(card->ssPin, HIGH);
+    perimanSetPinBusExtraType(card->ssPin, "SD_SS");
 
     s_cards[pdrv] = card;
 
@@ -713,7 +784,7 @@ uint8_t sdcard_unmount(uint8_t pdrv)
     return 0;
 }
 
-bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files)
+bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format_if_empty)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
     if(pdrv >= FF_VOLUMES || card == NULL){
@@ -738,9 +809,32 @@ bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files)
 
     FRESULT res = f_mount(fs, drv, 1);
     if (res != FR_OK) {
-        log_e("f_mount failed 0x(%x)", res);
-        esp_vfs_fat_unregister_path(path);
-        return false;
+        log_e("f_mount failed: %s", fferr2str[res]);
+        if(res == 13 && format_if_empty){
+            BYTE* work = (BYTE*) malloc(sizeof(BYTE) * FF_MAX_SS);
+            if (!work) {
+              log_e("alloc for f_mkfs failed");
+              return false;
+            }
+            //FRESULT f_mkfs (const TCHAR* path, const MKFS_PARM* opt, void* work, UINT len);
+            const MKFS_PARM opt = {(BYTE)FM_ANY, 0, 0, 0, 0};
+            res = f_mkfs(drv, &opt, work, sizeof(BYTE) * FF_MAX_SS);
+            free(work);
+            if (res != FR_OK) {
+                log_e("f_mkfs failed: %s", fferr2str[res]);
+                esp_vfs_fat_unregister_path(path);
+                return false;
+            }
+            res = f_mount(fs, drv, 1);
+            if (res != FR_OK) {
+                log_e("f_mount failed: %s", fferr2str[res]);
+                esp_vfs_fat_unregister_path(path);
+                return false;
+            }
+        } else {
+            esp_vfs_fat_unregister_path(path);
+            return false;
+        }
     }
     AcquireSPI lock(card);
     card->sectors = sdGetSectorsCount(pdrv);

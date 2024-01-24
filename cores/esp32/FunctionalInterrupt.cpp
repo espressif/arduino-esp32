@@ -16,7 +16,7 @@ extern "C"
 	extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc, void * arg, int intr_type, bool functional);
 }
 
-void IRAM_ATTR interruptFunctional(void* arg)
+void ARDUINO_ISR_ATTR interruptFunctional(void* arg)
 {
     InterruptArgStructure* localArg = (InterruptArgStructure*)arg;
 	if (localArg->interruptFunction)

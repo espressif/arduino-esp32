@@ -4,9 +4,11 @@
  *  Created on: Apr 16, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_bt.h>
 #include <esp_bt_main.h>
 #include "GeneralUtils.h"
@@ -157,6 +159,9 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 
 		case ESP_GATTS_MTU_EVT:
 			updatePeerMTU(param->mtu.conn_id, param->mtu.mtu);
+			if (m_pServerCallbacks != nullptr) {
+				m_pServerCallbacks->onMtuChanged(this, param);
+			}
 			break;
 
 		// ESP_GATTS_CONNECT_EVT
@@ -204,6 +209,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 		case ESP_GATTS_DISCONNECT_EVT: {
 			if (m_pServerCallbacks != nullptr) {         // If we have callbacks, call now.
 				m_pServerCallbacks->onDisconnect(this);
+				m_pServerCallbacks->onDisconnect(this, param);
 			}
             if(m_connId == ESP_GATT_IF_NONE) {
                 return;
@@ -371,6 +377,18 @@ void BLEServerCallbacks::onDisconnect(BLEServer* pServer) {
 	log_d("BLEServerCallbacks", "<< onDisconnect()");
 } // onDisconnect
 
+void BLEServerCallbacks::onDisconnect(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
+	log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
+	log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
+	log_d("BLEServerCallbacks", "<< onDisconnect()");
+} // onDisconnect
+
+void BLEServerCallbacks::onMtuChanged(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
+	log_d("BLEServerCallbacks", ">> onMtuChanged(): Default");
+	log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), param->mtu.mtu);
+	log_d("BLEServerCallbacks", "<< onMtuChanged()");
+} // onMtuChanged
+
 /* multi connect support */
 /* TODO do some more tweaks */
 void BLEServer::updatePeerMTU(uint16_t conn_id, uint16_t mtu) {
@@ -423,4 +441,5 @@ void BLEServer::disconnect(uint16_t connId) {
 	esp_ble_gatts_close(m_gatts_if, connId);
 }
 
-#endif // CONFIG_BT_ENABLED
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

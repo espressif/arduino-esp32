@@ -16,39 +16,30 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#include <Arduino.h>
-#include <MD5Builder.h>
 
-uint8_t hex_char_to_byte(uint8_t c)
-{
-    return  (c >= 'a' && c <= 'f') ? (c - ((uint8_t)'a' - 0xa)) :
-            (c >= 'A' && c <= 'F') ? (c - ((uint8_t)'A' - 0xA)) :
-            (c >= '0' &&  c<= '9') ? (c - (uint8_t)'0') : 0;
-}
+#include <Arduino.h>
+#include <HEXBuilder.h>
+#include <MD5Builder.h>
 
 void MD5Builder::begin(void)
 {
-    memset(_buf, 0x00, 16);
-    MD5Init(&_ctx);
+    memset(_buf, 0x00, ESP_ROM_MD5_DIGEST_LEN);
+    esp_rom_md5_init(&_ctx);
 }
 
-void MD5Builder::add(uint8_t * data, uint16_t len)
+void MD5Builder::add(const uint8_t * data, size_t len)
 {
-    MD5Update(&_ctx, data, len);
+    esp_rom_md5_update(&_ctx, data, len);
 }
 
 void MD5Builder::addHexString(const char * data)
 {
-    uint16_t i, len = strlen(data);
+    size_t len = strlen(data);
     uint8_t * tmp = (uint8_t*)malloc(len/2);
     if(tmp == NULL) {
         return;
     }
-    for(i=0; i<len; i+=2) {
-        uint8_t high = hex_char_to_byte(data[i]);
-        uint8_t low = hex_char_to_byte(data[i+1]);
-        tmp[i/2] = (high & 0x0F) << 4 | (low & 0x0F);
-    }
+    hex2bytes(tmp, len/2, data);
     add(tmp, len/2);
     free(tmp);
 }
@@ -78,11 +69,12 @@ bool MD5Builder::addStream(Stream & stream, const size_t maxLen)
         // read data and check if we got something
         int numBytesRead = stream.readBytes(buf, readBytes);
         if(numBytesRead< 1) {
+            free(buf);
             return false;
         }
 
         // Update MD5 with buffer payload
-        MD5Update(&_ctx, buf, numBytesRead);
+        esp_rom_md5_update(&_ctx, buf, numBytesRead);
 
         // update available number of bytes
         maxLengthLeft -= numBytesRead;
@@ -94,24 +86,22 @@ bool MD5Builder::addStream(Stream & stream, const size_t maxLen)
 
 void MD5Builder::calculate(void)
 {
-    MD5Final(_buf, &_ctx);
+    esp_rom_md5_final(_buf, &_ctx);
 }
 
 void MD5Builder::getBytes(uint8_t * output)
 {
-    memcpy(output, _buf, 16);
+    memcpy(output, _buf, ESP_ROM_MD5_DIGEST_LEN);
 }
 
 void MD5Builder::getChars(char * output)
 {
-    for(uint8_t i = 0; i < 16; i++) {
-        sprintf(output + (i * 2), "%02x", _buf[i]);
-    }
+    bytes2hex(output, ESP_ROM_MD5_DIGEST_LEN*2+1, _buf, ESP_ROM_MD5_DIGEST_LEN);
 }
 
 String MD5Builder::toString(void)
 {
-    char out[33];
+    char out[(ESP_ROM_MD5_DIGEST_LEN * 2) + 1];
     getChars(out);
     return String(out);
 }

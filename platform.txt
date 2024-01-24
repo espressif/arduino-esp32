@@ -1,97 +1,202 @@
 name=ESP32 Arduino
-version=0.0.1
+version=3.0.0
 
-runtime.tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
+tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
+tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
+tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
+tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
+tools.xtensa-esp-elf-gdb.path={runtime.platform.path}/tools/xtensa-esp-elf-gdb
+tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
+tools.riscv32-esp-elf-gdb.path={runtime.platform.path}/tools/riscv32-esp-elf-gdb
+
+debug.server.openocd.path={runtime.platform.path}/tools/openocd-esp32/bin/openocd
+debug.server.openocd.scripts_dir={runtime.platform.path}/tools/openocd-esp32/share/openocd/scripts/
+debug.server.openocd.scripts_dir.windows={runtime.platform.path}\tools\openocd-esp32\share\openocd\scripts\
 
 tools.esptool_py.path={runtime.platform.path}/tools/esptool
 tools.esptool_py.cmd=esptool
 tools.esptool_py.cmd.linux=esptool.py
 tools.esptool_py.cmd.windows=esptool.exe
 
-tools.esptool_py.network_cmd=python "{runtime.platform.path}/tools/espota.py"
-tools.esptool_py.network_cmd.windows="{runtime.platform.path}/tools/espota.exe"
+tools.esptool_py.network_cmd=python3 "{runtime.platform.path}/tools/espota.py" -r
+tools.esptool_py.network_cmd.windows="{runtime.platform.path}/tools/espota.exe" -r
 
-tools.gen_esp32part.cmd=python "{runtime.platform.path}/tools/gen_esp32part.py"
+tools.esp_ota.cmd=python3 "{runtime.platform.path}/tools/espota.py" -r
+tools.esp_ota.cmd.windows="{runtime.platform.path}/tools/espota.exe" -r
+
+tools.gen_esp32part.cmd=python3 "{runtime.platform.path}/tools/gen_esp32part.py"
 tools.gen_esp32part.cmd.windows="{runtime.platform.path}/tools/gen_esp32part.exe"
 
+tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
+tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}/tools/gen_insights_package.exe"
+
+compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
+compiler.prefix={build.tarch}-{build.target}-elf-
+
+compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.mcu}
+
+# EXPERIMENTAL feature: optimization flags
+#  - this is alpha and may be subject to change without notice
+compiler.optimization_flags=-Os
+compiler.optimization_flags.release=-Os
+compiler.optimization_flags.debug=-Og -g3
+
+# Arduino Compile Warning Levels
 compiler.warning_flags=-w
 compiler.warning_flags.none=-w
 compiler.warning_flags.default=
 compiler.warning_flags.more=-Wall -Werror=all
 compiler.warning_flags.all=-Wall -Werror=all -Wextra
 
-compiler.path={runtime.tools.xtensa-esp32-elf-gcc.path}/bin/
-compiler.sdk.path={runtime.platform.path}/tools/sdk
-compiler.cpreprocessor.flags=-DESP_PLATFORM -DMBEDTLS_CONFIG_FILE="mbedtls/esp_config.h" -DHAVE_CONFIG_H -DGCC_NOT_5_2_0=0 -DWITH_POSIX "-I{compiler.sdk.path}/include/config" "-I{compiler.sdk.path}/include/app_trace" "-I{compiler.sdk.path}/include/app_update" "-I{compiler.sdk.path}/include/asio" "-I{compiler.sdk.path}/include/bootloader_support" "-I{compiler.sdk.path}/include/bt" "-I{compiler.sdk.path}/include/coap" "-I{compiler.sdk.path}/include/console" "-I{compiler.sdk.path}/include/driver" "-I{compiler.sdk.path}/include/efuse" "-I{compiler.sdk.path}/include/esp-tls" "-I{compiler.sdk.path}/include/esp32" "-I{compiler.sdk.path}/include/esp_adc_cal" "-I{compiler.sdk.path}/include/esp_event" "-I{compiler.sdk.path}/include/esp_http_client" "-I{compiler.sdk.path}/include/esp_http_server" "-I{compiler.sdk.path}/include/esp_https_ota" "-I{compiler.sdk.path}/include/esp_https_server" "-I{compiler.sdk.path}/include/esp_ringbuf" "-I{compiler.sdk.path}/include/esp_websocket_client" "-I{compiler.sdk.path}/include/espcoredump" "-I{compiler.sdk.path}/include/ethernet" "-I{compiler.sdk.path}/include/expat" "-I{compiler.sdk.path}/include/fatfs" "-I{compiler.sdk.path}/include/freemodbus" "-I{compiler.sdk.path}/include/freertos" "-I{compiler.sdk.path}/include/heap" "-I{compiler.sdk.path}/include/idf_test" "-I{compiler.sdk.path}/include/jsmn" "-I{compiler.sdk.path}/include/json" "-I{compiler.sdk.path}/include/libsodium" "-I{compiler.sdk.path}/include/log" "-I{compiler.sdk.path}/include/lwip" "-I{compiler.sdk.path}/include/mbedtls" "-I{compiler.sdk.path}/include/mdns" "-I{compiler.sdk.path}/include/micro-ecc" "-I{compiler.sdk.path}/include/mqtt" "-I{compiler.sdk.path}/include/newlib" "-I{compiler.sdk.path}/include/nghttp" "-I{compiler.sdk.path}/include/nimble" "-I{compiler.sdk.path}/include/nvs_flash" "-I{compiler.sdk.path}/include/openssl" "-I{compiler.sdk.path}/include/protobuf-c" "-I{compiler.sdk.path}/include/protocomm" "-I{compiler.sdk.path}/include/pthread" "-I{compiler.sdk.path}/include/sdmmc" "-I{compiler.sdk.path}/include/smartconfig_ack" "-I{compiler.sdk.path}/include/soc" "-I{compiler.sdk.path}/include/spi_flash" "-I{compiler.sdk.path}/include/spiffs" "-I{compiler.sdk.path}/include/tcp_transport" "-I{compiler.sdk.path}/include/tcpip_adapter" "-I{compiler.sdk.path}/include/ulp" "-I{compiler.sdk.path}/include/unity" "-I{compiler.sdk.path}/include/vfs" "-I{compiler.sdk.path}/include/wear_levelling" "-I{compiler.sdk.path}/include/wifi_provisioning" "-I{compiler.sdk.path}/include/wpa_supplicant" "-I{compiler.sdk.path}/include/xtensa-debug-module" "-I{compiler.sdk.path}/include/esp-face" "-I{compiler.sdk.path}/include/esp32-camera" "-I{compiler.sdk.path}/include/esp-face" "-I{compiler.sdk.path}/include/fb_gfx"
+# Compile Flags
+compiler.cpreprocessor.flags="@{compiler.sdk.path}/flags/defines" "-I{build.source.path}" -iprefix "{compiler.sdk.path}/include/" "@{compiler.sdk.path}/flags/includes" "-I{compiler.sdk.path}/{build.memory_type}/include"
+compiler.c.flags="@{compiler.sdk.path}/flags/c_flags" {compiler.warning_flags} {compiler.optimization_flags}
+compiler.cpp.flags="@{compiler.sdk.path}/flags/cpp_flags" {compiler.warning_flags} {compiler.optimization_flags}
+compiler.S.flags="@{compiler.sdk.path}/flags/S_flags" {compiler.warning_flags} {compiler.optimization_flags}
+compiler.c.elf.flags="@{compiler.sdk.path}/flags/ld_flags" "@{compiler.sdk.path}/flags/ld_scripts"
+compiler.c.elf.libs="@{compiler.sdk.path}/flags/ld_libs"
+compiler.ar.flags=cr
 
-compiler.c.cmd=xtensa-esp32-elf-gcc
-compiler.c.flags=-std=gnu99 -Os -g3 -fstack-protector -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -Wpointer-arith {compiler.warning_flags} -Wno-maybe-uninitialized -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-variable -Wno-deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -Wno-old-style-declaration -MMD -c
-
-compiler.cpp.cmd=xtensa-esp32-elf-g++
-compiler.cpp.flags=-std=gnu++11 -Os -g3 -Wpointer-arith -fexceptions -fstack-protector -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib {compiler.warning_flags} -Wno-error=maybe-uninitialized -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-unused-but-set-parameter -Wno-missing-field-initializers -Wno-sign-compare -fno-rtti -MMD -c
-
-compiler.S.cmd=xtensa-esp32-elf-gcc
-compiler.S.flags=-c -g3 -x assembler-with-cpp -MMD -mlongcalls
-
-compiler.c.elf.cmd=xtensa-esp32-elf-gcc
-compiler.c.elf.flags=-nostdlib "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" -T esp32_out.ld -T esp32.project.ld -T esp32.rom.ld -T esp32.peripherals.ld -T esp32.rom.libgcc.ld -T esp32.rom.spiram_incompatible_fns.ld -u ld_include_panic_highint_hdl -u call_user_start_cpu0 -Wl,--gc-sections -Wl,-static -Wl,--undefined=uxTopUsedPriority  -u __cxa_guard_dummy -u __cxx_fatal_exception
-compiler.c.elf.libs=-lgcc -lespcoredump -lesp_event -lheap -lpe -lmesh -lm -lesp_http_client -lfb_gfx -lface_detection -lesp_adc_cal -ldetection_cat_face -lmbedtls -lunity -lspiffs -lod -lapp_trace -llog -lesp_websocket_client -lexpat -lwpa2 -lxtensa-debug-module -lnet80211 -lhal -lvfs -lwps -lmqtt -lasio -lbt -lwpa_supplicant -lpp -lmdns -llwip -lnvs_flash -lc -lbootloader_support -lnewlib -lsdmmc -lapp_update -lethernet -lefuse -lprotobuf-c -ldetection -lfreemodbus -lcore -lface_recognition -lfd -lcoap -ljsmn -lesp_https_ota -ltcp_transport -lbtdm_app -lesp_ringbuf -ldriver -lwifi_provisioning -llibsodium -lopenssl -lfatfs -lnghttp -lespnow -lprotocomm -lspi_flash -lc_nano -lulp -lesp_http_server -lesp32-camera -lsmartconfig -lsmartconfig_ack -lesp-tls -lcoexist -lmicro-ecc -lesp_https_server -lwpa -ltcpip_adapter -lwear_levelling -lfreertos -lsoc -ljson -lesp32 -lpthread -lcxx -lfr -ldl -lphy -limage_util -lrtc -lconsole  -lstdc++
-
-compiler.as.cmd=xtensa-esp32-elf-as
-
-compiler.ar.cmd=xtensa-esp32-elf-ar
-compiler.ar.flags=cru
-
-compiler.size.cmd=xtensa-esp32-elf-size
-
-compiler.libraries.ldflags=
-
-# This can be overriden in boards.txt
-build.flash_size=4MB
-build.flash_mode=dio
-build.boot=bootloader
-build.code_debug=0
-build.defines=
-build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.defines}
+# Compilers
+compiler.c.cmd={compiler.prefix}gcc
+compiler.cpp.cmd={compiler.prefix}g++
+compiler.S.cmd={compiler.prefix}gcc
+compiler.c.elf.cmd={compiler.prefix}g++
+compiler.as.cmd={compiler.prefix}as
+compiler.ar.cmd={compiler.prefix}gcc-ar
+compiler.size.cmd={compiler.prefix}size
 
 # These can be overridden in platform.local.txt
-compiler.c.extra_flags=
-compiler.c.elf.extra_flags=
-compiler.S.extra_flags=
-compiler.cpp.extra_flags=
+compiler.c.extra_flags=-MMD -c
+compiler.cpp.extra_flags=-MMD -c
+compiler.S.extra_flags=-MMD -c -x assembler-with-cpp
+compiler.c.elf.extra_flags="-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" "-L{compiler.sdk.path}/{build.memory_type}" "-Wl,--wrap=esp_panic_handler"
 compiler.ar.extra_flags=
 compiler.objcopy.eep.extra_flags=
 compiler.elf2hex.extra_flags=
 compiler.libraries.ldflags=
 
-# Build Dir: {build.path}
-# Sketch Dir: {build.source.path}
-recipe.hooks.prebuild.1.pattern=bash -c "[ ! -f {build.source.path}/partitions.csv ] || cp -f {build.source.path}/partitions.csv {build.path}/partitions.csv"
-recipe.hooks.prebuild.2.pattern=bash -c "[ -f {build.path}/partitions.csv ] || cp {runtime.platform.path}/tools/partitions/{build.partitions}.csv {build.path}/partitions.csv"
-recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" copy /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
-recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" copy "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" "{build.path}\partitions.csv"
+# Target dependent definitions
+build.extra_flags.esp32=-DARDUINO_USB_CDC_ON_BOOT=0
+build.extra_flags.esp32s3=-DARDUINO_USB_MODE={build.usb_mode} -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
+build.extra_flags.esp32s2=-DARDUINO_USB_MODE=0 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
+build.extra_flags.esp32c2=-DARDUINO_USB_CDC_ON_BOOT=0
+build.extra_flags.esp32c3=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
+build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
+build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
+
+# This can be overriden in boards.txt
+build.zigbee_mode=
+build.zigbee_libs=
+build.flash_size=4MB
+build.flash_mode=dio
+build.flash_freq=80m
+build.img_freq={build.flash_freq}
+build.boot=qio
+build.boot_freq={build.flash_freq}
+build.bootloader_addr=0x1000
+build.custom_bootloader=bootloader
+build.custom_partitions=partitions
+build.code_debug=0
+build.defines=
+build.loop_core=
+build.event_core=
+build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}} {build.zigbee_mode}
+build.extra_libs=
+build.memory_type={build.boot}_qspi
+
+# OpenOCD default configs
+build.copy_jtag_files=0
+build.openocdscript.esp32=esp32-wrover-kit-3.3v.cfg
+build.openocdscript.esp32s2=esp32s2-kaluga-1.cfg
+build.openocdscript.esp32s3=esp32s3-builtin.cfg
+build.openocdscript.esp32c3=esp32c3-builtin.cfg
+build.openocdscript.esp32c6=esp32c6-builtin.cfg
+build.openocdscript.esp32c6=esp32h2-builtin.cfg
+build.openocdscript={build.openocdscript.{build.mcu}}
+
+# Debug plugin configuration
+build.debugconfig={build.mcu}.json
+
+# Custom build options
+build.opt.name=build_opt.h
+build.opt.path={build.path}/{build.opt.name}
+
+# Check if custom partitions exist: source > variant > build.partitions
+recipe.hooks.prebuild.1.pattern=/usr/bin/env bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.2.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/partitions.csv ] || [ ! -f "{build.variant.path}"/{build.custom_partitions}.csv ] || cp "{build.variant.path}"/{build.custom_partitions}.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.3.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/partitions.csv ] || cp "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv "{build.path}"/partitions.csv"
+
+recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" COPY /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" if exist "{build.variant.path}\{build.custom_partitions}.csv" COPY "{build.variant.path}\{build.custom_partitions}.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.3.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" COPY "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" "{build.path}\partitions.csv"
+
+# Check if custom bootloader exist: source > variant > build.boot
+recipe.hooks.prebuild.4.pattern_args=--chip {build.mcu} elf2image --flash_mode {build.flash_mode} --flash_freq {build.img_freq} --flash_size {build.flash_size} -o
+recipe.hooks.prebuild.4.pattern=/usr/bin/env bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
+recipe.hooks.prebuild.4.pattern.linux=/usr/bin/env bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || python3 "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
+recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\{build.custom_bootloader}.bin" ( COPY "{build.variant.path}\{build.custom_bootloader}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.prebuild.4.pattern_args} "{build.path}\{build.project_name}.bootloader.bin" "{compiler.sdk.path}\bin\bootloader_{build.boot}_{build.boot_freq}.elf" ) )
+
+# Check if custom build options exist in the sketch folder
+recipe.hooks.prebuild.5.pattern=/usr/bin/env bash -c "[ ! -f "{build.source.path}"/build_opt.h ] || cp -f "{build.source.path}"/build_opt.h "{build.path}"/build_opt.h"
+recipe.hooks.prebuild.6.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/build_opt.h ] || : > "{build.path}"/build_opt.h"
+
+recipe.hooks.prebuild.5.pattern.windows=cmd /c if exist "{build.source.path}\build_opt.h" COPY /y "{build.source.path}\build_opt.h" "{build.path}\build_opt.h"
+recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.path}\build_opt.h" type nul > "{build.path}\build_opt.h"
+
+# Set -DARDUINO_CORE_BUILD only on core file compilation
+file_opts.path={build.path}/file_opts
+recipe.hooks.prebuild.set_core_build_flag.pattern=/usr/bin/env bash -c ": > '{file_opts.path}'"
+recipe.hooks.core.prebuild.set_core_build_flag.pattern=/usr/bin/env bash -c "echo -DARDUINO_CORE_BUILD > '{file_opts.path}'"
+recipe.hooks.core.postbuild.set_core_build_flag.pattern=/usr/bin/env bash -c ": > '{file_opts.path}'"
+
+recipe.hooks.prebuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
+recipe.hooks.core.prebuild.set_core_build_flag.pattern.windows=cmd /c echo "-DARDUINO_CORE_BUILD" > "{file_opts.path}"
+recipe.hooks.core.postbuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
+
+# Generate debug.cfg (must be postbuild)
+recipe.hooks.postbuild.1.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{debug.server.openocd.scripts_dir}"board/{build.openocdscript} "{build.source.path}"/debug.cfg"
+recipe.hooks.postbuild.1.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{debug.server.openocd.scripts_dir}board\{build.openocdscript}" "{build.source.path}\debug.cfg"
+
+# Generate debug_custom.json
+recipe.hooks.postbuild.2.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/{build.debugconfig} "{build.source.path}"/debug_custom.json"
+recipe.hooks.postbuild.2.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\{build.debugconfig}" "{build.source.path}\debug_custom.json"
+
+# Generate chip.svd
+recipe.hooks.postbuild.3.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{runtime.platform.path}"/tools/ide-debug/svd/{build.mcu}.svd "{build.source.path}"/debug.svd"
+recipe.hooks.postbuild.3.pattern.windows=cmd /c IF {build.copy_jtag_files}==1 COPY /y "{runtime.platform.path}\tools\ide-debug\svd\{build.mcu}.svd" "{build.source.path}\debug.svd"
 
 ## Compile c files
-recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.c.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.extra_flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "@{file_opts.path}" "{source_file}" -o "{object_file}"
 
 ## Compile c++ files
-recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpreprocessor.flags} {compiler.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.cpp.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.extra_flags} {compiler.cpp.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "@{file_opts.path}" "{source_file}" -o "{object_file}"
 
 ## Compile S files
-recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.cpreprocessor.flags} {compiler.S.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" {compiler.S.extra_flags} {build.extra_flags} {includes} "{source_file}" -o "{object_file}"
+recipe.S.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.S.extra_flags} {compiler.S.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "@{file_opts.path}" "{source_file}" -o "{object_file}"
 
 ## Create archives
 recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} {compiler.ar.extra_flags} "{archive_file_path}" "{object_file}"
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} {compiler.libraries.ldflags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {build.extra_libs} {build.zigbee_libs} {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
 
 ## Create partitions.bin
 recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}/partitions.csv" "{build.path}/{build.project_name}.partitions.bin"
 
 ## Create bin
-recipe.objcopy.bin.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
-recipe.objcopy.bin.pattern.linux=python "{tools.esptool_py.path}/{tools.esptool_py.cmd}" --chip esp32 elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.flash_freq}" --flash_size "{build.flash_size}" -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
+recipe.objcopy.bin.pattern_args=--chip {build.mcu} elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.img_freq}" --flash_size "{build.flash_size}" --elf-sha256-offset 0xb0 -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
+recipe.objcopy.bin.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
+recipe.objcopy.bin.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
+
+## Create Insights Firmware Package
+recipe.hooks.objcopy.postobjcopy.1.pattern_args={build.path} {build.project_name} "{build.source.path}"
+recipe.hooks.objcopy.postobjcopy.1.pattern=/usr/bin/env bash -c "[ ! -d "{build.path}"/libraries/Insights ] || {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}"
+recipe.hooks.objcopy.postobjcopy.1.pattern.windows=cmd /c if exist "{build.path}\libraries\Insights" {tools.gen_insights_pkg.cmd} {recipe.hooks.objcopy.postobjcopy.1.pattern_args}
+
+## Copy ESP_SR Model
+recipe.hooks.objcopy.postobjcopy.2.pattern=/usr/bin/env bash -c "[ ! -d "{build.path}"/libraries/ESP_SR ] || [ ! -f "{compiler.sdk.path}"/esp_sr/srmodels.bin ] || cp -f "{compiler.sdk.path}"/esp_sr/srmodels.bin "{build.path}"/srmodels.bin"
+recipe.hooks.objcopy.postobjcopy.2.pattern.windows=cmd /c if exist "{build.path}\libraries\ESP_SR" if exist "{compiler.sdk.path}\esp_sr\srmodels.bin" COPY /y "{compiler.sdk.path}\esp_sr\srmodels.bin" "{build.path}\srmodels.bin"
 
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin
@@ -102,11 +207,81 @@ recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build
 recipe.size.regex=^(?:\.iram0\.text|\.iram0\.vectors|\.dram0\.data|\.flash\.text|\.flash\.rodata|)\s+([0-9]+).*
 recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss|\.noinit)\s+([0-9]+).*
 
-# ------------------------------
+## Required discoveries and monitors
+## ---------------------------------
+pluggable_discovery.required.0=builtin:serial-discovery
+pluggable_discovery.required.1=builtin:mdns-discovery
+pluggable_monitor.required.serial=builtin:serial-monitor
 
-tools.esptool_py.upload.protocol=esp32
+## ------------------
+## Upload/Debug tools
+## ------------------
+
+# Debugger configuration (general options)
+# ----------------------------------------
+# EXPERIMENTAL feature:
+#  - this is alpha and may be subject to change without notice
+debug.executable={build.path}/{build.project_name}.elf
+debug.toolchain=gcc
+debug.toolchain.path={tools.{build.tarch}-esp-elf-gdb.path}/bin/
+debug.toolchain.prefix={build.tarch}-{build.target}-elf-
+debug.server=openocd
+debug.server.openocd.script=debug.cfg
+
+##
+## ESPTool
+##
+
+## Upload Sketch
+## -------------
+tools.esptool_py.upload.protocol=serial
 tools.esptool_py.upload.params.verbose=
 tools.esptool_py.upload.params.quiet=
-tools.esptool_py.upload.pattern="{path}/{cmd}" --chip esp32 --port "{serial.port}" --baud {upload.speed}  --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size detect 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x1000 "{runtime.platform.path}/tools/sdk/bin/bootloader_{build.boot}_{build.flash_freq}.bin" 0x10000 "{build.path}/{build.project_name}.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin"
-tools.esptool_py.upload.pattern.linux=python "{path}/{cmd}" --chip esp32 --port "{serial.port}" --baud {upload.speed}  --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size detect 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x1000 "{runtime.platform.path}/tools/sdk/bin/bootloader_{build.boot}_{build.flash_freq}.bin" 0x10000 "{build.path}/{build.project_name}.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin"
+tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash {upload.erase_cmd} -z --flash_mode keep --flash_freq keep --flash_size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
+tools.esptool_py.upload.pattern="{path}/{cmd}" {upload.pattern_args}
+tools.esptool_py.upload.pattern.linux=python3 "{path}/{cmd}" {upload.pattern_args}
+
+## Program Application
+## -------------------
+tools.esptool_py.program.params.verbose=
+tools.esptool_py.program.params.quiet=
+tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode keep --flash_freq keep --flash_size keep 0x10000 "{build.path}/{build.project_name}.bin"
+tools.esptool_py.program.pattern="{path}/{cmd}" {program.pattern_args}
+tools.esptool_py.program.pattern.linux=python3 "{path}/{cmd}" {program.pattern_args}
+
+## Erase Chip (before burning the bootloader)
+## ------------------------------------------
+tools.esptool_py.erase.protocol=serial
+tools.esptool_py.erase.params.verbose=
+tools.esptool_py.erase.params.quiet=
+tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset erase_flash
+tools.esptool_py.erase.pattern="{path}/{cmd}" {erase.pattern_args}
+tools.esptool_py.erase.pattern.linux=python3 "{path}/{cmd}" {erase.pattern_args}
+
+## Burn Bootloader
+## ---------------
+tools.esptool_py.bootloader.protocol=serial
+tools.esptool_py.bootloader.params.verbose=
+tools.esptool_py.bootloader.params.quiet=
+tools.esptool_py.bootloader.pattern=
+
+## Upload Sketch Through OTA (Arduino IDE 1.x)
+## -------------------------------------------
+## The following rule is deprecated by pluggable discovery.
+## We keep it to avoid breaking compatibility with the Arduino Java IDE.
 tools.esptool_py.upload.network_pattern={network_cmd} -i "{serial.port}" -p "{network.port}" "--auth={network.password}" -f "{build.path}/{build.project_name}.bin"
+
+## Upload Sketch Through OTA (Arduino IDE 2.x)
+## -------------------------------------------
+tools.esp_ota.upload.protocol=network
+tools.esp_ota.upload.field.password=Password
+tools.esp_ota.upload.field.password.secret=true
+tools.esp_ota.upload.pattern={cmd} -i {upload.port.address} -p {upload.port.properties.port} --auth={upload.field.password} -f "{build.path}/{build.project_name}.bin"
+
+## Upload Sketch Through DFU OTA
+## -------------------------------------------
+tools.dfu-util.path={runtime.tools.dfu-util-0.11.0-arduino5.path}
+tools.dfu-util.cmd=dfu-util
+tools.dfu-util.upload.params.verbose=-d
+tools.dfu-util.upload.params.quiet=
+tools.dfu-util.upload.pattern="{path}/{cmd}" --device {vid.0}:{pid.0} -D "{build.path}/{build.project_name}.bin" -Q

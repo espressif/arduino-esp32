@@ -64,36 +64,32 @@ void wifiConnectedLoop(){
   delay(9000);
 }
 
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
 void WiFiEvent(WiFiEvent_t event){
     switch(event) {
-
-        case SYSTEM_EVENT_AP_START:
+        case ARDUINO_EVENT_WIFI_AP_START:
             //can set ap hostname here
             WiFi.softAPsetHostname(AP_SSID);
-            //enable ap ipv6 here
-            WiFi.softAPenableIpV6();
             break;
-
-        case SYSTEM_EVENT_STA_START:
+        case ARDUINO_EVENT_WIFI_STA_START:
             //set sta hostname here
             WiFi.setHostname(AP_SSID);
             break;
-        case SYSTEM_EVENT_STA_CONNECTED:
-            //enable sta ipv6 here
-            WiFi.enableIpV6();
+        case ARDUINO_EVENT_WIFI_STA_CONNECTED:
             break;
-        case SYSTEM_EVENT_AP_STA_GOT_IP6:
-            //both interfaces get the same event
+        case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
             Serial.print("STA IPv6: ");
             Serial.println(WiFi.localIPv6());
+            break;
+        case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
             Serial.print("AP IPv6: ");
             Serial.println(WiFi.softAPIPv6());
             break;
-        case SYSTEM_EVENT_STA_GOT_IP:
+        case ARDUINO_EVENT_WIFI_STA_GOT_IP:
             wifiOnConnect();
             wifi_connected = true;
             break;
-        case SYSTEM_EVENT_STA_DISCONNECTED:
+        case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
             wifi_connected = false;
             wifiOnDisconnect();
             break;
@@ -105,9 +101,13 @@ void WiFiEvent(WiFiEvent_t event){
 void setup(){
     Serial.begin(115200);
     WiFi.disconnect(true);
-    WiFi.onEvent(WiFiEvent);
+    WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
     WiFi.mode(WIFI_MODE_APSTA);
+    //enable ap ipv6 here
+    WiFi.softAPenableIPv6();
     WiFi.softAP(AP_SSID);
+    //enable sta ipv6 here
+    WiFi.enableIPv6();
     WiFi.begin(STA_SSID, STA_PASS);
 }
 

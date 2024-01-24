@@ -8,8 +8,11 @@
 #ifndef _BLEHIDDEVICE_H_
 #define _BLEHIDDEVICE_H_
 
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLECharacteristic.h"
 #include "BLEService.h"
@@ -26,6 +29,7 @@
 #define HID_CARD_READER	0x03C6
 #define HID_DIGITAL_PEN	0x03C7
 #define HID_BARCODE		0x03C8
+#define HID_BRAILLE_DISPLAY		0x03C9
 
 class BLEHIDDevice {
 public:
@@ -40,7 +44,7 @@ public:
 	BLEService* batteryService();
 
 	BLECharacteristic* 	manufacturer();
-	void 	manufacturer(std::string name);
+	void 	manufacturer(String name);
 	//BLECharacteristic* 	pnp();
 	void	pnp(uint8_t sig, uint16_t vid, uint16_t pid, uint16_t version);
 	//BLECharacteristic*	hidInfo();
@@ -71,5 +75,7 @@ private:
 	BLECharacteristic* 	m_protocolModeCharacteristic;	//0x2a4e
 	BLECharacteristic*	m_batteryLevelCharacteristic;	//0x2a19
 };
-#endif // CONFIG_BT_ENABLED
+
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* _BLEHIDDEVICE_H_ */
