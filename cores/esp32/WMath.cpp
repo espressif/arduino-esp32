@@ -28,33 +28,40 @@ extern "C" {
 #include "esp_system.h"
 }
 #include "esp32-hal-log.h"
+#include "esp_random.h"
 
+// Allows the user to choose between Real Hardware
+// or Software Pseudo random generators for the
+// Arduino random() functions
+static bool s_useRandomHW = true;
+void useRealRandomGenerator(bool useRandomHW) {
+  s_useRandomHW = useRandomHW;
+}
+
+// Calling randomSeed() will force the
+// Pseudo Random generator like in 
+// Arduino mainstream API
 void randomSeed(unsigned long seed)
 {
     if(seed != 0) {
         srand(seed);
+        s_useRandomHW = false;
     }
 }
 
-long random(long howbig)
+long random( long howsmall, long howbig );
+long random( long howbig )
 {
-    uint32_t x = esp_random();
-    uint64_t m = uint64_t(x) * uint64_t(howbig);
-    uint32_t l = uint32_t(m);
-    if (l < howbig) {
-        uint32_t t = -howbig;
-        if (t >= howbig) {
-            t -= howbig;
-            if (t >= howbig)
-                t %= howbig;
-        }
-        while (l < t) {
-            x = esp_random();
-            m = uint64_t(x) * uint64_t(howbig);
-            l = uint32_t(m);
-        }
-    }
-    return m >> 32;
+  if ( howbig == 0 )
+  {
+    return 0 ;
+  }
+  if (howbig < 0) {
+    return (random(0, -howbig));
+  }
+  // if randomSeed was called, fall back to software PRNG
+  uint32_t val = (s_useRandomHW) ? esp_random() : rand();
+  return val % howbig;
 }
 
 long random(long howsmall, long howbig)

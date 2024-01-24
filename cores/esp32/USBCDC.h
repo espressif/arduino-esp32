@@ -13,6 +13,9 @@
 // limitations under the License.
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include "sdkconfig.h"
 #if CONFIG_TINYUSB_CDC_ENABLED
 
@@ -33,6 +36,7 @@ typedef enum {
     ARDUINO_USB_CDC_LINE_CODING_EVENT,
     ARDUINO_USB_CDC_RX_EVENT,
     ARDUINO_USB_CDC_TX_EVENT,
+    ARDUINO_USB_CDC_RX_OVERFLOW_EVENT,
     ARDUINO_USB_CDC_MAX_EVENT,
 } arduino_usb_cdc_event_t;
 
@@ -50,6 +54,9 @@ typedef union {
     struct {
             size_t len;
     } rx;
+    struct {
+            size_t dropped_bytes;
+    } rx_overflow;
 } arduino_usb_cdc_event_data_t;
 
 class USBCDC: public Stream
@@ -128,14 +135,20 @@ protected:
     bool     rts;
     bool     connected;
     bool     reboot_enable;
-    xQueueHandle rx_queue;
-    xSemaphoreHandle tx_lock;
+    QueueHandle_t rx_queue;
+    SemaphoreHandle_t tx_lock;
     uint32_t tx_timeout_ms;
     
 };
 
-#if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
-extern USBCDC Serial;
+#if !ARDUINO_USB_MODE        // Native USB CDC selected
+#ifndef USB_SERIAL_IS_DEFINED
+#define USB_SERIAL_IS_DEFINED 1
+#endif 
+// USBSerial is always available to be used
+extern USBCDC USBSerial;
 #endif
 
+
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

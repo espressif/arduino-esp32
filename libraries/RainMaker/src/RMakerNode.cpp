@@ -1,5 +1,6 @@
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "RMakerNode.h"
-#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_ESP_RMAKER_TASK_STACK && CONFIG_IDF_TARGET_ESP32
 static esp_err_t err;
 
 esp_err_t Node::addDevice(Device device)

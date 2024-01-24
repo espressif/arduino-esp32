@@ -9,14 +9,6 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS 40
-#define NUM_ANALOG_INPUTS 16
-
-#define analogInputToDigitalPin(p) (((p) < 20) ? (analogChannelToDigitalPin(p)) : -1)
-#define digitalPinToInterrupt(p) (((p) < 40) ? (p) : -1)
-#define digitalPinHasPWM(p) (p < 34)
-
 // interface to Ethernet PHY (LAN8720A)
 #define ETH_PHY_ADDR 1
 #define ETH_PHY_POWER 16
@@ -51,5 +43,15 @@ static const uint8_t TXD2 = 17, TXD = 17;
 static const uint8_t RXD2 = 5, RXD = 5;
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
+
+//SPI VSPI default pins
+static const uint8_t SS    = -1;
+static const uint8_t MOSI  = 14;
+static const uint8_t MISO  = 15;
+static const uint8_t SCK   = 12;
+
+//I2C default pins
+static const uint8_t SDA = 33;
+static const uint8_t SCL = 32;
 
 #endif /* Pins_Arduino_h */

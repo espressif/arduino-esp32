@@ -29,7 +29,10 @@
 #include "WiFiType.h"
 #include "IPAddress.h"
 #include "esp_smartconfig.h"
+#include "esp_netif_types.h"
+#include "esp_eth_driver.h"
 #include "wifi_provisioning/manager.h"
+#include "lwip/ip_addr.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);
 
@@ -57,6 +60,7 @@ typedef enum {
 	ARDUINO_EVENT_ETH_CONNECTED,
 	ARDUINO_EVENT_ETH_DISCONNECTED,
 	ARDUINO_EVENT_ETH_GOT_IP,
+	ARDUINO_EVENT_ETH_LOST_IP,
 	ARDUINO_EVENT_ETH_GOT_IP6,
 	ARDUINO_EVENT_WPS_ER_SUCCESS,
 	ARDUINO_EVENT_WPS_ER_FAILED,
@@ -108,6 +112,34 @@ typedef void (*WiFiEventSysCb)(arduino_event_t *event);
 
 typedef size_t wifi_event_id_t;
 
+// General Flags
+static const int NET_DNS_IDLE_BIT       = BIT0;
+static const int NET_DNS_DONE_BIT       = BIT1;
+// WiFi Scan Flags
+static const int WIFI_SCANNING_BIT      = BIT2;
+static const int WIFI_SCAN_DONE_BIT     = BIT3;
+// AP Flags
+static const int AP_STARTED_BIT         = BIT4;
+static const int AP_HAS_IP6_BIT         = BIT5;
+static const int AP_HAS_CLIENT_BIT      = BIT6;
+static const int AP_WANT_IP6_BIT        = BIT7;
+// STA Flags
+static const int STA_STARTED_BIT        = BIT8;
+static const int STA_CONNECTED_BIT      = BIT9;
+static const int STA_HAS_IP_BIT         = BIT10;
+static const int STA_HAS_IP6_BIT        = BIT11;
+static const int STA_HAS_IP6_GLOBAL_BIT = BIT12;
+static const int STA_WANT_IP6_BIT       = BIT13;
+// ETH Flags
+static const int ETH_STARTED_BIT        = BIT14;
+static const int ETH_CONNECTED_BIT      = BIT15;
+static const int ETH_HAS_IP_BIT         = BIT16;
+static const int ETH_HAS_IP6_BIT        = BIT17;
+static const int ETH_HAS_IP6_GLOBAL_BIT = BIT18;
+static const int ETH_WANT_IP6_BIT       = BIT19;
+// Masks
+static const int NET_HAS_IP6_GLOBAL_BIT = STA_HAS_IP6_GLOBAL_BIT | ETH_HAS_IP6_GLOBAL_BIT;
+
 typedef enum {
     WIFI_POWER_19_5dBm = 78,// 19.5dBm
     WIFI_POWER_19dBm = 76,// 19dBm
@@ -122,22 +154,6 @@ typedef enum {
     WIFI_POWER_2dBm = 8,// 2dBm
     WIFI_POWER_MINUS_1dBm = -4// -1dBm
 } wifi_power_t;
-
-static const int AP_STARTED_BIT    = BIT0;
-static const int AP_HAS_IP6_BIT    = BIT1;
-static const int AP_HAS_CLIENT_BIT = BIT2;
-static const int STA_STARTED_BIT   = BIT3;
-static const int STA_CONNECTED_BIT = BIT4;
-static const int STA_HAS_IP_BIT    = BIT5;
-static const int STA_HAS_IP6_BIT   = BIT6;
-static const int ETH_STARTED_BIT   = BIT7;
-static const int ETH_CONNECTED_BIT = BIT8;
-static const int ETH_HAS_IP_BIT    = BIT9;
-static const int ETH_HAS_IP6_BIT   = BIT10;
-static const int WIFI_SCANNING_BIT = BIT11;
-static const int WIFI_SCAN_DONE_BIT= BIT12;
-static const int WIFI_DNS_IDLE_BIT = BIT13;
-static const int WIFI_DNS_DONE_BIT = BIT14;
 
 typedef enum {
 	WIFI_RX_ANT0 = 0,
@@ -186,8 +202,10 @@ class WiFiGenericClass
 
     bool initiateFTM(uint8_t frm_count=16, uint16_t burst_period=2, uint8_t channel=1, const uint8_t * mac=NULL);
 
-    bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
+    static bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
 
+    const char * disconnectReasonName(wifi_err_reason_t reason);
+    const char * eventName(arduino_event_id_t id);
     static const char * getHostname();
     static bool setHostname(const char * hostname);
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
@@ -206,9 +224,12 @@ class WiFiGenericClass
 
     static int setStatusBits(int bits);
     static int clearStatusBits(int bits);
-    
+
+  private:
+    static bool _isReconnectableReason(uint8_t reason);
+
   public:
-    static int hostByName(const char *aHostname, IPAddress &aResult);
+    static int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
 
     static IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet);
     static IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet);
@@ -218,6 +239,7 @@ class WiFiGenericClass
     friend class WiFiSTAClass;
     friend class WiFiScanClass;
     friend class WiFiAPClass;
+    friend class ETHClass;
 };
 
 #endif /* ESP32WIFIGENERIC_H_ */

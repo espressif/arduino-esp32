@@ -31,7 +31,12 @@ extern "C" {
 // Initialize variant/board, called before setup()
 void initVariant(void)
 {
-
+  // This board has power control pins, and we must set them to output and high
+  // in order to enable the NeoPixels, TFT & I2C
+  pinMode(NEOPIXEL_POWER, OUTPUT);
+  digitalWrite(NEOPIXEL_POWER, HIGH);
+  pinMode(TFT_I2C_POWER, OUTPUT);
+  digitalWrite(TFT_I2C_POWER, HIGH);
 }
 
 }

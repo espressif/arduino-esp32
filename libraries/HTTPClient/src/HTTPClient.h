@@ -55,7 +55,8 @@
 #define HTTPC_ERROR_READ_TIMEOUT        (-11)
 
 /// size for the stream handling
-#define HTTP_TCP_BUFFER_SIZE (1460)
+#define HTTP_TCP_RX_BUFFER_SIZE (4096)
+#define HTTP_TCP_TX_BUFFER_SIZE (1460)
 
 /// HTTP codes see RFC7231
 typedef enum {
@@ -276,7 +277,7 @@ protected:
     /// request handling
     String _host;
     uint16_t _port = 0;
-    int32_t _connectTimeout = -1;
+    int32_t _connectTimeout = HTTPCLIENT_DEFAULT_TCP_TIMEOUT;
     bool _reuse = true;
     uint16_t _tcpTimeout = HTTPCLIENT_DEFAULT_TCP_TIMEOUT;
     bool _useHTTP10 = false;

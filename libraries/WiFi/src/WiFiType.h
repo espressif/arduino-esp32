@@ -23,6 +23,8 @@
 #ifndef ESP32WIFITYPE_H_
 #define ESP32WIFITYPE_H_
 
+#include "esp_wifi_types.h"
+
 #define WIFI_SCAN_RUNNING   (-1)
 #define WIFI_SCAN_FAILED    (-2)
 
@@ -39,6 +41,7 @@
 
 typedef enum {
     WL_NO_SHIELD        = 255,   // for compatibility with WiFi Shield library
+    WL_STOPPED          = 254,
     WL_IDLE_STATUS      = 0,
     WL_NO_SSID_AVAIL    = 1,
     WL_SCAN_COMPLETED   = 2,

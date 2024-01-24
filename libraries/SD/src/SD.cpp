@@ -75,12 +75,29 @@ uint64_t SDFS::cardSize()
     return (uint64_t)sectors * sectorSize;
 }
 
+size_t SDFS::numSectors()
+{
+    if(_pdrv == 0xFF) {
+        return 0;
+    }
+    return sdcard_num_sectors(_pdrv);
+}
+
+size_t SDFS::sectorSize()
+{
+    if(_pdrv == 0xFF) {
+        return 0;
+    }
+    return sdcard_sector_size(_pdrv);
+}
+
 uint64_t SDFS::totalBytes()
 {
 	FATFS* fsinfo;
 	DWORD fre_clust;
-	if(f_getfree("0:",&fre_clust,&fsinfo)!= 0) return 0;
-    uint64_t size = ((uint64_t)(fsinfo->csize))*(fsinfo->n_fatent - 2)
+	char drv[3] = {(char)(48+_pdrv), ':', 0};
+	if(f_getfree(drv,&fre_clust,&fsinfo)!= 0) return 0;
+	uint64_t size = ((uint64_t)(fsinfo->csize))*(fsinfo->n_fatent - 2)
 #if _MAX_SS != 512
         *(fsinfo->ssize);
 #else
@@ -93,7 +110,8 @@ uint64_t SDFS::usedBytes()
 {
 	FATFS* fsinfo;
 	DWORD fre_clust;
-	if(f_getfree("0:",&fre_clust,&fsinfo)!= 0) return 0;
+	char drv[3] = {(char)(48+_pdrv), ':', 0};
+	if(f_getfree(drv,&fre_clust,&fsinfo)!= 0) return 0;
 	uint64_t size = ((uint64_t)(fsinfo->csize))*((fsinfo->n_fatent - 2) - (fsinfo->free_clst))
 #if _MAX_SS != 512
         *(fsinfo->ssize);

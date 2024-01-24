@@ -32,6 +32,8 @@ public:
     void end();
     sdcard_type_t cardType();
     uint64_t cardSize();
+    size_t numSectors();
+    size_t sectorSize();
     uint64_t totalBytes();
     uint64_t usedBytes();
     bool readRAW(uint8_t* buffer, uint32_t sector);

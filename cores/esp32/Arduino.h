@@ -39,6 +39,7 @@
 
 #include "stdlib_noniso.h"
 #include "binary.h"
+#include "extra_attr.h"
 
 #define PI 3.1415926535897932384626433832795
 #define HALF_PI 1.5707963267948966192313216916398
@@ -69,13 +70,19 @@
 #define __STRINGIFY(a) #a
 #endif
 
+// can't define max() / min() because of conflicts with C++
+#define _min(a,b) ((a)<(b)?(a):(b))  
+#define _max(a,b) ((a)>(b)?(a):(b))
+#define _abs(x) ((x)>0?(x):-(x))  // abs() comes from STL
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+#define _round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))  // round() comes from STL
 #define radians(deg) ((deg)*DEG_TO_RAD)
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
 
-#define sei()
-#define cli()
+// ESP32xx runs FreeRTOS... disabling interrupts can lead to issues, such as Watchdog Timeout
+#define sei() portENABLE_INTERRUPTS()
+#define cli() portDISABLE_INTERRUPTS()
 #define interrupts() sei()
 #define noInterrupts() cli()
 
@@ -89,6 +96,7 @@
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
 #define bitSet(value, bit) ((value) |= (1UL << (bit)))
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitToggle(value, bit) ((value) ^= (1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
 
 // avr-libc defines _NOP() since 1.6.2
@@ -103,13 +111,13 @@
 #define analogInPinToBit(P)         (P)
 #if SOC_GPIO_PIN_COUNT <= 32
 #define digitalPinToPort(pin)       (0)
-#define digitalPinToBitMask(pin)    (1UL << (pin))
+#define digitalPinToBitMask(pin)    (1UL << digitalPinToGPIONumber(pin))
 #define portOutputRegister(port)    ((volatile uint32_t*)GPIO_OUT_REG)
 #define portInputRegister(port)     ((volatile uint32_t*)GPIO_IN_REG)
 #define portModeRegister(port)      ((volatile uint32_t*)GPIO_ENABLE_REG)
 #elif SOC_GPIO_PIN_COUNT <= 64
-#define digitalPinToPort(pin)       (((pin)>31)?1:0)
-#define digitalPinToBitMask(pin)    (1UL << (((pin)>31)?((pin)-32):(pin)))
+#define digitalPinToPort(pin)       ((digitalPinToGPIONumber(pin)>31)?1:0)
+#define digitalPinToBitMask(pin)    (1UL << (digitalPinToGPIONumber(pin)&31))
 #define portOutputRegister(port)    ((volatile uint32_t*)((port)?GPIO_OUT1_REG:GPIO_OUT_REG))
 #define portInputRegister(port)     ((volatile uint32_t*)((port)?GPIO_IN1_REG:GPIO_IN_REG))
 #define portModeRegister(port)      ((volatile uint32_t*)((port)?GPIO_ENABLE1_REG:GPIO_ENABLE_REG))
@@ -122,6 +130,18 @@
 #define NOT_AN_INTERRUPT -1
 #define NOT_ON_TIMER 0
 
+// some defines generic for all SoC moved from variants/board_name/pins_arduino.h
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT                                // All GPIOs
+#if SOC_ADC_PERIPH_NUM == 1
+#define NUM_ANALOG_INPUTS       (SOC_ADC_CHANNEL_NUM(0))                          // Depends on the SoC (ESP32C6, ESP32H2, ESP32C2, ESP32P4)
+#elif SOC_ADC_PERIPH_NUM == 2
+#define NUM_ANALOG_INPUTS       (SOC_ADC_CHANNEL_NUM(0)+SOC_ADC_CHANNEL_NUM(1))   // Depends on the SoC (ESP32, ESP32S2, ESP32S3, ESP32C3)
+#endif
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS                                  // All GPIOs
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    ((((uint8_t)digitalPinToGPIONumber(p))<NUM_DIGITAL_PINS)?digitalPinToGPIONumber(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (((uint8_t)digitalPinToGPIONumber(p))<NUM_DIGITAL_PINS)
+
 typedef bool boolean;
 typedef uint8_t byte;
 typedef unsigned int word;
@@ -130,9 +150,19 @@ typedef unsigned int word;
 void setup(void);
 void loop(void);
 
+// The default is using Real Hardware random number generator  
+// But when randomSeed() is called, it turns to Psedo random
+// generator, exactly as done in Arduino mainstream
+long random(long);
 long random(long, long);
-#endif
+// Calling randomSeed() will make random()
+// using pseudo random like in Arduino
 void randomSeed(unsigned long);
+// Allow the Application to decide if the random generator
+// will use Real Hardware random generation (true - default)
+// or Pseudo random generation (false) as in Arduino MainStream
+void useRealRandomGenerator(bool useRandomHW);
+#endif
 long map(long, long, long, long, long);
 
 #ifdef __cplusplus
@@ -166,14 +196,14 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 #include "Udp.h"
 #include "HardwareSerial.h"
 #include "Esp.h"
-#include "esp32/spiram.h"
 
+// Use float-compatible stl abs() and round(), we don't use Arduino macros to avoid issues with the C++ libraries
 using std::abs;
 using std::isinf;
 using std::isnan;
 using std::max;
 using std::min;
-using ::round;
+using std::round;
 
 uint16_t makeWord(uint16_t w);
 uint16_t makeWord(uint8_t h, uint8_t l);
@@ -183,8 +213,12 @@ uint16_t makeWord(uint8_t h, uint8_t l);
 size_t getArduinoLoopTaskStackSize(void);
 #define SET_LOOP_TASK_STACK_SIZE(sz) size_t getArduinoLoopTaskStackSize() { return sz;}
 
+bool shouldPrintChipDebugReport(void);
+#define ENABLE_CHIP_DEBUG_REPORT bool shouldPrintChipDebugReport(void){return true;}
+
 // allows user to bypass esp_spiram_test()
-#define BYPASS_SPIRAM_TEST(bypass) bool testSPIRAM(void) { if (bypass) return true; else return esp_spiram_test(); }
+bool esp_psram_extram_test(void);
+#define BYPASS_SPIRAM_TEST(bypass) bool testSPIRAM(void) { if (bypass) return true; else return esp_psram_extram_test(); }
 
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L);
@@ -195,13 +229,13 @@ extern "C" void configTime(long gmtOffset_sec, int daylightOffset_sec,
 extern "C" void configTzTime(const char* tz,
         const char* server1, const char* server2 = nullptr, const char* server3 = nullptr);
 
-// WMath prototypes
-long random(long);
+void setToneChannel(uint8_t channel = 0);
+void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
+void noTone(uint8_t _pin);
+
 #endif /* __cplusplus */
 
-#define _min(a,b) ((a)<(b)?(a):(b))
-#define _max(a,b) ((a)>(b)?(a):(b))
-
 #include "pins_arduino.h"
+#include "io_pin_remap.h"
 
 #endif /* _ESP32_CORE_ARDUINO_H_ */

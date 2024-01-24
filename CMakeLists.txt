@@ -5,8 +5,8 @@
 #   export ARDUINO_SKIP_IDF_VERSION_CHECK=1
 #   idf.py build
 
-set(min_supported_idf_version "4.4.0")
-set(max_supported_idf_version "4.4.99")
+set(min_supported_idf_version "5.1.0")
+set(max_supported_idf_version "5.1.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -25,6 +25,7 @@ endif()
 set(CORE_SRCS
   cores/esp32/base64.cpp
   cores/esp32/cbuf.cpp
+  cores/esp32/chip-debug-report.cpp
   cores/esp32/esp32-hal-adc.c
   cores/esp32/esp32-hal-bt.c
   cores/esp32/esp32-hal-cpu.c
@@ -35,7 +36,9 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-ledc.c
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
+  cores/esp32/esp32-hal-periman.c
   cores/esp32/esp32-hal-psram.c
+  cores/esp32/esp32-hal-rgb-led.c
   cores/esp32/esp32-hal-sigmadelta.c
   cores/esp32/esp32-hal-spi.c
   cores/esp32/esp32-hal-time.c
@@ -47,16 +50,18 @@ set(CORE_SRCS
   cores/esp32/Esp.cpp
   cores/esp32/FunctionalInterrupt.cpp
   cores/esp32/HardwareSerial.cpp
+  cores/esp32/HEXBuilder.cpp
   cores/esp32/IPAddress.cpp
-  cores/esp32/IPv6Address.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
   cores/esp32/main.cpp
   cores/esp32/MD5Builder.cpp
   cores/esp32/Print.cpp
+  cores/esp32/SHA1Builder.cpp
   cores/esp32/stdlib_noniso.c
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
+  cores/esp32/Tone.cpp
   cores/esp32/HWCDC.cpp
   cores/esp32/USB.cpp
   cores/esp32/USBCDC.cpp
@@ -78,6 +83,9 @@ set(LIBRARY_SRCS
   libraries/BluetoothSerial/src/BTScanResultsSet.cpp
   libraries/DNSServer/src/DNSServer.cpp
   libraries/EEPROM/src/EEPROM.cpp
+  libraries/ESP_I2S/src/ESP_I2S.cpp
+  libraries/ESP_SR/src/ESP_SR.cpp
+  libraries/ESP_SR/src/esp32-hal-sr.c
   libraries/ESPmDNS/src/ESPmDNS.cpp
   libraries/Ethernet/src/ETH.cpp
   libraries/FFat/src/FFat.cpp
@@ -86,6 +94,7 @@ set(LIBRARY_SRCS
   libraries/HTTPClient/src/HTTPClient.cpp
   libraries/HTTPUpdate/src/HTTPUpdate.cpp
   libraries/LittleFS/src/LittleFS.cpp
+  libraries/Insights/src/Insights.cpp
   libraries/NetBIOS/src/NetBIOS.cpp
   libraries/Preferences/src/Preferences.cpp
   libraries/RainMaker/src/RMaker.cpp
@@ -93,6 +102,9 @@ set(LIBRARY_SRCS
   libraries/RainMaker/src/RMakerParam.cpp
   libraries/RainMaker/src/RMakerDevice.cpp
   libraries/RainMaker/src/RMakerType.cpp
+  libraries/RainMaker/src/RMakerQR.cpp
+  libraries/RainMaker/src/RMakerUtils.cpp
+  libraries/RainMaker/src/AppInsights.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
@@ -104,6 +116,7 @@ set(LIBRARY_SRCS
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp
   libraries/USB/src/USBHID.cpp
+  libraries/USB/src/USBMIDI.cpp
   libraries/USB/src/USBHIDMouse.cpp
   libraries/USB/src/USBHIDKeyboard.cpp
   libraries/USB/src/USBHIDGamepad.cpp
@@ -115,7 +128,6 @@ set(LIBRARY_SRCS
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp
   libraries/WiFiClientSecure/src/ssl_client.cpp
-  libraries/WiFiClientSecure/src/esp_crt_bundle.c
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp
   libraries/WiFi/src/WiFiAP.cpp
   libraries/WiFi/src/WiFiClient.cpp
@@ -162,9 +174,8 @@ set(BLE_SRCS
   libraries/BLE/src/GeneralUtils.cpp
   )
 
-
 set(includedirs
-  variants/${IDF_TARGET}/
+  variants/${CONFIG_ARDUINO_VARIANT}/
   cores/esp32/
   libraries/ArduinoOTA/src
   libraries/AsyncUDP/src
@@ -172,6 +183,8 @@ set(includedirs
   libraries/BluetoothSerial/src
   libraries/DNSServer/src
   libraries/EEPROM/src
+  libraries/ESP_I2S/src
+  libraries/ESP_SR/src
   libraries/ESP32/src
   libraries/ESPmDNS/src
   libraries/Ethernet/src
@@ -180,6 +193,7 @@ set(includedirs
   libraries/HTTPClient/src
   libraries/HTTPUpdate/src
   libraries/LittleFS/src
+  libraries/Insights/src
   libraries/NetBIOS/src
   libraries/Preferences/src
   libraries/RainMaker/src
@@ -200,18 +214,25 @@ set(includedirs
 
 set(srcs ${CORE_SRCS} ${LIBRARY_SRCS} ${BLE_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash mbedtls mdns esp_adc_cal wifi_provisioning nghttp)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support openssl bt esp_ipc esp_hid)
+set(requires spi_flash esp_partition mbedtls wifi_provisioning wpa_supplicant esp_adc esp_eth http_parser)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid)
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 
-string(TOUPPER ${CONFIG_IDF_TARGET} idf_target_caps)
+if(NOT CONFIG_FREERTOS_HZ EQUAL 1000 AND NOT "$ENV{ARDUINO_SKIP_TICK_CHECK}")
+    # See delay() in cores/esp32/esp32-hal-misc.c.
+    message(FATAL_ERROR "esp32-arduino requires CONFIG_FREERTOS_HZ=1000 "
+                        "(currently ${CONFIG_FREERTOS_HZ})")
+endif()
+
+string(TOUPPER ${CONFIG_ARDUINO_VARIANT} idf_target_caps)
+string(REPLACE "-" "_" idf_target_for_macro "${idf_target_caps}")
 target_compile_options(${COMPONENT_TARGET} PUBLIC
     -DARDUINO=10812
-    -DARDUINO_${idf_target_caps}_DEV
+    -DARDUINO_${idf_target_for_macro}_DEV
     -DARDUINO_ARCH_ESP32
     -DARDUINO_BOARD="${idf_target_caps}_DEV"
-    -DARDUINO_VARIANT="${CONFIG_IDF_TARGET}"
+    -DARDUINO_VARIANT="${CONFIG_ARDUINO_VARIANT}"
     -DESP32)
 
 if(CONFIG_AUTOSTART_ARDUINO)
@@ -235,16 +256,9 @@ function(maybe_add_component component_name)
     endif()
 endfunction()
 
-if(IDF_TARGET MATCHES "esp32" AND CONFIG_ESP_RMAKER_TASK_STACK)
-    maybe_add_component(esp_rainmaker)
-    maybe_add_component(qrcode)
-endif()
 if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
     maybe_add_component(arduino_tinyusb)
 endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
     maybe_add_component(esp_https_ota)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LITTLEFS)
-    maybe_add_component(esp_littlefs)
 endif()
