@@ -1,0 +1,92 @@
+name: Boards Test - Remote trigger
+
+# The workflow will run on remote dispath with event-type set to "test-boards"
+on:
+  repository_dispatch:
+    types: [test-boards]
+
+jobs:
+  find-boards:
+    runs-on: ubuntu-latest
+
+    outputs:
+      fqbns: ${{ env.FQBNS }}
+      board-count: ${{ env.BOARD-COUNT }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.client_payload.branch }}
+
+      - name: Get boards fqbns
+        run: 
+          bash .github/scripts/find_all_boards.sh
+
+  setup-chunks:
+    needs: find-boards
+    runs-on: ubuntu-latest
+    if: needs.find-boards.outputs.fqbns != ''
+
+    outputs:
+      test-chunks: ${{ steps['set-test-chunks'].outputs['test-chunks'] }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.client_payload.branch }}
+
+      - run: npm install
+      - name: Setup jq
+        uses: dcarbone/install-jq-action@v1.0.1
+
+      - id: set-test-chunks
+        name: Set Chunks
+        run: 
+          echo "test-chunks<<EOF" >> $GITHUB_OUTPUT
+
+          echo "$( jq -nc '${{ needs.find-boards.outputs.fqbns }} | [_nwise( ${{ needs.find-boards.outputs.board-count }}/15 | ceil)]')" >> $GITHUB_OUTPUT
+
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  test-boards:
+    needs: setup-chunks
+    runs-on: ubuntu-latest
+
+    env:
+      REPOSITORY: |
+        - source-path: '.'
+          name: "espressif:esp32"
+
+    strategy:
+      fail-fast: false
+      matrix: 
+        chunk: ${{ fromJSON(needs.setup-chunks.outputs['test-chunks']) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.client_payload.branch }}
+
+      - name: Echo FQBNS to file
+        run:
+          echo "$FQBN" > fqbns.json
+        env: 
+          FQBN: ${{ toJSON(matrix.chunk) }}
+
+      - name: Compile sketch
+        uses: P-R-O-C-H-Y/compile-sketches@main
+        with:
+          platforms: |
+            ${{ env.REPOSITORY }}
+          multiple-fqbn: true
+          multiple-fqbn-path: "fqbns.json"
+          use-json-file: false
+          enable-deltas-report: false
+          enable-warnings-report: false
+          cli-compile-flags: |
+            - --warnings="all"
+          sketch-paths:
+            "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"

@@ -40,20 +40,27 @@ const esp_partition_t *check_ffat_partition(const char* label)
 
 bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles, const char * partitionLabel)
 {
-    if(_wl_handle){
+    if(_wl_handle != WL_INVALID_HANDLE){
         log_w("Already Mounted!");
         return true;
     }     
 
-    if (!check_ffat_partition(partitionLabel)) return false;
+    if (!check_ffat_partition(partitionLabel)){
+        log_e("No fat partition found on flash");
+        return false;
+    }
 
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = formatOnFail,
-      .max_files = maxOpenFiles
+      .max_files = maxOpenFiles,
+      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
+      .disk_status_check_enable = false
     };
-    esp_err_t err = esp_vfs_fat_spiflash_mount(basePath, partitionLabel, &conf, &_wl_handle);
+    esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(basePath, partitionLabel, &conf, &_wl_handle);
     if(err){
         log_e("Mounting FFat partition failed! Error: %d", err);
+        esp_vfs_fat_spiflash_unmount_rw_wl(basePath, _wl_handle);
+        _wl_handle = WL_INVALID_HANDLE;
         return false;
     }
     _impl->mountpoint(basePath);
@@ -62,13 +69,13 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
 
 void F_Fat::end()
 {
-    if(_wl_handle){
-        esp_err_t err = esp_vfs_fat_spiflash_unmount(_impl->mountpoint(), _wl_handle);
+    if(_wl_handle != WL_INVALID_HANDLE){
+        esp_err_t err = esp_vfs_fat_spiflash_unmount_rw_wl(_impl->mountpoint(), _wl_handle);
         if(err){
             log_e("Unmounting FFat partition failed! Error: %d", err);
             return;
         }
-        _wl_handle = 0;
+        _wl_handle = WL_INVALID_HANDLE;
         _impl->mountpoint(NULL);
     }
 }
@@ -77,7 +84,7 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
 {
     esp_err_t result;
     bool res = true;
-    if(_wl_handle){
+    if(_wl_handle != WL_INVALID_HANDLE){
         log_w("Already Mounted!");
         return false;
     }
@@ -102,13 +109,15 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
 // Now do a mount with format_if_fail (which it will)
     esp_vfs_fat_mount_config_t conf = {
       .format_if_mount_failed = true,
-      .max_files = 1
+      .max_files = 1,
+      .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
+      .disk_status_check_enable = false
     };
-    result = esp_vfs_fat_spiflash_mount("/format_ffat", partitionLabel, &conf, &temp_handle);
-    esp_vfs_fat_spiflash_unmount("/format_ffat", temp_handle);
+    result = esp_vfs_fat_spiflash_mount_rw_wl("/format_ffat", partitionLabel, &conf, &temp_handle);
+    esp_vfs_fat_spiflash_unmount_rw_wl("/format_ffat", temp_handle);
     if (result != ESP_OK){
         res = false;
-        log_w("esp_vfs_fat_spiflash_mount failed!");
+        log_w("esp_vfs_fat_spiflash_mount_rw_wl failed!");
     }
     return res;
 }
@@ -126,6 +135,21 @@ size_t F_Fat::totalBytes()
     tot_sect = (fs->n_fatent - 2) * fs->csize;
     sect_size = CONFIG_WL_SECTOR_SIZE;
     return tot_sect * sect_size;
+}
+
+size_t F_Fat::usedBytes()
+{
+    FATFS *fs;
+    DWORD free_clust, used_sect, sect_size;
+
+    BYTE pdrv = ff_diskio_get_pdrv_wl(_wl_handle);
+    char drv[3] = {(char)(48+pdrv), ':', 0};
+    if ( f_getfree(drv, &free_clust, &fs) != FR_OK){
+        return 0;
+    }
+    used_sect = (fs->n_fatent - 2 - free_clust) * fs->csize;
+    sect_size = CONFIG_WL_SECTOR_SIZE;
+    return used_sect * sect_size;
 }
 
 size_t F_Fat::freeBytes()
@@ -146,7 +170,7 @@ size_t F_Fat::freeBytes()
 
 bool F_Fat::exists(const char* path)
 {
-    File f = open(path, "r");
+    File f = open(path, "r",false);
     return (f == true) && !f.isDirectory();
 }
 

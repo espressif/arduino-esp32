@@ -20,6 +20,18 @@
  */
 
 #include "SPI.h"
+#if SOC_GPSPI_SUPPORTED
+
+#include "io_pin_remap.h"
+#include "esp32-hal-log.h"
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+#define SPI_PARAM_LOCK()    do {} while (xSemaphoreTake(paramLock, portMAX_DELAY) != pdPASS)
+#define SPI_PARAM_UNLOCK()  xSemaphoreGive(paramLock)
+#else
+#define SPI_PARAM_LOCK()
+#define SPI_PARAM_UNLOCK()
+#endif
 
 SPIClass::SPIClass(uint8_t spi_bus)
     :_spi_num(spi_bus)
@@ -32,7 +44,31 @@ SPIClass::SPIClass(uint8_t spi_bus)
     ,_div(0)
     ,_freq(1000000)
     ,_inTransaction(false)
+#if !CONFIG_DISABLE_HAL_LOCKS
+    ,paramLock(NULL)
+{
+    if(paramLock==NULL){
+        paramLock = xSemaphoreCreateMutex();
+        if(paramLock==NULL){
+            log_e("xSemaphoreCreateMutex failed");
+            return;
+        }
+    }
+}
+#else
 {}
+#endif
+
+SPIClass::~SPIClass()
+{
+    end();
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(paramLock!=NULL){
+        vSemaphoreDelete(paramLock);
+        paramLock = NULL;
+    }
+#endif
+}
 
 void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
 {
@@ -50,10 +86,22 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     }
 
     if(sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+        _sck = (_spi_num == FSPI) ? SCK : -1;
+        _miso = (_spi_num == FSPI) ? MISO : -1;
+        _mosi = (_spi_num == FSPI) ? MOSI : -1;
+        _ss = (_spi_num == FSPI) ? SS : -1;
+#elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
+        _sck = SCK;
+        _miso = MISO;
+        _mosi = MOSI;
+        _ss = SS;
+#else
         _sck = (_spi_num == VSPI) ? SCK : 14;
         _miso = (_spi_num == VSPI) ? MISO : 12;
         _mosi = (_spi_num == VSPI) ? MOSI : 13;
         _ss = (_spi_num == VSPI) ? SS : 15;
+#endif
     } else {
         _sck = sck;
         _miso = miso;
@@ -61,9 +109,13 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
         _ss = ss;
     }
 
-    spiAttachSCK(_spi, _sck);
-    spiAttachMISO(_spi, _miso);
-    spiAttachMOSI(_spi, _mosi);
+    if(!spiAttachSCK(_spi, _sck)){ goto err; }
+    if(_miso >= 0 && !spiAttachMISO(_spi, _miso)){ goto err; }
+    if(_mosi >= 0 && !spiAttachMOSI(_spi, _mosi)){ goto err; }
+    return;
+
+err:
+    log_e("Attaching pins to SPI failed.");
 
 }
 
@@ -72,28 +124,34 @@ void SPIClass::end()
     if(!_spi) {
         return;
     }
-    spiDetachSCK(_spi, _sck);
-    spiDetachMISO(_spi, _miso);
-    spiDetachMOSI(_spi, _mosi);
+    spiDetachSCK(_spi);
+    spiDetachMISO(_spi);
+    spiDetachMOSI(_spi);
     setHwCs(false);
-    spiStopBus(_spi);
+    if(spiGetClockDiv(_spi) != 0) {
+        spiStopBus(_spi);
+    }
     _spi = NULL;
 }
 
 void SPIClass::setHwCs(bool use)
 {
+    if(_ss < 0){
+        return;
+    }
     if(use && !_use_hw_ss) {
         spiAttachSS(_spi, 0, _ss);
         spiSSEnable(_spi);
-    } else if(_use_hw_ss) {
+    } else if(!use && _use_hw_ss) {
         spiSSDisable(_spi);
-        spiDetachSS(_spi, _ss);
+        spiDetachSS(_spi);
     }
     _use_hw_ss = use;
 }
 
 void SPIClass::setFrequency(uint32_t freq)
 {
+    SPI_PARAM_LOCK();
     //check if last freq changed
     uint32_t cdiv = spiGetClockDiv(_spi);
     if(_freq != freq || _div != cdiv) {
@@ -101,12 +159,15 @@ void SPIClass::setFrequency(uint32_t freq)
         _div = spiFrequencyToClockDiv(_freq);
         spiSetClockDiv(_spi, _div);
     }
+    SPI_PARAM_UNLOCK();
 }
 
 void SPIClass::setClockDivider(uint32_t clockDiv)
 {
+    SPI_PARAM_LOCK();
     _div = clockDiv;
     spiSetClockDiv(_spi, _div);
+    SPI_PARAM_UNLOCK();
 }
 
 uint32_t SPIClass::getClockDivider()
@@ -126,6 +187,7 @@ void SPIClass::setBitOrder(uint8_t bitOrder)
 
 void SPIClass::beginTransaction(SPISettings settings)
 {
+    SPI_PARAM_LOCK();
     //check if last freq changed
     uint32_t cdiv = spiGetClockDiv(_spi);
     if(_freq != settings._clock || _div != cdiv) {
@@ -141,6 +203,7 @@ void SPIClass::endTransaction()
     if(_inTransaction){
         _inTransaction = false;
         spiEndTransaction(_spi);
+        SPI_PARAM_UNLOCK(); // <-- Im not sure should it be here or right after spiTransaction()
     }
 }
 
@@ -214,9 +277,9 @@ void SPIClass::writeBytes(const uint8_t * data, uint32_t size)
     spiEndTransaction(_spi);
 }
 
-void SPIClass::transfer(uint8_t * data, uint32_t size) 
+void SPIClass::transfer(void * data, uint32_t size) 
 { 
-	transferBytes(data, data, size); 
+	transferBytes((const uint8_t *)data, (uint8_t *)data, size); 
 }
 
 /**
@@ -238,7 +301,7 @@ void SPIClass::writePixels(const void * data, uint32_t size)
  * @param out  uint8_t * output buffer. can be NULL for Write Only operation
  * @param size uint32_t
  */
-void SPIClass::transferBytes(uint8_t * data, uint8_t * out, uint32_t size)
+void SPIClass::transferBytes(const uint8_t * data, uint8_t * out, uint32_t size)
 {
     if(_inTransaction){
         return spiTransferBytesNL(_spi, data, out, size);
@@ -251,7 +314,7 @@ void SPIClass::transferBytes(uint8_t * data, uint8_t * out, uint32_t size)
  * @param size uint8_t  max for size is 64Byte
  * @param repeat uint32_t
  */
-void SPIClass::writePattern(uint8_t * data, uint8_t size, uint32_t repeat)
+void SPIClass::writePattern(const uint8_t * data, uint8_t size, uint32_t repeat)
 {
     if(size > 64) {
         return;    //max Hardware FIFO
@@ -272,12 +335,12 @@ void SPIClass::writePattern(uint8_t * data, uint8_t size, uint32_t repeat)
     }
 }
 
-void SPIClass::writePattern_(uint8_t * data, uint8_t size, uint8_t repeat)
+void SPIClass::writePattern_(const uint8_t * data, uint8_t size, uint8_t repeat)
 {
     uint8_t bytes = (size * repeat);
     uint8_t buffer[64];
     uint8_t * bufferPtr = &buffer[0];
-    uint8_t * dataPtr;
+    const uint8_t * dataPtr;
     uint8_t dataSize = bytes;
     for(uint8_t i = 0; i < repeat; i++) {
         dataSize = size;
@@ -292,4 +355,10 @@ void SPIClass::writePattern_(uint8_t * data, uint8_t size, uint8_t repeat)
     writeBytes(&buffer[0], bytes);
 }
 
+#if CONFIG_IDF_TARGET_ESP32
 SPIClass SPI(VSPI);
+#else
+SPIClass SPI(FSPI);
+#endif
+
+#endif /* SOC_GPSPI_SUPPORTED */

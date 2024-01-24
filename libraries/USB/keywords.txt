@@ -1,0 +1,33 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+USB	KEYWORD1
+USBCDC	KEYWORD1
+USBMSC	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+onEvent	KEYWORD2
+enableReset	KEYWORD2
+
+vendorID	KEYWORD2
+productID	KEYWORD2
+productRevision	KEYWORD2
+mediaPresent	KEYWORD2
+onStartStop	KEYWORD2
+onRead	KEYWORD2
+onWrite	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

@@ -4,66 +4,32 @@
 #include "RequestHandler.h"
 #include "mimetable.h"
 #include "WString.h"
+#include "Uri.h"
+#include <MD5Builder.h>
+#include <base64.h>
 
 using namespace mime;
 
 class FunctionRequestHandler : public RequestHandler {
 public:
-    FunctionRequestHandler(WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn, const String &uri, HTTPMethod method)
+    FunctionRequestHandler(WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn, const Uri &uri, HTTPMethod method)
     : _fn(fn)
     , _ufn(ufn)
-    , _uri(uri)
+    , _uri(uri.clone())
     , _method(method)
     {
-        int numParams = 0, start = 0;
-        do {
-            start = _uri.indexOf("{}", start);
-            if (start > 0) {
-                numParams++;
-                start += 2;
-            }
-        } while (start > 0);
-        pathArgs.resize(numParams);
+        _uri->initPathArgs(pathArgs);
+    }
+
+    ~FunctionRequestHandler() {
+        delete _uri;
     }
 
     bool canHandle(HTTPMethod requestMethod, String requestUri) override  {
         if (_method != HTTP_ANY && _method != requestMethod)
             return false;
 
-        if (_uri == requestUri)
-            return true;
-
-        size_t uriLength = _uri.length();
-        unsigned int pathArgIndex = 0;
-        unsigned int requestUriIndex = 0;
-        for (unsigned int i = 0; i < uriLength; i++, requestUriIndex++) {
-            char uriChar = _uri[i];
-            char requestUriChar = requestUri[requestUriIndex];
-
-            if (uriChar == requestUriChar)
-                continue;
-            if (uriChar != '{')
-                return false;
-
-            i += 2; // index of char after '}'
-            if (i >= uriLength) {
-                // there is no char after '}'
-                pathArgs[pathArgIndex] = requestUri.substring(requestUriIndex);
-                return pathArgs[pathArgIndex].indexOf("/") == -1; // path argument may not contain a '/'
-            }
-            else
-            {
-                char charEnd = _uri[i];
-                int uriIndex = requestUri.indexOf(charEnd, requestUriIndex);
-                if (uriIndex < 0)
-                    return false;
-                pathArgs[pathArgIndex] = requestUri.substring(requestUriIndex, uriIndex);
-                requestUriIndex = (unsigned int) uriIndex;
-            }
-            pathArgIndex++;
-        }
-
-        return requestUriIndex >= requestUri.length();
+        return _uri->canHandle(requestUri, pathArgs);
     }
 
     bool canUpload(String requestUri) override  {
@@ -92,7 +58,7 @@ public:
 protected:
     WebServer::THandlerFunction _fn;
     WebServer::THandlerFunction _ufn;
-    String _uri;
+    Uri *_uri;
     HTTPMethod _method;
 };
 
@@ -104,8 +70,9 @@ public:
     , _path(path)
     , _cache_header(cache_header)
     {
-        _isFile = fs.exists(path);
-        log_v("StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header);
+        File f = fs.open(path);
+        _isFile = (f && (! f.isDirectory()));
+        log_v("StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header ? cache_header : ""); // issue 5506 - cache_header can be nullptr
         _baseUriLength = _uri.length();
     }
 
@@ -126,6 +93,7 @@ public:
         log_v("StaticRequestHandler::handle: request=%s _uri=%s\r\n", requestUri.c_str(), _uri.c_str());
 
         String path(_path);
+        String eTagCode;
 
         if (!_isFile) {
             // Base URI doesn't point to a file.
@@ -149,11 +117,28 @@ public:
         }
 
         File f = _fs.open(path, "r");
-        if (!f)
+        if (!f || !f.available())
             return false;
+
+        if (server._eTagEnabled) {
+            if (server._eTagFunction) {
+                eTagCode = (server._eTagFunction)(_fs, path);
+            } else {
+                eTagCode = calcETag(_fs, path);
+            }
+
+            if (server.header("If-None-Match") == eTagCode) {
+                server.send(304);
+                return true;
+            }
+        }
 
         if (_cache_header.length() != 0)
             server.sendHeader("Cache-Control", _cache_header);
+
+        if ((server._eTagEnabled) && (eTagCode.length() > 0)) {
+            server.sendHeader("ETag", eTagCode);
+        }
 
         server.streamFile(f, contentType);
         return true;
@@ -173,6 +158,26 @@ public:
         strcpy_P(buff, mimeTable[sizeof(mimeTable)/sizeof(mimeTable[0])-1].mimeType);
         return String(buff);
     }
+
+    // calculate an ETag for a file in filesystem based on md5 checksum
+    // that can be used in the http headers - include quotes.
+    static String calcETag(FS &fs, const String &path) {
+        String result;
+
+        // calculate eTag using md5 checksum
+        uint8_t md5_buf[16];
+        File f = fs.open(path, "r");
+        MD5Builder calcMD5;
+        calcMD5.begin();
+        calcMD5.addStream(f, f.size());
+        calcMD5.calculate();
+        calcMD5.getBytes(md5_buf);
+        f.close();
+        // create a minimal-length eTag using base64 byte[]->text encoding.
+        result = "\"" + base64::encode(md5_buf, 16) + "\"";
+        return(result);
+    } // calcETag
+
 
 protected:
     FS _fs;

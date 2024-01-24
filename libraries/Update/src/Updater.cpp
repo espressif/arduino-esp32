@@ -1,6 +1,6 @@
 #include "Update.h"
 #include "Arduino.h"
-#include "esp_spi_flash.h"
+#include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 
@@ -36,11 +36,11 @@ static const char * _err2str(uint8_t _error){
 }
 
 static bool _partitionIsBootable(const esp_partition_t* partition){
-    uint8_t buf[4];
+    uint8_t buf[ENCRYPTED_BLOCK_SIZE];
     if(!partition){
         return false;
     }
-    if(!ESP.flashRead(partition->address, (uint32_t*)buf, 4)) {
+    if(!ESP.partitionRead(partition, 0, (uint32_t*)buf, ENCRYPTED_BLOCK_SIZE)) {
         return false;
     }
 
@@ -50,17 +50,11 @@ static bool _partitionIsBootable(const esp_partition_t* partition){
     return true;
 }
 
-static bool _enablePartition(const esp_partition_t* partition){
-    uint8_t buf[4];
+bool UpdateClass::_enablePartition(const esp_partition_t* partition){
     if(!partition){
         return false;
     }
-    if(!ESP.flashRead(partition->address, (uint32_t*)buf, 4)) {
-        return false;
-    }
-    buf[0] = ESP_IMAGE_HEADER_MAGIC;
-
-    return ESP.flashWrite(partition->address, (uint32_t*)buf, 4);
+    return ESP.partitionWrite(partition, 0, (uint32_t*) _skipBuffer, ENCRYPTED_BLOCK_SIZE);
 }
 
 UpdateClass::UpdateClass()
@@ -70,6 +64,7 @@ UpdateClass::UpdateClass()
 , _size(0)
 , _progress_callback(NULL)
 , _progress(0)
+, _paroffset(0)
 , _command(U_FLASH)
 , _partition(NULL)
 {
@@ -81,9 +76,15 @@ UpdateClass& UpdateClass::onProgress(THandlerFunction_Progress fn) {
 }
 
 void UpdateClass::_reset() {
-    if (_buffer)
+    if (_buffer) {
         delete[] _buffer;
-    _buffer = 0;
+    }
+    if (_skipBuffer) {
+        delete[] _skipBuffer;
+    }
+
+    _buffer = nullptr;
+    _skipBuffer = nullptr;
     _bufferLen = 0;
     _progress = 0;
     _size = 0;
@@ -110,7 +111,7 @@ bool UpdateClass::rollBack(){
     return _partitionIsBootable(partition) && !esp_ota_set_boot_partition(partition);
 }
 
-bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn) {
+bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, const char *label) {
     if(_size > 0){
         log_w("already running");
         return false;
@@ -121,6 +122,8 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn) {
 
     _reset();
     _error = 0;
+    _target_md5 = emptyString;
+    _md5 = MD5Builder();
 
     if(size == 0) {
         _error = UPDATE_ERROR_SIZE;
@@ -136,10 +139,15 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn) {
         log_d("OTA Partition: %s", _partition->label);
     }
     else if (command == U_SPIFFS) {
-        _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+        _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, label);
+        _paroffset = 0;
         if(!_partition){
-            _error = UPDATE_ERROR_NO_PARTITION;
-            return false;
+            _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, NULL);
+            _paroffset = 0x1000;  //Offset for ffat, assuming size is already corrected
+            if(!_partition){
+               _error = UPDATE_ERROR_NO_PARTITION;
+               return false;
+            }
         }
     }
     else {
@@ -157,9 +165,9 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn) {
     }
 
     //initialize
-    _buffer = (uint8_t*)malloc(SPI_FLASH_SEC_SIZE);
-    if(!_buffer){
-        log_e("malloc failed");
+    _buffer = new (std::nothrow) uint8_t[SPI_FLASH_SEC_SIZE];
+    if (!_buffer) {
+        log_e("_buffer allocation failed");
         return false;
     }
     _size = size;
@@ -179,27 +187,45 @@ void UpdateClass::abort(){
 
 bool UpdateClass::_writeBuffer(){
     //first bytes of new firmware
+    uint8_t skip = 0;
     if(!_progress && _command == U_FLASH){
         //check magic
         if(_buffer[0] != ESP_IMAGE_HEADER_MAGIC){
             _abort(UPDATE_ERROR_MAGIC_BYTE);
             return false;
         }
-        //remove magic byte from the firmware now and write it upon success
-        //this ensures that partially written firmware will not be bootable
-        _buffer[0] = 0xFF;
+
+        //Stash the first 16 bytes of data and set the offset so they are
+        //not written at this point so that partially written firmware
+        //will not be bootable
+        skip = ENCRYPTED_BLOCK_SIZE;
+        _skipBuffer = new (std::nothrow) uint8_t[skip];
+        if (!_skipBuffer) {
+            log_e("_skipBuffer allocation failed");
+            return false;
+        }
+        memcpy(_skipBuffer, _buffer, skip);
     }
     if (!_progress && _progress_callback) {
         _progress_callback(0, _size);
     }
-    if(!ESP.flashEraseSector((_partition->address + _progress)/SPI_FLASH_SEC_SIZE)){
-        _abort(UPDATE_ERROR_ERASE);
-        return false;
+    size_t offset = _partition->address + _progress;
+    bool block_erase = (_size - _progress >= SPI_FLASH_BLOCK_SIZE) && (offset % SPI_FLASH_BLOCK_SIZE == 0);             // if it's the block boundary, than erase the whole block from here
+    bool part_head_sectors = _partition->address % SPI_FLASH_BLOCK_SIZE && offset < (_partition->address / SPI_FLASH_BLOCK_SIZE + 1) * SPI_FLASH_BLOCK_SIZE;    // sector belong to unaligned partition heading block
+    bool part_tail_sectors = offset >= (_partition->address + _size) / SPI_FLASH_BLOCK_SIZE * SPI_FLASH_BLOCK_SIZE;     // sector belong to unaligned partition tailing block
+    if (block_erase || part_head_sectors || part_tail_sectors){
+        if(!ESP.partitionEraseRange(_partition, _progress, block_erase ? SPI_FLASH_BLOCK_SIZE : SPI_FLASH_SEC_SIZE)){
+            _abort(UPDATE_ERROR_ERASE);
+            return false;
+        }
     }
-    if (!ESP.flashWrite(_partition->address + _progress, (uint32_t*)_buffer, _bufferLen)) {
+
+    // try to skip empty blocks on unecrypted partitions
+    if ((_partition->encrypted || _chkDataInBlock(_buffer + skip/sizeof(uint32_t), _bufferLen - skip)) && !ESP.partitionWrite(_partition, _progress + skip, (uint32_t*)_buffer + skip/sizeof(uint32_t), _bufferLen - skip)) {
         _abort(UPDATE_ERROR_WRITE);
         return false;
     }
+
     //restore magic or md5 will fail
     if(!_progress && _command == U_FLASH){
         _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
@@ -252,6 +278,7 @@ bool UpdateClass::setMD5(const char * expected_md5){
         return false;
     }
     _target_md5 = expected_md5;
+    _target_md5.toLowerCase();
     return true;
 }
 
@@ -318,6 +345,8 @@ size_t UpdateClass::write(uint8_t *data, size_t len) {
 size_t UpdateClass::writeStream(Stream &data) {
     size_t written = 0;
     size_t toRead = 0;
+    int timeout_failures = 0;
+
     if(hasError() || !isRunning())
         return 0;
 
@@ -339,15 +368,24 @@ size_t UpdateClass::writeStream(Stream &data) {
             bytesToRead = remaining();
         }
 
-        toRead = data.readBytes(_buffer + _bufferLen,  bytesToRead);
-        if(toRead == 0) { //Timeout
-            delay(100);
-            toRead = data.readBytes(_buffer + _bufferLen, bytesToRead);
-            if(toRead == 0) { //Timeout
-                _abort(UPDATE_ERROR_STREAM);
-                return written;
+        /* 
+        Init read&timeout counters and try to read, if read failed, increase counter,
+        wait 100ms and try to read again. If counter > 300 (30 sec), give up/abort
+        */
+        toRead = 0;
+        timeout_failures = 0;
+        while(!toRead) {
+            toRead = data.readBytes(_buffer + _bufferLen,  bytesToRead);
+            if(toRead == 0) {
+                timeout_failures++;
+                if (timeout_failures >= 300) {
+                    _abort(UPDATE_ERROR_STREAM);
+                    return written;
+                }
+                delay(100);
             }
         }
+
         if(_ledPin != -1) {
             digitalWrite(_ledPin, !_ledOn); // Switch LED off
         }
@@ -359,7 +397,7 @@ size_t UpdateClass::writeStream(Stream &data) {
     return written;
 }
 
-void UpdateClass::printError(Stream &out){
+void UpdateClass::printError(Print &out){
     out.println(_err2str(_error));
 }
 
@@ -367,4 +405,22 @@ const char * UpdateClass::errorString(){
     return _err2str(_error);
 }
 
+bool UpdateClass::_chkDataInBlock(const uint8_t *data, size_t len) const {
+    // check 32-bit aligned blocks only
+    if (!len || len % sizeof(uint32_t))
+        return true;
+
+    size_t dwl = len / sizeof(uint32_t);
+
+    do {
+        if (*(uint32_t*)data ^ 0xffffffff)      // for SPI NOR flash empty blocks are all one's, i.e. filled with 0xff byte
+            return true;
+
+        data += sizeof(uint32_t);
+    } while (--dwl);
+    return false;
+}
+
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
 UpdateClass Update;
+#endif

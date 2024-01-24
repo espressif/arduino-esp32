@@ -9,13 +9,13 @@ struct Button {
 Button button1 = {23, 0, false};
 Button button2 = {18, 0, false};
 
-void IRAM_ATTR isr(void* arg) {
+void ARDUINO_ISR_ATTR isr(void* arg) {
     Button* s = static_cast<Button*>(arg);
     s->numberKeyPresses += 1;
     s->pressed = true;
 }
 
-void IRAM_ATTR isr() {
+void ARDUINO_ISR_ATTR isr() {
     button2.numberKeyPresses += 1;
     button2.pressed = true;
 }
@@ -30,11 +30,11 @@ void setup() {
 
 void loop() {
     if (button1.pressed) {
-        Serial.printf("Button 1 has been pressed %u times\n", button1.numberKeyPresses);
+        Serial.printf("Button 1 has been pressed %lu times\n", button1.numberKeyPresses);
         button1.pressed = false;
     }
     if (button2.pressed) {
-        Serial.printf("Button 2 has been pressed %u times\n", button2.numberKeyPresses);
+        Serial.printf("Button 2 has been pressed %lu times\n", button2.numberKeyPresses);
         button2.pressed = false;
     }
     static uint32_t lastMillis = 0;

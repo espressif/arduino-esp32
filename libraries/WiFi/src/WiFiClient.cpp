@@ -23,9 +23,15 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
-#define WIFI_CLIENT_MAX_WRITE_RETRY   (10)
-#define WIFI_CLIENT_SELECT_TIMEOUT_US (1000000)
-#define WIFI_CLIENT_FLUSH_BUFFER_SIZE (1024)
+#define IN6_IS_ADDR_V4MAPPED(a) \
+        ((((__const uint32_t *) (a))[0] == 0) \
+         && (((__const uint32_t *) (a))[1] == 0) \
+         && (((__const uint32_t *) (a))[2] == htonl (0xffff)))
+
+#define WIFI_CLIENT_DEF_CONN_TIMEOUT_MS  (3000)
+#define WIFI_CLIENT_MAX_WRITE_RETRY      (10)
+#define WIFI_CLIENT_SELECT_TIMEOUT_US    (1000000)
+#define WIFI_CLIENT_FLUSH_BUFFER_SIZE    (1024)
 
 #undef connect
 #undef write
@@ -46,7 +52,11 @@ private:
                 return 0;
             }
             int count;
+#ifdef ESP_IDF_VERSION_MAJOR
+            int res = lwip_ioctl(_fd, FIONREAD, &count);
+#else
             int res = lwip_ioctl_r(_fd, FIONREAD, &count);
+#endif
             if(res < 0) {
                 _failed = true;
                 return 0;
@@ -105,7 +115,7 @@ public:
 
     int read(uint8_t * dst, size_t len){
         if(!dst || !len || (_pos == _fill && !fillBuffer())){
-            return -1;
+            return _failed ? -1 : 0;
         }
         size_t a = _fill - _pos;
         if(len <= a || ((len - a) <= (_size - _fill) && fillBuffer() >= (len - a))){
@@ -148,6 +158,13 @@ public:
     size_t available(){
         return _fill - _pos + r_available();
     }
+
+    void flush(){
+        if(r_available()){
+            fillBuffer();
+        }
+        _pos = _fill;
+    }
 };
 
 class WiFiClientSocketHandle {
@@ -170,11 +187,11 @@ public:
     }
 };
 
-WiFiClient::WiFiClient():_connected(false),next(NULL)
+WiFiClient::WiFiClient():_rxBuffer(nullptr),_connected(false),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
 {
 }
 
-WiFiClient::WiFiClient(int fd):_connected(true),next(NULL)
+WiFiClient::WiFiClient(int fd):_connected(true),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
 {
     clientSocketHandle.reset(new WiFiClientSocketHandle(fd));
     _rxBuffer.reset(new WiFiClientRxBuffer(fd));
@@ -185,62 +202,71 @@ WiFiClient::~WiFiClient()
     stop();
 }
 
-WiFiClient & WiFiClient::operator=(const WiFiClient &other)
-{
-    stop();
-    clientSocketHandle = other.clientSocketHandle;
-    _rxBuffer = other._rxBuffer;
-    _connected = other._connected;
-    return *this;
-}
-
 void WiFiClient::stop()
 {
     clientSocketHandle = NULL;
     _rxBuffer = NULL;
     _connected = false;
+    _lastReadTimeout = 0;
+    _lastWriteTimeout = 0;
 }
 
 int WiFiClient::connect(IPAddress ip, uint16_t port)
 {
-    return connect(ip,port,-1);
+    return connect(ip,port,_timeout);
 }
-int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
+
+int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms)
 {
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_storage serveraddr = {};
+    _timeout = timeout_ms;
+    int sockfd = -1;
+
+    if (ip.type() == IPv6) {
+        struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
+        sockfd = socket(AF_INET6, SOCK_STREAM, 0);
+        tmpaddr->sin6_family = AF_INET6;
+        memcpy(tmpaddr->sin6_addr.un.u8_addr, &ip[0], 16);
+        tmpaddr->sin6_port = htons(port);
+        tmpaddr->sin6_scope_id = ip.zone();
+    } else {
+        struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serveraddr;
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        tmpaddr->sin_family = AF_INET;
+        tmpaddr->sin_addr.s_addr = ip;
+        tmpaddr->sin_port = htons(port);
+    }
     if (sockfd < 0) {
         log_e("socket: %d", errno);
         return 0;
     }
     fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) | O_NONBLOCK );
 
-    uint32_t ip_addr = ip;
-    struct sockaddr_in serveraddr;
-    bzero((char *) &serveraddr, sizeof(serveraddr));
-    serveraddr.sin_family = AF_INET;
-    bcopy((const void *)(&ip_addr), (void *)&serveraddr.sin_addr.s_addr, 4);
-    serveraddr.sin_port = htons(port);
     fd_set fdset;
     struct timeval tv;
     FD_ZERO(&fdset);
     FD_SET(sockfd, &fdset);
-    tv.tv_sec = 0;
-    tv.tv_usec = timeout * 1000;
+    tv.tv_sec = _timeout / 1000;
+    tv.tv_usec = (_timeout  % 1000) * 1000;
 
+#ifdef ESP_IDF_VERSION_MAJOR
+    int res = lwip_connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+#else
     int res = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+#endif
     if (res < 0 && errno != EINPROGRESS) {
         log_e("connect on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
         close(sockfd);
         return 0;
     }
 
-    res = select(sockfd + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
+    res = select(sockfd + 1, nullptr, &fdset, nullptr, _timeout<0 ? nullptr : &tv);
     if (res < 0) {
         log_e("select on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
         close(sockfd);
         return 0;
     } else if (res == 0) {
-        log_i("select returned due to timeout %d ms for fd %d", timeout, sockfd);
+        log_i("select returned due to timeout %d ms for fd %d", _timeout, sockfd);
         close(sockfd);
         return 0;
     } else {
@@ -261,64 +287,77 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout)
         }
     }
 
+#define ROE_WIFICLIENT(x,msg) { if (((x)<0)) { log_e("Setsockopt '" msg "'' on fd %d failed. errno: %d, \"%s\"", sockfd, errno, strerror(errno)); return 0; }}
+    ROE_WIFICLIENT(setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)),"SO_SNDTIMEO");
+    ROE_WIFICLIENT(setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)),"SO_RCVTIMEO");
+
+    // These are also set in WiFiClientSecure, should be set here too?
+    //ROE_WIFICLIENT(setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)),"TCP_NODELAY"); 
+    //ROE_WIFICLIENT (setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)),"SO_KEEPALIVE");
+
     fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) & (~O_NONBLOCK) );
     clientSocketHandle.reset(new WiFiClientSocketHandle(sockfd));
     _rxBuffer.reset(new WiFiClientRxBuffer(sockfd));
+
     _connected = true;
     return 1;
 }
 
 int WiFiClient::connect(const char *host, uint16_t port)
 {
-    return connect(host,port,-1);
+    return connect(host,port,_timeout);
 }
-int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout)
+
+int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
 {
     IPAddress srv((uint32_t)0);
     if(!WiFiGenericClass::hostByName(host, srv)){
         return 0;
     }
-    return connect(srv, port, timeout);
+    return connect(srv, port, timeout_ms);
 }
 
 int WiFiClient::setSocketOption(int option, char* value, size_t len)
 {
-    int res = setsockopt(fd(), SOL_SOCKET, option, value, len);
+    return setSocketOption(SOL_SOCKET, option, (const void*)value, len);
+}
+
+int WiFiClient::setSocketOption(int level, int option, const void* value, size_t len)
+{
+    int res = setsockopt(fd(), level, option, value, len);
     if(res < 0) {
-        log_e("%X : %d", option, errno);
+        log_e("fail on %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
 }
 
-int WiFiClient::setTimeout(uint32_t seconds)
+int WiFiClient::getSocketOption(int level, int option, const void* value, size_t size)
 {
-    Client::setTimeout(seconds * 1000);
-    struct timeval tv;
-    tv.tv_sec = seconds;
-    tv.tv_usec = 0;
-    if(setSocketOption(SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-        return -1;
-    }
-    return setSocketOption(SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
-}
-
-int WiFiClient::setOption(int option, int *value)
-{
-    int res = setsockopt(fd(), IPPROTO_TCP, option, (char *) value, sizeof(int));
+    int res = getsockopt(fd(), level, option, (char *)value, (socklen_t*)&size);
     if(res < 0) {
         log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
 }
 
+int WiFiClient::setOption(int option, int *value)
+{
+    return setSocketOption(IPPROTO_TCP, option, (const void*)value, sizeof(int));
+}
+
 int WiFiClient::getOption(int option, int *value)
 {
-    size_t size = sizeof(int);
+	socklen_t size = sizeof(int);
     int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
     if(res < 0) {
         log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
     }
     return res;
+}
+
+void WiFiClient::setConnectionTimeout(uint32_t milliseconds)
+{
+    _timeout = milliseconds;
 }
 
 int WiFiClient::setNoDelay(bool nodelay)
@@ -346,6 +385,9 @@ int WiFiClient::read()
     if(res < 0) {
         return res;
     }
+    if (res == 0) {  //  No data available.
+        return -1;
+    }
     return data;
 }
 
@@ -370,6 +412,18 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
         tv.tv_sec = 0;
         tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
         retry--;
+
+        if(_lastWriteTimeout != _timeout){
+            if(fd() >= 0){
+                struct timeval timeout_tv;
+                timeout_tv.tv_sec = _timeout / 1000;
+                timeout_tv.tv_usec = (_timeout % 1000) * 1000;
+                if(setSocketOption(SO_SNDTIMEO, (char *)&timeout_tv, sizeof(struct timeval)) >= 0)
+                {
+                    _lastWriteTimeout = _timeout;
+                }
+            }
+        }
 
         if(select(socketFileDescriptor + 1, NULL, &set, NULL, &tv) < 0) {
             return 0;
@@ -430,21 +484,38 @@ size_t WiFiClient::write(Stream &stream)
 
 int WiFiClient::read(uint8_t *buf, size_t size)
 {
+    if(_lastReadTimeout != _timeout){
+        if(fd() >= 0){
+            struct timeval timeout_tv;
+            timeout_tv.tv_sec = _timeout / 1000;
+            timeout_tv.tv_usec = (_timeout % 1000) * 1000;
+            if(setSocketOption(SO_RCVTIMEO, (char *)&timeout_tv, sizeof(struct timeval)) >= 0)
+            {
+                _lastReadTimeout = _timeout;
+            }
+        }
+    }
+
     int res = -1;
-    res = _rxBuffer->read(buf, size);
-    if(_rxBuffer->failed()) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
-        stop();
+    if (_rxBuffer) {
+        res = _rxBuffer->read(buf, size);
+        if(_rxBuffer->failed()) {
+            log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
+            stop();
+        }
     }
     return res;
 }
 
 int WiFiClient::peek()
 {
-    int res = _rxBuffer->peek();
-    if(_rxBuffer->failed()) {
-        log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
-        stop();
+    int res = -1;
+    if (_rxBuffer) {
+        res = _rxBuffer->peek();
+        if(_rxBuffer->failed()) {
+            log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
+            stop();
+        }
     }
     return res;
 }
@@ -466,26 +537,9 @@ int WiFiClient::available()
 // Though flushing means to send all pending data,
 // seems that in Arduino it also means to clear RX
 void WiFiClient::flush() {
-    int res;
-    size_t a = available(), toRead = 0;
-    if(!a){
-        return;//nothing to flush
+    if (_rxBuffer != nullptr) {
+        _rxBuffer->flush();
     }
-    uint8_t * buf = (uint8_t *)malloc(WIFI_CLIENT_FLUSH_BUFFER_SIZE);
-    if(!buf){
-        return;//memory error
-    }
-    while(a){
-        toRead = (a>WIFI_CLIENT_FLUSH_BUFFER_SIZE)?WIFI_CLIENT_FLUSH_BUFFER_SIZE:a;
-        res = recv(fd(), buf, toRead, MSG_DONTWAIT);
-        if(res < 0) {
-            log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
-            stop();
-            break;
-        }
-        a -= res;
-    }
-    free(buf);
 }
 
 uint8_t WiFiClient::connected()
@@ -495,23 +549,28 @@ uint8_t WiFiClient::connected()
         int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
         // avoid unused var warning by gcc
         (void)res;
-        switch (errno) {
-            case EWOULDBLOCK:
-            case ENOENT: //caused by vfs
-                _connected = true;
-                break;
-            case ENOTCONN:
-            case EPIPE:
-            case ECONNRESET:
-            case ECONNREFUSED:
-            case ECONNABORTED:
-                _connected = false;
-                log_d("Disconnected: RES: %d, ERR: %d", res, errno);
-                break;
-            default:
-                log_i("Unexpected: RES: %d, ERR: %d", res, errno);
-                _connected = true;
-                break;
+        // recv only sets errno if res is <= 0
+        if (res <= 0){
+          switch (errno) {
+              case EWOULDBLOCK:
+              case ENOENT: //caused by vfs
+                  _connected = true;
+                  break;
+              case ENOTCONN:
+              case EPIPE:
+              case ECONNRESET:
+              case ECONNREFUSED:
+              case ECONNABORTED:
+                  _connected = false;
+                  log_d("Disconnected: RES: %d, ERR: %d", res, errno);
+                  break;
+              default:
+                  log_i("Unexpected: RES: %d, ERR: %d", res, errno);
+                  _connected = true;
+                  break;
+          }
+        } else {
+          _connected = true;
         }
     }
     return _connected;
@@ -522,8 +581,24 @@ IPAddress WiFiClient::remoteIP(int fd) const
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
     getpeername(fd, (struct sockaddr*)&addr, &len);
-    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-    return IPAddress((uint32_t)(s->sin_addr.s_addr));
+
+    // IPv4 socket, old way
+    if (((struct sockaddr*)&addr)->sa_family == AF_INET) {
+        struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+        return IPAddress((uint32_t)(s->sin_addr.s_addr));
+    }
+
+    // IPv6, but it might be IPv4 mapped address
+    if (((struct sockaddr*)&addr)->sa_family == AF_INET6) {
+        struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
+        if (IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
+            return IPAddress(IPv4, (uint8_t*)saddr6->sin6_addr.s6_addr+IPADDRESS_V4_BYTES_INDEX);
+        } else {
+            return IPAddress(IPv6, (uint8_t*)(saddr6->sin6_addr.s6_addr), saddr6->sin6_scope_id);
+        }
+    }
+    log_e("WiFiClient::remoteIP Not AF_INET or AF_INET6?");
+    return (IPAddress(0,0,0,0));
 }
 
 uint16_t WiFiClient::remotePort(int fd) const
@@ -586,4 +661,3 @@ int WiFiClient::fd() const
         return clientSocketHandle->fd();
     }
 }
-

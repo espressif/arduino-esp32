@@ -36,8 +36,10 @@ void setup()
 
 void loop()
 {
-    const uint16_t port = 80;
-    const char * host = "192.168.1.1"; // ip or dns
+//    const uint16_t port = 80;
+//    const char * host = "192.168.1.1"; // ip or dns
+    const uint16_t port = 1337;
+    const char * host = "192.168.1.10"; // ip or dns
 
     Serial.print("Connecting to ");
     Serial.println(host);
@@ -53,11 +55,29 @@ void loop()
     }
 
     // This will send a request to the server
-    client.print("Send this data to the server");
+    //uncomment this line to send an arbitrary string to the server
+    //client.print("Send this data to the server");
+    //uncomment this line to send a basic document request to the server
+    client.print("GET /index.html HTTP/1.1\n\n");
 
+  int maxloops = 0;
+
+  //wait for the server's reply to become available
+  while (!client.available() && maxloops < 1000)
+  {
+    maxloops++;
+    delay(1); //delay 1 msec
+  }
+  if (client.available() > 0)
+  {
     //read back one line from the server
     String line = client.readStringUntil('\r');
-    client.println(line);
+    Serial.println(line);
+  }
+  else
+  {
+    Serial.println("client.available() timed out ");
+  }
 
     Serial.println("Closing connection.");
     client.stop();
@@ -65,4 +85,3 @@ void loop()
     Serial.println("Waiting 5 seconds before restarting...");
     delay(5000);
 }
-

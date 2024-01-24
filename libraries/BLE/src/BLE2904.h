@@ -7,8 +7,11 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLE2904_H_
 #define COMPONENTS_CPP_UTILS_BLE2904_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLEDescriptor.h"
 
@@ -70,5 +73,6 @@ private:
 	BLE2904_Data m_data;
 }; // BLE2904
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLE2904_H_ */

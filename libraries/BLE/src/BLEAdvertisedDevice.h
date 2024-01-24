@@ -7,8 +7,11 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
 #define COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gattc_api.h>
 
 #include <map>
@@ -17,6 +20,13 @@
 #include "BLEScan.h"
 #include "BLEUUID.h"
 
+typedef enum {
+	BLE_UNKNOWN_FRAME,
+	BLE_EDDYSTONE_UUID_FRAME,
+	BLE_EDDYSTONE_URL_FRAME,
+	BLE_EDDYSTONE_TLM_FRAME,
+	BLE_FRAME_MAX
+} ble_frame_type_t;
 
 class BLEScan;
 /**
@@ -31,17 +41,24 @@ public:
 
 	BLEAddress  getAddress();
 	uint16_t    getAppearance();
-	std::string getManufacturerData();
-	std::string getName();
+	String getManufacturerData();
+	String getName();
 	int         getRSSI();
 	BLEScan*    getScan();
-	std::string getServiceData();
+	String getServiceData();
+	String getServiceData(int i);
 	BLEUUID     getServiceDataUUID();
+	BLEUUID     getServiceDataUUID(int i);
 	BLEUUID     getServiceUUID();
+	BLEUUID     getServiceUUID(int i);
+	int         getServiceDataCount();
+	int         getServiceDataUUIDCount();
+	int         getServiceUUIDCount();
 	int8_t      getTXPower();
-	uint8_t* 	getPayload();
-	size_t		getPayloadLength();
+	uint8_t*    getPayload();
+	size_t      getPayloadLength();
 	esp_ble_addr_type_t getAddressType();
+	ble_frame_type_t getFrameType();
 	void setAddressType(esp_ble_addr_type_t type);
 
 
@@ -54,21 +71,22 @@ public:
 	bool        haveServiceUUID();
 	bool        haveTXPower();
 
-	std::string toString();
+	String toString();
 
 private:
 	friend class BLEScan;
 
 	void parseAdvertisement(uint8_t* payload, size_t total_len=62);
+	void setPayload(uint8_t* payload, size_t total_len=62);
 	void setAddress(BLEAddress address);
 	void setAdFlag(uint8_t adFlag);
 	void setAdvertizementResult(uint8_t* payload);
 	void setAppearance(uint16_t appearance);
-	void setManufacturerData(std::string manufacturerData);
-	void setName(std::string name);
+	void setManufacturerData(String manufacturerData);
+	void setName(String name);
 	void setRSSI(int rssi);
 	void setScan(BLEScan* pScan);
-	void setServiceData(std::string data);
+	void setServiceData(String data);
 	void setServiceDataUUID(BLEUUID uuid);
 	void setServiceUUID(const char* serviceUUID);
 	void setServiceUUID(BLEUUID serviceUUID);
@@ -78,8 +96,6 @@ private:
 	bool m_haveManufacturerData;
 	bool m_haveName;
 	bool m_haveRSSI;
-	bool m_haveServiceData;
-	bool m_haveServiceUUID;
 	bool m_haveTXPower;
 
 
@@ -87,14 +103,14 @@ private:
 	uint8_t     m_adFlag;
 	uint16_t    m_appearance;
 	int         m_deviceType;
-	std::string m_manufacturerData;
-	std::string m_name;
+	String m_manufacturerData;
+	String m_name;
 	BLEScan*    m_pScan;
 	int         m_rssi;
 	std::vector<BLEUUID> m_serviceUUIDs;
 	int8_t      m_txPower;
-	std::string m_serviceData;
-	BLEUUID     m_serviceDataUUID;
+	std::vector<String> m_serviceData;
+	std::vector<BLEUUID> m_serviceDataUUIDs;
 	uint8_t*	m_payload;
 	size_t		m_payloadLength = 0;
 	esp_ble_addr_type_t m_addressType;
@@ -119,5 +135,21 @@ public:
 	virtual void onResult(BLEAdvertisedDevice advertisedDevice) = 0;
 };
 
-#endif /* CONFIG_BT_ENABLED */
+#ifdef SOC_BLE_50_SUPPORTED
+class BLEExtAdvertisingCallbacks {
+public:
+	virtual ~BLEExtAdvertisingCallbacks() {}
+	/**
+	 * @brief Called when a new scan result is detected.
+	 *
+	 * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
+	 * device that was found.  During any individual scan, a device will only be detected one time.
+	 */
+	virtual void onResult(esp_ble_gap_ext_adv_reprot_t report) = 0;
+};
+#endif // SOC_BLE_50_SUPPORTED
+
+
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_ */

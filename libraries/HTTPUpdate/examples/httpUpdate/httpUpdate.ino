@@ -36,6 +36,22 @@ void setup() {
 
 }
 
+void update_started() {
+  Serial.println("CALLBACK:  HTTP update process started");
+}
+
+void update_finished() {
+  Serial.println("CALLBACK:  HTTP update process finished");
+}
+
+void update_progress(int cur, int total) {
+  Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
+}
+
+void update_error(int err) {
+  Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
+}
+
 void loop() {
   // wait for WiFi connection
   if ((WiFiMulti.run() == WL_CONNECTED)) {
@@ -50,9 +66,14 @@ void loop() {
     // value is used to put the LED on. If the LED is on with HIGH, that value should be passed
     // httpUpdate.setLedPin(LED_BUILTIN, LOW);
 
+    httpUpdate.onStart(update_started);
+    httpUpdate.onEnd(update_finished);
+    httpUpdate.onProgress(update_progress);
+    httpUpdate.onError(update_error);
+
     t_httpUpdate_return ret = httpUpdate.update(client, "http://server/file.bin");
     // Or:
-    //t_httpUpdate_return ret = httpUpdate.update(client, "server", 80, "file.bin");
+    //t_httpUpdate_return ret = httpUpdate.update(client, "server", 80, "/file.bin");
 
     switch (ret) {
       case HTTP_UPDATE_FAILED:

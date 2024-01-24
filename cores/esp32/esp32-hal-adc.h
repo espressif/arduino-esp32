@@ -17,8 +17,10 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef MAIN_ESP32_HAL_ADC_H_
-#define MAIN_ESP32_HAL_ADC_H_
+#pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_ADC_SUPPORTED
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,13 +32,19 @@ typedef enum {
     ADC_0db,
     ADC_2_5db,
     ADC_6db,
-    ADC_11db
+    ADC_11db,
+    ADC_ATTENDB_MAX
 } adc_attenuation_t;
 
 /*
  * Get ADC value for pin
  * */
 uint16_t analogRead(uint8_t pin);
+
+/*
+ * Get MilliVolts value for pin
+ * */
+uint32_t analogReadMilliVolts(uint8_t pin);
 
 /*
  * Set the resolution of analogRead return values. Default is 12 bits (range from 0 to 4096).
@@ -46,38 +54,6 @@ uint16_t analogRead(uint8_t pin);
  * Note: compatibility with Arduino SAM
  */
 void analogReadResolution(uint8_t bits);
-
-/*
- * Sets the sample bits and read resolution
- * Default is 12bit (0 - 4095)
- * Range is 9 - 12
- * */
-void analogSetWidth(uint8_t bits);
-
-/*
- * Set number of cycles per sample
- * Default is 8 and seems to do well
- * Range is 1 - 255
- * */
-void analogSetCycles(uint8_t cycles);
-
-/*
- * Set number of samples in the range.
- * Default is 1
- * Range is 1 - 255
- * This setting splits the range into
- * "samples" pieces, which could look
- * like the sensitivity has been multiplied
- * that many times
- * */
-void analogSetSamples(uint8_t samples);
-
-/*
- * Set the divider for the ADC clock.
- * Default is 1
- * Range is 1 - 255
- * */
-void analogSetClockDiv(uint8_t clockDiv);
 
 /*
  * Set the attenuation for all channels
@@ -91,43 +67,68 @@ void analogSetAttenuation(adc_attenuation_t attenuation);
  * */
 void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation);
 
+#if CONFIG_IDF_TARGET_ESP32
 /*
- * Get value for HALL sensor (without LNA)
- * connected to pins 36(SVP) and 39(SVN)
+ * Sets the sample bits and read resolution
+ * Default is 12bit (0 - 4095)
+ * Range is 9 - 12
  * */
-int hallRead();
+void analogSetWidth(uint8_t bits);
+
+#endif
 
 /*
- * Non-Blocking API (almost)
- *
- * Note: ADC conversion can run only for single pin at a time.
- *       That means that if you want to run ADC on two pins on the same bus,
- *       you need to run them one after another. Probably the best use would be
- *       to start conversion on both buses in parallel.
+ * Analog Continuous mode
  * */
 
-/*
- * Attach pin to ADC (will also clear any other analog mode that could be on)
- * */
-bool adcAttachPin(uint8_t pin);
+typedef struct {
+    uint8_t pin;           /*!<ADC pin */
+    uint8_t channel;       /*!<ADC channel */
+    int avg_read_raw;      /*!<ADC average raw data */
+    int avg_read_mvolts;   /*!<ADC average voltage in mV */
+} adc_continuos_data_t;
 
 /*
- * Start ADC conversion on attached pin's bus
+ * Setup ADC continuous peripheral
  * */
-bool adcStart(uint8_t pin);
+bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
 
 /*
- * Check if conversion on the pin's ADC bus is currently running
+ * Read ADC continuous conversion data
  * */
-bool adcBusy(uint8_t pin);
+bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms);
 
 /*
- * Get the result of the conversion (will wait if it have not finished)
+ * Start ADC continuous conversions
  * */
-uint16_t adcEnd(uint8_t pin);
+bool analogContinuousStart();
+
+/*
+ * Stop ADC continuous conversions
+ * */
+bool analogContinuousStop();
+
+/*
+ * Deinitialize ADC continuous peripheral
+ * */
+bool analogContinuousDeinit();
+
+/*
+ * Sets the attenuation for continuous mode reading
+ * Default is 11db
+ * */
+void analogContinuousSetAtten(adc_attenuation_t attenuation);
+
+/*
+ * Sets the read resolution for continuous mode
+ * Default is 12bit (0 - 4095)
+ * Range is 9 - 12
+ * */
+void analogContinuousSetWidth(uint8_t bits);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MAIN_ESP32_HAL_ADC_H_ */
+#endif /* SOC_ADC_SUPPORTED */

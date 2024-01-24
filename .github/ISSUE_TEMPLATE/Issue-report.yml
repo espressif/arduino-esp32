@@ -1,0 +1,144 @@
+name: Issue report
+description: Report any problem here
+labels: ["Status: Awaiting triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        * Before reporting a new issue please check and search in [List of existing issues](https://github.com/espressif/arduino-esp32/issues?q=is%3Aissue) 
+        * Please check [Online Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/index.html)
+        * Take a look on [Troubleshooting guide](https://docs.espressif.com/projects/arduino-esp32/en/latest/troubleshooting.html)
+        * If still experiencing the issue, please provide as many details as possible below about your hardware, computer setup and code.
+  - type: input
+    id: Board
+    attributes:
+      label: Board
+      description: On which Board does this issue occur?
+      placeholder: eg. ESP32 Dev Module, ESP32-S2, LilyGo TTGO LoRa32...
+    validations:
+      required: true
+  - type: textarea
+    id: devboard
+    attributes:
+      label: Device Description
+      description: What development board or other hardware is the chip attached to?
+      placeholder: ex. DevKitC, plain module on breadboard, etc. If your hardware is custom or unusual, please attach a photo.
+    validations:
+       required: true
+  - type: textarea
+    id: other-hw
+    attributes:
+      label: Hardware Configuration
+      description: Is anything else attached to the development board?
+      placeholder: ex. GPIO 18 & 19 are connected to I2C devices.
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of Arduino ESP32 are you running? If possible, consider updating to the latest version.
+      options:
+        - latest master (checkout manually)
+        - latest development Release Candidate (RC-X)
+        - v2.0.14
+        - v2.0.13
+        - v2.0.12
+        - v2.0.11
+        - v2.0.10
+        - v2.0.9
+        - v2.0.8
+        - v2.0.7
+        - v2.0.6
+        - v2.0.5 
+        - v2.0.4
+        - v2.0.3
+        - v2.0.2
+        - v2.0.1
+        - v2.0.0
+        - v1.0.6
+        - other
+    validations:
+      required: true
+  - type: input
+    id: IDE
+    attributes:
+     label: IDE Name
+     description: What IDE are you using?
+     placeholder: eg. Arduino IDE, PlatformIO, Sloeber...
+    validations:
+     required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: On which OS does this issue occur?
+      placeholder: ex. macOS 12.1, Windows 10...
+    validations:
+      required: true
+  - type: input
+    id: Flash
+    attributes:
+      label: Flash frequency
+      description: What flash frequency is used?
+      placeholder: eg. 40Mhz
+    validations:
+      required: true
+  - type: dropdown
+    id: PSRAM 
+    attributes:
+      label: PSRAM enabled
+      description: Is PSRAM enabled?
+      options:
+        - 'yes'
+        - 'no' 
+    validations:
+      required: true
+  - type: input
+    id: Upload
+    attributes:
+      label: Upload speed
+      description: What upload speed is used?
+      placeholder: eg. 115200
+    validations:
+      required: true
+  - type: textarea
+    id: Description
+    attributes:
+      label: Description
+      description: Please describe your problem here and expected behaviour
+      placeholder: ex. Can't connect/weird behaviour/wrong function/missing parameter..
+    validations:
+      required: true
+  - type: textarea
+    id: sketch
+    attributes:
+      label: Sketch
+      description: Please provide full minimal sketch/code which can be run to reproduce your issue
+      placeholder: ex. Related part of the code to replicate the issue
+      render: cpp
+    validations:
+     required: true
+  - type: textarea
+    id: Debug
+    attributes:
+      label: Debug Message
+      description: Please provide a debug message or error message. If you have a Guru Meditation Error or Backtrace, please decode it with [ExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecoder)
+      placeholder: Enable Core debug level - Debug on tools menu of Arduino IDE, then put the serial output here.
+      render: plain
+    validations:
+      required: true      
+  - type: textarea
+    id: other-remarks
+    attributes:
+      label: Other Steps to Reproduce 
+      description: Is there any other information you can think of which will help us reproduce this problem? Any additional info can be added as well.
+      placeholder: ex. I also tried on other OS, HW...it works correctly on that setup.
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: I have checked existing issues, online documentation and the Troubleshooting Guide
+      description: You agree to check all the resources above before opening a new issue.
+      options:
+        - label: I confirm I have checked existing issues, online documentation and Troubleshooting guide.
+          required: true

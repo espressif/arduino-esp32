@@ -44,6 +44,10 @@ class ArduinoOTAClass
     //Sets the password as above but in the form MD5(password). Default NULL
     ArduinoOTAClass& setPasswordHash(const char *password);
 
+    //Sets the partition label to write to when updating SPIFFS. Default NULL
+    ArduinoOTAClass &setPartitionLabel(const char *partition_label);
+    String getPartitionLabel();
+
     //Sets if the device should be rebooted after successful update. Default true
     ArduinoOTAClass& setRebootOnSuccess(bool reboot);
 
@@ -80,6 +84,7 @@ class ArduinoOTAClass
     int _port;
     String _password;
     String _hostname;
+    String _partition_label;
     String _nonce;
     WiFiUDP _udp_ota;
     bool _initialized;

@@ -1,0 +1,40 @@
+#######################################
+# Syntax Coloring Map For ESP_SR
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ESP_SR	KEYWORD1
+ESP_SR_Class	KEYWORD1
+sr_cmd_t	KEYWORD1
+sr_event_t	KEYWORD1
+sr_mode_t	KEYWORD1
+sr_channels_t	KEYWORD1
+sr_cb	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+onEvent	KEYWORD2
+setMode	KEYWORD2
+pause	KEYWORD2
+resume	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+SR_EVENT_WAKEWORD	LITERAL1
+SR_EVENT_WAKEWORD_CHANNEL	LITERAL1
+SR_EVENT_COMMAND	LITERAL1
+SR_EVENT_TIMEOUT	LITERAL1
+SR_MODE_OFF	LITERAL1
+SR_MODE_WAKEWORD	LITERAL1
+SR_MODE_COMMAND	LITERAL1
+SR_MODE_MAX	LITERAL1
+SR_CHANNELS_MONO	LITERAL1
+SR_CHANNELS_STEREO	LITERAL1
+SR_CHANNELS_MAX	LITERAL1

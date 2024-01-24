@@ -15,18 +15,29 @@
 #ifndef MAIN_ESP32_HAL_SPI_H_
 #define MAIN_ESP32_HAL_SPI_H_
 
+#include "soc/soc_caps.h"
+#if SOC_GPSPI_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "sdkconfig.h"
 #include <stdint.h>
 #include <stdbool.h>
 
 #define SPI_HAS_TRANSACTION
 
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32S3
+#define FSPI  0
+#define HSPI  1
+#else
 #define FSPI  1 //SPI bus attached to the flash (can use the same data lines but different SS)
 #define HSPI  2 //SPI bus normally mapped to pins 12 - 15, but can be matrixed to any pins
+#if CONFIG_IDF_TARGET_ESP32
 #define VSPI  3 //SPI bus normally attached to pins 5, 18, 19 and 23, but can be matrixed to any pins
+#endif
+#endif
 
 // This defines are not representing the real Divider of the ESP32
 // the Defines match to an AVR Arduino on 16MHz for better compatibility
@@ -43,10 +54,10 @@ extern "C" {
 #define SPI_MODE2 2
 #define SPI_MODE3 3
 
-#define SPI_CS0 0
-#define SPI_CS1 1
-#define SPI_CS2 2
-#define SPI_CS_MASK_ALL 0x7
+#define SPI_SS0 0
+#define SPI_SS1 1
+#define SPI_SS2 2
+#define SPI_SS_MASK_ALL 0x7
 
 #define SPI_LSBFIRST 0
 #define SPI_MSBFIRST 1
@@ -54,32 +65,32 @@ extern "C" {
 struct spi_struct_t;
 typedef struct spi_struct_t spi_t;
 
-spi_t * spiStartBus(uint8_t spi_num, uint32_t freq, uint8_t dataMode, uint8_t bitOrder);
+spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder);
 void spiStopBus(spi_t * spi);
 
 //Attach/Detach Signal Pins
-void spiAttachSCK(spi_t * spi, int8_t sck);
-void spiAttachMISO(spi_t * spi, int8_t miso);
-void spiAttachMOSI(spi_t * spi, int8_t mosi);
-void spiDetachSCK(spi_t * spi, int8_t sck);
-void spiDetachMISO(spi_t * spi, int8_t miso);
-void spiDetachMOSI(spi_t * spi, int8_t mosi);
+bool spiAttachSCK(spi_t * spi, int8_t sck);
+bool spiAttachMISO(spi_t * spi, int8_t miso);
+bool spiAttachMOSI(spi_t * spi, int8_t mosi);
+bool spiDetachSCK(spi_t * spi);
+bool spiDetachMISO(spi_t * spi);
+bool spiDetachMOSI(spi_t * spi);
 
-//Attach/Detach SS pin to SPI_CSx signal
-void spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss);
-void spiDetachSS(spi_t * spi, int8_t ss);
+//Attach/Detach SS pin to SPI_SSx signal
+bool spiAttachSS(spi_t * spi, uint8_t ss_num, int8_t ss);
+bool spiDetachSS(spi_t * spi);
 
-//Enable/Disable SPI_CSx pins
-void spiEnableSSPins(spi_t * spi, uint8_t cs_mask);
-void spiDisableSSPins(spi_t * spi, uint8_t cs_mask);
+//Enable/Disable SPI_SSx pins
+void spiEnableSSPins(spi_t * spi, uint8_t ss_mask);
+void spiDisableSSPins(spi_t * spi, uint8_t ss_mask);
 
-//Enable/Disable hardware control of SPI_CSx pins
+//Enable/Disable hardware control of SPI_SSx pins
 void spiSSEnable(spi_t * spi);
 void spiSSDisable(spi_t * spi);
 
-//Activate enabled SPI_CSx pins
+//Activate enabled SPI_SSx pins
 void spiSSSet(spi_t * spi);
-//Deactivate enabled SPI_CSx pins
+//Deactivate enabled SPI_SSx pins
 void spiSSClear(spi_t * spi);
 
 void spiWaitReady(spi_t * spi);
@@ -96,7 +107,7 @@ void spiSetClockDiv(spi_t * spi, uint32_t clockDiv);
 void spiSetDataMode(spi_t * spi, uint8_t dataMode);
 void spiSetBitOrder(spi_t * spi, uint8_t bitOrder);
 
-void spiWrite(spi_t * spi, uint32_t *data, uint8_t len);
+void spiWrite(spi_t * spi, const uint32_t *data, uint8_t len);
 void spiWriteByte(spi_t * spi, uint8_t data);
 void spiWriteWord(spi_t * spi, uint16_t data);
 void spiWriteLong(spi_t * spi, uint32_t data);
@@ -105,7 +116,7 @@ void spiTransfer(spi_t * spi, uint32_t *out, uint8_t len);
 uint8_t spiTransferByte(spi_t * spi, uint8_t data);
 uint16_t spiTransferWord(spi_t * spi, uint16_t data);
 uint32_t spiTransferLong(spi_t * spi, uint32_t data);
-void spiTransferBytes(spi_t * spi, uint8_t * data, uint8_t * out, uint32_t size);
+void spiTransferBytes(spi_t * spi, const uint8_t * data, uint8_t * out, uint32_t size);
 void spiTransferBits(spi_t * spi, uint32_t data, uint32_t * out, uint8_t bits);
 
 /*
@@ -115,11 +126,11 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
 void spiSimpleTransaction(spi_t * spi);
 void spiEndTransaction(spi_t * spi);
 
-void spiWriteNL(spi_t * spi, const void * data, uint32_t len);
+void spiWriteNL(spi_t * spi, const void * data_in, uint32_t len);
 void spiWriteByteNL(spi_t * spi, uint8_t data);
 void spiWriteShortNL(spi_t * spi, uint16_t data);
 void spiWriteLongNL(spi_t * spi, uint32_t data);
-void spiWritePixelsNL(spi_t * spi, const void * data, uint32_t len);
+void spiWritePixelsNL(spi_t * spi, const void * data_in, uint32_t len);
 
 #define spiTransferNL(spi, data, len) spiTransferBytesNL(spi, data, data, len)
 uint8_t spiTransferByteNL(spi_t * spi, uint8_t data);
@@ -138,4 +149,5 @@ uint32_t spiClockDivToFrequency(uint32_t freq);
 }
 #endif
 
+#endif /* SOC_GPSPI_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_SPI_H_ */

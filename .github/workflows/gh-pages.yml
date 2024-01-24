@@ -1,0 +1,23 @@
+name: GitHub Pages CI
+
+on:
+  push:
+    branches:
+    - master
+    - pages
+    paths:
+    - 'README.md'
+    - '.github/scripts/on-pages.sh'
+    - '.github/workflows/gh-pages.yml'
+
+jobs:
+
+  build-pages:
+    name: Build GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Copy Files
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: bash ./.github/scripts/on-pages.sh

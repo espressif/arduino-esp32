@@ -53,6 +53,8 @@ typedef unsigned long prog_uint32_t;
   *(void * const *)(_addr); \
 })
 
+#define pgm_get_far_address(x) ((uint32_t)(&(x)))
+
 #define pgm_read_byte_near(addr)  pgm_read_byte(addr)
 #define pgm_read_word_near(addr)  pgm_read_word(addr)
 #define pgm_read_dword_near(addr) pgm_read_dword(addr)
