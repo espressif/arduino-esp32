@@ -368,7 +368,7 @@ size_t UpdateClass::writeStream(Stream &data) {
             bytesToRead = remaining();
         }
 
-        /*
+        /* 
         Init read&timeout counters and try to read, if read failed, increase counter,
         wait 100ms and try to read again. If counter > 300 (30 sec), give up/abort
         */
@@ -394,7 +394,9 @@ size_t UpdateClass::writeStream(Stream &data) {
             return written;
         written += toRead;
 
+        #if CONFIG_FREERTOS_UNICORE
         delay(1);  // Fix solo WDT
+        #endif
     }
     return written;
 }
