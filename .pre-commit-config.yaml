@@ -1,0 +1,56 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 'v4.5.0'
+  hooks:
+  - id: check-case-conflict
+  - id: check-symlinks
+  - id: debug-statements
+  - id: destroyed-symlinks
+  - id: detect-private-key
+  - id: end-of-file-fixer
+  - id: mixed-line-ending
+    args:
+    - --fix=lf
+  - id: trailing-whitespace
+    args:
+    - --markdown-linebreak-ext=md
+- repo: https://github.com/codespell-project/codespell
+  rev: 'v2.2.4'
+  hooks:
+  - id: codespell
+- repo: https://github.com/pre-commit/mirrors-clang-format
+  rev: 'v15.0.7'
+  hooks:
+    - id: clang-format
+      types_or:
+      - c
+      - c++
+- repo: https://github.com/psf/black-pre-commit-mirror
+  rev: '22.10.0'
+  hooks:
+  - id: black
+    language_version: python3.8
+    args:
+    - --line-length=120 #From the arduino code style. Add as argument rather than creating a new config file.
+- repo: https://github.com/PyCQA/flake8
+  rev: '7.0.0'
+  hooks:
+  - id: flake8
+    types_or:
+    - python
+    additional_dependencies:
+      - flake8-bugbear
+      - flake8-comprehensions
+      - flake8-simplify
+- repo: https://github.com/pre-commit/mirrors-prettier
+  rev: 'v3.1.0'
+  hooks:
+  - id: prettier
+    types_or:
+    - yaml
+- repo: https://github.com/adrienverge/yamllint
+  rev: 'v1.33.0'
+  hooks:
+  - id: yamllint
+    types_or:
+    - yaml

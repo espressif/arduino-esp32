@@ -1,0 +1,76 @@
+# Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/check-yaml/.yamllint.yml
+# See: https://yamllint.readthedocs.io/en/stable/configuration.html
+# The code style defined in this file is the official standardized style to be used in all Arduino tooling projects and
+# should not be modified.
+# Note: Rules disabled solely because they are redundant to Prettier are marked with a "Prettier" comment.
+
+rules:
+  braces:
+    level: error
+    forbid: non-empty
+    min-spaces-inside: -1 # Prettier
+    max-spaces-inside: -1 # Prettier
+    min-spaces-inside-empty: -1 # Prettier
+    max-spaces-inside-empty: -1 # Prettier
+  brackets:
+    level: error
+    forbid: non-empty
+    min-spaces-inside: -1 # Prettier
+    max-spaces-inside: -1 # Prettier
+    min-spaces-inside-empty: -1 # Prettier
+    max-spaces-inside-empty: -1 # Prettier
+  colons: disable # Prettier
+  commas: disable # Prettier
+  comments: disable # Prettier
+  comments-indentation: disable # Prettier
+  document-end: disable # Prettier
+  document-start: disable
+  empty-lines: disable # Prettier
+  empty-values: disable
+  hyphens: disable # Prettier
+  indentation: disable # Prettier
+  key-duplicates: disable # Prettier
+  key-ordering: disable
+  line-length:
+    level: warning
+    max: 120
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+  new-line-at-end-of-file: disable # Prettier
+  new-lines: disable # Prettier
+  octal-values:
+    level: warning
+    forbid-implicit-octal: true
+    forbid-explicit-octal: false
+  quoted-strings: disable
+  trailing-spaces: disable # Prettier
+  truthy:
+    level: error
+    allowed-values:
+      - "true"
+      - "false"
+      - "on" # Used by GitHub Actions as a workflow key.
+    check-keys: true
+
+yaml-files:
+  # Source: https://github.com/ikatyang/linguist-languages/blob/master/data/YAML.json (used by Prettier)
+  - ".clang-format"
+  - ".clang-tidy"
+  - ".gemrc"
+  - ".yamllint"
+  - "glide.lock"
+  - "*.yml"
+  - "*.mir"
+  - "*.reek"
+  - "*.rviz"
+  - "*.sublime-syntax"
+  - "*.syntax"
+  - "*.yaml"
+  - "*.yaml-tmlanguage"
+  - "*.yaml.sed"
+  - "*.yml.mysql"
+
+ignore: |
+  /.git/
+  .clang-format
+  __pycache__/
