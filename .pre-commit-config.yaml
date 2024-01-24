@@ -18,6 +18,7 @@ repos:
     rev: "v2.2.4"
     hooks:
       - id: codespell
+        exclude: ^.*\.(svd|SVD)$
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: "v15.0.7"
     hooks:
