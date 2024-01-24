@@ -3,7 +3,6 @@
 #include "esp_netif_types.h"
 #include "esp_event.h"
 #include "Arduino.h"
-#include "IPv6Address.h"
 #include "ESP_Network_Manager.h"
 
 typedef enum {
@@ -24,7 +23,6 @@ class ESP_Network_Interface {
         virtual ~ESP_Network_Interface();
 
         bool config(IPAddress local_ip = (uint32_t)0x00000000, IPAddress gateway = (uint32_t)0x00000000, IPAddress subnet = (uint32_t)0x00000000, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000, IPAddress dns3 = (uint32_t)0x00000000);
-        bool enableIpV6();
 
         const char * getHostname();
         bool setHostname(const char * hostname);
@@ -46,7 +44,8 @@ class ESP_Network_Interface {
         IPAddress broadcastIP();
         IPAddress networkID();
         uint8_t subnetCIDR();
-        IPv6Address localIPv6();
+        IPAddress localIPv6();
+        IPAddress globalIPv6();
 
         void printInfo(Print & out);
 

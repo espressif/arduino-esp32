@@ -134,6 +134,7 @@ class ETHClass: public ESP_Network_Interface {
         }
 
         void end();
+        bool enableIPv6(bool en=true);
 
         // Event based getters
         bool connected();

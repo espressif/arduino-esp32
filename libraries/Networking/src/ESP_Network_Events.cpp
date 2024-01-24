@@ -55,6 +55,8 @@ ESP_Network_Events::~ESP_Network_Events(){
 	}
 }
 
+static uint32_t _initial_bits = NET_DNS_IDLE_BIT;
+
 bool ESP_Network_Events::initNetworkEvents(){
     if(!_arduino_event_group){
         _arduino_event_group = xEventGroupCreate();
@@ -62,7 +64,7 @@ bool ESP_Network_Events::initNetworkEvents(){
             log_e("Network Event Group Create Failed!");
             return false;
         }
-        xEventGroupSetBits(_arduino_event_group, WIFI_DNS_IDLE_BIT);
+        xEventGroupSetBits(_arduino_event_group, _initial_bits);
     }
     if(!_arduino_event_group_h){
         _arduino_event_group_h = xEventGroupCreate();
@@ -227,7 +229,8 @@ void ESP_Network_Events::removeEvent(network_event_handle_t id)
 
 int ESP_Network_Events::setStatusBits(int bits){
     if(!_arduino_event_group){
-        return 0;
+        _initial_bits |= bits;
+        return _initial_bits;
     }
     int l=bits & 0x00FFFFFF, h=(bits & 0xFF000000) >> 24;
     if(l){
@@ -241,7 +244,8 @@ int ESP_Network_Events::setStatusBits(int bits){
 
 int ESP_Network_Events::clearStatusBits(int bits){
     if(!_arduino_event_group){
-        return 0;
+        _initial_bits &= ~bits;
+        return _initial_bits;
     }
     int l=bits & 0x00FFFFFF, h=(bits & 0xFF000000) >> 24;
     if(l){
@@ -255,7 +259,7 @@ int ESP_Network_Events::clearStatusBits(int bits){
 
 int ESP_Network_Events::getStatusBits(){
     if(!_arduino_event_group){
-        return 0;
+        return _initial_bits;
     }
     return xEventGroupGetBits(_arduino_event_group) | (xEventGroupGetBits(_arduino_event_group_h) << 24);
 }
@@ -294,13 +298,13 @@ const char * ESP_Network_Events::eventName(arduino_event_id_t id) {
         case ARDUINO_EVENT_ETH_LOST_IP: return "ETH_LOST_IP";
         case ARDUINO_EVENT_ETH_GOT_IP6: return "ETH_GOT_IP6";
 
-        case ARDUINO_EVENT_PPP_START: return "PPP_START";
-        case ARDUINO_EVENT_PPP_STOP: return "PPP_STOP";
-        case ARDUINO_EVENT_PPP_CONNECTED: return "PPP_CONNECTED";
-        case ARDUINO_EVENT_PPP_DISCONNECTED: return "PPP_DISCONNECTED";
-        case ARDUINO_EVENT_PPP_GOT_IP: return "PPP_GOT_IP";
-        case ARDUINO_EVENT_PPP_LOST_IP: return "PPP_LOST_IP";
-        case ARDUINO_EVENT_PPP_GOT_IP6: return "PPP_GOT_IP6";
+        // case ARDUINO_EVENT_PPP_START: return "PPP_START";
+        // case ARDUINO_EVENT_PPP_STOP: return "PPP_STOP";
+        // case ARDUINO_EVENT_PPP_CONNECTED: return "PPP_CONNECTED";
+        // case ARDUINO_EVENT_PPP_DISCONNECTED: return "PPP_DISCONNECTED";
+        // case ARDUINO_EVENT_PPP_GOT_IP: return "PPP_GOT_IP";
+        // case ARDUINO_EVENT_PPP_LOST_IP: return "PPP_LOST_IP";
+        // case ARDUINO_EVENT_PPP_GOT_IP6: return "PPP_GOT_IP6";
 #if SOC_WIFI_SUPPORTED
         case ARDUINO_EVENT_WIFI_READY: return "WIFI_READY";
         case ARDUINO_EVENT_WIFI_SCAN_DONE: return "SCAN_DONE";

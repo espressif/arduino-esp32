@@ -9,7 +9,7 @@ public:
 	ESP_Network_Manager();
 
 	bool begin();
-	int hostByName(const char *aHostname, IPAddress &aResult);
+	int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
 	uint8_t * macAddress(uint8_t * mac);
 	String macAddress();
 };

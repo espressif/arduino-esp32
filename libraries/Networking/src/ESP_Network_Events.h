@@ -22,37 +22,52 @@
 static const int AP_STARTED_BIT    = BIT0;
 static const int AP_HAS_IP6_BIT    = BIT1;
 static const int AP_HAS_CLIENT_BIT = BIT2;
-static const int STA_STARTED_BIT   = BIT3;
-static const int STA_CONNECTED_BIT = BIT4;
-static const int STA_HAS_IP_BIT    = BIT5;
-static const int STA_HAS_IP6_BIT   = BIT6;
-static const int WIFI_SCANNING_BIT = BIT7;
-static const int WIFI_SCAN_DONE_BIT= BIT8;
+static const int AP_WANT_IP6_BIT        = BIT3;
+static const int STA_STARTED_BIT   = BIT4;
+static const int STA_CONNECTED_BIT = BIT5;
+static const int STA_HAS_IP_BIT    = BIT6;
+static const int STA_HAS_IP6_BIT   = BIT7;
+static const int STA_HAS_IP6_GLOBAL_BIT = BIT8;
+static const int STA_WANT_IP6_BIT       = BIT9;
+static const int WIFI_SCANNING_BIT = BIT10;
+static const int WIFI_SCAN_DONE_BIT= BIT11;
 #endif
 
-static const int WIFI_DNS_IDLE_BIT = BIT9;
-static const int WIFI_DNS_DONE_BIT = BIT10;
-static const int PPP_STARTED_BIT   = BIT11;
-static const int PPP_CONNECTED_BIT = BIT12;
-static const int PPP_HAS_IP_BIT    = BIT13;
-static const int PPP_HAS_IP6_BIT   = BIT14;
-static const int ETH0_STARTED_BIT   = BIT15;
-static const int ETH1_STARTED_BIT   = BIT16;
-static const int ETH2_STARTED_BIT   = BIT17;
-static const int ETH0_CONNECTED_BIT = BIT18;
-static const int ETH1_CONNECTED_BIT = BIT19;
-static const int ETH2_CONNECTED_BIT = BIT20;
-static const int ETH0_HAS_IP_BIT    = BIT21;
-static const int ETH1_HAS_IP_BIT    = BIT22;
-static const int ETH2_HAS_IP_BIT    = BIT23;
-static const int ETH0_HAS_IP6_BIT   = BIT24;
-static const int ETH1_HAS_IP6_BIT   = BIT25;
-static const int ETH2_HAS_IP6_BIT   = BIT26;
+static const int NET_DNS_IDLE_BIT  = BIT12;
+static const int NET_DNS_DONE_BIT  = BIT13;
+// static const int PPP_STARTED_BIT   = BIT14;
+// static const int PPP_CONNECTED_BIT = BIT15;
+// static const int PPP_HAS_IP_BIT    = BIT16;
+// static const int PPP_HAS_IP6_BIT   = BIT17;
+// static const int PPP_HAS_IP6_GLOBAL_BIT = BIT18;
+// static const int PPP_WANT_IP6_BIT       = BIT19;
+static const int ETH0_HAS_IP6_GLOBAL_BIT = BIT14;
+static const int ETH1_HAS_IP6_GLOBAL_BIT = BIT15;
+static const int ETH2_HAS_IP6_GLOBAL_BIT = BIT16;
+static const int ETH0_WANT_IP6_BIT       = BIT17;
+static const int ETH1_WANT_IP6_BIT       = BIT18;
+static const int ETH2_WANT_IP6_BIT       = BIT19;
+static const int ETH0_STARTED_BIT   = BIT20;
+static const int ETH1_STARTED_BIT   = BIT21;
+static const int ETH2_STARTED_BIT   = BIT22;
+static const int ETH0_CONNECTED_BIT = BIT23;
+static const int ETH1_CONNECTED_BIT = BIT24;
+static const int ETH2_CONNECTED_BIT = BIT25;
+static const int ETH0_HAS_IP_BIT    = BIT26;
+static const int ETH1_HAS_IP_BIT    = BIT27;
+static const int ETH2_HAS_IP_BIT    = BIT28;
+static const int ETH0_HAS_IP6_BIT   = BIT29;
+static const int ETH1_HAS_IP6_BIT   = BIT30;
+static const int ETH2_HAS_IP6_BIT   = BIT31;
+// Masks
+static const int NET_HAS_IP6_GLOBAL_BIT = STA_HAS_IP6_GLOBAL_BIT | ETH0_HAS_IP6_GLOBAL_BIT | ETH1_HAS_IP6_GLOBAL_BIT | ETH2_HAS_IP6_GLOBAL_BIT;
 
-#define ETH_STARTED_BIT(i) 		(ETH0_STARTED_BIT << (i))
-#define ETH_CONNECTED_BIT(i) 	(ETH0_CONNECTED_BIT << (i))
-#define ETH_HAS_IP_BIT(i) 		(ETH0_HAS_IP_BIT << (i))
-#define ETH_HAS_IP6_BIT(i) 		(ETH0_HAS_IP6_BIT << (i))
+#define ETH_STARTED_BIT(i) 			(ETH0_STARTED_BIT << (i))
+#define ETH_CONNECTED_BIT(i) 		(ETH0_CONNECTED_BIT << (i))
+#define ETH_HAS_IP_BIT(i) 			(ETH0_HAS_IP_BIT << (i))
+#define ETH_HAS_IP6_BIT(i) 			(ETH0_HAS_IP6_BIT << (i))
+#define ETH_HAS_IP6_GLOBAL_BIT(i)	(ETH0_HAS_IP6_GLOBAL_BIT << (i))
+#define ETH_WANT_IP6_BIT(i)			(ETH0_WANT_IP6_BIT << (i))
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);
 
@@ -65,13 +80,13 @@ typedef enum {
 	ARDUINO_EVENT_ETH_GOT_IP,
 	ARDUINO_EVENT_ETH_LOST_IP,
 	ARDUINO_EVENT_ETH_GOT_IP6,
-	ARDUINO_EVENT_PPP_START,
-	ARDUINO_EVENT_PPP_STOP,
-	ARDUINO_EVENT_PPP_CONNECTED,
-	ARDUINO_EVENT_PPP_DISCONNECTED,
-	ARDUINO_EVENT_PPP_GOT_IP,
-	ARDUINO_EVENT_PPP_LOST_IP,
-	ARDUINO_EVENT_PPP_GOT_IP6,
+	// ARDUINO_EVENT_PPP_START,
+	// ARDUINO_EVENT_PPP_STOP,
+	// ARDUINO_EVENT_PPP_CONNECTED,
+	// ARDUINO_EVENT_PPP_DISCONNECTED,
+	// ARDUINO_EVENT_PPP_GOT_IP,
+	// ARDUINO_EVENT_PPP_LOST_IP,
+	// ARDUINO_EVENT_PPP_GOT_IP6,
 #if SOC_WIFI_SUPPORTED
 	ARDUINO_EVENT_WIFI_READY,
 	ARDUINO_EVENT_WIFI_SCAN_DONE,

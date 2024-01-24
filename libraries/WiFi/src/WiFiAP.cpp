@@ -415,9 +415,9 @@ bool WiFiAPClass::softAPsetHostname(const char * hostname)
 bool WiFiAPClass::softAPenableIPv6(bool enable)
 {
     if (enable) {
-        WiFiGenericClass::setStatusBits(AP_WANT_IP6_BIT);
+        Network.setStatusBits(AP_WANT_IP6_BIT);
     } else {
-        WiFiGenericClass::clearStatusBits(AP_WANT_IP6_BIT);
+        Network.clearStatusBits(AP_WANT_IP6_BIT);
     }
     return true;
     // if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){

@@ -73,12 +73,34 @@ bool ETHClass::started()
     return Network.getStatusBits() & ETH_STARTED_BIT(_eth_index);
 }
 
+bool ETHClass::enableIPv6(bool en)
+{
+    // if(_esp_netif == NULL){
+    //     return false;
+    // }
+    if (en) {
+        Network.setStatusBits(ETH_WANT_IP6_BIT(_eth_index));
+    } else {
+        Network.clearStatusBits(ETH_WANT_IP6_BIT(_eth_index));
+    }
+    return true;
+    // return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
+}
+
 void ETHClass::_onEthEvent(int32_t event_id, void* event_data){
     arduino_event_t arduino_event;
     arduino_event.event_id = ARDUINO_EVENT_MAX;
     
     if (event_id == ETHERNET_EVENT_CONNECTED) {
         log_v("%s Connected", desc());
+        if (Network.getStatusBits() & ETH_WANT_IP6_BIT(_eth_index)){
+            esp_err_t err = esp_netif_create_ip6_linklocal(_esp_netif);
+            if(err != ESP_OK){
+                log_e("Failed to enable IPv6 Link Local on ETH: [%d] %s", err, esp_err_to_name(err));
+            } else {
+                log_v("Enabled IPv6 Link Local on %s", desc());
+            }
+        }
         arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
         Network.setStatusBits(ETH_CONNECTED_BIT(_eth_index));
     } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {

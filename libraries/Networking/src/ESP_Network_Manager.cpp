@@ -30,46 +30,94 @@ bool ESP_Network_Manager::begin(){
     return initialized;
 }
 
+typedef struct gethostbynameParameters {
+    const char *hostname;
+    ip_addr_t addr;
+    uint8_t addr_type;
+    int result;
+} gethostbynameParameters_t;
+
 /**
  * DNS callback
  * @param name
  * @param ipaddr
  * @param callback_arg
  */
-static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg){
+static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
+{
+    gethostbynameParameters_t *parameters = static_cast<gethostbynameParameters_t *>(callback_arg);
     if(ipaddr) {
-        (*reinterpret_cast<IPAddress*>(callback_arg)) = ipaddr->u_addr.ip4.addr;
+        if(parameters->result == 0){
+            memcpy(&(parameters->addr), ipaddr, sizeof(ip_addr_t));
+            parameters->result = 1;
+        }
+    } else {
+        parameters->result = -1;
     }
-    Network.setStatusBits(WIFI_DNS_DONE_BIT);
+    Network.setStatusBits(NET_DNS_DONE_BIT);
 }
 
 /**
- * Resolve the given hostname to an IP address. If passed hostname is an IP address, it will be parsed into IPAddress structure.
- * @param aHostname     Name to be resolved or string containing IP address
+ * Callback to execute dns_gethostbyname in lwIP's TCP/IP context
+ * @param param Parameters for dns_gethostbyname call
+ */
+static esp_err_t wifi_gethostbyname_tcpip_ctx(void *param)
+{
+    gethostbynameParameters_t *parameters = static_cast<gethostbynameParameters_t *>(param);
+    return dns_gethostbyname_addrtype(parameters->hostname, &parameters->addr, &wifi_dns_found_callback, parameters, parameters->addr_type);
+}
+
+/**
+ * Resolve the given hostname to an IP address.
+ * @param aHostname     Name to be resolved
  * @param aResult       IPAddress structure to store the returned IP address
  * @return 1 if aIPAddrString was successfully converted to an IP address,
  *          else error code
  */
-int ESP_Network_Manager::hostByName(const char* aHostname, IPAddress& aResult){
-    if (!aResult.fromString(aHostname))
-    {
-        ip_addr_t addr;
-        aResult = static_cast<uint32_t>(0);
-        waitStatusBits(WIFI_DNS_IDLE_BIT, 16000);
-        clearStatusBits(WIFI_DNS_IDLE_BIT | WIFI_DNS_DONE_BIT);
-        err_t err = dns_gethostbyname(aHostname, &addr, &wifi_dns_found_callback, &aResult);
-        if(err == ERR_OK && addr.u_addr.ip4.addr) {
-            aResult = addr.u_addr.ip4.addr;
-        } else if(err == ERR_INPROGRESS) {
-            waitStatusBits(WIFI_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
-            clearStatusBits(WIFI_DNS_DONE_BIT);
-        }
-        setStatusBits(WIFI_DNS_IDLE_BIT);
-        if((uint32_t)aResult == 0){
-            log_e("DNS Failed for %s", aHostname);
-        }
+int ESP_Network_Manager::hostByName(const char* aHostname, IPAddress& aResult, bool preferV6)
+{
+    err_t err = ERR_OK;
+    gethostbynameParameters_t params;
+
+    // This should generally check if we have a global address assigned to one of the interfaces.
+    // If such address is not assigned, there is no point in trying to get V6 from DNS as we will not be able to reach it.
+    // That is of course, if 'preferV6' is not set to true
+    static bool hasGlobalV6 = false;
+    bool hasGlobalV6Now = (Network.getStatusBits() & NET_HAS_IP6_GLOBAL_BIT) != 0;
+    if(hasGlobalV6 != hasGlobalV6Now){
+        hasGlobalV6 = hasGlobalV6Now;
+        dns_clear_cache();
+        log_d("Clearing DNS cache");
     }
-    return (uint32_t)aResult != 0;
+
+    aResult = static_cast<uint32_t>(0);
+    params.hostname = aHostname;
+    params.addr_type = (preferV6 || hasGlobalV6)?LWIP_DNS_ADDRTYPE_IPV6_IPV4:LWIP_DNS_ADDRTYPE_IPV4;
+    params.result = 0;
+    aResult.to_ip_addr_t(&(params.addr));
+
+    if (!aResult.fromString(aHostname)) {
+        Network.waitStatusBits(NET_DNS_IDLE_BIT, 16000);
+        Network.clearStatusBits(NET_DNS_IDLE_BIT | NET_DNS_DONE_BIT);
+
+        err = esp_netif_tcpip_exec(wifi_gethostbyname_tcpip_ctx, &params);
+        if (err == ERR_OK) {
+            aResult.from_ip_addr_t(&(params.addr));
+        } else if (err == ERR_INPROGRESS) {
+            Network.waitStatusBits(NET_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
+            Network.clearStatusBits(NET_DNS_DONE_BIT);
+            if (params.result == 1) {
+                aResult.from_ip_addr_t(&(params.addr));
+                err = ERR_OK;
+            }
+        }
+        Network.setStatusBits(NET_DNS_IDLE_BIT);
+    }
+    if (err == ERR_OK) {
+        return 1;
+    }
+    log_e("DNS Failed for '%s' with error '%d' and result '%d'", aHostname, err, params.result);
+    return err;
 }
 
 uint8_t * ESP_Network_Manager::macAddress(uint8_t * mac){
