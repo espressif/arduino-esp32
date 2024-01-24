@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "sdkconfig.h"
@@ -66,7 +70,7 @@ public:
 class USBHID
 {
 public:
-    USBHID(void);
+    USBHID(hid_interface_protocol_enum_t itf_protocol = HID_ITF_PROTOCOL_NONE);
     void begin(void);
     void end(void);
     bool ready(void);
@@ -77,3 +81,4 @@ public:
 };
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

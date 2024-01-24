@@ -3,14 +3,6 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        20
-#define NUM_ANALOG_INPUTS       16
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
 // SPI LoRa Radio
 #define LORA_SCK 5      // GPIO5  - SX1276 SCK
 #define LORA_MISO 19    // GPIO19 - SX1276 MISO
@@ -26,7 +18,7 @@ static const uint8_t KEY_BUILTIN = 39;
 
 static const uint8_t LED_BUILTIN = 14;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;

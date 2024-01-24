@@ -10,23 +10,14 @@
 #define USB_PRODUCT        "Maker Feather AIoT S3"
 #define USB_SERIAL         ""
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        20
-#define NUM_ANALOG_INPUTS       12
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
-
-
 static const uint8_t LED_BUILTIN = 2;                           // Status LED.
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT + 46;     // RGB LED.
+#define RGB_BUILTIN RGB_BUILTIN  // necessary to make digitalWrite/digitalMode find it
+#define RGB_BRIGHTNESS 64
 
-#define BUILTIN_LED     LED_BUILTIN                             // Backward compatibility
-#define LED_BUILTIN     LED_BUILTIN
 #define LED             LED_BUILTIN
-#define RGB_BUILTIN     RGB_BUILTIN
 #define RGB             RGB_BUILTIN
 #define NEOPIXEL        RGB_BUILTIN
 #define RGB_BRIGHTNESS  65

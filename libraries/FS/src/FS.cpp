@@ -203,6 +203,15 @@ String File::getNextFileName(void)
 
 }
 
+String File::getNextFileName(bool *isDir)
+{
+    if (!_p) {
+        return ""; 
+    }
+    return _p->getNextFileName(isDir);
+
+}
+
 void File::rewindDirectory(void)
 {
     if (!*this) {
@@ -289,6 +298,14 @@ bool FS::rmdir(const char *path)
 bool FS::rmdir(const String &path)
 {
     return rmdir(path.c_str());
+}
+
+const char * FS::mountpoint()
+{
+    if (!_impl) {
+        return NULL;
+    }
+    return _impl->mountpoint();
 }
 
 

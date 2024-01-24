@@ -190,6 +190,8 @@ class UpdateClass {
     uint8_t _ledOn;
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
 extern UpdateClass Update;
+#endif
 
 #endif
