@@ -59,6 +59,30 @@ static void _eth_event_cb(void* arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
+static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info)
+{
+    if(event == ARDUINO_EVENT_ETH_CONNECTED){
+        uint8_t index = 3;
+        for (int i = 0; i < 3; ++i) {
+            if(_ethernets[i] != NULL && _ethernets[i]->handle() == info.eth_connected){
+                index = i;
+                break;
+            }
+        }
+        if(index == 3){
+            return;
+        }
+        if (Network.getStatusBits() & ETH_WANT_IP6_BIT(index)){
+            esp_err_t err = esp_netif_create_ip6_linklocal(_ethernets[index]->netif());
+            if(err != ESP_OK){
+                log_e("Failed to enable IPv6 Link Local on ETH: [%d] %s", err, esp_err_to_name(err));
+            } else {
+                log_v("Enabled IPv6 Link Local on %s", _ethernets[index]->desc());
+            }
+        }
+    }
+}
+
 esp_eth_handle_t ETHClass::handle(){
     return _eth_handle;
 }
@@ -93,15 +117,8 @@ void ETHClass::_onEthEvent(int32_t event_id, void* event_data){
     
     if (event_id == ETHERNET_EVENT_CONNECTED) {
         log_v("%s Connected", desc());
-        if (Network.getStatusBits() & ETH_WANT_IP6_BIT(_eth_index)){
-            esp_err_t err = esp_netif_create_ip6_linklocal(_esp_netif);
-            if(err != ESP_OK){
-                log_e("Failed to enable IPv6 Link Local on ETH: [%d] %s", err, esp_err_to_name(err));
-            } else {
-                log_v("Enabled IPv6 Link Local on %s", desc());
-            }
-        }
         arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
+        arduino_event.event_info.eth_connected = handle();
         Network.setStatusBits(ETH_CONNECTED_BIT(_eth_index));
     } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
         log_v("%s Disconnected", desc());
@@ -310,6 +327,9 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     if(_pin_power != -1){
         if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)){ goto err; }
     }
+
+    Network.onEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+
     // holds a few milliseconds to let DHCP start and enter into a good state
     // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
     delay(50);
@@ -696,6 +716,8 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     if(_pin_rst != -1){
         if(!perimanSetPinBus(_pin_rst,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
+
+    Network.onEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
     return true;
 

@@ -29,6 +29,7 @@
 
 #include <Arduino.h>
 #include <WebServer.h>
+#include <WiFi.h>
 
 #include "secrets.h"  // add WLAN Credentials in here.
 
