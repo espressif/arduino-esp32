@@ -1,8 +1,9 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2021 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
+
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -14,8 +15,9 @@
 #include "Preferences.h"
 
 #include "nvs.h"
+#include "nvs_flash.h"
 
-const char * nvs_errors[] = { "OTHER", "NOT_INITIALIZED", "NOT_FOUND", "TYPE_MISMATCH", "READ_ONLY", "NOT_ENOUGH_SPACE", "INVALID_NAME", "INVALID_HANDLE", "REMOVE_FAILED", "KEY_TOO_LONG", "PAGE_FULL", "INVALID_STATE", "INVALID_LENGHT"};
+const char * nvs_errors[] = { "OTHER", "NOT_INITIALIZED", "NOT_FOUND", "TYPE_MISMATCH", "READ_ONLY", "NOT_ENOUGH_SPACE", "INVALID_NAME", "INVALID_HANDLE", "REMOVE_FAILED", "KEY_TOO_LONG", "PAGE_FULL", "INVALID_STATE", "INVALID_LENGTH"};
 #define nvs_error(e) (((e)>ESP_ERR_NVS_BASE)?nvs_errors[(e)&~(ESP_ERR_NVS_BASE)]:nvs_errors[0])
 
 Preferences::Preferences()
@@ -28,12 +30,22 @@ Preferences::~Preferences(){
     end();
 }
 
-bool Preferences::begin(const char * name, bool readOnly){
+bool Preferences::begin(const char * name, bool readOnly, const char* partition_label){
     if(_started){
         return false;
     }
     _readOnly = readOnly;
-    esp_err_t err = nvs_open(name, readOnly?NVS_READONLY:NVS_READWRITE, &_handle);
+    esp_err_t err = ESP_OK;
+    if (partition_label != NULL) {
+        err = nvs_flash_init_partition(partition_label);
+        if (err) {
+            log_e("nvs_flash_init_partition failed: %s", nvs_error(err));
+            return false;
+        }
+        err = nvs_open_from_partition(partition_label, name, readOnly ? NVS_READONLY : NVS_READWRITE, &_handle);
+    } else {
+        err = nvs_open(name, readOnly ? NVS_READONLY : NVS_READWRITE, &_handle);
+    }
     if(err){
         log_e("nvs_open failed: %s", nvs_error(err));
         return false;
@@ -63,6 +75,11 @@ bool Preferences::clear(){
         log_e("nvs_erase_all fail: %s", nvs_error(err));
         return false;
     }
+    err = nvs_commit(_handle);
+    if(err){
+        log_e("nvs_commit fail: %s", nvs_error(err));
+        return false;
+    }
     return true;
 }
 
@@ -77,6 +94,11 @@ bool Preferences::remove(const char * key){
     esp_err_t err = nvs_erase_key(_handle, key);
     if(err){
         log_e("nvs_erase_key fail: %s %s", key, nvs_error(err));
+        return false;
+    }
+    err = nvs_commit(_handle);
+    if(err){
+        log_e("nvs_commit fail: %s %s", key, nvs_error(err));
         return false;
     }
     return true;
@@ -278,6 +300,30 @@ size_t Preferences::putBytes(const char* key, const void* value, size_t len){
         return 0;
     }
     return len;
+}
+
+PreferenceType Preferences::getType(const char* key) {
+    if(!_started || !key || strlen(key)>15){
+        return PT_INVALID;
+    }
+    int8_t mt1; uint8_t mt2; int16_t mt3; uint16_t mt4;
+    int32_t mt5; uint32_t mt6; int64_t mt7; uint64_t mt8;
+    size_t len = 0;
+    if(nvs_get_i8(_handle, key, &mt1) == ESP_OK) return PT_I8;
+    if(nvs_get_u8(_handle, key, &mt2) == ESP_OK) return PT_U8;
+    if(nvs_get_i16(_handle, key, &mt3) == ESP_OK) return PT_I16;
+    if(nvs_get_u16(_handle, key, &mt4) == ESP_OK) return PT_U16;
+    if(nvs_get_i32(_handle, key, &mt5) == ESP_OK) return PT_I32;
+    if(nvs_get_u32(_handle, key, &mt6) == ESP_OK) return PT_U32;
+    if(nvs_get_i64(_handle, key, &mt7) == ESP_OK) return PT_I64;
+    if(nvs_get_u64(_handle, key, &mt8) == ESP_OK) return PT_U64;
+    if(nvs_get_str(_handle, key, NULL, &len) == ESP_OK) return PT_STR;
+    if(nvs_get_blob(_handle, key, NULL, &len) == ESP_OK) return PT_BLOB;
+    return PT_INVALID;
+}
+
+bool Preferences::isKey(const char* key) {
+    return getType(key) != PT_INVALID;
 }
 
 /*

@@ -31,6 +31,7 @@ public:
     bool begin(bool formatOnFail=false, const char * basePath="/ffat", uint8_t maxOpenFiles=10, const char * partitionLabel = (char*)FFAT_PARTITION_LABEL);
     bool format(bool full_wipe = FFAT_WIPE_QUICK, char* partitionLabel = (char*)FFAT_PARTITION_LABEL);
     size_t totalBytes();
+    size_t usedBytes();
     size_t freeBytes();
     void end();
     bool exists(const char* path);

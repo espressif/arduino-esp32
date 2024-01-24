@@ -88,6 +88,17 @@ ArduinoOTAClass& ArduinoOTAClass::setPasswordHash(const char * password) {
     return *this;
 }
 
+ArduinoOTAClass& ArduinoOTAClass::setPartitionLabel(const char * partition_label) {
+    if (!_initialized && !_partition_label.length() && partition_label) {
+        _partition_label = partition_label;
+    }
+    return *this;
+}
+
+String ArduinoOTAClass::getPartitionLabel() {
+    return _partition_label;
+}
+
 ArduinoOTAClass& ArduinoOTAClass::setRebootOnSuccess(bool reboot){
     _rebootOnSuccess = reboot;
     return *this;
@@ -235,7 +246,8 @@ void ArduinoOTAClass::_onRx(){
 }
 
 void ArduinoOTAClass::_runUpdate() {
-    if (!Update.begin(_size, _cmd)) {
+    const char *partition_label = _partition_label.length() ? _partition_label.c_str() : NULL;
+    if (!Update.begin(_size, _cmd, -1, LOW, partition_label)) {
 
         log_e("Begin ERROR: %s", Update.errorString());
 
@@ -275,7 +287,7 @@ void ArduinoOTAClass::_runUpdate() {
         if (!waited){
             if(written && tried++ < 3){
                 log_i("Try[%u]: %u", tried, written);
-                if(!client.printf("%u", written)){
+                if(!client.printf("%lu", written)){
                     log_e("failed to respond");
                     _state = OTA_IDLE;
                     break;
@@ -310,7 +322,7 @@ void ArduinoOTAClass::_runUpdate() {
             if(written != r){
                 log_w("didn't write enough! %u != %u", written, r);
             }
-            if(!client.printf("%u", written)){
+            if(!client.printf("%lu", written)){
                 log_w("failed to respond");
             }
             total += written;

@@ -47,7 +47,7 @@ void connectToWiFi(const char * ssid, const char * pwd){
   // delete old config
   WiFi.disconnect(true);
   //register event handler
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
   
   //Initiate connection
   WiFi.begin(ssid, pwd);
@@ -55,10 +55,10 @@ void connectToWiFi(const char * ssid, const char * pwd){
   Serial.println("Waiting for WIFI connection...");
 }
 
-//wifi event handler
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
 void WiFiEvent(WiFiEvent_t event){
     switch(event) {
-      case SYSTEM_EVENT_STA_GOT_IP:
+      case ARDUINO_EVENT_WIFI_STA_GOT_IP:
           //When connected set 
           Serial.print("WiFi connected! IP address: ");
           Serial.println(WiFi.localIP());  
@@ -67,7 +67,7 @@ void WiFiEvent(WiFiEvent_t event){
           udp.begin(WiFi.localIP(),udpPort);
           connected = true;
           break;
-      case SYSTEM_EVENT_STA_DISCONNECTED:
+      case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
           Serial.println("WiFi lost connection");
           connected = false;
           break;

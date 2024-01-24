@@ -7,8 +7,11 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLESECURITY_H_
 #define COMPONENTS_CPP_UTILS_BLESECURITY_H_
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <esp_gap_ble_api.h>
 
@@ -21,6 +24,7 @@ public:
 	void setInitEncryptionKey(uint8_t init_key);
 	void setRespEncryptionKey(uint8_t resp_key);
 	void setKeySize(uint8_t key_size = 16);
+	void setStaticPIN(uint32_t pin);
 	static char* esp_key_type_to_str(esp_ble_key_type_t key_type);
 
 private:
@@ -68,5 +72,6 @@ public:
 	virtual bool onConfirmPIN(uint32_t pin) = 0;
 }; // BLESecurityCallbacks
 
-#endif // CONFIG_BT_ENABLED
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */
 #endif // COMPONENTS_CPP_UTILS_BLESECURITY_H_

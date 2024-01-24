@@ -3,10 +3,15 @@
  *
  *  Created on: Jul 1, 2017
  *      Author: kolban
+ * 
+ * 	Update: April, 2021
+ * 		add BLE5 support
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
 
+#include "sdkconfig.h"
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <esp_err.h>
 
@@ -22,12 +27,15 @@
  * Constructor
  */
 BLEScan::BLEScan() {
+	memset(&m_scan_params, 0, sizeof(m_scan_params)); // Initialize all params
 	m_scan_params.scan_type          = BLE_SCAN_TYPE_PASSIVE; // Default is a passive scan.
 	m_scan_params.own_addr_type      = BLE_ADDR_TYPE_PUBLIC;
 	m_scan_params.scan_filter_policy = BLE_SCAN_FILTER_ALLOW_ALL;
+	m_scan_params.scan_duplicate     = BLE_SCAN_DUPLICATE_DISABLE;
 	m_pAdvertisedDeviceCallbacks     = nullptr;
 	m_stopped                        = true;
 	m_wantDuplicates                 = false;
+	m_shouldParse                    = true;
 	setInterval(100);
 	setWindow(100);
 } // BLEScan
@@ -88,15 +96,18 @@ void BLEScan::handleGAPEvent(
 // ignore it.
 					BLEAddress advertisedAddress(param->scan_rst.bda);
 					bool found = false;
+					bool shouldDelete = true;
 
-					if (m_scanResults.m_vectorAdvertisedDevices.count(advertisedAddress.toString()) != 0) {
-						found = true;
-					}
+					if (!m_wantDuplicates) {
+						if (m_scanResults.m_vectorAdvertisedDevices.count(advertisedAddress.toString()) != 0) {
+							found = true;
+						}
 
-					if (found && !m_wantDuplicates) {  // If we found a previous entry AND we don't want duplicates, then we are done.
-						log_d("Ignoring %s, already seen it.", advertisedAddress.toString().c_str());
-						vTaskDelay(1);  // <--- allow to switch task in case we scan infinity and dont have new devices to report, or we are blocked here
-						break;
+						if (found) {  // If we found a previous entry AND we don't want duplicates, then we are done.
+							log_d("Ignoring %s, already seen it.", advertisedAddress.toString().c_str());
+							vTaskDelay(1);  // <--- allow to switch task in case we scan infinity and dont have new devices to report, or we are blocked here
+							break;
+						}
 					}
 
 					// We now construct a model of the advertised device that we have just found for the first
@@ -107,19 +118,24 @@ void BLEScan::handleGAPEvent(
 					advertisedDevice->setAddress(advertisedAddress);
 					advertisedDevice->setRSSI(param->scan_rst.rssi);
 					advertisedDevice->setAdFlag(param->scan_rst.flag);
-					advertisedDevice->parseAdvertisement((uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len);
+					if (m_shouldParse) {
+						advertisedDevice->parseAdvertisement((uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len);
+					} else {
+						advertisedDevice->setPayload((uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len);
+					}
 					advertisedDevice->setScan(this);
 					advertisedDevice->setAddressType(param->scan_rst.ble_addr_type);
 
-					if (!found) {   // If we have previously seen this device, don't record it again.
-						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
-					}
-
-					if (m_pAdvertisedDeviceCallbacks) {
+					if (m_pAdvertisedDeviceCallbacks) { // if has callback, no need to record to vector
 						m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
+					} 
+					if (!m_wantDuplicates && !found) {   // if no callback and not want duplicate, and not already in vector, record it
+						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<String, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
+						shouldDelete = false;
 					}
-					if(found)
+					if (shouldDelete) {
 						delete advertisedDevice;
+					}
 
 					break;
 				} // ESP_GAP_SEARCH_INQ_RES_EVT
@@ -132,6 +148,98 @@ void BLEScan::handleGAPEvent(
 
 			break;
 		} // ESP_GAP_BLE_SCAN_RESULT_EVT
+#ifdef SOC_BLE_50_SUPPORTED
+		case ESP_GAP_BLE_EXT_ADV_REPORT_EVT: {
+			if (param->ext_adv_report.params.event_type & ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY) {
+				log_v("legacy adv, adv type 0x%x data len %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len);
+			}
+			else {
+				log_v("extend adv, adv type 0x%x data len %d, data status: %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len, param->ext_adv_report.params.data_status);
+			}
+
+			if (m_pExtendedScanCb != nullptr)
+			{
+				m_pExtendedScanCb->onResult(param->ext_adv_report.params);
+			}
+			
+			break;
+		}
+
+		case ESP_GAP_BLE_SET_EXT_SCAN_PARAMS_COMPLETE_EVT: {
+			if (param->set_ext_scan_params.status != ESP_BT_STATUS_SUCCESS) {
+				log_e("extend scan parameters set failed, error status = %x", param->set_ext_scan_params.status);
+				break;
+			}
+			log_v("extend scan params set successfully");
+			break;
+		}
+
+		case ESP_GAP_BLE_EXT_SCAN_START_COMPLETE_EVT:
+			if (param->ext_scan_start.status != ESP_BT_STATUS_SUCCESS) {
+				log_e("scan start failed, error status = %x", param->scan_start_cmpl.status);
+				break;
+			}
+			log_v("Scan start success");
+			break;
+
+		case ESP_GAP_BLE_EXT_SCAN_STOP_COMPLETE_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onStop(param->ext_scan_stop.status);
+			}
+			
+			if (param->ext_scan_stop.status != ESP_BT_STATUS_SUCCESS){
+				log_e("extend Scan stop failed, error status = %x", param->ext_scan_stop.status);
+				break;
+			}
+			log_v("Stop extend scan successfully");
+			break;
+
+		case ESP_GAP_BLE_PERIODIC_ADV_CREATE_SYNC_COMPLETE_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onCreateSync(param->period_adv_create_sync.status);
+			}
+
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_CREATE_SYNC_COMPLETE_EVT, status %d", param->period_adv_create_sync.status);
+			break;
+		case ESP_GAP_BLE_PERIODIC_ADV_SYNC_CANCEL_COMPLETE_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onCancelSync(param->period_adv_sync_cancel.status);
+			}
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_SYNC_CANCEL_COMPLETE_EVT, status %d", param->period_adv_sync_cancel.status);
+			break;
+		case ESP_GAP_BLE_PERIODIC_ADV_SYNC_TERMINATE_COMPLETE_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onTerminateSync(param->period_adv_sync_term.status);
+			}
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_SYNC_TERMINATE_COMPLETE_EVT, status %d", param->period_adv_sync_term.status);
+			break;
+		case ESP_GAP_BLE_PERIODIC_ADV_SYNC_LOST_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onLostSync(param->periodic_adv_sync_lost.sync_handle);
+			}
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_SYNC_LOST_EVT, sync handle %d", param->periodic_adv_sync_lost.sync_handle);
+			break;
+		case ESP_GAP_BLE_PERIODIC_ADV_SYNC_ESTAB_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onSync(*(esp_ble_periodic_adv_sync_estab_param_t*)&param->periodic_adv_sync_estab);
+			}
+			log_v("ESP_GAP_BLE_PERIODIC_ADV_SYNC_ESTAB_EVT, status %d", param->periodic_adv_sync_estab.status);
+			break;
+
+		case ESP_GAP_BLE_PERIODIC_ADV_REPORT_EVT:
+			if (m_pPeriodicScanCb != nullptr)
+			{
+				m_pPeriodicScanCb->onReport(param->period_adv_report.params);
+			}
+			break;
+
+#endif // SOC_BLE_50_SUPPORTED
 
 		default: {
 			break;
@@ -159,13 +267,97 @@ void BLEScan::setActiveScan(bool active) {
  * @brief Set the call backs to be invoked.
  * @param [in] pAdvertisedDeviceCallbacks Call backs to be invoked.
  * @param [in] wantDuplicates  True if we wish to be called back with duplicates.  Default is false.
+ * @param [in] shouldParse  True if we wish to parse advertised package or raw payload.  Default is true.
  */
-void BLEScan::setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates) {
+void BLEScan::setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates, bool shouldParse) {
 	m_wantDuplicates = wantDuplicates;
 	m_pAdvertisedDeviceCallbacks = pAdvertisedDeviceCallbacks;
+	m_shouldParse = shouldParse;
 } // setAdvertisedDeviceCallbacks
 
+#ifdef SOC_BLE_50_SUPPORTED
 
+void BLEScan::setExtendedScanCallback(BLEExtAdvertisingCallbacks* cb)
+{
+	m_pExtendedScanCb = cb;
+}
+
+/**
+* @brief           This function is used to set the extended scan parameters to be used on the advertising channels.
+*
+*
+* @return            - ESP_OK : success
+*                    - other  : failed
+*
+*/
+esp_err_t BLEScan::setExtScanParams()
+{
+	esp_ble_ext_scan_params_t ext_scan_params = {
+		.own_addr_type = BLE_ADDR_TYPE_PUBLIC,
+		.filter_policy = BLE_SCAN_FILTER_ALLOW_ALL,
+		.scan_duplicate = BLE_SCAN_DUPLICATE_DISABLE,
+		.cfg_mask = ESP_BLE_GAP_EXT_SCAN_CFG_UNCODE_MASK | ESP_BLE_GAP_EXT_SCAN_CFG_CODE_MASK,
+		.uncoded_cfg = {BLE_SCAN_TYPE_ACTIVE, 40, 40},
+		.coded_cfg = {BLE_SCAN_TYPE_ACTIVE, 40, 40},
+	};
+
+	esp_err_t rc = esp_ble_gap_set_ext_scan_params(&ext_scan_params);
+	if (rc) {
+		log_e("set extend scan params error, error code = %x", rc);
+	}
+	return rc;
+}
+
+/**
+* @brief           This function is used to set the extended scan parameters to be used on the advertising channels.
+*
+* @param[in]       params : scan parameters
+*
+* @return            - ESP_OK : success
+*                    - other  : failed
+*
+*/
+esp_err_t BLEScan::setExtScanParams(esp_ble_ext_scan_params_t* ext_scan_params)
+{
+	esp_err_t rc = esp_ble_gap_set_ext_scan_params(ext_scan_params);
+	if (rc) {
+		log_e("set extend scan params error, error code = %x", rc);
+	}
+	return rc; 
+}
+
+/**
+* @brief           This function is used to enable scanning.
+*
+* @param[in]       duration : Scan duration
+* @param[in]       period  : Time interval from when the Controller started its last Scan Duration until it begins the subsequent Scan Duration.
+*
+* @return            - ESP_OK : success
+*                    - other  : failed
+*
+*/
+esp_err_t BLEScan::startExtScan(uint32_t duration, uint16_t period)
+{
+	esp_err_t rc = esp_ble_gap_start_ext_scan(duration, period);
+	if(rc) log_e("extended scan start failed: %d", rc);
+	return rc;
+}
+
+
+esp_err_t BLEScan::stopExtScan()
+{
+	esp_err_t rc;
+	rc = esp_ble_gap_stop_ext_scan();
+
+	return rc;
+}
+
+void BLEScan::setPeriodicScanCallback(BLEPeriodicScanCallbacks* cb)
+{
+	m_pPeriodicScanCb = cb;
+}
+
+#endif // SOC_BLE_50_SUPPORTED
 /**
  * @brief Set the interval to scan.
  * @param [in] The interval in msecs.
@@ -194,7 +386,7 @@ void BLEScan::setWindow(uint16_t windowMSecs) {
 bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue) {
 	log_v(">> start(duration=%d)", duration);
 
-	m_semaphoreScanEnd.take(std::string("start"));
+	m_semaphoreScanEnd.take(String("start"));
 	m_scanCompleteCB = scanCompleteCB;                  // Save the callback to be invoked when the scan completes.
 
 	//  if we are connecting to devices that are advertising even after being connected, multiconnecting peripherals
@@ -234,11 +426,11 @@ bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), b
  * @param [in] duration The duration in seconds for which to scan.
  * @return The BLEScanResults.
  */
-BLEScanResults BLEScan::start(uint32_t duration, bool is_continue) {
+BLEScanResults* BLEScan::start(uint32_t duration, bool is_continue) {
 	if(start(duration, nullptr, is_continue)) {
 		m_semaphoreScanEnd.wait("start");   // Wait for the semaphore to release.
 	}
-	return m_scanResults;
+	return &m_scanResults;
 } // start
 
 
@@ -308,8 +500,8 @@ BLEAdvertisedDevice BLEScanResults::getDevice(uint32_t i) {
 	return dev;
 }
 
-BLEScanResults BLEScan::getResults() {
-	return m_scanResults;
+BLEScanResults* BLEScan::getResults() {
+	return &m_scanResults;
 }
 
 void BLEScan::clearResults() {
@@ -319,4 +511,5 @@ void BLEScan::clearResults() {
 	m_scanResults.m_vectorAdvertisedDevices.clear();
 }
 
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* SOC_BLE_SUPPORTED */

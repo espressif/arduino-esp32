@@ -9,8 +9,11 @@
  * See also:
  * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.characteristic_presentation_format.xml
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLE2904.h"
 
@@ -72,3 +75,4 @@ void BLE2904::setUnit(uint16_t unit) {
 } // setUnit
 
 #endif
+#endif /* SOC_BLE_SUPPORTED */

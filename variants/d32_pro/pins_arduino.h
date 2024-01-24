@@ -6,8 +6,9 @@
 
 static const uint8_t LED_BUILTIN = 5;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-static const uint8_t _VBAT = 35; // battery voltage
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
+static const uint8_t _VBAT = 35; // battery voltage
 
 #define TF_CS   4  // TF (Micro SD Card) CS pin
 #define TS_CS   12 // Touch Screen CS pin

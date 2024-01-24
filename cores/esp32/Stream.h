@@ -48,7 +48,6 @@ public:
     virtual int available() = 0;
     virtual int read() = 0;
     virtual int peek() = 0;
-    virtual void flush() = 0;
 
     Stream():_startMillis(0)
     {
@@ -60,6 +59,7 @@ public:
 
     void setTimeout(unsigned long timeout);  // sets maximum milliseconds to wait for stream data, default is 1 second
     unsigned long getTimeout(void);
+      
     bool find(const char *target);   // reads data from the stream until the target string is found
     bool find(uint8_t *target)
     {
@@ -123,6 +123,17 @@ protected:
     // this allows format characters (typically commas) in values to be ignored
 
     float parseFloat(char skipChar);  // as above but the given skipChar is ignored
+  
+    struct MultiTarget {
+      const char *str;  // string you're searching for
+      size_t len;       // length of string you're searching for
+      size_t index;     // index used by the search routine.
+    };
+
+  // This allows you to search for an arbitrary number of strings.
+  // Returns index of the target that is found first or -1 if timeout occurs.
+  int findMulti(struct MultiTarget *targets, int tCount);
+
 };
 
 #endif

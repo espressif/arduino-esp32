@@ -4,8 +4,11 @@
  *  Created on: Jul 2, 2017
  *      Author: kolban
  */
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "BLEAddress.h"
 #include <string>
@@ -39,7 +42,7 @@ BLEAddress::BLEAddress(esp_bd_addr_t address) {
  *
  * @param [in] stringAddress The hex representation of the address.
  */
-BLEAddress::BLEAddress(std::string stringAddress) {
+BLEAddress::BLEAddress(String stringAddress) {
 	if (stringAddress.length() != 17) return;
 
 	int data[6];
@@ -59,14 +62,37 @@ BLEAddress::BLEAddress(std::string stringAddress) {
  * @return True if the addresses are equal.
  */
 bool BLEAddress::equals(BLEAddress otherAddress) {
-	return memcmp(otherAddress.getNative(), m_address, 6) == 0;
+	return memcmp(otherAddress.getNative(), m_address, ESP_BD_ADDR_LEN) == 0;
 } // equals
 
+bool BLEAddress::operator==(const BLEAddress& otherAddress) const {
+	return memcmp(otherAddress.m_address, m_address, ESP_BD_ADDR_LEN) == 0;
+}
+
+bool BLEAddress::operator!=(const BLEAddress& otherAddress) const {
+  return !(*this == otherAddress);
+}
+
+bool BLEAddress::operator<(const BLEAddress& otherAddress) const {
+  return memcmp(m_address, otherAddress.m_address, ESP_BD_ADDR_LEN) < 0;
+}
+
+bool BLEAddress::operator<=(const BLEAddress& otherAddress) const {
+  return !(*this > otherAddress);
+}
+
+bool BLEAddress::operator>=(const BLEAddress& otherAddress) const {
+  return !(*this < otherAddress);
+}
+
+bool BLEAddress::operator>(const BLEAddress& otherAddress) const {
+  return memcmp(m_address, otherAddress.m_address, ESP_BD_ADDR_LEN) > 0;
+}
 
 /**
  * @brief Return the native representation of the address.
  * @return The native representation of the address.
- */
+ */   
 esp_bd_addr_t *BLEAddress::getNative() {
 	return &m_address;
 } // getNative
@@ -83,12 +109,14 @@ esp_bd_addr_t *BLEAddress::getNative() {
  *
  * @return The string representation of the address.
  */
-std::string BLEAddress::toString() {
+String BLEAddress::toString() {
 	auto size = 18;
 	char *res = (char*)malloc(size);
 	snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
-	std::string ret(res);
+	String ret(res);
 	free(res);
 	return ret;
 } // toString
+
 #endif
+#endif /* SOC_BLE_SUPPORTED */

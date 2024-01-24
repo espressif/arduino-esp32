@@ -17,8 +17,10 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef MAIN_ESP32_HAL_ADC_H_
-#define MAIN_ESP32_HAL_ADC_H_
+#pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_ADC_SUPPORTED
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,13 +32,19 @@ typedef enum {
     ADC_0db,
     ADC_2_5db,
     ADC_6db,
-    ADC_11db
+    ADC_11db,
+    ADC_ATTENDB_MAX
 } adc_attenuation_t;
 
 /*
  * Get ADC value for pin
  * */
 uint16_t analogRead(uint8_t pin);
+
+/*
+ * Get MilliVolts value for pin
+ * */
+uint32_t analogReadMilliVolts(uint8_t pin);
 
 /*
  * Set the resolution of analogRead return values. Default is 12 bits (range from 0 to 4096).
@@ -46,20 +54,6 @@ uint16_t analogRead(uint8_t pin);
  * Note: compatibility with Arduino SAM
  */
 void analogReadResolution(uint8_t bits);
-
-/*
- * Sets the sample bits and read resolution
- * Default is 12bit (0 - 4095)
- * Range is 9 - 12
- * */
-void analogSetWidth(uint8_t bits);
-
-/*
- * Set the divider for the ADC clock.
- * Default is 1
- * Range is 1 - 255
- * */
-void analogSetClockDiv(uint8_t clockDiv);
 
 /*
  * Set the attenuation for all channels
@@ -73,29 +67,68 @@ void analogSetAttenuation(adc_attenuation_t attenuation);
  * */
 void analogSetPinAttenuation(uint8_t pin, adc_attenuation_t attenuation);
 
+#if CONFIG_IDF_TARGET_ESP32
 /*
- * Get value for HALL sensor (without LNA)
- * connected to pins 36(SVP) and 39(SVN)
+ * Sets the sample bits and read resolution
+ * Default is 12bit (0 - 4095)
+ * Range is 9 - 12
  * */
-int hallRead();
+void analogSetWidth(uint8_t bits);
+
+#endif
 
 /*
- * Attach pin to ADC (will also clear any other analog mode that could be on)
+ * Analog Continuous mode
  * */
-bool adcAttachPin(uint8_t pin);
+
+typedef struct {
+    uint8_t pin;           /*!<ADC pin */
+    uint8_t channel;       /*!<ADC channel */
+    int avg_read_raw;      /*!<ADC average raw data */
+    int avg_read_mvolts;   /*!<ADC average voltage in mV */
+} adc_continuos_data_t;
 
 /*
- * Set pin to use for ADC calibration if the esp is not already calibrated (25, 26 or 27)
+ * Setup ADC continuous peripheral
  * */
-void analogSetVRefPin(uint8_t pin);
+bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
 
 /*
- * Get MilliVolts value for pin
+ * Read ADC continuous conversion data
  * */
-uint32_t analogReadMilliVolts(uint8_t pin);
+bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms);
+
+/*
+ * Start ADC continuous conversions
+ * */
+bool analogContinuousStart();
+
+/*
+ * Stop ADC continuous conversions
+ * */
+bool analogContinuousStop();
+
+/*
+ * Deinitialize ADC continuous peripheral
+ * */
+bool analogContinuousDeinit();
+
+/*
+ * Sets the attenuation for continuous mode reading
+ * Default is 11db
+ * */
+void analogContinuousSetAtten(adc_attenuation_t attenuation);
+
+/*
+ * Sets the read resolution for continuous mode
+ * Default is 12bit (0 - 4095)
+ * Range is 9 - 12
+ * */
+void analogContinuousSetWidth(uint8_t bits);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* MAIN_ESP32_HAL_ADC_H_ */
+#endif /* SOC_ADC_SUPPORTED */

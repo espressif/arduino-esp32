@@ -5,6 +5,8 @@
 #include "mimetable.h"
 #include "WString.h"
 #include "Uri.h"
+#include <MD5Builder.h>
+#include <base64.h>
 
 using namespace mime;
 
@@ -68,8 +70,9 @@ public:
     , _path(path)
     , _cache_header(cache_header)
     {
-        _isFile = fs.exists(path);
-        log_v("StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header);
+        File f = fs.open(path);
+        _isFile = (f && (! f.isDirectory()));
+        log_v("StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header ? cache_header : ""); // issue 5506 - cache_header can be nullptr
         _baseUriLength = _uri.length();
     }
 
@@ -90,6 +93,7 @@ public:
         log_v("StaticRequestHandler::handle: request=%s _uri=%s\r\n", requestUri.c_str(), _uri.c_str());
 
         String path(_path);
+        String eTagCode;
 
         if (!_isFile) {
             // Base URI doesn't point to a file.
@@ -113,11 +117,28 @@ public:
         }
 
         File f = _fs.open(path, "r");
-        if (!f)
+        if (!f || !f.available())
             return false;
+
+        if (server._eTagEnabled) {
+            if (server._eTagFunction) {
+                eTagCode = (server._eTagFunction)(_fs, path);
+            } else {
+                eTagCode = calcETag(_fs, path);
+            }
+
+            if (server.header("If-None-Match") == eTagCode) {
+                server.send(304);
+                return true;
+            }
+        }
 
         if (_cache_header.length() != 0)
             server.sendHeader("Cache-Control", _cache_header);
+
+        if ((server._eTagEnabled) && (eTagCode.length() > 0)) {
+            server.sendHeader("ETag", eTagCode);
+        }
 
         server.streamFile(f, contentType);
         return true;
@@ -137,6 +158,26 @@ public:
         strcpy_P(buff, mimeTable[sizeof(mimeTable)/sizeof(mimeTable[0])-1].mimeType);
         return String(buff);
     }
+
+    // calculate an ETag for a file in filesystem based on md5 checksum
+    // that can be used in the http headers - include quotes.
+    static String calcETag(FS &fs, const String &path) {
+        String result;
+
+        // calculate eTag using md5 checksum
+        uint8_t md5_buf[16];
+        File f = fs.open(path, "r");
+        MD5Builder calcMD5;
+        calcMD5.begin();
+        calcMD5.addStream(f, f.size());
+        calcMD5.calculate();
+        calcMD5.getBytes(md5_buf);
+        f.close();
+        // create a minimal-length eTag using base64 byte[]->text encoding.
+        result = "\"" + base64::encode(md5_buf, 16) + "\"";
+        return(result);
+    } // calcETag
+
 
 protected:
     FS _fs;
