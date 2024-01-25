@@ -13818,6 +13818,146 @@ nodemcu-32s.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+nologo_esp32c3_super_mini.name=Nologo ESP32C3 Super Mini
+nologo_esp32c3_super_mini.vid.0=0x303a
+nologo_esp32c3_super_mini.pid.0=0x1001
+
+nologo_esp32c3_super_mini.upload.tool=esptool_py
+nologo_esp32c3_super_mini.upload.tool.default=esptool_py
+nologo_esp32c3_super_mini.upload.tool.network=esp_ota
+nologo_esp32c3_super_mini.upload.maximum_size=1310720
+nologo_esp32c3_super_mini.upload.maximum_data_size=327680
+nologo_esp32c3_super_mini.upload.flags=
+nologo_esp32c3_super_mini.upload.extra_flags=
+nologo_esp32c3_super_mini.upload.use_1200bps_touch=false
+nologo_esp32c3_super_mini.upload.wait_for_upload_port=false
+
+nologo_esp32c3_super_mini.serial.disableDTR=false
+nologo_esp32c3_super_mini.serial.disableRTS=false
+
+nologo_esp32c3_super_mini.build.tarch=riscv32
+nologo_esp32c3_super_mini.build.target=esp
+nologo_esp32c3_super_mini.build.mcu=esp32c3
+nologo_esp32c3_super_mini.build.core=esp32
+nologo_esp32c3_super_mini.build.variant=nologo_esp32c3_super_mini
+nologo_esp32c3_super_mini.build.board=NOLOGO_ESP32C3_SUPER_MINI
+nologo_esp32c3_super_mini.build.bootloader_addr=0x0
+
+nologo_esp32c3_super_mini.build.usb_mode=1
+nologo_esp32c3_super_mini.build.cdc_on_boot=1
+nologo_esp32c3_super_mini.build.f_cpu=160000000L
+nologo_esp32c3_super_mini.build.flash_size=4MB
+nologo_esp32c3_super_mini.build.flash_freq=80m
+nologo_esp32c3_super_mini.build.flash_mode=qio
+nologo_esp32c3_super_mini.build.boot=qio
+nologo_esp32c3_super_mini.build.partitions=default
+nologo_esp32c3_super_mini.build.defines=
+
+nologo_esp32c3_super_mini.menu.USBMode.hwcdc=Hardware CDC and JTAG
+nologo_esp32c3_super_mini.menu.USBMode.hwcdc.build.usb_mode=1
+nologo_esp32c3_super_mini.menu.USBMode.default=USB-OTG
+nologo_esp32c3_super_mini.menu.USBMode.default.build.usb_mode=0
+
+nologo_esp32c3_super_mini.menu.JTAGAdapter.default=Disabled
+nologo_esp32c3_super_mini.menu.JTAGAdapter.default.build.copy_jtag_files=0
+nologo_esp32c3_super_mini.menu.JTAGAdapter.builtin=Integrated USB JTAG
+nologo_esp32c3_super_mini.menu.JTAGAdapter.builtin.build.openocdscript=esp32c3-builtin.cfg
+nologo_esp32c3_super_mini.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+nologo_esp32c3_super_mini.menu.JTAGAdapter.external=FTDI Adapter
+nologo_esp32c3_super_mini.menu.JTAGAdapter.external.build.openocdscript=esp32c3-ftdi.cfg
+nologo_esp32c3_super_mini.menu.JTAGAdapter.external.build.copy_jtag_files=1
+nologo_esp32c3_super_mini.menu.JTAGAdapter.bridge=ESP USB Bridge
+nologo_esp32c3_super_mini.menu.JTAGAdapter.bridge.build.openocdscript=esp32c3-bridge.cfg
+nologo_esp32c3_super_mini.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+nologo_esp32c3_super_mini.menu.CDCOnBoot.default=Enabled
+nologo_esp32c3_super_mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
+nologo_esp32c3_super_mini.menu.CDCOnBoot.cdc=Enabled
+nologo_esp32c3_super_mini.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+nologo_esp32c3_super_mini.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.default.build.partitions=default
+nologo_esp32c3_super_mini.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+nologo_esp32c3_super_mini.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+nologo_esp32c3_super_mini.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+nologo_esp32c3_super_mini.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.minimal.build.partitions=minimal
+nologo_esp32c3_super_mini.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.no_ota.build.partitions=no_ota
+nologo_esp32c3_super_mini.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+nologo_esp32c3_super_mini.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+nologo_esp32c3_super_mini.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+nologo_esp32c3_super_mini.menu.PartitionScheme.huge_app.build.partitions=huge_app
+nologo_esp32c3_super_mini.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+nologo_esp32c3_super_mini.menu.CPUFreq.160=160MHz (WiFi)
+nologo_esp32c3_super_mini.menu.CPUFreq.160.build.f_cpu=160000000L
+nologo_esp32c3_super_mini.menu.CPUFreq.80=80MHz (WiFi)
+nologo_esp32c3_super_mini.menu.CPUFreq.80.build.f_cpu=80000000L
+nologo_esp32c3_super_mini.menu.CPUFreq.40=40MHz
+nologo_esp32c3_super_mini.menu.CPUFreq.40.build.f_cpu=40000000L
+nologo_esp32c3_super_mini.menu.CPUFreq.20=20MHz
+nologo_esp32c3_super_mini.menu.CPUFreq.20.build.f_cpu=20000000L
+nologo_esp32c3_super_mini.menu.CPUFreq.10=10MHz
+nologo_esp32c3_super_mini.menu.CPUFreq.10.build.f_cpu=10000000L
+
+nologo_esp32c3_super_mini.menu.FlashMode.qio=QIO
+nologo_esp32c3_super_mini.menu.FlashMode.qio.build.flash_mode=dio
+nologo_esp32c3_super_mini.menu.FlashMode.qio.build.boot=qio
+nologo_esp32c3_super_mini.menu.FlashMode.dio=DIO
+nologo_esp32c3_super_mini.menu.FlashMode.dio.build.flash_mode=dio
+nologo_esp32c3_super_mini.menu.FlashMode.dio.build.boot=dio
+
+nologo_esp32c3_super_mini.menu.FlashFreq.80=80MHz
+nologo_esp32c3_super_mini.menu.FlashFreq.80.build.flash_freq=80m
+nologo_esp32c3_super_mini.menu.FlashFreq.40=40MHz
+nologo_esp32c3_super_mini.menu.FlashFreq.40.build.flash_freq=40m
+
+nologo_esp32c3_super_mini.menu.UploadSpeed.921600=921600
+nologo_esp32c3_super_mini.menu.UploadSpeed.921600.upload.speed=921600
+nologo_esp32c3_super_mini.menu.UploadSpeed.115200=115200
+nologo_esp32c3_super_mini.menu.UploadSpeed.115200.upload.speed=115200
+nologo_esp32c3_super_mini.menu.UploadSpeed.256000.windows=256000
+nologo_esp32c3_super_mini.menu.UploadSpeed.256000.upload.speed=256000
+nologo_esp32c3_super_mini.menu.UploadSpeed.230400.windows.upload.speed=256000
+nologo_esp32c3_super_mini.menu.UploadSpeed.230400=230400
+nologo_esp32c3_super_mini.menu.UploadSpeed.230400.upload.speed=230400
+nologo_esp32c3_super_mini.menu.UploadSpeed.460800.linux=460800
+nologo_esp32c3_super_mini.menu.UploadSpeed.460800.macosx=460800
+nologo_esp32c3_super_mini.menu.UploadSpeed.460800.upload.speed=460800
+nologo_esp32c3_super_mini.menu.UploadSpeed.512000.windows=512000
+nologo_esp32c3_super_mini.menu.UploadSpeed.512000.upload.speed=512000
+
+nologo_esp32c3_super_mini.menu.DebugLevel.none=None
+nologo_esp32c3_super_mini.menu.DebugLevel.none.build.code_debug=0
+nologo_esp32c3_super_mini.menu.DebugLevel.error=Error
+nologo_esp32c3_super_mini.menu.DebugLevel.error.build.code_debug=1
+nologo_esp32c3_super_mini.menu.DebugLevel.warn=Warn
+nologo_esp32c3_super_mini.menu.DebugLevel.warn.build.code_debug=2
+nologo_esp32c3_super_mini.menu.DebugLevel.info=Info
+nologo_esp32c3_super_mini.menu.DebugLevel.info.build.code_debug=3
+nologo_esp32c3_super_mini.menu.DebugLevel.debug=Debug
+nologo_esp32c3_super_mini.menu.DebugLevel.debug.build.code_debug=4
+nologo_esp32c3_super_mini.menu.DebugLevel.verbose=Verbose
+nologo_esp32c3_super_mini.menu.DebugLevel.verbose.build.code_debug=5
+
+nologo_esp32c3_super_mini.menu.EraseFlash.none=Disabled
+nologo_esp32c3_super_mini.menu.EraseFlash.none.upload.erase_cmd=
+nologo_esp32c3_super_mini.menu.EraseFlash.all=Enabled
+nologo_esp32c3_super_mini.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 mhetesp32devkit.name=MH ET LIVE ESP32DevKIT
 
 mhetesp32devkit.bootloader.tool=esptool_py
