@@ -316,7 +316,7 @@ void ArduinoOTAClass::_runUpdate() {
         if(r != available){
             log_w("didn't read enough! %u != %u", r, available);
 			if((int32_t) r<0){
-				delay(50);
+				delay(1);
 				continue;  	//let's not try to write 4 gigabytes when client.read returns -1
 			}
         }
