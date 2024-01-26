@@ -28,7 +28,7 @@ Ticker::Ticker() :
   _timer(nullptr) {}
 
 Ticker::~Ticker() {
-    detach();
+  detach();
 }
 
 void Ticker::_attach_us(uint64_t micros, bool repeat, callback_with_arg_t callback, void* arg) {

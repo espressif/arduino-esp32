@@ -1,8 +1,8 @@
-/*
+/* 
   Ticker.h - esp32 library that calls functions periodically
 
   Copyright (c) 2017 Bert Melis. All rights reserved.
-
+  
   Based on the original work of:
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
   The original version is part of the esp8266 core for Arduino environment.
@@ -123,7 +123,7 @@ public:
   void detach();
   bool active() const;
 
-protected:  
+protected:	
   static void _static_callback(void* arg);
 
   callback_function_t _callback_function = nullptr;
