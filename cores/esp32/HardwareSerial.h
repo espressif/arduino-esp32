@@ -49,12 +49,44 @@
 #include <functional>
 #include "Stream.h"
 #include "esp32-hal.h"
+#include "hal/uart_types.h"
 #include "soc/soc_caps.h"
 #include "HWCDC.h"
+#include "USBCDC.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+
+enum SerialConfig {
+    SERIAL_5N1 = 0x8000010,
+    SERIAL_6N1 = 0x8000014,
+    SERIAL_7N1 = 0x8000018,
+    SERIAL_8N1 = 0x800001c,
+    SERIAL_5N2 = 0x8000030,
+    SERIAL_6N2 = 0x8000034,
+    SERIAL_7N2 = 0x8000038,
+    SERIAL_8N2 = 0x800003c,
+    SERIAL_5E1 = 0x8000012,
+    SERIAL_6E1 = 0x8000016,
+    SERIAL_7E1 = 0x800001a,
+    SERIAL_8E1 = 0x800001e,
+    SERIAL_5E2 = 0x8000032,
+    SERIAL_6E2 = 0x8000036,
+    SERIAL_7E2 = 0x800003a,
+    SERIAL_8E2 = 0x800003e,
+    SERIAL_5O1 = 0x8000013,
+    SERIAL_6O1 = 0x8000017,
+    SERIAL_7O1 = 0x800001b,
+    SERIAL_8O1 = 0x800001f,
+    SERIAL_5O2 = 0x8000033,
+    SERIAL_6O2 = 0x8000037,
+    SERIAL_7O2 = 0x800003b,
+    SERIAL_8O2 = 0x800003f
+};
+
+typedef uart_mode_t SerialMode;
+typedef uart_hw_flowcontrol_t SerialHwFlowCtrl;
 
 typedef enum {
     UART_NO_ERROR,
@@ -64,6 +96,91 @@ typedef enum {
     UART_FRAME_ERROR,
     UART_PARITY_ERROR
 } hardwareSerial_error_t;
+
+
+#ifndef ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+  #define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE 2048
+#endif
+
+#ifndef ARDUINO_SERIAL_EVENT_TASK_PRIORITY
+  #define ARDUINO_SERIAL_EVENT_TASK_PRIORITY (configMAX_PRIORITIES-1)
+#endif
+
+#ifndef ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+  #define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE -1
+#endif
+
+// UART0 pins are defined by default by the bootloader.
+// The definitions for SOC_* should not be changed unless the bootloader pins
+// have changed and you know what you are doing.
+
+#ifndef SOC_RX0
+  #if CONFIG_IDF_TARGET_ESP32
+    #define SOC_RX0 (gpio_num_t)3
+  #elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    #define SOC_RX0 (gpio_num_t)44
+  #elif CONFIG_IDF_TARGET_ESP32C3
+    #define SOC_RX0 (gpio_num_t)20
+  #endif
+#endif
+
+#ifndef SOC_TX0
+  #if CONFIG_IDF_TARGET_ESP32
+    #define SOC_TX0 (gpio_num_t)1
+  #elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    #define SOC_TX0 (gpio_num_t)43
+  #elif CONFIG_IDF_TARGET_ESP32C3
+    #define SOC_TX0 (gpio_num_t)21
+  #endif
+#endif
+
+// Default pins for UART1 are arbitrary, and defined here for convenience.
+
+#if SOC_UART_NUM > 1
+  #ifndef RX1
+    #if CONFIG_IDF_TARGET_ESP32
+      #define RX1 (gpio_num_t)26
+    #elif CONFIG_IDF_TARGET_ESP32S2
+      #define RX1 (gpio_num_t)4
+    #elif CONFIG_IDF_TARGET_ESP32C3
+      #define RX1 (gpio_num_t)18
+    #elif CONFIG_IDF_TARGET_ESP32S3
+      #define RX1 (gpio_num_t)15
+    #endif
+  #endif
+
+  #ifndef TX1
+    #if CONFIG_IDF_TARGET_ESP32
+      #define TX1 (gpio_num_t)27
+    #elif CONFIG_IDF_TARGET_ESP32S2
+      #define TX1 (gpio_num_t)5
+    #elif CONFIG_IDF_TARGET_ESP32C3
+      #define TX1 (gpio_num_t)19
+    #elif CONFIG_IDF_TARGET_ESP32S3
+      #define TX1 (gpio_num_t)16
+    #endif
+  #endif
+#endif /* SOC_UART_NUM > 1 */
+
+// Default pins for UART2 are arbitrary, and defined here for convenience.
+
+#if SOC_UART_NUM > 2
+  #ifndef RX2
+    #if CONFIG_IDF_TARGET_ESP32
+      #define RX2 (gpio_num_t)4
+    #elif CONFIG_IDF_TARGET_ESP32S3
+      #define RX2 (gpio_num_t)19
+    #endif
+  #endif
+
+  #ifndef TX2
+    #if CONFIG_IDF_TARGET_ESP32
+      #define TX2 (gpio_num_t)25
+    #elif CONFIG_IDF_TARGET_ESP32S3
+      #define TX2 (gpio_num_t)20
+    #endif
+  #endif
+#endif /* SOC_UART_NUM > 2 */
 
 typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
@@ -106,8 +223,13 @@ public:
     // eventQueueReset clears all events in the queue (the events that trigger onReceive and onReceiveError) - maybe usefull in some use cases
     void eventQueueReset();
  
+    // When pins are changed, it will detach the previous ones
+    // if pin is negative, it won't be set/changed and will be kept as is
+    // timeout_ms is used in baudrate detection (ESP32, ESP32S2 only)
+    // invert will invert RX/TX polarity
+    // rxfifo_full_thrhd if the UART Flow Control Threshold in the UART FIFO (max 127)
     void begin(unsigned long baud, uint32_t config=SERIAL_8N1, int8_t rxPin=-1, int8_t txPin=-1, bool invert=false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
-    void end(bool fullyTerminate = true);
+    void end(void);
     void updateBaudRate(unsigned long baud);
     int available(void);
     int availableForWrite(void);
@@ -160,12 +282,22 @@ public:
     void setRxInvert(bool);
 
     // Negative Pin Number will keep it unmodified, thus this function can set individual pins
-    // SetPins shall be called after Serial begin()
+    // setPins() can be called after or before begin()
+    // When pins are changed, it will detach the previous ones
     bool setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
     // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
-    bool setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
+    //    UART_HW_FLOWCTRL_DISABLE = 0x0   disable hardware flow control
+    //    UART_HW_FLOWCTRL_RTS     = 0x1   enable RX hardware flow control (rts)
+    //    UART_HW_FLOWCTRL_CTS     = 0x2   enable TX hardware flow control (cts)
+    //    UART_HW_FLOWCTRL_CTS_RTS = 0x3   enable hardware flow control
+    bool setHwFlowCtrlMode(SerialHwFlowCtrl mode = UART_HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
     // Used to set RS485 modes such as UART_MODE_RS485_HALF_DUPLEX for Auto RTS function on ESP32
-    bool setMode(uint8_t mode);
+    //    UART_MODE_UART                   = 0x00    mode: regular UART mode
+    //    UART_MODE_RS485_HALF_DUPLEX      = 0x01    mode: half duplex RS485 UART mode control by RTS pin
+    //    UART_MODE_IRDA                   = 0x02    mode: IRDA UART mode
+    //    UART_MODE_RS485_COLLISION_DETECT = 0x03    mode: RS485 collision detection UART mode (used for test purposes)
+    //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
+    bool setMode(SerialMode mode);
     size_t setRxBufferSize(size_t new_size);
     size_t setTxBufferSize(size_t new_size);
 
@@ -183,7 +315,6 @@ protected:
 #if !CONFIG_DISABLE_HAL_LOCKS
     SemaphoreHandle_t _lock;
 #endif
-    int8_t _rxPin, _txPin, _ctsPin, _rtsPin;
 
     void _createEventTask(void *args);
     void _destroyEventTask(void);
@@ -212,5 +343,4 @@ extern HardwareSerial Serial1;
 extern HardwareSerial Serial2;
 #endif
 #endif
-
 #endif // HardwareSerial_h

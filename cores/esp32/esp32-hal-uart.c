@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2024 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp32-hal-uart.h"
 #include "esp32-hal.h"
 
 #include "freertos/FreeRTOS.h"
@@ -23,23 +22,32 @@
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
 #include "soc/uart_periph.h"
+#include "rom/ets_sys.h"
+#include "rom/gpio.h"
 
 #include "driver/gpio.h"
 #include "hal/gpio_hal.h"
 #include "esp_rom_gpio.h"
 
-static int s_uart_debug_nr = 0;
+static int s_uart_debug_nr = 0;               // UART number for debug output
 
 struct uart_struct_t {
 
 #if !CONFIG_DISABLE_HAL_LOCKS
-    xSemaphoreHandle lock;
+    SemaphoreHandle_t lock;                   // UART lock
 #endif
 
-    uint8_t num;
-    bool has_peek;
-    uint8_t peek_byte;
-    QueueHandle_t uart_event_queue;   // export it by some uartGetEventQueue() function
+    uint8_t num;                               // UART number for IDF driver API
+    bool has_peek;                             // flag to indicate that there is a peek byte pending to be read
+    uint8_t peek_byte;                         // peek byte that has been read but not consumed
+    QueueHandle_t uart_event_queue;            // export it by some uartGetEventQueue() function
+    // configuration data:: Arduino API tipical data
+    int8_t _rxPin, _txPin, _ctsPin, _rtsPin;   // UART GPIOs
+    uint32_t _baudrate, _config;               // UART baudrate and config
+    // UART ESP32 specific data
+    uint16_t _rx_buffer_size, _tx_buffer_size; // UART RX and TX buffer sizes
+    bool _inverted;                            // UART inverted signal
+    uint8_t _rxfifo_full_thrhd;                // UART RX FIFO full threshold
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -48,63 +56,142 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[] = {
-    {0, false, 0, NULL},
+    {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #if SOC_UART_NUM > 1
-    {1, false, 0, NULL},
+    {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 #if SOC_UART_NUM > 2
-    {2, false, 0, NULL},
+    {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 };
 
 #else
 
-#define UART_MUTEX_LOCK()    do {} while (xSemaphoreTake(uart->lock, portMAX_DELAY) != pdPASS)
-#define UART_MUTEX_UNLOCK()  xSemaphoreGive(uart->lock)
+#define UART_MUTEX_LOCK()    if(uart->lock != NULL) do {} while (xSemaphoreTake(uart->lock, portMAX_DELAY) != pdPASS)
+#define UART_MUTEX_UNLOCK()  if(uart->lock != NULL) xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
-    {NULL, 0, false, 0, NULL},
+    {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #if SOC_UART_NUM > 1
-    {NULL, 1, false, 0, NULL},
+    {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 #if SOC_UART_NUM > 2
-    {NULL, 2, false, 0, NULL},
+    {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 };
 
 #endif
 
-// IDF UART has no detach function. As consequence, after ending a UART, the previous pins continue
-// to work as RX/TX. It can be verified by changing the UART pins and writing to the UART. Output can 
-// be seen in the previous pins and new pins as well. 
-// Valid pin UART_PIN_NO_CHANGE is defined to (-1)
 // Negative Pin Number will keep it unmodified, thus this function can detach individual pins
-void uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+// This function will also unset the pins in the Peripheral Manager and set the pin to -1 after detaching
+static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(uart_num >= SOC_UART_NUM) {
-        log_e("Serial number is invalid, please use numers from 0 to %u", SOC_UART_NUM - 1);
-        return;
+        log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+        return false;
     }
+    // get UART information
+    uart_t* uart = &_uart_bus_array[uart_num];
+    bool retCode = true;
+    //log_v("detaching UART%d pins: prev,pin RX(%d,%d) TX(%d,%d) CTS(%d,%d) RTS(%d,%d)", uart_num, 
+    //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
 
-    if (txPin >= 0) {
+    // detaches pins and sets Peripheral Manager and UART information
+    if (rxPin >= 0 && uart->_rxPin == rxPin) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
+        // avoids causing BREAK in the UART line
+        if (uart->_inverted) {
+            esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
+        } else {
+            esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_HIGH, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
+        }
+        uart->_rxPin = -1;  // -1 means unassigned/detached
+    }
+    if (txPin >= 0 && uart->_txPin == txPin) {
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_out_signal(txPin, SIG_GPIO_OUT_IDX, false, false);
+        uart->_txPin = -1;  // -1 means unassigned/detached
     }
-
-    if (rxPin >= 0) {
-        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
-        esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
-    }
-
-    if (rtsPin >= 0) {
-        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
-        esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
-    }
-
-    if (ctsPin >= 0) {
+    if (ctsPin >= 0 && uart->_ctsPin == ctsPin) {
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
         esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_CTS_PIN_IDX), false);
+        uart->_ctsPin = -1;  // -1 means unassigned/detached
     }
+    if (rtsPin >= 0 && uart->_rtsPin == rtsPin) {
+        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
+        esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
+        uart->_rtsPin = -1;  // -1 means unassigned/detached
+    }
+    return retCode;
+}
+
+// Attach function for UART 
+// connects the IO Pad, set Paripheral Manager and internal UART structure data
+static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+{
+    if(uart_num >= SOC_UART_NUM) {
+        log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+        return false;
+    }
+    // get UART information
+    uart_t* uart = &_uart_bus_array[uart_num];
+    //log_v("attaching UART%d pins: prev,new RX(%d,%d) TX(%d,%d) CTS(%d,%d) RTS(%d,%d)", uart_num, 
+    //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+
+
+    bool retCode = true;
+    if (rxPin >= 0) {
+        // connect RX Pad
+        bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+        if (ret) {
+            uart->_rxPin = rxPin;
+        } else {
+            log_e("UART%d failed to attach RX pin %d", uart_num, rxPin);
+        }
+        retCode &= ret;
+    }
+    if (txPin >= 0) {
+        // connect TX Pad
+        bool ret = ESP_OK == uart_set_pin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+        if (ret) {
+            if (ret) uart->_txPin = txPin;
+        } else {
+            log_e("UART%d failed to attach TX pin %d", uart_num, txPin);
+        }
+        retCode &= ret;
+    }
+    if (ctsPin >= 0) {
+        // connect CTS Pad
+        bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
+        if (ret) {
+            if (ret) uart->_ctsPin = ctsPin;
+        } else {
+            log_e("UART%d failed to attach CTS pin %d", uart_num, ctsPin);
+        }
+        retCode &= ret;
+    }
+    if (rtsPin >= 0) {
+        // connect RTS Pad
+        bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
+        if (ret) {
+            if (ret) uart->_rtsPin = rtsPin;
+        } else {
+            log_e("UART%d failed to attach RTS pin %d", uart_num, rtsPin);
+        }
+        retCode &= ret;
+    }
+    return retCode;
+}
+
+// just helper functions
+int8_t uart_get_RxPin(uint8_t uart_num)
+{
+    return _uart_bus_array[uart_num]._rxPin;
+}
+
+int8_t uart_get_TxPin(uint8_t uart_num)
+{
+    return _uart_bus_array[uart_num]._txPin;
 }
 
 // solves issue https://github.com/espressif/arduino-esp32/issues/6032
@@ -144,57 +231,190 @@ bool uartIsDriverInstalled(uart_t* uart)
     return false;
 }
 
-// Valid pin UART_PIN_NO_CHANGE is defined to (-1)
 // Negative Pin Number will keep it unmodified, thus this function can set individual pins
+// When pins are changed, it will detach the previous one
 bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(uart_num >= SOC_UART_NUM) {
-        log_e("Serial number is invalid, please use numers from 0 to %u", SOC_UART_NUM - 1);
+        log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
         return false;
     }
+    // get UART information
+    uart_t* uart = &_uart_bus_array[uart_num];
 
-    // IDF uart_set_pin() will issue necessary Error Message and take care of all GPIO Number validation.
-    bool retCode = uart_set_pin(uart_num, txPin, rxPin, rtsPin, ctsPin) == ESP_OK; 
+    bool retCode = true;
+    UART_MUTEX_LOCK();
+
+    //log_v("setting UART%d pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num, 
+    //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+
+    // First step: detachs all previous UART pins
+    bool rxPinChanged = rxPin >= 0 && rxPin != uart->_rxPin;
+    if (rxPinChanged) {
+        retCode &= _uartDetachPins(uart_num, uart->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    bool txPinChanged = txPin >= 0 && txPin != uart->_txPin;
+    if (txPinChanged) {
+        retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, uart->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    bool ctsPinChanged = ctsPin >= 0 && ctsPin != uart->_ctsPin;
+    if (ctsPinChanged) {
+        retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, uart->_ctsPin, UART_PIN_NO_CHANGE);
+    }
+    bool rtsPinChanged = rtsPin >= 0 && rtsPin != uart->_rtsPin;
+    if (rtsPinChanged) {
+        retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, uart->_rtsPin);
+    }
+
+    // Second step: attach all UART new pins
+    if (rxPinChanged) {
+        retCode &= _uartAttachPins(uart_num, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    if (txPinChanged) {
+        retCode &= _uartAttachPins(uart_num, UART_PIN_NO_CHANGE, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    if (ctsPinChanged) {
+        retCode &= _uartAttachPins(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin, UART_PIN_NO_CHANGE);
+    }
+    if (rtsPinChanged) {
+        retCode &= _uartAttachPins(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin);
+    }
+    UART_MUTEX_UNLOCK();  
+
+    if (!retCode) {
+        log_e("UART%d set pins failed.", uart_num);
+    }
     return retCode;
 }
 
 // 
-bool uartSetHwFlowCtrlMode(uart_t *uart, uint8_t mode, uint8_t threshold) {
+bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t threshold) {
     if(uart == NULL) {
         return false;
     }
     // IDF will issue corresponding error message when mode or threshold are wrong and prevent crashing
     // IDF will check (mode > HW_FLOWCTRL_CTS_RTS || threshold >= SOC_UART_FIFO_LEN)
     UART_MUTEX_LOCK();
-    bool retCode = (ESP_OK == uart_set_hw_flow_ctrl(uart->num, (uart_hw_flowcontrol_t) mode, threshold));
+    bool retCode = (ESP_OK == uart_set_hw_flow_ctrl(uart->num, mode, threshold));
     UART_MUTEX_UNLOCK();  
     return retCode;
 }
 
+// This helper function will return true if a new IDF UART driver needs to be restarted and false if the current one can continue its execution
+bool _testUartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted, uint8_t rxfifo_full_thrhd)
+{
+    if(uart_nr >= SOC_UART_NUM) {
+        return false;  // no new driver has to be installed
+    }
+    uart_t* uart = &_uart_bus_array[uart_nr];
+    // verify if is necessary to restart the UART driver
+    if (uart_is_driver_installed(uart_nr)) {
+        // some parameters can't be changed unless we end the UART driver
+        if ( uart->_rx_buffer_size != rx_buffer_size || uart->_tx_buffer_size != tx_buffer_size || uart->_inverted != inverted || uart->_rxfifo_full_thrhd != rxfifo_full_thrhd) {
+            return true;   // the current IDF UART driver must be terminated and a new driver shall be installed
+        } else {
+            return false;  // The current IDF UART driver can continue its execution
+        }
+    } else {
+        return true;       // no IDF UART driver is running and a new driver shall be installed
+    }
+}
 
 uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted, uint8_t rxfifo_full_thrhd)
 {
     if(uart_nr >= SOC_UART_NUM) {
-        return NULL;
+        log_e("UART number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+        return NULL;  // no new driver was installed
     }
-
     uart_t* uart = &_uart_bus_array[uart_nr];
-
-    if (uart_is_driver_installed(uart_nr)) {
-        uartEnd(uart);
-    }
+    log_v("UART%d baud(%ld) Mode(%x) rxPin(%d) txPin(%d)", uart_nr, baudrate, config, rxPin, txPin);
 
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(uart->lock == NULL) {
         uart->lock = xSemaphoreCreateMutex();
         if(uart->lock == NULL) {
-            return NULL;
+            log_e("HAL LOCK error.");
+            return NULL; // no new driver was installed
         }
     }
 #endif
 
-    UART_MUTEX_LOCK();
-
+    if (uart_is_driver_installed(uart_nr)) {
+        log_v("UART%d Driver already installed.", uart_nr);
+        // some parameters can't be changed unless we end the UART driver
+        if ( uart->_rx_buffer_size != rx_buffer_size || uart->_tx_buffer_size != tx_buffer_size || uart->_inverted != inverted || uart->_rxfifo_full_thrhd != rxfifo_full_thrhd) {
+            log_v("UART%d changing buffer sizes or inverted signal or rxfifo_full_thrhd. IDF driver will be restarted", uart_nr);
+            uartEnd(uart_nr);
+        } else {
+            bool retCode = true;
+            UART_MUTEX_LOCK();
+            //User may just want to change some parameters, such as baudrate, data length, parity, stop bits or pins
+            if (uart->_baudrate != baudrate) {
+                if (ESP_OK != uart_set_baudrate(uart_nr, baudrate)) {
+                    log_e("UART%d changing baudrate failed.", uart_nr);
+                    retCode = false;
+                } else {
+                    log_v("UART%d changed baudrate to %d", uart_nr, baudrate);
+                    uart->_baudrate = baudrate;
+                }   
+            }
+            uart_word_length_t data_bits = (config & 0xc) >> 2;
+            uart_parity_t parity = config & 0x3;
+            uart_stop_bits_t stop_bits = (config & 0x30) >> 4;
+            if (retCode && (uart->_config & 0xc) >> 2 != data_bits) {
+                if (ESP_OK != uart_set_word_length(uart_nr, data_bits)) {
+                    log_e("UART%d changing data length failed.", uart_nr);
+                    retCode = false;
+                } else {
+                    log_v("UART%d changed data length to %d", uart_nr, data_bits + 5);
+                }
+            }
+            if (retCode && (uart->_config & 0x3) != parity) {
+                if (ESP_OK != uart_set_parity(uart_nr, parity)) {
+                    log_e("UART%d changing parity failed.", uart_nr);
+                    retCode = false;
+                } else {
+                    log_v("UART%d changed parity to %s", uart_nr, parity == 0 ? "NONE" : parity == 2 ? "EVEN" : "ODD");
+                }                
+            }
+            if (retCode && (uart->_config & 0xc30) >> 4 != stop_bits) {
+                if (ESP_OK != uart_set_stop_bits(uart_nr, stop_bits)) {
+                    log_e("UART%d changing stop bits failed.", uart_nr);
+                    retCode = false;
+                } else {
+                    log_v("UART%d changed stop bits to %d", uart_nr, stop_bits == 3 ? 2 : 1);
+                }                
+            }
+            if (retCode) uart->_config = config;
+            if (retCode && rxPin > 0 && uart->_rxPin != rxPin) {
+                retCode &= _uartDetachPins(uart_nr, uart->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+                retCode &= _uartAttachPins(uart_nr, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+                if (!retCode) {
+                    log_e("UART%d changing RX pin failed.", uart_nr);
+                } else {
+                    log_v("UART%d changed RX pin to %d", uart_nr, rxPin);
+                }
+            }
+            if (retCode && txPin > 0 && uart->_txPin != txPin) {
+                retCode &= _uartDetachPins(uart_nr, UART_PIN_NO_CHANGE, uart->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+                retCode &= _uartAttachPins(uart_nr, UART_PIN_NO_CHANGE, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+                if (!retCode) {
+                    log_e("UART%d changing TX pin failed.", uart_nr);
+                } else {
+                    log_v("UART%d changed TX pin to %d", uart_nr, txPin);
+                }   
+            }
+            UART_MUTEX_UNLOCK();
+            if (retCode) {
+                // UART driver was already working, just return the uart_t structure, syaing that no new driver was installed
+                return uart;
+            }
+            // if we reach this point, it means that we need to restart the UART driver
+            uartEnd(uart_nr);
+        }
+    } else {
+        log_v("UART%d not installed. Starting installation", uart_nr);
+    }
     uart_config_t uart_config;
     uart_config.data_bits = (config & 0xc) >> 2;
     uart_config.parity = (config & 0x3);
@@ -209,20 +429,42 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     uart_config.source_clk = UART_SCLK_APB;  // ESP32, ESP32S2
     uart_config.baud_rate = _get_effective_baudrate(baudrate);
 #endif
-    ESP_ERROR_CHECK(uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0));
-    ESP_ERROR_CHECK(uart_param_config(uart_nr, &uart_config));
-    ESP_ERROR_CHECK(uart_set_pin(uart_nr, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+    UART_MUTEX_LOCK();
+    bool retCode = ESP_OK == uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0);
+
+    if (retCode) retCode &= ESP_OK == uart_param_config(uart_nr, &uart_config);
 
     // Is it right or the idea is to swap rx and tx pins? 
-    if (inverted) {
+    if (retCode && inverted) {
         // invert signal for both Rx and Tx
-        ESP_ERROR_CHECK(uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV));    
+        retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);    
     }
     
+    if (retCode) {
+        uart->_baudrate = baudrate;
+        uart->_config = config;
+        uart->_inverted = inverted;
+        uart->_rxfifo_full_thrhd = rxfifo_full_thrhd;
+        uart->_rx_buffer_size = rx_buffer_size;
+        uart->_tx_buffer_size = tx_buffer_size;
+        uart->_ctsPin = -1;
+        uart->_rtsPin = -1;
+        uart->has_peek = false;
+        uart->peek_byte = 0;
+    }
     UART_MUTEX_UNLOCK();
 
-    uartFlush(uart);
-    return uart;
+    // uartSetPins detaches previous pins if new ones are used over a previous begin()
+    if (retCode) retCode &= uartSetPins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    if (!retCode) {
+        uartEnd(uart_nr);
+        uart = NULL;
+        log_e("UART%d initialization error.", uart->num);
+    } else {
+        uartFlush(uart);
+        log_v("UART%d initialization done.", uart->num);
+    }
+    return uart;  // a new driver was installed
 }
 
 // This function code is under testing - for now just keep it here
@@ -270,14 +512,21 @@ bool uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull)
     return retCode;
 }
 
-void uartEnd(uart_t* uart)
+
+void uartEnd(uint8_t uart_num)
 {
-    if(uart == NULL) {
+    if(uart_num >= SOC_UART_NUM) {
+        log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
         return;
     }
+    // get UART information
+    uart_t* uart = &_uart_bus_array[uart_num];
    
     UART_MUTEX_LOCK();
-    uart_driver_delete(uart->num);
+    _uartDetachPins(uart_num, uart->_rxPin, uart->_txPin, uart->_ctsPin, uart->_rtsPin);
+    if(uart_is_driver_installed(uart_num)) {
+        uart_driver_delete(uart_num);
+    }
     UART_MUTEX_UNLOCK();
 }
 
@@ -302,7 +551,7 @@ void uartSetRxInvert(uart_t* uart, bool invert)
         hw->conf0.rxd_inv = 1;
     else
         hw->conf0.rxd_inv = 0;
-#endif 
+#endif
 }
 
 
@@ -381,7 +630,7 @@ uint8_t uartRead(uart_t* uart)
       c = uart->peek_byte;
     } else {
 
-        int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_RATE_MS);
+        int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_PERIOD_MS);
         if (len <= 0) { // includes negative return from IDF in case of error
             c  = 0;
         }
@@ -403,7 +652,7 @@ uint8_t uartPeek(uart_t* uart)
     if (uart->has_peek) {
       c = uart->peek_byte;
     } else {
-        int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_RATE_MS);
+        int len = uart_read_bytes(uart->num, &c, 1, 20 / portTICK_PERIOD_MS);
         if (len <= 0) { // includes negative return from IDF in case of error
             c  = 0;
         } else {
@@ -463,17 +712,20 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
     }
     UART_MUTEX_LOCK();
     uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate));
+    uart->_baudrate = baud_rate;
     UART_MUTEX_UNLOCK();
 }
 
 uint32_t uartGetBaudRate(uart_t* uart)
 {
+    uint32_t baud_rate = 0;
+
     if(uart == NULL) {
         return 0;
     }
 
     UART_MUTEX_LOCK();
-    uint32_t baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num));
+    baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num));
     UART_MUTEX_UNLOCK();
     return baud_rate;
 }
@@ -524,7 +776,7 @@ void uart_install_putc()
 
 // Routines that take care of UART mode in the HardwareSerial Class code
 // used to set UART_MODE_RS485_HALF_DUPLEX auto RTS for TXD for ESP32 chips
-bool uartSetMode(uart_t *uart, uint8_t mode)
+bool uartSetMode(uart_t *uart, uart_mode_t mode)
 {
     if (uart == NULL || uart->num >= SOC_UART_NUM)
     {
@@ -567,23 +819,36 @@ int log_printfv(const char *format, va_list arg)
             return 0;
         }
     }
+/*
+// This causes dead locks with logging in specific cases and also with C++ constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY);
     }
 #endif
-    
+*/
+//#if CONFIG_IDF_TARGET_ESP32C3
     vsnprintf(temp, len+1, format, arg);
     ets_printf("%s", temp);
-
+//#else
+//    int wlen = vsnprintf(temp, len+1, format, arg);
+//    for (int i = 0; i < wlen; i++) {
+//        ets_write_char_uart(temp[i]);
+//    }
+//#endif
+/*
+// This causes dead locks with logging and also with constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
         xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
     }
 #endif
+*/
     if(len >= sizeof(loc_buf)){
         free(temp);
     }
+    // flushes TX - make sure that the log message is completely sent.
+    if(s_uart_debug_nr != -1) while(!uart_ll_is_tx_idle(UART_LL_GET_HW(s_uart_debug_nr)));
     return len;
 }
 
@@ -685,12 +950,18 @@ void uartStartDetectBaudrate(uart_t *uart) {
         return;
     }
 
-#ifdef CONFIG_IDF_TARGET_ESP32C3
+// Baud rate detection only works for ESP32 and ESP32S2
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+    hw->auto_baud.glitch_filt = 0x08;
+    hw->auto_baud.en = 0;
+    hw->auto_baud.en = 1;
+#else
     
     // ESP32-C3 requires further testing
     // Baud rate detection returns wrong values 
    
-    log_e("ESP32-C3 baud rate detection is not supported.");
+    log_e("baud rate detection for this SoC is not supported.");
     return;
 
     // Code bellow for C3 kept for future recall
@@ -698,19 +969,10 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->rx_filt.glitch_filt_en = 1;
     //hw->conf0.autobaud_en = 0;
     //hw->conf0.autobaud_en = 1;
-#elif CONFIG_IDF_TARGET_ESP32S3
-    log_e("ESP32-S3 baud rate detection is not supported.");
-    return;
-#else
-    uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->auto_baud.glitch_filt = 0x08;
-    hw->auto_baud.en = 0;
-    hw->auto_baud.en = 1;
 #endif
 }
  
-unsigned long
-uartDetectBaudrate(uart_t *uart)
+unsigned long uartDetectBaudrate(uart_t *uart)
 {
     if(uart == NULL) {
         return 0;
@@ -756,17 +1018,13 @@ uartDetectBaudrate(uart_t *uart)
 
     return default_rates[i];
 #else
-#ifdef CONFIG_IDF_TARGET_ESP32C3 
-    log_e("ESP32-C3 baud rate detection is not supported.");
-#else
-    log_e("ESP32-S3 baud rate detection is not supported.");
-#endif
+    log_e("baud rate detection this SoC is not supported.");
     return 0;
 #endif
 }
 
 /*
-    These functions are for testing puspose only and can be used in Arduino Sketches
+    These functions are for testing purpose only and can be used in Arduino Sketches
     Those are used in the UART examples
 */
 
@@ -776,15 +1034,17 @@ uartDetectBaudrate(uart_t *uart)
     This code "replaces" the physical wiring for connecting TX <--> RX in a loopback
 */
 
-// gets the right TX SIGNAL, based on the UART number
+// gets the right TX or RX SIGNAL, based on the UART number from gpio_sig_map.h
 #if SOC_UART_NUM > 2
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+  #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
+  #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : (uartNumber == UART_NUM_1 ? U1RXD_IN_IDX : U2RXD_IN_IDX))
 #else
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+  #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
+  #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : U1RXD_IN_IDX)
 #endif
 /*
-   Make sure UART's RX signal is connected to TX pin
-   This creates a loop that lets us receive anything we send on the UART
+   This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
+   This creates a loop that lets us receive anything we send on the UART without external wires.
 */
 void uart_internal_loopback(uint8_t uartNum, int8_t rxPin)
 {
@@ -805,7 +1065,7 @@ void uart_send_break(uint8_t uartNum)
   // This is very sensetive timing... it works fine for SERIAL_8N1
   uint32_t breakTime = (uint32_t) (10.0 * (1000000.0 / currentBaudrate));
   uart_set_line_inverse(uartNum, UART_SIGNAL_TXD_INV);
-  ets_delay_us(breakTime);
+  esp_rom_delay_us(breakTime);
   uart_set_line_inverse(uartNum, UART_SIGNAL_INV_DISABLE);
 }
 
