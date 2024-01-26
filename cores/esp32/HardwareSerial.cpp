@@ -57,7 +57,7 @@ void serialEventRun(void)
     if(USBSerial.available()) USBSerialEvent();
 #endif    
     // UART0 is default serialEvent()
-    if(Serial0.available()) serialEvent();
+    if(Serial.available()) serialEvent();
 #if SOC_UART_NUM > 1
     if(Serial1.available()) serialEvent1();
 #endif
