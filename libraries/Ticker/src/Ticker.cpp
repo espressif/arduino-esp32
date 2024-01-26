@@ -1,8 +1,8 @@
-/*
+/* 
   Ticker.cpp - esp32 library that calls functions periodically
 
   Copyright (c) 2017 Bert Melis. All rights reserved.
-
+  
   Based on the original work of:
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
   The original version is part of the esp8266 core for Arduino environment.
@@ -24,16 +24,14 @@
 
 #include "Ticker.h"
 
-Ticker::Ticker()
-    : _timer(nullptr) {}
+Ticker::Ticker() :
+  _timer(nullptr) {}
 
-Ticker::~Ticker()
-{
+Ticker::~Ticker() {
     detach();
 }
 
-void Ticker::_attach_us(uint64_t micros, bool repeat, callback_with_arg_t callback, void* arg)
-{
+void Ticker::_attach_us(uint64_t micros, bool repeat, callback_with_arg_t callback, void* arg) {
   esp_timer_create_args_t _timerConfig;
   _timerConfig.arg = reinterpret_cast<void*>(arg);
   _timerConfig.callback = callback;
