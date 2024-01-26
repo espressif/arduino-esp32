@@ -123,7 +123,7 @@ public:
   void detach();
   bool active() const;
 
-protected: 
+protected:  
   static void _static_callback(void* arg);
 
   callback_function_t _callback_function = nullptr;

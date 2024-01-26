@@ -23,7 +23,8 @@ void toggle() {
   if (isBlinking) {
     blinker.detach();
     isBlinking = false;
-  } else {
+  }
+  else {
     blinker.attach(blinkerPace, blink);
     isBlinking = true;
   }
@@ -37,5 +38,5 @@ void setup() {
 }
 
 void loop() {
-
+  
 }
