@@ -26,7 +26,7 @@
 #define TICKER_H
 
 extern "C" {
-#include "esp_timer.h"
+  #include "esp_timer.h"
 }
 #include <functional>
 
@@ -132,7 +132,7 @@ protected:
 
 private:
   void _attach_us(uint64_t micros, bool repeat, callback_with_arg_t callback, void* arg);
-  };
+};
 
 
 #endif  // TICKER_H
