@@ -14,8 +14,8 @@ static const uint8_t LED_BUILTIN = 33;
 
 static const uint8_t KEY_BUILTIN = 34;
 
-static const uint8_t SCL = 16; // This is extention pin 11
-static const uint8_t SDA = 32; // This is extention pin 13
+static const uint8_t SCL = 16; // This is extension pin 11
+static const uint8_t SDA = 32; // This is extension pin 13
 
 static const uint8_t SS    = 5;
 static const uint8_t MOSI  = 23;

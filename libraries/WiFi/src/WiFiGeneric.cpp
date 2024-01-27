@@ -169,7 +169,7 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
         }
         // prevents DHCP lease range to overflow subnet range
         if ((dhcp_ipaddr & ~netmask) >= leaseStartMax) {
-            // make first DHCP lease addr stay in the begining of the netmask range
+            // make first DHCP lease addr stay in the beginning of the netmask range
             lease.start_ip.addr = (dhcp_ipaddr & netmask) + 1;
             lease.end_ip.addr = lease.start_ip.addr + 10;
             log_w("DHCP Lease out of range - Changing DHCP leasing start to %s", IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str());

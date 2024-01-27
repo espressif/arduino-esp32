@@ -46,7 +46,7 @@ extern TaskHandle_t loopTaskHandle;
 
 
 /**
-   Typedefs for internal stuctures, enums
+   Typedefs for internal structures, enums
 */
 
 struct rmt_obj_s {
@@ -468,7 +468,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     return false;
   }
 
-  // Try to dettach any (Tx|Rx|Whatever) previous bus or just keep it as not attached
+  // Try to detach any (Tx|Rx|Whatever) previous bus or just keep it as not attached
   if (!perimanClearPinBus(pin)) {
     log_w("GPIO %d - Can't detach previous peripheral.", pin);
     return false;

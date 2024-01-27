@@ -106,7 +106,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
         return false;
     }
 
-    log_i("Initialising I2C Master: sda=%d scl=%d freq=%d", sda, scl, frequency);
+    log_i("Initializing I2C Master: sda=%d scl=%d freq=%d", sda, scl, frequency);
 
     i2c_config_t conf = { };
     conf.mode = I2C_MODE_MASTER;
@@ -115,7 +115,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency){
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = frequency;
-    conf.clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL; //Any one clock source that is available for the specified frequency may be choosen
+    conf.clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL; //Any one clock source that is available for the specified frequency may be chosen
 
     esp_err_t ret = i2c_param_config((i2c_port_t)i2c_num, &conf);
     if (ret != ESP_OK) {
@@ -357,7 +357,7 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
     ret = ESP_OK;
     for (i2c_sclk_t clk = I2C_SCLK_DEFAULT + 1; clk < I2C_SCLK_MAX; clk++) {
 #if CONFIG_IDF_TARGET_ESP32S3
-        if (clk == I2C_SCLK_RTC) { // RTC clock for s3 is unaccessable now.
+        if (clk == I2C_SCLK_RTC) { // RTC clock for s3 is inaccessible now.
             continue;
         }
 #endif

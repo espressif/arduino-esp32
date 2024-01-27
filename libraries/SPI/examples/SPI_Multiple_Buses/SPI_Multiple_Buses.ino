@@ -4,11 +4,11 @@
  * them are available to use, HSPI and VSPI. Simply using the SPI API 
  * as illustrated in Arduino examples will use VSPI, leaving HSPI unused.
  * 
- * However if we simply intialise two instance of the SPI class for both
+ * However if we simply initialize two instance of the SPI class for both
  * of these buses both can be used. However when just using these the Arduino
  * way only will actually be outputting at a time.
  * 
- * Logic analyser capture is in the same folder as this example as
+ * Logic analyzer capture is in the same folder as this example as
  * "multiple_bus_output.png"
  * 
  * created 30/04/2018 by Alistair Symonds
@@ -45,19 +45,19 @@
 
 static const int spiClk = 1000000; // 1 MHz
 
-//uninitalised pointers to SPI objects
+//uninitialised pointers to SPI objects
 SPIClass * vspi = NULL;
 SPIClass * hspi = NULL;
 
 void setup() {
-  //initialise two instances of the SPIClass attached to VSPI and HSPI respectively
+  //initialize two instances of the SPIClass attached to VSPI and HSPI respectively
   vspi = new SPIClass(VSPI);
   hspi = new SPIClass(HSPI);
   
   //clock miso mosi ss
 
 #ifndef ALTERNATE_PINS
-  //initialise vspi with default pins
+  //initialize vspi with default pins
   //SCLK = 18, MISO = 19, MOSI = 23, SS = 5
   vspi->begin();
 #else
@@ -66,7 +66,7 @@ void setup() {
 #endif
 
 #ifndef ALTERNATE_PINS
-  //initialise hspi with default pins
+  //initialize hspi with default pins
   //SCLK = 14, MISO = 12, MOSI = 13, SS = 15
   hspi->begin();
 #else

@@ -106,8 +106,8 @@ body:
     id: Description
     attributes:
       label: Description
-      description: Please describe your problem here and expected behaviour
-      placeholder: ex. Can't connect/weird behaviour/wrong function/missing parameter..
+      description: Please describe your problem here and expected behavior
+      placeholder: ex. Can't connect/weird behavior/wrong function/missing parameter..
     validations:
       required: true
   - type: textarea

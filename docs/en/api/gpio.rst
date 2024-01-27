@@ -51,7 +51,7 @@ The following modes are supported for the basic `input` and `output`:
 Internal Pullup and Pulldown
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ESP32 SoC families supports the internal pullup and pulldown throught a 45kR resistor, that can be enabled when configuring the GPIO mode as ``INPUT`` mode.
+The ESP32 SoC families supports the internal pullup and pulldown through a 45kR resistor, that can be enabled when configuring the GPIO mode as ``INPUT`` mode.
 If the pullup or pulldown mode is not defined, the pin will stay in the high impedance mode.
 
 digitalWrite

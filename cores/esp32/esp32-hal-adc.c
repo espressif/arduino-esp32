@@ -481,7 +481,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
         }
     }
 
-    //Check if Oneshot and Continous handle exists
+    //Check if Oneshot and Continuous handle exists
     if(adc_handle[adc_unit].adc_oneshot_handle != NULL){
         log_e("ADC%d is running in oneshot mode. Aborting.", adc_unit+1);
         return false;

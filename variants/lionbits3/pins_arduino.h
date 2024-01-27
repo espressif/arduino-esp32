@@ -79,7 +79,7 @@ static const uint8_t TFT_MOSI = 36; //GPIO36;
 static const uint8_t LCD_A0 = 37; //GPIO37, 
 static const uint8_t LCD_BACK_LIGHT = 45; //GPIO45, 
 static const uint8_t DAC1 = 21; //GPIO21, 
-//LCD aditional pins
+//LCD additional pins
 
 //Adafruit 128*128 ST7735 Driver New
 static const uint8_t rst = 38; 

@@ -5,14 +5,14 @@
    void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout = false)
 
    It is possible to register a UART callback function that will be called
-   everytime that UART receives data and an associated interrupt is generated.
+   every time that UART receives data and an associated interrupt is generated.
 
    The receiving data interrupt can occur because of two possible events:
 
    1- UART FIFO FULL: it happens when internal UART FIFO reaches a certain number of bytes.
       Its full capacity is 127 bytes. The FIFO Full threshold for the interrupt can be changed
       using HardwareSerial::setRxFIFOFull(uint8_t fifoFull).
-      Default FIFO Full Threshold is set at the UART initialzation using HardwareSerial::begin()
+      Default FIFO Full Threshold is set at the UART initialization using HardwareSerial::begin()
       This will depend on the baud rate set with when begin() is executed.
       For a baudrate of 115200 or lower, it it just 1 byte, mimicking original Arduino UART driver.
       For a baudrate over 115200 it will be 120 bytes for higher performance.
@@ -82,7 +82,7 @@ void setup() {
 
   for (uint8_t i = 0; i < sizeof(fifoFullTestCases); i++) {
     Serial.printf("\n\n================================\nTest Case #%d\n================================\n", i + 1);
-    // onReceive callback will be called on FIFO Full and RX timeout - default behaviour
+    // onReceive callback will be called on FIFO Full and RX timeout - default behavior
     testAndReport(fifoFullTestCases[i], false);
   }
 
@@ -97,7 +97,7 @@ void loop() {
 }
 
 void testAndReport(uint8_t fifoFull, bool onlyOnTimeOut) {
-  // Let's send 125 bytes from Serial1 rx<->tx and mesaure time using diferent FIFO Full configurations
+  // Let's send 125 bytes from Serial1 rx<->tx and mesaure time using different FIFO Full configurations
   received_bytes = 0;
   sent_bytes = DATA_SIZE;  // 26 characters
 
@@ -116,7 +116,7 @@ void testAndReport(uint8_t fifoFull, bool onlyOnTimeOut) {
     Serial.println("onReceive is called on both FIFO Full and RX Timeout events.");
   }
   Serial.flush(); // wait Serial FIFO to be empty and then spend almost no time processing it
-  Serial1.setRxFIFOFull(fifoFull); // testing diferent result based on FIFO Full setup
+  Serial1.setRxFIFOFull(fifoFull); // testing different result based on FIFO Full setup
   Serial1.onReceive(onReceiveFunction, onlyOnTimeOut); // sets a RX callback function for Serial 1
 
   sent_bytes = Serial1.write(dataSent, DATA_SIZE); // ESP32 TX FIFO is about 128 bytes, 125 bytes will fit fine

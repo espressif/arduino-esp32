@@ -26,7 +26,7 @@ void HttpEvent (HttpEvent_t * event);
 
 It tracks the progress of OTA firmware upgrade.
 * HTTPS_OTA_IDLE : OTA upgrade have not started yet.
-* HTTPS_OTA_UPDATNG : OTA upgarde is in progress.
+* HTTPS_OTA_UPDATNG : OTA upgrade is in progress.
 * HTTPS_OTA_SUCCESS : OTA upgrade is successful.
 * HTTPS_OTA_FAIL : OTA upgrade failed.
-* HTTPS_OTA_ERR : Error occured while creating xEventGroup().
+* HTTPS_OTA_ERR : Error occurred while creating xEventGroup().

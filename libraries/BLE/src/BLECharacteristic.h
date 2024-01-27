@@ -157,7 +157,7 @@ public:
 	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
 	/**
-	 * @brief DEPRECATED! Callback function to support a read request. Called only if onRead(,) not overrided. 
+	 * @brief DEPRECATED! Callback function to support a read request. Called only if onRead(,) not overridden. 
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic);
@@ -169,7 +169,7 @@ public:
 	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
 	/**
-	 * @brief DEPRECATED! Callback function to support a write request. Called only if onWrite(,) not overrided. 
+	 * @brief DEPRECATED! Callback function to support a write request. Called only if onWrite(,) not overridden. 
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic);

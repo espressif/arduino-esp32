@@ -59,7 +59,7 @@ BLEAddress BLEAdvertisedDevice::getAddress() {
  * @brief Get the appearance.
  *
  * A %BLE device can declare its own appearance.  The appearance is how it would like to be shown to an end user
- * typcially in the form of an icon.
+ * typically in the form of an icon.
  *
  * @return The appearance of the advertised device.
  */

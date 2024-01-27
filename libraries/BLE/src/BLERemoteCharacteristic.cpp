@@ -513,7 +513,7 @@ void BLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, 
 /**
  * @brief Delete the descriptors in the descriptor map.
  * We maintain a map called m_descriptorMap that contains pointers to BLERemoteDescriptors
- * object references.  Since we allocated these in this class, we are also responsible for deleteing
+ * object references.  Since we allocated these in this class, we are also responsible for deleting
  * them.  This method does just that.
  * @return N/A.
  */

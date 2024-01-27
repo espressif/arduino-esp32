@@ -105,7 +105,7 @@ def get_alignment_size_for_type(ptype):
         # For secure boot v2 case, app partition must be 4K aligned
         # signature block (4K) is kept after padding the unsigned image to 64K boundary
         return 0x1000
-    # No specific size alignement requirement as such
+    # No specific size alignment requirement as such
     return 0x1
 
 
@@ -542,7 +542,7 @@ def main():
                         nargs='?', choices=['1MB', '2MB', '4MB', '8MB', '16MB', '32MB', '64MB', '128MB'])
     parser.add_argument('--disable-md5sum', help='Disable md5 checksum for the partition table', default=False, action='store_true')
     parser.add_argument('--no-verify', help="Don't verify partition table fields", action='store_true')
-    parser.add_argument('--verify', '-v', help='Verify partition table fields (deprecated, this behaviour is '
+    parser.add_argument('--verify', '-v', help='Verify partition table fields (deprecated, this behavior is '
                                                'enabled by default and this flag does nothing.', action='store_true')
     parser.add_argument('--quiet', '-q', help="Don't print non-critical status messages to stderr", action='store_true')
     parser.add_argument('--offset', '-o', help='Set offset partition table', default='0x8000')

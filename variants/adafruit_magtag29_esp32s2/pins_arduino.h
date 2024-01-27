@@ -8,7 +8,7 @@
 #define USB_PID            0x80E5
 #define USB_MANUFACTURER   "Adafruit"
 #define USB_PRODUCT        "EPD MagTag 2.9\" ESP32-S2"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 // User LED 
 #define LED_BUILTIN 13

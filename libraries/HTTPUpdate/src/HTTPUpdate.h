@@ -71,7 +71,7 @@ public:
     }
     
     /**
-      * set redirect follow mode. See `followRedirects_t` enum for avaliable modes.
+      * set redirect follow mode. See `followRedirects_t` enum for available modes.
       * @param follow
       */
     void setFollowRedirects(followRedirects_t follow)

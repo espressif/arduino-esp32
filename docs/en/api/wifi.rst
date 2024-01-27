@@ -166,7 +166,7 @@ By default, the memory allocation will be set to **dynamic** if this function is
 setDualAntennaConfig
 ********************
 
-Configures the Dual antenna functionallity. This function should be used only on the **ESP32-WROOM-DA** module or any other ESP32 with RF switch.
+Configures the Dual antenna functionality. This function should be used only on the **ESP32-WROOM-DA** module or any other ESP32 with RF switch.
 
 .. code-block:: arduino
 
