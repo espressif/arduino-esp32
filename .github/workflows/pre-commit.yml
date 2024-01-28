@@ -1,0 +1,27 @@
+name: Pre-commit check
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+
+jobs:
+  lint:
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
+    name: Checking if any fixes are needed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - id: changed-files
+        uses: tj-actions/changed-files@v36
+      - uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --files ${{ steps.changed-files.outputs.all_changed_files }}
+      - uses: pre-commit-ci/lite-action@v1.0.1
+        if: always()
