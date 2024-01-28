@@ -44,7 +44,7 @@ Library methods are provided to:
    - determine data types stored against a key;
    - determine the number of key entries available in the namespace.
 
-Preferences directly suports the following data types:
+Preferences directly supports the following data types:
 
 .. table:: **Table 1 — Preferences Types**
    :align: center
@@ -363,7 +363,7 @@ If either of the above are used, the ``key-value`` pair will need to be recreate
 Determining the Number of Available Keys
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For each namespace, Preferences keeps track of the keys in a key table. There must be an open entry in the table before a key can be created. This method will return the number of entires available in the table.
+For each namespace, Preferences keeps track of the keys in a key table. There must be an open entry in the table before a key can be created. This method will return the number of entries available in the table.
 
 .. code-block:: arduino
 
@@ -484,7 +484,7 @@ This is best explained with an example. Here the ``Bytes`` methods are used to s
        Serial.println(
          "Storing myArray into the Preferences namespace \"myPrefs\" against the key \"myPrefsBytes\".");
        // Note: in the next statement, to store the entire array, we must use the 
-       //  size of the arrray in bytes, not the number of elements in the array.
+       //  size of the array in bytes, not the number of elements in the array.
        mySketchPrefs.putBytes( "myPrefsBytes", myArray, sizeof(myArray) );
        Serial.print("The size of \"myPrefsBytes\" is (in bytes): ");
        Serial.println( mySketchPrefs.getBytesLength("myPrefsBytes") );
@@ -584,11 +584,11 @@ After executing the statement:
 
 .. code-block:: arduino
 
-  dessert = mySketchPrefs.getString("favourites");
+  dessert = mySketchPrefs.getString("favorites");
   
 ..
 
-the variable ``dessert`` will contain the value of the string stored against the key ``"favourites"``.
+the variable ``dessert`` will contain the value of the string stored against the key ``"favorites"``.
 
 But what if something went wrong and the ``getString`` call failed to retrieve the key value? How would we be able to detect the error?
 
@@ -640,7 +640,7 @@ Returning to the example above:
 
 .. code-block:: arduino
 
-  dessert = mySketchPrefs.getString("favourites", "gravel");
+  dessert = mySketchPrefs.getString("favorites", "gravel");
 
 ..
 

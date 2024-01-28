@@ -150,7 +150,7 @@ bool IRAM_ATTR timerFnWrapper(gptimer_handle_t timer, const gptimer_alarm_event_
             isr->fn();
         }
     }
-    // some additional logic or handling may be required here to approriately yield or not
+    // some additional logic or handling may be required here to appropriately yield or not
     return false;
 }
 

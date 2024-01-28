@@ -14,9 +14,9 @@
 
 /**
  * @brief This example demonstrate how to use a C++ Class to read several GPIO RMT signals
- * calling a data processor when data is availble in background, using taks.
+ * calling a data processor when data is available in background, using tasks.
  * 
- * The output is the last RMT data read in the GPIO, just to ilustrate how it works.
+ * The output is the last RMT data read in the GPIO, just to illustrate how it works.
  * 
  */
 

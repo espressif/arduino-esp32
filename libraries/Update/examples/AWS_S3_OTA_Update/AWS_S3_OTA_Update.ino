@@ -50,7 +50,7 @@ void execOTA() {
   // Connect to S3
   if (client.connect(host.c_str(), port)) {
     // Connection Succeed.
-    // Fecthing the bin
+    // Fetching the bin
     Serial.println("Fetching Bin: " + String(bin));
 
     // Get the contents of the bin file

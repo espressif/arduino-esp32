@@ -672,7 +672,7 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
                             // no redirection
                             break;
                         }
-                        // redirect using the same request method and payload, diffrent URL
+                        // redirect using the same request method and payload, different URL
                         redirect = true;
                     }
                     break;
@@ -785,7 +785,7 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
                 int bytesWrite = _client->write((const uint8_t *) buff, bytesRead);
                 bytesWritten += bytesWrite;
 
-                // are all Bytes a writen to stream ?
+                // are all Bytes a written to stream ?
                 if(bytesWrite != bytesRead) {
                     log_d("short write, asked for %d but got %d retry...", bytesRead, bytesWrite);
 
@@ -1411,7 +1411,7 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
                 int bytesWrite = stream->write(buff, bytesRead);
                 bytesWritten += bytesWrite;
 
-                // are all Bytes a writen to stream ?
+                // are all Bytes a written to stream ?
                 if(bytesWrite != bytesRead) {
                     log_d("short write asked for %d but got %d retry...", bytesRead, bytesWrite);
 

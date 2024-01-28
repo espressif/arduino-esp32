@@ -49,7 +49,7 @@ struct DNSHeader
     struct {
       uint16_t RD : 1;      // recursion desired
       uint16_t TC : 1;      // truncated message
-      uint16_t AA : 1;      // authoritive answer
+      uint16_t AA : 1;      // authoritative answer
       uint16_t OPCode : 4;  // message_type
       uint16_t QR : 1;      // query/response flag
       uint16_t RCode : 4;   // response code
@@ -104,14 +104,14 @@ class DNSServer
     void processNextRequest(){};
 
     /**
-     * @brief Set the Error Reply Code for all req's not matching predifined domain
+     * @brief Set the Error Reply Code for all req's not matching predefined domain
      * 
      * @param replyCode 
      */
     void setErrorReplyCode(const DNSReplyCode &replyCode);
 
     /**
-     * @brief set TTL for successfull replies
+     * @brief set TTL for successful replies
      * 
      * @param ttl in seconds
      */

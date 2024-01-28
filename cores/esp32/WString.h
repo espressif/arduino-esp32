@@ -131,7 +131,7 @@ class String {
         bool concat(const __FlashStringHelper * str) {return concat(reinterpret_cast<const char*>(str));}
 
         // if there's not enough memory for the concatenated value, the string
-        // will be left unchanged (but this isn't signalled in any way)
+        // will be left unchanged (but this isn't signaled in any way)
         String & operator +=(const String &rhs) {
             concat(rhs);
             return (*this);

@@ -54,10 +54,10 @@ R"==(
 static const char notFoundContent[] PROGMEM = R"==(
 <html>
 <head>
-  <title>Ressource not found</title>
+  <title>Resource not found</title>
 </head>
 <body>
-  <p>The ressource was not found.</p>
+  <p>The resource was not found.</p>
   <p><a href="/">Start again</a></p>
 </body>
 )==";

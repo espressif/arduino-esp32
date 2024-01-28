@@ -24,7 +24,7 @@ void setup()
     // Set WiFi to station mode and disconnect from an AP if it was previously connected
     WiFi.mode(WIFI_STA);
 
-    /* Attention: This is the manual prodecure for the dual antenna configuration.
+    /* Attention: This is the manual procedure for the dual antenna configuration.
      * If you choose the ESP32-WROOM-DA module from the Tools -> Board, this configuration
      * is not necessary!
      * 
@@ -39,7 +39,7 @@ void setup()
     if(err == false) {
         Serial.println("Dual Antenna configuration failed!");
     } else {
-        Serial.println("Dual Antenna configuration successfuly done!");
+        Serial.println("Dual Antenna configuration successfully done!");
     }
 
     WiFi.disconnect();

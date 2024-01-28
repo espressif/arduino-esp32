@@ -97,7 +97,7 @@ You can try this request in a browser by opening <http://webserver/api/list> in 
 ## Registering a function to send out some static content from a String
 
 This is an example of registering a inline function in the web server.
-The 2. parameter of the on() method is a so called CPP lamda function (without a name)
+The 2. parameter of the on() method is a so called CPP lambda function (without a name)
 that actually has only one line of functionality by sending a string as result to the client.
 
 > ``` cpp
@@ -134,7 +134,7 @@ The **serveStatic** plug in is part of the library and handles delivering files 
 > server.serveStatic("/", LittleFS, "/");
 > ```
 
-### Cross-Origin Ressource Sharing (CORS)
+### Cross-Origin Resource Sharing (CORS)
 
 The `enableCORS(true)` function adds a `Access-Control-Allow-Origin: *` http-header to all responses to the client
 to inform that it is allowed to call URLs and services on this server from other web sites.

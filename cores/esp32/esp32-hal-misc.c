@@ -66,7 +66,7 @@
 #include "rom/rtc.h"
 #endif
 
-//Undocumented!!! Get chip temperature in Farenheit
+//Undocumented!!! Get chip temperature in Fahrenheit
 //Source: https://github.com/pcbreflux/espressif/blob/master/esp32/arduino/sketchbook/ESP32_int_temp_sensor/ESP32_int_temp_sensor.ino
 #ifdef CONFIG_IDF_TARGET_ESP32
 uint8_t temprature_sens_read();

@@ -68,7 +68,7 @@ You can use [EspExceptionDecoder](https://github.com/me-no-dev/EspExceptionDecod
 
 ### Issue/Bug report template
 
-Before reporting an issue, make sure you've searched for similar one that was already created. Also make sure to go through all the issues labelled as [Type: For reference](https://github.com/espressif/arduino-esp32/issues?q=is%3Aissue+label%3A%22Type%3A+For+reference%22+).
+Before reporting an issue, make sure you've searched for similar one that was already created. Also make sure to go through all the issues labeled as [Type: For reference](https://github.com/espressif/arduino-esp32/issues?q=is%3Aissue+label%3A%22Type%3A+For+reference%22+).
 
 Finally, if you are sure no one else had the issue, follow the **Issue template** or **Feature request template** while reporting any [new Issue](https://github.com/espressif/arduino-esp32/issues/new/choose).
 

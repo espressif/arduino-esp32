@@ -14,7 +14,7 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
     if (event_base == RMAKER_EVENT) {
         switch (event_id) {
             case RMAKER_EVENT_INIT_DONE:
-                log_i("RainMaker Initialised.");
+                log_i("RainMaker Initialized.");
                 break;
             case RMAKER_EVENT_CLAIM_STARTED:
                 log_i("RainMaker Claim Started.");

@@ -8,7 +8,7 @@
 #define USB_PID            0x8111
 #define USB_MANUFACTURER   "Adafruit"
 #define USB_PRODUCT        "QT Py ESP32-S2"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 // Neopixel
 #define PIN_NEOPIXEL        39

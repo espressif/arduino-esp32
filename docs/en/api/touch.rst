@@ -5,7 +5,7 @@ TOUCH
 About
 -----
 
-Touch sensor is a peripheral, that has an internal oscilator circuit and it measures charge/discharge frequency over a fixed period of time on respective GPIO pins. 
+Touch sensor is a peripheral, that has an internal oscillator circuit and it measures charge/discharge frequency over a fixed period of time on respective GPIO pins. 
 Therefore these touch sensors are also known as capacitive sensors. For example, if you touch any of these pins, finger electrical charge will change this number of cycles, 
 by changing the RC circuit attached to the touch sensor. The TouchRead() will return the number of cycles (charges/discharges) in a certain time (meas). 
 The change of this count will be used to validate if a touch has happened or not. These pins can be easily integrated into capacitive pads, and replace mechanical buttons.
@@ -118,7 +118,7 @@ TOUCH API specific for ESP32S2 and ESP32S3 chip (TOUCH_V2)
 touchInterruptGetLastStatus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This function is used get the lastest ISR status for the touch pad.
+This function is used get the last ISR status for the touch pad.
 
 .. code-block:: arduino
 

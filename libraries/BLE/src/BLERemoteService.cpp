@@ -309,7 +309,7 @@ String BLERemoteService::getValue(BLEUUID characteristicUuid) {
 /**
  * @brief Delete the characteristics in the characteristics map.
  * We maintain a map called m_characteristicsMap that contains pointers to BLERemoteCharacteristic
- * object references.  Since we allocated these in this class, we are also responsible for deleteing
+ * object references.  Since we allocated these in this class, we are also responsible for deleting
  * them.  This method does just that.
  * @return N/A.
  */

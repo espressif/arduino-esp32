@@ -72,7 +72,7 @@ int8_t analogChannelToDigitalPin(uint8_t channel)
     return adc_channel_io_map[adc_unit][adc_chan];
 }
 #else
-// No Analog channels availible
+// No Analog channels available
 int8_t analogChannelToDigitalPin(uint8_t channel) 
 {
     return -1;

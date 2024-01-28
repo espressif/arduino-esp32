@@ -96,7 +96,7 @@ void loop() {
     client.setCACert(rootCACertificate);
 
     // Reading data over SSL may be slow, use an adequate timeout
-    client.setTimeout(12000); // timeout argument is defined in miliseconds for setTimeout
+    client.setTimeout(12000); // timeout argument is defined in milliseconds for setTimeout
 
     // The line below is optional. It can be used to blink the LED on the board during flashing
     // The LED will be on during download of one buffer of data from the network. The LED will

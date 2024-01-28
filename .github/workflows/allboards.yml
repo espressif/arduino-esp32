@@ -1,6 +1,6 @@
 name: Boards Test - Remote trigger
 
-# The workflow will run on remote dispath with event-type set to "test-boards"
+# The workflow will run on remote dispatch with event-type set to "test-boards"
 on:
   repository_dispatch:
     types: [test-boards]

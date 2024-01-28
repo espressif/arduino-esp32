@@ -15,7 +15,7 @@
 
 */
 
-// Open the Serial Monitor with testing baud start typing and sending caracters
+// Open the Serial Monitor with testing baud start typing and sending characters
 void setup() {
   Serial.begin(0); // it will try to detect the baud rate for 20 seconds
   

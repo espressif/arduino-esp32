@@ -463,7 +463,7 @@ std::map<String, BLERemoteService*>* BLEClient::getServices() {
     log_e("esp_ble_gattc_search_service: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
     return &m_servicesMap;
   }
-  // If sucessfull, remember that we now have services.
+  // If successful, remember that we now have services.
   m_haveServices = (m_semaphoreSearchCmplEvt.wait("getServices") == 0);
   log_v("<< getServices");
   return &m_servicesMap;

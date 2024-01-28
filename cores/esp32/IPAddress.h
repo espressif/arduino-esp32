@@ -84,7 +84,7 @@ public:
     uint8_t operator[](int index) const;
     uint8_t& operator[](int index);
 
-    // Overloaded copy operators to allow initialisation of IPAddress objects from other types
+    // Overloaded copy operators to allow initialization of IPAddress objects from other types
     // NOTE: IPv4 only
     IPAddress& operator=(const uint8_t *address);
     // NOTE: IPv4 only; see implementation note

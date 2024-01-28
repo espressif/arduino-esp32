@@ -8,7 +8,7 @@
 #define USB_PID            0x8145
 #define USB_MANUFACTURER   "Adafruit"
 #define USB_PRODUCT        "Metro ESP32-S3"
-#define USB_SERIAL         ""   // Empty string for MAC adddress
+#define USB_SERIAL         ""   // Empty string for MAC address
 
 #define LED_BUILTIN     13
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility

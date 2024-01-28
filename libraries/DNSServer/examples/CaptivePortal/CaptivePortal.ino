@@ -39,7 +39,7 @@ void setup() {
   WiFi.softAP("ESP32-DNSServer");
 
   // by default DNSServer is started serving any "*" domain name. It will reply
-  // AccessPoint's IP to all DNS request (this is requred for Captive Portal detection)
+  // AccessPoint's IP to all DNS request (this is required for Captive Portal detection)
   dnsServer.start();
 
   // serve a simple root page

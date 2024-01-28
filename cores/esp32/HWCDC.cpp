@@ -95,7 +95,7 @@ static void hw_cdc_isr_handler(void *arg) {
             }
             size_t queued_size;
             uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
-            // If the hardware fifo is avaliable, write in it. Otherwise, do nothing.
+            // If the hardware fifo is available, write in it. Otherwise, do nothing.
             if (queued_buff != NULL) {  //Although tx_queued_bytes may be larger than 0. We may have interrupt before xRingbufferSend() was called.
                 //Copy the queued buffer into the TX FIFO
                 usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
@@ -114,7 +114,7 @@ static void hw_cdc_isr_handler(void *arg) {
     }
 
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT) {
-        // read rx buffer(max length is 64), and send avaliable data to ringbuffer.
+        // read rx buffer(max length is 64), and send available data to ringbuffer.
         // Ensure the rx buffer size is larger than RX_MAX_SIZE.
         usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT);
         uint32_t rx_fifo_len = usb_serial_jtag_ll_read_rxfifo(rx_data_buf, 64);

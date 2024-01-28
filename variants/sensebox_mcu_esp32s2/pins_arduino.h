@@ -7,7 +7,7 @@
 #define USB_PID 0x81B8
 #define USB_MANUFACTURER "senseBox"
 #define USB_PRODUCT "MCU-S2 ESP32S2"
-#define USB_SERIAL "" // Empty string for MAC adddress
+#define USB_SERIAL "" // Empty string for MAC address
 
 // Default USB FirmwareMSC Settings
 #define USB_FW_MSC_VENDOR_ID "senseBox"        // max 8 chars

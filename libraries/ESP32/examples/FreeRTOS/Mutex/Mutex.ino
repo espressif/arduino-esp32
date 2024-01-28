@@ -62,7 +62,7 @@ void Task(void *pvParameters){  // This is a task.
   for (;;){ // A Task shall never return or exit.
 #ifdef USE_MUTEX
     if(shared_var_mutex != NULL){ // Sanity check if the mutex exists
-        // Try to take the mutex and wait indefintly if needed
+        // Try to take the mutex and wait indefinitely if needed
         if(xSemaphoreTake(shared_var_mutex, portMAX_DELAY) == pdTRUE){
           // Mutex successfully taken
 #endif

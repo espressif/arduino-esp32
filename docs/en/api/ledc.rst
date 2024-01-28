@@ -4,7 +4,7 @@ LED Control (LEDC)
 
 About
 -----
-The LED control (LEDC) peripheral is primarly designed to control the intensity of LEDs, 
+The LED control (LEDC) peripheral is primarily designed to control the intensity of LEDs, 
 although it can also be used to generate PWM signals for other purposes. 
 
 ESP32 SoCs has from 6 to 16 channels (variates on socs, see table below) which can generate independent waveforms, that can be used for example to drive RGB LED devices.
@@ -201,7 +201,7 @@ This function is used to setup and start fade for the LEDC pin with interrupt.
 * ``start_duty`` select starting duty of fade.
 * ``target_duty`` select target duty of fade. 
 * ``max_fade_time_ms`` select maximum time for fade. 
-* ``userFunc`` funtion to be called when interrupt is triggered.
+* ``userFunc`` function to be called when interrupt is triggered.
   
 This function will return ``true`` if configuration is successful and fade start.
 If ``false`` is returned, error occurs and LEDC fade was not configured / started.
@@ -219,7 +219,7 @@ This function is used to setup and start fade for the LEDC pin with interrupt us
 * ``start_duty`` select starting duty of fade.
 * ``target_duty`` select target duty of fade. 
 * ``max_fade_time_ms`` select maximum time for fade. 
-* ``userFunc`` funtion to be called when interrupt is triggered.
+* ``userFunc`` function to be called when interrupt is triggered.
 * ``arg`` pointer to the interrupt arguments.
   
 This function will return ``true`` if configuration is successful and fade start.

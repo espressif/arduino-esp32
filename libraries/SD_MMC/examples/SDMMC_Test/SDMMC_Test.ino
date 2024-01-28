@@ -212,7 +212,7 @@ void testFileIO(fs::FS &fs, const char * path){
 void setup(){
     Serial.begin(115200);
     /*
-    // If you want to change the pin assigment on ESP32-S3 uncomment this block and the appropriate
+    // If you want to change the pin assignment on ESP32-S3 uncomment this block and the appropriate
     // line depending if you want to use 1-bit or 4-bit line.
     // Please note that ESP32 does not allow pin change and will always fail.
     //if(! setPins(clk, cmd, d0)){

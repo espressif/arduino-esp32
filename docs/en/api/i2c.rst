@@ -291,7 +291,7 @@ This mode is used to accept communication from the master.
 Basic Usage
 ^^^^^^^^^^^
 
-To start using I2C as slave mode on the Arduino, the first step is to include the ``Wire.h`` header to the scketch.
+To start using I2C as slave mode on the Arduino, the first step is to include the ``Wire.h`` header to the sketch.
 
 .. code-block:: arduino
 
@@ -309,7 +309,7 @@ and
 
     Wire.onRequest(onRequest);
 
-The ``onReceive`` will handle the request from the master device uppon a slave read request and the ``onRequest`` will handle the answer to the master.
+The ``onReceive`` will handle the request from the master device upon a slave read request and the ``onRequest`` will handle the answer to the master.
 
 Now, we can start the peripheral configuration by calling ``begin`` function with the device address.
 
@@ -322,7 +322,7 @@ By using ``begin`` without any arguments, all the settings will be done by using
 
 **For ESP32 only!**
 
-Use the function ``slaveWrite`` in order to pre-write to the slave response buffer. This is used only for the ESP32 in order to add the slave capability on the chip and keep compatability with Arduino.
+Use the function ``slaveWrite`` in order to pre-write to the slave response buffer. This is used only for the ESP32 in order to add the slave capability on the chip and keep compatibility with Arduino.
 
 .. code-block:: arduino
 
@@ -365,7 +365,7 @@ The ``onRequest`` function is used to define the callback for the data to be sen
 slaveWrite
 ^^^^^^^^^^
 
-The ``slaveWrite`` function writes on the slave response buffer before receiving the response message. This function is only used for adding the slave compatability for the ESP32.
+The ``slaveWrite`` function writes on the slave response buffer before receiving the response message. This function is only used for adding the slave compatibility for the ESP32.
 
 .. warning:: This function is only required for the ESP32. You **don't** need to use for ESP32-S2 and ESP32-C3.
 

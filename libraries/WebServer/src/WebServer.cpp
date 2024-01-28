@@ -146,7 +146,7 @@ bool WebServer::authenticateBasicSHA1(const char * _username, const char * _sha1
     }
 
     uint8_t sha1[20];
-    char sha1calc[48]; // large enough for base64 and Hex represenation
+    char sha1calc[48]; // large enough for base64 and Hex representation
     String ret;
     SHA1Builder sha_builder;
     base64 b64;
@@ -518,7 +518,7 @@ void WebServer::_prepareHeader(String& response, int code, const char* content_t
 
 void WebServer::send(int code, const char* content_type, const String& content) {
     String header;
-    // Can we asume the following?
+    // Can we assume the following?
     //if(code == 200 && content.length() == 0 && _contentLength == CONTENT_LENGTH_NOT_SET)
     //  _contentLength = CONTENT_LENGTH_UNKNOWN;
     if (content.length() == 0) {

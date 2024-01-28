@@ -8,7 +8,7 @@
 #define USB_PID            0x8117
 #define USB_MANUFACTURER   "Adafruit"
 #define USB_PRODUCT        "Camera ESP32-S3"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 
 static const uint8_t PIN_NEOPIXEL = 1;

@@ -163,7 +163,7 @@ wl_status_t WiFiSTAClass::status()
  * @param password const char *     Pointer to the password.
  * @param ca_pem const char*        Pointer to a string with the contents of a  .pem  file with CA cert
  * @param client_crt const char*        Pointer to a string with the contents of a .crt file with client cert
- * @param client_key const char*        Pointer to a string with the contants of a .key file with client key
+ * @param client_key const char*        Pointer to a string with the contents of a .key file with client key
  * @param bssid uint8_t[6]          Optional. BSSID / MAC of AP
  * @param channel                   Optional. Channel of AP
  * @param connect                   Optional. call connect
@@ -884,7 +884,7 @@ bool WiFiSTAClass::_smartConfigDone = false;
  * @brief 
  * 
  * @param type Select type of SmartConfig. Default type is SC_TYPE_ESPTOUCH
- * @param crypt_key When using type SC_TYPE_ESPTOUTCH_V2 crypt key needed, else ignored. Lenght should be 16 chars.
+ * @param crypt_key When using type SC_TYPE_ESPTOUTCH_V2 crypt key needed, else ignored. Length should be 16 chars.
  * @return true if configuration is successful.
  * @return false if configuration fails.
  */

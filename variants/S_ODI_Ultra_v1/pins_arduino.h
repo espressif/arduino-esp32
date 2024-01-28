@@ -53,4 +53,4 @@ static const uint8_t DAC2 = 26;
 
 #endif /* Pins_Arduino_h */
 
-/* compitable with SPELEC S.ODI Ultra v1.0 (based on ESP32 Series)*/
+/* compatible with SPELEC S.ODI Ultra v1.0 (based on ESP32 Series)*/

@@ -61,7 +61,7 @@ void loop() {
 }
 
 void testAndReport(uint8_t fifoFull) {
-  // Let's send 125 bytes from Serial1 rx<->tx and mesaure time using diferent FIFO Full configurations
+  // Let's send 125 bytes from Serial1 rx<->tx and mesaure time using different FIFO Full configurations
   uint8_t bytesReceived = 0;
   uint8_t dataSent[DATA_SIZE], dataReceived[DATA_SIZE];
   uint32_t timeStamp[DATA_SIZE], bytesJustReceived[DATA_SIZE];
@@ -76,7 +76,7 @@ void testAndReport(uint8_t fifoFull) {
 
   Serial.printf("Testing the time for receiving %d bytes at %d baud, using RX FIFO Full = %d:", DATA_SIZE, BAUD, fifoFull);
   Serial.flush(); // wait Serial FIFO to be empty and then spend almost no time processing it
-  Serial1.setRxFIFOFull(fifoFull); // testing diferent result based on FIFO Full setup
+  Serial1.setRxFIFOFull(fifoFull); // testing different result based on FIFO Full setup
 
   size_t sentBytes = Serial1.write(dataSent, sizeof(dataSent)); // ESP32 TX FIFO is about 128 bytes, 125 bytes will fit fine
   uint32_t now = millis();

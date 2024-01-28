@@ -9,7 +9,7 @@ Partition table is used to define the flash memory organization and the differen
 
 You can use one of the available partition table scheme or create your own. You can see all the different schemes on the `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder or by the Arduino IDE tools menu `Tools -> Partition Scheme`.
 
-The partition table is created by a .CSV (Comma-separeted Values) file with the following structure:
+The partition table is created by a .CSV (Comma-separated Values) file with the following structure:
 
 .. code-block::
 

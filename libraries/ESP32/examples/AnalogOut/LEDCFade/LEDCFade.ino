@@ -6,7 +6,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-// use 12 bit precission for LEDC timer
+// use 12 bit precision for LEDC timer
 #define LEDC_TIMER_12_BIT  12
 
 // use 5000 Hz as a LEDC base frequency

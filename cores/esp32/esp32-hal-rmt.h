@@ -124,14 +124,14 @@ bool rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols);
 bool rmtWriteLooping(int pin, rmt_data_t* data, size_t num_rmt_symbols);
 
 /**
-     Checks if transmission is completed and the rmtChannel ready for transmiting new data.
+     Checks if transmission is completed and the rmtChannel ready for transmitting new data.
      To be ready for a new transmission, means that the previous transmission is completed.
      Returns <true> when all data has been sent, <false> otherwise.
-     The data transmition information is reset when a new rmtWrite/Async function is called.
+     The data transmission information is reset when a new rmtWrite/Async function is called.
      If rmtWrite() times out or rmtWriteAsync() is called, this function will return <false> until 
      all data is sent out. 
      rmtTranmitCompleted() will always return <true> when rmtWriteLooping() is called, 
-     beacuse it has no effect in such case.
+     because it has no effect in such case.
 */
 bool rmtTransmitCompleted(int pin);
 

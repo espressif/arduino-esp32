@@ -113,11 +113,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     fi
 
     if [ -z "$fqbn" ]; then
-        echo "No FQBN passed or unvalid chip: $target"
+        echo "No FQBN passed or invalid chip: $target"
         exit 1
     fi
 
-    # The directory that will hold all the artifcats (the build directory) is
+    # The directory that will hold all the artifacts (the build directory) is
     # provided through:
     #  1. An env variable called ARDUINO_BUILD_DIR.
     #  2. Created at the sketch level as "build" in the case of a single
@@ -286,7 +286,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     local xtra_opts=$*
 
     if [ -z $chunk_index ] || [ -z $chunk_max ]; then
-        echo "ERROR: Invalid chunk paramters"
+        echo "ERROR: Invalid chunk parameters"
         echo "$USAGE"
         exit 1
     fi

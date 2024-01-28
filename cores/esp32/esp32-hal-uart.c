@@ -314,7 +314,7 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
     //log_v("setting UART%d pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num, 
     //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
 
-    // First step: detachs all previous UART pins
+    // First step: detaches all previous UART pins
     bool rxPinChanged = rxPin >= 0 && rxPin != uart->_rxPin;
     if (rxPinChanged) {
         retCode &= _uartDetachPins(uart_num, uart->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
@@ -676,7 +676,7 @@ size_t uartReadBytes(uart_t* uart, uint8_t *buffer, size_t size, uint32_t timeou
     return bytes_read;
 }
 
-// DEPRICATED but the original code will be kepts here as future reference when a final solution
+// DEPRECATED but the original code will be kepts here as future reference when a final solution
 // to the UART driver is defined in the use case of reading byte by byte from UART.
 uint8_t uartRead(uart_t* uart)
 {
@@ -963,7 +963,7 @@ void log_print_buf(const uint8_t *b, size_t len){
 
 /*
  * if enough pulses are detected return the minimum high pulse duration + minimum low pulse duration divided by two. 
- * This equals one bit period. If flag is true the function return inmediately, otherwise it waits for enough pulses.
+ * This equals one bit period. If flag is true the function return immediately, otherwise it waits for enough pulses.
  */
 unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 {
@@ -1130,7 +1130,7 @@ void uart_send_break(uint8_t uartNum)
   uint32_t currentBaudrate = 0;
   uart_get_baudrate(uartNum, &currentBaudrate);
   // calculates 10 bits of breaks in microseconds for baudrates up to 500mbps
-  // This is very sensetive timing... it works fine for SERIAL_8N1
+  // This is very sensitive timing... it works fine for SERIAL_8N1
   uint32_t breakTime = (uint32_t) (10.0 * (1000000.0 / currentBaudrate));
   uart_set_line_inverse(uartNum, UART_SIGNAL_TXD_INV);
   esp_rom_delay_us(breakTime);

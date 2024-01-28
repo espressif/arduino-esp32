@@ -171,7 +171,7 @@ void EEPROMClass::write(int address, uint8_t value) {
   if (!_data)
     return;
 
-  // Optimise _dirty. Only flagged if data written is different.
+  // Optimize _dirty. Only flagged if data written is different.
   uint8_t* pData = &_data[address];
   if (*pData != value)
   {

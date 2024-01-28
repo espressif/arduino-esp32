@@ -108,7 +108,7 @@ String::String(float value, unsigned int decimalPlaces) {
         free(buf);
     } else {
         *this = "nan";
-        log_e("No enought memory for the operation.");
+        log_e("No enough memory for the operation.");
     }
 }
 
@@ -120,7 +120,7 @@ String::String(double value, unsigned int decimalPlaces) {
         free(buf);
     } else {
         *this = "nan";
-        log_e("No enought memory for the operation.");
+        log_e("No enough memory for the operation.");
     }
 }
 
