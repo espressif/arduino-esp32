@@ -7,7 +7,7 @@ This guide will show how to install the Arduino-ESP32 support.
 Before Installing
 -----------------
 
-We recommend you install the support using your favorite IDE, but other options are available depending on your operating system. 
+We recommend you install the support using your favorite IDE, but other options are available depending on your operating system.
 To install Arduino-ESP32 support, you can use one of the following options.
 
 Installing using Arduino IDE
@@ -33,7 +33,7 @@ This is the way to install Arduino-ESP32 directly from the Arduino IDE.
 
 
 .. note::
-   Starting with the Arduino IDE version 1.6.4, Arduino allows installation of third-party platform 
+   Starting with the Arduino IDE version 1.6.4, Arduino allows installation of third-party platform
    packages using Boards Manager. We have packages available for Windows, macOS, and Linux.
 
 To start the installation process using the Boards Managaer, follow these steps:
@@ -189,7 +189,7 @@ Steps to install Arduino ESP32 support on Windows:
    :align: center
    :figclass: align-center
 
-- open a `Git Bash` session pointing to ``[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32`` and execute ```git submodule update --init --recursive``` 
+- open a `Git Bash` session pointing to ``[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32`` and execute ```git submodule update --init --recursive```
 - Open ``[ARDUINO_SKETCHBOOK_DIR]/hardware/espressif/esp32/tools`` and double-click ``get.exe``
 
 **Step 4**
@@ -337,7 +337,7 @@ macOS
    cd ~/Documents/Arduino/hardware/espressif && \
    git clone https://github.com/espressif/arduino-esp32.git esp32 && \
    cd esp32/tools && \
-   python get.py 
+   python get.py
 
 Where ``~/Documents/Arduino`` represents your sketch book location as per "Arduino" > "Preferences" > "Sketchbook location" (in the IDE once started). Adjust the command above accordingly.
 

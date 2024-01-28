@@ -11,12 +11,12 @@ jobs:
   pull-request-style-linter:
     runs-on: ubuntu-latest
     steps:
-    - name: Check out PR head
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ github.event.pull_request.head.sha }}
+      - name: Check out PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: DangerJS pull request linter
-      uses: espressif/shared-github-dangerjs@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: DangerJS pull request linter
+        uses: espressif/shared-github-dangerjs@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

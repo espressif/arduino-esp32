@@ -46,9 +46,9 @@ private:
   IPAddress remote_ip;
   uint16_t server_port;
   uint16_t remote_port;
-  char * tx_buffer;
+  char* tx_buffer;
   size_t tx_buffer_len;
-  cbuf * rx_buffer;
+  cbuf* rx_buffer;
 public:
   WiFiUDP();
   ~WiFiUDP();
@@ -59,10 +59,10 @@ public:
   int beginMulticastPacket();
   int beginPacket();
   int beginPacket(IPAddress ip, uint16_t port);
-  int beginPacket(const char *host, uint16_t port);
+  int beginPacket(const char* host, uint16_t port);
   int endPacket();
   size_t write(uint8_t);
-  size_t write(const uint8_t *buffer, size_t size);
+  size_t write(const uint8_t* buffer, size_t size);
   int parsePacket();
   int available();
   int read();

@@ -149,7 +149,7 @@ For more information, check `here <https://rainmaker.espressif.com/docs/sys-serv
 
     esp_err_t enableSystemService(uint16_t flags, int8_t reboot_seconds, int8_t reset_seconds, int8_t reset_reboot_seconds)
 
-* ``flags`` : Logical OR of system service flags (SYSTEM_SERV_FLAG_REBOOT, SYSTEM_SERV_FLAG_FACTORY_RESET, SYSTEM_SERV_FLAG_WIFI_RESET) as required or SYSTEM_SERV_FLAGS_ALL. 
+* ``flags`` : Logical OR of system service flags (SYSTEM_SERV_FLAG_REBOOT, SYSTEM_SERV_FLAG_FACTORY_RESET, SYSTEM_SERV_FLAG_WIFI_RESET) as required or SYSTEM_SERV_FLAGS_ALL.
 * ``reboot_seconds`` Time in seconds after which the device should reboot. Recommended value: 2
 * ``reset_seconds`` Time in seconds after which the device should reset(Wi-Fi or Factory). Recommended value: 2
 * ``reset_reboot_seconds`` Time in seconds after which the device should reboot after it has been reset. Zero as a value would mean there won't be any reboot after the reset. Recommended value: 2

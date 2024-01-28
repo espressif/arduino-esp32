@@ -7,7 +7,7 @@
  *  Fix temperature value (8.8 fixed format)
  *  Fix time stamp (0.1 second resolution)
  *  Fixes based on EddystoneTLM frame specification https://github.com/google/eddystone/blob/master/eddystone-tlm/tlm-plain.md
- * 
+ *
  */
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
@@ -24,54 +24,54 @@ static const char LOG_TAG[] = "BLEEddystoneTLM";
 BLEEddystoneTLM::BLEEddystoneTLM() {
   m_eddystoneData.frameType = EDDYSTONE_TLM_FRAME_TYPE;
   m_eddystoneData.version = 0;
-  m_eddystoneData.volt = 3300; // 3300mV = 3.3V
-  m_eddystoneData.temp = (uint16_t) ((float) 23.00)/256;
+  m_eddystoneData.volt = 3300;  // 3300mV = 3.3V
+  m_eddystoneData.temp = (uint16_t)((float)23.00) / 256;
   m_eddystoneData.advCount = 0;
   m_eddystoneData.tmil = 0;
-} // BLEEddystoneTLM
+}  // BLEEddystoneTLM
 
-BLEEddystoneTLM::BLEEddystoneTLM(BLEAdvertisedDevice *advertisedDevice){
+BLEEddystoneTLM::BLEEddystoneTLM(BLEAdvertisedDevice* advertisedDevice) {
   char* payload = (char*)advertisedDevice->getPayload();
-  for(int i = 0; i < advertisedDevice->getPayloadLength(); ++i){
-    if(payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i+2+sizeof(m_eddystoneData) && payload[i+1] == 0xAA && payload[i+2] == 0xFE && payload[i+3] == 0x20){
-      log_d("Eddystone TLM data frame starting at byte [%d]", i+3);
-      setData(String(payload+i+3, sizeof(m_eddystoneData)));
+  for (int i = 0; i < advertisedDevice->getPayloadLength(); ++i) {
+    if (payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i + 2 + sizeof(m_eddystoneData) && payload[i + 1] == 0xAA && payload[i + 2] == 0xFE && payload[i + 3] == 0x20) {
+      log_d("Eddystone TLM data frame starting at byte [%d]", i + 3);
+      setData(String(payload + i + 3, sizeof(m_eddystoneData)));
       break;
     }
   }
 }
 
 String BLEEddystoneTLM::getData() {
-  return String((char*) &m_eddystoneData, sizeof(m_eddystoneData));
-} // getData
+  return String((char*)&m_eddystoneData, sizeof(m_eddystoneData));
+}  // getData
 
 BLEUUID BLEEddystoneTLM::getUUID() {
   return beaconUUID;
-} // getUUID
+}  // getUUID
 
 uint8_t BLEEddystoneTLM::getVersion() {
   return m_eddystoneData.version;
-} // getVersion
+}  // getVersion
 
 uint16_t BLEEddystoneTLM::getVolt() {
   return ENDIAN_CHANGE_U16(m_eddystoneData.volt);
-} // getVolt
+}  // getVolt
 
 float BLEEddystoneTLM::getTemp() {
   return EDDYSTONE_TEMP_U16_TO_FLOAT(m_eddystoneData.temp);
-} // getTemp
+}  // getTemp
 
 uint16_t BLEEddystoneTLM::getRawTemp() {
   return ENDIAN_CHANGE_U16(m_eddystoneData.temp);
-} // getRawTemp
+}  // getRawTemp
 
 uint32_t BLEEddystoneTLM::getCount() {
   return ENDIAN_CHANGE_U32(m_eddystoneData.advCount);
-} // getCount
+}  // getCount
 
 uint32_t BLEEddystoneTLM::getTime() {
   return (ENDIAN_CHANGE_U32(m_eddystoneData.tmil)) / 10;
-} // getTime
+}  // getTime
 
 String BLEEddystoneTLM::toString() {
   String out = "";
@@ -82,7 +82,7 @@ String BLEEddystoneTLM::toString() {
   //snprintf(val, sizeof(val), "%d", m_eddystoneData.version);
   //out += val;
   out += "\n";
-  out += "Battery Voltage "; // + ENDIAN_CHANGE_U16(m_eddystoneData.volt);
+  out += "Battery Voltage ";  // + ENDIAN_CHANGE_U16(m_eddystoneData.volt);
   snprintf(val, sizeof(val), "%d", ENDIAN_CHANGE_U16(m_eddystoneData.volt));
   out += val;
   out += " mV\n";
@@ -98,7 +98,7 @@ String BLEEddystoneTLM::toString() {
   out += "\n";
 
   out += "Time in seconds ";
-  snprintf(val, sizeof(val), "%ld", rawsec/10);
+  snprintf(val, sizeof(val), "%ld", rawsec / 10);
   out += val;
   out += "\n";
 
@@ -121,7 +121,7 @@ String BLEEddystoneTLM::toString() {
   out += "\n";
 
   return out;
-} // toString
+}  // toString
 
 /**
  * Set the raw data for the beacon record.
@@ -148,32 +148,32 @@ void BLEEddystoneTLM::setData(String data) {
     return;
   }
   memcpy(&m_eddystoneData, data.c_str(), data.length());
-} // setData
+}  // setData
 
 void BLEEddystoneTLM::setUUID(BLEUUID l_uuid) {
   beaconUUID = l_uuid;
-} // setUUID
+}  // setUUID
 
 void BLEEddystoneTLM::setVersion(uint8_t version) {
   m_eddystoneData.version = version;
-} // setVersion
+}  // setVersion
 
 // Set voltage in ESP32 native Big endian and convert it to little endian used for BLE Frame
 void BLEEddystoneTLM::setVolt(uint16_t volt) {
   m_eddystoneData.volt = ENDIAN_CHANGE_U16(volt);
-} // setVolt
+}  // setVolt
 
 void BLEEddystoneTLM::setTemp(float temp) {
   m_eddystoneData.temp = EDDYSTONE_TEMP_FLOAT_TO_U16(temp);
-} // setTemp
+}  // setTemp
 
 void BLEEddystoneTLM::setCount(uint32_t advCount) {
   m_eddystoneData.advCount = advCount;
-} // setCount
+}  // setCount
 
 void BLEEddystoneTLM::setTime(uint32_t tmil) {
   m_eddystoneData.tmil = tmil;
-} // setTime
+}  // setTime
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

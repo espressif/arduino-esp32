@@ -41,7 +41,7 @@ To use this functionality, we must be aware of some precautions:
     Before assigning the peripheral pins in your design, double check if the pins you're using are appropriate.
     The input-only pins cannot be used for peripherals that require output or input/output signals.
 
-The greatest advantage of this functionality is the fact that we don't need to be fully dependent on the physical pin, since we can change according to our needs. 
+The greatest advantage of this functionality is the fact that we don't need to be fully dependent on the physical pin, since we can change according to our needs.
 This can facilitate the hardware design routing or in some cases, fix some pin swap mistake during the hardware design phase.
 
 Peripherals
@@ -83,7 +83,7 @@ This table is present on each datasheet provided by Espressif.
 Usage Examples
 --------------
 
-In the Arduino Uno, we have the I2C pins defined by hardware, A4 is the SDA and A5 the SCL. In this case, we do not need to set 
+In the Arduino Uno, we have the I2C pins defined by hardware, A4 is the SDA and A5 the SCL. In this case, we do not need to set
 these pins in the ``Wire.begin();`` function, because they are already into the Wire library.
 
 .. code-block:: arduino
@@ -93,7 +93,7 @@ these pins in the ``Wire.begin();`` function, because they are already into the 
         Wire.begin(); // join i2c bus (address optional for master)
     }
 
-Now, for the ESP32, the default pins for the I2C are SDA (GPIO21) and SCL (GPIO22). We can use a different pin as alternative for the 
+Now, for the ESP32, the default pins for the I2C are SDA (GPIO21) and SCL (GPIO22). We can use a different pin as alternative for the
 default ones if you need to change the pins.
 To change the pins, we must call the ``Wire.setPins(int sda, int scl);`` function before calling ``Wire.begin();``.
 
@@ -101,7 +101,7 @@ To change the pins, we must call the ``Wire.setPins(int sda, int scl);`` functio
 
     int sda_pin = 16; // GPIO16 as I2C SDA
     int scl_pin = 17; // GPIO17 as I2C SCL
-    
+
     void setup()
     {
         Wire.setPins(sda_pin, scl_pin); // Set the I2C pins before begin
@@ -115,6 +115,6 @@ A similar approach also applies for the other peripherals.
 Resources
 ---------
 
-.. _Espressif Systems: https://www.espressif.com 
+.. _Espressif Systems: https://www.espressif.com
 .. _Espressif Product Selector: https://products.espressif.com/
 .. _IO MUX GPIO: https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf#iomuxgpio

@@ -24,10 +24,11 @@ html_static_path = ["../_static"]
 
 # Conditional content
 
-extensions += ['sphinx_copybutton',
-               'sphinx_tabs.tabs',
-               'esp_docs.esp_extensions.dummy_build_system',
-               ]
+extensions += [
+    "sphinx_copybutton",
+    "sphinx_tabs.tabs",
+    "esp_docs.esp_extensions.dummy_build_system",
+]
 
 # ESP32_DOCS = [
 #     "index.rst",

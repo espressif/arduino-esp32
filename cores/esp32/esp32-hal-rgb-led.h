@@ -8,10 +8,10 @@ extern "C" {
 #include "esp32-hal.h"
 
 #ifndef RGB_BRIGHTNESS
-  #define RGB_BRIGHTNESS 64
+#define RGB_BRIGHTNESS 64
 #endif
 
-void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
+  void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
 #ifdef __cplusplus
 }

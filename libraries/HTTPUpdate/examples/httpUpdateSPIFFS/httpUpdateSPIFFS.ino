@@ -32,7 +32,6 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP("SSID", "PASSWORD");
-
 }
 
 void loop() {
@@ -72,4 +71,3 @@ void loop() {
     }
   }
 }
-

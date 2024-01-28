@@ -8,12 +8,12 @@
 #define USB_PID 0x1001
 
 static const uint8_t LED_BUILTIN = 38;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN  LED_BUILTIN // allow testing #ifdef LED_BUILTIN
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t BUT_BUILTIN = 0;
-#define BUILTIN_BUT  BUT_BUILTIN // backward compatibility
-#define BUT_BUILTIN  BUT_BUILTIN // allow testing #ifdef BUT_BUILTIN
+#define BUILTIN_BUT BUT_BUILTIN  // backward compatibility
+#define BUT_BUILTIN BUT_BUILTIN  // allow testing #ifdef BUT_BUILTIN
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -25,10 +25,10 @@ static const uint8_t RX1 = 18;
 static const uint8_t SDA = 48;
 static const uint8_t SCL = 47;
 
-static const uint8_t SS    = 10;
-static const uint8_t MOSI  = 11;
-static const uint8_t MISO  = 13;
-static const uint8_t SCK   = 12;
+static const uint8_t SS = 10;
+static const uint8_t MOSI = 11;
+static const uint8_t MISO = 13;
+static const uint8_t SCK = 12;
 // available at pUEXT -
 
 // external power sense

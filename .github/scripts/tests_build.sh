@@ -61,4 +61,3 @@ else
 fi
 
 ${BUILD_CMD} ${args} $*
-

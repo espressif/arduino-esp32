@@ -13,10 +13,10 @@
 #include "esp32-hal-log.h"
 
 BLEValue::BLEValue() {
-	m_accumulation = "";
-	m_value        = "";
-	m_readOffset   = 0;
-} // BLEValue
+  m_accumulation = "";
+  m_value = "";
+  m_readOffset = 0;
+}  // BLEValue
 
 
 /**
@@ -25,9 +25,9 @@ BLEValue::BLEValue() {
  * @param [in] part A message part being added.
  */
 void BLEValue::addPart(String part) {
-	log_v(">> addPart: length=%d", part.length());
-	m_accumulation += part;
-} // addPart
+  log_v(">> addPart: length=%d", part.length());
+  m_accumulation += part;
+}  // addPart
 
 
 /**
@@ -37,19 +37,19 @@ void BLEValue::addPart(String part) {
  * @param [in] length The number of bytes being added.
  */
 void BLEValue::addPart(uint8_t* pData, size_t length) {
-	log_v(">> addPart: length=%d", length);
-	m_accumulation += String((char*) pData, length);
-} // addPart
+  log_v(">> addPart: length=%d", length);
+  m_accumulation += String((char*)pData, length);
+}  // addPart
 
 
 /**
  * @brief Cancel the current accumulation.
  */
 void BLEValue::cancel() {
-	log_v(">> cancel");
-	m_accumulation = "";
-	m_readOffset   = 0;
-} // cancel
+  log_v(">> cancel");
+  m_accumulation = "";
+  m_readOffset = 0;
+}  // cancel
 
 
 /**
@@ -59,13 +59,13 @@ void BLEValue::cancel() {
  * we now have the complete message and commit the change as a unit.
  */
 void BLEValue::commit() {
-	log_v(">> commit");
-	// If there is nothing to commit, do nothing.
-	if (m_accumulation.length() == 0) return;
-	setValue(m_accumulation);
-	m_accumulation = "";
-	m_readOffset   = 0;
-} // commit
+  log_v(">> commit");
+  // If there is nothing to commit, do nothing.
+  if (m_accumulation.length() == 0) return;
+  setValue(m_accumulation);
+  m_accumulation = "";
+  m_readOffset = 0;
+}  // commit
 
 
 /**
@@ -73,7 +73,7 @@ void BLEValue::commit() {
  * @return A pointer to the data.
  */
 uint8_t* BLEValue::getData() {
-	return (uint8_t*) m_value.c_str();
+  return (uint8_t*)m_value.c_str();
 }
 
 
@@ -82,8 +82,8 @@ uint8_t* BLEValue::getData() {
  * @return The length of the data in bytes.
  */
 size_t BLEValue::getLength() {
-	return m_value.length();
-} // getLength
+  return m_value.length();
+}  // getLength
 
 
 /**
@@ -91,16 +91,16 @@ size_t BLEValue::getLength() {
  * @return The read offset into the read.
  */
 uint16_t BLEValue::getReadOffset() {
-	return m_readOffset;
-} // getReadOffset
+  return m_readOffset;
+}  // getReadOffset
 
 
 /**
  * @brief Get the current value.
  */
 String BLEValue::getValue() {
-	return m_value;
-} // getValue
+  return m_value;
+}  // getValue
 
 
 /**
@@ -108,16 +108,16 @@ String BLEValue::getValue() {
  * @param [in] readOffset The offset into the read.
  */
 void BLEValue::setReadOffset(uint16_t readOffset) {
-	m_readOffset = readOffset;
-} // setReadOffset
+  m_readOffset = readOffset;
+}  // setReadOffset
 
 
 /**
  * @brief Set the current value.
  */
 void BLEValue::setValue(String value) {
-	m_value = value;
-} // setValue
+  m_value = value;
+}  // setValue
 
 
 /**
@@ -126,8 +126,8 @@ void BLEValue::setValue(String value) {
  * @param [in] The length of the new current value.
  */
 void BLEValue::setValue(uint8_t* pData, size_t length) {
-	m_value = String((char*) pData, length);
-} // setValue
+  m_value = String((char*)pData, length);
+}  // setValue
 
 
 #endif /* CONFIG_BLUEDROID_ENABLED */

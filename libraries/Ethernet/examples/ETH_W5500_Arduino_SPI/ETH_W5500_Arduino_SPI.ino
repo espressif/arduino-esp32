@@ -9,31 +9,30 @@
 // Set this to 1 to enable dual Ethernet support
 #define USE_TWO_ETH_PORTS 0
 
-#define ETH_TYPE        ETH_PHY_W5500
-#define ETH_ADDR         1
-#define ETH_CS          15
-#define ETH_IRQ          4
-#define ETH_RST          5
+#define ETH_TYPE ETH_PHY_W5500
+#define ETH_ADDR 1
+#define ETH_CS 15
+#define ETH_IRQ 4
+#define ETH_RST 5
 
 // SPI pins
-#define ETH_SPI_SCK     14
-#define ETH_SPI_MISO    12
-#define ETH_SPI_MOSI    13
+#define ETH_SPI_SCK 14
+#define ETH_SPI_MISO 12
+#define ETH_SPI_MOSI 13
 
 #if USE_TWO_ETH_PORTS
 // Second port on shared SPI bus
-#define ETH1_TYPE        ETH_PHY_W5500
-#define ETH1_ADDR         1
-#define ETH1_CS          32
-#define ETH1_IRQ         33
-#define ETH1_RST         18
+#define ETH1_TYPE ETH_PHY_W5500
+#define ETH1_ADDR 1
+#define ETH1_CS 32
+#define ETH1_IRQ 33
+#define ETH1_RST 18
 ETHClass ETH1(1);
 #endif
 
 static bool eth_connected = false;
 
-void onEvent(arduino_event_id_t event, arduino_event_info_t info)
-{
+void onEvent(arduino_event_id_t event, arduino_event_info_t info) {
   switch (event) {
     case ARDUINO_EVENT_ETH_START:
       Serial.println("ETH Started");
@@ -68,8 +67,7 @@ void onEvent(arduino_event_id_t event, arduino_event_info_t info)
   }
 }
 
-void testClient(const char * host, uint16_t port)
-{
+void testClient(const char* host, uint16_t port) {
   Serial.print("\nconnecting to ");
   Serial.println(host);
 
@@ -79,7 +77,8 @@ void testClient(const char * host, uint16_t port)
     return;
   }
   client.printf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host);
-  while (client.connected() && !client.available());
+  while (client.connected() && !client.available())
+    ;
   while (client.available()) {
     Serial.write(client.read());
   }
@@ -88,8 +87,7 @@ void testClient(const char * host, uint16_t port)
   client.stop();
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   WiFi.onEvent(onEvent);
 
@@ -101,8 +99,7 @@ void setup()
 }
 
 
-void loop()
-{
+void loop() {
   if (eth_connected) {
     testClient("google.com", 80);
   }

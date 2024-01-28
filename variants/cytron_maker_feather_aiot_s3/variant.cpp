@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2022 Wai Weng for Cytron Technologies
@@ -28,11 +28,10 @@
 
 extern "C" {
 
-// Initialize variant/board, called before setup()
-void initVariant(void)
-{
-  // Turn on VPeripheral by default.
-  pinMode(VP_EN, OUTPUT);
-  digitalWrite(VP_EN, HIGH);
-}
+  // Initialize variant/board, called before setup()
+  void initVariant(void) {
+    // Turn on VPeripheral by default.
+    pinMode(VP_EN, OUTPUT);
+    digitalWrite(VP_EN, HIGH);
+  }
 }

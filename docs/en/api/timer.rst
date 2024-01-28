@@ -5,8 +5,8 @@ Timer
 About
 -----
 
-The ESP32 SoCs contains from 2 to 4 hardware timers. 
-They are all 64-bit (54-bit for ESP32-C3) generic timers based on 16-bit pre-scalers and 64-bit (54-bit for ESP32-C3) 
+The ESP32 SoCs contains from 2 to 4 hardware timers.
+They are all 64-bit (54-bit for ESP32-C3) generic timers based on 16-bit pre-scalers and 64-bit (54-bit for ESP32-C3)
 up / down counters which are capable of being auto-reloaded.
 
 ========= ================
@@ -157,7 +157,7 @@ This function is used to get resolution in Hz of the timer.
 * ``timer`` timer struct.
 
 This function will return ``frequency`` in Hz of the timer.
-  
+
 timerAttachInterrupt
 ********************
 

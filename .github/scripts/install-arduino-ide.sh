@@ -77,4 +77,3 @@ if [ ! -d "$ARDUINO_IDE_PATH" ]; then
     echo "Arduino IDE Installed in '$ARDUINO_IDE_PATH'"
     echo ""
 fi
-

@@ -1,6 +1,17 @@
 def test_periman(dut):
-    peripherals = ["GPIO", "SigmaDelta", "LEDC", "RMT", "I2S", "I2C", "SPI",
-                   "ADC_Oneshot", "ADC_Continuous", "DAC", "Touch"]
+    peripherals = [
+        "GPIO",
+        "SigmaDelta",
+        "LEDC",
+        "RMT",
+        "I2S",
+        "I2C",
+        "SPI",
+        "ADC_Oneshot",
+        "ADC_Continuous",
+        "DAC",
+        "Touch",
+    ]
 
     pattern = rb"(?:\b\w+\b test: This should(?: not)? be printed|Peripheral Manager test done)"
 

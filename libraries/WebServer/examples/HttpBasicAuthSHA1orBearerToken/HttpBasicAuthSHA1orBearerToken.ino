@@ -52,7 +52,7 @@ String* check_bearer_or_auth(HTTPAuthMethod mode, String authReq, String params[
     SHA1Builder sha_builder;
 
     sha_builder.begin();
-    sha_builder.add((uint8_t*) secret.c_str(), secret.length());
+    sha_builder.add((uint8_t*)secret.c_str(), secret.length());
     sha_builder.calculate();
     sha_builder.getBytes(sha1);
 
@@ -113,5 +113,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

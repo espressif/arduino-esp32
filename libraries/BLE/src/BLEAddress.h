@@ -13,7 +13,7 @@
 
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gap_ble_api.h> // ESP32 BLE
+#include <esp_gap_ble_api.h>  // ESP32 BLE
 #include <string>
 
 
@@ -24,20 +24,20 @@
  */
 class BLEAddress {
 public:
-	BLEAddress(esp_bd_addr_t address);
-	BLEAddress(String stringAddress);
-	bool           equals(BLEAddress otherAddress);
-  bool           operator==(const BLEAddress& otherAddress) const;
-  bool           operator!=(const BLEAddress& otherAddress) const;
-  bool           operator<(const BLEAddress& otherAddress) const;
-  bool           operator<=(const BLEAddress& otherAddress) const;
-  bool           operator>(const BLEAddress& otherAddress) const;
-  bool           operator>=(const BLEAddress& otherAddress) const;
+  BLEAddress(esp_bd_addr_t address);
+  BLEAddress(String stringAddress);
+  bool equals(BLEAddress otherAddress);
+  bool operator==(const BLEAddress& otherAddress) const;
+  bool operator!=(const BLEAddress& otherAddress) const;
+  bool operator<(const BLEAddress& otherAddress) const;
+  bool operator<=(const BLEAddress& otherAddress) const;
+  bool operator>(const BLEAddress& otherAddress) const;
+  bool operator>=(const BLEAddress& otherAddress) const;
   esp_bd_addr_t* getNative();
-  String         toString();
+  String toString();
 
 private:
-	esp_bd_addr_t m_address;
+  esp_bd_addr_t m_address;
 };
 
 #endif /* CONFIG_BLUEDROID_ENABLED */

@@ -12,13 +12,13 @@ static const uint8_t RX = 7;
 static const uint8_t SDA = 22;
 static const uint8_t SCL = 20;
 
-static const uint8_t SS    = 33;
-static const uint8_t MOSI  = 19;
-static const uint8_t MISO  = 21;
-static const uint8_t SCK   = 5;
+static const uint8_t SS = 33;
+static const uint8_t MOSI = 19;
+static const uint8_t MISO = 21;
+static const uint8_t SCK = 5;
 
 // mapping to match other feathers and also in order
-static const uint8_t A0 = 26; 
+static const uint8_t A0 = 26;
 static const uint8_t A1 = 25;
 static const uint8_t A2 = 34;
 static const uint8_t A3 = 39;
@@ -39,15 +39,15 @@ static const uint8_t A13 = 35;
 // internal switch
 #define BUTTON 38
 
-// User LED 
+// User LED
 static const uint8_t LED_BUILTIN = 13;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 // Neopixel
 #define PIN_NEOPIXEL 0
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 // Neopixel & I2C power

@@ -131,7 +131,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         echo "Skipping $sketchname for target $target"
         exit 0
     fi
-    
+
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
@@ -164,7 +164,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 --build-cache-path "$ARDUINO_CACHE_DIR" \
                 --build-path "$build_dir" \
                 $xtra_opts "${sketchdir}"
-            
+
             exit_status=$?
             if [ $exit_status -ne 0 ]; then
                 echo ""ERROR: Compilation failed with error code $exit_status""
@@ -388,4 +388,3 @@ case "$cmd" in
         echo "$USAGE"
         exit 2
 esac
-

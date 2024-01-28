@@ -39,8 +39,7 @@ void InitESPNow() {
   WiFi.disconnect();
   if (esp_now_init() == ESP_OK) {
     Serial.println("ESPNow Init Success");
-  }
-  else {
+  } else {
     Serial.println("ESPNow Init Failed");
     // Retry InitESPNow, add a counte and then restart?
     // InitESPNow();
@@ -57,7 +56,8 @@ void configDeviceAP() {
     Serial.println("AP Config failed.");
   } else {
     Serial.println("AP Config Success. Broadcasting with AP: " + String(SSID));
-    Serial.print("AP CHANNEL "); Serial.println(WiFi.channel());
+    Serial.print("AP CHANNEL ");
+    Serial.println(WiFi.channel());
   }
 }
 
@@ -69,7 +69,8 @@ void setup() {
   // configure device AP mode
   configDeviceAP();
   // This is the mac address of the Slave in AP Mode
-  Serial.print("AP MAC: "); Serial.println(WiFi.softAPmacAddress());
+  Serial.print("AP MAC: ");
+  Serial.println(WiFi.softAPmacAddress());
   // Init ESPNow with a fallback logic
   InitESPNow();
   // Once ESPNow is successfully Init, we will register for recv CB to
@@ -78,12 +79,14 @@ void setup() {
 }
 
 // callback when data is recv from Master
-void OnDataRecv(const esp_now_recv_info_t * info, const uint8_t *data, int data_len) {
+void OnDataRecv(const esp_now_recv_info_t *info, const uint8_t *data, int data_len) {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
            info->src_addr[0], info->src_addr[1], info->src_addr[2], info->src_addr[3], info->src_addr[4], info->src_addr[5]);
-  Serial.print("Last Packet Recv from: "); Serial.println(macStr);
-  Serial.print("Last Packet Recv Data: "); Serial.println(*data);
+  Serial.print("Last Packet Recv from: ");
+  Serial.println(macStr);
+  Serial.print("Last Packet Recv Data: ");
+  Serial.println(*data);
   Serial.println("");
 }
 

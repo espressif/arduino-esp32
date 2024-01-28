@@ -64,8 +64,7 @@ void handleRoot() {
   </body>\
 </html>",
 
-           hr, min % 60, sec % 60
-          );
+           hr, min % 60, sec % 60);
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }
@@ -125,7 +124,7 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }
 
 void drawGraph() {

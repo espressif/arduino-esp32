@@ -31,101 +31,99 @@
 #endif
 
 typedef enum {
-    WPA2_AUTH_TLS = 0,
-    WPA2_AUTH_PEAP = 1,
-    WPA2_AUTH_TTLS = 2
+  WPA2_AUTH_TLS = 0,
+  WPA2_AUTH_PEAP = 1,
+  WPA2_AUTH_TTLS = 2
 } wpa2_auth_method_t;
 
-class WiFiSTAClass
-{
-    // ----------------------------------------------------------------------------------------------
-    // ---------------------------------------- STA function ----------------------------------------
-    // ----------------------------------------------------------------------------------------------
+class WiFiSTAClass {
+  // ----------------------------------------------------------------------------------------------
+  // ---------------------------------------- STA function ----------------------------------------
+  // ----------------------------------------------------------------------------------------------
 
 public:
 
-    wl_status_t begin(const char* wpa2_ssid, wpa2_auth_method_t method, const char* wpa2_identity=NULL, const char* wpa2_username=NULL, const char *wpa2_password=NULL, const char* ca_pem=NULL, const char* client_crt=NULL, const char* client_key=NULL, int32_t channel=0, const uint8_t* bssid=0, bool connect=true);
-    wl_status_t begin(const String& wpa2_ssid, wpa2_auth_method_t method, const String& wpa2_identity = (const char*)NULL, const String& wpa2_username = (const char*)NULL, const String& wpa2_password = (const char*)NULL, const String& ca_pem = (const char*)NULL, const String& client_crt = (const char*)NULL, const String& client_key = (const char*)NULL, int32_t channel=0, const uint8_t* bssid=0, bool connect=true) {
-        return begin(wpa2_ssid.c_str(), method, wpa2_identity.c_str(), wpa2_username.c_str(), wpa2_password.c_str(), ca_pem.c_str(), client_crt.c_str(), client_key.c_str(), channel, bssid, connect);
-    }
-    wl_status_t begin(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
-    wl_status_t begin(const String& ssid, const String& passphrase = (const char*)NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true) {
-        return begin(ssid.c_str(), passphrase.c_str(), channel, bssid, connect);
-    }
-    wl_status_t begin(char* ssid, char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
-    wl_status_t begin();
+  wl_status_t begin(const char* wpa2_ssid, wpa2_auth_method_t method, const char* wpa2_identity = NULL, const char* wpa2_username = NULL, const char* wpa2_password = NULL, const char* ca_pem = NULL, const char* client_crt = NULL, const char* client_key = NULL, int32_t channel = 0, const uint8_t* bssid = 0, bool connect = true);
+  wl_status_t begin(const String& wpa2_ssid, wpa2_auth_method_t method, const String& wpa2_identity = (const char*)NULL, const String& wpa2_username = (const char*)NULL, const String& wpa2_password = (const char*)NULL, const String& ca_pem = (const char*)NULL, const String& client_crt = (const char*)NULL, const String& client_key = (const char*)NULL, int32_t channel = 0, const uint8_t* bssid = 0, bool connect = true) {
+    return begin(wpa2_ssid.c_str(), method, wpa2_identity.c_str(), wpa2_username.c_str(), wpa2_password.c_str(), ca_pem.c_str(), client_crt.c_str(), client_key.c_str(), channel, bssid, connect);
+  }
+  wl_status_t begin(const char* ssid, const char* passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
+  wl_status_t begin(const String& ssid, const String& passphrase = (const char*)NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true) {
+    return begin(ssid.c_str(), passphrase.c_str(), channel, bssid, connect);
+  }
+  wl_status_t begin(char* ssid, char* passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
+  wl_status_t begin();
 
-    bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
-    bool setDNS(IPAddress dns1, IPAddress dns2 = (uint32_t)0x00000000);  // sets DNS IP for all network interfaces
+  bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
+  bool setDNS(IPAddress dns1, IPAddress dns2 = (uint32_t)0x00000000);  // sets DNS IP for all network interfaces
 
-    bool bandwidth(wifi_bandwidth_t bandwidth);
+  bool bandwidth(wifi_bandwidth_t bandwidth);
 
-    bool reconnect();
-    bool disconnectAsync(bool wifioff = false, bool eraseap = false);
-    bool disconnect(bool wifioff = false, bool eraseap = false, unsigned long timeoutLength = 100);
-    bool eraseAP(void);
+  bool reconnect();
+  bool disconnectAsync(bool wifioff = false, bool eraseap = false);
+  bool disconnect(bool wifioff = false, bool eraseap = false, unsigned long timeoutLength = 100);
+  bool eraseAP(void);
 
-    bool isConnected();
+  bool isConnected();
 
-    bool setAutoConnect(bool autoConnect);
-    bool getAutoConnect();
+  bool setAutoConnect(bool autoConnect);
+  bool getAutoConnect();
 
-    bool setAutoReconnect(bool autoReconnect);
-    bool getAutoReconnect();
+  bool setAutoReconnect(bool autoReconnect);
+  bool getAutoReconnect();
 
-    uint8_t waitForConnectResult(unsigned long timeoutLength = 60000);
+  uint8_t waitForConnectResult(unsigned long timeoutLength = 60000);
 
-    // Next group functions must be called before WiFi.begin()
-    void setMinSecurity(wifi_auth_mode_t minSecurity);// Default is WIFI_AUTH_WPA2_PSK
-    void setScanMethod(wifi_scan_method_t scanMethod);// Default is WIFI_FAST_SCAN
-    void setSortMethod(wifi_sort_method_t sortMethod);// Default is WIFI_CONNECT_AP_BY_SIGNAL
+  // Next group functions must be called before WiFi.begin()
+  void setMinSecurity(wifi_auth_mode_t minSecurity);  // Default is WIFI_AUTH_WPA2_PSK
+  void setScanMethod(wifi_scan_method_t scanMethod);  // Default is WIFI_FAST_SCAN
+  void setSortMethod(wifi_sort_method_t sortMethod);  // Default is WIFI_CONNECT_AP_BY_SIGNAL
 
-    // STA network info
-    IPAddress localIP();
+  // STA network info
+  IPAddress localIP();
 
-    uint8_t * macAddress(uint8_t* mac);
-    String macAddress();
+  uint8_t* macAddress(uint8_t* mac);
+  String macAddress();
 
-    IPAddress subnetMask();
-    IPAddress gatewayIP();
-    IPAddress dnsIP(uint8_t dns_no = 0);
+  IPAddress subnetMask();
+  IPAddress gatewayIP();
+  IPAddress dnsIP(uint8_t dns_no = 0);
 
-    IPAddress broadcastIP();
-    IPAddress networkID();
-    uint8_t subnetCIDR();
-    
-    bool enableIPv6(bool en=true);
-    IPAddress localIPv6();
-    IPAddress globalIPv6();
+  IPAddress broadcastIP();
+  IPAddress networkID();
+  uint8_t subnetCIDR();
 
-    // STA WiFi info
-    static wl_status_t status();
-    String SSID() const;
-    String psk() const;
+  bool enableIPv6(bool en = true);
+  IPAddress localIPv6();
+  IPAddress globalIPv6();
 
-    uint8_t * BSSID(uint8_t* bssid = NULL);
-    String BSSIDstr();
+  // STA WiFi info
+  static wl_status_t status();
+  String SSID() const;
+  String psk() const;
 
-    int8_t RSSI();
+  uint8_t* BSSID(uint8_t* bssid = NULL);
+  String BSSIDstr();
 
-    static void _setStatus(wl_status_t status);
-    
+  int8_t RSSI();
+
+  static void _setStatus(wl_status_t status);
+
 protected:
-    static bool _useStaticIp;
-    static bool _autoReconnect;
-    static wifi_auth_mode_t _minSecurity;
-    static wifi_scan_method_t _scanMethod;
-    static wifi_sort_method_t _sortMethod;
+  static bool _useStaticIp;
+  static bool _autoReconnect;
+  static wifi_auth_mode_t _minSecurity;
+  static wifi_scan_method_t _scanMethod;
+  static wifi_sort_method_t _sortMethod;
 
-public: 
-    bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char* crypt_key = NULL);
-    bool stopSmartConfig();
-    bool smartConfigDone();
+public:
+  bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char* crypt_key = NULL);
+  bool stopSmartConfig();
+  bool smartConfigDone();
 
-    static bool _smartConfigDone;
+  static bool _smartConfigDone;
 protected:
-    static bool _smartConfigStarted;
-
+  static bool _smartConfigStarted;
 };
 
 

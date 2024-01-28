@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 static const uint8_t LED_BUILTIN = -1;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 #define MTDO 15
@@ -15,17 +15,17 @@ static const uint8_t LED_BUILTIN = -1;
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
-static const uint8_t SDA = 22;//23;
-static const uint8_t SCL = 21;//19;
+static const uint8_t SDA = 22;  //23;
+static const uint8_t SCL = 21;  //19;
 
-#define WIRE1_PIN_DEFINED 1             // See Wire.cpp at bool TwoWire::initPins(int sdaPin, int sclPin)
+#define WIRE1_PIN_DEFINED 1  // See Wire.cpp at bool TwoWire::initPins(int sdaPin, int sclPin)
 static const uint8_t SDA1 = 12;
 static const uint8_t SCL1 = 13;
 
-static const uint8_t SS    = 5;
-static const uint8_t MOSI  = 23;
-static const uint8_t MISO  = 19;
-static const uint8_t SCK   = 18;
+static const uint8_t SS = 5;
+static const uint8_t MOSI = 23;
+static const uint8_t MISO = 19;
+static const uint8_t SCK = 18;
 
 static const uint8_t A0 = 12;
 static const uint8_t A1 = 13;
@@ -45,12 +45,12 @@ static const uint8_t D0 = 3;
 static const uint8_t D1 = 1;
 static const uint8_t D2 = 16;
 static const uint8_t D3 = 17;
-static const uint8_t D4 = 32;//ADC1_CH4
-static const uint8_t D5 = 33;//ADC1_CH5
-static const uint8_t D6 = 25;//ADC2_CH8 DAC_1
-static const uint8_t D7 = 26;//ADC2_CH9 DAC_2
-static const uint8_t D8 = 27;//ADC2_CH7
-static const uint8_t D9 = 14;//ADC2_CH6
+static const uint8_t D4 = 32;  //ADC1_CH4
+static const uint8_t D5 = 33;  //ADC1_CH5
+static const uint8_t D6 = 25;  //ADC2_CH8 DAC_1
+static const uint8_t D7 = 26;  //ADC2_CH9 DAC_2
+static const uint8_t D8 = 27;  //ADC2_CH7
+static const uint8_t D9 = 14;  //ADC2_CH6
 static const uint8_t D10 = 5;
 static const uint8_t D11 = 23;
 static const uint8_t D12 = 19;

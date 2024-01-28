@@ -5,7 +5,7 @@ on:
     types: [opened, reopened, synchronize, labeled]
 
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
 
 env:
   MAX_CHUNKS: 15
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        chip: ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6", "esp32h2"]
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
     steps:
       - name: Checkout Repository
@@ -60,8 +60,8 @@ jobs:
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
           path: |
-             ~/.arduino/tests/*/build*.tmp/*.bin
-             ~/.arduino/tests/*/build*.tmp/*.json
+            ~/.arduino/tests/*/build*.tmp/*.bin
+            ~/.arduino/tests/*/build*.tmp/*.json
           if-no-files-found: error
   Test:
     needs: [gen_chunks, Build]
@@ -69,7 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        chip: ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6", "esp32h2"]
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
     runs-on: [arduino, "${{matrix.chip}}"]
     container:
@@ -77,31 +77,31 @@ jobs:
       options: --privileged
 
     steps:
-       - name: Checkout repository
-         uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-       - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
-         uses: actions/download-artifact@v3
-         with:
-           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
-           path: ~/.arduino/tests/
+      - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
+          path: ~/.arduino/tests/
 
-       - name: Install dependencies
-         run: |
-           pip install -U pip
-           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
-           apt update && apt install -y -qq jq
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+          apt update && apt install -y -qq jq
 
-       - name: Run Tests
-         run: |
-           bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -e
+      - name: Run Tests
+        run: |
+          bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -e
 
-       - name: Upload test result artifacts
-         uses: actions/upload-artifact@v3
-         if: always()
-         with:
-           name: test_results-${{matrix.chip}}-${{matrix.chunks}}
-           path: tests/*/*.xml
+      - name: Upload test result artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test_results-${{matrix.chip}}-${{matrix.chunks}}
+          path: tests/*/*.xml
 
   event_file:
     name: "Event File"
@@ -111,8 +111,8 @@ jobs:
     needs: Test
     runs-on: ubuntu-latest
     steps:
-       - name: Upload
-         uses: actions/upload-artifact@v3
-         with:
-           name: Event File
-           path: ${{github.event_path}}
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: Event File
+          path: ${{github.event_path}}

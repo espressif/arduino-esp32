@@ -1,9 +1,9 @@
 #include <WiFiClientSecure.h>
 
-const char* ssid     = "your-ssid";     // your network SSID (name of wifi network)
-const char* password = "your-password"; // your network password
+const char* ssid = "your-ssid";          // your network SSID (name of wifi network)
+const char* password = "your-password";  // your network password
 
-const char*  server = "www.howsmyssl.com";  // Server URL
+const char* server = "www.howsmyssl.com";  // Server URL
 
 WiFiClientSecure client;
 
@@ -27,7 +27,7 @@ void setup() {
   Serial.println(ssid);
 
   Serial.println("\nStarting connection to server...");
-  client.setInsecure();//skip verification
+  client.setInsecure();  //skip verification
   if (!client.connect(server, 443))
     Serial.println("Connection failed!");
   else {

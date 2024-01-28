@@ -24,8 +24,7 @@ jobs:
         uses: dcarbone/install-jq-action@v1.0.1
 
       - name: Get board name
-        run: 
-          bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{github.event.number}}
+        run: bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{github.event.number}}
 
   test-boards:
     needs: find-boards
@@ -67,5 +66,4 @@ jobs:
           cli-compile-flags: |
             - --warnings="all"
           exit-on-fail: true
-          sketch-paths:
-            "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
+          sketch-paths: "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"

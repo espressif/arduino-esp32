@@ -32,7 +32,7 @@ jobs:
             gh api $url > "$name.zip"
             unzip -d "$name" "$name.zip"
           done
-    
+
       - name: Report results
         uses: P-R-O-C-H-Y/report-size-deltas@main
         with:

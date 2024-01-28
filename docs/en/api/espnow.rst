@@ -3,7 +3,7 @@ ESP-NOW
 #######
 
 ESP-NOW is a fast, connectionless communication technology featuring a short packet transmission.
-ESP-NOW is ideal for smart lights, remote control devices, sensors and other applications. 
+ESP-NOW is ideal for smart lights, remote control devices, sensors and other applications.
 
 .. note:: This is a work in progress project and this section is still missing. If you want to contribute, please see the `Contributions Guide <../contributing.html>`_.
 

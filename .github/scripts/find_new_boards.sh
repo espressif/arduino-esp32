@@ -34,7 +34,7 @@ do
     addition_line=$( echo "${params_array[c+1]}" | cut -d'+' -f2 | cut -d',' -f1 )
     addition_count=$( echo "${params_array[c+1]}" | cut -d'+' -f2 | cut -d',' -f2 | cut -d' ' -f1 )
     addition_end=$(($addition_line+$addition_count))
-    
+
     addition_line=$(($addition_line + 3))
     addition_end=$(($addition_end - $deletion_count))
 
