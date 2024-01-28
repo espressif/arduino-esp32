@@ -388,7 +388,7 @@ uint32_t TwoWire::getClock()
     return frequency;
 }
 
-void TwoWire::setClock(uint32_t frequency)
+bool TwoWire::setClock(uint32_t frequency)
 {
     esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
