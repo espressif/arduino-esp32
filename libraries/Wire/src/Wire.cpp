@@ -332,26 +332,27 @@ end:
 
 }
 
-void TwoWire::end()
+bool TwoWire::end()
 {
+    esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(lock != NULL){
         //acquire lock
         if(xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
             log_e("could not acquire lock");
-            return;
+            return false;
         }
 #endif
 #if SOC_I2C_SUPPORT_SLAVE
         if(is_slave){
-            esp_err_t err = i2cSlaveDeinit(num);
+            err = i2cSlaveDeinit(num);
             if(err == ESP_OK){
                 is_slave = false;
             }
         } else
 #endif /* SOC_I2C_SUPPORT_SLAVE */
         if(i2cIsInit(num)){
-            i2cDeinit(num);
+            err = i2cDeinit(num);
         }
         freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -359,7 +360,7 @@ void TwoWire::end()
         xSemaphoreGive(lock);
     }
 #endif
-    return;
+    return (err == ESP_OK);
 }
 
 uint32_t TwoWire::getClock()
@@ -389,25 +390,28 @@ uint32_t TwoWire::getClock()
 
 void TwoWire::setClock(uint32_t frequency)
 {
+    esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
     //acquire lock
     if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
         log_e("could not acquire lock");
-        return;
+        return false;
     }
 #endif
 #if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
+        err = ESP_FAIL;
     } else 
 #endif /* SOC_I2C_SUPPORT_SLAVE */
     {
-        i2cSetClock(num, frequency);
+        err = i2cSetClock(num, frequency);
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
 #endif
+    return (err == ESP_OK);
 }
 
 void TwoWire::setTimeOut(uint16_t timeOutMillis)

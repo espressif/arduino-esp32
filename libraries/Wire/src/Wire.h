@@ -90,24 +90,24 @@ public:
     TwoWire(uint8_t bus_num);
     ~TwoWire();
 
-    void begin() override final
+    bool begin() override final
     {
-        begin(-1, -1);
+        return begin(-1, -1);
     }
 
-    void begin(uint8_t address) override final
+    bool begin(uint8_t address) override final
     {
 #if SOC_I2C_SUPPORT_SLAVE
-        begin(address, -1, -1, 0);
+        return begin(address, -1, -1, 0);
 #else
         log_e("I2C slave is not supported by you SoC!!!");
 #endif
     }
 
 
-    void end() override;
+    bool end() override;
 
-    void setClock(uint32_t freq) override;
+    bool setClock(uint32_t freq) override;
   
     void beginTransmission(uint8_t address) override;
     uint8_t endTransmission(bool stopBit) override;
