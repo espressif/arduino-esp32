@@ -634,7 +634,7 @@ void TwoWire::onReceive( void (*function)(int) )
 void TwoWire::onRequest( void (*function)(void) )
 {
 #if SOC_I2C_SUPPORT_SLAVE
-  user_onRequest = function;
+    user_onRequest = function;
 #endif
 }
 
