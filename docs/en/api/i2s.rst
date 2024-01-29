@@ -16,142 +16,142 @@ The I²S bus consists of at least three lines:
 .. note:: All lines can be attached to almost any pin and this change can occur even during operation.
 
 * **Bit clock line**
-  
+
   * Officially "continuous serial clock (SCK)". Typically written "bit clock (BCLK)".
-  *  In this library function parameter ``sckPin`` or constant ``PIN_I2S_SCK``.
+  *  In this library function parameter ``sck``.
 
 * **Word clock line**
-  
+
   * Officially "word select (WS)". Typically called "left-right clock (LRCLK)" or "frame sync (FS)".
   * 0 = Left channel, 1 = Right channel
-  * In this library function parameter ``fsPin`` or constant ``PIN_I2S_FS``.
+  * In this library function parameter ``ws``.
 
 * **Data line**
 
   * Officially "serial data (SD)", but can be called SDATA, SDIN, SDOUT, DACDAT, ADCDAT, etc.
   * Unlike Arduino I2S with single data pin switching between input and output, in ESP core driver use separate data line for input and output.
-  * For backward compatibility, the shared data pin is ``sdPin`` or constant ``PIN_I2S_SD`` when using simplex mode.
-  
-  * When using in duplex mode, there are two data lines:
-    
-    * Output data line is called ``outSdPin`` for function parameter, or constant ``PIN_I2S_SD_OUT``
-    * Input data line is called ``inSdPin`` for function parameter, or constant ``PIN_I2S_SD_IN``
+  * Output data line is called ``dout`` for function parameter.
+  * Input data line is called ``din`` for function parameter.
 
-I2S Modes
----------
+It may also include a **Master clock** line:
 
-The I2S can be set up in three groups of modes:
+* **Master clock**
 
-* Master (default) or Slave.
-* Simplex (default) or Duplex.
-* Operation modes (Philips standard, ADC/DAC, PDM)
-  
-  * Most of them are dual-channel, some can be single channel
+  * Officially "master clock (MCLK)".
+  * This is not a part of I2S bus, but is used to synchronize multiple I2S devices.
+  * In this library function parameter ``mclk``.
 
-.. note:: Officially supported operation mode is only ``I2S_PHILIPS_MODE``. Other modes are implemented, but we cannot guarantee flawless execution and behavior.
+.. note:: Please check the `ESP-IDF documentation <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html>`_ for more details on the I2S peripheral for each ESP32 chip.
+
+I2S Configuration
+-----------------
 
 Master / Slave Mode
 *******************
 
-In **Master mode** (default) the device is generating clock signal ``sckPin`` and word select signal on ``fsPin``.
+In **Master mode** (default) the device is generating clock signal ``sck`` and word select signal on ``ws``.
 
 In **Slave mode** the device listens on attached pins for the clock signal and word select - i.e. unless externally driven the pins will remain LOW.
-
-How to enter either mode is described in the function section.
+This mode is not supported yet.
 
 Operation Modes
 ***************
 
-Setting the operation mode is done with function ``begin`` (see API section)
+Setting the operation mode is done with function ``begin`` and is set by function parameter ``mode``.
 
-* ``I2S_PHILIPS_MODE``
-    * Currently the only official* ``PIN_I2S_SCK``
-* ``PIN_I2S_FS``
-* ``PIN_I2S_SD``
-* ``PIN_I2S_SD_OUT`` only need to send one channel data but the data will be copied for another channel automatically, then both channels will transmit same data.
+* ``I2S_MODE_STD``
+    In standard mode, there are always two sound channels, i.e., the left and right channels, which are called "slots".
+    These slots support 8/16/24/32-bit width sample data.
+    The communication format for the slots follows the Philips standard.
 
-* ``ADC_DAC_MODE``
-    The output will be an analog signal on pins ``25`` (L or R?) and ``26`` (L or R?).
-    Input will be received on pin ``_inSdPin``.
-    The data are sampled in 12 bits and stored in a 16 bits, with the 4 most significant bits set to zero.
+* ``I2S_MODE_TDM``
+    In Time Division Multiplexing mode (TDM), the number of sound channels is variable, and the width of each channel
+    is fixed.
 
-* ``PDM_STEREO_MODE``
-    Pulse-density-modulation is similar to PWM, but instead, the pulses have constant width. The signal is modulated with the number of ones or zeroes in sequence.
+* ``I2S_MODE_PDM_TX``
+    PDM (Pulse-density Modulation) mode for the TX channel can convert PCM data into PDM format which always
+    has left and right slots.
+    PDM TX is only supported on I2S0 and it only supports 16-bit width sample data.
+    It needs at least a CLK pin for clock signal and a DOUT pin for data signal.
 
-* ``PDM_MONO_MODE``
-    Single-channel version of PDM mode described above.
+* ``I2S_MODE_PDM_RX``
+    PDM (Pulse-density Modulation) mode for RX channel can receive PDM-format data and convert the data
+    into PCM format. PDM RX is only supported on I2S0, and it only supports 16-bit width sample data.
+    PDM RX needs at least a CLK pin for clock signal and a DIN pin for data signal.
 
 Simplex / Duplex Mode
 *********************
 
-The **Simplex** mode is the default after driver initialization. Simplex mode uses the shared data pin ``sdPin`` or constant ``PIN_I2S_SD`` for both output and input, but can only read or write. This is the same behavior as in original Arduino library.
+Due to the different clock sources the PDM modes are always in **Simplex** mode, using only one data pin.
 
-The **Duplex** mode uses two separate data pins:
+The STD and TDM modes operate in the **Duplex** mode, using two separate data pins:
 
-* Output pin ``outSdPin`` for function parameter, or constant ``PIN_I2S_SD_OUT``
-* Input pin ``inSdPin`` for function parameter, or constant ``PIN_I2S_SD_IN``
+* Output pin ``dout`` for function parameter
+* Input pin ``din`` for function parameter
 
 In this mode, the driver is able to read and write simultaneously on each line and is suitable for applications like walkie-talkie or phone.
 
-Switching between these modes is performed simply by calling setDuplex() or setSimplex() (see APi section for details and more functions).
+Data Bit Width
+**************
+
+This is the number of bits in a channel sample. The data bit width is set by function parameter ``bits_cfg``.
+The current supported values are:
+
+* ``I2S_DATA_BIT_WIDTH_8BIT``
+* ``I2S_DATA_BIT_WIDTH_16BIT``
+* ``I2S_DATA_BIT_WIDTH_24BIT``, requires the MCLK multiplier to be manually set to 384
+* ``I2S_DATA_BIT_WIDTH_32BIT``
+
+Sample Rate
+***********
+
+The sample rate is set by function parameter ``rate``. It is the number of samples per second in Hz.
+
+Slot Mode
+*********
+
+The slot mode is set by function parameter ``ch``. The current supported values are:
+
+* ``I2S_SLOT_MODE_MONO``
+    I2S channel slot format mono. Transmit the same data in all slots for TX mode.
+    Only receive the data in the first slots for RX mode.
+
+* ``I2S_SLOT_MODE_STEREO``
+    I2S channel slot format stereo. Transmit different data in different slots for TX mode.
+    Receive the data in all slots for RX mode.
 
 Arduino-ESP32 I2S API
 ---------------------
 
-The ESP32 I2S library is based on the Arduino I2S Library and implements a few more APIs, described in this `documentation <https://www.arduino.cc/en/Reference/I2S>`_.
-
 Initialization and deinitialization
 ***********************************
 
-Before initialization, choose which pins you want to use. In DAC mode you can use only pins `25` and `26` for the output.
+Before initialization, set which pins you want to use.
 
 begin (Master Mode)
 ^^^^^^^^^^^^^^^^^^^
 
-Before usage choose which pins you want to use. In DAC mode you can use only pins 25 and 26 as output.
+Before usage choose which pins you want to use.
 
 .. code-block:: arduino
 
-    int begin(int mode, int sampleRate, int bitsPerSample)
-
-Parameters:
- 
-* [in] ``mode`` one of above mentioned operation mode, for example ``I2S_PHILIPS_MODE``.
-
-* [in] ``sampleRate`` is the sampling rate in Hz. Currently officially supported value is only 16000 - other than this value will print warning, but continue to operate, however the resulting audio quality may suffer and the app may crash.
-
-* [in] ``bitsPerSample``  is the number of bits in a channel sample.
-  
-Currently, the supported value is only 16 - other than this value will print a warning, but continues to operate, however, the resulting audio quality may suffer and the application may crash.
-
-For ``ADC_DAC_MODE`` the only possible value will remain 16.
-
-This function will return ``true`` on success or ``fail`` in case of failure.
-
-When failed, an error message will be printed if subscribed.
-
-begin (Slave Mode)
-^^^^^^^^^^^^^^^^^^
-
-Performs initialization before use - creates buffers, task handling underlying driver messages, configuring and starting the driver operation.
-
-This version initializes I2S in SLAVE mode (see previous entry for MASTER mode).
-
-.. code-block:: arduino
-
-    int begin(int mode, int bitsPerSample)
+    bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask=-1)
 
 Parameters:
 
-* [in] ``mode`` one of above mentioned modes for example ``I2S_PHILIPS_MODE``.
+* [in] ``mode`` one of above mentioned operation mode, for example ``I2S_MODE_STD``.
 
-* [in] ``bitsPerSample`` is the umber of bits in a channel sample. Currently, the only supported value is only 16 - other than this value will print warning, but continue to operate, however the resulting audio quality may suffer and the app may crash.
+* [in] ``rate`` is the sampling rate in Hz, for example ``16000``.
 
-For ``ADC_DAC_MODE`` the only possible value will remain 16.
+* [in] ``bits_cfg``  is the number of bits in a channel sample, for example ``I2S_DATA_BIT_WIDTH_16BIT``.
+
+* [in] ``ch`` is the slot mode, for example ``I2S_SLOT_MODE_STEREO``.
+
+* [in] ``slot_mask`` is the slot mask, for example ``0b11``. This parameter is optional and defaults to ``-1`` (not used).
 
 This function will return ``true`` on success or ``fail`` in case of failure.
 
-When failed, an error message will be printed if subscribed.
+When failed, an error message will be printed if the correct log level is set.
 
 end
 ^^^
@@ -165,402 +165,393 @@ Performs safe deinitialization - free buffers, destroy task, end driver operatio
 Pin setup
 *********
 
-Pins can be changed in two ways- 1st constants, 2nd functions.
+The function to set the pins will depend on the operation mode.
 
-.. note:: Shared data pin can be equal to any other data pin, but must not be equal to clock pin nor frame sync pin! Input and Output pins must not be equal, but one of them can be equal to shared data pin!
+setPins
+^^^^^^^
 
-.. code-block:: arduino
-
-    sckPin != fsPin != outSdPin != inSdPin
-
-.. code-block:: arduino
-
-    sckPin != fsPin != sdPin
-
-By default, the pin numbers are defined in constants in the header file. You can redefine any of those constants before including ``I2S.h``. This way the driver will use these new default values and you will not need to specify pins in your code. The constants and their default values are:
-
-* ``PIN_I2S_SCK`` 14
-* ``PIN_I2S_FS`` 25
-* ``PIN_I2S_SD`` 26
-* ``PIN_I2S_SD_OUT`` 26
-* ``PIN_I2S_SD_IN`` 35
-
-The second option to change pins is using the following functions. These functions can be called on either on initialized or uninitialized object.
-
-If called on the initialized object (after calling ``begin``) the pins will change during operation.
-If called on the uninitialized object (before calling ``begin``, or after calling ``end``) the new pin setup will be used on next initialization.
-
-setSckPin
-^^^^^^^^^
-
-Set and apply clock pin.
+Set the pins for the I2S interface when using the standard or TDM mode.
 
 .. code-block:: arduino
 
-  int setSckPin(int sckPin)
+  void setPins(int8_t bclk, int8_t ws, int8_t dout, int8_t din=-1, int8_t mclk=-1)
 
-This function will return ``true`` on success or ``fail`` in case of failure.
+Parameters:
 
-setFsPin
-^^^^^^^^
+* [in] ``bclk`` is the bit clock pin.
 
-Set and apply frame sync pin.
+* [in] ``ws`` is the word select pin.
 
-.. code-block:: arduino
+* [in] ``dout`` is the data output pin. Can be set to ``-1`` if not used.
 
-  int setFsPin(int fsPin)
+* [in] ``din`` is the data input pin. This parameter is optional and defaults to ``-1`` (not used).
 
-This function will return ``true`` on success or ``fail`` in case of failure.
+* [in] ``mclk`` is the master clock pin. This parameter is optional and defaults to ``-1`` (not used).
 
-setDataPin
-^^^^^^^^^^
-
-Set and apply shared data pin used in simplex mode.
-
-.. code-block:: arduino
-
-  int setDataPin(int sdPin)
-
-This function will return ``true`` on success or ``fail`` in case of failure.
-
-setDataInPin
+setPinsPdmTx
 ^^^^^^^^^^^^
 
-Set and apply data input pin.
+Set the pins for the I2S interface when using the PDM TX mode.
 
 .. code-block:: arduino
 
-  int setDataInPin(int inSdPin)
+  void setPinsPdmTx(int8_t clk, int8_t dout0, int8_t dout1=-1)
 
-This function will return ``true`` on success or ``fail`` in case of failure.
+Parameters:
 
-setDataOutPin
-^^^^^^^^^^^^^
+* [in] ``clk`` is the clock pin.
 
-Set and apply data output pin.
+* [in] ``dout0`` is the data output pin 0.
 
-.. code-block:: arduino
+* [in] ``dout1`` is the data output pin 1. This parameter is optional and defaults to ``-1`` (not used).
 
-  int setDataOutPin(int outSdPin)
-
-This function will return ``true`` on success or ``fail`` in case of failure.
-
-setAllPins
-^^^^^^^^^^
-
-Set all pins using given values in parameters. This is simply a wrapper of four functions mentioned above.
-
-.. code-block:: arduino
-
-  int setAllPins(int sckPin, int fsPin, int sdPin, int outSdPin, int inSdPin)
-
-Set all pins to default i.e. take values from constants mentioned above. This simply calls the the function with the following constants.
-
-* ``PIN_I2S_SCK`` 14
-* ``PIN_I2S_FS`` 25
-* ``PIN_I2S_SD`` 26
-* ``PIN_I2S_SD_OUT`` 26
-* ``PIN_I2S_SD_IN`` 35
-
-.. code-block:: arduino
-
-  int setAllPins()
-
-getSckPin
-^^^^^^^^^
-
-Get the current value of the clock pin.
-
-.. code-block:: arduino
-
-  int getSckPin()
-
-getFsPin
-^^^^^^^^
-
-Get the current value of frame sync pin.
-
-.. code-block:: arduino
-
-  int getFsPin()
-
-getDataPin
-^^^^^^^^^^
-
-Get the current value of shared data pin.
-
-.. code-block:: arduino
-
-  int getDataPin()
-
-getDataInPin
+setPinsPdmRx
 ^^^^^^^^^^^^
 
-Get the current value of data input pin.
+Set the pins for the I2S interface when using the PDM RX mode.
 
 .. code-block:: arduino
 
-  int getDataInPin()
+  void setPinsPdmRx(int8_t clk, int8_t din0, int8_t din1=-1, int8_t din2=-1, int8_t din3=-1)
 
-getDataOutPin
-^^^^^^^^^^^^^
+Parameters:
 
-Get the current value of data output pin.
+* [in] ``clk`` is the clock pin.
 
-.. code-block:: arduino
+* [in] ``din0`` is the data input pin 0.
 
-  int getDataOutPin()
+* [in] ``din1`` is the data input pin 1. This parameter is optional and defaults to ``-1`` (not used).
 
-onTransmit
-^^^^^^^^^^
+* [in] ``din2`` is the data input pin 2. This parameter is optional and defaults to ``-1`` (not used).
 
-Register the function to be called on each successful transmit event.
+* [in] ``din3`` is the data input pin 3. This parameter is optional and defaults to ``-1`` (not used).
 
-.. code-block:: arduino
+setInverted
+^^^^^^^^^^^
 
-  void onTransmit(void(*)(void))
-
-onReceive
-^^^^^^^^^
-
-Register the function to be called on each successful receives event.
+Set which pins have inverted logic when using the standard or TDM mode. Data pins cannot be inverted.
 
 .. code-block:: arduino
 
-  void onReceive(void(*)(void))
+  void setInverted(bool bclk, bool ws, bool mclk=false)
 
-setBufferSize
-^^^^^^^^^^^^^
+Parameters:
 
-Set the size of buffer.
+* [in] ``bclk`` true if the bit clock pin is inverted. False otherwise.
 
-.. code-block:: arduino
+* [in] ``ws`` true if the word select pin is inverted. False otherwise.
 
-  int setBufferSize(int bufferSize)
+* [in] ``mclk`` true if the master clock pin is inverted. False otherwise. This parameter is optional and defaults to ``false``.
 
-This function can be called on both the initialized or uninitialized driver.
+setInvertedPdm
+^^^^^^^^^^^^^^
 
-If called on initialized, it will change internal values for buffer size and re-initialize driver with new value.
-If called on uninitialized, it will only change the internal values which will be used for next initialization.
-
-Parameter ``bufferSize`` must be in range from 8 to 1024 and the unit is sample words. The default value is 128.
-
-Example: 16 bit sample, dual channel, buffer size for input: 
-
-  ``128 = 2B sample * 2 channels * 128 buffer size * buffer count (default 2) = 1024B``
-  
-And more ```1024B`` for output buffer in total of ``2kB`` used.
-
-This function always assumes dual-channel, keeping the same size even for MONO modes.
-
-This function will return ``true`` on success or ``fail`` in case of failure.
-
-When failed, an error message will be printed.
-
-getBufferSize
-^^^^^^^^^^^^^
-
-Get current buffer sizes in sample words (see description for ``setBufferSize``).
+Set which pins have inverted logic when using the PDM mode. Data pins cannot be inverted.
 
 .. code-block:: arduino
 
-  int getBufferSize()
+  void setInvertedPdm(bool clk)
 
-Duplex vs Simplex
+Parameters:
+
+* [in] ``clk`` true if the clock pin is inverted. False otherwise.
+
+I2S Configuration
 *****************
 
-Original Arduino I2S library supports only *simplex* mode (only transmit or only receive at a time). For compatibility, we kept this behavior, but ESP natively supports *duplex* mode (receive and transmit simultaneously on separate pins).
-By default this library is initialized in simplex mode as it would in Arduino, switching input and output on ``sdPin`` (constant ``PIN_I2S_SD`` default pin 26).
+The I2S configuration can be changed during operation.
 
-setDuplex
-^^^^^^^^^
+configureTX
+^^^^^^^^^^^
 
-Switch to duplex mode and use separate pins:
+Configure the I2S TX channel.
 
 .. code-block:: arduino
 
-  int setDuplex()
+  bool configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask=-1)
 
-input: inSdPin (constant PIN_I2S_SD_IN, default 35)
-output: outSdPin (constant PIN_I2S_SD, default 26)
+Parameters:
 
-setSimplex
+* [in] ``rate`` is the sampling rate in Hz, for example ``16000``.
+
+* [in] ``bits_cfg``  is the number of bits in a channel sample, for example ``I2S_DATA_BIT_WIDTH_16BIT``.
+
+* [in] ``ch`` is the slot mode, for example ``I2S_SLOT_MODE_STEREO``.
+
+* [in] ``slot_mask`` is the slot mask, for example ``0b11``. This parameter is optional and defaults to ``-1`` (not used).
+
+This function will return ``true`` on success or ``fail`` in case of failure.
+
+When failed, an error message will be printed if the correct log level is set.
+
+configureRX
+^^^^^^^^^^^
+
+Configure the I2S RX channel.
+
+.. code-block:: arduino
+
+  bool configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform=I2S_RX_TRANSFORM_NONE)
+
+Parameters:
+
+* [in] ``rate`` is the sampling rate in Hz, for example ``16000``.
+
+* [in] ``bits_cfg``  is the number of bits in a channel sample, for example ``I2S_DATA_BIT_WIDTH_16BIT``.
+
+* [in] ``ch`` is the slot mode, for example ``I2S_SLOT_MODE_STEREO``.
+
+* [in] ``transform`` is the transform mode, for example ``I2S_RX_TRANSFORM_NONE``.
+         This can be used to apply a transformation/conversion to the received data.
+         The supported values are: ``I2S_RX_TRANSFORM_NONE`` (no transformation),
+         ``I2S_RX_TRANSFORM_32_TO_16`` (convert from 32 bits of data width to 16 bits) and
+         ``I2S_RX_TRANSFORM_16_STEREO_TO_MONO`` (convert from stereo to mono when using 16 bits of data width).
+
+This function will return ``true`` on success or ``fail`` in case of failure.
+
+When failed, an error message will be printed if the correct log level is set.
+
+txChan
+^^^^^^
+
+Get the TX channel handler pointer.
+
+.. code-block:: arduino
+
+  i2s_chan_handle_t txChan()
+
+txSampleRate
+^^^^^^^^^^^^
+
+Get the TX sample rate.
+
+.. code-block:: arduino
+
+  uint32_t txSampleRate()
+
+txDataWidth
+^^^^^^^^^^^
+
+Get the TX data width (8, 16 or 32 bits).
+
+.. code-block:: arduino
+
+  i2s_data_bit_width_t txDataWidth()
+
+txSlotMode
 ^^^^^^^^^^
 
-(Default mode)
-
-Switch to simplex mode using shared data pin sdPin (constant PIN_I2S_SD, default 26).
+Get the TX slot mode (stereo or mono).
 
 .. code-block:: arduino
 
-  int setSimplex()
+  i2s_slot_mode_t txSlotMode()
 
-isDuplex
-^^^^^^^^
+rxChan
+^^^^^^
 
-Returns 1 if current mode is duplex, 0 if current mode is simplex (default).
+Get the RX channel handler pointer.
 
 .. code-block:: arduino
 
-  int isDuplex()
+  i2s_chan_handle_t rxChan()
 
-Data stream
-***********
+rxSampleRate
+^^^^^^^^^^^^
 
-available
+Get the RX sample rate.
+
+.. code-block:: arduino
+
+  uint32_t rxSampleRate()
+
+rxDataWidth
+^^^^^^^^^^^
+
+Get the RX data width (8, 16 or 32 bits).
+
+.. code-block:: arduino
+
+  i2s_data_bit_width_t rxDataWidth()
+
+rxSlotMode
+^^^^^^^^^^
+
+Get the RX slot mode (stereo or mono).
+
+.. code-block:: arduino
+
+  i2s_slot_mode_t rxSlotMode()
+
+I/O Operations
+**************
+
+readBytes
 ^^^^^^^^^
 
-Returns number of **bytes** ready to read.
+Read a certain amount of data bytes from the I2S interface.
 
 .. code-block:: arduino
 
-  int available()
+  size_t readBytes(char *buffer, size_t size)
+
+Parameters:
+
+* [in] ``buffer`` is the buffer to store the read data. The buffer must be at least ``size`` bytes long.
+
+* [in] ``size`` is the number of bytes to read.
+
+This function will return the number of bytes read.
 
 read
 ^^^^
 
-Read ``size`` bytes from internal buffer if possible.
-
-.. code-block:: arduino
-
-  int read(void* buffer, size_t size)
-
-This function is non-blocking, i.e. if the requested number of bytes is not available, it will return as much as possible without waiting.
-
-Hint: use ``available()`` before calling this function.
-
-Parameters:
-
-[out] ``void* buffer`` buffer into which will be copied data read from internal buffer. WARNING: this buffer must be allocated before use!
-
-[in] ``size_t size`` number of bytes required to be read.
-
-Returns number of successfully bytes read. Returns ``false``` in case of reading error.
-
-Read one sample.
+Read the next available byte from the I2S interface.
 
 .. code-block:: arduino
 
   int read()
 
+This function will return the next available byte or ``-1`` if no data is available
+or an error occurred.
+
+write
+
+There are two versions of the write function:
+
+The first version writes a certain amount of data bytes to the I2S interface.
+
+.. code-block:: arduino
+
+  size_t write(uint8_t *buffer, size_t size)
+
+Parameters:
+
+* [in] ``buffer`` is the buffer containing the data to be written.
+
+* [in] ``size`` is the number of bytes to write from the buffer.
+
+This function will return the number of bytes written.
+
+The second version writes a single byte to the I2S interface.
+
+.. code-block:: arduino
+
+  size_t write(uint8_t d)
+
+Parameters:
+
+* [in] ``d`` is the byte to be written.
+
+This function will return ``1`` if the byte was written or ``0`` if an error occurred.
+
+available
+^^^^^^^^^
+
+Get if there is data available to be read.
+
+.. code-block:: arduino
+
+  int available()
+
+This function will return ``I2S_READ_CHUNK_SIZE`` if there is data available to be read or ``-1`` if not.
+
 peek
 ^^^^
 
-Read one sample from the internal buffer and returns it.
+Get the next available byte from the I2S interface without removing it from the buffer. Currently not implemented.
 
 .. code-block:: arduino
 
   int peek()
 
-Repeated peeks will be returned in the same sample until ``read`` is called.
+This function will currently always return ``-1``.
 
-flush
-^^^^^
+lastError
+^^^^^^^^^
 
-Force write internal buffer to driver.
-
-.. code-block:: arduino
-
-  void flush()
-
-write
-^^^^^
-
-Write a single byte.
+Get the last error code for an I/O operation on the I2S interface.
 
 .. code-block:: arduino
 
-  size_t write(uint8_t)
+  int lastError()
 
-Single-sample writes are blocking - waiting until there is free space in the internal buffer to be written into.
+recordWAV
+^^^^^^^^^
 
-Returns number of successfully written bytes, in this case, 1. Returns 0 on error.
-
-Write single sample.
-
-.. code-block:: arduino
-
-  size_t write(int32_t)
-
-Single-sample writes are blocking - waiting until there is free space in the internal buffer to be written into.
-
-Returns number of successfully written bytes. Returns 0 on error.
-
-Expected return number is ``bitsPerSample/8``.
-
-Write buffer of supplied size;
+Record a short PCM WAV to memory with the current RX settings.
+Returns a buffer that must be freed by the user.
 
 .. code-block:: arduino
 
-  size_t write(const void *buffer, size_t size)
+  uint8_t * recordWAV(size_t rec_seconds, size_t * out_size)
 
 Parameters:
 
-[in] ``const void *buffer`` buffer to be written
-[in] ``size_t size`` size of buffer in bytes
+* [in] ``rec_seconds`` is the number of seconds to record.
 
-Returns number of successfully written bytes. Returns 0 in case of error.
-The expected return number is equal to ``size``.
+* [out] ``out_size`` is the size of the returned buffer in bytes.
 
-write
-^^^^^
+This function will return a pointer to the buffer containing the recorded WAV data or ``NULL`` if an error occurred.
 
-This is a wrapper of the previous function performing typecast from `uint8_t*`` to ``void*``.
+playWAV
+^^^^^^^
 
-.. code-block:: arduino
-
-  size_t write(const uint8_t *buffer, size_t size)
-
-availableForWrite
-^^^^^^^^^^^^^^^^^
-
-Returns number of bytes available for write.
+Play a PCM WAV from memory with the current TX settings.
 
 .. code-block:: arduino
 
-  int availableForWrite()
+  void playWAV(uint8_t * data, size_t len)
 
-write_blocking
-^^^^^^^^^^^^^^
+Parameters:
 
-Core function implementing blocking write, i.e. waits until all requested data are written.
+* [in] ``data`` is the buffer containing the WAV data.
 
-.. code-block:: arduino
+* [in] ``len`` is the size of the buffer in bytes.
 
-  size_t write_blocking(const void *buffer, size_t size)
+playMP3
+^^^^^^^
 
-WARNING: If too many bytes are requested, this can cause WatchDog Trigger Reset!
-
-Returns number of successfully written bytes. Returns 0 on error.
-
-write_nonblocking
-^^^^^^^^^^^^^^^^^
-
-Core function implementing non-blocking write, i.e. writes as much as possible and exits.
+Play a MP3 from memory with the current TX settings.
 
 .. code-block:: arduino
 
-  size_t write_nonblocking(const void *buffer, size_t size)
+  bool playMP3(uint8_t *src, size_t src_len)
 
-Returns number of successfully written bytes. Returns 0 on error.
+Parameters:
+
+* [in] ``src`` is the buffer containing the MP3 data.
+
+* [in] ``src_len`` is the size of the buffer in bytes.
+
+This function will return ``true`` on success or ``false`` in case of failure.
+
+When failed, an error message will be printed if the correct log level is set.
 
 Sample code
 -----------
 
-.. code-block:: c
+.. code-block:: arduino
 
-  #include <I2S.h>
+  #include <ESP_I2S.h>
+
   const int buff_size = 128;
   int available, read;
   uint8_t buffer[buff_size];
+  I2SClass I2S;
 
-  I2S.begin(I2S_PHILIPS_MODE, 16000, 16);
-  I2S.read(); // Switch the driver in simplex mode to receive
-  available = I2S.available();
-  if(available < buff_size){
-    read = I2S.read(buffer, available);
-  }else{
-    read = I2S.read(buffer, buff_size);
+  void setup() {
+    I2S.setPins(5, 25, 26, 35, 0); //SCK, WS, SDOUT, SDIN, MCLK
+    I2S.begin(I2S_MODE_STD, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO);
+    I2S.read();
+    available = I2S.available();
+    if(available < buff_size) {
+      read = I2S.read(buffer, available);
+    } else {
+      read = I2S.read(buffer, buff_size);
+    }
+    I2S.write(buffer, read);
+    I2S.end();
   }
-  I2S.write(buffer, read);
-  I2S.end();
+
+  void loop() {}
