@@ -100,7 +100,8 @@ public:
 #if SOC_I2C_SUPPORT_SLAVE
         return begin(address, -1, -1, 0);
 #else
-        log_e("I2C slave is not supported by you SoC!!!");
+        log_e("I2C slave is not supported on " CONFIG_IDF_TARGET);
+        return false;
 #endif
     }
 
