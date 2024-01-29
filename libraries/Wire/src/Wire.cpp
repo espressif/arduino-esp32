@@ -556,7 +556,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
 }
 
 size_t TwoWire::requestFrom(uint8_t address, size_t size){
-	return requestFrom(address, size, true);
+    return requestFrom(address, size, true);
 }
 
 size_t TwoWire::write(uint8_t data)
