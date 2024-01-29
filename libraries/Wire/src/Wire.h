@@ -105,7 +105,6 @@ public:
 #endif
     }
 
-
     bool end() override;
 
     bool setClock(uint32_t freq) override;
@@ -119,7 +118,6 @@ public:
 
     void onReceive(void(*)(int)) override;
     void onRequest(void(*)(void)) override;
-
     
     //call setPins() first, so that begin() can be called without arguments from libraries
     bool setPins(int sda, int scl);
@@ -135,8 +133,6 @@ public:
     uint16_t getTimeOut();
 
     uint32_t getClock();
-
-
 
     size_t write(uint8_t) override;
     size_t write(const uint8_t *, size_t) override;
