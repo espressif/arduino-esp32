@@ -34,7 +34,7 @@
 enum HTTPUploadStatus { UPLOAD_FILE_START, UPLOAD_FILE_WRITE, UPLOAD_FILE_END,
                         UPLOAD_FILE_ABORTED };
 enum HTTPClientStatus { HC_NONE, HC_WAIT_READ, HC_WAIT_CLOSE };
-enum HTTPAuthMethod { BASIC_AUTH, DIGEST_AUTH };
+enum HTTPAuthMethod { BASIC_AUTH, DIGEST_AUTH, OTHER_AUTH };
 
 #define HTTP_DOWNLOAD_UNIT_SIZE 1436
 
@@ -46,6 +46,7 @@ enum HTTPAuthMethod { BASIC_AUTH, DIGEST_AUTH };
 #define HTTP_MAX_POST_WAIT 5000 //ms to wait for POST data to arrive
 #define HTTP_MAX_SEND_WAIT 5000 //ms to wait for data chunk to be ACKed
 #define HTTP_MAX_CLOSE_WAIT 2000 //ms to wait for the client to close the connection
+#define HTTP_MAX_BASIC_AUTH_LEN 256 // maximum length of a basic Auth base64 encoded username:password string
 
 #define CONTENT_LENGTH_UNKNOWN ((size_t) -1)
 #define CONTENT_LENGTH_NOT_SET ((size_t) -2)
@@ -82,12 +83,41 @@ public:
   virtual void close();
   void stop();
 
+  const String AuthTypeDigest = F("Digest");
+  const String AuthTypeBasic = F("Basic");
+
+  /* Callbackhandler for authentication. The extra parameters depend on the
+   * HTTPAuthMethod mode:
+   *
+   * BASIC_AUTH         enteredUsernameOrReq	contains the username entered by the user
+   *                    param[0]		          password entered (in the clear)
+   *                    param[1]		          authentication realm.
+   *
+   * To return - the password the user entered password is compared to. Or Null on fail.
+   *
+   * DIGEST_AUTH        enteredUsernameOrReq    contains the username entered by the user
+   *                    param[0]                autenticaiton realm
+   *                    param[1]                authentication URI
+   *
+   * To return - the password of which the digest will be based on for comparison. Or NULL
+   * to fail.
+   *
+   * OTHER_AUTH         enteredUsernameOrReq    rest of the auth line.
+   *                    params                  empty array
+   *
+   * To return - NULL to fail; or any string.
+   */
+  typedef std::function<String * (HTTPAuthMethod mode, String enteredUsernameOrReq, String extraParams[])> THandlerFunctionAuthCheck;
+
+  bool authenticate(THandlerFunctionAuthCheck fn);
   bool authenticate(const char * username, const char * password);
+  bool authenticateBasicSHA1(const char * _username, const char * _sha1AsBase64orHex);
+
   void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char* realm = NULL, const String& authFailMsg = String("") );
 
   typedef std::function<void(void)> THandlerFunction;
   void on(const Uri &uri, THandlerFunction fn);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn); 
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
   void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn); //ufn handles file uploads
   void addHandler(RequestHandler* handler);
   void serveStatic(const char* uri, fs::FS& fs, const char* path, const char* cache_header = NULL );

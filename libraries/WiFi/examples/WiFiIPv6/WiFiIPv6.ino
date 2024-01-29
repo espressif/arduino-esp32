@@ -70,16 +70,12 @@ void WiFiEvent(WiFiEvent_t event){
         case ARDUINO_EVENT_WIFI_AP_START:
             //can set ap hostname here
             WiFi.softAPsetHostname(AP_SSID);
-            //enable ap ipv6 here
-            WiFi.softAPenableIpV6();
             break;
         case ARDUINO_EVENT_WIFI_STA_START:
             //set sta hostname here
             WiFi.setHostname(AP_SSID);
             break;
         case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-            //enable sta ipv6 here
-            WiFi.enableIpV6();
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
             Serial.print("STA IPv6: ");
@@ -107,7 +103,11 @@ void setup(){
     WiFi.disconnect(true);
     WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
     WiFi.mode(WIFI_MODE_APSTA);
+    //enable ap ipv6 here
+    WiFi.softAPenableIPv6();
     WiFi.softAP(AP_SSID);
+    //enable sta ipv6 here
+    WiFi.enableIPv6();
     WiFi.begin(STA_SSID, STA_PASS);
 }
 
