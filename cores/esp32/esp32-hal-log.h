@@ -90,6 +90,8 @@ void log_print_buf(const uint8_t *b, size_t len);
 #define ARDUHAL_SHORT_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
 #define ARDUHAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long) (esp_timer_get_time() / 1000ULL), pathToFileName(__FILE__), __LINE__, __FUNCTION__
 
+//esp_rom_printf(DRAM_STR("ST:%d\n"), frame_pos);
+
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 #ifndef USE_ESP_IDF_LOG
 #define log_v(format, ...) log_printf(ARDUHAL_LOG_FORMAT(V, format), ##__VA_ARGS__)
@@ -206,16 +208,16 @@ void log_print_buf(const uint8_t *b, size_t len);
 #undef ESP_EARLY_LOGD
 #undef ESP_EARLY_LOGV
 
-#define ESP_LOGE(tag, ...)  log_e(__VA_ARGS__)
-#define ESP_LOGW(tag, ...)  log_w(__VA_ARGS__)
-#define ESP_LOGI(tag, ...)  log_i(__VA_ARGS__)
-#define ESP_LOGD(tag, ...)  log_d(__VA_ARGS__)
-#define ESP_LOGV(tag, ...)  log_v(__VA_ARGS__)
-#define ESP_EARLY_LOGE(tag, ...)  isr_log_e(__VA_ARGS__)
-#define ESP_EARLY_LOGW(tag, ...)  isr_log_w(__VA_ARGS__)
-#define ESP_EARLY_LOGI(tag, ...)  isr_log_i(__VA_ARGS__)
-#define ESP_EARLY_LOGD(tag, ...)  isr_log_d(__VA_ARGS__)
-#define ESP_EARLY_LOGV(tag, ...)  isr_log_v(__VA_ARGS__)
+#define ESP_LOGE(tag, format, ...)  log_e("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGW(tag, format, ...)  log_w("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGI(tag, format, ...)  log_i("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGD(tag, format, ...)  log_d("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGV(tag, format, ...)  log_v("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGE(tag, format, ...)  isr_log_e("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGW(tag, format, ...)  isr_log_w("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGI(tag, format, ...)  isr_log_i("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGD(tag, format, ...)  isr_log_d("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGV(tag, format, ...)  isr_log_v("[%s] " format, tag, ##__VA_ARGS__)
 #endif
 #endif
 

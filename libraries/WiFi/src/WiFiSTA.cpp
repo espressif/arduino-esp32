@@ -26,7 +26,6 @@
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
 
-extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -42,8 +41,13 @@ extern "C" {
 #include "lwip/dns.h"
 #include <esp_smartconfig.h>
 #include <esp_netif.h>
+#include "esp_mac.h"
+
+#if __has_include ("esp_eap_client.h")
+#include "esp_eap_client.h"
+#else
 #include "esp_wpa2.h"
-}
+#endif
 
 // -----------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------- Private functions ------------------------------------------------
@@ -51,7 +55,7 @@ extern "C" {
 
 esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
 esp_err_t set_esp_interface_dns(esp_interface_t interface, IPAddress main_dns=IPAddress(), IPAddress backup_dns=IPAddress(), IPAddress fallback_dns=IPAddress());
-esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPAddress(), IPAddress gateway=IPAddress(), IPAddress subnet=IPAddress());
+esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=INADDR_NONE, IPAddress gateway=INADDR_NONE, IPAddress subnet=INADDR_NONE, IPAddress dhcp_lease_start=INADDR_NONE);
 static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs);
 
 static size_t _wifi_strncpy(char * dst, const char * src, size_t dst_len){
@@ -83,7 +87,7 @@ static bool sta_config_equal(const wifi_config_t& lhs, const wifi_config_t& rhs)
     return true;
 }
 
-static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL, const char * password=NULL, const uint8_t * bssid=NULL, uint8_t channel=0, wifi_scan_method_t scan_method=WIFI_ALL_CHANNEL_SCAN, wifi_sort_method_t sort_method=WIFI_CONNECT_AP_BY_SIGNAL, uint16_t listen_interval=0, bool pmf_required=false){
+static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL, const char * password=NULL, const uint8_t * bssid=NULL, uint8_t channel=0, wifi_auth_mode_t min_security=WIFI_AUTH_WPA2_PSK, wifi_scan_method_t scan_method=WIFI_ALL_CHANNEL_SCAN, wifi_sort_method_t sort_method=WIFI_CONNECT_AP_BY_SIGNAL, uint16_t listen_interval=0, bool pmf_required=false){
     wifi_config->sta.channel = channel;
     wifi_config->sta.listen_interval = listen_interval;
     wifi_config->sta.scan_method = scan_method;//WIFI_ALL_CHANNEL_SCAN or WIFI_FAST_SCAN
@@ -99,7 +103,7 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
     if(ssid != NULL && ssid[0] != 0){
         _wifi_strncpy((char*)wifi_config->sta.ssid, ssid, 32);
     	if(password != NULL && password[0] != 0){
-    		wifi_config->sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    		wifi_config->sta.threshold.authmode = min_security;
     		_wifi_strncpy((char*)wifi_config->sta.password, password, 64);
     	}
         if(bssid != NULL){
@@ -115,8 +119,11 @@ static void wifi_sta_config(wifi_config_t * wifi_config, const char * ssid=NULL,
 
 bool WiFiSTAClass::_autoReconnect = true;
 bool WiFiSTAClass::_useStaticIp = false;
+wifi_auth_mode_t WiFiSTAClass::_minSecurity = WIFI_AUTH_WPA2_PSK;
+wifi_scan_method_t WiFiSTAClass::_scanMethod = WIFI_FAST_SCAN;
+wifi_sort_method_t WiFiSTAClass::_sortMethod = WIFI_CONNECT_AP_BY_SIGNAL;
 
-static wl_status_t _sta_status = WL_NO_SHIELD;
+static wl_status_t _sta_status = WL_STOPPED;
 static EventGroupHandle_t _sta_status_group = NULL;
 
 void WiFiSTAClass::_setStatus(wl_status_t status)
@@ -189,19 +196,40 @@ wl_status_t WiFiSTAClass::begin(const char* wpa2_ssid, wpa2_auth_method_t method
     }
 
     if(ca_pem) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_ca_cert((uint8_t *)ca_pem, strlen(ca_pem));
+#else
         esp_wifi_sta_wpa2_ent_set_ca_cert((uint8_t *)ca_pem, strlen(ca_pem));
+#endif
     }
 
     if(client_crt) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_certificate_and_key((uint8_t *)client_crt, strlen(client_crt), (uint8_t *)client_key, strlen(client_key), NULL, 0);
+#else
         esp_wifi_sta_wpa2_ent_set_cert_key((uint8_t *)client_crt, strlen(client_crt), (uint8_t *)client_key, strlen(client_key), NULL, 0);
+#endif
     }
 
+#if __has_include ("esp_eap_client.h")
+    esp_eap_client_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
+#else
     esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
+#endif
     if(method == WPA2_AUTH_PEAP || method == WPA2_AUTH_TTLS) {
+#if __has_include ("esp_eap_client.h")
+        esp_eap_client_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
+        esp_eap_client_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
+#else
         esp_wifi_sta_wpa2_ent_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
         esp_wifi_sta_wpa2_ent_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
+#endif
     }
+#if __has_include ("esp_eap_client.h")
+    esp_wifi_sta_enterprise_enable(); //set config settings to enable function
+#else
     esp_wifi_sta_wpa2_ent_enable(); //set config settings to enable function
+#endif
     WiFi.begin(wpa2_ssid); //connect to wifi
 
     return status();
@@ -237,18 +265,8 @@ wl_status_t WiFiSTAClass::begin(const char* ssid, const char *passphrase, int32_
 
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
-    _wifi_strncpy(reinterpret_cast<char*>(conf.sta.ssid), ssid, 32);
 
-    if(passphrase) {
-        _wifi_strncpy(reinterpret_cast<char*>(conf.sta.password), passphrase, 64);
-    }
-
-    if(channel == 0) {
-        // If no specific channel specified, then do an slower WIFI_ALL_CHANNEL_SCAN
-        wifi_sta_config(&conf, ssid, passphrase, bssid, channel, WIFI_ALL_CHANNEL_SCAN);
-    }
-    else
-        wifi_sta_config(&conf, ssid, passphrase, bssid, channel, WIFI_FAST_SCAN);
+    wifi_sta_config(&conf, ssid, passphrase, bssid, channel, _minSecurity, _scanMethod, _sortMethod);
 
     wifi_config_t current_conf;
     if(esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &current_conf) != ESP_OK){
@@ -344,11 +362,12 @@ bool WiFiSTAClass::reconnect()
 }
 
 /**
- * Disconnect from the network
- * @param wifioff
- * @return  one value of wl_status_t enum
+ * Disconnect from the network.
+ * @param wifioff `true` to turn the Wi-Fi radio off.
+ * @param eraseap `true` to erase the AP configuration from the NVS memory.
+ * @return `true` when successful.
  */
-bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
+bool WiFiSTAClass::disconnectAsync(bool wifioff, bool eraseap)
 {
     wifi_config_t conf;
     wifi_sta_config(&conf);
@@ -370,6 +389,47 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap)
     }
 
     return false;
+}
+
+/**
+ * Disconnect from the network.
+ * @param wifioff `true` to turn the Wi-Fi radio off.
+ * @param eraseap `true` to erase the AP configuration from the NVS memory.
+ * @param timeoutLength timeout to wait for status change
+ * @return `true` when successful.
+ */
+bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap, unsigned long timeoutLength)
+{
+    if (!disconnectAsync(wifioff, eraseap)) {
+        return false;
+    }
+    if (!timeoutLength) {
+        return true;
+    }
+    const unsigned long start = millis();
+    while ((WiFiGenericClass::getStatusBits() & STA_CONNECTED_BIT) != 0) {
+        if((millis() - start) >= timeoutLength){
+            return false;
+        }
+        delay(2);
+    }
+    return true;
+}
+
+/**
+ * @brief  Reset WiFi settings in NVS to default values.
+ * @return true if erase succeeded
+ * @note: Resets SSID, password, protocol, mode, etc.
+ * These settings are maintained by WiFi driver in IDF.
+ * WiFi driver must be initialized.
+ */
+bool WiFiSTAClass::eraseAP(void) {
+    if(WiFi.getMode()==WIFI_MODE_NULL) {
+        if(!WiFi.enableSTA(true))
+            return false;
+    }
+
+    return esp_wifi_restore()==ESP_OK;
 }
 
 /**
@@ -396,6 +456,39 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
 }
 
 /**
+ * Sets the working bandwidth of the STA mode
+ * @param m wifi_bandwidth_t
+ */
+bool WiFiSTAClass::bandwidth(wifi_bandwidth_t bandwidth) {
+    if(!WiFi.enableSTA(true)) {
+        log_e("STA enable failed!");
+        return false;
+    }
+
+    esp_err_t err;
+    err = esp_wifi_set_bandwidth((wifi_interface_t)ESP_IF_WIFI_STA, bandwidth);
+    if(err){
+        log_e("Could not set STA bandwidth!");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Change DNS server for static IP configuration
+ * @param dns1       Static DNS server 1
+ * @param dns2       Static DNS server 2 (optional)
+ */
+bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
+{
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL)
+        return false;
+    esp_err_t err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
+    return err == ESP_OK;
+}
+
+/**
  * is STA interface connected?
  * @return true if STA is connected to an AP
  */
@@ -404,10 +497,42 @@ bool WiFiSTAClass::isConnected()
     return (status() == WL_CONNECTED);
 }
 
+/**
+ * Set the minimum security for AP to be considered connectable.
+ * Must be called before WiFi.begin().
+ * @param minSecurity wifi_auth_mode_t
+ */
+void WiFiSTAClass::setMinSecurity(wifi_auth_mode_t minSecurity)
+{
+    _minSecurity = minSecurity;
+}
 
 /**
- * Setting the ESP32 station to connect to the AP (which is recorded)
+ * Set the way that AP is chosen. 
+ * First SSID match[WIFI_FAST_SCAN] or Sorted[WIFI_ALL_CHANNEL_SCAN] (RSSI or Security)
+ * Must be called before WiFi.begin()
+ * @param scanMethod wifi_scan_method_t
+ */
+void WiFiSTAClass::setScanMethod(wifi_scan_method_t scanMethod)
+{
+    _scanMethod = scanMethod;
+}
+
+/**
+ * Set the way that AP is sorted. (requires scanMethod WIFI_ALL_CHANNEL_SCAN) 
+ * By SSID[WIFI_CONNECT_AP_BY_SIGNAL] or Security[WIFI_CONNECT_AP_BY_SECURITY]
+ * Must be called before WiFi.begin()
+ * @param sortMethod wifi_sort_method_t
+ */
+void WiFiSTAClass::setSortMethod(wifi_sort_method_t sortMethod)
+{
+    _sortMethod = sortMethod;
+}
+
+/**
+ * Deprecated. Setting the ESP32 station to connect to the AP (which is recorded)
  * automatically or not when powered on. Enable auto-connect by default.
+ * @deprecated use `setAutoReconnect`
  * @param autoConnect bool
  * @return if saved
  */
@@ -417,8 +542,9 @@ bool WiFiSTAClass::setAutoConnect(bool autoConnect)
 }
 
 /**
- * Checks if ESP32 station mode will connect to AP
+ * Deprecated. Checks if ESP32 station mode will connect to AP
  * automatically or not when it is powered on.
+ * @deprecated use `getAutoReconnect`
  * @return auto connect
  */
 bool WiFiSTAClass::getAutoConnect()
@@ -426,12 +552,20 @@ bool WiFiSTAClass::getAutoConnect()
     return false;//now deprecated
 }
 
+/**
+ * Function used to set the automatic reconnection if the connection is lost. 
+ * @param autoReconnect `true` to enable this option.
+ * @return true 
+ */
 bool WiFiSTAClass::setAutoReconnect(bool autoReconnect)
 {
     _autoReconnect = autoReconnect;
     return true;
 }
-
+/**
+ * Function used to get the automatic reconnection if the connection is lost.
+ * @return The function will return `true` if this setting is enabled.
+ */
 bool WiFiSTAClass::getAutoReconnect()
 {
     return _autoReconnect;
@@ -640,14 +774,23 @@ String WiFiSTAClass::psk() const
  * Return the current bssid / mac associated with the network if configured
  * @return bssid uint8_t *
  */
-uint8_t* WiFiSTAClass::BSSID(void)
+uint8_t* WiFiSTAClass::BSSID(uint8_t* buff)
 {
     static uint8_t bssid[6];
     wifi_ap_record_t info;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
         return NULL;
     }
-    if(!esp_wifi_sta_get_ap_info(&info)) {
+    esp_err_t err = esp_wifi_sta_get_ap_info(&info);
+    if (buff != NULL) {
+        if(err) {
+          memset(buff, 0, 6);
+        } else {
+          memcpy(buff, info.bssid, 6);
+        }
+        return  buff;
+    }
+    if(!err) {
         memcpy(bssid, info.bssid, 6);
         return reinterpret_cast<uint8_t*>(bssid);
     }
@@ -687,30 +830,50 @@ int8_t WiFiSTAClass::RSSI(void)
 
 /**
  * Enable IPv6 on the station interface.
+ * Should be called before WiFi.begin()
+ * 
  * @return true on success
  */
-bool WiFiSTAClass::enableIpV6()
+bool WiFiSTAClass::enableIPv6(bool en)
 {
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return false;
+    if (en) {
+        WiFiGenericClass::setStatusBits(STA_WANT_IP6_BIT);
+    } else {
+        WiFiGenericClass::clearStatusBits(STA_WANT_IP6_BIT);
     }
-    return esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA)) == ESP_OK;
+    return true;
 }
 
 /**
- * Get the station interface IPv6 address.
- * @return IPv6Address
+ * Get the station interface link-local IPv6 address.
+ * @return IPAddress
  */
-IPv6Address WiFiSTAClass::localIPv6()
+IPAddress WiFiSTAClass::localIPv6()
 {
-	esp_ip6_addr_t addr;
+    static esp_ip6_addr_t addr;
     if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
-    if(esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)) {
-        return IPv6Address();
+    if(esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)){
+        return IPAddress(IPv6);
     }
-    return IPv6Address(addr.addr);
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
+}
+
+/**
+ * Get the station interface global IPv6 address.
+ * @return IPAddress
+ */
+IPAddress WiFiSTAClass::globalIPv6()
+{
+    static esp_ip6_addr_t addr;
+    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+        return IPAddress(IPv6);
+    }
+    if(esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), &addr)){
+        return IPAddress(IPv6);
+    }
+    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
 

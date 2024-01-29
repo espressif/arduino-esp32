@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "esp32-hal-gpio.h"
+#include "esp32-hal-periman.h"
 #include "hal/gpio_hal.h"
 #include "soc/soc_caps.h"
 
@@ -89,46 +90,93 @@ static InterruptHandle_t __pinInterruptHandlers[SOC_GPIO_PIN_COUNT] = {0,};
 
 #include "driver/rtc_io.h"
 
+static bool gpioDetachBus(void * bus){
+    return true;
+}
+
 extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
 {
-	if (!GPIO_IS_VALID_GPIO(pin)) {
-        log_e("Invalid pin selected");
-		return;
-	}
-	gpio_config_t conf = {
-		    .pin_bit_mask = (1ULL<<pin),			/*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
-		    .mode = GPIO_MODE_DISABLE,              /*!< GPIO mode: set input/output mode                     */
-		    .pull_up_en = GPIO_PULLUP_DISABLE,      /*!< GPIO pull-up                                         */
-		    .pull_down_en = GPIO_PULLDOWN_DISABLE,  /*!< GPIO pull-down                                       */
-		    .intr_type = GPIO_INTR_DISABLE      	/*!< GPIO interrupt type                                  */
-	};
-	if (mode < 0x20) {//io
-		conf.mode = mode & (INPUT | OUTPUT);
-		if (mode & OPEN_DRAIN) {
-			conf.mode |= GPIO_MODE_DEF_OD;
-		}
-		if (mode & PULLUP) {
-			conf.pull_up_en = GPIO_PULLUP_ENABLE;
-		}
-		if (mode & PULLDOWN) {
-			conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
-		}
-	}
-	if(gpio_config(&conf) != ESP_OK)
-    {
-        log_e("GPIO config failed");
+#ifdef RGB_BUILTIN
+    if (pin == RGB_BUILTIN){
+        __pinMode(RGB_BUILTIN-SOC_GPIO_PIN_COUNT, mode);
         return;
+    }
+#endif
+
+    if (pin >= SOC_GPIO_PIN_COUNT) {
+        log_e("Invalid IO %i selected", pin);
+        return;
+    }
+
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
+        perimanSetBusDeinit(ESP32_BUS_TYPE_GPIO, gpioDetachBus);
+        if(!perimanClearPinBus(pin)){
+            log_e("Deinit of previous bus from IO %i failed", pin);
+            return;
+        }
+    }
+    
+    gpio_hal_context_t gpiohal;
+    gpiohal.dev = GPIO_LL_GET_HW(GPIO_PORT_0);
+
+    gpio_config_t conf = {
+        .pin_bit_mask = (1ULL<<pin),                 /*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
+        .mode = GPIO_MODE_DISABLE,                   /*!< GPIO mode: set input/output mode                     */
+        .pull_up_en = GPIO_PULLUP_DISABLE,           /*!< GPIO pull-up                                         */
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,       /*!< GPIO pull-down                                       */
+        .intr_type = gpiohal.dev->pin[pin].int_type  /*!< GPIO interrupt type - previously set                 */
+    };
+    if (mode < 0x20) {//io
+        conf.mode = mode & (INPUT | OUTPUT);
+        if (mode & OPEN_DRAIN) {
+            conf.mode |= GPIO_MODE_DEF_OD;
+        }
+        if (mode & PULLUP) {
+            conf.pull_up_en = GPIO_PULLUP_ENABLE;
+        }
+        if (mode & PULLDOWN) {
+            conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
+        }
+    }
+    if(gpio_config(&conf) != ESP_OK)
+    {
+        log_e("IO %i config failed", pin);
+        return;
+    }
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL){
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_GPIO, (void *)(pin+1), -1, -1)){
+            //gpioDetachBus((void *)(pin+1));
+            return;
+        }
     }
 }
 
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
-	gpio_set_level((gpio_num_t)pin, val);
+    #ifdef RGB_BUILTIN
+        if(pin == RGB_BUILTIN){
+            //use RMT to set all channels on/off
+            const uint8_t comm_val = val != 0 ? RGB_BRIGHTNESS : 0;
+            neopixelWrite(RGB_BUILTIN, comm_val, comm_val, comm_val);
+            return;
+        }
+    #endif
+        if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL){
+            gpio_set_level((gpio_num_t)pin, val);
+        } else {
+            log_e("IO %i is not set as GPIO.", pin);
+        }
 }
 
 extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin)
 {
-	return gpio_get_level((gpio_num_t)pin);
+    if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL){
+        return gpio_get_level((gpio_num_t)pin);
+    }
+    else {
+        log_e("IO %i is not set as GPIO.", pin);
+        return 0;
+    }
 }
 
 static void ARDUINO_ISR_ATTR __onPinInterrupt(void * arg) {
@@ -148,12 +196,15 @@ extern void __attachInterruptFunctionalArg(uint8_t pin, voidFuncPtrArg userFunc,
 {
     static bool interrupt_initialized = false;
 
+    // makes sure that pin -1 (255) will never work -- this follows Arduino standard
+    if (pin >= SOC_GPIO_PIN_COUNT) return;
+
     if(!interrupt_initialized) {
     	esp_err_t err = gpio_install_isr_service((int)ARDUINO_ISR_FLAG);
     	interrupt_initialized = (err == ESP_OK) || (err == ESP_ERR_INVALID_STATE);
     }
     if(!interrupt_initialized) {
-    	log_e("GPIO ISR Service Failed To Start");
+    	log_e("IO %i ISR Service Failed To Start", pin);
     	return;
     }
 
@@ -203,6 +254,14 @@ extern void __detachInterrupt(uint8_t pin)
     __pinInterruptHandlers[pin].functional = false;
 
     gpio_set_intr_type((gpio_num_t)pin, GPIO_INTR_DISABLE);
+}
+
+extern void enableInterrupt(uint8_t pin) {
+    gpio_intr_enable((gpio_num_t)pin);
+}
+
+extern void disableInterrupt(uint8_t pin) {
+    gpio_intr_disable((gpio_num_t)pin);
 }
 
 

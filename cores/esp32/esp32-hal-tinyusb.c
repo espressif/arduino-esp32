@@ -1,4 +1,6 @@
+#include "soc/soc_caps.h"
 
+#if SOC_USB_OTG_SUPPORTED
 #include "sdkconfig.h"
 #if CONFIG_TINYUSB_ENABLED
 #include <stdlib.h>
@@ -18,20 +20,21 @@
 #include "soc/timer_group_struct.h"
 #include "soc/system_reg.h"
 
+#include "rom/gpio.h"
+
 #include "hal/usb_hal.h"
 #include "hal/gpio_ll.h"
+#include "hal/clk_gate_ll.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "driver/gpio.h"
-#include "driver/periph_ctrl.h"
 
-#include "esp_efuse.h"
-#include "esp_efuse_table.h"
 #include "esp_rom_gpio.h"
 
 #include "esp32-hal.h"
+#include "esp32-hal-periman.h"
 
 #include "esp32-hal-tinyusb.h"
 #if CONFIG_IDF_TARGET_ESP32S2
@@ -40,6 +43,7 @@
 #include "esp32s2/rom/usb/chip_usb_dw_wrapper.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "hal/usb_serial_jtag_ll.h"
+#include "hal/usb_phy_ll.h"
 #include "esp32s3/rom/usb/usb_persist.h"
 #include "esp32s3/rom/usb/usb_dc.h"
 #include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
@@ -54,6 +58,16 @@ typedef char *tusb_desc_strarray_device_t[USB_STRING_DESCRIPTOR_ARRAY_SIZE];
 typedef struct {
     bool external_phy;
 } tinyusb_config_t;
+
+static bool usb_otg_deinit(void * busptr) {
+    // Once USB OTG is initialized, its GPIOs are assigned and it shall never be deinited
+    // except when S3 swithicng usb from cdc to jtag while resetting to bootrom
+#if CONFIG_IDF_TARGET_ESP32S3
+    return true;
+#else
+    return false;
+#endif
+}
 
 static void configure_pins(usb_hal_context_t *usb)
 {
@@ -74,6 +88,13 @@ static void configure_pins(usb_hal_context_t *usb)
     if (!usb->use_external_phy) {
         gpio_set_drive_capability(USBPHY_DM_NUM, GPIO_DRIVE_CAP_3);
         gpio_set_drive_capability(USBPHY_DP_NUM, GPIO_DRIVE_CAP_3);
+        if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, usb_otg_deinit) && perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, usb_otg_deinit)){
+            // Bus Pointer is not used anyway - once the USB GPIOs are assigned, they can't be detached
+            perimanSetPinBus(USBPHY_DM_NUM, ESP32_BUS_TYPE_USB_DM, (void *) usb, -1, -1);
+            perimanSetPinBus(USBPHY_DP_NUM, ESP32_BUS_TYPE_USB_DP, (void *) usb, -1, -1);
+        } else {
+            log_e("USB OTG Pins can't be set into Peripheral Manager.");
+        }
     }
 }
 
@@ -356,6 +377,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 /*
  * Required Callbacks
  * */
+#if CFG_TUD_DFU
+__attribute__ ((weak)) uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state){return 0;}
+__attribute__ ((weak)) void tud_dfu_download_cb (uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length){}
+__attribute__ ((weak)) void tud_dfu_manifest_cb(uint8_t alt){}
+#endif
 #if CFG_TUD_HID
 __attribute__ ((weak)) const uint8_t * tud_hid_descriptor_report_cb(uint8_t itf){return NULL;}
 __attribute__ ((weak)) uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen){return 0;}
@@ -385,7 +411,7 @@ static void hw_cdc_reset_handler(void *arg) {
     usb_serial_jtag_ll_clr_intsts_mask(usbjtag_intr_status);
     
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
-        xSemaphoreGiveFromISR((xSemaphoreHandle)arg, &xTaskWoken);
+        xSemaphoreGiveFromISR((SemaphoreHandle_t)arg, &xTaskWoken);
     }
 
     if (xTaskWoken == pdTRUE) {
@@ -395,9 +421,9 @@ static void hw_cdc_reset_handler(void *arg) {
 
 static void usb_switch_to_cdc_jtag(){
     // Disable USB-OTG
-    periph_module_reset(PERIPH_USB_MODULE);
-    //periph_module_enable(PERIPH_USB_MODULE);
-    periph_module_disable(PERIPH_USB_MODULE);
+    periph_ll_reset(PERIPH_USB_MODULE);
+    //periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
+    periph_ll_disable_clk_set_rst(PERIPH_USB_MODULE);
 
     // Switch to hardware CDC+JTAG
     CLEAR_PERI_REG_MASK(RTC_CNTL_USB_CONF_REG, (RTC_CNTL_SW_HW_USB_PHY_SEL|RTC_CNTL_SW_USB_PHY_SEL|RTC_CNTL_USB_PAD_ENABLE));
@@ -415,11 +441,12 @@ static void usb_switch_to_cdc_jtag(){
     digitalWrite(USBPHY_DP_NUM, LOW);
 
     // Initialize CDC+JTAG ISR to listen for BUS_RESET
+    usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
     intr_handle_t intr_handle = NULL;
-    xSemaphoreHandle reset_sem = xSemaphoreCreateBinary();
+    SemaphoreHandle_t reset_sem = xSemaphoreCreateBinary();
     if(reset_sem){
         if(esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_reset_handler, reset_sem, &intr_handle) != ESP_OK){
             vSemaphoreDelete(reset_sem);
@@ -457,8 +484,8 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void)
                 chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
 #if CONFIG_IDF_TARGET_ESP32S2
             } else {
-                periph_module_reset(PERIPH_USB_MODULE);
-                periph_module_enable(PERIPH_USB_MODULE);
+                periph_ll_reset(PERIPH_USB_MODULE);
+                periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
 #endif
             }
             REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
@@ -646,11 +673,16 @@ static void usb_device_task(void *param) {
 /*
  * PUBLIC API
  * */
-static const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
-
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+    const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
+#endif
 static bool tinyusb_is_initialized = false;
 
-esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb)
+esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb){
+    return tinyusb_enable_interface2(interface, descriptor_len, cb, false);
+}
+
+esp_err_t tinyusb_enable_interface2(tinyusb_interface_t interface, uint16_t descriptor_len, tinyusb_descriptor_cb_t cb, bool reserve_endpoints)
 {
     if(tinyusb_is_initialized){
         log_e("TinyUSB has already started! Interface %s not enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
@@ -659,6 +691,13 @@ esp_err_t tinyusb_enable_interface(tinyusb_interface_t interface, uint16_t descr
     if((interface >= USB_INTERFACE_MAX) || (tinyusb_loaded_interfaces_mask & (1U << interface))){
         log_e("Interface %s invalid or already enabled", (interface >= USB_INTERFACE_MAX)?"":tinyusb_interface_names[interface]);
         return ESP_FAIL;
+    }
+    if(interface == USB_INTERFACE_HID && reserve_endpoints){
+        // Some simple PC BIOS requires specific endpoint addresses for keyboard at boot
+        if(!tinyusb_reserve_out_endpoint(1) ||!tinyusb_reserve_in_endpoint(1)){
+            log_e("HID Reserve Endpoints Failed");
+            return ESP_FAIL;
+        }
     }
     if(interface == USB_INTERFACE_CDC){
         if(!tinyusb_reserve_out_endpoint(3) ||!tinyusb_reserve_in_endpoint(4) || !tinyusb_reserve_in_endpoint(5)){
@@ -695,8 +734,8 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     //} else 
     if(!usb_did_persist || !usb_persist_enabled){
         // Reset USB module
-        periph_module_reset(PERIPH_USB_MODULE);
-        periph_module_enable(PERIPH_USB_MODULE);
+        periph_ll_reset(PERIPH_USB_MODULE);
+        periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
     }
 
     tinyusb_config_t tusb_cfg = {
@@ -773,3 +812,4 @@ uint8_t tinyusb_get_free_out_endpoint(void){
 }
 
 #endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

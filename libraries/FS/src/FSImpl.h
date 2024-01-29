@@ -36,12 +36,16 @@ public:
     virtual bool seek(uint32_t pos, SeekMode mode) = 0;
     virtual size_t position() const = 0;
     virtual size_t size() const = 0;
+    virtual bool setBufferSize(size_t size) = 0;
     virtual void close() = 0;
     virtual time_t getLastWrite() = 0;
     virtual const char* path() const = 0;
     virtual const char* name() const = 0;
     virtual boolean isDirectory(void) = 0;
     virtual FileImplPtr openNextFile(const char* mode) = 0;
+    virtual boolean seekDir(long position) = 0;
+    virtual String getNextFileName(void) = 0;
+    virtual String getNextFileName(bool *isDir) = 0;
     virtual void rewindDirectory(void) = 0;
     virtual operator bool() = 0;
 };

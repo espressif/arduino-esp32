@@ -19,6 +19,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "USBHID.h"
+#if SOC_USB_OTG_SUPPORTED
 
 #if CONFIG_TINYUSB_HID_ENABLED
 
@@ -32,10 +33,11 @@ static const uint8_t report_descriptor[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_REPORT_ID_KEYBOARD))
 };
 
-USBHIDKeyboard::USBHIDKeyboard(): hid(){
+USBHIDKeyboard::USBHIDKeyboard(): hid(HID_ITF_PROTOCOL_KEYBOARD), shiftKeyReports(true){
     static bool initialized = false;
     if(!initialized){
         initialized = true;
+        memset(&_keyReport, 0, sizeof(KeyReport));
         hid.addDevice(this, sizeof(report_descriptor));
     }
 }
@@ -72,12 +74,13 @@ void USBHIDKeyboard::sendReport(KeyReport* keys)
     hid_keyboard_report_t report;
     report.reserved = 0;
     report.modifier = keys->modifiers;
-    if (keys->keys) {
-        memcpy(report.keycode, keys->keys, 6);
-    } else {
-        memset(report.keycode, 0, 6);
-    }
+    memcpy(report.keycode, keys->keys, 6);
     hid.SendReport(HID_REPORT_ID_KEYBOARD, &report, sizeof(report));
+}
+
+void USBHIDKeyboard::setShiftKeyReports(bool set)
+{
+    shiftKeyReports = set;
 }
 
 #define SHIFT 0x80
@@ -274,7 +277,6 @@ size_t USBHIDKeyboard::releaseRaw(uint8_t k)
 // call release(), releaseAll(), or otherwise clear the report and resend.
 size_t USBHIDKeyboard::press(uint8_t k) 
 {
-    uint8_t i;
     if (k >= 0x88) {         // it's a non-printing key (not a modifier)
         k = k - 0x88;
     } else if (k >= 0x80) {  // it's a modifier key
@@ -286,7 +288,12 @@ size_t USBHIDKeyboard::press(uint8_t k)
             return 0;
         }
         if (k & 0x80) {                     // it's a capital letter or other character reached with shift
-            _keyReport.modifiers |= 0x02;   // the left shift modifier
+            // At boot, some PCs need a separate report with the shift key down like a real keyboard.
+            if (shiftKeyReports) {
+                pressRaw(HID_KEY_SHIFT_LEFT);
+            } else {
+                _keyReport.modifiers |= 0x02;   // the left shift modifier
+            }
             k &= 0x7F;
         }
     }
@@ -298,7 +305,6 @@ size_t USBHIDKeyboard::press(uint8_t k)
 // it shouldn't be repeated any more.
 size_t USBHIDKeyboard::release(uint8_t k) 
 {
-    uint8_t i;
     if (k >= 0x88) {         // it's a non-printing key (not a modifier)
         k = k - 0x88;
     } else if (k >= 0x80) {  // it's a modifier key
@@ -310,8 +316,13 @@ size_t USBHIDKeyboard::release(uint8_t k)
             return 0;
         }
         if (k & 0x80) {                         // it's a capital letter or other character reached with shift
-            _keyReport.modifiers &= ~(0x02);    // the left shift modifier
-            k &= 0x7F;
+            if (shiftKeyReports) {
+                releaseRaw(k & 0x7F);           // Release key without shift modifier
+                k = HID_KEY_SHIFT_LEFT;         // Below, release shift modifier
+            } else {
+                _keyReport.modifiers &= ~(0x02);    // the left shift modifier
+                k &= 0x7F;
+            }
         }
     }
     return releaseRaw(k);
@@ -352,3 +363,4 @@ size_t USBHIDKeyboard::write(const uint8_t *buffer, size_t size) {
 }
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

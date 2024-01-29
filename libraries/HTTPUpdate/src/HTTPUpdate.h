@@ -53,6 +53,7 @@ enum HTTPUpdateResult {
 typedef HTTPUpdateResult t_httpUpdate_return; // backward compatibility
 
 using HTTPUpdateStartCB = std::function<void()>;
+using HTTPUpdateRequestCB = std::function<void(HTTPClient*)>;
 using HTTPUpdateEndCB = std::function<void()>;
 using HTTPUpdateErrorCB = std::function<void(int)>;
 using HTTPUpdateProgressCB = std::function<void(int, int)>;
@@ -84,17 +85,34 @@ public:
         _ledOn = ledOn;
     }
 
-    t_httpUpdate_return update(WiFiClient& client, const String& url, const String& currentVersion = "");
+    void setMD5sum(const String &md5Sum) 
+    {
+        _md5Sum = md5Sum;
+    }
+    
+    void setAuthorization(const String& user, const String& password) 
+    {
+        _user = user;
+        _password = password;
+    }
+  
+    void setAuthorization(const String& auth)
+    {
+        _auth = auth;
+    }
+
+    t_httpUpdate_return update(WiFiClient& client, const String& url, const String& currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
     t_httpUpdate_return update(WiFiClient& client, const String& host, uint16_t port, const String& uri = "/",
-                               const String& currentVersion = "");
+                               const String& currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
-    t_httpUpdate_return updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion = "");
+    t_httpUpdate_return updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
     t_httpUpdate_return update(HTTPClient& httpClient,
-                               const String& currentVersion = "");
+                               const String& currentVersion = "", 
+                               HTTPUpdateRequestCB requestCB = NULL);
 
-    t_httpUpdate_return updateSpiffs(HTTPClient &httpClient, const String &currentVersion = "");
+    t_httpUpdate_return updateSpiffs(HTTPClient &httpClient, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
     // Notification callbacks
     void onStart(HTTPUpdateStartCB cbOnStart)          { _cbStart = cbOnStart; }
@@ -106,7 +124,7 @@ public:
     String getLastErrorString(void);
 
 protected:
-    t_httpUpdate_return handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs = false);
+    t_httpUpdate_return handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs = false, HTTPUpdateRequestCB requestCB = NULL);
     bool runUpdate(Stream& in, uint32_t size, String md5, int command = U_FLASH);
 
     // Set the error and potentially use a CB to notify the application
@@ -121,6 +139,10 @@ protected:
 private:
     int _httpClientTimeout;
     followRedirects_t _followRedirects;
+    String _user;
+    String _password;
+    String _auth;
+    String _md5Sum;
 
     // Callbacks
     HTTPUpdateStartCB    _cbStart;

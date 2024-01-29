@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# For reference: add tools for all boards by replacing one line in each board
+# "[board].upload.tool=esptool_py" to "[board].upload.tool=esptool_py\n[board].upload.tool.default=esptool_py\n[board].upload.tool.network=esp_ota"
+#cat boards.txt | sed "s/\([a-zA-Z0-9_\-]*\)\.upload\.tool\=esptool_py/\1\.upload\.tool\=esptool_py\\n\1\.upload\.tool\.default\=esptool_py\\n\1\.upload\.tool\.network\=esp_ota/"
+
 if [ ! $# -eq 3 ]; then
 	echo "Bad number of arguments: $#" >&2
 	echo "usage: $0 <major> <minor> <patch>" >&2

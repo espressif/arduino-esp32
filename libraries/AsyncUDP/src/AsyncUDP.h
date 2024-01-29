@@ -2,16 +2,24 @@
 #define ESPASYNCUDP_H
 
 #include "IPAddress.h"
-#include "IPv6Address.h"
 #include "Print.h"
 #include "Stream.h"
 #include <functional>
 extern "C" {
-#include "lwip/ip_addr.h"
 #include "esp_netif.h"
+#include "lwip/ip_addr.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 }
+
+// This enum and it's uses are copied and adapted for compatibility from ESP-IDF 4-
+typedef enum {
+    TCPIP_ADAPTER_IF_STA = 0,     /**< Wi-Fi STA (station) interface */
+    TCPIP_ADAPTER_IF_AP,          /**< Wi-Fi soft-AP interface */
+    TCPIP_ADAPTER_IF_ETH,         /**< Ethernet interface */
+    TCPIP_ADAPTER_IF_PPP,         /**< PPP interface */
+    TCPIP_ADAPTER_IF_MAX
+} tcpip_adapter_if_t;
 
 class AsyncUDP;
 class AsyncUDPPacket;
@@ -72,10 +80,10 @@ public:
     tcpip_adapter_if_t interface();
 
     IPAddress localIP();
-    IPv6Address localIPv6();
+    IPAddress localIPv6();
     uint16_t localPort();
     IPAddress remoteIP();
-    IPv6Address remoteIPv6();
+    IPAddress remoteIPv6();
     uint16_t remotePort();
     void remoteMac(uint8_t * mac);
 
@@ -95,7 +103,7 @@ class AsyncUDP : public Print
 {
 protected:
     udp_pcb *_pcb;
-    //xSemaphoreHandle _lock;
+    //SemaphoreHandle_t _lock;
     bool _connected;
 	esp_err_t _lastErr;
     AuPacketHandlerFunction _handler;
@@ -112,22 +120,18 @@ public:
 
     bool listen(const ip_addr_t *addr, uint16_t port);
     bool listen(const IPAddress addr, uint16_t port);
-    bool listen(const IPv6Address addr, uint16_t port);
     bool listen(uint16_t port);
 
     bool listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
     bool listenMulticast(const IPAddress addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
-    bool listenMulticast(const IPv6Address addr, uint16_t port, uint8_t ttl=1, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
 
     bool connect(const ip_addr_t *addr, uint16_t port);
     bool connect(const IPAddress addr, uint16_t port);
-    bool connect(const IPv6Address addr, uint16_t port);
 
     void close();
 
     size_t writeTo(const uint8_t *data, size_t len, const ip_addr_t *addr, uint16_t port, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
     size_t writeTo(const uint8_t *data, size_t len, const IPAddress addr, uint16_t port, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
-    size_t writeTo(const uint8_t *data, size_t len, const IPv6Address addr, uint16_t port, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
     size_t write(const uint8_t *data, size_t len);
     size_t write(uint8_t data);
 
@@ -138,14 +142,13 @@ public:
 
     size_t sendTo(AsyncUDPMessage &message, const ip_addr_t *addr, uint16_t port, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
     size_t sendTo(AsyncUDPMessage &message, const IPAddress addr, uint16_t port, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
-    size_t sendTo(AsyncUDPMessage &message, const IPv6Address addr, uint16_t port, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
     size_t send(AsyncUDPMessage &message);
 
     size_t broadcastTo(AsyncUDPMessage &message, uint16_t port, tcpip_adapter_if_t tcpip_if=TCPIP_ADAPTER_IF_MAX);
     size_t broadcast(AsyncUDPMessage &message);
 
     IPAddress listenIP();
-    IPv6Address listenIPv6();
+    IPAddress listenIPv6();
     bool connected();
 	esp_err_t lastErr();
     operator bool();

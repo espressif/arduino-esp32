@@ -13,11 +13,10 @@
 // limitations under the License.
 
 #include "vfs_api.h"
-#include <stdio_ext.h>
 
 using namespace fs;
 
-#define READ_SIZE_SWITCH 128    //swithc to read func when read size > 128bytes
+#define DEFAULT_FILE_BUFFER_SIZE 4096
 
 FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create)
 {
@@ -37,7 +36,8 @@ FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create
         return FileImplPtr();
     }
 
-    sprintf(temp,"%s%s", _mountpoint, fpath);
+    strcpy(temp, _mountpoint);
+    strcat(temp, fpath);
 
     struct stat st;
     //file found
@@ -137,19 +137,25 @@ bool VFSImpl::rename(const char* pathFrom, const char* pathTo)
         log_e("%s does not exists", pathFrom);
         return false;
     }
-    char * temp1 = (char *)malloc(strlen(pathFrom)+strlen(_mountpoint)+1);
+    size_t mountpointLen = strlen(_mountpoint);
+    char * temp1 = (char *)malloc(strlen(pathFrom)+mountpointLen+1);
     if(!temp1) {
         log_e("malloc failed");
         return false;
     }
-    char * temp2 = (char *)malloc(strlen(pathTo)+strlen(_mountpoint)+1);
+    char * temp2 = (char *)malloc(strlen(pathTo)+mountpointLen+1);
     if(!temp2) {
         free(temp1);
         log_e("malloc failed");
         return false;
     }
-    sprintf(temp1,"%s%s", _mountpoint, pathFrom);
-    sprintf(temp2,"%s%s", _mountpoint, pathTo);
+
+    strcpy(temp1, _mountpoint);
+    strcat(temp1, pathFrom);
+
+    strcpy(temp2, _mountpoint);
+    strcat(temp2, pathTo);
+
     auto rc = ::rename(temp1, temp2);
     free(temp1);
     free(temp2);
@@ -183,7 +189,10 @@ bool VFSImpl::remove(const char* fpath)
         log_e("malloc failed");
         return false;
     }
-    sprintf(temp,"%s%s", _mountpoint, fpath);
+
+    strcpy(temp, _mountpoint);
+    strcat(temp, fpath);
+
     auto rc = unlink(temp);
     free(temp);
     return rc == 0;
@@ -212,7 +221,10 @@ bool VFSImpl::mkdir(const char *fpath)
         log_e("malloc failed");
         return false;
     }
-    sprintf(temp,"%s%s", _mountpoint, fpath);
+
+    strcpy(temp, _mountpoint);
+    strcat(temp, fpath);
+
     auto rc = ::mkdir(temp, ACCESSPERMS);
     free(temp);
     return rc == 0;
@@ -245,7 +257,10 @@ bool VFSImpl::rmdir(const char *fpath)
         log_e("malloc failed");
         return false;
     }
-    sprintf(temp,"%s%s", _mountpoint, fpath);
+
+    strcpy(temp, _mountpoint);
+    strcat(temp, fpath);
+
     auto rc = ::rmdir(temp);
     free(temp);
     return rc == 0;
@@ -266,7 +281,9 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
     if(!temp) {
         return;
     }
-    sprintf(temp,"%s%s", _fs->_mountpoint, fpath);
+
+    strcpy(temp, _fs->_mountpoint);
+    strcat(temp, fpath);
 
     _path = strdup(fpath);
     if(!_path) {
@@ -283,6 +300,10 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(!_f) {
                 log_e("fopen(%s) failed", temp);
             }
+            if(_f && (_stat.st_blksize == 0))
+            {
+                setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
+            } 
         } else if(S_ISDIR(_stat.st_mode)) {
             _isDirectory = true;
             _d = opendir(temp);
@@ -310,6 +331,10 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(!_f) {
                 log_e("fopen(%s) failed", temp);
             }
+            if(_f && (_stat.st_blksize == 0))
+            {
+                setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
+            } 
         }
     }
     free(temp);
@@ -355,7 +380,10 @@ void VFSFileImpl::_getStat() const
     if(!temp) {
         return;
     }
-    sprintf(temp,"%s%s", _fs->_mountpoint, _path);
+
+    strcpy(temp, _fs->_mountpoint);
+    strcat(temp, _path);
+
     if(!stat(temp, &_stat)) {
         _written = false;
     }
@@ -377,28 +405,7 @@ size_t VFSFileImpl::read(uint8_t* buf, size_t size)
         return 0;
     }
 
-    //ERASE BYTEBUFFER and use read when size > READ_SIZE_SWITCH always
-    if(size > READ_SIZE_SWITCH)
-    {
-        //check some data in buffer exists –> clear buffer and move pointer to deleted data
-        size_t bytesinbuf = __fpending(_f);
-        if (bytesinbuf && (bytesinbuf != 128))  //buffer lenght is 128 bytes
-        {
-            fpurge(_f);
-            lseek(fileno(_f),(-128+bytesinbuf),SEEK_CUR);
-        }
-
-        int res = ::read(fileno(_f), buf, size);
-        if (res < 0) {
-            // an error occurred
-            return 0;
-        }
-        return res;
-    }
-    else
-    {
-        return fread(buf, 1, size, _f);
-    }
+    return fread(buf, 1, size, _f);
 }
 
 void VFSFileImpl::flush()
@@ -439,6 +446,19 @@ size_t VFSFileImpl::size() const
     return _stat.st_size;
 }
 
+/*
+* Change size of files internal buffer used for read / write operations.
+* Need to be called right after opening file before any other operation!
+*/
+bool VFSFileImpl::setBufferSize(size_t size)
+{
+    if(_isDirectory || !_f) {
+        return 0;
+    }
+    int res = setvbuf(_f,NULL,_IOFBF,size);
+    return res == 0;
+}
+
 const char* VFSFileImpl::path() const
 {
     return (const char*) _path;
@@ -467,14 +487,83 @@ FileImplPtr VFSFileImpl::openNextFile(const char* mode)
     if(file->d_type != DT_REG && file->d_type != DT_DIR) {
         return openNextFile(mode);
     }
+
+    size_t pathLen = strlen(_path);
+    size_t fileNameLen = strlen(file->d_name);
+    char * name = (char *)malloc(pathLen+fileNameLen+2);
+
+    if(name == NULL) {
+        return FileImplPtr();
+    }
+
+    strcpy(name, _path);
+
+    if ((file->d_name[0] != '/') && (_path[pathLen - 1] != '/'))
+    {
+        strcat(name, "/");
+    }
+
+    strcat(name, file->d_name);
+
+    FileImplPtr fileImplPtr = std::make_shared<VFSFileImpl>(_fs, name, mode);
+    free(name);
+    return fileImplPtr;
+}
+
+boolean VFSFileImpl::seekDir(long position){
+    if(!_d){
+        return false;
+    }
+    seekdir(_d, position);
+    return true;
+}
+
+
+String VFSFileImpl::getNextFileName()
+{
+    if (!_isDirectory || !_d) {
+        return "";
+    }
+    struct dirent *file = readdir(_d);
+    if (file == NULL) {
+        return "";
+    }
+    if (file->d_type != DT_REG && file->d_type != DT_DIR) {
+        return "";
+    }
     String fname = String(file->d_name);
     String name = String(_path);
-    if(!fname.startsWith("/") && !name.endsWith("/")) {
+    if (!fname.startsWith("/") && !name.endsWith("/")) {
+        name += "/";
+    }
+    name += fname;
+    return name;
+}
+
+String VFSFileImpl::getNextFileName(bool *isDir)
+{
+    if (!_isDirectory || !_d) {
+        return "";
+    }
+    struct dirent *file = readdir(_d);
+    if (file == NULL) {
+        return "";
+    }
+    if (file->d_type != DT_REG && file->d_type != DT_DIR) {
+        return "";
+    }
+    String fname = String(file->d_name);
+    String name = String(_path);
+    if (!fname.startsWith("/") && !name.endsWith("/")) {
         name += "/";
     }
     name += fname;
 
-    return std::make_shared<VFSFileImpl>(_fs, name.c_str(), mode);
+    // check entry is a directory
+    if (isDir) {
+        *isDir = (file->d_type == DT_DIR);
+    }
+    return name;
 }
 
 void VFSFileImpl::rewindDirectory(void)

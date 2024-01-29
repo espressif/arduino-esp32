@@ -12,7 +12,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gap_bt_api.h> // ESP32 BT
-#include <string>
+#include <Arduino.h>
 
 
 /**
@@ -22,11 +22,14 @@
  */
 class BTAddress {
 public:
+	BTAddress();
 	BTAddress(esp_bd_addr_t address);
-	BTAddress(std::string stringAddress);
+	BTAddress(String stringAddress);
 	bool           equals(BTAddress otherAddress);
-	esp_bd_addr_t* getNative();
-	std::string    toString();
+	operator bool () const;
+
+	esp_bd_addr_t* getNative() const;
+	String         toString(bool capital = false) const;
 
 private:
 	esp_bd_addr_t m_address;

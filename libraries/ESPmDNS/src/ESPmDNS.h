@@ -42,8 +42,8 @@ License (MIT license):
 #define ESP32MDNS_H
 
 #include "Arduino.h"
-#include "IPv6Address.h"
 #include "mdns.h"
+#include "esp_interface.h"
 
 //this should be defined at build time
 #ifndef ARDUINO_VARIANT
@@ -54,7 +54,10 @@ class MDNSResponder {
 public:
   MDNSResponder();
   ~MDNSResponder();
-  bool begin(const char* hostName);
+  bool begin(const String& hostName);
+  bool begin(const char* hostName){
+    return begin(String(hostName));
+  }
   void end();
 
   void setInstanceName(String name);
@@ -104,8 +107,8 @@ public:
   }
 
   String hostname(int idx);
-  IPAddress IP(int idx);
-  IPv6Address IPv6(int idx);
+  IPAddress address(int idx);
+  IPAddress addressV6(int idx);
   uint16_t port(int idx);
   int numTxt(int idx);
   bool hasTxt(int idx, const char * key);
