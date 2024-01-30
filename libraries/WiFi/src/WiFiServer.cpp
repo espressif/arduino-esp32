@@ -32,13 +32,11 @@ int WiFiServer::setTimeout(uint32_t seconds){
   return setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
 }
 
-size_t WiFiServer::write(const uint8_t *data, size_t len){
-  return 0;
+WiFiClient WiFiServer::available(){
+  return accept();
 }
 
-void WiFiServer::stopAll(){}
-
-WiFiClient WiFiServer::available(){
+WiFiClient WiFiServer::accept(){
   if(!_listening)
     return WiFiClient();
   int client_sock;
@@ -47,8 +45,8 @@ WiFiClient WiFiServer::available(){
     _accepted_sockfd = -1;
   }
   else {
-  struct sockaddr_in _client;
-  int cs = sizeof(struct sockaddr_in);
+  struct sockaddr_in6 _client;
+  int cs = sizeof(struct sockaddr_in6);
 #ifdef ESP_IDF_VERSION_MAJOR
     client_sock = lwip_accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
 #else
@@ -76,14 +74,21 @@ void WiFiServer::begin(uint16_t port, int enable){
   if(port){
       _port = port;
   }
-  struct sockaddr_in server;
-  sockfd = socket(AF_INET , SOCK_STREAM, 0);
+  struct sockaddr_in6 server;
+  sockfd = socket(AF_INET6 , SOCK_STREAM, 0);
   if (sockfd < 0)
     return;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
-  server.sin_family = AF_INET;
-  server.sin_addr.s_addr = _addr;
-  server.sin_port = htons(_port);
+  server.sin6_family = AF_INET6;
+  if (_addr.type() == IPv4) {
+    memcpy(server.sin6_addr.s6_addr+11, (uint8_t*)&_addr[0], 4);
+    server.sin6_addr.s6_addr[10] = 0xFF;
+    server.sin6_addr.s6_addr[11] = 0xFF;
+  } else {
+    memcpy(server.sin6_addr.s6_addr, (uint8_t*)&_addr[0], 16);
+  }
+  memset(server.sin6_addr.s6_addr, 0x0, 16);
+  server.sin6_port = htons(_port);
   if(bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
     return;
   if(listen(sockfd , _max_clients) < 0)
@@ -106,8 +111,8 @@ bool WiFiServer::hasClient() {
     if (_accepted_sockfd >= 0) {
       return true;
     }
-    struct sockaddr_in _client;
-    int cs = sizeof(struct sockaddr_in);
+    struct sockaddr_in6 _client;
+    int cs = sizeof(struct sockaddr_in6);
 #ifdef ESP_IDF_VERSION_MAJOR
     _accepted_sockfd = lwip_accept(sockfd, (struct sockaddr *)&_client, (socklen_t*)&cs);
 #else
@@ -136,4 +141,3 @@ void WiFiServer::close(){
 void WiFiServer::stop(){
   end();
 }
-

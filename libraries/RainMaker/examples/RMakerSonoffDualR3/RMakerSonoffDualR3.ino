@@ -34,6 +34,7 @@ LightSwitch switch_ch2 = {gpio_switch2, false};
 static Switch *my_switch1 = NULL;
 static Switch *my_switch2 = NULL;
 
+// WARNING: sysProvEvent is called from a separate FreeRTOS task (thread)!
 void sysProvEvent(arduino_event_t *sys_event)
 {
     switch (sys_event->event_id) {
@@ -155,12 +156,12 @@ void setup()
         chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
     }
 
-    Serial.printf("\nChip ID:  %d Service Name: %s\n", chipId, service_name);
+    Serial.printf("\nChip ID:  %lu Service Name: %s\n", chipId, service_name);
 
     Serial.printf("\nStarting ESP-RainMaker\n");
     RMaker.start();
 
-    WiFi.onEvent(sysProvEvent);
+    WiFi.onEvent(sysProvEvent);  // Will call sysProvEvent() from another thread.
 #if CONFIG_IDF_TARGET_ESP32
     WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, pop, service_name);
 #else

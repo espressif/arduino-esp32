@@ -69,7 +69,7 @@ void setup(void)
 void loop(void)
 {
     // Check if a client has connected
-    WiFiClient client = server.available();
+    WiFiClient client = server.accept();
     if (!client) {
         return;
     }
