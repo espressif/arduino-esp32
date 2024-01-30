@@ -29,6 +29,10 @@
 
 #include "common/tusb_common.h"
 
+enum {
+  VIDEO_BCD_1_50 = 0x0150,
+};
+
 // Table 3-19 Color Matching Descriptor
 typedef enum {
   VIDEO_COLOR_PRIMARIES_UNDEFINED = 0x00,
@@ -198,55 +202,98 @@ typedef enum {
 } video_terminal_type_t;
 
 //--------------------------------------------------------------------+
-// Descriptors
+// Video Control (VC) Descriptors
 //--------------------------------------------------------------------+
 
 /* 2.3.4.2 */
+#define tusb_desc_video_control_header_nitf_t(_nitf) \
+  struct TU_ATTR_PACKED { \
+    uint8_t  bLength; \
+    uint8_t  bDescriptorType; \
+    uint8_t  bDescriptorSubType; \
+    uint16_t bcdUVC; \
+    uint16_t wTotalLength; \
+    uint32_t dwClockFrequency; /* deprecated */ \
+    uint8_t  bInCollection; \
+    uint8_t  baInterfaceNr[_nitf]; \
+  }
+
+typedef tusb_desc_video_control_header_nitf_t()  tusb_desc_video_control_header_t;
+typedef tusb_desc_video_control_header_nitf_t(1) tusb_desc_video_control_header_1itf_t;
+typedef tusb_desc_video_control_header_nitf_t(2) tusb_desc_video_control_header_2itf_t;
+typedef tusb_desc_video_control_header_nitf_t(3) tusb_desc_video_control_header_3itf_t;
+typedef tusb_desc_video_control_header_nitf_t(4) tusb_desc_video_control_header_4itf_t;
+
 typedef struct TU_ATTR_PACKED {
   uint8_t  bLength;
   uint8_t  bDescriptorType;
   uint8_t  bDescriptorSubType;
-  uint16_t bcdUVC;
-  uint16_t wTotalLength;
-  uint32_t dwClockFrequency;
-  uint8_t  bInCollection;
-  uint8_t  baInterfaceNr[];
-} tusb_desc_cs_video_ctl_itf_hdr_t;
+  uint8_t  bTerminalID;
+  uint16_t wTerminalType;
+  uint8_t  bAssocTerminal;
+  uint8_t  iTerminal;
+} tusb_desc_video_control_input_terminal_t;
 
-/* 2.4.3.3 */
+TU_VERIFY_STATIC(sizeof(tusb_desc_video_control_input_terminal_t) == 8, "size is not correct");
+
 typedef struct TU_ATTR_PACKED {
-  uint8_t bHeaderLength;
-  union {
-    uint8_t bmHeaderInfo;
-    struct {
-      uint8_t FrameID:              1;
-      uint8_t EndOfFrame:           1;
-      uint8_t PresentationTime:     1;
-      uint8_t SourceClockReference: 1;
-      uint8_t PayloadSpecific:      1;
-      uint8_t StillImage:           1;
-      uint8_t Error:                1;
-      uint8_t EndOfHeader:          1;
-    };
-  };
-} tusb_video_payload_header_t;
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint8_t  bDescriptorSubType;
+  uint8_t  bTerminalID;
+  uint16_t wTerminalType;
+  uint8_t  bAssocTerminal;
+  uint8_t  bSourceID;
+  uint8_t  iTerminal;
+} tusb_desc_video_control_output_terminal_t;
+
+TU_VERIFY_STATIC(sizeof(tusb_desc_video_control_output_terminal_t) == 9, "size is not correct");
+
+typedef struct TU_ATTR_PACKED {
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint8_t  bDescriptorSubType;
+  uint8_t  bTerminalID;
+  uint16_t wTerminalType;
+  uint8_t  bAssocTerminal;
+  uint8_t  iTerminal;
+
+  uint16_t wObjectiveFocalLengthMin;
+  uint16_t wObjectiveFocalLengthMax;
+  uint16_t wOcularFocalLength;
+  uint8_t  bControlSize;
+  uint8_t  bmControls[3];
+} tusb_desc_video_control_camera_terminal_t;
+
+TU_VERIFY_STATIC(sizeof(tusb_desc_video_control_camera_terminal_t) == 18, "size is not correct");
+
+//--------------------------------------------------------------------+
+// Video Streaming (VS) Descriptors
+//--------------------------------------------------------------------+
 
 /* 3.9.2.1 */
-typedef struct TU_ATTR_PACKED {
-  uint8_t  bLength;
-  uint8_t  bDescriptorType;
-  uint8_t  bDescriptorSubType;
-  uint8_t  bNumFormats;
-  uint16_t wTotalLength;
-  uint8_t  bEndpointAddress;
-  uint8_t  bmInfo;
-  uint8_t  bTerminalLink;
-  uint8_t  bStillCaptureMethod;
-  uint8_t  bTriggerSupport;
-  uint8_t  bTriggerUsage;
-  uint8_t  bControlSize;
-  uint8_t  bmaControls[];
-} tusb_desc_cs_video_stm_itf_in_hdr_t;
+#define tusb_desc_video_streaming_input_header_nbyte_t(_nb) \
+  struct TU_ATTR_PACKED { \
+    uint8_t  bLength; \
+    uint8_t  bDescriptorType; \
+    uint8_t  bDescriptorSubType; \
+    uint8_t  bNumFormats; /* Number of video payload Format descriptors for this interface */ \
+    uint16_t wTotalLength; \
+    uint8_t  bEndpointAddress; \
+    uint8_t  bmInfo; /* Bit 0: dynamic format change supported */ \
+    uint8_t  bTerminalLink; \
+    uint8_t  bStillCaptureMethod; \
+    uint8_t  bTriggerSupport; /* Hardware trigger supported */ \
+    uint8_t  bTriggerUsage; \
+    uint8_t  bControlSize; /* sizeof of each control item */ \
+    uint8_t  bmaControls[_nb]; \
+  }
+
+typedef tusb_desc_video_streaming_input_header_nbyte_t() tusb_desc_video_streaming_input_header_t;
+typedef tusb_desc_video_streaming_input_header_nbyte_t(1) tusb_desc_video_streaming_input_header_1byte_t;
+typedef tusb_desc_video_streaming_input_header_nbyte_t(2) tusb_desc_video_streaming_input_header_2byte_t;
+typedef tusb_desc_video_streaming_input_header_nbyte_t(3) tusb_desc_video_streaming_input_header_3byte_t;
+typedef tusb_desc_video_streaming_input_header_nbyte_t(4) tusb_desc_video_streaming_input_header_4byte_t;
 
 /* 3.9.2.2 */
 typedef struct TU_ATTR_PACKED {
@@ -259,7 +306,7 @@ typedef struct TU_ATTR_PACKED {
   uint8_t  bTerminalLink;
   uint8_t  bControlSize;
   uint8_t  bmaControls[];
-} tusb_desc_cs_video_stm_itf_out_hdr_t;
+} tusb_desc_video_streaming_output_header_t;
 
 typedef struct TU_ATTR_PACKED {
   uint8_t  bLength;
@@ -285,14 +332,33 @@ typedef struct TU_ATTR_PACKED {
       uint8_t  bmaControls[];
     } output;
   };
-} tusb_desc_cs_video_stm_itf_hdr_t;
+} tusb_desc_video_streaming_inout_header_t;
 
+// 3.9.2.6 Color Matching Descriptor
+typedef struct TU_ATTR_PACKED {
+  uint8_t  bLength;
+  uint8_t  bDescriptorType;
+  uint8_t  bDescriptorSubType;
+  uint8_t  bColorPrimaries;
+  uint8_t  bTransferCharacteristics;
+  uint8_t  bMatrixCoefficients;
+} tusb_desc_video_streaming_color_matching_t;
+
+TU_VERIFY_STATIC(sizeof(tusb_desc_video_streaming_color_matching_t) == 6, "size is not correct");
+
+//--------------------------------------------------------------------+
+// Format and Frame Descriptor
+// Note: bFormatIndex & bFrameIndex are 1-based index
+//--------------------------------------------------------------------+
+
+//------------- Uncompressed -------------//
+// Uncompressed payload specs: 3.1.1 format descriptor
 typedef struct TU_ATTR_PACKED {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint8_t bDescriptorSubType;
   uint8_t bFormatIndex;
-  uint8_t bNumFrameDescriptors;
+  uint8_t bNumFrameDescriptors; // Number of frame descriptors for this format
   uint8_t guidFormat[16];
   uint8_t bBitsPerPixel;
   uint8_t bDefaultFrameIndex;
@@ -300,22 +366,65 @@ typedef struct TU_ATTR_PACKED {
   uint8_t bAspectRatioY;
   uint8_t bmInterlaceFlags;
   uint8_t bCopyProtect;
-} tusb_desc_cs_video_fmt_uncompressed_t;
+} tusb_desc_video_format_uncompressed_t;
 
+// Uncompressed payload specs: 3.1.2 frame descriptor
+#define tusb_desc_video_frame_uncompressed_nint_t(_nint) \
+  struct TU_ATTR_PACKED { \
+    uint8_t  bLength; \
+    uint8_t  bDescriptorType; \
+    uint8_t  bDescriptorSubType; \
+    uint8_t  bFrameIndex; \
+    uint8_t  bmCapabilities; \
+    uint16_t wWidth; \
+    uint16_t wHeight; \
+    uint32_t dwMinBitRate; \
+    uint32_t dwMaxBitRate; \
+    uint32_t dwMaxVideoFrameBufferSize; /* deprecated in 1.5 */ \
+    uint32_t dwDefaultFrameInterval; \
+    uint8_t  bFrameIntervalType; \
+    uint32_t dwFrameInterval[_nint]; \
+  }
+
+typedef tusb_desc_video_frame_uncompressed_nint_t() tusb_desc_video_frame_uncompressed_t;
+typedef tusb_desc_video_frame_uncompressed_nint_t(1) tusb_desc_video_frame_uncompressed_1int_t;
+typedef tusb_desc_video_frame_uncompressed_nint_t(2) tusb_desc_video_frame_uncompressed_2int_t;
+typedef tusb_desc_video_frame_uncompressed_nint_t(3) tusb_desc_video_frame_uncompressed_3int_t;
+typedef tusb_desc_video_frame_uncompressed_nint_t(4) tusb_desc_video_frame_uncompressed_4int_t;
+
+// continuous = 3 intervals: min, max, step
+typedef tusb_desc_video_frame_uncompressed_3int_t tusb_desc_video_frame_uncompressed_continuous_t;
+
+TU_VERIFY_STATIC(sizeof(tusb_desc_video_frame_uncompressed_continuous_t) == 38, "size is not correct");
+
+//------------- MJPEG -------------//
+// MJPEG payload specs: 3.1.1 format descriptor
 typedef struct TU_ATTR_PACKED {
   uint8_t bLength;
   uint8_t bDescriptorType;
   uint8_t bDescriptorSubType;
   uint8_t bFormatIndex;
   uint8_t bNumFrameDescriptors;
-  uint8_t bmFlags;
+  uint8_t bmFlags; // Bit 0: fixed size samples (1 = yes)
   uint8_t bDefaultFrameIndex;
   uint8_t bAspectRatioX;
   uint8_t bAspectRatioY;
   uint8_t bmInterlaceFlags;
   uint8_t bCopyProtect;
-} tusb_desc_cs_video_fmt_mjpeg_t;
+} tusb_desc_video_format_mjpeg_t;
 
+// MJPEG payload specs: 3.1.2 frame descriptor (same as uncompressed)
+typedef tusb_desc_video_frame_uncompressed_t tusb_desc_video_frame_mjpeg_t;
+typedef tusb_desc_video_frame_uncompressed_1int_t tusb_desc_video_frame_mjpeg_1int_t;
+typedef tusb_desc_video_frame_uncompressed_2int_t tusb_desc_video_frame_mjpeg_2int_t;
+typedef tusb_desc_video_frame_uncompressed_3int_t tusb_desc_video_frame_mjpeg_3int_t;
+typedef tusb_desc_video_frame_uncompressed_4int_t tusb_desc_video_frame_mjpeg_4int_t;
+
+// continuous = 3 intervals: min, max, step
+typedef tusb_desc_video_frame_mjpeg_3int_t tusb_desc_video_frame_mjpeg_continuous_t;
+
+//------------- DV -------------//
+// DV payload specs: 3.1.1
 typedef struct TU_ATTR_PACKED {
   uint8_t  bLength;
   uint8_t  bDescriptorType;
@@ -323,8 +432,9 @@ typedef struct TU_ATTR_PACKED {
   uint8_t  bFormatIndex;
   uint32_t dwMaxVideoFrameBufferSize; /* deprecated */
   uint8_t  bFormatType;
-} tusb_desc_cs_video_fmt_dv_t;
+} tusb_desc_video_format_dv_t;
 
+// Frame Based payload specs: 3.1.1
 typedef struct TU_ATTR_PACKED {
   uint8_t bLength;
   uint8_t bDescriptorType;
@@ -339,25 +449,7 @@ typedef struct TU_ATTR_PACKED {
   uint8_t bmInterlaceFlags;
   uint8_t bCopyProtect;
   uint8_t bVaribaleSize;
-} tusb_desc_cs_video_fmt_frame_based_t;
-
-typedef struct TU_ATTR_PACKED {
-  uint8_t  bLength;
-  uint8_t  bDescriptorType;
-  uint8_t  bDescriptorSubType;
-  uint8_t  bFrameIndex;
-  uint8_t  bmCapabilities;
-  uint16_t wWidth;
-  uint16_t wHeight;
-  uint32_t dwMinBitRate;
-  uint32_t dwMaxBitRate;
-  uint32_t dwMaxVideoFrameBufferSize; /* deprecated */
-  uint32_t dwDefaultFrameInterval;
-  uint8_t  bFrameIntervalType;
-  uint32_t dwFrameInterval[];
-} tusb_desc_cs_video_frm_uncompressed_t;
-
-typedef tusb_desc_cs_video_frm_uncompressed_t tusb_desc_cs_video_frm_mjpeg_t;
+} tusb_desc_video_format_framebased_t;
 
 typedef struct TU_ATTR_PACKED {
   uint8_t  bLength;
@@ -373,11 +465,29 @@ typedef struct TU_ATTR_PACKED {
   uint8_t  bFrameIntervalType;
   uint32_t dwBytesPerLine;
   uint32_t dwFrameInterval[];
-} tusb_desc_cs_video_frm_frame_based_t;
+} tusb_desc_video_frame_framebased_t;
 
 //--------------------------------------------------------------------+
 // Requests
 //--------------------------------------------------------------------+
+
+/* 2.4.3.3 */
+typedef struct TU_ATTR_PACKED {
+  uint8_t bHeaderLength;
+  union {
+    uint8_t bmHeaderInfo;
+    struct {
+      uint8_t FrameID:              1;
+      uint8_t EndOfFrame:           1;
+      uint8_t PresentationTime:     1;
+      uint8_t SourceClockReference: 1;
+      uint8_t PayloadSpecific:      1;
+      uint8_t StillImage:           1;
+      uint8_t Error:                1;
+      uint8_t EndOfHeader:          1;
+    };
+  };
+} tusb_video_payload_header_t;
 
 /* 4.3.1.1 */
 typedef struct TU_ATTR_PACKED {
