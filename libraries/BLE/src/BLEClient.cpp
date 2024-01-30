@@ -154,9 +154,9 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type, uint32_t t
   }
 
   bool got_sem = m_semaphoreOpenEvt.timedWait("connect", timeoutMs);   // Wait for the connection to complete.
-	rc = m_semaphoreOpenEvt.value();
-	// check the status of the connection and cleanup in case of failure
-	if (!got_sem || rc != ESP_GATT_OK) {
+  rc = m_semaphoreOpenEvt.value();
+  // check the status of the connection and cleanup in case of failure
+  if (!got_sem || rc != ESP_GATT_OK) {
     BLEDevice::removePeerDevice(m_appId, true);
     esp_ble_gattc_app_unregister(m_gattc_if);
     m_gattc_if = ESP_GATT_IF_NONE;
