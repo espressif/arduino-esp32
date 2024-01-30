@@ -42,7 +42,7 @@
             {
               "packager": "esp32",
               "name": "esp32-arduino-libs",
-              "version": "idf-release_v5.1-a5e3e0b90e"
+              "version": "idf-release_v5.1-7cbee80fb9"
             },
             {
               "packager": "esp32",
@@ -105,63 +105,63 @@
       "tools": [
         {
           "name": "esp32-arduino-libs",
-          "version": "idf-release_v5.1-a5e3e0b90e",
+          "version": "idf-release_v5.1-7cbee80fb9",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/6564ec970f8bedd3de60f584a7da40ffa66cebc2",
-              "archiveFileName": "esp32-arduino-libs-6564ec970f8bedd3de60f584a7da40ffa66cebc2.zip",
-              "checksum": "SHA-256:c58de85c93533495b1b53028f7b002febedf59185576577a57356d45d8362204",
-              "size": "355458234"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/b641c23033d9eb0244a7b579967df4ce14985e8a",
+              "archiveFileName": "esp32-arduino-libs-b641c23033d9eb0244a7b579967df4ce14985e8a.zip",
+              "checksum": "SHA-256:e4c03671e199b38e4f6398d9fec956f9266996d859e1f75d753646ee3515615d",
+              "size": "355580172"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/6564ec970f8bedd3de60f584a7da40ffa66cebc2",
-              "archiveFileName": "esp32-arduino-libs-6564ec970f8bedd3de60f584a7da40ffa66cebc2.zip",
-              "checksum": "SHA-256:c58de85c93533495b1b53028f7b002febedf59185576577a57356d45d8362204",
-              "size": "355458234"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/b641c23033d9eb0244a7b579967df4ce14985e8a",
+              "archiveFileName": "esp32-arduino-libs-b641c23033d9eb0244a7b579967df4ce14985e8a.zip",
+              "checksum": "SHA-256:e4c03671e199b38e4f6398d9fec956f9266996d859e1f75d753646ee3515615d",
+              "size": "355580172"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/6564ec970f8bedd3de60f584a7da40ffa66cebc2",
-              "archiveFileName": "esp32-arduino-libs-6564ec970f8bedd3de60f584a7da40ffa66cebc2.zip",
-              "checksum": "SHA-256:c58de85c93533495b1b53028f7b002febedf59185576577a57356d45d8362204",
-              "size": "355458234"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/b641c23033d9eb0244a7b579967df4ce14985e8a",
+              "archiveFileName": "esp32-arduino-libs-b641c23033d9eb0244a7b579967df4ce14985e8a.zip",
+              "checksum": "SHA-256:e4c03671e199b38e4f6398d9fec956f9266996d859e1f75d753646ee3515615d",
+              "size": "355580172"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/6564ec970f8bedd3de60f584a7da40ffa66cebc2",
-              "archiveFileName": "esp32-arduino-libs-6564ec970f8bedd3de60f584a7da40ffa66cebc2.zip",
-              "checksum": "SHA-256:c58de85c93533495b1b53028f7b002febedf59185576577a57356d45d8362204",
-              "size": "355458234"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/b641c23033d9eb0244a7b579967df4ce14985e8a",
+              "archiveFileName": "esp32-arduino-libs-b641c23033d9eb0244a7b579967df4ce14985e8a.zip",
+              "checksum": "SHA-256:e4c03671e199b38e4f6398d9fec956f9266996d859e1f75d753646ee3515615d",
+              "size": "355580172"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/6564ec970f8bedd3de60f584a7da40ffa66cebc2",
-              "archiveFileName": "esp32-arduino-libs-6564ec970f8bedd3de60f584a7da40ffa66cebc2.zip",
-              "checksum": "SHA-256:c58de85c93533495b1b53028f7b002febedf59185576577a57356d45d8362204",
-              "size": "355458234"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/b641c23033d9eb0244a7b579967df4ce14985e8a",
+              "archiveFileName": "esp32-arduino-libs-b641c23033d9eb0244a7b579967df4ce14985e8a.zip",
+              "checksum": "SHA-256:e4c03671e199b38e4f6398d9fec956f9266996d859e1f75d753646ee3515615d",
+              "size": "355580172"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/6564ec970f8bedd3de60f584a7da40ffa66cebc2",
-              "archiveFileName": "esp32-arduino-libs-6564ec970f8bedd3de60f584a7da40ffa66cebc2.zip",
-              "checksum": "SHA-256:c58de85c93533495b1b53028f7b002febedf59185576577a57356d45d8362204",
-              "size": "355458234"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/b641c23033d9eb0244a7b579967df4ce14985e8a",
+              "archiveFileName": "esp32-arduino-libs-b641c23033d9eb0244a7b579967df4ce14985e8a.zip",
+              "checksum": "SHA-256:e4c03671e199b38e4f6398d9fec956f9266996d859e1f75d753646ee3515615d",
+              "size": "355580172"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/6564ec970f8bedd3de60f584a7da40ffa66cebc2",
-              "archiveFileName": "esp32-arduino-libs-6564ec970f8bedd3de60f584a7da40ffa66cebc2.zip",
-              "checksum": "SHA-256:c58de85c93533495b1b53028f7b002febedf59185576577a57356d45d8362204",
-              "size": "355458234"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/b641c23033d9eb0244a7b579967df4ce14985e8a",
+              "archiveFileName": "esp32-arduino-libs-b641c23033d9eb0244a7b579967df4ce14985e8a.zip",
+              "checksum": "SHA-256:e4c03671e199b38e4f6398d9fec956f9266996d859e1f75d753646ee3515615d",
+              "size": "355580172"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/6564ec970f8bedd3de60f584a7da40ffa66cebc2",
-              "archiveFileName": "esp32-arduino-libs-6564ec970f8bedd3de60f584a7da40ffa66cebc2.zip",
-              "checksum": "SHA-256:c58de85c93533495b1b53028f7b002febedf59185576577a57356d45d8362204",
-              "size": "355458234"
+              "url": "https://codeload.github.com/espressif/esp32-arduino-libs/zip/b641c23033d9eb0244a7b579967df4ce14985e8a",
+              "archiveFileName": "esp32-arduino-libs-b641c23033d9eb0244a7b579967df4ce14985e8a.zip",
+              "checksum": "SHA-256:e4c03671e199b38e4f6398d9fec956f9266996d859e1f75d753646ee3515615d",
+              "size": "355580172"
             }
           ]
         },
