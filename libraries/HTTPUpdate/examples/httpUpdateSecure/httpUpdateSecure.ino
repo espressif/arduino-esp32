@@ -96,7 +96,7 @@ void loop() {
     client.setCACert(rootCACertificate);
 
     // Reading data over SSL may be slow, use an adequate timeout
-    client.setTimeout(12000 / 1000); // timeout argument is defined in seconds for setTimeout
+    client.setTimeout(12000); // timeout argument is defined in miliseconds for setTimeout
 
     // The line below is optional. It can be used to blink the LED on the board during flashing
     // The LED will be on during download of one buffer of data from the network. The LED will
@@ -106,7 +106,9 @@ void loop() {
     // value is used to put the LED on. If the LED is on with HIGH, that value should be passed
     // httpUpdate.setLedPin(LED_BUILTIN, HIGH);
 
-    t_httpUpdate_return ret = httpUpdate.update(client, "https://server/file.bin");
+    t_httpUpdate_return ret = httpUpdate.update(client, "https://server/file.bin", "", [](HTTPClient *client) {
+      client->setAuthorization("test", "password");
+    });
     // Or:
     //t_httpUpdate_return ret = httpUpdate.update(client, "server", 443, "/file.bin");
 

@@ -15,7 +15,9 @@
 #include <WiFiClient.h>
 #include <WiFiAP.h>
 
+#ifndef LED_BUILTIN
 #define LED_BUILTIN 2   // Set the GPIO pin where you connected your test LED or comment this line out if your dev board has a built-in LED
+#endif
 
 // Set these to your desired credentials.
 const char *ssid = "yourAP";
@@ -32,7 +34,11 @@ void setup() {
   Serial.println("Configuring access point...");
 
   // You can remove the password parameter if you want the AP to be open.
-  WiFi.softAP(ssid, password);
+  // a valid password must have more than 7 characters
+  if (!WiFi.softAP(ssid, password)) {
+    log_e("Soft AP creation failed.");
+    while(1);
+  }
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(myIP);
@@ -42,7 +48,7 @@ void setup() {
 }
 
 void loop() {
-  WiFiClient client = server.available();   // listen for incoming clients
+  WiFiClient client = server.accept();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port

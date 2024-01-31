@@ -53,8 +53,7 @@ void ssl_init(sslclient_context *ssl_client)
     mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
 }
 
-
-int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t port, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
+int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_t port, const char* hostname, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
 {
     char buf[512];
     int ret, flags;
@@ -74,16 +73,11 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         return ssl_client->socket;
     }
 
-    IPAddress srv((uint32_t)0);
-    if(!WiFiGenericClass::hostByName(host, srv)){
-        return -1;
-    }
-
     fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = srv;
+    serv_addr.sin_addr.s_addr = ip;
     serv_addr.sin_port = htons(port);
 
     if(timeout <= 0){
@@ -193,7 +187,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         }
     } else if (useRootCABundle) {
         log_v("Attaching root CA cert bundle");
-        ret = arduino_esp_crt_bundle_attach(&ssl_client->ssl_conf);
+        ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
 
         if (ret < 0) {
             return handle_error(ret);
@@ -246,7 +240,10 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
         }
 
         log_v("Loading private key");
-        ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0);
+        mbedtls_ctr_drbg_context ctr_drbg;
+        mbedtls_ctr_drbg_init( &ctr_drbg );
+        ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0, mbedtls_ctr_drbg_random, &ctr_drbg);
+        mbedtls_ctr_drbg_free( &ctr_drbg );
 
         if (ret != 0) {
             mbedtls_x509_crt_free(&ssl_client->client_cert); // cert+key are free'd in pair
@@ -259,7 +256,7 @@ int start_ssl_client(sslclient_context *ssl_client, const char *host, uint32_t p
     log_v("Setting hostname for TLS session...");
 
     // Hostname set here should match CN in server certificate
-    if((ret = mbedtls_ssl_set_hostname(&ssl_client->ssl_ctx, host)) != 0){
+    if((ret = mbedtls_ssl_set_hostname(&ssl_client->ssl_ctx, hostname != NULL ? hostname : ip.toString().c_str())) != 0){
         return handle_error(ret);
     }
 
@@ -331,13 +328,13 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     }
 
     // avoid memory leak if ssl connection attempt failed
-    if (ssl_client->ssl_conf.ca_chain != NULL) {
+    //if (ssl_client->ssl_conf.ca_chain != NULL) {
         mbedtls_x509_crt_free(&ssl_client->ca_cert);
-    }
-    if (ssl_client->ssl_conf.key_cert != NULL) {
+    //}
+    //if (ssl_client->ssl_conf.key_cert != NULL) {
         mbedtls_x509_crt_free(&ssl_client->client_cert);
         mbedtls_pk_free(&ssl_client->client_key);
-    }
+    //}
     mbedtls_ssl_free(&ssl_client->ssl_ctx);
     mbedtls_ssl_config_free(&ssl_client->ssl_conf);
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);

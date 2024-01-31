@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include "Stream.h"
 #include "sdkconfig.h"
 
@@ -92,3 +96,4 @@ public:
 };
 
 #endif /* CONFIG_TINYUSB_VENDOR_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

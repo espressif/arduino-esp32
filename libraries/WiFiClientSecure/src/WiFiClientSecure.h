@@ -55,6 +55,7 @@ public:
     int connect(const char *host, uint16_t port, const char *rootCABuff, const char *cli_cert, const char *cli_key);
     int connect(IPAddress ip, uint16_t port, const char *pskIdent, const char *psKey);
     int connect(const char *host, uint16_t port, const char *pskIdent, const char *psKey);
+    int connect(IPAddress ip, uint16_t port, const char *host, const char *CA_cert, const char *cert, const char *private_key);
     int peek();
     size_t write(uint8_t data);
     size_t write(const uint8_t *buf, size_t size);
@@ -79,7 +80,6 @@ public:
     void setAlpnProtocols(const char **alpn_protos);
     const mbedtls_x509_crt* getPeerCertificate() { return mbedtls_ssl_get_peer_cert(&sslclient->ssl_ctx); };
     bool getFingerprintSHA256(uint8_t sha256_result[32]) { return get_peer_fingerprint(sslclient, sha256_result); };
-    int setTimeout(uint32_t seconds);
     int fd() const;
 
     operator bool()

@@ -9,7 +9,8 @@ function build(){
     local fqbn=$2
     local chunk_index=$3
     local chunks_cnt=$4
-    local sketches=$5
+    shift; shift; shift; shift;
+    local sketches=$*
 
     local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
     local BUILD_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
@@ -24,15 +25,15 @@ function build(){
         ${BUILD_SKETCHES} ${args}
     else
         for sketch in ${sketches}; do
-            args+=" -s $(dirname $sketch)"
-            if [ "$OS_IS_WINDOWS" == "1" ]; then
+            local sargs="$args -s $(dirname $sketch)"
+            if [ "$OS_IS_WINDOWS" == "1" ] && [ -d "$ARDUINO_IDE_PATH/tools-builder" ]; then
                 local ctags_version=`ls "$ARDUINO_IDE_PATH/tools-builder/ctags/"`
                 local preprocessor_version=`ls "$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/"`
                 win_opts="-prefs=runtime.tools.ctags.path=$ARDUINO_IDE_PATH/tools-builder/ctags/$ctags_version
                 -prefs=runtime.tools.arduino-preprocessor.path=$ARDUINO_IDE_PATH/tools-builder/arduino-preprocessor/$preprocessor_version"
-                args+=" ${win_opts}"
+                sargs+=" ${win_opts}"
             fi
-            ${BUILD_SKETCH} ${args}
+            ${BUILD_SKETCH} ${sargs}
         done
     fi
 }
@@ -59,30 +60,29 @@ fi
 
 SCRIPTS_DIR="./.github/scripts"
 if [ "$BUILD_PIO" -eq 0 ]; then
-    source ${SCRIPTS_DIR}/install-arduino-ide.sh
+    #source ${SCRIPTS_DIR}/install-arduino-ide.sh
+    source ${SCRIPTS_DIR}/install-arduino-cli.sh
     source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
     FQBN_ESP32="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
     FQBN_ESP32S2="espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app"
     FQBN_ESP32S3="espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
     FQBN_ESP32C3="espressif:esp32:esp32c3:PartitionScheme=huge_app"
+    FQBN_ESP32C6="espressif:esp32:esp32c6:PartitionScheme=huge_app"
+    FQBN_ESP32H2="espressif:esp32:esp32h2:PartitionScheme=huge_app"
 
     SKETCHES_ESP32="\
       $ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino\
-      $ARDUINO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino\
+      $ARDUINO_ESP32_PATH/libraries/BLE/examples/Server/Server.ino\
       $ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino\
       $ARDUINO_ESP32_PATH/libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino\
     "
 
-    SKETCHES_ESP32XX="\
-      $ARDUINO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino\
-      $ARDUINO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino\
-      $ARDUINO_ESP32_PATH/libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino\
-    "
-
     build "esp32s3" $FQBN_ESP32S3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
-    build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
-    build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32XX
+    build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
+    build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
+    build "esp32c6" $FQBN_ESP32C6 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
+    build "esp32h2" $FQBN_ESP32H2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32"   $FQBN_ESP32   $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
 else
     source ${SCRIPTS_DIR}/install-platformio-esp32.sh
@@ -92,7 +92,7 @@ else
     build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFi/examples/WiFiClient/WiFiClient.ino" && \
     build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino" && \
     build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino" && \
-    build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/BLE/examples/BLE_server/BLE_server.ino" && \
+    build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/BLE/examples/Server/Server.ino" && \
     build_pio_sketch "$BOARD" "$OPTIONS" "$PLATFORMIO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino"
 
     # Basic sanity testing for other series
