@@ -50,14 +50,15 @@ repos:
         entry: pip install --upgrade docutils
         language: system
         pass_filenames: false
-  # - repo: https://github.com/errata-ai/vale
-  #   rev: "v3.0.7"
-  #   hooks:
-  #     - id: vale
-  #       name: vale-sync
-  #       language_version: "1.21.6"
-  #       pass_filenames: false
-  #       args: [sync]
-      # - id: vale
-      #   language_version: "1.21.6"
-      #   types_or: [markdown, rst]
+        types_or: [markdown, rst]
+  - repo: https://github.com/errata-ai/vale
+    rev: "v3.0.7"
+    hooks:
+      - id: vale
+        name: vale-sync
+        language_version: "1.21.6"
+        pass_filenames: false
+        args: [sync]
+      - id: vale
+        language_version: "1.21.6"
+        types_or: [markdown, rst]
