@@ -2,8 +2,12 @@ name: Pre-commit check
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
 jobs:
   lint:
+#    if: |
+#      contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
     name: Checking if any fixes are needed
     runs-on: ubuntu-latest
     steps:
