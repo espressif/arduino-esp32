@@ -90,7 +90,7 @@ set(ARDUINO_ALL_LIBRARIES
   HTTPClient
   HTTPUpdate
   Insights
-  LITTLEFS
+  LittleFS
   NetBIOS
   Preferences
   RainMaker
@@ -129,7 +129,6 @@ set(ARDUINO_LIBRARY_ESP_I2S_SRCS libraries/ESP_I2S/src/ESP_I2S.cpp)
 set(ARDUINO_LIBRARY_ESP_SR_SRCS 
   libraries/ESP_SR/src/ESP_SR.cpp
   libraries/ESP_SR/src/esp32-hal-sr.c)
-set(ARDUINO_LIBRARY_ESP_SR_REQUIRES esp_sr)
  
 set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
  
@@ -147,8 +146,8 @@ set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
 
 set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
 
-set(ARDUINO_LIBRARY_LITTLEFS_SRCS libraries/LITTLEFS/src/LITTLEFS.cpp)
-set(ARDUINO_LIBRARY_LITTLEFS_REQUIRES esp_littlefs)
+set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
+set(ARDUINO_LIBRARY_LittleFS_REQUIRES esp_littlefs)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
 
@@ -159,7 +158,6 @@ set(ARDUINO_LIBRARY_RainMaker_SRCS
   libraries/RainMaker/src/RMakerNode.cpp
   libraries/RainMaker/src/RMakerParam.cpp
   libraries/RainMaker/src/RMakerDevice.cpp
-  libraries/RainMaker/src/RMakerType.cpp
   libraries/RainMaker/src/RMakerType.cpp
   libraries/RainMaker/src/RMakerQR.cpp
   libraries/RainMaker/src/RMakerUtils.cpp
@@ -205,7 +203,6 @@ set(ARDUINO_LIBRARY_WiFiClientSecure_SRCS
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp)
 
 set(ARDUINO_LIBRARY_WiFi_SRCS
-  libraries/WiFi/src/ETH.cpp
   libraries/WiFi/src/WiFiAP.cpp
   libraries/WiFi/src/WiFiClient.cpp
   libraries/WiFi/src/WiFi.cpp
