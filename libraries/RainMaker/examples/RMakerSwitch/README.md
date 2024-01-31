@@ -25,3 +25,7 @@ Received value = true for Switch - Power
 Toggle State to false.
 [ 29937][I][RMakerDevice.cpp:162] updateAndReportParam(): Device : Switch, Param Name : Power, Val : false
 ```
+
+### Resetting the device
+- Press and Hold the Boot button for more than 3 seconds and then release to reset Wi-Fi configuration.
+- Press and Hold the Boot button for more than 10 seconds and then release to reset to factory defaults.

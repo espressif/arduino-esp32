@@ -2,39 +2,46 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
+
+#define USB_VID            0x239A
+#define USB_PID            0x80E5
+#define USB_MANUFACTURER   "Adafruit"
+#define USB_PRODUCT        "EPD MagTag 2.9\" ESP32-S2"
+#define USB_SERIAL         "" // Empty string for MAC adddress
+
+// User LED 
+#define LED_BUILTIN 13
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+
+// Neopixel
+#define PIN_NEOPIXEL        1    // D1
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
+#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BRIGHTNESS 64
+
+#define NEOPIXEL_NUM        4    // number of neopixels
+#define NEOPIXEL_POWER      21   // power pin
+#define NEOPIXEL_POWER_ON   LOW  // power pin state when on
 
 
-#define USB_VID 0x239A
-#define USB_PID 0x80DF
-#define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "EPD MagTag 2.9\" ESP32-S2"
-#define USB_SERIAL ""
+#define PIN_BUTTON1         15
+#define PIN_BUTTON2         14
+#define PIN_BUTTON3         12
+#define PIN_BUTTON4         11
+#define PIN_BUTTON5         0  // BOOT0 switch
 
-
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
-static const uint8_t PIN_NEOPIXEL = 1;  // D1
-static const uint8_t NEOPIXEL_POWER = 21;
-
-static const uint8_t LED_BUILTIN = 13;
-
-static const uint8_t EPD_BUSY = 5;
+static const uint8_t EPD_BUSY  = 5;
 static const uint8_t EPD_RESET = 6;
-static const uint8_t EPD_DC = 7;
-static const uint8_t EPD_CS = 8;
+static const uint8_t EPD_DC    = 7;
+static const uint8_t EPD_CS    = 8;
 
 static const uint8_t ACCEL_IRQ = 9;
 
-static const uint8_t BUTTON_A = 15;
-static const uint8_t BUTTON_B = 14;
-static const uint8_t BUTTON_C = 12;
-static const uint8_t BUTTON_D = 11;
+static const uint8_t BUTTON_A = PIN_BUTTON1;
+static const uint8_t BUTTON_B = PIN_BUTTON2;
+static const uint8_t BUTTON_C = PIN_BUTTON3;
+static const uint8_t BUTTON_D = PIN_BUTTON4;
 
 static const uint8_t LIGHT_SENSOR = 3;
 static const uint8_t BATT_MONITOR = 4;
@@ -52,9 +59,10 @@ static const uint8_t MISO  = 37;
 
 
 
-static const uint8_t TX = 37;
-static const uint8_t RX = 38;
-
+static const uint8_t TX = 43;
+static const uint8_t RX = 44;
+#define TX1 TX
+#define RX1 RX
 
 static const uint8_t A0 = 17;
 static const uint8_t A1 = 18;
@@ -78,20 +86,8 @@ static const uint8_t A18 = 19;
 static const uint8_t A19 = 20;
 
 
-static const uint8_t T1 = 1;
-static const uint8_t T2 = 2;
-static const uint8_t T3 = 3;
-static const uint8_t T4 = 4;
-static const uint8_t T5 = 5;
-static const uint8_t T6 = 6;
-static const uint8_t T7 = 7;
-static const uint8_t T8 = 8;
-static const uint8_t T9 = 9;
 static const uint8_t T10 = 10;
-static const uint8_t T11 = 11;
-static const uint8_t T12 = 12;
-static const uint8_t T13 = 13;
-static const uint8_t T14 = 14;
+
 
 static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;

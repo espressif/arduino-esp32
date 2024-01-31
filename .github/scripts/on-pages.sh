@@ -71,7 +71,7 @@ function git_safe_upload_to_pages(){
     local name=$(basename "$file")
     local size=`get_file_size "$file"`
     local upload_res=`git_upload_to_pages "$path" "$file"`
-    if [ $? -ne 0 ]; then 
+    if [ $? -ne 0 ]; then
         >&2 echo "ERROR: Failed to upload '$name' ($?)"
         return 1
     fi
@@ -85,53 +85,59 @@ function git_safe_upload_to_pages(){
     return $?
 }
 
-EVENT_JSON=`cat $GITHUB_EVENT_PATH`
+git_safe_upload_to_pages "index.md" "README.md"
 
-echo "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH"
-echo "EVENT_JSON: $EVENT_JSON"
+# At some point github stopped providing a list of edited file
+# but we also stopped havong documentation in md format,
+# so we can skip this portion safely and update just the index
 
-pages_added=`echo "$EVENT_JSON" | jq -r '.commits[].added[]'`
-echo "added: $pages_added"
-pages_modified=`echo "$EVENT_JSON" | jq -r '.commits[].modified[]'`
-echo "modified: $pages_modified"
-pages_removed=`echo "$EVENT_JSON" | jq -r '.commits[].removed[]'`
-echo "removed: $pages_removed"
+# EVENT_JSON=`cat $GITHUB_EVENT_PATH`
 
-for page in $pages_added; do
-    if [[ $page != "README.md" && $page != "docs/"* ]]; then
-        continue
-    fi
-    echo "Adding '$page' to pages ..."
-    if [[ $page == "README.md" ]]; then
-        git_safe_upload_to_pages "index.md" "README.md"
-    else
-        git_safe_upload_to_pages "$page" "$page"
-    fi
-done
+# echo "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH"
+# echo "EVENT_JSON: $EVENT_JSON"
 
-for page in $pages_modified; do
-    if [[ $page != "README.md" && $page != "docs/"* ]]; then
-        continue
-    fi
-    echo "Modifying '$page' ..."
-    if [[ $page == "README.md" ]]; then
-        git_safe_upload_to_pages "index.md" "README.md"
-    else
-        git_safe_upload_to_pages "$page" "$page"
-    fi
-done
+# pages_added=`echo "$EVENT_JSON" | jq -r '.commits[].added[]'`
+# echo "added: $pages_added"
+# pages_modified=`echo "$EVENT_JSON" | jq -r '.commits[].modified[]'`
+# echo "modified: $pages_modified"
+# pages_removed=`echo "$EVENT_JSON" | jq -r '.commits[].removed[]'`
+# echo "removed: $pages_removed"
 
-for page in $pages_removed; do
-    if [[ $page != "README.md" && $page != "docs/"* ]]; then
-        continue
-    fi
-    echo "Removing '$page' from pages ..."
-    if [[ $page == "README.md" ]]; then
-        git_remove_from_pages "README.md" > /dev/null
-    else
-        git_remove_from_pages "$page" > /dev/null
-    fi
-done
+# for page in $pages_added; do
+#     if [[ $page != "README.md" && $page != "docs/"* ]]; then
+#         continue
+#     fi
+#     echo "Adding '$page' to pages ..."
+#     if [[ $page == "README.md" ]]; then
+#         git_safe_upload_to_pages "index.md" "README.md"
+#     else
+#         git_safe_upload_to_pages "$page" "$page"
+#     fi
+# done
+
+# for page in $pages_modified; do
+#     if [[ $page != "README.md" && $page != "docs/"* ]]; then
+#         continue
+#     fi
+#     echo "Modifying '$page' ..."
+#     if [[ $page == "README.md" ]]; then
+#         git_safe_upload_to_pages "index.md" "README.md"
+#     else
+#         git_safe_upload_to_pages "$page" "$page"
+#     fi
+# done
+
+# for page in $pages_removed; do
+#     if [[ $page != "README.md" && $page != "docs/"* ]]; then
+#         continue
+#     fi
+#     echo "Removing '$page' from pages ..."
+#     if [[ $page == "README.md" ]]; then
+#         git_remove_from_pages "README.md" > /dev/null
+#     else
+#         git_remove_from_pages "$page" > /dev/null
+#     fi
+# done
 
 echo
 echo "DONE!"

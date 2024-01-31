@@ -11,13 +11,14 @@
 #######################################
 
 begin	KEYWORD2
+end	KEYWORD2
 setClock	KEYWORD2
-setClockStretchLimit	KEYWORD2
+getClock	KEYWORD2
+setTimeOut	KEYWORD2
+getTimeOut	KEYWORD2
 beginTransmission	KEYWORD2
 endTransmission	KEYWORD2
 requestFrom	KEYWORD2
-send	KEYWORD2
-receive	KEYWORD2
 onReceive	KEYWORD2
 onRequest	KEYWORD2
 
@@ -26,6 +27,7 @@ onRequest	KEYWORD2
 #######################################
 
 Wire	KEYWORD2
+TwoWire	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

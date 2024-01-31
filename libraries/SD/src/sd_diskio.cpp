@@ -11,8 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Disable the automatic pin remapping of the API calls in this file
+#define ARDUINO_CORE_BUILD
+
 #include "sd_diskio.h"
 #include "esp_system.h"
+#include "esp32-hal-periman.h"
+
 extern "C" {
     #include "ff.h"
     #include "diskio.h"
@@ -121,7 +127,7 @@ bool sdSelectCard(uint8_t pdrv)
 {
     ardu_sdcard_t * card = s_cards[pdrv];
     digitalWrite(card->ssPin, LOW);
-    bool s = sdWait(pdrv, 300);
+    bool s = sdWait(pdrv, 500);
     if (!s) {
         log_e("Select Failed");
         digitalWrite(card->ssPin, HIGH);
@@ -227,7 +233,7 @@ char sdWriteBytes(uint8_t pdrv, const char* buffer, char token)
     ardu_sdcard_t * card = s_cards[pdrv];
     unsigned short crc = (card->supports_crc)?CRC16(buffer, 512):0xFFFF;
     if (!sdWait(pdrv, 500)) {
-        return false;
+        return 0;
     }
 
     card->spi->write(token);
@@ -418,7 +424,7 @@ unsigned long sdGetSectorsCount(uint8_t pdrv)
 {
     for (int f = 0; f < 3; f++) {
         if(!sdSelectCard(pdrv)) {
-            return false;
+            return 0;
         }
 
         if (!sdCommand(pdrv, SEND_CSD, 0, NULL)) {
@@ -506,10 +512,17 @@ DSTATUS ff_sd_initialize(uint8_t pdrv)
         card->spi->transfer(0XFF);
     }
 
-    if (sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL) != 1) {
+    // Fix mount issue - sdWait fail ignored before command GO_IDLE_STATE
+    digitalWrite(card->ssPin, LOW);
+    if(!sdWait(pdrv, 500)){
+        log_w("sdWait fail ignored, card initialize continues");
+    }
+    if (sdCommand(pdrv, GO_IDLE_STATE, 0, NULL) != 1){
+        sdDeselectCard(pdrv);
         log_w("GO_IDLE_STATE failed");
         goto unknown_card;
     }
+    sdDeselectCard(pdrv);
 
     token = sdTransaction(pdrv, CRC_ON_OFF, 1, NULL);
     if (token == 0x5) {
@@ -609,6 +622,14 @@ unknown_card:
 
 DSTATUS ff_sd_status(uint8_t pdrv)
 {
+    ardu_sdcard_t * card = s_cards[pdrv];
+    AcquireSPI lock(card);
+    
+    if(sdTransaction(pdrv, SEND_STATUS, 0, NULL))
+    {
+        log_e("Check status failed");
+        return STA_NOINIT;
+    }
     return s_cards[pdrv]->status;
 }
 
@@ -703,6 +724,7 @@ uint8_t sdcard_uninit(uint8_t pdrv)
     esp_err_t err = ESP_OK;
     if (card->base_path) {
         err = esp_vfs_fat_unregister_path(card->base_path);
+        free(card->base_path);
     }
     free(card);
     return err;
@@ -724,7 +746,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
     card->base_path = NULL;
     card->frequency = hz;
     card->spi = spi;
-    card->ssPin = cs;
+    card->ssPin = digitalPinToGPIONumber(cs);
 
     card->supports_crc = true;
     card->type = CARD_NONE;
@@ -732,6 +754,7 @@ uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz)
 
     pinMode(card->ssPin, OUTPUT);
     digitalWrite(card->ssPin, HIGH);
+    perimanSetPinBusExtraType(card->ssPin, "SD_SS");
 
     s_cards[pdrv] = card;
 
@@ -788,8 +811,15 @@ bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format
     if (res != FR_OK) {
         log_e("f_mount failed: %s", fferr2str[res]);
         if(res == 13 && format_if_empty){
-            BYTE work[FF_MAX_SS];
-            res = f_mkfs(drv, FM_ANY, 0, work, sizeof(work));
+            BYTE* work = (BYTE*) malloc(sizeof(BYTE) * FF_MAX_SS);
+            if (!work) {
+              log_e("alloc for f_mkfs failed");
+              return false;
+            }
+            //FRESULT f_mkfs (const TCHAR* path, const MKFS_PARM* opt, void* work, UINT len);
+            const MKFS_PARM opt = {(BYTE)FM_ANY, 0, 0, 0, 0};
+            res = f_mkfs(drv, &opt, work, sizeof(BYTE) * FF_MAX_SS);
+            free(work);
             if (res != FR_OK) {
                 log_e("f_mkfs failed: %s", fferr2str[res]);
                 esp_vfs_fat_unregister_path(path);

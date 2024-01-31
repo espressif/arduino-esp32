@@ -1,19 +1,19 @@
 #######################################
-# Syntax Coloring Map For ESP8266httpUpdate
+# Syntax Coloring Map For HTTPUpdate
 #######################################
 
 #######################################
 # Library (KEYWORD3)
 #######################################
 
-ESP8266httpUpdate	KEYWORD3		RESERVED_WORD
+ESP32httpUpdate	KEYWORD3		RESERVED_WORD
 
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
 
 HTTPUpdateResult	KEYWORD1		DATA_TYPE
-ESPhttpUpdate	KEYWORD1		DATA_TYPE
+httpUpdate	KEYWORD1		DATA_TYPE
 
 #######################################
 # Methods and Functions (KEYWORD2)

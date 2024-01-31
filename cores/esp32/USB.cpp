@@ -11,10 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "USB.h"
+
+#if SOC_USB_OTG_SUPPORTED
+#if CONFIG_TINYUSB_ENABLED
+
+#include "pins_arduino.h"
 #include "esp32-hal.h"
 #include "esp32-hal-tinyusb.h"
-#include "USB.h"
-#if CONFIG_TINYUSB_ENABLED
+#include "common/tusb_common.h"
+#include "StreamString.h"
+#include "rom/ets_sys.h"
+#include "esp_mac.h"
 
 #ifndef USB_VID
 #define USB_VID USB_ESPRESSIF_VID
@@ -29,16 +38,26 @@
 #define USB_PRODUCT ARDUINO_BOARD
 #endif
 #ifndef USB_SERIAL
+#if CONFIG_IDF_TARGET_ESP32S3
+#define USB_SERIAL "__MAC__"
+#else
 #define USB_SERIAL "0"
 #endif
+#endif
+#ifndef USB_WEBUSB_ENABLED
+#define USB_WEBUSB_ENABLED false
+#endif
+#ifndef USB_WEBUSB_URL
+#define USB_WEBUSB_URL "https://espressif.github.io/arduino-esp32/webusb.html"
+#endif
 
-#if CFG_TUD_DFU_RUNTIME
+#if CFG_TUD_DFU
+__attribute__((weak)) uint16_t load_dfu_ota_descriptor(uint8_t * dst, uint8_t * itf) {
+    return 0;
+}
+#elif CFG_TUD_DFU_RUNTIME
 static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
 {
-#define DFU_ATTR_CAN_DOWNLOAD              1
-#define DFU_ATTR_CAN_UPLOAD                2
-#define DFU_ATTR_MANIFESTATION_TOLERANT    4
-#define DFU_ATTR_WILL_DETACH               8
 #define DFU_ATTRS (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
 
     uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB DFU_RT");
@@ -50,8 +69,11 @@ static uint16_t load_dfu_descriptor(uint8_t * dst, uint8_t * itf)
     memcpy(dst, descriptor, TUD_DFU_RT_DESC_LEN);
     return TUD_DFU_RT_DESC_LEN;
 }
+#endif /* CFG_TUD_DFU_RUNTIME */
+
+#if CFG_TUD_DFU_RUNTIME
 // Invoked on DFU_DETACH request to reboot to the bootloader
-void tud_dfu_rt_reboot_to_dfu(void)
+void tud_dfu_runtime_reboot_to_dfu_cb(void)
 {
     usb_persist_restart(RESTART_BOOTLOADER_DFU);
 }
@@ -80,14 +102,14 @@ static bool tinyusb_device_suspended = false;
 // Invoked when device is mounted (configured)
 void tud_mount_cb(void){
     tinyusb_device_mounted = true;
-    arduino_usb_event_data_t p = {0};
+    arduino_usb_event_data_t p;
     arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_STARTED_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 
 // Invoked when device is unmounted
 void tud_umount_cb(void){
     tinyusb_device_mounted = false;
-    arduino_usb_event_data_t p = {0};
+    arduino_usb_event_data_t p;
     arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 
@@ -95,7 +117,7 @@ void tud_umount_cb(void){
 // Within 7ms, device must draw an average of current less than 2.5 mA from bus
 void tud_suspend_cb(bool remote_wakeup_en){
     tinyusb_device_suspended = true;
-    arduino_usb_event_data_t p = {0};
+    arduino_usb_event_data_t p;
     p.suspend.remote_wakeup_en = remote_wakeup_en;
     arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_SUSPEND_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
@@ -103,7 +125,7 @@ void tud_suspend_cb(bool remote_wakeup_en){
 // Invoked when usb bus is resumed
 void tud_resume_cb(void){
     tinyusb_device_suspended = false;
-    arduino_usb_event_data_t p = {0};
+    arduino_usb_event_data_t p;
     arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_RESUME_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 
@@ -120,8 +142,8 @@ ESPUSB::ESPUSB(size_t task_stack_size, uint8_t event_task_priority)
 ,usb_protocol(MISC_PROTOCOL_IAD)
 ,usb_attributes(TUSB_DESC_CONFIG_ATT_SELF_POWERED)
 ,usb_power_ma(500)
-,webusb_enabled(false)
-,webusb_url("espressif.github.io/arduino-esp32/webusb.html")
+,webusb_enabled(USB_WEBUSB_ENABLED)
+,webusb_url(USB_WEBUSB_URL)
 ,_started(false)
 ,_task_stack_size(task_stack_size)
 ,_event_task_priority(event_task_priority)
@@ -149,6 +171,15 @@ ESPUSB::~ESPUSB(){
 
 bool ESPUSB::begin(){
     if(!_started){
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+        if(serial_number == "__MAC__"){
+            StreamString s;
+            uint8_t m[6];
+            esp_efuse_mac_get_default(m);
+            s.printf("%02X%02X%02X%02X%02X%02X", m[0], m[1], m[2], m[3], m[4], m[5]);
+            serial_number = s;
+        }
+#endif
         tinyusb_device_config_t tinyusb_device_config = {
                 .vid = vid,
                 .pid = pid,
@@ -183,7 +214,9 @@ ESPUSB::operator bool() const
 }
 
 bool ESPUSB::enableDFU(){
-#if CFG_TUD_DFU_RUNTIME
+#if CFG_TUD_DFU
+    return tinyusb_enable_interface(USB_INTERFACE_DFU, TUD_DFU_DESC_LEN(1), load_dfu_ota_descriptor) == ESP_OK;
+#elif CFG_TUD_DFU_RUNTIME
     return tinyusb_enable_interface(USB_INTERFACE_DFU, TUD_DFU_RT_DESC_LEN, load_dfu_descriptor) == ESP_OK;
 #endif /* CFG_TUD_DFU_RUNTIME */
     return false;
@@ -282,6 +315,9 @@ uint8_t ESPUSB::usbAttributes(void){
 bool ESPUSB::webUSB(bool enabled){
     if(!_started){
         webusb_enabled = enabled;
+        if(enabled && usb_version < 0x0210){
+            usb_version = 0x0210;
+        }
     }
     return !_started;
 }
@@ -332,3 +368,4 @@ const char * ESPUSB::webUSBURL(void){
 ESPUSB USB;
 
 #endif /* CONFIG_TINYUSB_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

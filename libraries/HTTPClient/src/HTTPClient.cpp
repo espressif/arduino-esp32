@@ -39,6 +39,9 @@
 
 #include "HTTPClient.h"
 
+/// Cookie jar support
+#include <time.h>
+
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
 class TransportTraits
 {
@@ -157,6 +160,7 @@ bool HTTPClient::begin(WiFiClient &client, String url) {
     }
 
     _port = (protocol == "https" ? 443 : 80);
+    _secure = (protocol == "https");
     return beginInternal(url, protocol.c_str());
 }
 
@@ -187,6 +191,7 @@ bool HTTPClient::begin(WiFiClient &client, String host, uint16_t port, String ur
     _port = port;
     _uri = uri;
     _protocol = (https ? "https" : "http");
+    _secure = https;
     return true;
 }
 
@@ -200,6 +205,7 @@ bool HTTPClient::begin(String url, const char* CAcert)
         end();
     }
 
+    clear();
     _port = 443;
     if (!beginInternal(url, "https")) {
         return false;
@@ -226,6 +232,7 @@ bool HTTPClient::begin(String url)
         end();
     }
 
+    clear();
     _port = 80;
     if (!beginInternal(url, "http")) {
         return begin(url, (const char*)NULL);
@@ -243,7 +250,6 @@ bool HTTPClient::begin(String url)
 bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 {
     log_v("url: %s", url.c_str());
-    clear();
 
     // check for : (http: or https:
     int index = url.indexOf(':');
@@ -254,13 +260,17 @@ bool HTTPClient::beginInternal(String url, const char* expectedProtocol)
 
     _protocol = url.substring(0, index);
     if (_protocol != expectedProtocol) {
-        log_w("unexpected protocol: %s, expected %s", _protocol.c_str(), expectedProtocol);
+        log_d("unexpected protocol: %s, expected %s", _protocol.c_str(), expectedProtocol);
         return false;
     }
 
     url.remove(0, (index + 3)); // remove http:// or https://
 
     index = url.indexOf('/');
+    if (index == -1) {
+        index = url.length();
+        url += '/';
+    }
     String host = url.substring(0, index);
     url.remove(0, index); // remove host part
 
@@ -376,9 +386,7 @@ void HTTPClient::disconnect(bool preserveClient)
     if(connected()) {
         if(_client->available() > 0) {
             log_d("still data in buffer (%d), clean up.\n", _client->available());
-            while(_client->available() > 0) {
-                _client->read();
-            }
+                _client->flush();
         }
 
         if(_reuse && _canReuse) {
@@ -460,6 +468,17 @@ void HTTPClient::setAuthorization(const char * auth)
 }
 
 /**
+ * set the Authorization type for the http request
+ * @param authType const char *
+ */
+void HTTPClient::setAuthorizationType(const char * authType)
+{
+    if(authType) {
+        _authorizationType = authType;
+    }
+}
+
+/**
  * set the timeout (ms) for establishing a connection to the server
  * @param connectTimeout int32_t
  */
@@ -476,7 +495,7 @@ void HTTPClient::setTimeout(uint16_t timeout)
 {
     _tcpTimeout = timeout;
     if(connected()) {
-        _client->setTimeout((timeout + 500) / 1000);
+        _client->setTimeout(timeout);
     }
 }
 
@@ -587,6 +606,12 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
             addHeader(F("Content-Length"), String(size));
         }
 
+        // add cookies to header, if present
+        String cookie_string;
+        if(generateCookieString(&cookie_string)) {
+            addHeader("Cookie", cookie_string);
+        }
+
         // send Header
         if(!sendHeader(type)) {
             return returnError(HTTPC_ERROR_SEND_HEADER_FAILED);
@@ -594,7 +619,21 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
 
         // send Payload if needed
         if(payload && size > 0) {
-            if(_client->write(&payload[0], size) != size) {
+            size_t sent_bytes = 0;
+            while(sent_bytes < size){
+                size_t sent = _client->write(&payload[sent_bytes], size - sent_bytes);
+                if (sent == 0){
+                    log_w("Failed to send chunk! Lets wait a bit");
+                    delay(100);
+                    sent = _client->write(&payload[sent_bytes], size - sent_bytes);
+                    if (sent == 0){
+                        log_e("Failed to send chunk!");
+                        break;
+                    }
+                }
+                sent_bytes += sent;
+            }
+            if(sent_bytes != size){
                 return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
             }
         }
@@ -690,12 +729,18 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
         addHeader("Content-Length", String(size));
     }
 
+    // add cookies to header, if present
+    String cookie_string;
+    if(generateCookieString(&cookie_string)) {
+        addHeader("Cookie", cookie_string);
+    }
+
     // send Header
     if(!sendHeader(type)) {
         return returnError(HTTPC_ERROR_SEND_HEADER_FAILED);
     }
 
-    int buff_size = HTTP_TCP_BUFFER_SIZE;
+    int buff_size = HTTP_TCP_TX_BUFFER_SIZE;
 
     int len = size;
     int bytesWritten = 0;
@@ -704,8 +749,8 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
         len = -1;
     }
 
-    // if possible create smaller buffer then HTTP_TCP_BUFFER_SIZE
-    if((len > 0) && (len < HTTP_TCP_BUFFER_SIZE)) {
+    // if possible create smaller buffer then HTTP_TCP_TX_BUFFER_SIZE
+    if((len > 0) && (len < buff_size)) {
         buff_size = len;
     }
 
@@ -798,7 +843,7 @@ int HTTPClient::sendRequest(const char * type, Stream * stream, size_t size)
         }
 
     } else {
-        log_d("too less ram! need %d", HTTP_TCP_BUFFER_SIZE);
+        log_d("too less ram! need %d", buff_size);
         return returnError(HTTPC_ERROR_TOO_LESS_RAM);
     }
 
@@ -888,7 +933,7 @@ int HTTPClient::writeToStream(Stream * stream)
             // read size of chunk
             len = (uint32_t) strtol((const char *) chunkHeader.c_str(), NULL, 16);
             size += len;
-            log_d(" read chunk len: %d", len);
+            log_v(" read chunk len: %d", len);
 
             // data left?
             if(len > 0) {
@@ -1036,7 +1081,7 @@ void HTTPClient::collectHeaders(const char* headerKeys[], const size_t headerKey
 String HTTPClient::header(const char* name)
 {
     for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if(_currentHeaders[i].key == name) {
+        if(_currentHeaders[i].key.equalsIgnoreCase(name)) {
             return _currentHeaders[i].value;
         }
     }
@@ -1067,7 +1112,7 @@ int HTTPClient::headers()
 bool HTTPClient::hasHeader(const char* name)
 {
     for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if((_currentHeaders[i].key == name) && (_currentHeaders[i].value.length() > 0)) {
+        if((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0)) {
             return true;
         }
     }
@@ -1120,7 +1165,7 @@ bool HTTPClient::connect(void)
     }
 
     // set Timeout for WiFiClient and for Stream::readBytesUntil() and Stream::readStringUntil()
-    _client->setTimeout((_tcpTimeout + 500) / 1000);	
+    _client->setTimeout(_tcpTimeout);	
 
     log_d(" connected to %s:%u", _host.c_str(), _port);
 
@@ -1174,7 +1219,9 @@ bool HTTPClient::sendHeader(const char * type)
 
     if(_base64Authorization.length()) {
         _base64Authorization.replace("\n", "");
-        header += F("Authorization: Basic ");
+        header += F("Authorization: ");
+        header += _authorizationType; 
+        header += " ";
         header += _base64Authorization;
         header += "\r\n";
     }
@@ -1195,8 +1242,8 @@ int HTTPClient::handleHeaderResponse()
         return HTTPC_ERROR_NOT_CONNECTED;
     }
 
-    clear();
-
+    _returnCode = 0;
+    _size = -1;
     _canReuse = _reuse;
 
     String transferEncoding;
@@ -1204,6 +1251,7 @@ int HTTPClient::handleHeaderResponse()
     _transferEncoding = HTTPC_TE_IDENTITY;
     unsigned long lastDataTime = millis();
     bool firstLine = true;
+    String date;
 
     while(connected()) {
         size_t len = _client->available();
@@ -1216,7 +1264,7 @@ int HTTPClient::handleHeaderResponse()
             log_v("RX: '%s'", headerLine.c_str());
 
             if(firstLine) {
-		firstLine = false;
+		        firstLine = false;
                 if(_canReuse && headerLine.startsWith("HTTP/1.")) {
                     _canReuse = (headerLine[sizeof "HTTP/1." - 1] != '0');
                 }
@@ -1226,6 +1274,10 @@ int HTTPClient::handleHeaderResponse()
                 String headerName = headerLine.substring(0, headerLine.indexOf(':'));
                 String headerValue = headerLine.substring(headerLine.indexOf(':') + 1);
                 headerValue.trim();
+
+                if(headerName.equalsIgnoreCase("Date")) {
+                    date = headerValue;
+                }
 
                 if(headerName.equalsIgnoreCase("Content-Length")) {
                     _size = headerValue.toInt();
@@ -1245,12 +1297,24 @@ int HTTPClient::handleHeaderResponse()
                     _location = headerValue;
                 }
 
-                for(size_t i = 0; i < _headerKeysCount; i++) {
-                    if(_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
+                if (headerName.equalsIgnoreCase("Set-Cookie")) {
+                    setCookie(date, headerValue);
+                }
+
+                for (size_t i = 0; i < _headerKeysCount; i++) {
+                    if (_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
+                        // Uncomment the following lines if you need to add support for multiple headers with the same key:
+                        // if (!_currentHeaders[i].value.isEmpty()) {
+                        //     // Existing value, append this one with a comma
+                        //     _currentHeaders[i].value += ',';
+                        //     _currentHeaders[i].value += headerValue;
+                        // } else {
                         _currentHeaders[i].value = headerValue;
-                        break;
+                        // }
+                        break; // We found a match, stop looking
                     }
                 }
+
             }
 
             if(headerLine == "") {
@@ -1264,6 +1328,8 @@ int HTTPClient::handleHeaderResponse()
                     log_d("Transfer-Encoding: %s", transferEncoding.c_str());
                     if(transferEncoding.equalsIgnoreCase("chunked")) {
                         _transferEncoding = HTTPC_TE_CHUNKED;
+                    } else if(transferEncoding.equalsIgnoreCase("identity")) {
+                        _transferEncoding = HTTPC_TE_IDENTITY;
                     } else {
                         return HTTPC_ERROR_ENCODING;
                     }
@@ -1298,12 +1364,12 @@ int HTTPClient::handleHeaderResponse()
  */
 int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
 {
-    int buff_size = HTTP_TCP_BUFFER_SIZE;
+    int buff_size = HTTP_TCP_RX_BUFFER_SIZE;
     int len = size;
     int bytesWritten = 0;
 
-    // if possible create smaller buffer then HTTP_TCP_BUFFER_SIZE
-    if((len > 0) && (len < HTTP_TCP_BUFFER_SIZE)) {
+    // if possible create smaller buffer then HTTP_TCP_RX_BUFFER_SIZE
+    if((len > 0) && (len < buff_size)) {
         buff_size = len;
     }
 
@@ -1315,7 +1381,10 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
         while(connected() && (len > 0 || len == -1)) {
 
             // get available data size
-            size_t sizeAvailable = _client->available();
+            size_t sizeAvailable = buff_size;
+            if(len < 0){
+                sizeAvailable = _client->available();
+            }
 
             if(sizeAvailable) {
 
@@ -1391,7 +1460,7 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
 
         free(buff);
 
-        log_d("connection closed or file end (written: %d).", bytesWritten);
+        log_v("connection closed or file end (written: %d).", bytesWritten);
 
         if((size > 0) && (size != bytesWritten)) {
             log_d("bytesWritten %d and size %d mismatch!.", bytesWritten, size);
@@ -1399,7 +1468,7 @@ int HTTPClient::writeToStreamDataBlock(Stream * stream, int size)
         }
 
     } else {
-        log_w("too less ram! need %d", HTTP_TCP_BUFFER_SIZE);
+        log_w("too less ram! need %d", buff_size);
         return HTTPC_ERROR_TOO_LESS_RAM;
     }
 
@@ -1470,4 +1539,173 @@ bool HTTPClient::setURL(const String& url)
 const String &HTTPClient::getLocation(void)
 {
     return _location;
+}
+
+void HTTPClient::setCookieJar(CookieJar* cookieJar)
+{
+    _cookieJar = cookieJar;
+}
+
+void HTTPClient::resetCookieJar()
+{
+    _cookieJar = nullptr;
+}
+
+void HTTPClient::clearAllCookies()
+{
+    if (_cookieJar) _cookieJar->clear();
+}
+
+void HTTPClient::setCookie(String date, String headerValue)
+{
+    if (!_cookieJar)
+    {
+        return;
+    }
+    #define HTTP_TIME_PATTERN "%a, %d %b %Y %H:%M:%S"
+
+    Cookie cookie;
+    String value;
+    int pos1, pos2;
+
+    struct tm tm;
+    strptime(date.c_str(), HTTP_TIME_PATTERN, &tm);
+    cookie.date = mktime(&tm);
+
+    pos1 = headerValue.indexOf('=');
+    pos2 = headerValue.indexOf(';');
+
+    if (pos1 >= 0 && pos2 > pos1){
+        cookie.name = headerValue.substring(0, pos1);
+        cookie.value = headerValue.substring(pos1 + 1, pos2);
+    } else {
+        return;     // invalid cookie header
+    }
+
+    // only Cookie Attributes are case insensitive from this point on
+    headerValue.toLowerCase();
+
+    // expires
+    if (headerValue.indexOf("expires=") >= 0){
+        pos1 = headerValue.indexOf("expires=") + strlen("expires=");
+        pos2 = headerValue.indexOf(';', pos1);
+
+        if (pos2 > pos1)
+            value = headerValue.substring(pos1, pos2);
+        else
+            value = headerValue.substring(pos1);
+
+        strptime(value.c_str(), HTTP_TIME_PATTERN, &tm);
+        cookie.expires.date = mktime(&tm);
+        cookie.expires.valid = true;
+    }
+
+    // max-age
+    if (headerValue.indexOf("max-age=") >= 0){
+        pos1 = headerValue.indexOf("max-age=") + strlen("max-age=");
+        pos2 = headerValue.indexOf(';', pos1);
+
+        if (pos2 > pos1)
+            value = headerValue.substring(pos1, pos2);
+        else
+            value = headerValue.substring(pos1);
+
+        cookie.max_age.duration = value.toInt();
+        cookie.max_age.valid = true;
+    }
+
+    // domain
+    if (headerValue.indexOf("domain=") >= 0){
+        pos1 = headerValue.indexOf("domain=") + strlen("domain=");
+        pos2 = headerValue.indexOf(';', pos1);
+
+        if (pos2 > pos1)
+            value = headerValue.substring(pos1, pos2);
+        else
+            value = headerValue.substring(pos1);
+
+        if (value.startsWith(".")) value.remove(0, 1);
+
+        if (_host.indexOf(value) >= 0) {
+            cookie.domain = value;
+        } else {
+            return;     // server tries to set a cookie on a different domain; ignore it
+        }
+    } else {
+        pos1 = _host.lastIndexOf('.', _host.lastIndexOf('.') - 1);
+        if (pos1 >= 0)
+            cookie.domain = _host.substring(pos1 + 1);
+        else
+            cookie.domain = _host;
+    }
+
+    // path
+    if (headerValue.indexOf("path=") >= 0){
+        pos1 = headerValue.indexOf("path=") + strlen("path=");
+        pos2 = headerValue.indexOf(';', pos1);
+
+        if (pos2 > pos1)
+            cookie.path = headerValue.substring(pos1, pos2);
+        else
+            cookie.path = headerValue.substring(pos1);
+    }
+
+    // HttpOnly
+    cookie.http_only = (headerValue.indexOf("httponly") >= 0);
+
+    // secure
+    cookie.secure = (headerValue.indexOf("secure") >= 0);
+
+    // overwrite or delete cookie in/from cookie jar
+    time_t now_local = time(NULL);
+    time_t now_gmt = mktime(gmtime(&now_local));
+
+    bool found = false;
+
+    for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
+        if (c->domain == cookie.domain && c->name == cookie.name) {
+            // when evaluating, max-age takes precedence over expires if both are defined
+            if ((cookie.max_age.valid && ((cookie.date + cookie.max_age.duration) < now_gmt)) || cookie.max_age.duration <= 0
+            || (!cookie.max_age.valid && cookie.expires.valid && cookie.expires.date < now_gmt)) {
+                _cookieJar->erase(c);
+                c--;
+            } else {
+                *c = cookie;
+            }
+            found = true;
+        }
+    }
+
+    // add cookie to jar
+    if (!found && !(cookie.max_age.valid && cookie.max_age.duration <= 0)) 
+        _cookieJar->push_back(cookie);
+
+}
+
+bool HTTPClient::generateCookieString(String *cookieString)
+{
+    time_t now_local = time(NULL);
+    time_t now_gmt = mktime(gmtime(&now_local));
+
+    *cookieString = "";
+    bool found = false;
+
+    if (!_cookieJar)
+    {
+        return false;
+    }
+ 	for (auto c = _cookieJar->begin(); c != _cookieJar->end(); ++c) {
+        if ((c->max_age.valid && ((c->date + c->max_age.duration) < now_gmt)) || (!c->max_age.valid && c->expires.valid && c->expires.date < now_gmt)) {
+            _cookieJar->erase(c);
+            c--;
+        } else if (_host.indexOf(c->domain) >= 0 && (!c->secure || _secure) ) {
+            if (*cookieString == "")
+                *cookieString = c->name + "=" + c->value;
+            else
+                *cookieString += " ;" + c->name + "=" + c->value;
+            found = true;
+        }
+    }
+    
+    return found;
 }

@@ -42,6 +42,7 @@ License (MIT license):
 #include "WiFi.h"
 #include <functional>
 #include "esp_wifi.h"
+#include "esp_wifi_types.h"
 
 // Add quotes around defined value
 #ifdef __IN_ECLIPSE__
@@ -60,7 +61,7 @@ MDNSResponder::~MDNSResponder() {
     end();
 }
 
-bool MDNSResponder::begin(const char* hostName){
+bool MDNSResponder::begin(const String& hostName){
     if(mdns_init()){
         log_e("Failed starting MDNS");
         return false;
@@ -68,7 +69,7 @@ bool MDNSResponder::begin(const char* hostName){
     //WiFi.onEvent(_on_sys_event);
     _hostname = hostName;
 	_hostname.toLowerCase();
-    if(mdns_hostname_set(hostName)) {
+    if(mdns_hostname_set(hostName.c_str())) {
         log_e("Failed setting MDNS hostname");
         return false;
     }
@@ -245,6 +246,16 @@ mdns_result_t * MDNSResponder::_getResult(int idx){
     return result;
 }
 
+mdns_txt_item_t * MDNSResponder::_getResultTxt(int idx, int txtIdx){
+    mdns_result_t * result = _getResult(idx);
+    if(!result){
+        log_e("Result %d not found", idx);
+        return NULL;
+    }
+    if (txtIdx >= result->txt_count) return NULL;
+    return &result->txt[txtIdx];
+}
+
 String MDNSResponder::hostname(int idx) {
     mdns_result_t * result = _getResult(idx);
     if(!result){
@@ -254,7 +265,7 @@ String MDNSResponder::hostname(int idx) {
     return String(result->hostname);
 }
 
-IPAddress MDNSResponder::IP(int idx) {
+IPAddress MDNSResponder::address(int idx) {
     mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
@@ -270,20 +281,20 @@ IPAddress MDNSResponder::IP(int idx) {
     return IPAddress();
 }
 
-IPv6Address MDNSResponder::IPv6(int idx) {
+IPAddress MDNSResponder::addressV6(int idx) {
     mdns_result_t * result = _getResult(idx);
     if(!result){
         log_e("Result %d not found", idx);
-        return IPv6Address();
+        return IPAddress(IPv6);
     }
     mdns_ip_addr_t * addr = result->addr;
     while(addr){
         if(addr->addr.type == MDNS_IP_PROTOCOL_V6){
-            return IPv6Address(addr->addr.u_addr.ip6.addr);
+            return IPAddress(IPv6, (const uint8_t *)addr->addr.u_addr.ip6.addr, addr->addr.u_addr.ip6.zone);
         }
         addr = addr->next;
     }
-    return IPv6Address();
+    return IPAddress(IPv6);
 }
 
 uint16_t MDNSResponder::port(int idx) {
@@ -333,13 +344,17 @@ String MDNSResponder::txt(int idx, const char * key) {
 }
 
 String MDNSResponder::txt(int idx, int txtIdx) {
-    mdns_result_t * result = _getResult(idx);
-    if(!result){
-        log_e("Result %d not found", idx);
-        return "";
-    }
-    if (txtIdx >= result->txt_count) return "";
-    return result->txt[txtIdx].value;
+    mdns_txt_item_t * resultTxt = _getResultTxt(idx, txtIdx);
+    return !resultTxt
+        ? ""
+        : resultTxt->value;
+}
+
+String MDNSResponder::txtKey(int idx, int txtIdx) {
+    mdns_txt_item_t * resultTxt = _getResultTxt(idx, txtIdx);
+    return !resultTxt
+        ? ""
+        : resultTxt->key;
 }
 
 MDNSResponder MDNS;

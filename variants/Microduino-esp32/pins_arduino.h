@@ -3,17 +3,9 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        22
-#define NUM_ANALOG_INPUTS       12
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
 static const uint8_t LED_BUILTIN = -1;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 #define MTDO 15
 #define MTDI 12
@@ -26,6 +18,7 @@ static const uint8_t RX = 3;
 static const uint8_t SDA = 22;//23;
 static const uint8_t SCL = 21;//19;
 
+#define WIRE1_PIN_DEFINED 1             // See Wire.cpp at bool TwoWire::initPins(int sdaPin, int sclPin)
 static const uint8_t SDA1 = 12;
 static const uint8_t SCL1 = 13;
 

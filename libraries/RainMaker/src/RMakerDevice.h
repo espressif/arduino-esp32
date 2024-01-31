@@ -1,23 +1,62 @@
+// Copyright 2015-2020 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#pragma once
+#include "sdkconfig.h"
+#ifdef CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK
 #include "esp_system.h"
-#if ESP_IDF_VERSION_MAJOR >= 4 && CONFIG_IDF_TARGET_ESP32
-
 #include "RMakerParam.h"
 #include <esp_rmaker_standard_devices.h>
 #include <esp_rmaker_standard_params.h>
 
 class Device
 {
+    public:
+    typedef void (*deviceWriteCb)(Device*, Param*, const param_val_t val, void *priv_data, write_ctx_t *ctx);
+    typedef void (*deviceReadCb)(Device*, Param*, void *priv_data, read_ctx_t *ctx);
+    typedef struct {
+        void *priv_data;
+        deviceWriteCb write_cb;
+        deviceReadCb read_cb;
+    } RMakerDevicePrivT;
     private:
         const device_handle_t *device_handle;
+        RMakerDevicePrivT private_data;
 
+    protected:
+        void setPrivateData(void *priv_data) {
+            this->private_data.priv_data = priv_data;
+        }
+        
+        const RMakerDevicePrivT* getDevicePrivateData()
+        {
+            return &this->private_data;
+        }
     public:
         Device()
         {
             device_handle = NULL;
-        }        
+            this->private_data.priv_data = NULL;
+            this->private_data.write_cb = NULL;
+            this->private_data.read_cb = NULL;
+        }
+
         Device(const char *dev_name, const char *dev_type = NULL, void *priv_data = NULL)
         {
-            device_handle = esp_rmaker_device_create(dev_name, dev_type, priv_data);
+            this->private_data.priv_data = priv_data;
+            this->private_data.write_cb = NULL;
+            this->private_data.read_cb = NULL;
+            device_handle = esp_rmaker_device_create(dev_name, dev_type, &this->private_data);
             if(device_handle == NULL){
                 log_e("Device create error");
             }   
@@ -34,9 +73,6 @@ class Device
         {
             return device_handle;
         }
-        
-        typedef void (*deviceWriteCb)(Device*, Param*, const param_val_t val, void *priv_data, write_ctx_t *ctx);
-        typedef void (*deviceReadCb)(Device*, Param*, void *priv_data, read_ctx_t *ctx);
 
         esp_err_t deleteDevice();
         void addCb(deviceWriteCb write_cb, deviceReadCb read_cb = NULL);
@@ -57,7 +93,7 @@ class Device
         esp_err_t addCCTParam(int val, const char *param_name = ESP_RMAKER_DEF_CCT_NAME);
         esp_err_t addDirectionParam(int val, const char *param_name = ESP_RMAKER_DEF_DIRECTION_NAME);
         esp_err_t addSpeedParam(int val, const char *param_name = ESP_RMAKER_DEF_SPEED_NAME);
-        esp_err_t addTempratureParam(float val, const char *param_name = ESP_RMAKER_DEF_TEMPERATURE_NAME);
+        esp_err_t addTemperatureParam(float val, const char *param_name = ESP_RMAKER_DEF_TEMPERATURE_NAME);
           
         //Update Parameter
         esp_err_t updateAndReportParam(const char *param_name, bool val);
@@ -80,7 +116,8 @@ class Switch : public Device
         }
         void standardSwitchDevice(const char *dev_name, void *priv_data, bool power)
         {
-            esp_rmaker_device_t *dev_handle = esp_rmaker_switch_device_create(dev_name, priv_data, power);
+            this->setPrivateData(priv_data);
+            esp_rmaker_device_t *dev_handle = esp_rmaker_switch_device_create(dev_name, (void *)this->getDevicePrivateData(), power);
             setDeviceHandle(dev_handle);
             if(dev_handle == NULL){
                 log_e("Switch device not created");
@@ -101,7 +138,8 @@ class LightBulb : public Device
         }
         void standardLightBulbDevice(const char *dev_name, void *priv_data, bool power)
         {
-            esp_rmaker_device_t *dev_handle = esp_rmaker_lightbulb_device_create(dev_name, priv_data, power);
+            this->setPrivateData(priv_data);
+            esp_rmaker_device_t *dev_handle = esp_rmaker_lightbulb_device_create(dev_name, (void *)this->getDevicePrivateData(), power);
             setDeviceHandle(dev_handle);
             if(dev_handle == NULL){
                 log_e("Light device not created");
@@ -143,12 +181,12 @@ class TemperatureSensor : public Device
         }
         void standardTemperatureSensorDevice(const char *dev_name, void *priv_data, float temp)
         {
-            esp_rmaker_device_t *dev_handle = esp_rmaker_temp_sensor_device_create(dev_name, priv_data, temp);
+            this->setPrivateData(priv_data);
+            esp_rmaker_device_t *dev_handle = esp_rmaker_temp_sensor_device_create(dev_name, (void *)this->getDevicePrivateData(), temp);
             setDeviceHandle(dev_handle);
             if(dev_handle == NULL){
                 log_e("Temperature Sensor device not created");
             }
         }
 };
-
 #endif
