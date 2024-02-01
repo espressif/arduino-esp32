@@ -30,7 +30,6 @@
 #endif
 
 #include "esp_zigbee_core.h"
-#include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -237,48 +236,6 @@ static void switch_gpios_intr_enabled(bool enabled)
     }
 }
 
-// Tasks for checking the button event and debounce the switch state
-static void switch_button_detected(void *arg)
-{
-    uint8_t pin = 0;
-    switch_func_pair_t button_func_pair;
-    static switch_state_t switch_state = SWITCH_IDLE;
-    bool evt_flag = false;
-
-    for (;;) {
-        /* check if there is any queue received, if yes read out the button_func_pair */
-        if (xQueueReceive(gpio_evt_queue, &button_func_pair, portMAX_DELAY)) {
-            pin =  button_func_pair.pin;
-            switch_gpios_intr_enabled(false);
-            evt_flag = true;
-        }
-        while (evt_flag) {
-            bool value = digitalRead(pin);
-            switch (switch_state) {
-            case SWITCH_IDLE:
-                switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_IDLE;
-                break;
-            case SWITCH_PRESS_DETECTED:
-                switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_RELEASE_DETECTED;
-                break;
-            case SWITCH_RELEASE_DETECTED:
-                switch_state = SWITCH_IDLE;
-                /* callback to button_handler */
-                (*esp_zb_buttons_handler)(&button_func_pair);
-                break;
-            default:
-                break;
-            }
-            if (switch_state == SWITCH_IDLE) {
-                switch_gpios_intr_enabled(true);
-                evt_flag = false;
-                break;
-            }
-            vTaskDelay(10 / portTICK_PERIOD_MS);
-        }
-    }
-}
-
 /********************* Arduino functions **************************/
 void setup() {
     // Init Zigbee
@@ -287,10 +244,8 @@ void setup() {
         .host_config = ESP_ZB_DEFAULT_HOST_CONFIG(),
     };
 
-    ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
 
-    //switch_driver_init(button_func_pair, PAIR_SIZE(button_func_pair), esp_zb_buttons_handler);
     // Init button switch 
     for (int i = 0; i < PAIR_SIZE(button_func_pair); i++) {
         pinMode(button_func_pair[i].pin, INPUT_PULLUP);
@@ -305,12 +260,43 @@ void setup() {
 
     // Start Zigbee task
     xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
-
-    // Start GPIO task
-    xTaskCreate(switch_button_detected, "button_detected", 2048, NULL, 10, NULL);
-    
 }
 
 void loop() {
-  //empty, zigbee running in separate task
+    // Handle button switch in loop()
+    uint8_t pin = 0;
+    switch_func_pair_t button_func_pair;
+    static switch_state_t switch_state = SWITCH_IDLE;
+    bool evt_flag = false;
+
+    /* check if there is any queue received, if yes read out the button_func_pair */
+    if (xQueueReceive(gpio_evt_queue, &button_func_pair, portMAX_DELAY)) {
+        pin =  button_func_pair.pin;
+        switch_gpios_intr_enabled(false);
+        evt_flag = true;
+    }
+    while (evt_flag) {
+        bool value = digitalRead(pin);
+        switch (switch_state) {
+        case SWITCH_IDLE:
+            switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_IDLE;
+            break;
+        case SWITCH_PRESS_DETECTED:
+            switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_RELEASE_DETECTED;
+            break;
+        case SWITCH_RELEASE_DETECTED:
+            switch_state = SWITCH_IDLE;
+            /* callback to button_handler */
+            (*esp_zb_buttons_handler)(&button_func_pair);
+            break;
+        default:
+            break;
+        }
+        if (switch_state == SWITCH_IDLE) {
+            switch_gpios_intr_enabled(true);
+            evt_flag = false;
+            break;
+        }
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
 }
