@@ -294,31 +294,26 @@ config ARDUINO_SELECTIVE_FS
 config ARDUINO_SELECTIVE_SD
     bool "Enable SD"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_FS
-    select ARDUINO_SELECTIVE_FS
     default y
 
 config ARDUINO_SELECTIVE_SD_MMC
     bool "Enable SD_MMC"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_FS
-    select ARDUINO_SELECTIVE_FS
     default y
 
 config ARDUINO_SELECTIVE_SPIFFS
     bool "Enable SPIFFS"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_FS
-    select ARDUINO_SELECTIVE_FS
     default y
 
 config ARDUINO_SELECTIVE_FFat
     bool "Enable FFat"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_FS
-    select ARDUINO_SELECTIVE_FS
     default y
 
 config ARDUINO_SELECTIVE_LITTLEFS
     bool "Enable LITTLEFS"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_FS
-    select ARDUINO_SELECTIVE_FS
     default y
 
 config ARDUINO_SELECTIVE_Networking
@@ -329,7 +324,6 @@ config ARDUINO_SELECTIVE_Networking
 config ARDUINO_SELECTIVE_ArduinoOTA
     bool "Enable ArduinoOTA"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
-    select ARDUINO_SELECTIVE_WiFi
     select ARDUINO_SELECTIVE_ESPmDNS
     default y
 
@@ -341,26 +335,22 @@ config ARDUINO_SELECTIVE_AsyncUDP
 config ARDUINO_SELECTIVE_DNSServer
     bool "Enable DNSServer"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
-    select ARDUINO_SELECTIVE_WiFi
     default y
 
 config ARDUINO_SELECTIVE_ESPmDNS
     bool "Enable ESPmDNS"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
-    select ARDUINO_SELECTIVE_WiFi
     default y
 
 config ARDUINO_SELECTIVE_HTTPClient
     bool "Enable HTTPClient"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
-    select ARDUINO_SELECTIVE_WiFi
     select ARDUINO_SELECTIVE_WiFiClientSecure
     default y
 
 config ARDUINO_SELECTIVE_NetBIOS
     bool "Enable NetBIOS"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
-    select ARDUINO_SELECTIVE_WiFi
     default y
 
 config ARDUINO_SELECTIVE_WebServer
@@ -377,13 +367,11 @@ config ARDUINO_SELECTIVE_WiFi
 config ARDUINO_SELECTIVE_WiFiClientSecure
     bool "Enable WiFiClientSecure"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
-    select ARDUINO_SELECTIVE_WiFi
     default y
 
 config ARDUINO_SELECTIVE_WiFiProv
     bool "Enable WiFiProv"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
-    select ARDUINO_SELECTIVE_WiFi
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking && ARDUINO_SELECTIVE_WiFi
     default y
 
 config ARDUINO_SELECTIVE_BLE

@@ -92,6 +92,7 @@ set(ARDUINO_ALL_LIBRARIES
   Insights
   LittleFS
   NetBIOS
+  Networking
   Preferences
   RainMaker
   SD_MMC
