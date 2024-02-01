@@ -18,7 +18,7 @@ jobs:
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup jq
         uses: dcarbone/install-jq-action@v1.0.1
@@ -43,7 +43,7 @@ jobs:
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Check if build.board is uppercase
         run: |
