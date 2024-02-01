@@ -57,7 +57,7 @@ jobs:
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@main
@@ -87,7 +87,7 @@ jobs:
     steps:
       # Check out repository
       - name: Checkout repository    
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ env.GITHUB_TOKEN }}
           fetch-depth: '0'
