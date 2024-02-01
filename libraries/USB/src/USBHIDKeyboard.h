@@ -63,6 +63,7 @@ typedef union {
 #define KEY_DOWN_ARROW  0xD9
 #define KEY_LEFT_ARROW  0xD8
 #define KEY_RIGHT_ARROW 0xD7
+#define KEY_MENU        0xFE
 #define KEY_SPACE       0x20
 #define KEY_BACKSPACE   0xB2
 #define KEY_TAB         0xB3
@@ -74,6 +75,7 @@ typedef union {
 #define KEY_PAGE_DOWN   0xD6
 #define KEY_HOME        0xD2
 #define KEY_END         0xD5
+#define KEY_NUM_LOCK    0xDB
 #define KEY_CAPS_LOCK   0xC1
 #define KEY_F1          0xC2
 #define KEY_F2          0xC3
@@ -99,6 +101,9 @@ typedef union {
 #define KEY_F22         0xF9
 #define KEY_F23         0xFA
 #define KEY_F24         0xFB
+#define KEY_PRINT_SCREEN 0xCE
+#define KEY_SCROLL_LOCK 0xCF
+#define KEY_PAUSE       0xD0
 
 #define LED_NUMLOCK     0x01
 #define LED_CAPSLOCK    0x02
