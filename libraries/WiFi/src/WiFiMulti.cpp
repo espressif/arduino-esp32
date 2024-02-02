@@ -174,7 +174,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden)
                 for(uint32_t x = 0; x < APlist.size(); x++) {
                     WifiAPlist_t entry = APlist[x];
 
-                    if(ssid_scan == entry.ssid || hidden_scan) { // SSID match
+                    if(ssid_scan == entry.ssid || hidden_scan) { // SSID match or hidden network found
                         if (!hidden_scan) {
                             log_v("known ssid: %s, has failed: %s", entry.ssid, entry.hasFailed ? "yes" : "no");
                             foundCount++;
