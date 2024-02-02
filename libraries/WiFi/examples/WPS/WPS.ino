@@ -61,6 +61,7 @@ String wpspin2string(uint8_t a[]){
   return (String)wps_pin;
 }
 
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
 void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
   switch(event){
     case ARDUINO_EVENT_WIFI_STA_START:
@@ -103,7 +104,7 @@ void setup(){
   Serial.begin(115200);
   delay(10);
   Serial.println();
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
   WiFi.mode(WIFI_MODE_STA);
   Serial.println("Starting WPS");
   wpsInitConfig();

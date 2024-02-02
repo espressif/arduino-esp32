@@ -18,7 +18,7 @@ jobs:
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup jq
         uses: dcarbone/install-jq-action@v1.0.1
@@ -43,7 +43,17 @@ jobs:
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Check if build.board is uppercase
+        run: |
+          board_name=$(echo ${{ matrix.fqbn }} | awk -F':' '{print $NF}')
+          if grep -q "^$board_name.build.board=[A-Z0-9_]*$" boards.txt; then
+            echo "$board_name.build.board is valid.";
+          else
+            echo "Error: $board_name.build.board is not uppercase!";
+            exit 1;
+          fi
 
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@main

@@ -78,6 +78,8 @@ int digitalRead(uint8_t pin);
 void attachInterrupt(uint8_t pin, void (*)(void), int mode);
 void attachInterruptArg(uint8_t pin, void (*)(void*), void * arg, int mode);
 void detachInterrupt(uint8_t pin);
+void enableInterrupt(uint8_t pin);
+void disableInterrupt(uint8_t pin);
 
 int8_t digitalPinToTouchChannel(uint8_t pin);
 int8_t digitalPinToAnalogChannel(uint8_t pin);

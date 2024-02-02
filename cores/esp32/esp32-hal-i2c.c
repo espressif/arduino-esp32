@@ -42,9 +42,10 @@ typedef volatile struct {
     uint32_t frequency;
 #if !CONFIG_DISABLE_HAL_LOCKS
     SemaphoreHandle_t lock;
+#endif
     int8_t scl;
     int8_t sda;
-#endif
+
 } i2c_bus_t;
 
 static i2c_bus_t bus[SOC_I2C_NUM];

@@ -24,6 +24,8 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 typedef enum {
     NOTE_C, NOTE_Cs, NOTE_D, NOTE_Eb, NOTE_E, NOTE_F, NOTE_Fs, NOTE_G, NOTE_Gs, NOTE_A, NOTE_Bb, NOTE_B, NOTE_MAX
@@ -45,6 +47,7 @@ typedef struct {
 
 //channel 0-15 resolution 1-16bits freq limits depend on resolution
 bool        ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
+bool        ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel);
 bool        ledcWrite(uint8_t pin, uint32_t duty);
 uint32_t    ledcWriteTone(uint8_t pin, uint32_t freq);
 uint32_t    ledcWriteNote(uint8_t pin, note_t note, uint8_t octave);

@@ -1,5 +1,6 @@
 description: "Arduino core for ESP32, ESP32-S and ESP32-C series of SoCs"
 url: "https://github.com/espressif/arduino-esp32"
+license: "LGPL-2.1"
 targets:
   - esp32
   - esp32s2
@@ -12,7 +13,6 @@ tags:
   - arduino
 files:
   include:
-    - "cores/**/*"
     - "variants/esp32/**/*"
     - "variants/esp32s2/**/*"
     - "variants/esp32s3/**/*"
@@ -20,11 +20,27 @@ files:
     - "variants/esp32c3/**/*"
     - "variants/esp32c6/**/*"
     - "variants/esp32h2/**/*"
-    - "libraries/**/*"
-    - "CMakeLists.txt"
-    - "Kconfig.projbuild"
   exclude:
-    - "**/*"
+    - "docs/"
+    - "docs/**/*"
+    - "idf_component_examples/"
+    - "idf_component_examples/**/*"
+    - "package/"
+    - "package/**/*"
+    - "tests/"
+    - "tests/**/*"
+    - "tools/"
+    - "tools/**/*"
+    - "variants/**/*"
+    - ".gitignore"
+    - ".gitmodules"
+    - ".readthedocs.yaml"
+    - "boards.txt"
+    - "CODE_OF_CONDUCT.md"
+    - "LICENSE.md"
+    - "package.json"
+    - "platform.txt"
+    - "programmers.txt"
 dependencies:
   idf: ">=5.1"
   # mdns 1.2.1 is necessary to build H2 with no WiFi
@@ -66,5 +82,5 @@ dependencies:
     rules:
       - if: "target in [esp32s3]"
 examples:
-  - path: ../idf_component_examples/
+  - path: ./idf_component_examples/Hello_world
 

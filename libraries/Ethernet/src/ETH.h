@@ -145,8 +145,9 @@ class ETHClass {
         IPAddress broadcastIP();
         IPAddress networkID();
         uint8_t subnetCIDR();
-        bool enableIpV6();
-        IPv6Address localIPv6();
+        bool enableIPv6(bool en=true);
+        IPAddress localIPv6();
+        IPAddress globalIPv6();
         const char * ifkey(void);
         const char * desc(void);
         String impl_name(void);
