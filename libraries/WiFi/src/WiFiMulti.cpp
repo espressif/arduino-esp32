@@ -123,7 +123,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden)
         return WL_NO_SSID_AVAIL;
     } else if (scanResult >= 0) {
         // scan done analyze
-        int bestIndex = -1;
+        int32_t bestIndex = -1;
         WifiAPlist_t bestNetwork { NULL, NULL, false };
         int bestNetworkDb = INT_MIN;
         int bestNetworkSec = WIFI_AUTH_MAX;
