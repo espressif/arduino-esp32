@@ -58,9 +58,9 @@ public:
     cbuf *next;
 
 protected:
-    RingbufHandle_t _buf;
+    RingbufHandle_t _buf = NULL;
 #if !CONFIG_DISABLE_HAL_LOCKS
-    SemaphoreHandle_t _lock;
+    SemaphoreHandle_t _lock = NULL;
 #endif
 
 };
