@@ -647,7 +647,7 @@ TU_VERIFY_STATIC( sizeof(video_probe_and_commit_control_t) == 48, "size is not c
 /* Motion-JPEG 3.1.1 Table 3-2 and 3-4 */
 #define TUD_VIDEO_DESC_CS_VS_FRM_MJPEG_DISC(_frmidx, _cap, _width, _height, _minbr, _maxbr, _maxfrmbufsz, _frminterval, ...) \
   TUD_VIDEO_DESC_CS_VS_FRM_MJPEG_DISC_LEN + (TU_ARGS_NUM(__VA_ARGS__)) * 4, \
-  TUSB_DESC_CS_INTERFACE, VIDEO_CS_VS_INTERFACE_FRAME_MJPEG, \
+  TUSB_DESC_CS_INTERFACE, VIDEO_CS_ITF_VS_FRAME_MJPEG, \
   _frmidx, _cap, U16_TO_U8S_LE(_width), U16_TO_U8S_LE(_height), U32_TO_U8S_LE(_minbr), U32_TO_U8S_LE(_maxbr), \
   U32_TO_U8S_LE(_maxfrmbufsz), U32_TO_U8S_LE(_frminterval), (TU_ARGS_NUM(__VA_ARGS__)), __VA_ARGS__
 
