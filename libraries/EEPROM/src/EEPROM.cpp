@@ -183,20 +183,21 @@ void EEPROMClass::write(int address, uint8_t value) {
 bool EEPROMClass::commit() {
   bool ret = false;
   if (!_size) {
-      return false;
+    return false;
   }
   if (!_data) {
-      return false;
+    return false;
   }
   if (!_dirty) {
-      return true;
+    return true;
   }
 
-  if (ESP_OK != nvs_set_blob(_handle, _name, _data, _size)) {
-      log_e( "error in write");
+  esp_err_t err = nvs_set_blob(_handle, _name, _data, _size);
+  if (err != ESP_OK) {
+    log_e("error in write: %s", esp_err_to_name(err));
   } else {
-      _dirty = false;
-      ret = true;
+    _dirty = false;
+    ret = true;
   }
 
   return ret;

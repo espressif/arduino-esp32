@@ -80,7 +80,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
   //reset header value
   for (int i = 0; i < _headerKeysCount; ++i) {
     _currentHeaders[i].value =String();
-   }
+  }
 
   // First line of HTTP request looks like "GET /path HTTP/1.1"
   // Retrieve the "/path" part by finding the spaces
@@ -103,6 +103,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
   }
   _currentUri = url;
   _chunked = false;
+  _clientContentLength = 0;  // not known yet, or invalid
 
   HTTPMethod method = HTTP_ANY;
   size_t num_methods = sizeof(_http_method_str) / sizeof(const char *);
@@ -136,7 +137,6 @@ bool WebServer::_parseRequest(WiFiClient& client) {
     String headerValue;
     bool isForm = false;
     bool isEncoded = false;
-    uint32_t contentLength = 0;
     //parse headers
     while(1){
       req = client.readStringUntil('\r');
@@ -167,7 +167,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
           isForm = true;
         }
       } else if (headerName.equalsIgnoreCase(F("Content-Length"))){
-        contentLength = headerValue.toInt();
+        _clientContentLength = headerValue.toInt();
       } else if (headerName.equalsIgnoreCase(F("Host"))){
         _hostHeader = headerValue;
       }
@@ -175,12 +175,12 @@ bool WebServer::_parseRequest(WiFiClient& client) {
 
     if (!isForm){
       size_t plainLength;
-      char* plainBuf = readBytesWithTimeout(client, contentLength, plainLength, HTTP_MAX_POST_WAIT);
-      if (plainLength < contentLength) {
+      char* plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
+      if (plainLength < _clientContentLength) {
       	free(plainBuf);
       	return false;
       }
-      if (contentLength > 0) {
+      if (_clientContentLength > 0) {
         if(isEncoded){
           //url encoded form
           if (searchStr != "") searchStr += '&';
@@ -200,11 +200,10 @@ bool WebServer::_parseRequest(WiFiClient& client) {
         // No content - but we can still have arguments in the URL.
         _parseArguments(searchStr);
       }
-    }
-
-    if (isForm){
+    } else {
+      // it IS a form
       _parseArguments(searchStr);
-      if (!_parseForm(client, boundaryStr, contentLength)) {
+      if (!_parseForm(client, boundaryStr, _clientContentLength)) {
         return false;
       }
     }
@@ -310,42 +309,14 @@ void WebServer::_uploadWriteByte(uint8_t b){
   _currentUpload->buf[_currentUpload->currentSize++] = b;
 }
 
-int WebServer::_uploadReadByte(WiFiClient& client){
+int WebServer::_uploadReadByte(WiFiClient& client) {
   int res = client.read();
-  if(res < 0) {
-    // keep trying until you either read a valid byte or timeout
-    unsigned long startMillis = millis();
-    long timeoutIntervalMillis = client.getTimeout();
-    boolean timedOut = false;
-    for(;;) {
-      if (!client.connected()) return -1;
-      // loosely modeled after blinkWithoutDelay pattern
-      while(!timedOut && !client.available() && client.connected()){
-        delay(2);
-        timedOut = millis() - startMillis >= timeoutIntervalMillis;
-      }
 
-      res = client.read();
-      if(res >= 0) {
-        return res; // exit on a valid read
-      }
-      // NOTE: it is possible to get here and have all of the following
-      //       assertions hold true
-      //
-      //       -- client.available() > 0
-      //       -- client.connected == true
-      //       -- res == -1
-      //
-      //       a simple retry strategy overcomes this which is to say the
-      //       assertion is not permanent, but the reason that this works
-      //       is elusive, and possibly indicative of a more subtle underlying
-      //       issue
+  if (res < 0) {
+    while(!client.available() && client.connected())
+      delay(2);
 
-      timedOut = millis() - startMillis >= timeoutIntervalMillis;
-      if(timedOut) {
-        return res; // exit on a timeout
-      }
-    }
+    res = client.read();
   }
 
   return res;
@@ -437,88 +408,59 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
             if(_currentHandler && _currentHandler->canUpload(_currentUri))
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             _currentUpload->status = UPLOAD_FILE_WRITE;
-            int argByte = _uploadReadByte(client);
-readfile:
 
-            while(argByte != 0x0D){
-                if(argByte < 0) return _parseFormUploadAborted();
-                _uploadWriteByte(argByte);
-                argByte = _uploadReadByte(client);
+            int fastBoundaryLen = 4 /* \r\n-- */ + boundary.length() + 1 /* \0 */;
+            char fastBoundary[ fastBoundaryLen ];
+            snprintf(fastBoundary, fastBoundaryLen, "\r\n--%s", boundary.c_str());
+            int boundaryPtr = 0;
+            while ( true ) {
+                int ret = _uploadReadByte(client);
+                if (ret < 0) {
+                    // Unexpected, we should have had data available per above
+                    return _parseFormUploadAborted();
+                }
+                char in = (char) ret;
+                if (in == fastBoundary[ boundaryPtr ]) {
+                    // The input matched the current expected character, advance and possibly exit this file
+                    boundaryPtr++;
+                    if (boundaryPtr == fastBoundaryLen - 1) {
+                        // We read the whole boundary line, we're done here!
+                        break;
+                    }
+                } else {
+                    // The char doesn't match what we want, so dump whatever matches we had, the read in char, and reset ptr to start
+                    for (int i = 0; i < boundaryPtr; i++) {
+                        _uploadWriteByte( fastBoundary[ i ] );
+                    }
+                    if (in == fastBoundary[ 0 ]) {
+                       // This could be the start of the real end, mark it so and don't emit/skip it
+                       boundaryPtr = 1;
+                    } else {
+                      // Not the 1st char of our pattern, so emit and ignore
+                      _uploadWriteByte( in );
+                      boundaryPtr = 0;
+                    }
+                }
             }
-
-            argByte = _uploadReadByte(client);
-            if(argByte < 0) return _parseFormUploadAborted();
-            if (argByte == 0x0A){
-              argByte = _uploadReadByte(client);
-              if(argByte < 0) return _parseFormUploadAborted();
-              if ((char)argByte != '-'){
-                //continue reading the file
-                _uploadWriteByte(0x0D);
-                _uploadWriteByte(0x0A);
-                goto readfile;
-              } else {
-                argByte = _uploadReadByte(client);
-                if(argByte < 0) return _parseFormUploadAborted();
-                if ((char)argByte != '-'){
-                  //continue reading the file
-                  _uploadWriteByte(0x0D);
-                  _uploadWriteByte(0x0A);
-                  _uploadWriteByte((uint8_t)('-'));
-                  goto readfile;
-                }
-              }
-
-              uint8_t endBuf[boundary.length()];
-              uint32_t i = 0;
-              while(i < boundary.length()){
-                argByte = _uploadReadByte(client);
-                if(argByte < 0) return _parseFormUploadAborted();
-                if ((char)argByte == 0x0D){
-                  _uploadWriteByte(0x0D);
-                  _uploadWriteByte(0x0A);
-                  _uploadWriteByte((uint8_t)('-'));
-                  _uploadWriteByte((uint8_t)('-'));
-                  uint32_t j = 0;
-                  while(j < i){
-                    _uploadWriteByte(endBuf[j++]);
-                  }
-                  goto readfile;
-                }
-                endBuf[i++] = (uint8_t)argByte;
-              }
-
-              if (strstr((const char*)endBuf, boundary.c_str()) != NULL){
-                if(_currentHandler && _currentHandler->canUpload(_currentUri))
-                  _currentHandler->upload(*this, _currentUri, *_currentUpload);
-                _currentUpload->totalSize += _currentUpload->currentSize;
-                _currentUpload->status = UPLOAD_FILE_END;
-                if(_currentHandler && _currentHandler->canUpload(_currentUri))
-                  _currentHandler->upload(*this, _currentUri, *_currentUpload);
-                log_v("End File: %s Type: %s Size: %d", _currentUpload->filename.c_str(), _currentUpload->type.c_str(), _currentUpload->totalSize);
-                line = client.readStringUntil(0x0D);
-                client.readStringUntil(0x0A);
-                if (line == "--"){
-                  log_v("Done Parsing POST");
-                  break;
-                }
-                continue;
-              } else {
-                _uploadWriteByte(0x0D);
-                _uploadWriteByte(0x0A);
-                _uploadWriteByte((uint8_t)('-'));
-                _uploadWriteByte((uint8_t)('-'));
-                uint32_t i = 0;
-                while(i < boundary.length()){
-                  _uploadWriteByte(endBuf[i++]);
-                }
-                argByte = _uploadReadByte(client);
-                goto readfile;
-              }
-            } else {
-              _uploadWriteByte(0x0D);
-              goto readfile;
+            // Found the boundary string, finish processing this file upload
+            if (_currentHandler && _currentHandler->canUpload(_currentUri))
+                _currentHandler->upload(*this, _currentUri, *_currentUpload);
+            _currentUpload->totalSize += _currentUpload->currentSize;
+            _currentUpload->status = UPLOAD_FILE_END;
+            if (_currentHandler && _currentHandler->canUpload(_currentUri))
+                _currentHandler->upload(*this, _currentUri, *_currentUpload);
+            log_v("End File: %s Type: %s Size: %d",
+                _currentUpload->filename.c_str(),
+                _currentUpload->type.c_str(),
+                (int)_currentUpload->totalSize);
+            if (!client.connected()) return _parseFormUploadAborted();
+            line = client.readStringUntil('\r');
+            client.readStringUntil('\n');
+            if (line == "--") {     // extra two dashes mean we reached the end of all form fields
+                log_v("Done Parsing POST");
+                break;
             }
-            break;
+            continue;
           }
         }
       }

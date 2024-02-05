@@ -287,7 +287,7 @@ void ArduinoOTAClass::_runUpdate() {
         if (!waited){
             if(written && tried++ < 3){
                 log_i("Try[%u]: %u", tried, written);
-                if(!client.printf("%u", written)){
+                if(!client.printf("%lu", written)){
                     log_e("failed to respond");
                     _state = OTA_IDLE;
                     break;
@@ -315,6 +315,10 @@ void ArduinoOTAClass::_runUpdate() {
         size_t r = client.read(buf, available);
         if(r != available){
             log_w("didn't read enough! %u != %u", r, available);
+	    if((int32_t) r<0) {
+	        delay(1);
+	        continue;  	//let's not try to write 4 gigabytes when client.read returns -1
+	    }
         }
 
         written = Update.write(buf, r);
@@ -322,7 +326,7 @@ void ArduinoOTAClass::_runUpdate() {
             if(written != r){
                 log_w("didn't write enough! %u != %u", written, r);
             }
-            if(!client.printf("%u", written)){
+            if(!client.printf("%lu", written)){
                 log_w("failed to respond");
             }
             total += written;

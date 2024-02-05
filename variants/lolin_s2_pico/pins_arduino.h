@@ -18,16 +18,9 @@
 #define USB_FW_MSC_VOLUME_NAME 		"S2-Firmware" 	//max 11 chars
 #define USB_FW_MSC_SERIAL_NUMBER 	0x00000000
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
 static const uint8_t LED_BUILTIN = 10;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 38;
 static const uint8_t RX = 33;
