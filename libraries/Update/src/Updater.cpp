@@ -362,11 +362,9 @@ bool UpdateClass::_writeBuffer(){
         //not written at this point so that partially written firmware
         //will not be bootable
         skip = ENCRYPTED_BLOCK_SIZE;
-        if(!_skipBuffer){
-            _skipBuffer = (uint8_t*)malloc(skip);
-        }
-        if(!_skipBuffer){
-            log_e("malloc failed");
+        _skipBuffer = new (std::nothrow) uint8_t[skip];
+        if (!_skipBuffer) {
+            log_e("_skipBuffer allocation failed");
             return false;
         }
         memcpy(_skipBuffer, _buffer, skip);
@@ -402,6 +400,19 @@ bool UpdateClass::_writeBuffer(){
         _progress_callback(_progress, _size);
     }
     return true;
+}
+
+bool UpdateClass::_verifyHeader(uint8_t data) {
+    if(_command == U_FLASH) {
+        if(data != ESP_IMAGE_HEADER_MAGIC) {
+            _abort(UPDATE_ERROR_MAGIC_BYTE);
+            return false;
+        }
+        return true;
+    } else if(_command == U_SPIFFS) {
+        return true;
+    }
+    return false;
 }
 
 bool UpdateClass::_verifyEnd() {
@@ -501,6 +512,11 @@ size_t UpdateClass::writeStream(Stream &data) {
 
     if(hasError() || !isRunning())
         return 0;
+
+    if(!_verifyHeader(data.peek())) {
+        _reset();
+        return 0;
+    }
 
     if(_ledPin != -1) {
         pinMode(_ledPin, OUTPUT);
