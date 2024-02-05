@@ -15,6 +15,9 @@
 #ifndef MAIN_ESP32_HAL_SPI_H_
 #define MAIN_ESP32_HAL_SPI_H_
 
+#include "soc/soc_caps.h"
+#if SOC_GPSPI_SUPPORTED
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,7 +28,7 @@ extern "C" {
 
 #define SPI_HAS_TRANSACTION
 
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32S3
 #define FSPI  0
 #define HSPI  1
 #else
@@ -51,10 +54,10 @@ extern "C" {
 #define SPI_MODE2 2
 #define SPI_MODE3 3
 
-#define SPI_CS0 0
-#define SPI_CS1 1
-#define SPI_CS2 2
-#define SPI_CS_MASK_ALL 0x7
+#define SPI_SS0 0
+#define SPI_SS1 1
+#define SPI_SS2 2
+#define SPI_SS_MASK_ALL 0x7
 
 #define SPI_LSBFIRST 0
 #define SPI_MSBFIRST 1
@@ -66,28 +69,28 @@ spi_t * spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_
 void spiStopBus(spi_t * spi);
 
 //Attach/Detach Signal Pins
-void spiAttachSCK(spi_t * spi, int8_t sck);
-void spiAttachMISO(spi_t * spi, int8_t miso);
-void spiAttachMOSI(spi_t * spi, int8_t mosi);
-void spiDetachSCK(spi_t * spi, int8_t sck);
-void spiDetachMISO(spi_t * spi, int8_t miso);
-void spiDetachMOSI(spi_t * spi, int8_t mosi);
+bool spiAttachSCK(spi_t * spi, int8_t sck);
+bool spiAttachMISO(spi_t * spi, int8_t miso);
+bool spiAttachMOSI(spi_t * spi, int8_t mosi);
+bool spiDetachSCK(spi_t * spi);
+bool spiDetachMISO(spi_t * spi);
+bool spiDetachMOSI(spi_t * spi);
 
-//Attach/Detach SS pin to SPI_CSx signal
-void spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss);
-void spiDetachSS(spi_t * spi, int8_t ss);
+//Attach/Detach SS pin to SPI_SSx signal
+bool spiAttachSS(spi_t * spi, uint8_t ss_num, int8_t ss);
+bool spiDetachSS(spi_t * spi);
 
-//Enable/Disable SPI_CSx pins
-void spiEnableSSPins(spi_t * spi, uint8_t cs_mask);
-void spiDisableSSPins(spi_t * spi, uint8_t cs_mask);
+//Enable/Disable SPI_SSx pins
+void spiEnableSSPins(spi_t * spi, uint8_t ss_mask);
+void spiDisableSSPins(spi_t * spi, uint8_t ss_mask);
 
-//Enable/Disable hardware control of SPI_CSx pins
+//Enable/Disable hardware control of SPI_SSx pins
 void spiSSEnable(spi_t * spi);
 void spiSSDisable(spi_t * spi);
 
-//Activate enabled SPI_CSx pins
+//Activate enabled SPI_SSx pins
 void spiSSSet(spi_t * spi);
-//Deactivate enabled SPI_CSx pins
+//Deactivate enabled SPI_SSx pins
 void spiSSClear(spi_t * spi);
 
 void spiWaitReady(spi_t * spi);
@@ -146,4 +149,5 @@ uint32_t spiClockDivToFrequency(uint32_t freq);
 }
 #endif
 
+#endif /* SOC_GPSPI_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_SPI_H_ */

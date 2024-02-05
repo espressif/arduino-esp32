@@ -47,5 +47,6 @@ class Param
         esp_err_t addUIType(const char *ui_type);
         esp_err_t addBounds(param_val_t min, param_val_t max, param_val_t step);
         esp_err_t updateAndReport(param_val_t val);
+        esp_err_t addValidStrList(const char **string_list, uint8_t count);
 };
 #endif

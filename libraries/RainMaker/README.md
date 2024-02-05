@@ -309,7 +309,7 @@ esp_err_t addIntensityParam(int val, const char *param_name = ESP_RMAKER_DEF_INT
 esp_err_t addCCTParam(int val, const char *param_name = ESP_RMAKER_DEF_CCT_NAME);
 esp_err_t addDirectionParam(int val, const char *param_name = ESP_RMAKER_DEF_DIRECTION_NAME);
 esp_err_t addSpeedParam(int val, const char *param_name = ESP_RMAKER_DEF_SPEED_NAME);
-esp_err_t addTempratureParam(float val, const char *param_name = ESP_RMAKER_DEF_TEMPERATURE_NAME);
+esp_err_t addTemperatureParam(float val, const char *param_name = ESP_RMAKER_DEF_TEMPERATURE_NAME);
 ```
 * **Standard Parameters**
 

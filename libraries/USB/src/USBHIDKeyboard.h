@@ -20,6 +20,10 @@
 */
 
 #pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include "Print.h"
 #include "USBHID.h"
 #if CONFIG_TINYUSB_HID_ENABLED
@@ -59,6 +63,8 @@ typedef union {
 #define KEY_DOWN_ARROW  0xD9
 #define KEY_LEFT_ARROW  0xD8
 #define KEY_RIGHT_ARROW 0xD7
+#define KEY_MENU        0xFE
+#define KEY_SPACE       0x20
 #define KEY_BACKSPACE   0xB2
 #define KEY_TAB         0xB3
 #define KEY_RETURN      0xB0
@@ -69,6 +75,7 @@ typedef union {
 #define KEY_PAGE_DOWN   0xD6
 #define KEY_HOME        0xD2
 #define KEY_END         0xD5
+#define KEY_NUM_LOCK    0xDB
 #define KEY_CAPS_LOCK   0xC1
 #define KEY_F1          0xC2
 #define KEY_F2          0xC3
@@ -94,6 +101,9 @@ typedef union {
 #define KEY_F22         0xF9
 #define KEY_F23         0xFA
 #define KEY_F24         0xFB
+#define KEY_PRINT_SCREEN 0xCE
+#define KEY_SCROLL_LOCK 0xCF
+#define KEY_PAUSE       0xD0
 
 #define LED_NUMLOCK     0x01
 #define LED_CAPSLOCK    0x02
@@ -114,6 +124,7 @@ class USBHIDKeyboard: public USBHIDDevice, public Print
 private:
     USBHID hid;
     KeyReport _keyReport;
+    bool shiftKeyReports;
 public:
     USBHIDKeyboard(void);
     void begin(void);
@@ -124,6 +135,7 @@ public:
     size_t release(uint8_t k);
     void releaseAll(void);
     void sendReport(KeyReport* keys);
+    void setShiftKeyReports(bool set);
 
     //raw functions work with TinyUSB's HID_KEY_* macros
     size_t pressRaw(uint8_t k);
@@ -137,4 +149,5 @@ public:
     void _onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len);
 };
 
-#endif
+#endif /* CONFIG_TINYUSB_HID_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

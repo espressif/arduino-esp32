@@ -26,6 +26,7 @@ extern "C" {
 
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
+#include "pins_arduino.h"
 
 #if (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #define NUM_OUPUT_PINS  46
@@ -50,7 +51,7 @@ extern "C" {
 #define PULLDOWN          0x08
 #define INPUT_PULLDOWN    0x09
 #define OPEN_DRAIN        0x10
-#define OUTPUT_OPEN_DRAIN 0x12
+#define OUTPUT_OPEN_DRAIN 0x13
 #define ANALOG            0xC0
 
 //Interrupt Modes
@@ -62,6 +63,7 @@ extern "C" {
 #define ONHIGH    0x05
 #define ONLOW_WE  0x0C
 #define ONHIGH_WE 0x0D
+
 
 #define digitalPinIsValid(pin)          GPIO_IS_VALID_GPIO(pin)
 #define digitalPinCanOutput(pin)        GPIO_IS_VALID_OUTPUT_GPIO(pin)
@@ -76,6 +78,8 @@ int digitalRead(uint8_t pin);
 void attachInterrupt(uint8_t pin, void (*)(void), int mode);
 void attachInterruptArg(uint8_t pin, void (*)(void*), void * arg, int mode);
 void detachInterrupt(uint8_t pin);
+void enableInterrupt(uint8_t pin);
+void disableInterrupt(uint8_t pin);
 
 int8_t digitalPinToTouchChannel(uint8_t pin);
 int8_t digitalPinToAnalogChannel(uint8_t pin);

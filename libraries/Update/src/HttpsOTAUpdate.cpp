@@ -44,7 +44,14 @@ void https_ota_task(void *param)
         xEventGroupSetBits(ota_status, OTA_UPDATING_BIT);
         xEventGroupClearBits(ota_status, OTA_IDLE_BIT);
     }
-    esp_err_t ret = esp_https_ota((const esp_http_client_config_t *)param);
+    esp_https_ota_config_t cfg;
+    cfg.http_config = (const esp_http_client_config_t *)param;
+    cfg.http_client_init_cb = NULL;
+    cfg.bulk_flash_erase = false; //Erase entire flash partition during initialization
+    cfg.partial_http_download = false; //Enable Firmware image to be downloaded over multiple HTTP requests
+    cfg.max_http_request_size = 0; //Maximum request size for partial HTTP download
+
+    esp_err_t ret = esp_https_ota((const esp_https_ota_config_t *)&cfg);
     if(ret == ESP_OK) {
         if(ota_status) {
             xEventGroupClearBits(ota_status, OTA_UPDATING_BIT);
