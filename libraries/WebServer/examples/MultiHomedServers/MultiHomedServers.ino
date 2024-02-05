@@ -3,62 +3,17 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
-/*
- * MultiHomedServers
- * 
- * MultiHomedServers tests support for multi-homed servers, i.e. a distinct web servers on each IP interface. 
- * It only tests the case n=2 because on a basic ESP32 device, we only have two IP interfaces, namely
- * the WiFi station interfaces and the WiFi soft AP interface.
- *
- * For this to work, the WebServer and the WiFiServer classes must correctly handle the case where an 
- * IP address is passed to their relevant constructor. It also requires WebServer to work with multiple,
- * simultaneous instances.
- * 
- * Testing the WebServer and the WiFiServer constructors was the primary purpose of this script.
- * The part of WebServer used by this sketch does seem to work with multiple, simultaneous instances.
- * However there is much functionality in WebServer that is not tested here. It may all be well, but
- * that is not proven here.
- * 
- * This sketch starts the mDNS server, as did HelloServer, and it resolves esp32.local on both interfaces,
- * but was not otherwise tested.
- * 
- * This script also tests that a server not bound to a specific IP address still works.
- * 
- * We create three, simultaneous web servers, one specific to each interface and one that listens on both:
- * 
- *  name    IP Address      Port
- *  ----    ----------      ----
- *  server0 INADDR_ANY      8080
- *  server1 station address 8081
- *  server2 soft AP address 8081
- *  
- *  The expected responses to a brower's requests are as follows:
- *  
- *  1. when client connected to the same WLAN as the station:
- *      Request URL                 Response
- *      -----------                 --------
- *      http://stationaddress:8080  "hello from server0"
- *      http://stationaddress:8081  "hello from server1"
- *      
- *  2. when client is connected to the soft AP:
- *  
- *      Request URL                 Response
- *      -----------                 --------
- *      http://softAPaddress:8080   "hello from server0"
- *      http://softAPaddress:8081   "hello from server2"
- *
- *  3. Repeat 1 and 2 above with esp32.local in place of stationaddress and softAPaddress, respectively.
- *  
- * MultiHomedServers was originally based on HelloServer.
- */
-
-const char* ssid = "........";
-const char* password = "........";
+const char* ssid = "WiFi_SSID";
+const char* password = "WiFi_Password";
 const char *apssid = "ESP32";
 
 WebServer *server0, *server1, *server2;
 
+#ifdef LED_BUILTIN
+const int led = LED_BUILTIN;
+#else
 const int led = 13;
+#endif
 
 void handleRoot(WebServer *server, const char *content) {
   digitalWrite(led, 1);
@@ -67,15 +22,15 @@ void handleRoot(WebServer *server, const char *content) {
 }
 
 void handleRoot0() {
-  handleRoot(server0, "hello from server0");
+  handleRoot(server0, "Hello from server0 who listens on both WLAN and own Soft AP");
 }
 
 void handleRoot1() {
-  handleRoot(server1, "hello from server1");
+  handleRoot(server1, "Hello from server1 who listens only on WLAN");
 }
 
 void handleRoot2() {
-  handleRoot(server2, "hello from server2");
+  handleRoot(server2, "Hello from server2 who listens only on own Soft AP");
 }
 
 void handleNotFound(WebServer *server) {
@@ -111,9 +66,12 @@ void setup(void) {
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
   Serial.begin(115200);
+  while(!Serial){ delay(100); }
+  Serial.println("Multi-homed Servers example starting");
+  delay(1000);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  Serial.println("");
+  Serial.print("Connecting ");
 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
@@ -121,9 +79,9 @@ void setup(void) {
     Serial.print(".");
   }
   Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
+  Serial.print("Connected to \"");
+  Serial.print(ssid);
+  Serial.print("\", IP address: \"");
   Serial.println(WiFi.localIP());
   if (!WiFi.softAP(apssid)) {
     Serial.println("failed to start softAP");
@@ -134,9 +92,9 @@ void setup(void) {
         delay(100);
     }
   }
-  Serial.print("Soft AP: ");
+  Serial.print("Soft AP SSID: \"");
   Serial.print(apssid);
-  Serial.print(" IP address: ");
+  Serial.print("\", IP address: ");
   Serial.println(WiFi.softAPIP());
 
   if (MDNS.begin("esp32")) {
@@ -161,6 +119,10 @@ void setup(void) {
   Serial.println("HTTP server1 started");
   server2->begin();
   Serial.println("HTTP server2 started");
+
+  Serial.printf("SSID: %s\n\thttp://", ssid); Serial.print(WiFi.localIP()); Serial.print(":8080\n\thttp://"); Serial.print(WiFi.localIP()); Serial.println(":8081");
+  Serial.printf("SSID: %s\n\thttp://", apssid); Serial.print(WiFi.softAPIP()); Serial.print(":8080\n\thttp://"); Serial.print(WiFi.softAPIP()); Serial.println(":8081");
+  Serial.printf("Any of the above SSIDs\n\thttp://esp32.local:8080\n\thttp://esp32.local:8081\n");
 }
 
 void loop(void) {

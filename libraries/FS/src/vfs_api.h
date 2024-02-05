@@ -65,11 +65,15 @@ public:
     bool        seek(uint32_t pos, SeekMode mode) override;
     size_t      position() const override;
     size_t      size() const override;
+    bool        setBufferSize(size_t size);
     void        close() override;
     const char* path() const override;
     const char* name() const override;
-    time_t getLastWrite()  override;
+    time_t      getLastWrite()  override;
     boolean     isDirectory(void) override;
+    boolean     seekDir(long position) override;
+    String      getNextFileName(void) override;
+    String      getNextFileName(bool *isDir) override;
     FileImplPtr openNextFile(const char* mode) override;
     void        rewindDirectory(void) override;
     operator    bool();

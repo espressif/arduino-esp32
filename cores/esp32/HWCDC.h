@@ -14,7 +14,9 @@
 #pragma once
 
 #include "sdkconfig.h"
-#if CONFIG_IDF_TARGET_ESP32C3
+#include "soc/soc_caps.h"
+
+#if SOC_USB_SERIAL_JTAG_SUPPORTED
 
 #include <inttypes.h>
 #include "esp_event.h"
@@ -42,6 +44,9 @@ typedef union {
 
 class HWCDC: public Stream
 {
+private:
+    static bool deinit(void * busptr);
+    
 public:
     HWCDC();
     ~HWCDC();
@@ -97,11 +102,12 @@ public:
     uint32_t baudRate(){return 115200;}
 
 };
-
-#if ARDUINO_HW_CDC_ON_BOOT //Serial used for USB CDC
-extern HWCDC Serial;
-#else
-extern HWCDC USBSerial;
+#if ARDUINO_USB_MODE  // Hardware JTAG CDC selected
+#ifndef HWCDC_SERIAL_IS_DEFINED
+#define HWCDC_SERIAL_IS_DEFINED 1
+#endif
+// HWCDCSerial is always available to be used
+extern HWCDC HWCDCSerial;
 #endif
 
-#endif /* CONFIG_IDF_TARGET_ESP32C3 */
+#endif /* SOC_USB_SERIAL_JTAG_SUPPORTED */

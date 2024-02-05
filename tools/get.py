@@ -35,7 +35,13 @@ else:
 if 'Windows' in platform.system():
     import requests
 
-current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
+# determine if application is a script file or frozen exe
+if getattr(sys, 'frozen', False):
+    current_dir = os.path.dirname(os.path.realpath(unicode(sys.executable)))
+elif __file__:
+    current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
+
+#current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
 dist_dir = current_dir + '/dist/'
 
 def sha256sum(filename, blocksize=65536):
@@ -53,10 +59,19 @@ def mkdir_p(path):
             raise
 
 def report_progress(count, blockSize, totalSize):
-    percent = int(count*blockSize*100/totalSize)
-    percent = min(100, percent)
-    sys.stdout.write("\r%d%%" % percent)
-    sys.stdout.flush()
+    if sys.stdout.isatty():
+        if totalSize > 0:
+            percent = int(count*blockSize*100/totalSize)
+            percent = min(100, percent)
+            sys.stdout.write("\r%d%%" % percent)
+        else:
+            sofar = (count*blockSize) / 1024
+            if sofar >= 1000:
+                sofar /= 1024
+                sys.stdout.write("\r%dMB  " % (sofar))
+            else:
+                sys.stdout.write("\r%dKB" % (sofar))
+        sys.stdout.flush()
 
 def unpack(filename, destination):
     dirname = ''
@@ -64,6 +79,10 @@ def unpack(filename, destination):
     sys.stdout.flush()
     if filename.endswith('tar.gz'):
         tfile = tarfile.open(filename, 'r:gz')
+        tfile.extractall(destination)
+        dirname = tfile.getnames()[0]
+    elif filename.endswith('tar.xz'):
+        tfile = tarfile.open(filename, 'r:xz')
         tfile.extractall(destination)
         dirname = tfile.getnames()[0]
     elif filename.endswith('zip'):
@@ -75,11 +94,39 @@ def unpack(filename, destination):
 
     # a little trick to rename tool directories so they don't contain version number
     rename_to = re.match(r'^([a-z][^\-]*\-*)+', dirname).group(0).strip('-')
+    if rename_to == dirname and dirname.startswith('esp32-arduino-libs-'):
+        rename_to = 'esp32-arduino-libs'
     if rename_to != dirname:
         print('Renaming {0} to {1} ...'.format(dirname, rename_to))
         if os.path.isdir(rename_to):
             shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
+
+def download_file_with_progress(url,filename):
+    import ssl
+    import contextlib
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    with contextlib.closing(urlopen(url,context=ctx)) as fp:
+        total_size = int(fp.getheader("Content-Length",fp.getheader("Content-length","0")))
+        block_count = 0
+        block_size = 1024 * 8
+        block = fp.read(block_size)
+        if block:
+            with open(filename,'wb') as out_file:
+                out_file.write(block)
+                block_count += 1
+                report_progress(block_count, block_size, total_size)
+                while True:
+                    block = fp.read(block_size)
+                    if not block:
+                        break
+                    out_file.write(block)
+                    block_count += 1
+                    report_progress(block_count, block_size, total_size)
+        else:
+            raise Exception ('nonexisting file or connection error')
 
 def download_file(url,filename):
     import ssl
@@ -125,8 +172,11 @@ def get_tool(tool):
             if is_ci:
                 download_file(url, local_path)
             else:
-                urlretrieve(url, local_path, report_progress)
-                sys.stdout.write("\rDone\n")
+                try:
+                    urlretrieve(url, local_path, report_progress)
+                except:
+                    download_file_with_progress(url, local_path)
+                sys.stdout.write("\rDone   \n")
                 sys.stdout.flush()
     else:
         print('Tool {0} already downloaded'.format(archive_name))
@@ -139,20 +189,34 @@ def load_tools_list(filename, platform):
     for t in tools_info:
         tool_platform = [p for p in t['systems'] if p['host'] == platform]
         if len(tool_platform) == 0:
-            continue
+            # Fallback to x86 on Apple ARM
+            if platform == 'arm64-apple-darwin':
+                tool_platform = [p for p in t['systems'] if p['host'] == 'x86_64-apple-darwin']
+                if len(tool_platform) == 0:
+                    continue
+            # Fallback to 32bit on 64bit x86 Windows
+            elif platform == 'x86_64-mingw32':
+                tool_platform = [p for p in t['systems'] if p['host'] == 'i686-mingw32']
+                if len(tool_platform) == 0:
+                    continue
+            else:
+                continue
         tools_to_download.append(tool_platform[0])
     return tools_to_download
 
 def identify_platform():
-    arduino_platform_names = {'Darwin'  : {32 : 'i386-apple-darwin',   64 : 'x86_64-apple-darwin'},
-                              'Linux'   : {32 : 'i686-pc-linux-gnu',   64 : 'x86_64-pc-linux-gnu'},
-                              'LinuxARM': {32 : 'arm-linux-gnueabihf', 64 : 'aarch64-linux-gnu'},
-                              'Windows' : {32 : 'i686-mingw32',        64 : 'i686-mingw32'}}
+    arduino_platform_names = {'Darwin'   : {32 : 'i386-apple-darwin',   64 : 'x86_64-apple-darwin'},
+                              'DarwinARM': {32 : 'arm64-apple-darwin',  64 : 'arm64-apple-darwin'},
+                              'Linux'    : {32 : 'i686-pc-linux-gnu',   64 : 'x86_64-pc-linux-gnu'},
+                              'LinuxARM' : {32 : 'arm-linux-gnueabihf', 64 : 'aarch64-linux-gnu'},
+                              'Windows'  : {32 : 'i686-mingw32',        64 : 'x86_64-mingw32'}}
     bits = 32
     if sys.maxsize > 2**32:
         bits = 64
     sys_name = platform.system()
     sys_platform = platform.platform()
+    if 'Darwin' in sys_name and (sys_platform.find('arm') > 0 or sys_platform.find('arm64') > 0):
+        sys_name = 'DarwinARM'
     if 'Linux' in sys_name and (sys_platform.find('arm') > 0 or sys_platform.find('aarch64') > 0):
         sys_name = 'LinuxARM'
     if 'CYGWIN_NT' in sys_name:
@@ -161,10 +225,16 @@ def identify_platform():
     return arduino_platform_names[sys_name][bits]
 
 if __name__ == '__main__':
+    is_test = (len(sys.argv) > 1 and sys.argv[1] == '-h')
+    if is_test:
+        print('Test run!')
     identified_platform = identify_platform()
     print('Platform: {0}'.format(identified_platform))
     tools_to_download = load_tools_list(current_dir + '/../package/package_esp32_index.template.json', identified_platform)
     mkdir_p(dist_dir)
     for tool in tools_to_download:
-        get_tool(tool)
+        if is_test:
+            print('Would install: {0}'.format(tool['archiveFileName']))
+        else:
+            get_tool(tool)
     print('Platform Tools Installed')

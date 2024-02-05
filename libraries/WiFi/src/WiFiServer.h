@@ -22,10 +22,9 @@
 #include "Arduino.h"
 #include "Server.h"
 #include "WiFiClient.h"
-#include "arpa/inet.h"
 #include "IPAddress.h"
 
-class WiFiServer : public Server {
+class WiFiServer {
   private:
     int sockfd;
     int _accepted_sockfd = -1;
@@ -38,32 +37,26 @@ class WiFiServer : public Server {
   public:
     void listenOnLocalhost(){}
 
-    WiFiServer(uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(INADDR_ANY),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
+    WiFiServer(uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
       log_v("WiFiServer::WiFiServer(port=%d, ...)", port);
     }
     WiFiServer(const IPAddress& addr, uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(addr),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
       log_v("WiFiServer::WiFiServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
     }
     ~WiFiServer(){ end();}
-    WiFiClient available();
-    WiFiClient accept(){return available();}
+    WiFiClient available() __attribute__((deprecated("Renamed to accept().")));
+    WiFiClient accept();
     void begin(uint16_t port=0);
     void begin(uint16_t port, int reuse_enable);
     void setNoDelay(bool nodelay);
     bool getNoDelay();
     bool hasClient();
-    size_t write(const uint8_t *data, size_t len);
-    size_t write(uint8_t data){
-      return write(&data, 1);
-    }
-    using Print::write;
 
     void end();
     void close();
     void stop();
     operator bool(){return _listening;}
     int setTimeout(uint32_t seconds);
-    void stopAll();
 };
 
 #endif /* _WIFISERVER_H_ */

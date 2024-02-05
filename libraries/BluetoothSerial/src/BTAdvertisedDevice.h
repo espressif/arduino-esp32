@@ -9,23 +9,23 @@
 #define __BTADVERTISEDDEVICE_H__
 
 #include "BTAddress.h"
-
+#include <string>
 
 class BTAdvertisedDevice {
 public:
     virtual ~BTAdvertisedDevice() = default;
 
-    virtual BTAddress   getAddress();
-    virtual uint32_t    getCOD();
-    virtual std::string getName();
-    virtual int8_t      getRSSI();
+    virtual BTAddress   getAddress() = 0;
+    virtual uint32_t    getCOD() const = 0;
+    virtual std::string getName() const = 0;
+    virtual int8_t      getRSSI() const = 0;
 
 
-    virtual bool        haveCOD();
-    virtual bool        haveName();
-    virtual bool        haveRSSI();
+    virtual bool        haveCOD() const = 0;
+    virtual bool        haveName() const = 0;
+    virtual bool        haveRSSI() const = 0;
 
-    virtual std::string toString();
+    virtual std::string toString() = 0;
 };
 
 class BTAdvertisedDeviceSet : public virtual BTAdvertisedDevice {
@@ -35,14 +35,14 @@ public:
     
 
     BTAddress   getAddress();
-    uint32_t    getCOD();
-    std::string getName();
-    int8_t      getRSSI();
+    uint32_t    getCOD() const;
+    std::string getName() const;
+    int8_t      getRSSI() const;
 
 
-    bool        haveCOD();
-    bool        haveName();
-    bool        haveRSSI();
+    bool        haveCOD() const;
+    bool        haveName() const;
+    bool        haveRSSI() const;
 
     std::string toString();
 

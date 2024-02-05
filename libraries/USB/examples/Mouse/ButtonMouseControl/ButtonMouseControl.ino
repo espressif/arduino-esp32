@@ -20,6 +20,13 @@
 
   http://www.arduino.cc/en/Tutorial/ButtonMouseControl
 */
+#ifndef ARDUINO_USB_MODE
+#error This ESP32 SoC has no Native USB interface
+#elif ARDUINO_USB_MODE == 1
+#warning This sketch should be used when USB is in OTG mode
+void setup(){}
+void loop(){}
+#else
 
 #include "USB.h"
 #include "USBHIDMouse.h"
@@ -84,3 +91,4 @@ void loop() {
   // a delay so the mouse doesn't move too fast:
   delay(responseDelay);
 }
+#endif /* ARDUINO_USB_MODE */

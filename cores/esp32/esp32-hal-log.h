@@ -38,7 +38,9 @@ extern "C"
 #else
 #define ARDUHAL_LOG_LEVEL CORE_DEBUG_LEVEL
 #ifdef USE_ESP_IDF_LOG
+#ifndef LOG_LOCAL_LEVEL
 #define LOG_LOCAL_LEVEL CORE_DEBUG_LEVEL
+#endif
 #endif
 #endif
 
@@ -87,6 +89,8 @@ void log_print_buf(const uint8_t *b, size_t len);
 
 #define ARDUHAL_SHORT_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter format ARDUHAL_LOG_RESET_COLOR "\r\n"
 #define ARDUHAL_LOG_FORMAT(letter, format)  ARDUHAL_LOG_COLOR_ ## letter "[%6u][" #letter "][%s:%u] %s(): " format ARDUHAL_LOG_RESET_COLOR "\r\n", (unsigned long) (esp_timer_get_time() / 1000ULL), pathToFileName(__FILE__), __LINE__, __FUNCTION__
+
+//esp_rom_printf(DRAM_STR("ST:%d\n"), frame_pos);
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 #ifndef USE_ESP_IDF_LOG
@@ -158,7 +162,7 @@ void log_print_buf(const uint8_t *b, size_t len);
 #define isr_log_e(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(E, format), ##__VA_ARGS__)
 #define log_buf_e(b,l) do{ARDUHAL_LOG_COLOR_PRINT(E);log_print_buf(b,l);ARDUHAL_LOG_COLOR_PRINT_END;}while(0)
 #else
-#define log_e(format, ...) do {log_to_esp(TAG, ESP_LOG_ERROR, format, ##__VA_ARGS__);}while(0)
+#define log_e(format, ...) do {ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR, TAG, format, ##__VA_ARGS__);}while(0)
 #define isr_log_e(format, ...) do {ets_printf(LOG_FORMAT(E, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
 #define log_buf_e(b,l) do {ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_ERROR);}while(0)
 #endif
@@ -187,9 +191,9 @@ void log_print_buf(const uint8_t *b, size_t len);
 #include "esp_log.h"
 
 #ifdef USE_ESP_IDF_LOG
-#ifndef TAG
-#define TAG "ARDUINO"
-#endif
+//#ifndef TAG
+//#define TAG "ARDUINO"
+//#endif
 //#define log_n(format, ...) myLog(ESP_LOG_NONE, format, ##__VA_ARGS__)
 #else
 #ifdef CONFIG_ARDUHAL_ESP_LOG
@@ -204,16 +208,16 @@ void log_print_buf(const uint8_t *b, size_t len);
 #undef ESP_EARLY_LOGD
 #undef ESP_EARLY_LOGV
 
-#define ESP_LOGE(tag, ...)  log_e(__VA_ARGS__)
-#define ESP_LOGW(tag, ...)  log_w(__VA_ARGS__)
-#define ESP_LOGI(tag, ...)  log_i(__VA_ARGS__)
-#define ESP_LOGD(tag, ...)  log_d(__VA_ARGS__)
-#define ESP_LOGV(tag, ...)  log_v(__VA_ARGS__)
-#define ESP_EARLY_LOGE(tag, ...)  isr_log_e(__VA_ARGS__)
-#define ESP_EARLY_LOGW(tag, ...)  isr_log_w(__VA_ARGS__)
-#define ESP_EARLY_LOGI(tag, ...)  isr_log_i(__VA_ARGS__)
-#define ESP_EARLY_LOGD(tag, ...)  isr_log_d(__VA_ARGS__)
-#define ESP_EARLY_LOGV(tag, ...)  isr_log_v(__VA_ARGS__)
+#define ESP_LOGE(tag, format, ...)  log_e("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGW(tag, format, ...)  log_w("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGI(tag, format, ...)  log_i("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGD(tag, format, ...)  log_d("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_LOGV(tag, format, ...)  log_v("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGE(tag, format, ...)  isr_log_e("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGW(tag, format, ...)  isr_log_w("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGI(tag, format, ...)  isr_log_i("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGD(tag, format, ...)  isr_log_d("[%s] " format, tag, ##__VA_ARGS__)
+#define ESP_EARLY_LOGV(tag, format, ...)  isr_log_v("[%s] " format, tag, ##__VA_ARGS__)
 #endif
 #endif
 

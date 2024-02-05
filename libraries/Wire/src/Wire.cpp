@@ -22,6 +22,8 @@
   Modified Nov 2017 by Chuck Todd (ctodd@cableone.net) - ESP32 ISR Support
   Modified Nov 2021 by Hristo Gochkov <Me-No-Dev> to support ESP-IDF API
  */
+#include "soc/soc_caps.h"
+#if SOC_I2C_SUPPORTED
 
 extern "C" {
 #include <stdlib.h>
@@ -30,7 +32,9 @@ extern "C" {
 }
 
 #include "esp32-hal-i2c.h"
+#if SOC_I2C_SUPPORT_SLAVE
 #include "esp32-hal-i2c-slave.h"
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 #include "Wire.h"
 #include "Arduino.h"
 
@@ -38,19 +42,24 @@ TwoWire::TwoWire(uint8_t bus_num)
     :num(bus_num & 1)
     ,sda(-1)
     ,scl(-1)
+    ,bufferSize(I2C_BUFFER_LENGTH) // default Wire Buffer Size
+    ,rxBuffer(NULL)
     ,rxIndex(0)
     ,rxLength(0)
+    ,txBuffer(NULL)
     ,txLength(0)
     ,txAddress(0)
     ,_timeOutMillis(50)
     ,nonStop(false)
 #if !CONFIG_DISABLE_HAL_LOCKS
-    ,nonStopTask(NULL)
+    ,currentTaskHandle(NULL)
     ,lock(NULL)
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
     ,is_slave(false)
     ,user_onRequest(NULL)
     ,user_onReceive(NULL)
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 {}
 
 TwoWire::~TwoWire()
@@ -74,8 +83,12 @@ bool TwoWire::initPins(int sdaPin, int sclPin)
             }
         } else {
             if(sda==-1) {
+#ifdef WIRE1_PIN_DEFINED
+                sdaPin = SDA1;
+#else
                 log_e("no Default SDA Pin for Second Peripheral");
                 return false; //no Default pin for Second Peripheral
+#endif
             } else {
                 sdaPin = sda;    // reuse prior pin
             }
@@ -91,8 +104,12 @@ bool TwoWire::initPins(int sdaPin, int sclPin)
             }
         } else {
             if(scl == -1) {
+#ifdef WIRE1_PIN_DEFINED
+                sclPin = SCL1;
+#else
                 log_e("no Default SCL Pin for Second Peripheral");
                 return false; //no Default pin for Second Peripheral
+#endif
             } else {
                 sclPin = scl;    // reuse prior pin
             }
@@ -132,6 +149,88 @@ bool TwoWire::setPins(int sdaPin, int sclPin)
     return !i2cIsInit(num);
 }
 
+bool TwoWire::allocateWireBuffer()
+{
+    // or both buffer can be allocated or none will be
+    if (rxBuffer == NULL) {
+            rxBuffer = (uint8_t *)malloc(bufferSize);
+            if (rxBuffer == NULL) {
+                log_e("Can't allocate memory for I2C_%d rxBuffer", num);
+                return false;
+            }
+    }
+    if (txBuffer == NULL) {
+            txBuffer = (uint8_t *)malloc(bufferSize);
+            if (txBuffer == NULL) {
+                log_e("Can't allocate memory for I2C_%d txBuffer", num);
+                freeWireBuffer();  // free rxBuffer for safety!
+                return false;
+            }
+    }
+    // in case both were allocated before, they must have the same size. All good.
+    return true;
+}
+
+void TwoWire::freeWireBuffer()
+{
+    if (rxBuffer != NULL) {
+        free(rxBuffer);
+        rxBuffer = NULL;
+    }
+    if (txBuffer != NULL) {
+        free(txBuffer);
+        txBuffer = NULL;
+    }
+}
+
+size_t TwoWire::setBufferSize(size_t bSize)
+{
+    // Maximum size .... HEAP limited ;-)
+    if (bSize < 32) {    // 32 bytes is the I2C FIFO Len for ESP32/S2/S3/C3
+        log_e("Minimum Wire Buffer size is 32 bytes");
+        return 0;
+    }
+
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if(lock == NULL){
+        lock = xSemaphoreCreateMutex();
+        if(lock == NULL){
+            log_e("xSemaphoreCreateMutex failed");
+            return 0;
+        }
+    }
+    //acquire lock
+    if(xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+        log_e("could not acquire lock");
+        return 0;
+    }
+#endif
+    // allocateWireBuffer allocates memory for both pointers or just free them
+    if (rxBuffer != NULL || txBuffer != NULL) {
+        // if begin() has been already executed, memory size changes... data may be lost. We don't care! :^)
+        if (bSize != bufferSize) {
+            // we want a new buffer size ... just reset buffer pointers and allocate new ones
+            freeWireBuffer();
+            bufferSize = bSize;
+            if (!allocateWireBuffer()) {
+                // failed! Error message already issued
+                bSize = 0; // returns error
+                log_e("Buffer allocation failed");
+            }
+        } // else nothing changes, all set!
+    } else {
+        // no memory allocated yet, just change the size value - allocation in begin()
+        bufferSize = bSize;
+    }
+#if !CONFIG_DISABLE_HAL_LOCKS
+    //release lock
+    xSemaphoreGive(lock);
+    
+#endif
+    return bSize;
+}
+
+#if SOC_I2C_SUPPORT_SLAVE
 // Slave Begin
 bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
 {
@@ -159,23 +258,29 @@ bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency)
         log_e("Bus already started in Master Mode.");
         goto end;
     }
+    if (!allocateWireBuffer()) {
+        // failed! Error Message already issued
+        goto end;
+    }
     if(!initPins(sdaPin, sclPin)){
         goto end;
     }
     i2cSlaveAttachCallbacks(num, onRequestService, onReceiveService, this);
-    if(i2cSlaveInit(num, sda, scl, addr, frequency, I2C_BUFFER_LENGTH, I2C_BUFFER_LENGTH) != ESP_OK){
+    if(i2cSlaveInit(num, sda, scl, addr, frequency, bufferSize, bufferSize) != ESP_OK){
         log_e("Slave Init ERROR");
         goto end;
     }
     is_slave = true;
     started = true;
 end:
+    if (!started) freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
 #endif
     return started;
 }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 
 // Master Begin
 bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
@@ -196,13 +301,19 @@ bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
         return false;
     }
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus already started in Slave Mode.");
         goto end;
     }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
     if(i2cIsInit(num)){
         log_w("Bus already started in Master Mode.");
         started = true;
+        goto end;
+    }
+    if (!allocateWireBuffer()) {
+        // failed! Error Message already issued
         goto end;
     }
     if(!initPins(sdaPin, sclPin)){
@@ -212,6 +323,7 @@ bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency)
     started = (err == ESP_OK);
 
 end:
+    if (!started) freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
@@ -231,14 +343,18 @@ bool TwoWire::end()
             return false;
         }
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
         if(is_slave){
             err = i2cSlaveDeinit(num);
             if(err == ESP_OK){
                 is_slave = false;
             }
-        } else if(i2cIsInit(num)){
+        } else
+#endif /* SOC_I2C_SUPPORT_SLAVE */
+        if(i2cIsInit(num)){
             err = i2cDeinit(num);
         }
+        freeWireBuffer();
 #if !CONFIG_DISABLE_HAL_LOCKS
         //release lock
         xSemaphoreGive(lock);
@@ -256,9 +372,12 @@ uint32_t TwoWire::getClock()
         log_e("could not acquire lock");
     } else {
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
         if(is_slave){
             log_e("Bus is in Slave Mode");
-        } else {
+        } else 
+#endif /* SOC_I2C_SUPPORT_SLAVE */
+        {
             i2cGetClock(num, &frequency);
         }
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -279,10 +398,13 @@ bool TwoWire::setClock(uint32_t frequency)
         return false;
     }
 #endif
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
         err = ESP_FAIL;
-    } else {
+    } else 
+#endif /* SOC_I2C_SUPPORT_SLAVE */
+    {
         err = i2cSetClock(num, frequency);
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -302,22 +424,24 @@ uint16_t TwoWire::getTimeOut()
     return _timeOutMillis;
 }
 
-void TwoWire::beginTransmission(uint16_t address)
+void TwoWire::beginTransmission(uint8_t address)
 {
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
         return;
     }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 #if !CONFIG_DISABLE_HAL_LOCKS
-    if(nonStop && nonStopTask == xTaskGetCurrentTaskHandle()){
-        log_e("Unfinished Repeated Start transaction! Expected requestFrom, not beginTransmission! Clearing...");
-        //release lock
-        xSemaphoreGive(lock);
-    }
-    //acquire lock
-    if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
-        log_e("could not acquire lock");
-        return;
+    TaskHandle_t task = xTaskGetCurrentTaskHandle();
+    if (currentTaskHandle != task)
+    {
+        //acquire lock
+        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+            log_e("could not acquire lock");
+            return;
+        }
+        currentTaskHandle = task;
     }
 #endif
     nonStop = false;
@@ -325,25 +449,39 @@ void TwoWire::beginTransmission(uint16_t address)
     txLength = 0;
 }
 
+/*
+https://www.arduino.cc/reference/en/language/functions/communication/wire/endtransmission/
+endTransmission() returns:
+0: success.
+1: data too long to fit in transmit buffer.
+2: received NACK on transmit of address.
+3: received NACK on transmit of data.
+4: other error.
+5: timeout
+*/
 uint8_t TwoWire::endTransmission(bool sendStop)
 {
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
+        return 4;
+    }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
+    if (txBuffer == NULL){
+        log_e("NULL TX buffer pointer");
         return 4;
     }
     esp_err_t err = ESP_OK;
     if(sendStop){
         err = i2cWrite(num, txAddress, txBuffer, txLength, _timeOutMillis);
 #if !CONFIG_DISABLE_HAL_LOCKS
+        currentTaskHandle = NULL;
         //release lock
         xSemaphoreGive(lock);
 #endif
     } else {
         //mark as non-stop
         nonStop = true;
-#if !CONFIG_DISABLE_HAL_LOCKS
-        nonStopTask = xTaskGetCurrentTaskHandle();
-#endif
     }
     switch(err){
         case ESP_OK: return 0;
@@ -354,48 +492,80 @@ uint8_t TwoWire::endTransmission(bool sendStop)
     return 4;
 }
 
-uint8_t TwoWire::requestFrom(uint16_t address, uint8_t size, bool sendStop)
+uint8_t TwoWire::endTransmission()
 {
+    return endTransmission(true);
+}
+
+size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
+{
+#if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
         log_e("Bus is in Slave Mode");
         return 0;
     }
+#endif /* SOC_I2C_SUPPORT_SLAVE */
+    if (rxBuffer == NULL || txBuffer == NULL){
+        log_e("NULL buffer pointer");
+        return 0;
+    }
     esp_err_t err = ESP_OK;
-    if(nonStop
 #if !CONFIG_DISABLE_HAL_LOCKS
-    && nonStopTask == xTaskGetCurrentTaskHandle()
-#endif
-    ){
+    TaskHandle_t task = xTaskGetCurrentTaskHandle();
+    if (currentTaskHandle != task)
+    {
+        //acquire lock
+        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+            log_e("could not acquire lock");
+            return 0;
+        }
+        currentTaskHandle = task;
+    }
+#endif  
+    if(nonStop){
         if(address != txAddress){
             log_e("Unfinished Repeated Start transaction! Expected address do not match! %u != %u", address, txAddress);
+#if !CONFIG_DISABLE_HAL_LOCKS
+            currentTaskHandle = NULL;
+            //release lock
+            xSemaphoreGive(lock);
+#endif
             return 0;
         }
         nonStop = false;
         rxIndex = 0;
         rxLength = 0;
         err = i2cWriteReadNonStop(num, address, txBuffer, txLength, rxBuffer, size, _timeOutMillis, &rxLength);
-    } else {
-#if !CONFIG_DISABLE_HAL_LOCKS
-        //acquire lock
-        if(lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
-            log_e("could not acquire lock");
-            return 0;
+        if(err){
+            log_e("i2cWriteReadNonStop returned Error %d", err);
         }
-#endif
+    } else {
         rxIndex = 0;
         rxLength = 0;
         err = i2cRead(num, address, rxBuffer, size, _timeOutMillis, &rxLength);
+        if(err){
+            log_e("i2cRead returned Error %d", err);
+        }
     }
 #if !CONFIG_DISABLE_HAL_LOCKS
+    currentTaskHandle = NULL;
     //release lock
     xSemaphoreGive(lock);
 #endif
     return rxLength;
 }
 
+size_t TwoWire::requestFrom(uint8_t address, size_t size){
+    return requestFrom(address, size, true);
+}
+
 size_t TwoWire::write(uint8_t data)
 {
-    if(txLength >= I2C_BUFFER_LENGTH) {
+    if (txBuffer == NULL){
+        log_e("NULL TX buffer pointer");
+        return 0;
+    }
+    if(txLength >= bufferSize) {
         return 0;
     }
     txBuffer[txLength++] = data;
@@ -413,31 +583,39 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity)
 
 }
 
-int TwoWire::available(void)
+int TwoWire::available()
 {
     int result = rxLength - rxIndex;
     return result;
 }
 
-int TwoWire::read(void)
+int TwoWire::read()
 {
     int value = -1;
+    if (rxBuffer == NULL){
+        log_e("NULL RX buffer pointer");
+        return value;
+    }
     if(rxIndex < rxLength) {
         value = rxBuffer[rxIndex++];
     }
     return value;
 }
 
-int TwoWire::peek(void)
+int TwoWire::peek()
 {
     int value = -1;
+    if (rxBuffer == NULL){
+        log_e("NULL RX buffer pointer");
+        return value;
+    }
     if(rxIndex < rxLength) {
         value = rxBuffer[rxIndex];
     }
     return value;
 }
 
-void TwoWire::flush(void)
+void TwoWire::flush()
 {
     rxIndex = 0;
     rxLength = 0;
@@ -445,50 +623,22 @@ void TwoWire::flush(void)
     //i2cFlush(num); // cleanup
 }
 
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity, uint8_t sendStop)
+void TwoWire::onReceive( void (*function)(int) )
 {
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop));
+#if SOC_I2C_SUPPORT_SLAVE
+    user_onReceive = function;
+#endif
 }
 
-uint8_t TwoWire::requestFrom(uint16_t address, uint8_t quantity, uint8_t sendStop)
+// sets function called on slave read
+void TwoWire::onRequest( void (*function)(void) )
 {
-    return requestFrom(address, static_cast<size_t>(quantity), static_cast<bool>(sendStop));
+#if SOC_I2C_SUPPORT_SLAVE
+    user_onRequest = function;
+#endif
 }
 
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity)
-{
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), true);
-}
-
-uint8_t TwoWire::requestFrom(uint16_t address, uint8_t quantity)
-{
-    return requestFrom(address, static_cast<size_t>(quantity), true);
-}
-
-uint8_t TwoWire::requestFrom(int address, int quantity)
-{
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), true);
-}
-
-uint8_t TwoWire::requestFrom(int address, int quantity, int sendStop)
-{
-    return static_cast<uint8_t>(requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(quantity), static_cast<bool>(sendStop)));
-}
-
-void TwoWire::beginTransmission(int address)
-{
-    beginTransmission(static_cast<uint16_t>(address));
-}
-
-void TwoWire::beginTransmission(uint8_t address)
-{
-    beginTransmission(static_cast<uint16_t>(address));
-}
-
-uint8_t TwoWire::endTransmission(void)
-{
-    return endTransmission(true);
-}
+#if SOC_I2C_SUPPORT_SLAVE
 
 size_t TwoWire::slaveWrite(const uint8_t * buffer, size_t len)
 {
@@ -499,6 +649,10 @@ void TwoWire::onReceiveService(uint8_t num, uint8_t* inBytes, size_t numBytes, b
 {
     TwoWire * wire = (TwoWire*)arg;
     if(!wire->user_onReceive){
+        return;
+    }
+    if (wire->rxBuffer == NULL){
+        log_e("NULL RX buffer pointer");
         return;
     }
     for(uint8_t i = 0; i < numBytes; ++i){
@@ -515,6 +669,10 @@ void TwoWire::onRequestService(uint8_t num, void * arg)
     if(!wire->user_onRequest){
         return;
     }
+    if (wire->txBuffer == NULL){
+        log_e("NULL TX buffer pointer");
+        return;
+    }
     wire->txLength = 0;
     wire->user_onRequest();
     if(wire->txLength){
@@ -522,17 +680,9 @@ void TwoWire::onRequestService(uint8_t num, void * arg)
     }
 }
 
-void TwoWire::onReceive( void (*function)(int) )
-{
-  user_onReceive = function;
-}
-
-// sets function called on slave read
-void TwoWire::onRequest( void (*function)(void) )
-{
-  user_onRequest = function;
-}
-
+#endif /* SOC_I2C_SUPPORT_SLAVE */
 
 TwoWire Wire = TwoWire(0);
 TwoWire Wire1 = TwoWire(1);
+
+#endif /* SOC_I2C_SUPPORTED */

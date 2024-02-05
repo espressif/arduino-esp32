@@ -1,63 +1,80 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2019-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+#include "esp32-hal-dac.h"
 
+#if SOC_DAC_SUPPORTED
 #include "esp32-hal.h"
+#include "esp32-hal-periman.h"
+#include "soc/dac_channel.h"
+#include "driver/dac_oneshot.h"
 
-#if CONFIG_IDF_TARGET_ESP32
-#include "soc/rtc_io_reg.h"
-#define DAC1 25
-#define DAC2 26
-#elif CONFIG_IDF_TARGET_ESP32S2
-#include "soc/rtc_io_reg.h"
-#define DAC1 17
-#define DAC2 18
-#elif CONFIG_IDF_TARGET_ESP32C3
-#define NODAC
-#else
-#error Target CONFIG_IDF_TARGET is not supported
-#endif
-
-#ifndef NODAC
-#include "esp_attr.h"
-#include "soc/rtc_cntl_reg.h"
-#include "soc/rtc_io_periph.h"
-#include "soc/sens_reg.h"
-#include "soc/sens_struct.h"
-#include "driver/dac.h"
-
-void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
-{
-    if(pin < DAC1 || pin > DAC2){
-        return;//not dac pin
+static bool dacDetachBus(void * bus){
+    esp_err_t err = dac_oneshot_del_channel((dac_oneshot_handle_t)bus);
+    if(err != ESP_OK){
+        log_e("dac_oneshot_del_channel failed with error: %d", err);
+        return false;
     }
-    pinMode(pin, ANALOG);
-    uint8_t channel = pin - DAC1;
-#if CONFIG_IDF_TARGET_ESP32
-    CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL1_REG, SENS_SW_TONE_EN);
-#elif CONFIG_IDF_TARGET_ESP32S2
-    SENS.sar_dac_ctrl1.dac_clkgate_en = 1;
-#endif
-    RTCIO.pad_dac[channel].dac_xpd_force = 1;
-    RTCIO.pad_dac[channel].xpd_dac = 1;
-    if (channel == 0) {
-        SENS.sar_dac_ctrl2.dac_cw_en1 = 0;
-    } else if (channel == 1) {
-        SENS.sar_dac_ctrl2.dac_cw_en2 = 0;
-    }
-    RTCIO.pad_dac[channel].dac = value;
+    return true;
 }
 
-extern void dacWrite(uint8_t pin, uint8_t value) __attribute__ ((weak, alias("__dacWrite")));
+bool __dacWrite(uint8_t pin, uint8_t value)
+{
+    esp_err_t err = ESP_OK;
+    if(pin != DAC_CHAN0_GPIO_NUM && pin != DAC_CHAN1_GPIO_NUM){
+        log_e("pin %u is not a DAC pin", pin);
+        return false;//not dac pin
+    }
+
+    dac_oneshot_handle_t bus = (dac_oneshot_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT);
+    if(bus == NULL){
+        perimanSetBusDeinit(ESP32_BUS_TYPE_DAC_ONESHOT, dacDetachBus);
+        if(!perimanClearPinBus(pin)){
+             return false;
+        }
+        dac_channel_t channel = (pin == DAC_CHAN0_GPIO_NUM)?DAC_CHAN_0:DAC_CHAN_1;
+        dac_oneshot_config_t config = {
+            .chan_id = channel
+        };
+        err = dac_oneshot_new_channel(&config, &bus);
+        if(err != ESP_OK){
+            log_e("dac_oneshot_new_channel failed with error: %d", err);
+            return false;
+        }
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT, (void *)bus, -1, channel)){
+            dacDetachBus((void *)bus);
+            return false;
+        }
+    }
+
+    err = dac_oneshot_output_voltage(bus, value);
+    if(err != ESP_OK){
+        log_e("dac_oneshot_output_voltage failed with error: %d", err);
+        return false;
+    }
+    return true;
+}
+
+bool __dacDisable(uint8_t pin)
+{
+    if(pin != DAC_CHAN0_GPIO_NUM && pin != DAC_CHAN1_GPIO_NUM){
+        log_e("pin %u is not a DAC pin", pin);
+        return false;//not dac pin
+    }
+    void * bus = perimanGetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT);
+    if(bus != NULL){
+        // will call dacDetachBus
+        return perimanClearPinBus(pin);
+    } else {
+        log_e("pin %u is not attached to DAC", pin);
+    }
+    return false;
+}
+
+extern bool dacWrite(uint8_t pin, uint8_t value) __attribute__ ((weak, alias("__dacWrite")));
+extern bool dacDisable(uint8_t pin) __attribute__ ((weak, alias("__dacDisable")));
 
 #endif

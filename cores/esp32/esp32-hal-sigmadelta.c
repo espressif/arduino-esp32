@@ -1,132 +1,90 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2019-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+#include "esp32-hal-sigmadelta.h"
 
+#if SOC_SDM_SUPPORTED
 #include "esp32-hal.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
-#include "esp32-hal-matrix.h"
-#include "soc/gpio_sd_reg.h"
-#include "soc/gpio_sd_struct.h"
+#include "esp32-hal-periman.h"
+#include "driver/sdm.h"
 
-#include "esp_system.h"
-#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
-#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
-#include "esp32/rom/ets_sys.h"
-#elif CONFIG_IDF_TARGET_ESP32S2
-#include "esp32s2/rom/ets_sys.h"
-#elif CONFIG_IDF_TARGET_ESP32C3
-#include "esp32c3/rom/ets_sys.h"
-#else 
-#error Target CONFIG_IDF_TARGET is not supported
-#endif
-#else // ESP32 Before IDF 4.0
-#include "rom/ets_sys.h"
-#endif
-
-
-#if CONFIG_DISABLE_HAL_LOCKS
-#define SD_MUTEX_LOCK()
-#define SD_MUTEX_UNLOCK()
-#else
-#define SD_MUTEX_LOCK()    do {} while (xSemaphoreTake(_sd_sys_lock, portMAX_DELAY) != pdPASS)
-#define SD_MUTEX_UNLOCK()  xSemaphoreGive(_sd_sys_lock)
-xSemaphoreHandle _sd_sys_lock;
-#endif
-
-static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
-    if(old_apb == new_apb){
-        return;
+static bool sigmaDeltaDetachBus(void * bus){
+    esp_err_t err = sdm_channel_disable((sdm_channel_handle_t)bus);
+    if(err != ESP_OK){
+        log_w("sdm_channel_disable failed with error: %d", err);
     }
-    uint32_t iarg = (uint32_t)arg;
-    uint8_t channel = iarg;
-    if(ev_type == APB_BEFORE_CHANGE){
-        SIGMADELTA.cg.clk_en = 0;
+    err = sdm_del_channel((sdm_channel_handle_t)bus);
+    if(err != ESP_OK){
+        log_e("sdm_del_channel failed with error: %d", err);
+        return false;
+    }
+    return true;
+}
+
+bool sigmaDeltaAttach(uint8_t pin, uint32_t freq) //freq 1220-312500
+{
+    perimanSetBusDeinit(ESP32_BUS_TYPE_SIGMADELTA, sigmaDeltaDetachBus);
+    sdm_channel_handle_t bus = (sdm_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
+    if(bus != NULL && !perimanClearPinBus(pin)){
+        return false;
+    }
+    bus = NULL;
+    sdm_config_t config = {
+        .gpio_num = (int)pin,
+        .clk_src = SDM_CLK_SRC_DEFAULT,
+        .sample_rate_hz = freq,
+        .flags = {
+            .invert_out = 0,
+            .io_loop_back = 0
+        }
+    };
+    esp_err_t err = sdm_new_channel(&config, &bus);
+    if(err != ESP_OK){
+        log_e("sdm_new_channel failed with error: %d", err);
+        return false;
+    }
+    err = sdm_channel_enable(bus);
+    if(err != ESP_OK){
+        sigmaDeltaDetachBus((void *)bus);
+        log_e("sdm_channel_enable failed with error: %d", err);
+        return false;
+    }
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA, (void *)bus, -1, -1)){
+        sigmaDeltaDetachBus((void *)bus);
+        return false;
+    }
+    return true;
+}
+
+bool sigmaDeltaWrite(uint8_t pin, uint8_t duty) //chan 0-x according to SOC duty 8 bit
+{
+    sdm_channel_handle_t bus = (sdm_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
+    if(bus != NULL){
+        int8_t d = duty - 128;
+        esp_err_t err = sdm_channel_set_duty(bus, d);
+        if(err != ESP_OK){
+            log_e("sdm_channel_set_duty failed with error: %d", err);
+            return false;
+        }
+        return true;
     } else {
-        old_apb /= 1000000;
-        new_apb /= 1000000;
-        SD_MUTEX_LOCK();
-        uint32_t old_prescale = SIGMADELTA.channel[channel].prescale + 1;
-        SIGMADELTA.channel[channel].prescale = ((new_apb * old_prescale) / old_apb) - 1;
-        SIGMADELTA.cg.clk_en = 0;
-        SIGMADELTA.cg.clk_en = 1;
-        SD_MUTEX_UNLOCK();
+        log_e("pin %u is not attached to SigmaDelta", pin);
     }
+    return false;
 }
 
-uint32_t sigmaDeltaSetup(uint8_t channel, uint32_t freq) //chan 0-7 freq 1220-312500
+bool sigmaDeltaDetach(uint8_t pin)
 {
-    if(channel > 7) {
-        return 0;
+    void * bus = perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
+    if(bus != NULL){
+        // will call sigmaDeltaDetachBus
+        return perimanClearPinBus(pin);
+    } else {
+        log_e("pin %u is not attached to SigmaDelta", pin);
     }
-#if !CONFIG_DISABLE_HAL_LOCKS
-    static bool tHasStarted = false;
-    if(!tHasStarted) {
-        tHasStarted = true;
-        _sd_sys_lock = xSemaphoreCreateMutex();
-    }
+    return false;
+}
 #endif
-    uint32_t apb_freq = getApbFrequency();
-    uint32_t prescale = (apb_freq/(freq*256)) - 1;
-    if(prescale > 0xFF) {
-        prescale = 0xFF;
-    }
-    SD_MUTEX_LOCK();
-#ifndef CONFIG_IDF_TARGET_ESP32
-    SIGMADELTA.misc.function_clk_en = 1;
-#endif
-    SIGMADELTA.channel[channel].prescale = prescale;
-    SIGMADELTA.cg.clk_en = 0;
-    SIGMADELTA.cg.clk_en = 1;
-    SD_MUTEX_UNLOCK();
-    uint32_t iarg = channel;
-    addApbChangeCallback((void*)iarg, _on_apb_change);
-    return apb_freq/((prescale + 1) * 256);
-}
-
-void sigmaDeltaWrite(uint8_t channel, uint8_t duty) //chan 0-7 duty 8 bit
-{
-    if(channel > 7) {
-        return;
-    }
-    duty -= 128;
-    SD_MUTEX_LOCK();
-    SIGMADELTA.channel[channel].duty = duty;
-    SD_MUTEX_UNLOCK();
-}
-
-uint8_t sigmaDeltaRead(uint8_t channel) //chan 0-7
-{
-    if(channel > 7) {
-        return 0;
-    }
-    SD_MUTEX_LOCK();
-    uint8_t duty = SIGMADELTA.channel[channel].duty + 128;
-    SD_MUTEX_UNLOCK();
-    return duty;
-}
-
-void sigmaDeltaAttachPin(uint8_t pin, uint8_t channel) //channel 0-7
-{
-    if(channel > 7) {
-        return;
-    }
-    pinMode(pin, OUTPUT);
-    pinMatrixOutAttach(pin, GPIO_SD0_OUT_IDX + channel, false, false);
-}
-
-void sigmaDeltaDetachPin(uint8_t pin)
-{
-    pinMatrixOutDetach(pin, false, false);
-}

@@ -28,33 +28,40 @@ extern "C" {
 #include "esp_system.h"
 }
 #include "esp32-hal-log.h"
+#include "esp_random.h"
 
+// Allows the user to choose between Real Hardware
+// or Software Pseudo random generators for the
+// Arduino random() functions
+static bool s_useRandomHW = true;
+void useRealRandomGenerator(bool useRandomHW) {
+  s_useRandomHW = useRandomHW;
+}
+
+// Calling randomSeed() will force the
+// Pseudo Random generator like in 
+// Arduino mainstream API
 void randomSeed(unsigned long seed)
 {
     if(seed != 0) {
         srand(seed);
+        s_useRandomHW = false;
     }
 }
 
-long random(long howbig)
+long random( long howsmall, long howbig );
+long random( long howbig )
 {
-    uint32_t x = esp_random();
-    uint64_t m = uint64_t(x) * uint64_t(howbig);
-    uint32_t l = uint32_t(m);
-    if (l < howbig) {
-        uint32_t t = -howbig;
-        if (t >= howbig) {
-            t -= howbig;
-            if (t >= howbig)
-                t %= howbig;
-        }
-        while (l < t) {
-            x = esp_random();
-            m = uint64_t(x) * uint64_t(howbig);
-            l = uint32_t(m);
-        }
-    }
-    return m >> 32;
+  if ( howbig == 0 )
+  {
+    return 0 ;
+  }
+  if (howbig < 0) {
+    return (random(0, -howbig));
+  }
+  // if randomSeed was called, fall back to software PRNG
+  uint32_t val = (s_useRandomHW) ? esp_random() : rand();
+  return val % howbig;
 }
 
 long random(long howsmall, long howbig)
@@ -67,14 +74,14 @@ long random(long howsmall, long howbig)
 }
 
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
-    const long dividend = out_max - out_min;
-    const long divisor = in_max - in_min;
-    const long delta = x - in_min;
-    if(divisor == 0){
-        log_e("Invalid map input range, min == max");
-        return -1; //AVR returns -1, SAM returns 0
+    const long run = in_max - in_min;
+    if(run == 0){
+        log_e("map(): Invalid input range, min == max");
+        return -1; // AVR returns -1, SAM returns 0
     }
-    return (delta * dividend + (divisor / 2)) / divisor + out_min;
+    const long rise = out_max - out_min;
+    const long delta = x - in_min;
+    return (delta * rise) / run + out_min;
 }
 
 uint16_t makeWord(uint16_t w)

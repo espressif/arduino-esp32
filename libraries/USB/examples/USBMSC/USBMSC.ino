@@ -1,13 +1,12 @@
+#ifndef ARDUINO_USB_MODE
+#error This ESP32 SoC has no Native USB interface
+#elif ARDUINO_USB_MODE == 1
+#warning This sketch should be used when USB is in OTG mode
+void setup(){}
+void loop(){}
+#else
 #include "USB.h"
 #include "USBMSC.h"
-
-#if ARDUINO_USB_CDC_ON_BOOT
-#define HWSerial Serial0
-#define USBSerial Serial
-#else
-#define HWSerial Serial
-USBCDC USBSerial;
-#endif
 
 USBMSC MSC;
 
@@ -131,19 +130,19 @@ static uint8_t msc_disk[DISK_SECTOR_COUNT][DISK_SECTOR_SIZE] =
 };
 
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize){
-  HWSerial.printf("MSC WRITE: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
+  Serial.printf("MSC WRITE: lba: %lu, offset: %lu, bufsize: %lu\n", lba, offset, bufsize);
   memcpy(msc_disk[lba] + offset, buffer, bufsize);
   return bufsize;
 }
 
 static int32_t onRead(uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize){
-  HWSerial.printf("MSC READ: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
+  Serial.printf("MSC READ: lba: %lu, offset: %lu, bufsize: %lu\n", lba, offset, bufsize);
   memcpy(buffer, msc_disk[lba] + offset, bufsize);
   return bufsize;
 }
 
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject){
-  HWSerial.printf("MSC START/STOP: power: %u, start: %u, eject: %u\n", power_condition, start, load_eject);
+  Serial.printf("MSC START/STOP: power: %u, start: %u, eject: %u\n", power_condition, start, load_eject);
   return true;
 }
 
@@ -152,16 +151,16 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
     arduino_usb_event_data_t * data = (arduino_usb_event_data_t*)event_data;
     switch (event_id){
       case ARDUINO_USB_STARTED_EVENT:
-        HWSerial.println("USB PLUGGED");
+        Serial.println("USB PLUGGED");
         break;
       case ARDUINO_USB_STOPPED_EVENT:
-        HWSerial.println("USB UNPLUGGED");
+        Serial.println("USB UNPLUGGED");
         break;
       case ARDUINO_USB_SUSPEND_EVENT:
-        HWSerial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
+        Serial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
         break;
       case ARDUINO_USB_RESUME_EVENT:
-        HWSerial.println("USB RESUMED");
+        Serial.println("USB RESUMED");
         break;
       
       default:
@@ -171,8 +170,8 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
 }
 
 void setup() {
-  HWSerial.begin(115200);
-  HWSerial.setDebugOutput(true);
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
 
   USB.onEvent(usbEventCallback);
   MSC.vendorID("ESP32");//max 8 chars
@@ -190,3 +189,4 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 }
+#endif /* ARDUINO_USB_MODE */

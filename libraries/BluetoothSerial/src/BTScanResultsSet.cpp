@@ -6,7 +6,7 @@
  */
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 
 #include <esp_err.h>
@@ -63,11 +63,11 @@ int BTScanResultsSet::getCount() {
  * @param [in] i The index of the device.
  * @return The device at the specified index.
  */
-BTAdvertisedDevice* BTScanResultsSet::getDevice(uint32_t i) {
+BTAdvertisedDevice* BTScanResultsSet::getDevice(int i) {
 	if (i < 0)
 		return nullptr;
 
-	uint32_t x = 0;
+	int x = 0;
 	BTAdvertisedDeviceSet* pDev = &m_vectorAdvertisedDevices.begin()->second;
 	for (auto it = m_vectorAdvertisedDevices.begin(); it != m_vectorAdvertisedDevices.end(); it++) {
 		pDev = &it->second;
@@ -84,7 +84,7 @@ void BTScanResultsSet::clear() {
 }
 
 bool BTScanResultsSet::add(BTAdvertisedDeviceSet advertisedDevice, bool unique) {
-	std::string key = advertisedDevice.getAddress().toString();
+	std::string key = std::string(advertisedDevice.getAddress().toString().c_str(), advertisedDevice.getAddress().toString().length());
 	if (!unique || m_vectorAdvertisedDevices.count(key) == 0) {
 		m_vectorAdvertisedDevices.insert(std::pair<std::string, BTAdvertisedDeviceSet>(key, advertisedDevice));
 		return true;
