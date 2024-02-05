@@ -207,6 +207,7 @@ class UpdateClass {
     void _cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key);
     bool _decryptBuffer();
     bool _writeBuffer();
+    bool _verifyHeader(uint8_t data);
     bool _verifyEnd();
     bool _enablePartition(const esp_partition_t* partition);
     bool _chkDataInBlock(const uint8_t *data, size_t len) const;    // check if block contains any data or is empty
