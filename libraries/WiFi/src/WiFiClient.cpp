@@ -175,7 +175,7 @@ public:
     }
 };
 
-WiFiClient::WiFiClient():_connected(false),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),_sse(false),next(NULL)
+WiFiClient::WiFiClient():_connected(false),_sse(false),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
 {
 }
 
