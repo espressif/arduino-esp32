@@ -17,7 +17,7 @@ jobs:
       all_changed_files: ${{ steps.verify-changed-files.outputs.all_changed_files }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
           ref: ${{ github.event.pull_request.head.ref }}
@@ -87,7 +87,7 @@ jobs:
             echo "tool $tool was changed"
           done
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Set up Python 3.8

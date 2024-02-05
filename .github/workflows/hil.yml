@@ -25,7 +25,7 @@ jobs:
       chunks: ${{ steps.gen-chunks.outputs.chunks }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Generate Chunks matrix
         id: gen-chunks
@@ -51,7 +51,7 @@ jobs:
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build sketches
         run: |
           bash .github/scripts/tests_build.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}}
@@ -78,7 +78,7 @@ jobs:
 
     steps:
        - name: Checkout repository
-         uses: actions/checkout@v3
+         uses: actions/checkout@v4
 
        - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
          uses: actions/download-artifact@v3
