@@ -90,9 +90,10 @@ bool WiFiMulti::addAP(const char* ssid, const char *passphrase)
     return true;
 }
 
-uint8_t WiFiMulti::run(uint32_t connectTimeout)
+uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden)
 {
     int8_t scanResult;
+    unsigned long startTime;
     uint8_t status = WiFi.status();
     if(status == WL_CONNECTED) {
         if (!_bWFMInit && _connectionTestCBFunc != NULL){
@@ -116,13 +117,13 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
         status = WiFi.status();
     }
 
-    scanResult = WiFi.scanNetworks();
+    scanResult = WiFi.scanNetworks(false, scanHidden);
     if (scanResult == WIFI_SCAN_RUNNING) {
         // scan is running
         return WL_NO_SSID_AVAIL;
     } else if (scanResult >= 0) {
         // scan done analyze
-        int32_t bestIndex = 0;
+        int32_t bestIndex = -1;
         WifiAPlist_t bestNetwork { NULL, NULL, false };
         int bestNetworkDb = INT_MIN;
         int bestNetworkSec = WIFI_AUTH_MAX;
@@ -145,8 +146,10 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                 uint8_t sec_scan;
                 uint8_t* BSSID_scan;
                 int32_t chan_scan;
+                bool hidden_scan;
 
                 WiFi.getNetworkInfo(i, ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan);
+                hidden_scan = (ssid_scan.length() == 0) && scanHidden;
                 // add any Open WiFi AP to the list, if allowed with setAllowOpenAP(true)
                 if (_bAllowOpenAP && sec_scan == WIFI_AUTH_OPEN){
                     bool found = false;
@@ -163,14 +166,49 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                     }
                 }
 
+                if (hidden_scan) {
+                    log_v("hidden ssid on channel %d found, trying to connect with known credentials...", chan_scan);
+                }
+
                 bool known = false;
                 for(uint32_t x = 0; x < APlist.size(); x++) {
                     WifiAPlist_t entry = APlist[x];
 
-                    if(ssid_scan == entry.ssid) { // SSID match
-                        log_v("known ssid: %s, has failed: %s", entry.ssid, entry.hasFailed ? "yes" : "no");
-                        foundCount++;
-                        if (!entry.hasFailed){
+                    if(ssid_scan == entry.ssid || hidden_scan) { // SSID match or hidden network found
+                        if (!hidden_scan) {
+                            log_v("known ssid: %s, has failed: %s", entry.ssid, entry.hasFailed ? "yes" : "no");
+                            foundCount++;
+                        }
+                        if (!entry.hasFailed) {
+                            if (hidden_scan) {
+                                WiFi.begin(entry.ssid, entry.passphrase, chan_scan, BSSID_scan);
+
+                                // If the ssid returned from the scan is empty, it is a hidden SSID
+                                // it appears that the WiFi.begin() function is asynchronous and takes
+                                // additional time to connect to a hidden SSID. Therefore a delay of 1000ms
+                                // is added for hidden SSIDs before calling WiFi.status()
+                                delay(1000);
+
+                                status = WiFi.status();
+                                startTime = millis();
+
+                                while (status != WL_CONNECTED && (millis() - startTime) <= connectTimeout)
+                                {
+                                    delay(10);
+                                    status = WiFi.status();
+                                }
+
+                                WiFi.disconnect();
+                                delay(10);
+
+                                if (status == WL_CONNECTED) {
+                                    log_v("hidden ssid %s found", entry.ssid);
+                                    ssid_scan = entry.ssid;
+                                    foundCount++;
+                                } else {
+                                    continue;
+                                }
+                            }
                             known = true;
                             log_v("rssi_scan: %d, bestNetworkDb: %d", rssi_scan, bestNetworkDb);
                             if(rssi_scan > bestNetworkDb) { // best network
@@ -191,10 +229,24 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
                     }
                 }
 
-                if(known) {
-                    log_d(" --->   %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
+                if (known) {
+                    log_d(" --->   %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) (%c) (%s)",
+                        i,
+                        chan_scan,
+                        BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5],
+                        ssid_scan.c_str(),
+                        rssi_scan,
+                        (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*',
+                        (hidden_scan) ? "hidden" : "visible");
                 } else {
-                    log_d("       %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*');
+                    log_d("        %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) (%c) (%s)",
+                        i,
+                        chan_scan,
+                        BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5],
+                        ssid_scan.c_str(),
+                        rssi_scan,
+                        (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*',
+                        (hidden_scan) ? "hidden" : "visible");
                 }
             }
             log_v("foundCount = %d, failCount = %d", foundCount, failCount);
@@ -206,7 +258,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
         // clean up ram
         WiFi.scanDelete();
 
-        if(bestNetwork.ssid) {
+        if(bestIndex >= 0) {
             log_i("[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channel: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb);
 
             if (ipv6_support == true) {
@@ -218,7 +270,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout)
             status = WiFi.status();
             _bWFMInit = true;
 
-            auto startTime = millis();
+            startTime = millis();
             // wait for connection, fail, or timeout
             while(status != WL_CONNECTED && (millis() - startTime) <= connectTimeout) {  // && status != WL_NO_SSID_AVAIL && status != WL_CONNECT_FAILED
                 delay(10);

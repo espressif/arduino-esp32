@@ -149,7 +149,7 @@ bool TwoWire::setPins(int sdaPin, int sclPin)
     return !i2cIsInit(num);
 }
 
-bool TwoWire::allocateWireBuffer(void)
+bool TwoWire::allocateWireBuffer()
 {
     // or both buffer can be allocated or none will be
     if (rxBuffer == NULL) {
@@ -171,7 +171,7 @@ bool TwoWire::allocateWireBuffer(void)
     return true;
 }
 
-void TwoWire::freeWireBuffer(void)
+void TwoWire::freeWireBuffer()
 {
     if (rxBuffer != NULL) {
         free(rxBuffer);
@@ -424,7 +424,7 @@ uint16_t TwoWire::getTimeOut()
     return _timeOutMillis;
 }
 
-void TwoWire::beginTransmission(uint16_t address)
+void TwoWire::beginTransmission(uint8_t address)
 {
 #if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
@@ -492,7 +492,12 @@ uint8_t TwoWire::endTransmission(bool sendStop)
     return 4;
 }
 
-size_t TwoWire::requestFrom(uint16_t address, size_t size, bool sendStop)
+uint8_t TwoWire::endTransmission()
+{
+    return endTransmission(true);
+}
+
+size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
 {
 #if SOC_I2C_SUPPORT_SLAVE
     if(is_slave){
@@ -550,6 +555,10 @@ size_t TwoWire::requestFrom(uint16_t address, size_t size, bool sendStop)
     return rxLength;
 }
 
+size_t TwoWire::requestFrom(uint8_t address, size_t size){
+    return requestFrom(address, size, true);
+}
+
 size_t TwoWire::write(uint8_t data)
 {
     if (txBuffer == NULL){
@@ -574,13 +583,13 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity)
 
 }
 
-int TwoWire::available(void)
+int TwoWire::available()
 {
     int result = rxLength - rxIndex;
     return result;
 }
 
-int TwoWire::read(void)
+int TwoWire::read()
 {
     int value = -1;
     if (rxBuffer == NULL){
@@ -593,7 +602,7 @@ int TwoWire::read(void)
     return value;
 }
 
-int TwoWire::peek(void)
+int TwoWire::peek()
 {
     int value = -1;
     if (rxBuffer == NULL){
@@ -606,7 +615,7 @@ int TwoWire::peek(void)
     return value;
 }
 
-void TwoWire::flush(void)
+void TwoWire::flush()
 {
     rxIndex = 0;
     rxLength = 0;
@@ -614,62 +623,19 @@ void TwoWire::flush(void)
     //i2cFlush(num); // cleanup
 }
 
-size_t TwoWire::requestFrom(uint8_t address, size_t len, bool sendStop)
+void TwoWire::onReceive( void (*function)(int) )
 {
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), static_cast<bool>(sendStop));
-}
-  
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t len, uint8_t sendStop)
-{
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), static_cast<bool>(sendStop));
+#if SOC_I2C_SUPPORT_SLAVE
+    user_onReceive = function;
+#endif
 }
 
-uint8_t TwoWire::requestFrom(uint16_t address, uint8_t len, uint8_t sendStop)
+// sets function called on slave read
+void TwoWire::onRequest( void (*function)(void) )
 {
-    return requestFrom(address, static_cast<size_t>(len), static_cast<bool>(sendStop));
-}
-
-/* Added to match the Arduino function definition: https://github.com/arduino/ArduinoCore-API/blob/173e8eadced2ad32eeb93bcbd5c49f8d6a055ea6/api/HardwareI2C.h#L39
- * See: https://github.com/arduino-libraries/ArduinoECCX08/issues/25
-*/
-uint8_t TwoWire::requestFrom(uint16_t address, uint8_t len, bool stopBit)
-{
-    return requestFrom((uint16_t)address, (size_t)len, stopBit);
-}
-
-uint8_t TwoWire::requestFrom(uint8_t address, uint8_t len)
-{
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), true);
-}
-
-uint8_t TwoWire::requestFrom(uint16_t address, uint8_t len)
-{
-    return requestFrom(address, static_cast<size_t>(len), true);
-}
-
-uint8_t TwoWire::requestFrom(int address, int len)
-{
-    return requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), true);
-}
-
-uint8_t TwoWire::requestFrom(int address, int len, int sendStop)
-{
-    return static_cast<uint8_t>(requestFrom(static_cast<uint16_t>(address), static_cast<size_t>(len), static_cast<bool>(sendStop)));
-}
-
-void TwoWire::beginTransmission(int address)
-{
-    beginTransmission(static_cast<uint16_t>(address));
-}
-
-void TwoWire::beginTransmission(uint8_t address)
-{
-    beginTransmission(static_cast<uint16_t>(address));
-}
-
-uint8_t TwoWire::endTransmission(void)
-{
-    return endTransmission(true);
+#if SOC_I2C_SUPPORT_SLAVE
+    user_onRequest = function;
+#endif
 }
 
 #if SOC_I2C_SUPPORT_SLAVE
@@ -712,17 +678,6 @@ void TwoWire::onRequestService(uint8_t num, void * arg)
     if(wire->txLength){
         wire->slaveWrite((uint8_t*)wire->txBuffer, wire->txLength);
     }
-}
-
-void TwoWire::onReceive( void (*function)(int) )
-{
-  user_onReceive = function;
-}
-
-// sets function called on slave read
-void TwoWire::onRequest( void (*function)(void) )
-{
-  user_onRequest = function;
 }
 
 #endif /* SOC_I2C_SUPPORT_SLAVE */
