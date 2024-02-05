@@ -34,7 +34,9 @@
 #endif
 
 cbuf::cbuf(size_t size) :
-    next(NULL), _buf(xRingbufferCreate(size, RINGBUF_TYPE_BYTEBUF))
+    next(NULL),
+    has_peek(false),
+    _buf(xRingbufferCreate(size, RINGBUF_TYPE_BYTEBUF))
 {
     if(_buf == NULL) {
         log_e("failed to allocate ring buffer");
@@ -127,6 +129,7 @@ size_t cbuf::available() const
     if(_buf != NULL){
         vRingbufferGetInfo(_buf, NULL, NULL, NULL, NULL, (UBaseType_t *)&available);
     }
+    if (has_peek) available++;
     return available;
 }
 
@@ -160,12 +163,24 @@ bool cbuf::full() const
 
 int cbuf::peek()
 {
-    return -1;
-}
+    if (!available()) {
+        return -1;
+    }
 
-size_t cbuf::peek(char *dst, size_t size)
-{
-    return 0;
+    int c;
+
+    CBUF_MUTEX_LOCK();
+    if (has_peek) {
+        c = peek_byte;
+    } else {
+        c = read();
+        if (c >= 0) {
+            has_peek = true;
+            peek_byte = c;
+        }
+    }
+    CBUF_MUTEX_UNLOCK();
+    return c;
 }
 
 int cbuf::read()
@@ -185,34 +200,50 @@ size_t cbuf::read(char* dst, size_t size)
         CBUF_MUTEX_UNLOCK();
         return 0;
     }
-    size_t size_to_read = (size < bytes_available) ? size : bytes_available;
-    size_t size_read = 0;
-    size_t received_size = 0;
-    uint8_t *received_buff = (uint8_t *)xRingbufferReceiveUpTo(_buf, &received_size, 0, size_to_read);
-    if (received_buff != NULL) {
-        if(dst != NULL){
-            memcpy(dst, received_buff, received_size);
+
+    if (has_peek) {
+        if (dst != NULL) {
+            *dst++ = peek_byte;
         }
-        vRingbufferReturnItem(_buf, received_buff);
-        size_read = received_size;
-        size_to_read -= received_size;
-        // wrap around data
-        if(size_to_read){
-            received_size = 0;
-            received_buff = (uint8_t *)xRingbufferReceiveUpTo(_buf, &received_size, 0, size_to_read);
-            if (received_buff != NULL) {
-                if(dst != NULL){
-                    memcpy(dst+size_read, received_buff, received_size);
-                }
-                vRingbufferReturnItem(_buf, received_buff);
-                size_read += received_size;
-            } else {
-                log_e("failed to read wrap around data from ring buffer");
-            }
-        }
-    } else {
-        log_e("failed to read from ring buffer");
+        size--;
     }
+
+    size_t size_read = 0;
+    if (size) {
+        size_t received_size = 0;
+        size_t size_to_read = (size < bytes_available) ? size : bytes_available;
+        uint8_t *received_buff = (uint8_t *)xRingbufferReceiveUpTo(_buf, &received_size, 0, size_to_read);
+        if (received_buff != NULL) {
+            if(dst != NULL){
+                memcpy(dst, received_buff, received_size);
+            }
+            vRingbufferReturnItem(_buf, received_buff);
+            size_read = received_size;
+            size_to_read -= received_size;
+            // wrap around data
+            if(size_to_read){
+                received_size = 0;
+                received_buff = (uint8_t *)xRingbufferReceiveUpTo(_buf, &received_size, 0, size_to_read);
+                if (received_buff != NULL) {
+                    if(dst != NULL){
+                        memcpy(dst+size_read, received_buff, received_size);
+                    }
+                    vRingbufferReturnItem(_buf, received_buff);
+                    size_read += received_size;
+                } else {
+                    log_e("failed to read wrap around data from ring buffer");
+                }
+            }
+        } else {
+            log_e("failed to read from ring buffer");
+        }
+    }
+
+    if (has_peek) {
+        has_peek = false;
+        size_read++;
+    }
+
     CBUF_MUTEX_UNLOCK();
     return size_read;
 }
