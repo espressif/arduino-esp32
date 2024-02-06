@@ -44,7 +44,7 @@ public:
     ~WiFiMulti();
 
     bool addAP(const char* ssid, const char *passphrase = NULL);
-    uint8_t run(uint32_t connectTimeout=5000);
+    uint8_t run(uint32_t connectTimeout=5000, bool scanHidden=false);
     void enableIPv6(bool state);
 
     // Force (default: true) to only keep connected or to connect to an AP from the provided WiFiMulti list.
