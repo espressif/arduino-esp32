@@ -6,7 +6,7 @@ on:
 
 jobs:
   lint:
-#    if: contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
+    if: contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
     name: Checking if any fixes are needed
     runs-on: ubuntu-latest
     steps:
@@ -30,7 +30,7 @@ jobs:
           key: pre-commit|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}|${{ hashFiles('.github/workflows/pre-commit.yml') }}
 
       - name: Install python dependencies
-        run: python -m pip install pre-commit docutils && python -m pip freeze --local
+        run: python -m pip install pre-commit docutils
 
       - name: Get changed files
         id: changed-files
