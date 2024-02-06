@@ -207,10 +207,10 @@ bool UpdateClass::setCryptKey(const uint8_t *cryptKey){
     }
     //initialize
     if(!_cryptKey){
-        _cryptKey = (uint8_t*)malloc(ENCRYPTED_KEY_SIZE);
+        _cryptKey = new (std::nothrow) uint8_t[ENCRYPTED_KEY_SIZE];
     }
     if(!_cryptKey){
-      log_e("malloc failed");
+      log_e("new failed");
       return false;
     }    
     memcpy(_cryptKey, cryptKey, ENCRYPTED_KEY_SIZE);
@@ -303,10 +303,10 @@ bool UpdateClass::_decryptBuffer(){
         return false;      
     }    
     if(!_cryptBuffer){
-        _cryptBuffer = (uint8_t*)malloc(ENCRYPTED_BLOCK_SIZE);
+        _cryptBuffer = new (std::nothrow) uint8_t[ENCRYPTED_BLOCK_SIZE];
     }
     if(!_cryptBuffer){
-        log_e("malloc failed");
+        log_e("new failed");
         return false;
     }
     uint8_t tweaked_key[ENCRYPTED_KEY_SIZE]; //tweaked crypt key
