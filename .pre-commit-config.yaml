@@ -1,4 +1,4 @@
-exclude: '.github/.*'
+exclude: ".github/.*"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -46,14 +46,6 @@ repos:
     hooks:
       - id: prettier
         types_or: [yaml]
-  - repo: local
-    hooks:
-      - id: install-docutils
-        name: install-docutils
-        entry: pip install --upgrade docutils
-        language: system
-        pass_filenames: false
-        types_or: [markdown, rst]
   - repo: https://github.com/errata-ai/vale
     rev: "v3.0.7"
     hooks:
@@ -62,6 +54,7 @@ repos:
         language_version: "1.21.6"
         pass_filenames: false
         args: [sync]
+        types_or: [markdown, rst]
       - id: vale
         language_version: "1.21.6"
         types_or: [markdown, rst]
