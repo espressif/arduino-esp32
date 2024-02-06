@@ -212,7 +212,7 @@ bool UpdateClass::setCryptKey(const uint8_t *cryptKey){
     if(!_cryptKey){
       log_e("new failed");
       return false;
-    }    
+    }
     memcpy(_cryptKey, cryptKey, ENCRYPTED_KEY_SIZE);
     return true;
 }
@@ -249,12 +249,12 @@ void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key){
     cryptAddress <<= 8; //bit23 shifted to bit31(MSB)
     while(pattern_idx < sizeof(pattern)){
         tweak = cryptAddress<<(23 - pattern[pattern_idx]); //bit shift for small patterns
-//      tweak = rotl32(tweak,8 - bit_len);
+        // alternative to: tweak = rotl32(tweak,8 - bit_len);
         tweak = (tweak<<(8 - bit_len)) | (tweak>>(24 + bit_len)); //rotate to line up with end of previous tweak bits
         bit_len += pattern[pattern_idx++] - 4; //add number of bits in next pattern(23-4 = 19bits = 23bit to 5bit)
         while(bit_len > 7){
             tweaked_key[key_idx++] ^= tweak; //XOR byte
-//          tweak = rotl32(tweak, 8);
+            // alternative to: tweak = rotl32(tweak, 8);
             tweak = (tweak<<8) | (tweak>>24); //compiler should optimize to use rotate(fast)
             bit_len -=8;
         }
@@ -300,8 +300,8 @@ bool UpdateClass::_decryptBuffer(){
     }
     if(_bufferLen%ENCRYPTED_BLOCK_SIZE !=0 ){
         log_e("buffer size error");
-        return false;      
-    }    
+        return false;
+    }
     if(!_cryptBuffer){
         _cryptBuffer = new (std::nothrow) uint8_t[ENCRYPTED_BLOCK_SIZE];
     }

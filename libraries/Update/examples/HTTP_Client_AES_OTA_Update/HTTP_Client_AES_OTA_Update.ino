@@ -1,14 +1,14 @@
 /*
-An example of how to use HTTpClient to download an encrypted and plain image files OTA from a web server.
+An example of how to use HTTPClient to download an encrypted and plain image files OTA from a web server.
 This example uses Wifi & HTTPClient to connect to webserver and two functions for obtaining firmware image from webserver.
 One uses the example 'updater.php' code on server to check and/or send relavent download firmware image file,
 the other directly downloads the firmware file from web server.
 
 To use:-
-Make a folder/directory on your webserve where your firmware images will be uploaded to. ie. /firmware
+Make a folder/directory on your webserver where your firmware images will be uploaded to. ie. /firmware
 The 'updater.php' file can also be uploaded to the same folder. Edit and change definitions in 'update.php' to suit your needs.
 In sketch:
-   set HTTPUPDATE_HOST   to domain name or IP address if on LAN of your web server
+   set HTTPUPDATE_HOST         to domain name or IP address if on LAN of your web server
    set HTTPUPDATE_UPDATER_URI  to path and file to call 'updater.php'
 or set HTTPUPDATE_DIRECT_URI   to path and firmware file to download
    edit other HTTPUPDATE_ as needed
@@ -35,7 +35,8 @@ OTA_MODE options:-
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/
 
-espsecure.py encrypt_flash_data   -k ota_key.bin   --flash_crypt_conf 0xf   -a 0x1000   -o output_filename.bin    source_filename.bin
+Example:
+    espsecure.py encrypt_flash_data -k ota_key.bin --flash_crypt_conf 0xf -a 0x4320 -o output_filename.bin source_filename.bin
 
 espsecure.py encrypt_flash_data  = runs the idf encryption function to make a encrypted output file from a source file
   -k text                        = path/filename to the AES 256bit(32byte) encryption key file
@@ -69,7 +70,7 @@ const uint8_t  OTA_KEY[32] = {'0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',
 */
 
 //const uint8_t  OTA_KEY[33] = "0123456789 this a simpletest key";
-                           
+
 const uint32_t OTA_ADDRESS = 0x4320;
 const uint32_t OTA_CFG     = 0x0f;
 const uint32_t OTA_MODE    = U_AES_DECRYPT_AUTO;
@@ -242,7 +243,7 @@ bool http_updater(const String& host, const uint16_t& port, String uri, const bo
             if(!download){
                 Serial.printf( "Found V%s Firmware\n", http.header("version").c_str() );
             }else{
-                Serial.printf( "Downloading & Installing V%s Firmware\n", http.header("version").c_str() );                
+                Serial.printf( "Downloading & Installing V%s Firmware\n", http.header("version").c_str() );
             }
             if( !download || http_downloadUpdate(http) ){
                 http.end(); //end connection
