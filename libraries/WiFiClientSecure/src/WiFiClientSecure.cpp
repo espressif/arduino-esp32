@@ -173,7 +173,7 @@ int WiFiClientSecure::startTLS()
         };
         _stillinPlainStart = false;
     } else 
-        log_e("startTLS: ignoring StartTLS - as we should be secure already");
+        log_i("startTLS: ignoring StartTLS - as we should be secure already");
     return 1;
 }
 
@@ -285,7 +285,7 @@ int WiFiClientSecure::read(uint8_t *buf, size_t size)
         res = get_ssl_receive(sslclient, buf, size);
 
     if (res < 0) {
-        log_d("Closing connection on failed read");
+        log_e("Closing connection on failed read");
         stop();
         return peeked?peeked:res;
     }
@@ -304,7 +304,7 @@ int WiFiClientSecure::available()
     res = data_to_read(sslclient);
 
     if (res < 0 && !_stillinPlainStart) {
-        log_e("Closing connection on failed avail check");
+        log_e("Closing connection on failed available check");
         stop();
         return peeked?peeked:res;
     }
@@ -339,7 +339,7 @@ void WiFiClientSecure::setCACert (const char *rootCA)
  {
     if (bundle != NULL)
     {
-        esp_crt_bundle_set(bundle,sizeof(bundle));
+        esp_crt_bundle_set(bundle, sizeof(bundle));
         _use_ca_bundle = true;
     } else {
         esp_crt_bundle_detach(NULL);

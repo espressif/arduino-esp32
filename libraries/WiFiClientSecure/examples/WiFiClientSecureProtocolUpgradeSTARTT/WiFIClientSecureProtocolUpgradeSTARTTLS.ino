@@ -48,9 +48,9 @@
 #define SMTP_PORT (587) // Standard (plaintext) submission port
 #endif
 
-const char* ssid     = WIFI_NETWORK;     // your network SSID (name of wifi network)
-const char* password = WIFI_PASSWD; // your network password
-const char*  server = SMTP_HOST;  // Server URL
+const char* ssid = WIFI_NETWORK;       // your network SSID (name of wifi network)
+const char* password = WIFI_PASSWD;    // your network password
+const char* server = SMTP_HOST;        // Server URL
 const int submission_port = SMTP_PORT; // submission port.
 
 WiFiClientSecure client;
@@ -82,7 +82,6 @@ void setup() {
 
   // skip verification for this demo. In production one should at the very least
   // enable TOFU; or ideally hardcode a (CA) certificate that is trusted.
-  //
   client.setInsecure();
 
   // Enable a plain-test start.
@@ -134,7 +133,6 @@ err:
 
 // SMTP command repsponse start with three digits and a space;
 // or, for continuation, with three digits and a '-'.
-//
 static bool readAllSMTPLines() {
   String s = "";
   int i;
@@ -142,7 +140,6 @@ static bool readAllSMTPLines() {
   // blocking read; we cannot rely on a timeout
   // of a WiFiClientSecure read; as it is non
   // blocking.
-  //
   const unsigned long timeout = 15 * 1000;
   unsigned long start = millis(); // the timeout is for the entire CMD block response; not per character/line.
   while (1) {
