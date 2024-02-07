@@ -230,7 +230,7 @@ void SHA1Builder::begin(void)
     memset(hash, 0x00, sizeof(hash));
 }
 
-void SHA1Builder::add(uint8_t* data, size_t len)
+void SHA1Builder::add(const uint8_t* data, size_t len)
 {
     size_t fill;
     uint32_t left;

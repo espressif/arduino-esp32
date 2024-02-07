@@ -124,15 +124,13 @@ void SPIClass::end()
     if(!_spi) {
         return;
     }
-    spiDetachSCK(_spi, _sck);
-    if(_miso >= 0){
-        spiDetachMISO(_spi, _miso);
-    }
-    if(_mosi >= 0){
-        spiDetachMOSI(_spi, _mosi);
-    }
+    spiDetachSCK(_spi);
+    spiDetachMISO(_spi);
+    spiDetachMOSI(_spi);
     setHwCs(false);
-    spiStopBus(_spi);
+    if(spiGetClockDiv(_spi) != 0) {
+        spiStopBus(_spi);
+    }
     _spi = NULL;
 }
 
@@ -146,7 +144,7 @@ void SPIClass::setHwCs(bool use)
         spiSSEnable(_spi);
     } else if(!use && _use_hw_ss) {
         spiSSDisable(_spi);
-        spiDetachSS(_spi, _ss);
+        spiDetachSS(_spi);
     }
     _use_hw_ss = use;
 }

@@ -31,12 +31,15 @@ extern "C" {
 #if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32S3
 #define FSPI  0
 #define HSPI  1
-#else
-#define FSPI  1 //SPI bus attached to the flash (can use the same data lines but different SS)
-#define HSPI  2 //SPI bus normally mapped to pins 12 - 15, but can be matrixed to any pins
-#if CONFIG_IDF_TARGET_ESP32
-#define VSPI  3 //SPI bus normally attached to pins 5, 18, 19 and 23, but can be matrixed to any pins
-#endif
+#elif CONFIG_IDF_TARGET_ESP32S2
+#define FSPI  1 //SPI 1 bus. ESP32S2: for external memory only (can use the same data lines but different SS)
+#define HSPI  2 //SPI 2 bus. ESP32S2: external memory or device  - it can be matrixed to any pins
+#define SPI2  2 // Another name for ESP32S2 SPI 2
+#define SPI3  3 //SPI 3 bus. ESP32S2: device only - it can be matrixed to any pins
+#elif CONFIG_IDF_TARGET_ESP32
+#define FSPI  1 //SPI 1 bus attached to the flash (can use the same data lines but different SS)
+#define HSPI  2 //SPI 2 bus normally mapped to pins 12 - 15, but can be matrixed to any pins
+#define VSPI  3 //SPI 3 bus normally attached to pins 5, 18, 19 and 23, but can be matrixed to any pins
 #endif
 
 // This defines are not representing the real Divider of the ESP32
@@ -54,10 +57,10 @@ extern "C" {
 #define SPI_MODE2 2
 #define SPI_MODE3 3
 
-#define SPI_CS0 0
-#define SPI_CS1 1
-#define SPI_CS2 2
-#define SPI_CS_MASK_ALL 0x7
+#define SPI_SS0 0
+#define SPI_SS1 1
+#define SPI_SS2 2
+#define SPI_SS_MASK_ALL 0x7
 
 #define SPI_LSBFIRST 0
 #define SPI_MSBFIRST 1
@@ -72,25 +75,25 @@ void spiStopBus(spi_t * spi);
 bool spiAttachSCK(spi_t * spi, int8_t sck);
 bool spiAttachMISO(spi_t * spi, int8_t miso);
 bool spiAttachMOSI(spi_t * spi, int8_t mosi);
-bool spiDetachSCK(spi_t * spi, int8_t sck);
-bool spiDetachMISO(spi_t * spi, int8_t miso);
-bool spiDetachMOSI(spi_t * spi, int8_t mosi);
+bool spiDetachSCK(spi_t * spi);
+bool spiDetachMISO(spi_t * spi);
+bool spiDetachMOSI(spi_t * spi);
 
-//Attach/Detach SS pin to SPI_CSx signal
-bool spiAttachSS(spi_t * spi, uint8_t cs_num, int8_t ss);
-bool spiDetachSS(spi_t * spi, int8_t ss);
+//Attach/Detach SS pin to SPI_SSx signal
+bool spiAttachSS(spi_t * spi, uint8_t ss_num, int8_t ss);
+bool spiDetachSS(spi_t * spi);
 
-//Enable/Disable SPI_CSx pins
-void spiEnableSSPins(spi_t * spi, uint8_t cs_mask);
-void spiDisableSSPins(spi_t * spi, uint8_t cs_mask);
+//Enable/Disable SPI_SSx pins
+void spiEnableSSPins(spi_t * spi, uint8_t ss_mask);
+void spiDisableSSPins(spi_t * spi, uint8_t ss_mask);
 
-//Enable/Disable hardware control of SPI_CSx pins
+//Enable/Disable hardware control of SPI_SSx pins
 void spiSSEnable(spi_t * spi);
 void spiSSDisable(spi_t * spi);
 
-//Activate enabled SPI_CSx pins
+//Activate enabled SPI_SSx pins
 void spiSSSet(spi_t * spi);
-//Deactivate enabled SPI_CSx pins
+//Deactivate enabled SPI_SSx pins
 void spiSSClear(spi_t * spi);
 
 void spiWaitReady(spi_t * spi);
