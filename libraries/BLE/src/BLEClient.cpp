@@ -93,11 +93,22 @@ bool BLEClient::connect(BLEAdvertisedDevice* device) {
 }
 
 /**
+ * Add overloaded function to ease connect to peer device with not public address
+ */
+bool BLEClient::connectTimeout(BLEAdvertisedDevice* device, uint32_t timeoutMs) {
+	BLEAddress address =  device->getAddress();
+	esp_ble_addr_type_t type = device->getAddressType();
+	return connect(address, type, timeoutMs);
+}
+
+/**
  * @brief Connect to the partner (BLE Server).
  * @param [in] address The address of the partner.
+ * @param [in] type The type of the address.
+ * @param [in] timeoutMs The number of milliseconds to wait for the connection to complete.
  * @return True on success.
  */
-bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
+bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type, uint32_t timeoutMs) {
   log_v(">> connect(%s)", address.toString().c_str());
 
 // We need the connection handle that we get from registering the application.  We register the app
@@ -142,9 +153,10 @@ bool BLEClient::connect(BLEAddress address, esp_ble_addr_type_t type) {
     return false;
   }
 
-  rc = m_semaphoreOpenEvt.wait("connect");   // Wait for the connection to complete.
+  bool got_sem = m_semaphoreOpenEvt.timedWait("connect", timeoutMs);   // Wait for the connection to complete.
+  rc = m_semaphoreOpenEvt.value();
   // check the status of the connection and cleanup in case of failure
-  if (rc != ESP_GATT_OK) {
+  if (!got_sem || rc != ESP_GATT_OK) {
     BLEDevice::removePeerDevice(m_appId, true);
     esp_ble_gattc_app_unregister(m_gattc_if);
     m_gattc_if = ESP_GATT_IF_NONE;
