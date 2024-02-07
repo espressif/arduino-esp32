@@ -23,7 +23,8 @@ OTA_MODE options:-
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/
 
-espsecure.py encrypt_flash_data   -k ota_key.bin   --flash_crypt_conf 0xf   -a 0x1000   -o output_filename.bin    source_filename.bin
+Example:
+    espsecure.py encrypt_flash_data -k ota_key.bin --flash_crypt_conf 0xf -a 0x00654320 -o output_filename.bin source_filename.bin
 
 espsecure.py encrypt_flash_data  = runs the idf encryption function to make a encrypted output file from a source file
   -k text                        = path/filename to the AES 256bit(32byte) encryption key file
@@ -54,7 +55,6 @@ const char*     host = "esp32-web";
 const char*     ssid = "wifi-ssid";
 const char* password = "wifi-password";
 
-                           
 const uint8_t OTA_KEY[32] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, \
                               0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20, \
                               0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65, \
@@ -68,7 +68,7 @@ const uint8_t OTA_KEY[32] = {'0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',
 */
 
 //const uint8_t   OTA_KEY[33] = "0123456789 this a simpletest key";
-                           
+
 const uint32_t  OTA_ADDRESS = 0x00654320; //OTA_ADDRESS value has no effect when OTA_CFG = 0x00
 const uint32_t  OTA_CFG     = 0x0f;
 const uint32_t  OTA_MODE    = U_AES_DECRYPT_AUTO;
