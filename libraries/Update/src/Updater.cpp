@@ -386,6 +386,10 @@ size_t UpdateClass::writeStream(Stream &data) {
         if((_bufferLen == remaining() || _bufferLen == SPI_FLASH_SEC_SIZE) && !_writeBuffer())
             return written;
         written += toRead;
+    
+        #if CONFIG_FREERTOS_UNICORE
+        delay(1);  // Fix solo WDT
+        #endif
     }
     return written;
 }
