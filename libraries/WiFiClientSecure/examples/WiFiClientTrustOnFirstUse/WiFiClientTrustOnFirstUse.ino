@@ -261,6 +261,4 @@ bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu) {
   return true;
 }
 
-void loop() {
-  delay(-1);
-}
+void loop() {}
