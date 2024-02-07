@@ -1,4 +1,5 @@
 <?php
+  /* Updater Server-side Example */
   $brand_codes = array("20", "21");
   $commands = array("check", "download");
 
@@ -58,6 +59,6 @@
       exit;
     }
   }
-  
+
   verify(false);
 ?>
