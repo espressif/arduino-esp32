@@ -146,13 +146,13 @@ recipe.hooks.prebuild.6.pattern.windows=cmd /c if not exist "{build.path}\build_
 
 # Set -DARDUINO_CORE_BUILD only on core file compilation
 file_opts.path={build.path}/file_opts
-recipe.hooks.prebuild.set_core_build_flag.pattern=/usr/bin/env bash -c ": > '{file_opts.path}'"
-recipe.hooks.core.prebuild.set_core_build_flag.pattern=/usr/bin/env bash -c "echo -DARDUINO_CORE_BUILD > '{file_opts.path}'"
-recipe.hooks.core.postbuild.set_core_build_flag.pattern=/usr/bin/env bash -c ": > '{file_opts.path}'"
+recipe.hooks.prebuild.7.pattern=/usr/bin/env bash -c ": > '{file_opts.path}'"
+recipe.hooks.core.prebuild.1.pattern=/usr/bin/env bash -c "echo -DARDUINO_CORE_BUILD > '{file_opts.path}'"
+recipe.hooks.core.postbuild.1.pattern=/usr/bin/env bash -c ": > '{file_opts.path}'"
 
-recipe.hooks.prebuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
-recipe.hooks.core.prebuild.set_core_build_flag.pattern.windows=cmd /c echo "-DARDUINO_CORE_BUILD" > "{file_opts.path}"
-recipe.hooks.core.postbuild.set_core_build_flag.pattern.windows=cmd /c type nul > "{file_opts.path}"
+recipe.hooks.prebuild.7.pattern.windows=cmd /c type nul > "{file_opts.path}"
+recipe.hooks.core.prebuild.1.pattern.windows=cmd /c echo "-DARDUINO_CORE_BUILD" > "{file_opts.path}"
+recipe.hooks.core.postbuild.1.pattern.windows=cmd /c type nul > "{file_opts.path}"
 
 # Generate debug.cfg (must be postbuild)
 recipe.hooks.postbuild.1.pattern=/usr/bin/env bash -c "[ {build.copy_jtag_files} -eq 0 ] || cp -f "{debug.server.openocd.scripts_dir}"board/{build.openocdscript} "{build.source.path}"/debug.cfg"
