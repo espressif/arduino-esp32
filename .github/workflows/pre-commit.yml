@@ -6,7 +6,8 @@ on:
 
 jobs:
   lint:
-    if: contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
     name: Checking if any fixes are needed
     runs-on: ubuntu-latest
     steps:
