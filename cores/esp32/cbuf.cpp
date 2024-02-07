@@ -36,6 +36,7 @@
 cbuf::cbuf(size_t size) :
     next(NULL),
     has_peek(false),
+    peek_byte(0),
     _buf(xRingbufferCreate(size, RINGBUF_TYPE_BYTEBUF))
 {
     if(_buf == NULL) {
