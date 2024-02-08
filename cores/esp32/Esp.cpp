@@ -248,6 +248,10 @@ String EspClass::getSketchMD5()
         md5.add(pb, readBytes);
         lengthLeft -= readBytes;
         offset += readBytes;
+
+        #if CONFIG_FREERTOS_UNICORE
+        delay(1);  // Fix solo WDT
+        #endif
     }
     free(pb);
     md5.calculate();
