@@ -3,6 +3,7 @@
 #include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
+#include "mbedtls/aes.h"
 
 static const char * _err2str(uint8_t _error){
     if(_error == UPDATE_ERROR_OK){
@@ -312,17 +313,27 @@ bool UpdateClass::_decryptBuffer(){
     uint8_t tweaked_key[ENCRYPTED_KEY_SIZE]; //tweaked crypt key
     int done = 0;
 
-    esp_aes_context ctx; //initialize AES
-    esp_aes_init( &ctx );
+    /*
+        Mbedtls functions will be replaced with esp_aes functions when hardware acceleration is available
+
+        To Do:
+        Replace mbedtls for the cases where there's no hardware acceleration
+     */
+
+    mbedtls_aes_context ctx; //initialize AES
+    mbedtls_aes_init( &ctx );
     while((_bufferLen - done) >= ENCRYPTED_BLOCK_SIZE){
         for(int i=0; i < ENCRYPTED_BLOCK_SIZE; i++) _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done]; //reverse order 16 bytes to decrypt
         if( ((_cryptAddress + _progress + done) % ENCRYPTED_TWEAK_BLOCK_SIZE) == 0 || done == 0 ){
             _cryptKeyTweak(_cryptAddress + _progress + done, tweaked_key); //update tweaked crypt key
-            if( esp_aes_setkey( &ctx, tweaked_key, 256 ) ){
+            if( mbedtls_aes_setkey_enc( &ctx, tweaked_key, 256 ) ){
+                return false;
+            }
+            if( mbedtls_aes_setkey_dec( &ctx, tweaked_key, 256 ) ){
                 return false;
             }
         }
-        if( esp_aes_crypt_ecb( &ctx, ESP_AES_ENCRYPT, _cryptBuffer, _cryptBuffer ) ){ //use ESP_AES_ENCRYPT to decrypt flash code
+        if( mbedtls_aes_crypt_ecb( &ctx, MBEDTLS_AES_ENCRYPT, _cryptBuffer, _cryptBuffer ) ){ //use MBEDTLS_AES_ENCRYPT to decrypt flash code
             return false;
         }
         for(int i=0; i < ENCRYPTED_BLOCK_SIZE; i++) _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i]; //reverse order 16 bytes from decrypt
