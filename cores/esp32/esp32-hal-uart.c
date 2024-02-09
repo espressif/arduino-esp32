@@ -647,12 +647,13 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 
     while(hw->rxd_cnt.rxd_edge_cnt < 30) { // UART_PULSE_NUM(uart_num)
         if(flg) return 0;
-        ets_delay_us(1000);
+        // ets_delay_us(1000);
+        delay(1);
     }
 
     UART_MUTEX_LOCK();
-    //log_i("lowpulse_min_cnt = %d hightpulse_min_cnt = %d", hw->lowpulse.min_cnt, hw->highpulse.min_cnt);
-    unsigned long ret = (hw->lowpulse.lowpulse_min_cnt + hw->highpulse.highpulse_min_cnt + 2) / 2;
+    log_i("rxd_edge_cnt = %d lowpulse_min_cnt = %d hightpulse_min_cnt = %d", hw->rxd_cnt.rxd_edge_cnt, hw->lowpulse.lowpulse_min_cnt, hw->highpulse.highpulse_min_cnt);
+    unsigned long ret = (hw->lowpulse.lowpulse_min_cnt + hw->highpulse.highpulse_min_cnt) >> 1;
     UART_MUTEX_UNLOCK();
 
     return ret;
@@ -669,6 +670,7 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
     UART_MUTEX_UNLOCK();
 
     return ret;
+#endif
 #endif
     return 0;
 }
@@ -714,11 +716,14 @@ void uartStartDetectBaudrate(uart_t *uart) {
     //hw->conf0.autobaud_en = 0;
     //hw->conf0.autobaud_en = 1;
 #elif CONFIG_IDF_TARGET_ESP32S3
+    // log_v("Start Init HW for baud detection");
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->rx_filt.glitch_filt = 0x08;
+    hw->rx_filt.glitch_filt = 1;
     hw->rx_filt.glitch_filt_en = 1;
     hw->conf0.autobaud_en = 0;
     hw->conf0.autobaud_en = 1;
+    // log_v("End Init HW for baud detection");
+
 #else
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
     hw->auto_baud.glitch_filt = 0x08;
@@ -763,32 +768,44 @@ uartDetectBaudrate(uart_t *uart)
     #ifdef CONFIG_IDF_TARGET_ESP32S3
         hw->conf0.autobaud_en = 0;
 
-        uart_sclk_t clk_src;
-        uart_ll_get_sclk(hw, &clk_src);
+        // uart_sclk_t clk_src;
+        // uart_ll_get_sclk(hw, &clk_src);
 
-        switch(clk_src)
-        {
-        case UART_SCLK_APB:
-            baudrate = getApbFrequency() / divisor;
-            break;
+        const uint32_t sclk_freq = uart_ll_get_sclk_freq(hw);
+        // const uart_clkdiv_reg_t div_reg = {.val = hw->clkdiv.val};
+        // const uint32_t div16 = ( (div_reg.clkdiv * 16) + div_reg.clkdiv_frag );
 
-        #if SOC_UART_SUPPORT_RTC_CLK
-            case UART_SCLK_RTC:
-                // baudrate = rtc_clk_slow_freq_get_hz() / divisor;
-                log_e("Currently unsupported clock source: UART_SCLK_RTC");
-                return 0;
-        #endif
+        // log_v("Divisor: %d", divisor);
+        // log_v("Divider: %d", div16);
 
-        #if SOC_UART_SUPPORT_XTAL_CLK
-            case UART_SCLK_XTAL:
-                baudrate = (getXtalFrequencyMhz() * 1000000) / divisor;
-            break;
-        #endif
+        
+        baudrate = sclk_freq / (divisor * 2);
 
-        default:
-            log_e("You should not ended up here! Unsupported clock source: %d", clk_src);
-            return 0;
-        }
+        // switch(clk_src)
+        // {
+        // case UART_SCLK_APB:
+        //     log_v("Clock is APB");
+        //     baudrate = getApbFrequency() / divisor;
+        //     break;
+
+        // #if SOC_UART_SUPPORT_RTC_CLK
+        //     case UART_SCLK_RTC:
+        //         // baudrate = rtc_clk_slow_freq_get_hz() / divisor;
+        //         log_e("Currently unsupported clock source: UART_SCLK_RTC");
+        //         return 0;
+        // #endif
+
+        // #if SOC_UART_SUPPORT_XTAL_CLK
+        //     case UART_SCLK_XTAL:
+        //         log_v("Clock is XTAL");
+        //         baudrate = (getXtalFrequencyMhz() * 1000000) / divisor;
+        //     break;
+        // #endif
+
+        // default:
+        //     log_e("You should not ended up here! Unsupported clock source: %d", clk_src);
+        //     return 0;
+        // }
 
     #else  
         hw->auto_baud.en = 0;
