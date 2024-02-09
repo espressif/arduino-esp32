@@ -5,7 +5,6 @@
 #include <MD5Builder.h>
 #include <functional>
 #include "esp_partition.h"
-#include "aes/esp_aes.h"
 
 #define UPDATE_ERROR_OK                 (0)
 #define UPDATE_ERROR_WRITE              (1)
