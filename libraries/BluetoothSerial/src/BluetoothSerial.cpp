@@ -661,8 +661,6 @@ static bool _init_bt(const char *deviceName)
         }
     }
 
-    // Why only master need this?  Slave need this during pairing as well
-//    if (_isMaster && esp_bt_gap_register_callback(esp_bt_gap_cb) != ESP_OK) {
     if (esp_bt_gap_register_callback(esp_bt_gap_cb) != ESP_OK) {
         log_e("gap register failed");
         return false;
@@ -840,6 +838,7 @@ int BluetoothSerial::read()
  */
 void BluetoothSerial::setTimeout(int timeoutMS)
 {
+    Stream::setTimeout(timeoutMS);
     this->timeoutTicks=timeoutMS / portTICK_PERIOD_MS;
 }
 
@@ -1183,4 +1182,31 @@ std::map<int, std::string> BluetoothSerial::getChannels(const BTAddress &remoteA
     return sdpRecords;
 }
 
+/**
+ * @brief      Gets the MAC address of local BT device in byte array.
+ *
+ * @param      mac [out]  The mac
+ */
+void BluetoothSerial::getBtAddress(uint8_t *mac) {
+    const uint8_t *dev_mac = esp_bt_dev_get_address();
+    memcpy(mac, dev_mac, ESP_BD_ADDR_LEN);
+}
+/**
+ * @brief      Gets the MAC address of local BT device as BTAddress object.
+ *
+ * @return     The BTAddress object.
+ */
+BTAddress BluetoothSerial::getBtAddressObject() {
+    uint8_t mac_arr[ESP_BD_ADDR_LEN];
+    getBtAddress(mac_arr);
+    return BTAddress(mac_arr);
+}
+/**
+ * @brief      Gets the MAC address of local BT device as string.
+ *
+ * @return     The BT MAC address string.
+ */
+String BluetoothSerial::getBtAddressString() {
+    return getBtAddressObject().toString(true);
+}
 #endif

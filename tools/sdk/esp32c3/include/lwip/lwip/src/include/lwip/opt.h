@@ -506,7 +506,7 @@
  * The default number of timeouts is calculated here for all enabled modules.
  */
 #if ESP_LWIP
-#define LWIP_NUM_SYS_TIMEOUT_INTERNAL   (LWIP_TCP + IP_REASSEMBLY + (LWIP_ARP + (ESP_GRATUITOUS_ARP ? 1 : 0)) + (2*LWIP_DHCP + (ESP_DHCPS_TIMER ? 1 : 0)) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD)))
+#define LWIP_NUM_SYS_TIMEOUT_INTERNAL   (LWIP_TCP + IP_REASSEMBLY + (LWIP_ARP + (ESP_GRATUITOUS_ARP ? 1 : 0)) + (ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND ? LWIP_DHCP : 2*LWIP_DHCP + (ESP_DHCPS_TIMER ? 1 : 0)) + LWIP_AUTOIP + LWIP_IGMP + (ESP_LWIP_DNS_TIMERS_ONDEMAND ? 0 : LWIP_DNS) + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD)))
 #else
 #define LWIP_NUM_SYS_TIMEOUT_INTERNAL   (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_NUM_TIMEOUTS + (LWIP_IPV6 * (1 + LWIP_IPV6_REASS + LWIP_IPV6_MLD)))
 #endif
@@ -2273,6 +2273,14 @@
 #define MIB2_STATS                      0
 #endif
 
+/**
+ * IP_NAPT_STATS==1: Stats for IP NAPT.
+ */
+#if !defined IP_NAPT_STATS || defined __DOXYGEN__
+#define IP_NAPT_STATS                   (IP_NAPT)
+#endif
+
+
 #else
 
 #define LINK_STATS                      0
@@ -2293,6 +2301,7 @@
 #define MLD6_STATS                      0
 #define ND6_STATS                       0
 #define MIB2_STATS                      0
+#define IP_NAPT_STATS                   0
 
 #endif /* LWIP_STATS */
 /**

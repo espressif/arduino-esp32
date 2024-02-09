@@ -514,6 +514,7 @@ typedef struct rtc_sleep_config_s {
     uint32_t lslp_meminf_pd : 1;        //!< remove all peripheral force power up flags
     uint32_t vddsdio_pd_en : 1;         //!< power down VDDSDIO regulator
     uint32_t xtal_fpu : 1;              //!< keep main XTAL powered up in sleep
+    uint32_t dbg_atten_slp : 2;             //!< voltage parameter
 } rtc_sleep_config_t;
 
 #define RTC_SLEEP_PD_DIG                BIT(0)  //!< Deep sleep (power down digital domain)
@@ -541,12 +542,13 @@ typedef struct rtc_sleep_config_s {
 void rtc_sleep_get_default_config(uint32_t sleep_flags, rtc_sleep_config_t *out_config);
 
 /* Various delays to be programmed into power control state machines */
-#define RTC_CNTL_XTL_BUF_WAIT_SLP_US        (500)
+#define RTC_CNTL_XTL_BUF_WAIT_SLP_US        (1000)
 #define RTC_CNTL_PLL_BUF_WAIT_SLP_CYCLES    (1)
 #define RTC_CNTL_CK8M_WAIT_SLP_CYCLES       (4)
 #define RTC_CNTL_WAKEUP_DELAY_CYCLES        (7)
 #define RTC_CNTL_OTHER_BLOCKS_POWERUP_CYCLES    (1)
 #define RTC_CNTL_OTHER_BLOCKS_WAIT_CYCLES       (1)
+#define RTC_CNTL_MIN_SLP_VAL_MIN            (128)
 
 #define RTC_CNTL_CK8M_WAIT_DEFAULT          20
 #define RTC_CK8M_ENABLE_WAIT_DEFAULT        5

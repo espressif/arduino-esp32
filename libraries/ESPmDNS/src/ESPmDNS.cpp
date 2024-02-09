@@ -60,7 +60,7 @@ MDNSResponder::~MDNSResponder() {
     end();
 }
 
-bool MDNSResponder::begin(const char* hostName){
+bool MDNSResponder::begin(const String& hostName){
     if(mdns_init()){
         log_e("Failed starting MDNS");
         return false;
@@ -68,7 +68,7 @@ bool MDNSResponder::begin(const char* hostName){
     //WiFi.onEvent(_on_sys_event);
     _hostname = hostName;
 	_hostname.toLowerCase();
-    if(mdns_hostname_set(hostName)) {
+    if(mdns_hostname_set(hostName.c_str())) {
         log_e("Failed setting MDNS hostname");
         return false;
     }

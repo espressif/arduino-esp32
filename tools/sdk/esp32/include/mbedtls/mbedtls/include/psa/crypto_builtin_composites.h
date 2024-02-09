@@ -43,9 +43,14 @@
 #define MBEDTLS_PSA_BUILTIN_MAC
 #endif
 
+#if defined(MBEDTLS_PSA_BUILTIN_ALG_GCM) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_CCM) || \
+    defined(MBEDTLS_PSA_BUILTIN_ALG_CHACHA20_POLY1305)
+#define MBEDTLS_PSA_BUILTIN_AEAD  1
+#endif
+
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC) || defined(PSA_CRYPTO_DRIVER_TEST)
-typedef struct
-{
+typedef struct {
     /** The HMAC algorithm in use */
     psa_algorithm_t alg;
     /** The hash context. */
@@ -54,16 +59,14 @@ typedef struct
     uint8_t opad[PSA_HMAC_MAX_HASH_BLOCK_SIZE];
 } mbedtls_psa_hmac_operation_t;
 
-#define MBEDTLS_PSA_HMAC_OPERATION_INIT {0, PSA_HASH_OPERATION_INIT, {0}}
+#define MBEDTLS_PSA_HMAC_OPERATION_INIT { 0, PSA_HASH_OPERATION_INIT, { 0 } }
 #endif /* MBEDTLS_PSA_BUILTIN_ALG_HMAC */
 
 #include "mbedtls/cmac.h"
 
-typedef struct
-{
+typedef struct {
     psa_algorithm_t alg;
-    union
-    {
+    union {
         unsigned dummy; /* Make the union non-empty even with no supported algorithms. */
 #if defined(MBEDTLS_PSA_BUILTIN_ALG_HMAC) || defined(PSA_CRYPTO_DRIVER_TEST)
         mbedtls_psa_hmac_operation_t hmac;
@@ -74,6 +77,6 @@ typedef struct
     } ctx;
 } mbedtls_psa_mac_operation_t;
 
-#define MBEDTLS_PSA_MAC_OPERATION_INIT {0, {0}}
+#define MBEDTLS_PSA_MAC_OPERATION_INIT { 0, { 0 } }
 
 #endif /* PSA_CRYPTO_BUILTIN_COMPOSITES_H */

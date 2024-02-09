@@ -39,7 +39,7 @@ jobs:
           set -e
           rm sketches.txt
           CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $((sketches - 1))`)
-          echo "::set-output name=chunks::${CHUNKS}"
+          echo "chunks=${CHUNKS}" >>$GITHUB_OUTPUT
 
   Build:
     needs: gen_chunks
@@ -49,21 +49,20 @@ jobs:
       matrix:
         chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3']
         chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
       - name: Build sketches
         run: |
           bash .github/scripts/tests_build.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}}
       - name: Upload ${{matrix.chip}}-${{matrix.chunks}} artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
           path: |
-             tests/*/build*/*.bin
-             tests/*/build*/*.json
+             ~/.arduino/tests/*/build*.tmp/*.bin
+             ~/.arduino/tests/*/build*.tmp/*.json
+          if-no-files-found: error
   Test:
     needs: [gen_chunks, Build]
     name: ${{matrix.chip}}-Test#${{matrix.chunks}}
@@ -87,10 +86,10 @@ jobs:
          uses: actions/checkout@v3
 
        - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
-         uses: actions/download-artifact@v2
+         uses: actions/download-artifact@v3
          with:
            name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
-           path: tests/
+           path: ~/.arduino/tests/
 
        - name: Install dependencies
          run: |
@@ -103,7 +102,7 @@ jobs:
            bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -e
 
        - name: Upload test result artifacts
-         uses: actions/upload-artifact@v2
+         uses: actions/upload-artifact@v3
          if: always()
          with:
            name: test_results-${{matrix.chip}}-${{matrix.chunks}}
@@ -118,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
        - name: Upload
-         uses: actions/upload-artifact@v2
+         uses: actions/upload-artifact@v3
          with:
            name: Event File
            path: ${{github.event_path}}

@@ -40,7 +40,7 @@ uint16_t BLEBeacon::getMinor() {
 }
 
 BLEUUID BLEBeacon::getProximityUUID() {
-	return BLEUUID(m_beaconData.proximityUUID, 16, false);
+	return BLEUUID(m_beaconData.proximityUUID, 16, true);
 }
 
 int8_t BLEBeacon::getSignalPower() {

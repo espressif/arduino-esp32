@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "pins_arduino.h"
+#include "io_pin_remap.h"
 #include "SD_MMC.h"
 #ifdef SOC_SDMMC_HOST_SUPPORTED
 #include "vfs_api.h"
@@ -54,6 +55,15 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3)
         log_e("SD_MMC.setPins must be called before SD_MMC.begin");
         return false;
     }
+
+    // map logical pins to GPIO numbers
+    clk = digitalPinToGPIONumber(clk);
+    cmd = digitalPinToGPIONumber(cmd);
+    d0 = digitalPinToGPIONumber(d0);
+    d1 = digitalPinToGPIONumber(d1);
+    d2 = digitalPinToGPIONumber(d2);
+    d3 = digitalPinToGPIONumber(d3);
+
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
     // SoC supports SDMMC pin configuration via GPIO matrix. Save the pins for later use in SDMMCFS::begin.
     _pin_clk = (int8_t) clk;
@@ -72,8 +82,8 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3)
         (d0 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D0) &&
         (((d1 == -1) && (d2 == -1) && (d3 == -1)) ||
          ((d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D1) &&
-         (d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D2) &&
-         (d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D3)));
+         (d2 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D2) &&
+         (d3 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D3)));
     if (!pins_ok) {
         log_e("SDMMCFS: specified pins are not supported by this chip.");
         return false;
@@ -93,7 +103,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
     // SoC supports SDMMC pin configuration via GPIO matrix.
-    // Chech that the pins have been set either in the constructor or setPins function.
+    // Check that the pins have been set either in the constructor or setPins function.
     if (_pin_cmd == -1 || _pin_clk == -1 || _pin_d0 == -1
         || (!mode1bit && (_pin_d1 == -1 || _pin_d2 == -1 || _pin_d3 == -1))) {
         log_e("SDMMCFS: some SD pins are not set");

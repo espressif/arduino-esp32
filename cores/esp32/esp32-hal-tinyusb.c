@@ -40,6 +40,7 @@
 #include "esp32s2/rom/usb/chip_usb_dw_wrapper.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "hal/usb_serial_jtag_ll.h"
+#include "hal/usb_phy_ll.h"
 #include "esp32s3/rom/usb/usb_persist.h"
 #include "esp32s3/rom/usb/usb_dc.h"
 #include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
@@ -356,6 +357,11 @@ bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_requ
 /*
  * Required Callbacks
  * */
+#if CFG_TUD_DFU
+__attribute__ ((weak)) uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state){return 0;}
+__attribute__ ((weak)) void tud_dfu_download_cb (uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length){}
+__attribute__ ((weak)) void tud_dfu_manifest_cb(uint8_t alt){}
+#endif
 #if CFG_TUD_HID
 __attribute__ ((weak)) const uint8_t * tud_hid_descriptor_report_cb(uint8_t itf){return NULL;}
 __attribute__ ((weak)) uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen){return 0;}
@@ -415,6 +421,7 @@ static void usb_switch_to_cdc_jtag(){
     digitalWrite(USBPHY_DP_NUM, LOW);
 
     // Initialize CDC+JTAG ISR to listen for BUS_RESET
+    usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);

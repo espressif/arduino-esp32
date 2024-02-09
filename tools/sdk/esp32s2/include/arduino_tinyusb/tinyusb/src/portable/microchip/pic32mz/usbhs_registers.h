@@ -21,7 +21,7 @@
 * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
 *******************************************************************************/
 /*******************************************************************************
-  USBHS Peripheral Library Register Definitions 
+  USBHS Peripheral Library Register Definitions
 
   File Name:
     usbhs_registers.h
@@ -50,16 +50,16 @@
 #define USBHS_REG_INTRRX        0x004
 #define USBHS_REG_INTRTXE       0x006
 #define USBHS_REG_INTRRXE       0x008
-#define USBHS_REG_INTRUSB       0x00A 
-#define USBHS_REG_INTRUSBE      0x00B 
+#define USBHS_REG_INTRUSB       0x00A
+#define USBHS_REG_INTRUSBE      0x00B
 #define USBHS_REG_FRAME         0x00C
 #define USBHS_REG_INDEX         0x00E
 #define USBHS_REG_TESTMODE      0x00F
 
 /*******************************************************
- * Endpoint Control Status Registers (CSR). These values 
+ * Endpoint Control Status Registers (CSR). These values
  * should be added to either the 0x10 to access the
- * register through Indexed CSR. To access the actual 
+ * register through Indexed CSR. To access the actual
  * CSR, see ahead in this header file.
  ******************************************************/
 
@@ -99,20 +99,20 @@
 #define USBHS_EP_DEVICE_RX_SEND_STALL 0x20
 
 /* FADDR - Device Function Address */
-typedef union 
+typedef union
 {
-    struct __attribute__((packed)) 
+    struct __attribute__((packed))
     {
         unsigned FUNC:7;
         unsigned :1;
     };
 
-    uint8_t w;  
+    uint8_t w;
 
 } __USBHS_FADDR_t;
 
 /* POWER - Control Resume and Suspend signalling */
-typedef union 
+typedef union
 {
     struct __attribute__((packed))
     {
@@ -126,14 +126,14 @@ typedef union
         unsigned ISOUPD:1;
     };
     struct
-    {   
+    {
         uint8_t w;
     };
 
 } __USBHS_POWER_t;
 
 /* INTRTXE - Transmit endpoint interrupt enable */
-typedef union 
+typedef union
 {
     struct __attribute__((packed))
     {
@@ -155,7 +155,7 @@ typedef union
 } __USBHS_INTRTXE_t;
 
 /* INTRRXE - Receive endpoint interrupt enable */
-typedef union 
+typedef union
 {
     struct __attribute__((packed))
     {
@@ -198,7 +198,7 @@ typedef union
 } __USBHS_INTRUSBE_t;
 
 /* FRAME - Frame number */
-typedef union 
+typedef union
 {
     struct __attribute__((packed))
     {
@@ -213,7 +213,7 @@ typedef union
 } __USBHS_FRAME_t;
 
 /* INDEX - Endpoint index */
-typedef union 
+typedef union
 {
     struct __attribute__((packed))
     {
@@ -228,7 +228,7 @@ typedef union
 } __USBHS_INDEX_t;
 
 /* TESTMODE - Test mode register */
-typedef union 
+typedef union
 {
     struct __attribute__((packed))
     {
@@ -248,7 +248,7 @@ typedef union
 
 } __USBHS_TESTMODE_t;
 
-/* COUNT0 - Indicates the amount of data received in endpoint 0 */ 
+/* COUNT0 - Indicates the amount of data received in endpoint 0 */
 typedef union
 {
     struct __attribute__((packed))
@@ -627,7 +627,7 @@ typedef union
     };
     uint16_t w;
 
-} __USBHS_TXMAXP_t;  
+} __USBHS_TXMAXP_t;
 
 /* TXFIFOSZ - Size of the transmit endpoint FIFO */
 typedef struct __attribute__((packed))
@@ -781,7 +781,7 @@ typedef union
 
 } __USBHS_DMACNTL_t;
 
-/* Endpoint Control and Status Register Set */    
+/* Endpoint Control and Status Register Set */
 typedef struct __attribute__((packed))
 {
     volatile __USBHS_TXMAXP_t TXMAXPbits;
@@ -906,7 +906,7 @@ typedef struct __attribute__((aligned(4),packed))
 
     volatile __USBHS_TXFIFOADD_t   TXFIFOADDbits;
     volatile __USBHS_RXFIFOADD_t   RXFIFOADDbits;
-    
+
     volatile uint32_t   VCONTROL;
     volatile uint16_t   HWVERS;
     volatile uint8_t    padding1[10];
@@ -923,7 +923,7 @@ typedef struct __attribute__((aligned(4),packed))
     volatile __USBHS_TARGET_ADDR_t  TADDR[16];
     volatile __USBHS_EPCSR_t        EPCSR[16];
     volatile uint32_t               DMA_INTR;
-    volatile __USBHS_DMA_CHANNEL_t  DMA_CHANNEL[8]; 
+    volatile __USBHS_DMA_CHANNEL_t  DMA_CHANNEL[8];
     volatile uint32_t               RQPKTXOUNT[16];
 
 } usbhs_registers_t;

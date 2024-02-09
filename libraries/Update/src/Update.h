@@ -1,5 +1,5 @@
-#ifndef ESP8266UPDATER_H
-#define ESP8266UPDATER_H
+#ifndef ESP32UPDATER_H
+#define ESP32UPDATER_H
 
 #include <Arduino.h>
 #include <MD5Builder.h>
@@ -190,6 +190,8 @@ class UpdateClass {
     uint8_t _ledOn;
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
 extern UpdateClass Update;
+#endif
 
 #endif

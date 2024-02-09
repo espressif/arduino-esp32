@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2021, Ha Thach (tinyusb.org)
@@ -31,13 +31,21 @@
  extern "C" {
 #endif
 
+// DCCPARAMS
+enum {
+  DCCPARAMS_DEN_MASK = 0x1Fu, ///< DEN bit 4:0
+};
+
 // USBCMD
 enum {
   USBCMD_RUN_STOP         = TU_BIT(0),
   USBCMD_RESET            = TU_BIT(1),
   USBCMD_SETUP_TRIPWIRE   = TU_BIT(13),
-  USBCMD_ADD_QTD_TRIPWIRE = TU_BIT(14)  ///< This bit is used as a semaphore to ensure the to proper addition of a new dTD to an active (primed) endpoint’s linked list. This bit is set and cleared by software during the process of adding a new dTD
-// Interrupt Threshold bit 23:16
+  USBCMD_ADD_QTD_TRIPWIRE = TU_BIT(14), // This bit is used as a semaphore to ensure the to proper addition of a
+                                        // new dTD to an active (primed) endpoint’s linked list. This bit is set and
+                                        // cleared by software during the process of adding a new dTD
+
+  USBCMD_INTR_THRESHOLD_MASK = 0x00FF0000u, // Interrupt Threshold bit 23:16
 };
 
 // PORTSC1
@@ -72,6 +80,7 @@ enum {
 
 // USBMode
 enum {
+  USBMOD_CM_MASK    = TU_BIT(0) | TU_BIT(1),
   USBMODE_CM_DEVICE = 2,
   USBMODE_CM_HOST   = 3,
 
@@ -134,7 +143,6 @@ typedef struct
 {
   uint32_t reg_base;
   uint32_t irqnum;
-  uint8_t  ep_count; // Max bi-directional Endpoints
 }ci_hs_controller_t;
 
 #ifdef __cplusplus

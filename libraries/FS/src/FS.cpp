@@ -203,6 +203,15 @@ String File::getNextFileName(void)
 
 }
 
+String File::getNextFileName(bool *isDir)
+{
+    if (!_p) {
+        return ""; 
+    }
+    return _p->getNextFileName(isDir);
+
+}
+
 void File::rewindDirectory(void)
 {
     if (!*this) {

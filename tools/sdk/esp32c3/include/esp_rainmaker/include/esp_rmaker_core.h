@@ -51,6 +51,8 @@ typedef enum {
     RMAKER_EVENT_LOCAL_CTRL_STARTED,
     /* User reset request successfully sent to ESP RainMaker Cloud */
     RMAKER_EVENT_USER_NODE_MAPPING_RESET,
+    /** Local control stopped. */
+    RMAKER_EVENT_LOCAL_CTRL_STOPPED
 } esp_rmaker_event_t;
 
 /** ESP RainMaker Node information */
@@ -65,6 +67,8 @@ typedef struct {
     char *model;
     /** Subtype (Optional). */
     char *subtype;
+    /** An array of digests read from efuse. Should be freed after use*/
+    char **secure_boot_digest;
 } esp_rmaker_node_info_t;
 
 /** ESP RainMaker Configuration */
@@ -945,6 +949,39 @@ esp_err_t esp_rmaker_ota_enable_default(void);
  * @return error on failure
  */
 esp_err_t esp_rmaker_test_cmd_resp(const void *cmd, size_t cmd_len, void *priv_data);
+
+/** This API signs the challenge with RainMaker private key.
+* 
+* @param[in] challenge Pointer to the data to be signed
+* @param[in] inlen Length of the challenge
+* @param[out] response Pointer to the signature.
+* @param[out] outlen   Length of the signature
+*
+* @return ESP_OK on success. response is dynamically allocated, free the response on success.
+* @return Apt error on failure.
+*/
+esp_err_t esp_rmaker_node_auth_sign_msg(const void *challenge, size_t inlen, void **response, size_t *outlen);
+/*
+ * @brief Enable Local Control Service.
+ *
+ * This enables local control service, which allows users to
+ * control their device without internet connection.
+ *
+ * @return ESP_OK on success
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_local_ctrl_enable(void);
+
+/*
+ * @brief Disable Local Control Service.
+ *
+ * This will free the memory used by local control service and remove
+ * local control service from the node.
+ *
+ * @return ESP_OK on success
+ * @return error on failure
+ */
+esp_err_t esp_rmaker_local_ctrl_disable(void);
 #ifdef __cplusplus
 }
 #endif

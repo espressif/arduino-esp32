@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define USB_VID            0x239A
 #define USB_PID            0x8119
@@ -14,13 +15,19 @@
 #define NUM_ANALOG_INPUTS       20
 
 #define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
+#define digitalPinToInterrupt(p)    (((p)<49)?(p):-1)
 #define digitalPinHasPWM(p)         (p < 46)
 
 #define PIN_NEOPIXEL        39
 #define NEOPIXEL_NUM        1     // number of neopixels
 #define NEOPIXEL_POWER      38    // power pin
 #define NEOPIXEL_POWER_ON   HIGH  // power pin state when on
+
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+PIN_NEOPIXEL;
+#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN  LED_BUILTIN
+#define RGB_BUILTIN  LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 
 static const uint8_t TX = 5;
 static const uint8_t RX = 16;

@@ -448,9 +448,9 @@ TU_VERIFY_STATIC( sizeof(video_probe_and_commit_control_t) == 48, "size is not c
 #define TUD_VIDEO_GUID_M420   0x4D,0x34,0x32,0x30,0x00,0x00,0x10,0x00,0x80,0x00,0x00,0xAA,0x00,0x38,0x9B,0x71
 #define TUD_VIDEO_GUID_I420   0x49,0x34,0x32,0x30,0x00,0x00,0x10,0x00,0x80,0x00,0x00,0xAA,0x00,0x38,0x9B,0x71
 
-#define TUD_VIDEO_DESC_IAD(_firstitfs, _nitfs, _stridx) \
+#define TUD_VIDEO_DESC_IAD(_firstitf, _nitfs, _stridx) \
   TUD_VIDEO_DESC_IAD_LEN, TUSB_DESC_INTERFACE_ASSOCIATION, \
-  _firstitfs, _nitfs, TUSB_CLASS_VIDEO, VIDEO_SUBCLASS_INTERFACE_COLLECTION, \
+  _firstitf, _nitfs, TUSB_CLASS_VIDEO, VIDEO_SUBCLASS_INTERFACE_COLLECTION, \
   VIDEO_ITF_PROTOCOL_UNDEFINED, _stridx
 
 #define TUD_VIDEO_DESC_STD_VC(_itfnum, _nEPs, _stridx) \
@@ -549,7 +549,7 @@ TU_VERIFY_STATIC( sizeof(video_probe_and_commit_control_t) == 48, "size is not c
 
 /* 3.10.1.1 */
 #define TUD_VIDEO_DESC_EP_ISO(_ep, _epsize, _ep_interval) \
-  7, TUSB_DESC_ENDPOINT, _ep, TUSB_XFER_ISOCHRONOUS | TUSB_ISO_EP_ATT_ASYNCHRONOUS,\
+  7, TUSB_DESC_ENDPOINT, _ep, (uint8_t) (TUSB_XFER_ISOCHRONOUS | TUSB_ISO_EP_ATT_ASYNCHRONOUS),\
   U16_TO_U8S_LE(_epsize), _ep_interval
 
 /* 3.10.1.2 */

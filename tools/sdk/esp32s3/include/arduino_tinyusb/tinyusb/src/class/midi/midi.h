@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -71,8 +71,8 @@ typedef enum
   MIDI_CIN_SYSEX_END_1BYTE   = 5, // SysEx ends with 1 data, or 1 byte system common message
   MIDI_CIN_SYSEX_END_2BYTE   = 6, // SysEx ends with 2 data
   MIDI_CIN_SYSEX_END_3BYTE   = 7, // SysEx ends with 3 data
-  MIDI_CIN_NOTE_ON           = 8,
-  MIDI_CIN_NOTE_OFF          = 9,
+  MIDI_CIN_NOTE_OFF          = 8,
+  MIDI_CIN_NOTE_ON           = 9,
   MIDI_CIN_POLY_KEYPRESS     = 10,
   MIDI_CIN_CONTROL_CHANGE    = 11,
   MIDI_CIN_PROGRAM_CHANGE    = 12,

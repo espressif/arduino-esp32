@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -34,89 +34,159 @@
 #endif
 
 //--------------------------------------------------------------------+
-// CDC APPLICATION PUBLIC API
+// Class Driver Configuration
 //--------------------------------------------------------------------+
-/** \ingroup ClassDriver_CDC Communication Device Class (CDC)
- * \addtogroup CDC_Serial Serial
- * @{
- * \defgroup   CDC_Serial_Host Host
- * @{ */
 
-bool tuh_cdc_set_control_line_state(uint8_t dev_addr, bool dtr, bool rts, tuh_xfer_cb_t complete_cb);
+// Set Line Control state on enumeration/mounted: DTR ( bit 0), RTS (bit 1)
+#ifndef CFG_TUH_CDC_LINE_CONTROL_ON_ENUM
+#define CFG_TUH_CDC_LINE_CONTROL_ON_ENUM    0
+#endif
 
-static inline bool tuh_cdc_connect(uint8_t dev_addr, tuh_xfer_cb_t complete_cb)
+// Set Line Coding on enumeration/mounted, value for cdc_line_coding_t
+//#ifndef CFG_TUH_CDC_LINE_CODING_ON_ENUM
+//#define CFG_TUH_CDC_LINE_CODING_ON_ENUM   { 115200, CDC_LINE_CONDING_STOP_BITS_1, CDC_LINE_CODING_PARITY_NONE, 8 }
+//#endif
+
+// RX FIFO size
+#ifndef CFG_TUH_CDC_RX_BUFSIZE
+#define CFG_TUH_CDC_RX_BUFSIZE USBH_EPSIZE_BULK_MAX
+#endif
+
+// RX Endpoint size
+#ifndef CFG_TUH_CDC_RX_EPSIZE
+#define CFG_TUH_CDC_RX_EPSIZE  USBH_EPSIZE_BULK_MAX
+#endif
+
+// TX FIFO size
+#ifndef CFG_TUH_CDC_TX_BUFSIZE
+#define CFG_TUH_CDC_TX_BUFSIZE USBH_EPSIZE_BULK_MAX
+#endif
+
+// TX Endpoint size
+#ifndef CFG_TUH_CDC_TX_EPSIZE
+#define CFG_TUH_CDC_TX_EPSIZE  USBH_EPSIZE_BULK_MAX
+#endif
+
+//--------------------------------------------------------------------+
+// Application API
+//--------------------------------------------------------------------+
+
+// Get Interface index from device address + interface number
+// return TUSB_INDEX_INVALID_8 (0xFF) if not found
+uint8_t tuh_cdc_itf_get_index(uint8_t daddr, uint8_t itf_num);
+
+// Get Interface information
+// return true if index is correct and interface is currently mounted
+bool tuh_cdc_itf_get_info(uint8_t idx, tuh_itf_info_t* info);
+
+// Check if a interface is mounted
+bool tuh_cdc_mounted(uint8_t idx);
+
+// Get current DTR status
+bool tuh_cdc_get_dtr(uint8_t idx);
+
+// Get current RTS status
+bool tuh_cdc_get_rts(uint8_t idx);
+
+// Check if interface is connected (DTR active)
+TU_ATTR_ALWAYS_INLINE static inline bool tuh_cdc_connected(uint8_t idx)
 {
-  return tuh_cdc_set_control_line_state(dev_addr, true, true, complete_cb);
+  return tuh_cdc_get_dtr(idx);
 }
 
-static inline bool tuh_cdc_disconnect(uint8_t dev_addr, tuh_xfer_cb_t complete_cb)
+// Get local (saved/cached) version of line coding.
+// This function should return correct values if tuh_cdc_set_line_coding() / tuh_cdc_get_line_coding()
+// are invoked previously or CFG_TUH_CDC_LINE_CODING_ON_ENUM is defined.
+// NOTE: This function does not make any USB transfer request to device.
+bool tuh_cdc_get_local_line_coding(uint8_t idx, cdc_line_coding_t* line_coding);
+
+//--------------------------------------------------------------------+
+// Write API
+//--------------------------------------------------------------------+
+
+// Get the number of bytes available for writing
+uint32_t tuh_cdc_write_available(uint8_t idx);
+
+// Write to cdc interface
+uint32_t tuh_cdc_write(uint8_t idx, void const* buffer, uint32_t bufsize);
+
+// Force sending data if possible, return number of forced bytes
+uint32_t tuh_cdc_write_flush(uint8_t idx);
+
+// Clear the transmit FIFO
+bool tuh_cdc_write_clear(uint8_t idx);
+
+//--------------------------------------------------------------------+
+// Read API
+//--------------------------------------------------------------------+
+
+// Get the number of bytes available for reading
+uint32_t tuh_cdc_read_available(uint8_t idx);
+
+// Read from cdc interface
+uint32_t tuh_cdc_read (uint8_t idx, void* buffer, uint32_t bufsize);
+
+// Get a byte from RX FIFO without removing it
+bool tuh_cdc_peek(uint8_t idx, uint8_t* ch);
+
+// Clear the received FIFO
+bool tuh_cdc_read_clear (uint8_t idx);
+
+//--------------------------------------------------------------------+
+// Control Endpoint (Request) API
+// Each Function will make a USB control transfer request to/from device
+// - If complete_cb is provided, the function will return immediately and invoke
+// the callback when request is complete.
+// - If complete_cb is NULL, the function will block until request is complete.
+//   - In this case, user_data should be pointed to xfer_result_t to hold the transfer result.
+//   - The function will return true if transfer is successful, false otherwise.
+//--------------------------------------------------------------------+
+
+// Request to Set Control Line State: DTR (bit 0), RTS (bit 1)
+bool tuh_cdc_set_control_line_state(uint8_t idx, uint16_t line_state, tuh_xfer_cb_t complete_cb, uintptr_t user_data);
+
+// Request to set baudrate
+bool tuh_cdc_set_baudrate(uint8_t idx, uint32_t baudrate, tuh_xfer_cb_t complete_cb, uintptr_t user_data);
+
+// Request to Set Line Coding (ACM only)
+// Should only use if you don't work with serial devices such as FTDI/CP210x
+bool tuh_cdc_set_line_coding(uint8_t idx, cdc_line_coding_t const* line_coding, tuh_xfer_cb_t complete_cb, uintptr_t user_data);
+
+// Request to Get Line Coding (ACM only)
+// Should only use if tuh_cdc_set_line_coding() / tuh_cdc_get_line_coding() never got invoked and
+// CFG_TUH_CDC_LINE_CODING_ON_ENUM is not defined
+// bool tuh_cdc_get_line_coding(uint8_t idx, cdc_line_coding_t* coding);
+
+// Connect by set both DTR, RTS
+TU_ATTR_ALWAYS_INLINE static inline
+bool tuh_cdc_connect(uint8_t idx, tuh_xfer_cb_t complete_cb, uintptr_t user_data)
 {
-  return tuh_cdc_set_control_line_state(dev_addr, false, false, complete_cb);
+  return tuh_cdc_set_control_line_state(idx, CDC_CONTROL_LINE_STATE_DTR | CDC_CONTROL_LINE_STATE_RTS, complete_cb, user_data);
 }
 
-/** \brief 			Check if device support CDC Serial interface or not
- * \param[in]		dev_addr	device address
- * \retval      true if device supports
- * \retval      false if device does not support or is not mounted
- */
-bool tuh_cdc_serial_is_mounted(uint8_t dev_addr);
-
-/** \brief      Check if the interface is currently busy or not
- * \param[in]   dev_addr device address
- * \param[in]   pipeid value from \ref cdc_pipeid_t to indicate target pipe.
- * \retval      true if the interface is busy, meaning the stack is still transferring/waiting data from/to device
- * \retval      false if the interface is not busy, meaning the stack successfully transferred data from/to device
- * \note        This function is used to check if previous transfer is complete (success or error), so that the next transfer
- *              can be scheduled. User needs to make sure the corresponding interface is mounted
- *              (by \ref tuh_cdc_serial_is_mounted) before calling this function.
- */
-bool tuh_cdc_is_busy(uint8_t dev_addr, cdc_pipeid_t pipeid);
-
-/** \brief 			Perform USB OUT transfer to device
- * \param[in]		dev_addr	device address
- * \param[in]	  p_data    Buffer containing data. Must be accessible by USB controller (see \ref CFG_TUSB_MEM_SECTION)
- * \param[in]		length    Number of bytes to be transferred via USB bus
- * \retval      TUSB_ERROR_NONE on success
- * \retval      TUSB_ERROR_INTERFACE_IS_BUSY if the interface is already transferring data with device
- * \retval      TUSB_ERROR_DEVICE_NOT_READY if device is not yet configured (by SET CONFIGURED request)
- * \retval      TUSB_ERROR_INVALID_PARA if input parameters are not correct
- * \note        This function is non-blocking and returns immediately. The result of USB transfer will be reported by the
- *              interface's callback function. \a p_data must be declared with \ref CFG_TUSB_MEM_SECTION.
- */
-bool tuh_cdc_send(uint8_t dev_addr, void const * p_data, uint32_t length, bool is_notify);
-
-/** \brief 			Perform USB IN transfer to get data from device
- * \param[in]		dev_addr	device address
- * \param[in]	  p_buffer  Buffer containing received data. Must be accessible by USB controller (see \ref CFG_TUSB_MEM_SECTION)
- * \param[in]		length    Number of bytes to be transferred via USB bus
- * \retval      TUSB_ERROR_NONE on success
- * \retval      TUSB_ERROR_INTERFACE_IS_BUSY if the interface is already transferring data with device
- * \retval      TUSB_ERROR_DEVICE_NOT_READY if device is not yet configured (by SET CONFIGURED request)
- * \retval      TUSB_ERROR_INVALID_PARA if input parameters are not correct
- * \note        This function is non-blocking and returns immediately. The result of USB transfer will be reported by the
- *              interface's callback function. \a p_data must be declared with \ref CFG_TUSB_MEM_SECTION.
- */
-bool tuh_cdc_receive(uint8_t dev_addr, void * p_buffer, uint32_t length, bool is_notify);
+// Disconnect by clear both DTR, RTS
+TU_ATTR_ALWAYS_INLINE static inline
+bool tuh_cdc_disconnect(uint8_t idx, tuh_xfer_cb_t complete_cb, uintptr_t user_data)
+{
+  return tuh_cdc_set_control_line_state(idx, 0x00, complete_cb, user_data);
+}
 
 //--------------------------------------------------------------------+
 // CDC APPLICATION CALLBACKS
 //--------------------------------------------------------------------+
 
-/** \brief      Callback function that is invoked when an transferring event occurred
- * \param[in]		dev_addr	Address of device
- * \param[in]   event an value from \ref xfer_result_t
- * \param[in]   pipe_id value from \ref cdc_pipeid_t indicate the pipe
- * \param[in]   xferred_bytes Number of bytes transferred via USB bus
- * \note        event can be one of following
- *              - XFER_RESULT_SUCCESS : previously scheduled transfer completes successfully.
- *              - XFER_RESULT_FAILED   : previously scheduled transfer encountered a transaction error.
- *              - XFER_RESULT_STALLED : previously scheduled transfer is stalled by device.
- * \note
- */
-void tuh_cdc_xfer_isr(uint8_t dev_addr, xfer_result_t event, cdc_pipeid_t pipe_id, uint32_t xferred_bytes);
+// Invoked when a device with CDC interface is mounted
+// idx is index of cdc interface in the internal pool.
+TU_ATTR_WEAK extern void tuh_cdc_mount_cb(uint8_t idx);
 
-/// @} // group CDC_Serial_Host
-/// @}
+// Invoked when a device with CDC interface is unmounted
+TU_ATTR_WEAK extern void tuh_cdc_umount_cb(uint8_t idx);
+
+// Invoked when received new data
+TU_ATTR_WEAK extern void tuh_cdc_rx_cb(uint8_t idx);
+
+// Invoked when a TX is complete and therefore space becomes available in TX buffer
+TU_ATTR_WEAK extern void tuh_cdc_tx_complete_cb(uint8_t idx);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API

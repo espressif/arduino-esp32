@@ -71,7 +71,7 @@ typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 class HardwareSerial: public Stream
 {
 public:
-    HardwareSerial(int uart_nr);
+    HardwareSerial(uint8_t uart_nr);
     ~HardwareSerial();
 
     // setRxTimeout sets the timeout after which onReceive callback will be called (after receiving data, it waits for this time of UART rx inactivity to call the callback fnc)
@@ -80,13 +80,13 @@ public:
     //                       Examples: Maximum for 11 bits symbol is 92 (SERIAL_8N2, SERIAL_8E1, SERIAL_8O1, etc), Maximum for 10 bits symbol is 101 (SERIAL_8N1).
     //                       For example symbols_timeout=1 defines a timeout equal to transmission time of one symbol (~11 bit) on current baudrate. 
     //                       For a baudrate of 9600, SERIAL_8N1 (10 bit symbol) and symbols_timeout = 3, the timeout would be 3 / (9600 / 10) = 3.125 ms
-    void setRxTimeout(uint8_t symbols_timeout);
+    bool setRxTimeout(uint8_t symbols_timeout);
 
     // setRxFIFOFull(uint8_t fifoBytes) will set the number of bytes that will trigger UART_INTR_RXFIFO_FULL interrupt and fill up RxRingBuffer
     // This affects some functions such as Serial::available() and Serial.read() because, in a UART flow of receiving data, Serial internal 
     // RxRingBuffer will be filled only after these number of bytes arrive or a RX Timeout happens.
     // This parameter can be set to 1 in order to receive byte by byte, but it will also consume more CPU time as the ISR will be activates often.
-    void setRxFIFOFull(uint8_t fifoBytes);
+    bool setRxFIFOFull(uint8_t fifoBytes);
 
     // onReceive will setup a callback that will be called whenever an UART interruption occurs (UART_INTR_RXFIFO_FULL or UART_INTR_RXFIFO_TOUT)
     // UART_INTR_RXFIFO_FULL interrupt triggers at UART_FULL_THRESH_DEFAULT bytes received (defined as 120 bytes by default in IDF)
@@ -161,15 +161,16 @@ public:
 
     // Negative Pin Number will keep it unmodified, thus this function can set individual pins
     // SetPins shall be called after Serial begin()
-    void setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
+    bool setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin = -1, int8_t rtsPin = -1);
     // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
-    void setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
-
+    bool setHwFlowCtrlMode(uint8_t mode = HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);   // 64 is half FIFO Length
+    // Used to set RS485 modes such as UART_MODE_RS485_HALF_DUPLEX for Auto RTS function on ESP32
+    bool setMode(uint8_t mode);
     size_t setRxBufferSize(size_t new_size);
     size_t setTxBufferSize(size_t new_size);
 
 protected:
-    int _uart_nr;
+    uint8_t _uart_nr;
     uart_t* _uart;
     size_t _rxBufferSize;
     size_t _txBufferSize;

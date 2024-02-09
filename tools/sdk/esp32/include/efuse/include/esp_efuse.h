@@ -277,13 +277,6 @@ esp_err_t esp_efuse_read_block(esp_efuse_block_t blk, void* dst_key, size_t offs
 esp_err_t esp_efuse_write_block(esp_efuse_block_t blk, const void* src_key, size_t offset_in_bits, size_t size_bits);
 
 /**
- * @brief   Returns chip version from efuse
- *
- * @return chip version
- */
-uint8_t esp_efuse_get_chip_ver(void);
-
-/**
  * @brief   Returns chip package from efuse
  *
  * @return chip package
@@ -748,7 +741,7 @@ esp_err_t esp_efuse_write_key(esp_efuse_block_t block, esp_efuse_purpose_t purpo
 esp_err_t esp_efuse_write_keys(const esp_efuse_purpose_t purposes[], uint8_t keys[][32], unsigned number_of_keys);
 
 
-#if CONFIG_ESP32_REV_MIN_3 || !CONFIG_IDF_TARGET_ESP32
+#if CONFIG_ESP32_REV_MIN_FULL >= 300 || !CONFIG_IDF_TARGET_ESP32
 /**
  * @brief Read key digests from efuse. Any revoked/missing digests will be marked as NULL
  *

@@ -4,6 +4,7 @@
 #include <inttypes.h>
 
 #include "pins_arduino.h"
+#include "io_pin_remap.h"
 #include "HardwareSerial.h"
 #include "soc/soc_caps.h"
 #include "driver/uart.h"
@@ -132,7 +133,7 @@ void serialEventRun(void)
 #define HSERIAL_MUTEX_UNLOCK()  
 #endif
 
-HardwareSerial::HardwareSerial(int uart_nr) : 
+HardwareSerial::HardwareSerial(uint8_t uart_nr) : 
 _uart_nr(uart_nr), 
 _uart(NULL),
 _rxBufferSize(256),
@@ -146,8 +147,6 @@ _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,_lock(NULL)
 #endif
-,_rxPin(-1) 
-,_txPin(-1)
 ,_ctsPin(-1)
 ,_rtsPin(-1)
 {
@@ -160,6 +159,14 @@ _eventTask(NULL)
         }
     }
 #endif
+    // sets UART0 (default console) RX/TX pins as already configured in boot
+    if (uart_nr == 0) {    
+        _rxPin = SOC_RX0;
+        _txPin = SOC_TX0;
+    } else {
+        _rxPin = -1;
+        _txPin = -1;
+    }
 }
 
 HardwareSerial::~HardwareSerial()
@@ -233,7 +240,7 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout)
 // A low value of FIFO Full bytes will consume more CPU time within the ISR
 // A high value of FIFO Full bytes will make the application wait longer to have byte available for the Stkech in a streaming scenario
 // Both RX FIFO Full and RX Timeout may affect when onReceive() will be called
-void HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
+bool HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
 {
     HSERIAL_MUTEX_LOCK();
     // in case that onReceive() shall work only with RX Timeout, FIFO shall be high
@@ -242,14 +249,15 @@ void HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
         fifoBytes = 120;
         log_w("OnReceive is set to Timeout only, thus FIFO Full is now 120 bytes.");
     }
-    uartSetRxFIFOFull(_uart, fifoBytes); // Set new timeout
+    bool retCode = uartSetRxFIFOFull(_uart, fifoBytes); // Set new timeout
     if (fifoBytes > 0 && fifoBytes < SOC_UART_FIFO_LEN - 1) _rxFIFOFull = fifoBytes;
     HSERIAL_MUTEX_UNLOCK();
+    return retCode;
 }
 
 // timout is calculates in time to receive UART symbols at the UART baudrate.
 // the estimation is about 11 bits per symbol (SERIAL_8N1)
-void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
+bool HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
 {
     HSERIAL_MUTEX_LOCK();
     
@@ -258,9 +266,10 @@ void HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
     _rxTimeout = symbols_timeout;   
     if (!symbols_timeout) _onReceiveTimeout = false;  // only when RX timeout is disabled, we also must disable this flag 
 
-    uartSetRxTimeout(_uart, _rxTimeout); // Set new timeout
+    bool retCode = uartSetRxTimeout(_uart, _rxTimeout); // Set new timeout
     
     HSERIAL_MUTEX_UNLOCK();
+    return retCode;
 }
 
 void HardwareSerial::eventQueueReset()
@@ -327,7 +336,7 @@ void HardwareSerial::_uartEventTask(void *args)
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd)
 {
-    if(0 > _uart_nr || _uart_nr >= SOC_UART_NUM) {
+    if(_uart_nr >= SOC_UART_NUM) {
         log_e("Serial number is invalid, please use numers from 0 to %u", SOC_UART_NUM - 1);
         return;
     }
@@ -345,31 +354,35 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         switch (_uart_nr) {
             case UART_NUM_0:
                 if (rxPin < 0 && txPin < 0) {
-                    rxPin = SOC_RX0;
-                    txPin = SOC_TX0;
+                    // do not change RX0/TX0 if it has already been set before
+                    rxPin = _rxPin < 0 ? SOC_RX0 : _rxPin;
+                    txPin = _txPin < 0 ? SOC_TX0 : _txPin;
                 }
             break;
 #if SOC_UART_NUM > 1                   // may save some flash bytes...
             case UART_NUM_1:
                if (rxPin < 0 && txPin < 0) {
-                    rxPin = RX1;
-                    txPin = TX1;
+                    // do not change RX1/TX1 if it has already been set before
+                    rxPin = _rxPin < 0 ? RX1 : _rxPin;
+                    txPin = _txPin < 0 ? TX1 : _txPin;
                 }
             break;
 #endif
 #if SOC_UART_NUM > 2                   // may save some flash bytes...
             case UART_NUM_2:
                if (rxPin < 0 && txPin < 0) {
-                    rxPin = RX2;
-                    txPin = TX2;
+                    // do not change RX2/TX2 if it has already been set before
+                    rxPin = _rxPin < 0 ? RX2 : _rxPin;
+                    txPin = _txPin < 0 ? TX2 : _txPin;
                 }
             break;
 #endif
-            default:
-                log_e("Bad UART Number");
-                return;
         }
     }
+
+    // map logical pins to GPIO numbers
+    rxPin = digitalPinToGPIONumber(rxPin);
+    txPin = digitalPinToGPIONumber(txPin);
 
     if(_uart) {
         // in this case it is a begin() over a previous begin() - maybe to change baud rate
@@ -420,9 +433,17 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
       uartSetRxFIFOFull(_uart, fifoFull);
       _rxFIFOFull = fifoFull;
     }
-
-    _rxPin = rxPin;
-    _txPin = txPin;
+    // detach previous attached RX/TX pins when it has changed
+    if (_uart != NULL) {
+        if (rxPin >= 0 && rxPin != _rxPin) {
+            uartDetachPins(_uart_nr, _rxPin, -1, -1, -1);
+            _rxPin = rxPin;
+        }
+        if (txPin >= 0 && txPin != _txPin) {
+            uartDetachPins(_uart_nr, -1, _txPin, -1, -1);
+            _txPin = txPin;
+        }        
+    }    
 
     HSERIAL_MUTEX_UNLOCK();
 }
@@ -445,11 +466,11 @@ void HardwareSerial::end(bool fullyTerminate)
 
         _rxFIFOFull = 0; 
 
-        uartDetachPins(_uart, _rxPin, _txPin, _ctsPin, _rtsPin);
+        uartDetachPins(_uart_nr, _rxPin, _txPin, _ctsPin, _rtsPin);
         _rxPin = _txPin = _ctsPin = _rtsPin = -1;
 
     }
-    delay(10);
+
     uartEnd(_uart);
     _uart = 0;
     _destroyEventTask();
@@ -548,28 +569,43 @@ void HardwareSerial::setRxInvert(bool invert)
 }
 
 // negative Pin value will keep it unmodified
-void HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
+bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
-    if(_uart == NULL) {
-        log_e("setPins() shall be called after begin() - nothing done\n");
-        return;
-    }
+    // map logical pins to GPIO numbers
+    rxPin = digitalPinToGPIONumber(rxPin);
+    txPin = digitalPinToGPIONumber(txPin);
+    ctsPin = digitalPinToGPIONumber(ctsPin);
+    rtsPin = digitalPinToGPIONumber(rtsPin);
 
-    // uartSetPins() checks if pins are valid for each function and for the SoC 
-    if (uartSetPins(_uart, rxPin, txPin, ctsPin, rtsPin)) {
-        _txPin = _txPin >= 0 ? txPin : _txPin;
-        _rxPin = _rxPin >= 0 ? rxPin : _rxPin;
-        _rtsPin = _rtsPin >= 0 ? rtsPin : _rtsPin;
-        _ctsPin = _ctsPin >= 0 ? ctsPin : _ctsPin;
+    // uartSetPins() checks if pins are valid for each function and for the SoC
+    bool retCode = uartSetPins(_uart_nr, rxPin, txPin, ctsPin, rtsPin);
+    if (retCode) {
+        // detach previous attached UART pins if not set as same as before
+        if (_rxPin >= 0 && rxPin >= 0 &&_rxPin != rxPin) uartDetachPins(_uart_nr, _rxPin, -1, -1, -1);
+        if (_txPin >= 0 && txPin >= 0 && _txPin != txPin) uartDetachPins(_uart_nr, -1, _txPin, -1, -1);
+        if (_ctsPin >= 0 && ctsPin >= 0 && _ctsPin != ctsPin) uartDetachPins(_uart_nr, -1, -1, _ctsPin, -1);
+        if (_rtsPin >= 0 &&  rtsPin >= 0 &&_rtsPin != rtsPin) uartDetachPins(_uart_nr, -1, -1, -1, _rtsPin);
+        // set new pins for a future end() or a setPins()    
+        _txPin = txPin >= 0 ? txPin : _txPin;
+        _rxPin = rxPin >= 0 ? rxPin : _rxPin;
+        _rtsPin = rtsPin >= 0 ? rtsPin : _rtsPin;
+        _ctsPin = ctsPin >= 0 ? ctsPin : _ctsPin;       
     } else {
         log_e("Error when setting Serial port Pins. Invalid Pin.\n");
     }
+    return retCode;
 }
 
 // Enables or disables Hardware Flow Control using RTS and/or CTS pins (must use setAllPins() before)
-void HardwareSerial::setHwFlowCtrlMode(uint8_t mode, uint8_t threshold)
+bool HardwareSerial::setHwFlowCtrlMode(uint8_t mode, uint8_t threshold)
 {
-    uartSetHwFlowCtrlMode(_uart, mode, threshold);
+    return uartSetHwFlowCtrlMode(_uart, mode, threshold);
+}
+
+// Sets the uart mode in the esp32 uart for use with RS485 modes (HwFlowCtrl must be disabled and RTS pin set)
+bool HardwareSerial::setMode(uint8_t mode)
+{
+    return uartSetMode(_uart, mode);
 }
 
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {

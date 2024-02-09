@@ -133,6 +133,7 @@ in the examples menu or inside each library folder.
 
     https://github.com/espressif/arduino-esp32/tree/master/libraries
 
+There is also a `list of examples <https://techtutorialsx.com/category/esp32/>`_ managed outside of Espressif, so check them out.
 
 .. include:: common/datasheet.inc
 

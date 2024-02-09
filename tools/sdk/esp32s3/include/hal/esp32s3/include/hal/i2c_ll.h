@@ -9,10 +9,12 @@
 #pragma once
 
 #include "hal/misc.h"
+#include "hal/assert.h"
 #include "soc/i2c_periph.h"
 #include "soc/soc_caps.h"
 #include "soc/i2c_struct.h"
 #include "hal/i2c_types.h"
+#include "esp_assert.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -114,12 +116,16 @@ static inline void i2c_ll_cal_bus_clk(uint32_t source_clk, uint32_t bus_freq, i2
     clk_cal->scl_wait_high = (bus_freq >= 80*1000) ? (half_cycle / 2 - 2) : (half_cycle / 4);
     clk_cal->scl_high = half_cycle - clk_cal->scl_wait_high;
     clk_cal->sda_hold = half_cycle / 4;
-    clk_cal->sda_sample = half_cycle / 2 + clk_cal->scl_wait_high;
+    clk_cal->sda_sample = half_cycle / 2;
     clk_cal->setup = half_cycle;
     clk_cal->hold = half_cycle;
     //default we set the timeout value to about 10 bus cycles
     // log(20*half_cycle)/log(2) = log(half_cycle)/log(2) +  log(20)/log(2)
     clk_cal->tout = (int)(sizeof(half_cycle) * 8 - __builtin_clz(5 * half_cycle)) + 2;
+
+    /* Verify the assumptions made by the hardware */
+    HAL_ASSERT(clk_cal->scl_wait_high < clk_cal->sda_sample &&
+               clk_cal->sda_sample < clk_cal->scl_high);
 }
 
 /**
@@ -129,6 +135,7 @@ static inline void i2c_ll_cal_bus_clk(uint32_t source_clk, uint32_t bus_freq, i2
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_update(i2c_dev_t *hw)
 {
     hw->ctr.conf_upgate = 1;
@@ -272,6 +279,7 @@ static inline void i2c_ll_disable_intr_mask(i2c_dev_t *hw, uint32_t mask)
  *
  * @return I2C interrupt status
  */
+__attribute__((always_inline))
 static inline uint32_t i2c_ll_get_intsts_mask(i2c_dev_t *hw)
 {
     return hw->int_status.val;
@@ -327,10 +335,11 @@ static inline void i2c_ll_set_slave_addr(i2c_dev_t *hw, uint16_t slave_addr, boo
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_write_cmd_reg(i2c_dev_t *hw, i2c_hw_cmd_t cmd, int cmd_idx)
 {
-    _Static_assert(sizeof(i2c_comd0_reg_t) == sizeof(i2c_hw_cmd_t),
-                   "i2c_comdX_reg_t structure size must be equal to i2c_hw_cmd_t structure size");
+    ESP_STATIC_ASSERT(sizeof(i2c_comd0_reg_t) == sizeof(i2c_hw_cmd_t),
+                      "i2c_comdX_reg_t structure size must be equal to i2c_hw_cmd_t structure size");
     volatile i2c_hw_cmd_t* commands = (volatile i2c_hw_cmd_t*) &hw->comd0;
     commands[cmd_idx].val = cmd.val;
 }
@@ -494,6 +503,7 @@ static inline bool i2c_ll_is_master_mode(i2c_dev_t *hw)
  *
  * @return RxFIFO readable length
  */
+__attribute__((always_inline))
 static inline uint32_t i2c_ll_get_rxfifo_cnt(i2c_dev_t *hw)
 {
     return hw->sr.rxfifo_cnt;
@@ -506,6 +516,7 @@ static inline uint32_t i2c_ll_get_rxfifo_cnt(i2c_dev_t *hw)
  *
  * @return TxFIFO writable length
  */
+__attribute__((always_inline))
 static inline uint32_t i2c_ll_get_txfifo_len(i2c_dev_t *hw)
 {
     return SOC_I2C_FIFO_LEN - hw->sr.txfifo_cnt;
@@ -530,6 +541,7 @@ static inline uint32_t i2c_ll_get_tout(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_trans_start(i2c_dev_t *hw)
 {
     hw->ctr.trans_start = 1;
@@ -605,6 +617,7 @@ static inline void i2c_ll_get_scl_clk_timing(i2c_dev_t *hw, int *high_period, in
  *
  * @return None.
  */
+__attribute__((always_inline))
 static inline void i2c_ll_write_txfifo(i2c_dev_t *hw, uint8_t *ptr, uint8_t len)
 {
     for (int i = 0; i< len; i++) {
@@ -621,6 +634,7 @@ static inline void i2c_ll_write_txfifo(i2c_dev_t *hw, uint8_t *ptr, uint8_t len)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_read_rxfifo(i2c_dev_t *hw, uint8_t *ptr, uint8_t len)
 {
     for(int i = 0; i < len; i++) {
@@ -669,6 +683,7 @@ static inline uint8_t i2c_ll_get_filter(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_master_enable_tx_it(i2c_dev_t *hw)
 {
     hw->int_clr.val = ~0;
@@ -682,6 +697,7 @@ static inline void i2c_ll_master_enable_tx_it(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_master_enable_rx_it(i2c_dev_t *hw)
 {
     hw->int_clr.val = ~0;
@@ -695,6 +711,7 @@ static inline void i2c_ll_master_enable_rx_it(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_master_disable_tx_it(i2c_dev_t *hw)
 {
     hw->int_ena.val &= (~I2C_LL_MASTER_TX_INT);
@@ -707,6 +724,7 @@ static inline void i2c_ll_master_disable_tx_it(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_master_disable_rx_it(i2c_dev_t *hw)
 {
     hw->int_ena.val &= (~I2C_LL_MASTER_RX_INT);
@@ -719,6 +737,7 @@ static inline void i2c_ll_master_disable_rx_it(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_master_clr_tx_it(i2c_dev_t *hw)
 {
     hw->int_clr.val = I2C_LL_MASTER_TX_INT;
@@ -731,6 +750,7 @@ static inline void i2c_ll_master_clr_tx_it(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_master_clr_rx_it(i2c_dev_t *hw)
 {
     hw->int_clr.val = I2C_LL_MASTER_RX_INT;
@@ -767,6 +787,7 @@ static inline void i2c_ll_slave_enable_rx_it(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_slave_disable_tx_it(i2c_dev_t *hw)
 {
     hw->int_ena.val &= (~I2C_LL_SLAVE_TX_INT);
@@ -791,6 +812,7 @@ static inline void i2c_ll_slave_disable_rx_it(i2c_dev_t *hw)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_slave_clr_tx_it(i2c_dev_t *hw)
 {
     hw->int_clr.val = I2C_LL_SLAVE_TX_INT;
@@ -859,6 +881,7 @@ static inline void i2c_ll_set_source_clk(i2c_dev_t *hw, i2c_sclk_t src_clk)
  *
  * @return None
  */
+__attribute__((always_inline))
 static inline void i2c_ll_master_get_event(i2c_dev_t *hw, i2c_intr_event_t *event)
 {
     typeof(hw->int_status) int_sts = hw->int_status;
@@ -885,6 +908,8 @@ static inline void i2c_ll_master_get_event(i2c_dev_t *hw, i2c_intr_event_t *even
  *
  * @return None
  */
+
+__attribute__((always_inline))
 static inline void i2c_ll_slave_get_event(i2c_dev_t *hw, i2c_intr_event_t *event)
 {
     typeof(hw->int_status) int_sts = hw->int_status;

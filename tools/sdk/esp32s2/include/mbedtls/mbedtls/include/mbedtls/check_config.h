@@ -28,6 +28,7 @@
 #ifndef MBEDTLS_CHECK_CONFIG_H
 #define MBEDTLS_CHECK_CONFIG_H
 
+/* *INDENT-OFF* */
 /*
  * We assume CHAR_BIT is 8 in many places. In practice, this is true on our
  * target platforms, so not an issue, but let's just be extra sure.
@@ -66,10 +67,6 @@
 
 #if defined(MBEDTLS_HAVE_TIME_DATE) && !defined(MBEDTLS_HAVE_TIME)
 #error "MBEDTLS_HAVE_TIME_DATE without MBEDTLS_HAVE_TIME does not make sense"
-#endif
-
-#if defined(MBEDTLS_AESNI_C) && !defined(MBEDTLS_HAVE_ASM)
-#error "MBEDTLS_AESNI_C defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_CTR_DRBG_C) && !defined(MBEDTLS_AES_C)
@@ -141,6 +138,11 @@
 #if defined(MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED)           && \
     defined(MBEDTLS_ECDH_LEGACY_CONTEXT)
 #error "MBEDTLS_ECDH_VARIANT_EVEREST_ENABLED defined, but MBEDTLS_ECDH_LEGACY_CONTEXT not disabled"
+#endif
+
+#if defined(MBEDTLS_ECP_RESTARTABLE)           && \
+    !defined(MBEDTLS_ECP_C)
+#error "MBEDTLS_ECP_RESTARTABLE defined, but not all prerequisites"
 #endif
 
 #if defined(MBEDTLS_ECDSA_DETERMINISTIC) && !defined(MBEDTLS_HMAC_DRBG_C)
@@ -525,6 +527,20 @@
 #error "MBEDTLS_PLATFORM_SNPRINTF_MACRO and MBEDTLS_PLATFORM_STD_SNPRINTF/MBEDTLS_PLATFORM_SNPRINTF_ALT cannot be defined simultaneously"
 #endif
 
+#if defined(MBEDTLS_PLATFORM_VSNPRINTF_ALT) && !defined(MBEDTLS_PLATFORM_C)
+#error "MBEDTLS_PLATFORM_VSNPRINTF_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_VSNPRINTF_MACRO) && !defined(MBEDTLS_PLATFORM_C)
+#error "MBEDTLS_PLATFORM_VSNPRINTF_MACRO defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_VSNPRINTF_MACRO) &&\
+    ( defined(MBEDTLS_PLATFORM_STD_VSNPRINTF) ||\
+        defined(MBEDTLS_PLATFORM_VSNPRINTF_ALT) )
+#error "MBEDTLS_PLATFORM_VSNPRINTF_MACRO and MBEDTLS_PLATFORM_STD_VSNPRINTF/MBEDTLS_PLATFORM_VSNPRINTF_ALT cannot be defined simultaneously"
+#endif
+
 #if defined(MBEDTLS_PLATFORM_STD_MEM_HDR) &&\
     !defined(MBEDTLS_PLATFORM_NO_STD_FUNCTIONS)
 #error "MBEDTLS_PLATFORM_STD_MEM_HDR defined, but not all prerequisites"
@@ -650,10 +666,9 @@
         MBEDTLS_ECDSA_C requires MBEDTLS_PK_WRITE_C to be defined."
 #endif
 
-#if defined(MBEDTLS_RSA_C) && defined(MBEDTLS_PKCS1_V15) && \
-    !defined(MBEDTLS_PK_WRITE_C) && defined(MBEDTLS_PSA_CRYPTO_C)
-#error "MBEDTLS_PSA_CRYPTO_C, MBEDTLS_RSA_C and  MBEDTLS_PKCS1_V15 defined, \
-        but not all prerequisites"
+#if defined(MBEDTLS_PSA_CRYPTO_C) && defined(MBEDTLS_RSA_C) && \
+    !( defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_PK_WRITE_C) )
+#error "MBEDTLS_PSA_CRYPTO_C with MBEDTLS_RSA_C requires MBEDTLS_PK_PARSE_C and MBEDTLS_PK_WRITE_C"
 #endif
 
 #if defined(MBEDTLS_RSA_C) && ( !defined(MBEDTLS_BIGNUM_C) ||         \
@@ -812,6 +827,11 @@
 #error "MBEDTLS_SSL_TICKET_C defined, but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_SSL_TICKET_C) && \
+    !( defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CCM_C) || defined(MBEDTLS_CHACHAPOLY_C) )
+#error "MBEDTLS_SSL_TICKET_C defined, but not all prerequisites"
+#endif
+
 #if defined(MBEDTLS_SSL_CBC_RECORD_SPLITTING) && \
     !defined(MBEDTLS_SSL_PROTO_SSL3) && !defined(MBEDTLS_SSL_PROTO_TLS1)
 #error "MBEDTLS_SSL_CBC_RECORD_SPLITTING defined, but not all prerequisites"
@@ -926,6 +946,10 @@
 #error "MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH defined, but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_SSL_CONTEXT_SERIALIZATION) && !( defined(MBEDTLS_GCM_C) || defined(MBEDTLS_CCM_C) || defined(MBEDTLS_CHACHAPOLY_C) )
+#error "MBEDTLS_SSL_CONTEXT_SERIALIZATION defined, but not all prerequisites"
+#endif
+
 /*
  * Avoid warning from -pedantic. This is a convenient place for this
  * workaround since this is included by every single file before the
@@ -933,4 +957,5 @@
  */
 typedef int mbedtls_iso_c_forbids_empty_translation_units;
 
+/* *INDENT-ON* */
 #endif /* MBEDTLS_CHECK_CONFIG_H */

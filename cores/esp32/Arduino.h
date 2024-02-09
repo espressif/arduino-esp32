@@ -110,13 +110,13 @@
 #define analogInPinToBit(P)         (P)
 #if SOC_GPIO_PIN_COUNT <= 32
 #define digitalPinToPort(pin)       (0)
-#define digitalPinToBitMask(pin)    (1UL << (pin))
+#define digitalPinToBitMask(pin)    (1UL << digitalPinToGPIONumber(pin))
 #define portOutputRegister(port)    ((volatile uint32_t*)GPIO_OUT_REG)
 #define portInputRegister(port)     ((volatile uint32_t*)GPIO_IN_REG)
 #define portModeRegister(port)      ((volatile uint32_t*)GPIO_ENABLE_REG)
 #elif SOC_GPIO_PIN_COUNT <= 64
-#define digitalPinToPort(pin)       (((pin)>31)?1:0)
-#define digitalPinToBitMask(pin)    (1UL << (((pin)>31)?((pin)-32):(pin)))
+#define digitalPinToPort(pin)       ((digitalPinToGPIONumber(pin)>31)?1:0)
+#define digitalPinToBitMask(pin)    (1UL << (digitalPinToGPIONumber(pin)&31))
 #define portOutputRegister(port)    ((volatile uint32_t*)((port)?GPIO_OUT1_REG:GPIO_OUT_REG))
 #define portInputRegister(port)     ((volatile uint32_t*)((port)?GPIO_IN1_REG:GPIO_IN_REG))
 #define portModeRegister(port)      ((volatile uint32_t*)((port)?GPIO_ENABLE1_REG:GPIO_ENABLE_REG))
@@ -137,9 +137,19 @@ typedef unsigned int word;
 void setup(void);
 void loop(void);
 
+// The default is using Real Hardware random number generator  
+// But when randomSeed() is called, it turns to Psedo random
+// generator, exactly as done in Arduino mainstream
+long random(long);
 long random(long, long);
-#endif
+// Calling randomSeed() will make random()
+// using pseudo random like in Arduino
 void randomSeed(unsigned long);
+// Allow the Application to decide if the random generator
+// will use Real Hardware random generation (true - default)
+// or Pseudo random generation (false) as in Arduino MainStream
+void useRealRandomGenerator(bool useRandomHW);
+#endif
 long map(long, long, long, long, long);
 
 #ifdef __cplusplus
@@ -207,10 +217,9 @@ void setToneChannel(uint8_t channel = 0);
 void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
 void noTone(uint8_t _pin);
 
-// WMath prototypes
-long random(long);
 #endif /* __cplusplus */
 
 #include "pins_arduino.h"
+#include "io_pin_remap.h"
 
 #endif /* _ESP32_CORE_ARDUINO_H_ */

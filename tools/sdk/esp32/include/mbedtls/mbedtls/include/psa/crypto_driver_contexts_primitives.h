@@ -50,32 +50,32 @@
 #if defined(MBEDTLS_TEST_LIBTESTDRIVER1) && \
     defined(LIBTESTDRIVER1_MBEDTLS_PSA_BUILTIN_CIPHER)
 typedef libtestdriver1_mbedtls_psa_cipher_operation_t
-        mbedtls_transparent_test_driver_cipher_operation_t;
+    mbedtls_transparent_test_driver_cipher_operation_t;
 
 #define MBEDTLS_TRANSPARENT_TEST_DRIVER_CIPHER_OPERATION_INIT \
-        LIBTESTDRIVER1_MBEDTLS_PSA_CIPHER_OPERATION_INIT
+    LIBTESTDRIVER1_MBEDTLS_PSA_CIPHER_OPERATION_INIT
 #else
 typedef mbedtls_psa_cipher_operation_t
-        mbedtls_transparent_test_driver_cipher_operation_t;
+    mbedtls_transparent_test_driver_cipher_operation_t;
 
 #define MBEDTLS_TRANSPARENT_TEST_DRIVER_CIPHER_OPERATION_INIT \
-        MBEDTLS_PSA_CIPHER_OPERATION_INIT
+    MBEDTLS_PSA_CIPHER_OPERATION_INIT
 #endif /* MBEDTLS_TEST_LIBTESTDRIVER1 &&
           LIBTESTDRIVER1_MBEDTLS_PSA_BUILTIN_CIPHER */
 
 #if defined(MBEDTLS_TEST_LIBTESTDRIVER1) && \
     defined(LIBTESTDRIVER1_MBEDTLS_PSA_BUILTIN_HASH)
 typedef libtestdriver1_mbedtls_psa_hash_operation_t
-        mbedtls_transparent_test_driver_hash_operation_t;
+    mbedtls_transparent_test_driver_hash_operation_t;
 
 #define MBEDTLS_TRANSPARENT_TEST_DRIVER_HASH_OPERATION_INIT \
-        LIBTESTDRIVER1_MBEDTLS_PSA_HASH_OPERATION_INIT
+    LIBTESTDRIVER1_MBEDTLS_PSA_HASH_OPERATION_INIT
 #else
 typedef mbedtls_psa_hash_operation_t
-        mbedtls_transparent_test_driver_hash_operation_t;
+    mbedtls_transparent_test_driver_hash_operation_t;
 
 #define MBEDTLS_TRANSPARENT_TEST_DRIVER_HASH_OPERATION_INIT \
-        MBEDTLS_PSA_HASH_OPERATION_INIT
+    MBEDTLS_PSA_HASH_OPERATION_INIT
 #endif /* MBEDTLS_TEST_LIBTESTDRIVER1 &&
           LIBTESTDRIVER1_MBEDTLS_PSA_BUILTIN_HASH */
 
@@ -85,7 +85,7 @@ typedef struct {
 } mbedtls_opaque_test_driver_cipher_operation_t;
 
 #define MBEDTLS_OPAQUE_TEST_DRIVER_CIPHER_OPERATION_INIT \
-     { 0, MBEDTLS_TRANSPARENT_TEST_DRIVER_CIPHER_OPERATION_INIT }
+    { 0, MBEDTLS_TRANSPARENT_TEST_DRIVER_CIPHER_OPERATION_INIT }
 
 #endif /* PSA_CRYPTO_DRIVER_TEST */
 

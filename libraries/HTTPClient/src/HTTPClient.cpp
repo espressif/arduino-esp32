@@ -619,7 +619,21 @@ int HTTPClient::sendRequest(const char * type, uint8_t * payload, size_t size)
 
         // send Payload if needed
         if(payload && size > 0) {
-            if(_client->write(&payload[0], size) != size) {
+            size_t sent_bytes = 0;
+            while(sent_bytes < size){
+                size_t sent = _client->write(&payload[sent_bytes], size - sent_bytes);
+                if (sent == 0){
+                    log_w("Failed to send chunk! Lets wait a bit");
+                    delay(100);
+                    sent = _client->write(&payload[sent_bytes], size - sent_bytes);
+                    if (sent == 0){
+                        log_e("Failed to send chunk!");
+                        break;
+                    }
+                }
+                sent_bytes += sent;
+            }
+            if(sent_bytes != size){
                 return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
             }
         }
@@ -1067,7 +1081,7 @@ void HTTPClient::collectHeaders(const char* headerKeys[], const size_t headerKey
 String HTTPClient::header(const char* name)
 {
     for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if(_currentHeaders[i].key == name) {
+        if(_currentHeaders[i].key.equalsIgnoreCase(name)) {
             return _currentHeaders[i].value;
         }
     }
@@ -1098,7 +1112,7 @@ int HTTPClient::headers()
 bool HTTPClient::hasHeader(const char* name)
 {
     for(size_t i = 0; i < _headerKeysCount; ++i) {
-        if((_currentHeaders[i].key == name) && (_currentHeaders[i].value.length() > 0)) {
+        if((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0)) {
             return true;
         }
     }

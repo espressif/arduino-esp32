@@ -12,8 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-#include <stdint.h>
+#include <esp_idf_version.h>
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+#include <esp_sntp.h>
+#else
 #include <sntp.h>
+#endif
+
+#include <stdint.h>
 #include <esp_err.h>
 #include <esp_heap_caps.h>
 #include <sdkconfig.h>
@@ -24,9 +30,9 @@ extern "C"
 #endif
 
 #if (CONFIG_SPIRAM_SUPPORT && (CONFIG_SPIRAM_USE_CAPS_ALLOC || CONFIG_SPIRAM_USE_MALLOC))
-#define MEM_ALLOC_EXTRAM(size)         heap_caps_malloc(size, MALLOC_CAP_SPIRAM)
-#define MEM_CALLOC_EXTRAM(num, size)   heap_caps_calloc(num, size, MALLOC_CAP_SPIRAM)
-#define MEM_REALLOC_EXTRAM(ptr, size)  heap_caps_realloc(ptr, size, MALLOC_CAP_SPIRAM)
+#define MEM_ALLOC_EXTRAM(size)         heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
+#define MEM_CALLOC_EXTRAM(num, size)   heap_caps_calloc_prefer(num, size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
+#define MEM_REALLOC_EXTRAM(ptr, size)  heap_caps_realloc_prefer(ptr, size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 #else
 #define MEM_ALLOC_EXTRAM(size)         malloc(size)
 #define MEM_CALLOC_EXTRAM(num, size)   calloc(num, size)

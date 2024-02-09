@@ -26,7 +26,7 @@ extern "C" {
 /// GATT INVALID HANDLE
 #define ESP_GATT_ILLEGAL_HANDLE             0
 /// GATT attribute max handle
-#define ESP_GATT_ATTR_HANDLE_MAX            100
+#define ESP_GATT_ATTR_HANDLE_MAX            UC_CONFIG_BT_GATT_MAX_SR_ATTRIBUTES
 #define ESP_GATT_MAX_READ_MULTI_HANDLES     10           /* Max attributes to read in one request */
 
 
@@ -285,6 +285,7 @@ typedef enum {
 #define    ESP_GATT_PERM_WRITE_SIGNED_MITM     (1 << 8)   /* bit 8 -  0x0100 */    /* relate to BTA_GATT_PERM_WRITE_SIGNED_MITM in bta/bta_gatt_api.h */
 #define    ESP_GATT_PERM_READ_AUTHORIZATION    (1 << 9)   /* bit 9 -  0x0200 */
 #define    ESP_GATT_PERM_WRITE_AUTHORIZATION   (1 << 10)  /* bit 10 - 0x0400 */
+#define    ESP_GATT_PERM_ENCRYPT_KEY_SIZE(keysize)     (((keysize - 6) & 0xF) << 12)    /* bit 12:15 - 0xF000 */
 typedef uint16_t esp_gatt_perm_t;
 
 /* relate to BTA_GATT_CHAR_PROP_BIT_xxx in bta/bta_gatt_api.h */

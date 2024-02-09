@@ -303,6 +303,9 @@ esp_err_t spi_device_polling_end(spi_device_handle_t handle, TickType_t ticks_to
  * @param trans_desc Description of transaction to execute
  * @return
  *         - ESP_ERR_INVALID_ARG   if parameter is invalid
+ *         - ESP_ERR_TIMEOUT       if the device cannot get control of the bus
+ *         - ESP_ERR_NO_MEM        if allocating DMA-capable temporary buffer failed
+ *         - ESP_ERR_INVALID_STATE if previous transactions of same device are not finished
  *         - ESP_OK                on success
  */
 esp_err_t spi_device_polling_transmit(spi_device_handle_t handle, spi_transaction_t *trans_desc);
@@ -383,6 +386,18 @@ void spi_get_timing(bool gpio_is_used, int input_delay_ns, int eff_clk, int *dum
   * @return Frequency limit of current configurations.
   */
 int spi_get_freq_limit(bool gpio_is_used, int input_delay_ns);
+
+/**
+ * @brief Get max length (in bytes) of one transaction
+ *
+ * @param       host_id    SPI peripheral
+ * @param[out]  max_bytes  Max length of one transaction, in bytes
+ *
+ * @return
+ *        - ESP_OK:               On success
+ *        - ESP_ERR_INVALID_ARG:  Invalid argument
+ */
+esp_err_t spi_bus_get_max_transaction_len(spi_host_device_t host_id, size_t *max_bytes);
 
 #ifdef __cplusplus
 }

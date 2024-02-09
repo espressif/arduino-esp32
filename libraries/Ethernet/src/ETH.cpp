@@ -18,6 +18,9 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "sdkconfig.h"
+#ifdef CONFIG_ETH_ENABLED
+
 #include "ETH.h"
 #include "esp_system.h"
 #if ESP_IDF_VERSION_MAJOR > 3
@@ -41,6 +44,7 @@
 #include "lwip/dns.h"
 
 extern void tcpipInit();
+extern void add_esp_interface_netif(esp_interface_t interface, esp_netif_t* esp_netif); /* from WiFiGeneric */
 
 #if ESP_IDF_VERSION_MAJOR > 3
 
@@ -327,6 +331,9 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         return false;
     }
 
+    /* attach to WiFiGeneric to receive events */
+    add_esp_interface_netif(ESP_IF_ETH, eth_netif);
+
     if(esp_eth_start(eth_handle) != ESP_OK){
         log_e("esp_eth_start failed");
         return false;
@@ -392,7 +399,7 @@ bool ETHClass::begin(uint8_t phy_addr, int power, int mdc, int mdio, eth_phy_typ
         log_e("esp_eth_init error: %d", err);
     }
 #endif
-    // holds a few microseconds to let DHCP start and enter into a good state
+    // holds a few milliseconds to let DHCP start and enter into a good state
     // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
     delay(50);
 
@@ -597,3 +604,5 @@ String ETHClass::macAddress(void)
 }
 
 ETHClass ETH;
+
+#endif  //  CONFIG_ETH_ENABLED

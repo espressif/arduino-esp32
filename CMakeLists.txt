@@ -99,6 +99,7 @@ set(LIBRARY_SRCS
   libraries/RainMaker/src/RMakerType.cpp
   libraries/RainMaker/src/RMakerQR.cpp
   libraries/RainMaker/src/RMakerUtils.cpp
+  libraries/RainMaker/src/AppInsights.cpp
   libraries/SD_MMC/src/SD_MMC.cpp
   libraries/SD/src/SD.cpp
   libraries/SD/src/sd_diskio.cpp
@@ -251,6 +252,9 @@ endfunction()
 
 maybe_add_component(esp-dsp)
 
+if(CONFIG_ESP_INSIGHTS_ENABLED)
+    maybe_add_component(esp_insights)
+endif()
 if(CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK)
     maybe_add_component(esp_rainmaker)
     maybe_add_component(qrcode)

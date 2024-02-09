@@ -155,5 +155,18 @@ esp_err_t RMakerClass::enableScenes()
     }
     return err;
 }
+
+esp_err_t RMakerClass::enableSystemService(uint16_t flags, int8_t reboot_seconds, int8_t reset_seconds, int8_t reset_reboot_seconds)
+{
+    esp_rmaker_system_serv_config_t config = {
+        .flags = flags,
+        .reboot_seconds = reboot_seconds,
+        .reset_seconds = reset_seconds,
+        .reset_reboot_seconds = reset_reboot_seconds
+    };
+    err = esp_rmaker_system_service_enable(&config);
+    return err;    
+}
+
 RMakerClass RMaker;
 #endif

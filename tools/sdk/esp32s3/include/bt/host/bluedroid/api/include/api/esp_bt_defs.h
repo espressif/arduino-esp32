@@ -27,6 +27,7 @@ extern "C" {
         return ESP_ERR_INVALID_STATE;                \
     }
 
+#define ESP_BT_STATUS_BASE_FOR_HCI_ERR  0X0100  /* base for coverting HCI error code to ESP status */
 
 /* relate to BT_STATUS_xxx in bt_def.h */
 /// Status Return Value
@@ -53,6 +54,70 @@ typedef enum {
     ESP_BT_STATUS_ERR_ILLEGAL_PARAMETER_FMT,    /* relate to HCI_ERR_ILLEGAL_PARAMETER_FMT in stack/hcidefs.h */
     ESP_BT_STATUS_MEMORY_FULL   = 20,           /* relate to BT_STATUS_MEMORY_FULL in bt_def.h */
     ESP_BT_STATUS_EIR_TOO_LARGE,                /* relate to BT_STATUS_EIR_TOO_LARGE in bt_def.h */
+    ESP_BT_STATUS_HCI_SUCCESS   = ESP_BT_STATUS_BASE_FOR_HCI_ERR,
+    ESP_BT_STATUS_HCI_ILLEGAL_COMMAND,
+    ESP_BT_STATUS_HCI_NO_CONNECTION,
+    ESP_BT_STATUS_HCI_HW_FAILURE,
+    ESP_BT_STATUS_HCI_PAGE_TIMEOUT,
+    ESP_BT_STATUS_HCI_AUTH_FAILURE,
+    ESP_BT_STATUS_HCI_KEY_MISSING,
+    ESP_BT_STATUS_HCI_MEMORY_FULL,
+    ESP_BT_STATUS_HCI_CONNECTION_TOUT,
+    ESP_BT_STATUS_HCI_MAX_NUM_OF_CONNECTIONS,
+    ESP_BT_STATUS_HCI_MAX_NUM_OF_SCOS,
+    ESP_BT_STATUS_HCI_CONNECTION_EXISTS,
+    ESP_BT_STATUS_HCI_COMMAND_DISALLOWED,
+    ESP_BT_STATUS_HCI_HOST_REJECT_RESOURCES,
+    ESP_BT_STATUS_HCI_HOST_REJECT_SECURITY,
+    ESP_BT_STATUS_HCI_HOST_REJECT_DEVICE,
+    ESP_BT_STATUS_HCI_HOST_TIMEOUT,
+    ESP_BT_STATUS_HCI_UNSUPPORTED_VALUE,
+    ESP_BT_STATUS_HCI_ILLEGAL_PARAMETER_FMT,
+    ESP_BT_STATUS_HCI_PEER_USER,
+    ESP_BT_STATUS_HCI_PEER_LOW_RESOURCES,
+    ESP_BT_STATUS_HCI_PEER_POWER_OFF,
+    ESP_BT_STATUS_HCI_CONN_CAUSE_LOCAL_HOST,
+    ESP_BT_STATUS_HCI_REPEATED_ATTEMPTS,
+    ESP_BT_STATUS_HCI_PAIRING_NOT_ALLOWED,
+    ESP_BT_STATUS_HCI_UNKNOWN_LMP_PDU,
+    ESP_BT_STATUS_HCI_UNSUPPORTED_REM_FEATURE,
+    ESP_BT_STATUS_HCI_SCO_OFFSET_REJECTED,
+    ESP_BT_STATUS_HCI_SCO_INTERVAL_REJECTED,
+    ESP_BT_STATUS_HCI_SCO_AIR_MODE,
+    ESP_BT_STATUS_HCI_INVALID_LMP_PARAM,
+    ESP_BT_STATUS_HCI_UNSPECIFIED,
+    ESP_BT_STATUS_HCI_UNSUPPORTED_LMP_PARAMETERS,
+    ESP_BT_STATUS_HCI_ROLE_CHANGE_NOT_ALLOWED,
+    ESP_BT_STATUS_HCI_LMP_RESPONSE_TIMEOUT,
+    ESP_BT_STATUS_HCI_LMP_ERR_TRANS_COLLISION,
+    ESP_BT_STATUS_HCI_LMP_PDU_NOT_ALLOWED,
+    ESP_BT_STATUS_HCI_ENCRY_MODE_NOT_ACCEPTABLE,
+    ESP_BT_STATUS_HCI_UNIT_KEY_USED,
+    ESP_BT_STATUS_HCI_QOS_NOT_SUPPORTED,
+    ESP_BT_STATUS_HCI_INSTANT_PASSED,
+    ESP_BT_STATUS_HCI_PAIRING_WITH_UNIT_KEY_NOT_SUPPORTED,
+    ESP_BT_STATUS_HCI_DIFF_TRANSACTION_COLLISION,
+    ESP_BT_STATUS_HCI_UNDEFINED_0x2B,
+    ESP_BT_STATUS_HCI_QOS_UNACCEPTABLE_PARAM,
+    ESP_BT_STATUS_HCI_QOS_REJECTED,
+    ESP_BT_STATUS_HCI_CHAN_CLASSIF_NOT_SUPPORTED,
+    ESP_BT_STATUS_HCI_INSUFFCIENT_SECURITY,
+    ESP_BT_STATUS_HCI_PARAM_OUT_OF_RANGE,
+    ESP_BT_STATUS_HCI_UNDEFINED_0x31,
+    ESP_BT_STATUS_HCI_ROLE_SWITCH_PENDING,
+    ESP_BT_STATUS_HCI_UNDEFINED_0x33,
+    ESP_BT_STATUS_HCI_RESERVED_SLOT_VIOLATION,
+    ESP_BT_STATUS_HCI_ROLE_SWITCH_FAILED,
+    ESP_BT_STATUS_HCI_INQ_RSP_DATA_TOO_LARGE,
+    ESP_BT_STATUS_HCI_SIMPLE_PAIRING_NOT_SUPPORTED,
+    ESP_BT_STATUS_HCI_HOST_BUSY_PAIRING,
+    ESP_BT_STATUS_HCI_REJ_NO_SUITABLE_CHANNEL,
+    ESP_BT_STATUS_HCI_CONTROLLER_BUSY,
+    ESP_BT_STATUS_HCI_UNACCEPT_CONN_INTERVAL,
+    ESP_BT_STATUS_HCI_DIRECTED_ADVERTISING_TIMEOUT,
+    ESP_BT_STATUS_HCI_CONN_TOUT_DUE_TO_MIC_FAILURE,
+    ESP_BT_STATUS_HCI_CONN_FAILED_ESTABLISHMENT,
+    ESP_BT_STATUS_HCI_MAC_CONNECTION_FAILED,
 } esp_bt_status_t;
 
 
@@ -68,18 +133,20 @@ typedef uint8_t esp_link_key[ESP_BT_OCTET16_LEN];      /* Link Key */
 /// Default GATT interface id
 #define ESP_DEFAULT_GATT_IF             0xff
 
+#if BLE_HIGH_DUTY_ADV_INTERVAL
+#define ESP_BLE_PRIM_ADV_INT_MIN            0x000008     /*!< Minimum advertising interval for undirected and low duty cycle directed advertising */
+#else
 #define ESP_BLE_PRIM_ADV_INT_MIN            0x000020     /*!< Minimum advertising interval for undirected and low duty cycle directed advertising */
+#endif
 #define ESP_BLE_PRIM_ADV_INT_MAX            0xFFFFFF     /*!< Maximum advertising interval for undirected and low duty cycle directed advertising */
 #define ESP_BLE_CONN_INT_MIN                0x0006       /*!< relate to BTM_BLE_CONN_INT_MIN in stack/btm_ble_api.h */
 #define ESP_BLE_CONN_INT_MAX                0x0C80       /*!< relate to BTM_BLE_CONN_INT_MAX in stack/btm_ble_api.h */
 #define ESP_BLE_CONN_LATENCY_MAX            499          /*!< relate to ESP_BLE_CONN_LATENCY_MAX in stack/btm_ble_api.h */
 #define ESP_BLE_CONN_SUP_TOUT_MIN           0x000A       /*!< relate to BTM_BLE_CONN_SUP_TOUT_MIN in stack/btm_ble_api.h */
 #define ESP_BLE_CONN_SUP_TOUT_MAX           0x0C80       /*!< relate to ESP_BLE_CONN_SUP_TOUT_MAX in stack/btm_ble_api.h */
-#define ESP_BLE_CONN_PARAM_UNDEF            0xffff       /* use this value when a specific value not to be overwritten */ /* relate to ESP_BLE_CONN_PARAM_UNDEF in stack/btm_ble_api.h */
-#define ESP_BLE_SCAN_PARAM_UNDEF            0xffffffff   /* relate to ESP_BLE_SCAN_PARAM_UNDEF in stack/btm_ble_api.h */
 
 /// Check the param is valid or not
-#define ESP_BLE_IS_VALID_PARAM(x, min, max)  (((x) >= (min) && (x) <= (max)) || ((x) == ESP_BLE_CONN_PARAM_UNDEF))
+#define ESP_BLE_IS_VALID_PARAM(x, min, max)  (((x) >= (min) && (x) <= (max)) )
 
 /// UUID type
 typedef struct {
@@ -109,10 +176,10 @@ typedef uint8_t esp_bd_addr_t[ESP_BD_ADDR_LEN];
 
 /// BLE device address type
 typedef enum {
-    BLE_ADDR_TYPE_PUBLIC        = 0x00,
-    BLE_ADDR_TYPE_RANDOM        = 0x01,
-    BLE_ADDR_TYPE_RPA_PUBLIC    = 0x02,
-    BLE_ADDR_TYPE_RPA_RANDOM    = 0x03,
+    BLE_ADDR_TYPE_PUBLIC        = 0x00,     /*!< Public Device Address */
+    BLE_ADDR_TYPE_RANDOM        = 0x01,     /*!< Random Device Address. To set this address, use the function esp_ble_gap_set_rand_addr(esp_bd_addr_t rand_addr) */
+    BLE_ADDR_TYPE_RPA_PUBLIC    = 0x02,     /*!< Resolvable Private Address (RPA) with public identity address */
+    BLE_ADDR_TYPE_RPA_RANDOM    = 0x03,     /*!< Resolvable Private Address (RPA) with random identity address. To set this address, use the function esp_ble_gap_set_rand_addr(esp_bd_addr_t rand_addr) */
 } esp_ble_addr_type_t;
 
 /// white list address type

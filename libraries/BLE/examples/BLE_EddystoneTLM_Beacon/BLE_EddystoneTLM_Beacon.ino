@@ -13,6 +13,7 @@
    5. Stop advertising.
    6. deep sleep
    
+   To read data advertised by this beacon use second ESP with example sketch BLE_Beacon_Scanner
 */
 #include "sys/time.h"
 
@@ -22,7 +23,7 @@
 #include "BLEUtils.h"
 #include "BLEBeacon.h"
 #include "BLEAdvertising.h"
-#include "BLEEddystoneURL.h"
+#include "BLEEddystoneTLM.h"
 
 #include "esp_sleep.h"
 
@@ -48,10 +49,10 @@ void setBeacon()
   char beacon_data[25];
   uint16_t beconUUID = 0xFEAA;
   uint16_t volt = random(2800, 3700); // 3300mV = 3.3V
-  float tempFloat = random(2000, 3100) / 100.0f;
-  Serial.printf("Random temperature is %.2fC\n", tempFloat);
-  int temp = (int)(tempFloat * 256); //(uint16_t)((float)23.00);
-  Serial.printf("Converted to 8.8 format %0X%0X\n", (temp >> 8), (temp & 0xFF));
+  float tempFloat = random(-3000, 3000) / 100.0f;
+  Serial.printf("Random temperature is %.2f°C\n", tempFloat);
+  int temp = (int)(tempFloat * 256);
+  Serial.printf("Converted to 8.8 format %0X%0X\n", (temp >> 8) & 0xFF, (temp & 0xFF)); 
 
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
@@ -82,13 +83,11 @@ void setBeacon()
 
 void setup()
 {
-
   Serial.begin(115200);
   gettimeofday(&nowTimeStruct, NULL);
 
-  Serial.printf("start ESP32 %d\n", bootcount++);
-
-  Serial.printf("deep sleep (%lds since last reset, %lds since last boot)\n", nowTimeStruct.tv_sec, nowTimeStruct.tv_sec - last);
+  Serial.printf("Starting ESP32. Bootcount = %d\n", bootcount++);
+  Serial.printf("Deep sleep (%lds since last reset, %lds since last boot)\n", nowTimeStruct.tv_sec, nowTimeStruct.tv_sec - last);
 
   last = nowTimeStruct.tv_sec;
   lastTenth = nowTimeStruct.tv_sec * 10; // Time since last reset as 0.1 second resolution counter
@@ -103,12 +102,11 @@ void setup()
   setBeacon();
   // Start advertising
   pAdvertising->start();
-  Serial.println("Advertizing started for 10s ...");
+  Serial.println("Advertising started for 10s ...");
   delay(10000);
   pAdvertising->stop();
-  Serial.printf("enter deep sleep for 10s\n");
+  Serial.printf("Enter deep sleep for 10s\n");
   esp_deep_sleep(1000000LL * GPIO_DEEP_SLEEP_DURATION);
-  Serial.printf("in deep sleep\n");
 }
 
 void loop()

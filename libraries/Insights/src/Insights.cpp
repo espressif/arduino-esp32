@@ -49,13 +49,18 @@ ESPInsightsClass::~ESPInsightsClass(){
     end();
 }
 
-bool ESPInsightsClass::begin(const char *auth_key, const char *node_id, uint32_t log_type, bool alloc_ext_ram){
+bool ESPInsightsClass::begin(const char *auth_key, const char *node_id, uint32_t log_type, bool alloc_ext_ram, bool use_default_transport){
     if(!initialized){
         if(log_type == 0xFFFFFFFF){
             log_type = (ESP_DIAG_LOG_TYPE_ERROR | ESP_DIAG_LOG_TYPE_WARNING | ESP_DIAG_LOG_TYPE_EVENT);
         }
         esp_insights_config_t config = {.log_type = log_type, .node_id = node_id, .auth_key = auth_key, .alloc_ext_ram = alloc_ext_ram};
-        esp_err_t err = esp_insights_init(&config);
+        esp_err_t err = ESP_OK;
+        if (use_default_transport) {
+            err = esp_insights_init(&config);
+        } else {
+            err = esp_insights_enable(&config);
+        }
         if (err != ESP_OK) {
             log_e("Failed to initialize ESP Insights, err:0x%x", err);
         }

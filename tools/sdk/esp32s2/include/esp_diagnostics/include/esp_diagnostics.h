@@ -238,7 +238,7 @@ esp_err_t esp_diag_log_event(const char *tag, const char *format, ...) __attribu
  */
 #define ESP_DIAG_EVENT(tag, format, ...) \
 { \
-    esp_diag_log_event(tag, "EV (%" PRIu32 ") %s: " format, esp_log_timestamp(), tag, ##__VA_ARGS__); \
+    esp_diag_log_event(tag, "EV (%"PRIu32") %s: " format, esp_log_timestamp(), tag, ##__VA_ARGS__); \
     ESP_LOGI(tag, format, ##__VA_ARGS__); \
 }
 

@@ -28,7 +28,7 @@ This function is used to setup the SigmaDelta channel frequency and resolution.
 
 .. code-block:: arduino
 
-    double ledcSetup(uint8_t channel, double freq, uint8_t resolution_bits);
+    uint32_t sigmaDeltaSetup(uint8_t pin, uint8_t channel, uint32_t freq);
 
 * ``pin`` select GPIO pin.
 * ``channel`` select SigmaDelta channel.

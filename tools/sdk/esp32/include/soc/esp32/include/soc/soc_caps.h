@@ -31,7 +31,7 @@
 #ifdef __has_include
 #  if __has_include("sdkconfig.h")
 #    include "sdkconfig.h"
-#    define SOC_CAPS_ECO_VER    CONFIG_ESP32_REV_MIN
+#    define SOC_CAPS_ECO_VER    CONFIG_ESP32_REV_MIN_FULL
 #  endif
 #endif
 
@@ -50,7 +50,7 @@
 #endif
 
 /*-------------------------- COMMON CAPS ---------------------------------------*/
-#define SOC_CAPS_ECO_VER_MAX        3
+#define SOC_CAPS_ECO_VER_MAX        301
 
 #define SOC_ADC_SUPPORTED           1
 #define SOC_DAC_SUPPORTED           1
@@ -80,6 +80,7 @@
 /*!< SAR ADC Module*/
 #define SOC_ADC_RTC_CTRL_SUPPORTED              1
 #define SOC_ADC_DIG_CTRL_SUPPORTED              1
+#define SOC_ADC_DIG_SUPPORTED_UNIT(UNIT)        ((UNIT == 0) ? 1 : 0)
 #define SOC_ADC_PERIPH_NUM                      (2)
 #define SOC_ADC_CHANNEL_NUM(PERIPH_NUM)         ((PERIPH_NUM==0)? 8: 10)
 #define SOC_ADC_MAX_CHANNEL_NUM                 (10)
@@ -101,7 +102,7 @@
 
 
 /*-------------------------- BROWNOUT CAPS -----------------------------------*/
-#if SOC_CAPS_ECO_VER >= 1
+#if SOC_CAPS_ECO_VER >= 100
 #define SOC_BROWNOUT_RESET_SUPPORTED 1
 #endif
 
@@ -131,8 +132,8 @@
 // GPIO >= 34 are input only
 #define SOC_GPIO_VALID_OUTPUT_GPIO_MASK (SOC_GPIO_VALID_GPIO_MASK & ~(0ULL | BIT34 | BIT35 | BIT36 | BIT37 | BIT38 | BIT39))
 
-// Support to configure slept status
-#define SOC_GPIO_SUPPORT_SLP_SWITCH  (1)
+// digital I/O pad powered by VDD3P3_CPU or VDD_SPI(GPIO_NUM: 1, 3, 5, 6, 7, 8, 9, 10, 11, 16, 17, 18, 19, 21, 22, 23)
+#define SOC_GPIO_VALID_DIGITAL_IO_PAD_MASK 0xEF0FEAULL
 
 /*-------------------------- I2C CAPS ----------------------------------------*/
 // ESP32 have 2 I2C.
@@ -251,7 +252,7 @@
 
 /*-------------------------- TWAI CAPS ---------------------------------------*/
 #define SOC_TWAI_BRP_MIN                        2
-#if SOC_CAPS_ECO_VER >= 2
+#if SOC_CAPS_ECO_VER >= 200
 #  define SOC_TWAI_BRP_MAX              256
 #  define SOC_TWAI_BRP_DIV_SUPPORTED    1
 #  define SOC_TWAI_BRP_DIV_THRESH       128
@@ -321,5 +322,7 @@
 #define SOC_SDMMC_USE_IOMUX  1
 #define SOC_SDMMC_NUM_SLOTS  2
 
-/*------------------------------ BLE --------------------------------------------*/
-#define SOC_BLE_DONT_UPDATE_OWN_RPA  (1)
+
+/*-------------------------- Bluetooth CAPS ----------------------------*/
+
+#define SOC_BLE_DEVICE_PRIVACY_SUPPORTED (0)

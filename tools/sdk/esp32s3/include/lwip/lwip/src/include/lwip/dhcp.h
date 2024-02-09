@@ -50,11 +50,9 @@ extern "C" {
 #endif
 
 /** period (in seconds) of the application calling dhcp_coarse_tmr() */
-#if ESP_DHCP
+#ifndef DHCP_COARSE_TIMER_SECS
 #define DHCP_COARSE_TIMER_SECS 1
-#else
-#define DHCP_COARSE_TIMER_SECS 60
-#endif
+#endif /* DHCP_COARSE_TIMER_SECS */
 /** period (in milliseconds) of the application calling dhcp_coarse_tmr() */
 #define DHCP_COARSE_TIMER_MSECS (DHCP_COARSE_TIMER_SECS * 1000UL)
 /** period (in milliseconds) of the application calling dhcp_fine_tmr() */
@@ -82,7 +80,9 @@ struct dhcp
   u8_t autoip_coop_state;
 #endif
   u8_t subnet_mask_given;
-
+#if ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND
+  u8_t fine_timer_enabled;
+#endif
   u16_t request_timeout; /* #ticks with period DHCP_FINE_TIMER_SECS for request timeout */
 #if ESP_DHCP
   u32_t t1_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for renewal time */
@@ -150,7 +150,12 @@ u8_t dhcp_supplied_address(const struct netif *netif);
 /* to be called every minute */
 void dhcp_coarse_tmr(void);
 /* to be called every half second */
+#if !ESP_LWIP_DHCP_FINE_TIMERS_ONDEMAND
 void dhcp_fine_tmr(void);
+#else
+void dhcp_fine_tmr(struct netif *netif);
+void dhcp_fine_timeout_cb(void *arg);
+#endif
 
 #if LWIP_DHCP_GET_NTP_SRV
 /** This function must exist, in other to add offered NTP servers to

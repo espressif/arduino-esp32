@@ -60,16 +60,21 @@ extern "C" {
 #include "lwip/err.h"
 #include "lwip/ip4.h"
 
+
+#ifndef NAPT_TMR_INTERVAL
+#define NAPT_TMR_INTERVAL 2000
+#endif
+
 /**
-* NAPT for a forwarded packet. It checks weather we need NAPT and modify
-* the packet source address and port if needed.
-*
-* @param p the packet to forward (p->payload points to IP header)
-* @param iphdr the IP header of the input packet
-* @param inp the netif on which this packet was received
-* @param outp the netif on which this packet will be sent
-* @return ERR_OK if packet should be sent, or ERR_RTE if it should be dropped
-*/
+ * NAPT for a forwarded packet. It checks weather we need NAPT and modify
+ * the packet source address and port if needed.
+ *
+ * @param p the packet to forward (p->payload points to IP header)
+ * @param iphdr the IP header of the input packet
+ * @param inp the netif on which this packet was received
+ * @param outp the netif on which this packet will be sent
+ * @return ERR_OK if packet should be sent, or ERR_RTE if it should be dropped
+ */
 err_t
 ip_napt_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp, struct netif *outp);
 
@@ -79,7 +84,6 @@ ip_napt_forward(struct pbuf *p, struct ip_hdr *iphdr, struct netif *inp, struct 
  *
  * @param p the packet to forward (p->payload points to IP header)
  * @param iphdr the IP header of the input packet
- * @param inp the netif on which this packet was received
  */
 void
 ip_napt_recv(struct pbuf *p, struct ip_hdr *iphdr);

@@ -92,7 +92,9 @@ typedef union {
 	ip_event_got_ip_t got_ip;
 	ip_event_got_ip6_t got_ip6;
 	smartconfig_event_got_ssid_pswd_t sc_got_ssid_pswd;
+#ifdef CONFIG_ETH_ENABLED
 	esp_eth_handle_t eth_connected;
+#endif
 	wifi_sta_config_t prov_cred_recv;
 	wifi_prov_sta_fail_reason_t prov_fail_reason;
 } arduino_event_info_t;
@@ -188,6 +190,8 @@ class WiFiGenericClass
 
     static bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
 
+    const char * disconnectReasonName(wifi_err_reason_t reason);
+    const char * eventName(arduino_event_id_t id);
     static const char * getHostname();
     static bool setHostname(const char * hostname);
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }

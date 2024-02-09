@@ -46,10 +46,9 @@
 /* Translations for symmetric crypto. */
 
 static inline psa_key_type_t mbedtls_psa_translate_cipher_type(
-    mbedtls_cipher_type_t cipher )
+    mbedtls_cipher_type_t cipher)
 {
-    switch( cipher )
-    {
+    switch (cipher) {
         case MBEDTLS_CIPHER_AES_128_CCM:
         case MBEDTLS_CIPHER_AES_192_CCM:
         case MBEDTLS_CIPHER_AES_256_CCM:
@@ -62,7 +61,7 @@ static inline psa_key_type_t mbedtls_psa_translate_cipher_type(
         case MBEDTLS_CIPHER_AES_128_ECB:
         case MBEDTLS_CIPHER_AES_192_ECB:
         case MBEDTLS_CIPHER_AES_256_ECB:
-            return( PSA_KEY_TYPE_AES );
+            return PSA_KEY_TYPE_AES;
 
         /* ARIA not yet supported in PSA. */
         /* case MBEDTLS_CIPHER_ARIA_128_CCM:
@@ -77,87 +76,85 @@ static inline psa_key_type_t mbedtls_psa_translate_cipher_type(
                return( PSA_KEY_TYPE_ARIA ); */
 
         default:
-            return( 0 );
+            return 0;
     }
 }
 
 static inline psa_algorithm_t mbedtls_psa_translate_cipher_mode(
-    mbedtls_cipher_mode_t mode, size_t taglen )
+    mbedtls_cipher_mode_t mode, size_t taglen)
 {
-    switch( mode )
-    {
+    switch (mode) {
         case MBEDTLS_MODE_ECB:
-            return( PSA_ALG_ECB_NO_PADDING );
+            return PSA_ALG_ECB_NO_PADDING;
         case MBEDTLS_MODE_GCM:
-            return( PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_GCM, taglen ) );
+            return PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_GCM, taglen);
         case MBEDTLS_MODE_CCM:
-            return( PSA_ALG_AEAD_WITH_SHORTENED_TAG( PSA_ALG_CCM, taglen ) );
+            return PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CCM, taglen);
         case MBEDTLS_MODE_CBC:
-            if( taglen == 0 )
-                return( PSA_ALG_CBC_NO_PADDING );
-            else
-                return( 0 );
+            if (taglen == 0) {
+                return PSA_ALG_CBC_NO_PADDING;
+            } else {
+                return 0;
+            }
         default:
-            return( 0 );
+            return 0;
     }
 }
 
 static inline psa_key_usage_t mbedtls_psa_translate_cipher_operation(
-    mbedtls_operation_t op )
+    mbedtls_operation_t op)
 {
-    switch( op )
-    {
+    switch (op) {
         case MBEDTLS_ENCRYPT:
-            return( PSA_KEY_USAGE_ENCRYPT );
+            return PSA_KEY_USAGE_ENCRYPT;
         case MBEDTLS_DECRYPT:
-            return( PSA_KEY_USAGE_DECRYPT );
+            return PSA_KEY_USAGE_DECRYPT;
         default:
-            return( 0 );
+            return 0;
     }
 }
 
 /* Translations for hashing. */
 
-static inline psa_algorithm_t mbedtls_psa_translate_md( mbedtls_md_type_t md_alg )
+static inline psa_algorithm_t mbedtls_psa_translate_md(mbedtls_md_type_t md_alg)
 {
-    switch( md_alg )
-    {
+    switch (md_alg) {
 #if defined(MBEDTLS_MD2_C)
-    case MBEDTLS_MD_MD2:
-        return( PSA_ALG_MD2 );
+        case MBEDTLS_MD_MD2:
+            return PSA_ALG_MD2;
 #endif
 #if defined(MBEDTLS_MD4_C)
-    case MBEDTLS_MD_MD4:
-        return( PSA_ALG_MD4 );
+        case MBEDTLS_MD_MD4:
+            return PSA_ALG_MD4;
 #endif
 #if defined(MBEDTLS_MD5_C)
-    case MBEDTLS_MD_MD5:
-        return( PSA_ALG_MD5 );
+        case MBEDTLS_MD_MD5:
+            return PSA_ALG_MD5;
 #endif
 #if defined(MBEDTLS_SHA1_C)
-    case MBEDTLS_MD_SHA1:
-        return( PSA_ALG_SHA_1 );
+        case MBEDTLS_MD_SHA1:
+            return PSA_ALG_SHA_1;
 #endif
 #if defined(MBEDTLS_SHA256_C)
-    case MBEDTLS_MD_SHA224:
-        return( PSA_ALG_SHA_224 );
-    case MBEDTLS_MD_SHA256:
-        return( PSA_ALG_SHA_256 );
+        case MBEDTLS_MD_SHA224:
+            return PSA_ALG_SHA_224;
+        case MBEDTLS_MD_SHA256:
+            return PSA_ALG_SHA_256;
 #endif
 #if defined(MBEDTLS_SHA512_C)
-    case MBEDTLS_MD_SHA384:
-        return( PSA_ALG_SHA_384 );
-    case MBEDTLS_MD_SHA512:
-        return( PSA_ALG_SHA_512 );
+        case MBEDTLS_MD_SHA384:
+            return PSA_ALG_SHA_384;
+        case MBEDTLS_MD_SHA512:
+            return PSA_ALG_SHA_512;
 #endif
 #if defined(MBEDTLS_RIPEMD160_C)
-    case MBEDTLS_MD_RIPEMD160:
-        return( PSA_ALG_RIPEMD160 );
+        case MBEDTLS_MD_RIPEMD160:
+            return PSA_ALG_RIPEMD160;
 #endif
-    case MBEDTLS_MD_NONE:
-        return( 0 );
-    default:
-        return( 0 );
+        case MBEDTLS_MD_NONE:
+            return 0;
+        default:
+            return 0;
     }
 }
 
@@ -165,202 +162,197 @@ static inline psa_algorithm_t mbedtls_psa_translate_md( mbedtls_md_type_t md_alg
 
 static inline int mbedtls_psa_get_ecc_oid_from_id(
     psa_ecc_family_t curve, size_t bits,
-    char const **oid, size_t *oid_len )
+    char const **oid, size_t *oid_len)
 {
-    switch( curve )
-    {
+    switch (curve) {
         case PSA_ECC_FAMILY_SECP_R1:
-            switch( bits )
-            {
+            switch (bits) {
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
                 case 192:
                     *oid = MBEDTLS_OID_EC_GRP_SECP192R1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_SECP192R1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_SECP192R1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_SECP192R1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
                 case 224:
                     *oid = MBEDTLS_OID_EC_GRP_SECP224R1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_SECP224R1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_SECP224R1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_SECP224R1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
                 case 256:
                     *oid = MBEDTLS_OID_EC_GRP_SECP256R1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_SECP256R1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_SECP256R1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_SECP256R1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
                 case 384:
                     *oid = MBEDTLS_OID_EC_GRP_SECP384R1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_SECP384R1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_SECP384R1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_SECP384R1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
                 case 521:
                     *oid = MBEDTLS_OID_EC_GRP_SECP521R1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_SECP521R1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_SECP521R1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_SECP521R1_ENABLED */
             }
             break;
         case PSA_ECC_FAMILY_SECP_K1:
-            switch( bits )
-            {
+            switch (bits) {
 #if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
                 case 192:
                     *oid = MBEDTLS_OID_EC_GRP_SECP192K1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_SECP192K1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_SECP192K1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_SECP192K1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
                 case 224:
                     *oid = MBEDTLS_OID_EC_GRP_SECP224K1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_SECP224K1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_SECP224K1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_SECP224K1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
                 case 256:
                     *oid = MBEDTLS_OID_EC_GRP_SECP256K1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_SECP256K1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_SECP256K1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_SECP256K1_ENABLED */
             }
             break;
         case PSA_ECC_FAMILY_BRAINPOOL_P_R1:
-            switch( bits )
-            {
+            switch (bits) {
 #if defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
                 case 256:
                     *oid = MBEDTLS_OID_EC_GRP_BP256R1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_BP256R1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_BP256R1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_BP256R1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_BP384R1_ENABLED)
                 case 384:
                     *oid = MBEDTLS_OID_EC_GRP_BP384R1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_BP384R1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_BP384R1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_BP384R1_ENABLED */
 #if defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)
                 case 512:
                     *oid = MBEDTLS_OID_EC_GRP_BP512R1;
-                    *oid_len = MBEDTLS_OID_SIZE( MBEDTLS_OID_EC_GRP_BP512R1 );
-                    return( 0 );
+                    *oid_len = MBEDTLS_OID_SIZE(MBEDTLS_OID_EC_GRP_BP512R1);
+                    return 0;
 #endif /* MBEDTLS_ECP_DP_BP512R1_ENABLED */
             }
             break;
     }
     (void) oid;
     (void) oid_len;
-    return( -1 );
+    return -1;
 }
 
 #define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH 1
 
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 192 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((192 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 192 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((192 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_SECP192R1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 224 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((224 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 224 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((224 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_SECP224R1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 256 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((256 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 256 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((256 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_SECP256R1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 384 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((384 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 384 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((384 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_SECP384R1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 521 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((521 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 521 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((521 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_SECP521R1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 192 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((192 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 192 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((192 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_SECP192K1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 224 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((224 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 224 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((224 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_SECP224K1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 256 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((256 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 256 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((256 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_SECP256K1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 256 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((256 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 256 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((256 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_BP256R1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_BP384R1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 384 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((384 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 384 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((384 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_BP384R1_ENABLED */
 
 #if defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)
-#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < ( 2 * ( ( 512 + 7 ) / 8 ) + 1 )
+#if MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH < (2 * ((512 + 7) / 8) + 1)
 #undef MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH
-#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH ( 2 * ( ( 512 + 7 ) / 8 ) + 1 )
+#define MBEDTLS_PSA_MAX_EC_PUBKEY_LENGTH (2 * ((512 + 7) / 8) + 1)
 #endif
 #endif /* MBEDTLS_ECP_DP_BP512R1_ENABLED */
 
 
 /* Translations for PK layer */
 
-static inline int mbedtls_psa_err_translate_pk( psa_status_t status )
+static inline int mbedtls_psa_err_translate_pk(psa_status_t status)
 {
-    switch( status )
-    {
+    switch (status) {
         case PSA_SUCCESS:
-            return( 0 );
+            return 0;
         case PSA_ERROR_NOT_SUPPORTED:
-            return( MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE );
+            return MBEDTLS_ERR_PK_FEATURE_UNAVAILABLE;
         case PSA_ERROR_INSUFFICIENT_MEMORY:
-            return( MBEDTLS_ERR_PK_ALLOC_FAILED );
+            return MBEDTLS_ERR_PK_ALLOC_FAILED;
         case PSA_ERROR_INSUFFICIENT_ENTROPY:
-            return( MBEDTLS_ERR_ECP_RANDOM_FAILED );
+            return MBEDTLS_ERR_ECP_RANDOM_FAILED;
         case PSA_ERROR_BAD_STATE:
-            return( MBEDTLS_ERR_PK_BAD_INPUT_DATA );
+            return MBEDTLS_ERR_PK_BAD_INPUT_DATA;
         /* All other failures */
         case PSA_ERROR_COMMUNICATION_FAILURE:
         case PSA_ERROR_HARDWARE_FAILURE:
         case PSA_ERROR_CORRUPTION_DETECTED:
-            return( MBEDTLS_ERR_PK_HW_ACCEL_FAILED );
+            return MBEDTLS_ERR_PK_HW_ACCEL_FAILED;
         default: /* We return the same as for the 'other failures',
                   * but list them separately nonetheless to indicate
                   * which failure conditions we have considered. */
-            return( MBEDTLS_ERR_PK_HW_ACCEL_FAILED );
+            return MBEDTLS_ERR_PK_HW_ACCEL_FAILED;
     }
 }
 
@@ -371,14 +363,15 @@ static inline int mbedtls_psa_err_translate_pk( psa_status_t status )
  * into a PSA ECC group identifier. */
 #if defined(MBEDTLS_ECP_C)
 static inline psa_key_type_t mbedtls_psa_parse_tls_ecc_group(
-    uint16_t tls_ecc_grp_reg_id, size_t *bits )
+    uint16_t tls_ecc_grp_reg_id, size_t *bits)
 {
     const mbedtls_ecp_curve_info *curve_info =
-        mbedtls_ecp_curve_info_from_tls_id( tls_ecc_grp_reg_id );
-    if( curve_info == NULL )
-        return( 0 );
-    return( PSA_KEY_TYPE_ECC_KEY_PAIR(
-                mbedtls_ecc_group_to_psa( curve_info->grp_id, bits ) ) );
+        mbedtls_ecp_curve_info_from_tls_id(tls_ecc_grp_reg_id);
+    if (curve_info == NULL) {
+        return 0;
+    }
+    return PSA_KEY_TYPE_ECC_KEY_PAIR(
+        mbedtls_ecc_group_to_psa(curve_info->grp_id, bits));
 }
 #endif /* MBEDTLS_ECP_C */
 
@@ -392,14 +385,14 @@ static inline psa_key_type_t mbedtls_psa_parse_tls_ecc_group(
  * as a subbuffer, and the function merely selects this subbuffer instead
  * of making a copy.
  */
-static inline int mbedtls_psa_tls_psa_ec_to_ecpoint( unsigned char *src,
-                                                     size_t srclen,
-                                                     unsigned char **dst,
-                                                     size_t *dstlen )
+static inline int mbedtls_psa_tls_psa_ec_to_ecpoint(unsigned char *src,
+                                                    size_t srclen,
+                                                    unsigned char **dst,
+                                                    size_t *dstlen)
 {
     *dst = src;
     *dstlen = srclen;
-    return( 0 );
+    return 0;
 }
 
 /* This function takes a buffer holding an ECPoint structure
@@ -407,18 +400,19 @@ static inline int mbedtls_psa_tls_psa_ec_to_ecpoint( unsigned char *src,
  * exchanges) and converts it into a format that the PSA key
  * agreement API understands.
  */
-static inline int mbedtls_psa_tls_ecpoint_to_psa_ec( unsigned char const *src,
-                                                     size_t srclen,
-                                                     unsigned char *dst,
-                                                     size_t dstlen,
-                                                     size_t *olen )
+static inline int mbedtls_psa_tls_ecpoint_to_psa_ec(unsigned char const *src,
+                                                    size_t srclen,
+                                                    unsigned char *dst,
+                                                    size_t dstlen,
+                                                    size_t *olen)
 {
-    if( srclen > dstlen )
-        return( MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL );
+    if (srclen > dstlen) {
+        return MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL;
+    }
 
-    memcpy( dst, src, srclen );
+    memcpy(dst, src, srclen);
     *olen = srclen;
-    return( 0 );
+    return 0;
 }
 
 #endif /* MBEDTLS_USE_PSA_CRYPTO */
@@ -435,7 +429,7 @@ static inline int mbedtls_psa_tls_ecpoint_to_psa_ec( unsigned char const *src,
  * This type name is not part of the Mbed TLS stable API. It may be renamed
  * or moved without warning.
  */
-typedef int mbedtls_f_rng_t( void *p_rng, unsigned char *output, size_t output_size );
+typedef int mbedtls_f_rng_t(void *p_rng, unsigned char *output, size_t output_size);
 
 #if defined(MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
 
@@ -474,9 +468,9 @@ typedef int mbedtls_f_rng_t( void *p_rng, unsigned char *output, size_t output_s
  *                      `MBEDTLS_ERR_CTR_DRBG_xxx` or
  *                      `MBEDTLS_ERR_HMAC_DRBG_xxx` on error.
  */
-int mbedtls_psa_get_random( void *p_rng,
-                            unsigned char *output,
-                            size_t output_size );
+int mbedtls_psa_get_random(void *p_rng,
+                           unsigned char *output,
+                           size_t output_size);
 
 /** The random generator state for the PSA subsystem.
  *

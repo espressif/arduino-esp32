@@ -240,7 +240,7 @@ void spiAttachMOSI(spi_t * spi, int8_t mosi)
         return;
     }
     if(mosi < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S2
         if(spi->num == FSPI) {
             mosi = 35;
         } else {
@@ -277,7 +277,7 @@ void spiDetachSCK(spi_t * spi, int8_t sck)
         return;
     }
     if(sck < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S2
         if(spi->num == FSPI) {
             sck = 36;
         } else {
@@ -314,7 +314,7 @@ void spiDetachMISO(spi_t * spi, int8_t miso)
         return;
     }
     if(miso < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S2
         if(spi->num == FSPI) {
             miso = 37;
         } else {
@@ -351,7 +351,7 @@ void spiDetachMOSI(spi_t * spi, int8_t mosi)
         return;
     }
     if(mosi < 0) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S2
         if(spi->num == FSPI) {
             mosi = 35;
         } else {

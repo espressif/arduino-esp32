@@ -28,7 +28,7 @@ void ARDUINO_ISR_ATTR interruptFunctional(void* arg)
 void attachInterrupt(uint8_t pin, std::function<void(void)> intRoutine, int mode)
 {
 	// use the local interrupt routine which takes the ArgStructure as argument
-	__attachInterruptFunctionalArg (pin, (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{intRoutine}, mode, true);
+	__attachInterruptFunctionalArg (digitalPinToGPIONumber(pin), (voidFuncPtrArg)interruptFunctional, new InterruptArgStructure{intRoutine}, mode, true);
 }
 
 extern "C"

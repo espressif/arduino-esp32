@@ -23,7 +23,7 @@ ESP32-S3  CDC and DFU
 
 It's important that your board includes the USB connector attached to the embedded USB from the SoC. If your board doesn't have the USB connector, you can attach an external one to the USB pins.
 
-These instructions it will only work on the supported devices with the embedded USB peripheral. This tutorial will not work if you are using an external USB-to-serial converter like FTDI, CP2102, CH340, etc.
+These instructions will only work on the supported devices with the embedded USB peripheral. This tutorial will not work if you are using an external USB-to-serial converter like FTDI, CP210x, CH340, etc.
 
 For a complete reference to the Arduino IDE tools menu, please see the `Tools Menus <../guides/tools_menu.html>`_ reference guide.
 

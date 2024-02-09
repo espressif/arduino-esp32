@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -62,14 +62,27 @@ typedef struct
 // Interface API
 //--------------------------------------------------------------------+
 
-// Get the number of HID instances
-uint8_t tuh_hid_instance_count(uint8_t dev_addr);
+// Get the total number of mounted HID interfaces of a device
+uint8_t tuh_hid_itf_get_count(uint8_t dev_addr);
 
-// Check if HID instance is mounted
-bool tuh_hid_mounted(uint8_t dev_addr, uint8_t instance);
+// Get all mounted interfaces across devices
+uint8_t tuh_hid_itf_get_total_count(void);
+
+// backward compatible rename
+#define tuh_hid_instance_count    tuh_hid_itf_get_count
+
+// Get Interface information
+bool tuh_hid_itf_get_info(uint8_t daddr, uint8_t idx, tuh_itf_info_t* itf_info);
+
+// Get Interface index from device address + interface number
+// return TUSB_INDEX_INVALID_8 (0xFF) if not found
+uint8_t tuh_hid_itf_get_index(uint8_t daddr, uint8_t itf_num);
 
 // Get interface supported protocol (bInterfaceProtocol) check out hid_interface_protocol_enum_t for possible values
-uint8_t tuh_hid_interface_protocol(uint8_t dev_addr, uint8_t instance);
+uint8_t tuh_hid_interface_protocol(uint8_t dev_addr, uint8_t idx);
+
+// Check if HID interface is mounted
+bool tuh_hid_mounted(uint8_t dev_addr, uint8_t idx);
 
 // Parse report descriptor into array of report_info struct and return number of reports.
 // For complicated report, application should write its own parser.
@@ -82,31 +95,34 @@ uint8_t tuh_hid_parse_report_descriptor(tuh_hid_report_info_t* reports_info_arr,
 // Get current protocol: HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
 // Note: Device will be initialized in Boot protocol for simplicity.
 //       Application can use set_protocol() to switch back to Report protocol.
-uint8_t tuh_hid_get_protocol(uint8_t dev_addr, uint8_t instance);
+uint8_t tuh_hid_get_protocol(uint8_t dev_addr, uint8_t idx);
 
 // Set protocol to HID_PROTOCOL_BOOT (0) or HID_PROTOCOL_REPORT (1)
 // This function is only supported by Boot interface (tuh_n_hid_interface_protocol() != NONE)
-bool tuh_hid_set_protocol(uint8_t dev_addr, uint8_t instance, uint8_t protocol);
+bool tuh_hid_set_protocol(uint8_t dev_addr, uint8_t idx, uint8_t protocol);
 
 // Set Report using control endpoint
 // report_type is either Input, Output or Feature, (value from hid_report_type_t)
-bool tuh_hid_set_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, void* report, uint16_t len);
+bool tuh_hid_set_report(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, void* report, uint16_t len);
 
 //--------------------------------------------------------------------+
 // Interrupt Endpoint API
 //--------------------------------------------------------------------+
 
-// Check if the interface is ready to use
-//bool tuh_n_hid_n_ready(uint8_t dev_addr, uint8_t instance);
+// Check if HID interface is ready to receive report
+bool tuh_hid_receive_ready(uint8_t dev_addr, uint8_t idx);
 
 // Try to receive next report on Interrupt Endpoint. Immediately return
 // - true If succeeded, tuh_hid_report_received_cb() callback will be invoked when report is available
 // - false if failed to queue the transfer e.g endpoint is busy
-bool tuh_hid_receive_report(uint8_t dev_addr, uint8_t instance);
+bool tuh_hid_receive_report(uint8_t dev_addr, uint8_t idx);
+
+// Check if HID interface is ready to send report
+bool tuh_hid_send_ready(uint8_t dev_addr, uint8_t idx);
 
 // Send report using interrupt endpoint
 // If report_id > 0 (composite), it will be sent as 1st byte, then report contents. Otherwise only report content is sent.
-//void tuh_hid_send_report(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t const* report, uint16_t len);
+bool tuh_hid_send_report(uint8_t dev_addr, uint8_t idx, uint8_t report_id, const void* report, uint16_t len);
 
 //--------------------------------------------------------------------+
 // Callbacks (Weak is optional)
@@ -117,24 +133,24 @@ bool tuh_hid_receive_report(uint8_t dev_addr, uint8_t instance);
 // can be used to parse common/simple enough descriptor.
 // Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
 // therefore report_desc = NULL, desc_len = 0
-void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report_desc, uint16_t desc_len);
+TU_ATTR_WEAK void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t idx, uint8_t const* report_desc, uint16_t desc_len);
 
 // Invoked when device with hid interface is un-mounted
-TU_ATTR_WEAK void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance);
+TU_ATTR_WEAK void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t idx);
 
 // Invoked when received report from device via interrupt endpoint
 // Note: if there is report ID (composite), it is 1st byte of report
-void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
+void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const* report, uint16_t len);
 
 // Invoked when sent report to device successfully via interrupt endpoint
-TU_ATTR_WEAK void tuh_hid_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len);
+TU_ATTR_WEAK void tuh_hid_report_sent_cb(uint8_t dev_addr, uint8_t idx, uint8_t const* report, uint16_t len);
 
 // Invoked when Sent Report to device via either control endpoint
 // len = 0 indicate there is error in the transfer e.g stalled response
-TU_ATTR_WEAK void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, uint16_t len);
+TU_ATTR_WEAK void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len);
 
 // Invoked when Set Protocol request is complete
-TU_ATTR_WEAK void tuh_hid_set_protocol_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t protocol);
+TU_ATTR_WEAK void tuh_hid_set_protocol_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t protocol);
 
 //--------------------------------------------------------------------+
 // Internal Class Driver API
