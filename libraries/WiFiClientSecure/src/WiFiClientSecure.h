@@ -34,6 +34,7 @@ protected:
     int _peek = -1;
     int _timeout;
     bool _use_insecure;
+    bool _stillinPlainStart = false;
     const char *_CA_cert;
     const char *_cert;
     const char *_private_key;
@@ -78,6 +79,17 @@ public:
     bool verify(const char* fingerprint, const char* domain_name);
     void setHandshakeTimeout(unsigned long handshake_timeout);
     void setAlpnProtocols(const char **alpn_protos);
+
+    // Certain protocols start in plain-text; and then have the client
+    // give some STARTSSL command to `upgrade' the connection to TLS
+    // or SSL. Setting PlainStart to true (the default is false) enables
+    // this. It is up to the application code to then call 'startTLS()'
+    // at the right point to initialise the SSL or TLS upgrade.
+    
+    void setPlainStart() { _stillinPlainStart = true; };
+    bool stillInPlainStart() { return _stillinPlainStart; };
+    int startTLS();
+
     const mbedtls_x509_crt* getPeerCertificate() { return mbedtls_ssl_get_peer_cert(&sslclient->ssl_ctx); };
     bool getFingerprintSHA256(uint8_t sha256_result[32]) { return get_peer_fingerprint(sslclient, sha256_result); };
     int fd() const;
