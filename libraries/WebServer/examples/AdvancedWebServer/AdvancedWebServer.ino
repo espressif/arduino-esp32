@@ -46,7 +46,7 @@ void handleRoot() {
   int sec = millis() / 1000;
   int hr = sec / 3600;
   int min = (sec / 60) % 60;
-  sec = sec % 60
+  sec = sec % 60;
 
   snprintf(temp, 400,
 
@@ -65,7 +65,7 @@ void handleRoot() {
   </body>\
 </html>",
 
-           hr, min % 60, sec % 60
+           hr, min, sec
           );
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
