@@ -718,8 +718,8 @@ void uartStartDetectBaudrate(uart_t *uart) {
 #elif CONFIG_IDF_TARGET_ESP32S3
     // log_v("Start Init HW for baud detection");
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->rx_filt.glitch_filt = 1;
-    hw->rx_filt.glitch_filt_en = 1;
+    hw->rx_filt.glitch_filt = 0;
+    hw->rx_filt.glitch_filt_en = 0;
     hw->conf0.autobaud_en = 0;
     hw->conf0.autobaud_en = 1;
     // log_v("End Init HW for baud detection");
@@ -778,7 +778,6 @@ uartDetectBaudrate(uart_t *uart)
         // log_v("Divisor: %d", divisor);
         // log_v("Divider: %d", div16);
 
-        
         baudrate = sclk_freq / (divisor * 2);
 
         // switch(clk_src)
@@ -827,6 +826,8 @@ uartDetectBaudrate(uart_t *uart)
             break;
         }
     }
+
+    log_v("Rounded %d to %d (b: %d) (n: %d)", baudrate, default_rates[i], default_rates[i-1], default_rates[i+1]); //THIS WILL OVERFLOW, only for testing now
 
     return default_rates[i];
 #else
