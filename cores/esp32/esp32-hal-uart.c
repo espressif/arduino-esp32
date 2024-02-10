@@ -828,9 +828,16 @@ uartDetectBaudrate(uart_t *uart)
     }
 
     log_v("Rounded\t%d\tto\t%d",  baudrate, default_rates[i]);
-    log_v("From Previous\t( %d )\t:\t( %d )", default_rates[i-1],   baudrate - default_rates[i-1] ); //THIS WILL OVERFLOW, only for testing now
-    log_v("From Current\t( %d )\t:\t( %d )",  default_rates[i],     default_rates[i] - baudrate); //THIS WILL OVERFLOW, only for testing now
-    log_v("From Next\t( %d )\t:\t( %d )",     default_rates[i+1],   default_rates[i+1] - baudrate); //THIS WILL OVERFLOW, only for testing now
+
+    if(i>0){
+        log_v("From Previous\t( %d )\t:\t( %d )", default_rates[i-1],   baudrate - default_rates[i-1] );
+    }
+        
+    log_v("From Current\t( %d )\t:\t( %d )",  default_rates[i],     default_rates[i] - baudrate);
+
+    if(i < ( sizeof(default_rates) / sizeof(default_rates[0]) - 2 ) ){
+        log_v("From Next\t( %d )\t:\t( %d )",     default_rates[i+1],   default_rates[i+1] - baudrate);
+    }
     
     return default_rates[i];
 #else
