@@ -653,7 +653,7 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 
     UART_MUTEX_LOCK();
     log_i("rxd_edge_cnt = %d lowpulse_min_cnt = %d hightpulse_min_cnt = %d", hw->rxd_cnt.rxd_edge_cnt, hw->lowpulse.lowpulse_min_cnt, hw->highpulse.highpulse_min_cnt);
-    unsigned long ret = (hw->lowpulse.lowpulse_min_cnt + hw->highpulse.highpulse_min_cnt) >> 1;
+    unsigned long ret = hw->lowpulse.lowpulse_min_cnt + hw->highpulse.highpulse_min_cnt;
     UART_MUTEX_UNLOCK();
 
     return ret;
@@ -778,7 +778,7 @@ uartDetectBaudrate(uart_t *uart)
         // log_v("Divisor: %d", divisor);
         // log_v("Divider: %d", div16);
 
-        baudrate = sclk_freq / (divisor * 2);
+        baudrate = sclk_freq / divisor;
 
         // switch(clk_src)
         // {
@@ -827,8 +827,11 @@ uartDetectBaudrate(uart_t *uart)
         }
     }
 
-    log_v("Rounded %d to %d (b: %d) (n: %d)", baudrate, default_rates[i], default_rates[i-1], default_rates[i+1]); //THIS WILL OVERFLOW, only for testing now
-
+    log_v("Rounded\t%d\tto\t%d",  baudrate, default_rates[i]);
+    log_v("From Previous\t( %d )\t:\t( %d )", default_rates[i-1],   baudrate - default_rates[i-1] ); //THIS WILL OVERFLOW, only for testing now
+    log_v("From Current\t( %d )\t:\t( %d )",  default_rates[i],     default_rates[i] - baudrate); //THIS WILL OVERFLOW, only for testing now
+    log_v("From Next\t( %d )\t:\t( %d )",     default_rates[i+1],   default_rates[i+1] - baudrate); //THIS WILL OVERFLOW, only for testing now
+    
     return default_rates[i];
 #else
 #ifdef CONFIG_IDF_TARGET_ESP32C3 
