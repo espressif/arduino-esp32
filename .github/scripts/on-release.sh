@@ -35,6 +35,12 @@ echo "Event: $GITHUB_EVENT_NAME, Repo: $GITHUB_REPOSITORY, Path: $GITHUB_WORKSPA
 echo "Action: $action, Branch: $RELEASE_BRANCH, ID: $RELEASE_ID"
 echo "Tag: $RELEASE_TAG, Draft: $draft, Pre-Release: $RELEASE_PRE"
 
+# Try extracting something like a JSON with a "boards" array/element and "vendor" fields
+BOARDS=`echo $RELEASE_BODY | grep -Pzo '(?s){.*}' | jq -r '.boards[]? // .boards? // empty' | xargs echo -n 2>/dev/null`
+VENDOR=`echo $RELEASE_BODY | grep -Pzo '(?s){.*}' | jq -r '.vendor? // empty' | xargs echo -n 2>/dev/null`
+if ! [ -z "${BOARDS}" ]; then echo "Releasing board(s): $BOARDS" ; fi
+if ! [ -z "${VENDOR}" ]; then echo "Setting packager: $VENDOR" ; fi
+
 function get_file_size(){
     local file="$1"
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -170,12 +176,26 @@ mkdir -p "$PKG_DIR/tools"
 
 # Copy all core files to the package folder
 echo "Copying files for packaging ..."
-cp -f  "$GITHUB_WORKSPACE/boards.txt"                       "$PKG_DIR/"
+if [ -z "${BOARDS}" ]; then
+    # Copy all variants
+    cp -f  "$GITHUB_WORKSPACE/boards.txt"                   "$PKG_DIR/"
+    cp -Rf "$GITHUB_WORKSPACE/variants"                     "$PKG_DIR/"
+else
+    # Remove all entries not starting with any board code or "menu." from boards.txt
+    cat "$GITHUB_WORKSPACE/boards.txt" | grep "^menu\."         >  "$PKG_DIR/boards.txt"
+    for board in ${BOARDS} ; do
+        cat "$GITHUB_WORKSPACE/boards.txt" | grep "^${board}\." >> "$PKG_DIR/boards.txt"
+    done
+    # Copy only relevant variant files
+    mkdir "$PKG_DIR/variants/"
+    for variant in `cat ${PKG_DIR}/boards.txt | grep "\.variant=" | cut -d= -f2` ; do
+        cp -Rf "$GITHUB_WORKSPACE/variants/${variant}"      "$PKG_DIR/variants/"
+    done
+fi
 cp -f  "$GITHUB_WORKSPACE/package.json"                     "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/programmers.txt"                  "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/cores"                            "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/libraries"                        "$PKG_DIR/"
-cp -Rf "$GITHUB_WORKSPACE/variants"                         "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/tools/espota.exe"                 "$PKG_DIR/tools/"
 cp -f  "$GITHUB_WORKSPACE/tools/espota.py"                  "$PKG_DIR/tools/"
 cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.py"           "$PKG_DIR/tools/"
@@ -201,18 +221,21 @@ RVTC_NEW_NAME="esp-rv32"
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
 sed "s/version=.*/version=$RELEASE_TAG/g" | \
-sed 's/tools.esp32-arduino-libs.path={runtime.platform.path}\/tools\/esp32-arduino-libs/tools.esp32-arduino-libs.path=\{runtime.tools.esp32-arduino-libs.path\}/g' | \
-sed 's/tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32-elf/tools.xtensa-esp32-elf-gcc.path=\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
-sed 's/tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s2-elf/tools.xtensa-esp32s2-elf-gcc.path=\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
-sed 's/tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}\/tools\/xtensa-esp32s3-elf/tools.xtensa-esp32s3-elf-gcc.path=\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
-sed 's/tools.xtensa-esp-elf-gdb.path={runtime.platform.path}\/tools\/xtensa-esp-elf-gdb/tools.xtensa-esp-elf-gdb.path=\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
-sed "s/tools.riscv32-esp-elf-gcc.path={runtime.platform.path}\\/tools\\/riscv32-esp-elf/tools.riscv32-esp-elf-gcc.path=\\{runtime.tools.$RVTC_NEW_NAME.path\\}/g" | \
-sed 's/tools.riscv32-esp-elf-gdb.path={runtime.platform.path}\/tools\/riscv32-esp-elf-gdb/tools.riscv32-esp-elf-gdb.path=\{runtime.tools.riscv32-esp-elf-gdb.path\}/g' | \
-sed 's/tools.esptool_py.path={runtime.platform.path}\/tools\/esptool/tools.esptool_py.path=\{runtime.tools.esptool_py.path\}/g' | \
-sed 's/debug.server.openocd.path={runtime.platform.path}\/tools\/openocd-esp32\/bin\/openocd/debug.server.openocd.path=\{runtime.tools.openocd-esp32.path\}\/bin\/openocd/g' | \
-sed 's/debug.server.openocd.scripts_dir={runtime.platform.path}\/tools\/openocd-esp32\/share\/openocd\/scripts\//debug.server.openocd.scripts_dir=\{runtime.tools.openocd-esp32.path\}\/share\/openocd\/scripts\//g' | \
-sed 's/debug.server.openocd.scripts_dir.windows={runtime.platform.path}\\tools\\openocd-esp32\\share\\openocd\\scripts\\/debug.server.openocd.scripts_dir.windows=\{runtime.tools.openocd-esp32.path\}\\share\\openocd\\scripts\\/g' \
+sed 's/{runtime\.platform\.path}.tools.esp32-arduino-libs/\{runtime.tools.esp32-arduino-libs.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.xtensa-esp-elf-gdb/\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.xtensa-esp32-elf/\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.xtensa-esp32s2-elf/\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.xtensa-esp32s3-elf/\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.riscv32-esp-elf-gdb/\{runtime.tools.riscv32-esp-elf-gdb.path\}/g' | \
+sed "s/{runtime\.platform\.path}.tools.riscv32-esp-elf/\\{runtime.tools.$RVTC_NEW_NAME.path\\}/g" | \
+sed 's/{runtime\.platform\.path}.tools.esptool/\{runtime.tools.esptool_py.path\}/g' | \
+sed 's/{runtime\.platform\.path}.tools.openocd-esp32/\{runtime.tools.openocd-esp32.path\}/g' \
  > "$PKG_DIR/platform.txt"
+
+if ! [ -z ${VENDOR} ]; then
+    # Append vendor name to platform.txt to create a separate section
+    sed -i  "/^name=.*/s/$/ ($VENDOR)/" "$PKG_DIR/platform.txt"
+fi
 
 # Add header with version information
 echo "Generating core_version.h ..."
