@@ -186,7 +186,7 @@ static bool _rmtDetachBus(void *busptr)
    Public method definitions
 */
 
-void rmtSetEOT(int pin, uint8_t EOT_Level)
+bool rmtSetEOT(int pin, uint8_t EOT_Level)
 {
   rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
@@ -197,6 +197,7 @@ void rmtSetEOT(int pin, uint8_t EOT_Level)
   }
 
   bus->rmt_EOT_Level = EOT_Level > 0 ? 1 : 0;
+  return true;
 }
 
 bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t frequency_Hz, float duty_percent)
