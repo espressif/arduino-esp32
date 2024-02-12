@@ -77,6 +77,18 @@ typedef union {
 bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t memsize, uint32_t frequency_Hz);
 
 /**
+     Sets the End of Transmission level to be set the <pin> when the RMT transmission ends.
+     This function affects how rmtWrite(), rmtWriteAsync() or rmtWriteLooping() will set the pin after writing the data.
+     The default EOT level is LOW, in case this function isn't used before RMT Writing.
+     This level can be set for each RMT pin and can change between writings to the same pin.
+
+     <EOT_Level> shall be Zero (LOW) or non-zero (HIGH) value.
+     It only affects the transmission process, therefore, it doesn't affect any IDLE LEVEL before starting the RMT transmission. 
+     The pre-transmission idle level can be set manually calling, for instance, digitalWrite(pin, Level).
+*/
+void rmtSetEOT(int pin, uint8_t EOT_Level);
+
+/**
      Sending data in Blocking Mode. 
      <rmt_symbol> is a 32 bits structure as defined by rmt_data_t type.
      It is possible to use the macro RMT_SYMBOLS_OF(data), if data is an array of <rmt_data_t>.
