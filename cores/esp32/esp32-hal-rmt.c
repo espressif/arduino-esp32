@@ -61,6 +61,7 @@ struct rmt_obj_s {
   bool rmt_ch_is_looping;                    // Is this RMT TX Channel in LOOPING MODE?
   size_t *num_symbols_read;                  // Pointer to the number of RMT symbol read by IDF RMT RX Done
   uint32_t frequency_Hz;                     // RMT Frequency
+  uint8_t rmt_EOT_Level;                     // RMT End of Transmission Level - default it LOW
 
 #if !CONFIG_DISABLE_HAL_LOCKS
   SemaphoreHandle_t g_rmt_objlocks;           // Channel Semaphore Lock
@@ -184,6 +185,19 @@ static bool _rmtDetachBus(void *busptr)
 /**
    Public method definitions
 */
+
+void rmtSetEOT(int pin, uint8_t EOT_Level)
+{
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+  if (bus == NULL) {
+    return false;
+  }
+  if (!_rmtCheckDirection(pin, RMT_TX_MODE, __FUNCTION__)) {
+    return false;
+  }
+
+  bus->rmt_EOT_Level = EOT_Level > 0 ? 1 : 0;
+}
 
 bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t frequency_Hz, float duty_percent)
 {
@@ -315,6 +329,10 @@ static bool _rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool bl
     // enable it again for looping or writing
     rmt_enable(bus->rmt_channel_h);
     bus->rmt_ch_is_looping = false;  // not looping anymore
+  }
+  // sets the End of trnasmission level to HIGH if the user has requested so
+  if (bus->rmt_EOT_Level) {
+    transmit_cfg.eot_level = 1;  // EOT is HIGH
   }
   if (loopCancel) {
     // just resets and releases the channel, maybe, already done above, then exits
@@ -487,7 +505,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   // store the RMT Freq to check Filter and Idle valid values in the RMT API
   bus->frequency_Hz = frequency_Hz;
   // pulses with width smaller than min_ns will be ignored (as a glitch)
-  bus->signal_range_min_ns = 0; // disabled
+  //bus->signal_range_min_ns = 0; // disabled  --> not necessary CALLOC set all to ZERO.
   // RMT stops reading if the input stays idle for longer than max_ns
   bus->signal_range_max_ns = (1000000000 / frequency_Hz) * RMT_LL_MAX_IDLE_VALUE; // maximum possible
   // creates the event group to control read_done and write_done
