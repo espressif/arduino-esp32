@@ -85,6 +85,8 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mems
      <EOT_Level> shall be Zero (LOW) or non-zero (HIGH) value.
      It only affects the transmission process, therefore, it doesn't affect any IDLE LEVEL before starting the RMT transmission. 
      The pre-transmission idle level can be set manually calling, for instance, digitalWrite(pin, Level).
+
+     Returns <true> when EOT has been correctly set for <pin>, <false> otherwise.
 */
 void rmtSetEOT(int pin, uint8_t EOT_Level);
 
