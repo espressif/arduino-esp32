@@ -88,7 +88,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mems
 
      Returns <true> when EOT has been correctly set for <pin>, <false> otherwise.
 */
-void rmtSetEOT(int pin, uint8_t EOT_Level);
+bool rmtSetEOT(int pin, uint8_t EOT_Level);
 
 /**
      Sending data in Blocking Mode. 
