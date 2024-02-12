@@ -333,7 +333,7 @@ static bool _rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool bl
   }
   // sets the End of trnasmission level to HIGH if the user has requested so
   if (bus->rmt_EOT_Level) {
-    transmit_cfg.eot_level = 1;  // EOT is HIGH
+    transmit_cfg.flags.eot_level = 1;  // EOT is HIGH
   }
   if (loopCancel) {
     // just resets and releases the channel, maybe, already done above, then exits
