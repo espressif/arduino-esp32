@@ -61,7 +61,7 @@ struct rmt_obj_s {
   bool rmt_ch_is_looping;                    // Is this RMT TX Channel in LOOPING MODE?
   size_t *num_symbols_read;                  // Pointer to the number of RMT symbol read by IDF RMT RX Done
   uint32_t frequency_Hz;                     // RMT Frequency
-  uint8_t rmt_EOT_Level;                     // RMT End of Transmission Level - default it LOW
+  uint8_t rmt_EOT_Level;                     // RMT End of Transmission Level - default is LOW
 
 #if !CONFIG_DISABLE_HAL_LOCKS
   SemaphoreHandle_t g_rmt_objlocks;           // Channel Semaphore Lock
