@@ -102,7 +102,7 @@ def generate_bootloader_image(bootloader_elf):
             '"$PYTHONEXE" "$OBJCOPY"',
             "--chip", build_mcu, "elf2image",
             "--flash_mode", "${__get_board_flash_mode(__env__)}",
-            "--flash_freq", "${__get_board_f_flash(__env__)}",
+            "--flash_freq", "${__get_board_img_freq(__env__)}",
             "--flash_size", board_config.get("upload.flash_size", "4MB"),
             "-o", "$TARGET", "$SOURCES"
         ]), "Building $TARGET"),
