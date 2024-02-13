@@ -57,7 +57,7 @@ class BluetoothSerial: public Stream
         void memrelease();
         void setTimeout(int timeoutMS);
         void onData(BluetoothSerialDataCb cb);
-        esp_err_t register_callback(esp_spp_cb_t * callback);
+        esp_err_t register_callback(esp_spp_cb_t callback);
         
 #ifdef CONFIG_BT_SSP_ENABLED
         void onConfirmRequest(ConfirmRequestCb cb);
