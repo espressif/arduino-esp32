@@ -21180,15 +21180,12 @@ heltec_wireless_stick.build.bootloader_addr=0x1000
 heltec_wireless_stick.build.target=esp32
 heltec_wireless_stick.build.mcu=esp32
 heltec_wireless_stick.build.core=esp32
-heltec_wireless_stick.build.variant=heltec_wireless_stick
 heltec_wireless_stick.build.board=HELTEC_WIRELESS_STICK
 
 heltec_wireless_stick.build.f_cpu=240000000L
-heltec_wireless_stick.build.flash_size=8MB
 heltec_wireless_stick.build.flash_freq=80m
 heltec_wireless_stick.build.flash_mode=dio
 heltec_wireless_stick.build.boot=dio
-heltec_wireless_stick.build.partitions=default_8MB
 heltec_wireless_stick.build.defines=-D{build.band} -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} {build.psram}
 
 heltec_wireless_stick.menu.PSRAM.disabled=Disabled
@@ -21267,6 +21264,24 @@ heltec_wireless_stick.menu.EraseFlash.none=Disabled
 heltec_wireless_stick.menu.EraseFlash.none.upload.erase_cmd=
 heltec_wireless_stick.menu.EraseFlash.all=Enabled
 heltec_wireless_stick.menu.EraseFlash.all.upload.erase_cmd=-e
+
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V1=Heltec Wireless Stick V1 (SX1276)
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V1.build.board=HELTEC_WIRELESS_STICK_V1
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V1.build.variant=heltec_wireless_stick_V1
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V1.build.flash_size=4MB
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V1.build.partitions=default
+
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V2=Heltec Wireless Stick V2 (SX1276)
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V2.build.board=HELTEC_WIRELESS_STICK_V2
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V2.build.variant=heltec_wireless_stick
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V2.build.flash_size=8MB
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V2.build.partitions=default_8MB
+
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V3=Heltec Wireless Stick V3 (SX1262)
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V3.build.board=HELTEC_WIRELESS_STICK_V3
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V3.build.variant=heltec_wireless_stick
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V3.build.flash_size=8MB
+heltec_wireless_stick.menu.Revision.Heltec_Wireless_Stick_V3.build.partitions=default_8MB
 
 ##############################################################
 
