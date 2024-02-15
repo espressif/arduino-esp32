@@ -351,8 +351,8 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
         log_w("ETH Already Started");
         return true;
     }
-    if(cs < 0 /*|| irq < 0*/){
-        log_e("CS and IRQ pins must be defined!");
+    if(cs < 0){
+        log_e("CS pin must be defined!");
         return false;
     }
 
