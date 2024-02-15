@@ -149,6 +149,9 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
         case ETH_PHY_DP83848:
             phy = esp_eth_phy_new_dp83848(&phy_config);
             break;
+	case ETH_PHY_JL1101:
+            phy = esp_eth_phy_new_jl1101(&phy_config);
+            break;
         case ETH_PHY_KSZ8041:
             phy = esp_eth_phy_new_ksz80xx(&phy_config);
             break;
@@ -351,7 +354,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
         log_w("ETH Already Started");
         return true;
     }
-    if(cs < 0 || irq < 0){
+    if(cs < 0 /*|| irq < 0*/){
         log_e("CS and IRQ pins must be defined!");
         return false;
     }
@@ -447,6 +450,9 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     if(type == ETH_PHY_W5500){
         eth_w5500_config_t mac_config = ETH_W5500_DEFAULT_CONFIG(spi_host, &spi_devcfg);
         mac_config.int_gpio_num = _pin_irq;
+        if (_pin_irq < 0) {
+            mac_config.poll_period_ms = 10;
+        }
 #if ETH_SPI_SUPPORTS_CUSTOM
         if(_spi != NULL){
             mac_config.custom_spi_driver.config = this;
@@ -586,8 +592,9 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
 #if ETH_SPI_SUPPORTS_CUSTOM
     }
 #endif
-    if(!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
-
+    if(_pin_irq != -1){
+        if(!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
+    }
     if(_pin_sck != -1){
         if(!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
