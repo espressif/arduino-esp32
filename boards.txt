@@ -33651,6 +33651,7 @@ epulse_feather.build.f_cpu=240000000L
 epulse_feather.build.flash_size=8MB
 epulse_feather.build.flash_freq=80m
 epulse_feather.build.flash_mode=dio
+epulse_feather.build.flash_type=qio
 epulse_feather.build.boot=dio
 epulse_feather.build.partitions=default_8MB
 epulse_feather.build.defines=
@@ -33679,15 +33680,6 @@ epulse_feather.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 epulse_feather.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 epulse_feather.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 epulse_feather.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
-epulse_feather.menu.PartitionScheme.default_ffat_8MB=8M with ffat (3MB APP/1.5MB FATFS)
-epulse_feather.menu.PartitionScheme.default_ffat_8MB.build.partitions=default_ffat_8MB
-epulse_feather.menu.PartitionScheme.default_ffat_8MB.upload.maximum_size=3342336
-epulse_feather.menu.PartitionScheme.large_spiffs_8MB=Large SPIFFS (1.2MB APP/5.3MB SPIFFS)
-epulse_feather.menu.PartitionScheme.large_spiffs_8MB.build.partitions=large_spiffs_8MB
-epulse_feather.menu.PartitionScheme.large_spiffs_8MB.upload.maximum_size=1310720
-epulse_feather.menu.PartitionScheme.large_ffat_8MB=Large FFAT (1.2MB APP/5.3MB FATFS)
-epulse_feather.menu.PartitionScheme.large_ffat_8MB.build.partitions=large_ffat_8MB
-epulse_feather.menu.PartitionScheme.large_ffat_8MB.upload.maximum_size=1310720
 epulse_feather.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
 epulse_feather.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 epulse_feather.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
@@ -33709,9 +33701,6 @@ epulse_feather.menu.FlashFreq.80=80MHz
 epulse_feather.menu.FlashFreq.80.build.flash_freq=80m
 epulse_feather.menu.FlashFreq.40=40MHz
 epulse_feather.menu.FlashFreq.40.build.flash_freq=40m
-
-epulse_feather.menu.FlashSize.8M=8MB (64Mb)
-epulse_feather.menu.FlashSize.8M.build.flash_size=8MB
 
 epulse_feather.menu.UploadSpeed.921600=921600
 epulse_feather.menu.UploadSpeed.921600.upload.speed=921600
