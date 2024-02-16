@@ -45,7 +45,6 @@ typedef struct {
 #endif
 } ledc_channel_handle_t;
 
-//channel 0-15 resolution 1-16bits freq limits depend on resolution
 bool        ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
 bool        ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel);
 bool        ledcWrite(uint8_t pin, uint32_t duty);
@@ -55,6 +54,7 @@ uint32_t    ledcRead(uint8_t pin);
 uint32_t    ledcReadFreq(uint8_t pin);
 bool        ledcDetach(uint8_t pin);
 uint32_t    ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution);
+bool        ledcOutputInvert(uint8_t pin, bool out_invert);
 
 //Fade functions
 bool ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms);

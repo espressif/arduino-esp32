@@ -33,7 +33,7 @@ void setup() {
   Serial.begin(115200);
   while(!Serial) delay(10);
 
-  // Setup timer and attach timer to a led pins
+  // Setup timer with given frequency, resolution and attach it to a led pin with auto-selected channel
   ledcAttach(LED_PIN, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
 
   // Setup and start fade on led (duty from 0 to 4095)

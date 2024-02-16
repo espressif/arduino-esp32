@@ -19,6 +19,8 @@
 #include "esp32-hal-ledc.h"
 #include "driver/ledc.h"
 #include "esp32-hal-periman.h"
+#include "soc/gpio_sig_map.h"
+#include "esp_rom_gpio.h"
 
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
 #define LEDC_CHANNELS           (SOC_LEDC_CHANNEL_NUM<<1)
@@ -40,7 +42,7 @@ typedef struct {
     int used_channels : LEDC_CHANNELS;              // Used channels as a bits
 } ledc_periph_t;
 
-ledc_periph_t ledc_handle;
+ledc_periph_t ledc_handle = {0};
 
 static bool fade_initialized = false;
 
@@ -58,15 +60,25 @@ static bool ledcDetachBus(void * bus){
 
 bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel)
 {
-    if (channel >= LEDC_CHANNELS || resolution > LEDC_MAX_BIT_WIDTH)
-    {
-        log_e("Channel %u is not available! (maximum %u) or bit width too big (maximum %u)", channel, LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
+    if(channel >= LEDC_CHANNELS || ledc_handle.used_channels & (1UL << channel)){
+        log_e("Channel %u is not available (maximum %u) or already used!", channel, LEDC_CHANNELS);
+        return false;
+    }
+    
+    if (resolution > LEDC_MAX_BIT_WIDTH){
+        log_e("LEDC resolution too big (maximum %u)", LEDC_MAX_BIT_WIDTH);
         return false;
     }
 
     perimanSetBusDeinit(ESP32_BUS_TYPE_LEDC, ledcDetachBus);
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
-    if(bus != NULL && !perimanClearPinBus(pin)){
+    if(bus != NULL){
+        log_e("Pin %u is already attached to LEDC (channel %u, resolution %u)", pin, bus->channel, bus->channel_resolution);
+        return false;
+    }
+
+    if(!perimanClearPinBus(pin)){
+        log_e("Pin %u is already attached to another bus and failed to detach", pin);
         return false;
     }
 
@@ -120,11 +132,11 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
 bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
 {
     uint8_t free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
-    if (free_channel == 0 || resolution > LEDC_MAX_BIT_WIDTH){
-        log_e("No more LEDC channels available! (maximum %u) or bit width too big (maximum %u)", LEDC_CHANNELS, LEDC_MAX_BIT_WIDTH);
+    if (free_channel == 0){
+        log_e("No more LEDC channels available! (maximum is %u channels)", LEDC_CHANNELS);
         return false;
     }
-    int channel = log2(free_channel & -free_channel);
+    uint8_t channel = log2(free_channel & -free_channel);
 
     return ledcAttachChannel(pin, freq, resolution, channel);
 }
@@ -263,6 +275,21 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution)
         return ledc_get_freq(group,timer);
     }
     return 0;
+}
+
+bool ledcOutputInvert(uint8_t pin, bool out_invert)
+{
+    ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+    if(bus != NULL){
+        gpio_set_level(pin, out_invert);
+    #ifdef SOC_LEDC_SUPPORT_HS_MODE
+        esp_rom_gpio_connect_out_signal(pin, ((bus->channel/8 == 0) ? LEDC_HS_SIG_OUT0_IDX : LEDC_LS_SIG_OUT0_IDX) + ((bus->channel)%8), out_invert, 0);
+    #else
+        esp_rom_gpio_connect_out_signal(pin, LEDC_LS_SIG_OUT0_IDX + ((bus->channel)%8), out_invert, 0);
+    #endif
+        return true;
+    }
+    return false;
 }
 
 static IRAM_ATTR bool ledcFnWrapper(const ledc_cb_param_t *param, void *user_arg)

@@ -26,19 +26,17 @@ Arduino-ESP32 LEDC API
 ledcAttach
 **********
 
-This function is used to setup LEDC pin with given frequency and resolution.
-LEDC channel will be selected automatically.
+This function is used to setup LEDC pin with given frequency and resolution. LEDC channel will be selected automatically.
 
 .. code-block:: arduino
 
-    bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
+    bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution, int8_t channel);
 
 * ``pin`` select LEDC pin.
 * ``freq`` select frequency of pwm.
 * ``resolution`` select resolution for LEDC channel. 
- 
   * range is 1-14 bits (1-20 bits for ESP32).
-  
+
 This function will return ``true`` if configuration is successful.
 If ``false`` is returned, error occurs and LEDC channel was not configured.
 
@@ -49,15 +47,14 @@ This function is used to setup LEDC pin with given frequency, resolution and cha
 
 .. code-block:: arduino
 
-    bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel);
+    bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution, int8_t channel);
 
 * ``pin`` select LEDC pin.
 * ``freq`` select frequency of pwm.
 * ``resolution`` select resolution for LEDC channel. 
-* ``channel`` select LEDC channel.
- 
   * range is 1-14 bits (1-20 bits for ESP32).
-  
+* ``channel`` select LEDC channel.
+
 This function will return ``true`` if configuration is successful.
 If ``false`` is returned, error occurs and LEDC channel was not configured.
 
@@ -170,6 +167,21 @@ This function is used to set frequency for the LEDC pin.
   
 This function will return ``frequency`` configured for the LEDC channel.
 If ``0`` is returned, error occurs and the LEDC channel frequency was not set.
+
+ledcOutputInvert
+****************
+
+This function is used to set inverting output for the LEDC pin.
+
+.. code-block:: arduino
+
+    bool ledcOutputInvert(uint8_t pin, bool out_invert);
+
+* ``pin`` select LEDC pin.
+* ``out_invert`` select, if output should be inverted (1 = inverting output).
+  
+This function returns ``true`` if setting inverting output was successful.
+If ``false`` is returned, an error occurred and the inverting output was not set.
 
 ledcFade
 ********

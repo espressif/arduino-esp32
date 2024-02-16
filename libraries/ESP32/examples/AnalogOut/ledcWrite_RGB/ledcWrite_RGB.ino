@@ -26,7 +26,7 @@ void setup()
   delay(10); 
   
   // Initialize pins as LEDC channels 
-  // resolution 1-16 bits, freq limits depend on resolution
+  // resolution 1-16 bits, freq limits depend on resolution, channel is automatically selected
   ledcAttach(ledR, 12000, 8); // 12 kHz PWM, 8-bit resolution
   ledcAttach(ledG, 12000, 8);
   ledcAttach(ledB, 12000, 8);
