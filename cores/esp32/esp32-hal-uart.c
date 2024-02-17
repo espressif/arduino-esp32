@@ -462,7 +462,11 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
     uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate));
+#else
+    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate);
+#endif
     UART_MUTEX_UNLOCK();
 }
 
