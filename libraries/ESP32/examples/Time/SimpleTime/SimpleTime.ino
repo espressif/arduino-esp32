@@ -33,6 +33,9 @@ void setup()
 {
   Serial.begin(115200);
 
+  // configure WiFi
+  WiFi.mode(WIFI_STA);
+
   // set notification call-back function
   sntp_set_time_sync_notification_cb( timeavailable );
 
