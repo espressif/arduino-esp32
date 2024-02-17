@@ -645,7 +645,6 @@ void log_print_buf(const uint8_t *b, size_t len){
  */
 unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 {
-// Baud rate detection only works for ESP32 and ESP32S2
     if(uart == NULL) {
         return 0;
     }
