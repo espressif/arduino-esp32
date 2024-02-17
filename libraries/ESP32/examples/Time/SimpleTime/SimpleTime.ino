@@ -33,8 +33,8 @@ void setup()
 {
   Serial.begin(115200);
 
-  // configure WiFi
-  WiFi.mode(WIFI_STA);
+  // configure WiFi STA and connect in order to get the current time and date.
+  WiFi.begin(ssid, password);
 
   // set notification call-back function
   sntp_set_time_sync_notification_cb( timeavailable );
