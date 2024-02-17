@@ -664,49 +664,15 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
  * detected calling uartBadrateDetect(). The raw baudrate is computed using the UART_CLK_FREQ. The raw baudrate is 
  * rounded to the closed real baudrate.
  * 
- * ESP32-C3 reports wrong baud rate detection as shown below:
- * 
- * This will help in a future recall for the C3.
- * Baud Sent:          Baud Read:
- *  300        -->       19536
- * 2400        -->       19536
- * 4800        -->       19536 
- * 9600        -->       28818 
- * 19200       -->       57678
- * 38400       -->       115440
- * 57600       -->       173535
- * 115200      -->       347826
- * 230400      -->       701754
- * 
- * 
 */
 void uartStartDetectBaudrate(uart_t *uart) {
     if(uart == NULL) {
         return;
     }
 
-#ifdef CONFIG_IDF_TARGET_ESP32C3
-    
-    // ESP32-C3 requires further testing
-    // Baud rate detection returns wrong values 
-   
-    log_e("ESP32-C3 baud rate detection is not supported.");
-    return;
-
-    // Code bellow for C3 kept for future recall
-    //hw->rx_filt.glitch_filt = 0x08;
-    //hw->rx_filt.glitch_filt_en = 1;
-    //hw->conf0.autobaud_en = 0;
-    //hw->conf0.autobaud_en = 1;
-#elif CONFIG_IDF_TARGET_ESP32S3
-    log_e("ESP32-S3 baud rate detection is not supported.");
-    return;
-#else
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->auto_baud.glitch_filt = 0x08;
-    hw->auto_baud.en = 0;
-    hw->auto_baud.en = 1;
-#endif
+    uart_ll_set_autobaud_en(hw, false);
+    uart_ll_set_autobaud_en(hw, true);
 }
  
 unsigned long
