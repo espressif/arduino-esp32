@@ -478,6 +478,12 @@ uint32_t uartGetBaudRate(uart_t* uart)
 
     UART_MUTEX_LOCK();
     uint32_t baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num));
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    uint32_t Freq = getApbFrequency()/1000000;
+    if (Freq < 80) {
+        baud_rate = baud_rate / (80 / Freq);
+     }
+#endif
     UART_MUTEX_UNLOCK();
     return baud_rate;
 }
