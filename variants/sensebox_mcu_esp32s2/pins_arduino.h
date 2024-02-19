@@ -16,6 +16,14 @@
 #define USB_FW_MSC_VOLUME_NAME "senseBox"      // max 11 chars
 #define USB_FW_MSC_SERIAL_NUMBER 0x00000000
 
+#define EXTERNAL_NUM_INTERRUPTS 46
+#define NUM_DIGITAL_PINS        48
+#define NUM_ANALOG_INPUTS       20
+
+#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
+#define digitalPinHasPWM(p)         (p < 46)
+
 #define PIN_NEOPIXEL 1 // NeoPixel LED
 #define NEOPIXEL_PIN 1 // NeoPixel LED
 #define NEOPIXEL_NUM 1 // number of neopixels
