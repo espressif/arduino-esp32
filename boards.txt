@@ -33657,15 +33657,11 @@ epulse_feather.build.partitions=default_8MB
 epulse_feather.build.defines=
 epulse_feather.build.loop_core=
 epulse_feather.build.event_core=
-epulse_feather.build.psram_type=qspi
-epulse_feather.build.memory_type={build.flash_type}_{build.psram_type}
 
+epulse_feather.menu.PSRAM.enabled=Enabled
+epulse_feather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 epulse_feather.menu.PSRAM.disabled=Disabled
 epulse_feather.menu.PSRAM.disabled.build.defines=
-epulse_feather.menu.PSRAM.disabled.build.psram_type=qspi
-epulse_feather.menu.PSRAM.enabled=QSPI PSRAM
-epulse_feather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-epulse_feather.menu.PSRAM.enabled.build.psram_type=qspi
 
 epulse_feather.menu.LoopCore.1=Core 1
 epulse_feather.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
