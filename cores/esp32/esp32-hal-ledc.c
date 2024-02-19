@@ -131,7 +131,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
 
 bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
 {
-    uint8_t free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
+    int free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels+1);
     if (free_channel == 0){
         log_e("No more LEDC channels available! (maximum is %u channels)", LEDC_CHANNELS);
         return false;
