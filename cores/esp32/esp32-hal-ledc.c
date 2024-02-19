@@ -136,7 +136,7 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution)
         log_e("No more LEDC channels available! (maximum is %u channels)", LEDC_CHANNELS);
         return false;
     }
-    uint8_t channel = log2(free_channel & -free_channel);
+    uint8_t channel = __builtin_ctz(free_channel); // Convert the free_channel bit to channel number
 
     return ledcAttachChannel(pin, freq, resolution, channel);
 }
