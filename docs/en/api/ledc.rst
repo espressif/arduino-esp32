@@ -178,7 +178,7 @@ This function is used to set inverting output for the LEDC pin.
     bool ledcOutputInvert(uint8_t pin, bool out_invert);
 
 * ``pin`` select LEDC pin.
-* ``out_invert`` select, if output should be inverted (1 = inverting output).
+* ``out_invert`` select, if output should be inverted (true = inverting output).
   
 This function returns ``true`` if setting inverting output was successful.
 If ``false`` is returned, an error occurred and the inverting output was not set.

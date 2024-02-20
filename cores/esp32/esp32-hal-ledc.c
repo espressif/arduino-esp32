@@ -64,9 +64,12 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
         log_e("Channel %u is not available (maximum %u) or already used!", channel, LEDC_CHANNELS);
         return false;
     }
-    
-    if (resolution > LEDC_MAX_BIT_WIDTH){
-        log_e("LEDC resolution too big (maximum %u)", LEDC_MAX_BIT_WIDTH);
+    if (freq == 0) {
+        log_e("LEDC pin %u - frequency can't be zero.", pin);
+        return false;
+    }
+    if (resolution == 0 || resolution > LEDC_MAX_BIT_WIDTH){
+        log_e("LEDC pin %u - resolution is zero or it is too big (maximum %u)", pin, LEDC_MAX_BIT_WIDTH);
         return false;
     }
 

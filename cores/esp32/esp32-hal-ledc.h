@@ -145,7 +145,7 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution);
  * @brief Sets inverting of the output signal for a given LEDC pin.
  * 
  * @param pin GPIO pin
- * @param out_invert select, if output should be inverted (1 = inverting output).
+ * @param out_invert select, if output should be inverted (true = inverting output).
  * 
  * @return true if output inverting was successfully set, false otherwise.
  */
