@@ -30,7 +30,7 @@ This function is used to setup LEDC pin with given frequency and resolution. LED
 
 .. code-block:: arduino
 
-    bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution, int8_t channel);
+    bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
 
 * ``pin`` select LEDC pin.
 * ``freq`` select frequency of pwm.
@@ -48,7 +48,7 @@ This function is used to setup LEDC pin with given frequency, resolution and cha
 
 .. code-block:: arduino
 
-    bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution, int8_t channel);
+    bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, int8_t channel);
 
 * ``pin`` select LEDC pin.
 * ``freq`` select frequency of pwm.
