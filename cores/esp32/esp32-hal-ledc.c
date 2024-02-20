@@ -254,9 +254,12 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution)
 {
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
-
-        if(resolution > LEDC_MAX_BIT_WIDTH){
-            log_e("LEDC resolution too big (maximum %u)", LEDC_MAX_BIT_WIDTH);
+        if (freq == 0) {
+            log_e("LEDC pin %u - frequency can't be zero.", pin);
+            return 0;
+        }
+        if (resolution == 0 || resolution > LEDC_MAX_BIT_WIDTH){
+            log_e("LEDC pin %u - resolution is zero or it is too big (maximum %u)", pin, LEDC_MAX_BIT_WIDTH);
             return 0;
         }
         uint8_t group=(bus->channel/8), timer=((bus->channel/2)%4);
