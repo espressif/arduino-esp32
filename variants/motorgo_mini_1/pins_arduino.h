@@ -6,16 +6,7 @@
 #include "soc/soc_caps.h"
 
 #define USB_VID 0x303A
-#define USB_PID 0x9001
-#define USB_MANUFACTURER "MotorGo"
-#define USB_PRODUCT "MotorGo Mini 1 (ESP32-S3)"
-#define USB_SERIAL ""  // Empty string for MAC adddress
-
-// Default USB FirmwareMSC Settings
-#define USB_FW_MSC_VENDOR_ID "MotorGo"                     // max 8 chars
-#define USB_FW_MSC_PRODUCT_ID "MotorGo Mini 1 (ESP32-S3)"  // max 16 chars
-#define USB_FW_MSC_PRODUCT_REVISION "3.00"                 // max 4 chars
-#define USB_FW_MSC_VOLUME_NAME "MotorGo"                   // max 11 chars
+#define USB_PID 0x1001
 
 #define NUM_DIGITAL_PINS 6
 #define NUM_ANALOG_INPUTS 1

@@ -26632,7 +26632,7 @@ sensebox_mcu_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 motorgo_mini_1.name=MotorGo Mini 1 (ESP32-S3)
 motorgo_mini_1.vid.0=0x303a
-motorgo_mini_1.pid.0=0x9001
+motorgo_mini_1.pid.0=0x1001
 
 motorgo_mini_1.bootloader.tool=esptool_py
 motorgo_mini_1.bootloader.tool.default=esptool_py
