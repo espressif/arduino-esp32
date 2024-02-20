@@ -368,10 +368,12 @@ bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
           argType = FPSTR(mimeTable[txt].mimeType);
           line = client.readStringUntil('\r');
           client.readStringUntil('\n');
-          if (line.length() > 12 && line.substring(0, 12).equalsIgnoreCase(FPSTR(Content_Type))){
-            argType = line.substring(line.indexOf(':')+2);
-            //skip next line
-            client.readStringUntil('\r');
+          while (line.length() > 0) {
+            if (line.length() > 12 && line.substring(0, 12).equalsIgnoreCase(FPSTR(Content_Type))){
+              argType = line.substring(line.indexOf(':')+2);
+            }
+            //skip over any other headers
+            line = client.readStringUntil('\r');
             client.readStringUntil('\n');
           }
           log_v("PostArg Type: %s", argType.c_str());
