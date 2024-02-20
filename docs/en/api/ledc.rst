@@ -34,7 +34,8 @@ This function is used to setup LEDC pin with given frequency and resolution. LED
 
 * ``pin`` select LEDC pin.
 * ``freq`` select frequency of pwm.
-* ``resolution`` select resolution for LEDC channel. 
+* ``resolution`` select resolution for LEDC channel.
+
   * range is 1-14 bits (1-20 bits for ESP32).
 
 This function will return ``true`` if configuration is successful.
@@ -51,8 +52,10 @@ This function is used to setup LEDC pin with given frequency, resolution and cha
 
 * ``pin`` select LEDC pin.
 * ``freq`` select frequency of pwm.
-* ``resolution`` select resolution for LEDC channel. 
+* ``resolution`` select resolution for LEDC channel.
+
   * range is 1-14 bits (1-20 bits for ESP32).
+
 * ``channel`` select LEDC channel.
 
 This function will return ``true`` if configuration is successful.
