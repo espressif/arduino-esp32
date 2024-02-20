@@ -16596,12 +16596,12 @@ esp32-sbc-fabgl.menu.JTAGAdapter.bridge=ESP USB Bridge
 esp32-sbc-fabgl.menu.JTAGAdapter.bridge.build.openocdscript=esp32-bridge.cfg
 esp32-sbc-fabgl.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-esp32-sbc-fabgl.menu.PSRAM.disabled=Disabled
-esp32-sbc-fabgl.menu.PSRAM.disabled.build.defines=
-esp32-sbc-fabgl.menu.PSRAM.disabled.build.extra_libs=
 esp32-sbc-fabgl.menu.PSRAM.enabled=Enabled
 esp32-sbc-fabgl.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 esp32-sbc-fabgl.menu.PSRAM.enabled.build.extra_libs=
+esp32-sbc-fabgl.menu.PSRAM.disabled=Disabled
+esp32-sbc-fabgl.menu.PSRAM.disabled.build.defines=
+esp32-sbc-fabgl.menu.PSRAM.disabled.build.extra_libs=
 
 esp32-sbc-fabgl.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32-sbc-fabgl.menu.PartitionScheme.default.build.partitions=default
