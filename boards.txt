@@ -15084,7 +15084,7 @@ esp32-poe.menu.PSRAM.disabled=Disabled (WROOM)
 esp32-poe.menu.PSRAM.disabled.build.defines=
 esp32-poe.menu.PSRAM.disabled.build.extra_libs=
 esp32-poe.menu.PSRAM.enabled=Enabled (WROVER)
-esp32-poe.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32-poe.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 esp32-poe.menu.PSRAM.enabled.build.extra_libs=
 
 esp32-poe.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -15221,7 +15221,7 @@ esp32-poe-iso.menu.PSRAM.disabled=Disabled (WROOM)
 esp32-poe-iso.menu.PSRAM.disabled.build.defines=
 esp32-poe-iso.menu.PSRAM.disabled.build.extra_libs=
 esp32-poe-iso.menu.PSRAM.enabled=Enabled (WROVER)
-esp32-poe-iso.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32-poe-iso.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 esp32-poe-iso.menu.PSRAM.enabled.build.extra_libs=
 
 esp32-poe-iso.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -16600,7 +16600,7 @@ esp32-sbc-fabgl.menu.PSRAM.disabled=Disabled
 esp32-sbc-fabgl.menu.PSRAM.disabled.build.defines=
 esp32-sbc-fabgl.menu.PSRAM.disabled.build.extra_libs=
 esp32-sbc-fabgl.menu.PSRAM.enabled=Enabled
-esp32-sbc-fabgl.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32-sbc-fabgl.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 esp32-sbc-fabgl.menu.PSRAM.enabled.build.extra_libs=
 
 esp32-sbc-fabgl.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
