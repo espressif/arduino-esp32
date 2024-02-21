@@ -26728,8 +26728,8 @@ motorgo_mini_1.menu.FlashSize.8M.build.flash_size=8MB
 motorgo_mini_1.menu.FlashSize.8M.build.partitions=default_8MB
 motorgo_mini_1.menu.FlashSize.16M=16MB (128Mb)
 motorgo_mini_1.menu.FlashSize.16M.build.flash_size=16MB
-#esp32s3.menu.FlashSize.32M=32MB (256Mb)
-#esp32s3.menu.FlashSize.32M.build.flash_size=32MB
+motorgo_mini_1.menu.FlashSize.32M=32MB (256Mb)
+motorgo_mini_1.menu.FlashSize.32M.build.flash_size=32MB
 
 motorgo_mini_1.menu.LoopCore.1=Core 1
 motorgo_mini_1.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
