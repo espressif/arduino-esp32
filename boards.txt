@@ -33620,3 +33620,114 @@ makergo_c3_supermini.menu.EraseFlash.all=Enabled
 makergo_c3_supermini.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+# ThingPulse ePulse Feather
+
+epulse_feather.name=ThingPulse ePulse Feather
+
+epulse_feather.bootloader.tool=esptool_py
+epulse_feather.bootloader.tool.default=esptool_py
+
+epulse_feather.upload.tool=esptool_py
+epulse_feather.upload.tool.default=esptool_py
+epulse_feather.upload.tool.network=esp_ota
+
+epulse_feather.upload.maximum_size=1310720
+epulse_feather.upload.maximum_data_size=327680
+epulse_feather.upload.flags=
+epulse_feather.upload.extra_flags=
+
+epulse_feather.serial.disableDTR=true
+epulse_feather.serial.disableRTS=true
+
+epulse_feather.build.tarch=xtensa
+epulse_feather.build.bootloader_addr=0x1000
+epulse_feather.build.target=esp32
+epulse_feather.build.mcu=esp32
+epulse_feather.build.core=esp32
+epulse_feather.build.variant=thingpulse_epulse_feather
+epulse_feather.build.board=THINGPULSE_EPULSE_FEATHER
+
+epulse_feather.build.f_cpu=240000000L
+epulse_feather.build.flash_size=8MB
+epulse_feather.build.flash_freq=80m
+epulse_feather.build.flash_mode=dio
+epulse_feather.build.boot=dio
+epulse_feather.build.partitions=default_8MB
+epulse_feather.build.defines=
+epulse_feather.build.loop_core=
+epulse_feather.build.event_core=
+
+epulse_feather.menu.PSRAM.enabled=Enabled
+epulse_feather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+epulse_feather.menu.PSRAM.disabled=Disabled
+epulse_feather.menu.PSRAM.disabled.build.defines=
+
+epulse_feather.menu.LoopCore.1=Core 1
+epulse_feather.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+epulse_feather.menu.LoopCore.0=Core 0
+epulse_feather.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+epulse_feather.menu.EventsCore.1=Core 1
+epulse_feather.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+epulse_feather.menu.EventsCore.0=Core 0
+epulse_feather.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+epulse_feather.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+epulse_feather.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+epulse_feather.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+epulse_feather.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
+epulse_feather.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
+epulse_feather.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+
+epulse_feather.menu.CPUFreq.240=240MHz (WiFi/BT)
+epulse_feather.menu.CPUFreq.240.build.f_cpu=240000000L
+epulse_feather.menu.CPUFreq.160=160MHz (WiFi/BT)
+epulse_feather.menu.CPUFreq.160.build.f_cpu=160000000L
+epulse_feather.menu.CPUFreq.80=80MHz (WiFi/BT)
+epulse_feather.menu.CPUFreq.80.build.f_cpu=80000000L
+epulse_feather.menu.CPUFreq.40=40MHz
+epulse_feather.menu.CPUFreq.40.build.f_cpu=40000000L
+epulse_feather.menu.CPUFreq.20=20MHz
+epulse_feather.menu.CPUFreq.20.build.f_cpu=20000000L
+epulse_feather.menu.CPUFreq.10=10MHz
+epulse_feather.menu.CPUFreq.10.build.f_cpu=10000000L
+
+epulse_feather.menu.FlashFreq.80=80MHz
+epulse_feather.menu.FlashFreq.80.build.flash_freq=80m
+epulse_feather.menu.FlashFreq.40=40MHz
+epulse_feather.menu.FlashFreq.40.build.flash_freq=40m
+
+epulse_feather.menu.UploadSpeed.921600=921600
+epulse_feather.menu.UploadSpeed.921600.upload.speed=921600
+epulse_feather.menu.UploadSpeed.115200=115200
+epulse_feather.menu.UploadSpeed.115200.upload.speed=115200
+epulse_feather.menu.UploadSpeed.256000.windows=256000
+epulse_feather.menu.UploadSpeed.256000.upload.speed=256000
+epulse_feather.menu.UploadSpeed.230400.windows.upload.speed=256000
+epulse_feather.menu.UploadSpeed.230400=230400
+epulse_feather.menu.UploadSpeed.230400.upload.speed=230400
+epulse_feather.menu.UploadSpeed.460800.linux=460800
+epulse_feather.menu.UploadSpeed.460800.macosx=460800
+epulse_feather.menu.UploadSpeed.460800.upload.speed=460800
+epulse_feather.menu.UploadSpeed.512000.windows=512000
+epulse_feather.menu.UploadSpeed.512000.upload.speed=512000
+
+epulse_feather.menu.DebugLevel.none=None
+epulse_feather.menu.DebugLevel.none.build.code_debug=0
+epulse_feather.menu.DebugLevel.error=Error
+epulse_feather.menu.DebugLevel.error.build.code_debug=1
+epulse_feather.menu.DebugLevel.warn=Warn
+epulse_feather.menu.DebugLevel.warn.build.code_debug=2
+epulse_feather.menu.DebugLevel.info=Info
+epulse_feather.menu.DebugLevel.info.build.code_debug=3
+epulse_feather.menu.DebugLevel.debug=Debug
+epulse_feather.menu.DebugLevel.debug.build.code_debug=4
+epulse_feather.menu.DebugLevel.verbose=Verbose
+epulse_feather.menu.DebugLevel.verbose.build.code_debug=5
+
+epulse_feather.menu.EraseFlash.none=Disabled
+epulse_feather.menu.EraseFlash.none.upload.erase_cmd=
+epulse_feather.menu.EraseFlash.all=Enabled
+epulse_feather.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
