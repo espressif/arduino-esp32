@@ -2706,6 +2706,158 @@ aventen_s3_sync.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+um_bling.name=UM BLING
+um_bling.vid.0=0x303a
+um_bling.pid.0=0x817F
+
+um_bling.bootloader.tool=esptool_py
+um_bling.bootloader.tool.default=esptool_py
+
+um_bling.upload.tool=esptool_py
+um_bling.upload.tool.default=esptool_py
+um_bling.upload.tool.network=esp_ota
+
+um_bling.upload.maximum_size=1310720
+um_bling.upload.maximum_data_size=327680
+um_bling.upload.flags=
+um_bling.upload.extra_flags=
+um_bling.upload.use_1200bps_touch=false
+um_bling.upload.wait_for_upload_port=false
+
+um_bling.serial.disableDTR=false
+um_bling.serial.disableRTS=false
+
+um_bling.build.tarch=xtensa
+um_bling.build.bootloader_addr=0x0
+um_bling.build.target=esp32s3
+um_bling.build.mcu=esp32s3
+um_bling.build.core=esp32
+um_bling.build.variant=um_bling
+um_bling.build.board=BLING
+
+um_bling.build.usb_mode=1
+um_bling.build.cdc_on_boot=0
+um_bling.build.msc_on_boot=0
+um_bling.build.dfu_on_boot=0
+um_bling.build.f_cpu=240000000L
+um_bling.build.flash_size=8MB
+um_bling.build.flash_freq=80m
+um_bling.build.flash_mode=dio
+um_bling.build.boot=qio
+um_bling.build.partitions=default
+um_bling.build.defines=
+um_bling.build.loop_core=
+um_bling.build.event_core=
+um_bling.build.flash_type=qio
+um_bling.build.psram_type=qspi
+um_bling.build.memory_type=qio_qspi
+
+um_bling.menu.LoopCore.1=Core 1
+um_bling.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+um_bling.menu.LoopCore.0=Core 0
+um_bling.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+um_bling.menu.EventsCore.1=Core 1
+um_bling.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+um_bling.menu.EventsCore.0=Core 0
+um_bling.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+um_bling.menu.USBMode.hwcdc=Hardware CDC and JTAG
+um_bling.menu.USBMode.hwcdc.build.usb_mode=1
+um_bling.menu.USBMode.default=USB-OTG (TinyUSB)
+um_bling.menu.USBMode.default.build.usb_mode=0
+
+um_bling.menu.CDCOnBoot.cdc=Enabled
+um_bling.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+um_bling.menu.CDCOnBoot.default=Disabled
+um_bling.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+um_bling.menu.MSCOnBoot.default=Disabled
+um_bling.menu.MSCOnBoot.default.build.msc_on_boot=0
+um_bling.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+um_bling.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+um_bling.menu.DFUOnBoot.default=Disabled
+um_bling.menu.DFUOnBoot.default.build.dfu_on_boot=0
+um_bling.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+um_bling.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+um_bling.menu.UploadMode.default=UART0 / Hardware CDC
+um_bling.menu.UploadMode.default.upload.use_1200bps_touch=false
+um_bling.menu.UploadMode.default.upload.wait_for_upload_port=false
+um_bling.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_bling.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+um_bling.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+um_bling.menu.PSRAM.enabled=Enabled
+um_bling.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_bling.menu.PSRAM.disabled=Disabled
+um_bling.menu.PSRAM.disabled.build.defines=
+
+um_bling.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+um_bling.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+um_bling.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+um_bling.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/3.7MB FFAT)
+um_bling.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+um_bling.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions_tinyuf2
+um_bling.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+um_bling.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+
+um_bling.menu.CPUFreq.240=240MHz (WiFi)
+um_bling.menu.CPUFreq.240.build.f_cpu=240000000L
+um_bling.menu.CPUFreq.160=160MHz (WiFi)
+um_bling.menu.CPUFreq.160.build.f_cpu=160000000L
+um_bling.menu.CPUFreq.80=80MHz (WiFi)
+um_bling.menu.CPUFreq.80.build.f_cpu=80000000L
+um_bling.menu.CPUFreq.40=40MHz
+um_bling.menu.CPUFreq.40.build.f_cpu=40000000L
+um_bling.menu.CPUFreq.20=20MHz
+um_bling.menu.CPUFreq.20.build.f_cpu=20000000L
+um_bling.menu.CPUFreq.10=10MHz
+um_bling.menu.CPUFreq.10.build.f_cpu=10000000L
+
+um_bling.menu.FlashMode.qio=QIO
+um_bling.menu.FlashMode.qio.build.flash_mode=dio
+um_bling.menu.FlashMode.qio.build.boot=qio
+um_bling.menu.FlashMode.dio=DIO
+um_bling.menu.FlashMode.dio.build.flash_mode=dio
+um_bling.menu.FlashMode.dio.build.boot=dio
+
+um_bling.menu.UploadSpeed.921600=921600
+um_bling.menu.UploadSpeed.921600.upload.speed=921600
+um_bling.menu.UploadSpeed.115200=115200
+um_bling.menu.UploadSpeed.115200.upload.speed=115200
+um_bling.menu.UploadSpeed.256000.windows=256000
+um_bling.menu.UploadSpeed.256000.upload.speed=256000
+um_bling.menu.UploadSpeed.230400.windows.upload.speed=256000
+um_bling.menu.UploadSpeed.230400=230400
+um_bling.menu.UploadSpeed.230400.upload.speed=230400
+um_bling.menu.UploadSpeed.460800.linux=460800
+um_bling.menu.UploadSpeed.460800.macosx=460800
+um_bling.menu.UploadSpeed.460800.upload.speed=460800
+um_bling.menu.UploadSpeed.512000.windows=512000
+um_bling.menu.UploadSpeed.512000.upload.speed=512000
+
+um_bling.menu.DebugLevel.none=None
+um_bling.menu.DebugLevel.none.build.code_debug=0
+um_bling.menu.DebugLevel.error=Error
+um_bling.menu.DebugLevel.error.build.code_debug=1
+um_bling.menu.DebugLevel.warn=Warn
+um_bling.menu.DebugLevel.warn.build.code_debug=2
+um_bling.menu.DebugLevel.info=Info
+um_bling.menu.DebugLevel.info.build.code_debug=3
+um_bling.menu.DebugLevel.debug=Debug
+um_bling.menu.DebugLevel.debug.build.code_debug=4
+um_bling.menu.DebugLevel.verbose=Verbose
+um_bling.menu.DebugLevel.verbose.build.code_debug=5
+
+um_bling.menu.EraseFlash.none=Disabled
+um_bling.menu.EraseFlash.none.upload.erase_cmd=
+um_bling.menu.EraseFlash.all=Enabled
+um_bling.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 um_feathers2.name=UM FeatherS2
 um_feathers2.vid.0=0x239A
 um_feathers2.pid.0=0x80AB
@@ -3024,7 +3176,7 @@ um_feathers3.build.variant=um_feathers3
 um_feathers3.build.board=FEATHERS3
 
 um_feathers3.build.usb_mode=1
-um_feathers3.build.cdc_on_boot=0
+um_feathers3.build.cdc_on_boot=1
 um_feathers3.build.msc_on_boot=0
 um_feathers3.build.dfu_on_boot=0
 um_feathers3.build.f_cpu=240000000L
@@ -3050,10 +3202,10 @@ um_feathers3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 um_feathers3.menu.EventsCore.0=Core 0
 um_feathers3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-um_feathers3.menu.USBMode.default=USB-OTG (TinyUSB)
-um_feathers3.menu.USBMode.default.build.usb_mode=0
 um_feathers3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 um_feathers3.menu.USBMode.hwcdc.build.usb_mode=1
+um_feathers3.menu.USBMode.default=USB-OTG (TinyUSB)
+um_feathers3.menu.USBMode.default.build.usb_mode=0
 
 um_feathers3.menu.CDCOnBoot.cdc=Enabled
 um_feathers3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -3070,10 +3222,10 @@ um_feathers3.menu.DFUOnBoot.default.build.dfu_on_boot=0
 um_feathers3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 um_feathers3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-um_feathers3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
-um_feathers3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_feathers3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 um_feathers3.menu.UploadMode.default=UART0 / Hardware CDC
+um_feathers3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_feathers3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_feathers3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_feathers3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
@@ -3185,7 +3337,7 @@ um_nanos3.build.variant=um_nanos3
 um_nanos3.build.board=NANOS3
 
 um_nanos3.build.usb_mode=1
-um_nanos3.build.cdc_on_boot=0
+um_nanos3.build.cdc_on_boot=1
 um_nanos3.build.msc_on_boot=0
 um_nanos3.build.dfu_on_boot=0
 um_nanos3.build.f_cpu=240000000L
@@ -3211,10 +3363,10 @@ um_nanos3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 um_nanos3.menu.EventsCore.0=Core 0
 um_nanos3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-um_nanos3.menu.USBMode.default=USB-OTG (TinyUSB)
-um_nanos3.menu.USBMode.default.build.usb_mode=0
 um_nanos3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 um_nanos3.menu.USBMode.hwcdc.build.usb_mode=1
+um_nanos3.menu.USBMode.default=USB-OTG (TinyUSB)
+um_nanos3.menu.USBMode.default.build.usb_mode=0
 
 um_nanos3.menu.CDCOnBoot.cdc=Enabled
 um_nanos3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -3231,10 +3383,10 @@ um_nanos3.menu.DFUOnBoot.default.build.dfu_on_boot=0
 um_nanos3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 um_nanos3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-um_nanos3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
-um_nanos3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_nanos3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 um_nanos3.menu.UploadMode.default=UART0 / Hardware CDC
+um_nanos3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_nanos3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_nanos3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_nanos3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
@@ -3337,7 +3489,7 @@ um_pros3.build.variant=um_pros3
 um_pros3.build.board=PROS3
 
 um_pros3.build.usb_mode=1
-um_pros3.build.cdc_on_boot=0
+um_pros3.build.cdc_on_boot=1
 um_pros3.build.msc_on_boot=0
 um_pros3.build.dfu_on_boot=0
 um_pros3.build.f_cpu=240000000L
@@ -3363,10 +3515,10 @@ um_pros3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 um_pros3.menu.EventsCore.0=Core 0
 um_pros3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-um_pros3.menu.USBMode.default=USB-OTG (TinyUSB)
-um_pros3.menu.USBMode.default.build.usb_mode=0
 um_pros3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 um_pros3.menu.USBMode.hwcdc.build.usb_mode=1
+um_pros3.menu.USBMode.default=USB-OTG (TinyUSB)
+um_pros3.menu.USBMode.default.build.usb_mode=0
 
 um_pros3.menu.CDCOnBoot.cdc=Enabled
 um_pros3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -3383,10 +3535,10 @@ um_pros3.menu.DFUOnBoot.default.build.dfu_on_boot=0
 um_pros3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 um_pros3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-um_pros3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
-um_pros3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_pros3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 um_pros3.menu.UploadMode.default=UART0 / Hardware CDC
+um_pros3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_pros3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_pros3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_pros3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
@@ -3993,7 +4145,7 @@ um_tinys3.build.variant=um_tinys3
 um_tinys3.build.board=TINYS3
 
 um_tinys3.build.usb_mode=1
-um_tinys3.build.cdc_on_boot=0
+um_tinys3.build.cdc_on_boot=1
 um_tinys3.build.msc_on_boot=0
 um_tinys3.build.dfu_on_boot=0
 um_tinys3.build.f_cpu=240000000L
@@ -4019,10 +4171,10 @@ um_tinys3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 um_tinys3.menu.EventsCore.0=Core 0
 um_tinys3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-um_tinys3.menu.USBMode.default=USB-OTG (TinyUSB)
-um_tinys3.menu.USBMode.default.build.usb_mode=0
 um_tinys3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 um_tinys3.menu.USBMode.hwcdc.build.usb_mode=1
+um_tinys3.menu.USBMode.default=USB-OTG (TinyUSB)
+um_tinys3.menu.USBMode.default.build.usb_mode=0
 
 um_tinys3.menu.CDCOnBoot.cdc=Enabled
 um_tinys3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -4039,10 +4191,10 @@ um_tinys3.menu.DFUOnBoot.default.build.dfu_on_boot=0
 um_tinys3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 um_tinys3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-um_tinys3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
-um_tinys3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_tinys3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 um_tinys3.menu.UploadMode.default=UART0 / Hardware CDC
+um_tinys3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_tinys3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_tinys3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_tinys3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
