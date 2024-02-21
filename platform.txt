@@ -118,8 +118,8 @@ compiler.size.cmd={compiler.prefix}size
 compiler.warning_flags=-w
 compiler.warning_flags.none=-w
 compiler.warning_flags.default=
-compiler.warning_flags.more=-Wall -Werror=all
-compiler.warning_flags.all=-Wall -Werror=all -Wextra
+compiler.warning_flags.more=-Wall
+compiler.warning_flags.all=-Wall -Wextra
 
 # These can be overridden in platform.local.txt
 compiler.c.extra_flags=
