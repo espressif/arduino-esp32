@@ -33,6 +33,15 @@ void setup()
 {
   Serial.begin(115200);
 
+  // First step is to configure WiFi STA and connect in order to get the current time and date.
+  Serial.printf("Connecting to %s ", ssid);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+  }
+  Serial.println(" CONNECTED");
+
   // set notification call-back function
   sntp_set_time_sync_notification_cb( timeavailable );
 
@@ -59,16 +68,6 @@ void setup()
    * A list of rules for your zone could be obtained from https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h
    */
   //configTzTime(time_zone, ntpServer1, ntpServer2);
-
-  //connect to WiFi
-  Serial.printf("Connecting to %s ", ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-  }
-  Serial.println(" CONNECTED");
-
 }
 
 void loop()
