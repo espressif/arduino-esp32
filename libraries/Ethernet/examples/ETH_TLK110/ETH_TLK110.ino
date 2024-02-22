@@ -5,12 +5,14 @@
 
 #include <ETH.h>
 
-#define ETH_TYPE            ETH_PHY_TLK110
-#define ETH_ADDR            31
-#define ETH_MDC_PIN         23
-#define ETH_MDIO_PIN        18
-#define ETH_POWER_PIN       17
+#ifndef ETH_PHY_TYPE
+#define ETH_PHY_TYPE        ETH_PHY_TLK110
+#define ETH_PHY_ADDR        31
+#define ETH_PHY_MDC         23
+#define ETH_PHY_MDIO        18
+#define ETH_PHY_POWER       17
 #define ETH_CLK_MODE        ETH_CLOCK_GPIO0_IN
+#endif
 
 static bool eth_connected = false;
 
@@ -72,8 +74,8 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
-  Network.onEvent(onEvent); // Will call onEvent in another thread
-  ETH.begin(ETH_TYPE, ETH_ADDR, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_POWER_PIN, ETH_CLK_MODE);
+  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
+  ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_MDC, ETH_PHY_MDIO, ETH_PHY_POWER, ETH_CLK_MODE);
 }
 
 

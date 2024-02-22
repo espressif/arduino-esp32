@@ -27,11 +27,13 @@ static bool sigmaDeltaDetachBus(void * bus){
 bool sigmaDeltaAttach(uint8_t pin, uint32_t freq) //freq 1220-312500
 {
     perimanSetBusDeinit(ESP32_BUS_TYPE_SIGMADELTA, sigmaDeltaDetachBus);
-    sdm_channel_handle_t bus = (sdm_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
-    if(bus != NULL && !perimanClearPinBus(pin)){
+    sdm_channel_handle_t bus = NULL;
+    // pin may be previously attached to other peripheral -> detach it.
+    // if attached to sigmaDelta, detach it and set the new frequency
+    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT && !perimanClearPinBus(pin)){
+        log_e("Pin %u could not be detached.", pin);
         return false;
     }
-    bus = NULL;
     sdm_config_t config = {
         .gpio_num = (int)pin,
         .clk_src = SDM_CLK_SRC_DEFAULT,

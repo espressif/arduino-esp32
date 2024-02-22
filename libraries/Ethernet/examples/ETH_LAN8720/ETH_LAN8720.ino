@@ -5,12 +5,14 @@
 
 // Important to be defined BEFORE including ETH.h for ETH.begin() to work.
 // Example RMII LAN8720 (Olimex, etc.)
+#ifndef ETH_PHY_TYPE
 #define ETH_PHY_TYPE        ETH_PHY_LAN8720
 #define ETH_PHY_ADDR         0
 #define ETH_PHY_MDC         23
 #define ETH_PHY_MDIO        18
 #define ETH_PHY_POWER       -1
 #define ETH_CLK_MODE        ETH_CLOCK_GPIO0_IN
+#endif
 
 #include <ETH.h>
 

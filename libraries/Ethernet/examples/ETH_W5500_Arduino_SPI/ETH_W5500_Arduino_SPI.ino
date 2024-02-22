@@ -9,24 +9,28 @@
 // Set this to 1 to enable dual Ethernet support
 #define USE_TWO_ETH_PORTS 0
 
-#define ETH_TYPE        ETH_PHY_W5500
-#define ETH_ADDR         1
-#define ETH_CS          15
-#define ETH_IRQ          4
-#define ETH_RST          5
+#ifndef ETH_PHY_TYPE
+#define ETH_PHY_TYPE        ETH_PHY_W5500
+#define ETH_PHY_ADDR         1
+#define ETH_PHY_CS          15
+#define ETH_PHY_IRQ          4
+#define ETH_PHY_RST          5
+#endif
 
 // SPI pins
-#define ETH_SPI_SCK     14
-#define ETH_SPI_MISO    12
-#define ETH_SPI_MOSI    13
+#define ETH_SPI_SCK         14
+#define ETH_SPI_MISO        12
+#define ETH_SPI_MOSI        13
 
 #if USE_TWO_ETH_PORTS
 // Second port on shared SPI bus
-#define ETH1_TYPE        ETH_PHY_W5500
-#define ETH1_ADDR         1
-#define ETH1_CS          32
-#define ETH1_IRQ         33
-#define ETH1_RST         18
+#ifndef ETH1_PHY_TYPE
+#define ETH1_PHY_TYPE        ETH_PHY_W5500
+#define ETH1_PHY_ADDR         1
+#define ETH1_PHY_CS          32
+#define ETH1_PHY_IRQ         33
+#define ETH1_PHY_RST         18
+#endif
 ETHClass ETH1(1);
 #endif
 
@@ -94,9 +98,9 @@ void setup()
   Network.onEvent(onEvent);
 
   SPI.begin(ETH_SPI_SCK, ETH_SPI_MISO, ETH_SPI_MOSI);
-  ETH.begin(ETH_TYPE, ETH_ADDR, ETH_CS, ETH_IRQ, ETH_RST, SPI);
+  ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, SPI);
 #if USE_TWO_ETH_PORTS
-  ETH1.begin(ETH1_TYPE, ETH1_ADDR, ETH1_CS, ETH1_IRQ, ETH1_RST, SPI);
+  ETH1.begin(ETH1_PHY_TYPE, ETH1_PHY_ADDR, ETH1_PHY_CS, ETH1_PHY_IRQ, ETH1_PHY_RST, SPI);
 #endif
 }
 

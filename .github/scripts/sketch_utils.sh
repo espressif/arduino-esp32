@@ -161,6 +161,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 --fqbn "$currfqbn" \
                 --board-options "$curroptions" \
                 --warnings "all" \
+                --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
                 --build-cache-path "$ARDUINO_CACHE_DIR" \
                 --build-path "$build_dir" \
                 $xtra_opts "${sketchdir}"
