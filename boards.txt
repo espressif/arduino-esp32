@@ -14249,8 +14249,9 @@ nodemcu-32s.menu.FlashFreq.80.build.flash_freq=80m
 nodemcu-32s.menu.FlashFreq.40=40MHz
 nodemcu-32s.menu.FlashFreq.40.build.flash_freq=40m
 
-nodemcu-32s.menu.UploadSpeed.921600=921600
-nodemcu-32s.menu.UploadSpeed.921600.upload.speed=921600
+nodemcu-32s.menu.UploadSpeed.460800.linux=460800
+nodemcu-32s.menu.UploadSpeed.460800.macosx=460800
+nodemcu-32s.menu.UploadSpeed.460800.upload.speed=460800
 nodemcu-32s.menu.UploadSpeed.115200=115200
 nodemcu-32s.menu.UploadSpeed.115200.upload.speed=115200
 nodemcu-32s.menu.UploadSpeed.256000.windows=256000
@@ -14258,11 +14259,10 @@ nodemcu-32s.menu.UploadSpeed.256000.upload.speed=256000
 nodemcu-32s.menu.UploadSpeed.230400.windows.upload.speed=256000
 nodemcu-32s.menu.UploadSpeed.230400=230400
 nodemcu-32s.menu.UploadSpeed.230400.upload.speed=230400
-nodemcu-32s.menu.UploadSpeed.460800.linux=460800
-nodemcu-32s.menu.UploadSpeed.460800.macosx=460800
-nodemcu-32s.menu.UploadSpeed.460800.upload.speed=460800
 nodemcu-32s.menu.UploadSpeed.512000.windows=512000
 nodemcu-32s.menu.UploadSpeed.512000.upload.speed=512000
+nodemcu-32s.menu.UploadSpeed.921600=921600
+nodemcu-32s.menu.UploadSpeed.921600.upload.speed=921600
 
 nodemcu-32s.menu.DebugLevel.none=None
 nodemcu-32s.menu.DebugLevel.none.build.code_debug=0
