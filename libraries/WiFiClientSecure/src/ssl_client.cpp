@@ -55,8 +55,7 @@ void ssl_init(sslclient_context *ssl_client)
 
 int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_t port, const char* hostname, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos)
 {
-    char buf[512];
-    int ret, flags;
+    int ret;
     int enable = 1;
     log_v("Free internal heap before TLS %u", ESP.getFreeHeap());
 
@@ -226,6 +225,9 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_
         return -1;
     }
 
+    // Note - this check for BOTH key and cert is relied on
+    // later during cleanup.
+    
     if (!insecure && cli_cert != NULL && cli_key != NULL) {
         mbedtls_x509_crt_init(&ssl_client->client_cert);
         mbedtls_pk_init(&ssl_client->client_key);
@@ -267,6 +269,13 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_
     }
 
     mbedtls_ssl_set_bio(&ssl_client->ssl_ctx, &ssl_client->socket, mbedtls_net_send, mbedtls_net_recv, NULL );
+    return ssl_client->socket;
+}
+
+int ssl_starttls_handshake(sslclient_context *ssl_client)
+{
+    char buf[512];
+    int ret, flags;
 
     log_v("Performing the SSL/TLS handshake...");
     unsigned long handshake_start_time=millis();
@@ -280,7 +289,7 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_
     }
 
 
-    if (cli_cert != NULL && cli_key != NULL) {
+    if (ssl_client->client_cert.version) {
         log_d("Protocol is %s Ciphersuite is %s", mbedtls_ssl_get_version(&ssl_client->ssl_ctx), mbedtls_ssl_get_ciphersuite(&ssl_client->ssl_ctx));
         if ((ret = mbedtls_ssl_get_record_expansion(&ssl_client->ssl_ctx)) >= 0) {
             log_d("Record expansion is %d", ret);
@@ -300,15 +309,16 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_
         log_v("Certificate verified.");
     }
     
-    if (rootCABuff != NULL) {
+    if (ssl_client->ca_cert.version) {
         mbedtls_x509_crt_free(&ssl_client->ca_cert);
     }
 
-    if (cli_cert != NULL) {
+    // We know that we always have a client cert/key pair -- and we
+    // cannot look into the private client_key pk struct for newer
+    // versions of mbedtls. So rely on a public field of the cert
+    // and infer that there is a key too.
+    if (ssl_client->client_cert.version) {
         mbedtls_x509_crt_free(&ssl_client->client_cert);
-    }
-
-    if (cli_key != NULL) {
         mbedtls_pk_free(&ssl_client->client_key);
     }    
 
@@ -316,7 +326,6 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_
 
     return ssl_client->socket;
 }
-
 
 void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, const char *cli_cert, const char *cli_key)
 {
@@ -328,13 +337,13 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     }
 
     // avoid memory leak if ssl connection attempt failed
-    //if (ssl_client->ssl_conf.ca_chain != NULL) {
+    // if (ssl_client->ssl_conf.ca_chain != NULL) {
         mbedtls_x509_crt_free(&ssl_client->ca_cert);
-    //}
-    //if (ssl_client->ssl_conf.key_cert != NULL) {
+    // }
+    // if (ssl_client->ssl_conf.key_cert != NULL) {
         mbedtls_x509_crt_free(&ssl_client->client_cert);
         mbedtls_pk_free(&ssl_client->client_key);
-    //}
+    // }
     mbedtls_ssl_free(&ssl_client->ssl_ctx);
     mbedtls_ssl_config_free(&ssl_client->ssl_conf);
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);
@@ -368,10 +377,8 @@ int data_to_read(sslclient_context *ssl_client)
 
 int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len)
 {
-    log_v("Writing HTTP request with %d bytes...", len); //for low level debug
-    int ret = -1;
-
     unsigned long write_start_time=millis();
+    int ret = -1;
 
     while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
         if((millis()-write_start_time)>ssl_client->socket_timeout) {
@@ -391,14 +398,60 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
     return ret;
 }
 
+// Some protocols, such as SMTP, XMPP, MySQL/Posgress and various others
+// do a 'in-line' upgrade from plaintext to SSL or TLS (usually with some
+// sort of 'STARTTLS' textual command from client to sever). For this
+// we need to have access to the 'raw' socket; i.e. without TLS/SSL state
+// handling before the handshake starts; but after setting up the TLS
+// connection.
+//
+int peek_net_receive(sslclient_context *ssl_client, int timeout) {
+#if MBEDTLS_FIXED_LINKING_NET_POLL
+    int ret = mbedtls_net_poll((mbedtls_net_context*)ssl_client, MBEDTLS_NET_POLL_READ, timeout);
+    ret == MBEDTLS_NET_POLL_READ ? 1 : ret;
+#else
+    // We should be using mbedtls_net_poll(); which is part of mbedtls and
+    // included in the EspressifSDK. Unfortunately - it did not make it into
+    // the statically linked library file. So, for now, we replace it by
+    // substancially similar code.
+    //
+    struct timeval tv = { .tv_sec = timeout / 1000, .tv_usec = (timeout % 1000) * 1000 };
+
+    fd_set fdset;
+    FD_SET(ssl_client->socket, &fdset);
+
+    int ret = select(ssl_client->socket + 1, &fdset, nullptr, nullptr, timeout<0 ? nullptr : &tv);
+    if (ret < 0) {
+        log_e("select on read fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
+        lwip_close(ssl_client->socket);
+        ssl_client->socket = -1;
+        return -1;
+    };
+#endif
+    return ret;
+};
+
+int get_net_receive(sslclient_context *ssl_client, uint8_t *data, int length)
+{
+   int ret = peek_net_receive(ssl_client,ssl_client->socket_timeout);
+   if (ret > 0)
+	ret = mbedtls_net_recv(ssl_client, data, length);
+
+    // log_v( "%d bytes NET read of %d", ret, length);   //for low level debug
+    return ret;
+}
+
+int send_net_data(sslclient_context *ssl_client, const uint8_t *data, size_t len) {
+    int ret = mbedtls_net_send(ssl_client, data, len);
+    // log_v("Net sending %d btes->ret %d", len, ret); //for low level debug
+    return ret;
+}
+
+
 int get_ssl_receive(sslclient_context *ssl_client, uint8_t *data, int length)
 {
-    //log_d( "Reading HTTP response...");   //for low level debug
-    int ret = -1;
-
-    ret = mbedtls_ssl_read(&ssl_client->ssl_ctx, data, length);
-
-    //log_v( "%d bytes read", ret);   //for low level debug
+    int ret = mbedtls_ssl_read(&ssl_client->ssl_ctx, data, length);
+    // log_v( "%d bytes SSL read", ret);   //for low level debug
     return ret;
 }
 

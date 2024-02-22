@@ -63,8 +63,10 @@ New APIs
 ********
 
 * ``ledcAttach`` used to set up the LEDC pin (merged ``ledcSetup`` and ``ledcAttachPin`` functions).
-* ``timerGetFrequency`` used to get the actual frequency of the timer.
-* ``timerAttachInterruptArg`` used to attach the interrupt to a timer using arguments.
+* ``ledcOutputInvert`` used to attach the interrupt to a timer using arguments.
+* ``ledcFade`` used to set up and start a fade on a given LEDC pin.
+* ``ledcFadeWithInterrupt`` used to set up and start a fade on a given LEDC pin with an interrupt.
+* ``ledcFadeWithInterruptArg`` used to set up and start a fade on a given LEDC pin with an interrupt using arguments.
 
 Changes in APIs
 ***************
@@ -90,6 +92,7 @@ Removed APIs
 New APIs
 ********
 
+* ``rmtSetEOT``
 * ``rmtWriteAsync``
 * ``rmtTransmitCompleted``
 * ``rmtSetRxMinThreshold``

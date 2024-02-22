@@ -28,7 +28,6 @@
 #include "BTScan.h"
 #include "BTAdvertisedDevice.h"
 
-
 typedef std::function<void(const uint8_t *buffer, size_t size)> BluetoothSerialDataCb;
 typedef std::function<void(uint32_t num_val)> ConfirmRequestCb;
 typedef std::function<void()> KeyRequestCb;
@@ -57,7 +56,7 @@ class BluetoothSerial: public Stream
         void memrelease();
         void setTimeout(int timeoutMS);
         void onData(BluetoothSerialDataCb cb);
-        esp_err_t register_callback(esp_spp_cb_t * callback);
+        esp_err_t register_callback(esp_spp_cb_t callback);
         
 #ifdef CONFIG_BT_SSP_ENABLED
         void onConfirmRequest(ConfirmRequestCb cb);
