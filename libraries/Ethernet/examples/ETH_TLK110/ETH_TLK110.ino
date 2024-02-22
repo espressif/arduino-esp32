@@ -74,7 +74,7 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
-  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
+  Network.onEvent(onEvent);  // Will call onEvent() from another thread.
   ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_MDC, ETH_PHY_MDIO, ETH_PHY_POWER, ETH_CLK_MODE);
 }
 
