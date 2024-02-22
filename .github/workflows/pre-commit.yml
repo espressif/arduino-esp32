@@ -16,10 +16,15 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: "3.x"
+
+      - name: Get Python version hash
+        run: |
+          echo "Using $(python -VV)"
+          echo "PY_HASH=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
 
       - name: Restore pre-commit cache
         uses: actions/cache/restore@v4
@@ -28,7 +33,7 @@ jobs:
           path: |
             ~/.cache/pre-commit
             ~/.cache/pip
-          key: pre-commit|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}|${{ hashFiles('.github/workflows/pre-commit.yml') }}
+          key: pre-commit|${{ env.PY_HASH }}|${{ hashFiles('.pre-commit-config.yaml') }}|${{ hashFiles('.github/workflows/pre-commit.yml') }}
 
       - name: Install python dependencies
         run: python -m pip install pre-commit docutils
