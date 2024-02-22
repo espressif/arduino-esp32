@@ -12,6 +12,14 @@
  * 
  */
 
+#ifndef ARDUINO_USB_MODE
+#error This ESP32 SoC has no Native USB interface
+#elif ARDUINO_USB_MODE == 0
+#warning This sketch should be used when USB is in Hardware CDC and JTAG mode
+void setup(){}
+void loop(){}
+#else
+
 // USB Event Callback Function that will log CDC events into UART0
 static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   if (event_base == ARDUINO_HW_CDC_EVENTS) {
@@ -58,3 +66,4 @@ void loop() {
   while (Serial0.available()) HWCDCSerial.write(Serial0.read());
   delay(1000);
 }
+#endif
