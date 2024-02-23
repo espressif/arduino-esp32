@@ -4,8 +4,12 @@
 #include <stdint.h>
 
 #if	defined (ARDUINO_ESP32_GATEWAY_E) || defined (ARDUINO_ESP32_GATEWAY_F)
-#define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
-#define ETH_PHY_POWER 5
+#define ETH_PHY_TYPE        ETH_PHY_LAN8720
+#define ETH_PHY_ADDR         0
+#define ETH_PHY_MDC         23
+#define ETH_PHY_MDIO        18
+#define ETH_PHY_POWER        5
+#define ETH_CLK_MODE        ETH_CLOCK_GPIO17_OUT
 #endif
 
 static const uint8_t LED_BUILTIN = 33;
