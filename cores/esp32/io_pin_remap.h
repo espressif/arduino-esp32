@@ -53,14 +53,16 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
 #define i2cSlaveInit(num, sda, scl, slaveID, frequency, rx_len, tx_len)     i2cSlaveInit(num, digitalPinToGPIONumber(sda), digitalPinToGPIONumber(scl), slaveID, frequency, rx_len, tx_len)
 
 // cores/esp32/esp32-hal-ledc.h
-#define ledcAttach(pin, freq, resolution)           ledcAttach(digitalPinToGPIONumber(pin), freq, resolution)
-#define ledcWrite(pin, duty)                        ledcWrite(digitalPinToGPIONumber(pin), duty)
-#define ledcWriteTone(pin, freq)                    ledcWriteTone(digitalPinToGPIONumber(pin), freq)
-#define ledcWriteNote(pin, note, octave)            ledcWriteNote(digitalPinToGPIONumber(pin), note, octave)
-#define ledcRead(pin)                               ledcRead(digitalPinToGPIONumber(pin))
-#define ledcReadFreq(pin)                           ledcReadFreq(digitalPinToGPIONumber(pin))
-#define ledcDetach(pin)                             ledcDetach(digitalPinToGPIONumber(pin))
-#define ledcChangeFrequency(pin, freq, resolution)  ledcChangeFrequency(digitalPinToGPIONumber(pin), freq, resolution)
+#define ledcAttach(pin, freq, resolution)                       ledcAttach(digitalPinToGPIONumber(pin), freq, resolution)
+#define ledcAttachChannel(pin, freq, resolution, channel)       ledcAttachChannel(digitalPinToGPIONumber(pin), freq, resolution, channel)
+#define ledcWrite(pin, duty)                                    ledcWrite(digitalPinToGPIONumber(pin), duty)
+#define ledcWriteTone(pin, freq)                                ledcWriteTone(digitalPinToGPIONumber(pin), freq)
+#define ledcWriteNote(pin, note, octave)                        ledcWriteNote(digitalPinToGPIONumber(pin), note, octave)
+#define ledcRead(pin)                                           ledcRead(digitalPinToGPIONumber(pin))
+#define ledcReadFreq(pin)                                       ledcReadFreq(digitalPinToGPIONumber(pin))
+#define ledcDetach(pin)                                         ledcDetach(digitalPinToGPIONumber(pin))
+#define ledcChangeFrequency(pin, freq, resolution)              ledcChangeFrequency(digitalPinToGPIONumber(pin), freq, resolution)
+#define ledcOutputInvert(pin, out_invert)                       ledcOutputInvert(digitalPinToGPIONumber(pin), out_invert)
 
 #define ledcFade(pin, start_duty, target_duty, max_fade_time_ms)                                ledcFade(digitalPinToGPIONumber(pin), start_duty, target_duty, max_fade_time_ms)
 #define ledcFadeWithInterrupt(pin, start_duty, target_duty, max_fade_time_ms, userFunc)         ledcFadeWithInterrupt(digitalPinToGPIONumber(pin), start_duty, target_duty, max_fade_time_ms, userFunc)
@@ -76,6 +78,7 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
 
 // cores/esp32/esp32-hal-rmt.h
 #define rmtInit(pin, channel_direction, memsize, frequency_Hz)                      rmtInit(digitalPinToGPIONumber(pin), channel_direction, memsize, frequency_Hz)
+#define rmtSetEOT(pin, EOT_Level)                                                   rmtSetEOT(digitalPinToGPIONumber(pin), EOT_Level) 
 #define rmtWrite(pin, data, num_rmt_symbols, timeout_ms)                            rmtWrite(digitalPinToGPIONumber(pin), data, num_rmt_symbols, timeout_ms)
 #define rmtWriteAsync(pin, data, num_rmt_symbols)                                   rmtWriteAsync(digitalPinToGPIONumber(pin), data, num_rmt_symbols)
 #define rmtWriteLooping(pin, data, num_rmt_symbols)                                 rmtWriteLooping(digitalPinToGPIONumber(pin), data, num_rmt_symbols)
