@@ -2,7 +2,7 @@
 #define Pins_Arduino_h
 
 /**
- * Variant: WT32-ETH01
+ * Variant: WT32-SC01 PLUS
  * Vendor: Wireless-Tag
  * Url: http://www.wireless-tag.com/portfolio/wt32-eth01/
  */
