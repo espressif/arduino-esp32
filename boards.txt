@@ -34360,3 +34360,135 @@ epulse_feather.menu.EraseFlash.all=Enabled
 epulse_feather.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+Geekble_ESP32C3.name=Geekble ESP32-C3
+Geekble_ESP32C3.vid.0=0x303A
+Geekble_ESP32C3.pid.0=0x1001
+
+Geekble_ESP32C3.bootloader.tool=esptool_py
+Geekble_ESP32C3.bootloader.tool.default=esptool_py
+
+Geekble_ESP32C3.upload.tool=esptool_py
+Geekble_ESP32C3.upload.tool.default=esptool_py
+Geekble_ESP32C3.upload.tool.network=esp_ota
+
+Geekble_ESP32C3.upload.maximum_size=1310720
+Geekble_ESP32C3.upload.maximum_data_size=327680
+Geekble_ESP32C3.upload.flags=
+Geekble_ESP32C3.upload.extra_flags=
+Geekble_ESP32C3.upload.use_1200bps_touch=false
+Geekble_ESP32C3.upload.wait_for_upload_port=false
+
+Geekble_ESP32C3.serial.disableDTR=true
+Geekble_ESP32C3.serial.disableRTS=true
+
+Geekble_ESP32C3.build.tarch=riscv32
+Geekble_ESP32C3.build.target=esp
+Geekble_ESP32C3.build.mcu=esp32c3
+Geekble_ESP32C3.build.core=esp32
+Geekble_ESP32C3.build.variant=Geekble_ESP32C3
+Geekble_ESP32C3.build.board=GEEKBLE_ESP32C3
+Geekble_ESP32C3.build.bootloader_addr=0x0
+
+Geekble_ESP32C3.build.cdc_on_boot=1
+Geekble_ESP32C3.build.f_cpu=160000000L
+Geekble_ESP32C3.build.flash_size=4MB
+Geekble_ESP32C3.build.flash_freq=80m
+Geekble_ESP32C3.build.flash_mode=dio
+Geekble_ESP32C3.build.boot=qio
+Geekble_ESP32C3.build.partitions=default
+Geekble_ESP32C3.build.defines=
+
+Geekble_ESP32C3.menu.CDCOnBoot.default=Enabled
+Geekble_ESP32C3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+Geekble_ESP32C3.menu.CDCOnBoot.cdc=Disabled
+Geekble_ESP32C3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+Geekble_ESP32C3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+Geekble_ESP32C3.menu.PartitionScheme.default.build.partitions=default
+Geekble_ESP32C3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+Geekble_ESP32C3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+Geekble_ESP32C3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+Geekble_ESP32C3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+Geekble_ESP32C3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+Geekble_ESP32C3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+Geekble_ESP32C3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+Geekble_ESP32C3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+Geekble_ESP32C3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+Geekble_ESP32C3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+Geekble_ESP32C3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+Geekble_ESP32C3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+Geekble_ESP32C3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+Geekble_ESP32C3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+Geekble_ESP32C3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+Geekble_ESP32C3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+Geekble_ESP32C3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+Geekble_ESP32C3.menu.CPUFreq.160=160MHz (WiFi) (Default)
+Geekble_ESP32C3.menu.CPUFreq.160.build.f_cpu=160000000L
+Geekble_ESP32C3.menu.CPUFreq.80=80MHz (WiFi)
+Geekble_ESP32C3.menu.CPUFreq.80.build.f_cpu=80000000L
+Geekble_ESP32C3.menu.CPUFreq.40=40MHz
+Geekble_ESP32C3.menu.CPUFreq.40.build.f_cpu=40000000L
+Geekble_ESP32C3.menu.CPUFreq.20=20MHz
+Geekble_ESP32C3.menu.CPUFreq.20.build.f_cpu=20000000L
+Geekble_ESP32C3.menu.CPUFreq.10=10MHz
+Geekble_ESP32C3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+Geekble_ESP32C3.menu.FlashMode.qio=QIO (Default)
+Geekble_ESP32C3.menu.FlashMode.qio.build.flash_mode=dio
+Geekble_ESP32C3.menu.FlashMode.qio.build.boot=qio
+Geekble_ESP32C3.menu.FlashMode.dio=DIO
+Geekble_ESP32C3.menu.FlashMode.dio.build.flash_mode=dio
+Geekble_ESP32C3.menu.FlashMode.dio.build.boot=dio
+Geekble_ESP32C3.menu.FlashMode.qout=QOUT
+Geekble_ESP32C3.menu.FlashMode.qout.build.flash_mode=dout
+Geekble_ESP32C3.menu.FlashMode.qout.build.boot=qout
+Geekble_ESP32C3.menu.FlashMode.dout=DOUT
+Geekble_ESP32C3.menu.FlashMode.dout.build.flash_mode=dout
+
+Geekble_ESP32C3.menu.FlashFreq.80=80MHz (Default)
+Geekble_ESP32C3.menu.FlashFreq.80.build.flash_freq=80m
+Geekble_ESP32C3.menu.FlashFreq.40=40MHz
+Geekble_ESP32C3.menu.FlashFreq.40.build.flash_freq=40m
+
+Geekble_ESP32C3.menu.FlashSize.4M=4MB (Default)
+Geekble_ESP32C3.menu.FlashSize.4M.build.flash_size=4MB
+Geekble_ESP32C3.menu.FlashSize.2M=2MB
+Geekble_ESP32C3.menu.FlashSize.2M.build.flash_size=2MB
+Geekble_ESP32C3.menu.FlashSize.2M.build.partitions=minimal
+
+Geekble_ESP32C3.menu.UploadSpeed.921600=921600 (Default)
+Geekble_ESP32C3.menu.UploadSpeed.921600.upload.speed=921600
+Geekble_ESP32C3.menu.UploadSpeed.115200=115200
+Geekble_ESP32C3.menu.UploadSpeed.115200.upload.speed=115200
+Geekble_ESP32C3.menu.UploadSpeed.256000.windows=256000
+Geekble_ESP32C3.menu.UploadSpeed.256000.upload.speed=256000
+Geekble_ESP32C3.menu.UploadSpeed.230400.windows.upload.speed=256000
+Geekble_ESP32C3.menu.UploadSpeed.230400=230400
+Geekble_ESP32C3.menu.UploadSpeed.230400.upload.speed=230400
+Geekble_ESP32C3.menu.UploadSpeed.460800.linux=460800
+Geekble_ESP32C3.menu.UploadSpeed.460800.macosx=460800
+Geekble_ESP32C3.menu.UploadSpeed.460800.upload.speed=460800
+Geekble_ESP32C3.menu.UploadSpeed.512000.windows=512000
+Geekble_ESP32C3.menu.UploadSpeed.512000.upload.speed=512000
+
+Geekble_ESP32C3.menu.DebugLevel.none=None
+Geekble_ESP32C3.menu.DebugLevel.none.build.code_debug=0
+Geekble_ESP32C3.menu.DebugLevel.error=Error
+Geekble_ESP32C3.menu.DebugLevel.error.build.code_debug=1
+Geekble_ESP32C3.menu.DebugLevel.warn=Warn
+Geekble_ESP32C3.menu.DebugLevel.warn.build.code_debug=2
+Geekble_ESP32C3.menu.DebugLevel.info=Info
+Geekble_ESP32C3.menu.DebugLevel.info.build.code_debug=3
+Geekble_ESP32C3.menu.DebugLevel.debug=Debug
+Geekble_ESP32C3.menu.DebugLevel.debug.build.code_debug=4
+Geekble_ESP32C3.menu.DebugLevel.verbose=Verbose
+Geekble_ESP32C3.menu.DebugLevel.verbose.build.code_debug=5
+
+Geekble_ESP32C3.menu.EraseFlash.none=Disabled
+Geekble_ESP32C3.menu.EraseFlash.none.upload.erase_cmd=
+Geekble_ESP32C3.menu.EraseFlash.all=Enabled
+Geekble_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
