@@ -97,6 +97,7 @@ static void hw_cdc_isr_handler(void *arg) {
             }
         } else {
             usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+            // should we just flush internal CDC buffer??
         }
     }
 
@@ -281,9 +282,23 @@ int HWCDC::availableForWrite(void)
     return a;
 }
 
+static void flushTXBuffer()
+{
+    if (!tx_ring_buf) return;
+    UBaseType_t uxItemsWaiting = 0;
+    vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+
+    size_t queued_size = 0;
+    uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, uxItemsWaiting);
+    if (queued_size && queued_buff != NULL) {
+        vRingbufferReturnItem(tx_ring_buf, (void *)queued_buff);
+    }
+    // flush internal CDC 
+}
+
 size_t HWCDC::write(const uint8_t *buffer, size_t size)
 {
-    uint32_t tx_timeout_ms = 0; // if not connected, no timeout
+    uint32_t tx_timeout_ms = 0; // if not connected, no timeout 
     if(buffer == NULL || size == 0 || tx_ring_buf == NULL || tx_lock == NULL){
         return 0;
     }
@@ -301,6 +316,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
         space = size;
     }
     // Non-Blocking method, Sending data to ringbuffer, and handle the data in ISR.
+    // USB may be plugged, but CDC may be not connected ==> do not block and flush TX buffer, keeping in the buffer just the lastest data
     if(xRingbufferSend(tx_ring_buf, (void*) (buffer), space, 0) != pdTRUE){
         size = 0;
     } else {
@@ -324,6 +340,8 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
             usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
         }
     }
+    // there is no more space in CDC Endpoint internal buffer ==> flush all data from TX buffer and only keep last written data
+    if(to_send && !usb_serial_jtag_ll_txfifo_writable()) flushTXBuffer();
     xSemaphoreGive(tx_lock);
     return size;
 }
@@ -345,16 +363,21 @@ void HWCDC::flush(void)
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return;
     }
+    // USB may be plugged, but CDC may be not connected ==> do not block and flush TX buffer, keeping in the buffer just the lastest data
     UBaseType_t uxItemsWaiting = 0;
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
     if(uxItemsWaiting){
         // Now trigger the ISR to read data from the ring buffer.
         usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
     }
-    while(uxItemsWaiting){
+    uint8_t tries = 3;
+    while(tries && uxItemsWaiting){
         delay(5);
+        UBaseType_t lastUxItemsWaiting = uxItemsWaiting; // is it flushing CDC?
         vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+        if (lastUxItemsWaiting == uxItemsWaiting) tries--; // avoids locking when USB is plugged, but CDC is not connected
     }
+    if (!tries) flushTXBuffer(); // flush TX Buffer
     xSemaphoreGive(tx_lock);
 }
 
