@@ -62,8 +62,4 @@ static const uint8_t MOSI  = 40;
 static const uint8_t MISO  = 38;
 static const uint8_t SCK   = 39;
 
-
-
-
-
 #endif /* Pins_Arduino_h */
