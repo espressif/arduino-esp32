@@ -20,6 +20,9 @@ void setup(){}
 void loop(){}
 #else
 
+#if !ARDUINO_USB_CDC_ON_BOOT
+HWCDC HWCDCSerial;
+#endif
 // USB Event Callback Function that will log CDC events into UART0
 static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   if (event_base == ARDUINO_HW_CDC_EVENTS) {
