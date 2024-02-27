@@ -455,7 +455,7 @@ USBCDC::operator bool() const
     return connected;
 }
 
-#if !ARDUINO_USB_MODE         // Native USB CDC selected
+#if !ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT         // Native USB CDC selected
 // USBSerial is always available to be used
 USBCDC USBSerial(0);
 #endif
