@@ -10,19 +10,18 @@ MacAddress::MacAddress(MACType mac_type){
     memset(_mac.bytes, 0, sizeof(_mac.bytes));
 }
 MacAddress::MacAddress(MACType mac_type, uint64_t mac) {
-    _mac.val = mac;
     _type = mac_type;
+    _mac.val = mac;
 }
 
 MacAddress::MacAddress(MACType mac_type, const uint8_t *macbytearray) {
-    // 6-bytes MacAddress only
+    _type = mac_type;
     memset(_mac.bytes, 0, sizeof(_mac.bytes));
-    if(mac_type == MAC6) {
+    if(_type == MAC6) {
         memcpy(_mac.bytes, macbytearray, 6);
     } else {
         memcpy(_mac.bytes, macbytearray, 8);
     }
-    _type = mac_type;
 }
 
 MacAddress::MacAddress(const char *macstr){
@@ -30,6 +29,7 @@ MacAddress::MacAddress(const char *macstr){
 }
 
 MacAddress::MacAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6) {
+    _type = MAC6;
     memset(_mac.bytes, 0, sizeof(_mac.bytes));
     _mac.bytes[0] = b1;
     _mac.bytes[1] = b2;
@@ -37,10 +37,10 @@ MacAddress::MacAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b
     _mac.bytes[3] = b4;
     _mac.bytes[4] = b5;
     _mac.bytes[5] = b6;
-    _type = MAC6;
 }
 
 MacAddress::MacAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6, uint8_t b7, uint8_t b8) {
+    _type = MAC8;
     _mac.bytes[0] = b1;
     _mac.bytes[1] = b2;
     _mac.bytes[2] = b3;
@@ -49,7 +49,6 @@ MacAddress::MacAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b
     _mac.bytes[5] = b6;
     _mac.bytes[6] = b7;
     _mac.bytes[7] = b8;
-    _type = MAC8;
 }
 
 //Parse user entered string into MAC address
