@@ -162,7 +162,7 @@ HWCDC::~HWCDC(){
 // It should return <true> just when USB is plugged and CDC is connected.
 HWCDC::operator bool() const
 {
-    // <running> deals when this functions is called many times
+    // <running> deals when this function is called many times
     // typically with something like `while(!Serial) delay(10);`
     static bool running = false;
 
