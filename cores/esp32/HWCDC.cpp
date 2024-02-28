@@ -178,7 +178,7 @@ HWCDC::operator bool() const
         return true;
     }
 
-    if (running == false && !isConnected) { // enable it only once!
+    if (running == false && !isConnected) { // enables it only once!
         usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
     }
     // this will feed CDC TX FIFO and then trigger when CDC is connected
