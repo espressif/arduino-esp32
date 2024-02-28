@@ -37,8 +37,9 @@ static QueueHandle_t rx_queue = NULL;
 static uint8_t rx_data_buf[64] = {0};
 static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
+static volatile bool isConnected = false;
 
-// workaround for when USB CDC is unplugged
+// timeout has no effect when USB CDC is unplugged
 static uint32_t requested_tx_timeout_ms = 100;
 
 static esp_event_loop_handle_t arduino_hw_cdc_event_loop_handle = NULL;
@@ -75,8 +76,17 @@ static void hw_cdc_isr_handler(void *arg) {
     arduino_hw_cdc_event_data_t event = {0};
     usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
 
+    // enabling USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY only happen when CDC is connected
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY) {
         // Interrupt tells us the host picked up the data we sent.
+        if(!usb_serial_jtag_is_connected()) {
+            isConnected = false; // reset it when USB is unplugged
+            usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+            // USB is unplugged, nothing to be done here
+            return;
+        } else {
+            isConnected = true;
+        }
         if (usb_serial_jtag_ll_txfifo_writable() == 1) {
             // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
             usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
@@ -89,12 +99,12 @@ static void hw_cdc_isr_handler(void *arg) {
                 usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
                 usb_serial_jtag_ll_txfifo_flush();
                 vRingbufferReturnItemFromISR(tx_ring_buf, queued_buff, &xTaskWoken);
-                usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+                if(isConnected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
                 //send event?
                 //ets_printf("TX:%u\n", queued_size);
                 event.tx.len = queued_size;
                 arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_TX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
-            }
+            } 
         } else {
             usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
             // should we just flush internal CDC buffer??
@@ -114,16 +124,13 @@ static void hw_cdc_isr_handler(void *arg) {
         }
         event.rx.len = i;
         arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_RX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
+        isConnected = true; // receiving data also means that CDC is connected!
     }
 
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
         usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
-        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-        //ets_printf("BUS_RESET\n");
         arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_BUS_RESET_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
-        if(usb_serial_jtag_is_connected()) {
-            arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_CONNECTED_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
-        }        
+        isConnected = false; // TX/RX only takes place after USB BUS resets (it was just plugged)
     }
 
     if (xTaskWoken == pdTRUE) {
@@ -141,7 +148,7 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
     } else {
         xRingbufferSend(tx_ring_buf, (void*) (&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
     }
-    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    usb_serial_jtag_ll_txfifo_flush(); // flushes HW Serial CDC and sets IN_EMPTY when Host reads data
 }
 
 HWCDC::HWCDC() {
@@ -152,9 +159,35 @@ HWCDC::~HWCDC(){
     end();
 }
 
+
+// It should return <true> just when USB is plugged and CDC is connected.
 HWCDC::operator bool() const
 {
-    return usb_serial_jtag_is_connected();
+    // <running> deals when this functions is called many times
+    // typically with something like `while(!Serial) delay(10);`
+    static bool running = false;
+
+    // USB may be unplugged
+    if (usb_serial_jtag_is_connected() == false) {
+        isConnected = false;
+        running = false; // reset it for when it will plugged in
+        return false;
+    }
+
+    if (isConnected) {
+        running = false;
+        return true;
+    }
+
+    if (running == false && !isConnected) { // enable it only once!
+        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    }
+    // this will feed CDC TX FIFO and then trigger when CDC is connected
+    uint8_t c = '\0';
+    usb_serial_jtag_ll_write_txfifo(&c, sizeof(c));
+    usb_serial_jtag_ll_txfifo_flush();
+    running = true;
+    return false;
 }
 
 void HWCDC::onEvent(esp_event_handler_t callback){
@@ -198,9 +231,9 @@ void HWCDC::begin(unsigned long baud)
             log_e("HW CDC RX Buffer error");
         }
     }
-    //TX Buffer default has 256 bytes if not preset
+    //TX Buffer default has 16 bytes if not preset
     if (tx_ring_buf == NULL) {
-        if (!setTxBufferSize(256)) {
+        if (!setTxBufferSize(16)) {
             log_e("HW CDC TX Buffer error");
         }    
     }
@@ -219,8 +252,11 @@ void HWCDC::begin(unsigned long baud)
     } else {
         log_e("Serial JTAG Pins can't be set into Peripheral Manager.");
     }
-
-    usb_serial_jtag_ll_txfifo_flush();
+    //isConnected = false;
+    // trying to detect if it is already connected by filling CDC FIFO
+    //uint8_t c = '0';
+    //usb_serial_jtag_ll_write_txfifo(&c, 1);
+    //usb_serial_jtag_ll_txfifo_flush();
 }
 
 void HWCDC::end()
@@ -240,6 +276,7 @@ void HWCDC::end()
         arduino_hw_cdc_event_loop_handle = NULL;
     }
     HWCDC::deinit(this);
+    isConnected = false;
 }
 
 void HWCDC::setTxTimeoutMs(uint32_t timeout){
@@ -293,7 +330,8 @@ static void flushTXBuffer()
     if (queued_size && queued_buff != NULL) {
         vRingbufferReturnItem(tx_ring_buf, (void *)queued_buff);
     }
-    // flush internal CDC 
+    // flushes CDC FIFO
+    usb_serial_jtag_ll_txfifo_flush();
 }
 
 size_t HWCDC::write(const uint8_t *buffer, size_t size)
@@ -304,6 +342,8 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
     }
     if(usb_serial_jtag_is_connected()) {
         tx_timeout_ms = requested_tx_timeout_ms;  // once connected, restores the TX timeout
+    } else {
+        isConnected = false;
     }
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return 0;
@@ -323,8 +363,9 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
         to_send -= space;
         so_far += space;
         // Now trigger the ISR to read data from the ring buffer.
-        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-
+        usb_serial_jtag_ll_txfifo_flush(); // flushes HW Serial CDC and sets IN_EMPTY when Host reads data
+        if(isConnected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+ 
         while(to_send){
             if(max_size > to_send){
                 max_size = to_send;
@@ -337,11 +378,16 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
             so_far += max_size;
             to_send -= max_size;
             // Now trigger the ISR to read data from the ring buffer.
-            usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+            usb_serial_jtag_ll_txfifo_flush(); // flushes HW Serial CDC and sets IN_EMPTY when Host reads data
+            if(isConnected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
         }
     }
-    // there is no more space in CDC Endpoint internal buffer ==> flush all data from TX buffer and only keep last written data
-    if(to_send && !usb_serial_jtag_ll_txfifo_writable()) flushTXBuffer();
+    // there is no more space in CDC Endpoint FIFO. It is very possible that CDC is diconnected!
+    // ==> flush all data from TX buffer and only keep last written data
+    if(to_send && !usb_serial_jtag_ll_txfifo_writable()) {
+        isConnected = false;  // we consider that CDC connection has been terminated
+        flushTXBuffer();  // flush TX Ringbuffer
+    }
     xSemaphoreGive(tx_lock);
     return size;
 }
@@ -359,6 +405,8 @@ void HWCDC::flush(void)
     }
     if(usb_serial_jtag_is_connected()) {
         tx_timeout_ms = requested_tx_timeout_ms;  // once connected, restores the TX timeout
+    } else {
+        isConnected = false;
     }
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return;
@@ -368,7 +416,8 @@ void HWCDC::flush(void)
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
     if(uxItemsWaiting){
         // Now trigger the ISR to read data from the ring buffer.
-        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+        usb_serial_jtag_ll_txfifo_flush(); // flushes HW Serial CDC and sets IN_EMPTY when Host reads data
+        if(isConnected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
     }
     uint8_t tries = 3;
     while(tries && uxItemsWaiting){
@@ -377,7 +426,10 @@ void HWCDC::flush(void)
         vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
         if (lastUxItemsWaiting == uxItemsWaiting) tries--; // avoids locking when USB is plugged, but CDC is not connected
     }
-    if (!tries) flushTXBuffer(); // flush TX Buffer
+    if (tries == 0) {  // it is very possible that CDC isn't connected anymore...
+        isConnected = false;  // we consider that CDC connection has been terminated
+        flushTXBuffer(); // flush TX Ringbuffer
+    }
     xSemaphoreGive(tx_lock);
 }
 
@@ -459,7 +511,7 @@ void HWCDC::setDebugOutput(bool en)
     }
 }
 
-#if ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Hardware JTAG CDC selected
+#if ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT // Hardware JTAG CDC selected
 // USBSerial is always available to be used
 HWCDC HWCDCSerial;
 #endif
