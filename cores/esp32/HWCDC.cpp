@@ -104,7 +104,7 @@ static void hw_cdc_isr_handler(void *arg) {
                 //ets_printf("TX:%u\n", queued_size);
                 event.tx.len = queued_size;
                 arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_TX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
-            } 
+            }
         } else {
             usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
             // should we just flush internal CDC buffer??
