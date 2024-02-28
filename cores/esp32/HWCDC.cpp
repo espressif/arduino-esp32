@@ -76,11 +76,10 @@ static void hw_cdc_isr_handler(void *arg) {
     arduino_hw_cdc_event_data_t event = {0};
     usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
 
-    // enabling USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY only happen when CDC is connected
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY) {
         // Interrupt tells us the host picked up the data we sent.
         if(!usb_serial_jtag_is_connected()) {
-            isConnected = false; // reset it when USB is unplugged
+            isConnected = false;
             usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
             // USB is unplugged, nothing to be done here
             return;
@@ -123,13 +122,13 @@ static void hw_cdc_isr_handler(void *arg) {
         }
         event.rx.len = i;
         arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_RX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
-        isConnected = true; // receiving data also means that CDC is connected!
+        isConnected = true;
     }
 
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
         usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
         arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_BUS_RESET_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
-        isConnected = false; // TX/RX only takes place after USB BUS resets (it was just plugged)
+        isConnected = false;
     }
 
     if (xTaskWoken == pdTRUE) {
@@ -138,16 +137,16 @@ static void hw_cdc_isr_handler(void *arg) {
 }
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
-    uint32_t tx_timeout_ms = 0; // if not connected, no timeout
+    uint32_t tx_timeout_ms = 0;
     if(usb_serial_jtag_is_connected()) {
-        tx_timeout_ms = requested_tx_timeout_ms;  // once connected, restores the TX timeout
+        tx_timeout_ms = requested_tx_timeout_ms;
     }
     if(xPortInIsrContext()){
         xRingbufferSendFromISR(tx_ring_buf, (void*) (&c), 1, NULL);
     } else {
         xRingbufferSend(tx_ring_buf, (void*) (&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
     }
-    usb_serial_jtag_ll_txfifo_flush(); // flushes HW Serial CDC and sets IN_EMPTY when Host reads data
+    usb_serial_jtag_ll_txfifo_flush();
 }
 
 HWCDC::HWCDC() {
@@ -162,8 +161,6 @@ HWCDC::~HWCDC(){
 // It should return <true> just when USB is plugged and CDC is connected.
 HWCDC::operator bool() const
 {
-    // <running> deals when this function is called many times
-    // typically with something like `while(!Serial) delay(10);`
     static bool running = false;
 
     // USB may be unplugged
@@ -181,7 +178,7 @@ HWCDC::operator bool() const
     if (running == false && !isConnected) { // enables it only once!
         usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
     }
-    // this will feed CDC TX FIFO and then trigger when CDC is connected
+    // this will feed CDC TX FIFO to trigger IN_EMPTY 
     uint8_t c = '\0';
     usb_serial_jtag_ll_write_txfifo(&c, sizeof(c));
     usb_serial_jtag_ll_txfifo_flush();
@@ -298,12 +295,12 @@ size_t HWCDC::setTxBufferSize(size_t tx_queue_len){
 
 int HWCDC::availableForWrite(void)
 {
-    uint32_t tx_timeout_ms = 0; // if not connected, no timeout
+    uint32_t tx_timeout_ms = 0;
     if(tx_ring_buf == NULL || tx_lock == NULL){
         return 0;
     }
     if(usb_serial_jtag_is_connected()) {
-        tx_timeout_ms = requested_tx_timeout_ms;  // once connected, restores the TX timeout
+        tx_timeout_ms = requested_tx_timeout_ms;
     }
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return 0;
@@ -330,12 +327,12 @@ static void flushTXBuffer()
 
 size_t HWCDC::write(const uint8_t *buffer, size_t size)
 {
-    uint32_t tx_timeout_ms = 0; // if not connected, no timeout 
+    uint32_t tx_timeout_ms = 0;
     if(buffer == NULL || size == 0 || tx_ring_buf == NULL || tx_lock == NULL){
         return 0;
     }
     if(usb_serial_jtag_is_connected()) {
-        tx_timeout_ms = requested_tx_timeout_ms;  // once connected, restores the TX timeout
+        tx_timeout_ms = requested_tx_timeout_ms;
     } else {
         isConnected = false;
     }
@@ -350,7 +347,6 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
         space = size;
     }
     // Non-Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-    // USB may be plugged, but CDC may be not connected ==> do not block and flush TX buffer, keeping just the lastest data buffered
     if(xRingbufferSend(tx_ring_buf, (void*) (buffer), space, 0) != pdTRUE){
         size = 0;
     } else {
@@ -379,7 +375,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
     // CDC is diconnected ==> flush all data from TX buffer
     if(to_send && !usb_serial_jtag_ll_txfifo_writable()) {
         isConnected = false;
-        flushTXBuffer();  // flush TX Ringbuffer
+        flushTXBuffer();
     }
     xSemaphoreGive(tx_lock);
     return size;
@@ -392,19 +388,18 @@ size_t HWCDC::write(uint8_t c)
 
 void HWCDC::flush(void)
 {
-    uint32_t tx_timeout_ms = 0; // if not connected, no timeout
+    uint32_t tx_timeout_ms = 0;
     if(tx_ring_buf == NULL || tx_lock == NULL){
         return;
     }
     if(usb_serial_jtag_is_connected()) {
-        tx_timeout_ms = requested_tx_timeout_ms;  // once connected, restores the TX timeout
+        tx_timeout_ms = requested_tx_timeout_ms;
     } else {
         isConnected = false;
     }
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return;
     }
-    // USB may be plugged, but CDC may be not connected ==> do not block and flush TX buffer, keeping just the lastest data buffered
     UBaseType_t uxItemsWaiting = 0;
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
     if(uxItemsWaiting){
@@ -415,13 +410,13 @@ void HWCDC::flush(void)
     uint8_t tries = 3;
     while(tries && uxItemsWaiting){
         delay(5);
-        UBaseType_t lastUxItemsWaiting = uxItemsWaiting; // is it flushing CDC?
+        UBaseType_t lastUxItemsWaiting = uxItemsWaiting;
         vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
-        if (lastUxItemsWaiting == uxItemsWaiting) tries--; // avoids locking when USB is plugged, but CDC is not connected
+        if (lastUxItemsWaiting == uxItemsWaiting) tries--;
     }
     if (tries == 0) {  // CDC isn't connected anymore...
         isConnected = false;
-        flushTXBuffer(); // flush TX Ringbuffer
+        flushTXBuffer();
     }
     xSemaphoreGive(tx_lock);
 }
