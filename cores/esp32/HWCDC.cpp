@@ -350,7 +350,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
         space = size;
     }
     // Non-Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-    // USB may be plugged, but CDC may be not connected ==> do not block and flush TX buffer, keeping in the buffer just the lastest data
+    // USB may be plugged, but CDC may be not connected ==> do not block and flush TX buffer, keeping just the lastest data buffered
     if(xRingbufferSend(tx_ring_buf, (void*) (buffer), space, 0) != pdTRUE){
         size = 0;
     } else {
