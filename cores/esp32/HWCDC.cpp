@@ -426,7 +426,7 @@ void HWCDC::flush(void)
         if (lastUxItemsWaiting == uxItemsWaiting) tries--; // avoids locking when USB is plugged, but CDC is not connected
     }
     if (tries == 0) {  // CDC isn't connected anymore...
-        isConnected = false;  // we consider that CDC connection has been terminated
+        isConnected = false;
         flushTXBuffer(); // flush TX Ringbuffer
     }
     xSemaphoreGive(tx_lock);
