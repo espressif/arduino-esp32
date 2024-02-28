@@ -45,7 +45,14 @@ esp_err_t esp_secure_cert_init_nvs_partition(void);
  *       the required memory to store the device cert and return the pointer.
  *       The pointer can be freed in this case (NVS) using respective free API
  *
- *       In case of cust_flash partition, a read only flash pointer shall be returned here. This pointer should not be freed
+ *       In case of cust_flash partition, a read only flash pointer shall be returned here.
+ *
+ *       A respective call to the esp_secure_cert_free_device_cert() should be made to free any memory (if allocated)
+ *
+ *       IMPORTANT: This API shall provide only the first entry of type Device cert (ESP_SECURE_CERT_DEV_CERT_TLV) present in the esp_secure_cert partition with subtype set as 0.
+ *       If you have multiple entries of the given type with different subtypes then please use the generic API esp_secure_cert_get_tlv_info with the appropriate type and subtype.
+ *       The type in this case shall be ESP_SECURE_CERT_DEV_CERT_TLV
+ *       and the subtype shall be the index of the device cert that needs to be obtained.
  *
  * @params
  *      - buffer(out)       This value shall be filled with the device cert address
@@ -85,6 +92,11 @@ esp_err_t esp_secure_cert_free_device_cert(char *buffer);
  *
  *      The esp_secure_cert_free_ca_cert API needs to be called in order to free the memory.
  *      The API shall only free the memory if it has been dynamically allocated.
+ *
+ *       IMPORTANT: This API shall provide only the first entry of type CA cert (ESP_SECURE_CERT_CA_CERT_TLV) present in the esp_secure_cert partition subtype set as 0.
+ *       If you have multiple entries of the given type with different subtypes then please use the generic API esp_secure_cert_get_tlv_info with the appropriate type and subtype.
+ *       The type in this case shall be ESP_SECURE_CERT_CA_CERT_TLV
+ *       and the subtype shall be the index of the device cert that needs to be obtained.
  *
  * @params
  *      - buffer(out)       This value shall be filled with the ca cert address
@@ -126,7 +138,10 @@ esp_err_t esp_secure_cert_free_ca_cert(char *buffer);
  *      The esp_secure_cert_free_priv_key API needs to be called in order to free the memory.
  *      The API shall only free the memory if it has been dynamically allocated.
  *
- *      The private key(buffer) shall be returned as NULL when private key type is ESP_SECURE_CERT_ECDSA_PERIPHERAL_KEY.
+ *       IMPORTANT: This API shall provide only the first entry of type private key (ESP_SECURE_CERT_PRIV_KEY_TLV) present in the esp_secure_cert partition with subtype set as 0.
+ *       If you have multiple entries of the given type with different subtypes then please use the generic API esp_secure_cert_get_tlv_info with the appropriate type and subtype.
+ *       The type in this case shall be ESP_SECURE_CERT_PRIV_KEY_TLV
+ *       and the subtype shall be the index of the device cert that needs to be obtained.
  *
  * @params
  *      - buffer(out)       This value shall be filled with the private key address
@@ -158,19 +173,25 @@ esp_err_t esp_secure_cert_free_priv_key(char *buffer);
  *       This function returns the flash esp_ds_context which can then be
  *       directly provided to an esp-tls connection through its config structure.
  *       The memory for the context is dynamically allocated.
+ * @note
+ *       This shall generate the DS context only for the
+ *       TLV entry with subtype 0 (First TLV entry for DS context)
+ *       Internally this API assumes that the TLV entries with
+ *       type ESP_SECURE_CERT_DS_CTX_TLV and ESP_SECURE_CERT_DS_DATA_TLV and subtype 0
+ *       are present.
+ *       A call to esp_secure_cert_free_ds_ctx() should be made
+ *       to free the allocated memory
  *
- * @params
- *      - ds_ctx    The pointer to the DS context
  * @return
+ *      - ds_ctx    The pointer to the DS context, On success
  *      - NULL      On failure
  */
 esp_ds_data_ctx_t *esp_secure_cert_get_ds_ctx(void);
 
 /*
- *@info
- *      Free the ds context
+ * @info
+ *      Free the DS context
  */
-
 void esp_secure_cert_free_ds_ctx(esp_ds_data_ctx_t *ds_ctx);
 #endif /* CONFIG_ESP_SECURE_CERT_DS_PERIPHERAL */
 
@@ -181,9 +202,10 @@ void esp_secure_cert_free_ds_ctx(esp_ds_data_ctx_t *ds_ctx);
  *
  * @note
  *      The API is only supported for the TLV format
+ *      This API shall only provide information for the private key with subtype set to ESP_SECURE_CERT_TLV_SUBTYPE_0 (first entry)
  *
  * @params
- *      - priv_key_type(in/out)    Pointer to store the obtained key type
+ *      - priv_key_type(out)    Pointer to store the obtained key type
  * @return
  *      - ESP_OK    On success
  *      - ESP_FAIL/other relevant esp error code
@@ -192,19 +214,20 @@ void esp_secure_cert_free_ds_ctx(esp_ds_data_ctx_t *ds_ctx);
 esp_err_t esp_secure_cert_get_priv_key_type(esp_secure_cert_key_type_t *priv_key_type);
 
 /* @info
- *  Get the efuse key block id in which the private key is stored.
+ *  Get the efuse block id in which the private key is stored.
  * @note
  *      The API is only supported for the TLV format.
- *      For now only ECDSA type of private key can be stored in the eFuse key blocks
+ *      For now only ECDSA type of private key can be stored in the efuse block
+ *      This API shall only provide information for the private key with subtype set to ESP_SECURE_CERT_TLV_SUBTYPE_0 (first entry)
  *
  * @params
- *      - efuse_key_id(in/out)    Pointer to store the obtained key id
+ *      - efuse_block_id(out)    Pointer to store the obtained efuse block id
  * @return
  *      - ESP_OK    On success
  *      - ESP_FAIL/other relevant esp error code
  *                  On failure
  */
-esp_err_t esp_secure_cert_get_priv_key_efuse_id(uint8_t *efuse_key_id);
+esp_err_t esp_secure_cert_get_priv_key_efuse_id(uint8_t *efuse_block_id);
 #endif
 
 #ifdef __cplusplus

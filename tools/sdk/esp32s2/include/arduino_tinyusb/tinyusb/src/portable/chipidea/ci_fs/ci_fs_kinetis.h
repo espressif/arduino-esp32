@@ -36,14 +36,12 @@
 #define CI_FS_REG(_port)        ((ci_fs_regs_t*) USB0_BASE)
 #define CI_REG                  CI_FS_REG(0)
 
-void dcd_int_enable(uint8_t rhport)
-{
+void dcd_int_enable(uint8_t rhport) {
   (void) rhport;
   NVIC_EnableIRQ(USB0_IRQn);
 }
 
-void dcd_int_disable(uint8_t rhport)
-{
+void dcd_int_disable(uint8_t rhport) {
   (void) rhport;
   NVIC_DisableIRQ(USB0_IRQn);
 }

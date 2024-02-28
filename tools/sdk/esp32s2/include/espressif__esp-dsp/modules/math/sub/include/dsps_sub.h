@@ -46,6 +46,13 @@ extern "C"
  */
 esp_err_t dsps_sub_f32_ansi(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out);
 esp_err_t dsps_sub_f32_ae32(const float *input1, const float *input2, float *output, int len, int step1, int step2, int step_out);
+
+esp_err_t dsps_sub_s16_ansi(const int16_t *input1, const int16_t *input2, int16_t *output, int len, int step1, int step2, int step_out, int shift);
+esp_err_t dsps_sub_s16_ae32(const int16_t *input1, const int16_t *input2, int16_t *output, int len, int step1, int step2, int step_out, int shift);
+esp_err_t dsps_sub_s16_aes3(const int16_t *input1, const int16_t *input2, int16_t *output, int len, int step1, int step2, int step_out, int shift);
+
+esp_err_t dsps_sub_s8_ansi(const int8_t *input1, const int8_t *input2, int8_t *output, int len, int step1, int step2, int step_out, int shift);
+esp_err_t dsps_sub_s8_aes3(const int8_t *input1, const int8_t *input2, int8_t *output, int len, int step1, int step2, int step_out, int shift);
 /**@}*/
 
 #ifdef __cplusplus
@@ -59,9 +66,22 @@ esp_err_t dsps_sub_f32_ae32(const float *input1, const float *input2, float *out
 #else
 #define dsps_sub_f32 dsps_sub_f32_ansi
 #endif
-#else
-#define dsps_sub_f32 dsps_sub_f32_ansi
-#endif // CONFIG_DSP_OPTIMIZED
 
+#if (dsps_sub_s16_aes3_enabled == 1)
+#define dsps_sub_s16 dsps_sub_s16_aes3
+#define dsps_sub_s8 dsps_sub_s8_aes3
+#elif (dsps_sub_s16_ae32_enabled == 1)
+#define dsps_sub_s16 dsps_sub_s16_ae32
+#define dsps_sub_s8 dsps_sub_s8_ansi
+#else
+#define dsps_sub_s16 dsps_sub_s16_ansi
+#define dsps_sub_s8 dsps_sub_s8_ansi
+#endif
+
+#else // CONFIG_DSP_OPTIMIZED
+#define dsps_sub_f32 dsps_sub_f32_ansi
+#define dsps_sub_s16 dsps_sub_s16_ansi
+#define dsps_sub_s8  dsps_sub_s8_ansi
+#endif // CONFIG_DSP_OPTIMIZED
 
 #endif // _dsps_sub_H_

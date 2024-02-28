@@ -71,6 +71,11 @@ esp_err_t dsps_mul_f32_ae32(const float *input1, const float *input2, float *out
  *      - One of the error codes from DSP library
  */
 esp_err_t dsps_mul_s16_ansi(const int16_t *input1, const int16_t *input2, int16_t *output, int len, int step1, int step2, int step_out, int shift);
+esp_err_t dsps_mul_s16_ae32(const int16_t *input1, const int16_t *input2, int16_t *output, int len, int step1, int step2, int step_out, int shift);
+esp_err_t dsps_mul_s16_aes3(const int16_t *input1, const int16_t *input2, int16_t *output, int len, int step1, int step2, int step_out, int shift);
+
+esp_err_t dsps_mul_s8_ansi(const int8_t *input1, const int8_t *input2, int8_t *output, int len, int step1, int step2, int step_out, int shift);
+esp_err_t dsps_mul_s8_aes3(const int8_t *input1, const int8_t *input2, int8_t *output, int len, int step1, int step2, int step_out, int shift);
 
 /**@}*/
 
@@ -79,14 +84,28 @@ esp_err_t dsps_mul_s16_ansi(const int16_t *input1, const int16_t *input2, int16_
 #endif
 
 #if CONFIG_DSP_OPTIMIZED
+
 #if (dsps_mul_f32_ae32_enabled == 1)
 #define dsps_mul_f32 dsps_mul_f32_ae32
 #else
 #define dsps_mul_f32 dsps_mul_f32_ansi
-#endif //
+#endif
+
+#if (dsps_mul_s16_aes3_enabled == 1)
+#define dsps_mul_s16 dsps_mul_s16_aes3
+#define dsps_mul_s8  dsps_mul_s8_aes3
+#elif (dsps_mul_s16_ae32_enabled == 1)
+#define dsps_mul_s16 dsps_mul_s16_ae32
+#define dsps_mul_s8  dsps_mul_s8_ansi
+#else
 #define dsps_mul_s16 dsps_mul_s16_ansi
+#define dsps_mul_s8  dsps_mul_s8_ansi
+#endif
+
 #else // CONFIG_DSP_OPTIMIZED
 #define dsps_mul_f32 dsps_mul_f32_ansi
 #define dsps_mul_s16 dsps_mul_s16_ansi
-#endif
+#define dsps_mul_s8  dsps_mul_s8_ansi
+#endif // CONFIG_DSP_OPTIMIZED
+
 #endif // _dsps_mul_H_

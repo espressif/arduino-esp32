@@ -133,7 +133,9 @@ err_t            tcp_process_refused_data(struct tcp_pcb *pcb);
 #endif /* TCP_FIN_WAIT_TIMEOUT */
 #define TCP_SYN_RCVD_TIMEOUT 20000 /* milliseconds */
 
+#ifndef TCP_OOSEQ_TIMEOUT
 #define TCP_OOSEQ_TIMEOUT        6U /* x RTO */
+#endif
 
 #ifndef TCP_MSL
 #define TCP_MSL 60000UL /* The maximum segment lifetime in milliseconds */

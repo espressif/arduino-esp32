@@ -44,7 +44,7 @@
 
 // Set Line Coding on enumeration/mounted, value for cdc_line_coding_t
 //#ifndef CFG_TUH_CDC_LINE_CODING_ON_ENUM
-//#define CFG_TUH_CDC_LINE_CODING_ON_ENUM   { 115200, CDC_LINE_CONDING_STOP_BITS_1, CDC_LINE_CODING_PARITY_NONE, 8 }
+//#define CFG_TUH_CDC_LINE_CODING_ON_ENUM   { 115200, CDC_LINE_CODING_STOP_BITS_1, CDC_LINE_CODING_PARITY_NONE, 8 }
 //#endif
 
 // RX FIFO size
@@ -148,8 +148,11 @@ bool tuh_cdc_set_control_line_state(uint8_t idx, uint16_t line_state, tuh_xfer_c
 // Request to set baudrate
 bool tuh_cdc_set_baudrate(uint8_t idx, uint32_t baudrate, tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
-// Request to Set Line Coding (ACM only)
-// Should only use if you don't work with serial devices such as FTDI/CP210x
+// Request to set data format
+bool tuh_cdc_set_data_format(uint8_t idx, uint8_t stop_bits, uint8_t parity, uint8_t data_bits, tuh_xfer_cb_t complete_cb, uintptr_t user_data);
+
+// Request to Set Line Coding = baudrate + data format
+// Note: only implemented by ACM and CH34x, not supported by FTDI and CP210x yet
 bool tuh_cdc_set_line_coding(uint8_t idx, cdc_line_coding_t const* line_coding, tuh_xfer_cb_t complete_cb, uintptr_t user_data);
 
 // Request to Get Line Coding (ACM only)
@@ -159,15 +162,13 @@ bool tuh_cdc_set_line_coding(uint8_t idx, cdc_line_coding_t const* line_coding, 
 
 // Connect by set both DTR, RTS
 TU_ATTR_ALWAYS_INLINE static inline
-bool tuh_cdc_connect(uint8_t idx, tuh_xfer_cb_t complete_cb, uintptr_t user_data)
-{
+bool tuh_cdc_connect(uint8_t idx, tuh_xfer_cb_t complete_cb, uintptr_t user_data) {
   return tuh_cdc_set_control_line_state(idx, CDC_CONTROL_LINE_STATE_DTR | CDC_CONTROL_LINE_STATE_RTS, complete_cb, user_data);
 }
 
 // Disconnect by clear both DTR, RTS
 TU_ATTR_ALWAYS_INLINE static inline
-bool tuh_cdc_disconnect(uint8_t idx, tuh_xfer_cb_t complete_cb, uintptr_t user_data)
-{
+bool tuh_cdc_disconnect(uint8_t idx, tuh_xfer_cb_t complete_cb, uintptr_t user_data) {
   return tuh_cdc_set_control_line_state(idx, 0x00, complete_cb, user_data);
 }
 

@@ -28,7 +28,7 @@
 
 // This file contains source copied from ST's HAL, and thus should have their copyright statement.
 
-// PMA_LENGTH is PMA buffer size in bytes.
+// FSDEV_PMA_SIZE is PMA buffer size in bytes.
 // On 512-byte devices, access with a stride of two words (use every other 16-bit address)
 // On 1024-byte devices, access with a stride of one word (use every 16-bit address)
 
@@ -37,7 +37,7 @@
 
 #if CFG_TUSB_MCU == OPT_MCU_STM32F0
   #include "stm32f0xx.h"
-  #define PMA_LENGTH (1024u)
+  #define FSDEV_PMA_SIZE (1024u)
   // F0x2 models are crystal-less
   // All have internal D+ pull-up
   // 070RB:    2 x 16 bits/word memory     LPM Support, BCD Support
@@ -45,7 +45,7 @@
 
 #elif CFG_TUSB_MCU == OPT_MCU_STM32F1
   #include "stm32f1xx.h"
-  #define PMA_LENGTH (512u)
+  #define FSDEV_PMA_SIZE (512u)
   // NO internal Pull-ups
   //         *B, and *C:    2 x 16 bits/word
 
@@ -56,7 +56,7 @@
       defined(STM32F303xB) || defined(STM32F303xC) || \
       defined(STM32F373xC)
   #include "stm32f3xx.h"
-  #define PMA_LENGTH (512u)
+  #define FSDEV_PMA_SIZE (512u)
   // NO internal Pull-ups
   //         *B, and *C:    1 x 16 bits/word
   // PMA dedicated to USB (no sharing with CAN)
@@ -65,27 +65,27 @@
       defined(STM32F302xD) || defined(STM32F302xE) || \
       defined(STM32F303xD) || defined(STM32F303xE)
   #include "stm32f3xx.h"
-  #define PMA_LENGTH (1024u)
+  #define FSDEV_PMA_SIZE (1024u)
   // NO internal Pull-ups
   // *6, *8, *D, and *E:    2 x 16 bits/word     LPM Support
   // When CAN clock is enabled, USB can use first 768 bytes ONLY.
 
 #elif CFG_TUSB_MCU == OPT_MCU_STM32L0
   #include "stm32l0xx.h"
-  #define PMA_LENGTH (1024u)
+  #define FSDEV_PMA_SIZE (1024u)
 
 #elif CFG_TUSB_MCU == OPT_MCU_STM32L1
   #include "stm32l1xx.h"
-  #define PMA_LENGTH (512u)
+  #define FSDEV_PMA_SIZE (512u)
 
 #elif CFG_TUSB_MCU == OPT_MCU_STM32G4
   #include "stm32g4xx.h"
-  #define PMA_LENGTH (1024u)
+  #define FSDEV_PMA_SIZE (1024u)
 
 #elif CFG_TUSB_MCU == OPT_MCU_STM32G0
   #include "stm32g0xx.h"
-  #define PMA_32BIT_ACCESS
-  #define PMA_LENGTH (2048u)
+  #define FSDEV_BUS_32BIT
+  #define FSDEV_PMA_SIZE (2048u)
   #undef USB_PMAADDR
   #define USB_PMAADDR USB_DRD_PMAADDR
   #define USB_TypeDef USB_DRD_TypeDef
@@ -110,20 +110,49 @@
   #define USB_CNTR_LPMODE USB_CNTR_SUSPRDY
   #define USB_CNTR_FSUSP USB_CNTR_SUSPEN
 
+#elif CFG_TUSB_MCU == OPT_MCU_STM32H5
+  #include "stm32h5xx.h"
+  #define FSDEV_BUS_32BIT
+  #define FSDEV_PMA_SIZE (2048u)
+  #undef USB_PMAADDR
+  #define USB_PMAADDR USB_DRD_PMAADDR
+  #define USB_TypeDef USB_DRD_TypeDef
+  #define EP0R CHEP0R
+  #define USB_EP_CTR_RX USB_EP_VTRX
+  #define USB_EP_CTR_TX USB_EP_VTTX
+  #define USB_EP_T_FIELD USB_CHEP_UTYPE
+  #define USB_EPREG_MASK USB_CHEP_REG_MASK
+  #define USB_EPTX_DTOGMASK USB_CHEP_TX_DTOGMASK
+  #define USB_EPRX_DTOGMASK USB_CHEP_RX_DTOGMASK
+  #define USB_EPTX_DTOG1 USB_CHEP_TX_DTOG1
+  #define USB_EPTX_DTOG2 USB_CHEP_TX_DTOG2
+  #define USB_EPRX_DTOG1 USB_CHEP_RX_DTOG1
+  #define USB_EPRX_DTOG2 USB_CHEP_RX_DTOG2
+  #define USB_EPRX_STAT USB_CH_RX_VALID
+  #define USB_EPKIND_MASK USB_EP_KIND_MASK
+  #define USB USB_DRD_FS
+  #define USB_CNTR_FRES USB_CNTR_USBRST
+  #define USB_CNTR_RESUME USB_CNTR_L2RES
+  #define USB_ISTR_EP_ID USB_ISTR_IDN
+  #define USB_EPADDR_FIELD USB_CHEP_ADDR
+  #define USB_CNTR_LPMODE USB_CNTR_SUSPRDY
+  #define USB_CNTR_FSUSP USB_CNTR_SUSPEN
+
+
 #elif CFG_TUSB_MCU == OPT_MCU_STM32WB
   #include "stm32wbxx.h"
-  #define PMA_LENGTH (1024u)
+  #define FSDEV_PMA_SIZE (1024u)
   /* ST provided header has incorrect value */
   #undef USB_PMAADDR
   #define USB_PMAADDR USB1_PMAADDR
 
 #elif CFG_TUSB_MCU == OPT_MCU_STM32L4
   #include "stm32l4xx.h"
-  #define PMA_LENGTH (1024u)
+  #define FSDEV_PMA_SIZE (1024u)
 
 #elif CFG_TUSB_MCU == OPT_MCU_STM32L5
   #include "stm32l5xx.h"
-  #define PMA_LENGTH (1024u)
+  #define FSDEV_PMA_SIZE (1024u)
 
   #ifndef USB_PMAADDR
     #define USB_PMAADDR (USB_BASE + (USB_PMAADDR_NS - USB_BASE_NS))
@@ -135,24 +164,28 @@
 #endif
 
 // For purposes of accessing the packet
-#if ((PMA_LENGTH) == 512u)
-  #define PMA_STRIDE  (2u)
-#elif ((PMA_LENGTH) == 1024u)
-  #define PMA_STRIDE  (1u)
+#if ((FSDEV_PMA_SIZE) == 512u)
+  #define FSDEV_PMA_STRIDE  (2u)
+#elif ((FSDEV_PMA_SIZE) == 1024u)
+  #define FSDEV_PMA_STRIDE  (1u)
 #endif
 
+// The fsdev_bus_t type can be used for both register and PMA access necessities
 // For type-safety create a new macro for the volatile address of PMAADDR
 // The compiler should warn us if we cast it to a non-volatile type?
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
+typedef uint32_t fsdev_bus_t;
 static __IO uint32_t * const pma32 = (__IO uint32_t*)USB_PMAADDR;
+
 #else
+typedef uint16_t fsdev_bus_t;
 // Volatile is also needed to prevent the optimizer from changing access to 32-bit (as 32-bit access is forbidden)
 static __IO uint16_t * const pma = (__IO uint16_t*)USB_PMAADDR;
 
 TU_ATTR_ALWAYS_INLINE static inline __IO uint16_t * pcd_btable_word_ptr(USB_TypeDef * USBx, size_t x)
 {
   size_t total_word_offset = (((USBx)->BTABLE)>>1) + x;
-  total_word_offset *= PMA_STRIDE;
+  total_word_offset *= FSDEV_PMA_STRIDE;
   return &(pma[total_word_offset]);
 }
 
@@ -183,7 +216,7 @@ TU_ATTR_ALWAYS_INLINE static inline uint16_t pcd_aligned_buffer_size(uint16_t si
 /* SetENDPOINT */
 TU_ATTR_ALWAYS_INLINE static inline void pcd_set_endpoint(USB_TypeDef * USBx, uint32_t bEpIdx, uint32_t wRegValue)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   __O uint32_t *reg = (__O uint32_t *)(USB_DRD_BASE + bEpIdx*4);
   *reg = wRegValue;
@@ -195,7 +228,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_set_endpoint(USB_TypeDef * USBx, ui
 
 /* GetENDPOINT */
 TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_endpoint(USB_TypeDef * USBx, uint32_t bEpIdx) {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   __I uint32_t *reg = (__I uint32_t *)(USB_DRD_BASE + bEpIdx*4);
 #else
@@ -250,7 +283,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_clear_tx_ep_ctr(USB_TypeDef * USBx,
   */
 TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_ep_tx_cnt(USB_TypeDef * USBx, uint32_t bEpIdx)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   return (pma32[2*bEpIdx] & 0x03FF0000) >> 16;
 #else
@@ -261,7 +294,7 @@ TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_ep_tx_cnt(USB_TypeDef * USB
 
 TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_ep_rx_cnt(USB_TypeDef * USBx, uint32_t bEpIdx)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   return (pma32[2*bEpIdx + 1] & 0x03FF0000) >> 16;
 #else
@@ -288,7 +321,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_address(USB_TypeDef * USBx, 
 
 TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_ep_tx_address(USB_TypeDef * USBx, uint32_t bEpIdx)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   return pma32[2*bEpIdx] & 0x0000FFFFu ;
 #else
@@ -298,7 +331,7 @@ TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_ep_tx_address(USB_TypeDef *
 
 TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_ep_rx_address(USB_TypeDef * USBx, uint32_t bEpIdx)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   return pma32[2*bEpIdx + 1] & 0x0000FFFFu;
 #else
@@ -308,7 +341,7 @@ TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_ep_rx_address(USB_TypeDef *
 
 TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_tx_address(USB_TypeDef * USBx, uint32_t bEpIdx, uint32_t addr)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   pma32[2*bEpIdx] = (pma32[2*bEpIdx] & 0xFFFF0000u) | (addr & 0x0000FFFCu);
 #else
@@ -318,7 +351,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_tx_address(USB_TypeDef * USB
 
 TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_rx_address(USB_TypeDef * USBx, uint32_t bEpIdx, uint32_t addr)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   pma32[2*bEpIdx + 1] = (pma32[2*bEpIdx + 1] & 0xFFFF0000u) | (addr & 0x0000FFFCu);
 #else
@@ -328,7 +361,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_rx_address(USB_TypeDef * USB
 
 TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_tx_cnt(USB_TypeDef * USBx, uint32_t bEpIdx, uint32_t wCount)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   pma32[2*bEpIdx] = (pma32[2*bEpIdx] & ~0x03FF0000u) | ((wCount & 0x3FFu) << 16);
 #else
@@ -339,7 +372,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_tx_cnt(USB_TypeDef * USBx, u
 
 TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_rx_cnt(USB_TypeDef * USBx, uint32_t bEpIdx, uint32_t wCount)
 {
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   pma32[2*bEpIdx + 1] = (pma32[2*bEpIdx + 1] & ~0x03FF0000u) | ((wCount & 0x3FFu) << 16);
 #else
@@ -351,7 +384,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_rx_cnt(USB_TypeDef * USBx, u
 TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_blsize_num_blocks(USB_TypeDef * USBx, uint32_t rxtx_idx, uint32_t blocksize, uint32_t numblocks)
 {
   /* Encode into register. When BLSIZE==1, we need to subtract 1 block count */
-#ifdef PMA_32BIT_ACCESS
+#ifdef FSDEV_BUS_32BIT
   (void) USBx;
   pma32[rxtx_idx] = (pma32[rxtx_idx] & 0x0000FFFFu) | (blocksize << 31) | ((numblocks - blocksize) << 26);
 #else

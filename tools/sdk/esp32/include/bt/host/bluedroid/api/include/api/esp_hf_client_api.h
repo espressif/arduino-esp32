@@ -1,16 +1,8 @@
-// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * SPDX-FileCopyrightText: 2015-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #ifndef __ESP_HF_CLIENT_API_H__
 #define __ESP_HF_CLIENT_API_H__
@@ -96,6 +88,7 @@ typedef enum {
     ESP_HF_CLIENT_BSIR_EVT,                          /*!< setting of in-band ring tone */
     ESP_HF_CLIENT_BINP_EVT,                          /*!< requested number of last voice tag from AG */
     ESP_HF_CLIENT_RING_IND_EVT,                      /*!< ring indication event */
+    ESP_HF_CLIENT_PKT_STAT_NUMS_GET_EVT,             /*!< requested number of packet different status */
 } esp_hf_client_cb_event_t;
 
 /// HFP client callback parameters
@@ -116,6 +109,7 @@ typedef union {
     struct hf_client_audio_stat_param {
         esp_hf_client_audio_state_t state;       /*!< audio connection state */
         esp_bd_addr_t remote_bda;                /*!< remote bluetooth device address */
+        uint16_t  sync_conn_handle;              /*!< (e)SCO connection handle */
     } audio_stat;                                /*!< HF callback param of ESP_HF_CLIENT_AUDIO_STATE_EVT */
 
     /**
@@ -251,6 +245,19 @@ typedef union {
         const char *number;                      /*!< phone number corresponding to the last voice tag in the HF */
     } binp;                                      /*!< HF callback param of ESP_HF_CLIENT_BINP_EVT */
 
+    /**
+     * @brief ESP_HF_CLIENT_PKT_STAT_NUMS_GET_EVT
+     */
+    struct hf_client_pkt_status_nums {
+        uint32_t rx_total;        /*!< the total number of packets received */
+        uint32_t rx_correct;      /*!< the total number of packets data correctly received */
+        uint32_t rx_err;          /*!< the total number of packets data with possible invalid */
+        uint32_t rx_none;         /*!< the total number of packets data no received */
+        uint32_t rx_lost;         /*!< the total number of packets data partially lost */
+        uint32_t tx_total;        /*!< the total number of packets send */
+        uint32_t tx_discarded;    /*!< the total number of packets send lost */
+    } pkt_nums;                   /*!< HF callback param of ESP_HF_CLIENT_PKT_STAT_NUMS_GET_EVT */
+
 } esp_hf_client_cb_param_t;                      /*!< HFP client callback parameters */
 
 /**
@@ -298,7 +305,7 @@ typedef void (* esp_hf_client_cb_t)(esp_hf_client_cb_event_t event, esp_hf_clien
  *
  * @return
  *                  - ESP_OK: success
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: if callback is a NULL function pointer
  *
  */
@@ -311,7 +318,7 @@ esp_err_t esp_hf_client_register_callback(esp_hf_client_cb_t callback);
  *
  * @return
  *                  - ESP_OK: if the initialization request is sent successfully
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -324,7 +331,7 @@ esp_err_t esp_hf_client_init(void);
  *
  * @return
  *                  - ESP_OK: success
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -339,7 +346,7 @@ esp_err_t esp_hf_client_deinit(void);
  *
  * @return
  *                  - ESP_OK: connect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -354,7 +361,7 @@ esp_err_t esp_hf_client_connect(esp_bd_addr_t remote_bda);
  *
  * @return
  *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -367,8 +374,8 @@ esp_err_t esp_hf_client_disconnect(esp_bd_addr_t remote_bda);
  *
  * @param[in]       remote_bda: remote bluetooth device address
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: connect audio request is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -381,8 +388,8 @@ esp_err_t esp_hf_client_connect_audio(esp_bd_addr_t remote_bda);
  *
  * @param[in]       remote_bda: remote bluetooth device address
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: disconnect audio request is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -394,8 +401,8 @@ esp_err_t esp_hf_client_disconnect_audio(esp_bd_addr_t remote_bda);
  *                  As a precondition to use this API, Service Level Connection shall exist with AG.
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: starting voice recognition is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -407,8 +414,8 @@ esp_err_t esp_hf_client_start_voice_recognition(void);
  *                  As a precondition to use this API, Service Level Connection shall exist with AG.
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: stoping voice recognition is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -423,8 +430,8 @@ esp_err_t esp_hf_client_stop_voice_recognition(void);
  * @param[in]       volume: gain of the speaker of microphone, ranges 0 to 15
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: volume update is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -438,8 +445,8 @@ esp_err_t esp_hf_client_volume_update(esp_hf_volume_control_target_t type, int v
  * @param[in]       number: number string of the call. If NULL, the last number is called(aka re-dial)
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: a call placing is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -453,8 +460,8 @@ esp_err_t esp_hf_client_dial(const char *number);
  * @param[in]       location: location of the number in the memory
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: a memory call placing is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -471,8 +478,8 @@ esp_err_t esp_hf_client_dial_memory(int location);
  *                       ESP_HF_CHLD_TYPE_REL_X or ESP_HF_CHLD_TYPE_PRIV_X
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: command AT+CHLD is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -486,8 +493,8 @@ esp_err_t esp_hf_client_send_chld_cmd(esp_hf_chld_type_t chld, int idx);
  * @param[in]       btrh: response and hold action to send
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: command AT+BTRH is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -499,8 +506,8 @@ esp_err_t esp_hf_client_send_btrh_cmd(esp_hf_btrh_cmd_t btrh);
  *                  As a precondition to use this API, Service Level Connection shall exist with AG.
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: a call answering is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -508,12 +515,12 @@ esp_err_t esp_hf_client_answer_call(void);
 
 /**
  *
- * @brief           Reject an incoming call(send AT+CHUP command).
+ * @brief           Reject an incoming call or terminate an ongoing call(send AT+CHUP command).
  *                  As a precondition to use this API, Service Level Connection shall exist with AG.
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: the call rejecting is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -525,8 +532,8 @@ esp_err_t esp_hf_client_reject_call(void);
  *                  As a precondition to use this API, Service Level Connection shall exist with AG.
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: query of current calls is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -538,8 +545,8 @@ esp_err_t esp_hf_client_query_current_calls(void);
  *                  As a precondition to use this API, Service Level Connection shall exist with AG.
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: query of current operator name is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -551,8 +558,8 @@ esp_err_t esp_hf_client_query_current_operator_name(void);
  *                  As a precondition to use this API, Service Level Connection shall exist with AG
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: the retrieving of subscriber information is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -566,8 +573,8 @@ esp_err_t esp_hf_client_retrieve_subscriber_info(void);
  * @param[in]       code: dtmf code, single ascii character in the set 0-9, #, *, A-D
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: the DTMF codes are sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -579,8 +586,8 @@ esp_err_t esp_hf_client_send_dtmf(char code);
  *                  As a precondition to use this API, Service Level Connection shall exist with AG.
  *
  * @return
- *                  - ESP_OK: disconnect request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_OK: the phone number request corresponding to last voice tag recorded is sent to lower layer
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -593,7 +600,7 @@ esp_err_t esp_hf_client_request_last_voice_tag_number(void);
  *
  * @return
  *                  - ESP_OK: NREC=0 request is sent to lower layer
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: others
  *
  */
@@ -610,12 +617,28 @@ esp_err_t esp_hf_client_send_nrec(void);
  *
  * @return
  *                  - ESP_OK: success
- *                  - ESP_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
  *                  - ESP_FAIL: if callback is a NULL function pointer
  *
  */
 esp_err_t esp_hf_client_register_data_callback(esp_hf_client_incoming_data_cb_t recv,
                                                esp_hf_client_outgoing_data_cb_t send);
+
+/**
+ *
+ * @brief           Get the number of packets received and sent
+ *                  This function is only used in the case that Voice Over HCI is enabled and the audio state is connected.
+ *                  When the operation is completed, the callback function will be called with ESP_HF_CLIENT_PKT_STAT_NUMS_GET_EVT.
+ *
+ * @param[in]       sync_conn_handle: the (e)SCO connection handle
+ *
+ * @return
+ *                  - ESP_OK: if the request is sent successfully
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not yet enabled
+ *                  - ESP_FAIL: others
+ *
+ */
+esp_err_t esp_hf_client_pkt_stat_nums_get(uint16_t sync_conn_handle);
 
 /**
  * @brief           Trigger the lower-layer to fetch and send audio data.
