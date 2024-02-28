@@ -1,4 +1,4 @@
-// Copyright 2015-2020 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2024 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class HWCDC: public Stream
 {
 private:
     static bool deinit(void * busptr);
-    bool isCDC_Connected();
+    static bool isCDC_Connected();
     
 public:
     HWCDC();
@@ -71,12 +71,12 @@ public:
     size_t write(const uint8_t *buffer, size_t size);
     void flush(void);
 
-    inline bool isPlugged(void)
+    inline static bool isPlugged(void)
     {
         return usb_serial_jtag_is_connected();
     }
 
-    inline bool isConnected(void)
+    inline static bool isConnected(void)
     {
         return isCDC_Connected();
     }
