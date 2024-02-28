@@ -425,7 +425,7 @@ void HWCDC::flush(void)
         vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
         if (lastUxItemsWaiting == uxItemsWaiting) tries--; // avoids locking when USB is plugged, but CDC is not connected
     }
-    if (tries == 0) {  // it is very possible that CDC isn't connected anymore...
+    if (tries == 0) {  // CDC isn't connected anymore...
         isConnected = false;  // we consider that CDC connection has been terminated
         flushTXBuffer(); // flush TX Ringbuffer
     }
