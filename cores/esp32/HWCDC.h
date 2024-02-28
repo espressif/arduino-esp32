@@ -102,7 +102,7 @@ public:
     uint32_t baudRate(){return 115200;}
 
 };
-#if ARDUINO_USB_MODE  // Hardware JTAG CDC selected
+#if ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Hardware JTAG CDC selected
 #ifndef HWCDC_SERIAL_IS_DEFINED
 #define HWCDC_SERIAL_IS_DEFINED 1
 #endif

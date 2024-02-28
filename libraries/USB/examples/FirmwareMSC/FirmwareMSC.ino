@@ -65,7 +65,6 @@ void setup() {
   USB.onEvent(usbEventCallback);
   MSC_Update.onEvent(usbEventCallback);
   MSC_Update.begin();
-  USBSerial.begin();
   USB.begin();
 }
 
