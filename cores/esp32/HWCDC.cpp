@@ -376,8 +376,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
             if(isConnected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
         }
     }
-    // there is no more space in CDC Endpoint FIFO. It is very possible that CDC is diconnected!
-    // ==> flush all data from TX buffer and only keep last written data
+    // CDC is diconnected ==> flush all data from TX buffer
     if(to_send && !usb_serial_jtag_ll_txfifo_writable()) {
         isConnected = false;  // we consider that CDC connection has been terminated
         flushTXBuffer();  // flush TX Ringbuffer
