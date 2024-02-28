@@ -378,7 +378,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
     }
     // CDC is diconnected ==> flush all data from TX buffer
     if(to_send && !usb_serial_jtag_ll_txfifo_writable()) {
-        isConnected = false;  // we consider that CDC connection has been terminated
+        isConnected = false;
         flushTXBuffer();  // flush TX Ringbuffer
     }
     xSemaphoreGive(tx_lock);
