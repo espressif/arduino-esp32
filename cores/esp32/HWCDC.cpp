@@ -138,7 +138,7 @@ static void hw_cdc_isr_handler(void *arg) {
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
     uint32_t tx_timeout_ms = 0;
-    if(usb_serial_jtag_is_connected()) {
+    if(isCDC_Connected()) {
         tx_timeout_ms = requested_tx_timeout_ms;
     }
     if(xPortInIsrContext()){
@@ -157,9 +157,7 @@ HWCDC::~HWCDC(){
     end();
 }
 
-
-// It should return <true> just when USB is plugged and CDC is connected.
-HWCDC::operator bool() const
+bool HWCDC::isCDC_Connected() 
 {
     static bool running = false;
 
@@ -183,7 +181,13 @@ HWCDC::operator bool() const
     usb_serial_jtag_ll_write_txfifo(&c, sizeof(c));
     usb_serial_jtag_ll_txfifo_flush();
     running = true;
-    return false;
+    return false;    
+}
+
+// It should return <true> just when USB is plugged and CDC is connected.
+HWCDC::operator bool() const
+{
+    return isCDC_Connected();
 }
 
 void HWCDC::onEvent(esp_event_handler_t callback){
@@ -299,7 +303,7 @@ int HWCDC::availableForWrite(void)
     if(tx_ring_buf == NULL || tx_lock == NULL){
         return 0;
     }
-    if(usb_serial_jtag_is_connected()) {
+    if(isCDC_Connected()) {
         tx_timeout_ms = requested_tx_timeout_ms;
     }
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
@@ -331,7 +335,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
     if(buffer == NULL || size == 0 || tx_ring_buf == NULL || tx_lock == NULL){
         return 0;
     }
-    if(usb_serial_jtag_is_connected()) {
+    if(isCDC_Connected()) {
         tx_timeout_ms = requested_tx_timeout_ms;
     } else {
         isConnected = false;
@@ -392,7 +396,7 @@ void HWCDC::flush(void)
     if(tx_ring_buf == NULL || tx_lock == NULL){
         return;
     }
-    if(usb_serial_jtag_is_connected()) {
+    if(isCDC_Connected()) {
         tx_timeout_ms = requested_tx_timeout_ms;
     } else {
         isConnected = false;
