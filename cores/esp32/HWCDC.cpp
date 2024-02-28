@@ -169,7 +169,7 @@ HWCDC::operator bool() const
     // USB may be unplugged
     if (usb_serial_jtag_is_connected() == false) {
         isConnected = false;
-        running = false; // reset it for when it will plugged in
+        running = false;
         return false;
     }
 
