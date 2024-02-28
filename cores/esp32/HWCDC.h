@@ -21,6 +21,7 @@
 #include <inttypes.h>
 #include "esp_event.h"
 #include "Stream.h"
+#include "driver/usb_serial_jtag.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_HW_CDC_EVENTS);
 
@@ -46,7 +47,7 @@ class HWCDC: public Stream
 {
 private:
     static bool deinit(void * busptr);
-    static bool isCDC_Connected();
+    bool isCDC_Connected();
     
 public:
     HWCDC();
@@ -69,7 +70,17 @@ public:
     size_t write(uint8_t);
     size_t write(const uint8_t *buffer, size_t size);
     void flush(void);
-    
+
+    inline bool isPlugged(void)
+    {
+        return usb_serial_jtag_is_connected();
+    }
+
+    inline bool isConnected(void)
+    {
+        return isCDC_Connected();
+    }
+
     inline size_t read(char * buffer, size_t size)
     {
         return read((uint8_t*) buffer, size);
