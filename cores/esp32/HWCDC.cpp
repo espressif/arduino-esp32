@@ -107,7 +107,6 @@ static void hw_cdc_isr_handler(void *arg) {
             }
         } else {
             usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-            // should we just flush internal CDC buffer??
         }
     }
 
