@@ -415,7 +415,7 @@ void HWCDC::flush(void)
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
     if(uxItemsWaiting){
         // Now trigger the ISR to read data from the ring buffer.
-        usb_serial_jtag_ll_txfifo_flush(); // flushes HW Serial CDC and sets IN_EMPTY when Host reads data
+        usb_serial_jtag_ll_txfifo_flush();
         if(isConnected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
     }
     uint8_t tries = 3;
