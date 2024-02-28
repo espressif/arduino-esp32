@@ -46,6 +46,7 @@ class HWCDC: public Stream
 {
 private:
     static bool deinit(void * busptr);
+    static bool isCDC_Connected();
     
 public:
     HWCDC();
