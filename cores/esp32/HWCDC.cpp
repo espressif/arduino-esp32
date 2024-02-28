@@ -251,11 +251,6 @@ void HWCDC::begin(unsigned long baud)
     } else {
         log_e("Serial JTAG Pins can't be set into Peripheral Manager.");
     }
-    //isConnected = false;
-    // trying to detect if it is already connected by filling CDC FIFO
-    //uint8_t c = '0';
-    //usb_serial_jtag_ll_write_txfifo(&c, 1);
-    //usb_serial_jtag_ll_txfifo_flush();
 }
 
 void HWCDC::end()
