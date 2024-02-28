@@ -23,7 +23,7 @@
 static const uint8_t LED_BUILTIN = 38;
 
 // Status LED
-static const uint8_t LED_STATUS = 8;
+static const uint8_t LED_STATUS = 47;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
 
