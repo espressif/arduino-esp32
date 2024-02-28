@@ -372,7 +372,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
             so_far += max_size;
             to_send -= max_size;
             // Now trigger the ISR to read data from the ring buffer.
-            usb_serial_jtag_ll_txfifo_flush(); // flushes HW Serial CDC and sets IN_EMPTY when Host reads data
+            usb_serial_jtag_ll_txfifo_flush();
             if(isConnected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
         }
     }
