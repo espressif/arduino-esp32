@@ -410,7 +410,7 @@ void HWCDC::flush(void)
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return;
     }
-    // USB may be plugged, but CDC may be not connected ==> do not block and flush TX buffer, keeping in the buffer just the lastest data
+    // USB may be plugged, but CDC may be not connected ==> do not block and flush TX buffer, keeping just the lastest data buffered
     UBaseType_t uxItemsWaiting = 0;
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
     if(uxItemsWaiting){
