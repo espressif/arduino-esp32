@@ -125,7 +125,7 @@ int MacAddress::toString(char *buf) {
 }
 
 String MacAddress::toString() const {
-    uint8_t bytes = (_type == MAC6) ? 6 : 8;
+    uint8_t bytes = (_type == MAC6) ? 18 : 24;
     char buf[bytes];
     if(_type == MAC6) {
         snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
