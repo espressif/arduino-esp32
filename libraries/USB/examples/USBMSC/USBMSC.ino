@@ -182,7 +182,6 @@ void setup() {
   MSC.onWrite(onWrite);
   MSC.mediaPresent(true);
   MSC.begin(DISK_SECTOR_COUNT, DISK_SECTOR_SIZE);
-  USBSerial.begin();
   USB.begin();
 }
 
