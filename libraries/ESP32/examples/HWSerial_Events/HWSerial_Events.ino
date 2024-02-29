@@ -24,8 +24,6 @@ void loop(){}
 HWCDC HWCDCSerial;
 #endif
 
-#include "driver/usb_serial_jtag.h"
-
 // USB Event Callback Function that will log CDC events into UART0
 static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   if (event_base == ARDUINO_HW_CDC_EVENTS) {
@@ -51,20 +49,16 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
   }
 }
 
-bool isPlugged() {
-  return usb_serial_jtag_is_connected();
-}
-
 const char* _hwcdc_status[] = {
-  " USB Plugged but CDC is not connected\r\n",
+  " USB Plugged but CDC is NOT connected\r\n",
   " USB Plugged and CDC is connected\r\n",
-  " USB Unplugged and CDC not connected\r\n",
+  " USB Unplugged and CDC NOT connected\r\n",
   " USB Unplugged BUT CDC is connected :: PROBLEM\r\n",
 };
 
 const char* HWCDC_Status() {
-  int i = isPlugged() ? 0 : 2;
-  if(HWCDCSerial) i += 1;
+  int i = HWCDCSerial.isPlugged() ? 0 : 2;
+  if(HWCDCSerial.isConnected()) i += 1;
   return _hwcdc_status[i];
 }
 
