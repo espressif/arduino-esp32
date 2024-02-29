@@ -47,7 +47,8 @@ jobs:
 
       - name: Save pre-commit cache
         uses: actions/cache/save@v4
-        if: always()
+        if: ${{ always() && steps.restore-cache.outputs.cache-hit != 'true' }}
+        continue-on-error: true
         with:
           path: |
             ~/.cache/pre-commit
