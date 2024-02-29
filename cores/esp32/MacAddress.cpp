@@ -125,20 +125,19 @@ int MacAddress::toString(char *buf) {
 }
 
 String MacAddress::toString() const {
+    uint8_t bytes = (_type == MAC6) ? 6 : 8;
+    char buf[bytes];
     if(_type == MAC6) {
-        char buf[18];
-        sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X",
+        snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
             _mac.bytes[0], _mac.bytes[1], _mac.bytes[2],
             _mac.bytes[3], _mac.bytes[4], _mac.bytes[5]);
-        return String(buf);
     } else {
-        char buf[24];
-        sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
+        snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
             _mac.bytes[0], _mac.bytes[1], _mac.bytes[2],
             _mac.bytes[3], _mac.bytes[4], _mac.bytes[5],
             _mac.bytes[6], _mac.bytes[7]);
-        return String(buf);
     }
+    return String(buf);
 }
 
 uint64_t MacAddress::Value() {
