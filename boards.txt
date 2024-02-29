@@ -14249,8 +14249,9 @@ nodemcu-32s.menu.FlashFreq.80.build.flash_freq=80m
 nodemcu-32s.menu.FlashFreq.40=40MHz
 nodemcu-32s.menu.FlashFreq.40.build.flash_freq=40m
 
-nodemcu-32s.menu.UploadSpeed.921600=921600
-nodemcu-32s.menu.UploadSpeed.921600.upload.speed=921600
+nodemcu-32s.menu.UploadSpeed.460800.linux=460800
+nodemcu-32s.menu.UploadSpeed.460800.macosx=460800
+nodemcu-32s.menu.UploadSpeed.460800.upload.speed=460800
 nodemcu-32s.menu.UploadSpeed.115200=115200
 nodemcu-32s.menu.UploadSpeed.115200.upload.speed=115200
 nodemcu-32s.menu.UploadSpeed.256000.windows=256000
@@ -14258,11 +14259,10 @@ nodemcu-32s.menu.UploadSpeed.256000.upload.speed=256000
 nodemcu-32s.menu.UploadSpeed.230400.windows.upload.speed=256000
 nodemcu-32s.menu.UploadSpeed.230400=230400
 nodemcu-32s.menu.UploadSpeed.230400.upload.speed=230400
-nodemcu-32s.menu.UploadSpeed.460800.linux=460800
-nodemcu-32s.menu.UploadSpeed.460800.macosx=460800
-nodemcu-32s.menu.UploadSpeed.460800.upload.speed=460800
 nodemcu-32s.menu.UploadSpeed.512000.windows=512000
 nodemcu-32s.menu.UploadSpeed.512000.upload.speed=512000
+nodemcu-32s.menu.UploadSpeed.921600=921600
+nodemcu-32s.menu.UploadSpeed.921600.upload.speed=921600
 
 nodemcu-32s.menu.DebugLevel.none=None
 nodemcu-32s.menu.DebugLevel.none.build.code_debug=0
@@ -22768,6 +22768,158 @@ wt32-eth01.menu.EraseFlash.none=Disabled
 wt32-eth01.menu.EraseFlash.none.upload.erase_cmd=
 wt32-eth01.menu.EraseFlash.all=Enabled
 wt32-eth01.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+wt32-sc01-plus.name=WT32-SC01 PLUS
+wt32-sc01-plus.vid.0=0x303a
+wt32-sc01-plus.pid.0=0x80D0
+
+wt32-sc01-plus.bootloader.tool=esptool_py
+wt32-sc01-plus.bootloader.tool.default=esptool_py
+
+wt32-sc01-plus.upload.tool=esptool_py
+wt32-sc01-plus.upload.tool.default=esptool_py
+wt32-sc01-plus.upload.tool.network=esp_ota
+
+wt32-sc01-plus.upload.maximum_size=1310720
+wt32-sc01-plus.upload.maximum_data_size=327680
+wt32-sc01-plus.upload.flags=
+wt32-sc01-plus.upload.extra_flags=
+wt32-sc01-plus.upload.use_1200bps_touch=false
+wt32-sc01-plus.upload.wait_for_upload_port=false
+
+wt32-sc01-plus.serial.disableDTR=false
+wt32-sc01-plus.serial.disableRTS=false
+
+wt32-sc01-plus.build.tarch=xtensa
+wt32-sc01-plus.build.bootloader_addr=0x0
+wt32-sc01-plus.build.target=esp32s3
+wt32-sc01-plus.build.mcu=esp32s3
+wt32-sc01-plus.build.core=esp32
+wt32-sc01-plus.build.variant=wt32-sc01-plus
+wt32-sc01-plus.build.board=WT32_SC01_PLUS
+
+wt32-sc01-plus.build.usb_mode=1
+wt32-sc01-plus.build.cdc_on_boot=1
+wt32-sc01-plus.build.msc_on_boot=0
+wt32-sc01-plus.build.dfu_on_boot=0
+wt32-sc01-plus.build.f_cpu=240000000L
+wt32-sc01-plus.build.flash_size=16MB
+wt32-sc01-plus.build.flash_freq=80m
+wt32-sc01-plus.build.flash_mode=dio
+wt32-sc01-plus.build.boot=qio
+wt32-sc01-plus.build.partitions=default
+wt32-sc01-plus.build.defines=
+wt32-sc01-plus.build.loop_core=
+wt32-sc01-plus.build.event_core=
+wt32-sc01-plus.build.flash_type=qio
+wt32-sc01-plus.build.psram_type=qspi
+wt32-sc01-plus.build.memory_type=qio_qspi
+
+wt32-sc01-plus.menu.LoopCore.1=Core 1
+wt32-sc01-plus.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+wt32-sc01-plus.menu.LoopCore.0=Core 0
+wt32-sc01-plus.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+wt32-sc01-plus.menu.EventsCore.1=Core 1
+wt32-sc01-plus.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+wt32-sc01-plus.menu.EventsCore.0=Core 0
+wt32-sc01-plus.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+wt32-sc01-plus.menu.USBMode.hwcdc=Hardware CDC and JTAG
+wt32-sc01-plus.menu.USBMode.hwcdc.build.usb_mode=1
+wt32-sc01-plus.menu.USBMode.default=USB-OTG (TinyUSB)
+wt32-sc01-plus.menu.USBMode.default.build.usb_mode=0
+
+wt32-sc01-plus.menu.CDCOnBoot.cdc=Enabled
+wt32-sc01-plus.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+wt32-sc01-plus.menu.CDCOnBoot.default=Disabled
+wt32-sc01-plus.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+wt32-sc01-plus.menu.MSCOnBoot.default=Disabled
+wt32-sc01-plus.menu.MSCOnBoot.default.build.msc_on_boot=0
+wt32-sc01-plus.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+wt32-sc01-plus.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+wt32-sc01-plus.menu.DFUOnBoot.default=Disabled
+wt32-sc01-plus.menu.DFUOnBoot.default.build.dfu_on_boot=0
+wt32-sc01-plus.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+wt32-sc01-plus.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+wt32-sc01-plus.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+wt32-sc01-plus.menu.UploadMode.default=UART0 / Hardware CDC
+wt32-sc01-plus.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+wt32-sc01-plus.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+wt32-sc01-plus.menu.UploadMode.default.upload.use_1200bps_touch=false
+wt32-sc01-plus.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+wt32-sc01-plus.menu.PSRAM.enabled=Enabled
+wt32-sc01-plus.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+wt32-sc01-plus.menu.PSRAM.disabled=Disabled
+wt32-sc01-plus.menu.PSRAM.disabled.build.defines=
+
+wt32-sc01-plus.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+wt32-sc01-plus.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+wt32-sc01-plus.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+wt32-sc01-plus.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/3.7MB FFAT)
+wt32-sc01-plus.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+wt32-sc01-plus.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions_tinyuf2
+wt32-sc01-plus.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+wt32-sc01-plus.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+
+wt32-sc01-plus.menu.CPUFreq.240=240MHz (WiFi)
+wt32-sc01-plus.menu.CPUFreq.240.build.f_cpu=240000000L
+wt32-sc01-plus.menu.CPUFreq.160=160MHz (WiFi)
+wt32-sc01-plus.menu.CPUFreq.160.build.f_cpu=160000000L
+wt32-sc01-plus.menu.CPUFreq.80=80MHz (WiFi)
+wt32-sc01-plus.menu.CPUFreq.80.build.f_cpu=80000000L
+wt32-sc01-plus.menu.CPUFreq.40=40MHz
+wt32-sc01-plus.menu.CPUFreq.40.build.f_cpu=40000000L
+wt32-sc01-plus.menu.CPUFreq.20=20MHz
+wt32-sc01-plus.menu.CPUFreq.20.build.f_cpu=20000000L
+wt32-sc01-plus.menu.CPUFreq.10=10MHz
+wt32-sc01-plus.menu.CPUFreq.10.build.f_cpu=10000000L
+
+wt32-sc01-plus.menu.FlashMode.qio=QIO
+wt32-sc01-plus.menu.FlashMode.qio.build.flash_mode=dio
+wt32-sc01-plus.menu.FlashMode.qio.build.boot=qio
+wt32-sc01-plus.menu.FlashMode.dio=DIO
+wt32-sc01-plus.menu.FlashMode.dio.build.flash_mode=dio
+wt32-sc01-plus.menu.FlashMode.dio.build.boot=dio
+
+wt32-sc01-plus.menu.UploadSpeed.921600=921600
+wt32-sc01-plus.menu.UploadSpeed.921600.upload.speed=921600
+wt32-sc01-plus.menu.UploadSpeed.115200=115200
+wt32-sc01-plus.menu.UploadSpeed.115200.upload.speed=115200
+wt32-sc01-plus.menu.UploadSpeed.256000.windows=256000
+wt32-sc01-plus.menu.UploadSpeed.256000.upload.speed=256000
+wt32-sc01-plus.menu.UploadSpeed.230400.windows.upload.speed=256000
+wt32-sc01-plus.menu.UploadSpeed.230400=230400
+wt32-sc01-plus.menu.UploadSpeed.230400.upload.speed=230400
+wt32-sc01-plus.menu.UploadSpeed.460800.linux=460800
+wt32-sc01-plus.menu.UploadSpeed.460800.macosx=460800
+wt32-sc01-plus.menu.UploadSpeed.460800.upload.speed=460800
+wt32-sc01-plus.menu.UploadSpeed.512000.windows=512000
+wt32-sc01-plus.menu.UploadSpeed.512000.upload.speed=512000
+
+wt32-sc01-plus.menu.DebugLevel.none=None
+wt32-sc01-plus.menu.DebugLevel.none.build.code_debug=0
+wt32-sc01-plus.menu.DebugLevel.error=Error
+wt32-sc01-plus.menu.DebugLevel.error.build.code_debug=1
+wt32-sc01-plus.menu.DebugLevel.warn=Warn
+wt32-sc01-plus.menu.DebugLevel.warn.build.code_debug=2
+wt32-sc01-plus.menu.DebugLevel.info=Info
+wt32-sc01-plus.menu.DebugLevel.info.build.code_debug=3
+wt32-sc01-plus.menu.DebugLevel.debug=Debug
+wt32-sc01-plus.menu.DebugLevel.debug.build.code_debug=4
+wt32-sc01-plus.menu.DebugLevel.verbose=Verbose
+wt32-sc01-plus.menu.DebugLevel.verbose.build.code_debug=5
+
+wt32-sc01-plus.menu.EraseFlash.none=Disabled
+wt32-sc01-plus.menu.EraseFlash.none.upload.erase_cmd=
+wt32-sc01-plus.menu.EraseFlash.all=Enabled
+wt32-sc01-plus.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -34358,5 +34510,137 @@ epulse_feather.menu.EraseFlash.none=Disabled
 epulse_feather.menu.EraseFlash.none.upload.erase_cmd=
 epulse_feather.menu.EraseFlash.all=Enabled
 epulse_feather.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+Geekble_ESP32C3.name=Geekble ESP32-C3
+Geekble_ESP32C3.vid.0=0x303A
+Geekble_ESP32C3.pid.0=0x1001
+
+Geekble_ESP32C3.bootloader.tool=esptool_py
+Geekble_ESP32C3.bootloader.tool.default=esptool_py
+
+Geekble_ESP32C3.upload.tool=esptool_py
+Geekble_ESP32C3.upload.tool.default=esptool_py
+Geekble_ESP32C3.upload.tool.network=esp_ota
+
+Geekble_ESP32C3.upload.maximum_size=1310720
+Geekble_ESP32C3.upload.maximum_data_size=327680
+Geekble_ESP32C3.upload.flags=
+Geekble_ESP32C3.upload.extra_flags=
+Geekble_ESP32C3.upload.use_1200bps_touch=false
+Geekble_ESP32C3.upload.wait_for_upload_port=false
+
+Geekble_ESP32C3.serial.disableDTR=true
+Geekble_ESP32C3.serial.disableRTS=true
+
+Geekble_ESP32C3.build.tarch=riscv32
+Geekble_ESP32C3.build.target=esp
+Geekble_ESP32C3.build.mcu=esp32c3
+Geekble_ESP32C3.build.core=esp32
+Geekble_ESP32C3.build.variant=Geekble_ESP32C3
+Geekble_ESP32C3.build.board=GEEKBLE_ESP32C3
+Geekble_ESP32C3.build.bootloader_addr=0x0
+
+Geekble_ESP32C3.build.cdc_on_boot=1
+Geekble_ESP32C3.build.f_cpu=160000000L
+Geekble_ESP32C3.build.flash_size=4MB
+Geekble_ESP32C3.build.flash_freq=80m
+Geekble_ESP32C3.build.flash_mode=dio
+Geekble_ESP32C3.build.boot=qio
+Geekble_ESP32C3.build.partitions=default
+Geekble_ESP32C3.build.defines=
+
+Geekble_ESP32C3.menu.CDCOnBoot.default=Enabled
+Geekble_ESP32C3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+Geekble_ESP32C3.menu.CDCOnBoot.cdc=Disabled
+Geekble_ESP32C3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+Geekble_ESP32C3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+Geekble_ESP32C3.menu.PartitionScheme.default.build.partitions=default
+Geekble_ESP32C3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+Geekble_ESP32C3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+Geekble_ESP32C3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+Geekble_ESP32C3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+Geekble_ESP32C3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+Geekble_ESP32C3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+Geekble_ESP32C3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+Geekble_ESP32C3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+Geekble_ESP32C3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+Geekble_ESP32C3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+Geekble_ESP32C3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+Geekble_ESP32C3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+Geekble_ESP32C3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+Geekble_ESP32C3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+Geekble_ESP32C3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+Geekble_ESP32C3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+Geekble_ESP32C3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+Geekble_ESP32C3.menu.CPUFreq.160=160MHz (WiFi) (Default)
+Geekble_ESP32C3.menu.CPUFreq.160.build.f_cpu=160000000L
+Geekble_ESP32C3.menu.CPUFreq.80=80MHz (WiFi)
+Geekble_ESP32C3.menu.CPUFreq.80.build.f_cpu=80000000L
+Geekble_ESP32C3.menu.CPUFreq.40=40MHz
+Geekble_ESP32C3.menu.CPUFreq.40.build.f_cpu=40000000L
+Geekble_ESP32C3.menu.CPUFreq.20=20MHz
+Geekble_ESP32C3.menu.CPUFreq.20.build.f_cpu=20000000L
+Geekble_ESP32C3.menu.CPUFreq.10=10MHz
+Geekble_ESP32C3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+Geekble_ESP32C3.menu.FlashMode.qio=QIO (Default)
+Geekble_ESP32C3.menu.FlashMode.qio.build.flash_mode=dio
+Geekble_ESP32C3.menu.FlashMode.qio.build.boot=qio
+Geekble_ESP32C3.menu.FlashMode.dio=DIO
+Geekble_ESP32C3.menu.FlashMode.dio.build.flash_mode=dio
+Geekble_ESP32C3.menu.FlashMode.dio.build.boot=dio
+Geekble_ESP32C3.menu.FlashMode.qout=QOUT
+Geekble_ESP32C3.menu.FlashMode.qout.build.flash_mode=dout
+Geekble_ESP32C3.menu.FlashMode.qout.build.boot=qout
+Geekble_ESP32C3.menu.FlashMode.dout=DOUT
+Geekble_ESP32C3.menu.FlashMode.dout.build.flash_mode=dout
+
+Geekble_ESP32C3.menu.FlashFreq.80=80MHz (Default)
+Geekble_ESP32C3.menu.FlashFreq.80.build.flash_freq=80m
+Geekble_ESP32C3.menu.FlashFreq.40=40MHz
+Geekble_ESP32C3.menu.FlashFreq.40.build.flash_freq=40m
+
+Geekble_ESP32C3.menu.FlashSize.4M=4MB (Default)
+Geekble_ESP32C3.menu.FlashSize.4M.build.flash_size=4MB
+Geekble_ESP32C3.menu.FlashSize.2M=2MB
+Geekble_ESP32C3.menu.FlashSize.2M.build.flash_size=2MB
+Geekble_ESP32C3.menu.FlashSize.2M.build.partitions=minimal
+
+Geekble_ESP32C3.menu.UploadSpeed.921600=921600 (Default)
+Geekble_ESP32C3.menu.UploadSpeed.921600.upload.speed=921600
+Geekble_ESP32C3.menu.UploadSpeed.115200=115200
+Geekble_ESP32C3.menu.UploadSpeed.115200.upload.speed=115200
+Geekble_ESP32C3.menu.UploadSpeed.256000.windows=256000
+Geekble_ESP32C3.menu.UploadSpeed.256000.upload.speed=256000
+Geekble_ESP32C3.menu.UploadSpeed.230400.windows.upload.speed=256000
+Geekble_ESP32C3.menu.UploadSpeed.230400=230400
+Geekble_ESP32C3.menu.UploadSpeed.230400.upload.speed=230400
+Geekble_ESP32C3.menu.UploadSpeed.460800.linux=460800
+Geekble_ESP32C3.menu.UploadSpeed.460800.macosx=460800
+Geekble_ESP32C3.menu.UploadSpeed.460800.upload.speed=460800
+Geekble_ESP32C3.menu.UploadSpeed.512000.windows=512000
+Geekble_ESP32C3.menu.UploadSpeed.512000.upload.speed=512000
+
+Geekble_ESP32C3.menu.DebugLevel.none=None
+Geekble_ESP32C3.menu.DebugLevel.none.build.code_debug=0
+Geekble_ESP32C3.menu.DebugLevel.error=Error
+Geekble_ESP32C3.menu.DebugLevel.error.build.code_debug=1
+Geekble_ESP32C3.menu.DebugLevel.warn=Warn
+Geekble_ESP32C3.menu.DebugLevel.warn.build.code_debug=2
+Geekble_ESP32C3.menu.DebugLevel.info=Info
+Geekble_ESP32C3.menu.DebugLevel.info.build.code_debug=3
+Geekble_ESP32C3.menu.DebugLevel.debug=Debug
+Geekble_ESP32C3.menu.DebugLevel.debug.build.code_debug=4
+Geekble_ESP32C3.menu.DebugLevel.verbose=Verbose
+Geekble_ESP32C3.menu.DebugLevel.verbose.build.code_debug=5
+
+Geekble_ESP32C3.menu.EraseFlash.none=Disabled
+Geekble_ESP32C3.menu.EraseFlash.none.upload.erase_cmd=
+Geekble_ESP32C3.menu.EraseFlash.all=Enabled
+Geekble_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
