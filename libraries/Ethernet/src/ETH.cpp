@@ -171,7 +171,7 @@ bool ETHClass::ethDetachBus(void * bus_pointer){
 }
 
 #if CONFIG_ETH_USE_ESP32_EMAC
-bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clock_mode)
+bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clock_mode)
 {
     esp_err_t ret = ESP_OK;
     if(_eth_index > 2){
@@ -179,6 +179,10 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     }
     if(_esp_netif != NULL){
         return true;
+    }
+    if(phy_addr < ETH_PHY_ADDR_AUTO){
+        log_e("Invalid PHY address: %d, set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
+        return false;
     }
     perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, ETHClass::ethDetachBus);
     perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, ETHClass::ethDetachBus);
@@ -265,7 +269,7 @@ bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int mdc, int mdio, i
     esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(mac, phy);
     ret = esp_eth_driver_install(&eth_config, &_eth_handle);
     if(ret != ESP_OK){
-        log_e("SPI Ethernet driver install failed: %d", ret);
+        log_e("Ethernet driver install failed: %d", ret);
         return false;
     }
     if(_eth_handle == NULL){
@@ -443,7 +447,7 @@ esp_err_t ETHClass::eth_spi_write(uint32_t cmd, uint32_t addr, const void *data,
 }
 #endif
 
-bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, int rst, 
+bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, 
 #if ETH_SPI_SUPPORTS_CUSTOM
     SPIClass *spi, 
 #endif
@@ -461,6 +465,10 @@ bool ETHClass::beginSPI(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, 
     if(cs < 0 || irq < 0){
         log_e("CS and IRQ pins must be defined!");
 #endif
+        return false;
+    }
+    if(phy_addr < ETH_PHY_ADDR_AUTO){
+        log_e("Invalid PHY address: %d, set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
         return false;
     }
 
@@ -743,13 +751,13 @@ err:
 }
 
 #if ETH_SPI_SUPPORTS_CUSTOM
-bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, int rst, SPIClass &spi, uint8_t spi_freq_mhz){
+bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, SPIClass &spi, uint8_t spi_freq_mhz){
 
     return beginSPI(type, phy_addr, cs, irq, rst, &spi, -1, -1, -1, SPI2_HOST, spi_freq_mhz);
 }
 #endif
 
-bool ETHClass::begin(eth_phy_type_t type, uint8_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck, int miso, int mosi, uint8_t spi_freq_mhz){
+bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck, int miso, int mosi, uint8_t spi_freq_mhz){
 
     return beginSPI(type, phy_addr, cs, irq, rst,
 #if ETH_SPI_SUPPORTS_CUSTOM 
