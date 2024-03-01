@@ -562,13 +562,12 @@ size_t HardwareSerial::setTxBufferSize(size_t new_size) {
         return 0;
     }
 
-    if (new_size < SOC_UART_FIFO_LEN) {
+    if (new_size <= SOC_UART_FIFO_LEN) {
         log_w("TX Buffer set to minimum value: %d.", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
         _txBufferSize = 0; // it will use just UART FIFO with SOC_UART_FIFO_LEN bytes (128 for most SoC)
         return SOC_UART_FIFO_LEN;
     }
-    // if new_size is SOC_UART_FIFO_LEN, _txBufferSize will be zero - just use the UART FIFO space
-    _txBufferSize = new_size - SOC_UART_FIFO_LEN; // for total correct report from "availableForWrite()"  that matches a call to this function
+    // if new_size is higher than SOC_UART_FIFO_LEN, TX Ringbuffer will be active and it will be used to report back "availableToWrite()"
+    _txBufferSize = new_size;
     return new_size;
 }
-
