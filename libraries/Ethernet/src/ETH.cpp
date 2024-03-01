@@ -88,6 +88,10 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     if(_esp_netif != NULL){
         return true;
     }
+    if(phy_addr < ETH_PHY_ADDR_AUTO){
+        log_e("Invalid PHY address: %d, set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
+        return false;
+    }
     perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, ETHClass::ethDetachBus);
     perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, ETHClass::ethDetachBus);
     perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, ETHClass::ethDetachBus);
@@ -358,6 +362,10 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
     if(cs < 0 || irq < 0){
         log_e("CS and IRQ pins must be defined!");
 #endif
+        return false;
+    }
+    if(phy_addr < ETH_PHY_ADDR_AUTO){
+        log_e("Invalid PHY address: %d, set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
         return false;
     }
 
