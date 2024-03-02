@@ -445,7 +445,11 @@ static void usb_switch_to_cdc_jtag(){
     digitalWrite(USBPHY_DP_NUM, LOW);
 
     // Initialize CDC+JTAG ISR to listen for BUS_RESET
+    #if defined __has_include && __has_include ("hal/usb_phy_ll.h")
     usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
+    #else
+    usb_fsls_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
+    #endif
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
