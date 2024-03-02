@@ -42,8 +42,12 @@
 #include "esp32s2/rom/usb/usb_dc.h"
 #include "esp32s2/rom/usb/chip_usb_dw_wrapper.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
-#include "hal/usb_serial_jtag_ll.h"
+#if defined __has_include && __has_include ("hal/usb_phy_ll.h")
 #include "hal/usb_phy_ll.h"
+#else
+#include "hal/usb_fsls_phy_ll.h"
+#endif
+#include "hal/usb_serial_jtag_ll.h"
 #include "esp32s3/rom/usb/usb_persist.h"
 #include "esp32s3/rom/usb/usb_dc.h"
 #include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
