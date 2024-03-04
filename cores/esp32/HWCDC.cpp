@@ -177,7 +177,8 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
 }
 
 HWCDC::HWCDC() {
-
+    perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit);
 }
 
 HWCDC::~HWCDC(){
@@ -246,12 +247,10 @@ void HWCDC::begin(unsigned long baud)
     }
     // Setting USB D+ D- pins
     uint8_t pin = ESP32_BUS_TYPE_USB_DM;
-    perimanSetBusDeinit(pin, HWCDC::deinit);
     if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT)
         if(!perimanClearPinBus(pin)) goto err;
     if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)) goto err;
     pin = ESP32_BUS_TYPE_USB_DP;
-    perimanSetBusDeinit(pin, HWCDC::deinit);
     if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT)
         if(!perimanClearPinBus(pin)) goto err;
     if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)) goto err;
