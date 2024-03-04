@@ -264,7 +264,7 @@ void HWCDC::begin(unsigned long baud)
 
 void HWCDC::end()
 {
-    //Disable tx/rx interrupt.
+    //Disable/clear/free tx/rx interrupt.
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     esp_intr_free(intr_handle);
