@@ -48,7 +48,6 @@ esp_err_t dsps_mulc_f32_ae32(const float *input, float *output, int len, float C
 esp_err_t dsps_mulc_s16_ae32(const int16_t *input, int16_t *output, int len, int16_t C, int step_in, int step_out);
 esp_err_t dsps_mulc_s16_ansi(const int16_t *input, int16_t *output, int len, int16_t C, int step_in, int step_out);
 
-/**@}*/
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2018-2023 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,54 @@ namespace dspm {
  */
 class Mat {
 public:
+
+    int rows;               /*!< Amount of rows*/
+    int cols;               /*!< Amount of columns*/
+    int stride;             /*!< Stride = (number of elements in a row) + padding*/
+    int padding;            /*!< Padding between 2 rows*/
+    float *data;            /*!< Buffer with matrix data*/
+    int length;             /*!< Total amount of data in data array*/
+    static float abs_tol;   /*!< Max acceptable absolute tolerance*/
+    bool ext_buff;          /*!< Flag indicates that matrix use external buffer*/
+    bool sub_matrix;        /*!< Flag indicates that matrix is a subset of another matrix*/
+
+    /**
+     * @brief Rectangular area
+     * 
+     * The Rect is used for creating regions of interest ROI(s). The ROI is then used as a sub-matrix
+     */
+    struct Rect {
+        int x;              /*!< x starting position (start col) of the rectangular area*/
+        int y;              /*!< y starting position (start row) of the rectangular area*/
+        int width;          /*!< width (number of cols) of the rectangular area*/
+        int height;         /*!< height (number of rows) of the rectangular area*/
+
+        /**
+        * @brief Constructor with initialization to 0
+        * 
+        * @param[in] x: x starting position (start col) of the rectangular area
+        * @param[in] y: y starting position (start row) of the rectangular area
+        * @param[in] width: width (number of cols) of the rectangular area
+        * @param[in] height: height (number of rows) of the rectangular area
+        */ 
+        Rect(int x = 0, int y = 0, int width = 0, int height = 0);
+
+        /**
+        * @brief Resize rect area
+        * 
+        * @param[in] x: x starting position (start col) of the new rectangular area
+        * @param[in] y: y starting position (start row) of the new rectangular area
+        * @param[in] width: width (number of cols) of the new rectangular area
+        * @param[in] height: height (number of rows) of the new rectangular area
+        */
+        void resizeRect(int x, int y, int width, int height);
+
+        /**
+         * @brief Get amount of elements in the rect area
+         */
+        int areaRect(void);
+    };
+
     /**
      * Constructor allocate internal buffer.
      * @param[in] rows: amount of matrix rows
@@ -42,16 +90,68 @@ public:
      * @param[in] cols: amount of matrix columns
     */
     Mat(float *data, int rows, int cols);
+
+    /**
+     * Constructor
+     * @param[in] data: external buffer with row-major matrix data
+     * @param[in] rows: amount of matrix rows
+     * @param[in] cols: amount of matrix columns
+     * @param[in] stride: col stride
+     */
+    Mat(float *data, int rows, int cols, int stride);
+
     /**
      * Allocate matrix with undefined size.
      */
     Mat();
     virtual ~Mat();
+    
     /**
-     * Make copy of matrix.
+     * @brief Make copy of matrix.
+     * 
+     * if src matrix is sub matrix, only the header is copied
+     * if src matrix is matrix, header and data are copied
+     * 
      * @param[in] src: source matrix
      */
     Mat(const Mat &src);
+
+    /**
+     * @brief Create a subset of matrix as ROI (Region of Interest)
+     * 
+     * @param[in] startRow: start row position of source matrix to get the subset matrix from
+     * @param[in] startCol: start col position of source matrix to get the subset matrix from
+     * @param[in] roiRows: size of row elements of source matrix to get the subset matrix from
+     * @param[in] roiCols: size of col elements of source matrix to get the subset matrix from
+     * 
+     * @return
+     *      - result matrix size roiRows x roiCols 
+     */
+    Mat getROI(int startRow, int startCol, int roiRows, int roiCols);
+
+    /**
+     * @brief Create a subset of matrix as ROI (Region of Interest)
+     * 
+     * @param[in] startRow: start row position of source matrix to get the subset matrix from
+     * @param[in] startCol: start col position of source matrix to get the subset matrix from
+     * @param[in] roiRows: size of row elements of source matrix to get the subset matrix from
+     * @param[in] roiCols: size of col elements of source matrix to get the subset matrix from
+     * @param[in] stride: number of cols + padding between 2 rows
+     * 
+     * @return
+     *      - result matrix size roiRows x roiCols 
+     */
+    Mat getROI(int startRow, int startCol, int roiRows, int roiCols, int stride);
+
+    /**
+     * @brief Create a subset of matrix as ROI (Region of Interest)
+     * 
+     * @param[in] rect: rectangular area of interest
+     * 
+     * @return
+     *      - result matrix size rect.rectRows x rect.rectCols 
+     */
+    Mat getROI(const Mat::Rect& rect);
 
     /**
      * Make copy of matrix.
@@ -60,6 +160,22 @@ public:
      * @param[in] col_pos: start col position of destination matrix
      */
     void Copy(const Mat &src, int row_pos, int col_pos);
+
+    /**
+     * @brief copy header of matrix
+     * 
+     * Make a shallow copy of matrix (no data copy)
+     * @param[in] src: source matrix
+     */
+    void CopyHead(const Mat &src);
+
+    /**
+     * @brief print matrix header
+     * 
+     * Print all information about matrix to the terminal
+     * @param[in] src: source matrix
+     */
+    void PrintHead(void);
 
     /**
      * Make copy of matrix.
@@ -74,6 +190,14 @@ public:
     Mat Get(int row_start, int row_size, int col_start, int col_size);
 
     /**
+     * Make copy of matrix.
+     * @param[in] rect: rectangular area of interest
+     * @return
+     *      - result matrix size row_size x col_size 
+     */
+    Mat Get(const Mat::Rect& rect);
+
+    /**
      * Copy operator
      *
      * @param[in] src: source matrix
@@ -82,8 +206,6 @@ public:
      *      - matrix copy
      */
     Mat &operator=(const Mat &src);
-
-    bool ext_buff; /*!< Flag indicates that matrix use external buffer*/
 
     /**
      * Access to the matrix elements.
@@ -95,7 +217,7 @@ public:
      */
     inline float &operator()(int row, int col)
     {
-        return data[row * this->cols + col];
+        return data[row * this->stride + col];
     }
     /**
      * Access to the matrix elements.
@@ -107,7 +229,7 @@ public:
      */
     inline const float &operator()(int row, int col) const
     {
-        return data[row * this->cols + col];
+        return data[row * this->stride + col];
     }
 
     /**
@@ -238,6 +360,18 @@ public:
      *      - matrix [N]x[N] with 1 in all elements
      */
     static Mat ones(int size);
+
+    /**
+     * Create matrix with all elements 1.
+     * Create a matrix and fill all elements with 1.
+     *
+     * @param[in] rows: matrix rows
+     * @param[in] cols: matrix cols
+     *
+     * @return
+     *      - matrix [N]x[N] with 1 in all elements
+     */
+    static Mat ones(int rows, int cols);
 
     /**
      * Return part of matrix from defined position (startRow, startCol) as a matrix[blockRows x blockCols].
@@ -371,13 +505,6 @@ public:
      */
     Mat pinv();
 
-    int rows; /*!< Amount of rows*/
-    int cols; /*!< Amount of columns*/
-    float *data; /*!< Buffer with matrix data*/
-    int length; /*!< Total amount of data in data array*/
-
-    static float abs_tol; /*!< Max acceptable absolute tolerance*/
-
     /**
      * Find determinant
      * @param[in] n: element number in first row
@@ -402,6 +529,17 @@ private:
  *      - output stream
  */
 std::ostream &operator<<(std::ostream &os, const Mat &m);
+
+/**
+ * Print rectangular ROI to the standard iostream.
+ * @param[in] os: output stream
+ * @param[in] rect: ROI
+ *
+ * @return
+ *      - output stream
+ */
+std::ostream &operator<<(std::ostream &os, const Mat::Rect &rect);
+
 /**
  * Fill the matrix from iostream.
  * @param[in] is: input stream
