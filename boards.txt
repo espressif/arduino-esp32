@@ -29533,6 +29533,155 @@ XIAO_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+XIAO_ESP32C6.name=XIAO_ESP32C6
+XIAO_ESP32C6.vid.0=0x303a
+XIAO_ESP32C6.pid.0=0x1001
+
+XIAO_ESP32C6.bootloader.tool=esptool_py
+XIAO_ESP32C6.bootloader.tool.default=esptool_py
+
+XIAO_ESP32C6.upload.tool=esptool_py
+XIAO_ESP32C6.upload.tool.default=esptool_py
+XIAO_ESP32C6.upload.tool.network=esp_ota
+
+XIAO_ESP32C6.upload.maximum_size=1310720
+XIAO_ESP32C6.upload.maximum_data_size=327680
+XIAO_ESP32C6.upload.flags=
+XIAO_ESP32C6.upload.extra_flags=
+XIAO_ESP32C6.upload.use_1200bps_touch=false
+XIAO_ESP32C6.upload.wait_for_upload_port=false
+
+XIAO_ESP32C6.serial.disableDTR=false
+XIAO_ESP32C6.serial.disableRTS=false
+
+XIAO_ESP32C6.build.tarch=riscv32
+XIAO_ESP32C6.build.target=esp
+XIAO_ESP32C6.build.mcu=esp32c6
+XIAO_ESP32C6.build.core=esp32
+XIAO_ESP32C6.build.variant=XIAO_ESP32C6
+XIAO_ESP32C6.build.board=XIAO_ESP32C3
+XIAO_ESP32C6.build.bootloader_addr=0x0
+
+XIAO_ESP32C6.build.cdc_on_boot=1
+XIAO_ESP32C6.build.f_cpu=160000000L
+XIAO_ESP32C6.build.flash_size=4MB
+XIAO_ESP32C6.build.flash_freq=80m
+XIAO_ESP32C6.build.flash_mode=qio
+XIAO_ESP32C6.build.boot=qio
+XIAO_ESP32C6.build.partitions=default
+XIAO_ESP32C6.build.defines=
+
+## IDE 2.0 Seems to not update the value
+XIAO_ESP32C6.menu.JTAGAdapter.default=Disabled
+XIAO_ESP32C6.menu.JTAGAdapter.default.build.copy_jtag_files=0
+XIAO_ESP32C6.menu.JTAGAdapter.builtin=Integrated USB JTAG
+XIAO_ESP32C6.menu.JTAGAdapter.builtin.build.openocdscript=esp32c6-builtin.cfg
+XIAO_ESP32C6.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+XIAO_ESP32C6.menu.JTAGAdapter.external=FTDI Adapter
+XIAO_ESP32C6.menu.JTAGAdapter.external.build.openocdscript=esp32c6-ftdi.cfg
+XIAO_ESP32C6.menu.JTAGAdapter.external.build.copy_jtag_files=1
+XIAO_ESP32C6.menu.JTAGAdapter.bridge=ESP USB Bridge
+XIAO_ESP32C6.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
+XIAO_ESP32C6.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+XIAO_ESP32C6.menu.CDCOnBoot.cdc=Enabled
+XIAO_ESP32C6.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+XIAO_ESP32C6.menu.CDCOnBoot.default=Disabled
+XIAO_ESP32C6.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+XIAO_ESP32C6.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+XIAO_ESP32C6.menu.PartitionScheme.default.build.partitions=default
+XIAO_ESP32C6.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+XIAO_ESP32C6.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+XIAO_ESP32C6.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+XIAO_ESP32C6.menu.PartitionScheme.no_ota.build.partitions=no_ota
+XIAO_ESP32C6.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+XIAO_ESP32C6.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+XIAO_ESP32C6.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+XIAO_ESP32C6.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+XIAO_ESP32C6.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+XIAO_ESP32C6.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+XIAO_ESP32C6.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+XIAO_ESP32C6.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+XIAO_ESP32C6.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+XIAO_ESP32C6.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+XIAO_ESP32C6.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+XIAO_ESP32C6.menu.PartitionScheme.huge_app.build.partitions=huge_app
+XIAO_ESP32C6.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+XIAO_ESP32C6.menu.CPUFreq.160=160MHz (WiFi)
+XIAO_ESP32C6.menu.CPUFreq.160.build.f_cpu=160000000L
+XIAO_ESP32C6.menu.CPUFreq.80=80MHz (WiFi)
+XIAO_ESP32C6.menu.CPUFreq.80.build.f_cpu=80000000L
+XIAO_ESP32C6.menu.CPUFreq.40=40MHz
+XIAO_ESP32C6.menu.CPUFreq.40.build.f_cpu=40000000L
+XIAO_ESP32C6.menu.CPUFreq.20=20MHz
+XIAO_ESP32C6.menu.CPUFreq.20.build.f_cpu=20000000L
+XIAO_ESP32C6.menu.CPUFreq.10=10MHz
+XIAO_ESP32C6.menu.CPUFreq.10.build.f_cpu=10000000L
+
+XIAO_ESP32C6.menu.FlashMode.qio=QIO
+XIAO_ESP32C6.menu.FlashMode.qio.build.flash_mode=dio
+XIAO_ESP32C6.menu.FlashMode.qio.build.boot=qio
+XIAO_ESP32C6.menu.FlashMode.dio=DIO
+XIAO_ESP32C6.menu.FlashMode.dio.build.flash_mode=dio
+XIAO_ESP32C6.menu.FlashMode.dio.build.boot=dio
+
+XIAO_ESP32C6.menu.FlashFreq.80=80MHz
+XIAO_ESP32C6.menu.FlashFreq.80.build.flash_freq=80m
+XIAO_ESP32C6.menu.FlashFreq.40=40MHz
+XIAO_ESP32C6.menu.FlashFreq.40.build.flash_freq=40m
+
+XIAO_ESP32C6.menu.FlashSize.4M=4MB (32Mb)
+XIAO_ESP32C6.menu.FlashSize.4M.build.flash_size=4MB
+
+XIAO_ESP32C6.menu.UploadSpeed.921600=921600
+XIAO_ESP32C6.menu.UploadSpeed.921600.upload.speed=921600
+XIAO_ESP32C6.menu.UploadSpeed.115200=115200
+XIAO_ESP32C6.menu.UploadSpeed.115200.upload.speed=115200
+XIAO_ESP32C6.menu.UploadSpeed.256000.windows=256000
+XIAO_ESP32C6.menu.UploadSpeed.256000.upload.speed=256000
+XIAO_ESP32C6.menu.UploadSpeed.230400.windows.upload.speed=256000
+XIAO_ESP32C6.menu.UploadSpeed.230400=230400
+XIAO_ESP32C6.menu.UploadSpeed.230400.upload.speed=230400
+XIAO_ESP32C6.menu.UploadSpeed.460800.linux=460800
+XIAO_ESP32C6.menu.UploadSpeed.460800.macosx=460800
+XIAO_ESP32C6.menu.UploadSpeed.460800.upload.speed=460800
+XIAO_ESP32C6.menu.UploadSpeed.512000.windows=512000
+XIAO_ESP32C6.menu.UploadSpeed.512000.upload.speed=512000
+
+XIAO_ESP32C6.menu.DebugLevel.none=None
+XIAO_ESP32C6.menu.DebugLevel.none.build.code_debug=0
+XIAO_ESP32C6.menu.DebugLevel.error=Error
+XIAO_ESP32C6.menu.DebugLevel.error.build.code_debug=1
+XIAO_ESP32C6.menu.DebugLevel.warn=Warn
+XIAO_ESP32C6.menu.DebugLevel.warn.build.code_debug=2
+XIAO_ESP32C6.menu.DebugLevel.info=Info
+XIAO_ESP32C6.menu.DebugLevel.info.build.code_debug=3
+XIAO_ESP32C6.menu.DebugLevel.debug=Debug
+XIAO_ESP32C6.menu.DebugLevel.debug.build.code_debug=4
+XIAO_ESP32C6.menu.DebugLevel.verbose=Verbose
+XIAO_ESP32C6.menu.DebugLevel.verbose.build.code_debug=5
+
+XIAO_ESP32C6.menu.EraseFlash.none=Disabled
+XIAO_ESP32C6.menu.EraseFlash.none.upload.erase_cmd=
+XIAO_ESP32C6.menu.EraseFlash.all=Enabled
+XIAO_ESP32C6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+XIAO_ESP32C6.menu.ZigbeeMode.default=Disabled
+XIAO_ESP32C6.menu.ZigbeeMode.default.build.zigbee_mode=
+XIAO_ESP32C6.menu.ZigbeeMode.default.build.zigbee_libs=
+XIAO_ESP32C6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+XIAO_ESP32C6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+XIAO_ESP32C6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
+XIAO_ESP32C6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+XIAO_ESP32C6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+XIAO_ESP32C6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+XIAO_ESP32C6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+XIAO_ESP32C6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+XIAO_ESP32C6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
+
+##############################################################
 
 XIAO_ESP32S3.name=XIAO_ESP32S3
 XIAO_ESP32S3.vid.0=0x2886
