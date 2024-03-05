@@ -261,7 +261,9 @@ void HWCDC::begin(unsigned long baud)
             goto err;
         }
     }
-    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)) goto err;
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)){
+        goto err;
+    }
     return;
     
     err:
