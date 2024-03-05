@@ -30,7 +30,7 @@
 #include "hid.h"
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif
 
 //--------------------------------------------------------------------+
@@ -47,10 +47,9 @@
 #endif
 
 
-typedef struct
-{
-  uint8_t  report_id;
-  uint8_t  usage;
+typedef struct {
+  uint8_t report_id;
+  uint8_t usage;
   uint16_t usage_page;
 
   // TODO still use the endpoint size for now
@@ -86,7 +85,8 @@ bool tuh_hid_mounted(uint8_t dev_addr, uint8_t idx);
 
 // Parse report descriptor into array of report_info struct and return number of reports.
 // For complicated report, application should write its own parser.
-uint8_t tuh_hid_parse_report_descriptor(tuh_hid_report_info_t* reports_info_arr, uint8_t arr_count, uint8_t const* desc_report, uint16_t desc_len) TU_ATTR_UNUSED;
+TU_ATTR_UNUSED uint8_t tuh_hid_parse_report_descriptor(tuh_hid_report_info_t* reports_info_arr, uint8_t arr_count,
+                                                       uint8_t const* desc_report, uint16_t desc_len);
 
 //--------------------------------------------------------------------+
 // Control Endpoint API
@@ -107,7 +107,8 @@ bool tuh_hid_set_protocol(uint8_t dev_addr, uint8_t idx, uint8_t protocol);
 
 // Set Report using control endpoint
 // report_type is either Input, Output or Feature, (value from hid_report_type_t)
-bool tuh_hid_set_report(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, void* report, uint16_t len);
+bool tuh_hid_set_report(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type,
+                        void* report, uint16_t len);
 
 //--------------------------------------------------------------------+
 // Interrupt Endpoint API
@@ -120,6 +121,9 @@ bool tuh_hid_receive_ready(uint8_t dev_addr, uint8_t idx);
 // - true If succeeded, tuh_hid_report_received_cb() callback will be invoked when report is available
 // - false if failed to queue the transfer e.g endpoint is busy
 bool tuh_hid_receive_report(uint8_t dev_addr, uint8_t idx);
+
+// Abort receiving report on Interrupt Endpoint
+bool tuh_hid_receive_abort(uint8_t dev_addr, uint8_t idx);
 
 // Check if HID interface is ready to send report
 bool tuh_hid_send_ready(uint8_t dev_addr, uint8_t idx);
@@ -159,11 +163,11 @@ TU_ATTR_WEAK void tuh_hid_set_protocol_complete_cb(uint8_t dev_addr, uint8_t idx
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void hidh_init       (void);
-bool hidh_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *desc_itf, uint16_t max_len);
-bool hidh_set_config (uint8_t dev_addr, uint8_t itf_num);
-bool hidh_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
-void hidh_close      (uint8_t dev_addr);
+void hidh_init(void);
+bool hidh_open(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const* desc_itf, uint16_t max_len);
+bool hidh_set_config(uint8_t dev_addr, uint8_t itf_num);
+bool hidh_xfer_cb(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
+void hidh_close(uint8_t dev_addr);
 
 #ifdef __cplusplus
 }
