@@ -247,8 +247,11 @@ void HWCDC::begin(unsigned long baud)
     }
     // Setting USB D+ D- pins
     uint8_t pin = ESP32_BUS_TYPE_USB_DM;
-    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT)
-        if(!perimanClearPinBus(pin)) goto err;
+    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
+        if(!perimanClearPinBus(pin)){
+            goto err;
+        }
+    }
     if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)) goto err;
     pin = ESP32_BUS_TYPE_USB_DP;
     if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT)
