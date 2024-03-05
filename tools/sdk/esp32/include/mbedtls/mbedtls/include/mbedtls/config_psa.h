@@ -12,19 +12,7 @@
  */
 /*
  *  Copyright The Mbed TLS Contributors
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
  */
 
 #ifndef MBEDTLS_CONFIG_PSA_H
@@ -110,6 +98,10 @@ extern "C" {
 
 #if defined(PSA_WANT_ALG_HKDF)
 #if !defined(MBEDTLS_PSA_ACCEL_ALG_HKDF)
+/*
+ * The PSA implementation has its own implementation of HKDF, separate from
+ * hkdf.c. No need to enable MBEDTLS_HKDF_C here.
+ */
 #define MBEDTLS_PSA_BUILTIN_ALG_HMAC 1
 #define MBEDTLS_PSA_BUILTIN_ALG_HKDF 1
 #endif /* !MBEDTLS_PSA_ACCEL_ALG_HKDF */
@@ -617,7 +609,7 @@ extern "C" {
 #if defined(MBEDTLS_MD_C)
 #define MBEDTLS_PSA_BUILTIN_ALG_HMAC 1
 #define PSA_WANT_ALG_HMAC 1
-#define PSA_WANT_KEY_TYPE_HMAC
+#define PSA_WANT_KEY_TYPE_HMAC 1
 #define MBEDTLS_PSA_BUILTIN_ALG_TLS12_PRF 1
 #define PSA_WANT_ALG_TLS12_PRF 1
 #define MBEDTLS_PSA_BUILTIN_ALG_TLS12_PSK_TO_MS 1
@@ -755,69 +747,69 @@ extern "C" {
 
 #if defined(MBEDTLS_ECP_DP_BP256R1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_BRAINPOOL_P_R1_256 1
-#define PSA_WANT_ECC_BRAINPOOL_P_R1_256
+#define PSA_WANT_ECC_BRAINPOOL_P_R1_256 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_BP384R1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_BRAINPOOL_P_R1_384 1
-#define PSA_WANT_ECC_BRAINPOOL_P_R1_384
+#define PSA_WANT_ECC_BRAINPOOL_P_R1_384 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_BP512R1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_BRAINPOOL_P_R1_512 1
-#define PSA_WANT_ECC_BRAINPOOL_P_R1_512
+#define PSA_WANT_ECC_BRAINPOOL_P_R1_512 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_MONTGOMERY_255 1
-#define PSA_WANT_ECC_MONTGOMERY_255
+#define PSA_WANT_ECC_MONTGOMERY_255 1
 #endif
 
 /* Curve448 is not yet supported via the PSA API (https://github.com/Mbed-TLS/mbedtls/issues/4249) */
 #if 0 && defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_MONTGOMERY_448 1
-#define PSA_WANT_ECC_MONTGOMERY_448
+#define PSA_WANT_ECC_MONTGOMERY_448 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_SECP192R1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_192 1
-#define PSA_WANT_ECC_SECP_R1_192
+#define PSA_WANT_ECC_SECP_R1_192 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_SECP224R1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_224 1
-#define PSA_WANT_ECC_SECP_R1_224
+#define PSA_WANT_ECC_SECP_R1_224 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_256 1
-#define PSA_WANT_ECC_SECP_R1_256
+#define PSA_WANT_ECC_SECP_R1_256 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_384 1
-#define PSA_WANT_ECC_SECP_R1_384
+#define PSA_WANT_ECC_SECP_R1_384 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_SECP_R1_521 1
-#define PSA_WANT_ECC_SECP_R1_521
+#define PSA_WANT_ECC_SECP_R1_521 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_SECP192K1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_SECP_K1_192 1
-#define PSA_WANT_ECC_SECP_K1_192
+#define PSA_WANT_ECC_SECP_K1_192 1
 #endif
 
 /* SECP224K1 is buggy via the PSA API (https://github.com/Mbed-TLS/mbedtls/issues/3541) */
 #if 0 && defined(MBEDTLS_ECP_DP_SECP224K1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_SECP_K1_224 1
-#define PSA_WANT_ECC_SECP_K1_224
+#define PSA_WANT_ECC_SECP_K1_224 1
 #endif
 
 #if defined(MBEDTLS_ECP_DP_SECP256K1_ENABLED)
 #define MBEDTLS_PSA_BUILTIN_ECC_SECP_K1_256 1
-#define PSA_WANT_ECC_SECP_K1_256
+#define PSA_WANT_ECC_SECP_K1_256 1
 #endif
 
 #endif /* MBEDTLS_PSA_CRYPTO_CONFIG */

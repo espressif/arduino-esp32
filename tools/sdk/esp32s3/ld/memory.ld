@@ -62,7 +62,7 @@ MEMORY
    */
   dram0_0_seg (RW) : org = (0x3FC88000), len = ((0x403CC700 - (0x40378000 - 0x3FC88000)) - 0x3FC88000)
   /* Flash mapped constant data */
-  drom0_0_seg (R) : org = 0x3C000020, len = 0x800000-0x20
+  drom0_0_seg (R) : org = 0x3C000020, len = 0x2000000-0x20
   /* (See iram0_2_seg for meaning of 0x20 offset in the above.) */
   /**
    * RTC fast memory (executable). Persists over deep sleep.

@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
- * SPDX-FileContributor: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileContributor: 2015-2024 Espressif Systems (Shanghai) CO LTD
  */
 
 #ifndef __LWIPOPTS_H__
@@ -43,6 +43,11 @@ extern "C"
  */
 #ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
 #define LWIP_TCPIP_CORE_LOCKING         1
+#ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING_INPUT
+#define LWIP_TCPIP_CORE_LOCKING_INPUT   1
+#else
+#define LWIP_TCPIP_CORE_LOCKING_INPUT   0
+#endif
 #define LOCK_TCPIP_CORE()     do { sys_mutex_lock(&lock_tcpip_core); sys_thread_tcpip(LWIP_CORE_LOCK_MARK_HOLDER); } while(0)
 #define UNLOCK_TCPIP_CORE()   do { sys_thread_tcpip(LWIP_CORE_LOCK_UNMARK_HOLDER); sys_mutex_unlock(&lock_tcpip_core);  } while(0)
 #ifdef CONFIG_LWIP_CHECK_THREAD_SAFETY
@@ -51,6 +56,7 @@ extern "C"
 
 #else
 #define LWIP_TCPIP_CORE_LOCKING         0
+#define LWIP_TCPIP_CORE_LOCKING_INPUT   0
 #ifdef CONFIG_LWIP_CHECK_THREAD_SAFETY
 #define LWIP_ASSERT_CORE_LOCKED()     do { LWIP_ASSERT("Required to run in TCPIP context!", sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)); } while(0)
 #endif /* CONFIG_LWIP_CHECK_THREAD_SAFETY */
@@ -203,6 +209,11 @@ extern "C"
  * packets even if the maximum amount of fragments is enqueued for reassembly!
  */
 #define IP_REASS_MAX_PBUFS              10
+
+/**
+ * IP_DEFAULT_TTL: Default value for Time-To-Live used by transport layers.
+ */
+#define IP_DEFAULT_TTL                   CONFIG_LWIP_IP_DEFAULT_TTL
 
 /**
  * IP_FORWARD==1: Enables the ability to forward IP packets across network
@@ -364,8 +375,16 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
  */
 #define LWIP_DNS                        1
 
-#define DNS_MAX_SERVERS                 3
-#define DNS_FALLBACK_SERVER_INDEX        (DNS_MAX_SERVERS - 1)
+#define DNS_MAX_SERVERS                 CONFIG_LWIP_DNS_MAX_SERVERS
+#define DNS_FALLBACK_SERVER_INDEX       (DNS_MAX_SERVERS - 1)
+
+#ifdef CONFIG_LWIP_FALLBACK_DNS_SERVER_SUPPORT
+#define FALLBACK_DNS_SERVER_ADDRESS(address)                           \
+        do {    ip_addr_t *server_dns = address;                            \
+                char server_ip[] = CONFIG_LWIP_FALLBACK_DNS_SERVER_ADDRESS; \
+                ipaddr_aton(server_ip, server_dns);                         \
+        } while (0)
+#endif /* CONFIG_LWIP_FALLBACK_DNS_SERVER_SUPPORT */
 
 /*
    ---------------------------------
@@ -384,6 +403,21 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
  * Define to 0 if your device is low on memory.
  */
 #define TCP_QUEUE_OOSEQ                 CONFIG_LWIP_TCP_QUEUE_OOSEQ
+
+/**
+ * TCP_OOSEQ_MAX_PBUFS: The maximum number of pbufs
+ * queued on ooseq per pcb
+ */
+#if TCP_QUEUE_OOSEQ
+#define TCP_OOSEQ_MAX_PBUFS             CONFIG_LWIP_TCP_OOSEQ_MAX_PBUFS
+#endif
+
+/**
+ * TCP_OOSEQ_TIMEOUT: Timeout for each pbuf queued in TCP OOSEQ, in RTOs.
+ */
+#if TCP_QUEUE_OOSEQ
+#define TCP_OOSEQ_TIMEOUT               CONFIG_LWIP_TCP_OOSEQ_TIMEOUT
+#endif
 
 /**
  * LWIP_TCP_SACK_OUT==1: TCP will support sending selective acknowledgements (SACKs).
@@ -1097,6 +1131,7 @@ static inline uint32_t timeout_from_offered(uint32_t lease, uint32_t min)
 #define ESP_LWIP_LOCK                   1
 #define ESP_THREAD_PROTECTION           1
 #define ESP_IP_FORWARD                  1
+#define ESP_LWIP_FALLBACK_DNS_PREFER_IPV4 0
 
 #ifdef CONFIG_LWIP_IPV6_AUTOCONFIG
 #define ESP_IPV6_AUTOCONFIG             CONFIG_LWIP_IPV6_AUTOCONFIG

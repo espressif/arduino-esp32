@@ -25,11 +25,8 @@
 #ifndef TUSB_FTDI_SIO_H
 #define TUSB_FTDI_SIO_H
 
-// VID/PID for matching FTDI devices
+// VID for matching FTDI devices
 #define TU_FTDI_VID 0x0403
-#define TU_FTDI_PID_LIST \
-  0x6001, 0x6006, 0x6010, 0x6011, 0x6014, 0x6015, 0x8372, 0xFBFA, \
-  0xcd18
 
 // Commands
 #define FTDI_SIO_RESET             	0    /* Reset the port */

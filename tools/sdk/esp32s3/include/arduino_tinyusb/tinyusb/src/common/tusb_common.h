@@ -37,6 +37,7 @@
 #define TU_ARRAY_SIZE(_arr)   ( sizeof(_arr) / sizeof(_arr[0]) )
 #define TU_MIN(_x, _y)        ( ( (_x) < (_y) ) ? (_x) : (_y) )
 #define TU_MAX(_x, _y)        ( ( (_x) > (_y) ) ? (_x) : (_y) )
+#define TU_DIV_CEIL(n, d)     (((n) + (d) - 1) / (d))
 
 #define TU_U16(_high, _low)   ((uint16_t) (((_high) << 8) | (_low)))
 #define TU_U16_HIGH(_u16)     ((uint8_t) (((_u16) >> 8) & 0x00ff))
