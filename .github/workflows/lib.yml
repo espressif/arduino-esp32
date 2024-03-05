@@ -77,7 +77,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
+          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-${{ matrix.target }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
   report-to-file:
@@ -100,7 +100,8 @@ jobs:
       - name: Download sketches reports artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
+          pattern: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-*
+          merge-multiple: true
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
       - name: Report results
