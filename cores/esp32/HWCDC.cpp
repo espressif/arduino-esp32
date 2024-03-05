@@ -177,7 +177,8 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
 }
 
 HWCDC::HWCDC() {
-
+    perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit);
+    perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit);
 }
 
 HWCDC::~HWCDC(){
@@ -238,26 +239,43 @@ void HWCDC::begin(unsigned long baud)
         }    
     }
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
-    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
     if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
         isr_log_e("HW USB CDC failed to init interrupts");
         end();
         return;
     }
-    if (perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit) && perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit)) {
-        // Setting USB D+ D- pins
-        perimanSetPinBus(USB_DM_GPIO_NUM, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1);
-        perimanSetPinBus(USB_DP_GPIO_NUM, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1);
-    } else {
-        log_e("Serial JTAG Pins can't be set into Peripheral Manager.");
+    // Setting USB D+ D- pins
+    uint8_t pin = ESP32_BUS_TYPE_USB_DM;
+    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
+        if(!perimanClearPinBus(pin)){
+            goto err;
+        }
     }
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)){
+        goto err;
+    }
+    pin = ESP32_BUS_TYPE_USB_DP;
+    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
+        if(!perimanClearPinBus(pin)){
+            goto err;
+        }
+    }
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)){
+        goto err;
+    }
+    return;
+    
+    err:
+    log_e("Serial JTAG Pin %u can't be set into Peripheral Manager.", pin);
+    end();
 }
 
 void HWCDC::end()
 {
-    //Disable tx/rx interrupt.
+    //Disable/clear/free tx/rx interrupt.
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     esp_intr_free(intr_handle);
     intr_handle = NULL;
     if(tx_lock != NULL) {
