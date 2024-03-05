@@ -1115,7 +1115,7 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
         spi->dev->ctrl.wr_bit_order = 1;
         spi->dev->ctrl.rd_bit_order = 1;
     }
-#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 
     // Sync new config with hardware, fixes https://github.com/espressif/arduino-esp32/issues/9221
     spi->dev->cmd.update = 1;
     while (spi->dev->cmd.update);
