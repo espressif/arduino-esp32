@@ -164,6 +164,7 @@ void setup() {
 
   USB.onEvent(usbEventCallback);
   USB.webUSB(true);
+  // Set the URL for your WebUSB landing page
   USB.webUSBURL("https://docs.espressif.com/projects/arduino-esp32/en/latest/_static/webusb.html");
   USB.begin();
 }
