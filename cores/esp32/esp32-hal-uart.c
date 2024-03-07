@@ -406,7 +406,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
             }
             UART_MUTEX_UNLOCK();
             if (retCode) {
-                // UART driver was already working, just return the uart_t structure, syaing that no new driver was installed
+                // UART driver was already working, just return the uart_t structure, saying that no new driver was installed
                 return uart;
             }
             // if we reach this point, it means that we need to restart the UART driver
@@ -716,6 +716,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
 #else
     uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate);
 #endif
+    uart->_baudrate = baud_rate;
     UART_MUTEX_UNLOCK();
 }
 
