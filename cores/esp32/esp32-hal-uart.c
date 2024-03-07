@@ -83,7 +83,7 @@ static uart_t _uart_bus_array[] = {
 #endif
 
 // Negative Pin Number will keep it unmodified, thus this function can detach individual pins
-// This function will also unset the pins in the Peripheral Manager and set the pin to -1 after detaching
+// This function will set the pin to -1 after detaching
 static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(uart_num >= SOC_UART_NUM) {
@@ -96,7 +96,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     //log_v("detaching UART%d pins: prev,pin RX(%d,%d) TX(%d,%d) CTS(%d,%d) RTS(%d,%d)", uart_num, 
     //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
 
-    // detaches pins and sets Peripheral Manager and UART information
+    // detaches pins and sets UART information
     if (rxPin >= 0 && uart->_rxPin == rxPin) {
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
         // avoids causing BREAK in the UART line
@@ -126,7 +126,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
 }
 
 // Attach function for UART 
-// connects the IO Pad, set Paripheral Manager and internal UART structure data
+// connects the IO Pad, set internal UART structure data
 static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin)
 {
     if(uart_num >= SOC_UART_NUM) {
@@ -307,7 +307,7 @@ bool _testUartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t 
         return false;  // no new driver has to be installed
     }
     uart_t* uart = &_uart_bus_array[uart_nr];
-    // verify if is necessary to restart the UART driver
+    // verify if it is necessary to restart the UART driver
     if (uart_is_driver_installed(uart_nr)) {
         // some parameters can't be changed unless we end the UART driver
         if ( uart->_rx_buffer_size != rx_buffer_size || uart->_tx_buffer_size != tx_buffer_size || uart->_inverted != inverted || uart->_rxfifo_full_thrhd != rxfifo_full_thrhd) {
@@ -333,7 +333,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
     if(uart->lock == NULL) {
         uart->lock = xSemaphoreCreateMutex();
         if(uart->lock == NULL) {
-            log_e("HAL LOCK error.");
+            log_e("Lock (Mutex) creation error.");
             return NULL; // no new driver was installed
         }
     }
@@ -447,8 +447,6 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         uart->_rxfifo_full_thrhd = rxfifo_full_thrhd;
         uart->_rx_buffer_size = rx_buffer_size;
         uart->_tx_buffer_size = tx_buffer_size;
-        uart->_ctsPin = -1;
-        uart->_rtsPin = -1;
         uart->has_peek = false;
         uart->peek_byte = 0;
     }
@@ -722,8 +720,6 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
 
 uint32_t uartGetBaudRate(uart_t* uart)
 {
-    uint32_t baud_rate = 0;
-
     if(uart == NULL) {
         return 0;
     }
@@ -837,15 +833,8 @@ int log_printfv(const char *format, va_list arg)
     }
 #endif
 */
-//#if CONFIG_IDF_TARGET_ESP32C3
     vsnprintf(temp, len+1, format, arg);
     ets_printf("%s", temp);
-//#else
-//    int wlen = vsnprintf(temp, len+1, format, arg);
-//    for (int i = 0; i < wlen; i++) {
-//        ets_write_char_uart(temp[i]);
-//    }
-//#endif
 /*
 // This causes dead locks with logging and also with constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -857,7 +846,7 @@ int log_printfv(const char *format, va_list arg)
     if(len >= sizeof(loc_buf)){
         free(temp);
     }
-    // flushes TX - make sure that the log message is completely sent.
+    // flushes TX - try to assure that the log message is completely sent.
     if(s_uart_debug_nr != -1) while(!uart_ll_is_tx_idle(UART_LL_GET_HW(s_uart_debug_nr)));
     return len;
 }
