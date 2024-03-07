@@ -111,7 +111,7 @@ public:
      * @return
      *      - derivative of input vector x and u
      */
-    virtual dspm::Mat StateXdot(dspm::Mat &x, float *u) = 0;
+    virtual dspm::Mat StateXdot(dspm::Mat &x, float *u);
     /**
      * Calculation of system state matrices F and G
      * @param[in] x: state vector

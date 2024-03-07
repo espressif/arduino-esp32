@@ -33,11 +33,6 @@
  extern "C" {
 #endif
 
-// Level where CFG_TUSB_DEBUG must be at least for USBD is logged
-#ifndef CFG_TUD_LOG_LEVEL
-#define CFG_TUD_LOG_LEVEL   2
-#endif
-
 #define TU_LOG_USBD(...)   TU_LOG(CFG_TUD_LOG_LEVEL, __VA_ARGS__)
 
 //--------------------------------------------------------------------+

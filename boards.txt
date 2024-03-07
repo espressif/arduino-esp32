@@ -26035,8 +26035,21 @@ nano_nora.build.psram_type=opi
 nano_nora.build.memory_type={build.boot}_{build.psram_type}
 nano_nora.build.disable_pin_remap=
 
+nano_nora.debug_config.nano_nora.cortex-debug.custom.name=Arduino on Nano ESP32
+nano_nora.debug_config.nano_nora.cortex-debug.custom.overrideAttachCommands.0=set remote hardware-watchpoint-limit 2
+nano_nora.debug_config.nano_nora.cortex-debug.custom.overrideAttachCommands.1=monitor reset halt
+nano_nora.debug_config.nano_nora.cortex-debug.custom.overrideAttachCommands.2=monitor gdb_sync
+nano_nora.debug_config.nano_nora.cortex-debug.custom.overrideAttachCommands.3=interrupt
+nano_nora.debug_config.nano_nora.cortex-debug.custom.overrideRestartCommands.0=monitor reset halt
+nano_nora.debug_config.nano_nora.cortex-debug.custom.overrideRestartCommands.1=monitor gdb_sync
+nano_nora.debug_config.nano_nora.cortex-debug.custom.overrideRestartCommands.2=interrupt
+nano_nora.debug.additional_config=debug_config.nano_nora
+
 nano_nora.tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0xf70000 "{build.variant.path}/extra/nora_recovery/nora_recovery.ino.bin" 0x10000 "{build.path}/{build.project_name}.bin"
 nano_nora.tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset erase_flash
+
+nano_nora.programmer.default=esptool
+nano_nora.debug.executable=
 
 nano_nora.menu.PartitionScheme.default=With FAT partition (default)
 nano_nora.menu.PartitionScheme.spiffs=With SPIFFS partition (advanced)
@@ -26049,9 +26062,7 @@ nano_nora.menu.PinNumbers.byGPIONumber.build.disable_pin_remap=-DBOARD_USES_HW_G
 nano_nora.menu.USBMode.default=Normal mode (TinyUSB)
 nano_nora.menu.USBMode.hwcdc=Debug mode (Hardware CDC)
 nano_nora.menu.USBMode.hwcdc.build.usb_mode=1
-nano_nora.menu.USBMode.hwcdc.build.copy_jtag_files=1
-nano_nora.menu.USBMode.hwcdc.build.openocdscript=esp32s3-builtin.cfg
-nano_nora.menu.USBMode.hwcdc.build.debugconfig=esp32s3-arduino.json
+nano_nora.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.elf
 
 ##############################################################
 
@@ -26446,5 +26457,571 @@ atd147_s3.menu.EraseFlash.none=Disabled
 atd147_s3.menu.EraseFlash.none.upload.erase_cmd=
 atd147_s3.menu.EraseFlash.all=Enabled
 atd147_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+sensebox_mcu_esp32s2.name=senseBox MCU-S2 ESP32-S2
+sensebox_mcu_esp32s2.vid.0=0x303A
+sensebox_mcu_esp32s2.pid.0=0x81B8
+sensebox_mcu_esp32s2.vid.1=0x303A
+sensebox_mcu_esp32s2.pid.1=0x81B9
+sensebox_mcu_esp32s2.vid.2=0x303A
+sensebox_mcu_esp32s2.pid.2=0x81BA
+
+sensebox_mcu_esp32s2.bootloader.tool=esptool_py
+sensebox_mcu_esp32s2.bootloader.tool.default=esptool_py
+
+sensebox_mcu_esp32s2.upload.tool=esptool_py
+sensebox_mcu_esp32s2.upload.tool.default=esptool_py
+sensebox_mcu_esp32s2.upload.tool.network=esp_ota
+
+sensebox_mcu_esp32s2.upload.maximum_size=1310720
+sensebox_mcu_esp32s2.upload.maximum_data_size=327680
+sensebox_mcu_esp32s2.upload.flags=
+sensebox_mcu_esp32s2.upload.extra_flags=
+sensebox_mcu_esp32s2.upload.use_1200bps_touch=true
+sensebox_mcu_esp32s2.upload.wait_for_upload_port=true
+
+sensebox_mcu_esp32s2.serial.disableDTR=false
+sensebox_mcu_esp32s2.serial.disableRTS=false
+
+sensebox_mcu_esp32s2.build.tarch=xtensa
+sensebox_mcu_esp32s2.build.bootloader_addr=0x1000
+sensebox_mcu_esp32s2.build.target=esp32s2
+sensebox_mcu_esp32s2.build.mcu=esp32s2
+sensebox_mcu_esp32s2.build.core=esp32
+sensebox_mcu_esp32s2.build.variant=sensebox_mcu_esp32s2
+sensebox_mcu_esp32s2.build.board=SENSEBOX_MCU_ESP32S2
+
+sensebox_mcu_esp32s2.build.cdc_on_boot=1
+sensebox_mcu_esp32s2.build.msc_on_boot=1
+sensebox_mcu_esp32s2.build.dfu_on_boot=0
+sensebox_mcu_esp32s2.build.f_cpu=240000000L
+sensebox_mcu_esp32s2.build.flash_size=4MB
+sensebox_mcu_esp32s2.build.flash_freq=80m
+sensebox_mcu_esp32s2.build.flash_mode=dio
+sensebox_mcu_esp32s2.build.boot=qio
+sensebox_mcu_esp32s2.build.partitions=default
+sensebox_mcu_esp32s2.build.defines=
+
+sensebox_mcu_esp32s2.menu.CDCOnBoot.cdc=Enabled
+sensebox_mcu_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+sensebox_mcu_esp32s2.menu.CDCOnBoot.default=Disabled
+sensebox_mcu_esp32s2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+sensebox_mcu_esp32s2.menu.MSCOnBoot.msc=Enabled
+sensebox_mcu_esp32s2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+sensebox_mcu_esp32s2.menu.MSCOnBoot.default=Disabled
+sensebox_mcu_esp32s2.menu.MSCOnBoot.default.build.msc_on_boot=0
+
+sensebox_mcu_esp32s2.menu.DFUOnBoot.default=Disabled
+sensebox_mcu_esp32s2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+sensebox_mcu_esp32s2.menu.DFUOnBoot.dfu=Enabled
+sensebox_mcu_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+sensebox_mcu_esp32s2.menu.UploadMode.cdc=Internal USB
+sensebox_mcu_esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+sensebox_mcu_esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+sensebox_mcu_esp32s2.menu.UploadMode.default=UART0
+sensebox_mcu_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
+sensebox_mcu_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+sensebox_mcu_esp32s2.menu.PSRAM.enabled=Enabled
+sensebox_mcu_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+sensebox_mcu_esp32s2.menu.PSRAM.disabled=Disabled
+sensebox_mcu_esp32s2.menu.PSRAM.disabled.build.defines=
+
+sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-4MB-tinyuf2
+sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+sensebox_mcu_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.default.build.partitions=default
+sensebox_mcu_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+sensebox_mcu_esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.minimal.build.partitions=minimal
+sensebox_mcu_esp32s2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+sensebox_mcu_esp32s2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+sensebox_mcu_esp32s2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+sensebox_mcu_esp32s2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+sensebox_mcu_esp32s2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+sensebox_mcu_esp32s2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+sensebox_mcu_esp32s2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+sensebox_mcu_esp32s2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+sensebox_mcu_esp32s2.menu.CPUFreq.240=240MHz (WiFi)
+sensebox_mcu_esp32s2.menu.CPUFreq.240.build.f_cpu=240000000L
+sensebox_mcu_esp32s2.menu.CPUFreq.160=160MHz (WiFi)
+sensebox_mcu_esp32s2.menu.CPUFreq.160.build.f_cpu=160000000L
+sensebox_mcu_esp32s2.menu.CPUFreq.80=80MHz (WiFi)
+sensebox_mcu_esp32s2.menu.CPUFreq.80.build.f_cpu=80000000L
+sensebox_mcu_esp32s2.menu.CPUFreq.40=40MHz
+sensebox_mcu_esp32s2.menu.CPUFreq.40.build.f_cpu=40000000L
+sensebox_mcu_esp32s2.menu.CPUFreq.20=20MHz
+sensebox_mcu_esp32s2.menu.CPUFreq.20.build.f_cpu=20000000L
+sensebox_mcu_esp32s2.menu.CPUFreq.10=10MHz
+sensebox_mcu_esp32s2.menu.CPUFreq.10.build.f_cpu=10000000L
+
+sensebox_mcu_esp32s2.menu.FlashMode.qio=QIO
+sensebox_mcu_esp32s2.menu.FlashMode.qio.build.flash_mode=dio
+sensebox_mcu_esp32s2.menu.FlashMode.qio.build.boot=qio
+sensebox_mcu_esp32s2.menu.FlashMode.dio=DIO
+sensebox_mcu_esp32s2.menu.FlashMode.dio.build.flash_mode=dio
+sensebox_mcu_esp32s2.menu.FlashMode.dio.build.boot=dio
+sensebox_mcu_esp32s2.menu.FlashMode.qout=QOUT
+sensebox_mcu_esp32s2.menu.FlashMode.qout.build.flash_mode=dout
+sensebox_mcu_esp32s2.menu.FlashMode.qout.build.boot=qout
+sensebox_mcu_esp32s2.menu.FlashMode.dout=DOUT
+sensebox_mcu_esp32s2.menu.FlashMode.dout.build.flash_mode=dout
+sensebox_mcu_esp32s2.menu.FlashMode.dout.build.boot=dout
+
+sensebox_mcu_esp32s2.menu.FlashFreq.80=80MHz
+sensebox_mcu_esp32s2.menu.FlashFreq.80.build.flash_freq=80m
+sensebox_mcu_esp32s2.menu.FlashFreq.40=40MHz
+sensebox_mcu_esp32s2.menu.FlashFreq.40.build.flash_freq=40m
+
+sensebox_mcu_esp32s2.menu.FlashSize.4M=4MB (32Mb)
+sensebox_mcu_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
+
+sensebox_mcu_esp32s2.menu.UploadSpeed.921600=921600
+sensebox_mcu_esp32s2.menu.UploadSpeed.921600.upload.speed=921600
+sensebox_mcu_esp32s2.menu.UploadSpeed.115200=115200
+sensebox_mcu_esp32s2.menu.UploadSpeed.115200.upload.speed=115200
+sensebox_mcu_esp32s2.menu.UploadSpeed.256000.windows=256000
+sensebox_mcu_esp32s2.menu.UploadSpeed.256000.upload.speed=256000
+sensebox_mcu_esp32s2.menu.UploadSpeed.230400.windows.upload.speed=256000
+sensebox_mcu_esp32s2.menu.UploadSpeed.230400=230400
+sensebox_mcu_esp32s2.menu.UploadSpeed.230400.upload.speed=230400
+sensebox_mcu_esp32s2.menu.UploadSpeed.460800.linux=460800
+sensebox_mcu_esp32s2.menu.UploadSpeed.460800.macosx=460800
+sensebox_mcu_esp32s2.menu.UploadSpeed.460800.upload.speed=460800
+sensebox_mcu_esp32s2.menu.UploadSpeed.512000.windows=512000
+sensebox_mcu_esp32s2.menu.UploadSpeed.512000.upload.speed=512000
+
+sensebox_mcu_esp32s2.menu.DebugLevel.none=None
+sensebox_mcu_esp32s2.menu.DebugLevel.none.build.code_debug=0
+sensebox_mcu_esp32s2.menu.DebugLevel.error=Error
+sensebox_mcu_esp32s2.menu.DebugLevel.error.build.code_debug=1
+sensebox_mcu_esp32s2.menu.DebugLevel.warn=Warn
+sensebox_mcu_esp32s2.menu.DebugLevel.warn.build.code_debug=2
+sensebox_mcu_esp32s2.menu.DebugLevel.info=Info
+sensebox_mcu_esp32s2.menu.DebugLevel.info.build.code_debug=3
+sensebox_mcu_esp32s2.menu.DebugLevel.debug=Debug
+sensebox_mcu_esp32s2.menu.DebugLevel.debug.build.code_debug=4
+sensebox_mcu_esp32s2.menu.DebugLevel.verbose=Verbose
+sensebox_mcu_esp32s2.menu.DebugLevel.verbose.build.code_debug=5
+
+sensebox_mcu_esp32s2.menu.EraseFlash.none=Disabled
+sensebox_mcu_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
+sensebox_mcu_esp32s2.menu.EraseFlash.all=Enabled
+sensebox_mcu_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+motorgo_mini_1.name=MotorGo Mini 1 (ESP32-S3)
+motorgo_mini_1.vid.0=0x303a
+motorgo_mini_1.pid.0=0x1001
+
+motorgo_mini_1.bootloader.tool=esptool_py
+motorgo_mini_1.bootloader.tool.default=esptool_py
+
+motorgo_mini_1.upload.tool=esptool_py
+motorgo_mini_1.upload.tool.default=esptool_py
+motorgo_mini_1.upload.tool.network=esp_ota
+
+motorgo_mini_1.upload.maximum_size=1310720
+motorgo_mini_1.upload.maximum_data_size=327680
+motorgo_mini_1.upload.flags=
+motorgo_mini_1.upload.extra_flags=
+motorgo_mini_1.upload.use_1200bps_touch=false
+motorgo_mini_1.upload.wait_for_upload_port=false
+
+motorgo_mini_1.serial.disableDTR=false
+motorgo_mini_1.serial.disableRTS=false
+
+motorgo_mini_1.build.tarch=xtensa
+motorgo_mini_1.build.bootloader_addr=0x0
+motorgo_mini_1.build.target=esp32s3
+motorgo_mini_1.build.mcu=esp32s3
+motorgo_mini_1.build.core=esp32
+motorgo_mini_1.build.variant=motorgo_mini_1
+motorgo_mini_1.build.board=MOTORGO_MINI_1
+
+motorgo_mini_1.build.usb_mode=1
+motorgo_mini_1.build.cdc_on_boot=1
+motorgo_mini_1.build.msc_on_boot=0
+motorgo_mini_1.build.dfu_on_boot=0
+motorgo_mini_1.build.f_cpu=240000000L
+motorgo_mini_1.build.flash_size=4MB
+motorgo_mini_1.build.flash_freq=80m
+motorgo_mini_1.build.flash_mode=dio
+motorgo_mini_1.build.boot=qio
+motorgo_mini_1.build.boot_freq=80m
+motorgo_mini_1.build.partitions=default
+motorgo_mini_1.build.defines=
+motorgo_mini_1.build.loop_core=
+motorgo_mini_1.build.event_core=
+motorgo_mini_1.build.psram_type=qspi
+motorgo_mini_1.build.memory_type={build.boot}_{build.psram_type}
+
+
+## IDE 2.0 Seems to not update the value
+motorgo_mini_1.menu.JTAGAdapter.default=Disabled
+motorgo_mini_1.menu.JTAGAdapter.default.build.copy_jtag_files=0
+motorgo_mini_1.menu.JTAGAdapter.builtin=Integrated USB JTAG
+motorgo_mini_1.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+motorgo_mini_1.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+motorgo_mini_1.menu.JTAGAdapter.external=FTDI Adapter
+motorgo_mini_1.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+motorgo_mini_1.menu.JTAGAdapter.external.build.copy_jtag_files=1
+motorgo_mini_1.menu.JTAGAdapter.bridge=ESP USB Bridge
+motorgo_mini_1.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+motorgo_mini_1.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+motorgo_mini_1.menu.PSRAM.disabled=Disabled
+motorgo_mini_1.menu.PSRAM.disabled.build.defines=
+motorgo_mini_1.menu.PSRAM.disabled.build.psram_type=qspi
+motorgo_mini_1.menu.PSRAM.enabled=QSPI PSRAM
+motorgo_mini_1.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+motorgo_mini_1.menu.PSRAM.enabled.build.psram_type=qspi
+motorgo_mini_1.menu.PSRAM.opi=OPI PSRAM
+motorgo_mini_1.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+motorgo_mini_1.menu.PSRAM.opi.build.psram_type=opi
+
+motorgo_mini_1.menu.FlashMode.qio=QIO 80MHz
+motorgo_mini_1.menu.FlashMode.qio.build.flash_mode=dio
+motorgo_mini_1.menu.FlashMode.qio.build.boot=qio
+motorgo_mini_1.menu.FlashMode.qio.build.boot_freq=80m
+motorgo_mini_1.menu.FlashMode.qio.build.flash_freq=80m
+motorgo_mini_1.menu.FlashMode.qio120=QIO 120MHz
+motorgo_mini_1.menu.FlashMode.qio120.build.flash_mode=dio
+motorgo_mini_1.menu.FlashMode.qio120.build.boot=qio
+motorgo_mini_1.menu.FlashMode.qio120.build.boot_freq=120m
+motorgo_mini_1.menu.FlashMode.qio120.build.flash_freq=80m
+motorgo_mini_1.menu.FlashMode.dio=DIO 80MHz
+motorgo_mini_1.menu.FlashMode.dio.build.flash_mode=dio
+motorgo_mini_1.menu.FlashMode.dio.build.boot=dio
+motorgo_mini_1.menu.FlashMode.dio.build.boot_freq=80m
+motorgo_mini_1.menu.FlashMode.dio.build.flash_freq=80m
+motorgo_mini_1.menu.FlashMode.opi=OPI 80MHz
+motorgo_mini_1.menu.FlashMode.opi.build.flash_mode=dout
+motorgo_mini_1.menu.FlashMode.opi.build.boot=opi
+motorgo_mini_1.menu.FlashMode.opi.build.boot_freq=80m
+motorgo_mini_1.menu.FlashMode.opi.build.flash_freq=80m
+
+motorgo_mini_1.menu.FlashSize.4M=4MB (32Mb)
+motorgo_mini_1.menu.FlashSize.4M.build.flash_size=4MB
+motorgo_mini_1.menu.FlashSize.8M=8MB (64Mb)
+motorgo_mini_1.menu.FlashSize.8M.build.flash_size=8MB
+motorgo_mini_1.menu.FlashSize.8M.build.partitions=default_8MB
+motorgo_mini_1.menu.FlashSize.16M=16MB (128Mb)
+motorgo_mini_1.menu.FlashSize.16M.build.flash_size=16MB
+motorgo_mini_1.menu.FlashSize.32M=32MB (256Mb)
+motorgo_mini_1.menu.FlashSize.32M.build.flash_size=32MB
+
+motorgo_mini_1.menu.LoopCore.1=Core 1
+motorgo_mini_1.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+motorgo_mini_1.menu.LoopCore.0=Core 0
+motorgo_mini_1.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+motorgo_mini_1.menu.EventsCore.1=Core 1
+motorgo_mini_1.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+motorgo_mini_1.menu.EventsCore.0=Core 0
+motorgo_mini_1.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+motorgo_mini_1.menu.USBMode.hwcdc=Hardware CDC and JTAG
+motorgo_mini_1.menu.USBMode.hwcdc.build.usb_mode=1
+motorgo_mini_1.menu.USBMode.default=USB-OTG (TinyUSB)
+motorgo_mini_1.menu.USBMode.default.build.usb_mode=0
+
+motorgo_mini_1.menu.CDCOnBoot.default=Enabled
+motorgo_mini_1.menu.CDCOnBoot.default.build.cdc_on_boot=1
+motorgo_mini_1.menu.CDCOnBoot.cdc=Disabled
+motorgo_mini_1.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+motorgo_mini_1.menu.MSCOnBoot.default=Disabled
+motorgo_mini_1.menu.MSCOnBoot.default.build.msc_on_boot=0
+motorgo_mini_1.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+motorgo_mini_1.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+motorgo_mini_1.menu.DFUOnBoot.default=Disabled
+motorgo_mini_1.menu.DFUOnBoot.default.build.dfu_on_boot=0
+motorgo_mini_1.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+motorgo_mini_1.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+motorgo_mini_1.menu.UploadMode.default=UART0 / Hardware CDC
+motorgo_mini_1.menu.UploadMode.default.upload.use_1200bps_touch=false
+motorgo_mini_1.menu.UploadMode.default.upload.wait_for_upload_port=false
+motorgo_mini_1.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+motorgo_mini_1.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+motorgo_mini_1.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+motorgo_mini_1.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+motorgo_mini_1.menu.PartitionScheme.default.build.partitions=default
+motorgo_mini_1.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+motorgo_mini_1.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+motorgo_mini_1.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+motorgo_mini_1.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+motorgo_mini_1.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+motorgo_mini_1.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+motorgo_mini_1.menu.PartitionScheme.minimal.build.partitions=minimal
+motorgo_mini_1.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+motorgo_mini_1.menu.PartitionScheme.no_ota.build.partitions=no_ota
+motorgo_mini_1.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+motorgo_mini_1.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+motorgo_mini_1.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+motorgo_mini_1.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+motorgo_mini_1.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+motorgo_mini_1.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+motorgo_mini_1.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+motorgo_mini_1.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+motorgo_mini_1.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+motorgo_mini_1.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+motorgo_mini_1.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+motorgo_mini_1.menu.PartitionScheme.huge_app.build.partitions=huge_app
+motorgo_mini_1.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+motorgo_mini_1.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+motorgo_mini_1.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+motorgo_mini_1.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+motorgo_mini_1.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+motorgo_mini_1.menu.PartitionScheme.fatflash.build.partitions=ffat
+motorgo_mini_1.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+motorgo_mini_1.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+motorgo_mini_1.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+motorgo_mini_1.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+motorgo_mini_1.menu.PartitionScheme.rainmaker=RainMaker
+motorgo_mini_1.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+motorgo_mini_1.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+motorgo_mini_1.menu.CPUFreq.240=240MHz (WiFi)
+motorgo_mini_1.menu.CPUFreq.240.build.f_cpu=240000000L
+motorgo_mini_1.menu.CPUFreq.160=160MHz (WiFi)
+motorgo_mini_1.menu.CPUFreq.160.build.f_cpu=160000000L
+motorgo_mini_1.menu.CPUFreq.80=80MHz (WiFi)
+motorgo_mini_1.menu.CPUFreq.80.build.f_cpu=80000000L
+motorgo_mini_1.menu.CPUFreq.40=40MHz
+motorgo_mini_1.menu.CPUFreq.40.build.f_cpu=40000000L
+motorgo_mini_1.menu.CPUFreq.20=20MHz
+motorgo_mini_1.menu.CPUFreq.20.build.f_cpu=20000000L
+motorgo_mini_1.menu.CPUFreq.10=10MHz
+motorgo_mini_1.menu.CPUFreq.10.build.f_cpu=10000000L
+
+motorgo_mini_1.menu.UploadSpeed.921600=921600
+motorgo_mini_1.menu.UploadSpeed.921600.upload.speed=921600
+motorgo_mini_1.menu.UploadSpeed.115200=115200
+motorgo_mini_1.menu.UploadSpeed.115200.upload.speed=115200
+motorgo_mini_1.menu.UploadSpeed.256000.windows=256000
+motorgo_mini_1.menu.UploadSpeed.256000.upload.speed=256000
+motorgo_mini_1.menu.UploadSpeed.230400.windows.upload.speed=256000
+motorgo_mini_1.menu.UploadSpeed.230400=230400
+motorgo_mini_1.menu.UploadSpeed.230400.upload.speed=230400
+motorgo_mini_1.menu.UploadSpeed.460800.linux=460800
+motorgo_mini_1.menu.UploadSpeed.460800.macosx=460800
+motorgo_mini_1.menu.UploadSpeed.460800.upload.speed=460800
+motorgo_mini_1.menu.UploadSpeed.512000.windows=512000
+motorgo_mini_1.menu.UploadSpeed.512000.upload.speed=512000
+
+motorgo_mini_1.menu.DebugLevel.none=None
+motorgo_mini_1.menu.DebugLevel.none.build.code_debug=0
+motorgo_mini_1.menu.DebugLevel.error=Error
+motorgo_mini_1.menu.DebugLevel.error.build.code_debug=1
+motorgo_mini_1.menu.DebugLevel.warn=Warn
+motorgo_mini_1.menu.DebugLevel.warn.build.code_debug=2
+motorgo_mini_1.menu.DebugLevel.info=Info
+motorgo_mini_1.menu.DebugLevel.info.build.code_debug=3
+motorgo_mini_1.menu.DebugLevel.debug=Debug
+motorgo_mini_1.menu.DebugLevel.debug.build.code_debug=4
+motorgo_mini_1.menu.DebugLevel.verbose=Verbose
+motorgo_mini_1.menu.DebugLevel.verbose.build.code_debug=5
+
+motorgo_mini_1.menu.EraseFlash.none=Disabled
+motorgo_mini_1.menu.EraseFlash.none.upload.erase_cmd=
+motorgo_mini_1.menu.EraseFlash.all=Enabled
+motorgo_mini_1.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+# ESP32-S3 PowerFeather
+
+esp32s3_powerfeather.name=ESP32-S3 PowerFeather
+esp32s3_powerfeather.vid.0=0x303a
+esp32s3_powerfeather.pid.0=0x81BB
+
+esp32s3_powerfeather.bootloader.tool=esptool_py
+esp32s3_powerfeather.bootloader.tool.default=esptool_py
+
+esp32s3_powerfeather.upload.tool=esptool_py
+esp32s3_powerfeather.upload.tool.default=esptool_py
+esp32s3_powerfeather.upload.tool.network=esp_ota
+
+esp32s3_powerfeather.upload.maximum_size=1310720
+esp32s3_powerfeather.upload.maximum_data_size=327680
+esp32s3_powerfeather.upload.flags=
+esp32s3_powerfeather.upload.extra_flags=
+esp32s3_powerfeather.upload.use_1200bps_touch=false
+esp32s3_powerfeather.upload.wait_for_upload_port=false
+
+esp32s3_powerfeather.serial.disableDTR=false
+esp32s3_powerfeather.serial.disableRTS=false
+
+esp32s3_powerfeather.build.tarch=xtensa
+esp32s3_powerfeather.build.bootloader_addr=0x0
+esp32s3_powerfeather.build.target=esp32s3
+esp32s3_powerfeather.build.mcu=esp32s3
+esp32s3_powerfeather.build.core=esp32
+esp32s3_powerfeather.build.variant=esp32s3_powerfeather
+esp32s3_powerfeather.build.board=ESP32S3_POWERFEATHER
+
+esp32s3_powerfeather.build.usb_mode=1
+esp32s3_powerfeather.build.cdc_on_boot=1
+esp32s3_powerfeather.build.msc_on_boot=0
+esp32s3_powerfeather.build.dfu_on_boot=0
+esp32s3_powerfeather.build.f_cpu=240000000L
+esp32s3_powerfeather.build.flash_size=8MB
+esp32s3_powerfeather.build.flash_freq=80m
+esp32s3_powerfeather.build.flash_mode=dio
+esp32s3_powerfeather.build.boot=qio
+esp32s3_powerfeather.build.boot_freq=80m
+esp32s3_powerfeather.build.partitions=default_8MB
+esp32s3_powerfeather.build.defines=
+esp32s3_powerfeather.build.loop_core=
+esp32s3_powerfeather.build.event_core=
+esp32s3_powerfeather.build.flash_type=qio
+esp32s3_powerfeather.build.psram_type=qspi
+esp32s3_powerfeather.build.memory_type={build.flash_type}_{build.psram_type}
+
+esp32s3_powerfeather.menu.PSRAM.disabled=Disabled
+esp32s3_powerfeather.menu.PSRAM.disabled.build.defines=
+esp32s3_powerfeather.menu.PSRAM.disabled.build.psram_type=qspi
+esp32s3_powerfeather.menu.PSRAM.enabled=QSPI PSRAM
+esp32s3_powerfeather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3_powerfeather.menu.PSRAM.enabled.build.psram_type=qspi
+
+esp32s3_powerfeather.menu.FlashMode.qio=QIO 80MHz
+esp32s3_powerfeather.menu.FlashMode.qio.build.flash_mode=dio
+esp32s3_powerfeather.menu.FlashMode.qio.build.boot=qio
+esp32s3_powerfeather.menu.FlashMode.qio.build.boot_freq=80m
+esp32s3_powerfeather.menu.FlashMode.qio.build.flash_freq=80m
+esp32s3_powerfeather.menu.FlashMode.qio120=QIO 120MHz
+esp32s3_powerfeather.menu.FlashMode.qio120.build.flash_mode=dio
+esp32s3_powerfeather.menu.FlashMode.qio120.build.boot=qio
+esp32s3_powerfeather.menu.FlashMode.qio120.build.boot_freq=120m
+esp32s3_powerfeather.menu.FlashMode.qio120.build.flash_freq=80m
+esp32s3_powerfeather.menu.FlashMode.dio=DIO 80MHz
+esp32s3_powerfeather.menu.FlashMode.dio.build.flash_mode=dio
+esp32s3_powerfeather.menu.FlashMode.dio.build.boot=dio
+esp32s3_powerfeather.menu.FlashMode.dio.build.boot_freq=80m
+esp32s3_powerfeather.menu.FlashMode.dio.build.flash_freq=80m
+
+esp32s3_powerfeather.menu.LoopCore.1=Core 1
+esp32s3_powerfeather.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+esp32s3_powerfeather.menu.LoopCore.0=Core 0
+esp32s3_powerfeather.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+esp32s3_powerfeather.menu.EventsCore.1=Core 1
+esp32s3_powerfeather.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+esp32s3_powerfeather.menu.EventsCore.0=Core 0
+esp32s3_powerfeather.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+esp32s3_powerfeather.menu.USBMode.hwcdc=Hardware CDC and JTAG
+esp32s3_powerfeather.menu.USBMode.hwcdc.build.usb_mode=1
+esp32s3_powerfeather.menu.USBMode.default=USB-OTG (TinyUSB)
+esp32s3_powerfeather.menu.USBMode.default.build.usb_mode=0
+
+esp32s3_powerfeather.menu.CDCOnBoot.cdc=Enabled
+esp32s3_powerfeather.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+esp32s3_powerfeather.menu.CDCOnBoot.default=Disabled
+esp32s3_powerfeather.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+esp32s3_powerfeather.menu.MSCOnBoot.default=Disabled
+esp32s3_powerfeather.menu.MSCOnBoot.default.build.msc_on_boot=0
+esp32s3_powerfeather.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+esp32s3_powerfeather.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+esp32s3_powerfeather.menu.DFUOnBoot.default=Disabled
+esp32s3_powerfeather.menu.DFUOnBoot.default.build.dfu_on_boot=0
+esp32s3_powerfeather.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+esp32s3_powerfeather.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+esp32s3_powerfeather.menu.UploadMode.default=UART0 / Hardware CDC
+esp32s3_powerfeather.menu.UploadMode.default.upload.use_1200bps_touch=false
+esp32s3_powerfeather.menu.UploadMode.default.upload.wait_for_upload_port=false
+esp32s3_powerfeather.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+esp32s3_powerfeather.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+esp32s3_powerfeather.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+esp32s3_powerfeather.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32s3_powerfeather.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32s3_powerfeather.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32s3_powerfeather.menu.PartitionScheme.default_ffat_8MB=8M with ffat (3MB APP/1.5MB FATFS)
+esp32s3_powerfeather.menu.PartitionScheme.default_ffat_8MB.build.partitions=default_ffat_8MB
+esp32s3_powerfeather.menu.PartitionScheme.default_ffat_8MB.upload.maximum_size=3342336
+esp32s3_powerfeather.menu.PartitionScheme.large_spiffs_8MB=Large SPIFFS (1.2MB APP/5.3MB SPIFFS)
+esp32s3_powerfeather.menu.PartitionScheme.large_spiffs_8MB.build.partitions=large_spiffs_8MB
+esp32s3_powerfeather.menu.PartitionScheme.large_spiffs_8MB.upload.maximum_size=1310720
+esp32s3_powerfeather.menu.PartitionScheme.large_ffat_8MB=Large FFAT (1.2MB APP/5.3MB FATFS)
+esp32s3_powerfeather.menu.PartitionScheme.large_ffat_8MB.build.partitions=large_ffat_8MB
+esp32s3_powerfeather.menu.PartitionScheme.large_ffat_8MB.upload.maximum_size=1310720
+esp32s3_powerfeather.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
+esp32s3_powerfeather.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
+esp32s3_powerfeather.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+
+esp32s3_powerfeather.menu.CPUFreq.240=240MHz (WiFi)
+esp32s3_powerfeather.menu.CPUFreq.240.build.f_cpu=240000000L
+esp32s3_powerfeather.menu.CPUFreq.160=160MHz (WiFi)
+esp32s3_powerfeather.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32s3_powerfeather.menu.CPUFreq.80=80MHz (WiFi)
+esp32s3_powerfeather.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32s3_powerfeather.menu.CPUFreq.40=40MHz
+esp32s3_powerfeather.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32s3_powerfeather.menu.CPUFreq.20=20MHz
+esp32s3_powerfeather.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32s3_powerfeather.menu.CPUFreq.10=10MHz
+esp32s3_powerfeather.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32s3_powerfeather.menu.UploadSpeed.921600=921600
+esp32s3_powerfeather.menu.UploadSpeed.921600.upload.speed=921600
+esp32s3_powerfeather.menu.UploadSpeed.115200=115200
+esp32s3_powerfeather.menu.UploadSpeed.115200.upload.speed=115200
+esp32s3_powerfeather.menu.UploadSpeed.256000.windows=256000
+esp32s3_powerfeather.menu.UploadSpeed.256000.upload.speed=256000
+esp32s3_powerfeather.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32s3_powerfeather.menu.UploadSpeed.230400=230400
+esp32s3_powerfeather.menu.UploadSpeed.230400.upload.speed=230400
+esp32s3_powerfeather.menu.UploadSpeed.460800.linux=460800
+esp32s3_powerfeather.menu.UploadSpeed.460800.macosx=460800
+esp32s3_powerfeather.menu.UploadSpeed.460800.upload.speed=460800
+esp32s3_powerfeather.menu.UploadSpeed.512000.windows=512000
+esp32s3_powerfeather.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32s3_powerfeather.menu.DebugLevel.none=None
+esp32s3_powerfeather.menu.DebugLevel.none.build.code_debug=0
+esp32s3_powerfeather.menu.DebugLevel.error=Error
+esp32s3_powerfeather.menu.DebugLevel.error.build.code_debug=1
+esp32s3_powerfeather.menu.DebugLevel.warn=Warn
+esp32s3_powerfeather.menu.DebugLevel.warn.build.code_debug=2
+esp32s3_powerfeather.menu.DebugLevel.info=Info
+esp32s3_powerfeather.menu.DebugLevel.info.build.code_debug=3
+esp32s3_powerfeather.menu.DebugLevel.debug=Debug
+esp32s3_powerfeather.menu.DebugLevel.debug.build.code_debug=4
+esp32s3_powerfeather.menu.DebugLevel.verbose=Verbose
+esp32s3_powerfeather.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32s3_powerfeather.menu.EraseFlash.none=Disabled
+esp32s3_powerfeather.menu.EraseFlash.none.upload.erase_cmd=
+esp32s3_powerfeather.menu.EraseFlash.all=Enabled
+esp32s3_powerfeather.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################

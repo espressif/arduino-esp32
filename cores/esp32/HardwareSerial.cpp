@@ -346,11 +346,10 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         if(detectedBaudRate) {
             delay(100); // Give some time...
             _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
-            if (_uart == NULL) {
-                log_e("UART driver failed to start. Please check the logs.");
-                HSERIAL_MUTEX_UNLOCK();
-                return;
-            }
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+           // S3 and C3 have a limitation and both can't detect a baud rate lower than 9600
+           if (detectedBaudRate == 9600) log_w("The baud detected, as 9600, may be wrong. ESP32-C3 and ESP32-S3 can't detect a baud rate under 9600.");
+#endif
         } else {
             log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
             _uart = NULL;

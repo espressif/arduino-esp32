@@ -711,8 +711,11 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate)
         return;
     }
     UART_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
     uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), _get_effective_baudrate(baud_rate));
-    uart->_baudrate = baud_rate;
+#else
+    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate);
+#endif
     UART_MUTEX_UNLOCK();
 }
 
@@ -725,7 +728,13 @@ uint32_t uartGetBaudRate(uart_t* uart)
     }
 
     UART_MUTEX_LOCK();
-    baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num));
+    uint32_t baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num));
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    uint32_t Freq = getApbFrequency()/1000000;
+    if (Freq < 80) {
+        baud_rate = baud_rate / (80 / Freq);
+     }
+#endif
     UART_MUTEX_UNLOCK();
     return baud_rate;
 }
@@ -895,32 +904,31 @@ void log_print_buf(const uint8_t *b, size_t len){
 
 /*
  * if enough pulses are detected return the minimum high pulse duration + minimum low pulse duration divided by two. 
+ * In the case of S3 and C3 using XTAL as UART CLK SOURCE, one bit period = Negative Pulse Count + 1
  * This equals one bit period. If flag is true the function return inmediately, otherwise it waits for enough pulses.
  */
 unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
 {
-// Baud rate detection only works for ESP32 and ESP32S2
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
     if(uart == NULL) {
         return 0;
     }
 
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
-    while(hw->rxd_cnt.edge_cnt < 30) { // UART_PULSE_NUM(uart_num)
+    while(uart_ll_get_rxd_edge_cnt(hw) < 30) { // UART_PULSE_NUM(uart_num)
         if(flg) return 0;
         ets_delay_us(1000);
     }
 
     UART_MUTEX_LOCK();
-    //log_i("lowpulse_min_cnt = %d hightpulse_min_cnt = %d", hw->lowpulse.min_cnt, hw->highpulse.min_cnt);
-    unsigned long ret = ((hw->lowpulse.min_cnt + hw->highpulse.min_cnt) >> 1);
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    unsigned long ret = ((uart_ll_get_low_pulse_cnt(hw) + uart_ll_get_high_pulse_cnt(hw)) >> 1);
+#else
+    unsigned long ret = uart_ll_get_neg_pulse_cnt(hw) + 1;
+#endif
     UART_MUTEX_UNLOCK();
 
     return ret;
-#else
-    return 0;
-#endif
 }
 
 
@@ -929,47 +937,15 @@ unsigned long uartBaudrateDetect(uart_t *uart, bool flg)
  * detected calling uartBadrateDetect(). The raw baudrate is computed using the UART_CLK_FREQ. The raw baudrate is 
  * rounded to the closed real baudrate.
  * 
- * ESP32-C3 reports wrong baud rate detection as shown below:
- * 
- * This will help in a future recall for the C3.
- * Baud Sent:          Baud Read:
- *  300        -->       19536
- * 2400        -->       19536
- * 4800        -->       19536 
- * 9600        -->       28818 
- * 19200       -->       57678
- * 38400       -->       115440
- * 57600       -->       173535
- * 115200      -->       347826
- * 230400      -->       701754
- * 
- * 
 */
 void uartStartDetectBaudrate(uart_t *uart) {
     if(uart == NULL) {
         return;
     }
 
-// Baud rate detection only works for ESP32 and ESP32S2
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->auto_baud.glitch_filt = 0x08;
-    hw->auto_baud.en = 0;
-    hw->auto_baud.en = 1;
-#else
-    
-    // ESP32-C3 requires further testing
-    // Baud rate detection returns wrong values 
-   
-    log_e("baud rate detection for this SoC is not supported.");
-    return;
-
-    // Code bellow for C3 kept for future recall
-    //hw->rx_filt.glitch_filt = 0x08;
-    //hw->rx_filt.glitch_filt_en = 1;
-    //hw->conf0.autobaud_en = 0;
-    //hw->conf0.autobaud_en = 1;
-#endif
+    uart_ll_set_autobaud_en(hw, false);
+    uart_ll_set_autobaud_en(hw, true);
 }
  
 unsigned long uartDetectBaudrate(uart_t *uart)
@@ -977,9 +953,6 @@ unsigned long uartDetectBaudrate(uart_t *uart)
     if(uart == NULL) {
         return 0;
     }
-
-// Baud rate detection only works for ESP32 and ESP32S2
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
 
     static bool uartStateDetectingBaudrate = false;
 
@@ -994,33 +967,27 @@ unsigned long uartDetectBaudrate(uart_t *uart)
     }
 
     uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-    hw->auto_baud.en = 0;
+    uart_ll_set_autobaud_en(hw, false);
 
     uartStateDetectingBaudrate = false; // Initialize for the next round
-
-    unsigned long baudrate = getApbFrequency() / divisor;
     
-    //log_i("APB_FREQ = %d\nraw baudrate detected = %d", getApbFrequency(), baudrate);
-
-    static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
-
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    unsigned long baudrate = getApbFrequency() / divisor;  // ESP32 and S2 APB Freq
+#else
+    unsigned long baudrate = (getXtalFrequencyMhz() * 1000000) / divisor;  // S3 and C3 XTAL Frequency
+#endif
+    
+    static const unsigned long default_rates[] = {300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 250000, 
+                                                  256000, 460800, 500000, 921600, 1000000, 1843200, 2000000, 3686400};
     size_t i;
-    for (i = 1; i < sizeof(default_rates) / sizeof(default_rates[0]) - 1; i++)	// find the nearest real baudrate
-    {
-        if (baudrate <= default_rates[i])
-        {
-            if (baudrate - default_rates[i - 1] < default_rates[i] - baudrate) {
-                i--;
-            }
+    for (i = 1; i < sizeof(default_rates) / sizeof(default_rates[0]) - 1; i++)	{ // find the nearest real baudrate
+        if (baudrate <= default_rates[i]) {
+            if (baudrate - default_rates[i - 1] < default_rates[i] - baudrate) i--;
             break;
         }
     }
 
     return default_rates[i];
-#else
-    log_e("baud rate detection this SoC is not supported.");
-    return 0;
-#endif
 }
 
 /*
