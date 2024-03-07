@@ -328,10 +328,6 @@ extern void serialEventRun(void) __attribute__((weak));
 #define ARDUINO_USB_CDC_ON_BOOT 0
 #endif
 #if ARDUINO_USB_CDC_ON_BOOT //Serial used for USB CDC
-#if !ARDUINO_USB_MODE
-#include "USB.h"
-#include "USBCDC.h"
-#endif
 extern HardwareSerial Serial0;
 #else
 extern HardwareSerial Serial;
@@ -342,5 +338,5 @@ extern HardwareSerial Serial1;
 #if SOC_UART_NUM > 2
 extern HardwareSerial Serial2;
 #endif
-#endif
+#endif // !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 #endif // HardwareSerial_h
