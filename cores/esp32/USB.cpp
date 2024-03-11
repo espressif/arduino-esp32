@@ -48,7 +48,7 @@
 #define USB_WEBUSB_ENABLED false
 #endif
 #ifndef USB_WEBUSB_URL
-#define USB_WEBUSB_URL "https://espressif.github.io/arduino-esp32/webusb.html"
+#define USB_WEBUSB_URL "https://docs.espressif.com/projects/arduino-esp32/en/latest/_static/webusb.html"
 #endif
 
 #if CFG_TUD_DFU
