@@ -26,6 +26,7 @@
 #include "soc/io_mux_reg.h"
 #pragma GCC diagnostic ignored "-Wvolatile"
 #include "hal/usb_serial_jtag_ll.h"
+#include "hal/usb_phy_ll.h"
 #pragma GCC diagnostic warning "-Wvolatile"
 #include "rom/ets_sys.h"
 #include "driver/usb_serial_jtag.h"
@@ -238,13 +239,6 @@ void HWCDC::begin(unsigned long baud)
             log_e("HW CDC TX Buffer error");
         }    
     }
-    usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
-    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
-    if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
-        isr_log_e("HW USB CDC failed to init interrupts");
-        end();
-        return;
-    }
     // Setting USB D+ D- pins
     uint8_t pin = USB_DM_GPIO_NUM;
     if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
@@ -263,6 +257,15 @@ void HWCDC::begin(unsigned long baud)
     }
     if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)){
         goto err;
+    }
+    // Configure PHY
+    usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
+    usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
+    if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
+        isr_log_e("HW USB CDC failed to init interrupts");
+        end();
+        return;
     }
     return;
     
