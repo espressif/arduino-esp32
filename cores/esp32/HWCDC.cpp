@@ -242,24 +242,41 @@ void HWCDC::begin(unsigned long baud)
             log_e("HW CDC TX Buffer error");
         }    
     }
+<<<<<<< Updated upstream
     // Setting USB D+ D- pins
+=======
+    // Setting USB D+ D- pins || reduces number of debug messages
+>>>>>>> Stashed changes
     uint8_t pin = USB_DM_GPIO_NUM;
-    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
-        if(!perimanClearPinBus(pin)){
+    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_USB_DM){
+        if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
+            if(!perimanClearPinBus(pin)){
+                goto err;
+            }
+        }
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)){
             goto err;
         }
-    }
-    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)){
-        goto err;
     }
     pin = USB_DP_GPIO_NUM;
-    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
-        if(!perimanClearPinBus(pin)){
+    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_USB_DP){
+        if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
+            if(!perimanClearPinBus(pin)){
+                goto err;
+            }
+        }
+        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)){
             goto err;
         }
     }
-    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)){
-        goto err;
+    // Configure PHY
+    usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
+    usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
+    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
+    if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
+        isr_log_e("HW USB CDC failed to init interrupts");
+        end();
+        return;
     }
     // Configure PHY
     usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
