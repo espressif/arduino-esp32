@@ -23,7 +23,7 @@ extern "C"
 
 /**
  * @brief   Hann window
- * 
+ *
  * The function generates Hann window.
  *
  * @param window: buffer to store window array.

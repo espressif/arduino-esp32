@@ -23,7 +23,7 @@ extern "C"
 
 /**
  * @brief   Blackman-Harris window
- * 
+ *
  * The function generates Blackman-Harris window.
  *
  * @param window: buffer to store window array.
