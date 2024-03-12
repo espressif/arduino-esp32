@@ -24,9 +24,9 @@
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
 #include "soc/io_mux_reg.h"
+#include "soc/usb_serial_jtag_struct.h"
 #pragma GCC diagnostic ignored "-Wvolatile"
 #include "hal/usb_serial_jtag_ll.h"
-#include "hal/usb_phy_ll.h"
 #pragma GCC diagnostic warning "-Wvolatile"
 #include "rom/ets_sys.h"
 #include "driver/usb_serial_jtag.h"
@@ -266,7 +266,14 @@ void HWCDC::begin(unsigned long baud)
         }
     }
     // Configure PHY
-    usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG); 
+    // USB_Serial_JTAG use internal PHY
+    USB_SERIAL_JTAG.conf0.phy_sel = 0;
+    // Disable software control USB D+ D- pullup pulldown (Device FS: dp_pullup = 1)
+    USB_SERIAL_JTAG.conf0.pad_pull_override = 0;
+    // Enable USB D+ pullup
+    USB_SERIAL_JTAG.conf0.dp_pullup = 1;
+    // Enable USB pad function
+    USB_SERIAL_JTAG.conf0.usb_pad_enable = 1;
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
     if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
