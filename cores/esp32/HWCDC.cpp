@@ -87,7 +87,7 @@ static void hw_cdc_isr_handler(void *arg) {
         } else {
             connected = true;
         }
-        if (usb_serial_jtag_ll_txfifo_writable() == 1) {
+        if (tx_ring_buf != NULL && usb_serial_jtag_ll_txfifo_writable() == 1) {
             // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
             usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
             size_t queued_size;
@@ -165,6 +165,9 @@ bool HWCDC::isCDC_Connected()
 }
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
+    if(tx_ring_buf == NULL) {
+        return;
+    }
     uint32_t tx_timeout_ms = 0;
     if(HWCDC::isConnected()) {
         tx_timeout_ms = requested_tx_timeout_ms;
@@ -292,6 +295,7 @@ void HWCDC::end()
         arduino_hw_cdc_event_loop_handle = NULL;
     }
     HWCDC::deinit(this);
+    setDebugOutput(false);
     connected = false;
 }
 
