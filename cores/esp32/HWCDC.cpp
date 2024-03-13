@@ -242,6 +242,12 @@ void HWCDC::begin(unsigned long baud)
             log_e("HW CDC TX Buffer error");
         }    
     }
+
+#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
+// it needs the HW Serial pins to be first deinited in order to allow `if(Serial)` to work :-(
+    deinit(NULL);
+    delay(10);
+#endif
     // Setting USB D+ D- pins || reduces number of debug messages
     uint8_t pin = USB_DM_GPIO_NUM;
     if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_USB_DM){
