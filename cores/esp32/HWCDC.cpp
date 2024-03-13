@@ -243,34 +243,16 @@ void HWCDC::begin(unsigned long baud)
         }    
     }
 
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-// the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
+    // the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
     deinit(NULL);
-    delay(10);
-#endif
-    // Setting USB D+ D- pins || reduces number of debug messages
+    delay(10);     // USB Host has to enumerate it again
+
+    // Peripheral Manager setting for USB D+ D- pins
     uint8_t pin = USB_DM_GPIO_NUM;
-    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_USB_DM){
-        if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
-            if(!perimanClearPinBus(pin)){
-                goto err;
-            }
-        }
-        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)){
-            goto err;
-        }
-    }
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)) goto err;
     pin = USB_DP_GPIO_NUM;
-    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_USB_DP){
-        if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
-            if(!perimanClearPinBus(pin)){
-                goto err;
-            }
-        }
-        if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)){
-            goto err;
-        }
-    }
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)) goto err;
+
     // Configure PHY
     // USB_Serial_JTAG use internal PHY
     USB_SERIAL_JTAG.conf0.phy_sel = 0;
