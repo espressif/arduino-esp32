@@ -244,7 +244,7 @@ void HWCDC::begin(unsigned long baud)
     }
 
 #if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-// it needs the HW Serial pins to be first deinited in order to allow `if(Serial)` to work :-(
+// the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
     deinit(NULL);
     delay(10);
 #endif
