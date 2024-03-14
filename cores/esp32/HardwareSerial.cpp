@@ -99,6 +99,8 @@ _eventTask(NULL)
         }
     }
 #endif
+    // do the same as boot time, that will set default UART0 pins RX, TX. 
+    if(uart_nr == 0) uartSetPins(0, SOC_RX0, SOC_TX0, -1, -1);
 }
 
 HardwareSerial::~HardwareSerial()
