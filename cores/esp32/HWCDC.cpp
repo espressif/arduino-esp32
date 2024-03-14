@@ -24,6 +24,7 @@
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
 #include "soc/io_mux_reg.h"
+#include "soc/usb_serial_jtag_struct.h"
 #pragma GCC diagnostic ignored "-Wvolatile"
 #include "hal/usb_serial_jtag_ll.h"
 #pragma GCC diagnostic warning "-Wvolatile"
@@ -86,7 +87,7 @@ static void hw_cdc_isr_handler(void *arg) {
         } else {
             connected = true;
         }
-        if (usb_serial_jtag_ll_txfifo_writable() == 1) {
+        if (tx_ring_buf != NULL && usb_serial_jtag_ll_txfifo_writable() == 1) {
             // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
             usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
             size_t queued_size;
@@ -164,6 +165,9 @@ bool HWCDC::isCDC_Connected()
 }
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
+    if(tx_ring_buf == NULL) {
+        return;
+    }
     uint32_t tx_timeout_ms = 0;
     if(HWCDC::isConnected()) {
         tx_timeout_ms = requested_tx_timeout_ms;
@@ -238,31 +242,32 @@ void HWCDC::begin(unsigned long baud)
             log_e("HW CDC TX Buffer error");
         }    
     }
+
+    // the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
+    deinit(NULL);
+    delay(10);     // USB Host has to enumerate it again
+
+    // Peripheral Manager setting for USB D+ D- pins
+    uint8_t pin = USB_DM_GPIO_NUM;
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)) goto err;
+    pin = USB_DP_GPIO_NUM;
+    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)) goto err;
+
+    // Configure PHY
+    // USB_Serial_JTAG use internal PHY
+    USB_SERIAL_JTAG.conf0.phy_sel = 0;
+    // Disable software control USB D+ D- pullup pulldown (Device FS: dp_pullup = 1)
+    USB_SERIAL_JTAG.conf0.pad_pull_override = 0;
+    // Enable USB D+ pullup
+    USB_SERIAL_JTAG.conf0.dp_pullup = 1;
+    // Enable USB pad function
+    USB_SERIAL_JTAG.conf0.usb_pad_enable = 1;
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
     if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
         isr_log_e("HW USB CDC failed to init interrupts");
         end();
         return;
-    }
-    // Setting USB D+ D- pins
-    uint8_t pin = ESP32_BUS_TYPE_USB_DM;
-    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
-        if(!perimanClearPinBus(pin)){
-            goto err;
-        }
-    }
-    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *) this, -1, -1)){
-        goto err;
-    }
-    pin = ESP32_BUS_TYPE_USB_DP;
-    if(perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT){
-        if(!perimanClearPinBus(pin)){
-            goto err;
-        }
-    }
-    if(!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *) this, -1, -1)){
-        goto err;
     }
     return;
     
@@ -289,6 +294,7 @@ void HWCDC::end()
         arduino_hw_cdc_event_loop_handle = NULL;
     }
     HWCDC::deinit(this);
+    setDebugOutput(false);
     connected = false;
 }
 
