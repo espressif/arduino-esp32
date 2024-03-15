@@ -2,6 +2,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2020 tfx2001 (2479727366@qq.com)
+ * Copyright (c) 2020 yekai (2857693944@qq.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -111,9 +112,12 @@ TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_de
 }
 
 TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_receive(osal_queue_t qhdl, void *data, uint32_t msec) {
-
     rt_tick_t tick = rt_tick_from_millisecond((rt_int32_t) msec);
+#if RT_VERSION_MAJOR >= 5
+    return rt_mq_recv(qhdl, data, qhdl->msg_size, tick) > 0;
+#else
     return rt_mq_recv(qhdl, data, qhdl->msg_size, tick) == RT_EOK;
+#endif  /* RT_VERSION_MAJOR >= 5 */
 }
 
 TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void const *data, bool in_isr) {
