@@ -5,9 +5,6 @@
 #include "soc/soc_caps.h"
 
 #define WIRELESS_MINI_SHELL true
-#define EXTERNAL_NUM_INTERRUPTS 22
-#define NUM_DIGITAL_PINS        22
-#define NUM_ANALOG_INPUTS       6
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+8;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
