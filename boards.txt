@@ -21803,7 +21803,7 @@ heltec_wireless_stick_V3.build.bootloader_addr=0x0
 heltec_wireless_stick_V3.build.target=esp32s3
 heltec_wireless_stick_V3.build.mcu=esp32s3
 heltec_wireless_stick_V3.build.core=esp32
-heltec_wireless_stick_V3.build.variant=heltec_wireless_stick_V3
+heltec_wireless_stick_V3.build.variant=heltec_wireless_stick_v3
 heltec_wireless_stick_V3.build.board=HELTEC_WIRELESS_STICK_V3
 
 heltec_wireless_stick_V3.build.usb_mode=1
@@ -21953,7 +21953,7 @@ heltec_wireless_stick_lite_V3.build.bootloader_addr=0x0
 heltec_wireless_stick_lite_V3.build.target=esp32s3
 heltec_wireless_stick_lite_V3.build.mcu=esp32s3
 heltec_wireless_stick_lite_V3.build.core=esp32
-heltec_wireless_stick_lite_V3.build.variant=heltec_wireless_stick_lite_V3
+heltec_wireless_stick_lite_V3.build.variant=heltec_wireless_stick_lite_v3
 heltec_wireless_stick_lite_V3.build.board=HELTEC_WIRELESS_STICK_LITE_V3
 
 heltec_wireless_stick_lite_V3.build.usb_mode=1
@@ -22077,7 +22077,7 @@ heltec_wireless_stick_lite_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-heltec_wireless_shell_V3.name=Heltec Wireless Shell(V3)
+heltec_wireless_shell_V3.name=Heltec Wireless Shell (V3)
 heltec_wireless_shell_V3.vid.0=0x303a
 heltec_wireless_shell_V3.pid.0=0x1001
 
@@ -22103,7 +22103,7 @@ heltec_wireless_shell_V3.build.bootloader_addr=0x0
 heltec_wireless_shell_V3.build.target=esp32s3
 heltec_wireless_shell_V3.build.mcu=esp32s3
 heltec_wireless_shell_V3.build.core=esp32
-heltec_wireless_shell_V3.build.variant=heltec_wireless_shell_V3
+heltec_wireless_shell_V3.build.variant=heltec_wireless_shell_v3
 heltec_wireless_shell_V3.build.board=HELTEC_WIRELESS_SHELL_V3
 
 heltec_wireless_shell_V3.build.usb_mode=1
