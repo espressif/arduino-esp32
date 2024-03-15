@@ -21228,7 +21228,7 @@ heltec_wifi_kit_32.build.target=esp32
 heltec_wifi_kit_32.build.mcu=esp32
 heltec_wifi_kit_32.build.core=esp32
 heltec_wifi_kit_32.build.variant=heltec_wifi_kit_32
-heltec_wifi_kit_32.build.board=heltec_wifi_kit_32
+heltec_wifi_kit_32.build.board=HELTEC_WIFI_KIT_32
 
 heltec_wifi_kit_32.build.f_cpu=240000000L
 heltec_wifi_kit_32.build.flash_size=4MB
@@ -21317,7 +21317,7 @@ heltec_wifi_kit_32_V3.build.target=esp32s3
 heltec_wifi_kit_32_V3.build.mcu=esp32s3
 heltec_wifi_kit_32_V3.build.core=esp32
 heltec_wifi_kit_32_V3.build.variant=heltec_wifi_kit_32_V3
-heltec_wifi_kit_32_V3.build.board=heltec_wifi_kit_32_V3
+heltec_wifi_kit_32_V3.build.board=HELTEC_WIFI_KIT_32_V3
 
 heltec_wifi_kit_32_V3.build.usb_mode=1
 heltec_wifi_kit_32_V3.build.cdc_on_boot=0
@@ -21416,7 +21416,7 @@ heltec_wifi_lora_32.build.target=esp32
 heltec_wifi_lora_32.build.mcu=esp32
 heltec_wifi_lora_32.build.core=esp32
 heltec_wifi_lora_32.build.variant=heltec_wifi_lora_32
-heltec_wifi_lora_32.build.board=heltec_wifi_lora_32
+heltec_wifi_lora_32.build.board=HELTEC_WIFI_LORA_32
 
 heltec_wifi_lora_32.build.f_cpu=240000000L
 heltec_wifi_lora_32.build.flash_size=8MB
@@ -21533,7 +21533,7 @@ heltec_wifi_lora_32_V2.build.target=esp32
 heltec_wifi_lora_32_V2.build.mcu=esp32
 heltec_wifi_lora_32_V2.build.core=esp32
 heltec_wifi_lora_32_V2.build.variant=heltec_wifi_lora_32_V2
-heltec_wifi_lora_32_V2.build.board=heltec_wifi_lora_32_V2
+heltec_wifi_lora_32_V2.build.board=HELTEC_WIFI_LORA_32_V2
 
 heltec_wifi_lora_32_V2.build.f_cpu=240000000L
 heltec_wifi_lora_32_V2.build.flash_size=8MB
@@ -21653,7 +21653,7 @@ heltec_wifi_lora_32_V3.build.target=esp32s3
 heltec_wifi_lora_32_V3.build.mcu=esp32s3
 heltec_wifi_lora_32_V3.build.core=esp32
 heltec_wifi_lora_32_V3.build.variant=heltec_wifi_lora_32_V3
-heltec_wifi_lora_32_V3.build.board=heltec_wifi_lora_32_V3
+heltec_wifi_lora_32_V3.build.board=HELTEC_WIFI_LORA_32_V3
 
 heltec_wifi_lora_32_V3.build.usb_mode=1
 heltec_wifi_lora_32_V3.build.cdc_on_boot=0
@@ -21923,6 +21923,7 @@ heltec_wireless_stick_V3.menu.EraseFlash.none=Disabled
 heltec_wireless_stick_V3.menu.EraseFlash.none.upload.erase_cmd=
 heltec_wireless_stick_V3.menu.EraseFlash.all=Enabled
 heltec_wireless_stick_V3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 heltec_wireless_stick_lite_V3.name=Heltec Wireless Stick Lite(V3)
@@ -22072,6 +22073,7 @@ heltec_wireless_stick_lite_V3.menu.EraseFlash.none=Disabled
 heltec_wireless_stick_lite_V3.menu.EraseFlash.none.upload.erase_cmd=
 heltec_wireless_stick_lite_V3.menu.EraseFlash.all=Enabled
 heltec_wireless_stick_lite_V3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 heltec_wireless_shell_V3.name=Heltec Wireless Shell(V3)
@@ -22221,6 +22223,7 @@ heltec_wireless_shell_V3.menu.EraseFlash.none=Disabled
 heltec_wireless_shell_V3.menu.EraseFlash.none.upload.erase_cmd=
 heltec_wireless_shell_V3.menu.EraseFlash.all=Enabled
 heltec_wireless_shell_V3.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 heltec_capsule_sensor_V3.name=Heltec Capsule Sensor (V3)
@@ -22250,7 +22253,7 @@ heltec_capsule_sensor_V3.build.target=esp32s3
 heltec_capsule_sensor_V3.build.mcu=esp32s3
 heltec_capsule_sensor_V3.build.core=esp32
 heltec_capsule_sensor_V3.build.variant=heltec_capsule_sensor_V3
-heltec_capsule_sensor_V3.build.board=heltec_capsule_sensor_V3
+heltec_capsule_sensor_V3.build.board=HELTEC_CAPSULE_SENSOR_V3
 
 heltec_capsule_sensor_V3.build.usb_mode=1
 heltec_capsule_sensor_V3.build.cdc_on_boot=0
@@ -22381,9 +22384,8 @@ heltec_capsule_sensor_V3.menu.EraseFlash.none.upload.erase_cmd=
 heltec_capsule_sensor_V3.menu.EraseFlash.all=Enabled
 heltec_capsule_sensor_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 
-
-
 #############################################################
+
 heltec_wireless_paper.name=Heltec Wireless Paper
 heltec_wireless_paper.vid.0=0x303a
 heltec_wireless_paper.pid.0=0x1001
@@ -22411,7 +22413,7 @@ heltec_wireless_paper.build.target=esp32s3
 heltec_wireless_paper.build.mcu=esp32s3
 heltec_wireless_paper.build.core=esp32
 heltec_wireless_paper.build.variant=heltec_wireless_paper
-heltec_wireless_paper.build.board=heltec_wireless_paper
+heltec_wireless_paper.build.board=HELTEC_WIRELESS_PAPER
 
 heltec_wireless_paper.build.usb_mode=1
 heltec_wireless_paper.build.cdc_on_boot=0
@@ -22531,6 +22533,7 @@ heltec_wireless_paper.menu.EraseFlash.none=Disabled
 heltec_wireless_paper.menu.EraseFlash.none.upload.erase_cmd=
 heltec_wireless_paper.menu.EraseFlash.all=Enabled
 heltec_wireless_paper.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 heltec_wireless_tracker.name=Heltec Wireless Tracker
@@ -22560,7 +22563,7 @@ heltec_wireless_tracker.build.target=esp32s3
 heltec_wireless_tracker.build.mcu=esp32s3
 heltec_wireless_tracker.build.core=esp32
 heltec_wireless_tracker.build.variant=heltec_wireless_tracker
-heltec_wireless_tracker.build.board=heltec_wireless_tracker
+heltec_wireless_tracker.build.board=HELTEC_WIRELESS_TRACKER
 
 heltec_wireless_tracker.build.usb_mode=1
 heltec_wireless_tracker.build.cdc_on_boot=0
@@ -22736,7 +22739,7 @@ heltec_wireless_mini_shell.build.target=esp
 heltec_wireless_mini_shell.build.mcu=esp32c3
 heltec_wireless_mini_shell.build.core=esp32
 heltec_wireless_mini_shell.build.variant=heltec_wireless_mini_shell
-heltec_wireless_mini_shell.build.board=heltec_wireless_mini_shell
+heltec_wireless_mini_shell.build.board=HELTEC_WIRELESS_MINI_SHELL
 heltec_wireless_mini_shell.build.bootloader_addr=0x0
 
 heltec_wireless_mini_shell.build.cdc_on_boot=0
@@ -22832,8 +22835,8 @@ heltec_wireless_mini_shell.menu.EraseFlash.none=Disabled
 heltec_wireless_mini_shell.menu.EraseFlash.none.upload.erase_cmd=
 heltec_wireless_mini_shell.menu.EraseFlash.all=Enabled
 heltec_wireless_mini_shell.menu.EraseFlash.all.upload.erase_cmd=-e
-##############################################################
 
+##############################################################
 
 heltec_wireless_stick.name=Heltec Wireless Stick
 
@@ -22858,7 +22861,7 @@ heltec_wireless_stick.build.target=esp32
 heltec_wireless_stick.build.mcu=esp32
 heltec_wireless_stick.build.core=esp32
 heltec_wireless_stick.build.variant=heltec_wireless_stick
-heltec_wireless_stick.build.board=heltec_wireless_stick
+heltec_wireless_stick.build.board=HELTEC_WIRELESS_STICK
 
 heltec_wireless_stick.build.f_cpu=240000000L
 heltec_wireless_stick.build.flash_size=8MB
@@ -22951,7 +22954,6 @@ heltec_wireless_stick.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-
 heltec_wireless_stick_lite.name=Heltec Wireless Stick Lite / Wireless Shell
 
 heltec_wireless_stick_lite.bootloader.tool=esptool_py
@@ -22975,7 +22977,7 @@ heltec_wireless_stick_lite.build.target=esp32
 heltec_wireless_stick_lite.build.mcu=esp32
 heltec_wireless_stick_lite.build.core=esp32
 heltec_wireless_stick_lite.build.variant=heltec_wireless_stick_lite
-heltec_wireless_stick_lite.build.board=heltec_wireless_stick_lite
+heltec_wireless_stick_lite.build.board=HELTEC_WIRELESS_STICK_LITE
 
 heltec_wireless_stick_lite.build.f_cpu=240000000L
 heltec_wireless_stick_lite.build.flash_size=4MB
@@ -23065,6 +23067,7 @@ heltec_wireless_stick_lite.menu.EraseFlash.none=Disabled
 heltec_wireless_stick_lite.menu.EraseFlash.none.upload.erase_cmd=
 heltec_wireless_stick_lite.menu.EraseFlash.all=Enabled
 heltec_wireless_stick_lite.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 heltec_wireless_bridge.name=Heltec Wireless Bridge
@@ -23091,7 +23094,7 @@ heltec_wireless_bridge.build.target=esp32
 heltec_wireless_bridge.build.mcu=esp32
 heltec_wireless_bridge.build.core=esp32
 heltec_wireless_bridge.build.variant=heltec_wireless_bridge
-heltec_wireless_bridge.build.board=heltec_wireless_bridge
+heltec_wireless_bridge.build.board=HELTEC_WIRELESS_BRIDGE
 
 heltec_wireless_bridge.build.f_cpu=240000000L
 heltec_wireless_bridge.build.flash_size=8MB
@@ -23193,6 +23196,7 @@ heltec_wireless_bridge.menu.EraseFlash.all=Enabled
 heltec_wireless_bridge.menu.EraseFlash.all.upload.erase_cmd=-e
 
 #############################################################
+
 heltec_ht_de01.name=Heltec E-Ink Driver
 heltec_ht_de01.vid.0=0x303a
 heltec_ht_de01.pid.0=0x1001
