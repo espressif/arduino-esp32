@@ -4,9 +4,7 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define WIRELESS_STICK_LITE_V3 true
-
-
+#define HELTEC_WIRELESS_SHELL_V3 true
 
 #define USB_VID 0x303a
 #define USB_PID 0x1001
