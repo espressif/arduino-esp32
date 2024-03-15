@@ -72,11 +72,11 @@ We also recommend you install to grammar check extension to help you to review E
 Building
 ********
 
-To build the documentation and generate the HTLM files, you can use the following command inside the ``docs`` folder. After a successful build, you can check the files inside the `build/html` folder.
+To build the documentation and generate the HTML files, you can use the following command inside the ``docs`` folder. After a successful build, you can check the files inside the `_build/en/generic/html` folder.
 
 .. code-block::
 
-    make html
+    build-docs -l en
 
 This step is essential to ensure that there are no syntax errors and also to see the final result.
 
@@ -104,7 +104,7 @@ If everything is ok, you will see some output logs similar to this one:
     dumping object inventory... done
     build succeeded.
 
-The HTML pages are in build/html.
+The HTML pages are in `_build/en/generic/html`.
 
 Sections
 --------
