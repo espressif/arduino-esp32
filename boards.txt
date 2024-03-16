@@ -23306,6 +23306,11 @@ heltec_ht_de01.menu.einksize.3.build.einksize=290;
 
 heltec_ht_de01.build.defines=   -DEINK={build.einksize}   -D{build.board}
 
+heltec_ht_de01.menu.EraseFlash.none=Disabled
+heltec_ht_de01.menu.EraseFlash.none.upload.erase_cmd=
+heltec_ht_de01.menu.EraseFlash.all=Enabled
+heltec_ht_de01.menu.EraseFlash.all.upload.erase_cmd=-e
+
 ##############################################################
 
 espectro32.name=ESPectro32
