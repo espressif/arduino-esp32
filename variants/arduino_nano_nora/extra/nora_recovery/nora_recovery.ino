@@ -1,10 +1,12 @@
+#include "USB.h"
+
 #define USB_TIMEOUT_MS 15000
 #define POLL_DELAY_MS 60
 #define FADESTEP 8
 
 void pulse_led() {
-	static u32_t pulse_width = 0;
-	static u8_t dir = 0;
+	static uint32_t pulse_width = 0;
+	static uint8_t dir = 0;
 
 	if (dir) {
 		pulse_width -= FADESTEP;

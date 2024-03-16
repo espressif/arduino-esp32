@@ -2,6 +2,7 @@
 
 #include <esp_system.h>
 #include <esp32s3/rom/cache.h>
+#include <esp_heap_caps.h>
 
 #include "double_tap.h"
 

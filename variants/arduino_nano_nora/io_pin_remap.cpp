@@ -45,40 +45,6 @@ static const int8_t TO_GPIO_NUMBER[] = {
     14, // [24] A7
 };
 
-void _nano_nora_reset_gpio_matrix(void)
-{
-    // In this core file pin mapping is _not_ applied, so the API is
-    // always GPIO-based, but the constants can be either.
-    for (int pin = 0; pin < sizeof(TO_GPIO_NUMBER); ++pin) {
-        int gpio = TO_GPIO_NUMBER[pin];
-#if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
-        // Pin remapping in effect, constants = indexes
-        switch (pin) {
-#else
-        // Pin remapping disabled, constants = GPIO numbers
-        switch (gpio) {
-#endif
-            case LED_RED:
-            case LED_GREEN:
-            case LED_BLUE:
-                // set RGB pins to dig outputs, HIGH=off
-                pinMode(gpio, OUTPUT);
-                digitalWrite(gpio, HIGH);
-                break;
-
-            case TX:
-            case RX:
-                // leave UART pins alone
-                break;
-
-            default:
-                // initialize other pins to dig inputs
-                pinMode(gpio, INPUT);
-                break;
-        }
-    }
-}
-
 #if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
 
 int8_t digitalPinToGPIONumber(int8_t digitalPin)

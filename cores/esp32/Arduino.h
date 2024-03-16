@@ -129,6 +129,18 @@
 #define NOT_AN_INTERRUPT -1
 #define NOT_ON_TIMER 0
 
+// some defines generic for all SoC moved from variants/board_name/pins_arduino.h
+#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT // All GPIOs
+#if SOC_ADC_PERIPH_NUM == 1
+#define NUM_ANALOG_INPUTS       (SOC_ADC_CHANNEL_NUM(0))
+#elif SOC_ADC_PERIPH_NUM == 2
+#define NUM_ANALOG_INPUTS       (SOC_ADC_CHANNEL_NUM(0)+SOC_ADC_CHANNEL_NUM(1))
+#endif
+#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS  // All GPIOs
+#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
+#define digitalPinToInterrupt(p)    ((((uint8_t)digitalPinToGPIONumber(p))<NUM_DIGITAL_PINS)?digitalPinToGPIONumber(p):NOT_AN_INTERRUPT)
+#define digitalPinHasPWM(p)         (((uint8_t)digitalPinToGPIONumber(p))<NUM_DIGITAL_PINS)
+
 typedef bool boolean;
 typedef uint8_t byte;
 typedef unsigned int word;
