@@ -303,7 +303,7 @@ This function is used to get the ``webUSBURL``.
 
     const char * webUSBURL(void);
 
-The default ``webUSBURL`` is: https://espressif.github.io/arduino-esp32/webusb.html
+The default ``webUSBURL`` is: https://docs.espressif.com/projects/arduino-esp32/en/latest/_static/webusb.html
 
 enableDFU
 ^^^^^^^^^

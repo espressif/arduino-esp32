@@ -80,16 +80,16 @@ void setup() {
 
   // Create a BLE Characteristic
   pTxCharacteristic = pService->createCharacteristic(
-										CHARACTERISTIC_UUID_TX,
-										BLECharacteristic::PROPERTY_NOTIFY
-									);
-                      
+                    CHARACTERISTIC_UUID_TX,
+                    BLECharacteristic::PROPERTY_NOTIFY
+                  );
+
   pTxCharacteristic->addDescriptor(new BLE2902());
 
   BLECharacteristic * pRxCharacteristic = pService->createCharacteristic(
-											 CHARACTERISTIC_UUID_RX,
-											BLECharacteristic::PROPERTY_WRITE
-										);
+                      CHARACTERISTIC_UUID_RX,
+                      BLECharacteristic::PROPERTY_WRITE
+                    );
 
   pRxCharacteristic->setCallbacks(new MyCallbacks());
 
@@ -103,23 +103,23 @@ void setup() {
 
 void loop() {
 
-    if (deviceConnected) {
-        pTxCharacteristic->setValue(&txValue, 1);
-        pTxCharacteristic->notify();
-        txValue++;
-		delay(10); // bluetooth stack will go into congestion, if too many packets are sent
-	}
+  if (deviceConnected) {
+    pTxCharacteristic->setValue(&txValue, 1);
+    pTxCharacteristic->notify();
+    txValue++;
+    delay(10); // bluetooth stack will go into congestion, if too many packets are sent
+  }
 
-    // disconnecting
-    if (!deviceConnected && oldDeviceConnected) {
-        delay(500); // give the bluetooth stack the chance to get things ready
-        pServer->startAdvertising(); // restart advertising
-        Serial.println("start advertising");
-        oldDeviceConnected = deviceConnected;
-    }
-    // connecting
-    if (deviceConnected && !oldDeviceConnected) {
-		// do stuff here on connecting
-        oldDeviceConnected = deviceConnected;
-    }
+  // disconnecting
+  if (!deviceConnected && oldDeviceConnected) {
+    delay(500); // give the bluetooth stack the chance to get things ready
+    pServer->startAdvertising(); // restart advertising
+    Serial.println("start advertising");
+    oldDeviceConnected = deviceConnected;
+  }
+  // connecting
+  if (deviceConnected && !oldDeviceConnected) {
+    // do stuff here on connecting
+    oldDeviceConnected = deviceConnected;
+  }
 }

@@ -509,8 +509,6 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         uart->_rxfifo_full_thrhd = rxfifo_full_thrhd;
         uart->_rx_buffer_size = rx_buffer_size;
         uart->_tx_buffer_size = tx_buffer_size;
-        uart->_ctsPin = -1;
-        uart->_rtsPin = -1;
         uart->has_peek = false;
         uart->peek_byte = 0;
     }
@@ -642,7 +640,7 @@ uint32_t uartAvailableForWrite(uart_t* uart)
     uint32_t available =  uart_ll_get_txfifo_len(UART_LL_GET_HW(uart->num));  
     size_t txRingBufferAvailable = 0;
     if (ESP_OK == uart_get_tx_buffer_free_size(uart->num, &txRingBufferAvailable)) {
-        available += txRingBufferAvailable; 
+        available = txRingBufferAvailable == 0 ? available : txRingBufferAvailable; 
     }
     UART_MUTEX_UNLOCK();
     return available;

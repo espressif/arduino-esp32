@@ -56,7 +56,7 @@ jobs:
         run: |
           bash .github/scripts/tests_build.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}}
       - name: Upload ${{matrix.chip}}-${{matrix.chunks}} artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
           path: |
@@ -81,7 +81,7 @@ jobs:
          uses: actions/checkout@v4
 
        - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
-         uses: actions/download-artifact@v3
+         uses: actions/download-artifact@v4
          with:
            name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
            path: ~/.arduino/tests/
@@ -97,7 +97,7 @@ jobs:
            bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -e
 
        - name: Upload test result artifacts
-         uses: actions/upload-artifact@v3
+         uses: actions/upload-artifact@v4
          if: always()
          with:
            name: test_results-${{matrix.chip}}-${{matrix.chunks}}
@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
        - name: Upload
-         uses: actions/upload-artifact@v3
+         uses: actions/upload-artifact@v4
          with:
            name: Event File
            path: ${{github.event_path}}
