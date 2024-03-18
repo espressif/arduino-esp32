@@ -7,17 +7,9 @@
 #define DISPLAY_HEIGHT 0
 #define DISPLAY_WIDTH  0
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        20
-#define NUM_ANALOG_INPUTS       15
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<49)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
 static const uint8_t LED_BUILTIN = 35;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -56,5 +48,12 @@ static const uint8_t T6 = 7;
 
 static const uint8_t Vext = 36;
 static const uint8_t LED  = 35;
+static const uint8_t RST_OLED = 21;
+static const uint8_t SCL_OLED = 18;
+static const uint8_t SDA_OLED = 17;
+
+static const uint8_t RST_LoRa = 12;
+static const uint8_t BUSY_LoRa = 13;
+static const uint8_t DIO0 = 14;
 
 #endif /* Pins_Arduino_h */

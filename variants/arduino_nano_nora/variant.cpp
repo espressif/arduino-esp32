@@ -9,13 +9,9 @@
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
 
-// defined in io_pin_remap.cpp
-extern void _nano_nora_reset_gpio_matrix(void);
-
 extern "C" {
     void initVariant() {
-        // FIXME: fix issues with GPIO matrix not being soft reset properly
-        _nano_nora_reset_gpio_matrix();
+        // nothing to do
     }
 }
 
@@ -54,9 +50,6 @@ static void rgb_pulse_delay(void)
     digitalWrite(LED_RED, HIGH);
     digitalWrite(LED_GREEN, HIGH);
     digitalWrite(LED_BLUE, HIGH);
-    pinMode(LED_RED, OUTPUT);
-    pinMode(LED_GREEN, OUTPUT);
-    pinMode(LED_BLUE, OUTPUT);
 }
 
 static void NANO_ESP32_enter_bootloader(void)

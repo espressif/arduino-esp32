@@ -2,7 +2,6 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-#include "soc/soc_caps.h"
 
 #define USB_VID 0x2341
 #define USB_PID 0x0070
@@ -16,14 +15,6 @@
 #if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
 
 // Arduino style definitions (API uses Dx)
-
-#define NUM_DIGITAL_PINS        25                    // 25 I/O lines exported
-#define NUM_ANALOG_INPUTS       20                    // 20 CPU ADC inputs, not all exported
-#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
-
-#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
-#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
 
 static constexpr uint8_t D0         = 0; // also RX
 static constexpr uint8_t D1         = 1; // also TX
@@ -56,14 +47,6 @@ static constexpr uint8_t A7         = 24;
 
 // ESP32-style definitions (API uses GPIOx)
 
-#define NUM_DIGITAL_PINS        SOC_GPIO_PIN_COUNT    // GPIO 0..48, not all exported
-#define NUM_ANALOG_INPUTS       20                    // GPIO 1..20, not all exported
-#define EXTERNAL_NUM_INTERRUPTS NUM_DIGITAL_PINS      // All GPIOs
-
-#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):NOT_AN_INTERRUPT)
-#define digitalPinHasPWM(p)         (p < NUM_DIGITAL_PINS)
-
 static constexpr uint8_t D0         = 44; // also RX
 static constexpr uint8_t D1         = 43; // also TX
 static constexpr uint8_t D2         = 5;
@@ -92,6 +75,12 @@ static constexpr uint8_t A6         = 13;
 static constexpr uint8_t A7         = 14;
 
 #endif
+
+// Aliases
+
+static constexpr uint8_t LEDR = LED_RED;
+static constexpr uint8_t LEDG = LED_GREEN;
+static constexpr uint8_t LEDB = LED_BLUE;
 
 // alternate pin functions
 
