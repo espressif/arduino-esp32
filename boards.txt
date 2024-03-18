@@ -34815,7 +34815,7 @@ waveshare_esp32s3_touch_lcd_128.serial.disableDTR=true
 waveshare_esp32s3_touch_lcd_128.serial.disableRTS=true
 
 waveshare_esp32s3_touch_lcd_128.build.tarch=xtensa
-waveshare_esp32s3_touch_lcd_128.build.bootloader_addr=0x1000
+waveshare_esp32s3_touch_lcd_128.build.bootloader_addr=0x0
 waveshare_esp32s3_touch_lcd_128.build.mcu=esp32s3
 waveshare_esp32s3_touch_lcd_128.build.core=esp32
 waveshare_esp32s3_touch_lcd_128.build.target=esp32s3
@@ -34832,7 +34832,7 @@ waveshare_esp32s3_touch_lcd_128.build.partitions=default
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled=Disabled
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled.build.defines=
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled=Enabled
-waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.extra_libs=
 
 waveshare_esp32s3_touch_lcd_128.menu.LoopCore.1=Core 1
