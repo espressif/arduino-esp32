@@ -35,43 +35,8 @@ static const int WIFI_SCAN_DONE_BIT= BIT11;
 
 static const int NET_DNS_IDLE_BIT  = BIT12;
 static const int NET_DNS_DONE_BIT  = BIT13;
-// static const int PPP_STARTED_BIT   = BIT14;
-// static const int PPP_CONNECTED_BIT = BIT15;
-// static const int PPP_HAS_IP_BIT    = BIT16;
-// static const int PPP_HAS_IP6_BIT   = BIT17;
-// static const int PPP_HAS_IP6_GLOBAL_BIT = BIT18;
-// static const int PPP_WANT_IP6_BIT       = BIT19;
-static const int ETH0_HAS_IP6_GLOBAL_BIT = BIT14;
-static const int ETH1_HAS_IP6_GLOBAL_BIT = BIT15;
-static const int ETH2_HAS_IP6_GLOBAL_BIT = BIT16;
-static const int ETH0_WANT_IP6_BIT       = BIT17;
-static const int ETH1_WANT_IP6_BIT       = BIT18;
-static const int ETH2_WANT_IP6_BIT       = BIT19;
-static const int ETH0_STARTED_BIT   = BIT20;
-static const int ETH1_STARTED_BIT   = BIT21;
-static const int ETH2_STARTED_BIT   = BIT22;
-static const int ETH0_CONNECTED_BIT = BIT23;
-static const int ETH1_CONNECTED_BIT = BIT24;
-static const int ETH2_CONNECTED_BIT = BIT25;
-static const int ETH0_HAS_IP_BIT    = BIT26;
-static const int ETH1_HAS_IP_BIT    = BIT27;
-static const int ETH2_HAS_IP_BIT    = BIT28;
-static const int ETH0_HAS_IP6_BIT   = BIT29;
-static const int ETH1_HAS_IP6_BIT   = BIT30;
-static const int ETH2_HAS_IP6_BIT   = BIT31;
-// Masks
-static const int NET_HAS_IP6_GLOBAL_BIT = ETH0_HAS_IP6_GLOBAL_BIT | ETH1_HAS_IP6_GLOBAL_BIT | ETH2_HAS_IP6_GLOBAL_BIT
-#if SOC_WIFI_SUPPORTED
-	| STA_HAS_IP6_GLOBAL_BIT
-#endif
-;
 
-#define ETH_STARTED_BIT(i) 			(ETH0_STARTED_BIT << (i))
-#define ETH_CONNECTED_BIT(i) 		(ETH0_CONNECTED_BIT << (i))
-#define ETH_HAS_IP_BIT(i) 			(ETH0_HAS_IP_BIT << (i))
-#define ETH_HAS_IP6_BIT(i) 			(ETH0_HAS_IP6_BIT << (i))
-#define ETH_HAS_IP6_GLOBAL_BIT(i)	(ETH0_HAS_IP6_GLOBAL_BIT << (i))
-#define ETH_WANT_IP6_BIT(i)			(ETH0_WANT_IP6_BIT << (i))
+#define NET_HAS_IP6_GLOBAL_BIT 0
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);
 
@@ -84,14 +49,8 @@ typedef enum {
 	ARDUINO_EVENT_ETH_GOT_IP,
 	ARDUINO_EVENT_ETH_LOST_IP,
 	ARDUINO_EVENT_ETH_GOT_IP6,
-	// ARDUINO_EVENT_PPP_START,
-	// ARDUINO_EVENT_PPP_STOP,
-	// ARDUINO_EVENT_PPP_CONNECTED,
-	// ARDUINO_EVENT_PPP_DISCONNECTED,
-	// ARDUINO_EVENT_PPP_GOT_IP,
-	// ARDUINO_EVENT_PPP_LOST_IP,
-	// ARDUINO_EVENT_PPP_GOT_IP6,
 #if SOC_WIFI_SUPPORTED
+	ARDUINO_EVENT_WIFI_OFF,
 	ARDUINO_EVENT_WIFI_READY,
 	ARDUINO_EVENT_WIFI_SCAN_DONE,
 	ARDUINO_EVENT_WIFI_STA_START,
@@ -127,6 +86,13 @@ typedef enum {
 	ARDUINO_EVENT_PROV_CRED_FAIL,
 	ARDUINO_EVENT_PROV_CRED_SUCCESS,
 #endif
+	// ARDUINO_EVENT_PPP_START,
+	// ARDUINO_EVENT_PPP_STOP,
+	// ARDUINO_EVENT_PPP_CONNECTED,
+	// ARDUINO_EVENT_PPP_DISCONNECTED,
+	// ARDUINO_EVENT_PPP_GOT_IP,
+	// ARDUINO_EVENT_PPP_LOST_IP,
+	// ARDUINO_EVENT_PPP_GOT_IP6,
 	ARDUINO_EVENT_MAX
 } arduino_event_id_t;
 
@@ -172,6 +138,7 @@ public:
     network_event_handle_t onEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
     network_event_handle_t onEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
     void removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+    void removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
     void removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
     void removeEvent(network_event_handle_t event_handle);
 
@@ -184,11 +151,21 @@ public:
     int waitStatusBits(int bits, uint32_t timeout_ms);
     int setStatusBits(int bits);
     int clearStatusBits(int bits);
+
+    friend class ESP_NetworkInterface;
+    friend class ETHClass;
+#if SOC_WIFI_SUPPORTED
+    friend class STAClass;
+    friend class WiFiGenericClass;
+#endif
+
 protected:
 	bool initNetworkEvents();
+    network_event_handle_t onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+    network_event_handle_t onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+    network_event_handle_t onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
 private:
 	EventGroupHandle_t _arduino_event_group;
-	EventGroupHandle_t _arduino_event_group_h;
 	QueueHandle_t _arduino_event_queue;
 	TaskHandle_t _arduino_event_task_handle;
 };

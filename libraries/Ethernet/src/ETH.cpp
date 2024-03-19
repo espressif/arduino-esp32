@@ -70,9 +70,10 @@ static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info)
             }
         }
         if(index == 3){
+            log_e("Could not find ETH interface with that handle!");
             return;
         }
-        if (Network.getStatusBits() & ETH_WANT_IP6_BIT(index)){
+        if (_ethernets[index]->getStatusBits() & ESP_NETIF_WANT_IP6_BIT){
             esp_err_t err = esp_netif_create_ip6_linklocal(_ethernets[index]->netif());
             if(err != ESP_OK){
                 log_e("Failed to enable IPv6 Link Local on ETH: [%d] %s", err, esp_err_to_name(err));
@@ -83,32 +84,8 @@ static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info)
     }
 }
 
-esp_eth_handle_t ETHClass::handle(){
+esp_eth_handle_t ETHClass::handle() const {
     return _eth_handle;
-}
-
-bool ETHClass::connected()
-{
-    return Network.getStatusBits() & ETH_CONNECTED_BIT(_eth_index);
-}
-
-bool ETHClass::started()
-{
-    return Network.getStatusBits() & ETH_STARTED_BIT(_eth_index);
-}
-
-bool ETHClass::enableIPv6(bool en)
-{
-    // if(_esp_netif == NULL){
-    //     return false;
-    // }
-    if (en) {
-        Network.setStatusBits(ETH_WANT_IP6_BIT(_eth_index));
-    } else {
-        Network.clearStatusBits(ETH_WANT_IP6_BIT(_eth_index));
-    }
-    return true;
-    // return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
 }
 
 void ETHClass::_onEthEvent(int32_t event_id, void* event_data){
@@ -119,19 +96,19 @@ void ETHClass::_onEthEvent(int32_t event_id, void* event_data){
         log_v("%s Connected", desc());
         arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
         arduino_event.event_info.eth_connected = handle();
-        Network.setStatusBits(ETH_CONNECTED_BIT(_eth_index));
+        setStatusBits(ESP_NETIF_CONNECTED_BIT);
     } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
         log_v("%s Disconnected", desc());
         arduino_event.event_id = ARDUINO_EVENT_ETH_DISCONNECTED;
-        Network.clearStatusBits(ETH_CONNECTED_BIT(_eth_index) | ETH_HAS_IP_BIT(_eth_index) | ETH_HAS_IP6_BIT(_eth_index));
+        clearStatusBits(ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
     } else if (event_id == ETHERNET_EVENT_START) {
         log_v("%s Started", desc());
         arduino_event.event_id = ARDUINO_EVENT_ETH_START;
-        Network.setStatusBits(ETH_STARTED_BIT(_eth_index));
+        setStatusBits(ESP_NETIF_STARTED_BIT);
     } else if (event_id == ETHERNET_EVENT_STOP) {
         log_v("%s Stopped", desc());
         arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
-        Network.clearStatusBits(ETH_STARTED_BIT(_eth_index) | ETH_CONNECTED_BIT(_eth_index) | ETH_HAS_IP_BIT(_eth_index) | ETH_HAS_IP6_BIT(_eth_index));
+        clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
     }
 
     if(arduino_event.event_id < ARDUINO_EVENT_MAX){
@@ -332,7 +309,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
         if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)){ goto err; }
     }
 
-    Network.onEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+    Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
     // holds a few milliseconds to let DHCP start and enter into a good state
     // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
@@ -740,7 +717,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
         if(!perimanSetPinBus(_pin_rst,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
 
-    Network.onEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+    Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
     return true;
 
@@ -835,7 +812,7 @@ void ETHClass::end(void)
     }
 }
 
-bool ETHClass::fullDuplex()
+bool ETHClass::fullDuplex() const
 {
     if(_eth_handle == NULL){
         return false;
@@ -845,7 +822,7 @@ bool ETHClass::fullDuplex()
     return (link_duplex == ETH_DUPLEX_FULL);
 }
 
-bool ETHClass::autoNegotiation()
+bool ETHClass::autoNegotiation() const
 {
     if(_eth_handle == NULL){
         return false;
@@ -855,7 +832,7 @@ bool ETHClass::autoNegotiation()
     return auto_nego;
 }
 
-uint32_t ETHClass::phyAddr()
+uint32_t ETHClass::phyAddr() const
 {
     if(_eth_handle == NULL){
         return 0;
@@ -865,7 +842,7 @@ uint32_t ETHClass::phyAddr()
     return phy_addr;
 }
 
-uint8_t ETHClass::linkSpeed()
+uint8_t ETHClass::linkSpeed() const
 {
     if(_eth_handle == NULL){
         return 0;
@@ -882,17 +859,19 @@ uint8_t ETHClass::linkSpeed()
 //     }
 // }
 
-void ETHClass::printDriverInfo(Print & out){
-    out.print(",");
-    out.print(linkSpeed());
-    out.print("M");
+size_t ETHClass::printDriverInfo(Print & out) const {
+    size_t bytes = 0;
+    bytes += out.print(",");
+    bytes += out.print(linkSpeed());
+    bytes += out.print("M");
     if(fullDuplex()){
-        out.print(",FULL_DUPLEX");
+        bytes += out.print(",FULL_DUPLEX");
     }
     if(autoNegotiation()){
-        out.print(",AUTO");
+        bytes += out.print(",AUTO");
     }
-    out.printf(",ADDR:0x%lX", phyAddr());
+    bytes += out.printf(",ADDR:0x%lX", phyAddr());
+    return bytes;
 }
 
 ETHClass ETH;

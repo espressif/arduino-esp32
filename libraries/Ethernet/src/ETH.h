@@ -136,19 +136,14 @@ class ETHClass: public ESP_Network_Interface {
         }
 
         void end();
-        bool enableIPv6(bool en=true);
-
-        // Event based getters
-        bool connected();
-        bool started();
 
         // ETH Handle APIs
-        bool fullDuplex();
-        uint8_t linkSpeed();
-        bool autoNegotiation();
-        uint32_t phyAddr();
+        bool fullDuplex() const;
+        uint8_t linkSpeed() const;
+        bool autoNegotiation() const;
+        uint32_t phyAddr() const;
 
-        esp_eth_handle_t handle();
+        esp_eth_handle_t handle() const;
 
 #if ETH_SPI_SUPPORTS_CUSTOM
         static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
@@ -162,8 +157,8 @@ class ETHClass: public ESP_Network_Interface {
 #endif
 
         // void getMac(uint8_t* mac);
-        void printDriverInfo(Print & out);
-        static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+        size_t printDriverInfo(Print & out) const;
+        // static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
     public:
         void _onEthEvent(int32_t event_id, void* event_data);

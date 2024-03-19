@@ -4,6 +4,7 @@
 #include "esp_event.h"
 #include "Arduino.h"
 #include "ESP_Network_Manager.h"
+#include "Printable.h"
 
 typedef enum {
     ESP_NETIF_ID_STA,
@@ -15,59 +16,76 @@ typedef enum {
     ESP_NETIF_ID_MAX
 } ESP_Network_Interface_ID;
 
+static const int ESP_NETIF_STARTED_BIT          = BIT0;
+static const int ESP_NETIF_CONNECTED_BIT        = BIT1;
+static const int ESP_NETIF_HAS_IP_BIT           = BIT2;
+static const int ESP_NETIF_HAS_LOCAL_IP6_BIT    = BIT3;
+static const int ESP_NETIF_HAS_GLOBAL_IP6_BIT   = BIT4;
+static const int ESP_NETIF_WANT_IP6_BIT         = BIT5;
+
 #define ESP_NETIF_ID_ETH ESP_NETIF_ID_ETH0
 
-class ESP_Network_Interface {
+class ESP_Network_Interface: public Printable {
     public:
         ESP_Network_Interface();
         virtual ~ESP_Network_Interface();
 
         bool config(IPAddress local_ip = (uint32_t)0x00000000, IPAddress gateway = (uint32_t)0x00000000, IPAddress subnet = (uint32_t)0x00000000, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000, IPAddress dns3 = (uint32_t)0x00000000);
 
-        const char * getHostname();
-        bool setHostname(const char * hostname);
+        const char * getHostname() const;
+        bool setHostname(const char * hostname) const;
 
-        virtual bool started() = 0;
-        virtual bool connected() = 0;
-        bool linkUp();
-        bool hasIP();
-        const char * ifkey();
-        const char * desc();
-        String impl_name();
+        bool started() const;
+        bool connected() const;
+        bool hasIP() const;
+        bool hasLocalIPv6() const;
+        bool hasGlobalIPv6() const;
+        bool enableIPv6(bool en=true);
 
-        uint8_t * macAddress(uint8_t* mac);
-        String macAddress();
-        IPAddress localIP();
-        IPAddress subnetMask();
-        IPAddress gatewayIP();
-        IPAddress dnsIP(uint8_t dns_no = 0);
-        IPAddress broadcastIP();
-        IPAddress networkID();
-        uint8_t subnetCIDR();
-        IPAddress localIPv6();
-        IPAddress globalIPv6();
+        bool linkUp() const;
+        const char * ifkey() const;
+        const char * desc() const;
+        String impl_name() const;
 
-        void printInfo(Print & out);
+        uint8_t * macAddress(uint8_t* mac) const;
+        String macAddress() const;
+        IPAddress localIP() const;
+        IPAddress subnetMask() const;
+        IPAddress gatewayIP() const;
+        IPAddress dnsIP(uint8_t dns_no = 0) const;
+        IPAddress broadcastIP() const;
+        IPAddress networkID() const;
+        uint8_t subnetCIDR() const;
+        IPAddress localIPv6() const;
+        IPAddress globalIPv6() const;
+
+        size_t printTo(Print & out) const;
 
         esp_netif_t * netif(){ return _esp_netif; }
+        int getStatusBits() const;
+        int waitStatusBits(int bits, uint32_t timeout_ms) const;
 
     protected:
         esp_netif_t *_esp_netif;
+        EventGroupHandle_t _interface_event_group;
+        int _initial_bits;
         int32_t _got_ip_event_id;
         int32_t _lost_ip_event_id;
         ESP_Network_Interface_ID _interface_id;
-        bool _has_ip;
 
         bool initNetif(ESP_Network_Interface_ID interface_id);
         void destroyNetif();
+        int setStatusBits(int bits);
+        int clearStatusBits(int bits);
+
         // virtual void getMac(uint8_t* mac) = 0;
-        virtual void printDriverInfo(Print & out) = 0;
+        virtual size_t printDriverInfo(Print & out) const = 0;
 
     public:
         void _onIpEvent(int32_t event_id, void* event_data);
 
     private:
-    	IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet);
-    	IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet);
-    	uint8_t calculateSubnetCIDR(IPAddress subnetMask);
+    	IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet) const;
+    	IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet) const;
+    	uint8_t calculateSubnetCIDR(IPAddress subnetMask) const;
 };

@@ -30,6 +30,7 @@
     After which things switch to TLS/SSL.
 */
 
+#include <WiFi.h>
 #include <WiFiClientSecure.h>
 
 #ifndef WIFI_NETWORK

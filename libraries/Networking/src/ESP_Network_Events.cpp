@@ -27,7 +27,6 @@ static void _network_event_task(void * arg){
 
 ESP_Network_Events::ESP_Network_Events()
 	: _arduino_event_group(NULL)
-	, _arduino_event_group_h(NULL)
 	, _arduino_event_queue(NULL)
 	, _arduino_event_task_handle(NULL)
 {}
@@ -40,10 +39,6 @@ ESP_Network_Events::~ESP_Network_Events(){
 	if(_arduino_event_group != NULL){
 		vEventGroupDelete(_arduino_event_group);
 		_arduino_event_group = NULL;
-	}
-	if(_arduino_event_group_h != NULL){
-		vEventGroupDelete(_arduino_event_group_h);
-		_arduino_event_group_h = NULL;
 	}
 	if(_arduino_event_queue != NULL){
 		arduino_event_t *event = NULL;
@@ -65,13 +60,6 @@ bool ESP_Network_Events::initNetworkEvents(){
             return false;
         }
         xEventGroupSetBits(_arduino_event_group, _initial_bits);
-    }
-    if(!_arduino_event_group_h){
-        _arduino_event_group_h = xEventGroupCreate();
-        if(!_arduino_event_group_h){
-            log_e("Network Event Group 2 Create Failed!");
-            return false;
-        }
     }
 
     if(!_arduino_event_queue){
@@ -189,6 +177,48 @@ network_event_handle_t ESP_Network_Events::onEvent(NetworkEventSysCb cbEvent, ar
     return newEventHandler.id;
 }
 
+network_event_handle_t ESP_Network_Events::onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event)
+{
+    if(!cbEvent) {
+        return 0;
+    }
+    NetworkEventCbList_t newEventHandler;
+    newEventHandler.cb = cbEvent;
+    newEventHandler.fcb = NULL;
+    newEventHandler.scb = NULL;
+    newEventHandler.event = event;
+    cbEventList.insert(cbEventList.begin(), newEventHandler);
+    return newEventHandler.id;
+}
+
+network_event_handle_t ESP_Network_Events::onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event)
+{
+    if(!cbEvent) {
+        return 0;
+    }
+    NetworkEventCbList_t newEventHandler;
+    newEventHandler.cb = NULL;
+    newEventHandler.fcb = cbEvent;
+    newEventHandler.scb = NULL;
+    newEventHandler.event = event;
+    cbEventList.insert(cbEventList.begin(), newEventHandler);
+    return newEventHandler.id;
+}
+
+network_event_handle_t ESP_Network_Events::onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event)
+{
+    if(!cbEvent) {
+        return 0;
+    }
+    NetworkEventCbList_t newEventHandler;
+    newEventHandler.cb = NULL;
+    newEventHandler.fcb = NULL;
+    newEventHandler.scb = cbEvent;
+    newEventHandler.event = event;
+    cbEventList.insert(cbEventList.begin(), newEventHandler);
+    return newEventHandler.id;
+}
+
 void ESP_Network_Events::removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event)
 {
     if(!cbEvent) {
@@ -198,6 +228,27 @@ void ESP_Network_Events::removeEvent(NetworkEventCb cbEvent, arduino_event_id_t 
     for(uint32_t i = 0; i < cbEventList.size(); i++) {
         NetworkEventCbList_t entry = cbEventList[i];
         if(entry.cb == cbEvent && entry.event == event) {
+            cbEventList.erase(cbEventList.begin() + i);
+        }
+    }
+}
+
+template<typename T, typename... U>
+static size_t getStdFunctionAddress(std::function<T(U...)> f) {
+    typedef T(fnType)(U...);
+    fnType ** fnPointer = f.template target<fnType*>();
+    return (size_t) *fnPointer;
+}
+
+void ESP_Network_Events::removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event)
+{
+    if(!cbEvent) {
+        return;
+    }
+
+    for(uint32_t i = 0; i < cbEventList.size(); i++) {
+        NetworkEventCbList_t entry = cbEventList[i];
+        if(getStdFunctionAddress(entry.fcb) == getStdFunctionAddress(cbEvent) && entry.event == event) {
             cbEventList.erase(cbEventList.begin() + i);
         }
     }
@@ -232,14 +283,7 @@ int ESP_Network_Events::setStatusBits(int bits){
         _initial_bits |= bits;
         return _initial_bits;
     }
-    int l=bits & 0x00FFFFFF, h=(bits & 0xFF000000) >> 24;
-    if(l){
-    	l = xEventGroupSetBits(_arduino_event_group, l);
-    }
-    if(h){
-    	h = xEventGroupSetBits(_arduino_event_group_h, h);
-    }
-    return l | (h << 24);
+    return xEventGroupSetBits(_arduino_event_group, bits);
 }
 
 int ESP_Network_Events::clearStatusBits(int bits){
@@ -247,47 +291,34 @@ int ESP_Network_Events::clearStatusBits(int bits){
         _initial_bits &= ~bits;
         return _initial_bits;
     }
-    int l=bits & 0x00FFFFFF, h=(bits & 0xFF000000) >> 24;
-    if(l){
-    	l = xEventGroupClearBits(_arduino_event_group, l);
-    }
-    if(h){
-    	h = xEventGroupClearBits(_arduino_event_group_h, h);
-    }
-    return l | (h << 24);
+    return xEventGroupClearBits(_arduino_event_group, bits);
 }
 
 int ESP_Network_Events::getStatusBits(){
     if(!_arduino_event_group){
         return _initial_bits;
     }
-    return xEventGroupGetBits(_arduino_event_group) | (xEventGroupGetBits(_arduino_event_group_h) << 24);
+    return xEventGroupGetBits(_arduino_event_group);
 }
 
 int ESP_Network_Events::waitStatusBits(int bits, uint32_t timeout_ms){
     if(!_arduino_event_group){
         return 0;
     }
-    int l=bits & 0x00FFFFFF, h=(bits & 0xFF000000) >> 24;
-    if(l){
-	    l = xEventGroupWaitBits(
-	        _arduino_event_group,    // The event group being tested.
-	        l,  // The bits within the event group to wait for.
-	        pdFALSE,         // bits should be cleared before returning.
-	        pdTRUE,        // Don't wait for all bits, any bit will do.
-	        timeout_ms / portTICK_PERIOD_MS ) & l; // Wait a maximum of timeout_ms for any bit to be set.
-    }
-    if(h){
-    	h = xEventGroupWaitBits(
-	        _arduino_event_group,    // The event group being tested.
-	        h,  // The bits within the event group to wait for.
-	        pdFALSE,         // bits should be cleared before returning.
-	        pdTRUE,        // Don't wait for all bits, any bit will do.
-	        timeout_ms / portTICK_PERIOD_MS ) & h; // Wait a maximum of timeout_ms for any bit to be set.
-    }
-    return l | (h << 24);
+    return xEventGroupWaitBits(
+        _arduino_event_group,    // The event group being tested.
+        bits,  // The bits within the event group to wait for.
+        pdFALSE,         // bits should be cleared before returning.
+        pdTRUE,        // Don't wait for all bits, any bit will do.
+        timeout_ms / portTICK_PERIOD_MS ) & bits; // Wait a maximum of timeout_ms for any bit to be set.
 }
 
+/**
+ * @brief Convert arduino_event_id_t to a C string.
+ * @param [in] id The event id to be converted.
+ * @return A string representation of the event id.
+ * @note: arduino_event_id_t values as of Mar 2023 (arduino-esp32 r2.0.7) are: 0-39 (ARDUINO_EVENT_MAX=40) and are defined in WiFiGeneric.h.
+ */
 const char * ESP_Network_Events::eventName(arduino_event_id_t id) {
     switch(id) {
         case ARDUINO_EVENT_ETH_START: return "ETH_START";
@@ -306,6 +337,7 @@ const char * ESP_Network_Events::eventName(arduino_event_id_t id) {
         // case ARDUINO_EVENT_PPP_LOST_IP: return "PPP_LOST_IP";
         // case ARDUINO_EVENT_PPP_GOT_IP6: return "PPP_GOT_IP6";
 #if SOC_WIFI_SUPPORTED
+        case ARDUINO_EVENT_WIFI_OFF: return "WIFI_OFF";
         case ARDUINO_EVENT_WIFI_READY: return "WIFI_READY";
         case ARDUINO_EVENT_WIFI_SCAN_DONE: return "SCAN_DONE";
         case ARDUINO_EVENT_WIFI_STA_START: return "STA_START";

@@ -83,7 +83,7 @@ int ESP_Network_Manager::hostByName(const char* aHostname, IPAddress& aResult, b
     // If such address is not assigned, there is no point in trying to get V6 from DNS as we will not be able to reach it.
     // That is of course, if 'preferV6' is not set to true
     static bool hasGlobalV6 = false;
-    bool hasGlobalV6Now = (Network.getStatusBits() & NET_HAS_IP6_GLOBAL_BIT) != 0;
+    bool hasGlobalV6Now = false;//ToDo: implement this!
     if(hasGlobalV6 != hasGlobalV6Now){
         hasGlobalV6 = hasGlobalV6Now;
         dns_clear_cache();

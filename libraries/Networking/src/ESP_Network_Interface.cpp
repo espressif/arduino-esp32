@@ -52,7 +52,7 @@ void ESP_Network_Interface::_onIpEvent(int32_t event_id, void* event_data){
     arduino_event_t arduino_event;
     arduino_event.event_id = ARDUINO_EVENT_MAX;
     if(event_id == _got_ip_event_id){
-        _has_ip = true;
+        setStatusBits(ESP_NETIF_HAS_IP_BIT);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         log_v("%s Got %sIP: " IPSTR " MASK: " IPSTR " GW: " IPSTR, desc(), event->ip_changed?"New ":"Same ", IP2STR(&event->ip_info.ip), IP2STR(&event->ip_info.netmask), IP2STR(&event->ip_info.gw));
@@ -61,39 +61,38 @@ void ESP_Network_Interface::_onIpEvent(int32_t event_id, void* event_data){
 #if SOC_WIFI_SUPPORTED
         if(_interface_id == ESP_NETIF_ID_STA){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP;
-            Network.setStatusBits(STA_HAS_IP_BIT);
         } else
 #endif
         // if(_interface_id == ESP_NETIF_ID_PPP){
         //     arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP;
-        //     Network.setStatusBits(PPP_HAS_IP_BIT);
         // } else 
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
-            Network.setStatusBits(ETH_HAS_IP_BIT(_interface_id - ESP_NETIF_ID_ETH));
         }
     } else if(event_id == _lost_ip_event_id){
-        _has_ip = false;
+        clearStatusBits(ESP_NETIF_HAS_IP_BIT);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
         log_v("%s Lost IP", desc());
 #endif
 #if SOC_WIFI_SUPPORTED
         if(_interface_id == ESP_NETIF_ID_STA){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_LOST_IP;
-            Network.clearStatusBits(STA_HAS_IP_BIT);
         } else 
 #endif
         // if(_interface_id == ESP_NETIF_ID_PPP){
         //     arduino_event.event_id = ARDUINO_EVENT_PPP_LOST_IP;
-        //     Network.clearStatusBits(PPP_HAS_IP_BIT);
         // } else 
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_LOST_IP;
-            Network.clearStatusBits(ETH_HAS_IP_BIT(_interface_id - ESP_NETIF_ID_ETH));
         }
     } else if(event_id == IP_EVENT_GOT_IP6){
         ip_event_got_ip6_t* event = (ip_event_got_ip6_t*) event_data;
         esp_ip6_addr_type_t addr_type = esp_netif_ip6_get_addr_type(&event->ip6_info.ip);
+        if(addr_type == ESP_IP6_ADDR_IS_GLOBAL){
+            setStatusBits(ESP_NETIF_HAS_GLOBAL_IP6_BIT);
+        } else if(addr_type == ESP_IP6_ADDR_IS_LINK_LOCAL){
+            setStatusBits(ESP_NETIF_HAS_LOCAL_IP6_BIT);
+        }
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE        
         char if_name[NETIF_NAMESIZE] = {0,};
         netif_index_to_name(event->ip6_info.ip.zone, if_name);
@@ -104,32 +103,19 @@ void ESP_Network_Interface::_onIpEvent(int32_t event_id, void* event_data){
 #if SOC_WIFI_SUPPORTED
         if(_interface_id == ESP_NETIF_ID_STA){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP6;
-            if(addr_type == ESP_IP6_ADDR_IS_GLOBAL){
-                Network.setStatusBits(STA_HAS_IP6_GLOBAL_BIT);
-            } else if(addr_type == ESP_IP6_ADDR_IS_LINK_LOCAL){
-                Network.setStatusBits(STA_HAS_IP6_BIT);
-            }
         } else if(_interface_id == ESP_NETIF_ID_AP){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_GOT_IP6;
-            if(addr_type == ESP_IP6_ADDR_IS_LINK_LOCAL){
-                Network.setStatusBits(AP_HAS_IP6_BIT);
-            }
         } else 
 #endif
         // if(_interface_id == ESP_NETIF_ID_PPP){
         //     arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP6;
-        //     Network.setStatusBits(PPP_HAS_IP6_BIT);
         // } else 
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP6;
-            if(addr_type == ESP_IP6_ADDR_IS_GLOBAL){
-                Network.setStatusBits(ETH_HAS_IP6_GLOBAL_BIT(_interface_id - ESP_NETIF_ID_ETH));
-            } else if(addr_type == ESP_IP6_ADDR_IS_LINK_LOCAL){
-                Network.setStatusBits(ETH_HAS_IP6_BIT(_interface_id - ESP_NETIF_ID_ETH));
-            }
         }
 #if SOC_WIFI_SUPPORTED
     } else if(event_id == IP_EVENT_AP_STAIPASSIGNED && _interface_id == ESP_NETIF_ID_AP){
+        setStatusBits(ESP_NETIF_HAS_IP_BIT);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
         ip_event_ap_staipassigned_t* event = (ip_event_ap_staipassigned_t*) event_data;
         log_v("%s Assigned IP: " IPSTR " to MAC: %02X:%02X:%02X:%02X:%02X:%02X", desc(), IP2STR(&event->ip), event->mac[0], event->mac[1], event->mac[2], event->mac[3], event->mac[4], event->mac[5]);
@@ -146,21 +132,18 @@ void ESP_Network_Interface::_onIpEvent(int32_t event_id, void* event_data){
 
 ESP_Network_Interface::ESP_Network_Interface()
     : _esp_netif(NULL)
+    , _interface_event_group(NULL)
+    , _initial_bits(0)
     , _got_ip_event_id(-1)
     , _lost_ip_event_id(-1)
     , _interface_id(ESP_NETIF_ID_MAX)
-    , _has_ip(false)
 {}
 
 ESP_Network_Interface::~ESP_Network_Interface(){
     destroyNetif();
 }
 
-bool ESP_Network_Interface::hasIP(){
-    return _has_ip;
-}
-
-IPAddress ESP_Network_Interface::calculateNetworkID(IPAddress ip, IPAddress subnet) {
+IPAddress ESP_Network_Interface::calculateNetworkID(IPAddress ip, IPAddress subnet) const {
 	IPAddress networkID;
 
 	for (size_t i = 0; i < 4; i++)
@@ -169,7 +152,7 @@ IPAddress ESP_Network_Interface::calculateNetworkID(IPAddress ip, IPAddress subn
 	return networkID;
 }
 
-IPAddress ESP_Network_Interface::calculateBroadcast(IPAddress ip, IPAddress subnet) {
+IPAddress ESP_Network_Interface::calculateBroadcast(IPAddress ip, IPAddress subnet) const {
     IPAddress broadcastIp;
     
     for (int i = 0; i < 4; i++)
@@ -178,7 +161,7 @@ IPAddress ESP_Network_Interface::calculateBroadcast(IPAddress ip, IPAddress subn
     return broadcastIp;
 }
 
-uint8_t ESP_Network_Interface::calculateSubnetCIDR(IPAddress subnetMask) {
+uint8_t ESP_Network_Interface::calculateSubnetCIDR(IPAddress subnetMask) const {
 	uint8_t CIDR = 0;
 
 	for (uint8_t i = 0; i < 4; i++) {
@@ -203,14 +186,59 @@ uint8_t ESP_Network_Interface::calculateSubnetCIDR(IPAddress subnetMask) {
 	return CIDR;
 }
 
-void ESP_Network_Interface::destroyNetif(){
+int ESP_Network_Interface::setStatusBits(int bits) {
+    if(!_interface_event_group){
+        _initial_bits |= bits;
+        return _initial_bits;
+    }
+    return xEventGroupSetBits(_interface_event_group, bits);
+}
+
+int ESP_Network_Interface::clearStatusBits(int bits) {
+    if(!_interface_event_group){
+        _initial_bits &= ~bits;
+        return _initial_bits;
+    }
+    return xEventGroupClearBits(_interface_event_group, bits) ;
+}
+
+int ESP_Network_Interface::getStatusBits() const {
+    if(!_interface_event_group){
+        return _initial_bits;
+    }
+    return xEventGroupGetBits(_interface_event_group);
+}
+
+int ESP_Network_Interface::waitStatusBits(int bits, uint32_t timeout_ms) const {
+    if(!_interface_event_group){
+        return 0;
+    }
+    bits = xEventGroupWaitBits(
+        _interface_event_group,    // The event group being tested.
+        bits,  // The bits within the event group to wait for.
+        pdFALSE,         // bits should be cleared before returning.
+        pdTRUE,        // Don't wait for all bits, any bit will do.
+        timeout_ms / portTICK_PERIOD_MS ) & bits; // Wait a maximum of timeout_ms for any bit to be set.
+    return bits;
+}
+
+void ESP_Network_Interface::destroyNetif() {
+    if(_ip_ev_instance != NULL){
+        esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, &_ip_event_cb);
+        _ip_ev_instance = NULL;
+    }
     if(_esp_netif != NULL){
         esp_netif_destroy(_esp_netif);
         _esp_netif = NULL;
     }
+    if(_interface_event_group != NULL){
+        vEventGroupDelete(_interface_event_group);
+        _interface_event_group = NULL;
+        _initial_bits = 0;
+    }
 }
 
-bool ESP_Network_Interface::initNetif(ESP_Network_Interface_ID interface_id){
+bool ESP_Network_Interface::initNetif(ESP_Network_Interface_ID interface_id) {
     if(_esp_netif == NULL || interface_id >= ESP_NETIF_ID_MAX){
         return false;
     }
@@ -219,9 +247,48 @@ bool ESP_Network_Interface::initNetif(ESP_Network_Interface_ID interface_id){
     _lost_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_LOST_IP);
     _interfaces[_interface_id] = this;
 
+    if(_interface_event_group == NULL){
+        _interface_event_group = xEventGroupCreate();
+        if(!_interface_event_group){
+            log_e("Interface Event Group Create Failed!");
+            return false;
+        }
+        setStatusBits(_initial_bits);
+    }
+
     if(_ip_ev_instance == NULL && esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &_ip_event_cb, NULL, &_ip_ev_instance)){
         log_e("event_handler_instance_register for IP_EVENT Failed!");
         return false;
+    }
+    return true;
+}
+
+bool ESP_Network_Interface::started() const {
+    return (getStatusBits() & ESP_NETIF_STARTED_BIT) != 0;
+}
+
+bool ESP_Network_Interface::connected() const {
+    return (getStatusBits() & ESP_NETIF_CONNECTED_BIT) != 0;
+}
+
+bool ESP_Network_Interface::hasIP() const {
+    return (getStatusBits() & ESP_NETIF_HAS_IP_BIT) != 0;
+}
+
+bool ESP_Network_Interface::hasLocalIPv6() const {
+    return (getStatusBits() & ESP_NETIF_HAS_LOCAL_IP6_BIT) != 0;
+}
+
+bool ESP_Network_Interface::hasGlobalIPv6() const {
+    return (getStatusBits() & ESP_NETIF_HAS_GLOBAL_IP6_BIT) != 0;
+}
+
+bool ESP_Network_Interface::enableIPv6(bool en)
+{
+    if (en) {
+        setStatusBits(ESP_NETIF_WANT_IP6_BIT);
+    } else {
+        clearStatusBits(ESP_NETIF_WANT_IP6_BIT);
     }
     return true;
 }
@@ -263,6 +330,8 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
         return false;
     }
 
+    clearStatusBits(ESP_NETIF_HAS_IP_BIT);
+
     // Set IPv4, Netmask, Gateway
     err = esp_netif_set_ip_info(_esp_netif, &info);
     if(err != ERR_OK){
@@ -283,13 +352,13 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
             return false;
         }
     } else {
-        _has_ip = true;
+        setStatusBits(ESP_NETIF_HAS_IP_BIT);
     }
 
     return true;
 }
 
-const char * ESP_Network_Interface::getHostname()
+const char * ESP_Network_Interface::getHostname() const
 {
     if(_esp_netif == NULL){
         return "";
@@ -301,7 +370,7 @@ const char * ESP_Network_Interface::getHostname()
     return hostname;
 }
 
-bool ESP_Network_Interface::setHostname(const char * hostname)
+bool ESP_Network_Interface::setHostname(const char * hostname) const
 {
     if(_esp_netif == NULL){
         return false;
@@ -309,7 +378,7 @@ bool ESP_Network_Interface::setHostname(const char * hostname)
     return esp_netif_set_hostname(_esp_netif, hostname) == 0;
 }
 
-bool ESP_Network_Interface::linkUp()
+bool ESP_Network_Interface::linkUp() const
 {
     if(_esp_netif == NULL){
         return false;
@@ -317,7 +386,7 @@ bool ESP_Network_Interface::linkUp()
     return esp_netif_is_netif_up(_esp_netif);
 }
 
-const char * ESP_Network_Interface::ifkey(void)
+const char * ESP_Network_Interface::ifkey(void) const
 {
     if(_esp_netif == NULL){
         return "";
@@ -325,7 +394,7 @@ const char * ESP_Network_Interface::ifkey(void)
     return esp_netif_get_ifkey(_esp_netif);
 }
 
-const char * ESP_Network_Interface::desc(void)
+const char * ESP_Network_Interface::desc(void) const
 {
     if(_esp_netif == NULL){
         return "";
@@ -333,7 +402,7 @@ const char * ESP_Network_Interface::desc(void)
     return esp_netif_get_desc(_esp_netif);
 }
 
-String ESP_Network_Interface::impl_name(void)
+String ESP_Network_Interface::impl_name(void) const
 {
     if(_esp_netif == NULL){
         return String("");
@@ -347,7 +416,7 @@ String ESP_Network_Interface::impl_name(void)
     return String(netif_name);
 }
 
-uint8_t * ESP_Network_Interface::macAddress(uint8_t* mac)
+uint8_t * ESP_Network_Interface::macAddress(uint8_t* mac) const
 {
     if(!mac || _esp_netif == NULL){
         return NULL;
@@ -361,7 +430,7 @@ uint8_t * ESP_Network_Interface::macAddress(uint8_t* mac)
     return mac;
 }
 
-String ESP_Network_Interface::macAddress(void)
+String ESP_Network_Interface::macAddress(void) const
 {
     uint8_t mac[6] = {0,0,0,0,0,0};
     char macStr[18] = { 0 };
@@ -370,7 +439,7 @@ String ESP_Network_Interface::macAddress(void)
     return String(macStr);
 }
 
-IPAddress ESP_Network_Interface::localIP()
+IPAddress ESP_Network_Interface::localIP() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -382,7 +451,7 @@ IPAddress ESP_Network_Interface::localIP()
     return IPAddress(ip.ip.addr);
 }
 
-IPAddress ESP_Network_Interface::subnetMask()
+IPAddress ESP_Network_Interface::subnetMask() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -394,7 +463,7 @@ IPAddress ESP_Network_Interface::subnetMask()
     return IPAddress(ip.netmask.addr);
 }
 
-IPAddress ESP_Network_Interface::gatewayIP()
+IPAddress ESP_Network_Interface::gatewayIP() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -406,7 +475,7 @@ IPAddress ESP_Network_Interface::gatewayIP()
     return IPAddress(ip.gw.addr);
 }
 
-IPAddress ESP_Network_Interface::dnsIP(uint8_t dns_no)
+IPAddress ESP_Network_Interface::dnsIP(uint8_t dns_no) const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -418,7 +487,7 @@ IPAddress ESP_Network_Interface::dnsIP(uint8_t dns_no)
     return IPAddress(d.ip.u_addr.ip4.addr);
 }
 
-IPAddress ESP_Network_Interface::broadcastIP()
+IPAddress ESP_Network_Interface::broadcastIP() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -430,7 +499,7 @@ IPAddress ESP_Network_Interface::broadcastIP()
     return calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
 }
 
-IPAddress ESP_Network_Interface::networkID()
+IPAddress ESP_Network_Interface::networkID() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -442,7 +511,7 @@ IPAddress ESP_Network_Interface::networkID()
     return calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
 }
 
-uint8_t ESP_Network_Interface::subnetCIDR()
+uint8_t ESP_Network_Interface::subnetCIDR() const
 {
     if(_esp_netif == NULL){
         return (uint8_t)0;
@@ -454,7 +523,7 @@ uint8_t ESP_Network_Interface::subnetCIDR()
     return calculateSubnetCIDR(IPAddress(ip.netmask.addr));
 }
 
-IPAddress ESP_Network_Interface::localIPv6()
+IPAddress ESP_Network_Interface::localIPv6() const
 {
     if(_esp_netif == NULL){
         return IPAddress(IPv6);
@@ -466,7 +535,7 @@ IPAddress ESP_Network_Interface::localIPv6()
     return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
-IPAddress ESP_Network_Interface::globalIPv6()
+IPAddress ESP_Network_Interface::globalIPv6() const
 {
     if(_esp_netif == NULL){
         return IPAddress(IPv6);
@@ -478,49 +547,51 @@ IPAddress ESP_Network_Interface::globalIPv6()
     return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
-void ESP_Network_Interface::printInfo(Print & out){
-    out.print(desc());
-    out.print(":");
-    if(linkUp()){
-        out.print(" <UP");
+size_t ESP_Network_Interface::printTo(Print & out) const {
+    size_t bytes = 0;
+    bytes += out.print(esp_netif_get_desc(_esp_netif));
+    bytes += out.print(":");
+    if(esp_netif_is_netif_up(_esp_netif)){
+        bytes += out.print(" <UP");
     } else {
-        out.print(" <DOWN");
+        bytes += out.print(" <DOWN");
     }
-    printDriverInfo(out);
-    out.println(">");
+    bytes += printDriverInfo(out);
+    bytes += out.println(">");
 
-    out.print("      ");
-    out.print("ether ");
-    out.print(macAddress());
-    out.println();
+    bytes += out.print("      ");
+    bytes += out.print("ether ");
+    bytes += out.print(macAddress());
+    bytes += out.println();
 
-    out.print("      ");
-    out.print("inet ");
-    out.print(localIP());
-    out.print(" netmask ");
-    out.print(subnetMask());
-    out.print(" broadcast ");
-    out.print(broadcastIP());
-    out.println();
+    bytes += out.print("      ");
+    bytes += out.print("inet ");
+    bytes += out.print(localIP());
+    bytes += out.print(" netmask ");
+    bytes += out.print(subnetMask());
+    bytes += out.print(" broadcast ");
+    bytes += out.print(broadcastIP());
+    bytes += out.println();
 
-    out.print("      ");
-    out.print("gateway ");
-    out.print(gatewayIP());
-    out.print(" dns ");
-    out.print(dnsIP());
-    out.println();
+    bytes += out.print("      ");
+    bytes += out.print("gateway ");
+    bytes += out.print(gatewayIP());
+    bytes += out.print(" dns ");
+    bytes += out.print(dnsIP());
+    bytes += out.println();
 
     static const char * types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
     esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
     int v6addrs = esp_netif_get_all_ip6(_esp_netif, if_ip6);
     for (int i = 0; i < v6addrs; ++i){
-        out.print("      ");
-        out.print("inet6 ");
-        IPAddress(IPv6, (const uint8_t *)if_ip6[i].addr, if_ip6[i].zone).printTo(out, true);
-        out.print(" type ");
-        out.print(types[esp_netif_ip6_get_addr_type(&if_ip6[i])]);
-        out.println();
+        bytes += out.print("      ");
+        bytes += out.print("inet6 ");
+        bytes += IPAddress(IPv6, (const uint8_t *)if_ip6[i].addr, if_ip6[i].zone).printTo(out, true);
+        bytes += out.print(" type ");
+        bytes += out.print(types[esp_netif_ip6_get_addr_type(&if_ip6[i])]);
+        bytes += out.println();
     }
 
-    out.println();
+    // bytes += out.println();
+    return bytes;
 }

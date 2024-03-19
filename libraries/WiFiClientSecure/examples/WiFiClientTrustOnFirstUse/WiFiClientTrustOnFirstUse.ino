@@ -54,6 +54,7 @@ const char* server = "www.howsmyssl.com";  // Server to test with.
 
 const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 and GND (pulldown) */
 
+#include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <EEPROM.h>
 

@@ -217,7 +217,8 @@ set(ARDUINO_LIBRARY_WiFi_SRCS
   libraries/WiFi/src/WiFiGeneric.cpp
   libraries/WiFi/src/WiFiMulti.cpp
   libraries/WiFi/src/WiFiScan.cpp
-  libraries/WiFi/src/WiFiSTA.cpp)
+  libraries/WiFi/src/WiFiSTA.cpp
+  libraries/WiFi/src/STA.cpp)
 
 set(ARDUINO_LIBRARY_WiFiProv_SRCS libraries/WiFiProv/src/WiFiProv.cpp)
 
