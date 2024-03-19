@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #pragma once
 
 #include "soc/soc_caps.h"
@@ -156,6 +161,7 @@ public:
     friend class ETHClass;
 #if SOC_WIFI_SUPPORTED
     friend class STAClass;
+    friend class APClass;
     friend class WiFiGenericClass;
 #endif
 

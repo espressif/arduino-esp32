@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #pragma once
 
 #include "esp_netif_types.h"
@@ -30,7 +35,7 @@ class ESP_Network_Interface: public Printable {
         ESP_Network_Interface();
         virtual ~ESP_Network_Interface();
 
-        // For server interfaces (WiFi AP), dns1 is the DNS and dns2 is the lease range start
+        // For server interfaces (WiFi AP), dns1 is the DHCP lease range start and dns2 is the DNS. dns3 is not used
         bool config(IPAddress local_ip = (uint32_t)0x00000000, IPAddress gateway = (uint32_t)0x00000000, IPAddress subnet = (uint32_t)0x00000000, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000, IPAddress dns3 = (uint32_t)0x00000000);
         bool dnsIP(uint8_t dns_no, IPAddress ip);
 

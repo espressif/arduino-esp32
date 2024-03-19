@@ -30,14 +30,42 @@
 #include "WiFiGeneric.h"
 
 
+
+// ----------------------------------------------------------------------------------------------
+// ------------------------------------ NEW AP Implementation  ----------------------------------
+// ----------------------------------------------------------------------------------------------
+
+class APClass: public ESP_Network_Interface {
+    public:
+        APClass();
+        ~APClass();
+
+        bool begin();
+        bool end();
+
+        bool enable(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false);
+        bool disable();
+
+        bool bandwidth(wifi_bandwidth_t bandwidth);
+
+        String SSID(void) const;
+        uint8_t stationCount();
+
+        void _onApEvent(int32_t event_id, void* event_data);
+
+    protected:
+        size_t printDriverInfo(Print & out) const;
+};
+
+// ----------------------------------------------------------------------------------------------
+// ------------------------------- OLD AP API (compatibility)  ----------------------------------
+// ----------------------------------------------------------------------------------------------
+
 class WiFiAPClass
 {
 
-    // ----------------------------------------------------------------------------------------------
-    // ----------------------------------------- AP function ----------------------------------------
-    // ----------------------------------------------------------------------------------------------
-
 public:
+    APClass AP;
 
     bool softAP(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false);
     bool softAP(const String& ssid, const String& passphrase = emptyString, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false) {
@@ -51,10 +79,6 @@ public:
 
     uint8_t softAPgetStationNum();
     String softAPSSID(void) const;
-
-
-
-
 
     IPAddress softAPIP();
     IPAddress softAPBroadcastIP();

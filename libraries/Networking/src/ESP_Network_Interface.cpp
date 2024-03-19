@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include "ESP_Network_Interface.h"
 #include "esp_netif.h"
 #include "esp_netif_defaults.h"
@@ -366,12 +371,14 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
         }
         
         // Set DNS Server
-        esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d1);
+        if(d2.ip.u_addr.ip4.addr != 0){
+            esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
+        }
 
         dhcps_lease_t lease;
         lease.enable = true;
         uint8_t CIDR = calculateSubnetCIDR(subnet);
-        log_v("SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dns2.toString().c_str(), subnet.toString().c_str());
+        log_v("SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dns1.toString().c_str(), subnet.toString().c_str());
         // netmask must have room for at least 12 IP addresses (AP + GW + 10 DHCP Leasing addresses)
         // netmask also must be limited to the last 8 bits of IPv4, otherwise this function won't work
         // IDF NETIF checks netmask for the 3rd byte: https://github.com/espressif/esp-idf/blob/master/components/esp_netif/lwip/esp_netif_lwip.c#L1857-L1862
@@ -383,7 +390,7 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
         // The code below is ready for any netmask, not limited to 255.255.255.0
         uint32_t netmask = _byte_swap32(info.netmask.addr);
         uint32_t ap_ipaddr = _byte_swap32(info.ip.addr);
-        uint32_t dhcp_ipaddr = _byte_swap32(static_cast<uint32_t>(dns2));
+        uint32_t dhcp_ipaddr = _byte_swap32(static_cast<uint32_t>(dns1));
         dhcp_ipaddr = dhcp_ipaddr == 0 ? ap_ipaddr + 1 : dhcp_ipaddr;
         uint32_t leaseStartMax = ~netmask - 10;
         // there will be 10 addresses for DHCP to lease

@@ -1,4 +1,8 @@
-
+/*
+ * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
@@ -141,7 +145,7 @@ static void _onStaArduinoEvent(arduino_event_id_t event, arduino_event_info_t in
         if (_sta_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT){
             esp_err_t err = esp_netif_create_ip6_linklocal(_sta_network_if->netif());
             if(err != ESP_OK){
-                log_e("Failed to enable IPv6 Link Local on STA: [%d] %s", err, esp_err_to_name(err));
+                log_e("Failed to enable IPv6 Link Local on STA:  0x%x: %s", err, esp_err_to_name(err));
             } else {
                 log_v("Enabled IPv6 Link Local on %s", _sta_network_if->desc());
             }
@@ -278,7 +282,7 @@ bool STAClass::bandwidth(wifi_bandwidth_t bandwidth) {
     esp_err_t err;
     err = esp_wifi_set_bandwidth(WIFI_IF_STA, bandwidth);
     if(err){
-        log_e("Could not set STA bandwidth!");
+        log_e("Could not set STA bandwidth! 0x%x: %s", err, esp_err_to_name(err));
         return false;
     }
 
@@ -292,6 +296,9 @@ bool STAClass::begin(bool tryConnect){
         log_e("event_handler_instance_register for WIFI_EVENT Failed!");
         return false;
     }
+    if(_esp_netif == NULL){
+        Network.onSysEvent(_onStaArduinoEvent);
+    }
 
     if(!WiFi.enableSTA(true)) {
         log_e("STA enable failed!");
@@ -303,7 +310,6 @@ bool STAClass::begin(bool tryConnect){
         _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_STA);
         /* attach to receive events */
         initNetif(ESP_NETIF_ID_STA);
-        Network.onSysEvent(_onStaArduinoEvent);
     }
 
     if(tryConnect){
@@ -322,6 +328,10 @@ bool STAClass::end(){
     // That would be done by WiFi.enableSTA(false) if AP is not enabled, or when it gets disabled
     _esp_netif = NULL;
     destroyNetif();
+    if(_sta_ev_instance != NULL){
+        esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &_sta_event_cb);
+        _sta_ev_instance = NULL;
+    }
     return true;
 }
 

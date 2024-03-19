@@ -261,37 +261,6 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
     	memcpy(&arduino_event.event_info.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
 
 	/*
-	 * AP
-	 * */
-	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START) {
-		log_v("AP Started");
-    	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_START;
-	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STOP) {
-		log_v("AP Stopped");
-    	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STOP;
-	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_PROBEREQRECVED) {
-		#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-            wifi_event_ap_probe_req_rx_t * event = (wifi_event_ap_probe_req_rx_t*)event_data;
-		    log_v("AP Probe Request: RSSI: %d, MAC: " MACSTR, event->rssi, MAC2STR(event->mac));
-    	#endif
-        arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED;
-    	memcpy(&arduino_event.event_info.wifi_ap_probereqrecved, event_data, sizeof(wifi_event_ap_probe_req_rx_t));
-	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED) {
-		#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-            wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-		    log_v("AP Station Connected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
-    	#endif
-        arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STACONNECTED;
-    	memcpy(&arduino_event.event_info.wifi_ap_staconnected, event_data, sizeof(wifi_event_ap_staconnected_t));
-	} else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-		#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-            wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-		    log_v("AP Station Disconnected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
-        #endif
-    	arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STADISCONNECTED;
-    	memcpy(&arduino_event.event_info.wifi_ap_stadisconnected, event_data, sizeof(wifi_event_ap_stadisconnected_t));
-
-	/*
 	 * WPS
 	 * */
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_SUCCESS) {
@@ -596,23 +565,6 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event)
     // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
     if(event->event_id == ARDUINO_EVENT_WIFI_SCAN_DONE) {
         WiFiScanClass::_scanDone();
-    } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_START) {
-        setStatusBits(AP_STARTED_BIT);
-        if (getStatusBits() & AP_WANT_IP6_BIT){
-            esp_err_t err = esp_netif_create_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_AP));
-            if(err != ESP_OK){
-                log_e("Failed to enable IPv6 Link Local on AP: [%d] %s", err, esp_err_to_name(err));
-            }
-        }
-    } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_STOP) {
-        clearStatusBits(AP_STARTED_BIT | AP_HAS_CLIENT_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_STACONNECTED) {
-        setStatusBits(AP_HAS_CLIENT_BIT);
-    } else if(event->event_id == ARDUINO_EVENT_WIFI_AP_STADISCONNECTED) {
-        wifi_sta_list_t clients;
-        if(esp_wifi_ap_get_sta_list(&clients) != ESP_OK || !clients.num){
-            clearStatusBits(AP_HAS_CLIENT_BIT);
-        }
     } else if(event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
     	WiFi.begin(
 			(const char *)event->event_info.sc_got_ssid_pswd.ssid,

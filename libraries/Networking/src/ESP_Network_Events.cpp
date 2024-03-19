@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include "ESP_Network_Events.h"
 #include "ESP_Network_Manager.h"
 #include "esp_task.h"
