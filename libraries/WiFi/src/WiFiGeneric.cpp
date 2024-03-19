@@ -615,8 +615,6 @@ bool WiFiGenericClass::setHostname(const char * hostname)
  */
 void WiFiGenericClass::_eventCallback(arduino_event_t *event)
 {
-    static bool first_connect = true;
-
     if(!event) return;                                                       //Null would crash this function
 
     // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
