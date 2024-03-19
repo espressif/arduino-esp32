@@ -48,5 +48,12 @@ static const uint8_t T6 = 7;
 
 static const uint8_t Vext = 36;
 static const uint8_t LED  = 35;
+static const uint8_t RST_OLED = 21;
+static const uint8_t SCL_OLED = 18;
+static const uint8_t SDA_OLED = 17;
+
+static const uint8_t RST_LoRa = 12;
+static const uint8_t BUSY_LoRa = 13;
+static const uint8_t DIO0 = 14;
 
 #endif /* Pins_Arduino_h */
