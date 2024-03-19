@@ -54,195 +54,14 @@ extern "C" {
 #include "sdkconfig.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
-/*
- * Private (exposable) methods
- * */
-static char default_hostname[32] = {0,};
-static const char * get_esp_netif_hostname(){
-    if(default_hostname[0] == 0){
-        uint8_t eth_mac[6];
-        esp_wifi_get_mac((wifi_interface_t)WIFI_IF_STA, eth_mac);
-        snprintf(default_hostname, 32, "%s%02X%02X%02X", CONFIG_IDF_TARGET "-", eth_mac[3], eth_mac[4], eth_mac[5]);
-    }
-    return (const char *)default_hostname;
-}
-static void set_esp_netif_hostname(const char * name){
-    if(name){
-        snprintf(default_hostname, 32, "%s", name);
-    }
-}
-
-
-
-
-
-
-
 
 static esp_netif_t* esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
-esp_interface_t get_esp_netif_interface(esp_netif_t* esp_netif){
-	for(int i=0; i<ESP_IF_MAX; i++){
-		if(esp_netifs[i] != NULL && esp_netifs[i] == esp_netif){
-			return (esp_interface_t)i;
-		}
-	}
-	return ESP_IF_MAX;
-}
-
-void add_esp_interface_netif(esp_interface_t interface, esp_netif_t* esp_netif){
-	if(interface < ESP_IF_MAX){
-		esp_netifs[interface] = esp_netif;
-	}
-}
 
 esp_netif_t* get_esp_interface_netif(esp_interface_t interface){
 	if(interface < ESP_IF_MAX){
 		return esp_netifs[interface];
 	}
 	return NULL;
-}
-
-esp_err_t set_esp_interface_hostname(esp_interface_t interface, const char * hostname){
-	if(interface < ESP_IF_MAX){
-		return esp_netif_set_hostname(esp_netifs[interface], hostname);
-	}
-	return ESP_FAIL;
-}
-
-esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPAddress(), IPAddress gateway=IPAddress(), IPAddress subnet=IPAddress(), IPAddress dhcp_lease_start=INADDR_NONE){
-	esp_netif_t *esp_netif = esp_netifs[interface];
-	esp_netif_dhcp_status_t status = ESP_NETIF_DHCP_INIT;
-	esp_netif_ip_info_t info;
-    info.ip.addr = static_cast<uint32_t>(local_ip);
-    info.gw.addr = static_cast<uint32_t>(gateway);
-    info.netmask.addr = static_cast<uint32_t>(subnet);
-
-    log_v("Configuring %s static IP: " IPSTR ", MASK: " IPSTR ", GW: " IPSTR,
-          interface == ESP_IF_WIFI_STA ? "Station" :
-          interface == ESP_IF_WIFI_AP ? "SoftAP" : "Ethernet",
-          IP2STR(&info.ip), IP2STR(&info.netmask), IP2STR(&info.gw));
-
-    esp_err_t err = ESP_OK;
-    if(interface != ESP_IF_WIFI_AP){
-    	err = esp_netif_dhcpc_get_status(esp_netif, &status);
-        if(err){
-        	log_e("DHCPC Get Status Failed! 0x%04x", err);
-        	return err;
-        }
-		err = esp_netif_dhcpc_stop(esp_netif);
-		if(err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
-			log_e("DHCPC Stop Failed! 0x%04x", err);
-			return err;
-		}
-        err = esp_netif_set_ip_info(esp_netif, &info);
-        if(err){
-        	log_e("Netif Set IP Failed! 0x%04x", err);
-        	return err;
-        }
-    	if(info.ip.addr == 0){
-    		err = esp_netif_dhcpc_start(esp_netif);
-    		if(err){
-            	log_e("DHCPC Start Failed! 0x%04x", err);
-            	return err;
-            }
-    	}
-    } else {
-    	err = esp_netif_dhcps_get_status(esp_netif, &status);
-        if(err){
-        	log_e("DHCPS Get Status Failed! 0x%04x", err);
-        	return err;
-        }
-		err = esp_netif_dhcps_stop(esp_netif);
-		if(err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
-			log_e("DHCPS Stop Failed! 0x%04x", err);
-			return err;
-		}
-        err = esp_netif_set_ip_info(esp_netif, &info);
-        if(err){
-        	log_e("Netif Set IP Failed! 0x%04x", err);
-        	return err;
-        }
-
-        dhcps_lease_t lease;
-        lease.enable = true;
-        uint8_t CIDR = WiFiGenericClass::calculateSubnetCIDR(subnet);
-        log_v("SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dhcp_lease_start.toString().c_str(), subnet.toString().c_str());
-        // netmask must have room for at least 12 IP addresses (AP + GW + 10 DHCP Leasing addresses)
-        // netmask also must be limited to the last 8 bits of IPv4, otherwise this function won't work
-        // IDF NETIF checks netmask for the 3rd byte: https://github.com/espressif/esp-idf/blob/master/components/esp_netif/lwip/esp_netif_lwip.c#L1857-L1862
-        if (CIDR > 28 || CIDR < 24) {
-            log_e("Bad netmask. It must be from /24 to /28 (255.255.255. 0<->240)");
-            return ESP_FAIL; //  ESP_FAIL if initializing failed
-        }
-        #define _byte_swap32(num) (((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000))
-        // The code below is ready for any netmask, not limited to 255.255.255.0
-        uint32_t netmask = _byte_swap32(info.netmask.addr);
-        uint32_t ap_ipaddr = _byte_swap32(info.ip.addr);
-        uint32_t dhcp_ipaddr = _byte_swap32(static_cast<uint32_t>(dhcp_lease_start));
-        dhcp_ipaddr = dhcp_ipaddr == 0 ? ap_ipaddr + 1 : dhcp_ipaddr;
-        uint32_t leaseStartMax = ~netmask - 10;
-        // there will be 10 addresses for DHCP to lease
-        lease.start_ip.addr = dhcp_ipaddr;
-        lease.end_ip.addr = lease.start_ip.addr + 10;
-        // Check if local_ip is in the same subnet as the dhcp leasing range initial address
-        if ((ap_ipaddr & netmask) != (dhcp_ipaddr & netmask)) {
-            log_e("The AP IP address (%s) and the DHCP start address (%s) must be in the same subnet", 
-                local_ip.toString().c_str(), IPAddress(_byte_swap32(dhcp_ipaddr)).toString().c_str());
-            return ESP_FAIL; //  ESP_FAIL if initializing failed
-        }
-        // prevents DHCP lease range to overflow subnet range
-        if ((dhcp_ipaddr & ~netmask) >= leaseStartMax) {
-            // make first DHCP lease addr stay in the begining of the netmask range
-            lease.start_ip.addr = (dhcp_ipaddr & netmask) + 1;
-            lease.end_ip.addr = lease.start_ip.addr + 10;
-            log_w("DHCP Lease out of range - Changing DHCP leasing start to %s", IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str());
-        }
-        // Check if local_ip is within DHCP range
-        if (ap_ipaddr >= lease.start_ip.addr && ap_ipaddr <= lease.end_ip.addr) {
-            log_e("The AP IP address (%s) can't be within the DHCP range (%s -- %s)", 
-                local_ip.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
-            return ESP_FAIL; //  ESP_FAIL if initializing failed
-        }
-        // Check if gateway is within DHCP range
-        uint32_t gw_ipaddr = _byte_swap32(info.gw.addr);
-        bool gw_in_same_subnet = (gw_ipaddr & netmask) == (ap_ipaddr & netmask);
-        if (gw_in_same_subnet && gw_ipaddr >= lease.start_ip.addr && gw_ipaddr <= lease.end_ip.addr) {
-            log_e("The GatewayP address (%s) can't be within the DHCP range (%s -- %s)", 
-                gateway.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
-            return ESP_FAIL; //  ESP_FAIL if initializing failed
-        }
-        // all done, just revert back byte order of DHCP lease range
-        lease.start_ip.addr = _byte_swap32(lease.start_ip.addr);
-        lease.end_ip.addr = _byte_swap32(lease.end_ip.addr);
-        log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString().c_str(), IPAddress(lease.end_ip.addr).toString().c_str());
-        // Following block is commented because it breaks AP DHCPS on recent ESP-IDF
-        // err = esp_netif_dhcps_option(
-        //     esp_netif,
-        //     ESP_NETIF_OP_SET,
-        //     ESP_NETIF_SUBNET_MASK,
-        //     (void*)&info.netmask.addr, sizeof(info.netmask.addr)
-        // );
-		// if(err){
-        // 	log_e("DHCPS Set Netmask Failed! 0x%04x", err);
-        // 	return err;
-        // }
-        err = esp_netif_dhcps_option(
-            esp_netif,
-            ESP_NETIF_OP_SET,
-            ESP_NETIF_REQUESTED_IP_ADDRESS,
-            (void*)&lease, sizeof(dhcps_lease_t)
-        );
-		if(err){
-        	log_e("DHCPS Set Lease Failed! 0x%04x", err);
-        	return err;
-        }
-		err = esp_netif_dhcps_start(esp_netif);
-		if(err){
-        	log_e("DHCPS Start Failed! 0x%04x", err);
-        	return err;
-        }
-    }
-	return err;
 }
 
 static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
@@ -351,11 +170,6 @@ static bool initWiFiEvents(){
         return false;
     }
 
-    // if(esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)){
-    //     log_e("event_handler_instance_register for IP_EVENT Failed!");
-    //     return false;
-    // }
-
     if(esp_event_handler_instance_register(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)){
         log_e("event_handler_instance_register for SC_EVENT Failed!");
         return false;
@@ -374,11 +188,6 @@ static bool deinitWiFiEvents(){
         log_e("esp_event_handler_unregister for WIFI_EVENT Failed!");
         return false;
     }
-
-    // if(esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)){
-    //     log_e("esp_event_handler_unregister for IP_EVENT Failed!");
-    //     return false;
-    // }
 
     if(esp_event_handler_unregister(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)){
         log_e("esp_event_handler_unregister for SC_EVENT Failed!");
@@ -545,13 +354,12 @@ const char * WiFiGenericClass::eventName(arduino_event_id_t id) {
 
 const char * WiFiGenericClass::getHostname()
 {
-    return get_esp_netif_hostname();
+    return ESP_Network_Manager::getHostname();
 }
 
 bool WiFiGenericClass::setHostname(const char * hostname)
 {
-    set_esp_netif_hostname(hostname);
-    return true;
+    return ESP_Network_Manager::setHostname(hostname);
 }
 
 /**
@@ -575,37 +383,6 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event)
     } else if(event->event_id == ARDUINO_EVENT_SC_SEND_ACK_DONE) {
     	esp_smartconfig_stop();
     	WiFiSTAClass::_smartConfigDone = true;
-    }
-}
-
-bool WiFiGenericClass::_isReconnectableReason(uint8_t reason) {
-    switch(reason) {
-        case WIFI_REASON_UNSPECIFIED:
-        //Timeouts (retry)
-        case WIFI_REASON_AUTH_EXPIRE:
-        case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
-        case WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT:
-        case WIFI_REASON_802_1X_AUTH_FAILED:
-        case WIFI_REASON_HANDSHAKE_TIMEOUT:
-        //Transient error (reconnect)
-        case WIFI_REASON_AUTH_LEAVE:
-        case WIFI_REASON_ASSOC_EXPIRE:
-        case WIFI_REASON_ASSOC_TOOMANY:
-        case WIFI_REASON_NOT_AUTHED:
-        case WIFI_REASON_NOT_ASSOCED:
-        case WIFI_REASON_ASSOC_NOT_AUTHED:
-        case WIFI_REASON_MIC_FAILURE:
-        case WIFI_REASON_IE_IN_4WAY_DIFFERS:
-        case WIFI_REASON_INVALID_PMKID:
-        case WIFI_REASON_BEACON_TIMEOUT:
-        case WIFI_REASON_NO_AP_FOUND:
-        case WIFI_REASON_ASSOC_FAIL:
-        case WIFI_REASON_CONNECTION_FAIL:
-        case WIFI_REASON_AP_TSF_RESET:
-        case WIFI_REASON_ROAMING:
-            return true;
-        default:
-            return false;
     }
 }
 
@@ -671,7 +448,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
 
     esp_err_t err;
     if(m & WIFI_MODE_STA){
-    	err = set_esp_interface_hostname(ESP_IF_WIFI_STA, get_esp_netif_hostname());
+    	err = esp_netif_set_hostname(esp_netifs[ESP_IF_WIFI_STA], ESP_Network_Manager::getHostname());
         if(err){
             log_e("Could not set hostname! %d", err);
             return false;
@@ -787,7 +564,7 @@ bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType)
 {
     if(sleepType != _sleepEnabled){
         _sleepEnabled = sleepType;
-        if((getMode() & WIFI_MODE_STA) != 0){
+        if(WiFi.STA.started()){
             if(esp_wifi_set_ps(_sleepEnabled) != ESP_OK){
                 log_e("esp_wifi_set_ps failed!");
                 return false;
@@ -813,7 +590,7 @@ wifi_ps_type_t WiFiGenericClass::getSleep()
  * @return ok
  */
 bool WiFiGenericClass::setTxPower(wifi_power_t power){
-    if((getStatusBits() & (STA_STARTED_BIT | AP_STARTED_BIT)) == 0){
+    if(!WiFi.STA.started() && !WiFi.AP.started()){
         log_w("Neither AP or STA has been started");
         return false;
     }
@@ -822,7 +599,7 @@ bool WiFiGenericClass::setTxPower(wifi_power_t power){
 
 wifi_power_t WiFiGenericClass::getTxPower(){
     int8_t power;
-    if((getStatusBits() & (STA_STARTED_BIT | AP_STARTED_BIT)) == 0){
+    if(!WiFi.STA.started() && !WiFi.AP.started()){
         log_w("Neither AP or STA has been started");
         return WIFI_POWER_19_5dBm;
     }

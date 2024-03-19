@@ -135,9 +135,9 @@ static void _onStaArduinoEvent(arduino_event_id_t event, arduino_event_info_t in
 
     if(event == ARDUINO_EVENT_WIFI_STA_START) {
         _sta_network_if->_setStatus(WL_DISCONNECTED);
-        // if(esp_wifi_set_ps(_sleepEnabled) != ESP_OK){
-        //     log_e("esp_wifi_set_ps failed");
-        // }
+        if(esp_wifi_set_ps(WiFi.getSleep()) != ESP_OK){
+            log_e("esp_wifi_set_ps failed");
+        }
     } else if(event == ARDUINO_EVENT_WIFI_STA_STOP) {
         _sta_network_if->_setStatus(WL_STOPPED);
     } else if(event == ARDUINO_EVENT_WIFI_STA_CONNECTED) {

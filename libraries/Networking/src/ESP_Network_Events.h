@@ -24,22 +24,12 @@
 #endif
 
 #if SOC_WIFI_SUPPORTED
-static const int AP_STARTED_BIT    = BIT0;
-static const int AP_HAS_IP6_BIT    = BIT1;
-static const int AP_HAS_CLIENT_BIT = BIT2;
-static const int AP_WANT_IP6_BIT        = BIT3;
-static const int STA_STARTED_BIT   = BIT4;
-static const int STA_CONNECTED_BIT = BIT5;
-static const int STA_HAS_IP_BIT    = BIT6;
-static const int STA_HAS_IP6_BIT   = BIT7;
-static const int STA_HAS_IP6_GLOBAL_BIT = BIT8;
-static const int STA_WANT_IP6_BIT       = BIT9;
-static const int WIFI_SCANNING_BIT = BIT10;
-static const int WIFI_SCAN_DONE_BIT= BIT11;
+static const int WIFI_SCANNING_BIT = BIT0;
+static const int WIFI_SCAN_DONE_BIT= BIT1;
 #endif
 
-static const int NET_DNS_IDLE_BIT  = BIT12;
-static const int NET_DNS_DONE_BIT  = BIT13;
+static const int NET_DNS_IDLE_BIT  = BIT2;
+static const int NET_DNS_DONE_BIT  = BIT3;
 
 #define NET_HAS_IP6_GLOBAL_BIT 0
 

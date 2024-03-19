@@ -138,4 +138,24 @@ String ESP_Network_Manager::macAddress(void){
     return String(macStr);
 }
 
+static char default_hostname[32] = {0,};
+
+const char * ESP_Network_Manager::getHostname()
+{
+    if(default_hostname[0] == 0){
+        uint8_t eth_mac[6];
+        esp_base_mac_addr_get(eth_mac);
+        snprintf(default_hostname, 32, "%s%02X%02X%02X", CONFIG_IDF_TARGET "-", eth_mac[3], eth_mac[4], eth_mac[5]);
+    }
+    return (const char *)default_hostname;
+}
+
+bool ESP_Network_Manager::setHostname(const char * name)
+{
+    if(name){
+        snprintf(default_hostname, 32, "%s", name);
+    }
+    return true;
+}
+
 ESP_Network_Manager Network;

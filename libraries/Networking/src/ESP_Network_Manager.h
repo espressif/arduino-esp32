@@ -17,6 +17,10 @@ public:
 	int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
 	uint8_t * macAddress(uint8_t * mac);
 	String macAddress();
+
+    static const char * getHostname();
+    static bool setHostname(const char * hostname);
+    static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
 };
 
 extern ESP_Network_Manager Network;

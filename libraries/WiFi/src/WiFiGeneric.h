@@ -135,10 +135,6 @@ class WiFiGenericClass
     static int setStatusBits(int bits);
     static int clearStatusBits(int bits);
 
-  private:
-    static bool _isReconnectableReason(uint8_t reason);
-
-  protected:
     friend class WiFiSTAClass;
     friend class WiFiScanClass;
     friend class WiFiAPClass;
