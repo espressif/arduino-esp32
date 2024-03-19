@@ -35839,7 +35839,7 @@ waveshare_esp32s3_touch_lcd_128.upload.tool.default=esptool_py
 waveshare_esp32s3_touch_lcd_128.upload.tool.network=esp_ota
 waveshare_esp32s3_touch_lcd_128.upload.maximum_size=16777216
 waveshare_esp32s3_touch_lcd_128.upload.maximum_data_size=327680
-waveshare_esp32s3_touch_lcd_128.upload.wait_for_upload_port=true
+waveshare_esp32s3_touch_lcd_128.upload.wait_for_upload_port=false
 waveshare_esp32s3_touch_lcd_128.upload.speed=460800
 waveshare_esp32s3_touch_lcd_128.upload.flags=
 waveshare_esp32s3_touch_lcd_128.upload.extra_flags=
@@ -35858,12 +35858,34 @@ waveshare_esp32s3_touch_lcd_128.build.target=esp32s3
 waveshare_esp32s3_touch_lcd_128.build.variant=waveshare_esp32s3_touch_lcd_128
 waveshare_esp32s3_touch_lcd_128.build.board=WAVESHARE_ESP32S3_TOUCH_LCD_128
 
+waveshare_esp32s3_touch_lcd_128.build.usb_mode=1
+waveshare_esp32s3_touch_lcd_128.build.cdc_on_boot=1
+waveshare_esp32s3_touch_lcd_128.build.msc_on_boot=0
+waveshare_esp32s3_touch_lcd_128.build.dfu_on_boot=0
+
 waveshare_esp32s3_touch_lcd_128.build.f_cpu=240000000L
 waveshare_esp32s3_touch_lcd_128.build.flash_size=16MB
 waveshare_esp32s3_touch_lcd_128.build.flash_freq=80m
 waveshare_esp32s3_touch_lcd_128.build.flash_mode=dio
 waveshare_esp32s3_touch_lcd_128.build.boot=dio
 waveshare_esp32s3_touch_lcd_128.build.partitions=default
+
+waveshare_esp32s3_touch_lcd_128.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32s3_touch_lcd_128.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32s3_touch_lcd_128.menu.USBMode.hwcdc.upload.use_1200bps_touch=false
+waveshare_esp32s3_touch_lcd_128.menu.USBMode.hwcdc.upload.wait_for_upload_port=false
+waveshare_esp32s3_touch_lcd_128.menu.USBMode.default=USB-OTG
+waveshare_esp32s3_touch_lcd_128.menu.USBMode.default.build.usb_mode=0
+waveshare_esp32s3_touch_lcd_128.menu.USBMode.default.upload.use_1200bps_touch=true
+waveshare_esp32s3_touch_lcd_128.menu.USBMode.default.upload.wait_for_upload_port=true
+waveshare_esp32s3_touch_lcd_128.menu.MSCOnBoot.default=Disabled
+waveshare_esp32s3_touch_lcd_128.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32s3_touch_lcd_128.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32s3_touch_lcd_128.menu.MSCOnBoot.msc.build.msc_on_boot=1
+waveshare_esp32s3_touch_lcd_128.menu.DFUOnBoot.default=Disabled
+waveshare_esp32s3_touch_lcd_128.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32s3_touch_lcd_128.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32s3_touch_lcd_128.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled=Disabled
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled.build.defines=
@@ -35941,8 +35963,6 @@ waveshare_esp32s3_touch_lcd_128.menu.FlashFreq.80.build.flash_freq=80m
 waveshare_esp32s3_touch_lcd_128.menu.FlashFreq.40=40MHz
 waveshare_esp32s3_touch_lcd_128.menu.FlashFreq.40.build.flash_freq=40m
 
-waveshare_esp32s3_touch_lcd_128.menu.FlashSize.4M=4MB (32Mb)
-waveshare_esp32s3_touch_lcd_128.menu.FlashSize.4M.build.flash_size=4MB
 waveshare_esp32s3_touch_lcd_128.menu.FlashSize.16M=16MB (128Mb)
 waveshare_esp32s3_touch_lcd_128.menu.FlashSize.16M.build.flash_size=16MB
 
