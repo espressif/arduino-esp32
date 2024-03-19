@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "ESP_Network_Manager.h"
+#include "ESP_Network_Interface.h"
 #include "esp_netif.h"
 #include "lwip/ip_addr.h"
 #include "lwip/dns.h"
@@ -157,5 +158,20 @@ bool ESP_Network_Manager::setHostname(const char * name)
     }
     return true;
 }
+
+ESP_Network_Interface * getNetifByID(ESP_Network_Interface_ID id);
+
+size_t ESP_Network_Manager::printTo(Print & out) const {
+    size_t bytes = 0;
+
+    for (int i = 0; i < ESP_NETIF_ID_MAX; ++i){
+        ESP_Network_Interface * iface = getNetifByID((ESP_Network_Interface_ID)i);
+        if(iface != NULL && iface->netif() != NULL){
+            bytes += out.println(*iface);
+        }
+    }
+    return bytes;
+}
+
 
 ESP_Network_Manager Network;

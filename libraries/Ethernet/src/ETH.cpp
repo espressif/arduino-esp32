@@ -42,8 +42,6 @@
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
 
-// extern void add_esp_interface_netif(esp_interface_t interface, esp_netif_t* esp_netif); /* from WiFiGeneric */
-
 static ETHClass * _ethernets[3] = { NULL, NULL, NULL };
 static esp_event_handler_instance_t _eth_ev_instance = NULL;
 
@@ -59,6 +57,7 @@ static void _eth_event_cb(void* arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
+// This callback needs to be aware of which interface it should match against
 static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info)
 {
     if(event == ARDUINO_EVENT_ETH_CONNECTED){
@@ -746,6 +745,14 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int
 void ETHClass::end(void)
 {
     destroyNetif();
+
+    if(_eth_ev_instance != NULL){
+        if(esp_event_handler_unregister(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb) == ESP_OK){
+            _eth_ev_instance = NULL;
+        }
+    }
+
+    Network.removeEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
     if(_eth_handle != NULL){
         if(esp_eth_stop(_eth_handle) != ESP_OK){

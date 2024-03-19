@@ -616,7 +616,7 @@ void STAClass::setSortMethod(wifi_sort_method_t sortMethod){
 }
 
 String STAClass::SSID() const {
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    if(!started()){
         return String();
     }
     wifi_ap_record_t info;
@@ -627,7 +627,7 @@ String STAClass::SSID() const {
 }
 
 String STAClass::psk() const {
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    if(!started()){
         return String();
     }
     wifi_config_t conf;
@@ -638,7 +638,7 @@ String STAClass::psk() const {
 uint8_t * STAClass::BSSID(uint8_t* buff){
     static uint8_t bssid[6];
     wifi_ap_record_t info;
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    if(!started()){
         return NULL;
     }
     esp_err_t err = esp_wifi_sta_get_ap_info(&info);
@@ -668,7 +668,7 @@ String STAClass::BSSIDstr(){
 }
 
 int8_t STAClass::RSSI(){
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL){
+    if(!started()){
         return 0;
     }
     wifi_ap_record_t info;
@@ -679,7 +679,48 @@ int8_t STAClass::RSSI(){
 }
 
 size_t STAClass::printDriverInfo(Print & out) const {
-    return 0;
+    size_t bytes = 0;
+    wifi_ap_record_t info;
+    if(!started()){
+        return bytes;
+    }
+    if(esp_wifi_sta_get_ap_info(&info) != ESP_OK){
+        return bytes;
+    }
+    bytes += out.print(",");
+    bytes += out.print((const char*)info.ssid);
+    bytes += out.print(",CH:");
+    bytes += out.print(info.primary);
+    bytes += out.print(",RSSI:");
+    bytes += out.print(info.rssi);
+    bytes += out.print(",");
+    if(info.phy_11ax){
+        bytes += out.print("AX");
+    } else if(info.phy_11n){
+        bytes += out.print("N");
+    } else if(info.phy_11g){
+        bytes += out.print("G");
+    } else if(info.phy_11b){
+        bytes += out.print("B");
+    }
+    if(info.phy_lr){
+        bytes += out.print(",");
+        bytes += out.print("LR");
+    }
+
+    if(info.authmode == WIFI_AUTH_OPEN){ bytes += out.print(",OPEN"); }
+    else if(info.authmode == WIFI_AUTH_WEP){ bytes += out.print(",WEP"); }
+    else if(info.authmode == WIFI_AUTH_WPA_PSK){ bytes += out.print(",WPA_PSK"); }
+    else if(info.authmode == WIFI_AUTH_WPA2_PSK){ bytes += out.print(",WPA2_PSK"); }
+    else if(info.authmode == WIFI_AUTH_WPA_WPA2_PSK){ bytes += out.print(",WPA_WPA2_PSK"); }
+    else if(info.authmode == WIFI_AUTH_ENTERPRISE){ bytes += out.print(",EAP"); }
+    else if(info.authmode == WIFI_AUTH_WPA3_PSK){ bytes += out.print(",WPA3_PSK"); }
+    else if(info.authmode == WIFI_AUTH_WPA2_WPA3_PSK){ bytes += out.print(",WPA2_WPA3_PSK"); }
+    else if(info.authmode == WIFI_AUTH_WAPI_PSK){ bytes += out.print(",WAPI_PSK"); }
+    else if(info.authmode == WIFI_AUTH_OWE){ bytes += out.print(",OWE"); }
+    else if(info.authmode == WIFI_AUTH_WPA3_ENT_192){ bytes += out.print(",WPA3_ENT_SUITE_B_192_BIT"); }
+
+    return bytes;
 }
 
 /**

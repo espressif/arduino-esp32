@@ -26,12 +26,12 @@ static ESP_Network_Interface * getNetifByEspNetif(esp_netif_t *esp_netif){
     return NULL;
 }
 
-// static ESP_Network_Interface * getNetifByID(ESP_Network_Interface_ID id){
-//     if(id < ESP_NETIF_ID_MAX){
-//         return _interfaces[id];
-//     }
-//     return NULL;
-// }
+ESP_Network_Interface * getNetifByID(ESP_Network_Interface_ID id){
+    if(id < ESP_NETIF_ID_MAX){
+        return _interfaces[id];
+    }
+    return NULL;
+}
 
 static void _ip_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == IP_EVENT){

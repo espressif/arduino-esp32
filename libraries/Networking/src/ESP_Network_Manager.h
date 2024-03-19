@@ -9,7 +9,7 @@
 #include "IPAddress.h"
 #include "WString.h"
 
-class ESP_Network_Manager : public ESP_Network_Events {
+class ESP_Network_Manager : public ESP_Network_Events, public Printable {
 public:
 	ESP_Network_Manager();
 
@@ -17,6 +17,8 @@ public:
 	int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
 	uint8_t * macAddress(uint8_t * mac);
 	String macAddress();
+
+    size_t printTo(Print & out) const;
 
     static const char * getHostname();
     static bool setHostname(const char * hostname);
