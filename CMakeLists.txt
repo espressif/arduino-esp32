@@ -54,6 +54,7 @@ set(CORE_SRCS
   cores/esp32/IPAddress.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
+  cores/esp32/MacAddress.cpp
   cores/esp32/main.cpp
   cores/esp32/MD5Builder.cpp
   cores/esp32/Print.cpp
