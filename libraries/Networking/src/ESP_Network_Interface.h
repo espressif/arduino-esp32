@@ -30,7 +30,9 @@ class ESP_Network_Interface: public Printable {
         ESP_Network_Interface();
         virtual ~ESP_Network_Interface();
 
+        // For server interfaces (WiFi AP), dns1 is the DNS and dns2 is the lease range start
         bool config(IPAddress local_ip = (uint32_t)0x00000000, IPAddress gateway = (uint32_t)0x00000000, IPAddress subnet = (uint32_t)0x00000000, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000, IPAddress dns3 = (uint32_t)0x00000000);
+        bool dnsIP(uint8_t dns_no, IPAddress ip);
 
         const char * getHostname() const;
         bool setHostname(const char * hostname) const;
@@ -72,8 +74,9 @@ class ESP_Network_Interface: public Printable {
         int32_t _got_ip_event_id;
         int32_t _lost_ip_event_id;
         ESP_Network_Interface_ID _interface_id;
+        bool _is_server_if;
 
-        bool initNetif(ESP_Network_Interface_ID interface_id);
+        bool initNetif(ESP_Network_Interface_ID interface_id, bool server_interface=false);
         void destroyNetif();
         int setStatusBits(int bits);
         int clearStatusBits(int bits);

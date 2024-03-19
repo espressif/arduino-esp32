@@ -5,6 +5,8 @@
 #include "lwip/ip_addr.h"
 #include "lwip/err.h"
 #include "lwip/netif.h"
+#include "dhcpserver/dhcpserver.h"
+#include "dhcpserver/dhcpserver_options.h"
 #include "esp32-hal-log.h"
 
 static ESP_Network_Interface * _interfaces[ESP_NETIF_ID_MAX] = { NULL, NULL, NULL, NULL, NULL, NULL};
@@ -137,6 +139,7 @@ ESP_Network_Interface::ESP_Network_Interface()
     , _got_ip_event_id(-1)
     , _lost_ip_event_id(-1)
     , _interface_id(ESP_NETIF_ID_MAX)
+    , _is_server_if(false)
 {}
 
 ESP_Network_Interface::~ESP_Network_Interface(){
@@ -238,10 +241,11 @@ void ESP_Network_Interface::destroyNetif() {
     }
 }
 
-bool ESP_Network_Interface::initNetif(ESP_Network_Interface_ID interface_id) {
+bool ESP_Network_Interface::initNetif(ESP_Network_Interface_ID interface_id, bool server_interface) {
     if(_esp_netif == NULL || interface_id >= ESP_NETIF_ID_MAX){
         return false;
     }
+    _is_server_if = server_interface;
     _interface_id = interface_id;
     _got_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_GOT_IP);
     _lost_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_LOST_IP);
@@ -293,6 +297,29 @@ bool ESP_Network_Interface::enableIPv6(bool en)
     return true;
 }
 
+bool ESP_Network_Interface::dnsIP(uint8_t dns_no, IPAddress ip)
+{
+    if(_esp_netif == NULL || dns_no > 2){
+        return false;
+    }
+    if(_is_server_if && dns_no > 0){
+        log_e("Server interfaces can have only one DNS server.");
+        return false;
+    }
+    esp_netif_dns_info_t d;
+    // ToDo: can this work with IPv6 addresses?
+    d.ip.type = IPADDR_TYPE_V4;
+    if(static_cast<uint32_t>(ip) != 0){
+        d.ip.u_addr.ip4.addr = static_cast<uint32_t>(ip);
+    } else {
+        d.ip.u_addr.ip4.addr = 0;
+    }
+    if(esp_netif_set_dns_info(_esp_netif, (esp_netif_dns_type_t)dns_no, &d) != ESP_OK){
+        return false;
+    }
+    return true;
+}
+
 bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2, IPAddress dns3)
 {
     if(_esp_netif == NULL){
@@ -323,36 +350,124 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
         d3.ip.u_addr.ip4.addr = 0;
 	}
 
-    // Stop DHCPC
-    err = esp_netif_dhcpc_stop(_esp_netif);
-    if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
-        log_e("DHCP could not be stopped! Error: %d", err);
-        return false;
-    }
+    if(_is_server_if){
+        // Stop DHCPS
+        err = esp_netif_dhcps_stop(_esp_netif);
+        if(err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
+            log_e("DHCPS Stop Failed! 0x%04x: %s", err, esp_err_to_name(err));
+            return false;
+        }
 
-    clearStatusBits(ESP_NETIF_HAS_IP_BIT);
+        // Set IPv4, Netmask, Gateway
+        err = esp_netif_set_ip_info(_esp_netif, &info);
+        if(err){
+            log_e("Netif Set IP Failed! 0x%04x: %s", err, esp_err_to_name(err));
+            return false;
+        }
+        
+        // Set DNS Server
+        esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d1);
 
-    // Set IPv4, Netmask, Gateway
-    err = esp_netif_set_ip_info(_esp_netif, &info);
-    if(err != ERR_OK){
-        log_e("ETH IP could not be configured! Error: %d", err);
-        return false;
-    }
-    
-    // Set DNS Servers
-    esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d1);
-    esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_BACKUP, &d2);
-    esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_FALLBACK, &d3);
-
-    // Start DHCPC if static IP was set
-    if(info.ip.addr == 0){
-        err = esp_netif_dhcpc_start(_esp_netif);
-        if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STARTED){
-            log_w("DHCP could not be started! Error: %d", err);
+        dhcps_lease_t lease;
+        lease.enable = true;
+        uint8_t CIDR = calculateSubnetCIDR(subnet);
+        log_v("SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dns2.toString().c_str(), subnet.toString().c_str());
+        // netmask must have room for at least 12 IP addresses (AP + GW + 10 DHCP Leasing addresses)
+        // netmask also must be limited to the last 8 bits of IPv4, otherwise this function won't work
+        // IDF NETIF checks netmask for the 3rd byte: https://github.com/espressif/esp-idf/blob/master/components/esp_netif/lwip/esp_netif_lwip.c#L1857-L1862
+        if (CIDR > 28 || CIDR < 24) {
+            log_e("Bad netmask. It must be from /24 to /28 (255.255.255. 0<->240)");
+            return false; //  ESP_FAIL if initializing failed
+        }
+        #define _byte_swap32(num) (((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000))
+        // The code below is ready for any netmask, not limited to 255.255.255.0
+        uint32_t netmask = _byte_swap32(info.netmask.addr);
+        uint32_t ap_ipaddr = _byte_swap32(info.ip.addr);
+        uint32_t dhcp_ipaddr = _byte_swap32(static_cast<uint32_t>(dns2));
+        dhcp_ipaddr = dhcp_ipaddr == 0 ? ap_ipaddr + 1 : dhcp_ipaddr;
+        uint32_t leaseStartMax = ~netmask - 10;
+        // there will be 10 addresses for DHCP to lease
+        lease.start_ip.addr = dhcp_ipaddr;
+        lease.end_ip.addr = lease.start_ip.addr + 10;
+        // Check if local_ip is in the same subnet as the dhcp leasing range initial address
+        if ((ap_ipaddr & netmask) != (dhcp_ipaddr & netmask)) {
+            log_e("The AP IP address (%s) and the DHCP start address (%s) must be in the same subnet", 
+                local_ip.toString().c_str(), IPAddress(_byte_swap32(dhcp_ipaddr)).toString().c_str());
+            return false; //  ESP_FAIL if initializing failed
+        }
+        // prevents DHCP lease range to overflow subnet range
+        if ((dhcp_ipaddr & ~netmask) >= leaseStartMax) {
+            // make first DHCP lease addr stay in the begining of the netmask range
+            lease.start_ip.addr = (dhcp_ipaddr & netmask) + 1;
+            lease.end_ip.addr = lease.start_ip.addr + 10;
+            log_w("DHCP Lease out of range - Changing DHCP leasing start to %s", IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str());
+        }
+        // Check if local_ip is within DHCP range
+        if (ap_ipaddr >= lease.start_ip.addr && ap_ipaddr <= lease.end_ip.addr) {
+            log_e("The AP IP address (%s) can't be within the DHCP range (%s -- %s)", 
+                local_ip.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
+            return false; //  ESP_FAIL if initializing failed
+        }
+        // Check if gateway is within DHCP range
+        uint32_t gw_ipaddr = _byte_swap32(info.gw.addr);
+        bool gw_in_same_subnet = (gw_ipaddr & netmask) == (ap_ipaddr & netmask);
+        if (gw_in_same_subnet && gw_ipaddr >= lease.start_ip.addr && gw_ipaddr <= lease.end_ip.addr) {
+            log_e("The GatewayP address (%s) can't be within the DHCP range (%s -- %s)", 
+                gateway.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
+            return false; //  ESP_FAIL if initializing failed
+        }
+        // all done, just revert back byte order of DHCP lease range
+        lease.start_ip.addr = _byte_swap32(lease.start_ip.addr);
+        lease.end_ip.addr = _byte_swap32(lease.end_ip.addr);
+        log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString().c_str(), IPAddress(lease.end_ip.addr).toString().c_str());
+        err = esp_netif_dhcps_option(
+            _esp_netif,
+            ESP_NETIF_OP_SET,
+            ESP_NETIF_REQUESTED_IP_ADDRESS,
+            (void*)&lease, sizeof(dhcps_lease_t)
+        );
+        if(err){
+            log_e("DHCPS Set Lease Failed! 0x%04x: %s", err, esp_err_to_name(err));
+            return false;
+        }
+        // Start DHCPS
+        err = esp_netif_dhcps_start(_esp_netif);
+        if(err){
+            log_e("DHCPS Start Failed! 0x%04x: %s", err, esp_err_to_name(err));
             return false;
         }
     } else {
-        setStatusBits(ESP_NETIF_HAS_IP_BIT);
+        // Stop DHCPC
+        err = esp_netif_dhcpc_stop(_esp_netif);
+        if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
+            log_e("DHCP could not be stopped! Error: 0x%04x: %s", err, esp_err_to_name(err));
+            return false;
+        }
+
+        clearStatusBits(ESP_NETIF_HAS_IP_BIT);
+
+        // Set IPv4, Netmask, Gateway
+        err = esp_netif_set_ip_info(_esp_netif, &info);
+        if(err != ERR_OK){
+            log_e("ETH IP could not be configured! Error: 0x%04x: %s", err, esp_err_to_name(err));
+            return false;
+        }
+        
+        // Set DNS Servers
+        esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d1);
+        esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_BACKUP, &d2);
+        esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_FALLBACK, &d3);
+
+        // Start DHCPC if static IP was set
+        if(info.ip.addr == 0){
+            err = esp_netif_dhcpc_start(_esp_netif);
+            if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STARTED){
+                log_w("DHCP could not be started! Error: 0x%04x: %s", err, esp_err_to_name(err));
+                return false;
+            }
+        } else {
+            setStatusBits(ESP_NETIF_HAS_IP_BIT);
+        }
     }
 
     return true;

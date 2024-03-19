@@ -53,7 +53,6 @@ extern "C" {
 #include <vector>
 #include "sdkconfig.h"
 
-#define _byte_swap32(num) (((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000))
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
 /*
  * Private (exposable) methods
@@ -175,6 +174,7 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
             log_e("Bad netmask. It must be from /24 to /28 (255.255.255. 0<->240)");
             return ESP_FAIL; //  ESP_FAIL if initializing failed
         }
+        #define _byte_swap32(num) (((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000))
         // The code below is ready for any netmask, not limited to 255.255.255.0
         uint32_t netmask = _byte_swap32(info.netmask.addr);
         uint32_t ap_ipaddr = _byte_swap32(info.ip.addr);
@@ -243,30 +243,6 @@ esp_err_t set_esp_interface_ip(esp_interface_t interface, IPAddress local_ip=IPA
         }
     }
 	return err;
-}
-
-esp_err_t set_esp_interface_dns(esp_interface_t interface, IPAddress main_dns=IPAddress(), IPAddress backup_dns=IPAddress(), IPAddress fallback_dns=IPAddress()){
-	esp_netif_t *esp_netif = esp_netifs[interface];
-	esp_netif_dns_info_t dns;
-	dns.ip.type = ESP_IPADDR_TYPE_V4;
-	dns.ip.u_addr.ip4.addr = static_cast<uint32_t>(main_dns);
-	if(dns.ip.u_addr.ip4.addr && esp_netif_set_dns_info(esp_netif, ESP_NETIF_DNS_MAIN, &dns) != ESP_OK){
-    	log_e("Set Main DNS Failed!");
-    	return ESP_FAIL;
-    }
-	if(interface != ESP_IF_WIFI_AP){
-		dns.ip.u_addr.ip4.addr = static_cast<uint32_t>(backup_dns);
-		if(dns.ip.u_addr.ip4.addr && esp_netif_set_dns_info(esp_netif, ESP_NETIF_DNS_BACKUP, &dns) != ESP_OK){
-	    	log_e("Set Backup DNS Failed!");
-	    	return ESP_FAIL;
-	    }
-		dns.ip.u_addr.ip4.addr = static_cast<uint32_t>(fallback_dns);
-		if(dns.ip.u_addr.ip4.addr && esp_netif_set_dns_info(esp_netif, ESP_NETIF_DNS_FALLBACK, &dns) != ESP_OK){
-	    	log_e("Set Fallback DNS Failed!");
-	    	return ESP_FAIL;
-	    }
-	}
-	return ESP_OK;
 }
 
 static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {

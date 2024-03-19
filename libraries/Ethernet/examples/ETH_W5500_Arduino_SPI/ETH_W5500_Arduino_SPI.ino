@@ -49,9 +49,9 @@ void onEvent(arduino_event_id_t event, arduino_event_info_t info)
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
       Serial.printf("ETH Got IP: '%s'\n", esp_netif_get_desc(info.got_ip.esp_netif));
-      ETH.printInfo(Serial);
+      Serial.println(ETH);
 #if USE_TWO_ETH_PORTS
-      ETH1.printInfo(Serial);
+      Serial.println(ETH1);
 #endif
       eth_connected = true;
       break;

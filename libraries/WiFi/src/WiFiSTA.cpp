@@ -54,20 +54,6 @@
 // ---------------------------------------------------- STA function -----------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
-esp_err_t set_esp_interface_dns(esp_interface_t interface, IPAddress main_dns=IPAddress(), IPAddress backup_dns=IPAddress(), IPAddress fallback_dns=IPAddress());
-/**
- * Change DNS server for static IP configuration
- * @param dns1       Static DNS server 1
- * @param dns2       Static DNS server 2 (optional)
- */
-bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
-{
-    if(WiFiGenericClass::getMode() == WIFI_MODE_NULL)
-        return false;
-    esp_err_t err = set_esp_interface_dns(ESP_IF_WIFI_STA, dns1, dns2);
-    return err == ESP_OK;
-}
-
 /**
  * Return Connection status.
  * @return one of the value defined in wl_status_t
@@ -184,6 +170,19 @@ bool WiFiSTAClass::eraseAP(void) {
 bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
     return STA.config(local_ip, gateway, subnet, dns1, dns2);
+}
+
+/**
+ * Change DNS server for static IP configuration
+ * @param dns1       Static DNS server 1
+ * @param dns2       Static DNS server 2 (optional)
+ */
+bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
+{
+    if(!STA.started()){
+        return false;
+    }
+    return STA.dnsIP(0, dns1) && STA.dnsIP(1, dns2);
 }
 
 /**
