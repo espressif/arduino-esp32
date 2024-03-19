@@ -49,7 +49,7 @@
 */
 bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder)
 {
-    return AP.begin() && AP.enable(ssid, passphrase, channel, ssid_hidden, max_connection, ftm_responder);
+    return AP.begin() && AP.create(ssid, passphrase, channel, ssid_hidden, max_connection, ftm_responder);
 }
 
 /**
@@ -79,7 +79,7 @@ bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress 
  */
 bool WiFiAPClass::softAPdisconnect(bool wifioff)
 {
-    if(!AP.disable()){
+    if(!AP.clear()){
         return false;
     }
     if(wifioff) {

@@ -200,7 +200,7 @@ bool APClass::end(){
     return true;
 }
 
-bool APClass::enable(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder){
+bool APClass::create(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder){
     if(!ssid || *ssid == 0) {
         // fail SSID missing
         log_e("SSID missing!");
@@ -251,7 +251,7 @@ bool APClass::enable(const char* ssid, const char* passphrase, int channel, int 
     return true;
 }
 
-bool APClass::disable(){
+bool APClass::clear(){
     if(!begin()) {
         return false;
     }

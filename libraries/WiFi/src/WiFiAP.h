@@ -43,8 +43,8 @@ class APClass: public ESP_Network_Interface {
         bool begin();
         bool end();
 
-        bool enable(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false);
-        bool disable();
+        bool create(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false);
+        bool clear();
 
         bool bandwidth(wifi_bandwidth_t bandwidth);
 
