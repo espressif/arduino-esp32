@@ -5,11 +5,11 @@
  */
 #pragma once
 
-#include "ESP_Network_Events.h"
+#include "NetworkEvents.h"
 #include "IPAddress.h"
 #include "WString.h"
 
-class NetworkManager : public ESP_Network_Events, public Printable {
+class NetworkManager : public NetworkEvents, public Printable {
 public:
 	NetworkManager();
 
