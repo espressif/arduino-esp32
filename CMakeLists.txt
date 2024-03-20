@@ -204,9 +204,9 @@ set(ARDUINO_LIBRARY_WiFiClientSecure_SRCS
   libraries/WiFiClientSecure/src/WiFiClientSecure.cpp)
 
 set(ARDUINO_LIBRARY_Networking_SRCS
-  libraries/Networking/src/ESP_Network_Interface.cpp
-  libraries/Networking/src/ESP_Network_Events.cpp
-  libraries/Networking/src/ESP_Network_Manager.cpp
+  libraries/Networking/src/NetworkInterface.cpp
+  libraries/Networking/src/NetworkEvents.cpp
+  libraries/Networking/src/NetworkManager.cpp
   libraries/Networking/src/WiFiClient.cpp
   libraries/Networking/src/WiFiServer.cpp
   libraries/Networking/src/WiFiUdp.cpp)

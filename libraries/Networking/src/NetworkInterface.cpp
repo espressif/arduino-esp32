@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "ESP_Network_Interface.h"
+#include "NetworkInterface.h"
 #include "esp_netif.h"
 #include "esp_netif_defaults.h"
 #include "esp_system.h"
@@ -14,10 +14,10 @@
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp32-hal-log.h"
 
-static ESP_Network_Interface * _interfaces[ESP_NETIF_ID_MAX] = { NULL, NULL, NULL, NULL, NULL, NULL};
+static NetworkInterface * _interfaces[ESP_NETIF_ID_MAX] = { NULL, NULL, NULL, NULL, NULL, NULL};
 static esp_event_handler_instance_t _ip_ev_instance = NULL;
 
-static ESP_Network_Interface * getNetifByEspNetif(esp_netif_t *esp_netif){
+static NetworkInterface * getNetifByEspNetif(esp_netif_t *esp_netif){
     for (int i = 0; i < ESP_NETIF_ID_MAX; ++i){
         if(_interfaces[i] != NULL && _interfaces[i]->netif() == esp_netif){
             return _interfaces[i];
@@ -26,7 +26,7 @@ static ESP_Network_Interface * getNetifByEspNetif(esp_netif_t *esp_netif){
     return NULL;
 }
 
-ESP_Network_Interface * getNetifByID(ESP_Network_Interface_ID id){
+NetworkInterface * getNetifByID(Network_Interface_ID id){
     if(id < ESP_NETIF_ID_MAX){
         return _interfaces[id];
     }
@@ -35,7 +35,7 @@ ESP_Network_Interface * getNetifByID(ESP_Network_Interface_ID id){
 
 static void _ip_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == IP_EVENT){
-        ESP_Network_Interface * netif = NULL;
+        NetworkInterface * netif = NULL;
         if(event_id == IP_EVENT_STA_GOT_IP || event_id == IP_EVENT_ETH_GOT_IP || event_id == IP_EVENT_PPP_GOT_IP){
             ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
             netif = getNetifByEspNetif(event->esp_netif);
@@ -55,7 +55,7 @@ static void _ip_event_cb(void* arg, esp_event_base_t event_base, int32_t event_i
     }
 }
 
-void ESP_Network_Interface::_onIpEvent(int32_t event_id, void* event_data){
+void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
     arduino_event_t arduino_event;
     arduino_event.event_id = ARDUINO_EVENT_MAX;
     if(event_id == _got_ip_event_id){
@@ -137,7 +137,7 @@ void ESP_Network_Interface::_onIpEvent(int32_t event_id, void* event_data){
     }
 }
 
-ESP_Network_Interface::ESP_Network_Interface()
+NetworkInterface::NetworkInterface()
     : _esp_netif(NULL)
     , _interface_event_group(NULL)
     , _initial_bits(0)
@@ -147,11 +147,11 @@ ESP_Network_Interface::ESP_Network_Interface()
     , _is_server_if(false)
 {}
 
-ESP_Network_Interface::~ESP_Network_Interface(){
+NetworkInterface::~NetworkInterface(){
     destroyNetif();
 }
 
-IPAddress ESP_Network_Interface::calculateNetworkID(IPAddress ip, IPAddress subnet) const {
+IPAddress NetworkInterface::calculateNetworkID(IPAddress ip, IPAddress subnet) const {
 	IPAddress networkID;
 
 	for (size_t i = 0; i < 4; i++)
@@ -160,7 +160,7 @@ IPAddress ESP_Network_Interface::calculateNetworkID(IPAddress ip, IPAddress subn
 	return networkID;
 }
 
-IPAddress ESP_Network_Interface::calculateBroadcast(IPAddress ip, IPAddress subnet) const {
+IPAddress NetworkInterface::calculateBroadcast(IPAddress ip, IPAddress subnet) const {
     IPAddress broadcastIp;
     
     for (int i = 0; i < 4; i++)
@@ -169,7 +169,7 @@ IPAddress ESP_Network_Interface::calculateBroadcast(IPAddress ip, IPAddress subn
     return broadcastIp;
 }
 
-uint8_t ESP_Network_Interface::calculateSubnetCIDR(IPAddress subnetMask) const {
+uint8_t NetworkInterface::calculateSubnetCIDR(IPAddress subnetMask) const {
 	uint8_t CIDR = 0;
 
 	for (uint8_t i = 0; i < 4; i++) {
@@ -194,7 +194,7 @@ uint8_t ESP_Network_Interface::calculateSubnetCIDR(IPAddress subnetMask) const {
 	return CIDR;
 }
 
-int ESP_Network_Interface::setStatusBits(int bits) {
+int NetworkInterface::setStatusBits(int bits) {
     if(!_interface_event_group){
         _initial_bits |= bits;
         return _initial_bits;
@@ -202,7 +202,7 @@ int ESP_Network_Interface::setStatusBits(int bits) {
     return xEventGroupSetBits(_interface_event_group, bits);
 }
 
-int ESP_Network_Interface::clearStatusBits(int bits) {
+int NetworkInterface::clearStatusBits(int bits) {
     if(!_interface_event_group){
         _initial_bits &= ~bits;
         return _initial_bits;
@@ -210,14 +210,14 @@ int ESP_Network_Interface::clearStatusBits(int bits) {
     return xEventGroupClearBits(_interface_event_group, bits) ;
 }
 
-int ESP_Network_Interface::getStatusBits() const {
+int NetworkInterface::getStatusBits() const {
     if(!_interface_event_group){
         return _initial_bits;
     }
     return xEventGroupGetBits(_interface_event_group);
 }
 
-int ESP_Network_Interface::waitStatusBits(int bits, uint32_t timeout_ms) const {
+int NetworkInterface::waitStatusBits(int bits, uint32_t timeout_ms) const {
     if(!_interface_event_group){
         return 0;
     }
@@ -230,7 +230,7 @@ int ESP_Network_Interface::waitStatusBits(int bits, uint32_t timeout_ms) const {
     return bits;
 }
 
-void ESP_Network_Interface::destroyNetif() {
+void NetworkInterface::destroyNetif() {
     if(_ip_ev_instance != NULL){
         esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, &_ip_event_cb);
         _ip_ev_instance = NULL;
@@ -246,7 +246,7 @@ void ESP_Network_Interface::destroyNetif() {
     }
 }
 
-bool ESP_Network_Interface::initNetif(ESP_Network_Interface_ID interface_id, bool server_interface) {
+bool NetworkInterface::initNetif(Network_Interface_ID interface_id, bool server_interface) {
     if(_esp_netif == NULL || interface_id >= ESP_NETIF_ID_MAX){
         return false;
     }
@@ -272,27 +272,27 @@ bool ESP_Network_Interface::initNetif(ESP_Network_Interface_ID interface_id, boo
     return true;
 }
 
-bool ESP_Network_Interface::started() const {
+bool NetworkInterface::started() const {
     return (getStatusBits() & ESP_NETIF_STARTED_BIT) != 0;
 }
 
-bool ESP_Network_Interface::connected() const {
+bool NetworkInterface::connected() const {
     return (getStatusBits() & ESP_NETIF_CONNECTED_BIT) != 0;
 }
 
-bool ESP_Network_Interface::hasIP() const {
+bool NetworkInterface::hasIP() const {
     return (getStatusBits() & ESP_NETIF_HAS_IP_BIT) != 0;
 }
 
-bool ESP_Network_Interface::hasLinkLocalIPv6() const {
+bool NetworkInterface::hasLinkLocalIPv6() const {
     return (getStatusBits() & ESP_NETIF_HAS_LOCAL_IP6_BIT) != 0;
 }
 
-bool ESP_Network_Interface::hasGlobalIPv6() const {
+bool NetworkInterface::hasGlobalIPv6() const {
     return (getStatusBits() & ESP_NETIF_HAS_GLOBAL_IP6_BIT) != 0;
 }
 
-bool ESP_Network_Interface::enableIPv6(bool en)
+bool NetworkInterface::enableIPv6(bool en)
 {
     if (en) {
         setStatusBits(ESP_NETIF_WANT_IP6_BIT);
@@ -302,7 +302,7 @@ bool ESP_Network_Interface::enableIPv6(bool en)
     return true;
 }
 
-bool ESP_Network_Interface::dnsIP(uint8_t dns_no, IPAddress ip)
+bool NetworkInterface::dnsIP(uint8_t dns_no, IPAddress ip)
 {
     if(_esp_netif == NULL || dns_no > 2){
         return false;
@@ -325,7 +325,7 @@ bool ESP_Network_Interface::dnsIP(uint8_t dns_no, IPAddress ip)
     return true;
 }
 
-bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2, IPAddress dns3)
+bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2, IPAddress dns3)
 {
     if(_esp_netif == NULL){
         return false;
@@ -480,7 +480,7 @@ bool ESP_Network_Interface::config(IPAddress local_ip, IPAddress gateway, IPAddr
     return true;
 }
 
-const char * ESP_Network_Interface::getHostname() const
+const char * NetworkInterface::getHostname() const
 {
     if(_esp_netif == NULL){
         return "";
@@ -492,7 +492,7 @@ const char * ESP_Network_Interface::getHostname() const
     return hostname;
 }
 
-bool ESP_Network_Interface::setHostname(const char * hostname) const
+bool NetworkInterface::setHostname(const char * hostname) const
 {
     if(_esp_netif == NULL){
         return false;
@@ -500,7 +500,7 @@ bool ESP_Network_Interface::setHostname(const char * hostname) const
     return esp_netif_set_hostname(_esp_netif, hostname) == 0;
 }
 
-bool ESP_Network_Interface::linkUp() const
+bool NetworkInterface::linkUp() const
 {
     if(_esp_netif == NULL){
         return false;
@@ -508,7 +508,7 @@ bool ESP_Network_Interface::linkUp() const
     return esp_netif_is_netif_up(_esp_netif);
 }
 
-const char * ESP_Network_Interface::ifkey(void) const
+const char * NetworkInterface::ifkey(void) const
 {
     if(_esp_netif == NULL){
         return "";
@@ -516,7 +516,7 @@ const char * ESP_Network_Interface::ifkey(void) const
     return esp_netif_get_ifkey(_esp_netif);
 }
 
-const char * ESP_Network_Interface::desc(void) const
+const char * NetworkInterface::desc(void) const
 {
     if(_esp_netif == NULL){
         return "";
@@ -524,7 +524,7 @@ const char * ESP_Network_Interface::desc(void) const
     return esp_netif_get_desc(_esp_netif);
 }
 
-String ESP_Network_Interface::impl_name(void) const
+String NetworkInterface::impl_name(void) const
 {
     if(_esp_netif == NULL){
         return String("");
@@ -538,7 +538,7 @@ String ESP_Network_Interface::impl_name(void) const
     return String(netif_name);
 }
 
-uint8_t * ESP_Network_Interface::macAddress(uint8_t* mac) const
+uint8_t * NetworkInterface::macAddress(uint8_t* mac) const
 {
     if(!mac || _esp_netif == NULL){
         return NULL;
@@ -552,7 +552,7 @@ uint8_t * ESP_Network_Interface::macAddress(uint8_t* mac) const
     return mac;
 }
 
-String ESP_Network_Interface::macAddress(void) const
+String NetworkInterface::macAddress(void) const
 {
     uint8_t mac[6] = {0,0,0,0,0,0};
     char macStr[18] = { 0 };
@@ -561,7 +561,7 @@ String ESP_Network_Interface::macAddress(void) const
     return String(macStr);
 }
 
-IPAddress ESP_Network_Interface::localIP() const
+IPAddress NetworkInterface::localIP() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -573,7 +573,7 @@ IPAddress ESP_Network_Interface::localIP() const
     return IPAddress(ip.ip.addr);
 }
 
-IPAddress ESP_Network_Interface::subnetMask() const
+IPAddress NetworkInterface::subnetMask() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -585,7 +585,7 @@ IPAddress ESP_Network_Interface::subnetMask() const
     return IPAddress(ip.netmask.addr);
 }
 
-IPAddress ESP_Network_Interface::gatewayIP() const
+IPAddress NetworkInterface::gatewayIP() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -597,7 +597,7 @@ IPAddress ESP_Network_Interface::gatewayIP() const
     return IPAddress(ip.gw.addr);
 }
 
-IPAddress ESP_Network_Interface::dnsIP(uint8_t dns_no) const
+IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -609,7 +609,7 @@ IPAddress ESP_Network_Interface::dnsIP(uint8_t dns_no) const
     return IPAddress(d.ip.u_addr.ip4.addr);
 }
 
-IPAddress ESP_Network_Interface::broadcastIP() const
+IPAddress NetworkInterface::broadcastIP() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -621,7 +621,7 @@ IPAddress ESP_Network_Interface::broadcastIP() const
     return calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
 }
 
-IPAddress ESP_Network_Interface::networkID() const
+IPAddress NetworkInterface::networkID() const
 {
     if(_esp_netif == NULL){
         return IPAddress();
@@ -633,7 +633,7 @@ IPAddress ESP_Network_Interface::networkID() const
     return calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
 }
 
-uint8_t ESP_Network_Interface::subnetCIDR() const
+uint8_t NetworkInterface::subnetCIDR() const
 {
     if(_esp_netif == NULL){
         return (uint8_t)0;
@@ -645,7 +645,7 @@ uint8_t ESP_Network_Interface::subnetCIDR() const
     return calculateSubnetCIDR(IPAddress(ip.netmask.addr));
 }
 
-IPAddress ESP_Network_Interface::linkLocalIPv6() const
+IPAddress NetworkInterface::linkLocalIPv6() const
 {
     if(_esp_netif == NULL){
         return IPAddress(IPv6);
@@ -657,7 +657,7 @@ IPAddress ESP_Network_Interface::linkLocalIPv6() const
     return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
-IPAddress ESP_Network_Interface::globalIPv6() const
+IPAddress NetworkInterface::globalIPv6() const
 {
     if(_esp_netif == NULL){
         return IPAddress(IPv6);
@@ -669,7 +669,7 @@ IPAddress ESP_Network_Interface::globalIPv6() const
     return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
-size_t ESP_Network_Interface::printTo(Print & out) const {
+size_t NetworkInterface::printTo(Print & out) const {
     size_t bytes = 0;
     bytes += out.print(esp_netif_get_desc(_esp_netif));
     bytes += out.print(":");

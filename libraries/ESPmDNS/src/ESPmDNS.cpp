@@ -50,7 +50,7 @@ License (MIT license):
 #define STR(tok) tok
 #endif
 
-// static void addInterface(ESP_Network_Interface * iface){
+// static void addInterface(NetworkInterface * iface){
 // #if defined(CONFIG_MDNS_ADD_CUSTOM_NETIF) && !defined(CONFIG_MDNS_PREDEF_NETIF_STA) && !defined(CONFIG_MDNS_PREDEF_NETIF_ETH)
 //     /* Demonstration of adding a custom netif to mdns service, but we're adding the default example one,
 //      * so we must disable all predefined interfaces (PREDEF_NETIF_STA, AP and ETH) first

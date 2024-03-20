@@ -124,10 +124,10 @@ typedef void (*NetworkEventSysCb)(arduino_event_t *event);
 
 typedef size_t network_event_handle_t;
 
-class ESP_Network_Events {
+class NetworkEvents {
 public:
-	ESP_Network_Events();
-	~ESP_Network_Events();
+	NetworkEvents();
+	~NetworkEvents();
 
     network_event_handle_t onEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
     network_event_handle_t onEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);

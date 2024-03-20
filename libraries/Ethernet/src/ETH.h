@@ -107,7 +107,7 @@ typedef enum {
     ETH_PHY_MAX 
 } eth_phy_type_t;
 
-class ETHClass: public ESP_Network_Interface {
+class ETHClass: public NetworkInterface {
     public:
         ETHClass(uint8_t eth_index=0);
         ~ETHClass();

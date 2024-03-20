@@ -18,7 +18,7 @@
 */
 
 #include "WiFiClient.h"
-#include "ESP_Network_Manager.h"
+#include "NetworkManager.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 #include <errno.h>

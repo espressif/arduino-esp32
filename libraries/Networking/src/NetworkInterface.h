@@ -8,7 +8,7 @@
 #include "esp_netif_types.h"
 #include "esp_event.h"
 #include "Arduino.h"
-#include "ESP_Network_Manager.h"
+#include "NetworkManager.h"
 #include "Printable.h"
 
 typedef enum {
@@ -19,7 +19,7 @@ typedef enum {
     ESP_NETIF_ID_ETH1,
     ESP_NETIF_ID_ETH2,
     ESP_NETIF_ID_MAX
-} ESP_Network_Interface_ID;
+} Network_Interface_ID;
 
 static const int ESP_NETIF_STARTED_BIT          = BIT0;
 static const int ESP_NETIF_CONNECTED_BIT        = BIT1;
@@ -30,10 +30,10 @@ static const int ESP_NETIF_WANT_IP6_BIT         = BIT5;
 
 #define ESP_NETIF_ID_ETH ESP_NETIF_ID_ETH0
 
-class ESP_Network_Interface: public Printable {
+class NetworkInterface: public Printable {
     public:
-        ESP_Network_Interface();
-        virtual ~ESP_Network_Interface();
+        NetworkInterface();
+        virtual ~NetworkInterface();
 
         // For server interfaces (WiFi AP), dns1 is the DHCP lease range start and dns2 is the DNS. dns3 is not used
         bool config(IPAddress local_ip = (uint32_t)0x00000000, IPAddress gateway = (uint32_t)0x00000000, IPAddress subnet = (uint32_t)0x00000000, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000, IPAddress dns3 = (uint32_t)0x00000000);
@@ -78,10 +78,10 @@ class ESP_Network_Interface: public Printable {
         int _initial_bits;
         int32_t _got_ip_event_id;
         int32_t _lost_ip_event_id;
-        ESP_Network_Interface_ID _interface_id;
+        Network_Interface_ID _interface_id;
         bool _is_server_if;
 
-        bool initNetif(ESP_Network_Interface_ID interface_id, bool server_interface=false);
+        bool initNetif(Network_Interface_ID interface_id, bool server_interface=false);
         void destroyNetif();
         int setStatusBits(int bits);
         int clearStatusBits(int bits);

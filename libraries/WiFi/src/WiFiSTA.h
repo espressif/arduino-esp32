@@ -42,7 +42,7 @@ typedef enum {
 // ------------------------------------ NEW STA Implementation ----------------------------------
 // ----------------------------------------------------------------------------------------------
 
-class STAClass: public ESP_Network_Interface {
+class STAClass: public NetworkInterface {
     public:
         STAClass();
         ~STAClass();

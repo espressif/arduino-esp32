@@ -9,9 +9,9 @@
 #include "IPAddress.h"
 #include "WString.h"
 
-class ESP_Network_Manager : public ESP_Network_Events, public Printable {
+class NetworkManager : public ESP_Network_Events, public Printable {
 public:
-	ESP_Network_Manager();
+	NetworkManager();
 
 	bool begin();
 	int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
@@ -25,4 +25,4 @@ public:
     static bool hostname(const String& aHostname) { return setHostname(aHostname.c_str()); }
 };
 
-extern ESP_Network_Manager Network;
+extern NetworkManager Network;

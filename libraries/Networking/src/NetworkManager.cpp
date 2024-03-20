@@ -3,19 +3,19 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "ESP_Network_Manager.h"
-#include "ESP_Network_Interface.h"
+#include "NetworkManager.h"
+#include "NetworkInterface.h"
 #include "esp_netif.h"
 #include "lwip/ip_addr.h"
 #include "lwip/dns.h"
 #include "esp32-hal-log.h"
 #include "esp_mac.h"
 
-ESP_Network_Manager::ESP_Network_Manager(){
+NetworkManager::NetworkManager(){
 
 }
 
-bool ESP_Network_Manager::begin(){
+bool NetworkManager::begin(){
     static bool initialized = false;
     if(!initialized){
         initialized = true;
@@ -80,7 +80,7 @@ static esp_err_t wifi_gethostbyname_tcpip_ctx(void *param)
  * @return 1 if aIPAddrString was successfully converted to an IP address,
  *          else error code
  */
-int ESP_Network_Manager::hostByName(const char* aHostname, IPAddress& aResult, bool preferV6)
+int NetworkManager::hostByName(const char* aHostname, IPAddress& aResult, bool preferV6)
 {
     err_t err = ERR_OK;
     gethostbynameParameters_t params;
@@ -126,12 +126,12 @@ int ESP_Network_Manager::hostByName(const char* aHostname, IPAddress& aResult, b
     return err;
 }
 
-uint8_t * ESP_Network_Manager::macAddress(uint8_t * mac){
+uint8_t * NetworkManager::macAddress(uint8_t * mac){
     esp_base_mac_addr_get(mac);
     return mac;
 }
 
-String ESP_Network_Manager::macAddress(void){
+String NetworkManager::macAddress(void){
     uint8_t mac[6];
     char macStr[18] = { 0 };
     macAddress(mac);
@@ -141,7 +141,7 @@ String ESP_Network_Manager::macAddress(void){
 
 static char default_hostname[32] = {0,};
 
-const char * ESP_Network_Manager::getHostname()
+const char * NetworkManager::getHostname()
 {
     if(default_hostname[0] == 0){
         uint8_t eth_mac[6];
@@ -151,7 +151,7 @@ const char * ESP_Network_Manager::getHostname()
     return (const char *)default_hostname;
 }
 
-bool ESP_Network_Manager::setHostname(const char * name)
+bool NetworkManager::setHostname(const char * name)
 {
     if(name){
         snprintf(default_hostname, 32, "%s", name);
@@ -159,13 +159,13 @@ bool ESP_Network_Manager::setHostname(const char * name)
     return true;
 }
 
-ESP_Network_Interface * getNetifByID(ESP_Network_Interface_ID id);
+NetworkInterface * getNetifByID(Network_Interface_ID id);
 
-size_t ESP_Network_Manager::printTo(Print & out) const {
+size_t NetworkManager::printTo(Print & out) const {
     size_t bytes = 0;
 
     for (int i = 0; i < ESP_NETIF_ID_MAX; ++i){
-        ESP_Network_Interface * iface = getNetifByID((ESP_Network_Interface_ID)i);
+        NetworkInterface * iface = getNetifByID((Network_Interface_ID)i);
         if(iface != NULL && iface->netif() != NULL){
             bytes += out.println(*iface);
         }
@@ -174,4 +174,4 @@ size_t ESP_Network_Manager::printTo(Print & out) const {
 }
 
 
-ESP_Network_Manager Network;
+NetworkManager Network;

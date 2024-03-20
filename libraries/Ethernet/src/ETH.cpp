@@ -285,7 +285,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     }
 
     /* attach to receive events */
-    initNetif((ESP_Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
+    initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
     ret = esp_eth_start(_eth_handle);
     if(ret != ESP_OK){
@@ -679,7 +679,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
     }
 
     /* attach to receive events */
-    initNetif((ESP_Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
+    initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
     // Start Ethernet driver state machine
     ret = esp_eth_start(_eth_handle);

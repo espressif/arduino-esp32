@@ -35,7 +35,7 @@
 // ------------------------------------ NEW AP Implementation  ----------------------------------
 // ----------------------------------------------------------------------------------------------
 
-class APClass: public ESP_Network_Interface {
+class APClass: public NetworkInterface {
     public:
         APClass();
         ~APClass();

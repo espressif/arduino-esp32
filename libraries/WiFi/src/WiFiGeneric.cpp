@@ -354,12 +354,12 @@ const char * WiFiGenericClass::eventName(arduino_event_id_t id) {
 
 const char * WiFiGenericClass::getHostname()
 {
-    return ESP_Network_Manager::getHostname();
+    return NetworkManager::getHostname();
 }
 
 bool WiFiGenericClass::setHostname(const char * hostname)
 {
-    return ESP_Network_Manager::setHostname(hostname);
+    return NetworkManager::setHostname(hostname);
 }
 
 /**
@@ -448,7 +448,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m)
 
     esp_err_t err;
     if(m & WIFI_MODE_STA){
-    	err = esp_netif_set_hostname(esp_netifs[ESP_IF_WIFI_STA], ESP_Network_Manager::getHostname());
+    	err = esp_netif_set_hostname(esp_netifs[ESP_IF_WIFI_STA], NetworkManager::getHostname());
         if(err){
             log_e("Could not set hostname! %d", err);
             return false;
