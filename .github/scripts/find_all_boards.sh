@@ -5,6 +5,11 @@ boards_array=()
 
 for line in `grep '.tarch=' boards.txt`; do
     board_name=$(echo "$line" | cut -d '.' -f1 | cut -d '#' -f1)
+    # skip esp32c2 as we dont build libs for it
+    if [ "$board_name" == "esp32c2" ]; then
+        echo "Skipping 'espressif:esp32:$board_name'"
+        continue
+    fi
     boards_array+=("espressif:esp32:$board_name")
     echo "Added 'espressif:esp32:$board_name' to array"
 done
