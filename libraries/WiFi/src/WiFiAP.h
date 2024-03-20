@@ -87,7 +87,7 @@ public:
     uint8_t softAPSubnetCIDR();
 
     bool softAPenableIPv6(bool enable=true);
-    IPAddress softAPIPv6();
+    IPAddress softAPlinkLocalIPv6();
 
     const char * softAPgetHostname();
     bool softAPsetHostname(const char * hostname);

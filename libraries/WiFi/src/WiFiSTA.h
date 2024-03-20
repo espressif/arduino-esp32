@@ -159,7 +159,7 @@ public:
     uint8_t subnetCIDR();
     
     bool enableIPv6(bool en=true);
-    IPAddress localIPv6();
+    IPAddress linkLocalIPv6();
     IPAddress globalIPv6();
 
     // ----------------------------------------------------------------------------------------------

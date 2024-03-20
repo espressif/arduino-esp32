@@ -284,7 +284,7 @@ bool ESP_Network_Interface::hasIP() const {
     return (getStatusBits() & ESP_NETIF_HAS_IP_BIT) != 0;
 }
 
-bool ESP_Network_Interface::hasLocalIPv6() const {
+bool ESP_Network_Interface::hasLinkLocalIPv6() const {
     return (getStatusBits() & ESP_NETIF_HAS_LOCAL_IP6_BIT) != 0;
 }
 
@@ -645,7 +645,7 @@ uint8_t ESP_Network_Interface::subnetCIDR() const
     return calculateSubnetCIDR(IPAddress(ip.netmask.addr));
 }
 
-IPAddress ESP_Network_Interface::localIPv6() const
+IPAddress ESP_Network_Interface::linkLocalIPv6() const
 {
     if(_esp_netif == NULL){
         return IPAddress(IPv6);

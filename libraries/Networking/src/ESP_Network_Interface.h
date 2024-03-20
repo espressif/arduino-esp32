@@ -45,7 +45,7 @@ class ESP_Network_Interface: public Printable {
         bool started() const;
         bool connected() const;
         bool hasIP() const;
-        bool hasLocalIPv6() const;
+        bool hasLinkLocalIPv6() const;
         bool hasGlobalIPv6() const;
         bool enableIPv6(bool en=true);
 
@@ -63,7 +63,7 @@ class ESP_Network_Interface: public Printable {
         IPAddress broadcastIP() const;
         IPAddress networkID() const;
         uint8_t subnetCIDR() const;
-        IPAddress localIPv6() const;
+        IPAddress linkLocalIPv6() const;
         IPAddress globalIPv6() const;
 
         size_t printTo(Print & out) const;

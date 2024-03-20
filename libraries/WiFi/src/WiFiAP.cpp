@@ -202,9 +202,9 @@ bool WiFiAPClass::softAPenableIPv6(bool enable)
  * @return IPAddress softAP IPv6
  */
 
-IPAddress WiFiAPClass::softAPIPv6()
+IPAddress WiFiAPClass::softAPlinkLocalIPv6()
 {
-    return AP.localIPv6();
+    return AP.linkLocalIPv6();
 }
 
 #endif /* SOC_WIFI_SUPPORTED */

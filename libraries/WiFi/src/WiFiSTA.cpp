@@ -406,9 +406,9 @@ bool WiFiSTAClass::enableIPv6(bool en)
  * Get the station interface link-local IPv6 address.
  * @return IPAddress
  */
-IPAddress WiFiSTAClass::localIPv6()
+IPAddress WiFiSTAClass::linkLocalIPv6()
 {
-    return STA.localIPv6();
+    return STA.linkLocalIPv6();
 }
 
 /**
