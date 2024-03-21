@@ -281,7 +281,7 @@ bool ESP_NOW_Peer::add(){
     if(_esp_now_add_peer(mac, chan, ifc, encrypt?key:NULL, this) != ESP_OK){
         return false;
     }
-    log_v("Peer added - "MACSTR, MAC2STR(mac));
+    log_v("Peer added - " MACSTR, MAC2STR(mac));
     added = true;
     return true;
 }
