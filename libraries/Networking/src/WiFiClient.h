@@ -108,7 +108,7 @@ public:
     uint16_t localPort() const;
     uint16_t localPort(int fd) const;
 
-    //friend class WiFiServer;
+    //friend class NetworkServer;
     using Print::write;
 };
 

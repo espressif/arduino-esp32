@@ -86,7 +86,7 @@ class ArduinoOTAClass
     String _hostname;
     String _partition_label;
     String _nonce;
-    WiFiUDP _udp_ota;
+    NetworkUDP _udp_ota;
     bool _initialized;
     bool _rebootOnSuccess;
     bool _mdnsEnabled;

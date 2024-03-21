@@ -21,7 +21,7 @@
 
 #include <Arduino.h>
 #include <esp32-hal-log.h>
-#include "WiFiServer.h"
+#include "NetworkServer.h"
 #include "WiFiClient.h"
 #include "WebServer.h"
 #include "detail/mimetable.h"

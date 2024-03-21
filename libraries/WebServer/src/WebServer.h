@@ -210,7 +210,7 @@ protected:
   };
 
   boolean     _corsEnabled;
-  WiFiServer  _server;
+  NetworkServer  _server;
 
   WiFiClient  _currentClient;
   HTTPMethod  _currentMethod;

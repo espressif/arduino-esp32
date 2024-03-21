@@ -16,14 +16,14 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#include "WiFiServer.h"
+#include "NetworkServer.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 
 #undef write
 #undef close
 
-int WiFiServer::setTimeout(uint32_t seconds){
+int NetworkServer::setTimeout(uint32_t seconds){
   struct timeval tv;
   tv.tv_sec = seconds;
   tv.tv_usec = 0;
@@ -32,11 +32,11 @@ int WiFiServer::setTimeout(uint32_t seconds){
   return setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
 }
 
-WiFiClient WiFiServer::available(){
+WiFiClient NetworkServer::available(){
   return accept();
 }
 
-WiFiClient WiFiServer::accept(){
+WiFiClient NetworkServer::accept(){
   if(!_listening)
     return WiFiClient();
   int client_sock;
@@ -64,11 +64,11 @@ WiFiClient WiFiServer::accept(){
   return WiFiClient();
 }
 
-void WiFiServer::begin(uint16_t port){
+void NetworkServer::begin(uint16_t port){
     begin(port, 1);
 }
 
-void WiFiServer::begin(uint16_t port, int enable){
+void NetworkServer::begin(uint16_t port, int enable){
   if(_listening)
     return;
   if(port){
@@ -99,15 +99,15 @@ void WiFiServer::begin(uint16_t port, int enable){
   _accepted_sockfd = -1;
 }
 
-void WiFiServer::setNoDelay(bool nodelay) {
+void NetworkServer::setNoDelay(bool nodelay) {
     _noDelay = nodelay;
 }
 
-bool WiFiServer::getNoDelay() {
+bool NetworkServer::getNoDelay() {
     return _noDelay;
 }
 
-bool WiFiServer::hasClient() {
+bool NetworkServer::hasClient() {
     if (_accepted_sockfd >= 0) {
       return true;
     }
@@ -124,7 +124,7 @@ bool WiFiServer::hasClient() {
     return false;
 }
 
-void WiFiServer::end(){
+void NetworkServer::end(){
 #ifdef ESP_IDF_VERSION_MAJOR
   lwip_close(sockfd);
 #else
@@ -134,10 +134,10 @@ void WiFiServer::end(){
   _listening = false;
 }
 
-void WiFiServer::close(){
+void NetworkServer::close(){
   end();
 }
 
-void WiFiServer::stop(){
+void NetworkServer::stop(){
   end();
 }

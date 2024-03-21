@@ -317,7 +317,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
 
                 WiFiClient * tcp = http.getStreamPtr();
 
-// To do?                WiFiUDP::stopAll();
+// To do?                NetworkUDP::stopAll();
 // To do?                WiFiClient::stopAllExcept(tcp);
 
                 delay(100);

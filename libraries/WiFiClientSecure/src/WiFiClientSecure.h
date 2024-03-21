@@ -121,7 +121,7 @@ public:
 private:
     char *_streamLoad(Stream& stream, size_t size);
 
-    //friend class WiFiServer;
+    //friend class NetworkServer;
     using Print::write;
 };
 

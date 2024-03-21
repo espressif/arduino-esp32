@@ -6,7 +6,7 @@
 
 static volatile bool wifi_connected = false;
 
-WiFiUDP ntpClient;
+NetworkUDP ntpClient;
 
 void wifiOnConnect(){
     Serial.println("STA Connected");

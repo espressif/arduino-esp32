@@ -208,8 +208,8 @@ set(ARDUINO_LIBRARY_Networking_SRCS
   libraries/Networking/src/NetworkEvents.cpp
   libraries/Networking/src/NetworkManager.cpp
   libraries/Networking/src/WiFiClient.cpp
-  libraries/Networking/src/WiFiServer.cpp
-  libraries/Networking/src/WiFiUdp.cpp)
+  libraries/Networking/src/NetworkServer.cpp
+  libraries/Networking/src/NetworkUdp.cpp)
 
 set(ARDUINO_LIBRARY_WiFi_SRCS
   libraries/WiFi/src/WiFiAP.cpp

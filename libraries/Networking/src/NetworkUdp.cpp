@@ -17,7 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "WiFiUdp.h"
+#include "NetworkUdp.h"
 #include <new>  //std::nothrow
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
@@ -26,7 +26,7 @@
 #undef write
 #undef read
 
-WiFiUDP::WiFiUDP()
+NetworkUDP::NetworkUDP()
 : udp_server(-1)
 , server_port(0)
 , remote_port(0)
@@ -35,11 +35,11 @@ WiFiUDP::WiFiUDP()
 , rx_buffer(0)
 {}
 
-WiFiUDP::~WiFiUDP(){
+NetworkUDP::~NetworkUDP(){
    stop();
 }
 
-uint8_t WiFiUDP::begin(IPAddress address, uint16_t port){
+uint8_t NetworkUDP::begin(IPAddress address, uint16_t port){
   stop();
 
   server_port = port;
@@ -100,11 +100,11 @@ uint8_t WiFiUDP::begin(IPAddress address, uint16_t port){
   return 1;
 }
 
-uint8_t WiFiUDP::begin(uint16_t p){
+uint8_t NetworkUDP::begin(uint16_t p){
   return begin(IPAddress(), p);
 }
 
-uint8_t WiFiUDP::beginMulticast(IPAddress address, uint16_t p){
+uint8_t NetworkUDP::beginMulticast(IPAddress address, uint16_t p){
   if(begin(IPAddress(), p)){
     ip_addr_t addr;
     address.to_ip_addr_t(&addr);
@@ -147,7 +147,7 @@ uint8_t WiFiUDP::beginMulticast(IPAddress address, uint16_t p){
   return 0;
 }
 
-void WiFiUDP::stop(){
+void NetworkUDP::stop(){
   if(tx_buffer){
     free(tx_buffer);
     tx_buffer = NULL;
@@ -190,7 +190,7 @@ void WiFiUDP::stop(){
   udp_server = -1;
 }
 
-int WiFiUDP::beginMulticastPacket(){
+int NetworkUDP::beginMulticastPacket(){
   if(!server_port || multicast_ip == IPAddress())
     return 0;
   remote_ip = multicast_ip;
@@ -198,7 +198,7 @@ int WiFiUDP::beginMulticastPacket(){
   return beginPacket();
 }
 
-int WiFiUDP::beginPacket(){
+int NetworkUDP::beginPacket(){
   if(!remote_port)
     return 0;
 
@@ -226,13 +226,13 @@ int WiFiUDP::beginPacket(){
   return 1;
 }
 
-int WiFiUDP::beginPacket(IPAddress ip, uint16_t port){
+int NetworkUDP::beginPacket(IPAddress ip, uint16_t port){
   remote_ip = ip;
   remote_port = port;
   return beginPacket();
 }
 
-int WiFiUDP::beginPacket(const char *host, uint16_t port){
+int NetworkUDP::beginPacket(const char *host, uint16_t port){
   struct hostent *server;
   server = gethostbyname(host);
   if (server == NULL){
@@ -242,7 +242,7 @@ int WiFiUDP::beginPacket(const char *host, uint16_t port){
   return beginPacket(IPAddress((const uint8_t *)(server->h_addr_list[0])), port);
 }
 
-int WiFiUDP::endPacket(){
+int NetworkUDP::endPacket(){
   ip_addr_t addr;
   remote_ip.to_ip_addr_t(&addr);
 
@@ -272,7 +272,7 @@ int WiFiUDP::endPacket(){
   return 1;
 }
 
-size_t WiFiUDP::write(uint8_t data){
+size_t NetworkUDP::write(uint8_t data){
   if(tx_buffer_len == 1460){
     endPacket();
     tx_buffer_len = 0;
@@ -281,14 +281,14 @@ size_t WiFiUDP::write(uint8_t data){
   return 1;
 }
 
-size_t WiFiUDP::write(const uint8_t *buffer, size_t size){
+size_t NetworkUDP::write(const uint8_t *buffer, size_t size){
   size_t i;
   for(i=0;i<size;i++)
     write(buffer[i]);
   return i;
 }
 
-int WiFiUDP::parsePacket(){
+int NetworkUDP::parsePacket(){
   if(rx_buffer)
     return 0;
   struct sockaddr_storage si_other_storage;   // enough storage for v4 and v6
@@ -338,12 +338,12 @@ int WiFiUDP::parsePacket(){
   return len;
 }
 
-int WiFiUDP::available(){
+int NetworkUDP::available(){
   if(!rx_buffer) return 0;
   return rx_buffer->available();
 }
 
-int WiFiUDP::read(){
+int NetworkUDP::read(){
   if(!rx_buffer) return -1;
   int out = rx_buffer->read();
   if(!rx_buffer->available()){
@@ -354,11 +354,11 @@ int WiFiUDP::read(){
   return out;
 }
 
-int WiFiUDP::read(unsigned char* buffer, size_t len){
+int NetworkUDP::read(unsigned char* buffer, size_t len){
   return read((char *)buffer, len);
 }
 
-int WiFiUDP::read(char* buffer, size_t len){
+int NetworkUDP::read(char* buffer, size_t len){
   if(!rx_buffer) return 0;
   int out = rx_buffer->read(buffer, len);
   if(!rx_buffer->available()){
@@ -369,22 +369,22 @@ int WiFiUDP::read(char* buffer, size_t len){
   return out;
 }
 
-int WiFiUDP::peek(){
+int NetworkUDP::peek(){
   if(!rx_buffer) return -1;
   return rx_buffer->peek();
 }
 
-void WiFiUDP::flush(){
+void NetworkUDP::flush(){
   if(!rx_buffer) return;
   cbuf *b = rx_buffer;
   rx_buffer = 0;
   delete b;
 }
 
-IPAddress WiFiUDP::remoteIP(){
+IPAddress NetworkUDP::remoteIP(){
   return remote_ip;
 }
 
-uint16_t WiFiUDP::remotePort(){
+uint16_t NetworkUDP::remotePort(){
   return remote_port;
 }

@@ -10,5 +10,5 @@
 #include "NetworkManager.h"
 
 #include "WiFiClient.h"
-#include "WiFiServer.h"
-#include "WiFiUdp.h"
+#include "NetworkServer.h"
+#include "NetworkUdp.h"

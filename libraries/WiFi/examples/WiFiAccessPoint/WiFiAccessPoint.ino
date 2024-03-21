@@ -23,7 +23,7 @@
 const char *ssid = "yourAP";
 const char *password = "yourPassword";
 
-WiFiServer server(80);
+NetworkServer server(80);
 
 
 void setup() {

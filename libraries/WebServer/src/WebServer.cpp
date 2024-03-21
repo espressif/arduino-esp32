@@ -26,7 +26,7 @@
 #include <libb64/cdecode.h>
 #include <libb64/cencode.h>
 #include "esp_random.h"
-#include "WiFiServer.h"
+#include "NetworkServer.h"
 #include "WiFiClient.h"
 #include "WebServer.h"
 #include "FS.h"

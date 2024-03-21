@@ -30,7 +30,7 @@ ported for sparkfun esp32
 const char* ssid     = "yourssid";
 const char* password = "yourpasswd";
 
-WiFiServer server(80);
+NetworkServer server(80);
 
 void setup()
 {
