@@ -93,7 +93,7 @@ set(ARDUINO_ALL_LIBRARIES
   Insights
   LittleFS
   NetBIOS
-  Networking
+  Network
   Preferences
   RainMaker
   SD_MMC
@@ -203,13 +203,13 @@ set(ARDUINO_LIBRARY_NetworkClientSecure_SRCS
   libraries/NetworkClientSecure/src/ssl_client.cpp
   libraries/NetworkClientSecure/src/NetworkClientSecure.cpp)
 
-set(ARDUINO_LIBRARY_Networking_SRCS
-  libraries/Networking/src/NetworkInterface.cpp
-  libraries/Networking/src/NetworkEvents.cpp
-  libraries/Networking/src/NetworkManager.cpp
-  libraries/Networking/src/NetworkClient.cpp
-  libraries/Networking/src/NetworkServer.cpp
-  libraries/Networking/src/NetworkUdp.cpp)
+set(ARDUINO_LIBRARY_Network_SRCS
+  libraries/Network/src/NetworkInterface.cpp
+  libraries/Network/src/NetworkEvents.cpp
+  libraries/Network/src/NetworkManager.cpp
+  libraries/Network/src/NetworkClient.cpp
+  libraries/Network/src/NetworkServer.cpp
+  libraries/Network/src/NetworkUdp.cpp)
 
 set(ARDUINO_LIBRARY_WiFi_SRCS
   libraries/WiFi/src/WiFiAP.cpp

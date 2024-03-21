@@ -22,7 +22,7 @@
 #define NetworkClientSecure_h
 #include "Arduino.h"
 #include "IPAddress.h"
-#include "Networking.h"
+#include "Network.h"
 #include "ssl_client.h"
 
 class NetworkClientSecure : public NetworkClient

@@ -64,7 +64,7 @@
 #define ETH_SPI_SUPPORTS_CUSTOM 1
 
 // #include "WiFi.h"
-#include "Networking.h"
+#include "Network.h"
 
 #if ETH_SPI_SUPPORTS_CUSTOM
 #include "SPI.h"

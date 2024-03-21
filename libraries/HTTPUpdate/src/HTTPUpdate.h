@@ -27,7 +27,7 @@
 #define ___HTTP_UPDATE_H___
 
 #include <Arduino.h>
-#include <Networking.h>
+#include <Network.h>
 #include <HTTPClient.h>
 #include <Update.h>
 

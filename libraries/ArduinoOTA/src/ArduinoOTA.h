@@ -1,7 +1,7 @@
 #ifndef __ARDUINO_OTA_H
 #define __ARDUINO_OTA_H
 
-#include "Networking.h"
+#include "Network.h"
 #include "Update.h"
 #include <functional>
 

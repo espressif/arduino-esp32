@@ -36,7 +36,7 @@
 #include "wifi_provisioning/manager.h"
 #include "lwip/ip_addr.h"
 
-#include "Networking.h"
+#include "Network.h"
 
 #define WiFiEventCb NetworkEventCb
 #define WiFiEventFuncCb NetworkEventFuncCb
