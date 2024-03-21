@@ -15,16 +15,14 @@ ESP_NOW_Serial_Class::ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t chan
 : ESP_NOW_Peer(mac_addr, channel, iface, lmk){
     tx_ring_buf = NULL;
     rx_queue = NULL;
-    rx2_queue = NULL;
     tx_sem = NULL;
-    last_tx_result = false;
     queued_size = 0;
     queued_buff = NULL;
     resend_count = 0;
 }
 
 ESP_NOW_Serial_Class::~ESP_NOW_Serial_Class(){
-
+    end();
 }
 
 size_t ESP_NOW_Serial_Class::setTxBufferSize(size_t tx_queue_len){
@@ -57,22 +55,6 @@ size_t ESP_NOW_Serial_Class::setRxBufferSize(size_t rx_queue_len){
     return rx_queue_len;
 }
 
-size_t ESP_NOW_Serial_Class::setRx2BufferSize(size_t rx_queue_len){
-    if(rx2_queue){
-        if(!rx_queue_len){
-            vQueueDelete(rx2_queue);
-            rx_queue = NULL;
-        }
-        return 0;
-    } else if(rx_queue_len){
-        rx2_queue = xQueueCreate(rx_queue_len, sizeof(uint8_t));
-        if(!rx2_queue){
-            return 0;
-        }
-    }
-    return rx_queue_len;
-}
-
 bool ESP_NOW_Serial_Class::begin(unsigned long baud){
     if(!ESP_NOW.begin() || !add()){
         return false;
@@ -83,7 +65,6 @@ bool ESP_NOW_Serial_Class::begin(unsigned long baud){
         xSemaphoreGive(tx_sem);
     }
     setRxBufferSize(1024);//default if not preset
-    setRx2BufferSize(0);//default if not preset
     setTxBufferSize(1024);//default if not preset
     return true;
 }
@@ -91,7 +72,6 @@ bool ESP_NOW_Serial_Class::begin(unsigned long baud){
 void ESP_NOW_Serial_Class::end(){
     remove();
     setRxBufferSize(0);
-    setRx2BufferSize(0);
     setTxBufferSize(0);
     if (tx_sem != NULL) {
         vSemaphoreDelete(tx_sem);
@@ -158,47 +138,17 @@ void ESP_NOW_Serial_Class::flush(){
         vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
     }
 }
-//Upper chars
-int ESP_NOW_Serial_Class::available2(void){
-    if(rx2_queue == NULL){
-        return -1;
-    }
-    return uxQueueMessagesWaiting(rx2_queue);
-}
-
-int ESP_NOW_Serial_Class::read2(void){
-    if(rx2_queue == NULL){
-        return -1;
-    }
-    uint8_t c = 0;
-    if(xQueueReceive(rx2_queue, &c, 0)) {
-        return c;
-    }
-    return -1;
-}
 
 //RX callback
 void ESP_NOW_Serial_Class::_onReceive(const uint8_t * data, size_t len){
-    if(rx_queue == NULL && rx2_queue == NULL){
+    if(rx_queue == NULL){
         return;
     }
-    log_v(MACSTR", data lenght : %u", MAC2STR(addr()), len);
+    log_v(MACSTR ", data lenght : %u", MAC2STR(addr()), len);
     for(uint32_t i=0; i<len; i++){
-        if(rx2_queue != NULL && (data[i] & 0x80)){
-            //it's upper char and rx2_queue exists
-            if(!xQueueSend(rx2_queue, data+i, 0)){
-                return;
-            }
-        } else if(rx_queue != NULL){
-            //either normal char or rx2_queue does not exist
-            if(!xQueueSend(rx_queue, data+i, 0)){
-                return;
-            }
-        } else if(rx2_queue != NULL){
-            //we have disabled rx_queue and are forwarding all to rx2
-            if(!xQueueSend(rx2_queue, data+i, 0)){
-                return;
-            }
+        if(!xQueueSend(rx_queue, data+i, 0)){
+            log_e("RX Overflow!");
+            return;
         }
     }
     // Now trigger the ISR to read data from the ring buffer.
