@@ -36,6 +36,10 @@ static const uint8_t SCK =   39;
 static const uint8_t SCL =   36;
 static const uint8_t SDA =   35;
 
+#define WIRE1_PIN_DEFINED 1
+static const uint8_t SCL1 =  48;
+static const uint8_t SDA1 =  47;
+
 static const uint8_t A0 =    10;
 static const uint8_t A1 =    9;
 static const uint8_t A2 =    8;
