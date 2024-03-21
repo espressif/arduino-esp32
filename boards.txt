@@ -35870,28 +35870,11 @@ waveshare_esp32s3_touch_lcd_128.build.flash_mode=dio
 waveshare_esp32s3_touch_lcd_128.build.boot=dio
 waveshare_esp32s3_touch_lcd_128.build.partitions=default
 
-waveshare_esp32s3_touch_lcd_128.menu.USBMode.hwcdc=Hardware CDC and JTAG
-waveshare_esp32s3_touch_lcd_128.menu.USBMode.hwcdc.build.usb_mode=1
-waveshare_esp32s3_touch_lcd_128.menu.USBMode.hwcdc.upload.use_1200bps_touch=false
-waveshare_esp32s3_touch_lcd_128.menu.USBMode.hwcdc.upload.wait_for_upload_port=false
-waveshare_esp32s3_touch_lcd_128.menu.USBMode.default=USB-OTG
-waveshare_esp32s3_touch_lcd_128.menu.USBMode.default.build.usb_mode=0
-waveshare_esp32s3_touch_lcd_128.menu.USBMode.default.upload.use_1200bps_touch=true
-waveshare_esp32s3_touch_lcd_128.menu.USBMode.default.upload.wait_for_upload_port=true
-waveshare_esp32s3_touch_lcd_128.menu.MSCOnBoot.default=Disabled
-waveshare_esp32s3_touch_lcd_128.menu.MSCOnBoot.default.build.msc_on_boot=0
-waveshare_esp32s3_touch_lcd_128.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
-waveshare_esp32s3_touch_lcd_128.menu.MSCOnBoot.msc.build.msc_on_boot=1
-waveshare_esp32s3_touch_lcd_128.menu.DFUOnBoot.default=Disabled
-waveshare_esp32s3_touch_lcd_128.menu.DFUOnBoot.default.build.dfu_on_boot=0
-waveshare_esp32s3_touch_lcd_128.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
-waveshare_esp32s3_touch_lcd_128.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
-
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled=Disabled
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled.build.defines=
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled=Enabled
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.extra_libs=
+waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.psram_type=qspi
 
 waveshare_esp32s3_touch_lcd_128.menu.LoopCore.1=Core 1
 waveshare_esp32s3_touch_lcd_128.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
