@@ -293,7 +293,7 @@ bool ESP_NOW_Peer::remove(){
     if(!added){
         return true;
     }
-    log_v("Peer removed - "MACSTR, MAC2STR(mac));
+    log_v("Peer removed - " MACSTR, MAC2STR(mac));
     esp_err_t err = _esp_now_del_peer(mac);
     if(err == ESP_OK){
         added = false;
