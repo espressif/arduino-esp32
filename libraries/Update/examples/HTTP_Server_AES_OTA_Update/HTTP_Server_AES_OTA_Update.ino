@@ -35,7 +35,7 @@ espsecure.py encrypt_flash_data  = runs the idf encryption function to make a en
 */
 
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <SPIFFS.h>
 #include <Update.h>
 #include <WebServer.h>

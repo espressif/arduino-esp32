@@ -17,7 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "WiFiClient.h"
+#include "NetworkClient.h"
 #include "NetworkManager.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
@@ -37,7 +37,7 @@
 #undef write
 #undef read
 
-class WiFiClientRxBuffer {
+class NetworkClientRxBuffer {
 private:
         size_t _size;
         uint8_t *_buffer;
@@ -93,7 +93,7 @@ private:
         }
 
 public:
-    WiFiClientRxBuffer(int fd, size_t size=1436)
+    NetworkClientRxBuffer(int fd, size_t size=1436)
         :_size(size)
         ,_buffer(NULL)
         ,_pos(0)
@@ -104,7 +104,7 @@ public:
         //_buffer = (uint8_t *)malloc(_size);
     }
 
-    ~WiFiClientRxBuffer()
+    ~NetworkClientRxBuffer()
     {
         free(_buffer);
     }
@@ -167,16 +167,16 @@ public:
     }
 };
 
-class WiFiClientSocketHandle {
+class NetworkClientSocketHandle {
 private:
     int sockfd;
 
 public:
-    WiFiClientSocketHandle(int fd):sockfd(fd)
+    NetworkClientSocketHandle(int fd):sockfd(fd)
     {
     }
 
-    ~WiFiClientSocketHandle()
+    ~NetworkClientSocketHandle()
     {
         close(sockfd);
     }
@@ -187,22 +187,22 @@ public:
     }
 };
 
-WiFiClient::WiFiClient():_rxBuffer(nullptr),_connected(false),_sse(false),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
+NetworkClient::NetworkClient():_rxBuffer(nullptr),_connected(false),_sse(false),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
 {
 }
 
-WiFiClient::WiFiClient(int fd):_connected(true),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
+NetworkClient::NetworkClient(int fd):_connected(true),_timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS),next(NULL)
 {
-    clientSocketHandle.reset(new WiFiClientSocketHandle(fd));
-    _rxBuffer.reset(new WiFiClientRxBuffer(fd));
+    clientSocketHandle.reset(new NetworkClientSocketHandle(fd));
+    _rxBuffer.reset(new NetworkClientRxBuffer(fd));
 }
 
-WiFiClient::~WiFiClient()
+NetworkClient::~NetworkClient()
 {
     stop();
 }
 
-void WiFiClient::stop()
+void NetworkClient::stop()
 {
     clientSocketHandle = NULL;
     _rxBuffer = NULL;
@@ -211,12 +211,12 @@ void WiFiClient::stop()
     _lastWriteTimeout = 0;
 }
 
-int WiFiClient::connect(IPAddress ip, uint16_t port)
+int NetworkClient::connect(IPAddress ip, uint16_t port)
 {
     return connect(ip,port,_timeout);
 }
 
-int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms)
+int NetworkClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms)
 {
     struct sockaddr_storage serveraddr = {};
     _timeout = timeout_ms;
@@ -291,24 +291,24 @@ int WiFiClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms)
     ROE_WIFICLIENT(setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)),"SO_SNDTIMEO");
     ROE_WIFICLIENT(setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)),"SO_RCVTIMEO");
 
-    // These are also set in WiFiClientSecure, should be set here too?
+    // These are also set in NetworkClientSecure, should be set here too?
     //ROE_WIFICLIENT(setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)),"TCP_NODELAY"); 
     //ROE_WIFICLIENT (setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)),"SO_KEEPALIVE");
 
     fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) & (~O_NONBLOCK) );
-    clientSocketHandle.reset(new WiFiClientSocketHandle(sockfd));
-    _rxBuffer.reset(new WiFiClientRxBuffer(sockfd));
+    clientSocketHandle.reset(new NetworkClientSocketHandle(sockfd));
+    _rxBuffer.reset(new NetworkClientRxBuffer(sockfd));
 
     _connected = true;
     return 1;
 }
 
-int WiFiClient::connect(const char *host, uint16_t port)
+int NetworkClient::connect(const char *host, uint16_t port)
 {
     return connect(host,port,_timeout);
 }
 
-int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
+int NetworkClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
 {
     IPAddress srv((uint32_t)0);
     if(!Network.hostByName(host, srv)){
@@ -317,12 +317,12 @@ int WiFiClient::connect(const char *host, uint16_t port, int32_t timeout_ms)
     return connect(srv, port, timeout_ms);
 }
 
-int WiFiClient::setSocketOption(int option, char* value, size_t len)
+int NetworkClient::setSocketOption(int option, char* value, size_t len)
 {
     return setSocketOption(SOL_SOCKET, option, (const void*)value, len);
 }
 
-int WiFiClient::setSocketOption(int level, int option, const void* value, size_t len)
+int NetworkClient::setSocketOption(int level, int option, const void* value, size_t len)
 {
     int res = setsockopt(fd(), level, option, value, len);
     if(res < 0) {
@@ -331,7 +331,7 @@ int WiFiClient::setSocketOption(int level, int option, const void* value, size_t
     return res;
 }
 
-int WiFiClient::getSocketOption(int level, int option, const void* value, size_t size)
+int NetworkClient::getSocketOption(int level, int option, const void* value, size_t size)
 {
     int res = getsockopt(fd(), level, option, (char *)value, (socklen_t*)&size);
     if(res < 0) {
@@ -340,12 +340,12 @@ int WiFiClient::getSocketOption(int level, int option, const void* value, size_t
     return res;
 }
 
-int WiFiClient::setOption(int option, int *value)
+int NetworkClient::setOption(int option, int *value)
 {
     return setSocketOption(IPPROTO_TCP, option, (const void*)value, sizeof(int));
 }
 
-int WiFiClient::getOption(int option, int *value)
+int NetworkClient::getOption(int option, int *value)
 {
     socklen_t size = sizeof(int);
     int res = getsockopt(fd(), IPPROTO_TCP, option, (char *)value, &size);
@@ -355,30 +355,30 @@ int WiFiClient::getOption(int option, int *value)
     return res;
 }
 
-void WiFiClient::setConnectionTimeout(uint32_t milliseconds)
+void NetworkClient::setConnectionTimeout(uint32_t milliseconds)
 {
     _timeout = milliseconds;
 }
 
-int WiFiClient::setNoDelay(bool nodelay)
+int NetworkClient::setNoDelay(bool nodelay)
 {
     int flag = nodelay;
     return setOption(TCP_NODELAY, &flag);
 }
 
-bool WiFiClient::getNoDelay()
+bool NetworkClient::getNoDelay()
 {
     int flag = 0;
     getOption(TCP_NODELAY, &flag);
     return flag;
 }
 
-size_t WiFiClient::write(uint8_t data)
+size_t NetworkClient::write(uint8_t data)
 {
     return write(&data, 1);
 }
 
-int WiFiClient::read()
+int NetworkClient::read()
 {
     uint8_t data = 0;
     int res = read(&data, 1);
@@ -391,7 +391,7 @@ int WiFiClient::read()
     return data;
 }
 
-size_t WiFiClient::write(const uint8_t *buf, size_t size)
+size_t NetworkClient::write(const uint8_t *buf, size_t size)
 {
     int res =0;
     int retry = WIFI_CLIENT_MAX_WRITE_RETRY;
@@ -459,12 +459,12 @@ size_t WiFiClient::write(const uint8_t *buf, size_t size)
     return totalBytesSent;
 }
 
-size_t WiFiClient::write_P(PGM_P buf, size_t size)
+size_t NetworkClient::write_P(PGM_P buf, size_t size)
 {
     return write(buf, size);
 }
 
-size_t WiFiClient::write(Stream &stream)
+size_t NetworkClient::write(Stream &stream)
 {
     uint8_t * buf = (uint8_t *)malloc(1360);
     if(!buf){
@@ -482,7 +482,7 @@ size_t WiFiClient::write(Stream &stream)
     return written;
 }
 
-int WiFiClient::read(uint8_t *buf, size_t size)
+int NetworkClient::read(uint8_t *buf, size_t size)
 {
     if(_lastReadTimeout != _timeout){
         if(fd() >= 0){
@@ -507,7 +507,7 @@ int WiFiClient::read(uint8_t *buf, size_t size)
     return res;
 }
 
-int WiFiClient::peek()
+int NetworkClient::peek()
 {
     int res = -1;
     if (_rxBuffer) {
@@ -520,7 +520,7 @@ int WiFiClient::peek()
     return res;
 }
 
-int WiFiClient::available()
+int NetworkClient::available()
 {
     if(!_rxBuffer)
     {
@@ -536,13 +536,13 @@ int WiFiClient::available()
 
 // Though flushing means to send all pending data,
 // seems that in Arduino it also means to clear RX
-void WiFiClient::flush() {
+void NetworkClient::flush() {
     if (_rxBuffer != nullptr) {
         _rxBuffer->flush();
     }
 }
 
-uint8_t WiFiClient::connected()
+uint8_t NetworkClient::connected()
 {
     if (_connected) {
         uint8_t dummy;
@@ -576,7 +576,7 @@ uint8_t WiFiClient::connected()
     return _connected;
 }
 
-IPAddress WiFiClient::remoteIP(int fd) const
+IPAddress NetworkClient::remoteIP(int fd) const
 {
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
@@ -597,11 +597,11 @@ IPAddress WiFiClient::remoteIP(int fd) const
             return IPAddress(IPv6, (uint8_t*)(saddr6->sin6_addr.s6_addr), saddr6->sin6_scope_id);
         }
     }
-    log_e("WiFiClient::remoteIP Not AF_INET or AF_INET6?");
+    log_e("NetworkClient::remoteIP Not AF_INET or AF_INET6?");
     return (IPAddress(0,0,0,0));
 }
 
-uint16_t WiFiClient::remotePort(int fd) const
+uint16_t NetworkClient::remotePort(int fd) const
 {
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
@@ -610,17 +610,17 @@ uint16_t WiFiClient::remotePort(int fd) const
     return ntohs(s->sin_port);
 }
 
-IPAddress WiFiClient::remoteIP() const
+IPAddress NetworkClient::remoteIP() const
 {
     return remoteIP(fd());
 }
 
-uint16_t WiFiClient::remotePort() const
+uint16_t NetworkClient::remotePort() const
 {
     return remotePort(fd());
 }
 
-IPAddress WiFiClient::localIP(int fd) const
+IPAddress NetworkClient::localIP(int fd) const
 {
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
@@ -629,7 +629,7 @@ IPAddress WiFiClient::localIP(int fd) const
     return IPAddress((uint32_t)(s->sin_addr.s_addr));
 }
 
-uint16_t WiFiClient::localPort(int fd) const
+uint16_t NetworkClient::localPort(int fd) const
 {
     struct sockaddr_storage addr;
     socklen_t len = sizeof addr;
@@ -638,22 +638,22 @@ uint16_t WiFiClient::localPort(int fd) const
     return ntohs(s->sin_port);
 }
 
-IPAddress WiFiClient::localIP() const
+IPAddress NetworkClient::localIP() const
 {
     return localIP(fd());
 }
 
-uint16_t WiFiClient::localPort() const
+uint16_t NetworkClient::localPort() const
 {
     return localPort(fd());
 }
 
-bool WiFiClient::operator==(const WiFiClient& rhs)
+bool NetworkClient::operator==(const NetworkClient& rhs)
 {
     return clientSocketHandle == rhs.clientSocketHandle && remotePort() == rhs.remotePort() && remoteIP() == rhs.remoteIP();
 }
 
-int WiFiClient::fd() const
+int NetworkClient::fd() const
 {
     if (clientSocketHandle == NULL) {
         return -1;
@@ -662,12 +662,12 @@ int WiFiClient::fd() const
     }
 }
 
-void WiFiClient::setSSE(bool sse)
+void NetworkClient::setSSE(bool sse)
 {
     _sse = sse;
 }
 
-bool WiFiClient::isSSE()
+bool NetworkClient::isSSE()
 {
     return _sse;
 }

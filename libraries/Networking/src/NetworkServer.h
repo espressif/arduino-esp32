@@ -21,7 +21,7 @@
 
 #include "Arduino.h"
 #include "Server.h"
-#include "WiFiClient.h"
+#include "NetworkClient.h"
 #include "IPAddress.h"
 
 class NetworkServer {
@@ -44,8 +44,8 @@ class NetworkServer {
       log_v("NetworkServer::NetworkServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
     }
     ~NetworkServer(){ end();}
-    WiFiClient available() __attribute__((deprecated("Renamed to accept().")));
-    WiFiClient accept();
+    NetworkClient available() __attribute__((deprecated("Renamed to accept().")));
+    NetworkClient accept();
     void begin(uint16_t port=0);
     void begin(uint16_t port, int reuse_enable);
     void setNoDelay(bool nodelay);

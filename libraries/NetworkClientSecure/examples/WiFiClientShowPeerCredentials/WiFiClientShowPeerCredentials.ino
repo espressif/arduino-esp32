@@ -1,4 +1,4 @@
-// WiFiClientShowPeerCredentials
+// NetworkClientShowPeerCredentials
 //
 // Example of a establishing a secure connection and then
 // showing the fingerprint of the certificate. This can
@@ -12,7 +12,7 @@
 
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <WiFiClientSecure.h>
+#include <NetworkClientSecure.h>
 
 #ifndef WIFI_NETWORK
 #define WIFI_NETWORK "MyWifiNetwork"
@@ -25,7 +25,7 @@
 #define URL "https://arduino.cc"
 
 void demo() {
-  WiFiClientSecure *client = new WiFiClientSecure;
+  NetworkClientSecure *client = new NetworkClientSecure;
   client->setInsecure(); // 
 
   HTTPClient https;

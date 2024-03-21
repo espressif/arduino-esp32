@@ -18,7 +18,7 @@
 
 #include <WiFi.h>
 #include <ESPmDNS.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 
 const char* ssid = "............";
 const char* password = "..............";
@@ -69,7 +69,7 @@ void setup(void)
 void loop(void)
 {
     // Check if a client has connected
-    WiFiClient client = server.accept();
+    NetworkClient client = server.accept();
     if (!client) {
         return;
     }

@@ -36,8 +36,8 @@
 #include "WiFiGeneric.h"
 
 #include "WiFiClient.h"
-#include "NetworkServer.h"
-#include "NetworkUdp.h"
+#include "WiFiServer.h"
+#include "WiFiUdp.h"
 
 class WiFiClass : public WiFiGenericClass, public WiFiSTAClass, public WiFiScanClass, public WiFiAPClass
 {
@@ -64,7 +64,7 @@ public:
     using WiFiScanClass::channel;
 public:  
     void printDiag(Print& dest);
-    friend class WiFiClient;
+    friend class NetworkClient;
     friend class NetworkServer;
     friend class NetworkUDP;
     void enableProv(bool status);

@@ -9,6 +9,6 @@
 #include "NetworkEvents.h"
 #include "NetworkManager.h"
 
-#include "WiFiClient.h"
+#include "NetworkClient.h"
 #include "NetworkServer.h"
 #include "NetworkUdp.h"

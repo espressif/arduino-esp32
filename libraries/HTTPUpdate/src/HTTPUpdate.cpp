@@ -54,7 +54,7 @@ HTTPUpdate::~HTTPUpdate(void)
 {
 }
 
-HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
+HTTPUpdateResult HTTPUpdate::update(NetworkClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, url))
@@ -69,7 +69,7 @@ HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& 
     return handleUpdate(httpClient, currentVersion, true, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(NetworkClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, url))
@@ -85,7 +85,7 @@ HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient,
     return handleUpdate(httpClient, currentVersion, false, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& host, uint16_t port, const String& uri,
+HTTPUpdateResult HTTPUpdate::update(NetworkClient& client, const String& host, uint16_t port, const String& uri,
         const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
@@ -315,10 +315,10 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                     _cbStart();
                 }
 
-                WiFiClient * tcp = http.getStreamPtr();
+                NetworkClient * tcp = http.getStreamPtr();
 
 // To do?                NetworkUDP::stopAll();
-// To do?                WiFiClient::stopAllExcept(tcp);
+// To do?                NetworkClient::stopAllExcept(tcp);
 
                 delay(100);
 

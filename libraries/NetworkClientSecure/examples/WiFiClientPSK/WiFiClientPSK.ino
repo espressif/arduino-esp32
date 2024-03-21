@@ -1,20 +1,34 @@
-#include <WiFiClientSecure.h>
+/*
+  Wifi secure connection example for ESP32 using a pre-shared key (PSK)
+  This is useful with MQTT servers instead of using a self-signed cert, tested with mosquitto.
+  Running on TLS 1.2 using mbedTLS
+
+  To test run a test server using: openssl s_server -accept 8443 -psk 1a2b3c4d -nocert
+  It will show the http request made, but there's no easy way to send a reply back...
+
+  2017 - Evandro Copercini - Apache 2.0 License.
+  2018 - Adapted for PSK by Thorsten von Eicken
+*/
+
+#include <NetworkClientSecure.h>
 #include <WiFi.h>
 
-/* This is a very INSECURE approach.
- * If for some reason the secure, proper example WiFiClientSecure
- * does not work for you; then you may want to check the 
- * WiFiClientTrustOnFirstUse example first. It is less secure than 
- * WiFiClientSecure, but a lot better than this totally insecure
- * approach shown below.
- */
-
+#if 0
 const char* ssid     = "your-ssid";     // your network SSID (name of wifi network)
 const char* password = "your-password"; // your network password
+#else
+const char* ssid     = "test";     // your network SSID (name of wifi network)
+const char* password = "securetest"; // your network password
+#endif
 
-const char*  server = "www.howsmyssl.com";  // Server URL
+//const char*  server = "server.local";  // Server hostname
+const IPAddress server = IPAddress(192, 168, 0, 14);  // Server IP address
+const int    port = 8443; // server's port (8883 for MQTT)
 
-WiFiClientSecure client;
+const char*  pskIdent = "Client_identity"; // PSK identity (sometimes called key hint)
+const char*  psKey = "1a2b3c4d"; // PSK Key (must be hex string without 0x)
+
+NetworkClientSecure client;
 
 void setup() {
   //Initialize serial and wait for port to open:
@@ -35,15 +49,17 @@ void setup() {
   Serial.print("Connected to ");
   Serial.println(ssid);
 
+  client.setPreSharedKey(pskIdent, psKey);
+
   Serial.println("\nStarting connection to server...");
-  client.setInsecure();//skip verification
-  if (!client.connect(server, 443))
+  if (!client.connect(server, port))
     Serial.println("Connection failed!");
   else {
     Serial.println("Connected to server!");
     // Make a HTTP request:
-    client.println("GET https://www.howsmyssl.com/a/check HTTP/1.0");
-    client.println("Host: www.howsmyssl.com");
+    client.println("GET /a/check HTTP/1.0");
+    client.print("Host: ");
+    client.println(server);
     client.println("Connection: close");
     client.println();
 

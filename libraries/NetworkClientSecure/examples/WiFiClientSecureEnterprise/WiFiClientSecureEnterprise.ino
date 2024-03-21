@@ -14,7 +14,7 @@
 // For more examples see https://github.com/martinius96/ESP32-eduroam
 
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
+#include <NetworkClientSecure.h>
 #if __has_include ("esp_eap_client.h")
 #include "esp_eap_client.h"
 #else
@@ -59,7 +59,7 @@ const char* test_root_ca = \
 // You can use x.509 client certificates if you want
 //const char* test_client_key = "";   //to verify the client
 //const char* test_client_cert = "";  //to verify the client
-WiFiClientSecure client;
+NetworkClientSecure client;
 void setup() {
   Serial.begin(115200);
   delay(10);

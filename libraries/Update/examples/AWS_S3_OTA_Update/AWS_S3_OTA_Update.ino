@@ -22,7 +22,7 @@
 #include <WiFi.h>
 #include <Update.h>
 
-WiFiClient client;
+NetworkClient client;
 
 // Variables to validate
 // response from S3

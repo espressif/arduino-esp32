@@ -1,9 +1,9 @@
-WiFiClientSecure
+NetworkClientSecure
 ================
 
-The WiFiClientSecure class implements support for secure connections using TLS (SSL).
-It inherits from WiFiClient and thus implements a superset of that class' interface.
-There are three ways to establish a secure connection using the WiFiClientSecure class:
+The NetworkClientSecure class implements support for secure connections using TLS (SSL).
+It inherits from NetworkClient and thus implements a superset of that class' interface.
+There are three ways to establish a secure connection using the NetworkClientSecure class:
 using a root certificate authority (CA) cert, using a root CA cert plus a client cert and key,
 and using a pre-shared key (PSK).
 
@@ -19,12 +19,12 @@ If you are accessing your own server:
 If you are accessing a public server:
 - Obtain the cert of the public CA that signed that server's cert
 Then:
-- In WiFiClientSecure use setCACert (or the appropriate connect method) to set the root cert of your
+- In NetworkClientSecure use setCACert (or the appropriate connect method) to set the root cert of your
   CA or of the public CA
-- When WiFiClientSecure connects to the target server it uses the CA cert to verify the certificate
+- When NetworkClientSecure connects to the target server it uses the CA cert to verify the certificate
   presented by the server, and then negotiates encryption for the connection
 
-Please see the WiFiClientSecure example.
+Please see the NetworkClientSecure example.
 
 Using a bundle of root certificate authority certificates 
 ---------------------------------------------------------
@@ -60,11 +60,11 @@ the client to the server, then negotiates an encrypted connection.
 - Follow steps above
 - Using your root CA generate cert/key for your client
 - Register the keys with the server you will be accessing so the server can authenticate your client
-- In WiFiClientSecure use setCACert (or the appropriate connect method) to set the root cert of your
+- In NetworkClientSecure use setCACert (or the appropriate connect method) to set the root cert of your
   CA or of the public CA, this is used to authenticate the server
-- In WiFiClientSecure use setCertificate, and setPrivateKey (or the appropriate connect method) to
+- In NetworkClientSecure use setCertificate, and setPrivateKey (or the appropriate connect method) to
   set your client's cert & key, this will be used to authenticate your client to the server
-- When WiFiClientSecure connects to the target server it uses the CA cert to verify the certificate
+- When NetworkClientSecure connects to the target server it uses the CA cert to verify the certificate
   presented by the server, it will use the cert/key to authenticate your client to the server, and
   it will then negotiate encryption for the connection
 
@@ -85,13 +85,13 @@ malicious server does not divulge the password. Plus the server is also authenti
 To use PSK:
 - Generate a random hex string (generating an MD5 or SHA for some file is one way to do this)
 - Come up with a string id for your client and configure your server to accept the id/key pair
-- In WiFiClientSecure use setPreSharedKey (or the appropriate connect method) to
+- In NetworkClientSecure use setPreSharedKey (or the appropriate connect method) to
   set the id/key combo
-- When WiFiClientSecure connects to the target server it uses the id/key combo to authenticate the
+- When NetworkClientSecure connects to the target server it uses the id/key combo to authenticate the
   server (it must prove that it has the key too), authenticate the client and then negotiate
   encryption for the connection
 
-Please see the WiFiClientPSK example.
+Please see the NetworkClientPSK example.
 
 Specifying the ALPN Protocol
 ----------------------------
@@ -110,23 +110,23 @@ wiFiClient.setAlpnProtocols(aws_protos);
 
 Examples
 --------
-#### WiFiClientInsecure
-Demonstrates usage of insecure connection using `WiFiClientSecure::setInsecure()`
-#### WiFiClientPSK
+#### NetworkClientInsecure
+Demonstrates usage of insecure connection using `NetworkClientSecure::setInsecure()`
+#### NetworkClientPSK
 Wifi secure connection example for ESP32 using a pre-shared key (PSK)
 This is useful with MQTT servers instead of using a self-signed cert, tested with mosquitto.
 Running on TLS 1.2 using mbedTLS
-#### WiFiClientSecure
+#### NetworkClientSecure
 Wifi secure connection example for ESP32
 Running on TLS 1.2 using mbedTLS
-#### WiFiClientSecureEnterprise
+#### NetworkClientSecureEnterprise
 This example demonstrates a secure connection to a WiFi network using WPA/WPA2 Enterprise (for example eduroam),
 and establishing a secure HTTPS connection with an external server (for example arduino.php5.sk) using the defined anonymous identity, user identity, and password.
 
 .. note::
   This example is outdated and might not work. For more examples see [https://github.com/martinius96/ESP32-eduroam](https://github.com/martinius96/ESP32-eduroam)
 
-#### WiFiClientShowPeerCredentials
+#### NetworkClientShowPeerCredentials
 Example of a establishing a secure connection and then showing the fingerprint of the certificate.
 This can be useful in an IoT setting to know for sure that you are connecting to the right server.
 Especially in situations where you cannot hardcode a trusted root certificate for long

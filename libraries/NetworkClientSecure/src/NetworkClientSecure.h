@@ -1,5 +1,5 @@
 /*
-  WiFiClientSecure.h - Base class that provides Client SSL to ESP32
+  NetworkClientSecure.h - Base class that provides Client SSL to ESP32
   Copyright (c) 2011 Adrian McEwen.  All right reserved.
   Additions Copyright (C) 2017 Evandro Luis Copercini.
 
@@ -18,14 +18,14 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef WiFiClientSecure_h
-#define WiFiClientSecure_h
+#ifndef NetworkClientSecure_h
+#define NetworkClientSecure_h
 #include "Arduino.h"
 #include "IPAddress.h"
 #include "Networking.h"
 #include "ssl_client.h"
 
-class WiFiClientSecure : public WiFiClient
+class NetworkClientSecure : public NetworkClient
 {
 protected:
     sslclient_context *sslclient;
@@ -44,10 +44,10 @@ protected:
     bool _use_ca_bundle;
 
 public:
-    WiFiClientSecure *next;
-    WiFiClientSecure();
-    WiFiClientSecure(int socket);
-    ~WiFiClientSecure();
+    NetworkClientSecure *next;
+    NetworkClientSecure();
+    NetworkClientSecure(int socket);
+    ~NetworkClientSecure();
     int connect(IPAddress ip, uint16_t port);
     int connect(IPAddress ip, uint16_t port, int32_t timeout);
     int connect(const char *host, uint16_t port);
@@ -98,7 +98,7 @@ public:
     {
         return connected();
     }
-    WiFiClientSecure &operator=(const WiFiClientSecure &other);
+    NetworkClientSecure &operator=(const NetworkClientSecure &other);
     bool operator==(const bool value)
     {
         return bool() == value;
@@ -107,8 +107,8 @@ public:
     {
         return bool() != value;
     }
-    bool operator==(const WiFiClientSecure &);
-    bool operator!=(const WiFiClientSecure &rhs)
+    bool operator==(const NetworkClientSecure &);
+    bool operator!=(const NetworkClientSecure &rhs)
     {
         return !this->operator==(rhs);
     };

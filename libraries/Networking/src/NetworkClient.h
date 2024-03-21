@@ -25,8 +25,8 @@
 #include "Client.h"
 #include <memory>
 
-class WiFiClientSocketHandle;
-class WiFiClientRxBuffer;
+class NetworkClientSocketHandle;
+class NetworkClientRxBuffer;
 
 class ESPLwIPClient : public Client
 {
@@ -36,11 +36,11 @@ public:
         virtual void setConnectionTimeout(uint32_t milliseconds) = 0;
 };
 
-class WiFiClient : public ESPLwIPClient
+class NetworkClient : public ESPLwIPClient
 {
 protected:
-    std::shared_ptr<WiFiClientSocketHandle> clientSocketHandle;
-    std::shared_ptr<WiFiClientRxBuffer> _rxBuffer;
+    std::shared_ptr<NetworkClientSocketHandle> clientSocketHandle;
+    std::shared_ptr<NetworkClientRxBuffer> _rxBuffer;
     bool _connected;
     bool _sse;
     int _timeout;
@@ -48,10 +48,10 @@ protected:
     int _lastReadTimeout;
 
 public:
-    WiFiClient *next;
-    WiFiClient();
-    WiFiClient(int fd);
-    ~WiFiClient();
+    NetworkClient *next;
+    NetworkClient();
+    NetworkClient(int fd);
+    ~NetworkClient();
     int connect(IPAddress ip, uint16_t port);
     int connect(IPAddress ip, uint16_t port, int32_t timeout_ms);
     int connect(const char *host, uint16_t port);
@@ -82,8 +82,8 @@ public:
     {
         return bool() != value;
     }
-    bool operator==(const WiFiClient&);
-    bool operator!=(const WiFiClient& rhs)
+    bool operator==(const NetworkClient&);
+    bool operator!=(const NetworkClient& rhs)
     {
         return !this->operator==(rhs);
     };

@@ -56,7 +56,7 @@ void loop() {
   // wait for WiFi connection
   if ((WiFiMulti.run() == WL_CONNECTED)) {
 
-    WiFiClient client;
+    NetworkClient client;
 
     // The line below is optional. It can be used to blink the LED on the board during flashing
     // The LED will be on during download of one buffer of data from the network. The LED will

@@ -75,7 +75,7 @@ void testClient(const char * host, uint16_t port)
   Serial.print("\nconnecting to ");
   Serial.println(host);
 
-  WiFiClient client;
+  NetworkClient client;
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
     return;

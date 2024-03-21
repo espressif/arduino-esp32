@@ -3,7 +3,7 @@
 #endif
 #include <functional>
 #include "ArduinoOTA.h"
-#include "WiFiClient.h"
+#include "NetworkClient.h"
 #include "ESPmDNS.h"
 #include "MD5Builder.h"
 #include "Update.h"
@@ -266,7 +266,7 @@ void ArduinoOTAClass::_runUpdate() {
         _progress_callback(0, _size);
     }
 
-    WiFiClient client;
+    NetworkClient client;
     if (!client.connect(_ota_ip, _ota_port)) {
         if (_error_callback) {
             _error_callback(OTA_CONNECT_ERROR);

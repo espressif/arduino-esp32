@@ -18,11 +18,11 @@
    8. server now tells the client what (else) is supported; such as additional authentication options.
    ... conversation continues encrypted.
 
-   This can be enabled in WiFiClientSecure by telling it to start in plaintext:
+   This can be enabled in NetworkClientSecure by telling it to start in plaintext:
 
           client.setPlainStart();
 
-   and client is than a plain, TCP, connection (just as WiFiClient would be); until the client calls
+   and client is than a plain, TCP, connection (just as NetworkClient would be); until the client calls
    the method:
 
           client.startTLS(); // returns zero on error; non zero on success.
@@ -31,7 +31,7 @@
 */
 
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
+#include <NetworkClientSecure.h>
 
 #ifndef WIFI_NETWORK
 #define WIFI_NETWORK "YOUR Wifi SSID"
@@ -54,7 +54,7 @@ const char* password = WIFI_PASSWD;    // your network password
 const char* server = SMTP_HOST;        // Server URL
 const int submission_port = SMTP_PORT; // submission port.
 
-WiFiClientSecure client;
+NetworkClientSecure client;
 
 static bool readAllSMTPLines();
 
@@ -139,7 +139,7 @@ static bool readAllSMTPLines() {
   int i;
 
   // blocking read; we cannot rely on a timeout
-  // of a WiFiClientSecure read; as it is non
+  // of a NetworkClientSecure read; as it is non
   // blocking.
   const unsigned long timeout = 15 * 1000;
   unsigned long start = millis(); // the timeout is for the entire CMD block response; not per character/line.

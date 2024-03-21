@@ -29,7 +29,7 @@ const char* ssid = "**********";
 const char* password = "**********";
 
 NetworkServer server(23);
-WiFiClient serverClients[MAX_SRV_CLIENTS];
+NetworkClient serverClients[MAX_SRV_CLIENTS];
 
 void setup() {
   Serial.begin(115200);

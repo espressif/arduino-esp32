@@ -27,7 +27,7 @@
 #include <libb64/cencode.h>
 #include "esp_random.h"
 #include "NetworkServer.h"
-#include "WiFiClient.h"
+#include "NetworkClient.h"
 #include "WebServer.h"
 #include "FS.h"
 #include "detail/RequestHandlersImpl.h"
@@ -435,7 +435,7 @@ void WebServer::handleClient() {
   }
 
   if (!keepCurrentClient) {
-    _currentClient = WiFiClient();
+    _currentClient = NetworkClient();
     _currentStatus = HC_NONE;
     _currentUpload.reset();
   }

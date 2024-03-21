@@ -63,7 +63,7 @@ void setup()
 }
 
 void loop(){
- WiFiClient client = server.accept();   // listen for incoming clients
+ NetworkClient client = server.accept();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port

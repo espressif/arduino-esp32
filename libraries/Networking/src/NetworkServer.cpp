@@ -32,13 +32,13 @@ int NetworkServer::setTimeout(uint32_t seconds){
   return setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
 }
 
-WiFiClient NetworkServer::available(){
+NetworkClient NetworkServer::available(){
   return accept();
 }
 
-WiFiClient NetworkServer::accept(){
+NetworkClient NetworkServer::accept(){
   if(!_listening)
-    return WiFiClient();
+    return NetworkClient();
   int client_sock;
   if (_accepted_sockfd >= 0) {
     client_sock = _accepted_sockfd;
@@ -58,10 +58,10 @@ WiFiClient NetworkServer::accept(){
     if(setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, sizeof(int)) == ESP_OK) {
       val = _noDelay;
       if(setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, sizeof(int)) == ESP_OK)
-        return WiFiClient(client_sock);
+        return NetworkClient(client_sock);
     }
   }
-  return WiFiClient();
+  return NetworkClient();
 }
 
 void NetworkServer::begin(uint16_t port){

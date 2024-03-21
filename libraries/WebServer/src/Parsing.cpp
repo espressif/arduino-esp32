@@ -22,7 +22,7 @@
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include "NetworkServer.h"
-#include "WiFiClient.h"
+#include "NetworkClient.h"
 #include "WebServer.h"
 #include "detail/mimetable.h"
 
@@ -41,7 +41,7 @@ const char * _http_method_str[] = {
 static const char Content_Type[] PROGMEM = "Content-Type";
 static const char filename[] PROGMEM = "filename";
 
-static char* readBytesWithTimeout(WiFiClient& client, size_t maxLength, size_t& dataLength, int timeout_ms)
+static char* readBytesWithTimeout(NetworkClient& client, size_t maxLength, size_t& dataLength, int timeout_ms)
 {
   char *buf = nullptr;
   dataLength = 0;
@@ -73,7 +73,7 @@ static char* readBytesWithTimeout(WiFiClient& client, size_t maxLength, size_t& 
   return buf;
 }
 
-bool WebServer::_parseRequest(WiFiClient& client) {
+bool WebServer::_parseRequest(NetworkClient& client) {
   // Read the first line of HTTP request
   String req = client.readStringUntil('\r');
   client.readStringUntil('\n');
@@ -309,7 +309,7 @@ void WebServer::_uploadWriteByte(uint8_t b){
   _currentUpload->buf[_currentUpload->currentSize++] = b;
 }
 
-int WebServer::_uploadReadByte(WiFiClient& client) {
+int WebServer::_uploadReadByte(NetworkClient& client) {
   int res = client.read();
 
   if (res < 0) {
@@ -322,7 +322,7 @@ int WebServer::_uploadReadByte(WiFiClient& client) {
   return res;
 }
 
-bool WebServer::_parseForm(WiFiClient& client, String boundary, uint32_t len){
+bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len){
   (void) len;
   log_v("Parse Form: Boundary: %s Length: %d", boundary.c_str(), len);
   String line;

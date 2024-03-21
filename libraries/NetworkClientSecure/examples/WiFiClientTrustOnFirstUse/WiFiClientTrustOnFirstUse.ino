@@ -55,7 +55,7 @@ const char* server = "www.howsmyssl.com";  // Server to test with.
 const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 and GND (pulldown) */
 
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
+#include <NetworkClientSecure.h>
 #include <EEPROM.h>
 
 /* Set aside some persistant memory (i.e. memory that is preserved on reboots and
@@ -77,7 +77,7 @@ static void printSHA256(unsigned char * ptr) {
   Serial.println("");
 };
 
-WiFiClientSecure client;
+NetworkClientSecure client;
 
 bool get_tofu();
 bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu);
