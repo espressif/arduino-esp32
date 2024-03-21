@@ -3,6 +3,7 @@
 #include "esp_system.h"
 #include "esp32-hal.h"
 #include "esp_mac.h"
+#include "esp_wifi.h"
 
 static void (*new_cb)(const esp_now_recv_info_t *info, const uint8_t * data, int len, void * arg) = NULL;
 static void * new_arg = NULL;// * tx_arg = NULL, * rx_arg = NULL,
@@ -138,11 +139,18 @@ bool ESP_NOW_Class::begin(const uint8_t *pmk){
     if(_esp_now_has_begun){
         return true;
     }
+
+    esp_err_t err = esp_wifi_start();
+    if (err != ESP_OK) {
+        log_e("WiFi not started! 0x%x)", err);
+        return false;
+    }
+
     _esp_now_has_begun = true;
 
     memset(_esp_now_peers, 0, sizeof(ESP_NOW_Peer *) * ESP_NOW_MAX_TOTAL_PEER_NUM);
 
-    esp_err_t err = esp_now_init();
+    err = esp_now_init();
     if(err != ESP_OK){
         log_e("esp_now_init failed! 0x%x", err);
         _esp_now_has_begun = false;
