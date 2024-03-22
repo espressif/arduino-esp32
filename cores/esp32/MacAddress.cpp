@@ -28,6 +28,10 @@ MacAddress::MacAddress(const char *macstr){
     fromString(macstr);
 }
 
+MacAddress::MacAddress(const String &macstr){
+    fromString(macstr.c_str());
+}
+
 MacAddress::MacAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6) {
     _type = MAC6;
     memset(_mac.bytes, 0, sizeof(_mac.bytes));
