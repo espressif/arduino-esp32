@@ -380,7 +380,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
         to_send -= space;
         so_far += space;
         // Now trigger the ISR to read data from the ring buffer.
-        usb_serial_jtag_ll_txfifo_flush();
+//        usb_serial_jtag_ll_txfifo_flush();
         if(connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
  
         while(to_send){
@@ -396,7 +396,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
             so_far += space;
             to_send -= space;
             // Now trigger the ISR to read data from the ring buffer.
-            usb_serial_jtag_ll_txfifo_flush();
+//            usb_serial_jtag_ll_txfifo_flush();
             if(connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
         }
     }
