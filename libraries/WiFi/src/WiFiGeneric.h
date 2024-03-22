@@ -183,7 +183,7 @@ class WiFiGenericClass
     static int waitStatusBits(int bits, uint32_t timeout_ms);
 
     int32_t channel(void);
-	void channel(uint8_t primary, wifi_second_chan_t secondary=WIFI_SECOND_CHAN_NONE);
+    void channel(uint8_t primary, wifi_second_chan_t secondary=WIFI_SECOND_CHAN_NONE);
 
     void persistent(bool persistent);
     void enableLongRange(bool enable);
