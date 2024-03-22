@@ -54,6 +54,7 @@ public:
     MacAddress(const uint8_t *macbytearray) : MacAddress(MAC6, macbytearray) {}
 
     MacAddress(const char *macstr);
+    MacAddress(const String &macstr);
 
     virtual ~MacAddress() {}
 
