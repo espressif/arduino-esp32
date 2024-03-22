@@ -1277,7 +1277,11 @@ int32_t WiFiGenericClass::channel(void)
 void WiFiGenericClass::channel(uint8_t primary, wifi_second_chan_t secondary)
 {
     wifi_country_t country;
-    esp_wifi_get_country(&country);
+
+    if (esp_wifi_get_country(&country) != ESP_OK) {
+        log_e("Failed to get country info");
+        return;
+    }
 
     uint8_t min_chan = country.schan;
     uint8_t max_chan = min_chan + country.nchan - 1;
