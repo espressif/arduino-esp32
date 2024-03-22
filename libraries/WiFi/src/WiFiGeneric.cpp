@@ -1274,7 +1274,7 @@ int32_t WiFiGenericClass::channel(void)
  * @param primaryChan primary channel. Depending on the region, not all channels may be available.
  * @param secondChan secondary channel (WIFI_SECOND_CHAN_NONE, WIFI_SECOND_CHAN_ABOVE, WIFI_SECOND_CHAN_BELOW)
  */
-void WiFiGenericClass::channel(uint8_t primary, wifi_second_chan_t secondary)
+void WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary)
 {
     wifi_country_t country;
 
