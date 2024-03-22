@@ -1270,6 +1270,27 @@ int32_t WiFiGenericClass::channel(void)
 }
 
 /**
+ * Set the WiFi channel configuration
+ * @param primaryChan primary channel. Depending on the region, not all channels may be available.
+ * @param secondChan secondary channel (WIFI_SECOND_CHAN_NONE, WIFI_SECOND_CHAN_ABOVE, WIFI_SECOND_CHAN_BELOW)
+ */
+void WiFiGenericClass::channel(uint8_t primary, wifi_second_chan_t secondary)
+{
+    wifi_country_t country;
+    esp_wifi_get_country(&country);
+
+    uint8_t min_chan = country.schan;
+    uint8_t max_chan = min_chan + country.nchan - 1;
+
+    if(primary < min_chan || primary > max_chan){
+        log_e("Invalid primary channel: %d", primary);
+        return;
+    }
+
+    esp_wifi_set_channel(primary, secondary);
+}
+
+/**
  * store WiFi config in SDK flash area
  * @param persistent
  */
