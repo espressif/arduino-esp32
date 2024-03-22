@@ -10,7 +10,10 @@
 #include "MacAddress.h"
 #include "WiFi.h"
 
+// 0: AP mode, 1: Station mode
 #define ESPNOW_WIFI_MODE_STATION 0
+
+// Channel to be used by the ESP-NOW protocol from 1 to 13
 #define ESPNOW_WIFI_CHANNEL 1
 
 #if ESPNOW_WIFI_MODE_STATION // ESP-NOW using WiFi Station mode
