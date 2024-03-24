@@ -1291,7 +1291,9 @@ void WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary)
         return;
     }
 
-    esp_wifi_set_channel(primary, secondary);
+    if (esp_wifi_set_channel(primary, secondary)) {
+        log_e("Failed to set channel");
+    }
 }
 
 /**
