@@ -1290,7 +1290,7 @@ int WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary)
     uint8_t max_chan = min_chan + country.nchan - 1;
 
     if(primary < min_chan || primary > max_chan){
-        log_e("Invalid primary channel: %d", primary);
+        log_e("Invalid primary channel: %d. Valid range is %d-%d for country %s", primary, min_chan, max_chan, country.cc);
         return ESP_ERR_INVALID_ARG;
     }
 
