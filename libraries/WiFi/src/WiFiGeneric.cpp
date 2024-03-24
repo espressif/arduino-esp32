@@ -1273,14 +1273,17 @@ int32_t WiFiGenericClass::channel(void)
  * Set the WiFi channel configuration
  * @param primary primary channel. Depending on the region, not all channels may be available.
  * @param secondary secondary channel (WIFI_SECOND_CHAN_NONE, WIFI_SECOND_CHAN_ABOVE, WIFI_SECOND_CHAN_BELOW)
+ * @return 0 on success, otherwise error
  */
-void WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary)
+int WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary)
 {
     wifi_country_t country;
+    esp_err_t ret;
 
-    if (esp_wifi_get_country(&country) != ESP_OK) {
+    ret = esp_wifi_get_country(&country);
+    if (ret != ESP_OK) {
         log_e("Failed to get country info");
-        return;
+        return ret;
     }
 
     uint8_t min_chan = country.schan;
@@ -1288,12 +1291,16 @@ void WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary)
 
     if(primary < min_chan || primary > max_chan){
         log_e("Invalid primary channel: %d", primary);
-        return;
+        return ESP_ERR_INVALID_ARG;
     }
 
-    if (esp_wifi_set_channel(primary, secondary)) {
+    ret = esp_wifi_set_channel(primary, secondary);
+    if (ret != ESP_OK) {
         log_e("Failed to set channel");
+        return ret;
     }
+
+    return ESP_OK;
 }
 
 /**
