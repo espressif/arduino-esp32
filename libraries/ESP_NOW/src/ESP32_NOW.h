@@ -20,8 +20,6 @@ protected:
   size_t send(const uint8_t * data, int len);
 
 public:
-  const MacAddress BROADCAST_ADDR(0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
-
   ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel=0, wifi_interface_t iface=WIFI_IF_AP, const uint8_t *lmk=NULL);
   virtual ~ESP_NOW_Peer() {}
 
@@ -46,6 +44,8 @@ public:
 
 class ESP_NOW_Class : public Print {
 public:
+  const MacAddress BROADCAST_ADDR = MacAddress(0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
+
   ESP_NOW_Class();
   ~ESP_NOW_Class();
 
