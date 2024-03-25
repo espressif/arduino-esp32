@@ -41,6 +41,7 @@ License (MIT license):
 #include "ESPmDNS.h"
 #include <functional>
 #include "esp_mac.h"
+#include "soc/soc_caps.h"
 
 // Add quotes around defined value
 #ifdef __IN_ECLIPSE__
@@ -132,7 +133,25 @@ void MDNSResponder::disableArduino(){
 void MDNSResponder::enableWorkstation(esp_interface_t interface){
     char winstance[21+_hostname.length()];
     uint8_t mac[6];
-    esp_base_mac_addr_get(mac);
+
+    esp_mac_type_t mtype = ESP_MAC_ETH;
+#if SOC_WIFI_SUPPORTED
+    switch(interface){
+        case ESP_IF_WIFI_STA:
+            mtype = ESP_MAC_WIFI_STA;
+            break;
+        case ESP_IF_WIFI_AP:
+            mtype = ESP_MAC_WIFI_SOFTAP;
+            break;
+        default:
+            break;
+    }
+#endif
+    if(esp_read_mac(mac, mtype) != ESP_OK){
+        log_e("Failed to read the MAC address");
+        return;
+    }
+
     sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     if(mdns_service_add(NULL, "_workstation", "_tcp", 9, NULL, 0)) {
