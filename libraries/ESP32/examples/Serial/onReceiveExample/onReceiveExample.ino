@@ -32,7 +32,7 @@ void UART0_RX_CB() {
   }
 }
 
-// setup() and loop()are callback functions executed by a low priority task
+// setup() and loop() are functions executed by a low priority task
 // Therefore, there are 2 tasks running when using onReceive()
 void setup() {
   // creates a mutex object to control access to uart_buffer
