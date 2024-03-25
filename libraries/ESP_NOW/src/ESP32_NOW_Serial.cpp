@@ -82,7 +82,7 @@ void ESP_NOW_Serial_Class::end(){
 //Stream
 int ESP_NOW_Serial_Class::available(void){
     if(rx_queue == NULL){
-        return -1;
+        return 0;
     }
     return uxQueueMessagesWaiting(rx_queue);
 }
