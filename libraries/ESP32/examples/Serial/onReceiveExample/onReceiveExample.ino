@@ -107,9 +107,9 @@ void loop() {
       UART0.print(" bytes] ");
       UART0.println(uart_buffer);
       uart_buffer = "";  // reset uart_buffer for the next UART reading
+      // releases the mutex for more data to be received
+      xSemaphoreGive(uart_buffer_Mutex);
     }
-    // releases the mutex for more data to be received
-    xSemaphoreGive(uart_buffer_Mutex);
   }
   UART0.println("Sleeping for 1 second...");
   delay(1000);
