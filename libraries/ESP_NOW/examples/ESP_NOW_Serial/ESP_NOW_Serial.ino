@@ -4,6 +4,11 @@
     Send data between two ESP32s using the ESP-NOW protocol in one-to-one (unicast) configuration.
     Note that different MAC addresses are used for different interfaces.
     Set the peer MAC address according to the device that will receive the data.
+    Example setup:
+    - Device 1: AP mode, peer MAC address set to the Station MAC address of Device 2
+    - Device 2: Station mode, peer MAC address set to the AP MAC address of Device 1
+
+    The device running this sketch will also receive and print data from any device that has its MAC address set as the peer MAC address.
     To properly visualize the data being sent, set the line ending in the Serial Monitor to "Both NL & CR".
 */
 
@@ -59,7 +64,7 @@ void setup() {
     // Start the ESP-NOW communication
     Serial.println("ESP-NOW communication starting...");
     NowSerial.begin(115200);
-    Serial.println("You can now send data between the devices using the Serial Monitor\n");
+    Serial.println("You can now send data to the peer device using the Serial Monitor.\n");
 }
 
 void loop() {
