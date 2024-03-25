@@ -1,3 +1,54 @@
+/*
+
+   This Sketch demonstrates how to use onReceive(callbackFunc) with HardwareSerial
+
+   void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout = false)
+
+   It is possible to register an UART callback function that will be called
+   every time that UART receives data and an associated interrupt is generated.
+
+   In summary, HardwareSerial::onReceive() works like an RX Interrupt callback, that can be adjusted
+   using HardwareSerial::setRxFIFOFull() and HardwareSerial::setRxTimeout().
+
+   OnReceive will be called, while receiving a stream of data, when every 120 bytes are received (default FIFO Full),
+   which may not help in case that the application needs to get all data at once before processing it.
+   Therefore, a way to make it work is by detecting the end of a stream transmission. This can be based on a protocol
+   or based on timeout with the UART line in idle (no data received - this is the case of this example). 
+
+   In some cases, it is necessary to wait for receiving all the data before processing it and parsing the
+   UART input. This example demonstrates a way to create a String with all data received from UART0 and
+   signaling it using a Mutex for another task to process it. This example uses a timeout of 500ms as a way to
+   know when the reception of data has finished.
+
+   The onReceive() callback is called whenever the RX ISR is triggered.
+   It can occur because of two possible events:
+
+   1- UART FIFO FULL: it happens when internal UART FIFO reaches a certain number of bytes.
+      Its full capacity is 127 bytes. The FIFO Full threshold for the interrupt can be changed
+      using HardwareSerial::setRxFIFOFull(uint8_t fifoFull).
+      Default FIFO Full Threshold is set in the UART initialization using HardwareSerial::begin()
+      This will depend on the baud rate used when begin() is executed.
+      For a baud rate of 115200 or lower, it it just 1 byte, mimicking original Arduino UART driver.
+      For a baud rate over 115200 it will be 120 bytes for higher performance.
+      Anyway, it can be changed by the application at any time.
+
+   2- UART RX Timeout: it happens, based on a timeout equivalent to a number of symbols at
+      the current baud rate. If the UART line is idle for this timeout, it will raise an interrupt.
+      This time can be changed by HardwareSerial::setRxTimeout(uint8_t rxTimeout)
+
+   When any of those two interrupts occur, IDF UART driver will copy FIFO data to its internal
+   RingBuffer and then Arduino can read such data. At the same time, Arduino Layer will execute
+   the callback function defined with HardwareSerial::onReceive().
+
+   <bool onlyOnTimeout> parameter (default false) can be used by the application to tell Arduino to
+   only execute the callback when the second event above happens (Rx Timeout). At this time all
+   received data will be available to be read by the Arduino application. But if the number of
+   received bytes is higher than the FIFO space, it will generate an error of FIFO overflow.
+   In order to avoid such problem, the application shall set an appropriate RX buffer size using
+   HardwareSerial::setRxBufferSize(size_t new_size) before executing begin() for the Serial port.
+*/
+
+
 // this will make UART0 work in any case (using or not USB)
 #if ARDUINO_USB_CDC_ON_BOOT
 #define UART0 Serial0
