@@ -86,13 +86,18 @@ void UART0_RX_CB() {
 // setup() and loop() are functions executed by a low priority task
 // Therefore, there are 2 tasks running when using onReceive()
 void setup() {
+  UART0.begin(115200);
+
   // creates a mutex object to control access to uart_buffer
   uart_buffer_Mutex = xSemaphoreCreateMutex();
   if(uart_buffer_Mutex == NULL) {
-     log_e("Error creating Mutex. Sketch will fail.");
-     delay(1000);
+    log_e("Error creating Mutex. Sketch will fail.");
+    while(true) {
+      UART0.println("Mutex error (NULL). Program halted.");
+      delay(2000);
+    }
   }
-  UART0.begin(115200);
+
   UART0.onReceive(UART0_RX_CB);  // sets the callback function
   UART0.println("Send data to UART0 in order to activate the RX callback");
 }
@@ -113,7 +118,7 @@ void loop() {
       // releases the mutex for more data to be received
       xSemaphoreGive(uart_buffer_Mutex);
     }
-  }
+  } 
   UART0.println("Sleeping for 1 second...");
   delay(1000);
 }
