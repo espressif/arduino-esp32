@@ -8,7 +8,7 @@
  * source: https://gist.github.com/ukBaz/217875c83c2535d22a16ba38fc8f2a91
  *
  * Tested with Raspberry Pi onboard Wifi/BT, USB BT 4.0 dongles, USB BT 1.1 dongles, 
- * 202202: does NOT work with USB BT 2.0 dongles when esp32 aduino lib is compiled with SSP support!
+ * 202202: does NOT work with USB BT 2.0 dongles when esp32 arduino lib is compiled with SSP support!
  *         see https://github.com/espressif/esp-idf/issues/8394
  *         
  * use ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE in connect() if remote side requests 'RequireAuthentication': dbus.Boolean(True),
