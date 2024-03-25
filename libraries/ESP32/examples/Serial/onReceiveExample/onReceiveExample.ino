@@ -70,7 +70,7 @@ SemaphoreHandle_t uart_buffer_Mutex = NULL;
 // task created when onReceive() is used
 void UART0_RX_CB() {
   // take the mutex, waits forever until loop() finishes its processing
-  if (uart_buffer_Mutex != NULL && xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
+  if (xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
     uint32_t now = millis(); // tracks timeout
     while ((millis() - now) < communicationTimeout_ms) {
       if (UART0.available()) {
@@ -106,7 +106,7 @@ uint32_t counter = 0;
 void loop() {
   if (uart_buffer.length() > 0) {
     // signals that the onReceive function shall not change uart_buffer while processing
-    if (uart_buffer_Mutex != NULL && xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
+    if (xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
       // process the received data from UART0 - example, just print it beside a counter
       UART0.print("[");
       UART0.print(counter++);
