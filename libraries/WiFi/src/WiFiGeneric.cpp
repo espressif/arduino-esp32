@@ -368,7 +368,7 @@ bool WiFiGenericClass::setHostname(const char * hostname)
  */
 void WiFiGenericClass::_eventCallback(arduino_event_t *event)
 {
-    if(!event) return;                                                       //Null would crash this function
+    if(!event) return; //Null would crash this function
 
     // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
     if(event->event_id == ARDUINO_EVENT_WIFI_SCAN_DONE) {

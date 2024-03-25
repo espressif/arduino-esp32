@@ -17,8 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _WIFICLIENT_H_
-#define _WIFICLIENT_H_
+#pragma once
 
 
 #include "Arduino.h"
@@ -112,4 +111,3 @@ public:
     using Print::write;
 };
 
-#endif /* _WIFICLIENT_H_ */

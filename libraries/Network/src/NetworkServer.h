@@ -16,8 +16,7 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#ifndef _WIFISERVER_H_
-#define _WIFISERVER_H_
+#pragma once
 
 #include "Arduino.h"
 #include "Server.h"
@@ -59,4 +58,3 @@ class NetworkServer {
     int setTimeout(uint32_t seconds);
 };
 
-#endif /* _WIFISERVER_H_ */

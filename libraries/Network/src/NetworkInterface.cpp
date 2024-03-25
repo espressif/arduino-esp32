@@ -222,10 +222,10 @@ int NetworkInterface::waitStatusBits(int bits, uint32_t timeout_ms) const {
         return 0;
     }
     bits = xEventGroupWaitBits(
-        _interface_event_group,    // The event group being tested.
-        bits,  // The bits within the event group to wait for.
-        pdFALSE,         // bits should be cleared before returning.
-        pdTRUE,        // Don't wait for all bits, any bit will do.
+        _interface_event_group, // The event group being tested.
+        bits, // The bits within the event group to wait for.
+        pdFALSE, // bits should be cleared before returning.
+        pdTRUE, // Don't wait for all bits, any bit will do.
         timeout_ms / portTICK_PERIOD_MS ) & bits; // Wait a maximum of timeout_ms for any bit to be set.
     return bits;
 }
@@ -714,6 +714,5 @@ size_t NetworkInterface::printTo(Print & out) const {
         bytes += out.println();
     }
 
-    // bytes += out.println();
     return bytes;
 }

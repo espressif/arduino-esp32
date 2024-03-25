@@ -32,8 +32,8 @@
  * bjoern@cs.stanford.edu 12/30/2008
  */
 
-#ifndef _WIFIUDP_H_
-#define _WIFIUDP_H_
+#ifndef _NETWORKUDP_H_
+#define _NETWORKUDP_H_
 
 #include <Arduino.h>
 #include <Udp.h>
@@ -74,4 +74,4 @@ public:
   uint16_t remotePort();
 };
 
-#endif /* _WIFIUDP_H_ */
+#endif /* _NETWORKUDP_H_ */

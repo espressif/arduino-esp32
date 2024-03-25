@@ -337,7 +337,4 @@ size_t APClass::printDriverInfo(Print & out) const{
     return bytes;
 }
 
-
-
-
 #endif /* SOC_WIFI_SUPPORTED */

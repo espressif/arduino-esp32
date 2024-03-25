@@ -7,7 +7,6 @@
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
 #if SOC_WIFI_SUPPORTED
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
