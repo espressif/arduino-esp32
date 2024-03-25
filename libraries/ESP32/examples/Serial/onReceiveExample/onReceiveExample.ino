@@ -70,7 +70,7 @@ SemaphoreHandle_t uart_buffer_Mutex = NULL;
 // task created when onReceive() is used
 void UART0_RX_CB() {
   // take the mutex, waits forever until loop() finishes its processing
-  if (xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
+  if (uart_buffer_Mutex != NULL && xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
     uint32_t now = millis(); // tracks timeout
     while ((millis() - now) < communicationTimeout_ms) {
       if (UART0.available()) {
@@ -88,7 +88,10 @@ void UART0_RX_CB() {
 void setup() {
   // creates a mutex object to control access to uart_buffer
   uart_buffer_Mutex = xSemaphoreCreateMutex();
-
+  if(uart_buffer_Mutex == NULL) {
+     log_e("Error creating Mutex. Sketch will fail.");
+     delay(1000);
+  }
   UART0.begin(115200);
   UART0.onReceive(UART0_RX_CB);  // sets the callback function
   UART0.println("Send data to UART0 in order to activate the RX callback");
@@ -98,7 +101,7 @@ uint32_t counter = 0;
 void loop() {
   if (uart_buffer.length() > 0) {
     // signals that the onReceive function shall not change uart_buffer while processing
-    if (xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
+    if (uart_buffer_Mutex != NULL && xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
       // process the received data from UART0 - example, just print it beside a counter
       UART0.print("[");
       UART0.print(counter++);
