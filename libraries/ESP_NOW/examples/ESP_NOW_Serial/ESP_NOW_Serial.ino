@@ -30,15 +30,15 @@
 #define ESPNOW_WIFI_CHANNEL 1
 
 #if ESPNOW_WIFI_MODE_STATION // ESP-NOW using WiFi Station mode
-    #define ESPNOW_WIFI_IF   WIFI_IF_STA
-    #define GET_IF_MAC       WiFi.macAddress
+    #define ESPNOW_WIFI_MODE WIFI_STA         // WiFi Mode
+    #define ESPNOW_WIFI_IF   WIFI_IF_STA      // WiFi Interface
 
     // Set the MAC address of the device that will receive the data
     // For example: F6:12:FA:42:B6:E8
     const MacAddress peer_mac({0xF6, 0x12, 0xFA, 0x42, 0xB6, 0xE8});
 #else // ESP-NOW using WiFi AP mode
-    #define ESPNOW_WIFI_IF   WIFI_IF_AP
-    #define GET_IF_MAC       WiFi.softAPmacAddress
+    #define ESPNOW_WIFI_MODE WIFI_AP                // WiFi Mode
+    #define ESPNOW_WIFI_IF   WIFI_IF_AP             // WiFi Interface
 
     // Set the MAC address of the device that will receive the data
     // For example: F4:12:FA:40:64:4C
@@ -51,22 +51,15 @@ void setup() {
     Serial.begin(115200);
 
     Serial.print("WiFi Mode: ");
-
-    #if ESPNOW_WIFI_MODE_STATION
-    Serial.println("STA");
-    WiFi.mode(WIFI_STA);
-    // ToDo: Set the channel using WiFi.setChannel() when using Station mode
-    esp_wifi_set_channel(ESPNOW_WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
-    #else
-    Serial.println("AP");
-    WiFi.softAP(WiFi.getHostname(), NULL, ESPNOW_WIFI_CHANNEL, 1);
-    #endif
+    Serial.println(ESPNOW_WIFI_MODE == WIFI_AP ? "AP" : "Station");
+    WiFi.mode(ESPNOW_WIFI_MODE);
 
     Serial.print("Channel: ");
     Serial.println(ESPNOW_WIFI_CHANNEL);
+    WiFi.setChannel(ESPNOW_WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
 
     Serial.print("MAC Address: ");
-    Serial.println(GET_IF_MAC());
+    Serial.println(ESPNOW_WIFI_MODE == WIFI_AP ? WiFi.softAPmacAddress() : WiFi.macAddress());
 
     // Start the ESP-NOW communication
     Serial.println("ESP-NOW communication starting...");
