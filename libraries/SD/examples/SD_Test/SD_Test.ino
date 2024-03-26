@@ -214,9 +214,10 @@ void setup(){
 
 #ifdef REASSIGN_PINS
     SPI.begin(sck, miso, mosi, cs);
-#endif
-    //if(!SD.begin(cs)){ //Change to this function to manually change CS pin
+    if(!SD.begin(cs)){
+#else
     if(!SD.begin()){
+#endif
         Serial.println("Card Mount Failed");
         return;
     }
