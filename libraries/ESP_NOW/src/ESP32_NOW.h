@@ -3,7 +3,6 @@
 #include "esp_wifi_types.h"
 #include "Print.h"
 #include "esp_now.h"
-#include "MacAddress.h"
 
 class ESP_NOW_Peer {
 private:
@@ -38,13 +37,13 @@ public:
   operator bool() const;
 
   //must be implemented by the upper class
-  virtual void _onReceive(const uint8_t * data, size_t len) = 0;
+  virtual void _onReceive(const uint8_t * data, size_t len, bool broadcast) = 0;
   virtual void _onSent(bool success) = 0;
 };
 
 class ESP_NOW_Class : public Print {
 public:
-  const MacAddress BROADCAST_ADDR = MacAddress(0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
+  const uint8_t BROADCAST_ADDR[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
   ESP_NOW_Class();
   ~ESP_NOW_Class();

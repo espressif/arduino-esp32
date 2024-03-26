@@ -39,7 +39,7 @@ public:
     size_t write(const uint8_t *buffer, size_t size){ return write(buffer, size, 1000); }
     size_t write(uint8_t data){ return write(&data, 1); }
     //ESP_NOW_Peer
-    void _onReceive(const uint8_t * data, size_t len);
+    void _onReceive(const uint8_t * data, size_t len, bool broadcast);
     void _onSent(bool success);
 };
 

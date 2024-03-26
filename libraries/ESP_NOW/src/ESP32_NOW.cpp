@@ -104,7 +104,8 @@ static esp_err_t _esp_now_modify_peer(const uint8_t *mac_addr, uint8_t channel, 
 }
 
 static void _esp_now_rx_cb(const esp_now_recv_info_t *info, const uint8_t *data, int len){
-    log_v(MACSTR", data lenght : %d", MAC2STR(info->src_addr), len);
+    bool broadcast = memcmp(info->des_addr, ESP_NOW.BROADCAST_ADDR, ESP_NOW_ETH_ALEN) == 0;
+    log_v("%s from " MACSTR ", data lenght : %u", broadcast ? "Broadcast" : "Unicast", MAC2STR(info->src_addr), len);
     log_buf_v(data, len);
     if(!esp_now_is_peer_exist(info->src_addr) && new_cb != NULL){
         log_v("Calling new_cb, peer not found.");
@@ -114,7 +115,7 @@ static void _esp_now_rx_cb(const esp_now_recv_info_t *info, const uint8_t *data,
     //find the peer and call it's callback
     for(uint8_t i=0; i<ESP_NOW_MAX_TOTAL_PEER_NUM; i++){
         if(_esp_now_peers[i] != NULL && memcmp(info->src_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0){
-            _esp_now_peers[i]->_onReceive(data, len);
+            _esp_now_peers[i]->_onReceive(data, len, broadcast);
             return;
         }
     }
