@@ -296,6 +296,16 @@ TU_ATTR_ALWAYS_INLINE static inline uint32_t pcd_get_ep_rx_cnt(USB_TypeDef * USB
 {
 #ifdef FSDEV_BUS_32BIT
   (void) USBx;
+  /* WA: few cycles for RX PMA descriptor to update, otherwise doesn't return the correct value.
+     Note: required for G0, U5, H5 etc.
+  This workaround is ported from stm32h5xx_hal_pcd.h and fixes the issue when calling this function fast enough.
+  Reproduced with GCC ast optimization(O2/O3) and stm32h573i_dk with an high frequency.
+  Observed on Windows 10 where tud_task() is scheduled by interrupt handler.
+  */
+  volatile uint32_t count = 10; // defined as PCD_RX_PMA_CNT in stm32 hal_driver
+  while (count > 0U) {
+    count--;
+  }
   return (pma32[2*bEpIdx + 1] & 0x03FF0000) >> 16;
 #else
   __I uint16_t *regPtr = pcd_ep_rx_cnt_ptr(USBx, bEpIdx);

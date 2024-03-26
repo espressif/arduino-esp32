@@ -5,29 +5,24 @@
 #include <inttypes.h>
 
 // union to simplify access to the 16 bit data
-typedef union sc16_u
-{
-    struct
-    {
+typedef union sc16_u {
+    struct {
         int16_t re;
         int16_t im;
     };
     uint32_t data;
-}sc16_t;
+} sc16_t;
 
-typedef union fc32_u
-{
-    struct
-    {
+typedef union fc32_u {
+    struct {
         float re;
         float im;
     };
     uint64_t data;
-}fc32_t;
+} fc32_t;
 
-typedef struct image2d_s
-{
-    void* data; // could be int8_t, unt8_t, int16_t, unt16_t, float
+typedef struct image2d_s {
+    void *data; // could be int8_t, unt8_t, int16_t, unt16_t, float
     int step_x; // step of elements by X
     int step_y; // step of elements by Y, usually is 1
     int stride_x; // stride width: size of the elements in X axis * by step_x + padding

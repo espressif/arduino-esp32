@@ -19,7 +19,7 @@ extern "C"
 /**@{*/
 /**
  * @brief   add a constant and an array with padding (add a constant and a sub-matrix)
- * 
+ *
  * The function adds a constant and an array defined as a sub-matrix with padding
  * out[row * ptr_step_out + col * step_out] = input[row * ptr_step_in + col * step_in] + C;
  * The implementation uses ANSI C and could be compiled and run on any platform

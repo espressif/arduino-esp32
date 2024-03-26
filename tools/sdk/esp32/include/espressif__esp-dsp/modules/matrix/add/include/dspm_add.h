@@ -21,11 +21,11 @@ extern "C"
 /**@{*/
 /**
  * @brief   add two arrays with paddings (add two sub-matrices)
- * 
+ *
  * The function adds two arrays defined as sub-matrices with paddings
  * out[row * ptr_step_out + col * step_out] = in1[row * ptr_step_in1 + col * step1] + in2[row * ptr_step_in2 + col * step2];
  * The implementation use ANSI C and could be compiled and run on any platform
- * 
+ *
  * @param[in]  input1: input array 1
  * @param[in]  input2: input array 2
  * @param[out] output: output array

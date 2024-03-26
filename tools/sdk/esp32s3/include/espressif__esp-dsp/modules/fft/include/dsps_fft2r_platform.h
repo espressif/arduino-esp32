@@ -12,7 +12,7 @@
 
 #define dsps_fft2r_fc32_ae32_enabled 1
 
-#endif // 
+#endif //
 
 #if ((XCHAL_HAVE_LOOPS == 1) && (XCHAL_HAVE_MAC16 == 1))
 

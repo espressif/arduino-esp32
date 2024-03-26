@@ -50,11 +50,9 @@ enum {
 //--------------------------------------------------------------------+
 
 typedef struct {
-  #if CFG_TUSB_DEBUG >= CFG_TUH_LOG_LEVEL
   char const* name;
-  #endif
-
-  void (* const init       )(void);
+  bool (* const init       )(void);
+  bool (* const deinit     )(void);
   bool (* const open       )(uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
   bool (* const set_config )(uint8_t dev_addr, uint8_t itf_num);
   bool (* const xfer_cb    )(uint8_t dev_addr, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);

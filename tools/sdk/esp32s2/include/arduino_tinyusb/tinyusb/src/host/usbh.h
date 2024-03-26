@@ -109,7 +109,11 @@ bool tuh_configure(uint8_t rhport, uint32_t cfg_id, const void* cfg_param);
 // Init host stack
 bool tuh_init(uint8_t rhport);
 
+// Deinit host stack on rhport
+bool tuh_deinit(uint8_t rhport);
+
 // Check if host stack is already initialized with any roothub ports
+// To check if an rhport is initialized, use tuh_rhport_is_active()
 bool tuh_inited(void);
 
 // Task function should be called in main/rtos loop, extended version of tuh_task()

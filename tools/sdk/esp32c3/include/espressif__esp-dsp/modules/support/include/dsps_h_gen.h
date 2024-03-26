@@ -23,8 +23,8 @@ extern "C"
 #endif
 
 /**
- * @brief   Heviside function 
- * 
+ * @brief   Heviside function
+ *
  * The Heviside function.
  * output[i]=0, if i=[0..pos)
  * output[i]=1, if i=[pos..N)

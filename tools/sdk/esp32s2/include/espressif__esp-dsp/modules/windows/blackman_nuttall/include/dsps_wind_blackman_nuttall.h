@@ -23,7 +23,7 @@ extern "C"
 
 /**
  * @brief   Blackman-Nuttall window
- * 
+ *
  * The function generates Blackman-Nuttall window.
  *
  * @param window: buffer to store window array.

@@ -24,7 +24,7 @@ extern "C"
 
 /**
  * @brief   SNR
- * 
+ *
  * The function calculates signal to noise ration in case if signal is sine tone.
  * The function makes FFT of the input, then search a spectrum maximum, and then calculated
  * SNR as sum of all harmonics to the maximum value.

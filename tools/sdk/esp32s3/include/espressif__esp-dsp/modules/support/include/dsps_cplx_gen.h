@@ -28,7 +28,7 @@ typedef enum output_data_type {
 
 /**
  * @brief Data struct of the complex signal generator
- * 
+ *
  * This structure is used by a complex generator internally. A user should access this structure only in case of
  * extensions for the DSP Library.
  * All the fields of this structure are initialized by the dsps_cplx_gen_init(...) function.
@@ -45,7 +45,7 @@ typedef struct cplx_sig_s {
 
 /**
  * @brief Initialize strucure for complex generator
- * 
+ *
  * Function initializes a structure for either 16-bit fixed point, or 32-bit floating point complex generator using LUT table.
  * cplx_gen_free(...) must be called, once the generator is not needed anymore to free dynamically allocated memory
  *
@@ -95,7 +95,7 @@ float dsps_cplx_gen_freq_get(cplx_sig_t *cplx_gen);
 
 /**
  * @brief function sets the phase of the complex generator
- * 
+ *
  * set function can be used after the cplx_gen structure was initialized by the dsps_cplx_gen_init(...) function
  *
  * @param cplx_gen: pointer to the complex signal generator structure
@@ -122,7 +122,7 @@ float dsps_cplx_gen_phase_get(cplx_sig_t *cplx_gen);
 
 /**
  * @brief function sets the output frequency and the phase of the complex generator
- * 
+ *
  * set function can be used after the cplx_gen structure was initialized by the dsps_cplx_gen_init(...) function
  *
  * @param cplx_gen: pointer to the complex signal generator structure
@@ -139,7 +139,7 @@ esp_err_t dsps_cplx_gen_set(cplx_sig_t *cplx_gen, float freq, float phase);
 
 /**
  * @brief function frees dynamically allocated memory, which was allocated in the init function
- * 
+ *
  * free function must be called after the dsps_cplx_gen_init(...) is called, once the complex generator is not
  * needed anymore
  *
@@ -150,7 +150,7 @@ void cplx_gen_free(cplx_sig_t *cplx_gen);
 
 /**
  * @brief The function generates a complex signal
- * 
+ *
  * the generated complex signal is in the form of two harmonics signals in either 16-bit signed fixed point
  * or 32-bit floating point
  *
@@ -160,7 +160,7 @@ void cplx_gen_free(cplx_sig_t *cplx_gen);
  *
  * dsps_cplx_gen_ansi() - The implementation uses ANSI C and could be compiled and run on any platform
  * dsps_cplx_gen_ae32() - Is targetted for Xtensa cores
- * 
+ *
  * @param cplx_gen: pointer to the generator structure
  * @param output: output array (length of len*2), data type is void so both (S16_FIXED, F32_FLOAT) types could be used
  * @param len: length of the output signal

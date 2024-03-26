@@ -23,7 +23,7 @@ extern "C"
 
 /**
  * @brief   Blackman window
- * 
+ *
  * The function generates Blackman window for plpha = 0.16.
  *
  * @param window: buffer to store window array.

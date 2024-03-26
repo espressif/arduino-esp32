@@ -165,57 +165,57 @@ esp_err_t dspm_mult_ex_f32_aes3(const float *A, const float *B, float *C, int m,
 #if CONFIG_DSP_OPTIMIZED
 
 
-    #if (dspm_mult_s16_aes3_enabled == 1)
-        #define dspm_mult_s16 dspm_mult_s16_aes3
-    #elif (dspm_mult_s16_ae32_enabled == 1)
-        #define dspm_mult_s16 dspm_mult_s16_ae32
-    #else
-        #define dspm_mult_s16 dspm_mult_s16_ansi
-    #endif
+#if (dspm_mult_s16_aes3_enabled == 1)
+#define dspm_mult_s16 dspm_mult_s16_aes3
+#elif (dspm_mult_s16_ae32_enabled == 1)
+#define dspm_mult_s16 dspm_mult_s16_ae32
+#else
+#define dspm_mult_s16 dspm_mult_s16_ansi
+#endif
 
-    #if (dspm_mult_f32_aes3_enabled == 1)
-        #define dspm_mult_f32 dspm_mult_f32_aes3
-        #define dspm_mult_ex_f32 dspm_mult_ex_f32_aes3
-    #elif (dspm_mult_f32_ae32_enabled == 1)
-        #define dspm_mult_f32 dspm_mult_f32_ae32
-        #define dspm_mult_ex_f32 dspm_mult_ex_f32_ae32
-    #else
-        #define dspm_mult_f32 dspm_mult_f32_ansi
-        #define dspm_mult_ex_f32 dspm_mult_ex_f32_ansi
-    #endif
+#if (dspm_mult_f32_aes3_enabled == 1)
+#define dspm_mult_f32 dspm_mult_f32_aes3
+#define dspm_mult_ex_f32 dspm_mult_ex_f32_aes3
+#elif (dspm_mult_f32_ae32_enabled == 1)
+#define dspm_mult_f32 dspm_mult_f32_ae32
+#define dspm_mult_ex_f32 dspm_mult_ex_f32_ae32
+#else
+#define dspm_mult_f32 dspm_mult_f32_ansi
+#define dspm_mult_ex_f32 dspm_mult_ex_f32_ansi
+#endif
 
-    #if (dspm_mult_3x3x1_f32_ae32_enabled == 1)
-        #define dspm_mult_3x3x1_f32 dspm_mult_3x3x1_f32_ae32
-    #else
-        #define dspm_mult_3x3x1_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 3, 3, 1)
-    #endif
-    #if (dspm_mult_3x3x3_f32_ae32_enabled == 1)
-        #define dspm_mult_3x3x3_f32(A,B,C) dspm_mult_3x3x3_f32_ae32(A,B,C)
-    #else
-        #define dspm_mult_3x3x3_f32(A,B,C) dspm_mult_f32_ansi(A,B,B,3,3,3);
-    #endif
-    #if (dspm_mult_4x4x1_f32_ae32_enabled == 1)
-    #define dspm_mult_4x4x1_f32(A,B,C) dspm_mult_4x4x1_f32_ae32(A,B,C)
-    #else
-    #define dspm_mult_4x4x1_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 4, 4, 1)
-    #endif
+#if (dspm_mult_3x3x1_f32_ae32_enabled == 1)
+#define dspm_mult_3x3x1_f32 dspm_mult_3x3x1_f32_ae32
+#else
+#define dspm_mult_3x3x1_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 3, 3, 1)
+#endif
+#if (dspm_mult_3x3x3_f32_ae32_enabled == 1)
+#define dspm_mult_3x3x3_f32(A,B,C) dspm_mult_3x3x3_f32_ae32(A,B,C)
+#else
+#define dspm_mult_3x3x3_f32(A,B,C) dspm_mult_f32_ansi(A,B,B,3,3,3);
+#endif
+#if (dspm_mult_4x4x1_f32_ae32_enabled == 1)
+#define dspm_mult_4x4x1_f32(A,B,C) dspm_mult_4x4x1_f32_ae32(A,B,C)
+#else
+#define dspm_mult_4x4x1_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 4, 4, 1)
+#endif
 
-    #if (dspm_mult_f32_aes3_enabled == 1)
-    #define dspm_mult_4x4x4_f32(A,B,C) dspm_mult_f32_aes3(A,B,C, 4, 4, 4)
-    #elif (dspm_mult_4x4x4_f32_ae32_enabled == 1)
-    #define dspm_mult_4x4x4_f32 dspm_mult_4x4x4_f32_ae32
-    #else
-    #define dspm_mult_4x4x4_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 4, 4, 4)
-    #endif
+#if (dspm_mult_f32_aes3_enabled == 1)
+#define dspm_mult_4x4x4_f32(A,B,C) dspm_mult_f32_aes3(A,B,C, 4, 4, 4)
+#elif (dspm_mult_4x4x4_f32_ae32_enabled == 1)
+#define dspm_mult_4x4x4_f32 dspm_mult_4x4x4_f32_ae32
+#else
+#define dspm_mult_4x4x4_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 4, 4, 4)
+#endif
 
 #else
-    #define dspm_mult_s16 dspm_mult_s16_ansi
-    #define dspm_mult_f32 dspm_mult_f32_ansi
-    #define dspm_mult_3x3x1_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 3, 3, 1)
-    #define dsps_sub_f32 dsps_sub_f32_ansi
-    #define dsps_add_f32 dsps_add_f32_ansi
-    #define dspm_mult_4x4x4_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 4, 4, 4)
-    #define dspm_mult_ex_f32 dspm_mult_ex_f32_ansi
+#define dspm_mult_s16 dspm_mult_s16_ansi
+#define dspm_mult_f32 dspm_mult_f32_ansi
+#define dspm_mult_3x3x1_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 3, 3, 1)
+#define dsps_sub_f32 dsps_sub_f32_ansi
+#define dsps_add_f32 dsps_add_f32_ansi
+#define dspm_mult_4x4x4_f32(A,B,C) dspm_mult_f32_ansi(A,B,C, 4, 4, 4)
+#define dspm_mult_ex_f32 dspm_mult_ex_f32_ansi
 #endif // CONFIG_DSP_OPTIMIZED
 
 

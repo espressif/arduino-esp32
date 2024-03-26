@@ -23,7 +23,7 @@ extern "C"
 
 /**
  * @brief   Nuttall window
- * 
+ *
  * The function generates Nuttall window.
  *
  * @param window: buffer to store window array.

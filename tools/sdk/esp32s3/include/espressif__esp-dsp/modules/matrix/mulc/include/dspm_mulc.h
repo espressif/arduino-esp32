@@ -17,7 +17,7 @@ extern "C"
 #endif
 
 /**@{*/
-/** 
+/**
  * @brief   multiply a constant and an array with padding
  *
  * The function multiplies a constant and an array defined as s sub-matrix with padding

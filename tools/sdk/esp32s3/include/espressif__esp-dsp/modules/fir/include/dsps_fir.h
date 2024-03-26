@@ -49,7 +49,7 @@ typedef struct fir_f32_s {
  * extensions for the DSP Library.
  * All fields of this structure are initialized by the dsps_fir_init_s16(...) function.
  */
-typedef struct fir_s16_s{
+typedef struct fir_s16_s {
     int16_t    *coeffs;         /*!< Pointer to the coefficient buffer.*/
     int16_t    *delay;          /*!< Pointer to the delay line buffer.*/
     int16_t     coeffs_len;     /*!< FIR filter coefficients amount.*/
@@ -60,7 +60,7 @@ typedef struct fir_s16_s{
     int32_t    *rounding_buff;  /*!< Rounding buffer for the purposes of esp32s3 ee.ld.accx.ip assembly instruction */
     int32_t     rounding_val;   /*!< Rounding value*/
     int16_t     free_status;    /*!< Indicator for dsps_fird_s16_aes3_free() function*/
-}fir_s16_t;
+} fir_s16_t;
 
 /**
  * @brief   initialize structure for 32 bit FIR filter
@@ -204,8 +204,8 @@ esp_err_t dsps_fird_s16_aexx_free(fir_s16_t *fir);
 /**
  * @brief   support arrays freeing function
  *
- * Function frees the delay line arrays, if it was allocated by the init functions. 
- * 
+ * Function frees the delay line arrays, if it was allocated by the init functions.
+ *
  * @param fir: pointer to fir filter structure, that must be initialized before
  *
  * @return
@@ -228,7 +228,7 @@ esp_err_t dsps_fir_f32_free(fir_f32_t *fir);
  * @return
  *      - ESP_OK on success
  */
-esp_err_t dsps_16_array_rev(int16_t *arr, int16_t len); 
+esp_err_t dsps_16_array_rev(int16_t *arr, int16_t len);
 /**@}*/
 
 #ifdef __cplusplus
@@ -238,37 +238,37 @@ esp_err_t dsps_16_array_rev(int16_t *arr, int16_t len);
 
 #if CONFIG_DSP_OPTIMIZED
 
-    #if (dsps_fir_f32_ae32_enabled == 1)
-    #define dsps_fir_f32 dsps_fir_f32_ae32
-    #elif (dsps_fir_f32_aes3_enabled == 1)
-    #define dsps_fir_f32 dsps_fir_f32_aes3
-    #else
-    #define dsps_fir_f32 dsps_fir_f32_ansi
-    #endif
+#if (dsps_fir_f32_ae32_enabled == 1)
+#define dsps_fir_f32 dsps_fir_f32_ae32
+#elif (dsps_fir_f32_aes3_enabled == 1)
+#define dsps_fir_f32 dsps_fir_f32_aes3
+#else
+#define dsps_fir_f32 dsps_fir_f32_ansi
+#endif
 
-    #if (dsps_fird_f32_aes3_enabled == 1)
-    #define dsps_fird_f32 dsps_fird_f32_aes3
-    #elif (dsps_fird_f32_ae32_enabled == 1)
-    #define dsps_fird_f32 dsps_fird_f32_ae32
-    #else
-    #define dsps_fird_f32 dsps_fird_f32_ansi
-    #endif
+#if (dsps_fird_f32_aes3_enabled == 1)
+#define dsps_fird_f32 dsps_fird_f32_aes3
+#elif (dsps_fird_f32_ae32_enabled == 1)
+#define dsps_fird_f32 dsps_fird_f32_ae32
+#else
+#define dsps_fird_f32 dsps_fird_f32_ansi
+#endif
 
-    #if (dsps_fird_s16_ae32_enabled == 1)
-    #define dsps_fird_s16 dsps_fird_s16_ae32
+#if (dsps_fird_s16_ae32_enabled == 1)
+#define dsps_fird_s16 dsps_fird_s16_ae32
 
-    #elif (dsps_fird_s16_aes3_enabled == 1)
-    #define dsps_fird_s16 dsps_fird_s16_aes3
+#elif (dsps_fird_s16_aes3_enabled == 1)
+#define dsps_fird_s16 dsps_fird_s16_aes3
 
-    #else
-    #define dsps_fird_s16 dsps_fird_s16_ansi
-    #endif
+#else
+#define dsps_fird_s16 dsps_fird_s16_ansi
+#endif
 
 #else // CONFIG_DSP_OPTIMIZED
 
-    #define dsps_fir_f32 dsps_fir_f32_ansi
-    #define dsps_fird_f32 dsps_fird_f32_ansi
-    #define dsps_fird_s16 dsps_fird_s16_ansi
+#define dsps_fir_f32 dsps_fir_f32_ansi
+#define dsps_fird_f32 dsps_fird_f32_ansi
+#define dsps_fird_s16 dsps_fird_s16_ansi
 
 #endif // CONFIG_DSP_OPTIMIZED
 

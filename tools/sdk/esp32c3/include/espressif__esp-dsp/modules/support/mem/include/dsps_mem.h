@@ -40,7 +40,7 @@ void *dsps_memcpy_aes3(void *arr_dest, const void *arr_src, size_t arr_len);
  * @param set_val: byte value, the dest array will be set with
  * @param set_size: count of bytes, the dest array will be set with
  *
- * @return: pointer to dest array 
+ * @return: pointer to dest array
  */
 void *dsps_memset_aes3(void *arr_dest, uint8_t set_val, size_t set_size);
 
@@ -50,18 +50,18 @@ void *dsps_memset_aes3(void *arr_dest, uint8_t set_val, size_t set_size);
 
 #if CONFIG_DSP_OPTIMIZED
 
-    #if dsps_mem_aes3_enbled
-    #define dsps_memcpy dsps_memcpy_aes3
-    #define dsps_memset dsps_memset_aes3
-    #else
-    #define dsps_memcpy memcpy
-    #define dsps_memset memset
-    #endif
+#if dsps_mem_aes3_enbled
+#define dsps_memcpy dsps_memcpy_aes3
+#define dsps_memset dsps_memset_aes3
+#else
+#define dsps_memcpy memcpy
+#define dsps_memset memset
+#endif
 
 #else // CONFIG_DSP_OPTIMIZED
 
-    #define dsps_memcpy memcpy
-    #define dsps_memset memset
+#define dsps_memcpy memcpy
+#define dsps_memset memset
 
 #endif // CONFIG_DSP_OPTIMIZED
 #endif // _dsps_mem_H_

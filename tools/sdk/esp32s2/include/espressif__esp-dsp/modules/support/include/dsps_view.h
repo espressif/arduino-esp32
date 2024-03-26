@@ -25,7 +25,7 @@ extern "C"
 /**@{*/
 /**
  * @brief   plot view
- * 
+ *
  * Generic view function.
  * This function takes input samples and show then in console view as a plot.
  * The main purpose to give and draft debug information to the DSP developer.
@@ -41,11 +41,11 @@ extern "C"
  */
 void dsps_view(const float *data, int32_t len, int width, int height, float min, float max, char view_char);
 void dsps_view_s16(const int16_t *data, int32_t len, int width, int height, float min, float max, char view_char);
-/**@}*/ 
+/**@}*/
 
 /**
  * @brief   spectrum view
- * 
+ *
  * The view function to show spectrum values  in 64x10 screen.
  * The function based on dsps_view.
  *

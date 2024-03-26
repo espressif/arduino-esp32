@@ -42,7 +42,7 @@ public:
 
     /**
      * @brief Rectangular area
-     * 
+     *
      * The Rect is used for creating regions of interest ROI(s). The ROI is then used as a sub-matrix
      */
     struct Rect {
@@ -53,17 +53,17 @@ public:
 
         /**
         * @brief Constructor with initialization to 0
-        * 
+        *
         * @param[in] x: x starting position (start col) of the rectangular area
         * @param[in] y: y starting position (start row) of the rectangular area
         * @param[in] width: width (number of cols) of the rectangular area
         * @param[in] height: height (number of rows) of the rectangular area
-        */ 
+        */
         Rect(int x = 0, int y = 0, int width = 0, int height = 0);
 
         /**
         * @brief Resize rect area
-        * 
+        *
         * @param[in] x: x starting position (start col) of the new rectangular area
         * @param[in] y: y starting position (start row) of the new rectangular area
         * @param[in] width: width (number of cols) of the new rectangular area
@@ -105,53 +105,53 @@ public:
      */
     Mat();
     virtual ~Mat();
-    
+
     /**
      * @brief Make copy of matrix.
-     * 
+     *
      * if src matrix is sub matrix, only the header is copied
      * if src matrix is matrix, header and data are copied
-     * 
+     *
      * @param[in] src: source matrix
      */
     Mat(const Mat &src);
 
     /**
      * @brief Create a subset of matrix as ROI (Region of Interest)
-     * 
+     *
      * @param[in] startRow: start row position of source matrix to get the subset matrix from
      * @param[in] startCol: start col position of source matrix to get the subset matrix from
      * @param[in] roiRows: size of row elements of source matrix to get the subset matrix from
      * @param[in] roiCols: size of col elements of source matrix to get the subset matrix from
-     * 
+     *
      * @return
-     *      - result matrix size roiRows x roiCols 
+     *      - result matrix size roiRows x roiCols
      */
     Mat getROI(int startRow, int startCol, int roiRows, int roiCols);
 
     /**
      * @brief Create a subset of matrix as ROI (Region of Interest)
-     * 
+     *
      * @param[in] startRow: start row position of source matrix to get the subset matrix from
      * @param[in] startCol: start col position of source matrix to get the subset matrix from
      * @param[in] roiRows: size of row elements of source matrix to get the subset matrix from
      * @param[in] roiCols: size of col elements of source matrix to get the subset matrix from
      * @param[in] stride: number of cols + padding between 2 rows
-     * 
+     *
      * @return
-     *      - result matrix size roiRows x roiCols 
+     *      - result matrix size roiRows x roiCols
      */
     Mat getROI(int startRow, int startCol, int roiRows, int roiCols, int stride);
 
     /**
      * @brief Create a subset of matrix as ROI (Region of Interest)
-     * 
+     *
      * @param[in] rect: rectangular area of interest
-     * 
+     *
      * @return
-     *      - result matrix size rect.rectRows x rect.rectCols 
+     *      - result matrix size rect.rectRows x rect.rectCols
      */
-    Mat getROI(const Mat::Rect& rect);
+    Mat getROI(const Mat::Rect &rect);
 
     /**
      * Make copy of matrix.
@@ -163,7 +163,7 @@ public:
 
     /**
      * @brief copy header of matrix
-     * 
+     *
      * Make a shallow copy of matrix (no data copy)
      * @param[in] src: source matrix
      */
@@ -171,7 +171,7 @@ public:
 
     /**
      * @brief print matrix header
-     * 
+     *
      * Print all information about matrix to the terminal
      * @param[in] src: source matrix
      */
@@ -183,9 +183,9 @@ public:
      * @param[in] row_size: size of wor elements of source matrix to copy
      * @param[in] col_start: start col position of source matrix to copy
      * @param[in] col_size: size of wor elements of source matrix to copy
-     * 
+     *
      * @return
-     *      - result matrix size row_size x col_size 
+     *      - result matrix size row_size x col_size
      */
     Mat Get(int row_start, int row_size, int col_start, int col_size);
 
@@ -193,9 +193,9 @@ public:
      * Make copy of matrix.
      * @param[in] rect: rectangular area of interest
      * @return
-     *      - result matrix size row_size x col_size 
+     *      - result matrix size row_size x col_size
      */
-    Mat Get(const Mat::Rect& rect);
+    Mat Get(const Mat::Rect &rect);
 
     /**
      * Copy operator
@@ -512,10 +512,10 @@ public:
      * @return
      *      - determinant value
      */
-	float det(int n);
+    float det(int n);
 private:
-	Mat cofactor(int row, int col, int n);
-	Mat adjoint();
+    Mat cofactor(int row, int col, int n);
+    Mat adjoint();
 
     void allocate(); // Allocate buffer
     Mat expHelper(const Mat &m, int num);

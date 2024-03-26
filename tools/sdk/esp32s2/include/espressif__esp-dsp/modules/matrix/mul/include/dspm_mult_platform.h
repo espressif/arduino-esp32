@@ -28,6 +28,6 @@
 #if CONFIG_IDF_TARGET_ESP32S3
 #define dspm_mult_f32_aes3_enabled 1
 #define dspm_mult_s16_aes3_enabled 1
-#endif 
+#endif
 
 #endif // _dspm_mult_platform_H_

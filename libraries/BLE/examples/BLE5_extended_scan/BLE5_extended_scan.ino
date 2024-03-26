@@ -19,7 +19,7 @@ uint32_t scanTime = 100; //In 10ms (1000ms)
 BLEScan* pBLEScan;
 
 class MyBLEExtAdvertisingCallbacks: public BLEExtAdvertisingCallbacks {
-    void onResult(esp_ble_gap_ext_adv_reprot_t report) {
+    void onResult(esp_ble_gap_ext_adv_report_t report) {
       if(report.event_type & ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY){
         // here we can receive regular advertising data from BLE4.x devices
         Serial.println("BLE4.2");

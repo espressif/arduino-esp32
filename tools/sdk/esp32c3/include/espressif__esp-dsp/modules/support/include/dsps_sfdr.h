@@ -25,7 +25,7 @@ extern "C"
 
 /**
  * @brief   SFDR
- * 
+ *
  * The function calculates Spurious-Free Dynamic Range.
  * The function makes FFT of the input, then search a spectrum maximum, and then compare
  * maximum value with all others. Result calculated as minimum value.

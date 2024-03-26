@@ -17,14 +17,14 @@
 #if ((XCHAL_HAVE_FP == 1) && (XCHAL_HAVE_LOOPS == 1))
 
 #if CONFIG_IDF_TARGET_ESP32S3
-    #define dsps_cplx_gen_aes3_enbled  1
-    #define dsps_cplx_gen_ae32_enbled  0
+#define dsps_cplx_gen_aes3_enbled  1
+#define dsps_cplx_gen_ae32_enbled  0
 
 #elif CONFIG_IDF_TARGET_ESP32
-    #define dsps_cplx_gen_ae32_enbled  1
-    #define dsps_cplx_gen_aes3_enbled  0
+#define dsps_cplx_gen_ae32_enbled  1
+#define dsps_cplx_gen_aes3_enbled  0
 
 #endif // CONFIG_IDF_TARGET_ESP32S3 CONFIG_IDF_TARGET_ESP32
-#endif // 
+#endif //
 #endif // __XTENSA__
 #endif // _dsps_cplx_gen_platform_H_

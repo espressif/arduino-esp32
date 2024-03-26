@@ -60,7 +60,7 @@ typedef struct {
   tu_fifo_t ff;
 
   // mutex: read if ep rx, write if e tx
-  OSAL_MUTEX_DEF(ff_mutex);
+  OSAL_MUTEX_DEF(ff_mutexdef);
 
 }tu_edpt_stream_t;
 
@@ -87,15 +87,17 @@ bool tu_edpt_release(tu_edpt_state_t* ep_state, osal_mutex_t mutex);
 // Endpoint Stream
 //--------------------------------------------------------------------+
 
-// Init an stream, should only be called once
+// Init an endpoint stream
 bool tu_edpt_stream_init(tu_edpt_stream_t* s, bool is_host, bool is_tx, bool overwritable,
                          void* ff_buf, uint16_t ff_bufsize, uint8_t* ep_buf, uint16_t ep_bufsize);
+
+// Deinit an endpoint stream
+bool tu_edpt_stream_deinit(tu_edpt_stream_t* s);
 
 // Open an stream for an endpoint
 // hwid is either device address (host mode) or rhport (device mode)
 TU_ATTR_ALWAYS_INLINE static inline
-void tu_edpt_stream_open(tu_edpt_stream_t* s, uint8_t hwid, tusb_desc_endpoint_t const *desc_ep)
-{
+void tu_edpt_stream_open(tu_edpt_stream_t* s, uint8_t hwid, tusb_desc_endpoint_t const *desc_ep) {
   tu_fifo_clear(&s->ff);
   s->hwid = hwid;
   s->ep_addr = desc_ep->bEndpointAddress;
@@ -103,16 +105,14 @@ void tu_edpt_stream_open(tu_edpt_stream_t* s, uint8_t hwid, tusb_desc_endpoint_t
 }
 
 TU_ATTR_ALWAYS_INLINE static inline
-void tu_edpt_stream_close(tu_edpt_stream_t* s)
-{
+void tu_edpt_stream_close(tu_edpt_stream_t* s) {
   s->hwid = 0;
   s->ep_addr = 0;
 }
 
 // Clear fifo
 TU_ATTR_ALWAYS_INLINE static inline
-bool tu_edpt_stream_clear(tu_edpt_stream_t* s)
-{
+bool tu_edpt_stream_clear(tu_edpt_stream_t* s) {
   return tu_fifo_clear(&s->ff);
 }
 
@@ -131,8 +131,7 @@ bool tu_edpt_stream_write_zlp_if_needed(tu_edpt_stream_t* s, uint32_t last_xferr
 
 // Get the number of bytes available for writing
 TU_ATTR_ALWAYS_INLINE static inline
-uint32_t tu_edpt_stream_write_available(tu_edpt_stream_t* s)
-{
+uint32_t tu_edpt_stream_write_available(tu_edpt_stream_t* s) {
   return (uint32_t) tu_fifo_remaining(&s->ff);
 }
 

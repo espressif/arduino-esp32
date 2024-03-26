@@ -59,7 +59,7 @@ int dsp_power_of_two(int x);
  *
  * @param n_regs: number of registers to be logged at once
  * @param ...: register codes 0, 1, 2, 3, 4, 5, 6, 7, 'a', 's'
- * 
+ *
  * @return ESP_OK
  *
  */
