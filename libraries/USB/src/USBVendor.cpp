@@ -212,7 +212,9 @@ size_t USBVendor::read(uint8_t *buffer, size_t size){
     return count;
 }
 
-void USBVendor::flush(void){}
+void USBVendor::flush(void){
+    tud_vendor_n_write_flush(itf);
+}
 
 #endif /* CONFIG_TINYUSB_VENDOR_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */

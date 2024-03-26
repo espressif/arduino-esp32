@@ -18,6 +18,10 @@ void loop(){}
 FirmwareMSC MSC_Update;
 #endif
 
+#if !ARDUINO_USB_CDC_ON_BOOT
+USBCDC USBSerial;
+#endif
+
 USBHID HID;
 USBHIDKeyboard Keyboard;
 USBHIDMouse Mouse;

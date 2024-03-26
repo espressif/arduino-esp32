@@ -75,9 +75,9 @@ jobs:
             - --warnings="all"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
+          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-${{ matrix.target }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
   report-to-file:
@@ -98,9 +98,10 @@ jobs:
 
       # This step is needed to get the size data produced by the compile jobs
       - name: Download sketches reports artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}
+          pattern: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-*
+          merge-multiple: true
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
       - name: Report results
@@ -129,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
        - name: Upload
-         uses: actions/upload-artifact@v2
+         uses: actions/upload-artifact@v4
          with:
            name: Event File
            path: ${{github.event_path}}
