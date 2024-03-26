@@ -17,8 +17,10 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef WiFiProv_h
-#define WiFiProv_h
+#pragma once
+
+#include "soc/soc_caps.h"
+#if SOC_WIFI_SUPPORTED
 
 #include "WiFi.h"
 #include "wifi_provisioning/manager.h"
@@ -54,4 +56,4 @@ class WiFiProvClass
 
 extern WiFiProvClass WiFiProv;
 
-#endif
+#endif /* SOC_WIFI_SUPPORTED */

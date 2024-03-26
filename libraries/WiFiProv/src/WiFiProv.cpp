@@ -17,6 +17,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
     
 */
+#include "soc/soc_caps.h"
+#if SOC_WIFI_SUPPORTED
 
 #include <stdio.h>
 #include <stdint.h>
@@ -191,3 +193,6 @@ void  WiFiProvClass :: printQR(const char *name, const char *pop, const char *tr
 }
 
 WiFiProvClass WiFiProv;
+
+#endif /* SOC_WIFI_SUPPORTED */
+

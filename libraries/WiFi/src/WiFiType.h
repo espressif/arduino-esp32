@@ -19,9 +19,10 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#pragma once
 
-#ifndef ESP32WIFITYPE_H_
-#define ESP32WIFITYPE_H_
+#include "soc/soc_caps.h"
+#if SOC_WIFI_SUPPORTED
 
 #include "esp_wifi_types.h"
 
@@ -51,4 +52,4 @@ typedef enum {
     WL_DISCONNECTED     = 6
 } wl_status_t;
 
-#endif /* ESP32WIFITYPE_H_ */
+#endif /* SOC_WIFI_SUPPORTED */
