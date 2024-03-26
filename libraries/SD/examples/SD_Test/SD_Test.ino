@@ -22,17 +22,17 @@
  * Note:  The SPI pins can be manually configured by using `SPI.begin(sck, miso, mosi, cs).`
  *        Alternatively, you can change the CS pin and use the other default settings by using `SD.begin(cs)`.
  *
- * +--------------+---------+-------+----------+----------+----------+
- * | SPI Pin Name | ESP8266 | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
- * +==============+=========+=======+==========+==========+==========+
- * | CS (SS)      | GPIO15  | GPIO5 | GPIO5    | GPIO13   | GPIO13   |
- * +--------------+---------+-------+----------+----------+----------+
- * | DI (MOSI)    | GPIO13  | GPIO23| GPIO24   | GPIO14   | GPIO14   |
- * +--------------+---------+-------+----------+----------+----------+
- * | DO (MISO)    | GPIO12  | GPIO19| GPIO25   | GPIO15   | GPIO15   |
- * +--------------+---------+-------+----------+----------+----------+
- * | SCK (SCLK)   | GPIO14  | GPIO18| GPIO19   | GPIO16   | GPIO16   |
- * +--------------+---------+-------+----------+----------+----------+
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+
+ * | SPI Pin Name | ESP8266 | ESP32 | ESP32-S2 | ESP32-S3 | ESP32-C3 | ESP32-C6 | ESP32-H2 |
+ * +==============+=========+=======+==========+==========+==========+==========+==========+
+ * | CS (SS)      | GPIO15  | GPIO5 | GPIO34   | GPIO10   | GPIO7    | GPIO18   | GPIO0    |
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+
+ * | DI (MOSI)    | GPIO13  | GPIO23| GPIO35   | GPIO11   | GPIO6    | GPIO19   | GPIO25   |
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+
+ * | DO (MISO)    | GPIO12  | GPIO19| GPIO37   | GPIO13   | GPIO5    | GPIO20   | GPIO11   |
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+
+ * | SCK (SCLK)   | GPIO14  | GPIO18| GPIO36   | GPIO12   | GPIO4    | GPIO21   | GPIO10   |
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+
  *
  * For more info see file README.md in this library or on URL:
  * https://github.com/espressif/arduino-esp32/tree/master/libraries/SD
