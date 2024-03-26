@@ -13,10 +13,14 @@ To ensure compatibility with both versions of the ESP32 Arduino core, developers
 
     .. code-block:: cpp
 
+      #ifdef ESP_ARDUINO_VERSION_MAJOR
       #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
-        // Code for ESP32 Arduino core version 3.x
+          // Code for version 3.x
       #else
-        // Code for ESP32 Arduino core version 2.x
+          // Code for version 2.x
+      #endif
+      #else
+          // Code for version 1.x
       #endif
 
 Version Print
