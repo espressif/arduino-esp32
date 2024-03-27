@@ -23,7 +23,7 @@
   edit the page by going to http://esp32fs.local/edit
 */
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 

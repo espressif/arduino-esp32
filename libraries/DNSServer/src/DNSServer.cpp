@@ -20,9 +20,13 @@ DNSServer::DNSServer(const String &domainName) : _port(DNS_DEFAULT_PORT), _ttl(h
 
 bool DNSServer::start(){
   if (_resolvedIP.operator uint32_t() == 0){    // no address is set, try to obtain AP interface's IP
+#if SOC_WIFI_SUPPORTED
     if (WiFi.getMode() & WIFI_AP){
       _resolvedIP = WiFi.softAPIP();
-    } else return false;              // won't run if WiFi is not in AP mode
+      return true;
+    }
+#endif
+    return false;              // won't run if WiFi is not in AP mode
   } 
 
   _udp.close();

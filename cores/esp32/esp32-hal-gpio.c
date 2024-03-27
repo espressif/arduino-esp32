@@ -151,11 +151,16 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
     }
 }
 
+#ifdef RGB_BUILTIN
+uint8_t RGB_BUILTIN_storage = 0;
+#endif
+
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 {
     #ifdef RGB_BUILTIN
         if(pin == RGB_BUILTIN){
             //use RMT to set all channels on/off
+            RGB_BUILTIN_storage=val;
             const uint8_t comm_val = val != 0 ? RGB_BRIGHTNESS : 0;
             neopixelWrite(RGB_BUILTIN, comm_val, comm_val, comm_val);
             return;
@@ -170,6 +175,12 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val)
 
 extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin)
 {
+    #ifdef RGB_BUILTIN
+        if(pin == RGB_BUILTIN){
+            return RGB_BUILTIN_storage;
+        }
+    #endif
+
     if(perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL){
         return gpio_get_level((gpio_num_t)pin);
     }

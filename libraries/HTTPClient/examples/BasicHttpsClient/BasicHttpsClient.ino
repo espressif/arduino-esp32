@@ -12,7 +12,7 @@
 
 #include <HTTPClient.h>
 
-#include <WiFiClientSecure.h>
+#include <NetworkClientSecure.h>
 
 // This is GandiStandardSSLCA2.pem, the root Certificate Authority that signed 
 // the server certifcate for the demo server https://jigsaw.w3.org in this
@@ -53,7 +53,7 @@ const char* rootCACertificate = \
 "BT02Vf6Dsuimrdfp5gJ0iHRc2jTbkNJtUQoj1iM=\n" \
 "-----END CERTIFICATE-----\n";
 
-// Not sure if WiFiClientSecure checks the validity date of the certificate. 
+// Not sure if NetworkClientSecure checks the validity date of the certificate. 
 // Setting clock just to be sure...
 void setClock() {
   configTime(0, 0, "pool.ntp.org");
@@ -100,12 +100,12 @@ void setup() {
 }
 
 void loop() {
-  WiFiClientSecure *client = new WiFiClientSecure;
+  NetworkClientSecure *client = new NetworkClientSecure;
   if(client) {
     client -> setCACert(rootCACertificate);
 
     {
-      // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is 
+      // Add a scoping block for HTTPClient https to make sure it is destroyed before NetworkClientSecure *client is 
       HTTPClient https;
   
       Serial.print("[HTTPS] begin...\n");
