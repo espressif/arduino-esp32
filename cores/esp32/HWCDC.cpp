@@ -367,7 +367,6 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
     if(xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS){
         return 0;
     }
-    size_t max_size = xRingbufferGetMaxItemSize(tx_ring_buf);
     size_t space = xRingbufferGetCurFreeSize(tx_ring_buf);
     size_t to_send = size, so_far = 0;
 
@@ -375,7 +374,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
         space = size;
     }
     // Non-Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-    if(xRingbufferSend(tx_ring_buf, (void*) (buffer), space, 0) != pdTRUE){
+    if(space > 0 && xRingbufferSend(tx_ring_buf, (void*) (buffer), space, 0) != pdTRUE){
         size = 0;
     } else {
         to_send -= space;
@@ -385,16 +384,17 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
         if(connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
  
         while(to_send){
-            if(max_size > to_send){
-                max_size = to_send;
+            space = xRingbufferGetCurFreeSize(tx_ring_buf);
+            if(space > to_send){
+                space = to_send;
             }
             // Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-            if(xRingbufferSend(tx_ring_buf, (void*) (buffer+so_far), max_size, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
+            if(xRingbufferSend(tx_ring_buf, (void*) (buffer+so_far), space, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE){
                 size = so_far;
                 break;
             }
-            so_far += max_size;
-            to_send -= max_size;
+            so_far += space;
+            to_send -= space;
             // Now trigger the ISR to read data from the ring buffer.
             usb_serial_jtag_ll_txfifo_flush();
             if(connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
