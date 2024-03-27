@@ -32,18 +32,14 @@
 #if ESPNOW_WIFI_MODE_STATION // ESP-NOW using WiFi Station mode
     #define ESPNOW_WIFI_MODE WIFI_STA         // WiFi Mode
     #define ESPNOW_WIFI_IF   WIFI_IF_STA      // WiFi Interface
-
-    // Set the MAC address of the device that will receive the data
-    // For example: F6:12:FA:42:B6:E8
-    const MacAddress peer_mac({0xF6, 0x12, 0xFA, 0x42, 0xB6, 0xE8});
 #else // ESP-NOW using WiFi AP mode
     #define ESPNOW_WIFI_MODE WIFI_AP                // WiFi Mode
     #define ESPNOW_WIFI_IF   WIFI_IF_AP             // WiFi Interface
-
-    // Set the MAC address of the device that will receive the data
-    // For example: F4:12:FA:40:64:4C
-    const MacAddress peer_mac({0xF4, 0x12, 0xFA, 0x40, 0x64, 0x4C});
 #endif
+
+// Set the MAC address of the device that will receive the data
+// For example: F4:12:FA:40:64:4C
+const MacAddress peer_mac({0xF4, 0x12, 0xFA, 0x40, 0x64, 0x4C});
 
 ESP_NOW_Serial_Class NowSerial(peer_mac, ESPNOW_WIFI_CHANNEL, ESPNOW_WIFI_IF);
 
