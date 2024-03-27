@@ -57,7 +57,7 @@ void setup()
     Serial.println(WiFi.localIP());
 }
 
-void readResponse(WiFiClient *client){
+void readResponse(NetworkClient *client){
   unsigned long timeout = millis();
   while(client->available() == 0){
     if(millis() - timeout > 5000){
@@ -77,7 +77,7 @@ void readResponse(WiFiClient *client){
 }
 
 void loop(){
-  WiFiClient client;
+  NetworkClient client;
   String footer = String(" HTTP/1.1\r\n") + "Host: " + String(host) + "\r\n" + "Connection: close\r\n\r\n";
 
   // WRITE --------------------------------------------------------------------------------------------

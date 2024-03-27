@@ -54,6 +54,7 @@ set(CORE_SRCS
   cores/esp32/IPAddress.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
+  cores/esp32/MacAddress.cpp
   cores/esp32/main.cpp
   cores/esp32/MD5Builder.cpp
   cores/esp32/Print.cpp
@@ -92,6 +93,7 @@ set(ARDUINO_ALL_LIBRARIES
   Insights
   LittleFS
   NetBIOS
+  Network
   Preferences
   RainMaker
   SD_MMC
@@ -103,7 +105,7 @@ set(ARDUINO_ALL_LIBRARIES
   Update
   USB
   WebServer
-  WiFiClientSecure
+  NetworkClientSecure
   WiFi
   WiFiProv
   Wire
@@ -197,20 +199,27 @@ set(ARDUINO_LIBRARY_WebServer_SRCS
   libraries/WebServer/src/Parsing.cpp
   libraries/WebServer/src/detail/mimetable.cpp)
 
-set(ARDUINO_LIBRARY_WiFiClientSecure_SRCS
-  libraries/WiFiClientSecure/src/ssl_client.cpp
-  libraries/WiFiClientSecure/src/WiFiClientSecure.cpp)
+set(ARDUINO_LIBRARY_NetworkClientSecure_SRCS
+  libraries/NetworkClientSecure/src/ssl_client.cpp
+  libraries/NetworkClientSecure/src/NetworkClientSecure.cpp)
+
+set(ARDUINO_LIBRARY_Network_SRCS
+  libraries/Network/src/NetworkInterface.cpp
+  libraries/Network/src/NetworkEvents.cpp
+  libraries/Network/src/NetworkManager.cpp
+  libraries/Network/src/NetworkClient.cpp
+  libraries/Network/src/NetworkServer.cpp
+  libraries/Network/src/NetworkUdp.cpp)
 
 set(ARDUINO_LIBRARY_WiFi_SRCS
   libraries/WiFi/src/WiFiAP.cpp
-  libraries/WiFi/src/WiFiClient.cpp
   libraries/WiFi/src/WiFi.cpp
   libraries/WiFi/src/WiFiGeneric.cpp
   libraries/WiFi/src/WiFiMulti.cpp
   libraries/WiFi/src/WiFiScan.cpp
-  libraries/WiFi/src/WiFiServer.cpp
   libraries/WiFi/src/WiFiSTA.cpp
-  libraries/WiFi/src/WiFiUdp.cpp)
+  libraries/WiFi/src/STA.cpp
+  libraries/WiFi/src/AP.cpp)
 
 set(ARDUINO_LIBRARY_WiFiProv_SRCS libraries/WiFiProv/src/WiFiProv.cpp)
 

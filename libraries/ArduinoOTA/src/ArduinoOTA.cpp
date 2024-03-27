@@ -2,8 +2,8 @@
 #define LWIP_OPEN_SRC
 #endif
 #include <functional>
-#include <WiFiUdp.h>
 #include "ArduinoOTA.h"
+#include "NetworkClient.h"
 #include "ESPmDNS.h"
 #include "MD5Builder.h"
 #include "Update.h"
@@ -128,7 +128,7 @@ void ArduinoOTAClass::begin() {
     if (!_hostname.length()) {
         char tmp[20];
         uint8_t mac[6];
-        WiFi.macAddress(mac);
+        Network.macAddress(mac);
         sprintf(tmp, "esp32-%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         _hostname = tmp;
     }
@@ -266,7 +266,7 @@ void ArduinoOTAClass::_runUpdate() {
         _progress_callback(0, _size);
     }
 
-    WiFiClient client;
+    NetworkClient client;
     if (!client.connect(_ota_ip, _ota_port)) {
         if (_error_callback) {
             _error_callback(OTA_CONNECT_ERROR);

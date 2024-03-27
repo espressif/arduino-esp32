@@ -92,7 +92,7 @@ void WiFiEvent(WiFiEvent_t event){
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
             Serial.print("STA IPv6: ");
-            Serial.println(WiFi.localIPv6());
+            Serial.println(WiFi.linkLocalIPv6());
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:
             Serial.print("STA IPv4: ");

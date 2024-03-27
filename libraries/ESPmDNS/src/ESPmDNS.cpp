@@ -39,10 +39,9 @@ License (MIT license):
 #endif
 
 #include "ESPmDNS.h"
-#include "WiFi.h"
 #include <functional>
-#include "esp_wifi.h"
-#include "esp_wifi_types.h"
+#include "esp_mac.h"
+#include "soc/soc_caps.h"
 
 // Add quotes around defined value
 #ifdef __IN_ECLIPSE__
@@ -51,6 +50,25 @@ License (MIT license):
 #else
 #define STR(tok) tok
 #endif
+
+// static void addInterface(NetworkInterface * iface){
+// #if defined(CONFIG_MDNS_ADD_CUSTOM_NETIF) && !defined(CONFIG_MDNS_PREDEF_NETIF_STA) && !defined(CONFIG_MDNS_PREDEF_NETIF_ETH)
+//     /* Demonstration of adding a custom netif to mdns service, but we're adding the default example one,
+//      * so we must disable all predefined interfaces (PREDEF_NETIF_STA, AP and ETH) first
+//      */
+//     ESP_ERROR_CHECK(mdns_register_netif(iface->netif()));
+//     /* It is not enough to just register the interface, we have to enable is manually.
+//      * This is typically performed in "GOT_IP" event handler, but we call it here directly
+//      * since the `EXAMPLE_INTERFACE` netif is connected already, to keep the example simple.
+//      */
+//     ESP_ERROR_CHECK(mdns_netif_action(iface->netif(), MDNS_EVENT_ENABLE_IP4 | MDNS_EVENT_ENABLE_IP6));
+//     ESP_ERROR_CHECK(mdns_netif_action(iface->netif(), MDNS_EVENT_ANNOUNCE_IP4 | MDNS_EVENT_ANNOUNCE_IP6));
+
+// #if defined(CONFIG_MDNS_RESPOND_REVERSE_QUERIES)
+//     ESP_ERROR_CHECK(mdns_netif_action(iface->netif(), MDNS_EVENT_IP4_REVERSE_LOOKUP | MDNS_EVENT_IP6_REVERSE_LOOKUP));
+// #endif
+// #endif // CONFIG_MDNS_ADD_CUSTOM_NETIF
+// }
 
 // static void _on_sys_event(arduino_event_t *event){
 //     mdns_handle_system_event(NULL, event);
@@ -115,7 +133,25 @@ void MDNSResponder::disableArduino(){
 void MDNSResponder::enableWorkstation(esp_interface_t interface){
     char winstance[21+_hostname.length()];
     uint8_t mac[6];
-    esp_wifi_get_mac((wifi_interface_t)interface, mac);
+
+    esp_mac_type_t mtype = ESP_MAC_ETH;
+#if SOC_WIFI_SUPPORTED
+    switch(interface){
+        case ESP_IF_WIFI_STA:
+            mtype = ESP_MAC_WIFI_STA;
+            break;
+        case ESP_IF_WIFI_AP:
+            mtype = ESP_MAC_WIFI_SOFTAP;
+            break;
+        default:
+            break;
+    }
+#endif
+    if(esp_read_mac(mac, mtype) != ESP_OK){
+        log_e("Failed to read the MAC address");
+        return;
+    }
+
     sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
     if(mdns_service_add(NULL, "_workstation", "_tcp", 9, NULL, 0)) {

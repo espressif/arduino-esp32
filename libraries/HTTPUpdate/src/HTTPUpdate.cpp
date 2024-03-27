@@ -25,6 +25,9 @@
 
 #include "HTTPUpdate.h"
 #include <StreamString.h>
+#if SOC_WIFI_SUPPORTED
+#include "WiFi.h"
+#endif
 
 #include <esp_partition.h>
 #include <esp_ota_ops.h>                // get running partition
@@ -51,7 +54,7 @@ HTTPUpdate::~HTTPUpdate(void)
 {
 }
 
-HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
+HTTPUpdateResult HTTPUpdate::update(NetworkClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, url))
@@ -66,7 +69,7 @@ HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& 
     return handleUpdate(httpClient, currentVersion, true, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(WiFiClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
+HTTPUpdateResult HTTPUpdate::updateSpiffs(NetworkClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
     if(!http.begin(client, url))
@@ -82,7 +85,7 @@ HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient,
     return handleUpdate(httpClient, currentVersion, false, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::update(WiFiClient& client, const String& host, uint16_t port, const String& uri,
+HTTPUpdateResult HTTPUpdate::update(NetworkClient& client, const String& host, uint16_t port, const String& uri,
         const String& currentVersion, HTTPUpdateRequestCB requestCB)
 {
     HTTPClient http;
@@ -194,8 +197,11 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     http.setFollowRedirects(_followRedirects);
     http.setUserAgent("ESP32-http-Update");
     http.addHeader("Cache-Control", "no-cache");
+    http.addHeader("x-ESP32-BASE-MAC", Network.macAddress());
+#if SOC_WIFI_SUPPORTED
     http.addHeader("x-ESP32-STA-MAC", WiFi.macAddress());
     http.addHeader("x-ESP32-AP-MAC", WiFi.softAPmacAddress());
+#endif
     http.addHeader("x-ESP32-free-space", String(ESP.getFreeSketchSpace()));
     http.addHeader("x-ESP32-sketch-size", String(ESP.getSketchSize()));
     String sketchMD5 = ESP.getSketchMD5();
@@ -309,10 +315,10 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
                     _cbStart();
                 }
 
-                WiFiClient * tcp = http.getStreamPtr();
+                NetworkClient * tcp = http.getStreamPtr();
 
-// To do?                WiFiUDP::stopAll();
-// To do?                WiFiClient::stopAllExcept(tcp);
+// To do?                NetworkUDP::stopAll();
+// To do?                NetworkClient::stopAllExcept(tcp);
 
                 delay(100);
 
