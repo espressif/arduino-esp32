@@ -170,7 +170,7 @@ size_t ESP_NOW_Serial_Class::tryToSend(){
     size_t sent = send(queued_buff, queued_size);
     if(!sent){
         //_onSent will not be called anymore
-        //sucks that we lose the data here
+        //the data is lost in this case
         vRingbufferReturnItem(tx_ring_buf, queued_buff);
         queued_buff = NULL;
         xSemaphoreGive(tx_sem);
