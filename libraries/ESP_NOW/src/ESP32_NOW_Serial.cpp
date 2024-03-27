@@ -144,7 +144,6 @@ void ESP_NOW_Serial_Class::_onReceive(const uint8_t * data, size_t len, bool bro
     if(rx_queue == NULL){
         return;
     }
-    log_v("%s from " MACSTR ", data lenght : %u", broadcast ? "Broadcast" : "Unicast", MAC2STR(addr()), len);
     for(uint32_t i=0; i<len; i++){
         if(!xQueueSend(rx_queue, data+i, 0)){
             log_e("RX Overflow!");
