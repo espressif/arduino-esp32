@@ -22,6 +22,7 @@
 
  */
 #include "WiFi.h"
+#if SOC_WIFI_SUPPORTED
 
 extern "C" {
 #include <stdint.h>
@@ -99,3 +100,5 @@ bool WiFiClass::isProvEnabled()
 }
 
 WiFiClass WiFi;
+
+#endif /* SOC_WIFI_SUPPORTED */
