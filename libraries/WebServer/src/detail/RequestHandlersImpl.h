@@ -11,7 +11,7 @@ using namespace mime;
 class FunctionRequestHandler : public RequestHandler {
 public:
     FunctionRequestHandler(WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn, const Uri &uri, HTTPMethod method)
-    : _fn(fn)
+        : _fn(fn)
     , _ufn(ufn)
     , _uri(uri.clone())
     , _method(method)
@@ -36,6 +36,12 @@ public:
 
         return true;
     }
+    bool canRaw(String requestUri) override {
+        if (!_ufn || _method == HTTP_GET)
+            return false;
+
+        return true;
+    }
 
     bool handle(WebServer& server, HTTPMethod requestMethod, String requestUri) override {
         (void) server;
@@ -53,6 +59,13 @@ public:
             _ufn();
     }
 
+    void raw(WebServer &server, String requestUri, HTTPRaw &raw) override {
+        (void)server;
+        (void)raw;
+        if (canRaw(requestUri))
+            _ufn();
+    }
+
 protected:
     WebServer::THandlerFunction _fn;
     WebServer::THandlerFunction _ufn;
@@ -63,7 +76,7 @@ protected:
 class StaticRequestHandler : public RequestHandler {
 public:
     StaticRequestHandler(FS& fs, const char* path, const char* uri, const char* cache_header)
-    : _fs(fs)
+        : _fs(fs)
     , _uri(uri)
     , _path(path)
     , _cache_header(cache_header)
@@ -95,8 +108,8 @@ public:
         if (!_isFile) {
             // Base URI doesn't point to a file.
             // If a directory is requested, look for index file.
-            if (requestUri.endsWith("/")) 
-              requestUri += "index.htm";
+            if (requestUri.endsWith("/"))
+                requestUri += "index.htm";
 
             // Append whatever follows this URI in request to get the file path.
             path += requestUri.substring(_baseUriLength);

@@ -41,7 +41,7 @@ static const char Content_Length[] = "Content-Length";
 
 
 WebServer::WebServer(IPAddress addr, int port)
-: _corsEnabled(false)
+    : _corsEnabled(false)
 , _server(addr, port)
 , _currentMethod(HTTP_ANY)
 , _currentVersion(0)
@@ -65,7 +65,7 @@ WebServer::WebServer(IPAddress addr, int port)
 }
 
 WebServer::WebServer(int port)
-: _corsEnabled(false)
+    : _corsEnabled(false)
 , _server(port)
 , _currentMethod(HTTP_ANY)
 , _currentVersion(0)
@@ -187,22 +187,22 @@ bool WebServer::authenticate(const char * username, const char * password){
       log_v("Hash of user:realm:pass=%s", _H1.c_str());
       String _H2 = "";
       if(_currentMethod == HTTP_GET){
-          _H2 = md5str(String(F("GET:")) + _uri);
+        _H2 = md5str(String(F("GET:")) + _uri);
       }else if(_currentMethod == HTTP_POST){
-          _H2 = md5str(String(F("POST:")) + _uri);
+        _H2 = md5str(String(F("POST:")) + _uri);
       }else if(_currentMethod == HTTP_PUT){
-          _H2 = md5str(String(F("PUT:")) + _uri);
+        _H2 = md5str(String(F("PUT:")) + _uri);
       }else if(_currentMethod == HTTP_DELETE){
-          _H2 = md5str(String(F("DELETE:")) + _uri);
+        _H2 = md5str(String(F("DELETE:")) + _uri);
       }else{
-          _H2 = md5str(String(F("GET:")) + _uri);
+        _H2 = md5str(String(F("GET:")) + _uri);
       }
       log_v("Hash of GET:uri=%s", _H2.c_str());
       String _responsecheck = "";
       if(authReq.indexOf(FPSTR(qop_auth)) != -1 || authReq.indexOf(FPSTR(qop_auth_quoted)) != -1) {
-          _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _nc + ':' + _cnonce + F(":auth:") + _H2);
+        _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _nc + ':' + _cnonce + F(":auth:") + _H2);
       } else {
-          _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _H2);
+        _responsecheck = md5str(_H1 + ':' + _nonce + ':' + _H2);
       }
       log_v("The Proper response=%s", _responsecheck.c_str());
       if(_response == _responsecheck){
@@ -254,22 +254,22 @@ void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunctio
 }
 
 void WebServer::addHandler(RequestHandler* handler) {
-    _addRequestHandler(handler);
+  _addRequestHandler(handler);
 }
 
 void WebServer::_addRequestHandler(RequestHandler* handler) {
-    if (!_lastHandler) {
-      _firstHandler = handler;
-      _lastHandler = handler;
-    }
-    else {
-      _lastHandler->next(handler);
-      _lastHandler = handler;
-    }
+  if (!_lastHandler) {
+    _firstHandler = handler;
+    _lastHandler = handler;
+  }
+  else {
+    _lastHandler->next(handler);
+    _lastHandler = handler;
+  }
 }
 
 void WebServer::serveStatic(const char* uri, FS& fs, const char* path, const char* cache_header) {
-    _addRequestHandler(new StaticRequestHandler(fs, path, uri, cache_header));
+  _addRequestHandler(new StaticRequestHandler(fs, path, uri, cache_header));
 }
 
 void WebServer::handleClient() {
@@ -306,12 +306,12 @@ void WebServer::handleClient() {
           _contentLength = CONTENT_LENGTH_NOT_SET;
           _handleRequest();
 
-// Fix for issue with Chrome based browsers: https://github.com/espressif/arduino-esp32/issues/3652
-//           if (_currentClient.connected()) {
-//             _currentStatus = HC_WAIT_CLOSE;
-//             _statusChange = millis();
-//             keepCurrentClient = true;
-//           }
+          // Fix for issue with Chrome based browsers: https://github.com/espressif/arduino-esp32/issues/3652
+          //           if (_currentClient.connected()) {
+          //             _currentStatus = HC_WAIT_CLOSE;
+          //             _statusChange = millis();
+          //             keepCurrentClient = true;
+          //           }
         }
       } else { // !_currentClient.available()
         if (millis() - _statusChange <= HTTP_MAX_DATA_WAIT) {
@@ -333,6 +333,7 @@ void WebServer::handleClient() {
     _currentClient = WiFiClient();
     _currentStatus = HC_NONE;
     _currentUpload.reset();
+    _currentRaw.reset();
   }
 
   if (callYield) {
@@ -366,7 +367,7 @@ void WebServer::sendHeader(const String& name, const String& value, bool first) 
 }
 
 void WebServer::setContentLength(const size_t contentLength) {
-    _contentLength = contentLength;
+  _contentLength = contentLength;
 }
 
 void WebServer::enableDelay(boolean value) {
@@ -382,51 +383,51 @@ void WebServer::enableCrossOrigin(boolean value) {
 }
 
 void WebServer::_prepareHeader(String& response, int code, const char* content_type, size_t contentLength) {
-    response = String(F("HTTP/1.")) + String(_currentVersion) + ' ';
-    response += String(code);
-    response += ' ';
-    response += _responseCodeToString(code);
-    response += "\r\n";
+  response = String(F("HTTP/1.")) + String(_currentVersion) + ' ';
+  response += String(code);
+  response += ' ';
+  response += _responseCodeToString(code);
+  response += "\r\n";
 
-    using namespace mime;
-    if (!content_type)
-        content_type = mimeTable[html].mimeType;
+  using namespace mime;
+  if (!content_type)
+    content_type = mimeTable[html].mimeType;
 
-    sendHeader(String(F("Content-Type")), String(FPSTR(content_type)), true);
-    if (_contentLength == CONTENT_LENGTH_NOT_SET) {
-        sendHeader(String(FPSTR(Content_Length)), String(contentLength));
-    } else if (_contentLength != CONTENT_LENGTH_UNKNOWN) {
-        sendHeader(String(FPSTR(Content_Length)), String(_contentLength));
-    } else if(_contentLength == CONTENT_LENGTH_UNKNOWN && _currentVersion){ //HTTP/1.1 or above client
-      //let's do chunked
-      _chunked = true;
-      sendHeader(String(F("Accept-Ranges")),String(F("none")));
-      sendHeader(String(F("Transfer-Encoding")),String(F("chunked")));
-    }
-    if (_corsEnabled) {
-        sendHeader(String(FPSTR("Access-Control-Allow-Origin")), String("*"));
-	sendHeader(String(FPSTR("Access-Control-Allow-Methods")), String("*"));
-	sendHeader(String(FPSTR("Access-Control-Allow-Headers")), String("*"));
-    }
-    sendHeader(String(F("Connection")), String(F("close")));
+  sendHeader(String(F("Content-Type")), String(FPSTR(content_type)), true);
+  if (_contentLength == CONTENT_LENGTH_NOT_SET) {
+    sendHeader(String(FPSTR(Content_Length)), String(contentLength));
+  } else if (_contentLength != CONTENT_LENGTH_UNKNOWN) {
+    sendHeader(String(FPSTR(Content_Length)), String(_contentLength));
+  } else if(_contentLength == CONTENT_LENGTH_UNKNOWN && _currentVersion){ //HTTP/1.1 or above client
+    //let's do chunked
+    _chunked = true;
+    sendHeader(String(F("Accept-Ranges")),String(F("none")));
+    sendHeader(String(F("Transfer-Encoding")),String(F("chunked")));
+  }
+  if (_corsEnabled) {
+    sendHeader(String(FPSTR("Access-Control-Allow-Origin")), String("*"));
+    sendHeader(String(FPSTR("Access-Control-Allow-Methods")), String("*"));
+    sendHeader(String(FPSTR("Access-Control-Allow-Headers")), String("*"));
+  }
+  sendHeader(String(F("Connection")), String(F("close")));
 
-    response += _responseHeaders;
-    response += "\r\n";
-    _responseHeaders = "";
+  response += _responseHeaders;
+  response += "\r\n";
+  _responseHeaders = "";
 }
 
 void WebServer::send(int code, const char* content_type, const String& content) {
-    String header;
-    // Can we asume the following?
-    //if(code == 200 && content.length() == 0 && _contentLength == CONTENT_LENGTH_NOT_SET)
-    //  _contentLength = CONTENT_LENGTH_UNKNOWN;
-    if (content.length() == 0) {
-        log_w("content length is zero");
-    }
-    _prepareHeader(header, code, content_type, content.length());
-    _currentClientWrite(header.c_str(), header.length());
-    if(content.length())
-      sendContent(content);
+  String header;
+  // Can we asume the following?
+  //if(code == 200 && content.length() == 0 && _contentLength == CONTENT_LENGTH_NOT_SET)
+  //  _contentLength = CONTENT_LENGTH_UNKNOWN;
+  if (content.length() == 0) {
+    log_w("content length is zero");
+  }
+  _prepareHeader(header, code, content_type, content.length());
+  _currentClientWrite(header.c_str(), header.length());
+  if(content.length())
+    sendContent(content);
 }
 
 void WebServer::send(int code, char* content_type, const String& content) {
@@ -439,35 +440,35 @@ void WebServer::send(int code, const String& content_type, const String& content
 
 void WebServer::send(int code, const char* content_type, const char* content)
 {
-    const String passStr = (String)content;
-    if (strlen(content) != passStr.length()) {
-       log_e("String cast failed.  Use send_P for long arrays");
-    }
-    send(code, content_type, passStr);
+  const String passStr = (String)content;
+  if (strlen(content) != passStr.length()) {
+    log_e("String cast failed.  Use send_P for long arrays");
+  }
+  send(code, content_type, passStr);
 }
 
 void WebServer::send_P(int code, PGM_P content_type, PGM_P content) {
-    size_t contentLength = 0;
+  size_t contentLength = 0;
 
-    if (content != NULL) {
-        contentLength = strlen_P(content);
-    }
+  if (content != NULL) {
+    contentLength = strlen_P(content);
+  }
 
-    String header;
-    char type[64];
-    memccpy_P((void*)type, (PGM_VOID_P)content_type, 0, sizeof(type));
-    _prepareHeader(header, code, (const char* )type, contentLength);
-    _currentClientWrite(header.c_str(), header.length());
-    sendContent_P(content);
+  String header;
+  char type[64];
+  memccpy_P((void*)type, (PGM_VOID_P)content_type, 0, sizeof(type));
+  _prepareHeader(header, code, (const char* )type, contentLength);
+  _currentClientWrite(header.c_str(), header.length());
+  sendContent_P(content);
 }
 
 void WebServer::send_P(int code, PGM_P content_type, PGM_P content, size_t contentLength) {
-    String header;
-    char type[64];
-    memccpy_P((void*)type, (PGM_VOID_P)content_type, 0, sizeof(type));
-    _prepareHeader(header, code, (const char* )type, contentLength);
-    sendContent(header);
-    sendContent_P(content, contentLength);
+  String header;
+  char type[64];
+  memccpy_P((void*)type, (PGM_VOID_P)content_type, 0, sizeof(type));
+  _prepareHeader(header, code, (const char* )type, contentLength);
+  sendContent(header);
+  sendContent_P(content, contentLength);
 }
 
 void WebServer::sendContent(const String& content) {
@@ -537,9 +538,9 @@ String WebServer::pathArg(unsigned int i) {
 
 String WebServer::arg(String name) {
   for (int j = 0; j < _postArgsLen; ++j) {
-	    if ( _postArgs[j].key == name )
-	      return _postArgs[j].value;
-	  }
+    if ( _postArgs[j].key == name )
+      return _postArgs[j].value;
+  }
   for (int i = 0; i < _currentArgCount; ++i) {
     if ( _currentArgs[i].key == name )
       return _currentArgs[i].value;
@@ -565,9 +566,9 @@ int WebServer::args() {
 
 bool WebServer::hasArg(String  name) {
   for (int j = 0; j < _postArgsLen; ++j) {
-	    if (_postArgs[j].key == name)
-	      return true;
-	  }
+    if (_postArgs[j].key == name)
+      return true;
+  }
   for (int i = 0; i < _currentArgCount; ++i) {
     if (_currentArgs[i].key == name)
       return true;
@@ -587,7 +588,7 @@ String WebServer::header(String name) {
 void WebServer::collectHeaders(const char* headerKeys[], const size_t headerKeysCount) {
   _headerKeysCount = headerKeysCount + 1;
   if (_currentHeaders)
-     delete[]_currentHeaders;
+    delete[]_currentHeaders;
   _currentHeaders = new RequestArgument[_headerKeysCount];
   _currentHeaders[0].key = FPSTR(AUTHORIZATION_HEADER);
   for (int i = 1; i < _headerKeysCount; i++){
@@ -666,46 +667,46 @@ void WebServer::_finalizeResponse() {
 
 String WebServer::_responseCodeToString(int code) {
   switch (code) {
-    case 100: return F("Continue");
-    case 101: return F("Switching Protocols");
-    case 200: return F("OK");
-    case 201: return F("Created");
-    case 202: return F("Accepted");
-    case 203: return F("Non-Authoritative Information");
-    case 204: return F("No Content");
-    case 205: return F("Reset Content");
-    case 206: return F("Partial Content");
-    case 300: return F("Multiple Choices");
-    case 301: return F("Moved Permanently");
-    case 302: return F("Found");
-    case 303: return F("See Other");
-    case 304: return F("Not Modified");
-    case 305: return F("Use Proxy");
-    case 307: return F("Temporary Redirect");
-    case 400: return F("Bad Request");
-    case 401: return F("Unauthorized");
-    case 402: return F("Payment Required");
-    case 403: return F("Forbidden");
-    case 404: return F("Not Found");
-    case 405: return F("Method Not Allowed");
-    case 406: return F("Not Acceptable");
-    case 407: return F("Proxy Authentication Required");
-    case 408: return F("Request Time-out");
-    case 409: return F("Conflict");
-    case 410: return F("Gone");
-    case 411: return F("Length Required");
-    case 412: return F("Precondition Failed");
-    case 413: return F("Request Entity Too Large");
-    case 414: return F("Request-URI Too Large");
-    case 415: return F("Unsupported Media Type");
-    case 416: return F("Requested range not satisfiable");
-    case 417: return F("Expectation Failed");
-    case 500: return F("Internal Server Error");
-    case 501: return F("Not Implemented");
-    case 502: return F("Bad Gateway");
-    case 503: return F("Service Unavailable");
-    case 504: return F("Gateway Time-out");
-    case 505: return F("HTTP Version not supported");
-    default:  return F("");
+  case 100: return F("Continue");
+  case 101: return F("Switching Protocols");
+  case 200: return F("OK");
+  case 201: return F("Created");
+  case 202: return F("Accepted");
+  case 203: return F("Non-Authoritative Information");
+  case 204: return F("No Content");
+  case 205: return F("Reset Content");
+  case 206: return F("Partial Content");
+  case 300: return F("Multiple Choices");
+  case 301: return F("Moved Permanently");
+  case 302: return F("Found");
+  case 303: return F("See Other");
+  case 304: return F("Not Modified");
+  case 305: return F("Use Proxy");
+  case 307: return F("Temporary Redirect");
+  case 400: return F("Bad Request");
+  case 401: return F("Unauthorized");
+  case 402: return F("Payment Required");
+  case 403: return F("Forbidden");
+  case 404: return F("Not Found");
+  case 405: return F("Method Not Allowed");
+  case 406: return F("Not Acceptable");
+  case 407: return F("Proxy Authentication Required");
+  case 408: return F("Request Time-out");
+  case 409: return F("Conflict");
+  case 410: return F("Gone");
+  case 411: return F("Length Required");
+  case 412: return F("Precondition Failed");
+  case 413: return F("Request Entity Too Large");
+  case 414: return F("Request-URI Too Large");
+  case 415: return F("Unsupported Media Type");
+  case 416: return F("Requested range not satisfiable");
+  case 417: return F("Expectation Failed");
+  case 500: return F("Internal Server Error");
+  case 501: return F("Not Implemented");
+  case 502: return F("Bad Gateway");
+  case 503: return F("Service Unavailable");
+  case 504: return F("Gateway Time-out");
+  case 505: return F("HTTP Version not supported");
+  default:  return F("");
   }
 }
