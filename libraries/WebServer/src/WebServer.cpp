@@ -333,6 +333,7 @@ void WebServer::handleClient() {
     _currentClient = WiFiClient();
     _currentStatus = HC_NONE;
     _currentUpload.reset();
+    _currentRaw.reset();
   }
 
   if (callYield) {

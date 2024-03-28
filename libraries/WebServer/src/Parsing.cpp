@@ -136,6 +136,7 @@ bool WebServer::_parseRequest(WiFiClient& client) {
     String headerName;
     String headerValue;
     bool isForm = false;
+    bool isRaw = false;
     bool isEncoded = false;
     //parse headers
     while(1){
@@ -158,6 +159,8 @@ bool WebServer::_parseRequest(WiFiClient& client) {
         using namespace mime;
         if (headerValue.startsWith(FPSTR(mimeTable[txt].mimeType))){
           isForm = false;
+        } else if (headerValue.startsWith(FPSTR(mimeTable[none].mimeType))){
+          isRaw = true;
         } else if (headerValue.startsWith(F("application/x-www-form-urlencoded"))){
           isForm = false;
           isEncoded = true;
@@ -173,7 +176,30 @@ bool WebServer::_parseRequest(WiFiClient& client) {
       }
     }
 
-    if (!isForm){
+    if (isRaw && _currentHandler && _currentHandler->canRaw(_currentUri)){
+      log_v("Parse raw");
+      _currentRaw.reset(new HTTPRaw());
+      _currentRaw->status = RAW_START;
+      _currentRaw->totalSize = 0;
+      _currentRaw->currentSize = 0;
+      log_v("Start Raw");
+      _currentHandler->raw(*this, _currentUri, *_currentRaw);
+      _currentRaw->status = RAW_WRITE;
+
+      while (_currentRaw->totalSize < _clientContentLength) {
+        _currentRaw->currentSize = client.readBytes(_currentRaw->buf, HTTP_RAW_BUFLEN);
+        _currentRaw->totalSize += _currentRaw->currentSize;
+        if (_currentRaw->currentSize == 0) {
+          _currentRaw->status = RAW_ABORTED;
+          _currentHandler->raw(*this, _currentUri, *_currentRaw);
+          return false;
+        }
+        _currentHandler->raw(*this, _currentUri, *_currentRaw);
+      }
+      _currentRaw->status = RAW_END;
+      _currentHandler->raw(*this, _currentUri, *_currentRaw);
+      log_v("Finish Raw");
+    } else if (!isForm) {
       size_t plainLength;
       char* plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
       if (plainLength < _clientContentLength) {
