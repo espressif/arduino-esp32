@@ -3,7 +3,7 @@
  *
  */
 #include <WiFi.h>
-#include <WiFiUdp.h>
+#include <NetworkUdp.h>
 
 // WiFi network name and password:
 const char * networkName = "your-ssid";
@@ -19,7 +19,7 @@ const int udpPort = 3333;
 boolean connected = false;
 
 //The udp library class
-WiFiUDP udp;
+NetworkUDP udp;
 
 void setup(){
   // Initilize hardware serial:

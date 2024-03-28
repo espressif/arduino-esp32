@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
-#include <WiFiUdp.h>
+#include <NetworkUdp.h>
 #include <ArduinoOTA.h>
 
 const char* ssid = "..........";
