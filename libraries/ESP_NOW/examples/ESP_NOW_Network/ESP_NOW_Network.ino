@@ -108,8 +108,7 @@ public:
     uint32_t priority;
     bool peer_is_master = false;
 
-    // Revert the lmk later
-    ESP_NOW_Network_Peer(const uint8_t *mac_addr, uint32_t priority = 0, const uint8_t *lmk = nullptr);
+    ESP_NOW_Network_Peer(const uint8_t *mac_addr, uint32_t priority = 0, const uint8_t *lmk = (const uint8_t *)ESPNOW_EXAMPLE_LMK);
     ~ESP_NOW_Network_Peer();
 
     bool begin();
