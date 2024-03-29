@@ -91,6 +91,10 @@ class STAClass: public NetworkInterface {
         wl_status_t _status;
 
         size_t printDriverInfo(Print & out) const;
+
+        friend class WiFiGenericClass;
+        bool onEnable();
+        bool onDisable();
 };
 
 // ----------------------------------------------------------------------------------------------

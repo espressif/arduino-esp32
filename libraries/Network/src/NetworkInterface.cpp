@@ -671,7 +671,10 @@ IPAddress NetworkInterface::globalIPv6() const
 
 size_t NetworkInterface::printTo(Print & out) const {
     size_t bytes = 0;
-    bytes += out.print(esp_netif_get_desc(_esp_netif));
+    const char * dscr = esp_netif_get_desc(_esp_netif);
+    if(dscr != NULL){
+        bytes += out.print(dscr);
+    }
     bytes += out.print(":");
     if(esp_netif_is_netif_up(_esp_netif)){
         bytes += out.print(" <UP");
