@@ -46,9 +46,7 @@ ESP_NOW_Peer_Class::ESP_NOW_Peer_Class(const uint8_t *mac_addr,
                                        const uint8_t *lmk) : ESP_NOW_Peer(mac_addr, channel, iface, lmk) {}
 
 // Destructor of the class
-ESP_NOW_Peer_Class::~ESP_NOW_Peer_Class() {
-    remove();
-}
+ESP_NOW_Peer_Class::~ESP_NOW_Peer_Class() {}
 
 // Function to register the master peer
 bool ESP_NOW_Peer_Class::add_peer() {
