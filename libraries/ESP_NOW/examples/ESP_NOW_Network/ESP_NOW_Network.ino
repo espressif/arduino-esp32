@@ -31,7 +31,6 @@
 
 #include <esp_mac.h> // For the MAC2STR and MACSTR macros
 
-#include <algorithm>
 #include <vector>
 
 /* Definitions */
@@ -82,6 +81,7 @@ typedef struct {
     uint32_t count;
     uint32_t priority;
     uint32_t data;
+    bool ready;
     char str[7];
 } __attribute__((packed)) esp_now_data_t;
 
@@ -89,7 +89,6 @@ typedef struct {
 
 uint32_t self_priority = 0;          // Priority of this device
 uint8_t current_peer_count = 0;      // Number of peers that have been found
-uint8_t check_count = 0;             // Counter to wait after all peers have been found
 bool device_is_master = false;       // Flag to indicate if this device is the master
 bool master_decided = false;         // Flag to indicate if the master has been decided
 uint32_t sent_msg_count = 0;         // Counter for the messages sent. Only starts counting after all peers have been found
@@ -107,6 +106,7 @@ class ESP_NOW_Network_Peer : public ESP_NOW_Peer {
 public:
     uint32_t priority;
     bool peer_is_master = false;
+    bool peer_ready = false;
 
     ESP_NOW_Network_Peer(const uint8_t *mac_addr, uint32_t priority = 0, const uint8_t *lmk = (const uint8_t *)ESPNOW_EXAMPLE_LMK);
     ~ESP_NOW_Network_Peer();
@@ -147,8 +147,14 @@ bool ESP_NOW_Network_Peer::send_message(const uint8_t *data, size_t len) {
 }
 
 void ESP_NOW_Network_Peer::_onReceive(const uint8_t *data, size_t len, bool broadcast) {
+    esp_now_data_t *msg = (esp_now_data_t *)data;
+
+    if (peer_ready == false && msg->ready == true) {
+        Serial.printf("Peer " MACSTR " reported ready\n", MAC2STR(addr()));
+        peer_ready = true;
+    }
+
     if (!broadcast) {
-        esp_now_data_t *msg = (esp_now_data_t *)data;
         recv_msg_count++;
         if (device_is_master) {
             Serial.printf("Received a message from peer " MACSTR "\n", MAC2STR(addr()));
@@ -212,6 +218,16 @@ uint32_t calc_average() {
     return avg;
 }
 
+// Function to check if all peers are ready
+bool check_all_peers_ready() {
+    for (auto &peer : peers) {
+        if (!peer->peer_ready) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /* Callbacks */
 
 // Callback called when a new peer is found
@@ -220,28 +236,23 @@ void register_new_peer(const esp_now_recv_info_t *info, const uint8_t *data, int
     int priority = msg->priority;
 
     if (priority == self_priority) {
-        Serial.println("ERROR! Device has the same priority as this device");
+        Serial.println("ERROR! Device has the same priority as this device. Unsupported behavior.");
         fail_reboot();
     }
 
     if (current_peer_count < ESPNOW_PEER_COUNT) {
         Serial.printf("New peer found: " MACSTR " with priority %d\n", MAC2STR(info->src_addr), priority);
         ESP_NOW_Network_Peer *new_peer = new ESP_NOW_Network_Peer(info->src_addr, priority);
-        if (!new_peer->begin()) {
-            Serial.println("Failed to create the new peer");
+        if (new_peer == nullptr || !new_peer->begin()) {
+            Serial.println("Failed to create or register the new peer");
             delete new_peer;
             return;
         }
         peers.push_back(new_peer);
-        if (!peers.back()->begin()) {
-            Serial.println("Failed to register the new peer");
-            peers.pop_back();
-            return;
-        }
         current_peer_count++;
         if (current_peer_count == ESPNOW_PEER_COUNT) {
             Serial.println("All peers have been found");
-            Serial.println("Broadcasting the priority 3 more times to ensure that all devices have received it");
+            new_msg.ready = true;
         }
     }
 }
@@ -298,8 +309,9 @@ void loop() {
 
         // Check if all peers have been found
         if (current_peer_count == ESPNOW_PEER_COUNT) {
-            // Transmit the priority 3 more times to ensure that all devices have received it
-            if (check_count >= 3) {
+            // Wait until all peers are ready
+            if (check_all_peers_ready()) {
+                Serial.println("All peers are ready");
                 // Check which device has the highest priority
                 master_decided = true;
                 uint32_t highest_priority = check_highest_priority();
@@ -318,8 +330,7 @@ void loop() {
                 }
                 Serial.println("The master has been decided");
             } else {
-                Serial.printf("%d...\n", check_count + 1);
-                check_count++;
+                Serial.println("Waiting for all peers to be ready...");
             }
         }
     } else {
