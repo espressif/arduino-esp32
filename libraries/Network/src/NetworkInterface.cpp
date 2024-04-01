@@ -606,6 +606,35 @@ IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const
     if(esp_netif_get_dns_info(_esp_netif, dns_no?ESP_NETIF_DNS_BACKUP:ESP_NETIF_DNS_MAIN, &d) != ESP_OK){
         return IPAddress();
     }
+    if (d.ip.type == ESP_IPADDR_TYPE_V6){
+        // IPv6 from 4x uint32_t; byte order based on IPV62STR() in esp_netif_ip_addr.h
+        log_d("DNS got IPv6: " IPV6STR, IPV62STR(d.ip.u_addr.ip6));
+        uint32_t addr0 esp_netif_htonl(d.ip.u_addr.ip6.addr[0]);
+        uint32_t addr1 esp_netif_htonl(d.ip.u_addr.ip6.addr[1]);
+        uint32_t addr2 esp_netif_htonl(d.ip.u_addr.ip6.addr[2]);
+        uint32_t addr3 esp_netif_htonl(d.ip.u_addr.ip6.addr[3]);
+        return IPAddress(
+            (uint8_t)(addr0 >> 24) & 0xFF,
+            (uint8_t)(addr0 >> 16) & 0xFF,
+            (uint8_t)(addr0 >> 8) & 0xFF,
+            (uint8_t)addr0 & 0xFF,
+            (uint8_t)(addr1 >> 24) & 0xFF,
+            (uint8_t)(addr1 >> 16) & 0xFF,
+            (uint8_t)(addr1 >> 8) & 0xFF,
+            (uint8_t)addr1 & 0xFF,
+            (uint8_t)(addr2 >> 24) & 0xFF,
+            (uint8_t)(addr2 >> 16) & 0xFF,
+            (uint8_t)(addr2 >> 8) & 0xFF,
+            (uint8_t)addr2 & 0xFF,
+            (uint8_t)(addr3 >> 24) & 0xFF,
+            (uint8_t)(addr3 >> 16) & 0xFF,
+            (uint8_t)(addr3 >> 8) & 0xFF,
+            (uint8_t)addr3 & 0xFF,
+            d.ip.u_addr.ip6.zone
+        );
+    }
+    // IPv4 from single uint32_t
+    log_d("DNS IPv4: " IPSTR, IP2STR(&d.ip.u_addr.ip4));
     return IPAddress(d.ip.u_addr.ip4.addr);
 }
 
