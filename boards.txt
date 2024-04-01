@@ -36155,3 +36155,166 @@ waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.all=Enabled
 waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+lilygo_t_relay_s3.name=LilyGo T-Relay S3
+lilygo_t_relay_s3.vid.0=0x303a
+lilygo_t_relay_s3.pid.0=0x1001
+
+lilygo_t_relay_s3.bootloader.tool=esptool_py
+lilygo_t_relay_s3.bootloader.tool.default=esptool_py
+
+lilygo_t_relay_s3.upload.tool=esptool_py
+lilygo_t_relay_s3.upload.tool.default=esptool_py
+lilygo_t_relay_s3.upload.tool.network=esp_ota
+
+lilygo_t_relay_s3.serial.disableDTR=false
+lilygo_t_relay_s3.serial.disableRTS=false
+
+lilygo_t_relay_s3.build.tarch=xtensa
+lilygo_t_relay_s3.build.bootloader_addr=0x0
+lilygo_t_relay_s3.build.target=esp32s3
+lilygo_t_relay_s3.build.mcu=esp32s3
+lilygo_t_relay_s3.build.core=esp32
+lilygo_t_relay_s3.build.variant=lilygo_t_relay_s3
+lilygo_t_relay_s3.build.board=LILYGO_T_RELAY_S3
+
+lilygo_t_relay_s3.build.openocdscript=esp32s3-builtin.cfg
+lilygo_t_relay_s3.build.copy_jtag_files=1
+lilygo_t_relay_s3.build.defines=-DBOARD_HAS_PSRAM
+lilygo_t_relay_s3.build.psram_type=opi
+lilygo_t_relay_s3.build.flash_mode=dio
+lilygo_t_relay_s3.build.boot=qio
+lilygo_t_relay_s3.build.boot_freq=80m
+lilygo_t_relay_s3.build.flash_freq=80m
+lilygo_t_relay_s3.build.flash_size=16MB
+lilygo_t_relay_s3.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lilygo_t_relay_s3.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+lilygo_t_relay_s3.build.usb_mode=1
+lilygo_t_relay_s3.build.cdc_on_boot=1
+lilygo_t_relay_s3.build.msc_on_boot=0
+lilygo_t_relay_s3.build.dfu_on_boot=0
+lilygo_t_relay_s3.build.f_cpu=240000000L
+lilygo_t_relay_s3.build.code_debug=0
+lilygo_t_relay_s3.build.partitions=app3M_fat9M_16MB
+lilygo_t_relay_s3.build.memory_type={build.boot}_{build.psram_type}
+
+lilygo_t_relay_s3.upload.use_1200bps_touch=false
+lilygo_t_relay_s3.upload.wait_for_upload_port=false
+lilygo_t_relay_s3.upload.speed=921600
+lilygo_t_relay_s3.upload.erase_cmd=
+lilygo_t_relay_s3.upload.maximum_size=3145728
+lilygo_t_relay_s3.upload.maximum_data_size=327680
+lilygo_t_relay_s3.upload.flags=
+lilygo_t_relay_s3.upload.extra_flags=
+
+lilygo_t_relay_s3.menu.JTAGAdapter.default=Disabled
+lilygo_t_relay_s3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+lilygo_t_relay_s3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+lilygo_t_relay_s3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+lilygo_t_relay_s3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+lilygo_t_relay_s3.menu.PSRAM.disabled=Disabled
+lilygo_t_relay_s3.menu.PSRAM.disabled.build.defines=
+lilygo_t_relay_s3.menu.PSRAM.disabled.build.psram_type=qspi
+lilygo_t_relay_s3.menu.PSRAM.opi=OPI PSRAM
+lilygo_t_relay_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+lilygo_t_relay_s3.menu.PSRAM.opi.build.psram_type=opi
+
+lilygo_t_relay_s3.menu.FlashMode.qio=QIO 80MHz
+# Required to load bootloader from flash.
+lilygo_t_relay_s3.menu.FlashMode.qio.build.flash_mode=dio
+lilygo_t_relay_s3.menu.FlashMode.qio.build.boot=qio
+lilygo_t_relay_s3.menu.FlashMode.qio.build.boot_freq=80m
+lilygo_t_relay_s3.menu.FlashMode.qio.build.flash_freq=80m
+
+lilygo_t_relay_s3.menu.FlashSize.16M=16MB (128Mb)
+lilygo_t_relay_s3.menu.FlashSize.16M.build.flash_size=16MB
+
+lilygo_t_relay_s3.menu.LoopCore.1=Core 1
+lilygo_t_relay_s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lilygo_t_relay_s3.menu.LoopCore.0=Core 0
+lilygo_t_relay_s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lilygo_t_relay_s3.menu.EventsCore.1=Core 1
+lilygo_t_relay_s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lilygo_t_relay_s3.menu.EventsCore.0=Core 0
+lilygo_t_relay_s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lilygo_t_relay_s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+lilygo_t_relay_s3.menu.USBMode.hwcdc.build.usb_mode=1
+lilygo_t_relay_s3.menu.USBMode.default=USB-OTG (TinyUSB)
+lilygo_t_relay_s3.menu.USBMode.default.build.usb_mode=0
+
+lilygo_t_relay_s3.menu.CDCOnBoot.default=Disabled
+lilygo_t_relay_s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+lilygo_t_relay_s3.menu.CDCOnBoot.cdc=Enabled
+lilygo_t_relay_s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+lilygo_t_relay_s3.menu.MSCOnBoot.default=Disabled
+lilygo_t_relay_s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+lilygo_t_relay_s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+lilygo_t_relay_s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lilygo_t_relay_s3.menu.DFUOnBoot.default=Disabled
+lilygo_t_relay_s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lilygo_t_relay_s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+lilygo_t_relay_s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lilygo_t_relay_s3.menu.UploadMode.default=UART0 / Hardware CDC
+lilygo_t_relay_s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+lilygo_t_relay_s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+lilygo_t_relay_s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+lilygo_t_relay_s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+lilygo_t_relay_s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+lilygo_t_relay_s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+lilygo_t_relay_s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lilygo_t_relay_s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+lilygo_t_relay_s3.menu.CPUFreq.240=240MHz (WiFi)
+lilygo_t_relay_s3.menu.CPUFreq.240.build.f_cpu=240000000L
+lilygo_t_relay_s3.menu.CPUFreq.160=160MHz (WiFi)
+lilygo_t_relay_s3.menu.CPUFreq.160.build.f_cpu=160000000L
+lilygo_t_relay_s3.menu.CPUFreq.80=80MHz (WiFi)
+lilygo_t_relay_s3.menu.CPUFreq.80.build.f_cpu=80000000L
+lilygo_t_relay_s3.menu.CPUFreq.40=40MHz
+lilygo_t_relay_s3.menu.CPUFreq.40.build.f_cpu=40000000L
+lilygo_t_relay_s3.menu.CPUFreq.20=20MHz
+lilygo_t_relay_s3.menu.CPUFreq.20.build.f_cpu=20000000L
+lilygo_t_relay_s3.menu.CPUFreq.10=10MHz
+lilygo_t_relay_s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+lilygo_t_relay_s3.menu.UploadSpeed.921600=921600
+lilygo_t_relay_s3.menu.UploadSpeed.921600.upload.speed=921600
+lilygo_t_relay_s3.menu.UploadSpeed.115200=115200
+lilygo_t_relay_s3.menu.UploadSpeed.115200.upload.speed=115200
+lilygo_t_relay_s3.menu.UploadSpeed.256000.windows=256000
+lilygo_t_relay_s3.menu.UploadSpeed.256000.upload.speed=256000
+lilygo_t_relay_s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+lilygo_t_relay_s3.menu.UploadSpeed.230400=230400
+lilygo_t_relay_s3.menu.UploadSpeed.230400.upload.speed=230400
+lilygo_t_relay_s3.menu.UploadSpeed.460800.linux=460800
+lilygo_t_relay_s3.menu.UploadSpeed.460800.macosx=460800
+lilygo_t_relay_s3.menu.UploadSpeed.460800.upload.speed=460800
+lilygo_t_relay_s3.menu.UploadSpeed.512000.windows=512000
+lilygo_t_relay_s3.menu.UploadSpeed.512000.upload.speed=512000
+
+lilygo_t_relay_s3.menu.DebugLevel.none=None
+lilygo_t_relay_s3.menu.DebugLevel.none.build.code_debug=0
+lilygo_t_relay_s3.menu.DebugLevel.error=Error
+lilygo_t_relay_s3.menu.DebugLevel.error.build.code_debug=1
+lilygo_t_relay_s3.menu.DebugLevel.warn=Warn
+lilygo_t_relay_s3.menu.DebugLevel.warn.build.code_debug=2
+lilygo_t_relay_s3.menu.DebugLevel.info=Info
+lilygo_t_relay_s3.menu.DebugLevel.info.build.code_debug=3
+lilygo_t_relay_s3.menu.DebugLevel.debug=Debug
+lilygo_t_relay_s3.menu.DebugLevel.debug.build.code_debug=4
+lilygo_t_relay_s3.menu.DebugLevel.verbose=Verbose
+lilygo_t_relay_s3.menu.DebugLevel.verbose.build.code_debug=5
+
+lilygo_t_relay_s3.menu.EraseFlash.none=Disabled
+lilygo_t_relay_s3.menu.EraseFlash.none.upload.erase_cmd=
+lilygo_t_relay_s3.menu.EraseFlash.all=Enabled
+lilygo_t_relay_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
