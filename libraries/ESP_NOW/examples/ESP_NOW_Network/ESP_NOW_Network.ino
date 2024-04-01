@@ -363,9 +363,9 @@ void loop() {
             if (recv_msg_count % REPORT_INTERVAL == 0) {
                 // Report average data to the peers
                 uint32_t avg = calc_average();
-                new_msg.count = sent_msg_count + 1;
                 new_msg.data = avg;
                 for (auto &peer : peers) {
+                    new_msg.count = sent_msg_count + 1;
                     if (!peer->send_message((const uint8_t *)&new_msg, sizeof(new_msg))) {
                         Serial.printf("Failed to send message to peer " MACSTR "\n", MAC2STR(peer->addr()));
                     } else {
