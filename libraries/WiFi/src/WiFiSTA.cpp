@@ -370,7 +370,7 @@ String WiFiSTAClass::psk() const
  */
 uint8_t* WiFiSTAClass::BSSID(uint8_t* buff)
 {
-    return STA.BSSID();
+    return STA.BSSID(buff);
 }
 
 /**
