@@ -44,8 +44,8 @@ void loop()
     Serial.print("Connecting to ");
     Serial.println(host);
 
-    // Use WiFiClient class to create TCP connections
-    WiFiClient client;
+    // Use NetworkClient class to create TCP connections
+    NetworkClient client;
 
     if (!client.connect(host, port)) {
         Serial.println("Connection failed.");

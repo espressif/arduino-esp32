@@ -48,7 +48,7 @@ How to install the Arduino IDE: [Install Arduino IDE](https://github.com/espress
 
 The WebServer library offers a simple path to implement a web server on a ESP32 based board.
 
-The advantage on using the WebServer instead of the plain simple WiFiServer is that the WebServer
+The advantage on using the WebServer instead of the plain simple NetworkServer is that the WebServer
 takes much care about the http protocol conventions and features and allows easily access to parameters.
 It offers plug-in capabilities by registering specific functionalities that will be outlined below.
 

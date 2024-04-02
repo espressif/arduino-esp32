@@ -28,8 +28,8 @@ WiFiMulti wifiMulti;
 const char* ssid = "**********";
 const char* password = "**********";
 
-WiFiServer server(23);
-WiFiClient serverClients[MAX_SRV_CLIENTS];
+NetworkServer server(23);
+NetworkClient serverClients[MAX_SRV_CLIENTS];
 
 void setup() {
   Serial.begin(115200);

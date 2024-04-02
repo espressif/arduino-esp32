@@ -26,8 +26,8 @@
 
 #include <functional>
 #include <memory>
-#include <WiFi.h>
-#include <FS.h>
+#include "FS.h"
+#include "Network.h"
 #include "HTTP_Method.h"
 #include "Uri.h"
 
@@ -126,7 +126,7 @@ public:
 
   String uri() { return _currentUri; }
   HTTPMethod method() { return _currentMethod; }
-  virtual WiFiClient & client() { return _currentClient; }
+  virtual NetworkClient & client() { return _currentClient; }
   HTTPUpload& upload() { return *_currentUpload; }
 
   String pathArg(unsigned int i); // get request path argument by number
@@ -188,13 +188,13 @@ protected:
   void _addRequestHandler(RequestHandler* handler);
   void _handleRequest();
   void _finalizeResponse();
-  bool _parseRequest(WiFiClient& client);
+  bool _parseRequest(NetworkClient& client);
   void _parseArguments(String data);
   static String _responseCodeToString(int code);
-  bool _parseForm(WiFiClient& client, String boundary, uint32_t len);
+  bool _parseForm(NetworkClient& client, String boundary, uint32_t len);
   bool _parseFormUploadAborted();
   void _uploadWriteByte(uint8_t b);
-  int _uploadReadByte(WiFiClient& client);
+  int _uploadReadByte(NetworkClient& client);
   void _prepareHeader(String& response, int code, const char* content_type, size_t contentLength);
   bool _collectHeader(const char* headerName, const char* headerValue);
 
@@ -210,9 +210,9 @@ protected:
   };
 
   boolean     _corsEnabled;
-  WiFiServer  _server;
+  NetworkServer  _server;
 
-  WiFiClient  _currentClient;
+  NetworkClient  _currentClient;
   HTTPMethod  _currentMethod;
   String      _currentUri;
   uint8_t     _currentVersion;

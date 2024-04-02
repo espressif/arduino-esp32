@@ -3,7 +3,7 @@
 */
 
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <Update.h>

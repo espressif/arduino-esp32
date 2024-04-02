@@ -18,13 +18,13 @@
 
 #include <WiFi.h>
 #include <ESPmDNS.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 
 const char* ssid = "............";
 const char* password = "..............";
 
 // TCP server at port 80 will respond to HTTP requests
-WiFiServer server(80);
+NetworkServer server(80);
 
 void setup(void)
 {  
@@ -69,7 +69,7 @@ void setup(void)
 void loop(void)
 {
     // Check if a client has connected
-    WiFiClient client = server.accept();
+    NetworkClient client = server.accept();
     if (!client) {
         return;
     }
