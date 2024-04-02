@@ -124,22 +124,22 @@ static const char * auth_mode_str(int authmode)
 }
 #endif
 
-static void _onStaArduinoEvent(arduino_event_id_t event, arduino_event_info_t info)
+static void _onStaArduinoEvent(arduino_event_t *ev)
 {
-    if(_sta_network_if == NULL || event < ARDUINO_EVENT_WIFI_STA_START || event > ARDUINO_EVENT_WIFI_STA_LOST_IP){
+    if(_sta_network_if == NULL || ev->event_id < ARDUINO_EVENT_WIFI_STA_START || ev->event_id > ARDUINO_EVENT_WIFI_STA_LOST_IP){
         return;
     }
     static bool first_connect = true;
-    log_d("Arduino STA Event: %d - %s", event, Network.eventName(event));
+    log_d("Arduino STA Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
 
-    if(event == ARDUINO_EVENT_WIFI_STA_START) {
+    if(ev->event_id == ARDUINO_EVENT_WIFI_STA_START) {
         _sta_network_if->_setStatus(WL_DISCONNECTED);
         if(esp_wifi_set_ps(WiFi.getSleep()) != ESP_OK){
             log_e("esp_wifi_set_ps failed");
         }
-    } else if(event == ARDUINO_EVENT_WIFI_STA_STOP) {
+    } else if(ev->event_id == ARDUINO_EVENT_WIFI_STA_STOP) {
         _sta_network_if->_setStatus(WL_STOPPED);
-    } else if(event == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
+    } else if(ev->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
         _sta_network_if->_setStatus(WL_IDLE_STATUS);
         if (_sta_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT){
             esp_err_t err = esp_netif_create_ip6_linklocal(_sta_network_if->netif());
@@ -149,8 +149,8 @@ static void _onStaArduinoEvent(arduino_event_id_t event, arduino_event_info_t in
                 log_v("Enabled IPv6 Link Local on %s", _sta_network_if->desc());
             }
         }
-    } else if(event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
-        uint8_t reason = info.wifi_sta_disconnected.reason;
+    } else if(ev->event_id == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
+        uint8_t reason = ev->event_info.wifi_sta_disconnected.reason;
         // Reason 0 causes crash, use reason 1 (UNSPECIFIED) instead
         if(!reason)
         reason = WIFI_REASON_UNSPECIFIED;
@@ -186,18 +186,18 @@ static void _onStaArduinoEvent(arduino_event_id_t event, arduino_event_info_t in
             _sta_network_if->disconnect();
             _sta_network_if->connect();
         }
-    } else if(event == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
+    } else if(ev->event_id == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-        uint8_t * ip = (uint8_t *)&(info.got_ip.ip_info.ip.addr);
-        uint8_t * mask = (uint8_t *)&(info.got_ip.ip_info.netmask.addr);
-        uint8_t * gw = (uint8_t *)&(info.got_ip.ip_info.gw.addr);
+        uint8_t * ip = (uint8_t *)&(ev->event_info.got_ip.ip_info.ip.addr);
+        uint8_t * mask = (uint8_t *)&(ev->event_info.got_ip.ip_info.netmask.addr);
+        uint8_t * gw = (uint8_t *)&(ev->event_info.got_ip.ip_info.gw.addr);
         log_d("STA IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u",
             ip[0], ip[1], ip[2], ip[3],
             mask[0], mask[1], mask[2], mask[3],
             gw[0], gw[1], gw[2], gw[3]);
 #endif
         _sta_network_if->_setStatus(WL_CONNECTED);
-    } else if(event == ARDUINO_EVENT_WIFI_STA_LOST_IP) {
+    } else if(ev->event_id == ARDUINO_EVENT_WIFI_STA_LOST_IP) {
         _sta_network_if->_setStatus(WL_IDLE_STATUS);
     }
 }
@@ -288,29 +288,42 @@ bool STAClass::bandwidth(wifi_bandwidth_t bandwidth) {
     return true;
 }
 
-bool STAClass::begin(bool tryConnect){
-
-    Network.begin();
+bool STAClass::onEnable(){
     if(_sta_ev_instance == NULL && esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_sta_event_cb, this, &_sta_ev_instance)){
         log_e("event_handler_instance_register for WIFI_EVENT Failed!");
         return false;
     }
     if(_esp_netif == NULL){
+        _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_STA);
+        if(_esp_netif == NULL){
+            log_e("STA was enabled, but netif is NULL???");
+            return false;
+        }
+        /* attach to receive events */
         Network.onSysEvent(_onStaArduinoEvent);
+        initNetif(ESP_NETIF_ID_STA);
     }
+    return true;
+}
 
+bool STAClass::onDisable(){
+    Network.removeEvent(_onStaArduinoEvent);
+    // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
+    // That would be done by WiFi.enableSTA(false) if AP is not enabled, or when it gets disabled
+    _esp_netif = NULL;
+    destroyNetif();
+    if(_sta_ev_instance != NULL){
+        esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &_sta_event_cb);
+        _sta_ev_instance = NULL;
+    }
+    return true;
+}
+
+bool STAClass::begin(bool tryConnect){
     if(!WiFi.enableSTA(true)) {
         log_e("STA enable failed!");
         return false;
     }
-
-    // attach events and esp_netif here
-    if(_esp_netif == NULL){
-        _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_STA);
-        /* attach to receive events */
-        initNetif(ESP_NETIF_ID_STA);
-    }
-
     if(tryConnect){
         return connect();
     }
@@ -321,15 +334,6 @@ bool STAClass::end(){
     if(!WiFi.enableSTA(false)) {
         log_e("STA disable failed!");
         return false;
-    }
-    Network.removeEvent(_onStaArduinoEvent);
-    // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
-    // That would be done by WiFi.enableSTA(false) if AP is not enabled, or when it gets disabled
-    _esp_netif = NULL;
-    destroyNetif();
-    if(_sta_ev_instance != NULL){
-        esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &_sta_event_cb);
-        _sta_ev_instance = NULL;
     }
     return true;
 }
