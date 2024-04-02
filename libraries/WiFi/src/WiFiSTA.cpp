@@ -169,7 +169,7 @@ bool WiFiSTAClass::eraseAP(void) {
  */
 bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
-    return STA.config(local_ip, gateway, subnet, dns1, dns2);
+    return STA.begin() && STA.config(local_ip, gateway, subnet, dns1, dns2);
 }
 
 /**
@@ -179,10 +179,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
  */
 bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
 {
-    if(!STA.started()){
-        return false;
-    }
-    return STA.dnsIP(0, dns1) && STA.dnsIP(1, dns2);
+    return STA.begin() && STA.dnsIP(0, dns1) && STA.dnsIP(1, dns2);
 }
 
 /**

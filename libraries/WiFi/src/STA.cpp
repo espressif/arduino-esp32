@@ -213,7 +213,7 @@ void STAClass::_onStaEvent(int32_t event_id, void* event_data){
     } else if (event_id == WIFI_EVENT_STA_STOP) {
         log_v("STA Stopped");
         arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_STOP;
-        clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
+        clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
     } else if (event_id == WIFI_EVENT_STA_AUTHMODE_CHANGE) {
         #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
             wifi_event_sta_authmode_change_t * event = (wifi_event_sta_authmode_change_t*)event_data;
@@ -351,7 +351,7 @@ bool STAClass::connect(){
         return false;
     }
 
-    if((getStatusBits() & ESP_NETIF_HAS_IP_BIT) == 0 && !config()){
+    if((getStatusBits() & ESP_NETIF_HAS_STATIC_IP_BIT) == 0 && !config()){
         log_e("STA failed to configure dynamic IP!");
         return false;
     }
@@ -422,7 +422,7 @@ bool STAClass::connect(const char* ssid, const char *passphrase, int32_t channel
         return false;
     }
 
-    if((getStatusBits() & ESP_NETIF_HAS_IP_BIT) == 0 && !config()){
+    if((getStatusBits() & ESP_NETIF_HAS_STATIC_IP_BIT) == 0 && !config()){
         log_e("STA failed to configure dynamic IP!");
         return false;
     }
