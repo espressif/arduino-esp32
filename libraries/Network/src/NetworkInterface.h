@@ -27,6 +27,7 @@ static const int ESP_NETIF_HAS_IP_BIT           = BIT2;
 static const int ESP_NETIF_HAS_LOCAL_IP6_BIT    = BIT3;
 static const int ESP_NETIF_HAS_GLOBAL_IP6_BIT   = BIT4;
 static const int ESP_NETIF_WANT_IP6_BIT         = BIT5;
+static const int ESP_NETIF_HAS_STATIC_IP_BIT    = BIT6;
 
 #define ESP_NETIF_ID_ETH ESP_NETIF_ID_ETH0
 
