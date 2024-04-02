@@ -7705,6 +7705,120 @@ lolin_c3_mini.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+lolin_c3_pico.name=LOLIN C3 Pico
+lolin_c3_pico.vid.0=0x303a
+lolin_c3_pico.pid.0=0x1001
+
+lolin_c3_pico.bootloader.tool=esptool_py
+lolin_c3_pico.bootloader.tool.default=esptool_py
+
+lolin_c3_pico.upload.tool=esptool_py
+lolin_c3_pico.upload.tool.default=esptool_py
+lolin_c3_pico.upload.tool.network=esp_ota
+
+lolin_c3_pico.upload.maximum_size=1310720
+lolin_c3_pico.upload.maximum_data_size=327680
+lolin_c3_pico.upload.flags=
+lolin_c3_pico.upload.extra_flags=
+lolin_c3_pico.upload.use_1200bps_touch=false
+lolin_c3_pico.upload.wait_for_upload_port=false
+
+lolin_c3_pico.serial.disableDTR=true
+lolin_c3_pico.serial.disableRTS=true
+
+lolin_c3_pico.build.tarch=riscv32
+lolin_c3_pico.build.target=esp
+lolin_c3_pico.build.mcu=esp32c3
+lolin_c3_pico.build.core=esp32
+lolin_c3_pico.build.variant=lolin_c3_pico
+lolin_c3_pico.build.board=LOLIN_C3_PICO
+lolin_c3_pico.build.bootloader_addr=0x0
+
+lolin_c3_pico.build.cdc_on_boot=1
+lolin_c3_pico.build.f_cpu=160000000L
+lolin_c3_pico.build.flash_size=4MB
+lolin_c3_pico.build.flash_freq=80m
+lolin_c3_pico.build.flash_mode=dio
+lolin_c3_pico.build.boot=qio
+lolin_c3_pico.build.partitions=default
+lolin_c3_pico.build.defines=
+
+lolin_c3_pico.menu.CDCOnBoot.default=Enabled
+lolin_c3_pico.menu.CDCOnBoot.default.build.cdc_on_boot=1
+lolin_c3_pico.menu.CDCOnBoot.dis_cdc=Disabled
+lolin_c3_pico.menu.CDCOnBoot.dis_cdc.build.cdc_on_boot=0
+
+lolin_c3_pico.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+lolin_c3_pico.menu.PartitionScheme.default.build.partitions=default
+lolin_c3_pico.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+lolin_c3_pico.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+lolin_c3_pico.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+lolin_c3_pico.menu.PartitionScheme.no_ota.build.partitions=no_ota
+lolin_c3_pico.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+lolin_c3_pico.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+lolin_c3_pico.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+lolin_c3_pico.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+lolin_c3_pico.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+lolin_c3_pico.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+lolin_c3_pico.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+lolin_c3_pico.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+lolin_c3_pico.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+lolin_c3_pico.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+lolin_c3_pico.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+lolin_c3_pico.menu.PartitionScheme.huge_app.build.partitions=huge_app
+lolin_c3_pico.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+lolin_c3_pico.menu.CPUFreq.160=160MHz (WiFi)
+lolin_c3_pico.menu.CPUFreq.160.build.f_cpu=160000000L
+lolin_c3_pico.menu.CPUFreq.80=80MHz (WiFi)
+lolin_c3_pico.menu.CPUFreq.80.build.f_cpu=80000000L
+lolin_c3_pico.menu.CPUFreq.40=40MHz
+lolin_c3_pico.menu.CPUFreq.40.build.f_cpu=40000000L
+lolin_c3_pico.menu.CPUFreq.20=20MHz
+lolin_c3_pico.menu.CPUFreq.20.build.f_cpu=20000000L
+lolin_c3_pico.menu.CPUFreq.10=10MHz
+lolin_c3_pico.menu.CPUFreq.10.build.f_cpu=10000000L
+
+lolin_c3_pico.menu.FlashFreq.80=80MHz
+lolin_c3_pico.menu.FlashFreq.80.build.flash_freq=80m
+lolin_c3_pico.menu.FlashFreq.40=40MHz
+lolin_c3_pico.menu.FlashFreq.40.build.flash_freq=40m
+
+lolin_c3_pico.menu.UploadSpeed.921600=921600
+lolin_c3_pico.menu.UploadSpeed.921600.upload.speed=921600
+lolin_c3_pico.menu.UploadSpeed.115200=115200
+lolin_c3_pico.menu.UploadSpeed.115200.upload.speed=115200
+lolin_c3_pico.menu.UploadSpeed.256000.windows=256000
+lolin_c3_pico.menu.UploadSpeed.256000.upload.speed=256000
+lolin_c3_pico.menu.UploadSpeed.230400.windows.upload.speed=256000
+lolin_c3_pico.menu.UploadSpeed.230400=230400
+lolin_c3_pico.menu.UploadSpeed.230400.upload.speed=230400
+lolin_c3_pico.menu.UploadSpeed.460800.linux=460800
+lolin_c3_pico.menu.UploadSpeed.460800.macosx=460800
+lolin_c3_pico.menu.UploadSpeed.460800.upload.speed=460800
+lolin_c3_pico.menu.UploadSpeed.512000.windows=512000
+lolin_c3_pico.menu.UploadSpeed.512000.upload.speed=512000
+
+lolin_c3_pico.menu.DebugLevel.none=None
+lolin_c3_pico.menu.DebugLevel.none.build.code_debug=0
+lolin_c3_pico.menu.DebugLevel.error=Error
+lolin_c3_pico.menu.DebugLevel.error.build.code_debug=1
+lolin_c3_pico.menu.DebugLevel.warn=Warn
+lolin_c3_pico.menu.DebugLevel.warn.build.code_debug=2
+lolin_c3_pico.menu.DebugLevel.info=Info
+lolin_c3_pico.menu.DebugLevel.info.build.code_debug=3
+lolin_c3_pico.menu.DebugLevel.debug=Debug
+lolin_c3_pico.menu.DebugLevel.debug.build.code_debug=4
+lolin_c3_pico.menu.DebugLevel.verbose=Verbose
+lolin_c3_pico.menu.DebugLevel.verbose.build.code_debug=5
+
+lolin_c3_pico.menu.EraseFlash.none=Disabled
+lolin_c3_pico.menu.EraseFlash.none.upload.erase_cmd=
+lolin_c3_pico.menu.EraseFlash.all=Enabled
+lolin_c3_pico.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 lolin_s2_mini.name=LOLIN S2 Mini
 lolin_s2_mini.vid.0=0x303a
 lolin_s2_mini.pid.0=0x80C2

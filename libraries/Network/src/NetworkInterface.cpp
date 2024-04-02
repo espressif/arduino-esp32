@@ -281,7 +281,7 @@ bool NetworkInterface::connected() const {
 }
 
 bool NetworkInterface::hasIP() const {
-    return (getStatusBits() & ESP_NETIF_HAS_IP_BIT) != 0;
+    return (getStatusBits() & (ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_STATIC_IP_BIT)) != 0;
 }
 
 bool NetworkInterface::hasLinkLocalIPv6() const {
@@ -451,7 +451,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             return false;
         }
 
-        clearStatusBits(ESP_NETIF_HAS_IP_BIT);
+        clearStatusBits(ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
 
         // Set IPv4, Netmask, Gateway
         err = esp_netif_set_ip_info(_esp_netif, &info);
@@ -473,7 +473,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
                 return false;
             }
         } else {
-            setStatusBits(ESP_NETIF_HAS_IP_BIT);
+            setStatusBits(ESP_NETIF_HAS_STATIC_IP_BIT);
         }
     }
 
@@ -671,7 +671,10 @@ IPAddress NetworkInterface::globalIPv6() const
 
 size_t NetworkInterface::printTo(Print & out) const {
     size_t bytes = 0;
-    bytes += out.print(esp_netif_get_desc(_esp_netif));
+    const char * dscr = esp_netif_get_desc(_esp_netif);
+    if(dscr != NULL){
+        bytes += out.print(dscr);
+    }
     bytes += out.print(":");
     if(esp_netif_is_netif_up(_esp_netif)){
         bytes += out.print(" <UP");

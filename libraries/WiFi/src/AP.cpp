@@ -82,13 +82,13 @@ static void _ap_event_cb(void* arg, esp_event_base_t event_base, int32_t event_i
     }
 }
 
-static void _onApArduinoEvent(arduino_event_id_t event, arduino_event_info_t info)
+static void _onApArduinoEvent(arduino_event_t *ev)
 {
-    if(_ap_network_if == NULL || event < ARDUINO_EVENT_WIFI_AP_START || event > ARDUINO_EVENT_WIFI_AP_GOT_IP6){
+    if(_ap_network_if == NULL || ev->event_id < ARDUINO_EVENT_WIFI_AP_START || ev->event_id > ARDUINO_EVENT_WIFI_AP_GOT_IP6){
         return;
     }
-    log_d("Arduino AP Event: %d - %s", event, Network.eventName(event));
-    if(event == ARDUINO_EVENT_WIFI_AP_START) {
+    log_d("Arduino AP Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
+    if(ev->event_id == ARDUINO_EVENT_WIFI_AP_START) {
         if (_ap_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT){
             esp_err_t err = esp_netif_create_ip6_linklocal(_ap_network_if->netif());
             if(err != ESP_OK){
@@ -157,37 +157,21 @@ APClass::~APClass(){
     _ap_network_if = NULL;
 }
 
-bool APClass::begin(){
-
-    Network.begin();
+bool APClass::onEnable(){
     if(_ap_ev_instance == NULL && esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_ap_event_cb, this, &_ap_ev_instance)){
         log_e("event_handler_instance_register for WIFI_EVENT Failed!");
         return false;
     }
     if(_esp_netif == NULL){
         Network.onSysEvent(_onApArduinoEvent);
-    }
-
-    if(!WiFi.enableAP(true)) {
-        log_e("AP enable failed!");
-        return false;
-    }
-
-    // attach events and esp_netif here
-    if(_esp_netif == NULL){
         _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_AP);
         /* attach to receive events */
         initNetif(ESP_NETIF_ID_AP);
     }
-
     return true;
 }
 
-bool APClass::end(){
-    if(!WiFi.enableAP(false)) {
-        log_e("AP disable failed!");
-        return false;
-    }
+bool APClass::onDisable(){
     Network.removeEvent(_onApArduinoEvent);
     // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
     // That would be done by WiFi.enableAP(false) if STA is not enabled, or when it gets disabled
@@ -200,15 +184,29 @@ bool APClass::end(){
     return true;
 }
 
+bool APClass::begin(){
+    if(!WiFi.enableAP(true)) {
+        log_e("AP enable failed!");
+        return false;
+    }
+    return true;
+}
+
+bool APClass::end(){
+    if(!WiFi.enableAP(false)) {
+        log_e("AP disable failed!");
+        return false;
+    }
+    return true;
+}
+
 bool APClass::create(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder){
     if(!ssid || *ssid == 0) {
-        // fail SSID missing
         log_e("SSID missing!");
         return false;
     }
 
     if(passphrase && (strlen(passphrase) > 0 && strlen(passphrase) < 8)) {
-        // fail passphrase too short
         log_e("passphrase too short!");
         return false;
     }
