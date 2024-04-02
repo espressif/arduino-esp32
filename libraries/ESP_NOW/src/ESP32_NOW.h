@@ -60,7 +60,6 @@ public:
 
   void onNewPeer(void (*cb)(const esp_now_recv_info_t *info, const uint8_t * data, int len, void * arg), void * arg);
 
-  //TODO: Add function to set peer rate - esp_now_set_peer_rate_config()
 };
 
 extern ESP_NOW_Class ESP_NOW;
