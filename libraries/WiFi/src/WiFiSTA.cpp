@@ -169,7 +169,33 @@ bool WiFiSTAClass::eraseAP(void) {
  */
 bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
 {
+    // handle Arduino ordering of parameters: ip, dns, gw, subnet
+    if (local_ip.type() == IPv4 && local_ip != INADDR_NONE && subnet[0] != 255) {
+        IPAddress tmp = dns1;
+        dns1 = gateway;
+        gateway = subnet;
+        subnet = (tmp != INADDR_NONE) ? tmp : IPAddress(255, 255, 255, 0);
+    }
+
     return STA.begin() && STA.config(local_ip, gateway, subnet, dns1, dns2);
+}
+
+bool WiFiSTAClass::config(IPAddress local_ip, IPAddress dns) {
+
+    if (local_ip == INADDR_NONE) {
+        return config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    }
+
+    if (local_ip.type() != IPv4) {
+        return false;
+    }
+
+    IPAddress gw(local_ip);
+    gw[3] = 1;
+    if (dns == INADDR_NONE) {
+        dns = gw;
+    }
+    return config(local_ip, gw, IPAddress(255, 255, 255, 0), dns);
 }
 
 /**
