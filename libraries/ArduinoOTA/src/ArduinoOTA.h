@@ -1,9 +1,9 @@
 #ifndef __ARDUINO_OTA_H
 #define __ARDUINO_OTA_H
 
-#include <WiFi.h>
-#include <functional>
+#include "Network.h"
 #include "Update.h"
+#include <functional>
 
 #define INT_BUFFER_SIZE 16
 
@@ -86,7 +86,7 @@ class ArduinoOTAClass
     String _hostname;
     String _partition_label;
     String _nonce;
-    WiFiUDP _udp_ota;
+    NetworkUDP _udp_ota;
     bool _initialized;
     bool _rebootOnSuccess;
     bool _mdnsEnabled;

@@ -53,7 +53,7 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
   Filesystem virtualization framework
 
 ### HTTPClient
-  A simple HTTP client, compatible with WiFiClientSecure
+  A simple HTTP client, compatible with NetworkClientSecure
 
 ### HTTPUpdate
   Download a firmware update from HTTPd and apply it using Update
@@ -103,7 +103,7 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
 ### WiFi
   Arduino compatible WiFi driver (includes Ethernet driver)
 
-### WiFiClientSecure
+### NetworkClientSecure
   Arduino compatible WiFi client object using embedded encryption
 
 ### Wire
