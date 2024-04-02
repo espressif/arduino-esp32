@@ -262,15 +262,15 @@ Set of 2 examples of the ESP-NOW library to send and receive data between multip
 
 1. ESP-NOW Broadcast Master Example:
 
-.. literalinclude:: libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Master/ESP_NOW_Broadcast_Master.ino
+.. literalinclude:: ../../../libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Master/ESP_NOW_Broadcast_Master.ino
     :language: cpp
 
 2. ESP-NOW Broadcast Slave Example:
 
-.. literalinclude:: libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave/ESP_NOW_Broadcast_Slave.ino
+.. literalinclude:: ../../../libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave/ESP_NOW_Broadcast_Slave.ino
     :language: cpp
 
 Example of the ESP-NOW Serial library to send and receive data between 2 ESP32 devices using the serial port:
 
-.. literalinclude:: libraries/ESP_NOW/examples/ESP_NOW_Serial/ESP_NOW_Serial.ino
+.. literalinclude:: ../../../libraries/ESP_NOW/examples/ESP_NOW_Serial/ESP_NOW_Serial.ino
     :language: cpp
