@@ -14,7 +14,7 @@ public:
 	NetworkManager();
 
 	bool begin();
-	int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
+	int hostByName(const char *aHostname, IPAddress &aResult);
 	uint8_t * macAddress(uint8_t * mac);
 	String macAddress();
 
