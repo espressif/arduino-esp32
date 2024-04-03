@@ -49,9 +49,9 @@ void onEvent(arduino_event_id_t event, arduino_event_info_t info)
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
       Serial.printf("ETH Got IP: '%s'\n", esp_netif_get_desc(info.got_ip.esp_netif));
-      ETH.printInfo(Serial);
+      Serial.println(ETH);
 #if USE_TWO_ETH_PORTS
-      ETH1.printInfo(Serial);
+      Serial.println(ETH1);
 #endif
       eth_connected = true;
       break;
@@ -77,7 +77,7 @@ void testClient(const char * host, uint16_t port)
   Serial.print("\nconnecting to ");
   Serial.println(host);
 
-  WiFiClient client;
+  NetworkClient client;
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
     return;
@@ -95,7 +95,7 @@ void testClient(const char * host, uint16_t port)
 void setup()
 {
   Serial.begin(115200);
-  WiFi.onEvent(onEvent);
+  Network.onEvent(onEvent);
 
   SPI.begin(ETH_SPI_SCK, ETH_SPI_MISO, ETH_SPI_MOSI);
   ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, SPI);

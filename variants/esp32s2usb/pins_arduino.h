@@ -10,7 +10,7 @@
 #define USB_PRODUCT 		"ESP32-S2-USB"
 #define USB_SERIAL 			"0"
 #define USB_WEBUSB_ENABLED	false
-#define USB_WEBUSB_URL 		"https://espressif.github.io/arduino-esp32/webusb.html"
+#define USB_WEBUSB_URL 		"https://docs.espressif.com/projects/arduino-esp32/en/latest/_static/webusb.html"
 
 // Default USB FirmwareMSC Settings
 #define USB_FW_MSC_VENDOR_ID 		"ESP32-S2" 		//max 8 chars

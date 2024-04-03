@@ -48,7 +48,7 @@ espsecure.py encrypt_flash_data  = runs the idf encryption function to make a en
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <HTTPClient.h>
 #include <Update.h>
 
@@ -150,7 +150,7 @@ bool http_downloadUpdate(HTTPClient& http, uint32_t size=0) {
     if(size == 0){
         return false;
     }
-    WiFiClient *client = http.getStreamPtr();
+    NetworkClient *client = http.getStreamPtr();
 
     if( !Update.begin(size, U_FLASH) ) {
         Serial.printf("Update.begin failed! (%s)\n", Update.errorString() );
@@ -207,7 +207,7 @@ bool http_updater(const String& host, const uint16_t& port, String uri, const bo
 
 //setup HTTPclient to be ready to connect & send a request to HTTP server
     HTTPClient http;
-    WiFiClient client;
+    NetworkClient client;
     uri.concat(query); //GET query added to end of uri path
     if( !http.begin(client, host, port, uri) ){
         return false; //httpclient setup error
@@ -261,7 +261,7 @@ bool http_updater(const String& host, const uint16_t& port, String uri, const bo
 bool http_direct(const String& host, const uint16_t& port, const String& uri, const char* user=NULL, const char* password=NULL) {
 //setup HTTPclient to be ready to connect & send a request to HTTP server
     HTTPClient http;
-    WiFiClient client;
+    NetworkClient client;
     if( !http.begin(client, host, port, uri) ){
         return false; //httpclient setup error
     }

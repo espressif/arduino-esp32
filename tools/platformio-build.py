@@ -88,7 +88,7 @@ def get_bootloader_image(variants_dir):
                 FRAMEWORK_LIBS_DIR,
                 build_mcu,
                 "bin",
-                "bootloader_${__get_board_boot_mode(__env__)}_${__get_board_f_flash(__env__)}.elf",
+                "bootloader_${__get_board_boot_mode(__env__)}_${__get_board_f_boot(__env__)}.elf",
             )
         )
     )

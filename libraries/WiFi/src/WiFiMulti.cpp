@@ -24,6 +24,7 @@
  */
 
 #include "WiFiMulti.h"
+#if SOC_WIFI_SUPPORTED
 #include <limits.h>
 #include <string.h>
 #include <esp32-hal.h>
@@ -355,3 +356,5 @@ void WiFiMulti::setAllowOpenAP(bool bAllowOpenAP) {
 void WiFiMulti::setConnectionTestCallbackFunc(ConnectionTestCB_t cbFunc) {
     _connectionTestCBFunc = cbFunc;
 }
+
+#endif /* SOC_WIFI_SUPPORTED */
