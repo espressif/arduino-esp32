@@ -98,7 +98,7 @@ std::vector<uint32_t> last_data(5);  // Vector that will store the last 5 data r
 
 /* Classes */
 
-// We need to create a class that inherits from ESP_NOW_Peer to implement the _onReceive and _onSent methods.
+// We need to create a class that inherits from ESP_NOW_Peer and implement the _onReceive and _onSent methods.
 // This class will be used to store the priority of the device and to send messages to the peers.
 // For more information about the ESP_NOW_Peer class, see the ESP_NOW_Peer class in the ESP32_NOW.h file.
 

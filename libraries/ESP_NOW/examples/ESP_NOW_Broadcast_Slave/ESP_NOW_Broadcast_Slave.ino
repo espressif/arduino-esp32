@@ -23,7 +23,7 @@
 
 /* Classes */
 
-// Create a new class that inherits from the ESP_NOW_Peer class is required to implement the _onReceive and _onSent methods.
+// Creating a new class that inherits from the ESP_NOW_Peer class is required.
 
 class ESP_NOW_Peer_Class : public ESP_NOW_Peer {
 public:
@@ -49,11 +49,6 @@ public:
     void _onReceive(const uint8_t *data, size_t len, bool broadcast) {
         Serial.printf("Received a message from master " MACSTR " (%s)\n", MAC2STR(addr()), broadcast ? "broadcast" : "unicast");
         Serial.printf("  Message: %s\n", (char *)data);
-    }
-
-    void _onSent(bool success) {
-        // In this example the slave will never send any data, so this method will never be called.
-        // It is still required to be implemented because it is a pure virtual method.
     }
 };
 

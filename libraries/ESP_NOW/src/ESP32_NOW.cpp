@@ -2,7 +2,6 @@
 #include <string.h>
 #include "esp_system.h"
 #include "esp32-hal.h"
-#include "esp_mac.h"
 #include "esp_wifi.h"
 
 static void (*new_cb)(const esp_now_recv_info_t *info, const uint8_t * data, int len, void * arg) = NULL;

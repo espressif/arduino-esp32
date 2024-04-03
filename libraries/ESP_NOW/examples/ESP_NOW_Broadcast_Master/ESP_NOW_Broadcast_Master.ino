@@ -22,7 +22,7 @@
 
 /* Classes */
 
-// Create a new class that inherits from the ESP_NOW_Peer class is required to implement the _onReceive and _onSent methods.
+// Creating a new class that inherits from the ESP_NOW_Peer class is required.
 
 class ESP_NOW_Broadcast_Peer : public ESP_NOW_Peer {
 public:
@@ -51,12 +51,6 @@ public:
             return false;
         }
         return true;
-    }
-
-    void onReceive(const uint8_t *data, size_t len, bool broadcast) {
-        // The broadcast peer will never receive any data. Rather, it will only send data.
-        // Data broadcasted will be received by the actual object of the peer that made the broadcast.
-        // It is still required to be implemented because it is a pure virtual method.
     }
 };
 

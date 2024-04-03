@@ -4,6 +4,7 @@
 #include "Print.h"
 #include "esp_now.h"
 #include "esp32-hal-log.h"
+#include "esp_mac.h"
 
 class ESP_NOW_Peer {
 private:
@@ -19,8 +20,9 @@ protected:
   bool remove();
   size_t send(const uint8_t * data, int len);
 
-public:
   ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel=0, wifi_interface_t iface=WIFI_IF_AP, const uint8_t *lmk=NULL);
+
+public:
   virtual ~ESP_NOW_Peer() {}
 
   const uint8_t * addr() const;
@@ -37,11 +39,11 @@ public:
 
   operator bool() const;
 
-  //must be implemented by the upper class
-  virtual void onReceive(const uint8_t * data, size_t len, bool broadcast) = 0;
-
-  //optional callback
-  virtual void onSent(bool success) { log_v("Message reported as sent %s", success ? "successfully" : "unsuccessfully"); }
+  //optional callbacks to be implemented by the upper class
+  virtual void onReceive(const uint8_t * data, size_t len, bool broadcast) {
+    log_i("Received %d bytes from " MACSTR " %s", len, MAC2STR(mac), broadcast ? "broadcast" : "");
+  }
+  virtual void onSent(bool success) { log_i("Message reported as sent %s", success ? "successfully" : "unsuccessfully"); }
 };
 
 class ESP_NOW_Class : public Print {

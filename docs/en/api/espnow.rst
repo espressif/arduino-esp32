@@ -234,7 +234,7 @@ Set the local master key (LMK) for the peer.
 onReceive
 ^^^^^^^^^^
 
-Callback function to handle incoming data from the peer. This is a pure virtual method that must be implemented by the upper class.
+Callback function to handle incoming data from the peer. This is a virtual method can be implemented by the upper class for custom handling.
 
 .. code-block:: cpp
 
@@ -247,7 +247,7 @@ Callback function to handle incoming data from the peer. This is a pure virtual 
 onSent
 ^^^^^^^
 
-Optional callback function to handle the completion of sending data to the peer. This is a pure virtual method that must be implemented by the upper class.
+Callback function to handle the completion of sending data to the peer. This is a virtual method can be implemented by the upper class for custom handling.
 
 .. code-block:: cpp
 
