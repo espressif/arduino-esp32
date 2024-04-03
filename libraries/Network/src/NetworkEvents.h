@@ -28,9 +28,6 @@ static const int WIFI_SCANNING_BIT = BIT0;
 static const int WIFI_SCAN_DONE_BIT= BIT1;
 #endif
 
-static const int NET_DNS_IDLE_BIT  = BIT2;
-static const int NET_DNS_DONE_BIT  = BIT3;
-
 #define NET_HAS_IP6_GLOBAL_BIT 0
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);

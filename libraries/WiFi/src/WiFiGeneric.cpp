@@ -794,9 +794,9 @@ set_ant:
 /*
  * Deprecated Methods
 */
-int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult, bool preferV6)
+int WiFiGenericClass::hostByName(const char* aHostname, IPAddress& aResult)
 {
-    return Network.hostByName(aHostname, aResult, preferV6);
+    return Network.hostByName(aHostname, aResult);
 }
 
 IPAddress WiFiGenericClass::calculateNetworkID(IPAddress ip, IPAddress subnet) {
