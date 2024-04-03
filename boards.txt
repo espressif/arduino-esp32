@@ -15620,6 +15620,13 @@ esp32-devkitlipo.build.boot=dio
 esp32-devkitlipo.build.partitions=default
 esp32-devkitlipo.build.defines=
 
+esp32-devkitlipo.menu.PSRAM.disabled=Disabled (WROOM)
+esp32-devkitlipo.menu.PSRAM.disabled.build.defines=
+esp32-devkitlipo.menu.PSRAM.disabled.build.extra_libs=
+esp32-devkitlipo.menu.PSRAM.enabled=Enabled (WROVER)
+esp32-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32-devkitlipo.menu.PSRAM.enabled.build.extra_libs=
+
 esp32-devkitlipo.menu.PartitionScheme.default=Default
 esp32-devkitlipo.menu.PartitionScheme.default.build.partitions=default
 esp32-devkitlipo.menu.PartitionScheme.minimal=Minimal (2MB FLASH)
