@@ -7,7 +7,7 @@ About
 
 ESP-NOW is a communication protocol designed for low-power, low-latency, and high-throughput communication between ESP32 devices without the need for an access point (AP). 
 It is ideal for scenarios where devices need to communicate directly with each other in a local network.
-ESP-NOW is ideal for smart lights, remote control devices, sensors and other applications. 
+ESP-NOW can be used for smart lights, remote control devices, sensors and many other applications. 
 
 This library provides an easy-to-use interface for setting up ESP-NOW communication, adding and removing peers, and sending and receiving data packets.
 
@@ -91,7 +91,7 @@ You can register a callback function to handle incoming data from new peers usin
 ESP-NOW Peer Class
 ******************
 
-The `ESP_NOW_Peer` class represents a peer device in the ESP-NOW network.
+The `ESP_NOW_Peer` class represents a peer device in the ESP-NOW network. It is an abstract class that must be inherited by a child class that properly handles the peer connections and implements the `_onReceive` and `_onSent` methods.
 
 Constructor
 ^^^^^^^^^^^
@@ -234,7 +234,7 @@ Set the local master key (LMK) for the peer.
 _onReceive
 ^^^^^^^^^^
 
-Callback function to handle incoming data from the peer, must be implemented by the upper class.
+Callback function to handle incoming data from the peer. This is a pure virtual method that must be implemented by the upper class.
 
 .. code-block:: cpp
 
@@ -247,7 +247,7 @@ Callback function to handle incoming data from the peer, must be implemented by 
 _onSent
 ^^^^^^^
 
-Callback function to handle the completion of sending data to the peer, must be implemented by the upper class.
+Callback function to handle the completion of sending data to the peer. This is a pure virtual method that must be implemented by the upper class.
 
 .. code-block:: cpp
 
@@ -258,7 +258,7 @@ Callback function to handle the completion of sending data to the peer, must be 
 Examples
 --------
 
-Set of 2 examples of the ESP-NOW library to send and receive data between multiple ESP32 devices (1 master, multiple slaves).
+Set of 2 examples of the ESP-NOW library to send and receive data using broadcast messages between multiple ESP32 devices (multiple masters, multiple slaves).
 
 1. ESP-NOW Broadcast Master Example:
 
@@ -270,7 +270,7 @@ Set of 2 examples of the ESP-NOW library to send and receive data between multip
 .. literalinclude:: ../../../libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave/ESP_NOW_Broadcast_Slave.ino
     :language: cpp
 
-Example of the ESP-NOW Serial library to send and receive data between 2 ESP32 devices using the serial port:
+Example of the ESP-NOW Serial library to send and receive data as a stream between 2 ESP32 devices using the serial monitor:
 
 .. literalinclude:: ../../../libraries/ESP_NOW/examples/ESP_NOW_Serial/ESP_NOW_Serial.ino
     :language: cpp
