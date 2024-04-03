@@ -45,8 +45,8 @@ public:
         return true;
     }
 
-    // Function to  print the received messages from the master
-    void _onReceive(const uint8_t *data, size_t len, bool broadcast) {
+    // Function to print the received messages from the master
+    void onReceive(const uint8_t *data, size_t len, bool broadcast) {
         Serial.printf("Received a message from master " MACSTR " (%s)\n", MAC2STR(addr()), broadcast ? "broadcast" : "unicast");
         Serial.printf("  Message: %s\n", (char *)data);
     }
@@ -85,15 +85,16 @@ void setup() {
     Serial.begin(115200);
     while (!Serial) delay(10);
 
+    // Initialize the Wi-Fi module
+    WiFi.mode(WIFI_STA);
+    WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
+    while(!WiFi.STA.started()) delay(100);
+
     Serial.println("ESP-NOW Example - Broadcast Slave");
     Serial.println("Wi-Fi parameters:");
     Serial.println("  Mode: STA");
     Serial.println("  MAC Address: " + WiFi.macAddress());
     Serial.printf("  Channel: %d\n", ESPNOW_WIFI_CHANNEL);
-
-    // Initialize the Wi-Fi module
-    WiFi.mode(WIFI_STA);
-    WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
 
     // Initialize the ESP-NOW protocol
     if (!ESP_NOW.begin()) {
