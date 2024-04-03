@@ -26,56 +26,44 @@
 
 class ESP_NOW_Broadcast_Peer : public ESP_NOW_Peer {
 public:
-    ESP_NOW_Broadcast_Peer(uint8_t channel, wifi_interface_t iface, const uint8_t *lmk);
-    ~ESP_NOW_Broadcast_Peer();
+    // Constructor of the class using the broadcast address
+    ESP_NOW_Broadcast_Peer(uint8_t channel, wifi_interface_t iface, const uint8_t *lmk)
+    : ESP_NOW_Peer(ESP_NOW.BROADCAST_ADDR, channel, iface, lmk) {}
 
-    bool begin();
-    bool send_message(const uint8_t *data, size_t len);
+    // Destructor of the class
+    ~ESP_NOW_Broadcast_Peer() {
+        remove();
+    }
 
-    // ESP_NOW_Peer interfaces
-    void _onReceive(const uint8_t *data, size_t len, bool broadcast);
-    void _onSent(bool success);
+    // Function to properly initialize the ESP-NOW and register the broadcast peer
+    bool begin() {
+        if (!ESP_NOW.begin() || !add()) {
+            log_e("Failed to initialize ESP-NOW or register the broadcast peer");
+            return false;
+        }
+        return true;
+    }
+
+    // Function to send a message to all devices within the network
+    bool send_message(const uint8_t *data, size_t len) {
+        if (!send(data, len)) {
+            log_e("Failed to broadcast message");
+            return false;
+        }
+        return true;
+    }
+
+    void _onReceive(const uint8_t *data, size_t len, bool broadcast) {
+        // The broadcast peer will never receive any data. Rather, it will only send data.
+        // Data broadcasted will be received by the actual object of the peer that made the broadcast.
+        // It is still required to be implemented because it is a pure virtual method.
+    }
+
+    void _onSent(bool success) {
+        // As broadcast messages does not require any acknowledgment, this method will never be called.
+        // It is still required to be implemented because it is a pure virtual method.
+    }
 };
-
-/* Methods */
-
-// Constructor of the class using the broadcast address
-ESP_NOW_Broadcast_Peer::ESP_NOW_Broadcast_Peer(uint8_t channel, wifi_interface_t iface, const uint8_t *lmk)
-  : ESP_NOW_Peer(ESP_NOW.BROADCAST_ADDR, channel, iface, lmk) {}
-
-// Destructor of the class
-ESP_NOW_Broadcast_Peer::~ESP_NOW_Broadcast_Peer() {
-    remove();
-}
-
-// Function to properly initialize the ESP-NOW and register the broadcast peer
-bool ESP_NOW_Broadcast_Peer::begin() {
-    if (!ESP_NOW.begin() || !add()) {
-        log_e("Failed to initialize ESP-NOW or register the broadcast peer");
-        return false;
-    }
-    return true;
-}
-
-// Function to send a message to all devices within the network
-bool ESP_NOW_Broadcast_Peer::send_message(const uint8_t *data, size_t len) {
-    if (!send(data, len)) {
-        log_e("Failed to broadcast message");
-        return false;
-    }
-    return true;
-}
-
-void ESP_NOW_Broadcast_Peer::_onReceive(const uint8_t *data, size_t len, bool broadcast) {
-    // The broadcast peer will never receive any data. Rather, it will only send data.
-    // Data broadcasted will be received by the actual object of the peer that made the broadcast.
-    // It is still required to be implemented because it is a pure virtual method.
-}
-
-void ESP_NOW_Broadcast_Peer::_onSent(bool success) {
-    // As broadcast messages does not require any acknowledgment, this method will never be called.
-    // It is still required to be implemented because it is a pure virtual method.
-}
 
 /* Global Variables */
 

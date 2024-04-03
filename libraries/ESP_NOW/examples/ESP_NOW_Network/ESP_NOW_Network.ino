@@ -108,79 +108,67 @@ public:
     bool peer_is_master = false;
     bool peer_ready = false;
 
-    ESP_NOW_Network_Peer(const uint8_t *mac_addr, uint32_t priority = 0, const uint8_t *lmk = (const uint8_t *)ESPNOW_EXAMPLE_LMK);
-    ~ESP_NOW_Network_Peer();
+    ESP_NOW_Network_Peer(const uint8_t *mac_addr, uint32_t priority = 0, const uint8_t *lmk = (const uint8_t *)ESPNOW_EXAMPLE_LMK)
+    : ESP_NOW_Peer(mac_addr, ESPNOW_WIFI_CHANNEL, ESPNOW_WIFI_IFACE, lmk)
+    , priority(priority) {}
 
-    bool begin();
-    bool send_message(const uint8_t *data, size_t len);
+    ~ESP_NOW_Network_Peer() {}
 
-    // ESP_NOW_Peer interfaces
-    void _onReceive(const uint8_t *data, size_t len, bool broadcast);
-    void _onSent(bool success);
-};
-
-/* Methods */
-
-ESP_NOW_Network_Peer::ESP_NOW_Network_Peer(const uint8_t *mac_addr, uint32_t priority, const uint8_t *lmk)
-  : ESP_NOW_Peer(mac_addr, ESPNOW_WIFI_CHANNEL, ESPNOW_WIFI_IFACE, lmk)
-  , priority(priority) {}
-
-ESP_NOW_Network_Peer::~ESP_NOW_Network_Peer() {}
-
-bool ESP_NOW_Network_Peer::begin() {
-    // In this example the ESP-NOW protocol will already be initialized as we require it to receive broadcast messages.
-    if (!add()) {
-        log_e("Failed to initialize ESP-NOW or register the peer");
-        return false;
-    }
-    return true;
-}
-
-bool ESP_NOW_Network_Peer::send_message(const uint8_t *data, size_t len) {
-    if (data == NULL || len == 0) {
-        log_e("Data to be sent is NULL or has a length of 0");
-        return false;
+    bool begin() {
+        // In this example the ESP-NOW protocol will already be initialized as we require it to receive broadcast messages.
+        if (!add()) {
+            log_e("Failed to initialize ESP-NOW or register the peer");
+            return false;
+        }
+        return true;
     }
 
-    // Call the parent class method to send the data
-    return send(data, len);
-}
+    bool send_message(const uint8_t *data, size_t len) {
+        if (data == NULL || len == 0) {
+            log_e("Data to be sent is NULL or has a length of 0");
+            return false;
+        }
 
-void ESP_NOW_Network_Peer::_onReceive(const uint8_t *data, size_t len, bool broadcast) {
-    esp_now_data_t *msg = (esp_now_data_t *)data;
-
-    if (peer_ready == false && msg->ready == true) {
-        Serial.printf("Peer " MACSTR " reported ready\n", MAC2STR(addr()));
-        peer_ready = true;
+        // Call the parent class method to send the data
+        return send(data, len);
     }
 
-    if (!broadcast) {
-        recv_msg_count++;
-        if (device_is_master) {
-            Serial.printf("Received a message from peer " MACSTR "\n", MAC2STR(addr()));
-            Serial.printf("  Count: %lu\n", msg->count);
-            Serial.printf("  Random data: %lu\n", msg->data);
-            last_data.push_back(msg->data);
-            last_data.erase(last_data.begin());
-        } else if (peer_is_master) {
-            Serial.println("Received a message from the master");
-            Serial.printf("  Average data: %lu\n", msg->data);
+    void _onReceive(const uint8_t *data, size_t len, bool broadcast) {
+        esp_now_data_t *msg = (esp_now_data_t *)data;
+
+        if (peer_ready == false && msg->ready == true) {
+            Serial.printf("Peer " MACSTR " reported ready\n", MAC2STR(addr()));
+            peer_ready = true;
+        }
+
+        if (!broadcast) {
+            recv_msg_count++;
+            if (device_is_master) {
+                Serial.printf("Received a message from peer " MACSTR "\n", MAC2STR(addr()));
+                Serial.printf("  Count: %lu\n", msg->count);
+                Serial.printf("  Random data: %lu\n", msg->data);
+                last_data.push_back(msg->data);
+                last_data.erase(last_data.begin());
+            } else if (peer_is_master) {
+                Serial.println("Received a message from the master");
+                Serial.printf("  Average data: %lu\n", msg->data);
+            }
+            else {
+                Serial.printf("Peer " MACSTR " says: %s\n", MAC2STR(addr()), msg->str);
+            }
+        }
+    }
+
+    void _onSent(bool success) {
+        bool broadcast = memcmp(addr(), ESP_NOW.BROADCAST_ADDR, ESP_NOW_ETH_ALEN) == 0;
+        if (broadcast) {
+            log_v("Broadcast message reported as sent %s", success ? "successfully" : "unsuccessfully");
         }
         else {
-            Serial.printf("Peer " MACSTR " says: %s\n", MAC2STR(addr()), msg->str);
+            log_v("Unicast message reported as sent %s to peer " MACSTR, success ? "successfully" : "unsuccessfully", MAC2STR(addr()));
         }
     }
-}
-
-void ESP_NOW_Network_Peer::_onSent(bool success) {
-    bool broadcast = memcmp(addr(), ESP_NOW.BROADCAST_ADDR, ESP_NOW_ETH_ALEN) == 0;
-    if (broadcast) {
-        log_v("Broadcast message reported as sent %s", success ? "successfully" : "unsuccessfully");
-    }
-    else {
-        log_v("Unicast message reported as sent %s to peer " MACSTR, success ? "successfully" : "unsuccessfully", MAC2STR(addr()));
-    }
-}
+};
 
 /* Peers */
 
