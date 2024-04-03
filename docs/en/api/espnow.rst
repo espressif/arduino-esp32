@@ -231,27 +231,27 @@ Set the local master key (LMK) for the peer.
 
 * ``lmk``: Local master key.
 
-_onReceive
+onReceive
 ^^^^^^^^^^
 
 Callback function to handle incoming data from the peer. This is a pure virtual method that must be implemented by the upper class.
 
 .. code-block:: cpp
 
-    void _onReceive(const uint8_t *data, int len, bool broadcast);
+    void onReceive(const uint8_t *data, int len, bool broadcast);
 
 * ``data``: Pointer to the received data.
 * ``len``: Length of the received data.
 * ``broadcast``: ``true`` if the data is broadcasted, ``false`` otherwise.
 
-_onSent
+onSent
 ^^^^^^^
 
-Callback function to handle the completion of sending data to the peer. This is a pure virtual method that must be implemented by the upper class.
+Optional callback function to handle the completion of sending data to the peer. This is a pure virtual method that must be implemented by the upper class.
 
 .. code-block:: cpp
 
-    void _onSent(bool success);
+    void onSent(bool success);
 
 * ``success``: ``true`` if the data is sent successfully, ``false`` otherwise.
 

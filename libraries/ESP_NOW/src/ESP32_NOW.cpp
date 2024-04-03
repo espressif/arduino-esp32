@@ -118,8 +118,8 @@ static void _esp_now_rx_cb(const esp_now_recv_info_t *info, const uint8_t *data,
             log_v("Checking peer " MACSTR, MAC2STR(_esp_now_peers[i]->addr()));
         }
         if(_esp_now_peers[i] != NULL && memcmp(info->src_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0){
-            log_v("Calling _onReceive");
-            _esp_now_peers[i]->_onReceive(data, len, broadcast);
+            log_v("Calling onReceive");
+            _esp_now_peers[i]->onReceive(data, len, broadcast);
             return;
         }
     }
@@ -130,7 +130,7 @@ static void _esp_now_tx_cb(const uint8_t *mac_addr, esp_now_send_status_t status
     //find the peer and call it's callback
     for(uint8_t i=0; i<ESP_NOW_MAX_TOTAL_PEER_NUM; i++){
         if(_esp_now_peers[i] != NULL && memcmp(mac_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0){
-            _esp_now_peers[i]->_onSent(status == ESP_NOW_SEND_SUCCESS);
+            _esp_now_peers[i]->onSent(status == ESP_NOW_SEND_SUCCESS);
             return;
         }
     }

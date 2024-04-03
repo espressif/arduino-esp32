@@ -133,7 +133,7 @@ public:
         return send(data, len);
     }
 
-    void _onReceive(const uint8_t *data, size_t len, bool broadcast) {
+    void onReceive(const uint8_t *data, size_t len, bool broadcast) {
         esp_now_data_t *msg = (esp_now_data_t *)data;
 
         if (peer_ready == false && msg->ready == true) {
@@ -159,7 +159,7 @@ public:
         }
     }
 
-    void _onSent(bool success) {
+    void onSent(bool success) {
         bool broadcast = memcmp(addr(), ESP_NOW.BROADCAST_ADDR, ESP_NOW_ETH_ALEN) == 0;
         if (broadcast) {
             log_v("Broadcast message reported as sent %s", success ? "successfully" : "unsuccessfully");

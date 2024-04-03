@@ -140,7 +140,7 @@ void ESP_NOW_Serial_Class::flush(){
 }
 
 //RX callback
-void ESP_NOW_Serial_Class::_onReceive(const uint8_t * data, size_t len, bool broadcast){
+void ESP_NOW_Serial_Class::onReceive(const uint8_t * data, size_t len, bool broadcast){
     if(rx_queue == NULL){
         return;
     }
@@ -241,7 +241,7 @@ size_t ESP_NOW_Serial_Class::write(const uint8_t *buffer, size_t size, uint32_t 
     return size;
 }
 //TX Done Callback
-void ESP_NOW_Serial_Class::_onSent(bool success){
+void ESP_NOW_Serial_Class::onSent(bool success){
     log_v(MACSTR" : %s", MAC2STR(addr()), success?"OK":"FAIL");
     if(tx_sem == NULL || tx_ring_buf == NULL || !added){
         return;

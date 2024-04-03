@@ -3,6 +3,7 @@
 #include "esp_wifi_types.h"
 #include "Print.h"
 #include "esp_now.h"
+#include "esp32-hal-log.h"
 
 class ESP_NOW_Peer {
 private:
@@ -37,8 +38,10 @@ public:
   operator bool() const;
 
   //must be implemented by the upper class
-  virtual void _onReceive(const uint8_t * data, size_t len, bool broadcast) = 0;
-  virtual void _onSent(bool success) = 0;
+  virtual void onReceive(const uint8_t * data, size_t len, bool broadcast) = 0;
+
+  //optional callback
+  virtual void onSent(bool success) { log_v("Message reported as sent %s", success ? "successfully" : "unsuccessfully"); }
 };
 
 class ESP_NOW_Class : public Print {

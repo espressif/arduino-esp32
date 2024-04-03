@@ -53,14 +53,9 @@ public:
         return true;
     }
 
-    void _onReceive(const uint8_t *data, size_t len, bool broadcast) {
+    void onReceive(const uint8_t *data, size_t len, bool broadcast) {
         // The broadcast peer will never receive any data. Rather, it will only send data.
         // Data broadcasted will be received by the actual object of the peer that made the broadcast.
-        // It is still required to be implemented because it is a pure virtual method.
-    }
-
-    void _onSent(bool success) {
-        // As broadcast messages does not require any acknowledgment, this method will never be called.
         // It is still required to be implemented because it is a pure virtual method.
     }
 };
