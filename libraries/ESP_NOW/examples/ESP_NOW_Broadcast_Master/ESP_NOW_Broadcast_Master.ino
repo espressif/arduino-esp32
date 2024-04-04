@@ -67,15 +67,16 @@ void setup() {
     Serial.begin(115200);
     while (!Serial) delay(10);
 
+    // Initialize the Wi-Fi module
+    WiFi.mode(WIFI_STA);
+    WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
+    while(!WiFi.STA.started()) delay(100);
+
     Serial.println("ESP-NOW Example - Broadcast Master");
     Serial.println("Wi-Fi parameters:");
     Serial.println("  Mode: STA");
     Serial.println("  MAC Address: " + WiFi.macAddress());
     Serial.printf("  Channel: %d\n", ESPNOW_WIFI_CHANNEL);
-
-    // Initialize the Wi-Fi module
-    WiFi.mode(WIFI_STA);
-    WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
 
     // Register the broadcast peer
     if (!broadcast_peer.begin()) {

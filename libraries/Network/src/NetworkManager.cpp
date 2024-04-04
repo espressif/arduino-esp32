@@ -67,10 +67,11 @@ int NetworkManager::hostByName(const char* aHostname, IPAddress& aResult)
 
     const char *servname = "0";
     struct addrinfo *res;
-    const struct addrinfo hints = {
-        .ai_family = AF_UNSPEC,
-        .ai_socktype = SOCK_STREAM,
-    };
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
     err = lwip_getaddrinfo(aHostname, servname, &hints, &res);
     if (err == ERR_OK)
     {

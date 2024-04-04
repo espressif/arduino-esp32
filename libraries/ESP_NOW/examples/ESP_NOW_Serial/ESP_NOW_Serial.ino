@@ -54,6 +54,8 @@ void setup() {
     Serial.println(ESPNOW_WIFI_CHANNEL);
     WiFi.setChannel(ESPNOW_WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
 
+    while(!(WiFi.STA.started() || WiFi.AP.started())) delay(100);
+
     Serial.print("MAC Address: ");
     Serial.println(ESPNOW_WIFI_MODE == WIFI_AP ? WiFi.softAPmacAddress() : WiFi.macAddress());
 
