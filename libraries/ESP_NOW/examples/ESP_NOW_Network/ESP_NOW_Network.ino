@@ -162,10 +162,10 @@ public:
     void onSent(bool success) {
         bool broadcast = memcmp(addr(), ESP_NOW.BROADCAST_ADDR, ESP_NOW_ETH_ALEN) == 0;
         if (broadcast) {
-            log_v("Broadcast message reported as sent %s", success ? "successfully" : "unsuccessfully");
+            log_i("Broadcast message reported as sent %s", success ? "successfully" : "unsuccessfully");
         }
         else {
-            log_v("Unicast message reported as sent %s to peer " MACSTR, success ? "successfully" : "unsuccessfully", MAC2STR(addr()));
+            log_i("Unicast message reported as sent %s to peer " MACSTR, success ? "successfully" : "unsuccessfully", MAC2STR(addr()));
         }
     }
 };
@@ -253,15 +253,16 @@ void setup() {
     Serial.begin(115200);
     while (!Serial) delay(10);
 
+    // Initialize the Wi-Fi module
+    WiFi.mode(WIFI_STA);
+    WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
+    while(!WiFi.STA.started()) delay(100);
+
     Serial.println("ESP-NOW Network Example");
     Serial.println("Wi-Fi parameters:");
     Serial.println("  Mode: STA");
     Serial.println("  MAC Address: " + WiFi.macAddress());
     Serial.printf("  Channel: %d\n", ESPNOW_WIFI_CHANNEL);
-
-    // Initialize the Wi-Fi module
-    WiFi.mode(WIFI_STA);
-    WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
 
     // Generate yhis device's priority based on the 3 last bytes of the MAC address
     WiFi.macAddress(self_mac);
