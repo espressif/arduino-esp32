@@ -8,7 +8,6 @@
 #include "esp_netif_types.h"
 #include "esp_event.h"
 #include "Arduino.h"
-#include "NetworkManager.h"
 #include "Printable.h"
 
 typedef enum {
@@ -54,6 +53,10 @@ class NetworkInterface: public Printable {
         const char * ifkey() const;
         const char * desc() const;
         String impl_name() const;
+        int impl_index() const;
+        int route_prio() const;
+        bool setDefault();
+        bool isDefault() const;
 
         uint8_t * macAddress(uint8_t* mac) const;
         String macAddress() const;

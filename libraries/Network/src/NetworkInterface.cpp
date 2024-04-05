@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "NetworkInterface.h"
+#include "NetworkManager.h"
 #include "esp_netif.h"
 #include "esp_netif_defaults.h"
 #include "esp_system.h"
@@ -536,6 +537,43 @@ String NetworkInterface::impl_name(void) const
         return String("");
     }
     return String(netif_name);
+}
+
+int NetworkInterface::impl_index() const
+{
+    if(_esp_netif == NULL){
+        return -1;
+    }
+    return esp_netif_get_netif_impl_index(_esp_netif);
+}
+
+int NetworkInterface::route_prio() const
+{
+    if(_esp_netif == NULL){
+        return -1;
+    }
+    return esp_netif_get_route_prio(_esp_netif);
+}
+
+bool NetworkInterface::setDefault()
+{
+    if(_esp_netif == NULL){
+        return false;
+    }
+    esp_err_t err = esp_netif_set_default_netif(_esp_netif);
+    if(err != ESP_OK){
+        log_e("Failed to set default netif: %d", err);
+        return false;
+    }
+    return true;
+}
+
+bool NetworkInterface::isDefault() const
+{
+    if(_esp_netif == NULL){
+        return false;
+    }
+    return esp_netif_get_default_netif() == _esp_netif;
 }
 
 uint8_t * NetworkInterface::macAddress(uint8_t* mac) const
