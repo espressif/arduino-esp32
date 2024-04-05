@@ -205,3 +205,5 @@ Functional changes
 ******************
 
 * In Arduino (and other frameworks) the method named ``flush()`` is intended to send out the transmit buffer content. ``WiFiClient`` and ``WiFiUDP`` method ``flush()`` won't clear the receive buffer anymore. A new method called ``clear()`` is now used for that. Currently ``flush()`` does nothing in ``WiFiClient``, ``WiFiClientSecure`` and ``WiFiUDP``.
+* ``WiFiServer`` has functions ``accept()`` and ``available()`` with the same functionality. In Arduino, ``available()`` should work differently so it is now deprecated.
+* ``WiFiServer`` had unimplemented write functions inherited from ``Print`` class. These are now removed. Also unimplemented method ``stopAll()`` is removed. The methods were unimplemented because WiFiServer doesn't manage connected WiFiClient objects for print-to-all-clients functionality.
