@@ -6,6 +6,7 @@
 #pragma once
 
 #include "NetworkEvents.h"
+#include "NetworkInterface.h"
 #include "IPAddress.h"
 #include "WString.h"
 
@@ -17,6 +18,9 @@ public:
 	int hostByName(const char *aHostname, IPAddress &aResult);
 	uint8_t * macAddress(uint8_t * mac);
 	String macAddress();
+
+	bool setDefaultInterface(NetworkInterface & ifc);
+	NetworkInterface * getDefaultInterface();
 
     size_t printTo(Print & out) const;
 
