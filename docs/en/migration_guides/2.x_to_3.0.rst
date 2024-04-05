@@ -197,3 +197,11 @@ Functional changes
 * Any pin set as -1 in ``begin()`` or ``setPins()`` won't be changed nor detached.
 * ``begin(baud)`` will not change any pins that have been set before this call, through a previous ``begin(baud, rx, tx)`` or ``setPin()``.
 * If the application only uses RX or TX, ``begin(baud, -1, tx)`` or ``begin(baud, rx)`` will change only the assigned pin and keep the other unchanged.
+
+WiFi
+----
+
+Functional changes
+******************
+
+* In Arduino (and other frameworks) the method named ``flush()`` is intended to send out the transmit buffer content. ``WiFiClient`` and ``WiFiUDP`` method ``flush()`` won't clear the receive buffer anymore. A new method called ``clear()`` is now used for that. Currently ``flush()`` does nothing in ``WiFiClient``, ``WiFiClientSecure`` and ``WiFiUDP``.
