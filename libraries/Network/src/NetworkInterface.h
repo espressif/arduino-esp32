@@ -83,9 +83,8 @@ class NetworkInterface: public Printable {
         int32_t _got_ip_event_id;
         int32_t _lost_ip_event_id;
         Network_Interface_ID _interface_id;
-        bool _is_server_if;
 
-        bool initNetif(Network_Interface_ID interface_id, bool server_interface=false);
+        bool initNetif(Network_Interface_ID interface_id);
         void destroyNetif();
         int setStatusBits(int bits);
         int clearStatusBits(int bits);
