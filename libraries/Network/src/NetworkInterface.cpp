@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "NetworkInterface.h"
+#include "NetworkManager.h"
 #include "esp_netif.h"
 #include "esp_netif_defaults.h"
 #include "esp_system.h"
@@ -281,7 +282,7 @@ bool NetworkInterface::connected() const {
 }
 
 bool NetworkInterface::hasIP() const {
-    return (getStatusBits() & ESP_NETIF_HAS_IP_BIT) != 0;
+    return (getStatusBits() & (ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_STATIC_IP_BIT)) != 0;
 }
 
 bool NetworkInterface::hasLinkLocalIPv6() const {
@@ -451,7 +452,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             return false;
         }
 
-        clearStatusBits(ESP_NETIF_HAS_IP_BIT);
+        clearStatusBits(ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
 
         // Set IPv4, Netmask, Gateway
         err = esp_netif_set_ip_info(_esp_netif, &info);
@@ -473,7 +474,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
                 return false;
             }
         } else {
-            setStatusBits(ESP_NETIF_HAS_IP_BIT);
+            setStatusBits(ESP_NETIF_HAS_STATIC_IP_BIT);
         }
     }
 
@@ -536,6 +537,43 @@ String NetworkInterface::impl_name(void) const
         return String("");
     }
     return String(netif_name);
+}
+
+int NetworkInterface::impl_index() const
+{
+    if(_esp_netif == NULL){
+        return -1;
+    }
+    return esp_netif_get_netif_impl_index(_esp_netif);
+}
+
+int NetworkInterface::route_prio() const
+{
+    if(_esp_netif == NULL){
+        return -1;
+    }
+    return esp_netif_get_route_prio(_esp_netif);
+}
+
+bool NetworkInterface::setDefault()
+{
+    if(_esp_netif == NULL){
+        return false;
+    }
+    esp_err_t err = esp_netif_set_default_netif(_esp_netif);
+    if(err != ESP_OK){
+        log_e("Failed to set default netif: %d", err);
+        return false;
+    }
+    return true;
+}
+
+bool NetworkInterface::isDefault() const
+{
+    if(_esp_netif == NULL){
+        return false;
+    }
+    return esp_netif_get_default_netif() == _esp_netif;
 }
 
 uint8_t * NetworkInterface::macAddress(uint8_t* mac) const
@@ -606,6 +644,35 @@ IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const
     if(esp_netif_get_dns_info(_esp_netif, dns_no?ESP_NETIF_DNS_BACKUP:ESP_NETIF_DNS_MAIN, &d) != ESP_OK){
         return IPAddress();
     }
+    if (d.ip.type == ESP_IPADDR_TYPE_V6){
+        // IPv6 from 4x uint32_t; byte order based on IPV62STR() in esp_netif_ip_addr.h
+        log_d("DNS got IPv6: " IPV6STR, IPV62STR(d.ip.u_addr.ip6));
+        uint32_t addr0 esp_netif_htonl(d.ip.u_addr.ip6.addr[0]);
+        uint32_t addr1 esp_netif_htonl(d.ip.u_addr.ip6.addr[1]);
+        uint32_t addr2 esp_netif_htonl(d.ip.u_addr.ip6.addr[2]);
+        uint32_t addr3 esp_netif_htonl(d.ip.u_addr.ip6.addr[3]);
+        return IPAddress(
+            (uint8_t)(addr0 >> 24) & 0xFF,
+            (uint8_t)(addr0 >> 16) & 0xFF,
+            (uint8_t)(addr0 >> 8) & 0xFF,
+            (uint8_t)addr0 & 0xFF,
+            (uint8_t)(addr1 >> 24) & 0xFF,
+            (uint8_t)(addr1 >> 16) & 0xFF,
+            (uint8_t)(addr1 >> 8) & 0xFF,
+            (uint8_t)addr1 & 0xFF,
+            (uint8_t)(addr2 >> 24) & 0xFF,
+            (uint8_t)(addr2 >> 16) & 0xFF,
+            (uint8_t)(addr2 >> 8) & 0xFF,
+            (uint8_t)addr2 & 0xFF,
+            (uint8_t)(addr3 >> 24) & 0xFF,
+            (uint8_t)(addr3 >> 16) & 0xFF,
+            (uint8_t)(addr3 >> 8) & 0xFF,
+            (uint8_t)addr3 & 0xFF,
+            d.ip.u_addr.ip6.zone
+        );
+    }
+    // IPv4 from single uint32_t
+    log_d("DNS IPv4: " IPSTR, IP2STR(&d.ip.u_addr.ip4));
     return IPAddress(d.ip.u_addr.ip4.addr);
 }
 

@@ -200,7 +200,7 @@ bool APClass::end(){
     return true;
 }
 
-bool APClass::create(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder){
+bool APClass::create(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder, wifi_auth_mode_t auth_mode, wifi_cipher_type_t cipher){
     if(!ssid || *ssid == 0) {
         log_e("SSID missing!");
         return false;
@@ -226,8 +226,8 @@ bool APClass::create(const char* ssid, const char* passphrase, int channel, int 
         _wifi_strncpy((char*)conf.ap.ssid, ssid, 32);
         conf.ap.ssid_len = strlen(ssid);
         if(passphrase != NULL && passphrase[0] != 0){
-            conf.ap.authmode = WIFI_AUTH_WPA2_PSK;
-            conf.ap.pairwise_cipher = WIFI_CIPHER_TYPE_CCMP; // Disable by default enabled insecure TKIP and use just CCMP.
+            conf.ap.authmode = auth_mode;
+            conf.ap.pairwise_cipher = cipher;
             _wifi_strncpy((char*)conf.ap.password, passphrase, 64);
         }
     }
@@ -318,15 +318,15 @@ size_t APClass::printDriverInfo(Print & out) const{
 
     if(info.ap.authmode == WIFI_AUTH_OPEN){ bytes += out.print(",OPEN"); }
     else if(info.ap.authmode == WIFI_AUTH_WEP){ bytes += out.print(",WEP"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA_PSK){ bytes += out.print(",WWPA_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA2_PSK){ bytes += out.print(",WWPA2_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA_WPA2_PSK){ bytes += out.print(",WWPA_WPA2_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA_PSK){ bytes += out.print(",WPA_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA2_PSK){ bytes += out.print(",WPA2_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA_WPA2_PSK){ bytes += out.print(",WPA_WPA2_PSK"); }
     else if(info.ap.authmode == WIFI_AUTH_ENTERPRISE){ bytes += out.print(",WEAP"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA3_PSK){ bytes += out.print(",WWPA3_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA2_WPA3_PSK){ bytes += out.print(",WWPA2_WPA3_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_WAPI_PSK){ bytes += out.print(",WWAPI_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_OWE){ bytes += out.print(",WOWE"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA3_ENT_192){ bytes += out.print(",WWPA3_ENT_SUITE_B_192_BIT"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA3_PSK){ bytes += out.print(",WPA3_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA2_WPA3_PSK){ bytes += out.print(",WPA2_WPA3_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WAPI_PSK){ bytes += out.print(",WAPI_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_OWE){ bytes += out.print(",OWE"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA3_ENT_192){ bytes += out.print(",WPA3_ENT_SUITE_B_192_BIT"); }
 
     if(esp_wifi_ap_get_sta_list(&clients) == ESP_OK) {
         bytes += out.print(",STA:");

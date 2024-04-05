@@ -177,7 +177,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subne
         subnet = (tmp != INADDR_NONE) ? tmp : IPAddress(255, 255, 255, 0);
     }
 
-    return STA.config(local_ip, gateway, subnet, dns1, dns2);
+    return STA.begin() && STA.config(local_ip, gateway, subnet, dns1, dns2);
 }
 
 bool WiFiSTAClass::config(IPAddress local_ip, IPAddress dns) {
@@ -205,10 +205,7 @@ bool WiFiSTAClass::config(IPAddress local_ip, IPAddress dns) {
  */
 bool WiFiSTAClass::setDNS(IPAddress dns1, IPAddress dns2)
 {
-    if(!STA.started()){
-        return false;
-    }
-    return STA.dnsIP(0, dns1) && STA.dnsIP(1, dns2);
+    return STA.begin() && STA.dnsIP(0, dns1) && STA.dnsIP(1, dns2);
 }
 
 /**
