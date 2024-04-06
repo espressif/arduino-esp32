@@ -5,7 +5,7 @@ This project is an example of an HTTP server designed to facilitate the transfer
 ### Example cURL Command
 
 ```bash
-curl -X PUT -H "Content-Type: application/octet-stream" -T ./my-file.mp3 http://esp-ip/upload/my-file.mp3
+curl -X PUT -T ./my-file.mp3 http://esp-ip/upload/my-file.mp3
 ```
 
 ## Resources

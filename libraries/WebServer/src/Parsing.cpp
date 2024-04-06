@@ -136,7 +136,6 @@ bool WebServer::_parseRequest(NetworkClient& client) {
     String headerName;
     String headerValue;
     bool isForm = false;
-    bool isRaw = false;
     bool isEncoded = false;
     //parse headers
     while(1){
@@ -159,8 +158,6 @@ bool WebServer::_parseRequest(NetworkClient& client) {
         using namespace mime;
         if (headerValue.startsWith(FPSTR(mimeTable[txt].mimeType))){
           isForm = false;
-        } else if (headerValue.startsWith(FPSTR(mimeTable[none].mimeType))){
-          isRaw = true;
         } else if (headerValue.startsWith(F("application/x-www-form-urlencoded"))){
           isForm = false;
           isEncoded = true;
@@ -176,7 +173,7 @@ bool WebServer::_parseRequest(NetworkClient& client) {
       }
     }
 
-    if (isRaw && _currentHandler && _currentHandler->canRaw(_currentUri)){
+    if (!isForm && _currentHandler && _currentHandler->canRaw(_currentUri)){
       log_v("Parse raw");
       _currentRaw.reset(new HTTPRaw());
       _currentRaw->status = RAW_START;
