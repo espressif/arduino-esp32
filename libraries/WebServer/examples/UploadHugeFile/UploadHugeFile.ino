@@ -14,7 +14,7 @@ void handleCreate() {
   server.send(200, "text/plain", "");
 }
 void handleCreateProcess() {
-  String path = server.pathArg(0);
+  String path = "/" + server.pathArg(0);
   HTTPRaw& raw = server.raw();
   if (raw.status == RAW_START) {
     if (SD.exists((char *)path.c_str())) {
