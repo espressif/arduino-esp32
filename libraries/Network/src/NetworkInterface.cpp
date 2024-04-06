@@ -759,7 +759,12 @@ size_t NetworkInterface::printTo(Print & out) const {
 
     bytes += out.print(" (");
     esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
-    if(flags & ESP_NETIF_DHCP_CLIENT) bytes += out.print("DHCPC");
+    if(flags & ESP_NETIF_DHCP_CLIENT){
+        bytes += out.print("DHCPC");
+        if(getStatusBits() & ESP_NETIF_HAS_STATIC_IP_BIT){
+            bytes += out.print("_OFF");
+        }
+    }
     if(flags & ESP_NETIF_DHCP_SERVER) bytes += out.print("DHCPS");
     if(flags & ESP_NETIF_FLAG_AUTOUP) bytes += out.print(",AUTOUP");
     if(flags & ESP_NETIF_FLAG_GARP) bytes += out.print(",GARP");
