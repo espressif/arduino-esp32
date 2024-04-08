@@ -54,14 +54,17 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
 		case ESP32_BUS_TYPE_I2S_STD_WS: return "I2S_STD_WS";
 		case ESP32_BUS_TYPE_I2S_STD_DOUT: return "I2S_STD_DOUT";
 		case ESP32_BUS_TYPE_I2S_STD_DIN: return "I2S_STD_DIN";
+
 		case ESP32_BUS_TYPE_I2S_TDM_MCLK: return "I2S_TDM_MCLK";
 		case ESP32_BUS_TYPE_I2S_TDM_BCLK: return "I2S_TDM_BCLK";
 		case ESP32_BUS_TYPE_I2S_TDM_WS: return "I2S_TDM_WS";
 		case ESP32_BUS_TYPE_I2S_TDM_DOUT: return "I2S_TDM_DOUT";
 		case ESP32_BUS_TYPE_I2S_TDM_DIN: return "I2S_TDM_DIN";
+
 		case ESP32_BUS_TYPE_I2S_PDM_TX_CLK: return "I2S_PDM_TX_CLK";
 		case ESP32_BUS_TYPE_I2S_PDM_TX_DOUT0: return "I2S_PDM_TX_DOUT0";
 		case ESP32_BUS_TYPE_I2S_PDM_TX_DOUT1: return "I2S_PDM_TX_DOUT1";
+
 		case ESP32_BUS_TYPE_I2S_PDM_RX_CLK: return "I2S_PDM_RX_CLK";
 		case ESP32_BUS_TYPE_I2S_PDM_RX_DIN0: return "I2S_PDM_RX_DIN0";
 		case ESP32_BUS_TYPE_I2S_PDM_RX_DIN1: return "I2S_PDM_RX_DIN1";
@@ -104,6 +107,12 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
 		case ESP32_BUS_TYPE_ETHERNET_MCD: return "ETHERNET_MCD";
 		case ESP32_BUS_TYPE_ETHERNET_MDIO: return "ETHERNET_MDIO";
 		case ESP32_BUS_TYPE_ETHERNET_PWR: return "ETHERNET_PWR";
+#endif
+#if CONFIG_LWIP_PPP_SUPPORT
+		case ESP32_BUS_TYPE_PPP_TX: return "PPP_MODEM_TX";
+		case ESP32_BUS_TYPE_PPP_RX: return "PPP_MODEM_RX";
+		case ESP32_BUS_TYPE_PPP_RTS: return "PPP_MODEM_RTS";
+		case ESP32_BUS_TYPE_PPP_CTS: return "PPP_MODEM_CTS";
 #endif
 		default: return "UNKNOWN";
     }

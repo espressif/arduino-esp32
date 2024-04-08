@@ -71,9 +71,9 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP;
         } else
 #endif
-        // if(_interface_id == ESP_NETIF_ID_PPP){
-        //     arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP;
-        // } else 
+        if(_interface_id == ESP_NETIF_ID_PPP){
+            arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP;
+        } else 
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
         }
@@ -87,9 +87,9 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_LOST_IP;
         } else 
 #endif
-        // if(_interface_id == ESP_NETIF_ID_PPP){
-        //     arduino_event.event_id = ARDUINO_EVENT_PPP_LOST_IP;
-        // } else 
+        if(_interface_id == ESP_NETIF_ID_PPP){
+            arduino_event.event_id = ARDUINO_EVENT_PPP_LOST_IP;
+        } else 
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_LOST_IP;
         }
@@ -115,9 +115,9 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_GOT_IP6;
         } else 
 #endif
-        // if(_interface_id == ESP_NETIF_ID_PPP){
-        //     arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP6;
-        // } else 
+        if(_interface_id == ESP_NETIF_ID_PPP){
+            arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP6;
+        } else 
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP6;
         }

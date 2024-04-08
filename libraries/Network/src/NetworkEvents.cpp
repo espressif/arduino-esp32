@@ -334,13 +334,13 @@ const char * NetworkEvents::eventName(arduino_event_id_t id) {
         case ARDUINO_EVENT_ETH_LOST_IP: return "ETH_LOST_IP";
         case ARDUINO_EVENT_ETH_GOT_IP6: return "ETH_GOT_IP6";
 
-        // case ARDUINO_EVENT_PPP_START: return "PPP_START";
-        // case ARDUINO_EVENT_PPP_STOP: return "PPP_STOP";
-        // case ARDUINO_EVENT_PPP_CONNECTED: return "PPP_CONNECTED";
-        // case ARDUINO_EVENT_PPP_DISCONNECTED: return "PPP_DISCONNECTED";
-        // case ARDUINO_EVENT_PPP_GOT_IP: return "PPP_GOT_IP";
-        // case ARDUINO_EVENT_PPP_LOST_IP: return "PPP_LOST_IP";
-        // case ARDUINO_EVENT_PPP_GOT_IP6: return "PPP_GOT_IP6";
+        case ARDUINO_EVENT_PPP_START: return "PPP_START";
+        case ARDUINO_EVENT_PPP_STOP: return "PPP_STOP";
+        case ARDUINO_EVENT_PPP_CONNECTED: return "PPP_CONNECTED";
+        case ARDUINO_EVENT_PPP_DISCONNECTED: return "PPP_DISCONNECTED";
+        case ARDUINO_EVENT_PPP_GOT_IP: return "PPP_GOT_IP";
+        case ARDUINO_EVENT_PPP_LOST_IP: return "PPP_LOST_IP";
+        case ARDUINO_EVENT_PPP_GOT_IP6: return "PPP_GOT_IP6";
 #if SOC_WIFI_SUPPORTED
         case ARDUINO_EVENT_WIFI_OFF: return "WIFI_OFF";
         case ARDUINO_EVENT_WIFI_READY: return "WIFI_READY";
