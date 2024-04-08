@@ -411,7 +411,7 @@ String PPPClass::moduleName() const
     return String(name);
 }
 
-String PPPClass::getOperator() const
+String PPPClass::operatorName() const
 {
     if(_dce == NULL){
         return String();

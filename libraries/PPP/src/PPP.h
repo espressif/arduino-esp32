@@ -35,7 +35,7 @@ class PPPClass: public NetworkInterface {
         String IMSI() const;
         String IMEI() const;
         String moduleName() const;
-        String getOperator() const;
+        String operatorName() const;
         int networkMode() const;
         int radioState() const;
         bool attached() const;
