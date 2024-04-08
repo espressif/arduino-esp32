@@ -145,7 +145,6 @@ NetworkInterface::NetworkInterface()
     , _got_ip_event_id(-1)
     , _lost_ip_event_id(-1)
     , _interface_id(ESP_NETIF_ID_MAX)
-    , _is_server_if(false)
 {}
 
 NetworkInterface::~NetworkInterface(){
@@ -247,11 +246,10 @@ void NetworkInterface::destroyNetif() {
     }
 }
 
-bool NetworkInterface::initNetif(Network_Interface_ID interface_id, bool server_interface) {
+bool NetworkInterface::initNetif(Network_Interface_ID interface_id) {
     if(_esp_netif == NULL || interface_id >= ESP_NETIF_ID_MAX){
         return false;
     }
-    _is_server_if = server_interface;
     _interface_id = interface_id;
     _got_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_GOT_IP);
     _lost_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_LOST_IP);
@@ -308,7 +306,8 @@ bool NetworkInterface::dnsIP(uint8_t dns_no, IPAddress ip)
     if(_esp_netif == NULL || dns_no > 2){
         return false;
     }
-    if(_is_server_if && dns_no > 0){
+    esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
+    if(flags & ESP_NETIF_DHCP_SERVER && dns_no > 0){
         log_e("Server interfaces can have only one DNS server.");
         return false;
     }
@@ -356,7 +355,8 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
         d3.ip.u_addr.ip4.addr = 0;
 	}
 
-    if(_is_server_if){
+    esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
+    if(flags & ESP_NETIF_DHCP_SERVER){
         // Stop DHCPS
         err = esp_netif_dhcps_stop(_esp_netif);
         if(err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
@@ -646,7 +646,7 @@ IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const
     }
     if (d.ip.type == ESP_IPADDR_TYPE_V6){
         // IPv6 from 4x uint32_t; byte order based on IPV62STR() in esp_netif_ip_addr.h
-        log_d("DNS got IPv6: " IPV6STR, IPV62STR(d.ip.u_addr.ip6));
+        // log_v("DNS got IPv6: " IPV6STR, IPV62STR(d.ip.u_addr.ip6));
         uint32_t addr0 esp_netif_htonl(d.ip.u_addr.ip6.addr[0]);
         uint32_t addr1 esp_netif_htonl(d.ip.u_addr.ip6.addr[1]);
         uint32_t addr2 esp_netif_htonl(d.ip.u_addr.ip6.addr[2]);
@@ -672,7 +672,7 @@ IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const
         );
     }
     // IPv4 from single uint32_t
-    log_d("DNS IPv4: " IPSTR, IP2STR(&d.ip.u_addr.ip4));
+    // log_v("DNS IPv4: " IPSTR, IP2STR(&d.ip.u_addr.ip4));
     return IPAddress(d.ip.u_addr.ip4.addr);
 }
 
@@ -738,6 +738,12 @@ IPAddress NetworkInterface::globalIPv6() const
 
 size_t NetworkInterface::printTo(Print & out) const {
     size_t bytes = 0;
+    if(_esp_netif == NULL){
+        return bytes;
+    }
+    if(isDefault()){
+        bytes += out.print("*");
+    }
     const char * dscr = esp_netif_get_desc(_esp_netif);
     if(dscr != NULL){
         bytes += out.print(dscr);
@@ -749,7 +755,24 @@ size_t NetworkInterface::printTo(Print & out) const {
         bytes += out.print(" <DOWN");
     }
     bytes += printDriverInfo(out);
-    bytes += out.println(">");
+    bytes += out.print(">");
+
+    bytes += out.print(" (");
+    esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
+    if(flags & ESP_NETIF_DHCP_CLIENT){
+        bytes += out.print("DHCPC");
+        if(getStatusBits() & ESP_NETIF_HAS_STATIC_IP_BIT){
+            bytes += out.print("_OFF");
+        }
+    }
+    if(flags & ESP_NETIF_DHCP_SERVER) bytes += out.print("DHCPS");
+    if(flags & ESP_NETIF_FLAG_AUTOUP) bytes += out.print(",AUTOUP");
+    if(flags & ESP_NETIF_FLAG_GARP) bytes += out.print(",GARP");
+    if(flags & ESP_NETIF_FLAG_EVENT_IP_MODIFIED) bytes += out.print(",IP_MOD");
+    if(flags & ESP_NETIF_FLAG_IS_PPP) bytes += out.print(",PPP");
+    if(flags & ESP_NETIF_FLAG_IS_BRIDGE) bytes += out.print(",BRIDGE");
+    if(flags & ESP_NETIF_FLAG_MLDV6_REPORT) bytes += out.print(",V6_REP");
+    bytes += out.println(")");
 
     bytes += out.print("      ");
     bytes += out.print("ether ");
