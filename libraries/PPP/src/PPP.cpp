@@ -13,7 +13,7 @@ static PPPClass * _esp_modem = NULL;
 static esp_event_handler_instance_t _ppp_ev_instance = NULL;
 
 static void _ppp_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-
+    log_v("PPP EVENT %ld::%ld", (int)event_base, event_id);
     if (event_base == NETIF_PPP_STATUS){
         if(_esp_modem != NULL){
             _esp_modem->_onPppEvent(event_id, event_data);
@@ -21,7 +21,10 @@ static void _ppp_event_cb(void* arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
-// This callback needs to be aware of which interface it should match against
+static void _ppp_error_cb(esp_modem_terminal_error_t err){
+
+}
+
 static void onPppConnected(arduino_event_id_t event, arduino_event_info_t info)
 {
     if(event == ARDUINO_EVENT_PPP_CONNECTED){
@@ -171,6 +174,8 @@ bool PPPClass::begin(ppp_modem_model_t model, int8_t tx, int8_t rx, int8_t rts, 
         log_e("esp_modem_new_dev failed");
         goto err;
     }
+
+    esp_modem_set_error_cb(_dce, _ppp_error_cb);
 
     if (dte_config.uart_config.flow_control == ESP_MODEM_FLOW_CONTROL_HW) {
         ret = esp_modem_set_flow_control(_dce, 2, 2);  //2/2 means HW Flow Control.
@@ -364,6 +369,48 @@ String PPPClass::IMSI() const
     return String(imsi);
 }
 
+String PPPClass::IMEI() const
+{
+    if(_dce == NULL){
+        return String();
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return String();
+    }
+
+    char imei[32];
+    esp_err_t err = esp_modem_get_imei(_dce, (std::string&)imei);
+    if (err != ESP_OK) {
+        log_e("esp_modem_get_imei failed with %d %s", err, esp_err_to_name(err));
+        return String();
+    }
+
+    return String(imei);
+}
+
+String PPPClass::moduleName() const
+{
+    if(_dce == NULL){
+        return String();
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return String();
+    }
+
+    char name[32];
+    esp_err_t err = esp_modem_get_module_name(_dce, (std::string&)name);
+    if (err != ESP_OK) {
+        log_e("esp_modem_get_module_name failed with %d %s", err, esp_err_to_name(err));
+        return String();
+    }
+
+    return String(name);
+}
+
 String PPPClass::getOperator() const
 {
     if(_dce == NULL){
@@ -384,6 +431,158 @@ String PPPClass::getOperator() const
     }
 
     return String(oper);
+}
+
+int PPPClass::networkMode() const
+{
+    if(_dce == NULL){
+        return 0;
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return 0;
+    }
+
+    int m = 0;
+    esp_err_t err = esp_modem_get_network_system_mode(_dce, m);
+    if (err != ESP_OK) {
+        log_e("esp_modem_get_network_system_mode failed with %d %s", err, esp_err_to_name(err));
+        return 0;
+    }
+    return m;
+}
+
+int PPPClass::radioState() const
+{
+    if(_dce == NULL){
+        return 0;
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return 0;
+    }
+
+    int m = 0;
+    esp_err_t err = esp_modem_get_radio_state(_dce, m);
+    if (err != ESP_OK) {
+        log_e("esp_modem_get_radio_state failed with %d %s", err, esp_err_to_name(err));
+        return 0;
+    }
+    return m;
+}
+
+bool PPPClass::attached() const
+{
+    if(_dce == NULL){
+        return false;
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return false;
+    }
+
+    int m = 0;
+    esp_err_t err = esp_modem_get_network_attachment_state(_dce, m);
+    if (err != ESP_OK) {
+        // log_e("esp_modem_get_network_attachment_state failed with %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+    return m != 0;
+}
+
+bool PPPClass::powerDown(){
+    if(_dce == NULL){
+        return false;
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return false;
+    }
+
+    esp_err_t err = esp_modem_power_down(_dce);
+    if (err != ESP_OK) {
+        log_e("esp_modem_power_down failed with %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+    return true;
+}
+
+bool PPPClass::reset(){
+    if(_dce == NULL){
+        return false;
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return false;
+    }
+
+    esp_err_t err = esp_modem_reset(_dce);
+    if (err != ESP_OK) {
+        log_e("esp_modem_reset failed with %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+    return true;
+}
+
+bool PPPClass::storeProfile(){
+    if(_dce == NULL){
+        return false;
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return false;
+    }
+
+    esp_err_t err = esp_modem_store_profile(_dce);
+    if (err != ESP_OK) {
+        log_e("esp_modem_store_profile failed with %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+    return true;
+}
+
+
+bool PPPClass::sms(const char * num, const char * message) {
+    if(_dce == NULL){
+        return false;
+    }
+
+    if(_mode != ESP_MODEM_MODE_COMMAND){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return false;
+    }
+
+    for(int i=0; i<strlen(num); i++){
+        if(num[i] != '+' && num[i] != '#' && num[i] != '*' && (num[i] < 0x30 || num[i] > 0x39)){
+            log_e("Bad character '%c' in SMS Number. Should be only digits and +, # or *", num[i]);
+            return false;
+        }
+    }
+
+    esp_err_t err = esp_modem_sms_txt_mode(_dce, true);
+    if (err != ESP_OK) {
+        log_e("Setting text mode failed %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+
+    err = esp_modem_sms_character_set(_dce);
+    if (err != ESP_OK) {
+        log_e("Setting GSM character set failed %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+
+    err = esp_modem_send_sms(_dce, num, message);
+    if (err != ESP_OK) {
+        log_e("esp_modem_send_sms() failed with %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+    return true;
 }
 
 size_t PPPClass::printDriverInfo(Print & out) const {

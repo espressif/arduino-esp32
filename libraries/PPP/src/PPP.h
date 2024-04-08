@@ -29,16 +29,25 @@ class PPPClass: public NetworkInterface {
         bool begin(ppp_modem_model_t model, int8_t tx, int8_t rx, int8_t rts=-1, int8_t cts=-1, esp_modem_flow_ctrl_t flow_ctrl=ESP_MODEM_FLOW_CONTROL_NONE);
         void end();
 
-        esp_modem_dce_mode_t mode() const {
-            return _mode;
-        }
-        bool mode(esp_modem_dce_mode_t m);
-
         // Modem DCE APIs
         int RSSI() const;
         int BER() const;
         String IMSI() const;
+        String IMEI() const;
+        String moduleName() const;
         String getOperator() const;
+        int networkMode() const;
+        int radioState() const;
+        bool attached() const;
+
+        esp_modem_dce_mode_t mode() const { return _mode; }
+        bool mode(esp_modem_dce_mode_t m);
+
+        bool powerDown();
+        bool reset();
+        bool storeProfile();
+
+        bool sms(const char * num, const char * message);
 
         esp_modem_dce_t * handle() const;
 
