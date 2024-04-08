@@ -70,8 +70,8 @@ const char* HWCDC_Status() {
 }
 
 void setup() {
-  USBSerial.begin();
   USBSerial.onEvent(usbEventCallback);
+  USBSerial.begin();
 
   Serial0.begin(115200);
   Serial0.setDebugOutput(true);
