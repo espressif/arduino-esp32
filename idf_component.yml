@@ -45,6 +45,7 @@ dependencies:
   idf: ">=5.1"
   # mdns 1.2.1 is necessary to build H2 with no WiFi
   mdns: "^1.2.3"
+  espressif/esp_modem: "^1.1.0"
   chmorgan/esp-libhelix-mp3:
     version: "1.0.3"
     require: public
