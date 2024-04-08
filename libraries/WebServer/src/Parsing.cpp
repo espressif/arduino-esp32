@@ -173,7 +173,30 @@ bool WebServer::_parseRequest(WiFiClient& client) {
       }
     }
 
-    if (!isForm){
+    if (!isForm && _currentHandler && _currentHandler->canRaw(_currentUri)){
+      log_v("Parse raw");
+      _currentRaw.reset(new HTTPRaw());
+      _currentRaw->status = RAW_START;
+      _currentRaw->totalSize = 0;
+      _currentRaw->currentSize = 0;
+      log_v("Start Raw");
+      _currentHandler->raw(*this, _currentUri, *_currentRaw);
+      _currentRaw->status = RAW_WRITE;
+
+      while (_currentRaw->totalSize < _clientContentLength) {
+        _currentRaw->currentSize = client.readBytes(_currentRaw->buf, HTTP_RAW_BUFLEN);
+        _currentRaw->totalSize += _currentRaw->currentSize;
+        if (_currentRaw->currentSize == 0) {
+          _currentRaw->status = RAW_ABORTED;
+          _currentHandler->raw(*this, _currentUri, *_currentRaw);
+          return false;
+        }
+        _currentHandler->raw(*this, _currentUri, *_currentRaw);
+      }
+      _currentRaw->status = RAW_END;
+      _currentHandler->raw(*this, _currentUri, *_currentRaw);
+      log_v("Finish Raw");
+    } else if (!isForm) {
       size_t plainLength;
       char* plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
       if (plainLength < _clientContentLength) {
