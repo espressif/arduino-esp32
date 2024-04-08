@@ -95,6 +95,7 @@ set(ARDUINO_ALL_LIBRARIES
   LittleFS
   NetBIOS
   Network
+  PPP
   Preferences
   RainMaker
   SD_MMC
