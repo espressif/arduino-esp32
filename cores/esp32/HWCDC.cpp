@@ -166,8 +166,6 @@ bool HWCDC::isCDC_Connected()
         usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
     }
     // this will feed CDC TX FIFO to trigger IN_EMPTY 
-    //uint8_t c = '\0';
-    //usb_serial_jtag_ll_write_txfifo(&c, sizeof(c));
     usb_serial_jtag_ll_txfifo_flush();
     running = true;
     return false;    
@@ -460,15 +458,21 @@ void HWCDC::flush(void)
         if(uxItemsWaiting){
             // Now trigger the ISR to read data from the ring buffer.
             usb_serial_jtag_ll_txfifo_flush();
-            if(connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+            if(connected) {
+                usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+            }
         }
         uint32_t tries = tx_timeout_ms; // waits 1ms per ISR sending data attempt, in case CDC is unplugged
         while(connected && tries && uxItemsWaiting){
             delay(1);
             UBaseType_t lastUxItemsWaiting = uxItemsWaiting;
             vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
-            if (lastUxItemsWaiting == uxItemsWaiting) tries--;
-            if(connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+            if (lastUxItemsWaiting == uxItemsWaiting) {
+                tries--;
+            }
+            if(connected) {
+                usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+            }
         }
         if (tries == 0) {  // CDC isn't connected anymore...
             connected = false;
