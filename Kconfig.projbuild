@@ -321,6 +321,16 @@ config ARDUINO_SELECTIVE_Networking
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
 
+config ARDUINO_SELECTIVE_Ethernet
+    bool "Enable Ethernet"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_PPP
+    bool "Enable PPP"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
 config ARDUINO_SELECTIVE_ArduinoOTA
     bool "Enable ArduinoOTA"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
