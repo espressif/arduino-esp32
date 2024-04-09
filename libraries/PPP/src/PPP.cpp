@@ -236,9 +236,9 @@ bool PPPClass::begin(ppp_modem_model_t model){
         } else {
             pinMode(_pin_rst, OUTPUT);
         }
-        digitalWrite(25, !_pin_rst_act_low);
+        digitalWrite(_pin_rst, !_pin_rst_act_low);
         delay(200);
-        digitalWrite(25, _pin_rst_act_low);
+        digitalWrite(_pin_rst, _pin_rst_act_low);
         delay(200);
     }
 
