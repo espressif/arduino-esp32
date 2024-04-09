@@ -56,6 +56,7 @@ class PPPClass: public NetworkInterface {
 
     public:
         void _onPppEvent(int32_t event_id, void* event_data);
+        void _onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t info);
 
     private:
         esp_modem_dce_t *_dce;

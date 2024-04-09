@@ -533,7 +533,7 @@ String NetworkInterface::impl_name(void) const
     char netif_name[8];
     esp_err_t err = esp_netif_get_netif_impl_name(_esp_netif, netif_name);
     if(err != ESP_OK){
-        log_e("Failed to get netif impl_name: %d", err);
+        log_e("Failed to get netif impl_name: 0x%04x %s", err, esp_err_to_name(err));
         return String("");
     }
     return String(netif_name);
@@ -562,7 +562,7 @@ bool NetworkInterface::setDefault()
     }
     esp_err_t err = esp_netif_set_default_netif(_esp_netif);
     if(err != ESP_OK){
-        log_e("Failed to set default netif: %d", err);
+        log_e("Failed to set default netif: 0x%04x %s", err, esp_err_to_name(err));
         return false;
     }
     return true;
@@ -578,15 +578,15 @@ bool NetworkInterface::isDefault() const
 
 uint8_t * NetworkInterface::macAddress(uint8_t* mac) const
 {
-    if(!mac || _esp_netif == NULL){
+    if(!mac || _esp_netif == NULL || _interface_id == ESP_NETIF_ID_PPP){
         return NULL;
     }
+
     esp_err_t err = esp_netif_get_mac(_esp_netif, mac);
     if(err != ESP_OK){
-        log_e("Failed to get netif mac: %d", err);
+        log_e("Failed to get netif mac: 0x%04x %s", err, esp_err_to_name(err));
         return NULL;
     }
-    // getMac(mac);
     return mac;
 }
 

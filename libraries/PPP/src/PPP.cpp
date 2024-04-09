@@ -12,8 +12,53 @@ typedef struct { void * arg; } PdpContext;
 static PPPClass * _esp_modem = NULL;
 static esp_event_handler_instance_t _ppp_ev_instance = NULL;
 
+static const char * _ppp_event_name(int32_t event_id){
+    switch(event_id){
+        case NETIF_PPP_ERRORNONE         : return "No error.";
+        case NETIF_PPP_ERRORPARAM        : return "Invalid parameter.";
+        case NETIF_PPP_ERROROPEN         : return "Unable to open PPP session.";
+        case NETIF_PPP_ERRORDEVICE       : return "Invalid I/O device for PPP.";
+        case NETIF_PPP_ERRORALLOC        : return "Unable to allocate resources.";
+        case NETIF_PPP_ERRORUSER         : return "User interrupt.";
+        case NETIF_PPP_ERRORCONNECT      : return "Connection lost.";
+        case NETIF_PPP_ERRORAUTHFAIL     : return "Failed authentication challenge.";
+        case NETIF_PPP_ERRORPROTOCOL     : return "Failed to meet protocol.";
+        case NETIF_PPP_ERRORPEERDEAD     : return "Connection timeout";
+        case NETIF_PPP_ERRORIDLETIMEOUT  : return "Idle Timeout";
+        case NETIF_PPP_ERRORCONNECTTIME  : return "Max connect time reached";
+        case NETIF_PPP_ERRORLOOPBACK     : return "Loopback detected";
+        case NETIF_PPP_PHASE_DEAD        : return "Phase Dead";
+        case NETIF_PPP_PHASE_MASTER      : return "Phase Master";
+        case NETIF_PPP_PHASE_HOLDOFF     : return "Phase Hold Off";
+        case NETIF_PPP_PHASE_INITIALIZE  : return "Phase Initialize";
+        case NETIF_PPP_PHASE_SERIALCONN  : return "Phase Serial Conn";
+        case NETIF_PPP_PHASE_DORMANT     : return "Phase Dormant";
+        case NETIF_PPP_PHASE_ESTABLISH   : return "Phase Establish";
+        case NETIF_PPP_PHASE_AUTHENTICATE: return "Phase Authenticate";
+        case NETIF_PPP_PHASE_CALLBACK    : return "Phase Callback";
+        case NETIF_PPP_PHASE_NETWORK     : return "Phase Network";
+        case NETIF_PPP_PHASE_RUNNING     : return "Phase Running";
+        case NETIF_PPP_PHASE_TERMINATE   : return "Phase Terminate";
+        case NETIF_PPP_PHASE_DISCONNECT  : return "Phase Disconnect";
+        case NETIF_PPP_CONNECT_FAILED    : return "Connect Failed";
+        default: break;
+    }
+    return "UNKNOWN";
+}
+
+static const char * _ppp_terminal_error_name(esp_modem_terminal_error_t err){
+    switch(err){
+        case ESP_MODEM_TERMINAL_BUFFER_OVERFLOW: return "Buffer Overflow";
+        case ESP_MODEM_TERMINAL_CHECKSUM_ERROR: return "Checksum Error";
+        case ESP_MODEM_TERMINAL_UNEXPECTED_CONTROL_FLOW: return "Unexpected Control Flow";
+        case ESP_MODEM_TERMINAL_DEVICE_GONE: return "Device Gone";
+        case ESP_MODEM_TERMINAL_UNKNOWN_ERROR: return "Unknown Error";
+        default: break;
+    }
+    return "UNKNOWN";
+}
+
 static void _ppp_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    log_v("PPP EVENT %ld::%ld", (int)event_base, event_id);
     if (event_base == NETIF_PPP_STATUS){
         if(_esp_modem != NULL){
             _esp_modem->_onPppEvent(event_id, event_data);
@@ -21,56 +66,72 @@ static void _ppp_event_cb(void* arg, esp_event_base_t event_base, int32_t event_
     }
 }
 
-static void _ppp_error_cb(esp_modem_terminal_error_t err){
-
+static void onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t info)
+{
+    if(event >= ARDUINO_EVENT_PPP_START && event <= ARDUINO_EVENT_PPP_GOT_IP6){
+        _esp_modem->_onPppArduinoEvent(event, info);
+    }
 }
 
-static void onPppConnected(arduino_event_id_t event, arduino_event_info_t info)
-{
-    if(event == ARDUINO_EVENT_PPP_CONNECTED){
-        if (_esp_modem->getStatusBits() & ESP_NETIF_WANT_IP6_BIT){
-            esp_err_t err = esp_netif_create_ip6_linklocal(_esp_modem->netif());
-            if(err != ESP_OK){
-                log_e("Failed to enable IPv6 Link Local on PPP: [%d] %s", err, esp_err_to_name(err));
-            } else {
-                log_v("Enabled IPv6 Link Local on %s", _esp_modem->desc());
-            }
+// PPP Error Callback
+static void _ppp_error_cb(esp_modem_terminal_error_t err){
+    log_v("PPP Driver Error %ld: %s", err, _ppp_terminal_error_name(err));
+}
+
+// PPP Arduino Events Callback
+void PPPClass::_onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t info){
+    log_v("PPP Arduino Event %ld: %s", event, Network.eventName(event));
+    if(event == ARDUINO_EVENT_PPP_GOT_IP){
+        if((getStatusBits() & ESP_NETIF_CONNECTED_BIT) == 0){
+            setStatusBits(ESP_NETIF_CONNECTED_BIT);
+            arduino_event_t arduino_event;
+            arduino_event.event_id = ARDUINO_EVENT_PPP_CONNECTED;
+            Network.postEvent(&arduino_event);
+        }
+    } else 
+    if(event == ARDUINO_EVENT_PPP_LOST_IP){
+        if((getStatusBits() & ESP_NETIF_CONNECTED_BIT) != 0){
+            clearStatusBits(ESP_NETIF_CONNECTED_BIT);
+            arduino_event_t arduino_event;
+            arduino_event.event_id = ARDUINO_EVENT_PPP_DISCONNECTED;
+            Network.postEvent(&arduino_event);
         }
     }
 }
 
-esp_modem_dce_t * PPPClass::handle() const {
-    return _dce;
-}
-
+// PPP Driver Events Callback
 void PPPClass::_onPppEvent(int32_t event_id, void* event_data){
     arduino_event_t arduino_event;
     arduino_event.event_id = ARDUINO_EVENT_MAX;
 
-    log_v("PPP EVENT %ld", event_id);
+    log_v("PPP Driver Event %ld: %s", event_id, _ppp_event_name(event_id));
     
     // if (event_id == ETHERNET_EVENT_CONNECTED) {
     //     log_v("%s Connected", desc());
-    //     arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
+    //     arduino_event.event_id = ARDUINO_EVENT_PPP_CONNECTED;
     //     arduino_event.event_info.eth_connected = handle();
     //     setStatusBits(ESP_NETIF_CONNECTED_BIT);
     // } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
     //     log_v("%s Disconnected", desc());
-    //     arduino_event.event_id = ARDUINO_EVENT_ETH_DISCONNECTED;
+    //     arduino_event.event_id = ARDUINO_EVENT_PPP_DISCONNECTED;
     //     clearStatusBits(ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
     // } else if (event_id == ETHERNET_EVENT_START) {
     //     log_v("%s Started", desc());
-    //     arduino_event.event_id = ARDUINO_EVENT_ETH_START;
+    //     arduino_event.event_id = ARDUINO_EVENT_PPP_START;
     //     setStatusBits(ESP_NETIF_STARTED_BIT);
     // } else if (event_id == ETHERNET_EVENT_STOP) {
     //     log_v("%s Stopped", desc());
-    //     arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
+    //     arduino_event.event_id = ARDUINO_EVENT_PPP_STOP;
     //     clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
     // }
 
     if(arduino_event.event_id < ARDUINO_EVENT_MAX){
         Network.postEvent(&arduino_event);
     }
+}
+
+esp_modem_dce_t * PPPClass::handle() const {
+    return _dce;
 }
 
 PPPClass::PPPClass()
@@ -207,7 +268,12 @@ bool PPPClass::begin(ppp_modem_model_t model, int8_t tx, int8_t rx, int8_t rts, 
         if(!perimanSetPinBus(_pin_cts,  ESP32_BUS_TYPE_PPP_CTS, (void *)(this), -1, -1)){ goto err; }
     }
 
-    Network.onSysEvent(onPppConnected, ARDUINO_EVENT_PPP_CONNECTED);
+    Network.onSysEvent(onPppArduinoEvent);
+
+    setStatusBits(ESP_NETIF_STARTED_BIT);
+    arduino_event_t arduino_event;
+    arduino_event.event_id = ARDUINO_EVENT_PPP_START;
+    Network.postEvent(&arduino_event);
 
     return true;
 
@@ -219,6 +285,21 @@ err:
 
 void PPPClass::end(void)
 {
+    if(_esp_modem && _esp_netif && _dce){
+
+        if((getStatusBits() & ESP_NETIF_CONNECTED_BIT) != 0){
+            clearStatusBits(ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
+            arduino_event_t disconnect_event;
+            disconnect_event.event_id = ARDUINO_EVENT_PPP_DISCONNECTED;
+            Network.postEvent(&disconnect_event);
+        }
+
+        clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
+        arduino_event_t arduino_event;
+        arduino_event.event_id = ARDUINO_EVENT_PPP_STOP;
+        Network.postEvent(&arduino_event);
+    }
+
     destroyNetif();
 
     if(_ppp_ev_instance != NULL){
@@ -228,7 +309,7 @@ void PPPClass::end(void)
     }
     _esp_modem = NULL;
 
-    Network.removeEvent(onPppConnected, ARDUINO_EVENT_PPP_CONNECTED);
+    Network.removeEvent(onPppArduinoEvent);
 
     if(_dce != NULL){
         esp_modem_destroy(_dce);
@@ -253,6 +334,26 @@ void PPPClass::end(void)
     }
 
     _mode = ESP_MODEM_MODE_COMMAND;
+}
+
+bool PPPClass::attached() const
+{
+    if(_dce == NULL){
+        return false;
+    }
+
+    if(_mode == ESP_MODEM_MODE_DATA){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return false;
+    }
+
+    int m = 0;
+    esp_err_t err = esp_modem_get_network_attachment_state(_dce, m);
+    if (err != ESP_OK) {
+        // log_e("esp_modem_get_network_attachment_state failed with %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+    return m != 0;
 }
 
 bool PPPClass::mode(esp_modem_dce_mode_t m){
@@ -314,7 +415,7 @@ int PPPClass::RSSI() const
         return 0;
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return 0;
     }
@@ -334,7 +435,7 @@ int PPPClass::BER() const
         return 0;
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return 0;
     }
@@ -354,7 +455,7 @@ String PPPClass::IMSI() const
         return String();
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return String();
     }
@@ -375,7 +476,7 @@ String PPPClass::IMEI() const
         return String();
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return String();
     }
@@ -396,7 +497,7 @@ String PPPClass::moduleName() const
         return String();
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return String();
     }
@@ -417,7 +518,7 @@ String PPPClass::operatorName() const
         return String();
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return String();
     }
@@ -439,7 +540,7 @@ int PPPClass::networkMode() const
         return 0;
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return 0;
     }
@@ -459,7 +560,7 @@ int PPPClass::radioState() const
         return 0;
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return 0;
     }
@@ -473,32 +574,12 @@ int PPPClass::radioState() const
     return m;
 }
 
-bool PPPClass::attached() const
-{
-    if(_dce == NULL){
-        return false;
-    }
-
-    if(_mode != ESP_MODEM_MODE_COMMAND){
-        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-        return false;
-    }
-
-    int m = 0;
-    esp_err_t err = esp_modem_get_network_attachment_state(_dce, m);
-    if (err != ESP_OK) {
-        // log_e("esp_modem_get_network_attachment_state failed with %d %s", err, esp_err_to_name(err));
-        return false;
-    }
-    return m != 0;
-}
-
 bool PPPClass::powerDown(){
     if(_dce == NULL){
         return false;
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return false;
     }
@@ -516,7 +597,7 @@ bool PPPClass::reset(){
         return false;
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return false;
     }
@@ -534,7 +615,7 @@ bool PPPClass::storeProfile(){
         return false;
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return false;
     }
@@ -553,7 +634,7 @@ bool PPPClass::sms(const char * num, const char * message) {
         return false;
     }
 
-    if(_mode != ESP_MODEM_MODE_COMMAND){
+    if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
         return false;
     }
@@ -587,7 +668,15 @@ bool PPPClass::sms(const char * num, const char * message) {
 
 size_t PPPClass::printDriverInfo(Print & out) const {
     size_t bytes = 0;
-    //bytes += out.print(",");
+    if(_dce == NULL || _mode == ESP_MODEM_MODE_DATA){
+        return bytes;
+    }
+    if(attached()){
+        bytes += out.print(",");
+        bytes += out.print(operatorName());
+    }
+    bytes += out.print(", RSSI: ");
+    bytes += out.print(RSSI());
     return bytes;
 }
 
