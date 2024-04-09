@@ -712,6 +712,7 @@ uint8_t sdcard_uninit(uint8_t pdrv)
     if (pdrv >= FF_VOLUMES || card == NULL) {
         return 1;
     }
+    AcquireSPI lock(card);
     sdTransaction(pdrv, GO_IDLE_STATE, 0, NULL);
     ff_diskio_register(pdrv, NULL);
     s_cards[pdrv] = NULL;
