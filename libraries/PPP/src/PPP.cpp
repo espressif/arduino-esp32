@@ -412,19 +412,19 @@ bool PPPClass::setPin(const char * pin){
 int PPPClass::RSSI() const
 {
     if(_dce == NULL){
-        return 0;
+        return -1;
     }
 
     if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-        return 0;
+        return -1;
     }
 
     int rssi, ber;
     esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
     if (err != ESP_OK) {
         log_e("esp_modem_get_signal_quality failed with %d %s", err, esp_err_to_name(err));
-        return 0;
+        return -1;
     }
     return rssi;
 }
@@ -432,19 +432,19 @@ int PPPClass::RSSI() const
 int PPPClass::BER() const
 {
     if(_dce == NULL){
-        return 0;
+        return -1;
     }
 
     if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-        return 0;
+        return -1;
     }
 
     int rssi, ber;
     esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
     if (err != ESP_OK) {
         log_e("esp_modem_get_signal_quality failed with %d %s", err, esp_err_to_name(err));
-        return 0;
+        return -1;
     }
     return ber;
 }
@@ -537,19 +537,19 @@ String PPPClass::operatorName() const
 int PPPClass::networkMode() const
 {
     if(_dce == NULL){
-        return 0;
+        return -1;
     }
 
     if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-        return 0;
+        return -1;
     }
 
     int m = 0;
     esp_err_t err = esp_modem_get_network_system_mode(_dce, m);
     if (err != ESP_OK) {
         log_e("esp_modem_get_network_system_mode failed with %d %s", err, esp_err_to_name(err));
-        return 0;
+        return -1;
     }
     return m;
 }
@@ -557,19 +557,19 @@ int PPPClass::networkMode() const
 int PPPClass::radioState() const
 {
     if(_dce == NULL){
-        return 0;
+        return -1;
     }
 
     if(_mode == ESP_MODEM_MODE_DATA){
         log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-        return 0;
+        return -1;
     }
 
     int m = 0;
     esp_err_t err = esp_modem_get_radio_state(_dce, m);
     if (err != ESP_OK) {
-        log_e("esp_modem_get_radio_state failed with %d %s", err, esp_err_to_name(err));
-        return 0;
+        // log_e("esp_modem_get_radio_state failed with %d %s", err, esp_err_to_name(err));
+        return -1;
     }
     return m;
 }
