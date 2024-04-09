@@ -12,6 +12,7 @@ typedef struct { void * arg; } PdpContext;
 static PPPClass * _esp_modem = NULL;
 static esp_event_handler_instance_t _ppp_ev_instance = NULL;
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 static const char * _ppp_event_name(int32_t event_id){
     switch(event_id){
         case NETIF_PPP_ERRORNONE         : return "No error.";
@@ -57,6 +58,7 @@ static const char * _ppp_terminal_error_name(esp_modem_terminal_error_t err){
     }
     return "UNKNOWN";
 }
+#endif
 
 static void _ppp_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == NETIF_PPP_STATUS){
