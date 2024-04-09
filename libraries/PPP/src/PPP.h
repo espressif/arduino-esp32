@@ -26,7 +26,10 @@ class PPPClass: public NetworkInterface {
         bool setApn(const char * apn);
         bool setPin(const char * pin);
 
-        bool begin(ppp_modem_model_t model, int8_t tx, int8_t rx, int8_t rts=-1, int8_t cts=-1, esp_modem_flow_ctrl_t flow_ctrl=ESP_MODEM_FLOW_CONTROL_NONE);
+        bool setPins(int8_t tx, int8_t rx, int8_t rts=-1, int8_t cts=-1, esp_modem_flow_ctrl_t flow_ctrl=ESP_MODEM_FLOW_CONTROL_NONE);
+        void setResetPin(int8_t rst, bool active_low=true);
+
+        bool begin(ppp_modem_model_t model);
         void end();
 
         // Modem DCE APIs
@@ -65,6 +68,8 @@ class PPPClass: public NetworkInterface {
         int8_t _pin_rts;
         int8_t _pin_cts;
         esp_modem_flow_ctrl_t _flow_ctrl;
+        int8_t _pin_rst;
+        bool _pin_rst_act_low;
         const char * _pin;
         const char * _apn;
         int _rx_buffer_size;
