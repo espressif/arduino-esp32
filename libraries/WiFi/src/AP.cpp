@@ -20,6 +20,7 @@
 #include <esp_event.h>
 #include <lwip/ip_addr.h>
 #include "dhcpserver/dhcpserver_options.h"
+#include "esp_netif.h"
 
 
 esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
@@ -276,6 +277,24 @@ bool APClass::bandwidth(wifi_bandwidth_t bandwidth){
         return false;
     }
 
+    return true;
+}
+
+bool APClass::enableNAPT(bool enable){
+    if(!started()) {
+        log_e("AP must be first started to enable/disable NAPT");
+        return false;
+    }
+    esp_err_t err = ESP_OK;
+    if(enable){
+        err = esp_netif_napt_enable(_esp_netif);
+    } else {
+        err = esp_netif_napt_disable(_esp_netif);
+    }
+    if(err){
+        log_e("Could not set enable/disable NAPT! 0x%x: %s", err, esp_err_to_name(err));
+        return false;
+    }
     return true;
 }
 
