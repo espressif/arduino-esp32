@@ -25,6 +25,7 @@ jobs:
       - name: Download and Extract Artifacts
         run: |
           mkdir -p artifacts && cd artifacts
+          mkdir -p sizes-report
           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
           gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
