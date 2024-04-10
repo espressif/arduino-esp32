@@ -45,7 +45,7 @@ static const uint8_t MOSI  = 13;
 static const uint8_t MISO  = 12;
 static const uint8_t SCK   = 14;
 
-static const uint8_t SPI_SS1  = 23;		// SPI Chip Select - 1; connected to MicroSD Card on the LogSens V1.1 Board
+static const uint8_t SS1  = 23;		// SPI Chip Select - 1; connected to MicroSD Card on the LogSens V1.1 Board
   
 /* Software Controlled: IO, LEDs and Switches */
 static const uint8_t BUZZER_CTRL = 19;		// Signal connected to MOSFET gate pin to control conenctor (X8)

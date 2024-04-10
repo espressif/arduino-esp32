@@ -63,7 +63,7 @@ void loop() {
                 uint8_t buff[128] = { 0 };
 
                 // get tcp stream
-                WiFiClient * stream = http.getStreamPtr();
+                NetworkClient * stream = http.getStreamPtr();
 
                 // read all data from server
                 while(http.connected() && (len > 0 || len == -1)) {

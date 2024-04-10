@@ -537,35 +537,37 @@ bool HardwareSerial::setMode(SerialMode mode)
     return uartSetMode(_uart, mode);
 }
 
+// minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {
 
     if (_uart) {
-        log_e("RX Buffer can't be resized when Serial is already running.\n");
+        log_e("RX Buffer can't be resized when Serial is already running. Set it before calling begin().");
         return 0;
     }
 
     if (new_size <= SOC_UART_FIFO_LEN) {
-        log_e("RX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
-        return 0;
+        log_w("RX Buffer set to minimum value: %d.", SOC_UART_FIFO_LEN + 1);  // ESP32, S2, S3 and C3 means higher than 128
+        new_size = SOC_UART_FIFO_LEN + 1;
     }
 
     _rxBufferSize = new_size;
     return _rxBufferSize;
 }
 
+// minimum total TX Buffer size is the UART FIFO space (128 bytes for most SoC).
 size_t HardwareSerial::setTxBufferSize(size_t new_size) {
 
     if (_uart) {
-        log_e("TX Buffer can't be resized when Serial is already running.\n");
+        log_e("TX Buffer can't be resized when Serial is already running. Set it before calling begin().");
         return 0;
     }
 
     if (new_size <= SOC_UART_FIFO_LEN) {
-        log_e("TX Buffer must be higher than %d.\n", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
-        return 0;
+        log_w("TX Buffer set to minimum value: %d.", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
+        _txBufferSize = 0; // it will use just UART FIFO with SOC_UART_FIFO_LEN bytes (128 for most SoC)
+        return SOC_UART_FIFO_LEN;
     }
-
+    // if new_size is higher than SOC_UART_FIFO_LEN, TX Ringbuffer will be active and it will be used to report back "availableToWrite()"
     _txBufferSize = new_size;
-    return _txBufferSize;
+    return new_size;
 }
-

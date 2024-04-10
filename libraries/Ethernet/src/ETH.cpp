@@ -42,14 +42,81 @@
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
 
-extern void tcpipInit();
-extern void add_esp_interface_netif(esp_interface_t interface, esp_netif_t* esp_netif); /* from WiFiGeneric */
+static ETHClass * _ethernets[3] = { NULL, NULL, NULL };
+static esp_event_handler_instance_t _eth_ev_instance = NULL;
 
+static void _eth_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+
+    if (event_base == ETH_EVENT){
+        esp_eth_handle_t eth_handle = *((esp_eth_handle_t*)event_data);
+        for(int i = 0; i < 3; ++i){
+            if(_ethernets[i] != NULL && _ethernets[i]->handle() == eth_handle){
+                _ethernets[i]->_onEthEvent(event_id, event_data);
+            }
+        }
+    }
+}
+
+// This callback needs to be aware of which interface it should match against
+static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info)
+{
+    if(event == ARDUINO_EVENT_ETH_CONNECTED){
+        uint8_t index = 3;
+        for (int i = 0; i < 3; ++i) {
+            if(_ethernets[i] != NULL && _ethernets[i]->handle() == info.eth_connected){
+                index = i;
+                break;
+            }
+        }
+        if(index == 3){
+            log_e("Could not find ETH interface with that handle!");
+            return;
+        }
+        if (_ethernets[index]->getStatusBits() & ESP_NETIF_WANT_IP6_BIT){
+            esp_err_t err = esp_netif_create_ip6_linklocal(_ethernets[index]->netif());
+            if(err != ESP_OK){
+                log_e("Failed to enable IPv6 Link Local on ETH: [%d] %s", err, esp_err_to_name(err));
+            } else {
+                log_v("Enabled IPv6 Link Local on %s", _ethernets[index]->desc());
+            }
+        }
+    }
+}
+
+esp_eth_handle_t ETHClass::handle() const {
+    return _eth_handle;
+}
+
+void ETHClass::_onEthEvent(int32_t event_id, void* event_data){
+    arduino_event_t arduino_event;
+    arduino_event.event_id = ARDUINO_EVENT_MAX;
+    
+    if (event_id == ETHERNET_EVENT_CONNECTED) {
+        log_v("%s Connected", desc());
+        arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
+        arduino_event.event_info.eth_connected = handle();
+        setStatusBits(ESP_NETIF_CONNECTED_BIT);
+    } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
+        log_v("%s Disconnected", desc());
+        arduino_event.event_id = ARDUINO_EVENT_ETH_DISCONNECTED;
+        clearStatusBits(ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
+    } else if (event_id == ETHERNET_EVENT_START) {
+        log_v("%s Started", desc());
+        arduino_event.event_id = ARDUINO_EVENT_ETH_START;
+        setStatusBits(ESP_NETIF_STARTED_BIT);
+    } else if (event_id == ETHERNET_EVENT_STOP) {
+        log_v("%s Stopped", desc());
+        arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
+        clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
+    }
+
+    if(arduino_event.event_id < ARDUINO_EVENT_MAX){
+        Network.postEvent(&arduino_event);
+    }
+}
 
 ETHClass::ETHClass(uint8_t eth_index)
-    :_eth_started(false)
-    ,_eth_handle(NULL)
-    ,_esp_netif(NULL)
+    :_eth_handle(NULL)
     ,_eth_index(eth_index)
     ,_phy_type(ETH_PHY_MAX)
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -75,9 +142,7 @@ ETHClass::~ETHClass()
 
 bool ETHClass::ethDetachBus(void * bus_pointer){
     ETHClass *bus = (ETHClass *) bus_pointer;
-    if(bus->_eth_started){
-        bus->end();
-    }
+    bus->end();
     return true;
 }
 
@@ -85,6 +150,9 @@ bool ETHClass::ethDetachBus(void * bus_pointer){
 bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clock_mode)
 {
     esp_err_t ret = ESP_OK;
+    if(_eth_index > 2){
+        return false;
+    }
     if(_esp_netif != NULL){
         return true;
     }
@@ -100,7 +168,12 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
         perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_PWR, ETHClass::ethDetachBus);
     }
 
-    tcpipInit();
+    Network.begin();
+    _ethernets[_eth_index] = this;
+    if(_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)){
+        log_e("event_handler_instance_register for ETH_EVENT Failed!");
+        return false;
+    }
 
     eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
     mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
@@ -188,7 +261,11 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     char if_desc_str[10];
     char num_str[3];
     itoa(_eth_index, num_str, 10);
-    strcat(strcpy(if_key_str, "ETH_"), num_str);
+    if(_eth_index == 0){
+        strcpy(if_key_str, "ETH_DEF");
+    } else {
+        strcat(strcpy(if_key_str, "ETH_"), num_str);
+    }
     strcat(strcpy(if_desc_str, "eth"), num_str);
 
     esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
@@ -207,15 +284,14 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
         return false;
     }
 
-    /* attach to WiFiGeneric to receive events */
-    add_esp_interface_netif(ESP_IF_ETH, _esp_netif);
+    /* attach to receive events */
+    initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
     ret = esp_eth_start(_eth_handle);
     if(ret != ESP_OK){
         log_e("esp_eth_start failed: %d", ret);
         return false;
     }
-    _eth_started = true;
 
     if(!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)){ goto err; }
     if(!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET_MCD, (void *)(this), -1, -1)){ goto err; }
@@ -231,6 +307,9 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     if(_pin_power != -1){
         if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)){ goto err; }
     }
+
+    Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+
     // holds a few milliseconds to let DHCP start and enter into a good state
     // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
     delay(50);
@@ -351,7 +430,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
     int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz){
     esp_err_t ret = ESP_OK;
 
-    if(_eth_started || _esp_netif != NULL || _eth_handle != NULL){
+    if(_esp_netif != NULL || _eth_handle != NULL){
         log_w("ETH Already Started");
         return true;
     }
@@ -421,6 +500,11 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
         buscfg.sclk_io_num = _pin_sck;
         buscfg.quadwp_io_num = -1;
         buscfg.quadhd_io_num = -1;
+        buscfg.data4_io_num = -1;
+        buscfg.data5_io_num = -1;
+        buscfg.data6_io_num = -1;
+        buscfg.data7_io_num = -1;
+        buscfg.max_transfer_sz = -1;
         ret = spi_bus_initialize(spi_host, &buscfg, SPI_DMA_CH_AUTO);
         if(ret != ESP_OK){
             log_e("SPI bus initialize failed: %d", ret);
@@ -428,7 +512,13 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
         }
     }
 
-    tcpipInit();
+    Network.begin();
+    _ethernets[_eth_index] = this;
+    if(_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)){
+        log_e("event_handler_instance_register for ETH_EVENT Failed!");
+        return false;
+    }
+
 
     // Install GPIO ISR handler to be able to service SPI Eth modules interrupts
     ret = gpio_install_isr_service(0);
@@ -556,7 +646,11 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
     char if_desc_str[10];
     char num_str[3];
     itoa(_eth_index, num_str, 10);
-    strcat(strcpy(if_key_str, "ETH_"), num_str);
+    if(_eth_index == 0){
+        strcpy(if_key_str, "ETH_DEF");
+    } else {
+        strcat(strcpy(if_key_str, "ETH_"), num_str);
+    }
     strcat(strcpy(if_desc_str, "eth"), num_str);
 
     esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
@@ -584,8 +678,8 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
         return false;
     }
 
-    // attach to WiFiGeneric to receive events
-    add_esp_interface_netif(ESP_IF_ETH, _esp_netif);
+    /* attach to receive events */
+    initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
     // Start Ethernet driver state machine
     ret = esp_eth_start(_eth_handle);
@@ -593,8 +687,6 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
         log_e("esp_eth_start failed: %d", ret);
         return false;
     }
-
-    _eth_started = true;
 
     // If Arduino's SPI is used, cs pin is in GPIO mode
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -624,6 +716,8 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
         if(!perimanSetPinBus(_pin_rst,  ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)){ goto err; }
     }
 
+    Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+
     return true;
 
 err:
@@ -650,12 +744,15 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int
 
 void ETHClass::end(void)
 {
-    _eth_started = false;
+    destroyNetif();
 
-    if(_esp_netif != NULL){
-        esp_netif_destroy(_esp_netif);
-        _esp_netif = NULL;
+    if(_eth_ev_instance != NULL){
+        if(esp_event_handler_unregister(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb) == ESP_OK){
+            _eth_ev_instance = NULL;
+        }
     }
+
+    Network.removeEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
     if(_eth_handle != NULL){
         if(esp_eth_stop(_eth_handle) != ESP_OK){
@@ -722,255 +819,7 @@ void ETHClass::end(void)
     }
 }
 
-bool ETHClass::config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1, IPAddress dns2)
-{
-    if(_esp_netif == NULL){
-        return false;
-    }
-    esp_err_t err = ESP_OK;
-    esp_netif_ip_info_t info;
-    esp_netif_dns_info_t d1;
-    esp_netif_dns_info_t d2;
-    d1.ip.type = IPADDR_TYPE_V4;
-    d2.ip.type = IPADDR_TYPE_V4;
-
-    if(static_cast<uint32_t>(local_ip) != 0){
-        info.ip.addr = static_cast<uint32_t>(local_ip);
-        info.gw.addr = static_cast<uint32_t>(gateway);
-        info.netmask.addr = static_cast<uint32_t>(subnet);
-        d1.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns1);
-        d2.ip.u_addr.ip4.addr = static_cast<uint32_t>(dns2);
-    } else {
-        info.ip.addr = 0;
-        info.gw.addr = 0;
-        info.netmask.addr = 0;
-        d1.ip.u_addr.ip4.addr = 0;
-        d2.ip.u_addr.ip4.addr = 0;
-	}
-
-    // Stop DHCPC
-    err = esp_netif_dhcpc_stop(_esp_netif);
-    if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
-        log_e("DHCP could not be stopped! Error: %d", err);
-        return false;
-    }
-
-    // Set IPv4, Netmask, Gateway
-    err = esp_netif_set_ip_info(_esp_netif, &info);
-    if(err != ERR_OK){
-        log_e("ETH IP could not be configured! Error: %d", err);
-        return false;
-    }
-    
-    // Set DNS1-Server
-    esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d1);
-
-    // Set DNS2-Server
-    esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_BACKUP, &d2);
-
-    // Start DHCPC if static IP was set
-    if(info.ip.addr == 0){
-        err = esp_netif_dhcpc_start(_esp_netif);
-        if(err != ESP_OK && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STARTED){
-            log_w("DHCP could not be started! Error: %d", err);
-            return false;
-        }
-    }
-
-    return true;
-}
-
-IPAddress ETHClass::localIP()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return IPAddress(ip.ip.addr);
-}
-
-IPAddress ETHClass::subnetMask()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return IPAddress(ip.netmask.addr);
-}
-
-IPAddress ETHClass::gatewayIP()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return IPAddress(ip.gw.addr);
-}
-
-IPAddress ETHClass::dnsIP(uint8_t dns_no)
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_dns_info_t d;
-    if(esp_netif_get_dns_info(_esp_netif, dns_no?ESP_NETIF_DNS_BACKUP:ESP_NETIF_DNS_MAIN, &d) != ESP_OK){
-        return IPAddress();
-    }
-    return IPAddress(d.ip.u_addr.ip4.addr);
-}
-
-IPAddress ETHClass::broadcastIP()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return WiFiGenericClass::calculateBroadcast(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
-}
-
-IPAddress ETHClass::networkID()
-{
-    if(_esp_netif == NULL){
-        return IPAddress();
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return IPAddress();
-    }
-    return WiFiGenericClass::calculateNetworkID(IPAddress(ip.gw.addr), IPAddress(ip.netmask.addr));
-}
-
-uint8_t ETHClass::subnetCIDR()
-{
-    if(_esp_netif == NULL){
-        return (uint8_t)0;
-    }
-    esp_netif_ip_info_t ip;
-    if(esp_netif_get_ip_info(_esp_netif, &ip)){
-        return (uint8_t)0;
-    }
-    return WiFiGenericClass::calculateSubnetCIDR(IPAddress(ip.netmask.addr));
-}
-
-const char * ETHClass::getHostname()
-{
-    if(_esp_netif == NULL){
-        return "";
-    }
-    const char * hostname;
-    if(esp_netif_get_hostname(_esp_netif, &hostname)){
-        return NULL;
-    }
-    return hostname;
-}
-
-bool ETHClass::setHostname(const char * hostname)
-{
-    if(_esp_netif == NULL){
-        return false;
-    }
-    return esp_netif_set_hostname(_esp_netif, hostname) == 0;
-}
-
-bool ETHClass::enableIPv6(bool en)
-{
-    // if(_esp_netif == NULL){
-    //     return false;
-    // }
-    // return esp_netif_create_ip6_linklocal(_esp_netif) == 0;
-    if (en) {
-        WiFiGenericClass::setStatusBits(ETH_WANT_IP6_BIT);
-    } else {
-        WiFiGenericClass::clearStatusBits(ETH_WANT_IP6_BIT);
-    }
-    return true;
-}
-
-IPAddress ETHClass::localIPv6()
-{
-    if(_esp_netif == NULL){
-        return IPAddress(IPv6);
-    }
-    static esp_ip6_addr_t addr;
-    if(esp_netif_get_ip6_linklocal(_esp_netif, &addr)){
-        return IPAddress(IPv6);
-    }
-    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
-}
-
-IPAddress ETHClass::globalIPv6()
-{
-    if(_esp_netif == NULL){
-        return IPAddress(IPv6);
-    }
-    static esp_ip6_addr_t addr;
-    if(esp_netif_get_ip6_global(_esp_netif, &addr)){
-        return IPAddress(IPv6);
-    }
-    return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
-}
-
-const char * ETHClass::ifkey(void)
-{
-    if(_esp_netif == NULL){
-        return "";
-    }
-    return esp_netif_get_ifkey(_esp_netif);
-}
-
-const char * ETHClass::desc(void)
-{
-    if(_esp_netif == NULL){
-        return "";
-    }
-    return esp_netif_get_desc(_esp_netif);
-}
-
-String ETHClass::impl_name(void)
-{
-    if(_esp_netif == NULL){
-        return String("");
-    }
-    char netif_name[8];
-    esp_err_t err = esp_netif_get_netif_impl_name(_esp_netif, netif_name);
-    if(err != ESP_OK){
-        log_e("Failed to get netif impl_name: %d", err);
-        return String("");
-    }
-    return String(netif_name);
-}
-
-bool ETHClass::connected()
-{
-    return WiFiGenericClass::getStatusBits() & ETH_CONNECTED_BIT;
-}
-
-bool ETHClass::hasIP()
-{
-    return WiFiGenericClass::getStatusBits() & ETH_HAS_IP_BIT;
-}
-
-bool ETHClass::linkUp()
-{
-    if(_esp_netif == NULL){
-        return false;
-    }
-    return esp_netif_is_netif_up(_esp_netif);
-}
-
-bool ETHClass::fullDuplex()
+bool ETHClass::fullDuplex() const
 {
     if(_eth_handle == NULL){
         return false;
@@ -980,7 +829,7 @@ bool ETHClass::fullDuplex()
     return (link_duplex == ETH_DUPLEX_FULL);
 }
 
-bool ETHClass::autoNegotiation()
+bool ETHClass::autoNegotiation() const
 {
     if(_eth_handle == NULL){
         return false;
@@ -990,7 +839,7 @@ bool ETHClass::autoNegotiation()
     return auto_nego;
 }
 
-uint32_t ETHClass::phyAddr()
+uint32_t ETHClass::phyAddr() const
 {
     if(_eth_handle == NULL){
         return 0;
@@ -1000,7 +849,7 @@ uint32_t ETHClass::phyAddr()
     return phy_addr;
 }
 
-uint8_t ETHClass::linkSpeed()
+uint8_t ETHClass::linkSpeed() const
 {
     if(_eth_handle == NULL){
         return 0;
@@ -1010,91 +859,26 @@ uint8_t ETHClass::linkSpeed()
     return (link_speed == ETH_SPEED_10M)?10:100;
 }
 
-uint8_t * ETHClass::macAddress(uint8_t* mac)
-{
-    if(_eth_handle == NULL){
-        return NULL;
-    }
-    if(!mac){
-        return NULL;
-    }
-    esp_eth_ioctl(_eth_handle, ETH_CMD_G_MAC_ADDR, mac);
-    return mac;
-}
+// void ETHClass::getMac(uint8_t* mac)
+// {
+//     if(_eth_handle != NULL && mac != NULL){
+//         esp_eth_ioctl(_eth_handle, ETH_CMD_G_MAC_ADDR, mac);
+//     }
+// }
 
-String ETHClass::macAddress(void)
-{
-    uint8_t mac[6] = {0,0,0,0,0,0};
-    char macStr[18] = { 0 };
-    macAddress(mac);
-    sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    return String(macStr);
-}
-
-void ETHClass::printInfo(Print & out){
-    out.print(desc());
-    out.print(":");
-    if(linkUp()){
-        out.print(" <UP");
-    } else {
-        out.print(" <DOWN");
-    }
-    out.print(",");
-    out.print(linkSpeed());
-    out.print("M");
+size_t ETHClass::printDriverInfo(Print & out) const {
+    size_t bytes = 0;
+    bytes += out.print(",");
+    bytes += out.print(linkSpeed());
+    bytes += out.print("M");
     if(fullDuplex()){
-        out.print(",FULL_DUPLEX");
+        bytes += out.print(",FULL_DUPLEX");
     }
     if(autoNegotiation()){
-        out.print(",AUTO");
+        bytes += out.print(",AUTO");
     }
-    out.println(">");
-
-    out.print("      ");
-    out.print("ether ");
-    out.print(macAddress());
-    out.printf(" phy 0x%lX", phyAddr());
-    out.println();
-
-    out.print("      ");
-    out.print("inet ");
-    out.print(localIP());
-    out.print(" netmask ");
-    out.print(subnetMask());
-    out.print(" broadcast ");
-    out.print(broadcastIP());
-    out.println();
-
-    out.print("      ");
-    out.print("gateway ");
-    out.print(gatewayIP());
-    out.print(" dns ");
-    out.print(dnsIP());
-    out.println();
-
-    static const char * types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
-    esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
-    int v6addrs = esp_netif_get_all_ip6(_esp_netif, if_ip6);
-    for (int i = 0; i < v6addrs; ++i){
-        out.print("      ");
-        out.print("inet6 ");
-        IPAddress(IPv6, (const uint8_t *)if_ip6[i].addr, if_ip6[i].zone).printTo(out, true);
-        out.print(" type ");
-        out.print(types[esp_netif_ip6_get_addr_type(&if_ip6[i])]);
-        out.println();
-    }
-
-    // out.print("      ");
-    // out.print("inet6 ");
-    // localIPv6().printTo(out);
-    // out.println();
-
-    // out.print("      ");
-    // out.print("inet6 ");
-    // globalIPv6().printTo(out);
-    // out.println();
-
-    out.println();
+    bytes += out.printf(",ADDR:0x%lX", phyAddr());
+    return bytes;
 }
 
 ETHClass ETH;

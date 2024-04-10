@@ -63,7 +63,8 @@
 // This will be uncommented once custom SPI support is available in ESP-IDF
 #define ETH_SPI_SUPPORTS_CUSTOM 1
 
-#include "WiFi.h"
+#include "Network.h"
+
 #if ETH_SPI_SUPPORTS_CUSTOM
 #include "SPI.h"
 #endif
@@ -105,7 +106,7 @@ typedef enum {
     ETH_PHY_MAX 
 } eth_phy_type_t;
 
-class ETHClass {
+class ETHClass: public NetworkInterface {
     public:
         ETHClass(uint8_t eth_index=0);
         ~ETHClass();
@@ -135,43 +136,13 @@ class ETHClass {
 
         void end();
 
-        // Netif APIs
-        esp_netif_t * netif(void){ return _esp_netif; }
-        bool config(IPAddress local_ip = (uint32_t)0x00000000, IPAddress gateway = (uint32_t)0x00000000, IPAddress subnet = (uint32_t)0x00000000, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
-        const char * getHostname();
-        bool setHostname(const char * hostname);
-        IPAddress localIP();
-        IPAddress subnetMask();
-        IPAddress gatewayIP();
-        IPAddress dnsIP(uint8_t dns_no = 0);
-        IPAddress broadcastIP();
-        IPAddress networkID();
-        uint8_t subnetCIDR();
-        bool enableIPv6(bool en=true);
-        IPAddress localIPv6();
-        IPAddress globalIPv6();
-        const char * ifkey(void);
-        const char * desc(void);
-        String impl_name(void);
-
-        // Event based getters
-        bool connected();
-        bool hasIP();
-
         // ETH Handle APIs
-        uint8_t * macAddress(uint8_t* mac);
-        String macAddress();
-        bool fullDuplex();
-        bool linkUp();
-        uint8_t linkSpeed();
-        bool autoNegotiation();
-        uint32_t phyAddr();
+        bool fullDuplex() const;
+        uint8_t linkSpeed() const;
+        bool autoNegotiation() const;
+        uint32_t phyAddr() const;
 
-        // Info APIs
-        void printInfo(Print & out);
-
-        friend class WiFiClient;
-        friend class WiFiServer;
+        esp_eth_handle_t handle() const;
 
 #if ETH_SPI_SUPPORTS_CUSTOM
         static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
@@ -184,12 +155,15 @@ class ETHClass {
         esp_err_t eth_spi_write(uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
 #endif
 
-        static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+        // void getMac(uint8_t* mac);
+        size_t printDriverInfo(Print & out) const;
+        // static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+
+    public:
+        void _onEthEvent(int32_t event_id, void* event_data);
 
     private:
-        bool _eth_started;
         esp_eth_handle_t _eth_handle;
-        esp_netif_t *_esp_netif;
         uint8_t _eth_index;
         eth_phy_type_t _phy_type;
 #if ETH_SPI_SUPPORTS_CUSTOM

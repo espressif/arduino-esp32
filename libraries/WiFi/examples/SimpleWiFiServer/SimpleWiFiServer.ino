@@ -30,7 +30,7 @@ ported for sparkfun esp32
 const char* ssid     = "yourssid";
 const char* password = "yourpasswd";
 
-WiFiServer server(80);
+NetworkServer server(80);
 
 void setup()
 {
@@ -63,7 +63,7 @@ void setup()
 }
 
 void loop(){
- WiFiClient client = server.accept();   // listen for incoming clients
+ NetworkClient client = server.accept();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port

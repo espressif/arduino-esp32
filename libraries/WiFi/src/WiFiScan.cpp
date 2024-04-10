@@ -26,6 +26,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiScan.h"
+#if SOC_WIFI_SUPPORTED
 
 extern "C" {
 #include <stdint.h>
@@ -288,3 +289,4 @@ int32_t WiFiScanClass::channel(uint8_t i)
     return it->primary;
 }
 
+#endif /* SOC_WIFI_SUPPORTED */

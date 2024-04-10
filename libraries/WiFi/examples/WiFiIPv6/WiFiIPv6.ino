@@ -6,7 +6,7 @@
 
 static volatile bool wifi_connected = false;
 
-WiFiUDP ntpClient;
+NetworkUDP ntpClient;
 
 void wifiOnConnect(){
     Serial.println("STA Connected");
@@ -50,7 +50,7 @@ void wifiConnectedLoop(){
     if(packetLength >= NTP_PACKET_SIZE){
       ntpClient.read(ntpPacketBuffer, NTP_PACKET_SIZE);
     }
-    ntpClient.flush();
+    ntpClient.clear();
     uint32_t secsSince1900 = (uint32_t)ntpPacketBuffer[40] << 24 | (uint32_t)ntpPacketBuffer[41] << 16 | (uint32_t)ntpPacketBuffer[42] << 8 | ntpPacketBuffer[43];
     //Serial.printf("Seconds since Jan 1 1900: %u\n", secsSince1900);
     uint32_t epoch = secsSince1900 - 2208988800UL;
@@ -79,11 +79,11 @@ void WiFiEvent(WiFiEvent_t event){
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
             Serial.print("STA IPv6: ");
-            Serial.println(WiFi.localIPv6());
+            Serial.println(WiFi.linkLocalIPv6());
             break;
         case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
             Serial.print("AP IPv6: ");
-            Serial.println(WiFi.softAPIPv6());
+            Serial.println(WiFi.softAPlinkLocalIPv6());
             break;
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:
             wifiOnConnect();

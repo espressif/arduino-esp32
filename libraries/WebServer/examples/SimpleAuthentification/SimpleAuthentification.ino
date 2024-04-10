@@ -1,5 +1,5 @@
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <WebServer.h>
 
 const char* ssid = "........";

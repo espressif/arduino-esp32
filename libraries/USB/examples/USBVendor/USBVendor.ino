@@ -164,7 +164,8 @@ void setup() {
 
   USB.onEvent(usbEventCallback);
   USB.webUSB(true);
-  USB.webUSBURL("http://localhost/webusb");
+  // Set the URL for your WebUSB landing page
+  USB.webUSBURL("https://docs.espressif.com/projects/arduino-esp32/en/latest/_static/webusb.html");
   USB.begin();
 }
 
@@ -176,9 +177,11 @@ void loop() {
     if (buttonState == LOW) {
       Serial.println("Button Pressed");
       Vendor.println("Button Pressed");
+      Vendor.flush(); //Without flushing the data will only be sent when the buffer is full (64 bytes)
     } else {
-      Vendor.println("Button Released");
       Serial.println("Button Released");
+      Vendor.println("Button Released");
+      Vendor.flush(); //Without flushing the data will only be sent when the buffer is full (64 bytes)
     }
     delay(100);
   }
@@ -188,6 +191,7 @@ void loop() {
     uint8_t b[l];
     l = Serial.read(b, l);
     Vendor.write(b, l);
+    Vendor.flush(); //Without flushing the data will only be sent when the buffer is full (64 bytes)
   }
 }
 #endif /* ARDUINO_USB_MODE */

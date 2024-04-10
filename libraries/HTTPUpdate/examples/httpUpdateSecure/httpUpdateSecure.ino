@@ -92,7 +92,7 @@ void loop() {
 
     setClock();
 
-    WiFiClientSecure client;
+    NetworkClientSecure client;
     client.setCACert(rootCACertificate);
 
     // Reading data over SSL may be slow, use an adequate timeout
