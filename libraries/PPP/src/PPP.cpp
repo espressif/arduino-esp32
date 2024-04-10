@@ -11,6 +11,17 @@
 typedef struct { void * arg; } PdpContext;
 #include "esp_modem_api.h"
 
+// Because of how esp_modem functions are declared, we need to workaround some APIs that take strings as input (output works OK)
+// Following APIs work only when called through this interface
+extern "C" {
+    esp_err_t _esp_modem_at(esp_modem_dce_t *dce_wrap, const char *at, char *p_out, int timeout);
+    esp_err_t _esp_modem_at_raw(esp_modem_dce_t *dce_wrap, const char *cmd, char *p_out, const char *pass, const char *fail, int timeout);
+    esp_err_t _esp_modem_send_sms(esp_modem_dce_t *dce_wrap, const char *number, const char *message);
+    esp_err_t _esp_modem_set_pin(esp_modem_dce_t *dce_wrap, const char *pin);
+    esp_err_t _esp_modem_set_operator(esp_modem_dce_t *dce_wrap, int mode, int format, const char *oper);
+    esp_err_t _esp_modem_set_network_bands(esp_modem_dce_t *dce_wrap, const char *mode, const int *bands, int size);
+};
+
 static PPPClass * _esp_modem = NULL;
 static esp_event_handler_instance_t _ppp_ev_instance = NULL;
 
@@ -105,33 +116,14 @@ void PPPClass::_onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t
 
 // PPP Driver Events Callback
 void PPPClass::_onPppEvent(int32_t event_id, void* event_data){
-    arduino_event_t arduino_event;
-    arduino_event.event_id = ARDUINO_EVENT_MAX;
+    // arduino_event_t arduino_event;
+    // arduino_event.event_id = ARDUINO_EVENT_MAX;
 
     log_v("PPP Driver Event %ld: %s", event_id, _ppp_event_name(event_id));
     
-    // if (event_id == ETHERNET_EVENT_CONNECTED) {
-    //     log_v("%s Connected", desc());
-    //     arduino_event.event_id = ARDUINO_EVENT_PPP_CONNECTED;
-    //     arduino_event.event_info.eth_connected = handle();
-    //     setStatusBits(ESP_NETIF_CONNECTED_BIT);
-    // } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
-    //     log_v("%s Disconnected", desc());
-    //     arduino_event.event_id = ARDUINO_EVENT_PPP_DISCONNECTED;
-    //     clearStatusBits(ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
-    // } else if (event_id == ETHERNET_EVENT_START) {
-    //     log_v("%s Started", desc());
-    //     arduino_event.event_id = ARDUINO_EVENT_PPP_START;
-    //     setStatusBits(ESP_NETIF_STARTED_BIT);
-    // } else if (event_id == ETHERNET_EVENT_STOP) {
-    //     log_v("%s Stopped", desc());
-    //     arduino_event.event_id = ARDUINO_EVENT_PPP_STOP;
-    //     clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
+    // if(arduino_event.event_id < ARDUINO_EVENT_MAX){
+    //     Network.postEvent(&arduino_event);
     // }
-
-    if(arduino_event.event_id < ARDUINO_EVENT_MAX){
-        Network.postEvent(&arduino_event);
-    }
 }
 
 esp_modem_dce_t * PPPClass::handle() const {
@@ -330,7 +322,7 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate){
 
     /* check if PIN needed */
     if (esp_modem_read_pin(_dce, pin_ok) == ESP_OK && pin_ok == false) {
-        if (_pin == NULL || esp_modem_set_pin(_dce, _pin) != ESP_OK) {
+        if (_pin == NULL || _esp_modem_set_pin(_dce, _pin) != ESP_OK) {
             log_e("PIN verification failed!");
             goto err;
         }
@@ -735,7 +727,6 @@ bool PPPClass::setBaudrate(int baudrate) {
     return true;
 }
 
-
 bool PPPClass::sms(const char * num, const char * message) {
     if(_dce == NULL){
         return false;
@@ -765,12 +756,30 @@ bool PPPClass::sms(const char * num, const char * message) {
         return false;
     }
 
-    err = esp_modem_send_sms(_dce, num, message);
+    err = _esp_modem_send_sms(_dce, num, message);
     if (err != ESP_OK) {
         log_e("esp_modem_send_sms() failed with %d %s", err, esp_err_to_name(err));
         return false;
     }
     return true;
+}
+
+String PPPClass::cmd(const char * at_command, int timeout){
+    if(_dce == NULL){
+        return String();
+    }
+
+    if(_mode == ESP_MODEM_MODE_DATA){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return String();
+    }
+    char out[128] = {0};
+    esp_err_t err = _esp_modem_at(_dce, at_command, out, timeout);
+    if (err != ESP_OK) {
+        log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));
+        return String();
+    }
+    return String(out);
 }
 
 size_t PPPClass::printDriverInfo(Print & out) const {

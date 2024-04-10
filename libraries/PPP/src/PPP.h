@@ -53,6 +53,7 @@ class PPPClass: public NetworkInterface {
 
         bool setBaudrate(int baudrate);
         bool sms(const char * num, const char * message);
+        String cmd(const char * at_command, int timeout);
 
         esp_modem_dce_t * handle() const;
 
