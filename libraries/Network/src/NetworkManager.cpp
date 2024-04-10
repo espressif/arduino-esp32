@@ -14,6 +14,8 @@ NetworkManager::NetworkManager(){
 
 }
 
+NetworkInterface * getNetifByID(Network_Interface_ID id);
+
 bool NetworkManager::begin(){
     static bool initialized = false;
     if(!initialized){
@@ -44,18 +46,11 @@ bool NetworkManager::begin(){
  */
 int NetworkManager::hostByName(const char* aHostname, IPAddress& aResult)
 {
-    err_t err = ERR_OK;
-
-    // This should generally check if we have a global address assigned to one of the interfaces.
-    // If such address is not assigned, there is no point in trying to get V6 from DNS as we will not be able to reach it.
-    // That is of course, if 'preferV6' is not set to true
     static bool hasGlobalV6 = false;
-    bool hasGlobalV6Now = false;//ToDo: implement this!
-    if(hasGlobalV6 != hasGlobalV6Now){
-        hasGlobalV6 = hasGlobalV6Now;
-        dns_clear_cache();
-        log_d("Clearing DNS cache");
-    }
+    static bool hasGlobalV4 = false;
+    err_t err = ERR_OK;
+    const char *servname = "0";
+    struct addrinfo *res;
 
     aResult = static_cast<uint32_t>(0);
 
@@ -64,8 +59,33 @@ int NetworkManager::hostByName(const char* aHostname, IPAddress& aResult)
         return 1;
     }
 
-    const char *servname = "0";
-    struct addrinfo *res;
+    // This should generally check if we have a global address assigned to one of the interfaces.
+    // If such address is not assigned, there is no point in trying to get V6 from DNS as we will not be able to reach it.
+    bool hasGlobalV6Now = false;
+    bool hasGlobalV4Now = false;
+    for (int i = 0; i < ESP_NETIF_ID_MAX; ++i){
+        NetworkInterface * iface = getNetifByID((Network_Interface_ID)i);
+        if(iface != NULL) {
+            if(iface->hasGlobalIPv6()) {
+                hasGlobalV6Now = true;
+            }
+            if(iface->hasIP()) {
+                hasGlobalV4Now = true;
+            }
+        }
+        if (hasGlobalV6Now && hasGlobalV4Now){
+            break;
+        }
+    }
+
+    // If the state of IP addresses has changed, clear the DNS cache
+    if(hasGlobalV6 != hasGlobalV6Now || hasGlobalV4 != hasGlobalV4Now){
+        hasGlobalV6 = hasGlobalV6Now;
+        hasGlobalV4 = hasGlobalV4Now;
+        dns_clear_cache();
+        log_d("Clearing DNS cache");
+    }
+
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
@@ -129,8 +149,6 @@ bool NetworkManager::setHostname(const char * name)
     }
     return true;
 }
-
-NetworkInterface * getNetifByID(Network_Interface_ID id);
 
 bool NetworkManager::setDefaultInterface(NetworkInterface & ifc)
 {
