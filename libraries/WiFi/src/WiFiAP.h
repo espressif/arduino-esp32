@@ -48,6 +48,7 @@ class APClass: public NetworkInterface {
         bool clear();
 
         bool bandwidth(wifi_bandwidth_t bandwidth);
+        bool enableNAPT(bool enable=true);
 
         String SSID(void) const;
         uint8_t stationCount();
@@ -77,7 +78,7 @@ public:
        return softAP(ssid.c_str(), passphrase.c_str(), channel, ssid_hidden, max_connection, ftm_responder, auth_mode, cipher);
     }
 
-    bool softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start = (uint32_t) 0);
+    bool softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start = (uint32_t) 0, IPAddress dns = (uint32_t) 0);
     bool softAPdisconnect(bool wifioff = false);
 
     bool softAPbandwidth(wifi_bandwidth_t bandwidth);
