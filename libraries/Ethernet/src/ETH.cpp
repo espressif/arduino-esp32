@@ -175,8 +175,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
         return false;
     }
 
-    Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
-
     eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
     mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
     mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode) ? EMAC_APPL_CLK_OUT_GPIO : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO : EMAC_CLK_IN_GPIO;
@@ -289,6 +287,8 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     /* attach to receive events */
     initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
+    Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+ 
     ret = esp_eth_start(_eth_handle);
     if(ret != ESP_OK){
         log_e("esp_eth_start failed: %d", ret);
