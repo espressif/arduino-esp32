@@ -29,7 +29,7 @@ class PPPClass: public NetworkInterface {
         bool setPins(int8_t tx, int8_t rx, int8_t rts=-1, int8_t cts=-1, esp_modem_flow_ctrl_t flow_ctrl=ESP_MODEM_FLOW_CONTROL_NONE);
         void setResetPin(int8_t rst, bool active_low=true);
 
-        bool begin(ppp_modem_model_t model);
+        bool begin(ppp_modem_model_t model, uint8_t uart_num=1, int baud_rate=115200);
         void end();
 
         // Modem DCE APIs
@@ -51,6 +51,7 @@ class PPPClass: public NetworkInterface {
         bool reset();
         bool storeProfile();
 
+        bool setBaudrate(int baudrate);
         bool sms(const char * num, const char * message);
 
         esp_modem_dce_t * handle() const;
@@ -76,6 +77,7 @@ class PPPClass: public NetworkInterface {
         int _rx_buffer_size;
         int _tx_buffer_size;
         esp_modem_dce_mode_t _mode;
+        uint8_t _uart_num;
 
         static bool pppDetachBus(void * bus_pointer);
 };

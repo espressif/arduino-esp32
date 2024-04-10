@@ -5,6 +5,8 @@
 #include "esp_netif.h"
 #include "esp_netif_ppp.h"
 #include <string>
+#include "driver/uart.h"
+#include "hal/uart_ll.h"
 
 typedef struct { void * arg; } PdpContext;
 #include "esp_modem_api.h"
@@ -150,6 +152,7 @@ PPPClass::PPPClass()
     ,_rx_buffer_size(4096)
     ,_tx_buffer_size(512)
     ,_mode(ESP_MODEM_MODE_COMMAND)
+    ,_uart_num(UART_NUM_1)
 {
 }
 
@@ -207,7 +210,7 @@ bool PPPClass::setPins(int8_t tx, int8_t rx, int8_t rts, int8_t cts, esp_modem_f
     return true;
 }
 
-bool PPPClass::begin(ppp_modem_model_t model){
+bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate){
     esp_err_t ret = ESP_OK;
     bool pin_ok = false;
     int trys = 0;
@@ -232,8 +235,12 @@ bool PPPClass::begin(ppp_modem_model_t model){
         return false;
     }
 
-    Network.begin();
+    _uart_num = uart_num;
     _esp_modem = this;
+
+    Network.begin();
+
+    /* Listen for PPP status events */
     if(_ppp_ev_instance == NULL && esp_event_handler_instance_register(NETIF_PPP_STATUS, ESP_EVENT_ANY_ID, &_ppp_event_cb, NULL, &_ppp_ev_instance)){
         log_e("event_handler_instance_register for NETIF_PPP_STATUS Failed!");
         return false;
@@ -247,7 +254,7 @@ bool PPPClass::begin(ppp_modem_model_t model){
         return false;
     }
 
-    /* attach to receive events */
+    /* Attach to receive IP events */
     initNetif(ESP_NETIF_ID_PPP);
 
     /* Configure the DTE */
@@ -259,6 +266,8 @@ bool PPPClass::begin(ppp_modem_model_t model){
     dte_config.uart_config.flow_control = _flow_ctrl;
     dte_config.uart_config.rx_buffer_size = _rx_buffer_size;
     dte_config.uart_config.tx_buffer_size = _tx_buffer_size;
+    dte_config.uart_config.port_num = _uart_num;
+    dte_config.uart_config.baud_rate = baud_rate;
 
     /* Configure the DCE */
     esp_modem_dce_config_t dce_config = ESP_MODEM_DCE_DEFAULT_CONFIG(_apn);
@@ -300,7 +309,14 @@ bool PPPClass::begin(ppp_modem_model_t model){
         }
     } else {
         // try to communicate with the modem
-        
+        if(esp_modem_sync(_dce) != ESP_OK){
+            log_v("Modem does not respond to AT, maybe in DATA mode? ...exiting network mode");
+            esp_modem_set_mode(_dce, ESP_MODEM_MODE_COMMAND);
+            if(esp_modem_sync(_dce) != ESP_OK){
+                log_e("Modem failed to respond to AT!");
+                goto err;
+            }
+        }
     }
 
     /* enable flow control */
@@ -689,6 +705,33 @@ bool PPPClass::storeProfile(){
         log_e("esp_modem_store_profile failed with %d %s", err, esp_err_to_name(err));
         return false;
     }
+    return true;
+}
+
+bool PPPClass::setBaudrate(int baudrate) {
+    if(_dce == NULL){
+        return false;
+    }
+
+    if(_mode == ESP_MODEM_MODE_DATA){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return false;
+    }
+
+    esp_err_t err = esp_modem_set_baud(_dce, baudrate);
+    if (err != ESP_OK) {
+        log_e("esp_modem_set_baud failed with %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+
+    uint32_t sclk_freq;
+    err = uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq);
+    if(err != ESP_OK){
+        log_e("uart_get_sclk_freq failed with %d %s", err, esp_err_to_name(err));
+        return false;
+    }
+    uart_ll_set_baudrate(UART_LL_GET_HW(_uart_num), (uint32_t)baudrate, sclk_freq);
+
     return true;
 }
 
