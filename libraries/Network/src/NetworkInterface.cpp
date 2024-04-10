@@ -357,6 +357,16 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
 
     esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
     if(flags & ESP_NETIF_DHCP_SERVER){
+
+        // Set DNS Server
+        if(d2.ip.u_addr.ip4.addr != 0){
+            err = esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
+            if(err){
+                log_e("Netif Set DNS Info Failed! 0x%04x: %s", err, esp_err_to_name(err));
+                return false;
+            }
+        }
+
         // Stop DHCPS
         err = esp_netif_dhcps_stop(_esp_netif);
         if(err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
@@ -371,11 +381,6 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             return false;
         }
         
-        // Set DNS Server
-        if(d2.ip.u_addr.ip4.addr != 0){
-            esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
-        }
-
         dhcps_lease_t lease;
         lease.enable = true;
         uint8_t CIDR = calculateSubnetCIDR(subnet);
@@ -438,6 +443,17 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             log_e("DHCPS Set Lease Failed! 0x%04x: %s", err, esp_err_to_name(err));
             return false;
         }
+ 
+        // Offer DNS to DHCP clients
+        if(d2.ip.u_addr.ip4.addr != 0){
+            dhcps_offer_t dhcps_dns_value = OFFER_DNS;
+            err = esp_netif_dhcps_option(_esp_netif, ESP_NETIF_OP_SET, ESP_NETIF_DOMAIN_NAME_SERVER, &dhcps_dns_value, sizeof(dhcps_dns_value));
+            if(err){
+                log_e("Netif Set DHCP Option Failed! 0x%04x: %s", err, esp_err_to_name(err));
+                return false;
+            }
+        }
+        
         // Start DHCPS
         err = esp_netif_dhcps_start(_esp_netif);
         if(err){

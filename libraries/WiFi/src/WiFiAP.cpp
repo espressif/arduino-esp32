@@ -67,9 +67,9 @@ String WiFiAPClass::softAPSSID() const
  * @param gateway       gateway IP
  * @param subnet        subnet mask
  */
-bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start)
+bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start, IPAddress dns)
 {
-    return AP.config(local_ip, gateway, subnet, dhcp_lease_start);
+    return AP.begin() && AP.config(local_ip, gateway, subnet, dhcp_lease_start, dns);
 }
 
 /**
