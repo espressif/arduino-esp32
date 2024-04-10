@@ -77,26 +77,15 @@ jobs:
           name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-${{ matrix.target }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
-  report-comment:
-    needs: compile-sketch  # Wait for the compile job to finish to get the data for the report
+  event_file:
+    name: "Event File"
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'sizes_test')
+    needs: compile-sketch
     runs-on: ubuntu-latest
     steps:
-      # Check out repository
-      - name: Checkout repository    
-        uses: actions/checkout@v4
-        with:
-          token: ${{ env.GITHUB_TOKEN }}
-          fetch-depth: '0'
-
-      # This step is needed to get the size data produced by the compile jobs
-      - name: Download sketches reports artifact
-        uses: actions/download-artifact@v4
-        with:
-          pattern: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-*
-          merge-multiple: true
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
-
-      - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@sizes
-        with:
-          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+       - name: Upload
+         uses: actions/upload-artifact@v4
+         with:
+           name: Event File
+           path: ${{github.event_path}}
