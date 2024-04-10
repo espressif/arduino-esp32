@@ -83,6 +83,7 @@ set(ARDUINO_ALL_LIBRARIES
   DNSServer
   EEPROM
   ESP_I2S
+  ESP_NOW
   ESP_SR
   ESPmDNS
   Ethernet
@@ -127,6 +128,10 @@ set(ARDUINO_LIBRARY_DNSServer_SRCS libraries/DNSServer/src/DNSServer.cpp)
 set(ARDUINO_LIBRARY_EEPROM_SRCS libraries/EEPROM/src/EEPROM.cpp)
 
 set(ARDUINO_LIBRARY_ESP_I2S_SRCS libraries/ESP_I2S/src/ESP_I2S.cpp)
+
+set(ARDUINO_LIBRARY_ESP_NOW_SRCS 
+  libraries/ESP_NOW/src/ESP32_NOW.cpp
+  libraries/ESP_NOW/src/ESP32_NOW_Serial.cpp)
   
 set(ARDUINO_LIBRARY_ESP_SR_SRCS 
   libraries/ESP_SR/src/ESP_SR.cpp

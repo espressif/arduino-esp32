@@ -115,7 +115,7 @@ class WiFiGenericClass
     static void useStaticBuffers(bool bufferMode);
     static bool useStaticBuffers();
 
-    static int hostByName(const char *aHostname, IPAddress &aResult, bool preferV6=false);
+    static int hostByName(const char *aHostname, IPAddress &aResult);
 
     static IPAddress calculateNetworkID(IPAddress ip, IPAddress subnet);
     static IPAddress calculateBroadcast(IPAddress ip, IPAddress subnet);

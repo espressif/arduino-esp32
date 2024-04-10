@@ -55,7 +55,7 @@ NetworkEvents::~NetworkEvents(){
 	}
 }
 
-static uint32_t _initial_bits = NET_DNS_IDLE_BIT;
+static uint32_t _initial_bits = 0;
 
 bool NetworkEvents::initNetworkEvents(){
     if(!_arduino_event_group){

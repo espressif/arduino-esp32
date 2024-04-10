@@ -91,6 +91,10 @@ class STAClass: public NetworkInterface {
         wl_status_t _status;
 
         size_t printDriverInfo(Print & out) const;
+
+        friend class WiFiGenericClass;
+        bool onEnable();
+        bool onDisable();
 };
 
 // ----------------------------------------------------------------------------------------------
@@ -112,7 +116,11 @@ public:
     }
     wl_status_t begin();
 
+    // also accepts Arduino ordering of parameters: ip, dns, gw, mask
     bool config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns1 = (uint32_t)0x00000000, IPAddress dns2 = (uint32_t)0x00000000);
+
+    // two and one parameter version. 2nd parameter is DNS like in Arduino
+    bool config(IPAddress local_ip, IPAddress dns = (uint32_t)0x00000000);
 
     bool setDNS(IPAddress dns1, IPAddress dns2 = (uint32_t)0x00000000);  // sets DNS IP for all network interfaces
 

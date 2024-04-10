@@ -62,21 +62,32 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_
         return -1;
     }
 
-    log_v("Starting socket");
+    int domain = ip.type() == IPv6 ? AF_INET6 : AF_INET;
+    log_v("Starting socket (domain %d)", domain);
     ssl_client->socket = -1;
 
-    ssl_client->socket = lwip_socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ssl_client->socket = lwip_socket(domain, SOCK_STREAM, IPPROTO_TCP);
     if (ssl_client->socket < 0) {
         log_e("ERROR opening socket");
         return ssl_client->socket;
     }
 
     fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
-    struct sockaddr_in serv_addr;
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = ip;
-    serv_addr.sin_port = htons(port);
+    struct sockaddr_storage serv_addr = {};
+    if (domain == AF_INET6) {
+        struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serv_addr;
+        tmpaddr->sin6_family = AF_INET6;
+        for (int index = 0; index < 16; index++) {
+            tmpaddr->sin6_addr.s6_addr[index] = ip[index];
+        }
+        tmpaddr->sin6_port = htons(port);
+        tmpaddr->sin6_scope_id = ip.zone();
+    } else {
+        struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serv_addr;
+        tmpaddr->sin_family = AF_INET;
+        tmpaddr->sin_addr.s_addr = ip;
+        tmpaddr->sin_port = htons(port);
+    }
 
     if(timeout <= 0){
         timeout = 30000; // Milli seconds.

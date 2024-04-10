@@ -20,6 +20,7 @@
 #include <esp_event.h>
 #include <lwip/ip_addr.h>
 #include "dhcpserver/dhcpserver_options.h"
+#include "esp_netif.h"
 
 
 esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
@@ -82,13 +83,13 @@ static void _ap_event_cb(void* arg, esp_event_base_t event_base, int32_t event_i
     }
 }
 
-static void _onApArduinoEvent(arduino_event_id_t event, arduino_event_info_t info)
+static void _onApArduinoEvent(arduino_event_t *ev)
 {
-    if(_ap_network_if == NULL || event < ARDUINO_EVENT_WIFI_AP_START || event > ARDUINO_EVENT_WIFI_AP_GOT_IP6){
+    if(_ap_network_if == NULL || ev->event_id < ARDUINO_EVENT_WIFI_AP_START || ev->event_id > ARDUINO_EVENT_WIFI_AP_GOT_IP6){
         return;
     }
-    log_d("Arduino AP Event: %d - %s", event, Network.eventName(event));
-    if(event == ARDUINO_EVENT_WIFI_AP_START) {
+    log_d("Arduino AP Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
+    if(ev->event_id == ARDUINO_EVENT_WIFI_AP_START) {
         if (_ap_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT){
             esp_err_t err = esp_netif_create_ip6_linklocal(_ap_network_if->netif());
             if(err != ESP_OK){
@@ -157,37 +158,21 @@ APClass::~APClass(){
     _ap_network_if = NULL;
 }
 
-bool APClass::begin(){
-
-    Network.begin();
+bool APClass::onEnable(){
     if(_ap_ev_instance == NULL && esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_ap_event_cb, this, &_ap_ev_instance)){
         log_e("event_handler_instance_register for WIFI_EVENT Failed!");
         return false;
     }
     if(_esp_netif == NULL){
         Network.onSysEvent(_onApArduinoEvent);
-    }
-
-    if(!WiFi.enableAP(true)) {
-        log_e("AP enable failed!");
-        return false;
-    }
-
-    // attach events and esp_netif here
-    if(_esp_netif == NULL){
         _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_AP);
         /* attach to receive events */
         initNetif(ESP_NETIF_ID_AP);
     }
-
     return true;
 }
 
-bool APClass::end(){
-    if(!WiFi.enableAP(false)) {
-        log_e("AP disable failed!");
-        return false;
-    }
+bool APClass::onDisable(){
     Network.removeEvent(_onApArduinoEvent);
     // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
     // That would be done by WiFi.enableAP(false) if STA is not enabled, or when it gets disabled
@@ -200,15 +185,29 @@ bool APClass::end(){
     return true;
 }
 
-bool APClass::create(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder){
+bool APClass::begin(){
+    if(!WiFi.enableAP(true)) {
+        log_e("AP enable failed!");
+        return false;
+    }
+    return true;
+}
+
+bool APClass::end(){
+    if(!WiFi.enableAP(false)) {
+        log_e("AP disable failed!");
+        return false;
+    }
+    return true;
+}
+
+bool APClass::create(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder, wifi_auth_mode_t auth_mode, wifi_cipher_type_t cipher){
     if(!ssid || *ssid == 0) {
-        // fail SSID missing
         log_e("SSID missing!");
         return false;
     }
 
     if(passphrase && (strlen(passphrase) > 0 && strlen(passphrase) < 8)) {
-        // fail passphrase too short
         log_e("passphrase too short!");
         return false;
     }
@@ -228,8 +227,8 @@ bool APClass::create(const char* ssid, const char* passphrase, int channel, int 
         _wifi_strncpy((char*)conf.ap.ssid, ssid, 32);
         conf.ap.ssid_len = strlen(ssid);
         if(passphrase != NULL && passphrase[0] != 0){
-            conf.ap.authmode = WIFI_AUTH_WPA2_PSK;
-            conf.ap.pairwise_cipher = WIFI_CIPHER_TYPE_CCMP; // Disable by default enabled insecure TKIP and use just CCMP.
+            conf.ap.authmode = auth_mode;
+            conf.ap.pairwise_cipher = cipher;
             _wifi_strncpy((char*)conf.ap.password, passphrase, 64);
         }
     }
@@ -281,6 +280,24 @@ bool APClass::bandwidth(wifi_bandwidth_t bandwidth){
     return true;
 }
 
+bool APClass::enableNAPT(bool enable){
+    if(!started()) {
+        log_e("AP must be first started to enable/disable NAPT");
+        return false;
+    }
+    esp_err_t err = ESP_OK;
+    if(enable){
+        err = esp_netif_napt_enable(_esp_netif);
+    } else {
+        err = esp_netif_napt_disable(_esp_netif);
+    }
+    if(err){
+        log_e("Could not set enable/disable NAPT! 0x%x: %s", err, esp_err_to_name(err));
+        return false;
+    }
+    return true;
+}
+
 String APClass::SSID(void) const{
     if(!started()){
         return String();
@@ -320,15 +337,15 @@ size_t APClass::printDriverInfo(Print & out) const{
 
     if(info.ap.authmode == WIFI_AUTH_OPEN){ bytes += out.print(",OPEN"); }
     else if(info.ap.authmode == WIFI_AUTH_WEP){ bytes += out.print(",WEP"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA_PSK){ bytes += out.print(",WWPA_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA2_PSK){ bytes += out.print(",WWPA2_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA_WPA2_PSK){ bytes += out.print(",WWPA_WPA2_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA_PSK){ bytes += out.print(",WPA_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA2_PSK){ bytes += out.print(",WPA2_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA_WPA2_PSK){ bytes += out.print(",WPA_WPA2_PSK"); }
     else if(info.ap.authmode == WIFI_AUTH_ENTERPRISE){ bytes += out.print(",WEAP"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA3_PSK){ bytes += out.print(",WWPA3_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA2_WPA3_PSK){ bytes += out.print(",WWPA2_WPA3_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_WAPI_PSK){ bytes += out.print(",WWAPI_PSK"); }
-    else if(info.ap.authmode == WIFI_AUTH_OWE){ bytes += out.print(",WOWE"); }
-    else if(info.ap.authmode == WIFI_AUTH_WPA3_ENT_192){ bytes += out.print(",WWPA3_ENT_SUITE_B_192_BIT"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA3_PSK){ bytes += out.print(",WPA3_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA2_WPA3_PSK){ bytes += out.print(",WPA2_WPA3_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_WAPI_PSK){ bytes += out.print(",WAPI_PSK"); }
+    else if(info.ap.authmode == WIFI_AUTH_OWE){ bytes += out.print(",OWE"); }
+    else if(info.ap.authmode == WIFI_AUTH_WPA3_ENT_192){ bytes += out.print(",WPA3_ENT_SUITE_B_192_BIT"); }
 
     if(esp_wifi_ap_get_sta_list(&clients) == ESP_OK) {
         bytes += out.print(",STA:");
