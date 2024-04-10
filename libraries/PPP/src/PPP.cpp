@@ -147,7 +147,7 @@ PPPClass::PPPClass()
     ,_pin_rst_act_low(true)
     ,_pin(NULL)
     ,_apn(NULL)
-    ,_rx_buffer_size(1024)
+    ,_rx_buffer_size(4096)
     ,_tx_buffer_size(512)
     ,_mode(ESP_MODEM_MODE_COMMAND)
 {
@@ -232,18 +232,6 @@ bool PPPClass::begin(ppp_modem_model_t model){
         return false;
     }
 
-    if(_pin_rst >= 0){
-        if(_pin_rst_act_low){
-            pinMode(_pin_rst, OUTPUT_OPEN_DRAIN);
-        } else {
-            pinMode(_pin_rst, OUTPUT);
-        }
-        digitalWrite(_pin_rst, !_pin_rst_act_low);
-        delay(200);
-        digitalWrite(_pin_rst, _pin_rst_act_low);
-        delay(200);
-    }
-
     Network.begin();
     _esp_modem = this;
     if(_ppp_ev_instance == NULL && esp_event_handler_instance_register(NETIF_PPP_STATUS, ESP_EVENT_ANY_ID, &_ppp_event_cb, NULL, &_ppp_ev_instance)){
@@ -264,7 +252,6 @@ bool PPPClass::begin(ppp_modem_model_t model){
 
     /* Configure the DTE */
     esp_modem_dte_config_t dte_config = ESP_MODEM_DTE_DEFAULT_CONFIG();
-    /* setup UART specific configuration based on kconfig options */
     dte_config.uart_config.tx_io_num = _pin_tx;
     dte_config.uart_config.rx_io_num = _pin_rx;
     dte_config.uart_config.rts_io_num = _pin_rts;
@@ -272,13 +259,25 @@ bool PPPClass::begin(ppp_modem_model_t model){
     dte_config.uart_config.flow_control = _flow_ctrl;
     dte_config.uart_config.rx_buffer_size = _rx_buffer_size;
     dte_config.uart_config.tx_buffer_size = _tx_buffer_size;
-    dte_config.uart_config.event_queue_size = 20;
-    dte_config.task_stack_size = 2048;
-    dte_config.task_priority = 5;
-    dte_config.dte_buffer_size = _rx_buffer_size / 2;
 
     /* Configure the DCE */
     esp_modem_dce_config_t dce_config = ESP_MODEM_DCE_DEFAULT_CONFIG(_apn);
+
+    /* Reset the Modem */
+    if(_pin_rst >= 0){
+        log_v("Resetting the modem");
+        if(_pin_rst_act_low){
+            pinMode(_pin_rst, OUTPUT_OPEN_DRAIN);
+        } else {
+            pinMode(_pin_rst, OUTPUT);
+        }
+        digitalWrite(_pin_rst, !_pin_rst_act_low);
+        delay(200);
+        digitalWrite(_pin_rst, _pin_rst_act_low);
+        delay(100);
+    }
+
+    /* Start the DCE */
     _dce = esp_modem_new_dev((esp_modem_dce_device_t)model, &dte_config, &dce_config, _esp_netif);
     if(_dce == NULL){
         log_e("esp_modem_new_dev failed");
@@ -287,27 +286,33 @@ bool PPPClass::begin(ppp_modem_model_t model){
 
     esp_modem_set_error_cb(_dce, _ppp_error_cb);
 
-    // wait to be able to talk to the modem
-    log_v("Waiting for response from the modem");
-    while(esp_modem_read_pin(_dce, pin_ok) != ESP_OK && trys < 50){
-        trys++;
-        delay(500);
-    }
-    if(trys >= 50){
-        log_e("Failed to wait for communication");
-        goto err;
+    /* Wait for Modem to respond */
+    if(_pin_rst >= 0){
+        // wait to be able to talk to the modem
+        log_v("Waiting for response from the modem");
+        while(esp_modem_sync(_dce) != ESP_OK && trys < 50){
+            trys++;
+            delay(500);
+        }
+        if(trys >= 50){
+            log_e("Failed to wait for communication");
+            goto err;
+        }
+    } else {
+        // try to communicate with the modem
+        
     }
 
-    // enable flow control
+    /* enable flow control */
     if (dte_config.uart_config.flow_control == ESP_MODEM_FLOW_CONTROL_HW) {
         ret = esp_modem_set_flow_control(_dce, 2, 2);  //2/2 means HW Flow Control.
         if (ret != ESP_OK) {
-            log_e("Failed to set the set_flow_control mode: [%d] %s", ret, esp_err_to_name(ret));
+            log_e("Failed to set the hardware flow control: [%d] %s", ret, esp_err_to_name(ret));
             goto err;
         }
     }
 
-    // check if PIN needed
+    /* check if PIN needed */
     if (esp_modem_read_pin(_dce, pin_ok) == ESP_OK && pin_ok == false) {
         if (_pin == NULL || esp_modem_set_pin(_dce, _pin) != ESP_OK) {
             log_e("PIN verification failed!");
@@ -380,6 +385,19 @@ void PPPClass::end(void)
     }
 
     _mode = ESP_MODEM_MODE_COMMAND;
+}
+
+bool PPPClass::sync() const
+{
+    if(_dce == NULL){
+        return false;
+    }
+
+    if(_mode == ESP_MODEM_MODE_DATA){
+        log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
+        return false;
+    }
+    return esp_modem_sync(_dce) == ESP_OK;
 }
 
 bool PPPClass::attached() const

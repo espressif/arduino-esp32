@@ -42,6 +42,7 @@ class PPPClass: public NetworkInterface {
         int networkMode() const;
         int radioState() const;
         bool attached() const;
+        bool sync() const;
 
         esp_modem_dce_mode_t mode() const { return _mode; }
         bool mode(esp_modem_dce_mode_t m);
