@@ -1,21 +1,21 @@
-name: External Libraries Results
+name: Sizes Results
 
 on:
   workflow_run:
-    workflows: [External Libraries Test]
+    workflows: [Sizes Test]
     types:
       - completed
 
   workflow_dispatch:
 env:
   # It's convenient to set variables for values used multiple times in the workflow
-  SKETCHES_REPORTS_PATH: artifacts/libraries-report
+  SKETCHES_REPORTS_PATH: artifacts/sizes-report
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   PR_EVENT_PATH: artifacts/Event File/event.json
 
 jobs:
   lib-test-results:
-    name: External Libraries Test Results
+    name: Sizes Test Results
     runs-on: ubuntu-latest
     if: |
       github.event.workflow_run.event == 'pull_request' &&
@@ -34,13 +34,9 @@ jobs:
             mv "temp_$name"/* ${{ env.SKETCHES_REPORTS_PATH }}/
             rm -r "temp_$name"
           done
-          echo "Contents of 'libraries-report':"
-          ls -R libraries-report
-          echo "Contents of parent directory:"
-          ls -R ..
     
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@main
+        uses: P-R-O-C-H-Y/report-size-deltas@sizes
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}
