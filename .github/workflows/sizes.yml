@@ -61,7 +61,7 @@ jobs:
           target: ${{ matrix.target }}
           fqbn: ${{ matrix.fqbn }}
           sketch-paths: |
-            ${{ env.REPOSITORY }}
+            - libraries/
           use-json-file: false
           enable-deltas-report: true
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
