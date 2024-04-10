@@ -30,7 +30,9 @@ jobs:
           do
             IFS=$'\t' read name url <<< "$artifact"
             gh api $url > "$name.zip"
-            unzip -d "$name" "$name.zip"
+            unzip -j "$name.zip" -d "temp_$name"
+            mv "temp_$name"/* ${{ env.SKETCHES_REPORTS_PATH }}/
+            rm -r "temp_$name"
           done
     
       - name: Report results

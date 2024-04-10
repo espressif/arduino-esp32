@@ -31,7 +31,7 @@ jobs:
             IFS=$'\t' read name url <<< "$artifact"
             gh api $url > "$name.zip"
             unzip -j "$name.zip" -d "temp_$name"
-            mv "temp_$name"/* libraries-report/
+            mv "temp_$name"/* ${{ env.SKETCHES_REPORTS_PATH }}/
             rm -r "temp_$name"
           done
           echo "Contents of 'libraries-report':"
