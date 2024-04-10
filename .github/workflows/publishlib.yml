@@ -25,13 +25,14 @@ jobs:
       - name: Download and Extract Artifacts
         run: |
           mkdir -p artifacts && cd artifacts
+          mkdir -p libraries-report
           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
           gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
             IFS=$'\t' read name url <<< "$artifact"
             gh api $url > "$name.zip"
             unzip -j "$name.zip" -d "temp_$name"
-            mv "temp_$name"/* ${{ env.SKETCHES_REPORTS_PATH }}/
+            mv "temp_$name"/* libraries-report
             rm -r "temp_$name"
           done
           echo "Contents of 'libraries-report':"
