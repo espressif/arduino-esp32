@@ -35,17 +35,17 @@ jobs:
 
         include:
           - target: esp32
-            fqbn: espressif:esp32:esp32
+            fqbn: espressif:esp32:esp32:PartitionScheme=huge_app"
           - target: esp32s2
-            fqbn: espressif:esp32:esp32s2
+            fqbn: espressif:esp32:esp32s2:PartitionScheme=huge_app"
           - target: esp32c3
-            fqbn: espressif:esp32:esp32c3
+            fqbn: espressif:esp32:esp32c3:PartitionScheme=huge_app"
           - target: esp32s3
-            fqbn: espressif:esp32:esp32s3
+            fqbn: espressif:esp32:esp32s3:PartitionScheme=huge_app"
           - target: esp32c6
-            fqbn: espressif:esp32:esp32c6
+            fqbn: espressif:esp32:esp32c6:PartitionScheme=huge_app
           - target: esp32h2
-            fqbn: espressif:esp32:esp32h2
+            fqbn: espressif:esp32:esp32h2:PartitionScheme=huge_app"
 
 
     steps:
