@@ -60,10 +60,9 @@ jobs:
             ${{ env.REPOSITORY }}
           target: ${{ matrix.target }}
           fqbn: ${{ matrix.fqbn }}
-          # The path to the libraries folder TODO: Change this to the correct path
+          # The path to the libraries folder
           sketch-paths: |
-            - libraries/SD/
-            - libraries/ESP_SR/
+            - libraries/
           use-json-file: false
           enable-deltas-report: true
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
