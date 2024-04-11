@@ -438,6 +438,7 @@ void WebServer::handleClient() {
     _currentClient = NetworkClient();
     _currentStatus = HC_NONE;
     _currentUpload.reset();
+    _currentRaw.reset();
   }
 
   if (callYield) {

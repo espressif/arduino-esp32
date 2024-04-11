@@ -38,6 +38,12 @@ public:
 
         return true;
     }
+    bool canRaw(String requestUri) override {
+        if (!_ufn || _method == HTTP_GET)
+            return false;
+
+        return true;
+    }
 
     bool handle(WebServer& server, HTTPMethod requestMethod, String requestUri) override {
         (void) server;
@@ -52,6 +58,13 @@ public:
         (void) server;
         (void) upload;
         if (canUpload(requestUri))
+            _ufn();
+    }
+
+    void raw(WebServer& server, String requestUri, HTTPRaw& raw) override {
+        (void)server;
+        (void)raw;
+        if (canRaw(requestUri))
             _ufn();
     }
 
