@@ -1,3 +1,4 @@
+#if CONFIG_LWIP_PPP_SUPPORT
 #include "esp_modem_api.h"
 
 esp_err_t _esp_modem_at(esp_modem_dce_t *dce_wrap, const char *at, char *p_out, int timeout){
@@ -23,3 +24,4 @@ esp_err_t _esp_modem_set_operator(esp_modem_dce_t *dce_wrap, int mode, int forma
 esp_err_t _esp_modem_set_network_bands(esp_modem_dce_t *dce_wrap, const char *mode, const int *bands, int size){
 	return esp_modem_set_network_bands(dce_wrap, mode, bands, size);
 }
+#endif // CONFIG_LWIP_PPP_SUPPORT
