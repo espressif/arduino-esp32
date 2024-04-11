@@ -33,7 +33,7 @@ jobs:
             IFS=$'\t' read name url <<< "$artifact"
             gh api $url > "$name.zip"
             unzip -j "$name.zip" -d "temp_$name"
-            if [[ "$name" == "event.json" ]]; then
+            if [[ "$name" == "Event File" ]]; then
               mv "temp_$name"/* event-file
             else
               mv "temp_$name"/* libraries-report
