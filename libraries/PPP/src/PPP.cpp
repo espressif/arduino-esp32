@@ -96,14 +96,14 @@ static void _ppp_error_cb(esp_modem_terminal_error_t err){
 // PPP Arduino Events Callback
 void PPPClass::_onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t info){
     log_v("PPP Arduino Event %ld: %s", event, Network.eventName(event));
-    if(event == ARDUINO_EVENT_PPP_GOT_IP){
-        if((getStatusBits() & ESP_NETIF_CONNECTED_BIT) == 0){
-            setStatusBits(ESP_NETIF_CONNECTED_BIT);
-            arduino_event_t arduino_event;
-            arduino_event.event_id = ARDUINO_EVENT_PPP_CONNECTED;
-            Network.postEvent(&arduino_event);
-        }
-    } else 
+    // if(event == ARDUINO_EVENT_PPP_GOT_IP){
+    //     if((getStatusBits() & ESP_NETIF_CONNECTED_BIT) == 0){
+    //         setStatusBits(ESP_NETIF_CONNECTED_BIT);
+    //         arduino_event_t arduino_event;
+    //         arduino_event.event_id = ARDUINO_EVENT_PPP_CONNECTED;
+    //         Network.postEvent(&arduino_event);
+    //     }
+    // } else 
     if(event == ARDUINO_EVENT_PPP_LOST_IP){
         if((getStatusBits() & ESP_NETIF_CONNECTED_BIT) != 0){
             clearStatusBits(ESP_NETIF_CONNECTED_BIT);
@@ -115,15 +115,24 @@ void PPPClass::_onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t
 }
 
 // PPP Driver Events Callback
-void PPPClass::_onPppEvent(int32_t event_id, void* event_data){
-    // arduino_event_t arduino_event;
-    // arduino_event.event_id = ARDUINO_EVENT_MAX;
+void PPPClass::_onPppEvent(int32_t event, void* event_data){
+    arduino_event_t arduino_event;
+    arduino_event.event_id = ARDUINO_EVENT_MAX;
 
-    log_v("PPP Driver Event %ld: %s", event_id, _ppp_event_name(event_id));
+    log_v("PPP Driver Event %ld: %s", event, _ppp_event_name(event));
+
+    if(event == NETIF_PPP_ERRORNONE){
+        if((getStatusBits() & ESP_NETIF_CONNECTED_BIT) == 0){
+            setStatusBits(ESP_NETIF_CONNECTED_BIT);
+            arduino_event_t arduino_event;
+            arduino_event.event_id = ARDUINO_EVENT_PPP_CONNECTED;
+            Network.postEvent(&arduino_event);
+        }
+    }
     
-    // if(arduino_event.event_id < ARDUINO_EVENT_MAX){
-    //     Network.postEvent(&arduino_event);
-    // }
+    if(arduino_event.event_id < ARDUINO_EVENT_MAX){
+        Network.postEvent(&arduino_event);
+    }
 }
 
 esp_modem_dce_t * PPPClass::handle() const {
@@ -291,11 +300,11 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate){
     if(_pin_rst >= 0){
         // wait to be able to talk to the modem
         log_v("Waiting for response from the modem");
-        while(esp_modem_sync(_dce) != ESP_OK && trys < 50){
+        while(esp_modem_sync(_dce) != ESP_OK && trys < 100){
             trys++;
             delay(500);
         }
-        if(trys >= 50){
+        if(trys >= 100){
             log_e("Failed to wait for communication");
             goto err;
         }
@@ -375,21 +384,26 @@ void PPPClass::end(void)
         _dce = NULL;
     }
 
+    int8_t pin = -1;
     if(_pin_tx != -1){
-        perimanClearPinBus(_pin_tx);
+        pin = _pin_tx;
         _pin_tx = -1;
+        perimanClearPinBus(pin);
     }
     if(_pin_rx != -1){
-        perimanClearPinBus(_pin_rx);
+        pin = _pin_rx;
         _pin_rx = -1;
+        perimanClearPinBus(pin);
     }
     if(_pin_rts != -1){
-        perimanClearPinBus(_pin_rts);
+        pin = _pin_rts;
         _pin_rts = -1;
+        perimanClearPinBus(pin);
     }
     if(_pin_cts != -1){
-        perimanClearPinBus(_pin_cts);
+        pin = _pin_cts;
         _pin_cts = -1;
+        perimanClearPinBus(pin);
     }
 
     _mode = ESP_MODEM_MODE_COMMAND;
