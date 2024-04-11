@@ -1,12 +1,12 @@
 name: Pre-commit check
 
 on:
-  workflow_dispatch:
   pull_request:
     types: [opened, reopened, synchronize, labeled]
   workflow_run:
     workflows: ["ESP32 Arduino CI"]
     types: [completed]
+    branches-ignore: [master, release/*, idf-release/*, gh-pages]
 
 concurrency:
   group: pre-commit-${{github.event.pull_request.number || github.ref}}
