@@ -1,3 +1,4 @@
+#include "sdkconfig.h"
 #if CONFIG_LWIP_PPP_SUPPORT
 #include "esp_modem_api.h"
 
