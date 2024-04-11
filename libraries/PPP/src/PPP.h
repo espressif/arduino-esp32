@@ -23,37 +23,56 @@ class PPPClass: public NetworkInterface {
         PPPClass();
         ~PPPClass();
 
-        bool setApn(const char * apn);
-        bool setPin(const char * pin);
-
-        bool setPins(int8_t tx, int8_t rx, int8_t rts=-1, int8_t cts=-1, esp_modem_flow_ctrl_t flow_ctrl=ESP_MODEM_FLOW_CONTROL_NONE);
-        void setResetPin(int8_t rst, bool active_low=true);
-
         bool begin(ppp_modem_model_t model, uint8_t uart_num=1, int baud_rate=115200);
         void end();
+
+        // Required for connecting to internet
+        bool setApn(const char * apn);
+
+        // Required only if the SIM card is protected by PIN
+        bool setPin(const char * pin);
+
+        // If the modem supports hardware flow control, it's best to use it
+        bool setPins(int8_t tx, int8_t rx, int8_t rts=-1, int8_t cts=-1, esp_modem_flow_ctrl_t flow_ctrl=ESP_MODEM_FLOW_CONTROL_NONE);
+
+        // Using the reset pin of the module ensures that proper communication can be achieved
+        void setResetPin(int8_t rst, bool active_low=true);
 
         // Modem DCE APIs
         int RSSI() const;
         int BER() const;
         String IMSI() const;
         String IMEI() const;
-        String moduleName() const;
-        String operatorName() const;
-        int networkMode() const;
-        int radioState() const;
-        bool attached() const;
-        bool sync() const;
+        String moduleName() const;   // modem module name
+        String operatorName() const; // network operator name
+        int networkMode() const;     // network type (GSM, LTE, etc.)
+        int radioState() const;      // 0:minimal, 1:full
+        bool attached() const;       // true is attached to network
+        bool sync() const;           // true if responds to 'AT'
 
-        esp_modem_dce_mode_t mode() const { return _mode; }
+        // Switch the communication mode
         bool mode(esp_modem_dce_mode_t m);
+        esp_modem_dce_mode_t mode() const { return _mode; }
 
+        // Change temporary the baud rate of communication
+        bool setBaudrate(int baudrate);
+
+        // Sens SMS message to a number
+        bool sms(const char * num, const char * message);
+        bool sms(String num, String message){
+            return sms(num.c_str(), message.c_str());
+        }
+
+        // Send AT command with timeout in milliseconds
+        String cmd(const char * at_command, int timeout);
+        String cmd(String at_command, int timeout){
+            return cmd(at_command.c_str(), timeout);
+        }
+
+        // untested
         bool powerDown();
         bool reset();
         bool storeProfile();
-
-        bool setBaudrate(int baudrate);
-        bool sms(const char * num, const char * message);
-        String cmd(const char * at_command, int timeout);
 
         esp_modem_dce_t * handle() const;
 
