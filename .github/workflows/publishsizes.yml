@@ -32,9 +32,13 @@ jobs:
             IFS=$'\t' read name url <<< "$artifact"
             gh api $url > "$name.zip"
             unzip -j "$name.zip" -d "temp_$name"
-            mv "temp_$name"/* ${{ env.SKETCHES_REPORTS_PATH }}/
+            mv "temp_$name"/* sizes-report/
             rm -r "temp_$name"
           done
+          echo "Contents of 'sizes-report':"
+          ls -R sizes-report
+          echo "Contents of parent directory:"
+          ls -R ..
     
       - name: Report results
         uses: P-R-O-C-H-Y/report-size-deltas@sizes
