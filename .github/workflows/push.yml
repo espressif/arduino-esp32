@@ -48,6 +48,17 @@ jobs:
     - name: Build Sketches
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
 
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-job-${{ matrix.chunk }}
+        path: |
+          ~/.arduino/tests/**/*.h
+          ~/.arduino/tests/**/*.cpp
+          ~/.arduino/tests/**/*.bin
+          ~/.arduino/tests/**/compile_commands.json
+        if-no-files-found: error
+
   # Windows and MacOS
   build-arduino-win-mac:
     name: Arduino on ${{ matrix.os }}

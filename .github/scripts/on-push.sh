@@ -2,8 +2,6 @@
 
 set -e
 
-export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
-
 function build(){
     local target=$1
     local fqbn=$2
