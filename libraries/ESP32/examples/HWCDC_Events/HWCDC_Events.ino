@@ -15,9 +15,7 @@
 #ifndef ARDUINO_USB_MODE
 #error This ESP32 SoC has no Native USB interface
 #elif ARDUINO_USB_MODE == 0
-#warning This sketch should be used when USB is in Hardware CDC and JTAG mode
-void setup(){}
-void loop(){}
+#error This sketch should be used when USB is in Hardware CDC and JTAG mode
 #else
 
 #if !ARDUINO_USB_CDC_ON_BOOT
@@ -63,8 +61,8 @@ const char* HWCDC_Status() {
 }
 
 void setup() {
-  USBSerial.onEvent(usbEventCallback);
-  USBSerial.begin();
+  HWCDCSerial.onEvent(usbEventCallback);
+  HWCDCSerial.begin();
 
   Serial0.begin(115200);
   Serial0.setDebugOutput(true);
