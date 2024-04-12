@@ -140,6 +140,9 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
     fi
 
+    log_file="$HOME/.arduino/cli_compile_output.txt"
+    sizes_file="$HOME/.arduino/cli_compile_output.json"
+
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in `seq 0 $(($len - 1))`
     do
@@ -164,13 +167,32 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
                 --build-cache-path "$ARDUINO_CACHE_DIR" \
                 --build-path "$build_dir" \
-                $xtra_opts "${sketchdir}"
+                $xtra_opts "${sketchdir}" \
+                > $log_file
             
             exit_status=$?
             if [ $exit_status -ne 0 ]; then
                 echo ""ERROR: Compilation failed with error code $exit_status""
                 exit $exit_status
             fi
+
+            #Extract the program storage space and dynamic memory usage in bytes and percentage in separate variables from the output, just the value without the string
+            flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' $log_file | awk '{print $3}')
+            flash_percentage=$(grep -oE 'Sketch uses ([0-9]+) bytes \(([0-9]+)%\)' $log_file | awk '{print $5}' | tr -d '(%)')
+            ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' $log_file | awk '{print $4}')
+            ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' $log_file | awk '{print $6}' | tr -d '(%)')
+
+            #append json file where key is fqbn, sketch name, sizes -> extracted values
+            echo "{\"fqbn\": \"$fqbn\", 
+                   \"sketch\": \"$sketch\", 
+                   \"sizes\": {
+                        \"flash_bytes\": $flash_bytes, 
+                        \"flash_percentage\": $flash_percentage, 
+                        \"ram_bytes\": $ram_bytes, 
+                        \"ram_percentage\": $ram_percentage
+                        }
+                  }" >> $out_file
+
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
             echo "Build path = $build_dir"

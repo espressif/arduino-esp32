@@ -48,6 +48,13 @@ jobs:
     - name: Build Sketches
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
 
+    #Upload cli compile json as artifact
+    - name: Upload cli compile json
+      uses: actions/upload-artifact@v2
+      with:
+        name: cli-compile-json-${{ matrix.chunk }}
+        path: cli-compile-${{ matrix.chunk }}.json
+
   # Windows and MacOS
   build-arduino-win-mac:
     name: Arduino on ${{ matrix.os }}
