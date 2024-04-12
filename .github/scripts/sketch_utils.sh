@@ -191,7 +191,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                         \"ram_bytes\": $ram_bytes, 
                         \"ram_percentage\": $ram_percentage
                         }
-                  }" >> $out_file
+                  }" >> "$sizes_file"
 
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
