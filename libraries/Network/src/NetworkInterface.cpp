@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "NetworkInterface.h"
+#include "NetworkManager.h"
 #include "esp_netif.h"
 #include "esp_netif_defaults.h"
 #include "esp_system.h"
@@ -144,7 +145,6 @@ NetworkInterface::NetworkInterface()
     , _got_ip_event_id(-1)
     , _lost_ip_event_id(-1)
     , _interface_id(ESP_NETIF_ID_MAX)
-    , _is_server_if(false)
 {}
 
 NetworkInterface::~NetworkInterface(){
@@ -246,11 +246,10 @@ void NetworkInterface::destroyNetif() {
     }
 }
 
-bool NetworkInterface::initNetif(Network_Interface_ID interface_id, bool server_interface) {
+bool NetworkInterface::initNetif(Network_Interface_ID interface_id) {
     if(_esp_netif == NULL || interface_id >= ESP_NETIF_ID_MAX){
         return false;
     }
-    _is_server_if = server_interface;
     _interface_id = interface_id;
     _got_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_GOT_IP);
     _lost_ip_event_id = esp_netif_get_event_id(_esp_netif, ESP_NETIF_IP_EVENT_LOST_IP);
@@ -281,7 +280,7 @@ bool NetworkInterface::connected() const {
 }
 
 bool NetworkInterface::hasIP() const {
-    return (getStatusBits() & ESP_NETIF_HAS_IP_BIT) != 0;
+    return (getStatusBits() & (ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_STATIC_IP_BIT)) != 0;
 }
 
 bool NetworkInterface::hasLinkLocalIPv6() const {
@@ -307,7 +306,8 @@ bool NetworkInterface::dnsIP(uint8_t dns_no, IPAddress ip)
     if(_esp_netif == NULL || dns_no > 2){
         return false;
     }
-    if(_is_server_if && dns_no > 0){
+    esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
+    if(flags & ESP_NETIF_DHCP_SERVER && dns_no > 0){
         log_e("Server interfaces can have only one DNS server.");
         return false;
     }
@@ -355,7 +355,18 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
         d3.ip.u_addr.ip4.addr = 0;
 	}
 
-    if(_is_server_if){
+    esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
+    if(flags & ESP_NETIF_DHCP_SERVER){
+
+        // Set DNS Server
+        if(d2.ip.u_addr.ip4.addr != 0){
+            err = esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
+            if(err){
+                log_e("Netif Set DNS Info Failed! 0x%04x: %s", err, esp_err_to_name(err));
+                return false;
+            }
+        }
+
         // Stop DHCPS
         err = esp_netif_dhcps_stop(_esp_netif);
         if(err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED){
@@ -370,11 +381,6 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             return false;
         }
         
-        // Set DNS Server
-        if(d2.ip.u_addr.ip4.addr != 0){
-            esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d2);
-        }
-
         dhcps_lease_t lease;
         lease.enable = true;
         uint8_t CIDR = calculateSubnetCIDR(subnet);
@@ -437,6 +443,17 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             log_e("DHCPS Set Lease Failed! 0x%04x: %s", err, esp_err_to_name(err));
             return false;
         }
+ 
+        // Offer DNS to DHCP clients
+        if(d2.ip.u_addr.ip4.addr != 0){
+            dhcps_offer_t dhcps_dns_value = OFFER_DNS;
+            err = esp_netif_dhcps_option(_esp_netif, ESP_NETIF_OP_SET, ESP_NETIF_DOMAIN_NAME_SERVER, &dhcps_dns_value, sizeof(dhcps_dns_value));
+            if(err){
+                log_e("Netif Set DHCP Option Failed! 0x%04x: %s", err, esp_err_to_name(err));
+                return false;
+            }
+        }
+        
         // Start DHCPS
         err = esp_netif_dhcps_start(_esp_netif);
         if(err){
@@ -451,7 +468,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             return false;
         }
 
-        clearStatusBits(ESP_NETIF_HAS_IP_BIT);
+        clearStatusBits(ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
 
         // Set IPv4, Netmask, Gateway
         err = esp_netif_set_ip_info(_esp_netif, &info);
@@ -473,7 +490,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
                 return false;
             }
         } else {
-            setStatusBits(ESP_NETIF_HAS_IP_BIT);
+            setStatusBits(ESP_NETIF_HAS_STATIC_IP_BIT);
         }
     }
 
@@ -536,6 +553,43 @@ String NetworkInterface::impl_name(void) const
         return String("");
     }
     return String(netif_name);
+}
+
+int NetworkInterface::impl_index() const
+{
+    if(_esp_netif == NULL){
+        return -1;
+    }
+    return esp_netif_get_netif_impl_index(_esp_netif);
+}
+
+int NetworkInterface::route_prio() const
+{
+    if(_esp_netif == NULL){
+        return -1;
+    }
+    return esp_netif_get_route_prio(_esp_netif);
+}
+
+bool NetworkInterface::setDefault()
+{
+    if(_esp_netif == NULL){
+        return false;
+    }
+    esp_err_t err = esp_netif_set_default_netif(_esp_netif);
+    if(err != ESP_OK){
+        log_e("Failed to set default netif: %d", err);
+        return false;
+    }
+    return true;
+}
+
+bool NetworkInterface::isDefault() const
+{
+    if(_esp_netif == NULL){
+        return false;
+    }
+    return esp_netif_get_default_netif() == _esp_netif;
 }
 
 uint8_t * NetworkInterface::macAddress(uint8_t* mac) const
@@ -606,6 +660,35 @@ IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const
     if(esp_netif_get_dns_info(_esp_netif, dns_no?ESP_NETIF_DNS_BACKUP:ESP_NETIF_DNS_MAIN, &d) != ESP_OK){
         return IPAddress();
     }
+    if (d.ip.type == ESP_IPADDR_TYPE_V6){
+        // IPv6 from 4x uint32_t; byte order based on IPV62STR() in esp_netif_ip_addr.h
+        // log_v("DNS got IPv6: " IPV6STR, IPV62STR(d.ip.u_addr.ip6));
+        uint32_t addr0 esp_netif_htonl(d.ip.u_addr.ip6.addr[0]);
+        uint32_t addr1 esp_netif_htonl(d.ip.u_addr.ip6.addr[1]);
+        uint32_t addr2 esp_netif_htonl(d.ip.u_addr.ip6.addr[2]);
+        uint32_t addr3 esp_netif_htonl(d.ip.u_addr.ip6.addr[3]);
+        return IPAddress(
+            (uint8_t)(addr0 >> 24) & 0xFF,
+            (uint8_t)(addr0 >> 16) & 0xFF,
+            (uint8_t)(addr0 >> 8) & 0xFF,
+            (uint8_t)addr0 & 0xFF,
+            (uint8_t)(addr1 >> 24) & 0xFF,
+            (uint8_t)(addr1 >> 16) & 0xFF,
+            (uint8_t)(addr1 >> 8) & 0xFF,
+            (uint8_t)addr1 & 0xFF,
+            (uint8_t)(addr2 >> 24) & 0xFF,
+            (uint8_t)(addr2 >> 16) & 0xFF,
+            (uint8_t)(addr2 >> 8) & 0xFF,
+            (uint8_t)addr2 & 0xFF,
+            (uint8_t)(addr3 >> 24) & 0xFF,
+            (uint8_t)(addr3 >> 16) & 0xFF,
+            (uint8_t)(addr3 >> 8) & 0xFF,
+            (uint8_t)addr3 & 0xFF,
+            d.ip.u_addr.ip6.zone
+        );
+    }
+    // IPv4 from single uint32_t
+    // log_v("DNS IPv4: " IPSTR, IP2STR(&d.ip.u_addr.ip4));
     return IPAddress(d.ip.u_addr.ip4.addr);
 }
 
@@ -671,7 +754,16 @@ IPAddress NetworkInterface::globalIPv6() const
 
 size_t NetworkInterface::printTo(Print & out) const {
     size_t bytes = 0;
-    bytes += out.print(esp_netif_get_desc(_esp_netif));
+    if(_esp_netif == NULL){
+        return bytes;
+    }
+    if(isDefault()){
+        bytes += out.print("*");
+    }
+    const char * dscr = esp_netif_get_desc(_esp_netif);
+    if(dscr != NULL){
+        bytes += out.print(dscr);
+    }
     bytes += out.print(":");
     if(esp_netif_is_netif_up(_esp_netif)){
         bytes += out.print(" <UP");
@@ -679,7 +771,24 @@ size_t NetworkInterface::printTo(Print & out) const {
         bytes += out.print(" <DOWN");
     }
     bytes += printDriverInfo(out);
-    bytes += out.println(">");
+    bytes += out.print(">");
+
+    bytes += out.print(" (");
+    esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
+    if(flags & ESP_NETIF_DHCP_CLIENT){
+        bytes += out.print("DHCPC");
+        if(getStatusBits() & ESP_NETIF_HAS_STATIC_IP_BIT){
+            bytes += out.print("_OFF");
+        }
+    }
+    if(flags & ESP_NETIF_DHCP_SERVER) bytes += out.print("DHCPS");
+    if(flags & ESP_NETIF_FLAG_AUTOUP) bytes += out.print(",AUTOUP");
+    if(flags & ESP_NETIF_FLAG_GARP) bytes += out.print(",GARP");
+    if(flags & ESP_NETIF_FLAG_EVENT_IP_MODIFIED) bytes += out.print(",IP_MOD");
+    if(flags & ESP_NETIF_FLAG_IS_PPP) bytes += out.print(",PPP");
+    if(flags & ESP_NETIF_FLAG_IS_BRIDGE) bytes += out.print(",BRIDGE");
+    if(flags & ESP_NETIF_FLAG_MLDV6_REPORT) bytes += out.print(",V6_REP");
+    bytes += out.println(")");
 
     bytes += out.print("      ");
     bytes += out.print("ether ");

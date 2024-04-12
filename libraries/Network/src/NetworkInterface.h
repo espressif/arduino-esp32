@@ -8,7 +8,6 @@
 #include "esp_netif_types.h"
 #include "esp_event.h"
 #include "Arduino.h"
-#include "NetworkManager.h"
 #include "Printable.h"
 
 typedef enum {
@@ -27,6 +26,7 @@ static const int ESP_NETIF_HAS_IP_BIT           = BIT2;
 static const int ESP_NETIF_HAS_LOCAL_IP6_BIT    = BIT3;
 static const int ESP_NETIF_HAS_GLOBAL_IP6_BIT   = BIT4;
 static const int ESP_NETIF_WANT_IP6_BIT         = BIT5;
+static const int ESP_NETIF_HAS_STATIC_IP_BIT    = BIT6;
 
 #define ESP_NETIF_ID_ETH ESP_NETIF_ID_ETH0
 
@@ -53,6 +53,10 @@ class NetworkInterface: public Printable {
         const char * ifkey() const;
         const char * desc() const;
         String impl_name() const;
+        int impl_index() const;
+        int route_prio() const;
+        bool setDefault();
+        bool isDefault() const;
 
         uint8_t * macAddress(uint8_t* mac) const;
         String macAddress() const;
@@ -79,9 +83,8 @@ class NetworkInterface: public Printable {
         int32_t _got_ip_event_id;
         int32_t _lost_ip_event_id;
         Network_Interface_ID _interface_id;
-        bool _is_server_if;
 
-        bool initNetif(Network_Interface_ID interface_id, bool server_interface=false);
+        bool initNetif(Network_Interface_ID interface_id);
         void destroyNetif();
         int setStatusBits(int bits);
         int clearStatusBits(int bits);

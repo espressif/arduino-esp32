@@ -107,7 +107,7 @@ void ETHClass::_onEthEvent(int32_t event_id, void* event_data){
     } else if (event_id == ETHERNET_EVENT_STOP) {
         log_v("%s Stopped", desc());
         arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
-        clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
+        clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
     }
 
     if(arduino_event.event_id < ARDUINO_EVENT_MAX){
@@ -287,6 +287,8 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     /* attach to receive events */
     initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
+    Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+ 
     ret = esp_eth_start(_eth_handle);
     if(ret != ESP_OK){
         log_e("esp_eth_start failed: %d", ret);
@@ -307,8 +309,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     if(_pin_power != -1){
         if(!perimanSetPinBus(_pin_power,  ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)){ goto err; }
     }
-
-    Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
     // holds a few milliseconds to let DHCP start and enter into a good state
     // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733

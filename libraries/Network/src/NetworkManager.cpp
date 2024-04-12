@@ -4,16 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "NetworkManager.h"
-#include "NetworkInterface.h"
+#include "IPAddress.h"
 #include "esp_netif.h"
-#include "lwip/ip_addr.h"
 #include "lwip/dns.h"
-#include "esp32-hal-log.h"
 #include "esp_mac.h"
+#include "netdb.h"
 
 NetworkManager::NetworkManager(){
 
 }
+
+NetworkInterface * getNetifByID(Network_Interface_ID id);
 
 bool NetworkManager::begin(){
     static bool initialized = false;
@@ -36,43 +37,6 @@ bool NetworkManager::begin(){
     return initialized;
 }
 
-typedef struct gethostbynameParameters {
-    const char *hostname;
-    ip_addr_t addr;
-    uint8_t addr_type;
-    int result;
-} gethostbynameParameters_t;
-
-/**
- * DNS callback
- * @param name
- * @param ipaddr
- * @param callback_arg
- */
-static void wifi_dns_found_callback(const char *name, const ip_addr_t *ipaddr, void *callback_arg)
-{
-    gethostbynameParameters_t *parameters = static_cast<gethostbynameParameters_t *>(callback_arg);
-    if(ipaddr) {
-        if(parameters->result == 0){
-            memcpy(&(parameters->addr), ipaddr, sizeof(ip_addr_t));
-            parameters->result = 1;
-        }
-    } else {
-        parameters->result = -1;
-    }
-    Network.setStatusBits(NET_DNS_DONE_BIT);
-}
-
-/**
- * Callback to execute dns_gethostbyname in lwIP's TCP/IP context
- * @param param Parameters for dns_gethostbyname call
- */
-static esp_err_t wifi_gethostbyname_tcpip_ctx(void *param)
-{
-    gethostbynameParameters_t *parameters = static_cast<gethostbynameParameters_t *>(param);
-    return dns_gethostbyname_addrtype(parameters->hostname, &parameters->addr, &wifi_dns_found_callback, parameters, parameters->addr_type);
-}
-
 /**
  * Resolve the given hostname to an IP address.
  * @param aHostname     Name to be resolved
@@ -80,49 +44,98 @@ static esp_err_t wifi_gethostbyname_tcpip_ctx(void *param)
  * @return 1 if aIPAddrString was successfully converted to an IP address,
  *          else error code
  */
-int NetworkManager::hostByName(const char* aHostname, IPAddress& aResult, bool preferV6)
+int NetworkManager::hostByName(const char* aHostname, IPAddress& aResult)
 {
+    static bool hasGlobalV6 = false;
+    static bool hasGlobalV4 = false;
     err_t err = ERR_OK;
-    gethostbynameParameters_t params;
+    const char *servname = "0";
+    struct addrinfo *res;
+
+    aResult = static_cast<uint32_t>(0);
+
+    // First check if the host parses as a literal address
+    if (aResult.fromString(aHostname)) {
+        return 1;
+    }
 
     // This should generally check if we have a global address assigned to one of the interfaces.
     // If such address is not assigned, there is no point in trying to get V6 from DNS as we will not be able to reach it.
-    // That is of course, if 'preferV6' is not set to true
-    static bool hasGlobalV6 = false;
-    bool hasGlobalV6Now = false;//ToDo: implement this!
-    if(hasGlobalV6 != hasGlobalV6Now){
+    bool hasGlobalV6Now = false;
+    bool hasGlobalV4Now = false;
+    for (int i = 0; i < ESP_NETIF_ID_MAX; ++i){
+        NetworkInterface * iface = getNetifByID((Network_Interface_ID)i);
+        if(iface != NULL) {
+            if(iface->hasGlobalIPv6()) {
+                hasGlobalV6Now = true;
+            }
+            if(iface->hasIP()) {
+                hasGlobalV4Now = true;
+            }
+        }
+        if (hasGlobalV6Now && hasGlobalV4Now){
+            break;
+        }
+    }
+
+    // If the state of IP addresses has changed, clear the DNS cache
+    if(hasGlobalV6 != hasGlobalV6Now || hasGlobalV4 != hasGlobalV4Now){
         hasGlobalV6 = hasGlobalV6Now;
+        hasGlobalV4 = hasGlobalV4Now;
         dns_clear_cache();
         log_d("Clearing DNS cache");
     }
 
-    aResult = static_cast<uint32_t>(0);
-    params.hostname = aHostname;
-    params.addr_type = (preferV6 || hasGlobalV6)?LWIP_DNS_ADDRTYPE_IPV6_IPV4:LWIP_DNS_ADDRTYPE_IPV4;
-    params.result = 0;
-    aResult.to_ip_addr_t(&(params.addr));
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
 
-    if (!aResult.fromString(aHostname)) {
-        Network.waitStatusBits(NET_DNS_IDLE_BIT, 16000);
-        Network.clearStatusBits(NET_DNS_IDLE_BIT | NET_DNS_DONE_BIT);
+    // **Workaround**
+    // LWIP AF_UNSPEC always prefers IPv4 and doesn't check what network is
+    // available. See https://github.com/espressif/esp-idf/issues/13255
+    // Until that is fixed, as a work around if we have a global scope IPv6,
+    // then we check IPv6 only first.
+    if (hasGlobalV6) {
+        hints.ai_family = AF_INET6;
+        err = lwip_getaddrinfo(aHostname, servname, &hints, &res);
 
-        err = esp_netif_tcpip_exec(wifi_gethostbyname_tcpip_ctx, &params);
-        if (err == ERR_OK) {
-            aResult.from_ip_addr_t(&(params.addr));
-        } else if (err == ERR_INPROGRESS) {
-            Network.waitStatusBits(NET_DNS_DONE_BIT, 15000);  //real internal timeout in lwip library is 14[s]
-            Network.clearStatusBits(NET_DNS_DONE_BIT);
-            if (params.result == 1) {
-                aResult.from_ip_addr_t(&(params.addr));
-                err = ERR_OK;
-            }
+        if (err == ERR_OK)
+        {
+            struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)res->ai_addr;
+            // As an array of u8_t
+            aResult = IPAddress(IPv6, ipv6->sin6_addr.s6_addr);
+            log_d("DNS found IPv6 first %s", aResult.toString().c_str());
+            lwip_freeaddrinfo(res);
+            return 1;
         }
-        Network.setStatusBits(NET_DNS_IDLE_BIT);
     }
-    if (err == ERR_OK) {
+    // **End Workaround**
+
+    hints.ai_family = AF_UNSPEC;
+    err = lwip_getaddrinfo(aHostname, servname, &hints, &res);
+
+    if (err == ERR_OK)
+    {
+        if (res->ai_family == AF_INET6)
+        {
+            struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)res->ai_addr;
+            // As an array of u8_t
+            aResult = IPAddress(IPv6, ipv6->sin6_addr.s6_addr);
+            log_d("DNS found IPv6 %s", aResult.toString().c_str());
+        }
+        else
+        {
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+            // As a single u32_t
+            aResult = IPAddress(ipv4->sin_addr.s_addr);
+            log_d("DNS found IPv4 %s", aResult.toString().c_str());
+        }
+
+        lwip_freeaddrinfo(res);
         return 1;
     }
-    log_e("DNS Failed for '%s' with error '%d' and result '%d'", aHostname, err, params.result);
+
+    log_e("DNS Failed for '%s' with error '%d'", aHostname, err);
     return err;
 }
 
@@ -159,7 +172,22 @@ bool NetworkManager::setHostname(const char * name)
     return true;
 }
 
-NetworkInterface * getNetifByID(Network_Interface_ID id);
+bool NetworkManager::setDefaultInterface(NetworkInterface & ifc)
+{
+    return ifc.setDefault();
+}
+
+NetworkInterface * NetworkManager::getDefaultInterface()
+{
+    esp_netif_t * netif = esp_netif_get_default_netif();
+    for (int i = 0; i < ESP_NETIF_ID_MAX; ++i){
+        NetworkInterface * iface = getNetifByID((Network_Interface_ID)i);
+        if(iface != NULL && iface->netif() == netif){
+            return iface;
+        }
+    }
+    return NULL;
+}
 
 size_t NetworkManager::printTo(Print & out) const {
     size_t bytes = 0;
