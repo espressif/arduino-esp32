@@ -88,10 +88,32 @@ int NetworkManager::hostByName(const char* aHostname, IPAddress& aResult)
 
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
+    // **Workaround**
+    // LWIP AF_UNSPEC always prefers IPv4 and doesn't check what network is
+    // available. See https://github.com/espressif/esp-idf/issues/13255
+    // Until that is fixed, as a work around if we have a global scope IPv6,
+    // then we check IPv6 only first.
+    if (hasGlobalV6) {
+        hints.ai_family = AF_INET6;
+        err = lwip_getaddrinfo(aHostname, servname, &hints, &res);
+
+        if (err == ERR_OK)
+        {
+            struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)res->ai_addr;
+            // As an array of u8_t
+            aResult = IPAddress(IPv6, ipv6->sin6_addr.s6_addr);
+            log_d("DNS found IPv6 first %s", aResult.toString().c_str());
+            lwip_freeaddrinfo(res);
+            return 1;
+        }
+    }
+    // **End Workaround**
+
+    hints.ai_family = AF_UNSPEC;
     err = lwip_getaddrinfo(aHostname, servname, &hints, &res);
+
     if (err == ERR_OK)
     {
         if (res->ai_family == AF_INET6)
