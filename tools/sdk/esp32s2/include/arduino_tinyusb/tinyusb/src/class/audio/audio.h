@@ -924,6 +924,31 @@ typedef struct TU_ATTR_PACKED {
     } subrange[numSubRanges];                   \
 }
 
+// 6.1 Interrupt Data Message Format
+typedef struct TU_ATTR_PACKED
+{
+  uint8_t bInfo;
+  uint8_t bAttribute;
+  union
+  {
+    uint16_t wValue;
+    struct
+    {
+      uint8_t wValue_cn_or_mcn;
+      uint8_t wValue_cs;
+    };
+  };
+  union
+  {
+    uint16_t wIndex;
+    struct
+    {
+      uint8_t wIndex_ep_or_int;
+      uint8_t wIndex_entity_id;
+    };
+  };
+} audio_interrupt_data_t;
+
 /** @} */
 
 #ifdef __cplusplus

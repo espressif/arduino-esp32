@@ -100,6 +100,13 @@
   #define TUP_DCD_ENDPOINT_MAX    8
   #define TUP_RHPORT_HIGHSPEED    1
 
+#elif TU_CHECK_MCU(OPT_MCU_MCXA15)
+  // USB0 is chipidea FS
+  #define TUP_USBIP_CHIPIDEA_FS
+  #define TUP_USBIP_CHIPIDEA_FS_MCX
+
+  #define TUP_DCD_ENDPOINT_MAX    16
+
 #elif TU_CHECK_MCU(OPT_MCU_MIMXRT1XXX)
   #define TUP_USBIP_CHIPIDEA_HS
   #define TUP_USBIP_EHCI
@@ -432,6 +439,10 @@
 // fast function, normally mean placing function in SRAM
 #ifndef TU_ATTR_FAST_FUNC
   #define TU_ATTR_FAST_FUNC
+#endif
+
+#if defined(TUP_USBIP_DWC2) || defined(TUP_USBIP_FSDEV)
+  #define TUP_DCD_EDPT_ISO_ALLOC
 #endif
 
 #endif

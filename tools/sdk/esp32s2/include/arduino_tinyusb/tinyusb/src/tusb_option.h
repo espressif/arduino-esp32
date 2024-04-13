@@ -34,7 +34,7 @@
 #define TUSB_VERSION_MAJOR     0
 #define TUSB_VERSION_MINOR     16
 #define TUSB_VERSION_REVISION  0
-#define TUSB_VERSION_BUILD     1
+#define TUSB_VERSION_BUILD     3
 
 #define TUSB_VERSION_NUMBER    (TUSB_VERSION_MAJOR << 24 | TUSB_VERSION_MINOR << 16 | TUSB_VERSION_REVISION << 8 | TUSB_VERSION_BUILD)
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
@@ -144,7 +144,6 @@
 #define OPT_MCU_RX72N            1402 ///< Renesas RX72N
 #define OPT_MCU_RAXXX            1403 ///< Renesas RAxxx families
 
-
 // Mind Motion
 #define OPT_MCU_MM32F327X        1500 ///< Mind Motion MM32F327
 
@@ -181,6 +180,7 @@
 
 // NXP LPC MCX
 #define OPT_MCU_MCXN9            2300  ///< NXP MCX N9 Series
+#define OPT_MCU_MCXA15           2301  ///< NXP MCX A15 Series
 
 // Check if configured MCU is one of listed
 // Apply _TU_CHECK_MCU with || as separator to list of input

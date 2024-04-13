@@ -73,10 +73,24 @@ typedef struct {
   tusb_desc_interface_t desc;
 } tuh_itf_info_t;
 
-// ConfigID for tuh_config()
+// ConfigID for tuh_configure()
 enum {
-  TUH_CFGID_RPI_PIO_USB_CONFIGURATION = OPT_MCU_RP2040 << 8 // cfg_param: pio_usb_configuration_t
+  TUH_CFGID_INVALID = 0,
+  TUH_CFGID_RPI_PIO_USB_CONFIGURATION = 100, // cfg_param: pio_usb_configuration_t
+  TUH_CFGID_MAX3421 = 200,
 };
+
+typedef struct {
+  uint8_t max_nak; // max NAK per endpoint per frame
+  uint8_t cpuctl; // R16: CPU Control Register
+  uint8_t pinctl; // R17: Pin Control Register. FDUPSPI bit is ignored
+} tuh_configure_max3421_t;
+
+typedef union {
+  // For TUH_CFGID_RPI_PIO_USB_CONFIGURATION use pio_usb_configuration_t
+
+  tuh_configure_max3421_t max3421;
+} tuh_configure_param_t;
 
 //--------------------------------------------------------------------+
 // APPLICATION CALLBACK

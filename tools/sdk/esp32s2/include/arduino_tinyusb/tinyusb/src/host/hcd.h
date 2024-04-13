@@ -125,7 +125,7 @@ bool hcd_dcache_clean_invalidate(void const* addr, uint32_t data_size) TU_ATTR_W
 //--------------------------------------------------------------------+
 
 // optional hcd configuration, called by tuh_configure()
-bool hcd_configure(uint8_t rhport, uint32_t cfg_id, const void* cfg_param) TU_ATTR_WEAK;
+bool hcd_configure(uint8_t rhport, uint32_t cfg_id, const void* cfg_param);
 
 // Initialize controller to host mode
 bool hcd_init(uint8_t rhport);

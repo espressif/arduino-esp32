@@ -105,6 +105,10 @@ void tuh_hid_set_default_protocol(uint8_t protocol);
 // This function is only supported by Boot interface (tuh_n_hid_interface_protocol() != NONE)
 bool tuh_hid_set_protocol(uint8_t dev_addr, uint8_t idx, uint8_t protocol);
 
+// Get Report using control endpoint
+// report_type is either Input, Output or Feature, (value from hid_report_type_t)
+bool tuh_hid_get_report(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, void* report, uint16_t len);
+
 // Set Report using control endpoint
 // report_type is either Input, Output or Feature, (value from hid_report_type_t)
 bool tuh_hid_set_report(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type,
@@ -152,6 +156,10 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t idx, uint8_t const* re
 
 // Invoked when sent report to device successfully via interrupt endpoint
 TU_ATTR_WEAK void tuh_hid_report_sent_cb(uint8_t dev_addr, uint8_t idx, uint8_t const* report, uint16_t len);
+
+// Invoked when Get Report to device via either control endpoint
+// len = 0 indicate there is error in the transfer e.g stalled response
+TU_ATTR_WEAK void tuh_hid_get_report_complete_cb(uint8_t dev_addr, uint8_t idx, uint8_t report_id, uint8_t report_type, uint16_t len);
 
 // Invoked when Sent Report to device via either control endpoint
 // len = 0 indicate there is error in the transfer e.g stalled response
