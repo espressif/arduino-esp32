@@ -3,9 +3,13 @@
 
 #include <stdint.h>
 
-static const uint8_t LED_BUILTIN = 10;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+static const uint8_t    LED_BUILTIN = 10;
+#define BUILTIN_LED     LED_BUILTIN     // backward compatibility
+#define LED_BUILTIN     LED_BUILTIN     // allow testing #ifdef LED_BUILTIN
+
+static const uint8_t    SW_BUILTIN = 9;
+#define BUILTIN_SW      SW_BUILTIN      // backward compatibility
+#define SW_BUILTIN      SW_BUILTIN      // allow testing #ifdef SW_BUILTIN
 
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
