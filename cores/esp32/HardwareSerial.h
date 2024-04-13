@@ -135,7 +135,7 @@ typedef enum {
 #endif
 
 // Default pins for UART1 are arbitrary, and defined here for convenience.
-
+#if SOC_UART_NUM > 1
 #ifndef RX1
     #if CONFIG_IDF_TARGET_ESP32
       #define RX1 (gpio_num_t)9
