@@ -135,12 +135,12 @@ typedef enum {
 #endif
 
 // Default pins for UART1 are arbitrary, and defined here for convenience.
-
+#if SOC_UART_NUM > 1
 #ifndef RX1
     #if CONFIG_IDF_TARGET_ESP32
-      #define RX1 (gpio_num_t)9
+      #define RX1 (gpio_num_t)26
     #elif CONFIG_IDF_TARGET_ESP32S2
-      #define RX1 (gpio_num_t)18
+      #define RX1 (gpio_num_t)4
     #elif CONFIG_IDF_TARGET_ESP32C3
       #define RX1 (gpio_num_t)18
     #elif CONFIG_IDF_TARGET_ESP32S3
@@ -150,9 +150,9 @@ typedef enum {
 
   #ifndef TX1
     #if CONFIG_IDF_TARGET_ESP32
-      #define TX1 (gpio_num_t)10
+      #define TX1 (gpio_num_t)27
     #elif CONFIG_IDF_TARGET_ESP32S2
-      #define TX1 (gpio_num_t)17
+      #define TX1 (gpio_num_t)5
     #elif CONFIG_IDF_TARGET_ESP32C3
       #define TX1 (gpio_num_t)19
     #elif CONFIG_IDF_TARGET_ESP32S3
@@ -166,7 +166,7 @@ typedef enum {
 #if SOC_UART_NUM > 2
   #ifndef RX2
     #if CONFIG_IDF_TARGET_ESP32
-      #define RX2 (gpio_num_t)16
+      #define RX2 (gpio_num_t)4
     #elif CONFIG_IDF_TARGET_ESP32S3
       #define RX2 (gpio_num_t)19
     #endif
@@ -174,7 +174,7 @@ typedef enum {
 
   #ifndef TX2
     #if CONFIG_IDF_TARGET_ESP32
-      #define TX2 (gpio_num_t)17
+      #define TX2 (gpio_num_t)25
     #elif CONFIG_IDF_TARGET_ESP32S3
       #define TX2 (gpio_num_t)20
     #endif
