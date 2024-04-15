@@ -11,7 +11,7 @@ env:
   # It's convenient to set variables for values used multiple times in the workflow
   SKETCHES_REPORTS_PATH: artifacts/libraries-report
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  PR_EVENT_PATH: artifacts/Event File/event.json
+  PR_EVENT_PATH: artifacts/event-file/event.json
 
 jobs:
   lib-test-results:
@@ -26,13 +26,18 @@ jobs:
         run: |
           mkdir -p artifacts && cd artifacts
           mkdir -p libraries-report
+          mkdir -p event-file
           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
           gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
             IFS=$'\t' read name url <<< "$artifact"
             gh api $url > "$name.zip"
             unzip -j "$name.zip" -d "temp_$name"
-            mv "temp_$name"/* libraries-report
+            if [[ "$name" == "Event File" ]]; then
+              mv "temp_$name"/* event-file
+            else
+              mv "temp_$name"/* libraries-report
+            fi
             rm -r "temp_$name"
             if [[ "$name" == "event.json" ]]; then
               mkdir -p artifacts/Event\ file

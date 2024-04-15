@@ -11,7 +11,7 @@ env:
   # It's convenient to set variables for values used multiple times in the workflow
   SKETCHES_REPORTS_PATH: artifacts/sizes-report
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  PR_EVENT_PATH: artifacts/Event File/event.json
+  PR_EVENT_PATH: artifacts/event-file/event.json
 
 jobs:
   lib-test-results:
@@ -40,8 +40,6 @@ jobs:
             fi
             rm -r "temp_$name"
           done
-          echo "Contents of 'sizes-report':"
-          ls -R sizes-report
           echo "Contents of parent directory:"
           ls -R ..
     
