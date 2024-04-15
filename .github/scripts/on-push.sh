@@ -89,7 +89,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     #rename sizes_file="$HOME/.arduino/cli_compile_output.json" to sizes_file="GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
     echo "Listings of $HOME/.arduino"
     ls $HOME/.arduino
-    mv $sizes_file "$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
+    mv $sizes_file "$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
     echo "Listings of $GITHUB_WORKSPACE"
     ls $GITHUB_WORKSPACE
 
