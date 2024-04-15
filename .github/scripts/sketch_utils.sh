@@ -140,8 +140,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
     fi
 
+    echo "Chunk index = $CHUNK_INDEX"
+
     log_file="$HOME/.arduino/cli_compile_output.txt"
     sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
+
+    echo "Sizes file = $sizes_file"
 
     #echo board,target and start of sketches to sizes_file json
     echo "{ \"board\": \"$fqbn\",
@@ -187,15 +191,15 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' $log_file | awk '{print $4}')
             ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' $log_file | awk '{print $6}' | tr -d '(%)')
 
+            # Extract the directory path excluding the filename
+            directory_path=$(dirname "$sketch")
+            echo "Debug (sketch)- directory path = $directory_path"
             # Define the constant part
-            constant_path="$HOME/Arduino/hardware/espressif/esp32/libraries/"
-
-            # Extract the desired substring using awk
-            lib_sketch_name=$(echo "$sketch" | sed "s|$constant_part\([^/]*\)/.*|\1|")
-
-            # Print the extracted substring
-            echo "Extracted Path: $lib_sketch_name"
-
+            constant_part="/home/runner/Arduino/hardware/espressif/esp32/libraries/"
+            echo "Debug (sketch)- constant part = $constant_part"
+            # Extract the desired substring using sed
+            lib_sketch_name=$(echo "$directory_path" | sed "s|$constant_part||")
+            echo "Debug (sketch)- extracted path = $lib_sketch_name"
             #append json file where key is fqbn, sketch name, sizes -> extracted values
             echo "{\"name\": \"$lib_sketch_name\", 
                    \"sizes\": {
@@ -206,6 +210,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                         }
                   }," >> "$sizes_file"
             #if i is the last index of the loop, remove the last comma
+            echo "Debug (sketch)- removing last comma from the last JSON object"
             if [ $i -eq $(($len - 1)) ]; then
                 sed -i '$ s/.$//' "$sizes_file"
             fi

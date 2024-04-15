@@ -89,8 +89,11 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     build "esp32h2" $FQBN_ESP32H2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32"   $FQBN_ESP32   $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
 
+
+    echo "Debug(board) - removing last comma from the last JSON object"
+
     #remove last comma from the last JSON object
-    sed -i '' -e '$ s/,$//' $sizes_file
+    sed -i '$ s/.$//' "$sizes_file"
     #echo end of JSON array
     echo "]}" >> $sizes_file
 
