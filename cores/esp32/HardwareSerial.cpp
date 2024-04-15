@@ -198,7 +198,7 @@ bool HardwareSerial::setRxFIFOFull(uint8_t fifoBytes)
     return retCode;
 }
 
-// timout is calculates in time to receive UART symbols at the UART baudrate.
+// timeout is calculates in time to receive UART symbols at the UART baudrate.
 // the estimation is about 11 bits per symbol (SERIAL_8N1)
 bool HardwareSerial::setRxTimeout(uint8_t symbols_timeout)
 {
@@ -332,7 +332,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
     // it will detach previous UART attached pins
 
-    // indicates that uartbegin() has to initilize a new IDF driver
+    // indicates that uartbegin() has to initialize a new IDF driver
     if (_testUartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd)) {
         _destroyEventTask(); // when IDF uart driver must be restarted, _eventTask must finish too
     }

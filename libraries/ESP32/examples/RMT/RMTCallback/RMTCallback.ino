@@ -14,10 +14,10 @@
 
 /**
  * @brief This example demonstrate how to use a C++ Class to read several GPIO RMT signals
- * calling a data processor when data is availble in background, using taks.
- * 
- * The output is the last RMT data read in the GPIO, just to ilustrate how it works.
- * 
+ * calling a data processor when data is available in background, using tasks.
+ *
+ * The output is the last RMT data read in the GPIO, just to illustrate how it works.
+ *
  */
 
 
@@ -53,14 +53,14 @@ class MyProcessor {
         rmtRead(me->gpio, me->rx_symbols, &me->rx_num_symbols, RMT_WAIT_FOR_EVER);
         // process the data like a callback whenever there is data available
         process(me->rx_symbols, me->rx_num_symbols, me);
-      }  
+      }
       vTaskDelete(NULL);
     }
 
     static void process(rmt_data_t *data, size_t len, void *args) {
       MyProcessor *me = (MyProcessor *) args;
       uint32_t *buff = &me->buff;
-      
+
       for (int i = 0; len; len--) {
         if (data[i].duration0 == 0)
           break;

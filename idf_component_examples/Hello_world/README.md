@@ -8,7 +8,7 @@ See [Arduino-esp32](https://components.espressif.com/components/espressif/arduin
 
 ## How to use example
 
-To create a ESP-IDF project from this example with the latest relase of Arduino-esp32, you can simply run command: `idf.py create-project-from-example "espressif/arduino-esp32:hello_world"`.
+To create a ESP-IDF project from this example with the latest release of Arduino-esp32, you can simply run command: `idf.py create-project-from-example "espressif/arduino-esp32:hello_world"`.
 ESP-IDF will download all dependencies needed from the component registry and setup the project for you.
 
 If you want to use cloned Arduino-esp32 repository, you can build this example directly.

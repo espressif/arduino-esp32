@@ -356,7 +356,7 @@ void BLECharacteristic::handleGATTServerEvent(
 //
 // If the is_long flag is set then this is a follow on from an original read and we will already have sent at least 22 bytes.
 // If the is_long flag is not set then we need to check how much data we are going to send.  If we are sending LESS than
-// 22 bytes, then we "just" send it and thats the end of the story.
+// 22 bytes, then we "just" send it and that's the end of the story.
 // If we are sending 22 bytes exactly, we just send it BUT we will get a follow on request.
 // If we are sending more than 22 bytes, we send the first 22 bytes and we will get a follow on request.
 // Because of follow on request processing, we need to maintain an offset of how much data we have already sent

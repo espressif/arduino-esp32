@@ -95,7 +95,7 @@ class UpdateClass {
       or there is an error
       this will clear everything and return false
       the last error is available through getError()
-      evenIfRemaining is helpfull when you update without knowing the final size first
+      evenIfRemaining is helpful when you update without knowing the final size first
     */
     bool end(bool evenIfRemaining = false);
 

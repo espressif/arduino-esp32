@@ -242,7 +242,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
         return false;
     }
 
-    log_i("Initialising I2C Slave: sda=%d scl=%d freq=%d, addr=0x%x", sda, scl, frequency, slaveID);
+    log_i("Initializing I2C Slave: sda=%d scl=%d freq=%d, addr=0x%x", sda, scl, frequency, slaveID);
 
     i2c_slave_struct_t * i2c = &_i2c_bus_array[num];
     esp_err_t ret = ESP_OK;
@@ -751,7 +751,7 @@ static void i2c_slave_isr_handler(void* arg)
     if(activeInt & I2C_SLAVE_STRETCH_INT_ENA){ // STRETCH
         i2c_stretch_cause_t cause = i2c_ll_stretch_cause(i2c->dev);
         if(cause == I2C_STRETCH_CAUSE_MASTER_READ){
-            //on C3 RX data dissapears with repeated start, so we need to get it here
+            //on C3 RX data disappears with repeated start, so we need to get it here
             if(rx_fifo_len){
                 pxHigherPriorityTaskWoken |= i2c_slave_handle_rx_fifo_full(i2c, rx_fifo_len);
             }

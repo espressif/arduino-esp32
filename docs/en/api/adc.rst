@@ -9,7 +9,7 @@ ADC (analog to digital converter) is a very common peripheral used to convert an
 to a digital form so that it can be read and processed by a microcontroller. 
 
 ADCs are very useful in control and monitoring applications since most sensors 
-(e.g., temperature, pressure, force) produce analogue output voltages.
+(e.g., temperature, pressure, force) produce analog output voltages.
 
 .. note:: Each SoC or module has a different number of ADC's with a different number of channels and pins available. Refer to datasheet of each board for more info.
 
@@ -214,7 +214,7 @@ This function is used to start ADC continuous conversions.
 
     bool analogContinuousStart();
   
-This function will return ``true`` if ADC continuous is succesfully started.
+This function will return ``true`` if ADC continuous is successfully started.
 If ``false`` is returned, starting ADC continuous has failed.
 
 analogContinuousStop
@@ -226,7 +226,7 @@ This function is used to stop ADC continuous conversions.
 
     bool analogContinuousStop();
   
-This function will return ``true`` if ADC continuous is succesfully stopped.
+This function will return ``true`` if ADC continuous is successfully stopped.
 If ``false`` is returned, stopping ADC continuous has failed.
 
 analogContinuousDeinit
@@ -238,13 +238,13 @@ This function is used to deinitialize ADC continuous peripheral.
 
     bool analogContinuousDeinit();
   
-This function will return ``true`` if ADC continuous is succesfully deinitialized.
+This function will return ``true`` if ADC continuous is successfully deinitialized.
 If ``false`` is returned, deinitilization of ADC continuous has failed.
 
 analogContinuousSetAtten
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the attenuation for ADC continuous peripheral. For more informations refer to `analogSetAttenuation`_.
+This function is used to set the attenuation for ADC continuous peripheral. For more information refer to `analogSetAttenuation`_.
 
 .. code-block:: arduino
 

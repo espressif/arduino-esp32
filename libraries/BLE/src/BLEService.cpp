@@ -283,7 +283,7 @@ void BLEService::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t
 			if (m_handle == param->add_char.service_handle) {
 				BLECharacteristic *pCharacteristic = getLastCreatedCharacteristic();
 				if (pCharacteristic == nullptr) {
-					log_e("Expected to find characteristic with UUID: %s, but didnt!",
+					log_e("Expected to find characteristic with UUID: %s, but didn't!",
 							BLEUUID(param->add_char.char_uuid).toString().c_str());
 					dump();
 					break;

@@ -22,7 +22,7 @@ boolean connected = false;
 NetworkUDP udp;
 
 void setup(){
-  // Initilize hardware serial:
+  // Initialize hardware serial:
   Serial.begin(115200);
   
   //Connect to the WiFi network

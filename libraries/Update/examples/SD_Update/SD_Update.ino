@@ -1,4 +1,4 @@
-/* 
+/*
  Name:      SD_Update.ino
  Created:   12.09.2017 15:07:17
  Author:    Frederik Merz <frederik.merz@novalight.de>
@@ -9,9 +9,9 @@
    2. Copy update.bin to a SD-Card, you can basically
       compile this or any other example
       then copy and rename the app binary to the sd card root
-   3. Connect SD-Card as shown in SD example, 
+   3. Connect SD-Card as shown in SD example,
       this can also be adapted for SPI
-   3. After successfull update and reboot, ESP32 shall start the new app
+   3. After successful update and reboot, ESP32 shall start the new app
 */
 
 #include <Update.h>
@@ -20,7 +20,7 @@
 
 // perform the actual update from a given stream
 void performUpdate(Stream &updateSource, size_t updateSize) {
-   if (Update.begin(updateSize)) {      
+   if (Update.begin(updateSize)) {
       size_t written = Update.writeStream(updateSource);
       if (written == updateSize) {
          Serial.println("Written : " + String(written) + " successfully");
@@ -69,9 +69,9 @@ void updateFromFS(fs::FS &fs) {
       }
 
       updateBin.close();
-    
-      // whe finished remove the binary from sd card to indicate end of the process
-      fs.remove("/update.bin");      
+
+      // when finished remove the binary from sd card to indicate end of the process
+      fs.remove("/update.bin");
    }
    else {
       Serial.println("Could not load update.bin from sd root");
@@ -84,7 +84,7 @@ void setup() {
    Serial.println("Welcome to the SD-Update example!");
 
    // You can uncomment this and build again
-   // Serial.println("Update successfull");
+   // Serial.println("Update successful");
 
    //first init and check SD card
    if (!SD.begin()) {
@@ -108,5 +108,5 @@ void rebootEspWithReason(String reason){
 
 //will not be reached
 void loop() {
-  
+
 }

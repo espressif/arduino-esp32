@@ -7,7 +7,7 @@
 #define USB_PID            0x8364
 #define USB_MANUFACTURER   "DFRobot"
 #define USB_PRODUCT        "Beetle ESP32-C3"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = 10;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility

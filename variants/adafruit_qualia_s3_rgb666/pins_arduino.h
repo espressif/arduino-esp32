@@ -8,7 +8,7 @@
 
 #define USB_MANUFACTURER   "Adafruit"
 #define USB_PRODUCT        "Qualia ESP32-S3 RGB666"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 static const uint8_t PCA_TFT_SCK = 0;
 static const uint8_t PCA_TFT_CS = 1;

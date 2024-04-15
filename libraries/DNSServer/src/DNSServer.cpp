@@ -77,7 +77,7 @@ void DNSServer::_handleUDP(AsyncUDPPacket& pkt)
   DNSHeader dnsHeader;
   DNSQuestion dnsQuestion;
   memcpy( &dnsHeader, pkt.data(), DNS_HEADER_SIZE );
-  if (dnsHeader.QR != DNS_QR_QUERY) return;     // ignore non-query mesages
+  if (dnsHeader.QR != DNS_QR_QUERY) return;     // ignore non-query messages
 
     if ( requestIncludesOnlyOneQuestion(dnsHeader) )
     {
@@ -101,7 +101,7 @@ void DNSServer::_handleUDP(AsyncUDPPacket& pkt)
       memcpy( &dnsQuestion.QClass, enoflbls + sizeof(dnsQuestion.QType), sizeof(dnsQuestion.QClass) );
     }
 
-    // will reply with IP only to "*" or if doman matches without www. subdomain
+    // will reply with IP only to "*" or if domain matches without www. subdomain
     if (dnsHeader.OPCode == DNS_OPCODE_QUERY &&
         requestIncludesOnlyOneQuestion(dnsHeader) &&
         (_domainName.isEmpty() ||
@@ -157,7 +157,7 @@ void DNSServer::replyWithIP(AsyncUDPPacket& req, DNSHeader& dnsHeader, DNSQuesti
   rpl.write( (uint8_t*) &dnsQuestion.QClass, 2 ) ;
 
   // Write the answer 
-  // Use DNS name compression : instead of repeating the name in this RNAME occurence,
+  // Use DNS name compression : instead of repeating the name in this RNAME occurrence,
   // set the two MSB of the byte corresponding normally to the length to 1. The following
   // 14 bits must be used to specify the offset of the domain name in the message 
   // (<255 here so the first byte has the 6 LSB at 0) 

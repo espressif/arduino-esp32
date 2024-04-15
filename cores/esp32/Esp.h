@@ -26,7 +26,7 @@
 #include "esp_cpu.h"
 
 /**
- * AVR macros for WDT managment
+ * AVR macros for WDT management
  */
 typedef enum {
     WDTO_0MS    = 0,   //!< WDTO_0MS

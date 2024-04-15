@@ -15,7 +15,7 @@
 #include <NetworkClientSecure.h>
 
 // This is GandiStandardSSLCA2.pem, the root Certificate Authority that signed 
-// the server certifcate for the demo server https://jigsaw.w3.org in this
+// the server certificate for the demo server https://jigsaw.w3.org in this
 // example. This certificate is valid until Sep 11 23:59:59 2024 GMT
 const char* rootCACertificate = \
 "-----BEGIN CERTIFICATE-----\n" \

@@ -4,7 +4,7 @@
  * executing the callback.
  * 
  * For each HardwareSerial object (Serial, Serial1, Serial2), it is necessary to set the callback with 
- * the repective Serial pointer. It is done using lambda expression as a std::function.
+ * the respective Serial pointer. It is done using lambda expression as a std::function.
  * Example:
  * Serial1.onReceive([]() { processOnReceiving(&Serial1); });
  *  
@@ -97,7 +97,7 @@ void setup() {
   
   delay(500);
   Serial.printf("\nSend bytes to UART%d in order to\n", TEST_UART);
-  Serial.println("see a single processing fuction display information about");
+  Serial.println("see a single processing function display information about");
   Serial.println("the received data.\n");
  
 }

@@ -55,7 +55,7 @@ void loop() {
             for (int i = 0; i < adc_pins_count; i++) {
             Serial.printf("\nADC PIN %d data:", result[i].pin);
             Serial.printf("\n   Avg raw value = %d", result[i].avg_read_raw);
-            Serial.printf("\n   Avg milivolts value = %d", result[i].avg_read_mvolts);
+            Serial.printf("\n   Avg millivolts value = %d", result[i].avg_read_mvolts);
             }
 
             // Delay for better readability of ADC data
@@ -65,7 +65,7 @@ void loop() {
             analogContinuousStart();
         }
         else {
-            Serial.println("Error occured during reading data. Set Core Debug Level to error or lower for more informations.");
+            Serial.println("Error occurred during reading data. Set Core Debug Level to error or lower for more information.");
         }
     }
 }

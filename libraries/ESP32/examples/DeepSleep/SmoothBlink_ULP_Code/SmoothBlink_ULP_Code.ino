@@ -14,7 +14,7 @@
 #define RTC_dutyMeter 0
 #define RTC_dir       4
 #define RTC_fadeDelay 12
-// *fadeCycleDelay is used to pass values to ULP and change its behaviour
+// *fadeCycleDelay is used to pass values to ULP and change its behavior
 uint32_t *fadeCycleDelay = &RTC_SLOW_MEM[RTC_fadeDelay];
 #define ULP_START_OFFSET 32
 

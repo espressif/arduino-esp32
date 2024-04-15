@@ -6,7 +6,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-// use 12 bit precission for LEDC timer
+// use 12 bit precision for LEDC timer
 #define LEDC_TIMER_12_BIT  12
 
 // use 5000 Hz as a LEDC base frequency
@@ -44,7 +44,7 @@ void setup() {
   delay(LEDC_FADE_TIME);
 
   // Setup and start fade off led and use ISR (duty from 4095 to 0)
-  ledcFadeWithInterrupt(LED_PIN, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR); 
+  ledcFadeWithInterrupt(LED_PIN, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
   Serial.println("LED Fade off started.");
 }
 
@@ -56,12 +56,12 @@ void loop() {
 
     // Check if last fade was fade on
     if(fade_on){
-      ledcFadeWithInterrupt(LED_PIN, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME, LED_FADE_ISR); 
+      ledcFadeWithInterrupt(LED_PIN, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
       Serial.println("LED Fade off started.");
       fade_on = false;
     }
     else {
-      ledcFadeWithInterrupt(LED_PIN, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR); 
+      ledcFadeWithInterrupt(LED_PIN, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
       Serial.println("LED Fade on started.");
       fade_on = true;
     }

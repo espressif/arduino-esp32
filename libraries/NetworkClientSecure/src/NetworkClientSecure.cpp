@@ -144,7 +144,7 @@ int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *host, 
     if (ret >=0 && ! _stillinPlainStart)
         ret = ssl_starttls_handshake(sslclient);
     else
-        log_i("Actual TLS start posponed.");
+        log_i("Actual TLS start postponed.");
 
     _lastError = ret;
 

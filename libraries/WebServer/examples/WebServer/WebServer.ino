@@ -130,7 +130,7 @@ public:
 
   // @brief check incoming request. Can handle POST for uploads and DELETE.
   // @param requestMethod method of the http request line.
-  // @param requestUri request ressource from the http request line.
+  // @param requestUri request resource from the http request line.
   // @return true when method can be handled.
   bool canHandle(HTTPMethod requestMethod, String UNUSED uri) override {
     return ((requestMethod == HTTP_POST) || (requestMethod == HTTP_DELETE));

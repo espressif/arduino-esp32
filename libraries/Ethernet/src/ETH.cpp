@@ -311,7 +311,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     }
 
     // holds a few milliseconds to let DHCP start and enter into a good state
-    // FIX ME -- adresses issue https://github.com/espressif/arduino-esp32/issues/5733
+    // FIX ME -- addresses issue https://github.com/espressif/arduino-esp32/issues/5733
     delay(50);
 
     return true;

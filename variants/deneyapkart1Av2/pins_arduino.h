@@ -6,9 +6,9 @@
 
 #define USB_VID            0x303A
 #define USB_PID            0x8147
-#define USB_MANUFACTURER   "Turkish Technnology Team Foundation (T3)"
+#define USB_MANUFACTURER   "Turkish Technology Team Foundation (T3)"
 #define USB_PRODUCT        "DENEYAP KART 1A v2"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48; //D9
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility

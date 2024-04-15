@@ -80,7 +80,7 @@ public:
 	void setValue(uint32_t& data32);
 	void setValue(int& data32);
 	void setValue(float& data32);
-	void setValue(double& data64); 
+	void setValue(double& data64);
 	void setWriteProperty(bool value);
 	void setWriteNoResponseProperty(bool value);
 	String toString();
@@ -124,7 +124,7 @@ private:
 	void                 setHandle(uint16_t handle);
 	FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
 	FreeRTOS::Semaphore m_semaphoreConfEvt   = FreeRTOS::Semaphore("ConfEvt");
-	FreeRTOS::Semaphore m_semaphoreSetValue  = FreeRTOS::Semaphore("SetValue");  
+	FreeRTOS::Semaphore m_semaphoreSetValue  = FreeRTOS::Semaphore("SetValue");
 }; // BLECharacteristic
 
 
@@ -157,7 +157,7 @@ public:
 	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
 	/**
-	 * @brief DEPRECATED! Callback function to support a read request. Called only if onRead(,) not overrided. 
+	 * @brief DEPRECATED! Callback function to support a read request. Called only if onRead(,) is not overridden
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
 	virtual void onRead(BLECharacteristic* pCharacteristic);
@@ -169,7 +169,7 @@ public:
 	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
 	/**
-	 * @brief DEPRECATED! Callback function to support a write request. Called only if onWrite(,) not overrided. 
+	 * @brief DEPRECATED! Callback function to support a write request. Called only if onWrite(,) is not overridden.
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
 	virtual void onWrite(BLECharacteristic* pCharacteristic);

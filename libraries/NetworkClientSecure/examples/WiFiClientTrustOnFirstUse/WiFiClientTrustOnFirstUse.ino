@@ -7,7 +7,7 @@
    https://medium.com/@munteanu210/ssl-certificates-vs-man-in-the-middle-attacks-3fb7846fa5db
    for some background on this.
 
-   Unfortunatley this means that one needs to hardcode a server
+   Unfortunately this means that one needs to hardcode a server
    public key, certificate or some cryptographically strong hash
    thereoff into the code, to verify that you are indeed talking to
    the right server. This is sometimes somewhat impractical. Especially
@@ -58,14 +58,14 @@ const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 an
 #include <NetworkClientSecure.h>
 #include <EEPROM.h>
 
-/* Set aside some persistant memory (i.e. memory that is preserved on reboots and
+/* Set aside some persistent memory (i.e. memory that is preserved on reboots and
   power cycling; and will generally survive software updates as well.
 */
 EEPROMClass TOFU("tofu0");
 
-// Utility function; checks if a given buffer is entirly
+// Utility function; checks if a given buffer is entirely
 // with with 0 bytes over its full length. Returns 0 on
-// succes; a non zero value on fail.
+// success; a non zero value on fail.
 //
 static int memcmpzero(unsigned char * ptr, size_t len) {
   while (len--) if (0xff != *ptr++) return -1;

@@ -1,5 +1,5 @@
 /*
-  stdlib_noniso.h - nonstandard (but usefull) conversion functions
+  stdlib_noniso.h - nonstandard (but useful) conversion functions
 
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
 

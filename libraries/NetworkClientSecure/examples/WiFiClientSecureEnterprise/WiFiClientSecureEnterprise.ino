@@ -84,7 +84,7 @@ void setup() {
     delay(500);
     Serial.print(".");
     counter++;
-    if (counter >= 60) { //after 30 seconds timeout - reset board (on unsucessful connection)
+    if (counter >= 60) { //after 30 seconds timeout - reset board (on unsuccessful connection)
       ESP.restart();
     }
   }
@@ -127,7 +127,7 @@ void loop() {
     String line = client.readStringUntil('\n');
     Serial.println(line);
   } else {
-    Serial.println("Connection unsucessful");
+    Serial.println("Connection unsuccessful");
   }
   delay(5000);
 }

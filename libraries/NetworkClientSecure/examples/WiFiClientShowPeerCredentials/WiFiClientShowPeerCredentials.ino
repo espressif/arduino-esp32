@@ -3,7 +3,7 @@
 // Example of a establishing a secure connection and then
 // showing the fingerprint of the certificate. This can
 // be useful in an IoT setting to know for sure that you
-// are connecting to the right server. Especally in 
+// are connecting to the right server. Especially in 
 // situations where you cannot hardcode a trusted root
 // certificate for long periods of time (as they tend to
 // get replaced more often than the lifecycle of IoT

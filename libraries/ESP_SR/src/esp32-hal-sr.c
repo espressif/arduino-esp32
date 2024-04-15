@@ -272,7 +272,7 @@ static void audio_detect_task(void *arg)
 
                 int sr_command_id = mn_result->command_id[0];
                 int sr_phrase_id = mn_result->phrase_id[0];
-                log_d("Deteted command : %d, phrase: %d", sr_command_id, sr_phrase_id);
+                log_d("Detected command : %d, phrase: %d", sr_command_id, sr_phrase_id);
                 sr_result_t result = {
                     .wakenet_mode = WAKENET_NO_DETECT,
                     .state = mn_state,
@@ -355,7 +355,7 @@ esp_err_t sr_start(sr_fill_cb fill_cb, void * fill_cb_arg, sr_channels_t rx_chan
     log_d("load model_data '%s'", mn_name);
     g_sr_data->model_data = g_sr_data->multinet->create(mn_name, 5760);
 
-    
+
     // Add commands
     esp_mn_commands_alloc((esp_mn_iface_t *)g_sr_data->multinet, (model_iface_data_t *)g_sr_data->model_data);
     log_i("add %d commands", cmd_number);
@@ -363,7 +363,7 @@ esp_err_t sr_start(sr_fill_cb fill_cb, void * fill_cb_arg, sr_channels_t rx_chan
         esp_mn_commands_add(sr_commands[i].command_id, (char *)(sr_commands[i].phoneme));
         log_i("  cmd[%d] phrase[%d]:'%s'", sr_commands[i].command_id, i, sr_commands[i].str);
     }
-    
+
     // Load commands
     esp_mn_error_t *err_id = esp_mn_commands_update();
     if(err_id){
@@ -394,7 +394,7 @@ esp_err_t sr_stop(void)
     ESP_RETURN_ON_FALSE(NULL != g_sr_data, ESP_ERR_INVALID_STATE, "SR is not running");
 
     /**
-     * Waiting for all task stoped
+     * Waiting for all task stopped
      * TODO: A task creation failure cannot be handled correctly now
      * */
     vTaskDelete(g_sr_data->handle_task);

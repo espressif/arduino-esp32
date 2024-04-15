@@ -129,7 +129,7 @@ This particular ESP32-S3 variant comes with 4MB Flash and 2MB PSRAM.
 The **x** stands for the temperature range specification.
 
 * **H** High Temperature (*-40 to 85ºC*)
-* **N** Low Temeprature (*-40 to 65ºC*)
+* **N** Low Temperature (*-40 to 65ºC*)
 
 For more details, please see the corresponding datasheet at `Espressif Product Selector`_.
 
@@ -180,7 +180,7 @@ This particular ESP32-S3 comes with 4MB Flash and 2MB PSRAM.
 The **x** stands for the temperature range specification.
 
 * **H** High Temperature (*-40 to 85ºC*)
-* **N** Low Temeprature (*-40 to 65ºC*)
+* **N** Low Temperature (*-40 to 65ºC*)
 
 For more details, please see the corresponding datasheet at `Espressif Product Selector`_.
 

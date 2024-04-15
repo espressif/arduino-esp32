@@ -7,7 +7,7 @@
 #define USB_PID 0x83CF
 #define USB_MANUFACTURER   "DFRobot"
 #define USB_PRODUCT        "FireBeetle 2 ESP32-S3"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

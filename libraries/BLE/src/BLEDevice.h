@@ -35,7 +35,7 @@ class BLEDevice {
 public:
 
 	static BLEClient*  createClient();    // Create a new BLE client.
-	static BLEServer*  createServer();    // Cretae a new BLE server.
+	static BLEServer*  createServer();    // Create a new BLE server.
 	static BLEAddress  getAddress();      // Retrieve our own local BD address.
 	static BLEScan*    getScan();         // Get the scan object
 	static String getValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID);	  // Get the value of a characteristic of a service on a server.

@@ -1,5 +1,5 @@
 /*
- core_esp8266_noniso.c - nonstandard (but usefull) conversion functions
+ core_esp8266_noniso.c - nonstandard (but useful) conversion functions
 
  Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
  This file is part of the esp8266 core for Arduino environment.

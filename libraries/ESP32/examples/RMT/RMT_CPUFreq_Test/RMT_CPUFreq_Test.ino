@@ -20,7 +20,7 @@
  * void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
  * 
  * The output is a visual WS2812 RGB LED color change routine using each time a
- * different CPU Frequency, just to ilustrate how it works. Serial output indicates 
+ * different CPU Frequency, just to illustrate how it works. Serial output indicates 
  * information about the CPU Frequency while controlling the RGB LED using RMT.
  */
 

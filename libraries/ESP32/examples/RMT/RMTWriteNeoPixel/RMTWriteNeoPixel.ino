@@ -89,7 +89,7 @@ void loop() {
             }
         }
     }
-    // make the led travel in the pannel
+    // make the led travel in the panel
     if ((++led_index)>=NR_OF_LEDS) {
         led_index = 0;
     }

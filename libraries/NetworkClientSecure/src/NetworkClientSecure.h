@@ -84,7 +84,7 @@ public:
     // give some STARTSSL command to `upgrade' the connection to TLS
     // or SSL. Setting PlainStart to true (the default is false) enables
     // this. It is up to the application code to then call 'startTLS()'
-    // at the right point to initialise the SSL or TLS upgrade.
+    // at the right point to initialize the SSL or TLS upgrade.
     
     void setPlainStart() { _stillinPlainStart = true; };
     bool stillInPlainStart() { return _stillinPlainStart; };

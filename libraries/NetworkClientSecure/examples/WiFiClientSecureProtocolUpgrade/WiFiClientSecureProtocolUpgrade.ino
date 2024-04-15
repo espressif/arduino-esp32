@@ -2,11 +2,11 @@
 
    Inline upgrading from a clear-text connection to an SSL/TLS connection.
 
-   Some protocols such as SMTP, XMPP, Mysql, Postgress and others allow, or require,
+   Some protocols such as SMTP, XMPP, Mysql, Postgresql and others allow, or require,
    that you start the connection without encryption; and then send a command to switch
    over to encryption.
 
-   E.g. a typical SMTP submission would entail a dialogue such as this:
+   E.g. a typical SMTP submission would entail a dialog such as this:
 
    1. client connects to server in the clear
    2. server says hello
