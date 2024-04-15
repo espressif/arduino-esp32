@@ -74,12 +74,15 @@
 
 #if CONFIG_ETH_USE_ESP32_EMAC
 #define ETH_PHY_IP101 ETH_PHY_TLK110
-typedef enum { ETH_CLOCK_GPIO0_IN, ETH_CLOCK_GPIO0_OUT, ETH_CLOCK_GPIO16_OUT, ETH_CLOCK_GPIO17_OUT } eth_clock_mode_t;
+typedef enum { ETH_CLOCK_GPIO0_IN,
+               ETH_CLOCK_GPIO0_OUT,
+               ETH_CLOCK_GPIO16_OUT,
+               ETH_CLOCK_GPIO17_OUT } eth_clock_mode_t;
 //Dedicated GPIOs for RMII
-#define ETH_RMII_TX_EN  21
-#define ETH_RMII_TX0    19
-#define ETH_RMII_TX1    22
-#define ETH_RMII_RX0    25
+#define ETH_RMII_TX_EN 21
+#define ETH_RMII_TX0 19
+#define ETH_RMII_TX1 22
+#define ETH_RMII_RX0 25
 #define ETH_RMII_RX1_EN 26
 #define ETH_RMII_CRS_DV 27
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
@@ -90,105 +93,110 @@ typedef enum { ETH_CLOCK_GPIO0_IN, ETH_CLOCK_GPIO0_OUT, ETH_CLOCK_GPIO16_OUT, ET
 
 #define ETH_PHY_ADDR_AUTO ESP_ETH_PHY_ADDR_AUTO
 
-typedef enum { 
+typedef enum {
 #if CONFIG_ETH_USE_ESP32_EMAC
-    ETH_PHY_LAN8720, ETH_PHY_TLK110, ETH_PHY_RTL8201, ETH_PHY_DP83848, ETH_PHY_KSZ8041, ETH_PHY_KSZ8081, 
+  ETH_PHY_LAN8720,
+  ETH_PHY_TLK110,
+  ETH_PHY_RTL8201,
+  ETH_PHY_DP83848,
+  ETH_PHY_KSZ8041,
+  ETH_PHY_KSZ8081,
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
-    ETH_PHY_DM9051, 
+  ETH_PHY_DM9051,
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_W5500
-    ETH_PHY_W5500, 
+  ETH_PHY_W5500,
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
-    ETH_PHY_KSZ8851,
+  ETH_PHY_KSZ8851,
 #endif
-    ETH_PHY_MAX 
+  ETH_PHY_MAX
 } eth_phy_type_t;
 
-class ETHClass: public NetworkInterface {
-    public:
-        ETHClass(uint8_t eth_index=0);
-        ~ETHClass();
+class ETHClass : public NetworkInterface {
+public:
+  ETHClass(uint8_t eth_index = 0);
+  ~ETHClass();
 
 #if CONFIG_ETH_USE_ESP32_EMAC
-        bool begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clk_mode);
+  bool begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clk_mode);
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #if ETH_SPI_SUPPORTS_CUSTOM
-        bool begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, SPIClass &spi, uint8_t spi_freq_mhz=ETH_PHY_SPI_FREQ_MHZ);
+  bool begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, SPIClass &spi, uint8_t spi_freq_mhz = ETH_PHY_SPI_FREQ_MHZ);
 #endif
-        bool begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck=-1, int miso=-1, int mosi=-1, uint8_t spi_freq_mhz=ETH_PHY_SPI_FREQ_MHZ);
+  bool begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck = -1, int miso = -1, int mosi = -1, uint8_t spi_freq_mhz = ETH_PHY_SPI_FREQ_MHZ);
 
-        bool begin(){
+  bool begin() {
 #if defined(ETH_PHY_TYPE) && defined(ETH_PHY_ADDR)
-    #if defined(CONFIG_ETH_USE_ESP32_EMAC) && defined(ETH_PHY_POWER) && defined(ETH_PHY_MDC) && defined(ETH_PHY_MDIO) && defined(ETH_CLK_MODE)
-            return begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_MDC, ETH_PHY_MDIO, ETH_PHY_POWER, ETH_CLK_MODE);
-    #elif defined(ETH_PHY_CS) && defined(ETH_PHY_IRQ) && defined(ETH_PHY_RST)
-        #if ETH_SPI_SUPPORTS_CUSTOM && defined(ETH_PHY_SPI)
-            return begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI, ETH_PHY_SPI_FREQ_MHZ);
-        #elif defined(ETH_PHY_SPI_HOST) && defined(ETH_PHY_SPI_SCK) && defined(ETH_PHY_SPI_MISO) && defined(ETH_PHY_SPI_MOSI)
-            return begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI, ETH_PHY_SPI_FREQ_MHZ);
-        #endif
-    #endif
+#if defined(CONFIG_ETH_USE_ESP32_EMAC) && defined(ETH_PHY_POWER) && defined(ETH_PHY_MDC) && defined(ETH_PHY_MDIO) && defined(ETH_CLK_MODE)
+    return begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_MDC, ETH_PHY_MDIO, ETH_PHY_POWER, ETH_CLK_MODE);
+#elif defined(ETH_PHY_CS) && defined(ETH_PHY_IRQ) && defined(ETH_PHY_RST)
+#if ETH_SPI_SUPPORTS_CUSTOM && defined(ETH_PHY_SPI)
+    return begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI, ETH_PHY_SPI_FREQ_MHZ);
+#elif defined(ETH_PHY_SPI_HOST) && defined(ETH_PHY_SPI_SCK) && defined(ETH_PHY_SPI_MISO) && defined(ETH_PHY_SPI_MOSI)
+    return begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI, ETH_PHY_SPI_FREQ_MHZ);
 #endif
-            return false;
-        }
+#endif
+#endif
+    return false;
+  }
 
-        void end();
+  void end();
 
-        // ETH Handle APIs
-        bool fullDuplex() const;
-        uint8_t linkSpeed() const;
-        bool autoNegotiation() const;
-        uint32_t phyAddr() const;
+  // ETH Handle APIs
+  bool fullDuplex() const;
+  uint8_t linkSpeed() const;
+  bool autoNegotiation() const;
+  uint32_t phyAddr() const;
 
-        esp_eth_handle_t handle() const;
+  esp_eth_handle_t handle() const;
 
 #if ETH_SPI_SUPPORTS_CUSTOM
-        static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
-        static esp_err_t _eth_spi_write(void *ctx, uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
+  static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
+  static esp_err_t _eth_spi_write(void *ctx, uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
 #endif
 
-    protected:
+protected:
 #if ETH_SPI_SUPPORTS_CUSTOM
-        esp_err_t eth_spi_read(uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
-        esp_err_t eth_spi_write(uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
+  esp_err_t eth_spi_read(uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
+  esp_err_t eth_spi_write(uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
 #endif
 
-        // void getMac(uint8_t* mac);
-        size_t printDriverInfo(Print & out) const;
-        // static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+  // void getMac(uint8_t* mac);
+  size_t printDriverInfo(Print &out) const;
+  // static void eth_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
-    public:
-        void _onEthEvent(int32_t event_id, void* event_data);
+public:
+  void _onEthEvent(int32_t event_id, void *event_data);
 
-    private:
-        esp_eth_handle_t _eth_handle;
-        uint8_t _eth_index;
-        eth_phy_type_t _phy_type;
+private:
+  esp_eth_handle_t _eth_handle;
+  uint8_t _eth_index;
+  eth_phy_type_t _phy_type;
 #if ETH_SPI_SUPPORTS_CUSTOM
-        SPIClass * _spi;
+  SPIClass *_spi;
 #endif
-        uint8_t _spi_freq_mhz;
-        int8_t _pin_cs;
-        int8_t _pin_irq;
-        int8_t _pin_rst;
-        int8_t _pin_sck;
-        int8_t _pin_miso;
-        int8_t _pin_mosi;
+  uint8_t _spi_freq_mhz;
+  int8_t _pin_cs;
+  int8_t _pin_irq;
+  int8_t _pin_rst;
+  int8_t _pin_sck;
+  int8_t _pin_miso;
+  int8_t _pin_mosi;
 #if CONFIG_ETH_USE_ESP32_EMAC
-        int8_t _pin_mcd;
-        int8_t _pin_mdio;
-        int8_t _pin_power;
-        int8_t _pin_rmii_clock;
+  int8_t _pin_mcd;
+  int8_t _pin_mdio;
+  int8_t _pin_power;
+  int8_t _pin_rmii_clock;
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 
-        static bool ethDetachBus(void * bus_pointer);
-        bool beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, 
+  static bool ethDetachBus(void *bus_pointer);
+  bool beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
-            SPIClass * spi, 
+                SPIClass *spi,
 #endif
-            int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz);
+                int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz);
 };
 
 extern ETHClass ETH;

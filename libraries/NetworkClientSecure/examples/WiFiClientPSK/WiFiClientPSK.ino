@@ -17,16 +17,16 @@
 const char* ssid     = "your-ssid";     // your network SSID (name of wifi network)
 const char* password = "your-password"; // your network password
 #else
-const char* ssid     = "test";     // your network SSID (name of wifi network)
-const char* password = "securetest"; // your network password
+const char* ssid = "test";            // your network SSID (name of wifi network)
+const char* password = "securetest";  // your network password
 #endif
 
 //const char*  server = "server.local";  // Server hostname
 const IPAddress server = IPAddress(192, 168, 0, 14);  // Server IP address
-const int    port = 8443; // server's port (8883 for MQTT)
+const int port = 8443;                                // server's port (8883 for MQTT)
 
-const char*  pskIdent = "Client_identity"; // PSK identity (sometimes called key hint)
-const char*  psKey = "1a2b3c4d"; // PSK Key (must be hex string without 0x)
+const char* pskIdent = "Client_identity";  // PSK identity (sometimes called key hint)
+const char* psKey = "1a2b3c4d";            // PSK Key (must be hex string without 0x)
 
 NetworkClientSecure client;
 

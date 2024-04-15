@@ -209,7 +209,7 @@ config ARDUHAL_ESP_LOG
     default "n"
     help
         This option will redefine the ESP_LOGx macros to Arduino's log_x macros.
-        To enable for your application, add the follwing after your includes:
+        To enable for your application, add the following after your includes:
         #ifdef ARDUINO_ARCH_ESP32
         #include "esp32-hal-log.h"
         #endif
@@ -390,4 +390,3 @@ config ARDUINO_SELECTIVE_SimpleBLE
     default y
 
 endmenu
-

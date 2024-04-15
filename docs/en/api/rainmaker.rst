@@ -149,7 +149,7 @@ For more information, check `here <https://rainmaker.espressif.com/docs/sys-serv
 
     esp_err_t enableSystemService(uint16_t flags, int8_t reboot_seconds, int8_t reset_seconds, int8_t reset_reboot_seconds)
 
-* ``flags`` : Logical OR of system service flags (SYSTEM_SERV_FLAG_REBOOT, SYSTEM_SERV_FLAG_FACTORY_RESET, SYSTEM_SERV_FLAG_WIFI_RESET) as required or SYSTEM_SERV_FLAGS_ALL. 
+* ``flags`` : Logical OR of system service flags (SYSTEM_SERV_FLAG_REBOOT, SYSTEM_SERV_FLAG_FACTORY_RESET, SYSTEM_SERV_FLAG_WIFI_RESET) as required or SYSTEM_SERV_FLAGS_ALL.
 * ``reboot_seconds`` Time in seconds after which the device should reboot. Recommended value: 2
 * ``reset_seconds`` Time in seconds after which the device should reset(Wi-Fi or Factory). Recommended value: 2
 * ``reset_reboot_seconds`` Time in seconds after which the device should reboot after it has been reset. Zero as a value would mean there won't be any reboot after the reset. Recommended value: 2
@@ -205,7 +205,7 @@ This function will return
 my_node.getNodeInfo
 *******************
 
-It returns pointer to the node_info_t as configured during node initialisation.
+It returns pointer to the node_info_t as configured during node initialization.
 
 .. code-block:: arduino
 
@@ -375,7 +375,7 @@ It adds attribute to the device. Device attributes are reported only once after 
 * ``attr_name`` : Name of the attribute
 * ``val`` : Value of the attribute
 
-This funtion will return
+This function will return
 
 1. `ESP_OK` : On success
 2. Error in case  of failure
@@ -623,7 +623,7 @@ This function will return
 **NOTE**:
 
 - This API should always be called inside device write callback, if you aimed at updating n reporting parameter values, changed via RainMaker Client (Phone App), to the ESP RainMaker cloud.
-- If not called then paramter values will not be updated to the ESP RainMaker cloud.
+- If not called then parameter values will not be updated to the ESP RainMaker cloud.
 
 printQR
 *******
@@ -635,7 +635,7 @@ This API displays QR code, which is used in provisioning.
     printQR(const char *serv_name, const char *pop, const char *transport);
 
 * ``name`` : Service name used in provisioning API.
-* ``pop`` : Proof of posession used in provisioning API.
+* ``pop`` : Proof of possession used in provisioning API.
 * ``transport`` :
     1. `softap` : In case of provisioning using SOFTAP.
     2. `ble` : In case of provisioning using BLE.

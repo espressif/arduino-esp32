@@ -14,69 +14,68 @@
 
 /**
  * @brief This example demonstrate how to use a C++ Class to read several GPIO RMT signals
- * calling a data processor when data is availble in background, using taks.
- * 
- * The output is the last RMT data read in the GPIO, just to ilustrate how it works.
- * 
+ * calling a data processor when data is available in background, using tasks.
+ *
+ * The output is the last RMT data read in the GPIO, just to illustrate how it works.
+ *
  */
 
 
 class MyProcessor {
-  private:
-    uint32_t buff; // rolling buffer of most recent 32 bits.
-    int at = 0;
-    size_t rx_num_symbols = RMT_MEM_NUM_BLOCKS_1 * RMT_SYMBOLS_PER_CHANNEL_BLOCK;
-    rmt_data_t rx_symbols[RMT_MEM_NUM_BLOCKS_1 * RMT_SYMBOLS_PER_CHANNEL_BLOCK];
+private:
+  uint32_t buff;  // rolling buffer of most recent 32 bits.
+  int at = 0;
+  size_t rx_num_symbols = RMT_MEM_NUM_BLOCKS_1 * RMT_SYMBOLS_PER_CHANNEL_BLOCK;
+  rmt_data_t rx_symbols[RMT_MEM_NUM_BLOCKS_1 * RMT_SYMBOLS_PER_CHANNEL_BLOCK];
 
-  public:
-    int8_t gpio = -1;
+public:
+  int8_t gpio = -1;
 
-    MyProcessor(uint8_t pin, uint32_t rmtFreqHz) {
-      if (!rmtInit(pin, RMT_RX_MODE, RMT_MEM_NUM_BLOCKS_1, rmtFreqHz))
-      {
-        Serial.println("init receiver failed\n");
-        return;
-      }
-      gpio = pin;
+  MyProcessor(uint8_t pin, uint32_t rmtFreqHz) {
+    if (!rmtInit(pin, RMT_RX_MODE, RMT_MEM_NUM_BLOCKS_1, rmtFreqHz)) {
+      Serial.println("init receiver failed\n");
+      return;
     }
+    gpio = pin;
+  }
 
-    void begin() {
-      // Creating RMT RX Callback Task
-      xTaskCreate(readTask, "MyProcessor", 2048, this, 4, NULL);
+  void begin() {
+    // Creating RMT RX Callback Task
+    xTaskCreate(readTask, "MyProcessor", 2048, this, 4, NULL);
+  }
+
+  static void readTask(void *args) {
+    MyProcessor *me = (MyProcessor *)args;
+
+    while (1) {
+      // blocks until RMT has read data
+      rmtRead(me->gpio, me->rx_symbols, &me->rx_num_symbols, RMT_WAIT_FOR_EVER);
+      // process the data like a callback whenever there is data available
+      process(me->rx_symbols, me->rx_num_symbols, me);
     }
+    vTaskDelete(NULL);
+  }
 
-    static void readTask(void *args) {
-      MyProcessor *me = (MyProcessor *) args;
+  static void process(rmt_data_t *data, size_t len, void *args) {
+    MyProcessor *me = (MyProcessor *)args;
+    uint32_t *buff = &me->buff;
 
-      while(1) {
-        // blocks until RMT has read data
-        rmtRead(me->gpio, me->rx_symbols, &me->rx_num_symbols, RMT_WAIT_FOR_EVER);
-        // process the data like a callback whenever there is data available
-        process(me->rx_symbols, me->rx_num_symbols, me);
-      }  
-      vTaskDelete(NULL);
-    }
+    for (int i = 0; len; len--) {
+      if (data[i].duration0 == 0)
+        break;
+      *buff = (*buff << 1) | (data[i].level0 ? 1 : 0);
+      i++;
 
-    static void process(rmt_data_t *data, size_t len, void *args) {
-      MyProcessor *me = (MyProcessor *) args;
-      uint32_t *buff = &me->buff;
-      
-      for (int i = 0; len; len--) {
-        if (data[i].duration0 == 0)
-          break;
-        *buff = (*buff << 1) | (data[i].level0 ? 1 : 0);
-        i++;
+      if (data[i].duration1 == 0)
+        break;
+      *buff = (*buff << 1) | (data[i].level1 ? 1 : 0);
+      i++;
+    };
+  }
 
-        if (data[i].duration1 == 0)
-          break;
-        *buff = (*buff << 1) | (data[i].level1 ? 1 : 0);
-        i++;
-      };
-    }
-
-    uint32_t val() {
-      return buff;
-    }
+  uint32_t val() {
+    return buff;
+  }
 };
 
 // Attach 3 processors to GPIO 4, 5 and 10 with different tick/speeds.

@@ -5,8 +5,8 @@ Timer
 About
 -----
 
-The ESP32 SoCs contains from 2 to 4 hardware timers. 
-They are all 64-bit (54-bit for ESP32-C3) generic timers based on 16-bit pre-scalers and 64-bit (54-bit for ESP32-C3) 
+The ESP32 SoCs contains from 2 to 4 hardware timers.
+They are all 64-bit (54-bit for ESP32-C3) generic timers based on 16-bit pre-scalers and 64-bit (54-bit for ESP32-C3)
 up / down counters which are capable of being auto-reloaded.
 
 ========= ================
@@ -122,7 +122,7 @@ This function will return ``counter value`` of the timer in microseconds.
 timerReadMilis
 **************
 
-This function is used to read counter value in miliseconds of the timer.
+This function is used to read counter value in milliseconds of the timer.
 
 .. code-block:: arduino
 
@@ -130,7 +130,7 @@ This function is used to read counter value in miliseconds of the timer.
 
 * ``timer`` timer struct.
 
-This function will return ``counter value`` of the timer in miliseconds.
+This function will return ``counter value`` of the timer in milliseconds.
 
 timerReadSeconds
 ****************
@@ -157,7 +157,7 @@ This function is used to get resolution in Hz of the timer.
 * ``timer`` timer struct.
 
 This function will return ``frequency`` in Hz of the timer.
-  
+
 timerAttachInterrupt
 ********************
 
@@ -168,7 +168,7 @@ This function is used to attach interrupt to timer.
     void timerAttachInterrupt(hw_timer_t * timer, void (*userFunc)(void));
 
 * ``timer`` timer struct.
-* ``userFunc`` funtion to be called when interrupt is triggered.
+* ``userFunc`` function to be called when interrupt is triggered.
 
 timerAttachInterruptArg
 ***********************
@@ -180,7 +180,7 @@ This function is used to attach interrupt to timer using arguments.
     void timerAttachInterruptArg(hw_timer_t * timer, void (*userFunc)(void*), void * arg);
 
 * ``timer`` timer struct.
-* ``userFunc`` funtion to be called when interrupt is triggered.
+* ``userFunc`` function to be called when interrupt is triggered.
 * ``arg`` pointer to the interrupt arguments.
 
 timerDetachInterrupt
@@ -197,7 +197,7 @@ This function is used to detach interrupt from timer.
 timerAlarm
 **********
 
-This function is used to configure alarm value and autoreload of the timer. Alarm is automaticaly enabled.
+This function is used to configure alarm value and autoreload of the timer. Alarm is automatically enabled.
 
 .. code-block:: arduino
 

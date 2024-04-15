@@ -24,8 +24,8 @@
 #error This ESP32 SoC has no Native USB interface
 #elif ARDUINO_USB_MODE == 1
 #warning This sketch should be used when USB is in OTG mode
-void setup(){}
-void loop(){}
+void setup() {}
+void loop() {}
 #else
 
 #include "USB.h"
@@ -40,8 +40,8 @@ const int leftButton = 14;
 const int rightButton = 15;
 const int mouseButton = 0;
 
-int range = 5;              // output range of X or Y movement; affects movement speed
-int responseDelay = 10;     // response delay of the mouse, in ms
+int range = 5;           // output range of X or Y movement; affects movement speed
+int responseDelay = 10;  // response delay of the mouse, in ms
 
 
 void setup() {
@@ -65,8 +65,8 @@ void loop() {
   int clickState = digitalRead(mouseButton);
 
   // calculate the movement distance based on the button states:
-  int  xDistance = (leftState - rightState) * range;
-  int  yDistance = (upState - downState) * range;
+  int xDistance = (leftState - rightState) * range;
+  int yDistance = (upState - downState) * range;
 
   // if X or Y is non-zero, move:
   if ((xDistance != 0) || (yDistance != 0)) {

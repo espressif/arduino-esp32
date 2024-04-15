@@ -25,7 +25,7 @@ In order to make this simple blink tutorial, you'll need to do the following ste
 
     #define LED 2
 
-This ``#define LED 2`` will be used to set the GPIO2 as the ``LED`` output pin. 
+This ``#define LED 2`` will be used to set the GPIO2 as the ``LED`` output pin.
 
 2. **Setup.**
 

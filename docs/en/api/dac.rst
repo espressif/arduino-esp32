@@ -6,7 +6,7 @@ About
 -----
 
 DAC (digital to analog converter) is a very common peripheral used to convert a digital signal to an
-analog form. 
+analog form.
 
 ESP32 and ESP32-S2 have two 8-bit DAC channels. The DAC driver allows these channels to be set to arbitrary voltages.
 

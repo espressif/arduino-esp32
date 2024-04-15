@@ -9,7 +9,7 @@ External libraries testing is a compilation test for listed libraries on arduino
 External libraries test is running periodically (once a week) against master branch and can also run on PR by adding a label ``lib_test``.
 The test is running on all supported ESP32 chips.
 
-.. note:: 
+.. note::
   As the test is just a compilation of example, that does not guarantee that the library/sketch will run without any problems after flashing it on your device.
 
 How to Add Library to Test
@@ -17,7 +17,7 @@ How to Add Library to Test
 
 To add a library to the CI test you need to add your library to the `lib.json`_. file located in ``./github/workflows/``.
 
-.. note:: 
+.. note::
   Please add the libraries to the `lib.json`_ in alphabetical order, thanks.
 
 List of parameters:
@@ -32,7 +32,7 @@ Required:
 
 * ``exclude_targets`` - List of targets to be excluded from testing. Use only when the SoC dont support used peripheral.
 * ``sketch_path`` - Path / paths to the sketch / sketches to be tested.
-  
+
 Optional:
 
 * ``version`` - Version of the library.
@@ -80,7 +80,7 @@ Submit a PR
 * Open a PR with the changes and someone from Espressif team will add a label ``lib_test`` to the PR and CI will run the test to check, if the addition is fine and the library/example is compiling.
 
 * After merging your PR, the next scheduled test will test your library and add the results to the `LIBRARIES_TEST.md`_.
-  
+
 Test Results
 ------------
 

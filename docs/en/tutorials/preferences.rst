@@ -8,7 +8,7 @@ Introduction
 
 The Preferences library is unique to arduino-esp32. It should be considered as the replacement for the Arduino EEPROM library.
 
-It uses a portion of the on-board non-volatile memory (NVS) of the ESP32 to store data. This data is retained across restarts and loss of power events to the system. 
+It uses a portion of the on-board non-volatile memory (NVS) of the ESP32 to store data. This data is retained across restarts and loss of power events to the system.
 
 Preferences works best for storing many small values, rather than a few large values. If you need to store large amounts of data, consider using a file system library such as LitteFS.
 
@@ -44,11 +44,11 @@ Library methods are provided to:
    - determine data types stored against a key;
    - determine the number of key entries available in the namespace.
 
-Preferences directly suports the following data types:
+Preferences directly supports the following data types:
 
 .. table:: **Table 1 — Preferences Types**
    :align: center
-   
+
    +-------------------+-------------------+---------------+
    | Preferences Type  | Data Type         | Size (bytes)  |
    +===================+===================+===============+
@@ -107,7 +107,7 @@ To retrieve a value:
 
 *(Technically, you can retrieve a value if the namespace is open in either read-only or read-write mode but it's good practice to open the namespace in read-only mode if you are only retrieving values.)*
 
-When storing information, a "``put[PreferencesType]``" method referenced to its key is used. 
+When storing information, a "``put[PreferencesType]``" method referenced to its key is used.
 
 When retrieving information a "``get[PreferencesType]``" method referenced to its key is used.
 
@@ -130,7 +130,7 @@ Each step is discussed below.
 
 ..
 
- 
+
 Create or Open the Namespace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -140,7 +140,7 @@ In your sketch, first insert a declaration of a ``Preferences`` object by includ
 
    Preferences mySketchPrefs;    // "mySketchPrefs" is the name of the Preferences object.
                                  //  Can be whatever you want.
-   
+
 This object is used with the Preferences methods to access the namespace and the key-value pairs it contains.
 
 A namespace is made available for use with the ``.begin`` method:
@@ -178,25 +178,25 @@ By example, consider this code segment:
    Preferences mySketchPrefs;
    String doesExist;
 
-   mySketchPrefs.begin("myPrefs", false);   // open (or create and then open if it does not 
+   mySketchPrefs.begin("myPrefs", false);   // open (or create and then open if it does not
                                             //  yet exist) the namespace "myPrefs" in RW mode.
-   
+
    bool doesExist = mySketchPrefs.isKey("myTestKey");
-   
+
    if (doesExist == false) {
-       /* 
+       /*
           If doesExist is false, we will need to create our
            namespace key(s) and store a value into them.
-      */    
-       
+      */
+
       // Insert your "first time run" code to create your keys & assign their values below here.
    }
    else {
-      /* 
+      /*
           If doesExist is true, the key(s) we need have been created before
            and so we can access their values as needed during startup.
       */
-      
+
       // Insert your "we've been here before" startup code below here.
    }
 
@@ -217,7 +217,7 @@ An example is:
 
 .. code-block:: arduino
 
-   myPreferences.putFloat("pi", 3.14159265359);    // stores an float_t data type 
+   myPreferences.putFloat("pi", 3.14159265359);    // stores an float_t data type
                                                    //  against the key "pi".
 
 Reading Values From a Namespace
@@ -244,13 +244,13 @@ Summary
 So the basics of using Preferences are:
 
    #. You cannot store into or retrieve from a ``key-value`` pair until a namespace is created and opened and the key exists in that namespace.
-   
+
    #. If the key already exists, it was created the first time the sketch was run.
 
    #. A key value can be retrieved regardless of the mode in which the namespace was opened, but a value can only be stored if the namespace is open in read-write mode.
-   
+
    #. Data types of the “``get``'s” and “``put``'s” must match.
-   
+
    #. Remember the 15 character limit for namespace and key names.
 
 
@@ -264,65 +264,65 @@ Its purpose is to set either a factory default configuration if the system has n
 When started, the system has no way of knowing which of the above conditions is true. So the first thing it does after opening the namespace is check for the existence of a key that we have predetermined can only exist if we have previously run the sketch. Based on its existence we decide if a factory default set of operating parameters should be used (and in so doing create the namespace keys and populate the values with defaults) or if we should use operating parameters from the last time the system was running.
 
 .. code-block:: arduino
-   
+
    #include <Preferences.h>
-   
+
    #define RW_MODE false
    #define RO_MODE true
-   
+
    Preferences stcPrefs;
 
    void setup() {
-   
+
       // not the complete setup(), but in setup(), include this...
-   
+
       stcPrefs.begin("STCPrefs", RO_MODE);           // Open our namespace (or create it
                                                      //  if it doesn't exist) in RO mode.
-      
+
       bool tpInit = stcPrefs.isKey("nvsInit");       // Test for the existence
                                                      // of the "already initialized" key.
 
       if (tpInit == false) {
-         // If tpInit is 'false', the key "nvsInit" does not yet exist therefore this 
+         // If tpInit is 'false', the key "nvsInit" does not yet exist therefore this
          //  must be our first-time run. We need to set up our Preferences namespace keys. So...
          stcPrefs.end();                             // close the namespace in RO mode and...
          stcPrefs.begin("STCPrefs", RW_MODE);        //  reopen it in RW mode.
-       
 
-         // The .begin() method created the "STCPrefs" namespace and since this is our 
+
+         // The .begin() method created the "STCPrefs" namespace and since this is our
          //  first-time run we will create
          //  our keys and store the initial "factory default" values.
          stcPrefs.putUChar("curBright", 10);
          stcPrefs.putString("talChan", "one");
          stcPrefs.putLong("talMax", -220226);
          stcPrefs.putBool("ctMde", true);
-         
+
          stcPrefs.putBool("nvsInit", true);          // Create the "already initialized"
                                                      //  key and store a value.
-         
+
          // The "factory defaults" are created and stored so...
          stcPrefs.end();                             // Close the namespace in RW mode and...
          stcPrefs.begin("STCPrefs", RO_MODE);        //  reopen it in RO mode so the setup code
                                                      //  outside this first-time run 'if' block
                                                      //  can retrieve the run-time values
-                                                     //  from the "STCPrefs" namespace. 
+                                                     //  from the "STCPrefs" namespace.
       }
 
       // Retrieve the operational parameters from the namespace
       //  and save them into their run-time variables.
-      currentBrightness = stcPrefs.getUChar("curBright");  //  
+      currentBrightness = stcPrefs.getUChar("curBright");  //
       tChannel = stcPrefs.getString("talChan");            //  The LHS variables were defined
       tChanMax = stcPrefs.getLong("talMax");               //   earlier in the sketch.
       ctMode = stcPrefs.getBool("ctMde");                  //
-      
+
       // All done. Last run state (or the factory default) is now restored.
       stcPrefs.end();                                      // Close our preferences namespace.
-      
+
       // Carry on with the rest of your setup code...
-      
-      // When the sketch is running, it updates any changes to an operational parameter  
+
+      // When the sketch is running, it updates any changes to an operational parameter
       //  to the appropriate key-value pair in the namespace.
-      
+
    }
 
 
@@ -337,23 +337,23 @@ Deleting key-value Pairs
 .. code-block:: arduino
 
    preferences.clear();
-   
-.. 
+
+..
 
       - Deletes *all* the key-value pairs in the currently opened namespace.
-      
+
         - The namespace still exists.
-      
+
         - The namespace must be open in read-write mode for this to work.
 
 .. code-block:: arduino
 
    preferences.remove("keyname");
-   
-.. 
+
+..
 
       - Deletes the "keyname" and value associated with it from the currently opened namespace.
-      
+
         - The namespace must be open in read-write mode for this to work.
         - Tip: use this to remove the "test key" to force a "factory reset" during the next reboot (see the *Real World Example* above).
 
@@ -363,13 +363,13 @@ If either of the above are used, the ``key-value`` pair will need to be recreate
 Determining the Number of Available Keys
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For each namespace, Preferences keeps track of the keys in a key table. There must be an open entry in the table before a key can be created. This method will return the number of entires available in the table.
+For each namespace, Preferences keeps track of the keys in a key table. There must be an open entry in the table before a key can be created. This method will return the number of entries available in the table.
 
 .. code-block:: arduino
 
    freeEntries()
-   
-.. 
+
+..
 
 To send to the serial monitor the number of available entries the following could be used.
 
@@ -405,7 +405,7 @@ As in:
 .. code-block:: arduino
 
    PreferenceType whatType = getType("myKey");
-   
+
 ..
 
 The value returned is a ``PreferenceType`` value that maps to a Preferences Type. Refer to the description in the `Preferences API Reference`_ for details.
@@ -424,7 +424,7 @@ The library provides the following methods to facilitate this.
    putBytes("myBytesKey", value, valueLen)
    getBytes("myBytesKey", buffer, valueLen)
    getBytesLength("myBytesKey")
-   
+
 ..
 
 The ``put`` and ``get`` ``Bytes`` methods store and retrieve the data. The ``getBytesLength`` method is used to find the size of the data stored against the key (which is needed to retrieve ``Bytes`` data).
@@ -458,21 +458,21 @@ This is best explained with an example. Here the ``Bytes`` methods are used to s
 
        Serial.begin(115200);
        delay(250);
-    
+
        mySketchPrefs.begin("myPrefs", RW_MODE);   // open (or create) the namespace
                                                   //  "myPrefs" in RW mode
        mySketchPrefs.clear();                     // delete any previous keys in this namespace
-    
+
        // Create an array of test values. We're using hex numbers
        //  throughout to better show how the bytes move around.
        int16_t myArray[] = { 0x1112, 0x2122, 0x3132, 0x4142, 0x5152, 0x6162, 0x7172 };
-    
+
        Serial.println("Printing myArray...");
        for (int i = 0; i < sizeof(myArray) / sizeof(int16_t); i++) {
            Serial.print(myArray[i], HEX); Serial.print(", ");
        }
        Serial.println("\r\n");
-    
+
        // In the next statement, the second sizeof() needs
        //  to match the data type of the elements of myArray
        Serial.print("The number of elements in myArray is: ");
@@ -480,22 +480,22 @@ This is best explained with an example. Here the ``Bytes`` methods are used to s
        Serial.print("But the size of myArray in bytes is: ");
        Serial.println( sizeof(myArray) );
        Serial.println("");
-    
+
        Serial.println(
          "Storing myArray into the Preferences namespace \"myPrefs\" against the key \"myPrefsBytes\".");
-       // Note: in the next statement, to store the entire array, we must use the 
-       //  size of the arrray in bytes, not the number of elements in the array.
+       // Note: in the next statement, to store the entire array, we must use the
+       //  size of the array in bytes, not the number of elements in the array.
        mySketchPrefs.putBytes( "myPrefsBytes", myArray, sizeof(myArray) );
        Serial.print("The size of \"myPrefsBytes\" is (in bytes): ");
        Serial.println( mySketchPrefs.getBytesLength("myPrefsBytes") );
        Serial.println("");
-    
+
        int16_t myIntBuffer[20] = {}; // No magic about 20. Just making a buffer (array) big enough.
        Serial.println("Retrieving the value of myPrefsBytes into myIntBuffer.");
        Serial.println("   - Note the data type of myIntBuffer matches that of myArray");
        mySketchPrefs.getBytes("myPrefsBytes", myIntBuffer,
                               mySketchPrefs.getBytesLength("myPrefsBytes"));
-    
+
        Serial.println("Printing myIntBuffer...");
        // In the next statement, sizeof() needs to match the data type of the elements of myArray
        for (int i = 0; i < mySketchPrefs.getBytesLength("myPrefsBytes") / sizeof(int16_t); i++) {
@@ -508,7 +508,7 @@ This is best explained with an example. Here the ``Bytes`` methods are used to s
        uint8_t myByteBuffer[40] = {}; // No magic about 40. Just making a buffer (array) big enough.
        mySketchPrefs.getBytes("myPrefsBytes", myByteBuffer,
                               mySketchPrefs.getBytesLength("myPrefsBytes"));
-    
+
        Serial.println("Printing myByteBuffer...");
        for (int i = 0; i < mySketchPrefs.getBytesLength("myPrefsBytes"); i++) {
           Serial.print(myByteBuffer[i], HEX); Serial.print(", ");
@@ -527,7 +527,7 @@ The resulting output is:
 ::
 
    Printing myArray...
-   1112, 2122, 3132, 4142, 5152, 6162, 7172, 
+   1112, 2122, 3132, 4142, 5152, 6162, 7172,
 
    The number of elements in myArray is: 7
    But the size of myArray in bytes is: 14
@@ -538,11 +538,11 @@ The resulting output is:
    Retrieving the value of myPrefsBytes into myIntBuffer.
       - Note the data type of myIntBuffer matches that of myArray
    Printing myIntBuffer...
-   1112, 2122, 3132, 4142, 5152, 6162, 7172, 
+   1112, 2122, 3132, 4142, 5152, 6162, 7172,
 
    We can see how the data from myArray is actually stored in the namespace as follows.
    Printing myByteBuffer...
-   12, 11, 22, 21, 32, 31, 42, 41, 52, 51, 62, 61, 72, 71, 
+   12, 11, 22, 21, 32, 31, 42, 41, 52, 51, 62, 61, 72, 71,
 
 You can copy the sketch and change the data type and values in ``myArray`` and follow along with the code and output to see how the ``Bytes`` methods work. The data type of ``myIntBuffer`` should be changed to match that of ``myArray`` (and check the "``sizeof()``'s" where indicated in the comments).
 
@@ -563,32 +563,32 @@ If you need to access a different namespace, close the one before opening the ot
       currentNamespace.begin("myNamespace", false);
          // do stuff...
 
-      currentNamespace.end();                              // closes 'myNamespace' 
-   
+      currentNamespace.end();                              // closes 'myNamespace'
+
       currentNamespace.begin("myOtherNamespace", false);   // opens a different Preferences namesspace.
          // do other stuff...
-         
+
       currentNamespace.end();                              // closes 'myOtherNamespace'
 
 Here the "``currentNamespace``" object is reused, but different Preferences objects can be declared and used. Just remember to keep it all straight as all "``putX``'s" and "``getX``'s", etc. will only operate on the single currently opened namespace.
 
 
-A Closer Look at ``getX`` 
+A Closer Look at ``getX``
 --------------------------
 
 Methods in the Preferences library return a status code that can be used to determine if the method completed successfully. This is described in the `Preferences API Reference`_.
 
-Assume we have a key named "``favourites``" that contains a value of a ``String`` data type.
+Assume we have a key named ``favorites`` that contains a value of a ``String`` data type.
 
 After executing the statement:
 
 .. code-block:: arduino
 
-  dessert = mySketchPrefs.getString("favourites");
-  
+  dessert = mySketchPrefs.getString("favorites");
+
 ..
 
-the variable ``dessert`` will contain the value of the string stored against the key ``"favourites"``.
+the variable ``dessert`` will contain the value of the string stored against the key ``"favorites"``.
 
 But what if something went wrong and the ``getString`` call failed to retrieve the key value? How would we be able to detect the error?
 
@@ -640,7 +640,7 @@ Returning to the example above:
 
 .. code-block:: arduino
 
-  dessert = mySketchPrefs.getString("favourites", "gravel");
+  dessert = mySketchPrefs.getString("favorites", "gravel");
 
 ..
 
@@ -676,9 +676,9 @@ To completely erase and reformat the NVS memory used by Preferences, create and 
       ;
    }
 
-.. 
+..
 
-.. warning:: 
+.. warning::
    **You should download a new sketch to your board immediately after running the above or else it will reformat the NVS partition every time it is powered up or restarted!**
 
 

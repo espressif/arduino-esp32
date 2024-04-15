@@ -5,11 +5,11 @@
 #include "soc/soc_caps.h"
 
 static const uint8_t LED_BUILTIN = 13;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT+2;
+static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT + 2;
 #define RGB_BUILTIN RGB_BUILTIN  // necessary to make digitalWrite/digitalMode find it
 #define RGB_BRIGHTNESS 64
 
@@ -22,12 +22,12 @@ static const uint8_t RX = 16;
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 15;
-static const uint8_t MOSI  = 23;
-static const uint8_t MISO  = 19;
-static const uint8_t SCK   = 18;
+static const uint8_t SS = 15;
+static const uint8_t MOSI = 23;
+static const uint8_t MISO = 19;
+static const uint8_t SCK = 18;
 
-static const uint8_t A0 = 26; 
+static const uint8_t A0 = 26;
 static const uint8_t A1 = 25;
 static const uint8_t A2 = 34;
 static const uint8_t A3 = 39;

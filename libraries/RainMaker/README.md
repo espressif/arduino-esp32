@@ -138,7 +138,7 @@ char * getNodeID()
 1. `char * ` : Pointer to a NULL terminated node_id string.
 
 ### my_node.getNodeInfo()
-It returns pointer to the node_info_t as configured during node initialisation.
+It returns pointer to the node_info_t as configured during node initialization.
 ```
 node_info_t * getNodeInfo();
 ```
@@ -407,7 +407,7 @@ Add a UI type to the parameter. This will be used by the Phone apps (or other cl
 ```
 esp_err_t addUIType(const char *ui_type);
 ```
-* **Paramter**
+* **Parameter**
 1. `ui_type` : String describing the UI Type.
     * Standard UI Types
      * ESP_RMAKER_UI_TOGGLE
@@ -449,7 +449,7 @@ esp_err_t updateAndReport(param_val_t val);
 
 > NOTE :
 > - This API should always be called inside device write callback, if you aimed at updating n reporting parameter values, changed via RainMaker Client (Phone App), to the ESP RainMaker cloud.
-> - If not called then paramter values will not be updated to the ESP RainMaker cloud.
+> - If not called then parameter values will not be updated to the ESP RainMaker cloud.
 
 ### printQR()
 This API displays QR code, which is used in provisioning.
@@ -458,7 +458,7 @@ printQR(const char *serv_name, const char *pop, const char *transport);
 ```
 * **Parameters**
 1. `name` : Service name used in provisioning API.
-2. `pop` : Proof of posession used in provisioning API.
+2. `pop` : Proof of possession used in provisioning API.
 3. `transport` :
     1. `softap` : In case of provisioning using SOFTAP.
     2. `ble` : In case of provisioning using BLE.

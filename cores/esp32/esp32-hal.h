@@ -61,13 +61,13 @@ extern "C" {
 #define ARDUINO_EVENT_RUNNING_CORE CONFIG_ARDUINO_EVENT_RUNNING_CORE
 #endif
 
-//forward declaration from freertos/portmacro.h
-void vPortYield(void);
-void yield(void);
+  //forward declaration from freertos/portmacro.h
+  void vPortYield(void);
+  void yield(void);
 #define optimistic_yield(u)
 
-#define ESP_REG(addr) *((volatile uint32_t *)(addr))
-#define NOP() asm volatile ("nop")
+#define ESP_REG(addr) *((volatile uint32_t*)(addr))
+#define NOP() asm volatile("nop")
 
 #include "esp32-hal-log.h"
 #include "esp32-hal-matrix.h"
@@ -87,71 +87,71 @@ void yield(void);
 #include "esp32-hal-rgb-led.h"
 #include "esp32-hal-cpu.h"
 
-void analogWrite(uint8_t pin, int value);
-void analogWriteFrequency(uint8_t pin, uint32_t freq);
-void analogWriteResolution(uint8_t pin, uint8_t bits);
+  void analogWrite(uint8_t pin, int value);
+  void analogWriteFrequency(uint8_t pin, uint32_t freq);
+  void analogWriteResolution(uint8_t pin, uint8_t bits);
 
-//returns chip temperature in Celsius
-float temperatureRead();
+  //returns chip temperature in Celsius
+  float temperatureRead();
 
-//allows user to bypass SPI RAM test routine
-bool testSPIRAM(void);
+  //allows user to bypass SPI RAM test routine
+  bool testSPIRAM(void);
 
 #if CONFIG_AUTOSTART_ARDUINO
-//enable/disable WDT for Arduino's setup and loop functions
-void enableLoopWDT();
-void disableLoopWDT();
-//feed WDT for the loop task
-void feedLoopWDT();
+  //enable/disable WDT for Arduino's setup and loop functions
+  void enableLoopWDT();
+  void disableLoopWDT();
+  //feed WDT for the loop task
+  void feedLoopWDT();
 #endif
 
-//enable/disable WDT for the IDLE task on Core 0 (SYSTEM)
-void enableCore0WDT();
-void disableCore0WDT();
+  //enable/disable WDT for the IDLE task on Core 0 (SYSTEM)
+  void enableCore0WDT();
+  void disableCore0WDT();
 #ifndef CONFIG_FREERTOS_UNICORE
-//enable/disable WDT for the IDLE task on Core 1 (Arduino)
-void enableCore1WDT();
-void disableCore1WDT();
+  //enable/disable WDT for the IDLE task on Core 1 (Arduino)
+  void enableCore1WDT();
+  void disableCore1WDT();
 #endif
 
-//if xCoreID < 0 or CPU is unicore, it will use xTaskCreate, else xTaskCreatePinnedToCore
-//allows to easily handle all possible situations without repetitive code
-BaseType_t xTaskCreateUniversal( TaskFunction_t pxTaskCode,
-                        const char * const pcName,
-                        const uint32_t usStackDepth,
-                        void * const pvParameters,
-                        UBaseType_t uxPriority,
-                        TaskHandle_t * const pxCreatedTask,
-                        const BaseType_t xCoreID );
+  //if xCoreID < 0 or CPU is unicore, it will use xTaskCreate, else xTaskCreatePinnedToCore
+  //allows to easily handle all possible situations without repetitive code
+  BaseType_t xTaskCreateUniversal(TaskFunction_t pxTaskCode,
+                                  const char* const pcName,
+                                  const uint32_t usStackDepth,
+                                  void* const pvParameters,
+                                  UBaseType_t uxPriority,
+                                  TaskHandle_t* const pxCreatedTask,
+                                  const BaseType_t xCoreID);
 
-unsigned long micros();
-unsigned long millis();
-void delay(uint32_t);
-void delayMicroseconds(uint32_t us);
+  unsigned long micros();
+  unsigned long millis();
+  void delay(uint32_t);
+  void delayMicroseconds(uint32_t us);
 
 #if !CONFIG_ESP32_PHY_AUTO_INIT
-void arduino_phy_init();
+  void arduino_phy_init();
 #endif
 
 #if !CONFIG_AUTOSTART_ARDUINO
-void initArduino();
+  void initArduino();
 #endif
 
-typedef struct {
-    int core;                   // core which triggered panic
-    const char* reason;         // exception string
-    const void* pc;             // instruction address that triggered the exception
-    bool backtrace_corrupt;     // if backtrace is corrupt
-    bool backtrace_continues;   // if backtrace continues, but did not fit
-    unsigned int backtrace_len; // number of backtrace addresses
-    unsigned int backtrace[60]; // backtrace addresses array
-} arduino_panic_info_t;
+  typedef struct {
+    int core;                    // core which triggered panic
+    const char* reason;          // exception string
+    const void* pc;              // instruction address that triggered the exception
+    bool backtrace_corrupt;      // if backtrace is corrupt
+    bool backtrace_continues;    // if backtrace continues, but did not fit
+    unsigned int backtrace_len;  // number of backtrace addresses
+    unsigned int backtrace[60];  // backtrace addresses array
+  } arduino_panic_info_t;
 
-typedef void (*arduino_panic_handler_t)(arduino_panic_info_t * info, void * arg);
+  typedef void (*arduino_panic_handler_t)(arduino_panic_info_t* info, void* arg);
 
-void set_arduino_panic_handler(arduino_panic_handler_t handler, void * arg);
-arduino_panic_handler_t get_arduino_panic_handler(void);
-void * get_arduino_panic_handler_arg(void);
+  void set_arduino_panic_handler(arduino_panic_handler_t handler, void* arg);
+  arduino_panic_handler_t get_arduino_panic_handler(void);
+  void* get_arduino_panic_handler_arg(void);
 
 #ifdef __cplusplus
 }

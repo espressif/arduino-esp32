@@ -7,7 +7,7 @@ About
 
 The Preferences library is unique to arduino-esp32. It should be considered as the replacement for the Arduino EEPROM library.
 
-It uses a portion of the on-board non-volatile memory (NVS) of the ESP32 to store data. This data is retained across restarts and loss of power events to the system. 
+It uses a portion of the on-board non-volatile memory (NVS) of the ESP32 to store data. This data is retained across restarts and loss of power events to the system.
 
 Preferences works best for storing many small values, rather than a few large values. If large amounts of data are to be stored, consider using a file system library such as LitteFS.
 
@@ -40,7 +40,7 @@ Preferences directly supports the following data types:
 
 .. table:: **Table 1 — Preferences Data Types**
    :align: center
-   
+
    +-------------------+-------------------+---------------+
    | Preferences Type  | Data Type         | Size (bytes)  |
    +===================+===================+===============+
@@ -113,7 +113,7 @@ Arduino-esp32 Preferences API
 
    **Notes**
       * If the namespace does not exist within the partition, it is first created.
-      * Attempting to write a key value to a namespace open in read-only mode will fail. 
+      * Attempting to write a key value to a namespace open in read-only mode will fail.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
 
 
@@ -123,8 +123,8 @@ Arduino-esp32 Preferences API
    Close the currently opened namespace.
 
    .. code-block:: arduino
-                       
-      void end()          
+
+      void end()
    ..
 
    **Parameters**
@@ -134,7 +134,7 @@ Arduino-esp32 Preferences API
       * Nothing
 
    **Note**
-      * After closing a namespace, methods used to access it will fail. 
+      * After closing a namespace, methods used to access it will fail.
 
 
 ``clear``
@@ -142,61 +142,61 @@ Arduino-esp32 Preferences API
 
    Delete all keys and values from the currently opened namespace.
 
-   .. code-block:: arduino 
-                        
-      bool clear()         
+   .. code-block:: arduino
+
+      bool clear()
    ..
 
    **Parameters**
       * None
-   
+
    **Returns**
       * ``true`` if all keys and values were deleted; ``false`` otherwise.
-   
+
    **Note**
-      * the namespace name still exists afterward. 
+      * the namespace name still exists afterward.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
-  
-  
+
+
 ``remove``
 *************
 
    Delete a key-value pair from the currently open namespace.
-   
+
    .. code-block:: arduino
-   
+
        bool remove(const char * key)
    ..
 
    **Parameters**
       * ``key`` (Required)
-         -  the name of the key to be deleted. 
-   
+         -  the name of the key to be deleted.
+
    **Returns**
       * ``true`` if key-value pair was deleted; ``false`` otherwise.
-   
-   **Note** 
+
+   **Note**
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
-  
-  
+
+
 ``isKey``
 *************
 
    Check if a key-value pair from the currently open namespace exists.
-   
+
    .. code-block:: arduino
-   
+
        bool isKey(const char * key)
    ..
 
    **Parameters**
       * ``key`` (Required)
-         -  the name of the key to be checked. 
-   
+         -  the name of the key to be checked.
+
    **Returns**
       * ``true`` if key-value pair exists; ``false`` otherwise.
-   
-   **Note** 
+
+   **Note**
       * Attempting to check a key without a namespace being open will return false.
 
 
@@ -218,7 +218,7 @@ Arduino-esp32 Preferences API
 
       * ``value`` (Required)
          - must match the data type of the method.
-         
+
    **Returns**
       * ``1`` (the number of bytes stored for these data types) if the call is successful; ``0`` otherwise.
 
@@ -245,7 +245,7 @@ Arduino-esp32 Preferences API
 
       * ``value`` (Required)
          - must match the data type of the method.
-         
+
    **Returns**
       * ``2`` (the number of bytes stored for these data types) if the call is successful; ``0`` otherwise.
 
@@ -261,7 +261,7 @@ Arduino-esp32 Preferences API
 **********************
 
    Store a value against a given key in the currently open namespace.
-   
+
    .. code-block:: arduino
 
        size_t putInt(const char* key, int32_t value)
@@ -277,7 +277,7 @@ Arduino-esp32 Preferences API
 
       * ``value`` (Required)
          - must match the data type of the method.
-         
+
    **Returns**
       * ``4`` (the number of bytes stored for these data types) if the call is successful; ``0`` otherwise.
 
@@ -308,7 +308,7 @@ Arduino-esp32 Preferences API
 
       * ``value`` (Required)
          - must match the data type of the method.
-         
+
    **Returns**
       * ``8`` (the number of bytes stored for these data types) if the call is successful; ``0`` otherwise.
 
@@ -334,7 +334,7 @@ Arduino-esp32 Preferences API
 
       * ``value`` (Required)
          - must match the data type of the method.
-         
+
    **Returns**
       * ``true`` if successful; ``false`` otherwise.
 
@@ -360,9 +360,9 @@ Arduino-esp32 Preferences API
          - if the key does not exist in the currently opened namespace it is first created.
 
       * ``value`` (Required)
-         - if ``const char*``, a null-terminated (c-string) character array.         
+         - if ``const char*``, a null-terminated (c-string) character array.
          - if ``String``, a valid Arduino String type.
-         
+
    **Returns**
       * if successful: the number of bytes stored; ``0`` otherwise.
 
@@ -391,13 +391,13 @@ Arduino-esp32 Preferences API
 
       * ``len`` (Required)
          - the number of bytes from ``value`` to be stored.
-         
+
    **Returns**
       *  if successful: the number of bytes stored; ``0`` otherwise.
 
    **Notes**
       * Attempting to store a value without a namespace being open in read-write mode will fail.
-      * This method operates on the bytes used by the underlying data type, not the number of elements of a given data type. The data type of ``value`` is not retained by the Preferences library afterward. 
+      * This method operates on the bytes used by the underlying data type, not the number of elements of a given data type. The data type of ``value`` is not retained by the Preferences library afterward.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
 
 
@@ -418,14 +418,14 @@ Arduino-esp32 Preferences API
 
       * ``defaultValue`` (Optional)
          - must match the data type of the method if provided.
-         
+
    **Returns**
       * the value stored against ``key`` if the call is successful.
       * ``defaultValue``, if it is provided; ``0`` otherwise.
 
    **Notes**
       * Attempting to retrieve a key without a namespace being available will fail.
-      * Attempting to retrieve value from a non existant key will fail.
+      * Attempting to retrieve value from a non existent key will fail.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
 
 
@@ -439,7 +439,7 @@ Arduino-esp32 Preferences API
       int16_t getShort(const char* key, int16_t defaultValue = 0)
       uint16_t getUShort(const char* key, uint16_t defaultValue = 0)
    ..
-   
+
    Except for the data type returned, behaves exactly like ``getChar``.
 
 
@@ -455,7 +455,7 @@ Arduino-esp32 Preferences API
     uint32_t getUInt(const char* key, uint32_t defaultValue = 0)
 
    ..
-   
+
    Except for the data type returned, behaves exactly like ``getChar``.
 
 
@@ -470,7 +470,7 @@ Arduino-esp32 Preferences API
       uint32_t getULong(const char* key, uint32_t defaultValue = 0)
 
    ..
-   
+
    Except for the data type returned, behaves exactly like ``getChar``.
 
 
@@ -485,7 +485,7 @@ Arduino-esp32 Preferences API
       uint64_t getULong64(const char* key, uint64_t defaultValue = 0)
 
    ..
-   
+
    Except for the data type returned, behaves exactly like ``getChar``.
 
 
@@ -499,7 +499,7 @@ Arduino-esp32 Preferences API
       float_t getFloat(const char* key, float_t defaultValue = NAN)
 
    ..
-   
+
    Except for the data type returned and the value of ``defaultValue``, behaves exactly like ``getChar``.
 
 
@@ -513,7 +513,7 @@ Arduino-esp32 Preferences API
       double_t getDouble(const char* key, double_t defaultValue = NAN)
 
    ..
-   
+
    Except for the data type returned and the value of ``defaultValue``, behaves exactly like ``getChar``.
 
 
@@ -527,7 +527,7 @@ Arduino-esp32 Preferences API
       uint8_t getUChar(const char* key, uint8_t defaultValue = 0);
 
    ..
-   
+
    Except for the data type returned, behaves exactly like ``getChar``.
 
 
@@ -571,7 +571,7 @@ Arduino-esp32 Preferences API
    **Parameters**
       * ``key`` (Required)
       * ``defaultValue`` (Optional)
-         
+
    **Returns**
       * the value stored against ``key`` if the call if successful
       * if the method fails: it returns ``defaultValue``, if provided; ``""`` (an empty String) otherwise.
@@ -623,7 +623,7 @@ Get the number of bytes stored in the value against a key of type ``Bytes`` in t
 
    **Returns**
       * if successful: the number of bytes in the value stored against ``key``; ``0`` otherwise.
-      
+
    **Notes**
       * This method will fail if ``key`` is not of type ``Bytes``.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
@@ -646,7 +646,7 @@ Get the Preferences data type of a given key within the currently open namespace
    **Returns**
       * an ``int`` value as per Table 2 below.
       * a value of ``10`` (PT_INVALID) if the call fails.
-      
+
    **Notes**
       * The return values are enumerated in ``Preferences.h``. Table 2 includes the enumerated values for information.
       * A return value can map to more than one Prefs Type.
@@ -654,7 +654,7 @@ Get the Preferences data type of a given key within the currently open namespace
 
 .. table:: **Table 2 — getType Return Values**
    :align: center
-   
+
    +---------------+---------------+-------------------+-----------------------+
    | Return value  | Prefs Type    | Data Type         | Enumerated Value      |
    +===============+===============+===================+=======================+
@@ -687,7 +687,7 @@ Get the Preferences data type of a given key within the currently open namespace
    | 9             | Double        | double_t          | PT_BLOB               |
    |               +---------------+-------------------+                       |
    |               | Float         | float_t           |                       |
-   |               +---------------+-------------------+                       |   
+   |               +---------------+-------------------+                       |
    |               | Bytes         | uint8_t           |                       |
    +---------------+---------------+-------------------+-----------------------+
    | 10            | \-            | \-                | PT_INVALID            |
@@ -710,13 +710,13 @@ Get the number of free entries available in the key table of the currently open 
 
    **Returns**
       * if successful: the number of free entries available in the key table of the currently open namespace; ``0`` otherwise.
-      
+
    **Notes**
       * keys storing values of type ``Bool``, ``Char``, ``UChar``, ``Short``, ``UShort``, ``Int``, ``UInt``, ``Long``, ``ULong``, ``Long64``, ``ULong64`` use one entry in the key table.
       * keys storing values of type ``Float`` and ``Double`` use three entries in the key table.
-      * Arduino or c-string ``String`` types use a minimum of two key table entries with the number of entries increasing with the length of the string. 
-      * keys storing values of type ``Bytes`` use a minimum of three key table entries with the number of entries increasing with the number of bytes stored. 
+      * Arduino or c-string ``String`` types use a minimum of two key table entries with the number of entries increasing with the length of the string.
+      * keys storing values of type ``Bytes`` use a minimum of three key table entries with the number of entries increasing with the number of bytes stored.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
-      
+
 
 ..    --- EOF ----
