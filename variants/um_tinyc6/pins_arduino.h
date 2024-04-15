@@ -16,12 +16,12 @@ static const uint8_t RX = 17;
 static const uint8_t SDA = 6;
 static const uint8_t SCL = 7;
 
-static const uint8_t SS    = 18;
-static const uint8_t MOSI  = 21;
-static const uint8_t MISO  = 20;
-static const uint8_t SDO  = 21;
-static const uint8_t SDI  = 20;
-static const uint8_t SCK   = 19;
+static const uint8_t SS = 18;
+static const uint8_t MOSI = 21;
+static const uint8_t MISO = 20;
+static const uint8_t SDO = 21;
+static const uint8_t SDI = 20;
+static const uint8_t SCK = 19;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -52,7 +52,7 @@ static const uint8_t RGB_DATA = 23;
 #define RGB_BRIGHTNESS 64
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = RGB_BUILTIN;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t RGB_PWR = 22;

@@ -25,11 +25,11 @@
 #define URL "https://arduino.cc"
 
 void demo() {
-  NetworkClientSecure *client = new NetworkClientSecure;
-  client->setInsecure(); //
+  NetworkClientSecure* client = new NetworkClientSecure;
+  client->setInsecure();  //
 
   HTTPClient https;
-  if (!https.begin(*client, URL )) {
+  if (!https.begin(*client, URL)) {
     Serial.println("HTTPS setup failed");
     return;
   };
@@ -48,7 +48,7 @@ void demo() {
   // Show general output / certificate information
   //
   char buf[1024];
-  int l = mbedtls_x509_crt_info (buf, sizeof(buf), "", peer);
+  int l = mbedtls_x509_crt_info(buf, sizeof(buf), "", peer);
   if (l <= 0) {
     Serial.println("Peer conversion to printable buffer failed");
     return;
@@ -63,7 +63,7 @@ void demo() {
   }
   // Fingerprint late 2021
   Serial.println("Expecting Fingerprint (SHA256): 70 CF A4 B7 5D 09 E9 2A 52 A8 B6 85 B5 0B D6 BE 83 47 83 5B 3A 4D 3C 3E 32 30 EC 1D 61 98 D7 0F");
-  Serial.print(  " Received Fingerprint (SHA256): ");
+  Serial.print(" Received Fingerprint (SHA256): ");
 
   for (int i = 0; i < 32; i++) {
     Serial.print(fingerprint_remote[i], HEX);

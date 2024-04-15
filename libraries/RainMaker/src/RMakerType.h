@@ -31,7 +31,7 @@ typedef esp_rmaker_ota_type_t ota_type_t;
 
 param_val_t value(int);
 param_val_t value(bool);
-param_val_t value(char *);
+param_val_t value(char*);
 param_val_t value(float);
 param_val_t value(const char*);
 #endif

@@ -205,7 +205,7 @@ public:
       }  // if
 
     } else if (upload.status == UPLOAD_FILE_END) {
-        TRACE("finished.\n");
+      TRACE("finished.\n");
       // Close the file
       if (_fsUploadFile) {
         _fsUploadFile.close();

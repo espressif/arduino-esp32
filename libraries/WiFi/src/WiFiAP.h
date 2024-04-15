@@ -29,81 +29,79 @@
 #include "WiFiType.h"
 #include "WiFiGeneric.h"
 
-#define WIFI_AP_DEFAULT_AUTH_MODE   WIFI_AUTH_WPA2_PSK
-#define WIFI_AP_DEFAULT_CIPHER      WIFI_CIPHER_TYPE_CCMP // Disable by default enabled insecure TKIP and use just CCMP.
+#define WIFI_AP_DEFAULT_AUTH_MODE WIFI_AUTH_WPA2_PSK
+#define WIFI_AP_DEFAULT_CIPHER WIFI_CIPHER_TYPE_CCMP  // Disable by default enabled insecure TKIP and use just CCMP.
 
 // ----------------------------------------------------------------------------------------------
 // ------------------------------------ NEW AP Implementation  ----------------------------------
 // ----------------------------------------------------------------------------------------------
 
-class APClass: public NetworkInterface {
-    public:
-        APClass();
-        ~APClass();
+class APClass : public NetworkInterface {
+public:
+  APClass();
+  ~APClass();
 
-        bool begin();
-        bool end();
+  bool begin();
+  bool end();
 
-        bool create(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false, wifi_auth_mode_t auth_mode = WIFI_AP_DEFAULT_AUTH_MODE, wifi_cipher_type_t cipher = WIFI_AP_DEFAULT_CIPHER);
-        bool clear();
+  bool create(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false, wifi_auth_mode_t auth_mode = WIFI_AP_DEFAULT_AUTH_MODE, wifi_cipher_type_t cipher = WIFI_AP_DEFAULT_CIPHER);
+  bool clear();
 
-        bool bandwidth(wifi_bandwidth_t bandwidth);
-        bool enableNAPT(bool enable=true);
+  bool bandwidth(wifi_bandwidth_t bandwidth);
+  bool enableNAPT(bool enable = true);
 
-        String SSID(void) const;
-        uint8_t stationCount();
+  String SSID(void) const;
+  uint8_t stationCount();
 
-        void _onApEvent(int32_t event_id, void* event_data);
+  void _onApEvent(int32_t event_id, void* event_data);
 
-    protected:
-        size_t printDriverInfo(Print & out) const;
+protected:
+  size_t printDriverInfo(Print& out) const;
 
-        friend class WiFiGenericClass;
-        bool onEnable();
-        bool onDisable();
+  friend class WiFiGenericClass;
+  bool onEnable();
+  bool onDisable();
 };
 
 // ----------------------------------------------------------------------------------------------
 // ------------------------------- OLD AP API (compatibility)  ----------------------------------
 // ----------------------------------------------------------------------------------------------
 
-class WiFiAPClass
-{
+class WiFiAPClass {
 
 public:
-    APClass AP;
+  APClass AP;
 
-    bool softAP(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false, wifi_auth_mode_t auth_mode = WIFI_AP_DEFAULT_AUTH_MODE, wifi_cipher_type_t cipher = WIFI_AP_DEFAULT_CIPHER);
-    bool softAP(const String& ssid, const String& passphrase = emptyString, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false, wifi_auth_mode_t auth_mode = WIFI_AP_DEFAULT_AUTH_MODE, wifi_cipher_type_t cipher = WIFI_AP_DEFAULT_CIPHER) {
-       return softAP(ssid.c_str(), passphrase.c_str(), channel, ssid_hidden, max_connection, ftm_responder, auth_mode, cipher);
-    }
+  bool softAP(const char* ssid, const char* passphrase = NULL, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false, wifi_auth_mode_t auth_mode = WIFI_AP_DEFAULT_AUTH_MODE, wifi_cipher_type_t cipher = WIFI_AP_DEFAULT_CIPHER);
+  bool softAP(const String& ssid, const String& passphrase = emptyString, int channel = 1, int ssid_hidden = 0, int max_connection = 4, bool ftm_responder = false, wifi_auth_mode_t auth_mode = WIFI_AP_DEFAULT_AUTH_MODE, wifi_cipher_type_t cipher = WIFI_AP_DEFAULT_CIPHER) {
+    return softAP(ssid.c_str(), passphrase.c_str(), channel, ssid_hidden, max_connection, ftm_responder, auth_mode, cipher);
+  }
 
-    bool softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start = (uint32_t) 0, IPAddress dns = (uint32_t) 0);
-    bool softAPdisconnect(bool wifioff = false);
+  bool softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start = (uint32_t)0, IPAddress dns = (uint32_t)0);
+  bool softAPdisconnect(bool wifioff = false);
 
-    bool softAPbandwidth(wifi_bandwidth_t bandwidth);
+  bool softAPbandwidth(wifi_bandwidth_t bandwidth);
 
-    uint8_t softAPgetStationNum();
-    String softAPSSID(void) const;
+  uint8_t softAPgetStationNum();
+  String softAPSSID(void) const;
 
-    IPAddress softAPIP();
-    IPAddress softAPBroadcastIP();
-    IPAddress softAPNetworkID();
-    IPAddress softAPSubnetMask();
-    uint8_t softAPSubnetCIDR();
+  IPAddress softAPIP();
+  IPAddress softAPBroadcastIP();
+  IPAddress softAPNetworkID();
+  IPAddress softAPSubnetMask();
+  uint8_t softAPSubnetCIDR();
 
-    bool softAPenableIPv6(bool enable=true);
-    IPAddress softAPlinkLocalIPv6();
+  bool softAPenableIPv6(bool enable = true);
+  IPAddress softAPlinkLocalIPv6();
 
-    const char * softAPgetHostname();
-    bool softAPsetHostname(const char * hostname);
+  const char* softAPgetHostname();
+  bool softAPsetHostname(const char* hostname);
 
-    uint8_t* softAPmacAddress(uint8_t* mac);
-    String softAPmacAddress(void);
+  uint8_t* softAPmacAddress(uint8_t* mac);
+  String softAPmacAddress(void);
 
 
 protected:
-
 };
 
 #endif /* SOC_WIFI_SUPPORTED*/

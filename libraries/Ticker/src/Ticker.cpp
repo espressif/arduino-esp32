@@ -24,8 +24,8 @@
 
 #include "Ticker.h"
 
-Ticker::Ticker() :
-  _timer(nullptr) {}
+Ticker::Ticker()
+  : _timer(nullptr) {}
 
 Ticker::~Ticker() {
   detach();
@@ -63,8 +63,7 @@ bool Ticker::active() const {
   return esp_timer_is_active(_timer);
 }
 
-void Ticker::_static_callback(void* arg)
-{
+void Ticker::_static_callback(void* arg) {
   Ticker* _this = reinterpret_cast<Ticker*>(arg);
   if (_this && _this->_callback_function)
     _this->_callback_function();

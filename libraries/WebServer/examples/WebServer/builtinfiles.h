@@ -7,7 +7,7 @@
 
 // used for $upload.htm
 static const char uploadContent[] PROGMEM =
-R"==(
+  R"==(
 <!doctype html>
 <html lang='en'>
 

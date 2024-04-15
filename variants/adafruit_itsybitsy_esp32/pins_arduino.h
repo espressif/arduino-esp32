@@ -6,13 +6,13 @@
 
 // User LED
 static const uint8_t LED_BUILTIN = 13;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 // Neopixel
 static const uint8_t PIN_NEOPIXEL = 0;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t NEOPIXEL_POWER = 2;
@@ -26,10 +26,10 @@ static const uint8_t RX = 8;
 static const uint8_t SDA = 15;
 static const uint8_t SCL = 27;
 
-static const uint8_t SS    = 32;
-static const uint8_t MOSI  = 21;
-static const uint8_t MISO  = 22;
-static const uint8_t SCK   = 19;
+static const uint8_t SS = 32;
+static const uint8_t MOSI = 21;
+static const uint8_t MISO = 22;
+static const uint8_t SCK = 19;
 
 static const uint8_t A0 = 25;
 static const uint8_t A1 = 26;

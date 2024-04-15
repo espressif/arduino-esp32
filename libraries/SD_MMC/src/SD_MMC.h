@@ -29,34 +29,32 @@
 #define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_HIGHSPEED
 #endif
 
-namespace fs
-{
+namespace fs {
 
-class SDMMCFS : public FS
-{
+class SDMMCFS : public FS {
 protected:
-    sdmmc_card_t* _card;
-    int8_t _pin_clk = -1;
-    int8_t _pin_cmd = -1;
-    int8_t _pin_d0 = -1;
-    int8_t _pin_d1 = -1;
-    int8_t _pin_d2 = -1;
-    int8_t _pin_d3 = -1;
-    bool _mode1bit = false;
+  sdmmc_card_t* _card;
+  int8_t _pin_clk = -1;
+  int8_t _pin_cmd = -1;
+  int8_t _pin_d0 = -1;
+  int8_t _pin_d1 = -1;
+  int8_t _pin_d2 = -1;
+  int8_t _pin_d3 = -1;
+  bool _mode1bit = false;
 
 public:
-    SDMMCFS(FSImplPtr impl);
-    bool setPins(int clk, int cmd, int d0);
-    bool setPins(int clk, int cmd, int d0, int d1, int d2, int d3);
-    bool begin(const char * mountpoint="/sdcard", bool mode1bit=false, bool format_if_mount_failed=false, int sdmmc_frequency=BOARD_MAX_SDMMC_FREQ, uint8_t maxOpenFiles = 5);
-    void end();
-    sdcard_type_t cardType();
-    uint64_t cardSize();
-    uint64_t totalBytes();
-    uint64_t usedBytes();
+  SDMMCFS(FSImplPtr impl);
+  bool setPins(int clk, int cmd, int d0);
+  bool setPins(int clk, int cmd, int d0, int d1, int d2, int d3);
+  bool begin(const char* mountpoint = "/sdcard", bool mode1bit = false, bool format_if_mount_failed = false, int sdmmc_frequency = BOARD_MAX_SDMMC_FREQ, uint8_t maxOpenFiles = 5);
+  void end();
+  sdcard_type_t cardType();
+  uint64_t cardSize();
+  uint64_t totalBytes();
+  uint64_t usedBytes();
 
 private:
-    static bool sdmmcDetachBus(void * bus_pointer);
+  static bool sdmmcDetachBus(void* bus_pointer);
 };
 
 }

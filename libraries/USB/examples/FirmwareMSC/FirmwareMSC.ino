@@ -2,8 +2,8 @@
 #error This ESP32 SoC has no Native USB interface
 #elif ARDUINO_USB_MODE == 1
 #warning This sketch should be used when USB is in OTG mode
-void setup(){}
-void loop(){}
+void setup() {}
+void loop() {}
 #else
 #include "USB.h"
 #include "FirmwareMSC.h"
@@ -12,10 +12,10 @@ void loop(){}
 FirmwareMSC MSC_Update;
 #endif
 
-static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data){
-  if(event_base == ARDUINO_USB_EVENTS){
-    arduino_usb_event_data_t * data = (arduino_usb_event_data_t*)event_data;
-    switch (event_id){
+static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+  if (event_base == ARDUINO_USB_EVENTS) {
+    arduino_usb_event_data_t* data = (arduino_usb_event_data_t*)event_data;
+    switch (event_id) {
       case ARDUINO_USB_STARTED_EVENT:
         Serial.println("USB PLUGGED");
         break;
@@ -32,9 +32,9 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       default:
         break;
     }
-  } else if(event_base == ARDUINO_FIRMWARE_MSC_EVENTS){
-    arduino_firmware_msc_event_data_t * data = (arduino_firmware_msc_event_data_t*)event_data;
-    switch (event_id){
+  } else if (event_base == ARDUINO_FIRMWARE_MSC_EVENTS) {
+    arduino_firmware_msc_event_data_t* data = (arduino_firmware_msc_event_data_t*)event_data;
+    switch (event_id) {
       case ARDUINO_FIRMWARE_MSC_START_EVENT:
         Serial.println("MSC Update Start");
         break;

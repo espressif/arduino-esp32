@@ -29,56 +29,53 @@
 // Channel to be used by the ESP-NOW protocol
 #define ESPNOW_WIFI_CHANNEL 1
 
-#if ESPNOW_WIFI_MODE_STATION // ESP-NOW using WiFi Station mode
-    #define ESPNOW_WIFI_MODE WIFI_STA         // WiFi Mode
-    #define ESPNOW_WIFI_IF   WIFI_IF_STA      // WiFi Interface
-#else // ESP-NOW using WiFi AP mode
-    #define ESPNOW_WIFI_MODE WIFI_AP                // WiFi Mode
-    #define ESPNOW_WIFI_IF   WIFI_IF_AP             // WiFi Interface
+#if ESPNOW_WIFI_MODE_STATION        // ESP-NOW using WiFi Station mode
+#define ESPNOW_WIFI_MODE WIFI_STA   // WiFi Mode
+#define ESPNOW_WIFI_IF WIFI_IF_STA  // WiFi Interface
+#else                               // ESP-NOW using WiFi AP mode
+#define ESPNOW_WIFI_MODE WIFI_AP    // WiFi Mode
+#define ESPNOW_WIFI_IF WIFI_IF_AP   // WiFi Interface
 #endif
 
 // Set the MAC address of the device that will receive the data
 // For example: F4:12:FA:40:64:4C
-const MacAddress peer_mac({0xF4, 0x12, 0xFA, 0x40, 0x64, 0x4C});
+const MacAddress peer_mac({ 0xF4, 0x12, 0xFA, 0x40, 0x64, 0x4C });
 
 ESP_NOW_Serial_Class NowSerial(peer_mac, ESPNOW_WIFI_CHANNEL, ESPNOW_WIFI_IF);
 
 void setup() {
-    Serial.begin(115200);
+  Serial.begin(115200);
 
-    Serial.print("WiFi Mode: ");
-    Serial.println(ESPNOW_WIFI_MODE == WIFI_AP ? "AP" : "Station");
-    WiFi.mode(ESPNOW_WIFI_MODE);
+  Serial.print("WiFi Mode: ");
+  Serial.println(ESPNOW_WIFI_MODE == WIFI_AP ? "AP" : "Station");
+  WiFi.mode(ESPNOW_WIFI_MODE);
 
-    Serial.print("Channel: ");
-    Serial.println(ESPNOW_WIFI_CHANNEL);
-    WiFi.setChannel(ESPNOW_WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
+  Serial.print("Channel: ");
+  Serial.println(ESPNOW_WIFI_CHANNEL);
+  WiFi.setChannel(ESPNOW_WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
 
-    while(!(WiFi.STA.started() || WiFi.AP.started())) delay(100);
+  while (!(WiFi.STA.started() || WiFi.AP.started())) delay(100);
 
-    Serial.print("MAC Address: ");
-    Serial.println(ESPNOW_WIFI_MODE == WIFI_AP ? WiFi.softAPmacAddress() : WiFi.macAddress());
+  Serial.print("MAC Address: ");
+  Serial.println(ESPNOW_WIFI_MODE == WIFI_AP ? WiFi.softAPmacAddress() : WiFi.macAddress());
 
-    // Start the ESP-NOW communication
-    Serial.println("ESP-NOW communication starting...");
-    NowSerial.begin(115200);
-    Serial.println("You can now send data to the peer device using the Serial Monitor.\n");
+  // Start the ESP-NOW communication
+  Serial.println("ESP-NOW communication starting...");
+  NowSerial.begin(115200);
+  Serial.println("You can now send data to the peer device using the Serial Monitor.\n");
 }
 
 void loop() {
-    while (NowSerial.available())
-    {
-        Serial.write(NowSerial.read());
-    }
+  while (NowSerial.available()) {
+    Serial.write(NowSerial.read());
+  }
 
-    while (Serial.available() && NowSerial.availableForWrite())
-    {
-        if (NowSerial.write(Serial.read()) <= 0)
-        {
-            Serial.println("Failed to send data");
-            break;
-        }
+  while (Serial.available() && NowSerial.availableForWrite()) {
+    if (NowSerial.write(Serial.read()) <= 0) {
+      Serial.println("Failed to send data");
+      break;
     }
+  }
 
-    delay(1);
+  delay(1);
 }

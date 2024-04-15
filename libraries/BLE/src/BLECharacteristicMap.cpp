@@ -24,7 +24,7 @@
  */
 BLECharacteristic* BLECharacteristicMap::getByHandle(uint16_t handle) {
   return m_handleMap.at(handle);
-} // getByHandle
+}  // getByHandle
 
 
 /**
@@ -33,7 +33,7 @@ BLECharacteristic* BLECharacteristicMap::getByHandle(uint16_t handle) {
  * @return The characteristic.
  */
 BLECharacteristic* BLECharacteristicMap::getByUUID(const char* uuid) {
-    return getByUUID(BLEUUID(uuid));
+  return getByUUID(BLEUUID(uuid));
 }
 
 
@@ -43,14 +43,14 @@ BLECharacteristic* BLECharacteristicMap::getByUUID(const char* uuid) {
  * @return The characteristic.
  */
 BLECharacteristic* BLECharacteristicMap::getByUUID(BLEUUID uuid) {
-  for (auto &myPair : m_uuidMap) {
+  for (auto& myPair : m_uuidMap) {
     if (myPair.first->getUUID().equals(uuid)) {
       return myPair.first;
     }
   }
   //return m_uuidMap.at(uuid.toString());
   return nullptr;
-} // getByUUID
+}  // getByUUID
 
 
 /**
@@ -63,7 +63,7 @@ BLECharacteristic* BLECharacteristicMap::getFirst() {
   BLECharacteristic* pRet = m_iterator->first;
   m_iterator++;
   return pRet;
-} // getFirst
+}  // getFirst
 
 
 /**
@@ -75,7 +75,7 @@ BLECharacteristic* BLECharacteristicMap::getNext() {
   BLECharacteristic* pRet = m_iterator->first;
   m_iterator++;
   return pRet;
-} // getNext
+}  // getNext
 
 
 /**
@@ -89,7 +89,7 @@ void BLECharacteristicMap::handleGATTServerEvent(esp_gatts_cb_event_t event, esp
   for (auto& myPair : m_uuidMap) {
     myPair.first->handleGATTServerEvent(event, gatts_if, param);
   }
-} // handleGATTServerEvent
+}  // handleGATTServerEvent
 
 
 /**
@@ -100,7 +100,7 @@ void BLECharacteristicMap::handleGATTServerEvent(esp_gatts_cb_event_t event, esp
  */
 void BLECharacteristicMap::setByHandle(uint16_t handle, BLECharacteristic* characteristic) {
   m_handleMap.insert(std::pair<uint16_t, BLECharacteristic*>(handle, characteristic));
-} // setByHandle
+}  // setByHandle
 
 
 /**
@@ -111,7 +111,7 @@ void BLECharacteristicMap::setByHandle(uint16_t handle, BLECharacteristic* chara
  */
 void BLECharacteristicMap::setByUUID(BLECharacteristic* pCharacteristic, BLEUUID uuid) {
   m_uuidMap.insert(std::pair<BLECharacteristic*, String>(pCharacteristic, uuid.toString()));
-} // setByUUID
+}  // setByUUID
 
 
 /**
@@ -122,8 +122,8 @@ String BLECharacteristicMap::toString() {
   String res;
   int count = 0;
   char hex[5];
-  for (auto &myPair: m_uuidMap) {
-    if (count > 0) {res += "\n";}
+  for (auto& myPair : m_uuidMap) {
+    if (count > 0) { res += "\n"; }
     snprintf(hex, sizeof(hex), "%04x", myPair.first->getHandle());
     count++;
     res += "handle: 0x";
@@ -131,7 +131,7 @@ String BLECharacteristicMap::toString() {
     res += ", uuid: " + myPair.first->getUUID().toString();
   }
   return res;
-} // toString
+}  // toString
 
 
 #endif /* CONFIG_BLUEDROID_ENABLED */

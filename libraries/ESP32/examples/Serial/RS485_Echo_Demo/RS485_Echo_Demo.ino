@@ -21,11 +21,11 @@
 
 void setup() {
   Serial.begin(115200);
-  while(!Serial) { delay(10); }
+  while (!Serial) { delay(10); }
 
   RS485.begin(9600, SERIAL_8N1, RS485_RX_PIN, RS485_TX_PIN);
-  while(!RS485) { delay(10); }
-  if(!RS485.setPins(-1, -1, -1, RS485_RTS_PIN)){
+  while (!RS485) { delay(10); }
+  if (!RS485.setPins(-1, -1, -1, RS485_RTS_PIN)) {
     Serial.print("Failed to set RS485 pins");
   }
 
@@ -33,8 +33,8 @@ void setup() {
   // By using UART_MODE_RS485_HALF_DUPLEX defined in hal/uart_types.h we work around this problem.
   // If using a newer IDF and Arduino core you can omit including hal/uart_types.h and use MODE_RS485_HALF_DUPLEX
   // defined in esp32-hal-uart.h (included during other build steps) instead.
-  if(!RS485.setMode(UART_MODE_RS485_HALF_DUPLEX)) {
-   Serial.print("Failed to set RS485 mode");
+  if (!RS485.setMode(UART_MODE_RS485_HALF_DUPLEX)) {
+    Serial.print("Failed to set RS485 mode");
   }
 }
 

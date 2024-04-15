@@ -9,16 +9,16 @@
  */
 
 // Stop button is attached to PIN 0 (IO0)
-#define BTN_STOP_ALARM    0
+#define BTN_STOP_ALARM 0
 
-hw_timer_t * timer = NULL;
+hw_timer_t* timer = NULL;
 volatile SemaphoreHandle_t timerSemaphore;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
 volatile uint32_t isrCounter = 0;
 volatile uint32_t lastIsrAt = 0;
 
-void ARDUINO_ISR_ATTR onTimer(){
+void ARDUINO_ISR_ATTR onTimer() {
   // Increment the counter and set the time of ISR
   portENTER_CRITICAL_ISR(&timerMux);
   isrCounter = isrCounter + 1;
@@ -51,7 +51,7 @@ void setup() {
 
 void loop() {
   // If Timer has fired
-  if (xSemaphoreTake(timerSemaphore, 0) == pdTRUE){
+  if (xSemaphoreTake(timerSemaphore, 0) == pdTRUE) {
     uint32_t isrCount = 0, isrTime = 0;
     // Read the interrupt count and time
     portENTER_CRITICAL(&timerMux);

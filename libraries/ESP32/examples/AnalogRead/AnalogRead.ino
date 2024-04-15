@@ -12,8 +12,8 @@ void loop() {
   int analogVolts = analogReadMilliVolts(2);
 
   // print out the values you read:
-  Serial.printf("ADC analog value = %d\n",analogValue);
-  Serial.printf("ADC millivolts value = %d\n",analogVolts);
+  Serial.printf("ADC analog value = %d\n", analogValue);
+  Serial.printf("ADC millivolts value = %d\n", analogVolts);
 
   delay(100);  // delay in between reads for clear read from serial
 }

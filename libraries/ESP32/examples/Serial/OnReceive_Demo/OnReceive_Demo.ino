@@ -44,15 +44,15 @@
 // By physically connecting the pins 4 and 5 and then create a physical UART loopback,
 // Or by using the internal IO_MUX to connect the TX signal to the RX pin, creating the
 // same loopback internally.
-#define USE_INTERNAL_PIN_LOOPBACK 1   // 1 uses the internal loopback, 0 for wiring pins 4 and 5 externally
+#define USE_INTERNAL_PIN_LOOPBACK 1  // 1 uses the internal loopback, 0 for wiring pins 4 and 5 externally
 
-#define DATA_SIZE 26    // 26 bytes is a lower than RX FIFO size (127 bytes)
-#define BAUD 9600       // Any baudrate from 300 to 115200
-#define TEST_UART 1     // Serial1 will be used for the loopback testing with different RX FIFO FULL values
-#define RXPIN 4         // GPIO 4 => RX for Serial1
-#define TXPIN 5         // GPIO 5 => TX for Serial1
+#define DATA_SIZE 26  // 26 bytes is a lower than RX FIFO size (127 bytes)
+#define BAUD 9600     // Any baudrate from 300 to 115200
+#define TEST_UART 1   // Serial1 will be used for the loopback testing with different RX FIFO FULL values
+#define RXPIN 4       // GPIO 4 => RX for Serial1
+#define TXPIN 5       // GPIO 5 => TX for Serial1
 
-uint8_t fifoFullTestCases[] = {120, 20, 5, 1};
+uint8_t fifoFullTestCases[] = { 120, 20, 5, 1 };
 // volatile declaration will avoid any compiler optimization when reading variable values
 volatile size_t sent_bytes = 0, received_bytes = 0;
 
@@ -62,7 +62,7 @@ void onReceiveFunction(void) {
   size_t available = Serial1.available();
   received_bytes = received_bytes + available;
   Serial.printf("onReceive Callback:: There are %d bytes available: ", available);
-  while (available --) {
+  while (available--) {
     Serial.print((char)Serial1.read());
   }
   Serial.println();
@@ -74,7 +74,7 @@ void setup() {
 
   // UART1 will have its RX<->TX cross connected
   // GPIO4 <--> GPIO5 using external wire
-  Serial1.begin(BAUD, SERIAL_8N1, RXPIN, TXPIN); // Rx = 4, Tx = 5 will work for ESP32, S2, S3 and C3
+  Serial1.begin(BAUD, SERIAL_8N1, RXPIN, TXPIN);  // Rx = 4, Tx = 5 will work for ESP32, S2, S3 and C3
 #if USE_INTERNAL_PIN_LOOPBACK
   uart_internal_loopback(TEST_UART, RXPIN);
 #endif
@@ -106,7 +106,7 @@ void testAndReport(uint8_t fifoFull, bool onlyOnTimeOut) {
 
   // initialize all data
   for (uint8_t i = 0; i < DATA_SIZE; i++) {
-    dataSent[i] = 'A' + i; // fill it with characters A..Z
+    dataSent[i] = 'A' + i;  // fill it with characters A..Z
   }
 
   Serial.printf("\nTesting onReceive for receiving %d bytes at %d baud, using RX FIFO Full = %d.\n", sent_bytes, BAUD, fifoFull);
@@ -115,11 +115,11 @@ void testAndReport(uint8_t fifoFull, bool onlyOnTimeOut) {
   } else {
     Serial.println("onReceive is called on both FIFO Full and RX Timeout events.");
   }
-  Serial.flush(); // wait Serial FIFO to be empty and then spend almost no time processing it
-  Serial1.setRxFIFOFull(fifoFull); // testing different result based on FIFO Full setup
-  Serial1.onReceive(onReceiveFunction, onlyOnTimeOut); // sets a RX callback function for Serial 1
+  Serial.flush();                                       // wait Serial FIFO to be empty and then spend almost no time processing it
+  Serial1.setRxFIFOFull(fifoFull);                      // testing different result based on FIFO Full setup
+  Serial1.onReceive(onReceiveFunction, onlyOnTimeOut);  // sets a RX callback function for Serial 1
 
-  sent_bytes = Serial1.write(dataSent, DATA_SIZE); // ESP32 TX FIFO is about 128 bytes, 125 bytes will fit fine
+  sent_bytes = Serial1.write(dataSent, DATA_SIZE);  // ESP32 TX FIFO is about 128 bytes, 125 bytes will fit fine
   Serial.printf("\nSent String: %s\n", dataSent);
   while (received_bytes < sent_bytes) {
     // just wait for receiving all byte in the callback...
@@ -129,5 +129,5 @@ void testAndReport(uint8_t fifoFull, bool onlyOnTimeOut) {
   Serial.printf("onReceive() has read a total of %d bytes\n", received_bytes);
   Serial.println("========================\nFinished!");
 
-  Serial1.onReceive(NULL); // resets/disables the RX callback function for Serial 1
+  Serial1.onReceive(NULL);  // resets/disables the RX callback function for Serial 1
 }

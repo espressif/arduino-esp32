@@ -35,9 +35,9 @@ const char* SSID = "YOUR-SSID";
 const char* PSWD = "YOUR-SSID-PSWD";
 
 // S3 Bucket Config
-String host = "bucket-name.s3.ap-south-1.amazonaws.com"; // Host => bucket-name.s3.region.amazonaws.com
-int port = 80; // Non https. For HTTPS 443. As of today, HTTPS doesn't work.
-String bin = "/sketch-name.ino.bin"; // bin file name with a slash in front.
+String host = "bucket-name.s3.ap-south-1.amazonaws.com";  // Host => bucket-name.s3.region.amazonaws.com
+int port = 80;                                            // Non https. For HTTPS 443. As of today, HTTPS doesn't work.
+String bin = "/sketch-name.ino.bin";                      // bin file name with a slash in front.
 
 // Utility to extract header value from headers
 String getHeaderValue(String header, String headerName) {
@@ -54,10 +54,7 @@ void execOTA() {
     Serial.println("Fetching Bin: " + String(bin));
 
     // Get the contents of the bin file
-    client.print(String("GET ") + bin + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Cache-Control: no-cache\r\n" +
-                 "Connection: close\r\n\r\n");
+    client.print(String("GET ") + bin + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Cache-Control: no-cache\r\n" + "Connection: close\r\n\r\n");
 
     // Check what is being sent
     //    Serial.print(String("GET ") + bin + " HTTP/1.1\r\n" +
@@ -105,7 +102,7 @@ void execOTA() {
       // Update.writeStream();
       if (!line.length()) {
         //headers ended
-        break; // and get the OTA started
+        break;  // and get the OTA started
       }
 
       // Check if the HTTP Response is 200
@@ -160,7 +157,7 @@ void execOTA() {
       if (written == contentLength) {
         Serial.println("Written : " + String(written) + " successfully");
       } else {
-        Serial.println("Written only : " + String(written) + "/" + String(contentLength) + ". Retry?" );
+        Serial.println("Written only : " + String(written) + "/" + String(contentLength) + ". Retry?");
         // retry??
         // execOTA();
       }
@@ -201,7 +198,7 @@ void setup() {
 
   // Wait for connection to establish
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print("."); // Keep the serial monitor lit!
+    Serial.print(".");  // Keep the serial monitor lit!
     delay(500);
   }
 

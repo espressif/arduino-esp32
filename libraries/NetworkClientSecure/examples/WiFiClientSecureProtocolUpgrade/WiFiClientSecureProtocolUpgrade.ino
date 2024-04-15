@@ -46,13 +46,13 @@
 #endif
 
 #ifndef SMTP_PORT
-#define SMTP_PORT (587) // Standard (plaintext) submission port
+#define SMTP_PORT (587)  // Standard (plaintext) submission port
 #endif
 
-const char* ssid = WIFI_NETWORK;       // your network SSID (name of wifi network)
-const char* password = WIFI_PASSWD;    // your network password
-const char* server = SMTP_HOST;        // Server URL
-const int submission_port = SMTP_PORT; // submission port.
+const char* ssid = WIFI_NETWORK;        // your network SSID (name of wifi network)
+const char* password = WIFI_PASSWD;     // your network password
+const char* server = SMTP_HOST;         // Server URL
+const int submission_port = SMTP_PORT;  // submission port.
 
 NetworkClientSecure client;
 
@@ -108,7 +108,7 @@ void setup() {
   if (!readAllSMTPLines()) goto err;
 
   Serial.println("Upgrading connection to TLS");
-  if ((ret=client.startTLS()) <= 0) {
+  if ((ret = client.startTLS()) <= 0) {
     Serial.printf("Upgrade connection failed: err %d\n", ret);
     goto err;
   }
@@ -142,7 +142,7 @@ static bool readAllSMTPLines() {
   // of a NetworkClientSecure read; as it is non
   // blocking.
   const unsigned long timeout = 15 * 1000;
-  unsigned long start = millis(); // the timeout is for the entire CMD block response; not per character/line.
+  unsigned long start = millis();  // the timeout is for the entire CMD block response; not per character/line.
   while (1) {
     while ((i = client.available()) == 0 && millis() - start < timeout) {
       /* .. wait */

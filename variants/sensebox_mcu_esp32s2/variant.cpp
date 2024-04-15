@@ -28,12 +28,11 @@
 
 extern "C" {
 
-// Initialize variant/board, called before setup()
-void initVariant(void)
-{
+  // Initialize variant/board, called before setup()
+  void initVariant(void) {
     //enable IO Pins by default
     pinMode(IO_ENABLE, OUTPUT);
-    digitalWrite(IO_ENABLE,LOW);
+    digitalWrite(IO_ENABLE, LOW);
 
     //reset RGB
     pinMode(PIN_NEOPIXEL, OUTPUT);
@@ -50,6 +49,5 @@ void initVariant(void)
     //enable PD-Sensor by default
     pinMode(PD_ENABLE, OUTPUT);
     digitalWrite(PD_ENABLE, HIGH);
-
-}
+  }
 }

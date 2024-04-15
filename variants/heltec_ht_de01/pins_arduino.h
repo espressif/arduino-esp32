@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define HT_DE01	true
+#define HT_DE01 true
 
 
 static const uint8_t LED_BUILTIN = 35;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
 
 static const uint8_t KEY_BUILTIN = 0;
@@ -60,7 +60,7 @@ static const uint8_t T13 = 13;
 static const uint8_t T14 = 14;
 
 static const uint8_t Vext = 45;
-static const uint8_t LED  = 18;
+static const uint8_t LED = 18;
 static const uint8_t RST_EINK = 6;
 static const uint8_t BUSY_EINK = 7;
 static const uint8_t CLK_EINK = 3;

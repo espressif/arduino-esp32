@@ -1,4 +1,4 @@
- /*
+/*
     WiFiProv.h - Base class for provisioning support
     All right reserved.
 
@@ -26,32 +26,31 @@
 #include "wifi_provisioning/manager.h"
 //Select the scheme using which you want to provision
 typedef enum {
-    WIFI_PROV_SCHEME_SOFTAP,
+  WIFI_PROV_SCHEME_SOFTAP,
 #if CONFIG_BLUEDROID_ENABLED
-    WIFI_PROV_SCHEME_BLE,
+  WIFI_PROV_SCHEME_BLE,
 #endif
-    WIFI_PROV_SCHEME_MAX
+  WIFI_PROV_SCHEME_MAX
 } prov_scheme_t;
 
 typedef enum {
-    WIFI_PROV_SCHEME_HANDLER_NONE,
+  WIFI_PROV_SCHEME_HANDLER_NONE,
 #if CONFIG_BLUEDROID_ENABLED
-    WIFI_PROV_SCHEME_HANDLER_FREE_BTDM,
-    WIFI_PROV_SCHEME_HANDLER_FREE_BLE,
-    WIFI_PROV_SCHEME_HANDLER_FREE_BT,
+  WIFI_PROV_SCHEME_HANDLER_FREE_BTDM,
+  WIFI_PROV_SCHEME_HANDLER_FREE_BLE,
+  WIFI_PROV_SCHEME_HANDLER_FREE_BT,
 #endif
-    WIFI_PROV_SCHEME_HANDLER_MAX
+  WIFI_PROV_SCHEME_HANDLER_MAX
 } scheme_handler_t;
 
 //Provisioning class
-class WiFiProvClass
-{
-    public:
+class WiFiProvClass {
+public:
 
-        void beginProvision(prov_scheme_t prov_scheme = WIFI_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = WIFI_PROV_SCHEME_HANDLER_NONE,
-                wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char * pop = "abcd1234", const char * service_name = NULL,
-                const char * service_key = NULL, uint8_t *uuid = NULL, bool reset_provisioned = false);
-        void printQR(const char *name, const char *pop, const char *transport);
+  void beginProvision(prov_scheme_t prov_scheme = WIFI_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = WIFI_PROV_SCHEME_HANDLER_NONE,
+                      wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char *pop = "abcd1234", const char *service_name = NULL,
+                      const char *service_key = NULL, uint8_t *uuid = NULL, bool reset_provisioned = false);
+  void printQR(const char *name, const char *pop, const char *transport);
 };
 
 extern WiFiProvClass WiFiProv;

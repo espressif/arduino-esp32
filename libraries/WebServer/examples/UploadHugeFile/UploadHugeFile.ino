@@ -17,8 +17,8 @@ void handleCreateProcess() {
   String path = "/" + server.pathArg(0);
   HTTPRaw& raw = server.raw();
   if (raw.status == RAW_START) {
-    if (SD.exists((char *)path.c_str())) {
-      SD.remove((char *)path.c_str());
+    if (SD.exists((char*)path.c_str())) {
+      SD.remove((char*)path.c_str());
     }
     rawFile = SD.open(path.c_str(), FILE_WRITE);
     Serial.print("Upload: START, filename: ");
@@ -79,10 +79,9 @@ void setup(void) {
   server.onNotFound(handleNotFound);
   server.begin();
   Serial.println("HTTP server started");
-
 }
 
 void loop(void) {
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

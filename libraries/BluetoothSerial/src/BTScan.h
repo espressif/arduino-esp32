@@ -20,23 +20,23 @@ class BTAdvertisedDeviceSet;
 
 class BTScanResults {
 public:
-    virtual ~BTScanResults() = default;
+  virtual ~BTScanResults() = default;
 
-    virtual void                dump(Print *print = nullptr) = 0;
-    virtual int                 getCount() = 0;
-    virtual BTAdvertisedDevice* getDevice(int i) = 0;
+  virtual void dump(Print* print = nullptr) = 0;
+  virtual int getCount() = 0;
+  virtual BTAdvertisedDevice* getDevice(int i) = 0;
 };
 
 class BTScanResultsSet : public BTScanResults {
 public:
-    void                       dump(Print *print = nullptr);
-    int                        getCount();
-    BTAdvertisedDevice*        getDevice(int i);
+  void dump(Print* print = nullptr);
+  int getCount();
+  BTAdvertisedDevice* getDevice(int i);
 
-    bool add(BTAdvertisedDeviceSet advertisedDevice, bool unique = true);
-    void clear();
+  bool add(BTAdvertisedDeviceSet advertisedDevice, bool unique = true);
+  void clear();
 
-    std::map<std::string, BTAdvertisedDeviceSet> m_vectorAdvertisedDevices;
+  std::map<std::string, BTAdvertisedDeviceSet> m_vectorAdvertisedDevices;
 };
 
 #endif

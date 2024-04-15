@@ -40,7 +40,7 @@ void handleLogin() {
     return;
   }
   if (server.hasArg("USERNAME") && server.hasArg("PASSWORD")) {
-    if (server.arg("USERNAME") == "admin" &&  server.arg("PASSWORD") == "admin") {
+    if (server.arg("USERNAME") == "admin" && server.arg("PASSWORD") == "admin") {
       server.sendHeader("Location", "/");
       server.sendHeader("Cache-Control", "no-cache");
       server.sendHeader("Set-Cookie", "ESPSESSIONID=1");
@@ -119,7 +119,7 @@ void setup(void) {
 
   server.onNotFound(handleNotFound);
   //here the list of headers to be recorded
-  const char * headerkeys[] = {"User-Agent", "Cookie"} ;
+  const char* headerkeys[] = { "User-Agent", "Cookie" };
   size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
   //ask server to track these headers
   server.collectHeaders(headerkeys, headerkeyssize);
@@ -129,5 +129,5 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

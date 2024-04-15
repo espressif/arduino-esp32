@@ -22,7 +22,7 @@ void loop() {
   //Read 16 bytes from the slave
   uint8_t bytesReceived = Wire.requestFrom(I2C_DEV_ADDR, 16);
   Serial.printf("requestFrom: %u\n", bytesReceived);
-  if((bool)bytesReceived){ //If received more than zero bytes
+  if ((bool)bytesReceived) {  //If received more than zero bytes
     uint8_t temp[bytesReceived];
     Wire.readBytes(temp, bytesReceived);
     log_print_buf(temp, bytesReceived);

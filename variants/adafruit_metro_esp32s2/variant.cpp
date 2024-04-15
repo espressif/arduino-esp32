@@ -28,10 +28,7 @@
 
 extern "C" {
 
-// Initialize variant/board, called before setup()
-void initVariant(void)
-{
-
-}
-
+  // Initialize variant/board, called before setup()
+  void initVariant(void) {
+  }
 }

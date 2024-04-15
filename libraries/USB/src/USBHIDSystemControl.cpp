@@ -19,42 +19,43 @@
 #include "USBHIDSystemControl.h"
 
 static const uint8_t report_descriptor[] = {
-    TUD_HID_REPORT_DESC_SYSTEM_CONTROL(HID_REPORT_ID(HID_REPORT_ID_SYSTEM_CONTROL))
+  TUD_HID_REPORT_DESC_SYSTEM_CONTROL(HID_REPORT_ID(HID_REPORT_ID_SYSTEM_CONTROL))
 };
 
-USBHIDSystemControl::USBHIDSystemControl(): hid(){
-    static bool initialized = false;
-    if(!initialized){
-        initialized = true;
-        hid.addDevice(this, sizeof(report_descriptor));
-    }
+USBHIDSystemControl::USBHIDSystemControl()
+  : hid() {
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    hid.addDevice(this, sizeof(report_descriptor));
+  }
 }
 
-uint16_t USBHIDSystemControl::_onGetDescriptor(uint8_t* dst){
-    memcpy(dst, report_descriptor, sizeof(report_descriptor));
-    return sizeof(report_descriptor);
+uint16_t USBHIDSystemControl::_onGetDescriptor(uint8_t* dst) {
+  memcpy(dst, report_descriptor, sizeof(report_descriptor));
+  return sizeof(report_descriptor);
 }
 
-void USBHIDSystemControl::begin(){
-    hid.begin();
+void USBHIDSystemControl::begin() {
+  hid.begin();
 }
 
-void USBHIDSystemControl::end(){
+void USBHIDSystemControl::end() {
 }
 
-bool USBHIDSystemControl::send(uint8_t value){
-    return hid.SendReport(HID_REPORT_ID_SYSTEM_CONTROL, &value, 1);
+bool USBHIDSystemControl::send(uint8_t value) {
+  return hid.SendReport(HID_REPORT_ID_SYSTEM_CONTROL, &value, 1);
 }
 
-size_t USBHIDSystemControl::press(uint8_t k){
-    if(k > 3){
-        return 0;
-    }
-    return send(k);
+size_t USBHIDSystemControl::press(uint8_t k) {
+  if (k > 3) {
+    return 0;
+  }
+  return send(k);
 }
 
-size_t USBHIDSystemControl::release(){
-    return send(0);
+size_t USBHIDSystemControl::release() {
+  return send(0);
 }
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */

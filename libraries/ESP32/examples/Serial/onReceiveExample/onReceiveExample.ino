@@ -71,10 +71,10 @@ SemaphoreHandle_t uart_buffer_Mutex = NULL;
 void UART0_RX_CB() {
   // take the mutex, waits forever until loop() finishes its processing
   if (xSemaphoreTake(uart_buffer_Mutex, portMAX_DELAY)) {
-    uint32_t now = millis(); // tracks timeout
+    uint32_t now = millis();  // tracks timeout
     while ((millis() - now) < communicationTimeout_ms) {
       if (UART0.available()) {
-        uart_buffer += (char) UART0.read();
+        uart_buffer += (char)UART0.read();
         now = millis();  // reset the timer
       }
     }
@@ -90,9 +90,9 @@ void setup() {
 
   // creates a mutex object to control access to uart_buffer
   uart_buffer_Mutex = xSemaphoreCreateMutex();
-  if(uart_buffer_Mutex == NULL) {
+  if (uart_buffer_Mutex == NULL) {
     log_e("Error creating Mutex. Sketch will fail.");
-    while(true) {
+    while (true) {
       UART0.println("Mutex error (NULL). Program halted.");
       delay(2000);
     }

@@ -5,7 +5,7 @@
 #include <Ticker.h>
 #include "html.h"
 
-#define SSID_FORMAT "ESP32-%06lX"   // 12 chars total
+#define SSID_FORMAT "ESP32-%06lX"  // 12 chars total
 //#define PASSWORD "test123456"    // generate if remarked
 
 WebServer server(80);
@@ -15,8 +15,8 @@ uint8_t otaDone = 0;
 const char* alphanum = "0123456789!@#$%^&*abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 String generatePass(uint8_t str_len) {
   String buff;
-  for(int i = 0; i < str_len; i++)
-    buff += alphanum[random(strlen(alphanum)-1)];
+  for (int i = 0; i < str_len; i++)
+    buff += alphanum[random(strlen(alphanum) - 1)];
   return buff;
 }
 
@@ -31,7 +31,7 @@ void apMode() {
   snprintf(passwd, 11, generatePass(10).c_str());
 #endif
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(ssid, passwd); // Set up the SoftAP
+  WiFi.softAP(ssid, passwd);  // Set up the SoftAP
   MDNS.begin("esp32");
   Serial.printf("AP: %s, PASS: %s\n", ssid, passwd);
 }
@@ -42,7 +42,7 @@ void handleUpdateEnd() {
     server.send(502, "text/plain", Update.errorString());
   } else {
     server.sendHeader("Refresh", "10");
-    server.sendHeader("Location","/");
+    server.sendHeader("Location", "/");
     server.send(307);
     ESP.restart();
   }
@@ -75,12 +75,20 @@ void handleUpdate() {
 }
 
 void webServerInit() {
-  server.on("/update", HTTP_POST, [](){handleUpdateEnd();}, [](){handleUpdate();});
-  server.on("/favicon.ico", HTTP_GET, [](){
-     server.sendHeader("Content-Encoding", "gzip");
-     server.send_P(200, "image/x-icon", favicon_ico_gz, favicon_ico_gz_len);
+  server.on(
+    "/update", HTTP_POST, []() {
+      handleUpdateEnd();
+    },
+    []() {
+      handleUpdate();
+    });
+  server.on("/favicon.ico", HTTP_GET, []() {
+    server.sendHeader("Content-Encoding", "gzip");
+    server.send_P(200, "image/x-icon", favicon_ico_gz, favicon_ico_gz_len);
   });
-  server.onNotFound([]() {server.send(200, "text/html", indexHtml);});
+  server.onNotFound([]() {
+    server.send(200, "text/html", indexHtml);
+  });
   server.begin();
   Serial.printf("Web Server ready at http://esp32.local or http://%s\n", WiFi.softAPIP().toString().c_str());
 }

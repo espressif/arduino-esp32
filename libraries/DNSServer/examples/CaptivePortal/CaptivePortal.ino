@@ -46,7 +46,9 @@ void setup() {
   server.on("/", handleRoot);
 
   // serve portal page
-  server.on("/portal",[](){server.send(200, "text/html", responsePortal);});
+  server.on("/portal", []() {
+    server.send(200, "text/html", responsePortal);
+  });
 
   // all unknown pages are redirected to captive portal
   server.onNotFound(handleNotFound);
@@ -55,5 +57,5 @@ void setup() {
 
 void loop() {
   server.handleClient();
-  delay(5);   // give CPU some idle time
+  delay(5);  // give CPU some idle time
 }

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 static const uint8_t LED_BUILTIN = 4;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t RGB_R_BUILTIN = 27;
@@ -19,10 +19,10 @@ static const uint8_t RX = 3;
 static const uint8_t SDA = 23;
 static const uint8_t SCL = 19;
 
-static const uint8_t SS    = 5;
-static const uint8_t MOSI  = 16;
-static const uint8_t MISO  = 17;
-static const uint8_t SCK   = 18;
+static const uint8_t SS = 5;
+static const uint8_t MOSI = 16;
+static const uint8_t MISO = 17;
+static const uint8_t SCK = 18;
 
 static const uint8_t A0 = 36;
 static const uint8_t A1 = 39;

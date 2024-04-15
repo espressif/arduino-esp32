@@ -26,7 +26,7 @@ limitations under the License.
 // on top of each other to form a spectrogram showing how those frequencies
 // changed over time.
 class FeatureProvider {
- public:
+public:
   // Create the provider, and bind it to an area of memory. This memory should
   // remain accessible for the lifetime of the provider object, since subsequent
   // calls will fill it with feature data. The provider does no memory
@@ -39,7 +39,7 @@ class FeatureProvider {
   TfLiteStatus PopulateFeatureData(int32_t last_time_in_ms, int32_t time_in_ms,
                                    int* how_many_new_slices);
 
- private:
+private:
   int feature_size_;
   int8_t* feature_data_;
   // Make sure we don't try to use cached information if this is the first call

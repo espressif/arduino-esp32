@@ -17,7 +17,7 @@
 
 // Open the Serial Monitor with testing baud start typing and sending characters
 void setup() {
-  Serial.begin(0); // it will try to detect the baud rate for 20 seconds
+  Serial.begin(0);  // it will try to detect the baud rate for 20 seconds
 
   Serial.print("\n==>The baud rate is ");
   Serial.println(Serial.baudRate());
@@ -31,7 +31,7 @@ void setup() {
     delay(1000);
     log_e("Baud rate detection failed.");
   }
- }
+}
 
 void loop() {
 }

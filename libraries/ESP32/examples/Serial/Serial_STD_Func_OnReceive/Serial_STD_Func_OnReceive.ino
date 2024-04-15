@@ -19,15 +19,15 @@
 // This example shall use UART1 or UART2 for testing and UART0 for console messages
 // If UART0 is used for testing, it is necessary to manually send data to it, using the Serial Monitor/Terminal
 // In case that USB CDC is available, it may be used as console for messages.
-#define TEST_UART 1     // Serial# (0, 1 or 2) will be used for the loopback
-#define RXPIN 4         // GPIO 4 => RX for Serial1 or Serial2
-#define TXPIN 5         // GPIO 5 => TX for Serial1 or Serial2
+#define TEST_UART 1  // Serial# (0, 1 or 2) will be used for the loopback
+#define RXPIN 4      // GPIO 4 => RX for Serial1 or Serial2
+#define TXPIN 5      // GPIO 5 => TX for Serial1 or Serial2
 
 // declare testingSerial (as reference) related to TEST_UART number defined above (only for Serial1 and Serial2)
 #if SOC_UART_NUM > 1 && TEST_UART == 1
-  HardwareSerial &testingSerial = Serial1;
+HardwareSerial &testingSerial = Serial1;
 #elif SOC_UART_NUM > 2 && TEST_UART == 2
-  HardwareSerial &testingSerial = Serial2;
+HardwareSerial &testingSerial = Serial2;
 #endif
 
 // General callback function for any UART -- used with a lambda std::function within HardwareSerial::onReceive()
@@ -55,7 +55,7 @@ void processOnReceiving(HardwareSerial &mySerial) {
   Serial.printf("Received %d bytes\n", mySerial.available());
   Serial.printf("First byte is '%c' [0x%02x]\n", mySerial.peek(), mySerial.peek());
   uint8_t charPerLine = 0;
-  while(mySerial.available()) {
+  while (mySerial.available()) {
     char c = mySerial.read();
     Serial.printf("'%c' [0x%02x] ", c, c);
     if (++charPerLine == 10) {
@@ -72,7 +72,7 @@ void setup() {
   // when data is received from UART0, it will call the general function
   // passing Serial0 as parameter for processing
 #if TEST_UART == 0
-  Serial0.begin(115200); // keeps default GPIOs
+  Serial0.begin(115200);  // keeps default GPIOs
   Serial0.onReceive([]() {
     processOnReceiving(Serial0);
   });
@@ -99,14 +99,13 @@ void setup() {
   Serial.printf("\nSend bytes to UART%d in order to\n", TEST_UART);
   Serial.println("see a single processing function display information about");
   Serial.println("the received data.\n");
-
 }
 
 void loop() {
   // All done by the UART callback functions
   // just write a random number of bytes into the testing UART
   char serial_data[24];
-  size_t len = random(sizeof(serial_data) - 1) + 1; // at least 1 byte will be sent
+  size_t len = random(sizeof(serial_data) - 1) + 1;  // at least 1 byte will be sent
   for (uint8_t i = 0; i < len; i++) serial_data[i] = 'A' + i;
 
 #if TEST_UART > 0
