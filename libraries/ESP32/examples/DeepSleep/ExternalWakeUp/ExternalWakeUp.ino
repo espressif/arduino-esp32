@@ -61,7 +61,7 @@ void setup(){
   We set our ESP32 to wake up for an external trigger.
   There are two types for ESP32, ext0 and ext1 .
   ext0 uses RTC_IO to wakeup thus requires RTC peripherals
-  to be on while ext1 uses RTC Controller so doesnt need
+  to be on while ext1 uses RTC Controller so does not need
   peripherals to be powered on.
   Note that using internal pullups/pulldowns also requires
   RTC peripherals to be turned on.

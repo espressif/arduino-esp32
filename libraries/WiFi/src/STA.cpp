@@ -205,7 +205,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev)
 void STAClass::_onStaEvent(int32_t event_id, void* event_data){
     arduino_event_t arduino_event;
     arduino_event.event_id = ARDUINO_EVENT_MAX;
-    
+
     if (event_id == WIFI_EVENT_STA_START) {
         log_v("STA Started");
         arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_START;
@@ -419,7 +419,7 @@ bool STAClass::connect(const char* ssid, const char *passphrase, int32_t channel
             memcpy(conf.sta.bssid, bssid, 6);
         }
     }
-    
+
     esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &conf);
     if(err != ESP_OK){
         log_e("STA clear config failed! 0x%x: %s", err, esp_err_to_name(err));
@@ -451,7 +451,7 @@ bool STAClass::connect(const char* ssid, const char *passphrase, int32_t channel
  * @param password const char *     Pointer to the password.
  * @param ca_pem const char*        Pointer to a string with the contents of a  .pem  file with CA cert
  * @param client_crt const char*        Pointer to a string with the contents of a .crt file with client cert
- * @param client_key const char*        Pointer to a string with the contants of a .key file with client key
+ * @param client_key const char*        Pointer to a string with the contents of a .key file with client key
  * @param bssid uint8_t[6]          Optional. BSSID / MAC of AP
  * @param channel                   Optional. Channel of AP
  * @param connect                   Optional. call connect

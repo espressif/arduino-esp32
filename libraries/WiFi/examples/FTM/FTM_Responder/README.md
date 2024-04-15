@@ -1,6 +1,6 @@
 # Wi-Fi FTM Responder Arduino Example
 
-This example demonstrates how to use the Fine Timing Measurement (FTM) to calculate the distace from the Access Point and the device. This is calculated by the Wi-Fi Round Trip Time (Wi-Fi RTT) introduced on the [IEEE Std 802.11-2016](https://en.wikipedia.org/wiki/IEEE_802.11mc) standard.
+This example demonstrates how to use the Fine Timing Measurement (FTM) to calculate the distance from the Access Point and the device. This is calculated by the Wi-Fi Round Trip Time (Wi-Fi RTT) introduced on the [IEEE Std 802.11-2016](https://en.wikipedia.org/wiki/IEEE_802.11mc) standard.
 
 This example will simulate the Router with FTM capability.
 

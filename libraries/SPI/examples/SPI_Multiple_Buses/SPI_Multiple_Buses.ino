@@ -4,7 +4,7 @@
  * them are available to use, HSPI and VSPI. Simply using the SPI API 
  * as illustrated in Arduino examples will use VSPI, leaving HSPI unused.
  * 
- * However if we simply initialise two instance of the SPI class for both
+ * However if we simply initialize two instance of the SPI class for both
  * of these buses both can be used. However when just using these the Arduino
  * way only will actually be outputting at a time.
  * 
