@@ -7,8 +7,8 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-static const uint8_t LED_BUILTIN = 38+SOC_GPIO_PIN_COUNT;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+static const uint8_t LED_BUILTIN = 38 + SOC_GPIO_PIN_COUNT;
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 #define RGB_BUILTIN LED_BUILTIN
 #define RGB_BRIGHTNESS 64
@@ -19,10 +19,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 42;
 static const uint8_t SCL = 41;
 
-static const uint8_t SS    = 10;
-static const uint8_t MOSI  = 11;
-static const uint8_t MISO  = 13;
-static const uint8_t SCK   = 12;
+static const uint8_t SS = 10;
+static const uint8_t MOSI = 11;
+static const uint8_t MISO = 13;
+static const uint8_t SCK = 12;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;

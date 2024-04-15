@@ -34,9 +34,9 @@ static const uint8_t DAC2 = 26;
 static const uint8_t ADC1 = 35;
 static const uint8_t ADC2 = 36;
 
-static const uint8_t SS    = 19;
-static const uint8_t MOSI  = 33;
-static const uint8_t MISO  = 23;
-static const uint8_t SCK   = 22;
+static const uint8_t SS = 19;
+static const uint8_t MOSI = 33;
+static const uint8_t MISO = 23;
+static const uint8_t SCK = 22;
 
 #endif /* Pins_Arduino_h */

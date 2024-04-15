@@ -6,7 +6,7 @@
  * Vendor: Wireless-Tag
  * Url: http://www.wireless-tag.com/portfolio/wt32-eth01/
  */
- 
+
 #include <stdint.h>
 
 #define USB_VID 0x303A
@@ -27,11 +27,11 @@ static const uint8_t TX = 42;
 static const uint8_t RX = 1;
 static const uint8_t RTS = 2;
 //TOUCHSCREEN
-static const uint8_t BL_PWM = 45; 		//BACKLIGHT PWM
-static const uint8_t LCD_RESET = 4; 	//LCD RESET, MULTIPLEXED WITH TOUCH RESET
-static const uint8_t LCD_RS = 0; 		//COMMAND/DATA
-static const uint8_t LCD_WR = 47; 		//WRITE CLOCK
-static const uint8_t LCD_TE = 48; 		//FRAME SYNC
+static const uint8_t BL_PWM = 45;    //BACKLIGHT PWM
+static const uint8_t LCD_RESET = 4;  //LCD RESET, MULTIPLEXED WITH TOUCH RESET
+static const uint8_t LCD_RS = 0;     //COMMAND/DATA
+static const uint8_t LCD_WR = 47;    //WRITE CLOCK
+static const uint8_t LCD_TE = 48;    //FRAME SYNC
 static const uint8_t LCD_DB0 = 9;
 static const uint8_t LCD_DB1 = 46;
 static const uint8_t LCD_DB2 = 3;
@@ -54,12 +54,12 @@ static const uint8_t SCL = 5;
 static const uint8_t RST = 4;
 //MICRO SD CARD
 static const uint8_t SD_CS = 41;
-static const uint8_t SD_DI = 40;		//MOSI
-static const uint8_t SD_DO = 38;		//MISO
+static const uint8_t SD_DI = 40;  //MOSI
+static const uint8_t SD_DO = 38;  //MISO
 static const uint8_t SD_CLK = 39;
-static const uint8_t SS    = 41;
-static const uint8_t MOSI  = 40;
-static const uint8_t MISO  = 38;
-static const uint8_t SCK   = 39;
+static const uint8_t SS = 41;
+static const uint8_t MOSI = 40;
+static const uint8_t MISO = 38;
+static const uint8_t SCK = 39;
 
 #endif /* Pins_Arduino_h */

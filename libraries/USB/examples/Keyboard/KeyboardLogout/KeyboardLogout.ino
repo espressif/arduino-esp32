@@ -28,8 +28,8 @@
 #error This ESP32 SoC has no Native USB interface
 #elif ARDUINO_USB_MODE == 1
 #warning This sketch should be used when USB is in OTG mode
-void setup(){}
-void loop(){}
+void setup() {}
+void loop() {}
 #else
 
 #define OSX 0
@@ -43,7 +43,7 @@ USBHIDKeyboard Keyboard;
 // change this to match your platform:
 int platform = OSX;
 
-const int buttonPin = 0;          // input pin for pushbutton
+const int buttonPin = 0;  // input pin for pushbutton
 
 void setup() {
   // make pin 0 an input and turn on the pull-up resistor so it goes high unless

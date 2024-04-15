@@ -128,7 +128,7 @@ Restricted Usage GPIOS
 Some of the GPIO's are used for the external flash and PSRAM. These GPIO's cannot be used:
 
 ====  ===================
-GPIO   Shared Function           
+GPIO   Shared Function
 ====  ===================
 IO26  Connected to PSRAM
 ====  ===================

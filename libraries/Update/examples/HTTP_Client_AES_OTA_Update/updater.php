@@ -42,10 +42,10 @@
 /*********************************************************************************/
 
     if( !$firmware['filename'] || !file_exists($firmware['filename']) ){
-      header('update: 0' );//no update avaliable
+      header('update: 0' );//no update available
       exit;
     }else{
-      header('update: 1' );//update avaliable
+      header('update: 1' );//update available
       header('version: ' . $firmware['version'] );
       if($GetArgs['cmd'] == "download"){
 //Get file type and set it as Content Type

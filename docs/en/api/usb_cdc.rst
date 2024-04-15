@@ -83,7 +83,7 @@ available
 This function will return if there are messages in the queue.
 
 .. code-block:: arduino
-    
+
     int available(void);
 
 The return is the number of bytes available to read.

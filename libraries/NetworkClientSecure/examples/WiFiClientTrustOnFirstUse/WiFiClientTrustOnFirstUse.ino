@@ -7,7 +7,7 @@
    https://medium.com/@munteanu210/ssl-certificates-vs-man-in-the-middle-attacks-3fb7846fa5db
    for some background on this.
 
-   Unfortunatley this means that one needs to hardcode a server
+   Unfortunately this means that one needs to hardcode a server
    public key, certificate or some cryptographically strong hash
    thereoff into the code, to verify that you are indeed talking to
    the right server. This is sometimes somewhat impractical. Especially
@@ -48,8 +48,8 @@
 #define WIFI_PASSWD "your-secret-wifi-password"
 #endif
 
-const char* ssid = WIFI_NETWORK;     // your network SSID (name of wifi network)
-const char* password = WIFI_PASSWD; // your network password
+const char* ssid = WIFI_NETWORK;           // your network SSID (name of wifi network)
+const char* password = WIFI_PASSWD;        // your network password
 const char* server = "www.howsmyssl.com";  // Server to test with.
 
 const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 and GND (pulldown) */
@@ -58,21 +58,22 @@ const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 an
 #include <NetworkClientSecure.h>
 #include <EEPROM.h>
 
-/* Set aside some persistant memory (i.e. memory that is preserved on reboots and
+/* Set aside some persistent memory (i.e. memory that is preserved on reboots and
   power cycling; and will generally survive software updates as well.
 */
 EEPROMClass TOFU("tofu0");
 
-// Utility function; checks if a given buffer is entirly
+// Utility function; checks if a given buffer is entirely
 // with with 0 bytes over its full length. Returns 0 on
-// succes; a non zero value on fail.
+// success; a non zero value on fail.
 //
-static int memcmpzero(unsigned char * ptr, size_t len) {
-  while (len--) if (0xff != *ptr++) return -1;
+static int memcmpzero(unsigned char* ptr, size_t len) {
+  while (len--)
+    if (0xff != *ptr++) return -1;
   return 0;
 };
 
-static void printSHA256(unsigned char * ptr) {
+static void printSHA256(unsigned char* ptr) {
   for (int i = 0; i < 32; i++) Serial.printf("%s%02x", i ? ":" : "", ptr[i]);
   Serial.println("");
 };
@@ -80,7 +81,7 @@ static void printSHA256(unsigned char * ptr) {
 NetworkClientSecure client;
 
 bool get_tofu();
-bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu);
+bool doTOFU_Protected_Connection(uint8_t* fingerprint_tofu);
 
 void setup() {
   bool tofu_reset = false;
@@ -119,7 +120,7 @@ void setup() {
     Serial.print("TOFU pegged to fingerprint: SHA256=");
     printSHA256(fingerprint_tofu);
     Serial.print("Note: You can check this fingerprint by going to the URL\n"
-                   "<https://");
+                 "<https://");
     Serial.print(server);
     Serial.println("> and then click on the lock icon.\n");
   };
@@ -156,7 +157,7 @@ void setup() {
 
 bool get_tofu() {
   Serial.println("\nStarting our insecure connection to server...");
-  client.setInsecure();//skip verification
+  client.setInsecure();  //skip verification
 
   if (!client.connect(server, 443)) {
     Serial.println("Connection failed!");
@@ -190,9 +191,7 @@ bool get_tofu() {
     return false;
   }
   if (
-    (32 != TOFU.writeBytes(0, fingerprint_remote, 32)) ||
-    (!TOFU.commit())
-  ) {
+    (32 != TOFU.writeBytes(0, fingerprint_remote, 32)) || (!TOFU.commit())) {
     Serial.println("Could not write the fingerprint to the EEPROM");
     client.stop();
     return false;
@@ -206,12 +205,12 @@ bool get_tofu() {
   return true;
 };
 
-bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu) {
+bool doTOFU_Protected_Connection(uint8_t* fingerprint_tofu) {
 
   // As we're not using a (CA) certificate to check the
   // connection; but the hash of the peer - we need to initially
   // allow the connection to be set up without the CA check.
-  client.setInsecure();//skip verification
+  client.setInsecure();  //skip verification
 
   if (!client.connect(server, 443)) {
     Serial.println("Connection failed!");
@@ -244,7 +243,8 @@ bool doTOFU_Protected_Connection(uint8_t * fingerprint_tofu) {
                  "when you set up TOFU. So we can now do a GET.\n\n");
 
   client.println("GET /a/check HTTP/1.0");
-  client.print("Host: " ); client.println(server);
+  client.print("Host: ");
+  client.println(server);
   client.println("Connection: close");
   client.println();
 

@@ -5,10 +5,10 @@
 
 #define WIFI_LoRa_32 true
 #define DISPLAY_HEIGHT 64
-#define DISPLAY_WIDTH  128
+#define DISPLAY_WIDTH 128
 
 static const uint8_t LED_BUILTIN = 25;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t KEY_BUILTIN = 0;
@@ -19,10 +19,10 @@ static const uint8_t RX = 3;
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 18;
-static const uint8_t MOSI  = 27;
-static const uint8_t MISO  = 19;
-static const uint8_t SCK   = 5;
+static const uint8_t SS = 18;
+static const uint8_t MOSI = 27;
+static const uint8_t MISO = 19;
+static const uint8_t SCK = 5;
 
 static const uint8_t A0 = 36;
 static const uint8_t A3 = 39;
@@ -55,8 +55,8 @@ static const uint8_t T9 = 32;
 static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
 
-static const uint8_t Vext  = 21;
-static const uint8_t LED  = 25;
+static const uint8_t Vext = 21;
+static const uint8_t LED = 25;
 static const uint8_t RST_OLED = 16;
 static const uint8_t SCL_OLED = 15;
 static const uint8_t SDA_OLED = 4;

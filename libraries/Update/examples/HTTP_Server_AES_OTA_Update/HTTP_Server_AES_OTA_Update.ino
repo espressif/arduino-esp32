@@ -47,17 +47,17 @@ WebServer httpServer(80);
 #define WIFI_MODE_AP
 
 #ifdef WIFI_MODE_AP
-  #include <DNSServer.h>
-  DNSServer dnsServer;
+#include <DNSServer.h>
+DNSServer dnsServer;
 #endif
 
-const char*     host = "esp32-web";
-const char*     ssid = "wifi-ssid";
+const char* host = "esp32-web";
+const char* ssid = "wifi-ssid";
 const char* password = "wifi-password";
 
-const uint8_t OTA_KEY[32] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, \
-                              0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20, \
-                              0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65, \
+const uint8_t OTA_KEY[32] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
+                              0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20,
+                              0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65,
                               0x74, 0x65, 0x73, 0x74, 0x20, 0x6b, 0x65, 0x79 };
 
 /*
@@ -69,15 +69,15 @@ const uint8_t OTA_KEY[32] = {'0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',
 
 //const uint8_t   OTA_KEY[33] = "0123456789 this a simpletest key";
 
-const uint32_t  OTA_ADDRESS = 0x4320; //OTA_ADDRESS value has no effect when OTA_CFG = 0x00
-const uint32_t  OTA_CFG     = 0x0f;
-const uint32_t  OTA_MODE    = U_AES_DECRYPT_AUTO;
+const uint32_t OTA_ADDRESS = 0x4320;  //OTA_ADDRESS value has no effect when OTA_CFG = 0x00
+const uint32_t OTA_CFG = 0x0f;
+const uint32_t OTA_MODE = U_AES_DECRYPT_AUTO;
 
 /*=================================================================*/
 const char* update_path = "update";
 
 static const char UpdatePage_HTML[] PROGMEM =
-R"(<!DOCTYPE html>
+  R"(<!DOCTYPE html>
      <html lang='en'>
      <head>
          <title>Image Upload</title>
@@ -102,11 +102,11 @@ R"(<!DOCTYPE html>
 /*=================================================================*/
 
 void printProgress(size_t progress, size_t size) {
-  static int last_progress=-1;
-  if(size>0){
-    progress = (progress*100)/size;
-    progress = (progress>100 ? 100 : progress); //0-100
-    if( progress != last_progress ){
+  static int last_progress = -1;
+  if (size > 0) {
+    progress = (progress * 100) / size;
+    progress = (progress > 100 ? 100 : progress);  //0-100
+    if (progress != last_progress) {
       Serial.printf("\nProgress: %d%%", progress);
       last_progress = progress;
     }
@@ -114,65 +114,67 @@ void printProgress(size_t progress, size_t size) {
 }
 
 void setupHttpUpdateServer() {
-    //redirecting not found web pages back to update page
-    httpServer.onNotFound( [&]() { //webpage not found
-        httpServer.sendHeader("Location", String("../")+String(update_path) );
-        httpServer.send(302, F("text/html"), "" );
-    });
+  //redirecting not found web pages back to update page
+  httpServer.onNotFound([&]() {  //webpage not found
+    httpServer.sendHeader("Location", String("../") + String(update_path));
+    httpServer.send(302, F("text/html"), "");
+  });
 
-    // handler for the update web page
-    httpServer.on(String("/")+String(update_path), HTTP_GET, [&]() {
-        httpServer.send_P(200, PSTR("text/html"), UpdatePage_HTML);
-    });
+  // handler for the update web page
+  httpServer.on(String("/") + String(update_path), HTTP_GET, [&]() {
+    httpServer.send_P(200, PSTR("text/html"), UpdatePage_HTML);
+  });
 
-    // handler for the update page form POST
-    httpServer.on( String("/")+String(update_path), HTTP_POST, [&]() {
-        // handler when file upload finishes
-        if (Update.hasError()) {
-            httpServer.send(200, F("text/html"), String(F("<META http-equiv=\"refresh\" content=\"5;URL=/\">Update error: ")) + String(Update.errorString()) );
+  // handler for the update page form POST
+  httpServer.on(
+    String("/") + String(update_path), HTTP_POST, [&]() {
+      // handler when file upload finishes
+      if (Update.hasError()) {
+        httpServer.send(200, F("text/html"), String(F("<META http-equiv=\"refresh\" content=\"5;URL=/\">Update error: ")) + String(Update.errorString()));
+      } else {
+        httpServer.client().setNoDelay(true);
+        httpServer.send(200, PSTR("text/html"), String(F("<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...")));
+        delay(100);
+        httpServer.client().stop();
+        ESP.restart();
+      }
+    },
+    [&]() {
+      // handler for the file upload, gets the sketch bytes, and writes
+      // them through the Update object
+      HTTPUpload& upload = httpServer.upload();
+      if (upload.status == UPLOAD_FILE_START) {
+        Serial.printf("Update: %s\n", upload.filename.c_str());
+        if (upload.name == "filesystem") {
+          if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {  //start with max available size
+            Update.printError(Serial);
+          }
         } else {
-            httpServer.client().setNoDelay(true);
-            httpServer.send(200, PSTR("text/html"), String(F("<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...")) );
-            delay(100);
-            httpServer.client().stop();
-            ESP.restart();
+          uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+          if (!Update.begin(maxSketchSpace, U_FLASH)) {  //start with max available size
+            Update.printError(Serial);
+          }
         }
-    }, [&]() {
-        // handler for the file upload, get's the sketch bytes, and writes
-        // them through the Update object
-        HTTPUpload& upload = httpServer.upload();
-        if (upload.status == UPLOAD_FILE_START) {
-            Serial.printf("Update: %s\n", upload.filename.c_str());
-            if (upload.name == "filesystem") {
-                if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {//start with max available size
-                    Update.printError(Serial);
-                }
-            } else {
-                uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-                if (!Update.begin(maxSketchSpace, U_FLASH)) {//start with max available size
-                    Update.printError(Serial);
-                }
-            }
-        } else if ( upload.status == UPLOAD_FILE_ABORTED || Update.hasError() ) {
-            if(upload.status == UPLOAD_FILE_ABORTED){
-                if(!Update.end(false)){
-                    Update.printError(Serial);
-                }
-                Serial.println("Update was aborted");
-            }
-        } else if (upload.status == UPLOAD_FILE_WRITE) {
-            Serial.printf(".");
-            if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-                Update.printError(Serial);
-            }
-        } else if (upload.status == UPLOAD_FILE_END) {
-            if (Update.end(true)) { //true to set the size to the current progress
-                Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-            } else {
-                Update.printError(Serial);
-            }
+      } else if (upload.status == UPLOAD_FILE_ABORTED || Update.hasError()) {
+        if (upload.status == UPLOAD_FILE_ABORTED) {
+          if (!Update.end(false)) {
+            Update.printError(Serial);
+          }
+          Serial.println("Update was aborted");
         }
-        delay(0);
+      } else if (upload.status == UPLOAD_FILE_WRITE) {
+        Serial.printf(".");
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+          Update.printError(Serial);
+        }
+      } else if (upload.status == UPLOAD_FILE_END) {
+        if (Update.end(true)) {  //true to set the size to the current progress
+          Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        } else {
+          Update.printError(Serial);
+        }
+      }
+      delay(0);
     });
 
   Update.onProgress(printProgress);
@@ -181,55 +183,55 @@ void setupHttpUpdateServer() {
 /*=================================================================*/
 
 void setup(void) {
-    Serial.begin(115200);
-    Serial.println();
-    Serial.println("Booting Sketch...");
-    WiFi.mode(WIFI_AP_STA);
+  Serial.begin(115200);
+  Serial.println();
+  Serial.println("Booting Sketch...");
+  WiFi.mode(WIFI_AP_STA);
 #ifdef WIFI_MODE_AP
-    WiFi.softAP(ssid, password);
-    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-    dnsServer.start(53, "*", WiFi.softAPIP() ); //if DNS started with "*" for domain name, it will reply with provided IP to all DNS request
-    Serial.printf("Wifi AP started, IP address: %s\n", WiFi.softAPIP().toString().c_str() );
-    Serial.printf("You can connect to ESP32 AP use:-\n    ssid: %s\npassword: %s\n\n", ssid, password);
+  WiFi.softAP(ssid, password);
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  dnsServer.start(53, "*", WiFi.softAPIP());  //if DNS started with "*" for domain name, it will reply with provided IP to all DNS request
+  Serial.printf("Wifi AP started, IP address: %s\n", WiFi.softAPIP().toString().c_str());
+  Serial.printf("You can connect to ESP32 AP use:-\n    ssid: %s\npassword: %s\n\n", ssid, password);
 #else
-    WiFi.begin(ssid, password);
-    if(WiFi.waitForConnectResult() != WL_CONNECTED){
-        Serial.println("WiFi failed, retrying.");
+  WiFi.begin(ssid, password);
+  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.println("WiFi failed, retrying.");
+  }
+  int i = 0;
+  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.print(".");
+    if ((++i % 100) == 0) {
+      Serial.println();
     }
-    int i = 0;
-    while (WiFi.waitForConnectResult() != WL_CONNECTED){
-        Serial.print(".");
-        if( (++i % 100) == 0){
-            Serial.println();
-        }
-        delay(100);
-    }
-    Serial.printf("Connected to Wifi\nLocal IP: %s\n", WiFi.localIP().toString().c_str());
+    delay(100);
+  }
+  Serial.printf("Connected to Wifi\nLocal IP: %s\n", WiFi.localIP().toString().c_str());
 #endif
 
-    if( MDNS.begin(host) ) {
-        Serial.println("mDNS responder started");
-    }
+  if (MDNS.begin(host)) {
+    Serial.println("mDNS responder started");
+  }
 
-    setupHttpUpdateServer();
+  setupHttpUpdateServer();
 
-    if( Update.setupCrypt(OTA_KEY, OTA_ADDRESS, OTA_CFG, OTA_MODE)){
-        Serial.println("Upload Decryption Ready");
-    }
+  if (Update.setupCrypt(OTA_KEY, OTA_ADDRESS, OTA_CFG, OTA_MODE)) {
+    Serial.println("Upload Decryption Ready");
+  }
 
-    httpServer.begin();
+  httpServer.begin();
 
-    MDNS.addService("http", "tcp", 80);
+  MDNS.addService("http", "tcp", 80);
 #ifdef WIFI_MODE_AP
-    Serial.printf("HTTPUpdateServer ready with Captive DNS!\nOpen http://anyname.xyz/%s in your browser\n", update_path);
+  Serial.printf("HTTPUpdateServer ready with Captive DNS!\nOpen http://anyname.xyz/%s in your browser\n", update_path);
 #else
-    Serial.printf("HTTPUpdateServer ready!\nOpen http://%s.local/%s in your browser\n", host, update_path);
+  Serial.printf("HTTPUpdateServer ready!\nOpen http://%s.local/%s in your browser\n", host, update_path);
 #endif
 }
 
 void loop(void) {
-    httpServer.handleClient();
+  httpServer.handleClient();
 #ifdef WIFI_MODE_AP
-    dnsServer.processNextRequest(); //DNS captive portal for easy access to this device webserver
+  dnsServer.processNextRequest();  //DNS captive portal for easy access to this device webserver
 #endif
 }

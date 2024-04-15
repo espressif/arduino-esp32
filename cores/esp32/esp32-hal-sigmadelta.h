@@ -16,10 +16,10 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-//freq 1220-312500 duty 0-255
-bool    sigmaDeltaAttach(uint8_t pin, uint32_t freq);
-bool    sigmaDeltaWrite(uint8_t pin, uint8_t duty);
-bool    sigmaDeltaDetach(uint8_t pin);
+  //freq 1220-312500 duty 0-255
+  bool sigmaDeltaAttach(uint8_t pin, uint32_t freq);
+  bool sigmaDeltaWrite(uint8_t pin, uint8_t duty);
+  bool sigmaDeltaDetach(uint8_t pin);
 
 #ifdef __cplusplus
 }

@@ -20,9 +20,9 @@
 #define chip_report_printf log_printf
 
 #define printMemCapsInfo(caps) _printMemCapsInfo(MALLOC_CAP_##caps, #caps)
-#define b2kb(b) ((float)b/1024.0)
-#define b2mb(b) ((float)b/(1024.0*1024.0))
-static void _printMemCapsInfo(uint32_t caps, const char * caps_str){
+#define b2kb(b) ((float)b / 1024.0)
+#define b2mb(b) ((float)b / (1024.0 * 1024.0))
+static void _printMemCapsInfo(uint32_t caps, const char* caps_str) {
   multi_heap_info_t info;
   size_t total = heap_caps_get_total_size(caps);
   heap_caps_get_info(&info, caps);
@@ -35,17 +35,17 @@ static void _printMemCapsInfo(uint32_t caps, const char * caps_str){
   chip_report_printf("  Largest Free Block: %8u B (%6.1f KB)\n", info.largest_free_block, b2kb(info.largest_free_block));
 }
 
-static void printPkgVersion(void){
+static void printPkgVersion(void) {
   chip_report_printf("  Package           : ");
 #if CONFIG_IDF_TARGET_ESP32
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
-  switch(pkg_ver){
+  switch (pkg_ver) {
     case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3: chip_report_printf("D0WD-R2-V3"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6  : chip_report_printf("D0WD-Q6"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5  : chip_report_printf("D0WD-Q5"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5  : chip_report_printf("D2WD-Q5"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH   : chip_report_printf("U4WD-H"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4  : chip_report_printf("PICO-D4"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6: chip_report_printf("D0WD-Q6"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5: chip_report_printf("D0WD-Q5"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5: chip_report_printf("D2WD-Q5"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH: chip_report_printf("U4WD-H"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4: chip_report_printf("PICO-D4"); break;
     case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302: chip_report_printf("PICO-V3-02"); break;
   }
 #elif CONFIG_IDF_TARGET_ESP32S2
@@ -70,13 +70,13 @@ static void printPkgVersion(void){
   chip_report_printf("\n");
 }
 
-static void printChipInfo(void){
+static void printChipInfo(void) {
   esp_chip_info_t info;
   esp_chip_info(&info);
   chip_report_printf("Chip Info:\n");
   chip_report_printf("------------------------------------------\n");
   chip_report_printf("  Model             : ");
-  switch(info.model){
+  switch (info.model) {
     case CHIP_ESP32: chip_report_printf("ESP32\n"); break;
     case CHIP_ESP32S2: chip_report_printf("ESP32-S2\n"); break;
     case CHIP_ESP32S3: chip_report_printf("ESP32-S3\n"); break;
@@ -88,7 +88,7 @@ static void printChipInfo(void){
   }
   printPkgVersion();
   chip_report_printf("  Revision          : ");
-  if(info.revision > 0xFF){
+  if (info.revision > 0xFF) {
     chip_report_printf("%d.%d\n", info.revision >> 8, info.revision & 0xFF);
   } else {
     chip_report_printf("%d\n", info.revision);
@@ -97,26 +97,26 @@ static void printChipInfo(void){
   rtc_cpu_freq_config_t conf;
   rtc_clk_cpu_freq_get_config(&conf);
   chip_report_printf("  Frequency         : %lu MHz\n", conf.freq_mhz);
-  chip_report_printf("  Embedded Flash    : %s\n", (info.features & CHIP_FEATURE_EMB_FLASH)?"Yes":"No");
-  chip_report_printf("  Embedded PSRAM    : %s\n", (info.features & CHIP_FEATURE_EMB_PSRAM)?"Yes":"No");
-  chip_report_printf("  2.4GHz WiFi       : %s\n", (info.features & CHIP_FEATURE_WIFI_BGN)?"Yes":"No");
-  chip_report_printf("  Classic BT        : %s\n", (info.features & CHIP_FEATURE_BT)?"Yes":"No");
-  chip_report_printf("  BT Low Energy     : %s\n", (info.features & CHIP_FEATURE_BLE)?"Yes":"No");
-  chip_report_printf("  IEEE 802.15.4     : %s\n", (info.features & CHIP_FEATURE_IEEE802154)?"Yes":"No");
+  chip_report_printf("  Embedded Flash    : %s\n", (info.features & CHIP_FEATURE_EMB_FLASH) ? "Yes" : "No");
+  chip_report_printf("  Embedded PSRAM    : %s\n", (info.features & CHIP_FEATURE_EMB_PSRAM) ? "Yes" : "No");
+  chip_report_printf("  2.4GHz WiFi       : %s\n", (info.features & CHIP_FEATURE_WIFI_BGN) ? "Yes" : "No");
+  chip_report_printf("  Classic BT        : %s\n", (info.features & CHIP_FEATURE_BT) ? "Yes" : "No");
+  chip_report_printf("  BT Low Energy     : %s\n", (info.features & CHIP_FEATURE_BLE) ? "Yes" : "No");
+  chip_report_printf("  IEEE 802.15.4     : %s\n", (info.features & CHIP_FEATURE_IEEE802154) ? "Yes" : "No");
 }
 
-static void printFlashInfo(void){
+static void printFlashInfo(void) {
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-  #define ESP_FLASH_IMAGE_BASE 0x1000
+#define ESP_FLASH_IMAGE_BASE 0x1000
 #else
-  #define ESP_FLASH_IMAGE_BASE 0x0000
+#define ESP_FLASH_IMAGE_BASE 0x0000
 #endif
 // REG_SPI_BASE is not defined for S3/C3 ??
 #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
-  #ifndef REG_SPI_BASE
-  #define REG_SPI_BASE(i)     (DR_REG_SPI1_BASE + (((i)>1) ? (((i)* 0x1000) + 0x20000) : (((~(i)) & 1)* 0x1000 )))
-  #endif // REG_SPI_BASE
-#endif // TARGET
+#ifndef REG_SPI_BASE
+#define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i)*0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
+#endif  // REG_SPI_BASE
+#endif  // TARGET
 
   chip_report_printf("Flash Info:\n");
   chip_report_printf("------------------------------------------\n");
@@ -127,9 +127,9 @@ static void printFlashInfo(void){
   chip_report_printf("  Page Size         : %8lu B (%6.1f KB)\n", g_rom_flashchip.page_size, b2kb(g_rom_flashchip.page_size));
   esp_image_header_t fhdr;
   esp_flash_read(esp_flash_default_chip, (void*)&fhdr, ESP_FLASH_IMAGE_BASE, sizeof(esp_image_header_t));
-  if(fhdr.magic == ESP_IMAGE_HEADER_MAGIC) {
+  if (fhdr.magic == ESP_IMAGE_HEADER_MAGIC) {
     uint32_t f_freq = 0;
-    switch(fhdr.spi_speed) {
+    switch (fhdr.spi_speed) {
 #if CONFIG_IDF_TARGET_ESP32H2
       case 0x0: f_freq = 32; break;
       case 0x2: f_freq = 16; break;
@@ -155,26 +155,26 @@ static void printFlashInfo(void){
   chip_report_printf("DIO\n");
 #elif CONFIG_ESPTOOLPY_FLASHMODE_DOUT
   chip_report_printf("DOUT\n");
-#endif 
+#endif
 }
 
-static void printPartitionsInfo(void){
+static void printPartitionsInfo(void) {
   chip_report_printf("Partitions Info:\n");
   chip_report_printf("------------------------------------------\n");
   esp_partition_iterator_t iterator = esp_partition_find(ESP_PARTITION_TYPE_ANY, ESP_PARTITION_SUBTYPE_ANY, NULL);
-  if(iterator != NULL){
+  if (iterator != NULL) {
     esp_partition_iterator_t it = iterator;
-    while(it != NULL){
+    while (it != NULL) {
       const esp_partition_t* partition = esp_partition_get(it);
-      if(partition){
+      if (partition) {
         chip_report_printf("  %17s : addr: 0x%08X, size: %7.1f KB", partition->label, partition->address, b2kb(partition->size));
-        if(partition->type == ESP_PARTITION_TYPE_APP){
+        if (partition->type == ESP_PARTITION_TYPE_APP) {
           chip_report_printf(", type:  APP");
-          if(partition->subtype == 0){
+          if (partition->subtype == 0) {
             chip_report_printf(", subtype: FACTORY");
-          } else if(partition->subtype >= 0x10 && partition->subtype < 0x20){
+          } else if (partition->subtype >= 0x10 && partition->subtype < 0x20) {
             chip_report_printf(", subtype: OTA_%lu", partition->subtype - 0x10);
-          } else if(partition->subtype == 0x20){
+          } else if (partition->subtype == 0x20) {
             chip_report_printf(", subtype: TEST");
           } else {
             chip_report_printf(", subtype: 0x%02X", partition->subtype);
@@ -182,7 +182,7 @@ static void printPartitionsInfo(void){
         } else {
           chip_report_printf(", type: DATA");
           chip_report_printf(", subtype: ");
-          switch(partition->subtype){
+          switch (partition->subtype) {
             case ESP_PARTITION_SUBTYPE_DATA_OTA: chip_report_printf("OTA"); break;
             case ESP_PARTITION_SUBTYPE_DATA_PHY: chip_report_printf("PHY"); break;
             case ESP_PARTITION_SUBTYPE_DATA_NVS: chip_report_printf("NVS"); break;
@@ -193,6 +193,7 @@ static void printPartitionsInfo(void){
             case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD: chip_report_printf("ESPHTTPD"); break;
             case ESP_PARTITION_SUBTYPE_DATA_FAT: chip_report_printf("FAT"); break;
             case ESP_PARTITION_SUBTYPE_DATA_SPIFFS: chip_report_printf("SPIFFS"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_LITTLEFS: chip_report_printf("LITTLEFS"); break;
             default: chip_report_printf("0x%02X", partition->subtype); break;
           }
         }
@@ -204,7 +205,7 @@ static void printPartitionsInfo(void){
   }
 }
 
-static void printSoftwareInfo(void){
+static void printSoftwareInfo(void) {
   chip_report_printf("Software Info:\n");
   chip_report_printf("------------------------------------------\n");
   chip_report_printf("  Compile Date/Time : %s %s\n", __DATE__, __TIME__);
@@ -215,7 +216,7 @@ static void printSoftwareInfo(void){
   chip_report_printf("  Arduino Version   : %s\n", ESP_ARDUINO_VERSION_STR);
 }
 
-static void printBoardInfo(void){
+static void printBoardInfo(void) {
   chip_report_printf("Board Info:\n");
   chip_report_printf("------------------------------------------\n");
   chip_report_printf("  Arduino Board     : %s\n", ARDUINO_BOARD);
@@ -239,7 +240,7 @@ static void printBoardInfo(void){
 #endif /* ARDUINO_FQBN */
 }
 
-static void printPerimanInfo(void){
+static void printPerimanInfo(void) {
   chip_report_printf("GPIO Info:\n");
   chip_report_printf("------------------------------------------\n");
 #if defined(BOARD_HAS_PIN_REMAP)
@@ -248,18 +249,18 @@ static void printPerimanInfo(void){
   chip_report_printf("  GPIO : BUS_TYPE[bus/unit][chan]\n");
 #endif
   chip_report_printf("  --------------------------------------  \n");
-  for(uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++){
-    if(!perimanPinIsValid(i)){
-      continue;//invalid pin
+  for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
+    if (!perimanPinIsValid(i)) {
+      continue;  //invalid pin
     }
     peripheral_bus_type_t type = perimanGetPinBusType(i);
-    if(type == ESP32_BUS_TYPE_INIT){
-      continue;//unused pin
+    if (type == ESP32_BUS_TYPE_INIT) {
+      continue;  //unused pin
     }
 #if defined(BOARD_HAS_PIN_REMAP)
     int dpin = gpioNumberToDigitalPin(i);
     if (dpin < 0) {
-      continue;//pin is not exported
+      continue;  //pin is not exported
     } else {
       chip_report_printf("  D%-3d|%4u : ", dpin, i);
     }
@@ -267,37 +268,36 @@ static void printPerimanInfo(void){
     chip_report_printf("  %4u : ", i);
 #endif
     const char* extra_type = perimanGetPinBusExtraType(i);
-    if(extra_type){
+    if (extra_type) {
       chip_report_printf("%s", extra_type);
-    }
-    else {
+    } else {
       chip_report_printf("%s", perimanGetTypeName(type));
     }
     int8_t bus_number = perimanGetPinBusNum(i);
-    if (bus_number != -1){
+    if (bus_number != -1) {
       chip_report_printf("[%u]", bus_number);
     }
     int8_t bus_channel = perimanGetPinBusChannel(i);
-    if (bus_channel != -1){
+    if (bus_channel != -1) {
       chip_report_printf("[%u]", bus_channel);
     }
     chip_report_printf("\n");
   }
 }
 
-void printBeforeSetupInfo(void){
+void printBeforeSetupInfo(void) {
 #if ARDUINO_USB_CDC_ON_BOOT
   Serial.begin(0);
   Serial.setDebugOutput(true);
   uint8_t t = 0;
-  while(!Serial && (t++ < 200)) delay(10); //wait up to 2 seconds for the IDE to connect
+  while (!Serial && (t++ < 200)) delay(10);  //wait up to 2 seconds for the IDE to connect
 #endif
   chip_report_printf("=========== Before Setup Start ===========\n");
   printChipInfo();
   chip_report_printf("------------------------------------------\n");
   printMemCapsInfo(INTERNAL);
   chip_report_printf("------------------------------------------\n");
-  if(psramFound()){
+  if (psramFound()) {
     printMemCapsInfo(SPIRAM);
     chip_report_printf("  Bus Mode          : ");
 #if CONFIG_SPIRAM_MODE_OCT
@@ -315,18 +315,18 @@ void printBeforeSetupInfo(void){
   chip_report_printf("------------------------------------------\n");
   printBoardInfo();
   chip_report_printf("============ Before Setup End ============\n");
-  delay(100); //allow the print to finish
+  delay(100);  //allow the print to finish
 }
 
-void printAfterSetupInfo(void){
+void printAfterSetupInfo(void) {
   chip_report_printf("=========== After Setup Start ============\n");
   printMemCapsInfo(INTERNAL);
   chip_report_printf("------------------------------------------\n");
-  if(psramFound()){
+  if (psramFound()) {
     printMemCapsInfo(SPIRAM);
     chip_report_printf("------------------------------------------\n");
   }
   printPerimanInfo();
   chip_report_printf("============ After Setup End =============\n");
-  delay(20); //allow the print to finish
+  delay(20);  //allow the print to finish
 }

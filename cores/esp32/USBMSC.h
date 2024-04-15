@@ -34,22 +34,21 @@ typedef int32_t (*msc_read_cb)(uint32_t lba, uint32_t offset, void* buffer, uint
 // Process data in buffer to disk's storage and return number of written bytes
 typedef int32_t (*msc_write_cb)(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize);
 
-class USBMSC
-{
+class USBMSC {
 public:
-    USBMSC();
-    ~USBMSC();
-    bool begin(uint32_t block_count, uint16_t block_size);
-    void end();
-    void vendorID(const char * vid);//max 8 chars
-    void productID(const char * pid);//max 16 chars
-    void productRevision(const char * ver);//max 4 chars
-    void mediaPresent(bool media_present);
-    void onStartStop(msc_start_stop_cb cb);
-    void onRead(msc_read_cb cb);
-    void onWrite(msc_write_cb cb);
+  USBMSC();
+  ~USBMSC();
+  bool begin(uint32_t block_count, uint16_t block_size);
+  void end();
+  void vendorID(const char* vid);         //max 8 chars
+  void productID(const char* pid);        //max 16 chars
+  void productRevision(const char* ver);  //max 4 chars
+  void mediaPresent(bool media_present);
+  void onStartStop(msc_start_stop_cb cb);
+  void onRead(msc_read_cb cb);
+  void onWrite(msc_write_cb cb);
 private:
-	uint8_t _lun;
+  uint8_t _lun;
 };
 
 #endif /* CONFIG_TINYUSB_MSC_ENABLED */

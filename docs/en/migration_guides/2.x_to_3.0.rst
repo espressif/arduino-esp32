@@ -44,7 +44,7 @@ Removed APIs
 I2S
 ---
 
-The I2S driver has been completely redesigned and refactored to use the new ESP-IDF driver. 
+The I2S driver has been completely redesigned and refactored to use the new ESP-IDF driver.
 For more information about the new API, check :doc:`/api/i2s`.
 
 LEDC
@@ -189,9 +189,13 @@ Changes in APIs
 Functional changes
 ******************
 
+* Default pins for some SoCs have been changed to avoid conflicts with other peripherals:
+  * ESP32's UART1 RX and TX pins are now GPIO26 and GPIO27, respectively;
+  * ESP32's UART2 RX and TX pins are now GPIO4 and GPIO25, respectively;
+  * ESP32-S2's UART1 RX and TX pins are now GPIO4 and GPIO5, respectively.
 * It is now possible to detach UART0 pins by calling ``end()`` with no previous call of ``begin()``.
 * It is now possible to call ``setPins()`` before ``begin()`` or in any order.
-* ``setPins(``) will detach any previous pins that have been changed.
+* ``setPins()`` will detach any previous pins that have been changed.
 * ``begin(baud, rx, tx)`` will detach any previous attached pins.
 * ``setPins()`` or ``begin(baud, rx, tx)`` when called at first, will detach console RX0/TX0, attached in boot.
 * Any pin set as -1 in ``begin()`` or ``setPins()`` won't be changed nor detached.
@@ -206,4 +210,4 @@ Functional changes
 
 * In Arduino (and other frameworks) the method named ``flush()`` is intended to send out the transmit buffer content. ``WiFiClient`` and ``WiFiUDP`` method ``flush()`` won't clear the receive buffer anymore. A new method called ``clear()`` is now used for that. Currently ``flush()`` does nothing in ``WiFiClient``, ``WiFiClientSecure`` and ``WiFiUDP``.
 * ``WiFiServer`` has functions ``accept()`` and ``available()`` with the same functionality. In Arduino, ``available()`` should work differently so it is now deprecated.
-* ``WiFiServer`` had unimplemented write functions inherited from ``Print`` class. These are now removed. Also unimplemented method ``stopAll()`` is removed. The methods were unimplemented because WiFiServer doesn't manage connected WiFiClient objects for print-to-all-clients functionality.
+* ``WiFiServer`` had unimplemented write functions inherited from ``Print`` class. These are now removed. Also unimplemented method ``stopAll()`` is removed. The methods were unimplemented because ``WiFiServer`` doesn't manage connected ``WiFiClient`` objects for print-to-all-clients functionality.

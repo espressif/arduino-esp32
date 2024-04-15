@@ -19,4 +19,4 @@ SDMMC Test
     :language: arduino
 
 
-Complete list of `SD MMC examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/SD_MMC/examples>`_. 
+Complete list of `SD MMC examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/SD_MMC/examples>`_.

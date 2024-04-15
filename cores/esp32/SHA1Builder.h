@@ -22,30 +22,29 @@
 
 #define SHA1_HASH_SIZE 20
 
-class SHA1Builder : public HashBuilder
-{
+class SHA1Builder : public HashBuilder {
 private:
-    uint32_t total[2];             /* number of bytes processed  */
-    uint32_t state[5];             /* intermediate digest state  */
-    unsigned char buffer[64];      /* data block being processed */
-    uint8_t hash[SHA1_HASH_SIZE];  /* SHA-1 result               */
+  uint32_t total[2];            /* number of bytes processed  */
+  uint32_t state[5];            /* intermediate digest state  */
+  unsigned char buffer[64];     /* data block being processed */
+  uint8_t hash[SHA1_HASH_SIZE]; /* SHA-1 result               */
 
-    void process(const uint8_t* data);
+  void process(const uint8_t* data);
 
 public:
-    void begin() override;
+  void begin() override;
 
-    using HashBuilder::add;
-    void add(const uint8_t* data, size_t len) override;
+  using HashBuilder::add;
+  void add(const uint8_t* data, size_t len) override;
 
-    using HashBuilder::addHexString;
-    void addHexString(const char* data) override;
+  using HashBuilder::addHexString;
+  void addHexString(const char* data) override;
 
-    bool addStream(Stream& stream, const size_t maxLen) override;
-    void calculate() override;
-    void getBytes(uint8_t* output) override;
-    void getChars(char* output) override;
-    String toString() override;
+  bool addStream(Stream& stream, const size_t maxLen) override;
+  void calculate() override;
+  void getBytes(uint8_t* output) override;
+  void getChars(char* output) override;
+  String toString() override;
 };
 
 #endif

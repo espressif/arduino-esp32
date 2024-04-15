@@ -4,15 +4,15 @@
 
 uint32_t i = 0;
 
-void onRequest(){
+void onRequest() {
   Wire.print(i++);
   Wire.print(" Packets.");
   Serial.println("onRequest");
 }
 
-void onReceive(int len){
+void onReceive(int len) {
   Serial.printf("onReceive[%d]: ", len);
-  while(Wire.available()){
+  while (Wire.available()) {
     Serial.write(Wire.read());
   }
   Serial.println();
@@ -33,5 +33,4 @@ void setup() {
 }
 
 void loop() {
-
 }
