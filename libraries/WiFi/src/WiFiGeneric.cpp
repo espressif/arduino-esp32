@@ -686,6 +686,7 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
     .channel = channel,
     .frm_count = frm_count,
     .burst_period = burst_period,
+    .use_get_report_api = true
   };
   if(mac != NULL){
     memcpy(ftmi_cfg.resp_mac, mac, 6);
