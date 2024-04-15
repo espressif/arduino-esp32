@@ -1,0 +1,62 @@
+name: Pre-commit check
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+jobs:
+  lint:
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
+    name: Checking if any fixes are needed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Get Python version hash
+        run: |
+          echo "Using $(python -VV)"
+          echo "PY_HASH=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+
+      - name: Restore pre-commit cache
+        uses: actions/cache/restore@v4
+        id: restore-cache
+        with:
+          path: |
+            ~/.cache/pre-commit
+            ~/.cache/pip
+          key: pre-commit|${{ env.PY_HASH }}|${{ hashFiles('.pre-commit-config.yaml', '.github/workflows/pre-commit.yml') }}
+
+      - name: Install python dependencies
+        run: python -m pip install pre-commit docutils
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v42.0.2
+
+      - name: Run pre-commit hooks in changed files
+        run: pre-commit run --color=always --show-diff-on-failure --files ${{ steps.changed-files.outputs.all_changed_files }}
+
+      - name: Save pre-commit cache
+        uses: actions/cache/save@v4
+        if: ${{ always() && steps.restore-cache.outputs.cache-hit != 'true' }}
+        continue-on-error: true
+        with:
+          path: |
+            ~/.cache/pre-commit
+            ~/.cache/pip
+          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
+
+      - name: Push changes using pre-commit-ci-lite
+        uses: pre-commit-ci/lite-action@v1.0.2
+        if: always()
+        with:
+          msg: "ci(pre-commit): Apply automatic fixes"

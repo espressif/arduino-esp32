@@ -1,0 +1,9 @@
+[codespell]
+# Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/spell-check/.codespellrc
+# In the event of a false positive, add the problematic word, in all lowercase, to a comma-separated list here:
+ignore-words-list = ba,licence,ot,dout,als,exten,acount,totaly,pasttime
+skip = ./.git,./.licenses,__pycache__,.clang-format,.codespellrc,.editorconfig,.flake8,.prettierignore,.yamllint.yml,.gitignore,boards.txt,platform.txt,programmers.txt
+builtin = clear,informal,en-GB_to_en-US
+check-filenames =
+check-hidden =
+write-changes =

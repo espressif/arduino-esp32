@@ -1,0 +1,12 @@
+# Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/check-python/.flake8
+# See: https://flake8.pycqa.org/en/latest/user/configuration.html
+# The code style defined in this file is the official standardized style to be used in all Arduino tooling projects and
+# should not be modified.
+
+[flake8]
+doctests = True
+# W503 and W504 are mutually exclusive. PEP 8 recommends line break before.
+ignore = W503,E203
+max-complexity = 10
+max-line-length = 120
+select = E,W,F,C,N
