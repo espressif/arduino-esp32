@@ -34,6 +34,7 @@ repos:
     rev: "22.10.0"
     hooks:
       - id: black
+        types_or: [python]
         args: [--line-length=120] #From the arduino code style. Add as argument rather than creating a new config file.
   - repo: https://github.com/PyCQA/flake8
     rev: "7.0.0"
