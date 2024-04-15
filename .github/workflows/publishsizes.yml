@@ -2,7 +2,7 @@ name: Sizes Results
 
 on:
   workflow_run:
-    workflows: [Sizes Test]
+    workflows: [ESP32 Arduino CI]
     types:
       - completed
 
