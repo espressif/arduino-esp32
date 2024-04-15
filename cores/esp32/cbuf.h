@@ -28,40 +28,38 @@
 #include "freertos/ringbuf.h"
 #include "freertos/semphr.h"
 
-class cbuf
-{
+class cbuf {
 public:
-    cbuf(size_t size);
-    ~cbuf();
+  cbuf(size_t size);
+  ~cbuf();
 
-    size_t resizeAdd(size_t addSize);
-    size_t resize(size_t newSize);
+  size_t resizeAdd(size_t addSize);
+  size_t resize(size_t newSize);
 
-    size_t available() const;
-    size_t size();
-    size_t room() const;
-    bool empty() const;
-    bool full() const;
+  size_t available() const;
+  size_t size();
+  size_t room() const;
+  bool empty() const;
+  bool full() const;
 
-    int peek();
+  int peek();
 
-    int read();
-    size_t read(char* dst, size_t size);
+  int read();
+  size_t read(char* dst, size_t size);
 
-    size_t write(char c);
-    size_t write(const char* src, size_t size);
+  size_t write(char c);
+  size_t write(const char* src, size_t size);
 
-    void flush();
-    size_t remove(size_t size);
+  void flush();
+  size_t remove(size_t size);
 
-    cbuf *next;
-    bool has_peek;
-    uint8_t peek_byte;
+  cbuf* next;
+  bool has_peek;
+  uint8_t peek_byte;
 
 protected:
-    RingbufHandle_t _buf = NULL;
+  RingbufHandle_t _buf = NULL;
 #if !CONFIG_DISABLE_HAL_LOCKS
-    SemaphoreHandle_t _lock = NULL;
+  SemaphoreHandle_t _lock = NULL;
 #endif
-
 };

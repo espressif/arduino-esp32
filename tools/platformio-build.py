@@ -32,9 +32,7 @@ env = DefaultEnvironment()
 platform = env.PioPlatform()
 board_config = env.BoardConfig()
 build_mcu = board_config.get("build.mcu", "").lower()
-partitions_name = board_config.get(
-    "build.partitions", board_config.get("build.arduino.partitions", "")
-)
+partitions_name = board_config.get("build.partitions", board_config.get("build.arduino.partitions", ""))
 
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
 FRAMEWORK_LIBS_DIR = platform.get_package_dir("framework-arduinoespressif32-libs")
@@ -62,11 +60,7 @@ def get_partition_table_csv(variants_dir):
         )
 
     variant_partitions = join(variant_partitions_dir, "partitions.csv")
-    return (
-        variant_partitions
-        if isfile(env.subst(variant_partitions))
-        else join(fwpartitions_dir, "default.csv")
-    )
+    return variant_partitions if isfile(env.subst(variant_partitions)) else join(fwpartitions_dir, "default.csv")
 
 
 def get_bootloader_image(variants_dir):
@@ -98,14 +92,26 @@ def generate_bootloader_image(bootloader_elf):
     bootloader_cmd = env.Command(
         join("$BUILD_DIR", "bootloader.bin"),
         bootloader_elf,
-        env.VerboseAction(" ".join([
-            '"$PYTHONEXE" "$OBJCOPY"',
-            "--chip", build_mcu, "elf2image",
-            "--flash_mode", "${__get_board_flash_mode(__env__)}",
-            "--flash_freq", "${__get_board_f_image(__env__)}",
-            "--flash_size", board_config.get("upload.flash_size", "4MB"),
-            "-o", "$TARGET", "$SOURCES"
-        ]), "Building $TARGET"),
+        env.VerboseAction(
+            " ".join(
+                [
+                    '"$PYTHONEXE" "$OBJCOPY"',
+                    "--chip",
+                    build_mcu,
+                    "elf2image",
+                    "--flash_mode",
+                    "${__get_board_flash_mode(__env__)}",
+                    "--flash_freq",
+                    "${__get_board_f_image(__env__)}",
+                    "--flash_size",
+                    board_config.get("upload.flash_size", "4MB"),
+                    "-o",
+                    "$TARGET",
+                    "$SOURCES",
+                ]
+            ),
+            "Building $TARGET",
+        ),
     )
 
     env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", bootloader_cmd)
@@ -129,10 +135,7 @@ def add_tinyuf2_extra_image():
         print("Warning! The `%s` UF2 bootloader image doesn't exist" % env.subst(tinuf2_image))
         return
 
-    if any(
-        "tinyuf2.bin" == basename(extra_image[1])
-        for extra_image in env.get("FLASH_EXTRA_IMAGES", [])
-    ):
+    if any("tinyuf2.bin" == basename(extra_image[1]) for extra_image in env.get("FLASH_EXTRA_IMAGES", [])):
         print("Warning! An extra UF2 bootloader image is already added!")
         return
 
@@ -141,11 +144,7 @@ def add_tinyuf2_extra_image():
             (
                 board_config.get(
                     "upload.arduino.uf2_bootloader_offset",
-                    (
-                        "0x2d0000"
-                        if env.subst("$BOARD").startswith("adafruit")
-                        else "0x410000"
-                    ),
+                    ("0x2d0000" if env.subst("$BOARD").startswith("adafruit") else "0x410000"),
                 ),
                 tinuf2_image,
             ),
@@ -211,16 +210,11 @@ env.Append(
         ("0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin")),
         ("0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin")),
     ]
-    + [
-        (offset, join(FRAMEWORK_DIR, img))
-        for offset, img in board_config.get("upload.arduino.flash_extra_images", [])
-    ],
+    + [(offset, join(FRAMEWORK_DIR, img)) for offset, img in board_config.get("upload.arduino.flash_extra_images", [])],
 )
 
 # Add an extra UF2 image if the 'TinyUF2' partition is selected
-if partitions_name.endswith("tinyuf2.csv") or board_config.get(
-    "upload.arduino.tinyuf2_image", ""
-):
+if partitions_name.endswith("tinyuf2.csv") or board_config.get("upload.arduino.tinyuf2_image", ""):
     add_tinyuf2_extra_image()
 
 #
@@ -233,8 +227,7 @@ partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
     "$PARTITIONS_TABLE_CSV",
     env.VerboseAction(
-        '"$PYTHONEXE" "%s" -q $SOURCE $TARGET'
-        % join(FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
+        '"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(FRAMEWORK_DIR, "tools", "gen_esp32part.py"),
         "Generating partitions $TARGET",
     ),
 )
@@ -245,7 +238,5 @@ env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
 #
 
 action = deepcopy(env["BUILDERS"]["ElfToBin"].action)
-action.cmd_list = env["BUILDERS"]["ElfToBin"].action.cmd_list.replace(
-    "-o", "--elf-sha256-offset 0xb0 -o"
-)
+action.cmd_list = env["BUILDERS"]["ElfToBin"].action.cmd_list.replace("-o", "--elf-sha256-offset 0xb0 -o")
 env["BUILDERS"]["ElfToBin"].action = action

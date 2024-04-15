@@ -4,17 +4,17 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID            0x303A
-#define USB_PID            0x8147
-#define USB_MANUFACTURER   "Turkish Technnology Team Foundation (T3)"
-#define USB_PRODUCT        "DENEYAP KART 1A v2"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_VID 0x303A
+#define USB_PID 0x8147
+#define USB_MANUFACTURER "Turkish Technology Team Foundation (T3)"
+#define USB_PRODUCT "DENEYAP KART 1A v2"
+#define USB_SERIAL ""  // Empty string for MAC address
 
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48; //D9
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + 48;  //D9
+#define BUILTIN_LED LED_BUILTIN                              // backward compatibility
+#define LED_BUILTIN LED_BUILTIN                              // allow testing #ifdef LED_BUILTIN
 #define RGB_BUILTIN LED_BUILTIN
-#define RGBLED      LED_BUILTIN
+#define RGBLED LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t GPKEY = 0;
@@ -29,10 +29,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 47;
 static const uint8_t SCL = 21;
 
-static const uint8_t SS		= 42;
-static const uint8_t MOSI	= 39;
-static const uint8_t MISO	= 40;
-static const uint8_t SCK	= 41;
+static const uint8_t SS = 42;
+static const uint8_t MOSI = 39;
+static const uint8_t MISO = 40;
+static const uint8_t SCK = 41;
 
 static const uint8_t A0 = 4;
 static const uint8_t A1 = 5;
@@ -54,16 +54,16 @@ static const uint8_t T6 = 10;
 static const uint8_t T7 = 1;
 static const uint8_t T8 = 2;
 
-static const uint8_t D0  = 1;
-static const uint8_t D1  = 2;
-static const uint8_t D2  = 43;
-static const uint8_t D3  = 44;
-static const uint8_t D4  = 42;
-static const uint8_t D5  = 41;
-static const uint8_t D6  = 40;
-static const uint8_t D7  = 39;
-static const uint8_t D8  = 38;
-static const uint8_t D9  = 48;
+static const uint8_t D0 = 1;
+static const uint8_t D1 = 2;
+static const uint8_t D2 = 43;
+static const uint8_t D3 = 44;
+static const uint8_t D4 = 42;
+static const uint8_t D5 = 41;
+static const uint8_t D6 = 40;
+static const uint8_t D7 = 39;
+static const uint8_t D8 = 38;
+static const uint8_t D9 = 48;
 static const uint8_t D10 = 47;
 static const uint8_t D11 = 21;
 static const uint8_t D12 = 10;
@@ -93,8 +93,8 @@ static const uint8_t CAMD8 = 17;
 static const uint8_t CAMD9 = 15;
 static const uint8_t CAMPC = 39;
 static const uint8_t CAMXC = 16;
-static const uint8_t CAMH  = 7;
-static const uint8_t CAMV  = 6;
+static const uint8_t CAMH = 7;
+static const uint8_t CAMV = 6;
 
 static const uint8_t SDMI = 14;
 static const uint8_t SDMO = 12;

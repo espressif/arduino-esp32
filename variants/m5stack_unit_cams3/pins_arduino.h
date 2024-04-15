@@ -17,21 +17,21 @@ static const uint8_t SDA = 13;
 static const uint8_t SCL = 15;
 
 // Modified elsewhere
-static const uint8_t SS    = -1;
-static const uint8_t MOSI  = -1;
-static const uint8_t MISO  = -1;
-static const uint8_t SCK   = -1;
+static const uint8_t SS = -1;
+static const uint8_t MOSI = -1;
+static const uint8_t MISO = -1;
+static const uint8_t SCK = -1;
 
-static const uint8_t G0  = 0;
-static const uint8_t G1  = 1;
-static const uint8_t G2  = 2;
-static const uint8_t G3  = 3;
-static const uint8_t G4  = 4;
-static const uint8_t G5  = 5;
-static const uint8_t G6  = 6;
-static const uint8_t G7  = 7;
-static const uint8_t G8  = 8;
-static const uint8_t G9  = 9;
+static const uint8_t G0 = 0;
+static const uint8_t G1 = 1;
+static const uint8_t G2 = 2;
+static const uint8_t G3 = 3;
+static const uint8_t G4 = 4;
+static const uint8_t G5 = 5;
+static const uint8_t G6 = 6;
+static const uint8_t G7 = 7;
+static const uint8_t G8 = 8;
+static const uint8_t G9 = 9;
 static const uint8_t G10 = 10;
 static const uint8_t G11 = 11;
 static const uint8_t G12 = 12;

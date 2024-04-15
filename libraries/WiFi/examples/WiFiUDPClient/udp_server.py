@@ -1,9 +1,9 @@
-# This python script listens on UDP port 3333 
+# This python script listens on UDP port 3333
 # for messages from the ESP32 board and prints them
 import socket
 import sys
 
-try :
+try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 except socket.error as msg :
@@ -18,11 +18,13 @@ except socket.error as msg:
      
 print('Server listening')
 
+print("Server listening")
+
 while 1:
     d = s.recvfrom(1024)
     data = d[0]
-     
-    if not data: 
+
+    if not data:
         break
     
     print(data.strip())

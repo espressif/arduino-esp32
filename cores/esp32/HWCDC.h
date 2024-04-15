@@ -26,93 +26,84 @@
 ESP_EVENT_DECLARE_BASE(ARDUINO_HW_CDC_EVENTS);
 
 typedef enum {
-    ARDUINO_HW_CDC_ANY_EVENT = ESP_EVENT_ANY_ID,
-    ARDUINO_HW_CDC_CONNECTED_EVENT = 0,
-    ARDUINO_HW_CDC_BUS_RESET_EVENT,
-    ARDUINO_HW_CDC_RX_EVENT,
-    ARDUINO_HW_CDC_TX_EVENT,
-    ARDUINO_HW_CDC_MAX_EVENT,
+  ARDUINO_HW_CDC_ANY_EVENT = ESP_EVENT_ANY_ID,
+  ARDUINO_HW_CDC_CONNECTED_EVENT = 0,
+  ARDUINO_HW_CDC_BUS_RESET_EVENT,
+  ARDUINO_HW_CDC_RX_EVENT,
+  ARDUINO_HW_CDC_TX_EVENT,
+  ARDUINO_HW_CDC_MAX_EVENT,
 } arduino_hw_cdc_event_t;
 
 typedef union {
-    struct {
-            size_t len;
-    } rx;
-    struct {
-            size_t len;
-    } tx;
+  struct {
+    size_t len;
+  } rx;
+  struct {
+    size_t len;
+  } tx;
 } arduino_hw_cdc_event_data_t;
 
-class HWCDC: public Stream
-{
+class HWCDC : public Stream {
 private:
-    static bool deinit(void * busptr);
-    static bool isCDC_Connected();
-    
+  static bool deinit(void *busptr);
+  static bool isCDC_Connected();
+
 public:
-    HWCDC();
-    ~HWCDC();
+  HWCDC();
+  ~HWCDC();
 
-    void onEvent(esp_event_handler_t callback);
-    void onEvent(arduino_hw_cdc_event_t event, esp_event_handler_t callback);
+  void onEvent(esp_event_handler_t callback);
+  void onEvent(arduino_hw_cdc_event_t event, esp_event_handler_t callback);
 
-    size_t setRxBufferSize(size_t);
-    size_t setTxBufferSize(size_t);
-    void setTxTimeoutMs(uint32_t timeout);
-    void begin(unsigned long baud=0);
-    void end();
-    
-    int available(void);
-    int availableForWrite(void);
-    int peek(void);
-    int read(void);
-    size_t read(uint8_t *buffer, size_t size);
-    size_t write(uint8_t);
-    size_t write(const uint8_t *buffer, size_t size);
-    void flush(void);
+  size_t setRxBufferSize(size_t);
+  size_t setTxBufferSize(size_t);
+  void setTxTimeoutMs(uint32_t timeout);
+  void begin(unsigned long baud = 0);
+  void end();
 
-    inline static bool isPlugged(void)
-    {
-        return usb_serial_jtag_is_connected();
-    }
+  int available(void);
+  int availableForWrite(void);
+  int peek(void);
+  int read(void);
+  size_t read(uint8_t *buffer, size_t size);
+  size_t write(uint8_t);
+  size_t write(const uint8_t *buffer, size_t size);
+  void flush(void);
 
-    inline static bool isConnected(void)
-    {
-        return isCDC_Connected();
-    }
+  inline static bool isPlugged(void) {
+    return usb_serial_jtag_is_connected();
+  }
 
-    inline size_t read(char * buffer, size_t size)
-    {
-        return read((uint8_t*) buffer, size);
-    }
-    inline size_t write(const char * buffer, size_t size)
-    {
-        return write((uint8_t*) buffer, size);
-    }
-    inline size_t write(const char * s)
-    {
-        return write((uint8_t*) s, strlen(s));
-    }
-    inline size_t write(unsigned long n)
-    {
-        return write((uint8_t) n);
-    }
-    inline size_t write(long n)
-    {
-        return write((uint8_t) n);
-    }
-    inline size_t write(unsigned int n)
-    {
-        return write((uint8_t) n);
-    }
-    inline size_t write(int n)
-    {
-        return write((uint8_t) n);
-    }
-    operator bool() const;
-    void setDebugOutput(bool);
-    uint32_t baudRate(){return 115200;}
+  inline static bool isConnected(void) {
+    return isCDC_Connected();
+  }
 
+  inline size_t read(char *buffer, size_t size) {
+    return read((uint8_t *)buffer, size);
+  }
+  inline size_t write(const char *buffer, size_t size) {
+    return write((uint8_t *)buffer, size);
+  }
+  inline size_t write(const char *s) {
+    return write((uint8_t *)s, strlen(s));
+  }
+  inline size_t write(unsigned long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(unsigned int n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(int n) {
+    return write((uint8_t)n);
+  }
+  operator bool() const;
+  void setDebugOutput(bool);
+  uint32_t baudRate() {
+    return 115200;
+  }
 };
 #if ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Hardware JTAG CDC selected
 #ifndef HWCDC_SERIAL_IS_DEFINED

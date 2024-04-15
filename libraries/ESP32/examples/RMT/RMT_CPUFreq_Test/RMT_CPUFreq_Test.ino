@@ -13,14 +13,14 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates usage of RGB LED driven by RMT to verify 
+ * @brief This example demonstrates usage of RGB LED driven by RMT to verify
  * that RMT works on any CPU/APB Frequency.
- * 
+ *
  * It uses an ESP32 Arduino builtin RGB NeoLED function based on RMT:
  * void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
- * 
+ *
  * The output is a visual WS2812 RGB LED color change routine using each time a
- * different CPU Frequency, just to ilustrate how it works. Serial output indicates 
+ * different CPU Frequency, just to illustrate how it works. Serial output indicates
  * information about the CPU Frequency while controlling the RGB LED using RMT.
  */
 
@@ -28,29 +28,29 @@
 // Default DevKit RGB LED GPIOs:
 // The effect seen in (Espressif devkits) ESP32C6, ESP32H2, ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
 #ifdef PIN_NEOPIXEL
-#define MY_LED_GPIO   PIN_NEOPIXEL
+#define MY_LED_GPIO PIN_NEOPIXEL
 #else
-#define MY_LED_GPIO   21   // ESP32 has no builtin RGB LED (PIN_NEOPIXEL)
+#define MY_LED_GPIO 21  // ESP32 has no builtin RGB LED (PIN_NEOPIXEL)
 #endif
 
 // Set the correct GPIO to any necessary by changing RGB_LED_GPIO value
-#define RGB_LED_GPIO MY_LED_GPIO   // Any GPIO valid in the board
+#define RGB_LED_GPIO MY_LED_GPIO  // Any GPIO valid in the board
 
 // Change the RGB Brightness to any value from 0 (off) to 255 (max)
-#define BRIGHTNESS 20             // Change color brightness (max 255)
+#define BRIGHTNESS 20  // Change color brightness (max 255)
 
 void setup() {
   Serial.begin(115200);
   delay(500);
   Serial.printf("\nUsing GPIO %d attached to the RGB LED.\nInitial CPU setup:\n", RGB_LED_GPIO);
 
-  Serial.printf("CPU Freq = %lu MHz\n",  getCpuFrequencyMhz());
+  Serial.printf("CPU Freq = %lu MHz\n", getCpuFrequencyMhz());
   Serial.printf("XTAL Freq = %lu MHz\n", getXtalFrequencyMhz());
-  Serial.printf("APB Freq = %lu Hz\n",   getApbFrequency());
+  Serial.printf("APB Freq = %lu Hz\n", getApbFrequency());
 }
 
 void loop() {
-  const uint8_t cpufreqs[] = {240, 160, 80, 40, 20, 10};
+  const uint8_t cpufreqs[] = { 240, 160, 80, 40, 20, 10 };
   static uint8_t i = 0;
 
   setCpuFrequencyMhz(cpufreqs[i]);
@@ -66,22 +66,22 @@ void loop() {
   Serial.updateBaudRate(115200);
   Serial.printf("\n--changed CPU Frequency to %lu MHz\n", getCpuFrequencyMhz());
 
-  neopixelWrite(RGB_LED_GPIO, BRIGHTNESS, BRIGHTNESS, BRIGHTNESS); // White
+  neopixelWrite(RGB_LED_GPIO, BRIGHTNESS, BRIGHTNESS, BRIGHTNESS);  // White
   Serial.println("White");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, 0, 0, 0); // Off
+  neopixelWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
   Serial.println("Off");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, BRIGHTNESS, 0, 0); // Red
+  neopixelWrite(RGB_LED_GPIO, BRIGHTNESS, 0, 0);  // Red
   Serial.println("Red");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, 0, BRIGHTNESS, 0); // Green
+  neopixelWrite(RGB_LED_GPIO, 0, BRIGHTNESS, 0);  // Green
   Serial.println("Green");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, 0, 0, BRIGHTNESS); // Blue
+  neopixelWrite(RGB_LED_GPIO, 0, 0, BRIGHTNESS);  // Blue
   Serial.println("Blue");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, 0, 0, 0); // Off
+  neopixelWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
   Serial.println("Off");
   delay(1000);
 }

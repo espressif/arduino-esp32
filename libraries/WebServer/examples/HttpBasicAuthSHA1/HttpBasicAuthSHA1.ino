@@ -6,7 +6,7 @@
 // Rather than specify the password as plaintext; we
 // provide it as an (unsalted!) SHA1 hash. This is not
 // much more secure (SHA1 is past its retirement age,
-// and long obsolte/insecure) - but it helps a little.
+// and long obsolete/insecure) - but it helps a little.
 
 const char* ssid = "........";
 const char* password = "........";
@@ -68,5 +68,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

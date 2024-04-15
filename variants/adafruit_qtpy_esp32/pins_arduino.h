@@ -5,10 +5,10 @@
 #include "soc/soc_caps.h"
 
 // Neopixel
-#define PIN_NEOPIXEL   5
+#define PIN_NEOPIXEL 5
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+PIN_NEOPIXEL;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_NEOPIXEL;
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
@@ -26,16 +26,16 @@ static const uint8_t RX = 7;
 static const uint8_t SDA = 4;
 static const uint8_t SCL = 33;
 
-#define WIRE1_PIN_DEFINED 1             // See Wire.cpp at bool TwoWire::initPins(int sdaPin, int sclPin)
+#define WIRE1_PIN_DEFINED 1  // See Wire.cpp at bool TwoWire::initPins(int sdaPin, int sclPin)
 static const uint8_t SDA1 = 22;
 static const uint8_t SCL1 = 19;
 
-static const uint8_t SS    = 27;
-static const uint8_t MOSI  = 13;
-static const uint8_t MISO  = 12;
-static const uint8_t SCK   = 14;
+static const uint8_t SS = 27;
+static const uint8_t MOSI = 13;
+static const uint8_t MISO = 12;
+static const uint8_t SCK = 14;
 
-static const uint8_t A0 = 26; 
+static const uint8_t A0 = 26;
 static const uint8_t A1 = 25;
 static const uint8_t A2 = 27;
 static const uint8_t A3 = 15;

@@ -23,31 +23,31 @@
 ESP_EVENT_DECLARE_BASE(ARDUINO_FIRMWARE_MSC_EVENTS);
 
 typedef enum {
-    ARDUINO_FIRMWARE_MSC_ANY_EVENT = ESP_EVENT_ANY_ID,
-    ARDUINO_FIRMWARE_MSC_START_EVENT = 0,
-    ARDUINO_FIRMWARE_MSC_WRITE_EVENT,
-    ARDUINO_FIRMWARE_MSC_END_EVENT,
-    ARDUINO_FIRMWARE_MSC_ERROR_EVENT,
-    ARDUINO_FIRMWARE_MSC_POWER_EVENT,
-    ARDUINO_FIRMWARE_MSC_MAX_EVENT,
+  ARDUINO_FIRMWARE_MSC_ANY_EVENT = ESP_EVENT_ANY_ID,
+  ARDUINO_FIRMWARE_MSC_START_EVENT = 0,
+  ARDUINO_FIRMWARE_MSC_WRITE_EVENT,
+  ARDUINO_FIRMWARE_MSC_END_EVENT,
+  ARDUINO_FIRMWARE_MSC_ERROR_EVENT,
+  ARDUINO_FIRMWARE_MSC_POWER_EVENT,
+  ARDUINO_FIRMWARE_MSC_MAX_EVENT,
 } arduino_firmware_msc_event_t;
 
 typedef union {
-    struct {
-            size_t offset;
-            size_t size;
-    } write;
-    struct {
-            uint8_t power_condition;
-            bool start;
-            bool load_eject;
-    } power;
-    struct {
-            size_t size;
-    } end;
-    struct {
-            size_t size;
-    } error;
+  struct {
+    size_t offset;
+    size_t size;
+  } write;
+  struct {
+    uint8_t power_condition;
+    bool start;
+    bool load_eject;
+  } power;
+  struct {
+    size_t size;
+  } end;
+  struct {
+    size_t size;
+  } error;
 } arduino_firmware_msc_event_data_t;
 
 class FirmwareMSC {

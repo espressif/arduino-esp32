@@ -24,7 +24,7 @@ Before sending us a Pull Request, please consider this:
 * Are comments and documentation written in clear English, with no spelling or grammar errors?
 
 * Example contributions are also welcome.
-  
+
   * If you are contributing by adding a new example, please use the `Arduino style guide`_ and the example guideline below.
 
 * If the contribution contains multiple commits, are they grouped together into logical changes (one major change per pull request)? Are any commits with names like "fixed typo" `squashed into previous commits <https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit/>`_?

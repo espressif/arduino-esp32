@@ -21,4 +21,4 @@ RMT Write Neo Pixel
     :language: arduino
 
 
-Complete list of `RMT examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/RMT>`_. 
+Complete list of `RMT examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/RMT>`_.

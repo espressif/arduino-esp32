@@ -42,7 +42,8 @@ void setup() {
   model = tflite::GetModel(g_model);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     MicroPrintf("Model provided is schema version %d not equal to supported "
-                "version %d.", model->version(), TFLITE_SCHEMA_VERSION);
+                "version %d.",
+                model->version(), TFLITE_SCHEMA_VERSION);
     return;
   }
 
@@ -54,7 +55,7 @@ void setup() {
 
   // Build an interpreter to run the model with.
   static tflite::MicroInterpreter static_interpreter(
-      model, resolver, tensor_arena, kTensorArenaSize);
+    model, resolver, tensor_arena, kTensorArenaSize);
   interpreter = &static_interpreter;
 
   // Allocate memory from the tensor_arena for the model's tensors.
@@ -78,8 +79,7 @@ void loop() {
   // inference_count to the number of inferences per cycle to determine
   // our position within the range of possible x values the model was
   // trained on, and use this to calculate a value.
-  float position = static_cast<float>(inference_count) /
-                   static_cast<float>(kInferencesPerCycle);
+  float position = static_cast<float>(inference_count) / static_cast<float>(kInferencesPerCycle);
   float x = position * kXrange;
 
   // Quantize the input from floating-point to integer
@@ -91,7 +91,7 @@ void loop() {
   TfLiteStatus invoke_status = interpreter->Invoke();
   if (invoke_status != kTfLiteOk) {
     MicroPrintf("Invoke failed on x: %f\n",
-                         static_cast<double>(x));
+                static_cast<double>(x));
     return;
   }
 

@@ -7,8 +7,8 @@ void setup() {
 
   // Convert a HEX string like 6c6c6f20576f726c64 to a binary buffer
   {
-    const char * out = "Hello World";
-    const char * hexin = "48656c6c6f20576f726c6400"; // As the string above is \0 terminated too
+    const char *out = "Hello World";
+    const char *hexin = "48656c6c6f20576f726c6400";  // As the string above is \0 terminated too
 
     unsigned char buff[256];
     size_t len = HEXBuilder::hex2bytes(buff, sizeof(buff), hexin);
@@ -16,7 +16,7 @@ void setup() {
     if (len != 1 + strlen(out))
       Serial.println("Odd - length 1 is wrong");
 
-    if (memcmp(buff,  out, len) != 0)
+    if (memcmp(buff, out, len) != 0)
       Serial.println("Odd - decode 1 went wrong");
 
     // Safe to print this binary buffer -- as we've included a \0 in the hex sequence.
@@ -33,7 +33,7 @@ void setup() {
     if (len != strlen(hello))
       Serial.println("Odd - length 2 is wrong");
 
-    if (strcmp((char *) buff,  hello) != 0)
+    if (strcmp((char *)buff, hello) != 0)
       Serial.println("Odd - decode 2 went wrong");
   }
 

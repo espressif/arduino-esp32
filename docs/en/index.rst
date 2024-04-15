@@ -5,7 +5,7 @@ Welcome to ESP32 Arduino Core's documentation
 Here you will find all the relevant information about the project.
 
 .. note::
-   This is a work in progress documentation and we will appreciate your help! We are looking for contributors! 
+   This is a work in progress documentation and we will appreciate your help! We are looking for contributors!
 
 .. toctree::
    :maxdepth: 1

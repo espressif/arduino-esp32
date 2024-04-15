@@ -35,4 +35,3 @@ Then simply build the libs for all SoCs or one specific SoC. Note that building 
       - ``esp32s3``
       - Example: ``./build.sh -t esp32``
       - A wrong format or non-existing SoC will result in the error sed: can't read sdkconfig: No such file or directory
-

@@ -8,7 +8,7 @@ static const uint8_t RX = 3;
 
 // IO
 static const uint8_t LED_BUILTIN = 5;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 static const uint8_t SW1 = 4;
 static const uint8_t SW2 = 18;
@@ -22,10 +22,10 @@ static const uint8_t I2S_SCLK = 26;   // SCLK - Fs (44100 Hz)
 static const uint8_t I2S_DOUT = 22;   // DATA
 
 //GPIO
-static const uint8_t D0 = 34; // GPI - Input Only
-static const uint8_t D1 = 35; // GPI - Input Only
-static const uint8_t D2 = 32; // GPO - Output Only
-static const uint8_t D3 = 33; // GPO - Output Only
+static const uint8_t D0 = 34;  // GPI - Input Only
+static const uint8_t D1 = 35;  // GPI - Input Only
+static const uint8_t D2 = 32;  // GPO - Output Only
+static const uint8_t D3 = 33;  // GPO - Output Only
 static const uint8_t D4 = 27;
 static const uint8_t D5 = 14;
 static const uint8_t D6 = 12;
