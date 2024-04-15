@@ -318,7 +318,7 @@ class PartitionTable(list):
         md5 = hashlib.md5()
         result = cls()
         for o in range(0, len(b), 32):
-            data = b[o:o + 32]
+            data = b[o : o + 32]
             if len(data) != 32:
                 raise InputError("Partition table length must be a multiple of 32 bytes")
             if data == b"\xFF" * 32:
