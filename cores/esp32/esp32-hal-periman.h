@@ -104,10 +104,10 @@ extern "C" {
     ESP32_BUS_TYPE_ETHERNET_PWR,   // IO is used as ETHERNET PWR pin
 #endif
 #if CONFIG_LWIP_PPP_SUPPORT
-    ESP32_BUS_TYPE_PPP_TX,          // IO is used as PPP Modem TX pin
-    ESP32_BUS_TYPE_PPP_RX,          // IO is used as PPP Modem RX pin
-    ESP32_BUS_TYPE_PPP_RTS,         // IO is used as PPP Modem RTS pin
-    ESP32_BUS_TYPE_PPP_CTS,         // IO is used as PPP Modem CTS pin
+    ESP32_BUS_TYPE_PPP_TX,   // IO is used as PPP Modem TX pin
+    ESP32_BUS_TYPE_PPP_RX,   // IO is used as PPP Modem RX pin
+    ESP32_BUS_TYPE_PPP_RTS,  // IO is used as PPP Modem RTS pin
+    ESP32_BUS_TYPE_PPP_CTS,  // IO is used as PPP Modem CTS pin
 #endif
     ESP32_BUS_TYPE_MAX
   } peripheral_bus_type_t;
