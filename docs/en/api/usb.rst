@@ -109,7 +109,7 @@ firmwareVersion
 Set the firmware version. This is a 16 bits unsigned value.
 
 .. code-block:: arduino
-    
+
     bool firmwareVersion(uint16_t version);
 
 Get the firmware version.
@@ -219,7 +219,7 @@ Set the USB attributes.
 Get the USB attributes.
 
 .. code-block:: arduino
-    
+
     uint8_t usbAttributes(void);
 
 Return the USB attributes. The default value is: ``TUSB_DESC_CONFIG_ATT_SELF_POWERED``
@@ -236,7 +236,7 @@ This function is used to enable the ``webUSB`` functionality.
 This function is used to get the ``webUSB`` setting.
 
 .. code-block:: arduino
-    
+
     bool webUSB(void);
 
 Return the ``webUSB`` setting (`Enabled` or `Disabled`)
@@ -268,7 +268,7 @@ This function is used to define the manufacturer name.
 This function is used to get the manufacturer's name.
 
 .. code-block:: arduino
-    
+
     const char * manufacturerName(void);
 
 serialNumber

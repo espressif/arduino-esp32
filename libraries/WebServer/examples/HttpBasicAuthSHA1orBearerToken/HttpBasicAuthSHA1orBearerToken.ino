@@ -13,7 +13,7 @@
 //    curl https://myesp.com/  -H "Authorization: Bearer SecritToken"
 //
 // We avoid hardcoding this "SecritToken" into the code by
-// using a SHA1 instead (which is not paricularly secure).
+// using a SHA1 instead (which is not particularly secure).
 
 // Create the secret token SHA1 with:
 //        echo -n SecritToken | openssl sha1
@@ -30,7 +30,7 @@ WebServer server(80);
 // Rather than specify the admin password as plaintext; we
 // provide it as an (unsalted!) SHA1 hash. This is not
 // much more secure (SHA1 is past its retirement age,
-// and long obsolte/insecure) - but it helps a little.
+// and long obsolete/insecure) - but it helps a little.
 
 // The sha1 of 'esp32' (without the trailing \0) expressed as 20
 // bytes of hex. Created by for example 'echo -n esp32 | openssl sha1'
@@ -52,7 +52,7 @@ String* check_bearer_or_auth(HTTPAuthMethod mode, String authReq, String params[
     SHA1Builder sha_builder;
 
     sha_builder.begin();
-    sha_builder.add((uint8_t*) secret.c_str(), secret.length());
+    sha_builder.add((uint8_t*)secret.c_str(), secret.length());
     sha_builder.calculate();
     sha_builder.getBytes(sha1);
 
@@ -113,5 +113,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

@@ -28,14 +28,14 @@ extern "C" {
 #include <stdbool.h>
 #include <esp_err.h>
 
-esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed);
-esp_err_t i2cDeinit(uint8_t i2c_num);
-esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency);
-esp_err_t i2cGetClock(uint8_t i2c_num, uint32_t * frequency);
-esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t* buff, size_t size, uint32_t timeOutMillis);
-esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t* buff, size_t size, uint32_t timeOutMillis, size_t *readCount);
-esp_err_t i2cWriteReadNonStop(uint8_t i2c_num, uint16_t address, const uint8_t* wbuff, size_t wsize, uint8_t* rbuff, size_t rsize, uint32_t timeOutMillis, size_t *readCount);
-bool i2cIsInit(uint8_t i2c_num);
+  esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t clk_speed);
+  esp_err_t i2cDeinit(uint8_t i2c_num);
+  esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency);
+  esp_err_t i2cGetClock(uint8_t i2c_num, uint32_t* frequency);
+  esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t* buff, size_t size, uint32_t timeOutMillis);
+  esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t* buff, size_t size, uint32_t timeOutMillis, size_t* readCount);
+  esp_err_t i2cWriteReadNonStop(uint8_t i2c_num, uint16_t address, const uint8_t* wbuff, size_t wsize, uint8_t* rbuff, size_t rsize, uint32_t timeOutMillis, size_t* readCount);
+  bool i2cIsInit(uint8_t i2c_num);
 
 #ifdef __cplusplus
 }

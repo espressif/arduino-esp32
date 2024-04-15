@@ -55,7 +55,7 @@ Prepare the sketch and configuration for initial upload with a serial port
 * password = admin
 
 .. note::
-    *If entering “http://ESP32.local” does not work, try replacing “ESP32” with module’s IP address. This workaround is useful in case the host software installed does not work*. 
+    *If entering “http://ESP32.local” does not work, try replacing “ESP32” with module’s IP address. This workaround is useful in case the host software installed does not work*.
 
 Now click on the Login button and browser will display an upload form
 

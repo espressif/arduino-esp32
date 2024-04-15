@@ -10,7 +10,7 @@ About
 Examples
 --------
 
-To get started with BLE, you can try: 
+To get started with BLE, you can try:
 
 BLE Scan
 ********
@@ -24,4 +24,4 @@ BLE UART
 .. literalinclude:: ../../../libraries/BLE/examples/UART/UART.ino
     :language: arduino
 
-Complete list of `BLE examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/BLE/examples>`_. 
+Complete list of `BLE examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/BLE/examples>`_.

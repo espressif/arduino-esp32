@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2021 Ha Thach (tinyusb.org) for Adafruit Industries
@@ -28,21 +28,20 @@
 
 extern "C" {
 
-// Initialize variant/board, called before setup()
-void initVariant(void)
-{
+  // Initialize variant/board, called before setup()
+  void initVariant(void) {
     //enable IO Pins by default
     pinMode(IO_ENABLE, OUTPUT);
-    digitalWrite(IO_ENABLE,LOW);
+    digitalWrite(IO_ENABLE, LOW);
 
     //reset RGB
     pinMode(PIN_NEOPIXEL, OUTPUT);
     digitalWrite(PIN_NEOPIXEL, LOW);
-     
+
     //enable XBEE by default
     pinMode(PIN_XB1_ENABLE, OUTPUT);
     digitalWrite(PIN_XB1_ENABLE, LOW);
- 
+
     //enable UART by default
     pinMode(PIN_UART_ENABLE, OUTPUT);
     digitalWrite(PIN_UART_ENABLE, LOW);
@@ -50,6 +49,5 @@ void initVariant(void)
     //enable PD-Sensor by default
     pinMode(PD_ENABLE, OUTPUT);
     digitalWrite(PD_ENABLE, HIGH);
-
-}
+  }
 }

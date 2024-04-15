@@ -8,9 +8,7 @@
 */
 
 void setup() {
-
 }
 
 void loop() {
-
 }

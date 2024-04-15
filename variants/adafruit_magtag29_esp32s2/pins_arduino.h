@@ -4,37 +4,37 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID            0x239A
-#define USB_PID            0x80E5
-#define USB_MANUFACTURER   "Adafruit"
-#define USB_PRODUCT        "EPD MagTag 2.9\" ESP32-S2"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_VID 0x239A
+#define USB_PID 0x80E5
+#define USB_MANUFACTURER "Adafruit"
+#define USB_PRODUCT "EPD MagTag 2.9\" ESP32-S2"
+#define USB_SERIAL ""  // Empty string for MAC address
 
-// User LED 
+// User LED
 #define LED_BUILTIN 13
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
 // Neopixel
-#define PIN_NEOPIXEL        1    // D1
+#define PIN_NEOPIXEL 1  // D1
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
-#define NEOPIXEL_NUM        4    // number of neopixels
-#define NEOPIXEL_POWER      21   // power pin
-#define NEOPIXEL_POWER_ON   LOW  // power pin state when on
+#define NEOPIXEL_NUM 4         // number of neopixels
+#define NEOPIXEL_POWER 21      // power pin
+#define NEOPIXEL_POWER_ON LOW  // power pin state when on
 
 
-#define PIN_BUTTON1         15
-#define PIN_BUTTON2         14
-#define PIN_BUTTON3         12
-#define PIN_BUTTON4         11
-#define PIN_BUTTON5         0  // BOOT0 switch
+#define PIN_BUTTON1 15
+#define PIN_BUTTON2 14
+#define PIN_BUTTON3 12
+#define PIN_BUTTON4 11
+#define PIN_BUTTON5 0  // BOOT0 switch
 
-static const uint8_t EPD_BUSY  = 5;
+static const uint8_t EPD_BUSY = 5;
 static const uint8_t EPD_RESET = 6;
-static const uint8_t EPD_DC    = 7;
-static const uint8_t EPD_CS    = 8;
+static const uint8_t EPD_DC = 7;
+static const uint8_t EPD_CS = 8;
 
 static const uint8_t ACCEL_IRQ = 9;
 
@@ -50,10 +50,10 @@ static const uint8_t SPEAKER_SHUTDOWN = 16;
 static const uint8_t SDA = 33;
 static const uint8_t SCL = 34;
 
-static const uint8_t SS    = 8;
-static const uint8_t MOSI  = 35;
-static const uint8_t SCK   = 36;
-static const uint8_t MISO  = 37;
+static const uint8_t SS = 8;
+static const uint8_t MOSI = 35;
+static const uint8_t SCK = 36;
+static const uint8_t MISO = 37;
 
 
 

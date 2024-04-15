@@ -3,16 +3,16 @@
 
 /* This is a very INSECURE approach.
  * If for some reason the secure, proper example NetworkClientSecure
- * does not work for you; then you may want to check the 
- * NetworkClientTrustOnFirstUse example first. It is less secure than 
+ * does not work for you; then you may want to check the
+ * NetworkClientTrustOnFirstUse example first. It is less secure than
  * NetworkClientSecure, but a lot better than this totally insecure
  * approach shown below.
  */
 
-const char* ssid     = "your-ssid";     // your network SSID (name of wifi network)
-const char* password = "your-password"; // your network password
+const char* ssid = "your-ssid";          // your network SSID (name of wifi network)
+const char* password = "your-password";  // your network password
 
-const char*  server = "www.howsmyssl.com";  // Server URL
+const char* server = "www.howsmyssl.com";  // Server URL
 
 NetworkClientSecure client;
 
@@ -36,7 +36,7 @@ void setup() {
   Serial.println(ssid);
 
   Serial.println("\nStarting connection to server...");
-  client.setInsecure();//skip verification
+  client.setInsecure();  //skip verification
   if (!client.connect(server, 443))
     Serial.println("Connection failed!");
   else {

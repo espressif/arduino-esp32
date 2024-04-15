@@ -10,20 +10,20 @@ struct Button {
 };
 
 void isr(void* param) {
-  struct Button *button = (struct Button*) param;
+  struct Button* button = (struct Button*)param;
   button->numberKeyPresses = button->numberKeyPresses + 1;
   button->pressed = 1;
 }
 
 void checkPressed(struct Button* button) {
-  if(button->pressed) {
+  if (button->pressed) {
     Serial.printf("Button on pin %u has been pressed %lu times\n", button->PIN, button->numberKeyPresses);
     button->pressed = 0;
   }
 }
 
-struct Button button1 = {BUTTON1, 0, 0};
-struct Button button2 = {BUTTON2, 0, 0};
+struct Button button1 = { BUTTON1, 0, 0 };
+struct Button button2 = { BUTTON2, 0, 0 };
 
 void setup() {
   Serial.begin(115200);

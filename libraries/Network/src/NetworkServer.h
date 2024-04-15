@@ -24,37 +24,42 @@
 #include "IPAddress.h"
 
 class NetworkServer {
-  private:
-    int sockfd;
-    int _accepted_sockfd = -1;
-    IPAddress _addr;
-    uint16_t _port;
-    uint8_t _max_clients;
-    bool _listening;
-    bool _noDelay = false;
+private:
+  int sockfd;
+  int _accepted_sockfd = -1;
+  IPAddress _addr;
+  uint16_t _port;
+  uint8_t _max_clients;
+  bool _listening;
+  bool _noDelay = false;
 
-  public:
-    void listenOnLocalhost(){}
+public:
+  void listenOnLocalhost() {}
 
-    NetworkServer(uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
-      log_v("NetworkServer::NetworkServer(port=%d, ...)", port);
-    }
-    NetworkServer(const IPAddress& addr, uint16_t port=80, uint8_t max_clients=4):sockfd(-1),_accepted_sockfd(-1),_addr(addr),_port(port),_max_clients(max_clients),_listening(false),_noDelay(false) {
-      log_v("NetworkServer::NetworkServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
-    }
-    ~NetworkServer(){ end();}
-    NetworkClient available() __attribute__((deprecated("Renamed to accept().")));
-    NetworkClient accept();
-    void begin(uint16_t port=0);
-    void begin(uint16_t port, int reuse_enable);
-    void setNoDelay(bool nodelay);
-    bool getNoDelay();
-    bool hasClient();
+  NetworkServer(uint16_t port = 80, uint8_t max_clients = 4)
+    : sockfd(-1), _accepted_sockfd(-1), _addr(), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
+    log_v("NetworkServer::NetworkServer(port=%d, ...)", port);
+  }
+  NetworkServer(const IPAddress& addr, uint16_t port = 80, uint8_t max_clients = 4)
+    : sockfd(-1), _accepted_sockfd(-1), _addr(addr), _port(port), _max_clients(max_clients), _listening(false), _noDelay(false) {
+    log_v("NetworkServer::NetworkServer(addr=%s, port=%d, ...)", addr.toString().c_str(), port);
+  }
+  ~NetworkServer() {
+    end();
+  }
+  NetworkClient available() __attribute__((deprecated("Renamed to accept().")));
+  NetworkClient accept();
+  void begin(uint16_t port = 0);
+  void begin(uint16_t port, int reuse_enable);
+  void setNoDelay(bool nodelay);
+  bool getNoDelay();
+  bool hasClient();
 
-    void end();
-    void close();
-    void stop();
-    operator bool(){return _listening;}
-    int setTimeout(uint32_t seconds);
+  void end();
+  void close();
+  void stop();
+  operator bool() {
+    return _listening;
+  }
+  int setTimeout(uint32_t seconds);
 };
-

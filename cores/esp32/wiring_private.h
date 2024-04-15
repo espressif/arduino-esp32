@@ -34,12 +34,12 @@
 extern "C" {
 #endif
 
-typedef void (*voidFuncPtr)(void);
+  typedef void (*voidFuncPtr)(void);
 
-void initPins();
+  void initPins();
 
 #ifdef __cplusplus
-} // extern "C"
+}  // extern "C"
 #endif
 
 #endif

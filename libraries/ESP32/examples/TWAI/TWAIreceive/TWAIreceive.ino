@@ -31,7 +31,7 @@
 #define RX_PIN 21
 #define TX_PIN 22
 
-// Intervall:
+// Interval:
 #define POLLING_RATE_MS 1000
 
 static bool driver_installed = false;

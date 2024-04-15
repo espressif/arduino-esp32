@@ -16,12 +16,12 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
-static const uint8_t SS    = 5;
-static const uint8_t MOSI  = 35;
-static const uint8_t MISO  = 37;
-static const uint8_t SDO  = 35;
-static const uint8_t SDI  = 37;
-static const uint8_t SCK   = 36;
+static const uint8_t SS = 5;
+static const uint8_t MOSI = 35;
+static const uint8_t MISO = 37;
+static const uint8_t SDO = 35;
+static const uint8_t SDI = 37;
+static const uint8_t SCK = 36;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -52,13 +52,13 @@ static const uint8_t T14 = 14;
 static const uint8_t VBAT_SENSE = 2;
 static const uint8_t VBUS_SENSE = 34;
 
-// User LED 
+// User LED
 #define LED_BUILTIN 13
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
 static const uint8_t RGB_DATA = 40;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)  
+#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t RGB_PWR = 39;

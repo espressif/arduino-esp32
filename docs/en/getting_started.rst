@@ -16,12 +16,12 @@ First Things First
 
 ESP32 is a single 2.4 GHz Wi-Fi-and-Bluetooth SoC (System On a Chip) designed by `Espressif Systems`_.
 
-ESP32 is designed for mobile, wearable electronics, and Internet-of-Things (IoT) applications. It features all the state-of-the-art characteristics 
-of low-power chips, including fine-grained clock gating, multiple power modes,and dynamic power scaling. For instance, in a low-power IoT sensor 
-hub application scenario, ESP32 is woken-up periodically and only when a specified condition is detected. Low-duty cycle is used to minimize the 
-amount of energy that the chip expends. 
+ESP32 is designed for mobile, wearable electronics, and Internet-of-Things (IoT) applications. It features all the state-of-the-art characteristics
+of low-power chips, including fine-grained clock gating, multiple power modes,and dynamic power scaling. For instance, in a low-power IoT sensor
+hub application scenario, ESP32 is woken-up periodically and only when a specified condition is detected. Low-duty cycle is used to minimize the
+amount of energy that the chip expends.
 
-The output of the power amplifier is also adjustable, thus contributing to an optimal trade-off between communication range, data rate and 
+The output of the power amplifier is also adjustable, thus contributing to an optimal trade-off between communication range, data rate and
 power consumption.
 
 The ESP32 series is available as a chip or module.
@@ -50,7 +50,7 @@ See `Boards <boards/boards.html>`_ for more details about ESP32 development boar
 Arduino Core Reference
 ----------------------
 
-This documentation is built on the ESP32 and we are not going to cover the common Arduino API. To see the Arduino reference documentation, 
+This documentation is built on the ESP32 and we are not going to cover the common Arduino API. To see the Arduino reference documentation,
 please consider reading the official documentation.
 
 Arduino Official Documentation: `Arduino Reference`_.
@@ -105,7 +105,7 @@ Here are some community channels where you may find information and ask for some
 Issues Reporting
 ----------------
 
-Before opening a new issue, please read this: 
+Before opening a new issue, please read this:
 
 Be sure to search for a similar reported issue. This avoids duplicating or creating noise in the GitHub Issues reporting.
 We also have the troubleshooting guide to save your time on the most common issues reported by users.
@@ -123,7 +123,7 @@ To install Arduino-ESP32, please see the dedicated section on the Installation g
 
 .. toctree::
     :maxdepth: 2
-    
+
     How to Install <installing>
     Development Boards <boards/boards>
 
@@ -142,7 +142,7 @@ There is also a `list of examples <https://techtutorialsx.com/category/esp32/>`_
 Resources
 ---------
 
-.. _Espressif Systems: https://www.espressif.com 
+.. _Espressif Systems: https://www.espressif.com
 .. _Espressif Product Selector: https://products.espressif.com/
 .. _Arduino.cc: https://www.arduino.cc/en/Main/Software
 .. _Arduino Reference: https://www.arduino.cc/reference/en/

@@ -22,15 +22,15 @@ from WPS_TYPE_PBC to WPS_TYPE_PIN in
 the case that you are using pin type
 WPS
 */
-#define ESP_WPS_MODE      WPS_TYPE_PBC
-#define ESP_MANUFACTURER  "ESPRESSIF"
-#define ESP_MODEL_NUMBER  "ESP32"
-#define ESP_MODEL_NAME    "ESPRESSIF IOT"
-#define ESP_DEVICE_NAME   "ESP STATION"
+#define ESP_WPS_MODE WPS_TYPE_PBC
+#define ESP_MANUFACTURER "ESPRESSIF"
+#define ESP_MODEL_NUMBER "ESP32"
+#define ESP_MODEL_NAME "ESPRESSIF IOT"
+#define ESP_DEVICE_NAME "ESP STATION"
 
 static esp_wps_config_t config;
 
-void wpsInitConfig(){
+void wpsInitConfig() {
   config.wps_type = ESP_WPS_MODE;
   strcpy(config.factory_info.manufacturer, ESP_MANUFACTURER);
   strcpy(config.factory_info.model_number, ESP_MODEL_NUMBER);
@@ -38,23 +38,23 @@ void wpsInitConfig(){
   strcpy(config.factory_info.device_name, ESP_DEVICE_NAME);
 }
 
-void wpsStart(){
-    if(esp_wifi_wps_enable(&config)){
-    	Serial.println("WPS Enable Failed");
-    } else if(esp_wifi_wps_start(0)){
-    	Serial.println("WPS Start Failed");
-    }
+void wpsStart() {
+  if (esp_wifi_wps_enable(&config)) {
+    Serial.println("WPS Enable Failed");
+  } else if (esp_wifi_wps_start(0)) {
+    Serial.println("WPS Start Failed");
+  }
 }
 
-void wpsStop(){
-    if(esp_wifi_wps_disable()){
-    	Serial.println("WPS Disable Failed");
-    }
+void wpsStop() {
+  if (esp_wifi_wps_disable()) {
+    Serial.println("WPS Disable Failed");
+  }
 }
 
-String wpspin2string(uint8_t a[]){
+String wpspin2string(uint8_t a[]) {
   char wps_pin[9];
-  for(int i=0;i<8;i++){
+  for (int i = 0; i < 8; i++) {
     wps_pin[i] = a[i];
   }
   wps_pin[8] = '\0';
@@ -62,8 +62,8 @@ String wpspin2string(uint8_t a[]){
 }
 
 // WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
-void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
-  switch(event){
+void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
+  switch (event) {
     case ARDUINO_EVENT_WIFI_STA_START:
       Serial.println("Station Mode Started");
       break;
@@ -77,7 +77,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
       WiFi.reconnect();
       break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:
-      Serial.println("WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
+      Serial.println("WPS Successful, stopping WPS and connecting to: " + String(WiFi.SSID()));
       wpsStop();
       delay(10);
       WiFi.begin();
@@ -100,7 +100,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
   }
 }
 
-void setup(){
+void setup() {
   Serial.begin(115200);
   delay(10);
   Serial.println();
@@ -111,6 +111,6 @@ void setup(){
   wpsStart();
 }
 
-void loop(){
+void loop() {
   //nothing to do here
 }

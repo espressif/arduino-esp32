@@ -35,19 +35,19 @@ USBMIDI MIDI;
 static double controllerInputValue = 0;
 
 void updateControllerInputValue() {
-    controllerInputValue =
-        (controllerInputValue * (SMOOTHING_VALUE - 1) + analogRead(CONTROLLER_PIN)) / SMOOTHING_VALUE;
+  controllerInputValue =
+    (controllerInputValue * (SMOOTHING_VALUE - 1) + analogRead(CONTROLLER_PIN)) / SMOOTHING_VALUE;
 }
 
 void primeControllerInputValue() {
-    for (int i = 0; i < SMOOTHING_VALUE; i++) {
-        updateControllerInputValue();
-    }
+  for (int i = 0; i < SMOOTHING_VALUE; i++) {
+    updateControllerInputValue();
+  }
 }
 
 uint16_t readControllerValue() {
-    // Lower ADC input amplitude to get a stable value
-    return round(controllerInputValue / 12);
+  // Lower ADC input amplitude to get a stable value
+  return round(controllerInputValue / 12);
 }
 
 ///// Button Handling /////
@@ -59,60 +59,60 @@ uint16_t readControllerValue() {
 #define PRESSED 0xff00
 #define RELEASED 0xfe1f
 uint16_t getButtonEvent() {
-    static uint16_t state = 0;
-    state = (state << 1) | digitalRead(BUTTON_PIN) | 0xfe00;
-    return state;
+  static uint16_t state = 0;
+  state = (state << 1) | digitalRead(BUTTON_PIN) | 0xfe00;
+  return state;
 }
 
 ///// Arduino Hooks /////
 
 void setup() {
-    Serial.begin(115200);
-    MIDI.begin();
-    USB.begin();
+  Serial.begin(115200);
+  MIDI.begin();
+  USB.begin();
 
-    primeControllerInputValue();
+  primeControllerInputValue();
 }
 
 void loop() {
-    uint16_t newControllerValue = readControllerValue();
-    static uint16_t lastControllerValue = 0;
+  uint16_t newControllerValue = readControllerValue();
+  static uint16_t lastControllerValue = 0;
 
-    // Auto-calibrate the controller range
-    static uint16_t maxControllerValue = 0;
-    static uint16_t minControllerValue = 0xFFFF;
+  // Auto-calibrate the controller range
+  static uint16_t maxControllerValue = 0;
+  static uint16_t minControllerValue = 0xFFFF;
 
-    if (newControllerValue < minControllerValue) {
-        minControllerValue = newControllerValue;
+  if (newControllerValue < minControllerValue) {
+    minControllerValue = newControllerValue;
+  }
+  if (newControllerValue > maxControllerValue) {
+    maxControllerValue = newControllerValue;
+  }
+
+  // Send update if the controller value has changed
+  if (lastControllerValue != newControllerValue) {
+    lastControllerValue = newControllerValue;
+
+    // Can't map if the range is zero
+    if (minControllerValue != maxControllerValue) {
+      MIDI.controlChange(MIDI_CC_CUTOFF,
+                         map(newControllerValue, minControllerValue, maxControllerValue, 0, 127));
     }
-    if (newControllerValue > maxControllerValue) {
-        maxControllerValue = newControllerValue;
-    }
+  }
 
-    // Send update if the controller value has changed
-    if (lastControllerValue != newControllerValue) {
-        lastControllerValue = newControllerValue;
+  updateControllerInputValue();
 
-        // Can't map if the range is zero
-        if (minControllerValue != maxControllerValue) {
-            MIDI.controlChange(MIDI_CC_CUTOFF,
-                               map(newControllerValue, minControllerValue, maxControllerValue, 0, 127));
-        }
-    }
-
-    updateControllerInputValue();
-
-    // Hook Button0 to a MIDI note so that we can observe
-    // the CC effect without the need for a MIDI keyboard.
-    switch (getButtonEvent()) {
-        case PRESSED:
-            MIDI.noteOn(MIDI_NOTE_C4, 64);
-            break;
-        case RELEASED:
-            MIDI.noteOff(MIDI_NOTE_C4, 0);
-            break;
-        default:
-            break;
-    }
+  // Hook Button0 to a MIDI note so that we can observe
+  // the CC effect without the need for a MIDI keyboard.
+  switch (getButtonEvent()) {
+    case PRESSED:
+      MIDI.noteOn(MIDI_NOTE_C4, 64);
+      break;
+    case RELEASED:
+      MIDI.noteOff(MIDI_NOTE_C4, 0);
+      break;
+    default:
+      break;
+  }
 }
 #endif /* ARDUINO_USB_MODE */

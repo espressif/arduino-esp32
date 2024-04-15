@@ -26,15 +26,15 @@ Then:
 
 Please see the NetworkClientSecure example.
 
-Using a bundle of root certificate authority certificates 
+Using a bundle of root certificate authority certificates
 ---------------------------------------------------------
-This method is similar to the single root certificate verfication above, but it uses a standard set of 
-root certificates from Mozilla to authenticate against, while the previous method only accepts a single 
+This method is similar to the single root certificate verification above, but it uses a standard set of
+root certificates from Mozilla to authenticate against, while the previous method only accepts a single
 certificate for a given server. This allows the client to connect to all public SSL servers.
 
 To use this feature in PlatformIO:
 1. create a certificate bundle as described in the document below, or obtain a pre-built one you trust:
-https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_crt_bundle.html 
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/esp_crt_bundle.html
 (gen_crt_bundle.py can be found in the /tools folder)
    a. note: the full bundle will take up around 64k of flash space, but has minimal RAM usage, as only
       the index of the certificates is kept in RAM
@@ -96,11 +96,11 @@ Please see the NetworkClientPSK example.
 Specifying the ALPN Protocol
 ----------------------------
 
-Application-Layer Protocol Negotiation (ALPN) is a Transport Layer Security (TLS) extension that allows 
-the application layer to negotiate which protocol should be performed over a secure connection in a manner 
+Application-Layer Protocol Negotiation (ALPN) is a Transport Layer Security (TLS) extension that allows
+the application layer to negotiate which protocol should be performed over a secure connection in a manner
 that avoids additional round trips and which is independent of the application-layer protocols.
 
-For example, this is used with AWS IoT Custom Authorizers where an MQTT client must set the ALPN protocol to ```mqtt```: 
+For example, this is used with AWS IoT Custom Authorizers where an MQTT client must set the ALPN protocol to ```mqtt```:
 
 ```
 const char *aws_protos[] = {"mqtt", NULL};

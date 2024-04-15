@@ -20,33 +20,29 @@
 
 #include "HEXBuilder.h"
 
-class HashBuilder : public HEXBuilder
-{
+class HashBuilder : public HEXBuilder {
 public:
-    virtual ~HashBuilder() {}
-    virtual void begin() = 0;
+  virtual ~HashBuilder() {}
+  virtual void begin() = 0;
 
-    virtual void add(const uint8_t* data, size_t len) = 0;
-    virtual void add(const char* data)
-    {
-        add((const uint8_t*)data, strlen(data));
-    }
-    virtual void add(String data)
-    {
-        add(data.c_str());
-    }
+  virtual void add(const uint8_t* data, size_t len) = 0;
+  virtual void add(const char* data) {
+    add((const uint8_t*)data, strlen(data));
+  }
+  virtual void add(String data) {
+    add(data.c_str());
+  }
 
-    virtual void addHexString(const char* data) = 0;
-    virtual void addHexString(String data)
-    {
-        addHexString(data.c_str());
-    }
+  virtual void addHexString(const char* data) = 0;
+  virtual void addHexString(String data) {
+    addHexString(data.c_str());
+  }
 
-    virtual bool addStream(Stream& stream, const size_t maxLen) = 0;
-    virtual void calculate() = 0;
-    virtual void getBytes(uint8_t* output) = 0;
-    virtual void getChars(char* output) = 0;
-    virtual String toString() = 0;
+  virtual bool addStream(Stream& stream, const size_t maxLen) = 0;
+  virtual void calculate() = 0;
+  virtual void getBytes(uint8_t* output) = 0;
+  virtual void getChars(char* output) = 0;
+  virtual String toString() = 0;
 };
 
 #endif

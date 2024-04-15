@@ -14,9 +14,9 @@
 
 /**
  * @brief This example demonstrates usage of RMT for receiving XJT D12 data
- * 
+ *
  * The output is the RMT data read and processed
- * 
+ *
  */
 
 //
@@ -53,30 +53,30 @@
 // ; 0x13 - Tail, 0x7E (tail ID)
 typedef union {
   struct {
-    uint8_t head;//0x7E
-    uint8_t rxid;//Receiver Number
-    uint8_t flags;//Range:0x20, Bind:0x01
-    uint8_t reserved0;//0x00
+    uint8_t head;       //0x7E
+    uint8_t rxid;       //Receiver Number
+    uint8_t flags;      //Range:0x20, Bind:0x01
+    uint8_t reserved0;  //0x00
     union {
       struct {
         uint8_t ch0_l;
-        uint8_t ch0_h: 4;
-        uint8_t ch1_l: 4;
+        uint8_t ch0_h : 4;
+        uint8_t ch1_l : 4;
         uint8_t ch1_h;
       };
       uint8_t bytes[3];
     } channels[4];
-    uint8_t reserved1;//0x00
+    uint8_t reserved1;  //0x00
     uint8_t crc_h;
     uint8_t crc_l;
-    uint8_t tail;//0x7E
+    uint8_t tail;  //0x7E
   };
   uint8_t buffer[20];
 } xjt_packet_t;
 
 #define XJT_VALID(i) (i->level0 && !i->level1 && i->duration0 >= 8 && i->duration0 <= 11)
 
-static uint32_t *s_channels;
+static uint32_t* s_channels;
 static uint32_t channels[16];
 static uint8_t xjt_flags = 0x0;
 static uint8_t xjt_rxid = 0x0;
@@ -114,7 +114,7 @@ static bool xjtReceiveBit(size_t index, bool bit) {
     //add bit
     xjt.buffer[xht_byte_index] &= ~(1 << --xjt_bit_index);
   }
-  if ((!xjt_bit_index) || (xjt_bit_index == 1 && xht_byte_index == 19) ) {
+  if ((!xjt_bit_index) || (xjt_bit_index == 1 && xht_byte_index == 19)) {
     xjt_bit_index = 8;
     if (!xht_byte_index && xjt.buffer[0] != 0x7E) {
       //fail!
@@ -156,7 +156,7 @@ void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels) {
   bool valid = true;
   rmt_data_t* it = NULL;
 
-  if (!channels)  {
+  if (!channels) {
     log_e("Please provide data block for storing channel info");
     return;
   }
@@ -179,7 +179,6 @@ void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels) {
       }
     } else if (!it->duration1 && !it->level1 && it->duration0 >= 5 && it->duration0 <= 8) {
       valid = xjtReceiveBit(i, false);
-
     }
   }
 }

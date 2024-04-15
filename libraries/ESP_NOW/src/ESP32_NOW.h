@@ -18,14 +18,14 @@ protected:
   bool added;
   bool add();
   bool remove();
-  size_t send(const uint8_t * data, int len);
+  size_t send(const uint8_t *data, int len);
 
-  ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel=0, wifi_interface_t iface=WIFI_IF_AP, const uint8_t *lmk=NULL);
+  ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = NULL);
 
 public:
   virtual ~ESP_NOW_Peer() {}
 
-  const uint8_t * addr() const;
+  const uint8_t *addr() const;
   bool addr(const uint8_t *mac_addr);
 
   uint8_t getChannel() const;
@@ -40,7 +40,7 @@ public:
   operator bool() const;
 
   //optional callbacks to be implemented by the upper class
-  virtual void onReceive(const uint8_t * data, size_t len, bool broadcast) {
+  virtual void onReceive(const uint8_t *data, size_t len, bool broadcast) {
     log_i("Received %d bytes from " MACSTR " %s", len, MAC2STR(mac), broadcast ? "(broadcast)" : "");
   }
 
@@ -51,24 +51,24 @@ public:
 
 class ESP_NOW_Class : public Print {
 public:
-  const uint8_t BROADCAST_ADDR[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+  const uint8_t BROADCAST_ADDR[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
   ESP_NOW_Class();
   ~ESP_NOW_Class();
 
-  bool begin(const uint8_t *pmk=NULL /* 16 bytes */);
+  bool begin(const uint8_t *pmk = NULL /* 16 bytes */);
   bool end();
 
   int getTotalPeerCount();
   int getEncryptedPeerCount();
 
   int availableForWrite();
-  size_t write(const uint8_t * data, size_t len);
-  size_t write(uint8_t data){ return write(&data, 1); }
+  size_t write(const uint8_t *data, size_t len);
+  size_t write(uint8_t data) {
+    return write(&data, 1);
+  }
 
-  void onNewPeer(void (*cb)(const esp_now_recv_info_t *info, const uint8_t * data, int len, void * arg), void * arg);
-
+  void onNewPeer(void (*cb)(const esp_now_recv_info_t *info, const uint8_t *data, int len, void *arg), void *arg);
 };
 
 extern ESP_NOW_Class ESP_NOW;
-

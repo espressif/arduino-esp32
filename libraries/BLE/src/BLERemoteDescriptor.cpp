@@ -15,14 +15,14 @@
 #include "esp32-hal-log.h"
 
 BLERemoteDescriptor::BLERemoteDescriptor(
-  uint16_t                 handle,
-  BLEUUID                  uuid,
+  uint16_t handle,
+  BLEUUID uuid,
   BLERemoteCharacteristic* pRemoteCharacteristic) {
 
-  m_handle                = handle;
-  m_uuid                  = uuid;
+  m_handle = handle;
+  m_uuid = uuid;
   m_pRemoteCharacteristic = pRemoteCharacteristic;
-    m_auth                  = ESP_GATT_AUTH_REQ_NONE;
+  m_auth = ESP_GATT_AUTH_REQ_NONE;
 }
 
 
@@ -32,7 +32,7 @@ BLERemoteDescriptor::BLERemoteDescriptor(
  */
 uint16_t BLERemoteDescriptor::getHandle() {
   return m_handle;
-} // getHandle
+}  // getHandle
 
 
 /**
@@ -41,7 +41,7 @@ uint16_t BLERemoteDescriptor::getHandle() {
  */
 BLERemoteCharacteristic* BLERemoteDescriptor::getRemoteCharacteristic() {
   return m_pRemoteCharacteristic;
-} // getRemoteCharacteristic
+}  // getRemoteCharacteristic
 
 
 /**
@@ -50,10 +50,10 @@ BLERemoteCharacteristic* BLERemoteDescriptor::getRemoteCharacteristic() {
  */
 BLEUUID BLERemoteDescriptor::getUUID() {
   return m_uuid;
-} // getUUID
+}  // getUUID
 
 void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* evtParam) {
-  switch(event) {
+  switch (event) {
     // ESP_GATTC_READ_DESCR_EVT
     // This event indicates that the server has responded to the read request.
     //
@@ -69,7 +69,7 @@ void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp
       // At this point, we have determined that the event is for us, so now we save the value
       if (evtParam->read.status == ESP_GATT_OK) {
         // it will read the cached value of the descriptor
-        m_value = String((char*) evtParam->read.value, evtParam->read.value_len);
+        m_value = String((char*)evtParam->read.value, evtParam->read.value_len);
       } else {
         m_value = "";
       }
@@ -101,9 +101,9 @@ String BLERemoteDescriptor::readValue() {
   // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
   esp_err_t errRc = ::esp_ble_gattc_read_char_descr(
     m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(),
-    m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),    // The connection ID to the BLE server
-    getHandle(),                                   // The handle of this characteristic
-    m_auth);                       // Security
+    m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),  // The connection ID to the BLE server
+    getHandle(),                                                            // The handle of this characteristic
+    m_auth);                                                                // Security
 
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -116,39 +116,39 @@ String BLERemoteDescriptor::readValue() {
 
   log_v("<< readValue(): length: %d", m_value.length());
   return m_value;
-} // readValue
+}  // readValue
 
 
 uint8_t BLERemoteDescriptor::readUInt8() {
   String value = readValue();
   if (value.length() >= 1) {
-    return (uint8_t) value[0];
+    return (uint8_t)value[0];
   }
   return 0;
-} // readUInt8
+}  // readUInt8
 
 
 uint16_t BLERemoteDescriptor::readUInt16() {
   String value = readValue();
   if (value.length() >= 2) {
-    return *(uint16_t*) value.c_str();
+    return *(uint16_t*)value.c_str();
   }
   return 0;
-} // readUInt16
+}  // readUInt16
 
 
 uint32_t BLERemoteDescriptor::readUInt32() {
   String value = readValue();
   if (value.length() >= 4) {
-    return *(uint32_t*) value.c_str();
+    return *(uint32_t*)value.c_str();
   }
   return 0;
-} // readUInt32
+}  // readUInt32
 
 
 /**
  * @brief Return a string representation of this BLE Remote Descriptor.
- * @retun A string representation of this BLE Remote Descriptor.
+ * @return A string representation of this BLE Remote Descriptor.
  */
 String BLERemoteDescriptor::toString() {
   char val[6];
@@ -157,7 +157,7 @@ String BLERemoteDescriptor::toString() {
   res += val;
   res += ", uuid: " + getUUID().toString();
   return res;
-} // toString
+}  // toString
 
 
 /**
@@ -180,18 +180,17 @@ void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response
     m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(),
     m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),
     getHandle(),
-    length,                           // Data length
-    data,                             // Data
+    length,  // Data length
+    data,    // Data
     response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP,
-    m_auth
-  );
+    m_auth);
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_write_char_descr: %d", errRc);
   }
 
   m_semaphoreWriteDescrEvt.wait("writeValue");
   log_v("<< writeValue");
-} // writeValue
+}  // writeValue
 
 
 /**
@@ -200,8 +199,8 @@ void BLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response
  * @param [in] response True if we expect a response.
  */
 void BLERemoteDescriptor::writeValue(String newValue, bool response) {
-  writeValue((uint8_t*) newValue.c_str(), newValue.length(), response);
-} // writeValue
+  writeValue((uint8_t*)newValue.c_str(), newValue.length(), response);
+}  // writeValue
 
 
 /**
@@ -211,14 +210,14 @@ void BLERemoteDescriptor::writeValue(String newValue, bool response) {
  */
 void BLERemoteDescriptor::writeValue(uint8_t newValue, bool response) {
   writeValue(&newValue, 1, response);
-} // writeValue
+}  // writeValue
 
 /**
  * @brief Set authentication request type for characteristic
  * @param [in] auth Authentication request type.
  */
 void BLERemoteDescriptor::setAuth(esp_gatt_auth_req_t auth) {
-    m_auth = auth;
+  m_auth = auth;
 }
 
 #endif /* CONFIG_BLUEDROID_ENABLED */

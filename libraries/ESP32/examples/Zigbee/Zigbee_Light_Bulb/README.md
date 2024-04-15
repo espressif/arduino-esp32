@@ -33,7 +33,7 @@ To get more information about the Espressif boards see [Espressif Development Ki
 
 ## Troubleshooting
 
-If the End device flashed with this example is not connecting to the coordinator, erase the flash before flashing it to the board. It is recommended to do this if you did changes to the coordinator. 
+If the End device flashed with this example is not connecting to the coordinator, erase the flash before flashing it to the board. It is recommended to do this if you did changes to the coordinator.
 You can do the following:
 
 * In the Arduino IDE go to the Tools menu and set `Erase All Flash Before Sketch Upload` to `Enabled`

@@ -56,7 +56,7 @@ This function will return ``true`` if the peripheral was initialized correctly.
 setPins
 ^^^^^^^
 
-This function is used to define the ``SDA`` and ``SCL`` pins. 
+This function is used to define the ``SDA`` and ``SCL`` pins.
 
 .. note:: Call this function before ``begin`` to change the pins from the default ones.
 
@@ -110,7 +110,7 @@ Set the bus timeout given in milliseconds. The default value is 50ms.
     void setTimeOut(uint16_t timeOutMillis);
 
 * ``timeOutMillis`` sets the timeout in ms.
-    
+
 getTimeOut
 ^^^^^^^^^^
 
@@ -132,8 +132,8 @@ This function writes data to the buffer.
 .. code-block:: arduino
 
     size_t write(uint8_t);
- 
-or 
+
+or
 
 .. code-block:: arduino
 
@@ -219,7 +219,7 @@ Here are the I2C master APIs. These function are intended to be used only for ma
 begin
 ^^^^^
 
-In master mode, the ``begin`` function can be used by passing the **pins** and **bus frequency**. Use this function only for the master mode. 
+In master mode, the ``begin`` function can be used by passing the **pins** and **bus frequency**. Use this function only for the master mode.
 
 .. code-block:: arduino
 
@@ -252,7 +252,7 @@ After writing to the buffer using `i2c write`_, use the function ``endTransmissi
 Calling the this function without ``sendStop`` is equivalent to ``sendStop = true``.
 
 .. code-block:: arduino
-    
+
     uint8_t endTransmission(void);
 
 This function will return the error code.
@@ -291,7 +291,7 @@ This mode is used to accept communication from the master.
 Basic Usage
 ^^^^^^^^^^^
 
-To start using I2C as slave mode on the Arduino, the first step is to include the ``Wire.h`` header to the scketch.
+To start using I2C as slave mode on the Arduino, the first step is to include the ``Wire.h`` header to the sketch.
 
 .. code-block:: arduino
 
@@ -309,7 +309,7 @@ and
 
     Wire.onRequest(onRequest);
 
-The ``onReceive`` will handle the request from the master device uppon a slave read request and the ``onRequest`` will handle the answer to the master.
+The ``onReceive`` will handle the request from the master device upon a slave read request and the ``onRequest`` will handle the answer to the master.
 
 Now, we can start the peripheral configuration by calling ``begin`` function with the device address.
 
@@ -322,7 +322,7 @@ By using ``begin`` without any arguments, all the settings will be done by using
 
 **For ESP32 only!**
 
-Use the function ``slaveWrite`` in order to pre-write to the slave response buffer. This is used only for the ESP32 in order to add the slave capability on the chip and keep compatability with Arduino.
+Use the function ``slaveWrite`` in order to pre-write to the slave response buffer. This is used only for the ESP32 in order to add the slave capability on the chip and keep compatibility with Arduino.
 
 .. code-block:: arduino
 
@@ -336,7 +336,7 @@ Here are the I2C slave APIs. These function are intended to be used only for sla
 begin
 ^^^^^
 
-In slave mode, the ``begin`` function must be used by passing the **slave address**. You can also define the **pins** and the **bus frequency**. 
+In slave mode, the ``begin`` function must be used by passing the **slave address**. You can also define the **pins** and the **bus frequency**.
 
 .. code-block:: arduino
 
@@ -365,7 +365,7 @@ The ``onRequest`` function is used to define the callback for the data to be sen
 slaveWrite
 ^^^^^^^^^^
 
-The ``slaveWrite`` function writes on the slave response buffer before receiving the response message. This function is only used for adding the slave compatability for the ESP32.
+The ``slaveWrite`` function writes on the slave response buffer before receiving the response message. This function is only used for adding the slave compatibility for the ESP32.
 
 .. warning:: This function is only required for the ESP32. You **don't** need to use for ESP32-S2 and ESP32-C3.
 

@@ -15,13 +15,13 @@ GPIOs Modes
 ***********
 
 There are two different modes in the GPIO configuration:
-    
+
 - **Input Mode**
 
 In this mode, the GPIO will receive the digital state from a specific device. This device could be a button or a switch.
 
 - **Output Mode**
-  
+
 For the output mode, the GPIO will change the GPIO digital state to a specific device. You can drive an LED for example.
 
 GPIO API
@@ -37,11 +37,11 @@ The ``pinMode`` function is used to define the GPIO operation mode for a specifi
 .. code-block:: arduino
 
     void pinMode(uint8_t pin, uint8_t mode);
- 
+
 * ``pin``   defines the GPIO pin number.
 * ``mode``  sets operation mode.
-  
-The following modes are supported for the basic `input` and `output`: 
+
+The following modes are supported for the basic `input` and `output`:
 
 * **INPUT** sets the GPIO as input without pullup or pulldown (high impedance).
 * **OUTPUT** sets the GPIO as output/read mode.
@@ -51,7 +51,7 @@ The following modes are supported for the basic `input` and `output`:
 Internal Pullup and Pulldown
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ESP32 SoC families supports the internal pullup and pulldown throught a 45kR resistor, that can be enabled when configuring the GPIO mode as ``INPUT`` mode.
+The ESP32 SoC families supports the internal pullup and pulldown through a 45kR resistor, that can be enabled when configuring the GPIO mode as ``INPUT`` mode.
 If the pullup or pulldown mode is not defined, the pin will stay in the high impedance mode.
 
 digitalWrite
@@ -64,7 +64,7 @@ The function ``digitalWrite`` sets the state of the selected GPIO to ``HIGH`` or
     void digitalWrite(uint8_t pin, uint8_t val);
 
 * ``pin``  defines the GPIO pin number.
-* ``val``  set the output digital state to ``HIGH`` or ``LOW``. 
+* ``val``  set the output digital state to ``HIGH`` or ``LOW``.
 
 digitalRead
 ***********
@@ -155,9 +155,9 @@ GPIO Input and Output Modes
 
     void loop() {
 
-       if(!digitalRead(BUTTON)){ 
+       if(!digitalRead(BUTTON)){
          stateLED = stateLED^1;
-        digitalWrite(LED,stateLED); 
+        digitalWrite(LED,stateLED);
       }
     }
 

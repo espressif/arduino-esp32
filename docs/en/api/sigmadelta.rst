@@ -6,7 +6,7 @@ About
 -----
 
 ESP32 provides a second-order sigma delta modulation module and 8 (4 for ESP32-C3)
-independent modulation channels. The channels are capable to output 1-bit 
+independent modulation channels. The channels are capable to output 1-bit
 signals (output index: 100 ~ 107) with sigma delta modulation.
 
 ========= =============================
@@ -36,7 +36,7 @@ This function is used to set up the SigmaDelta channel with the selected frequen
 * ``freq`` select frequency.
 
   * range is 1-14 bits (1-20 bits for ESP32).
-  
+
 This function returns ``true`` if the configuration was successful.
 If ``false`` is returned, an error occurred and the SigmaDelta channel was not configured.
 

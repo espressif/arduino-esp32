@@ -50,7 +50,8 @@ void setup() {
   model = tflite::GetModel(g_model);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     MicroPrintf("Model provided is schema version %d not equal to supported "
-                "version %d.", model->version(), TFLITE_SCHEMA_VERSION);
+                "version %d.",
+                model->version(), TFLITE_SCHEMA_VERSION);
     return;
   }
 
@@ -78,7 +79,7 @@ void setup() {
 
   // Build an interpreter to run the model with.
   static tflite::MicroInterpreter static_interpreter(
-      model, micro_op_resolver, tensor_arena, kTensorArenaSize);
+    model, micro_op_resolver, tensor_arena, kTensorArenaSize);
   interpreter = &static_interpreter;
 
   // Allocate memory from the tensor_arena for the model's tensors.
@@ -90,10 +91,7 @@ void setup() {
 
   // Get information about the memory area to use for the model's input.
   model_input = interpreter->input(0);
-  if ((model_input->dims->size != 2) || (model_input->dims->data[0] != 1) ||
-      (model_input->dims->data[1] !=
-       (kFeatureSliceCount * kFeatureSliceSize)) ||
-      (model_input->type != kTfLiteInt8)) {
+  if ((model_input->dims->size != 2) || (model_input->dims->data[0] != 1) || (model_input->dims->data[1] != (kFeatureSliceCount * kFeatureSliceSize)) || (model_input->type != kTfLiteInt8)) {
     MicroPrintf("Bad input tensor parameters in model");
     return;
   }
@@ -118,9 +116,9 @@ void loop() {
   const int32_t current_time = LatestAudioTimestamp();
   int how_many_new_slices = 0;
   TfLiteStatus feature_status = feature_provider->PopulateFeatureData(
-      previous_time, current_time, &how_many_new_slices);
+    previous_time, current_time, &how_many_new_slices);
   if (feature_status != kTfLiteOk) {
-    MicroPrintf( "Feature generation failed");
+    MicroPrintf("Feature generation failed");
     return;
   }
   previous_time = current_time;
@@ -138,7 +136,7 @@ void loop() {
   // Run the model on the spectrogram input and make sure it succeeds.
   TfLiteStatus invoke_status = interpreter->Invoke();
   if (invoke_status != kTfLiteOk) {
-    MicroPrintf( "Invoke failed");
+    MicroPrintf("Invoke failed");
     return;
   }
 
@@ -149,7 +147,7 @@ void loop() {
   uint8_t score = 0;
   bool is_new_command = false;
   TfLiteStatus process_status = recognizer->ProcessLatestResults(
-      output, current_time, &found_command, &score, &is_new_command);
+    output, current_time, &found_command, &score, &is_new_command);
   if (process_status != kTfLiteOk) {
     MicroPrintf("RecognizeCommands::ProcessLatestResults() failed");
     return;
