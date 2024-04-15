@@ -18,8 +18,8 @@ def test_periman(dut):
     while True:
         try:
             res = dut.expect(pattern, timeout=10)
-        except:
-            assert False, f"Could not detect end of test"
+        except Exception as e:  # noqa: F841
+            assert False, "Could not detect end of test"
 
         console_output = res.group(0).decode("utf-8")
         peripheral = console_output.split()[0]

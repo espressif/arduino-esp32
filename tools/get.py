@@ -27,7 +27,7 @@ if sys.version_info[0] == 3:
     from urllib.request import urlretrieve
     from urllib.request import urlopen
 
-    unicode = lambda s: str(s)
+    unicode = lambda s: str(s)  # noqa: E731
 else:
     # Not Python 3 - today, it is most likely to be Python 2
     from urllib import urlretrieve
@@ -185,7 +185,7 @@ def get_tool(tool):
             else:
                 try:
                     urlretrieve(url, local_path, report_progress)
-                except:
+                except:  # noqa: E722
                     download_file_with_progress(url, local_path)
                 sys.stdout.write("\rDone   \n")
                 sys.stdout.flush()

@@ -8,9 +8,10 @@
 # Modified since 2016-01-03 from Matthew O'Gorman (https://githumb.com/mogorman)
 #
 # This script will push an OTA update to the ESP
-# use it like: python espota.py -i <ESP_IP_address> -I <Host_IP_address> -p <ESP_port> -P <Host_port> [-a password] -f <sketch.bin>
+# use it like:
+# python espota.py -i <ESP_IP_addr> -I <Host_IP_addr> -p <ESP_port> -P <Host_port> [-a password] -f <sketch.bin>
 # Or to upload SPIFFS image:
-# python espota.py -i <ESP_IP_address> -I <Host_IP_address> -p <ESP_port> -P <HOST_port> [-a password] -s -f <spiffs.bin>
+# python espota.py -i <ESP_IP_addr> -I <Host_IP_addr> -p <ESP_port> -P <HOST_port> [-a password] -s -f <spiffs.bin>
 #
 # Changes
 # 2015-09-18:
@@ -53,6 +54,7 @@ AUTH = 200
 # Constants
 PROGRESS_BAR_LENGTH = 60
 
+
 # update_progress(): Displays or updates a console progress bar
 def update_progress(progress):
     if PROGRESS:
@@ -79,7 +81,7 @@ def update_progress(progress):
         sys.stderr.flush()
 
 
-def serve(remote_addr, local_addr, remote_port, local_port, password, filename, command=FLASH):
+def serve(remote_addr, local_addr, remote_port, local_port, password, filename, command=FLASH):  # noqa: C901
     # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = (local_addr, local_port)
@@ -107,8 +109,8 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
         sock2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         remote_address = (remote_addr, int(remote_port))
         try:
-            sent = sock2.sendto(message.encode(), remote_address)
-        except:
+            sent = sock2.sendto(message.encode(), remote_address)  # noqa: F841
+        except:  # noqa: E722
             sys.stderr.write("failed\n")
             sys.stderr.flush()
             sock2.close()
@@ -118,7 +120,7 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
         try:
             data = sock2.recv(37).decode()
             break
-        except:
+        except:  # noqa: E722
             sys.stderr.write(".")
             sys.stderr.flush()
             sock2.close()
@@ -142,7 +144,7 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
             sock2.settimeout(10)
             try:
                 data = sock2.recv(32).decode()
-            except:
+            except:  # noqa: E722
                 sys.stderr.write("FAIL\n")
                 logging.error("No Answer to our Authentication")
                 sock2.close()
@@ -166,7 +168,7 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
         connection, client_address = sock.accept()
         sock.settimeout(None)
         connection.settimeout(None)
-    except:
+    except:  # noqa: E722
         logging.error("No response from device")
         sock.close()
         return 1

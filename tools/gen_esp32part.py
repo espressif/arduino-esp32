@@ -165,7 +165,7 @@ class PartitionTable(list):
         return cls.from_csv(data), False
 
     @classmethod
-    def from_csv(cls, csv_contents):
+    def from_csv(cls, csv_contents):  # noqa: C901
         res = PartitionTable()
         lines = csv_contents.splitlines()
 
@@ -203,7 +203,7 @@ class PartitionTable(list):
                     )
                 else:
                     raise InputError(
-                        "CSV Error at line %d: Partitions overlap. Partition sets offset 0x%x. Previous partition ends 0x%x"
+                        "CSV Error at line %d: Partitions overlap. Partition sets offset 0x%x. Previous partition ends 0x%x"  # noqa: E501
                         % (e.line_no, e.offset, last_end)
                     )
             if e.offset is None:
@@ -246,14 +246,14 @@ class PartitionTable(list):
                 return p
         return None
 
-    def verify(self):
+    def verify(self):  # noqa: C901
         # verify each partition individually
         for p in self:
             p.verify()
 
         # check on duplicate name
         names = [p.name for p in self]
-        duplicates = set(n for n in names if names.count(n) > 1)
+        duplicates = set(n for n in names if names.count(n) > 1)  # noqa: C401
 
         # print sorted duplicate partitions by name
         if len(duplicates) != 0:
@@ -282,7 +282,7 @@ class PartitionTable(list):
             for p in otadata_duplicates:
                 critical("%s" % (p.to_csv()))
             raise InputError(
-                'Found multiple otadata partitions. Only one partition can be defined with type="data"(1) and subtype="ota"(0).'
+                'Found multiple otadata partitions. Only one partition can be defined with type="data"(1) and subtype="ota"(0).'  # noqa: E501
             )
 
         if len(otadata_duplicates) == 1 and otadata_duplicates[0].size != 0x2000:
@@ -318,7 +318,7 @@ class PartitionTable(list):
         md5 = hashlib.md5()
         result = cls()
         for o in range(0, len(b), 32):
-            data = b[o : o + 32]
+            data = b[o:o + 32]
             if len(data) != 32:
                 raise InputError("Partition table length must be a multiple of 32 bytes")
             if data == b"\xFF" * 32:
@@ -457,7 +457,7 @@ class PartitionDefinition(object):
             return None  # PartitionTable will fill in default
         return parse_int(strval)
 
-    def verify(self):
+    def verify(self):  # noqa: C901
         if self.type is None:
             raise ValidationError(self, "Type field is not set")
         if self.subtype is None:
@@ -574,7 +574,7 @@ def parse_int(v, keywords={}):
             raise InputError("Value '%s' is not valid. Known keywords: %s" % (v, ", ".join(keywords)))
 
 
-def main():
+def main():  # noqa: C901
     global quiet
     global md5sum
     global offset_part_table

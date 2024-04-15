@@ -2,7 +2,8 @@
 from g2p_en import G2p
 import argparse
 
-# python3 gen_sr_commands.py "Turn on the light,Switch on the light;Turn off the light,Switch off the light,Go dark;Start fan;Stop fan;Volume down,Turn down;Mute sound;Next song;Pause playback"
+# python3 gen_sr_commands.py "Turn on the light,Switch on the light;Turn off the light,Switch off the light,Go dark;\
+# Start fan;Stop fan;Volume down,Turn down;Mute sound;Next song;Pause playback"
 # enum {
 #   SR_CMD_TURN_ON_THE_LIGHT,
 #   SR_CMD_TURN_OFF_THE_LIGHT,
