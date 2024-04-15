@@ -58,3 +58,5 @@ jobs:
       - name: Push changes using pre-commit-ci-lite
         uses: pre-commit-ci/lite-action@v1.0.2
         if: always()
+        with:
+          msg: "ci(pre-commit): Apply automatic fixes"
