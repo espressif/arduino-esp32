@@ -16,8 +16,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-bool dacWrite(uint8_t pin, uint8_t value);
-bool dacDisable(uint8_t pin);
+  bool dacWrite(uint8_t pin, uint8_t value);
+  bool dacDisable(uint8_t pin);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-void setup(){
+void setup() {
   Serial.begin(115200);
   while (!Serial) {
     ;
@@ -7,5 +7,5 @@ void setup(){
   Serial.println("Hello cfg!");
 }
 
-void loop(){
+void loop() {
 }

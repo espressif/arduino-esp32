@@ -7,7 +7,7 @@ static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
 static const uint8_t LED_BUILTIN = 22;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t SDA = 21;
@@ -16,10 +16,10 @@ static const uint8_t SDA = 21;
 static const uint8_t SCL = 23;
 
 // These are the settings used for the on-board SD card slot
-static const uint8_t SS    = 13;
-static const uint8_t MOSI  = 15;
-static const uint8_t MISO  = 2;
-static const uint8_t SCK   = 14;
+static const uint8_t SS = 13;
+static const uint8_t MOSI = 15;
+static const uint8_t MISO = 2;
+static const uint8_t SCK = 14;
 
 static const uint8_t A0 = 36;
 static const uint8_t A3 = 39;

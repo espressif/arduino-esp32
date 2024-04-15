@@ -19,49 +19,50 @@
 #define BUTTON1 16
 #define BUTTON2 17
 
-class Button{
+class Button {
 public:
-  Button(uint8_t reqPin) : PIN(reqPin){
+  Button(uint8_t reqPin)
+    : PIN(reqPin) {
     pinMode(PIN, INPUT_PULLUP);
   };
 
-  void begin(){
-    attachInterrupt(PIN, std::bind(&Button::isr,this), FALLING);
+  void begin() {
+    attachInterrupt(PIN, std::bind(&Button::isr, this), FALLING);
     Serial.printf("Started button interrupt on pin %d\n", PIN);
   }
 
-  ~Button(){
+  ~Button() {
     detachInterrupt(PIN);
   }
 
-	void ARDUINO_ISR_ATTR isr() {
-		numberKeyPresses = numberKeyPresses + 1;
-		pressed = true;
-	}
+  void ARDUINO_ISR_ATTR isr() {
+    numberKeyPresses = numberKeyPresses + 1;
+    pressed = true;
+  }
 
-	void checkPressed() {
-		if (pressed) {
-			Serial.printf("Button on pin %u has been pressed %lu times\n", PIN, numberKeyPresses);
-			pressed = false;
-		}
-	}
+  void checkPressed() {
+    if (pressed) {
+      Serial.printf("Button on pin %u has been pressed %lu times\n", PIN, numberKeyPresses);
+      pressed = false;
+    }
+  }
 
 private:
-    const uint8_t PIN;
-    volatile uint32_t numberKeyPresses;
-    volatile bool pressed;
+  const uint8_t PIN;
+  volatile uint32_t numberKeyPresses;
+  volatile bool pressed;
 };
 
 Button button1(BUTTON1);
 Button button2(BUTTON2);
 
 void setup() {
-    Serial.begin(115200);
-    while(!Serial) delay(10);
-    Serial.println("Starting Functional Interrupt example.");
-    button1.begin();
-    button2.begin();
-    Serial.println("Setup done.");
+  Serial.begin(115200);
+  while (!Serial) delay(10);
+  Serial.println("Starting Functional Interrupt example.");
+  button1.begin();
+  button2.begin();
+  Serial.println("Setup done.");
 }
 
 void loop() {

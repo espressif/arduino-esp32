@@ -16309,7 +16309,7 @@ esp32s3-devkitlipo.menu.EraseFlash.none=Disabled
 esp32s3-devkitlipo.menu.EraseFlash.none.upload.erase_cmd=
 esp32s3-devkitlipo.menu.EraseFlash.all=Enabled
 esp32s3-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
-     
+
 ##############################################################
 
 esp32c3-devkitlipo.name=OLIMEX ESP32-C3-DevKit-Lipo
@@ -22487,7 +22487,7 @@ heltec_capsule_sensor_V3.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_L
 
 heltec_capsule_sensor_V3.menu.SLOW_CLK_TPYE.0=External 32K (default)
 heltec_capsule_sensor_V3.menu.SLOW_CLK_TPYE.0.build.SLOW_CLK_TPYE=1
-heltec_capsule_sensor_V3.menu.SLOW_CLK_TPYE.1=Internal 
+heltec_capsule_sensor_V3.menu.SLOW_CLK_TPYE.1=Internal
 heltec_capsule_sensor_V3.menu.SLOW_CLK_TPYE.1.build.SLOW_CLK_TPYE=0
 
 heltec_capsule_sensor_V3.menu.NetworkLogLevel.0=NONE
@@ -22499,7 +22499,7 @@ heltec_capsule_sensor_V3.menu.NetworkLogLevel.2.build.NetworkLogLevel=2
 heltec_capsule_sensor_V3.menu.NetworkLogLevel.3=INFO
 heltec_capsule_sensor_V3.menu.NetworkLogLevel.3.build.NetworkLogLevel=3
 
-heltec_capsule_sensor_V3.build.defines=-D{build.band} -DMCU_ESP32_S3 -DHELTEC_BOARD=50 -DCAPSULE_SENSOR_V3 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board} -DNLOG_LOCAL_LEVEL={build.NetworkLogLevel} 
+heltec_capsule_sensor_V3.build.defines=-D{build.band} -DMCU_ESP32_S3 -DHELTEC_BOARD=50 -DCAPSULE_SENSOR_V3 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board} -DNLOG_LOCAL_LEVEL={build.NetworkLogLevel}
 
 heltec_capsule_sensor_V3.menu.EraseFlash.none=Disabled
 heltec_capsule_sensor_V3.menu.EraseFlash.none.upload.erase_cmd=

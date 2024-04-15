@@ -55,7 +55,7 @@ void setup() {
   }
 
   // Mount the SD card
-  if(!SD_MMC.begin("/sdcard", true)){
+  if (!SD_MMC.begin("/sdcard", true)) {
     Serial.println("Failed to initialize SD card!");
     return;
   }

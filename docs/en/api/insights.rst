@@ -7,7 +7,7 @@ About
 
 ESP Insights is a remote diagnostics solution that allows users to remotely monitor the health of ESP devices in the field.
 
-Developers normally prefer debugging issues by physically probing them using gdb or observing the logs. This surely helps debug issues, but there are often cases wherein issues are seen only in specific environments under specific conditions. Even things like casings and placement of the product can affect the behaviour. A few examples are
+Developers normally prefer debugging issues by physically probing them using gdb or observing the logs. This surely helps debug issues, but there are often cases wherein issues are seen only in specific environments under specific conditions. Even things like casings and placement of the product can affect the behavior. A few examples are
 
 - Wi-Fi disconnections for a smart switch concealed in a wall.
 - Smart speakers crashing during some specific usage pattern.

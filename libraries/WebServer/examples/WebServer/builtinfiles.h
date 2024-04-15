@@ -1,13 +1,13 @@
 /**
  * @file builtinfiles.h
  * @brief This file is part of the WebServer example for the ESP8266WebServer.
- *  
+ *
  * This file contains long, multiline text variables for  all builtin resources.
  */
 
 // used for $upload.htm
 static const char uploadContent[] PROGMEM =
-R"==(
+  R"==(
 <!doctype html>
 <html lang='en'>
 
@@ -24,13 +24,13 @@ R"==(
   <div id='zone' style='width:16em;height:12em;padding:10px;background-color:#ddd'>Drop files here...</div>
 
   <script>
-    // allow drag&drop of file objects 
+    // allow drag&drop of file objects
     function dragHelper(e) {
       e.stopPropagation();
       e.preventDefault();
     }
 
-    // allow drag&drop of file objects 
+    // allow drag&drop of file objects
     function dropped(e) {
       dragHelper(e);
       var fls = e.dataTransfer.files;
@@ -54,10 +54,10 @@ R"==(
 static const char notFoundContent[] PROGMEM = R"==(
 <html>
 <head>
-  <title>Ressource not found</title>
+  <title>Resource not found</title>
 </head>
 <body>
-  <p>The ressource was not found.</p>
+  <p>The resource was not found.</p>
   <p><a href="/">Start again</a></p>
 </body>
 )==";

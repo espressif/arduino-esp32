@@ -129,16 +129,16 @@ set(ARDUINO_LIBRARY_EEPROM_SRCS libraries/EEPROM/src/EEPROM.cpp)
 
 set(ARDUINO_LIBRARY_ESP_I2S_SRCS libraries/ESP_I2S/src/ESP_I2S.cpp)
 
-set(ARDUINO_LIBRARY_ESP_NOW_SRCS 
+set(ARDUINO_LIBRARY_ESP_NOW_SRCS
   libraries/ESP_NOW/src/ESP32_NOW.cpp
   libraries/ESP_NOW/src/ESP32_NOW_Serial.cpp)
-  
-set(ARDUINO_LIBRARY_ESP_SR_SRCS 
+
+set(ARDUINO_LIBRARY_ESP_SR_SRCS
   libraries/ESP_SR/src/ESP_SR.cpp
   libraries/ESP_SR/src/esp32-hal-sr.c)
- 
+
 set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
- 
+
 set(ARDUINO_LIBRARY_Ethernet_SRCS libraries/Ethernet/src/ETH.cpp)
 
 set(ARDUINO_LIBRARY_FFat_SRCS libraries/FFat/src/FFat.cpp)
@@ -187,7 +187,7 @@ set(ARDUINO_LIBRARY_Ticker_SRCS libraries/Ticker/src/Ticker.cpp)
 set(ARDUINO_LIBRARY_Update_SRCS
   libraries/Update/src/Updater.cpp
   libraries/Update/src/HttpsOTAUpdate.cpp)
-  
+
 set(ARDUINO_LIBRARY_USB_SRCS
   libraries/USB/src/USBHID.cpp
   libraries/USB/src/USBMIDI.cpp

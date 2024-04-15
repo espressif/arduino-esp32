@@ -4,24 +4,24 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID            0x239A
-#define USB_PID            0x8145
-#define USB_MANUFACTURER   "Adafruit"
-#define USB_PRODUCT        "Metro ESP32-S3"
-#define USB_SERIAL         ""   // Empty string for MAC adddress
+#define USB_VID 0x239A
+#define USB_PID 0x8145
+#define USB_MANUFACTURER "Adafruit"
+#define USB_PRODUCT "Metro ESP32-S3"
+#define USB_SERIAL ""  // Empty string for MAC address
 
-#define LED_BUILTIN     13
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN 13
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
 // Neopixel
-#define PIN_NEOPIXEL    46
+#define PIN_NEOPIXEL 46
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
-#define NEOPIXEL_NUM    1
+#define NEOPIXEL_NUM 1
 
-#define PIN_BUTTON1     0  // BOOT0 switch
+#define PIN_BUTTON1 0  // BOOT0 switch
 
 static const uint8_t TX = 40;
 static const uint8_t RX = 41;
@@ -31,9 +31,9 @@ static const uint8_t RX = 41;
 static const uint8_t SDA = 47;
 static const uint8_t SCL = 48;
 
-static const uint8_t SS   = 45;
+static const uint8_t SS = 45;
 static const uint8_t MOSI = 42;
-static const uint8_t SCK  = 39;
+static const uint8_t SCK = 39;
 static const uint8_t MISO = 21;
 
 static const uint8_t A0 = 14;

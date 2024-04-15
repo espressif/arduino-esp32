@@ -6,19 +6,18 @@
 #include <ETH.h>
 
 #ifndef ETH_PHY_TYPE
-#define ETH_PHY_TYPE        ETH_PHY_TLK110
-#define ETH_PHY_ADDR        31
-#define ETH_PHY_MDC         23
-#define ETH_PHY_MDIO        18
-#define ETH_PHY_POWER       17
-#define ETH_CLK_MODE        ETH_CLOCK_GPIO0_IN
+#define ETH_PHY_TYPE ETH_PHY_TLK110
+#define ETH_PHY_ADDR 31
+#define ETH_PHY_MDC 23
+#define ETH_PHY_MDIO 18
+#define ETH_PHY_POWER 17
+#define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
 #endif
 
 static bool eth_connected = false;
 
 // WARNING: onEvent is called from a separate FreeRTOS task (thread)!
-void onEvent(arduino_event_id_t event)
-{
+void onEvent(arduino_event_id_t event) {
   switch (event) {
     case ARDUINO_EVENT_ETH_START:
       Serial.println("ETH Started");
@@ -51,8 +50,7 @@ void onEvent(arduino_event_id_t event)
   }
 }
 
-void testClient(const char * host, uint16_t port)
-{
+void testClient(const char* host, uint16_t port) {
   Serial.print("\nconnecting to ");
   Serial.println(host);
 
@@ -62,7 +60,8 @@ void testClient(const char * host, uint16_t port)
     return;
   }
   client.printf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host);
-  while (client.connected() && !client.available());
+  while (client.connected() && !client.available())
+    ;
   while (client.available()) {
     Serial.write(client.read());
   }
@@ -71,16 +70,14 @@ void testClient(const char * host, uint16_t port)
   client.stop();
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   Network.onEvent(onEvent);  // Will call onEvent() from another thread.
   ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_MDC, ETH_PHY_MDIO, ETH_PHY_POWER, ETH_CLK_MODE);
 }
 
 
-void loop()
-{
+void loop() {
   if (eth_connected) {
     testClient("google.com", 80);
   }

@@ -21,22 +21,21 @@
 #include <inttypes.h>
 #include "Stream.h"
 
-class HardwareI2C : public Stream
-{
-  public:
-    virtual bool begin() = 0;
-    virtual bool begin(uint8_t address) = 0;
-    virtual bool end() = 0;
+class HardwareI2C : public Stream {
+public:
+  virtual bool begin() = 0;
+  virtual bool begin(uint8_t address) = 0;
+  virtual bool end() = 0;
 
-    virtual bool setClock(uint32_t freq) = 0;
-  
-    virtual void beginTransmission(uint8_t address) = 0;
-    virtual uint8_t endTransmission(bool stopBit) = 0;
-    virtual uint8_t endTransmission(void) = 0;
+  virtual bool setClock(uint32_t freq) = 0;
 
-    virtual size_t requestFrom(uint8_t address, size_t len, bool stopBit) = 0;
-    virtual size_t requestFrom(uint8_t address, size_t len) = 0;
+  virtual void beginTransmission(uint8_t address) = 0;
+  virtual uint8_t endTransmission(bool stopBit) = 0;
+  virtual uint8_t endTransmission(void) = 0;
 
-    virtual void onReceive(void(*)(int)) = 0;
-    virtual void onRequest(void(*)(void)) = 0;
+  virtual size_t requestFrom(uint8_t address, size_t len, bool stopBit) = 0;
+  virtual size_t requestFrom(uint8_t address, size_t len) = 0;
+
+  virtual void onReceive(void (*)(int)) = 0;
+  virtual void onRequest(void (*)(void)) = 0;
 };

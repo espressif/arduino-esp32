@@ -19,7 +19,7 @@
 #include "sd_defines.h"
 // #include "diskio.h"
 
-uint8_t sdcard_init(uint8_t cs, SPIClass * spi, int hz);
+uint8_t sdcard_init(uint8_t cs, SPIClass* spi, int hz);
 uint8_t sdcard_uninit(uint8_t pdrv);
 
 bool sdcard_mount(uint8_t pdrv, const char* path, uint8_t max_files, bool format_if_empty);

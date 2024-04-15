@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2021 Ha Thach (tinyusb.org) for Adafruit Industries
@@ -28,11 +28,10 @@
 
 extern "C" {
 
-// Initialize variant/board, called before setup()
-void initVariant(void) {
-  // default SD_CS to input pullup (we cannot have built in pullup since its
-  // a strapping pin!)
-  pinMode(SS, INPUT_PULLUP);
-}
-
+  // Initialize variant/board, called before setup()
+  void initVariant(void) {
+    // default SD_CS to input pullup (we cannot have built in pullup since its
+    // a strapping pin!)
+    pinMode(SS, INPUT_PULLUP);
+  }
 }

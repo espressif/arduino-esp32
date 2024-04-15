@@ -15,11 +15,11 @@ bool is_authentified() {
     String cookie = server.header("Cookie");
     Serial.println(cookie);
     if (cookie.indexOf("ESPSESSIONID=1") != -1) {
-      Serial.println("Authentification Successful");
+      Serial.println("Authentication Successful");
       return true;
     }
   }
-  Serial.println("Authentification Failed");
+  Serial.println("Authentication Failed");
   return false;
 }
 
@@ -40,7 +40,7 @@ void handleLogin() {
     return;
   }
   if (server.hasArg("USERNAME") && server.hasArg("PASSWORD")) {
-    if (server.arg("USERNAME") == "admin" &&  server.arg("PASSWORD") == "admin") {
+    if (server.arg("USERNAME") == "admin" && server.arg("PASSWORD") == "admin") {
       server.sendHeader("Location", "/");
       server.sendHeader("Cache-Control", "no-cache");
       server.sendHeader("Set-Cookie", "ESPSESSIONID=1");
@@ -59,7 +59,7 @@ void handleLogin() {
   server.send(200, "text/html", content);
 }
 
-//root page can be accessed only if authentification is ok
+//root page can be accessed only if authentication is ok
 void handleRoot() {
   Serial.println("Enter handleRoot");
   String header;
@@ -77,7 +77,7 @@ void handleRoot() {
   server.send(200, "text/html", content);
 }
 
-//no need authentification
+//no need authentication
 void handleNotFound() {
   String message = "File Not Found\n\n";
   message += "URI: ";
@@ -114,12 +114,12 @@ void setup(void) {
   server.on("/", handleRoot);
   server.on("/login", handleLogin);
   server.on("/inline", []() {
-    server.send(200, "text/plain", "this works without need of authentification");
+    server.send(200, "text/plain", "this works without need of authentication");
   });
 
   server.onNotFound(handleNotFound);
   //here the list of headers to be recorded
-  const char * headerkeys[] = {"User-Agent", "Cookie"} ;
+  const char* headerkeys[] = { "User-Agent", "Cookie" };
   size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
   //ask server to track these headers
   server.collectHeaders(headerkeys, headerkeyssize);
@@ -129,5 +129,5 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

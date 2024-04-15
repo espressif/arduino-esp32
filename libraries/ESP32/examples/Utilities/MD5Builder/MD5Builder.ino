@@ -55,10 +55,8 @@ void setup() {
       Serial.println("Odd - failing MD5 on hex string");
       Serial.println(md5);
       Serial.println(result);
-    }
-    else
+    } else
       Serial.println("OK!");
-
   }
 
   // Check that this also work if we add the password as
@@ -80,16 +78,14 @@ void setup() {
       Serial.println("OK!");
 
     // And also check that we can compare this as pure, raw, bytes
-    uint8_t raw[16] = {   0xb1, 0x0a, 0x8d, 0xb1, 0x64, 0xe0, 0x75, 0x41,
-                          0x05, 0xb7, 0xa9, 0x9b, 0xe7, 0x2e, 0x3f, 0xe5
-                      };
+    uint8_t raw[16] = { 0xb1, 0x0a, 0x8d, 0xb1, 0x64, 0xe0, 0x75, 0x41,
+                        0x05, 0xb7, 0xa9, 0x9b, 0xe7, 0x2e, 0x3f, 0xe5 };
     uint8_t res[16];
     md.getBytes(res);
     if (memcmp(raw, res, 16))
       Serial.println("Odd - failing MD5 on byte array when compared as bytes");
     else
       Serial.println("OK!");
-
   }
 }
 

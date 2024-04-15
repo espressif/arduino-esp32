@@ -47,18 +47,16 @@
  * @param ssid_hidden       Network cloaking (0 = broadcast SSID, 1 = hide SSID)
  * @param max_connection    Max simultaneous connected clients, 1 - 4.
 */
-bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder, wifi_auth_mode_t auth_mode, wifi_cipher_type_t cipher)
-{
-    return AP.begin() && AP.create(ssid, passphrase, channel, ssid_hidden, max_connection, ftm_responder, auth_mode, cipher);
+bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder, wifi_auth_mode_t auth_mode, wifi_cipher_type_t cipher) {
+  return AP.begin() && AP.create(ssid, passphrase, channel, ssid_hidden, max_connection, ftm_responder, auth_mode, cipher);
 }
 
 /**
  * Return the current SSID associated with the network
  * @return SSID
  */
-String WiFiAPClass::softAPSSID() const
-{
-    return AP.SSID();
+String WiFiAPClass::softAPSSID() const {
+  return AP.SSID();
 }
 
 /**
@@ -67,9 +65,8 @@ String WiFiAPClass::softAPSSID() const
  * @param gateway       gateway IP
  * @param subnet        subnet mask
  */
-bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start, IPAddress dns)
-{
-    return AP.begin() && AP.config(local_ip, gateway, subnet, dhcp_lease_start, dns);
+bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dhcp_lease_start, IPAddress dns) {
+  return AP.begin() && AP.config(local_ip, gateway, subnet, dhcp_lease_start, dns);
 }
 
 /**
@@ -77,15 +74,14 @@ bool WiFiAPClass::softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress 
  * @param wifioff disable mode?
  * @return one value of wl_status_t enum
  */
-bool WiFiAPClass::softAPdisconnect(bool wifioff)
-{
-    if(!AP.clear()){
-        return false;
-    }
-    if(wifioff) {
-        return AP.end();
-    }
-    return true;
+bool WiFiAPClass::softAPdisconnect(bool wifioff) {
+  if (!AP.clear()) {
+    return false;
+  }
+  if (wifioff) {
+    return AP.end();
+  }
+  return true;
 }
 
 /**
@@ -93,61 +89,55 @@ bool WiFiAPClass::softAPdisconnect(bool wifioff)
  * @param m wifi_bandwidth_t
  */
 bool WiFiAPClass::softAPbandwidth(wifi_bandwidth_t bandwidth) {
-    return AP.bandwidth(bandwidth);
+  return AP.bandwidth(bandwidth);
 }
 
 /**
  * Get the count of the Station / client that are connected to the softAP interface
  * @return Stations count
  */
-uint8_t WiFiAPClass::softAPgetStationNum()
-{
-    return AP.stationCount();
+uint8_t WiFiAPClass::softAPgetStationNum() {
+  return AP.stationCount();
 }
 
 /**
  * Get the softAP interface IP address.
  * @return IPAddress softAP IP
  */
-IPAddress WiFiAPClass::softAPIP()
-{
-    return AP.localIP();
+IPAddress WiFiAPClass::softAPIP() {
+  return AP.localIP();
 }
 
 /**
  * Get the softAP broadcast IP address.
  * @return IPAddress softAP broadcastIP
  */
-IPAddress WiFiAPClass::softAPBroadcastIP()
-{
-    return AP.broadcastIP();
+IPAddress WiFiAPClass::softAPBroadcastIP() {
+  return AP.broadcastIP();
 }
 
 /**
  * Get the softAP network ID.
  * @return IPAddress softAP networkID
  */
-IPAddress WiFiAPClass::softAPNetworkID()
-{
-    return AP.networkID();
+IPAddress WiFiAPClass::softAPNetworkID() {
+  return AP.networkID();
 }
 
 /**
  * Get the softAP subnet mask.
  * @return IPAddress subnetMask
  */
-IPAddress WiFiAPClass::softAPSubnetMask()
-{
-    return AP.subnetMask();
+IPAddress WiFiAPClass::softAPSubnetMask() {
+  return AP.subnetMask();
 }
 
 /**
  * Get the softAP subnet CIDR.
  * @return uint8_t softAP subnetCIDR
  */
-uint8_t WiFiAPClass::softAPSubnetCIDR()
-{
-    return AP.subnetCIDR();
+uint8_t WiFiAPClass::softAPSubnetCIDR() {
+  return AP.subnetCIDR();
 }
 
 /**
@@ -155,27 +145,24 @@ uint8_t WiFiAPClass::softAPSubnetCIDR()
  * @param mac   pointer to uint8_t array with length WL_MAC_ADDR_LENGTH
  * @return      pointer to uint8_t*
  */
-uint8_t* WiFiAPClass::softAPmacAddress(uint8_t* mac)
-{
-    return AP.macAddress(mac);
+uint8_t* WiFiAPClass::softAPmacAddress(uint8_t* mac) {
+  return AP.macAddress(mac);
 }
 
 /**
  * Get the softAP interface MAC address.
  * @return String mac
  */
-String WiFiAPClass::softAPmacAddress(void)
-{
-    return AP.macAddress();
+String WiFiAPClass::softAPmacAddress(void) {
+  return AP.macAddress();
 }
 
 /**
  * Get the softAP interface Host name.
  * @return char array hostname
  */
-const char * WiFiAPClass::softAPgetHostname()
-{
-    return AP.getHostname();
+const char* WiFiAPClass::softAPgetHostname() {
+  return AP.getHostname();
 }
 
 /**
@@ -183,18 +170,16 @@ const char * WiFiAPClass::softAPgetHostname()
  * @param  hostname  pointer to const string
  * @return true on   success
  */
-bool WiFiAPClass::softAPsetHostname(const char * hostname)
-{
-    return AP.setHostname(hostname);
+bool WiFiAPClass::softAPsetHostname(const char* hostname) {
+  return AP.setHostname(hostname);
 }
 
 /**
  * Enable IPv6 on the softAP interface.
  * @return true on success
  */
-bool WiFiAPClass::softAPenableIPv6(bool enable)
-{
-    return AP.enableIPv6(enable);
+bool WiFiAPClass::softAPenableIPv6(bool enable) {
+  return AP.enableIPv6(enable);
 }
 
 /**
@@ -202,9 +187,8 @@ bool WiFiAPClass::softAPenableIPv6(bool enable)
  * @return IPAddress softAP IPv6
  */
 
-IPAddress WiFiAPClass::softAPlinkLocalIPv6()
-{
-    return AP.linkLocalIPv6();
+IPAddress WiFiAPClass::softAPlinkLocalIPv6() {
+  return AP.linkLocalIPv6();
 }
 
 #endif /* SOC_WIFI_SUPPORTED */

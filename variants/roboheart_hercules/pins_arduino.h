@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-// Motor driver pins 
+// Motor driver pins
 #define MOTOR_A_IN1 25  //  PHASE/IN1
 #define MOTOR_A_IN2 26  //  ENABLE/IN2
 
@@ -13,13 +13,13 @@
 #define MOTOR_C_IN1 33  //  PHASE/IN1
 #define MOTOR_C_IN2 4   //  ENABLE/IN2
 
-#define SLEEP_MOTOR_ABC 2  //  nSLEEP 
+#define SLEEP_MOTOR_ABC 2  //  nSLEEP
 
-#define LED_ROBOHEART 14  // Built in LED
-#define BUILTIN_LED LED_ROBOHEART // backward compatibility
+#define LED_ROBOHEART 13           // Built in LED
+#define BUILTIN_LED LED_ROBOHEART  // backward compatibility
 #define LED_BUILTIN LED_ROBOHEART
 
-#define BUTTON_ROBOHEART 0 // Button
+#define BUTTON_ROBOHEART 0  // Button
 
 // I2C IMU sensor
 #define IMU_SDA 21
@@ -35,7 +35,7 @@
 #define GSM_RTS 14
 #define GSM_TX TXD1
 #define GSM_RX RXD1
-#define BATTERY_PIN 36  // Battery ADC pin 
+#define BATTERY_PIN 36  // Battery ADC pin
 
 static const uint8_t TX = 35;
 static const uint8_t RX = 34;
@@ -46,10 +46,10 @@ static const uint8_t RXD2 = 16;
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 5;
-static const uint8_t MOSI  = 23;
-static const uint8_t MISO  = 19;
-static const uint8_t SCK   = 18;
+static const uint8_t SS = 5;
+static const uint8_t MOSI = 23;
+static const uint8_t MISO = 19;
+static const uint8_t SCK = 18;
 
 static const uint8_t G23 = 23;
 static const uint8_t G19 = 19;

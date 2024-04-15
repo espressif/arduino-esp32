@@ -14,16 +14,15 @@ typedef struct credentials_t {
 } credentials_t;
 
 credentials_t passwdfile[] = {
-  {  "admin",  "esp32" },
-  {  "fred",  "41234123" },
-  {  "charlie",  "sdfsd" },
-  {  "alice",  "vambdnkuhj" },
-  {  "bob",  "svcdbjhws12" },
+  { "admin", "esp32" },
+  { "fred", "41234123" },
+  { "charlie", "sdfsd" },
+  { "alice", "vambdnkuhj" },
+  { "bob", "svcdbjhws12" },
 };
 const size_t N_CREDENTIALS = sizeof(passwdfile) / sizeof(credentials_t);
 
-String * credentialsHandler(HTTPAuthMethod mode, String username, String params[])
-{
+String* credentialsHandler(HTTPAuthMethod mode, String username, String params[]) {
   for (int i = 0; i < N_CREDENTIALS; i++) {
     if (username == passwdfile[i].username)
       return new String(passwdfile[i].password);
@@ -60,5 +59,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

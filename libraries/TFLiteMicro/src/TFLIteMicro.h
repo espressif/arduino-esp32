@@ -3,4 +3,4 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-// This header file is kept to avoid Invalid libary error prints while compiling TFLite Micro examples.
+// This header file is kept to avoid Invalid library error prints while compiling TFLite Micro examples.

@@ -4,26 +4,26 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define PIN_NEOPIXEL        18
+#define PIN_NEOPIXEL 18
 #define RGB_BUILTIN PIN_NEOPIXEL
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t BUT_BUILTIN = 0;
-#define BUILTIN_BUT  BUT_BUILTIN // backward compatibility
-#define BUT_BUILTIN  BUT_BUILTIN // allow testing #ifdef BUT_BUILTIN
+#define BUILTIN_BUT BUT_BUILTIN  // backward compatibility
+#define BUT_BUILTIN BUT_BUILTIN  // allow testing #ifdef BUT_BUILTIN
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
-// define I2C pins 
+// define I2C pins
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
 // define SPI pins
-static const uint8_t SS    = 34;
-static const uint8_t MOSI  = 35;
-static const uint8_t MISO  = 37;
-static const uint8_t SCK   = 36;
+static const uint8_t SS = 34;
+static const uint8_t MOSI = 35;
+static const uint8_t MISO = 37;
+static const uint8_t SCK = 36;
 
 // external power sense - disabled by default - check the schematic
 //static const uint8_t PWR_SENSE = 7;

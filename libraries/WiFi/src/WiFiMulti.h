@@ -32,50 +32,49 @@
 #include <vector>
 
 typedef struct {
-    char * ssid;
-    char * passphrase;
-    bool hasFailed;
+  char* ssid;
+  char* passphrase;
+  bool hasFailed;
 } WifiAPlist_t;
 
 typedef std::function<bool(void)> ConnectionTestCB_t;
 
-class WiFiMulti
-{
+class WiFiMulti {
 public:
-    WiFiMulti();
-    ~WiFiMulti();
+  WiFiMulti();
+  ~WiFiMulti();
 
-    bool addAP(const char* ssid, const char *passphrase = NULL);
-    uint8_t run(uint32_t connectTimeout=5000, bool scanHidden=false);
-    void enableIPv6(bool state);
+  bool addAP(const char* ssid, const char* passphrase = NULL);
+  uint8_t run(uint32_t connectTimeout = 5000, bool scanHidden = false);
+  void enableIPv6(bool state);
 
-    // Force (default: true) to only keep connected or to connect to an AP from the provided WiFiMulti list.
-    // When bStrict is false, it will keep the last/current connected AP even if not in the WiFiMulti List.
-    void setStrictMode(bool bStrict = true);
-    
-    // allows (true) to connect to ANY open AP, even if not in the user list
-    // default false (do not connect to an open AP that has not been explicitaly added by the user to list)
-    void setAllowOpenAP(bool bAllowOpenAP = false);
+  // Force (default: true) to only keep connected or to connect to an AP from the provided WiFiMulti list.
+  // When bStrict is false, it will keep the last/current connected AP even if not in the WiFiMulti List.
+  void setStrictMode(bool bStrict = true);
 
-    // clears the current list of Multi APs and frees the memory
-    void APlistClean(void);
+  // allows (true) to connect to ANY open AP, even if not in the user list
+  // default false (do not connect to an open AP that has not been explicitaly added by the user to list)
+  void setAllowOpenAP(bool bAllowOpenAP = false);
 
-    // allow the user to define a callback function that will validate the connection to the Internet.
-    // if the callback returns true, the connection is considered valid and the AP will added to the validated AP list.
-    // set the callback to NULL to disable the feature and validate any SSID that is in the list.
-    void setConnectionTestCallbackFunc(ConnectionTestCB_t cbFunc);
+  // clears the current list of Multi APs and frees the memory
+  void APlistClean(void);
+
+  // allow the user to define a callback function that will validate the connection to the Internet.
+  // if the callback returns true, the connection is considered valid and the AP will added to the validated AP list.
+  // set the callback to NULL to disable the feature and validate any SSID that is in the list.
+  void setConnectionTestCallbackFunc(ConnectionTestCB_t cbFunc);
 
 private:
-    std::vector<WifiAPlist_t> APlist;
-    bool ipv6_support;
+  std::vector<WifiAPlist_t> APlist;
+  bool ipv6_support;
 
-    bool _bStrict = true;
-    bool _bAllowOpenAP = false;
-    ConnectionTestCB_t _connectionTestCBFunc = NULL;
-    bool _bWFMInit = false;
+  bool _bStrict = true;
+  bool _bAllowOpenAP = false;
+  ConnectionTestCB_t _connectionTestCBFunc = NULL;
+  bool _bWFMInit = false;
 
-    void markAsFailed(int32_t i);
-    void resetFails();
+  void markAsFailed(int32_t i);
+  void resetFails();
 };
 
 #endif /* SOC_WIFI_SUPPORTED */

@@ -1,6 +1,6 @@
 # ESP RainMaker Custom Device
 
-This example demonstrates how to build a custom device to be used with ESP RainMaker. 
+This example demonstrates how to build a custom device to be used with ESP RainMaker.
 
 ## What to expect in this example?
 
@@ -13,7 +13,7 @@ This example demonstrates how to build a custom device to be used with ESP RainM
 ### Output
 
 ```
-[    87][I][RMaker.cpp:13] event_handler(): RainMaker Initialised.
+[    87][I][RMaker.cpp:13] event_handler(): RainMaker Initialized.
 [    94][I][WiFiProv.cpp:158] beginProvision(): Already Provisioned
 [    95][I][WiFiProv.cpp:162] beginProvision(): Attempting connect to AP: Viking007_2GEXT
 

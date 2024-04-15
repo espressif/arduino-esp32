@@ -9,16 +9,16 @@ const char* password = "........";
 WebServer server(80);
 
 typedef struct credentials_t {
-  char * username;
-  char * password;
+  char* username;
+  char* password;
 } credentials_t;
 
 credentials_t passwdfile[] = {
-  {  "admin",  "esp32" },
-  {  "fred",  "41234123" },
-  {  "charlie",  "sdfsd" },
-  {  "alice",  "vambdnkuhj" },
-  {  "bob",  "svcdbjhws12" },
+  { "admin", "esp32" },
+  { "fred", "41234123" },
+  { "charlie", "sdfsd" },
+  { "alice", "vambdnkuhj" },
+  { "bob", "svcdbjhws12" },
   { NULL, NULL }
 };
 
@@ -35,19 +35,18 @@ void setup() {
   ArduinoOTA.begin();
 
   server.on("/", []() {
-    if (!server.authenticate([](HTTPAuthMethod mode, String username, String params[]) -> String * {
-      // Scan the password list for the username and return the password if
-      // we find the username.
-      //
-      for (credentials_t * entry = passwdfile; entry->username; entry++) {
-        if (username == entry->username) {
-          return new String(entry->password);
-        };
-      };
-      // we've not found the user in the list.
-      return NULL;
-    }))
-    {
+    if (!server.authenticate([](HTTPAuthMethod mode, String username, String params[]) -> String* {
+          // Scan the password list for the username and return the password if
+          // we find the username.
+          //
+          for (credentials_t* entry = passwdfile; entry->username; entry++) {
+            if (username == entry->username) {
+              return new String(entry->password);
+            };
+          };
+          // we've not found the user in the list.
+          return NULL;
+        })) {
       server.requestAuthentication();
       return;
     }
@@ -63,5 +62,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }
