@@ -36,12 +36,6 @@ function build(){
             ${BUILD_SKETCH} ${sargs}
         done
     fi
-    sizes_file="$HOME/.arduino/cli_compile_output.json"
-    #rename sizes_file="$HOME/.arduino/cli_compile_output.json" to sizes_file="GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
-    ls -R $HOME/.arduino
-    mv $sizes_file "$GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
-    ls -R $GITHUB_WORKSPACE
-
 }
 
 if [ -z "$GITHUB_WORKSPACE" ]; then
@@ -90,6 +84,13 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     build "esp32c6" $FQBN_ESP32C6 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32h2" $FQBN_ESP32H2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32"   $FQBN_ESP32   $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
+
+    sizes_file="$HOME/.arduino/cli_compile_output.json"
+    #rename sizes_file="$HOME/.arduino/cli_compile_output.json" to sizes_file="GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
+    ls $HOME/.arduino
+    mv $sizes_file "$GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
+    ls $GITHUB_WORKSPACE
+    
 else
     source ${SCRIPTS_DIR}/install-platformio-esp32.sh
     # PlatformIO ESP32 Test
