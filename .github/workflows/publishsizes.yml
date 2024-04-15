@@ -26,7 +26,8 @@ jobs:
         run: |
           mkdir -p artifacts && cd artifacts
           mkdir -p sizes-report
-          mkdir -p event-file
+          mkdir -p sizes-report/master
+          mkdir -p sizes-report/pr
           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
           gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
