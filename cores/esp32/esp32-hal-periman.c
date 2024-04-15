@@ -105,6 +105,12 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
     case ESP32_BUS_TYPE_ETHERNET_MDIO: return "ETHERNET_MDIO";
     case ESP32_BUS_TYPE_ETHERNET_PWR: return "ETHERNET_PWR";
 #endif
+#if CONFIG_LWIP_PPP_SUPPORT
+    case ESP32_BUS_TYPE_PPP_TX: return "PPP_MODEM_TX";
+    case ESP32_BUS_TYPE_PPP_RX: return "PPP_MODEM_RX";
+    case ESP32_BUS_TYPE_PPP_RTS: return "PPP_MODEM_RTS";
+    case ESP32_BUS_TYPE_PPP_CTS: return "PPP_MODEM_CTS";
+#endif
     default: return "UNKNOWN";
   }
 }
