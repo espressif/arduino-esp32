@@ -151,11 +151,6 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
     echo "Sizes file = $sizes_file"
 
-    #echo board,target and start of sketches to sizes_file json
-    echo "{ \"board\": \"$fqbn\",
-            \"target\": \"$target\", 
-            \"sketches\": [" >> "$sizes_file"
-
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in `seq 0 $(($len - 1))`
     do
@@ -213,11 +208,6 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                         \"ram_percentage\": $ram_percentage
                         }
                   }," >> "$sizes_file"
-            #if i is the last index of the loop, remove the last comma
-            echo "Debug (sketch)- removing last comma from the last JSON object"
-            if [ $i -eq $(($len - 1)) ]; then
-                sed -i '$ s/.$//' "$sizes_file"
-            fi
 
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
@@ -252,11 +242,6 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             #     $xtra_opts "${sketchdir}/${sketchname}.ino"
         fi
     done
-    
-    #echo end of sketches sizes_file json
-    echo "]}" >> "$sizes_file"
-    #echo end of board sizes_file json
-    echo "}," >> "$sizes_file"
 
     unset fqbn
     unset xtra_opts
@@ -394,6 +379,12 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     echo "Start Sketch: $start_num"
     echo "End Sketch  : $end_index"
 
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
+    #echo board,target and start of sketches to sizes_file json
+    echo "{ \"board\": \"$fqbn\",
+            \"target\": \"$target\", 
+            \"sketches\": [" >> "$sizes_file"
+
     local sketchnum=0
     args+=" -ai $ide_path -au $user_path -i $chunk_index"
     for sketch in $sketches; do
@@ -412,6 +403,15 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
             return $result
         fi
     done
+    echo "Debug (sketch)- removing last comma from the last JSON object"
+    if [ $i -eq $(($len - 1)) ]; then
+        sed -i '$ s/.$//' "$sizes_file"
+    fi
+    #echo end of sketches sizes_file json
+    echo "]}" >> "$sizes_file"
+    #echo end of board sizes_file json
+    echo "}," >> "$sizes_file"
+    
     return 0
 }
 
