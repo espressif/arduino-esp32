@@ -201,12 +201,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             echo "Debug (sketch)- extracted path = $lib_sketch_name"
             #append json file where key is fqbn, sketch name, sizes -> extracted values
             echo "{\"name\": \"$lib_sketch_name\", 
-                   \"sizes\": {
+                   \"sizes\": [{
                         \"flash_bytes\": $flash_bytes, 
                         \"flash_percentage\": $flash_percentage, 
                         \"ram_bytes\": $ram_bytes, 
                         \"ram_percentage\": $ram_percentage
-                        }
+                        }]
                   }," >> "$sizes_file"
 
         elif [ -f "$ide_path/arduino-builder" ]; then
@@ -408,10 +408,10 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         sed -i '$ s/.$//' "$sizes_file"
     fi
     #echo end of sketches sizes_file json
-    echo "]}" >> "$sizes_file"
+    echo "]" >> "$sizes_file"
     #echo end of board sizes_file json
     echo "}," >> "$sizes_file"
-    
+
     return 0
 }
 
