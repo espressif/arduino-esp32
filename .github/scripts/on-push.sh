@@ -36,8 +36,12 @@ function build(){
             ${BUILD_SKETCH} ${sargs}
         done
     fi
+    sizes_file="$HOME/.arduino/cli_compile_output.json"
     #rename sizes_file="$HOME/.arduino/cli_compile_output.json" to sizes_file="GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
-    mv "$HOME/.arduino/cli_compile_output.json" "$GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
+    ls -R $HOME/.arduino
+    mv $sizes_file "$GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
+    ls -R $GITHUB_WORKSPACE
+
 }
 
 if [ -z "$GITHUB_WORKSPACE" ]; then
