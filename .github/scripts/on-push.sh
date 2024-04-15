@@ -77,7 +77,11 @@ if [ "$BUILD_PIO" -eq 0 ]; then
       $ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino\
       $ARDUINO_ESP32_PATH/libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino\
     "
+    #create sizes_file and echo start of JSON array with "boards" key
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
+    echo "{\"boards\": [" > $sizes_file
 
+    #build sketches for different targets
     build "esp32s3" $FQBN_ESP32S3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
@@ -85,13 +89,10 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     build "esp32h2" $FQBN_ESP32H2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
     build "esp32"   $FQBN_ESP32   $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
 
-    sizes_file="$HOME/.arduino/cli_compile_output.json"
-    #rename sizes_file="$HOME/.arduino/cli_compile_output.json" to sizes_file="GITHUB_WORKSPACE/cli_compile_output_${chunk_index}.json"
-    echo "Listings of $HOME/.arduino"
-    ls $HOME/.arduino
-    mv $sizes_file "$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
-    echo "Listings of $GITHUB_WORKSPACE"
-    ls $GITHUB_WORKSPACE
+    #remove last comma from the last JSON object
+    sed -i '' -e '$ s/,$//' $sizes_file
+    #echo end of JSON array
+    echo "]}" >> $sizes_file
 
 else
     source ${SCRIPTS_DIR}/install-platformio-esp32.sh

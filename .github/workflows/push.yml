@@ -50,7 +50,7 @@ jobs:
 
     #Upload cli compile json as artifact
     - name: Upload cli compile json
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: cli_compile_${{ matrix.chunk }}
         path: cli_compile_${{ matrix.chunk }}.json

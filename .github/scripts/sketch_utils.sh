@@ -141,7 +141,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     fi
 
     log_file="$HOME/.arduino/cli_compile_output.txt"
-    sizes_file="$HOME/.arduino/cli_compile_output.json"
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
+
+    #echo board,target and start of sketches to sizes_file json
+    echo "{ \"board\": \"$fqbn\",
+            \"target\": \"$target\", 
+            \"sketches\": [" >> "$sizes_file"
 
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in `seq 0 $(($len - 1))`
@@ -182,16 +187,28 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' $log_file | awk '{print $4}')
             ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' $log_file | awk '{print $6}' | tr -d '(%)')
 
+            # Define the constant part
+            constant_path="$HOME/Arduino/hardware/espressif/esp32/libraries/"
+
+            # Extract the desired substring using awk
+            lib_sketch_name=$(echo "$sketch" | sed "s|$constant_part\([^/]*\)/.*|\1|")
+
+            # Print the extracted substring
+            echo "Extracted Path: $lib_sketch_name"
+
             #append json file where key is fqbn, sketch name, sizes -> extracted values
-            echo "{\"fqbn\": \"$fqbn\", 
-                   \"sketch\": \"$sketch\", 
+            echo "{\"name\": \"$lib_sketch_name\", 
                    \"sizes\": {
                         \"flash_bytes\": $flash_bytes, 
                         \"flash_percentage\": $flash_percentage, 
                         \"ram_bytes\": $ram_bytes, 
                         \"ram_percentage\": $ram_percentage
                         }
-                  }" >> "$sizes_file"
+                  }," >> "$sizes_file"
+            #if i is the last index of the loop, remove the last comma
+            if [ $i -eq $(($len - 1)) ]; then
+                sed -i '$ s/.$//' "$sizes_file"
+            fi
 
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
@@ -226,6 +243,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             #     $xtra_opts "${sketchdir}/${sketchname}.ino"
         fi
     done
+    
+    #echo end of sketches sizes_file json
+    echo "]}" >> "$sizes_file"
+    #echo end of board sizes_file json
+    echo "}," >> "$sizes_file"
+
     unset fqbn
     unset xtra_opts
     unset options
