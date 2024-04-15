@@ -2,7 +2,7 @@ name: Sizes Results
 
 on:
   workflow_run:
-    workflows: [Sizes Test]
+    workflows: [ESP32 Arduino CI]
     types:
       - completed
 
@@ -26,6 +26,8 @@ jobs:
         run: |
           mkdir -p artifacts && cd artifacts
           mkdir -p sizes-report
+          mkdir -p sizes-report/master
+          mkdir -p sizes-report/pr
           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
           gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
@@ -33,6 +35,9 @@ jobs:
             gh api $url > "$name.zip"
             unzip -j "$name.zip" -d "temp_$name"
             mv "temp_$name"/* sizes-report/
+            if [[ "$name" == "event.json" ]]; then
+              mv libraries-report/event.json /Event\ file/
+            fi
             rm -r "temp_$name"
           done
           echo "Contents of 'sizes-report':"

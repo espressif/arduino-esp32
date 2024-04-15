@@ -52,42 +52,42 @@ jobs:
     - name: Upload cli compile json
       uses: actions/upload-artifact@v4
       with:
-        name: cli_compile_${{ matrix.chunk }}
+        name: pr_cli_compile_${{ matrix.chunk }}
         path: cli_compile_${{ matrix.chunk }}.json
 
   # Windows and MacOS
-  build-arduino-win-mac:
-    name: Arduino on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macOS-latest]
-
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.x'
-    - name: Build Sketches
-      run: bash ./.github/scripts/on-push.sh
+  #build-arduino-win-mac:
+  #  name: Arduino on ${{ matrix.os }}
+  #  runs-on: ${{ matrix.os }}
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      os: [windows-latest, macOS-latest]
+  #
+  #  steps:
+  #  - uses: actions/checkout@v4
+  #  - uses: actions/setup-python@v5
+  #    with:
+  #      python-version: '3.x'
+  #  - name: Build Sketches
+  #    run: bash ./.github/scripts/on-push.sh
 
   # PlatformIO on Windows, Ubuntu and Mac
-  build-platformio:
-    name: PlatformIO on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: '3.x'
-    - name: Build Sketches
-      run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO
+  #build-platformio:
+  #  name: PlatformIO on ${{ matrix.os }}
+  #  runs-on: ${{ matrix.os }}
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      os: [ubuntu-latest, windows-latest, macOS-latest]
+  #
+  #  steps:
+  #  - uses: actions/checkout@v4
+  # - uses: actions/setup-python@v5
+  #    with:
+  #      python-version: '3.x'
+  #  - name: Build Sketches
+  #    run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO
 
   build-esp-idf-component:
     name: Build with ESP-IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
@@ -117,3 +117,40 @@ jobs:
           idf.py create-project test
           echo CONFIG_FREERTOS_HZ=1000 > test/sdkconfig.defaults
           idf.py -C test -DEXTRA_COMPONENT_DIRS=$PWD/components build
+
+    # Ubuntu
+  build-arduino-master-linux:
+    name: Arduino Master ${{ matrix.chunk }} on ubuntu-latest
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+    # Checkout master branch
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: master
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Cache tools
+      id: cache-linux
+      uses: actions/cache@v4
+      with:
+        path: |
+          ./tools/dist
+          ~/arduino_ide
+        key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json',
+                                            'tools/get.py',
+                                            '.github/scripts/install-arduino-ide.sh') }}
+    - name: Build Sketches
+      run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15
+
+    #Upload cli compile json as artifact
+    - name: Upload cli compile json
+      uses: actions/upload-artifact@v4
+      with:
+        name: master_cli_compile_${{ matrix.chunk }}
+        path: cli_compile_${{ matrix.chunk }}.json
