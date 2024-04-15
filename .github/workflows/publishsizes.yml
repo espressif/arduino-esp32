@@ -47,7 +47,7 @@ jobs:
           ls -R ..
     
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@sizes
+        uses: P-R-O-C-H-Y/report-size-deltas@sizes_v2
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}
