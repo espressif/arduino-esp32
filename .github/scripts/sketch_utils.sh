@@ -27,6 +27,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             shift
             sketchdir=$1
             ;;
+        -i )
+            shift
+            chunk_index=$1
+            ;;
         * )
             break
             ;;
@@ -140,10 +144,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
     fi
 
-    echo "Chunk index = $CHUNK_INDEX"
+    echo "Chunk index = $chunk_index"
 
     log_file="$HOME/.arduino/cli_compile_output.txt"
-    sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
 
     echo "Sizes file = $sizes_file"
 
@@ -391,7 +395,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     echo "End Sketch  : $end_index"
 
     local sketchnum=0
-    args+=" -ai $ide_path -au $user_path"
+    args+=" -ai $ide_path -au $user_path -i $chunk_index"
     for sketch in $sketches; do
         local sketchdir=$(dirname $sketch)
         local sketchdirname=$(basename $sketchdir)
