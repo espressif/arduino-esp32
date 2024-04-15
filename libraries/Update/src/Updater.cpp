@@ -228,7 +228,7 @@ bool UpdateClass::setCryptMode(const int cryptMode){
     if(cryptMode >= U_AES_DECRYPT_NONE && cryptMode <= U_AES_DECRYPT_ON){
         _cryptMode = cryptMode;
     }else{
-        log_e("bad crypt mode arguement %i", cryptMode);
+        log_e("bad crypt mode argument %i", cryptMode);
         return false;
     }
     return true;
