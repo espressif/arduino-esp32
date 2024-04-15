@@ -1,5 +1,4 @@
 #pragma once
-
 #include "sdkconfig.h"
 #if CONFIG_LWIP_PPP_SUPPORT
 #include "Network.h"
