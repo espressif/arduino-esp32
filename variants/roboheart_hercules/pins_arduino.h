@@ -15,7 +15,7 @@
 
 #define SLEEP_MOTOR_ABC 2  //  nSLEEP 
 
-#define LED_ROBOHEART 14  // Built in LED
+#define LED_ROBOHEART 13  // Built in LED
 #define BUILTIN_LED LED_ROBOHEART // backward compatibility
 #define LED_BUILTIN LED_ROBOHEART
 
