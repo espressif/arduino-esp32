@@ -237,7 +237,7 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress& ip, uint32_
 
     // Note - this check for BOTH key and cert is relied on
     // later during cleanup.
-    
+
     if (!insecure && cli_cert != NULL && cli_key != NULL) {
         mbedtls_x509_crt_init(&ssl_client->client_cert);
         mbedtls_pk_init(&ssl_client->client_key);
@@ -318,7 +318,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client)
     } else {
         log_v("Certificate verified.");
     }
-    
+
     if (ssl_client->ca_cert.version) {
         mbedtls_x509_crt_free(&ssl_client->ca_cert);
     }
@@ -330,7 +330,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client)
     if (ssl_client->client_cert.version) {
         mbedtls_x509_crt_free(&ssl_client->client_cert);
         mbedtls_pk_free(&ssl_client->client_key);
-    }    
+    }
 
     log_v("Free internal heap after TLS %u", ESP.getFreeHeap());
 
@@ -358,14 +358,14 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
     mbedtls_ssl_config_free(&ssl_client->ssl_conf);
     mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);
     mbedtls_entropy_free(&ssl_client->entropy_ctx);
-    
+
     // save only interesting fields
     int handshake_timeout = ssl_client->handshake_timeout;
     int socket_timeout = ssl_client->socket_timeout;
 
     // reset embedded pointers to zero
     memset(ssl_client, 0, sizeof(sslclient_context));
-    
+
     ssl_client->handshake_timeout = handshake_timeout;
     ssl_client->socket_timeout = socket_timeout;
 }
@@ -400,7 +400,7 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
             log_v("Handling error %d", ret); //for low level debug
             return handle_error(ret);
         }
-        
+
         //wait for space to become available
         vTaskDelay(2);
     }
@@ -530,7 +530,7 @@ bool verify_ssl_fingerprint(sslclient_context *ssl_client, const char* fp, const
 
     // Calculate certificate's SHA256 fingerprint
     uint8_t fingerprint_remote[32];
-    if(!get_peer_fingerprint(ssl_client, fingerprint_remote)) 
+    if(!get_peer_fingerprint(ssl_client, fingerprint_remote))
         return false;
 
     // Check if fingerprints match
@@ -547,7 +547,7 @@ bool verify_ssl_fingerprint(sslclient_context *ssl_client, const char* fp, const
         return true;
 }
 
-bool get_peer_fingerprint(sslclient_context *ssl_client, uint8_t sha256[32]) 
+bool get_peer_fingerprint(sslclient_context *ssl_client, uint8_t sha256[32])
 {
     if (!ssl_client) {
         log_d("Invalid ssl_client pointer");
@@ -617,4 +617,3 @@ bool verify_ssl_dn(sslclient_context *ssl_client, const char* domain_name)
     return false;
 }
 #endif
-

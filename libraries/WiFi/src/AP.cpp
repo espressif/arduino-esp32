@@ -104,7 +104,7 @@ static void _onApArduinoEvent(arduino_event_t *ev)
 void APClass::_onApEvent(int32_t event_id, void* event_data){
     arduino_event_t arduino_event;
     arduino_event.event_id = ARDUINO_EVENT_MAX;
-    
+
     if (event_id == WIFI_EVENT_AP_START) {
         log_v("AP Started");
         arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_START;

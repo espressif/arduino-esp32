@@ -7,7 +7,7 @@
  *  Fix temperature value (8.8 fixed format)
  *  Fix time stamp (0.1 second resolution)
  *  Fixes based on EddystoneTLM frame specification https://github.com/google/eddystone/blob/master/eddystone-tlm/tlm-plain.md
- * 
+ *
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)

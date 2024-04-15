@@ -2,16 +2,16 @@
  * This is C++ example that demonstrates the usage of a std::function as OnReceive Callback function to all the UARTs
  * It basically defines a general onReceive function that receives an extra parameter, the Serial pointer that is
  * executing the callback.
- * 
- * For each HardwareSerial object (Serial, Serial1, Serial2), it is necessary to set the callback with 
+ *
+ * For each HardwareSerial object (Serial, Serial1, Serial2), it is necessary to set the callback with
  * the respective Serial pointer. It is done using lambda expression as a std::function.
  * Example:
  * Serial1.onReceive([]() { processOnReceiving(&Serial1); });
- *  
+ *
  */
 
 // soc/soc_caps.h has information about each SoC target
-// in this example, we use SOC_UART_NUM that goes from 1 to 3, 
+// in this example, we use SOC_UART_NUM that goes from 1 to 3,
 // depending on the number of available UARTs in the ESP32xx
 // This makes the code transparent to what SoC is used.
 #include "soc/soc_caps.h"
@@ -67,9 +67,9 @@ void processOnReceiving(HardwareSerial &mySerial) {
 
 void setup() {
   // Serial can be the USB or UART0, depending on the settings and which SoC is used
-  Serial.begin(115200); 
-  
-  // when data is received from UART0, it will call the general function 
+  Serial.begin(115200);
+
+  // when data is received from UART0, it will call the general function
   // passing Serial0 as parameter for processing
 #if TEST_UART == 0
   Serial0.begin(115200); // keeps default GPIOs
@@ -79,14 +79,14 @@ void setup() {
 #else
   // and so on for the other UARTs (Serial1 and Serial2)
   // Rx = 4, Tx = 5 will work for ESP32, S2, S3, C3, C6 and H2
-  testingSerial.begin(115200, SERIAL_8N1, RXPIN, TXPIN);   
+  testingSerial.begin(115200, SERIAL_8N1, RXPIN, TXPIN);
   testingSerial.onReceive([]() {
     processOnReceiving(testingSerial);
   });
 #endif
 
-  // this helper function will connect TX pin (from TEST_UART number) to its RX pin 
-  // creating a loopback that will allow to write to TEST_UART number 
+  // this helper function will connect TX pin (from TEST_UART number) to its RX pin
+  // creating a loopback that will allow to write to TEST_UART number
   // and send it to RX with no need to physically connect both pins
 #if TEST_UART > 0
   uart_internal_loopback(TEST_UART, RXPIN);
@@ -94,12 +94,12 @@ void setup() {
   // when UART0 is used for testing, it is necessary to send data using the Serial Monitor/Terminal
   // Data must be sent by the CP2102, manually using  the Serial Monitor/Terminal
 #endif
-  
+
   delay(500);
   Serial.printf("\nSend bytes to UART%d in order to\n", TEST_UART);
   Serial.println("see a single processing function display information about");
   Serial.println("the received data.\n");
- 
+
 }
 
 void loop() {
@@ -120,4 +120,3 @@ void loop() {
   Serial.println("pausing for 15 seconds.");
   delay(15000);
 }
-

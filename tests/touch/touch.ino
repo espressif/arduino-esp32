@@ -95,7 +95,7 @@ static void test_release_fake(touch_pad_t pad_num) {
 
 /* These functions are intended to be called before and after each test. */
 void setUp(void) {
-  
+
 }
 
 void tearDown(void) {
@@ -104,7 +104,7 @@ void tearDown(void) {
   }
   delay(100);
 }
-  
+
 /*
  * Test Touch read on all available channels - compare values if reading is right
  */
@@ -124,7 +124,7 @@ void test_touch_read(void) {
           test_press_fake(touch_list[j]);
   }
   delay(100);
-  
+
   for (int k = 0; k < sizeof(TOUCH_GPIOS); k++) {
         #ifdef CONFIG_IDF_TARGET_ESP32
           TEST_ASSERT_LESS_THAN(PRESSED_VALUE,touchRead(TOUCH_GPIOS[k]));
@@ -135,7 +135,7 @@ void test_touch_read(void) {
 }
 
 void test_touch_interrtupt(void) {
- 
+
   touchAttachInterrupt(TOUCH_GPIOS[0], gotTouch1, INTERRUPT_THRESHOLD);
   touchAttachInterrupt(TOUCH_GPIOS[1], gotTouch2, INTERRUPT_THRESHOLD);
 
@@ -143,16 +143,16 @@ void test_touch_interrtupt(void) {
   test_press_fake(touch_list[1]);
 
   delay(300);
-  
+
   touchDetachInterrupt(TOUCH_GPIOS[0]);
   touchDetachInterrupt(TOUCH_GPIOS[1]);
-  
+
   TEST_ASSERT_TRUE(touch1detected);
   TEST_ASSERT_TRUE(touch2detected);
 }
 
 void test_touch_errors(void) {
-  
+
   TEST_ASSERT_FALSE(touchRead(NO_TOUCH_GPIO));
 }
 
@@ -161,7 +161,7 @@ void setup() {
   while (!Serial) {
     ;
   }
-  
+
   UNITY_BEGIN();
   RUN_TEST(test_touch_read);
   RUN_TEST(test_touch_interrtupt);
@@ -185,7 +185,7 @@ void setup() {
   while (!Serial) {
     ;
   }
-  
+
   UNITY_BEGIN();
   RUN_TEST(test_pass);
   UNITY_END();

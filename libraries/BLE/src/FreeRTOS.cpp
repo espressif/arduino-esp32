@@ -61,7 +61,7 @@ uint32_t FreeRTOS::getTimeSinceStart() {
  */
 uint32_t FreeRTOS::Semaphore::wait(String owner) {
 	log_v(">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
-	
+
 	if (m_usePthreads) {
 		pthread_mutex_lock(&m_pthread_mutex);
 	} else {
@@ -142,7 +142,7 @@ FreeRTOS::Semaphore::~Semaphore() {
 void FreeRTOS::Semaphore::give() {
 	log_v("Semaphore giving: %s", toString().c_str());
 	m_owner = String("<N/A>");
-	
+
 	if (m_usePthreads) {
 		pthread_mutex_unlock(&m_pthread_mutex);
 	} else {
@@ -302,5 +302,3 @@ void Ringbuffer::returnItem(void* item) {
 bool Ringbuffer::send(void* data, size_t length, TickType_t wait) {
 	return ::xRingbufferSend(m_handle, data, length, wait) == pdTRUE;
 } // send
-
-

@@ -49,7 +49,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_USB_RESUME_EVENT:
         Serial.println("USB RESUMED");
         break;
-      
+
       default:
         break;
     }
@@ -103,7 +103,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_FIRMWARE_MSC_POWER_EVENT:
         Serial.printf("MSC Update Power: power: %u, start: %u, eject: %u\n", data->power.power_condition, data->power.start, data->power.load_eject);
         break;
-      
+
       default:
         break;
     }
@@ -116,7 +116,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_USB_HID_SET_IDLE_EVENT:
         Serial.printf("HID SET IDLE: %u\n", data->set_idle.idle_rate);
         break;
-      
+
       default:
         break;
     }
@@ -126,7 +126,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_USB_HID_KEYBOARD_LED_EVENT:
         Serial.printf("HID KEYBOARD LED: NumLock:%u, CapsLock:%u, ScrollLock:%u\n", data->numlock, data->capslock, data->scrolllock);
         break;
-      
+
       default:
         break;
     }
@@ -154,7 +154,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
         }
         Serial.println();
         break;
-      
+
       default:
         break;
     }
@@ -164,16 +164,16 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
-  
+
   pinMode(buttonPin, INPUT_PULLUP);
-  
+
   USB.onEvent(usbEventCallback);
   USBSerial.onEvent(usbEventCallback);
   MSC_Update.onEvent(usbEventCallback);
   HID.onEvent(usbEventCallback);
   Keyboard.onEvent(usbEventCallback);
   Vendor.onEvent(usbEventCallback);
-  
+
   USBSerial.begin();
   MSC_Update.begin();
   Vendor.begin();
@@ -209,7 +209,7 @@ void loop() {
     }
     delay(100);
   }
-  
+
   while(Serial.available()){
     size_t l = Serial.available();
     uint8_t b[l];

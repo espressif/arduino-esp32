@@ -1,37 +1,37 @@
 /*
- * 
- * This Sketch demonstrates the effect of changing RX FIFO Full parameter into HardwareSerial Class 
+ *
+ * This Sketch demonstrates the effect of changing RX FIFO Full parameter into HardwareSerial Class
  * Serial.setRxFIFOFull(byte) is used to change it.
  * By default, UART ISR will wait for 120 bytes to arrive into UART before making the data available
- * to be read by an Arduino Sketch. It may also release fewer bytes after an RX Timeout equivalent by 
- * default to 2 UART symbols. 
- * 
+ * to be read by an Arduino Sketch. It may also release fewer bytes after an RX Timeout equivalent by
+ * default to 2 UART symbols.
+ *
  * The way we demonstrate the effect of this parameter is by measuring the time the Sketch takes
  * to read data using Arduino HardwareSerial API.
- * 
+ *
  * The higher RX FIFO Full is, the lower consumption of the core to process and make the data available.
  * At the same time, it may take longer for the Sketch to be able to read it, because the data must first
  * populate RX UART FIFO.
- * 
+ *
  * The lower RX FIFO Full is, the higher consumption of the core to process and make the data available.
  * This is because the core will be interrupted often and it will copy data from the RX FIFO to the Arduino
  * internal buffer to be read by the sketch. By other hand, the data will be made available to the sketch
- * faster, in a close to byte by byte communication. 
- * 
+ * faster, in a close to byte by byte communication.
+ *
  * Therefore, it allows the decision of the architecture to be designed by the developer.
  * Some application based on certain protocols may need the sketch to read the Serial Port byte by byte, for example.
- * 
+ *
  */
 
 #include <Arduino.h>
 
 // There are two ways to make this sketch work:
 // By physically connecting the pins 4 and 5 and then create a physical UART loopback,
-// Or by using the internal IO_MUX to connect the TX signal to the RX pin, creating the 
+// Or by using the internal IO_MUX to connect the TX signal to the RX pin, creating the
 // same loopback internally.
 #define USE_INTERNAL_PIN_LOOPBACK 1   // 1 uses the internal loopback, 0 for wiring pins 4 and 5 externally
 
-#define DATA_SIZE 125   // 125 bytes is a bit higher than the default 120 bytes of RX FIFO FULL 
+#define DATA_SIZE 125   // 125 bytes is a bit higher than the default 120 bytes of RX FIFO FULL
 #define BAUD 9600       // Any baudrate from 300 to 115200
 #define TEST_UART 1     // Serial1 will be used for the loopback testing with different RX FIFO FULL values
 #define RXPIN 4         // GPIO 4 => RX for Serial1
@@ -100,4 +100,3 @@ void testAndReport(uint8_t fifoFull) {
 
   Serial.println("========================\nFinished!");
 }
-

@@ -92,7 +92,7 @@ bool BLEAddress::operator>(const BLEAddress& otherAddress) const {
 /**
  * @brief Return the native representation of the address.
  * @return The native representation of the address.
- */   
+ */
 esp_bd_addr_t *BLEAddress::getNative() {
 	return &m_address;
 } // getNative

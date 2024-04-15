@@ -5,7 +5,7 @@
 
 #ifndef ESPECTRO32_VERSION
 #define ESPECTRO32_VERSION 1
-#endif 
+#endif
 
 static const uint8_t LED_BUILTIN = 15;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility

@@ -64,7 +64,7 @@ static const uint8_t DAC2 = 26;
 #define LED_BLU_PIN 25
 
 // Teleinfo RXD pin is connected to ESP32-PICO-V3-02 GPIO8
-#define TIC_RX_PIN  8   
+#define TIC_RX_PIN  8
 #endif
 
 

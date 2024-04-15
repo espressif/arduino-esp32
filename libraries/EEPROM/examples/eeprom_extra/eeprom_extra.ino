@@ -77,7 +77,7 @@ void setup() {
   // See also the general purpose writeBytes() and readBytes() for BLOB in EEPROM library
   EEPROM.commit();
   address = 0;
-  
+
   Serial.println(EEPROM.readByte(address));
   address += sizeof(byte);
 

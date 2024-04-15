@@ -216,7 +216,7 @@ uint16_t EEPROMClass::length ()
   return _size;
 }
 
-/* 
+/*
    Convert EEPROM partition into nvs blob
    Call convert before you call begin
 */
@@ -266,12 +266,12 @@ uint16_t EEPROMClass::convert (bool clear, const char* EEPROMname, const char* n
     goto exit;
   }
   result = size;
- 
+
   if (clear) {
     if (esp_partition_erase_range (mypart, 0, size) != ESP_OK) {
       log_w("Unable to clear EEPROM partition");
     }
-  } 
+  }
 exit:
   free(data);
   return result;

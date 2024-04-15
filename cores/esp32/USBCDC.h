@@ -72,7 +72,7 @@ public:
     void setTxTimeoutMs(uint32_t timeout);
     void begin(unsigned long baud=0);
     void end();
-    
+
     int available(void);
     int availableForWrite(void);
     int peek(void);
@@ -81,7 +81,7 @@ public:
     size_t write(uint8_t);
     size_t write(const uint8_t *buffer, size_t size);
     void flush(void);
-    
+
     inline size_t read(char * buffer, size_t size)
     {
         return read((uint8_t*) buffer, size);
@@ -124,7 +124,7 @@ public:
     void _onRX(void);
     void _onTX(void);
     void _onUnplugged(void);
-    
+
 protected:
     uint8_t  itf;
     uint32_t bit_rate;
@@ -138,13 +138,13 @@ protected:
     QueueHandle_t rx_queue;
     SemaphoreHandle_t tx_lock;
     uint32_t tx_timeout_ms;
-    
+
 };
 
 #if !ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT        // Native USB CDC selected
 #ifndef USB_SERIAL_IS_DEFINED
 #define USB_SERIAL_IS_DEFINED 1
-#endif 
+#endif
 // USBSerial is always available to be used
 extern USBCDC USBSerial;
 #endif

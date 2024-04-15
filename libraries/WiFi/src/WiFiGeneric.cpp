@@ -158,7 +158,7 @@ static void _arduino_event_cb(void* arg, esp_event_base_t event_base, int32_t ev
 		log_v("Provisioning Success!");
     	arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_SUCCESS;
     }
-    
+
 	if(arduino_event.event_id < ARDUINO_EVENT_MAX){
 		Network.postEvent(&arduino_event);
 	}
@@ -216,7 +216,7 @@ bool WiFiGenericClass::useStaticBuffers(){
 void WiFiGenericClass::useStaticBuffers(bool bufferMode){
     if (lowLevelInitDone) {
         log_w("WiFi already started. Call WiFi.mode(WIFI_MODE_NULL) before setting Static Buffer Mode.");
-    } 
+    }
     _wifiUseStaticBuffers = bufferMode;
 }
 
@@ -340,7 +340,7 @@ wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_NONE;
 wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_MIN_MODEM;
 #endif
 
-WiFiGenericClass::WiFiGenericClass() 
+WiFiGenericClass::WiFiGenericClass()
 {
 }
 
@@ -811,7 +811,7 @@ IPAddress WiFiGenericClass::calculateNetworkID(IPAddress ip, IPAddress subnet) {
 
 IPAddress WiFiGenericClass::calculateBroadcast(IPAddress ip, IPAddress subnet) {
     IPAddress broadcastIp;
-    
+
     for (int i = 0; i < 4; i++)
         broadcastIp[i] = ~subnet[i] | ip[i];
 

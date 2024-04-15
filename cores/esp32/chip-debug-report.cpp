@@ -155,7 +155,7 @@ static void printFlashInfo(void){
   chip_report_printf("DIO\n");
 #elif CONFIG_ESPTOOLPY_FLASHMODE_DOUT
   chip_report_printf("DOUT\n");
-#endif 
+#endif
 }
 
 static void printPartitionsInfo(void){

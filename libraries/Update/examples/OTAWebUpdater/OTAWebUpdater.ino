@@ -23,13 +23,13 @@ String generatePass(uint8_t str_len) {
 void apMode() {
   char ssid[13];
   char passwd[11];
-  long unsigned int espmac = ESP.getEfuseMac() >> 24; 
+  long unsigned int espmac = ESP.getEfuseMac() >> 24;
   snprintf(ssid, 13, SSID_FORMAT, espmac);
 #ifdef PASSWORD
   snprintf(passwd, 11, PASSWORD);
 #else
   snprintf(passwd, 11, generatePass(10).c_str());
-#endif   
+#endif
   WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid, passwd); // Set up the SoftAP
   MDNS.begin("esp32");
@@ -86,7 +86,7 @@ void webServerInit() {
 }
 
 void everySecond() {
-  if (otaDone > 1) Serial.printf("ota: %d%%\n", otaDone);  
+  if (otaDone > 1) Serial.printf("ota: %d%%\n", otaDone);
 }
 
 void setup() {

@@ -36,7 +36,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         Serial.println(devUUID.toString().c_str());
         Serial.println("");
       }
-      
+
       if (advertisedDevice.haveManufacturerData() == true)
       {
         String strManufacturerData = advertisedDevice.getManufacturerData();

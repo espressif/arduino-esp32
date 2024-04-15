@@ -40,7 +40,7 @@ void setup(void) {
     String user = server.pathArg(0);
     server.send(200, "text/plain", "User: '" + user + "'");
   });
-  
+
   server.on(UriRegex("^\\/users\\/([0-9]+)\\/devices\\/([0-9]+)$"), []() {
     String user = server.pathArg(0);
     String device = server.pathArg(1);

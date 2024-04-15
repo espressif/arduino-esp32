@@ -20,9 +20,9 @@
  created for arduino 25 Nov 2012
  by Tom Igoe
 
-ported for sparkfun esp32 
+ported for sparkfun esp32
 31.01.2017 by Jan Hendrik Berlin
- 
+
  */
 
 #include <WiFi.h>
@@ -57,7 +57,7 @@ void setup()
     Serial.println("WiFi connected.");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
-    
+
     server.begin();
 
 }

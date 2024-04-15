@@ -316,7 +316,7 @@ int NetworkUDP::parsePacket(){
     remote_ip = IPAddress(si_other.sin_addr.s_addr);
     remote_port = ntohs(si_other.sin_port);
   }
-#if LWIP_IPV6 
+#if LWIP_IPV6
   else if (si_other_storage.ss_family == AF_INET6) {
     struct sockaddr_in6 &si_other = (sockaddr_in6&) si_other_storage;
     remote_ip = IPAddress(IPv6, (uint8_t*)&si_other.sin6_addr, si_other.sin6_scope_id);   // force IPv6

@@ -173,7 +173,7 @@ static const uint8_t J3_7            = PD6;
 static const uint8_t J3_21           = PD5;
 static const uint8_t J3_16           = PD4;
 static const uint8_t J3_14           = PD3;
-static const uint8_t J3_9            = PD2;  
+static const uint8_t J3_9            = PD2;
 static const uint8_t J3_17           = TX;
 static const uint8_t J3_18           = RX;
 

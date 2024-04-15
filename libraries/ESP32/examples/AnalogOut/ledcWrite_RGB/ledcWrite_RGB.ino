@@ -1,17 +1,17 @@
 /*
   ledcWrite_RGB.ino
-  Runs through the full 255 color spectrum for an rgb led 
+  Runs through the full 255 color spectrum for an rgb led
   Demonstrate ledcWrite functionality for driving leds with PWM on ESP32
- 
+
   This example code is in the public domain.
-  
+
   Some basic modifications were made by vseven, mostly commenting.
  */
- 
+
 // Set up the rgb led names
 uint8_t ledR = 0;
 uint8_t ledG = 2;
-uint8_t ledB = 4; 
+uint8_t ledB = 4;
 
 const boolean invert = true; // set true if common anode, false if common cathode
 
@@ -20,12 +20,12 @@ uint32_t R, G, B;           // the Red Green and Blue color components
 uint8_t brightness = 255;  // 255 is maximum brightness, but can be changed.  Might need 256 for common anode to fully turn off.
 
 // the setup routine runs once when you press reset:
-void setup() 
-{            
+void setup()
+{
   Serial.begin(115200);
-  delay(10); 
-  
-  // Initialize pins as LEDC channels 
+  delay(10);
+
+  // Initialize pins as LEDC channels
   // resolution 1-16 bits, freq limits depend on resolution, channel is automatically selected
   ledcAttach(ledR, 12000, 8); // 12 kHz PWM, 8-bit resolution
   ledcAttach(ledG, 12000, 8);
@@ -33,7 +33,7 @@ void setup()
 }
 
 // void loop runs over and over again
-void loop() 
+void loop()
 {
   Serial.println("Send all LEDs a 255 and wait 2 seconds.");
   // If your RGB LED turns off instead of on here you should check if the LED is common anode or cathode.
@@ -47,21 +47,21 @@ void loop()
   ledcWrite(ledG, 0);
   ledcWrite(ledB, 0);
   delay(2000);
- 
+
   Serial.println("Starting color fade loop.");
-  
+
  for (color = 0; color < 255; color++) { // Slew through the color spectrum
 
   hueToRGB(color, brightness);  // call function to convert hue to RGB
 
   // write the RGB values to the pins
   ledcWrite(ledR, R); // write red component to channel 1, etc.
-  ledcWrite(ledG, G);   
-  ledcWrite(ledB, B); 
- 
+  ledcWrite(ledG, G);
+  ledcWrite(ledB, B);
+
   delay(100); // full cycle of rgb over 256 colors takes 26 seconds
  }
- 
+
 }
 
 // Courtesy http://www.instructables.com/id/How-to-Use-an-RGB-LED/?ALLSTEPS

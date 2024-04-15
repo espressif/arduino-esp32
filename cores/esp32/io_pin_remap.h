@@ -78,7 +78,7 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
 
 // cores/esp32/esp32-hal-rmt.h
 #define rmtInit(pin, channel_direction, memsize, frequency_Hz)                      rmtInit(digitalPinToGPIONumber(pin), channel_direction, memsize, frequency_Hz)
-#define rmtSetEOT(pin, EOT_Level)                                                   rmtSetEOT(digitalPinToGPIONumber(pin), EOT_Level) 
+#define rmtSetEOT(pin, EOT_Level)                                                   rmtSetEOT(digitalPinToGPIONumber(pin), EOT_Level)
 #define rmtWrite(pin, data, num_rmt_symbols, timeout_ms)                            rmtWrite(digitalPinToGPIONumber(pin), data, num_rmt_symbols, timeout_ms)
 #define rmtWriteAsync(pin, data, num_rmt_symbols)                                   rmtWriteAsync(digitalPinToGPIONumber(pin), data, num_rmt_symbols)
 #define rmtWriteLooping(pin, data, num_rmt_symbols)                                 rmtWriteLooping(digitalPinToGPIONumber(pin), data, num_rmt_symbols)

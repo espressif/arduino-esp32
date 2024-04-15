@@ -92,16 +92,16 @@ const uint8_t _asciimap[128] =
     0x00,          // ETX
     0x00,          // EOT
     0x00,          // ENQ
-    0x00,          // ACK  
+    0x00,          // ACK
     0x00,          // BEL
     0x2a,          // BS   Backspace
     0x2b,          // TAB  Tab
     0x28,          // LF   Enter
-    0x00,          // VT 
-    0x00,          // FF 
-    0x00,          // CR 
-    0x00,          // SO 
-    0x00,          // SI 
+    0x00,          // VT
+    0x00,          // FF
+    0x00,          // CR
+    0x00,          // SO
+    0x00,          // SI
     0x00,          // DEL
     0x00,          // DC1
     0x00,          // DC2
@@ -111,13 +111,13 @@ const uint8_t _asciimap[128] =
     0x00,          // SYN
     0x00,          // ETB
     0x00,          // CAN
-    0x00,          // EM 
+    0x00,          // EM
     0x00,          // SUB
     0x00,          // ESC
-    0x00,          // FS 
-    0x00,          // GS 
-    0x00,          // RS 
-    0x00,          // US 
+    0x00,          // FS
+    0x00,          // GS
+    0x00,          // RS
+    0x00,          // US
 
     0x2c,          //  ' '
     0x1e|SHIFT,    // !
@@ -217,7 +217,7 @@ const uint8_t _asciimap[128] =
     0              // DEL
 };
 
-size_t USBHIDKeyboard::pressRaw(uint8_t k) 
+size_t USBHIDKeyboard::pressRaw(uint8_t k)
 {
     uint8_t i;
     if (k >= 0xE0 && k < 0xE8) {
@@ -226,10 +226,10 @@ size_t USBHIDKeyboard::pressRaw(uint8_t k)
     } else if (k && k < 0xA5) {
         // Add k to the key report only if it's not already present
         // and if there is an empty slot.
-        if (_keyReport.keys[0] != k && _keyReport.keys[1] != k && 
+        if (_keyReport.keys[0] != k && _keyReport.keys[1] != k &&
             _keyReport.keys[2] != k && _keyReport.keys[3] != k &&
             _keyReport.keys[4] != k && _keyReport.keys[5] != k) {
-            
+
             for (i=0; i<6; i++) {
                 if (_keyReport.keys[i] == 0x00) {
                     _keyReport.keys[i] = k;
@@ -238,7 +238,7 @@ size_t USBHIDKeyboard::pressRaw(uint8_t k)
             }
             if (i == 6) {
                 return 0;
-            }   
+            }
         }
     } else {
         //not a modifier and not a key
@@ -248,7 +248,7 @@ size_t USBHIDKeyboard::pressRaw(uint8_t k)
     return 1;
 }
 
-size_t USBHIDKeyboard::releaseRaw(uint8_t k) 
+size_t USBHIDKeyboard::releaseRaw(uint8_t k)
 {
     uint8_t i;
     if (k >= 0xE0 && k < 0xE8) {
@@ -272,10 +272,10 @@ size_t USBHIDKeyboard::releaseRaw(uint8_t k)
 }
 
 // press() adds the specified key (printing, non-printing, or modifier)
-// to the persistent key report and sends the report.  Because of the way 
-// USB HID works, the host acts like the key remains pressed until we 
+// to the persistent key report and sends the report.  Because of the way
+// USB HID works, the host acts like the key remains pressed until we
 // call release(), releaseAll(), or otherwise clear the report and resend.
-size_t USBHIDKeyboard::press(uint8_t k) 
+size_t USBHIDKeyboard::press(uint8_t k)
 {
     if (k >= 0x88) {         // it's a non-printing key (not a modifier)
         k = k - 0x88;
@@ -303,7 +303,7 @@ size_t USBHIDKeyboard::press(uint8_t k)
 // release() takes the specified key out of the persistent key report and
 // sends the report.  This tells the OS the key is no longer pressed and that
 // it shouldn't be repeated any more.
-size_t USBHIDKeyboard::release(uint8_t k) 
+size_t USBHIDKeyboard::release(uint8_t k)
 {
     if (k >= 0x88) {         // it's a non-printing key (not a modifier)
         k = k - 0x88;
@@ -331,11 +331,11 @@ size_t USBHIDKeyboard::release(uint8_t k)
 void USBHIDKeyboard::releaseAll(void)
 {
     _keyReport.keys[0] = 0;
-    _keyReport.keys[1] = 0; 
+    _keyReport.keys[1] = 0;
     _keyReport.keys[2] = 0;
-    _keyReport.keys[3] = 0; 
+    _keyReport.keys[3] = 0;
     _keyReport.keys[4] = 0;
-    _keyReport.keys[5] = 0; 
+    _keyReport.keys[5] = 0;
     _keyReport.modifiers = 0;
     sendReport(&_keyReport);
 }

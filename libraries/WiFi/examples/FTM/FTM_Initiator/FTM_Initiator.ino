@@ -62,10 +62,10 @@ void setup() {
 
   // Create binary semaphore (initialized taken and can be taken/given from any thread/ISR)
   ftmSemaphore = xSemaphoreCreateBinary();
-  
+
   // Will call onFtmReport() from another thread with FTM Report events.
   WiFi.onEvent(onFtmReport, ARDUINO_EVENT_WIFI_FTM_REPORT);
-  
+
   // Connect to AP that has FTM Enabled
   Serial.println("Connecting to FTM Responder");
   WiFi.begin(WIFI_FTM_SSID, WIFI_FTM_PASS);

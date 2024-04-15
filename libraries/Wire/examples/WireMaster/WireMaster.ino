@@ -18,7 +18,7 @@ void loop() {
   Wire.printf("Hello World! %lu", i++);
   uint8_t error = Wire.endTransmission(true);
   Serial.printf("endTransmission: %u\n", error);
-  
+
   //Read 16 bytes from the slave
   uint8_t bytesReceived = Wire.requestFrom(I2C_DEV_ADDR, 16);
   Serial.printf("requestFrom: %u\n", bytesReceived);

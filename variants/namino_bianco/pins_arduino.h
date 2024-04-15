@@ -165,7 +165,7 @@ static const uint8_t PD_42           = PD6;
 static const uint8_t PD_21           = PD5;
 static const uint8_t PD_16           = PD4;
 static const uint8_t PD_14           = PD3;
-static const uint8_t PD_47           = PD2;  
+static const uint8_t PD_47           = PD2;
 static const uint8_t PD_17           = TX;
 static const uint8_t PD_18           = RX;
 
@@ -179,7 +179,7 @@ static const uint8_t PC_15           = PC5;
 
 static const uint8_t M1_3_AN         = GPIO3;
 static const uint8_t M1_RST          = 0;
-static const uint8_t M1_48_CS        = SS; 
+static const uint8_t M1_48_CS        = SS;
 static const uint8_t M1_12_SCK       = SCK;
 static const uint8_t M1_13_MISO      = MISO;
 static const uint8_t M1_11_MOSI      = MOSI;

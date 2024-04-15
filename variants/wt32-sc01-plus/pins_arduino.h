@@ -6,7 +6,7 @@
  * Vendor: Wireless-Tag
  * Url: http://www.wireless-tag.com/portfolio/wt32-eth01/
  */
- 
+
 #include <stdint.h>
 
 #define USB_VID 0x303A

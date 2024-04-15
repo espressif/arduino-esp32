@@ -32,7 +32,7 @@
 #include "esp32c6/rom/gpio.h"
 #elif CONFIG_IDF_TARGET_ESP32H2
 #include "esp32h2/rom/gpio.h"
-#else 
+#else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 #else // ESP32 Before IDF 4.0
@@ -66,4 +66,3 @@ void ARDUINO_ISR_ATTR intrMatrixAttach(uint32_t source, uint32_t inum){
   intr_matrix_set(PRO_CPU_NUM, source, inum);
 }
 */
-

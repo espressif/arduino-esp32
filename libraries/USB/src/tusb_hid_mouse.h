@@ -95,4 +95,3 @@
 #else
   #pragma message "This file is now safe to delete along with its include from USBHIDMouse.h"
 #endif
-

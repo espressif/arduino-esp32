@@ -169,7 +169,7 @@ int NetworkClientSecure::startTLS()
                 return 0;
         };
         _stillinPlainStart = false;
-    } else 
+    } else
         log_i("startTLS: ignoring StartTLS - as we should be secure already");
     return 1;
 }
@@ -222,7 +222,7 @@ size_t NetworkClientSecure::write(const uint8_t *buf, size_t size)
         return 0;
     }
 
-    if (_stillinPlainStart) 
+    if (_stillinPlainStart)
         return send_net_data(sslclient, buf, size);
 
     if(_lastWriteTimeout != _timeout){
@@ -245,7 +245,7 @@ size_t NetworkClientSecure::write(const uint8_t *buf, size_t size)
 
 int NetworkClientSecure::read(uint8_t *buf, size_t size)
 {
-    if(_stillinPlainStart) 
+    if(_stillinPlainStart)
         return  get_net_receive(sslclient, buf, size);
 
     if(_lastReadTimeout != _timeout){
@@ -291,7 +291,7 @@ int NetworkClientSecure::read(uint8_t *buf, size_t size)
 
 int NetworkClientSecure::available()
 {
-    if (_stillinPlainStart) 
+    if (_stillinPlainStart)
         return peek_net_receive(sslclient,0);
 
     int peeked = (_peek >= 0), res = -1;
@@ -437,4 +437,3 @@ int NetworkClientSecure::fd() const
 {
     return sslclient->socket;
 }
-

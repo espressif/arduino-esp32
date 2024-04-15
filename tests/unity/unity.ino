@@ -22,7 +22,7 @@ void setup() {
   while (!Serial) {
     ;
   }
-  
+
   UNITY_BEGIN();
   RUN_TEST(test_pass);
   RUN_TEST(test_fail);

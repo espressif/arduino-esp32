@@ -95,20 +95,20 @@ static uint8_t msc_disk[DISK_SECTOR_COUNT][DISK_SECTOR_SIZE] =
   //------------- Block2: Root Directory -------------//
   {
     // first entry is volume label
-    'E' , 'S' , 'P' , '3' , '2' , 'S' , '2' , ' ' , 
-    'M' , 'S' , 'C' , 
+    'E' , 'S' , 'P' , '3' , '2' , 'S' , '2' , ' ' ,
+    'M' , 'S' , 'C' ,
     0x08, //FILE_ATTR_VOLUME_LABEL
-    0x00, 
-    FAT_MS2B(0,0), 
+    0x00,
+    FAT_MS2B(0,0),
     FAT_HMS2B(0,0,0),
-    FAT_YMD2B(0,0,0), 
-    FAT_YMD2B(0,0,0), 
-    FAT_U16(0), 
+    FAT_YMD2B(0,0,0),
+    FAT_YMD2B(0,0,0),
+    FAT_U16(0),
     FAT_HMS2B(13,42,30),  //last_modified_hms
     FAT_YMD2B(2018,11,5), //last_modified_ymd
-    FAT_U16(0), 
+    FAT_U16(0),
     FAT_U32(0),
-    
+
     // second entry is readme file
     'R' , 'E' , 'A' , 'D' , 'M' , 'E' , ' ' , ' ' ,//file_name[8]; padded with spaces (0x20)
     'T' , 'X' , 'T' ,     //file_extension[3]; padded with spaces (0x20)
@@ -162,7 +162,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_USB_RESUME_EVENT:
         Serial.println("USB RESUMED");
         break;
-      
+
       default:
         break;
     }

@@ -52,13 +52,13 @@ static const uint8_t T14 = 14;
 static const uint8_t VBAT_SENSE = 2;
 static const uint8_t VBUS_SENSE = 34;
 
-// User LED 
+// User LED
 #define LED_BUILTIN 13
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 
 static const uint8_t RGB_DATA = 40;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)  
+#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t RGB_PWR = 39;

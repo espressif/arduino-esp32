@@ -3,8 +3,8 @@
 
 /* This is a very INSECURE approach.
  * If for some reason the secure, proper example NetworkClientSecure
- * does not work for you; then you may want to check the 
- * NetworkClientTrustOnFirstUse example first. It is less secure than 
+ * does not work for you; then you may want to check the
+ * NetworkClientTrustOnFirstUse example first. It is less secure than
  * NetworkClientSecure, but a lot better than this totally insecure
  * approach shown below.
  */

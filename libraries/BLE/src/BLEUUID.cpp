@@ -75,11 +75,11 @@ BLEUUID::BLEUUID(String value) {
 		for(int i=0;i<value.length();){
 			uint8_t MSB = value.c_str()[i];
 			uint8_t LSB = value.c_str()[i+1];
-			
+
 			if(MSB > '9') MSB -= 7;
 			if(LSB > '9') LSB -= 7;
 			m_uuid.uuid.uuid16 += (((MSB&0x0F) <<4) | (LSB & 0x0F))<<(2-i)*4;
-			i+=2;	
+			i+=2;
 		}
 	}
 	else if (value.length() == 8) {
@@ -88,12 +88,12 @@ BLEUUID::BLEUUID(String value) {
 		for(int i=0;i<value.length();){
 			uint8_t MSB = value.c_str()[i];
 			uint8_t LSB = value.c_str()[i+1];
-			
-			if(MSB > '9') MSB -= 7; 
+
+			if(MSB > '9') MSB -= 7;
 			if(LSB > '9') LSB -= 7;
 			m_uuid.uuid.uuid32 += (((MSB&0x0F) <<4) | (LSB & 0x0F))<<(6-i)*4;
 			i+=2;
-		}		
+		}
 	}
 	else if (value.length() == 16) {  // How we can have 16 byte length string representing 128 bit uuid??? needs to be investigated (lack of time) - maybe raw data encoded as String (128b==16B)?
 		m_uuid.len = ESP_UUID_LEN_128;
@@ -110,11 +110,11 @@ BLEUUID::BLEUUID(String value) {
 				i++;
 			uint8_t MSB = value.c_str()[i];
 			uint8_t LSB = value.c_str()[i+1];
-			
-			if(MSB > '9') MSB -= 7; 
+
+			if(MSB > '9') MSB -= 7;
 			if(LSB > '9') LSB -= 7;
 			m_uuid.uuid.uuid128[15-n++] = ((MSB&0x0F) <<4) | (LSB & 0x0F);
-			i+=2;	
+			i+=2;
 		}
 	}
 	else {

@@ -196,7 +196,7 @@ bool ESPUSB::begin(){
                 .webusb_enabled = webusb_enabled,
                 .webusb_url = webusb_url.c_str()
         };
-        _started = tinyusb_init(&tinyusb_device_config) == ESP_OK; 
+        _started = tinyusb_init(&tinyusb_device_config) == ESP_OK;
     }
     return _started;
 }

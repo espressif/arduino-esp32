@@ -107,8 +107,8 @@ bool btStop(){
 			return false;
 		}
 		vTaskDelay(1);
-		if (esp_bt_controller_get_status() != ESP_BT_CONTROLLER_STATUS_IDLE) {			
-			return false;		
+		if (esp_bt_controller_get_status() != ESP_BT_CONTROLLER_STATUS_IDLE) {
+			return false;
 		}
         return true;
     }

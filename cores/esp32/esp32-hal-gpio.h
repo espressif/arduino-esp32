@@ -43,9 +43,9 @@ extern "C" {
 
 //GPIO FUNCTIONS
 #define INPUT             0x01
-// Changed OUTPUT from 0x02 to behave the same as Arduino pinMode(pin,OUTPUT) 
+// Changed OUTPUT from 0x02 to behave the same as Arduino pinMode(pin,OUTPUT)
 // where you can read the state of pin even when it is set as OUTPUT
-#define OUTPUT            0x03 
+#define OUTPUT            0x03
 #define PULLUP            0x04
 #define INPUT_PULLUP      0x05
 #define PULLDOWN          0x08
@@ -68,7 +68,7 @@ extern "C" {
 #define digitalPinIsValid(pin)          GPIO_IS_VALID_GPIO(pin)
 #define digitalPinCanOutput(pin)        GPIO_IS_VALID_OUTPUT_GPIO(pin)
 
-#define digitalPinToRtcPin(pin)         ((RTC_GPIO_IS_VALID_GPIO(pin))?rtc_io_number_get(pin):-1) 
+#define digitalPinToRtcPin(pin)         ((RTC_GPIO_IS_VALID_GPIO(pin))?rtc_io_number_get(pin):-1)
 #define digitalPinToDacChannel(pin)     (((pin) == DAC_CHANNEL_1_GPIO_NUM)?0:((pin) == DAC_CHANNEL_2_GPIO_NUM)?1:-1)
 
 void pinMode(uint8_t pin, uint8_t mode);

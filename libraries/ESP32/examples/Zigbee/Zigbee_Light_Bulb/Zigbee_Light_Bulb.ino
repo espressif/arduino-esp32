@@ -14,13 +14,13 @@
 
 /**
  * @brief This example demonstrates simple Zigbee light bulb.
- * 
+ *
  * The example demonstrates how to use ESP Zigbee stack to create a end device light bulb.
  * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator.
- * 
- * Proper Zigbee mode must be selected in Tools->Zigbee mode 
+ *
+ * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
- * 
+ *
  * Please check the README.md for instructions and more detailed description.
  */
 

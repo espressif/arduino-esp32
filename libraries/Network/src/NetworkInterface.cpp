@@ -73,7 +73,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
 #endif
         // if(_interface_id == ESP_NETIF_ID_PPP){
         //     arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP;
-        // } else 
+        // } else
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
         }
@@ -85,11 +85,11 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
 #if SOC_WIFI_SUPPORTED
         if(_interface_id == ESP_NETIF_ID_STA){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_LOST_IP;
-        } else 
+        } else
 #endif
         // if(_interface_id == ESP_NETIF_ID_PPP){
         //     arduino_event.event_id = ARDUINO_EVENT_PPP_LOST_IP;
-        // } else 
+        // } else
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_LOST_IP;
         }
@@ -101,7 +101,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
         } else if(addr_type == ESP_IP6_ADDR_IS_LINK_LOCAL){
             setStatusBits(ESP_NETIF_HAS_LOCAL_IP6_BIT);
         }
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE        
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
         char if_name[NETIF_NAMESIZE] = {0,};
         netif_index_to_name(event->ip6_info.ip.zone, if_name);
         static const char * addr_types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
@@ -113,11 +113,11 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP6;
         } else if(_interface_id == ESP_NETIF_ID_AP){
             arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_GOT_IP6;
-        } else 
+        } else
 #endif
         // if(_interface_id == ESP_NETIF_ID_PPP){
         //     arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP6;
-        // } else 
+        // } else
         if(_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX){
             arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP6;
         }
@@ -132,7 +132,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data){
         memcpy(&arduino_event.event_info.wifi_ap_staipassigned, event_data, sizeof(ip_event_ap_staipassigned_t));
 #endif
     }
-    
+
     if(arduino_event.event_id < ARDUINO_EVENT_MAX){
         Network.postEvent(&arduino_event);
     }
@@ -162,7 +162,7 @@ IPAddress NetworkInterface::calculateNetworkID(IPAddress ip, IPAddress subnet) c
 
 IPAddress NetworkInterface::calculateBroadcast(IPAddress ip, IPAddress subnet) const {
     IPAddress broadcastIp;
-    
+
     for (int i = 0; i < 4; i++)
         broadcastIp[i] = ~subnet[i] | ip[i];
 
@@ -380,7 +380,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             log_e("Netif Set IP Failed! 0x%04x: %s", err, esp_err_to_name(err));
             return false;
         }
-        
+
         dhcps_lease_t lease;
         lease.enable = true;
         uint8_t CIDR = calculateSubnetCIDR(subnet);
@@ -404,7 +404,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
         lease.end_ip.addr = lease.start_ip.addr + 10;
         // Check if local_ip is in the same subnet as the dhcp leasing range initial address
         if ((ap_ipaddr & netmask) != (dhcp_ipaddr & netmask)) {
-            log_e("The AP IP address (%s) and the DHCP start address (%s) must be in the same subnet", 
+            log_e("The AP IP address (%s) and the DHCP start address (%s) must be in the same subnet",
                 local_ip.toString().c_str(), IPAddress(_byte_swap32(dhcp_ipaddr)).toString().c_str());
             return false; //  ESP_FAIL if initializing failed
         }
@@ -417,7 +417,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
         }
         // Check if local_ip is within DHCP range
         if (ap_ipaddr >= lease.start_ip.addr && ap_ipaddr <= lease.end_ip.addr) {
-            log_e("The AP IP address (%s) can't be within the DHCP range (%s -- %s)", 
+            log_e("The AP IP address (%s) can't be within the DHCP range (%s -- %s)",
                 local_ip.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
             return false; //  ESP_FAIL if initializing failed
         }
@@ -425,7 +425,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
         uint32_t gw_ipaddr = _byte_swap32(info.gw.addr);
         bool gw_in_same_subnet = (gw_ipaddr & netmask) == (ap_ipaddr & netmask);
         if (gw_in_same_subnet && gw_ipaddr >= lease.start_ip.addr && gw_ipaddr <= lease.end_ip.addr) {
-            log_e("The GatewayP address (%s) can't be within the DHCP range (%s -- %s)", 
+            log_e("The GatewayP address (%s) can't be within the DHCP range (%s -- %s)",
                 gateway.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
             return false; //  ESP_FAIL if initializing failed
         }
@@ -443,7 +443,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             log_e("DHCPS Set Lease Failed! 0x%04x: %s", err, esp_err_to_name(err));
             return false;
         }
- 
+
         // Offer DNS to DHCP clients
         if(d2.ip.u_addr.ip4.addr != 0){
             dhcps_offer_t dhcps_dns_value = OFFER_DNS;
@@ -453,7 +453,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
                 return false;
             }
         }
-        
+
         // Start DHCPS
         err = esp_netif_dhcps_start(_esp_netif);
         if(err){
@@ -476,7 +476,7 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
             log_e("ETH IP could not be configured! Error: 0x%04x: %s", err, esp_err_to_name(err));
             return false;
         }
-        
+
         // Set DNS Servers
         esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_MAIN, &d1);
         esp_netif_set_dns_info(_esp_netif, ESP_NETIF_DNS_BACKUP, &d2);

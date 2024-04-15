@@ -67,7 +67,7 @@ public:
     {
         _rebootOnUpdate = reboot;
     }
-    
+
     /**
       * set redirect follow mode. See `followRedirects_t` enum for available modes.
       * @param follow
@@ -83,17 +83,17 @@ public:
         _ledOn = ledOn;
     }
 
-    void setMD5sum(const String &md5Sum) 
+    void setMD5sum(const String &md5Sum)
     {
         _md5Sum = md5Sum;
     }
-    
-    void setAuthorization(const String& user, const String& password) 
+
+    void setAuthorization(const String& user, const String& password)
     {
         _user = user;
         _password = password;
     }
-  
+
     void setAuthorization(const String& auth)
     {
         _auth = auth;
@@ -107,7 +107,7 @@ public:
     t_httpUpdate_return updateSpiffs(NetworkClient& client, const String& url, const String& currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
     t_httpUpdate_return update(HTTPClient& httpClient,
-                               const String& currentVersion = "", 
+                               const String& currentVersion = "",
                                HTTPUpdateRequestCB requestCB = NULL);
 
     t_httpUpdate_return updateSpiffs(HTTPClient &httpClient, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);

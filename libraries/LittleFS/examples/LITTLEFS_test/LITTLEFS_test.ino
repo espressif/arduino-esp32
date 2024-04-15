@@ -5,7 +5,7 @@
 /* You only need to format LittleFS the first time you run a
    test or else use the LITTLEFS plugin to create a partition
    https://github.com/lorol/arduino-esp32littlefs-plugin
-   
+
    If you test two partitions, you need to use a custom
    partition.csv file, see in the sketch folder */
 
@@ -263,7 +263,7 @@ void setup(){
     writeFile2(LittleFS, "/new1/new2/new3/hello3.txt", "Hello3");
     listDir(LittleFS, "/", 3);
     deleteFile2(LittleFS, "/new1/new2/new3/hello3.txt");
-    
+
     listDir(LittleFS, "/", 3);
 	createDir(LittleFS, "/mydir");
 	writeFile(LittleFS, "/mydir/hello2.txt", "Hello2");
@@ -279,8 +279,8 @@ void setup(){
     deleteFile(LittleFS, "/foo.txt");
     testFileIO(LittleFS, "/test.txt");
     deleteFile(LittleFS, "/test.txt");
-	
-    Serial.println( "Test complete" ); 
+
+    Serial.println( "Test complete" );
 }
 
 void loop(){

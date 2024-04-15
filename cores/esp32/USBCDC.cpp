@@ -87,7 +87,7 @@ static void usb_unplugged_cb(void* arg, esp_event_base_t event_base, int32_t eve
     ((USBCDC*)arg)->_onUnplugged();
 }
 
-USBCDC::USBCDC(uint8_t itfn) 
+USBCDC::USBCDC(uint8_t itfn)
 : itf(itfn)
 , bit_rate(0)
 , stop_bits(0)
@@ -119,7 +119,7 @@ void USBCDC::onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback
 }
 
 size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
-    size_t currentQueueSize = rx_queue ? 
+    size_t currentQueueSize = rx_queue ?
             uxQueueSpacesAvailable(rx_queue) + uxQueueMessagesWaiting(rx_queue) : 0;
 
     if (rx_queue_len != currentQueueSize) {
@@ -143,7 +143,7 @@ size_t USBCDC::setRxBufferSize(size_t rx_queue_len){
                             log_e("CDC RX Overflow.");
                             break;
                         }
-                    }    
+                    }
                 }
                 vQueueDelete(rx_queue);
             }
@@ -241,7 +241,7 @@ void USBCDC::_onLineState(bool _dtr, bool _rts){
             }
         }
     }
-    
+
     if(lineState == CDC_LINE_IDLE){
         if(dtr && rts && !connected){
             connected = true;

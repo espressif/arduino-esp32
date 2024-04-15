@@ -57,7 +57,7 @@ public:
     int read(void);
     size_t read(uint8_t *buffer, size_t size);
     void flush(void);
-    
+
     void onEvent(esp_event_handler_t callback);
     void onEvent(arduino_usb_hid_vendor_event_t event, esp_event_handler_t callback);
 

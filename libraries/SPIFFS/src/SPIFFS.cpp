@@ -136,4 +136,3 @@ size_t SPIFFSFS::usedBytes()
 }
 
 SPIFFSFS SPIFFS;
-

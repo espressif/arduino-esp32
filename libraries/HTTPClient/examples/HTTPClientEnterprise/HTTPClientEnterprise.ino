@@ -11,7 +11,7 @@
 #include "esp_wpa2.h"
 #endif
 #include <Wire.h>
-#define EAP_IDENTITY "identity" //if connecting from another corporation, use identity@organization.domain in Eduroam 
+#define EAP_IDENTITY "identity" //if connecting from another corporation, use identity@organization.domain in Eduroam
 #define EAP_PASSWORD "password" //your Eduroam password
 const char* ssid = "eduroam"; // Eduroam SSID
 int counter = 0;
@@ -68,16 +68,16 @@ void setup() {
   }
   Serial.println("");
   Serial.println("WiFi connected");
-  Serial.println("IP address set: "); 
+  Serial.println("IP address set: ");
   Serial.println(WiFi.localIP()); //print LAN IP
 }
 void loop() {
   if (WiFi.status() == WL_CONNECTED) { //if we are connected to Eduroam network
     counter = 0; //reset counter
-    Serial.println("Wifi is still connected with IP: "); 
+    Serial.println("Wifi is still connected with IP: ");
     Serial.println(WiFi.localIP());   //inform user about his IP address
   }else if (WiFi.status() != WL_CONNECTED) { //if we lost connection, retry
-    WiFi.begin(ssid);      
+    WiFi.begin(ssid);
   }
   while (WiFi.status() != WL_CONNECTED) { //during lost connection, print dots
     delay(500);
@@ -103,6 +103,6 @@ void loop() {
      }else{
       Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
       }
-  http.end();  
+  http.end();
   delay(2000);
 }

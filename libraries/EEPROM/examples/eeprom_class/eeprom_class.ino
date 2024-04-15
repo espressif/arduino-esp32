@@ -2,7 +2,7 @@
   ESP32 eeprom_class example with EEPROM library
   This simple example demonstrates using EEPROM library to store different data in
   ESP32 Flash memory in a multiple user-defined EEPROM class objects.
-  
+
   Created for arduino-esp32 on 25 Dec, 2017
   by Elochukwu Ifediora (fedy0)
   converted to nvs by lbernstone - 06/22/2019
@@ -68,7 +68,7 @@ void setup() {
   Serial.print("name: ");   Serial.println(rname);
   Serial.print("height: "); Serial.println(height);
   Serial.print("age: ");    Serial.println(age);
-  
+
   Serial.println("Done!");
 }
 

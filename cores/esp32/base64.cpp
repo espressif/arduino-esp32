@@ -61,4 +61,3 @@ String base64::encode(const String& text)
 {
     return base64::encode((uint8_t *) text.c_str(), text.length());
 }
-

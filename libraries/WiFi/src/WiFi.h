@@ -62,7 +62,7 @@ public:
     using WiFiScanClass::BSSID;
     using WiFiScanClass::BSSIDstr;
     using WiFiScanClass::channel;
-public:  
+public:
     void printDiag(Print& dest);
     friend class NetworkClient;
     friend class NetworkServer;

@@ -198,7 +198,7 @@
 
 #elif defined(CAMERA_MODEL_ESP32_CAM_BOARD)
 // The 18 pin header on the board has Y5 and Y3 swapped
-#define USE_BOARD_HEADER 0 
+#define USE_BOARD_HEADER 0
 #define PWDN_GPIO_NUM    32
 #define RESET_GPIO_NUM   33
 #define XCLK_GPIO_NUM     4

@@ -89,15 +89,15 @@ If everything is ok, you will see some output logs similar to this one:
     building [mo]: targets for 0 po files that are out of date
     building [html]: targets for 35 source files that are out of date
     updating environment: [extensions changed ('sphinx_tabs.tabs')] 41 added, 3 changed, 0 removed
-    reading sources... [100%] tutorials/tutorials                                                                                                                                                                                                                                                             
+    reading sources... [100%] tutorials/tutorials
     looking for now-outdated files... none found
     pickling environment... done
     checking consistency... done
     preparing documents... done
-    writing output... [100%] tutorials/tutorials                                                                                                                                                                                                                                                              
+    writing output... [100%] tutorials/tutorials
     generating indices...  genindexdone
     writing additional pages...  searchdone
-    copying images... [100%] tutorials/../../_static/tutorials/peripherals/tutorial_peripheral_diagram.png                                                                                                                                                                                                       
+    copying images... [100%] tutorials/../../_static/tutorials/peripherals/tutorial_peripheral_diagram.png
     copying static files... ... done
     copying extra files... done
     dumping search index in English (code: en)... done
@@ -180,7 +180,7 @@ Here is an example of how to add the function description from `I2C API <https:/
     setPins
     ^^^^^^^
 
-    This function is used to define the ``SDA`` and ``SCL`` pins. 
+    This function is used to define the ``SDA`` and ``SCL`` pins.
 
     .. note:: Call this function before ``begin`` to change the pins from the default ones.
 

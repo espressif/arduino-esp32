@@ -13,13 +13,13 @@ static const uint8_t TX   = 43;
 static const uint8_t RX   = 44;
 static const uint8_t RTS  = 45;
 static const uint8_t CTS  =  6;
-static const uint8_t DTR  =  1; 
-static const uint8_t DSR  =  7; 
+static const uint8_t DTR  =  1;
+static const uint8_t DSR  =  7;
 
 static const uint8_t SW1  = 46;
 static const uint8_t SW2  =  0; // BOOT
-static const uint8_t SW3  = 47; 
-static const uint8_t SW4  = 48; 
+static const uint8_t SW3  = 47;
+static const uint8_t SW4  = 48;
 
 static const uint8_t LED_RED 	= 5;
 static const uint8_t LED_GREEN 	= 2;
@@ -41,7 +41,7 @@ static const uint8_t A5   = 16;
 
 static const uint8_t D0   = 44; // RX0
 static const uint8_t D1   = 43; // TX0
-static const uint8_t D2   = 46; 
+static const uint8_t D2   = 46;
 static const uint8_t D3   =  4;
 static const uint8_t D4   =  3;
 static const uint8_t D5   =  2;
@@ -49,17 +49,17 @@ static const uint8_t D6   = 14;
 static const uint8_t D7   = 10;
 
 static const uint8_t D8   = 33;
-static const uint8_t D9   = 38;	
+static const uint8_t D9   = 38;
 static const uint8_t D10  = 34; // SS
 static const uint8_t D11  = 35; // MOSI
 static const uint8_t D12  = 37; // MISO
 static const uint8_t D13  = 36; // SCK
-static const uint8_t SDA1 = 21;	
+static const uint8_t SDA1 = 21;
 static const uint8_t SCL1 =  0;
 
 static const uint8_t D14  = 45; // RTS
 static const uint8_t D15  =  6; // CTS
-static const uint8_t D16  =  1;	// DTR 
+static const uint8_t D16  =  1;	// DTR
 static const uint8_t D17  =  7;	// DSR
 static const uint8_t D18  = 47;
 static const uint8_t D19  = 48;

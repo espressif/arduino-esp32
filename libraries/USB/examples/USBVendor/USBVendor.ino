@@ -74,7 +74,7 @@ static const char * strRequestStages[] = {"SETUP", "DATA", "ACK"};
 
 //Handle USB requests to the vendor interface
 bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_control_request_t const * request) {
-  Serial.printf("Vendor Request: Stage: %5s, Direction: %3s, Type: %8s, Recipient: %9s, bRequest: 0x%02x, wValue: 0x%04x, wIndex: %u, wLength: %u\n", 
+  Serial.printf("Vendor Request: Stage: %5s, Direction: %3s, Type: %8s, Recipient: %9s, bRequest: 0x%02x, wValue: 0x%04x, wIndex: %u, wLength: %u\n",
     strRequestStages[requestStage],
     strRequestDirections[request->bmRequestDirection],
     strRequestTypes[request->bmRequestType],

@@ -49,7 +49,7 @@ static const uint8_t T9 = 32;
 static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
 
-// PWM Driver pins for PWM Driver board 
+// PWM Driver pins for PWM Driver board
 static const uint8_t PWM0 = 12;
 static const uint8_t PWM1 = 13;
 static const uint8_t PWM2 = 14;

@@ -1,15 +1,15 @@
 /*
  * This Example demonstrates how to receive Hardware Serial Events
  * This USB interface is available for the ESP32-S3, ESP32-C3, ESP32-C6 and ESP32-H2
- * 
+ *
  * It will log all events and USB status (plugged/unplugged) into UART0
  * Any data read from UART0 will be sent to the USB CDC
  * Any data read from USB CDC will be sent to the UART0
- * 
+ *
  * A suggestion is to use Arduino Serial Monitor for the UART0 port
  * and some other serial monitor application for the USB CDC port
  * in order to see the exchanged data and the Hardware Serial Events
- * 
+ *
  */
 
 #ifndef ARDUINO_USB_MODE
@@ -73,7 +73,7 @@ void setup() {
 
 void loop() {
   static uint32_t counter = 0;
-  
+
   Serial0.print(counter);
   Serial0.print(HWCDC_Status());
 

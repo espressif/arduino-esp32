@@ -22,7 +22,7 @@ static const uint8_t MISO  = 19;
 static const uint8_t SCK   = 5;
 
 // mapping to match other feathers and also in order
-static const uint8_t A0 = 26; 
+static const uint8_t A0 = 26;
 static const uint8_t A1 = 25;
 static const uint8_t A2 = 34;
 static const uint8_t A3 = 39;

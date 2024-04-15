@@ -90,7 +90,7 @@ esp_eth_handle_t ETHClass::handle() const {
 void ETHClass::_onEthEvent(int32_t event_id, void* event_data){
     arduino_event_t arduino_event;
     arduino_event.event_id = ARDUINO_EVENT_MAX;
-    
+
     if (event_id == ETHERNET_EVENT_CONNECTED) {
         log_v("%s Connected", desc());
         arduino_event.event_id = ARDUINO_EVENT_ETH_CONNECTED;
@@ -252,7 +252,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
         log_e("esp_eth_driver_install failed! eth_handle is NULL");
         return false;
     }
-    
+
     esp_netif_config_t cfg = ESP_NETIF_DEFAULT_ETH();
 
     // Use ESP_NETIF_INHERENT_DEFAULT_ETH when multiple Ethernet interfaces are used and so you need to modify
@@ -288,7 +288,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH+_eth_index));
 
     Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
- 
+
     ret = esp_eth_start(_eth_handle);
     if(ret != ESP_OK){
         log_e("esp_eth_start failed: %d", ret);
@@ -423,9 +423,9 @@ esp_err_t ETHClass::eth_spi_write(uint32_t cmd, uint32_t addr, const void *data,
 }
 #endif
 
-bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, 
+bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
-    SPIClass *spi, 
+    SPIClass *spi,
 #endif
     int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz){
     esp_err_t ret = ESP_OK;
@@ -566,7 +566,7 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, 
 #endif
         mac = esp_eth_mac_new_w5500(&mac_config, &eth_mac_config);
         phy = esp_eth_phy_new_w5500(&phy_config);
-    } else 
+    } else
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
     if(type == ETH_PHY_DM9051){
@@ -736,8 +736,8 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int
 bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck, int miso, int mosi, uint8_t spi_freq_mhz){
 
     return beginSPI(type, phy_addr, cs, irq, rst,
-#if ETH_SPI_SUPPORTS_CUSTOM 
-        NULL, 
+#if ETH_SPI_SUPPORTS_CUSTOM
+        NULL,
 #endif
         sck, miso, mosi, spi_host, spi_freq_mhz);
 }

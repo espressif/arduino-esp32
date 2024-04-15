@@ -137,7 +137,7 @@ static void hw_cdc_isr_handler(void *arg) {
     }
 }
 
-bool HWCDC::isCDC_Connected() 
+bool HWCDC::isCDC_Connected()
 {
     static bool running = false;
 
@@ -156,12 +156,12 @@ bool HWCDC::isCDC_Connected()
     if (running == false && !connected) { // enables it only once!
         usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
     }
-    // this will feed CDC TX FIFO to trigger IN_EMPTY 
+    // this will feed CDC TX FIFO to trigger IN_EMPTY
     uint8_t c = '\0';
     usb_serial_jtag_ll_write_txfifo(&c, sizeof(c));
     usb_serial_jtag_ll_txfifo_flush();
     running = true;
-    return false;    
+    return false;
 }
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
@@ -203,12 +203,12 @@ void HWCDC::onEvent(arduino_hw_cdc_event_t event, esp_event_handler_t callback){
     arduino_hw_cdc_event_handler_register_with(ARDUINO_HW_CDC_EVENTS, event, callback, this);
 }
 
-bool HWCDC::deinit(void * busptr) 
+bool HWCDC::deinit(void * busptr)
 {
     // avoid any recursion issue with Peripheral Manager perimanSetPinBus() call
     static bool running = false;
     if (running) return true;
-    running = true; 
+    running = true;
     // Setting USB D+ D- pins
     bool retCode = true;
     retCode &= perimanClearPinBus(USB_DM_GPIO_NUM);
@@ -240,7 +240,7 @@ void HWCDC::begin(unsigned long baud)
     if (tx_ring_buf == NULL) {
         if (!setTxBufferSize(16)) {
             log_e("HW CDC TX Buffer error");
-        }    
+        }
     }
 
     // the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
@@ -270,7 +270,7 @@ void HWCDC::begin(unsigned long baud)
         return;
     }
     return;
-    
+
     err:
     log_e("Serial JTAG Pin %u can't be set into Peripheral Manager.", pin);
     end();
@@ -382,7 +382,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size)
         // Now trigger the ISR to read data from the ring buffer.
         usb_serial_jtag_ll_txfifo_flush();
         if(connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
- 
+
         while(to_send){
             space = xRingbufferGetCurFreeSize(tx_ring_buf);
             if(space > to_send){

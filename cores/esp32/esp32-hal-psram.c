@@ -27,7 +27,7 @@
 #include "esp32s2/rom/cache.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/cache.h"
-#else 
+#else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 
@@ -35,9 +35,9 @@ static volatile bool spiramDetected = false;
 static volatile bool spiramFailed = false;
 
 //allows user to bypass SPI RAM test routine
-__attribute__((weak)) bool testSPIRAM(void) 
-{ 
-     return esp_psram_extram_test(); 
+__attribute__((weak)) bool testSPIRAM(void)
+{
+     return esp_psram_extram_test();
 }
 
 
@@ -73,7 +73,7 @@ bool psramInit(){
 #endif
         return false;
     }
-    
+
     //testSPIRAM() allows user to bypass SPI RAM test routine
     if (!testSPIRAM()) {
         spiramFailed = true;

@@ -250,7 +250,7 @@ void BLEService::addCharacteristic(BLECharacteristic* pCharacteristic) {
 BLECharacteristic* BLEService::createCharacteristic(const char* uuid, uint32_t properties) {
 	return createCharacteristic(BLEUUID(uuid), properties);
 }
-	
+
 
 /**
  * @brief Create a new BLE Characteristic associated with this service.

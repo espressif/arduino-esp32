@@ -71,7 +71,7 @@ void TaskBlink(void *pvParameters){  // This is a task.
 /*
   Blink
   Turns on an LED on for one second, then off for one second, repeatedly.
-    
+
   If you want to know what pin the on-board LED is connected to on your ESP32 model, check
   the Technical Specs of your board.
 */
@@ -97,7 +97,7 @@ void TaskAnalogRead(void *pvParameters){  // This is a task.
     analog_read_task_handle = NULL; // Prevent calling vTaskDelete on non-existing task
     vTaskDelete(NULL); // Delete this task
   }
-  
+
 /*
   AnalogReadSerial
   Reads an analog input on pin A3, prints the result to the serial monitor.

@@ -3,7 +3,7 @@
  *
  *  Created on: Jul 1, 2017
  *      Author: kolban
- * 
+ *
  * 	Update: April, 2021
  * 		add BLE5 support
  */
@@ -128,7 +128,7 @@ void BLEScan::handleGAPEvent(
 
 					if (m_pAdvertisedDeviceCallbacks) { // if has callback, no need to record to vector
 						m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
-					} 
+					}
 					if (!m_wantDuplicates && !found) {   // if no callback and not want duplicate, and not already in vector, record it
 						m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<String, BLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
 						shouldDelete = false;
@@ -161,7 +161,7 @@ void BLEScan::handleGAPEvent(
 			{
 				m_pExtendedScanCb->onResult(param->ext_adv_report.params);
 			}
-			
+
 			break;
 		}
 
@@ -187,7 +187,7 @@ void BLEScan::handleGAPEvent(
 			{
 				m_pPeriodicScanCb->onStop(param->ext_scan_stop.status);
 			}
-			
+
 			if (param->ext_scan_stop.status != ESP_BT_STATUS_SUCCESS){
 				log_e("extend Scan stop failed, error status = %x", param->ext_scan_stop.status);
 				break;
@@ -323,7 +323,7 @@ esp_err_t BLEScan::setExtScanParams(esp_ble_ext_scan_params_t* ext_scan_params)
 	if (rc) {
 		log_e("set extend scan params error, error code = %x", rc);
 	}
-	return rc; 
+	return rc;
 }
 
 /**
@@ -391,7 +391,7 @@ bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), b
 
 	//  if we are connecting to devices that are advertising even after being connected, multiconnecting peripherals
 	//  then we should not clear map or we will connect the same device few times
-	if(!is_continue) {  
+	if(!is_continue) {
 		for(auto _dev : m_scanResults.m_vectorAdvertisedDevices){
 			delete _dev.second;
 		}

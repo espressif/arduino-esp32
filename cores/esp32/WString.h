@@ -296,7 +296,7 @@ class String {
 
     protected:
         // Contains the string info when we're not in SSO mode
-        struct _ptr { 
+        struct _ptr {
             char *   buff;
             uint32_t cap;
             uint32_t len;
@@ -309,9 +309,9 @@ class String {
             unsigned char isSSO : 1;
         } __attribute__((packed)); // Ensure that GCC doesn't expand the flag byte to a 32-bit word for alignment issues
 #ifdef BOARD_HAS_PSRAM
-        enum { CAPACITY_MAX = 3145728 }; 
+        enum { CAPACITY_MAX = 3145728 };
 #else
-        enum { CAPACITY_MAX = 65535 }; 
+        enum { CAPACITY_MAX = 65535 };
 #endif
         union {
             struct _ptr ptr;
@@ -393,7 +393,7 @@ class StringSumHelper: public String {
                 String(num) {
         }
 };
-        
+
 inline StringSumHelper & operator +(const StringSumHelper &lhs, const __FlashStringHelper *rhs) {
         return lhs + reinterpret_cast<const char*>(rhs);
 }

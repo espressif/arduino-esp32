@@ -14,9 +14,9 @@
 
 /**
  * @brief This example demonstrates usage of RMT for receiving XJT D12 data
- * 
+ *
  * The output is the RMT data read and processed
- * 
+ *
  */
 
 //

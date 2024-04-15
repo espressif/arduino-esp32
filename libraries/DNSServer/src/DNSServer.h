@@ -5,7 +5,7 @@
 #define DNS_QR_RESPONSE 1
 #define DNS_OPCODE_QUERY 0
 #define DNS_DEFAULT_TTL 60        // Default Time To Live : time interval in seconds that the resource record should be cached before being discarded
-#define DNS_HEADER_SIZE 12 
+#define DNS_HEADER_SIZE 12
 #define DNS_OFFSET_DOMAIN_NAME DNS_HEADER_SIZE // Offset in bytes to reach the domain name labels in the DNS message
 #define DNS_DEFAULT_PORT  53
 
@@ -29,18 +29,18 @@ enum DNSType
   DNS_TYPE_SOA    = 6,  // Start Of a zone of Authority
   DNS_TYPE_PTR    = 12, // Domain name PoinTeR
   DNS_TYPE_DNAME  = 39  // Delegation Name
-} ; 
+} ;
 
 enum DNSClass
 {
   DNS_CLASS_IN = 1, // INternet
   DNS_CLASS_CH = 3  // CHaos
-} ; 
+} ;
 
 enum DNSRDLength
 {
-  DNS_RDLENGTH_IPV4 = 4 // 4 bytes for an IPv4 address 
-} ; 
+  DNS_RDLENGTH_IPV4 = 4 // 4 bytes for an IPv4 address
+} ;
 
 struct DNSHeader
 {
@@ -67,10 +67,10 @@ struct DNSHeader
 struct DNSQuestion
 {
   const uint8_t* QName;
-  uint16_t  QNameLength ; 
-  uint16_t  QType ; 
-  uint16_t  QClass ; 
-} ; 
+  uint16_t  QNameLength ;
+  uint16_t  QType ;
+  uint16_t  QClass ;
+} ;
 
 class DNSServer
 {
@@ -79,7 +79,7 @@ class DNSServer
      * @brief Construct a new DNSServer object
      * by default server is configured to run in "Captive-portal" mode
      * it must be started with start() call to establish a listening socket
-     * 
+     *
      */
     DNSServer();
 
@@ -99,20 +99,20 @@ class DNSServer
     /**
      * @brief stub, left for compatibility with an old version
      * does nothing actually
-     * 
+     *
      */
     void processNextRequest(){};
 
     /**
      * @brief Set the Error Reply Code for all req's not matching predefined domain
-     * 
-     * @param replyCode 
+     *
+     * @param replyCode
      */
     void setErrorReplyCode(const DNSReplyCode &replyCode);
 
     /**
      * @brief set TTL for successful replies
-     * 
+     *
      * @param ttl in seconds
      */
     void setTTL(const uint32_t &ttl);
@@ -124,7 +124,7 @@ class DNSServer
      * port: 53
      * domainName: any
      * ip: WiFi AP's IP address
-     * 
+     *
      * @return true on success
      * @return false if IP or socket error
      */
@@ -132,7 +132,7 @@ class DNSServer
 
     /**
      * @brief (re)Starts a server with provided configuration
-     * 
+     *
      * @return true on success
      * @return false if IP or socket error
      */
@@ -142,14 +142,14 @@ class DNSServer
 
     /**
      * @brief stops the server and close UDP socket
-     * 
+     *
      */
     void stop();
 
     /**
      * @brief returns true if DNS server runs in captive-portal mode
      * i.e. all requests are served with AP's ip address
-     * 
+     *
      * @return true if catch-all mode active
      * @return false otherwise
      */
@@ -157,7 +157,7 @@ class DNSServer
 
     /**
      * @brief returns 'true' if server is up and UDP socket is listening for UDP req's
-     * 
+     *
      * @return true if server is up
      * @return false otherwise
      */
@@ -177,10 +177,10 @@ class DNSServer
     /**
      * @brief Get the Domain Name Without Www Prefix object
      * scan labels in DNS packet and build a string of a domain name
-     * truncate any www. label if found 
+     * truncate any www. label if found
      * @param start a pointer to the start of labels records in DNS packet
      * @param len labels length
-     * @return String 
+     * @return String
      */
     String getDomainNameWithoutWwwPrefix(const unsigned char* start, size_t len);
     inline bool requestIncludesOnlyOneQuestion(DNSHeader& dnsHeader);

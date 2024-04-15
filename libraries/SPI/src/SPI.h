@@ -1,9 +1,9 @@
-/* 
+/*
   SPI.h - SPI library for esp32
 
   Copyright (c) 2015 Hristo Gochkov. All rights reserved.
   This file is part of the esp8266 core for Arduino environment.
- 
+
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation; either
@@ -71,7 +71,7 @@ public:
     void setDataMode(uint8_t dataMode);
     void setFrequency(uint32_t freq);
     void setClockDivider(uint32_t clockDiv);
-    
+
     uint32_t getClockDivider();
 
     void beginTransaction(SPISettings settings);
@@ -80,7 +80,7 @@ public:
     uint8_t transfer(uint8_t data);
     uint16_t transfer16(uint16_t data);
     uint32_t transfer32(uint32_t data);
-  
+
     void transferBytes(const uint8_t * data, uint8_t * out, uint32_t size);
     void transferBits(uint32_t data, uint32_t * out, uint8_t bits);
 

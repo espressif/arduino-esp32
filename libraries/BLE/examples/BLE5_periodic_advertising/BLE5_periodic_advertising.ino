@@ -53,7 +53,7 @@ static uint8_t periodic_adv_raw_data[] = {
 
 uint8_t addr_2m[6] = {0xc0, 0xde, 0x52, 0x00, 0x00, 0x02};
 
-BLEMultiAdvertising advert(1); // max number of advertisement data 
+BLEMultiAdvertising advert(1); // max number of advertisement data
 
 void setup() {
   Serial.begin(115200);

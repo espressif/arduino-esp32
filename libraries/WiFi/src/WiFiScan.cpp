@@ -150,7 +150,7 @@ int16_t WiFiScanClass::scanComplete()
         return WIFI_SCAN_RUNNING;
     }
     // last one to avoid time affecting Async mode
-    if (WiFiScanClass::_scanStarted && (millis()-WiFiScanClass::_scanStarted) > WiFiScanClass::_scanTimeout) { //Check is scan was started and if the delay expired, return WIFI_SCAN_FAILED in this case 
+    if (WiFiScanClass::_scanStarted && (millis()-WiFiScanClass::_scanStarted) > WiFiScanClass::_scanTimeout) { //Check is scan was started and if the delay expired, return WIFI_SCAN_FAILED in this case
     	WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
 	return WIFI_SCAN_FAILED;
     }

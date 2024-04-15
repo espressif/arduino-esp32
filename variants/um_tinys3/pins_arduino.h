@@ -48,7 +48,7 @@ static const uint8_t VBUS_SENSE = 33;
 
 static const uint8_t RGB_DATA = 18;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)  
+#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = RGB_BUILTIN;

@@ -5,7 +5,7 @@ namespace mime
 {
 
 // Table of extension->MIME strings stored in PROGMEM, needs to be global due to GCC section typing rules
-const Entry mimeTable[maxType] = 
+const Entry mimeTable[maxType] =
 {
     { ".html", "text/html" },
     { ".htm", "text/html" },
@@ -29,7 +29,7 @@ const Entry mimeTable[maxType] =
     { ".zip", "application/zip" },
     { ".gz", "application/x-gzip" },
     { ".appcache", "text/cache-manifest" },
-    { "", "application/octet-stream" } 
+    { "", "application/octet-stream" }
 };
 
 }

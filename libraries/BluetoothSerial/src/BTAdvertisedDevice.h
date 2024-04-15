@@ -32,7 +32,7 @@ class BTAdvertisedDeviceSet : public virtual BTAdvertisedDevice {
 public:
     BTAdvertisedDeviceSet();
     //~BTAdvertisedDeviceSet() = default;
-    
+
 
     BTAddress   getAddress();
     uint32_t    getCOD() const;

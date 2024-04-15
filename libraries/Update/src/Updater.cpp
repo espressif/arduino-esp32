@@ -39,7 +39,7 @@ static const char * _err2str(uint8_t _error){
     } else if(_error == UPDATE_ERROR_ABORT){
         return ("Aborted");
     } else if(_error == UPDATE_ERROR_DECRYPT){
-        return ("Decryption error"); 
+        return ("Decryption error");
     }
     return ("UNKNOWN");
 }
@@ -548,7 +548,7 @@ size_t UpdateClass::writeStream(Stream &data) {
             bytesToRead = remaining();
         }
 
-        /* 
+        /*
         Init read&timeout counters and try to read, if read failed, increase counter,
         wait 100ms and try to read again. If counter > 300 (30 sec), give up/abort
         */

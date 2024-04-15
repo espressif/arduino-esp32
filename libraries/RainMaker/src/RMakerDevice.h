@@ -37,7 +37,7 @@ class Device
         void setPrivateData(void *priv_data) {
             this->private_data.priv_data = priv_data;
         }
-        
+
         const RMakerDevicePrivT* getDevicePrivateData()
         {
             return &this->private_data;
@@ -59,7 +59,7 @@ class Device
             device_handle = esp_rmaker_device_create(dev_name, dev_type, &this->private_data);
             if(device_handle == NULL){
                 log_e("Device create error");
-            }   
+            }
         }
         void setDeviceHandle(const esp_rmaker_device_t *device_handle)
         {
@@ -79,7 +79,7 @@ class Device
         esp_err_t addDeviceAttr(const char *attr_name, const char *val);
         param_handle_t *getParamByName(const char *param_name);
         esp_err_t assignPrimaryParam(param_handle_t *param);
-         
+
         //Generic Device Parameter
         esp_err_t addParam(Param parameter);
 
@@ -94,7 +94,7 @@ class Device
         esp_err_t addDirectionParam(int val, const char *param_name = ESP_RMAKER_DEF_DIRECTION_NAME);
         esp_err_t addSpeedParam(int val, const char *param_name = ESP_RMAKER_DEF_SPEED_NAME);
         esp_err_t addTemperatureParam(float val, const char *param_name = ESP_RMAKER_DEF_TEMPERATURE_NAME);
-          
+
         //Update Parameter
         esp_err_t updateAndReportParam(const char *param_name, bool val);
         esp_err_t updateAndReportParam(const char *param_name, int  val);
@@ -121,8 +121,8 @@ class Switch : public Device
             setDeviceHandle(dev_handle);
             if(dev_handle == NULL){
                 log_e("Switch device not created");
-            }   
-        } 
+            }
+        }
 };
 
 class LightBulb : public Device
@@ -143,9 +143,9 @@ class LightBulb : public Device
             setDeviceHandle(dev_handle);
             if(dev_handle == NULL){
                 log_e("Light device not created");
-            }   
-        }  
-};       
+            }
+        }
+};
 
 class Fan : public Device
 {
@@ -165,7 +165,7 @@ class Fan : public Device
             if(dev_handle == NULL){
                 log_e("Fan device not created");
             }
-        } 
+        }
 };
 
 class TemperatureSensor : public Device

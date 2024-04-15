@@ -166,7 +166,7 @@ esp_err_t RMakerClass::enableSystemService(uint16_t flags, int8_t reboot_seconds
         .reset_reboot_seconds = reset_reboot_seconds
     };
     err = esp_rmaker_system_service_enable(&config);
-    return err;    
+    return err;
 }
 
 RMakerClass RMaker;

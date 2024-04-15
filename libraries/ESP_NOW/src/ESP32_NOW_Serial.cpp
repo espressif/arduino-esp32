@@ -237,7 +237,7 @@ size_t ESP_NOW_Serial_Class::write(const uint8_t *buffer, size_t size, uint32_t 
     if(xSemaphoreTake(tx_sem, 0) == pdTRUE){
         checkForTxData();
     }
-    
+
     return size;
 }
 //TX Done Callback

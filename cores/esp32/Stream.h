@@ -59,7 +59,7 @@ public:
 
     void setTimeout(unsigned long timeout);  // sets maximum milliseconds to wait for stream data, default is 1 second
     unsigned long getTimeout(void);
-      
+
     bool find(const char *target);   // reads data from the stream until the target string is found
     bool find(uint8_t *target)
     {
@@ -123,7 +123,7 @@ protected:
     // this allows format characters (typically commas) in values to be ignored
 
     float parseFloat(char skipChar);  // as above but the given skipChar is ignored
-  
+
     struct MultiTarget {
       const char *str;  // string you're searching for
       size_t len;       // length of string you're searching for

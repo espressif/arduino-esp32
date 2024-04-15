@@ -1,8 +1,8 @@
-/* 
+/*
   Ticker.cpp - esp32 library that calls functions periodically
 
   Copyright (c) 2017 Bert Melis. All rights reserved.
-  
+
   Based on the original work of:
   Copyright (c) 2014 Ivan Grokhotkov. All rights reserved.
   The original version is part of the esp8266 core for Arduino environment.
@@ -69,4 +69,3 @@ void Ticker::_static_callback(void* arg)
   if (_this && _this->_callback_function)
     _this->_callback_function();
 }
-

@@ -57,4 +57,3 @@ class NetworkServer {
     operator bool(){return _listening;}
     int setTimeout(uint32_t seconds);
 };
-

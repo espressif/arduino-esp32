@@ -14,14 +14,14 @@
 
 /**
  * @brief This example demonstrates simple Zigbee light switch.
- * 
+ *
  * The example demonstrates how to use ESP Zigbee stack to control a light bulb.
  * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator.
  * Button switch and Zigbee runs in separate tasks.
- * 
- * Proper Zigbee mode must be selected in Tools->Zigbee mode 
+ *
+ * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
- * 
+ *
  * Please check the README.md for instructions and more detailed description.
  */
 
@@ -246,7 +246,7 @@ void setup() {
 
     ESP_ERROR_CHECK(esp_zb_platform_config(&config));
 
-    // Init button switch 
+    // Init button switch
     for (int i = 0; i < PAIR_SIZE(button_func_pair); i++) {
         pinMode(button_func_pair[i].pin, INPUT_PULLUP);
         /* create a queue to handle gpio event from isr */

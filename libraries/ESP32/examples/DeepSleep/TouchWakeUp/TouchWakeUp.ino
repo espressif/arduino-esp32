@@ -67,7 +67,7 @@ void print_wakeup_touchpad(){
   #else
     if(touchPin < TOUCH_PAD_MAX)
     {
-      Serial.printf("Touch detected on GPIO %d\n", touchPin); 
+      Serial.printf("Touch detected on GPIO %d\n", touchPin);
     }
     else
     {
@@ -88,13 +88,13 @@ void setup(){
   print_wakeup_reason();
   print_wakeup_touchpad();
 
-  #if CONFIG_IDF_TARGET_ESP32 
-  //Setup sleep wakeup on Touch Pad 3 + 7 (GPIO15 + GPIO 27) 
+  #if CONFIG_IDF_TARGET_ESP32
+  //Setup sleep wakeup on Touch Pad 3 + 7 (GPIO15 + GPIO 27)
   touchSleepWakeUpEnable(T3,THRESHOLD);
   touchSleepWakeUpEnable(T7,THRESHOLD);
-  
+
   #else //ESP32-S2 + ESP32-S3
-  //Setup sleep wakeup on Touch Pad 3 (GPIO3) 
+  //Setup sleep wakeup on Touch Pad 3 (GPIO3)
   touchSleepWakeUpEnable(T3,THRESHOLD);
 
   #endif

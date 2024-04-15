@@ -31,13 +31,13 @@
 #include "FS.h"
 #include "SD_MMC.h"
 #include "SPI.h"
-#include <time.h> 
+#include <time.h>
 #include <WiFi.h>
 
 const char* ssid     = "your-ssid";
 const char* password = "your-password";
 
-long timezone = 1; 
+long timezone = 1;
 byte daysavetime = 1;
 
 // Default pins for ESP-S3
@@ -209,7 +209,7 @@ void setup(){
     getLocalTime(&tmstruct, 5000);
     Serial.printf("\nNow is : %d-%02d-%02d %02d:%02d:%02d\n",(tmstruct.tm_year)+1900,( tmstruct.tm_mon)+1, tmstruct.tm_mday,tmstruct.tm_hour , tmstruct.tm_min, tmstruct.tm_sec);
     Serial.println("");
-    
+
     // If you are using any other ESP32-S3 board than ESP32-S3-USB-OTG which has preset default pins, you will
     // need to specify the pins with the following example of SD_MMC.setPins()
     // If you want to use only 1-bit mode, you can use the line with only one data pin (d0) begin changed.
@@ -270,5 +270,3 @@ void setup(){
 void loop(){
 
 }
-
-

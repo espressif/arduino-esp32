@@ -682,7 +682,7 @@ static bool _init_bt(const char *deviceName, bt_mode mode)
         log_e("initialize controller failed");
         return false;
     }
-    
+
     esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
     if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED){
         if (esp_bluedroid_init()) {
@@ -690,7 +690,7 @@ static bool _init_bt(const char *deviceName, bt_mode mode)
             return false;
         }
     }
-    
+
     if (bt_state != ESP_BLUEDROID_STATUS_ENABLED){
         if (esp_bluedroid_enable()) {
             log_e("enable bluedroid failed");
@@ -1007,7 +1007,7 @@ bool BluetoothSerial::connect(String remoteName)
     if (!isReady(true, READY_TIMEOUT)) return false;
     if (remoteName && remoteName.length() < 1) {
         log_e("No remote name is provided");
-        return false; 
+        return false;
     }
     disconnect();
     _doConnect = true;
@@ -1050,7 +1050,7 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_
     if (!isReady(true, READY_TIMEOUT)) return false;
     if (!remoteAddress) {
         log_e("No remote address is provided");
-        return false; 
+        return false;
     }
     disconnect();
     _doConnect = true;

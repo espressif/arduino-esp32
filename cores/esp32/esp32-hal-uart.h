@@ -37,7 +37,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
 void uartEnd(uint8_t uart_num);
 
 // This is used to retrieve the Event Queue pointer from a UART IDF Driver in order to allow user to deal with its events
-void uartGetEventQueue(uart_t* uart, QueueHandle_t *q); 
+void uartGetEventQueue(uart_t* uart, QueueHandle_t *q);
 
 uint32_t uartAvailable(uart_t* uart);
 uint32_t uartAvailableForWrite(uart_t* uart);

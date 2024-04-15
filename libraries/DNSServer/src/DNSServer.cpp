@@ -27,7 +27,7 @@ bool DNSServer::start(){
     }
 #endif
     return false;              // won't run if WiFi is not in AP mode
-  } 
+  }
 
   _udp.close();
   _udp.onPacket([this](AsyncUDPPacket& pkt){ this->_handleUDP(pkt); });
@@ -83,7 +83,7 @@ void DNSServer::_handleUDP(AsyncUDPPacket& pkt)
     {
 /*
       // The QName has a variable length, maximum 255 bytes and is comprised of multiple labels.
-      // Each label contains a byte to describe its length and the label itself. The list of 
+      // Each label contains a byte to describe its length and the label itself. The list of
       // labels terminates with a zero-valued byte. In "github.com", we have two labels "github" & "com"
 */
       const char * enoflbls = strchr(reinterpret_cast<const char*>(pkt.data()) + DNS_HEADER_SIZE, 0);   // find end_of_label marker
@@ -95,7 +95,7 @@ void DNSServer::_handleUDP(AsyncUDPPacket& pkt)
         proper dns req should have label terminator at least 4 bytes before end of packet
       */
       if (dnsQuestion.QNameLength > pkt.length() - DNS_HEADER_SIZE - sizeof(dnsQuestion.QType) - sizeof(dnsQuestion.QClass)) return;              // malformed packet
-      
+
       // Copy the QType and QClass
       memcpy( &dnsQuestion.QType,  enoflbls, sizeof(dnsQuestion.QType) );
       memcpy( &dnsQuestion.QClass, enoflbls + sizeof(dnsQuestion.QType), sizeof(dnsQuestion.QClass) );
@@ -144,8 +144,8 @@ String DNSServer::getDomainNameWithoutWwwPrefix(const unsigned char* start, size
 void DNSServer::replyWithIP(AsyncUDPPacket& req, DNSHeader& dnsHeader, DNSQuestion& dnsQuestion)
 {
   AsyncUDPMessage rpl;
-  
-  // Change the type of message to a response and set the number of answers equal to 
+
+  // Change the type of message to a response and set the number of answers equal to
   // the number of questions in the header
   dnsHeader.QR      = DNS_QR_RESPONSE;
   dnsHeader.ANCount = dnsHeader.QDCount;
@@ -156,16 +156,16 @@ void DNSServer::replyWithIP(AsyncUDPPacket& req, DNSHeader& dnsHeader, DNSQuesti
   rpl.write( (uint8_t*) &dnsQuestion.QType, 2 ) ;
   rpl.write( (uint8_t*) &dnsQuestion.QClass, 2 ) ;
 
-  // Write the answer 
+  // Write the answer
   // Use DNS name compression : instead of repeating the name in this RNAME occurrence,
   // set the two MSB of the byte corresponding normally to the length to 1. The following
-  // 14 bits must be used to specify the offset of the domain name in the message 
-  // (<255 here so the first byte has the 6 LSB at 0) 
+  // 14 bits must be used to specify the offset of the domain name in the message
+  // (<255 here so the first byte has the 6 LSB at 0)
   rpl.write((uint8_t) 0xC0);
   rpl.write((uint8_t) DNS_OFFSET_DOMAIN_NAME);
 
-  // DNS type A : host address, DNS class IN for INternet, returning an IPv4 address 
-  uint16_t answerType = htons(DNS_TYPE_A), answerClass = htons(DNS_CLASS_IN), answerIPv4 = htons(DNS_RDLENGTH_IPV4)  ; 
+  // DNS type A : host address, DNS class IN for INternet, returning an IPv4 address
+  uint16_t answerType = htons(DNS_TYPE_A), answerClass = htons(DNS_CLASS_IN), answerIPv4 = htons(DNS_RDLENGTH_IPV4)  ;
   rpl.write((unsigned char*) &answerType, 2 );
   rpl.write((unsigned char*) &answerClass, 2 );
   rpl.write((unsigned char*) &_ttl, 4);        // DNS Time To Live
@@ -178,7 +178,7 @@ void DNSServer::replyWithIP(AsyncUDPPacket& req, DNSHeader& dnsHeader, DNSQuesti
   #ifdef DEBUG_ESP_DNS
     DEBUG_OUTPUT.printf("DNS responds: %s for %s\n",
             _resolvedIP.toString().c_str(), getDomainNameWithoutWwwPrefix(static_cast<const unsigned char*>(dnsQuestion.QName), dnsQuestion.QNameLength).c_str() );
-  #endif  
+  #endif
 }
 
 void DNSServer::replyWithCustomCode(AsyncUDPPacket& req, DNSHeader& dnsHeader)

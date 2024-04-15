@@ -82,19 +82,19 @@ void setup(){
 
     Serial.print("Connected to ");
     Serial.println(ssid);
-    
+
     HttpsOTA.onHttpEvent(HttpEvent);
     Serial.println("Starting OTA");
-    HttpsOTA.begin(url, server_certificate); 
+    HttpsOTA.begin(url, server_certificate);
 
     Serial.println("Please Wait it takes some time ...");
 }
 
 void loop(){
     otastatus = HttpsOTA.status();
-    if(otastatus == HTTPS_OTA_SUCCESS) { 
+    if(otastatus == HTTPS_OTA_SUCCESS) {
         Serial.println("Firmware written successfully. To reboot device, call API ESP.restart() or PUSH restart button on device");
-    } else if(otastatus == HTTPS_OTA_FAIL) { 
+    } else if(otastatus == HTTPS_OTA_FAIL) {
         Serial.println("Firmware Upgrade Fail");
     }
     delay(1000);

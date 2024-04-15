@@ -30,7 +30,7 @@
 #endif
 
 static uint8_t __analogAttenuation = ADC_11db;
-static uint8_t __analogWidth = SOC_ADC_RTC_MAX_BITWIDTH; 
+static uint8_t __analogWidth = SOC_ADC_RTC_MAX_BITWIDTH;
 static uint8_t __analogReturnedWidth = SOC_ADC_RTC_MAX_BITWIDTH;
 
 typedef struct {
@@ -70,7 +70,7 @@ static bool adcDetachBus(void * pin){
         }
         adc_handle[adc_unit].adc_oneshot_handle = NULL;
         if(adc_handle[adc_unit].adc_cali_handle != NULL){
-    #if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED        
+    #if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
             err = adc_cali_delete_scheme_curve_fitting(adc_handle[adc_unit].adc_cali_handle);
             if(err != ESP_OK){
                 return false;
@@ -198,7 +198,7 @@ void __analogSetAttenuation(adc_attenuation_t attenuation){
 void __analogSetWidth(uint8_t bits){
     if(bits < SOC_ADC_RTC_MIN_BITWIDTH){
         bits = SOC_ADC_RTC_MIN_BITWIDTH;
-    } 
+    }
     else if(bits > SOC_ADC_RTC_MAX_BITWIDTH){
         bits = SOC_ADC_RTC_MAX_BITWIDTH;
     }
@@ -254,7 +254,7 @@ void __analogReadResolution(uint8_t bits){
         return;
     }
     __analogReturnedWidth = bits;
-    
+
 #if CONFIG_IDF_TARGET_ESP32
     __analogSetWidth(bits);         // hardware analog resolution from 9 to 12
 #endif
@@ -361,7 +361,7 @@ extern void analogSetWidth(uint8_t bits) __attribute__ ((weak, alias("__analogSe
 #endif
 
 static uint8_t __adcContinuousAtten = ADC_11db;
-static uint8_t __adcContinuousWidth = SOC_ADC_DIGI_MAX_BITWIDTH; 
+static uint8_t __adcContinuousWidth = SOC_ADC_DIGI_MAX_BITWIDTH;
 
 static uint8_t used_adc_channels = 0;
 adc_continuos_data_t * adc_result = NULL;
@@ -380,7 +380,7 @@ static bool adcContinuousDetachBus(void * adc_unit_number){
         }
         adc_handle[adc_unit].adc_continuous_handle = NULL;
         if(adc_handle[adc_unit].adc_cali_handle != NULL){
-    #if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED  
+    #if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
             err = adc_cali_delete_scheme_curve_fitting(adc_handle[adc_unit].adc_cali_handle);
             if(err != ESP_OK){
                 return false;
@@ -452,7 +452,7 @@ esp_err_t __analogContinuousInit(adc_channel_t *channel, uint8_t channel_num, ad
     }
     dig_cfg.adc_pattern = adc_pattern;
     err = adc_continuous_config(adc_handle[adc_unit].adc_continuous_handle, &dig_cfg);
-    
+
     if(err != ESP_OK){
         log_e("adc_continuous_config failed with error: %d", err);
         return ESP_FAIL;
@@ -610,7 +610,7 @@ bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms){
             adc_digi_output_data_t *p = (adc_digi_output_data_t*)&adc_read[i];
             uint32_t chan_num = ADC_GET_CHANNEL(p);
             uint32_t data = ADC_GET_DATA(p);
-            
+
             /* Check the channel number validation, the data is invalid if the channel num exceed the maximum channel */
             if(chan_num >= SOC_ADC_CHANNEL_NUM(0)){
                 log_e("Invalid data [%d_%d]", chan_num, data);

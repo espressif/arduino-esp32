@@ -16,7 +16,7 @@ static const uint8_t SCK   = 5;
 static const uint8_t SS    = -1;
 
 // mapping to match other feathers and also in order
-static const uint8_t A0 = 26; 
+static const uint8_t A0 = 26;
 static const uint8_t A1 = 25;
 static const uint8_t A2 = 34;
 static const uint8_t A3 = 39;
@@ -38,7 +38,7 @@ static const uint8_t A13 = 35;
 
 // touch inputs
 static const uint8_t T0 = 4;
-static const uint8_t T2 = 2; 
+static const uint8_t T2 = 2;
 static const uint8_t T3 = 15;
 static const uint8_t T4 = 13;
 static const uint8_t T5 = 12;

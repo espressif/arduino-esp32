@@ -22,7 +22,7 @@
     Internal Private Touch Data Structure and Functions
 */
 
-#if SOC_TOUCH_VERSION_1         // ESP32 
+#if SOC_TOUCH_VERSION_1         // ESP32
 static uint16_t __touchSleepCycles = 0x1000;
 static uint16_t __touchMeasureCycles = 0x1000;
 #elif SOC_TOUCH_VERSION_2       // ESP32S2, ESP32S3
@@ -50,7 +50,7 @@ static bool channels_initialized[SOC_TOUCH_SENSOR_NUM] = { false };
 
 static void ARDUINO_ISR_ATTR __touchISR(void * arg)
 {
-#if SOC_TOUCH_VERSION_1         // ESP32 
+#if SOC_TOUCH_VERSION_1         // ESP32
     uint32_t pad_intr = touch_pad_get_status();
     //clear interrupt
     touch_pad_clear_status();
@@ -123,7 +123,7 @@ static void __touchInit()
     if(initialized){
         return;
     }
- 
+
    esp_err_t err = ESP_OK;
 
 #if SOC_TOUCH_VERSION_1                         // ESP32
@@ -132,7 +132,7 @@ static void __touchInit()
         goto err;
     }
     // the next two lines will drive the touch reading values -- both will return ESP_OK
-    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V); 
+    touch_pad_set_voltage(TOUCH_HVOLT_2V7, TOUCH_LVOLT_0V5, TOUCH_HVOLT_ATTEN_0V);
     touch_pad_set_measurement_clock_cycles(__touchMeasureCycles);
     touch_pad_set_measurement_interval(__touchSleepCycles);
     // Touch Sensor Timer initiated
@@ -272,7 +272,7 @@ static void __touchAttachArgsInterrupt(uint8_t pin, void (*userFunc)(void), void
 // new additional API to detach touch ISR
 static void __touchDettachInterrupt(uint8_t pin)
 {
-    __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as detaching 
+    __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as detaching
 }
 
 
@@ -289,7 +289,7 @@ void touchInterruptSetThresholdDirection(bool mustbeLower) {
     }
 }
 #elif SOC_TOUCH_VERSION_2     // Only for ESP32S2 and ESP32S3
-// returns true if touch pad has been and continues pressed and false otherwise 
+// returns true if touch pad has been and continues pressed and false otherwise
 bool touchInterruptGetLastStatus(uint8_t pin) {
     int8_t pad = digitalPinToTouchChannel(pin);
     if(pad < 0){
@@ -320,12 +320,12 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold)
     }
     #if SOC_TOUCH_VERSION_1        // Only for ESP32 SoC
     touch_pad_set_thresh(pad, threshold);
-   
+
     #elif SOC_TOUCH_VERSION_2
     touch_pad_sleep_channel_enable(pad, true);
     touch_pad_sleep_set_threshold(pad, threshold);
 
-    #endif 
+    #endif
     esp_sleep_enable_touchpad_wakeup();
 }
 

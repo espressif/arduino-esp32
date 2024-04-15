@@ -53,7 +53,7 @@ void ulp_setup() {
     DEC_DUTY,
     INC_DUTY,
   };
-  
+
   // Define ULP program
   const ulp_insn_t ulp_prog[] = {
     // Initial Value setup
@@ -163,4 +163,3 @@ void setup() {
 void loop() {
   // It never reaches this code because it enters in Deep Sleep mode at the end of setup()
 }
-

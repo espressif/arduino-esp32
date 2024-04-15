@@ -21,7 +21,7 @@ class Param
 {
     private:
         const param_handle_t *param_handle;
-       
+
     public:
         Param()
         {
@@ -31,7 +31,7 @@ class Param
         {
             param_handle = esp_rmaker_param_create(param_name, param_type, val, properties);
         }
-        void setParamHandle(const param_handle_t *param_handle) 
+        void setParamHandle(const param_handle_t *param_handle)
         {
             this->param_handle = param_handle;
         }
@@ -42,8 +42,8 @@ class Param
         const param_handle_t *getParamHandle()
         {
             return param_handle;
-        } 
-         
+        }
+
         esp_err_t addUIType(const char *ui_type);
         esp_err_t addBounds(param_val_t min, param_val_t max, param_val_t step);
         esp_err_t updateAndReport(param_val_t val);

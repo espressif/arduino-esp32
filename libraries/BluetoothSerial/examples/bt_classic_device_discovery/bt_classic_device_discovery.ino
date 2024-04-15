@@ -40,7 +40,7 @@ void setup() {
       Serial.println("Error on discoverAsync f.e. not working after a \"connect\"");
     }
   }
-  
+
   if (btScanSync) {
     Serial.println("Starting synchronous discovery... ");
     BTScanResults *pResults = SerialBT.discover(BT_DISCOVER_TIME);

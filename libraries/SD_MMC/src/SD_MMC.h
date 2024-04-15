@@ -22,8 +22,8 @@
 #include "driver/sdmmc_types.h"
 #include "sd_defines.h"
 
-// If reading/writing to the SD card is unstable, 
-// you can define BOARD_MAX_SDMMC_FREQ with lower value (Ex. SDMMC_FREQ_DEFAULT) 
+// If reading/writing to the SD card is unstable,
+// you can define BOARD_MAX_SDMMC_FREQ with lower value (Ex. SDMMC_FREQ_DEFAULT)
 // in pins_arduino.h for your board variant.
 #ifndef BOARD_MAX_SDMMC_FREQ
 #define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_HIGHSPEED
@@ -54,7 +54,7 @@ public:
     uint64_t cardSize();
     uint64_t totalBytes();
     uint64_t usedBytes();
-    
+
 private:
     static bool sdmmcDetachBus(void * bus_pointer);
 };

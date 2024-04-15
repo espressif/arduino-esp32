@@ -95,7 +95,7 @@ void loop() {
     printScannedNetworks(WiFiScanStatus);
     startWiFiScan(); // start over...
   }
-  
+
   // Loop can do something else...
   delay(250);
   Serial.println("Loop running...");

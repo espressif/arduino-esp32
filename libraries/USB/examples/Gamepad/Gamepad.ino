@@ -26,7 +26,7 @@ void setup() {
 void loop() {
   static uint8_t padID = 0;
   static long lastPress = 0;
-  
+
   int buttonState = digitalRead(buttonPin);
   if (buttonState != previousButtonState) {
     if (buttonState == LOW) { // BOOT Button pressed
@@ -44,7 +44,7 @@ void loop() {
       Gamepad.rightStick(0, 0);
       Gamepad.leftTrigger(0);
       Gamepad.rightTrigger(0);
-      Gamepad.hat(HAT_CENTER);      
+      Gamepad.hat(HAT_CENTER);
       log_d("Released PadID [%d]\n", padID);
       if (millis() - lastPress > 300) {
         padID = (padID + 1) & 0x1F;

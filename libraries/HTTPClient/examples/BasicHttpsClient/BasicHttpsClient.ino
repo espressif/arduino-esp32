@@ -14,7 +14,7 @@
 
 #include <NetworkClientSecure.h>
 
-// This is GandiStandardSSLCA2.pem, the root Certificate Authority that signed 
+// This is GandiStandardSSLCA2.pem, the root Certificate Authority that signed
 // the server certificate for the demo server https://jigsaw.w3.org in this
 // example. This certificate is valid until Sep 11 23:59:59 2024 GMT
 const char* rootCACertificate = \
@@ -53,7 +53,7 @@ const char* rootCACertificate = \
 "BT02Vf6Dsuimrdfp5gJ0iHRc2jTbkNJtUQoj1iM=\n" \
 "-----END CERTIFICATE-----\n";
 
-// Not sure if NetworkClientSecure checks the validity date of the certificate. 
+// Not sure if NetworkClientSecure checks the validity date of the certificate.
 // Setting clock just to be sure...
 void setClock() {
   configTime(0, 0, "pool.ntp.org");
@@ -96,7 +96,7 @@ void setup() {
   }
   Serial.println(" connected");
 
-  setClock();  
+  setClock();
 }
 
 void loop() {
@@ -105,20 +105,20 @@ void loop() {
     client -> setCACert(rootCACertificate);
 
     {
-      // Add a scoping block for HTTPClient https to make sure it is destroyed before NetworkClientSecure *client is 
+      // Add a scoping block for HTTPClient https to make sure it is destroyed before NetworkClientSecure *client is
       HTTPClient https;
-  
+
       Serial.print("[HTTPS] begin...\n");
       if (https.begin(*client, "https://jigsaw.w3.org/HTTP/connection.html")) {  // HTTPS
         Serial.print("[HTTPS] GET...\n");
         // start connection and send HTTP header
         int httpCode = https.GET();
-  
+
         // httpCode will be negative on error
         if (httpCode > 0) {
           // HTTP header has been send and Server response header has been handled
           Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-  
+
           // file found at server
           if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
             String payload = https.getString();
@@ -127,7 +127,7 @@ void loop() {
         } else {
           Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
         }
-  
+
         https.end();
       } else {
         Serial.printf("[HTTPS] Unable to connect\n");
@@ -135,7 +135,7 @@ void loop() {
 
       // End extra scoping block
     }
-  
+
     delete client;
   } else {
     Serial.println("Unable to create client");

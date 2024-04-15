@@ -20,12 +20,12 @@ def main():
     print("Creating ESP Insights Firmware Package.")
     archive_path = os.path.join(BUILD_DIR, PROJ_NAME)
     out_path = os.path.join(TARGET_PATH, PROJ_NAME)
-    
+
     # Create target archive directories
     os.makedirs(archive_path, exist_ok = True)
     os.makedirs(os.path.join(archive_path, "partition_table"), exist_ok = True)
     os.makedirs(os.path.join(archive_path, "bootloader"), exist_ok = True)
-    
+
     # Copy files from build directory to archive directory
     shutil.copy2(os.path.join(BUILD_DIR, PROJ_NAME + ".bin"), archive_path)
     shutil.copy2(os.path.join(BUILD_DIR, PROJ_NAME + ".elf"), archive_path)
@@ -33,7 +33,7 @@ def main():
     shutil.copy2(os.path.join(BUILD_DIR, "partitions.csv"), archive_path)
     shutil.copy2(os.path.join(BUILD_DIR, PROJ_NAME + ".bootloader.bin"), os.path.join(archive_path, "bootloader"))
     shutil.copy2(os.path.join(BUILD_DIR, PROJ_NAME + ".partitions.bin"), os.path.join(archive_path, "partition_table"))
-    
+
     with open(os.path.join(BUILD_DIR, PROJ_NAME + ".bin"), 'rb') as bin_file:
         bin_file.seek(VERSION_NAME_OFFSET)
         version_name = (bin_file.read(VERSION_NAME_SIZE).decode('utf-8')).split('\x00', 1)[0]
@@ -47,7 +47,7 @@ def main():
         }
         with open(os.path.join(archive_path, "project_build_config.json"), "w") as json_file:
             json_file.write(json.dumps(project_build_config_obj))
-    
+
     shutil.make_archive(out_path, "zip", BUILD_DIR, PROJ_NAME)
     print("Archive created at {}".format(out_path + ".zip"))
     return

@@ -64,4 +64,3 @@ int StreamString::peek() {
 
 void StreamString::flush() {
 }
-

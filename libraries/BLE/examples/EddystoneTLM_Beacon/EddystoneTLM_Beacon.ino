@@ -12,7 +12,7 @@
    4. wait
    5. Stop advertising.
    6. deep sleep
-   
+
    To read data advertised by this beacon use second ESP with example sketch BLE_Beacon_Scanner
 */
 #include "sys/time.h"

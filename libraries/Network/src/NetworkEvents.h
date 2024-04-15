@@ -162,5 +162,3 @@ private:
 	QueueHandle_t _arduino_event_queue;
 	TaskHandle_t _arduino_event_task_handle;
 };
-
-

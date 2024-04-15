@@ -76,7 +76,7 @@ void setup()
     }
     Serial.println("");
     Serial.println("WiFi connected");
-    
+
     if(!Insights.begin(insights_auth_key)){
         return;
     }
@@ -88,7 +88,7 @@ void setup()
         s_reset_count = 1;
     } else {
         s_reset_count++;
-    } 
+    }
 }
 
 void loop()

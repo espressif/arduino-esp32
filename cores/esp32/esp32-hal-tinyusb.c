@@ -413,7 +413,7 @@ static void hw_cdc_reset_handler(void *arg) {
     portBASE_TYPE xTaskWoken = 0;
     uint32_t usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
     usb_serial_jtag_ll_clr_intsts_mask(usbjtag_intr_status);
-    
+
     if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
         xSemaphoreGiveFromISR((SemaphoreHandle_t)arg, &xTaskWoken);
     }
@@ -633,25 +633,25 @@ static void tinyusb_apply_device_config(tinyusb_device_config_t *config){
     if(config->product_name){
         snprintf(USB_DEVICE_PRODUCT, 126, "%s", config->product_name);
     }
-    
+
     if(config->manufacturer_name){
         snprintf(USB_DEVICE_MANUFACTURER, 126, "%s", config->manufacturer_name);
     }
-    
+
     if(config->serial_number && config->serial_number[0]){
         snprintf(USB_DEVICE_SERIAL, 126, "%s", config->serial_number);
     } else {
         set_usb_serial_num();
     }
-    
+
     if(config->webusb_url){
         snprintf(WEBUSB_URL, 126, "%s", config->webusb_url);
     }
 
     // Windows 10 will not recognize the CDC device if WebUSB is enabled and USB Class is not 2 (CDC)
     if(
-        (tinyusb_loaded_interfaces_mask & BIT(USB_INTERFACE_CDC)) 
-        && config->webusb_enabled 
+        (tinyusb_loaded_interfaces_mask & BIT(USB_INTERFACE_CDC))
+        && config->webusb_enabled
         && (config->usb_class != TUSB_CLASS_CDC)
     ){
         config->usb_class = TUSB_CLASS_CDC;
@@ -661,7 +661,7 @@ static void tinyusb_apply_device_config(tinyusb_device_config_t *config){
     WEBUSB_ENABLED            = config->webusb_enabled;
     USB_DEVICE_ATTRIBUTES     = config->usb_attributes;
     USB_DEVICE_POWER          = config->usb_power_ma;
-    
+
     tinyusb_device_descriptor.bcdUSB = config->usb_version;
     tinyusb_device_descriptor.idVendor = config->vid;
     tinyusb_device_descriptor.idProduct = config->pid;
@@ -725,7 +725,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
         return ESP_OK;
     }
     tinyusb_is_initialized = true;
-    
+
     //tinyusb_endpoints.val = 0;
     tinyusb_apply_device_config(config);
     if (!tinyusb_load_enabled_interfaces()) {
@@ -739,7 +739,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
         // Enable USB/IO_MUX peripheral reset, if coming from persistent reboot
         REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_IO_MUX_RESET_DISABLE);
         REG_CLR_BIT(RTC_CNTL_USB_CONF_REG, RTC_CNTL_USB_RESET_DISABLE);
-    //} else 
+    //} else
     if(!usb_did_persist || !usb_persist_enabled){
         // Reset USB module
         periph_ll_reset(PERIPH_USB_MODULE);

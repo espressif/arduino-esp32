@@ -56,7 +56,7 @@ This function will return ``true`` if the peripheral was initialized correctly.
 setPins
 ^^^^^^^
 
-This function is used to define the ``SDA`` and ``SCL`` pins. 
+This function is used to define the ``SDA`` and ``SCL`` pins.
 
 .. note:: Call this function before ``begin`` to change the pins from the default ones.
 
@@ -110,7 +110,7 @@ Set the bus timeout given in milliseconds. The default value is 50ms.
     void setTimeOut(uint16_t timeOutMillis);
 
 * ``timeOutMillis`` sets the timeout in ms.
-    
+
 getTimeOut
 ^^^^^^^^^^
 
@@ -132,8 +132,8 @@ This function writes data to the buffer.
 .. code-block:: arduino
 
     size_t write(uint8_t);
- 
-or 
+
+or
 
 .. code-block:: arduino
 
@@ -219,7 +219,7 @@ Here are the I2C master APIs. These function are intended to be used only for ma
 begin
 ^^^^^
 
-In master mode, the ``begin`` function can be used by passing the **pins** and **bus frequency**. Use this function only for the master mode. 
+In master mode, the ``begin`` function can be used by passing the **pins** and **bus frequency**. Use this function only for the master mode.
 
 .. code-block:: arduino
 
@@ -252,7 +252,7 @@ After writing to the buffer using `i2c write`_, use the function ``endTransmissi
 Calling the this function without ``sendStop`` is equivalent to ``sendStop = true``.
 
 .. code-block:: arduino
-    
+
     uint8_t endTransmission(void);
 
 This function will return the error code.
@@ -336,7 +336,7 @@ Here are the I2C slave APIs. These function are intended to be used only for sla
 begin
 ^^^^^
 
-In slave mode, the ``begin`` function must be used by passing the **slave address**. You can also define the **pins** and the **bus frequency**. 
+In slave mode, the ``begin`` function must be used by passing the **slave address**. You can also define the **pins** and the **bus frequency**.
 
 .. code-block:: arduino
 

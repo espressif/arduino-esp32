@@ -58,9 +58,9 @@ void tud_vendor_rx_cb(uint8_t itf){
 }
 
 extern "C" bool tinyusb_vendor_control_request_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request){
-    log_v("Port: %u, Stage: %u, Direction: %u, Type: %u, Recipient: %u, bRequest: 0x%x, wValue: %u, wIndex: %u, wLength: %u", 
-        rhport, stage, request->bmRequestType_bit.direction, 
-        request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, 
+    log_v("Port: %u, Stage: %u, Direction: %u, Type: %u, Recipient: %u, bRequest: 0x%x, wValue: %u, wIndex: %u, wLength: %u",
+        rhport, stage, request->bmRequestType_bit.direction,
+        request->bmRequestType_bit.type, request->bmRequestType_bit.recipient,
         request->bRequest, request->wValue, request->wIndex, request->wLength);
 
     if(_Vendor) {

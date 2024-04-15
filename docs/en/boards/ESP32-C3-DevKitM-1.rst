@@ -83,7 +83,7 @@ No.  Name  Type [1]_   Function
 ===  ====  ==========  ====================================
 
 .. [1] P: Power supply; I: Input; O: Output; T: High impedance.
-.. [2] GPIO2, GPIO8, and GPIO9 are strapping pins of the ESP32-C3FN4 chip. During the chip's system reset, the latches of the strapping pins sample the voltage level as strapping bits, and hold these bits until the chip is powered down or shut down. 
+.. [2] GPIO2, GPIO8, and GPIO9 are strapping pins of the ESP32-C3FN4 chip. During the chip's system reset, the latches of the strapping pins sample the voltage level as strapping bits, and hold these bits until the chip is powered down or shut down.
 
 Pin Layout
 ----------

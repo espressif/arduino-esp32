@@ -33,7 +33,7 @@ void loop() {
   }
   delay(1000); //simulate work
   loopTime = millis() - loopTime;
-  
+
   Serial.print("loop time is = ");
   Serial.println(loopTime); //should be under 3000
 }

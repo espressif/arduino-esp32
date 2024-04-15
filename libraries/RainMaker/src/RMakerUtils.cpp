@@ -8,6 +8,6 @@ void RMakerFactoryReset(int reboot_seconds)
 
 void RMakerWiFiReset(int reboot_seconds)
 {
-    esp_rmaker_wifi_reset(RESET_DELAY_SEC, reboot_seconds);    
+    esp_rmaker_wifi_reset(RESET_DELAY_SEC, reboot_seconds);
 }
 #endif

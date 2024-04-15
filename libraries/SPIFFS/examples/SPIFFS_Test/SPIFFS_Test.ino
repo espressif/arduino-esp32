@@ -163,7 +163,7 @@ void setup(){
         Serial.println("SPIFFS Mount Failed");
         return;
     }
-    
+
     listDir(SPIFFS, "/", 0);
     writeFile(SPIFFS, "/hello.txt", "Hello ");
     appendFile(SPIFFS, "/hello.txt", "World!\r\n");

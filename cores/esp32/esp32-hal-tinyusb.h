@@ -38,14 +38,14 @@ typedef struct {
         const char * manufacturer_name;
         const char * serial_number;
         uint16_t fw_version;
-        
+
         uint16_t usb_version;
         uint8_t usb_class;
         uint8_t usb_subclass;
         uint8_t usb_protocol;
         uint8_t usb_attributes;
         uint16_t usb_power_ma;
-        
+
         bool webusb_enabled;
         const char * webusb_url;
 } tinyusb_device_config_t;

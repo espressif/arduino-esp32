@@ -11,4 +11,3 @@ ota_5,    0,    ota_5,    0xA10000, 0x200000
 firmware, app,  factory,  0xC10000, 0x0F0000
 spiffs,   data, spiffs,   0xD00000, 0x2F0000
 coredump, data, coredump, 0xFF0000,  0x10000
-

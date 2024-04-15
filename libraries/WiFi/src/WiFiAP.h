@@ -57,7 +57,7 @@ class APClass: public NetworkInterface {
 
     protected:
         size_t printDriverInfo(Print & out) const;
-        
+
         friend class WiFiGenericClass;
         bool onEnable();
         bool onDisable();

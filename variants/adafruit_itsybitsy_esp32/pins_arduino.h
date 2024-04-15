@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-// User LED 
+// User LED
 static const uint8_t LED_BUILTIN = 13;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
@@ -31,7 +31,7 @@ static const uint8_t MOSI  = 21;
 static const uint8_t MISO  = 22;
 static const uint8_t SCK   = 19;
 
-static const uint8_t A0 = 25; 
+static const uint8_t A0 = 25;
 static const uint8_t A1 = 26;
 static const uint8_t A2 = 4;
 static const uint8_t A3 = 38;

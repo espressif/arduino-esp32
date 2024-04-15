@@ -46,7 +46,7 @@
 // same loopback internally.
 #define USE_INTERNAL_PIN_LOOPBACK 1   // 1 uses the internal loopback, 0 for wiring pins 4 and 5 externally
 
-#define DATA_SIZE 26    // 26 bytes is a lower than RX FIFO size (127 bytes) 
+#define DATA_SIZE 26    // 26 bytes is a lower than RX FIFO size (127 bytes)
 #define BAUD 9600       // Any baudrate from 300 to 115200
 #define TEST_UART 1     // Serial1 will be used for the loopback testing with different RX FIFO FULL values
 #define RXPIN 4         // GPIO 4 => RX for Serial1

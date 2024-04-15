@@ -22,7 +22,7 @@
 #if SOC_TOUCH_SENSOR_NUM >  0
 #include "soc/touch_sensor_periph.h"
 
-int8_t digitalPinToTouchChannel(uint8_t pin) 
+int8_t digitalPinToTouchChannel(uint8_t pin)
 {
     int8_t ret = -1;
     if (pin < SOC_GPIO_PIN_COUNT) {
@@ -37,7 +37,7 @@ int8_t digitalPinToTouchChannel(uint8_t pin)
 }
 #else
 // No Touch Sensor available
-int8_t digitalPinToTouchChannel(uint8_t pin) 
+int8_t digitalPinToTouchChannel(uint8_t pin)
 {
     return -1;
 }
@@ -46,7 +46,7 @@ int8_t digitalPinToTouchChannel(uint8_t pin)
 #ifdef SOC_ADC_SUPPORTED
 #include "soc/adc_periph.h"
 
-int8_t digitalPinToAnalogChannel(uint8_t pin) 
+int8_t digitalPinToAnalogChannel(uint8_t pin)
 {
     uint8_t channel = 0;
     if (pin < SOC_GPIO_PIN_COUNT) {
@@ -62,7 +62,7 @@ int8_t digitalPinToAnalogChannel(uint8_t pin)
     return -1;
 }
 
-int8_t analogChannelToDigitalPin(uint8_t channel) 
+int8_t analogChannelToDigitalPin(uint8_t channel)
 {
     if (channel >= (SOC_ADC_PERIPH_NUM * SOC_ADC_MAX_CHANNEL_NUM)) {
         return -1;
@@ -73,7 +73,7 @@ int8_t analogChannelToDigitalPin(uint8_t channel)
 }
 #else
 // No Analog channels available
-int8_t analogChannelToDigitalPin(uint8_t channel) 
+int8_t analogChannelToDigitalPin(uint8_t channel)
 {
     return -1;
 }
@@ -115,7 +115,7 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode)
             return;
         }
     }
-    
+
     gpio_hal_context_t gpiohal;
     gpiohal.dev = GPIO_LL_GET_HW(GPIO_PORT_0);
 

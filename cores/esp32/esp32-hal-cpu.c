@@ -46,7 +46,7 @@
 #include "esp32c6/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32H2
 #include "esp32h2/rom/rtc.h"
-#else 
+#else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 #else // ESP32 Before IDF 4.0
@@ -223,7 +223,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz){
     capb = calculateApb(&cconf);
     //New APB
     apb = calculateApb(&conf);
-    
+
     //Call peripheral functions before the APB change
     if(apb_change_callbacks){
         triggerApbChangeCallback(APB_BEFORE_CHANGE, capb, apb);

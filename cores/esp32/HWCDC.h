@@ -48,7 +48,7 @@ class HWCDC: public Stream
 private:
     static bool deinit(void * busptr);
     static bool isCDC_Connected();
-    
+
 public:
     HWCDC();
     ~HWCDC();
@@ -61,7 +61,7 @@ public:
     void setTxTimeoutMs(uint32_t timeout);
     void begin(unsigned long baud=0);
     void end();
-    
+
     int available(void);
     int availableForWrite(void);
     int peek(void);

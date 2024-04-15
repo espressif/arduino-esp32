@@ -17,7 +17,7 @@ WebServer server(80);
 
 static const char responsePortal[] = R"===(
 <!DOCTYPE html><html><head><title>ESP32 CaptivePortal</title></head><body>
-<h1>Hello World!</h1><p>This is a captive portal example page. All unknown http requests will 
+<h1>Hello World!</h1><p>This is a captive portal example page. All unknown http requests will
 be redirected here.</p></body></html>
 )===";
 

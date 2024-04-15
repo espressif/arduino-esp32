@@ -15,7 +15,7 @@ static const uint8_t BUT_BUILTIN = 9;
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
 
-// define I2C pins 
+// define I2C pins
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 // define SPI pins

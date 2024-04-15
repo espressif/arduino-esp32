@@ -129,7 +129,7 @@ int8_t perimanGetPinBusChannel(uint8_t pin);
 // Sets the peripheral destructor callback. Used to destroy bus when pin is assigned another function
 bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t cb);
 
-// Check if given pin is a valid GPIO number 
+// Check if given pin is a valid GPIO number
 bool perimanPinIsValid(uint8_t pin);
 
 // Sets the extra type for non Init bus. Used to customize pin bus name which can be printed by printPerimanInfo().

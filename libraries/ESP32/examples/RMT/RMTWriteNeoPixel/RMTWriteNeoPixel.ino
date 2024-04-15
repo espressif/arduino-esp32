@@ -14,7 +14,7 @@
 
 /**
  * @brief This example demonstrates usage of RGB LED driven by RMT
- * 
+ *
  * The output is a visual WS2812 RGB LED color moving in a 8 x 4 LED matrix
  * Parameters can be changed by the user. In a single LED circuit, it will just blink.
  */
@@ -31,7 +31,7 @@
 
 //
 // Note: This example uses Neopixel LED board, 32 LEDs chained one
-//      after another, each RGB LED has its 24 bit value 
+//      after another, each RGB LED has its 24 bit value
 //      for color configuration (8b for each color)
 //
 //      Bits encoded as pulses as follows:

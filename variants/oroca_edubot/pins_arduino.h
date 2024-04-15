@@ -19,12 +19,12 @@ static const uint8_t MISO  = 19;
 static const uint8_t SCK   = 5;
 
 
-static const uint8_t A0 = 34; 
+static const uint8_t A0 = 34;
 static const uint8_t A1 = 39;
 static const uint8_t A2 = 36;
 static const uint8_t A3 = 33;
 
-static const uint8_t D0 = 4; 
+static const uint8_t D0 = 4;
 static const uint8_t D1 = 16;
 static const uint8_t D2 = 17;
 static const uint8_t D3 = 22;

@@ -84,15 +84,15 @@ void BLEAdvertising::addServiceUUID(const char* serviceUUID) {
  * @param [in] index The index of the service to stop exposing.
  */
 bool BLEAdvertising::removeServiceUUID(int index) {
-	
+
 	// If index is larger than the size of the
 	// advertised services, return false
 	if(index > m_serviceUUIDs.size()) return false;
-	
+
 	m_serviceUUIDs.erase(m_serviceUUIDs.begin() + index);
 	return true;
 }
-	
+
 /**
  * @brief Remove a service uuid to exposed list of services.
  * @param [in] serviceUUID The BLEUUID of the service to stop exposing.
@@ -105,7 +105,7 @@ bool BLEAdvertising::removeServiceUUID(BLEUUID serviceUUID) {
 	}
 	return false;
 }
-	
+
 /**
  * @brief Remove a service uuid to exposed list of services.
  * @param [in] serviceUUID The string of the service to stop exposing.
@@ -143,11 +143,11 @@ void BLEAdvertising::setMaxInterval(uint16_t maxinterval) {
 
 void BLEAdvertising::setMinPreferred(uint16_t mininterval) {
 	m_advData.min_interval = mininterval;
-} // 
+} //
 
 void BLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
 	m_advData.max_interval = maxinterval;
-} // 
+} //
 
 void BLEAdvertising::setScanResponse(bool set) {
 	m_scanResp = set;

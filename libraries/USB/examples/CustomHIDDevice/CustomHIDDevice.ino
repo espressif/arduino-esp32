@@ -41,11 +41,11 @@ public:
       HID.addDevice(this, sizeof(report_descriptor));
     }
   }
-  
+
   void begin(void){
     HID.begin();
   }
-    
+
   uint16_t _onGetDescriptor(uint8_t* buffer){
     memcpy(buffer, report_descriptor, sizeof(report_descriptor));
     return sizeof(report_descriptor);

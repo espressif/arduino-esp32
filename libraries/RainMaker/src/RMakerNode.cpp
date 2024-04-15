@@ -8,7 +8,7 @@ esp_err_t Node::addDevice(Device device)
     err = esp_rmaker_node_add_device(node, device.getDeviceHandle());
     if(err != ESP_OK){
         log_e("Device was not added to the Node");
-    }   
+    }
     return err;
 }
 
@@ -36,7 +36,7 @@ esp_err_t Node::addNodeAttr(const char *attr_name, const char *val)
     err = esp_rmaker_node_add_attribute(node, attr_name, val);
     if(err != ESP_OK) {
         log_e("Failed to add attribute to the Node");
-    }   
+    }
     return err;
 }
 #endif

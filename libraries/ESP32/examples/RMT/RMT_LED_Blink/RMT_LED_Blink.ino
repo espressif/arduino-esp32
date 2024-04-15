@@ -16,10 +16,10 @@
  * @brief This example demonstrate how to use RMT to just blink a regular LED (GPIO)
  * It uses all the different RMT Writing APIs to blink the LED by hardware, not being
  * necessary the regular Blink code in Arduino.
- * 
- * The output is the Blinking LED in the GPIO and a serial output describing what is 
+ *
+ * The output is the Blinking LED in the GPIO and a serial output describing what is
  * going on, along the execution.
- * 
+ *
  * The circuit is just a LED and a resistor of 270 ohms connected to the GPIO
  * GPIO ---> resistor 270 ohms ---> + LED - ---> GND
  */
@@ -206,7 +206,7 @@ void setup() {
   RMT_Mixed_Write_Blink();
   Serial.println("End of Mixed Calls testing");
   delay(1000);
-  
+
   Serial.println("\n===============================");
   Serial.println(  "Starting a Blinking sequence...");
   Serial.println(  "===============================\n");

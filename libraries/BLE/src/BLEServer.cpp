@@ -174,9 +174,9 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 			addPeerDevice((void*)this, false, m_connId);
 			if (m_pServerCallbacks != nullptr) {
 				m_pServerCallbacks->onConnect(this);
-				m_pServerCallbacks->onConnect(this, param);			
+				m_pServerCallbacks->onConnect(this, param);
 			}
-			m_connectedCount++;   // Increment the number of connected devices count.	
+			m_connectedCount++;   // Increment the number of connected devices count.
 			break;
 		} // ESP_GATTS_CONNECT_EVT
 
@@ -316,7 +316,7 @@ void BLEServer::setCallbacks(BLEServerCallbacks* pCallbacks) {
  */
 void BLEServer::removeService(BLEService* service) {
 	service->stop();
-	service->executeDelete();	
+	service->executeDelete();
 	m_serviceMap.removeService(service);
 }
 
@@ -416,7 +416,7 @@ void BLEServer::addPeerDevice(void* peer, bool _client, uint16_t conn_id) {
 		.mtu = 23
 	};
 
-	m_connectedServersMap.insert(std::pair<uint16_t, conn_status_t>(conn_id, status));	
+	m_connectedServersMap.insert(std::pair<uint16_t, conn_status_t>(conn_id, status));
 }
 
 bool BLEServer::removePeerDevice(uint16_t conn_id, bool _client) {
@@ -434,7 +434,7 @@ void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval,
 	conn_params.max_int = maxInterval;    // max_int = 0x20*1.25ms = 40ms
 	conn_params.min_int = minInterval;    // min_int = 0x10*1.25ms = 20ms
 	conn_params.timeout = timeout;    // timeout = 400*10ms = 4000ms
-	esp_ble_gap_update_conn_params(&conn_params); 
+	esp_ble_gap_update_conn_params(&conn_params);
 }
 
 void BLEServer::disconnect(uint16_t connId) {

@@ -47,7 +47,7 @@ void WiFiEvent(WiFiEvent_t event)
     Serial.printf("[WiFi-event] event: %d\n", event);
 
     switch (event) {
-        case ARDUINO_EVENT_WIFI_READY: 
+        case ARDUINO_EVENT_WIFI_READY:
             Serial.println("WiFi interface ready");
             break;
         case ARDUINO_EVENT_WIFI_SCAN_DONE:

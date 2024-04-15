@@ -42,5 +42,3 @@ public:
     void onReceive(const uint8_t * data, size_t len, bool broadcast);
     void onSent(bool success);
 };
-
-

@@ -387,7 +387,7 @@ bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
     if (_ws >= 0)   if (!perimanSetPinBus(_ws,   ESP32_BUS_TYPE_I2S_TDM_WS,   (void *)(this), -1, -1)){ goto err; }
     if (_dout >= 0) if (!perimanSetPinBus(_dout, ESP32_BUS_TYPE_I2S_TDM_DOUT, (void *)(this), -1, -1)){ goto err; }
     if (_din >= 0)  if (!perimanSetPinBus(_din,  ESP32_BUS_TYPE_I2S_TDM_DIN,  (void *)(this), -1, -1)){ goto err; }
-   
+
     return true;
 err:
     log_e("Failed to set all pins bus to I2S_TDM");
@@ -712,7 +712,7 @@ bool I2SClass::transformRX(i2s_rx_transform_t transform){
             rx_fn = i2s_channel_read_16_stereo_to_mono;
             rx_slot_mode = I2S_SLOT_MODE_MONO;
             break;
-            
+
         default:
             log_e("Unknown RX Transform %d", transform);
             return false;

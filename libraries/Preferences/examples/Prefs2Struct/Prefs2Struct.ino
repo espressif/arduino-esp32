@@ -3,7 +3,7 @@ This example shows how to use Preferences (nvs) to store a
 structure.  Note that the maximum size of a putBytes is 496K
 or 97% of the nvs partition size.  nvs has significant overhead,
 so should not be used for data that will change often.
-*/ 
+*/
 #include <Preferences.h>
 Preferences prefs;
 
@@ -27,17 +27,17 @@ void setup() {
     return;
   }
   schedule_t *schedule = (schedule_t *) buffer; // cast the bytes into a struct ptr
-  Serial.printf("%02d:%02d %d/%d\n", 
+  Serial.printf("%02d:%02d %d/%d\n",
     schedule[1].hour, schedule[1].minute,
     schedule[1].setting1, schedule[1].setting2);
   schedule[2] = {8, 30, 20, 21}; // add a third entry (unsafely)
 // force the struct array into a byte array
-  prefs.putBytes("schedule", schedule, 3*sizeof(schedule_t)); 
+  prefs.putBytes("schedule", schedule, 3*sizeof(schedule_t));
   schLen = prefs.getBytesLength("schedule");
   char buffer2[schLen];
   prefs.getBytes("schedule", buffer2, schLen);
   for (int x=0; x<schLen; x++) Serial.printf("%02X ", buffer[x]);
-  Serial.println(); 
+  Serial.println();
 }
 
 void loop() {}

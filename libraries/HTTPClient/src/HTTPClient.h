@@ -5,8 +5,8 @@
  *
  * Copyright (c) 2015 Markus Sattler. All rights reserved.
  * This file is part of the HTTPClient for Arduino.
- * Port to ESP32 by Evandro Luis Copercini (2017), 
- * changed fingerprints to CA verification. 	
+ * Port to ESP32 by Evandro Luis Copercini (2017),
+ * changed fingerprints to CA verification.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -177,7 +177,7 @@ public:
     ~HTTPClient();
 
 /*
- * Since both begin() functions take a reference to client as a parameter, you need to 
+ * Since both begin() functions take a reference to client as a parameter, you need to
  * ensure the client object lives the entire time of the HTTPClient
  */
     bool begin(NetworkClient &client, String url);

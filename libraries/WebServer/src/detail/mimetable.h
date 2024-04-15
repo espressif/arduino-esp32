@@ -35,7 +35,7 @@ enum type
 
 struct Entry
 {
-  const char endsWith[16]; 
+  const char endsWith[16];
   const char mimeType[32];
 };
 

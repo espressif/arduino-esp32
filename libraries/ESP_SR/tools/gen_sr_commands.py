@@ -59,7 +59,7 @@ def english_g2p(text):
     # print(text)
     print(enum)
     print(out)
-    
+
     return out
 
 if __name__ == "__main__":
@@ -67,7 +67,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="English Speech Commands G2P")
     parser.add_argument("text", type=str,  default=None, help="input text")
     args = parser.parse_args()
-    
+
     if args.text is not None:
         english_g2p(args.text)
-

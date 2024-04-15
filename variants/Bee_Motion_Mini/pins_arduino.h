@@ -25,4 +25,3 @@ static const uint8_t A4 = 4;
 static const uint8_t A5 = 5;
 
 #endif /* Pins_Arduino_h */
-

@@ -8,7 +8,7 @@ Extended MDNS-SD support 2016 Lars Englund (lars.englund@gmail.com)
 Rewritten for ESP32 by Hristo Gochkov (hristo@espressif.com)
 
 This is a simple implementation of multicast DNS query support for an Arduino
-running on ESP32 chip. 
+running on ESP32 chip.
 
 Usage:
 - Include the ESP32 Multicast DNS library in the sketch.
@@ -75,7 +75,7 @@ public:
   bool addService(String service, String proto, uint16_t port){
     return addService(service.c_str(), proto.c_str(), port);
   }
-  
+
   bool addServiceTxt(char *name, char *proto, char * key, char * value);
   void addServiceTxt(const char *name, const char *proto, const char *key,const char * value){
     addServiceTxt((char *)name, (char *)proto, (char *)key, (char *)value);
@@ -97,7 +97,7 @@ public:
   IPAddress queryHost(String host, uint32_t timeout=2000){
     return queryHost(host.c_str(), timeout);
   }
-  
+
   int queryService(char *service, char *proto);
   int queryService(const char *service, const char *proto){
     return queryService((char *)service, (char *)proto);
@@ -115,7 +115,7 @@ public:
   String txt(int idx, const char * key);
   String txt(int idx, int txtIdx);
   String txtKey(int idx, int txtIdx);
-  
+
 private:
   String _hostname;
   mdns_result_t * results;

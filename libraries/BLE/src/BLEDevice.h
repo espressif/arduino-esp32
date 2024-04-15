@@ -75,7 +75,7 @@ private:
 	static BLESecurityCallbacks* m_securityCallbacks;
 	static BLEAdvertising* m_bleAdvertising;
 	static esp_gatt_if_t getGattcIF();
-	static std::map<uint16_t, conn_status_t> m_connectedClientsMap;	
+	static std::map<uint16_t, conn_status_t> m_connectedClientsMap;
 	static portMUX_TYPE mux;
 
 	static void gattClientEventHandler(

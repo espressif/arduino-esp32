@@ -120,7 +120,7 @@ void setup() {
 
   // normally, as this point - we'd be authenticating and then be submitting
   // an email. This has been left out of this example.
-  
+
   Serial.println("Sending  : QUIT\t\t\tover the now encrypted connection");
   client.print("QUIT\r\n");
 
@@ -174,4 +174,3 @@ static bool readAllSMTPLines() {
 void loop() {
   // do nothing
 }
-

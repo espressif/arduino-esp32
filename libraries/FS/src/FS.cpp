@@ -197,7 +197,7 @@ boolean File::seekDir(long position){
 String File::getNextFileName(void)
 {
     if (!_p) {
-        return ""; 
+        return "";
     }
     return _p->getNextFileName();
 
@@ -206,7 +206,7 @@ String File::getNextFileName(void)
 String File::getNextFileName(bool *isDir)
 {
     if (!_p) {
-        return ""; 
+        return "";
     }
     return _p->getNextFileName(isDir);
 

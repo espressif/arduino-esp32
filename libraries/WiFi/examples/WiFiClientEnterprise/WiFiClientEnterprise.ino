@@ -1,5 +1,5 @@
 #include <WiFi.h> //Wifi library
-#define EAP_IDENTITY "login" //if connecting from another corporation, use identity@organization.domain in Eduroam 
+#define EAP_IDENTITY "login" //if connecting from another corporation, use identity@organization.domain in Eduroam
 #define EAP_USERNAME "login" //oftentimes just a repeat of the identity
 #define EAP_PASSWORD "password" //your Eduroam password
 const char* ssid = "eduroam"; // Eduroam SSID
@@ -24,17 +24,17 @@ void setup() {
   Serial.println(ssid);
   WiFi.disconnect(true);  //disconnect form wifi to set new wifi connection
   WiFi.mode(WIFI_STA); //init wifi mode
-  
+
   // Example1 (most common): a cert-file-free eduroam with PEAP (or TTLS)
   WiFi.begin(ssid, WPA2_AUTH_PEAP, EAP_IDENTITY, EAP_USERNAME, EAP_PASSWORD);
 
   // Example 2: a cert-file WPA2 Enterprise with PEAP
   //WiFi.begin(ssid, WPA2_AUTH_PEAP, EAP_IDENTITY, EAP_USERNAME, EAP_PASSWORD, ca_pem, client_cert, client_key);
-  
+
   // Example 3: TLS with cert-files and no password
   //WiFi.begin(ssid, WPA2_AUTH_TLS, EAP_IDENTITY, NULL, NULL, ca_pem, client_cert, client_key);
-  
-  
+
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -45,16 +45,16 @@ void setup() {
   }
   Serial.println("");
   Serial.println("WiFi connected");
-  Serial.println("IP address set: "); 
+  Serial.println("IP address set: ");
   Serial.println(WiFi.localIP()); //print LAN IP
 }
 void loop() {
   if (WiFi.status() == WL_CONNECTED) { //if we are connected to Eduroam network
     counter = 0; //reset counter
-    Serial.println("Wifi is still connected with IP: "); 
+    Serial.println("Wifi is still connected with IP: ");
     Serial.println(WiFi.localIP());   //inform user about his IP address
   }else if (WiFi.status() != WL_CONNECTED) { //if we lost connection, retry
-    WiFi.begin(ssid);      
+    WiFi.begin(ssid);
   }
   while (WiFi.status() != WL_CONNECTED) { //during lost connection, print dots
     delay(500);
@@ -81,5 +81,5 @@ void loop() {
    Serial.println(line);
   }else{
       Serial.println("Connection unsuccessful");
-    }  
+    }
 }

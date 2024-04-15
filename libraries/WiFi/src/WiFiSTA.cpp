@@ -149,7 +149,7 @@ bool WiFiSTAClass::disconnect(bool wifioff, bool eraseap, unsigned long timeoutL
  * - esp_wifi_set_protocol,
  * - esp_wifi_set_config related
  * - esp_wifi_set_mode
- * 
+ *
  * @return true if erase succeeded
  * @note: Resets SSID, password, protocol, mode, etc.
  * These settings are maintained by WiFi driver in IDF.
@@ -236,7 +236,7 @@ void WiFiSTAClass::setMinSecurity(wifi_auth_mode_t minSecurity)
 }
 
 /**
- * Set the way that AP is chosen. 
+ * Set the way that AP is chosen.
  * First SSID match[WIFI_FAST_SCAN] or Sorted[WIFI_ALL_CHANNEL_SCAN] (RSSI or Security)
  * Must be called before WiFi.begin()
  * @param scanMethod wifi_scan_method_t
@@ -247,7 +247,7 @@ void WiFiSTAClass::setScanMethod(wifi_scan_method_t scanMethod)
 }
 
 /**
- * Set the way that AP is sorted. (requires scanMethod WIFI_ALL_CHANNEL_SCAN) 
+ * Set the way that AP is sorted. (requires scanMethod WIFI_ALL_CHANNEL_SCAN)
  * By SSID[WIFI_CONNECT_AP_BY_SIGNAL] or Security[WIFI_CONNECT_AP_BY_SECURITY]
  * Must be called before WiFi.begin()
  * @param sortMethod wifi_sort_method_t
@@ -258,9 +258,9 @@ void WiFiSTAClass::setSortMethod(wifi_sort_method_t sortMethod)
 }
 
 /**
- * Function used to set the automatic reconnection if the connection is lost. 
+ * Function used to set the automatic reconnection if the connection is lost.
  * @param autoReconnect `true` to enable this option.
- * @return true 
+ * @return true
  */
 bool WiFiSTAClass::setAutoReconnect(bool autoReconnect)
 {
@@ -417,7 +417,7 @@ int8_t WiFiSTAClass::RSSI(void)
 /**
  * Enable IPv6 on the station interface.
  * Should be called before WiFi.begin()
- * 
+ *
  * @return true on success
  */
 bool WiFiSTAClass::enableIPv6(bool en)
@@ -448,8 +448,8 @@ bool WiFiSTAClass::_smartConfigStarted = false;
 bool WiFiSTAClass::_smartConfigDone = false;
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param type Select type of SmartConfig. Default type is SC_TYPE_ESPTOUCH
  * @param crypt_key When using type SC_TYPE_ESPTOUTCH_V2 crypt key needed, else ignored. Length should be 16 chars.
  * @return true if configuration is successful.

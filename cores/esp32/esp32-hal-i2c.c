@@ -192,7 +192,7 @@ esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t* buff, size_
         log_e("bus is not initialized");
         goto end;
     }
-    
+
     //short implementation does not support zero size writes (example when scanning) PR in IDF?
     //ret =  i2c_master_write_to_device((i2c_port_t)i2c_num, address, buff, size, timeOutMillis / portTICK_PERIOD_MS);
 
@@ -352,7 +352,7 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency){
         {SOC_MOD_CLK_REF_TICK, REF_CLK_FREQ},/*!< I2C REF_TICK characteristic*/
     #endif
     };
-    
+
     i2c_sclk_t src_clk = I2C_SCLK_DEFAULT;
     ret = ESP_OK;
     for (i2c_sclk_t clk = I2C_SCLK_DEFAULT + 1; clk < I2C_SCLK_MAX; clk++) {

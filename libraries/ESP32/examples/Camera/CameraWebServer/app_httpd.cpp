@@ -1388,7 +1388,7 @@ void startCameraServer()
     }
 }
 
-void setupLedFlash(int pin) 
+void setupLedFlash(int pin)
 {
     #if CONFIG_LED_ILLUMINATOR_ENABLED
     ledcAttach(pin, 5000, 8);

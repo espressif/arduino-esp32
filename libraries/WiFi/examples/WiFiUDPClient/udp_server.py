@@ -1,4 +1,4 @@
-# This python script listens on UDP port 3333 
+# This python script listens on UDP port 3333
 # for messages from the ESP32 board and prints them
 import socket
 import sys
@@ -15,16 +15,16 @@ try:
 except socket.error , msg:
     print 'Bind failed. Error: ' + str(msg[0]) + ': ' + msg[1]
     sys.exit()
-     
+
 print 'Server listening'
 
 while 1:
     d = s.recvfrom(1024)
     data = d[0]
-     
-    if not data: 
+
+    if not data:
         break
-    
+
     print data.strip()
-    
+
 s.close()

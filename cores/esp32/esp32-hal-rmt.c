@@ -84,7 +84,7 @@ static bool _rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_don
 {
   BaseType_t high_task_wakeup = pdFALSE;
   rmt_bus_handle_t bus = (rmt_bus_handle_t) args;
-  // sets the returning number of RMT symbols (32 bits) effectively read 
+  // sets the returning number of RMT symbols (32 bits) effectively read
   *bus->num_symbols_read = data->num_symbols;
   // set RX event group and signal the received RMT symbols of that channel
   xEventGroupSetBitsFromISR(bus->rmt_events, RMT_FLAG_RX_DONE, &high_task_wakeup);
@@ -147,7 +147,7 @@ static bool _rmtDetachBus(void *busptr)
   // lock it
   while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
 
-  // free Event Group 
+  // free Event Group
   if (bus->rmt_events != NULL) {
     vEventGroupDelete(bus->rmt_events);
     bus->rmt_events = NULL;
@@ -301,7 +301,7 @@ static bool _rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool bl
   if (!_rmtCheckDirection(pin, RMT_TX_MODE, __FUNCTION__)) {
     return false;
   }
-  bool loopCancel = false;  // user wants to cancel the writing loop mode 
+  bool loopCancel = false;  // user wants to cancel the writing loop mode
   if (data == NULL || num_rmt_symbols == 0) {
     if (!loop) {
       log_w("GPIO %d - RMT Write Data NULL pointer or size is zero.", pin);
@@ -342,7 +342,7 @@ static bool _rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool bl
     // looping | Writing over a previous looping state is valid
     if (loop) {
       transmit_cfg.loop_count = -1;  // enable infinite loop mode
-      // keeps RMT_FLAG_TX_DONE set - it never changes 
+      // keeps RMT_FLAG_TX_DONE set - it never changes
     } else {
       // looping mode never sets this flag (IDF 5.1) in the callback
       xEventGroupClearBits(bus->rmt_events, RMT_FLAG_TX_DONE);
@@ -354,11 +354,11 @@ static bool _rmtWrite(int pin, rmt_data_t* data, size_t num_rmt_symbols, bool bl
       log_w("GPIO %d - RMT Transmission failed.", pin);
     } else {   // transmit OK
       if (loop) {
-        bus->rmt_ch_is_looping = true; // for ever... until a channel canceling or new writing 
+        bus->rmt_ch_is_looping = true; // for ever... until a channel canceling or new writing
       } else {
         if (blocking) {
           // wait for transmission confirmation | timeout
-          retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_TX_DONE, pdFALSE /* do not clear on exit */, 
+          retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_TX_DONE, pdFALSE /* do not clear on exit */,
                      pdFALSE /* wait for all bits */, timeout_ms) & RMT_FLAG_TX_DONE) != 0;
         }
       }
@@ -396,10 +396,10 @@ static bool _rmtRead(int pin, rmt_data_t* data, size_t *num_rmt_symbols, bool wa
   rmt_receive(bus->rmt_channel_h, data, *num_rmt_symbols * sizeof(rmt_data_t), &receive_config);
   // wait for data if requested
   if (waitForData) {
-    retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_RX_DONE, pdFALSE /* do not clear on exit */, 
+    retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_RX_DONE, pdFALSE /* do not clear on exit */,
               pdFALSE /* wait for all bits */, timeout_ms) & RMT_FLAG_RX_DONE) != 0;
   }
-  
+
   RMT_MUTEX_UNLOCK(bus);
   return retCode;
 }
@@ -568,7 +568,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
       log_e("GPIO %d RMT - RX Initialization error.", pin);
       goto Err;
     }
-    
+
     // set RX Callback
     rmt_rx_event_callbacks_t cbs = { .on_recv_done = _rmt_rx_done_callback };
     if (ESP_OK != rmt_rx_register_event_callbacks(bus->rmt_channel_h, &cbs, bus)) {
@@ -602,10 +602,10 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     log_e("Can't allocate the GPIO %d in the Peripheral Manager.", pin);
     goto Err;
   }
-  
+
   // this delay is necessary when CPU frequency changes, but internal RMT setup is "old/wrong"
   // The use case is related to the RMT_CPUFreq_Test example. The very first RMT Write
-  // goes in the wrong pace (frequency). The delay allows other IDF tasks to run to fix it. 
+  // goes in the wrong pace (frequency). The delay allows other IDF tasks to run to fix it.
   if (loopTaskHandle != NULL) {
     // it can only run when Arduino task has been already started.
     delay(1);

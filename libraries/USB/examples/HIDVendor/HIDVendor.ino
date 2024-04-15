@@ -32,7 +32,7 @@ static void vendorEventCallback(void* arg, esp_event_base_t event_base, int32_t 
         //   Serial.write(Vendor.read());
         // }
         break;
-      
+
       default:
         break;
     }

@@ -1,15 +1,15 @@
 //-----------------------------------------------------------------------------
 // MacAddress.h - class to make it easier to handle BSSID and MAC addresses.
-// 
+//
 // Copyright 2022 David McCurley
 // Modified by Espressif Systems 2024
 //
 // Licensed under the Apache License, Version 2.0 (the "License").
 // You may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-//     
+//
 // Unless required by applicable law or agreed to in writing, software
 //   distributed under the License is distributed on an "AS IS" BASIS,
 //   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,7 +81,7 @@ public:
 
     virtual size_t printTo(Print& p) const;
 
-    // future use in Arduino Networking 
+    // future use in Arduino Networking
     /*
     friend class EthernetClass;
     friend class UDP;

@@ -27,7 +27,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_USB_RESUME_EVENT:
         Serial.println("USB RESUMED");
         break;
-      
+
       default:
         break;
     }
@@ -58,7 +58,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
        case ARDUINO_USB_CDC_RX_OVERFLOW_EVENT:
         Serial.printf("CDC RX Overflow of %d bytes", data->rx_overflow.dropped_bytes);
         break;
-     
+
       default:
         break;
     }
@@ -68,10 +68,10 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
-  
+
   USB.onEvent(usbEventCallback);
   USBSerial.onEvent(usbEventCallback);
-  
+
   USBSerial.begin();
   USB.begin();
 }

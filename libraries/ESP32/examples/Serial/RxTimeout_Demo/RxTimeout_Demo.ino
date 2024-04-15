@@ -6,8 +6,8 @@
    of UART data has ended. For example, if just one byte is received, UART will send about 10 to
    11 bits depending of the configuration (parity, number of stopbits). The timeout is measured in
    number of UART symbols, with 10 or 11 bits, in the current baudrate.
-   For 9600 baud, 1 bit takes 1/9600 of a second, equivalent to 104 microseconds, therefore, for 10 bits, 
-   it takes about 1ms. A timeout of 2 UART symbols, with about 20 bits, would take about 2.1 milliseconds 
+   For 9600 baud, 1 bit takes 1/9600 of a second, equivalent to 104 microseconds, therefore, for 10 bits,
+   it takes about 1ms. A timeout of 2 UART symbols, with about 20 bits, would take about 2.1 milliseconds
    for the ESP32 UART to trigger an IRQ telling the UART driver that the transmission has ended.
    Just at this point, the data will be made available to Arduino HardwareSerial API (read(), available(), etc).
 
@@ -31,7 +31,7 @@
 // same loopback internally.
 #define USE_INTERNAL_PIN_LOOPBACK 1   // 1 uses the internal loopback, 0 for wiring pins 4 and 5 externally
 
-#define DATA_SIZE 10    // 10 bytes is lower than the default 120 bytes of RX FIFO FULL 
+#define DATA_SIZE 10    // 10 bytes is lower than the default 120 bytes of RX FIFO FULL
 #define BAUD 9600       // Any baudrate from 300 to 115200
 #define TEST_UART 1     // Serial1 will be used for the loopback testing with different RX FIFO FULL values
 #define RXPIN 4         // GPIO 4 => RX for Serial1

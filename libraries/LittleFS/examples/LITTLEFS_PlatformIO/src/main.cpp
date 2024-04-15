@@ -6,7 +6,7 @@
 /* You only need to format LittleFS the first time you run a
    test or else use the LITTLEFS plugin to create a partition
    https://github.com/lorol/arduino-esp32littlefs-plugin */
-   
+
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -253,7 +253,7 @@ void setup(){
         Serial.println("LittleFS Mount Failed");
         return;
     }
-    
+
     listDir(LittleFS, "/", 0);
 	createDir(LittleFS, "/mydir");
 	writeFile(LittleFS, "/mydir/hello2.txt", "Hello2");
@@ -273,7 +273,7 @@ void setup(){
     deleteFile(LittleFS, "/foo.txt");
     testFileIO(LittleFS, "/test.txt");
     deleteFile(LittleFS, "/test.txt");
-	
+
     Serial.println( "Test complete" );
 }
 

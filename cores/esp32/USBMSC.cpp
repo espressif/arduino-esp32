@@ -153,7 +153,7 @@ int32_t tud_msc_scsi_cb (uint8_t lun, uint8_t const scsi_cmd[16], void* buffer, 
 
     // most scsi handled is input
     bool in_xfer = true;
-    
+
     if(!msc_luns[lun].media_present){
         return -1;
     }

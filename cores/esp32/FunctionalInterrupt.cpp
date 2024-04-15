@@ -38,7 +38,3 @@ extern "C"
 	 delete (InterruptArgStructure*)arg;
    }
 }
-
-
-
-

@@ -46,16 +46,16 @@ static const uint8_t MISO  = 12;
 static const uint8_t SCK   = 14;
 
 static const uint8_t SS1  = 23;		// SPI Chip Select - 1; connected to MicroSD Card on the LogSens V1.1 Board
-  
+
 /* Software Controlled: IO, LEDs and Switches */
 static const uint8_t BUZZER_CTRL = 19;		// Signal connected to MOSFET gate pin to control connector (X8)
 static const uint8_t SD_CARD_DETECT = 35; 	// MicroSD Card (X6): Card Detect Signal
 
 static const uint8_t SW2_BUILDIN = 0;		// Tactile Switch-2 (SW2); ESP32 BOOT0 pin, Use it with care !!
-static const uint8_t SW3_BUILDIN = 36;		// Tactile Switch-3 (SW3) 
+static const uint8_t SW3_BUILDIN = 36;		// Tactile Switch-3 (SW3)
 static const uint8_t SW4_BUILDIN = 34;		// Tactile Switch-4 (SW4)
 
-static const uint8_t LED1_BUILDIN = 32;	// Connected to LogSens V1.1: LED6 		
+static const uint8_t LED1_BUILDIN = 32;	// Connected to LogSens V1.1: LED6
 static const uint8_t LED2_BUILDIN = 33;	// Connected to LogSens V1.1: LED7
 
 

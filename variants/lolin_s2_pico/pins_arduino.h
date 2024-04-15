@@ -72,6 +72,6 @@ static const uint8_t T14 = 14;
 static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;
 
-static const uint8_t S2_PICO_OLED_RESET = 18; 
+static const uint8_t S2_PICO_OLED_RESET = 18;
 
 #endif /* Pins_Arduino_h */

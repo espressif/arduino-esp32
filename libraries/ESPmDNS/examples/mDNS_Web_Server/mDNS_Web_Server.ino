@@ -27,7 +27,7 @@ const char* password = "..............";
 NetworkServer server(80);
 
 void setup(void)
-{  
+{
     Serial.begin(115200);
 
     // Connect to WiFi network
@@ -117,4 +117,3 @@ void loop(void)
     client.stop();
     Serial.println("Done with client");
 }
-

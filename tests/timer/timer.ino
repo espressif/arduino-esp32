@@ -38,7 +38,7 @@ void timer_interrupt_test(void){
   timerAttachInterrupt(timer, &onTimer);
   timerAlarm(timer, (1.2 * TIMER_FREQUENCY), true, 0);
   timerStart(timer);
-  
+
   delay(2000);
 
   TEST_ASSERT_EQUAL(true, alarm_flag);
@@ -71,9 +71,9 @@ void timer_divider_test(void){
      TEST_FAIL_MESSAGE("Timer init failed!");
   }
   timerRestart(timer);
-  delay(1000);        
+  delay(1000);
   comp_time_val = timerRead(timer);
-    
+
   TEST_ASSERT_INT_WITHIN(4000, 4000000, time_val);
   TEST_ASSERT_INT_WITHIN(8000, 8000000, comp_time_val);
 
@@ -85,7 +85,7 @@ void timer_divider_test(void){
      TEST_FAIL_MESSAGE("Timer init failed!");
   }
   timerRestart(timer);
-  delay(1000);       
+  delay(1000);
   comp_time_val = timerRead(timer);
 
   TEST_ASSERT_INT_WITHIN(4000, 4000000, time_val);
@@ -106,13 +106,13 @@ void timer_read_test(void){
 void timer_clock_select_test(void){
   // Set timer frequency that can be achieved using XTAL clock source (autoselected)
   timer = timerBegin(TIMER_FREQUENCY_XTAL_CLK);
-  
+
   uint32_t resolution = timerGetFrequency(timer);
   TEST_ASSERT_EQUAL(TIMER_FREQUENCY_XTAL_CLK,resolution);
 }
 
 void setup(){
-  
+
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
   while (!Serial) {

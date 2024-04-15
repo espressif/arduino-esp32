@@ -29,7 +29,7 @@ class NetworkClientSecure : public NetworkClient
 {
 protected:
     sslclient_context *sslclient;
- 
+
     int _lastError = 0;
     int _peek = -1;
     int _timeout;
@@ -85,7 +85,7 @@ public:
     // or SSL. Setting PlainStart to true (the default is false) enables
     // this. It is up to the application code to then call 'startTLS()'
     // at the right point to initialize the SSL or TLS upgrade.
-    
+
     void setPlainStart() { _stillinPlainStart = true; };
     bool stillInPlainStart() { return _stillinPlainStart; };
     int startTLS();

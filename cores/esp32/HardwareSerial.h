@@ -218,12 +218,12 @@ public:
     // param symbols_timeout defines a timeout threshold in uart symbol periods. Setting 0 symbol timeout disables the callback call by timeout.
     //                       Maximum timeout setting is calculacted automatically by IDF. If set above the maximum, it is ignored and an error is printed on Serial0 (check console).
     //                       Examples: Maximum for 11 bits symbol is 92 (SERIAL_8N2, SERIAL_8E1, SERIAL_8O1, etc), Maximum for 10 bits symbol is 101 (SERIAL_8N1).
-    //                       For example symbols_timeout=1 defines a timeout equal to transmission time of one symbol (~11 bit) on current baudrate. 
+    //                       For example symbols_timeout=1 defines a timeout equal to transmission time of one symbol (~11 bit) on current baudrate.
     //                       For a baudrate of 9600, SERIAL_8N1 (10 bit symbol) and symbols_timeout = 3, the timeout would be 3 / (9600 / 10) = 3.125 ms
     bool setRxTimeout(uint8_t symbols_timeout);
 
     // setRxFIFOFull(uint8_t fifoBytes) will set the number of bytes that will trigger UART_INTR_RXFIFO_FULL interrupt and fill up RxRingBuffer
-    // This affects some functions such as Serial::available() and Serial.read() because, in a UART flow of receiving data, Serial internal 
+    // This affects some functions such as Serial::available() and Serial.read() because, in a UART flow of receiving data, Serial internal
     // RxRingBuffer will be filled only after these number of bytes arrive or a RX Timeout happens.
     // This parameter can be set to 1 in order to receive byte by byte, but it will also consume more CPU time as the ISR will be activates often.
     bool setRxFIFOFull(uint8_t fifoBytes);
@@ -232,7 +232,7 @@ public:
     // UART_INTR_RXFIFO_FULL interrupt triggers at UART_FULL_THRESH_DEFAULT bytes received (defined as 120 bytes by default in IDF)
     // UART_INTR_RXFIFO_TOUT interrupt triggers at UART_TOUT_THRESH_DEFAULT symbols passed without any reception (defined as 10 symbos by default in IDF)
     // onlyOnTimeout parameter will define how onReceive will behave:
-    // Default: true -- The callback will only be called when RX Timeout happens. 
+    // Default: true -- The callback will only be called when RX Timeout happens.
     //                  Whole stream of bytes will be ready for being read on the callback function at once.
     //                  This option may lead to Rx Overflow depending on the Rx Buffer Size and number of bytes received in the streaming
     //         false -- The callback will be called when FIFO reaches 120 bytes and also on RX Timeout.
@@ -245,7 +245,7 @@ public:
 
     // eventQueueReset clears all events in the queue (the events that trigger onReceive and onReceiveError) - maybe useful in some use cases
     void eventQueueReset();
- 
+
     // When pins are changed, it will detach the previous ones
     // if pin is negative, it won't be set/changed and will be kept as is
     // timeout_ms is used in baudrate detection (ESP32, ESP32S2 only)
@@ -268,7 +268,7 @@ public:
     size_t readBytes(char *buffer, size_t length)
     {
         return readBytes((uint8_t *) buffer, length);
-    }    
+    }
     void flush(void);
     void flush( bool txOnly);
     size_t write(uint8_t);
@@ -301,7 +301,7 @@ public:
     operator bool() const;
 
     void setDebugOutput(bool);
-    
+
     void setRxInvert(bool);
 
     // Negative Pin Number will keep it unmodified, thus this function can set individual pins
@@ -360,7 +360,7 @@ extern void serialEventRun(void) __attribute__((weak));
 #endif  // ARDUINO_USB_MODE
 #else   // !ARDUINO_USB_CDC_ON_BOOT -- Serial is used from UART0
 // if not using CDC on Boot, Arduino Serial is the UART0 device
-#define Serial Serial0 
+#define Serial Serial0
 #endif  // ARDUINO_USB_CDC_ON_BOOT
 // There is always Seria0 for UART0
 extern HardwareSerial Serial0;

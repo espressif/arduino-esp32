@@ -12,7 +12,7 @@ void wifiOnConnect(){
     Serial.println("STA Connected");
     Serial.print("STA IPv4: ");
     Serial.println(WiFi.localIP());
-    
+
     ntpClient.begin(2390);
 }
 
@@ -44,7 +44,7 @@ void wifiConnectedLoop(){
   ntpClient.endPacket();
 
   delay(1000);
-  
+
   int packetLength = ntpClient.parsePacket();
   if (packetLength){
     if(packetLength >= NTP_PACKET_SIZE){

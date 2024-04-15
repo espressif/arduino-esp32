@@ -52,7 +52,7 @@ void setup()
    * otherwise SNTP option 42 would be rejected by default.
    * NOTE: configTime() function call if made AFTER DHCP-client run
    * will OVERRIDE acquired NTP server address
-   */ 
+   */
   esp_sntp_servermode_dhcp(1);// (optional)
 
   /**
@@ -63,7 +63,7 @@ void setup()
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 
   /**
-   * A more convenient approach to handle TimeZones with daylightOffset 
+   * A more convenient approach to handle TimeZones with daylightOffset
    * would be to specify a environment variable with TimeZone definition including daylight adjustmnet rules.
    * A list of rules for your zone could be obtained from https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h
    */

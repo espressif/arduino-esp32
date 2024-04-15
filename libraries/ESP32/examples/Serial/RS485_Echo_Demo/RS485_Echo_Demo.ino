@@ -1,5 +1,5 @@
 /*
-  This Sketch demonstrates how to use the Hardware Serial peripheral to communicate over an RS485 bus. 
+  This Sketch demonstrates how to use the Hardware Serial peripheral to communicate over an RS485 bus.
 
   Data received on the primary serial port is relayed to the bus acting as an RS485 interface and vice versa.
 

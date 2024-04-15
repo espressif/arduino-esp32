@@ -44,7 +44,7 @@ String getHeaderValue(String header, String headerName) {
   return header.substring(strlen(headerName.c_str()));
 }
 
-// OTA Logic 
+// OTA Logic
 void execOTA() {
   Serial.println("Connecting to: " + String(host));
   // Connect to S3
@@ -88,7 +88,7 @@ void execOTA() {
         Content-Type: application/octet-stream
         Content-Length: 357280
         Server: AmazonS3
-                                   
+
         {{BIN FILE CONTENTS}}
 
     */
@@ -219,12 +219,12 @@ void loop() {
 
 /*
  * Serial Monitor log for this sketch
- * 
+ *
  * If the OTA succeeded, it would load the preference sketch, with a small modification. i.e.
  * Print `OTA Update succeeded!! This is an example sketch : Preferences > StartCounter`
  * And then keeps on restarting every 10 seconds, updating the preferences
- * 
- * 
+ *
+ *
       rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
       configsip: 0, SPIWP:0x00
       clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
@@ -247,7 +247,7 @@ void loop() {
       OTA done!
       Update successfully completed. Rebooting.
       ets Jun  8 2016 00:22:57
-      
+
       rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
       configsip: 0, SPIWP:0x00
       clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
@@ -257,13 +257,13 @@ void loop() {
       load:0x40078000,len:10632
       load:0x40080000,len:252
       entry 0x40080034
-      
+
       OTA Update succeeded!! This is an example sketch : Preferences > StartCounter
       Current counter value: 1
       Restarting in 10 seconds...
       E (102534) wifi: esp_wifi_stop 802 wifi is not init
       ets Jun  8 2016 00:22:57
-      
+
       rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
       configsip: 0, SPIWP:0x00
       clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
@@ -273,11 +273,11 @@ void loop() {
       load:0x40078000,len:10632
       load:0x40080000,len:252
       entry 0x40080034
-      
+
       OTA Update succeeded!! This is an example sketch : Preferences > StartCounter
       Current counter value: 2
       Restarting in 10 seconds...
 
       ....
- * 
+ *
  */

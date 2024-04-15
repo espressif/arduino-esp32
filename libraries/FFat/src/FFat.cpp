@@ -43,7 +43,7 @@ bool F_Fat::begin(bool formatOnFail, const char * basePath, uint8_t maxOpenFiles
     if(_wl_handle != WL_INVALID_HANDLE){
         log_w("Already Mounted!");
         return true;
-    }     
+    }
 
     if (!check_ffat_partition(partitionLabel)){
         log_e("No fat partition found on flash");
@@ -94,7 +94,7 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel)
     if (!ffat_partition){
         log_w("No partition!");
         return false;
-    } 
+    }
     result = wl_mount(ffat_partition, &temp_handle);
 
     if (result == ESP_OK) {

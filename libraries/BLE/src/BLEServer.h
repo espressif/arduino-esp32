@@ -27,7 +27,7 @@
 #include "BLEAddress.h"
 
 class BLEServerCallbacks;
-/* TODO possibly refactor this struct */ 
+/* TODO possibly refactor this struct */
 typedef struct {
 	void *peer_device;		// peer device BLEClient or BLEServer - maybe its better to have 2 structures or union here
 	bool connected;			// do we need it?
@@ -41,7 +41,7 @@ typedef struct {
 class BLEServiceMap {
 public:
 	BLEService* getByHandle(uint16_t handle);
-	BLEService* getByUUID(const char* uuid);	
+	BLEService* getByUUID(const char* uuid);
 	BLEService* getByUUID(BLEUUID uuid, uint8_t inst_id = 0);
 	void        handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 	void        setByHandle(uint16_t handle, BLEService* service);
@@ -66,7 +66,7 @@ private:
 class BLEServer {
 public:
 	uint32_t        getConnectedCount();
-	BLEService*     createService(const char* uuid);	
+	BLEService*     createService(const char* uuid);
 	BLEService*     createService(BLEUUID uuid, uint32_t numHandles=15, uint8_t inst_id=0);
 	BLEAdvertising* getAdvertising();
 	void            setCallbacks(BLEServerCallbacks* pCallbacks);

@@ -206,5 +206,3 @@ char * dtostrf(double number, signed int width, unsigned int prec, char *s) {
     *out = 0;
     return s;
 }
-
-

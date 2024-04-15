@@ -21,7 +21,7 @@ class Node
 {
     private:
         esp_rmaker_node_t *node;
-    
+
     public:
         Node()
         {
@@ -35,7 +35,7 @@ class Node
         {
             return node;
         }
-    
+
         esp_err_t addDevice(Device device);
         esp_err_t removeDevice(Device device);
 

@@ -24,7 +24,7 @@ protected:
     std::vector<String> pathArgs;
 
 public:
-    const String& pathArg(unsigned int i) { 
+    const String& pathArg(unsigned int i) {
         assert(i < pathArgs.size());
         return pathArgs[i];
     }

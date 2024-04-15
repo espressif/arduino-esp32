@@ -40,7 +40,7 @@ static const uint8_t MOSI = 35;
 static const uint8_t SCK  = 36;
 static const uint8_t MISO = 37;
 
-// XBEE Pins 
+// XBEE Pins
 #define PIN_XBEE_ENABLE    41
 #define PIN_XBEE_INT       33
 #define PIN_XBEE_CS        34
@@ -90,7 +90,7 @@ static const uint8_t D7 = PIN_IO7;
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 #define PIN_UART_TXD      43
-#define PIN_UART_RXD      44  
+#define PIN_UART_RXD      44
 #define PIN_UART_ENABLE   26
 
 // UART XBee

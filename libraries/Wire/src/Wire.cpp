@@ -225,7 +225,7 @@ size_t TwoWire::setBufferSize(size_t bSize)
 #if !CONFIG_DISABLE_HAL_LOCKS
     //release lock
     xSemaphoreGive(lock);
-    
+
 #endif
     return bSize;
 }
@@ -375,7 +375,7 @@ uint32_t TwoWire::getClock()
 #if SOC_I2C_SUPPORT_SLAVE
         if(is_slave){
             log_e("Bus is in Slave Mode");
-        } else 
+        } else
 #endif /* SOC_I2C_SUPPORT_SLAVE */
         {
             i2cGetClock(num, &frequency);
@@ -402,7 +402,7 @@ bool TwoWire::setClock(uint32_t frequency)
     if(is_slave){
         log_e("Bus is in Slave Mode");
         err = ESP_FAIL;
-    } else 
+    } else
 #endif /* SOC_I2C_SUPPORT_SLAVE */
     {
         err = i2cSetClock(num, frequency);
@@ -521,7 +521,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop)
         }
         currentTaskHandle = task;
     }
-#endif  
+#endif
     if(nonStop){
         if(address != txAddress){
             log_e("Unfinished Repeated Start transaction! Expected address do not match! %u != %u", address, txAddress);
@@ -656,7 +656,7 @@ void TwoWire::onReceiveService(uint8_t num, uint8_t* inBytes, size_t numBytes, b
         return;
     }
     for(uint8_t i = 0; i < numBytes; ++i){
-        wire->rxBuffer[i] = inBytes[i];    
+        wire->rxBuffer[i] = inBytes[i];
     }
     wire->rxIndex = 0;
     wire->rxLength = numBytes;

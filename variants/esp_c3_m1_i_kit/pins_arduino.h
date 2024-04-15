@@ -12,7 +12,7 @@
 static const uint8_t LED_WARM = 18;
 static const uint8_t LED_COLD = 19;
 
-// RGB LED 
+// RGB LED
 static const uint8_t LED_RED = 3;
 static const uint8_t LED_GREEN = 4;
 static const uint8_t LED_BLUE = 5;

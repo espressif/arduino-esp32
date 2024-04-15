@@ -223,7 +223,7 @@ Use the function ``softAP`` to configure the Wi-Fi AP characteristics:
 Where:
 
 * ``ssid`` sets the Wi-Fi network SSID.
-* ``passphrase`` sets the Wi-Fi network password. If the network is open, set as ``NULL``. 
+* ``passphrase`` sets the Wi-Fi network password. If the network is open, set as ``NULL``.
 * ``channel`` configures the Wi-Fi channel.
 * ``ssid_hidden`` sets the network as hidden.
 * ``max_connection`` sets the maximum number of simultaneous connections. The default is 4.

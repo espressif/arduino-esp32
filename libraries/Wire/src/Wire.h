@@ -41,7 +41,7 @@
 
 // WIRE_HAS_BUFFER_SIZE means Wire has setBufferSize()
 #define WIRE_HAS_BUFFER_SIZE    1
-// WIRE_HAS_END means Wire has end() 
+// WIRE_HAS_END means Wire has end()
 #define WIRE_HAS_END 1
 
 #ifndef I2C_BUFFER_LENGTH
@@ -108,7 +108,7 @@ public:
     bool end() override;
 
     bool setClock(uint32_t freq) override;
-  
+
     void beginTransmission(uint8_t address) override;
     uint8_t endTransmission(bool stopBit) override;
     uint8_t endTransmission() override;
@@ -118,10 +118,10 @@ public:
 
     void onReceive(void(*)(int)) override;
     void onRequest(void(*)(void)) override;
-    
+
     //call setPins() first, so that begin() can be called without arguments from libraries
     bool setPins(int sda, int scl);
-    
+
     bool begin(int sda, int scl, uint32_t frequency=0); // returns true, if successful init of i2c bus
 #if SOC_I2C_SUPPORT_SLAVE
     bool begin(uint8_t slaveAddr, int sda, int scl, uint32_t frequency);

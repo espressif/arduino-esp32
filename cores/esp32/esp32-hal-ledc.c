@@ -119,7 +119,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     handle->channel = channel;
     handle->channel_resolution = resolution;
     #ifndef SOC_LEDC_SUPPORT_FADE_STOP
-    handle->lock = NULL;         
+    handle->lock = NULL;
     #endif
     ledc_handle.used_channels |= 1UL << channel;
 
@@ -174,7 +174,7 @@ uint32_t ledcRead(uint8_t pin)
         uint8_t group=(bus->channel/8), channel=(bus->channel%8);
         return ledc_get_duty(group,channel);
     }
-    return 0;   
+    return 0;
 }
 
 uint32_t ledcReadFreq(uint8_t pin)
@@ -187,7 +187,7 @@ uint32_t ledcReadFreq(uint8_t pin)
         uint8_t group=(bus->channel/8), timer=((bus->channel/2)%4);
         return ledc_get_freq(group,timer);
         }
-    return 0;  
+    return 0;
 }
 
 
@@ -207,7 +207,7 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq)
             .speed_mode       = group,
             .timer_num        = timer,
             .duty_resolution  = 10,
-            .freq_hz          = freq, 
+            .freq_hz          = freq,
             .clk_cfg          = LEDC_DEFAULT_CLK
         };
 
@@ -268,7 +268,7 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution)
             .speed_mode       = group,
             .timer_num        = timer,
             .duty_resolution  = resolution,
-            .freq_hz          = freq, 
+            .freq_hz          = freq,
             .clk_cfg          = LEDC_DEFAULT_CLK
         };
 
@@ -320,7 +320,7 @@ static IRAM_ATTR bool ledcFnWrapper(const ledc_cb_param_t *param, void *user_arg
 static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg){
     ledc_channel_handle_t *bus = (ledc_channel_handle_t*)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if(bus != NULL){
-        
+
     #ifndef SOC_LEDC_SUPPORT_FADE_STOP
         #if !CONFIG_DISABLE_HAL_LOCKS
             if(bus->lock == NULL){
@@ -353,7 +353,7 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
             .fade_cb = ledcFnWrapper
         };
         ledc_cb_register(group, channel, &callbacks, (void *) bus);
-        
+
         //Fixing if all bits in resolution is set = LEDC FULL ON
         uint32_t max_duty = (1 << bus->channel_resolution) - 1;
 

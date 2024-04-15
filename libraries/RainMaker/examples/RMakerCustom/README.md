@@ -1,6 +1,6 @@
 # ESP RainMaker Custom Device
 
-This example demonstrates how to build a custom device to be used with ESP RainMaker. 
+This example demonstrates how to build a custom device to be used with ESP RainMaker.
 
 ## What to expect in this example?
 

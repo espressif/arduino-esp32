@@ -80,7 +80,7 @@ FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create
         {
             memcpy(folder,fpath + start_index, end_index-start_index);
             folder[end_index-start_index] = '\0';
-            
+
             if(!VFSImpl::mkdir(folder))
             {
                 log_e("Creating folder: %s failed!",folder);
@@ -93,7 +93,7 @@ FileImplPtr VFSImpl::open(const char* fpath, const char* mode, const bool create
                 end_index = (token-fpath);
                 memset(folder, 0, strlen(folder));
             }
-            
+
         }
 
         free(folder);
@@ -303,7 +303,7 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(_f && (_stat.st_blksize == 0))
             {
                 setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
-            } 
+            }
         } else if(S_ISDIR(_stat.st_mode)) {
             _isDirectory = true;
             _d = opendir(temp);
@@ -334,7 +334,7 @@ VFSFileImpl::VFSFileImpl(VFSImpl* fs, const char* fpath, const char* mode)
             if(_f && (_stat.st_blksize == 0))
             {
                 setvbuf(_f,NULL,_IOFBF,DEFAULT_FILE_BUFFER_SIZE);
-            } 
+            }
         }
     }
     free(temp);

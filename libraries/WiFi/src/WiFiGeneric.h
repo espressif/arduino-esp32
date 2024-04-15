@@ -123,9 +123,9 @@ class WiFiGenericClass
 
     const char * disconnectReasonName(wifi_err_reason_t reason);
     const char * eventName(arduino_event_id_t id);
-    
+
     static void _eventCallback(arduino_event_t *event);
-    
+
   protected:
     static bool _persistent;
     static bool _long_range;

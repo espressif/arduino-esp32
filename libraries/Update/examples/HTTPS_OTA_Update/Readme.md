@@ -1,16 +1,16 @@
 # OTA Firmware Upgrade for Arduino
 This sketch allows Arduino user to perform Over The Air (OTA) firmware upgrade. It uses HTTPS.
- 
+
 # API introduced for OTA
 
-## HttpsOTA.begin(const char * url, const char * server_certificate, bool skip_cert_common_name_check) 
+## HttpsOTA.begin(const char * url, const char * server_certificate, bool skip_cert_common_name_check)
 
 Main API which starts firmware upgrade
 
 ### Parameters
 * url : URL for the uploaded firmware image
 * server_certificate : Provide the ota server certificate for authentication via HTTPS
-* skip_cert_common_name_check : Skip any validation of server certificate CN field 
+* skip_cert_common_name_check : Skip any validation of server certificate CN field
 
 The default value provided to skip_cert_common_name_check is true
 
@@ -19,7 +19,7 @@ The default value provided to skip_cert_common_name_check is true
 This API exposes HTTP Events to the user
 
 ### Parameter
-Function passed has following signature 
+Function passed has following signature
 void HttpEvent (HttpEvent_t * event);
 
 # HttpsOTA.otaStatus()

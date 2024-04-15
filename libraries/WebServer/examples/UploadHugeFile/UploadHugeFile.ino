@@ -21,19 +21,19 @@ void handleCreateProcess() {
       SD.remove((char *)path.c_str());
     }
     rawFile = SD.open(path.c_str(), FILE_WRITE);
-    Serial.print("Upload: START, filename: "); 
+    Serial.print("Upload: START, filename: ");
     Serial.println(path);
   } else if (raw.status == RAW_WRITE) {
     if (rawFile) {
       rawFile.write(raw.buf, raw.currentSize);
     }
-    Serial.print("Upload: WRITE, Bytes: "); 
+    Serial.print("Upload: WRITE, Bytes: ");
     Serial.println(raw.currentSize);
   } else if (raw.status == RAW_END) {
     if (rawFile) {
       rawFile.close();
     }
-    Serial.print("Upload: END, Size: "); 
+    Serial.print("Upload: END, Size: ");
     Serial.println(raw.totalSize);
   }
 }

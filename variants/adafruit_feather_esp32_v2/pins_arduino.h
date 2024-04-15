@@ -18,7 +18,7 @@ static const uint8_t MISO  = 21;
 static const uint8_t SCK   = 5;
 
 // mapping to match other feathers and also in order
-static const uint8_t A0 = 26; 
+static const uint8_t A0 = 26;
 static const uint8_t A1 = 25;
 static const uint8_t A2 = 34;
 static const uint8_t A3 = 39;
@@ -39,7 +39,7 @@ static const uint8_t A13 = 35;
 // internal switch
 #define BUTTON 38
 
-// User LED 
+// User LED
 static const uint8_t LED_BUILTIN = 13;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN

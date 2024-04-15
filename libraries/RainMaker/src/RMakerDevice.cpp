@@ -39,7 +39,7 @@ esp_err_t Device::deleteDevice()
     if(err != ESP_OK) {
         log_e("Failed to delete device");
         return err;
-    }   
+    }
     return ESP_OK;
 }
 
@@ -50,7 +50,7 @@ void Device::addCb(deviceWriteCb writeCb, deviceReadCb readCb)
     err = esp_rmaker_device_add_cb(getDeviceHandle(), write_callback, read_callback);
     if(err != ESP_OK) {
         log_e("Failed to register callback");
-    }   
+    }
 }
 
 esp_err_t Device::addDeviceAttr(const char *attr_name, const char *val)
@@ -119,7 +119,7 @@ esp_err_t Device::addCCTParam(int val, const char *param_name)
 
 esp_err_t Device::addDirectionParam(int val, const char *param_name)
 {
-    param_handle_t *param = esp_rmaker_direction_param_create(param_name, val); 
+    param_handle_t *param = esp_rmaker_direction_param_create(param_name, val);
     return esp_rmaker_device_add_param(getDeviceHandle(), param);
 }
 
@@ -130,7 +130,7 @@ esp_err_t Device::addSpeedParam(int val, const char *param_name)
 }
 
 esp_err_t Device::addTemperatureParam(float val, const char *param_name)
-{   
+{
     param_handle_t *param = esp_rmaker_temperature_param_create(param_name, val);
     return esp_rmaker_device_add_param(getDeviceHandle(), param);
 }

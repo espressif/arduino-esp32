@@ -41,13 +41,13 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
-#include <time.h> 
+#include <time.h>
 #include <WiFi.h>
 
 const char* ssid     = "your-ssid";
 const char* password = "your-password";
 
-long timezone = 1; 
+long timezone = 1;
 byte daysavetime = 1;
 
 /*
@@ -205,7 +205,7 @@ void setup(){
     getLocalTime(&tmstruct, 5000);
 	Serial.printf("\nNow is : %d-%02d-%02d %02d:%02d:%02d\n",(tmstruct.tm_year)+1900,( tmstruct.tm_mon)+1, tmstruct.tm_mday,tmstruct.tm_hour , tmstruct.tm_min, tmstruct.tm_sec);
     Serial.println("");
-    
+
 #ifdef REASSIGN_PINS
     SPI.begin(sck, miso, mosi, cs);
     if(!SD.begin(cs)){
@@ -248,5 +248,3 @@ void setup(){
 void loop(){
 
 }
-
-

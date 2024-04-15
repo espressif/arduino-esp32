@@ -5,7 +5,7 @@
    Unless required by applicable law or agreed to in writing, this
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
-   
+
 */
 #include <WiFi.h>
 
@@ -41,7 +41,7 @@ void setup()
 
     // Wait for the WiFi event
     while (true) {
-        
+
         switch(WiFi.status()) {
           case WL_NO_SSID_AVAIL:
             Serial.println("[WiFi] SSID not found");
@@ -71,7 +71,7 @@ void setup()
             break;
         }
         delay(tryDelay);
-        
+
         if(numberOfTries <= 0){
           Serial.print("[WiFi] Failed to connect to WiFi!");
           // Use disconnect function to force stop trying to connect
@@ -87,7 +87,7 @@ void loop()
 {
     // Read the button state
     btnState = digitalRead(btnGPIO);
-    
+
     if (btnState == LOW) {
       // Disconnect from WiFi
       Serial.println("[WiFi] Disconnecting from WiFi!");

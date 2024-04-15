@@ -71,7 +71,7 @@
 #endif
 
 // can't define max() / min() because of conflicts with C++
-#define _min(a,b) ((a)<(b)?(a):(b))  
+#define _min(a,b) ((a)<(b)?(a):(b))
 #define _max(a,b) ((a)>(b)?(a):(b))
 #define _abs(x) ((x)>0?(x):-(x))  // abs() comes from STL
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
@@ -150,7 +150,7 @@ typedef unsigned int word;
 void setup(void);
 void loop(void);
 
-// The default is using Real Hardware random number generator  
+// The default is using Real Hardware random number generator
 // But when randomSeed() is called, it turns to Psedo random
 // generator, exactly as done in Arduino mainstream
 long random(long);

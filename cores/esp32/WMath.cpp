@@ -39,7 +39,7 @@ void useRealRandomGenerator(bool useRandomHW) {
 }
 
 // Calling randomSeed() will force the
-// Pseudo Random generator like in 
+// Pseudo Random generator like in
 // Arduino mainstream API
 void randomSeed(unsigned long seed)
 {

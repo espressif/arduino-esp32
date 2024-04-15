@@ -54,7 +54,7 @@
 #elif CONFIG_IDF_TARGET_ESP32H2
 #include "esp32h2/rom/rtc.h"
 
-#else 
+#else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 

@@ -23,7 +23,7 @@ static const uint8_t MISO  = 19;
 static const uint8_t SCK   = 5;
 
 // Analog Inputs
-static const uint8_t A0 = 4; 
+static const uint8_t A0 = 4;
 static const uint8_t A1 = 25;
 static const uint8_t A2 = 26;
 static const uint8_t A3 = 27;

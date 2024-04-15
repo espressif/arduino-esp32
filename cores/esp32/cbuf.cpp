@@ -113,7 +113,7 @@ size_t cbuf::resize(size_t newSize)
             }
             free(old_data);
         }
-        
+
         RingbufHandle_t b = _buf;
         _buf = newbuf;
         vRingbufferDelete(b);

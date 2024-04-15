@@ -48,23 +48,23 @@ HardwareSerial Serial2(2);
 
 #if HWCDC_SERIAL_IS_DEFINED == 1        // Hardware JTAG CDC Event
 extern void HWCDCSerialEvent (void)__attribute__((weak));
-void HWCDCSerialEvent(void) {} 
-#endif 
+void HWCDCSerialEvent(void) {}
+#endif
 
 #if USB_SERIAL_IS_DEFINED == 1          // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
 extern void USBSerialEvent (void)__attribute__((weak));
-void USBSerialEvent(void) {} 
-#endif 
+void USBSerialEvent(void) {}
+#endif
 
 void serialEventRun(void)
 {
 #if HWCDC_SERIAL_IS_DEFINED == 1        // Hardware JTAG CDC Event
     if(HWCDCSerial.available()) HWCDCSerialEvent();
-#endif    
+#endif
 #if USB_SERIAL_IS_DEFINED == 1          // Native USB CDC Event
     if(USBSerial.available()) USBSerialEvent();
-#endif    
+#endif
     // UART0 is default serialEvent()
     if(Serial0.available()) serialEvent();
 #if SOC_UART_NUM > 1
@@ -519,19 +519,19 @@ bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t r
     return uartSetPins(_uart_nr, rxPin, txPin, ctsPin, rtsPin);
 }
 
-// Enables or disables Hardware Flow Control using RTS and/or CTS pins 
+// Enables or disables Hardware Flow Control using RTS and/or CTS pins
 // must use setAllPins() in order to set RTS/CTS pins
-// SerialHwFlowCtrl = UART_HW_FLOWCTRL_DISABLE, UART_HW_FLOWCTRL_RTS, 
+// SerialHwFlowCtrl = UART_HW_FLOWCTRL_DISABLE, UART_HW_FLOWCTRL_RTS,
 //                    UART_HW_FLOWCTRL_CTS, UART_HW_FLOWCTRL_CTS_RTS
 bool HardwareSerial::setHwFlowCtrlMode(SerialHwFlowCtrl mode, uint8_t threshold)
 {
     return uartSetHwFlowCtrlMode(_uart, mode, threshold);
 }
 
-// Sets the uart mode in the esp32 uart for use with RS485 modes 
+// Sets the uart mode in the esp32 uart for use with RS485 modes
 // HwFlowCtrl must be disabled and RTS pin set
-// SerialMode = UART_MODE_UART, UART_MODE_RS485_HALF_DUPLEX, UART_MODE_IRDA, 
-// or testing mode: UART_MODE_RS485_COLLISION_DETECT, UART_MODE_RS485_APP_CTRL 
+// SerialMode = UART_MODE_UART, UART_MODE_RS485_HALF_DUPLEX, UART_MODE_IRDA,
+// or testing mode: UART_MODE_RS485_COLLISION_DETECT, UART_MODE_RS485_APP_CTRL
 bool HardwareSerial::setMode(SerialMode mode)
 {
     return uartSetMode(_uart, mode);

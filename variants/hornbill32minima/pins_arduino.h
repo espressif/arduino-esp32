@@ -11,13 +11,13 @@ static const uint8_t SCL = 22;  //2
 
 static const uint8_t SS    = 2; //3
 static const uint8_t MOSI  = 23; //4
-static const uint8_t MISO  = 19; //5	
+static const uint8_t MISO  = 19; //5
 static const uint8_t SCK   = 18; //6
 
 
 
 static const uint8_t A6 = 34;  //7
-static const uint8_t A7 = 35;  //8 
+static const uint8_t A7 = 35;  //8
 static const uint8_t A10 = 4;  //9
 static const uint8_t A11 = 0;  // taken out on pgm header
 static const uint8_t A12 = 2;  // with SPI SS

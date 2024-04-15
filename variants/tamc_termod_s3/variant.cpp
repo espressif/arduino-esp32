@@ -1,7 +1,7 @@
 #include "Arduino.h"
 
 float getBatteryVoltage() {
-  int analogVolt = analogReadMilliVolts(1); 
+  int analogVolt = analogReadMilliVolts(1);
   float voltage = analogVolt / 1000.0;
   voltage = voltage * (100.0+200.0) / 200.0;
   return voltage;

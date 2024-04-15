@@ -8,7 +8,7 @@ This method based on touchInterruptGetLastStatus() is only available for ESP32 S
 
 #include "Arduino.h"
 
-int threshold = 1500;   // ESP32S2 
+int threshold = 1500;   // ESP32S2
 bool touch1detected = false;
 bool touch2detected = false;
 
@@ -25,7 +25,7 @@ void setup() {
   delay(1000); // give me time to bring up serial monitor
 
   Serial.println("\n ESP32 Touch Interrupt Test\n");
-  touchAttachInterrupt(T1, gotTouch1, threshold); 
+  touchAttachInterrupt(T1, gotTouch1, threshold);
   touchAttachInterrupt(T2, gotTouch2, threshold);
 }
 

@@ -13,7 +13,7 @@
    OnReceive will be called, while receiving a stream of data, when every 120 bytes are received (default FIFO Full),
    which may not help in case that the application needs to get all data at once before processing it.
    Therefore, a way to make it work is by detecting the end of a stream transmission. This can be based on a protocol
-   or based on timeout with the UART line in idle (no data received - this is the case of this example). 
+   or based on timeout with the UART line in idle (no data received - this is the case of this example).
 
    In some cases, it is necessary to wait for receiving all the data before processing it and parsing the
    UART input. This example demonstrates a way to create a String with all data received from UART0 and
@@ -118,7 +118,7 @@ void loop() {
       // releases the mutex for more data to be received
       xSemaphoreGive(uart_buffer_Mutex);
     }
-  } 
+  }
   UART0.println("Sleeping for 1 second...");
   delay(1000);
 }

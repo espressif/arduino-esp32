@@ -57,7 +57,7 @@ void timerAlarm(hw_timer_t * timer, uint64_t alarm_value, bool autoreload, uint6
     err = gptimer_set_alarm_action(timer->timer_handle, &alarm_cfg);
     if (err != ESP_OK){
         log_e("Timer Alarm Write failed, error num=%d", err);
-    } 
+    }
 }
 
 uint32_t timerGetFrequency(hw_timer_t * timer){
@@ -120,7 +120,7 @@ hw_timer_t * timerBegin(uint32_t frequency){
         log_e("Failed to create a new GPTimer, error num=%d", err);
         free(timer);
         return NULL;
-    } 
+    }
     gptimer_enable(timer->timer_handle);
     gptimer_start(timer->timer_handle);
     timer->timer_started = true;
@@ -170,7 +170,7 @@ void timerAttachInterruptFunctionalArg(hw_timer_t * timer, void (*userFunc)(void
     err = gptimer_register_event_callbacks(timer->timer_handle, &cbs, &timer->interrupt_handle);
     if (err != ESP_OK){
         log_e("Timer Attach Interrupt failed, error num=%d", err);
-    } 
+    }
     gptimer_enable(timer->timer_handle);
     if(timer->timer_started == true){
         gptimer_start(timer->timer_handle);
@@ -193,7 +193,7 @@ void timerDetachInterrupt(hw_timer_t * timer){
     timer->interrupt_handle.arg = NULL;
     if (err != ESP_OK){
         log_e("Timer Detach Interrupt failed, error num=%d", err);
-    } 
+    }
 }
 
 uint64_t timerReadMicros(hw_timer_t * timer){

@@ -16,7 +16,7 @@ static const uint8_t SDA = 17;
 static const uint8_t SCL = 18;
 
 static const uint8_t SS    = -1;	// Modified elsewhere
-static const uint8_t MOSI  = -1;	// Modified elsewhere 
+static const uint8_t MOSI  = -1;	// Modified elsewhere
 static const uint8_t MISO  = -1;	// Modified elsewhere
 static const uint8_t SCK   = -1;	// Modified elsewhere
 

@@ -30,7 +30,7 @@ public:
 	void setByUUID(BLECharacteristic* pCharacteristic, const char* uuid);
 	void setByUUID(BLECharacteristic* pCharacteristic, BLEUUID uuid);
 	void setByHandle(uint16_t handle, BLECharacteristic* pCharacteristic);
-	BLECharacteristic* getByUUID(const char* uuid);	
+	BLECharacteristic* getByUUID(const char* uuid);
 	BLECharacteristic* getByUUID(BLEUUID uuid);
 	BLECharacteristic* getByHandle(uint16_t handle);
 	BLECharacteristic* getFirst();

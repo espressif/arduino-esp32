@@ -10,7 +10,7 @@
 #define USB_PRODUCT        "Feather ESP32-S2 Reverse TFT"
 #define USB_SERIAL         "" // Empty string for MAC address
 
-// User LED 
+// User LED
 #define LED_BUILTIN 13
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 

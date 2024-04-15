@@ -45,9 +45,9 @@ void setup()
 
 void loop()
 {
-    static bool isConnected = false; 
+    static bool isConnected = false;
     uint8_t WiFiStatus = wifiMulti.run();
-    
+
     if (WiFiStatus == WL_CONNECTED) {
         if (!isConnected) {
             Serial.println("");
@@ -58,7 +58,7 @@ void loop()
         isConnected = true;
     } else {
         Serial.println("WiFi not connected!");
-        isConnected = false; 
+        isConnected = false;
         delay(5000);
     }
 }

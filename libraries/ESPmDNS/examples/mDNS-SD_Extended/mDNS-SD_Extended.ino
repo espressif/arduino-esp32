@@ -2,7 +2,7 @@
   ESP8266 mDNS-SD responder and query sample
 
   This is an example of announcing and finding services.
-  
+
   Instructions:
   - Update WiFi SSID and password as necessary.
   - Flash the sketch to two ESP8266 boards

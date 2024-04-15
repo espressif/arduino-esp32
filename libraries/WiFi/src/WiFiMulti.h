@@ -52,7 +52,7 @@ public:
     // Force (default: true) to only keep connected or to connect to an AP from the provided WiFiMulti list.
     // When bStrict is false, it will keep the last/current connected AP even if not in the WiFiMulti List.
     void setStrictMode(bool bStrict = true);
-    
+
     // allows (true) to connect to ANY open AP, even if not in the user list
     // default false (do not connect to an open AP that has not been explicitaly added by the user to list)
     void setAllowOpenAP(bool bAllowOpenAP = false);

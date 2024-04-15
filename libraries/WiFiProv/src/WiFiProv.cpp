@@ -1,21 +1,21 @@
 /*
     WiFiProv.cpp - WiFiProv class for provisioning
     All rights reserved.
- 
+
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
     version 2.1 of the License, or (at your option) any later version.
-  
+
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-    
+
 */
 #include "soc/soc_caps.h"
 #if SOC_WIFI_SUPPORTED
@@ -160,7 +160,7 @@ void WiFiProvClass :: beginProvision(prov_scheme_t prov_scheme, scheme_handler_t
         esp_wifi_get_config((wifi_interface_t)WIFI_IF_STA,&conf);
         log_i("Attempting connect to AP: %s\n",conf.sta.ssid);
 #endif
-        esp_wifi_start();        
+        esp_wifi_start();
         wifi_prov_mgr_deinit();
         WiFi.begin();
     }
@@ -195,4 +195,3 @@ void  WiFiProvClass :: printQR(const char *name, const char *pop, const char *tr
 WiFiProvClass WiFiProv;
 
 #endif /* SOC_WIFI_SUPPORTED */
-

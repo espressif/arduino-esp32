@@ -120,7 +120,7 @@ uint8_t addr_2m[6] = {0xc0, 0xde, 0x52, 0x00, 0x00, 0x02};
 uint8_t addr_legacy[6] = {0xc0, 0xde, 0x52, 0x00, 0x00, 0x03};
 uint8_t addr_coded[6] = {0xc0, 0xde, 0x52, 0x00, 0x00, 0x04};
 
-BLEMultiAdvertising advert(4); // max number of advertisement data 
+BLEMultiAdvertising advert(4); // max number of advertisement data
 
 void setup() {
   Serial.begin(115200);

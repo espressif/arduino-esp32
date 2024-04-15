@@ -309,7 +309,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
         periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
 #endif
     }
-    
+
     i2c_ll_slave_init(i2c->dev);
     i2c_ll_set_fifo_mode(i2c->dev, true);
     i2c_ll_set_slave_addr(i2c->dev, slaveID, false);
@@ -349,7 +349,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
             goto fail;
         }
     }
-    
+
     i2c_ll_txfifo_rst(i2c->dev);
     i2c_ll_rxfifo_rst(i2c->dev);
     i2c_ll_slave_enable_rx_it(i2c->dev);
@@ -597,7 +597,7 @@ static bool i2c_slave_attach_gpio(i2c_slave_struct_t * i2c, int8_t sda, int8_t s
         log_e("no control block");
         return false;
     }
-    
+
     if ((sda < 0)||( scl < 0)) {
         log_e("bad pins sda=%d, scl=%d",sda,scl);
         return false;
@@ -800,9 +800,9 @@ static size_t i2c_slave_read_rx(i2c_slave_struct_t * i2c, uint8_t * data, size_t
     }
     return (data)?len:0;
 #else
-    size_t  dlen = 0, 
-            to_read = len, 
-            so_far = 0, 
+    size_t  dlen = 0,
+            to_read = len,
+            so_far = 0,
             available = 0;
     uint8_t * rx_data = NULL;
 

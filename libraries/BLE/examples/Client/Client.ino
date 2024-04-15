@@ -46,7 +46,7 @@ class MyClientCallback : public BLEClientCallbacks {
 bool connectToServer() {
     Serial.print("Forming a connection to ");
     Serial.println(myDevice->getAddress().toString().c_str());
-    
+
     BLEClient*  pClient  = BLEDevice::createClient();
     Serial.println(" - Created client");
 
@@ -56,7 +56,7 @@ bool connectToServer() {
     pClient->connect(myDevice);  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
     Serial.println(" - Connected to server");
     pClient->setMTU(517); //set client to request maximum MTU from server (default is 23 otherwise)
-  
+
     // Obtain a reference to the service we are after in the remote BLE server.
     BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
     if (pRemoteService == nullptr) {
@@ -136,7 +136,7 @@ void setup() {
 void loop() {
 
   // If the flag "doConnect" is true then we have scanned for and found the desired
-  // BLE Server with which we wish to connect.  Now we connect to it.  Once we are 
+  // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
   // connected we set the connected flag to be true.
   if (doConnect == true) {
     if (connectToServer()) {
@@ -152,12 +152,12 @@ void loop() {
   if (connected) {
     String newValue = "Time since boot: " + String(millis()/1000);
     Serial.println("Setting new characteristic value to \"" + newValue + "\"");
-    
+
     // Set the characteristic's value to be the array of bytes that is actually a string.
     pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
   }else if(doScan){
     BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
   }
-  
+
   delay(1000); // Delay a second between loops.
 } // End of loop

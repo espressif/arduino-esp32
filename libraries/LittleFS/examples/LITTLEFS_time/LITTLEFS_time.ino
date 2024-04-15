@@ -1,24 +1,24 @@
 #include "FS.h"
-//#include "SPIFFS.h" 
+//#include "SPIFFS.h"
 #include "LittleFS.h"
-#include <time.h> 
+#include <time.h>
 #include <WiFi.h>
 
 #define SPIFFS LittleFS
 
-/* This examples uses "quick re-define" of SPIFFS to run 
+/* This examples uses "quick re-define" of SPIFFS to run
    an existing sketch with LittleFS instead of SPIFFS
 
    You only need to format LittleFS the first time you run a
    test or else use the LittleFS plugin to create a partition
    https://github.com/lorol/arduino-esp32littlefs-plugin */
-   
+
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 const char* ssid     = "yourssid";
 const char* password = "yourpass";
 
-long timezone = 1; 
+long timezone = 1;
 byte daysavetime = 1;
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
@@ -167,7 +167,7 @@ void setup(){
     getLocalTime(&tmstruct, 5000);
 	Serial.printf("\nNow is : %d-%02d-%02d %02d:%02d:%02d\n",(tmstruct.tm_year)+1900,( tmstruct.tm_mon)+1, tmstruct.tm_mday,tmstruct.tm_hour , tmstruct.tm_min, tmstruct.tm_sec);
     Serial.println("");
-    
+
     if(!SPIFFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
         Serial.println("LittleFS Mount Failed");
         return;
@@ -175,36 +175,36 @@ void setup(){
 
     Serial.println("----list 1----");
     listDir(SPIFFS, "/", 1);
-	
+
     Serial.println("----remove old dir----");
     removeDir(SPIFFS, "/mydir");
-	
+
     Serial.println("----create a new dir----");
     createDir(SPIFFS, "/mydir");
-	
+
     Serial.println("----remove the new dir----");
     removeDir(SPIFFS, "/mydir");
-	
+
     Serial.println("----create the new again----");
     createDir(SPIFFS, "/mydir");
-	
+
     Serial.println("----create and work with file----");
     writeFile(SPIFFS, "/mydir/hello.txt", "Hello ");
     appendFile(SPIFFS, "/mydir/hello.txt", "World!\n");
 
     Serial.println("----list 2----");
     listDir(SPIFFS, "/", 1);
-	
+
     Serial.println("----attempt to remove dir w/ file----");
     removeDir(SPIFFS, "/mydir");
-	
+
     Serial.println("----remove dir after deleting file----");
     deleteFile(SPIFFS, "/mydir/hello.txt");
     removeDir(SPIFFS, "/mydir");
-	
+
 	Serial.println("----list 3----");
     listDir(SPIFFS, "/", 1);
-	
+
 	Serial.println( "Test complete" );
 
 }

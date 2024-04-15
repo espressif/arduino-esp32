@@ -165,7 +165,7 @@ public:
     IPAddress broadcastIP();
     IPAddress networkID();
     uint8_t subnetCIDR();
-    
+
     bool enableIPv6(bool en=true);
     IPAddress linkLocalIPv6();
     IPAddress globalIPv6();

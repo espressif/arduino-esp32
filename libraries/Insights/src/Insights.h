@@ -14,10 +14,10 @@ class ESPInsightsMetricsClass
 {
     private:
         bool initialized;
-    
+
     public:
         ESPInsightsMetricsClass():initialized(false){}
-    
+
         bool addBool(const char *tag, const char *key, const char *label, const char *path);
         bool addInt(const char *tag, const char *key, const char *label, const char *path);
         bool addUint(const char *tag, const char *key, const char *label, const char *path);
@@ -51,10 +51,10 @@ class ESPInsightsVariablesClass
 {
     private:
         bool initialized;
-    
+
     public:
         ESPInsightsVariablesClass():initialized(false){}
-    
+
         bool addBool(const char *tag, const char *key, const char *label, const char *path);
         bool addInt(const char *tag, const char *key, const char *label, const char *path);
         bool addUint(const char *tag, const char *key, const char *label, const char *path);
@@ -82,21 +82,21 @@ class ESPInsightsClass
 {
     private:
         bool initialized;
-    
+
     public:
         ESPInsightsMetricsClass metrics;
         ESPInsightsVariablesClass variables;
 
         ESPInsightsClass();
         ~ESPInsightsClass();
-        
+
         bool begin(const char *auth_key, const char *node_id = NULL, uint32_t log_type = 0xFFFFFFFF, bool alloc_ext_ram = false, bool use_default_transport = true);
         void end();
         bool send();
         const char * nodeID();
-        
+
         void dumpTasksStatus();
-        
+
         bool event(const char *tag, const char *format, ...);
 };
 

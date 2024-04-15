@@ -110,7 +110,7 @@ public:
 
     bool rmdir(const char *path);
     bool rmdir(const String &path);
-    
+
     const char * mountpoint();
 
 

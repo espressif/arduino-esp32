@@ -28,7 +28,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_USB_RESUME_EVENT:
         Serial.println("USB RESUMED");
         break;
-      
+
       default:
         break;
     }
@@ -51,7 +51,7 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_FIRMWARE_MSC_POWER_EVENT:
         Serial.printf("MSC Update Power: power: %u, start: %u, eject: %u", data->power.power_condition, data->power.start, data->power.load_eject);
         break;
-      
+
       default:
         break;
     }

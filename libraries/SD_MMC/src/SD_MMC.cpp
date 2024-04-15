@@ -156,7 +156,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
         if(!perimanClearPinBus(_pin_d2)){ return false; }
         if(!perimanClearPinBus(_pin_d3)){ return false; }
     }
-    
+
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
     host.flags = SDMMC_HOST_FLAG_4BIT;
     host.slot = SDMMC_HOST_SLOT_1;

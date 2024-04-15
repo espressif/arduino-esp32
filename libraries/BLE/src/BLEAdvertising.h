@@ -51,10 +51,10 @@ class BLEAdvertising {
 public:
 	BLEAdvertising();
 	void addServiceUUID(BLEUUID serviceUUID);
-	void addServiceUUID(const char* serviceUUID);	
+	void addServiceUUID(const char* serviceUUID);
 	bool removeServiceUUID(int index);
 	bool removeServiceUUID(BLEUUID serviceUUID);
-	bool removeServiceUUID(const char* serviceUUID);	
+	bool removeServiceUUID(const char* serviceUUID);
 	void start();
 	void stop();
 	void setAppearance(uint16_t appearance);

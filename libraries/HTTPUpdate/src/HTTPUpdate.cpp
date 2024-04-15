@@ -262,7 +262,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
 
     String md5;
     if (_md5Sum.length()) {
-        md5 = _md5Sum; 
+        md5 = _md5Sum;
     } else if(http.hasHeader("x-MD5")) {
         md5 = http.header("x-MD5");
     }

@@ -84,7 +84,7 @@ void setup(){
   reset occurs.
   */
   Serial.println("Going to sleep now");
-  Serial.flush(); 
+  Serial.flush();
   esp_deep_sleep_start();
   Serial.println("This will never be printed");
 }

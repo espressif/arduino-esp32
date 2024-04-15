@@ -15,19 +15,19 @@ const char* indexHtml = R"literal(
     var prg = document.getElementById('prg');
     var form = document.getElementById('upload-form');
     form.addEventListener('submit', el=>{
-      prg.style.backgroundColor = 'blue'; 
+      prg.style.backgroundColor = 'blue';
       el.preventDefault();
       var data = new FormData(form);
       var req = new XMLHttpRequest();
       var fsize = document.getElementById('file').files[0].size;
-      req.open('POST', '/update?size=' + fsize);  
+      req.open('POST', '/update?size=' + fsize);
       req.upload.addEventListener('progress', p=>{
         let w = Math.round(p.loaded/p.total*100) + '%';
           if(p.lengthComputable){
              prg.innerHTML = w;
              prg.style.width = w;
           }
-          if(w == '100%') prg.style.backgroundColor = 'black'; 
+          if(w == '100%') prg.style.backgroundColor = 'black';
       });
       req.send(data);
      });

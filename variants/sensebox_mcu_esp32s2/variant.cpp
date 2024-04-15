@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2021 Ha Thach (tinyusb.org) for Adafruit Industries
@@ -38,11 +38,11 @@ void initVariant(void)
     //reset RGB
     pinMode(PIN_NEOPIXEL, OUTPUT);
     digitalWrite(PIN_NEOPIXEL, LOW);
-     
+
     //enable XBEE by default
     pinMode(PIN_XB1_ENABLE, OUTPUT);
     digitalWrite(PIN_XB1_ENABLE, LOW);
- 
+
     //enable UART by default
     pinMode(PIN_UART_ENABLE, OUTPUT);
     digitalWrite(PIN_UART_ENABLE, LOW);

@@ -57,7 +57,7 @@ class BluetoothSerial: public Stream
         void setTimeout(int timeoutMS);
         void onData(BluetoothSerialDataCb cb);
         esp_err_t register_callback(esp_spp_cb_t callback);
-        
+
 #ifdef CONFIG_BT_SSP_ENABLED
         void onConfirmRequest(ConfirmRequestCb cb);
         void onKeyRequest(KeyRequestCb cb);
@@ -89,13 +89,13 @@ class BluetoothSerial: public Stream
         void discoverAsyncStop();
         void discoverClear();
         BTScanResults* getScanResults();
-        
+
         std::map<int, std::string> getChannels(const BTAddress &remoteAddress);
 
         const int INQ_TIME = 1280;   // Inquire Time unit 1280 ms
         const int MIN_INQ_TIME = (ESP_BT_GAP_MIN_INQ_LEN * INQ_TIME);
         const int MAX_INQ_TIME = (ESP_BT_GAP_MAX_INQ_LEN * INQ_TIME);
-        
+
         operator bool() const;
         void getBtAddress(uint8_t *mac);
         BTAddress getBtAddressObject();

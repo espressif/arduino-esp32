@@ -13,7 +13,7 @@
 
 static const uint8_t RGB_DATA = 38;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)  
+#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t LED_BUILTIN = 2;
