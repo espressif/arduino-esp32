@@ -4,7 +4,7 @@ ESP8266 Multicast DNS (port of CC3000 Multicast DNS library)
 Version 1.1
 Copyright (c) 2013 Tony DiCola (tony@tonydicola.com)
 ESP8266 port (c) 2015 Ivan Grokhotkov (ivan@esp8266.com)
-MDNS-SD Suport 2015 Hristo Gochkov (hristo@espressif.com)
+MDNS-SD Support 2015 Hristo Gochkov (hristo@espressif.com)
 Extended MDNS-SD support 2016 Lars Englund (lars.englund@gmail.com)
 
 

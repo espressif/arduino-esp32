@@ -45,7 +45,7 @@ void setup() {
   // set initial RMT state by writing a single RMT data
   rmt_data_t initStateSetup_rmt_data[] = { {1, RMT_EOT, 0, 0} };  
   rmtWrite(BLINK_GPIO, initStateSetup_rmt_data, RMT_SYMBOLS_OF(initStateSetup_rmt_data), RMT_WAIT_FOR_EVER);
-  Serial.printf("\nLED GPIO%d start in the inital level %s\n", BLINK_GPIO, RMT_EOT == LOW ? "LOW" : "HIGH");
+  Serial.printf("\nLED GPIO%d start in the initial level %s\n", BLINK_GPIO, RMT_EOT == LOW ? "LOW" : "HIGH");
   delay(EOT_INITIAL_STATE_TIME_MS); // set initial state of the LED is set by RMT_EOT.
    
   // Send the data and wait until it is done - set EOT level to HIGH

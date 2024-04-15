@@ -7,7 +7,7 @@
 #define USB_PID            0x55D3
 #define USB_MANUFACTURER   "Waveshare"
 #define USB_PRODUCT        "ESP32-S3 Touch LCD 1.28"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 #define LCD_BACKLIGHT  2
 #define LCD_DC         8

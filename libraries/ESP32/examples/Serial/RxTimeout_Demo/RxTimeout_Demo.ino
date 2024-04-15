@@ -19,7 +19,7 @@
    The driver will copy data from FIFO when RX Timeout is detected or when FIFO is full.
    ESP32 FIFO has 128 bytes and by default, the driver will copy the data when FIFO reaches 120 bytes.
    If UART receives less than 120 bytes, it will wait RX Timeout to understand that the bus is IDLE and
-   then copy the data from the FIFO to the Arduino internal buffer, making it availble to the Arduino API.
+   then copy the data from the FIFO to the Arduino internal buffer, making it available to the Arduino API.
 
 */
 
@@ -61,7 +61,7 @@ void loop() {
 }
 
 void testAndReport(uint8_t rxTimeout) {
-  // Let's send 10 bytes from Serial1 rx<->tx and mesaure time using diferent Rx Timeout configurations
+  // Let's send 10 bytes from Serial1 rx<->tx and mesaure time using different Rx Timeout configurations
   uint8_t bytesReceived = 0;
   uint8_t dataSent[DATA_SIZE], dataReceived[DATA_SIZE];
   uint8_t i;
@@ -73,9 +73,9 @@ void testAndReport(uint8_t rxTimeout) {
 
   Serial.printf("Testing the time for receiving %d bytes at %d baud, using RX Timeout = %d:", DATA_SIZE, BAUD, rxTimeout);
   Serial.flush(); // wait Serial FIFO to be empty and then spend almost no time processing it
-  Serial1.setRxTimeout(rxTimeout); // testing diferent results based on Rx Timeout setup
+  Serial1.setRxTimeout(rxTimeout); // testing different results based on Rx Timeout setup
   // For baud rates lower or equal to 57600, ESP32 Arduino makes it get byte-by-byte from FIFO, thus we will change it here:
-  Serial1.setRxFIFOFull(120);      // forces it to wait receiving 120 bytes in FIFO before making it availble to Arduino
+  Serial1.setRxFIFOFull(120);      // forces it to wait receiving 120 bytes in FIFO before making it available to Arduino
 
   size_t sentBytes = Serial1.write(dataSent, sizeof(dataSent)); // ESP32 TX FIFO is about 128 bytes, 10 bytes will fit fine
   uint32_t now = millis();

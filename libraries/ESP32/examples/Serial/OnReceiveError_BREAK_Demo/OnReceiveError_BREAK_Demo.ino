@@ -5,7 +5,7 @@
    void HardwareSerial::onReceiveError(OnReceiveErrorCb function)
 
    It is possible to register a UART callback function that will be called
-   everytime that UART detects an error which is also associated to an interrupt.
+   every time that UART detects an error which is also associated to an interrupt.
 
    There are some possible UART errors:
 
@@ -37,7 +37,7 @@
    In long UART transmissions, some data will be received based on FIFO Full parameter, and whenever
    an error ocurs, it will raise the UART error interrupt.
 
-   This sketch produces BREAK UART error in the begining of a transmission and also at the end of a
+   This sketch produces BREAK UART error in the beginning of a transmission and also at the end of a
    transmission. It will be possible to understand the order of the events in the logs.
 
 */
@@ -107,8 +107,8 @@ void setup() {
     Serial.printf("\n\n================================\nTest Case #%d BREAK at END\n================================\n", i + 1);
     // First sending BREAK at the end of the UART data transmission
     testAndReport(fifoFullTestCases[i], BREAK_AT_END_MSG);
-    Serial.printf("\n\n================================\nTest Case #%d BREAK at BEGINING\n================================\n", i + 1);
-    // Now sending BREAK at the begining of the UART data transmission
+    Serial.printf("\n\n================================\nTest Case #%d BREAK at BEGINNING\n================================\n", i + 1);
+    // Now sending BREAK at the beginning of the UART data transmission
     testAndReport(fifoFullTestCases[i], BREAK_BEFORE_MSG);
     Serial.println("========================\nFinished!");
   }
@@ -119,7 +119,7 @@ void loop() {
 }
 
 void testAndReport(uint8_t fifoFull, bool break_at_the_end) {
-  // Let's send 125 bytes from Serial1 rx<->tx and mesaure time using diferent FIFO Full configurations
+  // Let's send 125 bytes from Serial1 rx<->tx and mesaure time using different FIFO Full configurations
   received_bytes = 0;
   sent_bytes = DATA_SIZE;  // 26 characters
 
@@ -136,10 +136,10 @@ void testAndReport(uint8_t fifoFull, bool break_at_the_end) {
   if (break_at_the_end) {
     Serial.printf("BREAK event will be sent at the END of the %d bytes\n", sent_bytes);
   } else {
-    Serial.printf("BREAK event will be sent at the BEGINING of the %d bytes\n", sent_bytes);
+    Serial.printf("BREAK event will be sent at the BEGINNING of the %d bytes\n", sent_bytes);
   }
   Serial.flush(); // wait Serial FIFO to be empty and then spend almost no time processing it
-  Serial1.setRxFIFOFull(fifoFull); // testing diferent result based on FIFO Full setup
+  Serial1.setRxFIFOFull(fifoFull); // testing different result based on FIFO Full setup
   Serial1.onReceive(onReceiveFunction); // sets a RX callback function for Serial 1
   Serial1.onReceiveError(onReceiveErrorFunction); // sets a RX callback function for Serial 1
 

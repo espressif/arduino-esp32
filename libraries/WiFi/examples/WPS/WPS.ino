@@ -77,7 +77,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
       WiFi.reconnect();
       break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:
-      Serial.println("WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
+      Serial.println("WPS Successful, stopping WPS and connecting to: " + String(WiFi.SSID()));
       wpsStop();
       delay(10);
       WiFi.begin();

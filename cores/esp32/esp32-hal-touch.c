@@ -242,7 +242,7 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
     }
 
     if (userFunc == NULL) {
-        // dettach ISR User Call
+        // detach ISR User Call
         __touchInterruptHandlers[pad].fn = NULL;
         threshold = SOC_TOUCH_PAD_THRESHOLD_MAX;   // deactivate the ISR with SOC_TOUCH_PAD_THRESHOLD_MAX
     } else {
@@ -269,10 +269,10 @@ static void __touchAttachArgsInterrupt(uint8_t pin, void (*userFunc)(void), void
     __touchConfigInterrupt(pin, userFunc, args, threshold, true);
 }
 
-// new additional API to dettach touch ISR
+// new additional API to detach touch ISR
 static void __touchDettachInterrupt(uint8_t pin)
 {
-    __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as dettaching 
+    __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as detaching 
 }
 
 

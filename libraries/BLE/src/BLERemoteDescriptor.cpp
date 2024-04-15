@@ -148,7 +148,7 @@ uint32_t BLERemoteDescriptor::readUInt32() {
 
 /**
  * @brief Return a string representation of this BLE Remote Descriptor.
- * @retun A string representation of this BLE Remote Descriptor.
+ * @return A string representation of this BLE Remote Descriptor.
  */
 String BLERemoteDescriptor::toString() {
   char val[6];

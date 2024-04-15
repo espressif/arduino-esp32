@@ -8,7 +8,7 @@
 #define USB_PID            0x8113
 #define USB_MANUFACTURER   "Adafruit"
 #define USB_PRODUCT        "Feather ESP32-S3 No PSRAM"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 // User LED 
 #define LED_BUILTIN 13

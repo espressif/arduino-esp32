@@ -1,7 +1,7 @@
 /*
 This example shows how to use Preferences (nvs) to store a
 structure.  Note that the maximum size of a putBytes is 496K
-or 97% of the nvs partition size.  nvs has signifcant overhead,
+or 97% of the nvs partition size.  nvs has significant overhead,
 so should not be used for data that will change often.
 */ 
 #include <Preferences.h>

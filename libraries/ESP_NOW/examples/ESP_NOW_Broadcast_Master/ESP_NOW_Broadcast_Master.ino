@@ -58,7 +58,7 @@ public:
 
 uint32_t msg_count = 0;
 
-// Create a boradcast peer object
+// Create a broadcast peer object
 ESP_NOW_Broadcast_Peer broadcast_peer(ESPNOW_WIFI_CHANNEL, WIFI_IF_STA, NULL);
 
 /* Main */

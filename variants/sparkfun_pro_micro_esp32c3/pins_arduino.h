@@ -7,7 +7,7 @@
 #define USB_PID            0x0035
 #define USB_MANUFACTURER   "SparkFun"
 #define USB_PRODUCT        "SparkFun_Pro_Micro-ESP32C3"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = 10;
 

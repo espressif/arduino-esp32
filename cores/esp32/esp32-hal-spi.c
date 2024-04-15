@@ -1555,7 +1555,7 @@ typedef union {
 #else
             uint32_t clkdiv_pre:    13;                     /*it is pre-divider of spi_clk.*/
 #endif
-            uint32_t clk_equ_sysclk: 1;                     /*1: spi_clk is eqaul to system 0: spi_clk is divided from system clock.*/
+            uint32_t clk_equ_sysclk: 1;                     /*1: spi_clk is equal to system 0: spi_clk is divided from system clock.*/
     };
 } spiClk_t;
 

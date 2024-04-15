@@ -31,7 +31,7 @@ void setup() {
 
   // Certain versions of Arduino core don't define MODE_RS485_HALF_DUPLEX and so fail to compile.
   // By using UART_MODE_RS485_HALF_DUPLEX defined in hal/uart_types.h we work around this problem.
-  // If using a newer IDF and Arduino core you can ommit including hal/uart_types.h and use MODE_RS485_HALF_DUPLEX
+  // If using a newer IDF and Arduino core you can omit including hal/uart_types.h and use MODE_RS485_HALF_DUPLEX
   // defined in esp32-hal-uart.h (included during other build steps) instead.
   if(!RS485.setMode(UART_MODE_RS485_HALF_DUPLEX)) {
    Serial.print("Failed to set RS485 mode");

@@ -6,7 +6,7 @@
 // source code.
 //
 // SHA1Builder helps you obfuscate this (This is not much more secure.
-// SHA1 is past its retirement age and long obsolte/insecure, but it helps
+// SHA1 is past its retirement age and long obsolete/insecure, but it helps
 // a little) by letting you create an (unsalted!) SHA1 of the data the
 // user entered; and then compare this to an SHA1 string that you have put
 // in your code.

@@ -16,7 +16,7 @@
 #define RX_PIN 21
 #define TX_PIN 22
 
-// Intervall:
+// Interval:
 #define TRANSMIT_RATE_MS 1000
 
 #define POLLING_RATE_MS 1000

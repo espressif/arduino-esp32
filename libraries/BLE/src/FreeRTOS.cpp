@@ -28,7 +28,7 @@ void FreeRTOS::sleep(uint32_t ms) {
  * @param[in] task The function pointer to the function to be run in the task.
  * @param[in] taskName A string identifier for the task.
  * @param[in] param An optional parameter to be passed to the started task.
- * @param[in] stackSize An optional paremeter supplying the size of the stack in which to run the task.
+ * @param[in] stackSize An optional parameter supplying the size of the stack in which to run the task.
  */
 void FreeRTOS::startTask(void task(void*), String taskName, void* param, uint32_t stackSize) {
 	::xTaskCreate(task, taskName.c_str(), stackSize, param, 5, NULL);

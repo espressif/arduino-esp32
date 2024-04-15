@@ -14,7 +14,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\nTesting EEPROM Library\n");
   if (!EEPROM.begin(1000)) {
-    Serial.println("Failed to initialise EEPROM");
+    Serial.println("Failed to initialize EEPROM");
     Serial.println("Restarting...");
     delay(1000);
     ESP.restart();

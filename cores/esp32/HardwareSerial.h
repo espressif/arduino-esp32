@@ -243,7 +243,7 @@ public:
     // onReceive will be called on error events (see hardwareSerial_error_t)
     void onReceiveError(OnReceiveErrorCb function);
 
-    // eventQueueReset clears all events in the queue (the events that trigger onReceive and onReceiveError) - maybe usefull in some use cases
+    // eventQueueReset clears all events in the queue (the events that trigger onReceive and onReceiveError) - maybe useful in some use cases
     void eventQueueReset();
  
     // When pins are changed, it will detach the previous ones

@@ -205,7 +205,7 @@ This function will return
 my_node.getNodeInfo
 *******************
 
-It returns pointer to the node_info_t as configured during node initialisation.
+It returns pointer to the node_info_t as configured during node initialization.
 
 .. code-block:: arduino
 
@@ -375,7 +375,7 @@ It adds attribute to the device. Device attributes are reported only once after 
 * ``attr_name`` : Name of the attribute
 * ``val`` : Value of the attribute
 
-This funtion will return
+This function will return
 
 1. `ESP_OK` : On success
 2. Error in case  of failure
@@ -623,7 +623,7 @@ This function will return
 **NOTE**:
 
 - This API should always be called inside device write callback, if you aimed at updating n reporting parameter values, changed via RainMaker Client (Phone App), to the ESP RainMaker cloud.
-- If not called then paramter values will not be updated to the ESP RainMaker cloud.
+- If not called then parameter values will not be updated to the ESP RainMaker cloud.
 
 printQR
 *******
@@ -635,7 +635,7 @@ This API displays QR code, which is used in provisioning.
     printQR(const char *serv_name, const char *pop, const char *transport);
 
 * ``name`` : Service name used in provisioning API.
-* ``pop`` : Proof of posession used in provisioning API.
+* ``pop`` : Proof of possession used in provisioning API.
 * ``transport`` :
     1. `softap` : In case of provisioning using SOFTAP.
     2. `ble` : In case of provisioning using BLE.

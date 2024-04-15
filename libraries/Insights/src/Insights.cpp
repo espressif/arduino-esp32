@@ -108,7 +108,7 @@ bool ESPInsightsClass::event(const char *tag, const char *format, ...){
         va_end(arg);
         return false;
     };
-    if(len >= (int)sizeof(loc_buf)){  // comparation of same sign type for the compiler
+    if(len >= (int)sizeof(loc_buf)){  // comparison of same sign type for the compiler
         temp = (char*) malloc(len+1);
         if(temp == NULL) {
             va_end(arg);

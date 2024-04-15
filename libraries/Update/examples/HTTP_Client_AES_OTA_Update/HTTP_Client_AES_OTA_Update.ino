@@ -1,7 +1,7 @@
 /*
 An example of how to use HTTPClient to download an encrypted and plain image files OTA from a web server.
 This example uses Wifi & HTTPClient to connect to webserver and two functions for obtaining firmware image from webserver.
-One uses the example 'updater.php' code on server to check and/or send relavent download firmware image file,
+One uses the example 'updater.php' code on server to check and/or send relevant download firmware image file,
 the other directly downloads the firmware file from web server.
 
 To use:-
@@ -219,7 +219,7 @@ bool http_updater(const String& host, const uint16_t& port, String uri, const bo
         http.setAuthorization(user, password); //set basic Authorization to server, if needed be gain access
     }
 
-//add unique Headers to be sent to server used by server 'update.php' code to determine there a suitable firmware update image avaliable
+//add unique Headers to be sent to server used by server 'update.php' code to determine there a suitable firmware update image available
     http.addHeader("Brand-Code", HTTPUPDATE_BRAND);
     http.addHeader("Model", HTTPUPDATE_MODEL);
     http.addHeader("Firmware", HTTPUPDATE_FIRMWARE);
@@ -235,7 +235,7 @@ bool http_updater(const String& host, const uint16_t& port, String uri, const bo
 //is there an image to download
     if( size > 0 || (!download && size == 0) ){
         if( !http.header("update") || http.header("update").toInt() == 0 ){
-            Serial.println("No Firmware avaliable");
+            Serial.println("No Firmware available");
         }else if( !http.header("version") || http.header("version").toFloat() <= String(HTTPUPDATE_FIRMWARE).toFloat() ){
             Serial.println("Firmware is upto Date");
         }else{
@@ -314,17 +314,17 @@ void setup() {
 
     Update.onProgress(printProgress);
 
-    Serial.println("Checking with Server, if New Firmware avaliable");
+    Serial.println("Checking with Server, if New Firmware available");
     if( http_updater(HTTPUPDATE_HOST, HTTPUPDATE_PORT, HTTPUPDATE_UPDATER_URI, 0, HTTPUPDATE_USER, HTTPUPDATE_PASSWORD) ){ //check for new firmware
         if( http_updater(HTTPUPDATE_HOST, HTTPUPDATE_PORT, HTTPUPDATE_UPDATER_URI, 1, HTTPUPDATE_USER, HTTPUPDATE_PASSWORD) ){ //update to new firmware
-            Serial.println("Firmware Update Sucessfull, rebooting");
+            Serial.println("Firmware Update Successful, rebooting");
             ESP.restart();
         }
     }
 
     Serial.println("Checking Server for Firmware Image File to Download & Install");
     if( http_direct(HTTPUPDATE_HOST, HTTPUPDATE_PORT, HTTPUPDATE_DIRECT_URI, HTTPUPDATE_USER, HTTPUPDATE_PASSWORD) ){
-        Serial.println("Firmware Update Sucessfull, rebooting");
+        Serial.println("Firmware Update Successful, rebooting");
         ESP.restart();
     }
 }

@@ -394,7 +394,7 @@ esp_err_t sr_stop(void)
     ESP_RETURN_ON_FALSE(NULL != g_sr_data, ESP_ERR_INVALID_STATE, "SR is not running");
 
     /**
-     * Waiting for all task stoped
+     * Waiting for all task stopped
      * TODO: A task creation failure cannot be handled correctly now
      * */
     vTaskDelete(g_sr_data->handle_task);

@@ -236,7 +236,7 @@ gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 			  *
 			  */
 		 case ESP_GAP_BLE_PASSKEY_NOTIF_EVT:  //the app will receive this evt when the IO  has Output capability and the peer device IO has Input capability.
-			 //display the passkey number to the user to input it in the peer deivce within 30 seconds
+			 //display the passkey number to the user to input it in the peer device within 30 seconds
 			 log_i("ESP_GAP_BLE_PASSKEY_NOTIF_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE   // Check that BLE SMP (security) is configured in make menuconfig
 			log_i("passKey = %d", param->ble_security.key_notif.passkey);

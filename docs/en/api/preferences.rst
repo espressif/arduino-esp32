@@ -425,7 +425,7 @@ Arduino-esp32 Preferences API
 
    **Notes**
       * Attempting to retrieve a key without a namespace being available will fail.
-      * Attempting to retrieve value from a non existant key will fail.
+      * Attempting to retrieve value from a non existent key will fail.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
 
 

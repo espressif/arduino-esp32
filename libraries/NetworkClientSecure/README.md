@@ -28,7 +28,7 @@ Please see the NetworkClientSecure example.
 
 Using a bundle of root certificate authority certificates 
 ---------------------------------------------------------
-This method is similar to the single root certificate verfication above, but it uses a standard set of 
+This method is similar to the single root certificate verification above, but it uses a standard set of 
 root certificates from Mozilla to authenticate against, while the previous method only accepts a single 
 certificate for a given server. This allows the client to connect to all public SSL servers.
 

@@ -11,7 +11,7 @@
 #include "esp_wpa2.h"
 #endif
 #include <Wire.h>
-#define EAP_IDENTITY "identity" //if connecting from another corporation, use identity@organisation.domain in Eduroam 
+#define EAP_IDENTITY "identity" //if connecting from another corporation, use identity@organization.domain in Eduroam 
 #define EAP_PASSWORD "password" //your Eduroam password
 const char* ssid = "eduroam"; // Eduroam SSID
 int counter = 0;
@@ -95,7 +95,7 @@ void loop() {
     int httpCode = http.GET();
     if(httpCode > 0) {
       Serial.printf("[HTTP] GET... code: %d\n", httpCode);
-      //file found at server --> on unsucessful connection code will be -1
+      //file found at server --> on unsuccessful connection code will be -1
       if(httpCode == HTTP_CODE_OK) {
         String payload = http.getString();
         Serial.println(payload);

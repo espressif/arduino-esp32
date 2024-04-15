@@ -5,9 +5,9 @@
 
 #define USB_VID            0x303A
 #define USB_PID            0x8141
-#define USB_MANUFACTURER   "Turkish Technnology Team Foundation (T3)"
+#define USB_MANUFACTURER   "Turkish Technology Team Foundation (T3)"
 #define USB_PRODUCT        "DENEYAP MINI"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = 35;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility

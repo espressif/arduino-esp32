@@ -11,7 +11,7 @@
       then copy and rename the app binary to the sd card root
    3. Connect SD-Card as shown in SD example, 
       this can also be adapted for SPI
-   3. After successfull update and reboot, ESP32 shall start the new app
+   3. After successful update and reboot, ESP32 shall start the new app
 */
 
 #include <Update.h>
@@ -84,7 +84,7 @@ void setup() {
    Serial.println("Welcome to the SD-Update example!");
 
    // You can uncomment this and build again
-   // Serial.println("Update successfull");
+   // Serial.println("Update successful");
 
    //first init and check SD card
    if (!SD.begin()) {

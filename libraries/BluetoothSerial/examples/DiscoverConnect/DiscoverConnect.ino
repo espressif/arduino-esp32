@@ -1,6 +1,6 @@
 /**
  * Bluetooth Classic Example
- * Scan for devices - asyncronously, print device as soon as found
+ * Scan for devices - asynchronously, print device as soon as found
  * query devices for SPP - SDP profile
  * connect to first device offering a SPP connection
  * 

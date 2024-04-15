@@ -451,7 +451,7 @@ bool WiFiSTAClass::_smartConfigDone = false;
  * @brief 
  * 
  * @param type Select type of SmartConfig. Default type is SC_TYPE_ESPTOUCH
- * @param crypt_key When using type SC_TYPE_ESPTOUTCH_V2 crypt key needed, else ignored. Lenght should be 16 chars.
+ * @param crypt_key When using type SC_TYPE_ESPTOUTCH_V2 crypt key needed, else ignored. Length should be 16 chars.
  * @return true if configuration is successful.
  * @return false if configuration fails.
  */

@@ -8,7 +8,7 @@
 #define USB_PID            0x80F9
 #define USB_MANUFACTURER   "Adafruit"
 #define USB_PRODUCT        "Funhouse ESP32-S2"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_SERIAL         "" // Empty string for MAC address
 
 #define LED_BUILTIN   37
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility

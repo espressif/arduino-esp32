@@ -22,14 +22,14 @@ static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
 #ifdef BOARD_VARIANT_RS485
-/* UART2: Serial Port conencted to RS485 transceiver on the LogSens V1.1 Board */
+/* UART2: Serial Port connected to RS485 transceiver on the LogSens V1.1 Board */
 static const uint8_t UART2_TX = 17;
 static const uint8_t UART2_RX = 16;
 static const uint8_t UART2_RTS = 4;
 #endif /* BOARD_VARIANT_RS485 */
 
 #ifdef BOARD_VARIANT_CAN
-/* CAN Bus conencted to CAN transceiver on the LogSens V1.1 Board */
+/* CAN Bus connected to CAN transceiver on the LogSens V1.1 Board */
 static const uint8_t CAN_TX = 17;
 static const uint8_t CAN_RX = 16;
 static const uint8_t CAN_TXDE = 4;
@@ -48,7 +48,7 @@ static const uint8_t SCK   = 14;
 static const uint8_t SS1  = 23;		// SPI Chip Select - 1; connected to MicroSD Card on the LogSens V1.1 Board
   
 /* Software Controlled: IO, LEDs and Switches */
-static const uint8_t BUZZER_CTRL = 19;		// Signal connected to MOSFET gate pin to control conenctor (X8)
+static const uint8_t BUZZER_CTRL = 19;		// Signal connected to MOSFET gate pin to control connector (X8)
 static const uint8_t SD_CARD_DETECT = 35; 	// MicroSD Card (X6): Card Detect Signal
 
 static const uint8_t SW2_BUILDIN = 0;		// Tactile Switch-2 (SW2); ESP32 BOOT0 pin, Use it with care !!

@@ -138,7 +138,7 @@ void setupHttpUpdateServer() {
             ESP.restart();
         }
     }, [&]() {
-        // handler for the file upload, get's the sketch bytes, and writes
+        // handler for the file upload, gets the sketch bytes, and writes
         // them through the Update object
         HTTPUpload& upload = httpServer.upload();
         if (upload.status == UPLOAD_FILE_START) {

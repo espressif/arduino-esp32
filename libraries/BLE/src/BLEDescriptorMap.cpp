@@ -109,7 +109,7 @@ String BLEDescriptorMap::toString() {
 
 
 /**
- * @breif Pass the GATT server event onwards to each of the descriptors found in the mapping
+ * @brief Pass the GATT server event onwards to each of the descriptors found in the mapping
  * @param [in] event
  * @param [in] gatts_if
  * @param [in] param
