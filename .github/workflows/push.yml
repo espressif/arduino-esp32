@@ -156,12 +156,12 @@ jobs:
         path: cli_compile_${{ matrix.chunk }}.json
 
   event_file:
-  name: "Event File"
-  needs: [build-arduino-linux, build-arduino-master-linux]
-  runs-on: ubuntu-latest
-  steps:
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: Event File
-          path: ${{github.event_path}}
+    name: "Event File"
+    needs: [build-arduino-linux, build-arduino-master-linux]
+    runs-on: ubuntu-latest
+    steps:
+        - name: Upload
+          uses: actions/upload-artifact@v4
+          with:
+            name: Event File
+            path: ${{github.event_path}}
