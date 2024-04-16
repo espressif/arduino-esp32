@@ -139,7 +139,9 @@ set(ARDUINO_LIBRARY_ESP_SR_SRCS
 
 set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
 
-set(ARDUINO_LIBRARY_Ethernet_SRCS libraries/Ethernet/src/ETH.cpp)
+set(ARDUINO_LIBRARY_Ethernet_SRCS
+  libraries/Ethernet/src/ETH.cpp
+  libraries/Ethernet/src/EthernetCompat.cpp)
 
 set(ARDUINO_LIBRARY_FFat_SRCS libraries/FFat/src/FFat.cpp)
 

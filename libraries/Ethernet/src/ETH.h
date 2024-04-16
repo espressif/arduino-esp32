@@ -192,11 +192,13 @@ private:
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 
   static bool ethDetachBus(void *bus_pointer);
-  bool beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst,
+  bool beginSPI(eth_phy_type_t type, int32_t phy_addr, uint8_t* mac_addr, int cs, int irq, int rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
                 SPIClass *spi,
 #endif
                 int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz);
+
+        friend class EthernetClass; // to access beginSPI
 };
 
 extern ETHClass ETH;
