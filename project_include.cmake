@@ -51,18 +51,28 @@ function(convert_arduino_libraries_to_components)
                         endif()
                     endforeach()
 
+                    # Start CMakeLists.txt generation
+                    file(WRITE ${component_cmakelist} "idf_component_register(")
+
                     # Sources are not compiled only if precompiled=full and precompiled library for our target exists
-                    file(WRITE ${component_cmakelist} "idf_component_register(SRCS ")
                     if(NOT precompiled STREQUAL "full" OR NOT EXISTS "${src_dir}/${IDF_TARGET}/lib${child}.a")
+                        file(APPEND ${component_cmakelist} "SRCS ")
                         file(GLOB_RECURSE src_files "${src_dir}/*.c" "${src_dir}/*.cpp")
                         foreach(src_file ${src_files})
                             string(REPLACE "${child_dir}/" "" src_file "${src_file}")
                             file(APPEND ${component_cmakelist} "\"${src_file}\" ")
                         endforeach()
-                    else()
-                        file(APPEND ${component_cmakelist} "\"\" ")
                     endif()
+                    # Add src folder to includes
+                    file(APPEND ${component_cmakelist} "INCLUDE_DIRS \"src\" ")
+
+                    # Add component requires
                     file(APPEND ${component_cmakelist} "PRIV_REQUIRES ${arduino_component_name} ${main_component_name})\n")
+
+                    # Add any custom LD_FLAGS, if defined
+                    if(NOT "${ldflags}" STREQUAL "")
+                        file(APPEND ${component_cmakelist} "target_link_libraries(\${COMPONENT_TARGET} INTERFACE \"${ldflags}\")\n")
+                    endif()
 
                     # If this lib has precompiled libs and they match our target, get them
                     if((precompiled STREQUAL "true" OR precompiled STREQUAL "full") AND IS_DIRECTORY "${src_dir}/${IDF_TARGET}")
@@ -71,14 +81,6 @@ function(convert_arduino_libraries_to_components)
                             string(REPLACE "${child_dir}/" "" lib_file "${lib_file}")
                             file(APPEND ${component_cmakelist} "set_property(TARGET \${COMPONENT_TARGET} APPEND_STRING PROPERTY INTERFACE_LINK_LIBRARIES \"${lib_file}\")\n")
                         endforeach()
-                    endif()
-
-                    # Add src folder to includes
-                    file(APPEND ${component_cmakelist} "target_include_directories(\${COMPONENT_TARGET} PUBLIC \"src\")\n")
-
-                    # Add any custom LD_FLAGS, if defined
-                    if(NOT "${ldflags}" STREQUAL "")
-                        file(APPEND ${component_cmakelist} "target_link_libraries(\${COMPONENT_TARGET} INTERFACE \"${ldflags}\")\n")
                     endif()
 
                     message(STATUS "Created IDF component for ${child}")
@@ -102,18 +104,17 @@ function(convert_arduino_libraries_to_components)
                         endforeach()
                     endif()
 
-                    # Require arduino and main components to suceed in compilation
-                    file(APPEND ${component_cmakelist} "PRIV_REQUIRES ${arduino_component_name} ${main_component_name})\n")
-
                     # Add root folder to includes
-                    file(APPEND ${component_cmakelist} "target_include_directories(\${COMPONENT_TARGET} PUBLIC \".\"")
+                    file(APPEND ${component_cmakelist} "INCLUDE_DIRS \".\" ")
 
                     # Add the utility folder to includes if it exists
                     if(IS_DIRECTORY "${utility_dir}")
-                        file(APPEND ${component_cmakelist} " \"utility\"")
+                        file(APPEND ${component_cmakelist} "\"utility\" ")
                     endif()
+                    
+                    # Require arduino and main components to suceed in compilation
+                    file(APPEND ${component_cmakelist} "PRIV_REQUIRES ${arduino_component_name} ${main_component_name})\n")
 
-                    file(APPEND ${component_cmakelist} ")\n")
                     message(STATUS "Created IDF component for ${child}")
                 endif()
             else()
