@@ -28,6 +28,7 @@ jobs:
           mkdir -p sizes-report
           mkdir -p sizes-report/master
           mkdir -p sizes-report/pr
+          mkdir -p event-file
           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
           gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
@@ -38,8 +39,10 @@ jobs:
               mv "temp_$name"/* sizes-report/master
             elif [[ "$name" == *"pr"* ]]; then
               mv "temp_$name"/* sizes-report/pr
+            elif [[ "$name" == "Event File" ]]; then
+              mv "temp_$name"/* event-file
             else
-              mv "temp_$name"/* sizes-report/
+              mv "temp_$name"/* sizes-report
             fi
             rm -r "temp_$name"
           done
