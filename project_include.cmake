@@ -67,7 +67,6 @@ function(convert_arduino_libraries_to_components)
                     # If this lib has precompiled libs and they match our target, get them
                     if((precompiled STREQUAL "true" OR precompiled STREQUAL "full") AND IS_DIRECTORY "${src_dir}/${IDF_TARGET}")
                         file(GLOB_RECURSE lib_files "${src_dir}/${IDF_TARGET}/lib*.a")
-                        file(APPEND ${component_cmakelist} "\"\")\n")
                         foreach(lib_file ${lib_files})
                             string(REPLACE "${child_dir}/" "" lib_file "${lib_file}")
                             file(APPEND ${component_cmakelist} "set_property(TARGET \${COMPONENT_TARGET} APPEND_STRING PROPERTY INTERFACE_LINK_LIBRARIES \"${lib_file}\")\n")
