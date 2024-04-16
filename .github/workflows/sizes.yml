@@ -1,4 +1,5 @@
 name: Sizes Test
+# Comment
 
 # The workflow will run labeled pull requests
 on:
@@ -34,17 +35,17 @@ jobs:
 
         include:
           - target: esp32
-            fqbn: espressif:esp32:esp32
+            fqbn: espressif:esp32:esp32:PartitionScheme=huge_app"
           - target: esp32s2
-            fqbn: espressif:esp32:esp32s2
+            fqbn: espressif:esp32:esp32s2:PartitionScheme=huge_app"
           - target: esp32c3
-            fqbn: espressif:esp32:esp32c3
+            fqbn: espressif:esp32:esp32c3:PartitionScheme=huge_app"
           - target: esp32s3
-            fqbn: espressif:esp32:esp32s3
+            fqbn: espressif:esp32:esp32s3:PartitionScheme=huge_app"
           - target: esp32c6
-            fqbn: espressif:esp32:esp32c6
+            fqbn: espressif:esp32:esp32c6:PartitionScheme=huge_app
           - target: esp32h2
-            fqbn: espressif:esp32:esp32h2
+            fqbn: espressif:esp32:esp32h2:PartitionScheme=huge_app"
 
 
     steps:
@@ -59,8 +60,9 @@ jobs:
             ${{ env.REPOSITORY }}
           target: ${{ matrix.target }}
           fqbn: ${{ matrix.fqbn }}
+          # The path to the libraries folder
           sketch-paths: |
-            ${{ env.REPOSITORY }}
+            - libraries/
           use-json-file: false
           enable-deltas-report: true
           sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
@@ -74,26 +76,15 @@ jobs:
           name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-${{ matrix.target }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
-  report-comment:
-    needs: compile-sketch  # Wait for the compile job to finish to get the data for the report
+  event_file:
+    name: "Event File"
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'sizes_test')
+    needs: compile-sketch
     runs-on: ubuntu-latest
     steps:
-      # Check out repository
-      - name: Checkout repository    
-        uses: actions/checkout@v4
-        with:
-          token: ${{ env.GITHUB_TOKEN }}
-          fetch-depth: '0'
-
-      # This step is needed to get the size data produced by the compile jobs
-      - name: Download sketches reports artifact
-        uses: actions/download-artifact@v4
-        with:
-          pattern: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-*
-          merge-multiple: true
-          path: ${{ env.SKETCHES_REPORTS_PATH }}
-
-      - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@sizes
-        with:
-          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+       - name: Upload
+         uses: actions/upload-artifact@v4
+         with:
+           name: Event File
+           path: ${{github.event_path}}

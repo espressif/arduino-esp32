@@ -39,6 +39,10 @@ jobs:
               mv "temp_$name"/* libraries-report
             fi
             rm -r "temp_$name"
+            if [[ "$name" == "event.json" ]]; then
+              mkdir -p artifacts/Event\ file
+              mv libraries-report/event.json /Event\ file/
+            fi
           done
           echo "Contents of parent directory:"
           ls -R ..
