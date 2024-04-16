@@ -41,6 +41,21 @@ extern "C" {
 // ---------------------------------------------------------- Debug ------------------------------------------------------
 // -----------------------------------------------------------------------------------------------------------------------
 
+#if CONFIG_IDF_TARGET_ESP32
+static uint32_t __test1 = 0;
+static uint32_t __test2 = 0;
+static uint32_t __test3 = 0;
+static uint32_t __test4 = 0;
+static uint32_t __test5 = 0;
+#elif CONFIG_IDF_TARGET_ESP32S2
+static uint8_t __test1 = 0;
+static uint8_t __test2 = 0;
+static uint8_t __test3 = 0;
+#elif CONFIG_IDF_TARGET_ESP32C6
+static uint8_t __test1 = 0;
+#elif CONFIG_IDF_TARGET_ESP32S3
+static uint32_t __test1 = 0;
+#endif
 
 /**
  * Output WiFi settings to an object derived from Print interface (like Serial).
