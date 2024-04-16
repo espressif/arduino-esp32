@@ -1,15 +1,23 @@
 function(add_arduino_libraries libs_dir)
     # Construct the absolute path for libs_dir relative to the CMake project root
-    set(libs_dir_abs "${CMAKE_SOURCE_DIR}/${libs_dir}")
-    
+    if (IS_ABSOLUTE "${libs_dir}")
+        set(libs_dir_abs "${libs_dir}")
+    else()
+        set(libs_dir_abs "${CMAKE_SOURCE_DIR}/${libs_dir}")
+    endif()
+
     # Verify if libs_dir_abs is a valid directory
     if(NOT IS_DIRECTORY "${libs_dir_abs}")
         message(FATAL_ERROR "The specified libs_dir (${libs_dir_abs}) is not a valid directory.")
         return()  # Stop processing if the directory is invalid
     endif()
 
-    idf_component_get_property(arduino_esp32_lib arduino COMPONENT_LIB)
-    
+    # Get the name of the arduino component. It is the same as the name of the current directory.
+    get_filename_component(arduino_component_name ${CMAKE_CURRENT_FUNCTION_LIST_DIR} NAME)
+    message(STATUS "Adding Arduino libraries to ${arduino_component_name} component")
+
+    idf_component_get_property(arduino_esp32_lib ${arduino_component_name} COMPONENT_LIB)
+
     # Loop through each folder in the libs_dir
     file(GLOB children RELATIVE ${libs_dir_abs} ${libs_dir_abs}/*)
     foreach(child ${children})
