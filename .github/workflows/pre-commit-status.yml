@@ -1,0 +1,41 @@
+name: Report Pre-commit Check Status
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  statuses: write
+
+jobs:
+  report-run:
+    name: Check if the PR has run the pre-commit checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report pending
+        uses: conda/actions/set-commit-status@v24.2.0
+        with:
+          context: "Pre-commit checks"
+          state: pending
+          description: The pre-commit checks need to be successful before merging
+
+      - name: Wait for pre-commit checks to complete
+        uses: lucasssvaz/wait-on-workflow@v1
+        if: |
+          contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
+        id: wait-on-workflow
+        with:
+          timeout: 10
+          interval: 30
+          workflow: pre-commit.yml
+          sha: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Report success
+        uses: conda/actions/set-commit-status@v24.2.0
+        if: |
+          contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge') &&
+          steps.wait-on-workflow.outputs.conclusion == 'success'
+        with:
+          context: "Pre-commit checks"
+          state: success
+          description: All pre-commit checks passed

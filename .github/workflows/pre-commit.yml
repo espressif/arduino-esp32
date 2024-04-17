@@ -1,14 +1,14 @@
-name: Pre-commit check
+name: Pre-commit hooks
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, labeled]
+    types: [opened, reopened, synchronize, labeled, unlabeled]
 
 jobs:
   lint:
     if: |
       contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
-    name: Checking if any fixes are needed
+    name: Check if fixes are needed
     runs-on: ubuntu-latest
     steps:
       - name: Checkout latest commit
