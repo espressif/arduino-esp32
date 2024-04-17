@@ -193,6 +193,7 @@ static void printPartitionsInfo(void) {
             case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD: chip_report_printf("ESPHTTPD"); break;
             case ESP_PARTITION_SUBTYPE_DATA_FAT: chip_report_printf("FAT"); break;
             case ESP_PARTITION_SUBTYPE_DATA_SPIFFS: chip_report_printf("SPIFFS"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_LITTLEFS: chip_report_printf("LITTLEFS"); break;
             default: chip_report_printf("0x%02X", partition->subtype); break;
           }
         }
