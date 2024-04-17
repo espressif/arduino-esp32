@@ -1,21 +1,21 @@
-name: External Libraries Results
+name: Sizes Results
 
 on:
   workflow_run:
-    workflows: [External Libraries Test]
+    workflows: [ESP32 Arduino CI]
     types:
       - completed
 
   workflow_dispatch:
 env:
   # It's convenient to set variables for values used multiple times in the workflow
-  SKETCHES_REPORTS_PATH: artifacts/libraries-report
+  SKETCHES_REPORTS_PATH: artifacts/sizes-report
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
 
 jobs:
-  lib-test-results:
-    name: External Libraries Test Results
+  sizes-test-results:
+    name: Sizes Comparsion Results
     runs-on: ubuntu-latest
     if: |
       github.event.workflow_run.event == 'pull_request' &&
@@ -25,21 +25,29 @@ jobs:
       - name: Download and Extract Artifacts
         run: |
           mkdir -p artifacts && cd artifacts
-          mkdir -p libraries-report
+          mkdir -p sizes-report
+          mkdir -p sizes-report/master
+          mkdir -p sizes-report/pr
           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
           gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
             IFS=$'\t' read name url <<< "$artifact"
             gh api $url > "$name.zip"
             unzip -j "$name.zip" -d "temp_$name"
-            mv "temp_$name"/* libraries-report
+            if [[ "$name" == *"master"* ]]; then
+              mv "temp_$name"/* sizes-report/master
+            elif [[ "$name" == *"pr"* ]]; then
+              mv "temp_$name"/* sizes-report/pr
+            else
+              mv "temp_$name"/* sizes-report
+            fi
             rm -r "temp_$name"
           done
           echo "Contents of parent directory:"
           ls -R ..
     
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@libs
+        uses: P-R-O-C-H-Y/report-size-deltas@sizes_v2
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}
