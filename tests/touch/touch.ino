@@ -25,7 +25,7 @@ uint8_t TOUCH_GPIOS[] = { 4, 2, 15, 13, 12, 14, 27, 33, 32 };
 
 #define NO_TOUCH_GPIO 25
 
-#define RELEASED_VALUE 80  //80+ read value to pass test
+#define RELEASED_VALUE 75  //75+ read value to pass test
 #define PRESSED_VALUE 20   //20- read value to pass test
 #define INTERRUPT_THRESHOLD 40
 
