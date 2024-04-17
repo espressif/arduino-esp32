@@ -50,7 +50,7 @@ Nr | SSID            | RSSI | CH | Encryption
 
 ## Troubleshooting
 
-***Important: Be sure you're using a good quality USB cable and you have enought power source for your project.***
+***Important: Be sure you're using a good quality USB cable and you have enough power source for your project.***
 
 * **Programming Fail:** If the programming/flash procedure fails, try to reduce the serial connection speed.
 * **COM port not detected:** Check the USB cable connection and the USB to Serial driver installation.

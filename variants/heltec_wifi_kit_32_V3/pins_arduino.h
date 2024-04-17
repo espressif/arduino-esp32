@@ -3,12 +3,12 @@
 
 #include <stdint.h>
 
-#define WIFI_Kit_32_V3	true
+#define WIFI_Kit_32_V3 true
 #define DISPLAY_HEIGHT 64
-#define DISPLAY_WIDTH  128
+#define DISPLAY_WIDTH 128
 
 static const uint8_t LED_BUILTIN = 35;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t KEY_BUILTIN = 0;
@@ -61,7 +61,7 @@ static const uint8_t T13 = 13;
 static const uint8_t T14 = 14;
 
 static const uint8_t Vext = 36;
-static const uint8_t LED  = 35;
+static const uint8_t LED = 35;
 static const uint8_t RST_OLED = 21;
 static const uint8_t SCL_OLED = 18;
 static const uint8_t SDA_OLED = 17;

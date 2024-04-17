@@ -7,7 +7,7 @@
 #define USB_PID 0x0056
 
 static const uint8_t LED_BUILTIN = 21;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 43;
@@ -16,10 +16,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 5;
 static const uint8_t SCL = 6;
 
-static const uint8_t SS   = 44;
+static const uint8_t SS = 44;
 static const uint8_t MOSI = 9;
 static const uint8_t MISO = 8;
-static const uint8_t SCK  = 7;
+static const uint8_t SCK = 7;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;

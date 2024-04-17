@@ -7,8 +7,8 @@
 Ticker blinker;
 Ticker toggler;
 Ticker changer;
-float blinkerPace = 0.1;  //seconds
-const float togglePeriod = 5; //seconds
+float blinkerPace = 0.1;       //seconds
+const float togglePeriod = 5;  //seconds
 
 void change() {
   blinkerPace = 0.5;
@@ -23,8 +23,7 @@ void toggle() {
   if (isBlinking) {
     blinker.detach();
     isBlinking = false;
-  }
-  else {
+  } else {
     blinker.attach(blinkerPace, blink);
     isBlinking = true;
   }
@@ -38,5 +37,4 @@ void setup() {
 }
 
 void loop() {
-  
 }

@@ -17,7 +17,7 @@ WebServer server(80);
 
 static const char responsePortal[] = R"===(
 <!DOCTYPE html><html><head><title>ESP32 CaptivePortal</title></head><body>
-<h1>Hello World!</h1><p>This is a captive portal example page. All unknown http requests will 
+<h1>Hello World!</h1><p>This is a captive portal example page. All unknown http requests will
 be redirected here.</p></body></html>
 )===";
 
@@ -39,14 +39,16 @@ void setup() {
   WiFi.softAP("ESP32-DNSServer");
 
   // by default DNSServer is started serving any "*" domain name. It will reply
-  // AccessPoint's IP to all DNS request (this is requred for Captive Portal detection)
+  // AccessPoint's IP to all DNS request (this is required for Captive Portal detection)
   dnsServer.start();
 
   // serve a simple root page
   server.on("/", handleRoot);
 
   // serve portal page
-  server.on("/portal",[](){server.send(200, "text/html", responsePortal);});
+  server.on("/portal", []() {
+    server.send(200, "text/html", responsePortal);
+  });
 
   // all unknown pages are redirected to captive portal
   server.onNotFound(handleNotFound);
@@ -55,5 +57,5 @@ void setup() {
 
 void loop() {
   server.handleClient();
-  delay(5);   // give CPU some idle time
+  delay(5);  // give CPU some idle time
 }

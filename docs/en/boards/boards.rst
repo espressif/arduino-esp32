@@ -23,7 +23,7 @@ The ESP32 is divided by family:
 * ESP32-C
     * Wi-Fi and BLE 5
 * ESP32-H
-    * BLE and IEEE 802.15.4  
+    * BLE and IEEE 802.15.4
 
 For each family, we have SoC variants with some differentiation. The differences are more about the embedded flash and its size and the number of the cores (dual or single).
 
@@ -48,7 +48,7 @@ Now that you know that the module can be different but the heart is the same, yo
 Before buying: Keep in mind that for some "must have" features when choosing the best board for your needs:
 
 - Embedded USB-to-Serial
-    - This is very convenient for programming and monitoring the logs with the terminal via USB. 
+    - This is very convenient for programming and monitoring the logs with the terminal via USB.
 - Breadboard friendly
     - If you are prototyping, this will be very useful to connect your board directly on the breadboard.
 - open-source/open-hardware
@@ -73,7 +73,7 @@ Espressif
     ESP32-S2-Saola-1 <ESP32-S2-Saola-1>
     ESP32-C3-DevKitM-1 <ESP32-C3-DevKitM-1>
 
-.. note:: 
+.. note::
    Only a few development boards are described on this documentation page. For more information about other Espressif development boards please refer to the `Espressif website <https://www.espressif.com/en/products/devkits>`_.
 
 Third Party
@@ -94,12 +94,12 @@ LOLIN
 
 Generic Vendor
 **************
-    
+
     .. toctree::
         :maxdepth: 1
-    
+
         Generic Board Name <generic>
-    
+
     .. note::
         Create one file per board or one file with multiple boards. Do not add board information/description on this file.
 
@@ -108,7 +108,7 @@ Generic Vendor
 Resources
 ---------
 
-.. _Espressif Systems: https://www.espressif.com 
+.. _Espressif Systems: https://www.espressif.com
 .. _Espressif Product Selector: https://products.espressif.com/
 
 .. |board_lolin_d32| raw:: html

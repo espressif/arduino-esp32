@@ -1,4 +1,4 @@
-# WiFiClient
+# NetworkClient
 
 This example demonstrates reading and writing data from and to a web service which can be used for logging data, creating insights and taking actions based on those data.
 
@@ -126,7 +126,7 @@ ETag: W/"8e9c308fe2c50309f991586be1aff28d"
 X-Frame-Options: SAMEORIGIN
 
 1e3
-{"channel":{"id":2005329,"name":"WiFiCLient example","description":"Default setup for Arduino ESP32 WiFiClient example","latitude":"0.0","longitude":"0.0","field1":"data0","created_at":"2023-01-11T15:56:08Z","updated_at":"2023-01-13T08:13:58Z","last_entry_id":2871},"feeds":[{"created_at":"2023-01-13T13:11:30Z","entry_id":2869,"field1":"359"},{"created_at":"2023-01-13T13:11:57Z","entry_id":2870,"field1":"361"},{"created_at":"2023-01-13T13:12:23Z","entry_id":2871,"field1":"363"}]}
+{"channel":{"id":2005329,"name":"WiFiCLient example","description":"Default setup for Arduino ESP32 NetworkClient example","latitude":"0.0","longitude":"0.0","field1":"data0","created_at":"2023-01-11T15:56:08Z","updated_at":"2023-01-13T08:13:58Z","last_entry_id":2871},"feeds":[{"created_at":"2023-01-13T13:11:30Z","entry_id":2869,"field1":"359"},{"created_at":"2023-01-13T13:11:57Z","entry_id":2870,"field1":"361"},{"created_at":"2023-01-13T13:12:23Z","entry_id":2871,"field1":"363"}]}
 0
 
 

@@ -4,20 +4,20 @@
 #include <stdint.h>
 
 // Default USB Settings
-#define USB_VID 			0x303A
-#define USB_PID 			0x0003
-#define USB_MANUFACTURER 	"Espressif Systems"
-#define USB_PRODUCT 		"ESP32-S2-USB"
-#define USB_SERIAL 			"0"
-#define USB_WEBUSB_ENABLED	false
-#define USB_WEBUSB_URL 		"https://docs.espressif.com/projects/arduino-esp32/en/latest/_static/webusb.html"
+#define USB_VID 0x303A
+#define USB_PID 0x0003
+#define USB_MANUFACTURER "Espressif Systems"
+#define USB_PRODUCT "ESP32-S2-USB"
+#define USB_SERIAL "0"
+#define USB_WEBUSB_ENABLED false
+#define USB_WEBUSB_URL "https://docs.espressif.com/projects/arduino-esp32/en/latest/_static/webusb.html"
 
 // Default USB FirmwareMSC Settings
-#define USB_FW_MSC_VENDOR_ID 		"ESP32-S2" 		//max 8 chars
-#define USB_FW_MSC_PRODUCT_ID 		"Firmware MSC"	//max 16 chars
-#define USB_FW_MSC_PRODUCT_REVISION	"1.23" 			//max 4 chars
-#define USB_FW_MSC_VOLUME_NAME 		"S2-Firmware" 	//max 11 chars
-#define USB_FW_MSC_SERIAL_NUMBER 	0x00000000
+#define USB_FW_MSC_VENDOR_ID "ESP32-S2"       //max 8 chars
+#define USB_FW_MSC_PRODUCT_ID "Firmware MSC"  //max 16 chars
+#define USB_FW_MSC_PRODUCT_REVISION "1.23"    //max 4 chars
+#define USB_FW_MSC_VOLUME_NAME "S2-Firmware"  //max 11 chars
+#define USB_FW_MSC_SERIAL_NUMBER 0x00000000
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -25,10 +25,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
-static const uint8_t SS    = 34;
-static const uint8_t MOSI  = 35;
-static const uint8_t MISO  = 37;
-static const uint8_t SCK   = 36;
+static const uint8_t SS = 34;
+static const uint8_t MOSI = 35;
+static const uint8_t MISO = 37;
+static const uint8_t SCK = 36;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;

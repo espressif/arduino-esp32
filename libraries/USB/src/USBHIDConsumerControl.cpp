@@ -19,39 +19,40 @@
 #include "USBHIDConsumerControl.h"
 
 static const uint8_t report_descriptor[] = {
-    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_REPORT_ID_CONSUMER_CONTROL))
+  TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_REPORT_ID_CONSUMER_CONTROL))
 };
 
-USBHIDConsumerControl::USBHIDConsumerControl(): hid(){
-    static bool initialized = false;
-    if(!initialized){
-        initialized = true;
-        hid.addDevice(this, sizeof(report_descriptor));
-    }
+USBHIDConsumerControl::USBHIDConsumerControl()
+  : hid() {
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    hid.addDevice(this, sizeof(report_descriptor));
+  }
 }
 
-uint16_t USBHIDConsumerControl::_onGetDescriptor(uint8_t* dst){
-    memcpy(dst, report_descriptor, sizeof(report_descriptor));
-    return sizeof(report_descriptor);
+uint16_t USBHIDConsumerControl::_onGetDescriptor(uint8_t* dst) {
+  memcpy(dst, report_descriptor, sizeof(report_descriptor));
+  return sizeof(report_descriptor);
 }
 
-void USBHIDConsumerControl::begin(){
-    hid.begin();
+void USBHIDConsumerControl::begin() {
+  hid.begin();
 }
 
-void USBHIDConsumerControl::end(){
+void USBHIDConsumerControl::end() {
 }
 
-bool USBHIDConsumerControl::send(uint16_t value){
-    return hid.SendReport(HID_REPORT_ID_CONSUMER_CONTROL, &value, 2);
+bool USBHIDConsumerControl::send(uint16_t value) {
+  return hid.SendReport(HID_REPORT_ID_CONSUMER_CONTROL, &value, 2);
 }
 
-size_t USBHIDConsumerControl::press(uint16_t k){
-    return send(k);
+size_t USBHIDConsumerControl::press(uint16_t k) {
+  return send(k);
 }
 
-size_t USBHIDConsumerControl::release(){
-    return send(0);
+size_t USBHIDConsumerControl::release() {
+  return send(0);
 }
 
 

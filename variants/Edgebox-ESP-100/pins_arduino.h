@@ -8,7 +8,7 @@ static const uint8_t TXD = 43;
 static const uint8_t RXD = 44;
 static const uint8_t RST = 0;
 
-//I2C 
+//I2C
 static const uint8_t SDA = 20;
 static const uint8_t SCL = 19;
 

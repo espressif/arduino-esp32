@@ -6,21 +6,20 @@
 // Important to be defined BEFORE including ETH.h for ETH.begin() to work.
 // Example RMII LAN8720 (Olimex, etc.)
 #ifndef ETH_PHY_TYPE
-#define ETH_PHY_TYPE        ETH_PHY_LAN8720
-#define ETH_PHY_ADDR         0
-#define ETH_PHY_MDC         23
-#define ETH_PHY_MDIO        18
-#define ETH_PHY_POWER       -1
-#define ETH_CLK_MODE        ETH_CLOCK_GPIO0_IN
+#define ETH_PHY_TYPE ETH_PHY_LAN8720
+#define ETH_PHY_ADDR 0
+#define ETH_PHY_MDC 23
+#define ETH_PHY_MDIO 18
+#define ETH_PHY_POWER -1
+#define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
 #endif
 
 #include <ETH.h>
 
 static bool eth_connected = false;
 
-// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
-void WiFiEvent(WiFiEvent_t event)
-{
+// WARNING: onEvent is called from a separate FreeRTOS task (thread)!
+void onEvent(arduino_event_id_t event) {
   switch (event) {
     case ARDUINO_EVENT_ETH_START:
       Serial.println("ETH Started");
@@ -33,7 +32,7 @@ void WiFiEvent(WiFiEvent_t event)
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
       Serial.println("ETH Got IP");
-      ETH.printInfo(Serial);
+      Serial.println(ETH);
       eth_connected = true;
       break;
     case ARDUINO_EVENT_ETH_LOST_IP:
@@ -53,18 +52,18 @@ void WiFiEvent(WiFiEvent_t event)
   }
 }
 
-void testClient(const char * host, uint16_t port)
-{
+void testClient(const char* host, uint16_t port) {
   Serial.print("\nconnecting to ");
   Serial.println(host);
 
-  WiFiClient client;
+  NetworkClient client;
   if (!client.connect(host, port)) {
     Serial.println("connection failed");
     return;
   }
   client.printf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host);
-  while (client.connected() && !client.available());
+  while (client.connected() && !client.available())
+    ;
   while (client.available()) {
     Serial.write(client.read());
   }
@@ -73,15 +72,13 @@ void testClient(const char * host, uint16_t port)
   client.stop();
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
-  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
+  Network.onEvent(onEvent);
   ETH.begin();
 }
 
-void loop()
-{
+void loop() {
   if (eth_connected) {
     testClient("google.com", 80);
   }

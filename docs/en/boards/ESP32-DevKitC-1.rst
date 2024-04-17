@@ -125,14 +125,14 @@ Restricted Usage GPIO's
 Some of the GPIO's are used for the external flash and PSRAM. These GPIO's cannot be used:
 
 ====  ===================
-GPIO   Shared Function           
+GPIO   Shared Function
 ====  ===================
-IO6   External SPI Flash 
-IO7   External SPI Flash 
-IO8   External SPI Flash 
-IO9   External SPI Flash 
-IO10  External SPI Flash 
-IO11  External SPI Flash 
+IO6   External SPI Flash
+IO7   External SPI Flash
+IO8   External SPI Flash
+IO9   External SPI Flash
+IO10  External SPI Flash
+IO11  External SPI Flash
 ====  ===================
 
 Other GPIO's are `INPUT ONLY` and cannot be used as output pin:

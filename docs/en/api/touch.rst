@@ -5,9 +5,9 @@ TOUCH
 About
 -----
 
-Touch sensor is a peripheral, that has an internal oscilator circuit and it measures charge/discharge frequency over a fixed period of time on respective GPIO pins. 
-Therefore these touch sensors are also known as capacitive sensors. For example, if you touch any of these pins, finger electrical charge will change this number of cycles, 
-by changing the RC circuit attached to the touch sensor. The TouchRead() will return the number of cycles (charges/discharges) in a certain time (meas). 
+Touch sensor is a peripheral, that has an internal oscillator circuit and it measures charge/discharge frequency over a fixed period of time on respective GPIO pins.
+Therefore these touch sensors are also known as capacitive sensors. For example, if you touch any of these pins, finger electrical charge will change this number of cycles,
+by changing the RC circuit attached to the touch sensor. The TouchRead() will return the number of cycles (charges/discharges) in a certain time (meas).
 The change of this count will be used to validate if a touch has happened or not. These pins can be easily integrated into capacitive pads, and replace mechanical buttons.
 
 .. note:: Touch peripheral is not present in every SoC. Refer to datasheet of each chip for more info.
@@ -21,7 +21,7 @@ TOUCH common API
 touchRead
 ^^^^^^^^^
 
-This function gets the touch sensor data. Each touch sensor has a counter to count the number of charge/discharge cycles. When the pad is ‘touched’, 
+This function gets the touch sensor data. Each touch sensor has a counter to count the number of charge/discharge cycles. When the pad is ‘touched’,
 the value in the counter will change because of the larger equivalent capacitance. The change of the data determines if the pad has been touched or not.
 
 .. code-block:: arduino
@@ -29,7 +29,7 @@ the value in the counter will change because of the larger equivalent capacitanc
     touch_value_t touchRead(uint8_t pin);
 
 * ``pin`` GPIO pin to read TOUCH value
-  
+
 This function will return touch pad value as uint16_t (ESP32) or uint32_t (ESP32-S2/S3).
 
 touchSetCycles
@@ -48,8 +48,8 @@ The defaults are setting touchRead to take ~0.5ms.
 touchAttachInterrupt
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to attach interrupt to the touch pad. The function will be called if a touch sensor value falls below the given 
-threshold for ESP32 or rises above the given threshold for ESP32-S2/S3. To determine a proper threshold value between touched and untouched state, 
+This function is used to attach interrupt to the touch pad. The function will be called if a touch sensor value falls below the given
+threshold for ESP32 or rises above the given threshold for ESP32-S2/S3. To determine a proper threshold value between touched and untouched state,
 use touchRead() function.
 
 .. code-block:: arduino
@@ -118,13 +118,13 @@ TOUCH API specific for ESP32S2 and ESP32S3 chip (TOUCH_V2)
 touchInterruptGetLastStatus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This function is used get the lastest ISR status for the touch pad.
+This function is used get the latest ISR status for the touch pad.
 
 .. code-block:: arduino
 
     bool touchInterruptGetLastStatus(uint8_t pin);
 
-This function returns true if the touch pad has been and continues pressed or false otherwise.  
+This function returns true if the touch pad has been and continues pressed or false otherwise.
 
 Example Applications
 ********************
@@ -139,4 +139,4 @@ A usage example for the touch interrupts.
 .. literalinclude:: ../../../libraries/ESP32/examples/Touch/TouchInterrupt/TouchInterrupt.ino
     :language: arduino
 
-More examples can be found in our repository -> `Touch examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Touch>`_. 
+More examples can be found in our repository -> `Touch examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Touch>`_.

@@ -8,10 +8,10 @@
 extern "C" {
 #endif
 
-void double_tap_init(void);
-void double_tap_mark(void);
-void double_tap_invalidate(void);
-bool double_tap_check_match(void);
+  void double_tap_init(void);
+  void double_tap_mark(void);
+  void double_tap_invalidate(void);
+  bool double_tap_check_match(void);
 
 #ifdef __cplusplus
 }

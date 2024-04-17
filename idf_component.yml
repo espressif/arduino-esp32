@@ -83,4 +83,3 @@ dependencies:
       - if: "target in [esp32s3]"
 examples:
   - path: ./idf_component_examples/Hello_world
-

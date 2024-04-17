@@ -3,14 +3,14 @@
 */
 
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <HTTPUpdateServer.h>
 
 #ifndef STASSID
 #define STASSID "your-ssid"
-#define STAPSK  "your-password"
+#define STAPSK "your-password"
 #endif
 
 const char* host = "esp32-webupdate";

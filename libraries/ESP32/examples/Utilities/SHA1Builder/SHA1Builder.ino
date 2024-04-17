@@ -6,7 +6,7 @@
 // source code.
 //
 // SHA1Builder helps you obfuscate this (This is not much more secure.
-// SHA1 is past its retirement age and long obsolte/insecure, but it helps
+// SHA1 is past its retirement age and long obsolete/insecure, but it helps
 // a little) by letting you create an (unsalted!) SHA1 of the data the
 // user entered; and then compare this to an SHA1 string that you have put
 // in your code.
@@ -56,10 +56,8 @@ void setup() {
       Serial.println("Odd - failing SHA1 on hex string");
       Serial.println(sha1_str);
       Serial.println(result);
-    }
-    else
+    } else
       Serial.println("OK!");
-
   }
 
   // Check that this also work if we add the password as
@@ -81,16 +79,14 @@ void setup() {
       Serial.println("OK!");
 
     // And also check that we can compare this as pure, raw, bytes
-    uint8_t raw[20] = {   0x0a, 0x4d, 0x55, 0xa8, 0xd7, 0x78, 0xe5, 0x02, 0x2f, 0xab,
-                          0x70, 0x19, 0x77, 0xc5, 0xd8, 0x40, 0xbb, 0xc4, 0x86, 0xd0
-                      };
+    uint8_t raw[20] = { 0x0a, 0x4d, 0x55, 0xa8, 0xd7, 0x78, 0xe5, 0x02, 0x2f, 0xab,
+                        0x70, 0x19, 0x77, 0xc5, 0xd8, 0x40, 0xbb, 0xc4, 0x86, 0xd0 };
     uint8_t res[20];
     sha.getBytes(res);
     if (memcmp(raw, res, 20))
       Serial.println("Odd - failing SHA1 on byte array when compared as bytes");
     else
       Serial.println("OK!");
-
   }
 }
 

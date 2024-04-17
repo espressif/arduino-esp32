@@ -1,5 +1,5 @@
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
@@ -70,5 +70,5 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

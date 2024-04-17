@@ -9,7 +9,7 @@ Partition table is used to define the flash memory organization and the differen
 
 You can use one of the available partition table scheme or create your own. You can see all the different schemes on the `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder or by the Arduino IDE tools menu `Tools -> Partition Scheme`.
 
-The partition table is created by a .CSV (Comma-separeted Values) file with the following structure:
+The partition table is created by a .CSV (Comma-separated Values) file with the following structure:
 
 .. code-block::
 
@@ -35,35 +35,35 @@ Where:
     The SubType defines the usage of the ``app`` and ``data`` partitions.
 
    **data**
-       
+
        ``ota``
 
            The ota subtype is used to store the OTA information. This partition is used only when the OTA is used to select the initialization partition, otherwise no need to add it to your custom partition table.
            The size of this partition should be a fixed size of 8kB (0x2000 bytes).
-       
+
        ``nvs``
 
            The nvs partition subtype is used to define the partition to store general data, like the WiFi data, device PHY calibration data and any other data to be stored on the non-volatile memory.
            This kind of partition is suitable for small custom configuration data, cloud certificates, etc. Another usage for the NVS is to store sensitive data, since the NVS supports encryption.
            It is highly recommended to add at least one nvs partition, labeled with the name nvs, in your custom partition tables with size of at least 12kB (0x3000 bytes). If needed, you can increase the size of the nvs partition.
            The recommended size for this partition is from 12kb to 64kb. Although larger NVS partitions can be defined, we recommend using FAT or SPIFFS filesystem for storage of larger amounts of data.
-       
+
        ``coredump``
 
            The coredump partition subtype is used to store the core dump on the flash. The core dump is used to analyze critical errors like crash and panic.
            This function must be enabled in the project configuration menu and set the data destination to flash.
            The recommended size for this partition is 64kB (0x10000).
-       
+
        ``nvs_keys``
 
            The nvs_keys partition subtype is used to store the keys when the NVS encryption is used.
            The size for this partition is 4kB (0x1000).
-       
+
        ``fat``
 
            The fat partition subtype defines the FAT filesystem usage, and it is suitable for larger data and if this data is often updated and changed. The FAT FS can be used with wear leveling feature to increase the erase/modification cycles per memory sector and encryption for sensitive data storage, like cloud certificates or any other data that may be protected.
            To use FAT FS with wear leveling see the example.
-       
+
        ``spiffs``
 
            The spiffs partition subtype defines the SPI flash filesystem usage, and it is also suitable for larger files and it also performs the wear leveling and file system consistency check.
@@ -72,24 +72,24 @@ Where:
    **app**
 
     ``factory``
-    
+
         The factory partition subtype is the default application. The bootloader will set this partition as the default application initialization if no OTA partition is found, or the OTA partitions are empty.
         If the OTA partition is used, the ota_0 can be used as the default application and the factory can be removed from the partition table to save memory space.
-    
+
     ``ota_0`` to ``ota_15``
-    
+
         The ota_x partition subtype is used for the Over-the air update. The OTA feature requires at least two ota_x partition (usually ota_0 and ota_1) and it also requires the ota partition to keep the OTA information data.
         Up to 16 OTA partitions can be defined but only two are needed for basic OTA feature.
-    
+
     ``test``
-    
+
         The test partition subtype is used for factory test procedures.
 
 4. **Offset**
 
     The offset defines the partition start address. The offset is defined by the sum of the offset and the size of the earlier partition.
 
-.. note:: 
+.. note::
     Offset must be multiple of 4kB (0x1000) and for app partitions it must be aligned by 64kB (0x10000).
     If left blank, the offset will be automatically calculated based on the end of the previous partition, including any necessary alignment, however, the offset for the first partition must be always set as **0x9000** and for the first application partition **0x10000**.
 

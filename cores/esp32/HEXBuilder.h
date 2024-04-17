@@ -25,10 +25,10 @@
 
 class HEXBuilder {
 public:
-	static size_t hex2bytes(unsigned char * out, size_t maxlen, String & in);
-	static size_t hex2bytes(unsigned char * out, size_t maxlen, const char * in);
+  static size_t hex2bytes(unsigned char* out, size_t maxlen, String& in);
+  static size_t hex2bytes(unsigned char* out, size_t maxlen, const char* in);
 
-	static String bytes2hex(const unsigned char * in, size_t len);
-	static size_t bytes2hex(char * out, size_t maxlen, const unsigned char * in, size_t len);
+  static String bytes2hex(const unsigned char* in, size_t len);
+  static size_t bytes2hex(char* out, size_t maxlen, const unsigned char* in, size_t len);
 };
 #endif

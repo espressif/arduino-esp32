@@ -6,19 +6,19 @@
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
-#define TX1 33	// Ext1 pin 8
-#define RX1 25	// Ext1 pin 9
+#define TX1 33  // Ext1 pin 8
+#define RX1 25  // Ext1 pin 9
 
-#define TX2 19	// Ext2 pin 8
-#define RX2 18	// Ext2 pin 9
+#define TX2 19  // Ext2 pin 8
+#define RX2 18  // Ext2 pin 9
 
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 5;
-static const uint8_t MOSI  = 23;
-static const uint8_t MISO  = 19;
-static const uint8_t SCK   = 18;
+static const uint8_t SS = 5;
+static const uint8_t MOSI = 23;
+static const uint8_t MISO = 19;
+static const uint8_t SCK = 18;
 
 static const uint8_t A0 = 36;
 static const uint8_t A3 = 39;

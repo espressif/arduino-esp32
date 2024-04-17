@@ -29,29 +29,29 @@
 extern "C" {
 #endif
 
-struct timer_struct_t;
-typedef struct timer_struct_t hw_timer_t;
+  struct timer_struct_t;
+  typedef struct timer_struct_t hw_timer_t;
 
-hw_timer_t * timerBegin(uint32_t frequency);
-void timerEnd(hw_timer_t * timer);
+  hw_timer_t* timerBegin(uint32_t frequency);
+  void timerEnd(hw_timer_t* timer);
 
-void timerStart(hw_timer_t * timer);
-void timerStop(hw_timer_t * timer);
-void timerRestart(hw_timer_t * timer);
-void timerWrite(hw_timer_t * timer, uint64_t val);
+  void timerStart(hw_timer_t* timer);
+  void timerStop(hw_timer_t* timer);
+  void timerRestart(hw_timer_t* timer);
+  void timerWrite(hw_timer_t* timer, uint64_t val);
 
-uint64_t timerRead(hw_timer_t * timer);
-uint64_t timerReadMicros(hw_timer_t * timer);
-uint64_t timerReadMilis(hw_timer_t * timer);
-double timerReadSeconds(hw_timer_t * timer);
+  uint64_t timerRead(hw_timer_t* timer);
+  uint64_t timerReadMicros(hw_timer_t* timer);
+  uint64_t timerReadMilis(hw_timer_t* timer);
+  double timerReadSeconds(hw_timer_t* timer);
 
-uint32_t timerGetFrequency(hw_timer_t * timer);
+  uint32_t timerGetFrequency(hw_timer_t* timer);
 
-void timerAttachInterrupt(hw_timer_t * timer, void (*userFunc)(void));
-void timerAttachInterruptArg(hw_timer_t * timer, void (*userFunc)(void*), void * arg);
-void timerDetachInterrupt(hw_timer_t * timer);
+  void timerAttachInterrupt(hw_timer_t* timer, void (*userFunc)(void));
+  void timerAttachInterruptArg(hw_timer_t* timer, void (*userFunc)(void*), void* arg);
+  void timerDetachInterrupt(hw_timer_t* timer);
 
-void timerAlarm(hw_timer_t * timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count);
+  void timerAlarm(hw_timer_t* timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count);
 
 #ifdef __cplusplus
 }

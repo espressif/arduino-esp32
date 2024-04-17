@@ -4,8 +4,8 @@ LED Control (LEDC)
 
 About
 -----
-The LED control (LEDC) peripheral is primarly designed to control the intensity of LEDs, 
-although it can also be used to generate PWM signals for other purposes. 
+The LED control (LEDC) peripheral is primarily designed to control the intensity of LEDs,
+although it can also be used to generate PWM signals for other purposes.
 
 ESP32 SoCs has from 6 to 16 channels (variates on socs, see table below) which can generate independent waveforms, that can be used for example to drive RGB LED devices.
 
@@ -128,7 +128,7 @@ This function is used to setup the LEDC pin to specific note.
 
 * ``pin`` select LEDC pin.
 * ``note`` select note to be set.
-  
+
 ======= ======= ======= ======= ======= ======
 NOTE_C  NOTE_Cs NOTE_D  NOTE_Eb NOTE_E  NOTE_F
 NOTE_Fs NOTE_G  NOTE_Gs NOTE_A  NOTE_Bb NOTE_B
@@ -164,10 +164,10 @@ This function is used to set frequency for the LEDC pin.
 
 * ``pin`` select LEDC pin.
 * ``freq`` select frequency of pwm.
-* ``resolution`` select resolution for LEDC channel. 
- 
+* ``resolution`` select resolution for LEDC channel.
+
   * range is 1-14 bits (1-20 bits for ESP32).
-  
+
 This function will return ``frequency`` configured for the LEDC channel.
 If ``0`` is returned, error occurs and the LEDC channel frequency was not set.
 
@@ -182,7 +182,7 @@ This function is used to set inverting output for the LEDC pin.
 
 * ``pin`` select LEDC pin.
 * ``out_invert`` select, if output should be inverted (true = inverting output).
-  
+
 This function returns ``true`` if setting inverting output was successful.
 If ``false`` is returned, an error occurred and the inverting output was not set.
 
@@ -197,9 +197,9 @@ This function is used to setup and start fade for the LEDC pin.
 
 * ``pin`` select LEDC pin.
 * ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade. 
-* ``max_fade_time_ms`` select maximum time for fade. 
-  
+* ``target_duty`` select target duty of fade.
+* ``max_fade_time_ms`` select maximum time for fade.
+
 This function will return ``true`` if configuration is successful.
 If ``false`` is returned, error occurs and LEDC fade was not configured / started.
 
@@ -214,10 +214,10 @@ This function is used to setup and start fade for the LEDC pin with interrupt.
 
 * ``pin`` select LEDC pin.
 * ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade. 
-* ``max_fade_time_ms`` select maximum time for fade. 
-* ``userFunc`` funtion to be called when interrupt is triggered.
-  
+* ``target_duty`` select target duty of fade.
+* ``max_fade_time_ms`` select maximum time for fade.
+* ``userFunc`` function to be called when interrupt is triggered.
+
 This function will return ``true`` if configuration is successful and fade start.
 If ``false`` is returned, error occurs and LEDC fade was not configured / started.
 
@@ -232,11 +232,11 @@ This function is used to setup and start fade for the LEDC pin with interrupt us
 
 * ``pin`` select LEDC pin.
 * ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade. 
-* ``max_fade_time_ms`` select maximum time for fade. 
-* ``userFunc`` funtion to be called when interrupt is triggered.
+* ``target_duty`` select target duty of fade.
+* ``max_fade_time_ms`` select maximum time for fade.
+* ``userFunc`` function to be called when interrupt is triggered.
 * ``arg`` pointer to the interrupt arguments.
-  
+
 This function will return ``true`` if configuration is successful and fade start.
 If ``false`` is returned, error occurs and LEDC fade was not configured / started.
 
@@ -262,9 +262,9 @@ This function is used to set resolution for selected analogWrite pin.
 .. code-block:: arduino
 
     void analogWriteResolution(uint8_t pin, uint8_t resolution);
-   
+
 * ``pin`` select the GPIO pin.
-* ``resolution`` select resolution for analog channel. 
+* ``resolution`` select resolution for analog channel.
 
 analogWriteFrequency
 ********************

@@ -29,14 +29,17 @@ limitations under the License.
 // so it's a better fit for microcontroller applications, but this does mean
 // there are hard limits on the number of results it can store.
 class PreviousResultsQueue {
- public:
-  PreviousResultsQueue() : front_index_(0), size_(0) {}
+public:
+  PreviousResultsQueue()
+    : front_index_(0), size_(0) {}
 
   // Data structure that holds an inference result, and the time when it
   // was recorded.
   struct Result {
-    Result() : time_(0), scores() {}
-    Result(int32_t time, int8_t* input_scores) : time_(time) {
+    Result()
+      : time_(0), scores() {}
+    Result(int32_t time, int8_t* input_scores)
+      : time_(time) {
       for (int i = 0; i < kCategoryCount; ++i) {
         scores[i] = input_scores[i];
       }
@@ -45,9 +48,15 @@ class PreviousResultsQueue {
     int8_t scores[kCategoryCount];
   };
 
-  int size() { return size_; }
-  bool empty() { return size_ == 0; }
-  Result& front() { return results_[front_index_]; }
+  int size() {
+    return size_;
+  }
+  bool empty() {
+    return size_ == 0;
+  }
+  Result& front() {
+    return results_[front_index_];
+  }
   Result& back() {
     int back_index = front_index_ + (size_ - 1);
     if (back_index >= kMaxResults) {
@@ -94,7 +103,7 @@ class PreviousResultsQueue {
     return results_[index];
   }
 
- private:
+private:
   static constexpr int kMaxResults = 50;
   Result results_[kMaxResults];
 
@@ -113,7 +122,7 @@ class PreviousResultsQueue {
 // increasing from the previous, since the class is designed to process a stream
 // of data over time.
 class RecognizeCommands {
- public:
+public:
   // labels should be a list of the strings associated with each one-hot score.
   // The window duration controls the smoothing. Longer durations will give a
   // higher confidence that the results are correct, but may miss some commands.
@@ -135,7 +144,7 @@ class RecognizeCommands {
                                     const char** found_command, uint8_t* score,
                                     bool* is_new_command);
 
- private:
+private:
   // Configuration
   int32_t average_window_duration_ms_;
   uint8_t detection_threshold_;

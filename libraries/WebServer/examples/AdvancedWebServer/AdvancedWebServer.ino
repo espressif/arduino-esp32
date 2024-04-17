@@ -29,7 +29,7 @@
 */
 
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 
@@ -65,8 +65,7 @@ void handleRoot() {
   </body>\
 </html>",
 
-           hr, min, sec
-          );
+           hr, min, sec);
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }
@@ -126,7 +125,7 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }
 
 void drawGraph() {

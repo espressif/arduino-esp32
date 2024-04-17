@@ -21,11 +21,11 @@
 #include "BLEUUID.h"
 
 typedef enum {
-	BLE_UNKNOWN_FRAME,
-	BLE_EDDYSTONE_UUID_FRAME,
-	BLE_EDDYSTONE_URL_FRAME,
-	BLE_EDDYSTONE_TLM_FRAME,
-	BLE_FRAME_MAX
+  BLE_UNKNOWN_FRAME,
+  BLE_EDDYSTONE_UUID_FRAME,
+  BLE_EDDYSTONE_URL_FRAME,
+  BLE_EDDYSTONE_TLM_FRAME,
+  BLE_FRAME_MAX
 } ble_frame_type_t;
 
 class BLEScan;
@@ -37,83 +37,83 @@ class BLEScan;
  */
 class BLEAdvertisedDevice {
 public:
-	BLEAdvertisedDevice();
+  BLEAdvertisedDevice();
 
-	BLEAddress  getAddress();
-	uint16_t    getAppearance();
-	String getManufacturerData();
-	String getName();
-	int         getRSSI();
-	BLEScan*    getScan();
-	String getServiceData();
-	String getServiceData(int i);
-	BLEUUID     getServiceDataUUID();
-	BLEUUID     getServiceDataUUID(int i);
-	BLEUUID     getServiceUUID();
-	BLEUUID     getServiceUUID(int i);
-	int         getServiceDataCount();
-	int         getServiceDataUUIDCount();
-	int         getServiceUUIDCount();
-	int8_t      getTXPower();
-	uint8_t*    getPayload();
-	size_t      getPayloadLength();
-	esp_ble_addr_type_t getAddressType();
-	ble_frame_type_t getFrameType();
-	void setAddressType(esp_ble_addr_type_t type);
+  BLEAddress getAddress();
+  uint16_t getAppearance();
+  String getManufacturerData();
+  String getName();
+  int getRSSI();
+  BLEScan* getScan();
+  String getServiceData();
+  String getServiceData(int i);
+  BLEUUID getServiceDataUUID();
+  BLEUUID getServiceDataUUID(int i);
+  BLEUUID getServiceUUID();
+  BLEUUID getServiceUUID(int i);
+  int getServiceDataCount();
+  int getServiceDataUUIDCount();
+  int getServiceUUIDCount();
+  int8_t getTXPower();
+  uint8_t* getPayload();
+  size_t getPayloadLength();
+  esp_ble_addr_type_t getAddressType();
+  ble_frame_type_t getFrameType();
+  void setAddressType(esp_ble_addr_type_t type);
 
 
-	bool		isAdvertisingService(BLEUUID uuid);
-	bool        haveAppearance();
-	bool        haveManufacturerData();
-	bool        haveName();
-	bool        haveRSSI();
-	bool        haveServiceData();
-	bool        haveServiceUUID();
-	bool        haveTXPower();
+  bool isAdvertisingService(BLEUUID uuid);
+  bool haveAppearance();
+  bool haveManufacturerData();
+  bool haveName();
+  bool haveRSSI();
+  bool haveServiceData();
+  bool haveServiceUUID();
+  bool haveTXPower();
 
-	String toString();
+  String toString();
 
 private:
-	friend class BLEScan;
+  friend class BLEScan;
 
-	void parseAdvertisement(uint8_t* payload, size_t total_len=62);
-	void setPayload(uint8_t* payload, size_t total_len=62);
-	void setAddress(BLEAddress address);
-	void setAdFlag(uint8_t adFlag);
-	void setAdvertizementResult(uint8_t* payload);
-	void setAppearance(uint16_t appearance);
-	void setManufacturerData(String manufacturerData);
-	void setName(String name);
-	void setRSSI(int rssi);
-	void setScan(BLEScan* pScan);
-	void setServiceData(String data);
-	void setServiceDataUUID(BLEUUID uuid);
-	void setServiceUUID(const char* serviceUUID);
-	void setServiceUUID(BLEUUID serviceUUID);
-	void setTXPower(int8_t txPower);
+  void parseAdvertisement(uint8_t* payload, size_t total_len = 62);
+  void setPayload(uint8_t* payload, size_t total_len = 62);
+  void setAddress(BLEAddress address);
+  void setAdFlag(uint8_t adFlag);
+  void setAdvertizementResult(uint8_t* payload);
+  void setAppearance(uint16_t appearance);
+  void setManufacturerData(String manufacturerData);
+  void setName(String name);
+  void setRSSI(int rssi);
+  void setScan(BLEScan* pScan);
+  void setServiceData(String data);
+  void setServiceDataUUID(BLEUUID uuid);
+  void setServiceUUID(const char* serviceUUID);
+  void setServiceUUID(BLEUUID serviceUUID);
+  void setTXPower(int8_t txPower);
 
-	bool m_haveAppearance;
-	bool m_haveManufacturerData;
-	bool m_haveName;
-	bool m_haveRSSI;
-	bool m_haveTXPower;
+  bool m_haveAppearance;
+  bool m_haveManufacturerData;
+  bool m_haveName;
+  bool m_haveRSSI;
+  bool m_haveTXPower;
 
 
-	BLEAddress  m_address = BLEAddress((uint8_t*)"\0\0\0\0\0\0");
-	uint8_t     m_adFlag;
-	uint16_t    m_appearance;
-	int         m_deviceType;
-	String m_manufacturerData;
-	String m_name;
-	BLEScan*    m_pScan;
-	int         m_rssi;
-	std::vector<BLEUUID> m_serviceUUIDs;
-	int8_t      m_txPower;
-	std::vector<String> m_serviceData;
-	std::vector<BLEUUID> m_serviceDataUUIDs;
-	uint8_t*	m_payload;
-	size_t		m_payloadLength = 0;
-	esp_ble_addr_type_t m_addressType;
+  BLEAddress m_address = BLEAddress((uint8_t*)"\0\0\0\0\0\0");
+  uint8_t m_adFlag;
+  uint16_t m_appearance;
+  int m_deviceType;
+  String m_manufacturerData;
+  String m_name;
+  BLEScan* m_pScan;
+  int m_rssi;
+  std::vector<BLEUUID> m_serviceUUIDs;
+  int8_t m_txPower;
+  std::vector<String> m_serviceData;
+  std::vector<BLEUUID> m_serviceDataUUIDs;
+  uint8_t* m_payload;
+  size_t m_payloadLength = 0;
+  esp_ble_addr_type_t m_addressType;
 };
 
 /**
@@ -125,29 +125,29 @@ private:
  */
 class BLEAdvertisedDeviceCallbacks {
 public:
-	virtual ~BLEAdvertisedDeviceCallbacks() {}
-	/**
+  virtual ~BLEAdvertisedDeviceCallbacks() {}
+  /**
 	 * @brief Called when a new scan result is detected.
 	 *
 	 * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
 	 * device that was found.  During any individual scan, a device will only be detected one time.
 	 */
-	virtual void onResult(BLEAdvertisedDevice advertisedDevice) = 0;
+  virtual void onResult(BLEAdvertisedDevice advertisedDevice) = 0;
 };
 
 #ifdef SOC_BLE_50_SUPPORTED
 class BLEExtAdvertisingCallbacks {
 public:
-	virtual ~BLEExtAdvertisingCallbacks() {}
-	/**
+  virtual ~BLEExtAdvertisingCallbacks() {}
+  /**
 	 * @brief Called when a new scan result is detected.
 	 *
 	 * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
 	 * device that was found.  During any individual scan, a device will only be detected one time.
 	 */
-	virtual void onResult(esp_ble_gap_ext_adv_reprot_t report) = 0;
+  virtual void onResult(esp_ble_gap_ext_adv_report_t report) = 0;
 };
-#endif // SOC_BLE_50_SUPPORTED
+#endif  // SOC_BLE_50_SUPPORTED
 
 
 #endif /* CONFIG_BLUEDROID_ENABLED */

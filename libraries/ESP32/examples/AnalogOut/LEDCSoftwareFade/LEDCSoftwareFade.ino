@@ -10,17 +10,17 @@
  This example code is in the public domain.
  */
 
-// use 12 bit precission for LEDC timer
-#define LEDC_TIMER_12_BIT  12
+// use 12 bit precision for LEDC timer
+#define LEDC_TIMER_12_BIT 12
 
 // use 5000 Hz as a LEDC base frequency
-#define LEDC_BASE_FREQ     5000
+#define LEDC_BASE_FREQ 5000
 
 // fade LED PIN (replace with LED_BUILTIN constant for built-in LED)
-#define LED_PIN            5
+#define LED_PIN 5
 
-int brightness = 0;    // how bright the LED is
-int fadeAmount = 5;    // how many points to fade the LED by
+int brightness = 0;  // how bright the LED is
+int fadeAmount = 5;  // how many points to fade the LED by
 
 // Arduino like analogWrite
 // value has to be between 0 and valueMax
