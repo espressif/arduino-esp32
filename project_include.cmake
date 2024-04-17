@@ -83,7 +83,7 @@ function(convert_arduino_libraries_to_components)
                         endforeach()
                     endif()
 
-                    message(STATUS "Created IDF component for ${child}")
+                # We do not have 'src' folder. Import a flat structure (1.0 style)
                 else()
                     message(STATUS "Processing 1.0 compatible library '${child}' in '${libs_dir_abs}'")
                     file(WRITE ${component_cmakelist} "idf_component_register(SRCS ")
@@ -111,12 +111,17 @@ function(convert_arduino_libraries_to_components)
                     if(IS_DIRECTORY "${utility_dir}")
                         file(APPEND ${component_cmakelist} "\"utility\" ")
                     endif()
-                    
+
                     # Require arduino and main components to suceed in compilation
                     file(APPEND ${component_cmakelist} "PRIV_REQUIRES ${arduino_component_name} ${main_component_name})\n")
-
-                    message(STATUS "Created IDF component for ${child}")
                 endif()
+
+                message(STATUS "Created IDF component for ${child}")
+
+                # Include the component's CMakeLists.txt to execute it
+                # add_subdirectory("${child_dir}") # Using this method produces the following error: 'Called idf_component_register from a non-component directory.'
+                # list(APPEND EXTRA_COMPONENT_DIRS ${child_dir}) # Using this method does not help
+
             else()
                 message(STATUS "Skipped ${child}: Required 'library.properties' not found")
             endif()
