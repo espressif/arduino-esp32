@@ -121,16 +121,3 @@ jobs:
           git add ${{ env.RESULT_LIBRARY_TEST_FILE }}
           git commit -m "Generated External Libraries Test Results"
           git push origin HEAD:gh-pages
-          
-  event_file:
-    name: "Event File"
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'lib_test')
-    needs: compile-sketch
-    runs-on: ubuntu-latest
-    steps:
-       - name: Upload
-         uses: actions/upload-artifact@v4
-         with:
-           name: Event File
-           path: ${{github.event_path}}
