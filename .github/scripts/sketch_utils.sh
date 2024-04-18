@@ -382,8 +382,8 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     echo "Start Sketch: $start_num"
     echo "End Sketch  : $end_index"
 
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
     if [ $log_compilation ]; then
-        sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
         #echo board,target and start of sketches to sizes_file json
         echo "{ \"board\": \"$fqbn\",
                 \"target\": \"$target\", 
