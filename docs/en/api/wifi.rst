@@ -166,7 +166,7 @@ By default, the memory allocation will be set to **dynamic** if this function is
 setDualAntennaConfig
 ********************
 
-Configures the Dual antenna functionallity. This function should be used only on the **ESP32-WROOM-DA** module or any other ESP32 with RF switch.
+Configures the Dual antenna functionality. This function should be used only on the **ESP32-WROOM-DA** module or any other ESP32 with RF switch.
 
 .. code-block:: arduino
 
@@ -223,7 +223,7 @@ Use the function ``softAP`` to configure the Wi-Fi AP characteristics:
 Where:
 
 * ``ssid`` sets the Wi-Fi network SSID.
-* ``passphrase`` sets the Wi-Fi network password. If the network is open, set as ``NULL``. 
+* ``passphrase`` sets the Wi-Fi network password. If the network is open, set as ``NULL``.
 * ``channel`` configures the Wi-Fi channel.
 * ``ssid_hidden`` sets the network as hidden.
 * ``max_connection`` sets the maximum number of simultaneous connections. The default is 4.

@@ -17,23 +17,23 @@ void handleCreateProcess() {
   String path = "/" + server.pathArg(0);
   HTTPRaw& raw = server.raw();
   if (raw.status == RAW_START) {
-    if (SD.exists((char *)path.c_str())) {
-      SD.remove((char *)path.c_str());
+    if (SD.exists((char*)path.c_str())) {
+      SD.remove((char*)path.c_str());
     }
     rawFile = SD.open(path.c_str(), FILE_WRITE);
-    Serial.print("Upload: START, filename: "); 
+    Serial.print("Upload: START, filename: ");
     Serial.println(path);
   } else if (raw.status == RAW_WRITE) {
     if (rawFile) {
       rawFile.write(raw.buf, raw.currentSize);
     }
-    Serial.print("Upload: WRITE, Bytes: "); 
+    Serial.print("Upload: WRITE, Bytes: ");
     Serial.println(raw.currentSize);
   } else if (raw.status == RAW_END) {
     if (rawFile) {
       rawFile.close();
     }
-    Serial.print("Upload: END, Size: "); 
+    Serial.print("Upload: END, Size: ");
     Serial.println(raw.totalSize);
   }
 }
@@ -79,10 +79,9 @@ void setup(void) {
   server.onNotFound(handleNotFound);
   server.begin();
   Serial.println("HTTP server started");
-
 }
 
 void loop(void) {
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

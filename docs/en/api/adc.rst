@@ -5,11 +5,11 @@ ADC
 About
 -----
 
-ADC (analog to digital converter) is a very common peripheral used to convert an analog signal such as voltage 
-to a digital form so that it can be read and processed by a microcontroller. 
+ADC (analog to digital converter) is a very common peripheral used to convert an analog signal such as voltage
+to a digital form so that it can be read and processed by a microcontroller.
 
-ADCs are very useful in control and monitoring applications since most sensors 
-(e.g., temperature, pressure, force) produce analogue output voltages.
+ADCs are very useful in control and monitoring applications since most sensors
+(e.g., temperature, pressure, force) produce analog output voltages.
 
 .. note:: Each SoC or module has a different number of ADC's with a different number of channels and pins available. Refer to datasheet of each board for more info.
 
@@ -20,7 +20,7 @@ ADC OneShot mode
 ****************
 
 
-The ADC OneShot mode API is fully compatible with Arduino's ``analogRead`` function. 
+The ADC OneShot mode API is fully compatible with Arduino's ``analogRead`` function.
 When you call the ``analogRead`` or ``analogReadMillivolts`` function, it returns the result of a single conversion on the requested pin.
 
 analogRead
@@ -33,7 +33,7 @@ This function is used to get the ADC raw value for a given pin/ADC channel.
     uint16_t analogRead(uint8_t pin);
 
 * ``pin`` GPIO pin to read analog value
-  
+
 This function will return analog raw value (non-calibrated).
 
 analogReadMillivolts
@@ -52,8 +52,8 @@ This function will return analog value in millivolts (calibrated).
 analogReadResolution
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095) 
-for all chips except ESP32S3 where default is 13 bits (range from 0 to 8191). 
+This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095)
+for all chips except ESP32S3 where default is 13 bits (range from 0 to 8191).
 When different resolution is set, the values read will be shifted to match the given resolution.
 
 Range is 1 - 16 .The default value will be used, if this function is not used.
@@ -156,11 +156,11 @@ Range is 9 - 12.
 ADC Continuous mode
 *******************
 
-ADC Continuous mode is an API designed for performing analog conversions on multiple pins in the background, 
+ADC Continuous mode is an API designed for performing analog conversions on multiple pins in the background,
 with the feature of receiving a callback upon completion of these conversions to access the results.
 
-This API allows you to specify the desired number of conversions per pin within a single cycle, along with its corresponding sampling rate. 
-The outcome of the ``analogContinuousRead`` function is an array of ``adc_continuous_data_t`` structures. 
+This API allows you to specify the desired number of conversions per pin within a single cycle, along with its corresponding sampling rate.
+The outcome of the ``analogContinuousRead`` function is an array of ``adc_continuous_data_t`` structures.
 These structures hold both the raw average value and the average value in millivolts for each pin.
 
 analogContinuous
@@ -177,7 +177,7 @@ This function is used to configure ADC continuous peripheral on selected pins.
 * ``conversions_per_pin`` sets how many conversions per pin will run each ADC cycle
 * ``sampling_freq_hz`` sets sampling frequency of ADC in Hz
 * ``userFunc`` sets callback function to be called after adc conversion is done (can be set to ``NULL``)
-  
+
 This function will return ``true`` if configuration is successful.
 If ``false`` is returned, error occurs and ADC continuous was not configured.
 
@@ -199,9 +199,9 @@ This function is used to read ADC continuous data to the result buffer. The resu
 
     bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms);
 
-* ``buffer`` conversion result buffer to read from ADC in adc_continuos_data_t format. 
+* ``buffer`` conversion result buffer to read from ADC in adc_continuos_data_t format.
 * ``timeout_ms`` time to wait for data in milliseconds.
-  
+
 This function will return ``true`` if reading is successful and ``buffer`` is filled with data.
 If ``false`` is returned, reading has failed and ``buffer`` is set to NULL.
 
@@ -213,8 +213,8 @@ This function is used to start ADC continuous conversions.
 .. code-block:: arduino
 
     bool analogContinuousStart();
-  
-This function will return ``true`` if ADC continuous is succesfully started.
+
+This function will return ``true`` if ADC continuous is successfully started.
 If ``false`` is returned, starting ADC continuous has failed.
 
 analogContinuousStop
@@ -225,8 +225,8 @@ This function is used to stop ADC continuous conversions.
 .. code-block:: arduino
 
     bool analogContinuousStop();
-  
-This function will return ``true`` if ADC continuous is succesfully stopped.
+
+This function will return ``true`` if ADC continuous is successfully stopped.
 If ``false`` is returned, stopping ADC continuous has failed.
 
 analogContinuousDeinit
@@ -237,14 +237,14 @@ This function is used to deinitialize ADC continuous peripheral.
 .. code-block:: arduino
 
     bool analogContinuousDeinit();
-  
-This function will return ``true`` if ADC continuous is succesfully deinitialized.
+
+This function will return ``true`` if ADC continuous is successfully deinitialized.
 If ``false`` is returned, deinitilization of ADC continuous has failed.
 
 analogContinuousSetAtten
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the attenuation for ADC continuous peripheral. For more informations refer to `analogSetAttenuation`_.
+This function is used to set the attenuation for ADC continuous peripheral. For more information refer to `analogSetAttenuation`_.
 
 .. code-block:: arduino
 

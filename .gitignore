@@ -21,7 +21,7 @@ tools/openocd-esp32
 
 # Ignore build folder
 /build
- 
+
 # Ignore files built by Visual Studio/Visual Micro
 [Dd]ebug/
 [Rr]elease/
@@ -44,3 +44,9 @@ debug.cfg
 debug.svd
 debug_custom.json
 libraries/Insights/examples/*/*.ino.zip
+
+# Vale Style
+.vale/styles/*
+!.vale/styles/Vocab/
+.vale/styles/Vocab/*
+!.vale/styles/Vocab/Espressif/

@@ -6,13 +6,13 @@
 
 #define HELTEC_WIRELESS_SHELL_V3 true
 #define DISPLAY_HEIGHT 0
-#define DISPLAY_WIDTH  0
+#define DISPLAY_WIDTH 0
 
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
 static const uint8_t LED_BUILTIN = 35;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 43;
@@ -23,10 +23,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 2;
 static const uint8_t SCL = 3;
 
-static const uint8_t SS    = 8;
-static const uint8_t MOSI  = 10;
-static const uint8_t MISO  = 11;
-static const uint8_t SCK   = 9;
+static const uint8_t SS = 8;
+static const uint8_t MOSI = 10;
+static const uint8_t MISO = 11;
+static const uint8_t SCK = 9;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -65,7 +65,7 @@ static const uint8_t T13 = 13;
 static const uint8_t T14 = 14;
 
 static const uint8_t Vext = 36;
-static const uint8_t LED  = 35;
+static const uint8_t LED = 35;
 static const uint8_t RST_OLED = 21;
 static const uint8_t SCL_OLED = 18;
 static const uint8_t SDA_OLED = 17;

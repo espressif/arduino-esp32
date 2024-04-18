@@ -30,17 +30,17 @@
 #define ADC1_DEFAULT A4
 
 #if CONFIG_IDF_TARGET_ESP32
-# define ADC2_DEFAULT A5
+#define ADC2_DEFAULT A5
 #else
-# define ADC2_DEFAULT A3
+#define ADC2_DEFAULT A3
 #endif
 
 #if CONFIG_IDF_TARGET_ESP32
-# define TOUCH1_DEFAULT T0
-# define TOUCH2_DEFAULT T2
+#define TOUCH1_DEFAULT T0
+#define TOUCH2_DEFAULT T2
 #else
-# define TOUCH1_DEFAULT T4
-# define TOUCH2_DEFAULT T5
+#define TOUCH1_DEFAULT T4
+#define TOUCH2_DEFAULT T5
 #endif
 
 /* Global variables */
@@ -55,7 +55,7 @@ int8_t uart1_tx_pin;
 void onReceive_cb(void) {
   // This is a callback function that will be activated on UART RX events
   size_t available = Serial1.available();
-  while (available --) {
+  while (available--) {
     Serial.print((char)Serial1.read());
   }
 }
@@ -156,9 +156,9 @@ void adc_continuous_test(void) {
 #else
   setup_test("ADC_Continuous", ADC1_DEFAULT, ADC2_DEFAULT);
   test_executed = true;
-  uint8_t adc_pins[] = {ADC1_DEFAULT, ADC2_DEFAULT};
+  uint8_t adc_pins[] = { ADC1_DEFAULT, ADC2_DEFAULT };
   uint8_t adc_pins_count = 2;
-  adc_continuos_data_t * result = NULL;
+  adc_continuos_data_t* result = NULL;
 
   analogContinuousSetWidth(12);
   analogContinuousSetAtten(ADC_11db);
@@ -270,11 +270,11 @@ void touch_test(void) {
 
 void setup() {
   Serial.begin(115200);
-  while(!Serial) { delay(10); }
+  while (!Serial) { delay(10); }
 
   Serial1.setPins(UART1_RX_DEFAULT, UART1_TX_DEFAULT);
   Serial1.begin(115200);
-  while(!Serial1) { delay(10); }
+  while (!Serial1) { delay(10); }
   Serial1.onReceive(onReceive_cb);
   uart_internal_loopback(1, uart1_rx_pin);
 

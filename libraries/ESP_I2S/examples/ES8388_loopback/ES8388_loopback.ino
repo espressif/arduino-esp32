@@ -23,14 +23,14 @@ const uint8_t I2C_SDA = 18;
 const uint32_t I2C_FREQ = 400000;
 
 /* I2S */
-const uint8_t I2S_MCLK = 0;      /* Master clock */
-const uint8_t I2S_SCK = 5;       /* Audio data bit clock */
-const uint8_t I2S_WS = 25;       /* Audio data left and right clock */
-const uint8_t I2S_SDOUT = 26;    /* ESP32 audio data output (to speakers) */
-const uint8_t I2S_SDIN = 35;     /* ESP32 audio data input (from microphone) */
+const uint8_t I2S_MCLK = 0;   /* Master clock */
+const uint8_t I2S_SCK = 5;    /* Audio data bit clock */
+const uint8_t I2S_WS = 25;    /* Audio data left and right clock */
+const uint8_t I2S_SDOUT = 26; /* ESP32 audio data output (to speakers) */
+const uint8_t I2S_SDIN = 35;  /* ESP32 audio data input (from microphone) */
 
 /* PA */
-const uint8_t PA_ENABLE = 21;    /* Power amplifier enable */
+const uint8_t PA_ENABLE = 21; /* Power amplifier enable */
 
 void setup() {
   I2SClass i2s;

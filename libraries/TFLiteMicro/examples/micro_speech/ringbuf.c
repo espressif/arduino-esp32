@@ -42,8 +42,7 @@ ringbuf_t* rb_init(const char* name, uint32_t size) {
 
   r = malloc(sizeof(ringbuf_t));
   assert(r);
-#if (CONFIG_SPIRAM_SUPPORT && \
-     (CONFIG_SPIRAM_USE_CAPS_ALLOC || CONFIG_SPIRAM_USE_MALLOC))
+#if (CONFIG_SPIRAM_SUPPORT && (CONFIG_SPIRAM_USE_CAPS_ALLOC || CONFIG_SPIRAM_USE_MALLOC))
   buf = heap_caps_calloc(1, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 #else
   buf = calloc(1, size);
@@ -85,7 +84,9 @@ void rb_cleanup(ringbuf_t* rb) {
 /*
  * @brief: get the number of filled bytes in the buffer
  */
-ssize_t rb_filled(ringbuf_t* rb) { return rb->fill_cnt; }
+ssize_t rb_filled(ringbuf_t* rb) {
+  return rb->fill_cnt;
+}
 
 /*
  * @brief: get the number of empty bytes available in the buffer
@@ -259,7 +260,9 @@ static void _rb_reset(ringbuf_t* rb, int abort_read, int abort_write) {
   xSemaphoreGive(rb->lock);
 }
 
-void rb_reset(ringbuf_t* rb) { _rb_reset(rb, 0, 0); }
+void rb_reset(ringbuf_t* rb) {
+  _rb_reset(rb, 0, 0);
+}
 
 void rb_abort_read(ringbuf_t* rb) {
   if (rb == NULL) {

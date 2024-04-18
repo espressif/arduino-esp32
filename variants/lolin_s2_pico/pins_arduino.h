@@ -4,22 +4,22 @@
 #include <stdint.h>
 
 // Default USB Settings
-#define USB_VID 			0x303a
-#define USB_PID 			0x80C5
-#define USB_MANUFACTURER 	"WEMOS.CC"
-#define USB_PRODUCT 		"LOLIN-S2-PICO"
-#define USB_SERIAL 			"0"
+#define USB_VID 0x303a
+#define USB_PID 0x80C5
+#define USB_MANUFACTURER "WEMOS.CC"
+#define USB_PRODUCT "LOLIN-S2-PICO"
+#define USB_SERIAL "0"
 
 
 // Default USB FirmwareMSC Settings
-#define USB_FW_MSC_VENDOR_ID 		"ESP32-S2" 		//max 8 chars
-#define USB_FW_MSC_PRODUCT_ID 		"Firmware MSC"	//max 16 chars
-#define USB_FW_MSC_PRODUCT_REVISION	"1.23" 			//max 4 chars
-#define USB_FW_MSC_VOLUME_NAME 		"S2-Firmware" 	//max 11 chars
-#define USB_FW_MSC_SERIAL_NUMBER 	0x00000000
+#define USB_FW_MSC_VENDOR_ID "ESP32-S2"       //max 8 chars
+#define USB_FW_MSC_PRODUCT_ID "Firmware MSC"  //max 16 chars
+#define USB_FW_MSC_PRODUCT_REVISION "1.23"    //max 4 chars
+#define USB_FW_MSC_VOLUME_NAME "S2-Firmware"  //max 11 chars
+#define USB_FW_MSC_SERIAL_NUMBER 0x00000000
 
 static const uint8_t LED_BUILTIN = 10;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 38;
@@ -28,10 +28,10 @@ static const uint8_t RX = 33;
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
-static const uint8_t SS    = 34;
-static const uint8_t MOSI  = 35;
-static const uint8_t MISO  = 37;
-static const uint8_t SCK   = 36;
+static const uint8_t SS = 34;
+static const uint8_t MOSI = 35;
+static const uint8_t MISO = 37;
+static const uint8_t SCK = 36;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -72,6 +72,6 @@ static const uint8_t T14 = 14;
 static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;
 
-static const uint8_t S2_PICO_OLED_RESET = 18; 
+static const uint8_t S2_PICO_OLED_RESET = 18;
 
 #endif /* Pins_Arduino_h */

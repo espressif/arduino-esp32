@@ -24,12 +24,15 @@
 extern "C" {
 #endif
 
-typedef enum {BT_MODE_DEFAULT, BT_MODE_BLE, BT_MODE_CLASSIC_BT, BT_MODE_BTDM } bt_mode;
+  typedef enum { BT_MODE_DEFAULT,
+                 BT_MODE_BLE,
+                 BT_MODE_CLASSIC_BT,
+                 BT_MODE_BTDM } bt_mode;
 
-bool btStarted();
-bool btStart();
-bool btStartMode(bt_mode mode);
-bool btStop();
+  bool btStarted();
+  bool btStart();
+  bool btStartMode(bt_mode mode);
+  bool btStop();
 
 #ifdef __cplusplus
 }

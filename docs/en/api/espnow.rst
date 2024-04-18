@@ -5,9 +5,9 @@ ESP-NOW
 About
 -----
 
-ESP-NOW is a communication protocol designed for low-power, low-latency, and high-throughput communication between ESP32 devices without the need for an access point (AP). 
+ESP-NOW is a communication protocol designed for low-power, low-latency, and high-throughput communication between ESP32 devices without the need for an access point (AP).
 It is ideal for scenarios where devices need to communicate directly with each other in a local network.
-ESP-NOW can be used for smart lights, remote control devices, sensors and many other applications. 
+ESP-NOW can be used for smart lights, remote control devices, sensors and many other applications.
 
 This library provides an easy-to-use interface for setting up ESP-NOW communication, adding and removing peers, and sending and receiving data packets.
 

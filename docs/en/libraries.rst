@@ -71,7 +71,7 @@ APIs
 
 The Arduino ESP32 offers some unique APIs, described in this section:
 
-.. note:: 
+.. note::
     Please be advised that we cannot ensure continuous compatibility between the Arduino Core ESP32 APIs and ESP8266 APIs, as well as Arduino-Core APIs (Arduino.cc).
     While our aim is to maintain harmony, the addition of new features may result in occasional divergence. We strive to achieve the best possible integration but acknowledge
     that perfect compatibility might not always be feasible. Please refer to the documentation for any specific considerations.
@@ -79,5 +79,5 @@ The Arduino ESP32 offers some unique APIs, described in this section:
 .. toctree::
     :maxdepth: 1
     :glob:
-    
+
     api/*

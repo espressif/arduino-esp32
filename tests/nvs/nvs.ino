@@ -4,7 +4,7 @@ Preferences preferences;
 
 void setup() {
   Serial.begin(115200);
- 
+
   while (!Serial) {
     ;
   }
@@ -25,7 +25,7 @@ void setup() {
 
   // Close the Preferences
   preferences.end();
-  
+
   // Wait 1 second
   delay(1000);
 
