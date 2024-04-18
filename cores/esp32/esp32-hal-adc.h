@@ -86,7 +86,7 @@ extern "C" {
     uint8_t channel;     /*!<ADC channel */
     int avg_read_raw;    /*!<ADC average raw data */
     int avg_read_mvolts; /*!<ADC average voltage in mV */
-  } adc_continuos_data_t;
+  } adc_continuous_data_t;
 
   /*
  * Setup ADC continuous peripheral
@@ -96,7 +96,7 @@ extern "C" {
   /*
  * Read ADC continuous conversion data
  * */
-  bool analogContinuousRead(adc_continuos_data_t** buffer, uint32_t timeout_ms);
+  bool analogContinuousRead(adc_continuous_data_t** buffer, uint32_t timeout_ms);
 
   /*
  * Start ADC continuous conversions
