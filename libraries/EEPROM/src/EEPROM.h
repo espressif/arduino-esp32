@@ -45,7 +45,9 @@ public:
   uint16_t length();
   bool commit();
   void end();
-
+  void update(int address, uint8_t val) {
+    if (read(address) != val) write(address, val);
+  }
   uint8_t *getDataPtr();
   uint16_t convert(bool clear, const char *EEPROMname = "eeprom", const char *nvsname = "eeprom");
 
