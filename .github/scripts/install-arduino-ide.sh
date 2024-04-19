@@ -4,7 +4,7 @@
 #OSTYPE: 'msys', ARCH: 'x86_64' => win32
 #OSTYPE: 'darwin18', ARCH: 'i386' => macos
 
-OSBITS=`arch`
+OSBITS=`uname -m`
 if [[ "$OSTYPE" == "linux"* ]]; then
     export OS_IS_LINUX="1"
     ARCHIVE_FORMAT="tar.xz"

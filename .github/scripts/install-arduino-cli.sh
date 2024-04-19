@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OSBITS=`arch`
+OSBITS=`uname -m`
 if [[ "$OSTYPE" == "linux"* ]]; then
     export OS_IS_LINUX="1"
     if [[ "$OSBITS" == "i686" ]]; then
