@@ -125,7 +125,7 @@ jobs:
   #Upload PR number as artifact
   upload-pr-number:
     name: Upload PR number
-    if: github.event_name == 'pull_request'
+    if: (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'lib_test'))
     runs-on: ubuntu-latest
     steps:
       - name: Save the PR number in an artifact
