@@ -446,7 +446,7 @@ esp_err_t ETHClass::eth_spi_write(uint32_t cmd, uint32_t addr, const void *data,
 #endif
 
 bool ETHClass::beginSPI(
-  eth_phy_type_t type, int32_t phy_addr, uint8_t* mac_addr_p, int cs, int irq, int rst,
+  eth_phy_type_t type, int32_t phy_addr, uint8_t *mac_addr_p, int cs, int irq, int rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
   SPIClass *spi,
 #endif
