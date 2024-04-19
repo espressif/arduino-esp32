@@ -1,13 +1,22 @@
 name: Pre-commit hooks
 
 on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
   pull_request:
     types: [opened, reopened, synchronize, labeled, unlabeled]
+
+concurrency:
+  group: pre-commit-${{github.event.pull_request.number || github.ref}}
+  cancel-in-progress: true
 
 jobs:
   lint:
     if: |
-      contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
+      contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge') ||
+      github.event_name != 'pull_request'
     name: Check if fixes are needed
     runs-on: ubuntu-latest
     steps:
@@ -57,6 +66,7 @@ jobs:
 
       - name: Push changes using pre-commit-ci-lite
         uses: pre-commit-ci/lite-action@v1.0.2
-        if: always()
+        # Only push changes in PRs
+        if: ${{ always() && github.event_name == 'pull_request' }}
         with:
           msg: "ci(pre-commit): Apply automatic fixes"
