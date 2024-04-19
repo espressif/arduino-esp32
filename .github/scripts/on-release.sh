@@ -400,16 +400,16 @@ if [ "$RELEASE_PRE" == "false" ]; then
 fi
 
 # Upload package JSONs (temporary halted to fix json generation)
-# echo "Uploading $PACKAGE_JSON_DEV ..."
-# echo "Download URL: "`git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_DEV"`
+echo "Uploading $PACKAGE_JSON_DEV ..."
+echo "Download URL: "`git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_DEV"`
 # echo "Pages URL: "`git_safe_upload_to_pages "$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV"`
-# echo
-# if [ "$RELEASE_PRE" == "false" ]; then
-#     echo "Uploading $PACKAGE_JSON_REL ..."
-#     echo "Download URL: "`git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_REL"`
-#     echo "Pages URL: "`git_safe_upload_to_pages "$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL"`
-#     echo
-# fi
+echo
+if [ "$RELEASE_PRE" == "false" ]; then
+    echo "Uploading $PACKAGE_JSON_REL ..."
+    echo "Download URL: "`git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_REL"`
+    # echo "Pages URL: "`git_safe_upload_to_pages "$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL"`
+    echo
+fi
 
 set +e
 
