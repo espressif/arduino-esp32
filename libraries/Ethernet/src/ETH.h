@@ -201,7 +201,7 @@ private:
 
   static bool ethDetachBus(void *bus_pointer);
   bool beginSPI(
-    eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst,
+    eth_phy_type_t type, int32_t phy_addr, uint8_t* mac_addr_p, int cs, int irq, int rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
     SPIClass *spi,
 #endif
