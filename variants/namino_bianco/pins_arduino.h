@@ -169,7 +169,6 @@ static const uint8_t PD_47 = PD2;
 static const uint8_t PD_17 = TX;
 static const uint8_t PD_18 = RX;
 
-
 static const uint8_t PC_io3 = PC0;
 static const uint8_t PC_4 = PC1;
 static const uint8_t PC_5 = PC2;

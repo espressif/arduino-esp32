@@ -48,5 +48,7 @@ void loop() {
     onButton();
   }
   lastPinState = pinState;
-  while (Serial.available()) Serial.write(Serial.read());
+  while (Serial.available()) {
+    Serial.write(Serial.read());
+  }
 }

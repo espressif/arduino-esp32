@@ -8,5 +8,4 @@ void setup() {
   Serial.println("Hello Arduino!");
 }
 
-void loop() {
-}
+void loop() {}

@@ -30,36 +30,27 @@ void sysProvEvent(arduino_event_t *sys_event) {
   switch (sys_event->event_id) {
     case ARDUINO_EVENT_PROV_START:
 #if CONFIG_IDF_TARGET_ESP32S2
-      Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n",
-                    service_name, pop);
+      Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
       printQR(service_name, pop, "softap");
 #else
-      Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n",
-                    service_name, pop);
+      Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
       printQR(service_name, pop, "ble");
 #endif
       break;
-    case ARDUINO_EVENT_PROV_INIT:
-      wifi_prov_mgr_disable_auto_stop(10000);
-      break;
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-      wifi_prov_mgr_stop_provisioning();
-      break;
-    default:;
+    case ARDUINO_EVENT_PROV_INIT:         wifi_prov_mgr_disable_auto_stop(10000); break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS: wifi_prov_mgr_stop_provisioning(); break;
+    default:                              ;
   }
 }
 
-void write_callback(Device *device, Param *param, const param_val_t val,
-                    void *priv_data, write_ctx_t *ctx) {
+void write_callback(Device *device, Param *param, const param_val_t val, void *priv_data, write_ctx_t *ctx) {
   const char *device_name = device->getDeviceName();
   const char *param_name = param->getParamName();
 
   if (strcmp(param_name, "Power") == 0) {
-    Serial.printf("Received value = %s for %s - %s\n",
-                  val.val.b ? "true" : "false", device_name, param_name);
+    Serial.printf("Received value = %s for %s - %s\n", val.val.b ? "true" : "false", device_name, param_name);
     switch_state = val.val.b;
-    (switch_state == false) ? digitalWrite(gpio_switch, LOW)
-                            : digitalWrite(gpio_switch, HIGH);
+    (switch_state == false) ? digitalWrite(gpio_switch, LOW) : digitalWrite(gpio_switch, HIGH);
     param->updateAndReport(val);
   }
 }
@@ -107,11 +98,9 @@ void setup() {
 
   WiFi.onEvent(sysProvEvent);  // Will call sysProvEvent() from another thread.
 #if CONFIG_IDF_TARGET_ESP32S2
-  WiFiProv.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE,
-                          WIFI_PROV_SECURITY_1, pop, service_name);
+  WiFiProv.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE, WIFI_PROV_SECURITY_1, pop, service_name);
 #else
-  WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM,
-                          WIFI_PROV_SECURITY_1, pop, service_name);
+  WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, pop, service_name);
 #endif
 }
 
@@ -139,11 +128,9 @@ void loop() {
       switch_state = !switch_state;
       Serial.printf("Toggle State to %s.\n", switch_state ? "true" : "false");
       if (my_switch) {
-        my_switch->updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME,
-                                        switch_state);
+        my_switch->updateAndReportParam(ESP_RMAKER_DEF_POWER_NAME, switch_state);
       }
-      (switch_state == false) ? digitalWrite(gpio_switch, LOW)
-                              : digitalWrite(gpio_switch, HIGH);
+      (switch_state == false) ? digitalWrite(gpio_switch, LOW) : digitalWrite(gpio_switch, HIGH);
     }
   }
   delay(100);

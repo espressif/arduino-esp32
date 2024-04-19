@@ -102,9 +102,7 @@ static void configure_pins(usb_hal_context_t *usb) {
 }
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
-  usb_hal_context_t hal = {
-    .use_external_phy = config->external_phy
-  };
+  usb_hal_context_t hal = {.use_external_phy = config->external_phy};
   usb_hal_init(&hal);
   configure_pins(&hal);
   if (!tusb_init()) {
@@ -113,15 +111,6 @@ esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
   }
   return ESP_OK;
 }
-
-
-
-
-
-
-
-
-
 
 typedef char tusb_str_t[127];
 
@@ -172,7 +161,6 @@ static char *tinyusb_string_descriptor[MAX_STRING_DESCRIPTORS] = {
   USB_DEVICE_SERIAL,        // 3: Serials, should use chip ID
 };
 
-
 /* Microsoft OS 2.0 registry property descriptor
 Per MS requirements https://msdn.microsoft.com/en-us/library/windows/hardware/hh450799(v=vs.85).aspx
 device should create DeviceInterfaceGUIDs. It can be done by driver and
@@ -200,24 +188,22 @@ static uint8_t const tinyusb_ms_os_20_descriptor[] = {
   U16_TO_U8S_LE(0x0008), U16_TO_U8S_LE(MS_OS_20_SUBSET_HEADER_FUNCTION), 0, 0, U16_TO_U8S_LE(MS_OS_20_DESC_LEN - 0x0A - 0x08),
 
   // MS OS 2.0 Compatible ID descriptor: length, type, compatible ID, sub compatible ID
-  U16_TO_U8S_LE(0x0014), U16_TO_U8S_LE(MS_OS_20_FEATURE_COMPATBLE_ID), 'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // sub-compatible
+  U16_TO_U8S_LE(0x0014), U16_TO_U8S_LE(MS_OS_20_FEATURE_COMPATBLE_ID), 'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00,  // sub-compatible
 
   // MS OS 2.0 Registry property descriptor: length, type
-  U16_TO_U8S_LE(MS_OS_20_DESC_LEN - 0x0A - 0x08 - 0x08 - 0x14), U16_TO_U8S_LE(MS_OS_20_FEATURE_REG_PROPERTY),
-  U16_TO_U8S_LE(0x0007), U16_TO_U8S_LE(0x002A),  // wPropertyDataType, wPropertyNameLength and PropertyName "DeviceInterfaceGUIDs\0" in UTF-16
-  'D', 0x00, 'e', 0x00, 'v', 0x00, 'i', 0x00, 'c', 0x00, 'e', 0x00, 'I', 0x00, 'n', 0x00, 't', 0x00, 'e', 0x00,
-  'r', 0x00, 'f', 0x00, 'a', 0x00, 'c', 0x00, 'e', 0x00, 'G', 0x00, 'U', 0x00, 'I', 0x00, 'D', 0x00, 's', 0x00, 0x00, 0x00,
+  U16_TO_U8S_LE(MS_OS_20_DESC_LEN - 0x0A - 0x08 - 0x08 - 0x14), U16_TO_U8S_LE(MS_OS_20_FEATURE_REG_PROPERTY), U16_TO_U8S_LE(0x0007),
+  U16_TO_U8S_LE(0x002A),  // wPropertyDataType, wPropertyNameLength and PropertyName "DeviceInterfaceGUIDs\0" in UTF-16
+  'D', 0x00, 'e', 0x00, 'v', 0x00, 'i', 0x00, 'c', 0x00, 'e', 0x00, 'I', 0x00, 'n', 0x00, 't', 0x00, 'e', 0x00, 'r', 0x00, 'f', 0x00, 'a', 0x00, 'c', 0x00, 'e',
+  0x00, 'G', 0x00, 'U', 0x00, 'I', 0x00, 'D', 0x00, 's', 0x00, 0x00, 0x00,
   U16_TO_U8S_LE(0x0050),  // wPropertyDataLength
   //bPropertyData: “{975F44D9-0D08-43FD-8B3E-127CA8AFFF9D}”.
-  '{', 0x00, '9', 0x00, '7', 0x00, '5', 0x00, 'F', 0x00, '4', 0x00, '4', 0x00, 'D', 0x00, '9', 0x00, '-', 0x00,
-  '0', 0x00, 'D', 0x00, '0', 0x00, '8', 0x00, '-', 0x00, '4', 0x00, '3', 0x00, 'F', 0x00, 'D', 0x00, '-', 0x00,
-  '8', 0x00, 'B', 0x00, '3', 0x00, 'E', 0x00, '-', 0x00, '1', 0x00, '2', 0x00, '7', 0x00, 'C', 0x00, 'A', 0x00,
-  '8', 0x00, 'A', 0x00, 'F', 0x00, 'F', 0x00, 'F', 0x00, '9', 0x00, 'D', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00
+  '{', 0x00, '9', 0x00, '7', 0x00, '5', 0x00, 'F', 0x00, '4', 0x00, '4', 0x00, 'D', 0x00, '9', 0x00, '-', 0x00, '0', 0x00, 'D', 0x00, '0', 0x00, '8', 0x00, '-',
+  0x00, '4', 0x00, '3', 0x00, 'F', 0x00, 'D', 0x00, '-', 0x00, '8', 0x00, 'B', 0x00, '3', 0x00, 'E', 0x00, '-', 0x00, '1', 0x00, '2', 0x00, '7', 0x00, 'C',
+  0x00, 'A', 0x00, '8', 0x00, 'A', 0x00, 'F', 0x00, 'F', 0x00, 'F', 0x00, '9', 0x00, 'D', 0x00, '}', 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 TU_VERIFY_STATIC(sizeof(tinyusb_ms_os_20_descriptor) == MS_OS_20_DESC_LEN, "Incorrect size");
-
 
 /*
  * BOS Descriptor (required for webUSB)
@@ -272,14 +258,13 @@ static uint8_t *tinyusb_config_descriptor = NULL;
  * */
 typedef union {
   struct {
-    uint32_t in : 16;
+    uint32_t in  : 16;
     uint32_t out : 16;
   };
   uint32_t val;
 } tinyusb_endpoints_usage_t;
 
 static tinyusb_endpoints_usage_t tinyusb_endpoints;
-
 
 /*
  * TinyUSB Callbacks
@@ -406,7 +391,6 @@ __attribute__((weak)) int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cm
   return -1;
 }
 #endif
-
 
 /*
  * Private API
@@ -651,10 +635,7 @@ static void tinyusb_apply_device_config(tinyusb_device_config_t *config) {
   }
 
   // Windows 10 will not recognize the CDC device if WebUSB is enabled and USB Class is not 2 (CDC)
-  if (
-    (tinyusb_loaded_interfaces_mask & BIT(USB_INTERFACE_CDC))
-    && config->webusb_enabled
-    && (config->usb_class != TUSB_CLASS_CDC)) {
+  if ((tinyusb_loaded_interfaces_mask & BIT(USB_INTERFACE_CDC)) && config->webusb_enabled && (config->usb_class != TUSB_CLASS_CDC)) {
     config->usb_class = TUSB_CLASS_CDC;
     config->usb_protocol = 0x00;
   }
@@ -676,14 +657,16 @@ static void tinyusb_apply_device_config(tinyusb_device_config_t *config) {
 // This top level thread processes all usb events and invokes callbacks
 static void usb_device_task(void *param) {
   (void)param;
-  while (1) tud_task();  // RTOS forever loop
+  while (1) {
+    tud_task();  // RTOS forever loop
+  }
 }
 
 /*
  * PUBLIC API
  * */
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-const char *tinyusb_interface_names[USB_INTERFACE_MAX] = { "MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM" };
+const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
 #endif
 static bool tinyusb_is_initialized = false;
 

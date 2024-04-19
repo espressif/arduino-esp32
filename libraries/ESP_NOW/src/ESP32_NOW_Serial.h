@@ -20,6 +20,7 @@ private:
 
   bool checkForTxData();
   size_t tryToSend();
+
 public:
   ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = NULL);
   ~ESP_NOW_Serial_Class();

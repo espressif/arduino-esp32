@@ -16,7 +16,9 @@ bool testConnection() {
   http.begin("http://www.espressif.com");
   int httpCode = http.GET();
   // we expect to get a 301 because it will ask to use HTTPS instead of HTTP
-  if (httpCode == HTTP_CODE_MOVED_PERMANENTLY) return true;
+  if (httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+    return true;
+  }
   return false;
 }
 
@@ -29,8 +31,8 @@ void setup() {
   wifiMulti.addAP("ssid_from_AP_3", "your_password_for_AP_3");
 
   // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
-  wifiMulti.setStrictMode(false);                           // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
-  wifiMulti.setAllowOpenAP(true);                           // Default is false.  True adds open APs to the AP list.
+  wifiMulti.setStrictMode(false);  // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
+  wifiMulti.setAllowOpenAP(true);  // Default is false.  True adds open APs to the AP list.
   wifiMulti.setConnectionTestCallbackFunc(testConnection);  // Attempts to connect to a remote webserver in case of captive portals.
 
   Serial.println("Connecting Wifi...");

@@ -93,24 +93,24 @@ typedef struct i2c_slave_struct_t {
 typedef union {
   struct {
     uint32_t event : 2;
-    uint32_t stop : 1;
+    uint32_t stop  : 1;
     uint32_t param : 29;
   };
   uint32_t val;
 } i2c_slave_queue_event_t;
 
 static i2c_slave_struct_t _i2c_bus_array[SOC_I2C_NUM] = {
-  { &I2C0, 0, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0
+  {&I2C0, 0, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0
 #if !CONFIG_DISABLE_HAL_LOCKS
-    ,
-    NULL
+   ,
+   NULL
 #endif
   },
 #if SOC_I2C_NUM > 1
-  { &I2C1, 1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0
+  {&I2C1, 1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0
 #if !CONFIG_DISABLE_HAL_LOCKS
-    ,
-    NULL
+   ,
+   NULL
 #endif
   }
 #endif
@@ -120,10 +120,14 @@ static i2c_slave_struct_t _i2c_bus_array[SOC_I2C_NUM] = {
 #define I2C_SLAVE_MUTEX_LOCK()
 #define I2C_SLAVE_MUTEX_UNLOCK()
 #else
-#define I2C_SLAVE_MUTEX_LOCK() \
-  if (i2c->lock) { xSemaphoreTake(i2c->lock, portMAX_DELAY); }
+#define I2C_SLAVE_MUTEX_LOCK()                \
+  if (i2c->lock) {                            \
+    xSemaphoreTake(i2c->lock, portMAX_DELAY); \
+  }
 #define I2C_SLAVE_MUTEX_UNLOCK() \
-  if (i2c->lock) { xSemaphoreGive(i2c->lock); }
+  if (i2c->lock) {               \
+    xSemaphoreGive(i2c->lock);   \
+  }
 #endif
 
 //-------------------------------------- HAL_LL (Missing Functions) ------------------------------------------------
@@ -356,7 +360,8 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
   i2c_ll_slave_enable_rx_it(i2c->dev);
   i2c_ll_set_stretch(i2c->dev, 0x3FF);
   i2c_ll_update(i2c->dev);
-  if (!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_SLAVE_SDA, (void *)(i2c->num + 1), i2c->num, -1) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_SLAVE_SCL, (void *)(i2c->num + 1), i2c->num, -1)) {
+  if (!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_SLAVE_SDA, (void *)(i2c->num + 1), i2c->num, -1)
+      || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_SLAVE_SCL, (void *)(i2c->num + 1), i2c->num, -1)) {
     i2cSlaveDetachBus((void *)(i2c->num + 1));
     ret = ESP_FAIL;
   }
@@ -528,21 +533,15 @@ static void i2c_slave_delay_us(uint64_t us) {
   if (us) {
     uint64_t e = (m + us);
     if (m > e) {  //overflow
-      while ((uint64_t)esp_timer_get_time() > e)
-        ;
+      while ((uint64_t)esp_timer_get_time() > e);
     }
-    while ((uint64_t)esp_timer_get_time() < e)
-      ;
+    while ((uint64_t)esp_timer_get_time() < e);
   }
 }
 
 static void i2c_slave_gpio_mode(int8_t pin, gpio_mode_t mode) {
   gpio_config_t conf = {
-    .pin_bit_mask = 1LL << pin,
-    .mode = mode,
-    .pull_up_en = GPIO_PULLUP_ENABLE,
-    .pull_down_en = GPIO_PULLDOWN_DISABLE,
-    .intr_type = GPIO_INTR_DISABLE
+    .pin_bit_mask = 1LL << pin, .mode = mode, .pull_up_en = GPIO_PULLUP_ENABLE, .pull_down_en = GPIO_PULLDOWN_DISABLE, .intr_type = GPIO_INTR_DISABLE
   };
   gpio_config(&conf);
 }
@@ -735,8 +734,7 @@ static void i2c_slave_isr_handler(void *arg) {
       //reset TX data
       i2c_ll_txfifo_rst(i2c->dev);
       uint8_t d;
-      while (xQueueReceiveFromISR(i2c->tx_queue, &d, (BaseType_t *const)&pxHigherPriorityTaskWoken) == pdTRUE)
-        ;  //flush partial write
+      while (xQueueReceiveFromISR(i2c->tx_queue, &d, (BaseType_t *const)&pxHigherPriorityTaskWoken) == pdTRUE);  //flush partial write
 #endif
     }
   }
@@ -794,10 +792,7 @@ static size_t i2c_slave_read_rx(i2c_slave_struct_t *i2c, uint8_t *data, size_t l
   }
   return (data) ? len : 0;
 #else
-  size_t dlen = 0,
-         to_read = len,
-         so_far = 0,
-         available = 0;
+  size_t dlen = 0, to_read = len, so_far = 0, available = 0;
   uint8_t *rx_data = NULL;
 
   vRingbufferGetInfo(i2c->rx_ring_buf, NULL, NULL, NULL, NULL, &available);

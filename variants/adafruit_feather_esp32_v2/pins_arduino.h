@@ -47,7 +47,7 @@ static const uint8_t LED_BUILTIN = 13;
 // Neopixel
 #define PIN_NEOPIXEL 0
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN    (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 // Neopixel & I2C power

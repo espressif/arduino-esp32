@@ -13,7 +13,6 @@ static const uint8_t SWITCH_B = 47;  //GPIO47,
 static const uint8_t WIFI_LED = 38;
 static const uint8_t BT_LED = 37;
 
-
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 //-------------------------------------------------------------------
@@ -54,7 +53,6 @@ static const uint8_t A4 = 5;   //IO,GPIO5,ADC1_CH4,TOUCH5,MCPWM
 static const uint8_t A5 = 6;   //IO,GPIO6,ADC1_CH5,TOUCH6,MCPWM
 static const uint8_t A6 = 7;   //IO,GPIO7,ADC1_CH6,TOUCH7,MCPWM
 static const uint8_t AD1 = 7;  //IO,GPIO7,ADC1_CH6,TOUCH7,MCPWM
-
 
 // Inbuilt Display Unit 128*128 ST7735 Driver New
 

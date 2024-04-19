@@ -43,10 +43,9 @@ void setup() {
   // SerialBT.setPin("1234"); // doesn't seem to change anything
   // SerialBT.enableSSP(); // doesn't seem to change anything
 
-
   Serial.println("Starting discoverAsync...");
-  BTScanResults* btDeviceList = SerialBT.getScanResults();  // maybe accessing from different threads!
-  if (SerialBT.discoverAsync([](BTAdvertisedDevice* pDevice) {
+  BTScanResults *btDeviceList = SerialBT.getScanResults();  // maybe accessing from different threads!
+  if (SerialBT.discoverAsync([](BTAdvertisedDevice *pDevice) {
         // BTAdvertisedDeviceSet*set = reinterpret_cast<BTAdvertisedDeviceSet*>(pDevice);
         // btDeviceList[pDevice->getAddress()] = * set;
         Serial.printf(">>>>>>>>>>>Found a new device asynchronously: %s\n", pDevice->toString().c_str());
@@ -61,11 +60,11 @@ void setup() {
       int channel = 0;
       Serial.println("Found devices:");
       for (int i = 0; i < btDeviceList->getCount(); i++) {
-        BTAdvertisedDevice* device = btDeviceList->getDevice(i);
+        BTAdvertisedDevice *device = btDeviceList->getDevice(i);
         Serial.printf(" ----- %s  %s %d\n", device->getAddress().toString().c_str(), device->getName().c_str(), device->getRSSI());
         std::map<int, std::string> channels = SerialBT.getChannels(device->getAddress());
         Serial.printf("scanned for services, found %d\n", channels.size());
-        for (auto const& entry : channels) {
+        for (auto const &entry : channels) {
           Serial.printf("     channel %d (%s)\n", entry.first, entry.second.c_str());
         }
         if (channels.size() > 0) {
@@ -85,12 +84,11 @@ void setup() {
   }
 }
 
-
 String sendData = "Hi from esp32!\n";
 
 void loop() {
   if (!SerialBT.isClosed() && SerialBT.connected()) {
-    if (SerialBT.write((const uint8_t*)sendData.c_str(), sendData.length()) != sendData.length()) {
+    if (SerialBT.write((const uint8_t *)sendData.c_str(), sendData.length()) != sendData.length()) {
       Serial.println("tx: error");
     } else {
       Serial.printf("tx: %s", sendData.c_str());

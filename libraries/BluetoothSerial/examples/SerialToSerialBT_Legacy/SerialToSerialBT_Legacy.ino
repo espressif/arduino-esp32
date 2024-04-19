@@ -23,7 +23,7 @@
 void setup() {}
 void loop() {}
 #else
-const char* deviceName = "ESP32_Legacy_example";
+const char *deviceName = "ESP32_Legacy_example";
 
 BluetoothSerial SerialBT;
 bool confirmRequestDone = false;

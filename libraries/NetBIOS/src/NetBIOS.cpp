@@ -1,7 +1,7 @@
 #include "NetBIOS.h"
 #include <functional>
 
-#define NBNS_PORT 137
+#define NBNS_PORT             137
 #define NBNS_MAX_HOSTNAME_LEN 32
 
 typedef struct {
@@ -98,8 +98,7 @@ void NetBIOS::_onPacket(AsyncUDPPacket &packet) {
   }
 }
 
-NetBIOS::NetBIOS() {
-}
+NetBIOS::NetBIOS() {}
 
 NetBIOS::~NetBIOS() {
   end();
@@ -113,10 +112,12 @@ bool NetBIOS::begin(const char *name) {
     return true;
   }
 
-  _udp.onPacket([](void *arg, AsyncUDPPacket &packet) {
-    ((NetBIOS *)(arg))->_onPacket(packet);
-  },
-                this);
+  _udp.onPacket(
+    [](void *arg, AsyncUDPPacket &packet) {
+      ((NetBIOS *)(arg))->_onPacket(packet);
+    },
+    this
+  );
   return _udp.listen(NBNS_PORT);
 }
 

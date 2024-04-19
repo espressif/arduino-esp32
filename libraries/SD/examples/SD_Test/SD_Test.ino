@@ -191,7 +191,6 @@ void testFileIO(fs::FS &fs, const char *path) {
     Serial.println("Failed to open file for reading");
   }
 
-
   file = fs.open(path, FILE_WRITE);
   if (!file) {
     Serial.println("Failed to open file for writing");
@@ -210,7 +209,9 @@ void testFileIO(fs::FS &fs, const char *path) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
 
 #ifdef REASSIGN_PINS
   SPI.begin(sck, miso, mosi, cs);
@@ -258,5 +259,4 @@ void setup() {
   Serial.printf("Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
 }
 
-void loop() {
-}
+void loop() {}

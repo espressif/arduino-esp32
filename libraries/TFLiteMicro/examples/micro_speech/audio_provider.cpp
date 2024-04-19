@@ -37,19 +37,17 @@ using namespace std;
 
 #define NO_I2S_SUPPORT CONFIG_IDF_TARGET_ESP32C2 || (CONFIG_IDF_TARGET_ESP32C3 && (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 4, 0)))
 
-static const char* TAG = "TF_LITE_AUDIO_PROVIDER";
+static const char *TAG = "TF_LITE_AUDIO_PROVIDER";
 /* ringbuffer to hold the incoming audio data */
-ringbuf_t* g_audio_capture_buffer;
+ringbuf_t *g_audio_capture_buffer;
 volatile int32_t g_latest_audio_timestamp = 0;
 /* model requires 20ms new data from g_audio_capture_buffer and 10ms old data
  * each time , storing old data in the histrory buffer , {
  * history_samples_to_keep = 10 * 16 } */
-constexpr int32_t history_samples_to_keep =
-  ((kFeatureSliceDurationMs - kFeatureSliceStrideMs) * (kAudioSampleFrequency / 1000));
+constexpr int32_t history_samples_to_keep = ((kFeatureSliceDurationMs - kFeatureSliceStrideMs) * (kAudioSampleFrequency / 1000));
 /* new samples to get each time from ringbuffer, { new_samples_to_get =  20 * 16
  * } */
-constexpr int32_t new_samples_to_get =
-  (kFeatureSliceStrideMs * (kAudioSampleFrequency / 1000));
+constexpr int32_t new_samples_to_get = (kFeatureSliceStrideMs * (kAudioSampleFrequency / 1000));
 
 namespace {
 int16_t g_audio_output_buffer[kMaxAudioSampleSize];
@@ -101,7 +99,7 @@ static void i2s_init(void) {
 }
 #endif
 
-static void CaptureSamples(void* arg) {
+static void CaptureSamples(void *arg) {
 #if NO_I2S_SUPPORT
   ESP_LOGE(TAG, "i2s support not available on C3 chip for IDF < 4.4.0");
   return;
@@ -111,8 +109,7 @@ static void CaptureSamples(void* arg) {
   i2s_init();
   while (1) {
     /* read 100ms data at once from i2s */
-    i2s_read((i2s_port_t)1, (void*)i2s_read_buffer, i2s_bytes_to_read,
-             &bytes_read, pdMS_TO_TICKS(100));
+    i2s_read((i2s_port_t)1, (void *)i2s_read_buffer, i2s_bytes_to_read, &bytes_read, pdMS_TO_TICKS(100));
     if (bytes_read <= 0) {
       ESP_LOGE(TAG, "Error in I2S read : %d", bytes_read);
     } else {
@@ -120,8 +117,7 @@ static void CaptureSamples(void* arg) {
         ESP_LOGW(TAG, "Partial I2S read");
       }
       /* write bytes read by i2s into ring buffer */
-      int bytes_written = rb_write(g_audio_capture_buffer,
-                                   (uint8_t*)i2s_read_buffer, bytes_read, pdMS_TO_TICKS(100));
+      int bytes_written = rb_write(g_audio_capture_buffer, (uint8_t *)i2s_read_buffer, bytes_read, pdMS_TO_TICKS(100));
       /* update the timestamp (in ms) to let the model know that new data has
        * arrived */
       g_latest_audio_timestamp = g_latest_audio_timestamp + ((1000 * (bytes_written / 2)) / kAudioSampleFrequency);
@@ -152,8 +148,7 @@ TfLiteStatus InitAudioRecording() {
   return kTfLiteOk;
 }
 
-TfLiteStatus GetAudioSamples(int start_ms, int duration_ms,
-                             int* audio_samples_size, int16_t** audio_samples) {
+TfLiteStatus GetAudioSamples(int start_ms, int duration_ms, int *audio_samples_size, int16_t **audio_samples) {
   if (!g_is_audio_initialized) {
     TfLiteStatus init_status = InitAudioRecording();
     if (init_status != kTfLiteOk) {
@@ -162,29 +157,22 @@ TfLiteStatus GetAudioSamples(int start_ms, int duration_ms,
     g_is_audio_initialized = true;
   }
   /* copy 160 samples (320 bytes) into output_buff from history */
-  memcpy((void*)(g_audio_output_buffer), (void*)(g_history_buffer),
-         history_samples_to_keep * sizeof(int16_t));
+  memcpy((void *)(g_audio_output_buffer), (void *)(g_history_buffer), history_samples_to_keep * sizeof(int16_t));
 
   /* copy 320 samples (640 bytes) from rb at ( int16_t*(g_audio_output_buffer) +
    * 160 ), first 160 samples (320 bytes) will be from history */
   int bytes_read =
-    rb_read(g_audio_capture_buffer,
-            ((uint8_t*)(g_audio_output_buffer + history_samples_to_keep)),
-            new_samples_to_get * sizeof(int16_t), pdMS_TO_TICKS(100));
+    rb_read(g_audio_capture_buffer, ((uint8_t *)(g_audio_output_buffer + history_samples_to_keep)), new_samples_to_get * sizeof(int16_t), pdMS_TO_TICKS(100));
   if (bytes_read < 0) {
     ESP_LOGE(TAG, " Model Could not read data from Ring Buffer");
   } else if (bytes_read < new_samples_to_get * sizeof(int16_t)) {
-    ESP_LOGD(TAG, "RB FILLED RIGHT NOW IS %d",
-             rb_filled(g_audio_capture_buffer));
+    ESP_LOGD(TAG, "RB FILLED RIGHT NOW IS %d", rb_filled(g_audio_capture_buffer));
     ESP_LOGD(TAG, " Partial Read of Data by Model ");
-    ESP_LOGV(TAG, " Could only read %d bytes when required %d bytes ",
-             bytes_read, (int)(new_samples_to_get * sizeof(int16_t)));
+    ESP_LOGV(TAG, " Could only read %d bytes when required %d bytes ", bytes_read, (int)(new_samples_to_get * sizeof(int16_t)));
   }
 
   /* copy 320 bytes from output_buff into history */
-  memcpy((void*)(g_history_buffer),
-         (void*)(g_audio_output_buffer + new_samples_to_get),
-         history_samples_to_keep * sizeof(int16_t));
+  memcpy((void *)(g_history_buffer), (void *)(g_audio_output_buffer + new_samples_to_get), history_samples_to_keep * sizeof(int16_t));
 
   *audio_samples_size = kMaxAudioSampleSize;
   *audio_samples = g_audio_output_buffer;

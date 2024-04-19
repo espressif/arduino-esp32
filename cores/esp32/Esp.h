@@ -42,7 +42,6 @@ typedef enum {
   WDTO_8S = 8000     //!< WDTO_8S
 } WDTO_t;
 
-
 typedef enum {
   FM_QIO = 0x00,
   FM_QOUT = 0x01,

@@ -6,14 +6,14 @@
 static const uint8_t LED_BUILTIN = 4;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
-#define LEDB LED_BUILTIN
-#define LEDR 3
-#define LEDG 1
+#define LEDB        LED_BUILTIN
+#define LEDR        3
+#define LEDG        1
 
 static const uint8_t GPKEY = 0;
 #define KEY_BUILTIN GPKEY
 #define BUILTIN_KEY GPKEY
-#define BOOT GPKEY
+#define BOOT        GPKEY
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;

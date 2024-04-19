@@ -71,7 +71,9 @@ void loopTask(void *pvParameters) {
       esp_task_wdt_reset();
     }
     loop();
-    if (serialEventRun) serialEventRun();
+    if (serialEventRun) {
+      serialEventRun();
+    }
   }
 }
 

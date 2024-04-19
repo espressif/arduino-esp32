@@ -40,13 +40,10 @@ static const uint8_t G4 = 16;
 static const uint8_t G5 = 32;
 static const uint8_t G6 = 33;
 
-
-
 static const uint8_t AUD_OUT = 17;
 static const uint8_t AUD_IN = 16;
 static const uint8_t AUD_LRCLK = 25;
 static const uint8_t AUD_BCLK = 26;
-
 
 static const uint8_t T0 = 4;
 static const uint8_t T1 = 0;

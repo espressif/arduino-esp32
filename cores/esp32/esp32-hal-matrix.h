@@ -15,7 +15,6 @@
 #ifndef _ESP32_HAL_MATRIX_H_
 #define _ESP32_HAL_MATRIX_H_
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -23,10 +22,10 @@ extern "C" {
 #include "esp32-hal.h"
 #include "soc/gpio_sig_map.h"
 
-  void pinMatrixOutAttach(uint8_t pin, uint8_t function, bool invertOut, bool invertEnable);
-  void pinMatrixOutDetach(uint8_t pin, bool invertOut, bool invertEnable);
-  void pinMatrixInAttach(uint8_t pin, uint8_t signal, bool inverted);
-  void pinMatrixInDetach(uint8_t signal, bool high, bool inverted);
+void pinMatrixOutAttach(uint8_t pin, uint8_t function, bool invertOut, bool invertEnable);
+void pinMatrixOutDetach(uint8_t pin, bool invertOut, bool invertEnable);
+void pinMatrixInAttach(uint8_t pin, uint8_t signal, bool inverted);
+void pinMatrixInDetach(uint8_t signal, bool high, bool inverted);
 
 #ifdef __cplusplus
 }

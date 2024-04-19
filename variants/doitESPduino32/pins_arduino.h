@@ -7,7 +7,6 @@ static const uint8_t LED_BUILTIN = 2;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
-
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
@@ -82,10 +81,10 @@ static const uint8_t RX = 3;
 #define PIN_WIRE_SDA SDA  // backward compatibility
 #define PIN_WIRE_SCL SCL  // backward compatibility
 
-#define PIN_SPI_SS SS      // backward compatibility
+#define PIN_SPI_SS   SS    // backward compatibility
 #define PIN_SPI_MOSI MOSI  // backward compatibility
 #define PIN_SPI_MISO MISO  // backward compatibility
-#define PIN_SPI_SCK SCK    // backward compatibility
+#define PIN_SPI_SCK  SCK   // backward compatibility
 
 #define PIN_A0 A0  // backward compatibility
 

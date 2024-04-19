@@ -29,33 +29,29 @@ static int base64EncodedLength(size_t length) {
   return (length + 2 - ((length + 2) % 3)) / 3 * 4;
 }  // base64EncodedLength
 
-
-static int base64EncodedLength(const String& in) {
+static int base64EncodedLength(const String &in) {
   return base64EncodedLength(in.length());
 }  // base64EncodedLength
 
-
-static void a3_to_a4(unsigned char* a4, unsigned char* a3) {
+static void a3_to_a4(unsigned char *a4, unsigned char *a3) {
   a4[0] = (a3[0] & 0xfc) >> 2;
   a4[1] = ((a3[0] & 0x03) << 4) + ((a3[1] & 0xf0) >> 4);
   a4[2] = ((a3[1] & 0x0f) << 2) + ((a3[2] & 0xc0) >> 6);
   a4[3] = (a3[2] & 0x3f);
 }  // a3_to_a4
 
-
-static void a4_to_a3(unsigned char* a3, unsigned char* a4) {
+static void a4_to_a3(unsigned char *a3, unsigned char *a4) {
   a3[0] = (a4[0] << 2) + ((a4[1] & 0x30) >> 4);
   a3[1] = ((a4[1] & 0xf) << 4) + ((a4[2] & 0x3c) >> 2);
   a3[2] = ((a4[2] & 0x3) << 6) + a4[3];
 }  // a4_to_a3
-
 
 /**
  * @brief Encode a string into base 64.
  * @param [in] in
  * @param [out] out
  */
-bool GeneralUtils::base64Encode(const String& in, String* out) {
+bool GeneralUtils::base64Encode(const String &in, String *out) {
   std::string std_in(in.c_str());
   std::string std_out(out->c_str());
   int i = 0, j = 0;
@@ -100,7 +96,6 @@ bool GeneralUtils::base64Encode(const String& in, String* out) {
   return (enc_len == out->length());
 }  // base64Encode
 
-
 /**
  * @brief Dump general info to the log.
  * Data includes:
@@ -115,7 +110,6 @@ void GeneralUtils::dumpInfo() {
   log_v("ESP-IDF version: %s", esp_get_idf_version());
   log_v("---");
 }  // dumpInfo
-
 
 /**
  * @brief Does the string end with a specific character?
@@ -147,21 +141,30 @@ static int DecodedLength(const String& in) {
 */
 
 static unsigned char b64_lookup(unsigned char c) {
-  if (c >= 'A' && c <= 'Z') return c - 'A';
-  if (c >= 'a' && c <= 'z') return c - 71;
-  if (c >= '0' && c <= '9') return c + 4;
-  if (c == '+') return 62;
-  if (c == '/') return 63;
+  if (c >= 'A' && c <= 'Z') {
+    return c - 'A';
+  }
+  if (c >= 'a' && c <= 'z') {
+    return c - 71;
+  }
+  if (c >= '0' && c <= '9') {
+    return c + 4;
+  }
+  if (c == '+') {
+    return 62;
+  }
+  if (c == '/') {
+    return 63;
+  }
   return 255;
 };  // b64_lookup
-
 
 /**
  * @brief Decode a chunk of data that is base64 encoded.
  * @param [in] in The string to be decoded.
  * @param [out] out The resulting data.
  */
-bool GeneralUtils::base64Decode(const String& in, String* out) {
+bool GeneralUtils::base64Decode(const String &in, String *out) {
   int i = 0, j = 0;
   size_t dec_len = 0;
   unsigned char a3[3];
@@ -285,7 +288,6 @@ void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
 }
 */
 
-
 /**
  * @brief Dump a representation of binary data to the console.
  *
@@ -293,7 +295,7 @@ void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
  * @param [in] length Length of the data (in bytes) to be logged.
  * @return N/A.
  */
-void GeneralUtils::hexDump(const uint8_t* pData, uint32_t length) {
+void GeneralUtils::hexDump(const uint8_t *pData, uint32_t length) {
   char ascii[80];
   char hex[80];
   char tempBuf[80];
@@ -330,21 +332,19 @@ void GeneralUtils::hexDump(const uint8_t* pData, uint32_t length) {
   }
 }  // hexDump
 
-
 /**
  * @brief Convert an IP address to string.
  * @param ip The 4 byte IP address.
  * @return A string representation of the IP address.
  */
-String GeneralUtils::ipToString(uint8_t* ip) {
+String GeneralUtils::ipToString(uint8_t *ip) {
   auto size = 16;
-  char* val = (char*)malloc(size);
+  char *val = (char *)malloc(size);
   snprintf(val, size, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
   String res(val);
   free(val);
   return res;
 }  // ipToString
-
 
 /**
  * @brief Split a string into parts based on a delimiter.
@@ -367,84 +367,50 @@ std::vector<String> GeneralUtils::split(String source, char delimiter) {
   return strings;
 }  // split
 
-
 /**
  * @brief Convert an ESP error code to a string.
  * @param [in] errCode The errCode to be converted.
  * @return A string representation of the error code.
  */
-const char* GeneralUtils::errorToString(esp_err_t errCode) {
+const char *GeneralUtils::errorToString(esp_err_t errCode) {
   switch (errCode) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-    case ESP_OK:
-      return "ESP_OK";
-    case ESP_FAIL:
-      return "ESP_FAIL";
-    case ESP_ERR_NO_MEM:
-      return "ESP_ERR_NO_MEM";
-    case ESP_ERR_INVALID_ARG:
-      return "ESP_ERR_INVALID_ARG";
-    case ESP_ERR_INVALID_SIZE:
-      return "ESP_ERR_INVALID_SIZE";
-    case ESP_ERR_INVALID_STATE:
-      return "ESP_ERR_INVALID_STATE";
-    case ESP_ERR_NOT_FOUND:
-      return "ESP_ERR_NOT_FOUND";
-    case ESP_ERR_NOT_SUPPORTED:
-      return "ESP_ERR_NOT_SUPPORTED";
-    case ESP_ERR_TIMEOUT:
-      return "ESP_ERR_TIMEOUT";
-    case ESP_ERR_NVS_NOT_INITIALIZED:
-      return "ESP_ERR_NVS_NOT_INITIALIZED";
-    case ESP_ERR_NVS_NOT_FOUND:
-      return "ESP_ERR_NVS_NOT_FOUND";
-    case ESP_ERR_NVS_TYPE_MISMATCH:
-      return "ESP_ERR_NVS_TYPE_MISMATCH";
-    case ESP_ERR_NVS_READ_ONLY:
-      return "ESP_ERR_NVS_READ_ONLY";
-    case ESP_ERR_NVS_NOT_ENOUGH_SPACE:
-      return "ESP_ERR_NVS_NOT_ENOUGH_SPACE";
-    case ESP_ERR_NVS_INVALID_NAME:
-      return "ESP_ERR_NVS_INVALID_NAME";
-    case ESP_ERR_NVS_INVALID_HANDLE:
-      return "ESP_ERR_NVS_INVALID_HANDLE";
-    case ESP_ERR_NVS_REMOVE_FAILED:
-      return "ESP_ERR_NVS_REMOVE_FAILED";
-    case ESP_ERR_NVS_KEY_TOO_LONG:
-      return "ESP_ERR_NVS_KEY_TOO_LONG";
-    case ESP_ERR_NVS_PAGE_FULL:
-      return "ESP_ERR_NVS_PAGE_FULL";
-    case ESP_ERR_NVS_INVALID_STATE:
-      return "ESP_ERR_NVS_INVALID_STATE";
-    case ESP_ERR_NVS_INVALID_LENGTH:
-      return "ESP_ERR_NVS_INVALID_LENGTH";
-    case ESP_ERR_WIFI_NOT_INIT:
-      return "ESP_ERR_WIFI_NOT_INIT";
+    case ESP_OK:                       return "ESP_OK";
+    case ESP_FAIL:                     return "ESP_FAIL";
+    case ESP_ERR_NO_MEM:               return "ESP_ERR_NO_MEM";
+    case ESP_ERR_INVALID_ARG:          return "ESP_ERR_INVALID_ARG";
+    case ESP_ERR_INVALID_SIZE:         return "ESP_ERR_INVALID_SIZE";
+    case ESP_ERR_INVALID_STATE:        return "ESP_ERR_INVALID_STATE";
+    case ESP_ERR_NOT_FOUND:            return "ESP_ERR_NOT_FOUND";
+    case ESP_ERR_NOT_SUPPORTED:        return "ESP_ERR_NOT_SUPPORTED";
+    case ESP_ERR_TIMEOUT:              return "ESP_ERR_TIMEOUT";
+    case ESP_ERR_NVS_NOT_INITIALIZED:  return "ESP_ERR_NVS_NOT_INITIALIZED";
+    case ESP_ERR_NVS_NOT_FOUND:        return "ESP_ERR_NVS_NOT_FOUND";
+    case ESP_ERR_NVS_TYPE_MISMATCH:    return "ESP_ERR_NVS_TYPE_MISMATCH";
+    case ESP_ERR_NVS_READ_ONLY:        return "ESP_ERR_NVS_READ_ONLY";
+    case ESP_ERR_NVS_NOT_ENOUGH_SPACE: return "ESP_ERR_NVS_NOT_ENOUGH_SPACE";
+    case ESP_ERR_NVS_INVALID_NAME:     return "ESP_ERR_NVS_INVALID_NAME";
+    case ESP_ERR_NVS_INVALID_HANDLE:   return "ESP_ERR_NVS_INVALID_HANDLE";
+    case ESP_ERR_NVS_REMOVE_FAILED:    return "ESP_ERR_NVS_REMOVE_FAILED";
+    case ESP_ERR_NVS_KEY_TOO_LONG:     return "ESP_ERR_NVS_KEY_TOO_LONG";
+    case ESP_ERR_NVS_PAGE_FULL:        return "ESP_ERR_NVS_PAGE_FULL";
+    case ESP_ERR_NVS_INVALID_STATE:    return "ESP_ERR_NVS_INVALID_STATE";
+    case ESP_ERR_NVS_INVALID_LENGTH:   return "ESP_ERR_NVS_INVALID_LENGTH";
+    case ESP_ERR_WIFI_NOT_INIT:        return "ESP_ERR_WIFI_NOT_INIT";
     //case ESP_ERR_WIFI_NOT_START:
     //	return "ESP_ERR_WIFI_NOT_START";
-    case ESP_ERR_WIFI_IF:
-      return "ESP_ERR_WIFI_IF";
-    case ESP_ERR_WIFI_MODE:
-      return "ESP_ERR_WIFI_MODE";
-    case ESP_ERR_WIFI_STATE:
-      return "ESP_ERR_WIFI_STATE";
-    case ESP_ERR_WIFI_CONN:
-      return "ESP_ERR_WIFI_CONN";
-    case ESP_ERR_WIFI_NVS:
-      return "ESP_ERR_WIFI_NVS";
-    case ESP_ERR_WIFI_MAC:
-      return "ESP_ERR_WIFI_MAC";
-    case ESP_ERR_WIFI_SSID:
-      return "ESP_ERR_WIFI_SSID";
-    case ESP_ERR_WIFI_PASSWORD:
-      return "ESP_ERR_WIFI_PASSWORD";
-    case ESP_ERR_WIFI_TIMEOUT:
-      return "ESP_ERR_WIFI_TIMEOUT";
-    case ESP_ERR_WIFI_WAKE_FAIL:
-      return "ESP_ERR_WIFI_WAKE_FAIL";
+    case ESP_ERR_WIFI_IF:        return "ESP_ERR_WIFI_IF";
+    case ESP_ERR_WIFI_MODE:      return "ESP_ERR_WIFI_MODE";
+    case ESP_ERR_WIFI_STATE:     return "ESP_ERR_WIFI_STATE";
+    case ESP_ERR_WIFI_CONN:      return "ESP_ERR_WIFI_CONN";
+    case ESP_ERR_WIFI_NVS:       return "ESP_ERR_WIFI_NVS";
+    case ESP_ERR_WIFI_MAC:       return "ESP_ERR_WIFI_MAC";
+    case ESP_ERR_WIFI_SSID:      return "ESP_ERR_WIFI_SSID";
+    case ESP_ERR_WIFI_PASSWORD:  return "ESP_ERR_WIFI_PASSWORD";
+    case ESP_ERR_WIFI_TIMEOUT:   return "ESP_ERR_WIFI_TIMEOUT";
+    case ESP_ERR_WIFI_WAKE_FAIL: return "ESP_ERR_WIFI_WAKE_FAIL";
 #endif
-    default:
-      return "Unknown ESP_ERR error";
+    default: return "Unknown ESP_ERR error";
   }
 }  // errorToString
 
@@ -455,95 +421,70 @@ const char* GeneralUtils::errorToString(esp_err_t errCode) {
  *
  * @note: wifi_err_reason_t values as of April 2018 are: (1-24, 200-204) and are defined in ~/esp-idf/components/esp32/include/esp_wifi_types.h.
  */
-const char* GeneralUtils::wifiErrorToString(uint8_t errCode) {
-  if (errCode == ESP_OK) return "ESP_OK (received SYSTEM_EVENT_STA_GOT_IP event)";
-  if (errCode == UINT8_MAX) return "Not Connected (default value)";
+const char *GeneralUtils::wifiErrorToString(uint8_t errCode) {
+  if (errCode == ESP_OK) {
+    return "ESP_OK (received SYSTEM_EVENT_STA_GOT_IP event)";
+  }
+  if (errCode == UINT8_MAX) {
+    return "Not Connected (default value)";
+  }
 
   switch ((wifi_err_reason_t)errCode) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-    case WIFI_REASON_UNSPECIFIED:
-      return "WIFI_REASON_UNSPECIFIED";
-    case WIFI_REASON_AUTH_EXPIRE:
-      return "WIFI_REASON_AUTH_EXPIRE";
-    case WIFI_REASON_AUTH_LEAVE:
-      return "WIFI_REASON_AUTH_LEAVE";
-    case WIFI_REASON_ASSOC_EXPIRE:
-      return "WIFI_REASON_ASSOC_EXPIRE";
-    case WIFI_REASON_ASSOC_TOOMANY:
-      return "WIFI_REASON_ASSOC_TOOMANY";
-    case WIFI_REASON_NOT_AUTHED:
-      return "WIFI_REASON_NOT_AUTHED";
-    case WIFI_REASON_NOT_ASSOCED:
-      return "WIFI_REASON_NOT_ASSOCED";
-    case WIFI_REASON_ASSOC_LEAVE:
-      return "WIFI_REASON_ASSOC_LEAVE";
-    case WIFI_REASON_ASSOC_NOT_AUTHED:
-      return "WIFI_REASON_ASSOC_NOT_AUTHED";
-    case WIFI_REASON_DISASSOC_PWRCAP_BAD:
-      return "WIFI_REASON_DISASSOC_PWRCAP_BAD";
-    case WIFI_REASON_DISASSOC_SUPCHAN_BAD:
-      return "WIFI_REASON_DISASSOC_SUPCHAN_BAD";
-    case WIFI_REASON_IE_INVALID:
-      return "WIFI_REASON_IE_INVALID";
-    case WIFI_REASON_MIC_FAILURE:
-      return "WIFI_REASON_MIC_FAILURE";
-    case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
-      return "WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT";
-    case WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT:
-      return "WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT";
-    case WIFI_REASON_IE_IN_4WAY_DIFFERS:
-      return "WIFI_REASON_IE_IN_4WAY_DIFFERS";
-    case WIFI_REASON_GROUP_CIPHER_INVALID:
-      return "WIFI_REASON_GROUP_CIPHER_INVALID";
-    case WIFI_REASON_PAIRWISE_CIPHER_INVALID:
-      return "WIFI_REASON_PAIRWISE_CIPHER_INVALID";
-    case WIFI_REASON_AKMP_INVALID:
-      return "WIFI_REASON_AKMP_INVALID";
-    case WIFI_REASON_UNSUPP_RSN_IE_VERSION:
-      return "WIFI_REASON_UNSUPP_RSN_IE_VERSION";
-    case WIFI_REASON_INVALID_RSN_IE_CAP:
-      return "WIFI_REASON_INVALID_RSN_IE_CAP";
-    case WIFI_REASON_802_1X_AUTH_FAILED:
-      return "WIFI_REASON_802_1X_AUTH_FAILED";
-    case WIFI_REASON_CIPHER_SUITE_REJECTED:
-      return "WIFI_REASON_CIPHER_SUITE_REJECTED";
-    case WIFI_REASON_BEACON_TIMEOUT:
-      return "WIFI_REASON_BEACON_TIMEOUT";
-    case WIFI_REASON_NO_AP_FOUND:
-      return "WIFI_REASON_NO_AP_FOUND";
-    case WIFI_REASON_AUTH_FAIL:
-      return "WIFI_REASON_AUTH_FAIL";
-    case WIFI_REASON_ASSOC_FAIL:
-      return "WIFI_REASON_ASSOC_FAIL";
-    case WIFI_REASON_HANDSHAKE_TIMEOUT:
-      return "WIFI_REASON_HANDSHAKE_TIMEOUT";
+    case WIFI_REASON_UNSPECIFIED:              return "WIFI_REASON_UNSPECIFIED";
+    case WIFI_REASON_AUTH_EXPIRE:              return "WIFI_REASON_AUTH_EXPIRE";
+    case WIFI_REASON_AUTH_LEAVE:               return "WIFI_REASON_AUTH_LEAVE";
+    case WIFI_REASON_ASSOC_EXPIRE:             return "WIFI_REASON_ASSOC_EXPIRE";
+    case WIFI_REASON_ASSOC_TOOMANY:            return "WIFI_REASON_ASSOC_TOOMANY";
+    case WIFI_REASON_NOT_AUTHED:               return "WIFI_REASON_NOT_AUTHED";
+    case WIFI_REASON_NOT_ASSOCED:              return "WIFI_REASON_NOT_ASSOCED";
+    case WIFI_REASON_ASSOC_LEAVE:              return "WIFI_REASON_ASSOC_LEAVE";
+    case WIFI_REASON_ASSOC_NOT_AUTHED:         return "WIFI_REASON_ASSOC_NOT_AUTHED";
+    case WIFI_REASON_DISASSOC_PWRCAP_BAD:      return "WIFI_REASON_DISASSOC_PWRCAP_BAD";
+    case WIFI_REASON_DISASSOC_SUPCHAN_BAD:     return "WIFI_REASON_DISASSOC_SUPCHAN_BAD";
+    case WIFI_REASON_IE_INVALID:               return "WIFI_REASON_IE_INVALID";
+    case WIFI_REASON_MIC_FAILURE:              return "WIFI_REASON_MIC_FAILURE";
+    case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:   return "WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT";
+    case WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT: return "WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT";
+    case WIFI_REASON_IE_IN_4WAY_DIFFERS:       return "WIFI_REASON_IE_IN_4WAY_DIFFERS";
+    case WIFI_REASON_GROUP_CIPHER_INVALID:     return "WIFI_REASON_GROUP_CIPHER_INVALID";
+    case WIFI_REASON_PAIRWISE_CIPHER_INVALID:  return "WIFI_REASON_PAIRWISE_CIPHER_INVALID";
+    case WIFI_REASON_AKMP_INVALID:             return "WIFI_REASON_AKMP_INVALID";
+    case WIFI_REASON_UNSUPP_RSN_IE_VERSION:    return "WIFI_REASON_UNSUPP_RSN_IE_VERSION";
+    case WIFI_REASON_INVALID_RSN_IE_CAP:       return "WIFI_REASON_INVALID_RSN_IE_CAP";
+    case WIFI_REASON_802_1X_AUTH_FAILED:       return "WIFI_REASON_802_1X_AUTH_FAILED";
+    case WIFI_REASON_CIPHER_SUITE_REJECTED:    return "WIFI_REASON_CIPHER_SUITE_REJECTED";
+    case WIFI_REASON_BEACON_TIMEOUT:           return "WIFI_REASON_BEACON_TIMEOUT";
+    case WIFI_REASON_NO_AP_FOUND:              return "WIFI_REASON_NO_AP_FOUND";
+    case WIFI_REASON_AUTH_FAIL:                return "WIFI_REASON_AUTH_FAIL";
+    case WIFI_REASON_ASSOC_FAIL:               return "WIFI_REASON_ASSOC_FAIL";
+    case WIFI_REASON_HANDSHAKE_TIMEOUT:        return "WIFI_REASON_HANDSHAKE_TIMEOUT";
 #endif
-    default:
-      return "Unknown ESP_ERR error";
+    default: return "Unknown ESP_ERR error";
   }
 }  // wifiErrorToString
-
 
 /**
  * @brief Convert a string to lower case.
  * @param [in] value The string to convert to lower case.
  * @return A lower case representation of the string.
  */
-String GeneralUtils::toLower(String& value) {
+String GeneralUtils::toLower(String &value) {
   // Question: Could this be improved with a signature of:
   // String& GeneralUtils::toLower(String& value)
   std::transform(value.begin(), value.end(), value.begin(), ::tolower);
   return value;
 }  // toLower
 
-
 /**
  * @brief Remove white space from a string.
  */
-String GeneralUtils::trim(const String& str) {
+String GeneralUtils::trim(const String &str) {
   std::string std_str(str.c_str());
   size_t first = std_str.find_first_not_of(' ');
-  if (std::string::npos == first) return str;
+  if (std::string::npos == first) {
+    return str;
+  }
   size_t last = std_str.find_last_not_of(' ');
   return str.substring(first, (last + 1));
 }  // trim

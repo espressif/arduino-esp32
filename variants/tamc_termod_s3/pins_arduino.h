@@ -64,12 +64,12 @@ static const uint8_t TFT_BCKL = 48;  // TFT Backlight is enabled by soldering JP
 static const uint8_t SD_CS = 21;
 static const uint8_t SD_CD = 47;  // uSD Card Detect is enabled by soldering JP1 together.
 
-#define DISPLAY_PORTRAIT 2
-#define DISPLAY_LANDSCAPE 3
-#define DISPLAY_PORTRAIT_FLIP 0
+#define DISPLAY_PORTRAIT       2
+#define DISPLAY_LANDSCAPE      3
+#define DISPLAY_PORTRAIT_FLIP  0
 #define DISPLAY_LANDSCAPE_FLIP 1
 
-#define DISPLAY_WIDTH 240
+#define DISPLAY_WIDTH  240
 #define DISPLAY_HEIGHT 320
 
 /**

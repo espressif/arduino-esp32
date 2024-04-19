@@ -22,7 +22,6 @@ void FreeRTOS::sleep(uint32_t ms) {
   ::vTaskDelay(ms / portTICK_PERIOD_MS);
 }  // sleep
 
-
 /**
  * Start a new task.
  * @param[in] task The function pointer to the function to be run in the task.
@@ -30,10 +29,9 @@ void FreeRTOS::sleep(uint32_t ms) {
  * @param[in] param An optional parameter to be passed to the started task.
  * @param[in] stackSize An optional parameter supplying the size of the stack in which to run the task.
  */
-void FreeRTOS::startTask(void task(void*), String taskName, void* param, uint32_t stackSize) {
+void FreeRTOS::startTask(void task(void *), String taskName, void *param, uint32_t stackSize) {
   ::xTaskCreate(task, taskName.c_str(), stackSize, param, 5, NULL);
 }  // startTask
-
 
 /**
  * Delete the task.
@@ -43,7 +41,6 @@ void FreeRTOS::deleteTask(TaskHandle_t pTask) {
   ::vTaskDelete(pTask);
 }  // deleteTask
 
-
 /**
  * Get the time in milliseconds since the %FreeRTOS scheduler started.
  * @return The time in milliseconds since the %FreeRTOS scheduler started.
@@ -51,7 +48,6 @@ void FreeRTOS::deleteTask(TaskHandle_t pTask) {
 uint32_t FreeRTOS::getTimeSinceStart() {
   return (uint32_t)(xTaskGetTickCount() * portTICK_PERIOD_MS);
 }  // getTimeSinceStart
-
 
 /**
  * @brief Wait for a semaphore to be released by trying to take it and
@@ -110,7 +106,6 @@ bool FreeRTOS::Semaphore::timedWait(String owner, uint32_t timeoutMs) {
   return ret;
 }  // wait
 
-
 FreeRTOS::Semaphore::Semaphore(String name) {
   m_usePthreads = false;  // Are we using pThreads or FreeRTOS?
   if (m_usePthreads) {
@@ -125,7 +120,6 @@ FreeRTOS::Semaphore::Semaphore(String name) {
   m_value = 0;
 }
 
-
 FreeRTOS::Semaphore::~Semaphore() {
   if (m_usePthreads) {
     pthread_mutex_destroy(&m_pthread_mutex);
@@ -133,7 +127,6 @@ FreeRTOS::Semaphore::~Semaphore() {
     vSemaphoreDelete(m_semaphore);
   }
 }
-
 
 /**
  * @brief Give a semaphore.
@@ -154,7 +147,6 @@ void FreeRTOS::Semaphore::give() {
 
 }  // Semaphore::give
 
-
 /**
  * @brief Give a semaphore.
  * The Semaphore is given with an associated value.
@@ -164,7 +156,6 @@ void FreeRTOS::Semaphore::give(uint32_t value) {
   m_value = value;
   give();
 }  // give
-
 
 /**
  * @brief Give a semaphore from an ISR.
@@ -177,7 +168,6 @@ void FreeRTOS::Semaphore::giveFromISR() {
     xSemaphoreGiveFromISR(m_semaphore, &higherPriorityTaskWoken);
   }
 }  // giveFromISR
-
 
 /**
  * @brief Take a semaphore.
@@ -201,7 +191,6 @@ bool FreeRTOS::Semaphore::take(String owner) {
   }
   return rc;
 }  // Semaphore::take
-
 
 /**
  * @brief Take a semaphore.
@@ -227,8 +216,6 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, String owner) {
   return rc;
 }  // Semaphore::take
 
-
-
 /**
  * @brief Create a string representation of the semaphore.
  * @return A string representation of the semaphore.
@@ -242,7 +229,6 @@ String FreeRTOS::Semaphore::toString() {
   return res;
 }  // toString
 
-
 /**
  * @brief Set the name of the semaphore.
  * @param [in] name The name of the semaphore.
@@ -250,7 +236,6 @@ String FreeRTOS::Semaphore::toString() {
 void FreeRTOS::Semaphore::setName(String name) {
   m_name = name;
 }  // setName
-
 
 /**
  * @brief Create a ring buffer.
@@ -266,11 +251,9 @@ Ringbuffer::Ringbuffer(size_t length, ringbuf_type_t type)
   m_handle = ::xRingbufferCreate(length, type);
 }  // Ringbuffer
 
-
 Ringbuffer::~Ringbuffer() {
   ::vRingbufferDelete(m_handle);
 }  // ~Ringbuffer
-
 
 /**
  * @brief Receive data from the buffer.
@@ -278,19 +261,17 @@ Ringbuffer::~Ringbuffer() {
  * @param [in] wait How long to wait.
  * @return A pointer to the storage retrieved.
  */
-void* Ringbuffer::receive(size_t* size, TickType_t wait) {
+void *Ringbuffer::receive(size_t *size, TickType_t wait) {
   return ::xRingbufferReceive(m_handle, size, wait);
 }  // receive
-
 
 /**
  * @brief Return an item.
  * @param [in] item The item to be returned/released.
  */
-void Ringbuffer::returnItem(void* item) {
+void Ringbuffer::returnItem(void *item) {
   ::vRingbufferReturnItem(m_handle, item);
 }  // returnItem
-
 
 /**
  * @brief Send data to the buffer.
@@ -299,6 +280,6 @@ void Ringbuffer::returnItem(void* item) {
  * @param [in] wait How long to wait before giving up.  The default is to wait indefinitely.
  * @return
  */
-bool Ringbuffer::send(void* data, size_t length, TickType_t wait) {
+bool Ringbuffer::send(void *data, size_t length, TickType_t wait) {
   return ::xRingbufferSend(m_handle, data, length, wait) == pdTRUE;
 }  // send

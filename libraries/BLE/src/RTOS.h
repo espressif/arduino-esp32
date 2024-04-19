@@ -17,14 +17,13 @@
 #include <freertos/semphr.h>    // Include the semaphore definitions.
 #include <freertos/ringbuf.h>   // Include the ringbuffer definitions.
 
-
 /**
  * @brief Interface to %FreeRTOS functions.
  */
 class FreeRTOS {
 public:
   static void sleep(uint32_t ms);
-  static void startTask(void task(void*), String taskName, void* param = nullptr, uint32_t stackSize = 2048);
+  static void startTask(void task(void *), String taskName, void *param = nullptr, uint32_t stackSize = 2048);
   static void deleteTask(TaskHandle_t pTask = nullptr);
 
   static uint32_t getTimeSinceStart();
@@ -56,7 +55,6 @@ public:
   };
 };
 
-
 /**
  * @brief Ringbuffer.
  */
@@ -69,9 +67,10 @@ public:
 #endif
   ~Ringbuffer();
 
-  void* receive(size_t* size, TickType_t wait = portMAX_DELAY);
-  void returnItem(void* item);
-  bool send(void* data, size_t length, TickType_t wait = portMAX_DELAY);
+  void *receive(size_t *size, TickType_t wait = portMAX_DELAY);
+  void returnItem(void *item);
+  bool send(void *data, size_t length, TickType_t wait = portMAX_DELAY);
+
 private:
   RingbufHandle_t m_handle;
 };

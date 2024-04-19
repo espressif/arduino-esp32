@@ -18,6 +18,5 @@ limitations under the License.
 
 void HandleOutput(float x_value, float y_value) {
   // Log the current X and Y values
-  MicroPrintf("x_value: %f, y_value: %f\n", static_cast<double>(x_value),
-              static_cast<double>(y_value));
+  MicroPrintf("x_value: %f, y_value: %f\n", static_cast<double>(x_value), static_cast<double>(y_value));
 }

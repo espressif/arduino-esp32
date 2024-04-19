@@ -36,7 +36,7 @@
 
 /* Switch configuration */
 #define GPIO_INPUT_IO_TOGGLE_SWITCH GPIO_NUM_9
-#define PAIR_SIZE(TYPE_STR_PAIR) (sizeof(TYPE_STR_PAIR) / sizeof(TYPE_STR_PAIR[0]))
+#define PAIR_SIZE(TYPE_STR_PAIR)    (sizeof(TYPE_STR_PAIR) / sizeof(TYPE_STR_PAIR[0]))
 
 typedef enum {
   SWITCH_ON_CONTROL,
@@ -61,31 +61,24 @@ typedef enum {
   SWITCH_RELEASE_DETECTED,
 } switch_state_t;
 
-static switch_func_pair_t button_func_pair[] = {
-  { GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL }
-};
+static switch_func_pair_t button_func_pair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}};
 
 /* Default Coordinator config */
-#define ESP_ZB_ZC_CONFIG() \
-  { \
-    .esp_zb_role = ESP_ZB_DEVICE_TYPE_COORDINATOR, \
-    .install_code_policy = INSTALLCODE_POLICY_ENABLE, \
-    .nwk_cfg = { \
-      .zczr_cfg = { \
-        .max_children = MAX_CHILDREN, \
-      }, \
-    } \
+#define ESP_ZB_ZC_CONFIG()                                                                                        \
+  {                                                                                                               \
+    .esp_zb_role = ESP_ZB_DEVICE_TYPE_COORDINATOR, .install_code_policy = INSTALLCODE_POLICY_ENABLE, .nwk_cfg = { \
+      .zczr_cfg =                                                                                                 \
+        {                                                                                                         \
+          .max_children = MAX_CHILDREN,                                                                           \
+        },                                                                                                        \
+    }                                                                                                             \
   }
 
 #define ESP_ZB_DEFAULT_RADIO_CONFIG() \
-  { \
-    .radio_mode = RADIO_MODE_NATIVE, \
-  }
+  { .radio_mode = RADIO_MODE_NATIVE, }
 
 #define ESP_ZB_DEFAULT_HOST_CONFIG() \
-  { \
-    .host_connection_mode = HOST_CONNECTION_MODE_NONE, \
-  }
+  { .host_connection_mode = HOST_CONNECTION_MODE_NONE, }
 
 typedef struct light_bulb_device_params_s {
   esp_zb_ieee_addr_t ieee_addr;
@@ -94,9 +87,9 @@ typedef struct light_bulb_device_params_s {
 } light_bulb_device_params_t;
 
 /* Zigbee configuration */
-#define MAX_CHILDREN 10                                                  /* the max amount of connected devices */
-#define INSTALLCODE_POLICY_ENABLE false                                  /* enable the install code policy for security */
-#define HA_ONOFF_SWITCH_ENDPOINT 1                                       /* esp light switch device endpoint */
+#define MAX_CHILDREN                10                                   /* the max amount of connected devices */
+#define INSTALLCODE_POLICY_ENABLE   false                                /* enable the install code policy for security */
+#define HA_ONOFF_SWITCH_ENDPOINT    1                                    /* esp light switch device endpoint */
 #define ESP_ZB_PRIMARY_CHANNEL_MASK ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK /* Zigbee primary channel mask use in the example */
 
 /********************* Define functions **************************/
@@ -170,10 +163,11 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       if (err_status == ESP_OK) {
         esp_zb_ieee_addr_t extended_pan_id;
         esp_zb_get_extended_pan_id(extended_pan_id);
-        log_i("Formed network successfully (Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, PAN ID: 0x%04hx, Channel:%d, Short Address: 0x%04hx)",
-              extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4],
-              extended_pan_id[3], extended_pan_id[2], extended_pan_id[1], extended_pan_id[0],
-              esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address());
+        log_i(
+          "Formed network successfully (Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, PAN ID: 0x%04hx, Channel:%d, Short Address: 0x%04hx)",
+          extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4], extended_pan_id[3], extended_pan_id[2], extended_pan_id[1],
+          extended_pan_id[0], esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address()
+        );
         esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
       } else {
         log_i("Restart network formation (status: %s)", esp_err_to_name(err_status));
@@ -193,10 +187,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       cmd_req.addr_of_interest = dev_annce_params->device_short_addr;
       esp_zb_zdo_find_on_off_light(&cmd_req, user_find_cb, NULL);
       break;
-    default:
-      log_i("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type,
-            esp_err_to_name(err_status));
-      break;
+    default: log_i("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;
   }
 }
 
@@ -245,8 +236,7 @@ void setup() {
     gpio_evt_queue = xQueueCreate(10, sizeof(switch_func_pair_t));
     if (gpio_evt_queue == 0) {
       log_e("Queue was not created and must not be used");
-      while (1)
-        ;
+      while (1);
     }
     attachInterruptArg(button_func_pair[i].pin, gpio_isr_handler, (void *)(button_func_pair + i), FALLING);
   }
@@ -271,19 +261,14 @@ void loop() {
   while (evt_flag) {
     bool value = digitalRead(pin);
     switch (switch_state) {
-      case SWITCH_IDLE:
-        switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_IDLE;
-        break;
-      case SWITCH_PRESS_DETECTED:
-        switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_RELEASE_DETECTED;
-        break;
+      case SWITCH_IDLE:           switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_IDLE; break;
+      case SWITCH_PRESS_DETECTED: switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_RELEASE_DETECTED; break;
       case SWITCH_RELEASE_DETECTED:
         switch_state = SWITCH_IDLE;
         /* callback to button_handler */
         (*esp_zb_buttons_handler)(&button_func_pair);
         break;
-      default:
-        break;
+      default: break;
     }
     if (switch_state == SWITCH_IDLE) {
       switch_gpios_intr_enabled(true);

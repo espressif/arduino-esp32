@@ -7,10 +7,8 @@
 class UriRegex : public Uri {
 
 public:
-  explicit UriRegex(const char *uri)
-    : Uri(uri){};
-  explicit UriRegex(const String &uri)
-    : Uri(uri){};
+  explicit UriRegex(const char *uri) : Uri(uri){};
+  explicit UriRegex(const String &uri) : Uri(uri){};
 
   Uri *clone() const override final {
     return new UriRegex(_uri);
@@ -19,14 +17,15 @@ public:
   void initPathArgs(std::vector<String> &pathArgs) override final {
     std::regex rgx((_uri + "|").c_str());
     std::smatch matches;
-    std::string s{ "" };
+    std::string s{""};
     std::regex_search(s, matches, rgx);
     pathArgs.resize(matches.size() - 1);
   }
 
   bool canHandle(const String &requestUri, std::vector<String> &pathArgs) override final {
-    if (Uri::canHandle(requestUri, pathArgs))
+    if (Uri::canHandle(requestUri, pathArgs)) {
       return true;
+    }
 
     unsigned int pathArgIndex = 0;
     std::regex rgx(_uri.c_str());

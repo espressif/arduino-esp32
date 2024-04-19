@@ -100,5 +100,4 @@ void rebootEspWithReason(String reason) {
 }
 
 //will not be reached
-void loop() {
-}
+void loop() {}

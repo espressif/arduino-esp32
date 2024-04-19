@@ -60,30 +60,32 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[] = {
-  { 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0 },
+  {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #if SOC_UART_NUM > 1
-  { 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0 },
+  {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 #if SOC_UART_NUM > 2
-  { 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0 },
+  {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 };
 
 #else
 
 #define UART_MUTEX_LOCK() \
-  if (uart->lock != NULL) do { \
+  if (uart->lock != NULL) \
+    do {                  \
   } while (xSemaphoreTake(uart->lock, portMAX_DELAY) != pdPASS)
 #define UART_MUTEX_UNLOCK() \
-  if (uart->lock != NULL) xSemaphoreGive(uart->lock)
+  if (uart->lock != NULL)   \
+  xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
-  { NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0 },
+  {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #if SOC_UART_NUM > 1
-  { NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0 },
+  {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 #if SOC_UART_NUM > 2
-  { NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0 },
+  {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 };
 
@@ -97,7 +99,7 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     return false;
   }
   // get UART information
-  uart_t* uart = &_uart_bus_array[uart_num];
+  uart_t *uart = &_uart_bus_array[uart_num];
   bool retCode = true;
   //log_v("detaching UART%d pins: prev,pin RX(%d,%d) TX(%d,%d) CTS(%d,%d) RTS(%d,%d)", uart_num,
   //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
@@ -148,32 +150,31 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
 }
 
 // Peripheral Manager detach callback for each specific UART PIN
-static bool _uartDetachBus_RX(void* busptr) {
+static bool _uartDetachBus_RX(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_RX bus NULL pointer.");
-  uart_t* bus = (uart_t*)busptr;
+  uart_t *bus = (uart_t *)busptr;
   return _uartDetachPins(bus->num, bus->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
-static bool _uartDetachBus_TX(void* busptr) {
+static bool _uartDetachBus_TX(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_TX bus NULL pointer.");
-  uart_t* bus = (uart_t*)busptr;
+  uart_t *bus = (uart_t *)busptr;
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
-
-static bool _uartDetachBus_CTS(void* busptr) {
+static bool _uartDetachBus_CTS(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_CTS bus NULL pointer.");
-  uart_t* bus = (uart_t*)busptr;
+  uart_t *bus = (uart_t *)busptr;
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, bus->_ctsPin, UART_PIN_NO_CHANGE);
 }
 
-static bool _uartDetachBus_RTS(void* busptr) {
+static bool _uartDetachBus_RTS(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_RTS bus NULL pointer.");
-  uart_t* bus = (uart_t*)busptr;
+  uart_t *bus = (uart_t *)busptr;
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, bus->_rtsPin);
 }
 
@@ -185,20 +186,23 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     return false;
   }
   // get UART information
-  uart_t* uart = &_uart_bus_array[uart_num];
+  uart_t *uart = &_uart_bus_array[uart_num];
   //log_v("attaching UART%d pins: prev,new RX(%d,%d) TX(%d,%d) CTS(%d,%d) RTS(%d,%d)", uart_num,
   //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
-
 
   bool retCode = true;
   if (rxPin >= 0) {
     // forces a clean detaching from a previous peripheral
-    if (perimanGetPinBusType(rxPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(rxPin);
+    if (perimanGetPinBusType(rxPin) != ESP32_BUS_TYPE_INIT) {
+      perimanClearPinBus(rxPin);
+    }
     // connect RX Pad
     bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     if (ret) {
-      ret &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void*)uart, uart_num, -1);
-      if (ret) uart->_rxPin = rxPin;
+      ret &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void *)uart, uart_num, -1);
+      if (ret) {
+        uart->_rxPin = rxPin;
+      }
     }
     if (!ret) {
       log_e("UART%d failed to attach RX pin %d", uart_num, rxPin);
@@ -207,12 +211,16 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
   }
   if (txPin >= 0) {
     // forces a clean detaching from a previous peripheral
-    if (perimanGetPinBusType(txPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(txPin);
+    if (perimanGetPinBusType(txPin) != ESP32_BUS_TYPE_INIT) {
+      perimanClearPinBus(txPin);
+    }
     // connect TX Pad
     bool ret = ESP_OK == uart_set_pin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     if (ret) {
-      ret &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void*)uart, uart_num, -1);
-      if (ret) uart->_txPin = txPin;
+      ret &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void *)uart, uart_num, -1);
+      if (ret) {
+        uart->_txPin = txPin;
+      }
     }
     if (!ret) {
       log_e("UART%d failed to attach TX pin %d", uart_num, txPin);
@@ -221,12 +229,16 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
   }
   if (ctsPin >= 0) {
     // forces a clean detaching from a previous peripheral
-    if (perimanGetPinBusType(ctsPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(ctsPin);
+    if (perimanGetPinBusType(ctsPin) != ESP32_BUS_TYPE_INIT) {
+      perimanClearPinBus(ctsPin);
+    }
     // connect CTS Pad
     bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
     if (ret) {
-      ret &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART_CTS, (void*)uart, uart_num, -1);
-      if (ret) uart->_ctsPin = ctsPin;
+      ret &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART_CTS, (void *)uart, uart_num, -1);
+      if (ret) {
+        uart->_ctsPin = ctsPin;
+      }
     }
     if (!ret) {
       log_e("UART%d failed to attach CTS pin %d", uart_num, ctsPin);
@@ -235,12 +247,16 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
   }
   if (rtsPin >= 0) {
     // forces a clean detaching from a previous peripheral
-    if (perimanGetPinBusType(rtsPin) != ESP32_BUS_TYPE_INIT) perimanClearPinBus(rtsPin);
+    if (perimanGetPinBusType(rtsPin) != ESP32_BUS_TYPE_INIT) {
+      perimanClearPinBus(rtsPin);
+    }
     // connect RTS Pad
     bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
     if (ret) {
-      ret &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART_RTS, (void*)uart, uart_num, -1);
-      if (ret) uart->_rtsPin = rtsPin;
+      ret &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART_RTS, (void *)uart, uart_num, -1);
+      if (ret) {
+        uart->_rtsPin = rtsPin;
+      }
     }
     if (!ret) {
       log_e("UART%d failed to attach RTS pin %d", uart_num, rtsPin);
@@ -268,7 +284,7 @@ void uart_init_PeriMan(void) {
 }
 
 // Routines that take care of UART events will be in the HardwareSerial Class code
-void uartGetEventQueue(uart_t* uart, QueueHandle_t* q) {
+void uartGetEventQueue(uart_t *uart, QueueHandle_t *q) {
   // passing back NULL for the Queue pointer when UART is not initialized yet
   *q = NULL;
   if (uart == NULL) {
@@ -278,7 +294,7 @@ void uartGetEventQueue(uart_t* uart, QueueHandle_t* q) {
   return;
 }
 
-bool uartIsDriverInstalled(uart_t* uart) {
+bool uartIsDriverInstalled(uart_t *uart) {
   if (uart == NULL) {
     return false;
   }
@@ -297,7 +313,7 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
     return false;
   }
   // get UART information
-  uart_t* uart = &_uart_bus_array[uart_num];
+  uart_t *uart = &_uart_bus_array[uart_num];
 
   bool retCode = true;
   UART_MUTEX_LOCK();
@@ -345,7 +361,7 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
 }
 
 //
-bool uartSetHwFlowCtrlMode(uart_t* uart, uart_hw_flowcontrol_t mode, uint8_t threshold) {
+bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t threshold) {
   if (uart == NULL) {
     return false;
   }
@@ -358,15 +374,19 @@ bool uartSetHwFlowCtrlMode(uart_t* uart, uart_hw_flowcontrol_t mode, uint8_t thr
 }
 
 // This helper function will return true if a new IDF UART driver needs to be restarted and false if the current one can continue its execution
-bool _testUartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted, uint8_t rxfifo_full_thrhd) {
+bool _testUartBegin(
+  uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted,
+  uint8_t rxfifo_full_thrhd
+) {
   if (uart_nr >= SOC_UART_NUM) {
     return false;  // no new driver has to be installed
   }
-  uart_t* uart = &_uart_bus_array[uart_nr];
+  uart_t *uart = &_uart_bus_array[uart_nr];
   // verify if is necessary to restart the UART driver
   if (uart_is_driver_installed(uart_nr)) {
     // some parameters can't be changed unless we end the UART driver
-    if (uart->_rx_buffer_size != rx_buffer_size || uart->_tx_buffer_size != tx_buffer_size || uart->_inverted != inverted || uart->_rxfifo_full_thrhd != rxfifo_full_thrhd) {
+    if (uart->_rx_buffer_size != rx_buffer_size || uart->_tx_buffer_size != tx_buffer_size || uart->_inverted != inverted
+        || uart->_rxfifo_full_thrhd != rxfifo_full_thrhd) {
       return true;  // the current IDF UART driver must be terminated and a new driver shall be installed
     } else {
       return false;  // The current IDF UART driver can continue its execution
@@ -376,12 +396,15 @@ bool _testUartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t 
   }
 }
 
-uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted, uint8_t rxfifo_full_thrhd) {
+uart_t *uartBegin(
+  uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted,
+  uint8_t rxfifo_full_thrhd
+) {
   if (uart_nr >= SOC_UART_NUM) {
     log_e("UART number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
     return NULL;  // no new driver was installed
   }
-  uart_t* uart = &_uart_bus_array[uart_nr];
+  uart_t *uart = &_uart_bus_array[uart_nr];
   log_v("UART%d baud(%ld) Mode(%x) rxPin(%d) txPin(%d)", uart_nr, baudrate, config, rxPin, txPin);
 
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -397,7 +420,8 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
   if (uart_is_driver_installed(uart_nr)) {
     log_v("UART%d Driver already installed.", uart_nr);
     // some parameters can't be changed unless we end the UART driver
-    if (uart->_rx_buffer_size != rx_buffer_size || uart->_tx_buffer_size != tx_buffer_size || uart->_inverted != inverted || uart->_rxfifo_full_thrhd != rxfifo_full_thrhd) {
+    if (uart->_rx_buffer_size != rx_buffer_size || uart->_tx_buffer_size != tx_buffer_size || uart->_inverted != inverted
+        || uart->_rxfifo_full_thrhd != rxfifo_full_thrhd) {
       log_v("UART%d changing buffer sizes or inverted signal or rxfifo_full_thrhd. IDF driver will be restarted", uart_nr);
       uartEnd(uart_nr);
     } else {
@@ -429,8 +453,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
           log_e("UART%d changing parity failed.", uart_nr);
           retCode = false;
         } else {
-          log_v("UART%d changed parity to %s", uart_nr, parity == 0 ? "NONE" : parity == 2 ? "EVEN"
-                                                                                           : "ODD");
+          log_v("UART%d changed parity to %s", uart_nr, parity == 0 ? "NONE" : parity == 2 ? "EVEN" : "ODD");
         }
       }
       if (retCode && (uart->_config & 0xc30) >> 4 != stop_bits) {
@@ -441,7 +464,9 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
           log_v("UART%d changed stop bits to %d", uart_nr, stop_bits == 3 ? 2 : 1);
         }
       }
-      if (retCode) uart->_config = config;
+      if (retCode) {
+        uart->_config = config;
+      }
       if (retCode && rxPin > 0 && uart->_rxPin != rxPin) {
         retCode &= _uartDetachPins(uart_nr, uart->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
         retCode &= _uartAttachPins(uart_nr, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
@@ -484,7 +509,9 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
   UART_MUTEX_LOCK();
   bool retCode = ESP_OK == uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0);
 
-  if (retCode) retCode &= ESP_OK == uart_param_config(uart_nr, &uart_config);
+  if (retCode) {
+    retCode &= ESP_OK == uart_param_config(uart_nr, &uart_config);
+  }
 
   // Is it right or the idea is to swap rx and tx pins?
   if (retCode && inverted) {
@@ -505,7 +532,9 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
   UART_MUTEX_UNLOCK();
 
   // uartSetPins detaches previous pins if new ones are used over a previous begin()
-  if (retCode) retCode &= uartSetPins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+  if (retCode) {
+    retCode &= uartSetPins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+  }
   if (!retCode) {
     uartEnd(uart_nr);
     uart = NULL;
@@ -518,7 +547,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
 }
 
 // This function code is under testing - for now just keep it here
-void uartSetFastReading(uart_t* uart) {
+void uartSetFastReading(uart_t *uart) {
   if (uart == NULL) {
     return;
   }
@@ -536,8 +565,7 @@ void uartSetFastReading(uart_t* uart) {
   UART_MUTEX_UNLOCK();
 }
 
-
-bool uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout) {
+bool uartSetRxTimeout(uart_t *uart, uint8_t numSymbTimeout) {
   if (uart == NULL) {
     return false;
   }
@@ -548,7 +576,7 @@ bool uartSetRxTimeout(uart_t* uart, uint8_t numSymbTimeout) {
   return retCode;
 }
 
-bool uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull) {
+bool uartSetRxFIFOFull(uart_t *uart, uint8_t numBytesFIFOFull) {
   if (uart == NULL) {
     return false;
   }
@@ -559,14 +587,13 @@ bool uartSetRxFIFOFull(uart_t* uart, uint8_t numBytesFIFOFull) {
   return retCode;
 }
 
-
 void uartEnd(uint8_t uart_num) {
   if (uart_num >= SOC_UART_NUM) {
     log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
     return;
   }
   // get UART information
-  uart_t* uart = &_uart_bus_array[uart_num];
+  uart_t *uart = &_uart_bus_array[uart_num];
 
   UART_MUTEX_LOCK();
   _uartDetachPins(uart_num, uart->_rxPin, uart->_txPin, uart->_ctsPin, uart->_rtsPin);
@@ -576,31 +603,31 @@ void uartEnd(uint8_t uart_num) {
   UART_MUTEX_UNLOCK();
 }
 
-
-void uartSetRxInvert(uart_t* uart, bool invert) {
-  if (uart == NULL)
+void uartSetRxInvert(uart_t *uart, bool invert) {
+  if (uart == NULL) {
     return;
+  }
 #if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    // POTENTIAL ISSUE :: original code only set/reset rxd_inv bit
-    // IDF or LL set/reset the whole inv_mask!
-    // if (invert)
-    //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_RXD_INV));
-    // else
-    //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_INV_DISABLE));
+  // POTENTIAL ISSUE :: original code only set/reset rxd_inv bit
+  // IDF or LL set/reset the whole inv_mask!
+  // if (invert)
+  //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_RXD_INV));
+  // else
+  //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_INV_DISABLE));
 
 #else
   // this implementation is better over IDF API because it only affects RXD
   // this is supported in ESP32, ESP32-S2 and ESP32-C3
-  uart_dev_t* hw = UART_LL_GET_HW(uart->num);
-  if (invert)
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+  if (invert) {
     hw->conf0.rxd_inv = 1;
-  else
+  } else {
     hw->conf0.rxd_inv = 0;
+  }
 #endif
 }
 
-
-uint32_t uartAvailable(uart_t* uart) {
+uint32_t uartAvailable(uart_t *uart) {
 
   if (uart == NULL) {
     return 0;
@@ -609,13 +636,14 @@ uint32_t uartAvailable(uart_t* uart) {
   UART_MUTEX_LOCK();
   size_t available;
   uart_get_buffered_data_len(uart->num, &available);
-  if (uart->has_peek) available++;
+  if (uart->has_peek) {
+    available++;
+  }
   UART_MUTEX_UNLOCK();
   return available;
 }
 
-
-uint32_t uartAvailableForWrite(uart_t* uart) {
+uint32_t uartAvailableForWrite(uart_t *uart) {
   if (uart == NULL) {
     return 0;
   }
@@ -629,7 +657,7 @@ uint32_t uartAvailableForWrite(uart_t* uart) {
   return available;
 }
 
-size_t uartReadBytes(uart_t* uart, uint8_t* buffer, size_t size, uint32_t timeout_ms) {
+size_t uartReadBytes(uart_t *uart, uint8_t *buffer, size_t size, uint32_t timeout_ms) {
   if (uart == NULL || size == 0 || buffer == NULL) {
     return 0;
   }
@@ -647,10 +675,11 @@ size_t uartReadBytes(uart_t* uart, uint8_t* buffer, size_t size, uint32_t timeou
 
   if (size > 0) {
     int len = uart_read_bytes(uart->num, buffer, size, pdMS_TO_TICKS(timeout_ms));
-    if (len < 0) len = 0;  // error reading UART
+    if (len < 0) {
+      len = 0;  // error reading UART
+    }
     bytes_read += len;
   }
-
 
   UART_MUTEX_UNLOCK();
   return bytes_read;
@@ -658,7 +687,7 @@ size_t uartReadBytes(uart_t* uart, uint8_t* buffer, size_t size, uint32_t timeou
 
 // DEPRECATED but the original code will be kepts here as future reference when a final solution
 // to the UART driver is defined in the use case of reading byte by byte from UART.
-uint8_t uartRead(uart_t* uart) {
+uint8_t uartRead(uart_t *uart) {
   if (uart == NULL) {
     return 0;
   }
@@ -680,8 +709,7 @@ uint8_t uartRead(uart_t* uart) {
   return c;
 }
 
-
-uint8_t uartPeek(uart_t* uart) {
+uint8_t uartPeek(uart_t *uart) {
   if (uart == NULL) {
     return 0;
   }
@@ -704,7 +732,7 @@ uint8_t uartPeek(uart_t* uart) {
   return c;
 }
 
-void uartWrite(uart_t* uart, uint8_t c) {
+void uartWrite(uart_t *uart, uint8_t c) {
   if (uart == NULL) {
     return;
   }
@@ -713,7 +741,7 @@ void uartWrite(uart_t* uart, uint8_t c) {
   UART_MUTEX_UNLOCK();
 }
 
-void uartWriteBuf(uart_t* uart, const uint8_t* data, size_t len) {
+void uartWriteBuf(uart_t *uart, const uint8_t *data, size_t len) {
   if (uart == NULL || data == NULL || !len) {
     return;
   }
@@ -723,18 +751,17 @@ void uartWriteBuf(uart_t* uart, const uint8_t* data, size_t len) {
   UART_MUTEX_UNLOCK();
 }
 
-void uartFlush(uart_t* uart) {
+void uartFlush(uart_t *uart) {
   uartFlushTxOnly(uart, true);
 }
 
-void uartFlushTxOnly(uart_t* uart, bool txOnly) {
+void uartFlushTxOnly(uart_t *uart, bool txOnly) {
   if (uart == NULL) {
     return;
   }
 
   UART_MUTEX_LOCK();
-  while (!uart_ll_is_tx_idle(UART_LL_GET_HW(uart->num)))
-    ;
+  while (!uart_ll_is_tx_idle(UART_LL_GET_HW(uart->num)));
 
   if (!txOnly) {
     ESP_ERROR_CHECK(uart_flush_input(uart->num));
@@ -742,7 +769,7 @@ void uartFlushTxOnly(uart_t* uart, bool txOnly) {
   UART_MUTEX_UNLOCK();
 }
 
-void uartSetBaudRate(uart_t* uart, uint32_t baud_rate) {
+void uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
   if (uart == NULL) {
     return;
   }
@@ -755,7 +782,7 @@ void uartSetBaudRate(uart_t* uart, uint32_t baud_rate) {
   UART_MUTEX_UNLOCK();
 }
 
-uint32_t uartGetBaudRate(uart_t* uart) {
+uint32_t uartGetBaudRate(uart_t *uart) {
   uint32_t baud_rate = 0;
   uint32_t sclk_freq;
 
@@ -772,51 +799,40 @@ uint32_t uartGetBaudRate(uart_t* uart) {
 }
 
 static void ARDUINO_ISR_ATTR uart0_write_char(char c) {
-  while (uart_ll_get_txfifo_len(&UART0) == 0)
-    ;
-  uart_ll_write_txfifo(&UART0, (const uint8_t*)&c, 1);
+  while (uart_ll_get_txfifo_len(&UART0) == 0);
+  uart_ll_write_txfifo(&UART0, (const uint8_t *)&c, 1);
 }
 
 #if SOC_UART_NUM > 1
 static void ARDUINO_ISR_ATTR uart1_write_char(char c) {
-  while (uart_ll_get_txfifo_len(&UART1) == 0)
-    ;
-  uart_ll_write_txfifo(&UART1, (const uint8_t*)&c, 1);
+  while (uart_ll_get_txfifo_len(&UART1) == 0);
+  uart_ll_write_txfifo(&UART1, (const uint8_t *)&c, 1);
 }
 #endif
 
 #if SOC_UART_NUM > 2
 static void ARDUINO_ISR_ATTR uart2_write_char(char c) {
-  while (uart_ll_get_txfifo_len(&UART2) == 0)
-    ;
-  uart_ll_write_txfifo(&UART2, (const uint8_t*)&c, 1);
+  while (uart_ll_get_txfifo_len(&UART2) == 0);
+  uart_ll_write_txfifo(&UART2, (const uint8_t *)&c, 1);
 }
 #endif
 
 void uart_install_putc() {
   switch (s_uart_debug_nr) {
-    case 0:
-      ets_install_putc1((void (*)(char)) & uart0_write_char);
-      break;
+    case 0: ets_install_putc1((void (*)(char)) & uart0_write_char); break;
 #if SOC_UART_NUM > 1
-    case 1:
-      ets_install_putc1((void (*)(char)) & uart1_write_char);
-      break;
+    case 1: ets_install_putc1((void (*)(char)) & uart1_write_char); break;
 #endif
 #if SOC_UART_NUM > 2
-    case 2:
-      ets_install_putc1((void (*)(char)) & uart2_write_char);
-      break;
+    case 2: ets_install_putc1((void (*)(char)) & uart2_write_char); break;
 #endif
-    default:
-      ets_install_putc1(NULL);
-      break;
+    default: ets_install_putc1(NULL); break;
   }
 }
 
 // Routines that take care of UART mode in the HardwareSerial Class code
 // used to set UART_MODE_RS485_HALF_DUPLEX auto RTS for TXD for ESP32 chips
-bool uartSetMode(uart_t* uart, uart_mode_t mode) {
+bool uartSetMode(uart_t *uart, uart_mode_t mode) {
   if (uart == NULL || uart->num >= SOC_UART_NUM) {
     return false;
   }
@@ -827,7 +843,7 @@ bool uartSetMode(uart_t* uart, uart_mode_t mode) {
   return retCode;
 }
 
-void uartSetDebug(uart_t* uart) {
+void uartSetDebug(uart_t *uart) {
   if (uart == NULL || uart->num >= SOC_UART_NUM) {
     s_uart_debug_nr = -1;
   } else {
@@ -840,16 +856,16 @@ int uartGetDebug() {
   return s_uart_debug_nr;
 }
 
-int log_printfv(const char* format, va_list arg) {
+int log_printfv(const char *format, va_list arg) {
   static char loc_buf[64];
-  char* temp = loc_buf;
+  char *temp = loc_buf;
   uint32_t len;
   va_list copy;
   va_copy(copy, arg);
   len = vsnprintf(NULL, 0, format, copy);
   va_end(copy);
   if (len >= sizeof(loc_buf)) {
-    temp = (char*)malloc(len + 1);
+    temp = (char *)malloc(len + 1);
     if (temp == NULL) {
       return 0;
     }
@@ -883,13 +899,13 @@ int log_printfv(const char* format, va_list arg) {
     free(temp);
   }
   // flushes TX - make sure that the log message is completely sent.
-  if (s_uart_debug_nr != -1)
-    while (!uart_ll_is_tx_idle(UART_LL_GET_HW(s_uart_debug_nr)))
-      ;
+  if (s_uart_debug_nr != -1) {
+    while (!uart_ll_is_tx_idle(UART_LL_GET_HW(s_uart_debug_nr)));
+  }
   return len;
 }
 
-int log_printf(const char* format, ...) {
+int log_printf(const char *format, ...) {
   int len;
   va_list arg;
   va_start(arg, format);
@@ -898,8 +914,7 @@ int log_printf(const char* format, ...) {
   return len;
 }
 
-
-static void log_print_buf_line(const uint8_t* b, size_t len, size_t total_len) {
+static void log_print_buf_line(const uint8_t *b, size_t len, size_t total_len) {
   for (size_t i = 0; i < len; i++) {
     log_printf("%s0x%02x,", i ? " " : "", b[i]);
   }
@@ -917,7 +932,7 @@ static void log_print_buf_line(const uint8_t* b, size_t len, size_t total_len) {
   log_printf("\n");
 }
 
-void log_print_buf(const uint8_t* b, size_t len) {
+void log_print_buf(const uint8_t *b, size_t len) {
   if (!len || !b) {
     return;
   }
@@ -933,17 +948,19 @@ void log_print_buf(const uint8_t* b, size_t len) {
  * if enough pulses are detected return the minimum high pulse duration + minimum low pulse duration divided by two.
  * This equals one bit period. If flag is true the function return immediately, otherwise it waits for enough pulses.
  */
-unsigned long uartBaudrateDetect(uart_t* uart, bool flg) {
+unsigned long uartBaudrateDetect(uart_t *uart, bool flg) {
 // Baud rate detection only works for ESP32 and ESP32S2
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
   if (uart == NULL) {
     return 0;
   }
 
-  uart_dev_t* hw = UART_LL_GET_HW(uart->num);
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
   while (hw->rxd_cnt.edge_cnt < 30) {  // UART_PULSE_NUM(uart_num)
-    if (flg) return 0;
+    if (flg) {
+      return 0;
+    }
     ets_delay_us(1000);
   }
 
@@ -957,7 +974,6 @@ unsigned long uartBaudrateDetect(uart_t* uart, bool flg) {
   return 0;
 #endif
 }
-
 
 /*
  * To start detection of baud rate with the uart the auto_baud.en bit needs to be cleared and set. The bit period is
@@ -980,14 +996,14 @@ unsigned long uartBaudrateDetect(uart_t* uart, bool flg) {
  *
  *
 */
-void uartStartDetectBaudrate(uart_t* uart) {
+void uartStartDetectBaudrate(uart_t *uart) {
   if (uart == NULL) {
     return;
   }
 
 // Baud rate detection only works for ESP32 and ESP32S2
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-  uart_dev_t* hw = UART_LL_GET_HW(uart->num);
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
   hw->auto_baud.glitch_filt = 0x08;
   hw->auto_baud.en = 0;
   hw->auto_baud.en = 1;
@@ -1007,7 +1023,7 @@ void uartStartDetectBaudrate(uart_t* uart) {
 #endif
 }
 
-unsigned long uartDetectBaudrate(uart_t* uart) {
+unsigned long uartDetectBaudrate(uart_t *uart) {
   if (uart == NULL) {
     return 0;
   }
@@ -1027,7 +1043,7 @@ unsigned long uartDetectBaudrate(uart_t* uart) {
     return 0;
   }
 
-  uart_dev_t* hw = UART_LL_GET_HW(uart->num);
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
   hw->auto_baud.en = 0;
 
   uartStateDetectingBaudrate = false;  // Initialize for the next round
@@ -1036,7 +1052,8 @@ unsigned long uartDetectBaudrate(uart_t* uart) {
 
   //log_i("APB_FREQ = %d\nraw baudrate detected = %d", getApbFrequency(), baudrate);
 
-  static const unsigned long default_rates[] = { 300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400 };
+  static const unsigned long default_rates[] = {300,   600,    1200,   2400,   4800,   9600,   19200,   38400,  57600,
+                                                74880, 115200, 230400, 256000, 460800, 921600, 1843200, 3686400};
 
   size_t i;
   for (i = 1; i < sizeof(default_rates) / sizeof(default_rates[0]) - 1; i++)  // find the nearest real baudrate
@@ -1080,7 +1097,9 @@ unsigned long uartDetectBaudrate(uart_t* uart) {
    This creates a loop that lets us receive anything we send on the UART without external wires.
 */
 void uart_internal_loopback(uint8_t uartNum, int8_t rxPin) {
-  if (uartNum > SOC_UART_NUM - 1 || !GPIO_IS_VALID_GPIO(rxPin)) return;
+  if (uartNum > SOC_UART_NUM - 1 || !GPIO_IS_VALID_GPIO(rxPin)) {
+    return;
+  }
   esp_rom_gpio_connect_out_signal(rxPin, UART_TX_SIGNAL(uartNum), false, false);
 }
 
@@ -1101,9 +1120,9 @@ void uart_send_break(uint8_t uartNum) {
 }
 
 // Sends a buffer and at the end of the stream, it generates BREAK in the line
-int uart_send_msg_with_break(uint8_t uartNum, uint8_t* msg, size_t msgSize) {
+int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize) {
   // 12 bits long BREAK for 8N1
-  return uart_write_bytes_with_break(uartNum, (const void*)msg, msgSize, 12);
+  return uart_write_bytes_with_break(uartNum, (const void *)msg, msgSize, 12);
 }
 
 #endif /* SOC_UART_SUPPORTED */

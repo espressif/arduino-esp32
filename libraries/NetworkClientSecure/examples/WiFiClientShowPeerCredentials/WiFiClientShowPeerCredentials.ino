@@ -25,7 +25,7 @@
 #define URL "https://arduino.cc"
 
 void demo() {
-  NetworkClientSecure* client = new NetworkClientSecure;
+  NetworkClientSecure *client = new NetworkClientSecure;
   client->setInsecure();  //
 
   HTTPClient https;
@@ -43,7 +43,7 @@ void demo() {
     return;
   }
 
-  const mbedtls_x509_crt* peer = client->getPeerCertificate();
+  const mbedtls_x509_crt *peer = client->getPeerCertificate();
 
   // Show general output / certificate information
   //
@@ -88,8 +88,9 @@ void setup() {
 
 void loop() {
   bool already_tried = false;
-  if ((millis() < 1000) || already_tried)
+  if ((millis() < 1000) || already_tried) {
     return;
+  }
   already_tried = true;
 
   // Run the test just once.

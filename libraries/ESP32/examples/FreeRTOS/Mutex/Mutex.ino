@@ -17,7 +17,9 @@ void Task(void *pvParameters);
 void setup() {
   // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-  while (!Serial) delay(100);
+  while (!Serial) {
+    delay(100);
+  }
   Serial.printf(" Task 0          | Task 1\n");
 
 #ifdef USE_MUTEX
@@ -53,8 +55,7 @@ void setup() {
   // Now the task scheduler, which takes over control of scheduling individual tasks, is automatically started.
 }
 
-void loop() {
-}
+void loop() {}
 
 /*--------------------------------------------------*/
 /*---------------------- Tasks ---------------------*/
@@ -96,8 +97,8 @@ void Task(void *pvParameters) {  // This is a task.
       } else {
         // We could not obtain the semaphore and can therefore not access the shared resource safely.
       }  // mutex take
-    }    // sanity check
+    }  // sanity check
 #endif
     delay(10);  // Allow other task to be scheduled
-  }             // Infinite loop
+  }  // Infinite loop
 }

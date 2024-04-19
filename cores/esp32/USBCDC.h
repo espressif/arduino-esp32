@@ -140,6 +140,5 @@ protected:
 extern USBCDC USBSerial;
 #endif
 
-
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */

@@ -15,9 +15,7 @@ extern "C" {
 
 #include "lwip/priv/tcpip_priv.h"
 
-static const char *netif_ifkeys[TCPIP_ADAPTER_IF_MAX] = {
-  "WIFI_STA_DEF", "WIFI_AP_DEF", "ETH_DEF", "PPP_DEF"
-};
+static const char *netif_ifkeys[TCPIP_ADAPTER_IF_MAX] = {"WIFI_STA_DEF", "WIFI_AP_DEF", "ETH_DEF", "PPP_DEF"};
 
 static esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void **netif) {
   *netif = NULL;
@@ -172,7 +170,9 @@ static bool _udp_task_start() {
     }
   }
   if (!_udp_task_handle) {
-    xTaskCreateUniversal(_udp_task, "async_udp", 4096, NULL, CONFIG_ARDUINO_UDP_TASK_PRIORITY, (TaskHandle_t *)&_udp_task_handle, CONFIG_ARDUINO_UDP_RUNNING_CORE);
+    xTaskCreateUniversal(
+      _udp_task, "async_udp", 4096, NULL, CONFIG_ARDUINO_UDP_TASK_PRIORITY, (TaskHandle_t *)&_udp_task_handle, CONFIG_ARDUINO_UDP_RUNNING_CORE
+    );
     if (!_udp_task_handle) {
       return false;
     }
@@ -232,11 +232,8 @@ static bool _udp_task_stop(){
 }
 */
 
-
-
 #define UDP_MUTEX_LOCK()    //xSemaphoreTake(_lock, portMAX_DELAY)
 #define UDP_MUTEX_UNLOCK()  //xSemaphoreGive(_lock)
-
 
 AsyncUDPMessage::AsyncUDPMessage(size_t size) {
   _index = 0;
@@ -761,7 +758,6 @@ size_t AsyncUDP::broadcast(uint8_t *data, size_t len) {
 size_t AsyncUDP::broadcast(const char *data) {
   return broadcast((uint8_t *)data, strlen(data));
 }
-
 
 size_t AsyncUDP::sendTo(AsyncUDPMessage &message, const ip_addr_t *addr, uint16_t port, tcpip_adapter_if_t tcpip_if) {
   if (!message) {

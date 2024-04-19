@@ -48,9 +48,9 @@
 #define WIFI_PASSWD "your-secret-wifi-password"
 #endif
 
-const char* ssid = WIFI_NETWORK;           // your network SSID (name of wifi network)
-const char* password = WIFI_PASSWD;        // your network password
-const char* server = "www.howsmyssl.com";  // Server to test with.
+const char *ssid = WIFI_NETWORK;           // your network SSID (name of wifi network)
+const char *password = WIFI_PASSWD;        // your network password
+const char *server = "www.howsmyssl.com";  // Server to test with.
 
 const int TOFU_RESET_BUTTON = 35; /* Trust reset button wired between GPIO 35 and GND (pulldown) */
 
@@ -67,21 +67,26 @@ EEPROMClass TOFU("tofu0");
 // with with 0 bytes over its full length. Returns 0 on
 // success; a non zero value on fail.
 //
-static int memcmpzero(unsigned char* ptr, size_t len) {
-  while (len--)
-    if (0xff != *ptr++) return -1;
+static int memcmpzero(unsigned char *ptr, size_t len) {
+  while (len--) {
+    if (0xff != *ptr++) {
+      return -1;
+    }
+  }
   return 0;
 };
 
-static void printSHA256(unsigned char* ptr) {
-  for (int i = 0; i < 32; i++) Serial.printf("%s%02x", i ? ":" : "", ptr[i]);
+static void printSHA256(unsigned char *ptr) {
+  for (int i = 0; i < 32; i++) {
+    Serial.printf("%s%02x", i ? ":" : "", ptr[i]);
+  }
   Serial.println("");
 };
 
 NetworkClientSecure client;
 
 bool get_tofu();
-bool doTOFU_Protected_Connection(uint8_t* fingerprint_tofu);
+bool doTOFU_Protected_Connection(uint8_t *fingerprint_tofu);
 
 void setup() {
   bool tofu_reset = false;
@@ -151,8 +156,9 @@ void setup() {
 
   Serial.println("Trying to connect to a server; using TOFU details from the eeprom");
 
-  if (doTOFU_Protected_Connection(fingerprint_tofu))
+  if (doTOFU_Protected_Connection(fingerprint_tofu)) {
     Serial.println("ALL OK");
+  }
 }
 
 bool get_tofu() {
@@ -170,7 +176,7 @@ bool get_tofu() {
   // Now extract the data of the certificate and show it to
   // the user over the serial connection for optional
   // verification.
-  const mbedtls_x509_crt* peer = client.getPeerCertificate();
+  const mbedtls_x509_crt *peer = client.getPeerCertificate();
   char buf[1024];
   int l = mbedtls_x509_crt_info(buf, sizeof(buf), "", peer);
   if (l <= 0) {
@@ -190,8 +196,7 @@ bool get_tofu() {
     client.stop();
     return false;
   }
-  if (
-    (32 != TOFU.writeBytes(0, fingerprint_remote, 32)) || (!TOFU.commit())) {
+  if ((32 != TOFU.writeBytes(0, fingerprint_remote, 32)) || (!TOFU.commit())) {
     Serial.println("Could not write the fingerprint to the EEPROM");
     client.stop();
     return false;
@@ -205,7 +210,7 @@ bool get_tofu() {
   return true;
 };
 
-bool doTOFU_Protected_Connection(uint8_t* fingerprint_tofu) {
+bool doTOFU_Protected_Connection(uint8_t *fingerprint_tofu) {
 
   // As we're not using a (CA) certificate to check the
   // connection; but the hash of the peer - we need to initially

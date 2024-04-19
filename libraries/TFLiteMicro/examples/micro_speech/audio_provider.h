@@ -28,8 +28,7 @@ limitations under the License.
 // The reference implementation can have no platform-specific dependencies, so
 // it just returns an array filled with zeros. For real applications, you should
 // ensure there's a specialized implementation that accesses hardware APIs.
-TfLiteStatus GetAudioSamples(int start_ms, int duration_ms,
-                             int* audio_samples_size, int16_t** audio_samples);
+TfLiteStatus GetAudioSamples(int start_ms, int duration_ms, int *audio_samples_size, int16_t **audio_samples);
 
 // Returns the time that audio data was last captured in milliseconds. There's
 // no contract about what time zero represents, the accuracy, or the granularity

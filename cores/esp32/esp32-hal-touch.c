@@ -48,7 +48,7 @@ static TouchInterruptHandle_t __touchInterruptHandlers[SOC_TOUCH_SENSOR_NUM] = {
 
 static uint8_t used_pads = 0;
 static bool initialized = false;
-static bool channels_initialized[SOC_TOUCH_SENSOR_NUM] = { false };
+static bool channels_initialized[SOC_TOUCH_SENSOR_NUM] = {false};
 
 static void ARDUINO_ISR_ATTR __touchISR(void *arg) {
 #if SOC_TOUCH_VERSION_1  // ESP32
@@ -89,8 +89,6 @@ static void ARDUINO_ISR_ATTR __touchISR(void *arg) {
   }
 #endif
 }
-
-
 
 static void __touchSetCycles(uint16_t measure, uint16_t sleep) {
   __touchSleepCycles = sleep;
@@ -267,7 +265,6 @@ static void __touchAttachArgsInterrupt(uint8_t pin, void (*userFunc)(void), void
 static void __touchDettachInterrupt(uint8_t pin) {
   __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as detaching
 }
-
 
 /*
     External Public Touch API Functions

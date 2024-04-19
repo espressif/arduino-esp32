@@ -25,7 +25,7 @@
 #include "esp32-hal.h"
 
 #define PARSE_TIMEOUT 1000  // default number of milli-seconds to wait
-#define NO_SKIP_CHAR 1      // a magic char not found in a valid ASCII numeric field
+#define NO_SKIP_CHAR  1     // a magic char not found in a valid ASCII numeric field
 
 // private method to read stream with timeout
 int Stream::timedRead() {
@@ -104,10 +104,10 @@ bool Stream::findUntil(const char *target, const char *terminator) {
 // returns true if target string is found, false if terminated or timed out
 bool Stream::findUntil(const char *target, size_t targetLen, const char *terminator, size_t termLen) {
   if (terminator == NULL) {
-    MultiTarget t[1] = { { target, targetLen, 0 } };
+    MultiTarget t[1] = {{target, targetLen, 0}};
     return findMulti(t, 1) == 0 ? true : false;
   } else {
-    MultiTarget t[2] = { { target, targetLen, 0 }, { terminator, termLen, 0 } };
+    MultiTarget t[2] = {{target, targetLen, 0}, {terminator, termLen, 0}};
     return findMulti(t, 2) == 0 ? true : false;
   }
 }
@@ -116,37 +116,42 @@ int Stream::findMulti(struct Stream::MultiTarget *targets, int tCount) {
   // any zero length target string automatically matches and would make
   // a mess of the rest of the algorithm.
   for (struct MultiTarget *t = targets; t < targets + tCount; ++t) {
-    if (t->len <= 0)
+    if (t->len <= 0) {
       return t - targets;
+    }
   }
 
   while (1) {
     int c = timedRead();
-    if (c < 0)
+    if (c < 0) {
       return -1;
+    }
 
     for (struct MultiTarget *t = targets; t < targets + tCount; ++t) {
       // the simple case is if we match, deal with that first.
       if (c == t->str[t->index]) {
-        if (++t->index == t->len)
+        if (++t->index == t->len) {
           return t - targets;
-        else
+        } else {
           continue;
+        }
       }
 
       // if not we need to walk back and see if we could have matched further
       // down the stream (ie '1112' doesn't match the first position in '11112'
       // but it will match the second position so we can't just reset the current
       // index to 0 when we find a mismatch.
-      if (t->index == 0)
+      if (t->index == 0) {
         continue;
+      }
 
       int origIndex = t->index;
       do {
         --t->index;
         // first check if current char works against the new current index
-        if (c != t->str[t->index])
+        if (c != t->str[t->index]) {
           continue;
+        }
 
         // if it's the only char then we're good, nothing more to check
         if (t->index == 0) {
@@ -158,8 +163,9 @@ int Stream::findMulti(struct Stream::MultiTarget *targets, int tCount) {
         int diff = origIndex - t->index;
         size_t i;
         for (i = 0; i < t->index; ++i) {
-          if (t->str[i] != t->str[i + diff])
+          if (t->str[i] != t->str[i + diff]) {
             break;
+          }
         }
 
         // if we successfully got through the previous loop then our current

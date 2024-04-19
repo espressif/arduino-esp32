@@ -3,13 +3,13 @@
 #include <ArduinoOTA.h>
 #include <WebServer.h>
 
-const char* ssid = "........";
-const char* password = "........";
+const char *ssid = "........";
+const char *password = "........";
 
 WebServer server(80);
 
-const char* www_username = "admin";
-const char* www_password = "esp32";
+const char *www_username = "admin";
+const char *www_password = "esp32";
 
 void setup() {
   Serial.begin(115200);

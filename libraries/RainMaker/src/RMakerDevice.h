@@ -28,6 +28,7 @@ public:
     deviceWriteCb write_cb;
     deviceReadCb read_cb;
   } RMakerDevicePrivT;
+
 private:
   const device_handle_t *device_handle;
   RMakerDevicePrivT private_data;
@@ -40,6 +41,7 @@ protected:
   const RMakerDevicePrivT *getDevicePrivateData() {
     return &this->private_data;
   }
+
 public:
   Device() {
     device_handle = NULL;

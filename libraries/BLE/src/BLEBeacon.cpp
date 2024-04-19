@@ -12,8 +12,7 @@
 #include "BLEBeacon.h"
 #include "esp32-hal-log.h"
 
-#define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00) >> 8) + (((x)&0xFF) << 8))
-
+#define ENDIAN_CHANGE_U16(x) ((((x) & 0xFF00) >> 8) + (((x) & 0xFF) << 8))
 
 BLEBeacon::BLEBeacon() {
   m_beaconData.manufacturerId = 0x4c00;
@@ -26,7 +25,7 @@ BLEBeacon::BLEBeacon() {
 }  // BLEBeacon
 
 String BLEBeacon::getData() {
-  return String((char*)&m_beaconData, sizeof(m_beaconData));
+  return String((char *)&m_beaconData, sizeof(m_beaconData));
 }  // getData
 
 uint16_t BLEBeacon::getMajor() {
@@ -80,7 +79,6 @@ void BLEBeacon::setProximityUUID(BLEUUID uuid) {
 void BLEBeacon::setSignalPower(int8_t signalPower) {
   m_beaconData.signalPower = signalPower;
 }  // setSignalPower
-
 
 #endif
 #endif /* SOC_BLE_SUPPORTED */

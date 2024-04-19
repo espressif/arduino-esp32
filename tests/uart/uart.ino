@@ -66,12 +66,16 @@ extern int8_t uart_get_TxPin(uint8_t uart_num);
 void start_serial(unsigned long baudrate = 115200) {
 #if SOC_UART_NUM >= 2
   Serial1.begin(baudrate);
-  while (!Serial1) { delay(10); }
+  while (!Serial1) {
+    delay(10);
+  }
 #endif
 
 #if SOC_UART_NUM >= 3
   Serial2.begin(baudrate);
-  while (!Serial2) { delay(10); }
+  while (!Serial2) {
+    delay(10);
+  }
 #endif
 }
 
@@ -244,7 +248,6 @@ void change_baudrate_test(void) {
 
   Serial.println("Change baudrate test successful");
 }
-
 
 // This test checks if the buffers can be resized properly
 void resize_buffers_test(void) {
@@ -559,7 +562,9 @@ void change_cpu_frequency_test(void) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
   log_d("SOC_UART_NUM = %d", SOC_UART_NUM);
 
   // Begin needs to be called before setting up the loopback because it creates the serial object

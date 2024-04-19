@@ -111,7 +111,9 @@ void fat_set_table_index(uint8_t *table, uint16_t index, uint16_t value, bool fa
   }
 }
 
-fat_boot_sector_t *fat_add_boot_sector(uint8_t *dst, uint16_t sector_num, uint16_t table_sectors, const char *file_system_type, const char *volume_label, uint32_t serial_number) {
+fat_boot_sector_t *fat_add_boot_sector(
+  uint8_t *dst, uint16_t sector_num, uint16_t table_sectors, const char *file_system_type, const char *volume_label, uint32_t serial_number
+) {
   fat_boot_sector_t *boot = (fat_boot_sector_t *)dst;
   boot->jump_instruction[0] = 0xEB;
   boot->jump_instruction[1] = 0x3C;
@@ -149,7 +151,9 @@ fat_dir_entry_t *fat_add_label(uint8_t *dst, const char *volume_label) {
   return entry;
 }
 
-fat_dir_entry_t *fat_add_root_file(uint8_t *dst, uint8_t index, const char *file_name, const char *file_extension, size_t file_size, uint16_t data_start_sector, bool is_fat16) {
+fat_dir_entry_t *fat_add_root_file(
+  uint8_t *dst, uint8_t index, const char *file_name, const char *file_extension, size_t file_size, uint16_t data_start_sector, bool is_fat16
+) {
   fat_boot_sector_t *boot = (fat_boot_sector_t *)dst;
   uint8_t *table = dst + DISK_SECTOR_SIZE;
   fat_dir_entry_t *entry = (fat_dir_entry_t *)(dst + ((boot->sectors_per_alloc_table + 1) * DISK_SECTOR_SIZE) + (index * sizeof(fat_dir_entry_t)));
@@ -173,7 +177,7 @@ fat_dir_entry_t *fat_add_root_file(uint8_t *dst, uint8_t index, const char *file
   fat_set_table_index(table, data_end_sector - 1, 0xFFFF, is_fat16);
 
   //Set Firmware Date based on the build time
-  static const char *month_names_short[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+  static const char *month_names_short[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
   char mstr[8] = {
     '\0',
   };

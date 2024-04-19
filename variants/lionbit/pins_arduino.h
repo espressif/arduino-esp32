@@ -32,16 +32,18 @@ static const uint8_t D6 = 21;  //I/O   SDA GPIO21, VSPIHD, EMAC_TX_EN
 static const uint8_t D7 = 22;  //I/O   SCl GPIO22, VSPIWP, U0RTS, EMAC_TXD1
 
 //Second Segment - Sector -02 (Voltage (*5v or 3.3V) can be selected by using D8-11 Jumper
-static const uint8_t D8 = 5;    //I/O  GPIO5, VSPICS0, HS1_DATA6, EMAC_RX_CLK
-static const uint8_t D9 = 23;   //I/O GPIO23, VSPID, HS1_STROBE  **********************************************Don not use when display "ON or USE"*************************
+static const uint8_t D8 = 5;  //I/O  GPIO5, VSPICS0, HS1_DATA6, EMAC_RX_CLK
+static const uint8_t D9 =
+  23;  //I/O GPIO23, VSPID, HS1_STROBE  **********************************************Don not use when display "ON or USE"*************************
 static const uint8_t D10 = 19;  //I/O GPIO19, VSPIQ, U0CTS, EMAC_TXD0
-static const uint8_t D11 = 18;  //I/O GPIO18, VSPICLK, HS1_DATA7 **********************************************Don not use when display "ON or USE"*************************
-
+static const uint8_t D11 =
+  18;  //I/O GPIO18, VSPICLK, HS1_DATA7 **********************************************Don not use when display "ON or USE"*************************
 
 // Analog to Digital Converter (Support 5V) ADC2 pins not recommended while using Wifi
 static const uint8_t A0 /*ADC2_CH3 */ = 12;  //MAX 5V,I/O GPIO12, ADC2_CH5, TOUCH5, RTC_GPIO15, MTDI, HSPIQ, HS2_DATA2,SD_DATA2, EMAC_TXD3
 static const uint8_t A1 /*ADC1_CH0 */ = 14;  //MAX 5V,I/O GPIO14, ADC2_CH6, TOUCH6, RTC_GPIO16, MTMS, HSPICLK, HS2_CLK,SD_CLK, EMAC_TXD2
-static const uint8_t A2 /*ADC2_CH6 */ = 34;  //MAX 5V,GPIO34, ADC1_CH6, RTC_GPIO4 ***********************/////////////////////Connected LDR/////////////////////////////
+static const uint8_t A2 /*ADC2_CH6 */ =
+  34;  //MAX 5V,GPIO34, ADC1_CH6, RTC_GPIO4 ***********************/////////////////////Connected LDR/////////////////////////////
 static const uint8_t A3 /*ADC1_CH7 */ = 35;  //MAX 5V,GPIO35, ADC1_CH7, RTC_GPIO5
 static const uint8_t A4 /*ADC2_CH5 */ = 15;  //MAX 5V,GPIO15, ADC2_CH3, TOUCH3, MTDO, HSPICS0, RTC_GPIO13, HS2_CMD,SD_CMD, EMAC_RXD3
 static const uint8_t A5 /*ADC2_CH4 */ = 13;  //MAX 5V,GPIO13, ADC2_CH4, TOUCH4, RTC_GPIO14, MTCK, HSPID, HS2_DATA3,SD_DATA3, EMAC_RX_ER

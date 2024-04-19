@@ -76,7 +76,7 @@ typedef union {
 
 #define XJT_VALID(i) (i->level0 && !i->level1 && i->duration0 >= 8 && i->duration0 <= 11)
 
-static uint32_t* s_channels;
+static uint32_t *s_channels;
 static uint32_t channels[16];
 static uint8_t xjt_flags = 0x0;
 static uint8_t xjt_rxid = 0x0;
@@ -152,9 +152,9 @@ static bool xjtReceiveBit(size_t index, bool bit) {
   return true;
 }
 
-void parseRmt(rmt_data_t* items, size_t len, uint32_t* channels) {
+void parseRmt(rmt_data_t *items, size_t len, uint32_t *channels) {
   bool valid = true;
-  rmt_data_t* it = NULL;
+  rmt_data_t *it = NULL;
 
   if (!channels) {
     log_e("Please provide data block for storing channel info");

@@ -27,7 +27,7 @@
 #error Simple Secure Pairing for Bluetooth is not available or not enabled.
 #endif
 
-const char* deviceName = "ESP32_SSP_example";
+const char *deviceName = "ESP32_SSP_example";
 
 // The following lines defines the method of pairing
 // When both Input and Output are false only the other device authenticates pairing without any pin.
@@ -46,7 +46,9 @@ bool confirmRequestDone = false;
 void BTConfirmRequestCallback(uint32_t numVal) {
   confirmRequestDone = false;
 #ifndef AUTO_PAIR
-  Serial.printf("The PIN is: %06lu. If it matches number displayed on the other device write \'Y\' or \'y\':\n", numVal);  // Note the formatting "%06lu" - PIN can start with zero(s) which would be ignored with simple "%lu"
+  Serial.printf(
+    "The PIN is: %06lu. If it matches number displayed on the other device write \'Y\' or \'y\':\n", numVal
+  );  // Note the formatting "%06lu" - PIN can start with zero(s) which would be ignored with simple "%lu"
   while (!Serial.available()) {
     delay(1);  // Feed the watchdog
     // Wait until data is available on the Serial port.
@@ -65,7 +67,7 @@ void BTConfirmRequestCallback(uint32_t numVal) {
 
 void BTKeyRequestCallback() {
   Serial.println("BTKeyRequestCallback");  // debug
-  char buffer[7] = { 0 };                  // 6 bytes for number, one for termination '0'
+  char buffer[7] = {0};                    // 6 bytes for number, one for termination '0'
   while (1) {
     Serial.print("Enter the passkey displayed on the other device: ");
     while (!Serial.available()) {
@@ -82,7 +84,7 @@ void BTKeyRequestCallback() {
     } catch (...) {
       Serial.print("Wrong PIN! Try again.");
     }  // try
-  }    // while(1)
+  }  // while(1)
 }
 
 void BTAuthCompleteCallback(boolean success) {
@@ -120,7 +122,8 @@ void setup() {
   } else if (not INPUT_CAPABILITY and OUTPUT_CAPABILITY) {
     Serial.println("Authenticate pairing on the other device. No PIN is used");
   } else if (INPUT_CAPABILITY and not OUTPUT_CAPABILITY) {
-    Serial.println("After pairing is initiated you will be required to enter the passkey to the ESP32 device to authenticate\n > The Passkey will displayed on the other device");
+    Serial.println("After pairing is initiated you will be required to enter the passkey to the ESP32 device to authenticate\n > The Passkey will displayed on "
+                   "the other device");
   }
 }
 

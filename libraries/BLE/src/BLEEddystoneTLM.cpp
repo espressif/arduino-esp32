@@ -30,10 +30,11 @@ BLEEddystoneTLM::BLEEddystoneTLM() {
   m_eddystoneData.tmil = 0;
 }  // BLEEddystoneTLM
 
-BLEEddystoneTLM::BLEEddystoneTLM(BLEAdvertisedDevice* advertisedDevice) {
-  char* payload = (char*)advertisedDevice->getPayload();
+BLEEddystoneTLM::BLEEddystoneTLM(BLEAdvertisedDevice *advertisedDevice) {
+  char *payload = (char *)advertisedDevice->getPayload();
   for (int i = 0; i < advertisedDevice->getPayloadLength(); ++i) {
-    if (payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i + 2 + sizeof(m_eddystoneData) && payload[i + 1] == 0xAA && payload[i + 2] == 0xFE && payload[i + 3] == 0x20) {
+    if (payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i + 2 + sizeof(m_eddystoneData) && payload[i + 1] == 0xAA && payload[i + 2] == 0xFE
+        && payload[i + 3] == 0x20) {
       log_d("Eddystone TLM data frame starting at byte [%d]", i + 3);
       setData(String(payload + i + 3, sizeof(m_eddystoneData)));
       break;
@@ -42,7 +43,7 @@ BLEEddystoneTLM::BLEEddystoneTLM(BLEAdvertisedDevice* advertisedDevice) {
 }
 
 String BLEEddystoneTLM::getData() {
-  return String((char*)&m_eddystoneData, sizeof(m_eddystoneData));
+  return String((char *)&m_eddystoneData, sizeof(m_eddystoneData));
 }  // getData
 
 BLEUUID BLEEddystoneTLM::getUUID() {

@@ -6,10 +6,8 @@
 class UriBraces : public Uri {
 
 public:
-  explicit UriBraces(const char *uri)
-    : Uri(uri){};
-  explicit UriBraces(const String &uri)
-    : Uri(uri){};
+  explicit UriBraces(const char *uri) : Uri(uri){};
+  explicit UriBraces(const String &uri) : Uri(uri){};
 
   Uri *clone() const override final {
     return new UriBraces(_uri);
@@ -28,8 +26,9 @@ public:
   }
 
   bool canHandle(const String &requestUri, std::vector<String> &pathArgs) override final {
-    if (Uri::canHandle(requestUri, pathArgs))
+    if (Uri::canHandle(requestUri, pathArgs)) {
       return true;
+    }
 
     size_t uriLength = _uri.length();
     unsigned int pathArgIndex = 0;
@@ -38,10 +37,12 @@ public:
       char uriChar = _uri[i];
       char requestUriChar = requestUri[requestUriIndex];
 
-      if (uriChar == requestUriChar)
+      if (uriChar == requestUriChar) {
         continue;
-      if (uriChar != '{')
+      }
+      if (uriChar != '{') {
         return false;
+      }
 
       i += 2;  // index of char after '}'
       if (i >= uriLength) {
@@ -51,8 +52,9 @@ public:
       } else {
         char charEnd = _uri[i];
         int uriIndex = requestUri.indexOf(charEnd, requestUriIndex);
-        if (uriIndex < 0)
+        if (uriIndex < 0) {
           return false;
+        }
         pathArgs[pathArgIndex] = requestUri.substring(requestUriIndex, uriIndex);
         requestUriIndex = (unsigned int)uriIndex;
       }

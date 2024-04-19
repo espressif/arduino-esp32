@@ -6,13 +6,13 @@
 #include <NetworkUdp.h>
 
 // WiFi network name and password:
-const char* networkName = "your-ssid";
-const char* networkPswd = "your-password";
+const char *networkName = "your-ssid";
+const char *networkPswd = "your-password";
 
 //IP address to send UDP data to:
 // either use the ip address of the server or
 // a network broadcast address
-const char* udpAddress = "192.168.0.255";
+const char *udpAddress = "192.168.0.255";
 const int udpPort = 3333;
 
 //Are we currently connected?
@@ -41,7 +41,7 @@ void loop() {
   delay(1000);
 }
 
-void connectToWiFi(const char* ssid, const char* pwd) {
+void connectToWiFi(const char *ssid, const char *pwd) {
   Serial.println("Connecting to WiFi network: " + String(ssid));
 
   // delete old config

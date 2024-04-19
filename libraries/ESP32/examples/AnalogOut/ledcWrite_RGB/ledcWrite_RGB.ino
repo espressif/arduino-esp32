@@ -66,10 +66,9 @@ void loop() {
 
 void hueToRGB(uint8_t hue, uint8_t brightness) {
   uint16_t scaledHue = (hue * 6);
-  uint8_t segment = scaledHue / 256;  // segment 0 to 5 around the
-                                      // color wheel
-  uint16_t segmentOffset =
-    scaledHue - (segment * 256);  // position within the segment
+  uint8_t segment = scaledHue / 256;                     // segment 0 to 5 around the
+                                                         // color wheel
+  uint16_t segmentOffset = scaledHue - (segment * 256);  // position within the segment
 
   uint8_t complement = 0;
   uint16_t prev = (brightness * (255 - segmentOffset)) / 256;

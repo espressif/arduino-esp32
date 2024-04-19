@@ -12,11 +12,9 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
 
-BLESecurity::BLESecurity() {
-}
+BLESecurity::BLESecurity() {}
 
-BLESecurity::~BLESecurity() {
-}
+BLESecurity::~BLESecurity() {}
 /*
  * @brief Set requested authentication mode
  */
@@ -34,7 +32,6 @@ void BLESecurity::setCapability(esp_ble_io_cap_t iocap) {
   esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
 }  // setCapability
 
-
 /**
  * @brief Init encryption key by server
  * @param key_size is value between 7 and 16
@@ -44,7 +41,6 @@ void BLESecurity::setInitEncryptionKey(uint8_t init_key) {
   esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &m_initKey, sizeof(uint8_t));
 }  // setInitEncryptionKey
 
-
 /**
  * @brief Init encryption key by client
  * @param key_size is value between 7 and 16
@@ -53,7 +49,6 @@ void BLESecurity::setRespEncryptionKey(uint8_t resp_key) {
   m_respKey = resp_key;
   esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &m_respKey, sizeof(uint8_t));
 }  // setRespEncryptionKey
-
 
 /**
  *
@@ -79,39 +74,19 @@ void BLESecurity::setStaticPIN(uint32_t pin) {
 /**
  * @brief Debug function to display what keys are exchanged by peers
  */
-char* BLESecurity::esp_key_type_to_str(esp_ble_key_type_t key_type) {
-  char* key_str = nullptr;
+char *BLESecurity::esp_key_type_to_str(esp_ble_key_type_t key_type) {
+  char *key_str = nullptr;
   switch (key_type) {
-    case ESP_LE_KEY_NONE:
-      key_str = (char*)"ESP_LE_KEY_NONE";
-      break;
-    case ESP_LE_KEY_PENC:
-      key_str = (char*)"ESP_LE_KEY_PENC";
-      break;
-    case ESP_LE_KEY_PID:
-      key_str = (char*)"ESP_LE_KEY_PID";
-      break;
-    case ESP_LE_KEY_PCSRK:
-      key_str = (char*)"ESP_LE_KEY_PCSRK";
-      break;
-    case ESP_LE_KEY_PLK:
-      key_str = (char*)"ESP_LE_KEY_PLK";
-      break;
-    case ESP_LE_KEY_LLK:
-      key_str = (char*)"ESP_LE_KEY_LLK";
-      break;
-    case ESP_LE_KEY_LENC:
-      key_str = (char*)"ESP_LE_KEY_LENC";
-      break;
-    case ESP_LE_KEY_LID:
-      key_str = (char*)"ESP_LE_KEY_LID";
-      break;
-    case ESP_LE_KEY_LCSRK:
-      key_str = (char*)"ESP_LE_KEY_LCSRK";
-      break;
-    default:
-      key_str = (char*)"INVALID BLE KEY TYPE";
-      break;
+    case ESP_LE_KEY_NONE:  key_str = (char *)"ESP_LE_KEY_NONE"; break;
+    case ESP_LE_KEY_PENC:  key_str = (char *)"ESP_LE_KEY_PENC"; break;
+    case ESP_LE_KEY_PID:   key_str = (char *)"ESP_LE_KEY_PID"; break;
+    case ESP_LE_KEY_PCSRK: key_str = (char *)"ESP_LE_KEY_PCSRK"; break;
+    case ESP_LE_KEY_PLK:   key_str = (char *)"ESP_LE_KEY_PLK"; break;
+    case ESP_LE_KEY_LLK:   key_str = (char *)"ESP_LE_KEY_LLK"; break;
+    case ESP_LE_KEY_LENC:  key_str = (char *)"ESP_LE_KEY_LENC"; break;
+    case ESP_LE_KEY_LID:   key_str = (char *)"ESP_LE_KEY_LID"; break;
+    case ESP_LE_KEY_LCSRK: key_str = (char *)"ESP_LE_KEY_LCSRK"; break;
+    default:               key_str = (char *)"INVALID BLE KEY TYPE"; break;
   }
   return key_str;
 }  // esp_key_type_to_str

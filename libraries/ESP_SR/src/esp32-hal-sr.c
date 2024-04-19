@@ -40,30 +40,30 @@
 
 #undef ESP_GOTO_ON_FALSE
 #define ESP_GOTO_ON_FALSE(a, err_code, goto_tag, format, ...) \
-  do { \
-    if (unlikely(!(a))) { \
-      log_e(format, ##__VA_ARGS__); \
-      ret = err_code; \
-      goto goto_tag; \
-    } \
+  do {                                                        \
+    if (unlikely(!(a))) {                                     \
+      log_e(format, ##__VA_ARGS__);                           \
+      ret = err_code;                                         \
+      goto goto_tag;                                          \
+    }                                                         \
   } while (0)
 
 #undef ESP_RETURN_ON_FALSE
 #define ESP_RETURN_ON_FALSE(a, err_code, format, ...) \
-  do { \
-    if (unlikely(!(a))) { \
-      log_e(format, ##__VA_ARGS__); \
-      return err_code; \
-    } \
+  do {                                                \
+    if (unlikely(!(a))) {                             \
+      log_e(format, ##__VA_ARGS__);                   \
+      return err_code;                                \
+    }                                                 \
   } while (0)
 
-#define NEED_DELETE BIT0
-#define FEED_DELETED BIT1
+#define NEED_DELETE    BIT0
+#define FEED_DELETED   BIT1
 #define DETECT_DELETED BIT2
-#define PAUSE_FEED BIT3
-#define PAUSE_DETECT BIT4
-#define RESUME_FEED BIT5
-#define RESUME_DETECT BIT6
+#define PAUSE_FEED     BIT3
+#define PAUSE_DETECT   BIT4
+#define RESUME_FEED    BIT5
+#define RESUME_DETECT  BIT6
 
 typedef struct {
   wakenet_state_t wakenet_mode;
@@ -164,7 +164,9 @@ static void audio_feed_task(void *arg) {
       vTaskDelay(100);
       continue;
     }
-    esp_err_t err = g_sr_data->fill_cb(g_sr_data->fill_cb_arg, (char *)audio_buffer, audio_chunksize * g_sr_data->i2s_rx_chan_num * sizeof(int16_t), &bytes_read, portMAX_DELAY);
+    esp_err_t err = g_sr_data->fill_cb(
+      g_sr_data->fill_cb_arg, (char *)audio_buffer, audio_chunksize * g_sr_data->i2s_rx_chan_num * sizeof(int16_t), &bytes_read, portMAX_DELAY
+    );
     if (err != ESP_OK) {
       vTaskDelay(100);
       continue;
@@ -264,8 +266,7 @@ static void audio_detect_task(void *arg) {
         sr_set_mode(SR_MODE_OFF);
         esp_mn_results_t *mn_result = g_sr_data->multinet->get_results(g_sr_data->model_data);
         for (int i = 0; i < mn_result->num; i++) {
-          log_d("TOP %d, command_id: %d, phrase_id: %d, prob: %f",
-                i + 1, mn_result->command_id[i], mn_result->phrase_id[i], mn_result->prob[i]);
+          log_d("TOP %d, command_id: %d, phrase_id: %d, prob: %f", i + 1, mn_result->command_id[i], mn_result->phrase_id[i], mn_result->prob[i]);
         }
 
         int sr_command_id = mn_result->command_id[0];
@@ -304,14 +305,15 @@ esp_err_t sr_set_mode(sr_mode_t mode) {
         g_sr_data->afe_handle->disable_wakenet(g_sr_data->afe_data);
       }
       break;
-    default:
-      return ESP_FAIL;
+    default: return ESP_FAIL;
   }
   g_sr_data->mode = mode;
   return ESP_OK;
 }
 
-esp_err_t sr_start(sr_fill_cb fill_cb, void *fill_cb_arg, sr_channels_t rx_chan, sr_mode_t mode, const sr_cmd_t sr_commands[], size_t cmd_number, sr_event_cb cb, void *cb_arg) {
+esp_err_t sr_start(
+  sr_fill_cb fill_cb, void *fill_cb_arg, sr_channels_t rx_chan, sr_mode_t mode, const sr_cmd_t sr_commands[], size_t cmd_number, sr_event_cb cb, void *cb_arg
+) {
   esp_err_t ret = ESP_OK;
   ESP_RETURN_ON_FALSE(NULL == g_sr_data, ESP_ERR_INVALID_STATE, "SR already running");
 
@@ -350,7 +352,6 @@ esp_err_t sr_start(sr_fill_cb fill_cb, void *fill_cb_arg, sr_channels_t rx_chan,
   g_sr_data->multinet = esp_mn_handle_from_name(mn_name);
   log_d("load model_data '%s'", mn_name);
   g_sr_data->model_data = g_sr_data->multinet->create(mn_name, 5760);
-
 
   // Add commands
   esp_mn_commands_alloc((esp_mn_iface_t *)g_sr_data->multinet, (model_iface_data_t *)g_sr_data->model_data);

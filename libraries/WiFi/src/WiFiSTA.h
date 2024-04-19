@@ -37,7 +37,6 @@ typedef enum {
   WPA2_AUTH_TTLS = 2
 } wpa2_auth_method_t;
 
-
 // ----------------------------------------------------------------------------------------------
 // ------------------------------------ NEW STA Implementation ----------------------------------
 // ----------------------------------------------------------------------------------------------
@@ -53,8 +52,11 @@ public:
   bool bandwidth(wifi_bandwidth_t bandwidth);
 
   bool connect();
-  bool connect(const char* ssid, const char* passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
-  bool connect(const char* wpa2_ssid, wpa2_auth_method_t method, const char* wpa2_identity = NULL, const char* wpa2_username = NULL, const char* wpa2_password = NULL, const char* ca_pem = NULL, const char* client_crt = NULL, const char* client_key = NULL, int32_t channel = 0, const uint8_t* bssid = 0, bool connect = true);
+  bool connect(const char *ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t *bssid = NULL, bool connect = true);
+  bool connect(
+    const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity = NULL, const char *wpa2_username = NULL, const char *wpa2_password = NULL,
+    const char *ca_pem = NULL, const char *client_crt = NULL, const char *client_key = NULL, int32_t channel = 0, const uint8_t *bssid = 0, bool connect = true
+  );
   bool disconnect(bool eraseap = false, unsigned long timeout = 0);
   bool reconnect();
   bool erase();
@@ -73,15 +75,15 @@ public:
 
   String SSID() const;
   String psk() const;
-  uint8_t* BSSID(uint8_t* bssid = NULL);
+  uint8_t *BSSID(uint8_t *bssid = NULL);
   String BSSIDstr();
   int8_t RSSI();
 
-  const char* disconnectReasonName(wifi_err_reason_t reason);
+  const char *disconnectReasonName(wifi_err_reason_t reason);
 
   // Private Use
   void _setStatus(wl_status_t status);
-  void _onStaEvent(int32_t event_id, void* event_data);
+  void _onStaEvent(int32_t event_id, void *event_data);
 
 protected:
   wifi_auth_mode_t _minSecurity;
@@ -90,7 +92,7 @@ protected:
   bool _autoReconnect;
   wl_status_t _status;
 
-  size_t printDriverInfo(Print& out) const;
+  size_t printDriverInfo(Print &out) const;
 
   friend class WiFiGenericClass;
   bool onEnable();
@@ -105,12 +107,22 @@ class WiFiSTAClass {
 public:
   STAClass STA;
 
-  wl_status_t begin(const char* wpa2_ssid, wpa2_auth_method_t method, const char* wpa2_identity = NULL, const char* wpa2_username = NULL, const char* wpa2_password = NULL, const char* ca_pem = NULL, const char* client_crt = NULL, const char* client_key = NULL, int32_t channel = 0, const uint8_t* bssid = 0, bool connect = true);
-  wl_status_t begin(const String& wpa2_ssid, wpa2_auth_method_t method, const String& wpa2_identity = (const char*)NULL, const String& wpa2_username = (const char*)NULL, const String& wpa2_password = (const char*)NULL, const String& ca_pem = (const char*)NULL, const String& client_crt = (const char*)NULL, const String& client_key = (const char*)NULL, int32_t channel = 0, const uint8_t* bssid = 0, bool connect = true) {
-    return begin(wpa2_ssid.c_str(), method, wpa2_identity.c_str(), wpa2_username.c_str(), wpa2_password.c_str(), ca_pem.c_str(), client_crt.c_str(), client_key.c_str(), channel, bssid, connect);
+  wl_status_t begin(
+    const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity = NULL, const char *wpa2_username = NULL, const char *wpa2_password = NULL,
+    const char *ca_pem = NULL, const char *client_crt = NULL, const char *client_key = NULL, int32_t channel = 0, const uint8_t *bssid = 0, bool connect = true
+  );
+  wl_status_t begin(
+    const String &wpa2_ssid, wpa2_auth_method_t method, const String &wpa2_identity = (const char *)NULL, const String &wpa2_username = (const char *)NULL,
+    const String &wpa2_password = (const char *)NULL, const String &ca_pem = (const char *)NULL, const String &client_crt = (const char *)NULL,
+    const String &client_key = (const char *)NULL, int32_t channel = 0, const uint8_t *bssid = 0, bool connect = true
+  ) {
+    return begin(
+      wpa2_ssid.c_str(), method, wpa2_identity.c_str(), wpa2_username.c_str(), wpa2_password.c_str(), ca_pem.c_str(), client_crt.c_str(), client_key.c_str(),
+      channel, bssid, connect
+    );
   }
-  wl_status_t begin(const char* ssid, const char* passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
-  wl_status_t begin(const String& ssid, const String& passphrase = (const char*)NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true) {
+  wl_status_t begin(const char *ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t *bssid = NULL, bool connect = true);
+  wl_status_t begin(const String &ssid, const String &passphrase = (const char *)NULL, int32_t channel = 0, const uint8_t *bssid = NULL, bool connect = true) {
     return begin(ssid.c_str(), passphrase.c_str(), channel, bssid, connect);
   }
   wl_status_t begin();
@@ -147,14 +159,14 @@ public:
   String SSID() const;
   String psk() const;
 
-  uint8_t* BSSID(uint8_t* bssid = NULL);
+  uint8_t *BSSID(uint8_t *bssid = NULL);
   String BSSIDstr();
 
   int8_t RSSI();
 
   IPAddress localIP();
 
-  uint8_t* macAddress(uint8_t* mac);
+  uint8_t *macAddress(uint8_t *mac);
   String macAddress();
 
   IPAddress subnetMask();
@@ -174,13 +186,13 @@ public:
   // ----------------------------------------------------------------------------------------------
 protected:
   static bool _smartConfigStarted;
+
 public:
-  bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char* crypt_key = NULL);
+  bool beginSmartConfig(smartconfig_type_t type = SC_TYPE_ESPTOUCH, char *crypt_key = NULL);
   bool stopSmartConfig();
   bool smartConfigDone();
 
   static bool _smartConfigDone;
 };
-
 
 #endif /* SOC_WIFI_SUPPORTED */

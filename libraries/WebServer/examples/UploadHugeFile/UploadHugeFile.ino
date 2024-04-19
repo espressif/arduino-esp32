@@ -4,8 +4,8 @@
 #include <uri/UriRegex.h>
 #include <SD.h>
 
-const char* ssid = "**********";
-const char* password = "**********";
+const char *ssid = "**********";
+const char *password = "**********";
 
 WebServer server(80);
 
@@ -15,10 +15,10 @@ void handleCreate() {
 }
 void handleCreateProcess() {
   String path = "/" + server.pathArg(0);
-  HTTPRaw& raw = server.raw();
+  HTTPRaw &raw = server.raw();
   if (raw.status == RAW_START) {
-    if (SD.exists((char*)path.c_str())) {
-      SD.remove((char*)path.c_str());
+    if (SD.exists((char *)path.c_str())) {
+      SD.remove((char *)path.c_str());
     }
     rawFile = SD.open(path.c_str(), FILE_WRITE);
     Serial.print("Upload: START, filename: ");
@@ -60,7 +60,9 @@ void handleNotFound() {
 void setup(void) {
   Serial.begin(115200);
 
-  while (!SD.begin()) delay(1);
+  while (!SD.begin()) {
+    delay(1);
+  }
   Serial.println("SD Card initialized.");
 
   WiFi.mode(WIFI_STA);

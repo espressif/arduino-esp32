@@ -4,9 +4,9 @@
 #include "WiFiProv.h"
 
 #define DEFAULT_POWER_MODE true
-#define DEFAULT_SWING false
-#define DEFAULT_SPEED 0
-#define DEFAULT_MODE "Auto"
+#define DEFAULT_SWING      false
+#define DEFAULT_SPEED      0
+#define DEFAULT_MODE       "Auto"
 
 const char *service_name = "PROV_1234";
 const char *pop = "abcd1234";
@@ -52,13 +52,9 @@ void sysProvEvent(arduino_event_t *sys_event) {
       printQR(service_name, pop, "ble");
 #endif
       break;
-    case ARDUINO_EVENT_PROV_INIT:
-      wifi_prov_mgr_disable_auto_stop(10000);
-      break;
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-      wifi_prov_mgr_stop_provisioning();
-      break;
-    default:;
+    case ARDUINO_EVENT_PROV_INIT:         wifi_prov_mgr_disable_auto_stop(10000); break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS: wifi_prov_mgr_stop_provisioning(); break;
+    default:                              ;
   }
 }
 
@@ -143,7 +139,7 @@ void setup() {
   speed.addBounds(value(0), value(255), value(1));
   my_device->addParam(speed);
 
-  static const char *modes[] = { "Auto", "Cool", "Heat" };
+  static const char *modes[] = {"Auto", "Cool", "Heat"};
   Param mode_param("Mode", ESP_RMAKER_PARAM_MODE, value("Auto"), PROP_FLAG_READ | PROP_FLAG_WRITE);
   mode_param.addValidStrList(modes, 3);
   mode_param.addUIType(ESP_RMAKER_UI_DROPDOWN);

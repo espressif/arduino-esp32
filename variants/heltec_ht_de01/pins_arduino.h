@@ -5,7 +5,6 @@
 
 #define HT_DE01 true
 
-
 static const uint8_t LED_BUILTIN = 35;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN

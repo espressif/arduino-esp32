@@ -25,7 +25,6 @@ static bool driver_installed = false;
 
 unsigned long previousMillis = 0;  // will store last time a message was send
 
-
 void setup() {
   // Start Serial:
   Serial.begin(115200);

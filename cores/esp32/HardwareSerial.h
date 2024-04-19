@@ -96,7 +96,6 @@ typedef enum {
   UART_PARITY_ERROR
 } hardwareSerial_error_t;
 
-
 #ifndef ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
 #define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE 2048
 #endif
@@ -250,7 +249,10 @@ public:
   // timeout_ms is used in baudrate detection (ESP32, ESP32S2 only)
   // invert will invert RX/TX polarity
   // rxfifo_full_thrhd if the UART Flow Control Threshold in the UART FIFO (max 127)
-  void begin(unsigned long baud, uint32_t config = SERIAL_8N1, int8_t rxPin = -1, int8_t txPin = -1, bool invert = false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 112);
+  void begin(
+    unsigned long baud, uint32_t config = SERIAL_8N1, int8_t rxPin = -1, int8_t txPin = -1, bool invert = false, unsigned long timeout_ms = 20000UL,
+    uint8_t rxfifo_full_thrhd = 112
+  );
   void end(void);
   void updateBaudRate(unsigned long baud);
   int available(void);

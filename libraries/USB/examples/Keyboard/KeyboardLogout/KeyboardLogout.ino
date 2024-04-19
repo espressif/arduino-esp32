@@ -32,9 +32,9 @@ void setup() {}
 void loop() {}
 #else
 
-#define OSX 0
+#define OSX     0
 #define WINDOWS 1
-#define UBUNTU 2
+#define UBUNTU  2
 
 #include "USB.h"
 #include "USBHIDKeyboard.h"
@@ -97,6 +97,8 @@ void loop() {
   }
 
   // do nothing:
-  while (true) delay(1000);
+  while (true) {
+    delay(1000);
+  }
 }
 #endif /* ARDUINO_USB_MODE */

@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x1B4F
-#define USB_PID 0x0035
+#define USB_VID          0x1B4F
+#define USB_PID          0x0035
 #define USB_MANUFACTURER "SparkFun"
-#define USB_PRODUCT "SparkFun_Pro_Micro-ESP32C3"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "SparkFun_Pro_Micro-ESP32C3"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = 10;
 

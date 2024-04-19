@@ -6,11 +6,11 @@ struct Button {
   bool pressed;
 };
 
-Button button1 = { 23, 0, false };
-Button button2 = { 18, 0, false };
+Button button1 = {23, 0, false};
+Button button2 = {18, 0, false};
 
-void ARDUINO_ISR_ATTR isr(void* arg) {
-  Button* s = static_cast<Button*>(arg);
+void ARDUINO_ISR_ATTR isr(void *arg) {
+  Button *s = static_cast<Button *>(arg);
   s->numberKeyPresses += 1;
   s->pressed = true;
 }

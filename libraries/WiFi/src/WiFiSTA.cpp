@@ -63,7 +63,10 @@ wl_status_t WiFiSTAClass::status() {
   return STA.status();
 }
 
-wl_status_t WiFiSTAClass::begin(const char* wpa2_ssid, wpa2_auth_method_t method, const char* wpa2_identity, const char* wpa2_username, const char* wpa2_password, const char* ca_pem, const char* client_crt, const char* client_key, int32_t channel, const uint8_t* bssid, bool connect) {
+wl_status_t WiFiSTAClass::begin(
+  const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity, const char *wpa2_username, const char *wpa2_password, const char *ca_pem,
+  const char *client_crt, const char *client_key, int32_t channel, const uint8_t *bssid, bool connect
+) {
   if (!STA.begin()) {
     return WL_CONNECT_FAILED;
   }
@@ -75,7 +78,7 @@ wl_status_t WiFiSTAClass::begin(const char* wpa2_ssid, wpa2_auth_method_t method
   return STA.status();
 }
 
-wl_status_t WiFiSTAClass::begin(const char* ssid, const char* passphrase, int32_t channel, const uint8_t* bssid, bool connect) {
+wl_status_t WiFiSTAClass::begin(const char *ssid, const char *passphrase, int32_t channel, const uint8_t *bssid, bool connect) {
   if (!STA.begin()) {
     return WL_CONNECT_FAILED;
   }
@@ -277,13 +280,12 @@ IPAddress WiFiSTAClass::localIP() {
   return STA.localIP();
 }
 
-
 /**
  * Get the station interface MAC address.
  * @param mac   pointer to uint8_t array with length WL_MAC_ADDR_LENGTH
  * @return      pointer to uint8_t *
  */
-uint8_t* WiFiSTAClass::macAddress(uint8_t* mac) {
+uint8_t *WiFiSTAClass::macAddress(uint8_t *mac) {
   return STA.macAddress(mac);
 }
 
@@ -364,7 +366,7 @@ String WiFiSTAClass::psk() const {
  * Return the current bssid / mac associated with the network if configured
  * @return bssid uint8_t *
  */
-uint8_t* WiFiSTAClass::BSSID(uint8_t* buff) {
+uint8_t *WiFiSTAClass::BSSID(uint8_t *buff) {
   return STA.BSSID(buff);
 }
 
@@ -410,7 +412,6 @@ IPAddress WiFiSTAClass::globalIPv6() {
   return STA.globalIPv6();
 }
 
-
 bool WiFiSTAClass::_smartConfigStarted = false;
 bool WiFiSTAClass::_smartConfigDone = false;
 
@@ -422,7 +423,7 @@ bool WiFiSTAClass::_smartConfigDone = false;
  * @return true if configuration is successful.
  * @return false if configuration fails.
  */
-bool WiFiSTAClass::beginSmartConfig(smartconfig_type_t type, char* crypt_key) {
+bool WiFiSTAClass::beginSmartConfig(smartconfig_type_t type, char *crypt_key) {
   esp_err_t err;
   if (_smartConfigStarted) {
     return false;

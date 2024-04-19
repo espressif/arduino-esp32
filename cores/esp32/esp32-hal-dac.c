@@ -35,9 +35,7 @@ bool __dacWrite(uint8_t pin, uint8_t value) {
       return false;
     }
     dac_channel_t channel = (pin == DAC_CHAN0_GPIO_NUM) ? DAC_CHAN_0 : DAC_CHAN_1;
-    dac_oneshot_config_t config = {
-      .chan_id = channel
-    };
+    dac_oneshot_config_t config = {.chan_id = channel};
     err = dac_oneshot_new_channel(&config, &bus);
     if (err != ESP_OK) {
       log_e("dac_oneshot_new_channel failed with error: %d", err);

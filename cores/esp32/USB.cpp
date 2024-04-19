@@ -60,9 +60,8 @@ static uint16_t load_dfu_descriptor(uint8_t *dst, uint8_t *itf) {
 #define DFU_ATTRS (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
 
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB DFU_RT");
-  uint8_t descriptor[TUD_DFU_RT_DESC_LEN] = {
-    // Interface number, string index, attributes, detach timeout, transfer size */
-    TUD_DFU_RT_DESCRIPTOR(*itf, str_index, DFU_ATTRS, 700, 64)
+  uint8_t descriptor[TUD_DFU_RT_DESC_LEN] = {// Interface number, string index, attributes, detach timeout, transfer size */
+                                             TUD_DFU_RT_DESCRIPTOR(*itf, str_index, DFU_ATTRS, 700, 64)
   };
   *itf += 1;
   memcpy(dst, descriptor, TUD_DFU_RT_DESC_LEN);
@@ -128,9 +127,12 @@ void tud_resume_cb(void) {
 }
 
 ESPUSB::ESPUSB(size_t task_stack_size, uint8_t event_task_priority)
-  : vid(USB_VID), pid(USB_PID), product_name(USB_PRODUCT), manufacturer_name(USB_MANUFACTURER), serial_number(USB_SERIAL), fw_version(0x0100), usb_version(0x0200)  // at least 2.1 or 3.x for BOS & webUSB
+  : vid(USB_VID), pid(USB_PID), product_name(USB_PRODUCT), manufacturer_name(USB_MANUFACTURER), serial_number(USB_SERIAL), fw_version(0x0100),
+    usb_version(0x0200)  // at least 2.1 or 3.x for BOS & webUSB
     ,
-    usb_class(TUSB_CLASS_MISC), usb_subclass(MISC_SUBCLASS_COMMON), usb_protocol(MISC_PROTOCOL_IAD), usb_attributes(TUSB_DESC_CONFIG_ATT_SELF_POWERED), usb_power_ma(500), webusb_enabled(USB_WEBUSB_ENABLED), webusb_url(USB_WEBUSB_URL), _started(false), _task_stack_size(task_stack_size), _event_task_priority(event_task_priority) {
+    usb_class(TUSB_CLASS_MISC), usb_subclass(MISC_SUBCLASS_COMMON), usb_protocol(MISC_PROTOCOL_IAD), usb_attributes(TUSB_DESC_CONFIG_ATT_SELF_POWERED),
+    usb_power_ma(500), webusb_enabled(USB_WEBUSB_ENABLED), webusb_url(USB_WEBUSB_URL), _started(false), _task_stack_size(task_stack_size),
+    _event_task_priority(event_task_priority) {
   if (!arduino_usb_event_loop_handle) {
     esp_event_loop_args_t event_task_args = {
       .queue_size = 5,

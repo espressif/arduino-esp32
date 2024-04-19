@@ -28,7 +28,7 @@
 #include "BLEEddystoneURL.h"
 #include "esp_sleep.h"
 
-char unprintable[] = { 0x01, 0xFF, 0xDE, 0xAD };
+char unprintable[] = {0x01, 0xFF, 0xDE, 0xAD};
 String URL[] = {
   "http://www.espressif.com/",  // prefix 0x00, suffix 0x00
   "https://www.texas.gov",      // prefix 0x01, suffix 0x0D
@@ -42,7 +42,7 @@ String URL[] = {
 };
 
 #define GPIO_DEEP_SLEEP_DURATION 10  // sleep x seconds and then wake up
-#define BEACON_POWER ESP_PWR_LVL_N12
+#define BEACON_POWER             ESP_PWR_LVL_N12
 RTC_DATA_ATTR static time_t last;         // remember last boot in RTC Memory
 RTC_DATA_ATTR static uint32_t bootcount;  // remember number of boots in RTC Memory
 
@@ -102,5 +102,4 @@ void setup() {
   esp_deep_sleep(1000000LL * GPIO_DEEP_SLEEP_DURATION);
 }
 
-void loop() {
-}
+void loop() {}

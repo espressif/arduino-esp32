@@ -38,9 +38,8 @@
 #else  // ESP32 Before IDF 4.0
 #include "rom/gpio.h"
 #define GPIO_MATRIX_CONST_ZERO_INPUT GPIO_FUNC_IN_LOW
-#define GPIO_MATRIX_CONST_ONE_INPUT GPIO_FUNC_IN_HIGH
+#define GPIO_MATRIX_CONST_ONE_INPUT  GPIO_FUNC_IN_HIGH
 #endif
-
 
 void ARDUINO_ISR_ATTR pinMatrixOutAttach(uint8_t pin, uint8_t function, bool invertOut, bool invertEnable) {
   gpio_matrix_out(pin, function, invertOut, invertEnable);

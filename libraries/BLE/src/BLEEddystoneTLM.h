@@ -13,11 +13,11 @@
 #include "BLEUUID.h"
 #include <BLEAdvertisedDevice.h>
 
-#define EDDYSTONE_TLM_FRAME_TYPE 0x20
-#define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00) >> 8) + (((x)&0xFF) << 8))
-#define ENDIAN_CHANGE_U32(x) ((((x)&0xFF000000) >> 24) + (((x)&0x00FF0000) >> 8)) + ((((x)&0xFF00) << 8) + (((x)&0xFF) << 24))
-#define EDDYSTONE_TEMP_U16_TO_FLOAT(tempU16) (((int16_t)ENDIAN_CHANGE_U16(tempU16)) / 256.0f)
-#define EDDYSTONE_TEMP_FLOAT_TO_U16(tempFloat) (ENDIAN_CHANGE_U16(((int)((tempFloat)*256))))
+#define EDDYSTONE_TLM_FRAME_TYPE               0x20
+#define ENDIAN_CHANGE_U16(x)                   ((((x) & 0xFF00) >> 8) + (((x) & 0xFF) << 8))
+#define ENDIAN_CHANGE_U32(x)                   ((((x) & 0xFF000000) >> 24) + (((x) & 0x00FF0000) >> 8)) + ((((x) & 0xFF00) << 8) + (((x) & 0xFF) << 24))
+#define EDDYSTONE_TEMP_U16_TO_FLOAT(tempU16)   (((int16_t)ENDIAN_CHANGE_U16(tempU16)) / 256.0f)
+#define EDDYSTONE_TEMP_FLOAT_TO_U16(tempFloat) (ENDIAN_CHANGE_U16(((int)((tempFloat) * 256))))
 
 /**
  * @brief Representation of a beacon.

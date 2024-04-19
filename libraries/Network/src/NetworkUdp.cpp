@@ -26,8 +26,7 @@
 #undef write
 #undef read
 
-NetworkUDP::NetworkUDP()
-  : udp_server(-1), server_port(0), remote_port(0), tx_buffer(0), tx_buffer_len(0), rx_buffer(0) {}
+NetworkUDP::NetworkUDP() : udp_server(-1), server_port(0), remote_port(0), tx_buffer(0), tx_buffer_len(0), rx_buffer(0) {}
 
 NetworkUDP::~NetworkUDP() {
   stop();
@@ -114,7 +113,9 @@ uint8_t NetworkUDP::beginMulticast(IPAddress address, uint16_t p) {
           mreq.ipv6mr_interface = intf->num + 1;
           if (intf->name[0] != 'l' || intf->name[1] != 'o') {  // skip 'lo' local interface
             int ret = setsockopt(udp_server, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mreq, sizeof(mreq));
-            if (ret >= 0) { joined = true; }
+            if (ret >= 0) {
+              joined = true;
+            }
           }
         }
         if (!joined) {
@@ -152,8 +153,9 @@ void NetworkUDP::stop() {
     rx_buffer = NULL;
     delete b;
   }
-  if (udp_server == -1)
+  if (udp_server == -1) {
     return;
+  }
   ip_addr_t addr;
   multicast_ip.to_ip_addr_t(&addr);
   if (!ip_addr_isany(&addr)) {
@@ -185,16 +187,18 @@ void NetworkUDP::stop() {
 }
 
 int NetworkUDP::beginMulticastPacket() {
-  if (!server_port || multicast_ip == IPAddress())
+  if (!server_port || multicast_ip == IPAddress()) {
     return 0;
+  }
   remote_ip = multicast_ip;
   remote_port = server_port;
   return beginPacket();
 }
 
 int NetworkUDP::beginPacket() {
-  if (!remote_port)
+  if (!remote_port) {
     return 0;
+  }
 
   // allocate tx_buffer if is necessary
   if (!tx_buffer) {
@@ -207,8 +211,9 @@ int NetworkUDP::beginPacket() {
   tx_buffer_len = 0;
 
   // check whereas socket is already open
-  if (udp_server != -1)
+  if (udp_server != -1) {
     return 1;
+  }
 
   if ((udp_server = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
     log_e("could not create socket: %d", errno);
@@ -277,17 +282,18 @@ size_t NetworkUDP::write(uint8_t data) {
 
 size_t NetworkUDP::write(const uint8_t *buffer, size_t size) {
   size_t i;
-  for (i = 0; i < size; i++)
+  for (i = 0; i < size; i++) {
     write(buffer[i]);
+  }
   return i;
 }
 
-void NetworkUDP::flush() {
-}
+void NetworkUDP::flush() {}
 
 int NetworkUDP::parsePacket() {
-  if (rx_buffer)
+  if (rx_buffer) {
     return 0;
+  }
   struct sockaddr_storage si_other_storage;  // enough storage for v4 and v6
   socklen_t slen = sizeof(sockaddr_storage);
   int len;
@@ -336,12 +342,16 @@ int NetworkUDP::parsePacket() {
 }
 
 int NetworkUDP::available() {
-  if (!rx_buffer) return 0;
+  if (!rx_buffer) {
+    return 0;
+  }
   return rx_buffer->available();
 }
 
 int NetworkUDP::read() {
-  if (!rx_buffer) return -1;
+  if (!rx_buffer) {
+    return -1;
+  }
   int out = rx_buffer->read();
   if (!rx_buffer->available()) {
     cbuf *b = rx_buffer;
@@ -356,7 +366,9 @@ int NetworkUDP::read(unsigned char *buffer, size_t len) {
 }
 
 int NetworkUDP::read(char *buffer, size_t len) {
-  if (!rx_buffer) return 0;
+  if (!rx_buffer) {
+    return 0;
+  }
   int out = rx_buffer->read(buffer, len);
   if (!rx_buffer->available()) {
     cbuf *b = rx_buffer;
@@ -367,12 +379,16 @@ int NetworkUDP::read(char *buffer, size_t len) {
 }
 
 int NetworkUDP::peek() {
-  if (!rx_buffer) return -1;
+  if (!rx_buffer) {
+    return -1;
+  }
   return rx_buffer->peek();
 }
 
 void NetworkUDP::clear() {
-  if (!rx_buffer) return;
+  if (!rx_buffer) {
+    return;
+  }
   cbuf *b = rx_buffer;
   rx_buffer = 0;
   delete b;

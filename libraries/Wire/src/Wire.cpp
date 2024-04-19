@@ -257,7 +257,9 @@ bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency) {
   is_slave = true;
   started = true;
 end:
-  if (!started) freeWireBuffer();
+  if (!started) {
+    freeWireBuffer();
+  }
 #if !CONFIG_DISABLE_HAL_LOCKS
   //release lock
   xSemaphoreGive(lock);
@@ -306,7 +308,9 @@ bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency) {
   started = (err == ESP_OK);
 
 end:
-  if (!started) freeWireBuffer();
+  if (!started) {
+    freeWireBuffer();
+  }
 #if !CONFIG_DISABLE_HAL_LOCKS
   //release lock
   xSemaphoreGive(lock);
@@ -458,10 +462,10 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
     nonStop = true;
   }
   switch (err) {
-    case ESP_OK: return 0;
-    case ESP_FAIL: return 2;
+    case ESP_OK:          return 0;
+    case ESP_FAIL:        return 2;
     case ESP_ERR_TIMEOUT: return 5;
-    default: break;
+    default:              break;
   }
   return 4;
 }

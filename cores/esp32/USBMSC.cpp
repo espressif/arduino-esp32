@@ -19,13 +19,12 @@
 
 #include "esp32-hal-tinyusb.h"
 
-extern "C" uint16_t tusb_msc_load_descriptor(uint8_t* dst, uint8_t* itf) {
+extern "C" uint16_t tusb_msc_load_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB MSC");
   uint8_t ep_num = tinyusb_get_free_duplex_endpoint();
   TU_VERIFY(ep_num != 0);
-  uint8_t descriptor[TUD_MSC_DESC_LEN] = {
-    // Interface number, string index, EP Out & EP In address, EP size
-    TUD_MSC_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), 64)
+  uint8_t descriptor[TUD_MSC_DESC_LEN] = {// Interface number, string index, EP Out & EP In address, EP size
+                                          TUD_MSC_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), 64)
   };
   *itf += 1;
   memcpy(dst, descriptor, TUD_MSC_DESC_LEN);
@@ -40,19 +39,19 @@ typedef struct {
   uint16_t block_size;
   uint32_t block_count;
   bool (*start_stop)(uint8_t power_condition, bool start, bool load_eject);
-  int32_t (*read)(uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize);
-  int32_t (*write)(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize);
+  int32_t (*read)(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize);
+  int32_t (*write)(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize);
 } msc_lun_t;
 
 static const uint8_t MSC_MAX_LUN = 3;
 static uint8_t MSC_ACTIVE_LUN = 0;
 static msc_lun_t msc_luns[MSC_MAX_LUN];
 
-static void cplstr(void* dst, const void* src, size_t max_len) {
+static void cplstr(void *dst, const void *src, size_t max_len) {
   if (!src || !dst || !max_len) {
     return;
   }
-  size_t l = strlen((const char*)src);
+  size_t l = strlen((const char *)src);
   if (l > max_len) {
     l = max_len;
   }
@@ -83,7 +82,7 @@ bool tud_msc_test_unit_ready_cb(uint8_t lun) {
 
 // Invoked when received SCSI_CMD_READ_CAPACITY_10 and SCSI_CMD_READ_FORMAT_CAPACITY to determine the disk size
 // Application update block count and block size
-void tud_msc_capacity_cb(uint8_t lun, uint32_t* block_count, uint16_t* block_size) {
+void tud_msc_capacity_cb(uint8_t lun, uint32_t *block_count, uint16_t *block_size) {
   log_v("[%u]", lun);
   if (!msc_luns[lun].media_present) {
     *block_count = 0;
@@ -108,7 +107,7 @@ bool tud_msc_start_stop_cb(uint8_t lun, uint8_t power_condition, bool start, boo
 
 // Callback invoked when received READ10 command.
 // Copy disk's data to buffer (up to bufsize) and return number of copied bytes.
-int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize) {
+int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
   log_v("[%u], lba: %u, offset: %u, bufsize: %u", lun, lba, offset, bufsize);
   if (!msc_luns[lun].media_present) {
     return 0;
@@ -121,7 +120,7 @@ int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void* buff
 
 // Callback invoked when received WRITE10 command.
 // Process data in buffer to disk's storage and return number of written bytes
-int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize) {
+int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
   log_v("[%u], lba: %u, offset: %u, bufsize: %u", lun, lba, offset, bufsize);
   if (!msc_luns[lun].media_present) {
     return 0;
@@ -135,11 +134,11 @@ int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* 
 // Callback invoked when received an SCSI command not in built-in list below
 // - READ_CAPACITY10, READ_FORMAT_CAPACITY, INQUIRY, MODE_SENSE6, REQUEST_SENSE
 // - READ10 and WRITE10 has their own callbacks
-int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cmd[16], void* buffer, uint16_t bufsize) {
+int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cmd[16], void *buffer, uint16_t bufsize) {
   // read10 & write10 has their own callback and MUST not be handled here
   log_v("[%u] cmd: %u, bufsize: %u", lun, scsi_cmd[0], bufsize);
 
-  void const* response = NULL;
+  void const *response = NULL;
   uint16_t resplen = 0;
 
   // most scsi handled is input
@@ -165,7 +164,9 @@ int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cmd[16], void* buffer, u
   }
 
   // return resplen must not larger than bufsize
-  if (resplen > bufsize) resplen = bufsize;
+  if (resplen > bufsize) {
+    resplen = bufsize;
+  }
 
   if (response && (resplen > 0)) {
     if (in_xfer) {
@@ -222,15 +223,15 @@ void USBMSC::end() {
   msc_luns[_lun].write = NULL;
 }
 
-void USBMSC::vendorID(const char* vid) {
+void USBMSC::vendorID(const char *vid) {
   cplstr(msc_luns[_lun].vendor_id, vid, 8);
 }
 
-void USBMSC::productID(const char* pid) {
+void USBMSC::productID(const char *pid) {
   cplstr(msc_luns[_lun].product_id, pid, 16);
 }
 
-void USBMSC::productRevision(const char* rev) {
+void USBMSC::productRevision(const char *rev) {
   cplstr(msc_luns[_lun].product_rev, rev, 4);
 }
 

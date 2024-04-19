@@ -9,7 +9,7 @@ static const uint8_t LED_BUILTIN = 18;
 
 // IR receiver
 static const uint8_t IR = 27;
-#define IR_RECV IR
+#define IR_RECV  IR
 #define IR_INPUT IR
 
 static const uint8_t TX = 1;

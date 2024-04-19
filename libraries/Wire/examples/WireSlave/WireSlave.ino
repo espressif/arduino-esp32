@@ -32,5 +32,4 @@ void setup() {
 #endif
 }
 
-void loop() {
-}
+void loop() {}

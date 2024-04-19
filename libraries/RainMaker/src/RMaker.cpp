@@ -14,47 +14,24 @@ extern "C" bool verifyRollbackLater() {
 static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == RMAKER_EVENT) {
     switch (event_id) {
-      case RMAKER_EVENT_INIT_DONE:
-        log_i("RainMaker Initialized.");
-        break;
-      case RMAKER_EVENT_CLAIM_STARTED:
-        log_i("RainMaker Claim Started.");
-        break;
-      case RMAKER_EVENT_CLAIM_SUCCESSFUL:
-        log_i("RainMaker Claim Successful.");
-        break;
-      case RMAKER_EVENT_CLAIM_FAILED:
-        log_i("RainMaker Claim Failed.");
-        break;
-      default:
-        log_i("Unhandled RainMaker Event:");
+      case RMAKER_EVENT_INIT_DONE:        log_i("RainMaker Initialized."); break;
+      case RMAKER_EVENT_CLAIM_STARTED:    log_i("RainMaker Claim Started."); break;
+      case RMAKER_EVENT_CLAIM_SUCCESSFUL: log_i("RainMaker Claim Successful."); break;
+      case RMAKER_EVENT_CLAIM_FAILED:     log_i("RainMaker Claim Failed."); break;
+      default:                            log_i("Unhandled RainMaker Event:");
     }
   } else if (event_base == RMAKER_OTA_EVENT) {
     if (event_data == NULL) {
       event_data = (void *)"";
     }
     switch (event_id) {
-      case RMAKER_OTA_EVENT_STARTING:
-        log_i("Starting OTA");
-        break;
-      case RMAKER_OTA_EVENT_IN_PROGRESS:
-        log_i("OTA in progress : %s", (char *)event_data);
-        break;
-      case RMAKER_OTA_EVENT_SUCCESSFUL:
-        log_i("OTA Successful : %s", (char *)event_data);
-        break;
-      case RMAKER_OTA_EVENT_FAILED:
-        log_i("OTA Failed : %s", (char *)event_data);
-        break;
-      case RMAKER_OTA_EVENT_DELAYED:
-        log_i("OTA Delayed : %s", (char *)event_data);
-        break;
-      case RMAKER_OTA_EVENT_REJECTED:
-        log_i("OTA Rejected : %s", (char *)event_data);
-        break;
-      default:
-        log_i("Unhandled OTA Event");
-        break;
+      case RMAKER_OTA_EVENT_STARTING:    log_i("Starting OTA"); break;
+      case RMAKER_OTA_EVENT_IN_PROGRESS: log_i("OTA in progress : %s", (char *)event_data); break;
+      case RMAKER_OTA_EVENT_SUCCESSFUL:  log_i("OTA Successful : %s", (char *)event_data); break;
+      case RMAKER_OTA_EVENT_FAILED:      log_i("OTA Failed : %s", (char *)event_data); break;
+      case RMAKER_OTA_EVENT_DELAYED:     log_i("OTA Delayed : %s", (char *)event_data); break;
+      case RMAKER_OTA_EVENT_REJECTED:    log_i("OTA Rejected : %s", (char *)event_data); break;
+      default:                           log_i("Unhandled OTA Event"); break;
     }
   }
 }
@@ -127,12 +104,7 @@ esp_err_t RMakerClass::enableTZService() {
 }
 
 esp_err_t RMakerClass::enableOTA(ota_type_t type, const char *cert) {
-  esp_rmaker_ota_config_t ota_config = {
-    .ota_cb = NULL,
-    .ota_diag = NULL,
-    .server_cert = cert,
-    .priv = NULL
-  };
+  esp_rmaker_ota_config_t ota_config = {.ota_cb = NULL, .ota_diag = NULL, .server_cert = cert, .priv = NULL};
   err = esp_rmaker_ota_enable(&ota_config, type);
   if (err != ESP_OK) {
     log_e("OTA enable failed");
@@ -150,10 +122,7 @@ esp_err_t RMakerClass::enableScenes() {
 
 esp_err_t RMakerClass::enableSystemService(uint16_t flags, int8_t reboot_seconds, int8_t reset_seconds, int8_t reset_reboot_seconds) {
   esp_rmaker_system_serv_config_t config = {
-    .flags = flags,
-    .reboot_seconds = reboot_seconds,
-    .reset_seconds = reset_seconds,
-    .reset_reboot_seconds = reset_reboot_seconds
+    .flags = flags, .reboot_seconds = reboot_seconds, .reset_seconds = reset_seconds, .reset_reboot_seconds = reset_reboot_seconds
   };
   err = esp_rmaker_system_service_enable(&config);
   return err;

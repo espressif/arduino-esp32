@@ -1,4 +1,4 @@
-#define BLINK_GPIO 2
+#define BLINK_GPIO                2
 #define EOT_INITIAL_STATE_TIME_MS 1000
 
 // BLINK_GPIO shall start at RMT_EOT (HIGH or LOW) as initial state for EOT_INITIAL_STATE_TIME_MS,
@@ -107,7 +107,7 @@ rmt_data_t blink_1s_rmt_data[] = {
     0,
   },
   // Looping mode needs a Zero ending data to mark the EOF
-  { 0, 0, 0, 0 }
+  {0, 0, 0, 0}
 };
 
 void setup() {
@@ -123,7 +123,7 @@ void setup() {
   // sets the End of Transmission Level to HIGH, after writing to the pin. DEFAULT is LOW.
   rmtSetEOT(BLINK_GPIO, RMT_EOT);
   // set initial RMT state by writing a single RMT data
-  rmt_data_t initStateSetup_rmt_data[] = { { 1, RMT_EOT, 0, 0 } };
+  rmt_data_t initStateSetup_rmt_data[] = {{1, RMT_EOT, 0, 0}};
   rmtWrite(BLINK_GPIO, initStateSetup_rmt_data, RMT_SYMBOLS_OF(initStateSetup_rmt_data), RMT_WAIT_FOR_EVER);
   Serial.printf("\nLED GPIO%d start in the initial level %s\n", BLINK_GPIO, RMT_EOT == LOW ? "LOW" : "HIGH");
   delay(EOT_INITIAL_STATE_TIME_MS);  // set initial state of the LED is set by RMT_EOT.

@@ -11,55 +11,38 @@
 static touch_pad_t touch_list[TEST_TOUCH_CHANNEL] = {
   TOUCH_PAD_NUM0,
   //TOUCH_PAD_NUM1 is GPIO0, for download.
-  TOUCH_PAD_NUM2,
-  TOUCH_PAD_NUM3,
-  TOUCH_PAD_NUM4,
-  TOUCH_PAD_NUM5,
-  TOUCH_PAD_NUM6,
-  TOUCH_PAD_NUM7,
-  TOUCH_PAD_NUM8,
-  TOUCH_PAD_NUM9
+  TOUCH_PAD_NUM2, TOUCH_PAD_NUM3, TOUCH_PAD_NUM4, TOUCH_PAD_NUM5, TOUCH_PAD_NUM6, TOUCH_PAD_NUM7, TOUCH_PAD_NUM8, TOUCH_PAD_NUM9
 };
 
-uint8_t TOUCH_GPIOS[] = { 4, 2, 15, 13, 12, 14, 27, 33, 32 };
+uint8_t TOUCH_GPIOS[] = {4, 2, 15, 13, 12, 14, 27, 33, 32};
 
 #define NO_TOUCH_GPIO 25
 
-#define RELEASED_VALUE 75  //75+ read value to pass test
-#define PRESSED_VALUE 20   //20- read value to pass test
+#define RELEASED_VALUE      75  //75+ read value to pass test
+#define PRESSED_VALUE       20  //20- read value to pass test
 #define INTERRUPT_THRESHOLD 40
 
 #else  //ESP32S2 and ESP32S3
 
 #define TEST_TOUCH_CHANNEL (12)  //14
 static touch_pad_t touch_list[TEST_TOUCH_CHANNEL] = {
-  TOUCH_PAD_NUM1,
-  TOUCH_PAD_NUM2,
-  TOUCH_PAD_NUM3,
-  TOUCH_PAD_NUM4,
-  TOUCH_PAD_NUM5,
-  TOUCH_PAD_NUM6,
-  TOUCH_PAD_NUM7,
-  TOUCH_PAD_NUM8,
-  TOUCH_PAD_NUM9,
-  TOUCH_PAD_NUM10,
-  TOUCH_PAD_NUM11,
-  TOUCH_PAD_NUM12
+  TOUCH_PAD_NUM1, TOUCH_PAD_NUM2, TOUCH_PAD_NUM3,  TOUCH_PAD_NUM4,  TOUCH_PAD_NUM5, TOUCH_PAD_NUM6, TOUCH_PAD_NUM7,
+  TOUCH_PAD_NUM8, TOUCH_PAD_NUM9, TOUCH_PAD_NUM10, TOUCH_PAD_NUM11, TOUCH_PAD_NUM12
   //TOUCH_PAD_NUM13, //Wrong reading
   //TOUCH_PAD_NUM14
 };
 
-uint8_t TOUCH_GPIOS[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /*,13,14*/ };
+uint8_t TOUCH_GPIOS[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /*,13,14*/};
 
 #define NO_TOUCH_GPIO 17
 
 #if CONFIG_IDF_TARGET_ESP32S2
-#define RELEASED_VALUE 10000  //10000- read value to pass test
-#define PRESSED_VALUE 42000   //40000+ read value to pass test
+#define RELEASED_VALUE      10000  //10000- read value to pass test
+#define PRESSED_VALUE       42000  //40000+ read value to pass test
 #define INTERRUPT_THRESHOLD 30000
 #elif CONFIG_IDF_TARGET_ESP32S3
-#define RELEASED_VALUE 25000  //25000- read value to pass test
-#define PRESSED_VALUE 90000   //90000+ read value to pass test
+#define RELEASED_VALUE      25000  //25000- read value to pass test
+#define PRESSED_VALUE       90000  //90000+ read value to pass test
 #define INTERRUPT_THRESHOLD 80000
 #else
 #error Test not currently supported on this chip. Please adjust and try again!
@@ -92,10 +75,8 @@ static void test_release_fake(touch_pad_t pad_num) {
   touch_pad_set_cnt_mode(pad_num, TOUCH_PAD_SLOPE_7, TOUCH_PAD_TIE_OPT_DEFAULT);
 }
 
-
 /* These functions are intended to be called before and after each test. */
-void setUp(void) {
-}
+void setUp(void) {}
 
 void tearDown(void) {
   for (int i = 0; i < TEST_TOUCH_CHANNEL; i++) {
@@ -168,8 +149,7 @@ void setup() {
   UNITY_END();
 }
 
-void loop() {
-}
+void loop() {}
 
 #else
 //PASS TEST for UNSUPPORTED CHIPS
@@ -189,7 +169,6 @@ void setup() {
   UNITY_END();
 }
 
-void loop() {
-}
+void loop() {}
 
 #endif

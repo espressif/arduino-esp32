@@ -26,7 +26,9 @@ protected:
 
 public:
   SDFS(FSImplPtr impl);
-  bool begin(uint8_t ssPin = SS, SPIClass& spi = SPI, uint32_t frequency = 4000000, const char* mountpoint = "/sd", uint8_t max_files = 5, bool format_if_empty = false);
+  bool begin(
+    uint8_t ssPin = SS, SPIClass &spi = SPI, uint32_t frequency = 4000000, const char *mountpoint = "/sd", uint8_t max_files = 5, bool format_if_empty = false
+  );
   void end();
   sdcard_type_t cardType();
   uint64_t cardSize();
@@ -34,11 +36,11 @@ public:
   size_t sectorSize();
   uint64_t totalBytes();
   uint64_t usedBytes();
-  bool readRAW(uint8_t* buffer, uint32_t sector);
-  bool writeRAW(uint8_t* buffer, uint32_t sector);
+  bool readRAW(uint8_t *buffer, uint32_t sector);
+  bool writeRAW(uint8_t *buffer, uint32_t sector);
 };
 
-}
+}  // namespace fs
 
 extern fs::SDFS SD;
 

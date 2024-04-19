@@ -27,28 +27,30 @@
 #define CBUF_MUTEX_UNLOCK()
 #define CBUF_MUTEX_DELETE()
 #else
-#define CBUF_MUTEX_CREATE() \
-  if (_lock == NULL) { \
-    _lock = xSemaphoreCreateMutex(); \
-    if (_lock == NULL) { log_e("failed to create mutex"); } \
+#define CBUF_MUTEX_CREATE()            \
+  if (_lock == NULL) {                 \
+    _lock = xSemaphoreCreateMutex();   \
+    if (_lock == NULL) {               \
+      log_e("failed to create mutex"); \
+    }                                  \
   }
-#define CBUF_MUTEX_LOCK() \
-  if (_lock != NULL) { xSemaphoreTakeRecursive(_lock, portMAX_DELAY); }
-#define CBUF_MUTEX_UNLOCK() \
-  if (_lock != NULL) { xSemaphoreGiveRecursive(_lock); }
-#define CBUF_MUTEX_DELETE() \
-  if (_lock != NULL) { \
+#define CBUF_MUTEX_LOCK()                          \
+  if (_lock != NULL) {                             \
+    xSemaphoreTakeRecursive(_lock, portMAX_DELAY); \
+  }
+#define CBUF_MUTEX_UNLOCK()         \
+  if (_lock != NULL) {              \
+    xSemaphoreGiveRecursive(_lock); \
+  }
+#define CBUF_MUTEX_DELETE()      \
+  if (_lock != NULL) {           \
     SemaphoreHandle_t l = _lock; \
-    _lock = NULL; \
-    vSemaphoreDelete(l); \
+    _lock = NULL;                \
+    vSemaphoreDelete(l);         \
   }
 #endif
 
-cbuf::cbuf(size_t size)
-  : next(NULL),
-    has_peek(false),
-    peek_byte(0),
-    _buf(xRingbufferCreate(size, RINGBUF_TYPE_BYTEBUF)) {
+cbuf::cbuf(size_t size) : next(NULL), has_peek(false), peek_byte(0), _buf(xRingbufferCreate(size, RINGBUF_TYPE_BYTEBUF)) {
   if (_buf == NULL) {
     log_e("failed to allocate ring buffer");
   }
@@ -136,7 +138,9 @@ size_t cbuf::available() const {
   if (_buf != NULL) {
     vRingbufferGetInfo(_buf, NULL, NULL, NULL, NULL, (UBaseType_t *)&available);
   }
-  if (has_peek) available++;
+  if (has_peek) {
+    available++;
+  }
   return available;
 }
 

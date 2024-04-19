@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 #define Wireless_Stick_Lite_V3 true
-#define DISPLAY_HEIGHT 0
-#define DISPLAY_WIDTH 0
+#define DISPLAY_HEIGHT         0
+#define DISPLAY_WIDTH          0
 
 static const uint8_t LED_BUILTIN = 35;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

@@ -32,8 +32,7 @@
 
 using namespace fs;
 
-SDMMCFS::SDMMCFS(FSImplPtr impl)
-  : FS(impl), _card(nullptr) {
+SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
 #if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC)
   _pin_clk = SDMMC_CLK;
   _pin_cmd = SDMMC_CMD;
@@ -95,7 +94,9 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3) {
   // ESP32 doesn't support SDMMC pin configuration via GPIO matrix.
   // Since SDMMCFS::begin hardcodes the usage of slot 1, only check if
   // the pins match slot 1 pins.
-  bool pins_ok = (clk == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CLK) && (cmd == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CMD) && (d0 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D0) && (((d1 == -1) && (d2 == -1) && (d3 == -1)) || ((d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D1) && (d2 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D2) && (d3 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D3)));
+  bool pins_ok =
+    (clk == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CLK) && (cmd == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_CMD) && (d0 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D0)
+    && (((d1 == -1) && (d2 == -1) && (d3 == -1)) || ((d1 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D1) && (d2 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D2) && (d3 == (int)SDMMC_SLOT1_IOMUX_PIN_NUM_D3)));
   if (!pins_ok) {
     log_e("SDMMCFS: specified pins are not supported by this chip.");
     return false;
@@ -123,8 +124,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
 #ifdef SOC_SDMMC_USE_GPIO_MATRIX
   // SoC supports SDMMC pin configuration via GPIO matrix.
   // Check that the pins have been set either in the constructor or setPins function.
-  if (_pin_cmd == -1 || _pin_clk == -1 || _pin_d0 == -1
-      || (!mode1bit && (_pin_d1 == -1 || _pin_d2 == -1 || _pin_d3 == -1))) {
+  if (_pin_cmd == -1 || _pin_clk == -1 || _pin_d0 == -1 || (!mode1bit && (_pin_d1 == -1 || _pin_d2 == -1 || _pin_d3 == -1))) {
     log_e("SDMMCFS: some SD pins are not set");
     return false;
   }
@@ -138,13 +138,25 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   slot_config.width = 4;
 #endif  // SOC_SDMMC_USE_GPIO_MATRIX
 
-  if (!perimanClearPinBus(_pin_cmd)) { return false; }
-  if (!perimanClearPinBus(_pin_clk)) { return false; }
-  if (!perimanClearPinBus(_pin_d0)) { return false; }
+  if (!perimanClearPinBus(_pin_cmd)) {
+    return false;
+  }
+  if (!perimanClearPinBus(_pin_clk)) {
+    return false;
+  }
+  if (!perimanClearPinBus(_pin_d0)) {
+    return false;
+  }
   if (!mode1bit) {
-    if (!perimanClearPinBus(_pin_d1)) { return false; }
-    if (!perimanClearPinBus(_pin_d2)) { return false; }
-    if (!perimanClearPinBus(_pin_d3)) { return false; }
+    if (!perimanClearPinBus(_pin_d1)) {
+      return false;
+    }
+    if (!perimanClearPinBus(_pin_d2)) {
+      return false;
+    }
+    if (!perimanClearPinBus(_pin_d3)) {
+      return false;
+    }
   }
 
   sdmmc_host_t host = SDMMC_HOST_DEFAULT();
@@ -161,10 +173,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   _mode1bit = mode1bit;
 
   esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-    .format_if_mount_failed = format_if_mount_failed,
-    .max_files = maxOpenFiles,
-    .allocation_unit_size = 0,
-    .disk_status_check_enable = false
+    .format_if_mount_failed = format_if_mount_failed, .max_files = maxOpenFiles, .allocation_unit_size = 0, .disk_status_check_enable = false
   };
 
   esp_err_t ret = esp_vfs_fat_sdmmc_mount(mountpoint, &host, &slot_config, &mount_config, &_card);
@@ -183,13 +192,25 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   }
   _impl->mountpoint(mountpoint);
 
-  if (!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC_CMD, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_SDMMC_CLK, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(_pin_d0, ESP32_BUS_TYPE_SDMMC_D0, (void *)(this), -1, -1)) { goto err; }
+  if (!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC_CMD, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(_pin_clk, ESP32_BUS_TYPE_SDMMC_CLK, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(_pin_d0, ESP32_BUS_TYPE_SDMMC_D0, (void *)(this), -1, -1)) {
+    goto err;
+  }
   if (!mode1bit) {
-    if (!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_SDMMC_D1, (void *)(this), -1, -1)) { goto err; }
-    if (!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_SDMMC_D2, (void *)(this), -1, -1)) { goto err; }
-    if (!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_SDMMC_D3, (void *)(this), -1, -1)) { goto err; }
+    if (!perimanSetPinBus(_pin_d1, ESP32_BUS_TYPE_SDMMC_D1, (void *)(this), -1, -1)) {
+      goto err;
+    }
+    if (!perimanSetPinBus(_pin_d2, ESP32_BUS_TYPE_SDMMC_D2, (void *)(this), -1, -1)) {
+      goto err;
+    }
+    if (!perimanSetPinBus(_pin_d3, ESP32_BUS_TYPE_SDMMC_D3, (void *)(this), -1, -1)) {
+      goto err;
+    }
   }
   return true;
 
@@ -232,7 +253,9 @@ uint64_t SDMMCFS::cardSize() {
 uint64_t SDMMCFS::totalBytes() {
   FATFS *fsinfo;
   DWORD fre_clust;
-  if (f_getfree("0:", &fre_clust, &fsinfo) != 0) return 0;
+  if (f_getfree("0:", &fre_clust, &fsinfo) != 0) {
+    return 0;
+  }
   uint64_t size = ((uint64_t)(fsinfo->csize)) * (fsinfo->n_fatent - 2)
 #if _MAX_SS != 512
                   * (fsinfo->ssize);
@@ -245,7 +268,9 @@ uint64_t SDMMCFS::totalBytes() {
 uint64_t SDMMCFS::usedBytes() {
   FATFS *fsinfo;
   DWORD fre_clust;
-  if (f_getfree("0:", &fre_clust, &fsinfo) != 0) return 0;
+  if (f_getfree("0:", &fre_clust, &fsinfo) != 0) {
+    return 0;
+  }
   uint64_t size = ((uint64_t)(fsinfo->csize)) * ((fsinfo->n_fatent - 2) - (fsinfo->free_clst))
 #if _MAX_SS != 512
                   * (fsinfo->ssize);

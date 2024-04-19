@@ -7,8 +7,8 @@
 
 #pragma once
 
-#define MIDI_EP_HEADER_CN_GET(x) (x >> 4)
-#define MIDI_EP_HEADER_CIN_GET(x) ((midi_code_index_number_t)((x)&0xF))
+#define MIDI_EP_HEADER_CN_GET(x)  (x >> 4)
+#define MIDI_EP_HEADER_CIN_GET(x) ((midi_code_index_number_t)((x) & 0xF))
 
 typedef struct {
   uint8_t header;

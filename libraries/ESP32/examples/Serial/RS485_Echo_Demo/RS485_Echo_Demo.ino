@@ -13,18 +13,22 @@
 */
 #include "hal/uart_types.h"
 
-#define RS485_RX_PIN 16
-#define RS485_TX_PIN 5
+#define RS485_RX_PIN  16
+#define RS485_TX_PIN  5
 #define RS485_RTS_PIN 4
 
 #define RS485 Serial1
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
 
   RS485.begin(9600, SERIAL_8N1, RS485_RX_PIN, RS485_TX_PIN);
-  while (!RS485) { delay(10); }
+  while (!RS485) {
+    delay(10);
+  }
   if (!RS485.setPins(-1, -1, -1, RS485_RTS_PIN)) {
     Serial.print("Failed to set RS485 pins");
   }

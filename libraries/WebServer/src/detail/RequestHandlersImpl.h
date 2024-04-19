@@ -12,7 +12,7 @@ using namespace mime;
 
 class FunctionRequestHandler : public RequestHandler {
 public:
-  FunctionRequestHandler(WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn, const Uri& uri, HTTPMethod method)
+  FunctionRequestHandler(WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn, const Uri &uri, HTTPMethod method)
     : _fn(fn), _ufn(ufn), _uri(uri.clone()), _method(method) {
     _uri->initPathArgs(pathArgs);
   }
@@ -22,78 +22,88 @@ public:
   }
 
   bool canHandle(HTTPMethod requestMethod, String requestUri) override {
-    if (_method != HTTP_ANY && _method != requestMethod)
+    if (_method != HTTP_ANY && _method != requestMethod) {
       return false;
+    }
 
     return _uri->canHandle(requestUri, pathArgs);
   }
 
   bool canUpload(String requestUri) override {
-    if (!_ufn || !canHandle(HTTP_POST, requestUri))
+    if (!_ufn || !canHandle(HTTP_POST, requestUri)) {
       return false;
+    }
 
     return true;
   }
   bool canRaw(String requestUri) override {
-    if (!_ufn || _method == HTTP_GET)
+    if (!_ufn || _method == HTTP_GET) {
       return false;
+    }
 
     return true;
   }
 
-  bool handle(WebServer& server, HTTPMethod requestMethod, String requestUri) override {
+  bool handle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
     (void)server;
-    if (!canHandle(requestMethod, requestUri))
+    if (!canHandle(requestMethod, requestUri)) {
       return false;
+    }
 
     _fn();
     return true;
   }
 
-  void upload(WebServer& server, String requestUri, HTTPUpload& upload) override {
+  void upload(WebServer &server, String requestUri, HTTPUpload &upload) override {
     (void)server;
     (void)upload;
-    if (canUpload(requestUri))
+    if (canUpload(requestUri)) {
       _ufn();
+    }
   }
 
-  void raw(WebServer& server, String requestUri, HTTPRaw& raw) override {
+  void raw(WebServer &server, String requestUri, HTTPRaw &raw) override {
     (void)server;
     (void)raw;
-    if (canRaw(requestUri))
+    if (canRaw(requestUri)) {
       _ufn();
+    }
   }
 
 protected:
   WebServer::THandlerFunction _fn;
   WebServer::THandlerFunction _ufn;
-  Uri* _uri;
+  Uri *_uri;
   HTTPMethod _method;
 };
 
 class StaticRequestHandler : public RequestHandler {
 public:
-  StaticRequestHandler(FS& fs, const char* path, const char* uri, const char* cache_header)
-    : _fs(fs), _uri(uri), _path(path), _cache_header(cache_header) {
+  StaticRequestHandler(FS &fs, const char *path, const char *uri, const char *cache_header) : _fs(fs), _uri(uri), _path(path), _cache_header(cache_header) {
     File f = fs.open(path);
     _isFile = (f && (!f.isDirectory()));
-    log_v("StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header ? cache_header : "");  // issue 5506 - cache_header can be nullptr
+    log_v(
+      "StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header ? cache_header : ""
+    );  // issue 5506 - cache_header can be nullptr
     _baseUriLength = _uri.length();
   }
 
   bool canHandle(HTTPMethod requestMethod, String requestUri) override {
-    if (requestMethod != HTTP_GET)
+    if (requestMethod != HTTP_GET) {
       return false;
+    }
 
-    if ((_isFile && requestUri != _uri) || !requestUri.startsWith(_uri))
+    if ((_isFile && requestUri != _uri) || !requestUri.startsWith(_uri)) {
       return false;
+    }
 
     return true;
   }
 
-  bool handle(WebServer& server, HTTPMethod requestMethod, String requestUri) override {
-    if (!canHandle(requestMethod, requestUri))
+  bool handle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
+    if (!canHandle(requestMethod, requestUri)) {
       return false;
+    }
 
     log_v("StaticRequestHandler::handle: request=%s _uri=%s\r\n", requestUri.c_str(), _uri.c_str());
 
@@ -103,8 +113,9 @@ public:
     if (!_isFile) {
       // Base URI doesn't point to a file.
       // If a directory is requested, look for index file.
-      if (requestUri.endsWith("/"))
+      if (requestUri.endsWith("/")) {
         requestUri += "index.htm";
+      }
 
       // Append whatever follows this URI in request to get the file path.
       path += requestUri.substring(_baseUriLength);
@@ -117,13 +128,15 @@ public:
     // if you point the the path to gzip you will serve the gzip as content type "application/x-gzip", not text or javascript etc...
     if (!path.endsWith(FPSTR(mimeTable[gz].endsWith)) && !_fs.exists(path)) {
       String pathWithGz = path + FPSTR(mimeTable[gz].endsWith);
-      if (_fs.exists(pathWithGz))
+      if (_fs.exists(pathWithGz)) {
         path += FPSTR(mimeTable[gz].endsWith);
+      }
     }
 
     File f = _fs.open(path, "r");
-    if (!f || !f.available())
+    if (!f || !f.available()) {
       return false;
+    }
 
     if (server._eTagEnabled) {
       if (server._eTagFunction) {
@@ -138,8 +151,9 @@ public:
       }
     }
 
-    if (_cache_header.length() != 0)
+    if (_cache_header.length() != 0) {
       server.sendHeader("Cache-Control", _cache_header);
+    }
 
     if ((server._eTagEnabled) && (eTagCode.length() > 0)) {
       server.sendHeader("ETag", eTagCode);
@@ -149,7 +163,7 @@ public:
     return true;
   }
 
-  static String getContentType(const String& path) {
+  static String getContentType(const String &path) {
     char buff[sizeof(mimeTable[0].mimeType)];
     // Check all entries but last one for match, return if found
     for (size_t i = 0; i < sizeof(mimeTable) / sizeof(mimeTable[0]) - 1; i++) {
@@ -166,7 +180,7 @@ public:
 
   // calculate an ETag for a file in filesystem based on md5 checksum
   // that can be used in the http headers - include quotes.
-  static String calcETag(FS& fs, const String& path) {
+  static String calcETag(FS &fs, const String &path) {
     String result;
 
     // calculate eTag using md5 checksum
@@ -183,7 +197,6 @@ public:
     return (result);
   }  // calcETag
 
-
 protected:
   FS _fs;
   String _uri;
@@ -192,6 +205,5 @@ protected:
   bool _isFile;
   size_t _baseUriLength;
 };
-
 
 #endif  //REQUESTHANDLERSIMPL_H

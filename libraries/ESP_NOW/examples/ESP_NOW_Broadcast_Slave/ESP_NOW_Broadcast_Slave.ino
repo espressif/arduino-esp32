@@ -28,11 +28,7 @@
 class ESP_NOW_Peer_Class : public ESP_NOW_Peer {
 public:
   // Constructor of the class
-  ESP_NOW_Peer_Class(const uint8_t *mac_addr,
-                     uint8_t channel,
-                     wifi_interface_t iface,
-                     const uint8_t *lmk)
-    : ESP_NOW_Peer(mac_addr, channel, iface, lmk) {}
+  ESP_NOW_Peer_Class(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk) : ESP_NOW_Peer(mac_addr, channel, iface, lmk) {}
 
   // Destructor of the class
   ~ESP_NOW_Peer_Class() {}
@@ -84,12 +80,16 @@ void register_new_master(const esp_now_recv_info_t *info, const uint8_t *data, i
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  while (!Serial) {
+    delay(10);
+  }
 
   // Initialize the Wi-Fi module
   WiFi.mode(WIFI_STA);
   WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
-  while (!WiFi.STA.started()) delay(100);
+  while (!WiFi.STA.started()) {
+    delay(100);
+  }
 
   Serial.println("ESP-NOW Example - Broadcast Slave");
   Serial.println("Wi-Fi parameters:");

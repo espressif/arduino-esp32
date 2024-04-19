@@ -9,12 +9,12 @@ class NetBIOS {
 protected:
   AsyncUDP _udp;
   String _name;
-  void _onPacket(AsyncUDPPacket& packet);
+  void _onPacket(AsyncUDPPacket &packet);
 
 public:
   NetBIOS();
   ~NetBIOS();
-  bool begin(const char* name);
+  bool begin(const char *name);
   void end();
 };
 

@@ -20,15 +20,16 @@
 #include "USBHID.h"
 #if CONFIG_TINYUSB_HID_ENABLED
 
-#define SYSTEM_CONTROL_NONE 0
+#define SYSTEM_CONTROL_NONE      0
 #define SYSTEM_CONTROL_POWER_OFF 1
-#define SYSTEM_CONTROL_STANDBY 2
+#define SYSTEM_CONTROL_STANDBY   2
 #define SYSTEM_CONTROL_WAKE_HOST 3
 
 class USBHIDSystemControl : public USBHIDDevice {
 private:
   USBHID hid;
   bool send(uint8_t value);
+
 public:
   USBHIDSystemControl(void);
   void begin(void);
@@ -37,7 +38,7 @@ public:
   size_t release();
 
   // internal use
-  uint16_t _onGetDescriptor(uint8_t* buffer);
+  uint16_t _onGetDescriptor(uint8_t *buffer);
 };
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */

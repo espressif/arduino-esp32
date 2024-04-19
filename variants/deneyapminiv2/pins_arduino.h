@@ -4,17 +4,17 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x303A
-#define USB_PID 0x8144
+#define USB_VID          0x303A
+#define USB_PID          0x8144
 #define USB_MANUFACTURER "Turkish Technology Team Foundation (T3)"
-#define USB_PRODUCT "DENEYAP MINI v2"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "DENEYAP MINI v2"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + 33;  //D14
-#define BUILTIN_LED LED_BUILTIN                              // backward compatibility
-#define LED_BUILTIN LED_BUILTIN                              // allow testing #ifdef LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
-#define RGBLED LED_BUILTIN
+#define BUILTIN_LED    LED_BUILTIN                           // backward compatibility
+#define LED_BUILTIN    LED_BUILTIN                           // allow testing #ifdef LED_BUILTIN
+#define RGB_BUILTIN    LED_BUILTIN
+#define RGBLED         LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t GPKEY = 0;

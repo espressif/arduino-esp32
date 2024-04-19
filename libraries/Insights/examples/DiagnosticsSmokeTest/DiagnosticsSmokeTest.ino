@@ -6,12 +6,12 @@
 
 const char insights_auth_key[] = "<ENTER YOUR AUTH KEY>";
 
-#define WIFI_SSID "<ENTER YOUR SSID>"
+#define WIFI_SSID       "<ENTER YOUR SSID>"
 #define WIFI_PASSPHRASE "<ENTER YOUR PASSWORD>"
 
 #define MAX_CRASHES 5
-#define MAX_PTRS 30
-#define TAG "sketch"
+#define MAX_PTRS    30
+#define TAG         "sketch"
 
 RTC_NOINIT_ATTR static uint32_t s_reset_count;
 static void *s_ptrs[MAX_PTRS];

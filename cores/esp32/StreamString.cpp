@@ -61,5 +61,4 @@ int StreamString::peek() {
   return -1;
 }
 
-void StreamString::flush() {
-}
+void StreamString::flush() {}
