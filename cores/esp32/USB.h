@@ -79,17 +79,17 @@ public:
   bool webUSB(bool enabled);
   bool webUSB(void);
 
-  bool productName(const char* name);
-  const char* productName(void);
+  bool productName(const char *name);
+  const char *productName(void);
 
-  bool manufacturerName(const char* name);
-  const char* manufacturerName(void);
+  bool manufacturerName(const char *name);
+  const char *manufacturerName(void);
 
-  bool serialNumber(const char* name);
-  const char* serialNumber(void);
+  bool serialNumber(const char *name);
+  const char *serialNumber(void);
 
-  bool webUSBURL(const char* name);
-  const char* webUSBURL(void);
+  bool webUSBURL(const char *name);
+  const char *webUSBURL(void);
 
   bool enableDFU();
   bool begin();
@@ -117,7 +117,6 @@ private:
 };
 
 extern ESPUSB USB;
-
 
 #endif /* CONFIG_TINYUSB_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */

@@ -13,7 +13,9 @@
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
   Serial.println("\n\n\nStart.");
 
   // Check if a password obfuscated in an SHA1 actually
@@ -32,10 +34,11 @@ void setup() {
 
     String result = sha.toString();
 
-    if (!sha1_str.equalsIgnoreCase(result))
+    if (!sha1_str.equalsIgnoreCase(result)) {
       Serial.println("Odd - failing SHA1 on String");
-    else
+    } else {
       Serial.println("OK!");
+    }
   }
 
   // Check that this also work if we add the password not as
@@ -56,14 +59,15 @@ void setup() {
       Serial.println("Odd - failing SHA1 on hex string");
       Serial.println(sha1_str);
       Serial.println(result);
-    } else
+    } else {
       Serial.println("OK!");
+    }
   }
 
   // Check that this also work if we add the password as
   // an unsigned byte array.
   {
-    uint8_t password[] = { 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64 };
+    uint8_t password[] = {0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64};
     String sha1_str = "0a4d55a8d778e5022fab701977c5d840bbc486d0";
     SHA1Builder sha;
 
@@ -73,20 +77,21 @@ void setup() {
 
     String result = sha.toString();
 
-    if (!sha1_str.equalsIgnoreCase(result))
+    if (!sha1_str.equalsIgnoreCase(result)) {
       Serial.println("Odd - failing SHA1 on byte array");
-    else
+    } else {
       Serial.println("OK!");
+    }
 
     // And also check that we can compare this as pure, raw, bytes
-    uint8_t raw[20] = { 0x0a, 0x4d, 0x55, 0xa8, 0xd7, 0x78, 0xe5, 0x02, 0x2f, 0xab,
-                        0x70, 0x19, 0x77, 0xc5, 0xd8, 0x40, 0xbb, 0xc4, 0x86, 0xd0 };
+    uint8_t raw[20] = {0x0a, 0x4d, 0x55, 0xa8, 0xd7, 0x78, 0xe5, 0x02, 0x2f, 0xab, 0x70, 0x19, 0x77, 0xc5, 0xd8, 0x40, 0xbb, 0xc4, 0x86, 0xd0};
     uint8_t res[20];
     sha.getBytes(res);
-    if (memcmp(raw, res, 20))
+    if (memcmp(raw, res, 20)) {
       Serial.println("Odd - failing SHA1 on byte array when compared as bytes");
-    else
+    } else {
       Serial.println("OK!");
+    }
   }
 }
 

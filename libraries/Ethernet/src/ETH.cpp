@@ -42,7 +42,7 @@
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
 
-static ETHClass *_ethernets[3] = { NULL, NULL, NULL };
+static ETHClass *_ethernets[3] = {NULL, NULL, NULL};
 static esp_event_handler_instance_t _eth_ev_instance = NULL;
 
 static void _eth_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
@@ -106,7 +106,10 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
   } else if (event_id == ETHERNET_EVENT_STOP) {
     log_v("%s Stopped", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
-    clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
+    clearStatusBits(
+      ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT
+      | ESP_NETIF_HAS_STATIC_IP_BIT
+    );
   }
 
   if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
@@ -167,9 +170,10 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
   mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
-  mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode) ? EMAC_APPL_CLK_OUT_GPIO : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO
-                                                                                       : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO
-                                                                                                           : EMAC_CLK_IN_GPIO;
+  mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode)   ? EMAC_APPL_CLK_OUT_GPIO
+                                            : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO
+                                            : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO
+                                                                : EMAC_CLK_IN_GPIO;
   mac_config.smi_mdc_gpio_num = digitalPinToGPIONumber(mdc);
   mac_config.smi_mdio_gpio_num = digitalPinToGPIONumber(mdio);
 
@@ -178,17 +182,37 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
   _pin_power = digitalPinToGPIONumber(power);
 
-  if (!perimanClearPinBus(_pin_rmii_clock)) { return false; }
-  if (!perimanClearPinBus(_pin_mcd)) { return false; }
-  if (!perimanClearPinBus(_pin_mdio)) { return false; }
-  if (!perimanClearPinBus(ETH_RMII_TX_EN)) { return false; }
-  if (!perimanClearPinBus(ETH_RMII_TX0)) { return false; }
-  if (!perimanClearPinBus(ETH_RMII_TX1)) { return false; }
-  if (!perimanClearPinBus(ETH_RMII_RX0)) { return false; }
-  if (!perimanClearPinBus(ETH_RMII_RX1_EN)) { return false; }
-  if (!perimanClearPinBus(ETH_RMII_CRS_DV)) { return false; }
+  if (!perimanClearPinBus(_pin_rmii_clock)) {
+    return false;
+  }
+  if (!perimanClearPinBus(_pin_mcd)) {
+    return false;
+  }
+  if (!perimanClearPinBus(_pin_mdio)) {
+    return false;
+  }
+  if (!perimanClearPinBus(ETH_RMII_TX_EN)) {
+    return false;
+  }
+  if (!perimanClearPinBus(ETH_RMII_TX0)) {
+    return false;
+  }
+  if (!perimanClearPinBus(ETH_RMII_TX1)) {
+    return false;
+  }
+  if (!perimanClearPinBus(ETH_RMII_RX0)) {
+    return false;
+  }
+  if (!perimanClearPinBus(ETH_RMII_RX1_EN)) {
+    return false;
+  }
+  if (!perimanClearPinBus(ETH_RMII_CRS_DV)) {
+    return false;
+  }
   if (_pin_power != -1) {
-    if (!perimanClearPinBus(_pin_power)) { return false; }
+    if (!perimanClearPinBus(_pin_power)) {
+      return false;
+    }
   }
 
   eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
@@ -206,27 +230,13 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   esp_eth_phy_t *phy = NULL;
   switch (type) {
-    case ETH_PHY_LAN8720:
-      phy = esp_eth_phy_new_lan87xx(&phy_config);
-      break;
-    case ETH_PHY_TLK110:
-      phy = esp_eth_phy_new_ip101(&phy_config);
-      break;
-    case ETH_PHY_RTL8201:
-      phy = esp_eth_phy_new_rtl8201(&phy_config);
-      break;
-    case ETH_PHY_DP83848:
-      phy = esp_eth_phy_new_dp83848(&phy_config);
-      break;
-    case ETH_PHY_KSZ8041:
-      phy = esp_eth_phy_new_ksz80xx(&phy_config);
-      break;
-    case ETH_PHY_KSZ8081:
-      phy = esp_eth_phy_new_ksz80xx(&phy_config);
-      break;
-    default:
-      log_e("Unsupported PHY %d", type);
-      break;
+    case ETH_PHY_LAN8720: phy = esp_eth_phy_new_lan87xx(&phy_config); break;
+    case ETH_PHY_TLK110:  phy = esp_eth_phy_new_ip101(&phy_config); break;
+    case ETH_PHY_RTL8201: phy = esp_eth_phy_new_rtl8201(&phy_config); break;
+    case ETH_PHY_DP83848: phy = esp_eth_phy_new_dp83848(&phy_config); break;
+    case ETH_PHY_KSZ8041: phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+    case ETH_PHY_KSZ8081: phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+    default:              log_e("Unsupported PHY %d", type); break;
   }
   if (phy == NULL) {
     log_e("esp_eth_phy_new failed");
@@ -287,19 +297,39 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     return false;
   }
 
-  if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET_MCD, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(_pin_mdio, ESP32_BUS_TYPE_ETHERNET_MDIO, (void *)(this), -1, -1)) { goto err; }
+  if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET_MCD, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(_pin_mdio, ESP32_BUS_TYPE_ETHERNET_MDIO, (void *)(this), -1, -1)) {
+    goto err;
+  }
 
-  if (!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(ETH_RMII_TX1, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) { goto err; }
-  if (!perimanSetPinBus(ETH_RMII_CRS_DV, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) { goto err; }
+  if (!perimanSetPinBus(ETH_RMII_TX_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(ETH_RMII_TX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(ETH_RMII_TX1, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(ETH_RMII_RX0, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(ETH_RMII_RX1_EN, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) {
+    goto err;
+  }
+  if (!perimanSetPinBus(ETH_RMII_CRS_DV, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) {
+    goto err;
+  }
 
   if (_pin_power != -1) {
-    if (!perimanSetPinBus(_pin_power, ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)) { goto err; }
+    if (!perimanSetPinBus(_pin_power, ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)) {
+      goto err;
+    }
   }
 
   // holds a few milliseconds to let DHCP start and enter into a good state
@@ -415,11 +445,13 @@ esp_err_t ETHClass::eth_spi_write(uint32_t cmd, uint32_t addr, const void *data,
 }
 #endif
 
-bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, uint8_t* mac_addr_p, int cs, int irq, int rst,
+bool ETHClass::beginSPI(
+  eth_phy_type_t type, int32_t phy_addr, uint8_t* mac_addr_p, int cs, int irq, int rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
-                        SPIClass *spi,
+  SPIClass *spi,
 #endif
-                        int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz) {
+  int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz
+) {
   esp_err_t ret = ESP_OK;
 
   if (_esp_netif != NULL || _eth_handle != NULL) {
@@ -443,22 +475,34 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, uint8_t* mac_addr
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_SPI, ETHClass::ethDetachBus);
 
   if (_pin_cs != -1) {
-    if (!perimanClearPinBus(_pin_cs)) { return false; }
+    if (!perimanClearPinBus(_pin_cs)) {
+      return false;
+    }
   }
   if (_pin_rst != -1) {
-    if (!perimanClearPinBus(_pin_rst)) { return false; }
+    if (!perimanClearPinBus(_pin_rst)) {
+      return false;
+    }
   }
   if (_pin_irq != -1) {
-    if (!perimanClearPinBus(_pin_irq)) { return false; }
+    if (!perimanClearPinBus(_pin_irq)) {
+      return false;
+    }
   }
   if (_pin_sck != -1) {
-    if (!perimanClearPinBus(_pin_sck)) { return false; }
+    if (!perimanClearPinBus(_pin_sck)) {
+      return false;
+    }
   }
   if (_pin_miso != -1) {
-    if (!perimanClearPinBus(_pin_miso)) { return false; }
+    if (!perimanClearPinBus(_pin_miso)) {
+      return false;
+    }
   }
   if (_pin_mosi != -1) {
-    if (!perimanClearPinBus(_pin_mosi)) { return false; }
+    if (!perimanClearPinBus(_pin_mosi)) {
+      return false;
+    }
   }
 
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -510,7 +554,6 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, uint8_t* mac_addr
     log_e("event_handler_instance_register for ETH_EVENT Failed!");
     return false;
   }
-
 
   // Install GPIO ISR handler to be able to service SPI Eth modules interrupts
   ret = gpio_install_isr_service(0);
@@ -688,28 +731,40 @@ bool ETHClass::beginSPI(eth_phy_type_t type, int32_t phy_addr, uint8_t* mac_addr
 #if ETH_SPI_SUPPORTS_CUSTOM
   if (_spi == NULL) {
 #endif
-    if (!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) { goto err; }
+    if (!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+      goto err;
+    }
 #if ETH_SPI_SUPPORTS_CUSTOM
   }
 #endif
 #if ETH_SPI_SUPPORTS_NO_IRQ
   if (_pin_irq != -1) {
 #endif
-    if (!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) { goto err; }
+    if (!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+      goto err;
+    }
 #if ETH_SPI_SUPPORTS_NO_IRQ
   }
 #endif
   if (_pin_sck != -1) {
-    if (!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) { goto err; }
+    if (!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+      goto err;
+    }
   }
   if (_pin_miso != -1) {
-    if (!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) { goto err; }
+    if (!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+      goto err;
+    }
   }
   if (_pin_mosi != -1) {
-    if (!perimanSetPinBus(_pin_mosi, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) { goto err; }
+    if (!perimanSetPinBus(_pin_mosi, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+      goto err;
+    }
   }
   if (_pin_rst != -1) {
-    if (!perimanSetPinBus(_pin_rst, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) { goto err; }
+    if (!perimanSetPinBus(_pin_rst, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+      goto err;
+    }
   }
 
   Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
@@ -724,18 +779,20 @@ err:
 
 #if ETH_SPI_SUPPORTS_CUSTOM
 bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, SPIClass &spi, uint8_t spi_freq_mhz) {
-
   return beginSPI(type, phy_addr, nullptr, cs, irq, rst, &spi, -1, -1, -1, SPI2_HOST, spi_freq_mhz);
 }
 #endif
 
-bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck, int miso, int mosi, uint8_t spi_freq_mhz) {
-
-  return beginSPI(type, phy_addr, nullptr, cs, irq, rst,
+bool ETHClass::begin(
+  eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck, int miso, int mosi, uint8_t spi_freq_mhz
+) {
+  return beginSPI(
+    type, phy_addr, nullptr, cs, irq, rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
-                  NULL,
+    NULL,
 #endif
-                  sck, miso, mosi, spi_host, spi_freq_mhz);
+    sck, miso, mosi, spi_host, spi_freq_mhz
+  );
 }
 
 void ETHClass::end(void) {

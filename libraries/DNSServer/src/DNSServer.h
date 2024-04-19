@@ -1,13 +1,13 @@
 #pragma once
 #include <AsyncUDP.h>
 
-#define DNS_QR_QUERY 0
-#define DNS_QR_RESPONSE 1
-#define DNS_OPCODE_QUERY 0
-#define DNS_DEFAULT_TTL 60  // Default Time To Live : time interval in seconds that the resource record should be cached before being discarded
-#define DNS_HEADER_SIZE 12
+#define DNS_QR_QUERY           0
+#define DNS_QR_RESPONSE        1
+#define DNS_OPCODE_QUERY       0
+#define DNS_DEFAULT_TTL        60  // Default Time To Live : time interval in seconds that the resource record should be cached before being discarded
+#define DNS_HEADER_SIZE        12
 #define DNS_OFFSET_DOMAIN_NAME DNS_HEADER_SIZE  // Offset in bytes to reach the domain name labels in the DNS message
-#define DNS_DEFAULT_PORT 53
+#define DNS_DEFAULT_PORT       53
 
 enum class DNSReplyCode : uint16_t {
   NoError = 0,
@@ -42,14 +42,14 @@ struct DNSHeader {
   uint16_t ID;  // identification number
   union {
     struct {
-      uint16_t RD : 1;      // recursion desired
-      uint16_t TC : 1;      // truncated message
-      uint16_t AA : 1;      // authoritative answer
+      uint16_t RD     : 1;  // recursion desired
+      uint16_t TC     : 1;  // truncated message
+      uint16_t AA     : 1;  // authoritative answer
       uint16_t OPCode : 4;  // message_type
-      uint16_t QR : 1;      // query/response flag
-      uint16_t RCode : 4;   // response code
-      uint16_t Z : 3;       // its z! reserved
-      uint16_t RA : 1;      // recursion available
+      uint16_t QR     : 1;  // query/response flag
+      uint16_t RCode  : 4;  // response code
+      uint16_t Z      : 3;  // its z! reserved
+      uint16_t RA     : 1;  // recursion available
     };
     uint16_t Flags;
   };
@@ -60,7 +60,7 @@ struct DNSHeader {
 };
 
 struct DNSQuestion {
-  const uint8_t* QName;
+  const uint8_t *QName;
   uint16_t QNameLength;
   uint16_t QType;
   uint16_t QClass;
@@ -81,34 +81,33 @@ public:
      * builds DNS server with default parameters
      * @param domainName - domain name to serve
      */
-  DNSServer(const String& domainName);
+  DNSServer(const String &domainName);
   ~DNSServer(){};  // default d-tor
 
   // Copy semantics not implemented (won't run on same UDP port anyway)
-  DNSServer(const DNSServer&) = delete;
-  DNSServer& operator=(const DNSServer&) = delete;
-
+  DNSServer(const DNSServer &) = delete;
+  DNSServer &operator=(const DNSServer &) = delete;
 
   /**
      * @brief stub, left for compatibility with an old version
      * does nothing actually
      *
      */
-  void processNextRequest(){};
+  void processNextRequest() {};
 
   /**
      * @brief Set the Error Reply Code for all req's not matching predefined domain
      *
      * @param replyCode
      */
-  void setErrorReplyCode(const DNSReplyCode& replyCode);
+  void setErrorReplyCode(const DNSReplyCode &replyCode);
 
   /**
      * @brief set TTL for successful replies
      *
      * @param ttl in seconds
      */
-  void setTTL(const uint32_t& ttl);
+  void setTTL(const uint32_t &ttl);
 
   /**
      * @brief (re)Starts a server with current configuration or with default parameters
@@ -129,9 +128,7 @@ public:
      * @return true on success
      * @return false if IP or socket error
      */
-  bool start(uint16_t port,
-             const String& domainName,
-             const IPAddress& resolvedIP);
+  bool start(uint16_t port, const String &domainName, const IPAddress &resolvedIP);
 
   /**
      * @brief stops the server and close UDP socket
@@ -168,8 +165,7 @@ private:
   String _domainName;
   IPAddress _resolvedIP;
 
-
-  void downcaseAndRemoveWwwPrefix(String& domainName);
+  void downcaseAndRemoveWwwPrefix(String &domainName);
 
   /**
      * @brief Get the Domain Name Without Www Prefix object
@@ -179,9 +175,9 @@ private:
      * @param len labels length
      * @return String
      */
-  String getDomainNameWithoutWwwPrefix(const unsigned char* start, size_t len);
-  inline bool requestIncludesOnlyOneQuestion(DNSHeader& dnsHeader);
-  void replyWithIP(AsyncUDPPacket& req, DNSHeader& dnsHeader, DNSQuestion& dnsQuestion);
-  inline void replyWithCustomCode(AsyncUDPPacket& req, DNSHeader& dnsHeader);
-  void _handleUDP(AsyncUDPPacket& pkt);
+  String getDomainNameWithoutWwwPrefix(const unsigned char *start, size_t len);
+  inline bool requestIncludesOnlyOneQuestion(DNSHeader &dnsHeader);
+  void replyWithIP(AsyncUDPPacket &req, DNSHeader &dnsHeader, DNSQuestion &dnsQuestion);
+  inline void replyWithCustomCode(AsyncUDPPacket &req, DNSHeader &dnsHeader);
+  void _handleUDP(AsyncUDPPacket &pkt);
 };

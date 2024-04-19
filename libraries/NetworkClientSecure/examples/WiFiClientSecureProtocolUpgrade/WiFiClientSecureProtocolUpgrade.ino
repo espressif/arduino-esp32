@@ -49,9 +49,9 @@
 #define SMTP_PORT (587)  // Standard (plaintext) submission port
 #endif
 
-const char* ssid = WIFI_NETWORK;        // your network SSID (name of wifi network)
-const char* password = WIFI_PASSWD;     // your network password
-const char* server = SMTP_HOST;         // Server URL
+const char *ssid = WIFI_NETWORK;        // your network SSID (name of wifi network)
+const char *password = WIFI_PASSWD;     // your network password
+const char *server = SMTP_HOST;         // Server URL
 const int submission_port = SMTP_PORT;  // submission port.
 
 NetworkClientSecure client;
@@ -80,7 +80,6 @@ void setup() {
 
   Serial.printf("\nStarting connection to server: %s:%d\n", server, submission_port);
 
-
   // skip verification for this demo. In production one should at the very least
   // enable TOFU; or ideally hardcode a (CA) certificate that is trusted.
   client.setInsecure();
@@ -95,17 +94,23 @@ void setup() {
 
   Serial.println("Connected to server (in the clear, in plaintest)");
 
-  if (!readAllSMTPLines()) goto err;
+  if (!readAllSMTPLines()) {
+    goto err;
+  }
 
   Serial.println("Sending  : EHLO\t\tin the clear");
   client.print("EHLO there\r\n");
 
-  if (!readAllSMTPLines()) goto err;
+  if (!readAllSMTPLines()) {
+    goto err;
+  }
 
   Serial.println("Sending  : STARTTLS\t\tin the clear");
   client.print("STARTTLS\r\n");
 
-  if (!readAllSMTPLines()) goto err;
+  if (!readAllSMTPLines()) {
+    goto err;
+  }
 
   Serial.println("Upgrading connection to TLS");
   if ((ret = client.startTLS()) <= 0) {
@@ -116,7 +121,9 @@ void setup() {
   Serial.println("Sending  : EHLO again\t\tover the now encrypted connection");
   client.print("EHLO again\r\n");
 
-  if (!readAllSMTPLines()) goto err;
+  if (!readAllSMTPLines()) {
+    goto err;
+  }
 
   // normally, as this point - we'd be authenticating and then be submitting
   // an email. This has been left out of this example.
@@ -124,7 +131,9 @@ void setup() {
   Serial.println("Sending  : QUIT\t\t\tover the now encrypted connection");
   client.print("QUIT\r\n");
 
-  if (!readAllSMTPLines()) goto err;
+  if (!readAllSMTPLines()) {
+    goto err;
+  }
 
   Serial.println("Completed OK\n");
 err:
@@ -151,19 +160,24 @@ static bool readAllSMTPLines() {
       Serial.println("Timeout reading SMTP response");
       return false;
     };
-    if (i < 0)
+    if (i < 0) {
       break;
+    }
 
     i = client.read();
-    if (i < 0)
+    if (i < 0) {
       break;
+    }
 
-    if (i > 31 && i < 128) s += (char)i;
+    if (i > 31 && i < 128) {
+      s += (char)i;
+    }
     if (i == 0x0A) {
       Serial.print("Receiving: ");
       Serial.println(s);
-      if (s.charAt(3) == ' ')
+      if (s.charAt(3) == ' ') {
         return true;
+      }
       s = "";
     }
   }

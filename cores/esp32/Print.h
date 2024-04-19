@@ -38,14 +38,14 @@ private:
   size_t printNumber(unsigned long, uint8_t);
   size_t printNumber(unsigned long long, uint8_t);
   size_t printFloat(double, uint8_t);
+
 protected:
   void setWriteError(int err = 1) {
     write_error = err;
   }
+
 public:
-  Print()
-    : write_error(0) {
-  }
+  Print() : write_error(0) {}
   virtual ~Print() {}
   int getWriteError() {
     return write_error;
@@ -112,8 +112,7 @@ public:
   size_t println(struct tm *timeinfo, const char *format = NULL);
   size_t println(void);
 
-  virtual void flush() { /* Empty implementation for backward compatibility */
-  }
+  virtual void flush() { /* Empty implementation for backward compatibility */ }
 };
 
 #endif

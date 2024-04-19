@@ -21,22 +21,22 @@
 #define VSPI_MISO 2
 #define VSPI_MOSI 4
 #define VSPI_SCLK 0
-#define VSPI_SS 33
+#define VSPI_SS   33
 
 #define HSPI_MISO 26
 #define HSPI_MOSI 27
 #define HSPI_SCLK 25
-#define HSPI_SS 32
+#define HSPI_SS   32
 #else
 #define VSPI_MISO MISO
 #define VSPI_MOSI MOSI
 #define VSPI_SCLK SCK
-#define VSPI_SS SS
+#define VSPI_SS   SS
 
 #define HSPI_MISO 12
 #define HSPI_MOSI 13
 #define HSPI_SCLK 14
-#define HSPI_SS 15
+#define HSPI_SS   15
 #endif
 
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3

@@ -37,7 +37,7 @@ rmt_data_t data[256];
 
 static EventGroupHandle_t events;
 
-#define RMT_FREQ 10000000  // tick time is 100ns
+#define RMT_FREQ               10000000  // tick time is 100ns
 #define RMT_NUM_EXCHANGED_DATA 30
 
 void setup() {
@@ -77,8 +77,7 @@ void loop() {
   rmtWrite(RMT_TX_PIN, data, RMT_NUM_EXCHANGED_DATA, RMT_WAIT_FOR_EVER);
 
   // Wait until data is read
-  while (!rmtReceiveCompleted(RMT_RX_PIN))
-    ;
+  while (!rmtReceiveCompleted(RMT_RX_PIN));
 
   // Once data is available, the number of RMT Symbols is stored in rx_num_symbols
   // and the received data is copied to my_data
@@ -87,7 +86,9 @@ void loop() {
   // Printout the received data plus the original values
   for (i = 0; i < 60; i++) {
     Serial.printf("%08lx=%08lx ", my_data[i].val, data[i].val);
-    if (!((i + 1) % 4)) Serial.println("");
+    if (!((i + 1) % 4)) {
+      Serial.println("");
+    }
   }
   Serial.println("\n");
 

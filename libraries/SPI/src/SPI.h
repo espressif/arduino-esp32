@@ -34,10 +34,8 @@
 
 class SPISettings {
 public:
-  SPISettings()
-    : _clock(1000000), _bitOrder(SPI_MSBFIRST), _dataMode(SPI_MODE0) {}
-  SPISettings(uint32_t clock, uint8_t bitOrder, uint8_t dataMode)
-    : _clock(clock), _bitOrder(bitOrder), _dataMode(dataMode) {}
+  SPISettings() : _clock(1000000), _bitOrder(SPI_MSBFIRST), _dataMode(SPI_MODE0) {}
+  SPISettings(uint32_t clock, uint8_t bitOrder, uint8_t dataMode) : _clock(clock), _bitOrder(bitOrder), _dataMode(dataMode) {}
   uint32_t _clock;
   uint8_t _bitOrder;
   uint8_t _dataMode;
@@ -46,7 +44,7 @@ public:
 class SPIClass {
 private:
   int8_t _spi_num;
-  spi_t* _spi;
+  spi_t *_spi;
   bool _use_hw_ss;
   int8_t _sck;
   int8_t _miso;
@@ -58,7 +56,7 @@ private:
 #if !CONFIG_DISABLE_HAL_LOCKS
   SemaphoreHandle_t paramLock = NULL;
 #endif
-  void writePattern_(const uint8_t* data, uint8_t size, uint8_t repeat);
+  void writePattern_(const uint8_t *data, uint8_t size, uint8_t repeat);
 
 public:
   SPIClass(uint8_t spi_bus = HSPI);
@@ -76,22 +74,22 @@ public:
 
   void beginTransaction(SPISettings settings);
   void endTransaction(void);
-  void transfer(void* data, uint32_t size);
+  void transfer(void *data, uint32_t size);
   uint8_t transfer(uint8_t data);
   uint16_t transfer16(uint16_t data);
   uint32_t transfer32(uint32_t data);
 
-  void transferBytes(const uint8_t* data, uint8_t* out, uint32_t size);
-  void transferBits(uint32_t data, uint32_t* out, uint8_t bits);
+  void transferBytes(const uint8_t *data, uint8_t *out, uint32_t size);
+  void transferBits(uint32_t data, uint32_t *out, uint8_t bits);
 
   void write(uint8_t data);
   void write16(uint16_t data);
   void write32(uint32_t data);
-  void writeBytes(const uint8_t* data, uint32_t size);
-  void writePixels(const void* data, uint32_t size);  //ili9341 compatible
-  void writePattern(const uint8_t* data, uint8_t size, uint32_t repeat);
+  void writeBytes(const uint8_t *data, uint32_t size);
+  void writePixels(const void *data, uint32_t size);  //ili9341 compatible
+  void writePattern(const uint8_t *data, uint8_t size, uint32_t repeat);
 
-  spi_t* bus() {
+  spi_t *bus() {
     return _spi;
   }
   int8_t pinSS() {

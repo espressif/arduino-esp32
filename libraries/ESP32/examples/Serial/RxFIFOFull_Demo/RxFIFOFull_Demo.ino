@@ -31,13 +31,13 @@
 // same loopback internally.
 #define USE_INTERNAL_PIN_LOOPBACK 1  // 1 uses the internal loopback, 0 for wiring pins 4 and 5 externally
 
-#define DATA_SIZE 125  // 125 bytes is a bit higher than the default 120 bytes of RX FIFO FULL
-#define BAUD 9600      // Any baudrate from 300 to 115200
-#define TEST_UART 1    // Serial1 will be used for the loopback testing with different RX FIFO FULL values
-#define RXPIN 4        // GPIO 4 => RX for Serial1
-#define TXPIN 5        // GPIO 5 => TX for Serial1
+#define DATA_SIZE 125   // 125 bytes is a bit higher than the default 120 bytes of RX FIFO FULL
+#define BAUD      9600  // Any baudrate from 300 to 115200
+#define TEST_UART 1     // Serial1 will be used for the loopback testing with different RX FIFO FULL values
+#define RXPIN     4     // GPIO 4 => RX for Serial1
+#define TXPIN     5     // GPIO 5 => TX for Serial1
 
-uint8_t fifoFullTestCases[] = { 120, 20, 5, 1 };
+uint8_t fifoFullTestCases[] = {120, 20, 5, 1};
 
 void setup() {
   // UART0 will be used to log information into Serial Monitor
@@ -56,8 +56,7 @@ void setup() {
   }
 }
 
-void loop() {
-}
+void loop() {}
 
 void testAndReport(uint8_t fifoFull) {
   // Let's send 125 bytes from Serial1 rx<->tx and mesaure time using different FIFO Full configurations
@@ -83,9 +82,13 @@ void testAndReport(uint8_t fifoFull) {
   while (bytesReceived < DATA_SIZE) {
     bytesReceived += (bytesJustReceived[i] = Serial1.read(dataReceived + bytesReceived, DATA_SIZE));
     timeStamp[i] = millis();
-    if (bytesJustReceived[i] > 0) i++;  // next data only when we read something from Serial1
+    if (bytesJustReceived[i] > 0) {
+      i++;  // next data only when we read something from Serial1
+    }
     // safety for array limit && timeout... in 5 seconds...
-    if (i == DATA_SIZE || millis() - now > 5000) break;
+    if (i == DATA_SIZE || millis() - now > 5000) {
+      break;
+    }
   }
 
   uint32_t pastTime = millis() - now;
@@ -94,7 +97,9 @@ void testAndReport(uint8_t fifoFull) {
   Serial.printf("Per execution Serial.read() number of bytes data and time information:\n");
   for (i = 0; i < DATA_SIZE; i++) {
     Serial.printf("#%03d - Received %03lu bytes after %lu ms.\n", i, bytesJustReceived[i], i > 0 ? timeStamp[i] - timeStamp[i - 1] : timeStamp[i] - now);
-    if (i != DATA_SIZE - 1 && bytesJustReceived[i + 1] == 0) break;
+    if (i != DATA_SIZE - 1 && bytesJustReceived[i + 1] == 0) {
+      break;
+    }
   }
 
   Serial.println("========================\nFinished!");

@@ -42,7 +42,6 @@ static uintptr_t get_extram_data_high(void) {
 #define get_extram_data_high() ((uintptr_t)SOC_EXTRAM_DATA_HIGH)
 #endif
 
-
 void double_tap_init(void) {
   // magic location block ends 0x20 bytes from end of PSRAM
   magic_area = (void *)(get_extram_data_high() - 0x20 - sizeof(MAGIC_TOKENS));

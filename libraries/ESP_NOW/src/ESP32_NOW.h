@@ -51,7 +51,7 @@ public:
 
 class ESP_NOW_Class : public Print {
 public:
-  const uint8_t BROADCAST_ADDR[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+  const uint8_t BROADCAST_ADDR[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
   ESP_NOW_Class();
   ~ESP_NOW_Class();

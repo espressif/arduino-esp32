@@ -156,9 +156,9 @@ void adc_continuous_test(void) {
 #else
   setup_test("ADC_Continuous", ADC1_DEFAULT, ADC2_DEFAULT);
   test_executed = true;
-  uint8_t adc_pins[] = { ADC1_DEFAULT, ADC2_DEFAULT };
+  uint8_t adc_pins[] = {ADC1_DEFAULT, ADC2_DEFAULT};
   uint8_t adc_pins_count = 2;
-  adc_continuous_data_t* result = NULL;
+  adc_continuous_data_t *result = NULL;
 
   analogContinuousSetWidth(12);
   analogContinuousSetAtten(ADC_11db);
@@ -270,11 +270,15 @@ void touch_test(void) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
 
   Serial1.setPins(UART1_RX_DEFAULT, UART1_TX_DEFAULT);
   Serial1.begin(115200);
-  while (!Serial1) { delay(10); }
+  while (!Serial1) {
+    delay(10);
+  }
   Serial1.onReceive(onReceive_cb);
   uart_internal_loopback(1, uart1_rx_pin);
 

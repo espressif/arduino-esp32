@@ -27,7 +27,7 @@
 
 #if !CONFIG_DISABLE_HAL_LOCKS
 #define SPI_PARAM_LOCK() \
-  do { \
+  do {                   \
   } while (xSemaphoreTake(paramLock, portMAX_DELAY) != pdPASS)
 #define SPI_PARAM_UNLOCK() xSemaphoreGive(paramLock)
 #else
@@ -101,9 +101,15 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
     _ss = ss;
   }
 
-  if (!spiAttachSCK(_spi, _sck)) { goto err; }
-  if (_miso >= 0 && !spiAttachMISO(_spi, _miso)) { goto err; }
-  if (_mosi >= 0 && !spiAttachMOSI(_spi, _mosi)) { goto err; }
+  if (!spiAttachSCK(_spi, _sck)) {
+    goto err;
+  }
+  if (_miso >= 0 && !spiAttachMISO(_spi, _miso)) {
+    goto err;
+  }
+  if (_mosi >= 0 && !spiAttachMOSI(_spi, _mosi)) {
+    goto err;
+  }
   return;
 
 err:

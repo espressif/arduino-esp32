@@ -20,7 +20,6 @@
 #include "esp32-hal-log.h"
 #endif
 
-
 /**
  * @brief Create an address from the native ESP32 representation.
  * @param [in] address The native representation.
@@ -45,7 +44,9 @@ BTAddress::BTAddress() {
  * @param [in] stringAddress The hex representation of the address.
  */
 BTAddress::BTAddress(String stringAddress) {
-  if (stringAddress.length() != 17) return;
+  if (stringAddress.length() != 17) {
+    return;
+  }
 
   int data[6];
   sscanf(stringAddress.c_str(), "%x:%x:%x:%x:%x:%x", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5]);
@@ -56,7 +57,6 @@ BTAddress::BTAddress(String stringAddress) {
   m_address[4] = (uint8_t)data[4];
   m_address[5] = (uint8_t)data[5];
 }  // BTAddress
-
 
 /**
  * @brief Determine if this address equals another.
@@ -69,8 +69,9 @@ bool BTAddress::equals(BTAddress otherAddress) {
 
 BTAddress::operator bool() const {
   for (int i = 0; i < ESP_BD_ADDR_LEN; i++) {
-    if (this->m_address[i])
+    if (this->m_address[i]) {
       return true;
+    }
   }
   return false;
 }  // operator ()
@@ -82,7 +83,6 @@ BTAddress::operator bool() const {
 esp_bd_addr_t *BTAddress::getNative() const {
   return const_cast<esp_bd_addr_t *>(&m_address);
 }  // getNative
-
 
 /**
  * @brief Convert a BT address to a string.

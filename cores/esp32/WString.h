@@ -30,12 +30,11 @@
 #include <string.h>
 #include <ctype.h>
 
-
 // A pure abstract class forward used as a means to proide a unique pointer type
 // but really is never defined.
 class __FlashStringHelper;
 #define FPSTR(str_pointer) (reinterpret_cast<const __FlashStringHelper *>(str_pointer))
-#define F(string_literal) (FPSTR(PSTR(string_literal)))
+#define F(string_literal)  (FPSTR(PSTR(string_literal)))
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
@@ -47,8 +46,7 @@ class String {
   // complications of an operator bool(). for more information, see:
   // http://www.artima.com/cppsource/safebool.html
   typedef void (String::*StringIfHelperType)() const;
-  void StringIfHelper() const {
-  }
+  void StringIfHelper() const {}
 
 public:
   // constructors
@@ -59,12 +57,10 @@ public:
   String(const char *cstr = "");
   String(const char *cstr, unsigned int length);
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
-  String(const uint8_t *cstr, unsigned int length)
-    : String(reinterpret_cast<const char *>(cstr), length) {}
+  String(const uint8_t *cstr, unsigned int length) : String(reinterpret_cast<const char *>(cstr), length) {}
 #endif
   String(const String &str);
-  String(const __FlashStringHelper *str)
-    : String(reinterpret_cast<const char *>(str)) {}
+  String(const __FlashStringHelper *str) : String(reinterpret_cast<const char *>(str)) {}
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
   String(String &&rval);
   String(StringSumHelper &&rval);
@@ -322,16 +318,22 @@ protected:
     uint32_t len;
   };
   // This allows strings up up to 11 (10 + \0 termination) without any extra space.
-  enum { SSOSIZE = sizeof(struct _ptr) + 4 - 1 };  // Characters to allocate space for SSO, must be 12 or more
+  enum {
+    SSOSIZE = sizeof(struct _ptr) + 4 - 1
+  };  // Characters to allocate space for SSO, must be 12 or more
   struct _sso {
     char buff[SSOSIZE];
-    unsigned char len : 7;  // Ensure only one byte is allocated by GCC for the bitfields
+    unsigned char len   : 7;  // Ensure only one byte is allocated by GCC for the bitfields
     unsigned char isSSO : 1;
   } __attribute__((packed));  // Ensure that GCC doesn't expand the flag byte to a 32-bit word for alignment issues
 #ifdef BOARD_HAS_PSRAM
-  enum { CAPACITY_MAX = 3145728 };
+  enum {
+    CAPACITY_MAX = 3145728
+  };
 #else
-  enum { CAPACITY_MAX = 65535 };
+  enum {
+    CAPACITY_MAX = 65535
+  };
 #endif
   union {
     struct _ptr ptr;
@@ -362,10 +364,14 @@ protected:
     }
   }
   inline void setCapacity(int cap) {
-    if (!isSSO()) ptr.cap = cap;
+    if (!isSSO()) {
+      ptr.cap = cap;
+    }
   }
   inline void setBuffer(char *buff) {
-    if (!isSSO()) ptr.buff = buff;
+    if (!isSSO()) {
+      ptr.buff = buff;
+    }
   }
   // Buffer accessor functions
   inline const char *buffer() const {
@@ -392,42 +398,18 @@ protected:
 
 class StringSumHelper : public String {
 public:
-  StringSumHelper(const String &s)
-    : String(s) {
-  }
-  StringSumHelper(const char *p)
-    : String(p) {
-  }
-  StringSumHelper(char c)
-    : String(c) {
-  }
-  StringSumHelper(unsigned char num)
-    : String(num) {
-  }
-  StringSumHelper(int num)
-    : String(num) {
-  }
-  StringSumHelper(unsigned int num)
-    : String(num) {
-  }
-  StringSumHelper(long num)
-    : String(num) {
-  }
-  StringSumHelper(unsigned long num)
-    : String(num) {
-  }
-  StringSumHelper(float num)
-    : String(num) {
-  }
-  StringSumHelper(double num)
-    : String(num) {
-  }
-  StringSumHelper(long long num)
-    : String(num) {
-  }
-  StringSumHelper(unsigned long long num)
-    : String(num) {
-  }
+  StringSumHelper(const String &s) : String(s) {}
+  StringSumHelper(const char *p) : String(p) {}
+  StringSumHelper(char c) : String(c) {}
+  StringSumHelper(unsigned char num) : String(num) {}
+  StringSumHelper(int num) : String(num) {}
+  StringSumHelper(unsigned int num) : String(num) {}
+  StringSumHelper(long num) : String(num) {}
+  StringSumHelper(unsigned long num) : String(num) {}
+  StringSumHelper(float num) : String(num) {}
+  StringSumHelper(double num) : String(num) {}
+  StringSumHelper(long long num) : String(num) {}
+  StringSumHelper(unsigned long long num) : String(num) {}
 };
 
 inline StringSumHelper &operator+(const StringSumHelper &lhs, const __FlashStringHelper *rhs) {

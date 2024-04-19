@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x239A
-#define USB_PID 0x80E5
+#define USB_VID          0x239A
+#define USB_PID          0x80E5
 #define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "EPD MagTag 2.9\" ESP32-S2"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "EPD MagTag 2.9\" ESP32-S2"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 // User LED
 #define LED_BUILTIN 13
@@ -17,13 +17,12 @@
 // Neopixel
 #define PIN_NEOPIXEL 1  // D1
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN    (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
-#define NEOPIXEL_NUM 4         // number of neopixels
-#define NEOPIXEL_POWER 21      // power pin
+#define NEOPIXEL_NUM      4    // number of neopixels
+#define NEOPIXEL_POWER    21   // power pin
 #define NEOPIXEL_POWER_ON LOW  // power pin state when on
-
 
 #define PIN_BUTTON1 15
 #define PIN_BUTTON2 14
@@ -55,10 +54,6 @@ static const uint8_t MOSI = 35;
 static const uint8_t SCK = 36;
 static const uint8_t MISO = 37;
 
-
-
-
-
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 #define TX1 TX
@@ -85,9 +80,7 @@ static const uint8_t A17 = 16;
 static const uint8_t A18 = 19;
 static const uint8_t A19 = 20;
 
-
 static const uint8_t T10 = 10;
-
 
 static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;

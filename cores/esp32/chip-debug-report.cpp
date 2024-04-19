@@ -20,9 +20,9 @@
 #define chip_report_printf log_printf
 
 #define printMemCapsInfo(caps) _printMemCapsInfo(MALLOC_CAP_##caps, #caps)
-#define b2kb(b) ((float)b / 1024.0)
-#define b2mb(b) ((float)b / (1024.0 * 1024.0))
-static void _printMemCapsInfo(uint32_t caps, const char* caps_str) {
+#define b2kb(b)                ((float)b / 1024.0)
+#define b2mb(b)                ((float)b / (1024.0 * 1024.0))
+static void _printMemCapsInfo(uint32_t caps, const char *caps_str) {
   multi_heap_info_t info;
   size_t total = heap_caps_get_total_size(caps);
   heap_caps_get_info(&info, caps);
@@ -41,18 +41,18 @@ static void printPkgVersion(void) {
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
   switch (pkg_ver) {
     case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3: chip_report_printf("D0WD-R2-V3"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6: chip_report_printf("D0WD-Q6"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5: chip_report_printf("D0WD-Q5"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5: chip_report_printf("D2WD-Q5"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH: chip_report_printf("U4WD-H"); break;
-    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4: chip_report_printf("PICO-D4"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6:   chip_report_printf("D0WD-Q6"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5:   chip_report_printf("D0WD-Q5"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:   chip_report_printf("D2WD-Q5"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH:    chip_report_printf("U4WD-H"); break;
+    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4:   chip_report_printf("PICO-D4"); break;
     case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302: chip_report_printf("PICO-V3-02"); break;
   }
 #elif CONFIG_IDF_TARGET_ESP32S2
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
   switch (pkg_ver) {
-    case 1: chip_report_printf("FH16"); break;
-    case 2: chip_report_printf("FH32"); break;
+    case 1:  chip_report_printf("FH16"); break;
+    case 2:  chip_report_printf("FH32"); break;
     default: chip_report_printf("%lu", pkg_ver); break;
   }
 #elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
@@ -77,14 +77,14 @@ static void printChipInfo(void) {
   chip_report_printf("------------------------------------------\n");
   chip_report_printf("  Model             : ");
   switch (info.model) {
-    case CHIP_ESP32: chip_report_printf("ESP32\n"); break;
+    case CHIP_ESP32:   chip_report_printf("ESP32\n"); break;
     case CHIP_ESP32S2: chip_report_printf("ESP32-S2\n"); break;
     case CHIP_ESP32S3: chip_report_printf("ESP32-S3\n"); break;
     case CHIP_ESP32C2: chip_report_printf("ESP32-C2\n"); break;
     case CHIP_ESP32C3: chip_report_printf("ESP32-C3\n"); break;
     case CHIP_ESP32C6: chip_report_printf("ESP32-C6\n"); break;
     case CHIP_ESP32H2: chip_report_printf("ESP32-H2\n"); break;
-    default: chip_report_printf("Unknown %d\n", info.model); break;
+    default:           chip_report_printf("Unknown %d\n", info.model); break;
   }
   printPkgVersion();
   chip_report_printf("  Revision          : ");
@@ -114,7 +114,7 @@ static void printFlashInfo(void) {
 // REG_SPI_BASE is not defined for S3/C3 ??
 #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
 #ifndef REG_SPI_BASE
-#define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i)*0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
+#define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
 #endif  // REG_SPI_BASE
 #endif  // TARGET
 
@@ -126,7 +126,7 @@ static void printFlashInfo(void) {
   chip_report_printf("  Sector Size       : %8lu B (%6.1f KB)\n", g_rom_flashchip.sector_size, b2kb(g_rom_flashchip.sector_size));
   chip_report_printf("  Page Size         : %8lu B (%6.1f KB)\n", g_rom_flashchip.page_size, b2kb(g_rom_flashchip.page_size));
   esp_image_header_t fhdr;
-  esp_flash_read(esp_flash_default_chip, (void*)&fhdr, ESP_FLASH_IMAGE_BASE, sizeof(esp_image_header_t));
+  esp_flash_read(esp_flash_default_chip, (void *)&fhdr, ESP_FLASH_IMAGE_BASE, sizeof(esp_image_header_t));
   if (fhdr.magic == ESP_IMAGE_HEADER_MAGIC) {
     uint32_t f_freq = 0;
     switch (fhdr.spi_speed) {
@@ -165,7 +165,7 @@ static void printPartitionsInfo(void) {
   if (iterator != NULL) {
     esp_partition_iterator_t it = iterator;
     while (it != NULL) {
-      const esp_partition_t* partition = esp_partition_get(it);
+      const esp_partition_t *partition = esp_partition_get(it);
       if (partition) {
         chip_report_printf("  %17s : addr: 0x%08X, size: %7.1f KB", partition->label, partition->address, b2kb(partition->size));
         if (partition->type == ESP_PARTITION_TYPE_APP) {
@@ -183,18 +183,18 @@ static void printPartitionsInfo(void) {
           chip_report_printf(", type: DATA");
           chip_report_printf(", subtype: ");
           switch (partition->subtype) {
-            case ESP_PARTITION_SUBTYPE_DATA_OTA: chip_report_printf("OTA"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_PHY: chip_report_printf("PHY"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_NVS: chip_report_printf("NVS"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_COREDUMP: chip_report_printf("COREDUMP"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_NVS_KEYS: chip_report_printf("NVS_KEYS"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_EFUSE_EM: chip_report_printf("EFUSE_EM"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_OTA:       chip_report_printf("OTA"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_PHY:       chip_report_printf("PHY"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_NVS:       chip_report_printf("NVS"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_COREDUMP:  chip_report_printf("COREDUMP"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_NVS_KEYS:  chip_report_printf("NVS_KEYS"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_EFUSE_EM:  chip_report_printf("EFUSE_EM"); break;
             case ESP_PARTITION_SUBTYPE_DATA_UNDEFINED: chip_report_printf("UNDEFINED"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD: chip_report_printf("ESPHTTPD"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_FAT: chip_report_printf("FAT"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_SPIFFS: chip_report_printf("SPIFFS"); break;
-            case ESP_PARTITION_SUBTYPE_DATA_LITTLEFS: chip_report_printf("LITTLEFS"); break;
-            default: chip_report_printf("0x%02X", partition->subtype); break;
+            case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD:  chip_report_printf("ESPHTTPD"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_FAT:       chip_report_printf("FAT"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_SPIFFS:    chip_report_printf("SPIFFS"); break;
+            case ESP_PARTITION_SUBTYPE_DATA_LITTLEFS:  chip_report_printf("LITTLEFS"); break;
+            default:                                   chip_report_printf("0x%02X", partition->subtype); break;
           }
         }
         chip_report_printf("\n");
@@ -267,7 +267,7 @@ static void printPerimanInfo(void) {
 #else
     chip_report_printf("  %4u : ", i);
 #endif
-    const char* extra_type = perimanGetPinBusExtraType(i);
+    const char *extra_type = perimanGetPinBusExtraType(i);
     if (extra_type) {
       chip_report_printf("%s", extra_type);
     } else {
@@ -290,7 +290,9 @@ void printBeforeSetupInfo(void) {
   Serial.begin(0);
   Serial.setDebugOutput(true);
   uint8_t t = 0;
-  while (!Serial && (t++ < 200)) delay(10);  //wait up to 2 seconds for the IDE to connect
+  while (!Serial && (t++ < 200)) {
+    delay(10);  //wait up to 2 seconds for the IDE to connect
+  }
 #endif
   chip_report_printf("=========== Before Setup Start ===========\n");
   printChipInfo();

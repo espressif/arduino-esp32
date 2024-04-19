@@ -35,12 +35,10 @@ BLEServer::BLEServer() {
   m_pServerCallbacks = nullptr;
 }  // BLEServer
 
-
 void BLEServer::createApp(uint16_t appId) {
   m_appId = appId;
   registerApp(appId);
 }  // createApp
-
 
 /**
  * @brief Create a %BLE Service.
@@ -50,10 +48,9 @@ void BLEServer::createApp(uint16_t appId) {
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the new service object.
  */
-BLEService* BLEServer::createService(const char* uuid) {
+BLEService *BLEServer::createService(const char *uuid) {
   return createService(BLEUUID(uuid));
 }
-
 
 /**
  * @brief Create a %BLE Service.
@@ -65,17 +62,16 @@ BLEService* BLEServer::createService(const char* uuid) {
  * @param [in] inst_id With multiple services with the same UUID we need to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
-BLEService* BLEServer::createService(BLEUUID uuid, uint32_t numHandles, uint8_t inst_id) {
+BLEService *BLEServer::createService(BLEUUID uuid, uint32_t numHandles, uint8_t inst_id) {
   log_v(">> createService - %s", uuid.toString().c_str());
   m_semaphoreCreateEvt.take("createService");
 
   // Check that a service with the supplied UUID does not already exist.
   if (m_serviceMap.getByUUID(uuid) != nullptr) {
-    log_w("<< Attempt to create a new service with uuid %s but a service with that UUID already exists.",
-          uuid.toString().c_str());
+    log_w("<< Attempt to create a new service with uuid %s but a service with that UUID already exists.", uuid.toString().c_str());
   }
 
-  BLEService* pService = new BLEService(uuid, numHandles);
+  BLEService *pService = new BLEService(uuid, numHandles);
   pService->m_instId = inst_id;
   m_serviceMap.setByUUID(uuid, pService);  // Save a reference to this service being on this server.
   pService->executeCreate(this);           // Perform the API calls to actually create the service.
@@ -86,13 +82,12 @@ BLEService* BLEServer::createService(BLEUUID uuid, uint32_t numHandles, uint8_t 
   return pService;
 }  // createService
 
-
 /**
  * @brief Get a %BLE Service by its UUID
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the service object.
  */
-BLEService* BLEServer::getServiceByUUID(const char* uuid) {
+BLEService *BLEServer::getServiceByUUID(const char *uuid) {
   return m_serviceMap.getByUUID(uuid);
 }
 
@@ -101,7 +96,7 @@ BLEService* BLEServer::getServiceByUUID(const char* uuid) {
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the service object.
  */
-BLEService* BLEServer::getServiceByUUID(BLEUUID uuid) {
+BLEService *BLEServer::getServiceByUUID(BLEUUID uuid) {
   return m_serviceMap.getByUUID(uuid);
 }
 
@@ -110,14 +105,13 @@ BLEService* BLEServer::getServiceByUUID(BLEUUID uuid) {
  *
  * @return An advertising object.
  */
-BLEAdvertising* BLEServer::getAdvertising() {
+BLEAdvertising *BLEServer::getAdvertising() {
   return BLEDevice::getAdvertising();
 }
 
 uint16_t BLEServer::getConnId() {
   return m_connId;
 }
-
 
 /**
  * @brief Return the number of connected clients.
@@ -127,11 +121,9 @@ uint32_t BLEServer::getConnectedCount() {
   return m_connectedCount;
 }  // getConnectedCount
 
-
 uint16_t BLEServer::getGattsIf() {
   return m_gatts_if;
 }
-
 
 /**
  * @brief Handle a GATT Server Event.
@@ -141,9 +133,8 @@ uint16_t BLEServer::getGattsIf() {
  * @param [in] param
  *
  */
-void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param) {
-  log_v(">> handleGATTServerEvent: %s",
-        BLEUtils::gattServerEventTypeToString(event).c_str());
+void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
+  log_v(">> handleGATTServerEvent: %s", BLEUtils::gattServerEventTypeToString(event).c_str());
 
   switch (event) {
     // ESP_GATTS_ADD_CHAR_EVT - Indicate that a characteristic was added to the service.
@@ -154,9 +145,9 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // - esp_bt_uuid_t     char_uuid
     //
     case ESP_GATTS_ADD_CHAR_EVT:
-      {
-        break;
-      }  // ESP_GATTS_ADD_CHAR_EVT
+    {
+      break;
+    }  // ESP_GATTS_ADD_CHAR_EVT
 
     case ESP_GATTS_MTU_EVT:
       updatePeerMTU(param->mtu.conn_id, param->mtu.mtu);
@@ -171,17 +162,16 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // - esp_bd_addr_t remote_bda
     //
     case ESP_GATTS_CONNECT_EVT:
-      {
-        m_connId = param->connect.conn_id;
-        addPeerDevice((void*)this, false, m_connId);
-        if (m_pServerCallbacks != nullptr) {
-          m_pServerCallbacks->onConnect(this);
-          m_pServerCallbacks->onConnect(this, param);
-        }
-        m_connectedCount++;  // Increment the number of connected devices count.
-        break;
-      }  // ESP_GATTS_CONNECT_EVT
-
+    {
+      m_connId = param->connect.conn_id;
+      addPeerDevice((void *)this, false, m_connId);
+      if (m_pServerCallbacks != nullptr) {
+        m_pServerCallbacks->onConnect(this);
+        m_pServerCallbacks->onConnect(this, param);
+      }
+      m_connectedCount++;  // Increment the number of connected devices count.
+      break;
+    }  // ESP_GATTS_CONNECT_EVT
 
     // ESP_GATTS_CREATE_EVT
     // Called when a new service is registered as having been created.
@@ -192,13 +182,14 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // * esp_gatt_srvc_id_t service_id
     //
     case ESP_GATTS_CREATE_EVT:
-      {
-        BLEService* pService = m_serviceMap.getByUUID(param->create.service_id.id.uuid, param->create.service_id.id.inst_id);  // <--- very big bug for multi services with the same uuid
-        m_serviceMap.setByHandle(param->create.service_handle, pService);
-        m_semaphoreCreateEvt.give();
-        break;
-      }  // ESP_GATTS_CREATE_EVT
-
+    {
+      BLEService *pService = m_serviceMap.getByUUID(
+        param->create.service_id.id.uuid, param->create.service_id.id.inst_id
+      );  // <--- very big bug for multi services with the same uuid
+      m_serviceMap.setByHandle(param->create.service_handle, pService);
+      m_semaphoreCreateEvt.give();
+      break;
+    }  // ESP_GATTS_CREATE_EVT
 
     // ESP_GATTS_DISCONNECT_EVT
     //
@@ -210,23 +201,22 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // If we receive a disconnect event then invoke the callback for disconnects (if one is present).
     // we also want to start advertising again.
     case ESP_GATTS_DISCONNECT_EVT:
-      {
-        if (m_pServerCallbacks != nullptr) {  // If we have callbacks, call now.
-          m_pServerCallbacks->onDisconnect(this);
-          m_pServerCallbacks->onDisconnect(this, param);
-        }
-        if (m_connId == ESP_GATT_IF_NONE) {
-          return;
-        }
+    {
+      if (m_pServerCallbacks != nullptr) {  // If we have callbacks, call now.
+        m_pServerCallbacks->onDisconnect(this);
+        m_pServerCallbacks->onDisconnect(this, param);
+      }
+      if (m_connId == ESP_GATT_IF_NONE) {
+        return;
+      }
 
-        // only decrement if connection is found in map and removed
-        // sometimes this event triggers w/o a valid connection
-        if (removePeerDevice(param->disconnect.conn_id, false)) {
-          m_connectedCount--;  // Decrement the number of connected devices count.
-        }
-        break;
-      }  // ESP_GATTS_DISCONNECT_EVT
-
+      // only decrement if connection is found in map and removed
+      // sometimes this event triggers w/o a valid connection
+      if (removePeerDevice(param->disconnect.conn_id, false)) {
+        m_connectedCount--;  // Decrement the number of connected devices count.
+      }
+      break;
+    }  // ESP_GATTS_DISCONNECT_EVT
 
     // ESP_GATTS_READ_EVT - A request to read the value of a characteristic has arrived.
     //
@@ -240,10 +230,9 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // - bool          need_rsp
     //
     case ESP_GATTS_READ_EVT:
-      {
-        break;
-      }  // ESP_GATTS_READ_EVT
-
+    {
+      break;
+    }  // ESP_GATTS_READ_EVT
 
     // ESP_GATTS_REG_EVT
     // reg:
@@ -251,12 +240,11 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // - uint16_t app_id
     //
     case ESP_GATTS_REG_EVT:
-      {
-        m_gatts_if = gatts_if;
-        m_semaphoreRegisterAppEvt.give();  // Unlock the mutex waiting for the registration of the app.
-        break;
-      }  // ESP_GATTS_REG_EVT
-
+    {
+      m_gatts_if = gatts_if;
+      m_semaphoreRegisterAppEvt.give();  // Unlock the mutex waiting for the registration of the app.
+      break;
+    }  // ESP_GATTS_REG_EVT
 
     // ESP_GATTS_WRITE_EVT - A request to write the value of a characteristic has arrived.
     //
@@ -272,16 +260,13 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // - uint8_t*      value
     //
     case ESP_GATTS_WRITE_EVT:
-      {
-        break;
-      }
-
-    case ESP_GATTS_OPEN_EVT:
-      m_semaphoreOpenEvt.give(param->open.status);
+    {
       break;
+    }
 
-    default:
-      break;
+    case ESP_GATTS_OPEN_EVT: m_semaphoreOpenEvt.give(param->open.status); break;
+
+    default: break;
   }
 
   // Invoke the handler for every Service we have.
@@ -289,7 +274,6 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
 
   log_v("<< handleGATTServerEvent");
 }  // handleGATTServerEvent
-
 
 /**
  * @brief Register the app.
@@ -304,7 +288,6 @@ void BLEServer::registerApp(uint16_t m_appId) {
   log_v("<< registerApp");
 }  // registerApp
 
-
 /**
  * @brief Set the server callbacks.
  *
@@ -314,14 +297,14 @@ void BLEServer::registerApp(uint16_t m_appId) {
  *
  * @param [in] pCallbacks The callbacks to be invoked.
  */
-void BLEServer::setCallbacks(BLEServerCallbacks* pCallbacks) {
+void BLEServer::setCallbacks(BLEServerCallbacks *pCallbacks) {
   m_pServerCallbacks = pCallbacks;
 }  // setCallbacks
 
 /*
  * Remove service
  */
-void BLEServer::removeService(BLEService* service) {
+void BLEServer::removeService(BLEService *service) {
   service->stop();
   service->executeDelete();
   m_serviceMap.removeService(service);
@@ -363,34 +346,31 @@ bool BLEServer::connect(BLEAddress address) {
   return rc == ESP_GATT_OK;
 }  // connect
 
-
-
-void BLEServerCallbacks::onConnect(BLEServer* pServer) {
+void BLEServerCallbacks::onConnect(BLEServer *pServer) {
   log_d("BLEServerCallbacks", ">> onConnect(): Default");
   log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
   log_d("BLEServerCallbacks", "<< onConnect()");
 }  // onConnect
 
-void BLEServerCallbacks::onConnect(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
+void BLEServerCallbacks::onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
   log_d("BLEServerCallbacks", ">> onConnect(): Default");
   log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
   log_d("BLEServerCallbacks", "<< onConnect()");
 }  // onConnect
 
-
-void BLEServerCallbacks::onDisconnect(BLEServer* pServer) {
+void BLEServerCallbacks::onDisconnect(BLEServer *pServer) {
   log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
   log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
   log_d("BLEServerCallbacks", "<< onDisconnect()");
 }  // onDisconnect
 
-void BLEServerCallbacks::onDisconnect(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
+void BLEServerCallbacks::onDisconnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
   log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
   log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
   log_d("BLEServerCallbacks", "<< onDisconnect()");
 }  // onDisconnect
 
-void BLEServerCallbacks::onMtuChanged(BLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
+void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
   log_d("BLEServerCallbacks", ">> onMtuChanged(): Default");
   log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), param->mtu.mtu);
   log_d("BLEServerCallbacks", "<< onMtuChanged()");
@@ -411,17 +391,12 @@ std::map<uint16_t, conn_status_t> BLEServer::getPeerDevices(bool _client) {
   return m_connectedServersMap;
 }
 
-
 uint16_t BLEServer::getPeerMTU(uint16_t conn_id) {
   return m_connectedServersMap.find(conn_id)->second.mtu;
 }
 
-void BLEServer::addPeerDevice(void* peer, bool _client, uint16_t conn_id) {
-  conn_status_t status = {
-    .peer_device = peer,
-    .connected = true,
-    .mtu = 23
-  };
+void BLEServer::addPeerDevice(void *peer, bool _client, uint16_t conn_id) {
+  conn_status_t status = {.peer_device = peer, .connected = true, .mtu = 23};
 
   m_connectedServersMap.insert(std::pair<uint16_t, conn_status_t>(conn_id, status));
 }

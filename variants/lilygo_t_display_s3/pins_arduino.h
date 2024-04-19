@@ -70,7 +70,6 @@ static const uint8_t A15 = 16;
 static const uint8_t A16 = 17;
 static const uint8_t A17 = 18;
 
-
 // Touch
 static const uint8_t T1 = 1;
 static const uint8_t T2 = 2;

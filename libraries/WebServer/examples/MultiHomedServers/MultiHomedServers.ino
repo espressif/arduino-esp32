@@ -66,7 +66,9 @@ void setup(void) {
   pinMode(led, OUTPUT);
   digitalWrite(led, 0);
   Serial.begin(115200);
-  while (!Serial) { delay(100); }
+  while (!Serial) {
+    delay(100);
+  }
   Serial.println("Multi-homed Servers example starting");
   delay(1000);
   WiFi.mode(WIFI_STA);

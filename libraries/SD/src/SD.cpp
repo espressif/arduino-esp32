@@ -20,10 +20,9 @@
 
 using namespace fs;
 
-SDFS::SDFS(FSImplPtr impl)
-  : FS(impl), _pdrv(0xFF) {}
+SDFS::SDFS(FSImplPtr impl) : FS(impl), _pdrv(0xFF) {}
 
-bool SDFS::begin(uint8_t ssPin, SPIClass& spi, uint32_t frequency, const char* mountpoint, uint8_t max_files, bool format_if_empty) {
+bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char *mountpoint, uint8_t max_files, bool format_if_empty) {
   if (_pdrv != 0xFF) {
     return true;
   }
@@ -87,10 +86,12 @@ size_t SDFS::sectorSize() {
 }
 
 uint64_t SDFS::totalBytes() {
-  FATFS* fsinfo;
+  FATFS *fsinfo;
   DWORD fre_clust;
-  char drv[3] = { (char)(48 + _pdrv), ':', 0 };
-  if (f_getfree(drv, &fre_clust, &fsinfo) != 0) return 0;
+  char drv[3] = {(char)(48 + _pdrv), ':', 0};
+  if (f_getfree(drv, &fre_clust, &fsinfo) != 0) {
+    return 0;
+  }
   uint64_t size = ((uint64_t)(fsinfo->csize)) * (fsinfo->n_fatent - 2)
 #if _MAX_SS != 512
                   * (fsinfo->ssize);
@@ -101,10 +102,12 @@ uint64_t SDFS::totalBytes() {
 }
 
 uint64_t SDFS::usedBytes() {
-  FATFS* fsinfo;
+  FATFS *fsinfo;
   DWORD fre_clust;
-  char drv[3] = { (char)(48 + _pdrv), ':', 0 };
-  if (f_getfree(drv, &fre_clust, &fsinfo) != 0) return 0;
+  char drv[3] = {(char)(48 + _pdrv), ':', 0};
+  if (f_getfree(drv, &fre_clust, &fsinfo) != 0) {
+    return 0;
+  }
   uint64_t size = ((uint64_t)(fsinfo->csize)) * ((fsinfo->n_fatent - 2) - (fsinfo->free_clst))
 #if _MAX_SS != 512
                   * (fsinfo->ssize);
@@ -114,13 +117,12 @@ uint64_t SDFS::usedBytes() {
   return size;
 }
 
-bool SDFS::readRAW(uint8_t* buffer, uint32_t sector) {
+bool SDFS::readRAW(uint8_t *buffer, uint32_t sector) {
   return sd_read_raw(_pdrv, buffer, sector);
 }
 
-bool SDFS::writeRAW(uint8_t* buffer, uint32_t sector) {
+bool SDFS::writeRAW(uint8_t *buffer, uint32_t sector) {
   return sd_write_raw(_pdrv, buffer, sector);
 }
-
 
 SDFS SD = SDFS(FSImplPtr(new VFSImpl()));

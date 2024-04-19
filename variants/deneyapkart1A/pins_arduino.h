@@ -5,16 +5,16 @@
 #include "soc/soc_caps.h"
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + 13;  //D12
-#define BUILTIN_LED LED_BUILTIN                              // backward compatibility
-#define LED_BUILTIN LED_BUILTIN                              // allow testing #ifdef LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
-#define RGBLED LED_BUILTIN
+#define BUILTIN_LED    LED_BUILTIN                           // backward compatibility
+#define LED_BUILTIN    LED_BUILTIN                           // allow testing #ifdef LED_BUILTIN
+#define RGB_BUILTIN    LED_BUILTIN
+#define RGBLED         LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t GPKEY = 0;
 #define KEY_BUILTIN GPKEY
 #define BUILTIN_KEY GPKEY
-#define BOOT GPKEY
+#define BOOT        GPKEY
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;

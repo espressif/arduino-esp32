@@ -22,11 +22,11 @@ from WPS_TYPE_PBC to WPS_TYPE_PIN in
 the case that you are using pin type
 WPS
 */
-#define ESP_WPS_MODE WPS_TYPE_PBC
+#define ESP_WPS_MODE     WPS_TYPE_PBC
 #define ESP_MANUFACTURER "ESPRESSIF"
 #define ESP_MODEL_NUMBER "ESP32"
-#define ESP_MODEL_NAME "ESPRESSIF IOT"
-#define ESP_DEVICE_NAME "ESP STATION"
+#define ESP_MODEL_NAME   "ESPRESSIF IOT"
+#define ESP_DEVICE_NAME  "ESP STATION"
 
 static esp_wps_config_t config;
 
@@ -64,9 +64,7 @@ String wpspin2string(uint8_t a[]) {
 // WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
 void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
   switch (event) {
-    case ARDUINO_EVENT_WIFI_STA_START:
-      Serial.println("Station Mode Started");
-      break;
+    case ARDUINO_EVENT_WIFI_STA_START: Serial.println("Station Mode Started"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       Serial.println("Connected to :" + String(WiFi.SSID()));
       Serial.print("Got IP: ");
@@ -92,11 +90,8 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       wpsStop();
       wpsStart();
       break;
-    case ARDUINO_EVENT_WPS_ER_PIN:
-      Serial.println("WPS_PIN = " + wpspin2string(info.wps_er_pin.pin_code));
-      break;
-    default:
-      break;
+    case ARDUINO_EVENT_WPS_ER_PIN: Serial.println("WPS_PIN = " + wpspin2string(info.wps_er_pin.pin_code)); break;
+    default:                       break;
   }
 }
 

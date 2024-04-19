@@ -31,11 +31,11 @@ static const uint8_t T2 = 2;
 static const uint8_t T8 = 33;
 static const uint8_t T9 = 32;
 
-#define ETH_PHY_ADDR 0
+#define ETH_PHY_ADDR  0
 #define ETH_PHY_POWER -1
-#define ETH_PHY_MDC 16
-#define ETH_PHY_MDIO 17
-#define ETH_PHY_TYPE ETH_PHY_LAN8720
-#define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
+#define ETH_PHY_MDC   16
+#define ETH_PHY_MDIO  17
+#define ETH_PHY_TYPE  ETH_PHY_LAN8720
+#define ETH_CLK_MODE  ETH_CLOCK_GPIO0_IN
 
 #endif /* Pins_Arduino_h */

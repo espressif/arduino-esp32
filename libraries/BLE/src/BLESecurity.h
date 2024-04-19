@@ -25,7 +25,7 @@ public:
   void setRespEncryptionKey(uint8_t resp_key);
   void setKeySize(uint8_t key_size = 16);
   void setStaticPIN(uint32_t pin);
-  static char* esp_key_type_to_str(esp_ble_key_type_t key_type);
+  static char *esp_key_type_to_str(esp_ble_key_type_t key_type);
 
 private:
   esp_ble_auth_req_t m_authReq;
@@ -35,7 +35,6 @@ private:
   uint8_t m_keySize;
 
 };  // BLESecurity
-
 
 /*
  * @brief Callbacks to handle GAP events related to authorization

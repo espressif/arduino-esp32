@@ -7,10 +7,8 @@
 class UriGlob : public Uri {
 
 public:
-  explicit UriGlob(const char *uri)
-    : Uri(uri){};
-  explicit UriGlob(const String &uri)
-    : Uri(uri){};
+  explicit UriGlob(const char *uri) : Uri(uri){};
+  explicit UriGlob(const String &uri) : Uri(uri){};
 
   Uri *clone() const override final {
     return new UriGlob(_uri);

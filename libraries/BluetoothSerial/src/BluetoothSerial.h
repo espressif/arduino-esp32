@@ -36,7 +36,6 @@ typedef std::function<void(BTAdvertisedDevice *pAdvertisedDevice)> BTAdvertisedD
 
 class BluetoothSerial : public Stream {
 public:
-
   BluetoothSerial(void);
   ~BluetoothSerial(void);
 
@@ -73,8 +72,14 @@ public:
   bool setPin(const char *pin, uint8_t pin_code_len);
 #endif
   bool connect(String remoteName);
-  bool connect(uint8_t remoteAddress[], int channel = 0, esp_spp_sec_t sec_mask = (ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE), esp_spp_role_t role = ESP_SPP_ROLE_MASTER);
-  bool connect(const BTAddress &remoteAddress, int channel = 0, esp_spp_sec_t sec_mask = (ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE), esp_spp_role_t role = ESP_SPP_ROLE_MASTER) {
+  bool connect(
+    uint8_t remoteAddress[], int channel = 0, esp_spp_sec_t sec_mask = (ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE),
+    esp_spp_role_t role = ESP_SPP_ROLE_MASTER
+  );
+  bool connect(
+    const BTAddress &remoteAddress, int channel = 0, esp_spp_sec_t sec_mask = (ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE),
+    esp_spp_role_t role = ESP_SPP_ROLE_MASTER
+  ) {
     return connect(*remoteAddress.getNative(), channel, sec_mask);
   };
   bool connect();
@@ -108,6 +113,7 @@ public:
   int getBondedDevices(uint dev_num, esp_bd_addr_t *dev_list);
   bool deleteBondedDevice(uint8_t *remoteAddress);
   void deleteAllBondedDevices();
+
 private:
   String local_name;
   int timeoutTicks = 0;

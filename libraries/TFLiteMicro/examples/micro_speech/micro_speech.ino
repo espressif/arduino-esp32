@@ -27,11 +27,11 @@ limitations under the License.
 
 // Globals, used for compatibility with Arduino-style sketches.
 namespace {
-const tflite::Model* model = nullptr;
-tflite::MicroInterpreter* interpreter = nullptr;
-TfLiteTensor* model_input = nullptr;
-FeatureProvider* feature_provider = nullptr;
-RecognizeCommands* recognizer = nullptr;
+const tflite::Model *model = nullptr;
+tflite::MicroInterpreter *interpreter = nullptr;
+TfLiteTensor *model_input = nullptr;
+FeatureProvider *feature_provider = nullptr;
+RecognizeCommands *recognizer = nullptr;
 int32_t previous_time = 0;
 
 // Create an area of memory to use for input, output, and intermediate arrays.
@@ -40,7 +40,7 @@ int32_t previous_time = 0;
 constexpr int kTensorArenaSize = 30 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 int8_t feature_buffer[kFeatureElementCount];
-int8_t* model_input_buffer = nullptr;
+int8_t *model_input_buffer = nullptr;
 }  // namespace
 
 // The name of this function is important for Arduino compatibility.
@@ -49,9 +49,11 @@ void setup() {
   // copying or parsing, it's a very lightweight operation.
   model = tflite::GetModel(g_model);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
-    MicroPrintf("Model provided is schema version %d not equal to supported "
-                "version %d.",
-                model->version(), TFLITE_SCHEMA_VERSION);
+    MicroPrintf(
+      "Model provided is schema version %d not equal to supported "
+      "version %d.",
+      model->version(), TFLITE_SCHEMA_VERSION
+    );
     return;
   }
 
@@ -78,8 +80,7 @@ void setup() {
   }
 
   // Build an interpreter to run the model with.
-  static tflite::MicroInterpreter static_interpreter(
-    model, micro_op_resolver, tensor_arena, kTensorArenaSize);
+  static tflite::MicroInterpreter static_interpreter(model, micro_op_resolver, tensor_arena, kTensorArenaSize);
   interpreter = &static_interpreter;
 
   // Allocate memory from the tensor_arena for the model's tensors.
@@ -91,7 +92,8 @@ void setup() {
 
   // Get information about the memory area to use for the model's input.
   model_input = interpreter->input(0);
-  if ((model_input->dims->size != 2) || (model_input->dims->data[0] != 1) || (model_input->dims->data[1] != (kFeatureSliceCount * kFeatureSliceSize)) || (model_input->type != kTfLiteInt8)) {
+  if ((model_input->dims->size != 2) || (model_input->dims->data[0] != 1) || (model_input->dims->data[1] != (kFeatureSliceCount * kFeatureSliceSize))
+      || (model_input->type != kTfLiteInt8)) {
     MicroPrintf("Bad input tensor parameters in model");
     return;
   }
@@ -100,8 +102,7 @@ void setup() {
   // Prepare to access the audio spectrograms from a microphone or other source
   // that will provide the inputs to the neural network.
   // NOLINTNEXTLINE(runtime-global-variables)
-  static FeatureProvider static_feature_provider(kFeatureElementCount,
-                                                 feature_buffer);
+  static FeatureProvider static_feature_provider(kFeatureElementCount, feature_buffer);
   feature_provider = &static_feature_provider;
 
   static RecognizeCommands static_recognizer;
@@ -115,8 +116,7 @@ void loop() {
   // Fetch the spectrogram for the current time.
   const int32_t current_time = LatestAudioTimestamp();
   int how_many_new_slices = 0;
-  TfLiteStatus feature_status = feature_provider->PopulateFeatureData(
-    previous_time, current_time, &how_many_new_slices);
+  TfLiteStatus feature_status = feature_provider->PopulateFeatureData(previous_time, current_time, &how_many_new_slices);
   if (feature_status != kTfLiteOk) {
     MicroPrintf("Feature generation failed");
     return;
@@ -141,13 +141,12 @@ void loop() {
   }
 
   // Obtain a pointer to the output tensor
-  TfLiteTensor* output = interpreter->output(0);
+  TfLiteTensor *output = interpreter->output(0);
   // Determine whether a command was recognized based on the output of inference
-  const char* found_command = nullptr;
+  const char *found_command = nullptr;
   uint8_t score = 0;
   bool is_new_command = false;
-  TfLiteStatus process_status = recognizer->ProcessLatestResults(
-    output, current_time, &found_command, &score, &is_new_command);
+  TfLiteStatus process_status = recognizer->ProcessLatestResults(output, current_time, &found_command, &score, &is_new_command);
   if (process_status != kTfLiteOk) {
     MicroPrintf("RecognizeCommands::ProcessLatestResults() failed");
     return;

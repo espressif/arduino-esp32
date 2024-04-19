@@ -27,36 +27,27 @@
 
 #ifndef GET_UINT32_BE
 #define GET_UINT32_BE(n, b, i) \
-  { \
-    (n) = ((uint32_t)(b)[(i)] << 24) \
-          | ((uint32_t)(b)[(i) + 1] << 16) \
-          | ((uint32_t)(b)[(i) + 2] << 8) \
-          | ((uint32_t)(b)[(i) + 3]); \
-  }
+  { (n) = ((uint32_t)(b)[(i)] << 24) | ((uint32_t)(b)[(i) + 1] << 16) | ((uint32_t)(b)[(i) + 2] << 8) | ((uint32_t)(b)[(i) + 3]); }
 #endif
 
 #ifndef PUT_UINT32_BE
-#define PUT_UINT32_BE(n, b, i) \
-  { \
-    (b)[(i)] = (uint8_t)((n) >> 24); \
+#define PUT_UINT32_BE(n, b, i)           \
+  {                                      \
+    (b)[(i)] = (uint8_t)((n) >> 24);     \
     (b)[(i) + 1] = (uint8_t)((n) >> 16); \
-    (b)[(i) + 2] = (uint8_t)((n) >> 8); \
-    (b)[(i) + 3] = (uint8_t)((n)); \
+    (b)[(i) + 2] = (uint8_t)((n) >> 8);  \
+    (b)[(i) + 3] = (uint8_t)((n));       \
   }
 #endif
 
 // Constants
 
-static const uint8_t sha1_padding[64] = {
-  0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
+static const uint8_t sha1_padding[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                         0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // Private methods
 
-void SHA1Builder::process(const uint8_t* data) {
+void SHA1Builder::process(const uint8_t *data) {
   uint32_t temp, W[16], A, B, C, D, E;
 
   GET_UINT32_BE(W[0], data, 0);
@@ -78,15 +69,12 @@ void SHA1Builder::process(const uint8_t* data) {
 
 #define sha1_S(x, n) ((x << n) | ((x & 0xFFFFFFFF) >> (32 - n)))
 
-#define sha1_R(t) \
-  ( \
-    temp = W[(t - 3) & 0x0F] ^ W[(t - 8) & 0x0F] ^ W[(t - 14) & 0x0F] ^ W[t & 0x0F], \
-    (W[t & 0x0F] = sha1_S(temp, 1)))
+#define sha1_R(t) (temp = W[(t - 3) & 0x0F] ^ W[(t - 8) & 0x0F] ^ W[(t - 14) & 0x0F] ^ W[t & 0x0F], (W[t & 0x0F] = sha1_S(temp, 1)))
 
-#define sha1_P(a, b, c, d, e, x) \
-  { \
+#define sha1_P(a, b, c, d, e, x)                      \
+  {                                                   \
     e += sha1_S(a, 5) + sha1_F(b, c, d) + sha1_K + x; \
-    b = sha1_S(b, 30); \
+    b = sha1_S(b, 30);                                \
   }
 
   A = state[0];
@@ -96,7 +84,7 @@ void SHA1Builder::process(const uint8_t* data) {
   E = state[4];
 
 #define sha1_F(x, y, z) (z ^ (x & (y ^ z)))
-#define sha1_K 0x5A827999
+#define sha1_K          0x5A827999
 
   sha1_P(A, B, C, D, E, W[0]);
   sha1_P(E, A, B, C, D, W[1]);
@@ -123,7 +111,7 @@ void SHA1Builder::process(const uint8_t* data) {
 #undef sha1_F
 
 #define sha1_F(x, y, z) (x ^ y ^ z)
-#define sha1_K 0x6ED9EBA1
+#define sha1_K          0x6ED9EBA1
 
   sha1_P(A, B, C, D, E, sha1_R(20));
   sha1_P(E, A, B, C, D, sha1_R(21));
@@ -150,7 +138,7 @@ void SHA1Builder::process(const uint8_t* data) {
 #undef sha1_F
 
 #define sha1_F(x, y, z) ((x & y) | (z & (x | y)))
-#define sha1_K 0x8F1BBCDC
+#define sha1_K          0x8F1BBCDC
 
   sha1_P(A, B, C, D, E, sha1_R(40));
   sha1_P(E, A, B, C, D, sha1_R(41));
@@ -177,7 +165,7 @@ void SHA1Builder::process(const uint8_t* data) {
 #undef sha1_F
 
 #define sha1_F(x, y, z) (x ^ y ^ z)
-#define sha1_K 0xCA62C1D6
+#define sha1_K          0xCA62C1D6
 
   sha1_P(A, B, C, D, E, sha1_R(60));
   sha1_P(E, A, B, C, D, sha1_R(61));
@@ -226,7 +214,7 @@ void SHA1Builder::begin(void) {
   memset(hash, 0x00, sizeof(hash));
 }
 
-void SHA1Builder::add(const uint8_t* data, size_t len) {
+void SHA1Builder::add(const uint8_t *data, size_t len) {
   size_t fill;
   uint32_t left;
 
@@ -245,7 +233,7 @@ void SHA1Builder::add(const uint8_t* data, size_t len) {
   }
 
   if (left && len >= fill) {
-    memcpy((void*)(buffer + left), data, fill);
+    memcpy((void *)(buffer + left), data, fill);
     process(buffer);
     data += fill;
     len -= fill;
@@ -259,13 +247,13 @@ void SHA1Builder::add(const uint8_t* data, size_t len) {
   }
 
   if (len > 0) {
-    memcpy((void*)(buffer + left), data, len);
+    memcpy((void *)(buffer + left), data, len);
   }
 }
 
-void SHA1Builder::addHexString(const char* data) {
+void SHA1Builder::addHexString(const char *data) {
   uint16_t len = strlen(data);
-  uint8_t* tmp = (uint8_t*)malloc(len / 2);
+  uint8_t *tmp = (uint8_t *)malloc(len / 2);
   if (tmp == NULL) {
     return;
   }
@@ -274,10 +262,10 @@ void SHA1Builder::addHexString(const char* data) {
   free(tmp);
 }
 
-bool SHA1Builder::addStream(Stream& stream, const size_t maxLen) {
+bool SHA1Builder::addStream(Stream &stream, const size_t maxLen) {
   const int buf_size = 512;
   int maxLengthLeft = maxLen;
-  uint8_t* buf = (uint8_t*)malloc(buf_size);
+  uint8_t *buf = (uint8_t *)malloc(buf_size);
 
   if (!buf) {
     return false;
@@ -327,7 +315,7 @@ void SHA1Builder::calculate(void) {
   last = total[0] & 0x3F;
   padn = (last < 56) ? (56 - last) : (120 - last);
 
-  add((uint8_t*)sha1_padding, padn);
+  add((uint8_t *)sha1_padding, padn);
   add(msglen, 8);
 
   PUT_UINT32_BE(state[0], hash, 0);
@@ -337,11 +325,11 @@ void SHA1Builder::calculate(void) {
   PUT_UINT32_BE(state[4], hash, 16);
 }
 
-void SHA1Builder::getBytes(uint8_t* output) {
+void SHA1Builder::getBytes(uint8_t *output) {
   memcpy(output, hash, SHA1_HASH_SIZE);
 }
 
-void SHA1Builder::getChars(char* output) {
+void SHA1Builder::getChars(char *output) {
   bytes2hex(output, SHA1_HASH_SIZE * 2 + 1, hash, SHA1_HASH_SIZE);
 }
 

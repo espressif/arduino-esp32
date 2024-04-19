@@ -59,25 +59,35 @@ void USBSerialEvent(void) {}
 
 void serialEventRun(void) {
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
-  if (HWCDCSerial.available()) HWCDCSerialEvent();
+  if (HWCDCSerial.available()) {
+    HWCDCSerialEvent();
+  }
 #endif
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
-  if (USBSerial.available()) USBSerialEvent();
+  if (USBSerial.available()) {
+    USBSerialEvent();
+  }
 #endif
   // UART0 is default serialEvent()
-  if (Serial0.available()) serialEvent();
+  if (Serial0.available()) {
+    serialEvent();
+  }
 #if SOC_UART_NUM > 1
-  if (Serial1.available()) serialEvent1();
+  if (Serial1.available()) {
+    serialEvent1();
+  }
 #endif
 #if SOC_UART_NUM > 2
-  if (Serial2.available()) serialEvent2();
+  if (Serial2.available()) {
+    serialEvent2();
+  }
 #endif
 }
 #endif
 
 #if !CONFIG_DISABLE_HAL_LOCKS
 #define HSERIAL_MUTEX_LOCK() \
-  do { \
+  do {                       \
   } while (xSemaphoreTake(_lock, portMAX_DELAY) != pdPASS)
 #define HSERIAL_MUTEX_UNLOCK() xSemaphoreGive(_lock)
 #else
@@ -86,16 +96,8 @@ void serialEventRun(void) {
 #endif
 
 HardwareSerial::HardwareSerial(uint8_t uart_nr)
-  : _uart_nr(uart_nr),
-    _uart(NULL),
-    _rxBufferSize(256),
-    _txBufferSize(0),
-    _onReceiveCB(NULL),
-    _onReceiveErrorCB(NULL),
-    _onReceiveTimeout(false),
-    _rxTimeout(2),
-    _rxFIFOFull(0),
-    _eventTask(NULL)
+  : _uart_nr(uart_nr), _uart(NULL), _rxBufferSize(256), _txBufferSize(0), _onReceiveCB(NULL), _onReceiveErrorCB(NULL), _onReceiveTimeout(false), _rxTimeout(2),
+    _rxFIFOFull(0), _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,
     _lock(NULL)
@@ -123,10 +125,12 @@ HardwareSerial::~HardwareSerial() {
 #endif
 }
 
-
 void HardwareSerial::_createEventTask(void *args) {
   // Creating UART event Task
-  xTaskCreateUniversal(_uartEventTask, "uart_event_task", ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE, this, ARDUINO_SERIAL_EVENT_TASK_PRIORITY, &_eventTask, ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE);
+  xTaskCreateUniversal(
+    _uartEventTask, "uart_event_task", ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE, this, ARDUINO_SERIAL_EVENT_TASK_PRIORITY, &_eventTask,
+    ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+  );
   if (_eventTask == NULL) {
     log_e(" -- UART%d Event Task not Created!", _uart_nr);
   }
@@ -189,7 +193,9 @@ bool HardwareSerial::setRxFIFOFull(uint8_t fifoBytes) {
     log_w("OnReceive is set to Timeout only, thus FIFO Full is now 120 bytes.");
   }
   bool retCode = uartSetRxFIFOFull(_uart, fifoBytes);  // Set new timeout
-  if (fifoBytes > 0 && fifoBytes < SOC_UART_FIFO_LEN - 1) _rxFIFOFull = fifoBytes;
+  if (fifoBytes > 0 && fifoBytes < SOC_UART_FIFO_LEN - 1) {
+    _rxFIFOFull = fifoBytes;
+  }
   HSERIAL_MUTEX_UNLOCK();
   return retCode;
 }
@@ -202,7 +208,9 @@ bool HardwareSerial::setRxTimeout(uint8_t symbols_timeout) {
   // Zero disables timeout, thus, onReceive callback will only be called when RX FIFO reaches 120 bytes
   // Any non-zero value will activate onReceive callback based on UART baudrate with about 11 bits per symbol
   _rxTimeout = symbols_timeout;
-  if (!symbols_timeout) _onReceiveTimeout = false;  // only when RX timeout is disabled, we also must disable this flag
+  if (!symbols_timeout) {
+    _onReceiveTimeout = false;  // only when RX timeout is disabled, we also must disable this flag
+  }
 
   bool retCode = uartSetRxTimeout(_uart, _rxTimeout);  // Set new timeout
 
@@ -233,8 +241,9 @@ void HardwareSerial::_uartEventTask(void *args) {
         hardwareSerial_error_t currentErr = UART_NO_ERROR;
         switch (event.type) {
           case UART_DATA:
-            if (uart->_onReceiveCB && uart->available() > 0 && ((uart->_onReceiveTimeout && event.timeout_flag) || !uart->_onReceiveTimeout))
+            if (uart->_onReceiveCB && uart->available() > 0 && ((uart->_onReceiveTimeout && event.timeout_flag) || !uart->_onReceiveTimeout)) {
               uart->_onReceiveCB();
+            }
             break;
           case UART_FIFO_OVF:
             log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
@@ -256,12 +265,12 @@ void HardwareSerial::_uartEventTask(void *args) {
             log_w("UART%d frame error.", uart->_uart_nr);
             currentErr = UART_FRAME_ERROR;
             break;
-          default:
-            log_w("UART%d unknown event type %d.", uart->_uart_nr, event.type);
-            break;
+          default: log_w("UART%d unknown event type %d.", uart->_uart_nr, event.type); break;
         }
         if (currentErr != UART_NO_ERROR) {
-          if (uart->_onReceiveErrorCB) uart->_onReceiveErrorCB(currentErr);
+          if (uart->_onReceiveErrorCB) {
+            uart->_onReceiveErrorCB(currentErr);
+          }
         }
       }
     }

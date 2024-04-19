@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x1A86
-#define USB_PID 0x55D4
+#define USB_VID          0x1A86
+#define USB_PID          0x55D4
 #define USB_MANUFACTURER "Lilygo"
-#define USB_PRODUCT "T-Display"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "T-Display"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;

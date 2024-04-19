@@ -12,39 +12,39 @@
 #include <functional>
 #include "esp_partition.h"
 
-#define UPDATE_ERROR_OK (0)
-#define UPDATE_ERROR_WRITE (1)
-#define UPDATE_ERROR_ERASE (2)
-#define UPDATE_ERROR_READ (3)
-#define UPDATE_ERROR_SPACE (4)
-#define UPDATE_ERROR_SIZE (5)
-#define UPDATE_ERROR_STREAM (6)
-#define UPDATE_ERROR_MD5 (7)
-#define UPDATE_ERROR_MAGIC_BYTE (8)
-#define UPDATE_ERROR_ACTIVATE (9)
+#define UPDATE_ERROR_OK           (0)
+#define UPDATE_ERROR_WRITE        (1)
+#define UPDATE_ERROR_ERASE        (2)
+#define UPDATE_ERROR_READ         (3)
+#define UPDATE_ERROR_SPACE        (4)
+#define UPDATE_ERROR_SIZE         (5)
+#define UPDATE_ERROR_STREAM       (6)
+#define UPDATE_ERROR_MD5          (7)
+#define UPDATE_ERROR_MAGIC_BYTE   (8)
+#define UPDATE_ERROR_ACTIVATE     (9)
 #define UPDATE_ERROR_NO_PARTITION (10)
 #define UPDATE_ERROR_BAD_ARGUMENT (11)
-#define UPDATE_ERROR_ABORT (12)
-#define UPDATE_ERROR_DECRYPT (13)
+#define UPDATE_ERROR_ABORT        (12)
+#define UPDATE_ERROR_DECRYPT      (13)
 
 #define UPDATE_SIZE_UNKNOWN 0xFFFFFFFF
 
-#define U_FLASH 0
+#define U_FLASH  0
 #define U_SPIFFS 100
-#define U_AUTH 200
+#define U_AUTH   200
 
-#define ENCRYPTED_BLOCK_SIZE 16
+#define ENCRYPTED_BLOCK_SIZE       16
 #define ENCRYPTED_TWEAK_BLOCK_SIZE 32
-#define ENCRYPTED_KEY_SIZE 32
+#define ENCRYPTED_KEY_SIZE         32
 
-#define U_AES_DECRYPT_NONE 0
-#define U_AES_DECRYPT_AUTO 1
-#define U_AES_DECRYPT_ON 2
-#define U_AES_DECRYPT_MODE_MASK 3
+#define U_AES_DECRYPT_NONE         0
+#define U_AES_DECRYPT_AUTO         1
+#define U_AES_DECRYPT_ON           2
+#define U_AES_DECRYPT_MODE_MASK    3
 #define U_AES_IMAGE_DECRYPTING_BIT 4
 
 #define SPI_SECTORS_PER_BLOCK 16  // usually large erase block is 32k/64k
-#define SPI_FLASH_BLOCK_SIZE (SPI_SECTORS_PER_BLOCK * SPI_FLASH_SEC_SIZE)
+#define SPI_FLASH_BLOCK_SIZE  (SPI_SECTORS_PER_BLOCK * SPI_FLASH_SEC_SIZE)
 
 class UpdateClass {
 public:
@@ -186,11 +186,11 @@ public:
       faster than the writeStream method
       writes only what is available
     */
-  template<typename T>
-  size_t write(T &data) {
+  template<typename T> size_t write(T &data) {
     size_t written = 0;
-    if (hasError() || !isRunning())
+    if (hasError() || !isRunning()) {
       return 0;
+    }
 
     size_t available = data.available();
     while (available) {
@@ -201,8 +201,9 @@ public:
         size_t toBuff = 4096 - _bufferLen;
         data.read(_buffer + _bufferLen, toBuff);
         _bufferLen += toBuff;
-        if (!_writeBuffer())
+        if (!_writeBuffer()) {
           return written;
+        }
         written += toBuff;
       } else {
         data.read(_buffer + _bufferLen, available);
@@ -214,8 +215,9 @@ public:
           }
         }
       }
-      if (remaining() == 0)
+      if (remaining() == 0) {
         return written;
+      }
       available = data.available();
     }
     return written;
@@ -240,7 +242,6 @@ private:
   bool _verifyEnd();
   bool _enablePartition(const esp_partition_t *partition);
   bool _chkDataInBlock(const uint8_t *data, size_t len) const;  // check if block contains any data or is empty
-
 
   uint8_t _error;
   uint8_t *_cryptKey;

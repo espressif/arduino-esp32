@@ -310,7 +310,8 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_
         return 0;
       }
     } else if (msc_update_state == MSC_UPDATE_RUNNING) {
-      if (msc_update_entry && msc_update_entry->file_size && msc_update_bytes_written < msc_update_entry->file_size && (msc_update_bytes_written + bufsize) >= msc_update_entry->file_size) {
+      if (msc_update_entry && msc_update_entry->file_size && msc_update_bytes_written < msc_update_entry->file_size
+          && (msc_update_bytes_written + bufsize) >= msc_update_entry->file_size) {
         bufsize = msc_update_entry->file_size - msc_update_bytes_written;
       }
       if (msc_update_write(msc_ota_partition, ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, buffer, bufsize) == ESP_OK) {
@@ -369,8 +370,7 @@ static void msc_task(void *pvParameters) {
   vTaskDelete(NULL);
 }
 
-FirmwareMSC::FirmwareMSC()
-  : msc() {}
+FirmwareMSC::FirmwareMSC() : msc() {}
 
 FirmwareMSC::~FirmwareMSC() {
   end();

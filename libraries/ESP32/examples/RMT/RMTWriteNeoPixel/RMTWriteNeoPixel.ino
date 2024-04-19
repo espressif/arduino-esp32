@@ -26,7 +26,7 @@
 #define BUILTIN_RGBLED_PIN 21  // ESP32 has no builtin RGB LED (PIN_NEOPIXEL)
 #endif
 
-#define NR_OF_LEDS 8 * 4
+#define NR_OF_LEDS     8 * 4
 #define NR_OF_ALL_BITS 24 * NR_OF_LEDS
 
 //
@@ -64,7 +64,7 @@ void setup() {
   Serial.println("real tick set to: 100ns");
 }
 
-int color[] = { 0x55, 0x11, 0x77 };  // Green Red Blue values
+int color[] = {0x55, 0x11, 0x77};  // Green Red Blue values
 int led_index = 0;
 
 void loop() {

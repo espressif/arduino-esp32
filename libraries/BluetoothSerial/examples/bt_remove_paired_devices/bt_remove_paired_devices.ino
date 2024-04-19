@@ -19,15 +19,14 @@
 #endif
 
 #define REMOVE_BONDED_DEVICES true  // <- Set to `false` to view all bonded devices addresses, set to `true` to remove
-#define PAIR_MAX_DEVICES 20
+#define PAIR_MAX_DEVICES      20
 BluetoothSerial SerialBT;
 
 char *bda2str(const uint8_t *bda, char *str, size_t size) {
   if (bda == NULL || str == NULL || size < 18) {
     return NULL;
   }
-  sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
-          bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
+  sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x", bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
   return str;
 }
 
@@ -65,10 +64,10 @@ void setup() {
           } else {
             Serial.printf("Failed to remove bonded device # %d", i);
           }  // if(ESP_OK == tError)
-        }    // if(REMOVE_BONDED_DEVICES)
-      }      // for(int i = 0; i < count; i++)
-    }        // if(ESP_OK == tError)
-  }          // if(!count)
+        }  // if(REMOVE_BONDED_DEVICES)
+      }  // for(int i = 0; i < count; i++)
+    }  // if(ESP_OK == tError)
+  }  // if(!count)
 }
 
 void loop() {}

@@ -19,11 +19,11 @@
 #include "pins_arduino.h"
 #include "esp_cpu.h"
 
-#define WAIT_FOR_PIN_STATE(state) \
-  while (digitalRead(pin) != (state)) { \
+#define WAIT_FOR_PIN_STATE(state)                                         \
+  while (digitalRead(pin) != (state)) {                                   \
     if (esp_cpu_get_cycle_count() - start_cycle_count > timeout_cycles) { \
-      return 0; \
-    } \
+      return 0;                                                           \
+    }                                                                     \
   }
 
 // max timeout is 27 seconds at 160MHz clock and 54 seconds at 80MHz clock

@@ -13,7 +13,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/system_setup.h"
@@ -25,10 +24,10 @@ limitations under the License.
 
 // Globals, used for compatibility with Arduino-style sketches.
 namespace {
-const tflite::Model* model = nullptr;
-tflite::MicroInterpreter* interpreter = nullptr;
-TfLiteTensor* input = nullptr;
-TfLiteTensor* output = nullptr;
+const tflite::Model *model = nullptr;
+tflite::MicroInterpreter *interpreter = nullptr;
+TfLiteTensor *input = nullptr;
+TfLiteTensor *output = nullptr;
 int inference_count = 0;
 
 constexpr int kTensorArenaSize = 2000;
@@ -41,9 +40,11 @@ void setup() {
   // copying or parsing, it's a very lightweight operation.
   model = tflite::GetModel(g_model);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
-    MicroPrintf("Model provided is schema version %d not equal to supported "
-                "version %d.",
-                model->version(), TFLITE_SCHEMA_VERSION);
+    MicroPrintf(
+      "Model provided is schema version %d not equal to supported "
+      "version %d.",
+      model->version(), TFLITE_SCHEMA_VERSION
+    );
     return;
   }
 
@@ -54,8 +55,7 @@ void setup() {
   }
 
   // Build an interpreter to run the model with.
-  static tflite::MicroInterpreter static_interpreter(
-    model, resolver, tensor_arena, kTensorArenaSize);
+  static tflite::MicroInterpreter static_interpreter(model, resolver, tensor_arena, kTensorArenaSize);
   interpreter = &static_interpreter;
 
   // Allocate memory from the tensor_arena for the model's tensors.
@@ -90,8 +90,7 @@ void loop() {
   // Run inference, and report any error
   TfLiteStatus invoke_status = interpreter->Invoke();
   if (invoke_status != kTfLiteOk) {
-    MicroPrintf("Invoke failed on x: %f\n",
-                static_cast<double>(x));
+    MicroPrintf("Invoke failed on x: %f\n", static_cast<double>(x));
     return;
   }
 
@@ -107,5 +106,7 @@ void loop() {
   // Increment the inference_counter, and reset it if we have reached
   // the total number per cycle
   inference_count += 1;
-  if (inference_count >= kInferencesPerCycle) inference_count = 0;
+  if (inference_count >= kInferencesPerCycle) {
+    inference_count = 0;
+  }
 }

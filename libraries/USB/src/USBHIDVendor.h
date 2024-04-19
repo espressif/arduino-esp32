@@ -32,13 +32,14 @@ typedef enum {
 } arduino_usb_hid_vendor_event_t;
 
 typedef struct {
-  const uint8_t* buffer;
+  const uint8_t *buffer;
   uint16_t len;
 } arduino_usb_hid_vendor_event_data_t;
 
 class USBHIDVendor : public USBHIDDevice, public Stream {
 private:
   USBHID hid;
+
 public:
   // Max report size is 64, but we need one byte for report ID, so in reality max is 63.
   // Because input packets are always with length equal to the report size
@@ -50,22 +51,22 @@ public:
   void end(void);
   void prependInputPacketsWithSize(bool enable);
   size_t setRxBufferSize(size_t);
-  size_t write(const uint8_t* buffer, size_t len);
+  size_t write(const uint8_t *buffer, size_t len);
   size_t write(uint8_t);
   int available(void);
   int peek(void);
   int read(void);
-  size_t read(uint8_t* buffer, size_t size);
+  size_t read(uint8_t *buffer, size_t size);
   void flush(void);
 
   void onEvent(esp_event_handler_t callback);
   void onEvent(arduino_usb_hid_vendor_event_t event, esp_event_handler_t callback);
 
   // internal use
-  uint16_t _onGetDescriptor(uint8_t* buffer);
-  uint16_t _onGetFeature(uint8_t report_id, uint8_t* buffer, uint16_t len);
-  void _onSetFeature(uint8_t report_id, const uint8_t* buffer, uint16_t len);
-  void _onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len);
+  uint16_t _onGetDescriptor(uint8_t *buffer);
+  uint16_t _onGetFeature(uint8_t report_id, uint8_t *buffer, uint16_t len);
+  void _onSetFeature(uint8_t report_id, const uint8_t *buffer, uint16_t len);
+  void _onOutput(uint8_t report_id, const uint8_t *buffer, uint16_t len);
 };
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */

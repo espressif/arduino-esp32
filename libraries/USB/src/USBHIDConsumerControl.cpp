@@ -18,12 +18,9 @@
 
 #include "USBHIDConsumerControl.h"
 
-static const uint8_t report_descriptor[] = {
-  TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_REPORT_ID_CONSUMER_CONTROL))
-};
+static const uint8_t report_descriptor[] = {TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_REPORT_ID_CONSUMER_CONTROL))};
 
-USBHIDConsumerControl::USBHIDConsumerControl()
-  : hid() {
+USBHIDConsumerControl::USBHIDConsumerControl() : hid() {
   static bool initialized = false;
   if (!initialized) {
     initialized = true;
@@ -31,7 +28,7 @@ USBHIDConsumerControl::USBHIDConsumerControl()
   }
 }
 
-uint16_t USBHIDConsumerControl::_onGetDescriptor(uint8_t* dst) {
+uint16_t USBHIDConsumerControl::_onGetDescriptor(uint8_t *dst) {
   memcpy(dst, report_descriptor, sizeof(report_descriptor));
   return sizeof(report_descriptor);
 }
@@ -40,8 +37,7 @@ void USBHIDConsumerControl::begin() {
   hid.begin();
 }
 
-void USBHIDConsumerControl::end() {
-}
+void USBHIDConsumerControl::end() {}
 
 bool USBHIDConsumerControl::send(uint16_t value) {
   return hid.SendReport(HID_REPORT_ID_CONSUMER_CONTROL, &value, 2);
@@ -54,7 +50,6 @@ size_t USBHIDConsumerControl::press(uint16_t k) {
 size_t USBHIDConsumerControl::release() {
   return send(0);
 }
-
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */

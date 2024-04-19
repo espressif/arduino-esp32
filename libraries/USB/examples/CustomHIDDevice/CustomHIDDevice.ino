@@ -47,12 +47,12 @@ public:
     HID.begin();
   }
 
-  uint16_t _onGetDescriptor(uint8_t* buffer) {
+  uint16_t _onGetDescriptor(uint8_t *buffer) {
     memcpy(buffer, report_descriptor, sizeof(report_descriptor));
     return sizeof(report_descriptor);
   }
 
-  bool send(uint8_t* value) {
+  bool send(uint8_t *value) {
     return HID.SendReport(0, value, 8);
   }
 };

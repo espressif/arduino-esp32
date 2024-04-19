@@ -53,7 +53,7 @@ public:
 
 private:
   friend BLEScan;
-  std::map<String, BLEAdvertisedDevice*> m_vectorAdvertisedDevices;
+  std::map<String, BLEAdvertisedDevice *> m_vectorAdvertisedDevices;
 };
 
 /**
@@ -64,42 +64,37 @@ private:
 class BLEScan {
 public:
   void setActiveScan(bool active);
-  void setAdvertisedDeviceCallbacks(
-    BLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks,
-    bool wantDuplicates = false,
-    bool shouldParse = true);
+  void setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks *pAdvertisedDeviceCallbacks, bool wantDuplicates = false, bool shouldParse = true);
   void setInterval(uint16_t intervalMSecs);
   void setWindow(uint16_t windowMSecs);
   bool start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue = false);
-  BLEScanResults* start(uint32_t duration, bool is_continue = false);
+  BLEScanResults *start(uint32_t duration, bool is_continue = false);
   void stop();
   void erase(BLEAddress address);
-  BLEScanResults* getResults();
+  BLEScanResults *getResults();
   void clearResults();
 
 #ifdef SOC_BLE_50_SUPPORTED
-  void setExtendedScanCallback(BLEExtAdvertisingCallbacks* cb);
-  void setPeriodicScanCallback(BLEPeriodicScanCallbacks* cb);
+  void setExtendedScanCallback(BLEExtAdvertisingCallbacks *cb);
+  void setPeriodicScanCallback(BLEPeriodicScanCallbacks *cb);
 
   esp_err_t stopExtScan();
   esp_err_t setExtScanParams();
-  esp_err_t setExtScanParams(esp_ble_ext_scan_params_t* ext_scan_params);
+  esp_err_t setExtScanParams(esp_ble_ext_scan_params_t *ext_scan_params);
   esp_err_t startExtScan(uint32_t duration, uint16_t period);
+
 private:
-  BLEExtAdvertisingCallbacks* m_pExtendedScanCb = nullptr;
-  BLEPeriodicScanCallbacks* m_pPeriodicScanCb = nullptr;
+  BLEExtAdvertisingCallbacks *m_pExtendedScanCb = nullptr;
+  BLEPeriodicScanCallbacks *m_pPeriodicScanCb = nullptr;
 #endif  // SOC_BLE_50_SUPPORTED
 
 private:
   BLEScan();  // One doesn't create a new instance instead one asks the BLEDevice for the singleton.
   friend class BLEDevice;
-  void handleGAPEvent(
-    esp_gap_ble_cb_event_t event,
-    esp_ble_gap_cb_param_t* param);
-
+  void handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 
   esp_ble_scan_params_t m_scan_params;
-  BLEAdvertisedDeviceCallbacks* m_pAdvertisedDeviceCallbacks = nullptr;
+  BLEAdvertisedDeviceCallbacks *m_pAdvertisedDeviceCallbacks = nullptr;
   bool m_stopped = true;
   bool m_shouldParse = true;
   FreeRTOS::Semaphore m_semaphoreScanEnd = FreeRTOS::Semaphore("ScanEnd");

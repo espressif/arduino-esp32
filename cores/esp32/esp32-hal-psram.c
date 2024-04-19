@@ -39,7 +39,6 @@ __attribute__((weak)) bool testSPIRAM(void) {
   return esp_psram_extram_test();
 }
 
-
 bool psramInit() {
   if (spiramDetected) {
     return true;

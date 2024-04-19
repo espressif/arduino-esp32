@@ -27,8 +27,9 @@ int NetworkServer::setTimeout(uint32_t seconds) {
   struct timeval tv;
   tv.tv_sec = seconds;
   tv.tv_usec = 0;
-  if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0)
+  if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
     return -1;
+  }
   return setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(struct timeval));
 }
 
@@ -37,8 +38,9 @@ NetworkClient NetworkServer::available() {
 }
 
 NetworkClient NetworkServer::accept() {
-  if (!_listening)
+  if (!_listening) {
     return NetworkClient();
+  }
   int client_sock;
   if (_accepted_sockfd >= 0) {
     client_sock = _accepted_sockfd;
@@ -56,8 +58,9 @@ NetworkClient NetworkServer::accept() {
     int val = 1;
     if (setsockopt(client_sock, SOL_SOCKET, SO_KEEPALIVE, (char *)&val, sizeof(int)) == ESP_OK) {
       val = _noDelay;
-      if (setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(int)) == ESP_OK)
+      if (setsockopt(client_sock, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(int)) == ESP_OK) {
         return NetworkClient(client_sock);
+      }
     }
   }
   return NetworkClient();
@@ -68,15 +71,17 @@ void NetworkServer::begin(uint16_t port) {
 }
 
 void NetworkServer::begin(uint16_t port, int enable) {
-  if (_listening)
+  if (_listening) {
     return;
+  }
   if (port) {
     _port = port;
   }
   struct sockaddr_in6 server;
   sockfd = socket(AF_INET6, SOCK_STREAM, 0);
-  if (sockfd < 0)
+  if (sockfd < 0) {
     return;
+  }
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
   server.sin6_family = AF_INET6;
   if (_addr.type() == IPv4) {
@@ -88,10 +93,12 @@ void NetworkServer::begin(uint16_t port, int enable) {
   }
   memset(server.sin6_addr.s6_addr, 0x0, 16);
   server.sin6_port = htons(_port);
-  if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0)
+  if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
     return;
-  if (listen(sockfd, _max_clients) < 0)
+  }
+  if (listen(sockfd, _max_clients) < 0) {
     return;
+  }
   fcntl(sockfd, F_SETFL, O_NONBLOCK);
   _listening = true;
   _noDelay = false;

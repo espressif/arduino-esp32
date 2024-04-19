@@ -12,7 +12,6 @@
  *       This is completely normal and is not to be considered a fault.
  */
 
-
 #include <Arduino.h>
 #include <FunctionalInterrupt.h>
 
@@ -21,8 +20,7 @@
 
 class Button {
 public:
-  Button(uint8_t reqPin)
-    : PIN(reqPin) {
+  Button(uint8_t reqPin) : PIN(reqPin) {
     pinMode(PIN, INPUT_PULLUP);
   };
 
@@ -58,7 +56,9 @@ Button button2(BUTTON2);
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  while (!Serial) {
+    delay(10);
+  }
   Serial.println("Starting Functional Interrupt example.");
   button1.begin();
   button2.begin();

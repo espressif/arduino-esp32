@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x303A
-#define USB_PID 0x81BB
+#define USB_VID          0x303A
+#define USB_PID          0x81BB
 #define USB_MANUFACTURER "PowerFeather"
-#define USB_PRODUCT "ESP32-S3 PowerFeather"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "ESP32-S3 PowerFeather"
+#define USB_SERIAL       ""
 
 static const uint8_t ALARM = 21;
 static const uint8_t INT = 5;

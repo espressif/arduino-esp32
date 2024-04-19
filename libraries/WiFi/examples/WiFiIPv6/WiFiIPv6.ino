@@ -2,7 +2,7 @@
 
 #define STA_SSID "**********"
 #define STA_PASS "**********"
-#define AP_SSID "esp32-v6"
+#define AP_SSID  "esp32-v6"
 
 static volatile bool wifi_connected = false;
 
@@ -51,7 +51,8 @@ void wifiConnectedLoop() {
       ntpClient.read(ntpPacketBuffer, NTP_PACKET_SIZE);
     }
     ntpClient.clear();
-    uint32_t secsSince1900 = (uint32_t)ntpPacketBuffer[40] << 24 | (uint32_t)ntpPacketBuffer[41] << 16 | (uint32_t)ntpPacketBuffer[42] << 8 | ntpPacketBuffer[43];
+    uint32_t secsSince1900 =
+      (uint32_t)ntpPacketBuffer[40] << 24 | (uint32_t)ntpPacketBuffer[41] << 16 | (uint32_t)ntpPacketBuffer[42] << 8 | ntpPacketBuffer[43];
     //Serial.printf("Seconds since Jan 1 1900: %u\n", secsSince1900);
     uint32_t epoch = secsSince1900 - 2208988800UL;
     //Serial.printf("EPOCH: %u\n", epoch);
@@ -75,8 +76,7 @@ void WiFiEvent(WiFiEvent_t event) {
       //set sta hostname here
       WiFi.setHostname(AP_SSID);
       break;
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-      break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED: break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
       Serial.print("STA IPv6: ");
       Serial.println(WiFi.linkLocalIPv6());
@@ -93,8 +93,7 @@ void WiFiEvent(WiFiEvent_t event) {
       wifi_connected = false;
       wifiOnDisconnect();
       break;
-    default:
-      break;
+    default: break;
   }
 }
 
@@ -115,5 +114,7 @@ void loop() {
   if (wifi_connected) {
     wifiConnectedLoop();
   }
-  while (Serial.available()) Serial.write(Serial.read());
+  while (Serial.available()) {
+    Serial.write(Serial.read());
+  }
 }

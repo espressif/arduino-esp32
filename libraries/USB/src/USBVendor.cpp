@@ -30,9 +30,8 @@ uint16_t tusb_vendor_load_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB Vendor");
   uint8_t ep_num = tinyusb_get_free_duplex_endpoint();
   TU_VERIFY(ep_num != 0);
-  uint8_t descriptor[TUD_VENDOR_DESC_LEN] = {
-    // Interface number, string index, EP Out & IN address, EP size
-    TUD_VENDOR_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), USB_VENDOR_ENDPOINT_SIZE)
+  uint8_t descriptor[TUD_VENDOR_DESC_LEN] = {// Interface number, string index, EP Out & IN address, EP size
+                                             TUD_VENDOR_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), USB_VENDOR_ENDPOINT_SIZE)
   };
   *itf += 1;
   memcpy(dst, descriptor, TUD_VENDOR_DESC_LEN);
@@ -57,10 +56,11 @@ void tud_vendor_rx_cb(uint8_t itf) {
 }
 
 extern "C" bool tinyusb_vendor_control_request_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const *request) {
-  log_v("Port: %u, Stage: %u, Direction: %u, Type: %u, Recipient: %u, bRequest: 0x%x, wValue: %u, wIndex: %u, wLength: %u",
-        rhport, stage, request->bmRequestType_bit.direction,
-        request->bmRequestType_bit.type, request->bmRequestType_bit.recipient,
-        request->bRequest, request->wValue, request->wIndex, request->wLength);
+  log_v(
+    "Port: %u, Stage: %u, Direction: %u, Type: %u, Recipient: %u, bRequest: 0x%x, wValue: %u, wIndex: %u, wLength: %u", rhport, stage,
+    request->bmRequestType_bit.direction, request->bmRequestType_bit.type, request->bmRequestType_bit.recipient, request->bRequest, request->wValue,
+    request->wIndex, request->wLength
+  );
 
   if (_Vendor) {
     return _Vendor->_onRequest(rhport, stage, (arduino_usb_control_request_t const *)request);
@@ -68,8 +68,7 @@ extern "C" bool tinyusb_vendor_control_request_cb(uint8_t rhport, uint8_t stage,
   return false;
 }
 
-USBVendor::USBVendor(uint8_t endpoint_size)
-  : itf(0), cb(NULL) {
+USBVendor::USBVendor(uint8_t endpoint_size) : itf(0), cb(NULL) {
   if (!_Vendor) {
     _Vendor = this;
     if (endpoint_size <= 64) {

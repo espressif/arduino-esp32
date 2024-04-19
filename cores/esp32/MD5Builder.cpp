@@ -26,13 +26,13 @@ void MD5Builder::begin(void) {
   esp_rom_md5_init(&_ctx);
 }
 
-void MD5Builder::add(const uint8_t* data, size_t len) {
+void MD5Builder::add(const uint8_t *data, size_t len) {
   esp_rom_md5_update(&_ctx, data, len);
 }
 
-void MD5Builder::addHexString(const char* data) {
+void MD5Builder::addHexString(const char *data) {
   size_t len = strlen(data);
-  uint8_t* tmp = (uint8_t*)malloc(len / 2);
+  uint8_t *tmp = (uint8_t *)malloc(len / 2);
   if (tmp == NULL) {
     return;
   }
@@ -41,10 +41,10 @@ void MD5Builder::addHexString(const char* data) {
   free(tmp);
 }
 
-bool MD5Builder::addStream(Stream& stream, const size_t maxLen) {
+bool MD5Builder::addStream(Stream &stream, const size_t maxLen) {
   const int buf_size = 512;
   int maxLengthLeft = maxLen;
-  uint8_t* buf = (uint8_t*)malloc(buf_size);
+  uint8_t *buf = (uint8_t *)malloc(buf_size);
 
   if (!buf) {
     return false;
@@ -84,11 +84,11 @@ void MD5Builder::calculate(void) {
   esp_rom_md5_final(_buf, &_ctx);
 }
 
-void MD5Builder::getBytes(uint8_t* output) {
+void MD5Builder::getBytes(uint8_t *output) {
   memcpy(output, _buf, ESP_ROM_MD5_DIGEST_LEN);
 }
 
-void MD5Builder::getChars(char* output) {
+void MD5Builder::getChars(char *output) {
   bytes2hex(output, ESP_ROM_MD5_DIGEST_LEN * 2 + 1, _buf, ESP_ROM_MD5_DIGEST_LEN);
 }
 

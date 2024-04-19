@@ -25,40 +25,37 @@ HWCDC HWCDCSerial;
 #endif
 
 // USB Event Callback Function that will log CDC events into UART0
-static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == ARDUINO_HW_CDC_EVENTS) {
     switch (event_id) {
-      case ARDUINO_HW_CDC_CONNECTED_EVENT:
-        Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_CONNECTED_EVENT");
-        break;
-      case ARDUINO_HW_CDC_BUS_RESET_EVENT:
-        Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_BUS_RESET_EVENT");
-        break;
+      case ARDUINO_HW_CDC_CONNECTED_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_CONNECTED_EVENT"); break;
+      case ARDUINO_HW_CDC_BUS_RESET_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_BUS_RESET_EVENT"); break;
       case ARDUINO_HW_CDC_RX_EVENT:
         Serial0.println("\nCDC EVENT:: ARDUINO_HW_CDC_RX_EVENT");
         // sends all bytes read from USB Hardware Serial to UART0
-        while (HWCDCSerial.available()) Serial0.write(HWCDCSerial.read());
+        while (HWCDCSerial.available()) {
+          Serial0.write(HWCDCSerial.read());
+        }
         break;
-      case ARDUINO_HW_CDC_TX_EVENT:
-        Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_TX_EVENT");
-        break;
+      case ARDUINO_HW_CDC_TX_EVENT: Serial0.println("CDC EVENT:: ARDUINO_HW_CDC_TX_EVENT"); break;
 
-      default:
-        break;
+      default: break;
     }
   }
 }
 
-const char* _hwcdc_status[] = {
+const char *_hwcdc_status[] = {
   " USB Plugged but CDC is NOT connected\r\n",
   " USB Plugged and CDC is connected\r\n",
   " USB Unplugged and CDC NOT connected\r\n",
   " USB Unplugged BUT CDC is connected :: PROBLEM\r\n",
 };
 
-const char* HWCDC_Status() {
+const char *HWCDC_Status() {
   int i = HWCDCSerial.isPlugged() ? 0 : 2;
-  if (HWCDCSerial.isConnected()) i += 1;
+  if (HWCDCSerial.isConnected()) {
+    i += 1;
+  }
   return _hwcdc_status[i];
 }
 
@@ -81,7 +78,9 @@ void loop() {
     HWCDCSerial.printf("  [%ld] connected\n\r", counter);
   }
   // sends all bytes read from UART0 to USB Hardware Serial
-  while (Serial0.available()) HWCDCSerial.write(Serial0.read());
+  while (Serial0.available()) {
+    HWCDCSerial.write(Serial0.read());
+  }
   delay(1000);
   counter++;
 }

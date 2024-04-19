@@ -30,35 +30,16 @@ void printScannedNetworks(uint16_t networksFound) {
       Serial.printf("%2ld", WiFi.channel(i));
       Serial.print(" | ");
       switch (WiFi.encryptionType(i)) {
-        case WIFI_AUTH_OPEN:
-          Serial.print("open");
-          break;
-        case WIFI_AUTH_WEP:
-          Serial.print("WEP");
-          break;
-        case WIFI_AUTH_WPA_PSK:
-          Serial.print("WPA");
-          break;
-        case WIFI_AUTH_WPA2_PSK:
-          Serial.print("WPA2");
-          break;
-        case WIFI_AUTH_WPA_WPA2_PSK:
-          Serial.print("WPA+WPA2");
-          break;
-        case WIFI_AUTH_WPA2_ENTERPRISE:
-          Serial.print("WPA2-EAP");
-          break;
-        case WIFI_AUTH_WPA3_PSK:
-          Serial.print("WPA3");
-          break;
-        case WIFI_AUTH_WPA2_WPA3_PSK:
-          Serial.print("WPA2+WPA3");
-          break;
-        case WIFI_AUTH_WAPI_PSK:
-          Serial.print("WAPI");
-          break;
-        default:
-          Serial.print("unknown");
+        case WIFI_AUTH_OPEN:            Serial.print("open"); break;
+        case WIFI_AUTH_WEP:             Serial.print("WEP"); break;
+        case WIFI_AUTH_WPA_PSK:         Serial.print("WPA"); break;
+        case WIFI_AUTH_WPA2_PSK:        Serial.print("WPA2"); break;
+        case WIFI_AUTH_WPA_WPA2_PSK:    Serial.print("WPA+WPA2"); break;
+        case WIFI_AUTH_WPA2_ENTERPRISE: Serial.print("WPA2-EAP"); break;
+        case WIFI_AUTH_WPA3_PSK:        Serial.print("WPA3"); break;
+        case WIFI_AUTH_WPA2_WPA3_PSK:   Serial.print("WPA2+WPA3"); break;
+        case WIFI_AUTH_WAPI_PSK:        Serial.print("WAPI"); break;
+        default:                        Serial.print("unknown");
       }
       Serial.println();
       delay(10);

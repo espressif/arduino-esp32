@@ -20,7 +20,6 @@
   Modified 8 May 2015 by Hristo Gochkov (proper post and file upload handling)
 */
 
-
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include <libb64/cdecode.h>
@@ -43,22 +42,27 @@ static const char Content_Length[] = "Content-Length";
 static const char ETAG_HEADER[] = "If-None-Match";
 
 WebServer::WebServer(IPAddress addr, int port)
-  : _corsEnabled(false), _server(addr, port), _currentMethod(HTTP_ANY), _currentVersion(0), _currentStatus(HC_NONE), _statusChange(0), _nullDelay(true), _currentHandler(nullptr), _firstHandler(nullptr), _lastHandler(nullptr), _currentArgCount(0), _currentArgs(nullptr), _postArgsLen(0), _postArgs(nullptr), _headerKeysCount(0), _currentHeaders(nullptr), _contentLength(0), _clientContentLength(0), _chunked(false) {
+  : _corsEnabled(false), _server(addr, port), _currentMethod(HTTP_ANY), _currentVersion(0), _currentStatus(HC_NONE), _statusChange(0), _nullDelay(true),
+    _currentHandler(nullptr), _firstHandler(nullptr), _lastHandler(nullptr), _currentArgCount(0), _currentArgs(nullptr), _postArgsLen(0), _postArgs(nullptr),
+    _headerKeysCount(0), _currentHeaders(nullptr), _contentLength(0), _clientContentLength(0), _chunked(false) {
   log_v("WebServer::Webserver(addr=%s, port=%d)", addr.toString().c_str(), port);
 }
 
 WebServer::WebServer(int port)
-  : _corsEnabled(false), _server(port), _currentMethod(HTTP_ANY), _currentVersion(0), _currentStatus(HC_NONE), _statusChange(0), _nullDelay(true), _currentHandler(nullptr), _firstHandler(nullptr), _lastHandler(nullptr), _currentArgCount(0), _currentArgs(nullptr), _postArgsLen(0), _postArgs(nullptr), _headerKeysCount(0), _currentHeaders(nullptr), _contentLength(0), _clientContentLength(0), _chunked(false) {
+  : _corsEnabled(false), _server(port), _currentMethod(HTTP_ANY), _currentVersion(0), _currentStatus(HC_NONE), _statusChange(0), _nullDelay(true),
+    _currentHandler(nullptr), _firstHandler(nullptr), _lastHandler(nullptr), _currentArgCount(0), _currentArgs(nullptr), _postArgsLen(0), _postArgs(nullptr),
+    _headerKeysCount(0), _currentHeaders(nullptr), _contentLength(0), _clientContentLength(0), _chunked(false) {
   log_v("WebServer::Webserver(port=%d)", port);
 }
 
 WebServer::~WebServer() {
   _server.close();
-  if (_currentHeaders)
+  if (_currentHeaders) {
     delete[] _currentHeaders;
-  RequestHandler* handler = _firstHandler;
+  }
+  RequestHandler *handler = _firstHandler;
   while (handler) {
-    RequestHandler* next = handler->next();
+    RequestHandler *next = handler->next();
     delete handler;
     handler = next;
   }
@@ -76,14 +80,15 @@ void WebServer::begin(uint16_t port) {
   _server.setNoDelay(true);
 }
 
-String WebServer::_extractParam(String& authReq, const String& param, const char delimit) {
+String WebServer::_extractParam(String &authReq, const String &param, const char delimit) {
   int _begin = authReq.indexOf(param);
-  if (_begin == -1)
+  if (_begin == -1) {
     return "";
+  }
   return authReq.substring(_begin + param.length(), authReq.indexOf(delimit, _begin + param.length()));
 }
 
-static String md5str(String& in) {
+static String md5str(String &in) {
   MD5Builder md5 = MD5Builder();
   md5.begin();
   md5.add(in);
@@ -91,8 +96,8 @@ static String md5str(String& in) {
   return md5.toString();
 }
 
-bool WebServer::authenticateBasicSHA1(const char* _username, const char* _sha1Base64orHex) {
-  return WebServer::authenticate([_username, _sha1Base64orHex](HTTPAuthMethod mode, String username, String params[]) -> String* {
+bool WebServer::authenticateBasicSHA1(const char *_username, const char *_sha1Base64orHex) {
+  return WebServer::authenticate([_username, _sha1Base64orHex](HTTPAuthMethod mode, String username, String params[]) -> String * {
     // rather than work on a password to compare with; we take the sha1 of the
     // password received over the wire and compare that to the base64 encoded
     // sha1 passed as _sha1base64. That way there is no need to have a
@@ -115,7 +120,7 @@ bool WebServer::authenticateBasicSHA1(const char* _username, const char* _sha1Ba
 
     log_v("Trying to authenticate user %s using SHA1.", username.c_str());
     sha_builder.begin();
-    sha_builder.add((uint8_t*)params[0].c_str(), params[0].length());
+    sha_builder.add((uint8_t *)params[0].c_str(), params[0].length());
     sha_builder.calculate();
     sha_builder.getBytes(sha1);
 
@@ -131,15 +136,16 @@ bool WebServer::authenticateBasicSHA1(const char* _username, const char* _sha1Ba
       log_v("Calculated SHA1 in base64: %s", sha1calc);
     }
 
-    return ((username.equalsConstantTime(_username)) && (String((char*)sha1calc).equalsConstantTime(_sha1Base64orHex)) && (mode == BASIC_AUTH) /* to keep things somewhat time constant. */
-            )
+    return ((username.equalsConstantTime(_username)) && (String((char *)sha1calc).equalsConstantTime(_sha1Base64orHex))
+            && (mode == BASIC_AUTH) /* to keep things somewhat time constant. */
+           )
              ? new String(params[0])
              : NULL;
   });
 }
 
-bool WebServer::authenticate(const char* _username, const char* _password) {
-  return WebServer::authenticate([_username, _password](HTTPAuthMethod mode, String username, String params[]) -> String* {
+bool WebServer::authenticate(const char *_username, const char *_password) {
+  return WebServer::authenticate([_username, _password](HTTPAuthMethod mode, String username, String params[]) -> String * {
     return username.equalsConstantTime(_username) ? new String(_password) : NULL;
   });
 }
@@ -158,9 +164,9 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     authReq.trim();
 
     /* base64 encoded string is always shorter (or equal) in length */
-    char* decoded = (authReq.length() < HTTP_MAX_BASIC_AUTH_LEN) ? new char[authReq.length()] : NULL;
+    char *decoded = (authReq.length() < HTTP_MAX_BASIC_AUTH_LEN) ? new char[authReq.length()] : NULL;
     if (decoded) {
-      char* p;
+      char *p;
       if (base64_decode_chars(authReq.c_str(), authReq.length(), decoded) && (p = index(decoded, ':')) && p) {
         authReq = "";
         /* Note: rfc7617 guarantees that there will not be an escaped colon in the username itself.
@@ -168,18 +174,15 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
          */
         *p = '\0';
         char *_username = decoded, *_password = p + 1;
-        String params[] = {
-          _password,
-          _srealm
-        };
-        String* password = fn(BASIC_AUTH, _username, params);
+        String params[] = {_password, _srealm};
+        String *password = fn(BASIC_AUTH, _username, params);
 
         if (password) {
           ret = password->equalsConstantTime(_password);
           // we're more concerned about the password; as the attacker already
           // knows the _pasword. Arduino's string handling is simple; it reallocs
           // even when smaller; so a memset is enough (no capacity/size).
-          memset((void*)password->c_str(), 0, password->length());
+          memset((void *)password->c_str(), 0, password->length());
           delete password;
         }
       }
@@ -197,21 +200,20 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     String _username = _extractParam(authReq, F("username=\""), '\"');
     String _realm = _extractParam(authReq, F("realm=\""), '\"');
     String _uri = _extractParam(authReq, F("uri=\""), '\"');
-    if (!_username.length())
+    if (!_username.length()) {
       goto exf;
+    }
 
-    String params[] = {
-      _realm,
-      _uri
-    };
-    String* password = fn(DIGEST_AUTH, _username, params);
-    if (!password)
+    String params[] = {_realm, _uri};
+    String *password = fn(DIGEST_AUTH, _username, params);
+    if (!password) {
       goto exf;
+    }
 
     String _H1 = md5str(String(_username) + ':' + _realm + ':' + *password);
     // we're extra concerned; as digest request us to know the password
     // in the clear.
-    memset((void*)password->c_str(), 0, password->length());
+    memset((void *)password->c_str(), 0, password->length());
     delete password;
     _username = "";
 
@@ -219,11 +221,13 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     String _response = _extractParam(authReq, F("response=\""), '\"');
     String _opaque = _extractParam(authReq, F("opaque=\""), '\"');
 
-    if ((!_realm.length()) || (!_nonce.length()) || (!_uri.length()) || (!_response.length()) || (!_opaque.length()))
+    if ((!_realm.length()) || (!_nonce.length()) || (!_uri.length()) || (!_response.length()) || (!_opaque.length())) {
       goto exf;
+    }
 
-    if ((_opaque != _sopaque) || (_nonce != _snonce) || (_realm != _srealm))
+    if ((_opaque != _sopaque) || (_nonce != _snonce) || (_realm != _srealm)) {
       goto exf;
+    }
 
     // parameters for the RFC 2617 newer Digest
     String _nc, _cnonce;
@@ -261,7 +265,7 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
   } else if (authReq.length()) {
     // OTHER_AUTH
     log_v("Trying to authenticate using Other Auth, authReq=%s", authReq.c_str());
-    String* ret = fn(OTHER_AUTH, authReq, {});
+    String *ret = fn(OTHER_AUTH, authReq, {});
     if (ret) {
       log_v("Authentication Success");
       return true;
@@ -282,7 +286,7 @@ String WebServer::_getRandomHexString() {
   return String(buffer);
 }
 
-void WebServer::requestAuthentication(HTTPAuthMethod mode, const char* realm, const String& authFailMsg) {
+void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, const String &authFailMsg) {
   if (realm == NULL) {
     _srealm = String(F("Login Required"));
   } else {
@@ -293,29 +297,32 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char* realm, co
   } else {
     _snonce = _getRandomHexString();
     _sopaque = _getRandomHexString();
-    sendHeader(String(FPSTR(WWW_Authenticate)), AuthTypeDigest + String(F(" realm=\"")) + _srealm + String(F("\", qop=\"auth\", nonce=\"")) + _snonce + String(F("\", opaque=\"")) + _sopaque + String(F("\"")));
+    sendHeader(
+      String(FPSTR(WWW_Authenticate)), AuthTypeDigest + String(F(" realm=\"")) + _srealm + String(F("\", qop=\"auth\", nonce=\"")) + _snonce
+                                         + String(F("\", opaque=\"")) + _sopaque + String(F("\""))
+    );
   }
   using namespace mime;
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
 
-void WebServer::on(const Uri& uri, WebServer::THandlerFunction handler) {
+void WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
   on(uri, HTTP_ANY, handler);
 }
 
-void WebServer::on(const Uri& uri, HTTPMethod method, WebServer::THandlerFunction fn) {
+void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
   on(uri, method, fn, _fileUploadHandler);
 }
 
-void WebServer::on(const Uri& uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
+void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
   _addRequestHandler(new FunctionRequestHandler(fn, ufn, uri, method));
 }
 
-void WebServer::addHandler(RequestHandler* handler) {
+void WebServer::addHandler(RequestHandler *handler) {
   _addRequestHandler(handler);
 }
 
-void WebServer::_addRequestHandler(RequestHandler* handler) {
+void WebServer::_addRequestHandler(RequestHandler *handler) {
   if (!_lastHandler) {
     _firstHandler = handler;
     _lastHandler = handler;
@@ -325,7 +332,7 @@ void WebServer::_addRequestHandler(RequestHandler* handler) {
   }
 }
 
-void WebServer::serveStatic(const char* uri, FS& fs, const char* path, const char* cache_header) {
+void WebServer::serveStatic(const char *uri, FS &fs, const char *path, const char *cache_header) {
   _addRequestHandler(new StaticRequestHandler(fs, path, uri, cache_header));
 }
 
@@ -410,15 +417,16 @@ void WebServer::handleClient() {
 void WebServer::close() {
   _server.close();
   _currentStatus = HC_NONE;
-  if (!_headerKeysCount)
+  if (!_headerKeysCount) {
     collectHeaders(0, 0);
+  }
 }
 
 void WebServer::stop() {
   close();
 }
 
-void WebServer::sendHeader(const String& name, const String& value, bool first) {
+void WebServer::sendHeader(const String &name, const String &value, bool first) {
   String headerLine = name;
   headerLine += F(": ");
   headerLine += value;
@@ -452,7 +460,7 @@ void WebServer::enableETag(bool enable, ETagFunction fn) {
   _eTagFunction = fn;
 }
 
-void WebServer::_prepareHeader(String& response, int code, const char* content_type, size_t contentLength) {
+void WebServer::_prepareHeader(String &response, int code, const char *content_type, size_t contentLength) {
   response = String(F("HTTP/1.")) + String(_currentVersion) + ' ';
   response += String(code);
   response += ' ';
@@ -460,8 +468,9 @@ void WebServer::_prepareHeader(String& response, int code, const char* content_t
   response += "\r\n";
 
   using namespace mime;
-  if (!content_type)
+  if (!content_type) {
     content_type = mimeTable[html].mimeType;
+  }
 
   sendHeader(String(F("Content-Type")), String(FPSTR(content_type)), true);
   if (_contentLength == CONTENT_LENGTH_NOT_SET) {
@@ -486,7 +495,7 @@ void WebServer::_prepareHeader(String& response, int code, const char* content_t
   _responseHeaders = "";
 }
 
-void WebServer::send(int code, const char* content_type, const String& content) {
+void WebServer::send(int code, const char *content_type, const String &content) {
   String header;
   // Can we assume the following?
   //if(code == 200 && content.length() == 0 && _contentLength == CONTENT_LENGTH_NOT_SET)
@@ -496,19 +505,20 @@ void WebServer::send(int code, const char* content_type, const String& content) 
   }
   _prepareHeader(header, code, content_type, content.length());
   _currentClientWrite(header.c_str(), header.length());
-  if (content.length())
+  if (content.length()) {
     sendContent(content);
+  }
 }
 
-void WebServer::send(int code, char* content_type, const String& content) {
-  send(code, (const char*)content_type, content);
+void WebServer::send(int code, char *content_type, const String &content) {
+  send(code, (const char *)content_type, content);
 }
 
-void WebServer::send(int code, const String& content_type, const String& content) {
-  send(code, (const char*)content_type.c_str(), content);
+void WebServer::send(int code, const String &content_type, const String &content) {
+  send(code, (const char *)content_type.c_str(), content);
 }
 
-void WebServer::send(int code, const char* content_type, const char* content) {
+void WebServer::send(int code, const char *content_type, const char *content) {
   const String passStr = (String)content;
   if (strlen(content) != passStr.length()) {
     log_e("String cast failed.  Use send_P for long arrays");
@@ -525,8 +535,8 @@ void WebServer::send_P(int code, PGM_P content_type, PGM_P content) {
 
   String header;
   char type[64];
-  memccpy_P((void*)type, (PGM_VOID_P)content_type, 0, sizeof(type));
-  _prepareHeader(header, code, (const char*)type, contentLength);
+  memccpy_P((void *)type, (PGM_VOID_P)content_type, 0, sizeof(type));
+  _prepareHeader(header, code, (const char *)type, contentLength);
   _currentClientWrite(header.c_str(), header.length());
   sendContent_P(content);
 }
@@ -534,20 +544,20 @@ void WebServer::send_P(int code, PGM_P content_type, PGM_P content) {
 void WebServer::send_P(int code, PGM_P content_type, PGM_P content, size_t contentLength) {
   String header;
   char type[64];
-  memccpy_P((void*)type, (PGM_VOID_P)content_type, 0, sizeof(type));
-  _prepareHeader(header, code, (const char*)type, contentLength);
+  memccpy_P((void *)type, (PGM_VOID_P)content_type, 0, sizeof(type));
+  _prepareHeader(header, code, (const char *)type, contentLength);
   sendContent(header);
   sendContent_P(content, contentLength);
 }
 
-void WebServer::sendContent(const String& content) {
+void WebServer::sendContent(const String &content) {
   sendContent(content.c_str(), content.length());
 }
 
-void WebServer::sendContent(const char* content, size_t contentLength) {
-  const char* footer = "\r\n";
+void WebServer::sendContent(const char *content, size_t contentLength) {
+  const char *footer = "\r\n";
   if (_chunked) {
-    char* chunkSize = (char*)malloc(11);
+    char *chunkSize = (char *)malloc(11);
     if (chunkSize) {
       sprintf(chunkSize, "%x%s", contentLength, footer);
       _currentClientWrite(chunkSize, strlen(chunkSize));
@@ -568,9 +578,9 @@ void WebServer::sendContent_P(PGM_P content) {
 }
 
 void WebServer::sendContent_P(PGM_P content, size_t size) {
-  const char* footer = "\r\n";
+  const char *footer = "\r\n";
   if (_chunked) {
-    char* chunkSize = (char*)malloc(11);
+    char *chunkSize = (char *)malloc(11);
     if (chunkSize) {
       sprintf(chunkSize, "%x%s", size, footer);
       _currentClientWrite(chunkSize, strlen(chunkSize));
@@ -586,43 +596,48 @@ void WebServer::sendContent_P(PGM_P content, size_t size) {
   }
 }
 
-
-void WebServer::_streamFileCore(const size_t fileSize, const String& fileName, const String& contentType, const int code) {
+void WebServer::_streamFileCore(const size_t fileSize, const String &fileName, const String &contentType, const int code) {
   using namespace mime;
   setContentLength(fileSize);
-  if (fileName.endsWith(String(FPSTR(mimeTable[gz].endsWith))) && contentType != String(FPSTR(mimeTable[gz].mimeType)) && contentType != String(FPSTR(mimeTable[none].mimeType))) {
+  if (fileName.endsWith(String(FPSTR(mimeTable[gz].endsWith))) && contentType != String(FPSTR(mimeTable[gz].mimeType))
+      && contentType != String(FPSTR(mimeTable[none].mimeType))) {
     sendHeader(F("Content-Encoding"), F("gzip"));
   }
   send(code, contentType, "");
 }
 
 String WebServer::pathArg(unsigned int i) {
-  if (_currentHandler != nullptr)
+  if (_currentHandler != nullptr) {
     return _currentHandler->pathArg(i);
+  }
   return "";
 }
 
 String WebServer::arg(String name) {
   for (int j = 0; j < _postArgsLen; ++j) {
-    if (_postArgs[j].key == name)
+    if (_postArgs[j].key == name) {
       return _postArgs[j].value;
+    }
   }
   for (int i = 0; i < _currentArgCount; ++i) {
-    if (_currentArgs[i].key == name)
+    if (_currentArgs[i].key == name) {
       return _currentArgs[i].value;
+    }
   }
   return "";
 }
 
 String WebServer::arg(int i) {
-  if (i < _currentArgCount)
+  if (i < _currentArgCount) {
     return _currentArgs[i].value;
+  }
   return "";
 }
 
 String WebServer::argName(int i) {
-  if (i < _currentArgCount)
+  if (i < _currentArgCount) {
     return _currentArgs[i].key;
+  }
   return "";
 }
 
@@ -632,29 +647,32 @@ int WebServer::args() {
 
 bool WebServer::hasArg(String name) {
   for (int j = 0; j < _postArgsLen; ++j) {
-    if (_postArgs[j].key == name)
+    if (_postArgs[j].key == name) {
       return true;
+    }
   }
   for (int i = 0; i < _currentArgCount; ++i) {
-    if (_currentArgs[i].key == name)
+    if (_currentArgs[i].key == name) {
       return true;
+    }
   }
   return false;
 }
 
-
 String WebServer::header(String name) {
   for (int i = 0; i < _headerKeysCount; ++i) {
-    if (_currentHeaders[i].key.equalsIgnoreCase(name))
+    if (_currentHeaders[i].key.equalsIgnoreCase(name)) {
       return _currentHeaders[i].value;
+    }
   }
   return "";
 }
 
-void WebServer::collectHeaders(const char* headerKeys[], const size_t headerKeysCount) {
+void WebServer::collectHeaders(const char *headerKeys[], const size_t headerKeysCount) {
   _headerKeysCount = headerKeysCount + 2;
-  if (_currentHeaders)
+  if (_currentHeaders) {
     delete[] _currentHeaders;
+  }
   _currentHeaders = new RequestArgument[_headerKeysCount];
   _currentHeaders[0].key = FPSTR(AUTHORIZATION_HEADER);
   _currentHeaders[1].key = FPSTR(ETAG_HEADER);
@@ -664,14 +682,16 @@ void WebServer::collectHeaders(const char* headerKeys[], const size_t headerKeys
 }
 
 String WebServer::header(int i) {
-  if (i < _headerKeysCount)
+  if (i < _headerKeysCount) {
     return _currentHeaders[i].value;
+  }
   return "";
 }
 
 String WebServer::headerName(int i) {
-  if (i < _headerKeysCount)
+  if (i < _headerKeysCount) {
     return _currentHeaders[i].key;
+  }
   return "";
 }
 
@@ -681,8 +701,9 @@ int WebServer::headers() {
 
 bool WebServer::hasHeader(String name) {
   for (int i = 0; i < _headerKeysCount; ++i) {
-    if ((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0))
+    if ((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0)) {
       return true;
+    }
   }
   return false;
 }
@@ -723,7 +744,6 @@ void WebServer::_handleRequest() {
   }
   _currentUri = "";
 }
-
 
 void WebServer::_finalizeResponse() {
   if (_chunked) {
@@ -773,6 +793,6 @@ String WebServer::_responseCodeToString(int code) {
     case 503: return F("Service Unavailable");
     case 504: return F("Gateway Time-out");
     case 505: return F("HTTP Version not supported");
-    default: return F("");
+    default:  return F("");
   }
 }

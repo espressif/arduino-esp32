@@ -3,8 +3,7 @@
 #include <Print.h>
 
 //Default constructor, blank mac address.
-MacAddress::MacAddress()
-  : MacAddress(MAC6) {}
+MacAddress::MacAddress() : MacAddress(MAC6) {}
 
 MacAddress::MacAddress(MACType mac_type) {
   _type = mac_type;
@@ -118,14 +117,12 @@ void MacAddress::toBytes(uint8_t *buf) {
 //MAC: Buffer must be at least 18 chars
 int MacAddress::toString(char *buf) {
   if (_type == MAC6) {
-    return sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X",
-                   _mac.bytes[0], _mac.bytes[1], _mac.bytes[2],
-                   _mac.bytes[3], _mac.bytes[4], _mac.bytes[5]);
+    return sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5]);
   } else {
-    return sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-                   _mac.bytes[0], _mac.bytes[1], _mac.bytes[2],
-                   _mac.bytes[3], _mac.bytes[4], _mac.bytes[5],
-                   _mac.bytes[6], _mac.bytes[7]);
+    return sprintf(
+      buf, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5], _mac.bytes[6],
+      _mac.bytes[7]
+    );
   }
 }
 
@@ -133,14 +130,12 @@ String MacAddress::toString() const {
   uint8_t bytes = (_type == MAC6) ? 18 : 24;
   char buf[bytes];
   if (_type == MAC6) {
-    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
-             _mac.bytes[0], _mac.bytes[1], _mac.bytes[2],
-             _mac.bytes[3], _mac.bytes[4], _mac.bytes[5]);
+    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5]);
   } else {
-    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-             _mac.bytes[0], _mac.bytes[1], _mac.bytes[2],
-             _mac.bytes[3], _mac.bytes[4], _mac.bytes[5],
-             _mac.bytes[6], _mac.bytes[7]);
+    snprintf(
+      buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5],
+      _mac.bytes[6], _mac.bytes[7]
+    );
   }
   return String(buf);
 }

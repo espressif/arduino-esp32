@@ -2,7 +2,6 @@
 
 #include "esp32-hal-rgb-led.h"
 
-
 void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
 #if SOC_RMT_SUPPORTED
   rmt_data_t led_data[24];
@@ -16,7 +15,7 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
     return;
   }
 
-  int color[] = { green_val, red_val, blue_val };  // Color coding is in order GREEN, RED, BLUE
+  int color[] = {green_val, red_val, blue_val};  // Color coding is in order GREEN, RED, BLUE
   int i = 0;
   for (int col = 0; col < 3; col++) {
     for (int bit = 0; bit < 8; bit++) {

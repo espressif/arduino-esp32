@@ -2,8 +2,8 @@
 #define EAP_IDENTITY "login"           //if connecting from another corporation, use identity@organization.domain in Eduroam
 #define EAP_USERNAME "login"           //oftentimes just a repeat of the identity
 #define EAP_PASSWORD "password"        //your Eduroam password
-const char* ssid = "eduroam";          // Eduroam SSID
-const char* host = "arduino.php5.sk";  //external server domain for HTTP connection after authentication
+const char *ssid = "eduroam";          // Eduroam SSID
+const char *host = "arduino.php5.sk";  //external server domain for HTTP connection after authentication
 int counter = 0;
 
 // NOTE: For some systems, various certification keys are required to connect to the wifi system.
@@ -33,7 +33,6 @@ void setup() {
 
   // Example 3: TLS with cert-files and no password
   //WiFi.begin(ssid, WPA2_AUTH_TLS, EAP_IDENTITY, NULL, NULL, ca_pem, client_cert, client_key);
-
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);

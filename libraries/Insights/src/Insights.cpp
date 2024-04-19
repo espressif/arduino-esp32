@@ -14,37 +14,36 @@
 
 const char *ERROR_INSIGHTS_NOT_INIT = "ESP Insights not initialized";
 
-#define BOOL_FN_OR_ERROR(f, e) \
-  if (!initialized) { \
-    log_e("%s", ERROR_INSIGHTS_NOT_INIT); \
-    return false; \
-  } \
-  esp_err_t err = f; \
-  if (err != ESP_OK) { \
+#define BOOL_FN_OR_ERROR(f, e)                  \
+  if (!initialized) {                           \
+    log_e("%s", ERROR_INSIGHTS_NOT_INIT);       \
+    return false;                               \
+  }                                             \
+  esp_err_t err = f;                            \
+  if (err != ESP_OK) {                          \
     log_e("ESP Insights " e ", err:0x%x", err); \
-  } \
+  }                                             \
   return err == ESP_OK;
 
-#define BOOL_FN_OR_ERROR_ARG(f, e, a) \
-  if (!initialized) { \
-    log_e("%s", ERROR_INSIGHTS_NOT_INIT); \
-    return false; \
-  } \
-  esp_err_t err = f; \
-  if (err != ESP_OK) { \
+#define BOOL_FN_OR_ERROR_ARG(f, e, a)              \
+  if (!initialized) {                              \
+    log_e("%s", ERROR_INSIGHTS_NOT_INIT);          \
+    return false;                                  \
+  }                                                \
+  esp_err_t err = f;                               \
+  if (err != ESP_OK) {                             \
     log_e("ESP Insights " e ", err:0x%x", a, err); \
-  } \
+  }                                                \
   return err == ESP_OK;
 
-#define VOID_FN_OR_ERROR(f) \
-  if (!initialized) { \
+#define VOID_FN_OR_ERROR(f)               \
+  if (!initialized) {                     \
     log_e("%s", ERROR_INSIGHTS_NOT_INIT); \
-    return; \
-  } \
+    return;                               \
+  }                                       \
   f;
 
-ESPInsightsClass::ESPInsightsClass()
-  : initialized(false) {}
+ESPInsightsClass::ESPInsightsClass() : initialized(false) {}
 
 ESPInsightsClass::~ESPInsightsClass() {
   end();
@@ -55,7 +54,7 @@ bool ESPInsightsClass::begin(const char *auth_key, const char *node_id, uint32_t
     if (log_type == 0xFFFFFFFF) {
       log_type = (ESP_DIAG_LOG_TYPE_ERROR | ESP_DIAG_LOG_TYPE_WARNING | ESP_DIAG_LOG_TYPE_EVENT);
     }
-    esp_insights_config_t config = { .log_type = log_type, .node_id = node_id, .auth_key = auth_key, .alloc_ext_ram = alloc_ext_ram };
+    esp_insights_config_t config = {.log_type = log_type, .node_id = node_id, .auth_key = auth_key, .alloc_ext_ram = alloc_ext_ram};
     esp_err_t err = ESP_OK;
     if (use_default_transport) {
       err = esp_insights_init(&config);

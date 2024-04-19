@@ -17,21 +17,20 @@
 class BTAdvertisedDevice;
 class BTAdvertisedDeviceSet;
 
-
 class BTScanResults {
 public:
   virtual ~BTScanResults() = default;
 
-  virtual void dump(Print* print = nullptr) = 0;
+  virtual void dump(Print *print = nullptr) = 0;
   virtual int getCount() = 0;
-  virtual BTAdvertisedDevice* getDevice(int i) = 0;
+  virtual BTAdvertisedDevice *getDevice(int i) = 0;
 };
 
 class BTScanResultsSet : public BTScanResults {
 public:
-  void dump(Print* print = nullptr);
+  void dump(Print *print = nullptr);
   int getCount();
-  BTAdvertisedDevice* getDevice(int i);
+  BTAdvertisedDevice *getDevice(int i);
 
   bool add(BTAdvertisedDeviceSet advertisedDevice, bool unique = true);
   void clear();

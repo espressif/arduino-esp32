@@ -33,7 +33,6 @@ struct ble_gap_adv_params_s;
 
 class SimpleBLE {
 public:
-
   SimpleBLE(void);
   ~SimpleBLE(void);
 
@@ -56,6 +55,7 @@ public:
 
 private:
   String local_name;
+
 private:
 };
 

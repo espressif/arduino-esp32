@@ -9,8 +9,8 @@
 */
 #include <WiFi.h>
 
-const char* ssid = "your-ssid";
-const char* password = "your-password";
+const char *ssid = "your-ssid";
+const char *password = "your-password";
 
 int btnGPIO = 0;
 int btnState = false;
@@ -42,22 +42,14 @@ void setup() {
   while (true) {
 
     switch (WiFi.status()) {
-      case WL_NO_SSID_AVAIL:
-        Serial.println("[WiFi] SSID not found");
-        break;
+      case WL_NO_SSID_AVAIL: Serial.println("[WiFi] SSID not found"); break;
       case WL_CONNECT_FAILED:
         Serial.print("[WiFi] Failed - WiFi not connected! Reason: ");
         return;
         break;
-      case WL_CONNECTION_LOST:
-        Serial.println("[WiFi] Connection was lost");
-        break;
-      case WL_SCAN_COMPLETED:
-        Serial.println("[WiFi] Scan is completed");
-        break;
-      case WL_DISCONNECTED:
-        Serial.println("[WiFi] WiFi is disconnected");
-        break;
+      case WL_CONNECTION_LOST: Serial.println("[WiFi] Connection was lost"); break;
+      case WL_SCAN_COMPLETED:  Serial.println("[WiFi] Scan is completed"); break;
+      case WL_DISCONNECTED:    Serial.println("[WiFi] WiFi is disconnected"); break;
       case WL_CONNECTED:
         Serial.println("[WiFi] WiFi is connected!");
         Serial.print("[WiFi] IP address: ");

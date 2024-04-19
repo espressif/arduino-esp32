@@ -28,7 +28,6 @@
 #undef write
 #undef read
 
-
 NetworkClientSecure::NetworkClientSecure() {
   _connected = false;
   _timeout = 30000;  // Same default as ssl_client
@@ -47,7 +46,6 @@ NetworkClientSecure::NetworkClientSecure() {
   _alpn_protos = NULL;
   _use_ca_bundle = false;
 }
-
 
 NetworkClientSecure::NetworkClientSecure(int sock) {
   _connected = false;
@@ -95,8 +93,9 @@ void NetworkClientSecure::stop() {
 }
 
 int NetworkClientSecure::connect(IPAddress ip, uint16_t port) {
-  if (_pskIdent && _psKey)
+  if (_pskIdent && _psKey) {
     return connect(ip, port, _pskIdent, _psKey);
+  }
   return connect(ip, port, _CA_cert, _cert, _private_key);
 }
 
@@ -106,8 +105,9 @@ int NetworkClientSecure::connect(IPAddress ip, uint16_t port, int32_t timeout) {
 }
 
 int NetworkClientSecure::connect(const char *host, uint16_t port) {
-  if (_pskIdent && _psKey)
+  if (_pskIdent && _psKey) {
     return connect(host, port, _pskIdent, _psKey);
+  }
   return connect(host, port, _CA_cert, _cert, _private_key);
 }
 
@@ -122,8 +122,9 @@ int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *CA_cer
 
 int NetworkClientSecure::connect(const char *host, uint16_t port, const char *CA_cert, const char *cert, const char *private_key) {
   IPAddress address;
-  if (!Network.hostByName(host, address))
+  if (!Network.hostByName(host, address)) {
     return 0;
+  }
 
   return connect(address, port, host, CA_cert, cert, private_key);
 }
@@ -131,10 +132,11 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *CA
 int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *host, const char *CA_cert, const char *cert, const char *private_key) {
   int ret = start_ssl_client(sslclient, ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
 
-  if (ret >= 0 && !_stillinPlainStart)
+  if (ret >= 0 && !_stillinPlainStart) {
     ret = ssl_starttls_handshake(sslclient);
-  else
+  } else {
     log_i("Actual TLS start postponed.");
+  }
 
   _lastError = ret;
 
@@ -158,8 +160,9 @@ int NetworkClientSecure::startTLS() {
       return 0;
     };
     _stillinPlainStart = false;
-  } else
+  } else {
     log_i("startTLS: ignoring StartTLS - as we should be secure already");
+  }
   return 1;
 }
 
@@ -171,8 +174,9 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
   log_v("start_ssl_client with PSK");
 
   IPAddress address;
-  if (!Network.hostByName(host, address))
+  if (!Network.hostByName(host, address)) {
     return 0;
+  }
 
   int ret = start_ssl_client(sslclient, address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
   _lastError = ret;
@@ -208,8 +212,9 @@ size_t NetworkClientSecure::write(const uint8_t *buf, size_t size) {
     return 0;
   }
 
-  if (_stillinPlainStart)
+  if (_stillinPlainStart) {
     return send_net_data(sslclient, buf, size);
+  }
 
   if (_lastWriteTimeout != _timeout) {
     struct timeval timeout_tv;
@@ -229,8 +234,9 @@ size_t NetworkClientSecure::write(const uint8_t *buf, size_t size) {
 }
 
 int NetworkClientSecure::read(uint8_t *buf, size_t size) {
-  if (_stillinPlainStart)
+  if (_stillinPlainStart) {
     return get_net_receive(sslclient, buf, size);
+  }
 
   if (_lastReadTimeout != _timeout) {
     if (fd() >= 0) {
@@ -273,8 +279,9 @@ int NetworkClientSecure::read(uint8_t *buf, size_t size) {
 }
 
 int NetworkClientSecure::available() {
-  if (_stillinPlainStart)
+  if (_stillinPlainStart) {
     return peek_net_receive(sslclient, 0);
+  }
 
   int peeked = (_peek >= 0), res = -1;
   if (!_connected) {
@@ -335,8 +342,9 @@ void NetworkClientSecure::setPreSharedKey(const char *pskIdent, const char *psKe
 }
 
 bool NetworkClientSecure::verify(const char *fp, const char *domain_name) {
-  if (!sslclient)
+  if (!sslclient) {
     return false;
+  }
 
   return verify_ssl_fingerprint(sslclient, fp, domain_name);
 }
@@ -356,7 +364,9 @@ char *NetworkClientSecure::_streamLoad(Stream &stream, size_t size) {
 }
 
 bool NetworkClientSecure::loadCACert(Stream &stream, size_t size) {
-  if (_CA_cert != NULL) free(const_cast<char *>(_CA_cert));
+  if (_CA_cert != NULL) {
+    free(const_cast<char *>(_CA_cert));
+  }
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {
@@ -367,7 +377,9 @@ bool NetworkClientSecure::loadCACert(Stream &stream, size_t size) {
 }
 
 bool NetworkClientSecure::loadCertificate(Stream &stream, size_t size) {
-  if (_cert != NULL) free(const_cast<char *>(_cert));
+  if (_cert != NULL) {
+    free(const_cast<char *>(_cert));
+  }
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {
@@ -378,7 +390,9 @@ bool NetworkClientSecure::loadCertificate(Stream &stream, size_t size) {
 }
 
 bool NetworkClientSecure::loadPrivateKey(Stream &stream, size_t size) {
-  if (_private_key != NULL) free(const_cast<char *>(_private_key));
+  if (_private_key != NULL) {
+    free(const_cast<char *>(_private_key));
+  }
   char *dest = _streamLoad(stream, size);
   bool ret = false;
   if (dest) {

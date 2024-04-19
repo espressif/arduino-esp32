@@ -27,7 +27,6 @@ static const uint8_t A5 = 35;  // Analog Input
 static const uint8_t A6 = 25;  // Analog Input
 static const uint8_t A7 = 26;  // Analog Input
 
-
 static const uint8_t D2 = 27;  // BUILTIN_LED_Red
 static const uint8_t D3 = 14;  // BUILTIN_LED_Blue
 static const uint8_t D4 = 12;  // BUILTIN_LED_Green

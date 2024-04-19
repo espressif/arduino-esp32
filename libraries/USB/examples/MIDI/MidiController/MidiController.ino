@@ -28,15 +28,14 @@ USBMIDI MIDI;
 
 ///// ADC & Controller Input Handling /////
 
-#define CONTROLLER_PIN 5
+#define CONTROLLER_PIN  5
 
 // ESP32 ADC needs a ton of smoothing
 #define SMOOTHING_VALUE 1000
 static double controllerInputValue = 0;
 
 void updateControllerInputValue() {
-  controllerInputValue =
-    (controllerInputValue * (SMOOTHING_VALUE - 1) + analogRead(CONTROLLER_PIN)) / SMOOTHING_VALUE;
+  controllerInputValue = (controllerInputValue * (SMOOTHING_VALUE - 1) + analogRead(CONTROLLER_PIN)) / SMOOTHING_VALUE;
 }
 
 void primeControllerInputValue() {
@@ -56,8 +55,8 @@ uint16_t readControllerValue() {
 
 // Simple button state transition function with debounce
 // (See also: https://tinyurl.com/simple-debounce)
-#define PRESSED 0xff00
-#define RELEASED 0xfe1f
+#define PRESSED    0xff00
+#define RELEASED   0xfe1f
 uint16_t getButtonEvent() {
   static uint16_t state = 0;
   state = (state << 1) | digitalRead(BUTTON_PIN) | 0xfe00;
@@ -95,8 +94,7 @@ void loop() {
 
     // Can't map if the range is zero
     if (minControllerValue != maxControllerValue) {
-      MIDI.controlChange(MIDI_CC_CUTOFF,
-                         map(newControllerValue, minControllerValue, maxControllerValue, 0, 127));
+      MIDI.controlChange(MIDI_CC_CUTOFF, map(newControllerValue, minControllerValue, maxControllerValue, 0, 127));
     }
   }
 
@@ -105,14 +103,9 @@ void loop() {
   // Hook Button0 to a MIDI note so that we can observe
   // the CC effect without the need for a MIDI keyboard.
   switch (getButtonEvent()) {
-    case PRESSED:
-      MIDI.noteOn(MIDI_NOTE_C4, 64);
-      break;
-    case RELEASED:
-      MIDI.noteOff(MIDI_NOTE_C4, 0);
-      break;
-    default:
-      break;
+    case PRESSED:  MIDI.noteOn(MIDI_NOTE_C4, 64); break;
+    case RELEASED: MIDI.noteOff(MIDI_NOTE_C4, 0); break;
+    default:       break;
   }
 }
 #endif /* ARDUINO_USB_MODE */

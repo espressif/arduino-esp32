@@ -27,8 +27,7 @@
 class ESP_NOW_Broadcast_Peer : public ESP_NOW_Peer {
 public:
   // Constructor of the class using the broadcast address
-  ESP_NOW_Broadcast_Peer(uint8_t channel, wifi_interface_t iface, const uint8_t *lmk)
-    : ESP_NOW_Peer(ESP_NOW.BROADCAST_ADDR, channel, iface, lmk) {}
+  ESP_NOW_Broadcast_Peer(uint8_t channel, wifi_interface_t iface, const uint8_t *lmk) : ESP_NOW_Peer(ESP_NOW.BROADCAST_ADDR, channel, iface, lmk) {}
 
   // Destructor of the class
   ~ESP_NOW_Broadcast_Peer() {
@@ -65,12 +64,16 @@ ESP_NOW_Broadcast_Peer broadcast_peer(ESPNOW_WIFI_CHANNEL, WIFI_IF_STA, NULL);
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  while (!Serial) {
+    delay(10);
+  }
 
   // Initialize the Wi-Fi module
   WiFi.mode(WIFI_STA);
   WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
-  while (!WiFi.STA.started()) delay(100);
+  while (!WiFi.STA.started()) {
+    delay(100);
+  }
 
   Serial.println("ESP-NOW Example - Broadcast Master");
   Serial.println("Wi-Fi parameters:");

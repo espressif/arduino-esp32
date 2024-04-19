@@ -21,7 +21,7 @@ static esp_ble_gap_periodic_adv_sync_params_t periodic_adv_sync_params = {
   .filter_policy = 0,
   .sid = 0,
   .addr_type = BLE_ADDR_TYPE_RANDOM,
-  .addr = { 0, 0, 0, 0, 0, 0 },
+  .addr = {0, 0, 0, 0, 0, 0},
   .skip = 10,
   .sync_timeout = 1000,  // timeout: 1000 * 10ms
 };
@@ -33,7 +33,7 @@ class MyBLEExtAdvertisingCallbacks : public BLEExtAdvertisingCallbacks {
     adv_name = esp_ble_resolve_adv_data(params.adv_data, ESP_BLE_AD_TYPE_NAME_CMPL, &adv_name_len);
     if ((adv_name != NULL) && (memcmp(adv_name, "ESP_MULTI_ADV_2M", adv_name_len) == 0) && !periodic_sync) {
       periodic_sync = true;
-      char adv_temp_name[60] = { '0' };
+      char adv_temp_name[60] = {'0'};
       memcpy(adv_temp_name, adv_name, adv_name_len);
       log_i("Start create sync with the peer device %s", adv_temp_name);
       periodic_adv_sync_params.sid = params.sid;
@@ -63,17 +63,11 @@ class MyPeriodicScan : public BLEPeriodicScanCallbacks {
   void onSync(esp_ble_periodic_adv_sync_estab_param_t params) {
     log_i("ESP_GAP_BLE_PERIODIC_ADV_SYNC_ESTAB_EVT, status %d", params.status);
     // esp_log_buffer_hex("sync addr", param->periodic_adv_sync_estab.adv_addr, 6);
-    log_i("sync handle %d sid %d perioic adv interval %d adv phy %d", params.sync_handle,
-          params.sid,
-          params.period_adv_interval,
-          params.adv_phy);
+    log_i("sync handle %d sid %d perioic adv interval %d adv phy %d", params.sync_handle, params.sid, params.period_adv_interval, params.adv_phy);
   }
 
   void onReport(esp_ble_gap_periodic_adv_report_t params) {
-    log_i("periodic adv report, sync handle %d data status %d data len %d rssi %d", params.sync_handle,
-          params.data_status,
-          params.data_length,
-          params.rssi);
+    log_i("periodic adv report, sync handle %d data status %d data len %d rssi %d", params.sync_handle, params.data_status, params.data_length, params.rssi);
   }
 };
 

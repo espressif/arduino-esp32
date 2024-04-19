@@ -11,7 +11,7 @@
 // Stop button is attached to PIN 0 (IO0)
 #define BTN_STOP_ALARM 0
 
-hw_timer_t* timer = NULL;
+hw_timer_t *timer = NULL;
 volatile SemaphoreHandle_t timerSemaphore;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 

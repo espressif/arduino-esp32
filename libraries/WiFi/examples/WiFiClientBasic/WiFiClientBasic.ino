@@ -32,12 +32,11 @@ void setup() {
   delay(500);
 }
 
-
 void loop() {
   //    const uint16_t port = 80;
   //    const char * host = "192.168.1.1"; // ip or dns
   const uint16_t port = 1337;
-  const char* host = "192.168.1.10";  // ip or dns
+  const char *host = "192.168.1.10";  // ip or dns
 
   Serial.print("Connecting to ");
   Serial.println(host);

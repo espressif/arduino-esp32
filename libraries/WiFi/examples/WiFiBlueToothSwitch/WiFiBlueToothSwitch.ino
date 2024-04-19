@@ -18,16 +18,18 @@
 #include "WiFi.h"
 #define STA_SSID "your-ssid"
 #define STA_PASS "your-pass"
-#define AP_SSID "esp32"
+#define AP_SSID  "esp32"
 
-enum { STEP_BTON,
-       STEP_BTOFF,
-       STEP_STA,
-       STEP_AP,
-       STEP_AP_STA,
-       STEP_OFF,
-       STEP_BT_STA,
-       STEP_END };
+enum {
+  STEP_BTON,
+  STEP_BTOFF,
+  STEP_STA,
+  STEP_AP,
+  STEP_AP_STA,
+  STEP_OFF,
+  STEP_BT_STA,
+  STEP_END
+};
 
 void onButton() {
   static uint32_t step = STEP_BTON;
@@ -68,8 +70,7 @@ void onButton() {
       WiFi.mode(WIFI_OFF);
       btStop();
       break;
-    default:
-      break;
+    default: break;
   }
   if (step == STEP_END) {
     step = STEP_BTON;
@@ -87,16 +88,12 @@ void WiFiEvent(WiFiEvent_t event) {
       Serial.println("AP Started");
       WiFi.softAPsetHostname(AP_SSID);
       break;
-    case ARDUINO_EVENT_WIFI_AP_STOP:
-      Serial.println("AP Stopped");
-      break;
+    case ARDUINO_EVENT_WIFI_AP_STOP: Serial.println("AP Stopped"); break;
     case ARDUINO_EVENT_WIFI_STA_START:
       Serial.println("STA Started");
       WiFi.setHostname(AP_SSID);
       break;
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-      Serial.println("STA Connected");
-      break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED: Serial.println("STA Connected"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
       Serial.print("STA IPv6: ");
       Serial.println(WiFi.linkLocalIPv6());
@@ -105,14 +102,9 @@ void WiFiEvent(WiFiEvent_t event) {
       Serial.print("STA IPv4: ");
       Serial.println(WiFi.localIP());
       break;
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      Serial.println("STA Disconnected");
-      break;
-    case ARDUINO_EVENT_WIFI_STA_STOP:
-      Serial.println("STA Stopped");
-      break;
-    default:
-      break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED: Serial.println("STA Disconnected"); break;
+    case ARDUINO_EVENT_WIFI_STA_STOP:         Serial.println("STA Stopped"); break;
+    default:                                  break;
   }
 }
 

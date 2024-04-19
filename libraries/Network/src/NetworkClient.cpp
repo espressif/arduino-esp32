@@ -23,15 +23,12 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
-#define IN6_IS_ADDR_V4MAPPED(a) \
-  ((((__const uint32_t *)(a))[0] == 0) \
-   && (((__const uint32_t *)(a))[1] == 0) \
-   && (((__const uint32_t *)(a))[2] == htonl(0xffff)))
+#define IN6_IS_ADDR_V4MAPPED(a) ((((__const uint32_t *)(a))[0] == 0) && (((__const uint32_t *)(a))[1] == 0) && (((__const uint32_t *)(a))[2] == htonl(0xffff)))
 
 #define WIFI_CLIENT_DEF_CONN_TIMEOUT_MS (3000)
-#define WIFI_CLIENT_MAX_WRITE_RETRY (10)
-#define WIFI_CLIENT_SELECT_TIMEOUT_US (1000000)
-#define WIFI_CLIENT_FLUSH_BUFFER_SIZE (1024)
+#define WIFI_CLIENT_MAX_WRITE_RETRY     (10)
+#define WIFI_CLIENT_SELECT_TIMEOUT_US   (1000000)
+#define WIFI_CLIENT_FLUSH_BUFFER_SIZE   (1024)
 
 #undef connect
 #undef write
@@ -91,8 +88,7 @@ private:
   }
 
 public:
-  NetworkClientRxBuffer(int fd, size_t size = 1436)
-    : _size(size), _buffer(NULL), _pos(0), _fill(0), _fd(fd), _failed(false) {
+  NetworkClientRxBuffer(int fd, size_t size = 1436) : _size(size), _buffer(NULL), _pos(0), _fill(0), _fd(fd), _failed(false) {
     //_buffer = (uint8_t *)malloc(_size);
   }
 
@@ -163,9 +159,7 @@ private:
   int sockfd;
 
 public:
-  NetworkClientSocketHandle(int fd)
-    : sockfd(fd) {
-  }
+  NetworkClientSocketHandle(int fd) : sockfd(fd) {}
 
   ~NetworkClientSocketHandle() {
     close(sockfd);
@@ -176,12 +170,9 @@ public:
   }
 };
 
-NetworkClient::NetworkClient()
-  : _rxBuffer(nullptr), _connected(false), _sse(false), _timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS), next(NULL) {
-}
+NetworkClient::NetworkClient() : _rxBuffer(nullptr), _connected(false), _sse(false), _timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS), next(NULL) {}
 
-NetworkClient::NetworkClient(int fd)
-  : _connected(true), _timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS), next(NULL) {
+NetworkClient::NetworkClient(int fd) : _connected(true), _timeout(WIFI_CLIENT_DEF_CONN_TIMEOUT_MS), next(NULL) {
   clientSocketHandle.reset(new NetworkClientSocketHandle(fd));
   _rxBuffer.reset(new NetworkClientRxBuffer(fd));
 }
@@ -272,12 +263,12 @@ int NetworkClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms) {
     }
   }
 
-#define ROE_WIFICLIENT(x, msg) \
-  { \
-    if (((x) < 0)) { \
+#define ROE_WIFICLIENT(x, msg)                                                                           \
+  {                                                                                                      \
+    if (((x) < 0)) {                                                                                     \
       log_e("Setsockopt '" msg "'' on fd %d failed. errno: %d, \"%s\"", sockfd, errno, strerror(errno)); \
-      return 0; \
-    } \
+      return 0;                                                                                          \
+    }                                                                                                    \
   }
   ROE_WIFICLIENT(setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)), "SO_SNDTIMEO");
   ROE_WIFICLIENT(setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)), "SO_RCVTIMEO");
@@ -370,8 +361,7 @@ int NetworkClient::read() {
   return data;
 }
 
-void NetworkClient::flush() {
-}
+void NetworkClient::flush() {}
 
 size_t NetworkClient::write(const uint8_t *buf, size_t size) {
   int res = 0;

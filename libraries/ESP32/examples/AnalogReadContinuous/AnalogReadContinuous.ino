@@ -4,9 +4,9 @@
 // Declare array of ADC pins that will be used for ADC Continuous mode - ONLY ADC1 pins are supported
 // Number of selected pins can be from 1 to ALL ADC1 pins.
 #ifdef CONFIG_IDF_TARGET_ESP32
-uint8_t adc_pins[] = { 36, 39, 34, 35 };  //some of ADC1 pins for ESP32
+uint8_t adc_pins[] = {36, 39, 34, 35};  //some of ADC1 pins for ESP32
 #else
-uint8_t adc_pins[] = { 1, 2, 3, 4 };  //ADC1 common pins for ESP32S2/S3 + ESP32C3/C6 + ESP32H2
+uint8_t adc_pins[] = {1, 2, 3, 4};  //ADC1 common pins for ESP32S2/S3 + ESP32C3/C6 + ESP32H2
 #endif
 
 // Calculate how many pins are declared in the array - needed as input for the setup function of ADC Continuous
@@ -16,7 +16,7 @@ uint8_t adc_pins_count = sizeof(adc_pins) / sizeof(uint8_t);
 volatile bool adc_coversion_done = false;
 
 // Result structure for ADC Continuous reading
-adc_continuous_data_t* result = NULL;
+adc_continuous_data_t *result = NULL;
 
 // ISR Function that will be triggered when ADC conversion is done
 void ARDUINO_ISR_ATTR adcComplete() {

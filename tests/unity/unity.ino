@@ -1,13 +1,9 @@
 #include <unity.h>
 
-
 /* These functions are intended to be called before and after each test. */
-void setUp(void) {
-}
+void setUp(void) {}
 
-void tearDown(void) {
-}
-
+void tearDown(void) {}
 
 void test_pass(void) {
   TEST_ASSERT_EQUAL(1, 1);
@@ -29,5 +25,4 @@ void setup() {
   UNITY_END();
 }
 
-void loop() {
-}
+void loop() {}

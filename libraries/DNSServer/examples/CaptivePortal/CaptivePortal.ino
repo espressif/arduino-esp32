@@ -11,7 +11,6 @@ This works for Android, Ubuntu, FireFox, Windows, maybe others...
 #include <DNSServer.h>
 #include <WebServer.h>
 
-
 DNSServer dnsServer;
 WebServer server(80);
 

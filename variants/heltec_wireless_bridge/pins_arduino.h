@@ -5,7 +5,6 @@
 
 #define WIRELESS_BRIDGE true
 
-
 static const uint8_t LED_BUILTIN = 25;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 

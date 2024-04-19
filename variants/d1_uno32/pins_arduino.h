@@ -45,10 +45,10 @@ static const uint8_t D11 = 23;
 static const uint8_t D12 = 19;
 static const uint8_t D13 = 18;
 
-#define PIN_SPI_SS SS      // backward compatibility
+#define PIN_SPI_SS   SS    // backward compatibility
 #define PIN_SPI_MOSI MOSI  // backward compatibility
 #define PIN_SPI_MISO MISO  // backward compatibility
-#define PIN_SPI_SCK SCK    // backward compatibility
+#define PIN_SPI_SCK  SCK   // backward compatibility
 
 #define PIN_A0 A0  // backward compatibility
 

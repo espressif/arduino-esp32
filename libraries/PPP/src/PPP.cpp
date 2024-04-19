@@ -16,12 +16,12 @@ typedef struct {
 // Because of how esp_modem functions are declared, we need to workaround some APIs that take strings as input (output works OK)
 // Following APIs work only when called through this interface
 extern "C" {
-  esp_err_t _esp_modem_at(esp_modem_dce_t *dce_wrap, const char *at, char *p_out, int timeout);
-  esp_err_t _esp_modem_at_raw(esp_modem_dce_t *dce_wrap, const char *cmd, char *p_out, const char *pass, const char *fail, int timeout);
-  esp_err_t _esp_modem_send_sms(esp_modem_dce_t *dce_wrap, const char *number, const char *message);
-  esp_err_t _esp_modem_set_pin(esp_modem_dce_t *dce_wrap, const char *pin);
-  esp_err_t _esp_modem_set_operator(esp_modem_dce_t *dce_wrap, int mode, int format, const char *oper);
-  esp_err_t _esp_modem_set_network_bands(esp_modem_dce_t *dce_wrap, const char *mode, const int *bands, int size);
+esp_err_t _esp_modem_at(esp_modem_dce_t *dce_wrap, const char *at, char *p_out, int timeout);
+esp_err_t _esp_modem_at_raw(esp_modem_dce_t *dce_wrap, const char *cmd, char *p_out, const char *pass, const char *fail, int timeout);
+esp_err_t _esp_modem_send_sms(esp_modem_dce_t *dce_wrap, const char *number, const char *message);
+esp_err_t _esp_modem_set_pin(esp_modem_dce_t *dce_wrap, const char *pin);
+esp_err_t _esp_modem_set_operator(esp_modem_dce_t *dce_wrap, int mode, int format, const char *oper);
+esp_err_t _esp_modem_set_network_bands(esp_modem_dce_t *dce_wrap, const char *mode, const int *bands, int size);
 };
 
 static PPPClass *_esp_modem = NULL;
@@ -30,46 +30,46 @@ static esp_event_handler_instance_t _ppp_ev_instance = NULL;
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
 static const char *_ppp_event_name(int32_t event_id) {
   switch (event_id) {
-    case NETIF_PPP_ERRORNONE: return "No error.";
-    case NETIF_PPP_ERRORPARAM: return "Invalid parameter.";
-    case NETIF_PPP_ERROROPEN: return "Unable to open PPP session.";
-    case NETIF_PPP_ERRORDEVICE: return "Invalid I/O device for PPP.";
-    case NETIF_PPP_ERRORALLOC: return "Unable to allocate resources.";
-    case NETIF_PPP_ERRORUSER: return "User interrupt.";
-    case NETIF_PPP_ERRORCONNECT: return "Connection lost.";
-    case NETIF_PPP_ERRORAUTHFAIL: return "Failed authentication challenge.";
-    case NETIF_PPP_ERRORPROTOCOL: return "Failed to meet protocol.";
-    case NETIF_PPP_ERRORPEERDEAD: return "Connection timeout";
-    case NETIF_PPP_ERRORIDLETIMEOUT: return "Idle Timeout";
-    case NETIF_PPP_ERRORCONNECTTIME: return "Max connect time reached";
-    case NETIF_PPP_ERRORLOOPBACK: return "Loopback detected";
-    case NETIF_PPP_PHASE_DEAD: return "Phase Dead";
-    case NETIF_PPP_PHASE_MASTER: return "Phase Master";
-    case NETIF_PPP_PHASE_HOLDOFF: return "Phase Hold Off";
-    case NETIF_PPP_PHASE_INITIALIZE: return "Phase Initialize";
-    case NETIF_PPP_PHASE_SERIALCONN: return "Phase Serial Conn";
-    case NETIF_PPP_PHASE_DORMANT: return "Phase Dormant";
-    case NETIF_PPP_PHASE_ESTABLISH: return "Phase Establish";
+    case NETIF_PPP_ERRORNONE:          return "No error.";
+    case NETIF_PPP_ERRORPARAM:         return "Invalid parameter.";
+    case NETIF_PPP_ERROROPEN:          return "Unable to open PPP session.";
+    case NETIF_PPP_ERRORDEVICE:        return "Invalid I/O device for PPP.";
+    case NETIF_PPP_ERRORALLOC:         return "Unable to allocate resources.";
+    case NETIF_PPP_ERRORUSER:          return "User interrupt.";
+    case NETIF_PPP_ERRORCONNECT:       return "Connection lost.";
+    case NETIF_PPP_ERRORAUTHFAIL:      return "Failed authentication challenge.";
+    case NETIF_PPP_ERRORPROTOCOL:      return "Failed to meet protocol.";
+    case NETIF_PPP_ERRORPEERDEAD:      return "Connection timeout";
+    case NETIF_PPP_ERRORIDLETIMEOUT:   return "Idle Timeout";
+    case NETIF_PPP_ERRORCONNECTTIME:   return "Max connect time reached";
+    case NETIF_PPP_ERRORLOOPBACK:      return "Loopback detected";
+    case NETIF_PPP_PHASE_DEAD:         return "Phase Dead";
+    case NETIF_PPP_PHASE_MASTER:       return "Phase Master";
+    case NETIF_PPP_PHASE_HOLDOFF:      return "Phase Hold Off";
+    case NETIF_PPP_PHASE_INITIALIZE:   return "Phase Initialize";
+    case NETIF_PPP_PHASE_SERIALCONN:   return "Phase Serial Conn";
+    case NETIF_PPP_PHASE_DORMANT:      return "Phase Dormant";
+    case NETIF_PPP_PHASE_ESTABLISH:    return "Phase Establish";
     case NETIF_PPP_PHASE_AUTHENTICATE: return "Phase Authenticate";
-    case NETIF_PPP_PHASE_CALLBACK: return "Phase Callback";
-    case NETIF_PPP_PHASE_NETWORK: return "Phase Network";
-    case NETIF_PPP_PHASE_RUNNING: return "Phase Running";
-    case NETIF_PPP_PHASE_TERMINATE: return "Phase Terminate";
-    case NETIF_PPP_PHASE_DISCONNECT: return "Phase Disconnect";
-    case NETIF_PPP_CONNECT_FAILED: return "Connect Failed";
-    default: break;
+    case NETIF_PPP_PHASE_CALLBACK:     return "Phase Callback";
+    case NETIF_PPP_PHASE_NETWORK:      return "Phase Network";
+    case NETIF_PPP_PHASE_RUNNING:      return "Phase Running";
+    case NETIF_PPP_PHASE_TERMINATE:    return "Phase Terminate";
+    case NETIF_PPP_PHASE_DISCONNECT:   return "Phase Disconnect";
+    case NETIF_PPP_CONNECT_FAILED:     return "Connect Failed";
+    default:                           break;
   }
   return "UNKNOWN";
 }
 
 static const char *_ppp_terminal_error_name(esp_modem_terminal_error_t err) {
   switch (err) {
-    case ESP_MODEM_TERMINAL_BUFFER_OVERFLOW: return "Buffer Overflow";
-    case ESP_MODEM_TERMINAL_CHECKSUM_ERROR: return "Checksum Error";
+    case ESP_MODEM_TERMINAL_BUFFER_OVERFLOW:         return "Buffer Overflow";
+    case ESP_MODEM_TERMINAL_CHECKSUM_ERROR:          return "Checksum Error";
     case ESP_MODEM_TERMINAL_UNEXPECTED_CONTROL_FLOW: return "Unexpected Control Flow";
-    case ESP_MODEM_TERMINAL_DEVICE_GONE: return "Device Gone";
-    case ESP_MODEM_TERMINAL_UNKNOWN_ERROR: return "Unknown Error";
-    default: break;
+    case ESP_MODEM_TERMINAL_DEVICE_GONE:             return "Device Gone";
+    case ESP_MODEM_TERMINAL_UNKNOWN_ERROR:           return "Unknown Error";
+    default:                                         break;
   }
   return "UNKNOWN";
 }
@@ -141,8 +141,8 @@ esp_modem_dce_t *PPPClass::handle() const {
 }
 
 PPPClass::PPPClass()
-  : _dce(NULL), _pin_tx(-1), _pin_rx(-1), _pin_rts(-1), _pin_cts(-1), _flow_ctrl(ESP_MODEM_FLOW_CONTROL_NONE), _pin_rst(-1), _pin_rst_act_low(true), _pin(NULL), _apn(NULL), _rx_buffer_size(4096), _tx_buffer_size(512), _mode(ESP_MODEM_MODE_COMMAND), _uart_num(UART_NUM_1) {
-}
+  : _dce(NULL), _pin_tx(-1), _pin_rx(-1), _pin_rts(-1), _pin_cts(-1), _flow_ctrl(ESP_MODEM_FLOW_CONTROL_NONE), _pin_rst(-1), _pin_rst_act_low(true), _pin(NULL),
+    _apn(NULL), _rx_buffer_size(4096), _tx_buffer_size(512), _mode(ESP_MODEM_MODE_COMMAND), _uart_num(UART_NUM_1) {}
 
 PPPClass::~PPPClass() {}
 
@@ -164,16 +164,24 @@ bool PPPClass::setPins(int8_t tx, int8_t rx, int8_t rts, int8_t cts, esp_modem_f
   perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_CTS, PPPClass::pppDetachBus);
 
   if (_pin_tx >= 0) {
-    if (!perimanClearPinBus(_pin_tx)) { return false; }
+    if (!perimanClearPinBus(_pin_tx)) {
+      return false;
+    }
   }
   if (_pin_rx >= 0) {
-    if (!perimanClearPinBus(_pin_rx)) { return false; }
+    if (!perimanClearPinBus(_pin_rx)) {
+      return false;
+    }
   }
   if (_pin_rts >= 0) {
-    if (!perimanClearPinBus(_pin_rts)) { return false; }
+    if (!perimanClearPinBus(_pin_rts)) {
+      return false;
+    }
   }
   if (_pin_cts >= 0) {
-    if (!perimanClearPinBus(_pin_cts)) { return false; }
+    if (!perimanClearPinBus(_pin_cts)) {
+      return false;
+    }
   }
 
   _flow_ctrl = flow_ctrl;
@@ -183,16 +191,24 @@ bool PPPClass::setPins(int8_t tx, int8_t rx, int8_t rts, int8_t cts, esp_modem_f
   _pin_cts = digitalPinToGPIONumber(cts);
 
   if (_pin_tx >= 0) {
-    if (!perimanSetPinBus(_pin_tx, ESP32_BUS_TYPE_PPP_TX, (void *)(this), -1, -1)) { return false; }
+    if (!perimanSetPinBus(_pin_tx, ESP32_BUS_TYPE_PPP_TX, (void *)(this), -1, -1)) {
+      return false;
+    }
   }
   if (_pin_rx >= 0) {
-    if (!perimanSetPinBus(_pin_rx, ESP32_BUS_TYPE_PPP_RX, (void *)(this), -1, -1)) { return false; }
+    if (!perimanSetPinBus(_pin_rx, ESP32_BUS_TYPE_PPP_RX, (void *)(this), -1, -1)) {
+      return false;
+    }
   }
   if (_pin_rts >= 0) {
-    if (!perimanSetPinBus(_pin_rts, ESP32_BUS_TYPE_PPP_RTS, (void *)(this), -1, -1)) { return false; }
+    if (!perimanSetPinBus(_pin_rts, ESP32_BUS_TYPE_PPP_RTS, (void *)(this), -1, -1)) {
+      return false;
+    }
   }
   if (_pin_cts >= 0) {
-    if (!perimanSetPinBus(_pin_cts, ESP32_BUS_TYPE_PPP_CTS, (void *)(this), -1, -1)) { return false; }
+    if (!perimanSetPinBus(_pin_cts, ESP32_BUS_TYPE_PPP_CTS, (void *)(this), -1, -1)) {
+      return false;
+    }
   }
   return true;
 }
@@ -347,7 +363,10 @@ void PPPClass::end(void) {
       Network.postEvent(&disconnect_event);
     }
 
-    clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
+    clearStatusBits(
+      ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT
+      | ESP_NETIF_HAS_STATIC_IP_BIT
+    );
     arduino_event_t arduino_event;
     arduino_event.event_id = ARDUINO_EVENT_PPP_STOP;
     Network.postEvent(&arduino_event);
@@ -762,7 +781,7 @@ String PPPClass::cmd(const char *at_command, int timeout) {
     log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
     return String();
   }
-  char out[128] = { 0 };
+  char out[128] = {0};
   esp_err_t err = _esp_modem_at(_dce, at_command, out, timeout);
   if (err != ESP_OK) {
     log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));

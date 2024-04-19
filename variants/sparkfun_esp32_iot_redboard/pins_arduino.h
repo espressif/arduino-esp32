@@ -10,7 +10,7 @@ static const uint8_t LED_BUILTIN = 18;
 
 #define NEO_PIXEL 2  //WS2812 LED
 static const uint8_t RGB_BUILTIN = (SOC_GPIO_PIN_COUNT + NEO_PIXEL);
-#define RGB_BUILTIN RGB_BUILTIN  // necessary to make digitalWrite/digitalMode find it
+#define RGB_BUILTIN    RGB_BUILTIN  // necessary to make digitalWrite/digitalMode find it
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t TX = 1;

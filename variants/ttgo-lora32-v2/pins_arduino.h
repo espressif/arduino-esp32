@@ -9,18 +9,18 @@
 #define OLED_RST 16
 
 // SPI LoRa Radio
-#define LORA_SCK 5    // GPIO5 - SX1276 SCK
+#define LORA_SCK  5   // GPIO5 - SX1276 SCK
 #define LORA_MISO 19  // GPIO19 - SX1276 MISO
 #define LORA_MOSI 27  // GPIO27 - SX1276 MOSI
-#define LORA_CS 18    // GPIO18 - SX1276 CS
-#define LORA_RST 12   // GPIO14 - SX1276 RST
-#define LORA_IRQ 26   // GPIO26 - SX1276 IRQ (interrupt request)
+#define LORA_CS   18  // GPIO18 - SX1276 CS
+#define LORA_RST  12  // GPIO14 - SX1276 RST
+#define LORA_IRQ  26  // GPIO26 - SX1276 IRQ (interrupt request)
 
 // SD card
-#define SD_SCK 14
+#define SD_SCK  14
 #define SD_MISO 2
 #define SD_MOSI 15
-#define SD_CS 13
+#define SD_CS   13
 
 static const uint8_t LED_BUILTIN = 22;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

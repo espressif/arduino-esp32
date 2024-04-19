@@ -3,7 +3,7 @@
 #include "WiFi.h"
 #include "WiFiProv.h"
 
-#define DEFAULT_POWER_MODE true
+#define DEFAULT_POWER_MODE   true
 #define DEFAULT_DIMMER_LEVEL 50
 const char *service_name = "PROV_1234";
 const char *pop = "abcd1234";
@@ -36,13 +36,9 @@ void sysProvEvent(arduino_event_t *sys_event) {
       printQR(service_name, pop, "ble");
 #endif
       break;
-    case ARDUINO_EVENT_PROV_INIT:
-      wifi_prov_mgr_disable_auto_stop(10000);
-      break;
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-      wifi_prov_mgr_stop_provisioning();
-      break;
-    default:;
+    case ARDUINO_EVENT_PROV_INIT:         wifi_prov_mgr_disable_auto_stop(10000); break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS: wifi_prov_mgr_stop_provisioning(); break;
+    default:                              ;
   }
 }
 

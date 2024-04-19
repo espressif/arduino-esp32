@@ -101,11 +101,11 @@ static constexpr uint8_t SCK = D13;
 static constexpr uint8_t SDA = A4;
 static constexpr uint8_t SCL = A5;
 
-#define PIN_I2S_SCK D7
-#define PIN_I2S_FS D8
-#define PIN_I2S_SD D9
+#define PIN_I2S_SCK    D7
+#define PIN_I2S_FS     D8
+#define PIN_I2S_SD     D9
 #define PIN_I2S_SD_OUT D9  // same as bidir
-#define PIN_I2S_SD_IN D10
+#define PIN_I2S_SD_IN  D10
 
 #ifndef __cplusplus
 #undef constexpr

@@ -9,11 +9,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x303A
-#define USB_PID 0x80D0
+#define USB_VID          0x303A
+#define USB_PID          0x80D0
 #define USB_MANUFACTURER "PANLEE"
-#define USB_PRODUCT "SC01PLUS"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "SC01PLUS"
+#define USB_SERIAL       ""
 //GENERAL I/O
 static const uint8_t BOOT_0 = 0;
 static const uint8_t IO1 = 10;
@@ -45,7 +45,6 @@ static const uint8_t LCD_DB7 = 15;
 static const uint8_t LRCK = 35;
 static const uint8_t BCLK = 36;
 static const uint8_t DOUT = 37;
-
 
 //TOUCHSCREEN DIGITIZER
 static const uint8_t TP_INT = 7;

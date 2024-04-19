@@ -30,9 +30,9 @@
 #include "stdlib_noniso.h"
 #include "esp_system.h"
 
-static void reverse(char* begin, char* end) {
-  char* is = begin;
-  char* ie = end - 1;
+static void reverse(char *begin, char *end) {
+  char *is = begin;
+  char *ie = end - 1;
   while (is < ie) {
     char tmp = *ie;
     *ie = *is;
@@ -42,13 +42,13 @@ static void reverse(char* begin, char* end) {
   }
 }
 
-char* ltoa(long value, char* result, int base) {
+char *ltoa(long value, char *result, int base) {
   if (base < 2 || base > 16) {
     *result = 0;
     return result;
   }
 
-  char* out = result;
+  char *out = result;
   long quotient = abs(value);
 
   do {
@@ -59,21 +59,22 @@ char* ltoa(long value, char* result, int base) {
   } while (quotient);
 
   // Apply negative sign
-  if (value < 0)
+  if (value < 0) {
     *out++ = '-';
+  }
 
   reverse(result, out);
   *out = 0;
   return result;
 }
 
-char* lltoa(long long val, char* result, int base) {
+char *lltoa(long long val, char *result, int base) {
   if (base < 2 || base > 16) {
     *result = 0;
     return result;
   }
 
-  char* out = result;
+  char *out = result;
   long long quotient = val > 0 ? val : -val;
 
   do {
@@ -84,21 +85,22 @@ char* lltoa(long long val, char* result, int base) {
   } while (quotient);
 
   // Apply negative sign
-  if (val < 0)
+  if (val < 0) {
     *out++ = '-';
+  }
 
   reverse(result, out);
   *out = 0;
   return result;
 }
 
-char* ultoa(unsigned long value, char* result, int base) {
+char *ultoa(unsigned long value, char *result, int base) {
   if (base < 2 || base > 16) {
     *result = 0;
     return result;
   }
 
-  char* out = result;
+  char *out = result;
   unsigned long quotient = value;
 
   do {
@@ -113,13 +115,13 @@ char* ultoa(unsigned long value, char* result, int base) {
   return result;
 }
 
-char* ulltoa(unsigned long long val, char* result, int base) {
+char *ulltoa(unsigned long long val, char *result, int base) {
   if (base < 2 || base > 16) {
     *result = 0;
     return result;
   }
 
-  char* out = result;
+  char *out = result;
   unsigned long long quotient = val;
 
   do {
@@ -134,7 +136,7 @@ char* ulltoa(unsigned long long val, char* result, int base) {
   return result;
 }
 
-char* dtostrf(double number, signed int width, unsigned int prec, char* s) {
+char *dtostrf(double number, signed int width, unsigned int prec, char *s) {
   bool negative = false;
 
   if (isnan(number)) {
@@ -146,7 +148,7 @@ char* dtostrf(double number, signed int width, unsigned int prec, char* s) {
     return s;
   }
 
-  char* out = s;
+  char *out = s;
 
   int fillme = width;  // how many cells to fill for the integer part
   if (prec > 0) {
@@ -163,8 +165,9 @@ char* dtostrf(double number, signed int width, unsigned int prec, char* s) {
   // Round correctly so that print(1.999, 2) prints as "2.00"
   // I optimized out most of the divisions
   double rounding = 2.0;
-  for (unsigned int i = 0; i < prec; ++i)
+  for (unsigned int i = 0; i < prec; ++i) {
     rounding *= 10.0;
+  }
   rounding = 1.0 / rounding;
 
   number += rounding;
@@ -186,14 +189,18 @@ char* dtostrf(double number, signed int width, unsigned int prec, char* s) {
   }
 
   // Handle negative sign
-  if (negative) *out++ = '-';
+  if (negative) {
+    *out++ = '-';
+  }
 
   // Print the digits, and if necessary, the decimal point
   digitcount += prec;
   int8_t digit = 0;
   while (digitcount-- > 0) {
     digit = (int8_t)number;
-    if (digit > 9) digit = 9;  // insurance
+    if (digit > 9) {
+      digit = 9;  // insurance
+    }
     *out++ = (char)('0' | digit);
     if ((digitcount == prec) && (prec > 0)) {
       *out++ = '.';

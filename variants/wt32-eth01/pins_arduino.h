@@ -10,12 +10,12 @@
 #include <stdint.h>
 
 // interface to Ethernet PHY (LAN8720A)
-#define ETH_PHY_ADDR 1
+#define ETH_PHY_ADDR  1
 #define ETH_PHY_POWER 16
-#define ETH_PHY_MDC 23
-#define ETH_PHY_MDIO 18
-#define ETH_PHY_TYPE ETH_PHY_LAN8720
-#define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
+#define ETH_PHY_MDC   23
+#define ETH_PHY_MDIO  18
+#define ETH_PHY_TYPE  ETH_PHY_LAN8720
+#define ETH_CLK_MODE  ETH_CLOCK_GPIO0_IN
 
 // general purpose IO pins
 static const uint8_t IO0 = 0;

@@ -25,8 +25,7 @@
 
 #include "USBHIDMouse.h"
 
-USBHIDMouseBase::USBHIDMouseBase(HIDMouseType_t* type)
-  : hid(), _buttons(0), _type(type) {
+USBHIDMouseBase::USBHIDMouseBase(HIDMouseType_t *type) : hid(), _buttons(0), _type(type) {
   static bool initialized = false;
   if (!initialized) {
     initialized = true;
@@ -34,11 +33,10 @@ USBHIDMouseBase::USBHIDMouseBase(HIDMouseType_t* type)
   }
 };
 
-uint16_t USBHIDMouseBase::_onGetDescriptor(uint8_t* dst) {
+uint16_t USBHIDMouseBase::_onGetDescriptor(uint8_t *dst) {
   memcpy(dst, _type->report_descriptor, _type->descriptor_size);
   return _type->descriptor_size;
 }
-
 
 void USBHIDMouseBase::buttons(uint8_t b) {
   if (b != _buttons) {
@@ -46,14 +44,11 @@ void USBHIDMouseBase::buttons(uint8_t b) {
   }
 }
 
-
 void USBHIDMouseBase::begin() {
   hid.begin();
 }
 
-void USBHIDMouseBase::end() {
-}
-
+void USBHIDMouseBase::end() {}
 
 void USBHIDMouseBase::press(uint8_t b) {
   this->buttons(_buttons | b);
@@ -70,14 +65,9 @@ bool USBHIDMouseBase::isPressed(uint8_t b) {
   return false;
 }
 
+static const uint8_t abs_mouse_report_descriptor[] = {TUD_HID_REPORT_DESC_ABSMOUSE(HID_REPORT_ID(HID_REPORT_ID_MOUSE))};
 
-
-static const uint8_t abs_mouse_report_descriptor[] = {
-  TUD_HID_REPORT_DESC_ABSMOUSE(HID_REPORT_ID(HID_REPORT_ID_MOUSE))
-};
-
-HIDMouseType_t HIDMouseAbs = { HID_MOUSE_ABSOLUTE, abs_mouse_report_descriptor, sizeof(abs_mouse_report_descriptor), sizeof(hid_abs_mouse_report_t) };
-
+HIDMouseType_t HIDMouseAbs = {HID_MOUSE_ABSOLUTE, abs_mouse_report_descriptor, sizeof(abs_mouse_report_descriptor), sizeof(hid_abs_mouse_report_t)};
 
 void USBHIDAbsoluteMouse::move(int16_t x, int16_t y, int8_t wheel, int8_t pan) {
   hid_abs_mouse_report_t report;
@@ -88,7 +78,6 @@ void USBHIDAbsoluteMouse::move(int16_t x, int16_t y, int8_t wheel, int8_t pan) {
   report.pan = pan;
   sendReport(report);
 }
-
 
 void USBHIDAbsoluteMouse::click(uint8_t b) {
   _buttons = b;
@@ -104,27 +93,14 @@ void USBHIDAbsoluteMouse::buttons(uint8_t b) {
   }
 }
 
+static const uint8_t rel_mouse_report_descriptor[] = {TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(HID_REPORT_ID_MOUSE))};
 
-
-static const uint8_t rel_mouse_report_descriptor[] = {
-  TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(HID_REPORT_ID_MOUSE))
-};
-
-HIDMouseType_t HIDMouseRel = { HID_MOUSE_RELATIVE, rel_mouse_report_descriptor, sizeof(rel_mouse_report_descriptor), sizeof(hid_mouse_report_t) };
-
-
+HIDMouseType_t HIDMouseRel = {HID_MOUSE_RELATIVE, rel_mouse_report_descriptor, sizeof(rel_mouse_report_descriptor), sizeof(hid_mouse_report_t)};
 
 void USBHIDRelativeMouse::move(int8_t x, int8_t y, int8_t wheel, int8_t pan) {
-  hid_mouse_report_t report = {
-    .buttons = _buttons,
-    .x = x,
-    .y = y,
-    .wheel = wheel,
-    .pan = pan
-  };
+  hid_mouse_report_t report = {.buttons = _buttons, .x = x, .y = y, .wheel = wheel, .pan = pan};
   sendReport(report);
 }
-
 
 void USBHIDRelativeMouse::click(uint8_t b) {
   _buttons = b;
@@ -139,7 +115,6 @@ void USBHIDRelativeMouse::buttons(uint8_t b) {
     move(0, 0);
   }
 }
-
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */
 #endif /* SOC_USB_OTG_SUPPORTED */

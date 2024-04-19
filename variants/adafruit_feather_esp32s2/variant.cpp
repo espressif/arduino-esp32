@@ -22,24 +22,23 @@
  * THE SOFTWARE.
  */
 
-
 #include "esp32-hal-gpio.h"
 #include "pins_arduino.h"
 
 extern "C" {
 
-  // Initialize variant/board, called before setup()
-  void initVariant(void) {
-    // This board has a power control pin, and we must set it to output and high
-    // in order to enable the NeoPixels.
-    pinMode(NEOPIXEL_POWER, OUTPUT);
-    digitalWrite(NEOPIXEL_POWER, HIGH);
+// Initialize variant/board, called before setup()
+void initVariant(void) {
+  // This board has a power control pin, and we must set it to output and high
+  // in order to enable the NeoPixels.
+  pinMode(NEOPIXEL_POWER, OUTPUT);
+  digitalWrite(NEOPIXEL_POWER, HIGH);
 
-    // turn on the I2C power by setting pin to opposite of 'rest state'
-    pinMode(PIN_I2C_POWER, INPUT);
-    delay(1);
-    bool polarity = digitalRead(PIN_I2C_POWER);
-    pinMode(PIN_I2C_POWER, OUTPUT);
-    digitalWrite(PIN_I2C_POWER, !polarity);
-  }
+  // turn on the I2C power by setting pin to opposite of 'rest state'
+  pinMode(PIN_I2C_POWER, INPUT);
+  delay(1);
+  bool polarity = digitalRead(PIN_I2C_POWER);
+  pinMode(PIN_I2C_POWER, OUTPUT);
+  digitalWrite(PIN_I2C_POWER, !polarity);
+}
 }

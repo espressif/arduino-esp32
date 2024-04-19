@@ -29,20 +29,17 @@ class SPIFFSImpl : public VFSImpl {
 public:
   SPIFFSImpl();
   virtual ~SPIFFSImpl() {}
-  virtual bool exists(const char* path);
+  virtual bool exists(const char *path);
 };
 
-SPIFFSImpl::SPIFFSImpl() {
-}
+SPIFFSImpl::SPIFFSImpl() {}
 
-bool SPIFFSImpl::exists(const char* path) {
+bool SPIFFSImpl::exists(const char *path) {
   File f = open(path, "r", false);
   return (f == true) && !f.isDirectory();
 }
 
-SPIFFSFS::SPIFFSFS()
-  : FS(FSImplPtr(new SPIFFSImpl())), partitionLabel_(NULL) {
-}
+SPIFFSFS::SPIFFSFS() : FS(FSImplPtr(new SPIFFSImpl())), partitionLabel_(NULL) {}
 
 SPIFFSFS::~SPIFFSFS() {
   if (partitionLabel_) {
@@ -51,7 +48,7 @@ SPIFFSFS::~SPIFFSFS() {
   }
 }
 
-bool SPIFFSFS::begin(bool formatOnFail, const char* basePath, uint8_t maxOpenFiles, const char* partitionLabel) {
+bool SPIFFSFS::begin(bool formatOnFail, const char *basePath, uint8_t maxOpenFiles, const char *partitionLabel) {
   if (partitionLabel_) {
     free(partitionLabel_);
     partitionLabel_ = NULL;
@@ -66,12 +63,7 @@ bool SPIFFSFS::begin(bool formatOnFail, const char* basePath, uint8_t maxOpenFil
     return true;
   }
 
-  esp_vfs_spiffs_conf_t conf = {
-    .base_path = basePath,
-    .partition_label = partitionLabel_,
-    .max_files = maxOpenFiles,
-    .format_if_mount_failed = false
-  };
+  esp_vfs_spiffs_conf_t conf = {.base_path = basePath, .partition_label = partitionLabel_, .max_files = maxOpenFiles, .format_if_mount_failed = false};
 
   esp_err_t err = esp_vfs_spiffs_register(&conf);
   if (err == ESP_FAIL && formatOnFail) {

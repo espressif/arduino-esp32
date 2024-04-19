@@ -23,12 +23,10 @@ extern "C" {
 
 using namespace fs;
 
-F_Fat::F_Fat(FSImplPtr impl)
-  : FS(impl) {}
+F_Fat::F_Fat(FSImplPtr impl) : FS(impl) {}
 
-const esp_partition_t* check_ffat_partition(const char* label) {
-  const esp_partition_t* ck_part = esp_partition_find_first(
-    ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, label);
+const esp_partition_t *check_ffat_partition(const char *label) {
+  const esp_partition_t *ck_part = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, label);
   if (!ck_part) {
     log_e("No FAT partition found with label %s", label);
     return NULL;
@@ -36,7 +34,7 @@ const esp_partition_t* check_ffat_partition(const char* label) {
   return ck_part;
 }
 
-bool F_Fat::begin(bool formatOnFail, const char* basePath, uint8_t maxOpenFiles, const char* partitionLabel) {
+bool F_Fat::begin(bool formatOnFail, const char *basePath, uint8_t maxOpenFiles, const char *partitionLabel) {
   if (_wl_handle != WL_INVALID_HANDLE) {
     log_w("Already Mounted!");
     return true;
@@ -48,10 +46,7 @@ bool F_Fat::begin(bool formatOnFail, const char* basePath, uint8_t maxOpenFiles,
   }
 
   esp_vfs_fat_mount_config_t conf = {
-    .format_if_mount_failed = formatOnFail,
-    .max_files = maxOpenFiles,
-    .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
-    .disk_status_check_enable = false
+    .format_if_mount_failed = formatOnFail, .max_files = maxOpenFiles, .allocation_unit_size = CONFIG_WL_SECTOR_SIZE, .disk_status_check_enable = false
   };
   esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(basePath, partitionLabel, &conf, &_wl_handle);
   if (err) {
@@ -76,7 +71,7 @@ void F_Fat::end() {
   }
 }
 
-bool F_Fat::format(bool full_wipe, char* partitionLabel) {
+bool F_Fat::format(bool full_wipe, char *partitionLabel) {
   esp_err_t result;
   bool res = true;
   if (_wl_handle != WL_INVALID_HANDLE) {
@@ -85,7 +80,7 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel) {
   }
   wl_handle_t temp_handle;
   // Attempt to mount to see if there is already data
-  const esp_partition_t* ffat_partition = check_ffat_partition(partitionLabel);
+  const esp_partition_t *ffat_partition = check_ffat_partition(partitionLabel);
   if (!ffat_partition) {
     log_w("No partition!");
     return false;
@@ -103,10 +98,7 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel) {
   }
   // Now do a mount with format_if_fail (which it will)
   esp_vfs_fat_mount_config_t conf = {
-    .format_if_mount_failed = true,
-    .max_files = 1,
-    .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
-    .disk_status_check_enable = false
+    .format_if_mount_failed = true, .max_files = 1, .allocation_unit_size = CONFIG_WL_SECTOR_SIZE, .disk_status_check_enable = false
   };
   result = esp_vfs_fat_spiflash_mount_rw_wl("/format_ffat", partitionLabel, &conf, &temp_handle);
   esp_vfs_fat_spiflash_unmount_rw_wl("/format_ffat", temp_handle);
@@ -118,11 +110,11 @@ bool F_Fat::format(bool full_wipe, char* partitionLabel) {
 }
 
 size_t F_Fat::totalBytes() {
-  FATFS* fs;
+  FATFS *fs;
   DWORD free_clust, tot_sect, sect_size;
 
   BYTE pdrv = ff_diskio_get_pdrv_wl(_wl_handle);
-  char drv[3] = { (char)(48 + pdrv), ':', 0 };
+  char drv[3] = {(char)(48 + pdrv), ':', 0};
   if (f_getfree(drv, &free_clust, &fs) != FR_OK) {
     return 0;
   }
@@ -132,11 +124,11 @@ size_t F_Fat::totalBytes() {
 }
 
 size_t F_Fat::usedBytes() {
-  FATFS* fs;
+  FATFS *fs;
   DWORD free_clust, used_sect, sect_size;
 
   BYTE pdrv = ff_diskio_get_pdrv_wl(_wl_handle);
-  char drv[3] = { (char)(48 + pdrv), ':', 0 };
+  char drv[3] = {(char)(48 + pdrv), ':', 0};
   if (f_getfree(drv, &free_clust, &fs) != FR_OK) {
     return 0;
   }
@@ -147,11 +139,11 @@ size_t F_Fat::usedBytes() {
 
 size_t F_Fat::freeBytes() {
 
-  FATFS* fs;
+  FATFS *fs;
   DWORD free_clust, free_sect, sect_size;
 
   BYTE pdrv = ff_diskio_get_pdrv_wl(_wl_handle);
-  char drv[3] = { (char)(48 + pdrv), ':', 0 };
+  char drv[3] = {(char)(48 + pdrv), ':', 0};
   if (f_getfree(drv, &free_clust, &fs) != FR_OK) {
     return 0;
   }
@@ -160,14 +152,13 @@ size_t F_Fat::freeBytes() {
   return free_sect * sect_size;
 }
 
-bool F_Fat::exists(const char* path) {
+bool F_Fat::exists(const char *path) {
   File f = open(path, "r", false);
   return (f == true) && !f.isDirectory();
 }
 
-bool F_Fat::exists(const String& path) {
+bool F_Fat::exists(const String &path) {
   return exists(path.c_str());
 }
-
 
 F_Fat FFat = F_Fat(FSImplPtr(new VFSImpl()));

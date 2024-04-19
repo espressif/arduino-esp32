@@ -42,7 +42,6 @@ void loop() {
     USE_SERIAL.print("[HTTP] begin...\n");
     // configure traged server and url
 
-
     http.begin("http://user:password@192.168.1.12/test.html");
 
     /*
@@ -54,7 +53,6 @@ void loop() {
           http.begin("http://192.168.1.12/test.html");
           http.setAuthorization("dXNlcjpwYXN3b3Jk");
          */
-
 
     USE_SERIAL.print("[HTTP] GET...\n");
     // start connection and send HTTP header

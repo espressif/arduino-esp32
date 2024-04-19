@@ -3,23 +3,23 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x303A
-#define USB_PID 0x8141
+#define USB_VID          0x303A
+#define USB_PID          0x8141
 #define USB_MANUFACTURER "Turkish Technology Team Foundation (T3)"
-#define USB_PRODUCT "DENEYAP MINI"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "DENEYAP MINI"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = 35;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
-#define LEDB LED_BUILTIN
-#define LEDR 34
-#define LEDG 33
+#define LEDB        LED_BUILTIN
+#define LEDR        34
+#define LEDG        33
 
 static const uint8_t GPKEY = 0;
 #define KEY_BUILTIN GPKEY
 #define BUILTIN_KEY GPKEY
-#define BT GPKEY
+#define BT          GPKEY
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

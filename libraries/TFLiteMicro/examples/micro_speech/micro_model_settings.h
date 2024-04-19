@@ -38,6 +38,6 @@ constexpr int kSilenceIndex = 0;
 constexpr int kUnknownIndex = 1;
 // If you modify the output categories, you need to update the following values.
 constexpr int kCategoryCount = 4;
-extern const char* kCategoryLabels[kCategoryCount];
+extern const char *kCategoryLabels[kCategoryCount];
 
 #endif  // TENSORFLOW_LITE_MICRO_EXAMPLES_MICRO_SPEECH_MICRO_FEATURES_MICRO_MODEL_SETTINGS_H_

@@ -30,7 +30,7 @@ bool ftmSuccess = true;
 // FTM report handler with the calculated data from the round trip
 // WARNING: This function is called from a separate FreeRTOS task (thread)!
 void onFtmReport(arduino_event_t *event) {
-  const char *status_str[5] = { "SUCCESS", "UNSUPPORTED", "CONF_REJECTED", "NO_RESPONSE", "FAIL" };
+  const char *status_str[5] = {"SUCCESS", "UNSUPPORTED", "CONF_REJECTED", "NO_RESPONSE", "FAIL"};
   wifi_event_ftm_report_t *report = &event->event_info.wifi_ftm_report;
   // Set the global report status
   ftmSuccess = report->status == FTM_STATUS_SUCCESS;
@@ -83,8 +83,7 @@ void setup() {
   Serial.println(" ms");
 
   // Request FTM reports until one fails
-  while (getFtmReport())
-    ;
+  while (getFtmReport());
 }
 
 void loop() {

@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x239A
-#define USB_PID 0x811D
+#define USB_VID          0x239A
+#define USB_PID          0x811D
 #define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "Feather ESP32-S3 TFT"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "Feather ESP32-S3 TFT"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 // User LED
 #define LED_BUILTIN 13
@@ -17,18 +17,18 @@
 // Neopixel
 #define PIN_NEOPIXEL 33
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN    (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
-#define NEOPIXEL_NUM 1          // number of neopixels
-#define NEOPIXEL_POWER 34       // power pin
+#define NEOPIXEL_NUM      1     // number of neopixels
+#define NEOPIXEL_POWER    34    // power pin
 #define NEOPIXEL_POWER_ON HIGH  // power pin state when on
 
 #define TFT_I2C_POWER 21
-#define TFT_CS 7
-#define TFT_RST 40
-#define TFT_DC 39
-#define TFT_BACKLITE 45
+#define TFT_CS        7
+#define TFT_RST       40
+#define TFT_DC        39
+#define TFT_BACKLITE  45
 
 static const uint8_t SDA = 42;
 static const uint8_t SCL = 41;
