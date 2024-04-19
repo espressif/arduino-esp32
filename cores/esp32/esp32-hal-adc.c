@@ -360,7 +360,7 @@ static uint8_t __adcContinuousAtten = ADC_11db;
 static uint8_t __adcContinuousWidth = SOC_ADC_DIGI_MAX_BITWIDTH;
 
 static uint8_t used_adc_channels = 0;
-adc_continuos_data_t *adc_result = NULL;
+adc_continuous_data_t *adc_result = NULL;
 
 static bool adcContinuousDetachBus(void *adc_unit_number) {
   adc_unit_t adc_unit = (adc_unit_t)adc_unit_number - 1;
@@ -537,7 +537,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
   }
 
   //Allocate and prepare result structure for adc readings
-  adc_result = malloc(pins_count * sizeof(adc_continuos_data_t));
+  adc_result = malloc(pins_count * sizeof(adc_continuous_data_t));
   for (int k = 0; k < pins_count; k++) {
     adc_result[k].pin = pins[k];
     adc_result[k].channel = channel[k];
@@ -578,7 +578,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
   return true;
 }
 
-bool analogContinuousRead(adc_continuos_data_t **buffer, uint32_t timeout_ms) {
+bool analogContinuousRead(adc_continuous_data_t **buffer, uint32_t timeout_ms) {
   if (adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL) {
     uint32_t bytes_read = 0;
     uint32_t read_raw[used_adc_channels];

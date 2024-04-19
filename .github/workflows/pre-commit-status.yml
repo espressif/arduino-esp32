@@ -1,41 +1,64 @@
+# This needs to be in a separate workflow because it requires higher permissions than the calling workflow
 name: Report Pre-commit Check Status
 
 on:
-  pull_request_target:
-    types: [opened, reopened, synchronize, labeled, unlabeled]
+  workflow_run:
+    workflows: [Pre-commit hooks]
+    types:
+      - completed
 
 permissions:
   statuses: write
 
 jobs:
-  report-run:
-    name: Check if the PR has run the pre-commit checks
+  report-success:
+    name: Report pre-commit success
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report success
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Pre-commit checks',
+              description: 'Pre-commit checks successful',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: 'success',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+
+  report-pending:
+    name: Report pre-commit pending
+    if: github.event.workflow_run.conclusion != 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Report pending
-        uses: conda/actions/set-commit-status@v24.2.0
+        uses: actions/github-script@v7
         with:
-          context: "Pre-commit checks"
-          state: pending
-          description: The pre-commit checks need to be successful before merging
-
-      - name: Wait for pre-commit checks to complete
-        uses: lucasssvaz/wait-on-workflow@v1
-        if: |
-          contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge')
-        id: wait-on-workflow
-        with:
-          timeout: 10
-          interval: 30
-          workflow: pre-commit.yml
-          sha: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Report success
-        uses: conda/actions/set-commit-status@v24.2.0
-        if: |
-          contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge') &&
-          steps.wait-on-workflow.outputs.conclusion == 'success'
-        with:
-          context: "Pre-commit checks"
-          state: success
-          description: All pre-commit checks passed
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Pre-commit checks',
+              description: 'The pre-commit checks need to be successful before merging',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: 'pending',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}'
+            })).data;
+            core.info(`${name} is ${state}`);

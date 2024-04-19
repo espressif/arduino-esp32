@@ -158,7 +158,7 @@ void adc_continuous_test(void) {
   test_executed = true;
   uint8_t adc_pins[] = { ADC1_DEFAULT, ADC2_DEFAULT };
   uint8_t adc_pins_count = 2;
-  adc_continuos_data_t* result = NULL;
+  adc_continuous_data_t* result = NULL;
 
   analogContinuousSetWidth(12);
   analogContinuousSetAtten(ADC_11db);

@@ -71,12 +71,11 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data) {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP;
     } else
 #endif
-      // if(_interface_id == ESP_NETIF_ID_PPP){
-      //     arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP;
-      // } else
-      if (_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX) {
-        arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
-      }
+      if (_interface_id == ESP_NETIF_ID_PPP) {
+      arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP;
+    } else if (_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX) {
+      arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP;
+    }
   } else if (event_id == _lost_ip_event_id) {
     clearStatusBits(ESP_NETIF_HAS_IP_BIT);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
@@ -87,12 +86,11 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data) {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_LOST_IP;
     } else
 #endif
-      // if(_interface_id == ESP_NETIF_ID_PPP){
-      //     arduino_event.event_id = ARDUINO_EVENT_PPP_LOST_IP;
-      // } else
-      if (_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX) {
-        arduino_event.event_id = ARDUINO_EVENT_ETH_LOST_IP;
-      }
+      if (_interface_id == ESP_NETIF_ID_PPP) {
+      arduino_event.event_id = ARDUINO_EVENT_PPP_LOST_IP;
+    } else if (_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX) {
+      arduino_event.event_id = ARDUINO_EVENT_ETH_LOST_IP;
+    }
   } else if (event_id == IP_EVENT_GOT_IP6) {
     ip_event_got_ip6_t* event = (ip_event_got_ip6_t*)event_data;
     esp_ip6_addr_type_t addr_type = esp_netif_ip6_get_addr_type(&event->ip6_info.ip);
@@ -117,12 +115,11 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data) {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_GOT_IP6;
     } else
 #endif
-      // if(_interface_id == ESP_NETIF_ID_PPP){
-      //     arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP6;
-      // } else
-      if (_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX) {
-        arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP6;
-      }
+      if (_interface_id == ESP_NETIF_ID_PPP) {
+      arduino_event.event_id = ARDUINO_EVENT_PPP_GOT_IP6;
+    } else if (_interface_id >= ESP_NETIF_ID_ETH && _interface_id < ESP_NETIF_ID_MAX) {
+      arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP6;
+    }
 #if SOC_WIFI_SUPPORTED
   } else if (event_id == IP_EVENT_AP_STAIPASSIGNED && _interface_id == ESP_NETIF_ID_AP) {
     setStatusBits(ESP_NETIF_HAS_IP_BIT);
@@ -536,7 +533,7 @@ String NetworkInterface::impl_name(void) const {
   char netif_name[8];
   esp_err_t err = esp_netif_get_netif_impl_name(_esp_netif, netif_name);
   if (err != ESP_OK) {
-    log_e("Failed to get netif impl_name: %d", err);
+    log_e("Failed to get netif impl_name: 0x%04x %s", err, esp_err_to_name(err));
     return String("");
   }
   return String(netif_name);
@@ -562,7 +559,7 @@ bool NetworkInterface::setDefault() {
   }
   esp_err_t err = esp_netif_set_default_netif(_esp_netif);
   if (err != ESP_OK) {
-    log_e("Failed to set default netif: %d", err);
+    log_e("Failed to set default netif: 0x%04x %s", err, esp_err_to_name(err));
     return false;
   }
   return true;
@@ -576,15 +573,14 @@ bool NetworkInterface::isDefault() const {
 }
 
 uint8_t* NetworkInterface::macAddress(uint8_t* mac) const {
-  if (!mac || _esp_netif == NULL) {
+  if (!mac || _esp_netif == NULL || _interface_id == ESP_NETIF_ID_PPP) {
     return NULL;
   }
   esp_err_t err = esp_netif_get_mac(_esp_netif, mac);
   if (err != ESP_OK) {
-    log_e("Failed to get netif mac: %d", err);
+    log_e("Failed to get netif mac: 0x%04x %s", err, esp_err_to_name(err));
     return NULL;
   }
-  // getMac(mac);
   return mac;
 }
 

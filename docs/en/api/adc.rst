@@ -184,7 +184,7 @@ If ``false`` is returned, error occurs and ADC continuous was not configured.
 analogContinuousRead
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to read ADC continuous data to the result buffer. The result buffer is an array of ``adc_continuos_data_t``.
+This function is used to read ADC continuous data to the result buffer. The result buffer is an array of ``adc_continuous_data_t``.
 
 .. code-block:: arduino
 
@@ -193,13 +193,13 @@ This function is used to read ADC continuous data to the result buffer. The resu
         uint8_t channel;       /*!<ADC channel */
         int avg_read_raw;      /*!<ADC average raw data */
         int avg_read_mvolts;   /*!<ADC average voltage in mV */
-    } adc_continuos_data_t;
+    } adc_continuous_data_t;
 
 .. code-block:: arduino
 
-    bool analogContinuousRead(adc_continuos_data_t ** buffer, uint32_t timeout_ms);
+    bool analogContinuousRead(adc_continuous_data_t ** buffer, uint32_t timeout_ms);
 
-* ``buffer`` conversion result buffer to read from ADC in adc_continuos_data_t format.
+* ``buffer`` conversion result buffer to read from ADC in adc_continuous_data_t format.
 * ``timeout_ms`` time to wait for data in milliseconds.
 
 This function will return ``true`` if reading is successful and ``buffer`` is filled with data.

@@ -16,7 +16,7 @@ uint8_t adc_pins_count = sizeof(adc_pins) / sizeof(uint8_t);
 volatile bool adc_coversion_done = false;
 
 // Result structure for ADC Continuous reading
-adc_continuos_data_t* result = NULL;
+adc_continuous_data_t* result = NULL;
 
 // ISR Function that will be triggered when ADC conversion is done
 void ARDUINO_ISR_ATTR adcComplete() {
