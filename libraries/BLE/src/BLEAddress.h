@@ -16,7 +16,6 @@
 #include <esp_gap_ble_api.h>  // ESP32 BLE
 #include <string>
 
-
 /**
  * @brief A %BLE device address.
  *
@@ -27,13 +26,13 @@ public:
   BLEAddress(esp_bd_addr_t address);
   BLEAddress(String stringAddress);
   bool equals(BLEAddress otherAddress);
-  bool operator==(const BLEAddress& otherAddress) const;
-  bool operator!=(const BLEAddress& otherAddress) const;
-  bool operator<(const BLEAddress& otherAddress) const;
-  bool operator<=(const BLEAddress& otherAddress) const;
-  bool operator>(const BLEAddress& otherAddress) const;
-  bool operator>=(const BLEAddress& otherAddress) const;
-  esp_bd_addr_t* getNative();
+  bool operator==(const BLEAddress &otherAddress) const;
+  bool operator!=(const BLEAddress &otherAddress) const;
+  bool operator<(const BLEAddress &otherAddress) const;
+  bool operator<=(const BLEAddress &otherAddress) const;
+  bool operator>(const BLEAddress &otherAddress) const;
+  bool operator>=(const BLEAddress &otherAddress) const;
+  esp_bd_addr_t *getNative();
   String toString();
 
 private:

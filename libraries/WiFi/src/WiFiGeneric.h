@@ -38,9 +38,9 @@
 
 #include "Network.h"
 
-#define WiFiEventCb NetworkEventCb
+#define WiFiEventCb     NetworkEventCb
 #define WiFiEventFuncCb NetworkEventFuncCb
-#define WiFiEventSysCb NetworkEventSysCb
+#define WiFiEventSysCb  NetworkEventSysCb
 #define wifi_event_id_t network_event_handle_t
 
 typedef enum {

@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x239A
-#define USB_PID 0x80AB
+#define USB_VID          0x239A
+#define USB_PID          0x80AB
 #define USB_MANUFACTURER "Unexpected Maker"
-#define USB_PRODUCT "FeatherS2"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "FeatherS2"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

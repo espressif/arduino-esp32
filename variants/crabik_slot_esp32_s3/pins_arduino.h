@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x303a
-#define USB_PID 0x814D  // for user apps (https://github.com/espressif/usb-pids/pull/77)
+#define USB_VID          0x303a
+#define USB_PID          0x814D  // for user apps (https://github.com/espressif/usb-pids/pull/77)
 #define USB_MANUFACTURER "Crabik"
-#define USB_PRODUCT "Slot ESP32-S3"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "Slot ESP32-S3"
+#define USB_SERIAL       ""
 
 static const uint8_t LED_BUILTIN = 21;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

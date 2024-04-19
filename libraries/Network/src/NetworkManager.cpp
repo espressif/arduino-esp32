@@ -10,8 +10,7 @@
 #include "esp_mac.h"
 #include "netdb.h"
 
-NetworkManager::NetworkManager() {
-}
+NetworkManager::NetworkManager() {}
 
 NetworkInterface *getNetifByID(Network_Interface_ID id);
 
@@ -139,7 +138,7 @@ uint8_t *NetworkManager::macAddress(uint8_t *mac) {
 
 String NetworkManager::macAddress(void) {
   uint8_t mac[6];
-  char macStr[18] = { 0 };
+  char macStr[18] = {0};
   macAddress(mac);
   sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return String(macStr);
@@ -191,6 +190,5 @@ size_t NetworkManager::printTo(Print &out) const {
   }
   return bytes;
 }
-
 
 NetworkManager Network;

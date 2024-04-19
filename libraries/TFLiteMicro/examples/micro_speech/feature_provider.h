@@ -31,17 +31,16 @@ public:
   // remain accessible for the lifetime of the provider object, since subsequent
   // calls will fill it with feature data. The provider does no memory
   // management of this data.
-  FeatureProvider(int feature_size, int8_t* feature_data);
+  FeatureProvider(int feature_size, int8_t *feature_data);
   ~FeatureProvider();
 
   // Fills the feature data with information from audio inputs, and returns how
   // many feature slices were updated.
-  TfLiteStatus PopulateFeatureData(int32_t last_time_in_ms, int32_t time_in_ms,
-                                   int* how_many_new_slices);
+  TfLiteStatus PopulateFeatureData(int32_t last_time_in_ms, int32_t time_in_ms, int *how_many_new_slices);
 
 private:
   int feature_size_;
-  int8_t* feature_data_;
+  int8_t *feature_data_;
   // Make sure we don't try to use cached information if this is the first call
   // into the provider.
   bool is_first_run_;

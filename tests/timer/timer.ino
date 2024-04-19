@@ -1,7 +1,7 @@
 /* HW Timer test */
 #include <unity.h>
 
-#define TIMER_FREQUENCY 4000000
+#define TIMER_FREQUENCY          4000000
 #define TIMER_FREQUENCY_XTAL_CLK 1000
 
 /*
@@ -11,7 +11,7 @@
  * S3 - APB + XTAL clk
  */
 
-static hw_timer_t* timer = NULL;
+static hw_timer_t *timer = NULL;
 static volatile bool alarm_flag;
 
 /* setUp / tearDown functions are intended to be called before / after each test. */
@@ -129,5 +129,4 @@ void setup() {
   UNITY_END();
 }
 
-void loop() {
-}
+void loop() {}

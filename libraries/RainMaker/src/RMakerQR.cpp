@@ -5,10 +5,13 @@ void printQR(const char *name, const char *pop, const char *transport) {
     log_w("Cannot generate QR code payload. Data missing.");
     return;
   }
-  char payload[150] = { 0 };
-  snprintf(payload, sizeof(payload), "{\"ver\":\"%s\",\"name\":\"%s\""
-                                     ",\"pop\":\"%s\",\"transport\":\"%s\"}",
-           PROV_QR_VERSION, name, pop, transport);
+  char payload[150] = {0};
+  snprintf(
+    payload, sizeof(payload),
+    "{\"ver\":\"%s\",\"name\":\"%s\""
+    ",\"pop\":\"%s\",\"transport\":\"%s\"}",
+    PROV_QR_VERSION, name, pop, transport
+  );
   if (Serial) {
     Serial.printf("Scan this QR code from the ESP RainMaker phone app.\n");
   }

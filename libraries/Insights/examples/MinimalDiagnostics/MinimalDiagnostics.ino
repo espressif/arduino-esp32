@@ -3,7 +3,7 @@
 
 const char insights_auth_key[] = "<ENTER YOUR AUTH KEY>";
 
-#define WIFI_SSID "<ENTER YOUR SSID>"
+#define WIFI_SSID       "<ENTER YOUR SSID>"
 #define WIFI_PASSPHRASE "<ENTER YOUR PASSWORD>"
 
 void setup() {

@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x303a
-#define USB_PID 0x1001
+#define USB_VID          0x303a
+#define USB_PID          0x1001
 #define USB_MANUFACTURER "Aventen"
-#define USB_PRODUCT "Aventen S3 Sync"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "Aventen S3 Sync"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

@@ -4,13 +4,14 @@
 #include <stdint.h>
 
 // Renaming few signals
-#define SPI_CLK SCK                 // IO14
-#define SPI_MISO MISO               // IO12
-#define SPI_MOSI MOSI               // IO13
-#define SPI_CS0 SS                  // IO15, Default SPI CS: Extension Header, Pin_3
-#define SD_SPI_CS1 SPI_CS1          // SPI Chip Select: MicroSD Card
+#define SPI_CLK       SCK           // IO14
+#define SPI_MISO      MISO          // IO12
+#define SPI_MOSI      MOSI          // IO13
+#define SPI_CS0       SS            // IO15, Default SPI CS: Extension Header, Pin_3
+#define SD_SPI_CS1    SPI_CS1       // SPI Chip Select: MicroSD Card
 #define LED_WIFI_LINK LED1_BUILDIN  // LED6 on the LogSens V1.1 Board
-#define LED_WIFI_ACT LED2_BUILDIN   // LED7 on the LogSens V1.1 Board\
+#define LED_WIFI_ACT \
+  LED2_BUILDIN  // LED7 on the LogSens V1.1 Board\
 
 /* LED_BUILTIN is kept for compatibility reason; mapped to LED2 on the LogSens V1.1 Board */
 static const uint8_t LED_BUILTIN = 33;
@@ -57,7 +58,6 @@ static const uint8_t SW4_BUILDIN = 34;  // Tactile Switch-4 (SW4)
 
 static const uint8_t LED1_BUILDIN = 32;  // Connected to LogSens V1.1: LED6
 static const uint8_t LED2_BUILDIN = 33;  // Connected to LogSens V1.1: LED7
-
 
 /* Analog Input Channels accessible on the LogSens V1.1 Board */
 //static const uint8_t A0 = 36;

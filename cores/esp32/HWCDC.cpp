@@ -35,7 +35,7 @@ ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 
 static RingbufHandle_t tx_ring_buf = NULL;
 static QueueHandle_t rx_queue = NULL;
-static uint8_t rx_data_buf[64] = { 0 };
+static uint8_t rx_data_buf[64] = {0};
 static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
 static volatile bool connected = false;
@@ -45,21 +45,19 @@ static uint32_t requested_tx_timeout_ms = 100;
 
 static esp_event_loop_handle_t arduino_hw_cdc_event_loop_handle = NULL;
 
-static esp_err_t arduino_hw_cdc_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, BaseType_t *task_unblocked) {
+static esp_err_t
+  arduino_hw_cdc_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, BaseType_t *task_unblocked) {
   if (arduino_hw_cdc_event_loop_handle == NULL) {
     return ESP_FAIL;
   }
   return esp_event_isr_post_to(arduino_hw_cdc_event_loop_handle, event_base, event_id, event_data, event_data_size, task_unblocked);
 }
 
-static esp_err_t arduino_hw_cdc_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg) {
+static esp_err_t
+  arduino_hw_cdc_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg) {
   if (!arduino_hw_cdc_event_loop_handle) {
     esp_event_loop_args_t event_task_args = {
-      .queue_size = 5,
-      .task_name = "arduino_hw_cdc_events",
-      .task_priority = 5,
-      .task_stack_size = 2048,
-      .task_core_id = tskNO_AFFINITY
+      .queue_size = 5, .task_name = "arduino_hw_cdc_events", .task_priority = 5, .task_stack_size = 2048, .task_core_id = tskNO_AFFINITY
     };
     if (esp_event_loop_create(&event_task_args, &arduino_hw_cdc_event_loop_handle) != ESP_OK) {
       log_e("esp_event_loop_create failed");
@@ -74,7 +72,7 @@ static esp_err_t arduino_hw_cdc_event_handler_register_with(esp_event_base_t eve
 static void hw_cdc_isr_handler(void *arg) {
   portBASE_TYPE xTaskWoken = 0;
   uint32_t usbjtag_intr_status = 0;
-  arduino_hw_cdc_event_data_t event = { 0 };
+  arduino_hw_cdc_event_data_t event = {0};
   usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
 
   if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY) {
@@ -99,7 +97,9 @@ static void hw_cdc_isr_handler(void *arg) {
         usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
         usb_serial_jtag_ll_txfifo_flush();
         vRingbufferReturnItemFromISR(tx_ring_buf, queued_buff, &xTaskWoken);
-        if (connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+        if (connected) {
+          usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+        }
         //send event?
         //ets_printf("TX:%u\n", queued_size);
         event.tx.len = queued_size;
@@ -204,7 +204,9 @@ void HWCDC::onEvent(arduino_hw_cdc_event_t event, esp_event_handler_t callback) 
 bool HWCDC::deinit(void *busptr) {
   // avoid any recursion issue with Peripheral Manager perimanSetPinBus() call
   static bool running = false;
-  if (running) return true;
+  if (running) {
+    return true;
+  }
   running = true;
   // Setting USB D+ D- pins
   bool retCode = true;
@@ -245,9 +247,13 @@ void HWCDC::begin(unsigned long baud) {
 
   // Peripheral Manager setting for USB D+ D- pins
   uint8_t pin = USB_DM_GPIO_NUM;
-  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *)this, -1, -1)) goto err;
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *)this, -1, -1)) {
+    goto err;
+  }
   pin = USB_DP_GPIO_NUM;
-  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) goto err;
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) {
+    goto err;
+  }
 
   // Configure PHY
   // USB_Serial_JTAG use internal PHY
@@ -333,7 +339,9 @@ int HWCDC::availableForWrite(void) {
 }
 
 static void flushTXBuffer() {
-  if (!tx_ring_buf) return;
+  if (!tx_ring_buf) {
+    return;
+  }
   UBaseType_t uxItemsWaiting = 0;
   vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
 
@@ -373,7 +381,9 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
     so_far += space;
     // Now trigger the ISR to read data from the ring buffer.
     usb_serial_jtag_ll_txfifo_flush();
-    if (connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    if (connected) {
+      usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    }
 
     while (to_send) {
       space = xRingbufferGetCurFreeSize(tx_ring_buf);
@@ -389,7 +399,9 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
       to_send -= space;
       // Now trigger the ISR to read data from the ring buffer.
       usb_serial_jtag_ll_txfifo_flush();
-      if (connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+      if (connected) {
+        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+      }
     }
   }
   // CDC is disconnected ==> flush all data from TX buffer
@@ -423,14 +435,18 @@ void HWCDC::flush(void) {
   if (uxItemsWaiting) {
     // Now trigger the ISR to read data from the ring buffer.
     usb_serial_jtag_ll_txfifo_flush();
-    if (connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    if (connected) {
+      usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    }
   }
   uint8_t tries = 3;
   while (tries && uxItemsWaiting) {
     delay(5);
     UBaseType_t lastUxItemsWaiting = uxItemsWaiting;
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
-    if (lastUxItemsWaiting == uxItemsWaiting) tries--;
+    if (lastUxItemsWaiting == uxItemsWaiting) {
+      tries--;
+    }
   }
   if (tries == 0) {  // CDC isn't connected anymore...
     connected = false;

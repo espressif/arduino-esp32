@@ -54,7 +54,8 @@ BLEEddystoneURL::BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice) {
   lengthURL = 0;
   m_eddystoneData.advertisedTxPower = 0;
   for (int i = 0; i < advertisedDevice->getPayloadLength(); ++i) {
-    if (payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i + 2 + sizeof(m_eddystoneData) && payload[i + 1] == 0xAA && payload[i + 2] == 0xFE && payload[i + 3] == 0x10) {
+    if (payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i + 2 + sizeof(m_eddystoneData) && payload[i + 1] == 0xAA && payload[i + 2] == 0xFE
+        && payload[i + 3] == 0x10) {
       lengthURL = payload[i - 1] - 5;  // Subtracting 5 Bytes containing header and other data which are not actual URL data
       m_eddystoneData.advertisedTxPower = payload[i + 1];
       if (lengthURL <= 18) {
@@ -162,7 +163,6 @@ void BLEEddystoneURL::setUUID(BLEUUID l_uuid) {
   BLEHeadder[9] = beaconUUID & 0x00FF;
 }  // setUUID
 
-
 void BLEEddystoneURL::setPower(esp_power_level_t advertisedTxPower) {
   int tx_power;
   switch (advertisedTxPower) {
@@ -194,7 +194,6 @@ void BLEEddystoneURL::setPower(esp_power_level_t advertisedTxPower) {
   }
   m_eddystoneData.advertisedTxPower = int8_t((tx_power - -100) / 2);
 }  // setPower
-
 
 void BLEEddystoneURL::setPower(int8_t advertisedTxPower) {
   m_eddystoneData.advertisedTxPower = advertisedTxPower;
@@ -241,7 +240,8 @@ int BLEEddystoneURL::setSmartURL(String url) {
   }
 
   if (hasPrefix == false) {
-    log_w("Prefix not found - using default prefix \"http://www.\" = 0x00\n\tNote: URL must contain one of the prefixes: \"http://www.\", \"https://www.\", \"http://\", \"https://\"");
+    log_w("Prefix not found - using default prefix \"http://www.\" = 0x00\n\tNote: URL must contain one of the prefixes: \"http://www.\", \"https://www.\", "
+          "\"http://\", \"https://\"");
   }
 
   for (uint8_t i = 0; i < 0x0E; ++i) {
@@ -261,7 +261,10 @@ int BLEEddystoneURL::setSmartURL(String url) {
     log_e("Encoded URL is too long %d B - max 18 B", lengthURL);
     return 0;  // ERROR
   }
-  String baseUrl = url.substring((hasPrefix ? EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length() : 0), baseUrlLen + (hasPrefix ? EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length() : 0));
+  String baseUrl = url.substring(
+    (hasPrefix ? EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length() : 0),
+    baseUrlLen + (hasPrefix ? EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length() : 0)
+  );
   memcpy((void *)(m_eddystoneData.url + 1), (void *)baseUrl.c_str(), baseUrl.length());  // substr for Arduino String
 
   if (hasSuffix) {

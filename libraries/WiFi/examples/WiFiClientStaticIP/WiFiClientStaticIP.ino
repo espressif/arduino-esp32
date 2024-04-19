@@ -6,10 +6,10 @@
 
 #include <WiFi.h>
 
-const char* ssid = "your_network_name";
-const char* password = "your_network_password";
-const char* host = "example.com";
-const char* url = "/index.html";
+const char *ssid = "your_network_name";
+const char *password = "your_network_password";
+const char *host = "example.com";
+const char *url = "/index.html";
 
 IPAddress local_IP(192, 168, 31, 115);
 IPAddress gateway(192, 168, 31, 1);

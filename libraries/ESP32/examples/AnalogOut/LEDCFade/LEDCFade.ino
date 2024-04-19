@@ -16,9 +16,9 @@
 #define LED_PIN 4
 
 // define starting duty, target duty and maximum fade time
-#define LEDC_START_DUTY (0)
+#define LEDC_START_DUTY  (0)
 #define LEDC_TARGET_DUTY (4095)
-#define LEDC_FADE_TIME (3000)
+#define LEDC_FADE_TIME   (3000)
 
 bool fade_ended = false;  // status of LED fade
 bool fade_on = true;
@@ -30,7 +30,9 @@ void ARDUINO_ISR_ATTR LED_FADE_ISR() {
 void setup() {
   // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  while (!Serial) {
+    delay(10);
+  }
 
   // Setup timer with given frequency, resolution and attach it to a led pin with auto-selected channel
   ledcAttach(LED_PIN, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);

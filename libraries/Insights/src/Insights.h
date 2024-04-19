@@ -15,8 +15,7 @@ private:
   bool initialized;
 
 public:
-  ESPInsightsMetricsClass()
-    : initialized(false) {}
+  ESPInsightsMetricsClass() : initialized(false) {}
 
   bool addBool(const char *tag, const char *key, const char *label, const char *path);
   bool addInt(const char *tag, const char *key, const char *label, const char *path);
@@ -54,8 +53,7 @@ private:
   bool initialized;
 
 public:
-  ESPInsightsVariablesClass()
-    : initialized(false) {}
+  ESPInsightsVariablesClass() : initialized(false) {}
 
   bool addBool(const char *tag, const char *key, const char *label, const char *path);
   bool addInt(const char *tag, const char *key, const char *label, const char *path);
@@ -110,7 +108,7 @@ extern "C" {
 
 #include "esp_err.h"
 #include "esp_log.h"
-  esp_err_t esp_diag_log_event(const char *tag, const char *format, ...) __attribute__((format(printf, 2, 3)));
+esp_err_t esp_diag_log_event(const char *tag, const char *format, ...) __attribute__((format(printf, 2, 3)));
 #define insightsEvent(tag, format, ...) \
   { esp_diag_log_event(tag, "EV (%" PRIu32 ") %s: " format, esp_log_timestamp(), tag, ##__VA_ARGS__); }
 

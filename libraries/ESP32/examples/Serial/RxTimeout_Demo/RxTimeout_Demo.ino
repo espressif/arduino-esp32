@@ -31,13 +31,13 @@
 // same loopback internally.
 #define USE_INTERNAL_PIN_LOOPBACK 1  // 1 uses the internal loopback, 0 for wiring pins 4 and 5 externally
 
-#define DATA_SIZE 10  // 10 bytes is lower than the default 120 bytes of RX FIFO FULL
-#define BAUD 9600     // Any baudrate from 300 to 115200
-#define TEST_UART 1   // Serial1 will be used for the loopback testing with different RX FIFO FULL values
-#define RXPIN 4       // GPIO 4 => RX for Serial1
-#define TXPIN 5       // GPIO 5 => TX for Serial1
+#define DATA_SIZE 10    // 10 bytes is lower than the default 120 bytes of RX FIFO FULL
+#define BAUD      9600  // Any baudrate from 300 to 115200
+#define TEST_UART 1     // Serial1 will be used for the loopback testing with different RX FIFO FULL values
+#define RXPIN     4     // GPIO 4 => RX for Serial1
+#define TXPIN     5     // GPIO 5 => TX for Serial1
 
-uint8_t rxTimeoutTestCases[] = { 50, 20, 10, 5, 1 };
+uint8_t rxTimeoutTestCases[] = {50, 20, 10, 5, 1};
 
 void setup() {
   // UART0 will be used to log information into Serial Monitor
@@ -56,8 +56,7 @@ void setup() {
   }
 }
 
-void loop() {
-}
+void loop() {}
 
 void testAndReport(uint8_t rxTimeout) {
   // Let's send 10 bytes from Serial1 rx<->tx and mesaure time using different Rx Timeout configurations
@@ -81,7 +80,9 @@ void testAndReport(uint8_t rxTimeout) {
   while (bytesReceived < DATA_SIZE) {
     bytesReceived += Serial1.read(dataReceived, DATA_SIZE);
     // safety for array limit && timeout... in 5 seconds...
-    if (millis() - now > 5000) break;
+    if (millis() - now > 5000) {
+      break;
+    }
   }
 
   uint32_t pastTime = millis() - now;

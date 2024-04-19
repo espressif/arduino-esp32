@@ -32,7 +32,6 @@ void loop() {}
 #include "USBHIDMouse.h"
 USBHIDMouse Mouse;
 
-
 // set pin numbers for the five buttons:
 const int upButton = 12;
 const int downButton = 13;
@@ -42,7 +41,6 @@ const int mouseButton = 0;
 
 int range = 5;           // output range of X or Y movement; affects movement speed
 int responseDelay = 10;  // response delay of the mouse, in ms
-
 
 void setup() {
   // initialize the buttons' inputs:

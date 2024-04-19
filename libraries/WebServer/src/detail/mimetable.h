@@ -1,7 +1,6 @@
 #ifndef __MIMETABLE_H__
 #define __MIMETABLE_H__
 
-
 namespace mime {
 
 enum type {
@@ -36,9 +35,7 @@ struct Entry {
   const char mimeType[32];
 };
 
-
 extern const Entry mimeTable[maxType];
-}
-
+}  // namespace mime
 
 #endif

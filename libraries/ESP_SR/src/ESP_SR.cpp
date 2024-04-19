@@ -15,9 +15,7 @@ static void on_sr_event(void *arg, sr_event_t event, int command_id, int phrase_
   ((ESP_SR_Class *)arg)->_sr_event(event, command_id, phrase_id);
 }
 
-ESP_SR_Class::ESP_SR_Class()
-  : cb(NULL), i2s(NULL) {
-}
+ESP_SR_Class::ESP_SR_Class() : cb(NULL), i2s(NULL) {}
 
 ESP_SR_Class::~ESP_SR_Class() {
   end();

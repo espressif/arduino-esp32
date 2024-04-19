@@ -42,7 +42,7 @@ typedef struct {
   int used_channels : LEDC_CHANNELS;  // Used channels as a bits
 } ledc_periph_t;
 
-ledc_periph_t ledc_handle = { 0 };
+ledc_periph_t ledc_handle = {0};
 
 static bool fade_initialized = false;
 
@@ -86,13 +86,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
 
   uint8_t group = (channel / 8), timer = ((channel / 2) % 4);
 
-  ledc_timer_config_t ledc_timer = {
-    .speed_mode = group,
-    .timer_num = timer,
-    .duty_resolution = resolution,
-    .freq_hz = freq,
-    .clk_cfg = LEDC_DEFAULT_CLK
-  };
+  ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = resolution, .freq_hz = freq, .clk_cfg = LEDC_DEFAULT_CLK};
   if (ledc_timer_config(&ledc_timer) != ESP_OK) {
     log_e("ledc setup failed!");
     return false;
@@ -101,13 +95,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   uint32_t duty = ledc_get_duty(group, channel);
 
   ledc_channel_config_t ledc_channel = {
-    .speed_mode = group,
-    .channel = (channel % 8),
-    .timer_sel = timer,
-    .intr_type = LEDC_INTR_DISABLE,
-    .gpio_num = pin,
-    .duty = duty,
-    .hpoint = 0
+    .speed_mode = group, .channel = (channel % 8), .timer_sel = timer, .intr_type = LEDC_INTR_DISABLE, .gpio_num = pin, .duty = duty, .hpoint = 0
   };
   ledc_channel_config(&ledc_channel);
 
@@ -184,7 +172,6 @@ uint32_t ledcReadFreq(uint8_t pin) {
   return 0;
 }
 
-
 uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
   ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
   if (bus != NULL) {
@@ -196,13 +183,7 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
 
     uint8_t group = (bus->channel / 8), timer = ((bus->channel / 2) % 4);
 
-    ledc_timer_config_t ledc_timer = {
-      .speed_mode = group,
-      .timer_num = timer,
-      .duty_resolution = 10,
-      .freq_hz = freq,
-      .clk_cfg = LEDC_DEFAULT_CLK
-    };
+    ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = 10, .freq_hz = freq, .clk_cfg = LEDC_DEFAULT_CLK};
 
     if (ledc_timer_config(&ledc_timer) != ESP_OK) {
       log_e("ledcWriteTone configuration failed!");
@@ -218,9 +199,8 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
 }
 
 uint32_t ledcWriteNote(uint8_t pin, note_t note, uint8_t octave) {
-  const uint16_t noteFrequencyBase[12] = {
-    //   C        C#       D        Eb       E        F       F#        G       G#        A       Bb        B
-    4186, 4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459, 7902
+  const uint16_t noteFrequencyBase[12] = {//   C        C#       D        Eb       E        F       F#        G       G#        A       Bb        B
+                                          4186, 4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459, 7902
   };
 
   if (octave > 8 || note >= NOTE_MAX) {
@@ -254,13 +234,7 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution) {
     }
     uint8_t group = (bus->channel / 8), timer = ((bus->channel / 2) % 4);
 
-    ledc_timer_config_t ledc_timer = {
-      .speed_mode = group,
-      .timer_num = timer,
-      .duty_resolution = resolution,
-      .freq_hz = freq,
-      .clk_cfg = LEDC_DEFAULT_CLK
-    };
+    ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = resolution, .freq_hz = freq, .clk_cfg = LEDC_DEFAULT_CLK};
 
     if (ledc_timer_config(&ledc_timer) != ESP_OK) {
       log_e("ledcChangeFrequency failed!");
@@ -336,9 +310,7 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
     bus->fn = (voidFuncPtr)userFunc;
     bus->arg = arg;
 
-    ledc_cbs_t callbacks = {
-      .fade_cb = ledcFnWrapper
-    };
+    ledc_cbs_t callbacks = {.fade_cb = ledcFnWrapper};
     ledc_cb_register(group, channel, &callbacks, (void *)bus);
 
     //Fixing if all bits in resolution is set = LEDC FULL ON
@@ -359,8 +331,7 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
       return false;
     }
     // Wait for LEDCs next PWM cycle to update duty (~ 1-2 ms)
-    while (ledc_get_duty(group, channel) != start_duty)
-      ;
+    while (ledc_get_duty(group, channel) != start_duty);
 
     if (ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK) {
       log_e("ledc_set_fade_time_and_start failed");

@@ -128,7 +128,7 @@ rmt_data_t blink_1s_rmt_data[] = {
     0,
   },
   // Looping mode needs a Zero ending data to mark the EOF
-  { 0, 0, 0, 0 }
+  {0, 0, 0, 0}
 };
 
 // RMT is at 400KHz with a 2.5us tick
@@ -185,7 +185,7 @@ rmt_data_t blink_500ms_rmt_data[] = {
     0,
   },
   // Looping mode needs a Zero ending data to mark the EOF
-  { 0, 0, 0, 0 }
+  {0, 0, 0, 0}
 };
 
 // RMT is at 400KHz with a 2.5us tick
@@ -218,7 +218,7 @@ rmt_data_t blink_250ms_rmt_data[] = {
     0,
   },
   // Looping mode needs a Zero ending data to mark the EOF
-  { 0, 0, 0, 0 }
+  {0, 0, 0, 0}
 };
 
 void RMT_Mixed_Write_Blink() {
@@ -244,8 +244,7 @@ void RMT_Mixed_Write_Blink() {
       Serial.println("===> rmtWrite Blink 0.25s Error!");
     }
     // wait (blocks) until all the data is sent out
-    while (!rmtTransmitCompleted(BLINK_GPIO))
-      ;
+    while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking OFF for 1 seconds");
   delay(1000);
@@ -307,8 +306,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
       Serial.println("===> rmtWrite Blink 1s Error!");
     }
     // wait (blocks) until all the data is sent out
-    while (!rmtTransmitCompleted(BLINK_GPIO))
-      ;
+    while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking at 500ms on + 500ms off :: 5 blinks");
   for (uint8_t i = 0; i < 5; i++) {
@@ -316,8 +314,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
       Serial.println("===> rmtWrite Blink 0.5s Error!");
     }
     // wait (blocks) until all the data is sent out
-    while (!rmtTransmitCompleted(BLINK_GPIO))
-      ;
+    while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking at 250ms on + 250ms off :: 5 blinks");
   for (uint8_t i = 0; i < 5; i++) {
@@ -325,8 +322,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
       Serial.println("===> rmtWrite Blink 0.25s Error!");
     }
     // wait (blocks) until all the data is  sent out
-    while (!rmtTransmitCompleted(BLINK_GPIO))
-      ;
+    while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking OFF for 1 seconds");
   delay(1000);

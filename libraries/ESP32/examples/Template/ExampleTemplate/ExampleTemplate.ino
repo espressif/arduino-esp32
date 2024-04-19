@@ -7,8 +7,6 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-void setup() {
-}
+void setup() {}
 
-void loop() {
-}
+void loop() {}

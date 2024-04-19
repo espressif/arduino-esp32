@@ -20,5 +20,4 @@
 #define ICACHE_FLASH_ATTR
 #define ICACHE_RAM_ATTR ARDUINO_ISR_ATTR
 
-
 #endif /* _ESP8266_COMPAT_H_ */

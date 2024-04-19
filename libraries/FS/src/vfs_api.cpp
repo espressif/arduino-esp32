@@ -255,11 +255,7 @@ bool VFSImpl::rmdir(const char *fpath) {
   return rc == 0;
 }
 
-
-
-
-VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode)
-  : _fs(fs), _f(NULL), _d(NULL), _path(NULL), _isDirectory(false), _written(false) {
+VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs(fs), _f(NULL), _d(NULL), _path(NULL), _isDirectory(false), _written(false) {
   char *temp = (char *)malloc(strlen(fpath) + strlen(_fs->_mountpoint) + 1);
   if (!temp) {
     return;
@@ -482,7 +478,6 @@ boolean VFSFileImpl::seekDir(long position) {
   seekdir(_d, position);
   return true;
 }
-
 
 String VFSFileImpl::getNextFileName() {
   if (!_isDirectory || !_d) {

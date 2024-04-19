@@ -15,9 +15,9 @@
 
 #define SLEEP_MOTOR_ABC 2  //  nSLEEP
 
-#define LED_ROBOHEART 13           // Built in LED
-#define BUILTIN_LED LED_ROBOHEART  // backward compatibility
-#define LED_BUILTIN LED_ROBOHEART
+#define LED_ROBOHEART 13             // Built in LED
+#define BUILTIN_LED   LED_ROBOHEART  // backward compatibility
+#define LED_BUILTIN   LED_ROBOHEART
 
 #define BUTTON_ROBOHEART 0  // Button
 
@@ -29,12 +29,12 @@
 #define TXD1 17
 
 // GSM Vela connector board pins
-#define GSM_PWRKEY 12
-#define GSM_DTR 13
-#define GSM_CTS 15
-#define GSM_RTS 14
-#define GSM_TX TXD1
-#define GSM_RX RXD1
+#define GSM_PWRKEY  12
+#define GSM_DTR     13
+#define GSM_CTS     15
+#define GSM_RTS     14
+#define GSM_TX      TXD1
+#define GSM_RX      RXD1
 #define BATTERY_PIN 36  // Battery ADC pin
 
 static const uint8_t TX = 35;

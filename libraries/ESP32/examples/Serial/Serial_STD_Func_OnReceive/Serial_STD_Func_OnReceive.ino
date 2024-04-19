@@ -20,8 +20,8 @@
 // If UART0 is used for testing, it is necessary to manually send data to it, using the Serial Monitor/Terminal
 // In case that USB CDC is available, it may be used as console for messages.
 #define TEST_UART 1  // Serial# (0, 1 or 2) will be used for the loopback
-#define RXPIN 4      // GPIO 4 => RX for Serial1 or Serial2
-#define TXPIN 5      // GPIO 5 => TX for Serial1 or Serial2
+#define RXPIN     4  // GPIO 4 => RX for Serial1 or Serial2
+#define TXPIN     5  // GPIO 5 => TX for Serial1 or Serial2
 
 // declare testingSerial (as reference) related to TEST_UART number defined above (only for Serial1 and Serial2)
 #if SOC_UART_NUM > 1 && TEST_UART == 1
@@ -106,7 +106,9 @@ void loop() {
   // just write a random number of bytes into the testing UART
   char serial_data[24];
   size_t len = random(sizeof(serial_data) - 1) + 1;  // at least 1 byte will be sent
-  for (uint8_t i = 0; i < len; i++) serial_data[i] = 'A' + i;
+  for (uint8_t i = 0; i < len; i++) {
+    serial_data[i] = 'A' + i;
+  }
 
 #if TEST_UART > 0
   Serial.println("\n\n==================================");

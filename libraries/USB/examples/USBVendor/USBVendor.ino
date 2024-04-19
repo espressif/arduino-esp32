@@ -12,8 +12,8 @@ USBVendor Vendor;
 const int buttonPin = 0;
 
 //CDC Control Requests
-#define REQUEST_SET_LINE_CODING 0x20
-#define REQUEST_GET_LINE_CODING 0x21
+#define REQUEST_SET_LINE_CODING        0x20
+#define REQUEST_GET_LINE_CODING        0x21
 #define REQUEST_SET_CONTROL_LINE_STATE 0x22
 
 //CDC Line Coding Control Request Structure
@@ -24,34 +24,25 @@ typedef struct __attribute__((packed)) {
   uint8_t data_bits;  //5, 6, 7, 8 or 16
 } request_line_coding_t;
 
-static request_line_coding_t vendor_line_coding = { 9600, 0, 0, 8 };
+static request_line_coding_t vendor_line_coding = {9600, 0, 0, 8};
 
 // Bit 0:  DTR (Data Terminal Ready), Bit 1: RTS (Request to Send)
 static uint8_t vendor_line_state = 0;
 
 //USB and Vendor events
-static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == ARDUINO_USB_EVENTS) {
-    arduino_usb_event_data_t* data = (arduino_usb_event_data_t*)event_data;
+    arduino_usb_event_data_t *data = (arduino_usb_event_data_t *)event_data;
     switch (event_id) {
-      case ARDUINO_USB_STARTED_EVENT:
-        Serial.println("USB PLUGGED");
-        break;
-      case ARDUINO_USB_STOPPED_EVENT:
-        Serial.println("USB UNPLUGGED");
-        break;
-      case ARDUINO_USB_SUSPEND_EVENT:
-        Serial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
-        break;
-      case ARDUINO_USB_RESUME_EVENT:
-        Serial.println("USB RESUMED");
-        break;
+      case ARDUINO_USB_STARTED_EVENT: Serial.println("USB PLUGGED"); break;
+      case ARDUINO_USB_STOPPED_EVENT: Serial.println("USB UNPLUGGED"); break;
+      case ARDUINO_USB_SUSPEND_EVENT: Serial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en); break;
+      case ARDUINO_USB_RESUME_EVENT:  Serial.println("USB RESUMED"); break;
 
-      default:
-        break;
+      default: break;
     }
   } else if (event_base == ARDUINO_USB_VENDOR_EVENTS) {
-    arduino_usb_vendor_event_data_t* data = (arduino_usb_vendor_event_data_t*)event_data;
+    arduino_usb_vendor_event_data_t *data = (arduino_usb_vendor_event_data_t *)event_data;
     switch (event_id) {
       case ARDUINO_USB_VENDOR_DATA_EVENT:
         Serial.printf("Vendor RX: len:%u\n", data->data.len);
@@ -61,29 +52,28 @@ static void usbEventCallback(void* arg, esp_event_base_t event_base, int32_t eve
         Serial.println();
         break;
 
-      default:
-        break;
+      default: break;
     }
   }
 }
 
-static const char* strRequestDirections[] = { "OUT", "IN" };
-static const char* strRequestTypes[] = { "STANDARD", "CLASS", "VENDOR", "INVALID" };
-static const char* strRequestRecipients[] = { "DEVICE", "INTERFACE", "ENDPOINT", "OTHER" };
-static const char* strRequestStages[] = { "SETUP", "DATA", "ACK" };
+static const char *strRequestDirections[] = {"OUT", "IN"};
+static const char *strRequestTypes[] = {"STANDARD", "CLASS", "VENDOR", "INVALID"};
+static const char *strRequestRecipients[] = {"DEVICE", "INTERFACE", "ENDPOINT", "OTHER"};
+static const char *strRequestStages[] = {"SETUP", "DATA", "ACK"};
 
 //Handle USB requests to the vendor interface
-bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_control_request_t const* request) {
-  Serial.printf("Vendor Request: Stage: %5s, Direction: %3s, Type: %8s, Recipient: %9s, bRequest: 0x%02x, wValue: 0x%04x, wIndex: %u, wLength: %u\n",
-                strRequestStages[requestStage],
-                strRequestDirections[request->bmRequestDirection],
-                strRequestTypes[request->bmRequestType],
-                strRequestRecipients[request->bmRequestRecipient],
-                request->bRequest, request->wValue, request->wIndex, request->wLength);
+bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_control_request_t const *request) {
+  Serial.printf(
+    "Vendor Request: Stage: %5s, Direction: %3s, Type: %8s, Recipient: %9s, bRequest: 0x%02x, wValue: 0x%04x, wIndex: %u, wLength: %u\n",
+    strRequestStages[requestStage], strRequestDirections[request->bmRequestDirection], strRequestTypes[request->bmRequestType],
+    strRequestRecipients[request->bmRequestRecipient], request->bRequest, request->wValue, request->wIndex, request->wLength
+  );
 
   bool result = false;
 
-  if (request->bmRequestDirection == REQUEST_DIRECTION_OUT && request->bmRequestType == REQUEST_TYPE_STANDARD && request->bmRequestRecipient == REQUEST_RECIPIENT_INTERFACE && request->bRequest == 0x0b) {
+  if (request->bmRequestDirection == REQUEST_DIRECTION_OUT && request->bmRequestType == REQUEST_TYPE_STANDARD
+      && request->bmRequestRecipient == REQUEST_RECIPIENT_INTERFACE && request->bRequest == 0x0b) {
     if (requestStage == REQUEST_STAGE_SETUP) {
       // response with status OK
       result = Vendor.sendResponse(rhport, request);
@@ -102,10 +92,13 @@ bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_con
           }
           if (requestStage == REQUEST_STAGE_SETUP) {
             //Send the response in setup stage (it will write the data to vendor_line_coding in the DATA stage)
-            result = Vendor.sendResponse(rhport, request, (void*)&vendor_line_coding, sizeof(request_line_coding_t));
+            result = Vendor.sendResponse(rhport, request, (void *)&vendor_line_coding, sizeof(request_line_coding_t));
           } else if (requestStage == REQUEST_STAGE_ACK) {
             //In the ACK stage the response is complete
-            Serial.printf("Vendor Line Coding: bit_rate: %lu, data_bits: %u, stop_bits: %u, parity: %u\n", vendor_line_coding.bit_rate, vendor_line_coding.data_bits, vendor_line_coding.stop_bits, vendor_line_coding.parity);
+            Serial.printf(
+              "Vendor Line Coding: bit_rate: %lu, data_bits: %u, stop_bits: %u, parity: %u\n", vendor_line_coding.bit_rate, vendor_line_coding.data_bits,
+              vendor_line_coding.stop_bits, vendor_line_coding.parity
+            );
           }
           result = true;
           break;
@@ -117,7 +110,7 @@ bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_con
           }
           if (requestStage == REQUEST_STAGE_SETUP) {
             //Send the response in setup stage (it will write the data to vendor_line_coding in the DATA stage)
-            result = Vendor.sendResponse(rhport, request, (void*)&vendor_line_coding, sizeof(request_line_coding_t));
+            result = Vendor.sendResponse(rhport, request, (void *)&vendor_line_coding, sizeof(request_line_coding_t));
           }
           result = true;
           break;

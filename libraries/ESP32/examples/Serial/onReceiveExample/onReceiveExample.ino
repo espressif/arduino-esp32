@@ -48,7 +48,6 @@
    HardwareSerial::setRxBufferSize(size_t new_size) before executing begin() for the Serial port.
 */
 
-
 // this will make UART0 work in any case (using or not USB)
 #if ARDUINO_USB_CDC_ON_BOOT
 #define UART0 Serial0

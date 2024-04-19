@@ -45,5 +45,4 @@ static const uint8_t GPIO_SOS = 9;
 static const uint8_t GPIO_CHG_IN = 4;
 static const uint8_t GPIO_LED_SIGNAL = 8;
 
-
 #endif /* Pins_Arduino_h */

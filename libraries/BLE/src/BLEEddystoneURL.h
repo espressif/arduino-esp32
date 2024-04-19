@@ -47,7 +47,8 @@ public:
   int setSmartURL(String url);
 
 private:
-  uint8_t lengthURL;  // Describes the length of the URL part including prefix and optional suffix - max 18 B (excluding TX power, frame type and preceding header)
+  uint8_t
+    lengthURL;  // Describes the length of the URL part including prefix and optional suffix - max 18 B (excluding TX power, frame type and preceding header)
   struct {
     int8_t advertisedTxPower;
     uint8_t url[18];  // Byte [0] is for prefix. Last valid byte **can** contain suffix - i.e. the next byte after the URL

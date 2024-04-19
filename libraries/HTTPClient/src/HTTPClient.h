@@ -42,17 +42,17 @@
 #define HTTPCLIENT_DEFAULT_TCP_TIMEOUT (5000)
 
 /// HTTP client errors
-#define HTTPC_ERROR_CONNECTION_REFUSED (-1)
-#define HTTPC_ERROR_SEND_HEADER_FAILED (-2)
+#define HTTPC_ERROR_CONNECTION_REFUSED  (-1)
+#define HTTPC_ERROR_SEND_HEADER_FAILED  (-2)
 #define HTTPC_ERROR_SEND_PAYLOAD_FAILED (-3)
-#define HTTPC_ERROR_NOT_CONNECTED (-4)
-#define HTTPC_ERROR_CONNECTION_LOST (-5)
-#define HTTPC_ERROR_NO_STREAM (-6)
-#define HTTPC_ERROR_NO_HTTP_SERVER (-7)
-#define HTTPC_ERROR_TOO_LESS_RAM (-8)
-#define HTTPC_ERROR_ENCODING (-9)
-#define HTTPC_ERROR_STREAM_WRITE (-10)
-#define HTTPC_ERROR_READ_TIMEOUT (-11)
+#define HTTPC_ERROR_NOT_CONNECTED       (-4)
+#define HTTPC_ERROR_CONNECTION_LOST     (-5)
+#define HTTPC_ERROR_NO_STREAM           (-6)
+#define HTTPC_ERROR_NO_HTTP_SERVER      (-7)
+#define HTTPC_ERROR_TOO_LESS_RAM        (-8)
+#define HTTPC_ERROR_ENCODING            (-9)
+#define HTTPC_ERROR_STREAM_WRITE        (-10)
+#define HTTPC_ERROR_READ_TIMEOUT        (-11)
 
 /// size for the stream handling
 #define HTTP_TCP_RX_BUFFER_SIZE (4096)
@@ -142,7 +142,6 @@ typedef enum {
   HTTPC_FORCE_FOLLOW_REDIRECTS
 } followRedirects_t;
 
-
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
 class TransportTraits;
 typedef std::unique_ptr<TransportTraits> TransportTraitsPtr;
@@ -169,7 +168,6 @@ typedef struct {
 } Cookie;
 typedef std::vector<Cookie> CookieJar;
 
-
 class HTTPClient {
 public:
   HTTPClient();
@@ -179,15 +177,15 @@ public:
  * Since both begin() functions take a reference to client as a parameter, you need to
  * ensure the client object lives the entire time of the HTTPClient
  */
-  bool begin(NetworkClient& client, String url);
-  bool begin(NetworkClient& client, String host, uint16_t port, String uri = "/", bool https = false);
+  bool begin(NetworkClient &client, String url);
+  bool begin(NetworkClient &client, String host, uint16_t port, String uri = "/", bool https = false);
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
   bool begin(String url);
-  bool begin(String url, const char* CAcert);
+  bool begin(String url, const char *CAcert);
   bool begin(String host, uint16_t port, String uri = "/");
-  bool begin(String host, uint16_t port, String uri, const char* CAcert);
-  bool begin(String host, uint16_t port, String uri, const char* CAcert, const char* cli_cert, const char* cli_key);
+  bool begin(String host, uint16_t port, String uri, const char *CAcert);
+  bool begin(String host, uint16_t port, String uri, const char *CAcert, const char *cli_cert, const char *cli_key);
 #endif
 
   void end(void);
@@ -195,10 +193,10 @@ public:
   bool connected(void);
 
   void setReuse(bool reuse);  /// keep-alive
-  void setUserAgent(const String& userAgent);
-  void setAuthorization(const char* user, const char* password);
-  void setAuthorization(const char* auth);
-  void setAuthorizationType(const char* authType);
+  void setUserAgent(const String &userAgent);
+  void setAuthorization(const char *user, const char *password);
+  void setAuthorization(const char *auth);
+  void setAuthorizationType(const char *authType);
   void setConnectTimeout(int32_t connectTimeout);
   void setTimeout(uint16_t timeout);
 
@@ -206,44 +204,43 @@ public:
   void setFollowRedirects(followRedirects_t follow);
   void setRedirectLimit(uint16_t limit);  // max redirects to follow for a single request
 
-  bool setURL(const String& url);
+  bool setURL(const String &url);
   void useHTTP10(bool usehttp10 = true);
 
   /// request handling
   int GET();
-  int PATCH(uint8_t* payload, size_t size);
+  int PATCH(uint8_t *payload, size_t size);
   int PATCH(String payload);
-  int POST(uint8_t* payload, size_t size);
+  int POST(uint8_t *payload, size_t size);
   int POST(String payload);
-  int PUT(uint8_t* payload, size_t size);
+  int PUT(uint8_t *payload, size_t size);
   int PUT(String payload);
-  int sendRequest(const char* type, String payload);
-  int sendRequest(const char* type, uint8_t* payload = NULL, size_t size = 0);
-  int sendRequest(const char* type, Stream* stream, size_t size = 0);
+  int sendRequest(const char *type, String payload);
+  int sendRequest(const char *type, uint8_t *payload = NULL, size_t size = 0);
+  int sendRequest(const char *type, Stream *stream, size_t size = 0);
 
-  void addHeader(const String& name, const String& value, bool first = false, bool replace = true);
+  void addHeader(const String &name, const String &value, bool first = false, bool replace = true);
 
   /// Response handling
-  void collectHeaders(const char* headerKeys[], const size_t headerKeysCount);
-  String header(const char* name);   // get request header value by name
+  void collectHeaders(const char *headerKeys[], const size_t headerKeysCount);
+  String header(const char *name);   // get request header value by name
   String header(size_t i);           // get request header value by number
   String headerName(size_t i);       // get request header name by number
   int headers();                     // get header count
-  bool hasHeader(const char* name);  // check if header exists
-
+  bool hasHeader(const char *name);  // check if header exists
 
   int getSize(void);
-  const String& getLocation(void);
+  const String &getLocation(void);
 
-  NetworkClient& getStream(void);
-  NetworkClient* getStreamPtr(void);
-  int writeToStream(Stream* stream);
+  NetworkClient &getStream(void);
+  NetworkClient *getStreamPtr(void);
+  int writeToStream(Stream *stream);
   String getString(void);
 
   static String errorToString(int error);
 
   /// Cookie jar support
-  void setCookieJar(CookieJar* cookieJar);
+  void setCookieJar(CookieJar *cookieJar);
   void resetCookieJar();
   void clearAllCookies();
 
@@ -253,25 +250,25 @@ protected:
     String value;
   };
 
-  bool beginInternal(String url, const char* expectedProtocol);
+  bool beginInternal(String url, const char *expectedProtocol);
   void disconnect(bool preserveClient = false);
   void clear();
   int returnError(int error);
   bool connect(void);
-  bool sendHeader(const char* type);
+  bool sendHeader(const char *type);
   int handleHeaderResponse();
-  int writeToStreamDataBlock(Stream* stream, int len);
+  int writeToStreamDataBlock(Stream *stream, int len);
 
   /// Cookie jar support
   void setCookie(String date, String headerValue);
-  bool generateCookieString(String* cookieString);
+  bool generateCookieString(String *cookieString);
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
   TransportTraitsPtr _transportTraits;
   std::unique_ptr<NetworkClient> _tcpDeprecated;
 #endif
 
-  NetworkClient* _client = nullptr;
+  NetworkClient *_client = nullptr;
 
   /// request handling
   String _host;
@@ -290,7 +287,7 @@ protected:
   String _authorizationType = "Basic";
 
   /// Response handling
-  RequestArgument* _currentHeaders = nullptr;
+  RequestArgument *_currentHeaders = nullptr;
   size_t _headerKeysCount = 0;
 
   int _returnCode = 0;
@@ -302,9 +299,7 @@ protected:
   transferEncoding_t _transferEncoding = HTTPC_TE_IDENTITY;
 
   /// Cookie jar support
-  CookieJar* _cookieJar = nullptr;
+  CookieJar *_cookieJar = nullptr;
 };
-
-
 
 #endif /* HTTPClient_H_ */

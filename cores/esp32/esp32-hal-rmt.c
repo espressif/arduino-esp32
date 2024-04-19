@@ -41,11 +41,10 @@ extern TaskHandle_t loopTaskHandle;
 #define RMT_MUTEX_UNLOCK(busptr)
 #else
 #define RMT_MUTEX_LOCK(busptr) \
-  do { \
+  do {                         \
   } while (xSemaphoreTake(busptr->g_rmt_objlocks, portMAX_DELAY) != pdPASS)
 #define RMT_MUTEX_UNLOCK(busptr) xSemaphoreGive(busptr->g_rmt_objlocks)
 #endif /* CONFIG_DISABLE_HAL_LOCKS */
-
 
 /**
    Typedefs for internal structures, enums
@@ -206,7 +205,7 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
     log_w("GPIO %d - RMT Carrier must be a float percentage from 0 to 1. Setting to 50%.", pin);
     duty_percent = 0.5;
   }
-  rmt_carrier_config_t carrier_cfg = { 0 };
+  rmt_carrier_config_t carrier_cfg = {0};
   carrier_cfg.duty_cycle = duty_percent;                     // duty cycle
   carrier_cfg.frequency_hz = carrier_en ? frequency_Hz : 0;  // carrier frequency in Hz
   carrier_cfg.flags.polarity_active_low = carrier_level;     // carrier modulation polarity level
@@ -303,14 +302,17 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
   }
 
   log_v("GPIO: %d - Request: %d RMT Symbols - %s - Timeout: %d", pin, num_rmt_symbols, blocking ? "Blocking" : "Non-Blocking", timeout_ms);
-  log_v("GPIO: %d - Currently in Loop Mode: [%s] | Asked to Loop: %s, LoopCancel: %s", pin, bus->rmt_ch_is_looping ? "YES" : "NO", loop ? "YES" : "NO", loopCancel ? "YES" : "NO");
+  log_v(
+    "GPIO: %d - Currently in Loop Mode: [%s] | Asked to Loop: %s, LoopCancel: %s", pin, bus->rmt_ch_is_looping ? "YES" : "NO", loop ? "YES" : "NO",
+    loopCancel ? "YES" : "NO"
+  );
 
   if ((xEventGroupGetBits(bus->rmt_events) & RMT_FLAG_TX_DONE) == 0) {
     log_v("GPIO %d - RMT Write still pending to be completed.", pin);
     return false;
   }
 
-  rmt_transmit_config_t transmit_cfg = { 0 };  // loop mode disabled
+  rmt_transmit_config_t transmit_cfg = {0};  // loop mode disabled
   bool retCode = true;
 
   RMT_MUTEX_LOCK(bus);
@@ -348,8 +350,7 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
       } else {
         if (blocking) {
           // wait for transmission confirmation | timeout
-          retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_TX_DONE, pdFALSE /* do not clear on exit */,
-                                         pdFALSE /* wait for all bits */, timeout_ms)
+          retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_TX_DONE, pdFALSE /* do not clear on exit */, pdFALSE /* wait for all bits */, timeout_ms)
                      & RMT_FLAG_TX_DONE)
                     != 0;
         }
@@ -387,8 +388,7 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
   rmt_receive(bus->rmt_channel_h, data, *num_rmt_symbols * sizeof(rmt_data_t), &receive_config);
   // wait for data if requested
   if (waitForData) {
-    retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_RX_DONE, pdFALSE /* do not clear on exit */,
-                                   pdFALSE /* wait for all bits */, timeout_ms)
+    retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_RX_DONE, pdFALSE /* do not clear on exit */, pdFALSE /* wait for all bits */, timeout_ms)
                & RMT_FLAG_RX_DONE)
               != 0;
   }
@@ -396,7 +396,6 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
   RMT_MUTEX_UNLOCK(bus);
   return retCode;
 }
-
 
 bool rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t timeout_ms) {
   return _rmtWrite(pin, data, num_rmt_symbols, true /*blocks*/, false /*looping*/, timeout_ms);
@@ -451,7 +450,10 @@ bool rmtReceiveCompleted(int pin) {
 }
 
 bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_size, uint32_t frequency_Hz) {
-  log_v("GPIO %d - %s - MemSize[%d] - Freq=%dHz", pin, channel_direction == RMT_RX_MODE ? "RX MODE" : "TX MODE", mem_size * RMT_SYMBOLS_PER_CHANNEL_BLOCK, frequency_Hz);
+  log_v(
+    "GPIO %d - %s - MemSize[%d] - Freq=%dHz", pin, channel_direction == RMT_RX_MODE ? "RX MODE" : "TX MODE", mem_size * RMT_SYMBOLS_PER_CHANNEL_BLOCK,
+    frequency_Hz
+  );
 
   // create common block mutex for protecting allocs from multiple threads allocating RMT channels
   if (!g_rmt_block_lock) {
@@ -535,7 +537,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     }
 
     // set TX Callback
-    rmt_tx_event_callbacks_t cbs = { .on_trans_done = _rmt_tx_done_callback };
+    rmt_tx_event_callbacks_t cbs = {.on_trans_done = _rmt_tx_done_callback};
     if (ESP_OK != rmt_tx_register_event_callbacks(bus->rmt_channel_h, &cbs, bus)) {
       log_e("GPIO %d RMT - Error registering TX Callback.", pin);
       goto Err;
@@ -562,7 +564,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     }
 
     // set RX Callback
-    rmt_rx_event_callbacks_t cbs = { .on_recv_done = _rmt_rx_done_callback };
+    rmt_rx_event_callbacks_t cbs = {.on_recv_done = _rmt_rx_done_callback};
     if (ESP_OK != rmt_rx_register_event_callbacks(bus->rmt_channel_h, &cbs, bus)) {
       log_e("GPIO %d RMT - Error registering RX Callback.", pin);
       goto Err;
@@ -588,8 +590,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   rmt_enable(bus->rmt_channel_h);  // starts/enables the channel
 
   // Finally, allocate Peripheral Manager RMT bus and associate it to its GPIO
-  peripheral_bus_type_t pinBusType =
-    channel_direction == RMT_TX_MODE ? ESP32_BUS_TYPE_RMT_TX : ESP32_BUS_TYPE_RMT_RX;
+  peripheral_bus_type_t pinBusType = channel_direction == RMT_TX_MODE ? ESP32_BUS_TYPE_RMT_TX : ESP32_BUS_TYPE_RMT_RX;
   if (!perimanSetPinBus(pin, pinBusType, (void *)bus, -1, -1)) {
     log_e("Can't allocate the GPIO %d in the Peripheral Manager.", pin);
     goto Err;

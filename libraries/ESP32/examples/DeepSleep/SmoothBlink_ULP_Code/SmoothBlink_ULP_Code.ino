@@ -12,7 +12,7 @@
 
 // RTC Memory used for ULP internal variable and Sketch interfacing
 #define RTC_dutyMeter 0
-#define RTC_dir 4
+#define RTC_dir       4
 #define RTC_fadeDelay 12
 // *fadeCycleDelay is used to pass values to ULP and change its behavior
 uint32_t *fadeCycleDelay = &RTC_SLOW_MEM[RTC_fadeDelay];
@@ -23,8 +23,7 @@ RTC_DATA_ATTR uint32_t ULP_Started = 0;  // 0 or 1
 
 //Time-to-Sleep
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP 5           /* Time ESP32 will go to sleep (in microseconds); multiplied by above conversion to achieve seconds*/
-
+#define TIME_TO_SLEEP  5          /* Time ESP32 will go to sleep (in microseconds); multiplied by above conversion to achieve seconds*/
 
 void ulp_setup() {
   if (ULP_Started) {
@@ -138,7 +137,6 @@ void ulp_setup() {
   ulp_run(ULP_START_OFFSET);
 }
 
-
 void setup() {
   Serial.begin(115200);
   while (!Serial) {}  // wait for Serial to start
@@ -158,7 +156,6 @@ void setup() {
   esp_deep_sleep_start();
   // From this point on, no code is executed in DEEP SLEEP mode
 }
-
 
 void loop() {
   // It never reaches this code because it enters in Deep Sleep mode at the end of setup()

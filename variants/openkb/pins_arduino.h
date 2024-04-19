@@ -54,7 +54,6 @@ static const uint8_t LDR_PIN = 36;
 static const uint8_t SW1 = 16;
 static const uint8_t SW2 = 14;
 
-
 static const uint8_t BT_LED = 17;
 static const uint8_t WIFI_LED = 2;
 static const uint8_t NTP_LED = 15;

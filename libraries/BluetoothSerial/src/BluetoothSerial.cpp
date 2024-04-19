@@ -20,7 +20,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 #ifdef ARDUINO_ARCH_ESP32
@@ -41,10 +40,10 @@
 
 const char *_spp_server_name = "ESP32SPP";
 
-#define RX_QUEUE_SIZE 512
-#define TX_QUEUE_SIZE 32
-#define SPP_TX_QUEUE_TIMEOUT 1000
-#define SPP_TX_DONE_TIMEOUT 1000
+#define RX_QUEUE_SIZE         512
+#define TX_QUEUE_SIZE         32
+#define SPP_TX_QUEUE_TIMEOUT  1000
+#define SPP_TX_DONE_TIMEOUT   1000
 #define SPP_CONGESTED_TIMEOUT 1000
 
 static uint32_t _spp_client = 0;
@@ -62,12 +61,12 @@ static ConfirmRequestCb confirm_request_callback = NULL;
 static KeyRequestCb key_request_callback = NULL;
 static AuthCompleteCb auth_complete_callback = NULL;
 static bool _rmt_name_valid = false;
-static uint8_t _rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1] = { 0 };
+static uint8_t _rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1] = {0};
 
-#define INQ_LEN 0x10
-#define INQ_NUM_RSPS 20
+#define INQ_LEN       0x10
+#define INQ_NUM_RSPS  20
 #define READY_TIMEOUT (10 * 1000)
-#define SCAN_TIMEOUT (INQ_LEN * 2 * 1000)
+#define SCAN_TIMEOUT  (INQ_LEN * 2 * 1000)
 static esp_bd_addr_t _peer_bd_addr;
 static char _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
 static bool _isRemoteAddressSet;
@@ -77,7 +76,7 @@ static bool _enableSSP;
 static bool _IO_CAP_INPUT;
 static bool _IO_CAP_OUTPUT;
 #endif
-esp_bt_pin_code_t _pin_code = { 0 };
+esp_bt_pin_code_t _pin_code = {0};
 uint8_t _pin_code_len = 0;  // Number of valid Bytes in the esp_bt_pin_code_t array
 static esp_spp_sec_t _sec_mask;
 static esp_spp_role_t _role;
@@ -89,7 +88,7 @@ static BTScanResultsSet scanResults;
 static BTAdvertisedDeviceCb advertisedDeviceCb = nullptr;
 
 // _spp_event_group
-#define SPP_RUNNING 0x01
+#define SPP_RUNNING   0x01
 #define SPP_CONNECTED 0x02
 #define SPP_CONGESTED 0x04
 // true until OPEN successful, changes to false on CLOSE
@@ -98,10 +97,10 @@ static BTAdvertisedDeviceCb advertisedDeviceCb = nullptr;
 #define SPP_CLOSED 0x10
 
 // _bt_event_group
-#define BT_DISCOVERY_RUNNING 0x01
+#define BT_DISCOVERY_RUNNING   0x01
 #define BT_DISCOVERY_COMPLETED 0x02
 
-#define BT_SDP_RUNNING 0x04
+#define BT_SDP_RUNNING   0x04
 #define BT_SDP_COMPLETED 0x08
 
 typedef struct {
@@ -116,8 +115,7 @@ static char *bda2str(esp_bd_addr_t bda, char *str, size_t size) {
   }
 
   uint8_t *p = bda;
-  snprintf(str, size, "%02x:%02x:%02x:%02x:%02x:%02x",
-           p[0], p[1], p[2], p[3], p[4], p[5]);
+  snprintf(str, size, "%02x:%02x:%02x:%02x:%02x:%02x", p[0], p[1], p[2], p[3], p[4], p[5]);
   return str;
 }
 #endif
@@ -272,9 +270,7 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
           if (param->disc_comp.scn_num > 0) {
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
             char bda_str[18];
-            log_i("ESP_SPP_DISCOVERY_COMP_EVT: spp connect to remote %s channel %d",
-                  bda2str(_peer_bd_addr, bda_str, sizeof(bda_str)),
-                  param->disc_comp.scn[0]);
+            log_i("ESP_SPP_DISCOVERY_COMP_EVT: spp connect to remote %s channel %d", bda2str(_peer_bd_addr, bda_str, sizeof(bda_str)), param->disc_comp.scn[0]);
 #endif
             xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
             if (esp_spp_connect(_sec_mask, _role, param->disc_comp.scn[0], _peer_bd_addr) != ESP_OK) {
@@ -311,8 +307,10 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
 
     case ESP_SPP_CLOSE_EVT:  // Enum 27 - When SPP connection closed
       if ((param->close.async == false && param->close.status == ESP_SPP_SUCCESS) || param->close.async) {
-        log_i("ESP_SPP_CLOSE_EVT status:%d handle:%d close_by_remote:%d attempt %u", param->close.status,
-              param->close.handle, param->close.async, secondConnectionAttempt);
+        log_i(
+          "ESP_SPP_CLOSE_EVT status:%d handle:%d close_by_remote:%d attempt %u", param->close.status, param->close.handle, param->close.async,
+          secondConnectionAttempt
+        );
         if (secondConnectionAttempt) {
           secondConnectionAttempt = false;
         } else {
@@ -406,99 +404,96 @@ static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
       log_i("ESP_SPP_VFS_UNREGISTER_EVT");
       break;
 
-    default:
-      log_i("ESP_SPP_* event #%d unhandled", event);
-      break;
+    default: log_i("ESP_SPP_* event #%d unhandled", event); break;
   }
-  if (custom_spp_callback) (*custom_spp_callback)(event, param);
+  if (custom_spp_callback) {
+    (*custom_spp_callback)(event, param);
+  }
 }
 
 void BluetoothSerial::onData(BluetoothSerialDataCb cb) {
   custom_data_callback = cb;
 }
 
-
 static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param) {
   switch (event) {
     case ESP_BT_GAP_DISC_RES_EVT:
-      {  // Enum 0 - Device discovery result event
-        log_i("ESP_BT_GAP_DISC_RES_EVT properties=%d", param->disc_res.num_prop);
+    {  // Enum 0 - Device discovery result event
+      log_i("ESP_BT_GAP_DISC_RES_EVT properties=%d", param->disc_res.num_prop);
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
-        char bda_str[18];
-        log_i("Scanned device: %s", bda2str(param->disc_res.bda, bda_str, 18));
+      char bda_str[18];
+      log_i("Scanned device: %s", bda2str(param->disc_res.bda, bda_str, 18));
 #endif
-        BTAdvertisedDeviceSet advertisedDevice;
-        uint8_t peer_bdname_len = 0;
-        char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
-        for (int i = 0; i < param->disc_res.num_prop; i++) {
-          switch (param->disc_res.prop[i].type) {
-            case ESP_BT_GAP_DEV_PROP_BDNAME:  // Enum 1 - Bluetooth device name, value type is int8_t []
-              peer_bdname_len = param->disc_res.prop[i].len;
-              memcpy(peer_bdname, param->disc_res.prop[i].val, peer_bdname_len);
-              peer_bdname_len--;  // len includes 0 terminator
-              log_v("ESP_BT_GAP_DISC_RES_EVT : BDNAME :  %s : %d", peer_bdname, peer_bdname_len);
-              if (strlen(_remote_name) == peer_bdname_len
-                  && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
-                log_i("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_BDNAME : %s", peer_bdname);
+      BTAdvertisedDeviceSet advertisedDevice;
+      uint8_t peer_bdname_len = 0;
+      char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
+      for (int i = 0; i < param->disc_res.num_prop; i++) {
+        switch (param->disc_res.prop[i].type) {
+          case ESP_BT_GAP_DEV_PROP_BDNAME:  // Enum 1 - Bluetooth device name, value type is int8_t []
+            peer_bdname_len = param->disc_res.prop[i].len;
+            memcpy(peer_bdname, param->disc_res.prop[i].val, peer_bdname_len);
+            peer_bdname_len--;  // len includes 0 terminator
+            log_v("ESP_BT_GAP_DISC_RES_EVT : BDNAME :  %s : %d", peer_bdname, peer_bdname_len);
+            if (strlen(_remote_name) == peer_bdname_len && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
+              log_i("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_BDNAME : %s", peer_bdname);
+              _isRemoteAddressSet = true;
+              memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
+              esp_bt_gap_cancel_discovery();
+              esp_spp_start_discovery(_peer_bd_addr);
+            }
+            break;
+
+          case ESP_BT_GAP_DEV_PROP_COD:  // Enum 2 - Class of Device, value type is uint32_t
+            if (param->disc_res.prop[i].len <= sizeof(int)) {
+              uint32_t cod = 0;
+              memcpy(&cod, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
+              advertisedDevice.setCOD(cod);
+              log_d("ESP_BT_GAP_DEV_PROP_COD 0x%x", cod);
+            } else {
+              log_d("ESP_BT_GAP_DEV_PROP_COD invalid COD: Value size larger than integer");
+            }
+            break;
+
+          case ESP_BT_GAP_DEV_PROP_RSSI:  // Enum 3 - Received Signal strength Indication, value type is int8_t, ranging from -128 to 127
+            if (param->disc_res.prop[i].len <= sizeof(int)) {
+              uint8_t rssi = 0;
+              memcpy(&rssi, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
+              log_d("ESP_BT_GAP_DEV_PROP_RSSI %d", rssi);
+              advertisedDevice.setRSSI(rssi);
+            } else {
+              log_d("ESP_BT_GAP_DEV_PROP_RSSI invalid RSSI: Value size larger than integer");
+            }
+            break;
+
+          case ESP_BT_GAP_DEV_PROP_EIR:  // Enum 4 - Extended Inquiry Response, value type is uint8_t []
+            if (get_name_from_eir((uint8_t *)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)) {
+              log_i("ESP_BT_GAP_DISC_RES_EVT : EIR : %s : %d", peer_bdname, peer_bdname_len);
+              if (strlen(_remote_name) == peer_bdname_len && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
+                log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_EIR : %s", peer_bdname, peer_bdname_len);
                 _isRemoteAddressSet = true;
                 memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
                 esp_bt_gap_cancel_discovery();
                 esp_spp_start_discovery(_peer_bd_addr);
               }
-              break;
-
-            case ESP_BT_GAP_DEV_PROP_COD:  // Enum 2 - Class of Device, value type is uint32_t
-              if (param->disc_res.prop[i].len <= sizeof(int)) {
-                uint32_t cod = 0;
-                memcpy(&cod, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
-                advertisedDevice.setCOD(cod);
-                log_d("ESP_BT_GAP_DEV_PROP_COD 0x%x", cod);
-              } else {
-                log_d("ESP_BT_GAP_DEV_PROP_COD invalid COD: Value size larger than integer");
-              }
-              break;
-
-            case ESP_BT_GAP_DEV_PROP_RSSI:  // Enum 3 - Received Signal strength Indication, value type is int8_t, ranging from -128 to 127
-              if (param->disc_res.prop[i].len <= sizeof(int)) {
-                uint8_t rssi = 0;
-                memcpy(&rssi, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
-                log_d("ESP_BT_GAP_DEV_PROP_RSSI %d", rssi);
-                advertisedDevice.setRSSI(rssi);
-              } else {
-                log_d("ESP_BT_GAP_DEV_PROP_RSSI invalid RSSI: Value size larger than integer");
-              }
-              break;
-
-            case ESP_BT_GAP_DEV_PROP_EIR:  // Enum 4 - Extended Inquiry Response, value type is uint8_t []
-              if (get_name_from_eir((uint8_t *)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)) {
-                log_i("ESP_BT_GAP_DISC_RES_EVT : EIR : %s : %d", peer_bdname, peer_bdname_len);
-                if (strlen(_remote_name) == peer_bdname_len
-                    && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
-                  log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_EIR : %s", peer_bdname, peer_bdname_len);
-                  _isRemoteAddressSet = true;
-                  memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
-                  esp_bt_gap_cancel_discovery();
-                  esp_spp_start_discovery(_peer_bd_addr);
-                }
-              }
-              break;
-
-            default:
-              log_i("ESP_BT_GAP_DISC_RES_EVT unknown property [%d]:type:%d", i, param->disc_res.prop[i].type);
-              break;
-          }
-          if (_isRemoteAddressSet)
+            }
             break;
+
+          default: log_i("ESP_BT_GAP_DISC_RES_EVT unknown property [%d]:type:%d", i, param->disc_res.prop[i].type); break;
         }
-        if (peer_bdname_len)
-          advertisedDevice.setName(peer_bdname);
-        esp_bd_addr_t addr;
-        memcpy(addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
-        advertisedDevice.setAddress(BTAddress(addr));
-        if (scanResults.add(advertisedDevice) && advertisedDeviceCb)
-          advertisedDeviceCb(&advertisedDevice);
+        if (_isRemoteAddressSet) {
+          break;
+        }
       }
-      break;
+      if (peer_bdname_len) {
+        advertisedDevice.setName(peer_bdname);
+      }
+      esp_bd_addr_t addr;
+      memcpy(addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
+      advertisedDevice.setAddress(BTAddress(addr));
+      if (scanResults.add(advertisedDevice) && advertisedDeviceCb) {
+        advertisedDeviceCb(&advertisedDevice);
+      }
+    } break;
 
     case ESP_BT_GAP_DISC_STATE_CHANGED_EVT:  // Enum 1 - Discovery state changed event
       if (param->disc_st_chg.state == ESP_BT_GAP_DISCOVERY_STOPPED) {
@@ -594,7 +589,6 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
       }
       break;
 
-
     case ESP_BT_GAP_MODE_CHG_EVT:  // Enum 13
       log_i("ESP_BT_GAP_MODE_CHG_EVT: mode: %d", param->mode_chg.mode);
       break;
@@ -612,12 +606,13 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
       break;
 
     case ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT:  // Enum 17 - ACL disconnection complete status event
-      log_i("ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT ACL disconnection complete status event: reason %d, handle %d", param->acl_disconn_cmpl_stat.reason, param->acl_disconn_cmpl_stat.handle);
+      log_i(
+        "ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT ACL disconnection complete status event: reason %d, handle %d", param->acl_disconn_cmpl_stat.reason,
+        param->acl_disconn_cmpl_stat.handle
+      );
       break;
 
-    default:
-      log_i("ESP-BT_GAP_* unknown message: %d", event);
-      break;
+    default: log_i("ESP-BT_GAP_* unknown message: %d", event); break;
   }
 }
 
@@ -744,8 +739,9 @@ static bool _init_bt(const char *deviceName, bt_mode mode) {
 
 static bool _stop_bt() {
   if (btStarted()) {
-    if (_spp_client)
+    if (_spp_client) {
       esp_spp_disconnect(_spp_client);
+    }
     esp_spp_deinit();
     esp_bluedroid_disable();
     esp_bluedroid_deinit();
@@ -788,9 +784,9 @@ static bool waitForConnect(int timeout) {
   TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
   // wait for connected or closed
   EventBits_t rc = xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED | SPP_CLOSED, pdFALSE, pdFALSE, xTicksToWait);
-  if ((rc & SPP_CONNECTED) != 0)
+  if ((rc & SPP_CONNECTED) != 0) {
     return true;
-  else if ((rc & SPP_CLOSED) != 0) {
+  } else if ((rc & SPP_CLOSED) != 0) {
     log_d("connection closed!");
     return false;
   }
@@ -920,7 +916,6 @@ void BluetoothSerial::confirmReply(boolean confirm) {
   esp_bt_gap_ssp_confirm_reply(current_bd_addr, confirm);
 }
 
-
 esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t callback) {
   custom_spp_callback = callback;
   return ESP_OK;
@@ -978,7 +973,9 @@ bool BluetoothSerial::setPin(const char *pin, uint8_t pin_code_len) {
 bool BluetoothSerial::connect(String remoteName) {
   bool retval = false;
 
-  if (!isReady(true, READY_TIMEOUT)) return false;
+  if (!isReady(true, READY_TIMEOUT)) {
+    return false;
+  }
   if (remoteName && remoteName.length() < 1) {
     log_e("No remote name is provided");
     return false;
@@ -1020,7 +1017,9 @@ bool BluetoothSerial::connect(String remoteName) {
  */
 bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_t sec_mask, esp_spp_role_t role) {
   bool retval = false;
-  if (!isReady(true, READY_TIMEOUT)) return false;
+  if (!isReady(true, READY_TIMEOUT)) {
+    return false;
+  }
   if (!remoteAddress) {
     log_e("No remote address is provided");
     return false;
@@ -1037,9 +1036,7 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_
   if (channel > 0) {
 #if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
     char bda_str[18];
-    log_i("spp connect to remote %s channel %d",
-          bda2str(_peer_bd_addr, bda_str, sizeof(bda_str)),
-          channel);
+    log_i("spp connect to remote %s channel %d", bda2str(_peer_bd_addr, bda_str, sizeof(bda_str)), channel);
 #endif
     if (esp_spp_connect(sec_mask, role, channel, _peer_bd_addr) != ESP_OK) {
       log_e("spp connect failed");
@@ -1067,7 +1064,9 @@ bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_
 }
 
 bool BluetoothSerial::connect() {
-  if (!isReady(true, READY_TIMEOUT)) return false;
+  if (!isReady(true, READY_TIMEOUT)) {
+    return false;
+  }
   _doConnect = true;
   if (_isRemoteAddressSet) {
     disconnect();
@@ -1139,7 +1138,6 @@ bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
   return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING) != 0;
 }
 
-
 /**
  * @brief           RemoteName or address are not allowed to be set during discovery
  *                  (otherwise it might connect automatically and stop discovery)
@@ -1176,17 +1174,20 @@ BTScanResults *BluetoothSerial::discover(int timeoutMs) {
  */
 bool BluetoothSerial::discoverAsync(BTAdvertisedDeviceCb cb, int timeoutMs) {
   scanResults.clear();
-  if (strlen(_remote_name) || _isRemoteAddressSet)
+  if (strlen(_remote_name) || _isRemoteAddressSet) {
     return false;
+  }
   int timeout = timeoutMs / INQ_TIME;
   disconnect();
   advertisedDeviceCb = cb;
   log_i("discovering");
   // will resolve name to address first - it may take a while
   esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-  if (timeout > 0)
+  if (timeout > 0) {
     return esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, timeout, 0) == ESP_OK;
-  else return esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, ESP_BT_GAP_MAX_INQ_LEN, 0) == ESP_OK;
+  } else {
+    return esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, ESP_BT_GAP_MAX_INQ_LEN, 0) == ESP_OK;
+  }
 }
 
 /** @brief      Stops the asynchronous discovery and clears the callback */

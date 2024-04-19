@@ -56,34 +56,33 @@ typedef struct {
   wav_data_chunk_t data_chunk;             /*!< The "data" subchunk contains the size of the data and the actual sound */
 } __attribute__((packed)) non_pcm_wav_header_t;
 
-#define WAVE_FORMAT_PCM 1         // PCM
+#define WAVE_FORMAT_PCM        1  // PCM
 #define WAVE_FORMAT_IEEE_FLOAT 3  // IEEE float
-#define WAVE_FORMAT_ALAW 6        // 8-bit ITU-T G.711 A-law
-#define WAVE_FORMAT_MULAW 7       // 8-bit ITU-T G.711 µ-law
+#define WAVE_FORMAT_ALAW       6  // 8-bit ITU-T G.711 A-law
+#define WAVE_FORMAT_MULAW      7  // 8-bit ITU-T G.711 µ-law
 
-#define PCM_WAV_HEADER_SIZE 44
+#define PCM_WAV_HEADER_SIZE     44
 #define NON_PCM_WAV_HEADER_SIZE 46
 
 /**
  * @brief Default header for PCM format WAV files
  *
  */
-#define PCM_WAV_HEADER_DEFAULT(wav_sample_size, wav_sample_bits, wav_sample_rate, wav_channel_num) \
-  { \
-    .descriptor_chunk = { \
-      .chunk_id = { 'R', 'I', 'F', 'F' }, \
-      .chunk_size = (wav_sample_size) + sizeof(pcm_wav_header_t) - 8, \
-      .chunk_format = { 'W', 'A', 'V', 'E' } \
-    }, \
-    .fmt_chunk = { .subchunk_id = { 'f', 'm', 't', ' ' }, .subchunk_size = 16, /* 16 for PCM */ \
-                   .audio_format = WAVE_FORMAT_PCM,                            /* 1 for PCM */ \
-                   .num_of_channels = (uint16_t)(wav_channel_num), \
-                   .sample_rate = (wav_sample_rate), \
-                   .byte_rate = (wav_sample_bits) * (wav_sample_rate) * (wav_channel_num) / 8, \
-                   .block_align = (uint16_t)((wav_sample_bits) * (wav_channel_num) / 8), \
-                   .bits_per_sample = (uint16_t)(wav_sample_bits) }, \
-    .data_chunk = { \
-      .subchunk_id = { 'd', 'a', 't', 'a' }, \
-      .subchunk_size = (wav_sample_size) \
-    } \
+#define PCM_WAV_HEADER_DEFAULT(wav_sample_size, wav_sample_bits, wav_sample_rate, wav_channel_num)                                              \
+  {                                                                                                                                             \
+    .descriptor_chunk =                                                                                                                         \
+      {.chunk_id = {'R', 'I', 'F', 'F'}, .chunk_size = (wav_sample_size) + sizeof(pcm_wav_header_t) - 8, .chunk_format = {'W', 'A', 'V', 'E'}}, \
+    .fmt_chunk =                                                                                                                                \
+      {.subchunk_id = {'f', 'm', 't', ' '},                                                                                                     \
+       .subchunk_size = 16,             /* 16 for PCM */                                                                                        \
+       .audio_format = WAVE_FORMAT_PCM, /* 1 for PCM */                                                                                         \
+       .num_of_channels = (uint16_t)(wav_channel_num),                                                                                          \
+       .sample_rate = (wav_sample_rate),                                                                                                        \
+       .byte_rate = (wav_sample_bits) * (wav_sample_rate) * (wav_channel_num) / 8,                                                              \
+       .block_align = (uint16_t)((wav_sample_bits) * (wav_channel_num) / 8),                                                                    \
+       .bits_per_sample = (uint16_t)(wav_sample_bits)},                                                                                         \
+    .data_chunk = {                                                                                                                             \
+      .subchunk_id = {'d', 'a', 't', 'a'},                                                                                                      \
+      .subchunk_size = (wav_sample_size)                                                                                                        \
+    }                                                                                                                                           \
   }

@@ -59,10 +59,10 @@ void loop() {
         int len = http.getSize();
 
         // create buffer for read
-        uint8_t buff[128] = { 0 };
+        uint8_t buff[128] = {0};
 
         // get tcp stream
-        NetworkClient* stream = http.getStreamPtr();
+        NetworkClient *stream = http.getStreamPtr();
 
         // read all data from server
         while (http.connected() && (len > 0 || len == -1)) {

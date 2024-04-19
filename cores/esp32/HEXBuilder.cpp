@@ -21,9 +21,10 @@
 #include <HEXBuilder.h>
 
 static uint8_t hex_char_to_byte(uint8_t c) {
-  return (c >= 'a' && c <= 'f') ? (c - ((uint8_t)'a' - 0xa)) : (c >= 'A' && c <= 'F') ? (c - ((uint8_t)'A' - 0xA))
-                                                             : (c >= '0' && c <= '9') ? (c - (uint8_t)'0')
-                                                                                      : 0x10;  // unknown char is 16
+  return (c >= 'a' && c <= 'f')   ? (c - ((uint8_t)'a' - 0xa))
+         : (c >= 'A' && c <= 'F') ? (c - ((uint8_t)'A' - 0xA))
+         : (c >= '0' && c <= '9') ? (c - (uint8_t)'0')
+                                  : 0x10;  // unknown char is 16
 }
 
 size_t HEXBuilder::hex2bytes(unsigned char *out, size_t maxlen, String &in) {
@@ -35,15 +36,18 @@ size_t HEXBuilder::hex2bytes(unsigned char *out, size_t maxlen, const char *in) 
   for (; *in; in++) {
     uint8_t c = hex_char_to_byte(*in);
     // Silently skip anything unknown.
-    if (c > 15)
+    if (c > 15) {
       continue;
+    }
 
     if (len & 1) {
-      if (len / 2 < maxlen)
+      if (len / 2 < maxlen) {
         out[len / 2] |= c;
+      }
     } else {
-      if (len / 2 < maxlen)
+      if (len / 2 < maxlen) {
         out[len / 2] = c << 4;
+      }
     }
     len++;
   }
@@ -62,7 +66,9 @@ size_t HEXBuilder::bytes2hex(char *out, size_t maxlen, const unsigned char *in, 
 String HEXBuilder::bytes2hex(const unsigned char *in, size_t len) {
   size_t maxlen = len * 2 + 1;
   char *out = (char *)malloc(maxlen);
-  if (!out) return String();
+  if (!out) {
+    return String();
+  }
   bytes2hex(out, maxlen, in, len);
   String ret = String(out);
   free(out);

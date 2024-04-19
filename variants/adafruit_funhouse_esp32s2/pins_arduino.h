@@ -3,12 +3,11 @@
 
 #include <stdint.h>
 
-
-#define USB_VID 0x239A
-#define USB_PID 0x80F9
+#define USB_VID          0x239A
+#define USB_PID          0x80F9
 #define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "Funhouse ESP32-S2"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "Funhouse ESP32-S2"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 #define LED_BUILTIN 37
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
@@ -45,10 +44,6 @@ static const uint8_t A0 = 17;
 static const uint8_t A1 = 2;
 static const uint8_t A2 = 1;
 static const uint8_t A3 = 18;  // light sensor
-
-
-
-
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

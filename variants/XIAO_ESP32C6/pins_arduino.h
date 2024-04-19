@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x2886
-#define USB_PID 0x0048
+#define USB_VID          0x2886
+#define USB_PID          0x0048
 #define USB_MANUFACTURER "Seeed Studio"
-#define USB_PRODUCT "XIAO ESP32-C6"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "XIAO ESP32-C6"
+#define USB_SERIAL       ""
 
 static const uint8_t LED_BUILTIN = 15;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

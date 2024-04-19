@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x3343
-#define USB_PID 0x8364
+#define USB_VID          0x3343
+#define USB_PID          0x8364
 #define USB_MANUFACTURER "DFRobot"
-#define USB_PRODUCT "Beetle ESP32-C3"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "Beetle ESP32-C3"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = 10;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
@@ -34,17 +34,17 @@ static const uint8_t A5 = 5;
 #define GDI_DISPLAY_FPC_INTERFACE
 #ifdef GDI_DISPLAY_FPC_INTERFACE
 
-#define GDI_BLK LED_BUILTIN
+#define GDI_BLK      LED_BUILTIN
 #define GDI_SPI_SCLK SCK
 #define GDI_SPI_MOSI MOSI
 #define GDI_SPI_MISO MISO
-#define GDI_DC A1
-#define GDI_RES A2
-#define GDI_CS SS
-#define GDI_SDCS A0
-#define GDI_TCS A3
-#define GDI_SCL SCL
-#define GDI_SDA SDA
+#define GDI_DC       A1
+#define GDI_RES      A2
+#define GDI_CS       SS
+#define GDI_SDCS     A0
+#define GDI_TCS      A3
+#define GDI_SCL      SCL
+#define GDI_SDA      SDA
 
 #endif
 

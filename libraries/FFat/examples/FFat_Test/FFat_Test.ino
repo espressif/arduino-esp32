@@ -162,7 +162,9 @@ void testFileIO(fs::FS &fs, const char *path) {
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
-  if (FORMAT_FFAT) FFat.format();
+  if (FORMAT_FFAT) {
+    FFat.format();
+  }
   if (!FFat.begin()) {
     Serial.println("FFat Mount Failed");
     return;
@@ -183,5 +185,4 @@ void setup() {
   Serial.println("Test complete");
 }
 
-void loop() {
-}
+void loop() {}

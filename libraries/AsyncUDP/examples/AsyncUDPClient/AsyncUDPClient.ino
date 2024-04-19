@@ -1,8 +1,8 @@
 #include "WiFi.h"
 #include "AsyncUDP.h"
 
-const char* ssid = "***********";
-const char* password = "***********";
+const char *ssid = "***********";
+const char *password = "***********";
 
 AsyncUDP udp;
 
@@ -20,8 +20,7 @@ void setup() {
     Serial.println("UDP connected");
     udp.onPacket([](AsyncUDPPacket packet) {
       Serial.print("UDP Packet Type: ");
-      Serial.print(packet.isBroadcast() ? "Broadcast" : packet.isMulticast() ? "Multicast"
-                                                                             : "Unicast");
+      Serial.print(packet.isBroadcast() ? "Broadcast" : packet.isMulticast() ? "Multicast" : "Unicast");
       Serial.print(", From: ");
       Serial.print(packet.remoteIP());
       Serial.print(":");

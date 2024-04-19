@@ -49,7 +49,7 @@ WiFiMulti::~WiFiMulti() {
   APlistClean();
 }
 
-bool WiFiMulti::addAP(const char* ssid, const char* passphrase) {
+bool WiFiMulti::addAP(const char *ssid, const char *passphrase) {
   WifiAPlist_t newAP;
 
   if (!ssid || *ssid == '\0' || strlen(ssid) > 31) {
@@ -120,7 +120,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
   } else if (scanResult >= 0) {
     // scan done analyze
     int32_t bestIndex = -1;
-    WifiAPlist_t bestNetwork{ NULL, NULL, false };
+    WifiAPlist_t bestNetwork{NULL, NULL, false};
     int bestNetworkDb = INT_MIN;
     int bestNetworkSec = WIFI_AUTH_MAX;
     uint8_t bestBSSID[6];
@@ -140,7 +140,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
         String ssid_scan;
         int32_t rssi_scan;
         uint8_t sec_scan;
-        uint8_t* BSSID_scan;
+        uint8_t *BSSID_scan;
         int32_t chan_scan;
         bool hidden_scan;
 
@@ -213,8 +213,8 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
                   bestNetworkSec = sec_scan;
                   bestNetworkDb = rssi_scan;
                   bestChannel = chan_scan;
-                  memcpy((void*)&bestNetwork, (void*)&entry, sizeof(bestNetwork));
-                  memcpy((void*)&bestBSSID, (void*)BSSID_scan, sizeof(bestBSSID));
+                  memcpy((void *)&bestNetwork, (void *)&entry, sizeof(bestNetwork));
+                  memcpy((void *)&bestBSSID, (void *)BSSID_scan, sizeof(bestBSSID));
                 }
               }
               break;
@@ -225,23 +225,15 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
         }
 
         if (known) {
-          log_d(" --->   %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) (%c) (%s)",
-                i,
-                chan_scan,
-                BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5],
-                ssid_scan.c_str(),
-                rssi_scan,
-                (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*',
-                (hidden_scan) ? "hidden" : "visible");
+          log_d(
+            " --->   %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3],
+            BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*', (hidden_scan) ? "hidden" : "visible"
+          );
         } else {
-          log_d("        %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) (%c) (%s)",
-                i,
-                chan_scan,
-                BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5],
-                ssid_scan.c_str(),
-                rssi_scan,
-                (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*',
-                (hidden_scan) ? "hidden" : "visible");
+          log_d(
+            "        %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3],
+            BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*', (hidden_scan) ? "hidden" : "visible"
+          );
         }
       }
       log_v("foundCount = %d, failCount = %d", foundCount, failCount);
@@ -254,7 +246,10 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
     WiFi.scanDelete();
 
     if (bestIndex >= 0) {
-      log_i("[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channel: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3], bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb);
+      log_i(
+        "[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channel: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3],
+        bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb
+      );
 
       if (ipv6_support == true) {
         WiFi.enableIPv6();

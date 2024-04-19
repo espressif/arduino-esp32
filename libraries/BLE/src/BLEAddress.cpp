@@ -21,7 +21,6 @@
 #include "esp32-hal-log.h"
 #endif
 
-
 /**
  * @brief Create an address from the native ESP32 representation.
  * @param [in] address The native representation.
@@ -29,7 +28,6 @@
 BLEAddress::BLEAddress(esp_bd_addr_t address) {
   memcpy(m_address, address, ESP_BD_ADDR_LEN);
 }  // BLEAddress
-
 
 /**
  * @brief Create an address from a hex string
@@ -43,7 +41,9 @@ BLEAddress::BLEAddress(esp_bd_addr_t address) {
  * @param [in] stringAddress The hex representation of the address.
  */
 BLEAddress::BLEAddress(String stringAddress) {
-  if (stringAddress.length() != 17) return;
+  if (stringAddress.length() != 17) {
+    return;
+  }
 
   int data[6];
   sscanf(stringAddress.c_str(), "%x:%x:%x:%x:%x:%x", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5]);
@@ -55,7 +55,6 @@ BLEAddress::BLEAddress(String stringAddress) {
   m_address[5] = (uint8_t)data[5];
 }  // BLEAddress
 
-
 /**
  * @brief Determine if this address equals another.
  * @param [in] otherAddress The other address to compare against.
@@ -65,27 +64,27 @@ bool BLEAddress::equals(BLEAddress otherAddress) {
   return memcmp(otherAddress.getNative(), m_address, ESP_BD_ADDR_LEN) == 0;
 }  // equals
 
-bool BLEAddress::operator==(const BLEAddress& otherAddress) const {
+bool BLEAddress::operator==(const BLEAddress &otherAddress) const {
   return memcmp(otherAddress.m_address, m_address, ESP_BD_ADDR_LEN) == 0;
 }
 
-bool BLEAddress::operator!=(const BLEAddress& otherAddress) const {
+bool BLEAddress::operator!=(const BLEAddress &otherAddress) const {
   return !(*this == otherAddress);
 }
 
-bool BLEAddress::operator<(const BLEAddress& otherAddress) const {
+bool BLEAddress::operator<(const BLEAddress &otherAddress) const {
   return memcmp(m_address, otherAddress.m_address, ESP_BD_ADDR_LEN) < 0;
 }
 
-bool BLEAddress::operator<=(const BLEAddress& otherAddress) const {
+bool BLEAddress::operator<=(const BLEAddress &otherAddress) const {
   return !(*this > otherAddress);
 }
 
-bool BLEAddress::operator>=(const BLEAddress& otherAddress) const {
+bool BLEAddress::operator>=(const BLEAddress &otherAddress) const {
   return !(*this < otherAddress);
 }
 
-bool BLEAddress::operator>(const BLEAddress& otherAddress) const {
+bool BLEAddress::operator>(const BLEAddress &otherAddress) const {
   return memcmp(m_address, otherAddress.m_address, ESP_BD_ADDR_LEN) > 0;
 }
 
@@ -93,10 +92,9 @@ bool BLEAddress::operator>(const BLEAddress& otherAddress) const {
  * @brief Return the native representation of the address.
  * @return The native representation of the address.
  */
-esp_bd_addr_t* BLEAddress::getNative() {
+esp_bd_addr_t *BLEAddress::getNative() {
   return &m_address;
 }  // getNative
-
 
 /**
  * @brief Convert a BLE address to a string.
@@ -111,7 +109,7 @@ esp_bd_addr_t* BLEAddress::getNative() {
  */
 String BLEAddress::toString() {
   auto size = 18;
-  char* res = (char*)malloc(size);
+  char *res = (char *)malloc(size);
   snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
   String ret(res);
   free(res);

@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-#define WIFI_Kit_32 true
+#define WIFI_Kit_32    true
 #define DISPLAY_HEIGHT 64
-#define DISPLAY_WIDTH 128
+#define DISPLAY_WIDTH  128
 
 static const uint8_t LED_BUILTIN = 25;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

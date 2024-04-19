@@ -28,7 +28,7 @@
 #include "esp_sleep.h"
 
 #define GPIO_DEEP_SLEEP_DURATION 10  // sleep x seconds and then wake up
-#define BEACON_POWER ESP_PWR_LVL_N12
+#define BEACON_POWER             ESP_PWR_LVL_N12
 RTC_DATA_ATTR static time_t last;         // remember last boot in RTC Memory
 RTC_DATA_ATTR static uint32_t bootcount;  // remember number of boots in RTC Memory
 
@@ -89,5 +89,4 @@ void setup() {
   esp_deep_sleep(1000000LL * GPIO_DEEP_SLEEP_DURATION);
 }
 
-void loop() {
-}
+void loop() {}

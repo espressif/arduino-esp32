@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x303A
-#define USB_PID 0x810D
+#define USB_VID          0x303A
+#define USB_PID          0x810D
 #define USB_MANUFACTURER "Smart Bee Designs"
-#define USB_PRODUCT "Bee Motion S3"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "Bee Motion S3"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -49,7 +49,5 @@ static const uint8_t T14 = 14;
 
 static const uint8_t BOOT_BTN = 0;
 static const uint8_t PIR = 5;
-
-
 
 #endif /* Pins_Arduino_h */

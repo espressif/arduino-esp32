@@ -9,7 +9,6 @@ static const uint8_t RX = 3;
 static const uint8_t SDA = 26;
 static const uint8_t SCL = 32;
 
-
 static const uint8_t G12 = 12;
 static const uint8_t G19 = 19;
 static const uint8_t G21 = 21;

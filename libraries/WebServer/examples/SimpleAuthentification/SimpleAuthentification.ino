@@ -2,8 +2,8 @@
 #include <NetworkClient.h>
 #include <WebServer.h>
 
-const char* ssid = "........";
-const char* password = "........";
+const char *ssid = "........";
+const char *password = "........";
 
 WebServer server(80);
 
@@ -110,7 +110,6 @@ void setup(void) {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-
   server.on("/", handleRoot);
   server.on("/login", handleLogin);
   server.on("/inline", []() {
@@ -119,8 +118,8 @@ void setup(void) {
 
   server.onNotFound(handleNotFound);
   //here the list of headers to be recorded
-  const char* headerkeys[] = { "User-Agent", "Cookie" };
-  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
+  const char *headerkeys[] = {"User-Agent", "Cookie"};
+  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char *);
   //ask server to track these headers
   server.collectHeaders(headerkeys, headerkeyssize);
   server.begin();

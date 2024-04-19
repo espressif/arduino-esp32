@@ -21,7 +21,7 @@ void loop() {}
 USBMIDI MIDI;
 
 #define END_OF_SONG 255
-uint8_t notes[] = { END_OF_SONG, 71, 76, 79, 78, 76, 83, 81, 78, 76, 79, 78, 75, 77, 71 };
+uint8_t notes[] = {END_OF_SONG, 71, 76, 79, 78, 76, 83, 81, 78, 76, 79, 78, 75, 77, 71};
 uint8_t noteIndex = 0;  // From 0 to sizeof(notes)
 #define SONG_LENGTH (sizeof(notes) - 1)  // END_OF_SONG does not attribute to the length.
 

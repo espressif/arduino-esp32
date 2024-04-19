@@ -18,12 +18,9 @@
 
 #include "USBHIDGamepad.h"
 
-static const uint8_t report_descriptor[] = {
-  TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(HID_REPORT_ID_GAMEPAD))
-};
+static const uint8_t report_descriptor[] = {TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(HID_REPORT_ID_GAMEPAD))};
 
-USBHIDGamepad::USBHIDGamepad()
-  : hid(), _x(0), _y(0), _z(0), _rz(0), _rx(0), _ry(0), _hat(0), _buttons(0) {
+USBHIDGamepad::USBHIDGamepad() : hid(), _x(0), _y(0), _z(0), _rz(0), _rx(0), _ry(0), _hat(0), _buttons(0) {
   static bool initialized = false;
   if (!initialized) {
     initialized = true;
@@ -31,7 +28,7 @@ USBHIDGamepad::USBHIDGamepad()
   }
 }
 
-uint16_t USBHIDGamepad::_onGetDescriptor(uint8_t* dst) {
+uint16_t USBHIDGamepad::_onGetDescriptor(uint8_t *dst) {
   memcpy(dst, report_descriptor, sizeof(report_descriptor));
   return sizeof(report_descriptor);
 }
@@ -40,20 +37,10 @@ void USBHIDGamepad::begin() {
   hid.begin();
 }
 
-void USBHIDGamepad::end() {
-}
+void USBHIDGamepad::end() {}
 
 bool USBHIDGamepad::write() {
-  hid_gamepad_report_t report = {
-    .x = _x,
-    .y = _y,
-    .z = _z,
-    .rz = _rz,
-    .rx = _rx,
-    .ry = _ry,
-    .hat = _hat,
-    .buttons = _buttons
-  };
+  hid_gamepad_report_t report = {.x = _x, .y = _y, .z = _z, .rz = _rz, .rx = _rx, .ry = _ry, .hat = _hat, .buttons = _buttons};
   return hid.SendReport(HID_REPORT_ID_GAMEPAD, &report, sizeof(report));
 }
 

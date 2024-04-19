@@ -50,28 +50,21 @@
 // same loopback internally.
 #define USE_INTERNAL_PIN_LOOPBACK 1  // 1 uses the internal loopback, 0 for wiring pins 4 and 5 externally
 
-#define DATA_SIZE 26  // 26 bytes is a lower than RX FIFO size (127 bytes)
-#define BAUD 9600     // Any baudrate from 300 to 115200
-#define TEST_UART 1   // Serial1 will be used for the loopback testing with different RX FIFO FULL values
-#define RXPIN 4       // GPIO 4 => RX for Serial1
-#define TXPIN 5       // GPIO 5 => TX for Serial1
+#define DATA_SIZE 26    // 26 bytes is a lower than RX FIFO size (127 bytes)
+#define BAUD      9600  // Any baudrate from 300 to 115200
+#define TEST_UART 1     // Serial1 will be used for the loopback testing with different RX FIFO FULL values
+#define RXPIN     4     // GPIO 4 => RX for Serial1
+#define TXPIN     5     // GPIO 5 => TX for Serial1
 
 #define BREAK_BEFORE_MSG 0
 #define BREAK_AT_END_MSG 1
 
-
-uint8_t fifoFullTestCases[] = { 120, 20, 5, 1 };
+uint8_t fifoFullTestCases[] = {120, 20, 5, 1};
 // volatile declaration will avoid any compiler optimization when reading variable values
 volatile size_t sent_bytes = 0, received_bytes = 0;
 
-const char *uartErrorStrings[] = {
-  "UART_NO_ERROR",
-  "UART_BREAK_ERROR",
-  "UART_BUFFER_FULL_ERROR",
-  "UART_FIFO_OVF_ERROR",
-  "UART_FRAME_ERROR",
-  "UART_PARITY_ERROR"
-};
+const char *uartErrorStrings[] = {"UART_NO_ERROR",       "UART_BREAK_ERROR", "UART_BUFFER_FULL_ERROR",
+                                  "UART_FIFO_OVF_ERROR", "UART_FRAME_ERROR", "UART_PARITY_ERROR"};
 
 // Callback function that will treat the UART errors
 void onReceiveErrorFunction(hardwareSerial_error_t err) {
@@ -114,8 +107,7 @@ void setup() {
   }
 }
 
-void loop() {
-}
+void loop() {}
 
 void testAndReport(uint8_t fifoFull, bool break_at_the_end) {
   // Let's send 125 bytes from Serial1 rx<->tx and mesaure time using different FIFO Full configurations

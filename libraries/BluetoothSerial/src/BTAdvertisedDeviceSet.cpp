@@ -13,7 +13,6 @@
 #include "BTAdvertisedDevice.h"
 //#include "BTScan.h"
 
-
 BTAdvertisedDeviceSet::BTAdvertisedDeviceSet() {
   m_cod = 0;
   m_name = "";
@@ -36,7 +35,6 @@ std::string BTAdvertisedDeviceSet::getName() const {
 int8_t BTAdvertisedDeviceSet::getRSSI() const {
   return m_rssi;
 }
-
 
 bool BTAdvertisedDeviceSet::haveCOD() const {
   return m_haveCOD;
@@ -68,7 +66,6 @@ std::string BTAdvertisedDeviceSet::toString() {
   }
   return res;
 }  // toString
-
 
 void BTAdvertisedDeviceSet::setAddress(BTAddress address) {
   m_address = address;

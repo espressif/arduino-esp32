@@ -17,6 +17,7 @@ class ESP_SR_Class {
 private:
   sr_cb cb;
   I2SClass *i2s;
+
 public:
   ESP_SR_Class();
   ~ESP_SR_Class();
@@ -33,6 +34,5 @@ public:
 };
 
 extern ESP_SR_Class ESP_SR;
-
 
 #endif  // CONFIG_IDF_TARGET_ESP32S3

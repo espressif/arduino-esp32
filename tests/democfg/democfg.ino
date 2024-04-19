@@ -7,5 +7,4 @@ void setup() {
   Serial.println("Hello cfg!");
 }
 
-void loop() {
-}
+void loop() {}

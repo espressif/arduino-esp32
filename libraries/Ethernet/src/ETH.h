@@ -74,15 +74,17 @@
 
 #if CONFIG_ETH_USE_ESP32_EMAC
 #define ETH_PHY_IP101 ETH_PHY_TLK110
-typedef enum { ETH_CLOCK_GPIO0_IN,
-               ETH_CLOCK_GPIO0_OUT,
-               ETH_CLOCK_GPIO16_OUT,
-               ETH_CLOCK_GPIO17_OUT } eth_clock_mode_t;
+typedef enum {
+  ETH_CLOCK_GPIO0_IN,
+  ETH_CLOCK_GPIO0_OUT,
+  ETH_CLOCK_GPIO16_OUT,
+  ETH_CLOCK_GPIO17_OUT
+} eth_clock_mode_t;
 //Dedicated GPIOs for RMII
-#define ETH_RMII_TX_EN 21
-#define ETH_RMII_TX0 19
-#define ETH_RMII_TX1 22
-#define ETH_RMII_RX0 25
+#define ETH_RMII_TX_EN  21
+#define ETH_RMII_TX0    19
+#define ETH_RMII_TX1    22
+#define ETH_RMII_RX0    25
 #define ETH_RMII_RX1_EN 26
 #define ETH_RMII_CRS_DV 27
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
@@ -125,7 +127,10 @@ public:
 #if ETH_SPI_SUPPORTS_CUSTOM
   bool begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, SPIClass &spi, uint8_t spi_freq_mhz = ETH_PHY_SPI_FREQ_MHZ);
 #endif
-  bool begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck = -1, int miso = -1, int mosi = -1, uint8_t spi_freq_mhz = ETH_PHY_SPI_FREQ_MHZ);
+  bool begin(
+    eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, spi_host_device_t spi_host, int sck = -1, int miso = -1, int mosi = -1,
+    uint8_t spi_freq_mhz = ETH_PHY_SPI_FREQ_MHZ
+  );
 
   bool begin() {
 #if defined(ETH_PHY_TYPE) && defined(ETH_PHY_ADDR)
@@ -135,7 +140,10 @@ public:
 #if ETH_SPI_SUPPORTS_CUSTOM && defined(ETH_PHY_SPI)
     return begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI, ETH_PHY_SPI_FREQ_MHZ);
 #elif defined(ETH_PHY_SPI_HOST) && defined(ETH_PHY_SPI_SCK) && defined(ETH_PHY_SPI_MISO) && defined(ETH_PHY_SPI_MOSI)
-    return begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI, ETH_PHY_SPI_FREQ_MHZ);
+    return begin(
+      ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI,
+      ETH_PHY_SPI_FREQ_MHZ
+    );
 #endif
 #endif
 #endif
@@ -192,11 +200,13 @@ private:
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 
   static bool ethDetachBus(void *bus_pointer);
-  bool beginSPI(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst,
+  bool beginSPI(
+    eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
-                SPIClass *spi,
+    SPIClass *spi,
 #endif
-                int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz);
+    int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz
+  );
 };
 
 extern ETHClass ETH;

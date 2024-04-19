@@ -27,7 +27,6 @@ static const uint8_t A3 = 35;
 static const uint8_t A4 = 13;
 static const uint8_t A5 = 4;
 
-
 static const uint8_t D0 = 3;
 static const uint8_t D1 = 1;
 static const uint8_t D2 = 17;

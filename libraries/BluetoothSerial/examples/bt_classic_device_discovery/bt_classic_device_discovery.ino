@@ -10,15 +10,12 @@
 
 BluetoothSerial SerialBT;
 
-
 #define BT_DISCOVER_TIME 10000
-
 
 static bool btScanAsync = true;
 static bool btScanSync = true;
 
-
-void btAdvertisedDeviceFound(BTAdvertisedDevice* pDevice) {
+void btAdvertisedDeviceFound(BTAdvertisedDevice *pDevice) {
   Serial.printf("Found a device asynchronously: %s\n", pDevice->toString().c_str());
 }
 
@@ -26,7 +23,6 @@ void setup() {
   Serial.begin(115200);
   SerialBT.begin("ESP32test");  //Bluetooth device name
   Serial.println("The device started, now you can pair it with bluetooth!");
-
 
   if (btScanAsync) {
     Serial.print("Starting asynchronous discovery... ");
@@ -43,11 +39,12 @@ void setup() {
 
   if (btScanSync) {
     Serial.println("Starting synchronous discovery... ");
-    BTScanResults* pResults = SerialBT.discover(BT_DISCOVER_TIME);
-    if (pResults)
+    BTScanResults *pResults = SerialBT.discover(BT_DISCOVER_TIME);
+    if (pResults) {
       pResults->dump(&Serial);
-    else
+    } else {
       Serial.println("Error on BT Scan, no result!");
+    }
   }
 }
 

@@ -30,13 +30,13 @@
 // Makes no sense to have it enabled for them
 #if CONFIG_IDF_TARGET_ESP32S3
 #define CONFIG_ESP_FACE_RECOGNITION_ENABLED 1
-#define CONFIG_ESP_FACE_DETECT_ENABLED 1
+#define CONFIG_ESP_FACE_DETECT_ENABLED      1
 #else
 #define CONFIG_ESP_FACE_RECOGNITION_ENABLED 0
-#define CONFIG_ESP_FACE_DETECT_ENABLED 0
+#define CONFIG_ESP_FACE_DETECT_ENABLED      0
 #endif
 #else
-#define CONFIG_ESP_FACE_DETECT_ENABLED 0
+#define CONFIG_ESP_FACE_DETECT_ENABLED      0
 #define CONFIG_ESP_FACE_RECOGNITION_ENABLED 0
 #endif
 
@@ -63,13 +63,13 @@
 #define FACE_ID_SAVE_NUMBER 7
 #endif
 
-#define FACE_COLOR_WHITE 0x00FFFFFF
-#define FACE_COLOR_BLACK 0x00000000
-#define FACE_COLOR_RED 0x000000FF
-#define FACE_COLOR_GREEN 0x0000FF00
-#define FACE_COLOR_BLUE 0x00FF0000
+#define FACE_COLOR_WHITE  0x00FFFFFF
+#define FACE_COLOR_BLACK  0x00000000
+#define FACE_COLOR_RED    0x000000FF
+#define FACE_COLOR_GREEN  0x0000FF00
+#define FACE_COLOR_BLUE   0x00FF0000
 #define FACE_COLOR_YELLOW (FACE_COLOR_RED | FACE_COLOR_GREEN)
-#define FACE_COLOR_CYAN (FACE_COLOR_BLUE | FACE_COLOR_GREEN)
+#define FACE_COLOR_CYAN   (FACE_COLOR_BLUE | FACE_COLOR_GREEN)
 #define FACE_COLOR_PURPLE (FACE_COLOR_BLUE | FACE_COLOR_RED)
 #endif
 
@@ -79,7 +79,7 @@
 // LED FLASH setup
 #if CONFIG_LED_ILLUMINATOR_ENABLED
 
-#define LED_LEDC_GPIO 22  //configure LED pin
+#define LED_LEDC_GPIO            22  //configure LED pin
 #define CONFIG_LED_MAX_INTENSITY 255
 
 int led_duty = 0;
@@ -87,8 +87,7 @@ bool isStreaming = false;
 
 #endif
 
-typedef struct
-{
+typedef struct {
   httpd_req_t *req;
   size_t len;
 } jpg_chunking_t;
@@ -127,8 +126,7 @@ FaceRecognition112V1S8 recognizer;
 
 #endif
 
-typedef struct
-{
+typedef struct {
   size_t size;   //number of values used for filtering
   size_t index;  //current value index
   size_t count;  //value count
@@ -246,7 +244,7 @@ static int run_face_recognition(fb_data_t *fb, std::list<dl::detect::result_t> *
   int id = -1;
 
   Tensor<uint8_t> tensor;
-  tensor.set_element((uint8_t *)fb->data).set_shape({ fb->height, fb->width, 3 }).set_auto_free(false);
+  tensor.set_element((uint8_t *)fb->data).set_shape({fb->height, fb->width, 3}).set_auto_free(false);
 
   int enrolled_count = recognizer.get_enrolled_id_num();
 
@@ -300,7 +298,6 @@ static esp_err_t bmp_handler(httpd_req_t *req) {
   char ts[32];
   snprintf(ts, 32, "%lld.%06ld", fb->timestamp.tv_sec, fb->timestamp.tv_usec);
   httpd_resp_set_hdr(req, "X-Timestamp", (const char *)ts);
-
 
   uint8_t *buf = NULL;
   size_t buf_len = 0;
@@ -381,7 +378,7 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 #endif
       res = httpd_resp_send(req, (const char *)fb->buf, fb->len);
     } else {
-      jpg_chunking_t jchunk = { req, 0 };
+      jpg_chunking_t jchunk = {req, 0};
       res = frame2jpg_cb(fb, 80, jpg_encode_stream, &jchunk) ? ESP_OK : ESP_FAIL;
       httpd_resp_send_chunk(req, NULL, 0);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
@@ -397,7 +394,7 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 #if CONFIG_ESP_FACE_DETECT_ENABLED
   }
 
-  jpg_chunking_t jchunk = { req, 0 };
+  jpg_chunking_t jchunk = {req, 0};
 
   if (fb->format == PIXFORMAT_RGB565
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
@@ -407,11 +404,11 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 #if TWO_STAGE
     HumanFaceDetectMSR01 s1(0.1F, 0.5F, 10, 0.2F);
     HumanFaceDetectMNP01 s2(0.5F, 0.3F, 5);
-    std::list<dl::detect::result_t> &candidates = s1.infer((uint16_t *)fb->buf, { (int)fb->height, (int)fb->width, 3 });
-    std::list<dl::detect::result_t> &results = s2.infer((uint16_t *)fb->buf, { (int)fb->height, (int)fb->width, 3 }, candidates);
+    std::list<dl::detect::result_t> &candidates = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
+    std::list<dl::detect::result_t> &results = s2.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3}, candidates);
 #else
     HumanFaceDetectMSR01 s1(0.3F, 0.5F, 10, 0.2F);
-    std::list<dl::detect::result_t> &results = s1.infer((uint16_t *)fb->buf, { (int)fb->height, (int)fb->width, 3 });
+    std::list<dl::detect::result_t> &results = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
 #endif
     if (results.size() > 0) {
       fb_data_t rfb;
@@ -456,11 +453,11 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 #if TWO_STAGE
     HumanFaceDetectMSR01 s1(0.1F, 0.5F, 10, 0.2F);
     HumanFaceDetectMNP01 s2(0.5F, 0.3F, 5);
-    std::list<dl::detect::result_t> &candidates = s1.infer((uint8_t *)out_buf, { (int)out_height, (int)out_width, 3 });
-    std::list<dl::detect::result_t> &results = s2.infer((uint8_t *)out_buf, { (int)out_height, (int)out_width, 3 }, candidates);
+    std::list<dl::detect::result_t> &candidates = s1.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3});
+    std::list<dl::detect::result_t> &results = s2.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3}, candidates);
 #else
     HumanFaceDetectMSR01 s1(0.3F, 0.5F, 10, 0.2F);
-    std::list<dl::detect::result_t> &results = s1.infer((uint8_t *)out_buf, { (int)out_height, (int)out_width, 3 });
+    std::list<dl::detect::result_t> &results = s1.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3});
 #endif
 
     if (results.size() > 0) {
@@ -586,10 +583,10 @@ static esp_err_t stream_handler(httpd_req_t *req) {
           fr_ready = esp_timer_get_time();
 #endif
 #if TWO_STAGE
-          std::list<dl::detect::result_t> &candidates = s1.infer((uint16_t *)fb->buf, { (int)fb->height, (int)fb->width, 3 });
-          std::list<dl::detect::result_t> &results = s2.infer((uint16_t *)fb->buf, { (int)fb->height, (int)fb->width, 3 }, candidates);
+          std::list<dl::detect::result_t> &candidates = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
+          std::list<dl::detect::result_t> &results = s2.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3}, candidates);
 #else
-          std::list<dl::detect::result_t> &results = s1.infer((uint16_t *)fb->buf, { (int)fb->height, (int)fb->width, 3 });
+          std::list<dl::detect::result_t> &results = s1.infer((uint16_t *)fb->buf, {(int)fb->height, (int)fb->width, 3});
 #endif
 #if CONFIG_ESP_FACE_DETECT_ENABLED && ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
           fr_face = esp_timer_get_time();
@@ -646,10 +643,10 @@ static esp_err_t stream_handler(httpd_req_t *req) {
               rfb.format = FB_BGR888;
 
 #if TWO_STAGE
-              std::list<dl::detect::result_t> &candidates = s1.infer((uint8_t *)out_buf, { (int)out_height, (int)out_width, 3 });
-              std::list<dl::detect::result_t> &results = s2.infer((uint8_t *)out_buf, { (int)out_height, (int)out_width, 3 }, candidates);
+              std::list<dl::detect::result_t> &candidates = s1.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3});
+              std::list<dl::detect::result_t> &results = s2.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3}, candidates);
 #else
-              std::list<dl::detect::result_t> &results = s1.infer((uint8_t *)out_buf, { (int)out_height, (int)out_width, 3 });
+              std::list<dl::detect::result_t> &results = s1.infer((uint8_t *)out_buf, {(int)out_height, (int)out_width, 3});
 #endif
 
 #if CONFIG_ESP_FACE_DETECT_ENABLED && ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
@@ -723,18 +720,16 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
 #endif
-    log_i("MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
+    log_i(
+      "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
 #if CONFIG_ESP_FACE_DETECT_ENABLED
-          ", %u+%u+%u+%u=%u %s%d"
+      ", %u+%u+%u+%u=%u %s%d"
 #endif
-          ,
-          (uint32_t)(_jpg_buf_len),
-          (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time,
-          avg_frame_time, 1000.0 / avg_frame_time
+      ,
+      (uint32_t)(_jpg_buf_len), (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time, avg_frame_time, 1000.0 / avg_frame_time
 #if CONFIG_ESP_FACE_DETECT_ENABLED
-          ,
-          (uint32_t)ready_time, (uint32_t)face_time, (uint32_t)recognize_time, (uint32_t)encode_time, (uint32_t)process_time,
-          (detected) ? "DETECTED " : "", face_id
+      ,
+      (uint32_t)ready_time, (uint32_t)face_time, (uint32_t)recognize_time, (uint32_t)encode_time, (uint32_t)process_time, (detected) ? "DETECTED " : "", face_id
 #endif
     );
   }
@@ -792,57 +787,59 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     if (s->pixformat == PIXFORMAT_JPEG) {
       res = s->set_framesize(s, (framesize_t)val);
     }
-  } else if (!strcmp(variable, "quality"))
+  } else if (!strcmp(variable, "quality")) {
     res = s->set_quality(s, val);
-  else if (!strcmp(variable, "contrast"))
+  } else if (!strcmp(variable, "contrast")) {
     res = s->set_contrast(s, val);
-  else if (!strcmp(variable, "brightness"))
+  } else if (!strcmp(variable, "brightness")) {
     res = s->set_brightness(s, val);
-  else if (!strcmp(variable, "saturation"))
+  } else if (!strcmp(variable, "saturation")) {
     res = s->set_saturation(s, val);
-  else if (!strcmp(variable, "gainceiling"))
+  } else if (!strcmp(variable, "gainceiling")) {
     res = s->set_gainceiling(s, (gainceiling_t)val);
-  else if (!strcmp(variable, "colorbar"))
+  } else if (!strcmp(variable, "colorbar")) {
     res = s->set_colorbar(s, val);
-  else if (!strcmp(variable, "awb"))
+  } else if (!strcmp(variable, "awb")) {
     res = s->set_whitebal(s, val);
-  else if (!strcmp(variable, "agc"))
+  } else if (!strcmp(variable, "agc")) {
     res = s->set_gain_ctrl(s, val);
-  else if (!strcmp(variable, "aec"))
+  } else if (!strcmp(variable, "aec")) {
     res = s->set_exposure_ctrl(s, val);
-  else if (!strcmp(variable, "hmirror"))
+  } else if (!strcmp(variable, "hmirror")) {
     res = s->set_hmirror(s, val);
-  else if (!strcmp(variable, "vflip"))
+  } else if (!strcmp(variable, "vflip")) {
     res = s->set_vflip(s, val);
-  else if (!strcmp(variable, "awb_gain"))
+  } else if (!strcmp(variable, "awb_gain")) {
     res = s->set_awb_gain(s, val);
-  else if (!strcmp(variable, "agc_gain"))
+  } else if (!strcmp(variable, "agc_gain")) {
     res = s->set_agc_gain(s, val);
-  else if (!strcmp(variable, "aec_value"))
+  } else if (!strcmp(variable, "aec_value")) {
     res = s->set_aec_value(s, val);
-  else if (!strcmp(variable, "aec2"))
+  } else if (!strcmp(variable, "aec2")) {
     res = s->set_aec2(s, val);
-  else if (!strcmp(variable, "dcw"))
+  } else if (!strcmp(variable, "dcw")) {
     res = s->set_dcw(s, val);
-  else if (!strcmp(variable, "bpc"))
+  } else if (!strcmp(variable, "bpc")) {
     res = s->set_bpc(s, val);
-  else if (!strcmp(variable, "wpc"))
+  } else if (!strcmp(variable, "wpc")) {
     res = s->set_wpc(s, val);
-  else if (!strcmp(variable, "raw_gma"))
+  } else if (!strcmp(variable, "raw_gma")) {
     res = s->set_raw_gma(s, val);
-  else if (!strcmp(variable, "lenc"))
+  } else if (!strcmp(variable, "lenc")) {
     res = s->set_lenc(s, val);
-  else if (!strcmp(variable, "special_effect"))
+  } else if (!strcmp(variable, "special_effect")) {
     res = s->set_special_effect(s, val);
-  else if (!strcmp(variable, "wb_mode"))
+  } else if (!strcmp(variable, "wb_mode")) {
     res = s->set_wb_mode(s, val);
-  else if (!strcmp(variable, "ae_level"))
+  } else if (!strcmp(variable, "ae_level")) {
     res = s->set_ae_level(s, val);
+  }
 #if CONFIG_LED_ILLUMINATOR_ENABLED
   else if (!strcmp(variable, "led_intensity")) {
     led_duty = val;
-    if (isStreaming)
+    if (isStreaming) {
       enable_led(true);
+    }
   }
 #endif
 
@@ -1001,7 +998,8 @@ static esp_err_t reg_handler(httpd_req_t *req) {
   if (parse_get(req, &buf) != ESP_OK) {
     return ESP_FAIL;
   }
-  if (httpd_query_key_value(buf, "reg", _reg, sizeof(_reg)) != ESP_OK || httpd_query_key_value(buf, "mask", _mask, sizeof(_mask)) != ESP_OK || httpd_query_key_value(buf, "val", _val, sizeof(_val)) != ESP_OK) {
+  if (httpd_query_key_value(buf, "reg", _reg, sizeof(_reg)) != ESP_OK || httpd_query_key_value(buf, "mask", _mask, sizeof(_mask)) != ESP_OK
+      || httpd_query_key_value(buf, "val", _val, sizeof(_val)) != ESP_OK) {
     free(buf);
     httpd_resp_send_404(req);
     return ESP_FAIL;
@@ -1110,7 +1108,10 @@ static esp_err_t win_handler(httpd_req_t *req) {
   bool binning = parse_get_var(buf, "binning", 0) == 1;
   free(buf);
 
-  log_i("Set Window: Start: %d %d, End: %d %d, Offset: %d %d, Total: %d %d, Output: %d %d, Scale: %u, Binning: %u", startX, startY, endX, endY, offsetX, offsetY, totalX, totalY, outputX, outputY, scale, binning);
+  log_i(
+    "Set Window: Start: %d %d, End: %d %d, Offset: %d %d, Total: %d %d, Output: %d %d, Scale: %u, Binning: %u", startX, startY, endX, endY, offsetX, offsetY,
+    totalX, totalY, outputX, outputY, scale, binning
+  );
   sensor_t *s = esp_camera_sensor_get();
   int res = s->set_res_raw(s, startX, startY, endX, endY, offsetX, offsetY, totalX, totalY, outputX, outputY, scale, binning);
   if (res) {

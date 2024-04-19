@@ -55,7 +55,7 @@ extern "C" {
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
 
-static esp_netif_t *esp_netifs[ESP_IF_MAX] = { NULL, NULL, NULL };
+static esp_netif_t *esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
 
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {
   if (interface < ESP_IF_MAX) {
@@ -101,7 +101,6 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
   } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_FTM_REPORT) {
     arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
     memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
-
 
     /*
 	 * SMART CONFIG
@@ -340,8 +339,7 @@ wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_NONE;
 wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_MIN_MODEM;
 #endif
 
-WiFiGenericClass::WiFiGenericClass() {
-}
+WiFiGenericClass::WiFiGenericClass() {}
 
 const char *WiFiGenericClass::disconnectReasonName(wifi_err_reason_t reason) {
   return WiFi.STA.disconnectReasonName(reason);
@@ -364,17 +362,18 @@ bool WiFiGenericClass::setHostname(const char *hostname) {
  * @param arg
  */
 void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
-  if (!event) return;  //Null would crash this function
+  if (!event) {
+    return;  //Null would crash this function
+  }
 
   // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
   if (event->event_id == ARDUINO_EVENT_WIFI_SCAN_DONE) {
     WiFiScanClass::_scanDone();
   } else if (event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
     WiFi.begin(
-      (const char *)event->event_info.sc_got_ssid_pswd.ssid,
-      (const char *)event->event_info.sc_got_ssid_pswd.password,
-      0,
-      ((event->event_info.sc_got_ssid_pswd.bssid_set == true) ? event->event_info.sc_got_ssid_pswd.bssid : NULL));
+      (const char *)event->event_info.sc_got_ssid_pswd.ssid, (const char *)event->event_info.sc_got_ssid_pswd.password, 0,
+      ((event->event_info.sc_got_ssid_pswd.bssid_set == true) ? event->event_info.sc_got_ssid_pswd.bssid : NULL)
+    );
   } else if (event->event_id == ARDUINO_EVENT_SC_SEND_ACK_DONE) {
     esp_smartconfig_stop();
     WiFiSTAClass::_smartConfigDone = true;
@@ -436,7 +435,6 @@ void WiFiGenericClass::persistent(bool persistent) {
   _persistent = persistent;
 }
 
-
 /**
  * enable WiFi long range mode
  * @param enable
@@ -444,7 +442,6 @@ void WiFiGenericClass::persistent(bool persistent) {
 void WiFiGenericClass::enableLongRange(bool enable) {
   _long_range = enable;
 }
-
 
 /**
  * set new mode
@@ -667,11 +664,7 @@ wifi_power_t WiFiGenericClass::getTxPower() {
  */
 bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uint8_t channel, const uint8_t *mac) {
   wifi_ftm_initiator_cfg_t ftmi_cfg = {
-    .resp_mac = { 0, 0, 0, 0, 0, 0 },
-    .channel = channel,
-    .frm_count = frm_count,
-    .burst_period = burst_period,
-    .use_get_report_api = true
+    .resp_mac = {0, 0, 0, 0, 0, 0}, .channel = channel, .frm_count = frm_count, .burst_period = burst_period, .use_get_report_api = true
   };
   if (mac != NULL) {
     memcpy(ftmi_cfg.resp_mac, mac, 6);
@@ -721,12 +714,8 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
   };
 
   switch (rx_mode) {
-    case WIFI_RX_ANT0:
-      ant_config.rx_ant_mode = WIFI_ANT_MODE_ANT0;
-      break;
-    case WIFI_RX_ANT1:
-      ant_config.rx_ant_mode = WIFI_ANT_MODE_ANT1;
-      break;
+    case WIFI_RX_ANT0: ant_config.rx_ant_mode = WIFI_ANT_MODE_ANT0; break;
+    case WIFI_RX_ANT1: ant_config.rx_ant_mode = WIFI_ANT_MODE_ANT1; break;
     case WIFI_RX_ANT_AUTO:
       log_i("TX Antenna will be automatically selected");
       ant_config.rx_ant_default = WIFI_ANT_ANT0;
@@ -742,12 +731,8 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
   }
 
   switch (tx_mode) {
-    case WIFI_TX_ANT0:
-      ant_config.tx_ant_mode = WIFI_ANT_MODE_ANT0;
-      break;
-    case WIFI_TX_ANT1:
-      ant_config.tx_ant_mode = WIFI_ANT_MODE_ANT1;
-      break;
+    case WIFI_TX_ANT0: ant_config.tx_ant_mode = WIFI_ANT_MODE_ANT0; break;
+    case WIFI_TX_ANT1: ant_config.tx_ant_mode = WIFI_ANT_MODE_ANT1; break;
     case WIFI_TX_ANT_AUTO:
       log_i("RX Antenna will be automatically selected");
       ant_config.rx_ant_default = WIFI_ANT_ANT0;
@@ -785,8 +770,9 @@ int WiFiGenericClass::hostByName(const char *aHostname, IPAddress &aResult) {
 IPAddress WiFiGenericClass::calculateNetworkID(IPAddress ip, IPAddress subnet) {
   IPAddress networkID;
 
-  for (size_t i = 0; i < 4; i++)
+  for (size_t i = 0; i < 4; i++) {
     networkID[i] = subnet[i] & ip[i];
+  }
 
   return networkID;
 }
@@ -794,8 +780,9 @@ IPAddress WiFiGenericClass::calculateNetworkID(IPAddress ip, IPAddress subnet) {
 IPAddress WiFiGenericClass::calculateBroadcast(IPAddress ip, IPAddress subnet) {
   IPAddress broadcastIp;
 
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; i++) {
     broadcastIp[i] = ~subnet[i] | ip[i];
+  }
 
   return broadcastIp;
 }
@@ -804,22 +791,23 @@ uint8_t WiFiGenericClass::calculateSubnetCIDR(IPAddress subnetMask) {
   uint8_t CIDR = 0;
 
   for (uint8_t i = 0; i < 4; i++) {
-    if (subnetMask[i] == 0x80)  // 128
+    if (subnetMask[i] == 0x80) {  // 128
       CIDR += 1;
-    else if (subnetMask[i] == 0xC0)  // 192
+    } else if (subnetMask[i] == 0xC0) {  // 192
       CIDR += 2;
-    else if (subnetMask[i] == 0xE0)  // 224
+    } else if (subnetMask[i] == 0xE0) {  // 224
       CIDR += 3;
-    else if (subnetMask[i] == 0xF0)  // 242
+    } else if (subnetMask[i] == 0xF0) {  // 242
       CIDR += 4;
-    else if (subnetMask[i] == 0xF8)  // 248
+    } else if (subnetMask[i] == 0xF8) {  // 248
       CIDR += 5;
-    else if (subnetMask[i] == 0xFC)  // 252
+    } else if (subnetMask[i] == 0xFC) {  // 252
       CIDR += 6;
-    else if (subnetMask[i] == 0xFE)  // 254
+    } else if (subnetMask[i] == 0xFE) {  // 254
       CIDR += 7;
-    else if (subnetMask[i] == 0xFF)  // 255
+    } else if (subnetMask[i] == 0xFF) {  // 255
       CIDR += 8;
+    }
   }
 
   return CIDR;

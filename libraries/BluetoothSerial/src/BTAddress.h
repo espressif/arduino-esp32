@@ -14,7 +14,6 @@
 #include <esp_gap_bt_api.h>  // ESP32 BT
 #include <Arduino.h>
 
-
 /**
  * @brief A %BT device address.
  *
@@ -28,7 +27,7 @@ public:
   bool equals(BTAddress otherAddress);
   operator bool() const;
 
-  esp_bd_addr_t* getNative() const;
+  esp_bd_addr_t *getNative() const;
   String toString(bool capital = false) const;
 
 private:

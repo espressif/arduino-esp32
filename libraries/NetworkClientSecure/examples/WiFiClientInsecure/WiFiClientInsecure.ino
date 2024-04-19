@@ -9,10 +9,10 @@
  * approach shown below.
  */
 
-const char* ssid = "your-ssid";          // your network SSID (name of wifi network)
-const char* password = "your-password";  // your network password
+const char *ssid = "your-ssid";          // your network SSID (name of wifi network)
+const char *password = "your-password";  // your network password
 
-const char* server = "www.howsmyssl.com";  // Server URL
+const char *server = "www.howsmyssl.com";  // Server URL
 
 NetworkClientSecure client;
 
@@ -37,9 +37,9 @@ void setup() {
 
   Serial.println("\nStarting connection to server...");
   client.setInsecure();  //skip verification
-  if (!client.connect(server, 443))
+  if (!client.connect(server, 443)) {
     Serial.println("Connection failed!");
-  else {
+  } else {
     Serial.println("Connected to server!");
     // Make a HTTP request:
     client.println("GET https://www.howsmyssl.com/a/check HTTP/1.0");

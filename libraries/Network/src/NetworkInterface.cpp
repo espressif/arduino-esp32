@@ -15,10 +15,10 @@
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp32-hal-log.h"
 
-static NetworkInterface* _interfaces[ESP_NETIF_ID_MAX] = { NULL, NULL, NULL, NULL, NULL, NULL };
+static NetworkInterface *_interfaces[ESP_NETIF_ID_MAX] = {NULL, NULL, NULL, NULL, NULL, NULL};
 static esp_event_handler_instance_t _ip_ev_instance = NULL;
 
-static NetworkInterface* getNetifByEspNetif(esp_netif_t* esp_netif) {
+static NetworkInterface *getNetifByEspNetif(esp_netif_t *esp_netif) {
   for (int i = 0; i < ESP_NETIF_ID_MAX; ++i) {
     if (_interfaces[i] != NULL && _interfaces[i]->netif() == esp_netif) {
       return _interfaces[i];
@@ -27,27 +27,27 @@ static NetworkInterface* getNetifByEspNetif(esp_netif_t* esp_netif) {
   return NULL;
 }
 
-NetworkInterface* getNetifByID(Network_Interface_ID id) {
+NetworkInterface *getNetifByID(Network_Interface_ID id) {
   if (id < ESP_NETIF_ID_MAX) {
     return _interfaces[id];
   }
   return NULL;
 }
 
-static void _ip_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+static void _ip_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == IP_EVENT) {
-    NetworkInterface* netif = NULL;
+    NetworkInterface *netif = NULL;
     if (event_id == IP_EVENT_STA_GOT_IP || event_id == IP_EVENT_ETH_GOT_IP || event_id == IP_EVENT_PPP_GOT_IP) {
-      ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
+      ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
       netif = getNetifByEspNetif(event->esp_netif);
     } else if (event_id == IP_EVENT_STA_LOST_IP || event_id == IP_EVENT_PPP_LOST_IP || event_id == IP_EVENT_ETH_LOST_IP) {
-      ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
+      ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
       netif = getNetifByEspNetif(event->esp_netif);
     } else if (event_id == IP_EVENT_GOT_IP6) {
-      ip_event_got_ip6_t* event = (ip_event_got_ip6_t*)event_data;
+      ip_event_got_ip6_t *event = (ip_event_got_ip6_t *)event_data;
       netif = getNetifByEspNetif(event->esp_netif);
     } else if (event_id == IP_EVENT_AP_STAIPASSIGNED) {
-      ip_event_ap_staipassigned_t* event = (ip_event_ap_staipassigned_t*)event_data;
+      ip_event_ap_staipassigned_t *event = (ip_event_ap_staipassigned_t *)event_data;
       netif = getNetifByEspNetif(event->esp_netif);
     }
     if (netif != NULL) {
@@ -56,14 +56,17 @@ static void _ip_event_cb(void* arg, esp_event_base_t event_base, int32_t event_i
   }
 }
 
-void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data) {
+void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
   arduino_event_t arduino_event;
   arduino_event.event_id = ARDUINO_EVENT_MAX;
   if (event_id == _got_ip_event_id) {
     setStatusBits(ESP_NETIF_HAS_IP_BIT);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
-    log_v("%s Got %sIP: " IPSTR " MASK: " IPSTR " GW: " IPSTR, desc(), event->ip_changed ? "New " : "Same ", IP2STR(&event->ip_info.ip), IP2STR(&event->ip_info.netmask), IP2STR(&event->ip_info.gw));
+    ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+    log_v(
+      "%s Got %sIP: " IPSTR " MASK: " IPSTR " GW: " IPSTR, desc(), event->ip_changed ? "New " : "Same ", IP2STR(&event->ip_info.ip),
+      IP2STR(&event->ip_info.netmask), IP2STR(&event->ip_info.gw)
+    );
 #endif
     memcpy(&arduino_event.event_info.got_ip, event_data, sizeof(ip_event_got_ip_t));
 #if SOC_WIFI_SUPPORTED
@@ -92,7 +95,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data) {
       arduino_event.event_id = ARDUINO_EVENT_ETH_LOST_IP;
     }
   } else if (event_id == IP_EVENT_GOT_IP6) {
-    ip_event_got_ip6_t* event = (ip_event_got_ip6_t*)event_data;
+    ip_event_got_ip6_t *event = (ip_event_got_ip6_t *)event_data;
     esp_ip6_addr_type_t addr_type = esp_netif_ip6_get_addr_type(&event->ip6_info.ip);
     if (addr_type == ESP_IP6_ADDR_IS_GLOBAL) {
       setStatusBits(ESP_NETIF_HAS_GLOBAL_IP6_BIT);
@@ -104,8 +107,11 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data) {
       0,
     };
     netif_index_to_name(event->ip6_info.ip.zone, if_name);
-    static const char* addr_types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
-    log_v("IF %s Got IPv6: Interface: %d, IP Index: %d, Type: %s, Zone: %d (%s), Address: " IPV6STR, desc(), _interface_id, event->ip_index, addr_types[addr_type], event->ip6_info.ip.zone, if_name, IPV62STR(event->ip6_info.ip));
+    static const char *addr_types[] = {"UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6"};
+    log_v(
+      "IF %s Got IPv6: Interface: %d, IP Index: %d, Type: %s, Zone: %d (%s), Address: " IPV6STR, desc(), _interface_id, event->ip_index, addr_types[addr_type],
+      event->ip6_info.ip.zone, if_name, IPV62STR(event->ip6_info.ip)
+    );
 #endif
     memcpy(&arduino_event.event_info.got_ip6, event_data, sizeof(ip_event_got_ip6_t));
 #if SOC_WIFI_SUPPORTED
@@ -124,8 +130,11 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void* event_data) {
   } else if (event_id == IP_EVENT_AP_STAIPASSIGNED && _interface_id == ESP_NETIF_ID_AP) {
     setStatusBits(ESP_NETIF_HAS_IP_BIT);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    ip_event_ap_staipassigned_t* event = (ip_event_ap_staipassigned_t*)event_data;
-    log_v("%s Assigned IP: " IPSTR " to MAC: %02X:%02X:%02X:%02X:%02X:%02X", desc(), IP2STR(&event->ip), event->mac[0], event->mac[1], event->mac[2], event->mac[3], event->mac[4], event->mac[5]);
+    ip_event_ap_staipassigned_t *event = (ip_event_ap_staipassigned_t *)event_data;
+    log_v(
+      "%s Assigned IP: " IPSTR " to MAC: %02X:%02X:%02X:%02X:%02X:%02X", desc(), IP2STR(&event->ip), event->mac[0], event->mac[1], event->mac[2], event->mac[3],
+      event->mac[4], event->mac[5]
+    );
 #endif
     arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED;
     memcpy(&arduino_event.event_info.wifi_ap_staipassigned, event_data, sizeof(ip_event_ap_staipassigned_t));
@@ -147,8 +156,9 @@ NetworkInterface::~NetworkInterface() {
 IPAddress NetworkInterface::calculateNetworkID(IPAddress ip, IPAddress subnet) const {
   IPAddress networkID;
 
-  for (size_t i = 0; i < 4; i++)
+  for (size_t i = 0; i < 4; i++) {
     networkID[i] = subnet[i] & ip[i];
+  }
 
   return networkID;
 }
@@ -156,8 +166,9 @@ IPAddress NetworkInterface::calculateNetworkID(IPAddress ip, IPAddress subnet) c
 IPAddress NetworkInterface::calculateBroadcast(IPAddress ip, IPAddress subnet) const {
   IPAddress broadcastIp;
 
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 4; i++) {
     broadcastIp[i] = ~subnet[i] | ip[i];
+  }
 
   return broadcastIp;
 }
@@ -166,22 +177,23 @@ uint8_t NetworkInterface::calculateSubnetCIDR(IPAddress subnetMask) const {
   uint8_t CIDR = 0;
 
   for (uint8_t i = 0; i < 4; i++) {
-    if (subnetMask[i] == 0x80)  // 128
+    if (subnetMask[i] == 0x80) {  // 128
       CIDR += 1;
-    else if (subnetMask[i] == 0xC0)  // 192
+    } else if (subnetMask[i] == 0xC0) {  // 192
       CIDR += 2;
-    else if (subnetMask[i] == 0xE0)  // 224
+    } else if (subnetMask[i] == 0xE0) {  // 224
       CIDR += 3;
-    else if (subnetMask[i] == 0xF0)  // 242
+    } else if (subnetMask[i] == 0xF0) {  // 242
       CIDR += 4;
-    else if (subnetMask[i] == 0xF8)  // 248
+    } else if (subnetMask[i] == 0xF8) {  // 248
       CIDR += 5;
-    else if (subnetMask[i] == 0xFC)  // 252
+    } else if (subnetMask[i] == 0xFC) {  // 252
       CIDR += 6;
-    else if (subnetMask[i] == 0xFE)  // 254
+    } else if (subnetMask[i] == 0xFE) {  // 254
       CIDR += 7;
-    else if (subnetMask[i] == 0xFF)  // 255
+    } else if (subnetMask[i] == 0xFF) {  // 255
       CIDR += 8;
+    }
   }
 
   return CIDR;
@@ -219,7 +231,8 @@ int NetworkInterface::waitStatusBits(int bits, uint32_t timeout_ms) const {
            bits,                    // The bits within the event group to wait for.
            pdFALSE,                 // bits should be cleared before returning.
            pdTRUE,                  // Don't wait for all bits, any bit will do.
-           timeout_ms / portTICK_PERIOD_MS)
+           timeout_ms / portTICK_PERIOD_MS
+         )
          & bits;  // Wait a maximum of timeout_ms for any bit to be set.
   return bits;
 }
@@ -375,7 +388,10 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
     dhcps_lease_t lease;
     lease.enable = true;
     uint8_t CIDR = calculateSubnetCIDR(subnet);
-    log_v("SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dns1.toString().c_str(), subnet.toString().c_str());
+    log_v(
+      "SoftAP: %s | Gateway: %s | DHCP Start: %s | Netmask: %s", local_ip.toString().c_str(), gateway.toString().c_str(), dns1.toString().c_str(),
+      subnet.toString().c_str()
+    );
     // netmask must have room for at least 12 IP addresses (AP + GW + 10 DHCP Leasing addresses)
     // netmask also must be limited to the last 8 bits of IPv4, otherwise this function won't work
     // IDF NETIF checks netmask for the 3rd byte: https://github.com/espressif/esp-idf/blob/master/components/esp_netif/lwip/esp_netif_lwip.c#L1857-L1862
@@ -395,8 +411,10 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
     lease.end_ip.addr = lease.start_ip.addr + 10;
     // Check if local_ip is in the same subnet as the dhcp leasing range initial address
     if ((ap_ipaddr & netmask) != (dhcp_ipaddr & netmask)) {
-      log_e("The AP IP address (%s) and the DHCP start address (%s) must be in the same subnet",
-            local_ip.toString().c_str(), IPAddress(_byte_swap32(dhcp_ipaddr)).toString().c_str());
+      log_e(
+        "The AP IP address (%s) and the DHCP start address (%s) must be in the same subnet", local_ip.toString().c_str(),
+        IPAddress(_byte_swap32(dhcp_ipaddr)).toString().c_str()
+      );
       return false;  //  ESP_FAIL if initializing failed
     }
     // prevents DHCP lease range to overflow subnet range
@@ -408,27 +426,27 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
     }
     // Check if local_ip is within DHCP range
     if (ap_ipaddr >= lease.start_ip.addr && ap_ipaddr <= lease.end_ip.addr) {
-      log_e("The AP IP address (%s) can't be within the DHCP range (%s -- %s)",
-            local_ip.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
+      log_e(
+        "The AP IP address (%s) can't be within the DHCP range (%s -- %s)", local_ip.toString().c_str(),
+        IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str()
+      );
       return false;  //  ESP_FAIL if initializing failed
     }
     // Check if gateway is within DHCP range
     uint32_t gw_ipaddr = _byte_swap32(info.gw.addr);
     bool gw_in_same_subnet = (gw_ipaddr & netmask) == (ap_ipaddr & netmask);
     if (gw_in_same_subnet && gw_ipaddr >= lease.start_ip.addr && gw_ipaddr <= lease.end_ip.addr) {
-      log_e("The GatewayP address (%s) can't be within the DHCP range (%s -- %s)",
-            gateway.toString().c_str(), IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str());
+      log_e(
+        "The GatewayP address (%s) can't be within the DHCP range (%s -- %s)", gateway.toString().c_str(),
+        IPAddress(_byte_swap32(lease.start_ip.addr)).toString().c_str(), IPAddress(_byte_swap32(lease.end_ip.addr)).toString().c_str()
+      );
       return false;  //  ESP_FAIL if initializing failed
     }
     // all done, just revert back byte order of DHCP lease range
     lease.start_ip.addr = _byte_swap32(lease.start_ip.addr);
     lease.end_ip.addr = _byte_swap32(lease.end_ip.addr);
     log_v("DHCP Server Range: %s to %s", IPAddress(lease.start_ip.addr).toString().c_str(), IPAddress(lease.end_ip.addr).toString().c_str());
-    err = esp_netif_dhcps_option(
-      _esp_netif,
-      ESP_NETIF_OP_SET,
-      ESP_NETIF_REQUESTED_IP_ADDRESS,
-      (void*)&lease, sizeof(dhcps_lease_t));
+    err = esp_netif_dhcps_option(_esp_netif, ESP_NETIF_OP_SET, ESP_NETIF_REQUESTED_IP_ADDRESS, (void *)&lease, sizeof(dhcps_lease_t));
     if (err) {
       log_e("DHCPS Set Lease Failed! 0x%04x: %s", err, esp_err_to_name(err));
       return false;
@@ -487,18 +505,18 @@ bool NetworkInterface::config(IPAddress local_ip, IPAddress gateway, IPAddress s
   return true;
 }
 
-const char* NetworkInterface::getHostname() const {
+const char *NetworkInterface::getHostname() const {
   if (_esp_netif == NULL) {
     return "";
   }
-  const char* hostname;
+  const char *hostname;
   if (esp_netif_get_hostname(_esp_netif, &hostname)) {
     return NULL;
   }
   return hostname;
 }
 
-bool NetworkInterface::setHostname(const char* hostname) const {
+bool NetworkInterface::setHostname(const char *hostname) const {
   if (_esp_netif == NULL) {
     return false;
   }
@@ -512,14 +530,14 @@ bool NetworkInterface::linkUp() const {
   return esp_netif_is_netif_up(_esp_netif);
 }
 
-const char* NetworkInterface::ifkey(void) const {
+const char *NetworkInterface::ifkey(void) const {
   if (_esp_netif == NULL) {
     return "";
   }
   return esp_netif_get_ifkey(_esp_netif);
 }
 
-const char* NetworkInterface::desc(void) const {
+const char *NetworkInterface::desc(void) const {
   if (_esp_netif == NULL) {
     return "";
   }
@@ -572,7 +590,7 @@ bool NetworkInterface::isDefault() const {
   return esp_netif_get_default_netif() == _esp_netif;
 }
 
-uint8_t* NetworkInterface::macAddress(uint8_t* mac) const {
+uint8_t *NetworkInterface::macAddress(uint8_t *mac) const {
   if (!mac || _esp_netif == NULL || _interface_id == ESP_NETIF_ID_PPP) {
     return NULL;
   }
@@ -585,8 +603,8 @@ uint8_t* NetworkInterface::macAddress(uint8_t* mac) const {
 }
 
 String NetworkInterface::macAddress(void) const {
-  uint8_t mac[6] = { 0, 0, 0, 0, 0, 0 };
-  char macStr[18] = { 0 };
+  uint8_t mac[6] = {0, 0, 0, 0, 0, 0};
+  char macStr[18] = {0};
   macAddress(mac);
   sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return String(macStr);
@@ -641,23 +659,11 @@ IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const {
     uint32_t addr2 esp_netif_htonl(d.ip.u_addr.ip6.addr[2]);
     uint32_t addr3 esp_netif_htonl(d.ip.u_addr.ip6.addr[3]);
     return IPAddress(
-      (uint8_t)(addr0 >> 24) & 0xFF,
-      (uint8_t)(addr0 >> 16) & 0xFF,
-      (uint8_t)(addr0 >> 8) & 0xFF,
-      (uint8_t)addr0 & 0xFF,
-      (uint8_t)(addr1 >> 24) & 0xFF,
-      (uint8_t)(addr1 >> 16) & 0xFF,
-      (uint8_t)(addr1 >> 8) & 0xFF,
-      (uint8_t)addr1 & 0xFF,
-      (uint8_t)(addr2 >> 24) & 0xFF,
-      (uint8_t)(addr2 >> 16) & 0xFF,
-      (uint8_t)(addr2 >> 8) & 0xFF,
-      (uint8_t)addr2 & 0xFF,
-      (uint8_t)(addr3 >> 24) & 0xFF,
-      (uint8_t)(addr3 >> 16) & 0xFF,
-      (uint8_t)(addr3 >> 8) & 0xFF,
-      (uint8_t)addr3 & 0xFF,
-      d.ip.u_addr.ip6.zone);
+      (uint8_t)(addr0 >> 24) & 0xFF, (uint8_t)(addr0 >> 16) & 0xFF, (uint8_t)(addr0 >> 8) & 0xFF, (uint8_t)addr0 & 0xFF, (uint8_t)(addr1 >> 24) & 0xFF,
+      (uint8_t)(addr1 >> 16) & 0xFF, (uint8_t)(addr1 >> 8) & 0xFF, (uint8_t)addr1 & 0xFF, (uint8_t)(addr2 >> 24) & 0xFF, (uint8_t)(addr2 >> 16) & 0xFF,
+      (uint8_t)(addr2 >> 8) & 0xFF, (uint8_t)addr2 & 0xFF, (uint8_t)(addr3 >> 24) & 0xFF, (uint8_t)(addr3 >> 16) & 0xFF, (uint8_t)(addr3 >> 8) & 0xFF,
+      (uint8_t)addr3 & 0xFF, d.ip.u_addr.ip6.zone
+    );
   }
   // IPv4 from single uint32_t
   // log_v("DNS IPv4: " IPSTR, IP2STR(&d.ip.u_addr.ip4));
@@ -705,7 +711,7 @@ IPAddress NetworkInterface::linkLocalIPv6() const {
   if (esp_netif_get_ip6_linklocal(_esp_netif, &addr)) {
     return IPAddress(IPv6);
   }
-  return IPAddress(IPv6, (const uint8_t*)addr.addr, addr.zone);
+  return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
 IPAddress NetworkInterface::globalIPv6() const {
@@ -716,10 +722,10 @@ IPAddress NetworkInterface::globalIPv6() const {
   if (esp_netif_get_ip6_global(_esp_netif, &addr)) {
     return IPAddress(IPv6);
   }
-  return IPAddress(IPv6, (const uint8_t*)addr.addr, addr.zone);
+  return IPAddress(IPv6, (const uint8_t *)addr.addr, addr.zone);
 }
 
-size_t NetworkInterface::printTo(Print& out) const {
+size_t NetworkInterface::printTo(Print &out) const {
   size_t bytes = 0;
   if (_esp_netif == NULL) {
     return bytes;
@@ -727,7 +733,7 @@ size_t NetworkInterface::printTo(Print& out) const {
   if (isDefault()) {
     bytes += out.print("*");
   }
-  const char* dscr = esp_netif_get_desc(_esp_netif);
+  const char *dscr = esp_netif_get_desc(_esp_netif);
   if (dscr != NULL) {
     bytes += out.print(dscr);
   }
@@ -748,13 +754,27 @@ size_t NetworkInterface::printTo(Print& out) const {
       bytes += out.print("_OFF");
     }
   }
-  if (flags & ESP_NETIF_DHCP_SERVER) bytes += out.print("DHCPS");
-  if (flags & ESP_NETIF_FLAG_AUTOUP) bytes += out.print(",AUTOUP");
-  if (flags & ESP_NETIF_FLAG_GARP) bytes += out.print(",GARP");
-  if (flags & ESP_NETIF_FLAG_EVENT_IP_MODIFIED) bytes += out.print(",IP_MOD");
-  if (flags & ESP_NETIF_FLAG_IS_PPP) bytes += out.print(",PPP");
-  if (flags & ESP_NETIF_FLAG_IS_BRIDGE) bytes += out.print(",BRIDGE");
-  if (flags & ESP_NETIF_FLAG_MLDV6_REPORT) bytes += out.print(",V6_REP");
+  if (flags & ESP_NETIF_DHCP_SERVER) {
+    bytes += out.print("DHCPS");
+  }
+  if (flags & ESP_NETIF_FLAG_AUTOUP) {
+    bytes += out.print(",AUTOUP");
+  }
+  if (flags & ESP_NETIF_FLAG_GARP) {
+    bytes += out.print(",GARP");
+  }
+  if (flags & ESP_NETIF_FLAG_EVENT_IP_MODIFIED) {
+    bytes += out.print(",IP_MOD");
+  }
+  if (flags & ESP_NETIF_FLAG_IS_PPP) {
+    bytes += out.print(",PPP");
+  }
+  if (flags & ESP_NETIF_FLAG_IS_BRIDGE) {
+    bytes += out.print(",BRIDGE");
+  }
+  if (flags & ESP_NETIF_FLAG_MLDV6_REPORT) {
+    bytes += out.print(",V6_REP");
+  }
   bytes += out.println(")");
 
   bytes += out.print("      ");
@@ -778,13 +798,13 @@ size_t NetworkInterface::printTo(Print& out) const {
   bytes += out.print(dnsIP());
   bytes += out.println();
 
-  static const char* types[] = { "UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6" };
+  static const char *types[] = {"UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6"};
   esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
   int v6addrs = esp_netif_get_all_ip6(_esp_netif, if_ip6);
   for (int i = 0; i < v6addrs; ++i) {
     bytes += out.print("      ");
     bytes += out.print("inet6 ");
-    bytes += IPAddress(IPv6, (const uint8_t*)if_ip6[i].addr, if_ip6[i].zone).printTo(out, true);
+    bytes += IPAddress(IPv6, (const uint8_t *)if_ip6[i].addr, if_ip6[i].zone).printTo(out, true);
     bytes += out.print(" type ");
     bytes += out.print(types[esp_netif_ip6_get_addr_type(&if_ip6[i])]);
     bytes += out.println();

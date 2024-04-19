@@ -44,7 +44,7 @@ public:
   String getManufacturerData();
   String getName();
   int getRSSI();
-  BLEScan* getScan();
+  BLEScan *getScan();
   String getServiceData();
   String getServiceData(int i);
   BLEUUID getServiceDataUUID();
@@ -55,12 +55,11 @@ public:
   int getServiceDataUUIDCount();
   int getServiceUUIDCount();
   int8_t getTXPower();
-  uint8_t* getPayload();
+  uint8_t *getPayload();
   size_t getPayloadLength();
   esp_ble_addr_type_t getAddressType();
   ble_frame_type_t getFrameType();
   void setAddressType(esp_ble_addr_type_t type);
-
 
   bool isAdvertisingService(BLEUUID uuid);
   bool haveAppearance();
@@ -76,19 +75,19 @@ public:
 private:
   friend class BLEScan;
 
-  void parseAdvertisement(uint8_t* payload, size_t total_len = 62);
-  void setPayload(uint8_t* payload, size_t total_len = 62);
+  void parseAdvertisement(uint8_t *payload, size_t total_len = 62);
+  void setPayload(uint8_t *payload, size_t total_len = 62);
   void setAddress(BLEAddress address);
   void setAdFlag(uint8_t adFlag);
-  void setAdvertizementResult(uint8_t* payload);
+  void setAdvertizementResult(uint8_t *payload);
   void setAppearance(uint16_t appearance);
   void setManufacturerData(String manufacturerData);
   void setName(String name);
   void setRSSI(int rssi);
-  void setScan(BLEScan* pScan);
+  void setScan(BLEScan *pScan);
   void setServiceData(String data);
   void setServiceDataUUID(BLEUUID uuid);
-  void setServiceUUID(const char* serviceUUID);
+  void setServiceUUID(const char *serviceUUID);
   void setServiceUUID(BLEUUID serviceUUID);
   void setTXPower(int8_t txPower);
 
@@ -98,20 +97,19 @@ private:
   bool m_haveRSSI;
   bool m_haveTXPower;
 
-
-  BLEAddress m_address = BLEAddress((uint8_t*)"\0\0\0\0\0\0");
+  BLEAddress m_address = BLEAddress((uint8_t *)"\0\0\0\0\0\0");
   uint8_t m_adFlag;
   uint16_t m_appearance;
   int m_deviceType;
   String m_manufacturerData;
   String m_name;
-  BLEScan* m_pScan;
+  BLEScan *m_pScan;
   int m_rssi;
   std::vector<BLEUUID> m_serviceUUIDs;
   int8_t m_txPower;
   std::vector<String> m_serviceData;
   std::vector<BLEUUID> m_serviceDataUUIDs;
-  uint8_t* m_payload;
+  uint8_t *m_payload;
   size_t m_payloadLength = 0;
   esp_ble_addr_type_t m_addressType;
 };
@@ -148,7 +146,6 @@ public:
   virtual void onResult(esp_ble_gap_ext_adv_report_t report) = 0;
 };
 #endif  // SOC_BLE_50_SUPPORTED
-
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

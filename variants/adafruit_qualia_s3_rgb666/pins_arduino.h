@@ -7,8 +7,8 @@
 #define USB_PID 0x8147
 
 #define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "Qualia ESP32-S3 RGB666"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "Qualia ESP32-S3 RGB666"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 static const uint8_t PCA_TFT_SCK = 0;
 static const uint8_t PCA_TFT_CS = 1;
@@ -41,7 +41,6 @@ static const uint8_t T9 = 9;  // the analog numbers on board silk
 static const uint8_t T10 = 10;
 static const uint8_t T11 = 11;
 static const uint8_t T12 = 12;
-
 
 static const uint8_t TFT_R1 = 11;
 static const uint8_t TFT_R2 = 10;

@@ -47,7 +47,6 @@ WebServer server(80);
 static bool hasSD = false;
 File uploadFile;
 
-
 void returnOK() {
   server.send(200, "text/plain", "");
 }
@@ -294,15 +293,16 @@ void setup(void) {
     DBG_OUTPUT_PORT.println(".local");
   }
 
-
   server.on("/list", HTTP_GET, printDirectory);
   server.on("/edit", HTTP_DELETE, handleDelete);
   server.on("/edit", HTTP_PUT, handleCreate);
   server.on(
-    "/edit", HTTP_POST, []() {
+    "/edit", HTTP_POST,
+    []() {
       returnOK();
     },
-    handleFileUpload);
+    handleFileUpload
+  );
   server.onNotFound(handleNotFound);
 
   server.begin();

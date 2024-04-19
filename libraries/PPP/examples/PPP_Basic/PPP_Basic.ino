@@ -4,14 +4,14 @@
 #define PPP_MODEM_PIN "0000"  // or NULL
 
 // WaveShare SIM7600 HW Flow Control
-#define PPP_MODEM_RST 25
+#define PPP_MODEM_RST     25
 #define PPP_MODEM_RST_LOW false  //active HIGH
-#define PPP_MODEM_TX 21
-#define PPP_MODEM_RX 22
-#define PPP_MODEM_RTS 26
-#define PPP_MODEM_CTS 27
-#define PPP_MODEM_FC ESP_MODEM_FLOW_CONTROL_HW
-#define PPP_MODEM_MODEL PPP_MODEM_SIM7600
+#define PPP_MODEM_TX      21
+#define PPP_MODEM_RX      22
+#define PPP_MODEM_RTS     26
+#define PPP_MODEM_CTS     27
+#define PPP_MODEM_FC      ESP_MODEM_FLOW_CONTROL_HW
+#define PPP_MODEM_MODEL   PPP_MODEM_SIM7600
 
 // SIM800 basic module with just TX,RX and RST
 // #define PPP_MODEM_RST     0
@@ -25,38 +25,24 @@
 
 void onEvent(arduino_event_id_t event, arduino_event_info_t info) {
   switch (event) {
-    case ARDUINO_EVENT_PPP_START:
-      Serial.println("PPP Started");
-      break;
-    case ARDUINO_EVENT_PPP_CONNECTED:
-      Serial.println("PPP Connected");
-      break;
-    case ARDUINO_EVENT_PPP_GOT_IP:
-      Serial.println("PPP Got IP");
-      break;
-    case ARDUINO_EVENT_PPP_LOST_IP:
-      Serial.println("PPP Lost IP");
-      break;
-    case ARDUINO_EVENT_PPP_DISCONNECTED:
-      Serial.println("PPP Disconnected");
-      break;
-    case ARDUINO_EVENT_PPP_STOP:
-      Serial.println("PPP Stopped");
-      break;
-    default:
-      break;
+    case ARDUINO_EVENT_PPP_START:        Serial.println("PPP Started"); break;
+    case ARDUINO_EVENT_PPP_CONNECTED:    Serial.println("PPP Connected"); break;
+    case ARDUINO_EVENT_PPP_GOT_IP:       Serial.println("PPP Got IP"); break;
+    case ARDUINO_EVENT_PPP_LOST_IP:      Serial.println("PPP Lost IP"); break;
+    case ARDUINO_EVENT_PPP_DISCONNECTED: Serial.println("PPP Disconnected"); break;
+    case ARDUINO_EVENT_PPP_STOP:         Serial.println("PPP Stopped"); break;
+    default:                             break;
   }
 }
 
-void testClient(const char* host, uint16_t port) {
+void testClient(const char *host, uint16_t port) {
   NetworkClient client;
   if (!client.connect(host, port)) {
     Serial.println("Connection Failed");
     return;
   }
   client.printf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host);
-  while (client.connected() && !client.available())
-    ;
+  while (client.connected() && !client.available());
   while (client.available()) {
     client.read();  //Serial.write(client.read());
   }

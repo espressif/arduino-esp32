@@ -48,6 +48,4 @@ static const uint8_t G46 = 46;
 static const uint8_t ADC1 = 7;
 static const uint8_t ADC2 = 8;
 
-
-
 #endif /* Pins_Arduino_h */

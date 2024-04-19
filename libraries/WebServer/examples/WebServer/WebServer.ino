@@ -65,12 +65,13 @@ void handleRedirect() {
   TRACE("Redirect...\n");
   String url = "/index.htm";
 
-  if (!LittleFS.exists(url)) { url = "/$upload.htm"; }
+  if (!LittleFS.exists(url)) {
+    url = "/$upload.htm";
+  }
 
   server.sendHeader("Location", url, true);
   server.send(302);
 }  // handleRedirect()
-
 
 // This function is called when the WebServer was requested to list all existing files in the filesystem.
 // a JSON array with file information is returned.
@@ -80,7 +81,9 @@ void handleListFiles() {
 
   result += "[\n";
   while (File entry = dir.openNextFile()) {
-    if (result.length() > 4) { result += ",\n"; }
+    if (result.length() > 4) {
+      result += ",\n";
+    }
     result += "  {";
     result += "\"type\": \"file\", ";
     result += "\"name\": \"" + String(entry.name()) + "\", ";
@@ -93,7 +96,6 @@ void handleListFiles() {
   server.sendHeader("Cache-Control", "no-cache");
   server.send(200, "text/javascript; charset=utf-8", result);
 }  // handleListFiles()
-
 
 // This function is called when the sysInfo service was requested.
 void handleSysInfo() {
@@ -113,7 +115,6 @@ void handleSysInfo() {
   server.send(200, "text/javascript; charset=utf-8", result);
 }  // handleSysInfo()
 
-
 // ===== Request Handler class used to answer more complex requests =====
 
 // The FileServerHandler is registered to the web server to support DELETE and UPLOAD of files into the filesystem.
@@ -127,7 +128,6 @@ public:
     TRACE("FileServerHandler is registered\n");
   }
 
-
   // @brief check incoming request. Can handle POST for uploads and DELETE.
   // @param requestMethod method of the http request line.
   // @param requestUri request resource from the http request line.
@@ -136,17 +136,17 @@ public:
     return ((requestMethod == HTTP_POST) || (requestMethod == HTTP_DELETE));
   }  // canHandle()
 
-
   bool canUpload(String uri) override {
     // only allow upload on root fs level.
     return (uri == "/");
   }  // canUpload()
 
-
   bool handle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
     // ensure that filename starts with '/'
     String fName = requestUri;
-    if (!fName.startsWith("/")) { fName = "/" + fName; }
+    if (!fName.startsWith("/")) {
+      fName = "/" + fName;
+    }
 
     TRACE("handle %s\n", fName.c_str());
 
@@ -164,10 +164,8 @@ public:
     return (true);
   }  // handle()
 
-
   // uploading process
-  void
-  upload(WebServer UNUSED &server, String UNUSED _requestUri, HTTPUpload &upload) override {
+  void upload(WebServer UNUSED &server, String UNUSED _requestUri, HTTPUpload &upload) override {
     // ensure that filename starts with '/'
     static size_t uploadSize;
 
@@ -175,7 +173,9 @@ public:
       String fName = upload.filename;
 
       // Open the file for writing
-      if (!fName.startsWith("/")) { fName = "/" + fName; }
+      if (!fName.startsWith("/")) {
+        fName = "/" + fName;
+      }
       TRACE("start uploading file %s...\n", fName.c_str());
 
       if (LittleFS.exists(fName)) {
@@ -195,7 +195,9 @@ public:
 
           // delete file to free up space in filesystem
           String fName = upload.filename;
-          if (!fName.startsWith("/")) { fName = "/" + fName; }
+          if (!fName.startsWith("/")) {
+            fName = "/" + fName;
+          }
           LittleFS.remove(fName);
         }
         uploadSize += upload.currentSize;
@@ -215,11 +217,9 @@ public:
 
   }  // upload()
 
-
 protected:
   File _fsUploadFile;
 };
-
 
 // Setup everything to make the webserver work.
 void setup(void) {
@@ -318,11 +318,8 @@ void setup(void) {
 
   server.begin();
 
-  TRACE("open <http://%s> or <http://%s>\n",
-        WiFi.getHostname(),
-        WiFi.localIP().toString().c_str());
+  TRACE("open <http://%s> or <http://%s>\n", WiFi.getHostname(), WiFi.localIP().toString().c_str());
 }  // setup
-
 
 // run the server...
 void loop(void) {

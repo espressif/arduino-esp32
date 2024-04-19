@@ -27,10 +27,10 @@ public:
   void end();
 
   // Required for connecting to internet
-  bool setApn(const char* apn);
+  bool setApn(const char *apn);
 
   // Required only if the SIM card is protected by PIN
-  bool setPin(const char* pin);
+  bool setPin(const char *pin);
 
   // If the modem supports hardware flow control, it's best to use it
   bool setPins(int8_t tx, int8_t rx, int8_t rts = -1, int8_t cts = -1, esp_modem_flow_ctrl_t flow_ctrl = ESP_MODEM_FLOW_CONTROL_NONE);
@@ -60,13 +60,13 @@ public:
   bool setBaudrate(int baudrate);
 
   // Sens SMS message to a number
-  bool sms(const char* num, const char* message);
+  bool sms(const char *num, const char *message);
   bool sms(String num, String message) {
     return sms(num.c_str(), message.c_str());
   }
 
   // Send AT command with timeout in milliseconds
-  String cmd(const char* at_command, int timeout);
+  String cmd(const char *at_command, int timeout);
   String cmd(String at_command, int timeout) {
     return cmd(at_command.c_str(), timeout);
   }
@@ -76,17 +76,17 @@ public:
   bool reset();
   bool storeProfile();
 
-  esp_modem_dce_t* handle() const;
+  esp_modem_dce_t *handle() const;
 
 protected:
-  size_t printDriverInfo(Print& out) const;
+  size_t printDriverInfo(Print &out) const;
 
 public:
-  void _onPppEvent(int32_t event_id, void* event_data);
+  void _onPppEvent(int32_t event_id, void *event_data);
   void _onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t info);
 
 private:
-  esp_modem_dce_t* _dce;
+  esp_modem_dce_t *_dce;
   int8_t _pin_tx;
   int8_t _pin_rx;
   int8_t _pin_rts;
@@ -94,14 +94,14 @@ private:
   esp_modem_flow_ctrl_t _flow_ctrl;
   int8_t _pin_rst;
   bool _pin_rst_act_low;
-  const char* _pin;
-  const char* _apn;
+  const char *_pin;
+  const char *_apn;
   int _rx_buffer_size;
   int _tx_buffer_size;
   esp_modem_dce_mode_t _mode;
   uint8_t _uart_num;
 
-  static bool pppDetachBus(void* bus_pointer);
+  static bool pppDetachBus(void *bus_pointer);
 };
 
 extern PPPClass PPP;

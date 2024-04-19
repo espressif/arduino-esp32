@@ -5,7 +5,7 @@
 
 #define Wireless_Stick true
 #define DISPLAY_HEIGHT 32
-#define DISPLAY_WIDTH 64
+#define DISPLAY_WIDTH  64
 
 static const uint8_t LED_BUILTIN = 25;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

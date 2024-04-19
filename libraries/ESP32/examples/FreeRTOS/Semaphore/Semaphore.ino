@@ -36,7 +36,9 @@ void warehouse_worker_task(void *pvParameters) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(100); }
+  while (!Serial) {
+    delay(100);
+  }
   // Create the semaphore
   package_delivered_semaphore = xSemaphoreCreateCounting(10, 0);
 

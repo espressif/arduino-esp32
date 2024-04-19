@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-
 #include "vfs_api.h"
 
 extern "C" {
@@ -35,20 +33,17 @@ class LittleFSImpl : public VFSImpl {
 public:
   LittleFSImpl();
   virtual ~LittleFSImpl() {}
-  virtual bool exists(const char* path);
+  virtual bool exists(const char *path);
 };
 
-LittleFSImpl::LittleFSImpl() {
-}
+LittleFSImpl::LittleFSImpl() {}
 
-bool LittleFSImpl::exists(const char* path) {
+bool LittleFSImpl::exists(const char *path) {
   File f = open(path, "r", false);
   return (f == true);
 }
 
-LittleFSFS::LittleFSFS()
-  : FS(FSImplPtr(new LittleFSImpl())), partitionLabel_(NULL) {
-}
+LittleFSFS::LittleFSFS() : FS(FSImplPtr(new LittleFSImpl())), partitionLabel_(NULL) {}
 
 LittleFSFS::~LittleFSFS() {
   if (partitionLabel_) {
@@ -57,7 +52,7 @@ LittleFSFS::~LittleFSFS() {
   }
 }
 
-bool LittleFSFS::begin(bool formatOnFail, const char* basePath, uint8_t maxOpenFiles, const char* partitionLabel) {
+bool LittleFSFS::begin(bool formatOnFail, const char *basePath, uint8_t maxOpenFiles, const char *partitionLabel) {
 
   if (partitionLabel_) {
     free(partitionLabel_);

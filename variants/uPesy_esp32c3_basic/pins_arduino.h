@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x303A
-#define USB_PID 0x8195
+#define USB_VID          0x303A
+#define USB_PID          0x8195
 #define USB_MANUFACTURER "uPesy Electronics"
-#define USB_PRODUCT "uPesy ESP32C3 Basic"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "uPesy ESP32C3 Basic"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;

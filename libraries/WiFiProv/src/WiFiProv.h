@@ -46,10 +46,11 @@ typedef enum {
 //Provisioning class
 class WiFiProvClass {
 public:
-
-  void beginProvision(prov_scheme_t prov_scheme = WIFI_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = WIFI_PROV_SCHEME_HANDLER_NONE,
-                      wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char *pop = "abcd1234", const char *service_name = NULL,
-                      const char *service_key = NULL, uint8_t *uuid = NULL, bool reset_provisioned = false);
+  void beginProvision(
+    prov_scheme_t prov_scheme = WIFI_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = WIFI_PROV_SCHEME_HANDLER_NONE,
+    wifi_prov_security_t security = WIFI_PROV_SECURITY_1, const char *pop = "abcd1234", const char *service_name = NULL, const char *service_key = NULL,
+    uint8_t *uuid = NULL, bool reset_provisioned = false
+  );
   void printQR(const char *name, const char *pop, const char *transport);
 };
 

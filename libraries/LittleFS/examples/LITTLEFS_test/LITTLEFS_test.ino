@@ -283,5 +283,4 @@ void setup() {
   Serial.println("Test complete");
 }
 
-void loop() {
-}
+void loop() {}

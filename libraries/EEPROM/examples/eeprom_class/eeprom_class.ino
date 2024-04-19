@@ -38,7 +38,7 @@ void setup() {
     ESP.restart();
   }
 
-  const char* name = "Teo Swee Ann";
+  const char *name = "Teo Swee Ann";
   char rname[32];
   double height = 5.8;
   uint32_t age = 47;

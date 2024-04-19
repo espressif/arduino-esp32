@@ -33,19 +33,20 @@ class MD5Builder : public HashBuilder {
 private:
   md5_context_t _ctx;
   uint8_t _buf[ESP_ROM_MD5_DIGEST_LEN];
+
 public:
   void begin(void) override;
 
   using HashBuilder::add;
-  void add(const uint8_t* data, size_t len) override;
+  void add(const uint8_t *data, size_t len) override;
 
   using HashBuilder::addHexString;
-  void addHexString(const char* data) override;
+  void addHexString(const char *data) override;
 
-  bool addStream(Stream& stream, const size_t maxLen) override;
+  bool addStream(Stream &stream, const size_t maxLen) override;
   void calculate(void) override;
-  void getBytes(uint8_t* output) override;
-  void getChars(char* output) override;
+  void getBytes(uint8_t *output) override;
+  void getChars(char *output) override;
   String toString(void) override;
 };
 
