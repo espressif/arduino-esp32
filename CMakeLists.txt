@@ -95,6 +95,7 @@ set(ARDUINO_ALL_LIBRARIES
   LittleFS
   NetBIOS
   Network
+  PPP
   Preferences
   RainMaker
   SD_MMC
@@ -156,6 +157,10 @@ set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
 set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
+
+set(ARDUINO_LIBRARY_PPP_SRCS
+  libraries/PPP/src/PPP.cpp
+  libraries/PPP/src/ppp.c)
 
 set(ARDUINO_LIBRARY_Preferences_SRCS libraries/Preferences/src/Preferences.cpp)
 
