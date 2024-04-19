@@ -7,7 +7,11 @@ on:
 
   # Schedule weekly builds on every Sunday at 4 am
   schedule:
-    - cron: '0 4 * * SUN' 
+    - cron: '0 4 * * SUN'
+
+concurrency:
+  group: libs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   # It's convenient to set variables for values used multiple times in the workflow
@@ -86,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Check out repository
-      - name: Checkout repository    
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ env.GITHUB_TOKEN }}
