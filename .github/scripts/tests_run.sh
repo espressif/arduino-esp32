@@ -8,6 +8,11 @@ function run_test() {
     local sketchdir=$(dirname $sketch)
     local sketchname=$(basename $sketchdir)
 
+    if [[ -f "$sketchdir/.skip.$platform" ]]; then
+      echo "Skipping $sketchname test in $target"
+      exit 0
+    fi
+
     if [ $options -eq 0 ] && [ -f $sketchdir/cfg.json ]; then
         len=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn | length' $sketchdir/cfg.json`
     else
@@ -33,7 +38,13 @@ function run_test() {
             report_file="tests/$sketchname/$sketchname$i.xml"
         fi
 
-        pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file
+        if [ $platform == "wokwi" ]; then
+            extra_args="--target $target --embedded-services arduino,wokwi --wokwi-timeout=$wokwi_timeout"
+        else
+            extra_args="--embedded-services esp,arduino"
+        fi
+
+        pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args
         result=$?
         if [ $result -ne 0 ]; then
             return $result
@@ -44,6 +55,8 @@ function run_test() {
 SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
 
+platform="hardware"
+wokwi_timeout=60000
 chunk_run=0
 options=0
 erase=0
@@ -52,6 +65,11 @@ while [ ! -z "$1" ]; do
     case $1 in
     -c )
         chunk_run=1
+        ;;
+    -w )
+        shift
+        wokwi_timeout=$1
+        platform="wokwi"
         ;;
     -o )
         options=1
