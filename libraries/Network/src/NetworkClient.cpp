@@ -178,7 +178,6 @@ NetworkClient::NetworkClient(int fd) : _connected(true), _timeout(WIFI_CLIENT_DE
 }
 
 NetworkClient::~NetworkClient() {
-  stop();
 }
 
 void NetworkClient::stop() {
