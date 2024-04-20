@@ -446,7 +446,7 @@ esp_err_t ETHClass::eth_spi_write(uint32_t cmd, uint32_t addr, const void *data,
 #endif
 
 bool ETHClass::beginSPI(
-  eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst,
+  eth_phy_type_t type, int32_t phy_addr, uint8_t *mac_addr_p, int cs, int irq, int rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
   SPIClass *spi,
 #endif
@@ -654,16 +654,20 @@ bool ETHClass::beginSPI(
     return false;
   }
 
-  // Derive a new MAC address for this interface
-  uint8_t base_mac_addr[ETH_ADDR_LEN];
-  ret = esp_efuse_mac_get_default(base_mac_addr);
-  if (ret != ESP_OK) {
-    log_e("Get EFUSE MAC failed: %d", ret);
-    return false;
-  }
   uint8_t mac_addr[ETH_ADDR_LEN];
-  base_mac_addr[ETH_ADDR_LEN - 1] += _eth_index;  //Increment by the ETH number
-  esp_derive_local_mac(mac_addr, base_mac_addr);
+  if (mac_addr_p != nullptr) {
+    memcpy(mac_addr, mac_addr_p, ETH_ADDR_LEN);
+  } else {
+    // Derive a new MAC address for this interface
+    uint8_t base_mac_addr[ETH_ADDR_LEN];
+    ret = esp_efuse_mac_get_default(base_mac_addr);
+    if (ret != ESP_OK) {
+      log_e("Get EFUSE MAC failed: %d", ret);
+      return false;
+    }
+    base_mac_addr[ETH_ADDR_LEN - 1] += _eth_index;  //Increment by the ETH number
+    esp_derive_local_mac(mac_addr, base_mac_addr);
+  }
 
   ret = esp_eth_ioctl(_eth_handle, ETH_CMD_S_MAC_ADDR, mac_addr);
   if (ret != ESP_OK) {
@@ -776,7 +780,7 @@ err:
 #if ETH_SPI_SUPPORTS_CUSTOM
 bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int cs, int irq, int rst, SPIClass &spi, uint8_t spi_freq_mhz) {
 
-  return beginSPI(type, phy_addr, cs, irq, rst, &spi, -1, -1, -1, SPI2_HOST, spi_freq_mhz);
+  return beginSPI(type, phy_addr, nullptr, cs, irq, rst, &spi, -1, -1, -1, SPI2_HOST, spi_freq_mhz);
 }
 #endif
 
@@ -785,7 +789,7 @@ bool ETHClass::begin(
 ) {
 
   return beginSPI(
-    type, phy_addr, cs, irq, rst,
+    type, phy_addr, nullptr, cs, irq, rst,
 #if ETH_SPI_SUPPORTS_CUSTOM
     NULL,
 #endif
