@@ -1,0 +1,51 @@
+{
+  "targets": [
+    {
+      "name": "esp32",
+      "fqbn":[
+        "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio",
+        "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=qio"
+      ]
+    },
+    {
+      "name": "esp32s2",
+      "fqbn": [
+        "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio",
+        "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=qio"
+      ]
+    },
+    {
+      "name": "esp32c3",
+      "fqbn": [
+        "espressif:esp32:esp32c3:PartitionScheme=huge_app,FlashMode=dio",
+        "espressif:esp32:esp32c3:PartitionScheme=huge_app,FlashMode=qio"
+      ]
+    },
+    {
+      "name": "esp32s3",
+      "fqbn": [
+        "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=qio",
+        "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=qio120",
+        "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=dio"
+      ]
+    },
+    {
+      "name": "esp32c6",
+      "fqbn": [
+        "espressif:esp32:esp32c6:PartitionScheme=huge_app,FlashMode=dio",
+        "espressif:esp32:esp32c6:PartitionScheme=huge_app,FlashMode=dio,FlashFreq=40",
+        "espressif:esp32:esp32c6:PartitionScheme=huge_app,FlashMode=qio",
+        "espressif:esp32:esp32c6:PartitionScheme=huge_app,FlashMode=qio,FlashFreq=40"
+      ]
+    },
+    {
+      "name": "esp32h2",
+      "fqbn": [
+        "espressif:esp32:esp32h2:PartitionScheme=huge_app,FlashMode=dio",
+        "espressif:esp32:esp32h2:PartitionScheme=huge_app,FlashMode=dio,FlashFreq=16",
+        "espressif:esp32:esp32h2:PartitionScheme=huge_app,FlashMode=qio",
+        "espressif:esp32:esp32h2:PartitionScheme=huge_app,FlashMode=qio,FlashFreq=16"
+      ]
+    }
+  ]
+}

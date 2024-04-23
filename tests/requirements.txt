@@ -1,0 +1,5 @@
+cryptography>=2.1.4
+--only-binary cryptography
+pytest-cov
+pytest-embedded-serial-esp>=1.3.4
+pytest-embedded-arduino>=1.3.4
