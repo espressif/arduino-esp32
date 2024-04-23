@@ -180,7 +180,6 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
     _osal_q_unlock(qhdl);
   }
 
-  TU_ASSERT(success);
   return success;
 }
 

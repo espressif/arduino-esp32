@@ -145,7 +145,6 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
   bool success = tu_fifo_write(&qhdl->ff, data);
   critical_section_exit(&qhdl->critsec);
 
-  TU_ASSERT(success);
   return success;
 }
 
