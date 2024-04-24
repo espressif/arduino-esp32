@@ -21,7 +21,6 @@
 #include <inttypes.h>
 #include "esp_event.h"
 #include "Stream.h"
-#include "driver/usb_serial_jtag.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_HW_CDC_EVENTS);
 
