@@ -401,22 +401,6 @@ int HWCDC::availableForWrite(void) {
   return a;
 }
 
-static void flushTXBuffer() {
-  if (!tx_ring_buf) {
-    return;
-  }
-  UBaseType_t uxItemsWaiting = 0;
-  vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
-
-  size_t queued_size = 0;
-  uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, uxItemsWaiting);
-  if (queued_size && queued_buff != NULL) {
-    vRingbufferReturnItem(tx_ring_buf, (void *)queued_buff);
-  }
-  // flushes CDC FIFO
-  usb_serial_jtag_ll_txfifo_flush();
-}
-
 size_t HWCDC::write(const uint8_t *buffer, size_t size) {
   if (buffer == NULL || size == 0 || tx_ring_buf == NULL || tx_lock == NULL) {
     return 0;
