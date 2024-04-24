@@ -236,11 +236,11 @@ void HardwareSerial::_uartEventTask(void *args)
                                 uart->_onReceiveCB();
                         break;
                     case UART_FIFO_OVF:
-                        log_v("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
+                        log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
                         currentErr = UART_FIFO_OVF_ERROR;
                         break;
                     case UART_BUFFER_FULL:
-                        log_v("UART%d Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
+                        log_w("UART%d Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
                         currentErr = UART_BUFFER_FULL_ERROR;
                         break;
                     case UART_BREAK:
