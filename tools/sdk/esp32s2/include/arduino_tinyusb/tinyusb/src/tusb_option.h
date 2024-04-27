@@ -119,6 +119,10 @@
 // Espressif
 #define OPT_MCU_ESP32S2           900 ///< Espressif ESP32-S2
 #define OPT_MCU_ESP32S3           901 ///< Espressif ESP32-S3
+#define OPT_MCU_ESP32             902 ///< Espressif ESP32 (for host max3421e)
+#define OPT_MCU_ESP32C3           903 ///< Espressif ESP32-C3
+#define OPT_MCU_ESP32C6           904 ///< Espressif ESP32-C6
+#define TUP_MCU_ESPRESSIF         (CFG_TUSB_MCU >= 900 && CFG_TUSB_MCU < 1000) // check if Espressif MCU
 
 // Dialog
 #define OPT_MCU_DA1469X          1000 ///< Dialog Semiconductor DA1469x
