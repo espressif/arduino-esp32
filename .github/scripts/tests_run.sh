@@ -40,6 +40,9 @@ function run_test() {
 
         if [ $platform == "wokwi" ]; then
             extra_args="--target $target --embedded-services arduino,wokwi --wokwi-timeout=$wokwi_timeout"
+            if [[ -f "$sketchdir/scenario.yaml" ]]; then
+                extra_args+=" --wokwi-scenario $sketchdir/scenario.yaml"
+            fi
         else
             extra_args="--embedded-services esp,arduino"
         fi
