@@ -89,7 +89,7 @@ jobs:
         run: |
           pip install -U pip
           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
-          apt update && apt install -y -qq jq
+          sudo apt update && apt install -y -qq jq
 
       - name: Run Tests
         env:
