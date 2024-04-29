@@ -213,7 +213,7 @@ static void flushTXBuffer(const uint8_t *buffer, size_t size) {
     if (queued_size && queued_buff != NULL) {
       vRingbufferReturnItem(tx_ring_buf, (void *)queued_buff);
     }
-    // now add the new data that fits to the ring buffer
+    // now add the new data that fits into the ring buffer
     uint8_t *bptr = (uint8_t *)buffer;
     if (size >= ringbufferLength) {
       size = ringbufferLength;
