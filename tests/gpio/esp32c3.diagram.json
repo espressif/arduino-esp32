@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "author": "P-R-O-C-H-Y",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-c3-devkitm-1",
+      "id": "esp32",
+      "top": -57.6,
+      "left": -177.56,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": -22.6,
+      "left": -19.2,
+      "attrs": { "color": "green" }
+    }
+  ],
+  "connections": [
+    [ "esp32:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp32:TX", "$serialMonitor:RX", "", [] ],
+    [ "btn1:1.l", "esp32:0", "blue", [ "h-28.8", "v144", "h-144", "v-95.7" ] ],
+    [ "btn1:2.r", "esp32:GND.1", "black", [ "h19.4", "v173", "h-269.2", "v-98.23" ] ]
+  ],
+  "dependencies": {}
+}
