@@ -89,6 +89,11 @@ jobs:
         run: |
           pip install -U pip
           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+          git clone https://github.com/P-R-O-C-H-Y/pytest-embedded.git
+          cd pytest-embedded
+          git checkout feature/wokwi-scenario-support
+          pip install -e pytest-embedded-wokwi
+          cd ..
           sudo apt update && sudo apt install -y -qq jq
 
       - name: Run Tests
