@@ -1,7 +1,7 @@
 name: Run tests
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, synchronize, labeled]
 
   schedule:
@@ -17,7 +17,9 @@ concurrency:
 
 jobs:
   gen_chunks:
-    if: github.repository == 'espressif/arduino-esp32' || contains(github.event.pull_request.labels.*.name, 'run_tests')
+    if: |
+      github.repository == 'espressif/arduino-esp32' && 
+      ( contains(github.event.pull_request.labels.*.name, 'run_tests') || github.event_name == 'schedule' )
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
     outputs:
