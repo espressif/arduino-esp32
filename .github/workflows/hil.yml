@@ -1,13 +1,15 @@
 name: Run tests
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize, labeled]
-    branches:
-      - master
 
   schedule:
     - cron: '0 2 * * *'
+
+  push:
+    branches:
+      - master
 
 env:
   MAX_CHUNKS: 15
@@ -19,9 +21,7 @@ concurrency:
 
 jobs:
   gen_chunks:
-    if: |
-      github.repository == 'espressif/arduino-esp32' && 
-      ( contains(github.event.pull_request.labels.*.name, 'run_tests') || github.event_name == 'schedule' )
+    if: github.repository == 'espressif/arduino-esp32'
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
     outputs:
@@ -75,6 +75,8 @@ jobs:
   wokwi-test:
     needs: [gen_chunks, build]
     name: ${{matrix.chip}}-Wokwi_Test#${{matrix.chunks}}
+    if: |
+      github.event_name == 'schedule' || github.event_name == 'push'
     strategy:
       fail-fast: false
       matrix:
@@ -173,4 +175,3 @@ jobs:
          with:
            name: Event File
            path: ${{github.event_path}}
-
