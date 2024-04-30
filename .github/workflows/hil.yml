@@ -10,6 +10,7 @@ on:
 env:
   MAX_CHUNKS: 15
   WOKWI_TIMEOUT: 120000 # Milliseconds
+  WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
 
 concurrency:
   group: hil-${{github.event.pull_request.number || github.ref}}
@@ -97,8 +98,6 @@ jobs:
           sudo apt update && sudo apt install -y -qq jq
 
       - name: Run Tests
-        env:
-          WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
         run: |
           bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -w ${{env.WOKWI_TIMEOUT}}
 
