@@ -3,6 +3,8 @@ name: Run tests
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, labeled]
+    branches:
+      - master
 
   schedule:
     - cron: '0 2 * * *'
