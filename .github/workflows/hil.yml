@@ -1,7 +1,7 @@
 name: Run tests
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize, labeled]
 
   schedule:
