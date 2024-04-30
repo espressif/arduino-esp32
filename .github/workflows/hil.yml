@@ -1,7 +1,7 @@
 name: Run tests
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, synchronize, labeled]
 
   schedule:
@@ -10,7 +10,6 @@ on:
 env:
   MAX_CHUNKS: 15
   WOKWI_TIMEOUT: 120000 # Milliseconds
-  WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
 
 concurrency:
   group: hil-${{github.event.pull_request.number || github.ref}}
@@ -18,7 +17,7 @@ concurrency:
 
 jobs:
   gen_chunks:
-    if: github.repository == 'espressif/arduino-esp32'
+    if: github.repository == 'espressif/arduino-esp32' || contains(github.event.pull_request.labels.*.name, 'run_tests')
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
     outputs:
