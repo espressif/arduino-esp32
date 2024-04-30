@@ -98,6 +98,8 @@ jobs:
           sudo apt update && sudo apt install -y -qq jq
 
       - name: Run Tests
+        env:
+          WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
         run: |
           bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -w ${{env.WOKWI_TIMEOUT}}
 
