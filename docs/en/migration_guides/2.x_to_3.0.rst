@@ -5,62 +5,77 @@ Migration from 2.x to 3.0
 Introduction
 ------------
 
-This is a guide to highlight **breaking changes** in the API and to help the migration of projects from versions 2.X (based on ESP-IDF 4.4) to version 3.0 (based on ESP-IDF 5.1) of the Arduino ESP32 core.
+This is a guide to highlight **breaking changes** in the API and build system to help the migration of projects from versions 2.X (based on ESP-IDF 4.4) to version 3.0 (based on ESP-IDF 5.1) of the Arduino ESP32 core.
 
 All the examples on the version 3.0.0 were updated to be compatible to the new API. The old examples from the versions below 3.0.0 will be not compatible with the version 3.0.0 or newer releases.
 
 For more information about all changes and new features, check project `RELEASE NOTES <https://github.com/espressif/arduino-esp32/releases>`_.
 
+Build System
+------------
+
+Compilation Flags
+*****************
+
+Functional changes
+^^^^^^^^^^^^^^^^^^
+
+* If your project uses extra flags in the compilation process, it will now overwrite `some required default flags <https://github.com/espressif/arduino-esp32/blob/e5330d1797accfc8334e645372595d1bfda07ba2/platform.txt#L66-L67>`_.
+  To ensure your project compiles correctly, make sure to have the ``-MMD -c`` flags in your C and C++ extra flags.
+
+APIs
+----
+
 ADC
----
+***
 
 Removed APIs
-************
+^^^^^^^^^^^^
 
 * ``analogSetClockDiv``
 * ``adcAttachPin``
 * ``analogSetVRefPin``
 
 BLE
----
+***
 
 Changes in APIs
-***************
+^^^^^^^^^^^^^^^
 
 * Changed APIs return and parameter type from ``std::string`` to Arduino style ``String``.
 * Changed UUID data type from ``uint16_t`` to ``BLEUUID`` class.
 * ``BLEScan::start`` and ``BLEScan::getResults`` methods return type changed from ``BLEScanResults`` to ``BLEScanResults*``.
 
 Hall Sensor
------------
+***********
 
 Hall sensor is no longer supported.
 
 Removed APIs
-************
+^^^^^^^^^^^^
 
 * ``hallRead``
 
 I2S
----
+***
 
 The I2S driver has been completely redesigned and refactored to use the new ESP-IDF driver.
 For more information about the new API, check :doc:`/api/i2s`.
 
 LEDC
-----
+****
 
 The LEDC API has been changed in order to support the Peripheral Manager and make it easier to use, as LEDC channels are now automatically assigned to pins.
 For more information about the new API, check :doc:`/api/ledc`.
 
 Removed APIs
-************
+^^^^^^^^^^^^
 
 * ``ledcSetup``
 * ``ledcAttachPin``
 
 New APIs
-********
+^^^^^^^^
 
 * ``ledcAttach`` used to set up the LEDC pin (merged ``ledcSetup`` and ``ledcAttachPin`` functions).
 * ``ledcOutputInvert`` used to attach the interrupt to a timer using arguments.
@@ -69,18 +84,18 @@ New APIs
 * ``ledcFadeWithInterruptArg`` used to set up and start a fade on a given LEDC pin with an interrupt using arguments.
 
 Changes in APIs
-***************
+^^^^^^^^^^^^^^^
 
 * ``ledcDetachPin`` renamed to ``ledcDetach``.
 * In all functions, input parameter ``channel`` has been changed to ``pin``.
 
 RMT
----
+***
 
 For more information about the new API, check :doc:`/api/rmt`.
 
 Removed APIs
-************
+^^^^^^^^^^^^
 
 * ``_rmtDumpStatus``
 * ``rmtSetTick``
@@ -90,7 +105,7 @@ Removed APIs
 * ``rmtReadData``
 
 New APIs
-********
+^^^^^^^^
 
 * ``rmtSetEOT``
 * ``rmtWriteAsync``
@@ -99,7 +114,7 @@ New APIs
 
 
 Changes in APIs
-***************
+^^^^^^^^^^^^^^^
 
 * In all functions, input parameter ``rmt_obj_t* rmt`` has been changed to ``int pin``.
 * ``rmtInit`` return parameter changed to bool.
@@ -114,37 +129,37 @@ Changes in APIs
 * ``rmtSetCarrier`` input parameters ``uint32_t low, uint32_t high`` have been changed to ``uint32_t frequency_Hz, float duty_percent``.
 
 SigmaDelta
-----------
+**********
 
 SigmaDelta has been refactored to use the new ESP-IDF driver.
 For more information about the new API, check :doc:`/api/sigmadelta`.
 
 Removed APIs
-************
+^^^^^^^^^^^^
 
 * ``sigmaDeltaSetup``
 * ``sigmaDeltaRead``
 
 New APIs
-********
+^^^^^^^^
 
 * ``sigmaDeltaAttach`` used to set up the SigmaDelta pin (channel is acquired automatically).
 * ``timerGetFrequency`` used to get the actual frequency of the timer.
 * ``timerAttachInterruptArg`` used to attach the interrupt to a timer using arguments.
 
 Changes in APIs
-***************
+^^^^^^^^^^^^^^^
 
 * ``sigmaDeltaDetachPin`` renamed to ``sigmaDeltaDetach``.
 * ``sigmaDeltaWrite`` input parameter ``channel`` has been changed to ``pin``.
 
 Timer
------
+*****
 
 Timer has been refactored to use the new ESP-IDF driver and its API got simplified. For more information about the new API check :doc:`/api/timer`.
 
 Removed APIs
-************
+^^^^^^^^^^^^
 
 * ``timerGetConfig``
 * ``timerSetConfig``
@@ -164,30 +179,30 @@ Removed APIs
 * ``timerAttachInterruptFlag``
 
 New APIs
-********
+^^^^^^^^
 
 * ``timerAlarm`` used to set up Alarm for the timer and enable it automatically (merged ``timerAlarmWrite`` and ``timerAlarmEnable`` functions).
 * ``timerGetFrequency`` used to get the actual frequency of the timer.
 * ``timerAttachInterruptArg`` used to attach the interrupt to a timer using arguments.
 
 Changes in APIs
-***************
+^^^^^^^^^^^^^^^
 
 * ``timerBegin`` has now only 1 parameter (frequency). There is an automatic calculation of the divider using different clock sources
   to achieve the selected frequency.
 * ``timerAttachInterrupt`` has now only 2 parameters. The ``edge`` parameter has been removed.
 
 UART (HardwareSerial)
----------------------
+*********************
 
 Changes in APIs
-***************
+^^^^^^^^^^^^^^^
 
 * ``setHwFlowCtrlMode`` input parameter ``uint8_t mode`` has been changed to ``SerialHwFlowCtrl mode``.
 * ``setMode`` input parameter ``uint8_t mode`` has been changed to ``SerialMode mode``.
 
 Functional changes
-******************
+^^^^^^^^^^^^^^^^^^
 
 * Default pins for some SoCs have been changed to avoid conflicts with other peripherals:
   * ESP32's UART1 RX and TX pins are now GPIO26 and GPIO27, respectively;
@@ -203,10 +218,10 @@ Functional changes
 * If the application only uses RX or TX, ``begin(baud, -1, tx)`` or ``begin(baud, rx)`` will change only the assigned pin and keep the other unchanged.
 
 WiFi
-----
+****
 
 Functional changes
-******************
+^^^^^^^^^^^^^^^^^^
 
 * In Arduino (and other frameworks) the method named ``flush()`` is intended to send out the transmit buffer content. ``WiFiClient`` and ``WiFiUDP`` method ``flush()`` won't clear the receive buffer anymore. A new method called ``clear()`` is now used for that. Currently ``flush()`` does nothing in ``WiFiClient``, ``WiFiClientSecure`` and ``WiFiUDP``.
 * ``WiFiServer`` has functions ``accept()`` and ``available()`` with the same functionality. In Arduino, ``available()`` should work differently so it is now deprecated.
