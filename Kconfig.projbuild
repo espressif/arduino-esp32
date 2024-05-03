@@ -316,7 +316,7 @@ config ARDUINO_SELECTIVE_LITTLEFS
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_FS
     default y
 
-config ARDUINO_SELECTIVE_Networking
+config ARDUINO_SELECTIVE_Network
     bool "Enable Networking"
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
@@ -333,55 +333,55 @@ config ARDUINO_SELECTIVE_PPP
 
 config ARDUINO_SELECTIVE_ArduinoOTA
     bool "Enable ArduinoOTA"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     select ARDUINO_SELECTIVE_ESPmDNS
     default y
 
 config ARDUINO_SELECTIVE_AsyncUDP
     bool "Enable AsyncUDP"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
 
 config ARDUINO_SELECTIVE_DNSServer
     bool "Enable DNSServer"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
 
 config ARDUINO_SELECTIVE_ESPmDNS
     bool "Enable ESPmDNS"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
 
 config ARDUINO_SELECTIVE_HTTPClient
     bool "Enable HTTPClient"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     select ARDUINO_SELECTIVE_WiFiClientSecure
     default y
 
 config ARDUINO_SELECTIVE_NetBIOS
     bool "Enable NetBIOS"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
 
 config ARDUINO_SELECTIVE_WebServer
     bool "Enable WebServer"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
     select ARDUINO_SELECTIVE_FS
 
 config ARDUINO_SELECTIVE_WiFi
     bool "Enable WiFi"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
 
-config ARDUINO_SELECTIVE_WiFiClientSecure
+config ARDUINO_SELECTIVE_NetworkClientSecure
     bool "Enable WiFiClientSecure"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
 
 config ARDUINO_SELECTIVE_WiFiProv
     bool "Enable WiFiProv"
-    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Networking && ARDUINO_SELECTIVE_WiFi
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network && ARDUINO_SELECTIVE_WiFi
     default y
 
 config ARDUINO_SELECTIVE_BLE
