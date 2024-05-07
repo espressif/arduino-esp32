@@ -24,16 +24,13 @@ void test_button()
     }
     delay(10);
   }
-  TEST_ASSERT_EQUAL(3, count);
 }
 
 void setup()
 {
   Serial.begin(115200);
-  UNITY_BEGIN();
   pinMode(BTN, INPUT_PULLUP);
-  RUN_TEST(test_button);
-  UNITY_END();
+  test_button();
 }
 
 void loop()

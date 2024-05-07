@@ -5,8 +5,9 @@ author: Jan Prochazka (jan.prochazka@espressif.com)
 steps:
   - wait-serial: 'Button test'
 
-  # Delay 1s (to make sure the test is ready to start)
+  # Need for 1s delay for scenario to run properly
   - delay: 1000ms
+
   # Press once
   - set-control:
       part-id: btn1
