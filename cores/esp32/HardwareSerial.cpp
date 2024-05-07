@@ -254,18 +254,18 @@ void HardwareSerial::_uartEventTask(void *args) {
             currentErr = UART_BUFFER_FULL_ERROR;
             break;
           case UART_BREAK:
-            log_w("UART%d RX break.", uart->_uart_nr);
+            log_v("UART%d RX break.", uart->_uart_nr);
             currentErr = UART_BREAK_ERROR;
             break;
           case UART_PARITY_ERR:
-            log_w("UART%d parity error.", uart->_uart_nr);
+            log_v("UART%d parity error.", uart->_uart_nr);
             currentErr = UART_PARITY_ERROR;
             break;
           case UART_FRAME_ERR:
-            log_w("UART%d frame error.", uart->_uart_nr);
+            log_v("UART%d frame error.", uart->_uart_nr);
             currentErr = UART_FRAME_ERROR;
             break;
-          default: log_w("UART%d unknown event type %d.", uart->_uart_nr, event.type); break;
+          default: log_v("UART%d unknown event type %d.", uart->_uart_nr, event.type); break;
         }
         if (currentErr != UART_NO_ERROR) {
           if (uart->_onReceiveErrorCB) {
