@@ -3,7 +3,7 @@ version: 1
 author: Jan Prochazka (jan.prochazka@espressif.com)
 
 steps:
-  - wait-serial: 'Button test'
+  - wait-serial: "Button test"
 
   # Need for 1s delay for scenario to run properly
   - delay: 1000ms
@@ -37,4 +37,4 @@ steps:
       part-id: btn1
       control: pressed
       value: 1
-  - wait-serial: 'Button pressed 3 times'
+  - wait-serial: "Button pressed 3 times"
