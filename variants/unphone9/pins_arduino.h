@@ -56,4 +56,14 @@ static const uint8_t T12 = 13;
 static const uint8_t T13 = 14;
 static const uint8_t T14 = 15;
 
+static const uint8_t D5 = 14;
+static const uint8_t D6 = 7;
+static const uint8_t D9 = 15;
+static const uint8_t D10 = 16;
+static const uint8_t D11 = 17;
+static const uint8_t D12 = 12;
+static const uint8_t D13 = 13;
+static const uint8_t D21 = 47;
+#define UNPHONE_D_PINS_MAPPED
+
 #endif /* Pins_Arduino_h */

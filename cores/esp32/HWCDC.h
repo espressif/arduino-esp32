@@ -21,7 +21,6 @@
 #include <inttypes.h>
 #include "esp_event.h"
 #include "Stream.h"
-#include "driver/usb_serial_jtag.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_HW_CDC_EVENTS);
 
@@ -70,10 +69,7 @@ public:
   size_t write(const uint8_t *buffer, size_t size);
   void flush(void);
 
-  inline static bool isPlugged(void) {
-    return usb_serial_jtag_is_connected();
-  }
-
+  static bool isPlugged(void);
   inline static bool isConnected(void) {
     return isCDC_Connected();
   }

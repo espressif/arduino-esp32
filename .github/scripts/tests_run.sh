@@ -20,9 +20,9 @@ function run_test() {
     fi
 
     if [ $len -eq 1 ]; then
-      # build_dir="tests/$sketchname/build"
+      # build_dir="$sketchdir/build"
       build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
-      report_file="tests/$sketchname/$sketchname.xml"
+      report_file="$sketchdir/$sketchname.xml"
     fi
 
     for i in `seq 0 $(($len - 1))`
@@ -33,9 +33,9 @@ function run_test() {
         fi
 
         if [ $len -ne 1 ]; then
-            # build_dir="tests/$sketchname/build$i"
+            # build_dir="$sketchdir/build$i"
             build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
-            report_file="tests/$sketchname/$sketchname$i.xml"
+            report_file="$sketchdir/$sketchname$i.xml"
         fi
 
         if [ $platform == "wokwi" ]; then
@@ -100,6 +100,10 @@ while [ ! -z "$1" ]; do
         echo "$USAGE"
         exit 0
         ;;
+    -type )
+        shift
+        test_type=$1
+        ;;
     * )
       break
       ;;
@@ -109,21 +113,39 @@ done
 
 source ${SCRIPTS_DIR}/install-arduino-ide.sh
 
+# If sketch is provided and test type is not, test type is inferred from the sketch path
+if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
+    if [ -n "$sketch" ]; then
+        tmp_sketch_path=$(find tests -name $sketch.ino)
+        test_type=$(basename $(dirname $(dirname "$tmp_sketch_path")))
+        echo "Sketch $sketch test type: $test_type"
+        test_folder="$PWD/tests/$test_type"
+    else
+      test_folder="$PWD/tests"
+    fi
+else
+    test_folder="$PWD/tests/$test_type"
+fi
+
 if [ $chunk_run -eq 0 ]; then
-    run_test $target $PWD/tests/$sketch/$sketch.ino $options $erase
+    if [ -z $sketch ]; then
+        echo "ERROR: Sketch name is required for single test run"
+        exit 1
+    fi
+    run_test $target $test_folder/$sketch/$sketch.ino $options $erase
 else
   if [ "$chunk_max" -le 0 ]; then
       echo "ERROR: Chunks count must be positive number"
-      return 1
+      exit 1
   fi
 
   if [ "$chunk_index" -ge "$chunk_max" ] && [ "$chunk_max" -ge 2 ]; then
       echo "ERROR: Chunk index must be less than chunks count"
-      return 1
+      exit 1
   fi
 
   set +e
-  ${COUNT_SKETCHES} $PWD/tests $target
+  ${COUNT_SKETCHES} $test_folder $target
   sketchcount=$?
   set -e
   sketches=$(cat sketches.txt)
@@ -144,7 +166,8 @@ else
       start_index=$(( $chunk_index * $chunk_size ))
       if [ "$sketchcount" -le "$start_index" ]; then
           echo "Skipping job"
-          return 0
+          touch ~/.test_skipped
+          exit 0
       fi
 
       end_index=$(( $(( $chunk_index + 1 )) * $chunk_size ))
