@@ -1,4 +1,8 @@
-exclude: ".github/.*"
+exclude: |
+  (?x)(
+      ^\.github\/|
+      ^tests\/performance\/coremark\/.*\.[ch]$
+  )
 
 default_language_version:
   # force all unspecified python hooks to run python3
