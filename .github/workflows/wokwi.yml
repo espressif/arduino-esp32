@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   gen_chunks:
-    if: github.event.workflow_run.event == 'pull_request'
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
     outputs:
