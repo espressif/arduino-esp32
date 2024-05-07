@@ -8,6 +8,11 @@ function run_test() {
     local sketchdir=$(dirname $sketch)
     local sketchname=$(basename $sketchdir)
 
+    if [[ -f "$sketchdir/.skip.$platform" ]] || [[ -f "$sketchdir/.skip.$target" ]] || [[ -f "$sketchdir/.skip.$platform.$target" ]]; then
+      echo "Skipping $sketchname test in $target for $platform"
+      exit 0
+    fi
+
     if [ $options -eq 0 ] && [ -f $sketchdir/cfg.json ]; then
         len=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn | length' $sketchdir/cfg.json`
     else
@@ -33,7 +38,24 @@ function run_test() {
             report_file="tests/$sketchname/$sketchname$i.xml"
         fi
 
-        pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file
+        if [ $platform == "qemu" ]; then
+            PATH=$HOME/qemu/bin:$PATH
+            extra_args="--embedded-services qemu --qemu-image-path $build_dir/$sketchname.ino.merged.bin"
+
+            if [ $target == "esp32" ] || [ $target == "esp32s3" ]; then
+                extra_args+=" --qemu-prog-path qemu-system-xtensa --qemu-cli-args=\"-machine $target -m 4M -nographic\""
+            elif [ $target == "esp32c3" ]; then
+                extra_args+=" --qemu-prog-path qemu-system-riscv32 --qemu-cli-args=\"-machine $target -icount 3 -nographic\""
+            else
+                echo "Unsupported QEMU target: $target"
+                exit 1
+            fi
+        else
+            extra_args="--embedded-services esp,arduino"
+        fi
+
+        echo "pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args"
+        bash -c "pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args"
         result=$?
         if [ $result -ne 0 ]; then
             return $result
@@ -44,6 +66,7 @@ function run_test() {
 SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
 
+platform="hardware"
 chunk_run=0
 options=0
 erase=0
@@ -52,6 +75,13 @@ while [ ! -z "$1" ]; do
     case $1 in
     -c )
         chunk_run=1
+        ;;
+    -q )
+        if [ ! -d $QEMU_PATH ]; then
+            echo "QEMU path $QEMU_PATH does not exist"
+            exit 1
+        fi
+        platform="qemu"
         ;;
     -o )
         options=1
@@ -86,7 +116,9 @@ while [ ! -z "$1" ]; do
     shift
 done
 
-source ${SCRIPTS_DIR}/install-arduino-ide.sh
+if [ ! $platform == "qemu" ]; then
+    source ${SCRIPTS_DIR}/install-arduino-ide.sh
+fi
 
 if [ $chunk_run -eq 0 ]; then
     run_test $target $PWD/tests/$sketch/$sketch.ino $options $erase

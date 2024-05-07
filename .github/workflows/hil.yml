@@ -1,4 +1,4 @@
-name: Run tests in hardware
+name: Run tests
 
 on:
   pull_request:
@@ -16,9 +16,7 @@ concurrency:
 
 jobs:
   gen_chunks:
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'hil_test') ||
-      (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
+    if: github.repository == 'espressif/arduino-esp32'
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
     outputs:
@@ -41,7 +39,7 @@ jobs:
           CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $((sketches - 1))`)
           echo "chunks=${CHUNKS}" >>$GITHUB_OUTPUT
 
-  Build:
+  build:
     needs: gen_chunks
     name: ${{matrix.chip}}-Build#${{matrix.chunks}}
     runs-on: ubuntu-latest
@@ -63,9 +61,79 @@ jobs:
              ~/.arduino/tests/*/build*.tmp/*.bin
              ~/.arduino/tests/*/build*.tmp/*.json
           if-no-files-found: error
-  Test:
-    needs: [gen_chunks, Build]
-    name: ${{matrix.chip}}-Test#${{matrix.chunks}}
+
+  qemu-test:
+    needs: [gen_chunks, build]
+    name: ${{matrix.chip}}-QEMU_Test#${{matrix.chunks}}
+    strategy:
+      fail-fast: false
+      matrix:
+        chip: ['esp32', 'esp32c3'] # Currently only ESP32 and ESP32-C3 are supported by QEMU
+        chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
+    runs-on: ubuntu-latest
+    env:
+      QEMU_INSTALL_PATH: "$HOME"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get QEMU version
+        uses: pozetroninc/github-action-get-latest-release@v0.7.0
+        id: get-qemu-version
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          owner: espressif
+          repo: qemu
+          excludes: prerelease, draft
+
+      - name: Cache tools
+        id: cache-linux
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/qemu
+            ~/.cache/pip
+          key: ${{ steps.get-qemu-version.outputs.release }}-${{ hashFiles('.github/workflows/hil.yml') }}
+
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+          sudo apt update && sudo apt install libpixman-1-0 libnuma1 libglib2.0-0 libslirp0 libsdl2-2.0-0
+
+      - name: Download QEMU
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          cd ${{ env.QEMU_INSTALL_PATH }}
+          underscore_release=$(echo ${{ steps.get-qemu-version.outputs.release }} | sed 's/\-/_/g')
+          curl -L https://github.com/espressif/qemu/releases/download/${{ steps.get-qemu-version.outputs.release }}/qemu-riscv32-softmmu-${underscore_release}-x86_64-linux-gnu.tar.xz > qemu-riscv32.tar.xz
+          curl -L https://github.com/espressif/qemu/releases/download/${{ steps.get-qemu-version.outputs.release }}/qemu-xtensa-softmmu-${underscore_release}-x86_64-linux-gnu.tar.xz > qemu-xtensa.tar.xz
+          tar -xf qemu-riscv32.tar.xz
+          tar -xf qemu-xtensa.tar.xz
+          rm qemu-*
+          echo "QEMU_PATH=${{ env.QEMU_INSTALL_PATH }}/qemu" >> $GITHUB_ENV
+
+      - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
+          path: ~/.arduino/tests/
+
+      - name: Run Tests
+        run: QEMU_PATH="${{env.QEMU_PATH}}" bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -q
+
+      - name: Upload test result artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qemu_results-${{matrix.chip}}-${{matrix.chunks}}
+          path: tests/*/*.xml
+
+  hardware-test:
+    needs: [gen_chunks, build]
+    name: ${{matrix.chip}}-Hardware_Test#${{matrix.chunks}}
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'hil_test') || github.event_name == 'schedule'
     strategy:
       fail-fast: false
       matrix:
@@ -100,15 +168,13 @@ jobs:
          uses: actions/upload-artifact@v4
          if: always()
          with:
-           name: test_results-${{matrix.chip}}-${{matrix.chunks}}
+           name: hw_results-${{matrix.chip}}-${{matrix.chunks}}
            path: tests/*/*.xml
 
   event_file:
     name: "Event File"
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'hil_test') ||
-      github.event_name == 'schedule'
-    needs: Test
+    if: ${{ always() && !failure() && !cancelled() }}
+    needs: [hardware-test, qemu-test]
     runs-on: ubuntu-latest
     steps:
        - name: Upload

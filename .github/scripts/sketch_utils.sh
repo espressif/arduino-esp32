@@ -78,10 +78,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             # Default FQBN options if none were passed in the command line.
 
-            esp32_opts="PSRAM=enabled,PartitionScheme=huge_app"
+            esp32_opts="FlashMode=dio,PSRAM=enabled,PartitionScheme=huge_app"
             esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app"
             esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
-            esp32c3_opts="PartitionScheme=huge_app"
+            esp32c3_opts="FlashMode=dio,PartitionScheme=huge_app"
             esp32c6_opts="PartitionScheme=huge_app"
             esp32h2_opts="PartitionScheme=huge_app"
 
@@ -139,7 +139,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         echo "Skipping $sketchname for target $target"
         exit 0
     fi
-    
+
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
@@ -177,7 +177,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 --build-path "$build_dir" \
                 $xtra_opts "${sketchdir}" \
                 > $output_file
-            
+
             exit_status=$?
             if [ $exit_status -ne 0 ]; then
                 echo ""ERROR: Compilation failed with error code $exit_status""
@@ -198,11 +198,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 # Extract the desired substring using sed
                 lib_sketch_name=$(echo "$directory_path" | sed "s|$constant_part||")
                 #append json file where key is fqbn, sketch name, sizes -> extracted values
-                echo "{\"name\": \"$lib_sketch_name\", 
+                echo "{\"name\": \"$lib_sketch_name\",
                     \"sizes\": [{
-                            \"flash_bytes\": $flash_bytes, 
-                            \"flash_percentage\": $flash_percentage, 
-                            \"ram_bytes\": $ram_bytes, 
+                            \"flash_bytes\": $flash_bytes,
+                            \"flash_percentage\": $flash_percentage,
+                            \"ram_bytes\": $ram_bytes,
                             \"ram_percentage\": $ram_percentage
                             }]
                     }," >> "$sizes_file"
@@ -386,7 +386,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     if [ $log_compilation ]; then
         #echo board,target and start of sketches to sizes_file json
         echo "{ \"board\": \"$fqbn\",
-                \"target\": \"$target\", 
+                \"target\": \"$target\",
                 \"sketches\": [" >> "$sizes_file"
     fi
 
