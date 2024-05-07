@@ -19,8 +19,7 @@ concurrency:
 jobs:
   gen_chunks:
     if: |
-      contains(github.event.pull_request.labels.*.name, 'hil_test') ||
-      contains(github.event.pull_request.labels.*.name, 'perf_test') ||
+      github.event_name == 'pull_request' ||
       (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
