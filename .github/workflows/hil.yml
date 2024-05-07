@@ -62,7 +62,7 @@ jobs:
   build:
     needs: gen_chunks
     name: ${{matrix.chip}}-Build#${{matrix.chunks}}
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     strategy:
       matrix:
         chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
