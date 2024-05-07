@@ -1,0 +1,130 @@
+name: Run tests in wokwi on PR
+
+on:
+  workflow_run:
+    workflows: [Run tests]
+    types:
+      - completed
+
+permissions:
+  statuses: write
+
+env:
+  MAX_CHUNKS: 15
+  WOKWI_TIMEOUT: 600000 # Milliseconds
+  WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+concurrency:
+  group: wokwi-${{github.event.pull_request.number || github.ref}}
+  cancel-in-progress: true
+
+jobs:
+  gen_chunks:
+    if: github.event.workflow_run.event == 'pull_request'
+    name: Generate Chunks matrix
+    runs-on: ubuntu-latest
+    outputs:
+      chunks: ${{ steps.gen-chunks.outputs.chunks }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha  }} # Check out the code of the PR to generate accurate chunks
+
+      - name: Generate Chunks matrix
+        id: gen-chunks
+        run: |
+          set +e
+          .github/scripts/sketch_utils.sh count tests
+          sketches=$?
+          if [[ $sketches -ge ${{env.MAX_CHUNKS}} ]]; then
+            $sketches=${{env.MAX_CHUNKS}}
+          fi
+          set -e
+          rm sketches.txt
+          CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $((sketches - 1))`)
+          echo "chunks=${CHUNKS}" >>$GITHUB_OUTPUT
+
+  wokwi-test:
+    needs: [gen_chunks]
+    name: ${{matrix.chip}}-Wokwi_Test#${{matrix.chunks}}
+    strategy:
+      fail-fast: false
+      matrix:
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }} # Check out the code of the PR to get correct pytest files
+
+      - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
+          path: ~/
+          run-id: ${{github.event.workflow_run.id}}
+          github-token: ${{env.GITHUB_TOKEN}}
+
+      - name: Install Wokwi CLI
+        run: curl -L https://wokwi.com/ci/install.sh | sh
+
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+          sudo apt update && sudo apt install -y -qq jq
+
+      - name: Run Tests
+        run: |
+          bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -w ${{env.WOKWI_TIMEOUT}}
+
+      - name: Check if tests were skipped
+        id: check-test-skipped
+        run: |
+          if [ -f ~/.test_skipped ]; then
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload test result artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() && steps.check-test-skipped.outputs.skipped == 'false' }}
+        with:
+          name: wokwi_results-${{matrix.chip}}-${{matrix.chunks}}
+          path: tests/**/*.xml
+
+  report-result:
+    name: Report wokwi test result
+    runs-on: ubuntu-latest
+    needs: wokwi-test
+    if: always() && github.event.workflow_run.event == 'pull_request'
+    steps:
+      - name: Report result
+        uses: actions/github-script@v7
+        with:
+          debug: true
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            const result = '${{ needs.wokwi-test.result }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            core.debug(`result: ${result}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Wokwi tests',
+              description: 'Wokwi simulator tests',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: result,
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+  
