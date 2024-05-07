@@ -4,6 +4,7 @@ import os
 
 from collections import defaultdict
 
+
 def test_ramspeed(dut, request):
     LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,9 @@ def test_ramspeed(dut, request):
 
                 for k in range(2):
                     # Match "System/Mock memcpy/memtest(): Rate = %d KB/s Time: %d ms" or "Error: %s"
-                    res = dut.expect(r"((System|Mock) (memcpy|memset)\(\): Rate = (\d+) KB/s Time: (\d+) ms|^Error)", timeout=90)
+                    res = dut.expect(
+                        r"((System|Mock) (memcpy|memset)\(\): Rate = (\d+) KB/s Time: (\d+) ms|^Error)", timeout=90
+                    )
                     implementation = res.group(0).decode("utf-8").split(" ")[0].lower()
                     assert implementation != "error:", "Error detected in test output"
                     test_type = res.group(0).decode("utf-8").split(" ")[1].lower()[:-3]
@@ -64,23 +67,24 @@ def test_ramspeed(dut, request):
             LOGGER.info("=============================================================")
 
     # Calculate average rate and time for each test size
-    sums = defaultdict(lambda: {'rate_sum': 0, 'time_sum': 0})
+    sums = defaultdict(lambda: {"rate_sum": 0, "time_sum": 0})
 
     for (test, size, impl), (rate, time) in runs_results:
-        sums[(test, size, impl)]['rate_sum'] += rate
-        sums[(test, size, impl)]['time_sum'] += time
+        sums[(test, size, impl)]["rate_sum"] += rate
+        sums[(test, size, impl)]["time_sum"] += time
 
     avg_results = {}
     for (test, size, impl) in sums:
-        rate_avg = round(sums[(test, size, impl)]['rate_sum'] / runs, 2)
-        time_avg = round(sums[(test, size, impl)]['time_sum'] / runs, 2)
-        LOGGER.info("Test: {}-{}-{}: Average rate = {} KB/s. Average time = {} ms".format(test, size, impl, rate_avg, time_avg))
+        rate_avg = round(sums[(test, size, impl)]["rate_sum"] / runs, 2)
+        time_avg = round(sums[(test, size, impl)]["time_sum"] / runs, 2)
+        LOGGER.info(
+            "Test: {}-{}-{}: Average rate = {} KB/s. Average time = {} ms".format(test, size, impl, rate_avg, time_avg)
+        )
         if test not in avg_results:
             avg_results[test] = {}
         if size not in avg_results[test]:
             avg_results[test][size] = {}
         avg_results[test][size][impl] = {"avg_rate": rate_avg, "avg_time": time_avg}
-
 
     # Create JSON with results and write it to file
     # Always create a JSON with this format (so it can be merged later on):
