@@ -65,7 +65,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
-          path: ~/.arduino/tests/
+          path: ~/
           run-id: ${{github.event.workflow_run.id}}
           github-token: ${{env.GITHUB_TOKEN}}
 
@@ -82,12 +82,21 @@ jobs:
         run: |
           bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -w ${{env.WOKWI_TIMEOUT}}
 
+      - name: Check if tests were skipped
+        id: check-test-skipped
+        run: |
+          if [ -f ~/.test_skipped ]; then
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload test result artifacts
         uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() && steps.check-test-skipped.outputs.skipped == 'false' }}
         with:
           name: wokwi_results-${{matrix.chip}}-${{matrix.chunks}}
-          path: tests/*/*.xml
+          path: tests/**/*.xml
 
   report-result:
     name: Report wokwi test result
