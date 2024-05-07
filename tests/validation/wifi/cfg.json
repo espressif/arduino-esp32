@@ -25,7 +25,7 @@
       "fqbn": [
         "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=qio",
         "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio",
-        "espressif:esp32:esp32s3:PSRAM=qspi,USBMode=default,PartitionScheme=huge_app,FlashMode=qio"
+        "espressif:esp32:esp32s3:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio"
       ]
     },
     {
