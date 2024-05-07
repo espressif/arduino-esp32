@@ -16,7 +16,7 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 concurrency:
-  group: hil-${{github.event.pull_request.number || github.ref}}
+  group: wokwi-${{github.event.pull_request.number || github.ref}}
   cancel-in-progress: true
 
 jobs:
