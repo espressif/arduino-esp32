@@ -86,10 +86,9 @@ jobs:
             ~/.arduino/tests/**/build*.tmp/*.elf
             ~/.arduino/tests/**/build*.tmp/*.json
 
-  wokwi-test:
+  qemu-test:
     needs: [gen_chunks, build]
-    if: github.event_name == 'schedule'
-    name: ${{matrix.chip}}-Wokwi_Test#${{matrix.chunks}}
+    name: ${{matrix.chip}}-QEMU_Test#${{matrix.chunks}}
     strategy:
       fail-fast: false
       matrix:
@@ -118,7 +117,7 @@ jobs:
           path: |
             ~/qemu
             ~/.cache/pip
-          key: ${{ steps.get-qemu-version.outputs.release }}-${{ hashFiles('.github/workflows/hil.yml') }}
+          key: qemu-${{ steps.get-qemu-version.outputs.release }}-${{ hashFiles('.github/workflows/hil.yml') }}
 
       - name: Install dependencies
         run: |
@@ -154,11 +153,10 @@ jobs:
           name: qemu_results-${{matrix.chip}}-${{matrix.chunks}}
           path: tests/*/*.xml
 
-  hardware-test:
+  wokwi-test:
     needs: [gen_chunks, build]
-    name: ${{matrix.chip}}-Hardware_Test#${{matrix.chunks}}
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'hil_test') || github.event_name == 'schedule'
+    if: github.event_name == 'schedule'
+    name: ${{matrix.chip}}-Wokwi_Test#${{matrix.chunks}}
     strategy:
       fail-fast: false
       matrix:
@@ -174,7 +172,7 @@ jobs:
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
           path: ~/
-      
+
       - name: Install Wokwi CLI
         run: curl -L https://wokwi.com/ci/install.sh | sh
 
@@ -274,4 +272,3 @@ jobs:
          with:
            name: Event File
            path: ${{github.event_path}}
-
