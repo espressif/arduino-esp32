@@ -1,8 +1,5 @@
 #include <unity.h>
 #include "soc/soc_caps.h"
-
-#if SOC_TOUCH_SENSOR_NUM > 0
-
 #include "driver/touch_pad.h"
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -150,25 +147,3 @@ void setup() {
 }
 
 void loop() {}
-
-#else
-//PASS TEST for UNSUPPORTED CHIPS
-
-void test_pass(void) {
-  TEST_ASSERT_EQUAL(1, 1);
-}
-
-void setup() {
-  Serial.begin(115200);
-  while (!Serial) {
-    ;
-  }
-
-  UNITY_BEGIN();
-  RUN_TEST(test_pass);
-  UNITY_END();
-}
-
-void loop() {}
-
-#endif

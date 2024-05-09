@@ -191,7 +191,7 @@ jobs:
       - name: Check if tests were skipped
         id: check-test-skipped
         run: |
-          if [ -f ~/.test_skipped ]; then
+          if [ $(find "tests" -name ".test_skipped") ]; then
             echo "skipped=true" >> $GITHUB_OUTPUT
           else
             echo "skipped=false" >> $GITHUB_OUTPUT
@@ -242,7 +242,7 @@ jobs:
       - name: Check if tests were skipped
         id: check-test-skipped
         run: |
-          if [ -f ~/.test_skipped ]; then
+          if [ $(find "tests" -name ".test_skipped") ]; then
             echo "skipped=true" >> $GITHUB_OUTPUT
           else
             echo "skipped=false" >> $GITHUB_OUTPUT
