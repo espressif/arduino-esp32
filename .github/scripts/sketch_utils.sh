@@ -121,7 +121,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     fi
 
     if [ -z "$fqbn" ]; then
-        echo "No FQBN passed or unvalid chip: $target"
+        echo "No FQBN passed or invalid chip: $target"
         exit 1
     fi
 
@@ -365,6 +365,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         start_index=$(( $chunk_index * $chunk_size ))
         if [ "$sketchcount" -le "$start_index" ]; then
             echo "Skipping job"
+            touch ~/.build_skipped
             return 0
         fi
 

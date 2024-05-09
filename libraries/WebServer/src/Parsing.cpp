@@ -32,7 +32,7 @@
 
 #define __STR(a) #a
 #define _STR(a)  __STR(a)
-const char *_http_method_str[] = {
+static const char *_http_method_str[] = {
 #define XX(num, name, string) _STR(name),
   HTTP_METHOD_MAP(XX)
 #undef XX

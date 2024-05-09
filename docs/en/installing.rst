@@ -36,7 +36,7 @@ This is the way to install Arduino-ESP32 directly from the Arduino IDE.
    Starting with the Arduino IDE version 1.6.4, Arduino allows installation of third-party platform
    packages using Boards Manager. We have packages available for Windows, macOS, and Linux.
 
-To start the installation process using the Boards Managaer, follow these steps:
+To start the installation process using the Boards Manager, follow these steps:
 
 -  Install the current upstream Arduino IDE at the 1.8 level or later. The current version is at the `arduino.cc`_ website.
 

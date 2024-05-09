@@ -20,9 +20,9 @@ function run_test() {
     fi
 
     if [ $len -eq 1 ]; then
-      # build_dir="tests/$sketchname/build"
+      # build_dir="$sketchdir/build"
       build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
-      report_file="tests/$sketchname/$sketchname.xml"
+      report_file="$sketchdir/$sketchname.xml"
     fi
 
     for i in `seq 0 $(($len - 1))`
@@ -33,12 +33,17 @@ function run_test() {
         fi
 
         if [ $len -ne 1 ]; then
-            # build_dir="tests/$sketchname/build$i"
+            # build_dir="$sketchdir/build$i"
             build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
-            report_file="tests/$sketchname/$sketchname$i.xml"
+            report_file="$sketchdir/$sketchname$i.xml"
         fi
 
-        if [ $platform == "qemu" ]; then
+        if [ $platform == "wokwi" ]; then
+            extra_args="--target $target --embedded-services arduino,wokwi --wokwi-timeout=$wokwi_timeout"
+            if [[ -f "$sketchdir/scenario.yaml" ]]; then
+                extra_args+=" --wokwi-scenario $sketchdir/scenario.yaml"
+            fi
+        elif [ $platform == "qemu" ]; then
             PATH=$HOME/qemu/bin:$PATH
             extra_args="--embedded-services qemu --qemu-image-path $build_dir/$sketchname.ino.merged.bin"
 
@@ -67,6 +72,7 @@ SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
 
 platform="hardware"
+wokwi_timeout=60000
 chunk_run=0
 options=0
 erase=0
@@ -82,6 +88,11 @@ while [ ! -z "$1" ]; do
             exit 1
         fi
         platform="qemu"
+        ;;
+    -w )
+        shift
+        wokwi_timeout=$1
+        platform="wokwi"
         ;;
     -o )
         options=1
@@ -109,6 +120,10 @@ while [ ! -z "$1" ]; do
         echo "$USAGE"
         exit 0
         ;;
+    -type )
+        shift
+        test_type=$1
+        ;;
     * )
       break
       ;;
@@ -120,21 +135,39 @@ if [ ! $platform == "qemu" ]; then
     source ${SCRIPTS_DIR}/install-arduino-ide.sh
 fi
 
+# If sketch is provided and test type is not, test type is inferred from the sketch path
+if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
+    if [ -n "$sketch" ]; then
+        tmp_sketch_path=$(find tests -name $sketch.ino)
+        test_type=$(basename $(dirname $(dirname "$tmp_sketch_path")))
+        echo "Sketch $sketch test type: $test_type"
+        test_folder="$PWD/tests/$test_type"
+    else
+      test_folder="$PWD/tests"
+    fi
+else
+    test_folder="$PWD/tests/$test_type"
+fi
+
 if [ $chunk_run -eq 0 ]; then
-    run_test $target $PWD/tests/$sketch/$sketch.ino $options $erase
+    if [ -z $sketch ]; then
+        echo "ERROR: Sketch name is required for single test run"
+        exit 1
+    fi
+    run_test $target $test_folder/$sketch/$sketch.ino $options $erase
 else
   if [ "$chunk_max" -le 0 ]; then
       echo "ERROR: Chunks count must be positive number"
-      return 1
+      exit 1
   fi
 
   if [ "$chunk_index" -ge "$chunk_max" ] && [ "$chunk_max" -ge 2 ]; then
       echo "ERROR: Chunk index must be less than chunks count"
-      return 1
+      exit 1
   fi
 
   set +e
-  ${COUNT_SKETCHES} $PWD/tests $target
+  ${COUNT_SKETCHES} $test_folder $target
   sketchcount=$?
   set -e
   sketches=$(cat sketches.txt)
@@ -155,7 +188,8 @@ else
       start_index=$(( $chunk_index * $chunk_size ))
       if [ "$sketchcount" -le "$start_index" ]; then
           echo "Skipping job"
-          return 0
+          touch ~/.test_skipped
+          exit 0
       fi
 
       end_index=$(( $(( $chunk_index + 1 )) * $chunk_size ))
