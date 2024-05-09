@@ -141,14 +141,23 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
-          path: ~/.arduino/tests/
+          path: ~/
 
       - name: Run Tests
         run: QEMU_PATH="${{env.QEMU_PATH}}" bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -q
 
+      - name: Check if tests were skipped
+        id: check-test-skipped
+        run: |
+          if [ $(find "tests" -name ".test_skipped") ]; then
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload test result artifacts
         uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() && steps.check-test-skipped.outputs.skipped == 'false' }}
         with:
           name: qemu_results-${{matrix.chip}}-${{matrix.chunks}}
           path: tests/*/*.xml
