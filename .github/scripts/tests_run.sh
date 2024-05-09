@@ -9,7 +9,9 @@ function run_test() {
     local sketchname=$(basename $sketchdir)
 
     if [[ -f "$sketchdir/.skip.$platform" ]]; then
-      echo "Skipping $sketchname test in $target"
+      echo "Skipping $sketchname test for $target, platform: $platform"
+      skipfile="$sketchdir/.test_skipped"
+      touch $skipfile
       exit 0
     fi
 
@@ -166,7 +168,7 @@ else
       start_index=$(( $chunk_index * $chunk_size ))
       if [ "$sketchcount" -le "$start_index" ]; then
           echo "Skipping job"
-          touch ~/.test_skipped
+          touch $PWD/tests/.test_skipped
           exit 0
       fi
 

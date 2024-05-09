@@ -85,7 +85,7 @@ jobs:
       - name: Check if tests were skipped
         id: check-test-skipped
         run: |
-          if [ -f ~/.test_skipped ]; then
+          if [ $(find "tests" -name ".test_skipped") ]; then
             echo "skipped=true" >> $GITHUB_OUTPUT
           else
             echo "skipped=false" >> $GITHUB_OUTPUT
@@ -112,7 +112,7 @@ jobs:
             const owner = '${{ github.repository_owner }}';
             const repo = '${{ github.repository }}'.split('/')[1];
             const sha = '${{ github.event.workflow_run.head_sha }}';
-            const result = '${{ needs.wokwi-test.result }}';
+            const result = '${{ needs.wokwi-test.result }}' == 'success' ? 'success' : 'failure';
             core.debug(`owner: ${owner}`);
             core.debug(`repo: ${repo}`);
             core.debug(`sha: ${sha}`);
