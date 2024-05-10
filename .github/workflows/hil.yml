@@ -1,4 +1,4 @@
-name: Run tests in hardware
+name: Run tests
 
 on:
   pull_request:
@@ -9,6 +9,8 @@ on:
 
 env:
   MAX_CHUNKS: 15
+  WOKWI_TIMEOUT: 120000 # Milliseconds
+  WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
 
 concurrency:
   group: hil-${{github.event.pull_request.number || github.ref}}
@@ -17,12 +19,14 @@ concurrency:
 jobs:
   gen_chunks:
     if: |
-      contains(github.event.pull_request.labels.*.name, 'hil_test') ||
+      github.event_name == 'pull_request' ||
       (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
     outputs:
       chunks: ${{ steps.gen-chunks.outputs.chunks }}
+      test_folder: ${{ steps.gen-chunks.outputs.test_folder }}
+      test_type: ${{ steps.gen-chunks.outputs.test_type }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -31,7 +35,19 @@ jobs:
         id: gen-chunks
         run: |
           set +e
-          .github/scripts/sketch_utils.sh count tests
+          if [ "${{contains(github.event.pull_request.labels.*.name, 'hil_test')}}" == "true" ] && \
+             [ "${{contains(github.event.pull_request.labels.*.name, 'perf_test')}}" == "false" ]; then
+            test_folder="tests/validation"
+            test_type="validation"
+          elif [ "${{contains(github.event.pull_request.labels.*.name, 'hil_test')}}" == "false" ] && \
+               [ "${{contains(github.event.pull_request.labels.*.name, 'perf_test')}}" == "true" ]; then
+            test_folder="tests/performance"
+            test_type="performance"
+          else
+            test_folder="tests"
+            test_type="all"
+          fi
+          .github/scripts/sketch_utils.sh count $test_folder
           sketches=$?
           if [[ $sketches -ge ${{env.MAX_CHUNKS}} ]]; then
             $sketches=${{env.MAX_CHUNKS}}
@@ -39,9 +55,11 @@ jobs:
           set -e
           rm sketches.txt
           CHUNKS=$(jq -c -n '$ARGS.positional' --args `seq 0 1 $((sketches - 1))`)
-          echo "chunks=${CHUNKS}" >>$GITHUB_OUTPUT
+          echo "chunks=${CHUNKS}" >> $GITHUB_OUTPUT
+          echo "test_folder=${test_folder}" >> $GITHUB_OUTPUT
+          echo "test_type=${test_type}" >> $GITHUB_OUTPUT
 
-  Build:
+  build:
     needs: gen_chunks
     name: ${{matrix.chip}}-Build#${{matrix.chunks}}
     runs-on: ubuntu-latest
@@ -52,20 +70,78 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
       - name: Build sketches
         run: |
-          bash .github/scripts/tests_build.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}}
+          bash .github/scripts/tests_build.sh -c -type ${{ needs.gen_chunks.outputs.test_type }} -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}}
+
       - name: Upload ${{matrix.chip}}-${{matrix.chunks}} artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
-          path: |
-             ~/.arduino/tests/*/build*.tmp/*.bin
-             ~/.arduino/tests/*/build*.tmp/*.json
           if-no-files-found: error
-  Test:
-    needs: [gen_chunks, Build]
-    name: ${{matrix.chip}}-Test#${{matrix.chunks}}
+          path: |
+            ~/.build_skipped
+            ~/.arduino/tests/**/build*.tmp/*.bin
+            ~/.arduino/tests/**/build*.tmp/*.elf
+            ~/.arduino/tests/**/build*.tmp/*.json
+
+  wokwi-test:
+    needs: [gen_chunks, build]
+    if: github.event_name == 'schedule'
+    name: ${{matrix.chip}}-Wokwi_Test#${{matrix.chunks}}
+    strategy:
+      fail-fast: false
+      matrix:
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
+          path: ~/
+      
+      - name: Install Wokwi CLI
+        run: curl -L https://wokwi.com/ci/install.sh | sh
+
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+          sudo apt update && sudo apt install -y -qq jq
+
+      - name: Run Tests
+        env:
+          WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+        run: |
+          bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -w ${{env.WOKWI_TIMEOUT}}
+
+      - name: Check if tests were skipped
+        id: check-test-skipped
+        run: |
+          if [ $(find "tests" -name ".test_skipped") ]; then
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload test result artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() && steps.check-test-skipped.outputs.skipped == 'false' }}
+        with:
+          name: wokwi_results-${{matrix.chip}}-${{matrix.chunks}}
+          path: tests/**/*.xml
+
+  hardware-test:
+    needs: [gen_chunks, build]
+    name: ${{matrix.chip}}-Hardware_Test#${{matrix.chunks}}
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'hil_test') || github.event_name == 'schedule'
     strategy:
       fail-fast: false
       matrix:
@@ -77,38 +153,51 @@ jobs:
       options: --privileged
 
     steps:
-       - name: Checkout repository
-         uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-       - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
-         uses: actions/download-artifact@v4
-         with:
-           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
-           path: ~/.arduino/tests/
+      - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
+          path: ~/
 
-       - name: Install dependencies
-         run: |
-           pip install -U pip
-           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
-           apt update && apt install -y -qq jq
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+          apt update && apt install -y -qq jq
 
-       - name: Run Tests
-         run: |
-           bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -e
+      - name: Run Tests
+        run: |
+          bash .github/scripts/tests_run.sh -c -type ${{ needs.gen_chunks.outputs.test_type }} -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -e
 
-       - name: Upload test result artifacts
-         uses: actions/upload-artifact@v4
-         if: always()
-         with:
-           name: test_results-${{matrix.chip}}-${{matrix.chunks}}
-           path: tests/*/*.xml
+      - name: Check if tests were skipped
+        id: check-test-skipped
+        run: |
+          if [ $(find "tests" -name ".test_skipped") ]; then
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload test result artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() && steps.check-test-skipped.outputs.skipped == 'false' }}
+        with:
+          name: hw_results-${{matrix.chip}}-${{matrix.chunks}}
+          if-no-files-found: error
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
 
   event_file:
     name: "Event File"
     if: |
       contains(github.event.pull_request.labels.*.name, 'hil_test') ||
+      contains(github.event.pull_request.labels.*.name, 'perf_test') ||
       github.event_name == 'schedule'
-    needs: Test
+    needs: hardware-test
     runs-on: ubuntu-latest
     steps:
        - name: Upload
@@ -116,3 +205,4 @@ jobs:
          with:
            name: Event File
            path: ${{github.event_path}}
+
