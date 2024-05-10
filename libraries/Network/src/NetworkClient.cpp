@@ -184,12 +184,11 @@ NetworkClient::NetworkClient(int fd) : _connected(true), _timeout(WIFI_CLIENT_DE
   _rxBuffer.reset(new NetworkClientRxBuffer(fd));
 }
 
-NetworkClient::~NetworkClient() {
-}
+NetworkClient::~NetworkClient() {}
 
 void NetworkClient::stop() {
   if (clientSocketHandle) {
-  	clientSocketHandle->close();
+    clientSocketHandle->close();
   }
   clientSocketHandle = NULL;
   _rxBuffer = NULL;
