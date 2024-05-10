@@ -24,10 +24,11 @@
 #include "IPAddress.h"
 #include "Network.h"
 #include "ssl_client.h"
+#include <memory>
 
 class NetworkClientSecure : public NetworkClient {
 protected:
-  sslclient_context *sslclient;
+  std::shared_ptr<sslclient_context> sslclient;
 
   int _lastError = 0;
   int _peek = -1;
@@ -97,14 +98,14 @@ public:
     return mbedtls_ssl_get_peer_cert(&sslclient->ssl_ctx);
   };
   bool getFingerprintSHA256(uint8_t sha256_result[32]) {
-    return get_peer_fingerprint(sslclient, sha256_result);
+    return get_peer_fingerprint(sslclient.get(), sha256_result);
   };
   int fd() const;
 
   operator bool() {
     return connected();
   }
-  NetworkClientSecure &operator=(const NetworkClientSecure &other);
+
   bool operator==(const bool value) {
     return bool() == value;
   }

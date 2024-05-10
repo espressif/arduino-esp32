@@ -32,8 +32,12 @@ NetworkClientSecure::NetworkClientSecure() {
   _connected = false;
   _timeout = 30000;  // Same default as ssl_client
 
-  sslclient = new sslclient_context;
-  ssl_init(sslclient);
+  sslclient.reset(new sslclient_context, [](struct sslclient_context *sslclient) {
+    stop_ssl_socket(sslclient);
+    delete sslclient;
+
+  });
+  ssl_init(sslclient.get());
   sslclient->socket = -1;
   sslclient->handshake_timeout = 120000;
   _use_insecure = false;
@@ -53,8 +57,12 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
   _lastReadTimeout = 0;
   _lastWriteTimeout = 0;
 
-  sslclient = new sslclient_context;
-  ssl_init(sslclient);
+  sslclient.reset(new sslclient_context, [](struct sslclient_context *sslclient) {
+    stop_ssl_socket(sslclient);
+    delete sslclient;
+
+  });
+  ssl_init(sslclient.get());
   sslclient->socket = sock;
   sslclient->handshake_timeout = 120000;
 
@@ -72,19 +80,10 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
 }
 
 NetworkClientSecure::~NetworkClientSecure() {
-  stop();
-  delete sslclient;
-}
-
-NetworkClientSecure &NetworkClientSecure::operator=(const NetworkClientSecure &other) {
-  stop();
-  sslclient->socket = other.sslclient->socket;
-  _connected = other._connected;
-  return *this;
 }
 
 void NetworkClientSecure::stop() {
-  stop_ssl_socket(sslclient, _CA_cert, _cert, _private_key);
+  stop_ssl_socket(sslclient.get());
 
   _connected = false;
   _peek = -1;
@@ -130,10 +129,10 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *CA
 }
 
 int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *host, const char *CA_cert, const char *cert, const char *private_key) {
-  int ret = start_ssl_client(sslclient, ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
+  int ret = start_ssl_client(sslclient.get(), ip, port, host, _timeout, CA_cert, _use_ca_bundle, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
 
   if (ret >= 0 && !_stillinPlainStart) {
-    ret = ssl_starttls_handshake(sslclient);
+    ret = ssl_starttls_handshake(sslclient.get());
   } else {
     log_i("Actual TLS start postponed.");
   }
@@ -153,7 +152,7 @@ int NetworkClientSecure::startTLS() {
   int ret = 1;
   if (_stillinPlainStart) {
     log_i("startTLS: starting TLS/SSL on this dplain connection");
-    ret = ssl_starttls_handshake(sslclient);
+    ret = ssl_starttls_handshake(sslclient.get());
     if (ret < 0) {
       log_e("startTLS: %d", ret);
       stop();
@@ -178,7 +177,7 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
     return 0;
   }
 
-  int ret = start_ssl_client(sslclient, address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
+  int ret = start_ssl_client(sslclient.get(), address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
   _lastError = ret;
   if (ret < 0) {
     log_e("start_ssl_client: connect failed %d", ret);
@@ -213,7 +212,7 @@ size_t NetworkClientSecure::write(const uint8_t *buf, size_t size) {
   }
 
   if (_stillinPlainStart) {
-    return send_net_data(sslclient, buf, size);
+    return send_net_data(sslclient.get(), buf, size);
   }
 
   if (_lastWriteTimeout != _timeout) {
@@ -224,7 +223,7 @@ size_t NetworkClientSecure::write(const uint8_t *buf, size_t size) {
       _lastWriteTimeout = _timeout;
     }
   }
-  int res = send_ssl_data(sslclient, buf, size);
+  int res = send_ssl_data(sslclient.get(), buf, size);
   if (res < 0) {
     log_e("Closing connection on failed write");
     stop();
@@ -235,7 +234,7 @@ size_t NetworkClientSecure::write(const uint8_t *buf, size_t size) {
 
 int NetworkClientSecure::read(uint8_t *buf, size_t size) {
   if (_stillinPlainStart) {
-    return get_net_receive(sslclient, buf, size);
+    return get_net_receive(sslclient.get(), buf, size);
   }
 
   if (_lastReadTimeout != _timeout) {
@@ -268,7 +267,7 @@ int NetworkClientSecure::read(uint8_t *buf, size_t size) {
     buf++;
     peeked = 1;
   }
-  res = get_ssl_receive(sslclient, buf, size);
+  res = get_ssl_receive(sslclient.get(), buf, size);
 
   if (res < 0) {
     log_e("Closing connection on failed read");
@@ -280,14 +279,14 @@ int NetworkClientSecure::read(uint8_t *buf, size_t size) {
 
 int NetworkClientSecure::available() {
   if (_stillinPlainStart) {
-    return peek_net_receive(sslclient, 0);
+    return peek_net_receive(sslclient.get(), 0);
   }
 
   int peeked = (_peek >= 0), res = -1;
   if (!_connected) {
     return peeked;
   }
-  res = data_to_read(sslclient);
+  res = data_to_read(sslclient.get());
 
   if (res < 0 && !_stillinPlainStart) {
     log_e("Closing connection on failed available check");
@@ -346,7 +345,7 @@ bool NetworkClientSecure::verify(const char *fp, const char *domain_name) {
     return false;
   }
 
-  return verify_ssl_fingerprint(sslclient, fp, domain_name);
+  return verify_ssl_fingerprint(sslclient.get(), fp, domain_name);
 }
 
 char *NetworkClientSecure::_streamLoad(Stream &stream, size_t size) {
