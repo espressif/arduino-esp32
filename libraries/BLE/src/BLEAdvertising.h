@@ -62,7 +62,7 @@ public:
   void setMaxInterval(uint16_t maxinterval);
   void setMinInterval(uint16_t mininterval);
   void setAdvertisementData(BLEAdvertisementData &advertisementData);
-  void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
+  void setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly);
   void setScanResponseData(BLEAdvertisementData &advertisementData);
   void setPrivateAddress(esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
   void setDeviceAddress(esp_bd_addr_t addr, esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
