@@ -45,6 +45,7 @@ public:
   uint16_t length();
   bool commit();
   void end();
+  bool isDirty();
 
   uint8_t *getDataPtr();
   uint16_t convert(bool clear, const char *EEPROMname = "eeprom", const char *nvsname = "eeprom");
