@@ -145,22 +145,26 @@ bool tu_fifo_clear(tu_fifo_t *f);
 bool tu_fifo_config(tu_fifo_t *f, void* buffer, uint16_t depth, uint16_t item_size, bool overwritable);
 
 #if OSAL_MUTEX_REQUIRED
-  TU_ATTR_ALWAYS_INLINE static inline
-  void tu_fifo_config_mutex(tu_fifo_t *f, osal_mutex_t wr_mutex, osal_mutex_t rd_mutex) {
-    f->mutex_wr = wr_mutex;
-    f->mutex_rd = rd_mutex;
-  }
+TU_ATTR_ALWAYS_INLINE static inline
+void tu_fifo_config_mutex(tu_fifo_t *f, osal_mutex_t wr_mutex, osal_mutex_t rd_mutex) {
+  f->mutex_wr = wr_mutex;
+  f->mutex_rd = rd_mutex;
+}
 #else
-  #define tu_fifo_config_mutex(_f, _wr_mutex, _rd_mutex)
+#define tu_fifo_config_mutex(_f, _wr_mutex, _rd_mutex)
 #endif
 
 bool     tu_fifo_write                  (tu_fifo_t* f, void const * p_data);
 uint16_t tu_fifo_write_n                (tu_fifo_t* f, void const * p_data, uint16_t n);
+#ifdef TUP_MEM_CONST_ADDR
 uint16_t tu_fifo_write_n_const_addr_full_words    (tu_fifo_t* f, const void * data, uint16_t n);
+#endif
 
 bool     tu_fifo_read                   (tu_fifo_t* f, void * p_buffer);
 uint16_t tu_fifo_read_n                 (tu_fifo_t* f, void * p_buffer, uint16_t n);
+#ifdef TUP_MEM_CONST_ADDR
 uint16_t tu_fifo_read_n_const_addr_full_words     (tu_fifo_t* f, void * buffer, uint16_t n);
+#endif
 
 bool     tu_fifo_peek                   (tu_fifo_t* f, void * p_buffer);
 uint16_t tu_fifo_peek_n                 (tu_fifo_t* f, void * p_buffer, uint16_t n);

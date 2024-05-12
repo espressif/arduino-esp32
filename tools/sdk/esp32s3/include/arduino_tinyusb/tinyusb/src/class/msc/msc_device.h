@@ -131,6 +131,9 @@ TU_ATTR_WEAK uint8_t tud_msc_get_maxlun_cb(void);
 // - Start = 1 : active mode, if load_eject = 1 : load disk storage
 TU_ATTR_WEAK bool tud_msc_start_stop_cb(uint8_t lun, uint8_t power_condition, bool start, bool load_eject);
 
+//Invoked when we receive the Prevent / Allow Medium Removal command
+TU_ATTR_WEAK bool tud_msc_prevent_allow_medium_removal_cb(uint8_t lun, uint8_t prohibit_removal, uint8_t control);
+
 // Invoked when received REQUEST_SENSE
 TU_ATTR_WEAK int32_t tud_msc_request_sense_cb(uint8_t lun, void* buffer, uint16_t bufsize);
 

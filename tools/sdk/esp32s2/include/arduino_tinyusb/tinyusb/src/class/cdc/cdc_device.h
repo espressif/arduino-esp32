@@ -41,6 +41,12 @@
   #define CFG_TUD_CDC_EP_BUFSIZE    (TUD_OPT_HIGH_SPEED ? 512 : 64)
 #endif
 
+// By default the TX fifo buffer is cleared on connect / bus reset.
+// Enable this to persist any data in the fifo instead.
+#ifndef CFG_TUD_CDC_PERSISTENT_TX_BUFF
+  #define CFG_TUD_CDC_PERSISTENT_TX_BUFF    (0)
+#endif
+
 #ifdef __cplusplus
  extern "C" {
 #endif

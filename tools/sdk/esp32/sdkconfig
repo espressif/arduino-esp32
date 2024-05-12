@@ -434,6 +434,12 @@ CONFIG_BT_BLE_RPA_TIMEOUT=900
 # end of Bluedroid Options
 
 # CONFIG_BT_HCI_LOG_DEBUG_EN is not set
+
+#
+# Common Options
+#
+CONFIG_BT_ALARM_MAX_NUM=50
+# end of Common Options
 # end of Bluetooth
 
 CONFIG_BLE_MESH=y

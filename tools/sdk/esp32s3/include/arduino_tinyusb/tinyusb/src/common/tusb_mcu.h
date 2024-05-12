@@ -430,7 +430,7 @@
 #endif
 
 #if !defined(TUP_DCD_ENDPOINT_MAX) && defined(CFG_TUD_ENABLED) && CFG_TUD_ENABLED
-#warning "TUP_DCD_ENDPOINT_MAX is not defined for this MCU, default to 8"
+  #warning "TUP_DCD_ENDPOINT_MAX is not defined for this MCU, default to 8"
   #define TUP_DCD_ENDPOINT_MAX    8
 #endif
 
@@ -446,6 +446,10 @@
 
 #if defined(TUP_USBIP_DWC2) || defined(TUP_USBIP_FSDEV)
   #define TUP_DCD_EDPT_ISO_ALLOC
+#endif
+
+#if defined(TUP_USBIP_DWC2)
+  #define TUP_MEM_CONST_ADDR
 #endif
 
 #endif

@@ -97,6 +97,9 @@ bool tud_disconnect(void);
 // Return false on unsupported MCUs
 bool tud_connect(void);
 
+// Enable or disable the Start Of Frame callback support
+bool tud_sof_cb_enable(bool en);
+
 // Carry out Data and Status stage of control transfer
 // - If len = 0, it is equivalent to sending status only
 // - If len > wLength : it will be truncated
@@ -151,6 +154,9 @@ TU_ATTR_WEAK void tud_resume_cb(void);
 
 // Invoked when there is a new usb event, which need to be processed by tud_task()/tud_task_ext()
 void tud_event_hook_cb(uint8_t rhport, uint32_t eventid, bool in_isr);
+
+// Invoked when a new (micro) frame started
+void tud_sof_cb(uint32_t frame_count);
 
 // Invoked when received control request with VENDOR TYPE
 TU_ATTR_WEAK bool tud_vendor_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
