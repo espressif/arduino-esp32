@@ -241,6 +241,13 @@ This will start the Lib Builder UI for compiling the libraries. The above comman
     The ``-v`` option is used to mount a folder from the host machine to the container. Make sure the folder already exists on the host machine before running the command.
     Otherwise, the folder will be created with root permissions and files generated inside the container might cause permission issues and compilation errors.
 
+.. note::
+   When the mounted directory, ``/arduino-esp32``, contains a git repository owned by a different user (``UID``) than the one running the Docker container,
+   git commands executed within ``/arduino-esp32`` might fail, displaying an error message ``fatal: detected dubious ownership in repository at '/arduino-esp32'``.
+   To resolve this issue, you can designate the ``/arduino-esp32`` directory as safe by setting the ``LIBBUILDER_GIT_SAFE_DIR`` environment variable during the Docker container startup.
+   For instance, you can achieve this by including ``-e LIBBUILDER_GIT_SAFE_DIR='/arduino-esp32'`` as a parameter. Additionally, multiple directories can be specified by using a ``:`` separator.
+   To entirely disable this git security check, ``*`` can be used.
+
 After running the above command, you will be inside the container and can build the libraries using the user interface.
 
 By default the docker container will run the user interface script. If you want to run a specific command, you can pass it as an argument to the ``docker run`` command.
