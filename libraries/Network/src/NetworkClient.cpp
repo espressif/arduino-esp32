@@ -162,7 +162,14 @@ public:
   NetworkClientSocketHandle(int fd) : sockfd(fd) {}
 
   ~NetworkClientSocketHandle() {
-    close(sockfd);
+    close();
+  }
+
+  void close() {
+    if (sockfd >= 0) {
+      ::close(sockfd);
+      sockfd = -1;
+    }
   }
 
   int fd() {
@@ -177,11 +184,12 @@ NetworkClient::NetworkClient(int fd) : _connected(true), _timeout(WIFI_CLIENT_DE
   _rxBuffer.reset(new NetworkClientRxBuffer(fd));
 }
 
-NetworkClient::~NetworkClient() {
-  stop();
-}
+NetworkClient::~NetworkClient() {}
 
 void NetworkClient::stop() {
+  if (clientSocketHandle) {
+    clientSocketHandle->close();
+  }
   clientSocketHandle = NULL;
   _rxBuffer = NULL;
   _connected = false;
@@ -473,7 +481,7 @@ int NetworkClient::read(uint8_t *buf, size_t size) {
 
 int NetworkClient::peek() {
   int res = -1;
-  if (_rxBuffer) {
+  if (fd() >= 0 && _rxBuffer) {
     res = _rxBuffer->peek();
     if (_rxBuffer->failed()) {
       log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
@@ -484,7 +492,7 @@ int NetworkClient::peek() {
 }
 
 int NetworkClient::available() {
-  if (!_rxBuffer) {
+  if (fd() < 0 || !_rxBuffer) {
     return 0;
   }
   int res = _rxBuffer->available();
@@ -502,6 +510,9 @@ void NetworkClient::clear() {
 }
 
 uint8_t NetworkClient::connected() {
+  if (fd() == -1 && _connected) {
+    stop();
+  }
   if (_connected) {
     uint8_t dummy;
     int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);

@@ -375,7 +375,7 @@ bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t thr
 
 // This helper function will return true if a new IDF UART driver needs to be restarted and false if the current one can continue its execution
 bool _testUartBegin(
-  uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted,
+  uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint32_t rx_buffer_size, uint32_t tx_buffer_size, bool inverted,
   uint8_t rxfifo_full_thrhd
 ) {
   if (uart_nr >= SOC_UART_NUM) {
@@ -397,7 +397,7 @@ bool _testUartBegin(
 }
 
 uart_t *uartBegin(
-  uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint16_t rx_buffer_size, uint16_t tx_buffer_size, bool inverted,
+  uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint32_t rx_buffer_size, uint32_t tx_buffer_size, bool inverted,
   uint8_t rxfifo_full_thrhd
 ) {
   if (uart_nr >= SOC_UART_NUM) {

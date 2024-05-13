@@ -2,7 +2,7 @@ name: Unit Test Results
 
 on:
   workflow_run:
-    workflows: [Run tests in hardware]
+    workflows: [Run tests]
     branches-ignore: [master]
 
     types:
