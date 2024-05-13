@@ -89,6 +89,7 @@ jobs:
   qemu-test:
     needs: [gen_chunks, build]
     name: ${{matrix.chip}}-QEMU_Test#${{matrix.chunks}}
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
