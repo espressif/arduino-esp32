@@ -154,7 +154,7 @@ void setup() {
   MSC.onWrite(onWrite);
 
   MSC.mediaPresent(true);
-  MSC.isWritable(true); // true if writable, false if read-only
+  MSC.isWritable(true);  // true if writable, false if read-only
 
   MSC.begin(DISK_SECTOR_COUNT, DISK_SECTOR_SIZE);
   USB.begin();
