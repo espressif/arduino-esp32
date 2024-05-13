@@ -62,6 +62,10 @@ typedef struct {
   bool external_phy;
 } tinyusb_config_t;
 
+#if __has_include("hal/usb_hal.h")
+
+#include "hal/usb_hal.h"
+
 static bool usb_otg_deinit(void *busptr) {
   // Once USB OTG is initialized, its GPIOs are assigned and it shall never be deinited
   // except when S3 swithicng usb from cdc to jtag while resetting to bootrom
@@ -71,10 +75,6 @@ static bool usb_otg_deinit(void *busptr) {
   return false;
 #endif
 }
-
-#if __has_include("hal/usb_hal.h")
-
-#include "hal/usb_hal.h"
 
 static void configure_pins(usb_hal_context_t *usb) {
   for (const usb_iopin_dsc_t *iopin = usb_periph_iopins; iopin->pin != -1; ++iopin) {
