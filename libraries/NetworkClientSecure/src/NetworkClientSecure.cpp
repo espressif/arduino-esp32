@@ -35,7 +35,6 @@ NetworkClientSecure::NetworkClientSecure() {
   sslclient.reset(new sslclient_context, [](struct sslclient_context *sslclient) {
     stop_ssl_socket(sslclient);
     delete sslclient;
-
   });
   ssl_init(sslclient.get());
   sslclient->socket = -1;
@@ -60,7 +59,6 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
   sslclient.reset(new sslclient_context, [](struct sslclient_context *sslclient) {
     stop_ssl_socket(sslclient);
     delete sslclient;
-
   });
   ssl_init(sslclient.get());
   sslclient->socket = sock;
@@ -79,8 +77,7 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
   _alpn_protos = NULL;
 }
 
-NetworkClientSecure::~NetworkClientSecure() {
-}
+NetworkClientSecure::~NetworkClientSecure() {}
 
 void NetworkClientSecure::stop() {
   stop_ssl_socket(sslclient.get());
