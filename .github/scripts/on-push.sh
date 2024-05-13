@@ -60,7 +60,7 @@ elif [ "$CHUNK_INDEX" -eq "$CHUNKS_CNT" ]; then
     BUILD_PIO=1
 fi
 
-if [ "$BUILD_LOG" -le 0 ]; then
+if [ -z "$BUILD_LOG" ] || [ "$BUILD_LOG" -le 0 ]; then
     BUILD_LOG=0
 fi
 
