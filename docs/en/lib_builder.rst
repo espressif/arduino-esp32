@@ -271,7 +271,7 @@ For Windows, use the following command in PowerShell from the root of the ``ardu
 .. code-block:: powershell
 
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/master/tools/docker/run.ps1" -OutFile "run.ps1"
-    .\run.ps1 $PWD
+    .\run.ps1 $pwd
 
 .. warning::
     It is always a good practice to understand what the script does before running it.
