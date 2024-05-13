@@ -344,7 +344,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client) {
   return ssl_client->socket;
 }
 
-void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, const char *cli_cert, const char *cli_key) {
+void stop_ssl_socket(sslclient_context *ssl_client) {
   log_v("Cleaning SSL connection.");
 
   if (ssl_client->socket >= 0) {
