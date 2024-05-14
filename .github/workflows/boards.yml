@@ -1,8 +1,11 @@
 name: Boards Test
 
-# The workflow will run on schedule and labeled pull requests
 on:
   pull_request:
+    paths:
+      - 'boards.txt'
+      - 'libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino'
+      - '.github/workflows/boards.yml'
 
 env:
   # It's convenient to set variables for values used multiple times in the workflow
@@ -24,7 +27,7 @@ jobs:
         uses: dcarbone/install-jq-action@v1.0.1
 
       - name: Get board name
-        run: 
+        run:
           bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{github.event.number}}
 
   test-boards:

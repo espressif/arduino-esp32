@@ -7,6 +7,20 @@ on:
     - master
     - release/*
   pull_request:
+    paths:
+      - 'cores/**'
+      - 'libraries/**'
+      - 'package/**'
+      - 'tools/**.py'
+      - 'platform.txt'
+      - 'programmers.txt'
+      - 'package.json'
+      - '.github/workflows/push.yml'
+      - '.github/scripts/**'
+      - '!.github/scripts/find_*'
+      - '!.github/scripts/on-release.sh'
+      - '!.github/scripts/tests_*'
+      - '!.github/scripts/upload_*'
 
 concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
@@ -127,7 +141,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     # Check out repository
-      - name: Checkout repository    
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{secrets.GITHUB_TOKEN}}
@@ -143,7 +157,7 @@ jobs:
           pattern: pr_cli_compile_*
           merge-multiple: true
           path: master_cli_compile
-        
+
       - name: List files in the directory
         run: ls -R
 
@@ -155,7 +169,7 @@ jobs:
           git add --all
           git commit -m "Updated cli compile json files"
           git push origin HEAD:gh-pages
-  
+
   #Upload PR number as artifact
   upload-pr-number:
     name: Upload PR number

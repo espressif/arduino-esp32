@@ -3,6 +3,16 @@ name: Run tests
 on:
   pull_request:
     types: [opened, reopened, synchronize, labeled]
+    paths:
+      - 'tests/**'
+      - 'cores/**'
+      - 'libraries/**'
+      - 'package/**'
+      - '.github/workflows/hil.yml'
+      - '.github/workflows/wokwi.yml'
+      - '.github/scripts/install-*.sh'
+      - '.github/scripts/tests_*.sh'
+      - '.github/scripts/sketch_utils.sh'
 
   schedule:
     - cron: '0 2 * * *'
