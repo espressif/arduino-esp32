@@ -83,7 +83,7 @@ void NetworkClientSecure::stop() {
   stop_ssl_socket(sslclient.get());
 
   _connected = false;
-  _peek = -1;
+  sslclient->peek_buf = -1;
   _lastReadTimeout = 0;
   _lastWriteTimeout = 0;
 }
@@ -134,7 +134,7 @@ int NetworkClientSecure::connect(IPAddress ip, uint16_t port, const char *host, 
     log_i("Actual TLS start postponed.");
   }
 
-  _lastError = ret;
+  sslclient->last_error = ret;
 
   if (ret < 0) {
     log_e("start_ssl_client: connect failed: %d", ret);
@@ -175,7 +175,7 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
   }
 
   int ret = start_ssl_client(sslclient.get(), address, port, host, _timeout, NULL, false, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
-  _lastError = ret;
+  sslclient->last_error = ret;
   if (ret < 0) {
     log_e("start_ssl_client: connect failed %d", ret);
     stop();
@@ -186,11 +186,11 @@ int NetworkClientSecure::connect(const char *host, uint16_t port, const char *ps
 }
 
 int NetworkClientSecure::peek() {
-  if (_peek >= 0) {
-    return _peek;
+  if (sslclient->peek_buf >= 0) {
+    return sslclient->peek_buf;
   }
-  _peek = timedRead();
-  return _peek;
+  sslclient->peek_buf = timedRead();
+  return sslclient->peek_buf;
 }
 
 size_t NetworkClientSecure::write(uint8_t data) {
@@ -253,9 +253,9 @@ int NetworkClientSecure::read(uint8_t *buf, size_t size) {
   if (!size) {
     return 0;
   }
-  if (_peek >= 0) {
-    buf[0] = _peek;
-    _peek = -1;
+  if (sslclient->peek_buf >= 0) {
+    buf[0] = sslclient->peek_buf;
+    sslclient->peek_buf = -1;
     size--;
     avail--;
     if (!size || !avail) {
@@ -279,7 +279,7 @@ int NetworkClientSecure::available() {
     return peek_net_receive(sslclient.get(), 0);
   }
 
-  int peeked = (_peek >= 0), res = -1;
+  int peeked = (sslclient->peek_buf >= 0), res = -1;
   if (!_connected) {
     return peeked;
   }
@@ -399,11 +399,9 @@ bool NetworkClientSecure::loadPrivateKey(Stream &stream, size_t size) {
 }
 
 int NetworkClientSecure::lastError(char *buf, const size_t size) {
-  if (!_lastError) {
-    return 0;
-  }
-  mbedtls_strerror(_lastError, buf, size);
-  return _lastError;
+  int lastError = sslclient->last_error;
+  mbedtls_strerror(lastError, buf, size);
+  return lastError;
 }
 
 void NetworkClientSecure::setHandshakeTimeout(unsigned long handshake_timeout) {

@@ -26,6 +26,10 @@ typedef struct sslclient_context {
 
   unsigned long socket_timeout;
   unsigned long handshake_timeout;
+
+  int last_error;
+  int peek_buf;
+
 } sslclient_context;
 
 void ssl_init(sslclient_context *ssl_client);
