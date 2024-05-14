@@ -48,7 +48,7 @@ void loopTask(void *pvParameters) {
   // sets UART0 (default console) RX/TX pins as already configured in boot or as defined in variants/pins_arduino.h
   Serial0.setPins(gpioNumberToDigitalPin(SOC_RX0), gpioNumberToDigitalPin(SOC_TX0));
 #endif
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG && (!CONFIG_IDF_TARGET_ESP32C3 || !ARDUINO_USB_CDC_ON_BOOT)
   printBeforeSetupInfo();
 #else
   if (shouldPrintChipDebugReport()) {
@@ -56,7 +56,7 @@ void loopTask(void *pvParameters) {
   }
 #endif
   setup();
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG && (!CONFIG_IDF_TARGET_ESP32C3 || !ARDUINO_USB_CDC_ON_BOOT)
   printAfterSetupInfo();
 #else
   if (shouldPrintChipDebugReport()) {
