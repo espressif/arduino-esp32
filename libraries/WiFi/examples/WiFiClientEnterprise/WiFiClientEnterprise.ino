@@ -65,7 +65,7 @@ void loop() {
   }
   Serial.print("Connecting to website: ");
   Serial.println(host);
-  NetworkClient client;
+  WiFiClient client;
   if (client.connect(host, 80)) {
     String url = "/rele/rele1.txt";
     client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "User-Agent: ESP32\r\n" + "Connection: close\r\n\r\n");
