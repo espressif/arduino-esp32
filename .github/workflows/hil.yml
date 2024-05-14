@@ -270,15 +270,10 @@ jobs:
 
   event_file:
     name: "Event File"
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'hil_test') ||
-      contains(github.event.pull_request.labels.*.name, 'perf_test') ||
-      github.event_name == 'schedule'
-    needs: hardware-test
     runs-on: ubuntu-latest
     steps:
        - name: Upload
          uses: actions/upload-artifact@v4
          with:
-           name: Event File
+           name: event_file
            path: ${{github.event_path}}
