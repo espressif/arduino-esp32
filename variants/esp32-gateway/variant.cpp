@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2024 Olimex Ltd (support@olimex.com)
@@ -28,9 +28,8 @@
 
 extern "C" {
 // Initialize variant/board, called before setup()
-void initVariant(void)
-{
-// Change the drive strength of the digital output num 17 from the default value 20mA to 5mA
-gpio_set_drive_capability((gpio_num_t)GPIO_NUM_17, GPIO_DRIVE_CAP_0); 
+void initVariant(void) {
+  // Change the drive strength of the digital output num 17 from the default value 20mA to 5mA
+  gpio_set_drive_capability((gpio_num_t)GPIO_NUM_17, GPIO_DRIVE_CAP_0);
 }
 }
