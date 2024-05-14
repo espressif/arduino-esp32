@@ -29,6 +29,7 @@
 #include "hal/usb_serial_jtag_ll.h"
 #pragma GCC diagnostic warning "-Wvolatile"
 #include "rom/ets_sys.h"
+#include "driver/usb_serial_jtag.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 
