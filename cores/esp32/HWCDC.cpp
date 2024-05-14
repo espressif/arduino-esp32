@@ -39,8 +39,9 @@ static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
 static volatile bool connected = false;
 
-static volatile unsigned long lastSOF_ms;
-static volatile uint8_t SOF_TIMEOUT;
+// SOF in ISR causes problems for uploading firmware
+//static volatile unsigned long lastSOF_ms;
+//static volatile uint8_t SOF_TIMEOUT;
 
 // timeout has no effect when USB CDC is unplugged
 static uint32_t tx_timeout_ms = 100;
@@ -147,7 +148,8 @@ static void hw_cdc_isr_handler(void *arg) {
 
 inline bool HWCDC::isPlugged(void) {
   // SOF ISR is causing esptool to be unable to upload firmware to the board
-  return true;//(lastSOF_ms + SOF_TIMEOUT) >= millis();
+  // Timer test for SOF seems to work when uploading firmware
+  return usb_serial_jtag_is_connected();//(lastSOF_ms + SOF_TIMEOUT) >= millis();
 }
 
 bool HWCDC::isCDC_Connected() {
@@ -157,11 +159,13 @@ bool HWCDC::isCDC_Connected() {
   if (!isPlugged()) {
     connected = false;
     running = false;
-    SOF_TIMEOUT = 5;  // SOF timeout when unplugged
+    // SOF in ISR causes problems for uploading firmware
+    //SOF_TIMEOUT = 5;  // SOF timeout when unplugged
     return false;
-  } else {
-    SOF_TIMEOUT = 50;  // SOF timeout when plugged
-  }
+  } 
+  //else {
+  //  SOF_TIMEOUT = 50;  // SOF timeout when plugged
+  //}
 
   if (connected) {
     running = false;
@@ -249,8 +253,9 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
 HWCDC::HWCDC() {
   perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit);
   perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit);
-  lastSOF_ms = 0;
-  SOF_TIMEOUT = 5;
+  // SOF in ISR causes problems for uploading firmware
+  //  lastSOF_ms = 0;
+  //  SOF_TIMEOUT = 5;
 }
 
 HWCDC::~HWCDC() {
