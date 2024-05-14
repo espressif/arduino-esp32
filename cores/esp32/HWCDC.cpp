@@ -147,11 +147,12 @@ static void hw_cdc_isr_handler(void *arg) {
   }
 }
 
-inline bool HWCDC::isPlugged(void) {
+// Moved to header file as inline function. Kept just as future reference.
+//inline bool HWCDC::isPlugged(void) {
   // SOF ISR is causing esptool to be unable to upload firmware to the board
   // Timer test for SOF seems to work when uploading firmware
-  return usb_serial_jtag_is_connected();//(lastSOF_ms + SOF_TIMEOUT) >= millis();
-}
+//  return usb_serial_jtag_is_connected();//(lastSOF_ms + SOF_TIMEOUT) >= millis();
+//}
 
 bool HWCDC::isCDC_Connected() {
   static bool running = false;
