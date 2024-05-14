@@ -134,10 +134,11 @@ static void hw_cdc_isr_handler(void *arg) {
     connected = false;
   }
 
-  if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SOF) {
-    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SOF);
-    lastSOF_ms = millis();
-  }
+  // SOF ISR is causing esptool to be unable to upload firmware to the board
+  // if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SOF) {
+  //   usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SOF);
+  //   lastSOF_ms = millis();
+  // }
 
   if (xTaskWoken == pdTRUE) {
     portYIELD_FROM_ISR();
@@ -145,7 +146,8 @@ static void hw_cdc_isr_handler(void *arg) {
 }
 
 inline bool HWCDC::isPlugged(void) {
-  return (lastSOF_ms + SOF_TIMEOUT) >= millis();
+  // SOF ISR is causing esptool to be unable to upload firmware to the board
+  return true;//(lastSOF_ms + SOF_TIMEOUT) >= millis();
 }
 
 bool HWCDC::isCDC_Connected() {
@@ -309,8 +311,9 @@ void HWCDC::begin(unsigned long baud) {
   }
 
   // the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
-  deinit(NULL);
-  delay(10);  // USB Host has to enumerate it again
+  // But this is also causing terminal to hang, so they are disabled
+  // deinit(NULL);
+  // delay(10);  // USB Host has to enumerate it again
 
   // Peripheral Manager setting for USB D+ D- pins
   uint8_t pin = USB_DM_GPIO_NUM;
@@ -332,9 +335,11 @@ void HWCDC::begin(unsigned long baud) {
   // Enable USB pad function
   USB_SERIAL_JTAG.conf0.usb_pad_enable = 1;
   usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
-  usb_serial_jtag_ll_ena_intr_mask(
-    USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET | USB_SERIAL_JTAG_INTR_SOF
-  );
+  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
+  // SOF ISR is causing esptool to be unable to upload firmware to the board
+  // usb_serial_jtag_ll_ena_intr_mask(
+  //   USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET | USB_SERIAL_JTAG_INTR_SOF
+  // );
   if (!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK) {
     isr_log_e("HW USB CDC failed to init interrupts");
     end();
