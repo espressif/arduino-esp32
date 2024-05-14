@@ -317,10 +317,10 @@ esp32h2.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32h2.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32h2.menu.ZigbeeMode.ed=Zigbee ED (end device)
 esp32h2.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-esp32h2.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
+esp32h2.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
 esp32h2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 esp32h2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32h2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32h2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 esp32h2.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
 esp32h2.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 esp32h2.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
@@ -504,10 +504,10 @@ esp32c6.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32c6.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
 esp32c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
+esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
 esp32c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 esp32c6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
 esp32c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
@@ -756,7 +756,7 @@ esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
@@ -931,7 +931,8 @@ esp32c3.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32c3.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32c3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 esp32c3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32c3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32c3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
 ##############################################################
 
 esp32s2.name=ESP32S2 Dev Module
@@ -1128,7 +1129,7 @@ esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
@@ -1315,7 +1316,7 @@ esp32.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 esp32.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
@@ -10630,7 +10631,7 @@ adafruit_metro_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_metro_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_metro_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_metro_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Metro ESP32-S3
@@ -10827,7 +10828,7 @@ adafruit_metro_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_metro_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_metro_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_metro_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_metro_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_metro_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit MagTag 2.9"
@@ -11004,7 +11005,7 @@ adafruit_magtag29_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_magtag29_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_magtag29_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_magtag29_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_magtag29_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_magtag29_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit FunHouse
@@ -11181,7 +11182,7 @@ adafruit_funhouse_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_funhouse_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_funhouse_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_funhouse_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_funhouse_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_funhouse_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit ESP32 Feather
@@ -11315,7 +11316,7 @@ featheresp32.menu.ZigbeeMode.default.build.zigbee_mode=
 featheresp32.menu.ZigbeeMode.default.build.zigbee_libs=
 featheresp32.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 featheresp32.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-featheresp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+featheresp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32 V2
@@ -11433,7 +11434,7 @@ adafruit_feather_esp32_v2.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_feather_esp32_v2.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_feather_esp32_v2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_feather_esp32_v2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_feather_esp32_v2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_feather_esp32_v2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S2
@@ -11610,7 +11611,7 @@ adafruit_feather_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_feather_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_feather_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_feather_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_feather_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_feather_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S2 TFT
@@ -11787,7 +11788,7 @@ adafruit_feather_esp32s2_tft.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_feather_esp32s2_tft.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_feather_esp32s2_tft.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_feather_esp32s2_tft.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_feather_esp32s2_tft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_feather_esp32s2_tft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S2 Reverse TFT
@@ -11964,7 +11965,7 @@ adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_feather_esp32s2_reversetft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S3 2MB PSRAM
@@ -12176,7 +12177,7 @@ adafruit_feather_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_feather_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_feather_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_feather_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_feather_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_feather_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S3 No PSRAM
@@ -12357,7 +12358,7 @@ adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_feather_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S3 TFT
@@ -12569,7 +12570,7 @@ adafruit_feather_esp32s3_tft.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_feather_esp32s3_tft.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_feather_esp32s3_tft.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_feather_esp32s3_tft.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_feather_esp32s3_tft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_feather_esp32s3_tft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Feather ESP32-S3 Reverse TFT
@@ -12781,7 +12782,7 @@ adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32
@@ -12899,7 +12900,7 @@ adafruit_qtpy_esp32_pico.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_qtpy_esp32_pico.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32-C3
@@ -13036,7 +13037,7 @@ adafruit_qtpy_esp32c3.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_qtpy_esp32c3.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_qtpy_esp32c3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_qtpy_esp32c3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_qtpy_esp32c3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_qtpy_esp32c3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32-S2
@@ -13213,7 +13214,7 @@ adafruit_qtpy_esp32s2.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_qtpy_esp32s2.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_qtpy_esp32s2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_qtpy_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_qtpy_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_qtpy_esp32s2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32-S3 No PSRAM
@@ -13394,7 +13395,7 @@ adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_qtpy_esp32s3_nopsram.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit QT Py ESP32-S3 (4M Flash 2M PSRAM)
@@ -13606,7 +13607,7 @@ adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_qtpy_esp32s3_n4r2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit ItsyBitsy ESP32
@@ -13724,7 +13725,7 @@ adafruit_itsybitsy_esp32.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_itsybitsy_esp32.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_itsybitsy_esp32.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_itsybitsy_esp32.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_itsybitsy_esp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_itsybitsy_esp32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit MatrixPortal ESP32-S3
@@ -13915,7 +13916,7 @@ adafruit_matrixportal_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_matrixportal_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_matrixportal_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_matrixportal_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_matrixportal_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_matrixportal_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit pyCamera S3
@@ -14127,7 +14128,7 @@ adafruit_camera_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_camera_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_camera_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_camera_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_camera_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_camera_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # Adafruit Qualia ESP32-S3 RGB666
@@ -14324,7 +14325,7 @@ adafruit_qualia_s3_rgb666.menu.ZigbeeMode.default.build.zigbee_mode=
 adafruit_qualia_s3_rgb666.menu.ZigbeeMode.default.build.zigbee_libs=
 adafruit_qualia_s3_rgb666.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 adafruit_qualia_s3_rgb666.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-adafruit_qualia_s3_rgb666.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+adafruit_qualia_s3_rgb666.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
@@ -14777,7 +14778,7 @@ nologo_esp32s3_pico.menu.ZigbeeMode.default.build.zigbee_mode=
 nologo_esp32s3_pico.menu.ZigbeeMode.default.build.zigbee_libs=
 nologo_esp32s3_pico.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 nologo_esp32s3_pico.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-nologo_esp32s3_pico.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+nologo_esp32s3_pico.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
@@ -16816,10 +16817,10 @@ esp32h2-devkitlipo.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32h2-devkitlipo.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32h2-devkitlipo.menu.ZigbeeMode.ed=Zigbee ED (end device)
 esp32h2-devkitlipo.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-esp32h2-devkitlipo.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
+esp32h2-devkitlipo.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
 esp32h2-devkitlipo.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 esp32h2-devkitlipo.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32h2-devkitlipo.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32h2-devkitlipo.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 esp32h2-devkitlipo.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
 esp32h2-devkitlipo.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 esp32h2-devkitlipo.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
@@ -17009,7 +17010,7 @@ esp32-sbc-fabgl.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32-sbc-fabgl.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32-sbc-fabgl.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 esp32-sbc-fabgl.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32-sbc-fabgl.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+esp32-sbc-fabgl.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 
@@ -30830,10 +30831,10 @@ XIAO_ESP32C6.menu.ZigbeeMode.default.build.zigbee_mode=
 XIAO_ESP32C6.menu.ZigbeeMode.default.build.zigbee_libs=
 XIAO_ESP32C6.menu.ZigbeeMode.ed=Zigbee ED (end device)
 XIAO_ESP32C6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-XIAO_ESP32C6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
+XIAO_ESP32C6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
 XIAO_ESP32C6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 XIAO_ESP32C6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-XIAO_ESP32C6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+XIAO_ESP32C6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 XIAO_ESP32C6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
 XIAO_ESP32C6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 XIAO_ESP32C6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
@@ -35981,10 +35982,10 @@ epulse_feather_c6.menu.ZigbeeMode.default.build.zigbee_mode=
 epulse_feather_c6.menu.ZigbeeMode.default.build.zigbee_libs=
 epulse_feather_c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
 epulse_feather_c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-epulse_feather_c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed.trace -lzboss_stack.ed -lzboss_port
+epulse_feather_c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
 epulse_feather_c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
 epulse_feather_c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-epulse_feather_c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr.trace -lzboss_stack.zczr -lzboss_port
+epulse_feather_c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 epulse_feather_c6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
 epulse_feather_c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 epulse_feather_c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port

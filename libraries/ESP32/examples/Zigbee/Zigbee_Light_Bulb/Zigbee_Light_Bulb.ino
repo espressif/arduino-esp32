@@ -38,7 +38,8 @@
 /* Default End Device config */
 #define ESP_ZB_ZED_CONFIG()                                                                 \
   {                                                                                         \
-    .esp_zb_role = ESP_ZB_DEVICE_TYPE_ED, .install_code_policy = INSTALLCODE_POLICY_ENABLE, \
+    .esp_zb_role = ESP_ZB_DEVICE_TYPE_ED,                                                   \
+    .install_code_policy = INSTALLCODE_POLICY_ENABLE,                                       \
     .nwk_cfg = {                                                                            \
       .zed_cfg =                                                                            \
         {                                                                                   \
@@ -49,10 +50,10 @@
   }
 
 #define ESP_ZB_DEFAULT_RADIO_CONFIG() \
-  { .radio_mode = RADIO_MODE_NATIVE, }
+  { .radio_mode = ZB_RADIO_MODE_NATIVE, }
 
 #define ESP_ZB_DEFAULT_HOST_CONFIG() \
-  { .host_connection_mode = HOST_CONNECTION_MODE_NONE, }
+  { .host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE, }
 
 /* Zigbee configuration */
 #define INSTALLCODE_POLICY_ENABLE   false /* enable the install code policy for security */
@@ -78,8 +79,13 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
       if (err_status == ESP_OK) {
-        log_i("Start network steering");
-        esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+        log_i("Device started up in %s factory-reset mode", esp_zb_bdb_is_factory_new() ? "" : "non");
+        if (esp_zb_bdb_is_factory_new()) {
+          log_i("Start network formation");
+          esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+        } else {
+          log_i("Device rebooted");
+        }
       } else {
         /* commissioning failed */
         log_w("Failed to initialize Zigbee stack (status: %s)", esp_err_to_name(err_status));
@@ -106,8 +112,12 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message) {
   esp_err_t ret = ESP_OK;
   switch (callback_id) {
-    case ESP_ZB_CORE_SET_ATTR_VALUE_CB_ID: ret = zb_attribute_handler((esp_zb_zcl_set_attr_value_message_t *)message); break;
-    default:                               log_w("Receive Zigbee action(0x%x) callback", callback_id); break;
+    case ESP_ZB_CORE_SET_ATTR_VALUE_CB_ID: 
+      ret = zb_attribute_handler((esp_zb_zcl_set_attr_value_message_t *)message); 
+      break;
+    default:                               
+      log_w("Receive Zigbee action(0x%x) callback", callback_id); 
+      break;
   }
   return ret;
 }
@@ -122,7 +132,7 @@ static void esp_zb_task(void *pvParameters) {
   esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
 
   //Erase NVRAM before creating connection to new Coordinator
-  //esp_zb_nvram_erase_at_start(true); //Comment out this line to erase NVRAM data if you are conneting to new Coordinator
+  esp_zb_nvram_erase_at_start(true); //Comment out this line to erase NVRAM data if you are conneting to new Coordinator
 
   ESP_ERROR_CHECK(esp_zb_start(false));
   esp_zb_main_loop_iteration();

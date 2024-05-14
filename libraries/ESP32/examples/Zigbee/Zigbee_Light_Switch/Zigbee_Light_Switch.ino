@@ -66,7 +66,9 @@ static switch_func_pair_t button_func_pair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SW
 /* Default Coordinator config */
 #define ESP_ZB_ZC_CONFIG()                                                                                        \
   {                                                                                                               \
-    .esp_zb_role = ESP_ZB_DEVICE_TYPE_COORDINATOR, .install_code_policy = INSTALLCODE_POLICY_ENABLE, .nwk_cfg = { \
+    .esp_zb_role = ESP_ZB_DEVICE_TYPE_COORDINATOR,                                                                \
+    .install_code_policy = INSTALLCODE_POLICY_ENABLE,                                                             \
+    .nwk_cfg = {                                                                                                  \
       .zczr_cfg =                                                                                                 \
         {                                                                                                         \
           .max_children = MAX_CHILDREN,                                                                           \
@@ -75,10 +77,10 @@ static switch_func_pair_t button_func_pair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SW
   }
 
 #define ESP_ZB_DEFAULT_RADIO_CONFIG() \
-  { .radio_mode = RADIO_MODE_NATIVE, }
+  { .radio_mode = ZB_RADIO_MODE_NATIVE, }
 
 #define ESP_ZB_DEFAULT_HOST_CONFIG() \
-  { .host_connection_mode = HOST_CONNECTION_MODE_NONE, }
+  { .host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE, }
 
 typedef struct light_bulb_device_params_s {
   esp_zb_ieee_addr_t ieee_addr;
@@ -92,7 +94,7 @@ typedef struct light_bulb_device_params_s {
 #define HA_ONOFF_SWITCH_ENDPOINT    1                                    /* esp light switch device endpoint */
 #define ESP_ZB_PRIMARY_CHANNEL_MASK ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK /* Zigbee primary channel mask use in the example */
 
-/********************* Define functions **************************/
+/********************* Zigbee functions **************************/
 static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair) {
   if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
     /* implemented light switch toggle functionality */
@@ -153,8 +155,15 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
       if (err_status == ESP_OK) {
-        log_i("Start network formation");
-        esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_FORMATION);
+        log_i("Device started up in %s factory-reset mode", esp_zb_bdb_is_factory_new() ? "" : "non");
+        if (esp_zb_bdb_is_factory_new()) {
+          log_i("Start network formation");
+          esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_FORMATION);
+        } else {
+          log_i("Device rebooted");
+          log_i("Openning network for joining for %d seconds", 180);
+          esp_zb_bdb_open_network(180);
+        }
       } else {
         log_e("Failed to initialize Zigbee stack (status: %s)", esp_err_to_name(err_status));
       }
@@ -186,6 +195,15 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       cmd_req.dst_nwk_addr = dev_annce_params->device_short_addr;
       cmd_req.addr_of_interest = dev_annce_params->device_short_addr;
       esp_zb_zdo_find_on_off_light(&cmd_req, user_find_cb, NULL);
+      break;
+    case ESP_ZB_NWK_SIGNAL_PERMIT_JOIN_STATUS:
+      if (err_status == ESP_OK) {
+          if (*(uint8_t *)esp_zb_app_signal_get_params(p_sg_p)) {
+              log_i("Network(0x%04hx) is open for %d seconds", esp_zb_get_pan_id(), *(uint8_t *)esp_zb_app_signal_get_params(p_sg_p));
+          } else {
+              log_w("Network(0x%04hx) closed, devices joining not allowed.", esp_zb_get_pan_id());
+          }
+      }
       break;
     default: log_i("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;
   }
