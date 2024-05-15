@@ -433,7 +433,7 @@ bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel
  */
 bool STAClass::connect(
   const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity, const char *wpa2_username, const char *wpa2_password, const char *ca_pem,
-  const char *client_crt, const char *client_key, int32_t channel, const uint8_t *bssid, bool tryConnect
+  const char *client_crt, const char *client_key, int ttls_phase2_type, int32_t channel, const uint8_t *bssid, bool tryConnect
 ) {
   if (_esp_netif == NULL) {
     log_e("STA not started! You must call begin() first.");
@@ -465,6 +465,14 @@ bool STAClass::connect(
   if (wpa2_password && strlen(wpa2_password) > 64) {
     log_e("password too long!");
     return false;
+  }
+
+  if (ttls_phase2_type >= 0) {
+#if __has_include("esp_eap_client.h")
+    esp_eap_client_set_ttls_phase2_method((esp_eap_ttls_phase2_types)ttls_phase2_type);
+#else
+    esp_wifi_sta_wpa2_ent_set_ttls_phase2_method((esp_eap_ttls_phase2_types)ttls_phase2_type);
+#endif
   }
 
   if (ca_pem) {
@@ -503,7 +511,7 @@ bool STAClass::connect(
   esp_wifi_sta_wpa2_ent_enable();  //set config settings to enable function
 #endif
 
-  return connect(wpa2_ssid, NULL, 0, NULL, tryConnect);  //connect to wifi
+  return connect(wpa2_ssid, NULL, channel, bssid, tryConnect);  //connect to wifi
 }
 
 bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
