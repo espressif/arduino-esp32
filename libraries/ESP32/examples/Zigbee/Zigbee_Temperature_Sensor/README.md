@@ -1,6 +1,6 @@
 # Arduino-ESP32 Zigbee Temperature Sensor Example
 
-This example shows how to configure the Zigbee end device and use it as a HA temperature sensor.
+This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) temperature sensor.
 
 **This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_temperature_sensor.**
 
@@ -29,7 +29,7 @@ Functions:
 
 ### Configure the Project
 
-In this example, the temperature sensor task is reading the chip temperature.
+In this example, the internal temperature sensor task is reading the chip temperature.
 Set the Button Switch GPIO by changing the `GPIO_INPUT_IO_TOGGLE_SWITCH` definition. By default, it's the `GPIO_NUM_9` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE
@@ -50,7 +50,7 @@ You can do the following:
 * In the sketch uncomment function `esp_zb_nvram_erase_at_start(true);` located in `esp_zb_task` function.
 
 By default, the coordinator network is open for 180s after rebooting or flashing new firmware. After that, the network is closed for adding new devices.
-You can change by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
+You can change it by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 

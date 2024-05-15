@@ -1,6 +1,6 @@
 # Arduino-ESP32 Zigbee Thermostat Example
 
-This example shows how to configure Zigbee Coordinator and use it as an HA thermostat.
+This example shows how to configure Zigbee Coordinator and use it as a Home Automation (HA) thermostat.
 
 **This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_thermostat.**
 
@@ -49,7 +49,7 @@ You can do the following:
 * In the `Zigbee_Temperature_Sensor` example sketch uncomment function `esp_zb_nvram_erase_at_start(true);` located in `esp_zb_task` function.
 
 By default, the coordinator network is open for 180s after rebooting or flashing new firmware. After that, the network is closed for adding new devices.
-You can change by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
+You can change it by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 
