@@ -124,6 +124,9 @@ public:
   friend class UDP;
   friend class Client;
   friend class Server;
+  friend class EthernetClass;
+  friend class DhcpClass;
+  friend class DNSClient;
 
 protected:
   bool fromString4(const char *address);
