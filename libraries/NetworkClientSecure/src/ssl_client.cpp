@@ -48,6 +48,7 @@ void ssl_init(sslclient_context *ssl_client) {
   mbedtls_ssl_init(&ssl_client->ssl_ctx);
   mbedtls_ssl_config_init(&ssl_client->ssl_conf);
   mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
+  ssl_client->peek_buf = -1;
 }
 
 int start_ssl_client(
@@ -368,12 +369,15 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
   // save only interesting fields
   int handshake_timeout = ssl_client->handshake_timeout;
   int socket_timeout = ssl_client->socket_timeout;
+  int last_err = ssl_client->last_error;
 
   // reset embedded pointers to zero
   memset(ssl_client, 0, sizeof(sslclient_context));
 
   ssl_client->handshake_timeout = handshake_timeout;
   ssl_client->socket_timeout = socket_timeout;
+  ssl_client->last_error = last_err;
+  ssl_client->peek_buf = -1;
 }
 
 int data_to_read(sslclient_context *ssl_client) {

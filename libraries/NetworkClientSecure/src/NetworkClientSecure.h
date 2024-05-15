@@ -30,9 +30,6 @@ class NetworkClientSecure : public NetworkClient {
 protected:
   std::shared_ptr<sslclient_context> sslclient;
 
-  int _lastError = 0;
-  int _peek = -1;
-  int _timeout;
   bool _use_insecure;
   bool _stillinPlainStart = false;
   const char *_CA_cert;
