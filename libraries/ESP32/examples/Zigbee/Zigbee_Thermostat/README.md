@@ -1,8 +1,8 @@
-# Arduino-ESP32 Zigbee Light Switch Example
+# Arduino-ESP32 Zigbee Thermostat Example
 
-This example shows how to configure Zigbee Coordinator and use it as a Home Automation (HA) on/off light switch.
+This example shows how to configure Zigbee Coordinator and use it as a Home Automation (HA) thermostat.
 
-**This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_on_off_switch.**
+**This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_thermostat.**
 
 # Supported Targets
 
@@ -11,15 +11,24 @@ Currently, this example supports the following targets.
 | Supported Targets | ESP32-C6 | ESP32-H2 |
 | ----------------- | -------- | -------- |
 
+## Thermostat Functions
+
+Note:
+ * This board means the board (e.g. ESP32-H2) loaded with `Zigbee_Thermostat` example.
+ * The remote board means the board (e.g. ESP32-H2) loaded with `Zigbee_Temperature_Sensor` example.
+
+Functions:
+ * By clicking the switch button (BOOT) on this board, this board will read temperature value, temperature measurement range and temperature tolerance from the remote board. Also, this board will configure the remote board to report the measured temperature value every 10 seconds or every 2 degree changes.
+
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee end device (loaded with Zigbee_Light_bulb example).
+* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee end device (loaded with Zigbee_Temperature_Sensor example).
 * A USB cable for power supply and programming.
-* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee coordinator (loaded with Zigbee_Light_switch example).
+* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee coordinator (loaded with Zigbee_Thermostat example).
 
 ### Configure the Project
 
-Set the Button Switch GPIO by changing the `GPIO_INPUT_IO_TOGGLE_SWITCH` definition. By default, the LED_PIN is `GPIO_NUM_9`.
+Set the Button Switch GPIO by changing the `GPIO_INPUT_IO_TOGGLE_SWITCH` definition. By default, it's the `GPIO_NUM_9` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE
 
@@ -33,11 +42,11 @@ To get more information about the Espressif boards see [Espressif Development Ki
 
 ## Troubleshooting
 
-If the End device flashed with the example `Zigbee_Light_Bulb` is not connecting to the coordinator, erase the flash of the End device before flashing the example to the board. It is recommended to do this if you re-flash the coordinator.
+If the End device flashed with the example `Zigbee_Temperature_Sensor` is not connecting to the coordinator, erase the flash of the End device before flashing the example to the board. It is recommended to do this if you re-flash the coordinator.
 You can do the following:
 
 * In the Arduino IDE go to the Tools menu and set `Erase All Flash Before Sketch Upload` to `Enabled`.
-* In the `Zigbee_Light_Bulb` example sketch uncomment function `esp_zb_nvram_erase_at_start(true);` located in `esp_zb_task` function.
+* In the `Zigbee_Temperature_Sensor` example sketch uncomment function `esp_zb_nvram_erase_at_start(true);` located in `esp_zb_task` function.
 
 By default, the coordinator network is open for 180s after rebooting or flashing new firmware. After that, the network is closed for adding new devices.
 You can change it by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
