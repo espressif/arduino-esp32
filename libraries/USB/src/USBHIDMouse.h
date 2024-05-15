@@ -34,8 +34,6 @@
 #define MOUSE_FORWARD  0x10
 #define MOUSE_ALL      0x1F
 
-#include "./tusb_hid_mouse.h"
-
 enum MousePositioning_t {
   HID_MOUSE_RELATIVE,
   HID_MOUSE_ABSOLUTE
