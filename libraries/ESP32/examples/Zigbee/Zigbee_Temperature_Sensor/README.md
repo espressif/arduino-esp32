@@ -29,7 +29,7 @@ Functions:
 
 ### Configure the Project
 
-In this example, the temperature sensor task is reading the chip temperature. 
+In this example, the temperature sensor task is reading the chip temperature.
 Set the Button Switch GPIO by changing the `GPIO_INPUT_IO_TOGGLE_SWITCH` definition. By default, it's the `GPIO_NUM_9` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE

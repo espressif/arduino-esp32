@@ -60,15 +60,12 @@ typedef enum {
   SWITCH_RELEASE_DETECTED,
 } switch_state_t;
 
-static switch_func_pair_t button_func_pair[] = {
-    {GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}
-};
+static switch_func_pair_t button_func_pair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}};
 
 /* Default End Device config */
 #define ESP_ZB_ZED_CONFIG()                                                                 \
   {                                                                                         \
-    .esp_zb_role = ESP_ZB_DEVICE_TYPE_ED,                                                   \
-    .install_code_policy = INSTALLCODE_POLICY_ENABLE,                                       \
+    .esp_zb_role = ESP_ZB_DEVICE_TYPE_ED, .install_code_policy = INSTALLCODE_POLICY_ENABLE, \
     .nwk_cfg = {                                                                            \
       .zed_cfg =                                                                            \
         {                                                                                   \
@@ -85,58 +82,58 @@ static switch_func_pair_t button_func_pair[] = {
   { .host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE, }
 
 /* Zigbee configuration */
-#define INSTALLCODE_POLICY_ENABLE   false                                /* enable the install code policy for security */
+#define INSTALLCODE_POLICY_ENABLE   false /* enable the install code policy for security */
 #define ED_AGING_TIMEOUT            ESP_ZB_ED_AGING_TIMEOUT_64MIN
 #define ED_KEEP_ALIVE               3000                                 /* 3000 millisecond */
 #define HA_ESP_SENSOR_ENDPOINT      10                                   /* esp temperature sensor device endpoint, used for temperature measurement */
 #define ESP_ZB_PRIMARY_CHANNEL_MASK ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK /* Zigbee primary channel mask use in the example */
 
 /* Temperature sensor configuration */
-#define ESP_TEMP_SENSOR_UPDATE_INTERVAL (1)     /* Local sensor update interval (second) */
-#define ESP_TEMP_SENSOR_MIN_VALUE       (10)    /* Local sensor min measured value (degree Celsius) */
-#define ESP_TEMP_SENSOR_MAX_VALUE       (50)    /* Local sensor max measured value (degree Celsius) */
+#define ESP_TEMP_SENSOR_UPDATE_INTERVAL (1)  /* Local sensor update interval (second) */
+#define ESP_TEMP_SENSOR_MIN_VALUE       (10) /* Local sensor min measured value (degree Celsius) */
+#define ESP_TEMP_SENSOR_MAX_VALUE       (50) /* Local sensor max measured value (degree Celsius) */
 
 /* Attribute values in ZCL string format
  * The string should be started with the length of its own.
  */
-#define MANUFACTURER_NAME               "\x0B""ESPRESSIF"
-#define MODEL_IDENTIFIER                "\x09"CONFIG_IDF_TARGET
+#define MANUFACTURER_NAME \
+  "\x0B"                  \
+  "ESPRESSIF"
+#define MODEL_IDENTIFIER "\x09" CONFIG_IDF_TARGET
 
 /********************* Zigbee functions **************************/
-static int16_t zb_temperature_to_s16(float temp)
-{
-    return (int16_t)(temp * 100);
+static int16_t zb_temperature_to_s16(float temp) {
+  return (int16_t)(temp * 100);
 }
 
-static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair)
-{
-    if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
-        /* Send report attributes command */
-        esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
-        report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-        report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
-        report_attr_cmd.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-        report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
-        report_attr_cmd.zcl_basic_cmd.src_endpoint = HA_ESP_SENSOR_ENDPOINT;
+static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair) {
+  if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
+    /* Send report attributes command */
+    esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
+    report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
+    report_attr_cmd.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+    report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+    report_attr_cmd.zcl_basic_cmd.src_endpoint = HA_ESP_SENSOR_ENDPOINT;
 
-        esp_zb_lock_acquire(portMAX_DELAY);
-        esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-        esp_zb_lock_release();
-        log_i("Send 'report attributes' command");
-    }
-}
-
-static void esp_app_temp_sensor_handler(float temperature)
-{
-    int16_t measured_value = zb_temperature_to_s16(temperature);
-    Serial.println("Updating temperature sensor value...");
-    Serial.println(measured_value);
-    /* Update temperature sensor measured value */
     esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_set_attribute_val(HA_ESP_SENSOR_ENDPOINT,
-        ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-        ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &measured_value, false);
+    esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
     esp_zb_lock_release();
+    log_i("Send 'report attributes' command");
+  }
+}
+
+static void esp_app_temp_sensor_handler(float temperature) {
+  int16_t measured_value = zb_temperature_to_s16(temperature);
+  Serial.println("Updating temperature sensor value...");
+  Serial.println(measured_value);
+  /* Update temperature sensor measured value */
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_set_attribute_val(
+    HA_ESP_SENSOR_ENDPOINT, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &measured_value,
+    false
+  );
+  esp_zb_lock_release();
 }
 
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask) {
@@ -160,10 +157,10 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         // Start Temperature sensor reading task
         xTaskCreate(temp_sensor_value_update, "temp_sensor_update", 2048, NULL, 10, NULL);
         if (esp_zb_bdb_is_factory_new()) {
-            log_i("Start network steering");
-            esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+          log_i("Start network steering");
+          esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
         } else {
-            log_i("Device rebooted");
+          log_i("Device rebooted");
         }
       } else {
         /* commissioning failed */
@@ -188,30 +185,31 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
   }
 }
 
-static esp_zb_cluster_list_t *custom_temperature_sensor_clusters_create(esp_zb_temperature_sensor_cfg_t *temperature_sensor)
-{
-    esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
-    esp_zb_attribute_list_t *basic_cluster = esp_zb_basic_cluster_create(&(temperature_sensor->basic_cfg));
-    ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void*)MANUFACTURER_NAME));
-    ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void*)MODEL_IDENTIFIER));
-    ESP_ERROR_CHECK(esp_zb_cluster_list_add_basic_cluster(cluster_list, basic_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE));
-    ESP_ERROR_CHECK(esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(&(temperature_sensor->identify_cfg)), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE));
-    ESP_ERROR_CHECK(esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE));
-    ESP_ERROR_CHECK(esp_zb_cluster_list_add_temperature_meas_cluster(cluster_list, esp_zb_temperature_meas_cluster_create(&(temperature_sensor->temp_meas_cfg)), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE));
-    return cluster_list;
+static esp_zb_cluster_list_t *custom_temperature_sensor_clusters_create(esp_zb_temperature_sensor_cfg_t *temperature_sensor) {
+  esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
+  esp_zb_attribute_list_t *basic_cluster = esp_zb_basic_cluster_create(&(temperature_sensor->basic_cfg));
+  ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)MANUFACTURER_NAME));
+  ESP_ERROR_CHECK(esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)MODEL_IDENTIFIER));
+  ESP_ERROR_CHECK(esp_zb_cluster_list_add_basic_cluster(cluster_list, basic_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE));
+  ESP_ERROR_CHECK(
+    esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(&(temperature_sensor->identify_cfg)), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE)
+  );
+  ESP_ERROR_CHECK(
+    esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE)
+  );
+  ESP_ERROR_CHECK(esp_zb_cluster_list_add_temperature_meas_cluster(
+    cluster_list, esp_zb_temperature_meas_cluster_create(&(temperature_sensor->temp_meas_cfg)), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE
+  ));
+  return cluster_list;
 }
 
-static esp_zb_ep_list_t *custom_temperature_sensor_ep_create(uint8_t endpoint_id, esp_zb_temperature_sensor_cfg_t *temperature_sensor)
-{
-    esp_zb_ep_list_t *ep_list = esp_zb_ep_list_create();
-    esp_zb_endpoint_config_t endpoint_config = {
-        .endpoint = endpoint_id,
-        .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID,
-        .app_device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID,
-        .app_device_version = 0
-    };
-    esp_zb_ep_list_add_ep(ep_list, custom_temperature_sensor_clusters_create(temperature_sensor), endpoint_config);
-    return ep_list;
+static esp_zb_ep_list_t *custom_temperature_sensor_ep_create(uint8_t endpoint_id, esp_zb_temperature_sensor_cfg_t *temperature_sensor) {
+  esp_zb_ep_list_t *ep_list = esp_zb_ep_list_create();
+  esp_zb_endpoint_config_t endpoint_config = {
+    .endpoint = endpoint_id, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID, .app_device_version = 0
+  };
+  esp_zb_ep_list_add_ep(ep_list, custom_temperature_sensor_clusters_create(temperature_sensor), endpoint_config);
+  return ep_list;
 }
 
 static void esp_zb_task(void *pvParameters) {
@@ -228,26 +226,30 @@ static void esp_zb_task(void *pvParameters) {
 
   /* Config the reporting info  */
   esp_zb_zcl_reporting_info_t reporting_info = {
-      .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
-      .ep = HA_ESP_SENSOR_ENDPOINT,
-      .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,
-      .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-      .attr_id = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
-      .u = {
-        .send_info = {
+    .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
+    .ep = HA_ESP_SENSOR_ENDPOINT,
+    .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,
+    .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
+    .attr_id = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
+    .u =
+      {
+        .send_info =
+          {
             .min_interval = 1,
             .max_interval = 0,
-            .delta = {
-              .u16 = 100,
-            },
+            .delta =
+              {
+                .u16 = 100,
+              },
             .def_min_interval = 1,
             .def_max_interval = 0,
-        },
+          },
       },
-      .dst = {
+    .dst =
+      {
         .profile_id = ESP_ZB_AF_HA_PROFILE_ID,
       },
-      .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
+    .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
   };
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
@@ -277,13 +279,12 @@ static void switch_gpios_intr_enabled(bool enabled) {
 }
 
 /************************ Temp sensor *****************************/
-static void temp_sensor_value_update(void *arg)
-{
-    for (;;) {
-        float tsens_value = temperatureRead();
-        esp_app_temp_sensor_handler(tsens_value);
-        delay(1000);
-    }
+static void temp_sensor_value_update(void *arg) {
+  for (;;) {
+    float tsens_value = temperatureRead();
+    esp_app_temp_sensor_handler(tsens_value);
+    delay(1000);
+  }
 }
 
 /********************* Arduino functions **************************/
