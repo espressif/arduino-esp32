@@ -8,7 +8,7 @@ function run_test() {
     local sketchdir=$(dirname $sketch)
     local sketchname=$(basename $sketchdir)
 
-    if [[ -f "$sketchdir/.skip.$platform" ]]; then
+    if [[ -f "$sketchdir/.skip.$platform" ]] || [[ -f "$sketchdir/.skip.$target" ]] || [[ -f "$sketchdir/.skip.$platform.$target" ]]; then
       echo "Skipping $sketchname test for $target, platform: $platform"
       skipfile="$sketchdir/.test_skipped"
       touch $skipfile
@@ -45,11 +45,24 @@ function run_test() {
             if [[ -f "$sketchdir/scenario.yaml" ]]; then
                 extra_args+=" --wokwi-scenario $sketchdir/scenario.yaml"
             fi
+        elif [ $platform == "qemu" ]; then
+            PATH=$HOME/qemu/bin:$PATH
+            extra_args="--embedded-services qemu --qemu-image-path $build_dir/$sketchname.ino.merged.bin"
+
+            if [ $target == "esp32" ] || [ $target == "esp32s3" ]; then
+                extra_args+=" --qemu-prog-path qemu-system-xtensa --qemu-cli-args=\"-machine $target -m 4M -nographic\""
+            elif [ $target == "esp32c3" ]; then
+                extra_args+=" --qemu-prog-path qemu-system-riscv32 --qemu-cli-args=\"-machine $target -icount 3 -nographic\""
+            else
+                echo "Unsupported QEMU target: $target"
+                exit 1
+            fi
         else
             extra_args="--embedded-services esp,arduino"
         fi
 
-        pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args
+        echo "pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args"
+        bash -c "pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args"
         result=$?
         if [ $result -ne 0 ]; then
             return $result
@@ -70,6 +83,13 @@ while [ ! -z "$1" ]; do
     case $1 in
     -c )
         chunk_run=1
+        ;;
+    -q )
+        if [ ! -d $QEMU_PATH ]; then
+            echo "QEMU path $QEMU_PATH does not exist"
+            exit 1
+        fi
+        platform="qemu"
         ;;
     -w )
         shift
@@ -113,7 +133,9 @@ while [ ! -z "$1" ]; do
     shift
 done
 
-source ${SCRIPTS_DIR}/install-arduino-ide.sh
+if [ ! $platform == "qemu" ]; then
+    source ${SCRIPTS_DIR}/install-arduino-ide.sh
+fi
 
 # If sketch is provided and test type is not, test type is inferred from the sketch path
 if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then

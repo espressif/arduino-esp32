@@ -78,10 +78,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             # Default FQBN options if none were passed in the command line.
 
-            esp32_opts="PSRAM=enabled,PartitionScheme=huge_app"
+            esp32_opts="FlashMode=dio,PSRAM=enabled,PartitionScheme=huge_app"
             esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app"
             esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
-            esp32c3_opts="PartitionScheme=huge_app"
+            esp32c3_opts="FlashMode=dio,PartitionScheme=huge_app"
             esp32c6_opts="PartitionScheme=huge_app"
             esp32h2_opts="PartitionScheme=huge_app"
 

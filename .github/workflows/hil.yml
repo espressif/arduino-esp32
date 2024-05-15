@@ -86,6 +86,83 @@ jobs:
             ~/.arduino/tests/**/build*.tmp/*.elf
             ~/.arduino/tests/**/build*.tmp/*.json
 
+  qemu-test:
+    needs: [gen_chunks, build]
+    name: ${{matrix.chip}}-QEMU_Test#${{matrix.chunks}}
+    if: ${{ false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chip: ['esp32', 'esp32c3'] # Currently only ESP32 and ESP32-C3 are supported by QEMU
+        chunks: ${{fromJson(needs.gen_chunks.outputs.chunks)}}
+    runs-on: ubuntu-latest
+    env:
+      QEMU_INSTALL_PATH: "$HOME"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get QEMU version
+        uses: pozetroninc/github-action-get-latest-release@v0.7.0
+        id: get-qemu-version
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          owner: espressif
+          repo: qemu
+          excludes: prerelease, draft
+
+      - name: Cache tools
+        id: cache-linux
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/qemu
+            ~/.cache/pip
+          key: qemu-${{ steps.get-qemu-version.outputs.release }}-${{ hashFiles('.github/workflows/hil.yml') }}
+
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+          sudo apt update && sudo apt install libpixman-1-0 libnuma1 libglib2.0-0 libslirp0 libsdl2-2.0-0
+
+      - name: Download QEMU
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          cd ${{ env.QEMU_INSTALL_PATH }}
+          underscore_release=$(echo ${{ steps.get-qemu-version.outputs.release }} | sed 's/\-/_/g')
+          curl -L https://github.com/espressif/qemu/releases/download/${{ steps.get-qemu-version.outputs.release }}/qemu-riscv32-softmmu-${underscore_release}-x86_64-linux-gnu.tar.xz > qemu-riscv32.tar.xz
+          curl -L https://github.com/espressif/qemu/releases/download/${{ steps.get-qemu-version.outputs.release }}/qemu-xtensa-softmmu-${underscore_release}-x86_64-linux-gnu.tar.xz > qemu-xtensa.tar.xz
+          tar -xf qemu-riscv32.tar.xz
+          tar -xf qemu-xtensa.tar.xz
+          rm qemu-*
+          echo "QEMU_PATH=${{ env.QEMU_INSTALL_PATH }}/qemu" >> $GITHUB_ENV
+
+      - name: Download ${{matrix.chip}}-${{matrix.chunks}} artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
+          path: ~/
+
+      - name: Run Tests
+        run: QEMU_PATH="${{env.QEMU_PATH}}" bash .github/scripts/tests_run.sh -c -t ${{matrix.chip}} -i ${{matrix.chunks}} -m ${{env.MAX_CHUNKS}} -q
+
+      - name: Check if tests were skipped
+        id: check-test-skipped
+        run: |
+          if [ $(find "tests" -name ".test_skipped") ]; then
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload test result artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ always() && steps.check-test-skipped.outputs.skipped == 'false' }}
+        with:
+          name: qemu_results-${{matrix.chip}}-${{matrix.chunks}}
+          path: tests/*/*.xml
+
   wokwi-test:
     needs: [gen_chunks, build]
     if: github.event_name == 'schedule'
@@ -105,7 +182,7 @@ jobs:
         with:
           name: ${{matrix.chip}}-${{matrix.chunks}}.artifacts
           path: ~/
-      
+
       - name: Install Wokwi CLI
         run: curl -L https://wokwi.com/ci/install.sh | sh
 
@@ -193,16 +270,10 @@ jobs:
 
   event_file:
     name: "Event File"
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'hil_test') ||
-      contains(github.event.pull_request.labels.*.name, 'perf_test') ||
-      github.event_name == 'schedule'
-    needs: hardware-test
     runs-on: ubuntu-latest
     steps:
        - name: Upload
          uses: actions/upload-artifact@v4
          with:
-           name: Event File
+           name: event_file
            path: ${{github.event_path}}
-

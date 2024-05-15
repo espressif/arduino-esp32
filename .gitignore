@@ -50,3 +50,7 @@ libraries/Insights/examples/*/*.ino.zip
 !.vale/styles/Vocab/
 .vale/styles/Vocab/*
 !.vale/styles/Vocab/Espressif/
+
+# Ignore Lib Builder Docker run scripts
+/run.sh
+/run.ps1

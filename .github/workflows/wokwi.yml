@@ -15,17 +15,37 @@ env:
   WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-concurrency:
-  group: wokwi-${{github.event.pull_request.number || github.ref}}
-  cancel-in-progress: true
-
 jobs:
+  get_event_file:
+    name: Get event file
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.get-ref.outputs.ref }}
+    steps:
+      - name: Download event file
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{github.event.workflow_run.id}}
+          github-token: ${{env.GITHUB_TOKEN}}
+          name: event_file
+
+      - name: Get ref
+        id: get-ref
+        run: |
+          PR_NUMBER=$(jq -r '.number' event.json)
+          echo "PR_NUMBER = $PR_NUMBER"
+          echo "ref=$PR_NUMBER" >> $GITHUB_OUTPUT
+
   gen_chunks:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
     name: Generate Chunks matrix
     runs-on: ubuntu-latest
+    needs: get_event_file
     outputs:
       chunks: ${{ steps.gen-chunks.outputs.chunks }}
+    concurrency:
+      group: wokwi-${{ needs.get_event_file.outputs.ref || github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -47,8 +67,11 @@ jobs:
           echo "chunks=${CHUNKS}" >>$GITHUB_OUTPUT
 
   wokwi-test:
-    needs: [gen_chunks]
+    needs: [get_event_file, gen_chunks]
     name: ${{matrix.chip}}-Wokwi_Test#${{matrix.chunks}}
+    concurrency:
+      group: wokwi-${{ needs.get_event_file.outputs.ref || github.ref }}-${{matrix.chip}}-${{matrix.chunks}}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -101,7 +124,10 @@ jobs:
   report-result:
     name: Report wokwi test result
     runs-on: ubuntu-latest
-    needs: wokwi-test
+    needs: [get_event_file, wokwi-test]
+    concurrency:
+      group: wokwi-${{ needs.get_event_file.outputs.ref || github.ref }}
+      cancel-in-progress: true
     if: always() && github.event.workflow_run.event == 'pull_request'
     steps:
       - name: Report result
@@ -127,4 +153,4 @@ jobs:
               target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })).data;
             core.info(`${name} is ${state}`);
-  
+

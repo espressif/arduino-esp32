@@ -44,6 +44,7 @@ public:
   void productID(const char *pid);        //max 16 chars
   void productRevision(const char *ver);  //max 4 chars
   void mediaPresent(bool media_present);
+  void isWritable(bool is_writable);
   void onStartStop(msc_start_stop_cb cb);
   void onRead(msc_read_cb cb);
   void onWrite(msc_write_cb cb);

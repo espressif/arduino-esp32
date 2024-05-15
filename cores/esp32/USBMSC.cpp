@@ -33,6 +33,7 @@ extern "C" uint16_t tusb_msc_load_descriptor(uint8_t *dst, uint8_t *itf) {
 
 typedef struct {
   bool media_present;
+  bool is_writable;
   uint8_t vendor_id[8];
   uint8_t product_id[16];
   uint8_t product_rev[4];
@@ -179,11 +180,17 @@ int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cmd[16], void *buffer, u
   return resplen;
 }
 
+bool tud_msc_is_writable_cb(uint8_t lun) {
+  log_v("[%u]: %u", lun, msc_luns[lun].is_writable);
+  return msc_luns[lun].is_writable;  // RAM disk is always ready
+}
+
 USBMSC::USBMSC() {
   if (MSC_ACTIVE_LUN < MSC_MAX_LUN) {
     _lun = MSC_ACTIVE_LUN;
     MSC_ACTIVE_LUN++;
     msc_luns[_lun].media_present = false;
+    msc_luns[_lun].is_writable = true;
     msc_luns[_lun].vendor_id[0] = 0;
     msc_luns[_lun].product_id[0] = 0;
     msc_luns[_lun].product_rev[0] = 0;
@@ -213,6 +220,7 @@ bool USBMSC::begin(uint32_t block_count, uint16_t block_size) {
 
 void USBMSC::end() {
   msc_luns[_lun].media_present = false;
+  msc_luns[_lun].is_writable = false;
   msc_luns[_lun].vendor_id[0] = 0;
   msc_luns[_lun].product_id[0] = 0;
   msc_luns[_lun].product_rev[0] = 0;
@@ -245,6 +253,10 @@ void USBMSC::onRead(msc_read_cb cb) {
 
 void USBMSC::onWrite(msc_write_cb cb) {
   msc_luns[_lun].write = cb;
+}
+
+void USBMSC::isWritable(bool is_writable) {
+  msc_luns[_lun].is_writable = is_writable;
 }
 
 void USBMSC::mediaPresent(bool media_present) {
