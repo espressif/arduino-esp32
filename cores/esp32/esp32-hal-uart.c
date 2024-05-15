@@ -536,9 +536,9 @@ uart_t *uartBegin(
     retCode &= uartSetPins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
   }
   if (!retCode) {
+    log_e("UART%d initialization error.", uart->num);
     uartEnd(uart_nr);
     uart = NULL;
-    log_e("UART%d initialization error.", uart->num);
   } else {
     uartFlush(uart);
     log_v("UART%d initialization done.", uart->num);
