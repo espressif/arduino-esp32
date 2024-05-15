@@ -828,6 +828,7 @@ void uart_install_putc() {
 #endif
     default: ets_install_putc1(NULL); break;
   }
+  ets_install_putc2(NULL);
 }
 
 // Routines that take care of UART mode in the HardwareSerial Class code
@@ -878,7 +879,7 @@ int log_printfv(const char *format, va_list arg) {
     }
 #endif
 */
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || ((CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6) && ARDUINO_USB_CDC_ON_BOOT)
   vsnprintf(temp, len + 1, format, arg);
   ets_printf("%s", temp);
 #else

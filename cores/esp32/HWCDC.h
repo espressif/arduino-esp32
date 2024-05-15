@@ -21,6 +21,7 @@
 #include <inttypes.h>
 #include "esp_event.h"
 #include "Stream.h"
+#include "driver/usb_serial_jtag.h"
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_HW_CDC_EVENTS);
 
@@ -69,7 +70,12 @@ public:
   size_t write(const uint8_t *buffer, size_t size);
   void flush(void);
 
-  static bool isPlugged(void);
+  inline static bool isPlugged(void) {
+    // SOF ISR is causing esptool to be unable to upload firmware to the board
+    // Using IDF 5.1 helper function because it is based on Timer check instead of ISR
+    return usb_serial_jtag_is_connected();
+  }
+
   inline static bool isConnected(void) {
     return isCDC_Connected();
   }

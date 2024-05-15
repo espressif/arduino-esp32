@@ -39,8 +39,9 @@ static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
 static volatile bool connected = false;
 
-static volatile unsigned long lastSOF_ms;
-static volatile uint8_t SOF_TIMEOUT;
+// SOF in ISR causes problems for uploading firmware
+//static volatile unsigned long lastSOF_ms;
+//static volatile uint8_t SOF_TIMEOUT;
 
 // timeout has no effect when USB CDC is unplugged
 static uint32_t tx_timeout_ms = 100;
@@ -90,7 +91,7 @@ static void hw_cdc_isr_handler(void *arg) {
     if (tx_ring_buf != NULL && usb_serial_jtag_ll_txfifo_writable() == 1) {
       // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
       usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-      size_t queued_size;
+      size_t queued_size = 0;
       uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
       // If the hardware fifo is available, write in it. Otherwise, do nothing.
       if (queued_buff != NULL) {  //Although tx_queued_bytes may be larger than 0. We may have interrupt before xRingbufferSend() was called.
@@ -134,19 +135,23 @@ static void hw_cdc_isr_handler(void *arg) {
     connected = false;
   }
 
-  if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SOF) {
-    usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SOF);
-    lastSOF_ms = millis();
-  }
+  // SOF ISR is causing esptool to be unable to upload firmware to the board
+  // if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SOF) {
+  //   usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SOF);
+  //   lastSOF_ms = millis();
+  // }
 
   if (xTaskWoken == pdTRUE) {
     portYIELD_FROM_ISR();
   }
 }
 
-inline bool HWCDC::isPlugged(void) {
-  return (lastSOF_ms + SOF_TIMEOUT) >= millis();
-}
+// Moved to header file as inline function. Kept just as future reference.
+//inline bool HWCDC::isPlugged(void) {
+// SOF ISR is causing esptool to be unable to upload firmware to the board
+// Timer test for SOF seems to work when uploading firmware
+//  return usb_serial_jtag_is_connected();//(lastSOF_ms + SOF_TIMEOUT) >= millis();
+//}
 
 bool HWCDC::isCDC_Connected() {
   static bool running = false;
@@ -155,11 +160,13 @@ bool HWCDC::isCDC_Connected() {
   if (!isPlugged()) {
     connected = false;
     running = false;
-    SOF_TIMEOUT = 5;  // SOF timeout when unplugged
+    // SOF in ISR causes problems for uploading firmware
+    //SOF_TIMEOUT = 5;  // SOF timeout when unplugged
     return false;
-  } else {
-    SOF_TIMEOUT = 50;  // SOF timeout when plugged
   }
+  //else {
+  //  SOF_TIMEOUT = 50;  // SOF timeout when plugged
+  //}
 
   if (connected) {
     running = false;
@@ -242,13 +249,15 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
     xRingbufferSend(tx_ring_buf, (void *)(&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
   }
   usb_serial_jtag_ll_txfifo_flush();
+  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
 }
 
 HWCDC::HWCDC() {
   perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit);
   perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit);
-  lastSOF_ms = 0;
-  SOF_TIMEOUT = 5;
+  // SOF in ISR causes problems for uploading firmware
+  //  lastSOF_ms = 0;
+  //  SOF_TIMEOUT = 5;
 }
 
 HWCDC::~HWCDC() {
@@ -309,8 +318,9 @@ void HWCDC::begin(unsigned long baud) {
   }
 
   // the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
-  deinit(NULL);
-  delay(10);  // USB Host has to enumerate it again
+  // But this is also causing terminal to hang, so they are disabled
+  // deinit(NULL);
+  // delay(10);  // USB Host has to enumerate it again
 
   // Peripheral Manager setting for USB D+ D- pins
   uint8_t pin = USB_DM_GPIO_NUM;
@@ -332,9 +342,11 @@ void HWCDC::begin(unsigned long baud) {
   // Enable USB pad function
   USB_SERIAL_JTAG.conf0.usb_pad_enable = 1;
   usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
-  usb_serial_jtag_ll_ena_intr_mask(
-    USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET | USB_SERIAL_JTAG_INTR_SOF
-  );
+  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
+  // SOF ISR is causing esptool to be unable to upload firmware to the board
+  // usb_serial_jtag_ll_ena_intr_mask(
+  //   USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET | USB_SERIAL_JTAG_INTR_SOF
+  // );
   if (!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK) {
     isr_log_e("HW USB CDC failed to init interrupts");
     end();
@@ -587,9 +599,9 @@ size_t HWCDC::read(uint8_t *buffer, size_t size) {
 void HWCDC::setDebugOutput(bool en) {
   if (en) {
     uartSetDebug(NULL);
-    ets_install_putc1((void (*)(char)) & cdc0_write_char);
+    ets_install_putc2((void (*)(char)) & cdc0_write_char);
   } else {
-    ets_install_putc1(NULL);
+    ets_install_putc2(NULL);
   }
 }
 
