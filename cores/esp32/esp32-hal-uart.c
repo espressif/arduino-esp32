@@ -828,6 +828,7 @@ void uart_install_putc() {
 #endif
     default: ets_install_putc1(NULL); break;
   }
+  ets_install_putc2(NULL);
 }
 
 // Routines that take care of UART mode in the HardwareSerial Class code

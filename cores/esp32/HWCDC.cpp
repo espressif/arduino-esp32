@@ -91,7 +91,7 @@ static void hw_cdc_isr_handler(void *arg) {
     if (tx_ring_buf != NULL && usb_serial_jtag_ll_txfifo_writable() == 1) {
       // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
       usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-      size_t queued_size;
+      size_t queued_size = 0;
       uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
       // If the hardware fifo is available, write in it. Otherwise, do nothing.
       if (queued_buff != NULL) {  //Although tx_queued_bytes may be larger than 0. We may have interrupt before xRingbufferSend() was called.
@@ -249,6 +249,7 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
     xRingbufferSend(tx_ring_buf, (void *)(&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
   }
   usb_serial_jtag_ll_txfifo_flush();
+  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
 }
 
 HWCDC::HWCDC() {
@@ -598,9 +599,9 @@ size_t HWCDC::read(uint8_t *buffer, size_t size) {
 void HWCDC::setDebugOutput(bool en) {
   if (en) {
     uartSetDebug(NULL);
-    ets_install_putc1((void (*)(char)) & cdc0_write_char);
+    ets_install_putc2((void (*)(char)) & cdc0_write_char);
   } else {
-    ets_install_putc1(NULL);
+    ets_install_putc2(NULL);
   }
 }
 
