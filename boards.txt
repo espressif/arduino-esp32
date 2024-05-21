@@ -36308,3 +36308,143 @@ waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.all=Enabled
 waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+weact_studio_esp32c3.name=WeAct Studio ESP32C3
+weact_studio_esp32c3.vid.0=0x303a
+weact_studio_esp32c3.pid.0=0x1001
+
+weact_studio_esp32c3.upload.tool=esptool_py
+weact_studio_esp32c3.upload.tool.default=esptool_py
+weact_studio_esp32c3.upload.tool.network=esp_ota
+weact_studio_esp32c3.upload.maximum_size=1310720
+weact_studio_esp32c3.upload.maximum_data_size=327680
+weact_studio_esp32c3.upload.flags=
+weact_studio_esp32c3.upload.extra_flags=
+weact_studio_esp32c3.upload.use_1200bps_touch=false
+weact_studio_esp32c3.upload.wait_for_upload_port=false
+
+weact_studio_esp32c3.serial.disableDTR=false
+weact_studio_esp32c3.serial.disableRTS=false
+
+weact_studio_esp32c3.build.tarch=riscv32
+weact_studio_esp32c3.build.target=esp
+weact_studio_esp32c3.build.mcu=esp32c3
+weact_studio_esp32c3.build.core=esp32
+weact_studio_esp32c3.build.variant=weact_studio_esp32c3
+weact_studio_esp32c3.build.board=WEACT_STUDIO_ESP32C3
+weact_studio_esp32c3.build.bootloader_addr=0x0
+
+weact_studio_esp32c3.build.usb_mode=1
+weact_studio_esp32c3.build.cdc_on_boot=1
+weact_studio_esp32c3.build.f_cpu=160000000L
+weact_studio_esp32c3.build.flash_size=4MB
+weact_studio_esp32c3.build.flash_freq=80m
+weact_studio_esp32c3.build.flash_mode=qio
+weact_studio_esp32c3.build.boot=qio
+weact_studio_esp32c3.build.partitions=default
+weact_studio_esp32c3.build.defines=
+
+weact_studio_esp32c3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+weact_studio_esp32c3.menu.USBMode.hwcdc.build.usb_mode=1
+weact_studio_esp32c3.menu.USBMode.default=USB-OTG
+weact_studio_esp32c3.menu.USBMode.default.build.usb_mode=0
+
+weact_studio_esp32c3.menu.JTAGAdapter.default=Disabled
+weact_studio_esp32c3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+weact_studio_esp32c3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+weact_studio_esp32c3.menu.JTAGAdapter.builtin.build.openocdscript=esp32c3-builtin.cfg
+weact_studio_esp32c3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+weact_studio_esp32c3.menu.JTAGAdapter.external=FTDI Adapter
+weact_studio_esp32c3.menu.JTAGAdapter.external.build.openocdscript=esp32c3-ftdi.cfg
+weact_studio_esp32c3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+weact_studio_esp32c3.menu.JTAGAdapter.bridge=ESP USB Bridge
+weact_studio_esp32c3.menu.JTAGAdapter.bridge.build.openocdscript=esp32c3-bridge.cfg
+weact_studio_esp32c3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+weact_studio_esp32c3.menu.CDCOnBoot.default=Enabled
+weact_studio_esp32c3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+weact_studio_esp32c3.menu.CDCOnBoot.cdc=Enabled
+weact_studio_esp32c3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+weact_studio_esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.default.build.partitions=default
+weact_studio_esp32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+weact_studio_esp32c3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+weact_studio_esp32c3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+weact_studio_esp32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+weact_studio_esp32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.minimal.build.partitions=minimal
+weact_studio_esp32c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+weact_studio_esp32c3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+weact_studio_esp32c3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+weact_studio_esp32c3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+weact_studio_esp32c3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+weact_studio_esp32c3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+weact_studio_esp32c3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+weact_studio_esp32c3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+weact_studio_esp32c3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+weact_studio_esp32c3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+weact_studio_esp32c3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+weact_studio_esp32c3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+weact_studio_esp32c3.menu.CPUFreq.160=160MHz (WiFi)
+weact_studio_esp32c3.menu.CPUFreq.160.build.f_cpu=160000000L
+weact_studio_esp32c3.menu.CPUFreq.80=80MHz (WiFi)
+weact_studio_esp32c3.menu.CPUFreq.80.build.f_cpu=80000000L
+weact_studio_esp32c3.menu.CPUFreq.40=40MHz
+weact_studio_esp32c3.menu.CPUFreq.40.build.f_cpu=40000000L
+weact_studio_esp32c3.menu.CPUFreq.20=20MHz
+weact_studio_esp32c3.menu.CPUFreq.20.build.f_cpu=20000000L
+weact_studio_esp32c3.menu.CPUFreq.10=10MHz
+weact_studio_esp32c3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+weact_studio_esp32c3.menu.FlashMode.qio=QIO
+weact_studio_esp32c3.menu.FlashMode.qio.build.flash_mode=dio
+weact_studio_esp32c3.menu.FlashMode.qio.build.boot=qio
+weact_studio_esp32c3.menu.FlashMode.dio=DIO
+weact_studio_esp32c3.menu.FlashMode.dio.build.flash_mode=dio
+weact_studio_esp32c3.menu.FlashMode.dio.build.boot=dio
+
+weact_studio_esp32c3.menu.FlashFreq.80=80MHz
+weact_studio_esp32c3.menu.FlashFreq.80.build.flash_freq=80m
+weact_studio_esp32c3.menu.FlashFreq.40=40MHz
+weact_studio_esp32c3.menu.FlashFreq.40.build.flash_freq=40m
+
+weact_studio_esp32c3.menu.UploadSpeed.921600=921600
+weact_studio_esp32c3.menu.UploadSpeed.921600.upload.speed=921600
+weact_studio_esp32c3.menu.UploadSpeed.115200=115200
+weact_studio_esp32c3.menu.UploadSpeed.115200.upload.speed=115200
+weact_studio_esp32c3.menu.UploadSpeed.256000.windows=256000
+weact_studio_esp32c3.menu.UploadSpeed.256000.upload.speed=256000
+weact_studio_esp32c3.menu.UploadSpeed.230400.windows.upload.speed=256000
+weact_studio_esp32c3.menu.UploadSpeed.230400=230400
+weact_studio_esp32c3.menu.UploadSpeed.230400.upload.speed=230400
+weact_studio_esp32c3.menu.UploadSpeed.460800.linux=460800
+weact_studio_esp32c3.menu.UploadSpeed.460800.macosx=460800
+weact_studio_esp32c3.menu.UploadSpeed.460800.upload.speed=460800
+weact_studio_esp32c3.menu.UploadSpeed.512000.windows=512000
+weact_studio_esp32c3.menu.UploadSpeed.512000.upload.speed=512000
+
+weact_studio_esp32c3.menu.DebugLevel.none=None
+weact_studio_esp32c3.menu.DebugLevel.none.build.code_debug=0
+weact_studio_esp32c3.menu.DebugLevel.error=Error
+weact_studio_esp32c3.menu.DebugLevel.error.build.code_debug=1
+weact_studio_esp32c3.menu.DebugLevel.warn=Warn
+weact_studio_esp32c3.menu.DebugLevel.warn.build.code_debug=2
+weact_studio_esp32c3.menu.DebugLevel.info=Info
+weact_studio_esp32c3.menu.DebugLevel.info.build.code_debug=3
+weact_studio_esp32c3.menu.DebugLevel.debug=Debug
+weact_studio_esp32c3.menu.DebugLevel.debug.build.code_debug=4
+weact_studio_esp32c3.menu.DebugLevel.verbose=Verbose
+weact_studio_esp32c3.menu.DebugLevel.verbose.build.code_debug=5
+
+weact_studio_esp32c3.menu.EraseFlash.none=Disabled
+weact_studio_esp32c3.menu.EraseFlash.none.upload.erase_cmd=
+weact_studio_esp32c3.menu.EraseFlash.all=Enabled
+weact_studio_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
