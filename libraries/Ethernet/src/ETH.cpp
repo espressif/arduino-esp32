@@ -163,10 +163,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   Network.begin();
   _ethernets[_eth_index] = this;
-  if (_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)) {
-    log_e("event_handler_instance_register for ETH_EVENT Failed!");
-    return false;
-  }
 
   eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
   mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
@@ -283,6 +279,11 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   ret = esp_netif_attach(_esp_netif, esp_eth_new_netif_glue(_eth_handle));
   if (ret != ESP_OK) {
     log_e("esp_netif_attach failed: %d", ret);
+    return false;
+  }
+
+  if (_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)) {
+    log_e("event_handler_instance_register for ETH_EVENT Failed!");
     return false;
   }
 
@@ -550,10 +551,6 @@ bool ETHClass::beginSPI(
 
   Network.begin();
   _ethernets[_eth_index] = this;
-  if (_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)) {
-    log_e("event_handler_instance_register for ETH_EVENT Failed!");
-    return false;
-  }
 
   // Install GPIO ISR handler to be able to service SPI Eth modules interrupts
   ret = gpio_install_isr_service(0);
@@ -714,6 +711,11 @@ bool ETHClass::beginSPI(
   ret = esp_netif_attach(_esp_netif, new_netif_glue);
   if (ret != ESP_OK) {
     log_e("esp_netif_attach failed: %d", ret);
+    return false;
+  }
+
+  if (_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)) {
+    log_e("event_handler_instance_register for ETH_EVENT Failed!");
     return false;
   }
 
