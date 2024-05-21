@@ -718,7 +718,7 @@ bool ETHClass::beginSPI(
     log_e("event_handler_instance_register for ETH_EVENT Failed!");
     return false;
   }
-  
+
   /* attach to receive events */
   initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH + _eth_index));
 
