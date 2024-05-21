@@ -432,9 +432,9 @@ void USBCDC::setDebugOutput(bool en)
 {
     if(en) {
         uartSetDebug(NULL);
-        ets_install_putc1((void (*)(char)) &cdc0_write_char);
+        ets_install_putc2((void (*)(char)) &cdc0_write_char);
     } else {
-        ets_install_putc1(NULL);
+        ets_install_putc2(NULL);
     }
 }
 

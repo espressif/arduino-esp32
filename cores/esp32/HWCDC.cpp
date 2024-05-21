@@ -23,6 +23,8 @@
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
 #include "hal/usb_serial_jtag_ll.h"
+#include "esp_private/startup_internal.h"
+#include "esp_freertos_hooks.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 
@@ -33,8 +35,47 @@ static intr_handle_t intr_handle = NULL;
 static volatile bool connected = false;
 static xSemaphoreHandle tx_lock = NULL;
 
-static volatile unsigned long lastSOF_ms;
-static volatile uint8_t SOF_TIMEOUT;
+// SOF in ISR causes problems for uploading firmware
+//static volatile unsigned long lastSOF_ms;
+//static volatile uint8_t SOF_TIMEOUT;
+// detecting SOF from a timer seems to work with esptool.py
+static volatile bool s_usb_serial_jtag_conn_status;
+static volatile uint32_t remaining_allowed_no_sof_ticks;
+#define USJ_DISCONNECT_CONFIRM_PERIOD_MS    5
+#define ALLOWED_NO_SOF_TICKS                pdMS_TO_TICKS(USJ_DISCONNECT_CONFIRM_PERIOD_MS)
+
+static void IRAM_ATTR usb_serial_jtag_sof_tick_hook(void)
+{
+  // SOF packet is sent by the HOST every 1ms on a full speed bus
+  // Between two consecutive tick hooks, there will be at least 1ms (selectable tick rate range is 1 - 1000Hz)
+  // Therefore, SOF intr bit must have be raised at every tick hook if it is connected to a HOST
+  // Here, the strategy is: Always assume USB Serial/JTAG is connected until we are sure it is not connected
+  // Consider it is disconnected only if SOF intr bit is not raised within (ALLOWED_NO_SOF_TICKS + 1) tick periods
+  bool sof_received = USB_SERIAL_JTAG.int_raw.sof_int_raw == 1;
+  usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SOF);
+
+  if (s_usb_serial_jtag_conn_status != sof_received) {
+    if (!sof_received) {
+      if (remaining_allowed_no_sof_ticks > 0) {
+        remaining_allowed_no_sof_ticks--;
+      } else {
+        s_usb_serial_jtag_conn_status = false;
+      }
+    } else {
+      s_usb_serial_jtag_conn_status = true;
+      remaining_allowed_no_sof_ticks = ALLOWED_NO_SOF_TICKS;
+    }
+  }
+
+}
+
+// runs on Core 0
+ESP_SYSTEM_INIT_FN(usb_serial_jtag_conn_status_init, BIT(0))
+{
+  s_usb_serial_jtag_conn_status = true;
+  remaining_allowed_no_sof_ticks = ALLOWED_NO_SOF_TICKS;
+  esp_register_freertos_tick_hook(usb_serial_jtag_sof_tick_hook);
+}
 
 // timeout has no effect when USB CDC is unplugged
 static uint32_t tx_timeout_ms = 100;
@@ -86,7 +127,7 @@ static void hw_cdc_isr_handler(void *arg) {
         if (tx_ring_buf != NULL && usb_serial_jtag_ll_txfifo_writable() == 1) {
             // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
             usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-            size_t queued_size;
+            size_t queued_size = 0;
             uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
             // If the hardware fifo is avaliable, write in it. Otherwise, do nothing.
             if (queued_buff != NULL) {  //Although tx_queued_bytes may be larger than 0. We may have interrupt before xRingbufferSend() was called.
@@ -128,19 +169,19 @@ static void hw_cdc_isr_handler(void *arg) {
         connected = false;
     }
 
-    if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SOF) {
-        usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SOF);
-        lastSOF_ms = millis();
-    }
+//    if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SOF) {
+//        usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SOF);
+//        lastSOF_ms = millis();
+//    }
 
     if (xTaskWoken == pdTRUE) {
         portYIELD_FROM_ISR();
     }
 }
 
-inline bool HWCDC::isPlugged(void)
+bool HWCDC::isPlugged(void)
 {
-    return (lastSOF_ms + SOF_TIMEOUT) >= millis();
+    return s_usb_serial_jtag_conn_status; //(lastSOF_ms + SOF_TIMEOUT) >= millis();
 }
 
 bool HWCDC::isCDC_Connected() 
@@ -151,10 +192,10 @@ bool HWCDC::isCDC_Connected()
      if (!isPlugged()) {
         connected = false;
         running = false;
-        SOF_TIMEOUT = 5;       // SOF timeout when unplugged
+    //    SOF_TIMEOUT = 5;       // SOF timeout when unplugged
         return false;
-    } else {
-        SOF_TIMEOUT = 50;      // SOF timeout when plugged
+    //} else {
+    //    SOF_TIMEOUT = 50;      // SOF timeout when plugged
     }
 
     if (connected) {
@@ -232,11 +273,12 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
         xRingbufferSend(tx_ring_buf, (void*) (&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
     }
     usb_serial_jtag_ll_txfifo_flush();
+    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
 }
 
 HWCDC::HWCDC() {
-    lastSOF_ms = 0;
-    SOF_TIMEOUT = 5;
+//    lastSOF_ms = 0;
+//    SOF_TIMEOUT = 5;
 }
 
 HWCDC::~HWCDC(){
@@ -286,8 +328,8 @@ void HWCDC::begin(unsigned long baud)
     }
 
     // the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
-    deinit();
-    delay(10);     // USB Host has to enumerate it again
+    //deinit();
+    //delay(10);     // USB Host has to enumerate it again
 
     // Configure PHY
     // USB_Serial_JTAG use internal PHY
@@ -300,7 +342,7 @@ void HWCDC::begin(unsigned long baud)
     USB_SERIAL_JTAG.conf0.usb_pad_enable = 1;
     usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT
-                                     | USB_SERIAL_JTAG_INTR_BUS_RESET | USB_SERIAL_JTAG_INTR_SOF);
+                                     | USB_SERIAL_JTAG_INTR_BUS_RESET /*| USB_SERIAL_JTAG_INTR_SOF*/);
     if(!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK){
         isr_log_e("HW USB CDC failed to init interrupts");
         end();
@@ -554,9 +596,9 @@ void HWCDC::setDebugOutput(bool en)
 {
     if(en) {
         uartSetDebug(NULL);
-        ets_install_putc1((void (*)(char)) &cdc0_write_char);
+        ets_install_putc2((void (*)(char)) &cdc0_write_char);
     } else {
-        ets_install_putc1(NULL);
+        ets_install_putc2(NULL);
     }
 }
 
