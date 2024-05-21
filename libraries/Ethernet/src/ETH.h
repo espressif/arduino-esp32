@@ -62,6 +62,7 @@
 
 // This will be uncommented once custom SPI support is available in ESP-IDF
 #define ETH_SPI_SUPPORTS_CUSTOM 1
+#define ETH_SPI_SUPPORTS_NO_IRQ 1
 
 #include "Network.h"
 
