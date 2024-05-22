@@ -314,7 +314,7 @@ SECTIONS
     KEEP (*(SORT(.esp_system_init_fn) SORT(.esp_system_init_fn.*)))
     _esp_system_init_fn_array_end = ABSOLUTE(.);
 
-    *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) .data EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) .data.*)
+    *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a) .data EXCLUDE_FILE(*libbt.a *libbtdm_app.a) .data.*)
     *(.dram1 .dram1.*)
     _coredump_dram_start = ABSOLUTE(.);
     *(.dram2.coredump .dram2.coredump.*)
@@ -327,10 +327,10 @@ SECTIONS
     . = ALIGN(4);
     _bt_data_end = ABSOLUTE(.);
     . = ALIGN(4);
-    _btdm_data_start = ABSOLUTE(.);
+    _bt_controller_data_start = ABSOLUTE(.);
     *libbtdm_app.a:(.data .data.*)
     . = ALIGN(4);
-    _btdm_data_end = ABSOLUTE(.);
+    _bt_controller_data_end = ABSOLUTE(.);
     *libesp_hw_support.a:opiram_psram.*(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
     *libesp_hw_support.a:rtc_clk.*(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
     *libesp_hw_support.a:sleep_console.*(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
@@ -354,11 +354,6 @@ SECTIONS
     *libnewlib.a:assert.*(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
     *libnewlib.a:heap.*(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
     *libnewlib.a:stdatomic.*(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
-    . = ALIGN(4);
-    _nimble_data_start = ABSOLUTE(.);
-    *libnimble.a:(.data .data.*)
-    . = ALIGN(4);
-    _nimble_data_end = ABSOLUTE(.);
     *libphy.a:(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
     *libsoc.a:lldesc.*(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
     *libspi_flash.a:memspi_host_driver.*(.rodata .rodata.* .sdata2 .sdata2.* .srodata .srodata.*)
@@ -401,10 +396,10 @@ SECTIONS
     _bss_start = ABSOLUTE(.);
     *(.ext_ram.bss*)
 
-    *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) .bss EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) .bss.*)
-    *(.ext_ram.bss .ext_ram.bss.*)
+    *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a) .bss EXCLUDE_FILE(*libbt.a *libbtdm_app.a) .bss.*)
     *(.dynbss .dynsbss .gnu.linkonce.b .gnu.linkonce.b.* .gnu.linkonce.sb .gnu.linkonce.sb.* .gnu.linkonce.sb2 .gnu.linkonce.sb2.* .sbss .sbss.* .sbss2 .sbss2.* .scommon .share.mem)
-    *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a *libnimble.a) COMMON)
+    *(.ext_ram.bss .ext_ram.bss.*)
+    *(EXCLUDE_FILE(*libbt.a *libbtdm_app.a) COMMON)
     . = ALIGN(4);
     _bt_bss_start = ABSOLUTE(.);
     *libbt.a:(.bss .bss.*)
@@ -416,25 +411,15 @@ SECTIONS
     . = ALIGN(4);
     _bt_common_end = ABSOLUTE(.);
     . = ALIGN(4);
-    _btdm_bss_start = ABSOLUTE(.);
+    _bt_controller_bss_start = ABSOLUTE(.);
     *libbtdm_app.a:(.bss .bss.*)
     . = ALIGN(4);
-    _btdm_bss_end = ABSOLUTE(.);
+    _bt_controller_bss_end = ABSOLUTE(.);
     . = ALIGN(4);
-    _btdm_common_start = ABSOLUTE(.);
+    _bt_controller_common_start = ABSOLUTE(.);
     *libbtdm_app.a:(COMMON)
     . = ALIGN(4);
-    _btdm_common_end = ABSOLUTE(.);
-    . = ALIGN(4);
-    _nimble_bss_start = ABSOLUTE(.);
-    *libnimble.a:(.bss .bss.*)
-    . = ALIGN(4);
-    _nimble_bss_end = ABSOLUTE(.);
-    . = ALIGN(4);
-    _nimble_common_start = ABSOLUTE(.);
-    *libnimble.a:(COMMON)
-    . = ALIGN(4);
-    _nimble_common_end = ABSOLUTE(.);
+    _bt_controller_common_end = ABSOLUTE(.);
 
     *(.dynsbss)
     *(.sbss)

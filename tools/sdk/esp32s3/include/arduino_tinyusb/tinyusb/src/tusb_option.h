@@ -123,6 +123,8 @@
 #define OPT_MCU_ESP32             902 ///< Espressif ESP32 (for host max3421e)
 #define OPT_MCU_ESP32C3           903 ///< Espressif ESP32-C3
 #define OPT_MCU_ESP32C6           904 ///< Espressif ESP32-C6
+#define OPT_MCU_ESP32C2           905 ///< Espressif ESP32-C2
+#define OPT_MCU_ESP32H2           906 ///< Espressif ESP32-H2
 #define TUP_MCU_ESPRESSIF         (CFG_TUSB_MCU >= 900 && CFG_TUSB_MCU < 1000) // check if Espressif MCU
 
 // Dialog
@@ -181,6 +183,7 @@
 // WCH
 #define OPT_MCU_CH32V307         2200 ///< WCH CH32V307
 #define OPT_MCU_CH32F20X         2210 ///< WCH CH32F20x
+#define OPT_MCU_CH32V20X         2220 ///< WCH CH32V20X
 
 
 // NXP LPC MCX
@@ -362,6 +365,11 @@
 
 #ifndef CFG_TUD_INTERFACE_MAX
   #define CFG_TUD_INTERFACE_MAX   16
+#endif
+
+// USB 2.0 compliance test mode support
+#ifndef CFG_TUD_TEST_MODE
+  #define CFG_TUD_TEST_MODE       0
 #endif
 
 //------------- Device Class Driver -------------//
