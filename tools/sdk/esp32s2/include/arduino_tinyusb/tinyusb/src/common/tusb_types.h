@@ -24,12 +24,8 @@
  * This file is part of the TinyUSB stack.
  */
 
-/** \ingroup group_usb_definitions
- *  \defgroup USBDef_Type USB Types
- *  @{ */
-
-#ifndef _TUSB_TYPES_H_
-#define _TUSB_TYPES_H_
+#ifndef TUSB_TYPES_H_
+#define TUSB_TYPES_H_
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -212,8 +208,8 @@ typedef enum {
 } device_capability_type_t;
 
 enum {
-  TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP = TU_BIT(5),
-  TUSB_DESC_CONFIG_ATT_SELF_POWERED  = TU_BIT(6),
+  TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP = 1u << 5,
+  TUSB_DESC_CONFIG_ATT_SELF_POWERED  = 1u << 6,
 };
 
 #define TUSB_DESC_CONFIG_POWER_MA(x)  ((x)/2)
@@ -274,11 +270,11 @@ TU_ATTR_BIT_FIELD_ORDER_BEGIN
 typedef struct TU_ATTR_PACKED {
   uint8_t  bLength            ; ///< Size of this descriptor in bytes.
   uint8_t  bDescriptorType    ; ///< DEVICE Descriptor Type.
-  uint16_t bcdUSB             ; ///< BUSB Specification Release Number in Binary-Coded Decimal (i.e., 2.10 is 210H). This field identifies the release of the USB Specification with which the device and its descriptors are compliant.
+  uint16_t bcdUSB             ; ///< BUSB Specification Release Number in Binary-Coded Decimal (i.e., 2.10 is 210H).
 
-  uint8_t  bDeviceClass       ; ///< Class code (assigned by the USB-IF). \li If this field is reset to zero, each interface within a configuration specifies its own class information and the various interfaces operate independently. \li If this field is set to a value between 1 and FEH, the device supports different class specifications on different interfaces and the interfaces may not operate independently. This value identifies the class definition used for the aggregate interfaces. \li If this field is set to FFH, the device class is vendor-specific.
-  uint8_t  bDeviceSubClass    ; ///< Subclass code (assigned by the USB-IF). These codes are qualified by the value of the bDeviceClass field. \li If the bDeviceClass field is reset to zero, this field must also be reset to zero. \li If the bDeviceClass field is not set to FFH, all values are reserved for assignment by the USB-IF.
-  uint8_t  bDeviceProtocol    ; ///< Protocol code (assigned by the USB-IF). These codes are qualified by the value of the bDeviceClass and the bDeviceSubClass fields. If a device supports class-specific protocols on a device basis as opposed to an interface basis, this code identifies the protocols that the device uses as defined by the specification of the device class. \li If this field is reset to zero, the device does not use class-specific protocols on a device basis. However, it may use classspecific protocols on an interface basis. \li If this field is set to FFH, the device uses a vendor-specific protocol on a device basis.
+  uint8_t  bDeviceClass       ; ///< Class code (assigned by the USB-IF).
+  uint8_t  bDeviceSubClass    ; ///< Subclass code (assigned by the USB-IF).
+  uint8_t  bDeviceProtocol    ; ///< Protocol code (assigned by the USB-IF).
   uint8_t  bMaxPacketSize0    ; ///< Maximum packet size for endpoint zero (only 8, 16, 32, or 64 are valid). For HS devices is fixed to 64.
 
   uint16_t idVendor           ; ///< Vendor ID (assigned by the USB-IF).
@@ -493,15 +489,10 @@ TU_ATTR_ALWAYS_INLINE static inline uint8_t tu_edpt_addr(uint8_t num, uint8_t di
 }
 
 TU_ATTR_ALWAYS_INLINE static inline uint16_t tu_edpt_packet_size(tusb_desc_endpoint_t const* desc_ep) {
-  return tu_le16toh(desc_ep->wMaxPacketSize) & TU_GENMASK(10, 0);
+  return tu_le16toh(desc_ep->wMaxPacketSize) & 0x7FF;
 }
 
 #if CFG_TUSB_DEBUG
-TU_ATTR_ALWAYS_INLINE static inline const char *tu_edpt_dir_str(tusb_dir_t dir) {
-  tu_static const char *str[] = {"out", "in"};
-  return str[dir];
-}
-
 TU_ATTR_ALWAYS_INLINE static inline const char *tu_edpt_type_str(tusb_xfer_type_t t) {
   tu_static const char *str[] = {"control", "isochronous", "bulk", "interrupt"};
   return str[t];
@@ -541,6 +532,4 @@ uint8_t const * tu_desc_find3(uint8_t const* desc, uint8_t const* end, uint8_t b
  }
 #endif
 
-#endif /* _TUSB_TYPES_H_ */
-
-/** @} */
+#endif // TUSB_TYPES_H_

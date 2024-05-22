@@ -184,6 +184,23 @@ typedef enum {
 } usmtmc_request_type_enum;
 
 typedef enum {
+  // The last and first valid bNotify1 for use by the USBTMC class specification.
+  USBTMC_bNOTIFY1_USBTMC_FIRST          = 0x00,
+  USBTMC_bNOTIFY1_USBTMC_LAST           = 0x3F,
+
+  // The last and first valid bNotify1 for use by vendors.
+  USBTMC_bNOTIFY1_VENDOR_SPECIFIC_FIRST = 0x40,
+  USBTMC_bNOTIFY1_VENDOR_SPECIFIC_LAST  = 0x7F,
+
+  // The last and first valid bNotify1 for use by USBTMC subclass specifications.
+  USBTMC_bNOTIFY1_SUBCLASS_FIRST        = 0x80,
+  USBTMC_bNOTIFY1_SUBCLASS_LAST         = 0xFF,
+
+  // From the USB488 Subclass Specification, Section 3.4.
+  USB488_bNOTIFY1_SRQ                   = 0x81,
+} usbtmc_int_in_payload_format;
+
+typedef enum {
   USBTMC_STATUS_SUCCESS = 0x01,
   USBTMC_STATUS_PENDING = 0x02,
   USBTMC_STATUS_FAILED = 0x80,
@@ -302,6 +319,14 @@ typedef struct TU_ATTR_PACKED
 } usbtmc_read_stb_rsp_488_t;
 
 TU_VERIFY_STATIC(sizeof(usbtmc_read_stb_rsp_488_t) == 3u, "struct wrong length");
+
+typedef struct TU_ATTR_PACKED
+{
+  uint8_t bNotify1; // Must be USB488_bNOTIFY1_SRQ
+  uint8_t StatusByte;
+} usbtmc_srq_interrupt_488_t;
+
+TU_VERIFY_STATIC(sizeof(usbtmc_srq_interrupt_488_t) == 2u, "struct wrong length");
 
 typedef struct TU_ATTR_PACKED
 {

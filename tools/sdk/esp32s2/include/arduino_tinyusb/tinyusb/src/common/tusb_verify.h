@@ -76,14 +76,14 @@
 #endif
 
 // Halt CPU (breakpoint) when hitting error, only apply for Cortex M3, M4, M7, M33. M55
-#if defined(__ARM_ARCH_7M__) || defined (__ARM_ARCH_7EM__) || defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8_1M_MAIN__)
-  #define TU_BREAKPOINT() do                                                                                \
-  {                                                                                                         \
+#if defined(__ARM_ARCH_7M__) || defined (__ARM_ARCH_7EM__) || defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8_1M_MAIN__) || \
+    defined(__ARM7M__) || defined (__ARM7EM__) || defined(__ARM8M_MAINLINE__) || defined(__ARM8EM_MAINLINE__)
+  #define TU_BREAKPOINT() do {                                                                              \
     volatile uint32_t* ARM_CM_DHCSR =  ((volatile uint32_t*) 0xE000EDF0UL); /* Cortex M CoreDebug->DHCSR */ \
     if ( (*ARM_CM_DHCSR) & 1UL ) __asm("BKPT #0\n"); /* Only halt mcu if debugger is attached */            \
   } while(0)
 
-#elif defined(__riscv)
+#elif defined(__riscv) && !TUP_MCU_ESPRESSIF
   #define TU_BREAKPOINT() do { __asm("ebreak\n"); } while(0)
 
 #elif defined(_mips)

@@ -10,7 +10,7 @@
 
 #if CONFIG_IDF_TARGET_ESP32S3
 #define dspi_dotprod_aes3_enabled 1
-#endif 
+#endif
 #endif // __XTENSA__
 
 #endif // _dspi_dotprod_platform_H_

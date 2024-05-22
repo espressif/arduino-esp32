@@ -73,6 +73,10 @@ bool tud_usbtmc_check_abort_bulk_in_cb(usbtmc_check_abort_bulk_rsp_t *rsp);
 bool tud_usbtmc_check_abort_bulk_out_cb(usbtmc_check_abort_bulk_rsp_t *rsp);
 bool tud_usbtmc_check_clear_cb(usbtmc_get_clear_status_rsp_t *rsp);
 
+// The interrupt-IN endpoint buffer was transmitted to the host. Use
+// tud_usbtmc_transmit_notification_data to send another notification.
+TU_ATTR_WEAK bool tud_usbtmc_notification_complete_cb(void);
+
 // Indicator pulse should be 0.5 to 1.0 seconds long
 TU_ATTR_WEAK bool tud_usbtmc_indicator_pulse_cb(tusb_control_request_t const * msg, uint8_t *tmcResult);
 
@@ -82,31 +86,33 @@ TU_ATTR_WEAK bool tud_usbtmc_msg_trigger_cb(usbtmc_msg_generic_t* msg);
 //TU_ATTR_WEAK bool tud_usbtmc_app_go_to_local_cb();
 #endif
 
-/*******************************************
- * Called from app
- *
- * We keep a reference to the buffer, so it MUST not change until the app is
- * notified that the transfer is complete.
- ******************************************/
-
+// Called from app
+//
+// We keep a reference to the buffer, so it MUST not change until the app is
+// notified that the transfer is complete.
 bool tud_usbtmc_transmit_dev_msg_data(
     const void * data, size_t len,
     bool endOfMessage, bool usingTermChar);
+
+// Buffers a notification to be sent to the host. The data starts
+// with the bNotify1 field, see the USBTMC Specification, Table 13.
+//
+// If the previous notification data has not yet been sent, this
+// returns false.
+//
+// Requires an interrupt endpoint in the interface.
+bool tud_usbtmc_transmit_notification_data(const void * data, size_t len);
 
 bool tud_usbtmc_start_bus_read(void);
 
 
 /* "callbacks" from USB device core */
 
+void     usbtmcd_init_cb(void);
+bool     usbtmcd_deinit(void);
 uint16_t usbtmcd_open_cb(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
 void     usbtmcd_reset_cb(uint8_t rhport);
 bool     usbtmcd_xfer_cb(uint8_t rhport, uint8_t ep_addr, xfer_result_t result, uint32_t xferred_bytes);
 bool     usbtmcd_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);
-void     usbtmcd_init_cb(void);
-
-/************************************************************
- * USBTMC Descriptor Templates
- *************************************************************/
-
 
 #endif /* CLASS_USBTMC_USBTMC_DEVICE_H_ */

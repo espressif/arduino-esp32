@@ -131,6 +131,9 @@ TU_ATTR_WEAK uint8_t tud_msc_get_maxlun_cb(void);
 // - Start = 1 : active mode, if load_eject = 1 : load disk storage
 TU_ATTR_WEAK bool tud_msc_start_stop_cb(uint8_t lun, uint8_t power_condition, bool start, bool load_eject);
 
+//Invoked when we receive the Prevent / Allow Medium Removal command
+TU_ATTR_WEAK bool tud_msc_prevent_allow_medium_removal_cb(uint8_t lun, uint8_t prohibit_removal, uint8_t control);
+
 // Invoked when received REQUEST_SENSE
 TU_ATTR_WEAK int32_t tud_msc_request_sense_cb(uint8_t lun, void* buffer, uint16_t bufsize);
 
@@ -150,6 +153,7 @@ TU_ATTR_WEAK bool tud_msc_is_writable_cb(uint8_t lun);
 // Internal Class Driver API
 //--------------------------------------------------------------------+
 void     mscd_init            (void);
+bool     mscd_deinit          (void);
 void     mscd_reset           (uint8_t rhport);
 uint16_t mscd_open            (uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
 bool     mscd_control_xfer_cb (uint8_t rhport, uint8_t stage, tusb_control_request_t const * p_request);

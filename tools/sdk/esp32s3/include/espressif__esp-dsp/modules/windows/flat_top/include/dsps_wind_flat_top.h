@@ -23,7 +23,7 @@ extern "C"
 
 /**
  * @brief   Flat-Top window
- * 
+ *
  * The function generates Flat-Top window.
  *
  * @param window: buffer to store window array.

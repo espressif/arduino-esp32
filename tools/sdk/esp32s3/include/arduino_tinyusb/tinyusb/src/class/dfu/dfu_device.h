@@ -86,6 +86,7 @@ TU_ATTR_WEAK void tud_dfu_abort_cb(uint8_t alt);
 // Internal Class Driver API
 //--------------------------------------------------------------------+
 void     dfu_moded_init(void);
+bool     dfu_moded_deinit(void);
 void     dfu_moded_reset(uint8_t rhport);
 uint16_t dfu_moded_open(uint8_t rhport, tusb_desc_interface_t const * itf_desc, uint16_t max_len);
 bool     dfu_moded_control_xfer_cb(uint8_t rhport, uint8_t stage, tusb_control_request_t const * request);

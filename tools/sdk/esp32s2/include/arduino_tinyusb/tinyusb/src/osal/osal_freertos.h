@@ -24,8 +24,8 @@
  * This file is part of the TinyUSB stack.
  */
 
-#ifndef _TUSB_OSAL_FREERTOS_H_
-#define _TUSB_OSAL_FREERTOS_H_
+#ifndef TUSB_OSAL_FREERTOS_H_
+#define TUSB_OSAL_FREERTOS_H_
 
 // FreeRTOS Headers
 #include TU_INCLUDE_PATH(CFG_TUSB_OS_INC_PATH,FreeRTOS.h)
@@ -114,6 +114,11 @@ TU_ATTR_ALWAYS_INLINE static inline osal_semaphore_t osal_semaphore_create(osal_
 #endif
 }
 
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_delete(osal_semaphore_t semd_hdl) {
+  vSemaphoreDelete(semd_hdl);
+  return true;
+}
+
 TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr) {
   if ( !in_isr ) {
     return xSemaphoreGive(sem_hdl) != 0;
@@ -153,6 +158,11 @@ TU_ATTR_ALWAYS_INLINE static inline osal_mutex_t osal_mutex_create(osal_mutex_de
 #endif
 }
 
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_delete(osal_mutex_t mutex_hdl) {
+  vSemaphoreDelete(mutex_hdl);
+  return true;
+}
+
 TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_lock(osal_mutex_t mutex_hdl, uint32_t msec) {
   return osal_semaphore_wait(mutex_hdl, msec);
 }
@@ -179,6 +189,11 @@ TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_de
 #endif
 
   return q;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_delete(osal_queue_t qhdl) {
+  vQueueDelete(qhdl);
+  return true;
 }
 
 TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_receive(osal_queue_t qhdl, void* data, uint32_t msec) {
