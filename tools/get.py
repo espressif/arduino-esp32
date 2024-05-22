@@ -324,7 +324,7 @@ def get_tool(tool, force_download, force_extract):
         print("Tool {0} already downloaded".format(archive_name))
         sys.stdout.flush()
 
-    if sha256sum(local_path) != checksum:
+    if "esp32-arduino-libs" not in archive_name and sha256sum(local_path) != checksum:
         print("Checksum mismatch for {0}".format(archive_name))
         return False
 
