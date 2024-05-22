@@ -35606,7 +35606,6 @@ nano_nora.debug.additional_config=debug_config.nano_nora
 nano_nora.tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0xf70000 "{build.variant.path}/extra/nora_recovery/nora_recovery.ino.bin" 0x10000 "{build.path}/{build.project_name}.bin"
 nano_nora.tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset erase_flash
 
-nano_nora.programmer.default=esptool
 nano_nora.debug.executable=
 
 nano_nora.menu.PartitionScheme.default=With FAT partition (default)
