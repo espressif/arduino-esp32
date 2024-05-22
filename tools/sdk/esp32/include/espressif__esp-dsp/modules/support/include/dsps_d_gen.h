@@ -23,8 +23,8 @@ extern "C"
 #endif
 
 /**
- * @brief   delta function 
- * 
+ * @brief   delta function
+ *
  * The function generate delta function.
  * output[i]=0, if i=[0..N)
  * output[i]=1, if i=pos, pos: [0..N-1)

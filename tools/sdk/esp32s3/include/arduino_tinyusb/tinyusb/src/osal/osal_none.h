@@ -54,6 +54,12 @@ TU_ATTR_ALWAYS_INLINE static inline osal_semaphore_t osal_semaphore_create(osal_
   return semdef;
 }
 
+TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_delete(osal_semaphore_t semd_hdl) {
+  (void) semd_hdl;
+  return true; // nothing to do
+}
+
+
 TU_ATTR_ALWAYS_INLINE static inline bool osal_semaphore_post(osal_semaphore_t sem_hdl, bool in_isr) {
   (void) in_isr;
   sem_hdl->count++;
@@ -88,6 +94,11 @@ typedef osal_semaphore_t osal_mutex_t;
 TU_ATTR_ALWAYS_INLINE static inline osal_mutex_t osal_mutex_create(osal_mutex_def_t* mdef) {
   mdef->count = 1;
   return mdef;
+}
+
+TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_delete(osal_mutex_t mutex_hdl) {
+  (void) mutex_hdl;
+  return true; // nothing to do
 }
 
 TU_ATTR_ALWAYS_INLINE static inline bool osal_mutex_lock (osal_mutex_t mutex_hdl, uint32_t msec) {
@@ -143,6 +154,11 @@ TU_ATTR_ALWAYS_INLINE static inline osal_queue_t osal_queue_create(osal_queue_de
   return (osal_queue_t) qdef;
 }
 
+TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_delete(osal_queue_t qhdl) {
+  (void) qhdl;
+  return true; // nothing to do
+}
+
 TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_receive(osal_queue_t qhdl, void* data, uint32_t msec) {
   (void) msec; // not used, always behave as msec = 0
 
@@ -164,7 +180,6 @@ TU_ATTR_ALWAYS_INLINE static inline bool osal_queue_send(osal_queue_t qhdl, void
     _osal_q_unlock(qhdl);
   }
 
-  TU_ASSERT(success);
   return success;
 }
 
