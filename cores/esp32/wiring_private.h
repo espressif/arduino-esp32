@@ -39,7 +39,7 @@ typedef void (*voidFuncPtr)(void);
 void initPins();
 
 #ifdef __cplusplus
-} // extern "C"
+}  // extern "C"
 #endif
 
 #endif

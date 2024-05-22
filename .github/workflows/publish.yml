@@ -2,7 +2,7 @@ name: Unit Test Results
 
 on:
   workflow_run:
-    workflows: [Run tests in hardware]
+    workflows: [Run tests]
     branches-ignore: [master]
 
     types:
@@ -33,6 +33,6 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v1
         with:
           commit: ${{ github.event.workflow_run.head_sha }}
-          event_file: artifacts/Event File/event.json
+          event_file: artifacts/event_file/event.json
           event_name: ${{ github.event.workflow_run.event }}
           files: "artifacts/**/*.xml"

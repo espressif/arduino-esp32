@@ -1,91 +1,73 @@
-//This example code is in the Public Domain (or CC0 licensed, at your option.)
-//By Victor Tchistiak - 2019
+// This example code is in the Public Domain (or CC0 licensed, at your option.)
+// Originally by Victor Tchistiak - 2019
+// Rewritten with new API by Tomas Pilny - 2023
 //
-//This example demonstrates reading and removing paired devices stored on the ESP32 flash memory
-//Sometimes you may find your ESP32 device could not connect to the remote device despite
-//many successful connections earlier. This is most likely a result of client replacing your paired
-//device info with new one from other device. The BT clients store connection info for paired devices,
-//but it is limited to a few devices only. When new device pairs and number of stored devices is exceeded,
-//one of the previously paired devices would be replaced with new one.
-//The only remedy is to delete this saved bound device from your device flash memory
-//and pair with the other device again.
-//
-#include "esp_bt_main.h"
-#include "esp_bt_device.h"
-#include"esp_gap_bt_api.h"
-#include "esp_err.h"
+// This example demonstrates reading and removing paired devices stored on the ESP32 flash memory
+// Sometimes you may find your ESP32 device could not connect to the remote device despite
+// many successful connections earlier. This is most likely a result of client replacing your paired
+// device info with new one from other device. The BT clients store connection info for paired devices,
+// but it is limited to a few devices only. When new device pairs and number of stored devices is exceeded,
+// one of the previously paired devices would be replaced with new one.
+// The only remedy is to delete this saved bound device from your device flash memory
+// and pair with the other device again.
+
+#include "BluetoothSerial.h"
+//#include "esp_bt_device.h"
 
 #if !defined(CONFIG_BT_SPP_ENABLED)
 #error Serial Bluetooth not available or not enabled. It is only available for the ESP32 chip.
 #endif
 
-#define REMOVE_BONDED_DEVICES 0   // <- Set to 0 to view all bonded devices addresses, set to 1 to remove
+#define REMOVE_BONDED_DEVICES true  // <- Set to `false` to view all bonded devices addresses, set to `true` to remove
+#define PAIR_MAX_DEVICES      20
+BluetoothSerial SerialBT;
 
-#define PAIR_MAX_DEVICES 20
-uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
-char bda_str[18];
-
-bool initBluetooth()
-{
-  if(!btStart()) {
-    Serial.println("Failed to initialize controller");
-    return false;
-  }
- 
-  if(esp_bluedroid_init() != ESP_OK) {
-    Serial.println("Failed to initialize bluedroid");
-    return false;
-  }
- 
-  if(esp_bluedroid_enable() != ESP_OK) {
-    Serial.println("Failed to enable bluedroid");
-    return false;
-  }
-  return true;
-}
-
-char *bda2str(const uint8_t* bda, char *str, size_t size)
-{
+char *bda2str(const uint8_t *bda, char *str, size_t size) {
   if (bda == NULL || str == NULL || size < 18) {
     return NULL;
   }
-  sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
-          bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
+  sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x", bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
   return str;
 }
- 
+
 void setup() {
+  char bda_str[18];
+  uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
   Serial.begin(115200);
- 
-  initBluetooth();
-  Serial.print("ESP32 bluetooth address: "); Serial.println(bda2str(esp_bt_dev_get_address(), bda_str, 18));
+
+  SerialBT.begin();
+  Serial.printf("ESP32 bluetooth address: %s\n", SerialBT.getBtAddressString().c_str());
+  // SerialBT.deleteAllBondedDevices(); // If you want just delete all, this is the way
   // Get the numbers of bonded/paired devices in the BT module
-  int count = esp_bt_gap_get_bond_device_num();
-  if(!count) {
-    Serial.println("No bonded device found.");
+  int count = SerialBT.getNumberOfBondedDevices();
+  if (!count) {
+    Serial.println("No bonded devices found.");
   } else {
-    Serial.print("Bonded device count: "); Serial.println(count);
-    if(PAIR_MAX_DEVICES < count) {
-      count = PAIR_MAX_DEVICES; 
-      Serial.print("Reset bonded device count: "); Serial.println(count);
+    Serial.printf("Bonded device count: %d\n", count);
+    if (PAIR_MAX_DEVICES < count) {
+      count = PAIR_MAX_DEVICES;
+      Serial.printf("Reset %d bonded devices\n", count);
     }
-    esp_err_t tError =  esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
-    if(ESP_OK == tError) {
-      for(int i = 0; i < count; i++) {
-        Serial.print("Found bonded device # "); Serial.print(i); Serial.print(" -> ");
-        Serial.println(bda2str(pairedDeviceBtAddr[i], bda_str, 18));     
-        if(REMOVE_BONDED_DEVICES) {
-          esp_err_t tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);
-          if(ESP_OK == tError) {
-            Serial.print("Removed bonded device # "); 
-          } else {
-            Serial.print("Failed to remove bonded device # ");
-          }
-          Serial.println(i);
+    count = SerialBT.getBondedDevices(count, pairedDeviceBtAddr);
+    char rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
+    if (count > 0) {
+      for (int i = 0; i < count; i++) {
+        SerialBT.requestRemoteName(pairedDeviceBtAddr[i]);
+        while (!SerialBT.readRemoteName(rmt_name)) {
+          delay(1);  // Wait for response with the device name
         }
-      }        
-    }
-  }
+        Serial.printf("Found bonded device #%d BDA:%s; Name:\"%s\"\n", i, bda2str(pairedDeviceBtAddr[i], bda_str, 18), rmt_name);
+        SerialBT.invalidateRemoteName();  // Allows waiting for next reading
+        if (REMOVE_BONDED_DEVICES) {
+          if (SerialBT.deleteBondedDevice(pairedDeviceBtAddr[i])) {
+            Serial.printf("Removed bonded device # %d\n", i);
+          } else {
+            Serial.printf("Failed to remove bonded device # %d", i);
+          }  // if(ESP_OK == tError)
+        }  // if(REMOVE_BONDED_DEVICES)
+      }  // for(int i = 0; i < count; i++)
+    }  // if(ESP_OK == tError)
+  }  // if(!count)
 }
- 
+
 void loop() {}

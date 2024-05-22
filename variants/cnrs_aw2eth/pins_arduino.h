@@ -3,24 +3,16 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
-#define NUM_ANALOG_INPUTS       16
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
 static const uint8_t SDA = 9;
 static const uint8_t SCL = 10;
 
-static const uint8_t SS    = 5;
-static const uint8_t MOSI  = 14;
-static const uint8_t MISO  = 13;
-static const uint8_t SCK   = 4;
+static const uint8_t SS = 5;
+static const uint8_t MOSI = 14;
+static const uint8_t MISO = 13;
+static const uint8_t SCK = 4;
 
 static const uint8_t A0 = 36;
 static const uint8_t A3 = 39;

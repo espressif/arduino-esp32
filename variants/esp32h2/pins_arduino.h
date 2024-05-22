@@ -4,19 +4,14 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define EXTERNAL_NUM_INTERRUPTS 28
-#define NUM_DIGITAL_PINS        28
-#define NUM_ANALOG_INPUTS       5
-
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+8;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
+#define PIN_NEOPIXEL 8
+// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_NEOPIXEL;
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
+#define RGB_BUILTIN    LED_BUILTIN
 #define RGB_BRIGHTNESS 64
-
-#define analogInputToDigitalPin(p)  (((p)<NUM_ANALOG_INPUTS)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<NUM_DIGITAL_PINS)?(p):-1)
-#define digitalPinHasPWM(p)         (p < EXTERNAL_NUM_INTERRUPTS)
 
 static const uint8_t TX = 24;
 static const uint8_t RX = 23;
@@ -24,10 +19,10 @@ static const uint8_t RX = 23;
 static const uint8_t SDA = 12;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 0;
-static const uint8_t MOSI  = 25;
-static const uint8_t MISO  = 11;
-static const uint8_t SCK   = 10;
+static const uint8_t SS = 0;
+static const uint8_t MOSI = 25;
+static const uint8_t MISO = 11;
+static const uint8_t SCK = 10;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;

@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2022 Wai Weng for Cytron Technologies
@@ -22,15 +22,13 @@
  * THE SOFTWARE.
  */
 
-
 #include "esp32-hal-gpio.h"
 #include "pins_arduino.h"
 
 extern "C" {
 
 // Initialize variant/board, called before setup()
-void initVariant(void)
-{
+void initVariant(void) {
   // Turn on VPeripheral by default.
   pinMode(VP_EN, OUTPUT);
   digitalWrite(VP_EN, HIGH);

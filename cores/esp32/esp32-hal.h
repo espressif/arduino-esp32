@@ -67,7 +67,7 @@ void yield(void);
 #define optimistic_yield(u)
 
 #define ESP_REG(addr) *((volatile uint32_t *)(addr))
-#define NOP() asm volatile ("nop")
+#define NOP()         asm volatile("nop")
 
 #include "esp32-hal-log.h"
 #include "esp32-hal-matrix.h"
@@ -116,13 +116,10 @@ void disableCore1WDT();
 
 //if xCoreID < 0 or CPU is unicore, it will use xTaskCreate, else xTaskCreatePinnedToCore
 //allows to easily handle all possible situations without repetitive code
-BaseType_t xTaskCreateUniversal( TaskFunction_t pxTaskCode,
-                        const char * const pcName,
-                        const uint32_t usStackDepth,
-                        void * const pvParameters,
-                        UBaseType_t uxPriority,
-                        TaskHandle_t * const pxCreatedTask,
-                        const BaseType_t xCoreID );
+BaseType_t xTaskCreateUniversal(
+  TaskFunction_t pxTaskCode, const char *const pcName, const uint32_t usStackDepth, void *const pvParameters, UBaseType_t uxPriority,
+  TaskHandle_t *const pxCreatedTask, const BaseType_t xCoreID
+);
 
 unsigned long micros();
 unsigned long millis();
@@ -136,6 +133,22 @@ void arduino_phy_init();
 #if !CONFIG_AUTOSTART_ARDUINO
 void initArduino();
 #endif
+
+typedef struct {
+  int core;                    // core which triggered panic
+  const char *reason;          // exception string
+  const void *pc;              // instruction address that triggered the exception
+  bool backtrace_corrupt;      // if backtrace is corrupt
+  bool backtrace_continues;    // if backtrace continues, but did not fit
+  unsigned int backtrace_len;  // number of backtrace addresses
+  unsigned int backtrace[60];  // backtrace addresses array
+} arduino_panic_info_t;
+
+typedef void (*arduino_panic_handler_t)(arduino_panic_info_t *info, void *arg);
+
+void set_arduino_panic_handler(arduino_panic_handler_t handler, void *arg);
+arduino_panic_handler_t get_arduino_panic_handler(void);
+void *get_arduino_panic_handler_arg(void);
 
 #ifdef __cplusplus
 }

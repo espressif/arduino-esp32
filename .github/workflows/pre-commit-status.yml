@@ -1,0 +1,64 @@
+# This needs to be in a separate workflow because it requires higher permissions than the calling workflow
+name: Report Pre-commit Check Status
+
+on:
+  workflow_run:
+    workflows: [Pre-commit hooks]
+    types:
+      - completed
+
+permissions:
+  statuses: write
+
+jobs:
+  report-success:
+    name: Report pre-commit success
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report success
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Pre-commit checks',
+              description: 'Pre-commit checks successful',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: 'success',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+
+  report-pending:
+    name: Report pre-commit pending
+    if: github.event.workflow_run.conclusion != 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report pending
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Pre-commit checks',
+              description: 'The pre-commit checks need to be successful before merging',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: 'pending',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}'
+            })).data;
+            core.info(`${name} is ${state}`);

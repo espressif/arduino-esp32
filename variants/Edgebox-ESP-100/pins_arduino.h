@@ -3,20 +3,12 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 34
-#define NUM_DIGITAL_PINS        34
-#define NUM_ANALOG_INPUTS       2
-
-#define analogInputToDigitalPin(p)  (((p)<2)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<34)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
 //Programming and Debugging Port
 static const uint8_t TXD = 43;
 static const uint8_t RXD = 44;
 static const uint8_t RST = 0;
 
-//I2C 
+//I2C
 static const uint8_t SDA = 20;
 static const uint8_t SCL = 19;
 

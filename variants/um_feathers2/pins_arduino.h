@@ -3,19 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x239A
-#define USB_PID 0x80AB
+#define USB_VID          0x239A
+#define USB_PID          0x80AB
 #define USB_MANUFACTURER "Unexpected Maker"
-#define USB_PRODUCT "FeatherS2"
-#define USB_SERIAL ""
-
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define USB_PRODUCT      "FeatherS2"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -23,12 +15,12 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
-static const uint8_t SS    = 34;
-static const uint8_t MOSI  = 35;
-static const uint8_t MISO  = 37;
-static const uint8_t SDO  = 35;
-static const uint8_t SDI  = 37;
-static const uint8_t SCK   = 36;
+static const uint8_t SS = 34;
+static const uint8_t MOSI = 35;
+static const uint8_t MISO = 37;
+static const uint8_t SDO = 35;
+static const uint8_t SDI = 37;
+static const uint8_t SCK = 36;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;

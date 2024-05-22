@@ -1,8 +1,8 @@
 #include <WiFi.h>
 #include <NetBIOS.h>
 
-const char* ssid = "............";
-const char* password = "..............";
+const char *ssid = "............";
+const char *password = "..............";
 
 void setup() {
   Serial.begin(115200);
@@ -26,6 +26,4 @@ void setup() {
   NBNS.begin("ESP");
 }
 
-void loop() {
-  
-}
+void loop() {}

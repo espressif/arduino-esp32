@@ -1,0 +1,9 @@
+html, body {
+  color: #111111; font-family: Arial, ui-sans-serif, sans-serif; font-size: 1em; background-color: #f0f0f0;
+}
+
+#list > div {
+  margin: 0 0 0.5rem 0;
+}
+
+a { color: inherit; cursor: pointer; }

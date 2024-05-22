@@ -3,19 +3,11 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
-#define NUM_ANALOG_INPUTS       16
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
-#define ALKSESP32 // tell library to not map pins again
+#define ALKSESP32  // tell library to not map pins again
 
 static const uint8_t LED_BUILTIN = 23;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
@@ -75,10 +67,10 @@ static const uint8_t S5 = 21;
 static const uint8_t SDA = 27;
 static const uint8_t SCL = 14;
 
-static const uint8_t SS    = 19;
-static const uint8_t MOSI  = 21;
-static const uint8_t MISO  = 22;
-static const uint8_t SCK   = 23;
+static const uint8_t SS = 19;
+static const uint8_t MOSI = 21;
+static const uint8_t MISO = 22;
+static const uint8_t SCK = 23;
 
 static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;

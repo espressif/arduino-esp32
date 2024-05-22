@@ -3,10 +3,10 @@
 This example tests support for multi-homed servers, i.e. a distinct web servers on distinct IP interface.
 
 It only tests the case n=2 because on a basic ESP32 device, we only have two IP interfaces, namely the WiFi station interfaces and the WiFi soft AP interface.
-For this to work, the WebServer and the WiFiServer classes must correctly handle the case where an IP address is passed to their relevant constructor.
+For this to work, the WebServer and the NetworkServer classes must correctly handle the case where an IP address is passed to their relevant constructor.
 It also requires WebServer to work with multiple, simultaneous instances.
 
-Testing the WebServer and the WiFiServer constructors was the primary purpose of this script.
+Testing the WebServer and the NetworkServer constructors was the primary purpose of this script.
 The part of WebServer used by this sketch does seem to work with multiple, simultaneous instances.
 However there is much functionality in WebServer that is not tested here. It may all be well, but that is not proven here.
 

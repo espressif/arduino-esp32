@@ -27,6 +27,14 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             shift
             sketchdir=$1
             ;;
+        -i )
+            shift
+            chunk_index=$1
+            ;;
+        -l )
+            shift
+            log_compilation=$1
+            ;;
         * )
             break
             ;;
@@ -70,10 +78,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             # Default FQBN options if none were passed in the command line.
 
-            esp32_opts="PSRAM=enabled,PartitionScheme=huge_app"
+            esp32_opts="FlashMode=dio,PSRAM=enabled,PartitionScheme=huge_app"
             esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app"
             esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
-            esp32c3_opts="PartitionScheme=huge_app"
+            esp32c3_opts="FlashMode=dio,PartitionScheme=huge_app"
             esp32c6_opts="PartitionScheme=huge_app"
             esp32h2_opts="PartitionScheme=huge_app"
 
@@ -113,7 +121,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     fi
 
     if [ -z "$fqbn" ]; then
-        echo "No FQBN passed or unvalid chip: $target"
+        echo "No FQBN passed or invalid chip: $target"
         exit 1
     fi
 
@@ -126,7 +134,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     #     of configuration built in case of a multiconfiguration test.
 
     sketchname=$(basename $sketchdir)
-    
+
+    if [[ -n $target ]] && [[ -f "$sketchdir/.skip.$target" ]]; then
+        echo "Skipping $sketchname for target $target"
+        exit 0
+    fi
+
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
@@ -134,6 +147,9 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         # build_dir="$sketchdir/build"
         build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
     fi
+
+    output_file="$HOME/.arduino/cli_compile_output.txt"
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
 
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in `seq 0 $(($len - 1))`
@@ -156,9 +172,42 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 --fqbn "$currfqbn" \
                 --board-options "$curroptions" \
                 --warnings "all" \
+                --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
                 --build-cache-path "$ARDUINO_CACHE_DIR" \
                 --build-path "$build_dir" \
-                $xtra_opts "${sketchdir}"
+                $xtra_opts "${sketchdir}" \
+                > $output_file
+
+            exit_status=$?
+            if [ $exit_status -ne 0 ]; then
+                echo ""ERROR: Compilation failed with error code $exit_status""
+                exit $exit_status
+            fi
+
+            if [ $log_compilation ]; then
+                #Extract the program storage space and dynamic memory usage in bytes and percentage in separate variables from the output, just the value without the string
+                flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' $output_file | awk '{print $3}')
+                flash_percentage=$(grep -oE 'Sketch uses ([0-9]+) bytes \(([0-9]+)%\)' $output_file | awk '{print $5}' | tr -d '(%)')
+                ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' $output_file | awk '{print $4}')
+                ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' $output_file | awk '{print $6}' | tr -d '(%)')
+
+                # Extract the directory path excluding the filename
+                directory_path=$(dirname "$sketch")
+                # Define the constant part
+                constant_part="/home/runner/Arduino/hardware/espressif/esp32/libraries/"
+                # Extract the desired substring using sed
+                lib_sketch_name=$(echo "$directory_path" | sed "s|$constant_part||")
+                #append json file where key is fqbn, sketch name, sizes -> extracted values
+                echo "{\"name\": \"$lib_sketch_name\",
+                    \"sizes\": [{
+                            \"flash_bytes\": $flash_bytes,
+                            \"flash_percentage\": $flash_percentage,
+                            \"ram_bytes\": $ram_bytes,
+                            \"ram_percentage\": $ram_percentage
+                            }]
+                    }," >> "$sizes_file"
+            fi
+
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
             echo "Build path = $build_dir"
@@ -173,6 +222,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 -build-path "$build_dir" \
                 $xtra_opts "${sketchdir}/${sketchname}.ino"
 
+            exit_status=$?
+            if [ $exit_status -ne 0 ]; then
+                echo ""ERROR: Compilation failed with error code $exit_status""
+                exit $exit_status
+            fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
             #     -warnings="all" \
@@ -187,6 +241,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             #     $xtra_opts "${sketchdir}/${sketchname}.ino"
         fi
     done
+
     unset fqbn
     unset xtra_opts
     unset options
@@ -260,6 +315,10 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
             shift
             chunk_max=$1
             ;;
+        -l )
+            shift
+            log_compilation=$1
+            ;;
         * )
             break
             ;;
@@ -306,6 +365,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         start_index=$(( $chunk_index * $chunk_size ))
         if [ "$sketchcount" -le "$start_index" ]; then
             echo "Skipping job"
+            touch ~/.build_skipped
             return 0
         fi
 
@@ -323,8 +383,19 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     echo "Start Sketch: $start_num"
     echo "End Sketch  : $end_index"
 
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
+    if [ $log_compilation ]; then
+        #echo board,target and start of sketches to sizes_file json
+        echo "{ \"board\": \"$fqbn\",
+                \"target\": \"$target\",
+                \"sketches\": [" >> "$sizes_file"
+    fi
+
     local sketchnum=0
-    args+=" -ai $ide_path -au $user_path"
+    args+=" -ai $ide_path -au $user_path -i $chunk_index"
+    if [ $log_compilation ]; then
+        args+=" -l $log_compilation"
+    fi
     for sketch in $sketches; do
         local sketchdir=$(dirname $sketch)
         local sketchdirname=$(basename $sketchdir)
@@ -341,6 +412,18 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
             return $result
         fi
     done
+
+    if [ $log_compilation ]; then
+        #remove last comma from json
+        if [ $i -eq $(($len - 1)) ]; then
+            sed -i '$ s/.$//' "$sizes_file"
+        fi
+        #echo end of sketches sizes_file json
+        echo "]" >> "$sizes_file"
+        #echo end of board sizes_file json
+        echo "}," >> "$sizes_file"
+    fi
+
     return 0
 }
 
@@ -372,4 +455,3 @@ case "$cmd" in
         echo "$USAGE"
         exit 2
 esac
-

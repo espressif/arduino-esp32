@@ -15,24 +15,27 @@ extern "C" {
 #endif
 
 typedef enum {
-    step_a, step_b, step_c, step_d
+  step_a,
+  step_b,
+  step_c,
+  step_d
 } base64_decodestep;
 
 typedef struct {
-    base64_decodestep step;
-    char plainchar;
+  base64_decodestep step;
+  char plainchar;
 } base64_decodestate;
 
-void base64_init_decodestate(base64_decodestate* state_in);
+void base64_init_decodestate(base64_decodestate *state_in);
 
 int base64_decode_value(char value_in);
 
-int base64_decode_block(const char* code_in, const int length_in, char* plaintext_out, base64_decodestate* state_in);
+int base64_decode_block(const char *code_in, const int length_in, char *plaintext_out, base64_decodestate *state_in);
 
-int base64_decode_chars(const char* code_in, const int length_in, char* plaintext_out);
+int base64_decode_chars(const char *code_in, const int length_in, char *plaintext_out);
 
 #ifdef __cplusplus
-} // extern "C"
+}  // extern "C"
 #endif
 
 #endif /* BASE64_CDECODE_H */

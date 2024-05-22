@@ -15,7 +15,6 @@
 #ifndef _ESP32_HAL_MATRIX_H_
 #define _ESP32_HAL_MATRIX_H_
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -41,7 +41,7 @@ scan done
 1: IoTNetwork (-62)*
 2: WiFiSSID (-62)*
 3: B3A7992 (-63)*
-4: WiFi (-63) 
+4: WiFi (-63)
 5: IoTNetwork2 (-64)*
 ...
 ```

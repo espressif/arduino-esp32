@@ -10,7 +10,8 @@ This example allows Arduino users to choose either BLE or SOFTAP as the mode of 
 
 ### WiFi.onEvent()
 
-Using this API, users can register to receive WiFi Events and Provisioning Events.
+This API can be used to register a function to be called from another
+thread for WiFi Events and Provisioning Events.
 
 ### WiFi.beginProvision()
 

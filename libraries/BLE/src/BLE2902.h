@@ -23,15 +23,15 @@
  * See also:
  * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
  */
-class BLE2902: public BLEDescriptor {
+class BLE2902 : public BLEDescriptor {
 public:
-	BLE2902();
-	bool getNotifications();
-	bool getIndications();
-	void setNotifications(bool flag);
-	void setIndications(bool flag);
+  BLE2902();
+  bool getNotifications();
+  bool getIndications();
+  void setNotifications(bool flag);
+  void setIndications(bool flag);
 
-}; // BLE2902
+};  // BLE2902
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

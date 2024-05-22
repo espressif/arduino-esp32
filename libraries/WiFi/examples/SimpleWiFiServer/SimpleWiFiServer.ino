@@ -20,59 +20,57 @@
  created for arduino 25 Nov 2012
  by Tom Igoe
 
-ported for sparkfun esp32 
+ported for sparkfun esp32
 31.01.2017 by Jan Hendrik Berlin
- 
+
  */
 
 #include <WiFi.h>
 
-const char* ssid     = "yourssid";
-const char* password = "yourpasswd";
+const char *ssid = "yourssid";
+const char *password = "yourpasswd";
 
-WiFiServer server(80);
+NetworkServer server(80);
 
-void setup()
-{
-    Serial.begin(115200);
-    pinMode(5, OUTPUT);      // set the LED pin mode
+void setup() {
+  Serial.begin(115200);
+  pinMode(5, OUTPUT);  // set the LED pin mode
 
-    delay(10);
+  delay(10);
 
-    // We start by connecting to a WiFi network
+  // We start by connecting to a WiFi network
 
-    Serial.println();
-    Serial.println();
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
+  Serial.println();
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
 
-    WiFi.begin(ssid, password);
+  WiFi.begin(ssid, password);
 
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
 
-    Serial.println("");
-    Serial.println("WiFi connected.");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
-    
-    server.begin();
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
 
+  server.begin();
 }
 
-void loop(){
- WiFiClient client = server.available();   // listen for incoming clients
+void loop() {
+  NetworkClient client = server.accept();  // listen for incoming clients
 
-  if (client) {                             // if you get a client,
-    Serial.println("New Client.");           // print a message out the serial port
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.connected()) {            // loop while the client's connected
-      if (client.available()) {             // if there's bytes to read from the client,
-        char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
-        if (c == '\n') {                    // if the byte is a newline character
+  if (client) {                     // if you get a client,
+    Serial.println("New Client.");  // print a message out the serial port
+    String currentLine = "";        // make a String to hold incoming data from the client
+    while (client.connected()) {    // loop while the client's connected
+      if (client.available()) {     // if there's bytes to read from the client,
+        char c = client.read();     // read a byte, then
+        Serial.write(c);            // print it out the serial monitor
+        if (c == '\n') {            // if the byte is a newline character
 
           // if the current line is blank, you got two newline characters in a row.
           // that's the end of the client HTTP request, so send a response:
@@ -91,7 +89,7 @@ void loop(){
             client.println();
             // break out of the while loop:
             break;
-          } else {    // if you got a newline, then clear currentLine:
+          } else {  // if you got a newline, then clear currentLine:
             currentLine = "";
           }
         } else if (c != '\r') {  // if you got anything else but a carriage return character,
@@ -100,10 +98,10 @@ void loop(){
 
         // Check to see if the client request was "GET /H" or "GET /L":
         if (currentLine.endsWith("GET /H")) {
-          digitalWrite(5, HIGH);               // GET /H turns the LED on
+          digitalWrite(5, HIGH);  // GET /H turns the LED on
         }
         if (currentLine.endsWith("GET /L")) {
-          digitalWrite(5, LOW);                // GET /L turns the LED off
+          digitalWrite(5, LOW);  // GET /L turns the LED off
         }
       }
     }

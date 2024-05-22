@@ -3,19 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x1A86
-#define USB_PID 0x55D4
+#define USB_VID          0x1A86
+#define USB_PID          0x55D4
 #define USB_MANUFACTURER "Lilygo"
-#define USB_PRODUCT "T-Display"
-#define USB_SERIAL ""
-
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
-#define NUM_ANALOG_INPUTS       16
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(esp32_adc2gpio[(p)]):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
+#define USB_PRODUCT      "T-Display"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
@@ -23,10 +15,10 @@ static const uint8_t RX = 3;
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 5;
-static const uint8_t MOSI  = 23;
-static const uint8_t MISO  = 19;
-static const uint8_t SCK   = 18;
+static const uint8_t SS = 5;
+static const uint8_t MOSI = 23;
+static const uint8_t MISO = 19;
+static const uint8_t SCK = 18;
 
 static const uint8_t A0 = 36;
 static const uint8_t A3 = 39;

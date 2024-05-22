@@ -1,12 +1,9 @@
 #ifndef __MIMETABLE_H__
 #define __MIMETABLE_H__
 
+namespace mime {
 
-namespace mime
-{
-
-enum type
-{
+enum type {
   html,
   htm,
   css,
@@ -33,15 +30,12 @@ enum type
   maxType
 };
 
-struct Entry
-{
-  const char endsWith[16]; 
+struct Entry {
+  const char endsWith[16];
   const char mimeType[32];
 };
 
-
 extern const Entry mimeTable[maxType];
-}
-
+}  // namespace mime
 
 #endif

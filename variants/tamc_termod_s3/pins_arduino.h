@@ -2,27 +2,11 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-#include "soc/soc_caps.h"
 
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-// Some boards have too low voltage on this pin (board design bug)
-// Use different pin with 3V and connect with 48
-// and change this setup for the chosen pin (for example 38)
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT+48;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
-#define RGB_BRIGHTNESS 64
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+// This board has no NeoLED or any User LED
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -30,10 +14,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
-static const uint8_t SS    = 10;
-static const uint8_t MOSI  = 11;
-static const uint8_t MISO  = 13;
-static const uint8_t SCK   = 12;
+static const uint8_t SS = 10;
+static const uint8_t MOSI = 11;
+static const uint8_t MISO = 13;
+static const uint8_t SCK = 12;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -71,18 +55,18 @@ static const uint8_t T12 = 12;
 static const uint8_t T13 = 13;
 static const uint8_t T14 = 14;
 
-static const uint8_t BAT_LV   =  1;
-static const uint8_t CHG      =  2;
-static const uint8_t TFT_CS   = 10;
-static const uint8_t TFT_DC   = 18;
-static const uint8_t TFT_RST  = 14;
-static const uint8_t TFT_BCKL = 48; // TFT Backlight is enabled by soldering JP2 together
-static const uint8_t SD_CS    = 21;
-static const uint8_t SD_CD    = 47; // uSD Card Detect is enabled by soldering JP1 together.
+static const uint8_t BAT_LV = 1;
+static const uint8_t CHG = 2;
+static const uint8_t TFT_CS = 10;
+static const uint8_t TFT_DC = 18;
+static const uint8_t TFT_RST = 14;
+static const uint8_t TFT_BCKL = 48;  // TFT Backlight is enabled by soldering JP2 together
+static const uint8_t SD_CS = 21;
+static const uint8_t SD_CD = 47;  // uSD Card Detect is enabled by soldering JP1 together.
 
-#define DISPLAY_PORTRAIT 2
-#define DISPLAY_LANDSCAPE 3
-#define DISPLAY_PORTRAIT_FLIP 0
+#define DISPLAY_PORTRAIT       2
+#define DISPLAY_LANDSCAPE      3
+#define DISPLAY_PORTRAIT_FLIP  0
 #define DISPLAY_LANDSCAPE_FLIP 1
 
 #define DISPLAY_WIDTH  240

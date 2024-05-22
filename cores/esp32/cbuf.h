@@ -18,62 +18,48 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __cbuf_h
-#define __cbuf_h
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include "sdkconfig.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/ringbuf.h"
+#include "freertos/semphr.h"
 
-class cbuf
-{
+class cbuf {
 public:
-    cbuf(size_t size);
-    ~cbuf();
+  cbuf(size_t size);
+  ~cbuf();
 
-    size_t resizeAdd(size_t addSize);
-    size_t resize(size_t newSize);
-    size_t available() const;
-    size_t size();
+  size_t resizeAdd(size_t addSize);
+  size_t resize(size_t newSize);
 
-    size_t room() const;
+  size_t available() const;
+  size_t size();
+  size_t room() const;
+  bool empty() const;
+  bool full() const;
 
-    inline bool empty() const
-    {
-        return _begin == _end;
-    }
+  int peek();
 
-    inline bool full() const
-    {
-        return wrap_if_bufend(_end + 1) == _begin;
-    }
+  int read();
+  size_t read(char *dst, size_t size);
 
-    int peek();
-    size_t peek(char *dst, size_t size);
+  size_t write(char c);
+  size_t write(const char *src, size_t size);
 
-    int read();
-    size_t read(char* dst, size_t size);
+  void flush();
+  size_t remove(size_t size);
 
-    size_t write(char c);
-    size_t write(const char* src, size_t size);
-
-    void flush();
-    size_t remove(size_t size);
-
-    cbuf *next;
+  cbuf *next;
+  bool has_peek;
+  uint8_t peek_byte;
 
 protected:
-    inline char* wrap_if_bufend(char* ptr) const
-    {
-        return (ptr == _bufend) ? _buf : ptr;
-    }
-
-    size_t _size;
-    char* _buf;
-    const char* _bufend;
-    char* _begin;
-    char* _end;
-
+  RingbufHandle_t _buf = NULL;
+#if !CONFIG_DISABLE_HAL_LOCKS
+  SemaphoreHandle_t _lock = NULL;
+#endif
 };
-
-#endif//__cbuf_h

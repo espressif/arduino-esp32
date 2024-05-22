@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2021 Ha Thach (tinyusb.org) for Adafruit Industries
@@ -22,15 +22,22 @@
  * THE SOFTWARE.
  */
 
-
 #include "esp32-hal-gpio.h"
 #include "pins_arduino.h"
 
 extern "C" {
 
 // Initialize variant/board, called before setup()
-void initVariant(void)
-{
-
+void initVariant(void) {
+  pinMode(TFT_BACKLIGHT, OUTPUT);
+  digitalWrite(TFT_BACKLIGHT, LOW);
+  pinMode(SD_CS, OUTPUT);
+  digitalWrite(SD_CS, HIGH);
+  pinMode(TFT_CS, OUTPUT);
+  digitalWrite(TFT_CS, HIGH);
+  pinMode(TFT_RESET, OUTPUT);
+  digitalWrite(TFT_RESET, LOW);
+  delay(1);
+  digitalWrite(TFT_RESET, HIGH);
 }
 }

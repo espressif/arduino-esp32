@@ -2,21 +2,20 @@
 #ifndef __ESPNBNS_h__
 #define __ESPNBNS_h__
 
-#include <WiFi.h>
+#include "Arduino.h"
 #include "AsyncUDP.h"
 
-class NetBIOS
-{
+class NetBIOS {
 protected:
-    AsyncUDP _udp;
-    String _name;
-    void _onPacket(AsyncUDPPacket& packet);
+  AsyncUDP _udp;
+  String _name;
+  void _onPacket(AsyncUDPPacket &packet);
 
 public:
-    NetBIOS();
-    ~NetBIOS();
-    bool begin(const char *name);
-    void end();
+  NetBIOS();
+  ~NetBIOS();
+  bool begin(const char *name);
+  void end();
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_NETBIOS)

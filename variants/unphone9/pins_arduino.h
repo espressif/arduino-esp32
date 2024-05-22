@@ -3,19 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID            0x16D0
-#define USB_PID            0x1178
+#define USB_VID 0x16D0
+#define USB_PID 0x1178
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
-#define LED_BUILTIN         13
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define LED_BUILTIN 13
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -23,10 +15,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 3;
 static const uint8_t SCL = 4;
 
-static const uint8_t SS    = 13;
-static const uint8_t MOSI  = 40;
-static const uint8_t MISO  = 41;
-static const uint8_t SCK   = 39;
+static const uint8_t SS = 13;
+static const uint8_t MOSI = 40;
+static const uint8_t MISO = 41;
+static const uint8_t SCK = 39;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -63,5 +55,15 @@ static const uint8_t T11 = 12;
 static const uint8_t T12 = 13;
 static const uint8_t T13 = 14;
 static const uint8_t T14 = 15;
+
+static const uint8_t D5 = 14;
+static const uint8_t D6 = 7;
+static const uint8_t D9 = 15;
+static const uint8_t D10 = 16;
+static const uint8_t D11 = 17;
+static const uint8_t D12 = 12;
+static const uint8_t D13 = 13;
+static const uint8_t D21 = 47;
+#define UNPHONE_D_PINS_MAPPED
 
 #endif /* Pins_Arduino_h */
