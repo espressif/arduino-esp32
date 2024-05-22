@@ -85,7 +85,7 @@ void loop() {
   Serial0.print(HWCDC_Status());
 
   if (USBSerial) {
-    USBSerial.printf("  [%ld] connected\n\r", counter);
+    USBSerial.printf("  [%d] connected\n\r", counter);
   }
   // sends all bytes read from UART0 to USB Hardware Serial
   while (Serial0.available()) USBSerial.write(Serial0.read());
