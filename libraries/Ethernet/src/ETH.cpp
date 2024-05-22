@@ -118,7 +118,7 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
 }
 
 ETHClass::ETHClass(uint8_t eth_index)
-  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX)
+  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL)
 #if ETH_SPI_SUPPORTS_CUSTOM
     ,
     _spi(NULL)
@@ -274,9 +274,19 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   cfg.base = &esp_netif_config;
 
   _esp_netif = esp_netif_new(&cfg);
+  if (_esp_netif == NULL) {
+    log_e("esp_netif_new failed");
+    return false;
+  }
+
+  _glue_handle = esp_eth_new_netif_glue(_eth_handle);
+  if (_glue_handle == NULL) {
+    log_e("esp_eth_new_netif_glue failed");
+    return false;
+  }
 
   /* attach Ethernet driver to TCP/IP stack */
-  ret = esp_netif_attach(_esp_netif, esp_eth_new_netif_glue(_eth_handle));
+  ret = esp_netif_attach(_esp_netif, _glue_handle);
   if (ret != ESP_OK) {
     log_e("esp_netif_attach failed: %d", ret);
     return false;
@@ -702,13 +712,13 @@ bool ETHClass::beginSPI(
     return false;
   }
   // Attach Ethernet driver to TCP/IP stack
-  esp_eth_netif_glue_handle_t new_netif_glue = esp_eth_new_netif_glue(_eth_handle);
-  if (new_netif_glue == NULL) {
+  _glue_handle = esp_eth_new_netif_glue(_eth_handle);
+  if (_glue_handle == NULL) {
     log_e("esp_eth_new_netif_glue failed");
     return false;
   }
 
-  ret = esp_netif_attach(_esp_netif, new_netif_glue);
+  ret = esp_netif_attach(_esp_netif, _glue_handle);
   if (ret != ESP_OK) {
     log_e("esp_netif_attach failed: %d", ret);
     return false;
@@ -799,14 +809,11 @@ bool ETHClass::begin(
   );
 }
 
-void ETHClass::end(void) {
-  destroyNetif();
+static bool empty_ethDetachBus(void *bus_pointer) {
+  return true;
+}
 
-  if (_eth_ev_instance != NULL) {
-    if (esp_event_handler_unregister(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb) == ESP_OK) {
-      _eth_ev_instance = NULL;
-    }
-  }
+void ETHClass::end(void) {
 
   Network.removeEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
@@ -815,18 +822,43 @@ void ETHClass::end(void) {
       log_e("Failed to stop Ethernet");
       return;
     }
+    //wait for stop
+    while (getStatusBits() & ESP_NETIF_STARTED_BIT) {
+      delay(10);
+    }
+    //delete glue first
+    if (_glue_handle != NULL) {
+      if (esp_eth_del_netif_glue(_glue_handle) != ESP_OK) {
+        log_e("Failed to del_netif_glue Ethernet");
+        return;
+      }
+      _glue_handle = NULL;
+    }
+    //uninstall driver
     if (esp_eth_driver_uninstall(_eth_handle) != ESP_OK) {
-      log_e("Failed to stop Ethernet");
+      log_e("Failed to uninstall Ethernet");
       return;
     }
     _eth_handle = NULL;
   }
 
+  if (_eth_ev_instance != NULL) {
+    if (esp_event_handler_unregister(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb) == ESP_OK) {
+      _eth_ev_instance = NULL;
+    }
+  }
+
+  destroyNetif();
+
 #if ETH_SPI_SUPPORTS_CUSTOM
   _spi = NULL;
 #endif
-
 #if CONFIG_ETH_USE_ESP32_EMAC
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, empty_ethDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, empty_ethDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, empty_ethDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MDIO, empty_ethDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_PWR, empty_ethDetachBus);
   if (_pin_rmii_clock != -1 && _pin_mcd != -1 && _pin_mdio != -1) {
     perimanClearPinBus(_pin_rmii_clock);
     perimanClearPinBus(_pin_mcd);
@@ -849,6 +881,7 @@ void ETHClass::end(void) {
     _pin_power = -1;
   }
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_SPI, empty_ethDetachBus);
   if (_pin_cs != -1) {
     perimanClearPinBus(_pin_cs);
     _pin_cs = -1;
