@@ -402,28 +402,57 @@
 #elif TU_CHECK_MCU(OPT_MCU_F1C100S)
   #define TUP_DCD_ENDPOINT_MAX    4
 
-//------------- WCH -------------//
-#elif TU_CHECK_MCU(OPT_MCU_CH32V307)
-  // v307 support both FS and HS
-  #define TUP_USBIP_WCH_USBHS
-  #define TUP_USBIP_WCH_USBFS
-
-  #define TUP_RHPORT_HIGHSPEED    1 // default to highspeed
-  #define TUP_DCD_ENDPOINT_MAX    (CFG_TUD_MAX_SPEED == OPT_MODE_HIGH_SPEED ? 16 : 8)
-
+//--------------------------------------------------------------------+
+// WCH
+//--------------------------------------------------------------------+
 #elif TU_CHECK_MCU(OPT_MCU_CH32F20X)
   #define TUP_USBIP_WCH_USBHS
   #define TUP_USBIP_WCH_USBFS
 
-  #define TUP_RHPORT_HIGHSPEED    1 // default to highspeed
-  #define TUP_DCD_ENDPOINT_MAX    (CFG_TUD_MAX_SPEED == OPT_MODE_HIGH_SPEED ? 16 : 8)
+  #if !defined(CFG_TUD_WCH_USBIP_USBFS)
+  #define CFG_TUD_WCH_USBIP_USBFS 0
+  #endif
+
+  #if !defined(CFG_TUD_WCH_USBIP_USBHS)
+  #define CFG_TUD_WCH_USBIP_USBHS (CFG_TUD_WCH_USBIP_USBFS ? 0 : 1)
+  #endif
+
+  #define TUP_RHPORT_HIGHSPEED    CFG_TUD_WCH_USBIP_USBHS
+  #define TUP_DCD_ENDPOINT_MAX    (CFG_TUD_WCH_USBIP_USBHS ? 16 : 8)
 
 #elif TU_CHECK_MCU(OPT_MCU_CH32V20X)
+  // v20x support both FSDEV (USBD) and USBFS, default to FSDEV
   #define TUP_USBIP_WCH_USBFS
+  #define TUP_USBIP_FSDEV
+  #define TUP_USBIP_FSDEV_CH32
+
+  #if !defined(CFG_TUD_WCH_USBIP_USBFS)
+  #define CFG_TUD_WCH_USBIP_USBFS 0
+  #endif
+
+  #if !defined(CFG_TUD_WCH_USBIP_FSDEV)
+  #define CFG_TUD_WCH_USBIP_FSDEV  (CFG_TUD_WCH_USBIP_USBFS ? 0 : 1)
+  #endif
+
   #define TUP_DCD_ENDPOINT_MAX    8
 
-#endif
+#elif TU_CHECK_MCU(OPT_MCU_CH32V307)
+  // v307 support both FS and HS, default to HS
+  #define TUP_USBIP_WCH_USBHS
+  #define TUP_USBIP_WCH_USBFS
 
+  #if !defined(CFG_TUD_WCH_USBIP_USBFS)
+  #define CFG_TUD_WCH_USBIP_USBFS 0
+  #endif
+
+  #if !defined(CFG_TUD_WCH_USBIP_USBHS)
+  #define CFG_TUD_WCH_USBIP_USBHS (CFG_TUD_WCH_USBIP_USBFS ? 0 : 1)
+  #endif
+
+  #define TUP_RHPORT_HIGHSPEED    CFG_TUD_WCH_USBIP_USBHS
+  #define TUP_DCD_ENDPOINT_MAX    (CFG_TUD_WCH_USBIP_USBHS ? 16 : 8)
+
+#endif
 
 //--------------------------------------------------------------------+
 // External USB controller

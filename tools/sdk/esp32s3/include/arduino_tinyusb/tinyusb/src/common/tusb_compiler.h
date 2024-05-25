@@ -128,6 +128,7 @@
   #define TU_ATTR_SECTION(sec_name)     __attribute__ ((section(#sec_name)))
   #define TU_ATTR_PACKED                __attribute__ ((packed))
   #define TU_ATTR_WEAK                  __attribute__ ((weak))
+  // #define TU_ATTR_WEAK_ALIAS(f)         __attribute__ ((weak, alias(#f))
   #ifndef TU_ATTR_ALWAYS_INLINE // allow to override for debug
     #define TU_ATTR_ALWAYS_INLINE       __attribute__ ((always_inline))
   #endif
