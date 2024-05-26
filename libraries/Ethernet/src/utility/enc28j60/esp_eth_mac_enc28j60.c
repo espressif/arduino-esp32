@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/cdefs.h>
+#include "esp_check.h"
 #include "driver/gpio.h"
 #include "esp_attr.h"
 #include "esp_log.h"
@@ -15,6 +16,7 @@
 #include "esp_intr_alloc.h"
 #include "esp_heap_caps.h"
 #include "esp_rom_sys.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -99,10 +101,22 @@ typedef struct {
 } enc28j60_tsv_t;
 
 typedef struct {
+  spi_device_handle_t hdl;
+  SemaphoreHandle_t lock;
+} eth_spi_info_t;
+
+typedef struct {
+  void *ctx;
+  void *(*init)(const void *spi_config);
+  esp_err_t (*deinit)(void *spi_ctx);
+  esp_err_t (*read)(void *spi_ctx, uint32_t cmd,uint32_t addr, void *data, uint32_t data_len);
+  esp_err_t (*write)(void *spi_ctx, uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
+} eth_spi_custom_driver_t;
+
+typedef struct {
   esp_eth_mac_t parent;
   esp_eth_mediator_t *eth;
-  spi_device_handle_t spi_hdl;
-  SemaphoreHandle_t spi_lock;
+  eth_spi_custom_driver_t spi;
   SemaphoreHandle_t reg_trans_lock;
   SemaphoreHandle_t tx_ready_sem;
   TaskHandle_t rx_task_hdl;
@@ -110,18 +124,121 @@ typedef struct {
   uint32_t next_packet_ptr;
   uint32_t last_tsv_addr;
   int int_gpio_num;
+  esp_timer_handle_t poll_timer;
+  uint32_t poll_period_ms;
   uint8_t addr[6];
   uint8_t last_bank;
   bool packets_remain;
   eth_enc28j60_rev_t revision;
 } emac_enc28j60_t;
 
-static inline bool enc28j60_spi_lock(emac_enc28j60_t *emac) {
-  return xSemaphoreTake(emac->spi_lock, pdMS_TO_TICKS(ENC28J60_SPI_LOCK_TIMEOUT_MS)) == pdTRUE;
+static void *enc28j60_spi_init(const void *spi_config)
+{
+  void *ret = NULL;
+  eth_enc28j60_config_t *enc28j60_config = (eth_enc28j60_config_t *)spi_config;
+  eth_spi_info_t *spi = calloc(1, sizeof(eth_spi_info_t));
+  ESP_GOTO_ON_FALSE(spi, NULL, err, TAG, "no memory for SPI context data");
+
+  /* SPI device init */
+  spi_device_interface_config_t spi_devcfg;
+  memcpy(&spi_devcfg, enc28j60_config->spi_devcfg, sizeof(spi_device_interface_config_t));
+  if (enc28j60_config->spi_devcfg->command_bits == 0 && enc28j60_config->spi_devcfg->address_bits == 0) {
+    /* configure default SPI frame format */
+    spi_devcfg.command_bits = 3;
+    spi_devcfg.address_bits = 5;
+  } else {
+    MAC_CHECK(enc28j60_config->spi_devcfg->command_bits == 3 || enc28j60_config->spi_devcfg->address_bits == 5,
+        "incorrect SPI frame format (command_bits/address_bits)", err, NULL);
+  }
+  ESP_GOTO_ON_FALSE(spi_bus_add_device(enc28j60_config->spi_host_id, &spi_devcfg, &spi->hdl) == ESP_OK, NULL,
+      err, TAG, "adding device to SPI host #%i failed", enc28j60_config->spi_host_id + 1);
+  /* create mutex */
+  spi->lock = xSemaphoreCreateMutex();
+  ESP_GOTO_ON_FALSE(spi->lock, NULL, err, TAG, "create lock failed");
+
+  ret = spi;
+  return ret;
+
+  err:
+  if (spi) {
+    if (spi->lock) {
+      vSemaphoreDelete(spi->lock);
+    }
+    free(spi);
+  }
+  return ret;
 }
 
-static inline bool enc28j60_spi_unlock(emac_enc28j60_t *emac) {
-  return xSemaphoreGive(emac->spi_lock) == pdTRUE;
+static esp_err_t enc28j60_spi_deinit(void *spi_ctx)
+{
+  esp_err_t ret = ESP_OK;
+  eth_spi_info_t *spi = (eth_spi_info_t *)spi_ctx;
+
+  spi_bus_remove_device(spi->hdl);
+  vSemaphoreDelete(spi->lock);
+
+  free(spi);
+  return ret;
+}
+
+static inline bool enc28j60_spi_lock(eth_spi_info_t *spi)
+{
+  return xSemaphoreTake(spi->lock, pdMS_TO_TICKS(ENC28J60_SPI_LOCK_TIMEOUT_MS)) == pdTRUE;
+}
+
+static inline bool enc28j60_spi_unlock(eth_spi_info_t *spi)
+{
+  return xSemaphoreGive(spi->lock) == pdTRUE;
+}
+
+static esp_err_t enc28j60_spi_write(void *spi_ctx, uint32_t cmd, uint32_t addr, const void *value, uint32_t len)
+{
+  esp_err_t ret = ESP_OK;
+  eth_spi_info_t *spi = (eth_spi_info_t *)spi_ctx;
+
+  spi_transaction_t trans = {
+      .cmd = cmd,
+      .addr = addr,
+      .length = 8 * len,
+      .tx_buffer = value
+  };
+  if (enc28j60_spi_lock(spi)) {
+    if (spi_device_polling_transmit(spi->hdl, &trans) != ESP_OK) {
+      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
+      ret = ESP_FAIL;
+    }
+    enc28j60_spi_unlock(spi);
+  } else {
+    ret = ESP_ERR_TIMEOUT;
+  }
+  return ret;
+}
+
+static esp_err_t enc28j60_spi_read(void *spi_ctx, uint32_t cmd, uint32_t addr, void *value, uint32_t len)
+{
+  esp_err_t ret = ESP_OK;
+  eth_spi_info_t *spi = (eth_spi_info_t *)spi_ctx;
+
+  spi_transaction_t trans = {
+      .flags = len <= 4 ? SPI_TRANS_USE_RXDATA : 0, // use direct reads for registers to prevent overwrites by 4-byte boundary writes
+          .cmd = cmd,
+          .addr = addr,
+          .length = 8 * len,
+          .rx_buffer = value
+  };
+  if (enc28j60_spi_lock(spi)) {
+    if (spi_device_polling_transmit(spi->hdl, &trans) != ESP_OK) {
+      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
+      ret = ESP_FAIL;
+    }
+    enc28j60_spi_unlock(spi);
+  } else {
+    ret = ESP_ERR_TIMEOUT;
+  }
+  if ((trans.flags & SPI_TRANS_USE_RXDATA) && len <= 4) {
+    memcpy(value, trans.rx_data, len);  // copy register values to output
+  }
+  return ret;
 }
 
 static inline bool enc28j60_reg_trans_lock(emac_enc28j60_t *emac) {
@@ -163,24 +280,10 @@ static inline uint32_t enc28j60_rx_packet_start(uint32_t start_addr, uint32_t of
  */
 static esp_err_t enc28j60_do_register_write(emac_enc28j60_t *emac, uint8_t reg_addr, uint8_t value) {
   esp_err_t ret = ESP_OK;
-  spi_transaction_t trans = {
-      .cmd = ENC28J60_SPI_CMD_WCR, // Write control register
-      .addr = reg_addr,
-      .length = 8,
-      .flags = SPI_TRANS_USE_TXDATA,
-      .tx_data = {
-          [0] = value
-      }
-  };
-  if (enc28j60_spi_lock(emac)) {
-    if (spi_device_polling_transmit(emac->spi_hdl, &trans) != ESP_OK) {
-      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
-      ret = ESP_FAIL;
-    }
-    enc28j60_spi_unlock(emac);
-  } else {
-    ret = ESP_ERR_TIMEOUT;
-  }
+
+  ESP_GOTO_ON_ERROR(emac->spi.write(emac->spi.ctx, ENC28J60_SPI_CMD_WCR, reg_addr, &value, sizeof(value)), err, TAG, "register write failed");
+
+  err:
   return ret;
 }
 
@@ -189,23 +292,12 @@ static esp_err_t enc28j60_do_register_write(emac_enc28j60_t *emac, uint8_t reg_a
  */
 static esp_err_t enc28j60_do_register_read(emac_enc28j60_t *emac, bool is_eth_reg, uint8_t reg_addr, uint8_t *value) {
   esp_err_t ret = ESP_OK;
-  spi_transaction_t trans = {
-      .cmd = ENC28J60_SPI_CMD_RCR, // Read control register
-      .addr = reg_addr,
-      .length = is_eth_reg ? 8 : 16, // read operation is different for ETH register and non-ETH register
-          .flags = SPI_TRANS_USE_RXDATA
-  };
-  if (enc28j60_spi_lock(emac)) {
-    if (spi_device_polling_transmit(emac->spi_hdl, &trans) != ESP_OK) {
-      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
-      ret = ESP_FAIL;
-    } else {
-      *value = is_eth_reg ? trans.rx_data[0] : trans.rx_data[1];
-    }
-    enc28j60_spi_unlock(emac);
-  } else {
-    ret = ESP_ERR_TIMEOUT;
-  }
+
+  uint8_t tmp[2];
+  ESP_GOTO_ON_ERROR(emac->spi.read(emac->spi.ctx, ENC28J60_SPI_CMD_RCR, reg_addr, tmp, is_eth_reg ? 1 : 2), err, TAG, "register read failed");
+  *value = is_eth_reg ? tmp[0] : tmp[1];
+
+  err:
   return ret;
 }
 
@@ -215,24 +307,10 @@ static esp_err_t enc28j60_do_register_read(emac_enc28j60_t *emac, bool is_eth_re
  */
 static esp_err_t enc28j60_do_bitwise_set(emac_enc28j60_t *emac, uint8_t reg_addr, uint8_t mask) {
   esp_err_t ret = ESP_OK;
-  spi_transaction_t trans = {
-      .cmd = ENC28J60_SPI_CMD_BFS, // Bit field set
-      .addr = reg_addr,
-      .length = 8,
-      .flags = SPI_TRANS_USE_TXDATA,
-      .tx_data = {
-          [0] = mask
-      }
-  };
-  if (enc28j60_spi_lock(emac)) {
-    if (spi_device_polling_transmit(emac->spi_hdl, &trans) != ESP_OK) {
-      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
-      ret = ESP_FAIL;
-    }
-    enc28j60_spi_unlock(emac);
-  } else {
-    ret = ESP_ERR_TIMEOUT;
-  }
+
+  ESP_GOTO_ON_ERROR(emac->spi.write(emac->spi.ctx, ENC28J60_SPI_CMD_BFS, reg_addr, &mask, sizeof(mask)), err, TAG, "bitwise set failed");
+
+  err:
   return ret;
 }
 
@@ -242,24 +320,10 @@ static esp_err_t enc28j60_do_bitwise_set(emac_enc28j60_t *emac, uint8_t reg_addr
  */
 static esp_err_t enc28j60_do_bitwise_clr(emac_enc28j60_t *emac, uint8_t reg_addr, uint8_t mask) {
   esp_err_t ret = ESP_OK;
-  spi_transaction_t trans = {
-      .cmd = ENC28J60_SPI_CMD_BFC, // Bit field clear
-      .addr = reg_addr,
-      .length = 8,
-      .flags = SPI_TRANS_USE_TXDATA,
-      .tx_data = {
-          [0] = mask
-      }
-  };
-  if (enc28j60_spi_lock(emac)) {
-    if (spi_device_polling_transmit(emac->spi_hdl, &trans) != ESP_OK) {
-      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
-      ret = ESP_FAIL;
-    }
-    enc28j60_spi_unlock(emac);
-  } else {
-    ret = ESP_ERR_TIMEOUT;
-  }
+
+  ESP_GOTO_ON_ERROR(emac->spi.write(emac->spi.ctx, ENC28J60_SPI_CMD_BFC, reg_addr, &mask, sizeof(mask)), err, TAG, "bitwise clear failed");
+
+  err:
   return ret;
 }
 
@@ -268,21 +332,10 @@ static esp_err_t enc28j60_do_bitwise_clr(emac_enc28j60_t *emac, uint8_t reg_addr
  */
 static esp_err_t enc28j60_do_memory_write(emac_enc28j60_t *emac, uint8_t *buffer, uint32_t len) {
   esp_err_t ret = ESP_OK;
-  spi_transaction_t trans = {
-      .cmd = ENC28J60_SPI_CMD_WBM, // Write buffer memory
-      .addr = 0x1A,
-      .length = len * 8,
-      .tx_buffer = buffer
-  };
-  if (enc28j60_spi_lock(emac)) {
-    if (spi_device_polling_transmit(emac->spi_hdl, &trans) != ESP_OK) {
-      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
-      ret = ESP_FAIL;
-    }
-    enc28j60_spi_unlock(emac);
-  } else {
-    ret = ESP_ERR_TIMEOUT;
-  }
+
+  ESP_GOTO_ON_ERROR(emac->spi.write(emac->spi.ctx, ENC28J60_SPI_CMD_WBM, 0x1A, buffer, len), err, TAG, "memory writer failed");
+
+  err:
   return ret;
 }
 
@@ -291,22 +344,10 @@ static esp_err_t enc28j60_do_memory_write(emac_enc28j60_t *emac, uint8_t *buffer
  */
 static esp_err_t enc28j60_do_memory_read(emac_enc28j60_t *emac, uint8_t *buffer, uint32_t len) {
   esp_err_t ret = ESP_OK;
-  spi_transaction_t trans = {
-      .cmd = ENC28J60_SPI_CMD_RBM, // Read buffer memory
-      .addr = 0x1A,
-      .length = len * 8,
-      .rx_buffer = buffer
-  };
 
-  if (enc28j60_spi_lock(emac)) {
-    if (spi_device_polling_transmit(emac->spi_hdl, &trans) != ESP_OK) {
-      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
-      ret = ESP_FAIL;
-    }
-    enc28j60_spi_unlock(emac);
-  } else {
-    ret = ESP_ERR_TIMEOUT;
-  }
+  ESP_GOTO_ON_ERROR(emac->spi.read(emac->spi.ctx, ENC28J60_SPI_CMD_RBM, 0x1A, buffer, len), err, TAG, "register read failed");
+
+  err:
   return ret;
 }
 
@@ -315,23 +356,13 @@ static esp_err_t enc28j60_do_memory_read(emac_enc28j60_t *emac, uint8_t *buffer,
  */
 static esp_err_t enc28j60_do_reset(emac_enc28j60_t *emac) {
   esp_err_t ret = ESP_OK;
-  spi_transaction_t trans = {
-      .cmd = ENC28J60_SPI_CMD_SRC, // Soft reset
-      .addr = 0x1F,
-  };
-  if (enc28j60_spi_lock(emac)) {
-    if (spi_device_polling_transmit(emac->spi_hdl, &trans) != ESP_OK) {
-      ESP_LOGE(TAG, "%s(%d): spi transmit failed", __FUNCTION__, __LINE__);
-      ret = ESP_FAIL;
-    }
-    enc28j60_spi_unlock(emac);
-  } else {
-    ret = ESP_ERR_TIMEOUT;
-  }
+
+  ESP_GOTO_ON_ERROR(emac->spi.write(emac->spi.ctx, ENC28J60_SPI_CMD_SRC, 0x1F, NULL, 0), err, TAG, "soft reset failed");
 
   // After reset, wait at least 1ms for the device to be ready
   esp_rom_delay_us(ENC28J60_SYSTEM_RESET_ADDITION_TIME_US);
 
+  err:
   return ret;
 }
 
@@ -674,6 +705,11 @@ static void enc28j60_isr_handler(void *arg) {
   }
 }
 
+static void enc28j60_poll_timer(void *arg) {
+  emac_enc28j60_t *emac = (emac_enc28j60_t *)arg;
+  xTaskNotifyGive(emac->rx_task_hdl);
+}
+
 /**
  * @brief Main ENC28J60 Task. Mainly used for Rx processing. However, it also handles other interrupts.
  *
@@ -688,9 +724,13 @@ static void emac_enc28j60_task(void *arg) {
   while (1) {
     loop_start:
     // block until some task notifies me or check the gpio by myself
-    if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1000)) == 0 &&    // if no notification ...
-        gpio_get_level(emac->int_gpio_num) != 0) {               // ...and no interrupt asserted
-      continue;                                                // -> just continue to check again
+    if (emac->int_gpio_num >= 0) {                                   // if in interrupt mode
+      if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1000)) == 0 &&    // if no notification ...
+          gpio_get_level(emac->int_gpio_num) != 0) {               // ...and no interrupt asserted
+        continue;                                                // -> just continue to check again
+      }
+    } else {
+      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     }
     // the host controller should clear the global enable bit for the interrupt pin before servicing the interrupt
     MAC_CHECK_NO_RET(enc28j60_do_bitwise_clr(emac, ENC28J60_EIE, EIE_INTIE) == ESP_OK,
@@ -786,12 +826,21 @@ static void emac_enc28j60_task(void *arg) {
 
 static esp_err_t emac_enc28j60_set_link(esp_eth_mac_t *mac, eth_link_t link) {
   esp_err_t ret = ESP_OK;
+  emac_enc28j60_t *emac = __containerof(mac, emac_enc28j60_t, parent);
   switch (link) {
     case ETH_LINK_UP:
       MAC_CHECK(mac->start(mac) == ESP_OK, "enc28j60 start failed", out, ESP_FAIL);
+      if (emac->poll_timer) {
+        ESP_GOTO_ON_ERROR(esp_timer_start_periodic(emac->poll_timer, emac->poll_period_ms * 1000),
+            out, TAG, "start poll timer failed");
+      }
       break;
     case ETH_LINK_DOWN:
       MAC_CHECK(mac->stop(mac) == ESP_OK, "enc28j60 stop failed", out, ESP_FAIL);
+      if (emac->poll_timer) {
+        ESP_GOTO_ON_ERROR(esp_timer_stop(emac->poll_timer),
+            out, TAG, "stop poll timer failed");
+      }
       break;
     default:
       MAC_CHECK(false, "unknown link status", out, ESP_ERR_INVALID_ARG);
@@ -954,12 +1003,14 @@ static esp_err_t emac_enc28j60_init(esp_eth_mac_t *mac) {
   esp_eth_mediator_t *eth = emac->eth;
 
   /* init gpio used for reporting enc28j60 interrupt */
-  gpio_reset_pin(emac->int_gpio_num);
-  gpio_set_direction(emac->int_gpio_num, GPIO_MODE_INPUT);
-  gpio_set_pull_mode(emac->int_gpio_num, GPIO_PULLUP_ONLY);
-  gpio_set_intr_type(emac->int_gpio_num, GPIO_INTR_NEGEDGE);
-  gpio_intr_enable(emac->int_gpio_num);
-  gpio_isr_handler_add(emac->int_gpio_num, enc28j60_isr_handler, emac);
+  if (emac->int_gpio_num >= 0) {
+    gpio_reset_pin(emac->int_gpio_num);
+    gpio_set_direction(emac->int_gpio_num, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(emac->int_gpio_num, GPIO_PULLUP_ONLY);
+    gpio_set_intr_type(emac->int_gpio_num, GPIO_INTR_NEGEDGE);
+    gpio_intr_enable(emac->int_gpio_num);
+    gpio_isr_handler_add(emac->int_gpio_num, enc28j60_isr_handler, emac);
+  }
   MAC_CHECK(eth->on_state_changed(eth, ETH_STATE_LLINIT, NULL) == ESP_OK,
       "lowlevel init failed", out, ESP_FAIL);
 
@@ -974,8 +1025,10 @@ static esp_err_t emac_enc28j60_init(esp_eth_mac_t *mac) {
 
   return ESP_OK;
   out:
-  gpio_isr_handler_remove(emac->int_gpio_num);
-  gpio_reset_pin(emac->int_gpio_num);
+  if (emac->int_gpio_num >= 0) {
+    gpio_isr_handler_remove(emac->int_gpio_num);
+    gpio_reset_pin(emac->int_gpio_num);
+  }
   eth->on_state_changed(eth, ETH_STATE_DEINIT, NULL);
   return ret;
 }
@@ -984,17 +1037,24 @@ static esp_err_t emac_enc28j60_deinit(esp_eth_mac_t *mac) {
   emac_enc28j60_t *emac = __containerof(mac, emac_enc28j60_t, parent);
   esp_eth_mediator_t *eth = emac->eth;
   mac->stop(mac);
-  gpio_isr_handler_remove(emac->int_gpio_num);
-  gpio_reset_pin(emac->int_gpio_num);
+  if (emac->int_gpio_num >= 0) {
+    gpio_isr_handler_remove(emac->int_gpio_num);
+    gpio_reset_pin(emac->int_gpio_num);
+  }
+  if (emac->poll_timer && esp_timer_is_active(emac->poll_timer)) {
+    esp_timer_stop(emac->poll_timer);
+  }
   eth->on_state_changed(eth, ETH_STATE_DEINIT, NULL);
   return ESP_OK;
 }
 
 static esp_err_t emac_enc28j60_del(esp_eth_mac_t *mac) {
   emac_enc28j60_t *emac = __containerof(mac, emac_enc28j60_t, parent);
+  if (emac->poll_timer) {
+    esp_timer_delete(emac->poll_timer);
+  }
   vTaskDelete(emac->rx_task_hdl);
-  spi_bus_remove_device(emac->spi_hdl);
-  vSemaphoreDelete(emac->spi_lock);
+  emac->spi.deinit(emac->spi.ctx);
   vSemaphoreDelete(emac->reg_trans_lock);
   vSemaphoreDelete(emac->tx_ready_sem);
   free(emac);
@@ -1009,26 +1069,14 @@ esp_eth_mac_t *esp_eth_mac_new_enc28j60(const eth_enc28j60_config_t *enc28j60_co
   emac = calloc(1, sizeof(emac_enc28j60_t));
   MAC_CHECK(emac, "calloc emac failed", err, NULL);
   /* enc28j60 driver is interrupt driven */
-  MAC_CHECK(enc28j60_config->int_gpio_num >= 0, "error interrupt gpio number", err, NULL);
-  /* SPI device init */
-  spi_device_interface_config_t spi_devcfg;
-  memcpy(&spi_devcfg, enc28j60_config->spi_devcfg, sizeof(spi_device_interface_config_t));
-  if (enc28j60_config->spi_devcfg->command_bits == 0 && enc28j60_config->spi_devcfg->address_bits == 0) {
-    /* configure default SPI frame format */
-    spi_devcfg.command_bits = 3;
-    spi_devcfg.address_bits = 5;
-  } else {
-    MAC_CHECK(enc28j60_config->spi_devcfg->command_bits == 3 || enc28j60_config->spi_devcfg->address_bits == 5,
-        "incorrect SPI frame format (command_bits/address_bits)", err, NULL);
-  }
-  MAC_CHECK(spi_bus_add_device(enc28j60_config->spi_host_id, &spi_devcfg, &emac->spi_hdl) == ESP_OK,
-      "adding device to SPI host #%d failed", err, NULL, enc28j60_config->spi_host_id + 1);
+  MAC_CHECK((enc28j60_config->int_gpio_num >= 0)  != (enc28j60_config->poll_period_ms > 0), "invalid configuration argument combination", err, NULL);
 
   emac->last_bank = 0xFF;
   emac->next_packet_ptr = ENC28J60_BUF_RX_START;
   /* bind methods and attributes */
   emac->sw_reset_timeout_ms = mac_config->sw_reset_timeout_ms;
   emac->int_gpio_num = enc28j60_config->int_gpio_num;
+  emac->poll_period_ms = enc28j60_config->poll_period_ms;
   emac->parent.set_mediator = emac_enc28j60_set_mediator;
   emac->parent.init = emac_enc28j60_init;
   emac->parent.deinit = emac_enc28j60_deinit;
@@ -1045,9 +1093,26 @@ esp_eth_mac_t *esp_eth_mac_new_enc28j60(const eth_enc28j60_config_t *enc28j60_co
   emac->parent.set_promiscuous = emac_enc28j60_set_promiscuous;
   emac->parent.transmit = emac_enc28j60_transmit;
   emac->parent.receive = emac_enc28j60_receive;
+
+  if (enc28j60_config->custom_spi_driver.init != NULL && enc28j60_config->custom_spi_driver.deinit != NULL
+      && enc28j60_config->custom_spi_driver.read != NULL && enc28j60_config->custom_spi_driver.write != NULL) {
+    ESP_LOGD(TAG, "Using user's custom SPI Driver");
+    emac->spi.init = enc28j60_config->custom_spi_driver.init;
+    emac->spi.deinit = enc28j60_config->custom_spi_driver.deinit;
+    emac->spi.read = enc28j60_config->custom_spi_driver.read;
+    emac->spi.write = enc28j60_config->custom_spi_driver.write;
+    /* Custom SPI driver device init */
+    ESP_GOTO_ON_FALSE((emac->spi.ctx = emac->spi.init(enc28j60_config->custom_spi_driver.config)) != NULL, NULL, err, TAG, "SPI initialization failed");
+  } else {
+    ESP_LOGD(TAG, "Using default SPI Driver");
+    emac->spi.init = enc28j60_spi_init;
+    emac->spi.deinit = enc28j60_spi_deinit;
+    emac->spi.read = enc28j60_spi_read;
+    emac->spi.write = enc28j60_spi_write;
+    /* SPI device init */
+    ESP_GOTO_ON_FALSE((emac->spi.ctx = emac->spi.init(enc28j60_config)) != NULL, NULL, err, TAG, "SPI initialization failed");
+  }
   /* create mutex */
-  emac->spi_lock = xSemaphoreCreateMutex();
-  MAC_CHECK(emac->spi_lock, "create spi lock failed", err, NULL);
   emac->reg_trans_lock = xSemaphoreCreateMutex();
   MAC_CHECK(emac->reg_trans_lock, "create register transaction lock failed", err, NULL);
   emac->tx_ready_sem = xSemaphoreCreateBinary();
@@ -1062,14 +1127,27 @@ esp_eth_mac_t *esp_eth_mac_new_enc28j60(const eth_enc28j60_config_t *enc28j60_co
       mac_config->rx_task_prio, &emac->rx_task_hdl, core_num);
   MAC_CHECK(xReturned == pdPASS, "create enc28j60 task failed", err, NULL);
 
+  if (emac->int_gpio_num < 0) {
+    const esp_timer_create_args_t poll_timer_args = {
+        .callback = enc28j60_poll_timer,
+        .name = "emac_spi_poll_timer",
+        .arg = emac,
+        .skip_unhandled_events = true
+    };
+    ESP_GOTO_ON_FALSE(esp_timer_create(&poll_timer_args, &emac->poll_timer) == ESP_OK, NULL, err, TAG, "create poll timer failed");
+  }
+
   return &(emac->parent);
   err:
   if (emac) {
+    if (emac->poll_timer) {
+      esp_timer_delete(emac->poll_timer);
+    }
     if (emac->rx_task_hdl) {
       vTaskDelete(emac->rx_task_hdl);
     }
-    if (emac->spi_lock) {
-      vSemaphoreDelete(emac->spi_lock);
+    if (emac->spi.ctx) {
+      emac->spi.deinit(emac->spi.ctx);
     }
     if (emac->reg_trans_lock) {
       vSemaphoreDelete(emac->reg_trans_lock);

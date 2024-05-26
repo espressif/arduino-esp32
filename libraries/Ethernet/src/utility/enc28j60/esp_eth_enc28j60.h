@@ -23,7 +23,9 @@ extern "C" {
 typedef struct {
   spi_host_device_t spi_host_id;              /*!< SPI peripheral */
   spi_device_interface_config_t *spi_devcfg;  /*!< SPI device configuration */
+  eth_spi_custom_driver_config_t custom_spi_driver;   /*!< Custom SPI driver definitions */
   int int_gpio_num;                           /*!< Interrupt GPIO number */
+  uint32_t poll_period_ms;                    /*!< Period in ms to poll rx status when interrupt mode is not used */
 } eth_enc28j60_config_t;
 
 /**
@@ -41,12 +43,13 @@ typedef enum {
  * @brief Default ENC28J60 specific configuration
  *
  */
-#define ETH_ENC28J60_DEFAULT_CONFIG(spi_host, spi_devcfg_p) \
-    {                                             \
-  .spi_host_id = spi_host,                  \
-  .spi_devcfg = spi_devcfg_p,               \
-  .int_gpio_num = 4,                        \
-    }
+#define ETH_ENC28J60_DEFAULT_CONFIG(spi_host, spi_devcfg_p) {                                             \
+    .spi_host_id = spi_host,                  \
+    .spi_devcfg = spi_devcfg_p,               \
+    .custom_spi_driver = ETH_DEFAULT_SPI,     \
+    .int_gpio_num = 4,                        \
+    .poll_period_ms = 0,                      \
+  }
 
 /**
  * @brief Compute amount of SPI bit-cycles the CS should stay active after the transmission
