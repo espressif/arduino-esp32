@@ -114,6 +114,7 @@ typedef enum {
 #if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
   ETH_PHY_KSZ8851,
 #endif
+  ETH_PHY_ENC28J60,
   ETH_PHY_MAX
 } eth_phy_type_t;
 

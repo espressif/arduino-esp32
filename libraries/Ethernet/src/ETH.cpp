@@ -41,6 +41,7 @@
 #include "esp_netif_types.h"
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
+#include "utility/enc28j60/esp_eth_enc28j60.h"
 
 static ETHClass *_ethernets[3] = {NULL, NULL, NULL};
 static esp_event_handler_instance_t _eth_ev_instance = NULL;
@@ -401,7 +402,9 @@ esp_err_t ETHClass::eth_spi_read(uint32_t cmd, uint32_t addr, void *data, uint32
     }
   } else
 #endif
-  {
+  if (_phy_type == ETH_PHY_ENC28J60) {
+    _spi->write(cmd << 5 | addr);
+  } else {
     log_e("Unsupported PHY module: %d", _phy_type);
     digitalWrite(_pin_cs, HIGH);
     _spi->endTransaction();
@@ -442,7 +445,9 @@ esp_err_t ETHClass::eth_spi_write(uint32_t cmd, uint32_t addr, const void *data,
     }
   } else
 #endif
-  {
+  if (_phy_type == ETH_PHY_ENC28J60) {
+    _spi->write(cmd << 5 | addr);
+  } else {
     log_e("Unsupported PHY module: %d", _phy_type);
     digitalWrite(_pin_cs, HIGH);
     _spi->endTransaction();
@@ -644,7 +649,24 @@ bool ETHClass::beginSPI(
     phy = esp_eth_phy_new_ksz8851snl(&phy_config);
   } else
 #endif
-  {
+  if (type == ETH_PHY_ENC28J60) {
+    spi_devcfg.cs_ena_posttrans = enc28j60_cal_spi_cs_hold_time(_spi_freq_mhz);
+    eth_enc28j60_config_t mac_config = ETH_ENC28J60_DEFAULT_CONFIG(spi_host, &spi_devcfg);
+    mac_config.int_gpio_num = _pin_irq;
+    if (_pin_irq < 0) {
+      mac_config.poll_period_ms = 10;
+    }
+    if (_spi != NULL) {
+      mac_config.custom_spi_driver.config = this;
+      mac_config.custom_spi_driver.init = _eth_spi_init;
+      mac_config.custom_spi_driver.deinit = _eth_spi_deinit;
+      mac_config.custom_spi_driver.read = _eth_spi_read;
+      mac_config.custom_spi_driver.write = _eth_spi_write;
+    }
+    mac = esp_eth_mac_new_enc28j60(&mac_config, &eth_mac_config);
+    phy_config.autonego_timeout_ms = 0; // ENC28J60 doesn't support auto-negotiation
+    phy = esp_eth_phy_new_enc28j60(&phy_config);
+  } else {
     log_e("Unsupported PHY module: %d", (int)type);
     return false;
   }
