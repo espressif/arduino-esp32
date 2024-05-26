@@ -140,7 +140,10 @@ set(ARDUINO_LIBRARY_ESP_SR_SRCS
 
 set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
 
-set(ARDUINO_LIBRARY_Ethernet_SRCS libraries/Ethernet/src/ETH.cpp)
+set(ARDUINO_LIBRARY_Ethernet_SRCS 
+  libraries/Ethernet/src/ETH.cpp
+  libraries/Ethernet/src/utility/enc28j60/esp_eth_mac_enc28j60.c
+  libraries/Ethernet/src/utility/enc28j60/esp_eth_phy_enc28j60.c)
 
 set(ARDUINO_LIBRARY_FFat_SRCS libraries/FFat/src/FFat.cpp)
 
