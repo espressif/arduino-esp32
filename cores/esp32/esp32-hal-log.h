@@ -80,6 +80,12 @@ extern "C" {
 #define ARDUHAL_LOG_COLOR_PRINT_END
 #endif
 
+#ifdef USE_ESP_IDF_LOG
+#ifndef ARDUHAL_ESP_LOG_TAG
+#define ARDUHAL_ESP_LOG_TAG "ARDUINO"
+#endif
+#endif
+
 const char *pathToFileName(const char *path);
 int log_printf(const char *fmt, ...);
 void log_print_buf(const uint8_t *b, size_t len);
@@ -104,15 +110,15 @@ void log_print_buf(const uint8_t *b, size_t len);
 #else
 #define log_v(format, ...)                                            \
   do {                                                                \
-    ESP_LOG_LEVEL_LOCAL(ESP_LOG_VERBOSE, TAG, format, ##__VA_ARGS__); \
+    ESP_LOG_LEVEL_LOCAL(ESP_LOG_VERBOSE, ARDUHAL_ESP_LOG_TAG, format, ##__VA_ARGS__); \
   } while (0)
 #define isr_log_v(format, ...)                                                  \
   do {                                                                          \
-    ets_printf(LOG_FORMAT(V, format), esp_log_timestamp(), TAG, ##__VA_ARGS__); \
+    ets_printf(LOG_FORMAT(V, format), esp_log_timestamp(), ARDUHAL_ESP_LOG_TAG, ##__VA_ARGS__); \
   } while (0)
 #define log_buf_v(b, l)                                 \
   do {                                                  \
-    ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_VERBOSE); \
+    ESP_LOG_BUFFER_HEXDUMP(ARDUHAL_ESP_LOG_TAG, b, l, ESP_LOG_VERBOSE); \
   } while (0)
 #endif
 #else
@@ -140,15 +146,15 @@ void log_print_buf(const uint8_t *b, size_t len);
 #else
 #define log_d(format, ...)                                          \
   do {                                                              \
-    ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG, TAG, format, ##__VA_ARGS__); \
+    ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG, ARDUHAL_ESP_LOG_TAG, format, ##__VA_ARGS__); \
   } while (0)
 #define isr_log_d(format, ...)                                                  \
   do {                                                                          \
-    ets_printf(LOG_FORMAT(D, format), esp_log_timestamp(), TAG, ##__VA_ARGS__); \
+    ets_printf(LOG_FORMAT(D, format), esp_log_timestamp(), ARDUHAL_ESP_LOG_TAG, ##__VA_ARGS__); \
   } while (0)
 #define log_buf_d(b, l)                               \
   do {                                                \
-    ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_DEBUG); \
+    ESP_LOG_BUFFER_HEXDUMP(ARDUHAL_ESP_LOG_TAG, b, l, ESP_LOG_DEBUG); \
   } while (0)
 #endif
 #else
@@ -176,15 +182,15 @@ void log_print_buf(const uint8_t *b, size_t len);
 #else
 #define log_i(format, ...)                                         \
   do {                                                             \
-    ESP_LOG_LEVEL_LOCAL(ESP_LOG_INFO, TAG, format, ##__VA_ARGS__); \
+    ESP_LOG_LEVEL_LOCAL(ESP_LOG_INFO, ARDUHAL_ESP_LOG_TAG, format, ##__VA_ARGS__); \
   } while (0)
 #define isr_log_i(format, ...)                                                  \
   do {                                                                          \
-    ets_printf(LOG_FORMAT(I, format), esp_log_timestamp(), TAG, ##__VA_ARGS__); \
+    ets_printf(LOG_FORMAT(I, format), esp_log_timestamp(), ARDUHAL_ESP_LOG_TAG, ##__VA_ARGS__); \
   } while (0)
 #define log_buf_i(b, l)                              \
   do {                                               \
-    ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_INFO); \
+    ESP_LOG_BUFFER_HEXDUMP(ARDUHAL_ESP_LOG_TAG, b, l, ESP_LOG_INFO); \
   } while (0)
 #endif
 #else
@@ -212,15 +218,15 @@ void log_print_buf(const uint8_t *b, size_t len);
 #else
 #define log_w(format, ...)                                         \
   do {                                                             \
-    ESP_LOG_LEVEL_LOCAL(ESP_LOG_WARN, TAG, format, ##__VA_ARGS__); \
+    ESP_LOG_LEVEL_LOCAL(ESP_LOG_WARN, ARDUHAL_ESP_LOG_TAG, format, ##__VA_ARGS__); \
   } while (0)
 #define isr_log_w(format, ...)                                                  \
   do {                                                                          \
-    ets_printf(LOG_FORMAT(W, format), esp_log_timestamp(), TAG, ##__VA_ARGS__); \
+    ets_printf(LOG_FORMAT(W, format), esp_log_timestamp(), ARDUHAL_ESP_LOG_TAG, ##__VA_ARGS__); \
   } while (0)
 #define log_buf_w(b, l)                              \
   do {                                               \
-    ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_WARN); \
+    ESP_LOG_BUFFER_HEXDUMP(ARDUHAL_ESP_LOG_TAG, b, l, ESP_LOG_WARN); \
   } while (0)
 #endif
 #else
@@ -248,15 +254,15 @@ void log_print_buf(const uint8_t *b, size_t len);
 #else
 #define log_e(format, ...)                                          \
   do {                                                              \
-    ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR, TAG, format, ##__VA_ARGS__); \
+    ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR, ARDUHAL_ESP_LOG_TAG, format, ##__VA_ARGS__); \
   } while (0)
 #define isr_log_e(format, ...)                                                  \
   do {                                                                          \
-    ets_printf(LOG_FORMAT(E, format), esp_log_timestamp(), TAG, ##__VA_ARGS__); \
+    ets_printf(LOG_FORMAT(E, format), esp_log_timestamp(), ARDUHAL_ESP_LOG_TAG, ##__VA_ARGS__); \
   } while (0)
 #define log_buf_e(b, l)                               \
   do {                                                \
-    ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_ERROR); \
+    ESP_LOG_BUFFER_HEXDUMP(ARDUHAL_ESP_LOG_TAG, b, l, ESP_LOG_ERROR); \
   } while (0)
 #endif
 #else
@@ -284,15 +290,15 @@ void log_print_buf(const uint8_t *b, size_t len);
 #else
 #define log_n(format, ...)                                          \
   do {                                                              \
-    ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR, TAG, format, ##__VA_ARGS__); \
+    ESP_LOG_LEVEL_LOCAL(ESP_LOG_ERROR, ARDUHAL_ESP_LOG_TAG, format, ##__VA_ARGS__); \
   } while (0)
 #define isr_log_n(format, ...)                                                  \
   do {                                                                          \
-    ets_printf(LOG_FORMAT(E, format), esp_log_timestamp(), TAG, ##__VA_ARGS__); \
+    ets_printf(LOG_FORMAT(E, format), esp_log_timestamp(), ARDUHAL_ESP_LOG_TAG, ##__VA_ARGS__); \
   } while (0)
 #define log_buf_n(b, l)                               \
   do {                                                \
-    ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_ERROR); \
+    ESP_LOG_BUFFER_HEXDUMP(ARDUHAL_ESP_LOG_TAG, b, l, ESP_LOG_ERROR); \
   } while (0)
 #endif
 #else
@@ -309,12 +315,7 @@ void log_print_buf(const uint8_t *b, size_t len);
 
 #include "esp_log.h"
 
-#ifdef USE_ESP_IDF_LOG
-//#ifndef TAG
-//#define TAG "ARDUINO"
-//#endif
-//#define log_n(format, ...) myLog(ESP_LOG_NONE, format, ##__VA_ARGS__)
-#else
+#ifndef USE_ESP_IDF_LOG
 #ifdef CONFIG_ARDUHAL_ESP_LOG
 #undef ESP_LOGE
 #undef ESP_LOGW
