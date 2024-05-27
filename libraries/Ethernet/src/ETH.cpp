@@ -553,7 +553,7 @@ bool ETHClass::beginSPI(
     buscfg.data7_io_num = -1;
     buscfg.max_transfer_sz = -1;
     ret = spi_bus_initialize(spi_host, &buscfg, SPI_DMA_CH_AUTO);
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE) {
       log_e("SPI bus initialize failed: %d", ret);
       return false;
     }
