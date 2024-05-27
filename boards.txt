@@ -19381,12 +19381,12 @@ m5stack_unit_cams3.menu.JTAGAdapter.bridge=ESP USB Bridge
 m5stack_unit_cams3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_unit_cams3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-m5stack_unit_cams3.menu.PSRAM.disabled=Disabled
-m5stack_unit_cams3.menu.PSRAM.disabled.build.defines=
-m5stack_unit_cams3.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_unit_cams3.menu.PSRAM.opi=OPI PSRAM
 m5stack_unit_cams3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 m5stack_unit_cams3.menu.PSRAM.opi.build.psram_type=opi
+m5stack_unit_cams3.menu.PSRAM.disabled=Disabled
+m5stack_unit_cams3.menu.PSRAM.disabled.build.defines=
+m5stack_unit_cams3.menu.PSRAM.disabled.build.psram_type=qspi
 
 m5stack_unit_cams3.menu.FlashMode.qio=QIO 80MHz
 m5stack_unit_cams3.menu.FlashMode.qio.build.flash_mode=dio
