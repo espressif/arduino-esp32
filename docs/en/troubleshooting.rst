@@ -214,8 +214,6 @@ With this knowledge find your module in the table and note what is written in th
 - For QSPI go to Tools > PSRAM > QSPI PSRAM
 - For OPI go to Tools > PSRAM > OPI PSRAM
 
-For M5UnitCamS3, make sure to select the board as "M5UnitCamS3" in the Arduino IDE and set the PSRAM option to "OPI PSRAM". This will help avoid compatibility issues.
-
 Note that WROOM-2 has always OPI.
 
 +---------+--------+------------+-------+
