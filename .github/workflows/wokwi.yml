@@ -95,6 +95,9 @@ jobs:
       - name: Install Wokwi CLI
         run: curl -L https://wokwi.com/ci/install.sh | sh
 
+      - name: Wokwi CI Server
+        uses: wokwi/wokwi-ci-server-action@v1
+
       - name: Install dependencies
         run: |
           pip install -U pip

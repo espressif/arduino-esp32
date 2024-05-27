@@ -59,6 +59,12 @@ jobs:
           echo "test_folder=${test_folder}" >> $GITHUB_OUTPUT
           echo "test_type=${test_type}" >> $GITHUB_OUTPUT
 
+      - name: Upload Event file
+        uses: actions/upload-artifact@v4
+        with:
+          name: event_file
+          path: ${{github.event_path}}
+
   build:
     needs: gen_chunks
     name: ${{matrix.chip}}-Build#${{matrix.chunks}}
@@ -267,13 +273,3 @@ jobs:
           path: |
             tests/**/*.xml
             tests/**/result_*.json
-
-  event_file:
-    name: "Event File"
-    runs-on: ubuntu-latest
-    steps:
-       - name: Upload
-         uses: actions/upload-artifact@v4
-         with:
-           name: event_file
-           path: ${{github.event_path}}
