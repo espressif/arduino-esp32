@@ -1,0 +1,105 @@
+name: Hardware tests
+
+on:
+  workflow_call:
+    inputs:
+      type:
+        type: string
+        description: 'Type of tests to run'
+        required: true
+      chip:
+        type: string
+        description: 'Chip to run tests for'
+        required: true
+
+concurrency:
+  group: tests-hw-${{ github.event.pull_request.number || github.ref }}-${{ inputs.chip }}-${{ inputs.type }}
+  cancel-in-progress: true
+
+jobs:
+  hardware-test:
+    name: Hardware ${{ inputs.chip }} ${{ inputs.type }} tests
+    runs-on: [arduino, "${{ inputs.chip }}"]
+    env:
+      id: ${{ github.event.pull_request.number || github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ inputs.chip }}-${{ inputs.type }}
+    container:
+      image: python:3.10.1-bullseye
+      options: --privileged
+    steps:
+      - name: Check if already built
+        if: ${{ github.event.pull_request.number != null }}
+        id: cache-results
+        uses: actions/cache/restore@v4
+        with:
+          key: tests-${{ env.id }}-results-hw
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Evaluate if tests should be run
+        id: check-tests
+        run: |
+          cache_exists=${{ steps.cache-results.outputs.cache-hit == 'true' || false }}
+          enabled=true
+
+          if [[ $cache_exists == 'true' ]]; then
+            echo "Already ran, skipping"
+            enabled=false
+          fi
+
+          echo "enabled=$enabled" >> $GITHUB_OUTPUT
+
+      - name: Checkout repository
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: actions/setup-python@v5
+        if: steps.check-tests.outputs.enabled == 'true'
+        with:
+          cache-dependency-path: tests/requirements.txt
+          cache: 'pip'
+          python-version: '3.10.1'
+
+      - name: Install dependencies
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+
+      - name: Get binaries
+        id: cache-build-binaries
+        uses: actions/cache/restore@v4
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        with:
+          fail-on-cache-miss: true
+          key: tests-${{ env.id }}-bin
+          path: |
+            ~/.arduino/tests/**/build*.tmp/*.bin
+            ~/.arduino/tests/**/build*.tmp/*.elf
+            ~/.arduino/tests/**/build*.tmp/*.json
+
+      - name: Run Tests
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          bash .github/scripts/tests_run.sh -c -type ${{ inputs.type }} -t ${{ inputs.chip }} -i 0 -m 1 -e
+
+      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} hardware results as cache
+        uses: actions/cache/save@v4
+        if: ${{ always() && steps.check-tests.outputs.enabled == 'true' }}
+        with:
+          key: tests-${{ env.id }}-results-hw
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} hardware results as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-results-hw-${{ inputs.chip }}-${{ inputs.type }}
+          overwrite: true
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json

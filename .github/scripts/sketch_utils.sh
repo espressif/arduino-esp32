@@ -43,6 +43,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     done
 
     xtra_opts=$*
+    len=0
 
     if [ -z $sketchdir ]; then
         echo "ERROR: Sketch directory not provided"
@@ -64,13 +65,17 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         # precedence.  Note that the following logic also falls to the default
         # parameters if no arguments were passed and no file was found.
 
-        if [ -z $options ] && [ -f $sketchdir/cfg.json ]; then
+        if [ -z $options ] && [ -f $sketchdir/ci.json ]; then
             # The config file could contain multiple FQBNs for one chip.  If
             # that's the case we build one time for every FQBN.
 
-            len=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn | length' $sketchdir/cfg.json`
-            fqbn=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn' $sketchdir/cfg.json`
-        else
+            len=`jq -r --arg target $target '.fqbn[$target] | length' $sketchdir/ci.json`
+            if [ $len -gt 0 ]; then
+                fqbn=`jq -r --arg target $target '.fqbn[$target] | sort' $sketchdir/ci.json`
+            fi
+        fi
+
+        if [ ! -z $options ] || [ $len -eq 0 ]; then
             # Since we are passing options, we will end up with only one FQBN to
             # build.
 
@@ -78,12 +83,12 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             # Default FQBN options if none were passed in the command line.
 
-            esp32_opts="FlashMode=dio,PSRAM=enabled,PartitionScheme=huge_app"
-            esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app"
-            esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
-            esp32c3_opts="FlashMode=dio,PartitionScheme=huge_app"
-            esp32c6_opts="PartitionScheme=huge_app"
-            esp32h2_opts="PartitionScheme=huge_app"
+            esp32_opts="PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio"
+            esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio"
+            esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=dio"
+            esp32c3_opts="PartitionScheme=huge_app,FlashMode=dio"
+            esp32c6_opts="PartitionScheme=huge_app,FlashMode=dio"
+            esp32h2_opts="PartitionScheme=huge_app,FlashMode=dio"
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
@@ -135,7 +140,14 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
     sketchname=$(basename $sketchdir)
 
-    if [[ -n $target ]] && [[ -f "$sketchdir/.skip.$target" ]]; then
+    # If the target is listed as false, skip the sketch. Otherwise, include it.
+    if [ -f $sketchdir/ci.json ]; then
+        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
+    else
+        is_target="true"
+    fi
+
+    if [[ "$is_target" == "false" ]]; then
         echo "Skipping $sketchname for target $target"
         exit 0
     fi
@@ -270,12 +282,19 @@ function count_sketches(){ # count_sketches <path> [target]
         local sketchname=$(basename $sketch)
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]] && [[ -f "$sketchdir/.skip.$target" ]]; then
-            continue
-        else
-            echo $sketch >> sketches.txt
-            sketchnum=$(($sketchnum + 1))
+        elif [[ -n $target ]]; then
+            # If the target is listed as false, skip the sketch. Otherwise, include it.
+            if [ -f $sketchdir/ci.json ]; then
+                is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
+            else
+                is_target="true"
+            fi
+            if [[ "$is_target" == "false" ]]; then
+                continue
+            fi
         fi
+        echo $sketch >> sketches.txt
+        sketchnum=$(($sketchnum + 1))
     done
     return $sketchnum
 }
@@ -339,7 +358,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         return 1
     fi
 
-    if [ "$chunk_index" -gt "$chunk_max" ] &&  [ "$chunk_max" -ge 2 ]; then
+    if [ "$chunk_index" -gt "$chunk_max" ] && [ "$chunk_max" -ge 2 ]; then
         chunk_index=$chunk_max
     fi
 
@@ -364,8 +383,6 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     else
         start_index=$(( $chunk_index * $chunk_size ))
         if [ "$sketchcount" -le "$start_index" ]; then
-            echo "Skipping job"
-            touch ~/.build_skipped
             return 0
         fi
 

@@ -48,8 +48,8 @@
 
 #if SOC_UART_NUM == 2
 // Used for the pin swap test
-#define NEW_RX1 6
-#define NEW_TX1 7
+#define NEW_RX1 9
+#define NEW_TX1 10
 #endif
 
 /* Utility global variables */
