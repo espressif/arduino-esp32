@@ -6,6 +6,19 @@ on:
     branches:
     - master
     - release/*
+    paths:
+      - 'cores/**'
+      - 'libraries/**'
+      - 'package/**'
+      - 'tools/**.py'
+      - 'platform.txt'
+      - 'programmers.txt'
+      - '.github/workflows/push.yml'
+      - '.github/scripts/**'
+      - '!.github/scripts/find_*'
+      - '!.github/scripts/on-release.sh'
+      - '!.github/scripts/tests_*'
+      - '!.github/scripts/upload_*'
   pull_request:
 
 concurrency:
@@ -35,16 +48,20 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.x'
-    - name: Cache tools
-      id: cache-linux
+
+    - name: Get libs cache
       uses: actions/cache@v4
       with:
+        key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
         path: |
           ./tools/dist
-          ~/arduino_ide
-        key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json',
-                                            'tools/get.py',
-                                            '.github/scripts/install-arduino-ide.sh') }}
+          ./tools/esp32-arduino-libs
+          ./tools/esptool
+          ./tools/mk*
+          ./tools/openocd-esp32
+          ./tools/riscv32-*
+          ./tools/xtensa-*
+
     - name: Build Sketches
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15 1
 
@@ -127,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     # Check out repository
-      - name: Checkout repository    
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{secrets.GITHUB_TOKEN}}
@@ -143,7 +160,7 @@ jobs:
           pattern: pr_cli_compile_*
           merge-multiple: true
           path: master_cli_compile
-        
+
       - name: List files in the directory
         run: ls -R
 
@@ -155,7 +172,7 @@ jobs:
           git add --all
           git commit -m "Updated cli compile json files"
           git push origin HEAD:gh-pages
-  
+
   #Upload PR number as artifact
   upload-pr-number:
     name: Upload PR number

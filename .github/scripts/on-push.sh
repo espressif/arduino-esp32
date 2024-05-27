@@ -69,7 +69,6 @@ fi
 
 SCRIPTS_DIR="./.github/scripts"
 if [ "$BUILD_PIO" -eq 0 ]; then
-    #source ${SCRIPTS_DIR}/install-arduino-ide.sh
     source ${SCRIPTS_DIR}/install-arduino-cli.sh
     source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 

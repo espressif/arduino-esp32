@@ -89,6 +89,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Set up Python 3.8
         # Skip setting python on ARM because of missing compatibility: https://github.com/actions/setup-python/issues/108
@@ -107,7 +108,7 @@ jobs:
             pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/$tool.py
           done
       - name: Sign binaries
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-latest' && env.CERTIFICATE != '' && env.CERTIFICATE_PASSWORD != ''
         env:
           CERTIFICATE: ${{ secrets.CERTIFICATE }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
