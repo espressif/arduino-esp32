@@ -311,8 +311,8 @@ config ARDUINO_SELECTIVE_FFat
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_FS
     default y
 
-config ARDUINO_SELECTIVE_LITTLEFS
-    bool "Enable LITTLEFS"
+config ARDUINO_SELECTIVE_LittleFS
+    bool "Enable LittleFS"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_FS
     default y
 

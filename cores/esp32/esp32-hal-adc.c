@@ -440,7 +440,7 @@ esp_err_t __analogContinuousInit(adc_channel_t *channel, uint8_t channel_num, ad
   dig_cfg.pattern_num = channel_num;
   for (int i = 0; i < channel_num; i++) {
     adc_pattern[i].atten = __adcContinuousAtten;
-    adc_pattern[i].channel = channel[i] & 0x7;
+    adc_pattern[i].channel = channel[i];
     adc_pattern[i].unit = ADC_UNIT_1;
     adc_pattern[i].bit_width = __adcContinuousWidth;
   }

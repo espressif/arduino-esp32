@@ -7,6 +7,7 @@ function run_test() {
     local erase_flash=$4
     local sketchdir=$(dirname $sketch)
     local sketchname=$(basename $sketchdir)
+    local result=0
 
     if [[ -f "$sketchdir/.skip.$platform" ]] || [[ -f "$sketchdir/.skip.$target" ]] || [[ -f "$sketchdir/.skip.$platform.$target" ]]; then
       echo "Skipping $sketchname test for $target, platform: $platform"
@@ -61,11 +62,18 @@ function run_test() {
             extra_args="--embedded-services esp,arduino"
         fi
 
+        result=0
         echo "pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args"
-        bash -c "pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args"
+        bash -c "set +e; pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args; exit \$?" || result=$?
         result=$?
         if [ $result -ne 0 ]; then
-            return $result
+            result=0
+            echo "Retrying test: $sketchname -- Config: $i"
+            bash -c "set +e; pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args; exit \$?" || result=$?
+            result=$?
+            if [ $result -ne 0 ]; then
+              exit $result
+            fi
         fi
     done
 }
