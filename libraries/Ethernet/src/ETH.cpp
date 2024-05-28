@@ -535,7 +535,11 @@ bool ETHClass::beginSPI(
   if (_spi != NULL) {
     pinMode(_pin_cs, OUTPUT);
     digitalWrite(_pin_cs, HIGH);
-    perimanSetPinBusExtraType(_pin_cs, "ETH_CS");
+    char cs_num_str[3];
+    itoa(_eth_index, cs_num_str, 10);
+    strcat(strcpy(_cs_str, "ETH_CS["), cs_num_str);
+    strcat(_cs_str, "]");
+    perimanSetPinBusExtraType(_pin_cs, _cs_str);
   }
 #endif
 
@@ -742,40 +746,46 @@ bool ETHClass::beginSPI(
 #if ETH_SPI_SUPPORTS_CUSTOM
   if (_spi == NULL) {
 #endif
-    if (!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_cs, "ETH_SPI_CS");
 #if ETH_SPI_SUPPORTS_CUSTOM
   }
 #endif
 #if ETH_SPI_SUPPORTS_NO_IRQ
   if (_pin_irq != -1) {
 #endif
-    if (!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_irq, "ETH_IRQ");
 #if ETH_SPI_SUPPORTS_NO_IRQ
   }
 #endif
   if (_pin_sck != -1) {
-    if (!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_sck, "ETH_SPI_SCK");
   }
   if (_pin_miso != -1) {
-    if (!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_miso, "ETH_SPI_MISO");
   }
   if (_pin_mosi != -1) {
-    if (!perimanSetPinBus(_pin_mosi, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_mosi, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_mosi, "ETH_SPI_MOSI");
   }
   if (_pin_rst != -1) {
-    if (!perimanSetPinBus(_pin_rst, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_rst, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_rst, "ETH_RST");
   }
 
   Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);

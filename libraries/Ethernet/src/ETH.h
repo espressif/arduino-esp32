@@ -188,6 +188,7 @@ private:
   esp_eth_phy_t *_phy;
 #if ETH_SPI_SUPPORTS_CUSTOM
   SPIClass *_spi;
+  char _cs_str[10];
 #endif
   uint8_t _spi_freq_mhz;
   int8_t _pin_cs;
