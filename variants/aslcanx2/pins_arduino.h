@@ -4,21 +4,21 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x303a
-#define USB_PID 0x1001
+#define USB_VID 0x16D0
+#define USB_PID 0x07F2
 
 static const uint8_t LED_BUILTIN = 2;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
 
 static const uint8_t CAN1_RX = 6;
 static const uint8_t CAN1_TX = 7;
 
-static const uint8_t SS   = -1;
-static const uint8_t CS   = 10;
+static const uint8_t SS = -1;
+static const uint8_t CS = 10;
 static const uint8_t MOSI = 11;
 static const uint8_t MISO = 13;
-static const uint8_t SCK  = 12;
+static const uint8_t SCK = 12;
 
 
 static const uint8_t TX = 43;
