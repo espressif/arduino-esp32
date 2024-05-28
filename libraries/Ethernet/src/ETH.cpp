@@ -119,7 +119,7 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
 }
 
 ETHClass::ETHClass(uint8_t eth_index)
-  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL)
+  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL), _mac(NULL), _phy(NULL)
 #if ETH_SPI_SUPPORTS_CUSTOM
     ,
     _spi(NULL)
@@ -587,8 +587,6 @@ bool ETHClass::beginSPI(
   spi_devcfg.spics_io_num = _pin_cs;
   spi_devcfg.queue_size = 20;
 
-  esp_eth_mac_t *mac = NULL;
-  esp_eth_phy_t *phy = NULL;
 #if CONFIG_ETH_SPI_ETHERNET_W5500
   if (type == ETH_PHY_W5500) {
     eth_w5500_config_t mac_config = ETH_W5500_DEFAULT_CONFIG(spi_host, &spi_devcfg);
@@ -607,8 +605,8 @@ bool ETHClass::beginSPI(
       mac_config.custom_spi_driver.write = _eth_spi_write;
     }
 #endif
-    mac = esp_eth_mac_new_w5500(&mac_config, &eth_mac_config);
-    phy = esp_eth_phy_new_w5500(&phy_config);
+    _mac = esp_eth_mac_new_w5500(&mac_config, &eth_mac_config);
+    _phy = esp_eth_phy_new_w5500(&phy_config);
   } else
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -624,8 +622,8 @@ bool ETHClass::beginSPI(
       mac_config.custom_spi_driver.write = _eth_spi_write;
     }
 #endif
-    mac = esp_eth_mac_new_dm9051(&mac_config, &eth_mac_config);
-    phy = esp_eth_phy_new_dm9051(&phy_config);
+    _mac = esp_eth_mac_new_dm9051(&mac_config, &eth_mac_config);
+    _phy = esp_eth_phy_new_dm9051(&phy_config);
   } else
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
@@ -641,8 +639,8 @@ bool ETHClass::beginSPI(
       mac_config.custom_spi_driver.write = _eth_spi_write;
     }
 #endif
-    mac = esp_eth_mac_new_ksz8851snl(&mac_config, &eth_mac_config);
-    phy = esp_eth_phy_new_ksz8851snl(&phy_config);
+    _mac = esp_eth_mac_new_ksz8851snl(&mac_config, &eth_mac_config);
+    _phy = esp_eth_phy_new_ksz8851snl(&phy_config);
   } else
 #endif
   {
@@ -651,7 +649,7 @@ bool ETHClass::beginSPI(
   }
 
   // Init Ethernet driver to default and install it
-  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(mac, phy);
+  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(_mac, _phy);
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("SPI Ethernet driver install failed: %d", ret);
@@ -841,6 +839,16 @@ void ETHClass::end(void) {
       return;
     }
     _eth_handle = NULL;
+    //delete mac
+    if (_mac != NULL) {
+      _mac->del(_mac);
+      _mac = NULL;
+    }
+    //delete phy
+    if (_phy != NULL) {
+      _phy->del(_phy);
+      _phy = NULL;
+    }
   }
 
   if (_eth_ev_instance != NULL) {
