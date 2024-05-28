@@ -67,7 +67,8 @@
         "name": "ZACwire for TSic",
         "exclude_targets": [],
         "sketch_path": [
-            "~/Arduino/libraries/ZACwire_for_TSic/examples/FineTuningESP32/FineTuningESP32.ino"
+            "~/Arduino/libraries/ZACwire_for_TSic/examples/ReadingTwoTSICs/ReadingTwoTSICs.ino",
+            "~/Arduino/libraries/ZACwire_for_TSic/examples/ReadSingleTSIC206/ReadSingleTSIC206.ino"
         ]
     }
 ]
