@@ -20,7 +20,6 @@ static const uint8_t MOSI = 11;
 static const uint8_t MISO = 13;
 static const uint8_t SCK = 12;
 
-
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
