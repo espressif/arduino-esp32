@@ -62,5 +62,12 @@
         "sketch_path": [
             "~/Arduino/libraries/WS2812FX/examples/ws2812fx_spi/ws2812fx_spi.ino"
         ]
+    },
+    {
+        "name": "ZACwire for TSic",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/examples/FineTuningESP32/FineTuningESP32.ino"
+        ]
     }
 ]
