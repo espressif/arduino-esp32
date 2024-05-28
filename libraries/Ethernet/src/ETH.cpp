@@ -42,14 +42,15 @@
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
 
-static ETHClass *_ethernets[3] = {NULL, NULL, NULL};
+#define NUM_SUPPORTED_ETH_PORTS 3
+static ETHClass *_ethernets[NUM_SUPPORTED_ETH_PORTS] = {NULL, NULL, NULL};
 static esp_event_handler_instance_t _eth_ev_instance = NULL;
 
 static void _eth_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
 
   if (event_base == ETH_EVENT) {
     esp_eth_handle_t eth_handle = *((esp_eth_handle_t *)event_data);
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
       if (_ethernets[i] != NULL && _ethernets[i]->handle() == eth_handle) {
         _ethernets[i]->_onEthEvent(event_id, event_data);
       }
@@ -60,14 +61,14 @@ static void _eth_event_cb(void *arg, esp_event_base_t event_base, int32_t event_
 // This callback needs to be aware of which interface it should match against
 static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info) {
   if (event == ARDUINO_EVENT_ETH_CONNECTED) {
-    uint8_t index = 3;
-    for (int i = 0; i < 3; ++i) {
+    uint8_t index = NUM_SUPPORTED_ETH_PORTS;
+    for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
       if (_ethernets[i] != NULL && _ethernets[i]->handle() == info.eth_connected) {
         index = i;
         break;
       }
     }
-    if (index == 3) {
+    if (index == NUM_SUPPORTED_ETH_PORTS) {
       log_e("Could not find ETH interface with that handle!");
       return;
     }
@@ -843,8 +844,20 @@ void ETHClass::end(void) {
   }
 
   if (_eth_ev_instance != NULL) {
-    if (esp_event_handler_unregister(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb) == ESP_OK) {
-      _eth_ev_instance = NULL;
+    bool do_not_unreg_ev_handler = false;
+    for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
+      if (_ethernets[i] != NULL && _ethernets[i]->netif() != NULL && _ethernets[i]->netif() != _esp_netif) {
+        do_not_unreg_ev_handler = true;
+        break;
+      }
+    }
+    if (!do_not_unreg_ev_handler) {
+      if (esp_event_handler_unregister(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb) == ESP_OK) {
+        _eth_ev_instance = NULL;
+        log_v("Unregistered event handler");
+      } else {
+        log_e("Failed to unregister event handler");
+      }
     }
   }
 

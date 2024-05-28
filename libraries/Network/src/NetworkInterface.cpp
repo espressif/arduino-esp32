@@ -239,8 +239,21 @@ int NetworkInterface::waitStatusBits(int bits, uint32_t timeout_ms) const {
 
 void NetworkInterface::destroyNetif() {
   if (_ip_ev_instance != NULL) {
-    esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, &_ip_event_cb);
-    _ip_ev_instance = NULL;
+    bool do_not_unreg_ev_handler = false;
+    for (int i = 0; i < ESP_NETIF_ID_MAX; ++i) {
+      if (_interfaces[i] != NULL && _interfaces[i] != this) {
+        do_not_unreg_ev_handler = true;
+        break;
+      }
+    }
+    if (!do_not_unreg_ev_handler) {
+      if (esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, &_ip_event_cb) == ESP_OK) {
+        _ip_ev_instance = NULL;
+        log_v("Unregistered event handler");
+      } else {
+        log_e("Failed to unregister event handler");
+      }
+    }
   }
   if (_esp_netif != NULL) {
     esp_netif_destroy(_esp_netif);
@@ -250,6 +263,12 @@ void NetworkInterface::destroyNetif() {
     vEventGroupDelete(_interface_event_group);
     _interface_event_group = NULL;
     _initial_bits = 0;
+  }
+  for (int i = 0; i < ESP_NETIF_ID_MAX; ++i) {
+    if (_interfaces[i] != NULL && _interfaces[i] == this) {
+      _interfaces[i] = NULL;
+      break;
+    }
   }
 }
 
