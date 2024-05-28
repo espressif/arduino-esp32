@@ -46,7 +46,7 @@ jobs:
             IFS=$'\t' read name url <<< "$artifact"
             gh api $url > "$name.zip"
             unzip -j "$name.zip" -d "temp_$name"
-            if [[ "$name" == "pr_num" ]]; then
+            if [[ "$name" == "pr_number" ]]; then
               mv "temp_$name"/* sizes-report
             elif [[ "$name" == "pr_cli"* ]]; then
               mv "temp_$name"/* sizes-report/pr
