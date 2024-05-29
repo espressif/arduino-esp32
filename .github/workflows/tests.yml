@@ -1,4 +1,4 @@
-name: Tests
+name: Unit Tests
 
 on:
   workflow_dispatch:
@@ -8,6 +8,9 @@ on:
       - 'tests/**'
       - 'cores/**'
       - 'libraries/**'
+      - '!libraries/**.md'
+      - '!libraries/**.txt'
+      - '!libraries/**.properties'
       - 'package/**'
       - '.github/workflows/tests.yml'
       - '.github/workflows/build_tests.yml'

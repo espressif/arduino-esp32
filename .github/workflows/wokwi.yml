@@ -67,9 +67,6 @@ jobs:
           cache: 'pip'
           python-version: '3.x'
 
-      - name: Wokwi CI Server
-        uses: wokwi/wokwi-ci-server-action@v1
-
       - name: Install dependencies
         if: steps.check-tests.outputs.enabled == 'true'
         run: |
@@ -81,6 +78,7 @@ jobs:
         run: curl -L https://wokwi.com/ci/install.sh | sh
 
       - name: Wokwi CI Server
+        if: steps.check-tests.outputs.enabled == 'true'
         uses: wokwi/wokwi-ci-server-action@v1
 
       - name: Get binaries
