@@ -221,6 +221,7 @@ RVTC_NEW_NAME="esp-rv32"
 echo "Generating platform.txt..."
 cat "$GITHUB_WORKSPACE/platform.txt" | \
 sed "s/version=.*/version=$RELEASE_TAG/g" | \
+sed 's/tools\.esp32-arduino-libs\.path\.windows=.*//g' | \
 sed 's/{runtime\.platform\.path}.tools.esp32-arduino-libs/\{runtime.tools.esp32-arduino-libs.path\}/g' | \
 sed 's/{runtime\.platform\.path}.tools.xtensa-esp-elf-gdb/\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
 sed 's/{runtime\.platform\.path}.tools.xtensa-esp32-elf/\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \

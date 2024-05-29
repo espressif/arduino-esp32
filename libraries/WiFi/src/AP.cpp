@@ -85,7 +85,7 @@ static void _onApArduinoEvent(arduino_event_t *ev) {
   if (_ap_network_if == NULL || ev->event_id < ARDUINO_EVENT_WIFI_AP_START || ev->event_id > ARDUINO_EVENT_WIFI_AP_GOT_IP6) {
     return;
   }
-  log_d("Arduino AP Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
+  log_v("Arduino AP Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
   if (ev->event_id == ARDUINO_EVENT_WIFI_AP_START) {
     if (_ap_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
       esp_err_t err = esp_netif_create_ip6_linklocal(_ap_network_if->netif());

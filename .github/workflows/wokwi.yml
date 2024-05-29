@@ -67,14 +67,31 @@ jobs:
           cache: 'pip'
           python-version: '3.x'
 
-      - name: Wokwi CI Server
-        uses: wokwi/wokwi-ci-server-action@v1
-
       - name: Install dependencies
         if: steps.check-tests.outputs.enabled == 'true'
         run: |
           pip install -U pip
           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+
+      - name: Install Wokwi CLI
+        if: steps.check-tests.outputs.enabled == 'true'
+        run: curl -L https://wokwi.com/ci/install.sh | sh
+
+      - name: Wokwi CI Server
+        if: steps.check-tests.outputs.enabled == 'true'
+        uses: wokwi/wokwi-ci-server-action@v1
+
+      - name: Get binaries
+        if: steps.check-tests.outputs.enabled == 'true'
+        id: cache-build-binaries
+        uses: actions/cache/restore@v4
+        with:
+          fail-on-cache-miss: true
+          key: tests-${{ env.id }}-bin
+          path: |
+            ~/.arduino/tests/**/build*.tmp/*.bin
+            ~/.arduino/tests/**/build*.tmp/*.elf
+            ~/.arduino/tests/**/build*.tmp/*.json
 
       - name: Install Wokwi CLI
         if: steps.check-tests.outputs.enabled == 'true'
