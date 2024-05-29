@@ -5,7 +5,8 @@
 # Written by Ivan Grokhotkov, 2015
 #
 from __future__ import print_function
-from distutils.version import LooseVersion
+#from distutils.version import LooseVersion
+from packaging.version import Version
 import re
 import json
 import sys
@@ -33,7 +34,7 @@ def merge_objects(versions, obj):
 def pkgVersionNormalized(versionString):
 
     verStr = str(versionString)
-    verParts = re.split('\.|-rc', verStr, flags=re.IGNORECASE)
+    verParts = re.split('\.|-rc|-alpha', verStr, flags=re.IGNORECASE)
     
     if len(verParts) == 3:
         if (sys.version_info > (3, 0)): # Python 3
@@ -74,7 +75,8 @@ def main(args):
             print("Adding platform {0}-{1}".format(name, version), file=sys.stderr)
             pkg1['platforms'].append(platforms[name][version])
                 
-    pkg1['platforms'] = sorted(pkg1['platforms'], key=lambda k: LooseVersion(pkgVersionNormalized(k['version'])), reverse=True)
+    #pkg1['platforms'] = sorted(pkg1['platforms'], key=lambda k: LooseVersion(pkgVersionNormalized(k['version'])), reverse=True)
+    pkg1['platforms'] = sorted(pkg1['platforms'], key=lambda k: Version(pkgVersionNormalized(k['version'])), reverse=True)
 
     json.dump({'packages':[pkg1]}, sys.stdout, indent=2)
 

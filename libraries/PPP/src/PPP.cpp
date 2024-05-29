@@ -283,6 +283,7 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
     } else {
       pinMode(_pin_rst, OUTPUT);
     }
+    perimanSetPinBusExtraType(_pin_rst, "PPP_MODEM_RST");
     digitalWrite(_pin_rst, !_pin_rst_act_low);
     delay(200);
     digitalWrite(_pin_rst, _pin_rst_act_low);
