@@ -33,6 +33,7 @@ menu.NetworkLogLevel=Network Log Level
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
 ##############################################################
 
+# Generic definition to be used for USB discovery of CDC/JTAG
 esp32_family.name=ESP32 Family Device
 esp32_family.hide=true
 esp32_family.vid.0=0x303a
