@@ -33,6 +33,13 @@ menu.NetworkLogLevel=Network Log Level
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
 ##############################################################
 
+esp32_family.name=ESP32 Family Device
+esp32_family.hide=true
+esp32_family.vid.0=0x303a
+esp32_family.pid.0=0x1001
+
+##############################################################
+
 esp32c2.name=ESP32C2 Dev Module
 esp32c2.hide=true
 
@@ -149,8 +156,6 @@ esp32c2.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32h2.name=ESP32H2 Dev Module
-esp32h2.vid.0=0x303a
-esp32h2.pid.0=0x1001
 
 esp32h2.bootloader.tool=esptool_py
 esp32h2.bootloader.tool.default=esptool_py
@@ -329,8 +334,6 @@ esp32h2.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_comm
 ##############################################################
 
 esp32c6.name=ESP32C6 Dev Module
-esp32c6.vid.0=0x303a
-esp32c6.pid.0=0x1001
 
 esp32c6.bootloader.tool=esptool_py
 esp32c6.bootloader.tool.default=esptool_py
@@ -515,8 +518,6 @@ esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_comm
 ##############################################################
 
 esp32s3.name=ESP32S3 Dev Module
-esp32s3.vid.0=0x303a
-esp32s3.pid.0=0x1001
 
 esp32s3.bootloader.tool=esptool_py
 esp32s3.bootloader.tool.default=esptool_py
@@ -761,8 +762,6 @@ esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_co
 ##############################################################
 
 esp32c3.name=ESP32C3 Dev Module
-esp32c3.vid.0=0x303a
-esp32c3.pid.0=0x1001
 
 esp32c3.bootloader.tool=esptool_py
 esp32c3.bootloader.tool.default=esptool_py
@@ -1676,8 +1675,6 @@ pico32.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3-octal.name=ESP32S3 Dev Module Octal (WROOM2)
-esp32s3-octal.vid.0=0x303a
-esp32s3-octal.pid.0=0x1001
 
 esp32s3-octal.bootloader.tool=esptool_py
 esp32s3-octal.bootloader.tool.default=esptool_py
@@ -1906,8 +1903,6 @@ esp32s3-octal.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3box.name=ESP32-S3-Box
-esp32s3box.vid.0=0x303a
-esp32s3box.pid.0=0x1001
 
 esp32s3box.bootloader.tool=esptool_py
 esp32s3box.bootloader.tool.default=esptool_py
@@ -2004,8 +1999,6 @@ esp32s3box.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3usbotg.name=ESP32-S3-USB-OTG
-esp32s3usbotg.vid.0=0x303a
-esp32s3usbotg.pid.0=0x1001
 
 esp32s3usbotg.bootloader.tool=esptool_py
 esp32s3usbotg.bootloader.tool.default=esptool_py
@@ -2118,8 +2111,6 @@ esp32s3usbotg.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3camlcd.name=ESP32S3 CAM LCD
-esp32s3camlcd.vid.0=0x303a
-esp32s3camlcd.pid.0=0x1001
 
 esp32s3camlcd.bootloader.tool=esptool_py
 esp32s3camlcd.bootloader.tool.default=esptool_py
@@ -2494,8 +2485,6 @@ esp32wroverkit.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 aventen_s3_sync.name=Aventen S3 Sync
-aventen_s3_sync.vid.0=0x303a
-aventen_s3_sync.pid.0=0x1001
 ## Based upon ESP32-S3 Dev Board
 
 aventen_s3_sync.bootloader.tool=esptool_py
@@ -3854,8 +3843,6 @@ um_tinypico.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 um_tinyc6.name=UM TinyC6
-um_tinyc6.vid.0=0x303a
-um_tinyc6.pid.0=0x1001
 
 um_tinyc6.bootloader.tool=esptool_py
 um_tinyc6.bootloader.tool.default=esptool_py
@@ -4493,8 +4480,6 @@ lilygo_t_display.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lilygo_t_display_s3.name=LilyGo T-Display-S3
-lilygo_t_display_s3.vid.0=0x303a
-lilygo_t_display_s3.pid.0=0x1001
 
 lilygo_t_display_s3.bootloader.tool=esptool_py
 lilygo_t_display_s3.bootloader.tool.default=esptool_py
@@ -5961,8 +5946,6 @@ sparkfun_esp32s2_thing_plus.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 sparkfun_esp32c6_thing_plus.name=SparkFun ESP32-C6 Thing Plus
-sparkfun_esp32c6_thing_plus.vid.0=0x303a
-sparkfun_esp32c6_thing_plus.pid.0=0x1001
 
 sparkfun_esp32c6_thing_plus.bootloader.tool=esptool_py
 sparkfun_esp32c6_thing_plus.bootloader.tool.default=esptool_py
@@ -6531,8 +6514,6 @@ sparkfun_esp32_iot_redboard.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 sparkfun_esp32c6_qwiic_pocket.name=SparkFun ESP32-C6 Qwiic Pocket
-sparkfun_esp32c6_qwiic_pocket.vid.0=0x303a
-sparkfun_esp32c6_qwiic_pocket.pid.0=0x1001
 
 sparkfun_esp32c6_qwiic_pocket.bootloader.tool=esptool_py
 sparkfun_esp32c6_qwiic_pocket.bootloader.tool.default=esptool_py
@@ -6988,8 +6969,6 @@ nina_w10.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 nora_w10.name=u-blox NORA-W10 series (ESP32-S3)
-nora_w10.vid.0=0x303a
-nora_w10.pid.0=0x1001
 
 nora_w10.bootloader.tool=esptool_py
 nora_w10.bootloader.tool.default=esptool_py
@@ -7590,8 +7569,6 @@ d32_pro.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lolin_c3_mini.name=LOLIN C3 Mini
-lolin_c3_mini.vid.0=0x303a
-lolin_c3_mini.pid.0=0x1001
 
 lolin_c3_mini.bootloader.tool=esptool_py
 lolin_c3_mini.bootloader.tool.default=esptool_py
@@ -7707,8 +7684,6 @@ lolin_c3_mini.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lolin_c3_pico.name=LOLIN C3 Pico
-lolin_c3_pico.vid.0=0x303a
-lolin_c3_pico.pid.0=0x1001
 
 lolin_c3_pico.bootloader.tool=esptool_py
 lolin_c3_pico.bootloader.tool.default=esptool_py
@@ -8017,8 +7992,6 @@ lolin_s2_pico.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lolin_s3.name=LOLIN S3
-lolin_s3.vid.0=0x303a
-lolin_s3.pid.0=0x1001
 
 lolin_s3.bootloader.tool=esptool_py
 lolin_s3.bootloader.tool.default=esptool_py
@@ -9234,10 +9207,6 @@ hornbill32minima.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 dfrobot_beetle_esp32c3.name=DFRobot Beetle ESP32-C3
-#dfrobot_beetle_esp32c3.vid.0=0x3343
-#dfrobot_beetle_esp32c3.pid.0=0x8364
-dfrobot_beetle_esp32c3.vid.0=0x303a
-dfrobot_beetle_esp32c3.pid.0=0x1001
 
 dfrobot_beetle_esp32c3.bootloader.tool=esptool_py
 dfrobot_beetle_esp32c3.bootloader.tool.default=esptool_py
@@ -9378,8 +9347,6 @@ dfrobot_beetle_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 dfrobot_beetle_esp32c6.name=DFRobot Beetle ESP32-C6
-dfrobot_beetle_esp32c6.vid.0=0x303a
-dfrobot_beetle_esp32c6.pid.0=0x1001
 
 dfrobot_beetle_esp32c6.bootloader.tool=esptool_py
 dfrobot_beetle_esp32c6.bootloader.tool.default=esptool_py
@@ -9685,10 +9652,6 @@ dfrobot_firebeetle2_esp32e.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 dfrobot_firebeetle2_esp32s3.name=DFRobot Firebeetle 2 ESP32-S3
-#dfrobot_firebeetle2_esp32s3.vid.0=0x3343
-#dfrobot_firebeetle2_esp32s3.pid.0=0x83CF
-dfrobot_firebeetle2_esp32s3.vid.0=0x303a
-dfrobot_firebeetle2_esp32s3.pid.0=0x1001
 
 dfrobot_firebeetle2_esp32s3.bootloader.tool=esptool_py
 dfrobot_firebeetle2_esp32s3.bootloader.tool.default=esptool_py
@@ -9902,8 +9865,6 @@ dfrobot_firebeetle2_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 dfrobot_firebeetle2_esp32c6.name=DFRobot FireBeetle 2 ESP32-C6
-dfrobot_firebeetle2_esp32c6.vid.0=0x303a
-dfrobot_firebeetle2_esp32c6.pid.0=0x1001
 
 dfrobot_firebeetle2_esp32c6.bootloader.tool=esptool_py
 dfrobot_firebeetle2_esp32c6.bootloader.tool.default=esptool_py
@@ -10051,8 +10012,6 @@ dfrobot_firebeetle2_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
 
 # dfrobot Romeo ESP32-S3
 dfrobot_romeo_esp32s3.name=DFRobot Romeo ESP32-S3
-dfrobot_romeo_esp32s3.vid.0=0x303a
-dfrobot_romeo_esp32s3.pid.0=0x1001
 
 dfrobot_romeo_esp32s3.bootloader.tool=esptool_py
 dfrobot_romeo_esp32s3.bootloader.tool.default=esptool_py
@@ -12906,8 +12865,6 @@ adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zcz
 # Adafruit QT Py ESP32-C3
 
 adafruit_qtpy_esp32c3.name=Adafruit QT Py ESP32-C3
-adafruit_qtpy_esp32c3.vid.0=0x303a
-adafruit_qtpy_esp32c3.pid.0=0x1001
 
 adafruit_qtpy_esp32c3.bootloader.tool=esptool_py
 adafruit_qtpy_esp32c3.bootloader.tool.default=esptool_py
@@ -14402,8 +14359,6 @@ nodemcu-32s.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 nologo_esp32c3_super_mini.name=Nologo ESP32C3 Super Mini
-nologo_esp32c3_super_mini.vid.0=0x303a
-nologo_esp32c3_super_mini.pid.0=0x1001
 
 nologo_esp32c3_super_mini.upload.tool=esptool_py
 nologo_esp32c3_super_mini.upload.tool.default=esptool_py
@@ -14542,8 +14497,6 @@ nologo_esp32c3_super_mini.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 nologo_esp32s3_pico.name=Nologo ESP32S3 Pico
-nologo_esp32s3_pico.vid.0=0x303a
-nologo_esp32s3_pico.pid.0=0x1001
 
 nologo_esp32s3_pico.bootloader.tool=esptool_py
 nologo_esp32s3_pico.bootloader.tool.default=esptool_py
@@ -15723,8 +15676,6 @@ esp32-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s2-devkitlipo.name=OLIMEX ESP32-S2-DevKit-Lipo
-esp32s2-devkitlipo.vid.0=0x303a
-esp32s2-devkitlipo.pid.0=0x0002
 
 esp32s2-devkitlipo.bootloader.tool=esptool_py
 esp32s2-devkitlipo.bootloader.tool.default=esptool_py
@@ -15916,8 +15867,6 @@ esp32s2-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s2-devkitlipo-usb.name=OLIMEX ESP32-S2-DevKit-Lipo-USB
-esp32s2-devkitlipo-usb.vid.0=0x303a
-esp32s2-devkitlipo-usb.pid.0=0x0002
 
 esp32s2-devkitlipo-usb.bootloader.tool=esptool_py
 esp32s2-devkitlipo-usb.bootloader.tool.default=esptool_py
@@ -16109,8 +16058,6 @@ esp32s2-devkitlipo-usb.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3-devkitlipo.name=OLIMEX ESP32-S3-DevKit-Lipo
-esp32s3-devkitlipo.vid.0=0x303a
-esp32s3-devkitlipo.pid.0=0x1001
 
 esp32s3-devkitlipo.bootloader.tool=esptool_py
 esp32s3-devkitlipo.bootloader.tool.default=esptool_py
@@ -16345,8 +16292,6 @@ esp32s3-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32c3-devkitlipo.name=OLIMEX ESP32-C3-DevKit-Lipo
-esp32c3-devkitlipo.vid.0=0x303a
-esp32c3-devkitlipo.pid.0=0x1001
 
 esp32c3-devkitlipo.bootloader.tool=esptool_py
 esp32c3-devkitlipo.bootloader.tool.default=esptool_py
@@ -16516,8 +16461,6 @@ esp32c3-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32c6-evb.name=OLIMEX ESP32-C6-EVB
-esp32c6-evb.vid.0=0x303a
-esp32c6-evb.pid.0=0x1001
 
 esp32c6-evb.bootloader.tool=esptool_py
 esp32c6-evb.bootloader.tool.default=esptool_py
@@ -16681,8 +16624,6 @@ esp32c6-evb.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32h2-devkitlipo.name=OLIMEX ESP32-H2-DevKit-LiPo
-esp32h2-devkitlipo.vid.0=0x303a
-esp32h2-devkitlipo.pid.0=0x1001
 
 esp32h2-devkitlipo.bootloader.tool=esptool_py
 esp32h2-devkitlipo.bootloader.tool.default=esptool_py
@@ -18556,8 +18497,6 @@ m5stack_atom.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_atoms3.name=M5AtomS3
-m5stack_atoms3.vid.0=0x303a
-m5stack_atoms3.pid.0=0x1001
 m5stack_atoms3.bootloader.tool=esptool_py
 m5stack_atoms3.bootloader.tool.default=esptool_py
 
@@ -18785,8 +18724,6 @@ m5stack_atoms3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_cores3.name=M5CoreS3
-m5stack_cores3.vid.0=0x303a
-m5stack_cores3.pid.0=0x1001
 m5stack_cores3.bootloader.tool=esptool_py
 m5stack_cores3.bootloader.tool.default=esptool_py
 
@@ -19324,8 +19261,6 @@ m5stack_unit_cam.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_unit_cams3.name=M5UnitCAMS3
-m5stack_unit_cams3.vid.0=0x303a
-m5stack_unit_cams3.pid.0=0x1001
 m5stack_unit_cams3.bootloader.tool=esptool_py
 m5stack_unit_cams3.bootloader.tool.default=esptool_py
 
@@ -20176,8 +20111,6 @@ m5stack_stamp_pico.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_stamp_c3.name=M5StampC3
-m5stack_stamp_c3.vid.0=0x303a
-m5stack_stamp_c3.pid.0=0x1001
 
 m5stack_stamp_c3.bootloader.tool=esptool_py
 m5stack_stamp_c3.bootloader.tool.default=esptool_py
@@ -20324,8 +20257,6 @@ m5stack_stamp_c3.menu.EraseFlash.all.upload.erase_cmd=-e
 ###############################################################
 
 m5stack_stamp_s3.name=M5StampS3
-m5stack_stamp_s3.vid.0=0x303a
-m5stack_stamp_s3.pid.0=0x1001
 m5stack_stamp_s3.bootloader.tool=esptool_py
 m5stack_stamp_s3.bootloader.tool.default=esptool_py
 
@@ -20560,8 +20491,6 @@ m5stack_stamp_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_capsule.name=M5Capsule
-m5stack_capsule.vid.0=0x303a
-m5stack_capsule.pid.0=0x1001
 m5stack_capsule.bootloader.tool=esptool_py
 m5stack_capsule.bootloader.tool.default=esptool_py
 
@@ -20798,8 +20727,6 @@ m5stack_capsule.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_cardputer.name=M5Cardputer
-m5stack_cardputer.vid.0=0x303a
-m5stack_cardputer.pid.0=0x1001
 m5stack_cardputer.bootloader.tool=esptool_py
 m5stack_cardputer.bootloader.tool.default=esptool_py
 
@@ -21033,8 +20960,6 @@ m5stack_cardputer.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_dial.name=M5Dial
-m5stack_dial.vid.0=0x303a
-m5stack_dial.pid.0=0x1001
 m5stack_dial.bootloader.tool=esptool_py
 m5stack_dial.bootloader.tool.default=esptool_py
 
@@ -21442,9 +21367,6 @@ heltec_wifi_kit_32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 heltec_wifi_kit_32_V3.name=Heltec WiFi Kit 32(V3)
 
-heltec_wifi_kit_32_V3.vid.0=0x303a
-heltec_wifi_kit_32_V3.pid.0=0x1001
-
 heltec_wifi_kit_32_V3.bootloader.tool=esptool_py
 heltec_wifi_kit_32_V3.bootloader.tool.default=esptool_py
 
@@ -21778,8 +21700,6 @@ heltec_wifi_lora_32_V2.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wifi_lora_32_V3.name=Heltec WiFi LoRa 32(V3)
-heltec_wifi_lora_32_V3.vid.0=0x303a
-heltec_wifi_lora_32_V3.pid.0=0x1001
 
 heltec_wifi_lora_32_V3.bootloader.tool=esptool_py
 heltec_wifi_lora_32_V3.bootloader.tool.default=esptool_py
@@ -21928,8 +21848,6 @@ heltec_wifi_lora_32_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_stick_V3.name=Heltec Wireless Stick(V3)
-heltec_wireless_stick_V3.vid.0=0x303a
-heltec_wireless_stick_V3.pid.0=0x1001
 
 heltec_wireless_stick_V3.bootloader.tool=esptool_py
 heltec_wireless_stick_V3.bootloader.tool.default=esptool_py
@@ -22078,8 +21996,6 @@ heltec_wireless_stick_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_stick_lite_V3.name=Heltec Wireless Stick Lite(V3)
-heltec_wireless_stick_lite_V3.vid.0=0x303a
-heltec_wireless_stick_lite_V3.pid.0=0x1001
 
 heltec_wireless_stick_lite_V3.bootloader.tool=esptool_py
 heltec_wireless_stick_lite_V3.bootloader.tool.default=esptool_py
@@ -22228,8 +22144,6 @@ heltec_wireless_stick_lite_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_shell_V3.name=Heltec Wireless Shell (V3)
-heltec_wireless_shell_V3.vid.0=0x303a
-heltec_wireless_shell_V3.pid.0=0x1001
 
 heltec_wireless_shell_V3.bootloader.tool=esptool_py
 heltec_wireless_shell_V3.bootloader.tool.default=esptool_py
@@ -22378,8 +22292,6 @@ heltec_wireless_shell_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_capsule_sensor_V3.name=Heltec Capsule Sensor (V3)
-heltec_capsule_sensor_V3.vid.0=0x303a
-heltec_capsule_sensor_V3.pid.0=0x1001
 
 heltec_capsule_sensor_V3.bootloader.tool=esptool_py
 heltec_capsule_sensor_V3.bootloader.tool.default=esptool_py
@@ -22538,8 +22450,6 @@ heltec_capsule_sensor_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 #############################################################
 
 heltec_wireless_paper.name=Heltec Wireless Paper
-heltec_wireless_paper.vid.0=0x303a
-heltec_wireless_paper.pid.0=0x1001
 
 heltec_wireless_paper.bootloader.tool=esptool_py
 heltec_wireless_paper.bootloader.tool.default=esptool_py
@@ -22688,8 +22598,6 @@ heltec_wireless_paper.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_tracker.name=Heltec Wireless Tracker
-heltec_wireless_tracker.vid.0=0x303a
-heltec_wireless_tracker.pid.0=0x1001
 
 heltec_wireless_tracker.bootloader.tool=esptool_py
 heltec_wireless_tracker.bootloader.tool.default=esptool_py
@@ -22865,8 +22773,6 @@ heltec_wireless_tracker.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_mini_shell.name=Heltec Wireless Mini Shell
-heltec_wireless_mini_shell.vid.0=0x303a
-heltec_wireless_mini_shell.pid.0=0x1001
 
 heltec_wireless_mini_shell.bootloader.tool=esptool_py
 heltec_wireless_mini_shell.bootloader.tool.default=esptool_py
@@ -23349,8 +23255,6 @@ heltec_wireless_bridge.menu.EraseFlash.all.upload.erase_cmd=-e
 #############################################################
 
 heltec_ht_de01.name=Heltec E-Ink Driver
-heltec_ht_de01.vid.0=0x303a
-heltec_ht_de01.pid.0=0x1001
 
 heltec_ht_de01.bootloader.tool=esptool_py
 heltec_ht_de01.bootloader.tool.default=esptool_py
@@ -26572,8 +26476,6 @@ wifiduino32.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 wifiduino32c3.name=WiFiduinoV2
-wifiduino32c3.vid.0=0x303a
-wifiduino32c3.pid.0=0x1001
 
 wifiduino32c3.bootloader.tool=esptool_py
 wifiduino32c3.bootloader.tool.default=esptool_py
@@ -26721,8 +26623,6 @@ wifiduino32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 wifiduino32s3.name=WiFiduino32S3
-wifiduino32s3.vid.0=0x303a
-wifiduino32s3.pid.0=0x1001
 
 wifiduino32s3.bootloader.tool=esptool_py
 wifiduino32s3.bootloader.tool.default=esptool_py
@@ -29803,8 +29703,6 @@ franzininho_wifi_msc_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 tamc_termod_s3.name=TAMC Termod S3
-tamc_termod_s3.vid.0=0x303a
-tamc_termod_s3.pid.0=0x1001
 
 tamc_termod_s3.bootloader.tool=esptool_py
 tamc_termod_s3.bootloader.tool.default=esptool_py
@@ -30462,8 +30360,6 @@ watchy.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 AirM2M_CORE_ESP32C3.name=AirM2M_CORE_ESP32C3
-AirM2M_CORE_ESP32C3.vid.0=0x303a
-AirM2M_CORE_ESP32C3.pid.0=0x1001
 
 AirM2M_CORE_ESP32C3.upload.tool=esptool_py
 AirM2M_CORE_ESP32C3.upload.tool.default=esptool_py
@@ -30720,8 +30616,6 @@ XIAO_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 XIAO_ESP32C6.name=XIAO_ESP32C6
-XIAO_ESP32C6.vid.0=0x303a
-XIAO_ESP32C6.pid.0=0x1001
 
 XIAO_ESP32C6.bootloader.tool=esptool_py
 XIAO_ESP32C6.bootloader.tool.default=esptool_py
@@ -32564,8 +32458,6 @@ cytron_maker_feather_aiot_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 # RedPill(+) ESP32-S3
 
 redpill_esp32s3.name=RedPill(+) ESP32-S3
-redpill_esp32s3.vid.0=0x303a
-redpill_esp32s3.pid.0=0x1001
 
 redpill_esp32s3.bootloader.tool=esptool_py
 redpill_esp32s3.bootloader.tool.default=esptool_py
@@ -32979,8 +32871,6 @@ roboheart_hercules.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 VALTRACK_V4_VTS_ESP32_C3.name=VALTRACK_V4_VTS_ESP32_C3
-VALTRACK_V4_VTS_ESP32_C3.vid.0=0x303a
-VALTRACK_V4_VTS_ESP32_C3.pid.0=0x1001
 
 VALTRACK_V4_VTS_ESP32_C3.bootloader.tool=esptool_py
 VALTRACK_V4_VTS_ESP32_C3.bootloader.tool.default=esptool_py
@@ -33128,8 +33018,6 @@ VALTRACK_V4_VTS_ESP32_C3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 VALTRACK_V4_MFW_ESP32_C3.name=VALTRACK_V4_MFW_ESP32_C3
-VALTRACK_V4_MFW_ESP32_C3.vid.0=0x303a
-VALTRACK_V4_MFW_ESP32_C3.pid.0=0x1001
 
 VALTRACK_V4_MFW_ESP32_C3.bootloader.tool=esptool_py
 VALTRACK_V4_MFW_ESP32_C3.bootloader.tool.default=esptool_py
@@ -33484,8 +33372,6 @@ Edgebox-ESP-100.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 crabik_slot_esp32_s3.name=Crabik Slot ESP32-S3
-crabik_slot_esp32_s3.vid.0=0x303a
-crabik_slot_esp32_s3.pid.0=0x1001
 
 crabik_slot_esp32_s3.bootloader.tool=esptool_py
 crabik_slot_esp32_s3.bootloader.tool.default=esptool_py
@@ -33633,8 +33519,6 @@ crabik_slot_esp32_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 
 nebulas3.name=Nebula S3
-nebulas3.vid.0=0x303a
-nebulas3.pid.0=0x1001
 
 nebulas3.bootloader.tool=esptool_py
 nebulas3.bootloader.tool.default=esptool_py
@@ -33853,8 +33737,6 @@ nebulas3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lionbits3.name=Lion:Bit S3 STEM Dev Board
-lionbits3.vid.0=0x303a
-lionbits3.pid.0=0x1001
 
 lionbits3.bootloader.tool=esptool_py
 lionbits3.bootloader.tool.default=esptool_py
@@ -34077,8 +33959,6 @@ lionbits3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 
 gen4-ESP32-S3R8n16.name=4D Systems gen4-ESP32 16MB Modules (ESP32-S3R8n16)
-gen4-ESP32-S3R8n16.vid.0=0x303a
-gen4-ESP32-S3R8n16.pid.0=0x1001
 
 gen4-ESP32-S3R8n16.bootloader.tool=esptool_py
 gen4-ESP32-S3R8n16.bootloader.tool.default=esptool_py
@@ -34235,8 +34115,6 @@ gen4-ESP32-S3R8n16.menu.EraseFlash.all.upload.erase_cmd=-e
 # Namino Rosso
 
 namino_rosso.name=Namino Rosso
-namino_rosso.vid.0=0x303a
-namino_rosso.pid.0=0x1001
 
 namino_rosso.bootloader.tool=esptool_py
 namino_rosso.bootloader.tool.default=esptool_py
@@ -34426,8 +34304,6 @@ namino_rosso.menu.EraseFlash.all.upload.erase_cmd=-e
 # Namino Arancio
 
 namino_arancio.name=Namino Arancio
-namino_arancio.vid.0=0x303a
-namino_arancio.pid.0=0x1001
 
 namino_arancio.bootloader.tool=esptool_py
 namino_arancio.bootloader.tool.default=esptool_py
@@ -34617,8 +34493,6 @@ namino_arancio.menu.EraseFlash.all.upload.erase_cmd=-e
 # Namino Bianco
 
 namino_bianco.name=Namino Bianco
-namino_bianco.vid.0=0x303a
-namino_bianco.pid.0=0x1001
 
 namino_bianco.bootloader.tool=esptool_py
 namino_bianco.bootloader.tool.default=esptool_py
@@ -35022,8 +34896,6 @@ ioxesp32ps.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 atd147_s3.name=ATD1.47-S3
-atd147_s3.vid.0=0x303a
-atd147_s3.pid.0=0x1001
 
 atd147_s3.bootloader.tool=esptool_py
 atd147_s3.bootloader.tool.default=esptool_py
@@ -35621,8 +35493,6 @@ nano_nora.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.
 ##############################################################
 
 makergo_c3_supermini.name=MakerGO ESP32 C3 SuperMini
-makergo_c3_supermini.vid.0=0x303a
-makergo_c3_supermini.pid.0=0x1001
 
 makergo_c3_supermini.bootloader.tool=esptool_py
 makergo_c3_supermini.bootloader.tool.default=esptool_py
@@ -35849,8 +35719,6 @@ epulse_feather.menu.EraseFlash.all.upload.erase_cmd=-e
 # ThingPulse ePulse Feather C6
 
 epulse_feather_c6.name=ThingPulse ePulse Feather C6
-epulse_feather_c6.vid.0=0x303a
-epulse_feather_c6.pid.0=0x1001
 
 epulse_feather_c6.bootloader.tool=esptool_py
 epulse_feather_c6.bootloader.tool.default=esptool_py
@@ -36020,8 +35888,6 @@ epulse_feather_c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_z
 ##############################################################
 
 Geekble_ESP32C3.name=Geekble ESP32-C3
-Geekble_ESP32C3.vid.0=0x303A
-Geekble_ESP32C3.pid.0=0x1001
 
 Geekble_ESP32C3.bootloader.tool=esptool_py
 Geekble_ESP32C3.bootloader.tool.default=esptool_py
@@ -36306,8 +36172,6 @@ waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 weact_studio_esp32c3.name=WeAct Studio ESP32C3
-weact_studio_esp32c3.vid.0=0x303a
-weact_studio_esp32c3.pid.0=0x1001
 
 weact_studio_esp32c3.upload.tool=esptool_py
 weact_studio_esp32c3.upload.tool.default=esptool_py
@@ -36446,8 +36310,6 @@ weact_studio_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 aslcanx2.name=AutosportLabs ESP-CAN-X2
-aslcanx2.vid.0=0x303a
-aslcanx2.pid.0=0x1001
 
 aslcanx2.bootloader.tool=esptool_py
 aslcanx2.bootloader.tool.default=esptool_py
