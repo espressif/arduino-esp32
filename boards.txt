@@ -38,6 +38,8 @@ esp32_family.name=ESP32 Family Device
 esp32_family.hide=true
 esp32_family.vid.0=0x303a
 esp32_family.pid.0=0x1001
+esp32_family.upload_port.0.vid=0x303a
+esp32_family.upload_port.0.pid=0x1001
 
 ##############################################################
 
@@ -938,6 +940,8 @@ esp32c3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_co
 esp32s2.name=ESP32S2 Dev Module
 esp32s2.vid.0=0x303a
 esp32s2.pid.0=0x0002
+esp32s2.upload_port.vid.0=0x303a
+esp32s2.upload_port.pid.0=0x0002
 
 esp32s2.bootloader.tool=esptool_py
 esp32s2.bootloader.tool.default=esptool_py
@@ -2235,6 +2239,8 @@ esp32s3camlcd.menu.EraseFlash.all.upload.erase_cmd=-e
 esp32s2usb.name=ESP32S2 Native USB
 esp32s2usb.vid.0=0x303a
 esp32s2usb.pid.0=0x0003
+esp32s2usb.upload_port.vid.0=0x303a
+esp32s2usb.upload_port.pid.0=0x0003
 
 esp32s2usb.bootloader.tool=esptool_py
 esp32s2usb.bootloader.tool.default=esptool_py
