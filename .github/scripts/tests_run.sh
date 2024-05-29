@@ -46,6 +46,10 @@ function run_test() {
             if [[ -f "$sketchdir/scenario.yaml" ]]; then
                 extra_args+=" --wokwi-scenario $sketchdir/scenario.yaml"
             fi
+            if [[ -f "$sketchdir/$target.diagram.json" ]]; then
+                extra_args+=" --wokwi-diagram $sketchdir/$target.diagram.json"
+            fi
+
         elif [ $platform == "qemu" ]; then
             PATH=$HOME/qemu/bin:$PATH
             extra_args="--embedded-services qemu --qemu-image-path $build_dir/$sketchname.ino.merged.bin"
