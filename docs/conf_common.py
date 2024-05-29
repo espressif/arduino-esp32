@@ -28,7 +28,6 @@ extensions += [  # noqa: F405
     "sphinx_copybutton",
     "sphinx_tabs.tabs",
     "esp_docs.esp_extensions.dummy_build_system",
-    "sphinxemoji.sphinxemoji",
 ]
 
 # ESP32_DOCS = [
