@@ -2708,6 +2708,8 @@ aventen_s3_sync.menu.EraseFlash.all.upload.erase_cmd=-e
 um_bling.name=UM BLING
 um_bling.vid.0=0x303a
 um_bling.pid.0=0x817F
+um_bling.upload_port.0.vid=0x303a
+um_bling.upload_port.0.pid=0x817F
 
 um_bling.bootloader.tool=esptool_py
 um_bling.bootloader.tool.default=esptool_py
@@ -2860,6 +2862,8 @@ um_bling.menu.EraseFlash.all.upload.erase_cmd=-e
 um_feathers2.name=UM FeatherS2
 um_feathers2.vid.0=0x239A
 um_feathers2.pid.0=0x80AB
+um_feathers2.upload_port.0.vid=0x239A
+um_feathers2.upload_port.0.pid=0x80AB
 
 um_feathers2.bootloader.tool=esptool_py
 um_feathers2.bootloader.tool.default=esptool_py
@@ -3011,6 +3015,8 @@ um_feathers2.menu.EraseFlash.all.upload.erase_cmd=-e
 um_feathers2neo.name=UM FeatherS2 Neo
 um_feathers2neo.vid.0=0x303a
 um_feathers2neo.pid.0=0x80B4
+um_feathers2neo.upload_port.0.vid=0x303a
+um_feathers2neo.upload_port.0.pid=0x80B4
 
 um_feathers2neo.bootloader.tool=esptool_py
 um_feathers2neo.bootloader.tool.default=esptool_py
@@ -3148,6 +3154,8 @@ um_feathers2neo.menu.EraseFlash.all.upload.erase_cmd=-e
 um_feathers3.name=UM FeatherS3
 um_feathers3.vid.0=0x303a
 um_feathers3.pid.0=0x80D6
+um_feathers3.upload_port.0.vid=0x303a
+um_feathers3.upload_port.0.pid=0x80D6
 
 um_feathers3.bootloader.tool=esptool_py
 um_feathers3.bootloader.tool.default=esptool_py
@@ -3309,6 +3317,8 @@ um_feathers3.menu.EraseFlash.all.upload.erase_cmd=-e
 um_nanos3.name=UM NanoS3
 um_nanos3.vid.0=0x303a
 um_nanos3.pid.0=0x8179
+um_nanos3.upload_port.0.vid=0x303a
+um_nanos3.upload_port.0.pid=0x8179
 
 um_nanos3.bootloader.tool=esptool_py
 um_nanos3.bootloader.tool.default=esptool_py
@@ -3461,6 +3471,8 @@ um_nanos3.menu.EraseFlash.all.upload.erase_cmd=-e
 um_pros3.name=UM PROS3
 um_pros3.vid.0=0x303a
 um_pros3.pid.0=0x80D3
+um_pros3.upload_port.0.vid=0x303a
+um_pros3.upload_port.0.pid=0x80D3
 
 um_pros3.bootloader.tool=esptool_py
 um_pros3.bootloader.tool.default=esptool_py
@@ -3616,140 +3628,6 @@ um_pros3.menu.EraseFlash.none=Disabled
 um_pros3.menu.EraseFlash.none.upload.erase_cmd=
 um_pros3.menu.EraseFlash.all=Enabled
 um_pros3.menu.EraseFlash.all.upload.erase_cmd=-e
-
-##############################################################
-
-um_rmp.name=UM RMP
-um_rmp.vid.0=0x303a
-um_rmp.pid.0=0x80F6
-
-um_rmp.upload.tool=esptool_py
-um_rmp.upload.tool.default=esptool_py
-um_rmp.upload.tool.network=esp_ota
-
-um_rmp.upload.maximum_size=1310720
-um_rmp.upload.maximum_data_size=327680
-um_rmp.upload.flags=
-um_rmp.upload.extra_flags=
-um_rmp.upload.use_1200bps_touch=true
-um_rmp.upload.wait_for_upload_port=true
-
-um_rmp.serial.disableDTR=false
-um_rmp.serial.disableRTS=false
-
-um_rmp.build.tarch=xtensa
-um_rmp.build.bootloader_addr=0x1000
-um_rmp.build.target=esp32s2
-um_rmp.build.mcu=esp32s2
-um_rmp.build.core=esp32
-um_rmp.build.variant=um_rmp
-um_rmp.build.board=RMP
-
-um_rmp.build.cdc_on_boot=1
-um_rmp.build.msc_on_boot=0
-um_rmp.build.dfu_on_boot=0
-um_rmp.build.f_cpu=240000000L
-um_rmp.build.flash_size=4MB
-um_rmp.build.flash_freq=80m
-um_rmp.build.flash_mode=dio
-um_rmp.build.boot=qio
-um_rmp.build.partitions=default
-um_rmp.build.defines=
-
-um_rmp.menu.CDCOnBoot.cdc=Enabled
-um_rmp.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
-um_rmp.menu.CDCOnBoot.default=Disabled
-um_rmp.menu.CDCOnBoot.default.build.cdc_on_boot=0
-
-um_rmp.menu.MSCOnBoot.default=Disabled
-um_rmp.menu.MSCOnBoot.default.build.msc_on_boot=0
-um_rmp.menu.MSCOnBoot.msc=Enabled
-um_rmp.menu.MSCOnBoot.msc.build.msc_on_boot=1
-
-um_rmp.menu.DFUOnBoot.default=Disabled
-um_rmp.menu.DFUOnBoot.default.build.dfu_on_boot=0
-um_rmp.menu.DFUOnBoot.dfu=Enabled
-um_rmp.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
-
-um_rmp.menu.PSRAM.enabled=Enabled
-um_rmp.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-um_rmp.menu.PSRAM.disabled=Disabled
-um_rmp.menu.PSRAM.disabled.build.defines=
-
-um_rmp.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-um_rmp.menu.PartitionScheme.default.build.partitions=default
-um_rmp.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-um_rmp.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-um_rmp.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-um_rmp.menu.PartitionScheme.minimal.build.partitions=minimal
-um_rmp.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-um_rmp.menu.PartitionScheme.no_ota.build.partitions=no_ota
-um_rmp.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-um_rmp.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-um_rmp.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-um_rmp.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-um_rmp.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-um_rmp.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-um_rmp.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-um_rmp.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-um_rmp.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-um_rmp.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-um_rmp.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-um_rmp.menu.PartitionScheme.huge_app.build.partitions=huge_app
-um_rmp.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-um_rmp.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-um_rmp.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-um_rmp.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-
-um_rmp.menu.CPUFreq.240=240MHz (WiFi)
-um_rmp.menu.CPUFreq.240.build.f_cpu=240000000L
-um_rmp.menu.CPUFreq.160=160MHz (WiFi)
-um_rmp.menu.CPUFreq.160.build.f_cpu=160000000L
-um_rmp.menu.CPUFreq.80=80MHz (WiFi)
-um_rmp.menu.CPUFreq.80.build.f_cpu=80000000L
-um_rmp.menu.CPUFreq.40=40MHz
-um_rmp.menu.CPUFreq.40.build.f_cpu=40000000L
-um_rmp.menu.CPUFreq.20=20MHz
-um_rmp.menu.CPUFreq.20.build.f_cpu=20000000L
-um_rmp.menu.CPUFreq.10=10MHz
-um_rmp.menu.CPUFreq.10.build.f_cpu=10000000L
-
-um_rmp.menu.FlashSize.4M=4MB (32Mb)
-um_rmp.menu.FlashSize.4M.build.flash_size=4MB
-um_rmp.menu.FlashSize.2M=2MB (16Mb)
-um_rmp.menu.FlashSize.2M.build.flash_size=2MB
-um_rmp.menu.FlashSize.2M.build.partitions=minimal
-
-um_rmp.menu.UploadSpeed.921600=921600
-um_rmp.menu.UploadSpeed.921600.upload.speed=921600
-um_rmp.menu.UploadSpeed.115200=115200
-um_rmp.menu.UploadSpeed.115200.upload.speed=115200
-um_rmp.menu.UploadSpeed.256000.windows=256000
-um_rmp.menu.UploadSpeed.256000.upload.speed=256000
-um_rmp.menu.UploadSpeed.230400.windows.upload.speed=256000
-um_rmp.menu.UploadSpeed.230400=230400
-um_rmp.menu.UploadSpeed.230400.upload.speed=230400
-um_rmp.menu.UploadSpeed.460800.linux=460800
-um_rmp.menu.UploadSpeed.460800.macosx=460800
-um_rmp.menu.UploadSpeed.460800.upload.speed=460800
-
-um_rmp.menu.DebugLevel.none=None
-um_rmp.menu.DebugLevel.none.build.code_debug=0
-um_rmp.menu.DebugLevel.error=Error
-um_rmp.menu.DebugLevel.error.build.code_debug=1
-um_rmp.menu.DebugLevel.warn=Warn
-um_rmp.menu.DebugLevel.warn.build.code_debug=2
-um_rmp.menu.DebugLevel.info=Info
-um_rmp.menu.DebugLevel.info.build.code_debug=3
-um_rmp.menu.DebugLevel.debug=Debug
-um_rmp.menu.DebugLevel.debug.build.code_debug=4
-um_rmp.menu.DebugLevel.verbose=Verbose
-um_rmp.menu.DebugLevel.verbose.build.code_debug=5
-
-um_rmp.menu.EraseFlash.none=Disabled
-um_rmp.menu.EraseFlash.none.upload.erase_cmd=
-um_rmp.menu.EraseFlash.all=Enabled
-um_rmp.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -3978,6 +3856,8 @@ um_tinyc6.menu.EraseFlash.all.upload.erase_cmd=-e
 um_tinys2.name=UM TinyS2
 um_tinys2.vid.0=0x303a
 um_tinys2.pid.0=0x8001
+um_tinys2.upload_port.0.vid=0x303a
+um_tinys2.upload_port.0.pid=0x8001
 
 um_tinys2.bootloader.tool=esptool_py
 um_tinys2.bootloader.tool.default=esptool_py
@@ -4115,6 +3995,8 @@ um_tinys2.menu.EraseFlash.all.upload.erase_cmd=-e
 um_tinys3.name=UM TinyS3
 um_tinys3.vid.0=0x303a
 um_tinys3.pid.0=0x80D0
+um_tinys3.upload_port.0.vid=0x303a
+um_tinys3.upload_port.0.pid=0x80D0
 
 um_tinys3.bootloader.tool=esptool_py
 um_tinys3.bootloader.tool.default=esptool_py
