@@ -153,7 +153,7 @@ def verify_files(filename, destination, rename_to):
     return True
 
 
-def unpack(filename, destination, force_extract):
+def unpack(filename, destination, force_extract):  # noqa: C901
     dirname = ""
     cfile = None  # Compressed file
     file_is_corrupted = False
