@@ -66,7 +66,7 @@ jobs:
           echo "qemu-types=$qemu_types]" >> $GITHUB_OUTPUT
 
   call-build-tests:
-    name: Build tests
+    name: Build
     uses: espressif/arduino-esp32/.github/workflows/build_tests.yml@master
     needs: gen-matrix
     if: github.event.action != 'closed'
@@ -79,7 +79,7 @@ jobs:
       chip: ${{ matrix.chip }}
 
   call-hardware-tests:
-    name: Run tests on hardware
+    name: Hardware
     uses: espressif/arduino-esp32/.github/workflows/hw.yml@master
     needs: [gen-matrix, call-build-tests]
     if: |
@@ -96,7 +96,7 @@ jobs:
       chip: ${{ matrix.chip }}
 
   call-wokwi-tests:
-    name: Run tests on Wokwi
+    name: Wokwi
     uses: espressif/arduino-esp32/.github/workflows/wokwi.yml@master
     needs: [gen-matrix, call-build-tests]
     if: github.event.action != 'closed'
@@ -113,7 +113,7 @@ jobs:
 
   # This job is disabled for now
   call-qemu-tests:
-    name: Run tests on QEMU
+    name: QEMU
     uses: espressif/arduino-esp32/.github/workflows/qemu.yml@master
     needs: [gen-matrix, call-build-tests]
     if: false
