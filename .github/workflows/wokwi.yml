@@ -93,25 +93,6 @@ jobs:
             ~/.arduino/tests/**/build*.tmp/*.elf
             ~/.arduino/tests/**/build*.tmp/*.json
 
-      - name: Install Wokwi CLI
-        if: steps.check-tests.outputs.enabled == 'true'
-        run: curl -L https://wokwi.com/ci/install.sh | sh
-
-      - name: Wokwi CI Server
-        uses: wokwi/wokwi-ci-server-action@v1
-
-      - name: Get binaries
-        if: steps.check-tests.outputs.enabled == 'true'
-        id: cache-build-binaries
-        uses: actions/cache/restore@v4
-        with:
-          fail-on-cache-miss: true
-          key: tests-${{ env.id }}-bin
-          path: |
-            ~/.arduino/tests/**/build*.tmp/*.bin
-            ~/.arduino/tests/**/build*.tmp/*.elf
-            ~/.arduino/tests/**/build*.tmp/*.json
-
       - name: Run Tests
         if: steps.check-tests.outputs.enabled == 'true'
         env:
