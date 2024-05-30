@@ -37,7 +37,7 @@ jobs:
       - name: Evaluate if tests should be built
         id: check-build
         run: |
-          cache_exists=${{ steps.cache-build-binaries.outputs.cache-hit == 'true' || false }}
+          cache_exists=${{ steps.cache-build-binaries.outputs.cache-hit == 'true' }}
           enabled=true
 
           if [[ $cache_exists == 'true' ]]; then

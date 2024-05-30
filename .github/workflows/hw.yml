@@ -39,7 +39,7 @@ jobs:
       - name: Evaluate if tests should be run
         id: check-tests
         run: |
-          cache_exists=${{ steps.cache-results.outputs.cache-hit == 'true' || false }}
+          cache_exists=${{ steps.cache-results.outputs.cache-hit == 'true' }}
           enabled=true
 
           if [[ $cache_exists == 'true' ]]; then
