@@ -138,7 +138,7 @@ def verify_files(filename, destination, rename_to):
                 for i, zipped_file in enumerate(archive.getnames(), 1):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
-                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f"\nMissing {zipped_file} on location: {extracted_dir_path}")
                         print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
                         return False
                     print_verification_progress(total_files, i, t1)
@@ -155,7 +155,7 @@ def verify_files(filename, destination, rename_to):
 
 def unpack(filename, destination, force_extract):
     dirname = ""
-    cfile = None # Compressed file
+    cfile = None  # Compressed file
     file_is_corrupted = False
     if not force_extract:
         print(" > Verify archive... ", end="", flush=True)
@@ -379,35 +379,21 @@ def identify_platform():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download and extract tools")
 
-    parser.add_argument("-v", "--verbose",
-                        type=bool,
-                        default=False,
-                        required=False,
-                        help="Print verbose output")
+    parser.add_argument("-v", "--verbose", type=bool, default=False, required=False, help="Print verbose output")
 
-    parser.add_argument("-d", "--force_download",
-                        type=bool,
-                        default=False,
-                        required=False,
-                        help="Force download of tools")
+    parser.add_argument(
+        "-d", "--force_download", type=bool, default=False, required=False, help="Force download of tools"
+    )
 
-    parser.add_argument("-e", "--force_extract",
-                        type=bool,
-                        default=False,
-                        required=False,
-                        help="Force extraction of tools")
+    parser.add_argument(
+        "-e", "--force_extract", type=bool, default=False, required=False, help="Force extraction of tools"
+    )
 
-    parser.add_argument("-f", "--force_all",
-                        type=bool,
-                        default=False,
-                        required=False,
-                        help="Force download and extraction of tools")
+    parser.add_argument(
+        "-f", "--force_all", type=bool, default=False, required=False, help="Force download and extraction of tools"
+    )
 
-    parser.add_argument("-t", "--test",
-                        type=bool,
-                        default=False,
-                        required=False,
-                        help=argparse.SUPPRESS)
+    parser.add_argument("-t", "--test", type=bool, default=False, required=False, help=argparse.SUPPRESS)
 
     args = parser.parse_args()
 
