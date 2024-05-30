@@ -184,8 +184,11 @@ private:
   uint8_t _eth_index;
   eth_phy_type_t _phy_type;
   esp_eth_netif_glue_handle_t _glue_handle;
+  esp_eth_mac_t *_mac;
+  esp_eth_phy_t *_phy;
 #if ETH_SPI_SUPPORTS_CUSTOM
   SPIClass *_spi;
+  char _cs_str[10];
 #endif
   uint8_t _spi_freq_mhz;
   int8_t _pin_cs;

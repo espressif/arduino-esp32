@@ -107,7 +107,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
     return;
   }
   static bool first_connect = true;
-  log_d("Arduino STA Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
+  log_v("Arduino STA Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
 
   if (ev->event_id == ARDUINO_EVENT_WIFI_STA_START) {
     _sta_network_if->_setStatus(WL_DISCONNECTED);
@@ -162,11 +162,11 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
       _sta_network_if->connect();
     }
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     uint8_t *ip = (uint8_t *)&(ev->event_info.got_ip.ip_info.ip.addr);
     uint8_t *mask = (uint8_t *)&(ev->event_info.got_ip.ip_info.netmask.addr);
     uint8_t *gw = (uint8_t *)&(ev->event_info.got_ip.ip_info.gw.addr);
-    log_d(
+    log_v(
       "STA IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], gw[0], gw[1], gw[2], gw[3]
     );
 #endif
