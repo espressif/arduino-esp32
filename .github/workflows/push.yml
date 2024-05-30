@@ -6,19 +6,6 @@ on:
     branches:
     - master
     - release/*
-    paths:
-      - 'cores/**'
-      - 'libraries/**'
-      - 'package/**'
-      - 'tools/**.py'
-      - 'platform.txt'
-      - 'programmers.txt'
-      - '.github/workflows/push.yml'
-      - '.github/scripts/**'
-      - '!.github/scripts/find_*'
-      - '!.github/scripts/on-release.sh'
-      - '!.github/scripts/tests_*'
-      - '!.github/scripts/upload_*'
   pull_request:
     paths:
       - 'cores/**'
