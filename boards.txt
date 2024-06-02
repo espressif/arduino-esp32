@@ -3787,6 +3787,12 @@ um_tinyc6.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 um_tinyc6.menu.PartitionScheme.rainmaker=RainMaker
 um_tinyc6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 um_tinyc6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+um_tinyc6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+um_tinyc6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+um_tinyc6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+um_tinyc6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+um_tinyc6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+um_tinyc6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 um_tinyc6.menu.PartitionScheme.custom=Custom
 um_tinyc6.menu.PartitionScheme.custom.build.partitions=
 um_tinyc6.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -3850,6 +3856,19 @@ um_tinyc6.menu.EraseFlash.none=Disabled
 um_tinyc6.menu.EraseFlash.none.upload.erase_cmd=
 um_tinyc6.menu.EraseFlash.all=Enabled
 um_tinyc6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+um_tinyc6.menu.ZigbeeMode.default=Disabled
+um_tinyc6.menu.ZigbeeMode.default.build.zigbee_mode=
+um_tinyc6.menu.ZigbeeMode.default.build.zigbee_libs=
+um_tinyc6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+um_tinyc6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+um_tinyc6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+um_tinyc6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+um_tinyc6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+um_tinyc6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+um_tinyc6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+um_tinyc6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+um_tinyc6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -5924,6 +5943,12 @@ sparkfun_esp32c6_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.rainmaker=RainMaker
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee.build.partitions=zigbee
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.custom=Custom
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.custom.build.partitions=
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -5994,6 +6019,19 @@ sparkfun_esp32c6_thing_plus.menu.EraseFlash.none=Disabled
 sparkfun_esp32c6_thing_plus.menu.EraseFlash.none.upload.erase_cmd=
 sparkfun_esp32c6_thing_plus.menu.EraseFlash.all=Enabled
 sparkfun_esp32c6_thing_plus.menu.EraseFlash.all.upload.erase_cmd=-e
+
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.default=Disabled
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.default.build.zigbee_mode=
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.default.build.zigbee_libs=
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.ed=Zigbee ED (end device)
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -6492,6 +6530,12 @@ sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.app3M_fat9M_16MB.upload.maxim
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.rainmaker=RainMaker
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee.build.partitions=zigbee
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.custom=Custom
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.custom.build.partitions=
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -6562,6 +6606,19 @@ sparkfun_esp32c6_qwiic_pocket.menu.EraseFlash.none=Disabled
 sparkfun_esp32c6_qwiic_pocket.menu.EraseFlash.none.upload.erase_cmd=
 sparkfun_esp32c6_qwiic_pocket.menu.EraseFlash.all=Enabled
 sparkfun_esp32c6_qwiic_pocket.menu.EraseFlash.all.upload.erase_cmd=-e
+
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.default=Disabled
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.default.build.zigbee_mode=
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.default.build.zigbee_libs=
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.ed=Zigbee ED (end device)
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -9316,6 +9373,12 @@ dfrobot_beetle_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=19660
 dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker=RainMaker
 dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 dfrobot_beetle_esp32c6.menu.PartitionScheme.custom=Custom
 dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.build.partitions=
 dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -9378,6 +9441,19 @@ dfrobot_beetle_esp32c6.menu.EraseFlash.none=Disabled
 dfrobot_beetle_esp32c6.menu.EraseFlash.none.upload.erase_cmd=
 dfrobot_beetle_esp32c6.menu.EraseFlash.all=Enabled
 dfrobot_beetle_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.default=Disabled
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.default.build.zigbee_mode=
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.default.build.zigbee_libs=
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -9834,6 +9910,12 @@ dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker=RainMaker
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom=Custom
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.build.partitions=
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -9896,6 +9978,19 @@ dfrobot_firebeetle2_esp32c6.menu.EraseFlash.none=Disabled
 dfrobot_firebeetle2_esp32c6.menu.EraseFlash.none.upload.erase_cmd=
 dfrobot_firebeetle2_esp32c6.menu.EraseFlash.all=Enabled
 dfrobot_firebeetle2_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.default=Disabled
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.default.build.zigbee_mode=
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.default.build.zigbee_libs=
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -16439,6 +16534,12 @@ esp32c6-evb.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32c6-evb.menu.PartitionScheme.rainmaker=RainMaker
 esp32c6-evb.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32c6-evb.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32c6-evb.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+esp32c6-evb.menu.PartitionScheme.zigbee.build.partitions=zigbee
+esp32c6-evb.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+esp32c6-evb.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+esp32c6-evb.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+esp32c6-evb.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 esp32c6-evb.menu.PartitionScheme.custom=Custom
 esp32c6-evb.menu.PartitionScheme.custom.build.partitions=
 esp32c6-evb.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -16509,6 +16610,19 @@ esp32c6-evb.menu.EraseFlash.none=Disabled
 esp32c6-evb.menu.EraseFlash.none.upload.erase_cmd=
 esp32c6-evb.menu.EraseFlash.all=Enabled
 esp32c6-evb.menu.EraseFlash.all.upload.erase_cmd=-e
+
+esp32c6-evb.menu.ZigbeeMode.default=Disabled
+esp32c6-evb.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32c6-evb.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32c6-evb.menu.ZigbeeMode.ed=Zigbee ED (end device)
+esp32c6-evb.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32c6-evb.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+esp32c6-evb.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+esp32c6-evb.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32c6-evb.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+esp32c6-evb.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+esp32c6-evb.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+esp32c6-evb.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -30577,6 +30691,12 @@ XIAO_ESP32C6.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 XIAO_ESP32C6.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 XIAO_ESP32C6.menu.PartitionScheme.huge_app.build.partitions=huge_app
 XIAO_ESP32C6.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+XIAO_ESP32C6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+XIAO_ESP32C6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+XIAO_ESP32C6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+XIAO_ESP32C6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+XIAO_ESP32C6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+XIAO_ESP32C6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 
 XIAO_ESP32C6.menu.CPUFreq.160=160MHz (WiFi)
 XIAO_ESP32C6.menu.CPUFreq.160.build.f_cpu=160000000L
