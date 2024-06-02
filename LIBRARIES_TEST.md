@@ -6,11 +6,12 @@ Adafruit NeoPixel|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mar
 ArduinoBLE|1 :white_check_mark: |1 :white_check_mark: |1 :x: |1 :x: |N/A|1 :white_check_mark: 
 ESP32Servo|1 :x: |1 :x: |1 :x: |1 :x: |1 :x: |1 :x: 
 ESPAsyncWebServer|4 :x: |4 :x: |4 :x: |4 :x: |4 :x: |4 :x: 
-FastLED|1 :x: |1 :x: |1 :x: |1 :x: |1 :x: |1 :x: 
+FastLED|1 :warning: |1 :warning: |1 :x: |1 :x: |1 :x: |1 :x: 
 IRremote|1 :x: |1 :x: |1 :x: |1 :x: |1 :x: |1 :x: 
 MFRC522|1 :x: |1 :x: |1 :x: |1 :x: |1 :x: |1 :x: 
 WS2812FX|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: 
+ZACwire for TSic|2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: 
 
 
-Generated on: May-26-2024 04:09:00
-/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/9240467067)
+Generated on: Jun-02-2024 04:09:23
+/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/9335472476)
