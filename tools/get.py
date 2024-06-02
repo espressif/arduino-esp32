@@ -3,7 +3,7 @@
 """Script to download and extract tools
 
 This script will download and extract required tools into the current directory.
-Tools list is obtained from package/package_esp8266com_index.template.json file.
+Tools list is obtained from package/package_esp32_index.template.json file.
 """
 
 from __future__ import print_function
