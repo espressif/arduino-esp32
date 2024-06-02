@@ -1,0 +1,366 @@
+{"boards": [
+{ "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
+                "target": "esp32s3",
+                "sketches": [
+{"name": "USB/examples/CompositeDevice",
+                    "sizes": [{
+                            "flash_bytes": 350865,
+                            "flash_percentage": 11,
+                            "ram_bytes": 31584,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/ConsumerControl",
+                    "sizes": [{
+                            "flash_bytes": 291173,
+                            "flash_percentage": 9,
+                            "ram_bytes": 30816,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/CustomHIDDevice",
+                    "sizes": [{
+                            "flash_bytes": 309201,
+                            "flash_percentage": 9,
+                            "ram_bytes": 31160,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/FirmwareMSC",
+                    "sizes": [{
+                            "flash_bytes": 339009,
+                            "flash_percentage": 10,
+                            "ram_bytes": 31216,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/Gamepad",
+                    "sizes": [{
+                            "flash_bytes": 309517,
+                            "flash_percentage": 9,
+                            "ram_bytes": 31168,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/HIDVendor",
+                    "sizes": [{
+                            "flash_bytes": 311641,
+                            "flash_percentage": 9,
+                            "ram_bytes": 31240,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardLogout",
+                    "sizes": [{
+                            "flash_bytes": 292209,
+                            "flash_percentage": 9,
+                            "ram_bytes": 30832,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardMessage",
+                    "sizes": [{
+                            "flash_bytes": 292345,
+                            "flash_percentage": 9,
+                            "ram_bytes": 30832,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardReprogram",
+                    "sizes": [{
+                            "flash_bytes": 292549,
+                            "flash_percentage": 9,
+                            "ram_bytes": 30832,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardSerial",
+                    "sizes": [{
+                            "flash_bytes": 309441,
+                            "flash_percentage": 9,
+                            "ram_bytes": 31168,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/KeyboardAndMouseControl",
+                    "sizes": [{
+                            "flash_bytes": 310041,
+                            "flash_percentage": 9,
+                            "ram_bytes": 31176,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "USB/examples/Mouse/ButtonMouseControl",
+                    "sizes": [{
+                            "flash_bytes": 291433,
+                            "flash_percentage": 9,
+                            "ram_bytes": 30816,
+                            "ram_percentage": 9
+                            }]
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
+                "target": "esp32s2",
+                "sketches": [
+{"name": "USB/examples/ConsumerControl",
+                    "sizes": [{
+                            "flash_bytes": 252674,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26476,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/CustomHIDDevice",
+                    "sizes": [{
+                            "flash_bytes": 272950,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26692,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/FirmwareMSC",
+                    "sizes": [{
+                            "flash_bytes": 300898,
+                            "flash_percentage": 9,
+                            "ram_bytes": 26740,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/Gamepad",
+                    "sizes": [{
+                            "flash_bytes": 273290,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26708,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/HIDVendor",
+                    "sizes": [{
+                            "flash_bytes": 275410,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26788,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardLogout",
+                    "sizes": [{
+                            "flash_bytes": 253706,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26492,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardMessage",
+                    "sizes": [{
+                            "flash_bytes": 253842,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26492,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardReprogram",
+                    "sizes": [{
+                            "flash_bytes": 254054,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26492,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardSerial",
+                    "sizes": [{
+                            "flash_bytes": 271454,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26708,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "USB/examples/KeyboardAndMouseControl",
+                    "sizes": [{
+                            "flash_bytes": 273822,
+                            "flash_percentage": 8,
+                            "ram_bytes": 26716,
+                            "ram_percentage": 8
+                            }]
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32c3:PartitionScheme=huge_app",
+                "target": "esp32c3",
+                "sketches": [
+{"name": "SPIFFS/examples/SPIFFS_Test",
+                    "sizes": [{
+                            "flash_bytes": 282270,
+                            "flash_percentage": 8,
+                            "ram_bytes": 14220,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "SPIFFS/examples/SPIFFS_time",
+                    "sizes": [{
+                            "flash_bytes": 755720,
+                            "flash_percentage": 24,
+                            "ram_bytes": 38732,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "Ticker/examples/Arguments",
+                    "sizes": [{
+                            "flash_bytes": 253452,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13948,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Ticker/examples/Blinker",
+                    "sizes": [{
+                            "flash_bytes": 235218,
+                            "flash_percentage": 7,
+                            "ram_bytes": 13692,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Update/examples/AWS_S3_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 725980,
+                            "flash_percentage": 23,
+                            "ram_bytes": 39068,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "Update/examples/HTTPS_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 865108,
+                            "flash_percentage": 27,
+                            "ram_bytes": 39516,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "Update/examples/SD_Update",
+                    "sizes": [{
+                            "flash_bytes": 312096,
+                            "flash_percentage": 9,
+                            "ram_bytes": 14316,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "WebServer/examples/AdvancedWebServer",
+                    "sizes": [{
+                            "flash_bytes": 783592,
+                            "flash_percentage": 24,
+                            "ram_bytes": 41148,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/FSBrowser",
+                    "sizes": [{
+                            "flash_bytes": 818924,
+                            "flash_percentage": 26,
+                            "ram_bytes": 41076,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/HelloServer",
+                    "sizes": [{
+                            "flash_bytes": 782450,
+                            "flash_percentage": 24,
+                            "ram_bytes": 41148,
+                            "ram_percentage": 12
+                            }]
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app",
+                "target": "esp32",
+                "sketches": [
+{"name": "Preferences/examples/Prefs2Struct",
+                    "sizes": [{
+                            "flash_bytes": 286549,
+                            "flash_percentage": 9,
+                            "ram_bytes": 21496,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "Preferences/examples/StartCounter",
+                    "sizes": [{
+                            "flash_bytes": 287277,
+                            "flash_percentage": 9,
+                            "ram_bytes": 21496,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "RainMaker/examples/RMakerCustom",
+                    "sizes": [{
+                            "flash_bytes": 1922449,
+                            "flash_percentage": 61,
+                            "ram_bytes": 62436,
+                            "ram_percentage": 19
+                            }]
+                    },
+{"name": "RainMaker/examples/RMakerCustomAirCooler",
+                    "sizes": [{
+                            "flash_bytes": 1900137,
+                            "flash_percentage": 60,
+                            "ram_bytes": 62572,
+                            "ram_percentage": 19
+                            }]
+                    },
+{"name": "RainMaker/examples/RMakerSonoffDualR3",
+                    "sizes": [{
+                            "flash_bytes": 1925489,
+                            "flash_percentage": 61,
+                            "ram_bytes": 62932,
+                            "ram_percentage": 19
+                            }]
+                    },
+{"name": "RainMaker/examples/RMakerSwitch",
+                    "sizes": [{
+                            "flash_bytes": 1933345,
+                            "flash_percentage": 61,
+                            "ram_bytes": 62476,
+                            "ram_percentage": 19
+                            }]
+                    },
+{"name": "SD/examples/SD_Test",
+                    "sizes": [{
+                            "flash_bytes": 342017,
+                            "flash_percentage": 10,
+                            "ram_bytes": 22488,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "SD/examples/SD_time",
+                    "sizes": [{
+                            "flash_bytes": 801861,
+                            "flash_percentage": 25,
+                            "ram_bytes": 45344,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "SD_MMC/examples/SDMMC_Test",
+                    "sizes": [{
+                            "flash_bytes": 364541,
+                            "flash_percentage": 11,
+                            "ram_bytes": 22852,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "SD_MMC/examples/SDMMC_time",
+                    "sizes": [{
+                            "flash_bytes": 827829,
+                            "flash_percentage": 26,
+                            "ram_bytes": 45756,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "SPI/examples/SPI_Multiple_Buses",
+                    "sizes": [{
+                            "flash_bytes": 259337,
+                            "flash_percentage": 8,
+                            "ram_bytes": 21208,
+                            "ram_percentage": 6
+                            }]
+                    }
+]
+}
+]}
