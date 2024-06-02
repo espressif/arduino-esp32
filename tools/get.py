@@ -107,7 +107,7 @@ def verify_files(filename, destination, rename_to):
                 for i, zipped_file in enumerate(archive.namelist(), 1):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
-                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f"\nMissing {zipped_file} on location: {extracted_dir_path}")
                         print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
                         return False
                     print_verification_progress(total_files, i, t1)
@@ -122,7 +122,7 @@ def verify_files(filename, destination, rename_to):
                 for i, zipped_file in enumerate(archive.getnames(), 1):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
-                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f"\nMissing {zipped_file} on location: {extracted_dir_path}")
                         print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
                         return False
                     print_verification_progress(total_files, i, t1)
@@ -147,7 +147,7 @@ def verify_files(filename, destination, rename_to):
     else:
         raise NotImplementedError("Unsupported archive type")
 
-    if(verbose):
+    if verbose:
         print(f"\nVerification passed; completed in {format_time(time.time() - t1)}")
 
     return True
