@@ -13,10 +13,6 @@ jobs:
   sizes-test-results:
     name: Sizes Comparsion Results
     runs-on: ubuntu-latest
-    if: |
-      github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success'
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4  # This step checks out the repository's code at gh-pages branch
