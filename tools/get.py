@@ -47,7 +47,6 @@ if getattr(sys, "frozen", False):
 elif __file__:
     current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
 
-# current_dir = os.path.dirname(os.path.realpath(unicode(__file__)))
 dist_dir = current_dir + "/dist/"
 
 
@@ -108,7 +107,7 @@ def verify_files(filename, destination, rename_to):
                 for i, zipped_file in enumerate(archive.namelist(), 1):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
-                        # print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
                         print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
                         return False
                     print_verification_progress(total_files, i, t1)
@@ -123,7 +122,7 @@ def verify_files(filename, destination, rename_to):
                 for i, zipped_file in enumerate(archive.getnames(), 1):
                     local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
                     if not os.path.exists(local_path):
-                        # print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
+                        print(f'\nMissing {zipped_file} on location: {extracted_dir_path}')
                         print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
                         return False
                     print_verification_progress(total_files, i, t1)
@@ -148,8 +147,9 @@ def verify_files(filename, destination, rename_to):
     else:
         raise NotImplementedError("Unsupported archive type")
 
-    # if(verbose):
-    # print(f"\nVerification passed; completed in {format_time(time.time() - t1)}")
+    if(verbose):
+        print(f"\nVerification passed; completed in {format_time(time.time() - t1)}")
+
     return True
 
 
@@ -428,8 +428,8 @@ if __name__ == "__main__":
             if not get_tool(tool, force_download, force_extract):
                 if verbose:
                     print(f"Tool {tool['archiveFileName']} was corrupted. Re-downloading...\n")
-                if not get_tool(
-                    tool, True, force_extract
-                ):  # Corrupted file was renamed, will not be found and will be re-downloaded
+                if not get_tool(tool, True, force_extract):
                     print(f"Tool {tool['archiveFileName']} was corrupted, but re-downloading did not help!\n")
+                    sys.exit(1)
+
     print("Platform Tools Installed")
