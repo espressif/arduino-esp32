@@ -164,21 +164,21 @@ def unpack(filename, destination, force_extract):  # noqa: C901
         if filename.endswith("tar.gz"):
             if tarfile.is_tarfile(filename):
                 cfile = tarfile.open(filename, "r:gz")
-                dirname = cfile.getnames()[0]
+                dirname = cfile.getnames()[0].split("/")[0]
             else:
                 print("File corrupted!")
                 file_is_corrupted = True
         elif filename.endswith("tar.xz"):
             if tarfile.is_tarfile(filename):
                 cfile = tarfile.open(filename, "r:xz")
-                dirname = cfile.getnames()[0]
+                dirname = cfile.getnames()[0].split("/")[0]
             else:
                 print("File corrupted!")
                 file_is_corrupted = True
         elif filename.endswith("zip"):
             if zipfile.is_zipfile(filename):
                 cfile = zipfile.ZipFile(filename)
-                dirname = cfile.namelist()[0]
+                dirname = cfile.namelist()[0].split("/")[0]
             else:
                 print("File corrupted!")
                 file_is_corrupted = True
