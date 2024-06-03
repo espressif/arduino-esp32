@@ -26,9 +26,6 @@
 
 const char *pers = "esp32-tls";
 
-typedef esp_err_t (*crt_bundle_attach_cb)(void *conf);
-static crt_bundle_attach_cb _bundle_attach_cb = NULL;
-
 static int _handle_error(int err, const char *function, int line) {
   if (err == -30848) {
     return err;
@@ -54,11 +51,11 @@ void ssl_init(sslclient_context *ssl_client) {
   ssl_client->peek_buf = -1;
 }
 
-void attach_ssl_certificate_bundle(bool att) {
+void attach_ssl_certificate_bundle(sslclient_context *ssl_client, bool att) {
   if (att) {
-    _bundle_attach_cb = &esp_crt_bundle_attach;
+    ssl_client->bundle_attach_cb = &esp_crt_bundle_attach;
   } else {
-    _bundle_attach_cb = NULL;
+    ssl_client->bundle_attach_cb = NULL;
   }
 }
 
@@ -206,15 +203,14 @@ int start_ssl_client(
       return handle_error(ret);
     }
   } else if (useRootCABundle) {
-    if (_bundle_attach_cb != NULL) {
+    if (ssl_client->bundle_attach_cb != NULL) {
       log_v("Attaching root CA cert bundle");
-      ret = _bundle_attach_cb(&ssl_client->ssl_conf);
-
+      ret = ssl_client->bundle_attach_cb(&ssl_client->ssl_conf);
       if (ret < 0) {
         return handle_error(ret);
       }
     } else {
-      log_e("useRootCABundle is set, but attach_ssl_certificate_bundle(true); was not called!");
+      log_e("useRootCABundle is set, but attach_ssl_certificate_bundle(ssl, true); was not called!");
     }
   } else if (pskIdent != NULL && psKey != NULL) {
     log_v("Setting up PSK");

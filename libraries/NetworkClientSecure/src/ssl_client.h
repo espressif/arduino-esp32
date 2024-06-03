@@ -12,6 +12,8 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 
+typedef esp_err_t (*crt_bundle_attach_cb)(void *conf);
+
 typedef struct sslclient_context {
   int socket;
   mbedtls_ssl_context ssl_ctx;
@@ -23,6 +25,8 @@ typedef struct sslclient_context {
   mbedtls_x509_crt ca_cert;
   mbedtls_x509_crt client_cert;
   mbedtls_pk_context client_key;
+
+  crt_bundle_attach_cb bundle_attach_cb;
 
   unsigned long socket_timeout;
   unsigned long handshake_timeout;
@@ -37,7 +41,7 @@ int start_ssl_client(
   sslclient_context *ssl_client, const IPAddress &ip, uint32_t port, const char *hostname, int timeout, const char *rootCABuff, bool useRootCABundle,
   const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos
 );
-void attach_ssl_certificate_bundle(bool att);
+void attach_ssl_certificate_bundle(sslclient_context *ssl_client, bool att);
 int ssl_starttls_handshake(sslclient_context *ssl_client);
 void stop_ssl_socket(sslclient_context *ssl_client);
 int data_to_read(sslclient_context *ssl_client);
