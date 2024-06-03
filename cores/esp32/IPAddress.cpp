@@ -266,7 +266,7 @@ IPAddress &IPAddress::operator=(const IPAddress &address) {
 }
 
 bool IPAddress::operator==(const IPAddress &addr) const {
-  return (addr._type == _type) && (memcmp(addr._address.bytes, _address.bytes, sizeof(_address.bytes)) == 0);
+  return (addr._type == _type) && (_type == IPType::IPv4 ? addr._address.dword[IPADDRESS_V4_DWORD_INDEX] == _address.dword[IPADDRESS_V4_DWORD_INDEX] : memcmp(addr._address.bytes, _address.bytes, sizeof(_address.bytes)) == 0);
 }
 
 bool IPAddress::operator==(const uint8_t *addr) const {
@@ -395,6 +395,7 @@ IPAddress &IPAddress::from_ip_addr_t(const ip_addr_t *addr) {
 #endif /* LWIP_IPV6_SCOPES */
   } else {
     _type = IPv4;
+    memset(_address.bytes, 0, sizeof(_address.bytes));
     _address.dword[IPADDRESS_V4_DWORD_INDEX] = addr->u_addr.ip4.addr;
   }
   return *this;
