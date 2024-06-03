@@ -88,13 +88,13 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
 
 NetworkClientSecure::~NetworkClientSecure() {
   if (_ca_cert_free && _CA_cert) {
-    free(_CA_cert);
+    free((void *)_CA_cert);
   }
   if (_cert_free && _cert) {
-    free(_cert);
+    free((void *)_cert);
   }
   if (_private_key_free && _private_key) {
-    free(_private_key);
+    free((void *)_private_key);
   }
 }
 
@@ -330,7 +330,7 @@ void NetworkClientSecure::setInsecure() {
 
 void NetworkClientSecure::setCACert(const char *rootCA) {
   if (_ca_cert_free && _CA_cert) {
-    free(_CA_cert);
+    free((void *)_CA_cert);
     _ca_cert_free = false;
   }
   _CA_cert = rootCA;
@@ -349,7 +349,7 @@ void NetworkClientSecure::setCACertBundle(const uint8_t *bundle) {
 
 void NetworkClientSecure::setCertificate(const char *client_ca) {
   if (_cert_free && _cert) {
-    free(_cert);
+    free((void *)_cert);
     _cert_free = false;
   }
   _cert = client_ca;
@@ -357,7 +357,7 @@ void NetworkClientSecure::setCertificate(const char *client_ca) {
 
 void NetworkClientSecure::setPrivateKey(const char *private_key) {
   if (_private_key_free && _private_key) {
-    free(_private_key);
+    free((void *)_private_key);
     _private_key_free = false;
   }
   _private_key = private_key;
