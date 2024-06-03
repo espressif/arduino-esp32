@@ -32,8 +32,8 @@ cat package.json | sed "s/.*\"version\":.*/  \"version\": \"$ESP_ARDUINO_VERSION
 
 echo "Updating cores/esp32/esp_arduino_version.h..."
 cat cores/esp32/esp_arduino_version.h | \
-sed "s/#define ESP_ARDUINO_VERSION_MAJOR.*/#define ESP_ARDUINO_VERSION_MAJOR   $ESP_ARDUINO_VERSION_MAJOR/g" | \
-sed "s/#define ESP_ARDUINO_VERSION_MINOR.*/#define ESP_ARDUINO_VERSION_MINOR   $ESP_ARDUINO_VERSION_MINOR/g" | \
-sed "s/#define ESP_ARDUINO_VERSION_PATCH.*/#define ESP_ARDUINO_VERSION_PATCH   $ESP_ARDUINO_VERSION_PATCH/g" > __esp_arduino_version.h && mv __esp_arduino_version.h cores/esp32/esp_arduino_version.h
+sed "s/#define ESP_ARDUINO_VERSION_MAJOR.*/#define ESP_ARDUINO_VERSION_MAJOR $ESP_ARDUINO_VERSION_MAJOR/g" | \
+sed "s/#define ESP_ARDUINO_VERSION_MINOR.*/#define ESP_ARDUINO_VERSION_MINOR $ESP_ARDUINO_VERSION_MINOR/g" | \
+sed "s/#define ESP_ARDUINO_VERSION_PATCH.*/#define ESP_ARDUINO_VERSION_PATCH $ESP_ARDUINO_VERSION_PATCH/g" > __esp_arduino_version.h && mv __esp_arduino_version.h cores/esp32/esp_arduino_version.h
 
 exit 0
