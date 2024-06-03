@@ -31,7 +31,10 @@ protected:
   std::shared_ptr<sslclient_context> sslclient;
 
   bool _use_insecure;
-  bool _stillinPlainStart = false;
+  bool _stillinPlainStart;
+  bool _ca_cert_free;
+  bool _cert_free;
+  bool _private_key_free;
   const char *_CA_cert;
   const char *_cert;
   const char *_private_key;
