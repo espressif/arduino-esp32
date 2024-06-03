@@ -317,9 +317,11 @@ void NetworkClientSecure::setCACert(const char *rootCA) {
 void NetworkClientSecure::setCACertBundle(const uint8_t *bundle) {
   if (bundle != NULL) {
     esp_crt_bundle_set(bundle, sizeof(bundle));
+    attach_ssl_certificate_bundle(true);
     _use_ca_bundle = true;
   } else {
     esp_crt_bundle_detach(NULL);
+    attach_ssl_certificate_bundle(false);
     _use_ca_bundle = false;
   }
 }
