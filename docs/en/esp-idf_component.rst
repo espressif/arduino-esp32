@@ -2,19 +2,17 @@
 Arduino as an ESP-IDF component
 ###############################
 
+About
+-----
+
+You can use the Arduino framework as an ESP-IDF component. This allows you to use the Arduino framework in your ESP-IDF projects with the full flexibility of the ESP-IDF.
+
 This method is recommended for advanced users. To use this method, you will need to have the ESP-IDF toolchain installed.
 
 For a simplified method, see `Installing using Boards Manager <https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-boards-manager>`_.
 
-ESP32 Arduino lib-builder
--------------------------
-
-If you don't need any modifications in the default Arduino ESP32 core, we recommend you to install using the Boards Manager.
-
-Arduino Lib Builder is the tool that integrates ESP-IDF into Arduino. It allows you to customize the default settings used by Espressif and try them in Arduino IDE.
-
-For more information see `Arduino lib builder <https://github.com/espressif/esp32-arduino-lib-builder>`_
-
+If you plan to use these modified settings multiple times, for different projects and targets, you can recompile the Arduino core with the new settings using the Arduino Static Library Builder.
+For more information, see the `Lib Builder documentation <lib_builder.html>`_.
 
 Installation
 ------------
