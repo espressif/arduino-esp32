@@ -507,12 +507,7 @@ static void usb_switch_to_cdc_jtag() {
   usb_fsls_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
 #else
   // usb_serial_jtag_ll_phy_set_defaults();
-  const usb_serial_jtag_pull_override_vals_t pull_conf = {
-      .dp_pu = 1,
-      .dm_pu = 0,
-      .dp_pd = 0,
-      .dm_pd = 0
-  };
+  const usb_serial_jtag_pull_override_vals_t pull_conf = {.dp_pu = 1, .dm_pu = 0, .dp_pd = 0, .dm_pd = 0};
   usb_serial_jtag_ll_phy_enable_pull_override(&pull_conf);
   usb_serial_jtag_ll_phy_disable_pull_override();
 #endif
