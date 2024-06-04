@@ -51,6 +51,14 @@ void ssl_init(sslclient_context *ssl_client) {
   ssl_client->peek_buf = -1;
 }
 
+void attach_ssl_certificate_bundle(sslclient_context *ssl_client, bool att) {
+  if (att) {
+    ssl_client->bundle_attach_cb = &esp_crt_bundle_attach;
+  } else {
+    ssl_client->bundle_attach_cb = NULL;
+  }
+}
+
 int start_ssl_client(
   sslclient_context *ssl_client, const IPAddress &ip, uint32_t port, const char *hostname, int timeout, const char *rootCABuff, bool useRootCABundle,
   const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos
@@ -195,11 +203,14 @@ int start_ssl_client(
       return handle_error(ret);
     }
   } else if (useRootCABundle) {
-    log_v("Attaching root CA cert bundle");
-    ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
-
-    if (ret < 0) {
-      return handle_error(ret);
+    if (ssl_client->bundle_attach_cb != NULL) {
+      log_v("Attaching root CA cert bundle");
+      ret = ssl_client->bundle_attach_cb(&ssl_client->ssl_conf);
+      if (ret < 0) {
+        return handle_error(ret);
+      }
+    } else {
+      log_e("useRootCABundle is set, but attach_ssl_certificate_bundle(ssl, true); was not called!");
     }
   } else if (pskIdent != NULL && psKey != NULL) {
     log_v("Setting up PSK");
