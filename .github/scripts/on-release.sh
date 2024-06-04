@@ -216,6 +216,12 @@ find "$PKG_DIR" -name '*.git*' -type f -delete
 ##
 RVTC_NAME="riscv32-esp-elf-gcc"
 RVTC_NEW_NAME="esp-rv32"
+X32TC_NAME="xtensa-esp32-elf-gcc"
+X32TC_NEW_NAME="esp-x32"
+XS2TC_NAME="xtensa-esp32s2-elf-gcc"
+XS2TC_NEW_NAME="esp-xs2"
+XS3TC_NAME="xtensa-esp32s3-elf-gcc"
+XS3TC_NEW_NAME="esp-xs3"
 
 # Replace tools locations in platform.txt
 echo "Generating platform.txt..."
@@ -224,9 +230,9 @@ sed "s/version=.*/version=$RELEASE_TAG/g" | \
 sed 's/tools\.esp32-arduino-libs\.path\.windows=.*//g' | \
 sed 's/{runtime\.platform\.path}.tools.esp32-arduino-libs/\{runtime.tools.esp32-arduino-libs.path\}/g' | \
 sed 's/{runtime\.platform\.path}.tools.xtensa-esp-elf-gdb/\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
-sed 's/{runtime\.platform\.path}.tools.xtensa-esp32-elf/\{runtime.tools.xtensa-esp32-elf-gcc.path\}/g' | \
-sed 's/{runtime\.platform\.path}.tools.xtensa-esp32s2-elf/\{runtime.tools.xtensa-esp32s2-elf-gcc.path\}/g' | \
-sed 's/{runtime\.platform\.path}.tools.xtensa-esp32s3-elf/\{runtime.tools.xtensa-esp32s3-elf-gcc.path\}/g' | \
+sed "s/{runtime\.platform\.path}.tools.xtensa-esp32-elf/\\{runtime.tools.$X32TC_NEW_NAME.path\\}/g" | \
+sed "s/{runtime\.platform\.path}.tools.xtensa-esp32s2-elf/\\{runtime.tools.$XS2TC_NEW_NAME.path\\}/g" | \
+sed "s/{runtime\.platform\.path}.tools.xtensa-esp32s3-elf/\\{runtime.tools.$XS3TC_NEW_NAME.path\\}/g" | \
 sed 's/{runtime\.platform\.path}.tools.riscv32-esp-elf-gdb/\{runtime.tools.riscv32-esp-elf-gdb.path\}/g' | \
 sed "s/{runtime\.platform\.path}.tools.riscv32-esp-elf/\\{runtime.tools.$RVTC_NEW_NAME.path\\}/g" | \
 sed 's/{runtime\.platform\.path}.tools.esptool/\{runtime.tools.esptool_py.path\}/g' | \
@@ -342,7 +348,19 @@ rvtc_jq_arg="\
     (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$RVTC_NAME\")).version = \"$RVTC_VERSION\" |\
     (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$RVTC_NAME\")).name = \"$RVTC_NEW_NAME\" |\
     (.packages[0].tools[] | select(.name==\"$RVTC_NAME\")).version = \"$RVTC_VERSION\" |\
-    (.packages[0].tools[] | select(.name==\"$RVTC_NAME\")).name = \"$RVTC_NEW_NAME\""
+    (.packages[0].tools[] | select(.name==\"$RVTC_NAME\")).name = \"$RVTC_NEW_NAME\" |\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$X32TC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$X32TC_NAME\")).name = \"$X32TC_NEW_NAME\" |\
+    (.packages[0].tools[] | select(.name==\"$X32TC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].tools[] | select(.name==\"$X32TC_NAME\")).name = \"$X32TC_NEW_NAME\" |\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$XS2TC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$XS2TC_NAME\")).name = \"$XS2TC_NEW_NAME\" |\
+    (.packages[0].tools[] | select(.name==\"$XS2TC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].tools[] | select(.name==\"$XS2TC_NAME\")).name = \"$XS2TC_NEW_NAME\" |\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$XS3TC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$XS3TC_NAME\")).name = \"$XS3TC_NEW_NAME\" |\
+    (.packages[0].tools[] | select(.name==\"$XS3TC_NAME\")).version = \"$RVTC_VERSION\" |\
+    (.packages[0].tools[] | select(.name==\"$XS3TC_NAME\")).name = \"$XS3TC_NEW_NAME\""
 cat "$PACKAGE_JSON_TEMPLATE" | jq "$rvtc_jq_arg" > "$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
 PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
 
