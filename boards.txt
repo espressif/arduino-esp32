@@ -31343,6 +31343,8 @@ department_of_alchemy_minimain_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 Bee_Data_Logger.name=Bee Data Logger
 Bee_Data_Logger.vid.0=0x303a
 Bee_Data_Logger.pid.0=815C
+Bee_Data_Logger.upload_port.0.vid=0x303a
+Bee_Data_Logger.upload_port.0.pid=815C
 
 Bee_Data_Logger.bootloader.tool=esptool_py
 Bee_Data_Logger.bootloader.tool.default=esptool_py
@@ -31452,6 +31454,8 @@ Bee_Data_Logger.menu.EraseFlash.all.upload.erase_cmd=-e
 Bee_Motion_S3.name=Bee Motion S3
 Bee_Motion_S3.vid.0=0x303a
 Bee_Motion_S3.pid.0=0x8113
+Bee_Motion_S3.upload_port.0.vid=0x303a
+Bee_Motion_S3.upload_port.0.pid=0x8113
 
 Bee_Motion_S3.bootloader.tool=esptool_py
 Bee_Motion_S3.bootloader.tool.default=esptool_py
@@ -31561,6 +31565,8 @@ Bee_Motion_S3.menu.EraseFlash.all.upload.erase_cmd=-e
 Bee_Motion.name=Bee Motion
 Bee_Motion.vid.0=0x303a
 Bee_Motion.pid.0=0x810D
+Bee_Motion.vid.upload_port.0.vid=0x303a
+Bee_Motion.pid.upload_port.0.vid=0x810D
 
 Bee_Motion.bootloader.tool=esptool_py
 Bee_Motion.bootloader.tool.default=esptool_py
@@ -31778,6 +31784,8 @@ Bee_Motion_Mini.menu.EraseFlash.all.upload.erase_cmd=-e
 Bee_S3.name=Bee S3
 Bee_S3.vid.0=0x303a
 Bee_S3.pid.0=0x8110
+Bee_S3.vid.upload_port.0.vid=0x303a
+Bee_S3.pid.upload_port.0.vid=0x8110
 
 Bee_S3.bootloader.tool=esptool_py
 Bee_S3.bootloader.tool.default=esptool_py
