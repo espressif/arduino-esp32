@@ -40,6 +40,10 @@ NetworkClientSecure::NetworkClientSecure() {
   sslclient->socket = -1;
   sslclient->handshake_timeout = 120000;
   _use_insecure = false;
+  _stillinPlainStart = false;
+  _ca_cert_free = false;
+  _cert_free = false;
+  _private_key_free = false;
   _CA_cert = NULL;
   _cert = NULL;
   _private_key = NULL;
@@ -68,6 +72,11 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
     _connected = true;
   }
 
+  _use_insecure = false;
+  _stillinPlainStart = false;
+  _ca_cert_free = false;
+  _cert_free = false;
+  _private_key_free = false;
   _CA_cert = NULL;
   _cert = NULL;
   _private_key = NULL;
@@ -77,7 +86,17 @@ NetworkClientSecure::NetworkClientSecure(int sock) {
   _alpn_protos = NULL;
 }
 
-NetworkClientSecure::~NetworkClientSecure() {}
+NetworkClientSecure::~NetworkClientSecure() {
+  if (_ca_cert_free && _CA_cert) {
+    free((void *)_CA_cert);
+  }
+  if (_cert_free && _cert) {
+    free((void *)_cert);
+  }
+  if (_private_key_free && _private_key) {
+    free((void *)_private_key);
+  }
+}
 
 void NetworkClientSecure::stop() {
   stop_ssl_socket(sslclient.get());
@@ -310,6 +329,10 @@ void NetworkClientSecure::setInsecure() {
 }
 
 void NetworkClientSecure::setCACert(const char *rootCA) {
+  if (_ca_cert_free && _CA_cert) {
+    free((void *)_CA_cert);
+    _ca_cert_free = false;
+  }
   _CA_cert = rootCA;
   _use_insecure = false;
 }
@@ -327,10 +350,18 @@ void NetworkClientSecure::setCACertBundle(const uint8_t *bundle) {
 }
 
 void NetworkClientSecure::setCertificate(const char *client_ca) {
+  if (_cert_free && _cert) {
+    free((void *)_cert);
+    _cert_free = false;
+  }
   _cert = client_ca;
 }
 
 void NetworkClientSecure::setPrivateKey(const char *private_key) {
+  if (_private_key_free && _private_key) {
+    free((void *)_private_key);
+    _private_key_free = false;
+  }
   _private_key = private_key;
 }
 
@@ -369,6 +400,7 @@ bool NetworkClientSecure::loadCACert(Stream &stream, size_t size) {
   bool ret = false;
   if (dest) {
     setCACert(dest);
+    _ca_cert_free = true;
     ret = true;
   }
   return ret;
@@ -382,6 +414,7 @@ bool NetworkClientSecure::loadCertificate(Stream &stream, size_t size) {
   bool ret = false;
   if (dest) {
     setCertificate(dest);
+    _cert_free = true;
     ret = true;
   }
   return ret;
@@ -395,6 +428,7 @@ bool NetworkClientSecure::loadPrivateKey(Stream &stream, size_t size) {
   bool ret = false;
   if (dest) {
     setPrivateKey(dest);
+    _private_key_free = true;
     ret = true;
   }
   return ret;
