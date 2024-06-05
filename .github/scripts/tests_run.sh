@@ -8,16 +8,28 @@ function run_test() {
     local sketchdir=$(dirname $sketch)
     local sketchname=$(basename $sketchdir)
     local result=0
+    local error=0
 
-    if [[ -f "$sketchdir/.skip.$platform" ]] || [[ -f "$sketchdir/.skip.$target" ]] || [[ -f "$sketchdir/.skip.$platform.$target" ]]; then
-      echo "Skipping $sketchname test for $target, platform: $platform"
-      skipfile="$sketchdir/.test_skipped"
-      touch $skipfile
-      exit 0
+    # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
+    if [ -f $sketchdir/ci.json ]; then
+        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
+        selected_platform=$(jq -r --arg platform $platform '.platforms[$platform]' $sketchdir/ci.json)
+    else
+        is_target="true"
+        selected_platform="true"
     fi
 
-    if [ $options -eq 0 ] && [ -f $sketchdir/cfg.json ]; then
-        len=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn | length' $sketchdir/cfg.json`
+    if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
+      printf "\033[93mSkipping $sketchname test for $target, platform: $platform\033[0m\n"
+      printf "\n\n\n"
+      return 0
+    fi
+
+    if [ $options -eq 0 ] && [ -f $sketchdir/ci.json ]; then
+        len=`jq -r --arg target $target '.fqbn[$target] | length' $sketchdir/ci.json`
+        if [ $len -eq 0 ]; then
+            len=1
+        fi
     else
         len=1
     fi
@@ -25,12 +37,23 @@ function run_test() {
     if [ $len -eq 1 ]; then
       # build_dir="$sketchdir/build"
       build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
-      report_file="$sketchdir/$sketchname.xml"
+      report_file="$sketchdir/$target/$sketchname.xml"
     fi
 
     for i in `seq 0 $(($len - 1))`
     do
-        echo "Running test: $sketchname -- Config: $i"
+        fqbn="Default"
+
+        if [ $len -ne 1 ]; then
+            fqbn=`jq -r --arg target $target --argjson i $i '.fqbn[$target] | sort | .[$i]' $sketchdir/ci.json`
+        elif [ -f $sketchdir/ci.json ]; then
+            has_fqbn=`jq -r --arg target $target '.fqbn[$target]' $sketchdir/ci.json`
+            if [ "$has_fqbn" != "null" ]; then
+                fqbn=`jq -r --arg target $target '.fqbn[$target] | .[0]' $sketchdir/ci.json`
+            fi
+        fi
+
+        printf "\033[95mRunning test: $sketchname -- Config: $fqbn\033[0m\n"
         if [ $erase_flash -eq 1 ]; then
             esptool.py -c $target erase_flash
         fi
@@ -38,7 +61,7 @@ function run_test() {
         if [ $len -ne 1 ]; then
             # build_dir="$sketchdir/build$i"
             build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
-            report_file="$sketchdir/$sketchname$i.xml"
+            report_file="$sketchdir/$target/$sketchname$i.xml"
         fi
 
         if [ $platform == "wokwi" ]; then
@@ -55,7 +78,7 @@ function run_test() {
             elif [ $target == "esp32c3" ]; then
                 extra_args+=" --qemu-prog-path qemu-system-riscv32 --qemu-cli-args=\"-machine $target -icount 3 -nographic\""
             else
-                echo "Unsupported QEMU target: $target"
+                printf "\033[91mUnsupported QEMU target: $target\033[0m\n"
                 exit 1
             fi
         else
@@ -63,19 +86,23 @@ function run_test() {
         fi
 
         result=0
-        echo "pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args"
+        printf "\033[95mpytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args\033[0m\n"
         bash -c "set +e; pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args; exit \$?" || result=$?
-        result=$?
+        printf "\n"
         if [ $result -ne 0 ]; then
             result=0
-            echo "Retrying test: $sketchname -- Config: $i"
+            printf "\033[95mRetrying test: $sketchname -- Config: $i\033[0m\n"
+            printf "\033[95mpytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args\033[0m\n"
             bash -c "set +e; pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args; exit \$?" || result=$?
+            printf "\n"
             result=$?
             if [ $result -ne 0 ]; then
-              exit $result
+              error=$result
             fi
         fi
     done
+    printf "\n"
+    return $error
 }
 
 SCRIPTS_DIR="./.github/scripts"
@@ -92,14 +119,14 @@ while [ ! -z "$1" ]; do
     -c )
         chunk_run=1
         ;;
-    -q )
+    -Q )
         if [ ! -d $QEMU_PATH ]; then
             echo "QEMU path $QEMU_PATH does not exist"
             exit 1
         fi
         platform="qemu"
         ;;
-    -w )
+    -W )
         shift
         wokwi_timeout=$1
         platform="wokwi"
@@ -165,6 +192,7 @@ if [ $chunk_run -eq 0 ]; then
         exit 1
     fi
     run_test $target $test_folder/$sketch/$sketch.ino $options $erase
+    exit $?
 else
   if [ "$chunk_max" -le 0 ]; then
       echo "ERROR: Chunks count must be positive number"
@@ -197,8 +225,6 @@ else
   else
       start_index=$(( $chunk_index * $chunk_size ))
       if [ "$sketchcount" -le "$start_index" ]; then
-          echo "Skipping job"
-          touch $PWD/tests/.test_skipped
           exit 0
       fi
 
@@ -210,6 +236,7 @@ else
 
   start_num=$(( $start_index + 1 ))
   sketchnum=0
+  error=0
 
   for sketch in $sketches; do
 
@@ -218,9 +245,14 @@ else
       || [ "$sketchnum" -gt "$end_index" ]; then
           continue
       fi
-      echo ""
-      echo "Sketch Index $(($sketchnum - 1))"
 
-      run_test $target $sketch $options $erase
+      printf "\033[95mSketch Index $(($sketchnum - 1))\033[0m\n"
+
+      exit_code=0
+      run_test $target $sketch $options $erase || exit_code=$?
+      if [ $exit_code -ne 0 ]; then
+          error=$exit_code
+      fi
   done
+  exit $error
 fi

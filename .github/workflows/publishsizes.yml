@@ -2,7 +2,7 @@ name: Sizes Results
 
 on:
   workflow_run:
-    workflows: [ESP32 Arduino CI]
+    workflows: [Compilation Tests]
     types:
       - completed
 
@@ -63,7 +63,7 @@ jobs:
         uses: juliangruber/read-file-action@v1
         with:
           path: ./artifacts/sizes-report/pr_num.txt
-    
+
       - name: Report results
         uses: P-R-O-C-H-Y/report-size-deltas@sizes_v2
         with:

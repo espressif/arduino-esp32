@@ -1,4 +1,4 @@
-name: ESP32 Arduino CI
+name: Compilation Tests
 
 on:
   workflow_dispatch:
@@ -7,13 +7,35 @@ on:
     - master
     - release/*
   pull_request:
+    paths:
+      - 'cores/**'
+      - 'libraries/**'
+      - '!libraries/**.md'
+      - '!libraries/**.txt'
+      - '!libraries/**.properties'
+      - '!libraries/**.py'
+      - 'package/**'
+      - 'tools/**.py'
+      - 'platform.txt'
+      - 'programmers.txt'
+      - 'idf_component.yml'
+      - 'Kconfig.projbuild'
+      - 'package.json'
+      - '.github/workflows/push.yml'
+      - '.github/scripts/**'
+      - '!.github/scripts/find_*'
+      - '!.github/scripts/on-release.sh'
+      - '!.github/scripts/tests_*'
+      - '!.github/scripts/upload_*'
 
 concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
   cancel-in-progress: true
 
-jobs:
+env:
+  MAX_CHUNKS: 15
 
+jobs:
   cmake-check:
     name: Check cmake file
     runs-on: ubuntu-latest
@@ -21,32 +43,184 @@ jobs:
     - uses: actions/checkout@v4
     - run: bash ./.github/scripts/check-cmakelists.sh
 
+  gen-chunks:
+    name: Generate chunks
+    runs-on: ubuntu-latest
+    outputs:
+      build_all: ${{ steps.set-chunks.outputs.build_all }}
+      build_static_sketches: ${{ steps.set-chunks.outputs.build_static_sketches }}
+      build_idf: ${{ steps.set-chunks.outputs.build_idf }}
+      build_platformio: ${{ steps.set-chunks.outputs.build_platformio }}
+      chunk_count: ${{ steps.set-chunks.outputs.chunk_count }}
+      chunks: ${{ steps.set-chunks.outputs.chunks }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v44
+      with:
+        files_yaml: |
+            core:
+              - '.github/**'
+              - '!.github/scripts/install-platformio-esp32.sh'
+              - 'cores/**'
+              - 'package/**'
+              - 'tools/**'
+              - '!tools/platformio-build.py'
+              - 'platform.txt'
+              - 'programmers.txt'
+            libraries:
+              - 'libraries/**/examples/**'
+              - 'libraries/**/src/**'
+            static_sketeches:
+              - 'libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino'
+              - 'libraries/BLE/examples/Server/Server.ino'
+              - 'libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino'
+              - 'libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino'
+              - 'libraries/NetworkClientSecure/src/**'
+              - 'libraries/BLE/src/**'
+              - 'libraries/Insights/src/**'
+            idf:
+              - 'idf_component.yml'
+              - 'Kconfig.projbuild'
+            platformio:
+              - 'package.json'
+              - '.github/scripts/install-platformio-esp32.sh'
+              - 'tools/platformio-build.py'
+
+    - name: Set chunks
+      id: set-chunks
+      env:
+        LIB_FILES: ${{ steps.changed-files.outputs.libraries_all_changed_files }}
+      run: |
+        build_all=false
+        chunks_count=0
+        is_pr=${{ github.event_name == 'pull_request' }}
+
+        build_platformio=${{ steps.changed-files.outputs.platformio_any_changed == 'true' }}
+        build_idf=${{ steps.changed-files.outputs.idf_any_changed == 'true' }}
+        build_static_sketches=${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
+
+        core_changed=${{ steps.changed-files.outputs.core_any_changed == 'true' }}
+        lib_changed=${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
+
+        if [[ $core_changed == 'true' ]] || [[ $is_pr != 'true' ]]; then
+          echo "Core files changed or not a PR. Building all."
+          build_all=true
+          chunks_count=${{ env.MAX_CHUNKS }}
+        elif [[ $lib_changed == 'true' ]]; then
+          echo "Libraries changed. Building only affected sketches."
+          sketches=""
+          for file in $LIB_FILES; do
+              if [[ $file == *.ino ]]; then
+                  # If file ends with .ino, add it to the list of sketches
+                  echo "Sketch found: $file"
+                  sketches+="$file "
+              elif [[ $(basename $(dirname $file)) == "src" ]]; then
+                  # If file is in a src directory, find all sketches in the parent/examples directory
+                  echo "Library src file found: $file"
+                  lib=$(dirname $(dirname $file))
+                  lib_sketches=$(find $lib/examples -name *.ino)
+                  sketches+="$lib_sketches "
+                  echo "Library sketches: $lib_sketches"
+              else
+                  # If file is in a example folder but it is not a sketch, find all sketches in the current directory
+                  echo "File in example folder found: $file"
+                  sketch=$(find $(dirname $file) -name *.ino)
+                  sketches+="$sketch "
+                  echo "Sketch in example folder: $sketch"
+              fi
+              echo ""
+          done
+        else
+          echo "Unhandled change triggered the build. This should not happen."
+          exit 1
+        fi
+
+        if [[ -n $sketches ]]; then
+          # Remove duplicates
+          sketches=$(echo $sketches | tr ' ' '\n' | sort | uniq)
+          for sketch in $sketches; do
+              echo $sketch >> sketches_found.txt
+              chunks_count=$((chunks_count+1))
+          done
+          echo "Number of sketches found: $chunks_count"
+          echo "Sketches: $sketches"
+
+          if [[ $chunks_count -gt ${{ env.MAX_CHUNKS }} ]]; then
+            echo "More sketches than the allowed number of chunks found. Limiting to ${{ env.MAX_CHUNKS }} chunks."
+            chunks_count=${{ env.MAX_CHUNKS }}
+          fi
+        fi
+
+        chunks='["0"'
+        for i in $(seq 1 $(( $chunks_count - 1 )) ); do
+          chunks+=",\"$i\""
+        done
+        chunks+="]"
+
+        echo "build_all=$build_all" >> $GITHUB_OUTPUT
+        echo "build_static_sketches=$build_static_sketches" >> $GITHUB_OUTPUT
+        echo "build_idf=$build_idf" >> $GITHUB_OUTPUT
+        echo "build_platformio=$build_platformio" >> $GITHUB_OUTPUT
+        echo "chunk_count=$chunks_count" >> $GITHUB_OUTPUT
+        echo "chunks=$chunks" >> $GITHUB_OUTPUT
+
+    - name: Upload sketches found
+      if: ${{ steps.set-chunks.outputs.build_all == 'false' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: sketches_found
+        path: sketches_found.txt
+        overwrite: true
+        if-no-files-found: error
+
   # Ubuntu
   build-arduino-linux:
     name: Arduino ${{ matrix.chunk }} on ubuntu-latest
+    needs: gen-chunks
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+        chunk: ${{ fromJson(needs.gen-chunks.outputs.chunks) }}
 
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
       with:
         python-version: '3.x'
-    - name: Cache tools
-      id: cache-linux
+
+    - name: Get libs cache
       uses: actions/cache@v4
       with:
+        key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
         path: |
           ./tools/dist
-          ~/arduino_ide
-        key: ${{ runner.os }}-${{ hashFiles('package/package_esp32_index.template.json',
-                                            'tools/get.py',
-                                            '.github/scripts/install-arduino-ide.sh') }}
-    - name: Build Sketches
-      run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} 15 1
+          ./tools/esp32-arduino-libs
+          ./tools/esptool
+          ./tools/mk*
+          ./tools/openocd-esp32
+          ./tools/riscv32-*
+          ./tools/xtensa-*
+
+    - name: Build all sketches
+      if: ${{ needs.gen-chunks.outputs.build_all == 'true' }}
+      run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ env.MAX_CHUNKS }} 1
+
+    - name: Download sketches found
+      if: ${{ needs.gen-chunks.outputs.build_all == 'false' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: sketches_found
+
+    - name: Build selected sketches
+      if: ${{ needs.gen-chunks.outputs.build_all == 'false' }}
+      run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ needs.gen-chunks.outputs.chunk_count }} 1 sketches_found.txt
 
     #Upload cli compile json as artifact
     - name: Upload cli compile json
@@ -59,6 +233,8 @@ jobs:
   # Windows and MacOS
   build-arduino-win-mac:
     name: Arduino on ${{ matrix.os }}
+    needs: gen-chunks
+    if: ${{ needs.gen-chunks.outputs.build_all == 'true' || needs.gen-chunks.outputs.build_static_sketches == 'true' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -76,6 +252,11 @@ jobs:
   # PlatformIO on Windows, Ubuntu and Mac
   build-platformio:
     name: PlatformIO on ${{ matrix.os }}
+    needs: gen-chunks
+    if: |
+      needs.gen-chunks.outputs.build_all == 'true' ||
+      needs.gen-chunks.outputs.build_static_sketches == 'true' ||
+      needs.gen-chunks.outputs.build_platformio == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -92,6 +273,8 @@ jobs:
 
   build-esp-idf-component:
     name: Build with ESP-IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
+    needs: gen-chunks
+    if: ${{ needs.gen-chunks.outputs.build_all == 'true' || needs.gen-chunks.outputs.build_idf == 'true' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -127,7 +310,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     # Check out repository
-      - name: Checkout repository    
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{secrets.GITHUB_TOKEN}}
@@ -143,7 +326,7 @@ jobs:
           pattern: pr_cli_compile_*
           merge-multiple: true
           path: master_cli_compile
-        
+
       - name: List files in the directory
         run: ls -R
 
@@ -155,7 +338,7 @@ jobs:
           git add --all
           git commit -m "Updated cli compile json files"
           git push origin HEAD:gh-pages
-  
+
   #Upload PR number as artifact
   upload-pr-number:
     name: Upload PR number

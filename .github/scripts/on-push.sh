@@ -10,7 +10,8 @@ function build(){
     local chunk_index=$3
     local chunks_cnt=$4
     local build_log=$5
-    shift; shift; shift; shift; shift;
+    local sketches_file=$6
+    shift; shift; shift; shift; shift; shift;
     local sketches=$*
 
     local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
@@ -23,6 +24,9 @@ function build(){
     if [ "$OS_IS_LINUX" == "1" ]; then
         args+=" -p $ARDUINO_ESP32_PATH/libraries"
         args+=" -i $chunk_index -m $chunks_cnt"
+        if [ -n "$sketches_file" ]; then
+          args+=" -f $sketches_file"
+        fi
         if [ $build_log -eq 1 ]; then
             args+=" -l $build_log"
         fi
@@ -50,6 +54,7 @@ fi
 CHUNK_INDEX=$1
 CHUNKS_CNT=$2
 BUILD_LOG=$3
+SKETCHES_FILE=$4
 BUILD_PIO=0
 if [ "$#" -lt 2 ] || [ "$CHUNKS_CNT" -le 0 ]; then
     CHUNK_INDEX=0
@@ -69,7 +74,6 @@ fi
 
 SCRIPTS_DIR="./.github/scripts"
 if [ "$BUILD_PIO" -eq 0 ]; then
-    #source ${SCRIPTS_DIR}/install-arduino-ide.sh
     source ${SCRIPTS_DIR}/install-arduino-cli.sh
     source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
@@ -95,12 +99,12 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     fi
 
     #build sketches for different targets
-    build "esp32s3" $FQBN_ESP32S3 $CHUNK_INDEX $CHUNKS_CNT $BUILD_LOG $SKETCHES_ESP32
-    build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $BUILD_LOG $SKETCHES_ESP32
-    build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $BUILD_LOG $SKETCHES_ESP32
-    build "esp32c6" $FQBN_ESP32C6 $CHUNK_INDEX $CHUNKS_CNT $BUILD_LOG $SKETCHES_ESP32
-    build "esp32h2" $FQBN_ESP32H2 $CHUNK_INDEX $CHUNKS_CNT $BUILD_LOG $SKETCHES_ESP32
-    build "esp32"   $FQBN_ESP32   $CHUNK_INDEX $CHUNKS_CNT $BUILD_LOG $SKETCHES_ESP32
+    build "esp32s3" $FQBN_ESP32S3 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32s2" $FQBN_ESP32S2 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32c3" $FQBN_ESP32C3 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32c6" $FQBN_ESP32C6 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32h2" $FQBN_ESP32H2 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32"   $FQBN_ESP32   "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
 
     if [ "$BUILD_LOG" -eq 1 ]; then
         #remove last comma from the last JSON object
