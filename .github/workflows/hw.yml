@@ -55,12 +55,13 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - uses: actions/setup-python@v5
-        if: steps.check-tests.outputs.enabled == 'true'
-        with:
-          cache-dependency-path: tests/requirements.txt
-          cache: 'pip'
-          python-version: '3.10.1'
+      # setup-python currently only works on ubuntu images
+      # - uses: actions/setup-python@v5
+      #   if: steps.check-tests.outputs.enabled == 'true'
+      #   with:
+      #     cache-dependency-path: tests/requirements.txt
+      #     cache: 'pip'
+      #     python-version: '3.10.1'
 
       - name: Install dependencies
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
