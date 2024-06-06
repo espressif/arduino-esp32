@@ -24,7 +24,6 @@
  * information about the CPU Frequency while controlling the RGB LED using RMT.
  */
 
-
 // Default DevKit RGB LED GPIOs:
 // The effect seen in (Espressif devkits) ESP32C6, ESP32H2, ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
 #ifdef PIN_NEOPIXEL
@@ -50,7 +49,7 @@ void setup() {
 }
 
 void loop() {
-  const uint8_t cpufreqs[] = { 240, 160, 80, 40, 20, 10 };
+  const uint8_t cpufreqs[] = {240, 160, 80, 40, 20, 10};
   static uint8_t i = 0;
 
   setCpuFrequencyMhz(cpufreqs[i]);

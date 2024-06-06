@@ -8,9 +8,9 @@
 #define USB_PID 0x1001
 
 static const uint8_t LED_BUILTIN = 21;
-#define BUILTIN_LED LED_BUILTIN
-#define LED_BUILTIN LED_BUILTIN
-#define RGB_BUILTIN SOC_GPIO_PIN_COUNT + LED_BUILTIN
+#define BUILTIN_LED    LED_BUILTIN
+#define LED_BUILTIN    LED_BUILTIN
+#define RGB_BUILTIN    SOC_GPIO_PIN_COUNT + LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
 // SPI - unused but you can create your own definition in your sketch

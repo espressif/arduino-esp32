@@ -30,22 +30,22 @@ class BLECharacteristicCallbacks;
  */
 class BLEDescriptorMap {
 public:
-  void setByUUID(const char* uuid, BLEDescriptor* pDescriptor);
-  void setByUUID(BLEUUID uuid, BLEDescriptor* pDescriptor);
-  void setByHandle(uint16_t handle, BLEDescriptor* pDescriptor);
-  BLEDescriptor* getByUUID(const char* uuid);
-  BLEDescriptor* getByUUID(BLEUUID uuid);
-  BLEDescriptor* getByHandle(uint16_t handle);
+  void setByUUID(const char *uuid, BLEDescriptor *pDescriptor);
+  void setByUUID(BLEUUID uuid, BLEDescriptor *pDescriptor);
+  void setByHandle(uint16_t handle, BLEDescriptor *pDescriptor);
+  BLEDescriptor *getByUUID(const char *uuid);
+  BLEDescriptor *getByUUID(BLEUUID uuid);
+  BLEDescriptor *getByHandle(uint16_t handle);
   String toString();
-  void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
-  BLEDescriptor* getFirst();
-  BLEDescriptor* getNext();
-private:
-  std::map<BLEDescriptor*, String> m_uuidMap;
-  std::map<uint16_t, BLEDescriptor*> m_handleMap;
-  std::map<BLEDescriptor*, String>::iterator m_iterator;
-};
+  void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
+  BLEDescriptor *getFirst();
+  BLEDescriptor *getNext();
 
+private:
+  std::map<BLEDescriptor *, String> m_uuidMap;
+  std::map<uint16_t, BLEDescriptor *> m_handleMap;
+  std::map<BLEDescriptor *, String>::iterator m_iterator;
+};
 
 /**
  * @brief The model of a %BLE Characteristic.
@@ -55,32 +55,32 @@ private:
  */
 class BLECharacteristic {
 public:
-  BLECharacteristic(const char* uuid, uint32_t properties = 0);
+  BLECharacteristic(const char *uuid, uint32_t properties = 0);
   BLECharacteristic(BLEUUID uuid, uint32_t properties = 0);
   virtual ~BLECharacteristic();
 
-  void addDescriptor(BLEDescriptor* pDescriptor);
-  BLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
-  BLEDescriptor* getDescriptorByUUID(BLEUUID descriptorUUID);
+  void addDescriptor(BLEDescriptor *pDescriptor);
+  BLEDescriptor *getDescriptorByUUID(const char *descriptorUUID);
+  BLEDescriptor *getDescriptorByUUID(BLEUUID descriptorUUID);
   BLEUUID getUUID();
   String getValue();
-  uint8_t* getData();
+  uint8_t *getData();
   size_t getLength();
 
   void indicate();
   void notify(bool is_notification = true);
   void setBroadcastProperty(bool value);
-  void setCallbacks(BLECharacteristicCallbacks* pCallbacks);
+  void setCallbacks(BLECharacteristicCallbacks *pCallbacks);
   void setIndicateProperty(bool value);
   void setNotifyProperty(bool value);
   void setReadProperty(bool value);
-  void setValue(uint8_t* data, size_t size);
+  void setValue(uint8_t *data, size_t size);
   void setValue(String value);
-  void setValue(uint16_t& data16);
-  void setValue(uint32_t& data32);
-  void setValue(int& data32);
-  void setValue(float& data32);
-  void setValue(double& data64);
+  void setValue(uint16_t &data16);
+  void setValue(uint32_t &data32);
+  void setValue(int &data32);
+  void setValue(float &data32);
+  void setValue(double &data64);
   void setWriteProperty(bool value);
   void setWriteNoResponseProperty(bool value);
   String toString();
@@ -97,7 +97,6 @@ public:
   static const uint32_t indicationTimeout = 1000;
 
 private:
-
   friend class BLEServer;
   friend class BLEService;
   friend class BLEDescriptor;
@@ -107,26 +106,22 @@ private:
   BLEDescriptorMap m_descriptorMap;
   uint16_t m_handle;
   esp_gatt_char_prop_t m_properties;
-  BLECharacteristicCallbacks* m_pCallbacks;
-  BLEService* m_pService;
+  BLECharacteristicCallbacks *m_pCallbacks;
+  BLEService *m_pService;
   BLEValue m_value;
   esp_gatt_perm_t m_permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
   bool m_writeEvt = false;  // If we have started a long write, this tells the commit code that we were the target
 
-  void handleGATTServerEvent(
-    esp_gatts_cb_event_t event,
-    esp_gatt_if_t gatts_if,
-    esp_ble_gatts_cb_param_t* param);
+  void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
 
-  void executeCreate(BLEService* pService);
+  void executeCreate(BLEService *pService);
   esp_gatt_char_prop_t getProperties();
-  BLEService* getService();
+  BLEService *getService();
   void setHandle(uint16_t handle);
   FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
   FreeRTOS::Semaphore m_semaphoreConfEvt = FreeRTOS::Semaphore("ConfEvt");
   FreeRTOS::Semaphore m_semaphoreSetValue = FreeRTOS::Semaphore("SetValue");
 };  // BLECharacteristic
-
 
 /**
  * @brief Callbacks that can be associated with a %BLE characteristic to inform of events.
@@ -155,30 +150,30 @@ public:
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 * @param [in] param The BLE GATTS param. Use param->read.
 	 */
-  virtual void onRead(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
+  virtual void onRead(BLECharacteristic *pCharacteristic, esp_ble_gatts_cb_param_t *param);
   /**
 	 * @brief DEPRECATED! Callback function to support a read request. Called only if onRead(,) is not overridden
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
-  virtual void onRead(BLECharacteristic* pCharacteristic);
+  virtual void onRead(BLECharacteristic *pCharacteristic);
 
   /**
 	 * @brief Callback function to support a write request.
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 * @param [in] param The BLE GATTS param. Use param->write.
 	 */
-  virtual void onWrite(BLECharacteristic* pCharacteristic, esp_ble_gatts_cb_param_t* param);
+  virtual void onWrite(BLECharacteristic *pCharacteristic, esp_ble_gatts_cb_param_t *param);
   /**
 	 * @brief DEPRECATED! Callback function to support a write request. Called only if onWrite(,) is not overridden.
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
-  virtual void onWrite(BLECharacteristic* pCharacteristic);
+  virtual void onWrite(BLECharacteristic *pCharacteristic);
 
   /**
 	 * @brief Callback function to support a Notify request.
 	 * @param [in] pCharacteristic The characteristic that is the source of the event.
 	 */
-  virtual void onNotify(BLECharacteristic* pCharacteristic);
+  virtual void onNotify(BLECharacteristic *pCharacteristic);
 
   /**
 	 * @brief Callback function to support a Notify/Indicate Status report.
@@ -186,7 +181,7 @@ public:
 	 * @param [in] s Status of the notification/indication
 	 * @param [in] code Additional code of underlying errors
 	 */
-  virtual void onStatus(BLECharacteristic* pCharacteristic, Status s, uint32_t code);
+  virtual void onStatus(BLECharacteristic *pCharacteristic, Status s, uint32_t code);
 };
 
 #endif /* CONFIG_BLUEDROID_ENABLED */

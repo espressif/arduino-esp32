@@ -8,12 +8,13 @@
 #include <ESPmDNS.h>
 #include <Update.h>
 
-const char* host = "esp32-webupdate";
-const char* ssid = "........";
-const char* password = "........";
+const char *host = "esp32-webupdate";
+const char *ssid = "........";
+const char *password = "........";
 
 WebServer server(80);
-const char* serverIndex = "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
+const char *serverIndex =
+  "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
 
 void setup(void) {
   Serial.begin(115200);
@@ -28,13 +29,14 @@ void setup(void) {
       server.send(200, "text/html", serverIndex);
     });
     server.on(
-      "/update", HTTP_POST, []() {
+      "/update", HTTP_POST,
+      []() {
         server.sendHeader("Connection", "close");
         server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
         ESP.restart();
       },
       []() {
-        HTTPUpload& upload = server.upload();
+        HTTPUpload &upload = server.upload();
         if (upload.status == UPLOAD_FILE_START) {
           Serial.setDebugOutput(true);
           Serial.printf("Update: %s\n", upload.filename.c_str());
@@ -55,7 +57,8 @@ void setup(void) {
         } else {
           Serial.printf("Update Failed Unexpectedly (likely broken connection): status=%d\n", upload.status);
         }
-      });
+      }
+    );
     server.begin();
     MDNS.addService("http", "tcp", 80);
 

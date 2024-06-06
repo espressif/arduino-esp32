@@ -4,16 +4,15 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x303A
-#define USB_PID 0x8192
+#define USB_VID          0x303A
+#define USB_PID          0x8192
 #define USB_MANUFACTURER "uPesy Electronics"
-#define USB_PRODUCT "uPesy ESP32S3 Basic"
-#define USB_SERIAL ""
-
+#define USB_PRODUCT      "uPesy ESP32S3 Basic"
+#define USB_SERIAL       ""
 
 static const uint8_t RGB_DATA = 38;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN    (RGB_DATA + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t LED_BUILTIN = 2;
@@ -76,7 +75,5 @@ static const uint8_t MTMS = 42;
 static const uint8_t MTDI = 41;
 static const uint8_t MTDO = 40;
 static const uint8_t MTCK = 39;
-
-
 
 #endif /* Pins_Arduino_h */

@@ -28,18 +28,13 @@
 #include <esp_partition.h>
 #include <esp_log.h>
 
-EEPROMClass::EEPROMClass(void)
-  : _handle(0), _data(0), _size(0), _dirty(false), _name("eeprom") {
-}
+EEPROMClass::EEPROMClass(void) : _handle(0), _data(0), _size(0), _dirty(false), _name("eeprom") {}
 
 EEPROMClass::EEPROMClass(uint32_t sector)
   // Only for compatiility, no sectors in nvs!
-  : _handle(0), _data(0), _size(0), _dirty(false), _name("eeprom") {
-}
+  : _handle(0), _data(0), _size(0), _dirty(false), _name("eeprom") {}
 
-EEPROMClass::EEPROMClass(const char* name)
-  : _handle(0), _data(0), _size(0), _dirty(false), _name(name) {
-}
+EEPROMClass::EEPROMClass(const char *name) : _handle(0), _data(0), _size(0), _dirty(false), _name(name) {}
 
 EEPROMClass::~EEPROMClass() {
   end();
@@ -64,7 +59,7 @@ bool EEPROMClass::begin(size_t size) {
   }
   if (size < key_size) {  // truncate
     log_w("truncating EEPROM from %d to %d", key_size, size);
-    uint8_t* key_data = (uint8_t*)malloc(key_size);
+    uint8_t *key_data = (uint8_t *)malloc(key_size);
     if (!key_data) {
       log_e("Not enough memory to truncate EEPROM!");
       return false;
@@ -75,7 +70,7 @@ bool EEPROMClass::begin(size_t size) {
     free(key_data);
   } else if (size > key_size) {  // expand or new
     size_t expand_size = size - key_size;
-    uint8_t* expand_key = (uint8_t*)malloc(expand_size);
+    uint8_t *expand_key = (uint8_t *)malloc(expand_size);
     if (!expand_key) {
       log_e("Not enough memory to expand EEPROM!");
       return false;
@@ -88,7 +83,7 @@ bool EEPROMClass::begin(size_t size) {
     }
     free(expand_key);
     nvs_erase_key(_handle, "expand");
-    uint8_t* key_data = (uint8_t*)malloc(size);
+    uint8_t *key_data = (uint8_t *)malloc(size);
     if (!key_data) {
       log_e("Not enough memory to expand EEPROM!");
       return false;
@@ -112,7 +107,7 @@ bool EEPROMClass::begin(size_t size) {
     delete[] _data;
   }
 
-  _data = (uint8_t*)malloc(size);
+  _data = (uint8_t *)malloc(size);
   if (!_data) {
     log_e("Not enough memory for %d bytes in EEPROM", size);
     return false;
@@ -138,6 +133,10 @@ void EEPROMClass::end() {
   _handle = 0;
 }
 
+bool EEPROMClass::isDirty() {
+  return _dirty;
+}
+
 uint8_t EEPROMClass::read(int address) {
   if (address < 0 || (size_t)address >= _size) {
     return 0;
@@ -150,13 +149,15 @@ uint8_t EEPROMClass::read(int address) {
 }
 
 void EEPROMClass::write(int address, uint8_t value) {
-  if (address < 0 || (size_t)address >= _size)
+  if (address < 0 || (size_t)address >= _size) {
     return;
-  if (!_data)
+  }
+  if (!_data) {
     return;
+  }
 
   // Optimize _dirty. Only flagged if data written is different.
-  uint8_t* pData = &_data[address];
+  uint8_t *pData = &_data[address];
   if (*pData != value) {
     *pData = value;
     _dirty = true;
@@ -186,7 +187,7 @@ bool EEPROMClass::commit() {
   return ret;
 }
 
-uint8_t* EEPROMClass::getDataPtr() {
+uint8_t *EEPROMClass::getDataPtr() {
   _dirty = true;
   return &_data[0];
 }
@@ -202,22 +203,22 @@ uint16_t EEPROMClass::length() {
    Convert EEPROM partition into nvs blob
    Call convert before you call begin
 */
-uint16_t EEPROMClass::convert(bool clear, const char* EEPROMname, const char* nvsname) {
+uint16_t EEPROMClass::convert(bool clear, const char *EEPROMname, const char *nvsname) {
   uint16_t result = 0;
-  const esp_partition_t* mypart = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, EEPROMname);
+  const esp_partition_t *mypart = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, EEPROMname);
   if (mypart == NULL) {
     log_i("EEPROM partition not found for conversion");
     return result;
   }
 
   size_t size = mypart->size;
-  uint8_t* data = (uint8_t*)malloc(size);
+  uint8_t *data = (uint8_t *)malloc(size);
   if (!data) {
     log_e("Not enough memory to convert EEPROM!");
     goto exit;
   }
 
-  if (esp_partition_read(mypart, 0, (void*)data, size) != ESP_OK) {
+  if (esp_partition_read(mypart, 0, (void *)data, size) != ESP_OK) {
     log_e("Unable to read EEPROM partition");
     goto exit;
   }
@@ -331,63 +332,76 @@ bool EEPROMClass::readBool(int address) {
   return EEPROMClass::readAll(address, value) ? 1 : 0;
 }
 
-size_t EEPROMClass::readString(int address, char* value, size_t maxLen) {
-  if (!value)
+size_t EEPROMClass::readString(int address, char *value, size_t maxLen) {
+  if (!value) {
     return 0;
+  }
 
-  if (address < 0 || address + maxLen > _size)
+  if (address < 0 || address + maxLen > _size) {
     return 0;
+  }
 
   uint16_t len;
-  for (len = 0; len <= _size; len++)
-    if (_data[address + len] == 0)
+  for (len = 0; len <= _size; len++) {
+    if (_data[address + len] == 0) {
       break;
+    }
+  }
 
-  if (address + len > _size)
+  if (address + len > _size) {
     return 0;
+  }
 
-  if (len > maxLen)
+  if (len > maxLen) {
     return 0;  //Maybe return part of the string instead?
+  }
 
-  memcpy((uint8_t*)value, _data + address, len);
+  memcpy((uint8_t *)value, _data + address, len);
   value[len] = 0;
   return len;
 }
 
 String EEPROMClass::readString(int address) {
-  if (address < 0 || address > _size)
+  if (address < 0 || address > _size) {
     return String();
+  }
 
   uint16_t len;
-  for (len = 0; len <= _size; len++)
-    if (_data[address + len] == 0)
+  for (len = 0; len <= _size; len++) {
+    if (_data[address + len] == 0) {
       break;
+    }
+  }
 
-  if (address + len > _size)
+  if (address + len > _size) {
     return String();
+  }
 
   char value[len + 1];
-  memcpy((uint8_t*)value, _data + address, len);
+  memcpy((uint8_t *)value, _data + address, len);
   value[len] = 0;
   return String(value);
 }
 
-size_t EEPROMClass::readBytes(int address, void* value, size_t maxLen) {
-  if (!value || !maxLen)
+size_t EEPROMClass::readBytes(int address, void *value, size_t maxLen) {
+  if (!value || !maxLen) {
     return 0;
+  }
 
-  if (address < 0 || address + maxLen > _size)
+  if (address < 0 || address + maxLen > _size) {
     return 0;
+  }
 
-  memcpy((void*)value, _data + address, maxLen);
+  memcpy((void *)value, _data + address, maxLen);
   return maxLen;
 }
 
-template<class T> T EEPROMClass::readAll(int address, T& value) {
-  if (address < 0 || address + sizeof(T) > _size)
+template<class T> T EEPROMClass::readAll(int address, T &value) {
+  if (address < 0 || address + sizeof(T) > _size) {
     return value;
+  }
 
-  memcpy((uint8_t*)&value, _data + address, sizeof(T));
+  memcpy((uint8_t *)&value, _data + address, sizeof(T));
   return value;
 }
 
@@ -452,22 +466,27 @@ size_t EEPROMClass::writeBool(int address, bool value) {
   return EEPROMClass::writeAll(address, Bool);
 }
 
-size_t EEPROMClass::writeString(int address, const char* value) {
-  if (!value)
+size_t EEPROMClass::writeString(int address, const char *value) {
+  if (!value) {
     return 0;
+  }
 
-  if (address < 0 || address > _size)
+  if (address < 0 || address > _size) {
     return 0;
+  }
 
   uint16_t len;
-  for (len = 0; len <= _size; len++)
-    if (value[len] == 0)
+  for (len = 0; len <= _size; len++) {
+    if (value[len] == 0) {
       break;
+    }
+  }
 
-  if (address + len > _size)
+  if (address + len > _size) {
     return 0;
+  }
 
-  memcpy(_data + address, (const uint8_t*)value, len + 1);
+  memcpy(_data + address, (const uint8_t *)value, len + 1);
   _dirty = true;
   return strlen(value);
 }
@@ -476,23 +495,26 @@ size_t EEPROMClass::writeString(int address, String value) {
   return EEPROMClass::writeString(address, value.c_str());
 }
 
-size_t EEPROMClass::writeBytes(int address, const void* value, size_t len) {
-  if (!value || !len)
+size_t EEPROMClass::writeBytes(int address, const void *value, size_t len) {
+  if (!value || !len) {
     return 0;
+  }
 
-  if (address < 0 || address + len > _size)
+  if (address < 0 || address + len > _size) {
     return 0;
+  }
 
-  memcpy(_data + address, (const void*)value, len);
+  memcpy(_data + address, (const void *)value, len);
   _dirty = true;
   return len;
 }
 
-template<class T> T EEPROMClass::writeAll(int address, const T& value) {
-  if (address < 0 || address + sizeof(T) > _size)
+template<class T> T EEPROMClass::writeAll(int address, const T &value) {
+  if (address < 0 || address + sizeof(T) > _size) {
     return value;
+  }
 
-  memcpy(_data + address, (const uint8_t*)&value, sizeof(T));
+  memcpy(_data + address, (const uint8_t *)&value, sizeof(T));
   _dirty = true;
 
   return sizeof(value);

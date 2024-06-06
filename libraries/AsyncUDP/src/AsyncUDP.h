@@ -36,6 +36,7 @@ protected:
   uint8_t *_buffer;
   size_t _index;
   size_t _size;
+
 public:
   AsyncUDPMessage(size_t size = CONFIG_TCP_MSS);
   virtual ~AsyncUDPMessage();
@@ -63,6 +64,7 @@ protected:
   uint8_t *_data;
   size_t _len;
   size_t _index;
+
 public:
   AsyncUDPPacket(AsyncUDPPacket &packet);
   AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *addr, uint16_t port, struct netif *netif);

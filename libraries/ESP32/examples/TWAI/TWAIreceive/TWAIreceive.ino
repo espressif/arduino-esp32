@@ -74,7 +74,7 @@ void setup() {
   driver_installed = true;
 }
 
-static void handle_rx_message(twai_message_t& message) {
+static void handle_rx_message(twai_message_t &message) {
   // Process received message
   if (message.extd) {
     Serial.println("Message is in Extended Format");

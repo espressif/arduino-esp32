@@ -46,5 +46,4 @@ void setup() {
   Serial.println(mac_str.c_str());
 }
 
-void loop() {
-}
+void loop() {}

@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x239A
-#define USB_PID 0x8125
+#define USB_VID          0x239A
+#define USB_PID          0x8125
 #define USB_MANUFACTURER "Adafruit"
-#define USB_PRODUCT "MatrixPortal ESP32-S3"
-#define USB_SERIAL ""  // Empty string for MAC address
+#define USB_PRODUCT      "MatrixPortal ESP32-S3"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 // User LED
 #define LED_BUILTIN 13
@@ -17,13 +17,13 @@
 #define PIN_NEOPIXEL 4
 #define NEOPIXEL_PIN 4
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN    (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
-#define NEOPIXEL_NUM 1
+#define NEOPIXEL_NUM    1
 #define PIN_LIGHTSENSOR A5
 
-#define PIN_BUTTON_UP 6
+#define PIN_BUTTON_UP   6
 #define PIN_BUTTON_DOWN 7
 
 static const uint8_t TX = 18;

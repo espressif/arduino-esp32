@@ -60,18 +60,18 @@ static const uint8_t SDI = 12;
 
 /* Ethernet interface */
 static const uint8_t ETH_INT = 35;
-#define ETH_PHY_ADDR 0
+#define ETH_PHY_ADDR  0
 #define ETH_PHY_POWER -1
-#define ETH_PHY_MDC 32
-#define ETH_PHY_MDIO 33
-#define ETH_PHY_TYPE ETH_PHY_KSZ8081
-#define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
+#define ETH_PHY_MDC   32
+#define ETH_PHY_MDIO  33
+#define ETH_PHY_TYPE  ETH_PHY_KSZ8081
+#define ETH_CLK_MODE  ETH_CLOCK_GPIO0_IN
 
 /* USB interface */
-#define USB_VID 0x10C4  // Silabs's VID
-#define USB_PID 0x8D9A  // Espoir's PID, requires Silab USB PHY
+#define USB_VID          0x10C4  // Silabs's VID
+#define USB_PID          0x8D9A  // Espoir's PID, requires Silab USB PHY
 #define USB_MANUFACTURER "Connaxio"
-#define USB_PRODUCT "Espoir"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "Espoir"
+#define USB_SERIAL       ""
 
 #endif /* Pins_Arduino_h */

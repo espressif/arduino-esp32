@@ -60,14 +60,14 @@ typedef struct {
 
 class USBHIDDevice {
 public:
-  virtual uint16_t _onGetDescriptor(uint8_t* buffer) {
+  virtual uint16_t _onGetDescriptor(uint8_t *buffer) {
     return 0;
   }
-  virtual uint16_t _onGetFeature(uint8_t report_id, uint8_t* buffer, uint16_t len) {
+  virtual uint16_t _onGetFeature(uint8_t report_id, uint8_t *buffer, uint16_t len) {
     return 0;
   }
-  virtual void _onSetFeature(uint8_t report_id, const uint8_t* buffer, uint16_t len) {}
-  virtual void _onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len) {}
+  virtual void _onSetFeature(uint8_t report_id, const uint8_t *buffer, uint16_t len) {}
+  virtual void _onOutput(uint8_t report_id, const uint8_t *buffer, uint16_t len) {}
 };
 
 class USBHID {
@@ -76,10 +76,10 @@ public:
   void begin(void);
   void end(void);
   bool ready(void);
-  bool SendReport(uint8_t report_id, const void* data, size_t len, uint32_t timeout_ms = 100);
+  bool SendReport(uint8_t report_id, const void *data, size_t len, uint32_t timeout_ms = 100);
   void onEvent(esp_event_handler_t callback);
   void onEvent(arduino_usb_hid_event_t event, esp_event_handler_t callback);
-  static bool addDevice(USBHIDDevice* device, uint16_t descriptor_len);
+  static bool addDevice(USBHIDDevice *device, uint16_t descriptor_len);
 };
 
 #endif /* CONFIG_TINYUSB_HID_ENABLED */

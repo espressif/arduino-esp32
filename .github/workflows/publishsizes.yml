@@ -1,0 +1,72 @@
+name: Sizes Results
+
+on:
+  workflow_run:
+    workflows: [Compilation Tests]
+    types:
+      - completed
+
+  workflow_dispatch:
+env:
+  # It's convenient to set variables for values used multiple times in the workflow
+  SKETCHES_REPORTS_PATH: artifacts/sizes-report
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+jobs:
+  sizes-test-results:
+    name: Sizes Comparsion Results
+    runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4  # This step checks out the repository's code at gh-pages branch
+        with:
+          ref: gh-pages
+
+      - name: Create folder structure
+        run: |
+          mkdir -p artifacts && cd artifacts
+          mkdir -p sizes-report
+          mkdir -p sizes-report/master
+          mkdir -p sizes-report/pr
+
+      - name: Download JSON file
+        run: |
+          mv master_cli_compile/*.json artifacts/sizes-report/master/
+
+      - name: Download and Extract Artifacts
+        run: |
+          cd artifacts
+          artifacts_url=${{ github.event.workflow_run.artifacts_url }}
+          gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
+          do
+            IFS=$'\t' read name url <<< "$artifact"
+            gh api $url > "$name.zip"
+            unzip -j "$name.zip" -d "temp_$name"
+            if [[ "$name" == "pr_number" ]]; then
+              mv "temp_$name"/* sizes-report
+            elif [[ "$name" == "pr_cli"* ]]; then
+              mv "temp_$name"/* sizes-report/pr
+            else
+              mv "temp_$name"/* sizes-report
+            fi
+            rm -r "temp_$name"
+          done
+          echo "Contents of parent directory:"
+          ls -R ..
+
+      - name: Read the pr_num file
+        id: pr_num_reader
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./artifacts/sizes-report/pr_num.txt
+
+      - name: Report results
+        uses: P-R-O-C-H-Y/report-size-deltas@sizes_v2
+        with:
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          github-token: ${{ env.GITHUB_TOKEN }}
+          pr-number: "${{ steps.pr_num_reader.outputs.content }}"

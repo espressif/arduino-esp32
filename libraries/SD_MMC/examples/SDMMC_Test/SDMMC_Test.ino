@@ -192,7 +192,6 @@ void testFileIO(fs::FS &fs, const char *path) {
     Serial.println("Failed to open file for reading");
   }
 
-
   file = fs.open(path, FILE_WRITE);
   if (!file) {
     Serial.println("Failed to open file for writing");
@@ -263,5 +262,4 @@ void setup() {
   Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
 }
 
-void loop() {
-}
+void loop() {}

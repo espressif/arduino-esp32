@@ -9,8 +9,8 @@
 #define TP_INT 38
 
 // Interrupt IO port
-#define RTC_INT 37
-#define APX20X_INT 35
+#define RTC_INT     37
+#define APX20X_INT  35
 #define BMA42X_INT1 39
 
 static const uint8_t TX = 1;

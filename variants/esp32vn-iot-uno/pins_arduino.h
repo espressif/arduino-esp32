@@ -38,7 +38,6 @@ static const uint8_t T5 = 12;
 static const uint8_t T6 = 14;
 static const uint8_t T7 = 27;
 
-
 static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
 

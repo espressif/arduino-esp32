@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define USB_VID 0x239A
-#define USB_PID 0x80C5
+#define USB_VID          0x239A
+#define USB_PID          0x80C5
 #define USB_MANUFACTURER "microDev"
-#define USB_PRODUCT "microS2"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "microS2"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -67,7 +67,7 @@ static const uint8_t LED_BUILTIN = 21;
 
 static const uint8_t PIXEL_BUILTIN = 33;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN (PIXEL_BUILTIN + SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN    (PIXEL_BUILTIN + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t BUTTON_BUILTIN = 0;

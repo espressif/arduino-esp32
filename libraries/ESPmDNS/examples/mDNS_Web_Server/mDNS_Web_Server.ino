@@ -15,13 +15,12 @@
 
  */
 
-
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <NetworkClient.h>
 
-const char* ssid = "............";
-const char* password = "..............";
+const char *ssid = "............";
+const char *password = "..............";
 
 // TCP server at port 80 will respond to HTTP requests
 NetworkServer server(80);

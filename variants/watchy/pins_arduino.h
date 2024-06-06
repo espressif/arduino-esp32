@@ -30,23 +30,23 @@ static const uint8_t RTC_INT_PIN = 27;
 static const uint8_t UP_BTN_PIN = 32;
 static const uint8_t BATT_ADC_PIN = 33;
 #define UP_BTN_MASK GPIO_SEL_32
-#define RTC_TYPE 1  //DS3231
+#define RTC_TYPE    1  //DS3231
 #elif defined(ARDUINO_WATCHY_V15)
 static const uint8_t UP_BTN_PIN = 32;
 static const uint8_t BATT_ADC_PIN = 35;
 #define UP_BTN_MASK GPIO_SEL_32
-#define RTC_TYPE 2  //PCF8563
+#define RTC_TYPE    2  //PCF8563
 #elif defined(ARDUINO_WATCHY_V20)
 static const uint8_t UP_BTN_PIN = 35;
 static const uint8_t BATT_ADC_PIN = 34;
 #define UP_BTN_MASK GPIO_SEL_35
-#define RTC_TYPE 2  //PCF8563
+#define RTC_TYPE    2  //PCF8563
 #endif
 
 #define MENU_BTN_MASK GPIO_SEL_26
 #define BACK_BTN_MASK GPIO_SEL_25
 #define DOWN_BTN_MASK GPIO_SEL_4
-#define ACC_INT_MASK GPIO_SEL_14
-#define BTN_PIN_MASK MENU_BTN_MASK | BACK_BTN_MASK | UP_BTN_MASK | DOWN_BTN_MASK
+#define ACC_INT_MASK  GPIO_SEL_14
+#define BTN_PIN_MASK  MENU_BTN_MASK | BACK_BTN_MASK | UP_BTN_MASK | DOWN_BTN_MASK
 
 #endif /* Pins_Arduino_h */

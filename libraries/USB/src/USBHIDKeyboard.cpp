@@ -26,15 +26,12 @@
 #include "USBHIDKeyboard.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_USB_HID_KEYBOARD_EVENTS);
-esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void* event_data, size_t event_data_size, TickType_t ticks_to_wait);
-esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void* event_handler_arg);
+esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, TickType_t ticks_to_wait);
+esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
 
-static const uint8_t report_descriptor[] = {
-  TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_REPORT_ID_KEYBOARD))
-};
+static const uint8_t report_descriptor[] = {TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_REPORT_ID_KEYBOARD))};
 
-USBHIDKeyboard::USBHIDKeyboard()
-  : hid(HID_ITF_PROTOCOL_KEYBOARD), shiftKeyReports(true) {
+USBHIDKeyboard::USBHIDKeyboard() : hid(HID_ITF_PROTOCOL_KEYBOARD), shiftKeyReports(true) {
   static bool initialized = false;
   if (!initialized) {
     initialized = true;
@@ -43,7 +40,7 @@ USBHIDKeyboard::USBHIDKeyboard()
   }
 }
 
-uint16_t USBHIDKeyboard::_onGetDescriptor(uint8_t* dst) {
+uint16_t USBHIDKeyboard::_onGetDescriptor(uint8_t *dst) {
   memcpy(dst, report_descriptor, sizeof(report_descriptor));
   return sizeof(report_descriptor);
 }
@@ -52,8 +49,7 @@ void USBHIDKeyboard::begin() {
   hid.begin();
 }
 
-void USBHIDKeyboard::end() {
-}
+void USBHIDKeyboard::end() {}
 
 void USBHIDKeyboard::onEvent(esp_event_handler_t callback) {
   onEvent(ARDUINO_USB_HID_KEYBOARD_ANY_EVENT, callback);
@@ -62,15 +58,17 @@ void USBHIDKeyboard::onEvent(arduino_usb_hid_keyboard_event_t event, esp_event_h
   arduino_usb_event_handler_register_with(ARDUINO_USB_HID_KEYBOARD_EVENTS, event, callback, this);
 }
 
-void USBHIDKeyboard::_onOutput(uint8_t report_id, const uint8_t* buffer, uint16_t len) {
+void USBHIDKeyboard::_onOutput(uint8_t report_id, const uint8_t *buffer, uint16_t len) {
   if (report_id == HID_REPORT_ID_KEYBOARD) {
     arduino_usb_hid_keyboard_event_data_t p;
     p.leds = buffer[0];
-    arduino_usb_event_post(ARDUINO_USB_HID_KEYBOARD_EVENTS, ARDUINO_USB_HID_KEYBOARD_LED_EVENT, &p, sizeof(arduino_usb_hid_keyboard_event_data_t), portMAX_DELAY);
+    arduino_usb_event_post(
+      ARDUINO_USB_HID_KEYBOARD_EVENTS, ARDUINO_USB_HID_KEYBOARD_LED_EVENT, &p, sizeof(arduino_usb_hid_keyboard_event_data_t), portMAX_DELAY
+    );
   }
 }
 
-void USBHIDKeyboard::sendReport(KeyReport* keys) {
+void USBHIDKeyboard::sendReport(KeyReport *keys) {
   hid_keyboard_report_t report;
   report.reserved = 0;
   report.modifier = keys->modifiers;
@@ -223,7 +221,8 @@ size_t USBHIDKeyboard::pressRaw(uint8_t k) {
   } else if (k && k < 0xA5) {
     // Add k to the key report only if it's not already present
     // and if there is an empty slot.
-    if (_keyReport.keys[0] != k && _keyReport.keys[1] != k && _keyReport.keys[2] != k && _keyReport.keys[3] != k && _keyReport.keys[4] != k && _keyReport.keys[5] != k) {
+    if (_keyReport.keys[0] != k && _keyReport.keys[1] != k && _keyReport.keys[2] != k && _keyReport.keys[3] != k && _keyReport.keys[4] != k
+        && _keyReport.keys[5] != k) {
 
       for (i = 0; i < 6; i++) {
         if (_keyReport.keys[i] == 0x00) {
@@ -337,7 +336,7 @@ size_t USBHIDKeyboard::write(uint8_t c) {
   return p;              // just return the result of press() since release() almost always returns 1
 }
 
-size_t USBHIDKeyboard::write(const uint8_t* buffer, size_t size) {
+size_t USBHIDKeyboard::write(const uint8_t *buffer, size_t size) {
   size_t n = 0;
   while (size--) {
     if (*buffer != '\r') {

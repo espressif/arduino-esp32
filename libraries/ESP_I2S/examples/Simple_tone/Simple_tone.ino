@@ -50,8 +50,7 @@ void setup() {
   // start I2S at the sample rate with 16-bits per sample
   if (!i2s.begin(mode, sampleRate, bps, slot)) {
     Serial.println("Failed to initialize I2S!");
-    while (1)
-      ;  // do nothing
+    while (1);  // do nothing
   }
 }
 

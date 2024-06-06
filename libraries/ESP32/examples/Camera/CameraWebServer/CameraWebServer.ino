@@ -21,6 +21,7 @@
 //#define CAMERA_MODEL_M5STACK_WIDE // Has PSRAM
 //#define CAMERA_MODEL_M5STACK_ESP32CAM // No PSRAM
 //#define CAMERA_MODEL_M5STACK_UNITCAM // No PSRAM
+//#define CAMERA_MODEL_M5STACK_CAMS3_UNIT  // Has PSRAM
 //#define CAMERA_MODEL_AI_THINKER // Has PSRAM
 //#define CAMERA_MODEL_TTGO_T_JOURNAL // No PSRAM
 //#define CAMERA_MODEL_XIAO_ESP32S3 // Has PSRAM
@@ -35,8 +36,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid = "**********";
-const char* password = "**********";
+const char *ssid = "**********";
+const char *password = "**********";
 
 void startCameraServer();
 void setupLedFlash(int pin);
@@ -106,7 +107,7 @@ void setup() {
     return;
   }
 
-  sensor_t* s = esp_camera_sensor_get();
+  sensor_t *s = esp_camera_sensor_get();
   // initial sensors are flipped vertically and colors are a bit saturated
   if (s->id.PID == OV3660_PID) {
     s->set_vflip(s, 1);        // flip it back

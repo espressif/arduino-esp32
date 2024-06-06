@@ -68,7 +68,7 @@ This function is used to set duty for the LEDC pin.
 
 .. code-block:: arduino
 
-    void ledcWrite(uint8_t pin, uint32_t duty);
+    bool ledcWrite(uint8_t pin, uint32_t duty);
 
 * ``pin`` select LEDC pin.
 * ``duty`` select duty to be set for selected LEDC pin.

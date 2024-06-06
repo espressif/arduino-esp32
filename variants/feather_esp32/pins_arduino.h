@@ -42,7 +42,6 @@ static const uint8_t A13 = 35;
 //static const uint8_t Ax = 0; // not used/available
 //static const uint8_t Ax = 2; // not used/available
 
-
 static const uint8_t T0 = 4;
 static const uint8_t T3 = 15;
 static const uint8_t T4 = 13;

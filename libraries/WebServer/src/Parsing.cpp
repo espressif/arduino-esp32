@@ -31,8 +31,8 @@
 #endif
 
 #define __STR(a) #a
-#define _STR(a) __STR(a)
-const char* _http_method_str[] = {
+#define _STR(a)  __STR(a)
+static const char *_http_method_str[] = {
 #define XX(num, name, string) _STR(name),
   HTTP_METHOD_MAP(XX)
 #undef XX
@@ -41,23 +41,25 @@ const char* _http_method_str[] = {
 static const char Content_Type[] PROGMEM = "Content-Type";
 static const char filename[] PROGMEM = "filename";
 
-static char* readBytesWithTimeout(NetworkClient& client, size_t maxLength, size_t& dataLength, int timeout_ms) {
-  char* buf = nullptr;
+static char *readBytesWithTimeout(NetworkClient &client, size_t maxLength, size_t &dataLength, int timeout_ms) {
+  char *buf = nullptr;
   dataLength = 0;
   while (dataLength < maxLength) {
     int tries = timeout_ms;
     size_t newLength;
-    while (!(newLength = client.available()) && tries--) delay(1);
+    while (!(newLength = client.available()) && tries--) {
+      delay(1);
+    }
     if (!newLength) {
       break;
     }
     if (!buf) {
-      buf = (char*)malloc(newLength + 1);
+      buf = (char *)malloc(newLength + 1);
       if (!buf) {
         return nullptr;
       }
     } else {
-      char* newBuf = (char*)realloc(buf, dataLength + newLength + 1);
+      char *newBuf = (char *)realloc(buf, dataLength + newLength + 1);
       if (!newBuf) {
         free(buf);
         return nullptr;
@@ -71,7 +73,7 @@ static char* readBytesWithTimeout(NetworkClient& client, size_t maxLength, size_
   return buf;
 }
 
-bool WebServer::_parseRequest(NetworkClient& client) {
+bool WebServer::_parseRequest(NetworkClient &client) {
   // Read the first line of HTTP request
   String req = client.readStringUntil('\r');
   client.readStringUntil('\n');
@@ -104,7 +106,7 @@ bool WebServer::_parseRequest(NetworkClient& client) {
   _clientContentLength = 0;  // not known yet, or invalid
 
   HTTPMethod method = HTTP_ANY;
-  size_t num_methods = sizeof(_http_method_str) / sizeof(const char*);
+  size_t num_methods = sizeof(_http_method_str) / sizeof(const char *);
   for (size_t i = 0; i < num_methods; i++) {
     if (methodStr == _http_method_str[i]) {
       method = (HTTPMethod)i;
@@ -120,10 +122,11 @@ bool WebServer::_parseRequest(NetworkClient& client) {
   log_v("method: %s url: %s search: %s", methodStr.c_str(), url.c_str(), searchStr.c_str());
 
   //attach handler
-  RequestHandler* handler;
+  RequestHandler *handler;
   for (handler = _firstHandler; handler; handler = handler->next()) {
-    if (handler->canHandle(_currentMethod, _currentUri))
+    if (handler->canHandle(_currentMethod, _currentUri)) {
       break;
+    }
   }
   _currentHandler = handler;
 
@@ -139,7 +142,9 @@ bool WebServer::_parseRequest(NetworkClient& client) {
     while (1) {
       req = client.readStringUntil('\r');
       client.readStringUntil('\n');
-      if (req == "") break;  //no moar headers
+      if (req == "") {
+        break;  //no moar headers
+      }
       int headerDiv = req.indexOf(':');
       if (headerDiv == -1) {
         break;
@@ -196,7 +201,7 @@ bool WebServer::_parseRequest(NetworkClient& client) {
       log_v("Finish Raw");
     } else if (!isForm) {
       size_t plainLength;
-      char* plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
+      char *plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
       if (plainLength < _clientContentLength) {
         free(plainBuf);
         return false;
@@ -204,13 +209,15 @@ bool WebServer::_parseRequest(NetworkClient& client) {
       if (_clientContentLength > 0) {
         if (isEncoded) {
           //url encoded form
-          if (searchStr != "") searchStr += '&';
+          if (searchStr != "") {
+            searchStr += '&';
+          }
           searchStr += plainBuf;
         }
         _parseArguments(searchStr);
         if (!isEncoded) {
           //plain post json or other data
-          RequestArgument& arg = _currentArgs[_currentArgCount++];
+          RequestArgument &arg = _currentArgs[_currentArgCount++];
           arg.key = F("plain");
           arg.value = String(plainBuf);
         }
@@ -235,7 +242,9 @@ bool WebServer::_parseRequest(NetworkClient& client) {
     while (1) {
       req = client.readStringUntil('\r');
       client.readStringUntil('\n');
-      if (req == "") break;  //no moar headers
+      if (req == "") {
+        break;  //no moar headers
+      }
       int headerDiv = req.indexOf(':');
       if (headerDiv == -1) {
         break;
@@ -261,7 +270,7 @@ bool WebServer::_parseRequest(NetworkClient& client) {
   return true;
 }
 
-bool WebServer::_collectHeader(const char* headerName, const char* headerValue) {
+bool WebServer::_collectHeader(const char *headerName, const char *headerValue) {
   for (int i = 0; i < _headerKeysCount; i++) {
     if (_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
       _currentHeaders[i].value = headerValue;
@@ -273,8 +282,9 @@ bool WebServer::_collectHeader(const char* headerName, const char* headerValue) 
 
 void WebServer::_parseArguments(String data) {
   log_v("args: %s", data.c_str());
-  if (_currentArgs)
+  if (_currentArgs) {
     delete[] _currentArgs;
+  }
   _currentArgs = 0;
   if (data.length() == 0) {
     _currentArgCount = 0;
@@ -285,8 +295,9 @@ void WebServer::_parseArguments(String data) {
 
   for (int i = 0; i < (int)data.length();) {
     i = data.indexOf('&', i);
-    if (i == -1)
+    if (i == -1) {
       break;
+    }
     ++i;
     ++_currentArgCount;
   }
@@ -301,18 +312,20 @@ void WebServer::_parseArguments(String data) {
     log_v("pos %d =@%d &@%d", pos, equal_sign_index, next_arg_index);
     if ((equal_sign_index == -1) || ((equal_sign_index > next_arg_index) && (next_arg_index != -1))) {
       log_e("arg missing value: %d", iarg);
-      if (next_arg_index == -1)
+      if (next_arg_index == -1) {
         break;
+      }
       pos = next_arg_index + 1;
       continue;
     }
-    RequestArgument& arg = _currentArgs[iarg];
+    RequestArgument &arg = _currentArgs[iarg];
     arg.key = urlDecode(data.substring(pos, equal_sign_index));
     arg.value = urlDecode(data.substring(equal_sign_index + 1, next_arg_index));
     log_v("arg %d key: %s value: %s", iarg, arg.key.c_str(), arg.value.c_str());
     ++iarg;
-    if (next_arg_index == -1)
+    if (next_arg_index == -1) {
       break;
+    }
     pos = next_arg_index + 1;
   }
   _currentArgCount = iarg;
@@ -321,20 +334,22 @@ void WebServer::_parseArguments(String data) {
 
 void WebServer::_uploadWriteByte(uint8_t b) {
   if (_currentUpload->currentSize == HTTP_UPLOAD_BUFLEN) {
-    if (_currentHandler && _currentHandler->canUpload(_currentUri))
+    if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
       _currentHandler->upload(*this, _currentUri, *_currentUpload);
+    }
     _currentUpload->totalSize += _currentUpload->currentSize;
     _currentUpload->currentSize = 0;
   }
   _currentUpload->buf[_currentUpload->currentSize++] = b;
 }
 
-int WebServer::_uploadReadByte(NetworkClient& client) {
+int WebServer::_uploadReadByte(NetworkClient &client) {
   int res = client.read();
 
   if (res < 0) {
-    while (!client.available() && client.connected())
+    while (!client.available() && client.connected()) {
       delay(2);
+    }
 
     res = client.read();
   }
@@ -342,7 +357,7 @@ int WebServer::_uploadReadByte(NetworkClient& client) {
   return res;
 }
 
-bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len) {
+bool WebServer::_parseForm(NetworkClient &client, String boundary, uint32_t len) {
   (void)len;
   log_v("Parse Form: Boundary: %s Length: %d", boundary.c_str(), len);
   String line;
@@ -355,7 +370,9 @@ bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len)
   client.readStringUntil('\n');
   //start reading the form
   if (line == ("--" + boundary)) {
-    if (_postArgs) delete[] _postArgs;
+    if (_postArgs) {
+      delete[] _postArgs;
+    }
     _postArgs = new RequestArgument[WEBSERVER_MAX_POST_ARGS];
     _postArgsLen = 0;
     while (1) {
@@ -380,8 +397,9 @@ bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len)
             argIsFile = true;
             log_v("PostArg FileName: %s", argFilename.c_str());
             //use GET to set the filename if uploading using blob
-            if (argFilename == F("blob") && hasArg(FPSTR(filename)))
+            if (argFilename == F("blob") && hasArg(FPSTR(filename))) {
               argFilename = arg(FPSTR(filename));
+            }
           }
           log_v("PostArg Name: %s", argName.c_str());
           using namespace mime;
@@ -401,13 +419,17 @@ bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len)
             while (1) {
               line = client.readStringUntil('\r');
               client.readStringUntil('\n');
-              if (line.startsWith("--" + boundary)) break;
-              if (argValue.length() > 0) argValue += "\n";
+              if (line.startsWith("--" + boundary)) {
+                break;
+              }
+              if (argValue.length() > 0) {
+                argValue += "\n";
+              }
               argValue += line;
             }
             log_v("PostArg Value: %s", argValue.c_str());
 
-            RequestArgument& arg = _postArgs[_postArgsLen++];
+            RequestArgument &arg = _postArgs[_postArgsLen++];
             arg.key = argName;
             arg.value = argValue;
 
@@ -427,8 +449,9 @@ bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len)
             _currentUpload->totalSize = 0;
             _currentUpload->currentSize = 0;
             log_v("Start File: %s Type: %s", _currentUpload->filename.c_str(), _currentUpload->type.c_str());
-            if (_currentHandler && _currentHandler->canUpload(_currentUri))
+            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
+            }
             _currentUpload->status = UPLOAD_FILE_WRITE;
 
             int fastBoundaryLen = 4 /* \r\n-- */ + boundary.length() + 1 /* \0 */;
@@ -465,17 +488,18 @@ bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len)
               }
             }
             // Found the boundary string, finish processing this file upload
-            if (_currentHandler && _currentHandler->canUpload(_currentUri))
+            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
+            }
             _currentUpload->totalSize += _currentUpload->currentSize;
             _currentUpload->status = UPLOAD_FILE_END;
-            if (_currentHandler && _currentHandler->canUpload(_currentUri))
+            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
-            log_v("End File: %s Type: %s Size: %d",
-                  _currentUpload->filename.c_str(),
-                  _currentUpload->type.c_str(),
-                  (int)_currentUpload->totalSize);
-            if (!client.connected()) return _parseFormUploadAborted();
+            }
+            log_v("End File: %s Type: %s Size: %d", _currentUpload->filename.c_str(), _currentUpload->type.c_str(), (int)_currentUpload->totalSize);
+            if (!client.connected()) {
+              return _parseFormUploadAborted();
+            }
             line = client.readStringUntil('\r');
             client.readStringUntil('\n');
             if (line == "--") {  // extra two dashes mean we reached the end of all form fields
@@ -491,14 +515,16 @@ bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len)
     int iarg;
     int totalArgs = ((WEBSERVER_MAX_POST_ARGS - _postArgsLen) < _currentArgCount) ? (WEBSERVER_MAX_POST_ARGS - _postArgsLen) : _currentArgCount;
     for (iarg = 0; iarg < totalArgs; iarg++) {
-      RequestArgument& arg = _postArgs[_postArgsLen++];
+      RequestArgument &arg = _postArgs[_postArgsLen++];
       arg.key = _currentArgs[iarg].key;
       arg.value = _currentArgs[iarg].value;
     }
-    if (_currentArgs) delete[] _currentArgs;
+    if (_currentArgs) {
+      delete[] _currentArgs;
+    }
     _currentArgs = new RequestArgument[_postArgsLen];
     for (iarg = 0; iarg < _postArgsLen; iarg++) {
-      RequestArgument& arg = _currentArgs[iarg];
+      RequestArgument &arg = _currentArgs[iarg];
       arg.key = _postArgs[iarg].key;
       arg.value = _postArgs[iarg].value;
     }
@@ -514,7 +540,7 @@ bool WebServer::_parseForm(NetworkClient& client, String boundary, uint32_t len)
   return false;
 }
 
-String WebServer::urlDecode(const String& text) {
+String WebServer::urlDecode(const String &text) {
   String decoded = "";
   char temp[] = "0x00";
   unsigned int len = text.length();
@@ -541,7 +567,8 @@ String WebServer::urlDecode(const String& text) {
 
 bool WebServer::_parseFormUploadAborted() {
   _currentUpload->status = UPLOAD_FILE_ABORTED;
-  if (_currentHandler && _currentHandler->canUpload(_currentUri))
+  if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
     _currentHandler->upload(*this, _currentUri, *_currentUpload);
+  }
   return false;
 }

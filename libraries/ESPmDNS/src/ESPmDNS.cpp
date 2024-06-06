@@ -46,7 +46,7 @@ License (MIT license):
 // Add quotes around defined value
 #ifdef __IN_ECLIPSE__
 #define STR_EXPAND(tok) #tok
-#define STR(tok) STR_EXPAND(tok)
+#define STR(tok)        STR_EXPAND(tok)
 #else
 #define STR(tok) tok
 #endif
@@ -74,8 +74,7 @@ License (MIT license):
 //     mdns_handle_system_event(NULL, event);
 // }
 
-MDNSResponder::MDNSResponder()
-  : results(NULL) {}
+MDNSResponder::MDNSResponder() : results(NULL) {}
 MDNSResponder::~MDNSResponder() {
   end();
 }
@@ -100,20 +99,21 @@ void MDNSResponder::end() {
 }
 
 void MDNSResponder::setInstanceName(String name) {
-  if (name.length() > 63) return;
+  if (name.length() > 63) {
+    return;
+  }
   if (mdns_instance_name_set(name.c_str())) {
     log_e("Failed setting MDNS instance");
     return;
   }
 }
 
-
 void MDNSResponder::enableArduino(uint16_t port, bool auth) {
   mdns_txt_item_t arduTxtData[4] = {
-    { (char *)"board", (char *)STR(ARDUINO_VARIANT) },
-    { (char *)"tcp_check", (char *)"no" },
-    { (char *)"ssh_upload", (char *)"no" },
-    { (char *)"auth_upload", (char *)"no" }
+    {(char *)"board", (char *)STR(ARDUINO_VARIANT)},
+    {(char *)"tcp_check", (char *)"no"},
+    {(char *)"ssh_upload", (char *)"no"},
+    {(char *)"auth_upload", (char *)"no"}
   };
 
   if (mdns_service_add(NULL, "_arduino", "_tcp", port, arduTxtData, 4)) {
@@ -138,14 +138,9 @@ void MDNSResponder::enableWorkstation(esp_interface_t interface) {
   esp_mac_type_t mtype = ESP_MAC_ETH;
 #if SOC_WIFI_SUPPORTED
   switch (interface) {
-    case ESP_IF_WIFI_STA:
-      mtype = ESP_MAC_WIFI_STA;
-      break;
-    case ESP_IF_WIFI_AP:
-      mtype = ESP_MAC_WIFI_SOFTAP;
-      break;
-    default:
-      break;
+    case ESP_IF_WIFI_STA: mtype = ESP_MAC_WIFI_STA; break;
+    case ESP_IF_WIFI_AP:  mtype = ESP_MAC_WIFI_SOFTAP; break;
+    default:              break;
   }
 #endif
   if (esp_read_mac(mac, mtype) != ESP_OK) {
@@ -226,7 +221,6 @@ IPAddress MDNSResponder::queryHost(char *host, uint32_t timeout) {
   return IPAddress(addr.addr);
 }
 
-
 int MDNSResponder::queryService(char *service, char *proto) {
   if (!service || !service[0] || !proto || !proto[0]) {
     log_e("Bad Parameters");
@@ -289,7 +283,9 @@ mdns_txt_item_t *MDNSResponder::_getResultTxt(int idx, int txtIdx) {
     log_e("Result %d not found", idx);
     return NULL;
   }
-  if (txtIdx >= result->txt_count) return NULL;
+  if (txtIdx >= result->txt_count) {
+    return NULL;
+  }
   return &result->txt[txtIdx];
 }
 
@@ -360,7 +356,9 @@ bool MDNSResponder::hasTxt(int idx, const char *key) {
   }
   int i = 0;
   while (i < result->txt_count) {
-    if (strcmp(result->txt[i].key, key) == 0) return true;
+    if (strcmp(result->txt[i].key, key) == 0) {
+      return true;
+    }
     i++;
   }
   return false;
@@ -374,7 +372,9 @@ String MDNSResponder::txt(int idx, const char *key) {
   }
   int i = 0;
   while (i < result->txt_count) {
-    if (strcmp(result->txt[i].key, key) == 0) return result->txt[i].value;
+    if (strcmp(result->txt[i].key, key) == 0) {
+      return result->txt[i].value;
+    }
     i++;
   }
   return "";
@@ -382,16 +382,12 @@ String MDNSResponder::txt(int idx, const char *key) {
 
 String MDNSResponder::txt(int idx, int txtIdx) {
   mdns_txt_item_t *resultTxt = _getResultTxt(idx, txtIdx);
-  return !resultTxt
-           ? ""
-           : resultTxt->value;
+  return !resultTxt ? "" : resultTxt->value;
 }
 
 String MDNSResponder::txtKey(int idx, int txtIdx) {
   mdns_txt_item_t *resultTxt = _getResultTxt(idx, txtIdx);
-  return !resultTxt
-           ? ""
-           : resultTxt->key;
+  return !resultTxt ? "" : resultTxt->key;
 }
 
 MDNSResponder MDNS;

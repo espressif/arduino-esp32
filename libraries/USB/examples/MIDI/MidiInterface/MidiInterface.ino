@@ -50,9 +50,9 @@ void loop() {
   }
 
   // USB MIDI 1.0 to MIDI Serial 1.0
-  midiEventPacket_t midi_packet_in = { 0 };
+  midiEventPacket_t midi_packet_in = {0};
   // See Chapter 4: USB-MIDI Event Packets (page 16) of the spec.
-  int8_t cin_to_midix_size[16] = { -1, -1, 2, 3, 3, 1, 2, 3, 3, 3, 3, 3, 2, 2, 3, 1 };
+  int8_t cin_to_midix_size[16] = {-1, -1, 2, 3, 3, 1, 2, 3, 3, 3, 3, 3, 2, 2, 3, 1};
 
   if (MIDI.readPacket(&midi_packet_in)) {
     midi_code_index_number_t code_index_num = MIDI_EP_HEADER_CIN_GET(midi_packet_in.header);

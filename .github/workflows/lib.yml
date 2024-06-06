@@ -7,7 +7,11 @@ on:
 
   # Schedule weekly builds on every Sunday at 4 am
   schedule:
-    - cron: '0 4 * * SUN' 
+    - cron: '0 4 * * SUN'
+
+concurrency:
+  group: libs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   # It's convenient to set variables for values used multiple times in the workflow
@@ -86,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Check out repository
-      - name: Checkout repository    
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ env.GITHUB_TOKEN }}
@@ -121,16 +125,21 @@ jobs:
           git add ${{ env.RESULT_LIBRARY_TEST_FILE }}
           git commit -m "Generated External Libraries Test Results"
           git push origin HEAD:gh-pages
-          
-  event_file:
-    name: "Event File"
-    if: |
-      contains(github.event.pull_request.labels.*.name, 'lib_test')
-    needs: compile-sketch
+
+  #Upload PR number as artifact
+  upload-pr-number:
+    name: Upload PR number
+    if: (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'lib_test'))
     runs-on: ubuntu-latest
     steps:
-       - name: Upload
-         uses: actions/upload-artifact@v4
-         with:
-           name: Event File
-           path: ${{github.event_path}}
+      - name: Save the PR number in an artifact
+        shell: bash
+        env:
+          PR_NUM: ${{ github.event.number }}
+        run: echo $PR_NUM > pr_num.txt
+      - name: Upload PR number
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr_number
+          path: ./pr_num.txt
+          overwrite: true

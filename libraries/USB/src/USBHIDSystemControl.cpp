@@ -18,12 +18,9 @@
 
 #include "USBHIDSystemControl.h"
 
-static const uint8_t report_descriptor[] = {
-  TUD_HID_REPORT_DESC_SYSTEM_CONTROL(HID_REPORT_ID(HID_REPORT_ID_SYSTEM_CONTROL))
-};
+static const uint8_t report_descriptor[] = {TUD_HID_REPORT_DESC_SYSTEM_CONTROL(HID_REPORT_ID(HID_REPORT_ID_SYSTEM_CONTROL))};
 
-USBHIDSystemControl::USBHIDSystemControl()
-  : hid() {
+USBHIDSystemControl::USBHIDSystemControl() : hid() {
   static bool initialized = false;
   if (!initialized) {
     initialized = true;
@@ -31,7 +28,7 @@ USBHIDSystemControl::USBHIDSystemControl()
   }
 }
 
-uint16_t USBHIDSystemControl::_onGetDescriptor(uint8_t* dst) {
+uint16_t USBHIDSystemControl::_onGetDescriptor(uint8_t *dst) {
   memcpy(dst, report_descriptor, sizeof(report_descriptor));
   return sizeof(report_descriptor);
 }
@@ -40,8 +37,7 @@ void USBHIDSystemControl::begin() {
   hid.begin();
 }
 
-void USBHIDSystemControl::end() {
-}
+void USBHIDSystemControl::end() {}
 
 bool USBHIDSystemControl::send(uint8_t value) {
   return hid.SendReport(HID_REPORT_ID_SYSTEM_CONTROL, &value, 1);

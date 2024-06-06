@@ -27,14 +27,12 @@
 #include "USBHID.h"
 #if CONFIG_TINYUSB_HID_ENABLED
 
-#define MOUSE_LEFT 0x01
-#define MOUSE_RIGHT 0x02
-#define MOUSE_MIDDLE 0x04
+#define MOUSE_LEFT     0x01
+#define MOUSE_RIGHT    0x02
+#define MOUSE_MIDDLE   0x04
 #define MOUSE_BACKWARD 0x08
-#define MOUSE_FORWARD 0x10
-#define MOUSE_ALL 0x1F
-
-#include "./tusb_hid_mouse.h"
+#define MOUSE_FORWARD  0x10
+#define MOUSE_ALL      0x1F
 
 enum MousePositioning_t {
   HID_MOUSE_RELATIVE,
@@ -43,7 +41,7 @@ enum MousePositioning_t {
 
 struct HIDMouseType_t {
   MousePositioning_t positioning;
-  const uint8_t* report_descriptor;
+  const uint8_t *report_descriptor;
   size_t descriptor_size;
   size_t report_size;
 };
@@ -51,10 +49,9 @@ struct HIDMouseType_t {
 extern HIDMouseType_t HIDMouseRel;
 extern HIDMouseType_t HIDMouseAbs;
 
-
 class USBHIDMouseBase : public USBHIDDevice {
 public:
-  USBHIDMouseBase(HIDMouseType_t* type);
+  USBHIDMouseBase(HIDMouseType_t *type);
   void begin(void);
   void end(void);
   void press(uint8_t b = MOUSE_LEFT);      // press LEFT by default
@@ -64,38 +61,35 @@ public:
     return hid.SendReport(HID_REPORT_ID_MOUSE, &report, _type->report_size);
   };
   // internal use
-  uint16_t _onGetDescriptor(uint8_t* buffer);
+  uint16_t _onGetDescriptor(uint8_t *buffer);
   virtual void click(uint8_t b) = 0;
   virtual void buttons(uint8_t b) = 0;
+
 protected:
   USBHID hid;
   uint8_t _buttons;
-  HIDMouseType_t* _type;
+  HIDMouseType_t *_type;
 };
-
 
 class USBHIDRelativeMouse : public USBHIDMouseBase {
 public:
-  USBHIDRelativeMouse(void)
-    : USBHIDMouseBase(&HIDMouseRel) {}
+  USBHIDRelativeMouse(void) : USBHIDMouseBase(&HIDMouseRel) {}
   void move(int8_t x, int8_t y, int8_t wheel = 0, int8_t pan = 0);
   void click(uint8_t b = MOUSE_LEFT) override;
   void buttons(uint8_t b) override;
 };
 
-
 class USBHIDAbsoluteMouse : public USBHIDMouseBase {
 public:
-  USBHIDAbsoluteMouse(void)
-    : USBHIDMouseBase(&HIDMouseAbs) {}
+  USBHIDAbsoluteMouse(void) : USBHIDMouseBase(&HIDMouseAbs) {}
   void move(int16_t x, int16_t y, int8_t wheel = 0, int8_t pan = 0);
   void click(uint8_t b = MOUSE_LEFT) override;
   void buttons(uint8_t b) override;
+
 private:
   int16_t _lastx = 0;
   int16_t _lasty = 0;
 };
-
 
 // don't break examples and old sketches
 typedef USBHIDRelativeMouse USBHIDMouse;

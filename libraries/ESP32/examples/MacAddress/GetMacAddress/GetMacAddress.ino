@@ -34,7 +34,9 @@ esp_mac_type_t values:
 void setup() {
 
   Serial.begin(115200);
-  while (!Serial) { delay(100); }
+  while (!Serial) {
+    delay(100);
+  }
 
   Serial.println("Interface\t\t\t\t\t\tMAC address (6 bytes, 4 universally administered, default)");
 
@@ -54,14 +56,13 @@ void setup() {
   Serial.println(getInterfaceMacAddress(ESP_MAC_ETH));
 }
 
-void loop() { /* Nothing in loop */
-}
+void loop() { /* Nothing in loop */ }
 
 String getDefaultMacAddress() {
 
   String mac = "";
 
-  unsigned char mac_base[6] = { 0 };
+  unsigned char mac_base[6] = {0};
 
   if (esp_efuse_mac_get_default(mac_base) == ESP_OK) {
     char buffer[18];  // 6*2 characters for hex + 5 characters for colons + 1 character for null terminator
@@ -76,7 +77,7 @@ String getInterfaceMacAddress(esp_mac_type_t interface) {
 
   String mac = "";
 
-  unsigned char mac_base[6] = { 0 };
+  unsigned char mac_base[6] = {0};
 
   if (esp_read_mac(mac_base, interface) == ESP_OK) {
     char buffer[18];  // 6*2 characters for hex + 5 characters for colons + 1 character for null terminator

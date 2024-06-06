@@ -17,7 +17,7 @@
 #include <BLEAdvertisedDevice.h>
 
 uint32_t scanTime = 100;  //In 10ms (1000ms)
-BLEScan* pBLEScan;
+BLEScan *pBLEScan;
 
 class MyBLEExtAdvertisingCallbacks : public BLEExtAdvertisingCallbacks {
   void onResult(esp_ble_gap_ext_adv_report_t report) {

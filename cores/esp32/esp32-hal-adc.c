@@ -347,20 +347,20 @@ extern void analogSetWidth(uint8_t bits) __attribute__((weak, alias("__analogSet
  */
 
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-#define ADC_OUTPUT_TYPE ADC_DIGI_OUTPUT_FORMAT_TYPE1
+#define ADC_OUTPUT_TYPE         ADC_DIGI_OUTPUT_FORMAT_TYPE1
 #define ADC_GET_CHANNEL(p_data) ((p_data)->type1.channel)
-#define ADC_GET_DATA(p_data) ((p_data)->type1.data)
+#define ADC_GET_DATA(p_data)    ((p_data)->type1.data)
 #else
-#define ADC_OUTPUT_TYPE ADC_DIGI_OUTPUT_FORMAT_TYPE2
+#define ADC_OUTPUT_TYPE         ADC_DIGI_OUTPUT_FORMAT_TYPE2
 #define ADC_GET_CHANNEL(p_data) ((p_data)->type2.channel)
-#define ADC_GET_DATA(p_data) ((p_data)->type2.data)
+#define ADC_GET_DATA(p_data)    ((p_data)->type2.data)
 #endif
 
 static uint8_t __adcContinuousAtten = ADC_11db;
 static uint8_t __adcContinuousWidth = SOC_ADC_DIGI_MAX_BITWIDTH;
 
 static uint8_t used_adc_channels = 0;
-adc_continuos_data_t *adc_result = NULL;
+adc_continuous_data_t *adc_result = NULL;
 
 static bool adcContinuousDetachBus(void *adc_unit_number) {
   adc_unit_t adc_unit = (adc_unit_t)adc_unit_number - 1;
@@ -436,11 +436,11 @@ esp_err_t __analogContinuousInit(adc_channel_t *channel, uint8_t channel_num, ad
     .conv_mode = ADC_CONV_SINGLE_UNIT_1,
     .format = ADC_OUTPUT_TYPE,
   };
-  adc_digi_pattern_config_t adc_pattern[SOC_ADC_PATT_LEN_MAX] = { 0 };
+  adc_digi_pattern_config_t adc_pattern[SOC_ADC_PATT_LEN_MAX] = {0};
   dig_cfg.pattern_num = channel_num;
   for (int i = 0; i < channel_num; i++) {
     adc_pattern[i].atten = __adcContinuousAtten;
-    adc_pattern[i].channel = channel[i] & 0x7;
+    adc_pattern[i].channel = channel[i];
     adc_pattern[i].unit = ADC_UNIT_1;
     adc_pattern[i].bit_width = __adcContinuousWidth;
   }
@@ -455,7 +455,6 @@ esp_err_t __analogContinuousInit(adc_channel_t *channel, uint8_t channel_num, ad
   used_adc_channels = channel_num;
   return ESP_OK;
 }
-
 
 bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void)) {
   adc_channel_t channel[pins_count];
@@ -537,7 +536,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
   }
 
   //Allocate and prepare result structure for adc readings
-  adc_result = malloc(pins_count * sizeof(adc_continuos_data_t));
+  adc_result = malloc(pins_count * sizeof(adc_continuous_data_t));
   for (int k = 0; k < pins_count; k++) {
     adc_result[k].pin = pins[k];
     adc_result[k].channel = channel[k];
@@ -578,7 +577,7 @@ bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_pe
   return true;
 }
 
-bool analogContinuousRead(adc_continuos_data_t **buffer, uint32_t timeout_ms) {
+bool analogContinuousRead(adc_continuous_data_t **buffer, uint32_t timeout_ms) {
   if (adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL) {
     uint32_t bytes_read = 0;
     uint32_t read_raw[used_adc_channels];

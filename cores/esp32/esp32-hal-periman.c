@@ -10,8 +10,8 @@
 
 typedef struct ATTR_PACKED {
   peripheral_bus_type_t type;
-  const char* extra_type;
-  void* bus;
+  const char *extra_type;
+  void *bus;
   int8_t bus_num;
   int8_t bus_channel;
 } peripheral_pin_item_t;
@@ -21,12 +21,12 @@ static peripheral_pin_item_t pins[SOC_GPIO_PIN_COUNT];
 
 #define GPIO_NOT_VALID(p) ((p >= SOC_GPIO_PIN_COUNT) || ((SOC_GPIO_VALID_GPIO_MASK & (1ULL << p)) == 0))
 
-const char* perimanGetTypeName(peripheral_bus_type_t type) {
+const char *perimanGetTypeName(peripheral_bus_type_t type) {
   switch (type) {
-    case ESP32_BUS_TYPE_INIT: return "INIT";
-    case ESP32_BUS_TYPE_GPIO: return "GPIO";
-    case ESP32_BUS_TYPE_UART_RX: return "UART_RX";
-    case ESP32_BUS_TYPE_UART_TX: return "UART_TX";
+    case ESP32_BUS_TYPE_INIT:     return "INIT";
+    case ESP32_BUS_TYPE_GPIO:     return "GPIO";
+    case ESP32_BUS_TYPE_UART_RX:  return "UART_RX";
+    case ESP32_BUS_TYPE_UART_TX:  return "UART_TX";
     case ESP32_BUS_TYPE_UART_CTS: return "UART_CTS";
     case ESP32_BUS_TYPE_UART_RTS: return "UART_RTS";
 #if SOC_SDM_SUPPORTED
@@ -34,12 +34,12 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
 #endif
 #if SOC_ADC_SUPPORTED
     case ESP32_BUS_TYPE_ADC_ONESHOT: return "ADC_ONESHOT";
-    case ESP32_BUS_TYPE_ADC_CONT: return "ADC_CONT";
+    case ESP32_BUS_TYPE_ADC_CONT:    return "ADC_CONT";
 #endif
 #if SOC_DAC_SUPPORTED
     case ESP32_BUS_TYPE_DAC_ONESHOT: return "DAC_ONESHOT";
-    case ESP32_BUS_TYPE_DAC_CONT: return "DAC_CONT";
-    case ESP32_BUS_TYPE_DAC_COSINE: return "DAC_COSINE";
+    case ESP32_BUS_TYPE_DAC_CONT:    return "DAC_CONT";
+    case ESP32_BUS_TYPE_DAC_COSINE:  return "DAC_COSINE";
 #endif
 #if SOC_LEDC_SUPPORTED
     case ESP32_BUS_TYPE_LEDC: return "LEDC";
@@ -49,44 +49,44 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
     case ESP32_BUS_TYPE_RMT_RX: return "RMT_RX";
 #endif
 #if SOC_I2S_SUPPORTED
-    case ESP32_BUS_TYPE_I2S_STD_MCLK: return "I2S_STD_MCLK";
-    case ESP32_BUS_TYPE_I2S_STD_BCLK: return "I2S_STD_BCLK";
-    case ESP32_BUS_TYPE_I2S_STD_WS: return "I2S_STD_WS";
-    case ESP32_BUS_TYPE_I2S_STD_DOUT: return "I2S_STD_DOUT";
-    case ESP32_BUS_TYPE_I2S_STD_DIN: return "I2S_STD_DIN";
-    case ESP32_BUS_TYPE_I2S_TDM_MCLK: return "I2S_TDM_MCLK";
-    case ESP32_BUS_TYPE_I2S_TDM_BCLK: return "I2S_TDM_BCLK";
-    case ESP32_BUS_TYPE_I2S_TDM_WS: return "I2S_TDM_WS";
-    case ESP32_BUS_TYPE_I2S_TDM_DOUT: return "I2S_TDM_DOUT";
-    case ESP32_BUS_TYPE_I2S_TDM_DIN: return "I2S_TDM_DIN";
-    case ESP32_BUS_TYPE_I2S_PDM_TX_CLK: return "I2S_PDM_TX_CLK";
+    case ESP32_BUS_TYPE_I2S_STD_MCLK:     return "I2S_STD_MCLK";
+    case ESP32_BUS_TYPE_I2S_STD_BCLK:     return "I2S_STD_BCLK";
+    case ESP32_BUS_TYPE_I2S_STD_WS:       return "I2S_STD_WS";
+    case ESP32_BUS_TYPE_I2S_STD_DOUT:     return "I2S_STD_DOUT";
+    case ESP32_BUS_TYPE_I2S_STD_DIN:      return "I2S_STD_DIN";
+    case ESP32_BUS_TYPE_I2S_TDM_MCLK:     return "I2S_TDM_MCLK";
+    case ESP32_BUS_TYPE_I2S_TDM_BCLK:     return "I2S_TDM_BCLK";
+    case ESP32_BUS_TYPE_I2S_TDM_WS:       return "I2S_TDM_WS";
+    case ESP32_BUS_TYPE_I2S_TDM_DOUT:     return "I2S_TDM_DOUT";
+    case ESP32_BUS_TYPE_I2S_TDM_DIN:      return "I2S_TDM_DIN";
+    case ESP32_BUS_TYPE_I2S_PDM_TX_CLK:   return "I2S_PDM_TX_CLK";
     case ESP32_BUS_TYPE_I2S_PDM_TX_DOUT0: return "I2S_PDM_TX_DOUT0";
     case ESP32_BUS_TYPE_I2S_PDM_TX_DOUT1: return "I2S_PDM_TX_DOUT1";
-    case ESP32_BUS_TYPE_I2S_PDM_RX_CLK: return "I2S_PDM_RX_CLK";
-    case ESP32_BUS_TYPE_I2S_PDM_RX_DIN0: return "I2S_PDM_RX_DIN0";
-    case ESP32_BUS_TYPE_I2S_PDM_RX_DIN1: return "I2S_PDM_RX_DIN1";
-    case ESP32_BUS_TYPE_I2S_PDM_RX_DIN2: return "I2S_PDM_RX_DIN2";
-    case ESP32_BUS_TYPE_I2S_PDM_RX_DIN3: return "I2S_PDM_RX_DIN3";
+    case ESP32_BUS_TYPE_I2S_PDM_RX_CLK:   return "I2S_PDM_RX_CLK";
+    case ESP32_BUS_TYPE_I2S_PDM_RX_DIN0:  return "I2S_PDM_RX_DIN0";
+    case ESP32_BUS_TYPE_I2S_PDM_RX_DIN1:  return "I2S_PDM_RX_DIN1";
+    case ESP32_BUS_TYPE_I2S_PDM_RX_DIN2:  return "I2S_PDM_RX_DIN2";
+    case ESP32_BUS_TYPE_I2S_PDM_RX_DIN3:  return "I2S_PDM_RX_DIN3";
 #endif
 #if SOC_I2C_SUPPORTED
     case ESP32_BUS_TYPE_I2C_MASTER_SDA: return "I2C_MASTER_SDA";
     case ESP32_BUS_TYPE_I2C_MASTER_SCL: return "I2C_MASTER_SCL";
-    case ESP32_BUS_TYPE_I2C_SLAVE_SDA: return "I2C_SLAVE_SDA";
-    case ESP32_BUS_TYPE_I2C_SLAVE_SCL: return "I2C_SLAVE_SCL";
+    case ESP32_BUS_TYPE_I2C_SLAVE_SDA:  return "I2C_SLAVE_SDA";
+    case ESP32_BUS_TYPE_I2C_SLAVE_SCL:  return "I2C_SLAVE_SCL";
 #endif
 #if SOC_GPSPI_SUPPORTED
-    case ESP32_BUS_TYPE_SPI_MASTER_SCK: return "SPI_MASTER_SCK";
+    case ESP32_BUS_TYPE_SPI_MASTER_SCK:  return "SPI_MASTER_SCK";
     case ESP32_BUS_TYPE_SPI_MASTER_MISO: return "SPI_MASTER_MISO";
     case ESP32_BUS_TYPE_SPI_MASTER_MOSI: return "SPI_MASTER_MOSI";
-    case ESP32_BUS_TYPE_SPI_MASTER_SS: return "SPI_MASTER_SS";
+    case ESP32_BUS_TYPE_SPI_MASTER_SS:   return "SPI_MASTER_SS";
 #endif
 #if SOC_SDMMC_HOST_SUPPORTED
     case ESP32_BUS_TYPE_SDMMC_CLK: return "SDMMC_CLK";
     case ESP32_BUS_TYPE_SDMMC_CMD: return "SDMMC_CMD";
-    case ESP32_BUS_TYPE_SDMMC_D0: return "SDMMC_D0";
-    case ESP32_BUS_TYPE_SDMMC_D1: return "SDMMC_D1";
-    case ESP32_BUS_TYPE_SDMMC_D2: return "SDMMC_D2";
-    case ESP32_BUS_TYPE_SDMMC_D3: return "SDMMC_D3";
+    case ESP32_BUS_TYPE_SDMMC_D0:  return "SDMMC_D0";
+    case ESP32_BUS_TYPE_SDMMC_D1:  return "SDMMC_D1";
+    case ESP32_BUS_TYPE_SDMMC_D2:  return "SDMMC_D2";
+    case ESP32_BUS_TYPE_SDMMC_D3:  return "SDMMC_D3";
 #endif
 #if SOC_TOUCH_SENSOR_SUPPORTED
     case ESP32_BUS_TYPE_TOUCH: return "TOUCH";
@@ -100,18 +100,24 @@ const char* perimanGetTypeName(peripheral_bus_type_t type) {
 #endif
 #if CONFIG_ETH_USE_ESP32_EMAC
     case ESP32_BUS_TYPE_ETHERNET_RMII: return "ETHERNET_RMII";
-    case ESP32_BUS_TYPE_ETHERNET_CLK: return "ETHERNET_CLK";
-    case ESP32_BUS_TYPE_ETHERNET_MCD: return "ETHERNET_MCD";
+    case ESP32_BUS_TYPE_ETHERNET_CLK:  return "ETHERNET_CLK";
+    case ESP32_BUS_TYPE_ETHERNET_MCD:  return "ETHERNET_MCD";
     case ESP32_BUS_TYPE_ETHERNET_MDIO: return "ETHERNET_MDIO";
-    case ESP32_BUS_TYPE_ETHERNET_PWR: return "ETHERNET_PWR";
+    case ESP32_BUS_TYPE_ETHERNET_PWR:  return "ETHERNET_PWR";
+#endif
+#if CONFIG_LWIP_PPP_SUPPORT
+    case ESP32_BUS_TYPE_PPP_TX:  return "PPP_MODEM_TX";
+    case ESP32_BUS_TYPE_PPP_RX:  return "PPP_MODEM_RX";
+    case ESP32_BUS_TYPE_PPP_RTS: return "PPP_MODEM_RTS";
+    case ESP32_BUS_TYPE_PPP_CTS: return "PPP_MODEM_CTS";
 #endif
     default: return "UNKNOWN";
   }
 }
 
-bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void* bus, int8_t bus_num, int8_t bus_channel) {
+bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void *bus, int8_t bus_num, int8_t bus_channel) {
   peripheral_bus_type_t otype = ESP32_BUS_TYPE_INIT;
-  void* obus = NULL;
+  void *obus = NULL;
   if (GPIO_NOT_VALID(pin)) {
     log_e("Invalid pin: %u", pin);
     return false;
@@ -155,7 +161,7 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void* bus, int8_t
   return true;
 }
 
-bool perimanSetPinBusExtraType(uint8_t pin, const char* extra_type) {
+bool perimanSetPinBusExtraType(uint8_t pin, const char *extra_type) {
   if (GPIO_NOT_VALID(pin)) {
     log_e("Invalid pin: %u", pin);
     return false;
@@ -169,7 +175,7 @@ bool perimanSetPinBusExtraType(uint8_t pin, const char* extra_type) {
   return true;
 }
 
-void* perimanGetPinBus(uint8_t pin, peripheral_bus_type_t type) {
+void *perimanGetPinBus(uint8_t pin, peripheral_bus_type_t type) {
   if (GPIO_NOT_VALID(pin)) {
     log_e("Invalid pin: %u", pin);
     return NULL;
@@ -192,7 +198,7 @@ peripheral_bus_type_t perimanGetPinBusType(uint8_t pin) {
   return pins[pin].type;
 }
 
-const char* perimanGetPinBusExtraType(uint8_t pin) {
+const char *perimanGetPinBusExtraType(uint8_t pin) {
   if (GPIO_NOT_VALID(pin)) {
     log_e("Invalid pin: %u", pin);
     return NULL;

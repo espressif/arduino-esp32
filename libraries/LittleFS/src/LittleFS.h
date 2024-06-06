@@ -22,19 +22,18 @@ class LittleFSFS : public FS {
 public:
   LittleFSFS();
   ~LittleFSFS();
-  bool begin(bool formatOnFail = false, const char* basePath = "/littlefs", uint8_t maxOpenFiles = 10, const char* partitionLabel = "spiffs");
+  bool begin(bool formatOnFail = false, const char *basePath = "/littlefs", uint8_t maxOpenFiles = 10, const char *partitionLabel = "spiffs");
   bool format();
   size_t totalBytes();
   size_t usedBytes();
   void end();
 
 private:
-  char* partitionLabel_;
+  char *partitionLabel_;
 };
 
-}
+}  // namespace fs
 
 extern fs::LittleFSFS LittleFS;
-
 
 #endif

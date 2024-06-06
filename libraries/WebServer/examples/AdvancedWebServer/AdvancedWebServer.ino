@@ -48,9 +48,10 @@ void handleRoot() {
   int min = (sec / 60) % 60;
   sec = sec % 60;
 
-  snprintf(temp, 400,
+  snprintf(
+    temp, 400,
 
-           "<html>\
+    "<html>\
   <head>\
     <meta http-equiv='refresh' content='5'/>\
     <title>ESP32 Demo</title>\
@@ -65,7 +66,8 @@ void handleRoot() {
   </body>\
 </html>",
 
-           hr, min, sec);
+    hr, min, sec
+  );
   server.send(200, "text/html", temp);
   digitalWrite(led, 0);
 }

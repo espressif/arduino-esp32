@@ -1,8 +1,8 @@
 #include "USB.h"
 
 #define USB_TIMEOUT_MS 15000
-#define POLL_DELAY_MS 60
-#define FADESTEP 8
+#define POLL_DELAY_MS  60
+#define FADESTEP       8
 
 void pulse_led() {
   static uint32_t pulse_width = 0;
@@ -42,7 +42,7 @@ const esp_partition_t *find_previous_firmware() {
   for (; it != NULL; it = esp_partition_next(it)) {
     const esp_partition_t *part = esp_partition_get(it);
     if (part->subtype != ESP_PARTITION_SUBTYPE_APP_FACTORY) {
-      esp_partition_pos_t candidate = { part->address, part->size };
+      esp_partition_pos_t candidate = {part->address, part->size};
       esp_image_metadata_t meta;
       if (esp_image_verify(ESP_IMAGE_VERIFY_SILENT, &candidate, &meta) == ESP_OK) {
         // found, use it
@@ -58,8 +58,9 @@ const esp_partition_t *user_part = NULL;
 
 void setup() {
   user_part = find_previous_firmware();
-  if (user_part)
+  if (user_part) {
     esp_ota_set_boot_partition(user_part);
+  }
 
   extern bool _recovery_marker_found;
   if (!_recovery_marker_found && user_part) {

@@ -10,9 +10,10 @@ namespace {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 #include "../../libraries/Update/src/Updater.cpp"
+#include "../../cores/esp32/HEXBuilder.cpp"
 #include "../../cores/esp32/MD5Builder.cpp"
 #pragma GCC diagnostic pop
-}
+}  // namespace
 
 #define ALT_COUNT 1
 
@@ -21,7 +22,7 @@ namespace {
 // Note: alt is used as the partition number, in order to support multiple partitions like FLASH, EEPROM, etc.
 //--------------------------------------------------------------------+
 
-uint16_t load_dfu_ota_descriptor(uint8_t* dst, uint8_t* itf) {
+uint16_t load_dfu_ota_descriptor(uint8_t *dst, uint8_t *itf) {
 #define DFU_ATTRS (DFU_ATTR_CAN_DOWNLOAD | DFU_ATTR_CAN_UPLOAD | DFU_ATTR_MANIFESTATION_TOLERANT)
 
   uint8_t str_index = tinyusb_add_string_descriptor("Arduino DFU");
@@ -52,7 +53,7 @@ uint32_t tud_dfu_get_timeout_cb(uint8_t alt, uint8_t state) {
 // Invoked when received DFU_DNLOAD (wLength>0) following by DFU_GETSTATUS (state=DFU_DNBUSY) requests
 // This callback could be returned before flashing op is complete (async).
 // Once finished flashing, application must call tud_dfu_finish_flashing()
-void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const* data, uint16_t length) {
+void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const *data, uint16_t length) {
   if (!Update.isRunning()) {
     // this is the first data block, start update if possible
     if (!Update.begin()) {
@@ -63,7 +64,7 @@ void tud_dfu_download_cb(uint8_t alt, uint16_t block_num, uint8_t const* data, u
 
   // write a block of data to Flash
   // XXX: Update API is needlessly non-const
-  size_t written = Update.write(const_cast<uint8_t*>(data), length);
+  size_t written = Update.write(const_cast<uint8_t *>(data), length);
   tud_dfu_finish_flashing((written == length) ? DFU_STATUS_OK : DFU_STATUS_ERR_WRITE);
 }
 
@@ -81,7 +82,7 @@ void tud_dfu_manifest_cb(uint8_t alt) {
 // Invoked when received DFU_UPLOAD request
 // Application must populate data with up to length bytes and
 // Return the number of written bytes
-uint16_t tud_dfu_upload_cb(uint8_t alt, uint16_t block_num, uint8_t* data, uint16_t length) {
+uint16_t tud_dfu_upload_cb(uint8_t alt, uint16_t block_num, uint8_t *data, uint16_t length) {
   (void)alt;
   (void)block_num;
   (void)data;

@@ -20,7 +20,6 @@
  *
  */
 
-
 class MyProcessor {
 private:
   uint32_t buff;  // rolling buffer of most recent 32 bits.
@@ -61,13 +60,15 @@ public:
     uint32_t *buff = &me->buff;
 
     for (int i = 0; len; len--) {
-      if (data[i].duration0 == 0)
+      if (data[i].duration0 == 0) {
         break;
+      }
       *buff = (*buff << 1) | (data[i].level0 ? 1 : 0);
       i++;
 
-      if (data[i].duration1 == 0)
+      if (data[i].duration1 == 0) {
         break;
+      }
       *buff = (*buff << 1) | (data[i].level1 ? 1 : 0);
       i++;
     };

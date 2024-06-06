@@ -20,7 +20,8 @@
 #include "esp_crt_bundle.h"
 
 #if !defined(MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED) && !defined(MBEDTLS_KEY_EXCHANGE_SOME_PSK_ENABLED)
-#warning "Please call `idf.py menuconfig` then go to Component config -> mbedTLS -> TLS Key Exchange Methods -> Enable pre-shared-key ciphersuites and then check `Enable PSK based ciphersuite modes`. Save and Quit."
+#warning \
+  "Please call `idf.py menuconfig` then go to Component config -> mbedTLS -> TLS Key Exchange Methods -> Enable pre-shared-key ciphersuites and then check `Enable PSK based ciphersuite modes`. Save and Quit."
 #else
 
 const char *pers = "esp32-tls";
@@ -41,16 +42,27 @@ static int _handle_error(int err, const char *function, int line) {
 
 #define handle_error(e) _handle_error(e, __FUNCTION__, __LINE__)
 
-
 void ssl_init(sslclient_context *ssl_client) {
   // reset embedded pointers to zero
   memset(ssl_client, 0, sizeof(sslclient_context));
   mbedtls_ssl_init(&ssl_client->ssl_ctx);
   mbedtls_ssl_config_init(&ssl_client->ssl_conf);
   mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
+  ssl_client->peek_buf = -1;
 }
 
-int start_ssl_client(sslclient_context *ssl_client, const IPAddress &ip, uint32_t port, const char *hostname, int timeout, const char *rootCABuff, bool useRootCABundle, const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos) {
+void attach_ssl_certificate_bundle(sslclient_context *ssl_client, bool att) {
+  if (att) {
+    ssl_client->bundle_attach_cb = &esp_crt_bundle_attach;
+  } else {
+    ssl_client->bundle_attach_cb = NULL;
+  }
+}
+
+int start_ssl_client(
+  sslclient_context *ssl_client, const IPAddress &ip, uint32_t port, const char *hostname, int timeout, const char *rootCABuff, bool useRootCABundle,
+  const char *cli_cert, const char *cli_key, const char *pskIdent, const char *psKey, bool insecure, const char **alpn_protos
+) {
   int ret;
   int enable = 1;
   log_v("Free internal heap before TLS %u", ESP.getFreeHeap());
@@ -138,13 +150,12 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress &ip, uint32_
     }
   }
 
-
-#define ROE(x, msg) \
-  { \
-    if (((x) < 0)) { \
+#define ROE(x, msg)                                   \
+  {                                                   \
+    if (((x) < 0)) {                                  \
       log_e("LWIP Socket config of " msg " failed."); \
-      return -1; \
-    } \
+      return -1;                                      \
+    }                                                 \
   }
   ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)), "SO_RCVTIMEO");
   ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)), "SO_SNDTIMEO");
@@ -152,24 +163,17 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress &ip, uint32_
   ROE(lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)), "TCP_NODELAY");
   ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)), "SO_KEEPALIVE");
 
-
-
   log_v("Seeding the random number generator");
   mbedtls_entropy_init(&ssl_client->entropy_ctx);
 
-  ret = mbedtls_ctr_drbg_seed(&ssl_client->drbg_ctx, mbedtls_entropy_func,
-                              &ssl_client->entropy_ctx, (const unsigned char *)pers, strlen(pers));
+  ret = mbedtls_ctr_drbg_seed(&ssl_client->drbg_ctx, mbedtls_entropy_func, &ssl_client->entropy_ctx, (const unsigned char *)pers, strlen(pers));
   if (ret < 0) {
     return handle_error(ret);
   }
 
   log_v("Setting up the SSL/TLS structure...");
 
-  if ((ret = mbedtls_ssl_config_defaults(&ssl_client->ssl_conf,
-                                         MBEDTLS_SSL_IS_CLIENT,
-                                         MBEDTLS_SSL_TRANSPORT_STREAM,
-                                         MBEDTLS_SSL_PRESET_DEFAULT))
-      != 0) {
+  if ((ret = mbedtls_ssl_config_defaults(&ssl_client->ssl_conf, MBEDTLS_SSL_IS_CLIENT, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT)) != 0) {
     return handle_error(ret);
   }
 
@@ -199,11 +203,14 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress &ip, uint32_
       return handle_error(ret);
     }
   } else if (useRootCABundle) {
-    log_v("Attaching root CA cert bundle");
-    ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
-
-    if (ret < 0) {
-      return handle_error(ret);
+    if (ssl_client->bundle_attach_cb != NULL) {
+      log_v("Attaching root CA cert bundle");
+      ret = ssl_client->bundle_attach_cb(&ssl_client->ssl_conf);
+      if (ret < 0) {
+        return handle_error(ret);
+      }
+    } else {
+      log_e("useRootCABundle is set, but attach_ssl_certificate_bundle(ssl, true); was not called!");
     }
   } else if (pskIdent != NULL && psKey != NULL) {
     log_v("Setting up PSK");
@@ -216,21 +223,30 @@ int start_ssl_client(sslclient_context *ssl_client, const IPAddress &ip, uint32_
     size_t psk_len = strlen(psKey) / 2;
     for (int j = 0; j < strlen(psKey); j += 2) {
       char c = psKey[j];
-      if (c >= '0' && c <= '9') c -= '0';
-      else if (c >= 'A' && c <= 'F') c -= 'A' - 10;
-      else if (c >= 'a' && c <= 'f') c -= 'a' - 10;
-      else return -1;
+      if (c >= '0' && c <= '9') {
+        c -= '0';
+      } else if (c >= 'A' && c <= 'F') {
+        c -= 'A' - 10;
+      } else if (c >= 'a' && c <= 'f') {
+        c -= 'a' - 10;
+      } else {
+        return -1;
+      }
       psk[j / 2] = c << 4;
       c = psKey[j + 1];
-      if (c >= '0' && c <= '9') c -= '0';
-      else if (c >= 'A' && c <= 'F') c -= 'A' - 10;
-      else if (c >= 'a' && c <= 'f') c -= 'a' - 10;
-      else return -1;
+      if (c >= '0' && c <= '9') {
+        c -= '0';
+      } else if (c >= 'A' && c <= 'F') {
+        c -= 'A' - 10;
+      } else if (c >= 'a' && c <= 'f') {
+        c -= 'a' - 10;
+      } else {
+        return -1;
+      }
       psk[j / 2] |= c;
     }
     // set mbedtls config
-    ret = mbedtls_ssl_conf_psk(&ssl_client->ssl_conf, psk, psk_len,
-                               (const unsigned char *)pskIdent, strlen(pskIdent));
+    ret = mbedtls_ssl_conf_psk(&ssl_client->ssl_conf, psk, psk_len, (const unsigned char *)pskIdent, strlen(pskIdent));
     if (ret != 0) {
       log_e("mbedtls_ssl_conf_psk returned %d", ret);
       return handle_error(ret);
@@ -296,11 +312,11 @@ int ssl_starttls_handshake(sslclient_context *ssl_client) {
     if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
       return handle_error(ret);
     }
-    if ((millis() - handshake_start_time) > ssl_client->handshake_timeout)
+    if ((millis() - handshake_start_time) > ssl_client->handshake_timeout) {
       return -1;
+    }
     vTaskDelay(2);  //2 ticks
   }
-
 
   if (ssl_client->client_cert.version) {
     log_d("Protocol is %s Ciphersuite is %s", mbedtls_ssl_get_version(&ssl_client->ssl_ctx), mbedtls_ssl_get_ciphersuite(&ssl_client->ssl_ctx));
@@ -340,7 +356,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client) {
   return ssl_client->socket;
 }
 
-void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, const char *cli_cert, const char *cli_key) {
+void stop_ssl_socket(sslclient_context *ssl_client) {
   log_v("Cleaning SSL connection.");
 
   if (ssl_client->socket >= 0) {
@@ -364,14 +380,16 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
   // save only interesting fields
   int handshake_timeout = ssl_client->handshake_timeout;
   int socket_timeout = ssl_client->socket_timeout;
+  int last_err = ssl_client->last_error;
 
   // reset embedded pointers to zero
   memset(ssl_client, 0, sizeof(sslclient_context));
 
   ssl_client->handshake_timeout = handshake_timeout;
   ssl_client->socket_timeout = socket_timeout;
+  ssl_client->last_error = last_err;
+  ssl_client->peek_buf = -1;
 }
-
 
 int data_to_read(sslclient_context *ssl_client) {
   int ret, res;
@@ -425,7 +443,7 @@ int peek_net_receive(sslclient_context *ssl_client, int timeout) {
   // the statically linked library file. So, for now, we replace it by
   // substancially similar code.
   //
-  struct timeval tv = { .tv_sec = timeout / 1000, .tv_usec = (timeout % 1000) * 1000 };
+  struct timeval tv = {.tv_sec = timeout / 1000, .tv_usec = (timeout % 1000) * 1000};
 
   fd_set fdset;
   FD_SET(ssl_client->socket, &fdset);
@@ -443,8 +461,9 @@ int peek_net_receive(sslclient_context *ssl_client, int timeout) {
 
 int get_net_receive(sslclient_context *ssl_client, uint8_t *data, int length) {
   int ret = peek_net_receive(ssl_client, ssl_client->socket_timeout);
-  if (ret > 0)
+  if (ret > 0) {
     ret = mbedtls_net_recv(ssl_client, data, length);
+  }
 
   // log_v( "%d bytes NET read of %d", ret, length);   //for low level debug
   return ret;
@@ -455,7 +474,6 @@ int send_net_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
   // log_v("Net sending %d btes->ret %d", len, ret); //for low level debug
   return ret;
 }
-
 
 int get_ssl_receive(sslclient_context *ssl_client, uint8_t *data, int length) {
   int ret = mbedtls_ssl_read(&ssl_client->ssl_ctx, data, length);
@@ -528,8 +546,9 @@ bool verify_ssl_fingerprint(sslclient_context *ssl_client, const char *fp, const
 
   // Calculate certificate's SHA256 fingerprint
   uint8_t fingerprint_remote[32];
-  if (!get_peer_fingerprint(ssl_client, fingerprint_remote))
+  if (!get_peer_fingerprint(ssl_client, fingerprint_remote)) {
     return false;
+  }
 
   // Check if fingerprints match
   if (memcmp(fingerprint_local, fingerprint_remote, 32)) {
@@ -538,10 +557,11 @@ bool verify_ssl_fingerprint(sslclient_context *ssl_client, const char *fp, const
   }
 
   // Additionally check if certificate has domain name if provided
-  if (domain_name)
+  if (domain_name) {
     return verify_ssl_dn(ssl_client, domain_name);
-  else
+  } else {
     return true;
+  }
 }
 
 bool get_peer_fingerprint(sslclient_context *ssl_client, uint8_t sha256[32]) {
@@ -580,8 +600,9 @@ bool verify_ssl_dn(sslclient_context *ssl_client, const char *domain_name) {
     std::string san_str((const char *)san->buf.p, san->buf.len);
     std::transform(san_str.begin(), san_str.end(), san_str.begin(), ::tolower);
 
-    if (matchName(san_str, domain_name_str))
+    if (matchName(san_str, domain_name_str)) {
       return true;
+    }
 
     log_d("SAN '%s': no match", san_str.c_str());
 
@@ -596,8 +617,9 @@ bool verify_ssl_dn(sslclient_context *ssl_client, const char *domain_name) {
     if (!MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &common_name->oid)) {
       std::string common_name_str((const char *)common_name->val.p, common_name->val.len);
 
-      if (matchName(common_name_str, domain_name_str))
+      if (matchName(common_name_str, domain_name_str)) {
         return true;
+      }
 
       log_d("CN '%s': not match", common_name_str.c_str());
     }

@@ -39,7 +39,7 @@ time_t File::getLastWrite() {
   return _p->getLastWrite();
 }
 
-size_t File::write(const uint8_t* buf, size_t size) {
+size_t File::write(const uint8_t *buf, size_t size) {
   if (!*this) {
     return 0;
   }
@@ -68,7 +68,7 @@ int File::read() {
   return result;
 }
 
-size_t File::read(uint8_t* buf, size_t size) {
+size_t File::read(uint8_t *buf, size_t size) {
   if (!*this) {
     return -1;
   }
@@ -138,7 +138,7 @@ File::operator bool() const {
   return _p != nullptr && *_p != false;
 }
 
-const char* File::path() const {
+const char *File::path() const {
   if (!*this) {
     return nullptr;
   }
@@ -146,7 +146,7 @@ const char* File::path() const {
   return _p->path();
 }
 
-const char* File::name() const {
+const char *File::name() const {
   if (!*this) {
     return nullptr;
   }
@@ -162,7 +162,7 @@ boolean File::isDirectory(void) {
   return _p->isDirectory();
 }
 
-File File::openNextFile(const char* mode) {
+File File::openNextFile(const char *mode) {
   if (!*this) {
     return File();
   }
@@ -183,7 +183,7 @@ String File::getNextFileName(void) {
   return _p->getNextFileName();
 }
 
-String File::getNextFileName(bool* isDir) {
+String File::getNextFileName(bool *isDir) {
   if (!_p) {
     return "";
   }
@@ -197,11 +197,11 @@ void File::rewindDirectory(void) {
   _p->rewindDirectory();
 }
 
-File FS::open(const String& path, const char* mode, const bool create) {
+File FS::open(const String &path, const char *mode, const bool create) {
   return open(path.c_str(), mode, create);
 }
 
-File FS::open(const char* path, const char* mode, const bool create) {
+File FS::open(const char *path, const char *mode, const bool create) {
   if (!_impl) {
     return File();
   }
@@ -209,74 +209,72 @@ File FS::open(const char* path, const char* mode, const bool create) {
   return File(_impl->open(path, mode, create));
 }
 
-bool FS::exists(const char* path) {
+bool FS::exists(const char *path) {
   if (!_impl) {
     return false;
   }
   return _impl->exists(path);
 }
 
-bool FS::exists(const String& path) {
+bool FS::exists(const String &path) {
   return exists(path.c_str());
 }
 
-bool FS::remove(const char* path) {
+bool FS::remove(const char *path) {
   if (!_impl) {
     return false;
   }
   return _impl->remove(path);
 }
 
-bool FS::remove(const String& path) {
+bool FS::remove(const String &path) {
   return remove(path.c_str());
 }
 
-bool FS::rename(const char* pathFrom, const char* pathTo) {
+bool FS::rename(const char *pathFrom, const char *pathTo) {
   if (!_impl) {
     return false;
   }
   return _impl->rename(pathFrom, pathTo);
 }
 
-bool FS::rename(const String& pathFrom, const String& pathTo) {
+bool FS::rename(const String &pathFrom, const String &pathTo) {
   return rename(pathFrom.c_str(), pathTo.c_str());
 }
 
-
-bool FS::mkdir(const char* path) {
+bool FS::mkdir(const char *path) {
   if (!_impl) {
     return false;
   }
   return _impl->mkdir(path);
 }
 
-bool FS::mkdir(const String& path) {
+bool FS::mkdir(const String &path) {
   return mkdir(path.c_str());
 }
 
-bool FS::rmdir(const char* path) {
+bool FS::rmdir(const char *path) {
   if (!_impl) {
     return false;
   }
   return _impl->rmdir(path);
 }
 
-bool FS::rmdir(const String& path) {
+bool FS::rmdir(const String &path) {
   return rmdir(path.c_str());
 }
 
-const char* FS::mountpoint() {
+const char *FS::mountpoint() {
   if (!_impl) {
     return NULL;
   }
   return _impl->mountpoint();
 }
 
-
-void FSImpl::mountpoint(const char* mp) {
+void FSImpl::mountpoint(const char *mp) {
   _mountpoint = mp;
 }
 
-const char* FSImpl::mountpoint() {
+const char *FSImpl::mountpoint() {
   return _mountpoint;
 }

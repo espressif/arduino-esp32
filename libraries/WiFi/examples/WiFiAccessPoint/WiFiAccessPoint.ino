@@ -25,7 +25,6 @@ const char *password = "yourPassword";
 
 NetworkServer server(80);
 
-
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -37,8 +36,7 @@ void setup() {
   // a valid password must have more than 7 characters
   if (!WiFi.softAP(ssid, password)) {
     log_e("Soft AP creation failed.");
-    while (1)
-      ;
+    while (1);
   }
   IPAddress myIP = WiFi.softAPIP();
   Serial.print("AP IP address: ");

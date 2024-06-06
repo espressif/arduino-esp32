@@ -34,16 +34,21 @@ Supported SoC's
 
 Here are the ESP32 series supported by the Arduino-ESP32 project:
 
-======== ====== =========== ===================================
-SoC      Stable Development Datasheet
-======== ====== =========== ===================================
-ESP32    Yes    Yes         `ESP32`_
-ESP32-S2 Yes    Yes         `ESP32-S2`_
-ESP32-C3 Yes    Yes         `ESP32-C3`_
-ESP32-S3 Yes    Yes         `ESP32-S3`_
-ESP32-C6 No     Yes         `ESP32-C6`_
-ESP32-H2 No     Yes         `ESP32-H2`_
-======== ====== =========== ===================================
+========== ====== =========== =================================
+SoC        Stable Development Datasheet
+========== ====== =========== =================================
+ESP32      Yes    Yes         `ESP32`_
+ESP32-S2   Yes    Yes         `ESP32-S2`_
+ESP32-C3   Yes    Yes         `ESP32-C3`_
+ESP32-S3   Yes    Yes         `ESP32-S3`_
+ESP32-C6   Yes    Yes         `ESP32-C6`_
+ESP32-H2   Yes    Yes         `ESP32-H2`_
+========== ====== =========== =================================
+
+.. note::
+    ESP32-C2 is also supported by Arduino-ESP32 but requires rebuilding the static libraries.
+    This is not trivial and requires a good understanding of the ESP-IDF build system.
+    For more information, see the `Lib Builder documentation <lib_builder.html>`_.
 
 See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
 

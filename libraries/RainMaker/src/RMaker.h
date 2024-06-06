@@ -23,10 +23,9 @@
 
 class RMakerClass {
 private:
-  esp_rmaker_config_t rainmaker_cfg = { false };
+  esp_rmaker_config_t rainmaker_cfg = {false};
 
 public:
-
   void setTimeSync(bool val);
   Node initNode(const char *name, const char *type = "ESP RainMaker with Arduino");
   esp_err_t deinitNode(Node node);

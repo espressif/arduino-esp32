@@ -3,8 +3,8 @@
 #include <ArduinoOTA.h>
 #include <WebServer.h>
 
-const char* ssid = "........";
-const char* password = "........";
+const char *ssid = "........";
+const char *password = "........";
 
 WebServer server(80);
 
@@ -14,25 +14,24 @@ typedef struct credentials_t {
 } credentials_t;
 
 credentials_t passwdfile[] = {
-  { "admin", "esp32" },
-  { "fred", "41234123" },
-  { "charlie", "sdfsd" },
-  { "alice", "vambdnkuhj" },
-  { "bob", "svcdbjhws12" },
+  {"admin", "esp32"}, {"fred", "41234123"}, {"charlie", "sdfsd"}, {"alice", "vambdnkuhj"}, {"bob", "svcdbjhws12"},
 };
 const size_t N_CREDENTIALS = sizeof(passwdfile) / sizeof(credentials_t);
 
-String* credentialsHandler(HTTPAuthMethod mode, String username, String params[]) {
+String *credentialsHandler(HTTPAuthMethod mode, String username, String params[]) {
   for (int i = 0; i < N_CREDENTIALS; i++) {
-    if (username == passwdfile[i].username)
+    if (username == passwdfile[i].username) {
       return new String(passwdfile[i].password);
+    }
   }
   return NULL;
 }
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {

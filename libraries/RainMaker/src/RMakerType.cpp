@@ -10,7 +10,7 @@ param_val_t value(bool bval) {
   return esp_rmaker_bool(bval);
 }
 
-param_val_t value(char* sval) {
+param_val_t value(char *sval) {
   return esp_rmaker_str(sval);
 }
 
@@ -18,7 +18,7 @@ param_val_t value(float fval) {
   return esp_rmaker_float(fval);
 }
 
-param_val_t value(const char* sval) {
+param_val_t value(const char *sval) {
   return esp_rmaker_str(sval);
 }
 #endif

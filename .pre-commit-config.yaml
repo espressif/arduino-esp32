@@ -1,4 +1,8 @@
-exclude: ".github/.*"
+exclude: |
+  (?x)(
+      ^\.github\/|
+      ^tests\/performance\/coremark\/.*\.[ch]$
+  )
 
 default_language_version:
   # force all unspecified python hooks to run python3
@@ -26,7 +30,7 @@ repos:
         exclude: ^.*\.(svd|SVD)$
         stages: [manual]
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: "v15.0.7"
+    rev: "v18.1.3"
     hooks:
       - id: clang-format
         types_or: [c, c++]

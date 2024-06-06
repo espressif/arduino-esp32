@@ -24,7 +24,9 @@ typedef struct {
 void setup() {
   // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
 
   // Create the queue which will have <QueueElementSize> number of elements, each of size `message_t` and pass the address to <QueueHandle>.
   QueueHandle = xQueueCreate(QueueElementSize, sizeof(message_t));
@@ -32,7 +34,9 @@ void setup() {
   // Check if the queue was successfully created
   if (QueueHandle == NULL) {
     Serial.println("Queue could not be created. Halt.");
-    while (1) delay(1000);  // Halt at this point as is not possible to continue
+    while (1) {
+      delay(1000);  // Halt at this point as is not possible to continue
+    }
   }
 
   // Set up two tasks to run independently.
@@ -59,7 +63,11 @@ void setup() {
   );
 
   // Now the task scheduler, which takes over control of scheduling individual tasks, is automatically started.
-  Serial.printf("\nAnything you write will return as echo.\nMaximum line length is %d characters (+ terminating '0').\nAnything longer will be sent as a separate line.\n\n", MAX_LINE_LENGTH - 1);
+  Serial.printf(
+    "\nAnything you write will return as echo.\nMaximum line length is %d characters (+ terminating '0').\nAnything longer will be sent as a separate "
+    "line.\n\n",
+    MAX_LINE_LENGTH - 1
+  );
 }
 
 void loop() {
@@ -87,7 +95,7 @@ void TaskWriteToSerial(void *pvParameters) {  // This is a task.
         Serial.println("The `TaskWriteToSerial` was unable to receive data from the Queue");
       }
     }  // Sanity check
-  }    // Infinite loop
+  }  // Infinite loop
 }
 
 void TaskReadFromSerial(void *pvParameters) {  // This is a task.
@@ -116,9 +124,9 @@ void TaskReadFromSerial(void *pvParameters) {  // This is a task.
           //   write into the same queue it can fill-up between the test and actual send attempt
           Serial.println("The `TaskReadFromSerial` was unable to send data into the Queue");
         }  // Queue send check
-      }    // Queue sanity check
+      }  // Queue sanity check
     } else {
       delay(100);  // Allow other tasks to run when there is nothing to read
-    }              // Serial buffer check
-  }                // Infinite loop
+    }  // Serial buffer check
+  }  // Infinite loop
 }

@@ -21,16 +21,16 @@ class BLEValue {
 public:
   BLEValue();
   void addPart(String part);
-  void addPart(uint8_t* pData, size_t length);
+  void addPart(uint8_t *pData, size_t length);
   void cancel();
   void commit();
-  uint8_t* getData();
+  uint8_t *getData();
   size_t getLength();
   uint16_t getReadOffset();
   String getValue();
   void setReadOffset(uint16_t readOffset);
   void setValue(String value);
-  void setValue(uint8_t* pData, size_t length);
+  void setValue(uint8_t *pData, size_t length);
 
 private:
   String m_accumulation;

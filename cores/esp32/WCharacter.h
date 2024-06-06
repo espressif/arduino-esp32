@@ -22,7 +22,7 @@
 
 #include <ctype.h>
 #define isascii(__c) ((unsigned)(__c) <= 0177)
-#define toascii(__c) ((__c)&0177)
+#define toascii(__c) ((__c) & 0177)
 
 // WCharacter.h prototypes
 inline boolean isAlphaNumeric(int c) __attribute__((always_inline));

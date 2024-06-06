@@ -71,6 +71,8 @@ public:
   void flush(void);
 
   inline static bool isPlugged(void) {
+    // SOF ISR is causing esptool to be unable to upload firmware to the board
+    // Using IDF 5.1 helper function because it is based on Timer check instead of ISR
     return usb_serial_jtag_is_connected();
   }
 

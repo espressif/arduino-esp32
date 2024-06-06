@@ -9,15 +9,15 @@
 #include <ArduinoOTA.h>
 #include <WebServer.h>
 
-const char* ssid = "........";
-const char* password = "........";
+const char *ssid = "........";
+const char *password = "........";
 
 WebServer server(80);
 
-const char* www_username = "admin";
-const char* www_password = "esp32";
+const char *www_username = "admin";
+const char *www_password = "esp32";
 // allows you to set the realm of authentication Default:"Login Required"
-const char* www_realm = "Custom Auth Realm";
+const char *www_realm = "Custom Auth Realm";
 // the Content of the HTML response in case of Unautherized Access Default:empty
 String authFailResponse = "Authentication Failed";
 

@@ -27,6 +27,7 @@ private:
     uint16_t minor;
     int8_t signalPower;
   } __attribute__((packed)) m_beaconData;
+
 public:
   BLEBeacon();
   String getData();

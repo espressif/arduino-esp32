@@ -48,29 +48,14 @@ bool wifiLowLevelInit(bool persistent);
 
 #if CONFIG_BLUEDROID_ENABLED
 static const uint8_t custom_service_uuid[16] = {
-  0xb4,
-  0xdf,
-  0x5a,
-  0x1c,
-  0x3f,
-  0x6b,
-  0xf4,
-  0xbf,
-  0xea,
-  0x4a,
-  0x82,
-  0x03,
-  0x04,
-  0x90,
-  0x1a,
-  0x02,
+  0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02,
 };
 #endif
 
 #define SERV_NAME_PREFIX_PROV "PROV_"
 
 static void get_device_service_name(prov_scheme_t prov_scheme, char *service_name, size_t max) {
-  uint8_t eth_mac[6] = { 0, 0, 0, 0, 0, 0 };
+  uint8_t eth_mac[6] = {0, 0, 0, 0, 0, 0};
   if (esp_wifi_get_mac((wifi_interface_t)WIFI_IF_STA, eth_mac) != ESP_OK) {
     log_e("esp_wifi_get_mac failed!");
     return;
@@ -86,7 +71,10 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
 #endif
 }
 
-void WiFiProvClass ::beginProvision(prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, wifi_prov_security_t security, const char *pop, const char *service_name, const char *service_key, uint8_t *uuid, bool reset_provisioned) {
+void WiFiProvClass ::beginProvision(
+  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, wifi_prov_security_t security, const char *pop, const char *service_name, const char *service_key,
+  uint8_t *uuid, bool reset_provisioned
+) {
   bool provisioned = false;
   static char service_name_temp[32];
 
@@ -186,15 +174,21 @@ void WiFiProvClass ::printQR(const char *name, const char *pop, const char *tran
     log_w("Cannot generate QR code payload. Data missing.");
     return;
   }
-  char payload[150] = { 0 };
+  char payload[150] = {0};
   if (pop) {
-    snprintf(payload, sizeof(payload), "{\"ver\":\"%s\",\"name\":\"%s\""
-                                       ",\"pop\":\"%s\",\"transport\":\"%s\"}",
-             "v1", name, pop, transport);
+    snprintf(
+      payload, sizeof(payload),
+      "{\"ver\":\"%s\",\"name\":\"%s\""
+      ",\"pop\":\"%s\",\"transport\":\"%s\"}",
+      "v1", name, pop, transport
+    );
   } else {
-    snprintf(payload, sizeof(payload), "{\"ver\":\"%s\",\"name\":\"%s\""
-                                       ",\"transport\":\"%s\"}",
-             "v1", name, transport);
+    snprintf(
+      payload, sizeof(payload),
+      "{\"ver\":\"%s\",\"name\":\"%s\""
+      ",\"transport\":\"%s\"}",
+      "v1", name, transport
+    );
   }
 #if __has_include("qrcode.h")
   log_i("Scan this QR code from the provisioning application for Provisioning.");

@@ -17,7 +17,7 @@ static const uint8_t MOSI = 11;
 static const uint8_t MISO = 13;
 static const uint8_t SCK = 12;
 
-#define LCD_CS SS
+#define LCD_CS  SS
 #define LCD_SCK SCK
 #define LCD_SDA MOSI
 static const uint8_t LCD_DC = 21;

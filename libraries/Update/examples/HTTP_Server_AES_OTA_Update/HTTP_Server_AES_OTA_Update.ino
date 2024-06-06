@@ -51,14 +51,12 @@ WebServer httpServer(80);
 DNSServer dnsServer;
 #endif
 
-const char* host = "esp32-web";
-const char* ssid = "wifi-ssid";
-const char* password = "wifi-password";
+const char *host = "esp32-web";
+const char *ssid = "wifi-ssid";
+const char *password = "wifi-password";
 
-const uint8_t OTA_KEY[32] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
-                              0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20,
-                              0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65,
-                              0x74, 0x65, 0x73, 0x74, 0x20, 0x6b, 0x65, 0x79 };
+const uint8_t OTA_KEY[32] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20,
+                             0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x73, 0x74, 0x20, 0x6b, 0x65, 0x79};
 
 /*
 const uint8_t OTA_KEY[32] = {'0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',
@@ -74,7 +72,7 @@ const uint32_t OTA_CFG = 0x0f;
 const uint32_t OTA_MODE = U_AES_DECRYPT_AUTO;
 
 /*=================================================================*/
-const char* update_path = "update";
+const char *update_path = "update";
 
 static const char UpdatePage_HTML[] PROGMEM =
   R"(<!DOCTYPE html>
@@ -127,7 +125,8 @@ void setupHttpUpdateServer() {
 
   // handler for the update page form POST
   httpServer.on(
-    String("/") + String(update_path), HTTP_POST, [&]() {
+    String("/") + String(update_path), HTTP_POST,
+    [&]() {
       // handler when file upload finishes
       if (Update.hasError()) {
         httpServer.send(200, F("text/html"), String(F("<META http-equiv=\"refresh\" content=\"5;URL=/\">Update error: ")) + String(Update.errorString()));
@@ -142,7 +141,7 @@ void setupHttpUpdateServer() {
     [&]() {
       // handler for the file upload, gets the sketch bytes, and writes
       // them through the Update object
-      HTTPUpload& upload = httpServer.upload();
+      HTTPUpload &upload = httpServer.upload();
       if (upload.status == UPLOAD_FILE_START) {
         Serial.printf("Update: %s\n", upload.filename.c_str());
         if (upload.name == "filesystem") {
@@ -175,7 +174,8 @@ void setupHttpUpdateServer() {
         }
       }
       delay(0);
-    });
+    }
+  );
 
   Update.onProgress(printProgress);
 }

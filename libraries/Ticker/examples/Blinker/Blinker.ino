@@ -36,5 +36,4 @@ void setup() {
   changer.once(30, change);
 }
 
-void loop() {
-}
+void loop() {}

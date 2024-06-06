@@ -24,16 +24,15 @@
 
 #include "Ticker.h"
 
-Ticker::Ticker()
-  : _timer(nullptr) {}
+Ticker::Ticker() : _timer(nullptr) {}
 
 Ticker::~Ticker() {
   detach();
 }
 
-void Ticker::_attach_us(uint64_t micros, bool repeat, callback_with_arg_t callback, void* arg) {
+void Ticker::_attach_us(uint64_t micros, bool repeat, callback_with_arg_t callback, void *arg) {
   esp_timer_create_args_t _timerConfig;
-  _timerConfig.arg = reinterpret_cast<void*>(arg);
+  _timerConfig.arg = reinterpret_cast<void *>(arg);
   _timerConfig.callback = callback;
   _timerConfig.dispatch_method = ESP_TIMER_TASK;
   _timerConfig.name = "Ticker";
@@ -59,12 +58,15 @@ void Ticker::detach() {
 }
 
 bool Ticker::active() const {
-  if (!_timer) return false;
+  if (!_timer) {
+    return false;
+  }
   return esp_timer_is_active(_timer);
 }
 
-void Ticker::_static_callback(void* arg) {
-  Ticker* _this = reinterpret_cast<Ticker*>(arg);
-  if (_this && _this->_callback_function)
+void Ticker::_static_callback(void *arg) {
+  Ticker *_this = reinterpret_cast<Ticker *>(arg);
+  if (_this && _this->_callback_function) {
     _this->_callback_function();
+  }
 }

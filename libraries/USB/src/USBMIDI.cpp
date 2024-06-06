@@ -47,8 +47,7 @@ void USBMIDI::end() {}
 // uint compatible version of constrain
 #define uconstrain(amt, low, high) ((amt) <= (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
-#define STATUS(CIN, CHANNEL) \
-  static_cast<uint8_t>(((CIN & 0x7F) << 4) | (uconstrain(CHANNEL - 1, 0, 15) & 0x7F))
+#define STATUS(CIN, CHANNEL) static_cast<uint8_t>(((CIN & 0x7F) << 4) | (uconstrain(CHANNEL - 1, 0, 15) & 0x7F))
 
 // Note: All the user-level API calls do extensive input constraining to prevent easy to make mistakes.
 // (You can thank me later.)
@@ -56,43 +55,37 @@ void USBMIDI::end() {}
 
 // Note On
 void USBMIDI::noteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
-  midiEventPacket_t event = { MIDI_CIN_NOTE_ON, STATUS(MIDI_CIN_NOTE_ON, channel), _(note),
-                              _(velocity) };
+  midiEventPacket_t event = {MIDI_CIN_NOTE_ON, STATUS(MIDI_CIN_NOTE_ON, channel), _(note), _(velocity)};
   writePacket(&event);
 }
 
 // Note Off
 void USBMIDI::noteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
-  midiEventPacket_t event = { MIDI_CIN_NOTE_OFF, STATUS(MIDI_CIN_NOTE_OFF, channel), _(note),
-                              _(velocity) };
+  midiEventPacket_t event = {MIDI_CIN_NOTE_OFF, STATUS(MIDI_CIN_NOTE_OFF, channel), _(note), _(velocity)};
   writePacket(&event);
 }
 
 // Program Change
 void USBMIDI::programChange(uint8_t program, uint8_t channel) {
-  midiEventPacket_t event = { MIDI_CIN_PROGRAM_CHANGE, STATUS(MIDI_CIN_PROGRAM_CHANGE, channel),
-                              _(program), 0x0 };
+  midiEventPacket_t event = {MIDI_CIN_PROGRAM_CHANGE, STATUS(MIDI_CIN_PROGRAM_CHANGE, channel), _(program), 0x0};
   writePacket(&event);
 }
 
 // Control Change (Continuous Controller)
 void USBMIDI::controlChange(uint8_t control, uint8_t value, uint8_t channel) {
-  midiEventPacket_t event = { MIDI_CIN_CONTROL_CHANGE, STATUS(MIDI_CIN_CONTROL_CHANGE, channel),
-                              _(control), _(value) };
+  midiEventPacket_t event = {MIDI_CIN_CONTROL_CHANGE, STATUS(MIDI_CIN_CONTROL_CHANGE, channel), _(control), _(value)};
   writePacket(&event);
 }
 
 // Polyphonic Key Pressure (Aftertouch)
 void USBMIDI::polyPressure(uint8_t note, uint8_t pressure, uint8_t channel) {
-  midiEventPacket_t event = { MIDI_CIN_POLY_KEYPRESS, STATUS(MIDI_CIN_POLY_KEYPRESS, channel), _(note),
-                              _(pressure) };
+  midiEventPacket_t event = {MIDI_CIN_POLY_KEYPRESS, STATUS(MIDI_CIN_POLY_KEYPRESS, channel), _(note), _(pressure)};
   writePacket(&event);
 }
 
 // Channel Pressure (Aftertouch)
 void USBMIDI::channelPressure(uint8_t pressure, uint8_t channel) {
-  midiEventPacket_t event = { MIDI_CIN_CHANNEL_PRESSURE, STATUS(MIDI_CIN_CHANNEL_PRESSURE, channel),
-                              _(pressure), 0x0 };
+  midiEventPacket_t event = {MIDI_CIN_CHANNEL_PRESSURE, STATUS(MIDI_CIN_CHANNEL_PRESSURE, channel), _(pressure), 0x0};
   writePacket(&event);
 }
 
@@ -109,8 +102,7 @@ void USBMIDI::pitchBend(uint16_t value, uint8_t channel) {
   uint8_t lsb = pitchBendValue & 0x7F;         // Lower 7 bits
   uint8_t msb = (pitchBendValue >> 7) & 0x7F;  // Upper 7 bits
 
-  midiEventPacket_t event = { MIDI_CIN_PITCH_BEND_CHANGE, STATUS(MIDI_CIN_PITCH_BEND_CHANGE, channel),
-                              lsb, msb };
+  midiEventPacket_t event = {MIDI_CIN_PITCH_BEND_CHANGE, STATUS(MIDI_CIN_PITCH_BEND_CHANGE, channel), lsb, msb};
   writePacket(&event);
 }
 
@@ -133,7 +125,7 @@ bool USBMIDI::writePacket(midiEventPacket_t *packet) {
 size_t USBMIDI::write(uint8_t c) {
   // MIDI_CIN_1BYTE_DATA => Verbatim MIDI byte-stream copy
   // (See also Table 4-1 of USB MIDI spec 1.0)
-  midiEventPacket_t packet = { DEFAULT_CN | MIDI_CIN_1BYTE_DATA, c, 0, 0 };
+  midiEventPacket_t packet = {DEFAULT_CN | MIDI_CIN_1BYTE_DATA, c, 0, 0};
 
   return tud_midi_packet_write((uint8_t *)&packet);
 }

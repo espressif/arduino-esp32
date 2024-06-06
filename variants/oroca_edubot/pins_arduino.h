@@ -18,7 +18,6 @@ static const uint8_t MOSI = 18;
 static const uint8_t MISO = 19;
 static const uint8_t SCK = 5;
 
-
 static const uint8_t A0 = 34;
 static const uint8_t A1 = 39;
 static const uint8_t A2 = 36;
@@ -36,7 +35,6 @@ static const uint8_t D8 = 33;
 
 // vbat measure
 static const uint8_t VBAT = 35;
-
 
 static const uint8_t T0 = 4;
 static const uint8_t T1 = 0;

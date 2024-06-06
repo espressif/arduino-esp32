@@ -30,9 +30,9 @@
 #include "esp_wpa2.h"
 #endif
 
-esp_netif_t* get_esp_interface_netif(esp_interface_t interface);
+esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
 
-static size_t _wifi_strncpy(char* dst, const char* src, size_t dst_len) {
+static size_t _wifi_strncpy(char *dst, const char *src, size_t dst_len) {
   if (!dst || !src || !dst_len) {
     return 0;
   }
@@ -46,12 +46,12 @@ static size_t _wifi_strncpy(char* dst, const char* src, size_t dst_len) {
   return src_len;
 }
 
-static STAClass* _sta_network_if = NULL;
+static STAClass *_sta_network_if = NULL;
 
 static esp_event_handler_instance_t _sta_ev_instance = NULL;
-static void _sta_event_cb(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+static void _sta_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == WIFI_EVENT) {
-    ((STAClass*)arg)->_onStaEvent(event_id, event_data);
+    ((STAClass *)arg)->_onStaEvent(event_id, event_data);
   }
 }
 
@@ -79,56 +79,35 @@ static bool _is_staReconnectableReason(uint8_t reason) {
     case WIFI_REASON_ASSOC_FAIL:
     case WIFI_REASON_CONNECTION_FAIL:
     case WIFI_REASON_AP_TSF_RESET:
-    case WIFI_REASON_ROAMING:
-      return true;
-    default:
-      return false;
+    case WIFI_REASON_ROAMING:            return true;
+    default:                             return false;
   }
 }
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-static const char* auth_mode_str(int authmode) {
+static const char *auth_mode_str(int authmode) {
   switch (authmode) {
-    case WIFI_AUTH_OPEN:
-      return ("OPEN");
-      break;
-    case WIFI_AUTH_WEP:
-      return ("WEP");
-      break;
-    case WIFI_AUTH_WPA_PSK:
-      return ("WPA_PSK");
-      break;
-    case WIFI_AUTH_WPA2_PSK:
-      return ("WPA2_PSK");
-      break;
-    case WIFI_AUTH_WPA_WPA2_PSK:
-      return ("WPA_WPA2_PSK");
-      break;
-    case WIFI_AUTH_WPA2_ENTERPRISE:
-      return ("WPA2_ENTERPRISE");
-      break;
-    case WIFI_AUTH_WPA3_PSK:
-      return ("WPA3_PSK");
-      break;
-    case WIFI_AUTH_WPA2_WPA3_PSK:
-      return ("WPA2_WPA3_PSK");
-      break;
-    case WIFI_AUTH_WAPI_PSK:
-      return ("WPAPI_PSK");
-      break;
-    default:
-      break;
+    case WIFI_AUTH_OPEN:            return ("OPEN"); break;
+    case WIFI_AUTH_WEP:             return ("WEP"); break;
+    case WIFI_AUTH_WPA_PSK:         return ("WPA_PSK"); break;
+    case WIFI_AUTH_WPA2_PSK:        return ("WPA2_PSK"); break;
+    case WIFI_AUTH_WPA_WPA2_PSK:    return ("WPA_WPA2_PSK"); break;
+    case WIFI_AUTH_WPA2_ENTERPRISE: return ("WPA2_ENTERPRISE"); break;
+    case WIFI_AUTH_WPA3_PSK:        return ("WPA3_PSK"); break;
+    case WIFI_AUTH_WPA2_WPA3_PSK:   return ("WPA2_WPA3_PSK"); break;
+    case WIFI_AUTH_WAPI_PSK:        return ("WPAPI_PSK"); break;
+    default:                        break;
   }
   return ("UNKNOWN");
 }
 #endif
 
-static void _onStaArduinoEvent(arduino_event_t* ev) {
+static void _onStaArduinoEvent(arduino_event_t *ev) {
   if (_sta_network_if == NULL || ev->event_id < ARDUINO_EVENT_WIFI_STA_START || ev->event_id > ARDUINO_EVENT_WIFI_STA_LOST_IP) {
     return;
   }
   static bool first_connect = true;
-  log_d("Arduino STA Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
+  log_v("Arduino STA Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
 
   if (ev->event_id == ARDUINO_EVENT_WIFI_STA_START) {
     _sta_network_if->_setStatus(WL_DISCONNECTED);
@@ -150,8 +129,9 @@ static void _onStaArduinoEvent(arduino_event_t* ev) {
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
     uint8_t reason = ev->event_info.wifi_sta_disconnected.reason;
     // Reason 0 causes crash, use reason 1 (UNSPECIFIED) instead
-    if (!reason)
+    if (!reason) {
       reason = WIFI_REASON_UNSPECIFIED;
+    }
     log_w("Reason: %u - %s", reason, WiFi.STA.disconnectReasonName((wifi_err_reason_t)reason));
     if (reason == WIFI_REASON_NO_AP_FOUND) {
       _sta_network_if->_setStatus(WL_NO_SSID_AVAIL);
@@ -182,14 +162,13 @@ static void _onStaArduinoEvent(arduino_event_t* ev) {
       _sta_network_if->connect();
     }
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-    uint8_t* ip = (uint8_t*)&(ev->event_info.got_ip.ip_info.ip.addr);
-    uint8_t* mask = (uint8_t*)&(ev->event_info.got_ip.ip_info.netmask.addr);
-    uint8_t* gw = (uint8_t*)&(ev->event_info.got_ip.ip_info.gw.addr);
-    log_d("STA IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u",
-          ip[0], ip[1], ip[2], ip[3],
-          mask[0], mask[1], mask[2], mask[3],
-          gw[0], gw[1], gw[2], gw[3]);
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+    uint8_t *ip = (uint8_t *)&(ev->event_info.got_ip.ip_info.ip.addr);
+    uint8_t *mask = (uint8_t *)&(ev->event_info.got_ip.ip_info.netmask.addr);
+    uint8_t *gw = (uint8_t *)&(ev->event_info.got_ip.ip_info.gw.addr);
+    log_v(
+      "STA IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], gw[0], gw[1], gw[2], gw[3]
+    );
 #endif
     _sta_network_if->_setStatus(WL_CONNECTED);
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_LOST_IP) {
@@ -197,7 +176,7 @@ static void _onStaArduinoEvent(arduino_event_t* ev) {
   }
 }
 
-void STAClass::_onStaEvent(int32_t event_id, void* event_data) {
+void STAClass::_onStaEvent(int32_t event_id, void *event_data) {
   arduino_event_t arduino_event;
   arduino_event.event_id = ARDUINO_EVENT_MAX;
 
@@ -208,25 +187,30 @@ void STAClass::_onStaEvent(int32_t event_id, void* event_data) {
   } else if (event_id == WIFI_EVENT_STA_STOP) {
     log_v("STA Stopped");
     arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_STOP;
-    clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT | ESP_NETIF_HAS_STATIC_IP_BIT);
+    clearStatusBits(
+      ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT
+      | ESP_NETIF_HAS_STATIC_IP_BIT
+    );
   } else if (event_id == WIFI_EVENT_STA_AUTHMODE_CHANGE) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    wifi_event_sta_authmode_change_t* event = (wifi_event_sta_authmode_change_t*)event_data;
+    wifi_event_sta_authmode_change_t *event = (wifi_event_sta_authmode_change_t *)event_data;
     log_v("STA Auth Mode Changed: From: %s, To: %s", auth_mode_str(event->old_mode), auth_mode_str(event->new_mode));
 #endif
     arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE;
     memcpy(&arduino_event.event_info.wifi_sta_authmode_change, event_data, sizeof(wifi_event_sta_authmode_change_t));
   } else if (event_id == WIFI_EVENT_STA_CONNECTED) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    wifi_event_sta_connected_t* event = (wifi_event_sta_connected_t*)event_data;
-    log_v("STA Connected: SSID: %s, BSSID: " MACSTR ", Channel: %u, Auth: %s", event->ssid, MAC2STR(event->bssid), event->channel, auth_mode_str(event->authmode));
+    wifi_event_sta_connected_t *event = (wifi_event_sta_connected_t *)event_data;
+    log_v(
+      "STA Connected: SSID: %s, BSSID: " MACSTR ", Channel: %u, Auth: %s", event->ssid, MAC2STR(event->bssid), event->channel, auth_mode_str(event->authmode)
+    );
 #endif
     arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_CONNECTED;
     memcpy(&arduino_event.event_info.wifi_sta_connected, event_data, sizeof(wifi_event_sta_connected_t));
     setStatusBits(ESP_NETIF_CONNECTED_BIT);
   } else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    wifi_event_sta_disconnected_t* event = (wifi_event_sta_disconnected_t*)event_data;
+    wifi_event_sta_disconnected_t *event = (wifi_event_sta_disconnected_t *)event_data;
     log_v("STA Disconnected: SSID: %s, BSSID: " MACSTR ", Reason: %u", event->ssid, MAC2STR(event->bssid), event->reason);
 #endif
     arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_DISCONNECTED;
@@ -368,7 +352,7 @@ bool STAClass::connect() {
  * @param connect                   Optional. call connect
  * @return
  */
-bool STAClass::connect(const char* ssid, const char* passphrase, int32_t channel, const uint8_t* bssid, bool tryConnect) {
+bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel, const uint8_t *bssid, bool tryConnect) {
   if (_esp_netif == NULL) {
     log_e("STA not started! You must call begin() first.");
     return false;
@@ -399,10 +383,10 @@ bool STAClass::connect(const char* ssid, const char* passphrase, int32_t channel
   conf.sta.threshold.rssi = -127;
   conf.sta.pmf_cfg.capable = true;
   if (ssid != NULL && ssid[0] != 0) {
-    _wifi_strncpy((char*)conf.sta.ssid, ssid, 32);
+    _wifi_strncpy((char *)conf.sta.ssid, ssid, 32);
     if (passphrase != NULL && passphrase[0] != 0) {
       conf.sta.threshold.authmode = _minSecurity;
-      _wifi_strncpy((char*)conf.sta.password, passphrase, 64);
+      _wifi_strncpy((char *)conf.sta.password, passphrase, 64);
     }
     if (bssid != NULL) {
       conf.sta.bssid_set = 1;
@@ -447,7 +431,10 @@ bool STAClass::connect(const char* ssid, const char* passphrase, int32_t channel
  * @param connect                   Optional. call connect
  * @return
  */
-bool STAClass::connect(const char* wpa2_ssid, wpa2_auth_method_t method, const char* wpa2_identity, const char* wpa2_username, const char* wpa2_password, const char* ca_pem, const char* client_crt, const char* client_key, int32_t channel, const uint8_t* bssid, bool tryConnect) {
+bool STAClass::connect(
+  const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity, const char *wpa2_username, const char *wpa2_password, const char *ca_pem,
+  const char *client_crt, const char *client_key, int ttls_phase2_type, int32_t channel, const uint8_t *bssid, bool tryConnect
+) {
   if (_esp_netif == NULL) {
     log_e("STA not started! You must call begin() first.");
     return false;
@@ -480,34 +467,42 @@ bool STAClass::connect(const char* wpa2_ssid, wpa2_auth_method_t method, const c
     return false;
   }
 
+  if (ttls_phase2_type >= 0) {
+#if __has_include("esp_eap_client.h")
+    esp_eap_client_set_ttls_phase2_method((esp_eap_ttls_phase2_types)ttls_phase2_type);
+#else
+    esp_wifi_sta_wpa2_ent_set_ttls_phase2_method((esp_eap_ttls_phase2_types)ttls_phase2_type);
+#endif
+  }
+
   if (ca_pem) {
 #if __has_include("esp_eap_client.h")
-    esp_eap_client_set_ca_cert((uint8_t*)ca_pem, strlen(ca_pem));
+    esp_eap_client_set_ca_cert((uint8_t *)ca_pem, strlen(ca_pem));
 #else
-    esp_wifi_sta_wpa2_ent_set_ca_cert((uint8_t*)ca_pem, strlen(ca_pem));
+    esp_wifi_sta_wpa2_ent_set_ca_cert((uint8_t *)ca_pem, strlen(ca_pem));
 #endif
   }
 
   if (client_crt) {
 #if __has_include("esp_eap_client.h")
-    esp_eap_client_set_certificate_and_key((uint8_t*)client_crt, strlen(client_crt), (uint8_t*)client_key, strlen(client_key), NULL, 0);
+    esp_eap_client_set_certificate_and_key((uint8_t *)client_crt, strlen(client_crt), (uint8_t *)client_key, strlen(client_key), NULL, 0);
 #else
-    esp_wifi_sta_wpa2_ent_set_cert_key((uint8_t*)client_crt, strlen(client_crt), (uint8_t*)client_key, strlen(client_key), NULL, 0);
+    esp_wifi_sta_wpa2_ent_set_cert_key((uint8_t *)client_crt, strlen(client_crt), (uint8_t *)client_key, strlen(client_key), NULL, 0);
 #endif
   }
 
 #if __has_include("esp_eap_client.h")
-  esp_eap_client_set_identity((uint8_t*)wpa2_identity, strlen(wpa2_identity));
+  esp_eap_client_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
 #else
-  esp_wifi_sta_wpa2_ent_set_identity((uint8_t*)wpa2_identity, strlen(wpa2_identity));
+  esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)wpa2_identity, strlen(wpa2_identity));
 #endif
   if (method == WPA2_AUTH_PEAP || method == WPA2_AUTH_TTLS) {
 #if __has_include("esp_eap_client.h")
-    esp_eap_client_set_username((uint8_t*)wpa2_username, strlen(wpa2_username));
-    esp_eap_client_set_password((uint8_t*)wpa2_password, strlen(wpa2_password));
+    esp_eap_client_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
+    esp_eap_client_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
 #else
-    esp_wifi_sta_wpa2_ent_set_username((uint8_t*)wpa2_username, strlen(wpa2_username));
-    esp_wifi_sta_wpa2_ent_set_password((uint8_t*)wpa2_password, strlen(wpa2_password));
+    esp_wifi_sta_wpa2_ent_set_username((uint8_t *)wpa2_username, strlen(wpa2_username));
+    esp_wifi_sta_wpa2_ent_set_password((uint8_t *)wpa2_password, strlen(wpa2_password));
 #endif
   }
 #if __has_include("esp_eap_client.h")
@@ -516,7 +511,7 @@ bool STAClass::connect(const char* wpa2_ssid, wpa2_auth_method_t method, const c
   esp_wifi_sta_wpa2_ent_enable();  //set config settings to enable function
 #endif
 
-  return connect(wpa2_ssid, NULL, 0, NULL, tryConnect);  //connect to wifi
+  return connect(wpa2_ssid, NULL, channel, bssid, tryConnect);  //connect to wifi
 }
 
 bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
@@ -614,7 +609,7 @@ String STAClass::SSID() const {
   }
   wifi_ap_record_t info;
   if (!esp_wifi_sta_get_ap_info(&info)) {
-    return String(reinterpret_cast<char*>(info.ssid));
+    return String(reinterpret_cast<char *>(info.ssid));
   }
   return String();
 }
@@ -625,10 +620,10 @@ String STAClass::psk() const {
   }
   wifi_config_t conf;
   esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf);
-  return String(reinterpret_cast<char*>(conf.sta.password));
+  return String(reinterpret_cast<char *>(conf.sta.password));
 }
 
-uint8_t* STAClass::BSSID(uint8_t* buff) {
+uint8_t *STAClass::BSSID(uint8_t *buff) {
   static uint8_t bssid[6];
   wifi_ap_record_t info;
   if (!started()) {
@@ -645,17 +640,17 @@ uint8_t* STAClass::BSSID(uint8_t* buff) {
   }
   if (!err) {
     memcpy(bssid, info.bssid, 6);
-    return reinterpret_cast<uint8_t*>(bssid);
+    return reinterpret_cast<uint8_t *>(bssid);
   }
   return NULL;
 }
 
 String STAClass::BSSIDstr() {
-  uint8_t* bssid = BSSID();
+  uint8_t *bssid = BSSID();
   if (!bssid) {
     return String();
   }
-  char mac[18] = { 0 };
+  char mac[18] = {0};
   sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
   return String(mac);
 }
@@ -671,7 +666,7 @@ int8_t STAClass::RSSI() {
   return 0;
 }
 
-size_t STAClass::printDriverInfo(Print& out) const {
+size_t STAClass::printDriverInfo(Print &out) const {
   size_t bytes = 0;
   wifi_ap_record_t info;
   if (!started()) {
@@ -681,7 +676,7 @@ size_t STAClass::printDriverInfo(Print& out) const {
     return bytes;
   }
   bytes += out.print(",");
-  bytes += out.print((const char*)info.ssid);
+  bytes += out.print((const char *)info.ssid);
   bytes += out.print(",CH:");
   bytes += out.print(info.primary);
   bytes += out.print(",RSSI:");
@@ -734,66 +729,66 @@ size_t STAClass::printDriverInfo(Print& out) const {
  * @return A string representation of the error code.
  * @note: wifi_err_reason_t values as of Mar 2023 (arduino-esp32 r2.0.7) are: (1-39, 46-51, 67-68, 200-208) and are defined in /tools/sdk/esp32/include/esp_wifi/include/esp_wifi_types.h.
  */
-const char* STAClass::disconnectReasonName(wifi_err_reason_t reason) {
+const char *STAClass::disconnectReasonName(wifi_err_reason_t reason) {
   switch (reason) {
     //ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2,0,7)
-    case WIFI_REASON_UNSPECIFIED: return "UNSPECIFIED";
-    case WIFI_REASON_AUTH_EXPIRE: return "AUTH_EXPIRE";
-    case WIFI_REASON_AUTH_LEAVE: return "AUTH_LEAVE";
-    case WIFI_REASON_ASSOC_EXPIRE: return "ASSOC_EXPIRE";
-    case WIFI_REASON_ASSOC_TOOMANY: return "ASSOC_TOOMANY";
-    case WIFI_REASON_NOT_AUTHED: return "NOT_AUTHED";
-    case WIFI_REASON_NOT_ASSOCED: return "NOT_ASSOCED";
-    case WIFI_REASON_ASSOC_LEAVE: return "ASSOC_LEAVE";
-    case WIFI_REASON_ASSOC_NOT_AUTHED: return "ASSOC_NOT_AUTHED";
-    case WIFI_REASON_DISASSOC_PWRCAP_BAD: return "DISASSOC_PWRCAP_BAD";
-    case WIFI_REASON_DISASSOC_SUPCHAN_BAD: return "DISASSOC_SUPCHAN_BAD";
-    case WIFI_REASON_BSS_TRANSITION_DISASSOC: return "BSS_TRANSITION_DISASSOC";
-    case WIFI_REASON_IE_INVALID: return "IE_INVALID";
-    case WIFI_REASON_MIC_FAILURE: return "MIC_FAILURE";
-    case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT: return "4WAY_HANDSHAKE_TIMEOUT";
-    case WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT: return "GROUP_KEY_UPDATE_TIMEOUT";
-    case WIFI_REASON_IE_IN_4WAY_DIFFERS: return "IE_IN_4WAY_DIFFERS";
-    case WIFI_REASON_GROUP_CIPHER_INVALID: return "GROUP_CIPHER_INVALID";
-    case WIFI_REASON_PAIRWISE_CIPHER_INVALID: return "PAIRWISE_CIPHER_INVALID";
-    case WIFI_REASON_AKMP_INVALID: return "AKMP_INVALID";
-    case WIFI_REASON_UNSUPP_RSN_IE_VERSION: return "UNSUPP_RSN_IE_VERSION";
-    case WIFI_REASON_INVALID_RSN_IE_CAP: return "INVALID_RSN_IE_CAP";
-    case WIFI_REASON_802_1X_AUTH_FAILED: return "802_1X_AUTH_FAILED";
-    case WIFI_REASON_CIPHER_SUITE_REJECTED: return "CIPHER_SUITE_REJECTED";
-    case WIFI_REASON_TDLS_PEER_UNREACHABLE: return "TDLS_PEER_UNREACHABLE";
-    case WIFI_REASON_TDLS_UNSPECIFIED: return "TDLS_UNSPECIFIED";
-    case WIFI_REASON_SSP_REQUESTED_DISASSOC: return "SSP_REQUESTED_DISASSOC";
-    case WIFI_REASON_NO_SSP_ROAMING_AGREEMENT: return "NO_SSP_ROAMING_AGREEMENT";
-    case WIFI_REASON_BAD_CIPHER_OR_AKM: return "BAD_CIPHER_OR_AKM";
-    case WIFI_REASON_NOT_AUTHORIZED_THIS_LOCATION: return "NOT_AUTHORIZED_THIS_LOCATION";
-    case WIFI_REASON_SERVICE_CHANGE_PERCLUDES_TS: return "SERVICE_CHANGE_PERCLUDES_TS";
-    case WIFI_REASON_UNSPECIFIED_QOS: return "UNSPECIFIED_QOS";
-    case WIFI_REASON_NOT_ENOUGH_BANDWIDTH: return "NOT_ENOUGH_BANDWIDTH";
-    case WIFI_REASON_MISSING_ACKS: return "MISSING_ACKS";
-    case WIFI_REASON_EXCEEDED_TXOP: return "EXCEEDED_TXOP";
-    case WIFI_REASON_STA_LEAVING: return "STA_LEAVING";
-    case WIFI_REASON_END_BA: return "END_BA";
-    case WIFI_REASON_UNKNOWN_BA: return "UNKNOWN_BA";
-    case WIFI_REASON_TIMEOUT: return "TIMEOUT";
-    case WIFI_REASON_PEER_INITIATED: return "PEER_INITIATED";
-    case WIFI_REASON_AP_INITIATED: return "AP_INITIATED";
-    case WIFI_REASON_INVALID_FT_ACTION_FRAME_COUNT: return "INVALID_FT_ACTION_FRAME_COUNT";
-    case WIFI_REASON_INVALID_PMKID: return "INVALID_PMKID";
-    case WIFI_REASON_INVALID_MDE: return "INVALID_MDE";
-    case WIFI_REASON_INVALID_FTE: return "INVALID_FTE";
+    case WIFI_REASON_UNSPECIFIED:                        return "UNSPECIFIED";
+    case WIFI_REASON_AUTH_EXPIRE:                        return "AUTH_EXPIRE";
+    case WIFI_REASON_AUTH_LEAVE:                         return "AUTH_LEAVE";
+    case WIFI_REASON_ASSOC_EXPIRE:                       return "ASSOC_EXPIRE";
+    case WIFI_REASON_ASSOC_TOOMANY:                      return "ASSOC_TOOMANY";
+    case WIFI_REASON_NOT_AUTHED:                         return "NOT_AUTHED";
+    case WIFI_REASON_NOT_ASSOCED:                        return "NOT_ASSOCED";
+    case WIFI_REASON_ASSOC_LEAVE:                        return "ASSOC_LEAVE";
+    case WIFI_REASON_ASSOC_NOT_AUTHED:                   return "ASSOC_NOT_AUTHED";
+    case WIFI_REASON_DISASSOC_PWRCAP_BAD:                return "DISASSOC_PWRCAP_BAD";
+    case WIFI_REASON_DISASSOC_SUPCHAN_BAD:               return "DISASSOC_SUPCHAN_BAD";
+    case WIFI_REASON_BSS_TRANSITION_DISASSOC:            return "BSS_TRANSITION_DISASSOC";
+    case WIFI_REASON_IE_INVALID:                         return "IE_INVALID";
+    case WIFI_REASON_MIC_FAILURE:                        return "MIC_FAILURE";
+    case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:             return "4WAY_HANDSHAKE_TIMEOUT";
+    case WIFI_REASON_GROUP_KEY_UPDATE_TIMEOUT:           return "GROUP_KEY_UPDATE_TIMEOUT";
+    case WIFI_REASON_IE_IN_4WAY_DIFFERS:                 return "IE_IN_4WAY_DIFFERS";
+    case WIFI_REASON_GROUP_CIPHER_INVALID:               return "GROUP_CIPHER_INVALID";
+    case WIFI_REASON_PAIRWISE_CIPHER_INVALID:            return "PAIRWISE_CIPHER_INVALID";
+    case WIFI_REASON_AKMP_INVALID:                       return "AKMP_INVALID";
+    case WIFI_REASON_UNSUPP_RSN_IE_VERSION:              return "UNSUPP_RSN_IE_VERSION";
+    case WIFI_REASON_INVALID_RSN_IE_CAP:                 return "INVALID_RSN_IE_CAP";
+    case WIFI_REASON_802_1X_AUTH_FAILED:                 return "802_1X_AUTH_FAILED";
+    case WIFI_REASON_CIPHER_SUITE_REJECTED:              return "CIPHER_SUITE_REJECTED";
+    case WIFI_REASON_TDLS_PEER_UNREACHABLE:              return "TDLS_PEER_UNREACHABLE";
+    case WIFI_REASON_TDLS_UNSPECIFIED:                   return "TDLS_UNSPECIFIED";
+    case WIFI_REASON_SSP_REQUESTED_DISASSOC:             return "SSP_REQUESTED_DISASSOC";
+    case WIFI_REASON_NO_SSP_ROAMING_AGREEMENT:           return "NO_SSP_ROAMING_AGREEMENT";
+    case WIFI_REASON_BAD_CIPHER_OR_AKM:                  return "BAD_CIPHER_OR_AKM";
+    case WIFI_REASON_NOT_AUTHORIZED_THIS_LOCATION:       return "NOT_AUTHORIZED_THIS_LOCATION";
+    case WIFI_REASON_SERVICE_CHANGE_PERCLUDES_TS:        return "SERVICE_CHANGE_PERCLUDES_TS";
+    case WIFI_REASON_UNSPECIFIED_QOS:                    return "UNSPECIFIED_QOS";
+    case WIFI_REASON_NOT_ENOUGH_BANDWIDTH:               return "NOT_ENOUGH_BANDWIDTH";
+    case WIFI_REASON_MISSING_ACKS:                       return "MISSING_ACKS";
+    case WIFI_REASON_EXCEEDED_TXOP:                      return "EXCEEDED_TXOP";
+    case WIFI_REASON_STA_LEAVING:                        return "STA_LEAVING";
+    case WIFI_REASON_END_BA:                             return "END_BA";
+    case WIFI_REASON_UNKNOWN_BA:                         return "UNKNOWN_BA";
+    case WIFI_REASON_TIMEOUT:                            return "TIMEOUT";
+    case WIFI_REASON_PEER_INITIATED:                     return "PEER_INITIATED";
+    case WIFI_REASON_AP_INITIATED:                       return "AP_INITIATED";
+    case WIFI_REASON_INVALID_FT_ACTION_FRAME_COUNT:      return "INVALID_FT_ACTION_FRAME_COUNT";
+    case WIFI_REASON_INVALID_PMKID:                      return "INVALID_PMKID";
+    case WIFI_REASON_INVALID_MDE:                        return "INVALID_MDE";
+    case WIFI_REASON_INVALID_FTE:                        return "INVALID_FTE";
     case WIFI_REASON_TRANSMISSION_LINK_ESTABLISH_FAILED: return "TRANSMISSION_LINK_ESTABLISH_FAILED";
-    case WIFI_REASON_ALTERATIVE_CHANNEL_OCCUPIED: return "ALTERATIVE_CHANNEL_OCCUPIED";
-    case WIFI_REASON_BEACON_TIMEOUT: return "BEACON_TIMEOUT";
-    case WIFI_REASON_NO_AP_FOUND: return "NO_AP_FOUND";
-    case WIFI_REASON_AUTH_FAIL: return "AUTH_FAIL";
-    case WIFI_REASON_ASSOC_FAIL: return "ASSOC_FAIL";
-    case WIFI_REASON_HANDSHAKE_TIMEOUT: return "HANDSHAKE_TIMEOUT";
-    case WIFI_REASON_CONNECTION_FAIL: return "CONNECTION_FAIL";
-    case WIFI_REASON_AP_TSF_RESET: return "AP_TSF_RESET";
-    case WIFI_REASON_ROAMING: return "ROAMING";
-    case WIFI_REASON_ASSOC_COMEBACK_TIME_TOO_LONG: return "ASSOC_COMEBACK_TIME_TOO_LONG";
-    default: return "";
+    case WIFI_REASON_ALTERATIVE_CHANNEL_OCCUPIED:        return "ALTERATIVE_CHANNEL_OCCUPIED";
+    case WIFI_REASON_BEACON_TIMEOUT:                     return "BEACON_TIMEOUT";
+    case WIFI_REASON_NO_AP_FOUND:                        return "NO_AP_FOUND";
+    case WIFI_REASON_AUTH_FAIL:                          return "AUTH_FAIL";
+    case WIFI_REASON_ASSOC_FAIL:                         return "ASSOC_FAIL";
+    case WIFI_REASON_HANDSHAKE_TIMEOUT:                  return "HANDSHAKE_TIMEOUT";
+    case WIFI_REASON_CONNECTION_FAIL:                    return "CONNECTION_FAIL";
+    case WIFI_REASON_AP_TSF_RESET:                       return "AP_TSF_RESET";
+    case WIFI_REASON_ROAMING:                            return "ROAMING";
+    case WIFI_REASON_ASSOC_COMEBACK_TIME_TOO_LONG:       return "ASSOC_COMEBACK_TIME_TOO_LONG";
+    default:                                             return "";
   }
 }
 

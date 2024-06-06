@@ -20,7 +20,6 @@ public:
   virtual std::string getName() const = 0;
   virtual int8_t getRSSI() const = 0;
 
-
   virtual bool haveCOD() const = 0;
   virtual bool haveName() const = 0;
   virtual bool haveRSSI() const = 0;
@@ -33,12 +32,10 @@ public:
   BTAdvertisedDeviceSet();
   //~BTAdvertisedDeviceSet() = default;
 
-
   BTAddress getAddress();
   uint32_t getCOD() const;
   std::string getName() const;
   int8_t getRSSI() const;
-
 
   bool haveCOD() const;
   bool haveName() const;
@@ -55,8 +52,7 @@ public:
   bool m_haveName;
   bool m_haveRSSI;
 
-
-  BTAddress m_address = BTAddress((uint8_t*)"\0\0\0\0\0\0");
+  BTAddress m_address = BTAddress((uint8_t *)"\0\0\0\0\0\0");
   uint32_t m_cod;
   std::string m_name;
   int8_t m_rssi;

@@ -64,7 +64,6 @@ static const uint8_t D19 = 21;
 static const uint8_t D20 = 38;
 static const uint8_t D21 = 37;
 
-
 static const uint8_t T0 = 4;
 static const uint8_t T1 = 0;
 static const uint8_t T2 = 2;

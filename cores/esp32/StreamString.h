@@ -35,5 +35,4 @@ public:
   void flush() override;
 };
 
-
 #endif /* STREAMSTRING_H_ */

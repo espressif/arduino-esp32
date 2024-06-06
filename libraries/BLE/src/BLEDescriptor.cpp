@@ -22,13 +22,10 @@
 
 #define NULL_HANDLE (0xffff)
 
-
 /**
  * @brief BLEDescriptor constructor.
  */
-BLEDescriptor::BLEDescriptor(const char* uuid, uint16_t len)
-  : BLEDescriptor(BLEUUID(uuid), len) {
-}
+BLEDescriptor::BLEDescriptor(const char *uuid, uint16_t len) : BLEDescriptor(BLEUUID(uuid), len) {}
 
 /**
  * @brief BLEDescriptor constructor.
@@ -41,9 +38,8 @@ BLEDescriptor::BLEDescriptor(BLEUUID uuid, uint16_t max_len) {
   m_pCharacteristic = nullptr;     // No initial characteristic.
   m_pCallback = nullptr;           // No initial callback.
 
-  m_value.attr_value = (uint8_t*)malloc(max_len);  // Allocate storage for the value.
+  m_value.attr_value = (uint8_t *)malloc(max_len);  // Allocate storage for the value.
 }  // BLEDescriptor
-
 
 /**
  * @brief BLEDescriptor destructor.
@@ -52,12 +48,11 @@ BLEDescriptor::~BLEDescriptor() {
   free(m_value.attr_value);  // Release the storage we created in the constructor.
 }  // ~BLEDescriptor
 
-
 /**
  * @brief Execute the creation of the descriptor with the BLE runtime in ESP.
  * @param [in] pCharacteristic The characteristic to which to register this descriptor.
  */
-void BLEDescriptor::executeCreate(BLECharacteristic* pCharacteristic) {
+void BLEDescriptor::executeCreate(BLECharacteristic *pCharacteristic) {
   log_v(">> executeCreate(): %s", toString().c_str());
 
   if (m_handle != NULL_HANDLE) {
@@ -70,12 +65,8 @@ void BLEDescriptor::executeCreate(BLECharacteristic* pCharacteristic) {
   esp_attr_control_t control;
   control.auto_rsp = ESP_GATT_AUTO_RSP;
   m_semaphoreCreateEvt.take("executeCreate");
-  esp_err_t errRc = ::esp_ble_gatts_add_char_descr(
-    pCharacteristic->getService()->getHandle(),
-    getUUID().getNative(),
-    (esp_gatt_perm_t)m_permissions,
-    &m_value,
-    &control);
+  esp_err_t errRc =
+    ::esp_ble_gatts_add_char_descr(pCharacteristic->getService()->getHandle(), getUUID().getNative(), (esp_gatt_perm_t)m_permissions, &m_value, &control);
   if (errRc != ESP_OK) {
     log_e("<< esp_ble_gatts_add_char_descr: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
     return;
@@ -85,7 +76,6 @@ void BLEDescriptor::executeCreate(BLECharacteristic* pCharacteristic) {
   log_v("<< executeCreate");
 }  // executeCreate
 
-
 /**
  * @brief Get the BLE handle for this descriptor.
  * @return The handle for this descriptor.
@@ -93,7 +83,6 @@ void BLEDescriptor::executeCreate(BLECharacteristic* pCharacteristic) {
 uint16_t BLEDescriptor::getHandle() {
   return m_handle;
 }  // getHandle
-
 
 /**
  * @brief Get the length of the value of this descriptor.
@@ -103,7 +92,6 @@ size_t BLEDescriptor::getLength() {
   return m_value.attr_len;
 }  // getLength
 
-
 /**
  * @brief Get the UUID of the descriptor.
  */
@@ -111,16 +99,13 @@ BLEUUID BLEDescriptor::getUUID() {
   return m_bleUUID;
 }  // getUUID
 
-
-
 /**
  * @brief Get the value of this descriptor.
  * @return A pointer to the value of this descriptor.
  */
-uint8_t* BLEDescriptor::getValue() {
+uint8_t *BLEDescriptor::getValue() {
   return m_value.attr_value;
 }  // getValue
-
 
 /**
  * @brief Handle GATT server events for the descripttor.
@@ -128,10 +113,7 @@ uint8_t* BLEDescriptor::getValue() {
  * @param [in] gatts_if
  * @param [in] param
  */
-void BLEDescriptor::handleGATTServerEvent(
-  esp_gatts_cb_event_t event,
-  esp_gatt_if_t gatts_if,
-  esp_ble_gatts_cb_param_t* param) {
+void BLEDescriptor::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
   switch (event) {
     // ESP_GATTS_ADD_CHAR_DESCR_EVT
     //
@@ -141,13 +123,15 @@ void BLEDescriptor::handleGATTServerEvent(
     // - uint16_t          service_handle
     // - esp_bt_uuid_t     char_uuid
     case ESP_GATTS_ADD_CHAR_DESCR_EVT:
-      {
-        if (m_pCharacteristic != nullptr && m_bleUUID.equals(BLEUUID(param->add_char_descr.descr_uuid)) && m_pCharacteristic->getService()->getHandle() == param->add_char_descr.service_handle && m_pCharacteristic == m_pCharacteristic->getService()->getLastCreatedCharacteristic()) {
-          setHandle(param->add_char_descr.attr_handle);
-          m_semaphoreCreateEvt.give();
-        }
-        break;
-      }  // ESP_GATTS_ADD_CHAR_DESCR_EVT
+    {
+      if (m_pCharacteristic != nullptr && m_bleUUID.equals(BLEUUID(param->add_char_descr.descr_uuid))
+          && m_pCharacteristic->getService()->getHandle() == param->add_char_descr.service_handle
+          && m_pCharacteristic == m_pCharacteristic->getService()->getLastCreatedCharacteristic()) {
+        setHandle(param->add_char_descr.attr_handle);
+        m_semaphoreCreateEvt.give();
+      }
+      break;
+    }  // ESP_GATTS_ADD_CHAR_DESCR_EVT
 
     // ESP_GATTS_WRITE_EVT - A request to write the value of a descriptor has arrived.
     //
@@ -162,17 +146,17 @@ void BLEDescriptor::handleGATTServerEvent(
     // - uint16_t len
     // - uint8_t *value
     case ESP_GATTS_WRITE_EVT:
-      {
-        if (param->write.handle == m_handle) {
-          setValue(param->write.value, param->write.len);  // Set the value of the descriptor.
+    {
+      if (param->write.handle == m_handle) {
+        setValue(param->write.value, param->write.len);  // Set the value of the descriptor.
 
-          if (m_pCallback != nullptr) {  // We have completed the write, if there is a user supplied callback handler, invoke it now.
-            m_pCallback->onWrite(this);  // Invoke the onWrite callback handler.
-          }
-        }  // End of ... this is our handle.
+        if (m_pCallback != nullptr) {  // We have completed the write, if there is a user supplied callback handler, invoke it now.
+          m_pCallback->onWrite(this);  // Invoke the onWrite callback handler.
+        }
+      }  // End of ... this is our handle.
 
-        break;
-      }  // ESP_GATTS_WRITE_EVT
+      break;
+    }  // ESP_GATTS_WRITE_EVT
 
     // ESP_GATTS_READ_EVT - A request to read the value of a descriptor has arrived.
     //
@@ -186,33 +170,30 @@ void BLEDescriptor::handleGATTServerEvent(
     // - bool need_rsp
     //
     case ESP_GATTS_READ_EVT:
-      {
-        if (param->read.handle == m_handle) {  // If this event is for this descriptor ... process it
+    {
+      if (param->read.handle == m_handle) {  // If this event is for this descriptor ... process it
 
-          if (m_pCallback != nullptr) {  // If we have a user supplied callback, invoke it now.
-            m_pCallback->onRead(this);   // Invoke the onRead callback method in the callback handler.
-          }
+        if (m_pCallback != nullptr) {  // If we have a user supplied callback, invoke it now.
+          m_pCallback->onRead(this);   // Invoke the onRead callback method in the callback handler.
+        }
 
-        }  // End of this is our handle
-        break;
-      }  // ESP_GATTS_READ_EVT
-
-    default:
+      }  // End of this is our handle
       break;
+    }  // ESP_GATTS_READ_EVT
+
+    default: break;
   }  // switch event
 }  // handleGATTServerEvent
-
 
 /**
  * @brief Set the callback handlers for this descriptor.
  * @param [in] pCallbacks An instance of a callback structure used to define any callbacks for the descriptor.
  */
-void BLEDescriptor::setCallbacks(BLEDescriptorCallbacks* pCallback) {
+void BLEDescriptor::setCallbacks(BLEDescriptorCallbacks *pCallback) {
   log_v(">> setCallbacks: 0x%x", (uint32_t)pCallback);
   m_pCallback = pCallback;
   log_v("<< setCallbacks");
 }  // setCallbacks
-
 
 /**
  * @brief Set the handle of this descriptor.
@@ -226,13 +207,12 @@ void BLEDescriptor::setHandle(uint16_t handle) {
   log_v("<< setHandle()");
 }  // setHandle
 
-
 /**
  * @brief Set the value of the descriptor.
  * @param [in] data The data to set for the descriptor.
  * @param [in] length The length of the data in bytes.
  */
-void BLEDescriptor::setValue(uint8_t* data, size_t length) {
+void BLEDescriptor::setValue(uint8_t *data, size_t length) {
   if (length > ESP_GATT_MAX_ATTR_LEN) {
     log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
     return;
@@ -240,18 +220,17 @@ void BLEDescriptor::setValue(uint8_t* data, size_t length) {
   m_value.attr_len = length;
   memcpy(m_value.attr_value, data, length);
   if (m_handle != NULL_HANDLE) {
-    esp_ble_gatts_set_attr_value(m_handle, length, (const uint8_t*)data);
+    esp_ble_gatts_set_attr_value(m_handle, length, (const uint8_t *)data);
     log_d("Set the value in the GATTS database using handle 0x%x", m_handle);
   }
 }  // setValue
-
 
 /**
  * @brief Set the value of the descriptor.
  * @param [in] value The value of the descriptor in string form.
  */
 void BLEDescriptor::setValue(String value) {
-  setValue((uint8_t*)value.c_str(), value.length());
+  setValue((uint8_t *)value.c_str(), value.length());
 }  // setValue
 
 void BLEDescriptor::setAccessPermissions(esp_gatt_perm_t perm) {
@@ -269,28 +248,25 @@ String BLEDescriptor::toString() {
   return res;
 }  // toString
 
-
 BLEDescriptorCallbacks::~BLEDescriptorCallbacks() {}
 
 /**
  * @brief Callback function to support a read request.
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
-void BLEDescriptorCallbacks::onRead(BLEDescriptor* pDescriptor) {
+void BLEDescriptorCallbacks::onRead(BLEDescriptor *pDescriptor) {
   log_d("BLEDescriptorCallbacks", ">> onRead: default");
   log_d("BLEDescriptorCallbacks", "<< onRead");
 }  // onRead
-
 
 /**
  * @brief Callback function to support a write request.
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
-void BLEDescriptorCallbacks::onWrite(BLEDescriptor* pDescriptor) {
+void BLEDescriptorCallbacks::onWrite(BLEDescriptor *pDescriptor) {
   log_d("BLEDescriptorCallbacks", ">> onWrite: default");
   log_d("BLEDescriptorCallbacks", "<< onWrite");
 }  // onWrite
-
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

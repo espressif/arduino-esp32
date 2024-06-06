@@ -25,8 +25,8 @@ WiFiMulti wifiMulti;
 
 //how many clients should be able to telnet to this ESP32
 #define MAX_SRV_CLIENTS 1
-const char* ssid = "**********";
-const char* password = "**********";
+const char *ssid = "**********";
+const char *password = "**********";
 
 NetworkServer server(23);
 NetworkClient serverClients[MAX_SRV_CLIENTS];
@@ -76,9 +76,13 @@ void loop() {
       for (i = 0; i < MAX_SRV_CLIENTS; i++) {
         //find free/disconnected spot
         if (!serverClients[i] || !serverClients[i].connected()) {
-          if (serverClients[i]) serverClients[i].stop();
+          if (serverClients[i]) {
+            serverClients[i].stop();
+          }
           serverClients[i] = server.accept();
-          if (!serverClients[i]) Serial.println("available broken");
+          if (!serverClients[i]) {
+            Serial.println("available broken");
+          }
           Serial.print("New client: ");
           Serial.print(i);
           Serial.print(' ');
@@ -96,7 +100,9 @@ void loop() {
       if (serverClients[i] && serverClients[i].connected()) {
         if (serverClients[i].available()) {
           //get data from the telnet client and push it to the UART
-          while (serverClients[i].available()) Serial1.write(serverClients[i].read());
+          while (serverClients[i].available()) {
+            Serial1.write(serverClients[i].read());
+          }
         }
       } else {
         if (serverClients[i]) {
@@ -120,7 +126,9 @@ void loop() {
   } else {
     Serial.println("WiFi not connected!");
     for (i = 0; i < MAX_SRV_CLIENTS; i++) {
-      if (serverClients[i]) serverClients[i].stop();
+      if (serverClients[i]) {
+        serverClients[i].stop();
+      }
     }
     delay(1000);
   }

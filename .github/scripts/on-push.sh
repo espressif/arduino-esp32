@@ -9,7 +9,9 @@ function build(){
     local fqbn=$2
     local chunk_index=$3
     local chunks_cnt=$4
-    shift; shift; shift; shift;
+    local build_log=$5
+    local sketches_file=$6
+    shift; shift; shift; shift; shift; shift;
     local sketches=$*
 
     local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
@@ -22,6 +24,12 @@ function build(){
     if [ "$OS_IS_LINUX" == "1" ]; then
         args+=" -p $ARDUINO_ESP32_PATH/libraries"
         args+=" -i $chunk_index -m $chunks_cnt"
+        if [ -n "$sketches_file" ]; then
+          args+=" -f $sketches_file"
+        fi
+        if [ $build_log -eq 1 ]; then
+            args+=" -l $build_log"
+        fi
         ${BUILD_SKETCHES} ${args}
     else
         for sketch in ${sketches}; do
@@ -45,6 +53,8 @@ fi
 
 CHUNK_INDEX=$1
 CHUNKS_CNT=$2
+BUILD_LOG=$3
+SKETCHES_FILE=$4
 BUILD_PIO=0
 if [ "$#" -lt 2 ] || [ "$CHUNKS_CNT" -le 0 ]; then
     CHUNK_INDEX=0
@@ -55,12 +65,15 @@ elif [ "$CHUNK_INDEX" -eq "$CHUNKS_CNT" ]; then
     BUILD_PIO=1
 fi
 
+if [ -z "$BUILD_LOG" ] || [ "$BUILD_LOG" -le 0 ]; then
+    BUILD_LOG=0
+fi
+
 #echo "Updating submodules ..."
 #git -C "$GITHUB_WORKSPACE" submodule update --init --recursive > /dev/null 2>&1
 
 SCRIPTS_DIR="./.github/scripts"
 if [ "$BUILD_PIO" -eq 0 ]; then
-    #source ${SCRIPTS_DIR}/install-arduino-ide.sh
     source ${SCRIPTS_DIR}/install-arduino-cli.sh
     source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
@@ -77,13 +90,28 @@ if [ "$BUILD_PIO" -eq 0 ]; then
       $ARDUINO_ESP32_PATH/libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino\
       $ARDUINO_ESP32_PATH/libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino\
     "
+    #create sizes_file
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$CHUNK_INDEX.json"
 
-    build "esp32s3" $FQBN_ESP32S3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
-    build "esp32s2" $FQBN_ESP32S2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
-    build "esp32c3" $FQBN_ESP32C3 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
-    build "esp32c6" $FQBN_ESP32C6 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
-    build "esp32h2" $FQBN_ESP32H2 $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
-    build "esp32"   $FQBN_ESP32   $CHUNK_INDEX $CHUNKS_CNT $SKETCHES_ESP32
+    if [ "$BUILD_LOG" -eq 1 ]; then
+        #create sizes_file and echo start of JSON array with "boards" key
+        echo "{\"boards\": [" > $sizes_file
+    fi
+
+    #build sketches for different targets
+    build "esp32s3" $FQBN_ESP32S3 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32s2" $FQBN_ESP32S2 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32c3" $FQBN_ESP32C3 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32c6" $FQBN_ESP32C6 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32h2" $FQBN_ESP32H2 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32"   $FQBN_ESP32   "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+
+    if [ "$BUILD_LOG" -eq 1 ]; then
+        #remove last comma from the last JSON object
+        sed -i '$ s/.$//' "$sizes_file"
+        #echo end of JSON array
+        echo "]}" >> $sizes_file
+    fi
 else
     source ${SCRIPTS_DIR}/install-platformio-esp32.sh
     # PlatformIO ESP32 Test

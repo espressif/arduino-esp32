@@ -71,9 +71,10 @@ extern "C" {
 // REG_SPI_BASE is not defined for S3/C3 ??
 
 #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
-#ifndef REG_SPI_BASE
-#define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i)*0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
+#ifdef REG_SPI_BASE
+#undef REG_SPI_BASE
 #endif  // REG_SPI_BASE
+#define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
 #endif  // TARGET
 
 /**
@@ -118,7 +119,6 @@ unsigned long long operator"" _MB(unsigned long long x) {
 unsigned long long operator"" _GB(unsigned long long x) {
   return x * 1024 * 1024 * 1024;
 }
-
 
 EspClass ESP;
 
@@ -177,7 +177,9 @@ uint32_t EspClass::getMaxAllocPsram(void) {
 static uint32_t sketchSize(sketchSize_t response) {
   esp_image_metadata_t data;
   const esp_partition_t *running = esp_ota_get_running_partition();
-  if (!running) return 0;
+  if (!running) {
+    return 0;
+  }
   const esp_partition_pos_t running_pos = {
     .offset = running->address,
     .size = running->size,
@@ -260,39 +262,31 @@ const char *EspClass::getChipModel(void) {
   uint32_t pkg_ver = chip_ver & 0x7;
   switch (pkg_ver) {
     case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6:
-      if (getChipRevision() == 3)
+      if (getChipRevision() == 3) {
         return "ESP32-D0WDQ6-V3";
-      else
+      } else {
         return "ESP32-D0WDQ6";
+      }
     case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5:
-      if (getChipRevision() == 3)
+      if (getChipRevision() == 3) {
         return "ESP32-D0WD-V3";
-      else
+      } else {
         return "ESP32-D0WD";
-    case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:
-      return "ESP32-D2WD";
-    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2:
-      return "ESP32-PICO-D2";
-    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4:
-      return "ESP32-PICO-D4";
-    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302:
-      return "ESP32-PICO-V3-02";
-    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3:
-      return "ESP32-D0WDR2-V3";
-    default:
-      return "Unknown";
+      }
+    case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:   return "ESP32-D2WD";
+    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2:   return "ESP32-PICO-D2";
+    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4:   return "ESP32-PICO-D4";
+    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302: return "ESP32-PICO-V3-02";
+    case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3: return "ESP32-D0WDR2-V3";
+    default:                                  return "Unknown";
   }
 #elif CONFIG_IDF_TARGET_ESP32S2
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
   switch (pkg_ver) {
-    case 0:
-      return "ESP32-S2";
-    case 1:
-      return "ESP32-S2FH16";
-    case 2:
-      return "ESP32-S2FH32";
-    default:
-      return "ESP32-S2 (Unknown)";
+    case 0:  return "ESP32-S2";
+    case 1:  return "ESP32-S2FH16";
+    case 2:  return "ESP32-S2FH32";
+    default: return "ESP32-S2 (Unknown)";
   }
 #else
   esp_chip_info_t chip_info;
@@ -303,7 +297,7 @@ const char *EspClass::getChipModel(void) {
     case CHIP_ESP32C2: return "ESP32-C2";
     case CHIP_ESP32C6: return "ESP32-C6";
     case CHIP_ESP32H2: return "ESP32-H2";
-    default: return "UNKNOWN";
+    default:           return "UNKNOWN";
   }
 #endif
 }
@@ -414,7 +408,6 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
       return 0;
   }
 
-
 #elif CONFIG_IDF_TARGET_ESP32C6
   /*
    FLASH_FREQUENCY = {
@@ -449,7 +442,6 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
       return 0;
   }
 
-
 #else
   /*
     FLASH_FREQUENCY = {
@@ -469,7 +461,6 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
   }
 #endif
 }
-
 
 FlashMode_t EspClass::magicFlashChipMode(uint8_t byte) {
   FlashMode_t mode = (FlashMode_t)byte;

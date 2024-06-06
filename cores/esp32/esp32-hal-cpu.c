@@ -55,14 +55,13 @@
 #endif
 
 typedef struct apb_change_cb_s {
-  struct apb_change_cb_s* prev;
-  struct apb_change_cb_s* next;
-  void* arg;
+  struct apb_change_cb_s *prev;
+  struct apb_change_cb_s *next;
+  void *arg;
   apb_change_cb_t cb;
 } apb_change_t;
 
-
-static apb_change_t* apb_change_callbacks = NULL;
+static apb_change_t *apb_change_callbacks = NULL;
 static SemaphoreHandle_t apb_change_lock = NULL;
 
 static void initApbChangeCallback() {
@@ -79,15 +78,17 @@ static void initApbChangeCallback() {
 static void triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb) {
   initApbChangeCallback();
   xSemaphoreTake(apb_change_lock, portMAX_DELAY);
-  apb_change_t* r = apb_change_callbacks;
+  apb_change_t *r = apb_change_callbacks;
   if (r != NULL) {
-    if (ev_type == APB_BEFORE_CHANGE)
+    if (ev_type == APB_BEFORE_CHANGE) {
       while (r != NULL) {
         r->cb(r->arg, ev_type, old_apb, new_apb);
         r = r->next;
       }
-    else {                                  // run backwards through chain
-      while (r->next != NULL) r = r->next;  // find first added
+    } else {  // run backwards through chain
+      while (r->next != NULL) {
+        r = r->next;  // find first added
+      }
       while (r != NULL) {
         r->cb(r->arg, ev_type, old_apb, new_apb);
         r = r->prev;
@@ -97,9 +98,9 @@ static void triggerApbChangeCallback(apb_change_ev_t ev_type, uint32_t old_apb, 
   xSemaphoreGive(apb_change_lock);
 }
 
-bool addApbChangeCallback(void* arg, apb_change_cb_t cb) {
+bool addApbChangeCallback(void *arg, apb_change_cb_t cb) {
   initApbChangeCallback();
-  apb_change_t* c = (apb_change_t*)malloc(sizeof(apb_change_t));
+  apb_change_t *c = (apb_change_t *)malloc(sizeof(apb_change_t));
   if (!c) {
     log_e("Callback Object Malloc Failed");
     return false;
@@ -112,9 +113,11 @@ bool addApbChangeCallback(void* arg, apb_change_cb_t cb) {
   if (apb_change_callbacks == NULL) {
     apb_change_callbacks = c;
   } else {
-    apb_change_t* r = apb_change_callbacks;
+    apb_change_t *r = apb_change_callbacks;
     // look for duplicate callbacks
-    while ((r != NULL) && !((r->cb == cb) && (r->arg == arg))) r = r->next;
+    while ((r != NULL) && !((r->cb == cb) && (r->arg == arg))) {
+      r = r->next;
+    }
     if (r) {
       log_e("duplicate func=%8p arg=%8p", c->cb, c->arg);
       free(c);
@@ -130,30 +133,35 @@ bool addApbChangeCallback(void* arg, apb_change_cb_t cb) {
   return true;
 }
 
-bool removeApbChangeCallback(void* arg, apb_change_cb_t cb) {
+bool removeApbChangeCallback(void *arg, apb_change_cb_t cb) {
   initApbChangeCallback();
   xSemaphoreTake(apb_change_lock, portMAX_DELAY);
-  apb_change_t* r = apb_change_callbacks;
+  apb_change_t *r = apb_change_callbacks;
   // look for matching callback
-  while ((r != NULL) && !((r->cb == cb) && (r->arg == arg))) r = r->next;
+  while ((r != NULL) && !((r->cb == cb) && (r->arg == arg))) {
+    r = r->next;
+  }
   if (r == NULL) {
     log_e("not found func=%8p arg=%8p", cb, arg);
     xSemaphoreGive(apb_change_lock);
     return false;
   } else {
     // patch links
-    if (r->prev) r->prev->next = r->next;
-    else {  // this is first link
+    if (r->prev) {
+      r->prev->next = r->next;
+    } else {  // this is first link
       apb_change_callbacks = r->next;
     }
-    if (r->next) r->next->prev = r->prev;
+    if (r->next) {
+      r->next->prev = r->prev;
+    }
     free(r);
   }
   xSemaphoreGive(apb_change_lock);
   return true;
 }
 
-static uint32_t calculateApb(rtc_cpu_freq_config_t* conf) {
+static uint32_t calculateApb(rtc_cpu_freq_config_t *conf) {
 #if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
   return APB_CLK_FREQ;
 #else
@@ -254,9 +262,17 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
     triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
   }
 #ifdef SOC_CLK_APLL_SUPPORTED
-  log_d("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL) ? "PLL" : ((conf.source == RTC_CPU_FREQ_SRC_APLL) ? "APLL" : ((conf.source == RTC_CPU_FREQ_SRC_XTAL) ? "XTAL" : "8M")), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+  log_d(
+    "%s: %u / %u = %u Mhz, APB: %u Hz",
+    (conf.source == RTC_CPU_FREQ_SRC_PLL) ? "PLL"
+                                          : ((conf.source == RTC_CPU_FREQ_SRC_APLL) ? "APLL" : ((conf.source == RTC_CPU_FREQ_SRC_XTAL) ? "XTAL" : "8M")),
+    conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
+  );
 #else
-  log_d("%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL) ? "PLL" : ((conf.source == RTC_CPU_FREQ_SRC_XTAL) ? "XTAL" : "17.5M"), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+  log_d(
+    "%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL) ? "PLL" : ((conf.source == RTC_CPU_FREQ_SRC_XTAL) ? "XTAL" : "17.5M"),
+    conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
+  );
 #endif
   return true;
 }

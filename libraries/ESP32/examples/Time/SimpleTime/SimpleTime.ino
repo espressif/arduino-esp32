@@ -2,15 +2,15 @@
 #include "time.h"
 #include "esp_sntp.h"
 
-const char* ssid = "YOUR_SSID";
-const char* password = "YOUR_PASS";
+const char *ssid = "YOUR_SSID";
+const char *password = "YOUR_PASS";
 
-const char* ntpServer1 = "pool.ntp.org";
-const char* ntpServer2 = "time.nist.gov";
+const char *ntpServer1 = "pool.ntp.org";
+const char *ntpServer2 = "time.nist.gov";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
-const char* time_zone = "CET-1CEST,M3.5.0,M10.5.0/3";  // TimeZone rule for Europe/Rome including daylight adjustment rules (optional)
+const char *time_zone = "CET-1CEST,M3.5.0,M10.5.0/3";  // TimeZone rule for Europe/Rome including daylight adjustment rules (optional)
 
 void printLocalTime() {
   struct tm timeinfo;
@@ -22,7 +22,7 @@ void printLocalTime() {
 }
 
 // Callback function (gets called when time adjusts via NTP)
-void timeavailable(struct timeval* t) {
+void timeavailable(struct timeval *t) {
   Serial.println("Got time adjustment from NTP!");
   printLocalTime();
 }

@@ -33,8 +33,8 @@ BluetoothSerial SerialBT;
 #ifdef USE_NAME
 String slaveName = "ESP32-BT-Slave";  // Change this to reflect the real name of your slave BT device
 #else
-String MACadd = "AA:BB:CC:11:22:33";                          // This only for printing
-uint8_t address[6] = { 0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33 };  // Change this to reflect real MAC address of your slave BT device
+String MACadd = "AA:BB:CC:11:22:33";                        // This only for printing
+uint8_t address[6] = {0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33};  // Change this to reflect real MAC address of your slave BT device
 #endif
 
 String myName = "ESP32-BT-Master";

@@ -10,12 +10,12 @@
 
 #ifndef STASSID
 #define STASSID "your-ssid"
-#define STAPSK "your-password"
+#define STAPSK  "your-password"
 #endif
 
-const char* host = "esp32-webupdate";
-const char* ssid = STASSID;
-const char* password = STAPSK;
+const char *host = "esp32-webupdate";
+const char *ssid = STASSID;
+const char *password = STAPSK;
 
 WebServer httpServer(80);
 HTTPUpdateServer httpUpdater;
@@ -36,7 +36,6 @@ void setup(void) {
   if (MDNS.begin(host)) {
     Serial.println("mDNS responder started");
   }
-
 
   httpUpdater.setup(&httpServer);
   httpServer.begin();

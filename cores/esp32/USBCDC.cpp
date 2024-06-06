@@ -18,7 +18,6 @@
 #include "USB.h"
 #if CONFIG_TINYUSB_CDC_ENABLED
 
-
 #include "esp32-hal-tinyusb.h"
 #include "rom/ets_sys.h"
 
@@ -27,13 +26,12 @@ esp_err_t arduino_usb_event_post(esp_event_base_t event_base, int32_t event_id, 
 esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg);
 
 #define MAX_USB_CDC_DEVICES 2
-USBCDC *devices[MAX_USB_CDC_DEVICES] = { NULL, NULL };
+USBCDC *devices[MAX_USB_CDC_DEVICES] = {NULL, NULL};
 
 static uint16_t load_cdc_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB CDC");
-  uint8_t descriptor[TUD_CDC_DESC_LEN] = {
-    // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-    TUD_CDC_DESCRIPTOR(*itf, str_index, 0x85, 64, 0x03, 0x84, 64)
+  uint8_t descriptor[TUD_CDC_DESC_LEN] = {// Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+                                          TUD_CDC_DESCRIPTOR(*itf, str_index, 0x85, 64, 0x03, 0x84, 64)
   };
   *itf += 2;
   memcpy(dst, descriptor, TUD_CDC_DESC_LEN);
@@ -84,7 +82,8 @@ static void usb_unplugged_cb(void *arg, esp_event_base_t event_base, int32_t eve
 }
 
 USBCDC::USBCDC(uint8_t itfn)
-  : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false), rts(false), connected(false), reboot_enable(true), rx_queue(NULL), tx_lock(NULL), tx_timeout_ms(250) {
+  : itf(itfn), bit_rate(0), stop_bits(0), parity(0), data_bits(0), dtr(false), rts(false), connected(false), reboot_enable(true), rx_queue(NULL), tx_lock(NULL),
+    tx_timeout_ms(250) {
   tinyusb_enable_interface(USB_INTERFACE_CDC, TUD_CDC_DESC_LEN, load_cdc_descriptor);
   if (itf < MAX_USB_CDC_DEVICES) {
     arduino_usb_event_handler_register_with(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, usb_unplugged_cb, this);
@@ -147,7 +146,9 @@ void USBCDC::begin(unsigned long baud) {
     tx_lock = xSemaphoreCreateMutex();
   }
   // if rx_queue was set before begin(), keep it
-  if (!rx_queue) setRxBufferSize(256);  //default if not preset
+  if (!rx_queue) {
+    setRxBufferSize(256);  //default if not preset
+  }
   devices[itf] = this;
 }
 
@@ -175,10 +176,12 @@ void USBCDC::_onUnplugged(void) {
   }
 }
 
-enum { CDC_LINE_IDLE,
-       CDC_LINE_1,
-       CDC_LINE_2,
-       CDC_LINE_3 };
+enum {
+  CDC_LINE_IDLE,
+  CDC_LINE_1,
+  CDC_LINE_2,
+  CDC_LINE_3
+};
 void USBCDC::_onLineState(bool _dtr, bool _rts) {
   static uint8_t lineState = CDC_LINE_IDLE;
 
@@ -414,9 +417,9 @@ uint32_t USBCDC::baudRate() {
 void USBCDC::setDebugOutput(bool en) {
   if (en) {
     uartSetDebug(NULL);
-    ets_install_putc1((void (*)(char)) & cdc0_write_char);
+    ets_install_putc2((void (*)(char)) & cdc0_write_char);
   } else {
-    ets_install_putc1(NULL);
+    ets_install_putc2(NULL);
   }
 }
 

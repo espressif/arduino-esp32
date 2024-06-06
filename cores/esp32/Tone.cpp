@@ -20,7 +20,7 @@ typedef struct {
   unsigned long duration;
 } tone_msg_t;
 
-static void tone_task(void*) {
+static void tone_task(void *) {
   tone_msg_t tone_msg;
   while (1) {
     xQueueReceive(_tone_queue, &tone_msg, portMAX_DELAY);
@@ -51,8 +51,8 @@ static void tone_task(void*) {
         break;
 
       default:;  // do nothing
-    }            // switch
-  }              // infinite loop
+    }  // switch
+  }  // infinite loop
 }
 
 static int tone_init() {

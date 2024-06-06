@@ -4,19 +4,18 @@
 #include <stdint.h>
 
 // Default USB Settings
-#define USB_VID 0x303a
-#define USB_PID 0x80C5
+#define USB_VID          0x303a
+#define USB_PID          0x80C5
 #define USB_MANUFACTURER "WEMOS.CC"
-#define USB_PRODUCT "LOLIN-S2-PICO"
-#define USB_SERIAL "0"
-
+#define USB_PRODUCT      "LOLIN-S2-PICO"
+#define USB_SERIAL       "0"
 
 // Default USB FirmwareMSC Settings
-#define USB_FW_MSC_VENDOR_ID "ESP32-S2"       //max 8 chars
-#define USB_FW_MSC_PRODUCT_ID "Firmware MSC"  //max 16 chars
-#define USB_FW_MSC_PRODUCT_REVISION "1.23"    //max 4 chars
-#define USB_FW_MSC_VOLUME_NAME "S2-Firmware"  //max 11 chars
-#define USB_FW_MSC_SERIAL_NUMBER 0x00000000
+#define USB_FW_MSC_VENDOR_ID        "ESP32-S2"      //max 8 chars
+#define USB_FW_MSC_PRODUCT_ID       "Firmware MSC"  //max 16 chars
+#define USB_FW_MSC_PRODUCT_REVISION "1.23"          //max 4 chars
+#define USB_FW_MSC_VOLUME_NAME      "S2-Firmware"   //max 11 chars
+#define USB_FW_MSC_SERIAL_NUMBER    0x00000000
 
 static const uint8_t LED_BUILTIN = 10;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

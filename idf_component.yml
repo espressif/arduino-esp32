@@ -42,12 +42,13 @@ files:
     - "platform.txt"
     - "programmers.txt"
 dependencies:
-  idf: ">=5.1"
+  idf: ">=5.1,<5.2"
   # mdns 1.2.1 is necessary to build H2 with no WiFi
-  mdns: "^1.2.3"
-  chmorgan/esp-libhelix-mp3:
-    version: "1.0.3"
+  espressif/mdns:
+    version: "^1.2.3"
     require: public
+  espressif/esp_modem:
+    version: "^1.1.0"
   espressif/esp-zboss-lib:
     version: "^1.0.1"
     rules:
@@ -56,7 +57,7 @@ dependencies:
     version: "^1.0.1"
     rules:
       - if: "target != esp32c2"
-  esp-dsp:
+  espressif/esp-dsp:
     version: "^1.3.4"
     rules:
       - if: "target != esp32c2"
@@ -76,10 +77,14 @@ dependencies:
     version: "^0.1.0~1"
     rules:
       - if: "target != esp32c2"
-  joltwallet/littlefs: "^1.10.2"
   espressif/esp-sr:
     version: "^1.4.2"
     rules:
       - if: "target in [esp32s3]"
+  joltwallet/littlefs:
+    version: "^1.10.2"
+  chmorgan/esp-libhelix-mp3:
+    version: "1.0.3"
+    require: public
 examples:
   - path: ./idf_component_examples/Hello_world

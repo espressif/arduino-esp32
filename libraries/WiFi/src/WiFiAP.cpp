@@ -47,7 +47,10 @@
  * @param ssid_hidden       Network cloaking (0 = broadcast SSID, 1 = hide SSID)
  * @param max_connection    Max simultaneous connected clients, 1 - 4.
 */
-bool WiFiAPClass::softAP(const char* ssid, const char* passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder, wifi_auth_mode_t auth_mode, wifi_cipher_type_t cipher) {
+bool WiFiAPClass::softAP(
+  const char *ssid, const char *passphrase, int channel, int ssid_hidden, int max_connection, bool ftm_responder, wifi_auth_mode_t auth_mode,
+  wifi_cipher_type_t cipher
+) {
   return AP.begin() && AP.create(ssid, passphrase, channel, ssid_hidden, max_connection, ftm_responder, auth_mode, cipher);
 }
 
@@ -145,7 +148,7 @@ uint8_t WiFiAPClass::softAPSubnetCIDR() {
  * @param mac   pointer to uint8_t array with length WL_MAC_ADDR_LENGTH
  * @return      pointer to uint8_t*
  */
-uint8_t* WiFiAPClass::softAPmacAddress(uint8_t* mac) {
+uint8_t *WiFiAPClass::softAPmacAddress(uint8_t *mac) {
   return AP.macAddress(mac);
 }
 
@@ -161,7 +164,7 @@ String WiFiAPClass::softAPmacAddress(void) {
  * Get the softAP interface Host name.
  * @return char array hostname
  */
-const char* WiFiAPClass::softAPgetHostname() {
+const char *WiFiAPClass::softAPgetHostname() {
   return AP.getHostname();
 }
 
@@ -170,7 +173,7 @@ const char* WiFiAPClass::softAPgetHostname() {
  * @param  hostname  pointer to const string
  * @return true on   success
  */
-bool WiFiAPClass::softAPsetHostname(const char* hostname) {
+bool WiFiAPClass::softAPsetHostname(const char *hostname) {
   return AP.setHostname(hostname);
 }
 

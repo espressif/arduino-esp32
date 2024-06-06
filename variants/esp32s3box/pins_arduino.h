@@ -35,18 +35,18 @@ static const uint8_t T14 = 14;
 #define I2C_SDA 8
 #define I2C_SCL 18
 
-#define ES7210_ADDR 0x40     //MIC ADC
-#define ES8311_ADDR 0x18     //I2S DAC
+#define ES7210_ADDR    0x40  //MIC ADC
+#define ES8311_ADDR    0x18  //I2S DAC
 #define ICM42607P_ADDR 0x68  //IMU
-#define TT21100_ADDR 0x24    //Touch Panel
+#define TT21100_ADDR   0x24  //Touch Panel
 
-#define TFT_DC 4
-#define TFT_CS 5
+#define TFT_DC   4
+#define TFT_CS   5
 #define TFT_MOSI 6
-#define TFT_CLK 7
+#define TFT_CLK  7
 #define TFT_MISO 0
-#define TFT_BL 45
-#define TFT_RST 48
+#define TFT_BL   45
+#define TFT_RST  48
 
 #define I2S_LRCK 47
 #define I2S_MCLK 2
@@ -54,8 +54,8 @@ static const uint8_t T14 = 14;
 #define I2S_SDIN 16
 #define I2S_DOUT 15
 
-#define PA_PIN 46   //Audio Amp Power
-#define MUTE_PIN 1  //MUTE Button
-#define TS_IRQ 3    //Touch Screen IRQ
+#define PA_PIN   46  //Audio Amp Power
+#define MUTE_PIN 1   //MUTE Button
+#define TS_IRQ   3   //Touch Screen IRQ
 
 #endif /* Pins_Arduino_h */

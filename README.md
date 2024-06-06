@@ -1,6 +1,6 @@
 # Arduino core for the ESP32, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6 and ESP32-H2
 
-![Build Status](https://github.com/espressif/arduino-esp32/workflows/ESP32%20Arduino%20CI/badge.svg) [![External Libraries Test](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=master&event=schedule)](https://github.com/espressif/arduino-esp32/blob/gh-pages/LIBRARIES_TEST.md) [![Hardware Tests](https://github.com/espressif/arduino-esp32/actions/workflows/hil.yml/badge.svg?branch=master&event=schedule)](https://github.com/espressif/arduino-esp32/actions/workflows/hil.yml?query=event%3Aschedule)
+![Build Status](https://github.com/espressif/arduino-esp32/workflows/ESP32%20Arduino%20CI/badge.svg) [![External Libraries Test](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=master&event=schedule)](https://github.com/espressif/arduino-esp32/blob/gh-pages/LIBRARIES_TEST.md) [![Hardware Tests](https://github.com/espressif/arduino-esp32/actions/workflows/tests.yml/badge.svg?branch=master&event=schedule)](https://github.com/espressif/arduino-esp32/actions/workflows/tests.yml?query=event%3Aschedule)
 
 ### Need help or have a question? Join the chat at [Gitter](https://gitter.im/espressif/arduino-esp32) or [open a new Discussion](https://github.com/espressif/arduino-esp32/discussions)
 
@@ -57,8 +57,12 @@ Here are the ESP32 series supported by the Arduino-ESP32 project:
 | ESP32-S2 |     Yes    |       Yes       | [ESP32-S2](https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf) |
 | ESP32-C3 |     Yes    |       Yes       | [ESP32-C3](https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf) |
 | ESP32-S3 |     Yes    |       Yes       | [ESP32-S3](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf) |
-| ESP32-C6 |     No     |       Yes       | [ESP32-C6](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf) |
-| ESP32-H2 |     No     |       Yes       | [ESP32-H2](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf) |
+| ESP32-C6 |     Yes    |       Yes       | [ESP32-C6](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf) |
+| ESP32-H2 |     Yes    |       Yes       | [ESP32-H2](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf) |
+
+> [!NOTE]
+> ESP32-C2 is also supported by Arduino-ESP32 but requires rebuilding the static libraries. This is not trivial and requires a good understanding of the ESP-IDF
+> build system. For more information, see the [Lib Builder documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/lib_builder.html).
 
 For more details visit the [supported chips](https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html#supported-soc-s) documentation page.
 

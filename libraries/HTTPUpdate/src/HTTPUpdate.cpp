@@ -35,12 +35,9 @@
 // To do extern "C" uint32_t _SPIFFS_start;
 // To do extern "C" uint32_t _SPIFFS_end;
 
-HTTPUpdate::HTTPUpdate(void)
-  : HTTPUpdate(8000) {
-}
+HTTPUpdate::HTTPUpdate(void) : HTTPUpdate(8000) {}
 
-HTTPUpdate::HTTPUpdate(int httpClientTimeout)
-  : _httpClientTimeout(httpClientTimeout), _ledPin(-1) {
+HTTPUpdate::HTTPUpdate(int httpClientTimeout) : _httpClientTimeout(httpClientTimeout), _ledPin(-1) {
   _followRedirects = HTTPC_DISABLE_FOLLOW_REDIRECTS;
   _md5Sum = String();
   _user = String();
@@ -48,10 +45,9 @@ HTTPUpdate::HTTPUpdate(int httpClientTimeout)
   _auth = String();
 }
 
-HTTPUpdate::~HTTPUpdate(void) {
-}
+HTTPUpdate::~HTTPUpdate(void) {}
 
-HTTPUpdateResult HTTPUpdate::update(NetworkClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB) {
+HTTPUpdateResult HTTPUpdate::update(NetworkClient &client, const String &url, const String &currentVersion, HTTPUpdateRequestCB requestCB) {
   HTTPClient http;
   if (!http.begin(client, url)) {
     return HTTP_UPDATE_FAILED;
@@ -59,11 +55,11 @@ HTTPUpdateResult HTTPUpdate::update(NetworkClient& client, const String& url, co
   return handleUpdate(http, currentVersion, false, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient& httpClient, const String& currentVersion, HTTPUpdateRequestCB requestCB) {
+HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient &httpClient, const String &currentVersion, HTTPUpdateRequestCB requestCB) {
   return handleUpdate(httpClient, currentVersion, true, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::updateSpiffs(NetworkClient& client, const String& url, const String& currentVersion, HTTPUpdateRequestCB requestCB) {
+HTTPUpdateResult HTTPUpdate::updateSpiffs(NetworkClient &client, const String &url, const String &currentVersion, HTTPUpdateRequestCB requestCB) {
   HTTPClient http;
   if (!http.begin(client, url)) {
     return HTTP_UPDATE_FAILED;
@@ -71,13 +67,12 @@ HTTPUpdateResult HTTPUpdate::updateSpiffs(NetworkClient& client, const String& u
   return handleUpdate(http, currentVersion, true, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::update(HTTPClient& httpClient,
-                                    const String& currentVersion, HTTPUpdateRequestCB requestCB) {
+HTTPUpdateResult HTTPUpdate::update(HTTPClient &httpClient, const String &currentVersion, HTTPUpdateRequestCB requestCB) {
   return handleUpdate(httpClient, currentVersion, false, requestCB);
 }
 
-HTTPUpdateResult HTTPUpdate::update(NetworkClient& client, const String& host, uint16_t port, const String& uri,
-                                    const String& currentVersion, HTTPUpdateRequestCB requestCB) {
+HTTPUpdateResult
+  HTTPUpdate::update(NetworkClient &client, const String &host, uint16_t port, const String &uri, const String &currentVersion, HTTPUpdateRequestCB requestCB) {
   HTTPClient http;
   if (!http.begin(client, host, port, uri)) {
     return HTTP_UPDATE_FAILED;
@@ -117,34 +112,24 @@ String HTTPUpdate::getLastErrorString(void) {
   }
 
   switch (_lastError) {
-    case HTTP_UE_TOO_LESS_SPACE:
-      return "Not Enough space";
-    case HTTP_UE_SERVER_NOT_REPORT_SIZE:
-      return "Server Did Not Report Size";
-    case HTTP_UE_SERVER_FILE_NOT_FOUND:
-      return "File Not Found (404)";
-    case HTTP_UE_SERVER_FORBIDDEN:
-      return "Forbidden (403)";
-    case HTTP_UE_SERVER_WRONG_HTTP_CODE:
-      return "Wrong HTTP Code";
-    case HTTP_UE_SERVER_FAULTY_MD5:
-      return "Wrong MD5";
-    case HTTP_UE_BIN_VERIFY_HEADER_FAILED:
-      return "Verify Bin Header Failed";
-    case HTTP_UE_BIN_FOR_WRONG_FLASH:
-      return "New Binary Does Not Fit Flash Size";
-    case HTTP_UE_NO_PARTITION:
-      return "Partition Could Not be Found";
+    case HTTP_UE_TOO_LESS_SPACE:           return "Not Enough space";
+    case HTTP_UE_SERVER_NOT_REPORT_SIZE:   return "Server Did Not Report Size";
+    case HTTP_UE_SERVER_FILE_NOT_FOUND:    return "File Not Found (404)";
+    case HTTP_UE_SERVER_FORBIDDEN:         return "Forbidden (403)";
+    case HTTP_UE_SERVER_WRONG_HTTP_CODE:   return "Wrong HTTP Code";
+    case HTTP_UE_SERVER_FAULTY_MD5:        return "Wrong MD5";
+    case HTTP_UE_BIN_VERIFY_HEADER_FAILED: return "Verify Bin Header Failed";
+    case HTTP_UE_BIN_FOR_WRONG_FLASH:      return "New Binary Does Not Fit Flash Size";
+    case HTTP_UE_NO_PARTITION:             return "Partition Could Not be Found";
   }
 
   return String();
 }
 
-
 String getSketchSHA256() {
   const size_t HASH_LEN = 32;  // SHA-256 digest length
 
-  uint8_t sha_256[HASH_LEN] = { 0 };
+  uint8_t sha_256[HASH_LEN] = {0};
 
   // get sha256 digest for running partition
   if (esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256) == 0) {
@@ -173,7 +158,7 @@ String getSketchSHA256() {
  * @param currentVersion const char *
  * @return HTTPUpdateResult
  */
-HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& currentVersion, bool spiffs, HTTPUpdateRequestCB requestCB) {
+HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &currentVersion, bool spiffs, HTTPUpdateRequestCB requestCB) {
 
   HTTPUpdateResult ret = HTTP_UPDATE_FAILED;
 
@@ -223,12 +208,11 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     http.setAuthorization(_auth.c_str());
   }
 
-  const char* headerkeys[] = { "x-MD5" };
-  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
+  const char *headerkeys[] = {"x-MD5"};
+  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char *);
 
   // track these headers
   http.collectHeaders(headerkeys, headerkeyssize);
-
 
   int code = http.GET();
   int len = http.getSize();
@@ -239,7 +223,6 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
     http.end();
     return HTTP_UPDATE_FAILED;
   }
-
 
   log_d("Header read fin.\n");
   log_d("Server header:\n");
@@ -269,7 +252,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
       if (len > 0) {
         bool startUpdate = true;
         if (spiffs) {
-          const esp_partition_t* _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+          const esp_partition_t *_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
           if (!_partition) {
             _lastError = HTTP_UE_NO_PARTITION;
             return HTTP_UPDATE_FAILED;
@@ -301,7 +284,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
             _cbStart();
           }
 
-          NetworkClient* tcp = http.getStreamPtr();
+          NetworkClient *tcp = http.getStreamPtr();
 
           // To do?                NetworkUDP::stopAll();
           // To do?                NetworkClient::stopAllExcept(tcp);
@@ -403,7 +386,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient& http, const String& curren
  * @param md5 String
  * @return true if Update ok
  */
-bool HTTPUpdate::runUpdate(Stream& in, uint32_t size, String md5, int command) {
+bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command) {
 
   StreamString error;
 

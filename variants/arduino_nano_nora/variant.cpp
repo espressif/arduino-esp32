@@ -10,9 +10,9 @@
 #include <esp_partition.h>
 
 extern "C" {
-  void initVariant() {
-    // nothing to do
-  }
+void initVariant() {
+  // nothing to do
+}
 }
 
 // global, accessible from recovery sketch
@@ -23,7 +23,7 @@ bool _recovery_active;        // running from factory partition
 #define FADESTEP 8
 static void rgb_pulse_delay(void) {
   //                Bv   R^  G  x
-  int widths[4] = { 192, 64, 0, 0 };
+  int widths[4] = {192, 64, 0, 0};
   int dec_led = 0;
 
   // initialize RGB signals from weak pinstraps
@@ -98,4 +98,4 @@ public:
 };
 
 DoubleTap dt __attribute__((init_priority(101)));
-}
+}  // namespace

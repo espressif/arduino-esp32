@@ -44,7 +44,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         BLEBeacon oBeacon = BLEBeacon();
         oBeacon.setData(strManufacturerData);
         Serial.printf("iBeacon Frame\n");
-        Serial.printf("ID: %04X Major: %d Minor: %d UUID: %s Power: %d\n", oBeacon.getManufacturerId(), ENDIAN_CHANGE_U16(oBeacon.getMajor()), ENDIAN_CHANGE_U16(oBeacon.getMinor()), oBeacon.getProximityUUID().toString().c_str(), oBeacon.getSignalPower());
+        Serial.printf(
+          "ID: %04X Major: %d Minor: %d UUID: %s Power: %d\n", oBeacon.getManufacturerId(), ENDIAN_CHANGE_U16(oBeacon.getMajor()),
+          ENDIAN_CHANGE_U16(oBeacon.getMinor()), oBeacon.getProximityUUID().toString().c_str(), oBeacon.getSignalPower()
+        );
       } else {
         Serial.println("Found another manufacturers beacon!");
         Serial.printf("strManufacturerData: %d ", strManufacturerData.length());

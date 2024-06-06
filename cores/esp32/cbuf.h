@@ -45,15 +45,15 @@ public:
   int peek();
 
   int read();
-  size_t read(char* dst, size_t size);
+  size_t read(char *dst, size_t size);
 
   size_t write(char c);
-  size_t write(const char* src, size_t size);
+  size_t write(const char *src, size_t size);
 
   void flush();
   size_t remove(size_t size);
 
-  cbuf* next;
+  cbuf *next;
   bool has_peek;
   uint8_t peek_byte;
 

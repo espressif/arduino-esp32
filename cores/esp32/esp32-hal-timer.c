@@ -97,7 +97,9 @@ hw_timer_t *timerBegin(uint32_t frequency) {
     divider = counter_src_hz / frequency;
     if ((divider >= 2) && (divider <= 65536)) {
       break;
-    } else divider = 0;
+    } else {
+      divider = 0;
+    }
   }
 
   if (divider == 0) {

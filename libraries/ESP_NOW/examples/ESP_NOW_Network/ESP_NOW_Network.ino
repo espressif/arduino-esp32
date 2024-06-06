@@ -248,12 +248,16 @@ void setup() {
   uint8_t self_mac[6];
 
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  while (!Serial) {
+    delay(10);
+  }
 
   // Initialize the Wi-Fi module
   WiFi.mode(WIFI_STA);
   WiFi.setChannel(ESPNOW_WIFI_CHANNEL);
-  while (!WiFi.STA.started()) delay(100);
+  while (!WiFi.STA.started()) {
+    delay(100);
+  }
 
   Serial.println("ESP-NOW Network Example");
   Serial.println("Wi-Fi parameters:");
@@ -355,7 +359,9 @@ void loop() {
           if (!peer->send_message((const uint8_t *)&new_msg, sizeof(new_msg))) {
             Serial.printf("Failed to send message to peer " MACSTR "\n", MAC2STR(peer->addr()));
           } else {
-            Serial.printf("Sent message to peer " MACSTR ". Recv: %lu, Sent: %lu, Avg: %lu\n", MAC2STR(peer->addr()), recv_msg_count, new_msg.count, new_msg.data);
+            Serial.printf(
+              "Sent message to peer " MACSTR ". Recv: %lu, Sent: %lu, Avg: %lu\n", MAC2STR(peer->addr()), recv_msg_count, new_msg.count, new_msg.data
+            );
             sent_msg_count++;
           }
         }

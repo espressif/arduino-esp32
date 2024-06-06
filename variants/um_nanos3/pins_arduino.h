@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x303A
-#define USB_PID 0x8179
+#define USB_VID          0x303A
+#define USB_PID          0x8179
 #define USB_MANUFACTURER "Unexpected Maker"
-#define USB_PRODUCT "Nanos3"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "Nanos3"
+#define USB_SERIAL       ""
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -45,7 +45,7 @@ static const uint8_t T9 = 9;
 
 static const uint8_t RGB_DATA = 41;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
-#define RGB_BUILTIN (RGB_DATA + SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN    (RGB_DATA + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = RGB_BUILTIN;

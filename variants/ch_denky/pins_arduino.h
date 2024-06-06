@@ -48,13 +48,13 @@ static const uint8_t DAC2 = 26;
 // Specific CH2i (Charles Hallard) Boards
 // 1st Revision Denky with ESP WROOM32 + LoRa RN2483 module
 #if defined(ARDUINO_DENKY_WROOM32)
-#define PUSH_BUTTON 0
+#define PUSH_BUTTON    0
 #define TIC_ENABLE_PIN 4
-#define TIC_RX_PIN 33
-#define LORA_TX_PIN 26
-#define LORA_RX_PIN 27
-#define LORA_RESET 14
-#define RGB_LED_PIN 25
+#define TIC_RX_PIN     33
+#define LORA_TX_PIN    26
+#define LORA_RX_PIN    27
+#define LORA_RESET     14
+#define RGB_LED_PIN    25
 
 // 2nd Utra Small version with ESP Pico-D4-V3-02
 #elif defined(ARDUINO_DENKY_PICOV3)
@@ -64,8 +64,7 @@ static const uint8_t DAC2 = 26;
 #define LED_BLU_PIN 25
 
 // Teleinfo RXD pin is connected to ESP32-PICO-V3-02 GPIO8
-#define TIC_RX_PIN 8
+#define TIC_RX_PIN  8
 #endif
-
 
 #endif /* Pins_Arduino_h */

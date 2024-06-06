@@ -18,9 +18,9 @@
 #include "esp_netif.h"
 
 static void setTimeZone(long offset, int daylight) {
-  char cst[17] = { 0 };
+  char cst[17] = {0};
   char cdt[17] = "DST";
-  char tz[33] = { 0 };
+  char tz[33] = {0};
 
   if (offset % 3600) {
     sprintf(cst, "UTC%ld:%02u:%02u", offset / 3600, abs((offset % 3600) / 60), abs(offset % 60));
@@ -44,16 +44,16 @@ static void setTimeZone(long offset, int daylight) {
  * configTime
  * Source: https://github.com/esp8266/Arduino/blob/master/cores/esp8266/time.c
  * */
-void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1, const char* server2, const char* server3) {
+void configTime(long gmtOffset_sec, int daylightOffset_sec, const char *server1, const char *server2, const char *server3) {
   //tcpip_adapter_init();  // Should not hurt anything if already inited
   esp_netif_init();
   if (sntp_enabled()) {
     sntp_stop();
   }
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
-  sntp_setservername(0, (char*)server1);
-  sntp_setservername(1, (char*)server2);
-  sntp_setservername(2, (char*)server3);
+  sntp_setservername(0, (char *)server1);
+  sntp_setservername(1, (char *)server2);
+  sntp_setservername(2, (char *)server3);
   sntp_init();
   setTimeZone(-gmtOffset_sec, daylightOffset_sec);
 }
@@ -62,22 +62,22 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char* server1,
  * configTzTime
  * sntp setup using TZ environment variable
  * */
-void configTzTime(const char* tz, const char* server1, const char* server2, const char* server3) {
+void configTzTime(const char *tz, const char *server1, const char *server2, const char *server3) {
   //tcpip_adapter_init();  // Should not hurt anything if already inited
   esp_netif_init();
   if (sntp_enabled()) {
     sntp_stop();
   }
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
-  sntp_setservername(0, (char*)server1);
-  sntp_setservername(1, (char*)server2);
-  sntp_setservername(2, (char*)server3);
+  sntp_setservername(0, (char *)server1);
+  sntp_setservername(1, (char *)server2);
+  sntp_setservername(2, (char *)server3);
   sntp_init();
   setenv("TZ", tz, 1);
   tzset();
 }
 
-bool getLocalTime(struct tm* info, uint32_t ms) {
+bool getLocalTime(struct tm *info, uint32_t ms) {
   uint32_t start = millis();
   time_t now;
   while ((millis() - start) <= ms) {

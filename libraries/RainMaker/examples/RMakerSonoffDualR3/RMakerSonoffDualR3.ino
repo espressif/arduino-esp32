@@ -27,8 +27,8 @@ struct LightSwitch {
 };
 
 // Define the light switches for channel 1 and 2
-LightSwitch switch_ch1 = { gpio_switch1, false };
-LightSwitch switch_ch2 = { gpio_switch2, false };
+LightSwitch switch_ch1 = {gpio_switch1, false};
+LightSwitch switch_ch2 = {gpio_switch2, false};
 
 //The framework provides some standard device types like switch, lightbulb, fan, temperature sensor.
 static Switch *my_switch1 = NULL;
@@ -50,17 +50,11 @@ void sysProvEvent(arduino_event_t *sys_event) {
       Serial.printf("\nConnected to Wi-Fi!\n");
       digitalWrite(gpio_led, true);
       break;
-    case ARDUINO_EVENT_PROV_INIT:
-      wifi_prov_mgr_disable_auto_stop(10000);
-      break;
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS:
-      wifi_prov_mgr_stop_provisioning();
-      break;
-    default:;
+    case ARDUINO_EVENT_PROV_INIT:         wifi_prov_mgr_disable_auto_stop(10000); break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS: wifi_prov_mgr_stop_provisioning(); break;
+    default:                              ;
   }
 }
-
-
 
 void write_callback(Device *device, Param *param, const param_val_t val, void *priv_data, write_ctx_t *ctx) {
   const char *device_name = device->getDeviceName();

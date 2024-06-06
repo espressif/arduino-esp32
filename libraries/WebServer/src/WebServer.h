@@ -20,7 +20,6 @@
   Modified 8 May 2015 by Hristo Gochkov (proper post and file upload handling)
 */
 
-
 #ifndef WEBSERVER_H
 #define WEBSERVER_H
 
@@ -31,20 +30,28 @@
 #include "HTTP_Method.h"
 #include "Uri.h"
 
-enum HTTPUploadStatus { UPLOAD_FILE_START,
-                        UPLOAD_FILE_WRITE,
-                        UPLOAD_FILE_END,
-                        UPLOAD_FILE_ABORTED };
-enum HTTPRawStatus { RAW_START,
-                     RAW_WRITE,
-                     RAW_END,
-                     RAW_ABORTED };
-enum HTTPClientStatus { HC_NONE,
-                        HC_WAIT_READ,
-                        HC_WAIT_CLOSE };
-enum HTTPAuthMethod { BASIC_AUTH,
-                      DIGEST_AUTH,
-                      OTHER_AUTH };
+enum HTTPUploadStatus {
+  UPLOAD_FILE_START,
+  UPLOAD_FILE_WRITE,
+  UPLOAD_FILE_END,
+  UPLOAD_FILE_ABORTED
+};
+enum HTTPRawStatus {
+  RAW_START,
+  RAW_WRITE,
+  RAW_END,
+  RAW_ABORTED
+};
+enum HTTPClientStatus {
+  HC_NONE,
+  HC_WAIT_READ,
+  HC_WAIT_CLOSE
+};
+enum HTTPAuthMethod {
+  BASIC_AUTH,
+  DIGEST_AUTH,
+  OTHER_AUTH
+};
 
 #define HTTP_DOWNLOAD_UNIT_SIZE 1436
 
@@ -56,14 +63,14 @@ enum HTTPAuthMethod { BASIC_AUTH,
 #define HTTP_RAW_BUFLEN 1436
 #endif
 
-#define HTTP_MAX_DATA_WAIT 5000      //ms to wait for the client to send the request
-#define HTTP_MAX_POST_WAIT 5000      //ms to wait for POST data to arrive
-#define HTTP_MAX_SEND_WAIT 5000      //ms to wait for data chunk to be ACKed
-#define HTTP_MAX_CLOSE_WAIT 2000     //ms to wait for the client to close the connection
-#define HTTP_MAX_BASIC_AUTH_LEN 256  // maximum length of a basic Auth base64 encoded username:password string
+#define HTTP_MAX_DATA_WAIT      5000  //ms to wait for the client to send the request
+#define HTTP_MAX_POST_WAIT      5000  //ms to wait for POST data to arrive
+#define HTTP_MAX_SEND_WAIT      5000  //ms to wait for data chunk to be ACKed
+#define HTTP_MAX_CLOSE_WAIT     2000  //ms to wait for the client to close the connection
+#define HTTP_MAX_BASIC_AUTH_LEN 256   // maximum length of a basic Auth base64 encoded username:password string
 
-#define CONTENT_LENGTH_UNKNOWN ((size_t)-1)
-#define CONTENT_LENGTH_NOT_SET ((size_t)-2)
+#define CONTENT_LENGTH_UNKNOWN ((size_t) - 1)
+#define CONTENT_LENGTH_NOT_SET ((size_t) - 2)
 
 class WebServer;
 
@@ -77,13 +84,12 @@ typedef struct {
   uint8_t buf[HTTP_UPLOAD_BUFLEN];
 } HTTPUpload;
 
-typedef struct
-{
+typedef struct {
   HTTPRawStatus status;
   size_t totalSize;    // content size
   size_t currentSize;  // size of data currently in buf
   uint8_t buf[HTTP_UPLOAD_BUFLEN];
-  void* data;  // additional data
+  void *data;  // additional data
 } HTTPRaw;
 
 #include "detail/RequestHandler.h"
@@ -129,20 +135,20 @@ public:
    *
    * To return - NULL to fail; or any string.
    */
-  typedef std::function<String*(HTTPAuthMethod mode, String enteredUsernameOrReq, String extraParams[])> THandlerFunctionAuthCheck;
+  typedef std::function<String *(HTTPAuthMethod mode, String enteredUsernameOrReq, String extraParams[])> THandlerFunctionAuthCheck;
 
   bool authenticate(THandlerFunctionAuthCheck fn);
-  bool authenticate(const char* username, const char* password);
-  bool authenticateBasicSHA1(const char* _username, const char* _sha1AsBase64orHex);
+  bool authenticate(const char *username, const char *password);
+  bool authenticateBasicSHA1(const char *_username, const char *_sha1AsBase64orHex);
 
-  void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char* realm = NULL, const String& authFailMsg = String(""));
+  void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char *realm = NULL, const String &authFailMsg = String(""));
 
   typedef std::function<void(void)> THandlerFunction;
-  void on(const Uri& uri, THandlerFunction fn);
-  void on(const Uri& uri, HTTPMethod method, THandlerFunction fn);
-  void on(const Uri& uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);  //ufn handles file uploads
-  void addHandler(RequestHandler* handler);
-  void serveStatic(const char* uri, fs::FS& fs, const char* path, const char* cache_header = NULL);
+  void on(const Uri &uri, THandlerFunction fn);
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
+  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);  //ufn handles file uploads
+  void addHandler(RequestHandler *handler);
+  void serveStatic(const char *uri, fs::FS &fs, const char *path, const char *cache_header = NULL);
   void onNotFound(THandlerFunction fn);     //called when handler is not assigned
   void onFileUpload(THandlerFunction ufn);  //handle file uploads
 
@@ -152,13 +158,13 @@ public:
   HTTPMethod method() {
     return _currentMethod;
   }
-  virtual NetworkClient& client() {
+  virtual NetworkClient &client() {
     return _currentClient;
   }
-  HTTPUpload& upload() {
+  HTTPUpload &upload() {
     return *_currentUpload;
   }
-  HTTPRaw& raw() {
+  HTTPRaw &raw() {
     return *_currentRaw;
   }
 
@@ -168,7 +174,7 @@ public:
   String argName(int i);                                                        // get request argument name by number
   int args();                                                                   // get arguments count
   bool hasArg(String name);                                                     // check if argument exists
-  void collectHeaders(const char* headerKeys[], const size_t headerKeysCount);  // set the request headers to collect
+  void collectHeaders(const char *headerKeys[], const size_t headerKeysCount);  // set the request headers to collect
   String header(String name);                                                   // get request header value by name
   String header(int i);                                                         // get request header value by number
   String headerName(int i);                                                     // get request header name by number
@@ -185,10 +191,10 @@ public:
   // code - HTTP response code, can be 200 or 404
   // content_type - HTTP content type, like "text/plain" or "image/png"
   // content - actual content body
-  void send(int code, const char* content_type = NULL, const String& content = String(""));
-  void send(int code, char* content_type, const String& content);
-  void send(int code, const String& content_type, const String& content);
-  void send(int code, const char* content_type, const char* content);
+  void send(int code, const char *content_type = NULL, const String &content = String(""));
+  void send(int code, char *content_type, const String &content);
+  void send(int code, const String &content_type, const String &content);
+  void send(int code, const char *content_type, const char *content);
 
   void send_P(int code, PGM_P content_type, PGM_P content);
   void send_P(int code, PGM_P content_type, PGM_P content, size_t contentLength);
@@ -196,20 +202,19 @@ public:
   void enableDelay(boolean value);
   void enableCORS(boolean value = true);
   void enableCrossOrigin(boolean value = true);
-  typedef std::function<String(FS& fs, const String& fName)> ETagFunction;
+  typedef std::function<String(FS &fs, const String &fName)> ETagFunction;
   void enableETag(bool enable, ETagFunction fn = nullptr);
 
   void setContentLength(const size_t contentLength);
-  void sendHeader(const String& name, const String& value, bool first = false);
-  void sendContent(const String& content);
-  void sendContent(const char* content, size_t contentLength);
+  void sendHeader(const String &name, const String &value, bool first = false);
+  void sendContent(const String &content);
+  void sendContent(const char *content, size_t contentLength);
   void sendContent_P(PGM_P content);
   void sendContent_P(PGM_P content, size_t size);
 
-  static String urlDecode(const String& text);
+  static String urlDecode(const String &text);
 
-  template<typename T>
-  size_t streamFile(T& file, const String& contentType, const int code = 200) {
+  template<typename T> size_t streamFile(T &file, const String &contentType, const int code = 200) {
     _streamFileCore(file.size(), file.name(), contentType, code);
     return _currentClient.write(file);
   }
@@ -218,30 +223,30 @@ public:
   ETagFunction _eTagFunction = nullptr;
 
 protected:
-  virtual size_t _currentClientWrite(const char* b, size_t l) {
+  virtual size_t _currentClientWrite(const char *b, size_t l) {
     return _currentClient.write(b, l);
   }
   virtual size_t _currentClientWrite_P(PGM_P b, size_t l) {
     return _currentClient.write_P(b, l);
   }
-  void _addRequestHandler(RequestHandler* handler);
+  void _addRequestHandler(RequestHandler *handler);
   void _handleRequest();
   void _finalizeResponse();
-  bool _parseRequest(NetworkClient& client);
+  bool _parseRequest(NetworkClient &client);
   void _parseArguments(String data);
   static String _responseCodeToString(int code);
-  bool _parseForm(NetworkClient& client, String boundary, uint32_t len);
+  bool _parseForm(NetworkClient &client, String boundary, uint32_t len);
   bool _parseFormUploadAborted();
   void _uploadWriteByte(uint8_t b);
-  int _uploadReadByte(NetworkClient& client);
-  void _prepareHeader(String& response, int code, const char* content_type, size_t contentLength);
-  bool _collectHeader(const char* headerName, const char* headerValue);
+  int _uploadReadByte(NetworkClient &client);
+  void _prepareHeader(String &response, int code, const char *content_type, size_t contentLength);
+  bool _collectHeader(const char *headerName, const char *headerValue);
 
-  void _streamFileCore(const size_t fileSize, const String& fileName, const String& contentType, const int code = 200);
+  void _streamFileCore(const size_t fileSize, const String &fileName, const String &contentType, const int code = 200);
 
   String _getRandomHexString();
   // for extracting Auth parameters
-  String _extractParam(String& authReq, const String& param, const char delimit = '"');
+  String _extractParam(String &authReq, const String &param, const char delimit = '"');
 
   struct RequestArgument {
     String key;
@@ -259,22 +264,22 @@ protected:
   unsigned long _statusChange;
   boolean _nullDelay;
 
-  RequestHandler* _currentHandler;
-  RequestHandler* _firstHandler;
-  RequestHandler* _lastHandler;
+  RequestHandler *_currentHandler;
+  RequestHandler *_firstHandler;
+  RequestHandler *_lastHandler;
   THandlerFunction _notFoundHandler;
   THandlerFunction _fileUploadHandler;
 
   int _currentArgCount;
-  RequestArgument* _currentArgs;
+  RequestArgument *_currentArgs;
   int _postArgsLen;
-  RequestArgument* _postArgs;
+  RequestArgument *_postArgs;
 
   std::unique_ptr<HTTPUpload> _currentUpload;
   std::unique_ptr<HTTPRaw> _currentRaw;
 
   int _headerKeysCount;
-  RequestArgument* _currentHeaders;
+  RequestArgument *_currentHeaders;
   size_t _contentLength;
   int _clientContentLength;  // "Content-Length" from header of incoming POST or GET request
   String _responseHeaders;
@@ -286,6 +291,5 @@ protected:
   String _sopaque;
   String _srealm;  // Store the Auth realm between Calls
 };
-
 
 #endif  //ESP8266WEBSERVER_H

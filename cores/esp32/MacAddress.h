@@ -50,10 +50,8 @@ public:
   MacAddress(MACType mac_type, const uint8_t *macbytearray);
 
   //Default MAC6
-  MacAddress(uint64_t mac)
-    : MacAddress(MAC6, mac) {}
-  MacAddress(const uint8_t *macbytearray)
-    : MacAddress(MAC6, macbytearray) {}
+  MacAddress(uint64_t mac) : MacAddress(MAC6, mac) {}
+  MacAddress(const uint8_t *macbytearray) : MacAddress(MAC6, macbytearray) {}
 
   MacAddress(const char *macstr);
   MacAddress(const String &macstr);

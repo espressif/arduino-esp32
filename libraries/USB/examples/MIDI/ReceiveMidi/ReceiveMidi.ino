@@ -28,7 +28,7 @@ void setup() {
 }
 
 void loop() {
-  midiEventPacket_t midi_packet_in = { 0 };
+  midiEventPacket_t midi_packet_in = {0};
 
   if (MIDI.readPacket(&midi_packet_in)) {
     printDetails(midi_packet_in);
@@ -44,18 +44,13 @@ void printDetails(midiEventPacket_t &midi_packet_in) {
   Serial.println(".----.-----.--------.--------.--------.");
   Serial.println("| CN | CIN | STATUS | DATA 0 | DATA 1 |");
   Serial.println("+----+-----+--------+--------+--------+");
-  Serial.printf("| %d  |  %X  |   %X   |   %X   |   %X   |\n", cable_num, code_index_num,
-                midi_packet_in.byte1, midi_packet_in.byte2, midi_packet_in.byte3);
+  Serial.printf("| %d  |  %X  |   %X   |   %X   |   %X   |\n", cable_num, code_index_num, midi_packet_in.byte1, midi_packet_in.byte2, midi_packet_in.byte3);
   Serial.println("'----'-----'--------.--------'--------'\n");
   Serial.print("Description: ");
 
   switch (code_index_num) {
-    case MIDI_CIN_MISC:
-      Serial.println("This a Miscellaneous event");
-      break;
-    case MIDI_CIN_CABLE_EVENT:
-      Serial.println("This a Cable event");
-      break;
+    case MIDI_CIN_MISC:        Serial.println("This a Miscellaneous event"); break;
+    case MIDI_CIN_CABLE_EVENT: Serial.println("This a Cable event"); break;
     case MIDI_CIN_SYSCOM_2BYTE:  // 2 byte system common message e.g MTC, SongSelect
     case MIDI_CIN_SYSCOM_3BYTE:  // 3 byte system common message e.g SPP
       Serial.println("This a System Common (SysCom) event");
@@ -66,37 +61,22 @@ void printDetails(midiEventPacket_t &midi_packet_in) {
     case MIDI_CIN_SYSEX_END_3BYTE:  // SysEx ends with 3 data
       Serial.println("This a system exclusive (SysEx) event");
       break;
-    case MIDI_CIN_NOTE_ON:
-      Serial.printf("This a Note-On event of Note %d with a Velocity of %d\n",
-                    midi_packet_in.byte2, midi_packet_in.byte3);
-      break;
-    case MIDI_CIN_NOTE_OFF:
-      Serial.printf("This a Note-Off event of Note %d with a Velocity of %d\n",
-                    midi_packet_in.byte2, midi_packet_in.byte3);
-      break;
-    case MIDI_CIN_POLY_KEYPRESS:
-      Serial.printf("This a Poly Aftertouch event for Note %d and Value %d\n",
-                    midi_packet_in.byte2, midi_packet_in.byte3);
-      break;
+    case MIDI_CIN_NOTE_ON:       Serial.printf("This a Note-On event of Note %d with a Velocity of %d\n", midi_packet_in.byte2, midi_packet_in.byte3); break;
+    case MIDI_CIN_NOTE_OFF:      Serial.printf("This a Note-Off event of Note %d with a Velocity of %d\n", midi_packet_in.byte2, midi_packet_in.byte3); break;
+    case MIDI_CIN_POLY_KEYPRESS: Serial.printf("This a Poly Aftertouch event for Note %d and Value %d\n", midi_packet_in.byte2, midi_packet_in.byte3); break;
     case MIDI_CIN_CONTROL_CHANGE:
-      Serial.printf("This a Control Change/Continuous Controller (CC) event of Controller %d "
-                    "with a Value of %d\n",
-                    midi_packet_in.byte2, midi_packet_in.byte3);
+      Serial.printf(
+        "This a Control Change/Continuous Controller (CC) event of Controller %d "
+        "with a Value of %d\n",
+        midi_packet_in.byte2, midi_packet_in.byte3
+      );
       break;
-    case MIDI_CIN_PROGRAM_CHANGE:
-      Serial.printf("This a Program Change event with a Value of %d\n", midi_packet_in.byte2);
-      break;
-    case MIDI_CIN_CHANNEL_PRESSURE:
-      Serial.printf("This a Channel Pressure event with a Value of %d\n", midi_packet_in.byte2);
-      break;
+    case MIDI_CIN_PROGRAM_CHANGE:   Serial.printf("This a Program Change event with a Value of %d\n", midi_packet_in.byte2); break;
+    case MIDI_CIN_CHANNEL_PRESSURE: Serial.printf("This a Channel Pressure event with a Value of %d\n", midi_packet_in.byte2); break;
     case MIDI_CIN_PITCH_BEND_CHANGE:
-      Serial.printf("This a Pitch Bend Change event with a Value of %d\n",
-                    ((uint16_t)midi_packet_in.byte2) << 7 | midi_packet_in.byte3);
+      Serial.printf("This a Pitch Bend Change event with a Value of %d\n", ((uint16_t)midi_packet_in.byte2) << 7 | midi_packet_in.byte3);
       break;
-    case MIDI_CIN_1BYTE_DATA:
-      Serial.printf("This an embedded Serial MIDI event byte with Value %X\n",
-                    midi_packet_in.byte1);
-      break;
+    case MIDI_CIN_1BYTE_DATA: Serial.printf("This an embedded Serial MIDI event byte with Value %X\n", midi_packet_in.byte1); break;
   }
 
   Serial.println();

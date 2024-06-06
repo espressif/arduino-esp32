@@ -6,12 +6,12 @@
 #include <ETH.h>
 
 #ifndef ETH_PHY_TYPE
-#define ETH_PHY_TYPE ETH_PHY_TLK110
-#define ETH_PHY_ADDR 31
-#define ETH_PHY_MDC 23
-#define ETH_PHY_MDIO 18
+#define ETH_PHY_TYPE  ETH_PHY_TLK110
+#define ETH_PHY_ADDR  31
+#define ETH_PHY_MDC   23
+#define ETH_PHY_MDIO  18
 #define ETH_PHY_POWER 17
-#define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN
+#define ETH_CLK_MODE  ETH_CLOCK_GPIO0_IN
 #endif
 
 static bool eth_connected = false;
@@ -25,9 +25,7 @@ void onEvent(arduino_event_id_t event) {
       // to be set before DHCP, so set it from the event handler thread.
       ETH.setHostname("esp32-ethernet");
       break;
-    case ARDUINO_EVENT_ETH_CONNECTED:
-      Serial.println("ETH Connected");
-      break;
+    case ARDUINO_EVENT_ETH_CONNECTED: Serial.println("ETH Connected"); break;
     case ARDUINO_EVENT_ETH_GOT_IP:
       Serial.println("ETH Got IP");
       Serial.println(ETH);
@@ -45,12 +43,11 @@ void onEvent(arduino_event_id_t event) {
       Serial.println("ETH Stopped");
       eth_connected = false;
       break;
-    default:
-      break;
+    default: break;
   }
 }
 
-void testClient(const char* host, uint16_t port) {
+void testClient(const char *host, uint16_t port) {
   Serial.print("\nconnecting to ");
   Serial.println(host);
 
@@ -60,8 +57,7 @@ void testClient(const char* host, uint16_t port) {
     return;
   }
   client.printf("GET / HTTP/1.1\r\nHost: %s\r\n\r\n", host);
-  while (client.connected() && !client.available())
-    ;
+  while (client.connected() && !client.available());
   while (client.available()) {
     Serial.write(client.read());
   }
@@ -75,7 +71,6 @@ void setup() {
   Network.onEvent(onEvent);  // Will call onEvent() from another thread.
   ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_MDC, ETH_PHY_MDIO, ETH_PHY_POWER, ETH_CLK_MODE);
 }
-
 
 void loop() {
   if (eth_connected) {

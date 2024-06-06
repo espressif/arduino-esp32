@@ -17,11 +17,11 @@
 #include <esp_rmaker_common_events.h>
 
 extern "C" {
-  bool esp_rmaker_mqtt_is_budget_available();
+bool esp_rmaker_mqtt_is_budget_available();
 }
 
 #define INSIGHTS_TOPIC_SUFFIX "diagnostics/from-node"
-#define INSIGHTS_TOPIC_RULE "insights_message_delivery"
+#define INSIGHTS_TOPIC_RULE   "insights_message_delivery"
 
 static void _rmakerCommonEventHandler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base != RMAKER_COMMON_EVENT) {
@@ -34,8 +34,7 @@ static void _rmakerCommonEventHandler(void *arg, esp_event_base_t event_base, in
       data.msg_id = *(int *)event_data;
       esp_event_post(INSIGHTS_EVENT, INSIGHTS_EVENT_TRANSPORT_SEND_SUCCESS, &data, sizeof(data), portMAX_DELAY);
       break;
-    default:
-      break;
+    default: break;
   }
 }
 

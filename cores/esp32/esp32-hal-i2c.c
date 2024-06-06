@@ -131,7 +131,8 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
       bus[i2c_num].sda = sda;
       //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2
       i2c_set_timeout((i2c_port_t)i2c_num, I2C_LL_MAX_TIMEOUT);
-      if (!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_MASTER_SDA, (void *)(i2c_num + 1), i2c_num, -1) || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_MASTER_SCL, (void *)(i2c_num + 1), i2c_num, -1)) {
+      if (!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_MASTER_SDA, (void *)(i2c_num + 1), i2c_num, -1)
+          || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_MASTER_SCL, (void *)(i2c_num + 1), i2c_num, -1)) {
         i2cDetachBus((void *)(i2c_num + 1));
         return false;
       }
@@ -197,7 +198,7 @@ esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t *buff, size_
   //ret =  i2c_master_write_to_device((i2c_port_t)i2c_num, address, buff, size, timeOutMillis / portTICK_PERIOD_MS);
 
   ret = ESP_OK;
-  uint8_t cmd_buff[I2C_LINK_RECOMMENDED_SIZE(1)] = { 0 };
+  uint8_t cmd_buff[I2C_LINK_RECOMMENDED_SIZE(1)] = {0};
   cmd = i2c_cmd_link_create_static(cmd_buff, I2C_LINK_RECOMMENDED_SIZE(1));
   ret = i2c_master_start(cmd);
   if (ret != ESP_OK) {
@@ -259,7 +260,9 @@ esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t *buff, size_t size,
   return ret;
 }
 
-esp_err_t i2cWriteReadNonStop(uint8_t i2c_num, uint16_t address, const uint8_t *wbuff, size_t wsize, uint8_t *rbuff, size_t rsize, uint32_t timeOutMillis, size_t *readCount) {
+esp_err_t i2cWriteReadNonStop(
+  uint8_t i2c_num, uint16_t address, const uint8_t *wbuff, size_t wsize, uint8_t *rbuff, size_t rsize, uint32_t timeOutMillis, size_t *readCount
+) {
   esp_err_t ret = ESP_FAIL;
   if (i2c_num >= SOC_I2C_NUM) {
     return ESP_ERR_INVALID_ARG;
@@ -338,18 +341,18 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency) {
 
   // i2c clock characteristic, The order is the same as i2c_sclk_t.
   i2c_clk_alloc_t i2c_clk_alloc[I2C_SCLK_MAX] = {
-    { 0, 0 },
+    {0, 0},
 #if SOC_I2C_SUPPORT_APB
-    { SOC_MOD_CLK_APB, esp_clk_apb_freq() }, /*!< I2C APB clock characteristic*/
+    {SOC_MOD_CLK_APB, esp_clk_apb_freq()}, /*!< I2C APB clock characteristic*/
 #endif
 #if SOC_I2C_SUPPORT_XTAL
-    { SOC_MOD_CLK_XTAL, esp_clk_xtal_freq() }, /*!< I2C XTAL characteristic*/
+    {SOC_MOD_CLK_XTAL, esp_clk_xtal_freq()}, /*!< I2C XTAL characteristic*/
 #endif
 #if SOC_I2C_SUPPORT_RTC
-    { SOC_MOD_CLK_RC_FAST, periph_rtc_dig_clk8m_get_freq() }, /*!< I2C 20M RTC characteristic*/
+    {SOC_MOD_CLK_RC_FAST, periph_rtc_dig_clk8m_get_freq()}, /*!< I2C 20M RTC characteristic*/
 #endif
 #if SOC_I2C_SUPPORT_REF_TICK
-    { SOC_MOD_CLK_REF_TICK, REF_CLK_FREQ }, /*!< I2C REF_TICK characteristic*/
+    {SOC_MOD_CLK_REF_TICK, REF_CLK_FREQ}, /*!< I2C REF_TICK characteristic*/
 #endif
   };
 

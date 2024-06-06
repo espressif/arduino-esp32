@@ -12,11 +12,12 @@ WebServer server(80);
 Ticker tkSecond;
 uint8_t otaDone = 0;
 
-const char* alphanum = "0123456789!@#$%^&*abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const char *alphanum = "0123456789!@#$%^&*abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 String generatePass(uint8_t str_len) {
   String buff;
-  for (int i = 0; i < str_len; i++)
+  for (int i = 0; i < str_len; i++) {
     buff += alphanum[random(strlen(alphanum) - 1)];
+  }
   return buff;
 }
 
@@ -50,8 +51,10 @@ void handleUpdateEnd() {
 
 void handleUpdate() {
   size_t fsize = UPDATE_SIZE_UNKNOWN;
-  if (server.hasArg("size")) fsize = server.arg("size").toInt();
-  HTTPUpload& upload = server.upload();
+  if (server.hasArg("size")) {
+    fsize = server.arg("size").toInt();
+  }
+  HTTPUpload &upload = server.upload();
   if (upload.status == UPLOAD_FILE_START) {
     Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
     if (!Update.begin(fsize)) {
@@ -76,12 +79,14 @@ void handleUpdate() {
 
 void webServerInit() {
   server.on(
-    "/update", HTTP_POST, []() {
+    "/update", HTTP_POST,
+    []() {
       handleUpdateEnd();
     },
     []() {
       handleUpdate();
-    });
+    }
+  );
   server.on("/favicon.ico", HTTP_GET, []() {
     server.sendHeader("Content-Encoding", "gzip");
     server.send_P(200, "image/x-icon", favicon_ico_gz, favicon_ico_gz_len);
@@ -94,7 +99,9 @@ void webServerInit() {
 }
 
 void everySecond() {
-  if (otaDone > 1) Serial.printf("ota: %d%%\n", otaDone);
+  if (otaDone > 1) {
+    Serial.printf("ota: %d%%\n", otaDone);
+  }
 }
 
 void setup() {

@@ -67,8 +67,8 @@ bool UpdateClass::_enablePartition(const esp_partition_t *partition) {
 }
 
 UpdateClass::UpdateClass()
-  : _error(0), _cryptKey(0), _cryptBuffer(0), _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0), _command(U_FLASH), _partition(NULL), _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf) {
-}
+  : _error(0), _cryptKey(0), _cryptBuffer(0), _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0),
+    _command(U_FLASH), _partition(NULL), _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf) {}
 
 UpdateClass &UpdateClass::onProgress(THandlerFunction_Progress fn) {
   _progress_callback = fn;
@@ -228,9 +228,11 @@ void UpdateClass::abort() {
 
 void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key) {
   memcpy(tweaked_key, _cryptKey, ENCRYPTED_KEY_SIZE);
-  if (_cryptCfg == 0) return;  //no tweaking needed, use crypt key as-is
+  if (_cryptCfg == 0) {
+    return;  //no tweaking needed, use crypt key as-is
+  }
 
-  const uint8_t pattern[] = { 23, 23, 23, 14, 23, 23, 23, 12, 23, 23, 23, 10, 23, 23, 23, 8 };
+  const uint8_t pattern[] = {23, 23, 23, 14, 23, 23, 23, 12, 23, 23, 23, 10, 23, 23, 23, 8};
   int pattern_idx = 0;
   int key_idx = 0;
   int bit_len = 0;
@@ -250,10 +252,12 @@ void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key) {
     }
     tweaked_key[key_idx] ^= tweak;  //XOR remaining bits, will XOR zeros if no remaining bits
   }
-  if (_cryptCfg == 0xf) return;  //return with fully tweaked key
+  if (_cryptCfg == 0xf) {
+    return;  //return with fully tweaked key
+  }
 
   //some of tweaked key bits need to be restore back to crypt key bits
-  const uint8_t cfg_bits[] = { 67, 65, 63, 61 };
+  const uint8_t cfg_bits[] = {67, 65, 63, 61};
   key_idx = 0;
   pattern_idx = 0;
   while (key_idx < ENCRYPTED_KEY_SIZE) {
@@ -312,7 +316,9 @@ bool UpdateClass::_decryptBuffer() {
   mbedtls_aes_context ctx;  //initialize AES
   mbedtls_aes_init(&ctx);
   while ((_bufferLen - done) >= ENCRYPTED_BLOCK_SIZE) {
-    for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done];  //reverse order 16 bytes to decrypt
+    for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
+      _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done];  //reverse order 16 bytes to decrypt
+    }
     if (((_cryptAddress + _progress + done) % ENCRYPTED_TWEAK_BLOCK_SIZE) == 0 || done == 0) {
       _cryptKeyTweak(_cryptAddress + _progress + done, tweaked_key);  //update tweaked crypt key
       if (mbedtls_aes_setkey_enc(&ctx, tweaked_key, 256)) {
@@ -325,7 +331,9 @@ bool UpdateClass::_decryptBuffer() {
     if (mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_ENCRYPT, _cryptBuffer, _cryptBuffer)) {  //use MBEDTLS_AES_ENCRYPT to decrypt flash code
       return false;
     }
-    for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i];  //reverse order 16 bytes from decrypt
+    for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
+      _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i];  //reverse order 16 bytes from decrypt
+    }
     done += ENCRYPTED_BLOCK_SIZE;
   }
   return true;
@@ -335,8 +343,7 @@ bool UpdateClass::_writeBuffer() {
   //first bytes of loading image, check to see if loading image needs decrypting
   if (!_progress) {
     _cryptMode &= U_AES_DECRYPT_MODE_MASK;
-    if ((_cryptMode == U_AES_DECRYPT_ON)
-        || ((_command == U_FLASH) && (_cryptMode & U_AES_DECRYPT_AUTO) && (_buffer[0] != ESP_IMAGE_HEADER_MAGIC))) {
+    if ((_cryptMode == U_AES_DECRYPT_ON) || ((_command == U_FLASH) && (_cryptMode & U_AES_DECRYPT_AUTO) && (_buffer[0] != ESP_IMAGE_HEADER_MAGIC))) {
       _cryptMode |= U_AES_IMAGE_DECRYPTING_BIT;  //set to decrypt the loading image
       log_d("Decrypting OTA Image");
     }
@@ -372,9 +379,13 @@ bool UpdateClass::_writeBuffer() {
     _progress_callback(0, _size);
   }
   size_t offset = _partition->address + _progress;
-  bool block_erase = (_size - _progress >= SPI_FLASH_BLOCK_SIZE) && (offset % SPI_FLASH_BLOCK_SIZE == 0);                                                   // if it's the block boundary, than erase the whole block from here
-  bool part_head_sectors = _partition->address % SPI_FLASH_BLOCK_SIZE && offset < (_partition->address / SPI_FLASH_BLOCK_SIZE + 1) * SPI_FLASH_BLOCK_SIZE;  // sector belong to unaligned partition heading block
-  bool part_tail_sectors = offset >= (_partition->address + _size) / SPI_FLASH_BLOCK_SIZE * SPI_FLASH_BLOCK_SIZE;                                           // sector belong to unaligned partition tailing block
+  bool block_erase =
+    (_size - _progress >= SPI_FLASH_BLOCK_SIZE) && (offset % SPI_FLASH_BLOCK_SIZE == 0);  // if it's the block boundary, than erase the whole block from here
+  bool part_head_sectors =
+    _partition->address % SPI_FLASH_BLOCK_SIZE
+    && offset < (_partition->address / SPI_FLASH_BLOCK_SIZE + 1) * SPI_FLASH_BLOCK_SIZE;  // sector belong to unaligned partition heading block
+  bool part_tail_sectors =
+    offset >= (_partition->address + _size) / SPI_FLASH_BLOCK_SIZE * SPI_FLASH_BLOCK_SIZE;  // sector belong to unaligned partition tailing block
   if (block_erase || part_head_sectors || part_tail_sectors) {
     if (!ESP.partitionEraseRange(_partition, _progress, block_erase ? SPI_FLASH_BLOCK_SIZE : SPI_FLASH_SEC_SIZE)) {
       _abort(UPDATE_ERROR_ERASE);
@@ -383,7 +394,8 @@ bool UpdateClass::_writeBuffer() {
   }
 
   // try to skip empty blocks on unecrypted partitions
-  if ((_partition->encrypted || _chkDataInBlock(_buffer + skip / sizeof(uint32_t), _bufferLen - skip)) && !ESP.partitionWrite(_partition, _progress + skip, (uint32_t *)_buffer + skip / sizeof(uint32_t), _bufferLen - skip)) {
+  if ((_partition->encrypted || _chkDataInBlock(_buffer + skip / sizeof(uint32_t), _bufferLen - skip))
+      && !ESP.partitionWrite(_partition, _progress + skip, (uint32_t *)_buffer + skip / sizeof(uint32_t), _bufferLen - skip)) {
     _abort(UPDATE_ERROR_WRITE);
     return false;
   }
@@ -508,8 +520,9 @@ size_t UpdateClass::writeStream(Stream &data) {
   size_t toRead = 0;
   int timeout_failures = 0;
 
-  if (hasError() || !isRunning())
+  if (hasError() || !isRunning()) {
     return 0;
+  }
 
   if (!_verifyHeader(data.peek())) {
     _reset();
@@ -551,8 +564,9 @@ size_t UpdateClass::writeStream(Stream &data) {
       digitalWrite(_ledPin, !_ledOn);  // Switch LED off
     }
     _bufferLen += toRead;
-    if ((_bufferLen == remaining() || _bufferLen == SPI_FLASH_SEC_SIZE) && !_writeBuffer())
+    if ((_bufferLen == remaining() || _bufferLen == SPI_FLASH_SEC_SIZE) && !_writeBuffer()) {
       return written;
+    }
     written += toRead;
 
 #if CONFIG_FREERTOS_UNICORE
@@ -572,14 +586,16 @@ const char *UpdateClass::errorString() {
 
 bool UpdateClass::_chkDataInBlock(const uint8_t *data, size_t len) const {
   // check 32-bit aligned blocks only
-  if (!len || len % sizeof(uint32_t))
+  if (!len || len % sizeof(uint32_t)) {
     return true;
+  }
 
   size_t dwl = len / sizeof(uint32_t);
 
   do {
-    if (*(uint32_t *)data ^ 0xffffffff)  // for SPI NOR flash empty blocks are all one's, i.e. filled with 0xff byte
+    if (*(uint32_t *)data ^ 0xffffffff) {  // for SPI NOR flash empty blocks are all one's, i.e. filled with 0xff byte
       return true;
+    }
 
     data += sizeof(uint32_t);
   } while (--dwl);

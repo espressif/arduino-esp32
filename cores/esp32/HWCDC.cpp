@@ -29,37 +29,38 @@
 #include "hal/usb_serial_jtag_ll.h"
 #pragma GCC diagnostic warning "-Wvolatile"
 #include "rom/ets_sys.h"
-#include "driver/usb_serial_jtag.h"
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 
 static RingbufHandle_t tx_ring_buf = NULL;
 static QueueHandle_t rx_queue = NULL;
-static uint8_t rx_data_buf[64] = { 0 };
+static uint8_t rx_data_buf[64] = {0};
 static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
 static volatile bool connected = false;
 
+// SOF in ISR causes problems for uploading firmware
+//static volatile unsigned long lastSOF_ms;
+//static volatile uint8_t SOF_TIMEOUT;
+
 // timeout has no effect when USB CDC is unplugged
-static uint32_t requested_tx_timeout_ms = 100;
+static uint32_t tx_timeout_ms = 100;
 
 static esp_event_loop_handle_t arduino_hw_cdc_event_loop_handle = NULL;
 
-static esp_err_t arduino_hw_cdc_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, BaseType_t *task_unblocked) {
+static esp_err_t
+  arduino_hw_cdc_event_post(esp_event_base_t event_base, int32_t event_id, void *event_data, size_t event_data_size, BaseType_t *task_unblocked) {
   if (arduino_hw_cdc_event_loop_handle == NULL) {
     return ESP_FAIL;
   }
   return esp_event_isr_post_to(arduino_hw_cdc_event_loop_handle, event_base, event_id, event_data, event_data_size, task_unblocked);
 }
 
-static esp_err_t arduino_hw_cdc_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg) {
+static esp_err_t
+  arduino_hw_cdc_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg) {
   if (!arduino_hw_cdc_event_loop_handle) {
     esp_event_loop_args_t event_task_args = {
-      .queue_size = 5,
-      .task_name = "arduino_hw_cdc_events",
-      .task_priority = 5,
-      .task_stack_size = 2048,
-      .task_core_id = tskNO_AFFINITY
+      .queue_size = 5, .task_name = "arduino_hw_cdc_events", .task_priority = 5, .task_stack_size = 2048, .task_core_id = tskNO_AFFINITY
     };
     if (esp_event_loop_create(&event_task_args, &arduino_hw_cdc_event_loop_handle) != ESP_OK) {
       log_e("esp_event_loop_create failed");
@@ -74,12 +75,12 @@ static esp_err_t arduino_hw_cdc_event_handler_register_with(esp_event_base_t eve
 static void hw_cdc_isr_handler(void *arg) {
   portBASE_TYPE xTaskWoken = 0;
   uint32_t usbjtag_intr_status = 0;
-  arduino_hw_cdc_event_data_t event = { 0 };
+  arduino_hw_cdc_event_data_t event = {0};
   usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
 
   if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY) {
     // Interrupt tells us the host picked up the data we sent.
-    if (!usb_serial_jtag_is_connected()) {
+    if (!HWCDC::isPlugged()) {
       connected = false;
       usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
       // USB is unplugged, nothing to be done here
@@ -90,7 +91,7 @@ static void hw_cdc_isr_handler(void *arg) {
     if (tx_ring_buf != NULL && usb_serial_jtag_ll_txfifo_writable() == 1) {
       // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
       usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-      size_t queued_size;
+      size_t queued_size = 0;
       uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
       // If the hardware fifo is available, write in it. Otherwise, do nothing.
       if (queued_buff != NULL) {  //Although tx_queued_bytes may be larger than 0. We may have interrupt before xRingbufferSend() was called.
@@ -99,7 +100,9 @@ static void hw_cdc_isr_handler(void *arg) {
         usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
         usb_serial_jtag_ll_txfifo_flush();
         vRingbufferReturnItemFromISR(tx_ring_buf, queued_buff, &xTaskWoken);
-        if (connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+        if (connected) {
+          usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+        }
         //send event?
         //ets_printf("TX:%u\n", queued_size);
         event.tx.len = queued_size;
@@ -132,20 +135,38 @@ static void hw_cdc_isr_handler(void *arg) {
     connected = false;
   }
 
+  // SOF ISR is causing esptool to be unable to upload firmware to the board
+  // if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SOF) {
+  //   usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SOF);
+  //   lastSOF_ms = millis();
+  // }
+
   if (xTaskWoken == pdTRUE) {
     portYIELD_FROM_ISR();
   }
 }
 
+// Moved to header file as inline function. Kept just as future reference.
+//inline bool HWCDC::isPlugged(void) {
+// SOF ISR is causing esptool to be unable to upload firmware to the board
+// Timer test for SOF seems to work when uploading firmware
+//  return usb_serial_jtag_is_connected();//(lastSOF_ms + SOF_TIMEOUT) >= millis();
+//}
+
 bool HWCDC::isCDC_Connected() {
   static bool running = false;
 
   // USB may be unplugged
-  if (usb_serial_jtag_is_connected() == false) {
+  if (!isPlugged()) {
     connected = false;
     running = false;
+    // SOF in ISR causes problems for uploading firmware
+    //SOF_TIMEOUT = 5;  // SOF timeout when unplugged
     return false;
   }
+  //else {
+  //  SOF_TIMEOUT = 50;  // SOF timeout when plugged
+  //}
 
   if (connected) {
     running = false;
@@ -155,21 +176,72 @@ bool HWCDC::isCDC_Connected() {
   if (running == false && !connected) {  // enables it only once!
     usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
   }
+
   // this will feed CDC TX FIFO to trigger IN_EMPTY
-  uint8_t c = '\0';
-  usb_serial_jtag_ll_write_txfifo(&c, sizeof(c));
   usb_serial_jtag_ll_txfifo_flush();
   running = true;
   return false;
+}
+
+static void flushTXBuffer(const uint8_t *buffer, size_t size) {
+  if (!tx_ring_buf) {
+    return;
+  }
+  UBaseType_t uxItemsWaiting = 0;
+  vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+  size_t freeSpace = xRingbufferGetCurFreeSize(tx_ring_buf);
+  size_t ringbufferLength = freeSpace + uxItemsWaiting;
+
+  if (buffer == NULL) {
+    // just flush the whole ring buffer and exit - used by HWCDC::flush()
+    size_t queued_size = 0;
+    uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, ringbufferLength);
+    if (queued_size && queued_buff != NULL) {
+      vRingbufferReturnItem(tx_ring_buf, (void *)queued_buff);
+    }
+    return;
+  }
+  if (size == 0) {
+    return;  // nothing to do
+  }
+  if (freeSpace >= size) {
+    // there is enough space, just add the data to the ring buffer
+    if (xRingbufferSend(tx_ring_buf, (void *)buffer, size, 0) != pdTRUE) {
+      return;
+    }
+  } else {
+    // how many byte should be flushed to make space for the new data
+    size_t to_flush = size - freeSpace;
+    if (to_flush > ringbufferLength) {
+      to_flush = ringbufferLength;
+    }
+    size_t queued_size = 0;
+    uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, to_flush);
+    if (queued_size && queued_buff != NULL) {
+      vRingbufferReturnItem(tx_ring_buf, (void *)queued_buff);
+    }
+    // now add the new data that fits into the ring buffer
+    uint8_t *bptr = (uint8_t *)buffer;
+    if (size >= ringbufferLength) {
+      size = ringbufferLength;
+      bptr = (uint8_t *)buffer + (size - ringbufferLength);
+    }
+    if (xRingbufferSend(tx_ring_buf, (void *)bptr, size, 0) != pdTRUE) {
+      return;
+    }
+  }
+  // flushes CDC FIFO
+  usb_serial_jtag_ll_txfifo_flush();
 }
 
 static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
   if (tx_ring_buf == NULL) {
     return;
   }
-  uint32_t tx_timeout_ms = 0;
-  if (HWCDC::isConnected()) {
-    tx_timeout_ms = requested_tx_timeout_ms;
+  if (!HWCDC::isConnected()) {
+    // just pop/push RingBuffer and apply FIFO policy
+    flushTXBuffer((const uint8_t *)&c, 1);
+    return;
   }
   if (xPortInIsrContext()) {
     xRingbufferSendFromISR(tx_ring_buf, (void *)(&c), 1, NULL);
@@ -177,11 +249,15 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
     xRingbufferSend(tx_ring_buf, (void *)(&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
   }
   usb_serial_jtag_ll_txfifo_flush();
+  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
 }
 
 HWCDC::HWCDC() {
   perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit);
   perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit);
+  // SOF in ISR causes problems for uploading firmware
+  //  lastSOF_ms = 0;
+  //  SOF_TIMEOUT = 5;
 }
 
 HWCDC::~HWCDC() {
@@ -204,7 +280,9 @@ void HWCDC::onEvent(arduino_hw_cdc_event_t event, esp_event_handler_t callback) 
 bool HWCDC::deinit(void *busptr) {
   // avoid any recursion issue with Peripheral Manager perimanSetPinBus() call
   static bool running = false;
-  if (running) return true;
+  if (running) {
+    return true;
+  }
   running = true;
   // Setting USB D+ D- pins
   bool retCode = true;
@@ -232,22 +310,27 @@ void HWCDC::begin(unsigned long baud) {
       log_e("HW CDC RX Buffer error");
     }
   }
-  //TX Buffer default has 16 bytes if not preset
+  //TX Buffer default has 256 bytes if not preset
   if (tx_ring_buf == NULL) {
-    if (!setTxBufferSize(16)) {
+    if (!setTxBufferSize(256)) {
       log_e("HW CDC TX Buffer error");
     }
   }
 
   // the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
-  deinit(NULL);
-  delay(10);  // USB Host has to enumerate it again
+  // But this is also causing terminal to hang, so they are disabled
+  // deinit(NULL);
+  // delay(10);  // USB Host has to enumerate it again
 
   // Peripheral Manager setting for USB D+ D- pins
   uint8_t pin = USB_DM_GPIO_NUM;
-  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *)this, -1, -1)) goto err;
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *)this, -1, -1)) {
+    goto err;
+  }
   pin = USB_DP_GPIO_NUM;
-  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) goto err;
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) {
+    goto err;
+  }
 
   // Configure PHY
   // USB_Serial_JTAG use internal PHY
@@ -260,6 +343,10 @@ void HWCDC::begin(unsigned long baud) {
   USB_SERIAL_JTAG.conf0.usb_pad_enable = 1;
   usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
   usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET);
+  // SOF ISR is causing esptool to be unable to upload firmware to the board
+  // usb_serial_jtag_ll_ena_intr_mask(
+  //   USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY | USB_SERIAL_JTAG_INTR_SERIAL_OUT_RECV_PKT | USB_SERIAL_JTAG_INTR_BUS_RESET | USB_SERIAL_JTAG_INTR_SOF
+  // );
   if (!intr_handle && esp_intr_alloc(ETS_USB_SERIAL_JTAG_INTR_SOURCE, 0, hw_cdc_isr_handler, NULL, &intr_handle) != ESP_OK) {
     isr_log_e("HW USB CDC failed to init interrupts");
     end();
@@ -294,7 +381,7 @@ void HWCDC::end() {
 }
 
 void HWCDC::setTxTimeoutMs(uint32_t timeout) {
-  requested_tx_timeout_ms = timeout;
+  tx_timeout_ms = timeout;
 }
 
 /*
@@ -317,12 +404,8 @@ size_t HWCDC::setTxBufferSize(size_t tx_queue_len) {
 }
 
 int HWCDC::availableForWrite(void) {
-  uint32_t tx_timeout_ms = 0;
   if (tx_ring_buf == NULL || tx_lock == NULL) {
     return 0;
-  }
-  if (HWCDC::isCDC_Connected()) {
-    tx_timeout_ms = requested_tx_timeout_ms;
   }
   if (xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS) {
     return 0;
@@ -332,70 +415,75 @@ int HWCDC::availableForWrite(void) {
   return a;
 }
 
-static void flushTXBuffer() {
-  if (!tx_ring_buf) return;
-  UBaseType_t uxItemsWaiting = 0;
-  vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
-
-  size_t queued_size = 0;
-  uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, uxItemsWaiting);
-  if (queued_size && queued_buff != NULL) {
-    vRingbufferReturnItem(tx_ring_buf, (void *)queued_buff);
-  }
-  // flushes CDC FIFO
-  usb_serial_jtag_ll_txfifo_flush();
-}
-
 size_t HWCDC::write(const uint8_t *buffer, size_t size) {
-  uint32_t tx_timeout_ms = 0;
   if (buffer == NULL || size == 0 || tx_ring_buf == NULL || tx_lock == NULL) {
     return 0;
-  }
-  if (HWCDC::isCDC_Connected()) {
-    tx_timeout_ms = requested_tx_timeout_ms;
-  } else {
-    connected = false;
   }
   if (xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS) {
     return 0;
   }
-  size_t space = xRingbufferGetCurFreeSize(tx_ring_buf);
-  size_t to_send = size, so_far = 0;
-
-  if (space > size) {
-    space = size;
-  }
-  // Non-Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-  if (space > 0 && xRingbufferSend(tx_ring_buf, (void *)(buffer), space, 0) != pdTRUE) {
-    size = 0;
+  if (!isCDC_Connected()) {
+    // just pop/push RingBuffer and apply FIFO policy
+    flushTXBuffer(buffer, size);
   } else {
-    to_send -= space;
-    so_far += space;
-    // Now trigger the ISR to read data from the ring buffer.
-    usb_serial_jtag_ll_txfifo_flush();
-    if (connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+    size_t space = xRingbufferGetCurFreeSize(tx_ring_buf);
+    size_t to_send = size, so_far = 0;
 
-    while (to_send) {
-      space = xRingbufferGetCurFreeSize(tx_ring_buf);
-      if (space > to_send) {
-        space = to_send;
-      }
-      // Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-      if (xRingbufferSend(tx_ring_buf, (void *)(buffer + so_far), space, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
-        size = so_far;
-        break;
-      }
-      so_far += space;
+    if (space > size) {
+      space = size;
+    }
+    // Non-Blocking method, Sending data to ringbuffer, and handle the data in ISR.
+    if (space > 0 && xRingbufferSend(tx_ring_buf, (void *)(buffer), space, 0) != pdTRUE) {
+      size = 0;
+    } else {
       to_send -= space;
+      so_far += space;
       // Now trigger the ISR to read data from the ring buffer.
       usb_serial_jtag_ll_txfifo_flush();
-      if (connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+      if (connected) {
+        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+      }
+      // tracks CDC trasmission progress to avoid hanging if CDC is unplugged while still sending data
+      size_t last_toSend = to_send;
+      uint32_t tries = tx_timeout_ms;  // waits 1ms per sending data attempt, in case CDC is unplugged
+      while (connected && to_send) {
+        space = xRingbufferGetCurFreeSize(tx_ring_buf);
+        if (space > to_send) {
+          space = to_send;
+        }
+        // Blocking method, Sending data to ringbuffer, and handle the data in ISR.
+        if (xRingbufferSend(tx_ring_buf, (void *)(buffer + so_far), space, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
+          size = so_far;
+          log_w("write failed due to ring buffer full - timeout");
+          break;
+        }
+        so_far += space;
+        to_send -= space;
+        // Now trigger the ISR to read data from the ring buffer.
+        usb_serial_jtag_ll_txfifo_flush();
+        if (connected) {
+          usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+        }
+        if (last_toSend == to_send) {
+          // no progress in sending data... USB CDC is probably unplugged
+          tries--;
+          delay(1);
+        } else {
+          last_toSend = to_send;
+          tries = tx_timeout_ms;  // reset the timeout
+        }
+        if (tries == 0) {  // CDC isn't connected anymore...
+          size = so_far;
+          log_w("write failed due to waiting USB Host - timeout");
+          connected = false;
+        }
+      }
     }
-  }
-  // CDC is disconnected ==> flush all data from TX buffer
-  if (to_send && !usb_serial_jtag_ll_txfifo_writable()) {
-    connected = false;
-    flushTXBuffer();
+    // CDC was diconnected while sending data ==> flush the TX buffer keeping the last data
+    if (to_send && !usb_serial_jtag_ll_txfifo_writable()) {
+      connected = false;
+      flushTXBuffer(buffer + so_far, to_send);
+    }
   }
   xSemaphoreGive(tx_lock);
   return size;
@@ -406,35 +494,40 @@ size_t HWCDC::write(uint8_t c) {
 }
 
 void HWCDC::flush(void) {
-  uint32_t tx_timeout_ms = 0;
   if (tx_ring_buf == NULL || tx_lock == NULL) {
     return;
-  }
-  if (HWCDC::isCDC_Connected()) {
-    tx_timeout_ms = requested_tx_timeout_ms;
-  } else {
-    connected = false;
   }
   if (xSemaphoreTake(tx_lock, tx_timeout_ms / portTICK_PERIOD_MS) != pdPASS) {
     return;
   }
-  UBaseType_t uxItemsWaiting = 0;
-  vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
-  if (uxItemsWaiting) {
-    // Now trigger the ISR to read data from the ring buffer.
-    usb_serial_jtag_ll_txfifo_flush();
-    if (connected) usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-  }
-  uint8_t tries = 3;
-  while (tries && uxItemsWaiting) {
-    delay(5);
-    UBaseType_t lastUxItemsWaiting = uxItemsWaiting;
+  if (!isCDC_Connected()) {
+    flushTXBuffer(NULL, 0);
+  } else {
+    UBaseType_t uxItemsWaiting = 0;
     vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
-    if (lastUxItemsWaiting == uxItemsWaiting) tries--;
-  }
-  if (tries == 0) {  // CDC isn't connected anymore...
-    connected = false;
-    flushTXBuffer();
+    if (uxItemsWaiting) {
+      // Now trigger the ISR to read data from the ring buffer.
+      usb_serial_jtag_ll_txfifo_flush();
+      if (connected) {
+        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+      }
+    }
+    uint32_t tries = tx_timeout_ms;  // waits 1ms per ISR sending data attempt, in case CDC is unplugged
+    while (connected && tries && uxItemsWaiting) {
+      delay(1);
+      UBaseType_t lastUxItemsWaiting = uxItemsWaiting;
+      vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+      if (lastUxItemsWaiting == uxItemsWaiting) {
+        tries--;
+      }
+      if (connected) {
+        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+      }
+    }
+    if (tries == 0) {  // CDC isn't connected anymore...
+      connected = false;
+      flushTXBuffer(NULL, 0);  // flushes all TX Buffer
+    }
   }
   xSemaphoreGive(tx_lock);
 }
@@ -506,9 +599,9 @@ size_t HWCDC::read(uint8_t *buffer, size_t size) {
 void HWCDC::setDebugOutput(bool en) {
   if (en) {
     uartSetDebug(NULL);
-    ets_install_putc1((void (*)(char)) & cdc0_write_char);
+    ets_install_putc2((void (*)(char)) & cdc0_write_char);
   } else {
-    ets_install_putc1(NULL);
+    ets_install_putc2(NULL);
   }
 }
 

@@ -12,8 +12,8 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
-const char* ssid = "...";
-const char* password = "...";
+const char *ssid = "...";
+const char *password = "...";
 
 void setup() {
   Serial.begin(115200);
@@ -55,7 +55,7 @@ void loop() {
   delay(10000);
 }
 
-void browseService(const char* service, const char* proto) {
+void browseService(const char *service, const char *proto) {
   Serial.printf("Browsing for service _%s._%s.local. ... ", service, proto);
   int n = MDNS.queryService(service, proto);
   if (n == 0) {

@@ -3,17 +3,16 @@
 
 #include <stdint.h>
 
-#define ETH_PHY_TYPE ETH_PHY_LAN8720
-#define ETH_PHY_ADDR 0
-#define ETH_PHY_MDC 23
-#define ETH_PHY_MDIO 18
+#define ETH_PHY_TYPE  ETH_PHY_LAN8720
+#define ETH_PHY_ADDR  0
+#define ETH_PHY_MDC   23
+#define ETH_PHY_MDIO  18
 #define ETH_PHY_POWER 12
 #if defined BOARD_HAS_PSRAM  // when PSRAM is enabled pins 16 and 17 are used for the PSRAM and alternative pins are used for respectively I2C SCL and Ethernet Clock GPIO
 #define ETH_CLK_MODE ETH_CLOCK_GPIO0_OUT
 #else
 #define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
 #endif
-
 
 static const uint8_t KEY_BUILTIN = 34;
 

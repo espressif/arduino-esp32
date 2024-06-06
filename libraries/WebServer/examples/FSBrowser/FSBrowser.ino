@@ -30,7 +30,7 @@
 #define FILESYSTEM SPIFFS
 // You only need to format the filesystem once
 #define FORMAT_FILESYSTEM false
-#define DBG_OUTPUT_PORT Serial
+#define DBG_OUTPUT_PORT   Serial
 
 #if FILESYSTEM == FFat
 #include <FFat.h>
@@ -39,9 +39,9 @@
 #include <SPIFFS.h>
 #endif
 
-const char* ssid = "wifi-ssid";
-const char* password = "wifi-password";
-const char* host = "esp32fs";
+const char *ssid = "wifi-ssid";
+const char *password = "wifi-password";
+const char *host = "esp32fs";
 WebServer server(80);
 //holds the current upload
 File fsUploadFile;
@@ -123,7 +123,7 @@ void handleFileUpload() {
   if (server.uri() != "/edit") {
     return;
   }
-  HTTPUpload& upload = server.upload();
+  HTTPUpload &upload = server.upload();
   if (upload.status == UPLOAD_FILE_START) {
     String filename = upload.filename;
     if (!filename.startsWith("/")) {
@@ -195,7 +195,6 @@ void handleFileList() {
   String path = server.arg("dir");
   DBG_OUTPUT_PORT.println("handleFileList: " + path);
 
-
   File root = FILESYSTEM.open(path);
   path = String();
 
@@ -222,7 +221,9 @@ void setup(void) {
   DBG_OUTPUT_PORT.begin(115200);
   DBG_OUTPUT_PORT.print("\n");
   DBG_OUTPUT_PORT.setDebugOutput(true);
-  if (FORMAT_FILESYSTEM) FILESYSTEM.format();
+  if (FORMAT_FILESYSTEM) {
+    FILESYSTEM.format();
+  }
   FILESYSTEM.begin();
   {
     File root = FILESYSTEM.open("/");
@@ -235,7 +236,6 @@ void setup(void) {
     }
     DBG_OUTPUT_PORT.printf("\n");
   }
-
 
   //WIFI INIT
   DBG_OUTPUT_PORT.printf("Connecting to %s\n", ssid);
@@ -257,7 +257,6 @@ void setup(void) {
   DBG_OUTPUT_PORT.print(host);
   DBG_OUTPUT_PORT.println(".local/edit to see the file browser");
 
-
   //SERVER INIT
   //list directory
   server.on("/list", HTTP_GET, handleFileList);
@@ -274,10 +273,12 @@ void setup(void) {
   //first callback is called after the request has ended with all parsed arguments
   //second callback handles file uploads at that location
   server.on(
-    "/edit", HTTP_POST, []() {
+    "/edit", HTTP_POST,
+    []() {
       server.send(200, "text/plain", "");
     },
-    handleFileUpload);
+    handleFileUpload
+  );
 
   //called when the url is not defined here
   //use it to load content from FILESYSTEM

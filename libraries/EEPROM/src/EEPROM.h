@@ -35,7 +35,7 @@ typedef uint32_t nvs_handle;
 class EEPROMClass {
 public:
   EEPROMClass(uint32_t sector);
-  EEPROMClass(const char* name);
+  EEPROMClass(const char *name);
   EEPROMClass(void);
   ~EEPROMClass(void);
 
@@ -45,25 +45,26 @@ public:
   uint16_t length();
   bool commit();
   void end();
+  bool isDirty();
 
-  uint8_t* getDataPtr();
-  uint16_t convert(bool clear, const char* EEPROMname = "eeprom", const char* nvsname = "eeprom");
+  uint8_t *getDataPtr();
+  uint16_t convert(bool clear, const char *EEPROMname = "eeprom", const char *nvsname = "eeprom");
 
-  template<typename T>
-  T& get(int address, T& t) {
-    if (address < 0 || address + sizeof(T) > _size)
+  template<typename T> T &get(int address, T &t) {
+    if (address < 0 || address + sizeof(T) > _size) {
       return t;
+    }
 
-    memcpy((uint8_t*)&t, _data + address, sizeof(T));
+    memcpy((uint8_t *)&t, _data + address, sizeof(T));
     return t;
   }
 
-  template<typename T>
-  const T& put(int address, const T& t) {
-    if (address < 0 || address + sizeof(T) > _size)
+  template<typename T> const T &put(int address, const T &t) {
+    if (address < 0 || address + sizeof(T) > _size) {
       return t;
+    }
 
-    memcpy(_data + address, (const uint8_t*)&t, sizeof(T));
+    memcpy(_data + address, (const uint8_t *)&t, sizeof(T));
     _dirty = true;
     return t;
   }
@@ -82,10 +83,10 @@ public:
   float_t readFloat(int address);
   double_t readDouble(int address);
   bool readBool(int address);
-  size_t readString(int address, char* value, size_t maxLen);
+  size_t readString(int address, char *value, size_t maxLen);
   String readString(int address);
-  size_t readBytes(int address, void* value, size_t maxLen);
-  template<class T> T readAll(int address, T&);
+  size_t readBytes(int address, void *value, size_t maxLen);
+  template<class T> T readAll(int address, T &);
 
   size_t writeByte(int address, uint8_t value);
   size_t writeChar(int address, int8_t value);
@@ -101,17 +102,17 @@ public:
   size_t writeFloat(int address, float_t value);
   size_t writeDouble(int address, double_t value);
   size_t writeBool(int address, bool value);
-  size_t writeString(int address, const char* value);
+  size_t writeString(int address, const char *value);
   size_t writeString(int address, String value);
-  size_t writeBytes(int address, const void* value, size_t len);
-  template<class T> T writeAll(int address, const T&);
+  size_t writeBytes(int address, const void *value, size_t len);
+  template<class T> T writeAll(int address, const T &);
 
 protected:
   nvs_handle _handle;
-  uint8_t* _data;
+  uint8_t *_data;
   size_t _size;
   bool _dirty;
-  const char* _name;
+  const char *_name;
 };
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_EEPROM)

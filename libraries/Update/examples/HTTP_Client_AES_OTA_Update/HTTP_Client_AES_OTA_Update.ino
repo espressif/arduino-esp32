@@ -54,13 +54,11 @@ espsecure.py encrypt_flash_data  = runs the idf encryption function to make a en
 
 //==========================================================================
 //==========================================================================
-const char* WIFI_SSID = "wifi-ssid";
-const char* WIFI_PASSWORD = "wifi-password";
+const char *WIFI_SSID = "wifi-ssid";
+const char *WIFI_PASSWORD = "wifi-password";
 
-const uint8_t OTA_KEY[32] = { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
-                              0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20,
-                              0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65,
-                              0x74, 0x65, 0x73, 0x74, 0x20, 0x6b, 0x65, 0x79 };
+const uint8_t OTA_KEY[32] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20,
+                             0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x73, 0x74, 0x20, 0x6b, 0x65, 0x79};
 
 /*
 const uint8_t  OTA_KEY[32] = {'0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',
@@ -75,24 +73,24 @@ const uint32_t OTA_ADDRESS = 0x4320;
 const uint32_t OTA_CFG = 0x0f;
 const uint32_t OTA_MODE = U_AES_DECRYPT_AUTO;
 
-const char* HTTPUPDATE_USERAGRENT = "ESP32-Updater";
+const char *HTTPUPDATE_USERAGRENT = "ESP32-Updater";
 //const char*    HTTPUPDATE_HOST         = "www.yourdomain.com";
-const char* HTTPUPDATE_HOST = "192.168.1.2";
+const char *HTTPUPDATE_HOST = "192.168.1.2";
 const uint16_t HTTPUPDATE_PORT = 80;
-const char* HTTPUPDATE_UPDATER_URI = "/firmware/updater.php";                          //uri to 'updater.php'
-const char* HTTPUPDATE_DIRECT_URI = "/firmware/HTTP_Client_AES_OTA_Update-v1.1.xbin";  //uri to image file
+const char *HTTPUPDATE_UPDATER_URI = "/firmware/updater.php";                          //uri to 'updater.php'
+const char *HTTPUPDATE_DIRECT_URI = "/firmware/HTTP_Client_AES_OTA_Update-v1.1.xbin";  //uri to image file
 
-const char* HTTPUPDATE_USER = NULL;  //use NULL if no authentication needed
+const char *HTTPUPDATE_USER = NULL;  //use NULL if no authentication needed
 //const char*    HTTPUPDATE_USER       = "user";
-const char* HTTPUPDATE_PASSWORD = "password";
+const char *HTTPUPDATE_PASSWORD = "password";
 
-const char* HTTPUPDATE_BRAND = "21";                         /* Brand ID */
-const char* HTTPUPDATE_MODEL = "HTTP_Client_AES_OTA_Update"; /* Project name */
-const char* HTTPUPDATE_FIRMWARE = "0.9";                     /* Firmware version */
+const char *HTTPUPDATE_BRAND = "21";                         /* Brand ID */
+const char *HTTPUPDATE_MODEL = "HTTP_Client_AES_OTA_Update"; /* Project name */
+const char *HTTPUPDATE_FIRMWARE = "0.9";                     /* Firmware version */
 
 //==========================================================================
 //==========================================================================
-String urlEncode(const String& url, const char* safeChars = "-_.~") {
+String urlEncode(const String &url, const char *safeChars = "-_.~") {
   String encoded = "";
   char temp[4];
 
@@ -115,7 +113,7 @@ String urlEncode(const String& url, const char* safeChars = "-_.~") {
 }
 
 //==========================================================================
-bool addQuery(String* query, const String name, const String value) {
+bool addQuery(String *query, const String name, const String value) {
   if (name.length() && value.length()) {
     if (query->length() < 3) {
       *query = "?";
@@ -132,7 +130,7 @@ bool addQuery(String* query, const String name, const String value) {
 
 //==========================================================================
 //==========================================================================
-void printProgress(size_t progress, const size_t& size) {
+void printProgress(size_t progress, const size_t &size) {
   static int last_progress = -1;
   if (size > 0) {
     progress = (progress * 100) / size;
@@ -145,12 +143,12 @@ void printProgress(size_t progress, const size_t& size) {
 }
 
 //==========================================================================
-bool http_downloadUpdate(HTTPClient& http, uint32_t size = 0) {
+bool http_downloadUpdate(HTTPClient &http, uint32_t size = 0) {
   size = (size == 0 ? http.getSize() : size);
   if (size == 0) {
     return false;
   }
-  NetworkClient* client = http.getStreamPtr();
+  NetworkClient *client = http.getStreamPtr();
 
   if (!Update.begin(size, U_FLASH)) {
     Serial.printf("Update.begin failed! (%s)\n", Update.errorString());
@@ -174,7 +172,7 @@ bool http_downloadUpdate(HTTPClient& http, uint32_t size = 0) {
 }
 
 //==========================================================================
-int http_sendRequest(HTTPClient& http) {
+int http_sendRequest(HTTPClient &http) {
 
   //set request Headers to be sent to server
   http.useHTTP10(true);  // use HTTP/1.0 for update since the update handler not support any transfer Encoding
@@ -200,7 +198,7 @@ int http_sendRequest(HTTPClient& http) {
 
 //==========================================================================
 /* http_updater sends a GET request to 'update.php' on web server */
-bool http_updater(const String& host, const uint16_t& port, String uri, const bool& download, const char* user = NULL, const char* password = NULL) {
+bool http_updater(const String &host, const uint16_t &port, String uri, const bool &download, const char *user = NULL, const char *password = NULL) {
   //add GET query params to be sent to server (are used by server 'updater.php' code to determine what action to take)
   String query = "";
   addQuery(&query, "cmd", (download ? "download" : "check"));  //action command
@@ -225,8 +223,8 @@ bool http_updater(const String& host, const uint16_t& port, String uri, const bo
   http.addHeader("Firmware", HTTPUPDATE_FIRMWARE);
 
   //set headers to look for to get returned values in servers http response to our http request
-  const char* headerkeys[] = { "update", "version" };  //server returns update 0=no update found, 1=update found, version=version of update found
-  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
+  const char *headerkeys[] = {"update", "version"};  //server returns update 0=no update found, 1=update found, version=version of update found
+  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char *);
   http.collectHeaders(headerkeys, headerkeyssize);
 
   //connect & send HTTP request to server
@@ -258,7 +256,7 @@ bool http_updater(const String& host, const uint16_t& port, String uri, const bo
 
 //==========================================================================
 /* this downloads Firmware image file directly from web server */
-bool http_direct(const String& host, const uint16_t& port, const String& uri, const char* user = NULL, const char* password = NULL) {
+bool http_direct(const String &host, const uint16_t &port, const String &uri, const char *user = NULL, const char *password = NULL) {
   //setup HTTPclient to be ready to connect & send a request to HTTP server
   HTTPClient http;
   NetworkClient client;
@@ -329,5 +327,4 @@ void setup() {
   }
 }
 
-void loop() {
-}
+void loop() {}
