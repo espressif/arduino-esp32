@@ -16,7 +16,9 @@
 
 #include "sdkconfig.h"
 #include "soc/soc_caps.h"
-#ifdef SOC_SDMMC_HOST_SUPPORTED
+#ifndef SOC_SDMMC_HOST_SUPPORTED
+#error The SDMMC library requires a device with an SDIO Host
+#else
 
 #include "FS.h"
 #include "driver/sdmmc_types.h"
@@ -40,6 +42,7 @@ protected:
   int8_t _pin_d1 = -1;
   int8_t _pin_d2 = -1;
   int8_t _pin_d3 = -1;
+  uint8_t _pdrv = 0xFF;
   bool _mode1bit = false;
 
 public:
@@ -55,6 +58,10 @@ public:
   uint64_t cardSize();
   uint64_t totalBytes();
   uint64_t usedBytes();
+  int sectorSize();
+  int numSectors();
+  bool readRAW(uint8_t *buffer, uint32_t sector);
+  bool writeRAW(uint8_t *buffer, uint32_t sector);
 
 private:
   static bool sdmmcDetachBus(void *bus_pointer);

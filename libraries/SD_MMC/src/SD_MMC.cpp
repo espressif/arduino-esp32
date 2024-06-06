@@ -26,6 +26,8 @@
 #include "driver/sdmmc_host.h"
 #include "driver/sdmmc_defs.h"
 #include "sdmmc_cmd.h"
+#include "diskio_sdmmc.h"
+#include "diskio.h"
 #include "soc/sdmmc_pins.h"
 #include "ff.h"
 #include "esp32-hal-periman.h"
@@ -191,6 +193,8 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
     return false;
   }
   _impl->mountpoint(mountpoint);
+  _pdrv = ff_diskio_get_pdrv_card(_card);
+
 
   if (!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC_CMD, (void *)(this), -1, -1)) {
     goto err;
@@ -278,6 +282,25 @@ uint64_t SDMMCFS::usedBytes() {
                   * 512;
 #endif
   return size;
+}
+
+int SDMMCFS::sectorSize() {
+  if (!_card) return 0;
+  return _card->csd.sector_size;
+}
+
+int SDMMCFS::numSectors() {
+  if (!_card) return 0;
+  return (totalBytes()/_card->csd.sector_size);
+}
+
+bool SDMMCFS::readRAW(uint8_t* buffer, uint32_t sector) {
+  log_i("Sector size: %ld", _card->csd.sector_size);
+  return (disk_read(_pdrv, buffer, sector, 1) == 0);
+}
+
+bool SDMMCFS::writeRAW(uint8_t *buffer, uint32_t sector) {
+  return (disk_write(_pdrv, buffer, sector, 1) == 0);
 }
 
 SDMMCFS SD_MMC = SDMMCFS(FSImplPtr(new VFSImpl()));
