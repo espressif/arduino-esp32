@@ -15,31 +15,39 @@ int d0 = 37;
 int d1 = 38;
 int d2 = 33;
 int d3 = 34;
-bool onebit = true; // set to false for 4-bit. 1-bit will ignore the d1-d3 pins (but d3 must be pulled high)
+bool onebit = true;  // set to false for 4-bit. 1-bit will ignore the d1-d3 pins (but d3 must be pulled high)
 
-static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize){
+static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
   uint32_t secSize = SD_MMC.sectorSize();
-  if (!secSize) return false; // disk error
+  if (!secSize) {
+    return false;  // disk error
+  }
   log_v("Write lba: %ld\toffset: %ld\tbufsize: %ld", lba, offset, bufsize);
-  for (int x=0; x< bufsize/secSize; x++) {
+  for (int x = 0; x < bufsize / secSize; x++) {
     uint8_t blkbuffer[secSize];
-    memcpy(blkbuffer, (uint8_t*)buffer + secSize*x, secSize);
-    if (!SD_MMC.writeRAW(blkbuffer, lba + x)) return false;
+    memcpy(blkbuffer, (uint8_t *)buffer + secSize * x, secSize);
+    if (!SD_MMC.writeRAW(blkbuffer, lba + x)) {
+      return false;
+    }
   }
   return bufsize;
 }
 
-static int32_t onRead(uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize){
+static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
   uint32_t secSize = SD_MMC.sectorSize();
-  if (!secSize) return false; // disk error
+  if (!secSize) {
+    return false;  // disk error
+  }
   log_v("Read lba: %ld\toffset: %ld\tbufsize: %ld\tsector: %lu", lba, offset, bufsize, secSize);
-  for (int x=0; x < bufsize/secSize; x++) {
-    if (!SD_MMC.readRAW((uint8_t*)buffer + (x * secSize), lba + x)) return false; // outside of volume boundary
+  for (int x = 0; x < bufsize / secSize; x++) {
+    if (!SD_MMC.readRAW((uint8_t *)buffer + (x * secSize), lba + x)) {
+      return false;  // outside of volume boundary
+    }
   }
   return bufsize;
 }
 
-static bool onStartStop(uint8_t power_condition, bool start, bool load_eject){
+static bool onStartStop(uint8_t power_condition, bool start, bool load_eject) {
   log_i("Start/Stop power: %u\tstart: %d\teject: %d", power_condition, start, load_eject);
   return true;
 }
@@ -58,13 +66,13 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
   }
 }
 
-void setup(){
+void setup() {
   Serial.begin(115200);
   Serial.println("Starting Serial");
 
   Serial.println("Mounting SDcard");
   SD_MMC.setPins(clk, cmd, d0, d1, d2, d3);
-  if(!SD_MMC.begin("/sdcard", onebit)){
+  if (!SD_MMC.begin("/sdcard", onebit)) {
     Serial.println("Mount Failed");
     return;
   }
@@ -85,10 +93,10 @@ void setup(){
   USB.begin();
   USB.onEvent(usbEventCallback);
 
-  Serial.printf("Card Size: %lluMB\n", SD_MMC.totalBytes()/1024/1024);
+  Serial.printf("Card Size: %lluMB\n", SD_MMC.totalBytes() / 1024 / 1024);
   Serial.printf("Sector: %d\tCount: %d\n", SD_MMC.sectorSize(), SD_MMC.numSectors());
 }
 
-void loop(){
+void loop() {
   delay(-1);
 }

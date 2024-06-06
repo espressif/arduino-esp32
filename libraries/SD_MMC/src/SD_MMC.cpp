@@ -195,7 +195,6 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   _impl->mountpoint(mountpoint);
   _pdrv = ff_diskio_get_pdrv_card(_card);
 
-
   if (!perimanSetPinBus(_pin_cmd, ESP32_BUS_TYPE_SDMMC_CMD, (void *)(this), -1, -1)) {
     goto err;
   }
@@ -285,16 +284,20 @@ uint64_t SDMMCFS::usedBytes() {
 }
 
 int SDMMCFS::sectorSize() {
-  if (!_card) return 0;
+  if (!_card) {
+    return 0;
+  }
   return _card->csd.sector_size;
 }
 
 int SDMMCFS::numSectors() {
-  if (!_card) return 0;
-  return (totalBytes()/_card->csd.sector_size);
+  if (!_card) {
+    return 0;
+  }
+  return (totalBytes() / _card->csd.sector_size);
 }
 
-bool SDMMCFS::readRAW(uint8_t* buffer, uint32_t sector) {
+bool SDMMCFS::readRAW(uint8_t *buffer, uint32_t sector) {
   return (disk_read(_pdrv, buffer, sector, 1) == 0);
 }
 
