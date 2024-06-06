@@ -48,6 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build_all: ${{ steps.set-chunks.outputs.build_all }}
+      build_libraries: ${{ steps.set-chunks.outputs.build_libraries }}
       build_static_sketches: ${{ steps.set-chunks.outputs.build_static_sketches }}
       build_idf: ${{ steps.set-chunks.outputs.build_idf }}
       build_platformio: ${{ steps.set-chunks.outputs.build_platformio }}
@@ -103,6 +104,7 @@ jobs:
 
         build_platformio=${{ steps.changed-files.outputs.platformio_any_changed == 'true' }}
         build_idf=${{ steps.changed-files.outputs.idf_any_changed == 'true' }}
+        build_libraries=${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
         build_static_sketches=${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
 
         core_changed=${{ steps.changed-files.outputs.core_any_changed == 'true' }}
@@ -164,6 +166,7 @@ jobs:
         chunks+="]"
 
         echo "build_all=$build_all" >> $GITHUB_OUTPUT
+        echo "build_libraries=$build_libraries" >> $GITHUB_OUTPUT
         echo "build_static_sketches=$build_static_sketches" >> $GITHUB_OUTPUT
         echo "build_idf=$build_idf" >> $GITHUB_OUTPUT
         echo "build_platformio=$build_platformio" >> $GITHUB_OUTPUT
@@ -274,7 +277,10 @@ jobs:
   build-esp-idf-component:
     name: Build with ESP-IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
     needs: gen-chunks
-    if: ${{ needs.gen-chunks.outputs.build_all == 'true' || needs.gen-chunks.outputs.build_idf == 'true' }}
+    if: |
+      needs.gen-chunks.outputs.build_all == 'true' ||
+      needs.gen-chunks.outputs.build_libraries == 'true' ||
+      needs.gen-chunks.outputs.build_idf == 'true'
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
