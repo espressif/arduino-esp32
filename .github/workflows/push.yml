@@ -138,9 +138,6 @@ jobs:
               fi
               echo ""
           done
-        else
-          echo "Unhandled change triggered the build. This should not happen."
-          exit 1
         fi
 
         if [[ -n $sketches ]]; then
@@ -185,6 +182,7 @@ jobs:
   # Ubuntu
   build-arduino-linux:
     name: Arduino ${{ matrix.chunk }} on ubuntu-latest
+    if: ${{ needs.gen-chunks.outputs.build_all == 'true' || needs.gen-chunks.outputs.build_libraries == 'true' }}
     needs: gen-chunks
     runs-on: ubuntu-latest
     strategy:
