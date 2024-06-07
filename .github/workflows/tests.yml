@@ -12,14 +12,6 @@ on:
       - '!libraries/**.txt'
       - '!libraries/**.properties'
       - 'package/**'
-      - '.github/workflows/tests.yml'
-      - '.github/workflows/build_tests.yml'
-      - '.github/workflows/hw.yml'
-      - '.github/workflows/wokwi.yml'
-      - '.github/workflows/qemu.yml'
-      - '.github/scripts/install-*.sh'
-      - '.github/scripts/tests_*.sh'
-      - '.github/scripts/sketch_utils.sh'
   schedule:
     - cron: '0 2 * * *'
 
