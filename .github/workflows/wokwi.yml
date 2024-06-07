@@ -16,10 +16,6 @@ on:
         description: 'Wokwi CLI API token'
         required: true
 
-concurrency:
-  group: tests-wokwi-${{ github.event.pull_request.number || github.ref }}-${{ inputs.chip }}-${{ inputs.type }}
-  cancel-in-progress: true
-
 env:
   WOKWI_TIMEOUT: 600000 # Milliseconds
 

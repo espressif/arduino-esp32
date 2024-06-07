@@ -12,10 +12,6 @@ on:
         description: 'Chip to run tests for'
         required: true
 
-concurrency:
-  group: tests-hw-${{ github.event.pull_request.number || github.ref }}-${{ inputs.chip }}-${{ inputs.type }}
-  cancel-in-progress: true
-
 jobs:
   hardware-test:
     name: Hardware ${{ inputs.chip }} ${{ inputs.type }} tests
