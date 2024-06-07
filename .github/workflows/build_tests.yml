@@ -47,11 +47,24 @@ jobs:
 
           echo "enabled=$enabled" >> $GITHUB_OUTPUT
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout user repository
         if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !.github
+
+      # To avoid giving unknown scripts elevated permissions, download them from the master branch
+      - name: Get CI scripts from master
+        if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        run: |
+          mkdir -p .github
+          cd .github
+          curl https://codeload.github.com/${{ github.repository }}/tar.gz/master | tar -xz --strip=2 arduino-esp32-master/.github
 
       - name: Get libs cache
         uses: actions/cache@v4

@@ -101,7 +101,7 @@ function run_test() {
             fi
         fi
     done
-    printf "\n"
+    printf "Test return code: $error\n"
     return $error
 }
 
@@ -250,6 +250,7 @@ else
 
       exit_code=0
       run_test $target $sketch $options $erase || exit_code=$?
+      echo "Sketch $sketch exit code: $exit_code"
       if [ $exit_code -ne 0 ]; then
           error=$exit_code
       fi
