@@ -191,8 +191,8 @@ BaseType_t xTaskCreateUniversal(
 #endif
 }
 
-unsigned long ARDUINO_ISR_ATTR micros() {
-  return (unsigned long)(esp_timer_get_time());
+unsigned long long ARDUINO_ISR_ATTR micros() {
+  return (unsigned long long)(esp_timer_get_time());
 }
 
 unsigned long ARDUINO_ISR_ATTR millis() {

@@ -121,7 +121,7 @@ BaseType_t xTaskCreateUniversal(
   TaskHandle_t *const pxCreatedTask, const BaseType_t xCoreID
 );
 
-unsigned long micros();
+unsigned long long micros();
 unsigned long millis();
 void delay(uint32_t);
 void delayMicroseconds(uint32_t us);
