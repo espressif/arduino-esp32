@@ -49,18 +49,32 @@ jobs:
 
           echo "enabled=$enabled" >> $GITHUB_OUTPUT
 
-      - name: Checkout repository
+      - name: Checkout user repository
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !.github
 
-      - uses: actions/setup-python@v5
-        if: steps.check-tests.outputs.enabled == 'true'
-        with:
-          cache-dependency-path: tests/requirements.txt
-          cache: 'pip'
-          python-version: '3.10.1'
+      # To avoid giving unknown scripts elevated permissions, download them from the master branch
+      - name: Get CI scripts from master
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          mkdir -p .github
+          cd .github
+          curl https://codeload.github.com/${{ github.repository }}/tar.gz/master | tar -xz --strip=2 arduino-esp32-master/.github
+
+      # setup-python currently only works on ubuntu images
+      # - uses: actions/setup-python@v5
+      #   if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+      #   with:
+      #     cache-dependency-path: tests/requirements.txt
+      #     cache: 'pip'
+      #     python-version: '3.10.1'
 
       - name: Install dependencies
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
