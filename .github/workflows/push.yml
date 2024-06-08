@@ -171,7 +171,7 @@ jobs:
         echo "chunks=$chunks" >> $GITHUB_OUTPUT
 
     - name: Upload sketches found
-      if: ${{ steps.set-chunks.outputs.build_libraries == 'true' }}
+      if: ${{ steps.set-chunks.outputs.build_all == 'false' && steps.set-chunks.outputs.build_libraries == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: sketches_found
