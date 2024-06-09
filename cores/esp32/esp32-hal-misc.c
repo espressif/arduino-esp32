@@ -203,7 +203,7 @@ void delay(uint32_t ms) {
   vTaskDelay(ms / portTICK_PERIOD_MS);
 }
 
-void ARDUINO_ISR_ATTR delayMicroseconds(uint32_t us) {
+void ARDUINO_ISR_ATTR delayMicroseconds(uint64_t us) {
   uint64_t m = (uint64_t)esp_timer_get_time();
   if (us) {
     uint64_t e = (m + us);
