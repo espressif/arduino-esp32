@@ -682,7 +682,7 @@ void analogContinuousSetAtten(adc_attenuation_t attenuation) {
 }
 
 void analogContinuousSetWidth(uint8_t bits) {
-  if ((bits < SOC_ADC_DIGI_MIN_BITWIDTH) && (bits > SOC_ADC_DIGI_MAX_BITWIDTH)) {
+  if ((bits < SOC_ADC_DIGI_MIN_BITWIDTH) || (bits > SOC_ADC_DIGI_MAX_BITWIDTH)) {
     log_e("Selected width cannot be set. Range is from %d to %d", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
     return;
   }
