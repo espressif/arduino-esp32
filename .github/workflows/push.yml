@@ -171,7 +171,7 @@ jobs:
         echo "chunks=$chunks" >> $GITHUB_OUTPUT
 
     - name: Upload sketches found
-      if: ${{ steps.set-chunks.outputs.build_all == 'false' }}
+      if: ${{ steps.set-chunks.outputs.build_all == 'false' && steps.set-chunks.outputs.build_libraries == 'true' }}
       uses: actions/upload-artifact@v4
       with:
         name: sketches_found
@@ -214,13 +214,13 @@ jobs:
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ env.MAX_CHUNKS }} 1
 
     - name: Download sketches found
-      if: ${{ needs.gen-chunks.outputs.build_all == 'false' }}
+      if: ${{ needs.gen-chunks.outputs.build_all == 'false' && needs.gen-chunks.outputs.build_libraries == 'true' }}
       uses: actions/download-artifact@v4
       with:
         name: sketches_found
 
     - name: Build selected sketches
-      if: ${{ needs.gen-chunks.outputs.build_all == 'false' }}
+      if: ${{ needs.gen-chunks.outputs.build_all == 'false' && needs.gen-chunks.outputs.build_libraries == 'true' }}
       run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ needs.gen-chunks.outputs.chunk_count }} 1 sketches_found.txt
 
     #Upload cli compile json as artifact

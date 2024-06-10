@@ -12,10 +12,6 @@ on:
         description: 'Chip to build tests for'
         required: true
 
-concurrency:
-  group: tests-build-${{ github.event.pull_request.number || github.ref }}-${{ inputs.chip }}-${{ inputs.type }}
-  cancel-in-progress: true
-
 jobs:
   build-tests:
     name: Build ${{ inputs.type }} tests for ${{ inputs.chip }}

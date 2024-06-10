@@ -10,10 +10,6 @@ on:
         required: true
         type: string
 
-concurrency:
-  group: qemu-${{ github.event.pull_request.number || github.ref }}-${{ inputs.chip }}-${{ inputs.type }}
-  cancel-in-progress: true
-
 jobs:
   qemu-test:
     name: QEMU ${{ inputs.chip }} ${{ inputs.type }} tests
