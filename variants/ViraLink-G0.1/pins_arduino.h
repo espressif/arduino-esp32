@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 static const uint8_t LED_BUILTIN = 5;
-#define BUILTIN_LED LED_BUILTIN  // backward compatibility
-#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+#define BUILTIN_LED LED_BUILTIN
+#define LED_BUILTIN LED_BUILTIN
 
 static const uint8_t RESET_KEY = 0;
 
@@ -39,16 +39,5 @@ static const uint8_t EMAC_RXD1 = 26;
 static const uint8_t EMAC_RXD_DV = 27;
 
 static const uint8_t EMAC_RXD_DV = 27;
-
-
-
-
-
-
-
-
-
-
-
 
 #endif /* Pins_Arduino_h */
