@@ -40,4 +40,5 @@ static const uint8_t EMAC_RXD_DV = 27;
 
 static const uint8_t EMAC_RXD_DV = 27;
 
+
 #endif /* Pins_Arduino_h */
