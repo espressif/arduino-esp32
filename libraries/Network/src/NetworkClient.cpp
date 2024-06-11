@@ -479,6 +479,14 @@ int NetworkClient::read(uint8_t *buf, size_t size) {
   return res;
 }
 
+size_t NetworkClient::readBytes(char *buffer, size_t length) {
+  int r = read((uint8_t*)buffer, length);
+  if (r < 0) {
+    return 0;
+  }
+  return (size_t)r;
+}
+
 int NetworkClient::peek() {
   int res = -1;
   if (fd() >= 0 && _rxBuffer) {
