@@ -77,6 +77,10 @@ jobs:
             libraries:
               - 'libraries/**/examples/**'
               - 'libraries/**/src/**'
+            networking:
+              - 'libraries/Network/src/**'
+            fs:
+              - 'libraries/FS/src/**'
             static_sketeches:
               - 'libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino'
               - 'libraries/BLE/examples/Server/Server.ino'
@@ -97,78 +101,18 @@ jobs:
       id: set-chunks
       env:
         LIB_FILES: ${{ steps.changed-files.outputs.libraries_all_changed_files }}
+        IS_PR: ${{ github.event_name == 'pull_request' }}
+        MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
+        BUILD_PLATFORMIO: ${{ steps.changed-files.outputs.platformio_any_changed == 'true' }}
+        BUILD_IDF: ${{ steps.changed-files.outputs.idf_any_changed == 'true' }}
+        BUILD_LIBRARIES: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
+        BUILD_STATIC_SKETCHES: ${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
+        FS_CHANGED: ${{ steps.changed-files.outputs.fs_any_changed == 'true' }}
+        NETWORKING_CHANGED: ${{ steps.changed-files.outputs.networking_any_changed == 'true' }}
+        CORE_CHANGED: ${{ steps.changed-files.outputs.core_any_changed == 'true' }}
+        LIB_CHANGED: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
       run: |
-        build_all=false
-        chunks_count=0
-        is_pr=${{ github.event_name == 'pull_request' }}
-
-        build_platformio=${{ steps.changed-files.outputs.platformio_any_changed == 'true' }}
-        build_idf=${{ steps.changed-files.outputs.idf_any_changed == 'true' }}
-        build_libraries=${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
-        build_static_sketches=${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
-
-        core_changed=${{ steps.changed-files.outputs.core_any_changed == 'true' }}
-        lib_changed=${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
-
-        if [[ $core_changed == 'true' ]] || [[ $is_pr != 'true' ]]; then
-          echo "Core files changed or not a PR. Building all."
-          build_all=true
-          chunks_count=${{ env.MAX_CHUNKS }}
-        elif [[ $lib_changed == 'true' ]]; then
-          echo "Libraries changed. Building only affected sketches."
-          sketches=""
-          for file in $LIB_FILES; do
-              if [[ $file == *.ino ]]; then
-                  # If file ends with .ino, add it to the list of sketches
-                  echo "Sketch found: $file"
-                  sketches+="$file "
-              elif [[ $(basename $(dirname $file)) == "src" ]]; then
-                  # If file is in a src directory, find all sketches in the parent/examples directory
-                  echo "Library src file found: $file"
-                  lib=$(dirname $(dirname $file))
-                  lib_sketches=$(find $lib/examples -name *.ino)
-                  sketches+="$lib_sketches "
-                  echo "Library sketches: $lib_sketches"
-              else
-                  # If file is in a example folder but it is not a sketch, find all sketches in the current directory
-                  echo "File in example folder found: $file"
-                  sketch=$(find $(dirname $file) -name *.ino)
-                  sketches+="$sketch "
-                  echo "Sketch in example folder: $sketch"
-              fi
-              echo ""
-          done
-        fi
-
-        if [[ -n $sketches ]]; then
-          # Remove duplicates
-          sketches=$(echo $sketches | tr ' ' '\n' | sort | uniq)
-          for sketch in $sketches; do
-              echo $sketch >> sketches_found.txt
-              chunks_count=$((chunks_count+1))
-          done
-          echo "Number of sketches found: $chunks_count"
-          echo "Sketches: $sketches"
-
-          if [[ $chunks_count -gt ${{ env.MAX_CHUNKS }} ]]; then
-            echo "More sketches than the allowed number of chunks found. Limiting to ${{ env.MAX_CHUNKS }} chunks."
-            chunks_count=${{ env.MAX_CHUNKS }}
-          fi
-        fi
-
-        chunks='["0"'
-        for i in $(seq 1 $(( $chunks_count - 1 )) ); do
-          chunks+=",\"$i\""
-        done
-        chunks+="]"
-
-        echo "build_all=$build_all" >> $GITHUB_OUTPUT
-        echo "build_libraries=$build_libraries" >> $GITHUB_OUTPUT
-        echo "build_static_sketches=$build_static_sketches" >> $GITHUB_OUTPUT
-        echo "build_idf=$build_idf" >> $GITHUB_OUTPUT
-        echo "build_platformio=$build_platformio" >> $GITHUB_OUTPUT
-        echo "chunk_count=$chunks_count" >> $GITHUB_OUTPUT
-        echo "chunks=$chunks" >> $GITHUB_OUTPUT
+        bash ./.github/scripts/set_push_chunks.sh
 
     - name: Upload sketches found
       if: ${{ steps.set-chunks.outputs.build_all == 'false' && steps.set-chunks.outputs.build_libraries == 'true' }}
