@@ -1,3 +1,5 @@
+#!/bin/bash
+
 build_all=false
 chunks_count=0
 
