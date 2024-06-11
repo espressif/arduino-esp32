@@ -1,5 +1,5 @@
-#ifndef ARDUINO_USB_MODE
-#error This sketch requires a device capable of USB-OTG
+#if !SOC_USB_OTG_SUPPORTED || ARDUINO_USB_MODE
+#error Device does not support USB_OTG or native USB CDC/JTAG is selected
 #endif
 
 #include <USB.h>
