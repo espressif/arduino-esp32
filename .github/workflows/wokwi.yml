@@ -91,15 +91,11 @@ jobs:
 
       - name: Get binaries
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        id: cache-build-binaries
-        uses: actions/cache/restore@v4
+        uses: actions/download-artifact@v4
         with:
-          fail-on-cache-miss: true
-          key: tests-${{ env.id }}-bin
+          name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
           path: |
-            ~/.arduino/tests/**/build*.tmp/*.bin
-            ~/.arduino/tests/**/build*.tmp/*.elf
-            ~/.arduino/tests/**/build*.tmp/*.json
+            ~/.arduino/tests
 
       - name: Run Tests
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
