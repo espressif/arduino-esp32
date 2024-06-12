@@ -806,10 +806,10 @@ String WebServer::_responseCodeToString(int code) {
 
 #if SOC_WIFI_SUPPORTED
   bool ON_STA_FILTER(WebServer &server) {
-    return WiFi.STA.localIP() == server.client().localIP();
+    return WiFi.STA.hasIP() && WiFi.STA.localIP() == server.client().localIP();
   }
 
   bool ON_AP_FILTER(WebServer &server) {
-    return WiFi.AP.localIP() == server.client().localIP();
+    return WiFi.AP.hasIP() && WiFi.AP.localIP() == server.client().localIP();
   }
 #endif
