@@ -481,7 +481,7 @@ int NetworkClient::read(uint8_t *buf, size_t size) {
 
 size_t NetworkClient::readBytes(char *buffer, size_t length) {
   size_t left = length, sofar = 0;
-  int r = 0, to = millis() + _timeout;
+  int r = 0, to = millis() + getTimeout();
   while (left) {
     r = read((uint8_t*)buffer+sofar, left);
     if (r < 0) {
@@ -492,7 +492,7 @@ size_t NetworkClient::readBytes(char *buffer, size_t length) {
       // We got some data
       left -= r;
       sofar += r;
-      to = millis() + _timeout;
+      to = millis() + getTimeout();
     } else {
       // We got no data
       if (millis() >= to) {
