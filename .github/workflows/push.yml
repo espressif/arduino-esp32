@@ -282,8 +282,8 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         continue-on-error: true
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add --all
           git commit -m "Updated cli compile json files"
           git push origin HEAD:gh-pages
