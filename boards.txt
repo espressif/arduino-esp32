@@ -8722,7 +8722,7 @@ viralink32g01.build.target=esp32
 viralink32g01.build.mcu=esp32
 viralink32g01.build.core=esp32
 viralink32g01.build.variant=ViraLink-G0.1
-viralink32g01.build.board=ViraLink-Gate32-0.1
+viralink32g01.build.board=ViraLink_Gate32_01
 
 viralink32g01.build.f_cpu=240000000L
 viralink32g01.build.flash_mode=dio
@@ -8820,7 +8820,7 @@ viralink32g11.build.target=esp32
 viralink32g11.build.mcu=esp32
 viralink32g11.build.core=esp32
 viralink32g11.build.variant=ViraLink-G1.1
-viralink32g11.build.board=ViraLink-Gate32-1.1
+viralink32g11.build.board=ViraLink_Gate32_11
 
 viralink32g11.build.f_cpu=240000000L
 viralink32g11.build.flash_mode=dio
