@@ -207,7 +207,14 @@ public:
     return (result);
   }  // calcETag
 
+  StaticRequestHandler& setFilter(WebServer::FilterFunction filter) {
+    _filter = filter;
+    return *this;
+  }
+
 protected:
+  // _filter should return 'true' when the request should be handled
+  // and 'false' when the request should be ignored
   WebServer::FilterFunction _filter;
   FS _fs;
   String _uri;
