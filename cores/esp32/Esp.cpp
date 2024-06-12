@@ -59,10 +59,11 @@ extern "C" {
 // REG_SPI_BASE is not defined for S3/C3 ??
 
 #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
-  #ifndef REG_SPI_BASE
-  #define REG_SPI_BASE(i)     (DR_REG_SPI1_BASE + (((i)>1) ? (((i)* 0x1000) + 0x20000) : (((~(i)) & 1)* 0x1000 )))
-  #endif // REG_SPI_BASE
-#endif // TARGET
+#ifdef REG_SPI_BASE
+#undef REG_SPI_BASE
+#endif  // REG_SPI_BASE
+#define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
+#endif  // TARGET
 
 /**
  * User-defined Literals
