@@ -280,6 +280,7 @@ jobs:
 
       - name: Commit json files to gh-pages if on master
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        continue-on-error: true
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
