@@ -26,6 +26,7 @@
 #include <functional>
 #include <memory>
 #include "FS.h"
+#include "WiFi.h"
 #include "Network.h"
 #include "HTTP_Method.h"
 #include "Uri.h"
@@ -144,9 +145,10 @@ public:
   void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char *realm = NULL, const String &authFailMsg = String(""));
 
   typedef std::function<void(void)> THandlerFunction;
-  void on(const Uri &uri, THandlerFunction fn);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);  //ufn handles file uploads
+  typedef std::function<bool(WebServer &server)> FilterFunction;
+  RequestHandler& on(const Uri &uri, THandlerFunction fn);
+  RequestHandler& on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
+  RequestHandler& on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);  //ufn handles file uploads
   void addHandler(RequestHandler *handler);
   void serveStatic(const char *uri, fs::FS &fs, const char *path, const char *cache_header = NULL);
   void onNotFound(THandlerFunction fn);     //called when handler is not assigned
@@ -291,5 +293,13 @@ protected:
   String _sopaque;
   String _srealm;  // Store the Auth realm between Calls
 };
+
+/*
+  Request Filters
+*/
+
+bool ON_STA_FILTER(WebServer &server);
+
+bool ON_AP_FILTER(WebServer &server);
 
 #endif  //ESP8266WEBSERVER_H

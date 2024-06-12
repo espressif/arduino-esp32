@@ -306,16 +306,18 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
 
-void WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
-  on(uri, HTTP_ANY, handler);
+RequestHandler& WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
+  return on(uri, HTTP_ANY, handler);
 }
 
-void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
-  on(uri, method, fn, _fileUploadHandler);
+RequestHandler& WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
+  return on(uri, method, fn, _fileUploadHandler);
 }
 
-void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
-  _addRequestHandler(new FunctionRequestHandler(fn, ufn, uri, method));
+RequestHandler& WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
+  FunctionRequestHandler *handler = new FunctionRequestHandler(fn, ufn, uri, method);
+  _addRequestHandler(handler);
+  return *handler;
 }
 
 void WebServer::addHandler(RequestHandler *handler) {
@@ -795,4 +797,15 @@ String WebServer::_responseCodeToString(int code) {
     case 505: return F("HTTP Version not supported");
     default:  return F("");
   }
+}
+
+bool ON_STA_FILTER(WebServer &server) {
+  return (
+    (WiFi.localIP() != IPAddress(0, 0, 0, 0) && server.client().localIP() != IPAddress(0, 0, 0, 0))
+    && WiFi.localIP() == server.client().localIP()
+  );
+}
+
+bool ON_AP_FILTER(WebServer &server) {
+  return WiFi.localIP() == server.client().localIP();
 }

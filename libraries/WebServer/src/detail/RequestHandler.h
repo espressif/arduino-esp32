@@ -7,16 +7,19 @@
 class RequestHandler {
 public:
   virtual ~RequestHandler() {}
-  virtual bool canHandle(HTTPMethod method, String uri) {
+  virtual bool canHandle(WebServer &server, HTTPMethod method, String uri) {
+    (void)server;
     (void)method;
     (void)uri;
     return false;
   }
-  virtual bool canUpload(String uri) {
+  virtual bool canUpload(WebServer &server, String uri) {
+    (void)server;
     (void)uri;
     return false;
   }
-  virtual bool canRaw(String uri) {
+  virtual bool canRaw(WebServer &server, String uri) {
+    (void)server;
     (void)uri;
     return false;
   }
@@ -35,6 +38,11 @@ public:
     (void)server;
     (void)requestUri;
     (void)raw;
+  }
+
+  virtual RequestHandler& setFilter(std::function<bool(WebServer&)> filter) {
+    (void)filter;
+    return *this;
   }
 
   RequestHandler *next() {
