@@ -21,11 +21,6 @@
 */
 
 #include <Arduino.h>
-
-#if SOC_WIFI_SUPPORTED
-  #include "WiFi.h"
-#endif
-
 #include <esp32-hal-log.h>
 #include <libb64/cdecode.h>
 #include <libb64/cencode.h>
@@ -803,13 +798,3 @@ String WebServer::_responseCodeToString(int code) {
     default:  return F("");
   }
 }
-
-#if SOC_WIFI_SUPPORTED
-  bool ON_STA_FILTER(WebServer &server) {
-    return WiFi.STA.hasIP() && WiFi.STA.localIP() == server.client().localIP();
-  }
-
-  bool ON_AP_FILTER(WebServer &server) {
-    return WiFi.AP.hasIP() && WiFi.AP.localIP() == server.client().localIP();
-  }
-#endif
