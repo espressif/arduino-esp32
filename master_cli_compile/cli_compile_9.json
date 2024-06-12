@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "SPIFFS/examples/SPIFFS_Test",
+                    "sizes": [{
+                            "flash_bytes": 305793,
+                            "flash_percentage": 9,
+                            "ram_bytes": 14672,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
                             "flash_bytes": 893165,
@@ -101,14 +109,6 @@
 {"name": "USB/examples/Keyboard/KeyboardLogout",
                     "sizes": [{
                             "flash_bytes": 323065,
-                            "flash_percentage": 10,
-                            "ram_bytes": 26968,
-                            "ram_percentage": 8
-                            }]
-                    },
-{"name": "USB/examples/Keyboard/KeyboardMessage",
-                    "sizes": [{
-                            "flash_bytes": 323217,
                             "flash_percentage": 10,
                             "ram_bytes": 26968,
                             "ram_percentage": 8
@@ -541,7 +541,7 @@
                     },
 {"name": "SD/examples/SD_time",
                     "sizes": [{
-                            "flash_bytes": 953789,
+                            "flash_bytes": 953797,
                             "flash_percentage": 30,
                             "ram_bytes": 42380,
                             "ram_percentage": 12
@@ -549,7 +549,7 @@
                     },
 {"name": "SD_MMC/examples/SDMMC_Test",
                     "sizes": [{
-                            "flash_bytes": 350513,
+                            "flash_bytes": 350605,
                             "flash_percentage": 11,
                             "ram_bytes": 18208,
                             "ram_percentage": 5
@@ -557,7 +557,7 @@
                     },
 {"name": "SD_MMC/examples/SDMMC_time",
                     "sizes": [{
-                            "flash_bytes": 967813,
+                            "flash_bytes": 967901,
                             "flash_percentage": 30,
                             "ram_bytes": 42492,
                             "ram_percentage": 12

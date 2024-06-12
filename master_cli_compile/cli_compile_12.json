@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "WebServer/examples/MultiHomedServers",
+                    "sizes": [{
+                            "flash_bytes": 927729,
+                            "flash_percentage": 29,
+                            "ram_bytes": 40096,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "WebServer/examples/PathArgServer",
                     "sizes": [{
                             "flash_bytes": 1193317,
@@ -52,7 +60,7 @@
                     },
 {"name": "WiFi/examples/FTM/FTM_Initiator",
                     "sizes": [{
-                            "flash_bytes": 835993,
+                            "flash_bytes": 836001,
                             "flash_percentage": 26,
                             "ram_bytes": 36352,
                             "ram_percentage": 11
@@ -103,14 +111,6 @@
                             "flash_bytes": 847897,
                             "flash_percentage": 26,
                             "ram_bytes": 37672,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiClientBasic",
-                    "sizes": [{
-                            "flash_bytes": 849269,
-                            "flash_percentage": 26,
-                            "ram_bytes": 37648,
                             "ram_percentage": 11
                             }]
                     }

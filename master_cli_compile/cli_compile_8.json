@@ -82,9 +82,17 @@
                             "ram_percentage": 11
                             }]
                     },
+{"name": "SD_MMC/examples/SD2USBMSC",
+                    "sizes": [{
+                            "flash_bytes": 397037,
+                            "flash_percentage": 12,
+                            "ram_bytes": 27264,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "SD_MMC/examples/SDMMC_Test",
                     "sizes": [{
-                            "flash_bytes": 342313,
+                            "flash_bytes": 342405,
                             "flash_percentage": 10,
                             "ram_bytes": 15008,
                             "ram_percentage": 4
@@ -92,7 +100,7 @@
                     },
 {"name": "SD_MMC/examples/SDMMC_time",
                     "sizes": [{
-                            "flash_bytes": 919305,
+                            "flash_bytes": 919401,
                             "flash_percentage": 29,
                             "ram_bytes": 38384,
                             "ram_percentage": 11
@@ -103,14 +111,6 @@
                             "flash_bytes": 285149,
                             "flash_percentage": 9,
                             "ram_bytes": 14720,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "SPIFFS/examples/SPIFFS_Test",
-                    "sizes": [{
-                            "flash_bytes": 305793,
-                            "flash_percentage": 9,
-                            "ram_bytes": 14672,
                             "ram_percentage": 4
                             }]
                     }

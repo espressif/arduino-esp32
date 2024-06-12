@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "USB/examples/Keyboard/KeyboardMessage",
+                    "sizes": [{
+                            "flash_bytes": 323217,
+                            "flash_percentage": 10,
+                            "ram_bytes": 26968,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "USB/examples/Keyboard/KeyboardReprogram",
                     "sizes": [{
                             "flash_bytes": 323425,
@@ -103,14 +111,6 @@
                             "flash_bytes": 877569,
                             "flash_percentage": 27,
                             "ram_bytes": 38416,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "Update/examples/HTTPS_OTA_Update",
-                    "sizes": [{
-                            "flash_bytes": 960577,
-                            "flash_percentage": 30,
-                            "ram_bytes": 38808,
                             "ram_percentage": 11
                             }]
                     }

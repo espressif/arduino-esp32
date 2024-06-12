@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "WiFi/examples/WiFiClientBasic",
+                    "sizes": [{
+                            "flash_bytes": 849269,
+                            "flash_percentage": 26,
+                            "ram_bytes": 37648,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "WiFi/examples/WiFiClientConnect",
                     "sizes": [{
                             "flash_bytes": 837533,
@@ -105,14 +113,6 @@
                             "ram_bytes": 38024,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "WiFiProv/examples/WiFiProv",
-                    "sizes": [{
-                            "flash_bytes": 1497893,
-                            "flash_percentage": 47,
-                            "ram_bytes": 57524,
-                            "ram_percentage": 17
-                            }]
                     }
 ]
 },
@@ -209,7 +209,7 @@
                     },
 {"name": "WiFi/examples/WiFiScan",
                     "sizes": [{
-                            "flash_bytes": 813322,
+                            "flash_bytes": 813314,
                             "flash_percentage": 25,
                             "ram_bytes": 32668,
                             "ram_percentage": 9

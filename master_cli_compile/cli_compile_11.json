@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "Update/examples/HTTPS_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 960577,
+                            "flash_percentage": 30,
+                            "ram_bytes": 38808,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
                             "flash_bytes": 923101,
@@ -104,14 +112,6 @@
                             "flash_percentage": 30,
                             "ram_bytes": 42768,
                             "ram_percentage": 13
-                            }]
-                    },
-{"name": "WebServer/examples/MultiHomedServers",
-                    "sizes": [{
-                            "flash_bytes": 927729,
-                            "flash_percentage": 29,
-                            "ram_bytes": 40096,
-                            "ram_percentage": 12
                             }]
                     }
 ]
