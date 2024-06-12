@@ -1,6 +1,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_task_wdt.h"
+#include "soc/rtc.h"
 #include "Arduino.h"
 #if (ARDUINO_USB_CDC_ON_BOOT | ARDUINO_USB_MSC_ON_BOOT | ARDUINO_USB_DFU_ON_BOOT) && !ARDUINO_USB_MODE
 #include "USB.h"
@@ -78,6 +79,15 @@ void loopTask(void *pvParameters) {
 }
 
 extern "C" void app_main() {
+#ifdef F_XTAL_MHZ
+#if !CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2 does not support rtc_clk_xtal_freq_update
+  rtc_clk_xtal_freq_update((rtc_xtal_freq_t)F_XTAL_MHZ);
+  rtc_clk_cpu_freq_set_xtal();
+#endif
+#endif
+#ifdef F_CPU
+  setCpuFrequencyMhz(F_CPU / 1000000);
+#endif
 #if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE
   Serial.begin();
 #endif
