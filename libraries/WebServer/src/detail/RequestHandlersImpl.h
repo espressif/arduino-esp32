@@ -21,6 +21,30 @@ public:
     delete _uri;
   }
 
+  bool canHandle(HTTPMethod requestMethod, String requestUri) override {
+    if (_method != HTTP_ANY && _method != requestMethod) {
+      return false;
+    }
+
+    return _uri->canHandle(requestUri, pathArgs);
+  }
+
+  bool canUpload(String requestUri) override {
+    if (!_ufn || !canHandle(HTTP_POST, requestUri)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool canRaw(String requestUri) override {
+    if (!_ufn || _method == HTTP_GET) {
+      return false;
+    }
+
+    return true;
+  }
+
   bool canHandle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
     if (_method != HTTP_ANY && _method != requestMethod) {
       return false;
@@ -92,6 +116,18 @@ public:
       "StaticRequestHandler: path=%s uri=%s isFile=%d, cache_header=%s\r\n", path, uri, _isFile, cache_header ? cache_header : ""
     );  // issue 5506 - cache_header can be nullptr
     _baseUriLength = _uri.length();
+  }
+
+  bool canHandle(HTTPMethod requestMethod, String requestUri) override {
+    if (requestMethod != HTTP_GET) {
+      return false;
+    }
+
+    if ((_isFile && requestUri != _uri) || !requestUri.startsWith(_uri)) {
+      return false;
+    }
+
+    return true;
   }
 
   bool canHandle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {

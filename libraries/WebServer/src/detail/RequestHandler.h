@@ -7,6 +7,29 @@
 class RequestHandler {
 public:
   virtual ~RequestHandler() {}
+
+  /*
+    note: old handler API for backward compatibility
+  */
+
+  virtual bool canHandle(HTTPMethod method, String uri) {
+    (void)method;
+    (void)uri;
+    return false;
+  }
+  virtual bool canUpload(String uri) {
+    (void)uri;
+    return false;
+  }
+  virtual bool canRaw(String uri) {
+    (void)uri;
+    return false;
+  }
+
+  /*
+    note: new handler API with support for filters etc.
+  */
+
   virtual bool canHandle(WebServer &server, HTTPMethod method, String uri) {
     (void)server;
     (void)method;
