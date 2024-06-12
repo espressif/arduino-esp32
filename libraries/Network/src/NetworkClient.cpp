@@ -480,11 +480,31 @@ int NetworkClient::read(uint8_t *buf, size_t size) {
 }
 
 size_t NetworkClient::readBytes(char *buffer, size_t length) {
-  int r = read((uint8_t*)buffer, length);
-  if (r < 0) {
-    return 0;
+  size_t left = length, sofar = 0;
+  int r = 0, to = millis() + _timeout;
+  while (left) {
+    r = read((uint8_t*)buffer+sofar, left);
+    if (r < 0) {
+      // Error has occurred
+      break;
+    }
+    if (r > 0) {
+      // We got some data
+      left -= r;
+      sofar += r;
+      to = millis() + _timeout;
+    } else {
+      // We got no data
+      if (millis() >= to) {
+        // We have waited for data enough
+        log_w("Timeout waiting for data on fd %d", fd());
+        break;
+      }
+      // Allow other tasks to run
+      delay(2);
+    }
   }
-  return (size_t)r;
+  return sofar;
 }
 
 int NetworkClient::peek() {
