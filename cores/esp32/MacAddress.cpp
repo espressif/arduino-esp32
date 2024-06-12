@@ -67,12 +67,12 @@ bool MacAddress::fromString(const char *buf) {
 
 //Parse user entered string into MAC address
 bool MacAddress::fromString6(const char *buf) {
-  char cs[18];
+  char cs[18];  // 17 + 1 for null terminator
   char *token;
   char *next;  //Unused but required
   int i;
 
-  strncpy(cs, buf, sizeof(cs));  //strtok modifies the buffer: copy to working buffer.
+  strncpy(cs, buf, sizeof(cs) - 1);  //strtok modifies the buffer: copy to working buffer.
 
   for (i = 0; i < 6; i++) {
     token = strtok((i == 0) ? cs : NULL, ":");  //Find first or next token
@@ -86,12 +86,12 @@ bool MacAddress::fromString6(const char *buf) {
 }
 
 bool MacAddress::fromString8(const char *buf) {
-  char cs[24];
+  char cs[24];  // 23 + 1 for null terminator
   char *token;
   char *next;  //Unused but required
   int i;
 
-  strncpy(cs, buf, sizeof(cs));  //strtok modifies the buffer: copy to working buffer.
+  strncpy(cs, buf, sizeof(cs) - 1);  //strtok modifies the buffer: copy to working buffer.
 
   for (i = 0; i < 8; i++) {
     token = strtok((i == 0) ? cs : NULL, ":");  //Find first or next token

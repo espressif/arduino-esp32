@@ -358,11 +358,11 @@ err:
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 
 #if ETH_SPI_SUPPORTS_CUSTOM
-static void *_eth_spi_init(const void *ctx) {
+__unused static void *_eth_spi_init(const void *ctx) {
   return (void *)ctx;
 }
 
-static esp_err_t _eth_spi_deinit(void *ctx) {
+__unused static esp_err_t _eth_spi_deinit(void *ctx) {
   return ESP_OK;
 }
 
@@ -575,8 +575,8 @@ bool ETHClass::beginSPI(
   }
 
   // Init common MAC and PHY configs to default
-  eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
-  eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
+  __unused eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
+  __unused eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
 
   // Update PHY config based on board specific configuration
   phy_config.phy_addr = phy_addr;

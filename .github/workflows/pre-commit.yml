@@ -28,6 +28,8 @@ jobs:
       - name: Set up Python 3
         uses: actions/setup-python@v5
         with:
+          cache-dependency-path: tools/pre-commit/requirements.txt
+          cache: 'pip'
           python-version: "3.x"
 
       - name: Get Python version hash
@@ -41,11 +43,10 @@ jobs:
         with:
           path: |
             ~/.cache/pre-commit
-            ~/.cache/pip
-          key: pre-commit|${{ env.PY_HASH }}|${{ hashFiles('.pre-commit-config.yaml', '.github/workflows/pre-commit.yml') }}
+          key: pre-commit-${{ env.PY_HASH }}-${{ hashFiles('.pre-commit-config.yaml', '.github/workflows/pre-commit.yml', 'tools/pre-commit/requirements.txt') }}
 
       - name: Install python dependencies
-        run: python -m pip install pre-commit docutils
+        run: python -m pip install -r tools/pre-commit/requirements.txt
 
       - name: Get changed files
         id: changed-files
@@ -61,7 +62,6 @@ jobs:
         with:
           path: |
             ~/.cache/pre-commit
-            ~/.cache/pip
           key: ${{ steps.restore-cache.outputs.cache-primary-key }}
 
       - name: Push changes using pre-commit-ci-lite

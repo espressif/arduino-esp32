@@ -458,7 +458,7 @@ esp_err_t __analogContinuousInit(adc_channel_t *channel, uint8_t channel_num, ad
 
 bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void)) {
   adc_channel_t channel[pins_count];
-  adc_unit_t adc_unit;
+  adc_unit_t adc_unit = ADC_UNIT_1;
   esp_err_t err = ESP_OK;
 
   //Convert pins to channels and check if all are ADC1s unit
@@ -682,7 +682,7 @@ void analogContinuousSetAtten(adc_attenuation_t attenuation) {
 }
 
 void analogContinuousSetWidth(uint8_t bits) {
-  if ((bits < SOC_ADC_DIGI_MIN_BITWIDTH) && (bits > SOC_ADC_DIGI_MAX_BITWIDTH)) {
+  if ((bits < SOC_ADC_DIGI_MIN_BITWIDTH) || (bits > SOC_ADC_DIGI_MAX_BITWIDTH)) {
     log_e("Selected width cannot be set. Range is from %d to %d", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
     return;
   }
