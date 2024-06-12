@@ -589,8 +589,24 @@ IPAddress NetworkClient::localIP(int fd) const {
   struct sockaddr_storage addr;
   socklen_t len = sizeof addr;
   getsockname(fd, (struct sockaddr *)&addr, &len);
-  struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-  return IPAddress((uint32_t)(s->sin_addr.s_addr));
+
+  // IPv4 socket, old way
+  if (((struct sockaddr *)&addr)->sa_family == AF_INET) {
+    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+    return IPAddress((uint32_t)(s->sin_addr.s_addr));
+  }
+
+  // IPv6, but it might be IPv4 mapped address
+  if (((struct sockaddr *)&addr)->sa_family == AF_INET6) {
+    struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
+    if (IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
+      return IPAddress(IPv4, (uint8_t *)saddr6->sin6_addr.s6_addr + IPADDRESS_V4_BYTES_INDEX);
+    } else {
+      return IPAddress(IPv6, (uint8_t *)(saddr6->sin6_addr.s6_addr), saddr6->sin6_scope_id);
+    }
+  }
+  log_e("NetworkClient::localIP Not AF_INET or AF_INET6?");
+  return (IPAddress(0, 0, 0, 0));
 }
 
 uint16_t NetworkClient::localPort(int fd) const {
