@@ -57,25 +57,28 @@ String ArduinoOTAClass::getHostname() {
 }
 
 ArduinoOTAClass &ArduinoOTAClass::setPassword(const char *password) {
-  if (!_initialized && !_password.length() && password) {
+  if (_state == OTA_IDLE && password) {
     MD5Builder passmd5;
     passmd5.begin();
     passmd5.add(password);
     passmd5.calculate();
+    _password.clear();
     _password = passmd5.toString();
   }
   return *this;
 }
 
 ArduinoOTAClass &ArduinoOTAClass::setPasswordHash(const char *password) {
-  if (!_initialized && !_password.length() && password) {
+  if (_state == OTA_IDLE && password) {
+    _password.clear();
     _password = password;
   }
   return *this;
 }
 
 ArduinoOTAClass &ArduinoOTAClass::setPartitionLabel(const char *partition_label) {
-  if (!_initialized && !_partition_label.length() && partition_label) {
+  if (_state == OTA_IDLE && partition_label) {
+    _partition_label.clear();
     _partition_label = partition_label;
   }
   return *this;
