@@ -95,13 +95,12 @@ function run_test() {
             printf "\033[95mpytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args\033[0m\n"
             bash -c "set +e; pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args; exit \$?" || result=$?
             printf "\n"
-            result=$?
             if [ $result -ne 0 ]; then
+              printf "\033[91mFailed test: $sketchname -- Config: $i\033[0m\n\n"
               error=$result
             fi
         fi
     done
-    printf "Test return code: $error\n"
     return $error
 }
 
@@ -250,7 +249,6 @@ else
 
       exit_code=0
       run_test $target $sketch $options $erase || exit_code=$?
-      echo "Sketch $sketch exit code: $exit_code"
       if [ $exit_code -ne 0 ]; then
           error=$exit_code
       fi
