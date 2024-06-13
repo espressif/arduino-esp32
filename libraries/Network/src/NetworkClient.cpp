@@ -483,7 +483,7 @@ size_t NetworkClient::readBytes(char *buffer, size_t length) {
   size_t left = length, sofar = 0;
   int r = 0, to = millis() + getTimeout();
   while (left) {
-    r = read((uint8_t*)buffer+sofar, left);
+    r = read((uint8_t *)buffer + sofar, left);
     if (r < 0) {
       // Error has occurred
       break;
