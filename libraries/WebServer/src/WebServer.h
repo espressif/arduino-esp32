@@ -293,12 +293,4 @@ protected:
   String _srealm;  // Store the Auth realm between Calls
 };
 
-/*
-  Request Filters
-*/
-
-bool ON_STA_FILTER(WebServer &server);
-
-bool ON_AP_FILTER(WebServer &server);
-
 #endif  //ESP8266WEBSERVER_H
