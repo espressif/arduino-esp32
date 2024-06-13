@@ -60,6 +60,10 @@ public:
   int available();
   int read();
   int read(uint8_t *buf, size_t size);
+  size_t readBytes(char *buffer, size_t length);
+  size_t readBytes(uint8_t *buffer, size_t length) {
+    return readBytes((char *)buffer, length);
+  }
   int peek();
   void clear();  // clear rx
   void stop();
