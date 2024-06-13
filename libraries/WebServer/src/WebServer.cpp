@@ -331,15 +331,28 @@ bool WebServer::removeRoute(const String &uri) {
 }
 
 bool WebServer::removeRoute(const String &uri, HTTPMethod method) {
-  // Loop through all request handlers and see if there is a match
+  bool anyHandlerRemoved = false;
   RequestHandler *handler = _firstHandler;
+  RequestHandler *previousHandler = nullptr;
+
   while (handler) {
     if (handler->canHandle(method, uri)) {
-      return _removeRequestHandler(handler);
+      if (_removeRequestHandler(handler)) {
+        anyHandlerRemoved = true;
+        // Move to the next handler
+        if (previousHandler) {
+          handler = previousHandler->next();
+        } else {
+          handler = _firstHandler;
+        }
+        continue;
+      }
     }
+    previousHandler = handler;
     handler = handler->next();
   }
-  return false;
+
+  return anyHandlerRemoved;
 }
 
 void WebServer::addHandler(RequestHandler *handler) {
