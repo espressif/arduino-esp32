@@ -92,7 +92,7 @@ public:
     }
   }
 
-  FunctionRequestHandler& setFilter(WebServer::FilterFunction filter) {
+  FunctionRequestHandler &setFilter(WebServer::FilterFunction filter) {
     _filter = filter;
     return *this;
   }
@@ -243,7 +243,7 @@ public:
     return (result);
   }  // calcETag
 
-  StaticRequestHandler& setFilter(WebServer::FilterFunction filter) {
+  StaticRequestHandler &setFilter(WebServer::FilterFunction filter) {
     _filter = filter;
     return *this;
   }

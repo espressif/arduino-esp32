@@ -71,18 +71,28 @@ void setup(void) {
   }
 
   // This route will be accessible by STA clients only
-  server.on("/", [&]() {
-    digitalWrite(led, 1);
-    server.send(200, "text/plain", "Hi!, This route is accessible for STA clients only");
-    digitalWrite(led, 0);
-  }).setFilter(ON_STA_FILTER);
+  server
+    .on(
+      "/",
+      [&]() {
+        digitalWrite(led, 1);
+        server.send(200, "text/plain", "Hi!, This route is accessible for STA clients only");
+        digitalWrite(led, 0);
+      }
+    )
+    .setFilter(ON_STA_FILTER);
 
   // This route will be accessible by AP clients only
-  server.on("/", [&]() {
-    digitalWrite(led, 1);
-    server.send(200, "text/plain", "Hi!, This route is accessible for AP clients only");
-    digitalWrite(led, 0);
-  }).setFilter(ON_AP_FILTER);
+  server
+    .on(
+      "/",
+      [&]() {
+        digitalWrite(led, 1);
+        server.send(200, "text/plain", "Hi!, This route is accessible for AP clients only");
+        digitalWrite(led, 0);
+      }
+    )
+    .setFilter(ON_AP_FILTER);
 
   server.on("/inline", []() {
     server.send(200, "text/plain", "this works as well");

@@ -63,7 +63,7 @@ public:
     (void)raw;
   }
 
-  virtual RequestHandler& setFilter(std::function<bool(WebServer&)> filter) {
+  virtual RequestHandler &setFilter(std::function<bool(WebServer &)> filter) {
     (void)filter;
     return *this;
   }

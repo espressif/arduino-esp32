@@ -306,15 +306,15 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
 
-RequestHandler& WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
+RequestHandler &WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
   return on(uri, HTTP_ANY, handler);
 }
 
-RequestHandler& WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
+RequestHandler &WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
   return on(uri, method, fn, _fileUploadHandler);
 }
 
-RequestHandler& WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
+RequestHandler &WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
   FunctionRequestHandler *handler = new FunctionRequestHandler(fn, ufn, uri, method);
   _addRequestHandler(handler);
   return *handler;
