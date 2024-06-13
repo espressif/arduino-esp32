@@ -147,7 +147,12 @@ public:
   void on(const Uri &uri, THandlerFunction fn);
   void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
   void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);  //ufn handles file uploads
+  bool removeRoute(const char *uri);
+  bool removeRoute(const char *uri, HTTPMethod method);
+  bool removeRoute(const String &uri);
+  bool removeRoute(const String &uri, HTTPMethod method);
   void addHandler(RequestHandler *handler);
+  bool removeHandler(RequestHandler *handler);
   void serveStatic(const char *uri, fs::FS &fs, const char *path, const char *cache_header = NULL);
   void onNotFound(THandlerFunction fn);     //called when handler is not assigned
   void onFileUpload(THandlerFunction ufn);  //handle file uploads
@@ -230,6 +235,7 @@ protected:
     return _currentClient.write_P(b, l);
   }
   void _addRequestHandler(RequestHandler *handler);
+  bool _removeRequestHandler(RequestHandler *handler);
   void _handleRequest();
   void _finalizeResponse();
   bool _parseRequest(NetworkClient &client);
