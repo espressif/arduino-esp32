@@ -363,7 +363,7 @@ void WebServer::_addRequestHandler(RequestHandler *handler) {
 bool WebServer::_removeRequestHandler(RequestHandler *handler) {
   RequestHandler *current = _firstHandler;
   RequestHandler *previous = nullptr;
-  
+
   while (current != nullptr) {
     if (current == handler) {
       if (previous == nullptr) {
@@ -371,11 +371,11 @@ bool WebServer::_removeRequestHandler(RequestHandler *handler) {
       } else {
         previous->next(current->next());
       }
-            
+
       if (current == _lastHandler) {
         _lastHandler = previous;
       }
-      
+
       // Delete 'matching' handler
       delete current;
       return true;
