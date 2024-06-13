@@ -320,8 +320,36 @@ RequestHandler& WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THan
   return *handler;
 }
 
+bool WebServer::removeRoute(const char *uri) {
+  return removeRoute(String(uri), HTTP_ANY);
+}
+
+bool WebServer::removeRoute(const char *uri, HTTPMethod method) {
+  return removeRoute(String(uri), method);
+}
+
+bool WebServer::removeRoute(const String &uri) {
+  return removeRoute(uri, HTTP_ANY);
+}
+
+bool WebServer::removeRoute(const String &uri, HTTPMethod method) {
+  // Loop through all request handlers and see if there is a match
+  RequestHandler *handler = _firstHandler;
+  while (handler) {
+    if (handler->canHandle(method, uri)) {
+      return _removeRequestHandler(handler);
+    }
+    handler = handler->next();
+  }
+  return false;
+}
+
 void WebServer::addHandler(RequestHandler *handler) {
   _addRequestHandler(handler);
+}
+
+bool WebServer::removeHandler(RequestHandler *handler) {
+  return _removeRequestHandler(handler);
 }
 
 void WebServer::_addRequestHandler(RequestHandler *handler) {
@@ -332,6 +360,32 @@ void WebServer::_addRequestHandler(RequestHandler *handler) {
     _lastHandler->next(handler);
     _lastHandler = handler;
   }
+}
+
+bool WebServer::_removeRequestHandler(RequestHandler *handler) {
+  RequestHandler *current = _firstHandler;
+  RequestHandler *previous = nullptr;
+
+  while (current != nullptr) {
+    if (current == handler) {
+      if (previous == nullptr) {
+        _firstHandler = current->next();
+      } else {
+        previous->next(current->next());
+      }
+
+      if (current == _lastHandler) {
+        _lastHandler = previous;
+      }
+
+      // Delete 'matching' handler
+      delete current;
+      return true;
+    }
+    previous = current;
+    current = current->next();
+  }
+  return false;
 }
 
 void WebServer::serveStatic(const char *uri, FS &fs, const char *path, const char *cache_header) {
