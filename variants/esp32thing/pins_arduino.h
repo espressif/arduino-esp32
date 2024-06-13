@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define F_XTAL_MHZ 26 //SparkFun ESP32 Thing has 26MHz Crystal
+#define F_XTAL_MHZ 26  //SparkFun ESP32 Thing has 26MHz Crystal
 
 static const uint8_t LED_BUILTIN = 5;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

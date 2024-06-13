@@ -80,7 +80,7 @@ void loopTask(void *pvParameters) {
 
 extern "C" void app_main() {
 #ifdef F_XTAL_MHZ
-#if !CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2 does not support rtc_clk_xtal_freq_update
+#if !CONFIG_IDF_TARGET_ESP32S2  // ESP32-S2 does not support rtc_clk_xtal_freq_update
   rtc_clk_xtal_freq_update((rtc_xtal_freq_t)F_XTAL_MHZ);
   rtc_clk_cpu_freq_set_xtal();
 #endif
