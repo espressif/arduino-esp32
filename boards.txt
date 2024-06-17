@@ -4697,6 +4697,122 @@ lilygo_t_display_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+lilygo_t_eth_lite.name=LilyGo T-ETH-Lite
+
+lilygo_t_eth_lite.bootloader.tool=esptool_py
+lilygo_t_eth_lite.bootloader.tool.default=esptool_py
+
+lilygo_t_eth_lite.upload.tool=esptool_py
+lilygo_t_eth_lite.upload.tool.default=esptool_py
+lilygo_t_eth_lite.upload.tool.network=esp_ota
+
+lilygo_t_eth_lite.upload.maximum_size=3145728
+lilygo_t_eth_lite.upload.maximum_data_size=327680
+lilygo_t_eth_lite.upload.speed=921600
+lilygo_t_eth_lite.upload.flags=
+lilygo_t_eth_lite.upload.extra_flags=
+lilygo_t_eth_lite.upload.use_1200bps_touch=false
+lilygo_t_eth_lite.upload.wait_for_upload_port=false
+
+lilygo_t_eth_lite.serial.disableDTR=false
+lilygo_t_eth_lite.serial.disableRTS=false
+
+lilygo_t_eth_lite.build.tarch=xtensa
+lilygo_t_eth_lite.build.bootloader_addr=0x0
+lilygo_t_eth_lite.build.target=esp32s3
+lilygo_t_eth_lite.build.mcu=esp32s3
+lilygo_t_eth_lite.build.core=esp32
+lilygo_t_eth_lite.build.variant=lilygo_t_eth_lite
+lilygo_t_eth_lite.build.board=LILYGO_T_ETH_LITE
+
+lilygo_t_eth_lite.build.usb_mode=1
+lilygo_t_eth_lite.build.cdc_on_boot=0
+lilygo_t_eth_lite.build.msc_on_boot=0
+lilygo_t_eth_lite.build.dfu_on_boot=0
+lilygo_t_eth_lite.build.f_cpu=240000000L
+lilygo_t_eth_lite.build.flash_size=16MB
+lilygo_t_eth_lite.build.flash_freq=80m
+lilygo_t_eth_lite.build.flash_mode=dio
+lilygo_t_eth_lite.build.boot=qio
+lilygo_t_eth_lite.build.boot_freq=80m
+lilygo_t_eth_lite.build.partitions=app3M_fat9M_16MB
+lilygo_t_eth_lite.build.defines=
+lilygo_t_eth_lite.build.loop_core=
+lilygo_t_eth_lite.build.event_core=
+lilygo_t_eth_lite.build.psram_type=opi
+lilygo_t_eth_lite.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+lilygo_t_eth_lite.menu.JTAGAdapter.default=Disabled
+lilygo_t_eth_lite.menu.JTAGAdapter.default.build.copy_jtag_files=0
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin=Integrated USB JTAG
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+lilygo_t_eth_lite.menu.LoopCore.1=Core 1
+lilygo_t_eth_lite.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lilygo_t_eth_lite.menu.LoopCore.0=Core 0
+lilygo_t_eth_lite.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lilygo_t_eth_lite.menu.EventsCore.1=Core 1
+lilygo_t_eth_lite.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lilygo_t_eth_lite.menu.EventsCore.0=Core 0
+lilygo_t_eth_lite.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lilygo_t_eth_lite.menu.USBMode.hwcdc=Hardware CDC and JTAG
+lilygo_t_eth_lite.menu.USBMode.hwcdc.build.usb_mode=1
+lilygo_t_eth_lite.menu.USBMode.default=USB-OTG (TinyUSB)
+lilygo_t_eth_lite.menu.USBMode.default.build.usb_mode=0
+
+lilygo_t_eth_lite.menu.CDCOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.CDCOnBoot.default.build.cdc_on_boot=0
+lilygo_t_eth_lite.menu.CDCOnBoot.cdc=Enabled
+lilygo_t_eth_lite.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+lilygo_t_eth_lite.menu.MSCOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.MSCOnBoot.default.build.msc_on_boot=0
+lilygo_t_eth_lite.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+lilygo_t_eth_lite.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lilygo_t_eth_lite.menu.DFUOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lilygo_t_eth_lite.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+lilygo_t_eth_lite.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lilygo_t_eth_lite.menu.UploadMode.default=UART0 / Hardware CDC
+lilygo_t_eth_lite.menu.UploadMode.default.upload.use_1200bps_touch=false
+lilygo_t_eth_lite.menu.UploadMode.default.upload.wait_for_upload_port=false
+lilygo_t_eth_lite.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+lilygo_t_eth_lite.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+lilygo_t_eth_lite.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker=RainMaker
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+lilygo_t_eth_lite.menu.DebugLevel.none=None
+lilygo_t_eth_lite.menu.DebugLevel.none.build.code_debug=0
+lilygo_t_eth_lite.menu.DebugLevel.error=Error
+lilygo_t_eth_lite.menu.DebugLevel.error.build.code_debug=1
+lilygo_t_eth_lite.menu.DebugLevel.warn=Warn
+lilygo_t_eth_lite.menu.DebugLevel.warn.build.code_debug=2
+lilygo_t_eth_lite.menu.DebugLevel.info=Info
+lilygo_t_eth_lite.menu.DebugLevel.info.build.code_debug=3
+lilygo_t_eth_lite.menu.DebugLevel.debug=Debug
+lilygo_t_eth_lite.menu.DebugLevel.debug.build.code_debug=4
+lilygo_t_eth_lite.menu.DebugLevel.verbose=Verbose
+lilygo_t_eth_lite.menu.DebugLevel.verbose.build.code_debug=5
+
+lilygo_t_eth_lite.menu.EraseFlash.none=Disabled
+lilygo_t_eth_lite.menu.EraseFlash.none.upload.erase_cmd=
+lilygo_t_eth_lite.menu.EraseFlash.all=Enabled
+lilygo_t_eth_lite.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 micros2.name=microS2
 micros2.vid.0=0x239A
 micros2.pid.0=0x80C5
