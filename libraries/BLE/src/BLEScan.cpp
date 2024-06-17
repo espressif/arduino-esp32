@@ -130,7 +130,8 @@ void BLEScan::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_
             m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
           }
           if (!m_wantDuplicates && !found) {  // if no callback and not want duplicate, and not already in vector, record it
-            m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice *>(advertisedAddress.toString().c_str(), advertisedDevice));
+            m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice *>(advertisedAddress.toString().c_str(), advertisedDevice)
+            );
             shouldDelete = false;
           }
           if (shouldDelete) {

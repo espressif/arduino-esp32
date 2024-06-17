@@ -42,7 +42,7 @@ public:
   void disconnect();                                                 // Disconnect from the remote BLE Server
   BLEAddress getPeerAddress();                                       // Get the address of the remote BLE Server
   int getRssi();                                                     // Get the RSSI of the remote BLE Server
-  std::map<std::string, BLERemoteService *> *getServices();               // Get a map of the services offered by the remote BLE Server
+  std::map<std::string, BLERemoteService *> *getServices();          // Get a map of the services offered by the remote BLE Server
   BLERemoteService *getService(const char *uuid);                    // Get a reference to a specified service offered by the remote BLE server.
   BLERemoteService *getService(BLEUUID uuid);                        // Get a reference to a specified service offered by the remote BLE server.
   String getValue(BLEUUID serviceUUID, BLEUUID characteristicUUID);  // Get the value of a given characteristic at a given service.

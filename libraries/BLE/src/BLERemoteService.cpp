@@ -179,7 +179,9 @@ void BLERemoteService::retrieveCharacteristics() {
     // We now have a new characteristic ... let us add that to our set of known characteristics
     BLERemoteCharacteristic *pNewRemoteCharacteristic = new BLERemoteCharacteristic(result.char_handle, BLEUUID(result.uuid), result.properties, this);
 
-    m_characteristicMap.insert(std::pair<std::string, BLERemoteCharacteristic *>(pNewRemoteCharacteristic->getUUID().toString().c_str(), pNewRemoteCharacteristic));
+    m_characteristicMap.insert(
+      std::pair<std::string, BLERemoteCharacteristic *>(pNewRemoteCharacteristic->getUUID().toString().c_str(), pNewRemoteCharacteristic)
+    );
     m_characteristicMapByHandle.insert(std::pair<uint16_t, BLERemoteCharacteristic *>(result.char_handle, pNewRemoteCharacteristic));
     offset++;  // Increment our count of number of descriptors found.
   }  // Loop forever (until we break inside the loop).
