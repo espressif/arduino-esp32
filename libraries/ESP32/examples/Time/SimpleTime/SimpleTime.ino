@@ -50,7 +50,7 @@ void setup() {
    * NOTE: configTime() function call if made AFTER DHCP-client run
    * will OVERRIDE acquired NTP server address
    */
-  esp_sntp_servermode_dhcp(1);  // (optional)
+  //esp_sntp_servermode_dhcp(1);  // (optional) -- Not used within Arduino Core 3.0.0+
 
   /**
    * This will set configured ntp servers and constant TimeZone/daylightOffset
