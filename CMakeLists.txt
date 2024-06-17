@@ -236,6 +236,7 @@ set(ARDUINO_LIBRARY_WiFiProv_SRCS libraries/WiFiProv/src/WiFiProv.cpp)
 set(ARDUINO_LIBRARY_Wire_SRCS libraries/Wire/src/Wire.cpp)
 
 set(ARDUINO_LIBRARY_BLE_SRCS
+  libraries/BLE/src/BLE2901.cpp
   libraries/BLE/src/BLE2902.cpp
   libraries/BLE/src/BLE2904.cpp
   libraries/BLE/src/BLEAddress.cpp
