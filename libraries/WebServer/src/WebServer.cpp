@@ -306,16 +306,18 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
 
-void WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
-  on(uri, HTTP_ANY, handler);
+RequestHandler &WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
+  return on(uri, HTTP_ANY, handler);
 }
 
-void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
-  on(uri, method, fn, _fileUploadHandler);
+RequestHandler &WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
+  return on(uri, method, fn, _fileUploadHandler);
 }
 
-void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
-  _addRequestHandler(new FunctionRequestHandler(fn, ufn, uri, method));
+RequestHandler &WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
+  FunctionRequestHandler *handler = new FunctionRequestHandler(fn, ufn, uri, method);
+  _addRequestHandler(handler);
+  return *handler;
 }
 
 bool WebServer::removeRoute(const char *uri) {
@@ -331,15 +333,28 @@ bool WebServer::removeRoute(const String &uri) {
 }
 
 bool WebServer::removeRoute(const String &uri, HTTPMethod method) {
-  // Loop through all request handlers and see if there is a match
+  bool anyHandlerRemoved = false;
   RequestHandler *handler = _firstHandler;
+  RequestHandler *previousHandler = nullptr;
+
   while (handler) {
     if (handler->canHandle(method, uri)) {
-      return _removeRequestHandler(handler);
+      if (_removeRequestHandler(handler)) {
+        anyHandlerRemoved = true;
+        // Move to the next handler
+        if (previousHandler) {
+          handler = previousHandler->next();
+        } else {
+          handler = _firstHandler;
+        }
+        continue;
+      }
     }
+    previousHandler = handler;
     handler = handler->next();
   }
-  return false;
+
+  return anyHandlerRemoved;
 }
 
 void WebServer::addHandler(RequestHandler *handler) {

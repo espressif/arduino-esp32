@@ -4697,6 +4697,122 @@ lilygo_t_display_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+lilygo_t_eth_lite.name=LilyGo T-ETH-Lite
+
+lilygo_t_eth_lite.bootloader.tool=esptool_py
+lilygo_t_eth_lite.bootloader.tool.default=esptool_py
+
+lilygo_t_eth_lite.upload.tool=esptool_py
+lilygo_t_eth_lite.upload.tool.default=esptool_py
+lilygo_t_eth_lite.upload.tool.network=esp_ota
+
+lilygo_t_eth_lite.upload.maximum_size=3145728
+lilygo_t_eth_lite.upload.maximum_data_size=327680
+lilygo_t_eth_lite.upload.speed=921600
+lilygo_t_eth_lite.upload.flags=
+lilygo_t_eth_lite.upload.extra_flags=
+lilygo_t_eth_lite.upload.use_1200bps_touch=false
+lilygo_t_eth_lite.upload.wait_for_upload_port=false
+
+lilygo_t_eth_lite.serial.disableDTR=false
+lilygo_t_eth_lite.serial.disableRTS=false
+
+lilygo_t_eth_lite.build.tarch=xtensa
+lilygo_t_eth_lite.build.bootloader_addr=0x0
+lilygo_t_eth_lite.build.target=esp32s3
+lilygo_t_eth_lite.build.mcu=esp32s3
+lilygo_t_eth_lite.build.core=esp32
+lilygo_t_eth_lite.build.variant=lilygo_t_eth_lite
+lilygo_t_eth_lite.build.board=LILYGO_T_ETH_LITE
+
+lilygo_t_eth_lite.build.usb_mode=1
+lilygo_t_eth_lite.build.cdc_on_boot=0
+lilygo_t_eth_lite.build.msc_on_boot=0
+lilygo_t_eth_lite.build.dfu_on_boot=0
+lilygo_t_eth_lite.build.f_cpu=240000000L
+lilygo_t_eth_lite.build.flash_size=16MB
+lilygo_t_eth_lite.build.flash_freq=80m
+lilygo_t_eth_lite.build.flash_mode=dio
+lilygo_t_eth_lite.build.boot=qio
+lilygo_t_eth_lite.build.boot_freq=80m
+lilygo_t_eth_lite.build.partitions=app3M_fat9M_16MB
+lilygo_t_eth_lite.build.defines=
+lilygo_t_eth_lite.build.loop_core=
+lilygo_t_eth_lite.build.event_core=
+lilygo_t_eth_lite.build.psram_type=opi
+lilygo_t_eth_lite.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+lilygo_t_eth_lite.menu.JTAGAdapter.default=Disabled
+lilygo_t_eth_lite.menu.JTAGAdapter.default.build.copy_jtag_files=0
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin=Integrated USB JTAG
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+lilygo_t_eth_lite.menu.LoopCore.1=Core 1
+lilygo_t_eth_lite.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lilygo_t_eth_lite.menu.LoopCore.0=Core 0
+lilygo_t_eth_lite.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lilygo_t_eth_lite.menu.EventsCore.1=Core 1
+lilygo_t_eth_lite.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lilygo_t_eth_lite.menu.EventsCore.0=Core 0
+lilygo_t_eth_lite.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lilygo_t_eth_lite.menu.USBMode.hwcdc=Hardware CDC and JTAG
+lilygo_t_eth_lite.menu.USBMode.hwcdc.build.usb_mode=1
+lilygo_t_eth_lite.menu.USBMode.default=USB-OTG (TinyUSB)
+lilygo_t_eth_lite.menu.USBMode.default.build.usb_mode=0
+
+lilygo_t_eth_lite.menu.CDCOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.CDCOnBoot.default.build.cdc_on_boot=0
+lilygo_t_eth_lite.menu.CDCOnBoot.cdc=Enabled
+lilygo_t_eth_lite.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+lilygo_t_eth_lite.menu.MSCOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.MSCOnBoot.default.build.msc_on_boot=0
+lilygo_t_eth_lite.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+lilygo_t_eth_lite.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lilygo_t_eth_lite.menu.DFUOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lilygo_t_eth_lite.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+lilygo_t_eth_lite.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lilygo_t_eth_lite.menu.UploadMode.default=UART0 / Hardware CDC
+lilygo_t_eth_lite.menu.UploadMode.default.upload.use_1200bps_touch=false
+lilygo_t_eth_lite.menu.UploadMode.default.upload.wait_for_upload_port=false
+lilygo_t_eth_lite.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+lilygo_t_eth_lite.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+lilygo_t_eth_lite.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker=RainMaker
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+lilygo_t_eth_lite.menu.DebugLevel.none=None
+lilygo_t_eth_lite.menu.DebugLevel.none.build.code_debug=0
+lilygo_t_eth_lite.menu.DebugLevel.error=Error
+lilygo_t_eth_lite.menu.DebugLevel.error.build.code_debug=1
+lilygo_t_eth_lite.menu.DebugLevel.warn=Warn
+lilygo_t_eth_lite.menu.DebugLevel.warn.build.code_debug=2
+lilygo_t_eth_lite.menu.DebugLevel.info=Info
+lilygo_t_eth_lite.menu.DebugLevel.info.build.code_debug=3
+lilygo_t_eth_lite.menu.DebugLevel.debug=Debug
+lilygo_t_eth_lite.menu.DebugLevel.debug.build.code_debug=4
+lilygo_t_eth_lite.menu.DebugLevel.verbose=Verbose
+lilygo_t_eth_lite.menu.DebugLevel.verbose.build.code_debug=5
+
+lilygo_t_eth_lite.menu.EraseFlash.none=Disabled
+lilygo_t_eth_lite.menu.EraseFlash.none.upload.erase_cmd=
+lilygo_t_eth_lite.menu.EraseFlash.all=Enabled
+lilygo_t_eth_lite.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 micros2.name=microS2
 micros2.vid.0=0x239A
 micros2.pid.0=0x80C5
@@ -36819,5 +36935,178 @@ aslcanx2.menu.EraseFlash.none=Disabled
 aslcanx2.menu.EraseFlash.none.upload.erase_cmd=
 aslcanx2.menu.EraseFlash.all=Enabled
 aslcanx2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+walter.name=DPTechnics Walter
+
+walter.bootloader.tool=esptool_py
+walter.bootloader.tool.default=esptool_py
+
+walter.upload.tool=esptool_py
+walter.upload.tool.default=esptool_py
+walter.upload.tool.network=esp_ota
+
+walter.upload.maximum_size=1310720
+walter.upload.maximum_data_size=327680
+walter.upload.flags=
+walter.upload.extra_flags=
+walter.upload.use_1200bps_touch=false
+walter.upload.wait_for_upload_port=false
+
+walter.serial.disableDTR=false
+walter.serial.disableRTS=false
+
+walter.build.tarch=xtensa
+walter.build.bootloader_addr=0x0
+walter.build.target=esp32s3
+walter.build.mcu=esp32s3
+walter.build.core=esp32
+walter.build.variant=walter
+walter.build.board=DPTECHNICS_WALTER
+
+walter.build.usb_mode=1
+walter.build.cdc_on_boot=1
+walter.build.msc_on_boot=0
+walter.build.dfu_on_boot=0
+walter.build.f_cpu=240000000L
+walter.build.flash_size=16MB
+walter.build.flash_freq=80m
+walter.build.flash_mode=dio
+walter.build.boot=qio
+walter.build.boot_freq=80m
+walter.build.partitions=default
+walter.build.defines=
+walter.build.loop_core=
+walter.build.event_core=
+walter.build.psram_type=qspi
+walter.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+walter.menu.JTAGAdapter.default=Disabled
+walter.menu.JTAGAdapter.default.build.copy_jtag_files=0
+walter.menu.JTAGAdapter.builtin=Integrated USB JTAG
+walter.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+walter.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+walter.menu.JTAGAdapter.external=FTDI Adapter
+walter.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+walter.menu.JTAGAdapter.external.build.copy_jtag_files=1
+walter.menu.JTAGAdapter.bridge=ESP USB Bridge
+walter.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+walter.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+walter.menu.PSRAM.enabled=QSPI PSRAM
+walter.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+walter.menu.PSRAM.enabled.build.psram_type=qspi
+walter.menu.PSRAM.disabled=Disabled
+walter.menu.PSRAM.disabled.build.defines=
+walter.menu.PSRAM.disabled.build.psram_type=qspi
+
+walter.menu.FlashMode.qio=QIO 80MHz
+walter.menu.FlashMode.qio.build.flash_mode=dio
+walter.menu.FlashMode.qio.build.boot=qio
+walter.menu.FlashMode.qio.build.boot_freq=80m
+walter.menu.FlashMode.qio.build.flash_freq=80m
+walter.menu.FlashMode.dio=DIO 80MHz
+walter.menu.FlashMode.dio.build.flash_mode=dio
+walter.menu.FlashMode.dio.build.boot=dio
+walter.menu.FlashMode.dio.build.boot_freq=80m
+walter.menu.FlashMode.dio.build.flash_freq=80m
+
+walter.menu.FlashSize.16M=16MB (128Mb)
+walter.menu.FlashSize.16M.build.flash_size=16MB
+
+walter.menu.LoopCore.1=Core 1
+walter.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+walter.menu.LoopCore.0=Core 0
+walter.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+walter.menu.EventsCore.1=Core 1
+walter.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+walter.menu.EventsCore.0=Core 0
+walter.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+walter.menu.USBMode.hwcdc=Hardware CDC and JTAG
+walter.menu.USBMode.hwcdc.build.usb_mode=1
+walter.menu.USBMode.default=USB-OTG (TinyUSB)
+walter.menu.USBMode.default.build.usb_mode=0
+
+walter.menu.CDCOnBoot.cdc=Enabled
+walter.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+walter.menu.CDCOnBoot.default=Disabled
+walter.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+walter.menu.MSCOnBoot.default=Disabled
+walter.menu.MSCOnBoot.default.build.msc_on_boot=0
+walter.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+walter.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+walter.menu.DFUOnBoot.default=Disabled
+walter.menu.DFUOnBoot.default.build.dfu_on_boot=0
+walter.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+walter.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+walter.menu.UploadMode.default=UART0 / Hardware CDC
+walter.menu.UploadMode.default.upload.use_1200bps_touch=false
+walter.menu.UploadMode.default.upload.wait_for_upload_port=false
+walter.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+walter.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+walter.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+walter.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+walter.menu.PartitionScheme.fatflash.build.partitions=ffat
+walter.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+walter.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+walter.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+walter.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+walter.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+walter.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+walter.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+
+walter.menu.CPUFreq.240=240MHz (WiFi)
+walter.menu.CPUFreq.240.build.f_cpu=240000000L
+walter.menu.CPUFreq.160=160MHz (WiFi)
+walter.menu.CPUFreq.160.build.f_cpu=160000000L
+walter.menu.CPUFreq.80=80MHz (WiFi)
+walter.menu.CPUFreq.80.build.f_cpu=80000000L
+walter.menu.CPUFreq.40=40MHz
+walter.menu.CPUFreq.40.build.f_cpu=40000000L
+walter.menu.CPUFreq.20=20MHz
+walter.menu.CPUFreq.20.build.f_cpu=20000000L
+walter.menu.CPUFreq.10=10MHz
+walter.menu.CPUFreq.10.build.f_cpu=10000000L
+
+walter.menu.UploadSpeed.921600=921600
+walter.menu.UploadSpeed.921600.upload.speed=921600
+walter.menu.UploadSpeed.115200=115200
+walter.menu.UploadSpeed.115200.upload.speed=115200
+walter.menu.UploadSpeed.256000.windows=256000
+walter.menu.UploadSpeed.256000.upload.speed=256000
+walter.menu.UploadSpeed.230400.windows.upload.speed=256000
+walter.menu.UploadSpeed.230400=230400
+walter.menu.UploadSpeed.230400.upload.speed=230400
+walter.menu.UploadSpeed.460800.linux=460800
+walter.menu.UploadSpeed.460800.macosx=460800
+walter.menu.UploadSpeed.460800.upload.speed=460800
+walter.menu.UploadSpeed.512000.windows=512000
+walter.menu.UploadSpeed.512000.upload.speed=512000
+
+walter.menu.DebugLevel.none=None
+walter.menu.DebugLevel.none.build.code_debug=0
+walter.menu.DebugLevel.error=Error
+walter.menu.DebugLevel.error.build.code_debug=1
+walter.menu.DebugLevel.warn=Warn
+walter.menu.DebugLevel.warn.build.code_debug=2
+walter.menu.DebugLevel.info=Info
+walter.menu.DebugLevel.info.build.code_debug=3
+walter.menu.DebugLevel.debug=Debug
+walter.menu.DebugLevel.debug.build.code_debug=4
+walter.menu.DebugLevel.verbose=Verbose
+walter.menu.DebugLevel.verbose.build.code_debug=5
+
+walter.menu.EraseFlash.none=Disabled
+walter.menu.EraseFlash.none.upload.erase_cmd=
+walter.menu.EraseFlash.all=Enabled
+walter.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################

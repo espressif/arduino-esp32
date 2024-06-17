@@ -27,7 +27,7 @@
 const char *pers = "esp32-tls";
 
 static int _handle_error(int err, const char *function, int line) {
-  if (err == -30848) {
+  if (err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
     return err;
   }
 #ifdef MBEDTLS_ERROR_C
