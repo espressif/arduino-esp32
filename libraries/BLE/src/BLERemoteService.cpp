@@ -79,8 +79,8 @@ void BLERemoteService::gattClientEventHandler(esp_gattc_cb_event_t event, esp_ga
 
       // This is an indication that we now have the characteristic details for a characteristic owned
       // by this service so remember it.
-      m_characteristicMap.insert(std::pair<String, BLERemoteCharacteristic*>(
-          BLEUUID(evtParam->get_char.char_id.uuid).toString(),
+      m_characteristicMap.insert(std::pair<std::String, BLERemoteCharacteristic*>(
+          BLEUUID(evtParam->get_char.char_id.uuid).toString().c_str(),
           new BLERemoteCharacteristic(evtParam->get_char.char_id, evtParam->get_char.char_prop, this)  ));
 
 
@@ -134,7 +134,7 @@ BLERemoteCharacteristic *BLERemoteService::getCharacteristic(BLEUUID uuid) {
   if (!m_haveCharacteristics) {
     retrieveCharacteristics();
   }
-  String v = uuid.toString();
+  std::string v = uuid.toString().c_str();
   for (auto &myPair : m_characteristicMap) {
     if (myPair.first == v) {
       return myPair.second;
@@ -179,7 +179,7 @@ void BLERemoteService::retrieveCharacteristics() {
     // We now have a new characteristic ... let us add that to our set of known characteristics
     BLERemoteCharacteristic *pNewRemoteCharacteristic = new BLERemoteCharacteristic(result.char_handle, BLEUUID(result.uuid), result.properties, this);
 
-    m_characteristicMap.insert(std::pair<String, BLERemoteCharacteristic *>(pNewRemoteCharacteristic->getUUID().toString(), pNewRemoteCharacteristic));
+    m_characteristicMap.insert(std::pair<std::string, BLERemoteCharacteristic *>(pNewRemoteCharacteristic->getUUID().toString().c_str(), pNewRemoteCharacteristic));
     m_characteristicMapByHandle.insert(std::pair<uint16_t, BLERemoteCharacteristic *>(result.char_handle, pNewRemoteCharacteristic));
     offset++;  // Increment our count of number of descriptors found.
   }  // Loop forever (until we break inside the loop).
@@ -192,7 +192,7 @@ void BLERemoteService::retrieveCharacteristics() {
  * @brief Retrieve a map of all the characteristics of this service.
  * @return A map of all the characteristics of this service.
  */
-std::map<String, BLERemoteCharacteristic *> *BLERemoteService::getCharacteristics() {
+std::map<std::string, BLERemoteCharacteristic *> *BLERemoteService::getCharacteristics() {
   log_v(">> getCharacteristics() for service: %s", getUUID().toString().c_str());
   // If is possible that we have not read the characteristics associated with the service so do that
   // now.  The request to retrieve the characteristics by calling "retrieveCharacteristics" is a blocking

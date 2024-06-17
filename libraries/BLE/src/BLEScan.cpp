@@ -99,7 +99,7 @@ void BLEScan::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_
           bool shouldDelete = true;
 
           if (!m_wantDuplicates) {
-            if (m_scanResults.m_vectorAdvertisedDevices.count(advertisedAddress.toString()) != 0) {
+            if (m_scanResults.m_vectorAdvertisedDevices.count(advertisedAddress.toString().c_str()) != 0) {
               found = true;
             }
 
@@ -130,7 +130,7 @@ void BLEScan::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_
             m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
           }
           if (!m_wantDuplicates && !found) {  // if no callback and not want duplicate, and not already in vector, record it
-            m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<String, BLEAdvertisedDevice *>(advertisedAddress.toString(), advertisedDevice));
+            m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice *>(advertisedAddress.toString().c_str(), advertisedDevice));
             shouldDelete = false;
           }
           if (shouldDelete) {
@@ -443,8 +443,8 @@ void BLEScan::stop() {
 // delete peer device from cache after disconnecting, it is required in case we are connecting to devices with not public address
 void BLEScan::erase(BLEAddress address) {
   log_i("erase device: %s", address.toString().c_str());
-  BLEAdvertisedDevice *advertisedDevice = m_scanResults.m_vectorAdvertisedDevices.find(address.toString())->second;
-  m_scanResults.m_vectorAdvertisedDevices.erase(address.toString());
+  BLEAdvertisedDevice *advertisedDevice = m_scanResults.m_vectorAdvertisedDevices.find(address.toString().c_str())->second;
+  m_scanResults.m_vectorAdvertisedDevices.erase(address.toString().c_str());
   delete advertisedDevice;
 }
 
