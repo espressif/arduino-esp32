@@ -79,7 +79,7 @@ void BLERemoteService::gattClientEventHandler(esp_gattc_cb_event_t event, esp_ga
 
       // This is an indication that we now have the characteristic details for a characteristic owned
       // by this service so remember it.
-      m_characteristicMap.insert(std::pair<std::String, BLERemoteCharacteristic*>(
+      m_characteristicMap.insert(std::pair<std::string, BLERemoteCharacteristic*>(
           BLEUUID(evtParam->get_char.char_id.uuid).toString().c_str(),
           new BLERemoteCharacteristic(evtParam->get_char.char_id, evtParam->get_char.char_prop, this)  ));
 
