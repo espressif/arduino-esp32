@@ -53,7 +53,7 @@ public:
 
 private:
   friend BLEScan;
-  std::map<String, BLEAdvertisedDevice *> m_vectorAdvertisedDevices;
+  std::map<std::string, BLEAdvertisedDevice *> m_vectorAdvertisedDevices;
 };
 
 /**
