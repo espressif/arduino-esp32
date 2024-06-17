@@ -108,7 +108,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
 
     if [ "$BUILD_LOG" -eq 1 ]; then
         #remove last comma from the last JSON object
-        sed -i '$ s/.$//' "$sizes_file"
+        sed -i '$ s/,$//' "$sizes_file"
         #echo end of JSON array
         echo "]}" >> $sizes_file
     fi

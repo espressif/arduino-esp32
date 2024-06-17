@@ -12,14 +12,6 @@ on:
       - '!libraries/**.txt'
       - '!libraries/**.properties'
       - 'package/**'
-      - '.github/workflows/tests.yml'
-      - '.github/workflows/build_tests.yml'
-      - '.github/workflows/hw.yml'
-      - '.github/workflows/wokwi.yml'
-      - '.github/workflows/qemu.yml'
-      - '.github/scripts/install-*.sh'
-      - '.github/scripts/tests_*.sh'
-      - '.github/scripts/sketch_utils.sh'
   schedule:
     - cron: '0 2 * * *'
 
@@ -167,7 +159,7 @@ jobs:
   clean:
     name: Clean objects
     needs: unit-test-results
-    if: always() && ${{ github.event_name }} == 'pull_request_target' && ${{ github.event.action }} != 'closed'
+    if: always()
     permissions:
       actions: write
     runs-on: ubuntu-latest
@@ -178,6 +170,11 @@ jobs:
           script: |
             const ref = '${{ github.event.pull_request.number || github.ref }}';
             const key_prefix = 'tests-' + ref + '-';
+
+            if ('${{ github.event_name }}' == 'pull_request_target' && '${{ github.event.action }}' != 'closed') {
+              console.log('Skipping cache cleanup for open PR');
+              return;
+            }
 
             await github.paginate(github.rest.actions.getActionsCacheList, {
               owner: context.repo.owner,

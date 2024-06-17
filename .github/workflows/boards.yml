@@ -59,6 +59,19 @@ jobs:
             exit 1;
           fi
 
+      - name: Get libs cache
+        uses: actions/cache@v4
+        with:
+          key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
+          path: |
+            ./tools/dist
+            ./tools/esp32-arduino-libs
+            ./tools/esptool
+            ./tools/mk*
+            ./tools/openocd-esp32
+            ./tools/riscv32-*
+            ./tools/xtensa-*
+            
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@main
         with:
@@ -73,3 +86,4 @@ jobs:
           exit-on-fail: true
           sketch-paths:
             "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
+          verbose: true

@@ -112,6 +112,28 @@ void setup() {
   Serial.println(eventID);
   // WiFi.removeEvent(eventID);
 
+  Serial.println("Scan start");
+
+  // WiFi.scanNetworks will return the number of networks found.
+  int n = WiFi.scanNetworks();
+  Serial.println("Scan done");
+  if (n == 0) {
+    Serial.println("no networks found");
+  } else {
+    Serial.print(n);
+    Serial.println(" networks found");
+    for (int i = 0; i < n; ++i) {
+      // Print SSID for each network found
+      Serial.printf("%s\n", WiFi.SSID(i).c_str());
+      Serial.println();
+      delay(10);
+    }
+  }
+  Serial.println("");
+
+  // Delete the scan result to free memory for code below.
+  WiFi.scanDelete();
+
   WiFi.begin(ssid, password);
 
   Serial.println();

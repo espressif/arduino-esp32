@@ -187,6 +187,10 @@ bool APClass::begin() {
     log_e("AP enable failed!");
     return false;
   }
+  if (!waitStatusBits(ESP_NETIF_STARTED_BIT, 1000)) {
+    log_e("Failed to start AP!");
+    return false;
+  }
   return true;
 }
 

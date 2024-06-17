@@ -192,7 +192,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             exit_status=$?
             if [ $exit_status -ne 0 ]; then
-                echo ""ERROR: Compilation failed with error code $exit_status""
+                echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
             fi
 
@@ -236,7 +236,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             exit_status=$?
             if [ $exit_status -ne 0 ]; then
-                echo ""ERROR: Compilation failed with error code $exit_status""
+                echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
             fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
@@ -398,6 +398,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     else
         start_index=$(( $chunk_index * $chunk_size ))
         if [ "$sketchcount" -le "$start_index" ]; then
+            echo "No sketches to build for $target in this chunk"
             return 0
         fi
 
@@ -437,7 +438,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
             continue
         fi
         echo ""
-        echo "Building Sketch Index $(($sketchnum - 1)) - $sketchdirname"
+        echo "Building Sketch Index $sketchnum - $sketchdirname"
         build_sketch $args -s $sketchdir $xtra_opts
         local result=$?
         if [ $result -ne 0 ]; then

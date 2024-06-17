@@ -44,6 +44,9 @@
 #define wifi_event_id_t network_event_handle_t
 
 typedef enum {
+  WIFI_POWER_21dBm = 84,      // 21dBm
+  WIFI_POWER_20_5dBm = 82,    // 20.5dBm
+  WIFI_POWER_20dBm = 80,      // 20dBm
   WIFI_POWER_19_5dBm = 78,    // 19.5dBm
   WIFI_POWER_19dBm = 76,      // 19dBm
   WIFI_POWER_18_5dBm = 74,    // 18.5dBm

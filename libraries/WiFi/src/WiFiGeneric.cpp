@@ -660,7 +660,11 @@ bool WiFiGenericClass::setTxPower(wifi_power_t power) {
     log_w("Neither AP or STA has been started");
     return false;
   }
-  return esp_wifi_set_max_tx_power(power) == ESP_OK;
+  esp_err_t err = esp_wifi_set_max_tx_power(power);
+  if (err != ESP_OK) {
+    log_e("Failed to set TX Power: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
 }
 
 wifi_power_t WiFiGenericClass::getTxPower() {
@@ -669,7 +673,9 @@ wifi_power_t WiFiGenericClass::getTxPower() {
     log_w("Neither AP or STA has been started");
     return WIFI_POWER_19_5dBm;
   }
-  if (esp_wifi_get_max_tx_power(&power)) {
+  esp_err_t err = esp_wifi_get_max_tx_power(&power);
+  if (err != ESP_OK) {
+    log_e("Failed to get TX Power: 0x%x: %s", err, esp_err_to_name(err));
     return WIFI_POWER_19_5dBm;
   }
   return (wifi_power_t)power;

@@ -3339,6 +3339,175 @@ um_feathers3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+um_feathers3neo.name=UM FeatherS3 Neo
+um_feathers3neo.vid.0=0x303a
+um_feathers3neo.pid.0=0x81FB
+um_feathers3neo.upload_port.0.vid=0x303a
+um_feathers3neo.upload_port.0.pid=0x81FB
+
+um_feathers3neo.bootloader.tool=esptool_py
+um_feathers3neo.bootloader.tool.default=esptool_py
+
+um_feathers3neo.upload.tool=esptool_py
+um_feathers3neo.upload.tool.default=esptool_py
+um_feathers3neo.upload.tool.network=esp_ota
+
+um_feathers3neo.upload.maximum_size=1310720
+um_feathers3neo.upload.maximum_data_size=327680
+um_feathers3neo.upload.flags=
+um_feathers3neo.upload.extra_flags=
+um_feathers3neo.upload.use_1200bps_touch=false
+um_feathers3neo.upload.wait_for_upload_port=false
+
+um_feathers3neo.serial.disableDTR=false
+um_feathers3neo.serial.disableRTS=false
+
+um_feathers3neo.build.tarch=xtensa
+um_feathers3neo.build.bootloader_addr=0x0
+um_feathers3neo.build.target=esp32s3
+um_feathers3neo.build.mcu=esp32s3
+um_feathers3neo.build.core=esp32
+um_feathers3neo.build.variant=um_feathers3neo
+um_feathers3neo.build.board=FEATHERS3NEO
+
+um_feathers3neo.build.usb_mode=1
+um_feathers3neo.build.cdc_on_boot=1
+um_feathers3neo.build.msc_on_boot=0
+um_feathers3neo.build.dfu_on_boot=0
+um_feathers3neo.build.f_cpu=240000000L
+um_feathers3neo.build.flash_size=16MB
+um_feathers3neo.build.flash_freq=80m
+um_feathers3neo.build.flash_mode=dio
+um_feathers3neo.build.boot=qio
+um_feathers3neo.build.partitions=default
+um_feathers3neo.build.defines=
+um_feathers3neo.build.loop_core=
+um_feathers3neo.build.event_core=
+um_feathers3neo.build.flash_type=qio
+um_feathers3neo.build.psram_type=qspi
+um_feathers3neo.build.memory_type=qio_qspi
+
+um_feathers3neo.menu.LoopCore.1=Core 1
+um_feathers3neo.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+um_feathers3neo.menu.LoopCore.0=Core 0
+um_feathers3neo.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+um_feathers3neo.menu.EventsCore.1=Core 1
+um_feathers3neo.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+um_feathers3neo.menu.EventsCore.0=Core 0
+um_feathers3neo.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+um_feathers3neo.menu.USBMode.hwcdc=Hardware CDC and JTAG
+um_feathers3neo.menu.USBMode.hwcdc.build.usb_mode=1
+um_feathers3neo.menu.USBMode.default=USB-OTG (TinyUSB)
+um_feathers3neo.menu.USBMode.default.build.usb_mode=0
+
+um_feathers3neo.menu.CDCOnBoot.cdc=Enabled
+um_feathers3neo.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+um_feathers3neo.menu.CDCOnBoot.default=Disabled
+um_feathers3neo.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+um_feathers3neo.menu.MSCOnBoot.default=Disabled
+um_feathers3neo.menu.MSCOnBoot.default.build.msc_on_boot=0
+um_feathers3neo.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+um_feathers3neo.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+um_feathers3neo.menu.DFUOnBoot.default=Disabled
+um_feathers3neo.menu.DFUOnBoot.default.build.dfu_on_boot=0
+um_feathers3neo.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+um_feathers3neo.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+um_feathers3neo.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+um_feathers3neo.menu.UploadMode.default=UART0 / Hardware CDC
+um_feathers3neo.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_feathers3neo.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+um_feathers3neo.menu.UploadMode.default.upload.use_1200bps_touch=false
+um_feathers3neo.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+um_feathers3neo.menu.PSRAM.enabled=Enabled
+um_feathers3neo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_feathers3neo.menu.PSRAM.disabled=Disabled
+um_feathers3neo.menu.PSRAM.disabled.build.defines=
+
+um_feathers3neo.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+um_feathers3neo.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+um_feathers3neo.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.minimal.build.partitions=minimal
+um_feathers3neo.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.no_ota.build.partitions=no_ota
+um_feathers3neo.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+um_feathers3neo.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+um_feathers3neo.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+um_feathers3neo.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+um_feathers3neo.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+um_feathers3neo.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+um_feathers3neo.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+um_feathers3neo.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+um_feathers3neo.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+um_feathers3neo.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.huge_app.build.partitions=huge_app
+um_feathers3neo.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+um_feathers3neo.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+um_feathers3neo.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+um_feathers3neo.menu.CPUFreq.240=240MHz (WiFi)
+um_feathers3neo.menu.CPUFreq.240.build.f_cpu=240000000L
+um_feathers3neo.menu.CPUFreq.160=160MHz (WiFi)
+um_feathers3neo.menu.CPUFreq.160.build.f_cpu=160000000L
+um_feathers3neo.menu.CPUFreq.80=80MHz (WiFi)
+um_feathers3neo.menu.CPUFreq.80.build.f_cpu=80000000L
+um_feathers3neo.menu.CPUFreq.40=40MHz
+um_feathers3neo.menu.CPUFreq.40.build.f_cpu=40000000L
+um_feathers3neo.menu.CPUFreq.20=20MHz
+um_feathers3neo.menu.CPUFreq.20.build.f_cpu=20000000L
+um_feathers3neo.menu.CPUFreq.10=10MHz
+um_feathers3neo.menu.CPUFreq.10.build.f_cpu=10000000L
+
+um_feathers3neo.menu.FlashMode.qio=QIO
+um_feathers3neo.menu.FlashMode.qio.build.flash_mode=dio
+um_feathers3neo.menu.FlashMode.qio.build.boot=qio
+um_feathers3neo.menu.FlashMode.dio=DIO
+um_feathers3neo.menu.FlashMode.dio.build.flash_mode=dio
+um_feathers3neo.menu.FlashMode.dio.build.boot=dio
+
+um_feathers3neo.menu.UploadSpeed.921600=921600
+um_feathers3neo.menu.UploadSpeed.921600.upload.speed=921600
+um_feathers3neo.menu.UploadSpeed.115200=115200
+um_feathers3neo.menu.UploadSpeed.115200.upload.speed=115200
+um_feathers3neo.menu.UploadSpeed.256000.windows=256000
+um_feathers3neo.menu.UploadSpeed.256000.upload.speed=256000
+um_feathers3neo.menu.UploadSpeed.230400.windows.upload.speed=256000
+um_feathers3neo.menu.UploadSpeed.230400=230400
+um_feathers3neo.menu.UploadSpeed.230400.upload.speed=230400
+um_feathers3neo.menu.UploadSpeed.460800.linux=460800
+um_feathers3neo.menu.UploadSpeed.460800.macosx=460800
+um_feathers3neo.menu.UploadSpeed.460800.upload.speed=460800
+um_feathers3neo.menu.UploadSpeed.512000.windows=512000
+um_feathers3neo.menu.UploadSpeed.512000.upload.speed=512000
+
+um_feathers3neo.menu.DebugLevel.none=None
+um_feathers3neo.menu.DebugLevel.none.build.code_debug=0
+um_feathers3neo.menu.DebugLevel.error=Error
+um_feathers3neo.menu.DebugLevel.error.build.code_debug=1
+um_feathers3neo.menu.DebugLevel.warn=Warn
+um_feathers3neo.menu.DebugLevel.warn.build.code_debug=2
+um_feathers3neo.menu.DebugLevel.info=Info
+um_feathers3neo.menu.DebugLevel.info.build.code_debug=3
+um_feathers3neo.menu.DebugLevel.debug=Debug
+um_feathers3neo.menu.DebugLevel.debug.build.code_debug=4
+um_feathers3neo.menu.DebugLevel.verbose=Verbose
+um_feathers3neo.menu.DebugLevel.verbose.build.code_debug=5
+
+um_feathers3neo.menu.EraseFlash.none=Disabled
+um_feathers3neo.menu.EraseFlash.none.upload.erase_cmd=
+um_feathers3neo.menu.EraseFlash.all=Enabled
+um_feathers3neo.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 um_nanos3.name=UM NanoS3
 um_nanos3.vid.0=0x303a
 um_nanos3.pid.0=0x8179
@@ -4525,6 +4694,122 @@ lilygo_t_display_s3.menu.EraseFlash.none=Disabled
 lilygo_t_display_s3.menu.EraseFlash.none.upload.erase_cmd=
 lilygo_t_display_s3.menu.EraseFlash.all=Enabled
 lilygo_t_display_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+lilygo_t_eth_lite.name=LilyGo T-ETH-Lite
+
+lilygo_t_eth_lite.bootloader.tool=esptool_py
+lilygo_t_eth_lite.bootloader.tool.default=esptool_py
+
+lilygo_t_eth_lite.upload.tool=esptool_py
+lilygo_t_eth_lite.upload.tool.default=esptool_py
+lilygo_t_eth_lite.upload.tool.network=esp_ota
+
+lilygo_t_eth_lite.upload.maximum_size=3145728
+lilygo_t_eth_lite.upload.maximum_data_size=327680
+lilygo_t_eth_lite.upload.speed=921600
+lilygo_t_eth_lite.upload.flags=
+lilygo_t_eth_lite.upload.extra_flags=
+lilygo_t_eth_lite.upload.use_1200bps_touch=false
+lilygo_t_eth_lite.upload.wait_for_upload_port=false
+
+lilygo_t_eth_lite.serial.disableDTR=false
+lilygo_t_eth_lite.serial.disableRTS=false
+
+lilygo_t_eth_lite.build.tarch=xtensa
+lilygo_t_eth_lite.build.bootloader_addr=0x0
+lilygo_t_eth_lite.build.target=esp32s3
+lilygo_t_eth_lite.build.mcu=esp32s3
+lilygo_t_eth_lite.build.core=esp32
+lilygo_t_eth_lite.build.variant=lilygo_t_eth_lite
+lilygo_t_eth_lite.build.board=LILYGO_T_ETH_LITE
+
+lilygo_t_eth_lite.build.usb_mode=1
+lilygo_t_eth_lite.build.cdc_on_boot=0
+lilygo_t_eth_lite.build.msc_on_boot=0
+lilygo_t_eth_lite.build.dfu_on_boot=0
+lilygo_t_eth_lite.build.f_cpu=240000000L
+lilygo_t_eth_lite.build.flash_size=16MB
+lilygo_t_eth_lite.build.flash_freq=80m
+lilygo_t_eth_lite.build.flash_mode=dio
+lilygo_t_eth_lite.build.boot=qio
+lilygo_t_eth_lite.build.boot_freq=80m
+lilygo_t_eth_lite.build.partitions=app3M_fat9M_16MB
+lilygo_t_eth_lite.build.defines=
+lilygo_t_eth_lite.build.loop_core=
+lilygo_t_eth_lite.build.event_core=
+lilygo_t_eth_lite.build.psram_type=opi
+lilygo_t_eth_lite.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+lilygo_t_eth_lite.menu.JTAGAdapter.default=Disabled
+lilygo_t_eth_lite.menu.JTAGAdapter.default.build.copy_jtag_files=0
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin=Integrated USB JTAG
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+lilygo_t_eth_lite.menu.LoopCore.1=Core 1
+lilygo_t_eth_lite.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lilygo_t_eth_lite.menu.LoopCore.0=Core 0
+lilygo_t_eth_lite.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lilygo_t_eth_lite.menu.EventsCore.1=Core 1
+lilygo_t_eth_lite.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lilygo_t_eth_lite.menu.EventsCore.0=Core 0
+lilygo_t_eth_lite.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lilygo_t_eth_lite.menu.USBMode.hwcdc=Hardware CDC and JTAG
+lilygo_t_eth_lite.menu.USBMode.hwcdc.build.usb_mode=1
+lilygo_t_eth_lite.menu.USBMode.default=USB-OTG (TinyUSB)
+lilygo_t_eth_lite.menu.USBMode.default.build.usb_mode=0
+
+lilygo_t_eth_lite.menu.CDCOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.CDCOnBoot.default.build.cdc_on_boot=0
+lilygo_t_eth_lite.menu.CDCOnBoot.cdc=Enabled
+lilygo_t_eth_lite.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+lilygo_t_eth_lite.menu.MSCOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.MSCOnBoot.default.build.msc_on_boot=0
+lilygo_t_eth_lite.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+lilygo_t_eth_lite.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lilygo_t_eth_lite.menu.DFUOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lilygo_t_eth_lite.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+lilygo_t_eth_lite.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lilygo_t_eth_lite.menu.UploadMode.default=UART0 / Hardware CDC
+lilygo_t_eth_lite.menu.UploadMode.default.upload.use_1200bps_touch=false
+lilygo_t_eth_lite.menu.UploadMode.default.upload.wait_for_upload_port=false
+lilygo_t_eth_lite.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+lilygo_t_eth_lite.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+lilygo_t_eth_lite.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker=RainMaker
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+lilygo_t_eth_lite.menu.DebugLevel.none=None
+lilygo_t_eth_lite.menu.DebugLevel.none.build.code_debug=0
+lilygo_t_eth_lite.menu.DebugLevel.error=Error
+lilygo_t_eth_lite.menu.DebugLevel.error.build.code_debug=1
+lilygo_t_eth_lite.menu.DebugLevel.warn=Warn
+lilygo_t_eth_lite.menu.DebugLevel.warn.build.code_debug=2
+lilygo_t_eth_lite.menu.DebugLevel.info=Info
+lilygo_t_eth_lite.menu.DebugLevel.info.build.code_debug=3
+lilygo_t_eth_lite.menu.DebugLevel.debug=Debug
+lilygo_t_eth_lite.menu.DebugLevel.debug.build.code_debug=4
+lilygo_t_eth_lite.menu.DebugLevel.verbose=Verbose
+lilygo_t_eth_lite.menu.DebugLevel.verbose.build.code_debug=5
+
+lilygo_t_eth_lite.menu.EraseFlash.none=Disabled
+lilygo_t_eth_lite.menu.EraseFlash.none.upload.erase_cmd=
+lilygo_t_eth_lite.menu.EraseFlash.all=Enabled
+lilygo_t_eth_lite.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -36650,5 +36935,178 @@ aslcanx2.menu.EraseFlash.none=Disabled
 aslcanx2.menu.EraseFlash.none.upload.erase_cmd=
 aslcanx2.menu.EraseFlash.all=Enabled
 aslcanx2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+walter.name=DPTechnics Walter
+
+walter.bootloader.tool=esptool_py
+walter.bootloader.tool.default=esptool_py
+
+walter.upload.tool=esptool_py
+walter.upload.tool.default=esptool_py
+walter.upload.tool.network=esp_ota
+
+walter.upload.maximum_size=1310720
+walter.upload.maximum_data_size=327680
+walter.upload.flags=
+walter.upload.extra_flags=
+walter.upload.use_1200bps_touch=false
+walter.upload.wait_for_upload_port=false
+
+walter.serial.disableDTR=false
+walter.serial.disableRTS=false
+
+walter.build.tarch=xtensa
+walter.build.bootloader_addr=0x0
+walter.build.target=esp32s3
+walter.build.mcu=esp32s3
+walter.build.core=esp32
+walter.build.variant=walter
+walter.build.board=DPTECHNICS_WALTER
+
+walter.build.usb_mode=1
+walter.build.cdc_on_boot=1
+walter.build.msc_on_boot=0
+walter.build.dfu_on_boot=0
+walter.build.f_cpu=240000000L
+walter.build.flash_size=16MB
+walter.build.flash_freq=80m
+walter.build.flash_mode=dio
+walter.build.boot=qio
+walter.build.boot_freq=80m
+walter.build.partitions=default
+walter.build.defines=
+walter.build.loop_core=
+walter.build.event_core=
+walter.build.psram_type=qspi
+walter.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+walter.menu.JTAGAdapter.default=Disabled
+walter.menu.JTAGAdapter.default.build.copy_jtag_files=0
+walter.menu.JTAGAdapter.builtin=Integrated USB JTAG
+walter.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+walter.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+walter.menu.JTAGAdapter.external=FTDI Adapter
+walter.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+walter.menu.JTAGAdapter.external.build.copy_jtag_files=1
+walter.menu.JTAGAdapter.bridge=ESP USB Bridge
+walter.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+walter.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+walter.menu.PSRAM.enabled=QSPI PSRAM
+walter.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+walter.menu.PSRAM.enabled.build.psram_type=qspi
+walter.menu.PSRAM.disabled=Disabled
+walter.menu.PSRAM.disabled.build.defines=
+walter.menu.PSRAM.disabled.build.psram_type=qspi
+
+walter.menu.FlashMode.qio=QIO 80MHz
+walter.menu.FlashMode.qio.build.flash_mode=dio
+walter.menu.FlashMode.qio.build.boot=qio
+walter.menu.FlashMode.qio.build.boot_freq=80m
+walter.menu.FlashMode.qio.build.flash_freq=80m
+walter.menu.FlashMode.dio=DIO 80MHz
+walter.menu.FlashMode.dio.build.flash_mode=dio
+walter.menu.FlashMode.dio.build.boot=dio
+walter.menu.FlashMode.dio.build.boot_freq=80m
+walter.menu.FlashMode.dio.build.flash_freq=80m
+
+walter.menu.FlashSize.16M=16MB (128Mb)
+walter.menu.FlashSize.16M.build.flash_size=16MB
+
+walter.menu.LoopCore.1=Core 1
+walter.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+walter.menu.LoopCore.0=Core 0
+walter.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+walter.menu.EventsCore.1=Core 1
+walter.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+walter.menu.EventsCore.0=Core 0
+walter.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+walter.menu.USBMode.hwcdc=Hardware CDC and JTAG
+walter.menu.USBMode.hwcdc.build.usb_mode=1
+walter.menu.USBMode.default=USB-OTG (TinyUSB)
+walter.menu.USBMode.default.build.usb_mode=0
+
+walter.menu.CDCOnBoot.cdc=Enabled
+walter.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+walter.menu.CDCOnBoot.default=Disabled
+walter.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+walter.menu.MSCOnBoot.default=Disabled
+walter.menu.MSCOnBoot.default.build.msc_on_boot=0
+walter.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+walter.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+walter.menu.DFUOnBoot.default=Disabled
+walter.menu.DFUOnBoot.default.build.dfu_on_boot=0
+walter.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+walter.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+walter.menu.UploadMode.default=UART0 / Hardware CDC
+walter.menu.UploadMode.default.upload.use_1200bps_touch=false
+walter.menu.UploadMode.default.upload.wait_for_upload_port=false
+walter.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+walter.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+walter.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+walter.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+walter.menu.PartitionScheme.fatflash.build.partitions=ffat
+walter.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+walter.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+walter.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+walter.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+walter.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+walter.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+walter.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+
+walter.menu.CPUFreq.240=240MHz (WiFi)
+walter.menu.CPUFreq.240.build.f_cpu=240000000L
+walter.menu.CPUFreq.160=160MHz (WiFi)
+walter.menu.CPUFreq.160.build.f_cpu=160000000L
+walter.menu.CPUFreq.80=80MHz (WiFi)
+walter.menu.CPUFreq.80.build.f_cpu=80000000L
+walter.menu.CPUFreq.40=40MHz
+walter.menu.CPUFreq.40.build.f_cpu=40000000L
+walter.menu.CPUFreq.20=20MHz
+walter.menu.CPUFreq.20.build.f_cpu=20000000L
+walter.menu.CPUFreq.10=10MHz
+walter.menu.CPUFreq.10.build.f_cpu=10000000L
+
+walter.menu.UploadSpeed.921600=921600
+walter.menu.UploadSpeed.921600.upload.speed=921600
+walter.menu.UploadSpeed.115200=115200
+walter.menu.UploadSpeed.115200.upload.speed=115200
+walter.menu.UploadSpeed.256000.windows=256000
+walter.menu.UploadSpeed.256000.upload.speed=256000
+walter.menu.UploadSpeed.230400.windows.upload.speed=256000
+walter.menu.UploadSpeed.230400=230400
+walter.menu.UploadSpeed.230400.upload.speed=230400
+walter.menu.UploadSpeed.460800.linux=460800
+walter.menu.UploadSpeed.460800.macosx=460800
+walter.menu.UploadSpeed.460800.upload.speed=460800
+walter.menu.UploadSpeed.512000.windows=512000
+walter.menu.UploadSpeed.512000.upload.speed=512000
+
+walter.menu.DebugLevel.none=None
+walter.menu.DebugLevel.none.build.code_debug=0
+walter.menu.DebugLevel.error=Error
+walter.menu.DebugLevel.error.build.code_debug=1
+walter.menu.DebugLevel.warn=Warn
+walter.menu.DebugLevel.warn.build.code_debug=2
+walter.menu.DebugLevel.info=Info
+walter.menu.DebugLevel.info.build.code_debug=3
+walter.menu.DebugLevel.debug=Debug
+walter.menu.DebugLevel.debug.build.code_debug=4
+walter.menu.DebugLevel.verbose=Verbose
+walter.menu.DebugLevel.verbose.build.code_debug=5
+
+walter.menu.EraseFlash.none=Disabled
+walter.menu.EraseFlash.none.upload.erase_cmd=
+walter.menu.EraseFlash.all=Enabled
+walter.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
