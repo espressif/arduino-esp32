@@ -37,14 +37,14 @@ static const uint8_t T7 = 7;
 static const uint8_t T8 = 8;
 
 // Ethernet
-#define ETH_PHY_TYPE        ETH_PHY_W5500
-#define ETH_PHY_ADDR         1
-#define ETH_PHY_CS           9
-#define ETH_PHY_IRQ         13
-#define ETH_PHY_RST         14
-#define ETH_PHY_SPI_HOST    SPI2_HOST
-#define ETH_PHY_SPI_SCK     10
-#define ETH_PHY_SPI_MISO    11
-#define ETH_PHY_SPI_MOSI    12
+#define ETH_PHY_TYPE     ETH_PHY_W5500
+#define ETH_PHY_ADDR     1
+#define ETH_PHY_CS       9
+#define ETH_PHY_IRQ      13
+#define ETH_PHY_RST      14
+#define ETH_PHY_SPI_HOST SPI2_HOST
+#define ETH_PHY_SPI_SCK  10
+#define ETH_PHY_SPI_MISO 11
+#define ETH_PHY_SPI_MOSI 12
 
 #endif /* Pins_Arduino_h */
