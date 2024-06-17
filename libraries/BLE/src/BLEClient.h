@@ -42,7 +42,7 @@ public:
   void disconnect();                                                 // Disconnect from the remote BLE Server
   BLEAddress getPeerAddress();                                       // Get the address of the remote BLE Server
   int getRssi();                                                     // Get the RSSI of the remote BLE Server
-  std::map<String, BLERemoteService *> *getServices();               // Get a map of the services offered by the remote BLE Server
+  std::map<std::string, BLERemoteService *> *getServices();          // Get a map of the services offered by the remote BLE Server
   BLERemoteService *getService(const char *uuid);                    // Get a reference to a specified service offered by the remote BLE server.
   BLERemoteService *getService(BLEUUID uuid);                        // Get a reference to a specified service offered by the remote BLE server.
   String getValue(BLEUUID serviceUUID, BLEUUID characteristicUUID);  // Get the value of a given characteristic at a given service.
@@ -82,7 +82,7 @@ private:
   FreeRTOS::Semaphore m_semaphoreOpenEvt = FreeRTOS::Semaphore("OpenEvt");
   FreeRTOS::Semaphore m_semaphoreSearchCmplEvt = FreeRTOS::Semaphore("SearchCmplEvt");
   FreeRTOS::Semaphore m_semaphoreRssiCmplEvt = FreeRTOS::Semaphore("RssiCmplEvt");
-  std::map<String, BLERemoteService *> m_servicesMap;
+  std::map<std::string, BLERemoteService *> m_servicesMap;
   std::map<BLERemoteService *, uint16_t> m_servicesMapByInstID;
   void clearServices();  // Clear any existing services.
   uint16_t m_mtu = 23;
