@@ -6,7 +6,7 @@
 #   idf.py build
 
 set(min_supported_idf_version "5.1.0")
-set(max_supported_idf_version "5.1.99")
+set(max_supported_idf_version "5.2.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
