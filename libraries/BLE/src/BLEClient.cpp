@@ -343,7 +343,7 @@ void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
       BLEUUID uuid = BLEUUID(evtParam->search_res.srvc_id);
       BLERemoteService *pRemoteService =
         new BLERemoteService(evtParam->search_res.srvc_id, this, evtParam->search_res.start_handle, evtParam->search_res.end_handle);
-      m_servicesMap.insert(std::pair<String, BLERemoteService *>(uuid.toString(), pRemoteService));
+      m_servicesMap.insert(std::pair<std::string, BLERemoteService *>(uuid.toString().c_str(), pRemoteService));
       m_servicesMapByInstID.insert(std::pair<BLERemoteService *, uint16_t>(pRemoteService, evtParam->search_res.srvc_id.inst_id));
       break;
     }  // ESP_GATTC_SEARCH_RES_EVT
@@ -428,7 +428,7 @@ BLERemoteService *BLEClient::getService(BLEUUID uuid) {
   if (!m_haveServices) {
     getServices();
   }
-  String uuidStr = uuid.toString();
+  std::string uuidStr = uuid.toString().c_str();
   for (auto &myPair : m_servicesMap) {
     if (myPair.first == uuidStr) {
       log_v("<< getService: found the service with uuid: %s", uuid.toString().c_str());
@@ -445,7 +445,7 @@ BLERemoteService *BLEClient::getService(BLEUUID uuid) {
  * services and wait until we have received them all.
  * @return N/A
  */
-std::map<String, BLERemoteService *> *BLEClient::getServices() {
+std::map<std::string, BLERemoteService *> *BLEClient::getServices() {
   /*
  * Design
  * ------

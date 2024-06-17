@@ -34,7 +34,7 @@ public:
   BLERemoteCharacteristic *getCharacteristic(const char *uuid);  // Get the specified characteristic reference.
   BLERemoteCharacteristic *getCharacteristic(BLEUUID uuid);      // Get the specified characteristic reference.
   BLERemoteCharacteristic *getCharacteristic(uint16_t uuid);     // Get the specified characteristic reference.
-  std::map<String, BLERemoteCharacteristic *> *getCharacteristics();
+  std::map<std::string, BLERemoteCharacteristic *> *getCharacteristics();
   std::map<uint16_t, BLERemoteCharacteristic *> *getCharacteristicsByHandle();  // Get the characteristics map.
   void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic *> **pCharacteristicMap);
 
@@ -66,7 +66,7 @@ private:
   // Properties
 
   // We maintain a map of characteristics owned by this service keyed by a string representation of the UUID.
-  std::map<String, BLERemoteCharacteristic *> m_characteristicMap;
+  std::map<std::string, BLERemoteCharacteristic *> m_characteristicMap;
 
   // We maintain a map of characteristics owned by this service keyed by a handle.
   std::map<uint16_t, BLERemoteCharacteristic *> m_characteristicMapByHandle;
