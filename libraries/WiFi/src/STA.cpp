@@ -298,7 +298,7 @@ bool STAClass::begin(bool tryConnect) {
     log_e("STA enable failed!");
     return false;
   }
-  if(!waitStatusBits(ESP_NETIF_STARTED_BIT, 1000)){
+  if (!waitStatusBits(ESP_NETIF_STARTED_BIT, 1000)) {
     log_e("Failed to start STA!");
     return false;
   }
