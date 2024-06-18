@@ -2,7 +2,7 @@
 #include <functional>
 extern "C" {
 #include <lwip/netif.h>
-}; // extern "C"
+};  // extern "C"
 
 #define NBNS_PORT             137
 #define NBNS_MAX_HOSTNAME_LEN 32
@@ -94,7 +94,7 @@ void NetBIOS::_onPacket(AsyncUDPPacket &packet) {
         append_32((void *)&nbnsa.ttl, 300000);
         append_16((void *)&nbnsa.data_len, 6);
         append_16((void *)&nbnsa.flags, 0);
-        nbnsa.addr = packet.localIP(); // By default, should be overridden below
+        nbnsa.addr = packet.localIP();  // By default, should be overridden below
         // Iterate over all netifs, see if the incoming address matches one of the netmaskes networks
         for (auto netif = netif_list; netif; netif = netif->next) {
           auto maskedip = ip4_addr_get_u32(netif_ip4_addr(netif)) & ip4_addr_get_u32(netif_ip4_netmask(netif));
