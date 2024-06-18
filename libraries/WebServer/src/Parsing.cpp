@@ -32,7 +32,7 @@
 
 #define __STR(a) #a
 #define _STR(a)  __STR(a)
-const char *_http_method_str[] = {
+static const char *_http_method_str[] = {
 #define XX(num, name, string) _STR(name),
   HTTP_METHOD_MAP(XX)
 #undef XX
@@ -124,7 +124,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
   //attach handler
   RequestHandler *handler;
   for (handler = _firstHandler; handler; handler = handler->next()) {
-    if (handler->canHandle(_currentMethod, _currentUri)) {
+    if (handler->canHandle(*this, _currentMethod, _currentUri)) {
       break;
     }
   }
@@ -176,7 +176,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       }
     }
 
-    if (!isForm && _currentHandler && _currentHandler->canRaw(_currentUri)) {
+    if (!isForm && _currentHandler && _currentHandler->canRaw(*this, _currentUri)) {
       log_v("Parse raw");
       _currentRaw.reset(new HTTPRaw());
       _currentRaw->status = RAW_START;
@@ -334,7 +334,7 @@ void WebServer::_parseArguments(String data) {
 
 void WebServer::_uploadWriteByte(uint8_t b) {
   if (_currentUpload->currentSize == HTTP_UPLOAD_BUFLEN) {
-    if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+    if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
       _currentHandler->upload(*this, _currentUri, *_currentUpload);
     }
     _currentUpload->totalSize += _currentUpload->currentSize;
@@ -449,7 +449,7 @@ bool WebServer::_parseForm(NetworkClient &client, String boundary, uint32_t len)
             _currentUpload->totalSize = 0;
             _currentUpload->currentSize = 0;
             log_v("Start File: %s Type: %s", _currentUpload->filename.c_str(), _currentUpload->type.c_str());
-            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+            if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             }
             _currentUpload->status = UPLOAD_FILE_WRITE;
@@ -488,12 +488,12 @@ bool WebServer::_parseForm(NetworkClient &client, String boundary, uint32_t len)
               }
             }
             // Found the boundary string, finish processing this file upload
-            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+            if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             }
             _currentUpload->totalSize += _currentUpload->currentSize;
             _currentUpload->status = UPLOAD_FILE_END;
-            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+            if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             }
             log_v("End File: %s Type: %s Size: %d", _currentUpload->filename.c_str(), _currentUpload->type.c_str(), (int)_currentUpload->totalSize);
@@ -567,7 +567,7 @@ String WebServer::urlDecode(const String &text) {
 
 bool WebServer::_parseFormUploadAborted() {
   _currentUpload->status = UPLOAD_FILE_ABORTED;
-  if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+  if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
     _currentHandler->upload(*this, _currentUri, *_currentUpload);
   }
   return false;

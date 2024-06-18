@@ -1,0 +1,53 @@
+name: Sizes Results (master-v2.x)
+
+on:
+  workflow_dispatch:
+
+env:
+  # It's convenient to set variables for values used multiple times in the workflow
+  SKETCHES_REPORTS_PATH: artifacts/sizes-report
+  RESULT_SIZES_TEST_FILE: SIZES_TEST.md
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+jobs:
+  sizes-test-results:
+    name: Sizes Comparsion Results
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4  # This step checks out the repository's code at gh-pages branch
+        with:
+          ref: gh-pages
+
+      - name: Create folder structure
+        run: |
+          mkdir -p artifacts && cd artifacts
+          mkdir -p sizes-report
+          mkdir -p sizes-report/master
+          mkdir -p sizes-report/pr
+
+      # master folder is a base for comparison
+      # pr folder is for comparison with master
+      - name: Download JSON file
+        run: |
+          mv master_cli_compile/*.json artifacts/sizes-report/pr/
+          mv v2.x_cli_compile/*.json artifacts/sizes-report/master/
+
+      - name: Report results
+        uses: P-R-O-C-H-Y/report-size-deltas@sizes_v2
+        with:
+          sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
+          github-token: ${{ env.GITHUB_TOKEN }}
+          destination-file: ${{ env.RESULT_SIZES_TEST_FILE }}
+
+      - name: Append file with action URL
+        run:
+          echo "/ [GitHub Action Link](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})" >> ${{ env.RESULT_SIZES_TEST_FILE }}
+
+      - name: Push to github repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ${{ env.RESULT_SIZES_TEST_FILE }}
+          git commit -m "Generated Sizes Results (master-v2.x)"
+          git push origin HEAD:gh-pages

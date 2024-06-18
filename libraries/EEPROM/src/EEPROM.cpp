@@ -133,6 +133,10 @@ void EEPROMClass::end() {
   _handle = 0;
 }
 
+bool EEPROMClass::isDirty() {
+  return _dirty;
+}
+
 uint8_t EEPROMClass::read(int address) {
   if (address < 0 || (size_t)address >= _size) {
     return 0;

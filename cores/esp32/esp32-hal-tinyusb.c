@@ -22,7 +22,6 @@
 
 #include "rom/gpio.h"
 
-#include "hal/usb_hal.h"
 #include "hal/gpio_ll.h"
 #include "hal/clk_gate_ll.h"
 
@@ -44,7 +43,7 @@
 #elif CONFIG_IDF_TARGET_ESP32S3
 #if defined __has_include && __has_include("hal/usb_phy_ll.h")
 #include "hal/usb_phy_ll.h"
-#else
+#elif defined __has_include && __has_include("hal/usb_fsls_phy_ll.h")
 #include "hal/usb_fsls_phy_ll.h"
 #endif
 #include "hal/usb_serial_jtag_ll.h"
@@ -62,6 +61,10 @@ typedef char *tusb_desc_strarray_device_t[USB_STRING_DESCRIPTOR_ARRAY_SIZE];
 typedef struct {
   bool external_phy;
 } tinyusb_config_t;
+
+#if __has_include("hal/usb_hal.h")
+
+#include "hal/usb_hal.h"
 
 static bool usb_otg_deinit(void *busptr) {
   // Once USB OTG is initialized, its GPIOs are assigned and it shall never be deinited
@@ -101,10 +104,67 @@ static void configure_pins(usb_hal_context_t *usb) {
   }
 }
 
-esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
-  usb_hal_context_t hal = {.use_external_phy = config->external_phy};
+esp_err_t init_usb_hal(bool external_phy) {
+  usb_hal_context_t hal = {.use_external_phy = external_phy};
   usb_hal_init(&hal);
   configure_pins(&hal);
+  return ESP_OK;
+}
+
+esp_err_t deinit_usb_hal() {
+  return ESP_OK;
+}
+
+#elif __has_include("esp_private/usb_phy.h")
+
+#include "esp_private/usb_phy.h"
+
+static usb_phy_handle_t phy_handle = NULL;
+
+esp_err_t init_usb_hal(bool external_phy) {
+  esp_err_t ret = ESP_OK;
+  usb_phy_config_t phy_config = {
+    .controller = USB_PHY_CTRL_OTG,
+    .target = USB_PHY_TARGET_INT,
+    .otg_mode = USB_OTG_MODE_DEVICE,
+    .otg_speed = USB_PHY_SPEED_FULL,
+    .ext_io_conf = NULL,
+    .otg_io_conf = NULL,
+  };
+
+  ret = usb_new_phy(&phy_config, &phy_handle);
+  if (ret != ESP_OK) {
+    log_e("Failed to init USB PHY");
+  }
+  return ret;
+}
+
+esp_err_t deinit_usb_hal() {
+  esp_err_t ret = ESP_OK;
+  if (phy_handle) {
+    ret = usb_del_phy(phy_handle);
+    if (ret != ESP_OK) {
+      log_e("Failed to deinit USB PHY");
+    }
+  }
+  return ret;
+}
+
+#else
+
+#error No way to initialize USP PHY
+
+void init_usb_hal(bool external_phy) {
+  return ESP_OK;
+}
+
+void deinit_usb_hal() {
+  return ESP_OK;
+}
+#endif
+
+esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
+  init_usb_hal(config->external_phy);
   if (!tusb_init()) {
     log_e("Can't initialize the TinyUSB stack.");
     return ESP_FAIL;
@@ -390,6 +450,10 @@ __attribute__((weak)) int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint
 __attribute__((weak)) int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cmd[16], void *buffer, uint16_t bufsize) {
   return -1;
 }
+__attribute__((weak)) bool tud_msc_is_writable_cb(uint8_t lun) {
+  return false;
+}
+
 #endif
 
 /*
@@ -416,6 +480,7 @@ static void hw_cdc_reset_handler(void *arg) {
 
 static void usb_switch_to_cdc_jtag() {
   // Disable USB-OTG
+  deinit_usb_hal();
   periph_ll_reset(PERIPH_USB_MODULE);
   //periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
   periph_ll_disable_clk_set_rst(PERIPH_USB_MODULE);
@@ -438,8 +503,13 @@ static void usb_switch_to_cdc_jtag() {
 // Initialize CDC+JTAG ISR to listen for BUS_RESET
 #if defined __has_include && __has_include("hal/usb_phy_ll.h")
   usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
-#else
+#elif defined __has_include && __has_include("hal/usb_fsls_phy_ll.h")
   usb_fsls_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
+#else
+  // usb_serial_jtag_ll_phy_set_defaults();
+  const usb_serial_jtag_pull_override_vals_t pull_conf = {.dp_pu = 1, .dm_pu = 0, .dp_pd = 0, .dm_pd = 0};
+  usb_serial_jtag_ll_phy_enable_pull_override(&pull_conf);
+  usb_serial_jtag_ll_phy_disable_pull_override();
 #endif
   usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
   usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);

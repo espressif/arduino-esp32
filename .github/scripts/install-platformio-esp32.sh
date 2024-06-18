@@ -89,7 +89,9 @@ function count_sketches(){ # count_sketches <examples-path>
         if [[ "${sketchdirname}.ino" != "$sketchname" ]]; then
             continue
         fi
-        if [[ -f "$sketchdir/.test.skip" ]]; then
+        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
+        # If the target is listed as false, skip the sketch. Otherwise, include it.
+        if [[ "$is_target" == "false" ]]; then
             continue
         fi
         echo $sketch >> sketches.txt
@@ -161,8 +163,10 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
         local sketchdir=$(dirname $sketch)
         local sketchdirname=$(basename $sketchdir)
         local sketchname=$(basename $sketch)
+        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
+        # If the target is listed as false, skip the sketch. Otherwise, include it.
         if [ "${sketchdirname}.ino" != "$sketchname" ] \
-        || [ -f "$sketchdir/.test.skip" ]; then
+        || [[ "$is_target" == "false" ]]; then
             continue
         fi
         sketchnum=$(($sketchnum + 1))

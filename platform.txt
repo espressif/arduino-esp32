@@ -1,7 +1,8 @@
 name=ESP32 Arduino
-version=3.0.0
+version=3.0.1
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
+tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
 tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
 tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
 tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
@@ -30,6 +31,7 @@ compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
 compiler.prefix={build.tarch}-{build.target}-elf-
 
 compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.mcu}
+compiler.sdk.path.windows={tools.esp32-arduino-libs.path}\{build.mcu}
 
 # EXPERIMENTAL feature: optimization flags
 #  - this is alpha and may be subject to change without notice
@@ -168,6 +170,11 @@ recipe.hooks.objcopy.postobjcopy.1.pattern.windows=cmd /c if exist "{build.path}
 ## Copy ESP_SR Model
 recipe.hooks.objcopy.postobjcopy.2.pattern=/usr/bin/env bash -c "[ ! -d "{build.path}"/libraries/ESP_SR ] || [ ! -f "{compiler.sdk.path}"/esp_sr/srmodels.bin ] || cp -f "{compiler.sdk.path}"/esp_sr/srmodels.bin "{build.path}"/srmodels.bin"
 recipe.hooks.objcopy.postobjcopy.2.pattern.windows=cmd /c if exist "{build.path}\libraries\ESP_SR" if exist "{compiler.sdk.path}\esp_sr\srmodels.bin" COPY /y "{compiler.sdk.path}\esp_sr\srmodels.bin" "{build.path}\srmodels.bin"
+
+# Create merged binary
+recipe.hooks.objcopy.postobjcopy.3.pattern_args=--chip {build.mcu} merge_bin -o "{build.path}/{build.project_name}.merged.bin" --fill-flash-size {build.flash_size} --flash_mode keep --flash_freq keep --flash_size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin"
+recipe.hooks.objcopy.postobjcopy.3.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.objcopy.postobjcopy.3.pattern_args}
+recipe.hooks.objcopy.postobjcopy.3.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.objcopy.postobjcopy.3.pattern_args}
 
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin

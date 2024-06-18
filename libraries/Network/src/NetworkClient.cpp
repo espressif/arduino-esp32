@@ -162,7 +162,14 @@ public:
   NetworkClientSocketHandle(int fd) : sockfd(fd) {}
 
   ~NetworkClientSocketHandle() {
-    close(sockfd);
+    close();
+  }
+
+  void close() {
+    if (sockfd >= 0) {
+      ::close(sockfd);
+      sockfd = -1;
+    }
   }
 
   int fd() {
@@ -177,11 +184,12 @@ NetworkClient::NetworkClient(int fd) : _connected(true), _timeout(WIFI_CLIENT_DE
   _rxBuffer.reset(new NetworkClientRxBuffer(fd));
 }
 
-NetworkClient::~NetworkClient() {
-  stop();
-}
+NetworkClient::~NetworkClient() {}
 
 void NetworkClient::stop() {
+  if (clientSocketHandle) {
+    clientSocketHandle->close();
+  }
   clientSocketHandle = NULL;
   _rxBuffer = NULL;
   _connected = false;
@@ -471,9 +479,37 @@ int NetworkClient::read(uint8_t *buf, size_t size) {
   return res;
 }
 
+size_t NetworkClient::readBytes(char *buffer, size_t length) {
+  size_t left = length, sofar = 0;
+  int r = 0, to = millis() + getTimeout();
+  while (left) {
+    r = read((uint8_t *)buffer + sofar, left);
+    if (r < 0) {
+      // Error has occurred
+      break;
+    }
+    if (r > 0) {
+      // We got some data
+      left -= r;
+      sofar += r;
+      to = millis() + getTimeout();
+    } else {
+      // We got no data
+      if (millis() >= to) {
+        // We have waited for data enough
+        log_w("Timeout waiting for data on fd %d", fd());
+        break;
+      }
+      // Allow other tasks to run
+      delay(2);
+    }
+  }
+  return sofar;
+}
+
 int NetworkClient::peek() {
   int res = -1;
-  if (_rxBuffer) {
+  if (fd() >= 0 && _rxBuffer) {
     res = _rxBuffer->peek();
     if (_rxBuffer->failed()) {
       log_e("fail on fd %d, errno: %d, \"%s\"", fd(), errno, strerror(errno));
@@ -484,7 +520,7 @@ int NetworkClient::peek() {
 }
 
 int NetworkClient::available() {
-  if (!_rxBuffer) {
+  if (fd() < 0 || !_rxBuffer) {
     return 0;
   }
   int res = _rxBuffer->available();
@@ -502,6 +538,9 @@ void NetworkClient::clear() {
 }
 
 uint8_t NetworkClient::connected() {
+  if (fd() == -1 && _connected) {
+    stop();
+  }
   if (_connected) {
     uint8_t dummy;
     int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
@@ -578,8 +617,24 @@ IPAddress NetworkClient::localIP(int fd) const {
   struct sockaddr_storage addr;
   socklen_t len = sizeof addr;
   getsockname(fd, (struct sockaddr *)&addr, &len);
-  struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-  return IPAddress((uint32_t)(s->sin_addr.s_addr));
+
+  // IPv4 socket, old way
+  if (((struct sockaddr *)&addr)->sa_family == AF_INET) {
+    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+    return IPAddress((uint32_t)(s->sin_addr.s_addr));
+  }
+
+  // IPv6, but it might be IPv4 mapped address
+  if (((struct sockaddr *)&addr)->sa_family == AF_INET6) {
+    struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
+    if (IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
+      return IPAddress(IPv4, (uint8_t *)saddr6->sin6_addr.s6_addr + IPADDRESS_V4_BYTES_INDEX);
+    } else {
+      return IPAddress(IPv6, (uint8_t *)(saddr6->sin6_addr.s6_addr), saddr6->sin6_scope_id);
+    }
+  }
+  log_e("NetworkClient::localIP Not AF_INET or AF_INET6?");
+  return (IPAddress(0, 0, 0, 0));
 }
 
 uint16_t NetworkClient::localPort(int fd) const {

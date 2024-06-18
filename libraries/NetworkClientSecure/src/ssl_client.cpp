@@ -27,7 +27,7 @@
 const char *pers = "esp32-tls";
 
 static int _handle_error(int err, const char *function, int line) {
-  if (err == -30848) {
+  if (err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
     return err;
   }
 #ifdef MBEDTLS_ERROR_C
@@ -48,6 +48,15 @@ void ssl_init(sslclient_context *ssl_client) {
   mbedtls_ssl_init(&ssl_client->ssl_ctx);
   mbedtls_ssl_config_init(&ssl_client->ssl_conf);
   mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
+  ssl_client->peek_buf = -1;
+}
+
+void attach_ssl_certificate_bundle(sslclient_context *ssl_client, bool att) {
+  if (att) {
+    ssl_client->bundle_attach_cb = &esp_crt_bundle_attach;
+  } else {
+    ssl_client->bundle_attach_cb = NULL;
+  }
 }
 
 int start_ssl_client(
@@ -194,11 +203,14 @@ int start_ssl_client(
       return handle_error(ret);
     }
   } else if (useRootCABundle) {
-    log_v("Attaching root CA cert bundle");
-    ret = esp_crt_bundle_attach(&ssl_client->ssl_conf);
-
-    if (ret < 0) {
-      return handle_error(ret);
+    if (ssl_client->bundle_attach_cb != NULL) {
+      log_v("Attaching root CA cert bundle");
+      ret = ssl_client->bundle_attach_cb(&ssl_client->ssl_conf);
+      if (ret < 0) {
+        return handle_error(ret);
+      }
+    } else {
+      log_e("useRootCABundle is set, but attach_ssl_certificate_bundle(ssl, true); was not called!");
     }
   } else if (pskIdent != NULL && psKey != NULL) {
     log_v("Setting up PSK");
@@ -344,7 +356,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client) {
   return ssl_client->socket;
 }
 
-void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, const char *cli_cert, const char *cli_key) {
+void stop_ssl_socket(sslclient_context *ssl_client) {
   log_v("Cleaning SSL connection.");
 
   if (ssl_client->socket >= 0) {
@@ -368,12 +380,15 @@ void stop_ssl_socket(sslclient_context *ssl_client, const char *rootCABuff, cons
   // save only interesting fields
   int handshake_timeout = ssl_client->handshake_timeout;
   int socket_timeout = ssl_client->socket_timeout;
+  int last_err = ssl_client->last_error;
 
   // reset embedded pointers to zero
   memset(ssl_client, 0, sizeof(sslclient_context));
 
   ssl_client->handshake_timeout = handshake_timeout;
   ssl_client->socket_timeout = socket_timeout;
+  ssl_client->last_error = last_err;
+  ssl_client->peek_buf = -1;
 }
 
 int data_to_read(sslclient_context *ssl_client) {

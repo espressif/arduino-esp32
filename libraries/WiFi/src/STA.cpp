@@ -107,7 +107,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
     return;
   }
   static bool first_connect = true;
-  log_d("Arduino STA Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
+  log_v("Arduino STA Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
 
   if (ev->event_id == ARDUINO_EVENT_WIFI_STA_START) {
     _sta_network_if->_setStatus(WL_DISCONNECTED);
@@ -162,11 +162,11 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
       _sta_network_if->connect();
     }
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     uint8_t *ip = (uint8_t *)&(ev->event_info.got_ip.ip_info.ip.addr);
     uint8_t *mask = (uint8_t *)&(ev->event_info.got_ip.ip_info.netmask.addr);
     uint8_t *gw = (uint8_t *)&(ev->event_info.got_ip.ip_info.gw.addr);
-    log_d(
+    log_v(
       "STA IP: %u.%u.%u.%u, MASK: %u.%u.%u.%u, GW: %u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3], mask[0], mask[1], mask[2], mask[3], gw[0], gw[1], gw[2], gw[3]
     );
 #endif
@@ -296,6 +296,10 @@ bool STAClass::onDisable() {
 bool STAClass::begin(bool tryConnect) {
   if (!WiFi.enableSTA(true)) {
     log_e("STA enable failed!");
+    return false;
+  }
+  if (!waitStatusBits(ESP_NETIF_STARTED_BIT, 1000)) {
+    log_e("Failed to start STA!");
     return false;
   }
   if (tryConnect) {
@@ -433,7 +437,7 @@ bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel
  */
 bool STAClass::connect(
   const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity, const char *wpa2_username, const char *wpa2_password, const char *ca_pem,
-  const char *client_crt, const char *client_key, int32_t channel, const uint8_t *bssid, bool tryConnect
+  const char *client_crt, const char *client_key, int ttls_phase2_type, int32_t channel, const uint8_t *bssid, bool tryConnect
 ) {
   if (_esp_netif == NULL) {
     log_e("STA not started! You must call begin() first.");
@@ -465,6 +469,14 @@ bool STAClass::connect(
   if (wpa2_password && strlen(wpa2_password) > 64) {
     log_e("password too long!");
     return false;
+  }
+
+  if (ttls_phase2_type >= 0) {
+#if __has_include("esp_eap_client.h")
+    esp_eap_client_set_ttls_phase2_method((esp_eap_ttls_phase2_types)ttls_phase2_type);
+#else
+    esp_wifi_sta_wpa2_ent_set_ttls_phase2_method((esp_eap_ttls_phase2_types)ttls_phase2_type);
+#endif
   }
 
   if (ca_pem) {
@@ -503,7 +515,7 @@ bool STAClass::connect(
   esp_wifi_sta_wpa2_ent_enable();  //set config settings to enable function
 #endif
 
-  return connect(wpa2_ssid, NULL, 0, NULL, tryConnect);  //connect to wifi
+  return connect(wpa2_ssid, NULL, channel, bssid, tryConnect);  //connect to wifi
 }
 
 bool STAClass::disconnect(bool eraseap, unsigned long timeout) {

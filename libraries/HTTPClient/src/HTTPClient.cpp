@@ -409,6 +409,14 @@ void HTTPClient::setUserAgent(const String &userAgent) {
 }
 
 /**
+ * set Accept Encoding Header
+ * @param acceptEncoding const char *
+ */
+void HTTPClient::setAcceptEncoding(const String &acceptEncoding) {
+  _acceptEncoding = acceptEncoding;
+}
+
+/**
  * set the Authorizatio for the http request
  * @param user const char *
  * @param password const char *
@@ -969,8 +977,8 @@ String HTTPClient::errorToString(int error) {
  */
 void HTTPClient::addHeader(const String &name, const String &value, bool first, bool replace) {
   // not allow set of Header handled by code
-  if (!name.equalsIgnoreCase(F("Connection")) && !name.equalsIgnoreCase(F("User-Agent")) && !name.equalsIgnoreCase(F("Host"))
-      && !(name.equalsIgnoreCase(F("Authorization")) && _base64Authorization.length())) {
+  if (!name.equalsIgnoreCase(F("Connection")) && !name.equalsIgnoreCase(F("User-Agent")) && !name.equalsIgnoreCase(F("Accept-Encoding"))
+      && !name.equalsIgnoreCase(F("Host")) && !(name.equalsIgnoreCase(F("Authorization")) && _base64Authorization.length())) {
 
     String headerLine = name;
     headerLine += ": ";
@@ -1130,7 +1138,7 @@ bool HTTPClient::sendHeader(const char *type) {
   header += "\r\n";
 
   if (!_useHTTP10) {
-    header += F("Accept-Encoding: identity;q=1,chunked;q=0.1,*;q=0\r\n");
+    header += String(F("Accept-Encoding: ")) + _acceptEncoding + F("\r\n");
   }
 
   if (_base64Authorization.length()) {

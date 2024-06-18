@@ -10,6 +10,7 @@ namespace {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 #include "../../libraries/Update/src/Updater.cpp"
+#include "../../cores/esp32/HEXBuilder.cpp"
 #include "../../cores/esp32/MD5Builder.cpp"
 #pragma GCC diagnostic pop
 }  // namespace

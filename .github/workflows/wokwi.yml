@@ -1,0 +1,124 @@
+name: Wokwi tests
+
+on:
+  workflow_call:
+    inputs:
+      chip:
+        type: string
+        description: 'Chip to run tests for'
+        required: true
+      type:
+        type: string
+        description: 'Type of tests to run'
+        required: true
+    secrets:
+      WOKWI_CLI_TOKEN:
+        description: 'Wokwi CLI API token'
+        required: true
+
+env:
+  WOKWI_TIMEOUT: 600000 # Milliseconds
+
+jobs:
+  wokwi-test:
+    name: Wokwi ${{ inputs.chip }} ${{ inputs.type }} tests
+    env:
+      id: ${{ github.event.pull_request.number || github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ inputs.chip }}-${{ inputs.type }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if already run
+        if: ${{ github.event.pull_request.number != null }}
+        id: get-cache-results
+        uses: actions/cache/restore@v4
+        with:
+          key: tests-${{ env.id }}-results-wokwi
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Evaluate if tests should be run
+        id: check-tests
+        run: |
+          cache_exists=${{ steps.get-cache-results.outputs.cache-hit == 'true' }}
+          enabled=true
+
+          if [[ $cache_exists == 'true' ]]; then
+            echo "Already ran, skipping"
+            enabled=false
+          fi
+
+          echo "enabled=$enabled" >> $GITHUB_OUTPUT
+
+      - name: Checkout user repository
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !.github
+
+      # To avoid giving unknown scripts elevated permissions, download them from the master branch
+      - name: Get CI scripts from master
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          mkdir -p .github
+          cd .github
+          curl https://codeload.github.com/${{ github.repository }}/tar.gz/master | tar -xz --strip=2 arduino-esp32-master/.github
+
+      - uses: actions/setup-python@v5
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        with:
+          cache-dependency-path: tests/requirements.txt
+          cache: 'pip'
+          python-version: '3.x'
+
+      - name: Install dependencies
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+
+      - name: Install Wokwi CLI
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: curl -L https://wokwi.com/ci/install.sh | sh
+
+      - name: Wokwi CI Server
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: wokwi/wokwi-ci-server-action@v1
+
+      - name: Get binaries
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
+          path: |
+            ~/.arduino/tests
+
+      - name: Run Tests
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        env:
+          WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+        run: |
+          bash .github/scripts/tests_run.sh -c -type ${{ inputs.type }} -t ${{inputs.chip}} -i 0 -m 1 -W ${{env.WOKWI_TIMEOUT}}
+
+      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} Wokwi results as cache
+        uses: actions/cache/save@v4
+        if: ${{ always() && steps.check-tests.outputs.enabled == 'true' }}
+        with:
+          key: tests-${{ env.id }}-results-wokwi
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} Wokwi results as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-results-wokwi-${{ inputs.chip }}-${{ inputs.type }}
+          overwrite: true
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json

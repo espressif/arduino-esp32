@@ -92,7 +92,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     return false;
   }
 
-  uint32_t duty = ledc_get_duty(group, channel);
+  uint32_t duty = ledc_get_duty(group, (channel % 8));
 
   ledc_channel_config_t ledc_channel = {
     .speed_mode = group, .channel = (channel % 8), .timer_sel = timer, .intr_type = LEDC_INTR_DISABLE, .gpio_num = pin, .duty = duty, .hpoint = 0

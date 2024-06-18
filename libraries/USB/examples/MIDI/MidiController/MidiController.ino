@@ -22,7 +22,7 @@ void loop() {}
 #include "USBMIDI.h"
 USBMIDI MIDI;
 
-#define MIDI_NOTE_C4 64
+#define MIDI_NOTE_C4 60
 
 #define MIDI_CC_CUTOFF 74
 
@@ -69,7 +69,7 @@ void setup() {
   Serial.begin(115200);
   MIDI.begin();
   USB.begin();
-
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   primeControllerInputValue();
 }
 
