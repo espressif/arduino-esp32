@@ -236,6 +236,7 @@ set(ARDUINO_LIBRARY_WiFiProv_SRCS libraries/WiFiProv/src/WiFiProv.cpp)
 set(ARDUINO_LIBRARY_Wire_SRCS libraries/Wire/src/Wire.cpp)
 
 set(ARDUINO_LIBRARY_BLE_SRCS
+  libraries/BLE/src/BLE2901.cpp
   libraries/BLE/src/BLE2902.cpp
   libraries/BLE/src/BLE2904.cpp
   libraries/BLE/src/BLEAddress.cpp
@@ -288,7 +289,7 @@ set(includedirs variants/${CONFIG_ARDUINO_VARIANT}/ cores/esp32/ ${ARDUINO_LIBRA
 set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash esp_partition mbedtls wifi_provisioning wpa_supplicant esp_adc esp_eth http_parser)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid usb ${ARDUINO_LIBRARIES_REQUIRES})
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid usb esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
 

@@ -51,7 +51,6 @@ while [ ! -z "$1" ]; do
     shift
 done
 
-#source ${SCRIPTS_DIR}/install-arduino-ide.sh
 source ${SCRIPTS_DIR}/install-arduino-cli.sh
 source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
@@ -72,7 +71,7 @@ fi
 
 if [ $chunk_build -eq 1 ]; then
     BUILD_CMD="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
-    args+=" -p $test_folder"
+    args+=" -p $test_folder -i 0 -m 1"
 else
     BUILD_CMD="${SCRIPTS_DIR}/sketch_utils.sh build"
     args+=" -s $test_folder/$sketch"
