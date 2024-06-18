@@ -34,7 +34,9 @@
 #include <memory>
 #include <Arduino.h>
 #include <NetworkClient.h>
+#ifndef HTTPCLIENT_NOSECURE
 #include <NetworkClientSecure.h>
+#endif  // HTTPCLIENT_NOSECURE
 
 /// Cookie jar support
 #include <vector>
@@ -182,10 +184,17 @@ public:
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
   bool begin(String url);
-  bool begin(String url, const char *CAcert);
   bool begin(String host, uint16_t port, String uri = "/");
+#ifndef HTTPCLIENT_NOSECURE
+  bool begin(String url, const char *CAcert);
   bool begin(String host, uint16_t port, String uri, const char *CAcert);
   bool begin(String host, uint16_t port, String uri, const char *CAcert, const char *cli_cert, const char *cli_key);
+#else
+  bool begin(String url, const char *CAcert){ return false; };
+  bool begin(String host, uint16_t port, String uri, const char *CAcert){ return false; };
+  bool begin(String host, uint16_t port, String uri, const char *CAcert, const char *cli_cert, const char *cli_key){ return false; };
+#endif  // HTTPCLIENT_NOSECURE
+
 #endif
 
   void end(void);
