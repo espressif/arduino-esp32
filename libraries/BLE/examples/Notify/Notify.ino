@@ -68,12 +68,12 @@ void setup() {
     BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE
   );
 
-  // Creates BLE Descriptor 0x2902: Client Characteristic Configuration Descriptor (CCCD) 
+  // Creates BLE Descriptor 0x2902: Client Characteristic Configuration Descriptor (CCCD)
   pCharacteristic->addDescriptor(new BLE2902());
   // Adds also the Characteristic User Description - 0x2901 descriptor
   descriptor_2901 = new BLE2901();
   descriptor_2901->setDescription("My own description for this characteristic.");
-  descriptor_2901->setAccessPermissions(ESP_GATT_PERM_READ); // enforce read only - default is Read|Write 
+  descriptor_2901->setAccessPermissions(ESP_GATT_PERM_READ);  // enforce read only - default is Read|Write
   pCharacteristic->addDescriptor(descriptor_2901);
 
   // Start the service

@@ -1,6 +1,6 @@
 /*
    BLE2901.h
- 
+
      GATT Descriptor 0x2901 Characteristic User Description
 
      The value of this description is a user-readable string
@@ -23,8 +23,7 @@
 
 #include "BLE2901.h"
 
-BLE2901::BLE2901() : BLEDescriptor(BLEUUID((uint16_t)0x2901)) {
-}  // BLE2901
+BLE2901::BLE2901() : BLEDescriptor(BLEUUID((uint16_t)0x2901)) {}  // BLE2901
 
 /**
  * @brief Set the Characteristic User Description
@@ -32,7 +31,7 @@ BLE2901::BLE2901() : BLEDescriptor(BLEUUID((uint16_t)0x2901)) {
 void BLE2901::setDescription(String userDesc) {
   if (userDesc.length() > ESP_GATT_MAX_ATTR_LEN) {
     log_e("Size %d too large, must be no bigger than %d", userDesc.length(), ESP_GATT_MAX_ATTR_LEN);
-    return;    
+    return;
   }
   setValue(userDesc);
 }

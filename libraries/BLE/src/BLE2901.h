@@ -27,9 +27,9 @@
 #include "BLEDescriptor.h"
 
 class BLE2901 : public BLEDescriptor {
-  public:
-    BLE2901();
-    void setDescription(String desc);
+public:
+  BLE2901();
+  void setDescription(String desc);
 };  // BLE2901
 
 #endif /* CONFIG_BLUEDROID_ENABLED */
