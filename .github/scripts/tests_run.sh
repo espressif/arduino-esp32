@@ -69,8 +69,8 @@ function run_test() {
             if [[ -f "$sketchdir/scenario.yaml" ]]; then
                 extra_args+=" --wokwi-scenario $sketchdir/scenario.yaml"
             fi
-            if [[ -f "$sketchdir/$target.diagram.json" ]]; then
-                extra_args+=" --wokwi-diagram $sketchdir/$target.diagram.json"
+            if [[ -f "$sketchdir/diagram.$target.json" ]]; then
+                extra_args+=" --wokwi-diagram $sketchdir/diagram.$target.json"
             fi
 
         elif [ $platform == "qemu" ]; then
