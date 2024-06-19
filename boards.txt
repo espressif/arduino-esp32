@@ -37224,12 +37224,6 @@ elecrow_crowpanel_7.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 elecrow_crowpanel_7.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 elecrow_crowpanel_7.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 elecrow_crowpanel_7.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-elecrow_crowpanel_7.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FAT)
-elecrow_crowpanel_7.menu.PartitionScheme.fatflash.build.partitions=ffat
-elecrow_crowpanel_7.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-elecrow_crowpanel_7.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
-elecrow_crowpanel_7.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-elecrow_crowpanel_7.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
 elecrow_crowpanel_7.menu.CPUFreq.240=240MHz (WiFi/BT)
 elecrow_crowpanel_7.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -37260,8 +37254,8 @@ elecrow_crowpanel_7.menu.FlashFreq.80.build.flash_freq=80m
 elecrow_crowpanel_7.menu.FlashFreq.40=40MHz
 elecrow_crowpanel_7.menu.FlashFreq.40.build.flash_freq=40m
 
-elecrow_crowpanel_7.menu.FlashSize.16M=4MB (32Mb)
-elecrow_crowpanel_7.menu.FlashSize.16M.build.flash_size=4MB
+elecrow_crowpanel_7.menu.FlashSize.4MB=4MB (32Mb)
+elecrow_crowpanel_7.menu.FlashSize.4MB.build.flash_size=4MB
 
 elecrow_crowpanel_7.menu.UploadSpeed.921600=921600
 elecrow_crowpanel_7.menu.UploadSpeed.921600.upload.speed=921600
