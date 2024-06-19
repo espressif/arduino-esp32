@@ -1,33 +1,34 @@
 /*
-Deep Sleep with External Wake Up
-=====================================
-This code displays how to use deep sleep with
-an external trigger as a wake up source and how
-to store data in RTC memory to use it over reboots
+  Deep Sleep with External Wake Up
+  =====================================
+  This code displays how to use deep sleep with
+  an external trigger as a wake up source and how
+  to store data in RTC memory to use it over reboots
 
-This code is under Public Domain License.
+  This code is under Public Domain License.
 
-Hardware Connections
-======================
-Push Button to GPIO 33 pulled down with a 10K Ohm
-resistor
+  Hardware Connections
+  ======================
+  Push Button to GPIO 33 pulled down with a 10K Ohm
+  resistor
 
-NOTE:
-======
-Only RTC IO can be used as a source for external wake
-source. They are pins: 0,2,4,12-15,25-27,32-39.
+  NOTE:
+  ======
+  Only RTC IO can be used as a source for external wake
+  source. They are pins: 0,2,4,12-15,25-27,32-39.
 
-Author:
-Pranav Cherukupalli <cherukupallip@gmail.com>
+  Author:
+  Pranav Cherukupalli <cherukupallip@gmail.com>
 */
+#include "driver/rtc_io.h"
 
-#define BUTTON_PIN_BITMASK 0x200000000  // 2^33 in hex
-
+#define BUTTON_PIN_BITMASK(GPIO) (1ULL << GPIO)  // 2 ^ GPIO_NUMBER in hex
+#define USE_EXT0_WAKEUP 1  // 1 = EXT0 wakeup, 0 = EXT1 wakeup
 RTC_DATA_ATTR int bootCount = 0;
 
 /*
-Method to print the reason by which ESP32
-has been awaken from sleep
+  Method to print the reason by which ESP32
+  has been awaken from sleep
 */
 void print_wakeup_reason() {
   esp_sleep_wakeup_cause_t wakeup_reason;
@@ -56,20 +57,35 @@ void setup() {
   print_wakeup_reason();
 
   /*
-  First we configure the wake up source
-  We set our ESP32 to wake up for an external trigger.
-  There are two types for ESP32, ext0 and ext1 .
-  ext0 uses RTC_IO to wakeup thus requires RTC peripherals
-  to be on while ext1 uses RTC Controller so does not need
-  peripherals to be powered on.
-  Note that using internal pullups/pulldowns also requires
-  RTC peripherals to be turned on.
+    First we configure the wake up source
+    We set our ESP32 to wake up for an external trigger.
+    There are two types for ESP32, ext0 and ext1 .
+    ext0 uses RTC_IO to wakeup thus requires RTC peripherals
+    to be on while ext1 uses RTC Controller so does not need
+    peripherals to be powered on.
+    Note that using internal pullups/pulldowns also requires
+    RTC peripherals to be turned on.
   */
+#if USE_EXT0_WAKEUP
   esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1);  //1 = High, 0 = Low
-
+  // Configure pullup/downs via RTCIO to tie wakeup pins to inactive level during deepsleep.
+  // EXT0 resides in the same power domain (RTC_PERIPH) as the RTC IO pullup/downs.
+  // No need to keep that power domain explicitly, unlike EXT1.
+  rtc_gpio_pullup_dis(GPIO_NUM_33);
+  rtc_gpio_pulldown_en(GPIO_NUM_33);
+  
+#else // EXT1 WAKEUP
   //If you were to use ext1, you would use it like
-  //esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ANY_HIGH);
-
+  esp_sleep_enable_ext1_wakeup_io(BUTTON_PIN_BITMASK(GPIO_NUM_33), ESP_EXT1_WAKEUP_ANY_HIGH);
+  /*
+    If there are no external pull-up/downs, tie wakeup pins to inactive level with internal pull-up/downs via RTC IO
+         during deepsleep. However, RTC IO relies on the RTC_PERIPH power domain. Keeping this power domain on will
+         increase some power comsumption. However, if we turn off the RTC_PERIPH domain or if certain chips lack the RTC_PERIPH
+         domain, we will use the HOLD feature to maintain the pull-up and pull-down on the pins during sleep.
+  */
+  rtc_gpio_pulldown_en(GPIO_NUM_33);  // GPIO33 is tie to GND in order to wake up in HIGH
+  rtc_gpio_pullup_dis(GPIO_NUM_33);   // Disable PULL_UP in order to allow it to wakeup on HIGH
+#endif
   //Go to sleep now
   Serial.println("Going to sleep now");
   esp_deep_sleep_start();
