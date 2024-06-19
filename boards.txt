@@ -21731,12 +21731,25 @@ heltec_wifi_kit_32.build.defines=
 heltec_wifi_kit_32.build.band=LoRaWAN_NONE
 heltec_wifi_kit_32.build.LoRaWanDebugLevel=0
 
-heltec_wifi_kit_32.menu.PSRAM.disabled=Disabled
-heltec_wifi_kit_32.menu.PSRAM.disabled.build.defines=
-heltec_wifi_kit_32.menu.PSRAM.disabled.build.extra_libs=
-heltec_wifi_kit_32.menu.PSRAM.enabled=Enabled
-heltec_wifi_kit_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
-heltec_wifi_kit_32.menu.PSRAM.enabled.build.extra_libs=
+heltec_wifi_kit_32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+heltec_wifi_kit_32.menu.PartitionScheme.default.build.partitions=default
+heltec_wifi_kit_32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+heltec_wifi_kit_32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+heltec_wifi_kit_32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+heltec_wifi_kit_32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+heltec_wifi_kit_32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+heltec_wifi_kit_32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+heltec_wifi_kit_32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+heltec_wifi_kit_32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+heltec_wifi_kit_32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+heltec_wifi_kit_32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+heltec_wifi_kit_32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 
 heltec_wifi_kit_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_kit_32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -21907,13 +21920,33 @@ heltec_wifi_lora_32.build.variant=heltec_wifi_lora_32
 heltec_wifi_lora_32.build.board=HELTEC_WIFI_LORA_32
 
 heltec_wifi_lora_32.build.f_cpu=240000000L
-heltec_wifi_lora_32.build.flash_size=8MB
+heltec_wifi_lora_32.build.flash_size=4MB
 heltec_wifi_lora_32.build.flash_freq=80m
 heltec_wifi_lora_32.build.flash_mode=dio
 heltec_wifi_lora_32.build.boot=qio
-heltec_wifi_lora_32.build.partitions=default_8MB
+heltec_wifi_lora_32.build.partitions=default
 heltec_wifi_lora_32.build.psram=
 heltec_wifi_lora_32.build.defines=-D{build.band} -DMCU_ESP32_D0 -DWIFI_LORA_32 -DHELTEC_BOARD=1 -DRADIO_CHIP_SX127X -DSLOW_CLK_TPYE=0 -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH}  -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO}  {build.psram}
+
+heltec_wifi_lora_32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.default.build.partitions=default
+heltec_wifi_lora_32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 
 heltec_wifi_lora_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_lora_32.menu.CPUFreq.240.build.f_cpu=240000000L
