@@ -23,8 +23,8 @@
 #include "driver/rtc_io.h"
 
 #define BUTTON_PIN_BITMASK(GPIO) (1ULL << GPIO)  // 2 ^ GPIO_NUMBER in hex
-#define USE_EXT0_WAKEUP 1  // 1 = EXT0 wakeup, 0 = EXT1 wakeup
-#define WAKEUP_GPIO GPIO_NUM_33 // Only RTC IO are allowed - ESP32 Pin example
+#define USE_EXT0_WAKEUP          1               // 1 = EXT0 wakeup, 0 = EXT1 wakeup
+#define WAKEUP_GPIO              GPIO_NUM_33     // Only RTC IO are allowed - ESP32 Pin example
 RTC_DATA_ATTR int bootCount = 0;
 
 /*
@@ -74,8 +74,8 @@ void setup() {
   // No need to keep that power domain explicitly, unlike EXT1.
   rtc_gpio_pullup_dis(WAKEUP_GPIO);
   rtc_gpio_pulldown_en(WAKEUP_GPIO);
-  
-#else // EXT1 WAKEUP
+
+#else  // EXT1 WAKEUP
   //If you were to use ext1, you would use it like
   esp_sleep_enable_ext1_wakeup_io(BUTTON_PIN_BITMASK(WAKEUP_GPIO), ESP_EXT1_WAKEUP_ANY_HIGH);
   /*
