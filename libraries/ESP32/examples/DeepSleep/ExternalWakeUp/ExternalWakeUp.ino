@@ -24,7 +24,7 @@
 
 #define BUTTON_PIN_BITMASK(GPIO) (1ULL << GPIO)  // 2 ^ GPIO_NUMBER in hex
 #define USE_EXT0_WAKEUP 1  // 1 = EXT0 wakeup, 0 = EXT1 wakeup
-#define WAKEUP_GPIO GPIO_NUM_33 // Only RTC GPIO are allowed - this is a ESP32 example
+#define WAKEUP_GPIO GPIO_NUM_33 // Only RTC IO are allowed - ESP32 Pin example
 RTC_DATA_ATTR int bootCount = 0;
 
 /*
