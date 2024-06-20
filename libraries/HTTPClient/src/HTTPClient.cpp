@@ -142,10 +142,9 @@ bool HTTPClient::begin(NetworkClient &client, String url) {
   _secure = (protocol == "https");
 
 #ifdef HTTPCLIENT_NOSECURE
-  return _secure ? false : beginInternal(url, protocol.c_str());
-#else
-  return beginInternal(url, protocol.c_str());
+  if (_secure) return false;
 #endif  // HTTPCLIENT_NOSECURE
+  return beginInternal(url, protocol.c_str());
 }
 
 /**
