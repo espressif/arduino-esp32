@@ -878,7 +878,7 @@ size_t BluetoothSerial::write(const uint8_t *buffer, size_t size) {
 void BluetoothSerial::flush() {
   if (_spp_tx_queue != NULL) {
     while (uxQueueMessagesWaiting(_spp_tx_queue) > 0) {
-      delay(100);
+      delay(2);
     }
   }
 }
