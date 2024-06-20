@@ -11,47 +11,20 @@
 #include "OThreadCLI.h"
 #include "OThreadCLI_Util.h"
 
-bool otPrintRespCLI(const char *cmd, Stream &output) {
-  char cliResp[256];
-  if (cmd == NULL) {
-    return true;
-  }
-  OThreadCLI.println(cmd);
-  while (1) {
-    size_t len = OThreadCLI.readBytesUntil('\n', cliResp, sizeof(cliResp));
-    if (len == 0) {
-      return false; // timeout for reading a response from CLI
-    }
-    // clip it on EOL
-    for (int i = 0; i < len; i++) {
-      if (cliResp[i] == '\r' || cliResp[i] == '\n') {
-        cliResp[i] = '\0';
-      }
-    }
-    if (!strncmp(cliResp, "Done", 4)) {
-      return true; // finished with success
-    }
-    if (!strncmp(cliResp, "Error", 4)) {
-      return false; // the CLI command or its arguments are not valid
-    }
-    output.println(cliResp); 
-  }
-}
-
 void setup() {
   Serial.begin(115200);
   OThreadCLI.begin(true); // For scanning, AutoStart must be active, any setup
-  OThreadCLI.setTimeout(10000); // 10 seconds for reading a line from CLI - scanning takes time
+  OThreadCLI.setTimeout(100); // Set a timeout for the CLI response
   Serial.println();
-  Serial.println("This sketch will continuosly scan the Thread Local Network and all devices IEEE 802.15.4 compatible");
+  Serial.println("This sketch will continuously scan the Thread Local Network and all devices IEEE 802.15.4 compatible");
 }
 
 void loop() {
   Serial.println();
-  Serial.println("Scanning for near by IEEE 802.15.4 devices:");
-  // 802.15.4 Scan just need a previous OThreadCLI.begin() to tun on the 802.15.4 stack
-  if (!otPrintRespCLI("scan", Serial)) {
-    Serial.println("802.15.4 Scan Failed...");
+  Serial.println("Scanning for nearby IEEE 802.15.4 devices:");
+  // 802.15.4 Scan just needs a previous OThreadCLI.begin()
+  if (!otPrintRespCLI("scan", Serial, 3000)) {
+    Serial.println("Scan Failed...");
   }
   delay(5000);
   if (otGetDeviceRole() < OT_ROLE_CHILD) {
@@ -60,9 +33,9 @@ void loop() {
     return;
   }
   Serial.println();
-  Serial.println("Scanning - MLE Discover:");
-  if (!otPrintRespCLI("discover", Serial)) {
-    Serial.println("MLE Discover Failed...");
+  Serial.println("Scanning MLE Discover:");
+  if (!otPrintRespCLI("discover", Serial, 3000)) {
+    Serial.println("Discover Failed...");
   }
   delay(5000);
 }

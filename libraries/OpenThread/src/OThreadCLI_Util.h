@@ -21,6 +21,7 @@ ot_device_role_t otGetDeviceRole();
 const char* otGetStringDeviceRole();
 bool otGetRespCmd(const char *cmd, char *resp = NULL, uint32_t respTimeout = 5000);
 bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL);
+bool otPrintRespCLI(const char *cmd, Stream &output, uint32_t respTimeout);
 void otPrintNetworkInformation(Stream &output);
 
 #endif /* CONFIG_OPENTHREAD_ENABLED */

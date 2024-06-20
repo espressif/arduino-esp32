@@ -123,6 +123,39 @@ bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode
   }
 }
 
+bool otPrintRespCLI(const char *cmd, Stream &output, uint32_t respTimeout) {
+  char cliResp[256] = {0};
+  if (cmd == NULL) {
+    return true;
+  }
+  OThreadCLI.println(cmd);
+  uint32_t timeout = millis() + respTimeout;
+  while (millis() < timeout) {
+    size_t len = OThreadCLI.readBytesUntil('\n', cliResp, sizeof(cliResp));
+    if (cliResp[0] == '\0') {
+      // Straem has timed out and it should try again using parameter respTimeout
+      continue;
+    }
+    // clip it on EOL
+    for (int i = 0; i < len; i++) {
+      if (cliResp[i] == '\r' || cliResp[i] == '\n') {
+        cliResp[i] = '\0';
+      }
+    }
+    if (strncmp(cliResp, "Done", 4) && strncmp(cliResp, "Error", 4)) {
+      output.println(cliResp);
+      memset(cliResp, 0, sizeof(cliResp));
+      timeout = millis() + respTimeout; // renew timeout, line per line
+    } else {
+      break;
+    }
+  }
+  if (!strncmp(cliResp, "Error", 4) || millis() > timeout) {
+    return false;
+  }
+  return true;
+}
+
 void otPrintNetworkInformation(Stream &output) {
   if (!OThreadCLI) {
     return;    
