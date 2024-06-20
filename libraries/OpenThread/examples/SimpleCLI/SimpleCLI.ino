@@ -1,6 +1,6 @@
 /*
- * OpenThread.begin(false) will not start a node in a Thread Network
- * You will need to start it manually using the OpenThread CLI commands
+ * OpenThread.begin(false) will not automatically start a node in a Thread Network
+ * The user will need to start it manually using the OpenThread CLI commands
  * Use the Serial Monitor to interact with the OpenThread CLI
  * 
  * Type 'help' for a list of commands.

@@ -93,15 +93,17 @@ void setupNode() {
 // this function is used by the Lamp mode to listen for CoAP frames from the Switch Node
 void otCOAPListen() {
   // waits for the client to send a CoAP request
-  char cliResp[256];
+  char cliResp[256] = {0};
   size_t len = OThreadCLI.readBytesUntil('\n', cliResp, sizeof(cliResp));
-  cliResp[len] = '\0';
+  cliResp[len - 1] = '\0';
   if (strlen(cliResp)) {
     String sResp(cliResp);
+    // cliResp shall be something like:
+    // "coap request from fd0c:94df:f1ae:b39a:ec47:ec6d:15e8:804a PUT with payload: 30"
+    // payload may be 30 or 31 (HEX) '0' or '1' (ASCII)
     log_d("Msg[%s]", cliResp);
     if (sResp.startsWith("coap request from") && sResp.indexOf("PUT") > 0) {
-      uint16_t payloadIdx = sResp.indexOf("payload: ") + 10;  // 0x30 | 0x31
-      char payload = sResp.charAt(payloadIdx);
+      char payload = sResp.charAt(sResp.length() - 1);  //  last character in the payload
       log_i("CoAP PUT [%s]\r\n", payload == '0' ? "OFF" : "ON");
       if (payload == '0') {
         for (int16_t c = 248; c > 16; c -= 8) {
@@ -127,6 +129,7 @@ void setup() {
   OThreadCLI.begin(false); // No AutoStart is necessary
   OThreadCLI.setTimeout(250); // waits 250ms for the OpenThread CLI response
   setupNode();
+  // LED goes Green when all is ready and Red when failed.
 }
 
 void loop() {

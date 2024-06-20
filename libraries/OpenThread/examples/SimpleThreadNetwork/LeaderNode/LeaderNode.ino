@@ -1,7 +1,7 @@
 /*
- * OpenThread.begin(false) will not start a node in a Thread Network
- * A Leader node is the first device to start Thread that has a complete dataset
- * This is achieved by using the OpenThread CLI command "dataset init new"
+ * OpenThread.begin(false) will not automatically start a node in a Thread Network
+ * A Leader node is the first device, that has a complete dataset, to start Thread
+ * A complete dataset is easily achieved by using the OpenThread CLI command "dataset init new"
  * 
  * In order to allow other node to join the network, 
  * all of them shall use the same network master key

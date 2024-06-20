@@ -1,6 +1,6 @@
 /*
- * OpenThread.begin(false) will not start a node in a Thread Network
- * A Router/Child node is the device that will join an existent Thread Network 
+ * OpenThread.begin(false) will not automatically start a node in a Thread Network
+ * A Router/Child node is the device that will join an existing Thread Network 
  * 
  * In order to allow this node to join the network, 
  * it shall use the same network master key as used by the Leader Node

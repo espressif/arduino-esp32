@@ -67,7 +67,7 @@ bool otDeviceSetup(const char **otSetupCmds, uint8_t nCmds1, const char **otCoap
     return false;
   }
   Serial.println("OpenThread setup done. Node is ready.");
-  // all fine! LED goes Blue
+  // all fine! LED goes and stays Blue
   neopixelWrite(RGB_BUILTIN, 0, 0, 64);   // BLUE ... Swtich is ready!
   return true;
 }
@@ -96,6 +96,7 @@ bool otCoapPUT(bool lampState) {
   coapMsg += OT_COAP_RESOURCE_NAME;
   coapMsg += " con 0";
 
+  // final command is "coap put ff05::abcd Lamp con 1" or "coap put ff05::abcd Lamp con 0"
   if (lampState) {
     coapMsg[coapMsg.length() - 1] = '1';
   }
@@ -103,16 +104,16 @@ bool otCoapPUT(bool lampState) {
   log_d("Send CLI CMD:[%s]", coapMsg.c_str());
 
   char cliResp[256];
-  // waits for the CoAP confirmation and Done message for about 5 seconds
+  // waits for the CoAP confirmation and Done message for about 1.25 seconds
   // timeout is based on Stream::setTimeout()
+  // Example of the expected confirmation response: "coap response from fdae:3289:1783:5c3f:fd84:c714:7e83:6122"
   uint8_t tries = 5;
   *cliResp = '\0';
   while (tries && !(gotDone && gotConfirmation)) {
     size_t len = OThreadCLI.readBytesUntil('\n', cliResp, sizeof(cliResp));
-    cliResp[len] = '\0';
+    cliResp[len - 1] = '\0';
     log_d("Try[%d]::MSG[%s]", tries, cliResp);
     if (strlen(cliResp)) {
-      log_d("%s", cliResp);
       if (!strncmp(cliResp, "coap response from", 18)) {
         gotConfirmation = true;
       }
@@ -132,13 +133,12 @@ bool otCoapPUT(bool lampState) {
 void checkUserButton() {
   static long unsigned int lastPress = 0;
   const long unsigned int debounceTime = 500;
-  static bool lastLampState = false;
+  static bool lastLampState = true; // first button press will turn the Lamp OFF from inital Green 
 
   pinMode(USER_BUTTON, INPUT_PULLUP); // C6/H2 User Button
   if (millis() > lastPress + debounceTime && digitalRead(USER_BUTTON) == LOW) {
-    if (otCoapPUT(!lastLampState)) {
-      lastLampState = !lastLampState;
-    } else {
+    lastLampState = !lastLampState;
+    if (!otCoapPUT(lastLampState)) { // failed: Lamp Node is not responding due to be off or unreachable
       // timeout from the CoAP PUT message... restart the node.
       neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... something failed!
       Serial.println("Reseting the Node as Switch... wait.");
@@ -156,6 +156,7 @@ void setup() {
   OThreadCLI.begin(false); // No AutoStart is necessary
   OThreadCLI.setTimeout(250); // waits 250ms for the OpenThread CLI response
   setupNode();
+  // LED goes and keeps Blue when all is ready and Red when failed.
 }
 
 void loop() {
