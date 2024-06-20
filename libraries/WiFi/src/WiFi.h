@@ -38,6 +38,11 @@
 #include "NetworkClient.h"
 #include "NetworkServer.h"
 #include "NetworkUdp.h"
+//defines are added here not to cause warnings
+//to be removed in the future
+#define WiFiClient NetworkClient
+#define WiFiServer NetworkServer
+#define WiFiUDP NetworkUDP
 
 class WiFiClass : public WiFiGenericClass, public WiFiSTAClass, public WiFiScanClass, public WiFiAPClass {
 private:
