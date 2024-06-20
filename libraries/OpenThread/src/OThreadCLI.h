@@ -1,15 +1,14 @@
 #pragma once
 #include "soc/soc_caps.h"
+#include "sdkconfig.h"
 #if SOC_IEEE802154_SUPPORTED
+#if CONFIG_OPENTHREAD_ENABLED
 
 #include "esp_openthread.h"
 #include "esp_openthread_cli.h"
 #include "esp_openthread_lock.h"
 #include "esp_openthread_netif_glue.h"
 #include "esp_openthread_types.h"
-
-#include "sdkconfig.h"
-#if CONFIG_OPENTHREAD_ENABLED
 
 #include "openthread/cli.h"
 #include "openthread/instance.h"
@@ -52,5 +51,6 @@ public:
 };
 
 extern OpenThreadCLI OThreadCLI;
+
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

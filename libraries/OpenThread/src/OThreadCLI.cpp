@@ -1,5 +1,6 @@
 #include "OThreadCLI.h"
 #if SOC_IEEE802154_SUPPORTED
+#if CONFIG_OPENTHREAD_ENABLED
 
 #include "Arduino.h"
 #include "OThreadCLI.h"
@@ -422,4 +423,5 @@ void OpenThreadCLI::flush() {
 
 OpenThreadCLI OThreadCLI;
 
+#endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

@@ -1,5 +1,7 @@
 #include "OThreadCLI.h"
 #if SOC_IEEE802154_SUPPORTED
+#if CONFIG_OPENTHREAD_ENABLED
+
 #include "OThreadCLI_Util.h"
 
 static const char *otRoleString[] = {
@@ -70,4 +72,6 @@ bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode
     return false;
   }
 }
+
+#endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

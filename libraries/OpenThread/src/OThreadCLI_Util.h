@@ -1,6 +1,8 @@
 #pragma once
 #include "soc/soc_caps.h"
+#include "sdkconfig.h"
 #if SOC_IEEE802154_SUPPORTED
+#if CONFIG_OPENTHREAD_ENABLED
 
 typedef enum {
   OT_ROLE_DISABLED = 0, ///< The Thread stack is disabled.
@@ -19,4 +21,5 @@ ot_device_role_t getOtDeviceRole();
 const char* getStringOtDeviceRole();
 bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL);
 
+#endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */
