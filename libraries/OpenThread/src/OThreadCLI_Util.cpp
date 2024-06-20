@@ -3,6 +3,7 @@
 #if CONFIG_OPENTHREAD_ENABLED
 
 #include "OThreadCLI_Util.h"
+#include <StreamString.h>
 
 static const char *otRoleString[] = {
   "Disabled",     ///< The Thread stack is disabled.
