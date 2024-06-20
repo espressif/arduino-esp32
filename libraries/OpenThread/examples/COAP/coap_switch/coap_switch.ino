@@ -4,6 +4,8 @@
 #define USER_BUTTON 9 // C6/H2 Boot button
 #define OT_CHANNEL "24"
 #define OT_NETWORK_KEY "00112233445566778899aabbccddeeff"
+#define OT_MCAST_ADDR "ff05::abcd"
+#define OT_COAP_RESOURCE_NAME "Lamp"
 
 const char *otSetupChild[] = {
   // clear/disable all
@@ -88,13 +90,17 @@ void setupNode() {
 // Sends the CoAP frame to the Lamp node
 bool otCoapPUT(bool lampState) {
   bool gotDone = false, gotConfirmation = false;
-  char coapMsg[] = "coap put ff05::abcd Lamp con 0";
+  String coapMsg = "coap put ";
+  coapMsg += OT_MCAST_ADDR;
+  coapMsg += " ";
+  coapMsg += OT_COAP_RESOURCE_NAME;
+  coapMsg += " con 0";
 
   if (lampState) {
-    coapMsg[strlen(coapMsg) - 1] = '1';
+    coapMsg[coapMsg.length() - 1] = '1';
   }
-  OThreadCLI.println(coapMsg);
-  log_d("Send CLI CMD:[%s]", coapMsg);
+  OThreadCLI.println(coapMsg.c_str());
+  log_d("Send CLI CMD:[%s]", coapMsg.c_str());
 
   char cliResp[256];
   // waits for the CoAP confirmation and Done message for about 5 seconds

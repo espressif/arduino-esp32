@@ -3,6 +3,8 @@
 
 #define OT_CHANNEL "24"
 #define OT_NETWORK_KEY "00112233445566778899aabbccddeeff"
+#define OT_MCAST_ADDR "ff05::abcd"
+#define OT_COAP_RESOURCE_NAME "Lamp"
 
 const char *otSetupLeader[] = {
   // clear/disable all
@@ -22,10 +24,10 @@ const char *otSetupLeader[] = {
 
 const char *otCoapLamp[] = {
   // create a multicast IPv6 Address for this device
-  "ipmaddr add", "ff05::abcd",
+  "ipmaddr add", OT_MCAST_ADDR,
   // start and create a CoAP resource
   "coap", "start",
-  "coap resource", "Lamp",
+  "coap resource", OT_COAP_RESOURCE_NAME,
   "coap set", "0"
 };
 
