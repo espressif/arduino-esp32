@@ -32,6 +32,6 @@ void setup() {
 
 void loop() {
   Serial.print("Thread Node State: ");
-  Serial.println(getStringOtDeviceRole());
+  Serial.println(otGetStringDeviceRole());
   delay(5000);
 }

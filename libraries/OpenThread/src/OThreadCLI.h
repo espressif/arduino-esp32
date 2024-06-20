@@ -23,9 +23,11 @@ typedef std::function<void(void)> OnReceiveCb_t;
 class OpenThreadCLI : public Stream {
 private:
   static size_t setBuffer(xQueueHandle &queue, size_t len);
+  bool otStarted = false;
 public:
   OpenThreadCLI();
   ~OpenThreadCLI();
+  operator bool() const;
 
   // starts a task to read/write otStream. Default prompt is "ot> ". Set it to NULL to make it invisible.
   void startOpenThreadConsole(Stream& otStream, bool echoback = true, const char *prompt = "ot> ");

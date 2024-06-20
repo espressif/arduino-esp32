@@ -44,18 +44,18 @@ bool otDeviceSetup(const char **otSetupCmds, uint8_t nCmds1, const char **otCoap
   Serial.println("OpenThread started.\r\nWaiting for activating correct Device Role.");
   // wait for the expected Device Role to start
   uint8_t tries = 24; // 24 x 2.5 sec = 1 min
-  while (tries && getOtDeviceRole() != expectedRole1 && getOtDeviceRole() != expectedRole2) {
+  while (tries && otGetDeviceRole() != expectedRole1 && otGetDeviceRole() != expectedRole2) {
     Serial.print(".");
     delay(2500);
     tries--;
   }
   Serial.println();
   if (!tries) {
-    log_e("Sorry, Device Role failed by timeout! Current Role: %s.", getStringOtDeviceRole());
+    log_e("Sorry, Device Role failed by timeout! Current Role: %s.", otGetStringDeviceRole());
     neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
     return false;
   }
-  Serial.printf("Device is %s.\r\n", getStringOtDeviceRole());
+  Serial.printf("Device is %s.\r\n", otGetStringDeviceRole());
   for (i = 0; i < nCmds2; i++) {
     if (!otExecCommand(otCoapCmds[i * 2], otCoapCmds[i * 2 + 1])) {
       break;

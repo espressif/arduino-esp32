@@ -22,10 +22,11 @@
 void setup() {
   Serial.begin(115200);
   OThreadCLI.begin(); // AutoStart using Thread default settings  
+  otPrintNetworkInformation(Serial); // Print Current Thread Network Information
 }
 
 void loop() {
   Serial.print("Thread Node State: ");
-  Serial.println(getStringOtDeviceRole());
+  Serial.println(otGetStringDeviceRole());
   delay(5000);
 }

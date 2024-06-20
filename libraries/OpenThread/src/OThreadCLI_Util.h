@@ -17,9 +17,11 @@ typedef struct {
   String errorMessage;
 } ot_cmd_return_t;
 
-ot_device_role_t getOtDeviceRole();
-const char* getStringOtDeviceRole();
+ot_device_role_t otGetDeviceRole();
+const char* otGetStringDeviceRole();
+bool otGetRespCmd(const char *cmd, char *resp = NULL, uint32_t respTimeout = 5000);
 bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL);
+void otPrintNetworkInformation(Stream &output);
 
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

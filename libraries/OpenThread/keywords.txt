@@ -29,9 +29,11 @@ available	KEYWORD2
 read	KEYWORD2
 peek	KEYWORD2
 flush	KEYWORD2
-getOtDeviceRole	KEYWORD2
-getStringOtDeviceRole	KEYWORD2
+otGetDeviceRole	KEYWORD2
+otGetStringDeviceRole	KEYWORD2
+otGetRespCmd    KEYWORD2
 otExecCommand	KEYWORD2
+otPrintNetworkInformation  KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

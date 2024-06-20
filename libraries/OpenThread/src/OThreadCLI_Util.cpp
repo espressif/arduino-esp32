@@ -12,17 +12,66 @@ static const char *otRoleString[] = {
   "Leader",       ///< The Thread Leader role.
 };
 
-ot_device_role_t getOtDeviceRole() {
+ot_device_role_t otGetDeviceRole() {
+  if (!OThreadCLI) {
+    return OT_ROLE_DISABLED;
+  }
   otInstance *instance = esp_openthread_get_instance();
   return (ot_device_role_t) otThreadGetDeviceRole(instance);
 }
 
-const char* getStringOtDeviceRole() {
-  return otRoleString[getOtDeviceRole()];
+const char* otGetStringDeviceRole() {
+  return otRoleString[otGetDeviceRole()];
+}
+
+bool otGetRespCmd(const char *cmd, char *resp, uint32_t respTimeout) {
+  if (!OThreadCLI) {
+    return false;
+  }
+  StreamString cliRespAllLines;
+  char cliResp[256] = {0};
+  if (resp != NULL) {
+    *resp = '\0';
+  }
+  if (cmd == NULL) {
+    return true;
+  }
+  OThreadCLI.println(cmd);
+  log_d("CMD[%s]", cmd);
+  uint32_t timeout = millis() + respTimeout;
+  while(millis() < timeout) {
+    size_t len = OThreadCLI.readBytesUntil('\n', cliResp, sizeof(cliResp));
+    // clip it on EOL
+    for (int i = 0; i < len; i++) {
+      if (cliResp[i] == '\r' || cliResp[i] == '\n') {
+        cliResp[i] = '\0';
+      }
+    }
+    log_d("Resp[%s]", cliResp);
+    if (strncmp(cliResp, "Done", 4) && strncmp(cliResp, "Error", 4)) {
+      cliRespAllLines += cliResp;
+      cliRespAllLines.println(); // Adds whatever EOL is for the OS
+    } else {
+      break;
+    }
+  }
+  if (!strncmp(cliResp, "Error", 4) || millis() > timeout) {
+    return false;
+  }
+  if (resp != NULL) {
+    strcpy(resp, cliRespAllLines.c_str());
+  }
+  return true;
 }
 
 bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode) {
-  char cliResp[256];
+  if (!OThreadCLI) {
+    return false;
+  }
+  char cliResp[256] = {0};
+  if (cmd == NULL) {
+    return true;
+  }
   if (arg == NULL) {
     OThreadCLI.println(cmd);
   } else {
@@ -72,6 +121,41 @@ bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode
     return false;
   }
 }
+
+void otPrintNetworkInformation(Stream &output) {
+  if (!OThreadCLI) {
+    return;    
+  }
+  char resp[512];
+  output.println("Thread Setup:");
+  if (otGetRespCmd("state", resp)) {
+    output.printf("Node State: \t%s", resp);
+  }  
+  if (otGetRespCmd("networkname", resp)) {
+    output.printf("Network Name: \t%s", resp);
+  }  
+  if (otGetRespCmd("channel", resp)) {
+    output.printf("Channel: \t%s", resp);
+  }  
+  if (otGetRespCmd("panid", resp)) {
+    output.printf("Pan ID: \t%s", resp);
+  }  
+  if (otGetRespCmd("extpanid", resp)) {
+    output.printf("Ext Pan ID: \t%s", resp);
+  }  
+  if (otGetRespCmd("networkkey", resp)) {
+    output.printf("Network Key: \t%s", resp);
+  }  
+  if (otGetRespCmd("ipaddr", resp)) {
+    output.println("Node IP Addresses are:");
+    output.printf("%s", resp);
+  }
+  if (otGetRespCmd("ipmaddr", resp)) {
+    output.println("Node Multicast Addresses are:");
+    output.printf("%s", resp);
+  }
+}
+
 
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

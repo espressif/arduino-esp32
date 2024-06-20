@@ -220,6 +220,10 @@ OpenThreadCLI::~OpenThreadCLI() {
   end();
 }
 
+OpenThreadCLI::operator bool() const {
+  return otStarted;
+}
+
 static void ot_task_worker(void *aContext) {
   esp_vfs_eventfd_config_t eventfd_config = {
     .max_fds = 3,
@@ -301,7 +305,6 @@ void OpenThreadCLI::begin(bool OThreadAutoStart) {
     } else {
       log_i("Got active NVS dataset from OpenThread");
     }
-#if 1
     esp_err_t err = esp_openthread_auto_start((error == OT_ERROR_NONE) ? &dataset : NULL);
     if (err != ESP_OK) {
       log_i("Failed to AUTO start OpenThread");
@@ -309,28 +312,8 @@ void OpenThreadCLI::begin(bool OThreadAutoStart) {
       log_i("AUTO start OpenThread done");
     }
 
-#else
-    if (dataset.mLength > 0) {
-      Serial.println("There is a dataset in NVS. Trying to start OpenThread...");
-      log_i("There is a dataset in NVS. Trying to start OpenThread...");
-      if (IDFesp_openthread_auto_start(&dataset) != ESP_OK) {
-        Serial.println("Failed to start OpenThread using NVS dataset. Trying a new one...");
-        log_i("Failed to start OpenThread using NVS dataset. Trying a new one...");
-        if (IDFesp_openthread_auto_start(NULL) != ESP_OK) {
-          Serial.println("Failed to start OpenThread using a new dataset");
-          log_i("Failed to start OpenThread using a new dataset");
-        }
-      }
-    } else {
-      Serial.println("There is no dataset in NVS. Trying a new one...");
-      log_i("There is no dataset in NVS. Trying a new one...");
-      if (IDFesp_openthread_auto_start(NULL) != ESP_OK) {
-        Serial.println("Failed to start OpenThread using a new dataset");
-        log_i("Failed to start OpenThread using a new dataset");
-      }
-    }
-#endif
   }
+  otStarted = true;
   return;
 }
 
@@ -350,6 +333,7 @@ void OpenThreadCLI::end() {
   }
   setRxBufferSize(0);
   setTxBufferSize(0);
+  otStarted = false;
 }
 
 
