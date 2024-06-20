@@ -190,9 +190,15 @@ public:
   bool begin(String host, uint16_t port, String uri, const char *CAcert);
   bool begin(String host, uint16_t port, String uri, const char *CAcert, const char *cli_cert, const char *cli_key);
 #else
-  bool begin(String url, const char *CAcert){ return false; };
-  bool begin(String host, uint16_t port, String uri, const char *CAcert){ return false; };
-  bool begin(String host, uint16_t port, String uri, const char *CAcert, const char *cli_cert, const char *cli_key){ return false; };
+  bool begin(String url, const char *CAcert) {
+    return false;
+  };
+  bool begin(String host, uint16_t port, String uri, const char *CAcert) {
+    return false;
+  };
+  bool begin(String host, uint16_t port, String uri, const char *CAcert, const char *cli_cert, const char *cli_key) {
+    return false;
+  };
 #endif  // HTTPCLIENT_NOSECURE
 
 #endif
