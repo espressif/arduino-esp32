@@ -19,4 +19,4 @@ ot_device_role_t getOtDeviceRole();
 const char* getStringOtDeviceRole();
 bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL);
 
-#endif
+#endif /* SOC_IEEE802154_SUPPORTED */

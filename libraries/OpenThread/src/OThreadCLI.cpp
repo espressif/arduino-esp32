@@ -421,4 +421,5 @@ void OpenThreadCLI::flush() {
 
 
 OpenThreadCLI OThreadCLI;
-#endif // SOC_IEEE802154_SUPPORTED
+
+#endif /* SOC_IEEE802154_SUPPORTED */

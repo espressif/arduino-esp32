@@ -8,6 +8,9 @@
 #include "esp_openthread_netif_glue.h"
 #include "esp_openthread_types.h"
 
+#include "sdkconfig.h"
+#if CONFIG_OPENTHREAD_ENABLED
+
 #include "openthread/cli.h"
 #include "openthread/instance.h"
 #include "openthread/logging.h"
@@ -49,5 +52,5 @@ public:
 };
 
 extern OpenThreadCLI OThreadCLI;
-
-#endif // SOC_IEEE802154_SUPPORTED
+#endif /* CONFIG_OPENTHREAD_ENABLED */
+#endif /* SOC_IEEE802154_SUPPORTED */

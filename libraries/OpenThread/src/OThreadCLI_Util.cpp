@@ -70,5 +70,4 @@ bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode
     return false;
   }
 }
-
-#endif // SOC_IEEE802154_SUPPORTED
+#endif /* SOC_IEEE802154_SUPPORTED */
