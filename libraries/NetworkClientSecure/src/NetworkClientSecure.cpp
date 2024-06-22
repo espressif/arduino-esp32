@@ -305,9 +305,11 @@ int NetworkClientSecure::available() {
   res = data_to_read(sslclient.get());
 
   if (res < 0 && !_stillinPlainStart) {
-    log_e("Closing connection on failed available check");
+    if (res != MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+      log_e("Closing connection on failed available check");
+    }
     stop();
-    return peeked ? peeked : res;
+    return peeked;
   }
   return res + peeked;
 }

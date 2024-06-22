@@ -81,6 +81,12 @@ dependencies:
     version: "^1.4.2"
     rules:
       - if: "target in [esp32s3]"
+  espressif/libsodium:
+    version: "^1.0.20~1"
+    require: public
+  espressif/esp-modbus:
+    version: "^1.0.15"
+    require: public
   joltwallet/littlefs:
     version: "^1.10.2"
   chmorgan/esp-libhelix-mp3:

@@ -39,7 +39,7 @@ public:
   bool canWrite();
   bool canWriteNoResponse();
   BLERemoteDescriptor *getDescriptor(BLEUUID uuid);
-  std::map<String, BLERemoteDescriptor *> *getDescriptors();
+  std::map<std::string, BLERemoteDescriptor *> *getDescriptors();
   BLERemoteService *getRemoteService();
   uint16_t getHandle();
   BLEUUID getUUID();
@@ -82,7 +82,7 @@ private:
   notify_callback m_notifyCallback;
 
   // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
-  std::map<String, BLERemoteDescriptor *> m_descriptorMap;
+  std::map<std::string, BLERemoteDescriptor *> m_descriptorMap;
 };  // BLERemoteCharacteristic
 
 #endif /* CONFIG_BLUEDROID_ENABLED */

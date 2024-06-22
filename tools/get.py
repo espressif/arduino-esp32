@@ -101,51 +101,45 @@ def verify_files(filename, destination, rename_to):
     t1 = time.time()
     if filename.endswith(".zip"):
         try:
-            with zipfile.ZipFile(filename, "r") as archive:
-                first_dir = archive.namelist()[0].split("/")[0]
-                total_files = len(archive.namelist())
-                for i, zipped_file in enumerate(archive.namelist(), 1):
-                    local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
-                    if not os.path.exists(local_path):
-                        print(f"\nMissing {zipped_file} on location: {extracted_dir_path}")
-                        print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
-                        return False
-                    print_verification_progress(total_files, i, t1)
+            archive = zipfile.ZipFile(filename, "r")
+            file_list = archive.namelist()
         except zipfile.BadZipFile:
-            print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
+            if verbose:
+                print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
             return False
     elif filename.endswith(".tar.gz"):
         try:
-            with tarfile.open(filename, "r:gz") as archive:
-                first_dir = archive.getnames()[0].split("/")[0]
-                total_files = len(archive.getnames())
-                for i, zipped_file in enumerate(archive.getnames(), 1):
-                    local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
-                    if not os.path.exists(local_path):
-                        print(f"\nMissing {zipped_file} on location: {extracted_dir_path}")
-                        print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
-                        return False
-                    print_verification_progress(total_files, i, t1)
+            archive = tarfile.open(filename, "r:gz")
+            file_list = archive.getnames()
         except tarfile.ReadError:
-            print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
+            if verbose:
+                print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
             return False
     elif filename.endswith(".tar.xz"):
         try:
-            with tarfile.open(filename, "r:xz") as archive:
-                first_dir = archive.getnames()[0].split("/")[0]
-                total_files = len(archive.getnames())
-                for i, zipped_file in enumerate(archive.getnames(), 1):
-                    local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
-                    if not os.path.exists(local_path):
-                        print(f"\nMissing {zipped_file} on location: {extracted_dir_path}")
-                        print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
-                        return False
-                    print_verification_progress(total_files, i, t1)
+            archive = tarfile.open(filename, "r:xz")
+            file_list = archive.getnames()
         except tarfile.ReadError:
-            print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
+            if verbose:
+                print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
             return False
     else:
         raise NotImplementedError("Unsupported archive type")
+
+    try:
+        first_dir = file_list[0].split("/")[0]
+        total_files = len(file_list)
+        for i, zipped_file in enumerate(file_list, 1):
+            local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
+            if not os.path.exists(local_path):
+                if verbose:
+                    print(f"\nMissing {zipped_file} on location: {extracted_dir_path}")
+                    print(f"Verification failed; aborted in {format_time(time.time() - t1)}")
+                return False
+            print_verification_progress(total_files, i, t1)
+    except Exception as e:
+        print(f"\nError: {e}")
+        return False
 
     if verbose:
         print(f"\nVerification passed; completed in {format_time(time.time() - t1)}")
@@ -231,7 +225,12 @@ def unpack(filename, destination, force_extract):  # noqa: C901
             shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
 
-    return True
+    if verify_files(filename, destination, rename_to):
+        print(" Files extracted successfully.")
+        return True
+    else:
+        print(" Failed to extract files.")
+        return False
 
 
 def download_file_with_progress(url, filename, start_time):
@@ -291,6 +290,7 @@ def get_tool(tool, force_download, force_extract):
     local_path = dist_dir + archive_name
     url = tool["url"]
     start_time = time.time()
+    print("")
     if not os.path.isfile(local_path) or force_download:
         if verbose:
             print("Downloading '" + archive_name + "' to '" + local_path + "'")
@@ -421,6 +421,9 @@ if __name__ == "__main__":
         current_dir + "/../package/package_esp32_index.template.json", identified_platform
     )
     mkdir_p(dist_dir)
+
+    print("\nDownloading and extracting tools...")
+
     for tool in tools_to_download:
         if is_test:
             print("Would install: {0}".format(tool["archiveFileName"]))
@@ -432,4 +435,4 @@ if __name__ == "__main__":
                     print(f"Tool {tool['archiveFileName']} was corrupted, but re-downloading did not help!\n")
                     sys.exit(1)
 
-    print("Platform Tools Installed")
+    print("\nPlatform Tools Installed")
