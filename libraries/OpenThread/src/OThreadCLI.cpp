@@ -69,7 +69,7 @@ static void ot_cli_loop(void *context) {
 }
 
 // process the CLI responses received from the OpenThread stack
-static int OTcli_output_callback(void *context, const char *format, va_list args)
+static int ot_cli_output_callback(void *context, const char *format, va_list args)
 {
   char prompt_check[3];
   int ret = 0;
@@ -188,6 +188,11 @@ void onReceive(OnReceiveCb_t func) {
 
 // Stream object shall be already started and configured before calling this function
 void OpenThreadCLI::startOpenThreadConsole(Stream& otStream, bool echoback, const char *prompt) {
+  if (!otStarted) {
+    log_e("OpenThread CLI has not started. Please begin() it before starting the console.");
+    return;
+  }
+
   if (s_console_cli_task == NULL) {
     otConsole.cliStream = &otStream;
     otConsole.echoback = echoback;
@@ -249,7 +254,7 @@ static void ot_task_worker(void *aContext) {
   }
   if (!err) {
     // Initialize the OpenThread cli
-    otCliInit(esp_openthread_get_instance(), OTcli_output_callback, NULL);
+    otCliInit(esp_openthread_get_instance(), ot_cli_output_callback, NULL);
 
     // Initialize the esp_netif bindings
     esp_netif_config_t cfg = ESP_NETIF_DEFAULT_OPENTHREAD();
@@ -279,6 +284,11 @@ static void ot_task_worker(void *aContext) {
 }
 
 void OpenThreadCLI::begin(bool OThreadAutoStart) {
+  if (otStarted) {
+    log_w("OpenThread CLI already started. Please end() it before starting again.");
+    return;
+  }
+
   xTaskCreate(ot_task_worker, "ot_main_loop", 10240, NULL, 20, &s_ot_task);
 
   //RX Buffer default has 1024 bytes if not preset
@@ -318,9 +328,14 @@ void OpenThreadCLI::begin(bool OThreadAutoStart) {
 }
 
 void OpenThreadCLI::end() {
+  if (!otStarted) {
+    log_w("OpenThread CLI already stopped. Please begin() it before stopping again.");
+    return;
+  }
   if (s_ot_task != NULL) {
     vTaskDelete(s_ot_task);
     // Clean up
+    esp_openthread_deinit();
     esp_openthread_netif_glue_deinit();
     esp_netif_destroy(openthread_netif);
     esp_vfs_eventfd_unregister();
@@ -331,6 +346,7 @@ void OpenThreadCLI::end() {
   if (s_console_cli_task != NULL) {
     vTaskDelete(s_console_cli_task);
   }
+  esp_event_loop_delete_default();
   setRxBufferSize(0);
   setTxBufferSize(0);
   otStarted = false;
