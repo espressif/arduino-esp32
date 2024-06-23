@@ -354,7 +354,7 @@ void OpenThreadCLI::end() {
 
 
 size_t OpenThreadCLI::write(uint8_t c) {
-  if (rx_queue == NULL) {
+  if (tx_queue == NULL) {
     return 0;
   }
   if (xQueueSend(tx_queue, &c, 0) != pdPASS) {
@@ -416,6 +416,9 @@ int OpenThreadCLI::read(void) {
 }
 
 void OpenThreadCLI::flush() {
+  if (tx_queue == NULL) {
+    return;
+  }
   // wait for the TX Queue to be empty
   while (uxQueueMessagesWaiting(tx_queue));
 }
