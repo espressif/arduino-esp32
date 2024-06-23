@@ -99,6 +99,11 @@ static int ot_cli_output_callback(void *context, const char *format, va_list arg
         for (int i = 0; i < ret; i++) {
           xQueueSend(rx_queue, &buf[i], 0);
         }
+        // if there is a user callback function in place, it shall have the priority
+        // to process/consume the Stream data received from OpenThread CLI, which is available in its RX Buffer
+        if (otConsole.responseCallBack != NULL) {
+          otConsole.responseCallBack();
+        }
       }
     }
   }
@@ -144,13 +149,8 @@ static void ot_cli_console_worker(void *context) {
       if (c == '\n' && lastReadChar != '\n') {
         // wait for the OpenThread CLI to finish processing the command
         xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);
-        // if there is a user callback function in place, it shall have the priority
-        // to process/consume the Stream data received from OpenThread CLI, which is available in its RX Buffer
-        if (cli->responseCallBack != NULL) {
-          cli->responseCallBack();
-        }
         // read response from OpenThread CLI and send it to the Stream
-        while (OThreadCLI.available()) {
+        while (OThreadCLI.available() > 0) {
           char c = OThreadCLI.read();
           // echo it back to the console
           if (cli->echoback) {
@@ -182,7 +182,7 @@ void OpenThreadCLI::setStream(Stream& otStream) {
   otConsole.cliStream = &otStream;
 }
 
-void onReceive(OnReceiveCb_t func) {
+void OpenThreadCLI::onReceive(OnReceiveCb_t func) {
   otConsole.responseCallBack = func; // NULL will set it off
 }
 
