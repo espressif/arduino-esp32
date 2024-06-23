@@ -1,12 +1,18 @@
+| Supported Targets | ESP32-C6 | ESP32-H2 |
+| ----------------- | -------- | -------- |
+
 # ESP32 Arduino OpenThreadCLI
 
-The `OpenThreadCLI` class is an Arduino API for interacting with the OpenThread Command Line Interface (CLI). It allows you to manage and configure the Thread stack using a command-line interface. Below are the details of the class:
-The available OpenThread Commands are documented in the [OpenThread CLI Reference Page](https://openthread.io/reference/cli/commands)
+The `OpenThreadCLI` class is an Arduino API for interacting with the OpenThread Command Line Interface (CLI). It allows you to manage and configure the Thread stack using a command-line interface.
 
-There is one main class called `OpenThreadCLI` and a global object used to operate OpenThread CLI, called `OThreadCLI`
+There is one main class called `OpenThreadCLI` and a global object used to operate OpenThread CLI, called `OThreadCLI`.\
 Some [helper functions](helper_functions.md) were made available for working with the OpenThread CLI environment.
 
+The available OpenThread Commands are documented in the [OpenThread CLI Reference Page](https://openthread.io/reference/cli/commands)
+
 It is important to note that the current implementation can only be used with Espressif SoC that has support to IEEE 802.15.4, such as **ESP32-C6** and **ESP32-H2**.
+
+Below are the details of the class:
 
 ## Class Definition
 
