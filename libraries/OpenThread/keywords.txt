@@ -15,8 +15,8 @@ ot_device_role_t	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-startOpenThreadConsole	KEYWORD2
-stopOpenThreadConsole	KEYWORD2
+startConsole	KEYWORD2
+stopConsole	KEYWORD2
 setPrompt	KEYWORD2
 setEchoBack	KEYWORD2
 setStream	KEYWORD2

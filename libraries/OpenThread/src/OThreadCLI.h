@@ -31,8 +31,8 @@ public:
   operator bool() const;
 
   // starts a task to read/write otStream. Default prompt is "ot> ". Set it to NULL to make it invisible.
-  void startOpenThreadConsole(Stream& otStream, bool echoback = true, const char *prompt = "ot> ");
-  void stopOpenThreadConsole();
+  void startConsole(Stream& otStream, bool echoback = true, const char *prompt = "ot> ");
+  void stopConsole();
   void setPrompt(char *prompt);      // changes the console prompt. NULL is an empty prompt.
   void setEchoBack(bool echoback);   // changes the console echoback option
   void setStream(Stream& otStream);  // changes the console Stream object

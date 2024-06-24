@@ -163,7 +163,7 @@ set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThreadCLI.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp)
 
-  set(ARDUINO_LIBRARY_PPP_SRCS
+set(ARDUINO_LIBRARY_PPP_SRCS
   libraries/PPP/src/PPP.cpp
   libraries/PPP/src/ppp.c)
 

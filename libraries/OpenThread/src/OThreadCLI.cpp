@@ -187,7 +187,7 @@ void OpenThreadCLI::onReceive(OnReceiveCb_t func) {
 }
 
 // Stream object shall be already started and configured before calling this function
-void OpenThreadCLI::startOpenThreadConsole(Stream& otStream, bool echoback, const char *prompt) {
+void OpenThreadCLI::startConsole(Stream& otStream, bool echoback, const char *prompt) {
   if (!otStarted) {
     log_e("OpenThread CLI has not started. Please begin() it before starting the console.");
     return;
@@ -204,7 +204,7 @@ void OpenThreadCLI::startOpenThreadConsole(Stream& otStream, bool echoback, cons
   }
 }
 
-void OpenThreadCLI::stopOpenThreadConsole() {
+void OpenThreadCLI::stopConsole() {
   if (s_console_cli_task) {
     vTaskDelete(s_console_cli_task);
     s_console_cli_task = NULL;

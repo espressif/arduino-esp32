@@ -14,7 +14,7 @@ void setup() {
   Serial.begin(115200);
   OThreadCLI.begin(false); // No AutoStart - fresh start
   Serial.println("OpenThread CLI started - type 'help' for a list of commands.");
-  OThreadCLI.startOpenThreadConsole(Serial);
+  OThreadCLI.startConsole(Serial);
 }
 
 void loop() {

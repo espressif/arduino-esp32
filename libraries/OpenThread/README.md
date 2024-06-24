@@ -28,8 +28,8 @@ public:
   operator bool() const;
 
   // Starts a task to read/write otStream. Default prompt is "ot> ". Set it to NULL to make it invisible.
-  void startOpenThreadConsole(Stream& otStream, bool echoback = true, const char* prompt = "ot> ");
-  void stopOpenThreadConsole();
+  void startConsole(Stream& otStream, bool echoback = true, const char* prompt = "ot> ");
+  void stopConsole();
   void setPrompt(char* prompt);      // Changes the console prompt. NULL is an empty prompt.
   void setEchoBack(bool echoback);   // Changes the console echoback option
   void setStream(Stream& otStream);  // Changes the console Stream object
@@ -59,8 +59,8 @@ extern OpenThreadCLI OThreadCLI;
 - You can customize the console behavior by adjusting parameters such as echoback and buffer sizes.
 
 ## Public Methods
-- `startOpenThreadConsole(Stream& otStream, bool echoback = true, const char* prompt = "ot> ")`: Starts the OpenThread console with the specified stream, echoback option, and prompt.
-- `stopOpenThreadConsole()`: Stops the OpenThread console.
+- `startConsole(Stream& otStream, bool echoback = true, const char* prompt = "ot> ")`: Starts the OpenThread console with the specified stream, echoback option, and prompt.
+- `stopConsole()`: Stops the OpenThread console.
 - `setPrompt(char* prompt)`: Changes the console prompt (set to NULL for an empty prompt).
 - `setEchoBack(bool echoback)`: Changes the console echoback option.
 - `setStream(Stream& otStream)`: Changes the console Stream object.
