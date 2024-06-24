@@ -27,6 +27,7 @@ private:
 public:
   OpenThreadCLI();
   ~OpenThreadCLI();
+  // returns true if OpenThread CLI is running
   operator bool() const;
 
   // starts a task to read/write otStream. Default prompt is "ot> ". Set it to NULL to make it invisible.
