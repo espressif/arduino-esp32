@@ -4,15 +4,15 @@
 #define PPP_MODEM_PIN "0000"  // or NULL
 
 // WaveShare SIM7600 HW Flow Control
-#define PPP_MODEM_RST        25
-#define PPP_MODEM_RST_LOW    false  //active HIGH
-#define PPP_MODEM_RST_DELAY  200
-#define PPP_MODEM_TX         21
-#define PPP_MODEM_RX         22
-#define PPP_MODEM_RTS        26
-#define PPP_MODEM_CTS        27
-#define PPP_MODEM_FC         ESP_MODEM_FLOW_CONTROL_HW
-#define PPP_MODEM_MODEL      PPP_MODEM_SIM7600
+#define PPP_MODEM_RST       25
+#define PPP_MODEM_RST_LOW   false  //active HIGH
+#define PPP_MODEM_RST_DELAY 200
+#define PPP_MODEM_TX        21
+#define PPP_MODEM_RX        22
+#define PPP_MODEM_RTS       26
+#define PPP_MODEM_CTS       27
+#define PPP_MODEM_FC        ESP_MODEM_FLOW_CONTROL_HW
+#define PPP_MODEM_MODEL     PPP_MODEM_SIM7600
 
 // SIM800 basic module with just TX,RX and RST
 // #define PPP_MODEM_RST     0
