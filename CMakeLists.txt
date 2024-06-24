@@ -95,6 +95,7 @@ set(ARDUINO_ALL_LIBRARIES
   LittleFS
   NetBIOS
   Network
+  OpenThread
   PPP
   Preferences
   RainMaker
@@ -157,6 +158,10 @@ set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
 set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
+
+set(ARDUINO_LIBRARY_OpenThread_SRCS
+  libraries/OpenThread/src/OThreadCLI.cpp
+  libraries/OpenThread/src/OThreadCLI_Util.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS
   libraries/PPP/src/PPP.cpp
