@@ -4,14 +4,15 @@
 #define PPP_MODEM_PIN "0000"  // or NULL
 
 // WaveShare SIM7600 HW Flow Control
-#define PPP_MODEM_RST     25
-#define PPP_MODEM_RST_LOW false  //active HIGH
-#define PPP_MODEM_TX      21
-#define PPP_MODEM_RX      22
-#define PPP_MODEM_RTS     26
-#define PPP_MODEM_CTS     27
-#define PPP_MODEM_FC      ESP_MODEM_FLOW_CONTROL_HW
-#define PPP_MODEM_MODEL   PPP_MODEM_SIM7600
+#define PPP_MODEM_RST       25
+#define PPP_MODEM_RST_LOW   false  //active HIGH
+#define PPP_MODEM_RST_DELAY 200
+#define PPP_MODEM_TX        21
+#define PPP_MODEM_RX        22
+#define PPP_MODEM_RTS       26
+#define PPP_MODEM_CTS       27
+#define PPP_MODEM_FC        ESP_MODEM_FLOW_CONTROL_HW
+#define PPP_MODEM_MODEL     PPP_MODEM_SIM7600
 
 // SIM800 basic module with just TX,RX and RST
 // #define PPP_MODEM_RST     0
@@ -60,7 +61,7 @@ void setup() {
   // Configure the modem
   PPP.setApn(PPP_MODEM_APN);
   PPP.setPin(PPP_MODEM_PIN);
-  PPP.setResetPin(PPP_MODEM_RST, PPP_MODEM_RST_LOW);
+  PPP.setResetPin(PPP_MODEM_RST, PPP_MODEM_RST_LOW, PPP_MODEM_RST_DELAY);
   PPP.setPins(PPP_MODEM_TX, PPP_MODEM_RX, PPP_MODEM_RTS, PPP_MODEM_CTS, PPP_MODEM_FC);
 
   Serial.println("Starting the modem. It might take a while!");
