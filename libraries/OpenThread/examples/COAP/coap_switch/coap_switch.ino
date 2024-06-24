@@ -8,18 +8,32 @@
 #define OT_COAP_RESOURCE_NAME "Lamp"
 
 const char *otSetupChild[] = {
-  // clear/disable all
-  "coap", "stop", "thread", "stop", "ifconfig", "down", "dataset", "clear",
-  // set dataset
-  "dataset channel", OT_CHANNEL, "dataset networkkey", OT_NETWORK_KEY, "dataset", "commit active",
-  // network start
-  "ifconfig", "up", "thread", "start"
+  // -- clear/disable all
+  // stop CoAP 
+  "coap", "stop",
+  // stop Thread 
+  "thread", "stop",
+  // stop the interface
+  "ifconfig", "down",
+  // clear the dataset
+  "dataset", "clear",
+  // -- set dataset
+  // set the channel
+  "dataset channel", OT_CHANNEL,
+  // set the network key 
+  "dataset networkkey", OT_NETWORK_KEY,
+  // commit the dataset
+  "dataset", "commit active",
+  // -- network start
+  // start the interface
+  "ifconfig", "up",
+  // start the Thread network
+  "thread", "start"
 };
 
 const char *otCoapSwitch[] = {
-  // start and create a CoAP resource
-  "coap",
-  "start",
+  // -- start CoAP as client
+  "coap", "start"
 };
 
 bool otDeviceSetup(

@@ -7,19 +7,41 @@
 #define OT_COAP_RESOURCE_NAME "Lamp"
 
 const char *otSetupLeader[] = {
-  // clear/disable all
-  "coap", "stop", "thread", "stop", "ifconfig", "down", "dataset", "clear",
-  // set dataset
-  "dataset", "init new", "dataset channel", OT_CHANNEL, "dataset networkkey", OT_NETWORK_KEY, "dataset", "commit active",
-  // network start
-  "ifconfig", "up", "thread", "start"
+  // -- clear/disable all
+  // stop CoAP 
+  "coap", "stop",
+  // stop Thread 
+  "thread", "stop",
+  // stop the interface
+  "ifconfig", "down",
+  // clear the dataset
+  "dataset", "clear",
+  // -- set dataset
+  // create a new complete dataset with random data 
+  "dataset", "init new",
+  // set the channel
+  "dataset channel", OT_CHANNEL,
+  // set the network key 
+  "dataset networkkey", OT_NETWORK_KEY,
+  // commit the dataset
+  "dataset", "commit active",
+  // -- network start
+  // start the interface
+  "ifconfig", "up",
+  // start the Thread network
+  "thread", "start"
 };
 
 const char *otCoapLamp[] = {
-  // create a multicast IPv6 Address for this device
+  // -- create a multicast IPv6 Address for this device
   "ipmaddr add", OT_MCAST_ADDR,
-  // start and create a CoAP resource
-  "coap", "start", "coap resource", OT_COAP_RESOURCE_NAME, "coap set", "0"
+  // -- start and create a CoAP resource
+  // start CoAP as server
+  "coap", "start",
+  // create a CoAP resource
+  "coap resource", OT_COAP_RESOURCE_NAME,
+  // set the CoAP resource initial value
+  "coap set", "0"
 };
 
 bool otDeviceSetup(const char **otSetupCmds, uint8_t nCmds1, const char **otCoapCmds, uint8_t nCmds2, ot_device_role_t expectedRole) {
