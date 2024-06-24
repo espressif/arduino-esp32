@@ -6,11 +6,11 @@
 #include <StreamString.h>
 
 static const char *otRoleString[] = {
-  "Disabled",     ///< The Thread stack is disabled.
-  "Detached",     ///< Not currently participating in a Thread network/partition.
-  "Child",        ///< The Thread Child role.
-  "Router",       ///< The Thread Router role.
-  "Leader",       ///< The Thread Leader role.
+  "Disabled",  ///< The Thread stack is disabled.
+  "Detached",  ///< Not currently participating in a Thread network/partition.
+  "Child",     ///< The Thread Child role.
+  "Router",    ///< The Thread Router role.
+  "Leader",    ///< The Thread Leader role.
 };
 
 ot_device_role_t otGetDeviceRole() {
@@ -18,10 +18,10 @@ ot_device_role_t otGetDeviceRole() {
     return OT_ROLE_DISABLED;
   }
   otInstance *instance = esp_openthread_get_instance();
-  return (ot_device_role_t) otThreadGetDeviceRole(instance);
+  return (ot_device_role_t)otThreadGetDeviceRole(instance);
 }
 
-const char* otGetStringDeviceRole() {
+const char *otGetStringDeviceRole() {
   return otRoleString[otGetDeviceRole()];
 }
 
@@ -40,7 +40,7 @@ bool otGetRespCmd(const char *cmd, char *resp, uint32_t respTimeout) {
   OThreadCLI.println(cmd);
   log_d("CMD[%s]", cmd);
   uint32_t timeout = millis() + respTimeout;
-  while(millis() < timeout) {
+  while (millis() < timeout) {
     size_t len = OThreadCLI.readBytesUntil('\n', cliResp, sizeof(cliResp));
     // clip it on EOL
     for (int i = 0; i < len; i++) {
@@ -51,7 +51,7 @@ bool otGetRespCmd(const char *cmd, char *resp, uint32_t respTimeout) {
     log_d("Resp[%s]", cliResp);
     if (strncmp(cliResp, "Done", 4) && strncmp(cliResp, "Error", 4)) {
       cliRespAllLines += cliResp;
-      cliRespAllLines.println(); // Adds whatever EOL is for the OS
+      cliRespAllLines.println();  // Adds whatever EOL is for the OS
     } else {
       break;
     }
@@ -107,18 +107,22 @@ bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode
       //Error 7: InvalidArgs
       char *i = cliResp;
       char *m = cliResp;
-      while (*i && *i != ':') i++;
+      while (*i && *i != ':') {
+        i++;
+      }
       if (*i) {
         *i = '\0';
-        m = i + 2; // message is 2 characters after ':'
-        while (i > cliResp && *i != ' ') i--; // search for ' ' before ":'
+        m = i + 2;  // message is 2 characters after ':'
+        while (i > cliResp && *i != ' ') {
+          i--;  // search for ' ' before ":'
+        }
         if (*i == ' ') {
-          i++; // move it forward to the number begining
+          i++;  // move it forward to the number begining
           returnCode->errorCode = atoi(i);
           returnCode->errorMessage = m;
-        } // otherwise, it will keep the "bad error message" information
-      } // otherwise, it will keep the "bad error message" information
-    } // returnCode is NULL pointer
+        }  // otherwise, it will keep the "bad error message" information
+      }  // otherwise, it will keep the "bad error message" information
+    }  // returnCode is NULL pointer
     return false;
   }
 }
@@ -145,7 +149,7 @@ bool otPrintRespCLI(const char *cmd, Stream &output, uint32_t respTimeout) {
     if (strncmp(cliResp, "Done", 4) && strncmp(cliResp, "Error", 4)) {
       output.println(cliResp);
       memset(cliResp, 0, sizeof(cliResp));
-      timeout = millis() + respTimeout; // renew timeout, line per line
+      timeout = millis() + respTimeout;  // renew timeout, line per line
     } else {
       break;
     }
@@ -158,28 +162,28 @@ bool otPrintRespCLI(const char *cmd, Stream &output, uint32_t respTimeout) {
 
 void otPrintNetworkInformation(Stream &output) {
   if (!OThreadCLI) {
-    return;    
+    return;
   }
   char resp[512];
   output.println("Thread Setup:");
   if (otGetRespCmd("state", resp)) {
     output.printf("Node State: \t%s", resp);
-  }  
+  }
   if (otGetRespCmd("networkname", resp)) {
     output.printf("Network Name: \t%s", resp);
-  }  
+  }
   if (otGetRespCmd("channel", resp)) {
     output.printf("Channel: \t%s", resp);
-  }  
+  }
   if (otGetRespCmd("panid", resp)) {
     output.printf("Pan ID: \t%s", resp);
-  }  
+  }
   if (otGetRespCmd("extpanid", resp)) {
     output.printf("Ext Pan ID: \t%s", resp);
-  }  
+  }
   if (otGetRespCmd("networkkey", resp)) {
     output.printf("Network Key: \t%s", resp);
-  }  
+  }
   if (otGetRespCmd("ipaddr", resp)) {
     output.println("Node IP Addresses are:");
     output.printf("%s", resp);
@@ -189,7 +193,6 @@ void otPrintNetworkInformation(Stream &output) {
     output.printf("%s", resp);
   }
 }
-
 
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

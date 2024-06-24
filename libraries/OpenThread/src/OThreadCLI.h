@@ -24,6 +24,7 @@ class OpenThreadCLI : public Stream {
 private:
   static size_t setBuffer(xQueueHandle &queue, size_t len);
   bool otStarted = false;
+
 public:
   OpenThreadCLI();
   ~OpenThreadCLI();
@@ -31,13 +32,13 @@ public:
   operator bool() const;
 
   // starts a task to read/write otStream. Default prompt is "ot> ". Set it to NULL to make it invisible.
-  void startConsole(Stream& otStream, bool echoback = true, const char *prompt = "ot> ");
+  void startConsole(Stream &otStream, bool echoback = true, const char *prompt = "ot> ");
   void stopConsole();
-  void setPrompt(char *prompt);      // changes the console prompt. NULL is an empty prompt.
-  void setEchoBack(bool echoback);   // changes the console echoback option
-  void setStream(Stream& otStream);  // changes the console Stream object
+  void setPrompt(char *prompt);        // changes the console prompt. NULL is an empty prompt.
+  void setEchoBack(bool echoback);     // changes the console echoback option
+  void setStream(Stream &otStream);    // changes the console Stream object
   void onReceive(OnReceiveCb_t func);  // called on a complete line of output from OT CLI, as OT Response
-  
+
   void begin(bool OThreadAutoStart = true);
   void end();
 
@@ -45,7 +46,7 @@ public:
   size_t setTxBufferSize(size_t tx_queue_len);
   // default size is 1024 bytes
   size_t setRxBufferSize(size_t rx_queue_len);
-  
+
   size_t write(uint8_t);
   int available();
   int read();

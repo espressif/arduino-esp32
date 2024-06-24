@@ -70,5 +70,3 @@ extern OpenThreadCLI OThreadCLI;
 - `setTxBufferSize(size_t tx_queue_len)`: Sets the transmit buffer size (default is 256 bytes).
 - `setRxBufferSize(size_t rx_queue_len)`: Sets the receive buffer size (default is 1024 bytes).
 - `write(uint8_t)`, `available()`, `read()`, `peek()`, `flush()`: Standard Stream methods implementation for OpenThread CLI object.
-
-

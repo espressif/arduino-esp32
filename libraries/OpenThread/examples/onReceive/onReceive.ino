@@ -16,7 +16,7 @@ void otReceivedLine() {
       line += ch;
     }
   }
-  // ignores empty lines, usually EOL sequence 
+  // ignores empty lines, usually EOL sequence
   if (line.length() > 0) {
     Serial.print("OpenThread CLI RESP===> ");
     Serial.println(line.c_str());
@@ -25,7 +25,7 @@ void otReceivedLine() {
 
 void setup() {
   Serial.begin(115200);
-  OThreadCLI.begin(); // AutoStart 
+  OThreadCLI.begin();  // AutoStart
   OThreadCLI.onReceive(otReceivedLine);
 }
 

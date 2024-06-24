@@ -13,8 +13,8 @@
 
 void setup() {
   Serial.begin(115200);
-  OThreadCLI.begin(true); // For scanning, AutoStart must be active, any setup
-  OThreadCLI.setTimeout(100); // Set a timeout for the CLI response
+  OThreadCLI.begin(true);      // For scanning, AutoStart must be active, any setup
+  OThreadCLI.setTimeout(100);  // Set a timeout for the CLI response
   Serial.println();
   Serial.println("This sketch will continuously scan the Thread Local Network and all devices IEEE 802.15.4 compatible");
 }

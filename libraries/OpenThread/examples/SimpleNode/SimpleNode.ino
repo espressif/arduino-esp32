@@ -1,7 +1,7 @@
 /*
  * OpenThread.begin() will automatically start a node in a Thread Network
  * If NVS is empty, default configuration will be as follow:
- * 
+ *
  *   NETWORK_NAME "OpenThread-ESP"
  *   MESH_LOCAL_PREFIX "fd00:db8:a0:0::/64"
  *   NETWORK_CHANNEL 15
@@ -21,8 +21,8 @@
 
 void setup() {
   Serial.begin(115200);
-  OThreadCLI.begin(); // AutoStart using Thread default settings  
-  otPrintNetworkInformation(Serial); // Print Current Thread Network Information
+  OThreadCLI.begin();                 // AutoStart using Thread default settings
+  otPrintNetworkInformation(Serial);  // Print Current Thread Network Information
 }
 
 void loop() {

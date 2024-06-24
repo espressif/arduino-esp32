@@ -28,7 +28,7 @@ static esp_openthread_platform_config_t ot_native_config;
 static TaskHandle_t s_ot_task = NULL;
 static esp_netif_t *openthread_netif = NULL;
 
-#define OT_CLI_MAX_LINE_LENGTH  512
+#define OT_CLI_MAX_LINE_LENGTH 512
 
 typedef struct {
   Stream *cliStream;
@@ -36,7 +36,7 @@ typedef struct {
   String prompt;
   OnReceiveCb_t responseCallBack;
 } ot_cli_console_t;
-static ot_cli_console_t otConsole = {NULL, false, (const char *) NULL, NULL};
+static ot_cli_console_t otConsole = {NULL, false, (const char *)NULL, NULL};
 
 // process the CLI commands sent to the OpenThread stack
 static void ot_cli_loop(void *context) {
@@ -59,7 +59,7 @@ static void ot_cli_loop(void *context) {
           } else {
             // only allow printable characters
             if (c > 31 && c < 127) {
-              sTxString +=  (char)c;
+              sTxString += (char)c;
             }
           }
         }
@@ -69,8 +69,7 @@ static void ot_cli_loop(void *context) {
 }
 
 // process the CLI responses received from the OpenThread stack
-static int ot_cli_output_callback(void *context, const char *format, va_list args)
-{
+static int ot_cli_output_callback(void *context, const char *format, va_list args) {
   char prompt_check[3];
   int ret = 0;
 
@@ -115,7 +114,7 @@ static void ot_cli_console_worker(void *context) {
   ot_cli_console_t *cli = (ot_cli_console_t *)context;
 
   // prints the prompt as first action
-  if (cli->prompt  && cli->echoback) {
+  if (cli->prompt && cli->echoback) {
     cli->cliStream->print(cli->prompt.c_str());
   }
   // manages and synchronizes the Stream flow with OpenThread CLI response
@@ -131,14 +130,14 @@ static void ot_cli_console_worker(void *context) {
       if (c == '\r') {
         c = '\n';  // just mark it as New Line
       }
-      if (c == '\n' && lastReadChar == '\n')  {
+      if (c == '\n' && lastReadChar == '\n') {
         continue;
-      } 
-      
+      }
+
       // echo it back to the console
       if (cli->echoback) {
         if (c == '\n') {
-          cli->cliStream->println(); // follows whatever is defined as EOL in Arduino
+          cli->cliStream->println();  // follows whatever is defined as EOL in Arduino
         } else {
           cli->cliStream->write(c);
         }
@@ -155,7 +154,7 @@ static void ot_cli_console_worker(void *context) {
           // echo it back to the console
           if (cli->echoback) {
             if (c == '\n') {
-              cli->cliStream->println(); // follows whatever is defined as EOL in Arduino
+              cli->cliStream->println();  // follows whatever is defined as EOL in Arduino
             } else {
               cli->cliStream->write(c);
             }
@@ -175,19 +174,19 @@ void OpenThreadCLI::setEchoBack(bool echoback) {
 }
 
 void OpenThreadCLI::setPrompt(char *prompt) {
-  otConsole.prompt = prompt; // NULL will make the prompt not visible
+  otConsole.prompt = prompt;  // NULL will make the prompt not visible
 }
 
-void OpenThreadCLI::setStream(Stream& otStream) {
+void OpenThreadCLI::setStream(Stream &otStream) {
   otConsole.cliStream = &otStream;
 }
 
 void OpenThreadCLI::onReceive(OnReceiveCb_t func) {
-  otConsole.responseCallBack = func; // NULL will set it off
+  otConsole.responseCallBack = func;  // NULL will set it off
 }
 
 // Stream object shall be already started and configured before calling this function
-void OpenThreadCLI::startConsole(Stream& otStream, bool echoback, const char *prompt) {
+void OpenThreadCLI::startConsole(Stream &otStream, bool echoback, const char *prompt) {
   if (!otStarted) {
     log_e("OpenThread CLI has not started. Please begin() it before starting the console.");
     return;
@@ -196,7 +195,7 @@ void OpenThreadCLI::startConsole(Stream& otStream, bool echoback, const char *pr
   if (s_console_cli_task == NULL) {
     otConsole.cliStream = &otStream;
     otConsole.echoback = echoback;
-    otConsole.prompt = prompt; // NULL will invalidate the String
+    otConsole.prompt = prompt;  // NULL will invalidate the String
     // it will run in the same priority (1) as the Arduino setup()/loop() task
     xTaskCreate(ot_cli_console_worker, "ot_cli_console", 4096, &otConsole, 1, &s_console_cli_task);
   } else {
@@ -321,7 +320,6 @@ void OpenThreadCLI::begin(bool OThreadAutoStart) {
     } else {
       log_i("AUTO start OpenThread done");
     }
-
   }
   otStarted = true;
   return;
@@ -352,7 +350,6 @@ void OpenThreadCLI::end() {
   otStarted = false;
 }
 
-
 size_t OpenThreadCLI::write(uint8_t c) {
   if (tx_queue == NULL) {
     return 0;
@@ -363,7 +360,7 @@ size_t OpenThreadCLI::write(uint8_t c) {
   return 1;
 }
 
-size_t OpenThreadCLI::setBuffer(xQueueHandle & queue, size_t queue_len) {
+size_t OpenThreadCLI::setBuffer(xQueueHandle &queue, size_t queue_len) {
   if (queue) {
     vQueueDelete(queue);
     queue = NULL;
@@ -422,7 +419,6 @@ void OpenThreadCLI::flush() {
   // wait for the TX Queue to be empty
   while (uxQueueMessagesWaiting(tx_queue));
 }
-
 
 OpenThreadCLI OThreadCLI;
 
