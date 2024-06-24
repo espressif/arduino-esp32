@@ -321,36 +321,28 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
+{"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
-                            "flash_bytes": 1033540,
-                            "flash_percentage": 32,
-                            "ram_bytes": 40272,
-                            "ram_percentage": 12
+                            "flash_bytes": 943978,
+                            "flash_percentage": 30,
+                            "ram_bytes": 48952,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
+{"name": "OpenThread/examples/ThreadScan",
                     "sizes": [{
-                            "flash_bytes": 981378,
-                            "flash_percentage": 31,
-                            "ram_bytes": 39840,
-                            "ram_percentage": 12
+                            "flash_bytes": 944460,
+                            "flash_percentage": 30,
+                            "ram_bytes": 48952,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
+{"name": "OpenThread/examples/onReceive",
                     "sizes": [{
-                            "flash_bytes": 1012168,
-                            "flash_percentage": 32,
-                            "ram_bytes": 39872,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
-                    "sizes": [{
-                            "flash_bytes": 994200,
-                            "flash_percentage": 31,
-                            "ram_bytes": 40176,
-                            "ram_percentage": 12
+                            "flash_bytes": 944122,
+                            "flash_percentage": 30,
+                            "ram_bytes": 48952,
+                            "ram_percentage": 14
                             }]
                     },
 {"name": "PPP/examples/PPP_Basic",
@@ -407,6 +399,22 @@
                             "flash_percentage": 29,
                             "ram_bytes": 39400,
                             "ram_percentage": 12
+                            }]
+                    },
+{"name": "SimpleBLE/examples/SimpleBleDevice",
+                    "sizes": [{
+                            "flash_bytes": 1073850,
+                            "flash_percentage": 34,
+                            "ram_bytes": 36980,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "TFLiteMicro/examples/hello_world",
+                    "sizes": [{
+                            "flash_bytes": 236578,
+                            "flash_percentage": 7,
+                            "ram_bytes": 14848,
+                            "ram_percentage": 4
                             }]
                     }
 ]

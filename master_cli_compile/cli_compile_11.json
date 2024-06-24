@@ -321,30 +321,6 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "WebServer/examples/AdvancedWebServer",
-                    "sizes": [{
-                            "flash_bytes": 968892,
-                            "flash_percentage": 30,
-                            "ram_bytes": 42040,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WebServer/examples/FSBrowser",
-                    "sizes": [{
-                            "flash_bytes": 1004154,
-                            "flash_percentage": 31,
-                            "ram_bytes": 41880,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WebServer/examples/Filters",
-                    "sizes": [{
-                            "flash_bytes": 969584,
-                            "flash_percentage": 30,
-                            "ram_bytes": 42048,
-                            "ram_percentage": 12
-                            }]
-                    },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
                             "flash_bytes": 967740,
@@ -408,6 +384,38 @@
                             "ram_bytes": 41704,
                             "ram_percentage": 12
                             }]
+                    },
+{"name": "WebServer/examples/PathArgServer",
+                    "sizes": [{
+                            "flash_bytes": 1185078,
+                            "flash_percentage": 37,
+                            "ram_bytes": 46888,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "WebServer/examples/SDWebServer",
+                    "sizes": [{
+                            "flash_bytes": 1020100,
+                            "flash_percentage": 32,
+                            "ram_bytes": 42312,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/SimpleAuthentification",
+                    "sizes": [{
+                            "flash_bytes": 919930,
+                            "flash_percentage": 29,
+                            "ram_bytes": 39560,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/UploadHugeFile",
+                    "sizes": [{
+                            "flash_bytes": 1213906,
+                            "flash_percentage": 38,
+                            "ram_bytes": 45520,
+                            "ram_percentage": 13
+                            }]
                     }
 ]
 },
@@ -430,36 +438,36 @@
                             "ram_percentage": 4
                             }]
                     },
-{"name": "PPP/examples/PPP_Basic",
+{"name": "OpenThread/examples/COAP/coap_lamp",
                     "sizes": [{
-                            "flash_bytes": 504290,
-                            "flash_percentage": 16,
-                            "ram_bytes": 17924,
-                            "ram_percentage": 5
+                            "flash_bytes": 992990,
+                            "flash_percentage": 31,
+                            "ram_bytes": 48804,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "Preferences/examples/Prefs2Struct",
+{"name": "OpenThread/examples/COAP/coap_switch",
                     "sizes": [{
-                            "flash_bytes": 263492,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12732,
-                            "ram_percentage": 3
+                            "flash_bytes": 993078,
+                            "flash_percentage": 31,
+                            "ram_bytes": 48780,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "Preferences/examples/StartCounter",
+{"name": "OpenThread/examples/SimpleCLI",
                     "sizes": [{
-                            "flash_bytes": 263340,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12740,
-                            "ram_percentage": 3
+                            "flash_bytes": 972252,
+                            "flash_percentage": 30,
+                            "ram_bytes": 48188,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "SD/examples/SD_Test",
+{"name": "OpenThread/examples/SimpleNode",
                     "sizes": [{
-                            "flash_bytes": 340382,
-                            "flash_percentage": 10,
-                            "ram_bytes": 14012,
-                            "ram_percentage": 4
+                            "flash_bytes": 973624,
+                            "flash_percentage": 30,
+                            "ram_bytes": 48188,
+                            "ram_percentage": 14
                             }]
                     }
 ]
@@ -485,7 +493,7 @@
                     },
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 974077,
+                            "flash_bytes": 974069,
                             "flash_percentage": 30,
                             "ram_bytes": 47196,
                             "ram_percentage": 14

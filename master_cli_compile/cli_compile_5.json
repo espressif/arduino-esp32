@@ -321,46 +321,6 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "ESP32/examples/Serial/OnReceive_Demo",
-                    "sizes": [{
-                            "flash_bytes": 213804,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12544,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/RS485_Echo_Demo",
-                    "sizes": [{
-                            "flash_bytes": 212908,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12528,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/RxFIFOFull_Demo",
-                    "sizes": [{
-                            "flash_bytes": 213272,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12536,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/RxTimeout_Demo",
-                    "sizes": [{
-                            "flash_bytes": 213026,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12536,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
-                    "sizes": [{
-                            "flash_bytes": 213220,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12544,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
                     "sizes": [{
                             "flash_bytes": 213532,
@@ -407,6 +367,54 @@
                             "flash_percentage": 28,
                             "ram_bytes": 39376,
                             "ram_percentage": 12
+                            }]
+                    },
+{"name": "ESP32/examples/Timer/RepeatTimer",
+                    "sizes": [{
+                            "flash_bytes": 221748,
+                            "flash_percentage": 7,
+                            "ram_bytes": 12864,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Timer/WatchdogTimer",
+                    "sizes": [{
+                            "flash_bytes": 221538,
+                            "flash_percentage": 7,
+                            "ram_bytes": 12856,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Utilities/HEXBuilder",
+                    "sizes": [{
+                            "flash_bytes": 213908,
+                            "flash_percentage": 6,
+                            "ram_bytes": 12528,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Utilities/MD5Builder",
+                    "sizes": [{
+                            "flash_bytes": 213990,
+                            "flash_percentage": 6,
+                            "ram_bytes": 12528,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Utilities/SHA1Builder",
+                    "sizes": [{
+                            "flash_bytes": 220186,
+                            "flash_percentage": 6,
+                            "ram_bytes": 12528,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP_I2S/examples/ES8388_loopback",
+                    "sizes": [{
+                            "flash_bytes": 279716,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13288,
+                            "ram_percentage": 4
                             }]
                     }
 ]

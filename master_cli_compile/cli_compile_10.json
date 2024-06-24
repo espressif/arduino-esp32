@@ -321,22 +321,6 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "SimpleBLE/examples/SimpleBleDevice",
-                    "sizes": [{
-                            "flash_bytes": 1073850,
-                            "flash_percentage": 34,
-                            "ram_bytes": 36980,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "TFLiteMicro/examples/hello_world",
-                    "sizes": [{
-                            "flash_bytes": 236578,
-                            "flash_percentage": 7,
-                            "ram_bytes": 14848,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "Ticker/examples/Blinker",
                     "sizes": [{
                             "flash_bytes": 220922,
@@ -407,6 +391,30 @@
                             "flash_percentage": 9,
                             "ram_bytes": 13660,
                             "ram_percentage": 4
+                            }]
+                    },
+{"name": "WebServer/examples/AdvancedWebServer",
+                    "sizes": [{
+                            "flash_bytes": 968892,
+                            "flash_percentage": 30,
+                            "ram_bytes": 42040,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/FSBrowser",
+                    "sizes": [{
+                            "flash_bytes": 1004154,
+                            "flash_percentage": 31,
+                            "ram_bytes": 41880,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/Filters",
+                    "sizes": [{
+                            "flash_bytes": 969584,
+                            "flash_percentage": 30,
+                            "ram_bytes": 42048,
+                            "ram_percentage": 12
                             }]
                     }
 ]

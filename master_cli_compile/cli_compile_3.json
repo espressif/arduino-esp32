@@ -321,30 +321,6 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "ESP32/examples/DeepSleep/TimerWakeUp",
-                    "sizes": [{
-                            "flash_bytes": 220970,
-                            "flash_percentage": 7,
-                            "ram_bytes": 12772,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/FreeRTOS/BasicMultiThreading",
-                    "sizes": [{
-                            "flash_bytes": 244636,
-                            "flash_percentage": 7,
-                            "ram_bytes": 13328,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/FreeRTOS/Mutex",
-                    "sizes": [{
-                            "flash_bytes": 212714,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12544,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
                             "flash_bytes": 212920,
@@ -407,6 +383,38 @@
                             "flash_percentage": 6,
                             "ram_bytes": 12696,
                             "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMTCallback",
+                    "sizes": [{
+                            "flash_bytes": 233200,
+                            "flash_percentage": 7,
+                            "ram_bytes": 13648,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMTLoopback",
+                    "sizes": [{
+                            "flash_bytes": 234504,
+                            "flash_percentage": 7,
+                            "ram_bytes": 15072,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMTReadXJT",
+                    "sizes": [{
+                            "flash_bytes": 233806,
+                            "flash_percentage": 7,
+                            "ram_bytes": 13504,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMTWriteNeoPixel",
+                    "sizes": [{
+                            "flash_bytes": 232442,
+                            "flash_percentage": 7,
+                            "ram_bytes": 16120,
+                            "ram_percentage": 4
                             }]
                     }
 ]

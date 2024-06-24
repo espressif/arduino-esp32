@@ -321,22 +321,6 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "EEPROM/examples/eeprom_write",
-                    "sizes": [{
-                            "flash_bytes": 219570,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12592,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogOut/LEDCFade",
-                    "sizes": [{
-                            "flash_bytes": 223004,
-                            "flash_percentage": 7,
-                            "ram_bytes": 12592,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/AnalogOut/LEDCSoftwareFade",
                     "sizes": [{
                             "flash_bytes": 204354,
@@ -406,6 +390,30 @@
                             "flash_bytes": 214432,
                             "flash_percentage": 6,
                             "ram_bytes": 12576,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/DeepSleep/TimerWakeUp",
+                    "sizes": [{
+                            "flash_bytes": 220970,
+                            "flash_percentage": 7,
+                            "ram_bytes": 12772,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/FreeRTOS/BasicMultiThreading",
+                    "sizes": [{
+                            "flash_bytes": 244636,
+                            "flash_percentage": 7,
+                            "ram_bytes": 13328,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/FreeRTOS/Mutex",
+                    "sizes": [{
+                            "flash_bytes": 212714,
+                            "flash_percentage": 6,
+                            "ram_bytes": 12544,
                             "ram_percentage": 3
                             }]
                     }
