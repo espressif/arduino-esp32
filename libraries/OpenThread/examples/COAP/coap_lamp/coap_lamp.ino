@@ -8,20 +8,20 @@
 
 const char *otSetupLeader[] = {
   // -- clear/disable all
-  // stop CoAP 
+  // stop CoAP
   "coap", "stop",
-  // stop Thread 
+  // stop Thread
   "thread", "stop",
   // stop the interface
   "ifconfig", "down",
   // clear the dataset
   "dataset", "clear",
   // -- set dataset
-  // create a new complete dataset with random data 
+  // create a new complete dataset with random data
   "dataset", "init new",
   // set the channel
   "dataset channel", OT_CHANNEL,
-  // set the network key 
+  // set the network key
   "dataset networkkey", OT_NETWORK_KEY,
   // commit the dataset
   "dataset", "commit active",

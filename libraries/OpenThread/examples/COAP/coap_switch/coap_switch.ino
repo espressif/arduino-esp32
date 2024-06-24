@@ -9,9 +9,9 @@
 
 const char *otSetupChild[] = {
   // -- clear/disable all
-  // stop CoAP 
+  // stop CoAP
   "coap", "stop",
-  // stop Thread 
+  // stop Thread
   "thread", "stop",
   // stop the interface
   "ifconfig", "down",
@@ -20,7 +20,7 @@ const char *otSetupChild[] = {
   // -- set dataset
   // set the channel
   "dataset channel", OT_CHANNEL,
-  // set the network key 
+  // set the network key
   "dataset networkkey", OT_NETWORK_KEY,
   // commit the dataset
   "dataset", "commit active",
