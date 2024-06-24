@@ -1,3 +1,3 @@
 #pragma once
 #include "NetworkUdp.h"
-#define WiFiUDP NetworkUDP
+typedef NetworkUDP WiFiUDP;
