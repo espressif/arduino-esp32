@@ -55,6 +55,7 @@ jobs:
           action_fail: true
 
       - name: Clean up caches
+        if: always()
         uses: actions/github-script@v7
         with:
           script: |
