@@ -355,7 +355,7 @@ config ARDUINO_SELECTIVE_ESPmDNS
 config ARDUINO_SELECTIVE_HTTPClient
     bool "Enable HTTPClient"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
-    select ARDUINO_SELECTIVE_WiFiClientSecure
+    select ARDUINO_SELECTIVE_NetworkClientSecure
     default y
 
 config ARDUINO_SELECTIVE_NetBIOS
@@ -375,7 +375,7 @@ config ARDUINO_SELECTIVE_WiFi
     default y
 
 config ARDUINO_SELECTIVE_NetworkClientSecure
-    bool "Enable WiFiClientSecure"
+    bool "Enable NetworkClientSecure"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
 
