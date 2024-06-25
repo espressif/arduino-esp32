@@ -8815,6 +8815,202 @@ lolin32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+viralink32g01.name=ViraLink Gate32-0.1
+
+viralink32g01.bootloader.tool=esptool_py
+viralink32g01.bootloader.tool.default=esptool_py
+
+viralink32g01.upload.tool=esptool_py
+viralink32g01.upload.tool.default=esptool_py
+viralink32g01.upload.tool.network=esp_ota
+
+viralink32g01.upload.maximum_size=1310720
+viralink32g01.upload.maximum_data_size=327680
+viralink32g01.upload.flags=
+viralink32g01.upload.extra_flags=
+
+viralink32g01.serial.disableDTR=true
+viralink32g01.serial.disableRTS=true
+
+viralink32g01.build.tarch=xtensa
+viralink32g01.build.bootloader_addr=0x1000
+viralink32g01.build.target=esp32
+viralink32g01.build.mcu=esp32
+viralink32g01.build.core=esp32
+viralink32g01.build.variant=ViraLink-G0.1
+viralink32g01.build.board=VIRALINK_GATE32_01
+
+viralink32g01.build.f_cpu=240000000L
+viralink32g01.build.flash_mode=dio
+viralink32g01.build.flash_size=4MB
+viralink32g01.build.boot=dio
+viralink32g01.build.partitions=default
+viralink32g01.build.defines=
+
+viralink32g01.menu.FlashFreq.80=80MHz
+viralink32g01.menu.FlashFreq.80.build.flash_freq=80m
+viralink32g01.menu.FlashFreq.40=40MHz
+viralink32g01.menu.FlashFreq.40.build.flash_freq=40m
+
+viralink32g01.menu.PartitionScheme.default=Default
+viralink32g01.menu.PartitionScheme.default.build.partitions=default
+viralink32g01.menu.PartitionScheme.no_ota=No OTA (Large APP)
+viralink32g01.menu.PartitionScheme.no_ota.build.partitions=no_ota
+viralink32g01.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+viralink32g01.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+viralink32g01.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+viralink32g01.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+viralink32g01.menu.CPUFreq.240=240MHz (WiFi/BT)
+viralink32g01.menu.CPUFreq.240.build.f_cpu=240000000L
+viralink32g01.menu.CPUFreq.160=160MHz (WiFi/BT)
+viralink32g01.menu.CPUFreq.160.build.f_cpu=160000000L
+viralink32g01.menu.CPUFreq.80=80MHz (WiFi/BT)
+viralink32g01.menu.CPUFreq.80.build.f_cpu=80000000L
+viralink32g01.menu.CPUFreq.40=40MHz (40MHz XTAL)
+viralink32g01.menu.CPUFreq.40.build.f_cpu=40000000L
+viralink32g01.menu.CPUFreq.26=26MHz (26MHz XTAL)
+viralink32g01.menu.CPUFreq.26.build.f_cpu=26000000L
+viralink32g01.menu.CPUFreq.20=20MHz (40MHz XTAL)
+viralink32g01.menu.CPUFreq.20.build.f_cpu=20000000L
+viralink32g01.menu.CPUFreq.13=13MHz (26MHz XTAL)
+viralink32g01.menu.CPUFreq.13.build.f_cpu=13000000L
+viralink32g01.menu.CPUFreq.10=10MHz (40MHz XTAL)
+viralink32g01.menu.CPUFreq.10.build.f_cpu=10000000L
+
+viralink32g01.menu.UploadSpeed.921600=921600
+viralink32g01.menu.UploadSpeed.921600.upload.speed=921600
+viralink32g01.menu.UploadSpeed.115200=115200
+viralink32g01.menu.UploadSpeed.115200.upload.speed=115200
+viralink32g01.menu.UploadSpeed.256000.windows=256000
+viralink32g01.menu.UploadSpeed.256000.upload.speed=256000
+viralink32g01.menu.UploadSpeed.230400.windows.upload.speed=256000
+viralink32g01.menu.UploadSpeed.230400=230400
+viralink32g01.menu.UploadSpeed.230400.upload.speed=230400
+viralink32g01.menu.UploadSpeed.460800.linux=460800
+viralink32g01.menu.UploadSpeed.460800.macosx=460800
+viralink32g01.menu.UploadSpeed.460800.upload.speed=460800
+viralink32g01.menu.UploadSpeed.512000.windows=512000
+viralink32g01.menu.UploadSpeed.512000.upload.speed=512000
+
+viralink32g01.menu.DebugLevel.none=None
+viralink32g01.menu.DebugLevel.none.build.code_debug=0
+viralink32g01.menu.DebugLevel.error=Error
+viralink32g01.menu.DebugLevel.error.build.code_debug=1
+viralink32g01.menu.DebugLevel.warn=Warn
+viralink32g01.menu.DebugLevel.warn.build.code_debug=2
+viralink32g01.menu.DebugLevel.info=Info
+viralink32g01.menu.DebugLevel.info.build.code_debug=3
+viralink32g01.menu.DebugLevel.debug=Debug
+viralink32g01.menu.DebugLevel.debug.build.code_debug=4
+viralink32g01.menu.DebugLevel.verbose=Verbose
+viralink32g01.menu.DebugLevel.verbose.build.code_debug=5
+
+viralink32g01.menu.EraseFlash.none=Disabled
+viralink32g01.menu.EraseFlash.none.upload.erase_cmd=
+viralink32g01.menu.EraseFlash.all=Enabled
+viralink32g01.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+viralink32g11.name=ViraLink Gate32-1.1
+
+viralink32g11.bootloader.tool=esptool_py
+viralink32g11.bootloader.tool.default=esptool_py
+
+viralink32g11.upload.tool=esptool_py
+viralink32g11.upload.tool.default=esptool_py
+viralink32g11.upload.tool.network=esp_ota
+
+viralink32g11.upload.maximum_size=1310720
+viralink32g11.upload.maximum_data_size=327680
+viralink32g11.upload.flags=
+viralink32g11.upload.extra_flags=
+
+viralink32g11.serial.disableDTR=true
+viralink32g11.serial.disableRTS=true
+
+viralink32g11.build.tarch=xtensa
+viralink32g11.build.bootloader_addr=0x1000
+viralink32g11.build.target=esp32
+viralink32g11.build.mcu=esp32
+viralink32g11.build.core=esp32
+viralink32g11.build.variant=ViraLink-G1.1
+viralink32g11.build.board=VIRALINK_GATE32_11
+
+viralink32g11.build.f_cpu=240000000L
+viralink32g11.build.flash_mode=dio
+viralink32g11.build.flash_size=4MB
+viralink32g11.build.boot=dio
+viralink32g11.build.partitions=default
+viralink32g11.build.defines=
+
+viralink32g11.menu.FlashFreq.80=80MHz
+viralink32g11.menu.FlashFreq.80.build.flash_freq=80m
+viralink32g11.menu.FlashFreq.40=40MHz
+viralink32g11.menu.FlashFreq.40.build.flash_freq=40m
+
+viralink32g11.menu.PartitionScheme.default=Default
+viralink32g11.menu.PartitionScheme.default.build.partitions=default
+viralink32g11.menu.PartitionScheme.no_ota=No OTA (Large APP)
+viralink32g11.menu.PartitionScheme.no_ota.build.partitions=no_ota
+viralink32g11.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+viralink32g11.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+viralink32g11.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+viralink32g11.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+viralink32g11.menu.CPUFreq.240=240MHz (WiFi/BT)
+viralink32g11.menu.CPUFreq.240.build.f_cpu=240000000L
+viralink32g11.menu.CPUFreq.160=160MHz (WiFi/BT)
+viralink32g11.menu.CPUFreq.160.build.f_cpu=160000000L
+viralink32g11.menu.CPUFreq.80=80MHz (WiFi/BT)
+viralink32g11.menu.CPUFreq.80.build.f_cpu=80000000L
+viralink32g11.menu.CPUFreq.40=40MHz (40MHz XTAL)
+viralink32g11.menu.CPUFreq.40.build.f_cpu=40000000L
+viralink32g11.menu.CPUFreq.26=26MHz (26MHz XTAL)
+viralink32g11.menu.CPUFreq.26.build.f_cpu=26000000L
+viralink32g11.menu.CPUFreq.20=20MHz (40MHz XTAL)
+viralink32g11.menu.CPUFreq.20.build.f_cpu=20000000L
+viralink32g11.menu.CPUFreq.13=13MHz (26MHz XTAL)
+viralink32g11.menu.CPUFreq.13.build.f_cpu=13000000L
+viralink32g11.menu.CPUFreq.10=10MHz (40MHz XTAL)
+viralink32g11.menu.CPUFreq.10.build.f_cpu=10000000L
+
+viralink32g11.menu.UploadSpeed.921600=921600
+viralink32g11.menu.UploadSpeed.921600.upload.speed=921600
+viralink32g11.menu.UploadSpeed.115200=115200
+viralink32g11.menu.UploadSpeed.115200.upload.speed=115200
+viralink32g11.menu.UploadSpeed.256000.windows=256000
+viralink32g11.menu.UploadSpeed.256000.upload.speed=256000
+viralink32g11.menu.UploadSpeed.230400.windows.upload.speed=256000
+viralink32g11.menu.UploadSpeed.230400=230400
+viralink32g11.menu.UploadSpeed.230400.upload.speed=230400
+viralink32g11.menu.UploadSpeed.460800.linux=460800
+viralink32g11.menu.UploadSpeed.460800.macosx=460800
+viralink32g11.menu.UploadSpeed.460800.upload.speed=460800
+viralink32g11.menu.UploadSpeed.512000.windows=512000
+viralink32g11.menu.UploadSpeed.512000.upload.speed=512000
+
+viralink32g11.menu.DebugLevel.none=None
+viralink32g11.menu.DebugLevel.none.build.code_debug=0
+viralink32g11.menu.DebugLevel.error=Error
+viralink32g11.menu.DebugLevel.error.build.code_debug=1
+viralink32g11.menu.DebugLevel.warn=Warn
+viralink32g11.menu.DebugLevel.warn.build.code_debug=2
+viralink32g11.menu.DebugLevel.info=Info
+viralink32g11.menu.DebugLevel.info.build.code_debug=3
+viralink32g11.menu.DebugLevel.debug=Debug
+viralink32g11.menu.DebugLevel.debug.build.code_debug=4
+viralink32g11.menu.DebugLevel.verbose=Verbose
+viralink32g11.menu.DebugLevel.verbose.build.code_debug=5
+
+viralink32g11.menu.EraseFlash.none=Disabled
+viralink32g11.menu.EraseFlash.none.upload.erase_cmd=
+viralink32g11.menu.EraseFlash.all=Enabled
+viralink32g11.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 lolin32-lite.name=WEMOS LOLIN32 Lite
 
 lolin32-lite.bootloader.tool=esptool_py
