@@ -42,5 +42,10 @@ static const uint8_t EMAC_RXD0 = 25;
 static const uint8_t EMAC_RXD1 = 26;
 static const uint8_t EMAC_RXD_DV = 27;
 
+static const uint8_t SS = -1;
+static const uint8_t MOSI = -1;
+static const uint8_t SCK = -1;
+static const uint8_t MISO = -1;
+
 
 #endif /* Pins_Arduino_h */
