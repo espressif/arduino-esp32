@@ -7,10 +7,10 @@
  * 
  */
 
-#ifndef NO_NEW_RMT_DRV
+#ifndef ESP32_ARDUIESP32_ARDUINO_NEW_RMT_DRV_OFF_OFF
 
-// add the file "build_opt.h" to your Arduino project folder with "-DNO_NEW_RMT_DRV" to use the RMT Legacy driver
-#warning "NO_NEW_RMT_DRV is not defined, using new RMT driver"
+// add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NEW_RMT_DRV_OFF" to use the RMT Legacy driver
+#warning "ESP32_ARDUINO_NEW_RMT_DRV_OFF is not defined, using new RMT driver"
 
 #define RMT_PIN 4  // Valid GPIO for ESP32, S2, S3, C3, C6 and H2
 bool installed = false;
@@ -30,7 +30,7 @@ void loop() {
 
 #else
 
-// add the file "build_opt.h" to your Arduino project folder with "-DNO_NEW_RMT_DRV" to use the RMT Legacy driver
+// add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NEW_RMT_DRV_OFF" to use the RMT Legacy driver
 // neoPixelWrite() is a function that writes to the RGB LED and it won't be available here
 #include "driver/rmt.h"
 
@@ -49,4 +49,4 @@ void loop() {
   delay(5000);
 }
 
-#endif // NO_NEW_RMT_DRV
+#endif // ESP32_ARDUINO_NEW_RMT_DRV_OFF
