@@ -1,0 +1,1 @@
+-DNO_NEW_RMT_DRV
