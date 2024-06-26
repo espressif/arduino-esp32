@@ -1,4 +1,14 @@
+/*
+ * This example demonstrates how to use the file build_opt.h to disable the new RMT Driver
+ * Note that this file shall be added the Arduino project 
+ * 
+ * If the content of this file changes, it is necessary to delete the compiled Arduino IDE cache
+ * It can be done by changing, for instance, the "Core Debug Level" option, forcing the system to rebuild the Arduino Core
+ * 
+ */
+
 #ifndef NO_NEW_RMT_DRV
+
 // add the file "build_opt.h" to your Arduino project folder with "-DNO_NEW_RMT_DRV" to use the RMT Legacy driver
 #warning "NO_NEW_RMT_DRV is not defined, using new RMT driver"
 
@@ -12,7 +22,9 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("RMT New driver is installed: " + installed ? String("Yes.") : String("No."));
+  String msg = "RMT New driver is installed: ";
+  msg += (char*)(installed ? "Yes." : "No.");
+  Serial.println(msg);
   delay(5000);
 }
 
@@ -31,9 +43,10 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("RMT Legacy driver is installed: " + installed ? String("Yes.") : String("No."));
+  String msg = "RMT Legacy driver is installed: ";
+  msg += (char*)(installed ? "Yes." : "No.");
+  Serial.println(msg);
   delay(5000);
 }
 
-
-#endif
+#endif // NO_NEW_RMT_DRV
