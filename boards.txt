@@ -21827,7 +21827,7 @@ m5stack_nanoc6.build.target=esp
 m5stack_nanoc6.build.mcu=esp32c6
 m5stack_nanoc6.build.core=esp32
 m5stack_nanoc6.build.variant=m5stack_nanoc6
-m5stack_nanoc6.build.board=m5stack_nanoc6
+m5stack_nanoc6.build.board=M5STACK_NANOC6
 m5stack_nanoc6.build.bootloader_addr=0x0
 
 m5stack_nanoc6.build.cdc_on_boot=1
