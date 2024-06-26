@@ -7,30 +7,22 @@
  * 
  */
 
-#ifndef ESP32_ARDUINO_NEW_RMT_DRV_OFF
+#ifndef ESP32_ARDUINO_NO_RGB_BUILTIN
 
-// add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NEW_RMT_DRV_OFF" to use the RMT Legacy driver
-#warning "ESP32_ARDUINO_NEW_RMT_DRV_OFF is not defined, using new RMT driver"
-
-#define RMT_PIN 4  // Valid GPIO for ESP32, S2, S3, C3, C6 and H2
-bool installed = false;
+// add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NO_RGB_BUILTIN" to use the RMT Legacy driver
+#warning "ESP32_ARDUINO_NO_RGB_BUILTIN is not defined, this example is intended to demonstrate the RMT Legacy driver.
+#warning "Please add the file 'build_opt.h' with '-DESP32_ARDUINO_NO_RGB_BUILTIN' to your Arduino project folder."
+#warning "Another way to disable the RGB_BUILTIN is to define it in the platformio.ini file, for instance: '-D ESP32_ARDUINO_NO_RGB_BUILTIN'"
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println("This sketch uses the new RMT driver.");
-  installed = rmtInit(RMT_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000);
 }
 
 void loop() {
-  String msg = "RMT New driver is installed: ";
-  msg += (char*)(installed ? "Yes." : "No.");
-  Serial.println(msg);
-  delay(5000);
 }
 
 #else
 
-// add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NEW_RMT_DRV_OFF" to use the RMT Legacy driver
+// add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NO_RGB_BUILTIN" to use the RMT Legacy driver
 // neoPixelWrite() is a function that writes to the RGB LED and it won't be available here
 #include "driver/rmt.h"
 
@@ -49,4 +41,4 @@ void loop() {
   delay(5000);
 }
 
-#endif // ESP32_ARDUINO_NEW_RMT_DRV_OFF
+#endif // ESP32_ARDUINO_NO_RGB_BUILTIN

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "soc/soc_caps.h"
-#ifndef ESP32_ARDUINO_NEW_RMT_DRV_OFF
 
 #if SOC_RMT_SUPPORTED
 #include "esp32-hal.h"
@@ -629,4 +628,3 @@ Err:
 }
 
 #endif /* SOC_RMT_SUPPORTED */
-#endif /* ESP32_ARDUINO_NEW_RMT_DRV_OFF */
