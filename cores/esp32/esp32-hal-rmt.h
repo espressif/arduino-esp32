@@ -16,6 +16,8 @@
 #define MAIN_ESP32_HAL_RMT_H_
 
 #include "soc/soc_caps.h"
+#ifndef NO_NEW_RMT_DRV
+
 #if SOC_RMT_SUPPORTED
 
 #ifdef __cplusplus
@@ -234,3 +236,4 @@ bool rmtDeinit(int pin);
 
 #endif /* SOC_RMT_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_RMT_H_ */
+#endif /* NO_NEW_RMT_DRV */

@@ -1,5 +1,7 @@
 #include "soc/soc_caps.h"
 
+#ifndef NO_NEW_RMT_DRV
+
 #include "esp32-hal-rgb-led.h"
 
 void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
@@ -40,3 +42,4 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
   log_e("RMT is not supported on " CONFIG_IDF_TARGET);
 #endif /* SOC_RMT_SUPPORTED */
 }
+#endif /* NO_NEW_RMT_DRV */

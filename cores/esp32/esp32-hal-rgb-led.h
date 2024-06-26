@@ -1,6 +1,7 @@
 #ifndef MAIN_ESP32_HAL_RGB_LED_H_
 #define MAIN_ESP32_HAL_RGB_LED_H_
 
+#ifndef NO_NEW_RMT_DRV
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,3 +19,4 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
 #endif
 
 #endif /* MAIN_ESP32_HAL_RGB_LED_H_ */
+#endif /* NO_NEW_RMT_DRV */

@@ -79,6 +79,7 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
 // cores/esp32/esp32-hal-rgb-led.h
 #define neopixelWrite(pin, red_val, green_val, blue_val) neopixelWrite(digitalPinToGPIONumber(pin), red_val, green_val, blue_val)
 
+#ifndef NO_NEW_RMT_DRV
 // cores/esp32/esp32-hal-rmt.h
 #define rmtInit(pin, channel_direction, memsize, frequency_Hz) rmtInit(digitalPinToGPIONumber(pin), channel_direction, memsize, frequency_Hz)
 #define rmtSetEOT(pin, EOT_Level)                              rmtSetEOT(digitalPinToGPIONumber(pin), EOT_Level)
@@ -94,6 +95,7 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
   rmtSetCarrier(digitalPinToGPIONumber(pin), carrier_en, carrier_level, frequency_Hz, duty_percent)
 #define rmtSetRxMinThreshold(pin, filter_pulse_ticks) rmtSetRxMinThreshold(digitalPinToGPIONumber(pin), filter_pulse_ticks)
 #define rmtDeinit(pin)                                rmtDeinit(digitalPinToGPIONumber(pin))
+#endif // NO_NEW_RMT_DRV
 
 // cores/esp32/esp32-hal-sigmadelta.h
 #define sigmaDeltaAttach(pin, freq) sigmaDeltaAttach(digitalPinToGPIONumber(pin), freq)
