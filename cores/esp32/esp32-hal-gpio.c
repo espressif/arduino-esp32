@@ -151,7 +151,7 @@ uint8_t RGB_BUILTIN_storage = 0;
 #endif
 
 extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val) {
-#ifndef NO_NEW_RMT_DRV
+#ifndef ESP32_ARDUINO_NEW_RMT_DRV_OFF
 #ifdef RGB_BUILTIN
   if (pin == RGB_BUILTIN) {
     //use RMT to set all channels on/off
@@ -161,7 +161,7 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val) {
     return;
   }
 #endif // RGB_BUILTIN
-#endif // NO_NEW_RMT_DRV
+#endif // ESP32_ARDUINO_NEW_RMT_DRV_OFF
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL) {
     gpio_set_level((gpio_num_t)pin, val);
   } else {

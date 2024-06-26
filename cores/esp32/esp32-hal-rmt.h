@@ -16,7 +16,7 @@
 #define MAIN_ESP32_HAL_RMT_H_
 
 #include "soc/soc_caps.h"
-#ifndef NO_NEW_RMT_DRV
+#ifndef ESP32_ARDUINO_NEW_RMT_DRV_OFF
 
 #if SOC_RMT_SUPPORTED
 
@@ -236,4 +236,4 @@ bool rmtDeinit(int pin);
 
 #endif /* SOC_RMT_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_RMT_H_ */
-#endif /* NO_NEW_RMT_DRV */
+#endif /* ESP32_ARDUINO_NEW_RMT_DRV_OFF */
