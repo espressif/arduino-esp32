@@ -7,7 +7,7 @@
  * 
  */
 
-#ifndef ESP32_ARDUIESP32_ARDUINO_NEW_RMT_DRV_OFF_OFF
+#ifndef ESP32_ARDUINO_NEW_RMT_DRV_OFF
 
 // add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NEW_RMT_DRV_OFF" to use the RMT Legacy driver
 #warning "ESP32_ARDUINO_NEW_RMT_DRV_OFF is not defined, using new RMT driver"
