@@ -159,9 +159,38 @@
     #define USB_PMAADDR (USB_BASE + (USB_PMAADDR_NS - USB_BASE_NS))
   #endif
 
+#elif CFG_TUSB_MCU == OPT_MCU_STM32U5
+  #include "stm32u5xx.h"
+  #define FSDEV_BUS_32BIT
+
+  #define FSDEV_PMA_SIZE (2048u)
+  #undef USB_PMAADDR
+  #define USB_PMAADDR USB_DRD_PMAADDR
+  #define USB_TypeDef USB_DRD_TypeDef
+  #define EP0R CHEP0R
+  #define USB_EP_CTR_RX USB_EP_VTRX
+  #define USB_EP_CTR_TX USB_EP_VTTX
+  #define USB_EP_T_FIELD USB_CHEP_UTYPE
+  #define USB_EPREG_MASK USB_CHEP_REG_MASK
+  #define USB_EPTX_DTOGMASK USB_CHEP_TX_DTOGMASK
+  #define USB_EPRX_DTOGMASK USB_CHEP_RX_DTOGMASK
+  #define USB_EPTX_DTOG1 USB_CHEP_TX_DTOG1
+  #define USB_EPTX_DTOG2 USB_CHEP_TX_DTOG2
+  #define USB_EPRX_DTOG1 USB_CHEP_RX_DTOG1
+  #define USB_EPRX_DTOG2 USB_CHEP_RX_DTOG2
+  #define USB_EPRX_STAT USB_CH_RX_VALID
+  #define USB_EPKIND_MASK USB_EP_KIND_MASK
+  #define USB USB_DRD_FS
+  #define USB_CNTR_FRES USB_CNTR_USBRST
+  #define USB_CNTR_RESUME USB_CNTR_L2RES
+  #define USB_ISTR_EP_ID USB_ISTR_IDN
+  #define USB_EPADDR_FIELD USB_CHEP_ADDR
+  #define USB_CNTR_LPMODE USB_CNTR_SUSPRDY
+  #define USB_CNTR_FSUSP USB_CNTR_SUSPEN
+
 #else
   #error You are using an untested or unimplemented STM32 variant. Please update the driver.
-  // This includes L1x0, L1x1, L1x2, L4x2 and L4x3, G1x1, G1x3, and G1x4
+  // This includes U0
 #endif
 
 // This checks if the device has "LPM"
@@ -211,6 +240,8 @@ static const IRQn_Type fsdev_irq[] = {
   #elif CFG_TUSB_MCU == OPT_MCU_STM32WB
     USB_HP_IRQn,
     USB_LP_IRQn,
+  #elif CFG_TUSB_MCU == OPT_MCU_STM32U5
+    USB_IRQn,
   #else
     #error Unknown arch in USB driver
   #endif

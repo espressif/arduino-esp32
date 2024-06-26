@@ -295,18 +295,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_rx_cnt(USB_TypeDef * USBx, u
 TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_tx_status(USB_TypeDef * USBx,  uint32_t bEpIdx, uint32_t wState) {
   uint32_t regVal = pcd_get_endpoint(USBx, bEpIdx);
   regVal &= USB_EPTX_DTOGMASK;
-
-  /* toggle first bit ? */
-  if((USB_EPTX_DTOG1 & (wState))!= 0U)
-  {
-    regVal ^= USB_EPTX_DTOG1;
-  }
-  /* toggle second bit ?  */
-  if((USB_EPTX_DTOG2 & ((uint32_t)(wState)))!= 0U)
-  {
-    regVal ^= USB_EPTX_DTOG2;
-  }
-
+  regVal ^= wState;
   regVal |= USB_EP_CTR_RX|USB_EP_CTR_TX;
   pcd_set_endpoint(USBx, bEpIdx, regVal);
 }
@@ -322,16 +311,7 @@ TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_tx_status(USB_TypeDef * USBx
 TU_ATTR_ALWAYS_INLINE static inline void pcd_set_ep_rx_status(USB_TypeDef * USBx,  uint32_t bEpIdx, uint32_t wState) {
   uint32_t regVal = pcd_get_endpoint(USBx, bEpIdx);
   regVal &= USB_EPRX_DTOGMASK;
-
-  /* toggle first bit ? */
-  if((USB_EPRX_DTOG1 & wState)!= 0U) {
-    regVal ^= USB_EPRX_DTOG1;
-  }
-  /* toggle second bit ? */
-  if((USB_EPRX_DTOG2 & wState)!= 0U) {
-    regVal ^= USB_EPRX_DTOG2;
-  }
-
+  regVal ^= wState;
   regVal |= USB_EP_CTR_RX|USB_EP_CTR_TX;
   pcd_set_endpoint(USBx, bEpIdx, regVal);
 }

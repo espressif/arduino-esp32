@@ -28,15 +28,79 @@
 #ifndef USB_CH32_USBFS_REG_H
 #define USB_CH32_USBFS_REG_H
 
-#if CFG_TUSB_MCU == OPT_MCU_CH32V307
-  #include <ch32v30x.h>
-  #define USBHD_IRQn OTG_FS_IRQn
+// https://github.com/openwch/ch32v307/pull/90
+// https://github.com/openwch/ch32v20x/pull/12
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-prototypes"
+#endif
 
+#if CFG_TUSB_MCU == OPT_MCU_CH32F20X
+  #include <ch32f20x.h>
+#elif CFG_TUSB_MCU == OPT_MCU_CH32V103
+  #include <ch32v10x.h>
+  typedef struct
+  {
+    __IO uint8_t  BASE_CTRL;
+    __IO uint8_t  UDEV_CTRL;
+    __IO uint8_t  INT_EN;
+    __IO uint8_t  DEV_ADDR;
+    __IO uint8_t  Reserve0;
+    __IO uint8_t  MIS_ST;
+    __IO uint8_t  INT_FG;
+    __IO uint8_t  INT_ST;
+    __IO uint32_t RX_LEN;
+    __IO uint8_t  UEP4_1_MOD;
+    __IO uint8_t  UEP2_3_MOD;
+    __IO uint8_t  UEP5_6_MOD;
+    __IO uint8_t  UEP7_MOD;
+    __IO uint32_t UEP0_DMA;
+    __IO uint32_t UEP1_DMA;
+    __IO uint32_t UEP2_DMA;
+    __IO uint32_t UEP3_DMA;
+    __IO uint32_t UEP4_DMA;
+    __IO uint32_t UEP5_DMA;
+    __IO uint32_t UEP6_DMA;
+    __IO uint32_t UEP7_DMA;
+    __IO uint16_t UEP0_TX_LEN;
+    __IO uint8_t  UEP0_TX_CTRL;
+    __IO uint8_t  UEP0_RX_CTRL;
+    __IO uint16_t UEP1_TX_LEN;
+    __IO uint8_t  UEP1_TX_CTRL;
+    __IO uint8_t  UEP1_RX_CTRL;
+    __IO uint16_t UEP2_TX_LEN;
+    __IO uint8_t  UEP2_TX_CTRL;
+    __IO uint8_t  UEP2_RX_CTRL;
+    __IO uint16_t UEP3_TX_LEN;
+    __IO uint8_t  UEP3_TX_CTRL;
+    __IO uint8_t  UEP3_RX_CTRL;
+    __IO uint16_t UEP4_TX_LEN;
+    __IO uint8_t  UEP4_TX_CTRL;
+    __IO uint8_t  UEP4_RX_CTRL;
+    __IO uint16_t UEP5_TX_LEN;
+    __IO uint8_t  UEP5_TX_CTRL;
+    __IO uint8_t  UEP5_RX_CTRL;
+    __IO uint16_t UEP6_TX_LEN;
+    __IO uint8_t  UEP6_TX_CTRL;
+    __IO uint8_t  UEP6_RX_CTRL;
+    __IO uint16_t UEP7_TX_LEN;
+    __IO uint8_t  UEP7_TX_CTRL;
+    __IO uint8_t  UEP7_RX_CTRL;
+    __IO uint32_t Reserve1;
+    __IO uint32_t OTG_CR;
+    __IO uint32_t OTG_SR;
+  } USBOTG_FS_TypeDef;
+
+  #define USBOTG_FS ((USBOTG_FS_TypeDef *) 0x40023400)
 #elif CFG_TUSB_MCU == OPT_MCU_CH32V20X
   #include <ch32v20x.h>
+#elif CFG_TUSB_MCU == OPT_MCU_CH32V307
+  #include <ch32v30x.h>
+  #define USBHD_IRQn OTG_FS_IRQn
+#endif
 
-#elif CFG_TUSB_MCU == OPT_MCU_CH32F20X
-  #include <ch32f20x.h>
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
 #endif
 
 // CTRL

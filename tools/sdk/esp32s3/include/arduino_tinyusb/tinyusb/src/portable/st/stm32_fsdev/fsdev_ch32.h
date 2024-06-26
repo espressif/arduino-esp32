@@ -36,11 +36,21 @@
 
 #include "common/tusb_compiler.h"
 
-#if CFG_TUSB_MCU == OPT_MCU_CH32V20X
-  #include <ch32v20x.h>
+// https://github.com/openwch/ch32v307/pull/90
+// https://github.com/openwch/ch32v20x/pull/12
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-prototypes"
+#endif
 
-#elif CFG_TUSB_MCU == OPT_MCU_CH32F20X
+#if CFG_TUSB_MCU == OPT_MCU_CH32F20X
   #include <ch32f20x.h>
+#elif CFG_TUSB_MCU == OPT_MCU_CH32V20X
+  #include <ch32v20x.h>
+#endif
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
 #endif
 
 #define FSDEV_PMA_SIZE (512u)
