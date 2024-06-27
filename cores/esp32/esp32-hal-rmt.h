@@ -16,7 +16,6 @@
 #define MAIN_ESP32_HAL_RMT_H_
 
 #include "soc/soc_caps.h"
-
 #if SOC_RMT_SUPPORTED
 
 #ifdef __cplusplus
