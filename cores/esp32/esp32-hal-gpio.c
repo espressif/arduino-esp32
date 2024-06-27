@@ -169,7 +169,7 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val) {
     neopixelWrite(RGB_BUILTIN, comm_val, comm_val, comm_val);
     return;
   }
-#endif // RGB_BUILTIN
+#endif  // RGB_BUILTIN
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL) {
     gpio_set_level((gpio_num_t)pin, val);
   } else {

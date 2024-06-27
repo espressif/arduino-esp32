@@ -1,10 +1,10 @@
 /*
  * This example demonstrates how to use the file build_opt.h to disable the new RMT Driver
- * Note that this file shall be added the Arduino project 
- * 
+ * Note that this file shall be added the Arduino project
+ *
  * If the content of this file changes, it is necessary to delete the compiled Arduino IDE cache
  * It can be done by changing, for instance, the "Core Debug Level" option, forcing the system to rebuild the Arduino Core
- * 
+ *
  */
 
 #ifndef ESP32_ARDUINO_NO_RGB_BUILTIN
@@ -30,9 +30,9 @@ void setup() {
 
 void loop() {
   String msg = "RMT Legacy driver is installed: ";
-  msg += (char*)(installed ? "Yes." : "No.");
+  msg += (char *)(installed ? "Yes." : "No.");
   Serial.println(msg);
   delay(5000);
 }
 
-#endif // ESP32_ARDUINO_NO_RGB_BUILTIN
+#endif  // ESP32_ARDUINO_NO_RGB_BUILTIN
