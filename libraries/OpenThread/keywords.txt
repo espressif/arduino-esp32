@@ -1,0 +1,47 @@
+#######################################
+# Syntax Coloring Map For OpenThread
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+OThreadCLI	KEYWORD1
+OpenThreadCLI	KEYWORD1
+ot_cmd_return_t	KEYWORD1
+ot_device_role_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+startConsole	KEYWORD2
+stopConsole	KEYWORD2
+setPrompt	KEYWORD2
+setEchoBack	KEYWORD2
+setStream	KEYWORD2
+onReceive	KEYWORD2
+begin	KEYWORD2
+setTxBufferSize	KEYWORD2
+setRxBufferSize	KEYWORD2
+write	KEYWORD2
+available	KEYWORD2
+read	KEYWORD2
+peek	KEYWORD2
+flush	KEYWORD2
+otGetDeviceRole	KEYWORD2
+otGetStringDeviceRole	KEYWORD2
+otGetRespCmd    KEYWORD2
+otExecCommand	KEYWORD2
+otPrintRespCLI  KEYWORD2
+otPrintNetworkInformation  KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+OT_ROLE_DISABLED	LITERAL1
+OT_ROLE_DETACHED	LITERAL1
+OT_ROLE_CHILD	LITERAL1
+OT_ROLE_ROUTER	LITERAL1
+OT_ROLE_LEADER	LITERAL1

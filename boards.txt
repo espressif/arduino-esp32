@@ -33,6 +33,17 @@ menu.NetworkLogLevel=Network Log Level
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
 ##############################################################
 
+# Generic definition to be used for USB discovery of CDC/JTAG
+esp32_family.name=ESP32 Family Device
+esp32_family.hide=true
+esp32_family.vid.0=0x303a
+esp32_family.pid.0=0x1001
+esp32_family.upload_port.0.vid=0x303a
+esp32_family.upload_port.0.pid=0x1001
+esp32_family.build.board=ESP32_FAMILY
+
+##############################################################
+
 esp32c2.name=ESP32C2 Dev Module
 esp32c2.hide=true
 
@@ -76,6 +87,9 @@ esp32c2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SP
 esp32c2.menu.PartitionScheme.default.build.partitions=default
 esp32c2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32c2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32c2.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32c2.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32c2.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
 esp32c2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 esp32c2.menu.PartitionScheme.no_ota.build.partitions=no_ota
 esp32c2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
@@ -149,8 +163,6 @@ esp32c2.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32h2.name=ESP32H2 Dev Module
-esp32h2.vid.0=0x303a
-esp32h2.pid.0=0x1001
 
 esp32h2.bootloader.tool=esptool_py
 esp32h2.bootloader.tool.default=esptool_py
@@ -214,6 +226,9 @@ esp32h2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32h2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32h2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32h2.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32h2.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32h2.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32h2.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
 esp32h2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 esp32h2.menu.PartitionScheme.no_ota.build.partitions=no_ota
 esp32h2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
@@ -329,8 +344,6 @@ esp32h2.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_comm
 ##############################################################
 
 esp32c6.name=ESP32C6 Dev Module
-esp32c6.vid.0=0x303a
-esp32c6.pid.0=0x1001
 
 esp32c6.bootloader.tool=esptool_py
 esp32c6.bootloader.tool.default=esptool_py
@@ -393,6 +406,9 @@ esp32c6.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32c6.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32c6.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32c6.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32c6.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32c6.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32c6.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
 esp32c6.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 esp32c6.menu.PartitionScheme.no_ota.build.partitions=no_ota
 esp32c6.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
@@ -515,8 +531,6 @@ esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_comm
 ##############################################################
 
 esp32s3.name=ESP32S3 Dev Module
-esp32s3.vid.0=0x303a
-esp32s3.pid.0=0x1001
 
 esp32s3.bootloader.tool=esptool_py
 esp32s3.bootloader.tool.default=esptool_py
@@ -661,6 +675,9 @@ esp32s3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32s3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32s3.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32s3.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32s3.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32s3.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
 esp32s3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 esp32s3.menu.PartitionScheme.no_ota.build.partitions=no_ota
 esp32s3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
@@ -761,8 +778,6 @@ esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_co
 ##############################################################
 
 esp32c3.name=ESP32C3 Dev Module
-esp32c3.vid.0=0x303a
-esp32c3.pid.0=0x1001
 
 esp32c3.bootloader.tool=esptool_py
 esp32c3.bootloader.tool.default=esptool_py
@@ -825,6 +840,9 @@ esp32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32c3.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32c3.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32c3.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32c3.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
 esp32c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 esp32c3.menu.PartitionScheme.no_ota.build.partitions=no_ota
 esp32c3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
@@ -938,6 +956,8 @@ esp32c3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_co
 esp32s2.name=ESP32S2 Dev Module
 esp32s2.vid.0=0x303a
 esp32s2.pid.0=0x0002
+esp32s2.upload_port.vid.0=0x303a
+esp32s2.upload_port.pid.0=0x0002
 
 esp32s2.bootloader.tool=esptool_py
 esp32s2.bootloader.tool.default=esptool_py
@@ -1021,6 +1041,9 @@ esp32s2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32s2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32s2.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32s2.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32s2.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32s2.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
 esp32s2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 esp32s2.menu.PartitionScheme.no_ota.build.partitions=no_ota
 esp32s2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
@@ -1194,6 +1217,9 @@ esp32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
 esp32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 esp32.menu.PartitionScheme.no_ota.build.partitions=no_ota
 esp32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
@@ -1364,6 +1390,9 @@ esp32da.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32da.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32da.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32da.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32da.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32da.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32da.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
 esp32da.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 esp32da.menu.PartitionScheme.no_ota.build.partitions=no_ota
 esp32da.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
@@ -1676,8 +1705,6 @@ pico32.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3-octal.name=ESP32S3 Dev Module Octal (WROOM2)
-esp32s3-octal.vid.0=0x303a
-esp32s3-octal.pid.0=0x1001
 
 esp32s3-octal.bootloader.tool=esptool_py
 esp32s3-octal.bootloader.tool.default=esptool_py
@@ -1906,8 +1933,6 @@ esp32s3-octal.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3box.name=ESP32-S3-Box
-esp32s3box.vid.0=0x303a
-esp32s3box.pid.0=0x1001
 
 esp32s3box.bootloader.tool=esptool_py
 esp32s3box.bootloader.tool.default=esptool_py
@@ -2004,8 +2029,6 @@ esp32s3box.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3usbotg.name=ESP32-S3-USB-OTG
-esp32s3usbotg.vid.0=0x303a
-esp32s3usbotg.pid.0=0x1001
 
 esp32s3usbotg.bootloader.tool=esptool_py
 esp32s3usbotg.bootloader.tool.default=esptool_py
@@ -2118,8 +2141,6 @@ esp32s3usbotg.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3camlcd.name=ESP32S3 CAM LCD
-esp32s3camlcd.vid.0=0x303a
-esp32s3camlcd.pid.0=0x1001
 
 esp32s3camlcd.bootloader.tool=esptool_py
 esp32s3camlcd.bootloader.tool.default=esptool_py
@@ -2243,6 +2264,8 @@ esp32s3camlcd.menu.EraseFlash.all.upload.erase_cmd=-e
 esp32s2usb.name=ESP32S2 Native USB
 esp32s2usb.vid.0=0x303a
 esp32s2usb.pid.0=0x0003
+esp32s2usb.upload_port.vid.0=0x303a
+esp32s2usb.upload_port.pid.0=0x0003
 
 esp32s2usb.bootloader.tool=esptool_py
 esp32s2usb.bootloader.tool.default=esptool_py
@@ -2494,8 +2517,6 @@ esp32wroverkit.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 aventen_s3_sync.name=Aventen S3 Sync
-aventen_s3_sync.vid.0=0x303a
-aventen_s3_sync.pid.0=0x1001
 ## Based upon ESP32-S3 Dev Board
 
 aventen_s3_sync.bootloader.tool=esptool_py
@@ -2712,6 +2733,8 @@ aventen_s3_sync.menu.EraseFlash.all.upload.erase_cmd=-e
 um_bling.name=UM BLING
 um_bling.vid.0=0x303a
 um_bling.pid.0=0x817F
+um_bling.upload_port.0.vid=0x303a
+um_bling.upload_port.0.pid=0x817F
 
 um_bling.bootloader.tool=esptool_py
 um_bling.bootloader.tool.default=esptool_py
@@ -2864,6 +2887,8 @@ um_bling.menu.EraseFlash.all.upload.erase_cmd=-e
 um_feathers2.name=UM FeatherS2
 um_feathers2.vid.0=0x239A
 um_feathers2.pid.0=0x80AB
+um_feathers2.upload_port.0.vid=0x239A
+um_feathers2.upload_port.0.pid=0x80AB
 
 um_feathers2.bootloader.tool=esptool_py
 um_feathers2.bootloader.tool.default=esptool_py
@@ -3015,6 +3040,8 @@ um_feathers2.menu.EraseFlash.all.upload.erase_cmd=-e
 um_feathers2neo.name=UM FeatherS2 Neo
 um_feathers2neo.vid.0=0x303a
 um_feathers2neo.pid.0=0x80B4
+um_feathers2neo.upload_port.0.vid=0x303a
+um_feathers2neo.upload_port.0.pid=0x80B4
 
 um_feathers2neo.bootloader.tool=esptool_py
 um_feathers2neo.bootloader.tool.default=esptool_py
@@ -3152,6 +3179,8 @@ um_feathers2neo.menu.EraseFlash.all.upload.erase_cmd=-e
 um_feathers3.name=UM FeatherS3
 um_feathers3.vid.0=0x303a
 um_feathers3.pid.0=0x80D6
+um_feathers3.upload_port.0.vid=0x303a
+um_feathers3.upload_port.0.pid=0x80D6
 
 um_feathers3.bootloader.tool=esptool_py
 um_feathers3.bootloader.tool.default=esptool_py
@@ -3310,9 +3339,180 @@ um_feathers3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+um_feathers3neo.name=UM FeatherS3 Neo
+um_feathers3neo.vid.0=0x303a
+um_feathers3neo.pid.0=0x81FB
+um_feathers3neo.upload_port.0.vid=0x303a
+um_feathers3neo.upload_port.0.pid=0x81FB
+
+um_feathers3neo.bootloader.tool=esptool_py
+um_feathers3neo.bootloader.tool.default=esptool_py
+
+um_feathers3neo.upload.tool=esptool_py
+um_feathers3neo.upload.tool.default=esptool_py
+um_feathers3neo.upload.tool.network=esp_ota
+
+um_feathers3neo.upload.maximum_size=1310720
+um_feathers3neo.upload.maximum_data_size=327680
+um_feathers3neo.upload.flags=
+um_feathers3neo.upload.extra_flags=
+um_feathers3neo.upload.use_1200bps_touch=false
+um_feathers3neo.upload.wait_for_upload_port=false
+
+um_feathers3neo.serial.disableDTR=false
+um_feathers3neo.serial.disableRTS=false
+
+um_feathers3neo.build.tarch=xtensa
+um_feathers3neo.build.bootloader_addr=0x0
+um_feathers3neo.build.target=esp32s3
+um_feathers3neo.build.mcu=esp32s3
+um_feathers3neo.build.core=esp32
+um_feathers3neo.build.variant=um_feathers3neo
+um_feathers3neo.build.board=FEATHERS3NEO
+
+um_feathers3neo.build.usb_mode=1
+um_feathers3neo.build.cdc_on_boot=1
+um_feathers3neo.build.msc_on_boot=0
+um_feathers3neo.build.dfu_on_boot=0
+um_feathers3neo.build.f_cpu=240000000L
+um_feathers3neo.build.flash_size=16MB
+um_feathers3neo.build.flash_freq=80m
+um_feathers3neo.build.flash_mode=dio
+um_feathers3neo.build.boot=qio
+um_feathers3neo.build.partitions=default
+um_feathers3neo.build.defines=
+um_feathers3neo.build.loop_core=
+um_feathers3neo.build.event_core=
+um_feathers3neo.build.flash_type=qio
+um_feathers3neo.build.psram_type=qspi
+um_feathers3neo.build.memory_type=qio_qspi
+
+um_feathers3neo.menu.LoopCore.1=Core 1
+um_feathers3neo.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+um_feathers3neo.menu.LoopCore.0=Core 0
+um_feathers3neo.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+um_feathers3neo.menu.EventsCore.1=Core 1
+um_feathers3neo.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+um_feathers3neo.menu.EventsCore.0=Core 0
+um_feathers3neo.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+um_feathers3neo.menu.USBMode.hwcdc=Hardware CDC and JTAG
+um_feathers3neo.menu.USBMode.hwcdc.build.usb_mode=1
+um_feathers3neo.menu.USBMode.default=USB-OTG (TinyUSB)
+um_feathers3neo.menu.USBMode.default.build.usb_mode=0
+
+um_feathers3neo.menu.CDCOnBoot.cdc=Enabled
+um_feathers3neo.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+um_feathers3neo.menu.CDCOnBoot.default=Disabled
+um_feathers3neo.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+um_feathers3neo.menu.MSCOnBoot.default=Disabled
+um_feathers3neo.menu.MSCOnBoot.default.build.msc_on_boot=0
+um_feathers3neo.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+um_feathers3neo.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+um_feathers3neo.menu.DFUOnBoot.default=Disabled
+um_feathers3neo.menu.DFUOnBoot.default.build.dfu_on_boot=0
+um_feathers3neo.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+um_feathers3neo.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+um_feathers3neo.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+um_feathers3neo.menu.UploadMode.default=UART0 / Hardware CDC
+um_feathers3neo.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_feathers3neo.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+um_feathers3neo.menu.UploadMode.default.upload.use_1200bps_touch=false
+um_feathers3neo.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+um_feathers3neo.menu.PSRAM.enabled=Enabled
+um_feathers3neo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_feathers3neo.menu.PSRAM.disabled=Disabled
+um_feathers3neo.menu.PSRAM.disabled.build.defines=
+
+um_feathers3neo.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+um_feathers3neo.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+um_feathers3neo.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.minimal.build.partitions=minimal
+um_feathers3neo.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.no_ota.build.partitions=no_ota
+um_feathers3neo.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+um_feathers3neo.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+um_feathers3neo.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+um_feathers3neo.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+um_feathers3neo.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+um_feathers3neo.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+um_feathers3neo.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+um_feathers3neo.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+um_feathers3neo.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+um_feathers3neo.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.huge_app.build.partitions=huge_app
+um_feathers3neo.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+um_feathers3neo.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+um_feathers3neo.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+um_feathers3neo.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+um_feathers3neo.menu.CPUFreq.240=240MHz (WiFi)
+um_feathers3neo.menu.CPUFreq.240.build.f_cpu=240000000L
+um_feathers3neo.menu.CPUFreq.160=160MHz (WiFi)
+um_feathers3neo.menu.CPUFreq.160.build.f_cpu=160000000L
+um_feathers3neo.menu.CPUFreq.80=80MHz (WiFi)
+um_feathers3neo.menu.CPUFreq.80.build.f_cpu=80000000L
+um_feathers3neo.menu.CPUFreq.40=40MHz
+um_feathers3neo.menu.CPUFreq.40.build.f_cpu=40000000L
+um_feathers3neo.menu.CPUFreq.20=20MHz
+um_feathers3neo.menu.CPUFreq.20.build.f_cpu=20000000L
+um_feathers3neo.menu.CPUFreq.10=10MHz
+um_feathers3neo.menu.CPUFreq.10.build.f_cpu=10000000L
+
+um_feathers3neo.menu.FlashMode.qio=QIO
+um_feathers3neo.menu.FlashMode.qio.build.flash_mode=dio
+um_feathers3neo.menu.FlashMode.qio.build.boot=qio
+um_feathers3neo.menu.FlashMode.dio=DIO
+um_feathers3neo.menu.FlashMode.dio.build.flash_mode=dio
+um_feathers3neo.menu.FlashMode.dio.build.boot=dio
+
+um_feathers3neo.menu.UploadSpeed.921600=921600
+um_feathers3neo.menu.UploadSpeed.921600.upload.speed=921600
+um_feathers3neo.menu.UploadSpeed.115200=115200
+um_feathers3neo.menu.UploadSpeed.115200.upload.speed=115200
+um_feathers3neo.menu.UploadSpeed.256000.windows=256000
+um_feathers3neo.menu.UploadSpeed.256000.upload.speed=256000
+um_feathers3neo.menu.UploadSpeed.230400.windows.upload.speed=256000
+um_feathers3neo.menu.UploadSpeed.230400=230400
+um_feathers3neo.menu.UploadSpeed.230400.upload.speed=230400
+um_feathers3neo.menu.UploadSpeed.460800.linux=460800
+um_feathers3neo.menu.UploadSpeed.460800.macosx=460800
+um_feathers3neo.menu.UploadSpeed.460800.upload.speed=460800
+um_feathers3neo.menu.UploadSpeed.512000.windows=512000
+um_feathers3neo.menu.UploadSpeed.512000.upload.speed=512000
+
+um_feathers3neo.menu.DebugLevel.none=None
+um_feathers3neo.menu.DebugLevel.none.build.code_debug=0
+um_feathers3neo.menu.DebugLevel.error=Error
+um_feathers3neo.menu.DebugLevel.error.build.code_debug=1
+um_feathers3neo.menu.DebugLevel.warn=Warn
+um_feathers3neo.menu.DebugLevel.warn.build.code_debug=2
+um_feathers3neo.menu.DebugLevel.info=Info
+um_feathers3neo.menu.DebugLevel.info.build.code_debug=3
+um_feathers3neo.menu.DebugLevel.debug=Debug
+um_feathers3neo.menu.DebugLevel.debug.build.code_debug=4
+um_feathers3neo.menu.DebugLevel.verbose=Verbose
+um_feathers3neo.menu.DebugLevel.verbose.build.code_debug=5
+
+um_feathers3neo.menu.EraseFlash.none=Disabled
+um_feathers3neo.menu.EraseFlash.none.upload.erase_cmd=
+um_feathers3neo.menu.EraseFlash.all=Enabled
+um_feathers3neo.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 um_nanos3.name=UM NanoS3
 um_nanos3.vid.0=0x303a
 um_nanos3.pid.0=0x8179
+um_nanos3.upload_port.0.vid=0x303a
+um_nanos3.upload_port.0.pid=0x8179
 
 um_nanos3.bootloader.tool=esptool_py
 um_nanos3.bootloader.tool.default=esptool_py
@@ -3465,6 +3665,8 @@ um_nanos3.menu.EraseFlash.all.upload.erase_cmd=-e
 um_pros3.name=UM PROS3
 um_pros3.vid.0=0x303a
 um_pros3.pid.0=0x80D3
+um_pros3.upload_port.0.vid=0x303a
+um_pros3.upload_port.0.pid=0x80D3
 
 um_pros3.bootloader.tool=esptool_py
 um_pros3.bootloader.tool.default=esptool_py
@@ -3623,140 +3825,6 @@ um_pros3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-um_rmp.name=UM RMP
-um_rmp.vid.0=0x303a
-um_rmp.pid.0=0x80F6
-
-um_rmp.upload.tool=esptool_py
-um_rmp.upload.tool.default=esptool_py
-um_rmp.upload.tool.network=esp_ota
-
-um_rmp.upload.maximum_size=1310720
-um_rmp.upload.maximum_data_size=327680
-um_rmp.upload.flags=
-um_rmp.upload.extra_flags=
-um_rmp.upload.use_1200bps_touch=true
-um_rmp.upload.wait_for_upload_port=true
-
-um_rmp.serial.disableDTR=false
-um_rmp.serial.disableRTS=false
-
-um_rmp.build.tarch=xtensa
-um_rmp.build.bootloader_addr=0x1000
-um_rmp.build.target=esp32s2
-um_rmp.build.mcu=esp32s2
-um_rmp.build.core=esp32
-um_rmp.build.variant=um_rmp
-um_rmp.build.board=RMP
-
-um_rmp.build.cdc_on_boot=1
-um_rmp.build.msc_on_boot=0
-um_rmp.build.dfu_on_boot=0
-um_rmp.build.f_cpu=240000000L
-um_rmp.build.flash_size=4MB
-um_rmp.build.flash_freq=80m
-um_rmp.build.flash_mode=dio
-um_rmp.build.boot=qio
-um_rmp.build.partitions=default
-um_rmp.build.defines=
-
-um_rmp.menu.CDCOnBoot.cdc=Enabled
-um_rmp.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
-um_rmp.menu.CDCOnBoot.default=Disabled
-um_rmp.menu.CDCOnBoot.default.build.cdc_on_boot=0
-
-um_rmp.menu.MSCOnBoot.default=Disabled
-um_rmp.menu.MSCOnBoot.default.build.msc_on_boot=0
-um_rmp.menu.MSCOnBoot.msc=Enabled
-um_rmp.menu.MSCOnBoot.msc.build.msc_on_boot=1
-
-um_rmp.menu.DFUOnBoot.default=Disabled
-um_rmp.menu.DFUOnBoot.default.build.dfu_on_boot=0
-um_rmp.menu.DFUOnBoot.dfu=Enabled
-um_rmp.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
-
-um_rmp.menu.PSRAM.enabled=Enabled
-um_rmp.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-um_rmp.menu.PSRAM.disabled=Disabled
-um_rmp.menu.PSRAM.disabled.build.defines=
-
-um_rmp.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-um_rmp.menu.PartitionScheme.default.build.partitions=default
-um_rmp.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-um_rmp.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-um_rmp.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-um_rmp.menu.PartitionScheme.minimal.build.partitions=minimal
-um_rmp.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-um_rmp.menu.PartitionScheme.no_ota.build.partitions=no_ota
-um_rmp.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-um_rmp.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-um_rmp.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-um_rmp.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-um_rmp.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-um_rmp.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-um_rmp.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-um_rmp.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-um_rmp.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-um_rmp.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-um_rmp.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-um_rmp.menu.PartitionScheme.huge_app.build.partitions=huge_app
-um_rmp.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-um_rmp.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-um_rmp.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-um_rmp.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-
-um_rmp.menu.CPUFreq.240=240MHz (WiFi)
-um_rmp.menu.CPUFreq.240.build.f_cpu=240000000L
-um_rmp.menu.CPUFreq.160=160MHz (WiFi)
-um_rmp.menu.CPUFreq.160.build.f_cpu=160000000L
-um_rmp.menu.CPUFreq.80=80MHz (WiFi)
-um_rmp.menu.CPUFreq.80.build.f_cpu=80000000L
-um_rmp.menu.CPUFreq.40=40MHz
-um_rmp.menu.CPUFreq.40.build.f_cpu=40000000L
-um_rmp.menu.CPUFreq.20=20MHz
-um_rmp.menu.CPUFreq.20.build.f_cpu=20000000L
-um_rmp.menu.CPUFreq.10=10MHz
-um_rmp.menu.CPUFreq.10.build.f_cpu=10000000L
-
-um_rmp.menu.FlashSize.4M=4MB (32Mb)
-um_rmp.menu.FlashSize.4M.build.flash_size=4MB
-um_rmp.menu.FlashSize.2M=2MB (16Mb)
-um_rmp.menu.FlashSize.2M.build.flash_size=2MB
-um_rmp.menu.FlashSize.2M.build.partitions=minimal
-
-um_rmp.menu.UploadSpeed.921600=921600
-um_rmp.menu.UploadSpeed.921600.upload.speed=921600
-um_rmp.menu.UploadSpeed.115200=115200
-um_rmp.menu.UploadSpeed.115200.upload.speed=115200
-um_rmp.menu.UploadSpeed.256000.windows=256000
-um_rmp.menu.UploadSpeed.256000.upload.speed=256000
-um_rmp.menu.UploadSpeed.230400.windows.upload.speed=256000
-um_rmp.menu.UploadSpeed.230400=230400
-um_rmp.menu.UploadSpeed.230400.upload.speed=230400
-um_rmp.menu.UploadSpeed.460800.linux=460800
-um_rmp.menu.UploadSpeed.460800.macosx=460800
-um_rmp.menu.UploadSpeed.460800.upload.speed=460800
-
-um_rmp.menu.DebugLevel.none=None
-um_rmp.menu.DebugLevel.none.build.code_debug=0
-um_rmp.menu.DebugLevel.error=Error
-um_rmp.menu.DebugLevel.error.build.code_debug=1
-um_rmp.menu.DebugLevel.warn=Warn
-um_rmp.menu.DebugLevel.warn.build.code_debug=2
-um_rmp.menu.DebugLevel.info=Info
-um_rmp.menu.DebugLevel.info.build.code_debug=3
-um_rmp.menu.DebugLevel.debug=Debug
-um_rmp.menu.DebugLevel.debug.build.code_debug=4
-um_rmp.menu.DebugLevel.verbose=Verbose
-um_rmp.menu.DebugLevel.verbose.build.code_debug=5
-
-um_rmp.menu.EraseFlash.none=Disabled
-um_rmp.menu.EraseFlash.none.upload.erase_cmd=
-um_rmp.menu.EraseFlash.all=Enabled
-um_rmp.menu.EraseFlash.all.upload.erase_cmd=-e
-
-##############################################################
-
 um_tinypico.name=UM TinyPICO
 
 um_tinypico.bootloader.tool=esptool_py
@@ -3854,8 +3922,6 @@ um_tinypico.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 um_tinyc6.name=UM TinyC6
-um_tinyc6.vid.0=0x303a
-um_tinyc6.pid.0=0x1001
 
 um_tinyc6.bootloader.tool=esptool_py
 um_tinyc6.bootloader.tool.default=esptool_py
@@ -3915,6 +3981,12 @@ um_tinyc6.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 um_tinyc6.menu.PartitionScheme.rainmaker=RainMaker
 um_tinyc6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 um_tinyc6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+um_tinyc6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+um_tinyc6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+um_tinyc6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+um_tinyc6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+um_tinyc6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+um_tinyc6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 um_tinyc6.menu.PartitionScheme.custom=Custom
 um_tinyc6.menu.PartitionScheme.custom.build.partitions=
 um_tinyc6.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -3979,11 +4051,26 @@ um_tinyc6.menu.EraseFlash.none.upload.erase_cmd=
 um_tinyc6.menu.EraseFlash.all=Enabled
 um_tinyc6.menu.EraseFlash.all.upload.erase_cmd=-e
 
+um_tinyc6.menu.ZigbeeMode.default=Disabled
+um_tinyc6.menu.ZigbeeMode.default.build.zigbee_mode=
+um_tinyc6.menu.ZigbeeMode.default.build.zigbee_libs=
+um_tinyc6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+um_tinyc6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+um_tinyc6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+um_tinyc6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+um_tinyc6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+um_tinyc6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+um_tinyc6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+um_tinyc6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+um_tinyc6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
+
 ##############################################################
 
 um_tinys2.name=UM TinyS2
 um_tinys2.vid.0=0x303a
 um_tinys2.pid.0=0x8001
+um_tinys2.upload_port.0.vid=0x303a
+um_tinys2.upload_port.0.pid=0x8001
 
 um_tinys2.bootloader.tool=esptool_py
 um_tinys2.bootloader.tool.default=esptool_py
@@ -4121,6 +4208,8 @@ um_tinys2.menu.EraseFlash.all.upload.erase_cmd=-e
 um_tinys3.name=UM TinyS3
 um_tinys3.vid.0=0x303a
 um_tinys3.pid.0=0x80D0
+um_tinys3.upload_port.0.vid=0x303a
+um_tinys3.upload_port.0.pid=0x80D0
 
 um_tinys3.bootloader.tool=esptool_py
 um_tinys3.bootloader.tool.default=esptool_py
@@ -4493,8 +4582,6 @@ lilygo_t_display.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lilygo_t_display_s3.name=LilyGo T-Display-S3
-lilygo_t_display_s3.vid.0=0x303a
-lilygo_t_display_s3.pid.0=0x1001
 
 lilygo_t_display_s3.bootloader.tool=esptool_py
 lilygo_t_display_s3.bootloader.tool.default=esptool_py
@@ -4607,6 +4694,122 @@ lilygo_t_display_s3.menu.EraseFlash.none=Disabled
 lilygo_t_display_s3.menu.EraseFlash.none.upload.erase_cmd=
 lilygo_t_display_s3.menu.EraseFlash.all=Enabled
 lilygo_t_display_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+lilygo_t_eth_lite.name=LilyGo T-ETH-Lite
+
+lilygo_t_eth_lite.bootloader.tool=esptool_py
+lilygo_t_eth_lite.bootloader.tool.default=esptool_py
+
+lilygo_t_eth_lite.upload.tool=esptool_py
+lilygo_t_eth_lite.upload.tool.default=esptool_py
+lilygo_t_eth_lite.upload.tool.network=esp_ota
+
+lilygo_t_eth_lite.upload.maximum_size=3145728
+lilygo_t_eth_lite.upload.maximum_data_size=327680
+lilygo_t_eth_lite.upload.speed=921600
+lilygo_t_eth_lite.upload.flags=
+lilygo_t_eth_lite.upload.extra_flags=
+lilygo_t_eth_lite.upload.use_1200bps_touch=false
+lilygo_t_eth_lite.upload.wait_for_upload_port=false
+
+lilygo_t_eth_lite.serial.disableDTR=false
+lilygo_t_eth_lite.serial.disableRTS=false
+
+lilygo_t_eth_lite.build.tarch=xtensa
+lilygo_t_eth_lite.build.bootloader_addr=0x0
+lilygo_t_eth_lite.build.target=esp32s3
+lilygo_t_eth_lite.build.mcu=esp32s3
+lilygo_t_eth_lite.build.core=esp32
+lilygo_t_eth_lite.build.variant=lilygo_t_eth_lite
+lilygo_t_eth_lite.build.board=LILYGO_T_ETH_LITE
+
+lilygo_t_eth_lite.build.usb_mode=1
+lilygo_t_eth_lite.build.cdc_on_boot=0
+lilygo_t_eth_lite.build.msc_on_boot=0
+lilygo_t_eth_lite.build.dfu_on_boot=0
+lilygo_t_eth_lite.build.f_cpu=240000000L
+lilygo_t_eth_lite.build.flash_size=16MB
+lilygo_t_eth_lite.build.flash_freq=80m
+lilygo_t_eth_lite.build.flash_mode=dio
+lilygo_t_eth_lite.build.boot=qio
+lilygo_t_eth_lite.build.boot_freq=80m
+lilygo_t_eth_lite.build.partitions=app3M_fat9M_16MB
+lilygo_t_eth_lite.build.defines=
+lilygo_t_eth_lite.build.loop_core=
+lilygo_t_eth_lite.build.event_core=
+lilygo_t_eth_lite.build.psram_type=opi
+lilygo_t_eth_lite.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+lilygo_t_eth_lite.menu.JTAGAdapter.default=Disabled
+lilygo_t_eth_lite.menu.JTAGAdapter.default.build.copy_jtag_files=0
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin=Integrated USB JTAG
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+lilygo_t_eth_lite.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+lilygo_t_eth_lite.menu.LoopCore.1=Core 1
+lilygo_t_eth_lite.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+lilygo_t_eth_lite.menu.LoopCore.0=Core 0
+lilygo_t_eth_lite.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+lilygo_t_eth_lite.menu.EventsCore.1=Core 1
+lilygo_t_eth_lite.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+lilygo_t_eth_lite.menu.EventsCore.0=Core 0
+lilygo_t_eth_lite.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+lilygo_t_eth_lite.menu.USBMode.hwcdc=Hardware CDC and JTAG
+lilygo_t_eth_lite.menu.USBMode.hwcdc.build.usb_mode=1
+lilygo_t_eth_lite.menu.USBMode.default=USB-OTG (TinyUSB)
+lilygo_t_eth_lite.menu.USBMode.default.build.usb_mode=0
+
+lilygo_t_eth_lite.menu.CDCOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.CDCOnBoot.default.build.cdc_on_boot=0
+lilygo_t_eth_lite.menu.CDCOnBoot.cdc=Enabled
+lilygo_t_eth_lite.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+lilygo_t_eth_lite.menu.MSCOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.MSCOnBoot.default.build.msc_on_boot=0
+lilygo_t_eth_lite.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+lilygo_t_eth_lite.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+lilygo_t_eth_lite.menu.DFUOnBoot.default=Disabled
+lilygo_t_eth_lite.menu.DFUOnBoot.default.build.dfu_on_boot=0
+lilygo_t_eth_lite.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+lilygo_t_eth_lite.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+lilygo_t_eth_lite.menu.UploadMode.default=UART0 / Hardware CDC
+lilygo_t_eth_lite.menu.UploadMode.default.upload.use_1200bps_touch=false
+lilygo_t_eth_lite.menu.UploadMode.default.upload.wait_for_upload_port=false
+lilygo_t_eth_lite.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+lilygo_t_eth_lite.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+lilygo_t_eth_lite.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+lilygo_t_eth_lite.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker=RainMaker
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+lilygo_t_eth_lite.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+lilygo_t_eth_lite.menu.DebugLevel.none=None
+lilygo_t_eth_lite.menu.DebugLevel.none.build.code_debug=0
+lilygo_t_eth_lite.menu.DebugLevel.error=Error
+lilygo_t_eth_lite.menu.DebugLevel.error.build.code_debug=1
+lilygo_t_eth_lite.menu.DebugLevel.warn=Warn
+lilygo_t_eth_lite.menu.DebugLevel.warn.build.code_debug=2
+lilygo_t_eth_lite.menu.DebugLevel.info=Info
+lilygo_t_eth_lite.menu.DebugLevel.info.build.code_debug=3
+lilygo_t_eth_lite.menu.DebugLevel.debug=Debug
+lilygo_t_eth_lite.menu.DebugLevel.debug.build.code_debug=4
+lilygo_t_eth_lite.menu.DebugLevel.verbose=Verbose
+lilygo_t_eth_lite.menu.DebugLevel.verbose.build.code_debug=5
+
+lilygo_t_eth_lite.menu.EraseFlash.none=Disabled
+lilygo_t_eth_lite.menu.EraseFlash.none.upload.erase_cmd=
+lilygo_t_eth_lite.menu.EraseFlash.all=Enabled
+lilygo_t_eth_lite.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -5961,8 +6164,6 @@ sparkfun_esp32s2_thing_plus.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 sparkfun_esp32c6_thing_plus.name=SparkFun ESP32-C6 Thing Plus
-sparkfun_esp32c6_thing_plus.vid.0=0x303a
-sparkfun_esp32c6_thing_plus.pid.0=0x1001
 
 sparkfun_esp32c6_thing_plus.bootloader.tool=esptool_py
 sparkfun_esp32c6_thing_plus.bootloader.tool.default=esptool_py
@@ -6052,6 +6253,12 @@ sparkfun_esp32c6_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.rainmaker=RainMaker
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee.build.partitions=zigbee
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+sparkfun_esp32c6_thing_plus.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.custom=Custom
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.custom.build.partitions=
 sparkfun_esp32c6_thing_plus.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -6122,6 +6329,19 @@ sparkfun_esp32c6_thing_plus.menu.EraseFlash.none=Disabled
 sparkfun_esp32c6_thing_plus.menu.EraseFlash.none.upload.erase_cmd=
 sparkfun_esp32c6_thing_plus.menu.EraseFlash.all=Enabled
 sparkfun_esp32c6_thing_plus.menu.EraseFlash.all.upload.erase_cmd=-e
+
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.default=Disabled
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.default.build.zigbee_mode=
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.default.build.zigbee_libs=
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.ed=Zigbee ED (end device)
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+sparkfun_esp32c6_thing_plus.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -6531,8 +6751,6 @@ sparkfun_esp32_iot_redboard.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 sparkfun_esp32c6_qwiic_pocket.name=SparkFun ESP32-C6 Qwiic Pocket
-sparkfun_esp32c6_qwiic_pocket.vid.0=0x303a
-sparkfun_esp32c6_qwiic_pocket.pid.0=0x1001
 
 sparkfun_esp32c6_qwiic_pocket.bootloader.tool=esptool_py
 sparkfun_esp32c6_qwiic_pocket.bootloader.tool.default=esptool_py
@@ -6622,6 +6840,12 @@ sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.app3M_fat9M_16MB.upload.maxim
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.rainmaker=RainMaker
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee.build.partitions=zigbee
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.custom=Custom
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.custom.build.partitions=
 sparkfun_esp32c6_qwiic_pocket.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -6692,6 +6916,19 @@ sparkfun_esp32c6_qwiic_pocket.menu.EraseFlash.none=Disabled
 sparkfun_esp32c6_qwiic_pocket.menu.EraseFlash.none.upload.erase_cmd=
 sparkfun_esp32c6_qwiic_pocket.menu.EraseFlash.all=Enabled
 sparkfun_esp32c6_qwiic_pocket.menu.EraseFlash.all.upload.erase_cmd=-e
+
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.default=Disabled
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.default.build.zigbee_mode=
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.default.build.zigbee_libs=
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.ed=Zigbee ED (end device)
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+sparkfun_esp32c6_qwiic_pocket.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -6988,8 +7225,6 @@ nina_w10.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 nora_w10.name=u-blox NORA-W10 series (ESP32-S3)
-nora_w10.vid.0=0x303a
-nora_w10.pid.0=0x1001
 
 nora_w10.bootloader.tool=esptool_py
 nora_w10.bootloader.tool.default=esptool_py
@@ -7590,8 +7825,6 @@ d32_pro.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lolin_c3_mini.name=LOLIN C3 Mini
-lolin_c3_mini.vid.0=0x303a
-lolin_c3_mini.pid.0=0x1001
 
 lolin_c3_mini.bootloader.tool=esptool_py
 lolin_c3_mini.bootloader.tool.default=esptool_py
@@ -7707,8 +7940,6 @@ lolin_c3_mini.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lolin_c3_pico.name=LOLIN C3 Pico
-lolin_c3_pico.vid.0=0x303a
-lolin_c3_pico.pid.0=0x1001
 
 lolin_c3_pico.bootloader.tool=esptool_py
 lolin_c3_pico.bootloader.tool.default=esptool_py
@@ -8017,8 +8248,6 @@ lolin_s2_pico.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lolin_s3.name=LOLIN S3
-lolin_s3.vid.0=0x303a
-lolin_s3.pid.0=0x1001
 
 lolin_s3.bootloader.tool=esptool_py
 lolin_s3.bootloader.tool.default=esptool_py
@@ -8583,6 +8812,202 @@ lolin32.menu.EraseFlash.none=Disabled
 lolin32.menu.EraseFlash.none.upload.erase_cmd=
 lolin32.menu.EraseFlash.all=Enabled
 lolin32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+viralink32g01.name=ViraLink Gate32-0.1
+
+viralink32g01.bootloader.tool=esptool_py
+viralink32g01.bootloader.tool.default=esptool_py
+
+viralink32g01.upload.tool=esptool_py
+viralink32g01.upload.tool.default=esptool_py
+viralink32g01.upload.tool.network=esp_ota
+
+viralink32g01.upload.maximum_size=1310720
+viralink32g01.upload.maximum_data_size=327680
+viralink32g01.upload.flags=
+viralink32g01.upload.extra_flags=
+
+viralink32g01.serial.disableDTR=true
+viralink32g01.serial.disableRTS=true
+
+viralink32g01.build.tarch=xtensa
+viralink32g01.build.bootloader_addr=0x1000
+viralink32g01.build.target=esp32
+viralink32g01.build.mcu=esp32
+viralink32g01.build.core=esp32
+viralink32g01.build.variant=ViraLink-G0.1
+viralink32g01.build.board=VIRALINK_GATE32_01
+
+viralink32g01.build.f_cpu=240000000L
+viralink32g01.build.flash_mode=dio
+viralink32g01.build.flash_size=4MB
+viralink32g01.build.boot=dio
+viralink32g01.build.partitions=default
+viralink32g01.build.defines=
+
+viralink32g01.menu.FlashFreq.80=80MHz
+viralink32g01.menu.FlashFreq.80.build.flash_freq=80m
+viralink32g01.menu.FlashFreq.40=40MHz
+viralink32g01.menu.FlashFreq.40.build.flash_freq=40m
+
+viralink32g01.menu.PartitionScheme.default=Default
+viralink32g01.menu.PartitionScheme.default.build.partitions=default
+viralink32g01.menu.PartitionScheme.no_ota=No OTA (Large APP)
+viralink32g01.menu.PartitionScheme.no_ota.build.partitions=no_ota
+viralink32g01.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+viralink32g01.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+viralink32g01.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+viralink32g01.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+viralink32g01.menu.CPUFreq.240=240MHz (WiFi/BT)
+viralink32g01.menu.CPUFreq.240.build.f_cpu=240000000L
+viralink32g01.menu.CPUFreq.160=160MHz (WiFi/BT)
+viralink32g01.menu.CPUFreq.160.build.f_cpu=160000000L
+viralink32g01.menu.CPUFreq.80=80MHz (WiFi/BT)
+viralink32g01.menu.CPUFreq.80.build.f_cpu=80000000L
+viralink32g01.menu.CPUFreq.40=40MHz (40MHz XTAL)
+viralink32g01.menu.CPUFreq.40.build.f_cpu=40000000L
+viralink32g01.menu.CPUFreq.26=26MHz (26MHz XTAL)
+viralink32g01.menu.CPUFreq.26.build.f_cpu=26000000L
+viralink32g01.menu.CPUFreq.20=20MHz (40MHz XTAL)
+viralink32g01.menu.CPUFreq.20.build.f_cpu=20000000L
+viralink32g01.menu.CPUFreq.13=13MHz (26MHz XTAL)
+viralink32g01.menu.CPUFreq.13.build.f_cpu=13000000L
+viralink32g01.menu.CPUFreq.10=10MHz (40MHz XTAL)
+viralink32g01.menu.CPUFreq.10.build.f_cpu=10000000L
+
+viralink32g01.menu.UploadSpeed.921600=921600
+viralink32g01.menu.UploadSpeed.921600.upload.speed=921600
+viralink32g01.menu.UploadSpeed.115200=115200
+viralink32g01.menu.UploadSpeed.115200.upload.speed=115200
+viralink32g01.menu.UploadSpeed.256000.windows=256000
+viralink32g01.menu.UploadSpeed.256000.upload.speed=256000
+viralink32g01.menu.UploadSpeed.230400.windows.upload.speed=256000
+viralink32g01.menu.UploadSpeed.230400=230400
+viralink32g01.menu.UploadSpeed.230400.upload.speed=230400
+viralink32g01.menu.UploadSpeed.460800.linux=460800
+viralink32g01.menu.UploadSpeed.460800.macosx=460800
+viralink32g01.menu.UploadSpeed.460800.upload.speed=460800
+viralink32g01.menu.UploadSpeed.512000.windows=512000
+viralink32g01.menu.UploadSpeed.512000.upload.speed=512000
+
+viralink32g01.menu.DebugLevel.none=None
+viralink32g01.menu.DebugLevel.none.build.code_debug=0
+viralink32g01.menu.DebugLevel.error=Error
+viralink32g01.menu.DebugLevel.error.build.code_debug=1
+viralink32g01.menu.DebugLevel.warn=Warn
+viralink32g01.menu.DebugLevel.warn.build.code_debug=2
+viralink32g01.menu.DebugLevel.info=Info
+viralink32g01.menu.DebugLevel.info.build.code_debug=3
+viralink32g01.menu.DebugLevel.debug=Debug
+viralink32g01.menu.DebugLevel.debug.build.code_debug=4
+viralink32g01.menu.DebugLevel.verbose=Verbose
+viralink32g01.menu.DebugLevel.verbose.build.code_debug=5
+
+viralink32g01.menu.EraseFlash.none=Disabled
+viralink32g01.menu.EraseFlash.none.upload.erase_cmd=
+viralink32g01.menu.EraseFlash.all=Enabled
+viralink32g01.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+viralink32g11.name=ViraLink Gate32-1.1
+
+viralink32g11.bootloader.tool=esptool_py
+viralink32g11.bootloader.tool.default=esptool_py
+
+viralink32g11.upload.tool=esptool_py
+viralink32g11.upload.tool.default=esptool_py
+viralink32g11.upload.tool.network=esp_ota
+
+viralink32g11.upload.maximum_size=1310720
+viralink32g11.upload.maximum_data_size=327680
+viralink32g11.upload.flags=
+viralink32g11.upload.extra_flags=
+
+viralink32g11.serial.disableDTR=true
+viralink32g11.serial.disableRTS=true
+
+viralink32g11.build.tarch=xtensa
+viralink32g11.build.bootloader_addr=0x1000
+viralink32g11.build.target=esp32
+viralink32g11.build.mcu=esp32
+viralink32g11.build.core=esp32
+viralink32g11.build.variant=ViraLink-G1.1
+viralink32g11.build.board=VIRALINK_GATE32_11
+
+viralink32g11.build.f_cpu=240000000L
+viralink32g11.build.flash_mode=dio
+viralink32g11.build.flash_size=4MB
+viralink32g11.build.boot=dio
+viralink32g11.build.partitions=default
+viralink32g11.build.defines=
+
+viralink32g11.menu.FlashFreq.80=80MHz
+viralink32g11.menu.FlashFreq.80.build.flash_freq=80m
+viralink32g11.menu.FlashFreq.40=40MHz
+viralink32g11.menu.FlashFreq.40.build.flash_freq=40m
+
+viralink32g11.menu.PartitionScheme.default=Default
+viralink32g11.menu.PartitionScheme.default.build.partitions=default
+viralink32g11.menu.PartitionScheme.no_ota=No OTA (Large APP)
+viralink32g11.menu.PartitionScheme.no_ota.build.partitions=no_ota
+viralink32g11.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+viralink32g11.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+viralink32g11.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+viralink32g11.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+viralink32g11.menu.CPUFreq.240=240MHz (WiFi/BT)
+viralink32g11.menu.CPUFreq.240.build.f_cpu=240000000L
+viralink32g11.menu.CPUFreq.160=160MHz (WiFi/BT)
+viralink32g11.menu.CPUFreq.160.build.f_cpu=160000000L
+viralink32g11.menu.CPUFreq.80=80MHz (WiFi/BT)
+viralink32g11.menu.CPUFreq.80.build.f_cpu=80000000L
+viralink32g11.menu.CPUFreq.40=40MHz (40MHz XTAL)
+viralink32g11.menu.CPUFreq.40.build.f_cpu=40000000L
+viralink32g11.menu.CPUFreq.26=26MHz (26MHz XTAL)
+viralink32g11.menu.CPUFreq.26.build.f_cpu=26000000L
+viralink32g11.menu.CPUFreq.20=20MHz (40MHz XTAL)
+viralink32g11.menu.CPUFreq.20.build.f_cpu=20000000L
+viralink32g11.menu.CPUFreq.13=13MHz (26MHz XTAL)
+viralink32g11.menu.CPUFreq.13.build.f_cpu=13000000L
+viralink32g11.menu.CPUFreq.10=10MHz (40MHz XTAL)
+viralink32g11.menu.CPUFreq.10.build.f_cpu=10000000L
+
+viralink32g11.menu.UploadSpeed.921600=921600
+viralink32g11.menu.UploadSpeed.921600.upload.speed=921600
+viralink32g11.menu.UploadSpeed.115200=115200
+viralink32g11.menu.UploadSpeed.115200.upload.speed=115200
+viralink32g11.menu.UploadSpeed.256000.windows=256000
+viralink32g11.menu.UploadSpeed.256000.upload.speed=256000
+viralink32g11.menu.UploadSpeed.230400.windows.upload.speed=256000
+viralink32g11.menu.UploadSpeed.230400=230400
+viralink32g11.menu.UploadSpeed.230400.upload.speed=230400
+viralink32g11.menu.UploadSpeed.460800.linux=460800
+viralink32g11.menu.UploadSpeed.460800.macosx=460800
+viralink32g11.menu.UploadSpeed.460800.upload.speed=460800
+viralink32g11.menu.UploadSpeed.512000.windows=512000
+viralink32g11.menu.UploadSpeed.512000.upload.speed=512000
+
+viralink32g11.menu.DebugLevel.none=None
+viralink32g11.menu.DebugLevel.none.build.code_debug=0
+viralink32g11.menu.DebugLevel.error=Error
+viralink32g11.menu.DebugLevel.error.build.code_debug=1
+viralink32g11.menu.DebugLevel.warn=Warn
+viralink32g11.menu.DebugLevel.warn.build.code_debug=2
+viralink32g11.menu.DebugLevel.info=Info
+viralink32g11.menu.DebugLevel.info.build.code_debug=3
+viralink32g11.menu.DebugLevel.debug=Debug
+viralink32g11.menu.DebugLevel.debug.build.code_debug=4
+viralink32g11.menu.DebugLevel.verbose=Verbose
+viralink32g11.menu.DebugLevel.verbose.build.code_debug=5
+
+viralink32g11.menu.EraseFlash.none=Disabled
+viralink32g11.menu.EraseFlash.none.upload.erase_cmd=
+viralink32g11.menu.EraseFlash.all=Enabled
+viralink32g11.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -9234,10 +9659,6 @@ hornbill32minima.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 dfrobot_beetle_esp32c3.name=DFRobot Beetle ESP32-C3
-#dfrobot_beetle_esp32c3.vid.0=0x3343
-#dfrobot_beetle_esp32c3.pid.0=0x8364
-dfrobot_beetle_esp32c3.vid.0=0x303a
-dfrobot_beetle_esp32c3.pid.0=0x1001
 
 dfrobot_beetle_esp32c3.bootloader.tool=esptool_py
 dfrobot_beetle_esp32c3.bootloader.tool.default=esptool_py
@@ -9378,8 +9799,6 @@ dfrobot_beetle_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 dfrobot_beetle_esp32c6.name=DFRobot Beetle ESP32-C6
-dfrobot_beetle_esp32c6.vid.0=0x303a
-dfrobot_beetle_esp32c6.pid.0=0x1001
 
 dfrobot_beetle_esp32c6.bootloader.tool=esptool_py
 dfrobot_beetle_esp32c6.bootloader.tool.default=esptool_py
@@ -9460,6 +9879,12 @@ dfrobot_beetle_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=19660
 dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker=RainMaker
 dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 dfrobot_beetle_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 dfrobot_beetle_esp32c6.menu.PartitionScheme.custom=Custom
 dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.build.partitions=
 dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -9522,6 +9947,19 @@ dfrobot_beetle_esp32c6.menu.EraseFlash.none=Disabled
 dfrobot_beetle_esp32c6.menu.EraseFlash.none.upload.erase_cmd=
 dfrobot_beetle_esp32c6.menu.EraseFlash.all=Enabled
 dfrobot_beetle_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.default=Disabled
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.default.build.zigbee_mode=
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.default.build.zigbee_libs=
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+dfrobot_beetle_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
 
@@ -9685,10 +10123,6 @@ dfrobot_firebeetle2_esp32e.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 dfrobot_firebeetle2_esp32s3.name=DFRobot Firebeetle 2 ESP32-S3
-#dfrobot_firebeetle2_esp32s3.vid.0=0x3343
-#dfrobot_firebeetle2_esp32s3.pid.0=0x83CF
-dfrobot_firebeetle2_esp32s3.vid.0=0x303a
-dfrobot_firebeetle2_esp32s3.pid.0=0x1001
 
 dfrobot_firebeetle2_esp32s3.bootloader.tool=esptool_py
 dfrobot_firebeetle2_esp32s3.bootloader.tool.default=esptool_py
@@ -9902,8 +10336,6 @@ dfrobot_firebeetle2_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 dfrobot_firebeetle2_esp32c6.name=DFRobot FireBeetle 2 ESP32-C6
-dfrobot_firebeetle2_esp32c6.vid.0=0x303a
-dfrobot_firebeetle2_esp32c6.pid.0=0x1001
 
 dfrobot_firebeetle2_esp32c6.bootloader.tool=esptool_py
 dfrobot_firebeetle2_esp32c6.bootloader.tool.default=esptool_py
@@ -9984,6 +10416,12 @@ dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker=RainMaker
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom=Custom
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.build.partitions=
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -10047,12 +10485,23 @@ dfrobot_firebeetle2_esp32c6.menu.EraseFlash.none.upload.erase_cmd=
 dfrobot_firebeetle2_esp32c6.menu.EraseFlash.all=Enabled
 dfrobot_firebeetle2_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
 
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.default=Disabled
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.default.build.zigbee_mode=
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.default.build.zigbee_libs=
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+dfrobot_firebeetle2_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
+
 ##############################################################
 
 # dfrobot Romeo ESP32-S3
 dfrobot_romeo_esp32s3.name=DFRobot Romeo ESP32-S3
-dfrobot_romeo_esp32s3.vid.0=0x303a
-dfrobot_romeo_esp32s3.pid.0=0x1001
 
 dfrobot_romeo_esp32s3.bootloader.tool=esptool_py
 dfrobot_romeo_esp32s3.bootloader.tool.default=esptool_py
@@ -10466,6 +10915,12 @@ adafruit_metro_esp32s2.vid.1=0x239A
 adafruit_metro_esp32s2.pid.1=0x00DF
 adafruit_metro_esp32s2.vid.2=0x239A
 adafruit_metro_esp32s2.pid.2=0x80E0
+adafruit_metro_esp32s2.upload_port.0.vid=0x239A
+adafruit_metro_esp32s2.upload_port.0.pid=0x80DF
+adafruit_metro_esp32s2.upload_port.1.vid=0x239A
+adafruit_metro_esp32s2.upload_port.1.pid=0x00DF
+adafruit_metro_esp32s2.upload_port.2.vid=0x239A
+adafruit_metro_esp32s2.upload_port.2.pid=0x80E0
 
 adafruit_metro_esp32s2.bootloader.tool=esptool_py
 adafruit_metro_esp32s2.bootloader.tool.default=esptool_py
@@ -10643,6 +11098,12 @@ adafruit_metro_esp32s3.vid.1=0x239A
 adafruit_metro_esp32s3.pid.1=0x0145
 adafruit_metro_esp32s3.vid.2=0x239A
 adafruit_metro_esp32s3.pid.2=0x8146
+adafruit_metro_esp32s3.upload_port.0.vid=0x239A
+adafruit_metro_esp32s3.upload_port.0.pid=0x8145
+adafruit_metro_esp32s3.upload_port.1.vid=0x239A
+adafruit_metro_esp32s3.upload_port.1.pid=0x0145
+adafruit_metro_esp32s3.upload_port.2.vid=0x239A
+adafruit_metro_esp32s3.upload_port.2.pid=0x8146
 
 adafruit_metro_esp32s3.bootloader.tool=esptool_py
 adafruit_metro_esp32s3.bootloader.tool.default=esptool_py
@@ -10840,6 +11301,12 @@ adafruit_magtag29_esp32s2.vid.1=0x239A
 adafruit_magtag29_esp32s2.pid.1=0x00E5
 adafruit_magtag29_esp32s2.vid.2=0x239A
 adafruit_magtag29_esp32s2.pid.2=0x80E6
+adafruit_magtag29_esp32s2.upload_port.0.vid=0x239A
+adafruit_magtag29_esp32s2.upload_port.0.pid=0x80E5
+adafruit_magtag29_esp32s2.upload_port.1.vid=0x239A
+adafruit_magtag29_esp32s2.upload_port.1.pid=0x00E5
+adafruit_magtag29_esp32s2.upload_port.2.vid=0x239A
+adafruit_magtag29_esp32s2.upload_port.2.pid=0x80E6
 
 adafruit_magtag29_esp32s2.bootloader.tool=esptool_py
 adafruit_magtag29_esp32s2.bootloader.tool.default=esptool_py
@@ -11017,6 +11484,12 @@ adafruit_funhouse_esp32s2.vid.1=0x239A
 adafruit_funhouse_esp32s2.pid.1=0x00F9
 adafruit_funhouse_esp32s2.vid.2=0x239A
 adafruit_funhouse_esp32s2.pid.2=0x80FA
+adafruit_funhouse_esp32s2.upload_port.0.vid=0x239A
+adafruit_funhouse_esp32s2.upload_port.0.pid=0x80F9
+adafruit_funhouse_esp32s2.upload_port.1.vid=0x239A
+adafruit_funhouse_esp32s2.upload_port.1.pid=0x00F9
+adafruit_funhouse_esp32s2.upload_port.2.vid=0x239A
+adafruit_funhouse_esp32s2.upload_port.2.pid=0x80FA
 
 adafruit_funhouse_esp32s2.bootloader.tool=esptool_py
 adafruit_funhouse_esp32s2.bootloader.tool.default=esptool_py
@@ -11446,6 +11919,12 @@ adafruit_feather_esp32s2.vid.1=0x239A
 adafruit_feather_esp32s2.pid.1=0x00EB
 adafruit_feather_esp32s2.vid.2=0x239A
 adafruit_feather_esp32s2.pid.2=0x80EC
+adafruit_feather_esp32s2.upload_port.0.vid=0x239A
+adafruit_feather_esp32s2.upload_port.0.pid=0x80EB
+adafruit_feather_esp32s2.upload_port.1.vid=0x239A
+adafruit_feather_esp32s2.upload_port.1.pid=0x00EB
+adafruit_feather_esp32s2.upload_port.2.vid=0x239A
+adafruit_feather_esp32s2.upload_port.2.pid=0x80EC
 
 adafruit_feather_esp32s2.bootloader.tool=esptool_py
 adafruit_feather_esp32s2.bootloader.tool.default=esptool_py
@@ -11623,6 +12102,12 @@ adafruit_feather_esp32s2_tft.vid.1=0x239A
 adafruit_feather_esp32s2_tft.pid.1=0x010F
 adafruit_feather_esp32s2_tft.vid.2=0x239A
 adafruit_feather_esp32s2_tft.pid.2=0x8110
+adafruit_feather_esp32s2_tft.upload_port.0.vid=0x239A
+adafruit_feather_esp32s2_tft.upload_port.0.pid=0x810F
+adafruit_feather_esp32s2_tft.upload_port.1.vid=0x239A
+adafruit_feather_esp32s2_tft.upload_port.1.pid=0x010F
+adafruit_feather_esp32s2_tft.upload_port.2.vid=0x239A
+adafruit_feather_esp32s2_tft.upload_port.2.pid=0x8110
 
 adafruit_feather_esp32s2_tft.bootloader.tool=esptool_py
 adafruit_feather_esp32s2_tft.bootloader.tool.default=esptool_py
@@ -11800,6 +12285,12 @@ adafruit_feather_esp32s2_reversetft.vid.1=0x239A
 adafruit_feather_esp32s2_reversetft.pid.1=0x00ED
 adafruit_feather_esp32s2_reversetft.vid.2=0x239A
 adafruit_feather_esp32s2_reversetft.pid.2=0x80EE
+adafruit_feather_esp32s2_reversetft.upload_port.0.vid=0x239A
+adafruit_feather_esp32s2_reversetft.upload_port.0.pid=0x80ED
+adafruit_feather_esp32s2_reversetft.upload_port.1.vid=0x239A
+adafruit_feather_esp32s2_reversetft.upload_port.1.pid=0x00ED
+adafruit_feather_esp32s2_reversetft.upload_port.2.vid=0x239A
+adafruit_feather_esp32s2_reversetft.upload_port.2.pid=0x80EE
 
 adafruit_feather_esp32s2_reversetft.bootloader.tool=esptool_py
 adafruit_feather_esp32s2_reversetft.bootloader.tool.default=esptool_py
@@ -11977,6 +12468,12 @@ adafruit_feather_esp32s3.vid.1=0x239A
 adafruit_feather_esp32s3.pid.1=0x011B
 adafruit_feather_esp32s3.vid.2=0x239A
 adafruit_feather_esp32s3.pid.2=0x811C
+adafruit_feather_esp32s3.upload_port.0.vid=0x239A
+adafruit_feather_esp32s3.upload_port.0.pid=0x811B
+adafruit_feather_esp32s3.upload_port.1.vid=0x239A
+adafruit_feather_esp32s3.upload_port.1.pid=0x011B
+adafruit_feather_esp32s3.upload_port.2.vid=0x239A
+adafruit_feather_esp32s3.upload_port.2.pid=0x811C
 
 adafruit_feather_esp32s3.bootloader.tool=esptool_py
 adafruit_feather_esp32s3.bootloader.tool.default=esptool_py
@@ -12189,6 +12686,12 @@ adafruit_feather_esp32s3_nopsram.vid.1=0x239A
 adafruit_feather_esp32s3_nopsram.pid.1=0x0113
 adafruit_feather_esp32s3_nopsram.vid.2=0x239A
 adafruit_feather_esp32s3_nopsram.pid.2=0x8114
+adafruit_feather_esp32s3_nopsram.upload_port.0.vid=0x239A
+adafruit_feather_esp32s3_nopsram.upload_port.0.pid=0x8113
+adafruit_feather_esp32s3_nopsram.upload_port.1.vid=0x239A
+adafruit_feather_esp32s3_nopsram.upload_port.1.pid=0x0113
+adafruit_feather_esp32s3_nopsram.upload_port.2.vid=0x239A
+adafruit_feather_esp32s3_nopsram.upload_port.2.pid=0x8114
 
 adafruit_feather_esp32s3_nopsram.bootloader.tool=esptool_py
 adafruit_feather_esp32s3_nopsram.bootloader.tool.default=esptool_py
@@ -12370,6 +12873,12 @@ adafruit_feather_esp32s3_tft.vid.1=0x239A
 adafruit_feather_esp32s3_tft.pid.1=0x011D
 adafruit_feather_esp32s3_tft.vid.2=0x239A
 adafruit_feather_esp32s3_tft.pid.2=0x811E
+adafruit_feather_esp32s3_tft.upload_port.0.vid=0x239A
+adafruit_feather_esp32s3_tft.upload_port.0.pid=0x811D
+adafruit_feather_esp32s3_tft.upload_port.1.vid=0x239A
+adafruit_feather_esp32s3_tft.upload_port.1.pid=0x011D
+adafruit_feather_esp32s3_tft.upload_port.2.vid=0x239A
+adafruit_feather_esp32s3_tft.upload_port.2.pid=0x811E
 
 adafruit_feather_esp32s3_tft.bootloader.tool=esptool_py
 adafruit_feather_esp32s3_tft.bootloader.tool.default=esptool_py
@@ -12582,6 +13091,12 @@ adafruit_feather_esp32s3_reversetft.vid.1=0x239A
 adafruit_feather_esp32s3_reversetft.pid.1=0x0123
 adafruit_feather_esp32s3_reversetft.vid.2=0x239A
 adafruit_feather_esp32s3_reversetft.pid.2=0x8124
+adafruit_feather_esp32s3_reversetft.upload_port.0.vid=0x239A
+adafruit_feather_esp32s3_reversetft.upload_port.0.pid=0x8123
+adafruit_feather_esp32s3_reversetft.upload_port.1.vid=0x239A
+adafruit_feather_esp32s3_reversetft.upload_port.1.pid=0x0123
+adafruit_feather_esp32s3_reversetft.upload_port.2.vid=0x239A
+adafruit_feather_esp32s3_reversetft.upload_port.2.pid=0x8124
 
 adafruit_feather_esp32s3_reversetft.bootloader.tool=esptool_py
 adafruit_feather_esp32s3_reversetft.bootloader.tool.default=esptool_py
@@ -12906,8 +13421,6 @@ adafruit_qtpy_esp32_pico.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zcz
 # Adafruit QT Py ESP32-C3
 
 adafruit_qtpy_esp32c3.name=Adafruit QT Py ESP32-C3
-adafruit_qtpy_esp32c3.vid.0=0x303a
-adafruit_qtpy_esp32c3.pid.0=0x1001
 
 adafruit_qtpy_esp32c3.bootloader.tool=esptool_py
 adafruit_qtpy_esp32c3.bootloader.tool.default=esptool_py
@@ -13049,6 +13562,12 @@ adafruit_qtpy_esp32s2.vid.1=0x239A
 adafruit_qtpy_esp32s2.pid.1=0x0111
 adafruit_qtpy_esp32s2.vid.2=0x239A
 adafruit_qtpy_esp32s2.pid.2=0x8112
+adafruit_qtpy_esp32s2.upload_port.0.vid=0x239A
+adafruit_qtpy_esp32s2.upload_port.0.pid=0x8111
+adafruit_qtpy_esp32s2.upload_port.1.vid=0x239A
+adafruit_qtpy_esp32s2.upload_port.1.pid=0x0111
+adafruit_qtpy_esp32s2.upload_port.2.vid=0x239A
+adafruit_qtpy_esp32s2.upload_port.2.pid=0x8112
 
 adafruit_qtpy_esp32s2.bootloader.tool=esptool_py
 adafruit_qtpy_esp32s2.bootloader.tool.default=esptool_py
@@ -13226,6 +13745,12 @@ adafruit_qtpy_esp32s3_nopsram.vid.1=0x239A
 adafruit_qtpy_esp32s3_nopsram.pid.1=0x0119
 adafruit_qtpy_esp32s3_nopsram.vid.2=0x239A
 adafruit_qtpy_esp32s3_nopsram.pid.2=0x811A
+adafruit_qtpy_esp32s3_nopsram.upload_port.0.vid=0x239A
+adafruit_qtpy_esp32s3_nopsram.upload_port.0.pid=0x8119
+adafruit_qtpy_esp32s3_nopsram.upload_port.1.vid=0x239A
+adafruit_qtpy_esp32s3_nopsram.upload_port.1.pid=0x0119
+adafruit_qtpy_esp32s3_nopsram.upload_port.2.vid=0x239A
+adafruit_qtpy_esp32s3_nopsram.upload_port.2.pid=0x811A
 
 adafruit_qtpy_esp32s3_nopsram.bootloader.tool=esptool_py
 adafruit_qtpy_esp32s3_nopsram.bootloader.tool.default=esptool_py
@@ -13407,6 +13932,12 @@ adafruit_qtpy_esp32s3_n4r2.vid.1=0x239A
 adafruit_qtpy_esp32s3_n4r2.pid.1=0x0143
 adafruit_qtpy_esp32s3_n4r2.vid.2=0x239A
 adafruit_qtpy_esp32s3_n4r2.pid.2=0x8144
+adafruit_qtpy_esp32s3_n4r2.upload_port.0.vid=0x239A
+adafruit_qtpy_esp32s3_n4r2.upload_port.0.pid=0x8143
+adafruit_qtpy_esp32s3_n4r2.upload_port.1.vid=0x239A
+adafruit_qtpy_esp32s3_n4r2.upload_port.1.pid=0x0143
+adafruit_qtpy_esp32s3_n4r2.upload_port.2.vid=0x239A
+adafruit_qtpy_esp32s3_n4r2.upload_port.2.pid=0x8144
 
 adafruit_qtpy_esp32s3_n4r2.bootloader.tool=esptool_py
 adafruit_qtpy_esp32s3_n4r2.bootloader.tool.default=esptool_py
@@ -13737,6 +14268,12 @@ adafruit_matrixportal_esp32s3.vid.1=0x239A
 adafruit_matrixportal_esp32s3.pid.1=0x0125
 adafruit_matrixportal_esp32s3.vid.2=0x239A
 adafruit_matrixportal_esp32s3.pid.2=0x8126
+adafruit_matrixportal_esp32s3.upload_port.0.vid=0x239A
+adafruit_matrixportal_esp32s3.upload_port.0.pid=0x8125
+adafruit_matrixportal_esp32s3.upload_port.1.vid=0x239A
+adafruit_matrixportal_esp32s3.upload_port.1.pid=0x0125
+adafruit_matrixportal_esp32s3.upload_port.2.vid=0x239A
+adafruit_matrixportal_esp32s3.upload_port.2.pid=0x8126
 
 adafruit_matrixportal_esp32s3.bootloader.tool=esptool_py
 adafruit_matrixportal_esp32s3.bootloader.tool.default=esptool_py
@@ -13928,6 +14465,12 @@ adafruit_camera_esp32s3.vid.1=0x239A
 adafruit_camera_esp32s3.pid.1=0x8117
 adafruit_camera_esp32s3.vid.2=0x239A
 adafruit_camera_esp32s3.pid.2=0x8118
+adafruit_camera_esp32s3.upload_port.0.vid=0x239A
+adafruit_camera_esp32s3.upload_port.0.pid=0x0117
+adafruit_camera_esp32s3.upload_port.1.vid=0x239A
+adafruit_camera_esp32s3.upload_port.1.pid=0x8117
+adafruit_camera_esp32s3.upload_port.2.vid=0x239A
+adafruit_camera_esp32s3.upload_port.2.pid=0x8118
 
 adafruit_camera_esp32s3.bootloader.tool=esptool_py
 adafruit_camera_esp32s3.bootloader.tool.default=esptool_py
@@ -14140,6 +14683,12 @@ adafruit_qualia_s3_rgb666.vid.1=0x239A
 adafruit_qualia_s3_rgb666.pid.1=0x0147
 adafruit_qualia_s3_rgb666.vid.2=0x239A
 adafruit_qualia_s3_rgb666.pid.2=0x8148
+adafruit_qualia_s3_rgb666.upload_port.0.vid=0x239A
+adafruit_qualia_s3_rgb666.upload_port.0.pid=0x8147
+adafruit_qualia_s3_rgb666.upload_port.1.vid=0x239A
+adafruit_qualia_s3_rgb666.upload_port.1.pid=0x0147
+adafruit_qualia_s3_rgb666.upload_port.2.vid=0x239A
+adafruit_qualia_s3_rgb666.upload_port.2.pid=0x8148
 
 adafruit_qualia_s3_rgb666.bootloader.tool=esptool_py
 adafruit_qualia_s3_rgb666.bootloader.tool.default=esptool_py
@@ -14402,8 +14951,6 @@ nodemcu-32s.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 nologo_esp32c3_super_mini.name=Nologo ESP32C3 Super Mini
-nologo_esp32c3_super_mini.vid.0=0x303a
-nologo_esp32c3_super_mini.pid.0=0x1001
 
 nologo_esp32c3_super_mini.upload.tool=esptool_py
 nologo_esp32c3_super_mini.upload.tool.default=esptool_py
@@ -14542,8 +15089,6 @@ nologo_esp32c3_super_mini.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 nologo_esp32s3_pico.name=Nologo ESP32S3 Pico
-nologo_esp32s3_pico.vid.0=0x303a
-nologo_esp32s3_pico.pid.0=0x1001
 
 nologo_esp32s3_pico.bootloader.tool=esptool_py
 nologo_esp32s3_pico.bootloader.tool.default=esptool_py
@@ -15090,6 +15635,9 @@ esp32doit-devkit-v1.menu.EraseFlash.all.upload.erase_cmd=-e
 
 esp32doit-espduino.name=DOIT ESPduino32
 
+esp32doit-espduino.bootloader.tool=esptool_py
+esp32doit-espduino.bootloader.tool.default=esptool_py
+
 esp32doit-espduino.upload.tool=esptool_py
 esp32doit-espduino.upload.tool.default=esptool_py
 esp32doit-espduino.upload.tool.network=esp_ota
@@ -15123,6 +15671,32 @@ esp32doit-espduino.menu.FlashFreq.80.build.flash_freq=80m
 esp32doit-espduino.menu.FlashFreq.40=40MHz
 esp32doit-espduino.menu.FlashFreq.40.build.flash_freq=40m
 
+esp32doit-espduino.menu.PartitionScheme.default=Default
+esp32doit-espduino.menu.PartitionScheme.default.build.partitions=default
+esp32doit-espduino.menu.PartitionScheme.no_ota=No OTA (Large APP)
+esp32doit-espduino.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32doit-espduino.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32doit-espduino.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
+esp32doit-espduino.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32doit-espduino.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+esp32doit-espduino.menu.CPUFreq.240=240MHz (WiFi/BT)
+esp32doit-espduino.menu.CPUFreq.240.build.f_cpu=240000000L
+esp32doit-espduino.menu.CPUFreq.160=160MHz (WiFi/BT)
+esp32doit-espduino.menu.CPUFreq.160.build.f_cpu=160000000L
+esp32doit-espduino.menu.CPUFreq.80=80MHz (WiFi/BT)
+esp32doit-espduino.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32doit-espduino.menu.CPUFreq.40=40MHz (40MHz XTAL)
+esp32doit-espduino.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32doit-espduino.menu.CPUFreq.26=26MHz (26MHz XTAL)
+esp32doit-espduino.menu.CPUFreq.26.build.f_cpu=26000000L
+esp32doit-espduino.menu.CPUFreq.20=20MHz (40MHz XTAL)
+esp32doit-espduino.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32doit-espduino.menu.CPUFreq.13=13MHz (26MHz XTAL)
+esp32doit-espduino.menu.CPUFreq.13.build.f_cpu=13000000L
+esp32doit-espduino.menu.CPUFreq.10=10MHz (40MHz XTAL)
+esp32doit-espduino.menu.CPUFreq.10.build.f_cpu=10000000L
+
 esp32doit-espduino.menu.UploadSpeed.921600=921600
 esp32doit-espduino.menu.UploadSpeed.921600.upload.speed=921600
 esp32doit-espduino.menu.UploadSpeed.115200=115200
@@ -15148,6 +15722,8 @@ esp32doit-espduino.menu.DebugLevel.info=Info
 esp32doit-espduino.menu.DebugLevel.info.build.code_debug=3
 esp32doit-espduino.menu.DebugLevel.debug=Debug
 esp32doit-espduino.menu.DebugLevel.debug.build.code_debug=4
+esp32doit-espduino.menu.DebugLevel.verbose=Verbose
+esp32doit-espduino.menu.DebugLevel.verbose.build.code_debug=5
 
 esp32doit-espduino.menu.EraseFlash.none=Disabled
 esp32doit-espduino.menu.EraseFlash.none.upload.erase_cmd=
@@ -15692,8 +16268,6 @@ esp32-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s2-devkitlipo.name=OLIMEX ESP32-S2-DevKit-Lipo
-esp32s2-devkitlipo.vid.0=0x303a
-esp32s2-devkitlipo.pid.0=0x0002
 
 esp32s2-devkitlipo.bootloader.tool=esptool_py
 esp32s2-devkitlipo.bootloader.tool.default=esptool_py
@@ -15885,8 +16459,6 @@ esp32s2-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s2-devkitlipo-usb.name=OLIMEX ESP32-S2-DevKit-Lipo-USB
-esp32s2-devkitlipo-usb.vid.0=0x303a
-esp32s2-devkitlipo-usb.pid.0=0x0002
 
 esp32s2-devkitlipo-usb.bootloader.tool=esptool_py
 esp32s2-devkitlipo-usb.bootloader.tool.default=esptool_py
@@ -16078,8 +16650,6 @@ esp32s2-devkitlipo-usb.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32s3-devkitlipo.name=OLIMEX ESP32-S3-DevKit-Lipo
-esp32s3-devkitlipo.vid.0=0x303a
-esp32s3-devkitlipo.pid.0=0x1001
 
 esp32s3-devkitlipo.bootloader.tool=esptool_py
 esp32s3-devkitlipo.bootloader.tool.default=esptool_py
@@ -16314,8 +16884,6 @@ esp32s3-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32c3-devkitlipo.name=OLIMEX ESP32-C3-DevKit-Lipo
-esp32c3-devkitlipo.vid.0=0x303a
-esp32c3-devkitlipo.pid.0=0x1001
 
 esp32c3-devkitlipo.bootloader.tool=esptool_py
 esp32c3-devkitlipo.bootloader.tool.default=esptool_py
@@ -16485,8 +17053,6 @@ esp32c3-devkitlipo.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32c6-evb.name=OLIMEX ESP32-C6-EVB
-esp32c6-evb.vid.0=0x303a
-esp32c6-evb.pid.0=0x1001
 
 esp32c6-evb.bootloader.tool=esptool_py
 esp32c6-evb.bootloader.tool.default=esptool_py
@@ -16576,6 +17142,12 @@ esp32c6-evb.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32c6-evb.menu.PartitionScheme.rainmaker=RainMaker
 esp32c6-evb.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32c6-evb.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+esp32c6-evb.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+esp32c6-evb.menu.PartitionScheme.zigbee.build.partitions=zigbee
+esp32c6-evb.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+esp32c6-evb.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+esp32c6-evb.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+esp32c6-evb.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 esp32c6-evb.menu.PartitionScheme.custom=Custom
 esp32c6-evb.menu.PartitionScheme.custom.build.partitions=
 esp32c6-evb.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -16647,11 +17219,22 @@ esp32c6-evb.menu.EraseFlash.none.upload.erase_cmd=
 esp32c6-evb.menu.EraseFlash.all=Enabled
 esp32c6-evb.menu.EraseFlash.all.upload.erase_cmd=-e
 
+esp32c6-evb.menu.ZigbeeMode.default=Disabled
+esp32c6-evb.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32c6-evb.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32c6-evb.menu.ZigbeeMode.ed=Zigbee ED (end device)
+esp32c6-evb.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32c6-evb.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+esp32c6-evb.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+esp32c6-evb.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32c6-evb.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+esp32c6-evb.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
+esp32c6-evb.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
+esp32c6-evb.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
+
 ##############################################################
 
 esp32h2-devkitlipo.name=OLIMEX ESP32-H2-DevKit-LiPo
-esp32h2-devkitlipo.vid.0=0x303a
-esp32h2-devkitlipo.pid.0=0x1001
 
 esp32h2-devkitlipo.bootloader.tool=esptool_py
 esp32h2-devkitlipo.bootloader.tool.default=esptool_py
@@ -18525,8 +19108,6 @@ m5stack_atom.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_atoms3.name=M5AtomS3
-m5stack_atoms3.vid.0=0x303a
-m5stack_atoms3.pid.0=0x1001
 m5stack_atoms3.bootloader.tool=esptool_py
 m5stack_atoms3.bootloader.tool.default=esptool_py
 
@@ -18754,8 +19335,6 @@ m5stack_atoms3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_cores3.name=M5CoreS3
-m5stack_cores3.vid.0=0x303a
-m5stack_cores3.pid.0=0x1001
 m5stack_cores3.bootloader.tool=esptool_py
 m5stack_cores3.bootloader.tool.default=esptool_py
 
@@ -19293,8 +19872,6 @@ m5stack_unit_cam.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_unit_cams3.name=M5UnitCAMS3
-m5stack_unit_cams3.vid.0=0x303a
-m5stack_unit_cams3.pid.0=0x1001
 m5stack_unit_cams3.bootloader.tool=esptool_py
 m5stack_unit_cams3.bootloader.tool.default=esptool_py
 
@@ -19334,7 +19911,7 @@ m5stack_unit_cams3.build.partitions=default
 m5stack_unit_cams3.build.defines=
 m5stack_unit_cams3.build.loop_core=
 m5stack_unit_cams3.build.event_core=
-m5stack_unit_cams3.build.psram_type=qspi
+m5stack_unit_cams3.build.psram_type=opi
 m5stack_unit_cams3.build.memory_type={build.boot}_{build.psram_type}
 
 ## IDE 2.0 Seems to not update the value
@@ -19350,15 +19927,12 @@ m5stack_unit_cams3.menu.JTAGAdapter.bridge=ESP USB Bridge
 m5stack_unit_cams3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_unit_cams3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-m5stack_unit_cams3.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_unit_cams3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-m5stack_unit_cams3.menu.PSRAM.enabled.build.psram_type=qspi
-m5stack_unit_cams3.menu.PSRAM.disabled=Disabled
-m5stack_unit_cams3.menu.PSRAM.disabled.build.defines=
-m5stack_unit_cams3.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_unit_cams3.menu.PSRAM.opi=OPI PSRAM
 m5stack_unit_cams3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 m5stack_unit_cams3.menu.PSRAM.opi.build.psram_type=opi
+m5stack_unit_cams3.menu.PSRAM.disabled=Disabled
+m5stack_unit_cams3.menu.PSRAM.disabled.build.defines=
+m5stack_unit_cams3.menu.PSRAM.disabled.build.psram_type=qspi
 
 m5stack_unit_cams3.menu.FlashMode.qio=QIO 80MHz
 m5stack_unit_cams3.menu.FlashMode.qio.build.flash_mode=dio
@@ -20148,8 +20722,6 @@ m5stack_stamp_pico.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_stamp_c3.name=M5StampC3
-m5stack_stamp_c3.vid.0=0x303a
-m5stack_stamp_c3.pid.0=0x1001
 
 m5stack_stamp_c3.bootloader.tool=esptool_py
 m5stack_stamp_c3.bootloader.tool.default=esptool_py
@@ -20296,8 +20868,6 @@ m5stack_stamp_c3.menu.EraseFlash.all.upload.erase_cmd=-e
 ###############################################################
 
 m5stack_stamp_s3.name=M5StampS3
-m5stack_stamp_s3.vid.0=0x303a
-m5stack_stamp_s3.pid.0=0x1001
 m5stack_stamp_s3.bootloader.tool=esptool_py
 m5stack_stamp_s3.bootloader.tool.default=esptool_py
 
@@ -20532,8 +21102,6 @@ m5stack_stamp_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_capsule.name=M5Capsule
-m5stack_capsule.vid.0=0x303a
-m5stack_capsule.pid.0=0x1001
 m5stack_capsule.bootloader.tool=esptool_py
 m5stack_capsule.bootloader.tool.default=esptool_py
 
@@ -20770,8 +21338,6 @@ m5stack_capsule.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_cardputer.name=M5Cardputer
-m5stack_cardputer.vid.0=0x303a
-m5stack_cardputer.pid.0=0x1001
 m5stack_cardputer.bootloader.tool=esptool_py
 m5stack_cardputer.bootloader.tool.default=esptool_py
 
@@ -21005,8 +21571,6 @@ m5stack_cardputer.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 m5stack_dial.name=M5Dial
-m5stack_dial.vid.0=0x303a
-m5stack_dial.pid.0=0x1001
 m5stack_dial.bootloader.tool=esptool_py
 m5stack_dial.bootloader.tool.default=esptool_py
 
@@ -21363,12 +21927,25 @@ heltec_wifi_kit_32.build.defines=
 heltec_wifi_kit_32.build.band=LoRaWAN_NONE
 heltec_wifi_kit_32.build.LoRaWanDebugLevel=0
 
-heltec_wifi_kit_32.menu.PSRAM.disabled=Disabled
-heltec_wifi_kit_32.menu.PSRAM.disabled.build.defines=
-heltec_wifi_kit_32.menu.PSRAM.disabled.build.extra_libs=
-heltec_wifi_kit_32.menu.PSRAM.enabled=Enabled
-heltec_wifi_kit_32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
-heltec_wifi_kit_32.menu.PSRAM.enabled.build.extra_libs=
+heltec_wifi_kit_32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+heltec_wifi_kit_32.menu.PartitionScheme.default.build.partitions=default
+heltec_wifi_kit_32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+heltec_wifi_kit_32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+heltec_wifi_kit_32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+heltec_wifi_kit_32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+heltec_wifi_kit_32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+heltec_wifi_kit_32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+heltec_wifi_kit_32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+heltec_wifi_kit_32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+heltec_wifi_kit_32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+heltec_wifi_kit_32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+heltec_wifi_kit_32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+heltec_wifi_kit_32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 
 heltec_wifi_kit_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_kit_32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -21413,9 +21990,6 @@ heltec_wifi_kit_32.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wifi_kit_32_V3.name=Heltec WiFi Kit 32(V3)
-
-heltec_wifi_kit_32_V3.vid.0=0x303a
-heltec_wifi_kit_32_V3.pid.0=0x1001
 
 heltec_wifi_kit_32_V3.bootloader.tool=esptool_py
 heltec_wifi_kit_32_V3.bootloader.tool.default=esptool_py
@@ -21542,13 +22116,33 @@ heltec_wifi_lora_32.build.variant=heltec_wifi_lora_32
 heltec_wifi_lora_32.build.board=HELTEC_WIFI_LORA_32
 
 heltec_wifi_lora_32.build.f_cpu=240000000L
-heltec_wifi_lora_32.build.flash_size=8MB
+heltec_wifi_lora_32.build.flash_size=4MB
 heltec_wifi_lora_32.build.flash_freq=80m
 heltec_wifi_lora_32.build.flash_mode=dio
 heltec_wifi_lora_32.build.boot=qio
-heltec_wifi_lora_32.build.partitions=default_8MB
+heltec_wifi_lora_32.build.partitions=default
 heltec_wifi_lora_32.build.psram=
 heltec_wifi_lora_32.build.defines=-D{build.band} -DMCU_ESP32_D0 -DWIFI_LORA_32 -DHELTEC_BOARD=1 -DRADIO_CHIP_SX127X -DSLOW_CLK_TPYE=0 -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH}  -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO}  {build.psram}
+
+heltec_wifi_lora_32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.default.build.partitions=default
+heltec_wifi_lora_32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+heltec_wifi_lora_32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+heltec_wifi_lora_32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+heltec_wifi_lora_32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+heltec_wifi_lora_32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 
 heltec_wifi_lora_32.menu.CPUFreq.240=240MHz (WiFi/BT)
 heltec_wifi_lora_32.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -21750,8 +22344,6 @@ heltec_wifi_lora_32_V2.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wifi_lora_32_V3.name=Heltec WiFi LoRa 32(V3)
-heltec_wifi_lora_32_V3.vid.0=0x303a
-heltec_wifi_lora_32_V3.pid.0=0x1001
 
 heltec_wifi_lora_32_V3.bootloader.tool=esptool_py
 heltec_wifi_lora_32_V3.bootloader.tool.default=esptool_py
@@ -21900,8 +22492,6 @@ heltec_wifi_lora_32_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_stick_V3.name=Heltec Wireless Stick(V3)
-heltec_wireless_stick_V3.vid.0=0x303a
-heltec_wireless_stick_V3.pid.0=0x1001
 
 heltec_wireless_stick_V3.bootloader.tool=esptool_py
 heltec_wireless_stick_V3.bootloader.tool.default=esptool_py
@@ -22050,8 +22640,6 @@ heltec_wireless_stick_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_stick_lite_V3.name=Heltec Wireless Stick Lite(V3)
-heltec_wireless_stick_lite_V3.vid.0=0x303a
-heltec_wireless_stick_lite_V3.pid.0=0x1001
 
 heltec_wireless_stick_lite_V3.bootloader.tool=esptool_py
 heltec_wireless_stick_lite_V3.bootloader.tool.default=esptool_py
@@ -22200,8 +22788,6 @@ heltec_wireless_stick_lite_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_shell_V3.name=Heltec Wireless Shell (V3)
-heltec_wireless_shell_V3.vid.0=0x303a
-heltec_wireless_shell_V3.pid.0=0x1001
 
 heltec_wireless_shell_V3.bootloader.tool=esptool_py
 heltec_wireless_shell_V3.bootloader.tool.default=esptool_py
@@ -22350,8 +22936,6 @@ heltec_wireless_shell_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_capsule_sensor_V3.name=Heltec Capsule Sensor (V3)
-heltec_capsule_sensor_V3.vid.0=0x303a
-heltec_capsule_sensor_V3.pid.0=0x1001
 
 heltec_capsule_sensor_V3.bootloader.tool=esptool_py
 heltec_capsule_sensor_V3.bootloader.tool.default=esptool_py
@@ -22510,8 +23094,6 @@ heltec_capsule_sensor_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 #############################################################
 
 heltec_wireless_paper.name=Heltec Wireless Paper
-heltec_wireless_paper.vid.0=0x303a
-heltec_wireless_paper.pid.0=0x1001
 
 heltec_wireless_paper.bootloader.tool=esptool_py
 heltec_wireless_paper.bootloader.tool.default=esptool_py
@@ -22660,8 +23242,6 @@ heltec_wireless_paper.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_tracker.name=Heltec Wireless Tracker
-heltec_wireless_tracker.vid.0=0x303a
-heltec_wireless_tracker.pid.0=0x1001
 
 heltec_wireless_tracker.bootloader.tool=esptool_py
 heltec_wireless_tracker.bootloader.tool.default=esptool_py
@@ -22837,8 +23417,6 @@ heltec_wireless_tracker.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_wireless_mini_shell.name=Heltec Wireless Mini Shell
-heltec_wireless_mini_shell.vid.0=0x303a
-heltec_wireless_mini_shell.pid.0=0x1001
 
 heltec_wireless_mini_shell.bootloader.tool=esptool_py
 heltec_wireless_mini_shell.bootloader.tool.default=esptool_py
@@ -23321,8 +23899,6 @@ heltec_wireless_bridge.menu.EraseFlash.all.upload.erase_cmd=-e
 #############################################################
 
 heltec_ht_de01.name=Heltec E-Ink Driver
-heltec_ht_de01.vid.0=0x303a
-heltec_ht_de01.pid.0=0x1001
 
 heltec_ht_de01.bootloader.tool=esptool_py
 heltec_ht_de01.bootloader.tool.default=esptool_py
@@ -26544,8 +27120,6 @@ wifiduino32.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 wifiduino32c3.name=WiFiduinoV2
-wifiduino32c3.vid.0=0x303a
-wifiduino32c3.pid.0=0x1001
 
 wifiduino32c3.bootloader.tool=esptool_py
 wifiduino32c3.bootloader.tool.default=esptool_py
@@ -26693,8 +27267,6 @@ wifiduino32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 wifiduino32s3.name=WiFiduino32S3
-wifiduino32s3.vid.0=0x303a
-wifiduino32s3.pid.0=0x1001
 
 wifiduino32s3.bootloader.tool=esptool_py
 wifiduino32s3.bootloader.tool.default=esptool_py
@@ -29775,8 +30347,6 @@ franzininho_wifi_msc_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 tamc_termod_s3.name=TAMC Termod S3
-tamc_termod_s3.vid.0=0x303a
-tamc_termod_s3.pid.0=0x1001
 
 tamc_termod_s3.bootloader.tool=esptool_py
 tamc_termod_s3.bootloader.tool.default=esptool_py
@@ -30434,8 +31004,6 @@ watchy.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 AirM2M_CORE_ESP32C3.name=AirM2M_CORE_ESP32C3
-AirM2M_CORE_ESP32C3.vid.0=0x303a
-AirM2M_CORE_ESP32C3.pid.0=0x1001
 
 AirM2M_CORE_ESP32C3.upload.tool=esptool_py
 AirM2M_CORE_ESP32C3.upload.tool.default=esptool_py
@@ -30692,8 +31260,6 @@ XIAO_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 XIAO_ESP32C6.name=XIAO_ESP32C6
-XIAO_ESP32C6.vid.0=0x303a
-XIAO_ESP32C6.pid.0=0x1001
 
 XIAO_ESP32C6.bootloader.tool=esptool_py
 XIAO_ESP32C6.bootloader.tool.default=esptool_py
@@ -30717,7 +31283,7 @@ XIAO_ESP32C6.build.target=esp
 XIAO_ESP32C6.build.mcu=esp32c6
 XIAO_ESP32C6.build.core=esp32
 XIAO_ESP32C6.build.variant=XIAO_ESP32C6
-XIAO_ESP32C6.build.board=XIAO_ESP32C3
+XIAO_ESP32C6.build.board=XIAO_ESP32C6
 XIAO_ESP32C6.build.bootloader_addr=0x0
 
 XIAO_ESP32C6.build.cdc_on_boot=1
@@ -30766,6 +31332,12 @@ XIAO_ESP32C6.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 XIAO_ESP32C6.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 XIAO_ESP32C6.menu.PartitionScheme.huge_app.build.partitions=huge_app
 XIAO_ESP32C6.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+XIAO_ESP32C6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+XIAO_ESP32C6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+XIAO_ESP32C6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+XIAO_ESP32C6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+XIAO_ESP32C6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+XIAO_ESP32C6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 
 XIAO_ESP32C6.menu.CPUFreq.160=160MHz (WiFi)
 XIAO_ESP32C6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -31387,6 +31959,8 @@ department_of_alchemy_minimain_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 Bee_Data_Logger.name=Bee Data Logger
 Bee_Data_Logger.vid.0=0x303a
 Bee_Data_Logger.pid.0=815C
+Bee_Data_Logger.upload_port.0.vid=0x303a
+Bee_Data_Logger.upload_port.0.pid=815C
 
 Bee_Data_Logger.bootloader.tool=esptool_py
 Bee_Data_Logger.bootloader.tool.default=esptool_py
@@ -31496,6 +32070,8 @@ Bee_Data_Logger.menu.EraseFlash.all.upload.erase_cmd=-e
 Bee_Motion_S3.name=Bee Motion S3
 Bee_Motion_S3.vid.0=0x303a
 Bee_Motion_S3.pid.0=0x8113
+Bee_Motion_S3.upload_port.0.vid=0x303a
+Bee_Motion_S3.upload_port.0.pid=0x8113
 
 Bee_Motion_S3.bootloader.tool=esptool_py
 Bee_Motion_S3.bootloader.tool.default=esptool_py
@@ -31605,6 +32181,8 @@ Bee_Motion_S3.menu.EraseFlash.all.upload.erase_cmd=-e
 Bee_Motion.name=Bee Motion
 Bee_Motion.vid.0=0x303a
 Bee_Motion.pid.0=0x810D
+Bee_Motion.vid.upload_port.0.vid=0x303a
+Bee_Motion.pid.upload_port.0.vid=0x810D
 
 Bee_Motion.bootloader.tool=esptool_py
 Bee_Motion.bootloader.tool.default=esptool_py
@@ -31822,6 +32400,8 @@ Bee_Motion_Mini.menu.EraseFlash.all.upload.erase_cmd=-e
 Bee_S3.name=Bee S3
 Bee_S3.vid.0=0x303a
 Bee_S3.pid.0=0x8110
+Bee_S3.vid.upload_port.0.vid=0x303a
+Bee_S3.pid.upload_port.0.vid=0x8110
 
 Bee_S3.bootloader.tool=esptool_py
 Bee_S3.bootloader.tool.default=esptool_py
@@ -32536,8 +33116,6 @@ cytron_maker_feather_aiot_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 # RedPill(+) ESP32-S3
 
 redpill_esp32s3.name=RedPill(+) ESP32-S3
-redpill_esp32s3.vid.0=0x303a
-redpill_esp32s3.pid.0=0x1001
 
 redpill_esp32s3.bootloader.tool=esptool_py
 redpill_esp32s3.bootloader.tool.default=esptool_py
@@ -32951,8 +33529,6 @@ roboheart_hercules.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 VALTRACK_V4_VTS_ESP32_C3.name=VALTRACK_V4_VTS_ESP32_C3
-VALTRACK_V4_VTS_ESP32_C3.vid.0=0x303a
-VALTRACK_V4_VTS_ESP32_C3.pid.0=0x1001
 
 VALTRACK_V4_VTS_ESP32_C3.bootloader.tool=esptool_py
 VALTRACK_V4_VTS_ESP32_C3.bootloader.tool.default=esptool_py
@@ -33100,8 +33676,6 @@ VALTRACK_V4_VTS_ESP32_C3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 VALTRACK_V4_MFW_ESP32_C3.name=VALTRACK_V4_MFW_ESP32_C3
-VALTRACK_V4_MFW_ESP32_C3.vid.0=0x303a
-VALTRACK_V4_MFW_ESP32_C3.pid.0=0x1001
 
 VALTRACK_V4_MFW_ESP32_C3.bootloader.tool=esptool_py
 VALTRACK_V4_MFW_ESP32_C3.bootloader.tool.default=esptool_py
@@ -33456,8 +34030,6 @@ Edgebox-ESP-100.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 crabik_slot_esp32_s3.name=Crabik Slot ESP32-S3
-crabik_slot_esp32_s3.vid.0=0x303a
-crabik_slot_esp32_s3.pid.0=0x1001
 
 crabik_slot_esp32_s3.bootloader.tool=esptool_py
 crabik_slot_esp32_s3.bootloader.tool.default=esptool_py
@@ -33605,8 +34177,6 @@ crabik_slot_esp32_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 
 nebulas3.name=Nebula S3
-nebulas3.vid.0=0x303a
-nebulas3.pid.0=0x1001
 
 nebulas3.bootloader.tool=esptool_py
 nebulas3.bootloader.tool.default=esptool_py
@@ -33825,8 +34395,6 @@ nebulas3.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lionbits3.name=Lion:Bit S3 STEM Dev Board
-lionbits3.vid.0=0x303a
-lionbits3.pid.0=0x1001
 
 lionbits3.bootloader.tool=esptool_py
 lionbits3.bootloader.tool.default=esptool_py
@@ -34049,8 +34617,6 @@ lionbits3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 
 gen4-ESP32-S3R8n16.name=4D Systems gen4-ESP32 16MB Modules (ESP32-S3R8n16)
-gen4-ESP32-S3R8n16.vid.0=0x303a
-gen4-ESP32-S3R8n16.pid.0=0x1001
 
 gen4-ESP32-S3R8n16.bootloader.tool=esptool_py
 gen4-ESP32-S3R8n16.bootloader.tool.default=esptool_py
@@ -34207,8 +34773,6 @@ gen4-ESP32-S3R8n16.menu.EraseFlash.all.upload.erase_cmd=-e
 # Namino Rosso
 
 namino_rosso.name=Namino Rosso
-namino_rosso.vid.0=0x303a
-namino_rosso.pid.0=0x1001
 
 namino_rosso.bootloader.tool=esptool_py
 namino_rosso.bootloader.tool.default=esptool_py
@@ -34398,8 +34962,6 @@ namino_rosso.menu.EraseFlash.all.upload.erase_cmd=-e
 # Namino Arancio
 
 namino_arancio.name=Namino Arancio
-namino_arancio.vid.0=0x303a
-namino_arancio.pid.0=0x1001
 
 namino_arancio.bootloader.tool=esptool_py
 namino_arancio.bootloader.tool.default=esptool_py
@@ -34589,8 +35151,6 @@ namino_arancio.menu.EraseFlash.all.upload.erase_cmd=-e
 # Namino Bianco
 
 namino_bianco.name=Namino Bianco
-namino_bianco.vid.0=0x303a
-namino_bianco.pid.0=0x1001
 
 namino_bianco.bootloader.tool=esptool_py
 namino_bianco.bootloader.tool.default=esptool_py
@@ -34994,8 +35554,6 @@ ioxesp32ps.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 atd147_s3.name=ATD1.47-S3
-atd147_s3.vid.0=0x303a
-atd147_s3.pid.0=0x1001
 
 atd147_s3.bootloader.tool=esptool_py
 atd147_s3.bootloader.tool.default=esptool_py
@@ -35575,7 +36133,6 @@ nano_nora.debug.additional_config=debug_config.nano_nora
 nano_nora.tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset write_flash -z --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0xf70000 "{build.variant.path}/extra/nora_recovery/nora_recovery.ino.bin" 0x10000 "{build.path}/{build.project_name}.bin"
 nano_nora.tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --before default_reset --after hard_reset erase_flash
 
-nano_nora.programmer.default=esptool
 nano_nora.debug.executable=
 
 nano_nora.menu.PartitionScheme.default=With FAT partition (default)
@@ -35594,8 +36151,6 @@ nano_nora.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.
 ##############################################################
 
 makergo_c3_supermini.name=MakerGO ESP32 C3 SuperMini
-makergo_c3_supermini.vid.0=0x303a
-makergo_c3_supermini.pid.0=0x1001
 
 makergo_c3_supermini.bootloader.tool=esptool_py
 makergo_c3_supermini.bootloader.tool.default=esptool_py
@@ -35822,8 +36377,6 @@ epulse_feather.menu.EraseFlash.all.upload.erase_cmd=-e
 # ThingPulse ePulse Feather C6
 
 epulse_feather_c6.name=ThingPulse ePulse Feather C6
-epulse_feather_c6.vid.0=0x303a
-epulse_feather_c6.pid.0=0x1001
 
 epulse_feather_c6.bootloader.tool=esptool_py
 epulse_feather_c6.bootloader.tool.default=esptool_py
@@ -35992,9 +36545,7 @@ epulse_feather_c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_z
 
 ##############################################################
 
-Geekble_ESP32C3.name=Geekble ESP32-C3
-Geekble_ESP32C3.vid.0=0x303A
-Geekble_ESP32C3.pid.0=0x1001
+Geekble_ESP32C3.name=Geekble Mini ESP32-C3
 
 Geekble_ESP32C3.bootloader.tool=esptool_py
 Geekble_ESP32C3.bootloader.tool.default=esptool_py
@@ -36275,5 +36826,664 @@ waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.none=Disabled
 waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.none.upload.erase_cmd=
 waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.all=Enabled
 waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+weact_studio_esp32c3.name=WeAct Studio ESP32C3
+
+weact_studio_esp32c3.upload.tool=esptool_py
+weact_studio_esp32c3.upload.tool.default=esptool_py
+weact_studio_esp32c3.upload.tool.network=esp_ota
+weact_studio_esp32c3.upload.maximum_size=1310720
+weact_studio_esp32c3.upload.maximum_data_size=327680
+weact_studio_esp32c3.upload.flags=
+weact_studio_esp32c3.upload.extra_flags=
+weact_studio_esp32c3.upload.use_1200bps_touch=false
+weact_studio_esp32c3.upload.wait_for_upload_port=false
+
+weact_studio_esp32c3.serial.disableDTR=false
+weact_studio_esp32c3.serial.disableRTS=false
+
+weact_studio_esp32c3.build.tarch=riscv32
+weact_studio_esp32c3.build.target=esp
+weact_studio_esp32c3.build.mcu=esp32c3
+weact_studio_esp32c3.build.core=esp32
+weact_studio_esp32c3.build.variant=weact_studio_esp32c3
+weact_studio_esp32c3.build.board=WEACT_STUDIO_ESP32C3
+weact_studio_esp32c3.build.bootloader_addr=0x0
+
+weact_studio_esp32c3.build.usb_mode=1
+weact_studio_esp32c3.build.cdc_on_boot=1
+weact_studio_esp32c3.build.f_cpu=160000000L
+weact_studio_esp32c3.build.flash_size=4MB
+weact_studio_esp32c3.build.flash_freq=80m
+weact_studio_esp32c3.build.flash_mode=qio
+weact_studio_esp32c3.build.boot=qio
+weact_studio_esp32c3.build.partitions=default
+weact_studio_esp32c3.build.defines=
+
+weact_studio_esp32c3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+weact_studio_esp32c3.menu.USBMode.hwcdc.build.usb_mode=1
+weact_studio_esp32c3.menu.USBMode.default=USB-OTG
+weact_studio_esp32c3.menu.USBMode.default.build.usb_mode=0
+
+weact_studio_esp32c3.menu.JTAGAdapter.default=Disabled
+weact_studio_esp32c3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+weact_studio_esp32c3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+weact_studio_esp32c3.menu.JTAGAdapter.builtin.build.openocdscript=esp32c3-builtin.cfg
+weact_studio_esp32c3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+weact_studio_esp32c3.menu.JTAGAdapter.external=FTDI Adapter
+weact_studio_esp32c3.menu.JTAGAdapter.external.build.openocdscript=esp32c3-ftdi.cfg
+weact_studio_esp32c3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+weact_studio_esp32c3.menu.JTAGAdapter.bridge=ESP USB Bridge
+weact_studio_esp32c3.menu.JTAGAdapter.bridge.build.openocdscript=esp32c3-bridge.cfg
+weact_studio_esp32c3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+weact_studio_esp32c3.menu.CDCOnBoot.default=Enabled
+weact_studio_esp32c3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+weact_studio_esp32c3.menu.CDCOnBoot.cdc=Enabled
+weact_studio_esp32c3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+weact_studio_esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.default.build.partitions=default
+weact_studio_esp32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+weact_studio_esp32c3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+weact_studio_esp32c3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+weact_studio_esp32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+weact_studio_esp32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.minimal.build.partitions=minimal
+weact_studio_esp32c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+weact_studio_esp32c3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+weact_studio_esp32c3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+weact_studio_esp32c3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+weact_studio_esp32c3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+weact_studio_esp32c3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+weact_studio_esp32c3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+weact_studio_esp32c3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+weact_studio_esp32c3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+weact_studio_esp32c3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+weact_studio_esp32c3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+weact_studio_esp32c3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+weact_studio_esp32c3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+
+weact_studio_esp32c3.menu.CPUFreq.160=160MHz (WiFi)
+weact_studio_esp32c3.menu.CPUFreq.160.build.f_cpu=160000000L
+weact_studio_esp32c3.menu.CPUFreq.80=80MHz (WiFi)
+weact_studio_esp32c3.menu.CPUFreq.80.build.f_cpu=80000000L
+weact_studio_esp32c3.menu.CPUFreq.40=40MHz
+weact_studio_esp32c3.menu.CPUFreq.40.build.f_cpu=40000000L
+weact_studio_esp32c3.menu.CPUFreq.20=20MHz
+weact_studio_esp32c3.menu.CPUFreq.20.build.f_cpu=20000000L
+weact_studio_esp32c3.menu.CPUFreq.10=10MHz
+weact_studio_esp32c3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+weact_studio_esp32c3.menu.FlashMode.qio=QIO
+weact_studio_esp32c3.menu.FlashMode.qio.build.flash_mode=dio
+weact_studio_esp32c3.menu.FlashMode.qio.build.boot=qio
+weact_studio_esp32c3.menu.FlashMode.dio=DIO
+weact_studio_esp32c3.menu.FlashMode.dio.build.flash_mode=dio
+weact_studio_esp32c3.menu.FlashMode.dio.build.boot=dio
+
+weact_studio_esp32c3.menu.FlashFreq.80=80MHz
+weact_studio_esp32c3.menu.FlashFreq.80.build.flash_freq=80m
+weact_studio_esp32c3.menu.FlashFreq.40=40MHz
+weact_studio_esp32c3.menu.FlashFreq.40.build.flash_freq=40m
+
+weact_studio_esp32c3.menu.UploadSpeed.921600=921600
+weact_studio_esp32c3.menu.UploadSpeed.921600.upload.speed=921600
+weact_studio_esp32c3.menu.UploadSpeed.115200=115200
+weact_studio_esp32c3.menu.UploadSpeed.115200.upload.speed=115200
+weact_studio_esp32c3.menu.UploadSpeed.256000.windows=256000
+weact_studio_esp32c3.menu.UploadSpeed.256000.upload.speed=256000
+weact_studio_esp32c3.menu.UploadSpeed.230400.windows.upload.speed=256000
+weact_studio_esp32c3.menu.UploadSpeed.230400=230400
+weact_studio_esp32c3.menu.UploadSpeed.230400.upload.speed=230400
+weact_studio_esp32c3.menu.UploadSpeed.460800.linux=460800
+weact_studio_esp32c3.menu.UploadSpeed.460800.macosx=460800
+weact_studio_esp32c3.menu.UploadSpeed.460800.upload.speed=460800
+weact_studio_esp32c3.menu.UploadSpeed.512000.windows=512000
+weact_studio_esp32c3.menu.UploadSpeed.512000.upload.speed=512000
+
+weact_studio_esp32c3.menu.DebugLevel.none=None
+weact_studio_esp32c3.menu.DebugLevel.none.build.code_debug=0
+weact_studio_esp32c3.menu.DebugLevel.error=Error
+weact_studio_esp32c3.menu.DebugLevel.error.build.code_debug=1
+weact_studio_esp32c3.menu.DebugLevel.warn=Warn
+weact_studio_esp32c3.menu.DebugLevel.warn.build.code_debug=2
+weact_studio_esp32c3.menu.DebugLevel.info=Info
+weact_studio_esp32c3.menu.DebugLevel.info.build.code_debug=3
+weact_studio_esp32c3.menu.DebugLevel.debug=Debug
+weact_studio_esp32c3.menu.DebugLevel.debug.build.code_debug=4
+weact_studio_esp32c3.menu.DebugLevel.verbose=Verbose
+weact_studio_esp32c3.menu.DebugLevel.verbose.build.code_debug=5
+
+weact_studio_esp32c3.menu.EraseFlash.none=Disabled
+weact_studio_esp32c3.menu.EraseFlash.none.upload.erase_cmd=
+weact_studio_esp32c3.menu.EraseFlash.all=Enabled
+weact_studio_esp32c3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+aslcanx2.name=AutosportLabs ESP-CAN-X2
+
+aslcanx2.bootloader.tool=esptool_py
+aslcanx2.bootloader.tool.default=esptool_py
+
+aslcanx2.upload.tool=esptool_py
+aslcanx2.upload.tool.default=esptool_py
+aslcanx2.upload.tool.network=esp_ota
+
+aslcanx2.upload.maximum_size=1310720
+aslcanx2.upload.maximum_data_size=327680
+aslcanx2.upload.flags=
+aslcanx2.upload.extra_flags=
+aslcanx2.upload.use_1200bps_touch=false
+aslcanx2.upload.wait_for_upload_port=false
+
+aslcanx2.serial.disableDTR=false
+aslcanx2.serial.disableRTS=false
+
+aslcanx2.build.tarch=xtensa
+aslcanx2.build.bootloader_addr=0x0
+aslcanx2.build.target=esp32s3
+aslcanx2.build.mcu=esp32s3
+aslcanx2.build.core=esp32
+aslcanx2.build.variant=aslcanx2
+aslcanx2.build.board=ASL_CAN_X2
+
+aslcanx2.build.usb_mode=1
+aslcanx2.build.cdc_on_boot=0
+aslcanx2.build.msc_on_boot=0
+aslcanx2.build.dfu_on_boot=0
+aslcanx2.build.f_cpu=240000000L
+aslcanx2.build.flash_size=8MB
+aslcanx2.build.flash_freq=80m
+aslcanx2.build.flash_mode=dio
+aslcanx2.build.boot=qio
+aslcanx2.build.boot_freq=80m
+aslcanx2.build.partitions=default_8MB
+aslcanx2.build.defines=
+aslcanx2.build.loop_core=
+aslcanx2.build.event_core=
+aslcanx2.build.psram_type=qspi
+aslcanx2.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+aslcanx2.menu.JTAGAdapter.default=Disabled
+aslcanx2.menu.JTAGAdapter.default.build.copy_jtag_files=0
+aslcanx2.menu.JTAGAdapter.builtin=Integrated USB JTAG
+aslcanx2.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+aslcanx2.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+aslcanx2.menu.JTAGAdapter.external=FTDI Adapter
+aslcanx2.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+aslcanx2.menu.JTAGAdapter.external.build.copy_jtag_files=1
+aslcanx2.menu.JTAGAdapter.bridge=ESP USB Bridge
+aslcanx2.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+aslcanx2.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+aslcanx2.menu.PSRAM.disabled=Disabled
+aslcanx2.menu.PSRAM.disabled.build.defines=
+aslcanx2.menu.PSRAM.disabled.build.psram_type=qspi
+aslcanx2.menu.PSRAM.opi=OPI PSRAM
+aslcanx2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+aslcanx2.menu.PSRAM.opi.build.psram_type=opi
+
+aslcanx2.menu.FlashMode.qio=QIO 80MHz
+aslcanx2.menu.FlashMode.qio.build.flash_mode=dio
+aslcanx2.menu.FlashMode.qio.build.boot=qio
+aslcanx2.menu.FlashMode.qio.build.boot_freq=80m
+aslcanx2.menu.FlashMode.qio.build.flash_freq=80m
+aslcanx2.menu.FlashMode.qio120=QIO 120MHz
+aslcanx2.menu.FlashMode.qio120.build.flash_mode=dio
+aslcanx2.menu.FlashMode.qio120.build.boot=qio
+aslcanx2.menu.FlashMode.qio120.build.boot_freq=120m
+aslcanx2.menu.FlashMode.qio120.build.flash_freq=80m
+aslcanx2.menu.FlashMode.dio=DIO 80MHz
+aslcanx2.menu.FlashMode.dio.build.flash_mode=dio
+aslcanx2.menu.FlashMode.dio.build.boot=dio
+aslcanx2.menu.FlashMode.dio.build.boot_freq=80m
+aslcanx2.menu.FlashMode.dio.build.flash_freq=80m
+aslcanx2.menu.FlashMode.opi=OPI 80MHz
+aslcanx2.menu.FlashMode.opi.build.flash_mode=dout
+aslcanx2.menu.FlashMode.opi.build.boot=opi
+aslcanx2.menu.FlashMode.opi.build.boot_freq=80m
+aslcanx2.menu.FlashMode.opi.build.flash_freq=80m
+
+aslcanx2.menu.LoopCore.1=Core 1
+aslcanx2.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+aslcanx2.menu.LoopCore.0=Core 0
+aslcanx2.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+aslcanx2.menu.EventsCore.1=Core 1
+aslcanx2.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+aslcanx2.menu.EventsCore.0=Core 0
+aslcanx2.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+aslcanx2.menu.USBMode.hwcdc=Hardware CDC and JTAG
+aslcanx2.menu.USBMode.hwcdc.build.usb_mode=1
+aslcanx2.menu.USBMode.default=USB-OTG (TinyUSB)
+aslcanx2.menu.USBMode.default.build.usb_mode=0
+
+aslcanx2.menu.CDCOnBoot.default=Enabled
+aslcanx2.menu.CDCOnBoot.default.build.cdc_on_boot=1
+aslcanx2.menu.CDCOnBoot.cdc=Disabled
+aslcanx2.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+aslcanx2.menu.MSCOnBoot.default=Disabled
+aslcanx2.menu.MSCOnBoot.default.build.msc_on_boot=0
+aslcanx2.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+aslcanx2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+aslcanx2.menu.DFUOnBoot.default=Disabled
+aslcanx2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+aslcanx2.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+aslcanx2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+aslcanx2.menu.UploadMode.default=UART0 / Hardware CDC
+aslcanx2.menu.UploadMode.default.upload.use_1200bps_touch=false
+aslcanx2.menu.UploadMode.default.upload.wait_for_upload_port=false
+aslcanx2.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+aslcanx2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+aslcanx2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+aslcanx2.menu.PartitionScheme.default=Default with spiffs (3MB APP/1.5MB SPIFFS)
+aslcanx2.menu.PartitionScheme.default.build.partitions=default_8MB
+aslcanx2.menu.PartitionScheme.default.upload.maximum_size=3342336
+aslcanx2.menu.PartitionScheme.defaultffat=Default with ffat (3MB APP/1.5MB FATFS)
+aslcanx2.menu.PartitionScheme.defaultffat.build.partitions=default_8MB_ffat
+aslcanx2.menu.PartitionScheme.defaultffat.upload.maximum_size=3342336
+aslcanx2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+aslcanx2.menu.PartitionScheme.minimal.build.partitions=minimal
+aslcanx2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+aslcanx2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+aslcanx2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+aslcanx2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+aslcanx2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+aslcanx2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+aslcanx2.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+aslcanx2.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+aslcanx2.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+aslcanx2.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+aslcanx2.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+aslcanx2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+aslcanx2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+aslcanx2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+aslcanx2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+aslcanx2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+aslcanx2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+aslcanx2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+aslcanx2.menu.PartitionScheme.rainmaker=RainMaker
+aslcanx2.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+aslcanx2.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+
+aslcanx2.menu.CPUFreq.240=240MHz (WiFi)
+aslcanx2.menu.CPUFreq.240.build.f_cpu=240000000L
+aslcanx2.menu.CPUFreq.160=160MHz (WiFi)
+aslcanx2.menu.CPUFreq.160.build.f_cpu=160000000L
+aslcanx2.menu.CPUFreq.80=80MHz (WiFi)
+aslcanx2.menu.CPUFreq.80.build.f_cpu=80000000L
+aslcanx2.menu.CPUFreq.40=40MHz
+aslcanx2.menu.CPUFreq.40.build.f_cpu=40000000L
+aslcanx2.menu.CPUFreq.20=20MHz
+aslcanx2.menu.CPUFreq.20.build.f_cpu=20000000L
+aslcanx2.menu.CPUFreq.10=10MHz
+aslcanx2.menu.CPUFreq.10.build.f_cpu=10000000L
+
+aslcanx2.menu.UploadSpeed.921600=921600
+aslcanx2.menu.UploadSpeed.921600.upload.speed=921600
+aslcanx2.menu.UploadSpeed.115200=115200
+aslcanx2.menu.UploadSpeed.115200.upload.speed=115200
+aslcanx2.menu.UploadSpeed.256000.windows=256000
+aslcanx2.menu.UploadSpeed.256000.upload.speed=256000
+aslcanx2.menu.UploadSpeed.230400.windows.upload.speed=256000
+aslcanx2.menu.UploadSpeed.230400=230400
+aslcanx2.menu.UploadSpeed.230400.upload.speed=230400
+aslcanx2.menu.UploadSpeed.460800.linux=460800
+aslcanx2.menu.UploadSpeed.460800.macosx=460800
+aslcanx2.menu.UploadSpeed.460800.upload.speed=460800
+aslcanx2.menu.UploadSpeed.512000.windows=512000
+aslcanx2.menu.UploadSpeed.512000.upload.speed=512000
+
+aslcanx2.menu.DebugLevel.none=None
+aslcanx2.menu.DebugLevel.none.build.code_debug=0
+aslcanx2.menu.DebugLevel.error=Error
+aslcanx2.menu.DebugLevel.error.build.code_debug=1
+aslcanx2.menu.DebugLevel.warn=Warn
+aslcanx2.menu.DebugLevel.warn.build.code_debug=2
+aslcanx2.menu.DebugLevel.info=Info
+aslcanx2.menu.DebugLevel.info.build.code_debug=3
+aslcanx2.menu.DebugLevel.debug=Debug
+aslcanx2.menu.DebugLevel.debug.build.code_debug=4
+aslcanx2.menu.DebugLevel.verbose=Verbose
+aslcanx2.menu.DebugLevel.verbose.build.code_debug=5
+
+aslcanx2.menu.EraseFlash.none=Disabled
+aslcanx2.menu.EraseFlash.none.upload.erase_cmd=
+aslcanx2.menu.EraseFlash.all=Enabled
+aslcanx2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+walter.name=DPTechnics Walter
+
+walter.bootloader.tool=esptool_py
+walter.bootloader.tool.default=esptool_py
+
+walter.upload.tool=esptool_py
+walter.upload.tool.default=esptool_py
+walter.upload.tool.network=esp_ota
+
+walter.upload.maximum_size=1310720
+walter.upload.maximum_data_size=327680
+walter.upload.flags=
+walter.upload.extra_flags=
+walter.upload.use_1200bps_touch=false
+walter.upload.wait_for_upload_port=false
+
+walter.serial.disableDTR=false
+walter.serial.disableRTS=false
+
+walter.build.tarch=xtensa
+walter.build.bootloader_addr=0x0
+walter.build.target=esp32s3
+walter.build.mcu=esp32s3
+walter.build.core=esp32
+walter.build.variant=walter
+walter.build.board=DPTECHNICS_WALTER
+
+walter.build.usb_mode=1
+walter.build.cdc_on_boot=1
+walter.build.msc_on_boot=0
+walter.build.dfu_on_boot=0
+walter.build.f_cpu=240000000L
+walter.build.flash_size=16MB
+walter.build.flash_freq=80m
+walter.build.flash_mode=dio
+walter.build.boot=qio
+walter.build.boot_freq=80m
+walter.build.partitions=default
+walter.build.defines=
+walter.build.loop_core=
+walter.build.event_core=
+walter.build.psram_type=qspi
+walter.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+walter.menu.JTAGAdapter.default=Disabled
+walter.menu.JTAGAdapter.default.build.copy_jtag_files=0
+walter.menu.JTAGAdapter.builtin=Integrated USB JTAG
+walter.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+walter.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+walter.menu.JTAGAdapter.external=FTDI Adapter
+walter.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+walter.menu.JTAGAdapter.external.build.copy_jtag_files=1
+walter.menu.JTAGAdapter.bridge=ESP USB Bridge
+walter.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+walter.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+walter.menu.PSRAM.enabled=QSPI PSRAM
+walter.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+walter.menu.PSRAM.enabled.build.psram_type=qspi
+walter.menu.PSRAM.disabled=Disabled
+walter.menu.PSRAM.disabled.build.defines=
+walter.menu.PSRAM.disabled.build.psram_type=qspi
+
+walter.menu.FlashMode.qio=QIO 80MHz
+walter.menu.FlashMode.qio.build.flash_mode=dio
+walter.menu.FlashMode.qio.build.boot=qio
+walter.menu.FlashMode.qio.build.boot_freq=80m
+walter.menu.FlashMode.qio.build.flash_freq=80m
+walter.menu.FlashMode.dio=DIO 80MHz
+walter.menu.FlashMode.dio.build.flash_mode=dio
+walter.menu.FlashMode.dio.build.boot=dio
+walter.menu.FlashMode.dio.build.boot_freq=80m
+walter.menu.FlashMode.dio.build.flash_freq=80m
+
+walter.menu.FlashSize.16M=16MB (128Mb)
+walter.menu.FlashSize.16M.build.flash_size=16MB
+
+walter.menu.LoopCore.1=Core 1
+walter.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+walter.menu.LoopCore.0=Core 0
+walter.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+walter.menu.EventsCore.1=Core 1
+walter.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+walter.menu.EventsCore.0=Core 0
+walter.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+walter.menu.USBMode.hwcdc=Hardware CDC and JTAG
+walter.menu.USBMode.hwcdc.build.usb_mode=1
+walter.menu.USBMode.default=USB-OTG (TinyUSB)
+walter.menu.USBMode.default.build.usb_mode=0
+
+walter.menu.CDCOnBoot.cdc=Enabled
+walter.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+walter.menu.CDCOnBoot.default=Disabled
+walter.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+walter.menu.MSCOnBoot.default=Disabled
+walter.menu.MSCOnBoot.default.build.msc_on_boot=0
+walter.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+walter.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+walter.menu.DFUOnBoot.default=Disabled
+walter.menu.DFUOnBoot.default.build.dfu_on_boot=0
+walter.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+walter.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+walter.menu.UploadMode.default=UART0 / Hardware CDC
+walter.menu.UploadMode.default.upload.use_1200bps_touch=false
+walter.menu.UploadMode.default.upload.wait_for_upload_port=false
+walter.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+walter.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+walter.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+walter.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+walter.menu.PartitionScheme.fatflash.build.partitions=ffat
+walter.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+walter.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+walter.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+walter.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+walter.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+walter.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+walter.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+
+walter.menu.CPUFreq.240=240MHz (WiFi)
+walter.menu.CPUFreq.240.build.f_cpu=240000000L
+walter.menu.CPUFreq.160=160MHz (WiFi)
+walter.menu.CPUFreq.160.build.f_cpu=160000000L
+walter.menu.CPUFreq.80=80MHz (WiFi)
+walter.menu.CPUFreq.80.build.f_cpu=80000000L
+walter.menu.CPUFreq.40=40MHz
+walter.menu.CPUFreq.40.build.f_cpu=40000000L
+walter.menu.CPUFreq.20=20MHz
+walter.menu.CPUFreq.20.build.f_cpu=20000000L
+walter.menu.CPUFreq.10=10MHz
+walter.menu.CPUFreq.10.build.f_cpu=10000000L
+
+walter.menu.UploadSpeed.921600=921600
+walter.menu.UploadSpeed.921600.upload.speed=921600
+walter.menu.UploadSpeed.115200=115200
+walter.menu.UploadSpeed.115200.upload.speed=115200
+walter.menu.UploadSpeed.256000.windows=256000
+walter.menu.UploadSpeed.256000.upload.speed=256000
+walter.menu.UploadSpeed.230400.windows.upload.speed=256000
+walter.menu.UploadSpeed.230400=230400
+walter.menu.UploadSpeed.230400.upload.speed=230400
+walter.menu.UploadSpeed.460800.linux=460800
+walter.menu.UploadSpeed.460800.macosx=460800
+walter.menu.UploadSpeed.460800.upload.speed=460800
+walter.menu.UploadSpeed.512000.windows=512000
+walter.menu.UploadSpeed.512000.upload.speed=512000
+
+walter.menu.DebugLevel.none=None
+walter.menu.DebugLevel.none.build.code_debug=0
+walter.menu.DebugLevel.error=Error
+walter.menu.DebugLevel.error.build.code_debug=1
+walter.menu.DebugLevel.warn=Warn
+walter.menu.DebugLevel.warn.build.code_debug=2
+walter.menu.DebugLevel.info=Info
+walter.menu.DebugLevel.info.build.code_debug=3
+walter.menu.DebugLevel.debug=Debug
+walter.menu.DebugLevel.debug.build.code_debug=4
+walter.menu.DebugLevel.verbose=Verbose
+walter.menu.DebugLevel.verbose.build.code_debug=5
+
+walter.menu.EraseFlash.none=Disabled
+walter.menu.EraseFlash.none.upload.erase_cmd=
+walter.menu.EraseFlash.all=Enabled
+walter.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+elecrow_crowpanel_7.name=Elecrow CrowPanel 7.0P
+elecrow_crowpanel_7.vid.0=0x1a86
+elecrow_crowpanel_7.pid.0=0x7523
+
+elecrow_crowpanel_7.upload.tool=esptool_py
+elecrow_crowpanel_7.upload.tool.default=esptool_py
+elecrow_crowpanel_7.upload.tool.network=esp_ota
+elecrow_crowpanel_7.upload.maximum_size=1310720
+elecrow_crowpanel_7.upload.maximum_data_size=327680
+elecrow_crowpanel_7.upload.wait_for_upload_port=false
+elecrow_crowpanel_7.upload.speed=460800
+elecrow_crowpanel_7.upload.flags=
+elecrow_crowpanel_7.upload.extra_flags=
+
+elecrow_crowpanel_7.bootloader.tool=esptool_py
+elecrow_crowpanel_7.bootloader.tool.default=esptool_py
+
+elecrow_crowpanel_7.serial.disableDTR=true
+elecrow_crowpanel_7.serial.disableRTS=true
+
+elecrow_crowpanel_7.build.tarch=xtensa
+elecrow_crowpanel_7.build.bootloader_addr=0x0
+elecrow_crowpanel_7.build.mcu=esp32s3
+elecrow_crowpanel_7.build.core=esp32
+elecrow_crowpanel_7.build.target=esp32s3
+elecrow_crowpanel_7.build.variant=elecrow_crowpanel_7
+elecrow_crowpanel_7.build.board=ELECROW_CROWPANEL_7
+
+elecrow_crowpanel_7.build.usb_mode=1
+elecrow_crowpanel_7.build.cdc_on_boot=1
+elecrow_crowpanel_7.build.msc_on_boot=0
+elecrow_crowpanel_7.build.dfu_on_boot=0
+
+elecrow_crowpanel_7.build.f_cpu=240000000L
+elecrow_crowpanel_7.build.flash_size=4MB
+elecrow_crowpanel_7.build.flash_freq=80m
+elecrow_crowpanel_7.build.flash_mode=dio
+elecrow_crowpanel_7.build.boot=dio
+elecrow_crowpanel_7.build.partitions=default
+
+elecrow_crowpanel_7.menu.PSRAM.disabled=Disabled
+elecrow_crowpanel_7.menu.PSRAM.disabled.build.defines=
+elecrow_crowpanel_7.menu.PSRAM.enabled=Enabled
+elecrow_crowpanel_7.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+elecrow_crowpanel_7.menu.PSRAM.enabled.build.psram_type=opi
+
+elecrow_crowpanel_7.menu.LoopCore.1=Core 1
+elecrow_crowpanel_7.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+elecrow_crowpanel_7.menu.LoopCore.0=Core 0
+elecrow_crowpanel_7.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+elecrow_crowpanel_7.menu.EventsCore.1=Core 1
+elecrow_crowpanel_7.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+elecrow_crowpanel_7.menu.EventsCore.0=Core 0
+elecrow_crowpanel_7.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+elecrow_crowpanel_7.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+elecrow_crowpanel_7.menu.PartitionScheme.default.build.partitions=default
+elecrow_crowpanel_7.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+elecrow_crowpanel_7.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+elecrow_crowpanel_7.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+elecrow_crowpanel_7.menu.PartitionScheme.minimal.build.partitions=minimal
+elecrow_crowpanel_7.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+elecrow_crowpanel_7.menu.PartitionScheme.no_ota.build.partitions=no_ota
+elecrow_crowpanel_7.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+elecrow_crowpanel_7.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+elecrow_crowpanel_7.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+elecrow_crowpanel_7.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+elecrow_crowpanel_7.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+elecrow_crowpanel_7.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+elecrow_crowpanel_7.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+elecrow_crowpanel_7.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+elecrow_crowpanel_7.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+elecrow_crowpanel_7.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+elecrow_crowpanel_7.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+elecrow_crowpanel_7.menu.PartitionScheme.huge_app.build.partitions=huge_app
+elecrow_crowpanel_7.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+elecrow_crowpanel_7.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+elecrow_crowpanel_7.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+elecrow_crowpanel_7.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+elecrow_crowpanel_7.menu.CPUFreq.240=240MHz (WiFi/BT)
+elecrow_crowpanel_7.menu.CPUFreq.240.build.f_cpu=240000000L
+elecrow_crowpanel_7.menu.CPUFreq.160=160MHz (WiFi/BT)
+elecrow_crowpanel_7.menu.CPUFreq.160.build.f_cpu=160000000L
+elecrow_crowpanel_7.menu.CPUFreq.80=80MHz (WiFi/BT)
+elecrow_crowpanel_7.menu.CPUFreq.80.build.f_cpu=80000000L
+elecrow_crowpanel_7.menu.CPUFreq.40=40MHz (40MHz XTAL)
+elecrow_crowpanel_7.menu.CPUFreq.40.build.f_cpu=40000000L
+elecrow_crowpanel_7.menu.CPUFreq.26=26MHz (26MHz XTAL)
+elecrow_crowpanel_7.menu.CPUFreq.26.build.f_cpu=26000000L
+elecrow_crowpanel_7.menu.CPUFreq.20=20MHz (40MHz XTAL)
+elecrow_crowpanel_7.menu.CPUFreq.20.build.f_cpu=20000000L
+elecrow_crowpanel_7.menu.CPUFreq.13=13MHz (26MHz XTAL)
+elecrow_crowpanel_7.menu.CPUFreq.13.build.f_cpu=13000000L
+elecrow_crowpanel_7.menu.CPUFreq.10=10MHz (40MHz XTAL)
+elecrow_crowpanel_7.menu.CPUFreq.10.build.f_cpu=10000000L
+
+elecrow_crowpanel_7.menu.FlashMode.qio=QIO
+elecrow_crowpanel_7.menu.FlashMode.qio.build.flash_mode=dio
+elecrow_crowpanel_7.menu.FlashMode.qio.build.boot=qio
+elecrow_crowpanel_7.menu.FlashMode.dio=DIO
+elecrow_crowpanel_7.menu.FlashMode.dio.build.flash_mode=dio
+elecrow_crowpanel_7.menu.FlashMode.dio.build.boot=dio
+
+elecrow_crowpanel_7.menu.FlashFreq.80=80MHz
+elecrow_crowpanel_7.menu.FlashFreq.80.build.flash_freq=80m
+elecrow_crowpanel_7.menu.FlashFreq.40=40MHz
+elecrow_crowpanel_7.menu.FlashFreq.40.build.flash_freq=40m
+
+elecrow_crowpanel_7.menu.FlashSize.4MB=4MB (32Mb)
+elecrow_crowpanel_7.menu.FlashSize.4MB.build.flash_size=4MB
+
+elecrow_crowpanel_7.menu.UploadSpeed.921600=921600
+elecrow_crowpanel_7.menu.UploadSpeed.921600.upload.speed=921600
+elecrow_crowpanel_7.menu.UploadSpeed.115200=115200
+elecrow_crowpanel_7.menu.UploadSpeed.115200.upload.speed=115200
+elecrow_crowpanel_7.menu.UploadSpeed.256000.windows=256000
+elecrow_crowpanel_7.menu.UploadSpeed.256000.upload.speed=256000
+elecrow_crowpanel_7.menu.UploadSpeed.230400.windows.upload.speed=256000
+elecrow_crowpanel_7.menu.UploadSpeed.230400=230400
+elecrow_crowpanel_7.menu.UploadSpeed.230400.upload.speed=230400
+elecrow_crowpanel_7.menu.UploadSpeed.460800.linux=460800
+elecrow_crowpanel_7.menu.UploadSpeed.460800.macosx=460800
+elecrow_crowpanel_7.menu.UploadSpeed.460800.upload.speed=460800
+elecrow_crowpanel_7.menu.UploadSpeed.512000.windows=512000
+elecrow_crowpanel_7.menu.UploadSpeed.512000.upload.speed=512000
+
+elecrow_crowpanel_7.menu.DebugLevel.none=None
+elecrow_crowpanel_7.menu.DebugLevel.none.build.code_debug=0
+elecrow_crowpanel_7.menu.DebugLevel.error=Error
+elecrow_crowpanel_7.menu.DebugLevel.error.build.code_debug=1
+elecrow_crowpanel_7.menu.DebugLevel.warn=Warn
+elecrow_crowpanel_7.menu.DebugLevel.warn.build.code_debug=2
+elecrow_crowpanel_7.menu.DebugLevel.info=Info
+elecrow_crowpanel_7.menu.DebugLevel.info.build.code_debug=3
+elecrow_crowpanel_7.menu.DebugLevel.debug=Debug
+elecrow_crowpanel_7.menu.DebugLevel.debug.build.code_debug=4
+elecrow_crowpanel_7.menu.DebugLevel.verbose=Verbose
+elecrow_crowpanel_7.menu.DebugLevel.verbose.build.code_debug=5
+
+elecrow_crowpanel_7.menu.EraseFlash.none=Disabled
+elecrow_crowpanel_7.menu.EraseFlash.none.upload.erase_cmd=
+elecrow_crowpanel_7.menu.EraseFlash.all=Enabled
+elecrow_crowpanel_7.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
