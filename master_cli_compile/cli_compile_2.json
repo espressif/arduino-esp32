@@ -175,6 +175,14 @@
                             "ram_percentage": 4
                             }]
                     },
+{"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
+                    "sizes": [{
+                            "flash_bytes": 256474,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13712,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
                             "flash_bytes": 272622,
@@ -205,14 +213,6 @@
                             "flash_percentage": 8,
                             "ram_bytes": 17224,
                             "ram_percentage": 5
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
-                    "sizes": [{
-                            "flash_bytes": 272586,
-                            "flash_percentage": 8,
-                            "ram_bytes": 14136,
-                            "ram_percentage": 4
                             }]
                     }
 ]
@@ -422,22 +422,6 @@
 { "board": "espressif:esp32:esp32h2:PartitionScheme=huge_app",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 1167454,
-                            "flash_percentage": 37,
-                            "ram_bytes": 36216,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "EEPROM/examples/eeprom_class",
-                    "sizes": [{
-                            "flash_bytes": 265214,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12812,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
                             "flash_bytes": 267352,
@@ -467,6 +451,30 @@
                             "flash_bytes": 248966,
                             "flash_percentage": 7,
                             "ram_bytes": 12772,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/SigmaDelta",
+                    "sizes": [{
+                            "flash_bytes": 248014,
+                            "flash_percentage": 7,
+                            "ram_bytes": 12732,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/ledcFrequency",
+                    "sizes": [{
+                            "flash_bytes": 253876,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12812,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
+                    "sizes": [{
+                            "flash_bytes": 262994,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12780,
                             "ram_percentage": 3
                             }]
                     }

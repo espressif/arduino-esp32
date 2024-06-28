@@ -42,6 +42,14 @@
                             "ram_percentage": 5
                             }]
                     },
+{"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
+                    "sizes": [{
+                            "flash_bytes": 286101,
+                            "flash_percentage": 9,
+                            "ram_bytes": 18272,
+                            "ram_percentage": 5
+                            }]
+                    },
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
                             "flash_bytes": 305817,
@@ -105,20 +113,20 @@
                             "ram_bytes": 18328,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "ESP32/examples/ResetReason/ResetReason2",
-                    "sizes": [{
-                            "flash_bytes": 282901,
-                            "flash_percentage": 8,
-                            "ram_bytes": 18096,
-                            "ram_percentage": 5
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
+                    "sizes": [{
+                            "flash_bytes": 272586,
+                            "flash_percentage": 8,
+                            "ram_bytes": 14136,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/RMT/RMT_EndOfTransmissionState",
                     "sizes": [{
                             "flash_bytes": 272218,
@@ -206,14 +214,6 @@
                             "ram_bytes": 13632,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
-                    "sizes": [{
-                            "flash_bytes": 255454,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13616,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
@@ -284,6 +284,14 @@
                             "ram_percentage": 3
                             }]
                     },
+{"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
+                    "sizes": [{
+                            "flash_bytes": 259136,
+                            "flash_percentage": 8,
+                            "ram_bytes": 11804,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
                             "flash_bytes": 276764,
@@ -306,14 +314,6 @@
                             "flash_percentage": 8,
                             "ram_bytes": 12640,
                             "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMTWriteNeoPixel",
-                    "sizes": [{
-                            "flash_bytes": 276008,
-                            "flash_percentage": 8,
-                            "ram_bytes": 15248,
-                            "ram_percentage": 4
                             }]
                     }
 ]
@@ -385,6 +385,14 @@
                             "ram_percentage": 3
                             }]
                     },
+{"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
+                    "sizes": [{
+                            "flash_bytes": 215272,
+                            "flash_percentage": 6,
+                            "ram_bytes": 12676,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
                             "flash_bytes": 233210,
@@ -408,44 +416,12 @@
                             "ram_bytes": 13504,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "ESP32/examples/RMT/RMTWriteNeoPixel",
-                    "sizes": [{
-                            "flash_bytes": 232452,
-                            "flash_percentage": 7,
-                            "ram_bytes": 16120,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2:PartitionScheme=huge_app",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "ESP32/examples/AnalogOut/SigmaDelta",
-                    "sizes": [{
-                            "flash_bytes": 248014,
-                            "flash_percentage": 7,
-                            "ram_bytes": 12732,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogOut/ledcFrequency",
-                    "sizes": [{
-                            "flash_bytes": 253876,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12812,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
-                    "sizes": [{
-                            "flash_bytes": 262994,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12780,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/AnalogRead",
                     "sizes": [{
                             "flash_bytes": 270970,
@@ -467,6 +443,38 @@
                             "flash_bytes": 256722,
                             "flash_percentage": 8,
                             "ram_bytes": 12716,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/CI/CIBoardsTest",
+                    "sizes": [{
+                            "flash_bytes": 298316,
+                            "flash_percentage": 9,
+                            "ram_bytes": 13580,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/ChipID/GetChipID",
+                    "sizes": [{
+                            "flash_bytes": 257750,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12756,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/FreeRTOS/BasicMultiThreading",
+                    "sizes": [{
+                            "flash_bytes": 287996,
+                            "flash_percentage": 9,
+                            "ram_bytes": 13468,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/FreeRTOS/Mutex",
+                    "sizes": [{
+                            "flash_bytes": 257462,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12732,
                             "ram_percentage": 3
                             }]
                     }
@@ -571,11 +579,11 @@
                             "ram_percentage": 6
                             }]
                     },
-{"name": "ESP32/examples/RMT/RMTCallback",
+{"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                     "sizes": [{
-                            "flash_bytes": 307773,
+                            "flash_bytes": 292909,
                             "flash_percentage": 9,
-                            "ram_bytes": 21608,
+                            "ram_bytes": 20408,
                             "ram_percentage": 6
                             }]
                     }

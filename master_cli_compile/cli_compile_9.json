@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "SPI/examples/SPI_Multiple_Buses",
+                    "sizes": [{
+                            "flash_bytes": 298661,
+                            "flash_percentage": 9,
+                            "ram_bytes": 18680,
+                            "ram_percentage": 5
+                            }]
+                    },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
                             "flash_bytes": 319257,
@@ -105,20 +113,20 @@
                             "ram_bytes": 31000,
                             "ram_percentage": 9
                             }]
-                    },
-{"name": "USB/examples/Keyboard/KeyboardLogout",
-                    "sizes": [{
-                            "flash_bytes": 336585,
-                            "flash_percentage": 10,
-                            "ram_bytes": 30928,
-                            "ram_percentage": 9
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "TFLiteMicro/examples/hello_world",
+                    "sizes": [{
+                            "flash_bytes": 274750,
+                            "flash_percentage": 8,
+                            "ram_bytes": 15896,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "Ticker/examples/Blinker",
                     "sizes": [{
                             "flash_bytes": 262362,
@@ -206,20 +214,20 @@
                             "ram_bytes": 26248,
                             "ram_percentage": 8
                             }]
-                    },
-{"name": "USB/examples/Keyboard/KeyboardReprogram",
-                    "sizes": [{
-                            "flash_bytes": 287102,
-                            "flash_percentage": 9,
-                            "ram_bytes": 26240,
-                            "ram_percentage": 8
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3:PartitionScheme=huge_app",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "Preferences/examples/StartCounter",
+                    "sizes": [{
+                            "flash_bytes": 262542,
+                            "flash_percentage": 8,
+                            "ram_bytes": 11688,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
                             "flash_bytes": 1984458,
@@ -307,20 +315,20 @@
                             "ram_bytes": 12176,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "Ticker/examples/TickerParameter",
-                    "sizes": [{
-                            "flash_bytes": 264414,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12216,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
+                    "sizes": [{
+                            "flash_bytes": 943932,
+                            "flash_percentage": 30,
+                            "ram_bytes": 48952,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
                             "flash_bytes": 943988,
@@ -408,66 +416,66 @@
                             "ram_bytes": 36972,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "TFLiteMicro/examples/hello_world",
-                    "sizes": [{
-                            "flash_bytes": 236588,
-                            "flash_percentage": 7,
-                            "ram_bytes": 14848,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2:PartitionScheme=huge_app",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "ESP32/examples/TWAI/TWAIreceive",
+{"name": "ESP_I2S/examples/ES8388_loopback",
                     "sizes": [{
-                            "flash_bytes": 263380,
+                            "flash_bytes": 325200,
+                            "flash_percentage": 10,
+                            "ram_bytes": 13548,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP_I2S/examples/Simple_tone",
+                    "sizes": [{
+                            "flash_bytes": 279890,
                             "flash_percentage": 8,
-                            "ram_bytes": 12732,
+                            "ram_bytes": 12844,
                             "ram_percentage": 3
                             }]
                     },
-{"name": "ESP32/examples/TWAI/TWAItransmit",
+{"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 263684,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12740,
-                            "ram_percentage": 3
+                            "flash_bytes": 540528,
+                            "flash_percentage": 17,
+                            "ram_bytes": 18168,
+                            "ram_percentage": 5
                             }]
                     },
-{"name": "ESP32/examples/Template/ExampleTemplate",
+{"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 242690,
-                            "flash_percentage": 7,
-                            "ram_bytes": 12708,
-                            "ram_percentage": 3
+                            "flash_bytes": 538036,
+                            "flash_percentage": 17,
+                            "ram_bytes": 18152,
+                            "ram_percentage": 5
                             }]
                     },
-{"name": "ESP32/examples/Timer/RepeatTimer",
+{"name": "FFat/examples/FFat_Test",
                     "sizes": [{
-                            "flash_bytes": 266500,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13060,
-                            "ram_percentage": 3
+                            "flash_bytes": 318208,
+                            "flash_percentage": 10,
+                            "ram_bytes": 13524,
+                            "ram_percentage": 4
                             }]
                     },
-{"name": "ESP32/examples/Timer/WatchdogTimer",
+{"name": "LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
-                            "flash_bytes": 266292,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13052,
-                            "ram_percentage": 3
+                            "flash_bytes": 305374,
+                            "flash_percentage": 9,
+                            "ram_bytes": 13284,
+                            "ram_percentage": 4
                             }]
                     },
-{"name": "ESP32/examples/Utilities/HEXBuilder",
+{"name": "OpenThread/examples/COAP/coap_lamp",
                     "sizes": [{
-                            "flash_bytes": 258658,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12716,
-                            "ram_percentage": 3
+                            "flash_bytes": 993000,
+                            "flash_percentage": 31,
+                            "ram_bytes": 48804,
+                            "ram_percentage": 14
                             }]
                     }
 ]
@@ -475,6 +483,14 @@
 { "board": "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32",
                 "sketches": [
+{"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
+                    "sizes": [{
+                            "flash_bytes": 1037617,
+                            "flash_percentage": 32,
+                            "ram_bytes": 46864,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                     "sizes": [{
                             "flash_bytes": 1006701,
@@ -569,14 +585,6 @@
                             "flash_percentage": 31,
                             "ram_bytes": 45700,
                             "ram_percentage": 13
-                            }]
-                    },
-{"name": "SPI/examples/SPI_Multiple_Buses",
-                    "sizes": [{
-                            "flash_bytes": 283453,
-                            "flash_percentage": 9,
-                            "ram_bytes": 20352,
-                            "ram_percentage": 6
                             }]
                     }
 ]

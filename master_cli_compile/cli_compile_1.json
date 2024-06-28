@@ -422,14 +422,6 @@
 { "board": "espressif:esp32:esp32h2:PartitionScheme=huge_app",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "BLE/examples/Notify",
-                    "sizes": [{
-                            "flash_bytes": 1165688,
-                            "flash_percentage": 37,
-                            "ram_bytes": 36224,
-                            "ram_percentage": 11
-                            }]
-                    },
 {"name": "BLE/examples/Scan",
                     "sizes": [{
                             "flash_bytes": 1154400,
@@ -468,6 +460,22 @@
                             "flash_percentage": 36,
                             "ram_bytes": 36208,
                             "ram_percentage": 11
+                            }]
+                    },
+{"name": "BLE/examples/iBeacon",
+                    "sizes": [{
+                            "flash_bytes": 1167454,
+                            "flash_percentage": 37,
+                            "ram_bytes": 36216,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "EEPROM/examples/eeprom_class",
+                    "sizes": [{
+                            "flash_bytes": 265214,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12812,
+                            "ram_percentage": 3
                             }]
                     }
 ]

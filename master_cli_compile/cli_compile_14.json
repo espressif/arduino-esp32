@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "WiFi/examples/WiFiTelnetToSerial",
+                    "sizes": [{
+                            "flash_bytes": 868045,
+                            "flash_percentage": 27,
+                            "ram_bytes": 41704,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "WiFi/examples/WiFiUDPClient",
                     "sizes": [{
                             "flash_bytes": 856973,
@@ -47,6 +55,14 @@
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "WiFi/examples/WiFiMultiAdvanced",
+                    "sizes": [{
+                            "flash_bytes": 960814,
+                            "flash_percentage": 30,
+                            "ram_bytes": 38028,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "WiFi/examples/WiFiScan",
                     "sizes": [{
                             "flash_bytes": 826538,
@@ -129,9 +145,30 @@
                     }
 ]
 },
+{ "board": "espressif:esp32:esp32c3:PartitionScheme=huge_app",
+                "target": "esp32c3",
+                "sketches": [
+{"name": "Wire/examples/WireSlave",
+                    "sizes": [{
+                            "flash_bytes": 274092,
+                            "flash_percentage": 8,
+                            "ram_bytes": 11912,
+                            "ram_percentage": 3
+                            }]
+                    }
+]
+},
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "WiFiProv/examples/WiFiProv",
+                    "sizes": [{
+                            "flash_bytes": 1726292,
+                            "flash_percentage": 54,
+                            "ram_bytes": 58684,
+                            "ram_percentage": 17
+                            }]
+                    },
 {"name": "Wire/examples/WireMaster",
                     "sizes": [{
                             "flash_bytes": 230864,
@@ -158,62 +195,17 @@
                     }
 ]
 },
-{ "board": "espressif:esp32:esp32h2:PartitionScheme=huge_app",
-                "target": "esp32h2",
-                "sketches": [
-{"name": "Ticker/examples/TickerBasic",
-                    "sizes": [{
-                            "flash_bytes": 265586,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13244,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "Ticker/examples/TickerParameter",
-                    "sizes": [{
-                            "flash_bytes": 265322,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13284,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "Update/examples/SD_Update",
-                    "sizes": [{
-                            "flash_bytes": 345490,
-                            "flash_percentage": 10,
-                            "ram_bytes": 13844,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "Wire/examples/WireMaster",
-                    "sizes": [{
-                            "flash_bytes": 276334,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13044,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "Wire/examples/WireScan",
-                    "sizes": [{
-                            "flash_bytes": 276006,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13044,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "Wire/examples/WireSlave",
-                    "sizes": [{
-                            "flash_bytes": 276102,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13044,
-                            "ram_percentage": 3
-                            }]
-                    }
-]
-},
 { "board": "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32",
                 "sketches": [
+{"name": "WiFiProv/examples/WiFiProv",
+                    "sizes": [{
+                            "flash_bytes": 1750349,
+                            "flash_percentage": 55,
+                            "ram_bytes": 56724,
+                            "ram_percentage": 17
+                            }]
+                    },
 {"name": "Wire/examples/WireMaster",
                     "sizes": [{
                             "flash_bytes": 308877,
