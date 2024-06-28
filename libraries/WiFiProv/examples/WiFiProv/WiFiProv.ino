@@ -53,7 +53,7 @@ void SysProvEvent(arduino_event_t *sys_event) {
 
 void setup() {
   Serial.begin(115200);
-  WiFi.begin(); // no SSID/PWD - get it from the Provisioning APP or from NVS (last successful connection)
+  WiFi.begin();  // no SSID/PWD - get it from the Provisioning APP or from NVS (last successful connection)
   WiFi.onEvent(SysProvEvent);
 
 // BLE Provisioning using the ESP SoftAP Prov works fine for any BLE SoC, including ESP32, ESP32S3 and ESP32C3.
