@@ -78,7 +78,7 @@ typedef struct
 // _int_set is not used with an RTOS
 #define OSAL_QUEUE_DEF(_int_set, _name, _depth, _type) \
   static _type _name##_##buf[_depth];\
-  osal_queue_def_t _name = { .depth = _depth, .item_sz = sizeof(_type), .buf = _name##_##buf, _OSAL_Q_NAME(_name) };
+  osal_queue_def_t _name = { .depth = _depth, .item_sz = sizeof(_type), .buf = _name##_##buf, _OSAL_Q_NAME(_name) }
 
 //--------------------------------------------------------------------+
 // TASK API

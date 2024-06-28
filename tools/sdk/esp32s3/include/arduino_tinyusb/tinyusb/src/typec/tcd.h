@@ -63,7 +63,7 @@ typedef struct TU_ATTR_PACKED {
     } xfer_complete;
   };
 
-} tcd_event_t;;
+} tcd_event_t;
 
 //--------------------------------------------------------------------+
 //
