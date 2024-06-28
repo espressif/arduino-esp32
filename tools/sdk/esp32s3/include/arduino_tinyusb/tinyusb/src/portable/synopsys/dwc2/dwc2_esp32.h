@@ -35,6 +35,7 @@
 #include "esp_intr_alloc.h"
 #include "soc/periph_defs.h"
 //#include "soc/usb_periph.h"
+#include "freertos/task.h"
 
 #define DWC2_REG_BASE       0x60080000UL
 #define DWC2_EP_MAX         6             // USB_OUT_EP_NUM. TODO ESP32Sx only has 5 tx fifo (5 endpoint IN)

@@ -27,7 +27,7 @@ static esp_ble_gap_periodic_adv_sync_params_t periodic_adv_sync_params = {
 
 class MyBLEExtAdvertisingCallbacks : public BLEExtAdvertisingCallbacks
 {
-  void onResult(esp_ble_gap_ext_adv_reprot_t params)
+  void onResult(esp_ble_gap_ext_adv_report_t params)
   {
     uint8_t *adv_name = NULL;
     uint8_t adv_name_len = 0;

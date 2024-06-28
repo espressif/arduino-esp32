@@ -45,7 +45,7 @@ public:
     void Test();
     /**
     *     Method for development and tests only.
-    * 
+    *
     * @param[in] enable_att - enable attitude as input reference value
     */
     void TestFull(bool enable_att);
@@ -62,13 +62,13 @@ public:
     /**
     * number of control measurements
     */
-    int NUMU; 
+    int NUMU;
 
     /**
      * Update part of system state by reference measurements accelerometer and magnetometer.
      * Only attitude and gyro bias will be updated.
      * This method should be used as main method after calibration.
-     * 
+     *
      * @param[in] accel_data: accelerometer measurement vector XYZ in g, where 1 g ~ 9.81 m/s^2
      * @param[in] magn_data: magnetometer measurement vector XYZ
      * @param[in] R: measurement noise covariance values for diagonal covariance matrix. Then smaller value, then more you trust them.
@@ -77,7 +77,7 @@ public:
     /**
      * Update full system state by reference measurements accelerometer and magnetometer.
      * This method should be used at calibration phase.
-     * 
+     *
      * @param[in] accel_data: accelerometer measurement vector XYZ in g, where 1 g ~ 9.81 m/s^2
      * @param[in] magn_data: magnetometer measurement vector XYZ
      * @param[in] R: measurement noise covariance values for diagonal covariance matrix. Then smaller value, then more you trust them.

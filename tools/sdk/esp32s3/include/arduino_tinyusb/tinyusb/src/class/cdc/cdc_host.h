@@ -192,7 +192,8 @@ TU_ATTR_WEAK extern void tuh_cdc_tx_complete_cb(uint8_t idx);
 //--------------------------------------------------------------------+
 // Internal Class Driver API
 //--------------------------------------------------------------------+
-void cdch_init       (void);
+bool cdch_init       (void);
+bool cdch_deinit     (void);
 bool cdch_open       (uint8_t rhport, uint8_t dev_addr, tusb_desc_interface_t const *itf_desc, uint16_t max_len);
 bool cdch_set_config (uint8_t dev_addr, uint8_t itf_num);
 bool cdch_xfer_cb    (uint8_t dev_addr, uint8_t ep_addr, xfer_result_t event, uint32_t xferred_bytes);

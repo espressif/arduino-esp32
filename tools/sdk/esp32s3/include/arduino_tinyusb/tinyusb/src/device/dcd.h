@@ -24,8 +24,8 @@
  * This file is part of the TinyUSB stack.
  */
 
-#ifndef _TUSB_DCD_H_
-#define _TUSB_DCD_H_
+#ifndef TUSB_DCD_H_
+#define TUSB_DCD_H_
 
 #include "common/tusb_common.h"
 #include "osal/osal.h"
@@ -33,14 +33,6 @@
 
 #ifdef __cplusplus
  extern "C" {
-#endif
-
-//--------------------------------------------------------------------+
-// Configuration
-//--------------------------------------------------------------------+
-
-#ifndef CFG_TUD_ENDPPOINT_MAX
-  #define CFG_TUD_ENDPPOINT_MAX   TUP_DCD_ENDPOINT_MAX
 #endif
 
 //--------------------------------------------------------------------+
@@ -97,6 +89,14 @@ typedef struct TU_ATTR_ALIGNED(4) {
   };
 } dcd_event_t;
 
+typedef enum {
+  TEST_J = 1,
+  TEST_K,
+  TEST_SE0_NAK,
+  TEST_PACKET,
+  TEST_FORCE_ENABLE,
+} test_mode_t;
+
 //TU_VERIFY_STATIC(sizeof(dcd_event_t) <= 12, "size is not correct");
 
 //--------------------------------------------------------------------+
@@ -122,6 +122,9 @@ void dcd_dcache_clean_invalidate(void const* addr, uint32_t data_size) TU_ATTR_W
 // Initialize controller to device mode
 void dcd_init(uint8_t rhport);
 
+// Deinitialize controller, unset device mode.
+bool dcd_deinit(uint8_t rhport);
+
 // Interrupt Handler
 void dcd_int_handler(uint8_t rhport);
 
@@ -138,14 +141,21 @@ void dcd_set_address(uint8_t rhport, uint8_t dev_addr);
 void dcd_remote_wakeup(uint8_t rhport);
 
 // Connect by enabling internal pull-up resistor on D+/D-
-void dcd_connect(uint8_t rhport) TU_ATTR_WEAK;
+void dcd_connect(uint8_t rhport);
 
 // Disconnect by disabling internal pull-up resistor on D+/D-
-void dcd_disconnect(uint8_t rhport) TU_ATTR_WEAK;
+void dcd_disconnect(uint8_t rhport);
 
 // Enable/Disable Start-of-frame interrupt. Default is disabled
 void dcd_sof_enable(uint8_t rhport, bool en);
 
+#if CFG_TUD_TEST_MODE
+// Check if the test mode is supported, returns true is test mode selector is supported
+bool dcd_check_test_mode_support(test_mode_t test_selector) TU_ATTR_WEAK;
+
+// Put device into a test mode (needs power cycle to quit)
+void dcd_enter_test_mode(uint8_t rhport, test_mode_t test_selector) TU_ATTR_WEAK;
+#endif
 //--------------------------------------------------------------------+
 // Endpoint API
 //--------------------------------------------------------------------+
@@ -236,4 +246,4 @@ TU_ATTR_ALWAYS_INLINE static inline void dcd_event_sof(uint8_t rhport, uint32_t 
  }
 #endif
 
-#endif /* _TUSB_DCD_H_ */
+#endif

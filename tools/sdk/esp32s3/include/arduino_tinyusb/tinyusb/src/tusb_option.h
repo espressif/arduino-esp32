@@ -29,9 +29,12 @@
 
 #include "common/tusb_compiler.h"
 
+// Version is release as major.minor.revision eg 1.0.0
 #define TUSB_VERSION_MAJOR     0
-#define TUSB_VERSION_MINOR     16
+#define TUSB_VERSION_MINOR     17
 #define TUSB_VERSION_REVISION  0
+
+#define TUSB_VERSION_NUMBER    (TUSB_VERSION_MAJOR * 10000 + TUSB_VERSION_MINOR * 100 + TUSB_VERSION_REVISION)
 #define TUSB_VERSION_STRING    TU_STRING(TUSB_VERSION_MAJOR) "." TU_STRING(TUSB_VERSION_MINOR) "." TU_STRING(TUSB_VERSION_REVISION)
 
 //--------------------------------------------------------------------+
@@ -50,7 +53,8 @@
 #define OPT_MCU_LPC18XX             6 ///< NXP LPC18xx
 #define OPT_MCU_LPC40XX             7 ///< NXP LPC40xx
 #define OPT_MCU_LPC43XX             8 ///< NXP LPC43xx
-#define OPT_MCU_LPC51UXX            9 ///< NXP LPC51U6x
+#define OPT_MCU_LPC51               9 ///< NXP LPC51
+#define OPT_MCU_LPC51UXX            OPT_MCU_LPC51 ///< NXP LPC51
 #define OPT_MCU_LPC54              10 ///< NXP LPC54
 #define OPT_MCU_LPC55              11 ///< NXP LPC55
 // legacy naming
@@ -114,6 +118,12 @@
 // Espressif
 #define OPT_MCU_ESP32S2           900 ///< Espressif ESP32-S2
 #define OPT_MCU_ESP32S3           901 ///< Espressif ESP32-S3
+#define OPT_MCU_ESP32             902 ///< Espressif ESP32 (for host max3421e)
+#define OPT_MCU_ESP32C3           903 ///< Espressif ESP32-C3
+#define OPT_MCU_ESP32C6           904 ///< Espressif ESP32-C6
+#define OPT_MCU_ESP32C2           905 ///< Espressif ESP32-C2
+#define OPT_MCU_ESP32H2           906 ///< Espressif ESP32-H2
+#define TUP_MCU_ESPRESSIF         (CFG_TUSB_MCU >= 900 && CFG_TUSB_MCU < 1000) // check if Espressif MCU
 
 // Dialog
 #define OPT_MCU_DA1469X          1000 ///< Dialog Semiconductor DA1469x
@@ -138,7 +148,6 @@
 #define OPT_MCU_RX65X            1401 ///< Renesas RX65N/RX651
 #define OPT_MCU_RX72N            1402 ///< Renesas RX72N
 #define OPT_MCU_RAXXX            1403 ///< Renesas RAxxx families
-
 
 // Mind Motion
 #define OPT_MCU_MM32F327X        1500 ///< Mind Motion MM32F327
@@ -172,10 +181,12 @@
 // WCH
 #define OPT_MCU_CH32V307         2200 ///< WCH CH32V307
 #define OPT_MCU_CH32F20X         2210 ///< WCH CH32F20x
-
+#define OPT_MCU_CH32V20X         2220 ///< WCH CH32V20X
+#define OPT_MCU_CH32V103         2230 ///< WCH CH32V103
 
 // NXP LPC MCX
 #define OPT_MCU_MCXN9            2300  ///< NXP MCX N9 Series
+#define OPT_MCU_MCXA15           2301  ///< NXP MCX A15 Series
 
 // Check if configured MCU is one of listed
 // Apply _TU_CHECK_MCU with || as separator to list of input
@@ -194,19 +205,9 @@
 #define OPT_OS_RTTHREAD   6  ///< RT-Thread
 #define OPT_OS_RTX4       7  ///< Keil RTX 4
 
-// Allow to use command line to change the config name/location
-#ifdef CFG_TUSB_CONFIG_FILE
-  #include CFG_TUSB_CONFIG_FILE
-#else
-  #include "tusb_config.h"
-#endif
-
-#include "common/tusb_mcu.h"
-
-//--------------------------------------------------------------------
-// RootHub Mode Configuration
-// CFG_TUSB_RHPORTx_MODE contains operation mode and speed for that port
-//--------------------------------------------------------------------
+//--------------------------------------------------------------------+
+// Mode and Speed
+//--------------------------------------------------------------------+
 
 // Low byte is operational mode
 #define OPT_MODE_NONE           0x0000 ///< Disabled
@@ -220,7 +221,24 @@
 #define OPT_MODE_HIGH_SPEED     0x0400 ///< High Speed
 #define OPT_MODE_SPEED_MASK     0xff00
 
-//------------- Roothub as Device -------------//
+//--------------------------------------------------------------------+
+// Include tusb_config.h and tusb_mcu.h
+//--------------------------------------------------------------------+
+
+// Allow to use command line to change the config name/location
+#ifdef CFG_TUSB_CONFIG_FILE
+  #include CFG_TUSB_CONFIG_FILE
+#else
+  #include "tusb_config.h"
+#endif
+
+#include "common/tusb_mcu.h"
+
+//--------------------------------------------------------------------
+// RootHub Mode detection
+//--------------------------------------------------------------------
+
+//------------- Root hub as Device -------------//
 
 #if defined(CFG_TUSB_RHPORT0_MODE) && ((CFG_TUSB_RHPORT0_MODE) & OPT_MODE_DEVICE)
   #define TUD_RHPORT_MODE     (CFG_TUSB_RHPORT0_MODE)
@@ -248,7 +266,7 @@
 // highspeed support indicator
 #define TUD_OPT_HIGH_SPEED    (CFG_TUD_MAX_SPEED ? (CFG_TUD_MAX_SPEED & OPT_MODE_HIGH_SPEED) : TUP_RHPORT_HIGHSPEED)
 
-//------------- Roothub as Host -------------//
+//------------- Root hub as Host -------------//
 
 #if defined(CFG_TUSB_RHPORT0_MODE) && ((CFG_TUSB_RHPORT0_MODE) & OPT_MODE_HOST)
   #define TUH_RHPORT_MODE  (CFG_TUSB_RHPORT0_MODE)
@@ -354,6 +372,20 @@
   #define CFG_TUD_INTERFACE_MAX   16
 #endif
 
+// default to max hardware endpoint, but can be smaller to save RAM
+#ifndef CFG_TUD_ENDPPOINT_MAX
+  #define CFG_TUD_ENDPPOINT_MAX   TUP_DCD_ENDPOINT_MAX
+#endif
+
+#if CFG_TUD_ENDPPOINT_MAX > TUP_DCD_ENDPOINT_MAX
+  #error "CFG_TUD_ENDPPOINT_MAX must be less than or equal to TUP_DCD_ENDPOINT_MAX"
+#endif
+
+// USB 2.0 compliance test mode support
+#ifndef CFG_TUD_TEST_MODE
+  #define CFG_TUD_TEST_MODE       0
+#endif
+
 //------------- Device Class Driver -------------//
 #ifndef CFG_TUD_BTH
   #define CFG_TUD_BTH             0
@@ -449,26 +481,26 @@
   #define CFG_TUH_CDC    0
 #endif
 
+// FTDI is not part of CDC class, only to re-use CDC driver API
 #ifndef CFG_TUH_CDC_FTDI
-  // FTDI is not part of CDC class, only to re-use CDC driver API
   #define CFG_TUH_CDC_FTDI 0
 #endif
 
+// List of product IDs that can use the FTDI CDC driver. 0x0403 is FTDI's VID
 #ifndef CFG_TUH_CDC_FTDI_VID_PID_LIST
-  // List of product IDs that can use the FTDI CDC driver. 0x0403 is FTDI's VID
   #define CFG_TUH_CDC_FTDI_VID_PID_LIST \
     {0x0403, 0x6001}, {0x0403, 0x6006}, {0x0403, 0x6010}, {0x0403, 0x6011}, \
     {0x0403, 0x6014}, {0x0403, 0x6015}, {0x0403, 0x8372}, {0x0403, 0xFBFA}, \
     {0x0403, 0xCD18}
 #endif
 
+// CP210X is not part of CDC class, only to re-use CDC driver API
 #ifndef CFG_TUH_CDC_CP210X
-  // CP210X is not part of CDC class, only to re-use CDC driver API
   #define CFG_TUH_CDC_CP210X 0
 #endif
 
+// List of product IDs that can use the CP210X CDC driver. 0x10C4 is Silicon Labs' VID
 #ifndef CFG_TUH_CDC_CP210X_VID_PID_LIST
-  // List of product IDs that can use the CP210X CDC driver. 0x10C4 is Silicon Labs' VID
   #define CFG_TUH_CDC_CP210X_VID_PID_LIST \
     {0x10C4, 0xEA60}, {0x10C4, 0xEA70}
 #endif
@@ -478,8 +510,8 @@
   #define CFG_TUH_CDC_CH34X 0
 #endif
 
+// List of product IDs that can use the CH34X CDC driver
 #ifndef CFG_TUH_CDC_CH34X_VID_PID_LIST
-  // List of product IDs that can use the CH34X CDC driver
   #define CFG_TUH_CDC_CH34X_VID_PID_LIST \
     { 0x1a86, 0x5523 }, /* ch341 chip */ \
     { 0x1a86, 0x7522 }, /* ch340k chip */ \

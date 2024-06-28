@@ -13,7 +13,7 @@
 #define dsps_fft4r_fc32_ae32_enabled 1
 #define dsps_cplx2real_fc32_ae32_enabled 1
 
-#endif // 
+#endif //
 
 
 #if ((XCHAL_HAVE_LOOPS == 1) && (XCHAL_HAVE_MAC16 == 1))
