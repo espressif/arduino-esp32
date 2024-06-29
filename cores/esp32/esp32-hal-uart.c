@@ -434,7 +434,6 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
 
     if (retCode) retCode &= ESP_OK == uart_param_config(uart_nr, &uart_config);
 
-    // Is it right or the idea is to swap rx and tx pins? 
     if (retCode) {
       if (inverted) {
         // invert signal for both Rx and Tx
