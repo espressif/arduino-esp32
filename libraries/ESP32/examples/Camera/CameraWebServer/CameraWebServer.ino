@@ -39,6 +39,8 @@
 const char *ssid = "**********";
 const char *password = "**********";
 
+bool tryingToConnectWifi = true;
+
 void startCameraServer();
 void setupLedFlash(int pin);
 
@@ -151,6 +153,24 @@ void setup() {
 }
 
 void loop() {
-  // Do nothing. Everything is done in another task by the web server
-  delay(10000);
+  if (WiFi.status() != WL_CONNECTED) {
+    if (!tryingToConnectWifi) {
+      WiFi.begin(ssid, password);
+      WiFi.setSleep(false);
+      tryingToConnectWifi = true;
+    }
+
+    Serial.println("Wifi not connected, trying to re-connect");
+    delay(500);
+  } else if (WiFi.status() == WL_CONNECTED) {
+    if (tryingToConnectWifi) {
+      startCameraServer();
+      Serial.print("Camera Ready! Use 'http://");
+      Serial.print(WiFi.localIP());
+      Serial.println("' to connect");
+      tryingToConnectWifi = false;
+    }
+  }
+
+  delay(2000);
 }
