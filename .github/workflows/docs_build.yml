@@ -1,0 +1,46 @@
+name: Documentation Build and Deploy CI
+
+on:
+  push:
+    branches:
+    - master
+    - release/*
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs_build.yml'
+  pull_request:
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs_build.yml'
+
+jobs:
+
+  build-docs:
+    name: Build ESP-Docs
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - uses: actions/setup-python@v5
+      with:
+        cache-dependency-path: docs/requirements.txt
+        cache: 'pip'
+        python-version: '3.10'
+    - name: Build
+      run: |
+        sudo apt update
+        sudo apt install python3-pip python3-setuptools
+        # GitHub CI installs pip3 and setuptools outside the path.
+        # Update the path to include them and run.
+        cd ./docs
+        PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
+        PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en
+    - name: Archive Docs
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs
+        path: docs

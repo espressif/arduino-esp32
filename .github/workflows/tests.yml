@@ -1,0 +1,128 @@
+# This file is used to run the runtime tests for the Arduino core for ESP32.
+# The tests are run on the hardware, Wokwi and QEMU emulators.
+# The QEMU tests are disabled for now as they are redundant with most of the Wokwi tests.
+# As the Wokwi tests require access to secrets, they are run in a separate workflow.
+# We need to ensure that the artifacts from previous tests in the chain are propagated for publishing the results.
+# This is the current trigger sequence for the tests:
+#  tests.yml -> tests_wokwi.yml -> tests_results.yml
+#   ⌙> tests_build.yml
+#   ⌙> tests_hw.yml
+#   ⌙> tests_qemu.yml
+
+name: Runtime Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened, closed, synchronize, labeled, unlabeled]
+    paths:
+      - '.github/workflows/tests*'
+      - '.github/scripts/*.sh'
+      - '!.github/scripts/check-cmakelists.sh'
+      - '!.github/scripts/find_*'
+      - '!.github/scripts/on-*.sh'
+      - '!.github/scripts/set_push_chunks.sh'
+      - '!.github/scripts/update-version.sh'
+      - '!.github/scripts/upload_py_tools.sh'
+      - 'tests/**'
+      - 'cores/**'
+      - 'libraries/**'
+      - '!libraries/**.md'
+      - '!libraries/**.txt'
+      - '!libraries/**.properties'
+      - 'package/**'
+  schedule:
+    - cron: '0 2 * * *'
+
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  push-event-file:
+    name: Push event file
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: event_file
+          path: ${{ github.event_path }}
+
+  gen-matrix:
+    name: Generate matrix
+    runs-on: ubuntu-latest
+    outputs:
+      build-types: ${{ steps.set-matrix.outputs.build-types }}
+      hw-types: ${{ steps.set-matrix.outputs.hw-types }}
+      wokwi-types: ${{ steps.set-matrix.outputs.wokwi-types }}
+      qemu-types: ${{ steps.set-matrix.outputs.qemu-types }}
+    steps:
+      - name: Set matrix
+        id: set-matrix
+        run: |
+          build_types='["validation"'
+          hw_types='["validation"'
+          wokwi_types='["validation"'
+          qemu_types='["validation"'
+
+          is_pr=${{ github.event.pull_request.number != null }}
+          is_performance_enabled=${{ contains(github.event.pull_request.labels.*.name, 'perf_test') }}
+
+          if [[ $is_pr != 'true' ]] || [[ $is_performance_enabled == 'true' ]]; then
+            build_types+=',"performance"'
+            hw_types+=',"performance"'
+            #wokwi_types+=',"performance"'
+            #qemu_types+=',"performance"'
+          fi
+
+          echo "build-types=$build_types]" >> $GITHUB_OUTPUT
+          echo "hw-types=$hw_types]" >> $GITHUB_OUTPUT
+          echo "wokwi-types=$wokwi_types]" >> $GITHUB_OUTPUT
+          echo "qemu-types=$qemu_types]" >> $GITHUB_OUTPUT
+
+  call-build-tests:
+    name: Build
+    uses: ./.github/workflows/tests_build.yml
+    needs: gen-matrix
+    strategy:
+      matrix:
+        type: ${{ fromJson(needs.gen-matrix.outputs.build-types) }}
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+    with:
+      type: ${{ matrix.type }}
+      chip: ${{ matrix.chip }}
+
+  call-hardware-tests:
+    name: Hardware
+    uses: ./.github/workflows/tests_hw.yml
+    needs: [gen-matrix, call-build-tests]
+    if: |
+      github.repository == 'espressif/arduino-esp32' &&
+      (github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'hil_test'))
+    strategy:
+      fail-fast: false
+      matrix:
+        type: ${{ fromJson(needs.gen-matrix.outputs.hw-types) }}
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+    with:
+      type: ${{ matrix.type }}
+      chip: ${{ matrix.chip }}
+
+  # This job is disabled for now
+  call-qemu-tests:
+    name: QEMU
+    uses: ./.github/workflows/tests_qemu.yml
+    needs: [gen-matrix, call-build-tests]
+    if: false
+    strategy:
+      fail-fast: false
+      matrix:
+        type: ${{ fromJson(needs.gen-matrix.outputs.qemu-types) }}
+        chip: ['esp32', 'esp32c3']
+    with:
+      type: ${{ matrix.type }}
+      chip: ${{ matrix.chip }}
+
+  # Wokwi tests are run after this workflow as it needs access to secrets

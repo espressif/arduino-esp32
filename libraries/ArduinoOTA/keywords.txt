@@ -1,0 +1,25 @@
+#######################################
+# Syntax Coloring Map For Ultrasound
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ArduinoOTA	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+setup	KEYWORD2
+handle	KEYWORD2
+onStart	KEYWORD2
+onEnd	KEYWORD2
+onError	KEYWORD2
+onProgress	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

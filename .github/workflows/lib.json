@@ -1,0 +1,82 @@
+[
+    {
+        "name": "Adafruit NeoPixel",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/Adafruit_NeoPixel/examples/strandtest/strandtest.ino"
+        ]
+    },
+    {
+        "name": "ArduinoBLE",
+        "exclude_targets": [
+            "esp32s2"
+        ],
+        "sketch_path": [
+            "~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino"
+        ]
+    },
+    {
+        "name": "ESP32Servo",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/ESP32Servo/examples/Multiple-Servo-Example-Arduino/Multiple-Servo-Example-Arduino.ino"
+        ]
+    },
+    {
+        "source-url": "https://github.com/me-no-dev/ESPAsyncWebServer.git",
+        "required-libs": [
+            {"source-url": "https://github.com/me-no-dev/AsyncTCP.git"}
+        ],
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/CaptivePortal/CaptivePortal.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/ESP_AsyncFSBrowser/ESP_AsyncFSBrowser.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/regex_patterns/regex_patterns.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/simple_server/simple_server.ino"
+        ]
+    },
+    {
+        "name": "EthernetESP32",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/EthernetESP32/examples/LegacyEthernetTest/LegacyEthernetTest.ino",
+            "~/Arduino/libraries/EthernetESP32/examples/TwoEthernets/TwoEthernets.ino"
+        ]
+    },
+    {
+        "name": "FastLED",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/FastLED/examples/Blink/Blink.ino"
+        ]
+    },
+    {
+        "name": "IRremote",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/IRremote/examples/SendDemo/SendDemo.ino"
+        ]
+    },
+    {
+        "name": "MFRC522",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/MFRC522/examples/ReadUidMultiReader/ReadUidMultiReader.ino"
+        ]
+    },
+    {
+        "name": "WS2812FX",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/WS2812FX/examples/ws2812fx_spi/ws2812fx_spi.ino"
+        ]
+    },
+    {
+        "name": "ZACwire for TSic",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/ZACwire_for_TSic/examples/ReadingTwoTSICs/ReadingTwoTSICs.ino",
+            "~/Arduino/libraries/ZACwire_for_TSic/examples/ReadSingleTSIC206/ReadSingleTSIC206.ino"
+        ]
+    }
+]

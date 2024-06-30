@@ -1,0 +1,307 @@
+name: Compilation Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - master
+    - release/*
+  pull_request:
+    paths:
+      - 'cores/**'
+      - 'libraries/**'
+      - '!libraries/**.md'
+      - '!libraries/**.txt'
+      - '!libraries/**.properties'
+      - '!libraries/**.py'
+      - 'package/**'
+      - 'tools/**.py'
+      - 'platform.txt'
+      - 'programmers.txt'
+      - 'idf_component.yml'
+      - 'Kconfig.projbuild'
+      - 'package.json'
+      - '.github/workflows/push.yml'
+      - '.github/scripts/**'
+      - '!.github/scripts/find_*'
+      - '!.github/scripts/on-release.sh'
+      - '!.github/scripts/tests_*'
+      - '!.github/scripts/upload_*'
+
+concurrency:
+  group: build-${{github.event.pull_request.number || github.ref}}
+  cancel-in-progress: true
+
+env:
+  MAX_CHUNKS: 15
+
+jobs:
+  cmake-check:
+    name: Check cmake file
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - run: bash ./.github/scripts/check-cmakelists.sh
+
+  gen-chunks:
+    name: Generate chunks
+    runs-on: ubuntu-latest
+    outputs:
+      build_all: ${{ steps.set-chunks.outputs.build_all }}
+      build_libraries: ${{ steps.set-chunks.outputs.build_libraries }}
+      build_static_sketches: ${{ steps.set-chunks.outputs.build_static_sketches }}
+      build_idf: ${{ steps.set-chunks.outputs.build_idf }}
+      build_platformio: ${{ steps.set-chunks.outputs.build_platformio }}
+      chunk_count: ${{ steps.set-chunks.outputs.chunk_count }}
+      chunks: ${{ steps.set-chunks.outputs.chunks }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v44
+      with:
+        files_yaml: |
+            core:
+              - '.github/**'
+              - '!.github/scripts/install-platformio-esp32.sh'
+              - 'cores/**'
+              - 'package/**'
+              - 'tools/**'
+              - '!tools/platformio-build.py'
+              - 'platform.txt'
+              - 'programmers.txt'
+            libraries:
+              - 'libraries/**/examples/**'
+              - 'libraries/**/src/**'
+            networking:
+              - 'libraries/Network/src/**'
+            fs:
+              - 'libraries/FS/src/**'
+            static_sketeches:
+              - 'libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino'
+              - 'libraries/BLE/examples/Server/Server.ino'
+              - 'libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino'
+              - 'libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino'
+              - 'libraries/NetworkClientSecure/src/**'
+              - 'libraries/BLE/src/**'
+              - 'libraries/Insights/src/**'
+            idf:
+              - 'idf_component.yml'
+              - 'Kconfig.projbuild'
+            platformio:
+              - 'package.json'
+              - '.github/scripts/install-platformio-esp32.sh'
+              - 'tools/platformio-build.py'
+
+    - name: Set chunks
+      id: set-chunks
+      env:
+        LIB_FILES: ${{ steps.changed-files.outputs.libraries_all_changed_files }}
+        IS_PR: ${{ github.event_name == 'pull_request' }}
+        MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
+        BUILD_PLATFORMIO: ${{ steps.changed-files.outputs.platformio_any_changed == 'true' }}
+        BUILD_IDF: ${{ steps.changed-files.outputs.idf_any_changed == 'true' }}
+        BUILD_LIBRARIES: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
+        BUILD_STATIC_SKETCHES: ${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
+        FS_CHANGED: ${{ steps.changed-files.outputs.fs_any_changed == 'true' }}
+        NETWORKING_CHANGED: ${{ steps.changed-files.outputs.networking_any_changed == 'true' }}
+        CORE_CHANGED: ${{ steps.changed-files.outputs.core_any_changed == 'true' }}
+        LIB_CHANGED: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
+      run: |
+        bash ./.github/scripts/set_push_chunks.sh
+
+    - name: Upload sketches found
+      if: ${{ steps.set-chunks.outputs.build_all == 'false' && steps.set-chunks.outputs.build_libraries == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: sketches_found
+        path: sketches_found.txt
+        overwrite: true
+        if-no-files-found: error
+
+  # Ubuntu
+  build-arduino-linux:
+    name: Arduino ${{ matrix.chunk }} on ubuntu-latest
+    if: ${{ needs.gen-chunks.outputs.build_all == 'true' || needs.gen-chunks.outputs.build_libraries == 'true' }}
+    needs: gen-chunks
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJson(needs.gen-chunks.outputs.chunks) }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Get libs cache
+      uses: actions/cache@v4
+      with:
+        key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
+        path: |
+          ./tools/dist
+          ./tools/esp32-arduino-libs
+          ./tools/esptool
+          ./tools/mk*
+          ./tools/openocd-esp32
+          ./tools/riscv32-*
+          ./tools/xtensa-*
+
+    - name: Build all sketches
+      if: ${{ needs.gen-chunks.outputs.build_all == 'true' }}
+      run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ env.MAX_CHUNKS }} 1
+
+    - name: Download sketches found
+      if: ${{ needs.gen-chunks.outputs.build_all == 'false' && needs.gen-chunks.outputs.build_libraries == 'true' }}
+      uses: actions/download-artifact@v4
+      with:
+        name: sketches_found
+
+    - name: Build selected sketches
+      if: ${{ needs.gen-chunks.outputs.build_all == 'false' && needs.gen-chunks.outputs.build_libraries == 'true' }}
+      run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ needs.gen-chunks.outputs.chunk_count }} 1 sketches_found.txt
+
+    #Upload cli compile json as artifact
+    - name: Upload cli compile json
+      uses: actions/upload-artifact@v4
+      with:
+        name: pr_cli_compile_${{ matrix.chunk }}
+        path: cli_compile_${{ matrix.chunk }}.json
+        overwrite: true
+
+  # Windows and MacOS
+  build-arduino-win-mac:
+    name: Arduino on ${{ matrix.os }}
+    needs: gen-chunks
+    if: ${{ needs.gen-chunks.outputs.build_all == 'true' || needs.gen-chunks.outputs.build_static_sketches == 'true' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macOS-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Build Sketches
+      run: bash ./.github/scripts/on-push.sh
+
+  # PlatformIO on Windows, Ubuntu and Mac
+  build-platformio:
+    name: PlatformIO on ${{ matrix.os }}
+    needs: gen-chunks
+    if: |
+      needs.gen-chunks.outputs.build_all == 'true' ||
+      needs.gen-chunks.outputs.build_static_sketches == 'true' ||
+      needs.gen-chunks.outputs.build_platformio == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+    - name: Build Sketches
+      run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO
+
+  build-esp-idf-component:
+    name: Build with ESP-IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
+    needs: gen-chunks
+    if: |
+      needs.gen-chunks.outputs.build_all == 'true' ||
+      needs.gen-chunks.outputs.build_libraries == 'true' ||
+      needs.gen-chunks.outputs.build_idf == 'true'
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # The version names here correspond to the versions of espressif/idf Docker image.
+        # See https://hub.docker.com/r/espressif/idf/tags and
+        # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
+        # for details.
+        idf_ver: ["release-v5.1"]
+        idf_target: ["esp32", "esp32s2", "esp32s3", "esp32c2", "esp32c3", "esp32c6", "esp32h2"]
+    container: espressif/idf:${{ matrix.idf_ver }}
+    steps:
+      - name: Check out arduino-esp32 as a component
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: components/arduino-esp32
+      - name: Build
+        env:
+          IDF_TARGET: ${{ matrix.idf_target }}
+        shell: bash
+        run: |
+          . ${IDF_PATH}/export.sh
+          idf.py create-project test
+          echo CONFIG_FREERTOS_HZ=1000 > test/sdkconfig.defaults
+          idf.py -C test -DEXTRA_COMPONENT_DIRS=$PWD/components build
+
+  # Save artifacts to gh-pages
+  save-master-artifacts:
+    name: Save master artifacts
+    needs: build-arduino-linux
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+    # Check out repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          fetch-depth: '0'
+
+      - name: Switch branch
+        run:
+          git checkout remotes/origin/gh-pages
+
+      - name: Download sketches reports artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pr_cli_compile_*
+          merge-multiple: true
+          path: master_cli_compile
+
+      - name: List files in the directory
+        run: ls -R
+
+      - name: Commit json files to gh-pages if on master
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "Updated cli compile json files"
+          git push origin HEAD:gh-pages
+
+  #Upload PR number as artifact
+  upload-pr-number:
+    name: Upload PR number
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Save the PR number in an artifact
+        shell: bash
+        env:
+          PR_NUM: ${{ github.event.number }}
+        run: echo $PR_NUM > pr_num.txt
+      - name: Upload PR number
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr_number
+          path: ./pr_num.txt
+          overwrite: true

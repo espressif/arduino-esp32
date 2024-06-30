@@ -1,0 +1,53 @@
+name: Documentation Build and Production Deploy CI
+
+on:
+  release:
+    types: [published]
+  push:
+    branches:
+    - release/*
+    - master
+    paths:
+    - 'docs/**'
+    - '.github/workflows/docs_deploy.yml'
+
+jobs:
+
+  deploy-prod-docs:
+    name: Deploy Documentation on Production
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+    - uses: actions/setup-python@v5
+      with:
+        cache-dependency-path: docs/requirements.txt
+        cache: 'pip'
+        python-version: '3.10'
+    - name: Deploy Documentation
+      env:
+        # Deploy to production server
+        # DOCS_BUILD_DIR: "./docs/_build/"
+        DOCS_DEPLOY_PRIVATEKEY: ${{ secrets.DOCS_KEY }}
+        DOCS_DEPLOY_PATH: ${{ secrets.DOCS_PATH }}
+        DOCS_DEPLOY_SERVER: ${{ secrets.DOCS_SERVER }}
+        DOCS_DEPLOY_SERVER_USER: ${{ secrets.DOCS_USER }}
+        DOCS_DEPLOY_URL_BASE: ${{ secrets.DOCS_URL }}
+      run: |
+        sudo apt update
+        sudo apt install python3-pip python3-setuptools
+        source ./docs/utils.sh
+        add_doc_server_ssh_keys $DOCS_DEPLOY_PRIVATEKEY $DOCS_DEPLOY_SERVER $DOCS_DEPLOY_SERVER_USER
+        export GIT_VER=$(git describe --always)
+        echo "PIP install requirements..."
+        pip3 install --user -r ./docs/requirements.txt
+        echo "Building the Docs..."
+        cd ./docs && build-docs -l en
+        echo "Deploy the Docs..."
+        export DOCS_BUILD_DIR=$GITHUB_WORKSPACE/docs/
+        cd $GITHUB_WORKSPACE/docs
+        deploy-docs

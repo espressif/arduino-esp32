@@ -1,0 +1,71 @@
+exclude: |
+  (?x)(
+      ^\.github\/|
+      ^tests\/performance\/coremark\/.*\.[ch]$
+  )
+
+default_language_version:
+  # force all unspecified python hooks to run python3
+  python: python3
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.5.0"
+    hooks:
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: debug-statements
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: ^.*\.(bin|BIN)$
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+  - repo: https://github.com/codespell-project/codespell
+    rev: "v2.2.4"
+    hooks:
+      - id: codespell
+        exclude: ^.*\.(svd|SVD)$
+        stages: [manual]
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: "v18.1.3"
+    hooks:
+      - id: clang-format
+        types_or: [c, c++]
+        exclude: ^.*\/build_opt\.h$
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: "22.10.0"
+    hooks:
+      - id: black
+        types_or: [python]
+        args: [--line-length=120] #From the arduino code style. Add as argument rather than creating a new config file.
+  - repo: https://github.com/PyCQA/flake8
+    rev: "7.0.0"
+    hooks:
+      - id: flake8
+        types_or: [python]
+        additional_dependencies:
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-simplify
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v3.1.0"
+    hooks:
+      - id: prettier
+        types_or: [yaml]
+  - repo: https://github.com/errata-ai/vale
+    rev: "v3.0.7"
+    hooks:
+      - id: vale
+        name: vale-sync
+        language_version: "1.21.6"
+        pass_filenames: false
+        args: [sync]
+        types_or: [markdown, rst]
+        stages: [manual]
+      - id: vale
+        language_version: "1.21.6"
+        types_or: [markdown, rst]
+        stages: [manual]

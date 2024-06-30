@@ -1,0 +1,96 @@
+description: "Arduino core for ESP32, ESP32-S and ESP32-C series of SoCs"
+url: "https://github.com/espressif/arduino-esp32"
+license: "LGPL-2.1"
+targets:
+  - esp32
+  - esp32s2
+  - esp32s3
+  - esp32c2
+  - esp32c3
+  - esp32c6
+  - esp32h2
+tags:
+  - arduino
+files:
+  include:
+    - "variants/esp32/**/*"
+    - "variants/esp32s2/**/*"
+    - "variants/esp32s3/**/*"
+    - "variants/esp32c2/**/*"
+    - "variants/esp32c3/**/*"
+    - "variants/esp32c6/**/*"
+    - "variants/esp32h2/**/*"
+  exclude:
+    - "docs/"
+    - "docs/**/*"
+    - "idf_component_examples/"
+    - "idf_component_examples/**/*"
+    - "package/"
+    - "package/**/*"
+    - "tests/"
+    - "tests/**/*"
+    - "tools/"
+    - "tools/**/*"
+    - "variants/**/*"
+    - ".gitignore"
+    - ".gitmodules"
+    - ".readthedocs.yaml"
+    - "boards.txt"
+    - "CODE_OF_CONDUCT.md"
+    - "LICENSE.md"
+    - "package.json"
+    - "platform.txt"
+    - "programmers.txt"
+dependencies:
+  idf: ">=5.1,<5.2"
+  # mdns 1.2.1 is necessary to build H2 with no WiFi
+  espressif/mdns:
+    version: "^1.2.3"
+    require: public
+  espressif/esp_modem:
+    version: "^1.1.0"
+  espressif/esp-zboss-lib:
+    version: "^1.0.1"
+    rules:
+      - if: "target != esp32c2"
+  espressif/esp-zigbee-lib:
+    version: "^1.0.1"
+    rules:
+      - if: "target != esp32c2"
+  espressif/esp-dsp:
+    version: "^1.3.4"
+    rules:
+      - if: "target != esp32c2"
+  espressif/esp_rainmaker:
+    version: "^1.0.0"
+    rules:
+      - if: "target != esp32c2"
+  espressif/rmaker_common:
+    version: "^1.4.3"
+    rules:
+      - if: "target != esp32c2"
+  espressif/esp_insights:
+    version: "^1.0.1"
+    rules:
+      - if: "target != esp32c2"
+  espressif/qrcode:
+    version: "^0.1.0~1"
+    rules:
+      - if: "target != esp32c2"
+  espressif/esp-sr:
+    version: "^1.4.2"
+    rules:
+      - if: "target in [esp32s3]"
+  espressif/libsodium:
+    version: "^1.0.20~1"
+    require: public
+  espressif/esp-modbus:
+    version: "^1.0.15"
+    require: public
+  joltwallet/littlefs:
+    version: "^1.10.2"
+  chmorgan/esp-libhelix-mp3:
+    version: "1.0.3"
+    require: public
+examples:
+  - path: ./idf_component_examples/hello_world
