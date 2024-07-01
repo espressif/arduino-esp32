@@ -439,7 +439,7 @@ uart_t* uartBegin(uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rx
         // invert signal for both Rx and Tx
         retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
       } else {
-        // invert signal for both Rx and Tx
+        // disable invert signal for both Rx and Tx
         retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_INV_DISABLE);
       }
     }
