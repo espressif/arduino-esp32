@@ -10,7 +10,6 @@ static const uint8_t LED_BUILTIN = 37;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
-
 static const uint8_t BUTTON_1 = 0;
 static const uint8_t BAT_VOLT = 1;
 
@@ -30,15 +29,15 @@ static const uint8_t MOSI = 11;
 static const uint8_t MISO = 2;
 static const uint8_t SCK = 14;
 
-#define LORA_SCK    5    // SX1262 SCK
-#define LORA_MISO   3    // SX1262 MISO
-#define LORA_MOSI   6    // SX1262 MOSI
-#define LORA_CS     7    // SX1262 CS
-#define LORA_RST    8    // SX1262 RST
+#define LORA_SCK  5  // SX1262 SCK
+#define LORA_MISO 3  // SX1262 MISO
+#define LORA_MOSI 6  // SX1262 MOSI
+#define LORA_CS   7  // SX1262 CS
+#define LORA_RST  8  // SX1262 RST
 
-#define LORA_DIO1   33    //SX1262 DIO1
-#define LORA_BUSY   34
-#define LORA_IRQ    LORA_DIO1   
+#define LORA_DIO1 33  //SX1262 DIO1
+#define LORA_BUSY 34
+#define LORA_IRQ  LORA_DIO1
 
 // P1
 static const uint8_t PIN_42 = 45;
@@ -64,6 +63,5 @@ static const uint8_t PIN_12 = 12;
 static const uint8_t PIN_8 = 8;
 static const uint8_t PIN_15 = 15;
 static const uint8_t PIN_16 = 16;
-
 
 #endif /* Pins_Arduino_h */
