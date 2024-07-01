@@ -320,6 +320,15 @@ bool NetworkInterface::hasGlobalIPv6() const {
 bool NetworkInterface::enableIPv6(bool en) {
   if (en) {
     setStatusBits(ESP_NETIF_WANT_IP6_BIT);
+    if (_esp_netif != NULL && connected()) {
+      // If we are already connected, try to enable IPv6 immediately
+      esp_err_t err = esp_netif_create_ip6_linklocal(_esp_netif);
+      if (err != ESP_OK) {
+        log_e("Failed to enable IPv6 Link Local on %s: [%d] %s", desc(), err, esp_err_to_name(err));
+      } else {
+        log_v("Enabled IPv6 Link Local on %s", desc());
+      }
+    }
   } else {
     clearStatusBits(ESP_NETIF_WANT_IP6_BIT);
   }
