@@ -513,12 +513,16 @@ uart_t *uartBegin(
     retCode &= ESP_OK == uart_param_config(uart_nr, &uart_config);
   }
 
-  // Is it right or the idea is to swap rx and tx pins?
-  if (retCode && inverted) {
-    // invert signal for both Rx and Tx
-    retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
+  if (retCode) {
+    if (inverted) {
+      // invert signal for both Rx and Tx
+      retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
+    } else {
+      // disable invert signal for both Rx and Tx
+      retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_INV_DISABLE);
+    }
   }
-
+  // if all fine, set internal parameters
   if (retCode) {
     uart->_baudrate = baudrate;
     uart->_config = config;
