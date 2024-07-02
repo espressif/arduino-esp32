@@ -181,6 +181,26 @@ Specify additional configs to be applied. ex. 'qio 80m' to compile for QIO Flash
 
     ./build.sh -t esp32 -b idf_libs qio 80m
 
+User Interface
+--------------
+
+There is also a terminal user interface that can be used to configure the libraries to be compiled.
+It allows the user to select the targets to compile, change the configuration options and compile the libraries.
+It has mouse support and can be pre-configured using command line arguments.
+For more information and troubleshooting, check `the documentation <https://github.com/espressif/esp32-arduino-lib-builder/blob/master/tools/config_editor/README.md>`_.
+
+To use the terminal user interface, make sure to have ``python>=3.9``, all the previous dependencies and install the ``textual`` library:
+
+.. code-block:: bash
+
+    pip install --user textual
+
+You can then run the UI using the following command:
+
+.. code-block:: bash
+
+    ./tools/config_editor/app.py
+
 Docker Image
 ------------
 
