@@ -22,7 +22,12 @@ jobs:
         statuses: write
         checks: write
         pull-requests: write
+        contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
       - name: Download and Extract Artifacts
         uses: dawidd6/action-download-artifact@v6
         with:
@@ -102,7 +107,31 @@ jobs:
               repo: repo,
               sha: sha,
               state: '${{ job.status }}',
-              description: '${{ job.status }}' ? 'Runtime tests successful' : 'Runtime tests failed',
+              description: '${{ job.status }}' == 'success' ? 'Runtime tests successful' : 'Runtime tests failed',
               target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })).data;
             core.info(`${name} is ${state}`);
+
+      - name: Create output folder
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        run: |
+          rm -rf artifacts
+          mkdir -p runtime-tests-results
+
+      - name: Generate badge
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        uses: jaywcjlove/generated-badges@main
+        with:
+          label: Runtime Tests
+          status: ${{ job.status }}
+          output: runtime-tests-results/badge.svg
+          color: ${{ job.status == 'success' && 'green' || 'red' }}
+
+      - name: Push badge
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit -m "Updated runtime tests badge"
+          git push origin HEAD:gh-pages
