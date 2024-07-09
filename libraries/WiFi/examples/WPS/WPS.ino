@@ -20,35 +20,28 @@ Pranav Cherukupalli <cherukupallip@gmail.com>
 Change the definition of the WPS mode
 from WPS_TYPE_PBC to WPS_TYPE_PIN in
 the case that you are using pin type
-WPS
+WPS (pin is 00000000)
 */
 #define ESP_WPS_MODE     WPS_TYPE_PBC
-#define ESP_MANUFACTURER "ESPRESSIF"
-#define ESP_MODEL_NUMBER "ESP32"
-#define ESP_MODEL_NAME   "ESPRESSIF IOT"
-#define ESP_DEVICE_NAME  "ESP STATION"
-
-static esp_wps_config_t config;
-
-void wpsInitConfig() {
-  config.wps_type = ESP_WPS_MODE;
-  strcpy(config.factory_info.manufacturer, ESP_MANUFACTURER);
-  strcpy(config.factory_info.model_number, ESP_MODEL_NUMBER);
-  strcpy(config.factory_info.model_name, ESP_MODEL_NAME);
-  strcpy(config.factory_info.device_name, ESP_DEVICE_NAME);
-}
 
 void wpsStart() {
-  if (esp_wifi_wps_enable(&config)) {
-    Serial.println("WPS Enable Failed");
-  } else if (esp_wifi_wps_start(0)) {
-    Serial.println("WPS Start Failed");
+  esp_wps_config_t config = WPS_CONFIG_INIT_DEFAULT(ESP_WPS_MODE);
+  esp_err_t err = esp_wifi_wps_enable(&config);
+  if (err != ESP_OK) {
+    Serial.printf("WPS Enable Failed: 0x%x: %s\n", err, esp_err_to_name(err));
+    return;
+  }
+
+  err = esp_wifi_wps_start(0);
+  if (err != ESP_OK) {
+    Serial.printf("WPS Start Failed: 0x%x: %s\n", err, esp_err_to_name(err));
   }
 }
 
 void wpsStop() {
-  if (esp_wifi_wps_disable()) {
-    Serial.println("WPS Disable Failed");
+  esp_err_t err = esp_wifi_wps_disable();
+  if (err != ESP_OK) {
+    Serial.printf("WPS Disable Failed: 0x%x: %s\n", err, esp_err_to_name(err));
   }
 }
 
@@ -102,7 +95,6 @@ void setup() {
   WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
   WiFi.mode(WIFI_MODE_STA);
   Serial.println("Starting WPS");
-  wpsInitConfig();
   wpsStart();
 }
 
