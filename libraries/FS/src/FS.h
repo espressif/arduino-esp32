@@ -64,7 +64,7 @@ public:
   bool seek(uint32_t pos) {
     return seek(pos, SeekSet);
   }
-  size_t position() const; // returns (size_t)-1 on error
+  size_t position() const;  // returns (size_t)-1 on error
   size_t size() const;
   bool setBufferSize(size_t size);
   void close();
