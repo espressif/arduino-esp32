@@ -345,23 +345,25 @@ void WebServer::_uploadWriteByte(uint8_t b) {
 
 int WebServer::_uploadReadByte(NetworkClient &client) {
   int res = client.read();
-  
+
   if (res < 0) {
     // keep trying until you either read a valid byte or timeout
     const unsigned long startMillis = millis();
     const long timeoutIntervalMillis = client.getTimeout();
     bool timedOut = false;
-    for(;;) {
-      if (!client.connected()) return -1;
+    for (;;) {
+      if (!client.connected()) {
+        return -1;
+      }
       // loosely modeled after blinkWithoutDelay pattern
-      while(!timedOut && !client.available() && client.connected()){
+      while (!timedOut && !client.available() && client.connected()) {
         delay(2);
         timedOut = (millis() - startMillis) >= timeoutIntervalMillis;
       }
 
       res = client.read();
-      if(res >= 0) {
-        return res; // exit on a valid read
+      if (res >= 0) {
+        return res;  // exit on a valid read
       }
       // NOTE: it is possible to get here and have all of the following
       //       assertions hold true
@@ -377,7 +379,7 @@ int WebServer::_uploadReadByte(NetworkClient &client) {
 
       timedOut = (millis() - startMillis) >= timeoutIntervalMillis;
       if (timedOut) {
-        return res; // exit on a timeout
+        return res;  // exit on a timeout
       }
     }
   }
