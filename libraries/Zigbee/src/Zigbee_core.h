@@ -20,9 +20,9 @@ typedef struct {
 
 // enum of Zigbee Roles
 typedef enum {
-    Zigbee_Coordinator = 0,
-    Zigbee_Router = 1,
-    Zigbee_End_Device = 2
+    ZIGBEE_COORDINATOR = 0,
+    ZIGBEE_ROUTER = 1,
+    ZIGBEE_END_DEVICE = 2
 } zigbee_role_t;
 
 // default Zigbee configuration for each role
