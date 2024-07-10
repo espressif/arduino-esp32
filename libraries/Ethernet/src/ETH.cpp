@@ -131,8 +131,7 @@ ETHClass::ETHClass(uint8_t eth_index)
     _pin_mcd(-1), _pin_mdio(-1), _pin_power(-1), _pin_rmii_clock(-1)
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
     ,
-    _task_stack_size(4096)
-{
+    _task_stack_size(4096) {
 }
 
 ETHClass::~ETHClass() {}
