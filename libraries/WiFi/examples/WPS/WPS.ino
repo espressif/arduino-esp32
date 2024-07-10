@@ -22,7 +22,7 @@ from WPS_TYPE_PBC to WPS_TYPE_PIN in
 the case that you are using pin type
 WPS (pin is 00000000)
 */
-#define ESP_WPS_MODE     WPS_TYPE_PBC
+#define ESP_WPS_MODE WPS_TYPE_PBC
 
 void wpsStart() {
   esp_wps_config_t config = WPS_CONFIG_INIT_DEFAULT(ESP_WPS_MODE);
