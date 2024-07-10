@@ -130,6 +130,8 @@ ETHClass::ETHClass(uint8_t eth_index)
     ,
     _pin_mcd(-1), _pin_mdio(-1), _pin_power(-1), _pin_rmii_clock(-1)
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
+    ,
+    _task_stack_size(4096)
 {
 }
 
@@ -139,6 +141,10 @@ bool ETHClass::ethDetachBus(void *bus_pointer) {
   ETHClass *bus = (ETHClass *)bus_pointer;
   bus->end();
   return true;
+}
+
+void ETHClass::setTaskStackSize(size_t size) {
+  _task_stack_size = size;
 }
 
 #if CONFIG_ETH_USE_ESP32_EMAC
@@ -214,6 +220,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
   eth_mac_config.sw_reset_timeout_ms = 1000;
+  eth_mac_config.rx_task_stack_size = _task_stack_size;
 
   esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
   if (mac == NULL) {
@@ -577,6 +584,9 @@ bool ETHClass::beginSPI(
   // Init common MAC and PHY configs to default
   __unused eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
   __unused eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
+
+  // Set RX Task Stack Size
+  eth_mac_config.rx_task_stack_size = _task_stack_size;
 
   // Update PHY config based on board specific configuration
   phy_config.phy_addr = phy_addr;
