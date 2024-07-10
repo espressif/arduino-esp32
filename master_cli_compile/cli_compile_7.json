@@ -4,7 +4,7 @@
                 "sketches": [
 {"name": "HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
-                            "flash_bytes": 938345,
+                            "flash_bytes": 938341,
                             "flash_percentage": 29,
                             "ram_bytes": 42640,
                             "ram_percentage": 13
@@ -12,7 +12,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSPIFFS",
                     "sizes": [{
-                            "flash_bytes": 937569,
+                            "flash_bytes": 937565,
                             "flash_percentage": 29,
                             "ram_bytes": 42640,
                             "ram_percentage": 13
@@ -20,7 +20,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSecure",
                     "sizes": [{
-                            "flash_bytes": 1023429,
+                            "flash_bytes": 1023421,
                             "flash_percentage": 32,
                             "ram_bytes": 43208,
                             "ram_percentage": 13
@@ -28,7 +28,7 @@
                     },
 {"name": "HTTPUpdateServer/examples/WebUpdater",
                     "sizes": [{
-                            "flash_bytes": 964253,
+                            "flash_bytes": 964313,
                             "flash_percentage": 30,
                             "ram_bytes": 44704,
                             "ram_percentage": 13
@@ -201,7 +201,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 965374,
+                            "flash_bytes": 965370,
                             "flash_percentage": 30,
                             "ram_bytes": 37980,
                             "ram_percentage": 11
@@ -294,7 +294,7 @@
                     },
 {"name": "HTTPUpdateServer/examples/WebUpdater",
                     "sizes": [{
-                            "flash_bytes": 1004432,
+                            "flash_bytes": 1004510,
                             "flash_percentage": 31,
                             "ram_bytes": 37860,
                             "ram_percentage": 11
@@ -395,7 +395,7 @@
                     },
 {"name": "HTTPUpdateServer/examples/WebUpdater",
                     "sizes": [{
-                            "flash_bytes": 990886,
+                            "flash_bytes": 990964,
                             "flash_percentage": 31,
                             "ram_bytes": 42336,
                             "ram_percentage": 12
@@ -485,33 +485,33 @@
                 "sketches": [
 {"name": "Ethernet/examples/ETH_LAN8720",
                     "sizes": [{
-                            "flash_bytes": 508945,
+                            "flash_bytes": 508961,
                             "flash_percentage": 16,
-                            "ram_bytes": 25024,
+                            "ram_bytes": 25032,
                             "ram_percentage": 7
                             }]
                     },
 {"name": "Ethernet/examples/ETH_TLK110",
                     "sizes": [{
-                            "flash_bytes": 508949,
+                            "flash_bytes": 508965,
                             "flash_percentage": 16,
-                            "ram_bytes": 25024,
+                            "ram_bytes": 25032,
                             "ram_percentage": 7
                             }]
                     },
 {"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 549317,
+                            "flash_bytes": 549333,
                             "flash_percentage": 17,
-                            "ram_bytes": 25184,
+                            "ram_bytes": 25192,
                             "ram_percentage": 7
                             }]
                     },
 {"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 547769,
+                            "flash_bytes": 547785,
                             "flash_percentage": 17,
-                            "ram_bytes": 25184,
+                            "ram_bytes": 25192,
                             "ram_percentage": 7
                             }]
                     },
@@ -533,7 +533,7 @@
                     },
 {"name": "HTTPClient/examples/Authorization",
                     "sizes": [{
-                            "flash_bytes": 1033869,
+                            "flash_bytes": 1033849,
                             "flash_percentage": 32,
                             "ram_bytes": 46880,
                             "ram_percentage": 14
@@ -541,7 +541,7 @@
                     },
 {"name": "HTTPClient/examples/BasicHttpClient",
                     "sizes": [{
-                            "flash_bytes": 1033869,
+                            "flash_bytes": 1033849,
                             "flash_percentage": 32,
                             "ram_bytes": 46880,
                             "ram_percentage": 14
@@ -549,7 +549,7 @@
                     },
 {"name": "HTTPClient/examples/BasicHttpsClient",
                     "sizes": [{
-                            "flash_bytes": 1038601,
+                            "flash_bytes": 1038581,
                             "flash_percentage": 33,
                             "ram_bytes": 47120,
                             "ram_percentage": 14
@@ -557,7 +557,7 @@
                     },
 {"name": "HTTPClient/examples/HTTPClientEnterprise",
                     "sizes": [{
-                            "flash_bytes": 1081681,
+                            "flash_bytes": 1081661,
                             "flash_percentage": 34,
                             "ram_bytes": 47376,
                             "ram_percentage": 14
@@ -565,7 +565,7 @@
                     },
 {"name": "HTTPClient/examples/ReuseConnection",
                     "sizes": [{
-                            "flash_bytes": 1033421,
+                            "flash_bytes": 1033401,
                             "flash_percentage": 32,
                             "ram_bytes": 47088,
                             "ram_percentage": 14
@@ -573,7 +573,7 @@
                     },
 {"name": "HTTPClient/examples/StreamHttpClient",
                     "sizes": [{
-                            "flash_bytes": 1033193,
+                            "flash_bytes": 1033189,
                             "flash_percentage": 32,
                             "ram_bytes": 46880,
                             "ram_percentage": 14
@@ -581,7 +581,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
-                            "flash_bytes": 968585,
+                            "flash_bytes": 968581,
                             "flash_percentage": 30,
                             "ram_bytes": 46800,
                             "ram_percentage": 14
