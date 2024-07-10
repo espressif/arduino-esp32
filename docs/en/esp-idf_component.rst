@@ -16,7 +16,7 @@ For more information, see the `Lib Builder documentation <lib_builder.html>`_.
 
 .. note:: Latest Arduino Core ESP32 version (3.0.X) is now compatible with `ESP-IDF v5.1 <https://github.com/espressif/esp-idf/tree/release/v5.1>`_. Please consider this compatibility when using Arduino as a component in ESP-IDF.
 
-For easiest use of Arduino framework as a ESP-IDF component, you can use the `IDF Component Manager <https://docs.espressif.com/projects/esp-idf/en/v5.1.4/esp32/api-guides/tools/idf-component-manager.html>`_ to add the Arduino component to your project. 
+For easiest use of Arduino framework as a ESP-IDF component, you can use the `IDF Component Manager <https://docs.espressif.com/projects/esp-idf/en/v5.1.4/esp32/api-guides/tools/idf-component-manager.html>`_ to add the Arduino component to your project.
 This will automatically clone the repository and its submodules. You can find the Arduino component in the `ESP Registry <https://components.espressif.com/components/espressif/arduino-esp32>`_ together with dependencies list and examples.
 
 Installation
