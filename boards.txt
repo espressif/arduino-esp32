@@ -15264,7 +15264,7 @@ nodemcu-32s.build.target=esp32
 nodemcu-32s.build.mcu=esp32
 nodemcu-32s.build.core=esp32
 nodemcu-32s.build.variant=nodemcu-32s
-nodemcu-32s.build.board=NodeMCU_32S
+nodemcu-32s.build.board=NODEMCU_32S
 
 nodemcu-32s.build.f_cpu=240000000L
 nodemcu-32s.build.flash_mode=dio
@@ -15278,9 +15278,6 @@ nodemcu-32s.menu.FlashFreq.80.build.flash_freq=80m
 nodemcu-32s.menu.FlashFreq.40=40MHz
 nodemcu-32s.menu.FlashFreq.40.build.flash_freq=40m
 
-nodemcu-32s.menu.UploadSpeed.460800.linux=460800
-nodemcu-32s.menu.UploadSpeed.460800.macosx=460800
-nodemcu-32s.menu.UploadSpeed.460800.upload.speed=460800
 nodemcu-32s.menu.UploadSpeed.115200=115200
 nodemcu-32s.menu.UploadSpeed.115200.upload.speed=115200
 nodemcu-32s.menu.UploadSpeed.256000.windows=256000
@@ -15290,6 +15287,9 @@ nodemcu-32s.menu.UploadSpeed.230400=230400
 nodemcu-32s.menu.UploadSpeed.230400.upload.speed=230400
 nodemcu-32s.menu.UploadSpeed.512000.windows=512000
 nodemcu-32s.menu.UploadSpeed.512000.upload.speed=512000
+nodemcu-32s.menu.UploadSpeed.460800.linux=460800
+nodemcu-32s.menu.UploadSpeed.460800.macosx=460800
+nodemcu-32s.menu.UploadSpeed.460800.upload.speed=460800
 nodemcu-32s.menu.UploadSpeed.921600=921600
 nodemcu-32s.menu.UploadSpeed.921600.upload.speed=921600
 
