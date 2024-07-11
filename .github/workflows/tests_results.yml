@@ -120,7 +120,7 @@ jobs:
 
       - name: Generate badge
         if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
-        uses: jaywcjlove/generated-badges@main
+        uses: jaywcjlove/generated-badges@v1.0.13
         with:
           label: Runtime Tests
           status: ${{ job.status }}
@@ -132,6 +132,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add --all
-          git commit -m "Updated runtime tests badge"
-          git push origin HEAD:gh-pages
+          if [[ `git status --porcelain` ]]; then
+            git add --all
+            git commit -m "Updated runtime tests badge"
+            git push origin HEAD:gh-pages
+          fi
