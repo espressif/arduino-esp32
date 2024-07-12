@@ -2413,6 +2413,7 @@ esp32wroverkit.menu.FlashSize.2M.build.flash_size=2MB
 esp32wroverkit.menu.FlashSize.2M.build.partitions=minimal
 esp32wroverkit.menu.FlashSize.16M=16MB (128Mb)
 esp32wroverkit.menu.FlashSize.16M.build.flash_size=16MB
+esp32wroverkit.menu.FlashSize.16M.build.partitions=default_16MB
 
 esp32wroverkit.menu.PSRAM.enabled=Enabled
 esp32wroverkit.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
@@ -2426,6 +2427,9 @@ esp32wroverkit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 esp32wroverkit.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 esp32wroverkit.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32wroverkit.menu.PartitionScheme.default_16MB=16M with spiffs (6.25MB APP/3.43MB SPIFFS)
+esp32wroverkit.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+esp32wroverkit.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
 esp32wroverkit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32wroverkit.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
