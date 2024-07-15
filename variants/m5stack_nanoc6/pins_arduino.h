@@ -27,7 +27,7 @@ static const uint8_t SCK = 8;   // Not connected
 
 static const uint8_t A1 = 1;
 static const uint8_t A2 = 2;
-static const uint8_t A3 = 2;
+static const uint8_t A3 = 3;
 
 static const uint8_t D1 = 1;
 static const uint8_t D2 = 2;
