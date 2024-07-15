@@ -105,6 +105,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   uint8_t group = (channel / 8), timer = ((channel / 2) % 4);
   bool channel_used = ledc_handle.used_channels & (1UL << channel);
   if (channel_used) {
+    log_i("Channel %u is already set up, given frequency and resolution will be ignored", channel);
     if (ledc_set_pin(pin, group, channel % 8) != ESP_OK) {
       log_e("Attaching pin to already used channel failed!");
       return false;
@@ -135,6 +136,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   //get resolution of selected channel when used
   if (channel_used) {
     uint32_t channel_resolution = 0;
+    log_i("Channel %u frequency: %u, resolution: %u", channel, ledc_get_freq(group, timer), channel_resolution);
     ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &channel_resolution);
     handle->channel_resolution = (uint8_t)channel_resolution;
   }
