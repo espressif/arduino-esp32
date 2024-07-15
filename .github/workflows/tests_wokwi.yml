@@ -92,6 +92,11 @@ jobs:
             exit 1
           fi
 
+          conclusion="${{ github.event.workflow_run.conclusion }}"
+          printf "$conclusion" >> artifacts/conclusion.txt
+          printf "\nConclusion = "
+          cat artifacts/conclusion.txt
+
           echo "pr_num=$pr_num" >> $GITHUB_OUTPUT
           echo "ref=$ref" >> $GITHUB_OUTPUT
 

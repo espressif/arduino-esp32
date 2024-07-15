@@ -40,15 +40,18 @@ jobs:
           original_action=$(cat ./artifacts/parent-artifacts/action.txt)
           original_sha=$(cat ./artifacts/parent-artifacts/sha.txt)
           original_ref=$(cat ./artifacts/parent-artifacts/ref.txt)
+          original_conclusion=$(cat ./artifacts/parent-artifacts/conclusion.txt)
           echo "original_event=$original_event" >> $GITHUB_ENV
           echo "original_action=$original_action" >> $GITHUB_ENV
           echo "original_sha=$original_sha" >> $GITHUB_ENV
           echo "original_ref=$original_ref" >> $GITHUB_ENV
+          echo "original_conclusion=$original_conclusion" >> $GITHUB_ENV
 
           echo "original_event = $original_event"
           echo "original_action = $original_action"
           echo "original_sha = $original_sha"
           echo "original_ref = $original_ref"
+          echo "original_conclusion = $original_conclusion"
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -58,6 +61,10 @@ jobs:
           event_name: ${{ env.original_event }}
           files: ./artifacts/**/*.xml
           action_fail: true
+
+      - name: Fail if tests failed
+        if: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' }}
+        run: exit 1
 
       - name: Clean up caches
         if: always()
@@ -120,7 +127,7 @@ jobs:
 
       - name: Generate badge
         if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
-        uses: jaywcjlove/generated-badges@main
+        uses: jaywcjlove/generated-badges@v1.0.13
         with:
           label: Runtime Tests
           status: ${{ job.status }}
@@ -132,6 +139,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add --all
-          git commit -m "Updated runtime tests badge"
-          git push origin HEAD:gh-pages
+          if [[ `git status --porcelain` ]]; then
+            git add --all
+            git commit -m "Updated runtime tests badge"
+            git push origin HEAD:gh-pages
+          fi
