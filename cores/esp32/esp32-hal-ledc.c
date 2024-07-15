@@ -48,9 +48,26 @@ static bool fade_initialized = false;
 
 static bool ledcDetachBus(void *bus) {
   ledc_channel_handle_t *handle = (ledc_channel_handle_t *)bus;
-  ledc_handle.used_channels &= ~(1UL << handle->channel);
+  bool channel_found = false;
+  // Check if more pins are attached to the same ledc channel
+  for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
+    if (!perimanPinIsValid(i)) {
+      continue;  //invalid pin, skip
+    }
+    peripheral_bus_type_t type = perimanGetPinBusType(i);
+    if (type == ESP32_BUS_TYPE_LEDC) {
+      ledc_channel_handle_t *bus_check = (ledc_channel_handle_t *)perimanGetPinBus(i, ESP32_BUS_TYPE_LEDC);
+      if (bus_check->channel == handle->channel) {
+        channel_found = true;
+        break;
+      }
+    }
+  }
   pinMatrixOutDetach(handle->pin, false, false);
   free(handle);
+  if (!channel_found) {
+    ledc_handle.used_channels &= ~(1UL << handle->channel);
+  }
   if (ledc_handle.used_channels == 0) {
     ledc_fade_func_uninstall();
     fade_initialized = false;
@@ -59,8 +76,8 @@ static bool ledcDetachBus(void *bus) {
 }
 
 bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel) {
-  if (channel >= LEDC_CHANNELS || ledc_handle.used_channels & (1UL << channel)) {
-    log_e("Channel %u is not available (maximum %u) or already used!", channel, LEDC_CHANNELS);
+  if (channel >= LEDC_CHANNELS) { //|| ledc_handle.used_channels & (1UL << channel)) {
+    log_e("Channel %u is not available (maximum %u) TODO: delete (or already used)!", channel, LEDC_CHANNELS);
     return false;
   }
   if (freq == 0) {
