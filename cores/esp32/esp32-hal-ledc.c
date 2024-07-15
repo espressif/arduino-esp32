@@ -77,7 +77,7 @@ static bool ledcDetachBus(void *bus) {
 }
 
 bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel) {
-  if (channel >= LEDC_CHANNELS) { //|| ledc_handle.used_channels & (1UL << channel)) {
+  if (channel >= LEDC_CHANNELS) {
     log_e("Channel %u is not available (maximum %u)!", channel, LEDC_CHANNELS);
     return false;
   }
