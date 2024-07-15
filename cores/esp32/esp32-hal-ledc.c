@@ -65,10 +65,10 @@ static bool ledcDetachBus(void *bus) {
     }
   }
   pinMatrixOutDetach(handle->pin, false, false);
-  free(handle);
   if (!channel_found) {
     ledc_handle.used_channels &= ~(1UL << handle->channel);
   }
+  free(handle);
   if (ledc_handle.used_channels == 0) {
     ledc_fade_func_uninstall();
     fade_initialized = false;
@@ -136,8 +136,8 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   //get resolution of selected channel when used
   if (channel_used) {
     uint32_t channel_resolution = 0;
-    log_i("Channel %u frequency: %u, resolution: %u", channel, ledc_get_freq(group, timer), channel_resolution);
     ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &channel_resolution);
+    log_i("Channel %u frequency: %u, resolution: %u", channel, ledc_get_freq(group, timer), channel_resolution);
     handle->channel_resolution = (uint8_t)channel_resolution;
   }
   else {
