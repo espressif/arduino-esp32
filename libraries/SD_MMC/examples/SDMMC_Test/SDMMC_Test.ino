@@ -214,8 +214,8 @@ void setup() {
     // If you want to change the pin assignment on ESP32-S3 uncomment this block and the appropriate
     // line depending if you want to use 1-bit or 4-bit line.
     // Please note that ESP32 does not allow pin change and will always fail.
-    //if(! setPins(clk, cmd, d0)){
-    //if(! setPins(clk, cmd, d0, d1, d2, d3)){
+    //if(! SD_MMC.setPins(clk, cmd, d0)){
+    //if(! SD_MMC.setPins(clk, cmd, d0, d1, d2, d3)){
         Serial.println("Pin change failed!");
         return;
     }
