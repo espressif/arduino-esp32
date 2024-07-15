@@ -7,12 +7,13 @@
 #define USB_VID 0x303a
 #define USB_PID 0x8216
 
-static const uint8_t LED_BUILTIN = 8 + SOC_GPIO_PIN_COUNT;;
+static const uint8_t LED_BUILTIN = 8 + SOC_GPIO_PIN_COUNT;
+;
 #define BUILTIN_LED    LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN    LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 #define RGB_BUILTIN    LED_BUILTIN
 #define RGB_BRIGHTNESS 5
-#define RGB_POWER     7  //RGB LED POWER PIN
+#define RGB_POWER      7  //RGB LED POWER PIN
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
