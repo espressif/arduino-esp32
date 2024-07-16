@@ -45,6 +45,7 @@ ledcAttachChannel
 *****************
 
 This function is used to setup LEDC pin with given frequency, resolution and channel.
+Attaching multiple pins to the same channel will make them share the same duty cycle. Given frequency, resolution will be ignored if channel is already configured.
 
 .. code-block:: arduino
 
@@ -72,6 +73,21 @@ This function is used to set duty for the LEDC pin.
 
 * ``pin`` select LEDC pin.
 * ``duty`` select duty to be set for selected LEDC pin.
+
+This function will return ``true`` if setting duty is successful.
+If ``false`` is returned, error occurs and duty was not set.
+
+ledcWriteChannel
+****************
+
+This function is used to set duty for the LEDC channel.
+
+.. code-block:: arduino
+
+    bool ledcWriteChannel(uint8_t channel, uint32_t duty);
+
+* ``channel`` select LEDC channel.
+* ``duty`` select duty to be set for selected LEDC channel.
 
 This function will return ``true`` if setting duty is successful.
 If ``false`` is returned, error occurs and duty was not set.
