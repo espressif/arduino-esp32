@@ -3,7 +3,7 @@
 
  This example shows how to software fade LED
  using the ledcWriteChannel function on multiple pins.
- This example is useful if you need to control synchronously 
+ This example is useful if you need to control synchronously
  multiple LEDs on different pins.
 
  Code adapted from original Arduino Fade example:

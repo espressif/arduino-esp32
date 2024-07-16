@@ -110,8 +110,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
       log_e("Attaching pin to already used channel failed!");
       return false;
     }
-  }
-  else {
+  } else {
     ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = resolution, .freq_hz = freq, .clk_cfg = LEDC_DEFAULT_CLK};
     if (ledc_timer_config(&ledc_timer) != ESP_OK) {
       log_e("ledc setup failed!");
@@ -139,8 +138,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &channel_resolution);
     log_i("Channel %u frequency: %u, resolution: %u", channel, ledc_get_freq(group, timer), channel_resolution);
     handle->channel_resolution = (uint8_t)channel_resolution;
-  }
-  else {
+  } else {
     handle->channel_resolution = resolution;
     ledc_handle.used_channels |= 1UL << channel;
   }
@@ -186,7 +184,7 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
   return false;
 }
 
-bool ledcWriteChannel(uint8_t channel, uint32_t duty){
+bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
   //check if channel is valid and used
   if (channel >= LEDC_CHANNELS || !(ledc_handle.used_channels & (1UL << channel))) {
     log_e("Channel %u is not available (maximum %u) or not used!", channel, LEDC_CHANNELS);
@@ -197,7 +195,7 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty){
   //Fixing if all bits in resolution is set = LEDC FULL ON
   uint32_t resolution = 0;
   ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &resolution);
-  
+
   uint32_t max_duty = (1 << resolution) - 1;
 
   if ((duty == max_duty) && (max_duty != 1)) {
