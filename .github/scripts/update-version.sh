@@ -36,4 +36,11 @@ sed "s/#define ESP_ARDUINO_VERSION_MAJOR.*/#define ESP_ARDUINO_VERSION_MAJOR $ES
 sed "s/#define ESP_ARDUINO_VERSION_MINOR.*/#define ESP_ARDUINO_VERSION_MINOR $ESP_ARDUINO_VERSION_MINOR/g" | \
 sed "s/#define ESP_ARDUINO_VERSION_PATCH.*/#define ESP_ARDUINO_VERSION_PATCH $ESP_ARDUINO_VERSION_PATCH/g" > __esp_arduino_version.h && mv __esp_arduino_version.h cores/esp32/esp_arduino_version.h
 
+for lib in `ls libraries`; do
+	if [ -f "libraries/$lib/library.properties" ]; then
+		echo "Updating Library $lib..."
+		cat "libraries/$lib/library.properties" | sed "s/version=.*/version=$ESP_ARDUINO_VERSION/g" > "libraries/$lib/__library.properties" && mv "libraries/$lib/__library.properties" "libraries/$lib/library.properties"
+	fi
+done
+
 exit 0
