@@ -35,6 +35,7 @@ NetworkInterface *getNetifByID(Network_Interface_ID id) {
 }
 
 #if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
+extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) __attribute__((weak));
 extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) {
   if (ip6_addr_isany_val(inp->ip6_addr[0].u_addr.ip6)) {
     // We don't have an LL address -> eat this packet here, so it won't get accepted on input netif
