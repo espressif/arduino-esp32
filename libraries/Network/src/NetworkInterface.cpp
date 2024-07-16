@@ -11,7 +11,6 @@
 #include "lwip/ip_addr.h"
 #include "lwip/err.h"
 #include "lwip/netif.h"
-#include "lwip/dns.h"
 #include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp32-hal-log.h"
