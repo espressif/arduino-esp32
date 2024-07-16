@@ -76,15 +76,23 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCFade",
                     "sizes": [{
-                            "flash_bytes": 291781,
+                            "flash_bytes": 292133,
                             "flash_percentage": 9,
                             "ram_bytes": 18168,
                             "ram_percentage": 5
                             }]
                     },
+{"name": "ESP32/examples/AnalogOut/LEDCSingleChannel",
+                    "sizes": [{
+                            "flash_bytes": 275913,
+                            "flash_percentage": 8,
+                            "ram_bytes": 18160,
+                            "ram_percentage": 5
+                            }]
+                    },
 {"name": "ESP32/examples/AnalogOut/LEDCSoftwareFade",
                     "sizes": [{
-                            "flash_bytes": 275641,
+                            "flash_bytes": 275993,
                             "flash_percentage": 8,
                             "ram_bytes": 18160,
                             "ram_percentage": 5
@@ -100,17 +108,9 @@
                     },
 {"name": "ESP32/examples/AnalogOut/ledcFrequency",
                     "sizes": [{
-                            "flash_bytes": 286677,
+                            "flash_bytes": 287013,
                             "flash_percentage": 9,
                             "ram_bytes": 18168,
-                            "ram_percentage": 5
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
-                    "sizes": [{
-                            "flash_bytes": 288165,
-                            "flash_percentage": 9,
-                            "ram_bytes": 18176,
                             "ram_percentage": 5
                             }]
                     }
@@ -119,9 +119,17 @@
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "ESP32/examples/AnalogOut/ledcFrequency",
+                    "sizes": [{
+                            "flash_bytes": 258090,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13688,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
                     "sizes": [{
-                            "flash_bytes": 259274,
+                            "flash_bytes": 259582,
                             "flash_percentage": 8,
                             "ram_bytes": 13712,
                             "ram_percentage": 4
@@ -161,7 +169,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 974434,
+                            "flash_bytes": 974738,
                             "flash_percentage": 30,
                             "ram_bytes": 53040,
                             "ram_percentage": 16
@@ -204,14 +212,6 @@
                             "flash_bytes": 282978,
                             "flash_percentage": 8,
                             "ram_bytes": 14272,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/FreeRTOS/Mutex",
-                    "sizes": [{
-                            "flash_bytes": 254774,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13624,
                             "ram_percentage": 4
                             }]
                     }
@@ -310,7 +310,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCFade",
                     "sizes": [{
-                            "flash_bytes": 266448,
+                            "flash_bytes": 266898,
                             "flash_percentage": 8,
                             "ram_bytes": 11728,
                             "ram_percentage": 3
@@ -411,7 +411,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCFade",
                     "sizes": [{
-                            "flash_bytes": 223016,
+                            "flash_bytes": 223430,
                             "flash_percentage": 7,
                             "ram_bytes": 12592,
                             "ram_percentage": 3

@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "USB/examples/HIDVendor",
+                    "sizes": [{
+                            "flash_bytes": 349729,
+                            "flash_percentage": 11,
+                            "ram_bytes": 31000,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "USB/examples/Keyboard/KeyboardLogout",
                     "sizes": [{
                             "flash_bytes": 336585,
@@ -105,20 +113,20 @@
                             "ram_bytes": 30768,
                             "ram_percentage": 9
                             }]
-                    },
-{"name": "USB/examples/USBVendor",
-                    "sizes": [{
-                            "flash_bytes": 349649,
-                            "flash_percentage": 11,
-                            "ram_bytes": 30928,
-                            "ram_percentage": 9
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "USB/examples/Keyboard/KeyboardMessage",
+                    "sizes": [{
+                            "flash_bytes": 286894,
+                            "flash_percentage": 9,
+                            "ram_bytes": 26248,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "USB/examples/Keyboard/KeyboardReprogram",
                     "sizes": [{
                             "flash_bytes": 287102,
@@ -206,20 +214,20 @@
                             "ram_bytes": 25760,
                             "ram_percentage": 7
                             }]
-                    },
-{"name": "USB/examples/USBVendor",
-                    "sizes": [{
-                            "flash_bytes": 300166,
-                            "flash_percentage": 9,
-                            "ram_bytes": 26248,
-                            "ram_percentage": 8
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3:PartitionScheme=huge_app",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "Ticker/examples/TickerBasic",
+                    "sizes": [{
+                            "flash_bytes": 264680,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12176,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "Ticker/examples/TickerParameter",
                     "sizes": [{
                             "flash_bytes": 264414,
@@ -307,20 +315,20 @@
                             "ram_bytes": 37548,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "WebServer/examples/HttpAdvancedAuth",
-                    "sizes": [{
-                            "flash_bytes": 999990,
-                            "flash_percentage": 31,
-                            "ram_bytes": 39876,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "SimpleBLE/examples/SimpleBleDevice",
+                    "sizes": [{
+                            "flash_bytes": 1074572,
+                            "flash_percentage": 34,
+                            "ram_bytes": 36972,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
                             "flash_bytes": 236588,
@@ -408,20 +416,20 @@
                             "ram_bytes": 42040,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "WebServer/examples/FSBrowser",
-                    "sizes": [{
-                            "flash_bytes": 1004244,
-                            "flash_percentage": 31,
-                            "ram_bytes": 41880,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2:PartitionScheme=huge_app",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "OpenThread/examples/COAP/coap_lamp",
+                    "sizes": [{
+                            "flash_bytes": 993002,
+                            "flash_percentage": 31,
+                            "ram_bytes": 48804,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "OpenThread/examples/COAP/coap_switch",
                     "sizes": [{
                             "flash_bytes": 993090,
@@ -469,20 +477,20 @@
                             "ram_bytes": 48188,
                             "ram_percentage": 14
                             }]
-                    },
-{"name": "OpenThread/examples/onReceive",
-                    "sizes": [{
-                            "flash_bytes": 972212,
-                            "flash_percentage": 30,
-                            "ram_bytes": 48188,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32",
                 "sketches": [
+{"name": "SD_MMC/examples/SDMMC_time",
+                    "sizes": [{
+                            "flash_bytes": 982033,
+                            "flash_percentage": 31,
+                            "ram_bytes": 45700,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "SPI/examples/SPI_Multiple_Buses",
                     "sizes": [{
                             "flash_bytes": 283453,
@@ -576,14 +584,6 @@
                             "flash_bytes": 995377,
                             "flash_percentage": 31,
                             "ram_bytes": 47532,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "Update/examples/OTAWebUpdater",
-                    "sizes": [{
-                            "flash_bytes": 982045,
-                            "flash_percentage": 31,
-                            "ram_bytes": 47544,
                             "ram_percentage": 14
                             }]
                     }

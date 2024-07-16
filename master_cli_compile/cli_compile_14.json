@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "WiFi/examples/WiFiSmartConfig",
+                    "sizes": [{
+                            "flash_bytes": 882661,
+                            "flash_percentage": 28,
+                            "ram_bytes": 40616,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "WiFi/examples/WiFiTelnetToSerial",
                     "sizes": [{
                             "flash_bytes": 868061,
@@ -55,6 +63,14 @@
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "WiFi/examples/WiFiMulti",
+                    "sizes": [{
+                            "flash_bytes": 828042,
+                            "flash_percentage": 26,
+                            "ram_bytes": 36116,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "WiFi/examples/WiFiMultiAdvanced",
                     "sizes": [{
                             "flash_bytes": 960822,
@@ -148,6 +164,14 @@
 { "board": "espressif:esp32:esp32c3:PartitionScheme=huge_app",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "Wire/examples/WireScan",
+                    "sizes": [{
+                            "flash_bytes": 273990,
+                            "flash_percentage": 8,
+                            "ram_bytes": 11904,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "Wire/examples/WireSlave",
                     "sizes": [{
                             "flash_bytes": 274094,
@@ -161,6 +185,14 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "WiFi/examples/WiFiUDPClient",
+                    "sizes": [{
+                            "flash_bytes": 884824,
+                            "flash_percentage": 28,
+                            "ram_bytes": 39624,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "WiFiProv/examples/WiFiProv",
                     "sizes": [{
                             "flash_bytes": 1726302,
@@ -198,6 +230,14 @@
 { "board": "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32",
                 "sketches": [
+{"name": "WiFi/examples/WiFiUDPClient",
+                    "sizes": [{
+                            "flash_bytes": 906697,
+                            "flash_percentage": 28,
+                            "ram_bytes": 45276,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "WiFiProv/examples/WiFiProv",
                     "sizes": [{
                             "flash_bytes": 1750345,

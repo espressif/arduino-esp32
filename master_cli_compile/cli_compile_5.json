@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "ESP32/examples/Time/SimpleTime",
+                    "sizes": [{
+                            "flash_bytes": 875241,
+                            "flash_percentage": 27,
+                            "ram_bytes": 41728,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "ESP32/examples/Timer/RepeatTimer",
                     "sizes": [{
                             "flash_bytes": 291589,
@@ -105,20 +113,20 @@
                             "ram_bytes": 40512,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "ESP_NOW/examples/ESP_NOW_Network",
-                    "sizes": [{
-                            "flash_bytes": 863493,
-                            "flash_percentage": 27,
-                            "ram_bytes": 40608,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "ESP32/examples/Utilities/HEXBuilder",
+                    "sizes": [{
+                            "flash_bytes": 255598,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13600,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/Utilities/MD5Builder",
                     "sizes": [{
                             "flash_bytes": 256082,
@@ -193,7 +201,7 @@
                     },
 {"name": "ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
-                            "flash_bytes": 873050,
+                            "flash_bytes": 873058,
                             "flash_percentage": 27,
                             "ram_bytes": 39356,
                             "ram_percentage": 12
@@ -206,20 +214,20 @@
                             "ram_bytes": 18944,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
-                    "sizes": [{
-                            "flash_bytes": 520150,
-                            "flash_percentage": 16,
-                            "ram_bytes": 18944,
-                            "ram_percentage": 5
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3:PartitionScheme=huge_app",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "ESP32/examples/Serial/RxTimeout_Demo",
+                    "sizes": [{
+                            "flash_bytes": 256830,
+                            "flash_percentage": 8,
+                            "ram_bytes": 11664,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
                     "sizes": [{
                             "flash_bytes": 256948,
@@ -307,20 +315,20 @@
                             "ram_bytes": 11656,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "ESP32/examples/Utilities/SHA1Builder",
-                    "sizes": [{
-                            "flash_bytes": 264124,
-                            "flash_percentage": 8,
-                            "ram_bytes": 11656,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "ESP32/examples/Serial/RxTimeout_Demo",
+                    "sizes": [{
+                            "flash_bytes": 213038,
+                            "flash_percentage": 6,
+                            "ram_bytes": 12536,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
                     "sizes": [{
                             "flash_bytes": 213232,
@@ -408,20 +416,20 @@
                             "ram_bytes": 12528,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "ESP32/examples/Utilities/SHA1Builder",
-                    "sizes": [{
-                            "flash_bytes": 220198,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12528,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2:PartitionScheme=huge_app",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/HWCDC_Events",
+                    "sizes": [{
+                            "flash_bytes": 285944,
+                            "flash_percentage": 9,
+                            "ram_bytes": 13364,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
                             "flash_bytes": 259772,
@@ -469,20 +477,20 @@
                             "ram_bytes": 16308,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
-                    "sizes": [{
-                            "flash_bytes": 278306,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13220,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32",
                 "sketches": [
+{"name": "ESP32/examples/Serial/RS485_Echo_Demo",
+                    "sizes": [{
+                            "flash_bytes": 290837,
+                            "flash_percentage": 9,
+                            "ram_bytes": 20256,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "ESP32/examples/Serial/RxFIFOFull_Demo",
                     "sizes": [{
                             "flash_bytes": 291065,
@@ -574,14 +582,6 @@
 {"name": "ESP32/examples/Touch/TouchButton",
                     "sizes": [{
                             "flash_bytes": 297933,
-                            "flash_percentage": 9,
-                            "ram_bytes": 20432,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "ESP32/examples/Touch/TouchInterrupt",
-                    "sizes": [{
-                            "flash_bytes": 296505,
                             "flash_percentage": 9,
                             "ram_bytes": 20432,
                             "ram_percentage": 6

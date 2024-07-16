@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
+                    "sizes": [{
+                            "flash_bytes": 944477,
+                            "flash_percentage": 30,
+                            "ram_bytes": 42176,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
                             "flash_bytes": 986433,
@@ -52,7 +60,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1819137,
+                            "flash_bytes": 1819501,
                             "flash_percentage": 57,
                             "ram_bytes": 66228,
                             "ram_percentage": 20
@@ -105,20 +113,20 @@
                             "ram_bytes": 18968,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "SD_MMC/examples/SDMMC_time",
-                    "sizes": [{
-                            "flash_bytes": 933445,
-                            "flash_percentage": 29,
-                            "ram_bytes": 42344,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
+                    "sizes": [{
+                            "flash_bytes": 936506,
+                            "flash_percentage": 29,
+                            "ram_bytes": 38324,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
                             "flash_bytes": 497434,
@@ -153,7 +161,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1253534,
+                            "flash_bytes": 1253846,
                             "flash_percentage": 39,
                             "ram_bytes": 40948,
                             "ram_percentage": 12
@@ -206,20 +214,20 @@
                             "ram_bytes": 14128,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "SPIFFS/examples/SPIFFS_time",
-                    "sizes": [{
-                            "flash_bytes": 884570,
-                            "flash_percentage": 28,
-                            "ram_bytes": 37532,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3:PartitionScheme=huge_app",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "Insights/examples/MinimalDiagnostics",
+                    "sizes": [{
+                            "flash_bytes": 1038200,
+                            "flash_percentage": 33,
+                            "ram_bytes": 36980,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
                             "flash_bytes": 302680,
@@ -307,20 +315,20 @@
                             "ram_bytes": 16664,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "Preferences/examples/Prefs2Struct",
-                    "sizes": [{
-                            "flash_bytes": 262690,
-                            "flash_percentage": 8,
-                            "ram_bytes": 11688,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "LittleFS/examples/LITTLEFS_time",
+                    "sizes": [{
+                            "flash_bytes": 931932,
+                            "flash_percentage": 29,
+                            "ram_bytes": 39400,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
                             "flash_bytes": 878250,
@@ -408,20 +416,20 @@
                             "ram_bytes": 48952,
                             "ram_percentage": 14
                             }]
-                    },
-{"name": "OpenThread/examples/SimpleNode",
-                    "sizes": [{
-                            "flash_bytes": 945580,
-                            "flash_percentage": 30,
-                            "ram_bytes": 48952,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2:PartitionScheme=huge_app",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/TWAI/TWAIreceive",
+                    "sizes": [{
+                            "flash_bytes": 263382,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12732,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/TWAI/TWAItransmit",
                     "sizes": [{
                             "flash_bytes": 263686,
@@ -469,20 +477,20 @@
                             "ram_bytes": 12716,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "ESP32/examples/Utilities/SHA1Builder",
-                    "sizes": [{
-                            "flash_bytes": 264946,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12716,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32",
                 "sketches": [
+{"name": "HTTPUpdate/examples/httpUpdate",
+                    "sizes": [{
+                            "flash_bytes": 968581,
+                            "flash_percentage": 30,
+                            "ram_bytes": 46800,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "HTTPUpdate/examples/httpUpdateSPIFFS",
                     "sizes": [{
                             "flash_bytes": 967773,
@@ -577,14 +585,6 @@
                             "flash_percentage": 33,
                             "ram_bytes": 45972,
                             "ram_percentage": 14
-                            }]
-                    },
-{"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
-                    "sizes": [{
-                            "flash_bytes": 995625,
-                            "flash_percentage": 31,
-                            "ram_bytes": 45476,
-                            "ram_percentage": 13
                             }]
                     }
 ]
