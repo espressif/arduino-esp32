@@ -11,6 +11,7 @@
 #include "lwip/ip_addr.h"
 #include "lwip/err.h"
 #include "lwip/netif.h"
+#include "lwip/dns.h"
 #include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp32-hal-log.h"
@@ -33,6 +34,17 @@ NetworkInterface *getNetifByID(Network_Interface_ID id) {
   }
   return NULL;
 }
+
+#if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
+extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) {
+  if (ip6_addr_isany_val(inp->ip6_addr[0].u_addr.ip6)) {
+    // We don't have an LL address -> eat this packet here, so it won't get accepted on input netif
+    pbuf_free(p);
+    return 1;
+  }
+  return 0;
+}
+#endif
 
 static void _ip_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == IP_EVENT) {
