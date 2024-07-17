@@ -193,7 +193,7 @@ else
     done
 fi
 cp -f  "$GITHUB_WORKSPACE/CMakeLists.txt"                   "$PKG_DIR/"
-cp -f  "$GITHUB_WORKSPACE/idf_component.yaml"               "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/idf_component.yml"                "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/Kconfig.projbuild"                "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/package.json"                     "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/programmers.txt"                  "$PKG_DIR/"
