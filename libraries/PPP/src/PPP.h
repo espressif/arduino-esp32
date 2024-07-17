@@ -41,6 +41,9 @@ public:
   // Modem DCE APIs
   int RSSI() const;
   int BER() const;
+  int getBatteryVoltage() const;
+  int getBatteryLevel() const;
+  int getBatteryStatus() const;
   String IMSI() const;
   String IMEI() const;
   String moduleName() const;    // modem module name
