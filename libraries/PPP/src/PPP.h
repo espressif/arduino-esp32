@@ -41,9 +41,6 @@ public:
   // Modem DCE APIs
   int RSSI() const;
   int BER() const;
-  int getBatteryVoltage() const;
-  int getBatteryLevel() const;
-  int getBatteryStatus() const;
   String IMSI() const;
   String IMEI() const;
   String moduleName() const;    // modem module name
@@ -52,7 +49,10 @@ public:
   int radioState() const;       // 0:minimal, 1:full
   bool attached() const;        // true is attached to network
   bool sync() const;            // true if responds to 'AT'
-
+  int batteryVoltage() const;
+  int batteryLevel() const;
+  int batteryStatus() const;
+  
   // Switch the communication mode
   bool mode(esp_modem_dce_mode_t m);
   esp_modem_dce_mode_t mode() const {
