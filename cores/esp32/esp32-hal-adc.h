@@ -91,7 +91,7 @@ typedef struct {
 /*
  * Setup ADC continuous peripheral
  * */
-bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
+bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
 
 /*
  * Read ADC continuous conversion data
