@@ -499,7 +499,7 @@ int PPPClass::RSSI() const {
   int rssi, ber;
   esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
   if (err != ESP_OK) {
-    // log_e("esp_modem_get_signal_quality failed with %d %s", err, esp_err_to_name(err));
+    log_e("esp_modem_get_signal_quality failed with %d %s", err, esp_err_to_name(err));
     return -1;
   }
   return rssi;
@@ -511,7 +511,7 @@ int PPPClass::BER() const {
   int rssi, ber;
   esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
   if (err != ESP_OK) {
-    // log_e("esp_modem_get_signal_quality failed with %d %s", err, esp_err_to_name(err));
+    log_e("esp_modem_get_signal_quality failed with %d %s", err, esp_err_to_name(err));
     return -1;
   }
   return ber;
@@ -647,37 +647,37 @@ bool PPPClass::setBaudrate(int baudrate) {
   return true;
 }
 
-int PPPClass::getBatteryVoltage() const {
+int PPPClass::batteryVoltage() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int volt, bcs, bcl;
   esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
   if (err != ESP_OK) {
-    //log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
+    log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
     return -1;
   }
   return volt;
 }
 
-int PPPClass::getBatteryLevel() const {
+int PPPClass::batteryLevel() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int volt, bcs, bcl;
   esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
   if (err != ESP_OK) {
-    //log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
+    log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
     return -1;
   }
   return bcl;
 }
 
-int PPPClass::getBatteryStatus() const {
+int PPPClass::batteryStatus() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int volt, bcs, bcl;
   esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
   if (err != ESP_OK) {
-    //log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
+    log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
     return -1;
   }
   return bcs;
