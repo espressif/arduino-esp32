@@ -8,6 +8,13 @@
 #include "driver/uart.h"
 #include "hal/uart_ll.h"
 
+#define PPP_CMD_MODE_CHECK(x) if (_dce == NULL) {return x;}      \
+  if (_mode == ESP_MODEM_MODE_DATA) {                            \
+    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND"); \
+    return x;                                                    \
+  }                                                              \
+
+
 typedef struct {
   void *arg;
 } PdpContext;
@@ -416,26 +423,13 @@ void PPPClass::end(void) {
 }
 
 bool PPPClass::sync() const {
-  if (_dce == NULL) {
-    return false;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return false;
-  }
+  PPP_CMD_MODE_CHECK(false);
+  
   return esp_modem_sync(_dce) == ESP_OK;
 }
 
 bool PPPClass::attached() const {
-  if (_dce == NULL) {
-    return false;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return false;
-  }
+  PPP_CMD_MODE_CHECK(false);
 
   int m = 0;
   esp_err_t err = esp_modem_get_network_attachment_state(_dce, m);
@@ -500,15 +494,8 @@ bool PPPClass::setPin(const char *pin) {
 }
 
 int PPPClass::RSSI() const {
-  if (_dce == NULL) {
-    return -1;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return -1;
-  }
-
+  PPP_CMD_MODE_CHECK(-1);
+  
   int rssi, ber;
   esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
   if (err != ESP_OK) {
@@ -519,14 +506,7 @@ int PPPClass::RSSI() const {
 }
 
 int PPPClass::BER() const {
-  if (_dce == NULL) {
-    return -1;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return -1;
-  }
+  PPP_CMD_MODE_CHECK(-1);
 
   int rssi, ber;
   esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
@@ -538,14 +518,7 @@ int PPPClass::BER() const {
 }
 
 String PPPClass::IMSI() const {
-  if (_dce == NULL) {
-    return String();
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return String();
-  }
+  PPP_CMD_MODE_CHECK(String());
 
   char imsi[32];
   esp_err_t err = esp_modem_get_imsi(_dce, (std::string &)imsi);
@@ -558,15 +531,8 @@ String PPPClass::IMSI() const {
 }
 
 String PPPClass::IMEI() const {
-  if (_dce == NULL) {
-    return String();
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return String();
-  }
-
+  PPP_CMD_MODE_CHECK(String());
+  
   char imei[32];
   esp_err_t err = esp_modem_get_imei(_dce, (std::string &)imei);
   if (err != ESP_OK) {
@@ -578,15 +544,8 @@ String PPPClass::IMEI() const {
 }
 
 String PPPClass::moduleName() const {
-  if (_dce == NULL) {
-    return String();
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return String();
-  }
-
+  PPP_CMD_MODE_CHECK(String());
+  
   char name[32];
   esp_err_t err = esp_modem_get_module_name(_dce, (std::string &)name);
   if (err != ESP_OK) {
@@ -598,14 +557,7 @@ String PPPClass::moduleName() const {
 }
 
 String PPPClass::operatorName() const {
-  if (_dce == NULL) {
-    return String();
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return String();
-  }
+  PPP_CMD_MODE_CHECK(String());
 
   char oper[32];
   int act = 0;
@@ -619,14 +571,7 @@ String PPPClass::operatorName() const {
 }
 
 int PPPClass::networkMode() const {
-  if (_dce == NULL) {
-    return -1;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return -1;
-  }
+  PPP_CMD_MODE_CHECK(-1);
 
   int m = 0;
   esp_err_t err = esp_modem_get_network_system_mode(_dce, m);
@@ -638,14 +583,7 @@ int PPPClass::networkMode() const {
 }
 
 int PPPClass::radioState() const {
-  if (_dce == NULL) {
-    return -1;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return -1;
-  }
+  PPP_CMD_MODE_CHECK(-1);
 
   int m = 0;
   esp_err_t err = esp_modem_get_radio_state(_dce, m);
@@ -657,14 +595,7 @@ int PPPClass::radioState() const {
 }
 
 bool PPPClass::powerDown() {
-  if (_dce == NULL) {
-    return false;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return false;
-  }
+  PPP_CMD_MODE_CHECK(false);
 
   esp_err_t err = esp_modem_power_down(_dce);
   if (err != ESP_OK) {
@@ -675,14 +606,7 @@ bool PPPClass::powerDown() {
 }
 
 bool PPPClass::reset() {
-  if (_dce == NULL) {
-    return false;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return false;
-  }
+  PPP_CMD_MODE_CHECK(false);
 
   esp_err_t err = esp_modem_reset(_dce);
   if (err != ESP_OK) {
@@ -693,14 +617,7 @@ bool PPPClass::reset() {
 }
 
 bool PPPClass::storeProfile() {
-  if (_dce == NULL) {
-    return false;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return false;
-  }
+  PPP_CMD_MODE_CHECK(false);
 
   esp_err_t err = esp_modem_store_profile(_dce);
   if (err != ESP_OK) {
@@ -711,14 +628,7 @@ bool PPPClass::storeProfile() {
 }
 
 bool PPPClass::setBaudrate(int baudrate) {
-  if (_dce == NULL) {
-    return false;
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return false;
-  }
+  PPP_CMD_MODE_CHECK(false);
 
   esp_err_t err = esp_modem_set_baud(_dce, baudrate);
   if (err != ESP_OK) {
@@ -737,15 +647,44 @@ bool PPPClass::setBaudrate(int baudrate) {
   return true;
 }
 
-bool PPPClass::sms(const char *num, const char *message) {
-  if (_dce == NULL) {
-    return false;
-  }
+int PPPClass::getBatteryVoltage() const {
+  PPP_CMD_MODE_CHECK(-1);
 
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return false;
+  int volt, bcs, bcl;
+  esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
+  if (err != ESP_OK) {
+    //log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
+    return -1;
   }
+  return volt;
+}
+
+int PPPClass::getBatteryLevel() const {
+  PPP_CMD_MODE_CHECK(-1);
+
+  int volt, bcs, bcl;
+  esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
+  if (err != ESP_OK) {
+    //log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
+    return -1;
+  }
+  return bcl;
+}
+
+int PPPClass::getBatteryStatus() const {
+  PPP_CMD_MODE_CHECK(-1);
+
+  int volt, bcs, bcl;
+  esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
+  if (err != ESP_OK) {
+    //log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
+    return -1;
+  }
+  return bcs;
+}
+
+bool PPPClass::sms(const char *num, const char *message) {
+  PPP_CMD_MODE_CHECK(false);
 
   for (int i = 0; i < strlen(num); i++) {
     if (num[i] != '+' && num[i] != '#' && num[i] != '*' && (num[i] < 0x30 || num[i] > 0x39)) {
@@ -775,14 +714,8 @@ bool PPPClass::sms(const char *num, const char *message) {
 }
 
 String PPPClass::cmd(const char *at_command, int timeout) {
-  if (_dce == NULL) {
-    return String();
-  }
-
-  if (_mode == ESP_MODEM_MODE_DATA) {
-    log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND");
-    return String();
-  }
+  PPP_CMD_MODE_CHECK(String());
+  
   char out[128] = {0};
   esp_err_t err = _esp_modem_at(_dce, at_command, out, timeout);
   if (err != ESP_OK) {
