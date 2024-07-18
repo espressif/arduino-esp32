@@ -85,7 +85,7 @@ PlatformIO can be used in two flavors:
 
 To install PlatformIO, you can follow this Getting Started, provided at `docs.platformio.org`_.
 
-Using the stable code
+Using the stable code 2.0.x
 *********************
 
 .. note::
@@ -122,20 +122,19 @@ Create a new project and select one of the available boards. You can change afte
    board = esp32-c3-devkitm-1
    framework = arduino
 
-How to update to the latest code
+How to update to the stable code based on 3.0.x 
 ********************************
 
-To test the latest Arduino ESP32, you need to change your project *platformio.ini* accordingly.
-The following configuration uses the upstream version of the Espressif development platform and the latest Arduino core directly from the Espressif GitHub repository:
+To use the actual Arduino ESP32, you need to change your project *platformio.ini* accordingly.
+The following configuration uses the not official Platformio community version pioarduino and the latest Arduino core from the pioarduino GitHub repository:
 
 .. code-block:: bash
 
    [env:esp32-c3-devkitm-1]
-   platform = https://github.com/platformio/platform-espressif32.git
+   platform = https://github.com/pioarduino/platform-espressif32/releases/download/51.03.03/platform-espressif32.zip
    board = esp32-c3-devkitm-1
    framework = arduino
-   platform_packages =
-       framework-arduinoespressif32 @ https://github.com/espressif/arduino-esp32#master
+
 
 
 To get more information about PlatformIO, see the following links:
