@@ -85,6 +85,17 @@ PlatformIO can be used in two flavors:
 
 To install PlatformIO, you can follow this Getting Started, provided at `docs.platformio.org`_.
 
+To get more information about PlatformIO, see the following links:
+
+- `PlatformIO Core (CLI) <https://docs.platformio.org/en/latest/core/index.html>`_
+
+- `PlatformIO Home <https://docs.platformio.org/en/latest/home/index.html>`_
+
+- `Tutorials and Examples <https://docs.platformio.org/en/latest/tutorials/index.html>`_
+
+- `Library Management <https://docs.platformio.org/en/latest/librarymanager/index.html>`_
+
+
 Using the stable code 2.0.x
 *********************
 
@@ -135,17 +146,6 @@ The following configuration uses the community version pioarduino and the latest
    board = esp32-c3-devkitm-1
    framework = arduino
 
-
-
-To get more information about PlatformIO, see the following links:
-
-- `PlatformIO Core (CLI) <https://docs.platformio.org/en/latest/core/index.html>`_
-
-- `PlatformIO Home <https://docs.platformio.org/en/latest/home/index.html>`_
-
-- `Tutorials and Examples <https://docs.platformio.org/en/latest/tutorials/index.html>`_
-
-- `Library Management <https://docs.platformio.org/en/latest/librarymanager/index.html>`_
 
 
 Windows (manual installation)
