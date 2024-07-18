@@ -126,7 +126,7 @@ How to update to the stable code based on 3.0.x
 ********************************
 
 To use the actual Arduino ESP32, you need to change your project *platformio.ini* accordingly.
-The following configuration uses the not official Platformio community version pioarduino and the latest Arduino core from the pioarduino GitHub repository:
+The following configuration uses the community version pioarduino and the latest Arduino core from the pioarduino GitHub repository:
 
 .. code-block:: bash
 
