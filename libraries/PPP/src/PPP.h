@@ -52,7 +52,7 @@ public:
   int batteryVoltage() const;
   int batteryLevel() const;
   int batteryStatus() const;
-  
+
   // Switch the communication mode
   bool mode(esp_modem_dce_mode_t m);
   esp_modem_dce_mode_t mode() const {

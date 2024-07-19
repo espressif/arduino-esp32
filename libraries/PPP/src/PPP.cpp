@@ -8,12 +8,14 @@
 #include "driver/uart.h"
 #include "hal/uart_ll.h"
 
-#define PPP_CMD_MODE_CHECK(x) if (_dce == NULL) {return x;}      \
+#define PPP_CMD_MODE_CHECK(x)                                    \
+  if (_dce == NULL) {                                            \
+    return x;                                                    \
+  }                                                              \
   if (_mode == ESP_MODEM_MODE_DATA) {                            \
     log_e("Wrong modem mode. Should be ESP_MODEM_MODE_COMMAND"); \
     return x;                                                    \
-  }                                                              \
-
+  }
 
 typedef struct {
   void *arg;
@@ -424,7 +426,7 @@ void PPPClass::end(void) {
 
 bool PPPClass::sync() const {
   PPP_CMD_MODE_CHECK(false);
-  
+
   return esp_modem_sync(_dce) == ESP_OK;
 }
 
@@ -495,7 +497,7 @@ bool PPPClass::setPin(const char *pin) {
 
 int PPPClass::RSSI() const {
   PPP_CMD_MODE_CHECK(-1);
-  
+
   int rssi, ber;
   esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
   if (err != ESP_OK) {
@@ -532,7 +534,7 @@ String PPPClass::IMSI() const {
 
 String PPPClass::IMEI() const {
   PPP_CMD_MODE_CHECK(String());
-  
+
   char imei[32];
   esp_err_t err = esp_modem_get_imei(_dce, (std::string &)imei);
   if (err != ESP_OK) {
@@ -545,7 +547,7 @@ String PPPClass::IMEI() const {
 
 String PPPClass::moduleName() const {
   PPP_CMD_MODE_CHECK(String());
-  
+
   char name[32];
   esp_err_t err = esp_modem_get_module_name(_dce, (std::string &)name);
   if (err != ESP_OK) {
@@ -715,7 +717,7 @@ bool PPPClass::sms(const char *num, const char *message) {
 
 String PPPClass::cmd(const char *at_command, int timeout) {
   PPP_CMD_MODE_CHECK(String());
-  
+
   char out[128] = {0};
   esp_err_t err = _esp_modem_at(_dce, at_command, out, timeout);
   if (err != ESP_OK) {
