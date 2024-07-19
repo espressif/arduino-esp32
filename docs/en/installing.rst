@@ -97,7 +97,7 @@ To get more information about PlatformIO, see the following links:
 
 
 Using the stable code 2.0.x
-*********************
+---------------------------
 
 .. note::
    A detailed overview of supported development boards, examples and frameworks can be found on `the official Espressif32 dev-platform page <https://registry.platformio.org/platforms/platformio/espressif32>`_ in the PlatformIO Registry.
@@ -134,7 +134,7 @@ Create a new project and select one of the available boards. You can change afte
    framework = arduino
 
 How to update to the stable code based on 3.0.x 
-********************************
+-----------------------------------------------
 
 To use the actual Arduino ESP32, you need to change your project *platformio.ini* accordingly.
 The following configuration uses the community version pioarduino and the latest Arduino core from the pioarduino GitHub repository:
