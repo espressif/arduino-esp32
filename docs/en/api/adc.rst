@@ -170,7 +170,7 @@ This function is used to configure ADC continuous peripheral on selected pins.
 
 .. code-block:: arduino
 
-    bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
+    bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void));
 
 * ``pins[]`` array of pins to be set up
 * ``pins_count`` count of pins in array
