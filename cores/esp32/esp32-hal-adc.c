@@ -456,7 +456,7 @@ esp_err_t __analogContinuousInit(adc_channel_t *channel, uint8_t channel_num, ad
   return ESP_OK;
 }
 
-bool analogContinuous(uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void)) {
+bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversions_per_pin, uint32_t sampling_freq_hz, void (*userFunc)(void)) {
   adc_channel_t channel[pins_count];
   adc_unit_t adc_unit = ADC_UNIT_1;
   esp_err_t err = ESP_OK;
