@@ -9,6 +9,6 @@ void initVariant(void) {
   digitalWrite(3, LOW);//turn on this function
 
   pinMode(14, OUTPUT); 
-  digitalWrite(14, HIGH);//use external antenna
+  digitalWrite(14, LOW);//use external antenna
 }
 }
