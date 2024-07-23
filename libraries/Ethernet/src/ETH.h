@@ -153,6 +153,9 @@ public:
 
   void end();
 
+  // This function must be called before `begin()`
+  void setTaskStackSize(size_t size);
+
   // ETH Handle APIs
   bool fullDuplex() const;
   uint8_t linkSpeed() const;
@@ -203,6 +206,7 @@ private:
   int8_t _pin_power;
   int8_t _pin_rmii_clock;
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
+  size_t _task_stack_size;
 
   static bool ethDetachBus(void *bus_pointer);
   bool beginSPI(

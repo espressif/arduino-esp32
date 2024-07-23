@@ -21,6 +21,7 @@
 #include "esp32-hal-periman.h"
 #include "soc/gpio_sig_map.h"
 #include "esp_rom_gpio.h"
+#include "hal/ledc_ll.h"
 
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
 #define LEDC_CHANNELS (SOC_LEDC_CHANNEL_NUM << 1)
@@ -48,8 +49,25 @@ static bool fade_initialized = false;
 
 static bool ledcDetachBus(void *bus) {
   ledc_channel_handle_t *handle = (ledc_channel_handle_t *)bus;
-  ledc_handle.used_channels &= ~(1UL << handle->channel);
+  bool channel_found = false;
+  // Check if more pins are attached to the same ledc channel
+  for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
+    if (!perimanPinIsValid(i)) {
+      continue;  //invalid pin, skip
+    }
+    peripheral_bus_type_t type = perimanGetPinBusType(i);
+    if (type == ESP32_BUS_TYPE_LEDC) {
+      ledc_channel_handle_t *bus_check = (ledc_channel_handle_t *)perimanGetPinBus(i, ESP32_BUS_TYPE_LEDC);
+      if (bus_check->channel == handle->channel) {
+        channel_found = true;
+        break;
+      }
+    }
+  }
   pinMatrixOutDetach(handle->pin, false, false);
+  if (!channel_found) {
+    ledc_handle.used_channels &= ~(1UL << handle->channel);
+  }
   free(handle);
   if (ledc_handle.used_channels == 0) {
     ledc_fade_func_uninstall();
@@ -59,8 +77,8 @@ static bool ledcDetachBus(void *bus) {
 }
 
 bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel) {
-  if (channel >= LEDC_CHANNELS || ledc_handle.used_channels & (1UL << channel)) {
-    log_e("Channel %u is not available (maximum %u) or already used!", channel, LEDC_CHANNELS);
+  if (channel >= LEDC_CHANNELS) {
+    log_e("Channel %u is not available (maximum %u)!", channel, LEDC_CHANNELS);
     return false;
   }
   if (freq == 0) {
@@ -85,29 +103,45 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   }
 
   uint8_t group = (channel / 8), timer = ((channel / 2) % 4);
+  bool channel_used = ledc_handle.used_channels & (1UL << channel);
+  if (channel_used) {
+    log_i("Channel %u is already set up, given frequency and resolution will be ignored", channel);
+    if (ledc_set_pin(pin, group, channel % 8) != ESP_OK) {
+      log_e("Attaching pin to already used channel failed!");
+      return false;
+    }
+  } else {
+    ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = resolution, .freq_hz = freq, .clk_cfg = LEDC_DEFAULT_CLK};
+    if (ledc_timer_config(&ledc_timer) != ESP_OK) {
+      log_e("ledc setup failed!");
+      return false;
+    }
 
-  ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = resolution, .freq_hz = freq, .clk_cfg = LEDC_DEFAULT_CLK};
-  if (ledc_timer_config(&ledc_timer) != ESP_OK) {
-    log_e("ledc setup failed!");
-    return false;
+    uint32_t duty = ledc_get_duty(group, (channel % 8));
+
+    ledc_channel_config_t ledc_channel = {
+      .speed_mode = group, .channel = (channel % 8), .timer_sel = timer, .intr_type = LEDC_INTR_DISABLE, .gpio_num = pin, .duty = duty, .hpoint = 0
+    };
+    ledc_channel_config(&ledc_channel);
   }
 
-  uint32_t duty = ledc_get_duty(group, (channel % 8));
-
-  ledc_channel_config_t ledc_channel = {
-    .speed_mode = group, .channel = (channel % 8), .timer_sel = timer, .intr_type = LEDC_INTR_DISABLE, .gpio_num = pin, .duty = duty, .hpoint = 0
-  };
-  ledc_channel_config(&ledc_channel);
-
   ledc_channel_handle_t *handle = (ledc_channel_handle_t *)malloc(sizeof(ledc_channel_handle_t));
-
   handle->pin = pin;
   handle->channel = channel;
-  handle->channel_resolution = resolution;
 #ifndef SOC_LEDC_SUPPORT_FADE_STOP
   handle->lock = NULL;
 #endif
-  ledc_handle.used_channels |= 1UL << channel;
+
+  //get resolution of selected channel when used
+  if (channel_used) {
+    uint32_t channel_resolution = 0;
+    ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &channel_resolution);
+    log_i("Channel %u frequency: %u, resolution: %u", channel, ledc_get_freq(group, timer), channel_resolution);
+    handle->channel_resolution = (uint8_t)channel_resolution;
+  } else {
+    handle->channel_resolution = resolution;
+    ledc_handle.used_channels |= 1UL << channel;
+  }
 
   if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_LEDC, (void *)handle, group, channel)) {
     ledcDetachBus((void *)handle);
@@ -148,6 +182,30 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
     return true;
   }
   return false;
+}
+
+bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
+  //check if channel is valid and used
+  if (channel >= LEDC_CHANNELS || !(ledc_handle.used_channels & (1UL << channel))) {
+    log_e("Channel %u is not available (maximum %u) or not used!", channel, LEDC_CHANNELS);
+    return false;
+  }
+  uint8_t group = (channel / 8), timer = ((channel / 2) % 4);
+
+  //Fixing if all bits in resolution is set = LEDC FULL ON
+  uint32_t resolution = 0;
+  ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &resolution);
+
+  uint32_t max_duty = (1 << resolution) - 1;
+
+  if ((duty == max_duty) && (max_duty != 1)) {
+    duty = max_duty + 1;
+  }
+
+  ledc_set_duty(group, channel, duty);
+  ledc_update_duty(group, channel);
+
+  return true;
 }
 
 uint32_t ledcRead(uint8_t pin) {
