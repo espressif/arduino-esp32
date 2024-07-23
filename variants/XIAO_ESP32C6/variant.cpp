@@ -3,7 +3,6 @@
 
 extern "C" {
 
-// Initialize variant/board, called before setup()
 void initVariant(void) {
   pinMode(3, OUTPUT);
   digitalWrite(3, LOW);//turn on this function
