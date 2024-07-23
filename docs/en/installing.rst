@@ -111,7 +111,7 @@ Create a new project and select one of the available boards. You can change afte
 .. code-block:: bash
 
    [env:esp32dev]
-   platform = espressif32
+   platform = espressif32@6.7.0 
    board = esp32dev
    framework = arduino
 
@@ -120,7 +120,7 @@ Create a new project and select one of the available boards. You can change afte
 .. code-block:: bash
 
    [env:esp32-s2-saola-1]
-   platform = espressif32
+   platform = espressif32@6.7.0
    board = esp32-s2-saola-1
    framework = arduino
 
@@ -129,15 +129,15 @@ Create a new project and select one of the available boards. You can change afte
 .. code-block:: bash
 
    [env:esp32-c3-devkitm-1]
-   platform = espressif32
+   platform = espressif32@6.7.0
    board = esp32-c3-devkitm-1
    framework = arduino
 
 How to update to the stable code based on 3.0.x 
 -----------------------------------------------
 
-To use the actual Arduino ESP32, you need to change your project *platformio.ini* accordingly.
-The following configuration uses the community version pioarduino and the latest Arduino core from the pioarduino GitHub repository:
+To use the latest supported Arduino ESP32, you need to change your project *platformio.ini* accordingly.
+The following configuration uses the community version ``pioarduino`` and the latest release Arduino core from the ``espressif`` GitHub repository:
 
 .. code-block:: bash
 
