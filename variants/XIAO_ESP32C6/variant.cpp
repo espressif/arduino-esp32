@@ -16,6 +16,6 @@ void initVariant(void) {
   digitalWrite(WIFI_ENABLE, LOW);//turn on this function
 
   pinMode(WIFI_ANT_CONFIG, OUTPUT); 
-  digitalWrite(WIFI_ANT_CONFIG, LOW);//use external antenna
+  digitalWrite(WIFI_ANT_CONFIG, LOW);//use built-in antenna, set HIGH to use external antenna
 }
 }
