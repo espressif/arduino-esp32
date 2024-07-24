@@ -139,6 +139,7 @@ How to update to the stable code based on 3.0.x
 To use the latest supported Arduino ESP32, you need to change your project *platformio.ini* accordingly.
 The following configuration uses the community version ``pioarduino`` and the latest release Arduino core from the ``espressif`` GitHub repository:
 
+.. note:: This is only an example. Make sure to check the latest available version in `pioarduino's repository <https://github.com/pioarduino/platform-espressif32/releases>`_.
 .. code-block:: bash
 
    [env:esp32-c3-devkitm-1]
