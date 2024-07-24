@@ -85,7 +85,7 @@ PlatformIO can be used in two flavors:
 
 To install PlatformIO, you can follow this Getting Started, provided at `docs.platformio.org`_.
 
-To get more information about PlatformIO, see the following links:
+For more information about PlatformIO, see the following links:
 
 - `PlatformIO Core (CLI) <https://docs.platformio.org/en/latest/core/index.html>`_
 
