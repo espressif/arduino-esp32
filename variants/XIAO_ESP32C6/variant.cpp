@@ -4,10 +4,10 @@
 extern "C" {
 
 void initVariant(void) {
-  pinMode(3, OUTPUT);
-  digitalWrite(3, LOW);//turn on this function
+  pinMode(WIFI_ENABLE, OUTPUT);
+  digitalWrite(WIFI_ENABLE, LOW);//turn on this function
 
-  pinMode(14, OUTPUT); 
-  digitalWrite(14, LOW);//use external antenna
+  pinMode(WIFI_ANT_CONFIG, OUTPUT); 
+  digitalWrite(WIFI_ANT_CONFIG, LOW);//use external antenna
 }
 }
