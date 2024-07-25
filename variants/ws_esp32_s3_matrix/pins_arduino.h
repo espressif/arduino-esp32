@@ -14,14 +14,14 @@
 #define USB_SERIAL       ""
 
 // Onboard 8 x 8 Matrix panel
-#define WS_MATRIX_DIN	14
+#define WS_MATRIX_DIN 14
 
 // Onboard  QMI8658 IMU
-#define WS_IMU_SDA      11
-#define WS_IMU_SCL      12
-#define WS_IMU_ADDRESS	0x6B
-#define WS_IMU_INT1     10
-#define WS_IMU_INT2     13
+#define WS_IMU_SDA     11
+#define WS_IMU_SCL     12
+#define WS_IMU_ADDRESS 0x6B
+#define WS_IMU_INT1    10
+#define WS_IMU_INT2    13
 
 // UART0 pins
 static const uint8_t TX = 43;
@@ -32,10 +32,10 @@ static const uint8_t SDA = 11;
 static const uint8_t SCL = 12;
 
 // Mapping based on the ESP32S3 data sheet - alternate for SPI2
-static const uint8_t   SS = 34;		// FSPICS0
-static const uint8_t MOSI = 35;		// FSPID
-static const uint8_t MISO = 37;		// FSPIQ
-static const uint8_t  SCK = 36;		// FSPICLK
+static const uint8_t SS = 34;    // FSPICS0
+static const uint8_t MOSI = 35;  // FSPID
+static const uint8_t MISO = 37;  // FSPIQ
+static const uint8_t SCK = 36;   // FSPICLK
 
 // Analog capable pins on the header
 static const uint8_t A0 = 1;
