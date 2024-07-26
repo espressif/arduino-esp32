@@ -306,12 +306,9 @@ bool ESP_NOW_Peer::remove() {
     return true;
   }
   log_v("Peer removed - " MACSTR, MAC2STR(mac));
+  added = false;
   esp_err_t err = _esp_now_del_peer(mac);
-  if (err == ESP_OK) {
-    added = false;
-    return true;
-  }
-  return false;
+  return (err == ESP_OK);
 }
 
 const uint8_t *ESP_NOW_Peer::addr() const {
