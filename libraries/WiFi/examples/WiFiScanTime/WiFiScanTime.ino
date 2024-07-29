@@ -69,7 +69,6 @@ void wifiScan(uint16_t min_time, uint16_t max_time) {
   delay(2000);
 }
 
-
 void setup() {
   Serial.begin(115200);
 
