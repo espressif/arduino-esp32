@@ -92,6 +92,16 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
 bool ledcWrite(uint8_t pin, uint32_t duty);
 
 /**
+ * @brief Set the duty cycle of a given channel.
+ *
+ * @param channel LEDC channel
+ * @param duty duty cycle to set
+ *
+ * @return true if duty cycle was successfully set, false otherwise.
+ */
+bool ledcWriteChannel(uint8_t channel, uint32_t duty);
+
+/**
  * @brief Sets the duty to 50 % PWM tone on selected frequency.
  *
  * @param pin GPIO pin

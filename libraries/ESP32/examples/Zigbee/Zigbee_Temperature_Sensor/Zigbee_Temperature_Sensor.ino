@@ -15,7 +15,7 @@
 /**
  * @brief This example demonstrates simple Zigbee temperature sensor.
  *
- * The example demonstrates how to use ESP Zigbee stack to create a end device temperatu sensor.
+ * The example demonstrates how to use ESP Zigbee stack to create a end device temperature sensor.
  * The temperature sensor is a Zigbee end device, which is controlled by a Zigbee coordinator.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
