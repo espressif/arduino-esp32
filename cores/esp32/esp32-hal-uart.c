@@ -503,9 +503,15 @@ uart_t *uartBegin(
   uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
   uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
   uart_config.baud_rate = baudrate;
-  // CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6
-  uart_config.source_clk = UART_SCLK_DEFAULT;
-
+  // there is an issue when returning from light sleep with the C6 and H2: the uart baud rate is not restored
+  // therefore, uart clock source will set to XTAL for all SoC that support it. This fix solves the C6|H2 issue.
+#if SOC_UART_SUPPORT_XTAL_CLK
+  uart_config.source_clk = UART_SCLK_XTAL; // valid for S3, C3, C6, H2 and P4
+#else
+  // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6
+  uart_config.source_clk = UART_SCLK_DEFAULT; // valid for ESP32 and S2
+#endif
+  
   UART_MUTEX_LOCK();
   bool retCode = ESP_OK == uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0);
 
