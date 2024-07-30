@@ -54,6 +54,12 @@ HTTPUpdateResult HTTPUpdate::update(NetworkClient &client, const String &url, co
   }
   return handleUpdate(http, currentVersion, false, requestCB);
 }
+HTTPUpdateResult HTTPUpdate::update(NetworkClient &client,HTTPClient &httpclient, const String &url, const String &currentVersion, HTTPUpdateRequestCB requestCB){
+  if (!httpclient.begin(client, url)) {
+    return HTTP_UPDATE_FAILED;
+  }
+  return handleUpdate(httpclient, currentVersion, false, requestCB);
+}
 
 HTTPUpdateResult HTTPUpdate::updateSpiffs(HTTPClient &httpClient, const String &currentVersion, HTTPUpdateRequestCB requestCB) {
   return handleUpdate(httpClient, currentVersion, true, requestCB);
