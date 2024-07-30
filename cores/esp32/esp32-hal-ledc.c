@@ -271,6 +271,13 @@ uint32_t ledcWriteNote(uint8_t pin, note_t note, uint8_t octave) {
 bool ledcDetach(uint8_t pin) {
   ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
   if (bus != NULL) {
+    /* ledc_handle.used_channels use bitmap to indicate if channel is used
+      bit is set if channel is used, in ledcAttachChannel/ledcAttach
+      bit is cleared if channel is detached here
+    */
+    if (ledc_handle.used_channels & (1UL << bus->channel)) {
+      ledc_handle.used_channels &= ~(1UL << bus->channel);
+    }
     // will call ledcDetachBus
     return perimanClearPinBus(pin);
   } else {
