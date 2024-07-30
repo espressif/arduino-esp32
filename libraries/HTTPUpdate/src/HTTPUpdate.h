@@ -93,6 +93,10 @@ public:
   }
 
   t_httpUpdate_return update(NetworkClient &client, const String &url, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
+  
+  t_httpUpdate_return update(
+    NetworkClient &client,HTTPClient &httpclient, const String &url, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL
+    );
 
   t_httpUpdate_return update(
     NetworkClient &client, const String &host, uint16_t port, const String &uri = "/", const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL
