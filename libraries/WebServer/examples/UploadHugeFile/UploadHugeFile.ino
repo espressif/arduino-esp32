@@ -1,5 +1,4 @@
 #include <WiFi.h>
-#include <WiFiClient.h>
 #include <WebServer.h>
 #include <uri/UriRegex.h>
 #include <SD.h>

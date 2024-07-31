@@ -17,6 +17,16 @@
 #include "hal/gpio_hal.h"
 #include "soc/soc_caps.h"
 
+// RGB_BUILTIN is defined in pins_arduino.h
+// If RGB_BUILTIN is defined, it will be used as a pin number for the RGB LED
+// If RGB_BUILTIN has a side effect that prevents using RMT Legacy driver in IDF 5.1
+// Define ESP32_ARDUINO_NO_RGB_BUILTIN in build_opt.h or through CLI to disable RGB_BUILTIN
+#ifdef ESP32_ARDUINO_NO_RGB_BUILTIN
+#ifdef RGB_BUILTIN
+#undef RGB_BUILTIN
+#endif
+#endif
+
 // It fixes lack of pin definition for S3 and for any future SoC
 // this function works for ESP32, ESP32-S2 and ESP32-S3 - including the C3, it will return -1 for any pin
 #if SOC_TOUCH_SENSOR_NUM > 0
@@ -159,7 +169,7 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val) {
     neopixelWrite(RGB_BUILTIN, comm_val, comm_val, comm_val);
     return;
   }
-#endif
+#endif  // RGB_BUILTIN
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL) {
     gpio_set_level((gpio_num_t)pin, val);
   } else {

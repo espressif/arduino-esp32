@@ -1,0 +1,146 @@
+name: Publish and clean test results
+
+on:
+  workflow_run:
+    workflows: ["Wokwi tests"]
+    types:
+      - completed
+
+# No permissions by default
+permissions: { contents: read }
+
+jobs:
+  unit-test-results:
+    name: Unit Test Results
+    if: |
+      github.event.workflow_run.conclusion == 'success' ||
+      github.event.workflow_run.conclusion == 'failure' ||
+      github.event.workflow_run.conclusion == 'timed_out'
+    runs-on: ubuntu-latest
+    permissions:
+        actions: write
+        statuses: write
+        checks: write
+        pull-requests: write
+        contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Download and Extract Artifacts
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          path: ./artifacts
+
+      - name: Get original info
+        run: |
+          original_event=$(cat ./artifacts/parent-artifacts/event.txt)
+          original_action=$(cat ./artifacts/parent-artifacts/action.txt)
+          original_sha=$(cat ./artifacts/parent-artifacts/sha.txt)
+          original_ref=$(cat ./artifacts/parent-artifacts/ref.txt)
+          original_conclusion=$(cat ./artifacts/parent-artifacts/conclusion.txt)
+          echo "original_event=$original_event" >> $GITHUB_ENV
+          echo "original_action=$original_action" >> $GITHUB_ENV
+          echo "original_sha=$original_sha" >> $GITHUB_ENV
+          echo "original_ref=$original_ref" >> $GITHUB_ENV
+          echo "original_conclusion=$original_conclusion" >> $GITHUB_ENV
+
+          echo "original_event = $original_event"
+          echo "original_action = $original_action"
+          echo "original_sha = $original_sha"
+          echo "original_ref = $original_ref"
+          echo "original_conclusion = $original_conclusion"
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          commit: ${{ env.original_sha }}
+          event_file: ./artifacts/parent-artifacts/event_file/event.json
+          event_name: ${{ env.original_event }}
+          files: ./artifacts/**/*.xml
+          action_fail: true
+
+      - name: Fail if tests failed
+        if: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' }}
+        run: exit 1
+
+      - name: Clean up caches
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ref = '${{ env.original_ref }}';
+            const key_prefix = 'tests-' + ref + '-';
+
+            if ('${{ env.original_event }}' == 'pull_request' && '${{ env.original_action }}' != 'closed') {
+              console.log('Skipping cache cleanup for open PR');
+              return;
+            }
+
+            await github.paginate(github.rest.actions.getActionsCacheList, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+              key: key_prefix
+            }).then(caches => {
+              if (caches) {
+                for (const cache of caches) {
+                  console.log(`Deleting cache: ${cache.key}`);
+                  github.rest.actions.deleteActionsCacheById({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    cache_id: cache.id
+                  });
+                }
+              }
+            });
+
+      - name: Report conclusion
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ env.original_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Runtime Tests / Report results (${{ env.original_event }} -> workflow_run -> workflow_run)',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: '${{ job.status }}',
+              description: '${{ job.status }}' == 'success' ? 'Runtime tests successful' : 'Runtime tests failed',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+
+      - name: Create output folder
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        run: |
+          rm -rf artifacts
+          mkdir -p runtime-tests-results
+
+      - name: Generate badge
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        uses: jaywcjlove/generated-badges@v1.0.13
+        with:
+          label: Runtime Tests
+          status: ${{ job.status }}
+          output: runtime-tests-results/badge.svg
+          color: ${{ job.status == 'success' && 'green' || 'red' }}
+
+      - name: Push badge
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ `git status --porcelain` ]]; then
+            git add --all
+            git commit -m "Updated runtime tests badge"
+            git push origin HEAD:gh-pages
+          fi

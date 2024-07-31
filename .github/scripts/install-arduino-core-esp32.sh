@@ -28,7 +28,11 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
     #git submodule update --init --recursive > /dev/null 2>&1
 
     echo "Installing Platform Tools ..."
-    cd tools && python get.py
+    if [ "$OS_IS_WINDOWS" == "1" ]; then
+      cd tools && ./get.exe
+    else
+      cd tools && python get.py
+    fi
     cd $script_init_path
 
     echo "ESP32 Arduino has been installed in '$ARDUINO_ESP32_PATH'"

@@ -192,6 +192,9 @@ else
         cp -Rf "$GITHUB_WORKSPACE/variants/${variant}"      "$PKG_DIR/variants/"
     done
 fi
+cp -f  "$GITHUB_WORKSPACE/CMakeLists.txt"                   "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/idf_component.yml"                "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/Kconfig.projbuild"                "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/package.json"                     "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/programmers.txt"                  "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/cores"                            "$PKG_DIR/"
@@ -421,12 +424,12 @@ fi
 # Upload package JSONs (temporary halted to fix json generation)
 echo "Uploading $PACKAGE_JSON_DEV ..."
 echo "Download URL: "`git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_DEV"`
-# echo "Pages URL: "`git_safe_upload_to_pages "$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV"`
+echo "Pages URL: "`git_safe_upload_to_pages "$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV"`
 echo
 if [ "$RELEASE_PRE" == "false" ]; then
     echo "Uploading $PACKAGE_JSON_REL ..."
     echo "Download URL: "`git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_REL"`
-    # echo "Pages URL: "`git_safe_upload_to_pages "$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL"`
+    echo "Pages URL: "`git_safe_upload_to_pages "$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL"`
     echo
 fi
 

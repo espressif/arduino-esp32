@@ -12,6 +12,13 @@ on:
         description: 'Chip to run tests for'
         required: true
 
+env:
+  DEBIAN_FRONTEND: noninteractive
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   hardware-test:
     name: Hardware ${{ inputs.chip }} ${{ inputs.type }} tests
@@ -22,9 +29,9 @@ jobs:
       image: python:3.10.1-bullseye
       options: --privileged
     steps:
-      - name: Check if already built
-        if: ${{ github.event.pull_request.number != null }}
+      - name: Check if already passed
         id: cache-results
+        if: github.event.pull_request.number != null
         uses: actions/cache/restore@v4
         with:
           key: tests-${{ env.id }}-results-hw
@@ -49,20 +56,12 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          persist-credentials: false
-          sparse-checkout-cone-mode: false
           sparse-checkout: |
-            /*
-            !.github
+            *
 
-      # To avoid giving unknown scripts elevated permissions, download them from the master branch
-      - name: Get CI scripts from master
+      - name: List files
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        run: |
-          mkdir -p .github
-          cd .github
-          curl https://codeload.github.com/${{ github.repository }}/tar.gz/master | tar -xz --strip=2 arduino-esp32-master/.github
+        run: ls -la
 
       # setup-python currently only works on ubuntu images
       # - uses: actions/setup-python@v5
@@ -95,7 +94,7 @@ jobs:
 
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} hardware results as cache
         uses: actions/cache/save@v4
-        if: ${{ always() && steps.check-tests.outputs.enabled == 'true' }}
+        if: steps.check-tests.outputs.enabled == 'true' && github.event.pull_request.number != null
         with:
           key: tests-${{ env.id }}-results-hw
           path: |

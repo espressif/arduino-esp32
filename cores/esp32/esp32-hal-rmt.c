@@ -1,4 +1,4 @@
-// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,11 +58,12 @@ struct rmt_obj_s {
   uint32_t signal_range_min_ns;  // RX Filter data - Low Pass pulse width
   uint32_t signal_range_max_ns;  // RX idle time that defines end of reading
 
-  EventGroupHandle_t rmt_events;  // read/write done event RMT callback handle
-  bool rmt_ch_is_looping;         // Is this RMT TX Channel in LOOPING MODE?
-  size_t *num_symbols_read;       // Pointer to the number of RMT symbol read by IDF RMT RX Done
-  uint32_t frequency_Hz;          // RMT Frequency
-  uint8_t rmt_EOT_Level;          // RMT End of Transmission Level - default is LOW
+  EventGroupHandle_t rmt_events;   // read/write done event RMT callback handle
+  bool rmt_ch_is_looping;          // Is this RMT TX Channel in LOOPING MODE?
+  size_t *num_symbols_read;        // Pointer to the number of RMT symbol read by IDF RMT RX Done
+  rmt_reserve_memsize_t mem_size;  // RMT Memory size
+  uint32_t frequency_Hz;           // RMT Frequency
+  uint8_t rmt_EOT_Level;           // RMT End of Transmission Level - default is LOW
 
 #if !CONFIG_DISABLE_HAL_LOCKS
   SemaphoreHandle_t g_rmt_objlocks;  // Channel Semaphore Lock
@@ -464,6 +465,17 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     }
   }
 
+  // check if the RMT peripheral is already initialized with the same parameters
+  rmt_bus_handle_t bus = NULL;
+  peripheral_bus_type_t rmt_bus_type = perimanGetPinBusType(pin);
+  if (rmt_bus_type == ESP32_BUS_TYPE_RMT_TX || rmt_bus_type == ESP32_BUS_TYPE_RMT_RX) {
+    rmt_ch_dir_t bus_rmt_dir = rmt_bus_type == ESP32_BUS_TYPE_RMT_TX ? RMT_TX_MODE : RMT_RX_MODE;
+    bus = (rmt_bus_handle_t)perimanGetPinBus(pin, rmt_bus_type);
+    if (bus->frequency_Hz == frequency_Hz && bus_rmt_dir == channel_direction && bus->mem_size == mem_size) {
+      return true;  // already initialized with the same parameters
+    }
+  }
+
   // set Peripheral Manager deInit Callback
   perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_TX, _rmtDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_RMT_RX, _rmtDetachBus);
@@ -491,14 +503,15 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   while (xSemaphoreTake(g_rmt_block_lock, portMAX_DELAY) != pdPASS) {}
 
   // allocate the rmt bus object and sets all fields to NULL
-  rmt_bus_handle_t bus = (rmt_bus_handle_t)heap_caps_calloc(1, sizeof(struct rmt_obj_s), MALLOC_CAP_DEFAULT);
+  bus = (rmt_bus_handle_t)heap_caps_calloc(1, sizeof(struct rmt_obj_s), MALLOC_CAP_DEFAULT);
   if (bus == NULL) {
     log_e("GPIO %d - Bus Memory allocation fault.", pin);
     goto Err;
   }
 
-  // store the RMT Freq to check Filter and Idle valid values in the RMT API
+  // store the RMT Freq and mem_size to check Initialization, Filter and Idle valid values in the RMT API
   bus->frequency_Hz = frequency_Hz;
+  bus->mem_size = mem_size;
   // pulses with width smaller than min_ns will be ignored (as a glitch)
   //bus->signal_range_min_ns = 0; // disabled  --> not necessary CALLOC set all to ZERO.
   // RMT stops reading if the input stays idle for longer than max_ns
