@@ -784,25 +784,25 @@ void uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
     return;
   }
   UART_MUTEX_LOCK();
-  uint32_t sclk_freq;
-  if (uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK) {
-    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate, sclk_freq);
+  if (uart_set_baudrate(uart->num, baud_rate) == ESP_OK) {
+    uart->_baudrate = baud_rate;
+  } else {
+    log_e("Setting UART%d baud rate to %d has failed.", uart->num, baud_rate);
   }
-  uart->_baudrate = baud_rate;
   UART_MUTEX_UNLOCK();
 }
 
 uint32_t uartGetBaudRate(uart_t *uart) {
   uint32_t baud_rate = 0;
-  uint32_t sclk_freq;
 
   if (uart == NULL) {
     return 0;
   }
 
   UART_MUTEX_LOCK();
-  if (uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK) {
-    baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num), sclk_freq);
+  if (uart_get_baudrate(uart->num, &baud_rate) != ESP_OK) {
+    log_e("Getting UART%d baud rate has failed.", uart->num);
+    baud_rate = (uint32_t) -1; // return value when failed
   }
   UART_MUTEX_UNLOCK();
   return baud_rate;
