@@ -4,7 +4,7 @@
                 "sketches": [
 {"name": "ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 878397,
+                            "flash_bytes": 878445,
                             "flash_percentage": 27,
                             "ram_bytes": 41696,
                             "ram_percentage": 12
@@ -12,7 +12,7 @@
                     },
 {"name": "ESP32/examples/Timer/RepeatTimer",
                     "sizes": [{
-                            "flash_bytes": 291869,
+                            "flash_bytes": 291913,
                             "flash_percentage": 9,
                             "ram_bytes": 18480,
                             "ram_percentage": 5
@@ -20,7 +20,7 @@
                     },
 {"name": "ESP32/examples/Timer/WatchdogTimer",
                     "sizes": [{
-                            "flash_bytes": 291721,
+                            "flash_bytes": 291749,
                             "flash_percentage": 9,
                             "ram_bytes": 18448,
                             "ram_percentage": 5
@@ -28,7 +28,7 @@
                     },
 {"name": "ESP32/examples/Touch/TouchButtonV2",
                     "sizes": [{
-                            "flash_bytes": 290061,
+                            "flash_bytes": 290089,
                             "flash_percentage": 9,
                             "ram_bytes": 18704,
                             "ram_percentage": 5
@@ -36,7 +36,7 @@
                     },
 {"name": "ESP32/examples/Touch/TouchInterrupt",
                     "sizes": [{
-                            "flash_bytes": 289961,
+                            "flash_bytes": 289989,
                             "flash_percentage": 9,
                             "ram_bytes": 18704,
                             "ram_percentage": 5
@@ -44,7 +44,7 @@
                     },
 {"name": "ESP32/examples/Touch/TouchRead",
                     "sizes": [{
-                            "flash_bytes": 291009,
+                            "flash_bytes": 291053,
                             "flash_percentage": 9,
                             "ram_bytes": 18696,
                             "ram_percentage": 5
@@ -52,7 +52,7 @@
                     },
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
-                            "flash_bytes": 284865,
+                            "flash_bytes": 284909,
                             "flash_percentage": 9,
                             "ram_bytes": 18104,
                             "ram_percentage": 5
@@ -60,7 +60,7 @@
                     },
 {"name": "ESP32/examples/Utilities/MD5Builder",
                     "sizes": [{
-                            "flash_bytes": 285377,
+                            "flash_bytes": 285421,
                             "flash_percentage": 9,
                             "ram_bytes": 18104,
                             "ram_percentage": 5
@@ -68,7 +68,7 @@
                     },
 {"name": "ESP32/examples/Utilities/SHA1Builder",
                     "sizes": [{
-                            "flash_bytes": 290277,
+                            "flash_bytes": 290321,
                             "flash_percentage": 9,
                             "ram_bytes": 18104,
                             "ram_percentage": 5
@@ -76,7 +76,7 @@
                     },
 {"name": "ESP_I2S/examples/ES8388_loopback",
                     "sizes": [{
-                            "flash_bytes": 352909,
+                            "flash_bytes": 352953,
                             "flash_percentage": 11,
                             "ram_bytes": 18976,
                             "ram_percentage": 5
@@ -84,7 +84,7 @@
                     },
 {"name": "ESP_I2S/examples/Record_to_WAV",
                     "sizes": [{
-                            "flash_bytes": 378401,
+                            "flash_bytes": 378429,
                             "flash_percentage": 12,
                             "ram_bytes": 18480,
                             "ram_percentage": 5
@@ -92,7 +92,7 @@
                     },
 {"name": "ESP_I2S/examples/Simple_tone",
                     "sizes": [{
-                            "flash_bytes": 307861,
+                            "flash_bytes": 307905,
                             "flash_percentage": 9,
                             "ram_bytes": 18248,
                             "ram_percentage": 5
@@ -100,7 +100,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 863161,
+                            "flash_bytes": 863205,
                             "flash_percentage": 27,
                             "ram_bytes": 40480,
                             "ram_percentage": 12
@@ -108,7 +108,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 863357,
+                            "flash_bytes": 863401,
                             "flash_percentage": 27,
                             "ram_bytes": 40456,
                             "ram_percentage": 12
@@ -121,7 +121,7 @@
                 "sketches": [
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 839942,
+                            "flash_bytes": 839986,
                             "flash_percentage": 26,
                             "ram_bytes": 36236,
                             "ram_percentage": 11
@@ -129,7 +129,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 840118,
+                            "flash_bytes": 840162,
                             "flash_percentage": 26,
                             "ram_bytes": 36212,
                             "ram_percentage": 11
@@ -137,7 +137,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
-                            "flash_bytes": 843762,
+                            "flash_bytes": 843806,
                             "flash_percentage": 26,
                             "ram_bytes": 36324,
                             "ram_percentage": 11
@@ -145,7 +145,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Serial",
                     "sizes": [{
-                            "flash_bytes": 840618,
+                            "flash_bytes": 840662,
                             "flash_percentage": 26,
                             "ram_bytes": 36300,
                             "ram_percentage": 11
@@ -153,7 +153,7 @@
                     },
 {"name": "ESPmDNS/examples/mDNS-SD_Extended",
                     "sizes": [{
-                            "flash_bytes": 858774,
+                            "flash_bytes": 858818,
                             "flash_percentage": 27,
                             "ram_bytes": 37988,
                             "ram_percentage": 11
@@ -161,7 +161,7 @@
                     },
 {"name": "ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
-                            "flash_bytes": 875682,
+                            "flash_bytes": 875726,
                             "flash_percentage": 27,
                             "ram_bytes": 39292,
                             "ram_percentage": 11
@@ -169,7 +169,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 522042,
+                            "flash_bytes": 522086,
                             "flash_percentage": 16,
                             "ram_bytes": 18944,
                             "ram_percentage": 5
@@ -177,7 +177,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 520602,
+                            "flash_bytes": 520642,
                             "flash_percentage": 16,
                             "ram_bytes": 18944,
                             "ram_percentage": 5
@@ -185,7 +185,7 @@
                     },
 {"name": "FFat/examples/FFat_Test",
                     "sizes": [{
-                            "flash_bytes": 311242,
+                            "flash_bytes": 311286,
                             "flash_percentage": 9,
                             "ram_bytes": 14384,
                             "ram_percentage": 4
@@ -193,7 +193,7 @@
                     },
 {"name": "FFat/examples/FFat_time",
                     "sizes": [{
-                            "flash_bytes": 893214,
+                            "flash_bytes": 893262,
                             "flash_percentage": 28,
                             "ram_bytes": 37588,
                             "ram_percentage": 11
@@ -201,7 +201,7 @@
                     },
 {"name": "HTTPClient/examples/Authorization",
                     "sizes": [{
-                            "flash_bytes": 964474,
+                            "flash_bytes": 964518,
                             "flash_percentage": 30,
                             "ram_bytes": 37972,
                             "ram_percentage": 11
@@ -209,7 +209,7 @@
                     },
 {"name": "HTTPClient/examples/BasicHttpClient",
                     "sizes": [{
-                            "flash_bytes": 964458,
+                            "flash_bytes": 964502,
                             "flash_percentage": 30,
                             "ram_bytes": 37972,
                             "ram_percentage": 11
@@ -217,7 +217,7 @@
                     },
 {"name": "HTTPClient/examples/BasicHttpsClient",
                     "sizes": [{
-                            "flash_bytes": 969214,
+                            "flash_bytes": 969258,
                             "flash_percentage": 30,
                             "ram_bytes": 38004,
                             "ram_percentage": 11
@@ -230,7 +230,7 @@
                 "sketches": [
 {"name": "ESP32/examples/Serial/RxTimeout_Demo",
                     "sizes": [{
-                            "flash_bytes": 257032,
+                            "flash_bytes": 257078,
                             "flash_percentage": 8,
                             "ram_bytes": 11668,
                             "ram_percentage": 3
@@ -238,7 +238,7 @@
                     },
 {"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
                     "sizes": [{
-                            "flash_bytes": 257146,
+                            "flash_bytes": 257192,
                             "flash_percentage": 8,
                             "ram_bytes": 11684,
                             "ram_percentage": 3
@@ -246,7 +246,7 @@
                     },
 {"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
                     "sizes": [{
-                            "flash_bytes": 257538,
+                            "flash_bytes": 257584,
                             "flash_percentage": 8,
                             "ram_bytes": 11668,
                             "ram_percentage": 3
@@ -254,7 +254,7 @@
                     },
 {"name": "ESP32/examples/Serial/onReceiveExample",
                     "sizes": [{
-                            "flash_bytes": 257130,
+                            "flash_bytes": 257176,
                             "flash_percentage": 8,
                             "ram_bytes": 11684,
                             "ram_percentage": 3
@@ -262,7 +262,7 @@
                     },
 {"name": "ESP32/examples/TWAI/TWAIreceive",
                     "sizes": [{
-                            "flash_bytes": 262526,
+                            "flash_bytes": 262572,
                             "flash_percentage": 8,
                             "ram_bytes": 11684,
                             "ram_percentage": 3
@@ -270,7 +270,7 @@
                     },
 {"name": "ESP32/examples/TWAI/TWAItransmit",
                     "sizes": [{
-                            "flash_bytes": 262828,
+                            "flash_bytes": 262874,
                             "flash_percentage": 8,
                             "ram_bytes": 11692,
                             "ram_percentage": 3
@@ -278,7 +278,7 @@
                     },
 {"name": "ESP32/examples/Template/ExampleTemplate",
                     "sizes": [{
-                            "flash_bytes": 242378,
+                            "flash_bytes": 242424,
                             "flash_percentage": 7,
                             "ram_bytes": 11652,
                             "ram_percentage": 3
@@ -286,7 +286,7 @@
                     },
 {"name": "ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 918414,
+                            "flash_bytes": 918460,
                             "flash_percentage": 29,
                             "ram_bytes": 34828,
                             "ram_percentage": 10
@@ -294,7 +294,7 @@
                     },
 {"name": "ESP32/examples/Timer/RepeatTimer",
                     "sizes": [{
-                            "flash_bytes": 265556,
+                            "flash_bytes": 265602,
                             "flash_percentage": 8,
                             "ram_bytes": 11996,
                             "ram_percentage": 3
@@ -302,7 +302,7 @@
                     },
 {"name": "ESP32/examples/Timer/WatchdogTimer",
                     "sizes": [{
-                            "flash_bytes": 265420,
+                            "flash_bytes": 265466,
                             "flash_percentage": 8,
                             "ram_bytes": 11988,
                             "ram_percentage": 3
@@ -310,7 +310,7 @@
                     },
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
-                            "flash_bytes": 258034,
+                            "flash_bytes": 258082,
                             "flash_percentage": 8,
                             "ram_bytes": 11660,
                             "ram_percentage": 3
@@ -318,7 +318,7 @@
                     },
 {"name": "ESP32/examples/Utilities/MD5Builder",
                     "sizes": [{
-                            "flash_bytes": 258126,
+                            "flash_bytes": 258172,
                             "flash_percentage": 8,
                             "ram_bytes": 11660,
                             "ram_percentage": 3
@@ -331,7 +331,7 @@
                 "sketches": [
 {"name": "ESP32/examples/Serial/RxTimeout_Demo",
                     "sizes": [{
-                            "flash_bytes": 213294,
+                            "flash_bytes": 213340,
                             "flash_percentage": 6,
                             "ram_bytes": 12544,
                             "ram_percentage": 3
@@ -339,7 +339,7 @@
                     },
 {"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
                     "sizes": [{
-                            "flash_bytes": 213488,
+                            "flash_bytes": 213534,
                             "flash_percentage": 6,
                             "ram_bytes": 12552,
                             "ram_percentage": 3
@@ -347,7 +347,7 @@
                     },
 {"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
                     "sizes": [{
-                            "flash_bytes": 213792,
+                            "flash_bytes": 213838,
                             "flash_percentage": 6,
                             "ram_bytes": 12536,
                             "ram_percentage": 3
@@ -355,7 +355,7 @@
                     },
 {"name": "ESP32/examples/Serial/onReceiveExample",
                     "sizes": [{
-                            "flash_bytes": 213386,
+                            "flash_bytes": 213434,
                             "flash_percentage": 6,
                             "ram_bytes": 12560,
                             "ram_percentage": 3
@@ -363,7 +363,7 @@
                     },
 {"name": "ESP32/examples/TWAI/TWAIreceive",
                     "sizes": [{
-                            "flash_bytes": 218962,
+                            "flash_bytes": 219010,
                             "flash_percentage": 6,
                             "ram_bytes": 12552,
                             "ram_percentage": 3
@@ -371,7 +371,7 @@
                     },
 {"name": "ESP32/examples/TWAI/TWAItransmit",
                     "sizes": [{
-                            "flash_bytes": 219264,
+                            "flash_bytes": 219312,
                             "flash_percentage": 6,
                             "ram_bytes": 12560,
                             "ram_percentage": 3
@@ -379,7 +379,7 @@
                     },
 {"name": "ESP32/examples/Template/ExampleTemplate",
                     "sizes": [{
-                            "flash_bytes": 198338,
+                            "flash_bytes": 198384,
                             "flash_percentage": 6,
                             "ram_bytes": 12528,
                             "ram_percentage": 3
@@ -387,7 +387,7 @@
                     },
 {"name": "ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 893904,
+                            "flash_bytes": 893950,
                             "flash_percentage": 28,
                             "ram_bytes": 39372,
                             "ram_percentage": 12
@@ -395,7 +395,7 @@
                     },
 {"name": "ESP32/examples/Timer/RepeatTimer",
                     "sizes": [{
-                            "flash_bytes": 222028,
+                            "flash_bytes": 222074,
                             "flash_percentage": 7,
                             "ram_bytes": 12872,
                             "ram_percentage": 3
@@ -403,7 +403,7 @@
                     },
 {"name": "ESP32/examples/Timer/WatchdogTimer",
                     "sizes": [{
-                            "flash_bytes": 221828,
+                            "flash_bytes": 221874,
                             "flash_percentage": 7,
                             "ram_bytes": 12864,
                             "ram_percentage": 3
@@ -411,7 +411,7 @@
                     },
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
-                            "flash_bytes": 214176,
+                            "flash_bytes": 214222,
                             "flash_percentage": 6,
                             "ram_bytes": 12536,
                             "ram_percentage": 3
@@ -419,7 +419,7 @@
                     },
 {"name": "ESP32/examples/Utilities/MD5Builder",
                     "sizes": [{
-                            "flash_bytes": 214258,
+                            "flash_bytes": 214304,
                             "flash_percentage": 6,
                             "ram_bytes": 12536,
                             "ram_percentage": 3
@@ -432,7 +432,7 @@
                 "sketches": [
 {"name": "ESP32/examples/HWCDC_Events",
                     "sizes": [{
-                            "flash_bytes": 286162,
+                            "flash_bytes": 286208,
                             "flash_percentage": 9,
                             "ram_bytes": 13360,
                             "ram_percentage": 4
@@ -440,7 +440,7 @@
                     },
 {"name": "ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
-                            "flash_bytes": 259998,
+                            "flash_bytes": 260046,
                             "flash_percentage": 8,
                             "ram_bytes": 12848,
                             "ram_percentage": 3
@@ -448,7 +448,7 @@
                     },
 {"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                     "sizes": [{
-                            "flash_bytes": 260126,
+                            "flash_bytes": 260172,
                             "flash_percentage": 8,
                             "ram_bytes": 12852,
                             "ram_percentage": 3
@@ -456,7 +456,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
-                            "flash_bytes": 278154,
+                            "flash_bytes": 278200,
                             "flash_percentage": 8,
                             "ram_bytes": 13848,
                             "ram_percentage": 4
@@ -464,7 +464,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTLoopback",
                     "sizes": [{
-                            "flash_bytes": 279466,
+                            "flash_bytes": 279512,
                             "flash_percentage": 8,
                             "ram_bytes": 15272,
                             "ram_percentage": 4
@@ -472,7 +472,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTReadXJT",
                     "sizes": [{
-                            "flash_bytes": 278764,
+                            "flash_bytes": 278810,
                             "flash_percentage": 8,
                             "ram_bytes": 13704,
                             "ram_percentage": 4
@@ -480,7 +480,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTWriteNeoPixel",
                     "sizes": [{
-                            "flash_bytes": 277408,
+                            "flash_bytes": 277454,
                             "flash_percentage": 8,
                             "ram_bytes": 16304,
                             "ram_percentage": 4
@@ -493,7 +493,7 @@
                 "sketches": [
 {"name": "ESP32/examples/Serial/RS485_Echo_Demo",
                     "sizes": [{
-                            "flash_bytes": 291169,
+                            "flash_bytes": 291209,
                             "flash_percentage": 9,
                             "ram_bytes": 20264,
                             "ram_percentage": 6
@@ -501,7 +501,7 @@
                     },
 {"name": "ESP32/examples/Serial/RxFIFOFull_Demo",
                     "sizes": [{
-                            "flash_bytes": 291413,
+                            "flash_bytes": 291437,
                             "flash_percentage": 9,
                             "ram_bytes": 20280,
                             "ram_percentage": 6
@@ -509,7 +509,7 @@
                     },
 {"name": "ESP32/examples/Serial/RxTimeout_Demo",
                     "sizes": [{
-                            "flash_bytes": 291241,
+                            "flash_bytes": 291281,
                             "flash_percentage": 9,
                             "ram_bytes": 20280,
                             "ram_percentage": 6
@@ -517,7 +517,7 @@
                     },
 {"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
                     "sizes": [{
-                            "flash_bytes": 291185,
+                            "flash_bytes": 291209,
                             "flash_percentage": 9,
                             "ram_bytes": 20296,
                             "ram_percentage": 6
@@ -525,7 +525,7 @@
                     },
 {"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
                     "sizes": [{
-                            "flash_bytes": 292189,
+                            "flash_bytes": 292229,
                             "flash_percentage": 9,
                             "ram_bytes": 20388,
                             "ram_percentage": 6
@@ -533,7 +533,7 @@
                     },
 {"name": "ESP32/examples/Serial/onReceiveExample",
                     "sizes": [{
-                            "flash_bytes": 291445,
+                            "flash_bytes": 291485,
                             "flash_percentage": 9,
                             "ram_bytes": 20288,
                             "ram_percentage": 6
@@ -541,7 +541,7 @@
                     },
 {"name": "ESP32/examples/TWAI/TWAIreceive",
                     "sizes": [{
-                            "flash_bytes": 297241,
+                            "flash_bytes": 297281,
                             "flash_percentage": 9,
                             "ram_bytes": 20336,
                             "ram_percentage": 6
@@ -549,7 +549,7 @@
                     },
 {"name": "ESP32/examples/TWAI/TWAItransmit",
                     "sizes": [{
-                            "flash_bytes": 297421,
+                            "flash_bytes": 297461,
                             "flash_percentage": 9,
                             "ram_bytes": 20336,
                             "ram_percentage": 6
@@ -557,7 +557,7 @@
                     },
 {"name": "ESP32/examples/Template/ExampleTemplate",
                     "sizes": [{
-                            "flash_bytes": 277161,
+                            "flash_bytes": 277201,
                             "flash_percentage": 8,
                             "ram_bytes": 20264,
                             "ram_percentage": 6
@@ -565,7 +565,7 @@
                     },
 {"name": "ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 927805,
+                            "flash_bytes": 927845,
                             "flash_percentage": 29,
                             "ram_bytes": 46184,
                             "ram_percentage": 14
@@ -573,7 +573,7 @@
                     },
 {"name": "ESP32/examples/Timer/RepeatTimer",
                     "sizes": [{
-                            "flash_bytes": 297509,
+                            "flash_bytes": 297549,
                             "flash_percentage": 9,
                             "ram_bytes": 20320,
                             "ram_percentage": 6
@@ -581,7 +581,7 @@
                     },
 {"name": "ESP32/examples/Timer/WatchdogTimer",
                     "sizes": [{
-                            "flash_bytes": 297341,
+                            "flash_bytes": 297381,
                             "flash_percentage": 9,
                             "ram_bytes": 20288,
                             "ram_percentage": 6
@@ -589,7 +589,7 @@
                     },
 {"name": "ESP32/examples/Touch/TouchButton",
                     "sizes": [{
-                            "flash_bytes": 298281,
+                            "flash_bytes": 298321,
                             "flash_percentage": 9,
                             "ram_bytes": 20440,
                             "ram_percentage": 6
