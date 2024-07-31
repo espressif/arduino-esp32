@@ -119,38 +119,6 @@
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
-                    "sizes": [{
-                            "flash_bytes": 254650,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13632,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
-                    "sizes": [{
-                            "flash_bytes": 255618,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13616,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/onReceiveExample",
-                    "sizes": [{
-                            "flash_bytes": 254946,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13624,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/TWAI/TWAIreceive",
-                    "sizes": [{
-                            "flash_bytes": 260290,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13632,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/TWAI/TWAItransmit",
                     "sizes": [{
                             "flash_bytes": 260766,
@@ -212,6 +180,46 @@
                             "flash_bytes": 261614,
                             "flash_percentage": 8,
                             "ram_bytes": 14200,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Utilities/HEXBuilder",
+                    "sizes": [{
+                            "flash_bytes": 255766,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13600,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Utilities/MD5Builder",
+                    "sizes": [{
+                            "flash_bytes": 256250,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13600,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Utilities/SHA1Builder",
+                    "sizes": [{
+                            "flash_bytes": 261158,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13600,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP_I2S/examples/ES8388_loopback",
+                    "sizes": [{
+                            "flash_bytes": 310022,
+                            "flash_percentage": 9,
+                            "ram_bytes": 14504,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP_I2S/examples/Simple_tone",
+                    "sizes": [{
+                            "flash_bytes": 268150,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13744,
                             "ram_percentage": 4
                             }]
                     }

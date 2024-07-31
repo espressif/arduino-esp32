@@ -119,46 +119,6 @@
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/Utilities/HEXBuilder",
-                    "sizes": [{
-                            "flash_bytes": 255766,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13600,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Utilities/MD5Builder",
-                    "sizes": [{
-                            "flash_bytes": 256250,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13600,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Utilities/SHA1Builder",
-                    "sizes": [{
-                            "flash_bytes": 261158,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13600,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP_I2S/examples/ES8388_loopback",
-                    "sizes": [{
-                            "flash_bytes": 310022,
-                            "flash_percentage": 9,
-                            "ram_bytes": 14504,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP_I2S/examples/Simple_tone",
-                    "sizes": [{
-                            "flash_bytes": 268150,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13744,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
                             "flash_bytes": 839942,
@@ -213,6 +173,54 @@
                             "flash_percentage": 16,
                             "ram_bytes": 18944,
                             "ram_percentage": 5
+                            }]
+                    },
+{"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
+                    "sizes": [{
+                            "flash_bytes": 520602,
+                            "flash_percentage": 16,
+                            "ram_bytes": 18944,
+                            "ram_percentage": 5
+                            }]
+                    },
+{"name": "FFat/examples/FFat_Test",
+                    "sizes": [{
+                            "flash_bytes": 311242,
+                            "flash_percentage": 9,
+                            "ram_bytes": 14384,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "FFat/examples/FFat_time",
+                    "sizes": [{
+                            "flash_bytes": 893214,
+                            "flash_percentage": 28,
+                            "ram_bytes": 37588,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "HTTPClient/examples/Authorization",
+                    "sizes": [{
+                            "flash_bytes": 964474,
+                            "flash_percentage": 30,
+                            "ram_bytes": 37972,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "HTTPClient/examples/BasicHttpClient",
+                    "sizes": [{
+                            "flash_bytes": 964458,
+                            "flash_percentage": 30,
+                            "ram_bytes": 37972,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "HTTPClient/examples/BasicHttpsClient",
+                    "sizes": [{
+                            "flash_bytes": 969214,
+                            "flash_percentage": 30,
+                            "ram_bytes": 38004,
+                            "ram_percentage": 11
                             }]
                     }
 ]

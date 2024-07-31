@@ -119,14 +119,6 @@
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/AnalogOut/ledcFrequency",
-                    "sizes": [{
-                            "flash_bytes": 258258,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13688,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
                     "sizes": [{
                             "flash_bytes": 259750,
@@ -212,6 +204,22 @@
                             "flash_bytes": 283146,
                             "flash_percentage": 9,
                             "ram_bytes": 14272,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/FreeRTOS/Mutex",
+                    "sizes": [{
+                            "flash_bytes": 254942,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13624,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/FreeRTOS/Queue",
+                    "sizes": [{
+                            "flash_bytes": 254678,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13600,
                             "ram_percentage": 4
                             }]
                     }

@@ -119,30 +119,6 @@
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/RMT/RMTWriteNeoPixel",
-                    "sizes": [{
-                            "flash_bytes": 271974,
-                            "flash_percentage": 8,
-                            "ram_bytes": 17224,
-                            "ram_percentage": 5
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
-                    "sizes": [{
-                            "flash_bytes": 272750,
-                            "flash_percentage": 8,
-                            "ram_bytes": 14136,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMT_EndOfTransmissionState",
-                    "sizes": [{
-                            "flash_bytes": 272382,
-                            "flash_percentage": 8,
-                            "ram_bytes": 14216,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/RMT/RMT_LED_Blink",
                     "sizes": [{
                             "flash_bytes": 274350,
@@ -212,6 +188,38 @@
                             "flash_bytes": 254714,
                             "flash_percentage": 8,
                             "ram_bytes": 13616,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
+                    "sizes": [{
+                            "flash_bytes": 254650,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13632,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
+                    "sizes": [{
+                            "flash_bytes": 255618,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13616,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/onReceiveExample",
+                    "sizes": [{
+                            "flash_bytes": 254946,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13624,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/TWAI/TWAIreceive",
+                    "sizes": [{
+                            "flash_bytes": 260290,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13632,
                             "ram_percentage": 4
                             }]
                     }

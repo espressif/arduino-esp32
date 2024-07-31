@@ -119,22 +119,6 @@
 { "board": "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/FreeRTOS/Mutex",
-                    "sizes": [{
-                            "flash_bytes": 254942,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13624,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/FreeRTOS/Queue",
-                    "sizes": [{
-                            "flash_bytes": 254678,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13600,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
                             "flash_bytes": 254034,
@@ -212,6 +196,30 @@
                             "flash_bytes": 273250,
                             "flash_percentage": 8,
                             "ram_bytes": 14752,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMTWriteNeoPixel",
+                    "sizes": [{
+                            "flash_bytes": 271974,
+                            "flash_percentage": 8,
+                            "ram_bytes": 17224,
+                            "ram_percentage": 5
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
+                    "sizes": [{
+                            "flash_bytes": 272750,
+                            "flash_percentage": 8,
+                            "ram_bytes": 14136,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMT_EndOfTransmissionState",
+                    "sizes": [{
+                            "flash_bytes": 272382,
+                            "flash_percentage": 8,
+                            "ram_bytes": 14216,
                             "ram_percentage": 4
                             }]
                     }
