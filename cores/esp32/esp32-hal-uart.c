@@ -506,18 +506,18 @@ uart_t *uartBegin(
   // there is an issue when returning from light sleep with the C6 and H2: the uart baud rate is not restored
   // therefore, uart clock source will set to XTAL for all SoC that support it. This fix solves the C6|H2 issue.
 #if SOC_UART_SUPPORT_XTAL_CLK
-  uart_config.source_clk = UART_SCLK_XTAL; // valid for C2, S3, C3, C6, H2 and P4
+  uart_config.source_clk = UART_SCLK_XTAL;  // valid for C2, S3, C3, C6, H2 and P4
 #elif SOC_UART_SUPPORT_REF_TICK
   if (baudrate <= 1000000) {
-    uart_config.source_clk = UART_SCLK_REF_TICK; // valid for ESP32, S2 - MAX supported baud rate is 1MHz
+    uart_config.source_clk = UART_SCLK_REF_TICK;  // valid for ESP32, S2 - MAX supported baud rate is 1MHz
   } else {
-    uart_config.source_clk = UART_SCLK_APB; // baudrate may change with the APB Frequency!
+    uart_config.source_clk = UART_SCLK_APB;  // baudrate may change with the APB Frequency!
   }
 #else
   // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6
-  uart_config.source_clk = UART_SCLK_DEFAULT; // baudrate may change with the APB Frequency!
+  uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
 #endif
-  
+
   UART_MUTEX_LOCK();
   bool retCode = ESP_OK == uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0);
 
@@ -808,7 +808,7 @@ uint32_t uartGetBaudRate(uart_t *uart) {
   UART_MUTEX_LOCK();
   if (uart_get_baudrate(uart->num, &baud_rate) != ESP_OK) {
     log_e("Getting UART%d baud rate has failed.", uart->num);
-    baud_rate = (uint32_t) -1; // return value when failed
+    baud_rate = (uint32_t)-1;  // return value when failed
   }
   UART_MUTEX_UNLOCK();
   return baud_rate;
