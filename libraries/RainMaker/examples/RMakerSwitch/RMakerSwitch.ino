@@ -9,7 +9,7 @@ const char *service_name = "PROV_1234";
 const char *pop = "abcd1234";
 
 // GPIO for push button
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
 static int gpio_0 = 9;
 static int gpio_switch = 7;
 #else
