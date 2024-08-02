@@ -437,7 +437,7 @@ arduino-cli core install esp32:esp32
 if [ $? -ne 0 ]; then echo "ERROR: Failed to install esp32 ($?)"; exit 1; fi
 
 echo "Compiling example ..."
-arduino-cli compile --fqbn espressif:esp32:esp32 $GITHUB_WORKSPACE/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino
+arduino-cli compile --fqbn esp32:esp32:esp32 $GITHUB_WORKSPACE/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino
 if [ $? -ne 0 ]; then echo "ERROR: Failed to compile example ($?)"; exit 1; fi
 
 echo "Uninstalling esp32 ..."
@@ -457,7 +457,7 @@ if [ "$RELEASE_PRE" == "false" ]; then
     if [ $? -ne 0 ]; then echo "ERROR: Failed to install esp32 ($?)"; exit 1; fi
 
     echo "Compiling example ..."
-    arduino-cli compile --fqbn espressif:esp32:esp32 $GITHUB_WORKSPACE/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino
+    arduino-cli compile --fqbn esp32:esp32:esp32 $GITHUB_WORKSPACE/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino
     if [ $? -ne 0 ]; then echo "ERROR: Failed to compile example ($?)"; exit 1; fi
 
     echo "Uninstalling esp32 ..."
