@@ -6,7 +6,7 @@
 #include "esp32-hal-log.h"
 #include "esp_mac.h"
 
-class ESP_NOW_Peer; //forward declaration for friend function
+class ESP_NOW_Peer;  //forward declaration for friend function
 
 class ESP_NOW_Class : public Print {
 public:
@@ -73,7 +73,7 @@ public:
     log_i("Message transmission to peer " MACSTR " %s", MAC2STR(mac), success ? "successful" : "failed");
   }
 
-  friend bool ESP_NOW_Class::removePeer(ESP_NOW_Peer&);
+  friend bool ESP_NOW_Class::removePeer(ESP_NOW_Peer &);
 };
 
 extern ESP_NOW_Class ESP_NOW;

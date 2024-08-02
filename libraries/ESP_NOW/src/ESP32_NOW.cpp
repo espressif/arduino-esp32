@@ -191,7 +191,7 @@ bool ESP_NOW_Class::end() {
     return true;
   }
   //remove all peers
-  for(uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
+  for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
     if (_esp_now_peers[i] != NULL) {
       removePeer(*_esp_now_peers[i]);
     }
