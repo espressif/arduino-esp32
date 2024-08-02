@@ -41,4 +41,7 @@ static const uint8_t D8 = 19;
 static const uint8_t D9 = 20;
 static const uint8_t D10 = 18;
 
+static const uint8_t WIFI_ENABLE = 3;
+static const uint8_t WIFI_ANT_CONFIG = 14;
+
 #endif /* Pins_Arduino_h */
