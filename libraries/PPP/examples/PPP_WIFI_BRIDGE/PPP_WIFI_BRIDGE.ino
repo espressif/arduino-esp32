@@ -45,7 +45,7 @@ void setup() {
   WiFi.AP.begin();
   WiFi.AP.config(ap_ip, ap_ip, ap_mask, ap_leaseStart, ap_dns);
   WiFi.AP.create(AP_SSID, AP_PASS);
-  if(!WiFi.AP.waitStatusBits(ESP_NETIF_STARTED_BIT, 1000)){
+  if (!WiFi.AP.waitStatusBits(ESP_NETIF_STARTED_BIT, 1000)) {
     Serial.println("Failed to start AP!");
     return;
   }
@@ -118,12 +118,8 @@ void loop() {
 
 void onEvent(arduino_event_id_t event, arduino_event_info_t info) {
   switch (event) {
-    case ARDUINO_EVENT_PPP_START:
-      Serial.println("PPP Started");
-      break;
-    case ARDUINO_EVENT_PPP_CONNECTED:
-      Serial.println("PPP Connected");
-      break;
+    case ARDUINO_EVENT_PPP_START:     Serial.println("PPP Started"); break;
+    case ARDUINO_EVENT_PPP_CONNECTED: Serial.println("PPP Connected"); break;
     case ARDUINO_EVENT_PPP_GOT_IP:
       Serial.println("PPP Got IP");
       Serial.println(PPP);
@@ -137,32 +133,21 @@ void onEvent(arduino_event_id_t event, arduino_event_info_t info) {
       Serial.println("PPP Disconnected");
       WiFi.AP.enableNAPT(false);
       break;
-    case ARDUINO_EVENT_PPP_STOP:
-      Serial.println("PPP Stopped");
-      break;
+    case ARDUINO_EVENT_PPP_STOP: Serial.println("PPP Stopped"); break;
 
     case ARDUINO_EVENT_WIFI_AP_START:
       Serial.println("AP Started");
       Serial.println(WiFi.AP);
       break;
-    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
-      Serial.println("AP STA Connected");
-      break;
-    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
-      Serial.println("AP STA Disconnected");
-      break;
+    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:    Serial.println("AP STA Connected"); break;
+    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED: Serial.println("AP STA Disconnected"); break;
     case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
       Serial.print("AP STA IP Assigned: ");
       Serial.println(IPAddress(info.wifi_ap_staipassigned.ip.addr));
       break;
-    case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
-      Serial.println("AP Probe Request Received");
-      break;
-    case ARDUINO_EVENT_WIFI_AP_STOP:
-      Serial.println("AP Stopped");
-      break;
+    case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED: Serial.println("AP Probe Request Received"); break;
+    case ARDUINO_EVENT_WIFI_AP_STOP:           Serial.println("AP Stopped"); break;
 
-    default:
-      break;
+    default: break;
   }
 }
