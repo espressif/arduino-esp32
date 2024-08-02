@@ -143,7 +143,7 @@ The following configuration uses the community version ``pioarduino`` and the la
 .. code-block:: bash
 
    [env:esp32-c3-devkitm-1]
-   platform = https://github.com/pioarduino/platform-espressif32/releases/download/51.03.03/platform-espressif32.zip
+   platform = https://github.com/pioarduino/platform-espressif32/releases/download/51.03.04/platform-espressif32.zip
    board = esp32-c3-devkitm-1
    framework = arduino
 
