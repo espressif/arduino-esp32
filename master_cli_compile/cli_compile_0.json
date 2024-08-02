@@ -424,6 +424,14 @@
                             "ram_bytes": 37824,
                             "ram_percentage": 11
                             }]
+                    },
+{"name": "BLE/examples/Notify",
+                    "sizes": [{
+                            "flash_bytes": 1110606,
+                            "flash_percentage": 35,
+                            "ram_bytes": 37516,
+                            "ram_percentage": 11
+                            }]
                     }
 ]
 },
@@ -517,7 +525,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPServer",
                     "sizes": [{
-                            "flash_bytes": 907401,
+                            "flash_bytes": 907393,
                             "flash_percentage": 28,
                             "ram_bytes": 43612,
                             "ram_percentage": 13

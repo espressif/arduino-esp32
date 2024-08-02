@@ -329,14 +329,6 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "BLE/examples/Notify",
-                    "sizes": [{
-                            "flash_bytes": 1110606,
-                            "flash_percentage": 35,
-                            "ram_bytes": 37516,
-                            "ram_percentage": 11
-                            }]
-                    },
 {"name": "BLE/examples/Scan",
                     "sizes": [{
                             "flash_bytes": 1099330,
@@ -421,6 +413,22 @@
                     "sizes": [{
                             "flash_bytes": 223730,
                             "flash_percentage": 7,
+                            "ram_bytes": 12592,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/LEDCSingleChannel",
+                    "sizes": [{
+                            "flash_bytes": 205032,
+                            "flash_percentage": 6,
+                            "ram_bytes": 12592,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/LEDCSoftwareFade",
+                    "sizes": [{
+                            "flash_bytes": 205078,
+                            "flash_percentage": 6,
                             "ram_bytes": 12592,
                             "ram_percentage": 3
                             }]

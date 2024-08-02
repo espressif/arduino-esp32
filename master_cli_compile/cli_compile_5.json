@@ -100,7 +100,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 865265,
+                            "flash_bytes": 865289,
                             "flash_percentage": 27,
                             "ram_bytes": 40488,
                             "ram_percentage": 12
@@ -108,7 +108,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 865433,
+                            "flash_bytes": 865457,
                             "flash_percentage": 27,
                             "ram_bytes": 40464,
                             "ram_percentage": 12
@@ -121,7 +121,7 @@
                 "sketches": [
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 841514,
+                            "flash_bytes": 841538,
                             "flash_percentage": 26,
                             "ram_bytes": 36236,
                             "ram_percentage": 11
@@ -129,7 +129,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 841746,
+                            "flash_bytes": 841770,
                             "flash_percentage": 26,
                             "ram_bytes": 36212,
                             "ram_percentage": 11
@@ -137,7 +137,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
-                            "flash_bytes": 845402,
+                            "flash_bytes": 845426,
                             "flash_percentage": 26,
                             "ram_bytes": 36324,
                             "ram_percentage": 11
@@ -145,7 +145,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Serial",
                     "sizes": [{
-                            "flash_bytes": 842262,
+                            "flash_bytes": 842286,
                             "flash_percentage": 26,
                             "ram_bytes": 36308,
                             "ram_percentage": 11
@@ -183,6 +183,14 @@
                             "ram_percentage": 5
                             }]
                     },
+{"name": "Ethernet/examples/ETH_WIFI_BRIDGE",
+                    "sizes": [{
+                            "flash_bytes": 932554,
+                            "flash_percentage": 29,
+                            "ram_bytes": 37012,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "FFat/examples/FFat_Test",
                     "sizes": [{
                             "flash_bytes": 311274,
@@ -212,14 +220,6 @@
                             "flash_bytes": 966070,
                             "flash_percentage": 30,
                             "ram_bytes": 37980,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "HTTPClient/examples/BasicHttpsClient",
-                    "sizes": [{
-                            "flash_bytes": 970850,
-                            "flash_percentage": 30,
-                            "ram_bytes": 38012,
                             "ram_percentage": 11
                             }]
                     }
@@ -329,46 +329,6 @@
 { "board": "espressif:esp32:esp32c6:PartitionScheme=huge_app",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "ESP32/examples/Serial/RxTimeout_Demo",
-                    "sizes": [{
-                            "flash_bytes": 213340,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12544,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
-                    "sizes": [{
-                            "flash_bytes": 213302,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12552,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
-                    "sizes": [{
-                            "flash_bytes": 213838,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12536,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/onReceiveExample",
-                    "sizes": [{
-                            "flash_bytes": 213434,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12560,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/TWAI/TWAIreceive",
-                    "sizes": [{
-                            "flash_bytes": 219008,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12552,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/TWAI/TWAItransmit",
                     "sizes": [{
                             "flash_bytes": 219312,
@@ -423,6 +383,54 @@
                             "flash_percentage": 6,
                             "ram_bytes": 12536,
                             "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Utilities/SHA1Builder",
+                    "sizes": [{
+                            "flash_bytes": 220500,
+                            "flash_percentage": 7,
+                            "ram_bytes": 12536,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP_I2S/examples/ES8388_loopback",
+                    "sizes": [{
+                            "flash_bytes": 280036,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13296,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP_I2S/examples/Simple_tone",
+                    "sizes": [{
+                            "flash_bytes": 235564,
+                            "flash_percentage": 7,
+                            "ram_bytes": 12664,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
+                    "sizes": [{
+                            "flash_bytes": 891216,
+                            "flash_percentage": 28,
+                            "ram_bytes": 38172,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
+                    "sizes": [{
+                            "flash_bytes": 891152,
+                            "flash_percentage": 28,
+                            "ram_bytes": 38156,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "ESP_NOW/examples/ESP_NOW_Network",
+                    "sizes": [{
+                            "flash_bytes": 894444,
+                            "flash_percentage": 28,
+                            "ram_bytes": 38244,
+                            "ram_percentage": 11
                             }]
                     }
 ]
