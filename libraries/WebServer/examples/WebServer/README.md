@@ -10,6 +10,12 @@ This example requires some space for a filesystem and runs fine boards with 4 MB
 * Partition Scheme: Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
     but LittleFS will be used in the partition (not SPIFFS)
 
+or
+
+* Board: Arduino Nano ESP32
+* Partition Scheme: "With FAT partition"
+
+
 It features
 
 * Setup a web server
@@ -28,9 +34,9 @@ It features
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 |
-| ----------------- | ----- | -------- | -------- |
-|                   | yes   | yes      | yes      |
+| Supported Targets | ESP32 | ESP32-S2 | ESP32-S3 | ESP32-C3 |
+| ----------------- | ----- | -------- | -------- | -------- |
+|                   | yes   | no       | yes      | yes      |
 
 ## Use the Example
 
@@ -200,6 +206,7 @@ This class has to implements several functions and works in a more detailed way:
 
 * The `canUpload()`and `upload()` methods work similar while the `upload()` method is called multiple times to create, append data and close the new file.
 
+
 ## File upload
 
 By opening <http://webserver/$upload.htm> you can easily upload files by dragging them over the drop area.
@@ -238,6 +245,7 @@ You can see on the Serial output that one filesystem write error is reported.
 Please be patient and wait for the upload ending even when writing to the filesystem is disabled
 it maybe take more than a minute.
 
+
 ## Registering a special handler for "file not found"
 
 Any other incoming request that was not handled by the registered plug-ins above can be detected by registering
@@ -253,6 +261,7 @@ Any other incoming request that was not handled by the registered plug-ins above
 This allows sending back an "friendly" result for the browser. Here a simple html page is created from a static string.
 You can easily change the html code in the file `builtinfiles.h`.
 
+
 ## customizations
 
 You may like to change the hostname and the timezone in the lines:
@@ -262,9 +271,18 @@ You may like to change the hostname and the timezone in the lines:
 > #define TIMEZONE "CET-1CEST,M3.5.0,M10.5.0/3"
 > ```
 
+
 ## Troubleshooting
 
 Have a look in the Serial output for some additional runtime information.
+
+
+## Changes
+
+* 2024-08-02 -- Fixing for board implementation 3.0.4 ff.
+* 2024-08-02 -- Support for FAT
+* 2024-08-02 -- Tested with Arduino Nano ESP32
+
 
 ## Contribute
 
@@ -274,11 +292,13 @@ If you have any **feedback** or **issue** to report on this example/library, ple
 
 Before creating a new issue, be sure to try Troubleshooting and check if the same issue was already created by someone else.
 
+
 ## Resources
 
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
 * ESP32 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)
 * ESP32-S2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf)
+* ESP32-S3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf)
 * ESP32-C3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)
