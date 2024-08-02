@@ -52,8 +52,8 @@ static bool ledcDetachBus(void *bus) {
   bool channel_found = false;
   // Check if more pins are attached to the same ledc channel
   for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
-    if (!perimanPinIsValid(i)) {
-      continue;  //invalid pin, skip
+    if (!perimanPinIsValid(i) || i == handle->pin) {
+      continue;  //invalid pin or same pin
     }
     peripheral_bus_type_t type = perimanGetPinBusType(i);
     if (type == ESP32_BUS_TYPE_LEDC) {

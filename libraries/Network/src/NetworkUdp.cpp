@@ -296,7 +296,14 @@ int NetworkUDP::parsePacket() {
   }
   struct sockaddr_storage si_other_storage;  // enough storage for v4 and v6
   socklen_t slen = sizeof(sockaddr_storage);
-  int len;
+  int len = 0;
+  if (ioctl(udp_server, FIONREAD, &len) == -1) {
+    log_e("could not check for data in buffer length: %d", errno);
+    return 0;
+  }
+  if (!len) {
+    return 0;
+  }
   char *buf = (char *)malloc(1460);
   if (!buf) {
     return 0;
