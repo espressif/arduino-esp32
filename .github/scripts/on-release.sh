@@ -424,6 +424,7 @@ fi
 # Test the package JSONs
 
 echo "Installing arduino-cli ..."
+export PATH="/home/runner/bin:$PATH"
 source ./.github/scripts/install-arduino-cli.sh
 
 echo "Testing $PACKAGE_JSON_DEV install ..."
