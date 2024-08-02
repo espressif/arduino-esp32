@@ -347,11 +347,41 @@ int WebServer::_uploadReadByte(NetworkClient &client) {
   int res = client.read();
 
   if (res < 0) {
-    while (!client.available() && client.connected()) {
-      delay(2);
-    }
+    // keep trying until you either read a valid byte or timeout
+    const unsigned long startMillis = millis();
+    const long timeoutIntervalMillis = client.getTimeout();
+    bool timedOut = false;
+    for (;;) {
+      if (!client.connected()) {
+        return -1;
+      }
+      // loosely modeled after blinkWithoutDelay pattern
+      while (!timedOut && !client.available() && client.connected()) {
+        delay(2);
+        timedOut = (millis() - startMillis) >= timeoutIntervalMillis;
+      }
 
-    res = client.read();
+      res = client.read();
+      if (res >= 0) {
+        return res;  // exit on a valid read
+      }
+      // NOTE: it is possible to get here and have all of the following
+      //       assertions hold true
+      //
+      //       -- client.available() > 0
+      //       -- client.connected == true
+      //       -- res == -1
+      //
+      //       a simple retry strategy overcomes this which is to say the
+      //       assertion is not permanent, but the reason that this works
+      //       is elusive, and possibly indicative of a more subtle underlying
+      //       issue
+
+      timedOut = (millis() - startMillis) >= timeoutIntervalMillis;
+      if (timedOut) {
+        return res;  // exit on a timeout
+      }
+    }
   }
 
   return res;

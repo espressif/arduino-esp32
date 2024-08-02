@@ -46,10 +46,16 @@ bool WiFiScanClass::_scanAsync = false;
 uint32_t WiFiScanClass::_scanStarted = 0;
 uint32_t WiFiScanClass::_scanTimeout = 60000;
 uint16_t WiFiScanClass::_scanCount = 0;
+uint32_t WiFiScanClass::_scanActiveMinTime = 100;
+
 void *WiFiScanClass::_scanResult = 0;
 
 void WiFiScanClass::setScanTimeout(uint32_t ms) {
   WiFiScanClass::_scanTimeout = ms;
+}
+
+void WiFiScanClass::setScanActiveMinTime(uint32_t ms) {
+  WiFiScanClass::_scanActiveMinTime = ms;
 }
 
 /**
@@ -80,7 +86,7 @@ int16_t
     config.scan_time.passive = max_ms_per_chan;
   } else {
     config.scan_type = WIFI_SCAN_TYPE_ACTIVE;
-    config.scan_time.active.min = 100;
+    config.scan_time.active.min = _scanActiveMinTime;
     config.scan_time.active.max = max_ms_per_chan;
   }
   if (esp_wifi_scan_start(&config, false) == ESP_OK) {

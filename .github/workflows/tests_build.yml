@@ -20,8 +20,8 @@ jobs:
       id: ${{ github.event.pull_request.number || github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ inputs.chip }}-${{ inputs.type }}
     steps:
       - name: Check if already built
-        if: ${{ github.event.pull_request.number != null }}
         id: cache-build-binaries
+        if: github.event.pull_request.number != null
         uses: actions/cache/restore@v4
         with:
           key: tests-${{ env.id }}-bin
@@ -46,21 +46,6 @@ jobs:
       - name: Checkout user repository
         if: ${{ steps.check-build.outputs.enabled == 'true' }}
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          persist-credentials: false
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /*
-            !.github
-
-      # To avoid giving unknown scripts elevated permissions, download them from the master branch
-      - name: Get CI scripts from master
-        if: ${{ steps.check-build.outputs.enabled == 'true' }}
-        run: |
-          mkdir -p .github
-          cd .github
-          curl https://codeload.github.com/${{ github.repository }}/tar.gz/master | tar -xz --strip=2 arduino-esp32-master/.github
 
       - name: Get libs cache
         uses: actions/cache@v4
@@ -83,7 +68,7 @@ jobs:
 
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as cache
         uses: actions/cache/save@v4
-        if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        if: steps.check-build.outputs.enabled == 'true' && github.event.pull_request.number != null
         with:
           key: tests-${{ env.id }}-bin
           path: |

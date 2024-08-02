@@ -4,7 +4,7 @@ This example demonstrates how to use the WiFi library to scan available WiFi net
 
 ## Supported Targets
 
-Currently this example supports the following targets.
+Currently, this example supports the following targets.
 
 | Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 | ESP32-C6 |
 | ----------------- | ----- | -------- | -------- | -------- | -------- |
@@ -55,7 +55,7 @@ Nr | SSID            | RSSI | CH | Encryption
 * **Programming Fail:** If the programming/flash procedure fails, try to reduce the serial connection speed.
 * **COM port not detected:** Check the USB cable connection and the USB to Serial driver installation.
 
-If the error persist, you can ask help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
+If the error persists, you can ask for help at the official [ESP32 forum](https://esp32.com) or see [Contribute](#contribute).
 
 ## Contribute
 

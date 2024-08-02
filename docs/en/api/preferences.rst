@@ -524,7 +524,7 @@ Arduino-esp32 Preferences API
 
    .. code-block:: arduino
 
-      uint8_t getUChar(const char* key, uint8_t defaultValue = 0);
+      bool getBool(const char* key, bool defaultValue = false);
 
    ..
 
