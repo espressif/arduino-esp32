@@ -38064,7 +38064,7 @@ waveshare_esp32_s3_touch_lcd_169.build.cdc_on_boot=0
 waveshare_esp32_s3_touch_lcd_169.build.msc_on_boot=0
 waveshare_esp32_s3_touch_lcd_169.build.dfu_on_boot=0
 waveshare_esp32_s3_touch_lcd_169.build.f_cpu=240000000L
-waveshare_esp32_s3_touch_lcd_169.build.flash_size=4MB
+waveshare_esp32_s3_touch_lcd_169.build.flash_size=16MB
 waveshare_esp32_s3_touch_lcd_169.build.flash_freq=80m
 waveshare_esp32_s3_touch_lcd_169.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_169.build.boot=qio
@@ -38081,7 +38081,7 @@ waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.defines=
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled=Enabled
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.psram_type=qspi
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio=QIO 80MHz
 waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio.build.flash_mode=dio
@@ -38093,9 +38093,6 @@ waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120.build.boot=qio
 waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120.build.boot_freq=120m
 waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120.build.flash_freq=80m
-
-waveshare_esp32_s3_touch_lcd_169.menu.FlashSize.4M=4MB (32Mb)
-waveshare_esp32_s3_touch_lcd_169.menu.FlashSize.4M.build.flash_size=4MB
 
 waveshare_esp32_s3_touch_lcd_169.menu.LoopCore.1=Core 1
 waveshare_esp32_s3_touch_lcd_169.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -38134,6 +38131,7 @@ waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -38159,9 +38157,15 @@ waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.min_spiffs.upload.maximum_
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker=RainMaker 4MB
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
-waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
-waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
-waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
@@ -38259,7 +38263,7 @@ waveshare_esp32_s3_lcd_169.build.cdc_on_boot=0
 waveshare_esp32_s3_lcd_169.build.msc_on_boot=0
 waveshare_esp32_s3_lcd_169.build.dfu_on_boot=0
 waveshare_esp32_s3_lcd_169.build.f_cpu=240000000L
-waveshare_esp32_s3_lcd_169.build.flash_size=4MB
+waveshare_esp32_s3_lcd_169.build.flash_size=16MB
 waveshare_esp32_s3_lcd_169.build.flash_freq=80m
 waveshare_esp32_s3_lcd_169.build.flash_mode=dio
 waveshare_esp32_s3_lcd_169.build.boot=qio
@@ -38276,7 +38280,7 @@ waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.defines=
 waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled=Enabled
 waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.psram_type=qspi
+waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_lcd_169.menu.FlashMode.qio=QIO 80MHz
 waveshare_esp32_s3_lcd_169.menu.FlashMode.qio.build.flash_mode=dio
@@ -38288,9 +38292,6 @@ waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120.build.flash_mode=dio
 waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120.build.boot=qio
 waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120.build.boot_freq=120m
 waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120.build.flash_freq=80m
-
-waveshare_esp32_s3_lcd_169.menu.FlashSize.4M=4MB (32Mb)
-waveshare_esp32_s3_lcd_169.menu.FlashSize.4M.build.flash_size=4MB
 
 waveshare_esp32_s3_lcd_169.menu.LoopCore.1=Core 1
 waveshare_esp32_s3_lcd_169.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -38329,6 +38330,7 @@ waveshare_esp32_s3_lcd_169.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 waveshare_esp32_s3_lcd_169.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 waveshare_esp32_s3_lcd_169.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -38354,9 +38356,15 @@ waveshare_esp32_s3_lcd_169.menu.PartitionScheme.min_spiffs.upload.maximum_size=1
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker=RainMaker 4MB
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
-waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
-waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
-waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
