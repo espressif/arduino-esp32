@@ -269,6 +269,7 @@ Arduino-esp32 Preferences API
        size_t putUInt(const char* key, uint32_t value)
        size_t putLong(const char* key, int32_t value)
        size_t putULong(const char* key, uint32_t value)
+       size_t putFloat(const char* key, float_t value)
 
    ..
 
@@ -298,7 +299,6 @@ Arduino-esp32 Preferences API
 
        size_t putLong64(const char* key, int64_t value)
        size_t putULong64(const char* key, uint64_t value)
-       size_t putFloat(const char* key, float_t value)
        size_t putDouble(const char* key, double_t value)
 
    ..
