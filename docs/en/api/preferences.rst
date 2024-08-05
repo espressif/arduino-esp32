@@ -76,6 +76,7 @@ Preferences directly supports the following data types:
    +-------------------+-------------------+---------------+
    | Bytes             | uint8_t           | variable      |
    +-------------------+-------------------+---------------+
+
 String values can be stored and retrieved either as an Arduino String or as a null terminated ``char`` array (c-string).
 
 Bytes type is used for storing and retrieving an arbitrary number of bytes in a namespace.
