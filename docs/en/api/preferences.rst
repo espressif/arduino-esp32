@@ -62,11 +62,11 @@ Preferences directly supports the following data types:
    +-------------------+-------------------+---------------+
    | ULong             | uint32_t          | 4             |
    +-------------------+-------------------+---------------+
+   | Float             | float_t           | 4             |
+   +-------------------+-------------------+---------------+
    | Long64            | int64_t           | 8             |
    +-------------------+-------------------+---------------+
    | ULong64           | uint64_t          | 8             |
-   +-------------------+-------------------+---------------+
-   | Float             | float_t           | 8             |
    +-------------------+-------------------+---------------+
    | Double            | double_t          | 8             |
    +-------------------+-------------------+---------------+
@@ -76,7 +76,6 @@ Preferences directly supports the following data types:
    +-------------------+-------------------+---------------+
    | Bytes             | uint8_t           | variable      |
    +-------------------+-------------------+---------------+
-
 String values can be stored and retrieved either as an Arduino String or as a null terminated ``char`` array (c-string).
 
 Bytes type is used for storing and retrieving an arbitrary number of bytes in a namespace.
@@ -259,6 +258,8 @@ Arduino-esp32 Preferences API
 ********************
 ``putLong, putULong``
 **********************
+``putFloat``
+**********************
 
    Store a value against a given key in the currently open namespace.
 
@@ -288,8 +289,8 @@ Arduino-esp32 Preferences API
 
 ``putLong64, putULong64``
 *************************
-``putFloat, putDouble``
-***********************
+``putDouble``
+*************************
 
    Store a value against a given key in the currently open namespace.
 
