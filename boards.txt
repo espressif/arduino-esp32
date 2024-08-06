@@ -38079,7 +38079,7 @@ waveshare_esp32_s3_touch_lcd_169.build.memory_type={build.boot}_{build.psram_typ
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled=Disabled
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.defines=
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.psram_type=qspi
-waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled=Disabled
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled=Enabled
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.psram_type=opi
 
@@ -38278,7 +38278,7 @@ waveshare_esp32_s3_lcd_169.build.memory_type={build.boot}_{build.psram_type}
 waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled=Disabled
 waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.defines=
 waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.psram_type=qspi
-waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled=Disabled
+waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled=Enabled
 waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.psram_type=opi
 
