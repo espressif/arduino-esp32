@@ -14,18 +14,18 @@
 #define USB_SERIAL       ""
 
 // display for ST7789V2
-#define WS_LCD_DC 4
-#define WS_LCD_CS 5
+#define WS_LCD_DC  4
+#define WS_LCD_CS  5
 #define WS_LCD_SCL 6
 #define WS_LCD_SDA 7
 #define WS_LCD_RST 8
-#define WS_LCD_BL 15
+#define WS_LCD_BL  15
 
 // Onboard RTC for PCF85063
-#define WS_RTC_SCL 10
-#define WS_RTC_SDA 11
+#define WS_RTC_SCL     10
+#define WS_RTC_SDA     11
 #define WS_RTC_ADDRESS 0x51
-#define WS_RTC_INT 41
+#define WS_RTC_INT     41
 
 // Onboard  QMI8658 IMU
 #define WS_QMI8658_SDA     11
@@ -35,9 +35,9 @@
 
 // Onboard Electric buzzer & Custom buttons
 // GPIO and PSRAM conflict, need to pay attention when using
-#define WS_BUZZ 33  // Please pull down the level when using
+#define WS_BUZZ    33  // Please pull down the level when using
 #define WS_SYS_OUT 36
-#define WS_SYS_EN 35
+#define WS_SYS_EN  35
 
 // Partial voltage measurement method
 #define WS_BAT_ADC 1
