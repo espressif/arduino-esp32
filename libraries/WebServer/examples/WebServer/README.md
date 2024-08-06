@@ -6,14 +6,8 @@ It is a small project in it's own and has some files to use on the web server to
 
 This example requires some space for a filesystem and runs fine boards with 4 MByte flash using the following options:
 
-* Board: ESP32 Dev Module
-* Partition Scheme: Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-    but LittleFS will be used in the partition (not SPIFFS)
-
-or
-
-* Board: Arduino Nano ESP32
-* Partition Scheme: "With FAT partition"
+* For using SPIFFS(LittleFS): Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)  
+* For using FATFS: Default 4MB with ffat (1.2MB APP/1.5MB FATFS)  
 
 
 It features
@@ -34,9 +28,9 @@ It features
 
 Currently, this example supports the following targets.
 
-| Supported Targets | ESP32 | ESP32-S2 | ESP32-S3 | ESP32-C3 |
-| ----------------- | ----- | -------- | -------- | -------- |
-|                   | yes   | no       | yes      | yes      |
+| Supported Targets | ESP32 | ESP32-S2 | ESP32-S3 | ESP32-C3 | ESP32-C6 |
+| ----------------- | ----- | -------- | -------- | -------- | -------- |
+|                   | yes   | yes      | yes      | yes      | yes      |
 
 ## Use the Example
 
@@ -281,7 +275,6 @@ Have a look in the Serial output for some additional runtime information.
 
 * 2024-08-02 -- Fixing for board implementation 3.0.4 ff.
 * 2024-08-02 -- Support for FAT
-* 2024-08-02 -- Tested with Arduino Nano ESP32
 
 
 ## Contribute
