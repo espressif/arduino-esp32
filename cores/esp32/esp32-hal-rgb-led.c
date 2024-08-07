@@ -2,7 +2,11 @@
 
 #include "esp32-hal-rgb-led.h"
 
-void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
+void neopixelWrite(uint8_t pin, uint8_t green_val, uint8_t red_val, uint8_t blue_val) {
+  neopixelWriteOrdered(pin, GRB, red_val, green_val, blue_val);
+}
+
+void neopixelWriteOrdered(uint8_t pin, color_order_t color_order, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
 #if SOC_RMT_SUPPORTED
   rmt_data_t led_data[24];
 
@@ -15,7 +19,39 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
     return;
   }
 
-  int color[] = {red_val, green_val, blue_val};
+  int color[3];
+  switch (color_order) {
+    case RGB:
+      color[0] = red_val;
+      color[1] = green_val;
+      color[2] = blue_val;
+      break;
+    case BGR:
+      color[0] = blue_val;
+      color[1] = green_val;
+      color[2] = red_val;
+      break;
+    case BRG:
+      color[0] = blue_val;
+      color[1] = red_val;
+      color[2] = green_val;
+      break;
+    case RBG:
+      color[0] = red_val;
+      color[1] = blue_val;
+      color[2] = green_val;
+      break;
+    case GBR:
+      color[0] = green_val;
+      color[1] = blue_val;
+      color[2] = red_val;
+      break;
+    default:
+      color[0] = green_val;
+      color[1] = red_val;
+      color[2] = blue_val;
+      break;
+  }
   int i = 0;
   for (int col = 0; col < 3; col++) {
     for (int bit = 0; bit < 8; bit++) {
