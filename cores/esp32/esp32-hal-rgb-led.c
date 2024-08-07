@@ -2,7 +2,7 @@
 
 #include "esp32-hal-rgb-led.h"
 
-void neopixelWrite(uint8_t pin, uint8_t green_val, uint8_t red_val, uint8_t blue_val) {
+void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
   neopixelWriteOrdered(pin, GRB, red_val, green_val, blue_val);
 }
 

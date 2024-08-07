@@ -20,7 +20,7 @@ typedef enum {
   GRB
 } color_order_t;
 
-void neopixelWrite(uint8_t pin, uint8_t green_val, uint8_t red_val, uint8_t blue_val);
+void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
 void neopixelWriteOrdered(uint8_t pin, color_order_t color_order, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
