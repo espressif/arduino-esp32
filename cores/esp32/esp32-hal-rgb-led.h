@@ -12,17 +12,17 @@ extern "C" {
 #endif
 
 typedef enum {
-  RGB,
-  BGR,
-  BRG,
-  RBG,
-  GBR,
-  GRB
-} color_order_t;
+  LED_COLOR_ORDER_RGB,
+  LED_COLOR_ORDER_BGR,
+  LED_COLOR_ORDER_BRG,
+  LED_COLOR_ORDER_RBG,
+  LED_COLOR_ORDER_GBR,
+  LED_COLOR_ORDER_GRB
+} rgb_led_color_order_t;
 
 void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
-void neopixelWriteOrdered(uint8_t pin, color_order_t color_order, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
+void neopixelWriteOrdered(uint8_t pin, rgb_led_color_order_t rgb_led_color_order, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
 #ifdef __cplusplus
 }
