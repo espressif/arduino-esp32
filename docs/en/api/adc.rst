@@ -21,7 +21,7 @@ ADC OneShot mode
 
 
 The ADC OneShot mode API is fully compatible with Arduino's ``analogRead`` function.
-When you call the ``analogRead`` or ``analogReadMillivolts`` function, it returns the result of a single conversion on the requested pin.
+When you call the ``analogRead`` or ``analogReadMilliVolts`` function, it returns the result of a single conversion on the requested pin.
 
 analogRead
 ^^^^^^^^^^
@@ -36,7 +36,7 @@ This function is used to get the ADC raw value for a given pin/ADC channel.
 
 This function will return analog raw value (non-calibrated).
 
-analogReadMillivolts
+analogReadMilliVolts
 ^^^^^^^^^^^^^^^^^^^^
 
 This function is used to get ADC raw value for a given pin/ADC channel and convert it to calibrated result in millivolts.
