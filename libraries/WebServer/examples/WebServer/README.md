@@ -4,7 +4,7 @@ This example shows different techniques on how to use and extend the WebServer f
 
 It is a small project in it's own and has some files to use on the web server to show how to use simple REST based services.
 
-This example requires some space for a filesystem and runs fine boards with 4 MByte flash using the following options:
+This example requires some space for a filesystem and runs fine on supported SoCs with 4 MByte or more flash by selecting the proper partition table:
 
 * For using SPIFFS(LittleFS): Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)  
 * For using FATFS: Default 4MB with ffat (1.2MB APP/1.5MB FATFS)  
