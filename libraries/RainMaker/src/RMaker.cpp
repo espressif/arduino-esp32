@@ -4,6 +4,7 @@
 #include <esp_rmaker_schedule.h>
 #include <esp_rmaker_utils.h>
 #include <esp_rmaker_scenes.h>
+#include <esp_rmaker_common_events.h>
 bool wifiLowLevelInit(bool persistent);
 static esp_err_t err;
 
@@ -19,6 +20,16 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
       case RMAKER_EVENT_CLAIM_SUCCESSFUL: log_i("RainMaker Claim Successful."); break;
       case RMAKER_EVENT_CLAIM_FAILED:     log_i("RainMaker Claim Failed."); break;
       default:                            log_i("Unhandled RainMaker Event:");
+    }
+  } else if (event_base == RMAKER_COMMON_EVENT) {
+    switch (event_id) {
+        case RMAKER_EVENT_REBOOT:            log_i("Rebooting in %d seconds.", *((uint8_t *)event_data)); break;
+        case RMAKER_EVENT_WIFI_RESET:        log_i("Wi-Fi credentials reset."); break;
+        case RMAKER_EVENT_FACTORY_RESET:     log_i("Node reset to factory defaults."); break;
+        case RMAKER_MQTT_EVENT_CONNECTED:    log_i("MQTT Connected."); break;
+        case RMAKER_MQTT_EVENT_DISCONNECTED: log_i("MQTT Disconnected."); break;
+        case RMAKER_MQTT_EVENT_PUBLISHED:    log_i("MQTT Published. Msg id: %d.", *((int *)event_data)); break;
+        default:                             log_w("Unhandled RainMaker Common Event: %"PRIi32, event_id);
     }
   } else if (event_base == RMAKER_OTA_EVENT) {
     if (event_data == NULL) {
@@ -46,6 +57,7 @@ Node RMakerClass::initNode(const char *name, const char *type) {
   esp_rmaker_node_t *rnode = NULL;
   esp_event_handler_register(RMAKER_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL);
   esp_event_handler_register(RMAKER_OTA_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL);
+  esp_event_handler_register(RMAKER_COMMON_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL);
   rnode = esp_rmaker_node_init(&rainmaker_cfg, name, type);
   if (!rnode) {
     log_e("Node init failed");
