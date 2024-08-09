@@ -11,4 +11,17 @@
 #define LED_BUILTIN 45
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
+//static const uint8_t TX = 39;
+//static const uint8_t RX = 40;
+//#define TX1 TX
+//#define RX1 RX
+
+static const uint8_t SDA = 33;
+static const uint8_t SCL = 34;
+
+static const uint8_t SS = 41;
+//static const uint8_t MOSI = 42;
+//static const uint8_t SCK = 10;
+//static const uint8_t MISO = 11;
+
 #endif /* Pins_Arduino_h */
