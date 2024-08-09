@@ -38845,3 +38845,169 @@ elecrow_crowpanel_7.menu.EraseFlash.all=Enabled
 elecrow_crowpanel_7.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+# Alfredo NoU3
+
+alfredo-nou3.name=Alfredo NoU3
+alfredo-nou3.vid.0=0xAFD0
+alfredo-nou3.pid.0=0x0003
+alfredo-nou3.upload_port.0.vid=0xAFD0
+alfredo-nou3.upload_port.0.pid=0x0003
+
+alfredo-nou3.bootloader.tool=esptool_py
+alfredo-nou3.bootloader.tool.default=esptool_py
+
+alfredo-nou3.upload.tool=esptool_py
+alfredo-nou3.upload.tool.default=esptool_py
+alfredo-nou3.upload.tool.network=esp_ota
+
+alfredo-nou3.upload.maximum_size=3342336
+alfredo-nou3.upload.maximum_data_size=327680
+alfredo-nou3.upload.flags=
+alfredo-nou3.upload.extra_flags=
+alfredo-nou3.upload.use_1200bps_touch=false
+alfredo-nou3.upload.wait_for_upload_port=false
+
+alfredo-nou3.serial.disableDTR=false
+alfredo-nou3.serial.disableRTS=false
+
+alfredo-nou3.build.tarch=xtensa
+alfredo-nou3.build.bootloader_addr=0x0
+alfredo-nou3.build.target=esp32s3
+alfredo-nou3.build.mcu=esp32s3
+alfredo-nou3.build.core=esp32
+alfredo-nou3.build.variant=alfredo-nou3
+alfredo-nou3.build.board=ALFREDO_NOU3
+
+alfredo-nou3.build.usb_mode=1
+alfredo-nou3.build.cdc_on_boot=1
+alfredo-nou3.build.msc_on_boot=0
+alfredo-nou3.build.dfu_on_boot=0
+alfredo-nou3.build.f_cpu=240000000L
+alfredo-nou3.build.flash_size=8MB
+alfredo-nou3.build.flash_freq=80m
+alfredo-nou3.build.flash_mode=dio
+alfredo-nou3.build.boot=qio
+alfredo-nou3.build.partitions=default
+alfredo-nou3.build.defines=
+alfredo-nou3.build.loop_core=
+alfredo-nou3.build.event_core=
+alfredo-nou3.build.flash_type=qio
+alfredo-nou3.build.psram_type=qspi
+alfredo-nou3.build.memory_type={build.flash_type}_{build.psram_type}
+
+alfredo-nou3.menu.LoopCore.1=Core 1
+alfredo-nou3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+alfredo-nou3.menu.LoopCore.0=Core 0
+alfredo-nou3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+alfredo-nou3.menu.EventsCore.1=Core 1
+alfredo-nou3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+alfredo-nou3.menu.EventsCore.0=Core 0
+alfredo-nou3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+alfredo-nou3.menu.USBMode.default=Hardware CDC and JTAG
+alfredo-nou3.menu.USBMode.default.build.usb_mode=1
+alfredo-nou3.menu.USBMode.usbotg=USB-OTG (TinyUSB)
+alfredo-nou3.menu.USBMode.usbotg.build.usb_mode=0
+
+alfredo-nou3.menu.CDCOnBoot.cdc=Enabled
+alfredo-nou3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+alfredo-nou3.menu.CDCOnBoot.default=Disabled
+alfredo-nou3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+alfredo-nou3.menu.MSCOnBoot.default=Disabled
+alfredo-nou3.menu.MSCOnBoot.default.build.msc_on_boot=0
+alfredo-nou3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+alfredo-nou3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+alfredo-nou3.menu.DFUOnBoot.default=Disabled
+alfredo-nou3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+alfredo-nou3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+alfredo-nou3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+alfredo-nou3.menu.UploadMode.default=UART0 / Hardware CDC
+alfredo-nou3.menu.UploadMode.default.upload.use_1200bps_touch=false
+alfredo-nou3.menu.UploadMode.default.upload.wait_for_upload_port=false
+alfredo-nou3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+alfredo-nou3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+alfredo-nou3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+alfredo-nou3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+alfredo-nou3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+alfredo-nou3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+alfredo-nou3.menu.PartitionScheme.big_8MB=Max App (8MB APP)
+alfredo-nou3.menu.PartitionScheme.big_8MB.build.partitions=max_app_8MB
+alfredo-nou3.menu.PartitionScheme.big_8MB.upload.maximum_size=8257536
+
+alfredo-nou3.menu.CPUFreq.240=240MHz (WiFi)
+alfredo-nou3.menu.CPUFreq.240.build.f_cpu=240000000L
+alfredo-nou3.menu.CPUFreq.160=160MHz (WiFi)
+alfredo-nou3.menu.CPUFreq.160.build.f_cpu=160000000L
+alfredo-nou3.menu.CPUFreq.80=80MHz (WiFi)
+alfredo-nou3.menu.CPUFreq.80.build.f_cpu=80000000L
+alfredo-nou3.menu.CPUFreq.40=40MHz
+alfredo-nou3.menu.CPUFreq.40.build.f_cpu=40000000L
+alfredo-nou3.menu.CPUFreq.20=20MHz
+alfredo-nou3.menu.CPUFreq.20.build.f_cpu=20000000L
+alfredo-nou3.menu.CPUFreq.10=10MHz
+alfredo-nou3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+alfredo-nou3.menu.FlashMode.qio=QIO 80MHz
+alfredo-nou3.menu.FlashMode.qio.build.flash_mode=dio
+alfredo-nou3.menu.FlashMode.qio.build.boot=qio
+alfredo-nou3.menu.FlashMode.qio.build.boot_freq=80m
+alfredo-nou3.menu.FlashMode.qio.build.flash_freq=80m
+alfredo-nou3.menu.FlashMode.qio120=QIO 120MHz
+alfredo-nou3.menu.FlashMode.qio120.build.flash_mode=dio
+alfredo-nou3.menu.FlashMode.qio120.build.boot=qio
+alfredo-nou3.menu.FlashMode.qio120.build.boot_freq=120m
+alfredo-nou3.menu.FlashMode.qio120.build.flash_freq=80m
+alfredo-nou3.menu.FlashMode.dio=DIO 80MHz
+alfredo-nou3.menu.FlashMode.dio.build.flash_mode=dio
+alfredo-nou3.menu.FlashMode.dio.build.boot=dio
+alfredo-nou3.menu.FlashMode.dio.build.boot_freq=80m
+alfredo-nou3.menu.FlashMode.dio.build.flash_freq=80m
+alfredo-nou3.menu.FlashMode.opi=OPI 80MHz
+alfredo-nou3.menu.FlashMode.opi.build.flash_mode=dout
+alfredo-nou3.menu.FlashMode.opi.build.boot=opi
+alfredo-nou3.menu.FlashMode.opi.build.boot_freq=80m
+alfredo-nou3.menu.FlashMode.opi.build.flash_freq=80m
+
+alfredo-nou3.menu.FlashSize.8M=8MB (64Mb)
+alfredo-nou3.menu.FlashSize.8M.build.flash_size=8MB
+
+alfredo-nou3.menu.UploadSpeed.921600=921600
+alfredo-nou3.menu.UploadSpeed.921600.upload.speed=921600
+alfredo-nou3.menu.UploadSpeed.512000.windows=512000
+alfredo-nou3.menu.UploadSpeed.512000.upload.speed=512000
+alfredo-nou3.menu.UploadSpeed.460800.linux=460800
+alfredo-nou3.menu.UploadSpeed.460800.macosx=460800
+alfredo-nou3.menu.UploadSpeed.460800.upload.speed=460800
+alfredo-nou3.menu.UploadSpeed.256000.windows=256000
+alfredo-nou3.menu.UploadSpeed.256000.upload.speed=256000
+alfredo-nou3.menu.UploadSpeed.230400.windows.upload.speed=256000
+alfredo-nou3.menu.UploadSpeed.230400=230400
+alfredo-nou3.menu.UploadSpeed.230400.upload.speed=230400
+alfredo-nou3.menu.UploadSpeed.115200=115200
+alfredo-nou3.menu.UploadSpeed.115200.upload.speed=115200
+
+alfredo-nou3.menu.DebugLevel.none=None
+alfredo-nou3.menu.DebugLevel.none.build.code_debug=0
+alfredo-nou3.menu.DebugLevel.error=Error
+alfredo-nou3.menu.DebugLevel.error.build.code_debug=1
+alfredo-nou3.menu.DebugLevel.warn=Warn
+alfredo-nou3.menu.DebugLevel.warn.build.code_debug=2
+alfredo-nou3.menu.DebugLevel.info=Info
+alfredo-nou3.menu.DebugLevel.info.build.code_debug=3
+alfredo-nou3.menu.DebugLevel.debug=Debug
+alfredo-nou3.menu.DebugLevel.debug.build.code_debug=4
+alfredo-nou3.menu.DebugLevel.verbose=Verbose
+alfredo-nou3.menu.DebugLevel.verbose.build.code_debug=5
+
+alfredo-nou3.menu.EraseFlash.none=Disabled
+alfredo-nou3.menu.EraseFlash.none.upload.erase_cmd=
+alfredo-nou3.menu.EraseFlash.all=Enabled
+alfredo-nou3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
