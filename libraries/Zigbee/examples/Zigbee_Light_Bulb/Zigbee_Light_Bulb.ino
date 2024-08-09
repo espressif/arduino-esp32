@@ -39,22 +39,19 @@
 #define LED_PIN RGB_BUILTIN
 #define ZIGBEE_LIGHT_ENDPOINT       10                                   /* esp light bulb device endpoint, used to process light controlling commands */
 
-/* Handle the light attribute */
-// User callback for Zigbee actions to handle turning on/off the light called by Zigbee stack in zb_attribute_handler()
+class MyZigbeeLight : public ZigbeeLight {
+public:
+    // Constructor that passes parameters to the base class constructor
+    MyZigbeeLight(uint8_t endpoint) : ZigbeeLight(endpoint) {}
 
-static void light_cb(const esp_zb_zcl_set_attr_value_message_t *message) {
-  bool light_state = 0;
-  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
-    if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-      light_state = message->attribute.data.value ? *(bool *)message->attribute.data.value : light_state;
-      log_i("Light sets to %s", light_state ? "On" : "Off");
-      neopixelWrite(LED_PIN, 255 * light_state, 255 * light_state, 255 * light_state);  // Toggle light
+    // Override the set_on_off function
+    void set_on_off(bool value) override {
+      log_v("Overwritten method, set on/off: %d", value);
+      neopixelWrite(LED_PIN, 255 * value, 255 * value, 255 * value);  // Toggle light
     }
-  }
-  return;
-}
+};
 
-ZigbeeLight zbLight = ZigbeeLight(ZIGBEE_LIGHT_ENDPOINT, light_cb);
+MyZigbeeLight zbLight = MyZigbeeLight(ZIGBEE_LIGHT_ENDPOINT);
 
 /********************* Arduino functions **************************/
 void setup() {
@@ -65,7 +62,7 @@ void setup() {
   log_d("Adding ZigbeeLight endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbLight);
   
-  // When all EPs are registered, start Zigbee. By default acts as Zigbee_End_Device
+  // When all EPs are registered, start Zigbee. By default acts as ZIGBEE_END_DEVICE
   log_d("Calling Zigbee.begin()");
   Zigbee.begin();
 }

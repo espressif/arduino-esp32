@@ -7,8 +7,7 @@
 
 class ZigbeeTempSensor : public Zigbee_EP {
   public:
-    ZigbeeTempSensor(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message));
-    //ZigbeeTempSensor(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message)) : ZigbeeTempSensor(endpoint, cb, NULL) {}
+    ZigbeeTempSensor(uint8_t endpoint);
     ~ZigbeeTempSensor();
 
     void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);

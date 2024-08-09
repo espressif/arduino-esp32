@@ -7,8 +7,7 @@
 
 class ZigbeeSwitch : public Zigbee_EP {
   public:
-    ZigbeeSwitch(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message));//, void *arg);
-    // ZigbeeSwitch(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message)) : ZigbeeSwitch(endpoint, cb, NULL) {}
+    ZigbeeSwitch(uint8_t endpoint);
     ~ZigbeeSwitch();
 
     void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);

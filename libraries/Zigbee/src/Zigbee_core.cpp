@@ -1,5 +1,6 @@
 /* Zigbee Common Functions */
 #include "Zigbee_core.h"
+#include "Zigbee_handlers.cpp"
 #include "Arduino.h"
 
 Zigbee_Core::Zigbee_Core() {
@@ -11,37 +12,44 @@ Zigbee_Core::Zigbee_Core() {
 }
 Zigbee_Core::~Zigbee_Core() {}
 
+//forward declaration
+static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message);
+
 bool Zigbee_Core::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
-  zigbeeInit(role_cfg, erase_nvs);
+  if (!zigbeeInit(role_cfg, erase_nvs)){
+    return false;
+  }
   _role = (zigbee_role_t)role_cfg->esp_zb_role;
+  return true;
 }
 
 bool Zigbee_Core::begin(zigbee_role_t role, bool erase_nvs) {
+  bool status = true;
   switch (role)
   {
-    case Zigbee_Coordinator: {
-      _role = Zigbee_Coordinator;
+    case ZIGBEE_COORDINATOR: {
+      _role = ZIGBEE_COORDINATOR;
       esp_zb_cfg_t zb_nwk_cfg = ZIGBEE_DEFAULT_COORDINATOR_CONFIG();
-      zigbeeInit(&zb_nwk_cfg, erase_nvs);
+      status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
       break;
     }
-    case Zigbee_Router: {
-      _role = Zigbee_Router;
+    case ZIGBEE_ROUTER: {
+      _role = ZIGBEE_ROUTER;
       esp_zb_cfg_t zb_nwk_cfg = ZIGBEE_DEFAULT_ROUTER_CONFIG();
-      zigbeeInit(&zb_nwk_cfg, erase_nvs);
+      status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
       break;
     }
-    case Zigbee_End_Device: {
-      _role = Zigbee_End_Device;
+    case ZIGBEE_END_DEVICE: {
+      _role = ZIGBEE_END_DEVICE;
       esp_zb_cfg_t zb_nwk_cfg = ZIGBEE_DEFAULT_ED_CONFIG();
-      zigbeeInit(&zb_nwk_cfg, erase_nvs);
+      status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
       break;
     }
     default:
       log_e("Invalid Zigbee Role");
       return false;
   }
-  return true;
+  return status;
 }
 
 void Zigbee_Core::addEndpoint(Zigbee_EP *ep) {
@@ -57,52 +65,6 @@ void Zigbee_Core::addEndpoint(Zigbee_EP *ep) {
   esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
 }
 
-static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t *message) {
-  esp_err_t ret = ESP_OK;
-  bool light_state = 0;
-
-  if (!message) {
-    log_e("Empty message");
-  }
-  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Received message: error status(%d)", message->info.status);
-  }
-
-  log_i(
-    "Received message: endpoint(%d), cluster(0x%x), attribute(0x%x), data size(%d)", message->info.dst_endpoint, message->info.cluster, message->attribute.id,
-    message->attribute.data.size
-  );
-
-  // List through all Zigbee EPs and call the callback function, with the message
-  for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-    if (message->info.dst_endpoint == (*it)->_endpoint) {
-      //TODO: implement argument passing to the callback function
-      //if Zigbee_EP argument is set, pass it to the callback function
-      // if ((*it)->_arg) {
-      //   (*it)->_cb(message, (*it)->_arg);
-      // }
-      // else {
-      (*it)->_cb(message);
-      // }
-    }
-  }
-  return ret;
-}
-
-
-static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message) {
-  esp_err_t ret = ESP_OK;
-  /* TODO: 
-    Implement handlers for different Zigbee actions (callback_id's)
-  */
-  switch (callback_id) {
-    case ESP_ZB_CORE_SET_ATTR_VALUE_CB_ID:   ret = zb_attribute_handler((esp_zb_zcl_set_attr_value_message_t *)message); break;
-    case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID: log_i("Received default response"); break;
-    default:                                 log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
-  }
-  return ret;
-}
-
 static void esp_zb_task(void *pvParameters) {
   /* initialize Zigbee stack */
   ESP_ERROR_CHECK(esp_zb_start(false));
@@ -110,13 +72,18 @@ static void esp_zb_task(void *pvParameters) {
 }
 
 // Zigbee core init function
-void Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
+bool Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   // Zigbee platform configuration
   esp_zb_platform_config_t platform_config = {
     .radio_config = _radio_config,
     .host_config = _host_config,
   };
-  ESP_ERROR_CHECK(esp_zb_platform_config(&platform_config));
+
+  esp_err_t err  = esp_zb_platform_config(&platform_config);
+  if (err != ESP_OK) {
+    log_e("Failed to configure Zigbee platform");
+    return false;
+  }
 
   // Initialize Zigbee stack
   log_d("Initialize Zigbee stack");
@@ -124,7 +91,11 @@ void Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
 
   // Register all Zigbee EPs in list 
   log_d("Register all Zigbee EPs in list");
-  esp_zb_device_register(_zb_ep_list);
+  err = esp_zb_device_register(_zb_ep_list);
+  if (err != ESP_OK) {
+    log_e("Failed to register Zigbee EPs");
+    return false;
+  }
   
   //print the list of Zigbee EPs from ep_objects
   log_i("List of registered Zigbee EPs:");
@@ -134,7 +105,11 @@ void Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
 
   // Register Zigbee action handler
   esp_zb_core_action_handler_register(zb_action_handler);
-  esp_zb_set_primary_network_channel_set(_primary_channel_mask);
+  err = esp_zb_set_primary_network_channel_set(_primary_channel_mask);
+  if (err != ESP_OK) {
+    log_e("Failed to set primary network channel mask");
+    return false;
+  }
 
   //Erase NVRAM before creating connection to new Coordinator
   if (erase_nvs) {
@@ -143,6 +118,8 @@ void Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
 
   // Create Zigbee task and start Zigbee stack
   xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
+
+  return true;
 }
 
 void Zigbee_Core::setRadioConfig(esp_zb_radio_config_t config) {
@@ -299,6 +276,89 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
     default: log_i("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;
   }
 }
+
+// // Zigbee action handlers
+// static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message) {
+//   esp_err_t ret = ESP_OK;
+//   /* TODO: 
+//     Implement handlers for different Zigbee actions (callback_id's)
+//   */
+//   // NOTE: Implement all Zigbee actions that can be handled by the Zigbee_Core class, or just call user defined callback function and let the user handle the action and read the message properly
+//   // NOTE: This may me harder for users, to know what callback_id's are available and what message type is received
+//   switch (callback_id) {
+//     case ESP_ZB_CORE_SET_ATTR_VALUE_CB_ID:          ret = zb_attribute_set_handler((esp_zb_zcl_set_attr_value_message_t *)message); break;
+//     case ESP_ZB_CORE_REPORT_ATTR_CB_ID:             ret = zb_attribute_reporting_handler((esp_zb_zcl_report_attr_message_t *)message); break;
+//     case ESP_ZB_CORE_CMD_READ_ATTR_RESP_CB_ID:      ret = zb_read_attr_resp_handler((esp_zb_zcl_cmd_read_attr_resp_message_t *)message); break;
+//     case ESP_ZB_CORE_CMD_REPORT_CONFIG_RESP_CB_ID:  ret = zb_configure_report_resp_handler((esp_zb_zcl_cmd_config_report_resp_message_t *)message); break;
+//     case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID:        log_i("Received default response"); break;
+//     default:                                 log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
+//   }
+
+//   //TODO: get destination endpoint from the message:
+//   uint8_t dst_endpoint = ((esp_zb_zcl_set_attr_value_message_t *)message)->info.dst_endpoint;
+
+
+
+//   return ret;
+// }
+
+// static esp_err_t zb_attribute_set_handler(const esp_zb_zcl_set_attr_value_message_t *message) {
+//   if (!message) {
+//     log_e("Empty message");
+//   }
+//   if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+//     log_e("Received message: error status(%d)", message->info.status);
+//   }
+
+//   log_i(
+//     "Received message: endpoint(%d), cluster(0x%x), attribute(0x%x), data size(%d)", message->info.dst_endpoint, message->info.cluster, message->attribute.id,
+//     message->attribute.data.size
+//   );
+
+//   // List through all Zigbee EPs and call the callback function, with the message
+//   for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+//     if (message->info.dst_endpoint == (*it)->_endpoint) {
+//       //TODO: implement argument passing to the callback function
+//       //if Zigbee_EP argument is set, pass it to the callback function
+//       // if ((*it)->_arg) {
+//       //   (*it)->_cb(message, (*it)->_arg);
+//       // }
+//       // else {
+//       (*it)->_cb(message); //method zb_attribute_set_handler in the LIGHT EP
+//       // }
+//     }
+//   }
+//   return ESP_OK;
+// }
+
+// static esp_err_t zb_attribute_reporting_handler(const esp_zb_zcl_report_attr_message_t *message) {
+//   if (!message) {
+//     log_e("Empty message");
+//   }
+//   if (message->status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+//     log_e("Received message: error status(%d)", message->status);
+//   }
+//   log_i(
+//     "Received report from address(0x%x) src endpoint(%d) to dst endpoint(%d) cluster(0x%x)", message->src_address.u.short_addr, message->src_endpoint,
+//     message->dst_endpoint, message->cluster
+//   );
+//     // List through all Zigbee EPs and call the callback function, with the message
+//   for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+//     if (message->info.dst_endpoint == (*it)->_endpoint) {
+//       //TODO: implement argument passing to the callback function
+//       //if Zigbee_EP argument is set, pass it to the callback function
+//       // if ((*it)->_arg) {
+//       //   (*it)->_cb(message, (*it)->_arg);
+//       // }
+//       // else {
+//       (*it)->_cb(message);
+//       // }
+//     }
+//   }
+//   return ESP_OK;
+// }
+
+
 
 // TODO: Implement scanning network
 // /**

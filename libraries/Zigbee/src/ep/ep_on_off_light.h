@@ -7,9 +7,15 @@
 
 class ZigbeeLight : public Zigbee_EP {
   public:
-    ZigbeeLight(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message));
-    //ZigbeeLight(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message)) : ZigbeeLight(endpoint, cb, NULL) {}
+    ZigbeeLight(uint8_t endpoint);
     ~ZigbeeLight();
 
+    // methods to be implemented by the user by overwritting them
+    virtual void set_on_off(bool value);
+
+  private:
     void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
+
+    void attribute_set(const esp_zb_zcl_set_attr_value_message_t *message) override;
+
 };

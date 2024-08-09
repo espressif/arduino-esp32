@@ -1,6 +1,6 @@
 #include "ep_temperature_sensor.h"
 
-ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message)) : Zigbee_EP(endpoint, cb) {
+ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID;
     _version = 0;
 

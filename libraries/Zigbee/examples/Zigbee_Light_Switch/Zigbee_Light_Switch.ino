@@ -98,7 +98,7 @@ static void switch_gpios_intr_enabled(bool enabled) {
   }
 }
 
-ZigbeeSwitch zbSwitch = ZigbeeSwitch(SWITCH_ENDPOINT_NUMBER,NULL);
+ZigbeeSwitch zbSwitch = ZigbeeSwitch(SWITCH_ENDPOINT_NUMBER);
 
 /********************* Arduino functions **************************/
 void setup() {
@@ -108,6 +108,9 @@ void setup() {
   //Add endpoint to Zigbee Core
   log_d("Adding ZigbeeSwitch endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbSwitch);
+
+  //Open network for 180 seconds after boot
+  Zigbee.setRebootOpenNetwork(180);
   
   // Init button switch
   for (int i = 0; i < PAIR_SIZE(button_func_pair); i++) {
@@ -121,9 +124,9 @@ void setup() {
     attachInterruptArg(button_func_pair[i].pin, gpio_isr_handler, (void *)(button_func_pair + i), FALLING);
   }
 
-  // When all EPs are registered, start Zigbee. By default acts as Zigbee_End_Device
+  // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
   log_d("Calling Zigbee.begin()");
-  Zigbee.begin(Zigbee_Coordinator);
+  Zigbee.begin(ZIGBEE_COORDINATOR);
   
   Serial.println("Waiting for Light to bound to the switch");
   //Wait for switch to bound to a light:

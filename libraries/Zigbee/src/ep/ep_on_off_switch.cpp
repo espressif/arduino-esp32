@@ -1,6 +1,4 @@
 #include "ep_on_off_switch.h"
-#include <Arduino.h>
-//#include "esp_zigbee_zcl_common.h"
 
 typedef struct light_bulb_device_params_s {
     esp_zb_ieee_addr_t ieee_addr;
@@ -8,10 +6,7 @@ typedef struct light_bulb_device_params_s {
     uint16_t short_addr;
 } light_bulb_device_params_t;
 
-// Definition and initialization of the static member variables
-
-
-ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message)) : Zigbee_EP(endpoint, cb) {
+ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _device_id = ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID;
     _version = 0;
 

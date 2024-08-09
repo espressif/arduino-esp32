@@ -1,6 +1,6 @@
 #include "ep_template.h"
 
-ZigbeeDevice::ZigbeeDevice(uint8_t endpoint, void (*cb)(const esp_zb_zcl_set_attr_value_message_t *message)) : Zigbee_EP(endpoint, cb) {
+ZigbeeDevice::ZigbeeDevice(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _device_id = ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID; //TODO: Change to correct device ID
     _version = 0;
     

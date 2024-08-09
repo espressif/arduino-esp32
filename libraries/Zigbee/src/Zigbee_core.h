@@ -20,8 +20,8 @@ typedef struct {
 
 // enum of Zigbee Roles
 typedef enum {
-    ZIGBEE_COORDINATOR = 0,
-    ZIGBEE_ROUTER = 1,
+    ZIGBEE_COORDINATOR = 0, 
+    ZIGBEE_ROUTER = 1, 
     ZIGBEE_END_DEVICE = 2
 } zigbee_role_t;
 
@@ -82,7 +82,7 @@ class Zigbee_Core {
         esp_zb_host_config_t _host_config;
         uint32_t _primary_channel_mask;
 
-        void zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
+        bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
 
     public:
         esp_zb_ep_list_t *_zb_ep_list;
@@ -93,7 +93,7 @@ class Zigbee_Core {
         Zigbee_Core();
         ~Zigbee_Core();
 
-        bool begin(zigbee_role_t role = Zigbee_End_Device, bool erase_nvs = false);
+        bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
         bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
         // bool end();
 
