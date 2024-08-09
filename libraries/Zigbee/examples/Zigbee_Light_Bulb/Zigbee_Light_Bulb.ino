@@ -1,4 +1,4 @@
-// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
+ * 
+ * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
 #ifndef ZIGBEE_MODE_ED
@@ -45,7 +47,7 @@ public:
     MyZigbeeLight(uint8_t endpoint) : ZigbeeLight(endpoint) {}
 
     // Override the set_on_off function
-    void set_on_off(bool value) override {
+    void setOnOff(bool value) override {
       log_v("Overwritten method, set on/off: %d", value);
       neopixelWrite(LED_PIN, 255 * value, 255 * value, 255 * value);  // Toggle light
     }

@@ -69,3 +69,84 @@ void ZigbeeSwitch::find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
 
     esp_zb_zdo_match_cluster(&on_off_req, find_cb, NULL);
 }
+
+// Call to control the light
+void ZigbeeSwitch::lightToggle() {
+    if (_is_bound) {
+        esp_zb_zcl_on_off_cmd_t cmd_req;
+        cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+        cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+        cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
+        log_i("Sending 'light toggle' command");
+        esp_zb_zcl_on_off_cmd_req(&cmd_req);
+    } else {
+        log_e("Light not bound");
+    }
+}
+
+void ZigbeeSwitch::lightOn() {
+    if (_is_bound) {
+        esp_zb_zcl_on_off_cmd_t cmd_req;
+        cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+        cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+        cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
+        log_i("Sending 'light on' command");
+        esp_zb_zcl_on_off_cmd_req(&cmd_req);
+    } else {
+        log_e("Light not bound");
+    }
+}
+
+void ZigbeeSwitch::lightOff() {
+    if (_is_bound) {
+        esp_zb_zcl_on_off_cmd_t cmd_req;
+        cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+        cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+        cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
+        log_i("Sending 'light off' command");
+        esp_zb_zcl_on_off_cmd_req(&cmd_req);
+    } else {
+        log_e("Light not bound");
+    }
+}
+
+void ZigbeeSwitch::lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant) {
+    if (_is_bound) {
+        esp_zb_zcl_on_off_off_with_effect_cmd_t cmd_req;
+        cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+        cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+        cmd_req.effect_id = effect_id;
+        cmd_req.effect_variant = effect_variant;
+        log_i("Sending 'light off with effect' command");
+        esp_zb_zcl_on_off_off_with_effect_cmd_req(&cmd_req);
+    } else {
+        log_e("Light not bound");
+    }
+}
+
+void ZigbeeSwitch::lightOnWithSceneRecall() {
+    if (_is_bound) {
+        esp_zb_zcl_on_off_on_with_recall_global_scene_cmd_t cmd_req;
+        cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+        cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+        log_i("Sending 'light on with scene recall' command");
+        esp_zb_zcl_on_off_on_with_recall_global_scene_cmd_req(&cmd_req);
+    } else {
+        log_e("Light not bound");
+    }
+}
+void ZigbeeSwitch::lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on, uint16_t time_off) {
+    if (_is_bound) {
+        esp_zb_zcl_on_off_on_with_timed_off_cmd_t cmd_req;
+        cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+        cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+        cmd_req.on_off_control = on_off_control; //TODO: Test how it works, then maybe change API
+        cmd_req.on_time = time_on;
+        cmd_req.off_wait_time = time_off;
+        log_i("Sending 'light on with time off' command");
+        esp_zb_zcl_on_off_on_with_timed_off_cmd_req(&cmd_req);
+    } else {
+        log_e("Light not bound");
+    }
+}
+

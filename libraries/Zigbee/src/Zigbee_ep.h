@@ -14,7 +14,8 @@ class Zigbee_EP {
     Zigbee_EP(uint8_t endpoint = 10);
     ~Zigbee_EP();
 
-    virtual void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) = 0;
+    // Find endpoint may be implemented by EPs
+    virtual void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
 
     static uint8_t _endpoint;
     esp_zb_ha_standard_devices_t _device_id; //type of device

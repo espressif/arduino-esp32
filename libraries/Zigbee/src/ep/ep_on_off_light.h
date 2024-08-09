@@ -11,11 +11,12 @@ class ZigbeeLight : public Zigbee_EP {
     ~ZigbeeLight();
 
     // methods to be implemented by the user by overwritting them
-    virtual void set_on_off(bool value);
+    virtual void setOnOff(bool value);
+    virtual void sceneControl(bool value);
+    virtual void setOnOffTime(uint16_t value);
+    virtual void setOffWaitTime(uint16_t value);
 
   private:
-    void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-
     void attribute_set(const esp_zb_zcl_set_attr_value_message_t *message) override;
 
 };

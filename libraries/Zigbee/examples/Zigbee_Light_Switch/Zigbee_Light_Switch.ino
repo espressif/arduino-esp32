@@ -1,9 +1,9 @@
-// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -16,13 +16,15 @@
  * @brief This example demonstrates simple Zigbee light switch.
  *
  * The example demonstrates how to use ESP Zigbee stack to control a light bulb.
- * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator.
+ * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator (Switch).
  * Button switch and Zigbee runs in separate tasks.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
+ * 
+ * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
 #ifndef ZIGBEE_MODE_ZCZR
@@ -68,16 +70,14 @@ typedef enum {
 
 static switch_func_pair_t button_func_pair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}};
 
+/* Zigbee switch */
+ZigbeeSwitch zbSwitch = ZigbeeSwitch(SWITCH_ENDPOINT_NUMBER);
+
 /********************* Zigbee functions **************************/
 static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair) {
   if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
-    /* implemented light switch toggle functionality */
-    esp_zb_zcl_on_off_cmd_t cmd_req;
-    cmd_req.zcl_basic_cmd.src_endpoint = SWITCH_ENDPOINT_NUMBER;
-    cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-    cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
-    log_i("Send 'on_off toggle' command");
-    esp_zb_zcl_on_off_cmd_req(&cmd_req);
+    // Send toggle command to the light
+    zbSwitch.lightToggle();
   }
 }
 
@@ -97,8 +97,6 @@ static void switch_gpios_intr_enabled(bool enabled) {
     }
   }
 }
-
-ZigbeeSwitch zbSwitch = ZigbeeSwitch(SWITCH_ENDPOINT_NUMBER);
 
 /********************* Arduino functions **************************/
 void setup() {
