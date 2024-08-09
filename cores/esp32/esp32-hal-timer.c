@@ -37,17 +37,28 @@ struct timer_struct_t {
 };
 
 inline uint64_t timerRead(hw_timer_t *timer) {
-
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return 0;
+  }
   uint64_t value;
   gptimer_get_raw_count(timer->timer_handle, &value);
   return value;
 }
 
 void timerWrite(hw_timer_t *timer, uint64_t val) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return;
+  }
   gptimer_set_raw_count(timer->timer_handle, val);
 }
 
 void timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return;
+  }
   esp_err_t err = ESP_OK;
   gptimer_alarm_config_t alarm_cfg = {
     .alarm_count = alarm_value,
@@ -61,22 +72,37 @@ void timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64
 }
 
 uint32_t timerGetFrequency(hw_timer_t *timer) {
+  if (timer == NULL) {
+    return 0;
+  }
   uint32_t frequency;
   gptimer_get_resolution(timer->timer_handle, &frequency);
   return frequency;
 }
 
 void timerStart(hw_timer_t *timer) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return;
+  }
   gptimer_start(timer->timer_handle);
   timer->timer_started = true;
 }
 
 void timerStop(hw_timer_t *timer) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return;
+  }
   gptimer_stop(timer->timer_handle);
   timer->timer_started = false;
 }
 
 void timerRestart(hw_timer_t *timer) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return;
+  }
   gptimer_set_raw_count(timer->timer_handle, 0);
 }
 
@@ -129,17 +155,19 @@ hw_timer_t *timerBegin(uint32_t frequency) {
 }
 
 void timerEnd(hw_timer_t *timer) {
-  esp_err_t err = ESP_OK;
-  if (timer->timer_started == true) {
-    gptimer_stop(timer->timer_handle);
+  if (timer != NULL) {
+    esp_err_t err = ESP_OK;
+    if (timer->timer_started == true) {
+      gptimer_stop(timer->timer_handle);
+    }
+    gptimer_disable(timer->timer_handle);
+    err = gptimer_del_timer(timer->timer_handle);
+    if (err != ESP_OK) {
+      log_e("Failed to destroy GPTimer, error num=%d", err);
+      return;
+    }
+    free(timer);
   }
-  gptimer_disable(timer->timer_handle);
-  err = gptimer_del_timer(timer->timer_handle);
-  if (err != ESP_OK) {
-    log_e("Failed to destroy GPTimer, error num=%d", err);
-    return;
-  }
-  free(timer);
 }
 
 bool IRAM_ATTR timerFnWrapper(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *args) {
@@ -156,6 +184,10 @@ bool IRAM_ATTR timerFnWrapper(gptimer_handle_t timer, const gptimer_alarm_event_
 }
 
 void timerAttachInterruptFunctionalArg(hw_timer_t *timer, void (*userFunc)(void *), void *arg) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return;
+  }
   esp_err_t err = ESP_OK;
   gptimer_event_callbacks_t cbs = {
     .on_alarm = timerFnWrapper,
@@ -187,6 +219,10 @@ void timerAttachInterrupt(hw_timer_t *timer, voidFuncPtr userFunc) {
 }
 
 void timerDetachInterrupt(hw_timer_t *timer) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return;
+  }
   esp_err_t err = ESP_OK;
   err = gptimer_set_alarm_action(timer->timer_handle, NULL);
   timer->interrupt_handle.fn = NULL;
@@ -197,18 +233,30 @@ void timerDetachInterrupt(hw_timer_t *timer) {
 }
 
 uint64_t timerReadMicros(hw_timer_t *timer) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return 0;
+  }
   uint64_t timer_val = timerRead(timer);
   uint32_t frequency = timerGetFrequency(timer);
   return timer_val * 1000000 / frequency;
 }
 
 uint64_t timerReadMilis(hw_timer_t *timer) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return 0;
+  }
   uint64_t timer_val = timerRead(timer);
   uint32_t frequency = timerGetFrequency(timer);
   return timer_val * 1000 / frequency;
 }
 
 double timerReadSeconds(hw_timer_t *timer) {
+  if (timer == NULL) {
+    log_e("Timer handle is NULL");
+    return 0;
+  }
   uint64_t timer_val = timerRead(timer);
   uint32_t frequency = timerGetFrequency(timer);
   return (double)timer_val / frequency;

@@ -5,7 +5,7 @@ Library Builder
 About
 -----
 
-Espressif provides a `tool <https://github.com/espressif/esp32-arduino-lib-builder>`_ to simplify building your own compiled libraries for use in Arduino IDE (or your favorite IDE).
+Espressif provides a macOS and Linux `tool <https://github.com/espressif/esp32-arduino-lib-builder>`_ to simplify building your own compiled libraries for use in Arduino IDE (or your favorite IDE).
 
 This tool can be used to change the project or a specific configuration according to your needs.
 
@@ -181,6 +181,29 @@ Specify additional configs to be applied. ex. 'qio 80m' to compile for QIO Flash
 
     ./build.sh -t esp32 -b idf_libs qio 80m
 
+User Interface
+--------------
+
+Starting from ``arduino-esp32`` version 3.0.0 (IDF v5.1), there is also a terminal user interface that can be used
+to configure the libraries to be compiled.
+
+It allows the user to select the targets to compile, change the configuration options and compile the libraries.
+It has mouse support and can be pre-configured using command line arguments.
+
+For more information and troubleshooting, check `the documentation <https://github.com/espressif/esp32-arduino-lib-builder/blob/master/tools/config_editor/README.md>`_.
+
+To use the terminal user interface, make sure to have ``python>=3.9``, all the previous dependencies and install the ``textual`` library:
+
+.. code-block:: bash
+
+    pip install --user textual
+
+You can then run the UI using the following command:
+
+.. code-block:: bash
+
+    ./tools/config_editor/app.py
+
 Docker Image
 ------------
 
@@ -194,7 +217,7 @@ The current supported architectures by the Docker image are:
 
 .. note::
     Building the libraries using the Docker image is much slower than building them natively on the host machine.
-    It is recommended to use the Docker image only when the host machine does not meet the requirements for building the libraries.
+    It is recommended to use the Docker image only when the host machine does not meet the requirements for building the libraries (e.g., building on Windows).
 
 Tags
 ****

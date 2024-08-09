@@ -546,9 +546,9 @@ Sample code
     I2S.read();
     available_bytes = I2S.available();
     if(available_bytes < buff_size) {
-      read_bytes = I2S.read(buffer, available_bytes);
+      read_bytes = I2S.readBytes(buffer, available_bytes);
     } else {
-      read_bytes = I2S.read(buffer, buff_size);
+      read_bytes = I2S.readBytes(buffer, buff_size);
     }
     I2S.write(buffer, read_bytes);
     I2S.end();

@@ -192,6 +192,9 @@ else
         cp -Rf "$GITHUB_WORKSPACE/variants/${variant}"      "$PKG_DIR/variants/"
     done
 fi
+cp -f  "$GITHUB_WORKSPACE/CMakeLists.txt"                   "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/idf_component.yml"                "$PKG_DIR/"
+cp -f  "$GITHUB_WORKSPACE/Kconfig.projbuild"                "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/package.json"                     "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/programmers.txt"                  "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/cores"                            "$PKG_DIR/"
@@ -418,7 +421,54 @@ if [ "$RELEASE_PRE" == "false" ]; then
     fi
 fi
 
-# Upload package JSONs (temporary halted to fix json generation)
+# Test the package JSONs
+
+echo "Installing arduino-cli ..."
+export PATH="/home/runner/bin:$PATH"
+source ./.github/scripts/install-arduino-cli.sh
+
+echo "Testing $PACKAGE_JSON_DEV install ..."
+echo "Updating index ..."
+arduino-cli core update-index --additional-urls "file://$OUTPUT_DIR/$PACKAGE_JSON_DEV"
+if [ $? -ne 0 ]; then echo "ERROR: Failed to update index ($?)"; exit 1; fi
+
+echo "Installing esp32 ..."
+arduino-cli core install esp32:esp32
+if [ $? -ne 0 ]; then echo "ERROR: Failed to install esp32 ($?)"; exit 1; fi
+
+echo "Compiling example ..."
+arduino-cli compile --fqbn esp32:esp32:esp32 $GITHUB_WORKSPACE/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino
+if [ $? -ne 0 ]; then echo "ERROR: Failed to compile example ($?)"; exit 1; fi
+
+echo "Uninstalling esp32 ..."
+arduino-cli core uninstall esp32:esp32
+if [ $? -ne 0 ]; then echo "ERROR: Failed to uninstall esp32 ($?)"; exit 1; fi
+
+echo "Test successful!"
+
+if [ "$RELEASE_PRE" == "false" ]; then
+    echo "Testing $PACKAGE_JSON_REL install ..."
+    echo "Updating index ..."
+    arduino-cli core update-index --additional-urls "file://$OUTPUT_DIR/$PACKAGE_JSON_REL"
+    if [ $? -ne 0 ]; then echo "ERROR: Failed to update index ($?)"; exit 1; fi
+
+    echo "Installing esp32 ..."
+    arduino-cli core install esp32:esp32
+    if [ $? -ne 0 ]; then echo "ERROR: Failed to install esp32 ($?)"; exit 1; fi
+
+    echo "Compiling example ..."
+    arduino-cli compile --fqbn esp32:esp32:esp32 $GITHUB_WORKSPACE/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino
+    if [ $? -ne 0 ]; then echo "ERROR: Failed to compile example ($?)"; exit 1; fi
+
+    echo "Uninstalling esp32 ..."
+    arduino-cli core uninstall esp32:esp32
+    if [ $? -ne 0 ]; then echo "ERROR: Failed to uninstall esp32 ($?)"; exit 1; fi
+
+    echo "Test successful!"
+fi
+
+# Upload package JSONs
+
 echo "Uploading $PACKAGE_JSON_DEV ..."
 echo "Download URL: "`git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_DEV"`
 echo "Pages URL: "`git_safe_upload_to_pages "$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV"`

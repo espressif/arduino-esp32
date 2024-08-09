@@ -11,7 +11,7 @@
 const char *service_name = "PROV_1234";
 const char *pop = "abcd1234";
 
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
 //GPIO for push button
 static int gpio_reset = 9;
 //GPIO for virtual device

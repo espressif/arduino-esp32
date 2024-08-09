@@ -96,7 +96,7 @@ void serialEventRun(void) {
 #endif
 
 HardwareSerial::HardwareSerial(uint8_t uart_nr)
-  : _uart_nr(uart_nr), _uart(NULL), _rxBufferSize(256), _txBufferSize(0), _onReceiveCB(NULL), _onReceiveErrorCB(NULL), _onReceiveTimeout(false), _rxTimeout(2),
+  : _uart_nr(uart_nr), _uart(NULL), _rxBufferSize(256), _txBufferSize(0), _onReceiveCB(NULL), _onReceiveErrorCB(NULL), _onReceiveTimeout(false), _rxTimeout(1),
     _rxFIFOFull(0), _eventTask(NULL)
 #if !CONFIG_DISABLE_HAL_LOCKS
     ,

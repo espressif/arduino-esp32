@@ -98,6 +98,7 @@ static void printChipInfo(void) {
   rtc_clk_cpu_freq_get_config(&conf);
   chip_report_printf("  CPU Frequency     : %lu MHz\n", conf.freq_mhz);
   chip_report_printf("  XTAL Frequency    : %d MHz\n", rtc_clk_xtal_freq_get());
+  chip_report_printf("  Features Bitfield : %#010x\n", info.features);
   chip_report_printf("  Embedded Flash    : %s\n", (info.features & CHIP_FEATURE_EMB_FLASH) ? "Yes" : "No");
   chip_report_printf("  Embedded PSRAM    : %s\n", (info.features & CHIP_FEATURE_EMB_PSRAM) ? "Yes" : "No");
   chip_report_printf("  2.4GHz WiFi       : %s\n", (info.features & CHIP_FEATURE_WIFI_BGN) ? "Yes" : "No");

@@ -432,10 +432,8 @@ void WebServer::handleClient() {
       case HC_WAIT_READ:
         // Wait for data from client to become available
         if (_currentClient.available()) {
+          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
           if (_parseRequest(_currentClient)) {
-            // because HTTP_MAX_SEND_WAIT is expressed in milliseconds,
-            // it must be divided by 1000
-            _currentClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
             _contentLength = CONTENT_LENGTH_NOT_SET;
             _handleRequest();
 
