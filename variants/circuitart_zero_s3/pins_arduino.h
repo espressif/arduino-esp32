@@ -9,10 +9,6 @@
 #define USB_PRODUCT        "ZeroS3"
 #define USB_SERIAL         "" // Empty string for MAC adddress
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
 // User LED
 #define LED_BUILTIN 46
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
