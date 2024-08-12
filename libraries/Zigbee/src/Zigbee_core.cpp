@@ -101,7 +101,7 @@ bool Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   //print the list of Zigbee EPs from ep_objects
   log_i("List of registered Zigbee EPs:");
   for (std::list<Zigbee_EP*>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
-    log_i("Endpoint: %d, Device ID: 0x%04x", (*it)->_endpoint, (*it)->_device_id); //TODO: Idea device id -> device name
+    log_i("Device type: %s, Endpoint: %d, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
   }
 
   // Register Zigbee action handler

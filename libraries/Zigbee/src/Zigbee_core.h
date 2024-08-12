@@ -110,6 +110,8 @@ class Zigbee_Core {
         void setRebootOpenNetwork(uint8_t time);
 
         void factoryReset();
+
+        const char* getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
 };
 
 extern Zigbee_Core Zigbee;
