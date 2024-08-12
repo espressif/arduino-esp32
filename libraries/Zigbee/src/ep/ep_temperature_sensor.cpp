@@ -12,6 +12,7 @@ ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : Zigbee_EP(endpoint) {
         .app_device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID,
         .app_device_version = _version
     };
+    _attribute_cluster = esp_zb_basic_cluster_create(&temp_sensor_cfg.basic_cfg);
 }
 
 void ZigbeeTempSensor::find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {

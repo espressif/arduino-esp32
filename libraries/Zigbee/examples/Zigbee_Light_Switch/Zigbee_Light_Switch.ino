@@ -71,7 +71,23 @@ typedef enum {
 static switch_func_pair_t button_func_pair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}};
 
 /* Zigbee switch */
-ZigbeeSwitch zbSwitch = ZigbeeSwitch(SWITCH_ENDPOINT_NUMBER);
+class MyZigbeeSwitch : public ZigbeeSwitch {
+public:
+    // Constructor that passes parameters to the base class constructor
+    MyZigbeeSwitch(uint8_t endpoint) : ZigbeeSwitch(endpoint) {}
+
+    // Override the set_on_off function
+    void readManufacturer(char* manufacturer) override {
+      //Do what you want with the manufacturer string
+      Serial.printf("Manufacturer: %s\n", manufacturer);
+    }
+    void readModel(char* model) override {
+      //Do what you want with the model string
+      Serial.printf("Model: %s\n", model);
+    }
+};
+
+MyZigbeeSwitch zbSwitch = MyZigbeeSwitch(SWITCH_ENDPOINT_NUMBER);
 
 /********************* Zigbee functions **************************/
 static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair) {
@@ -103,6 +119,12 @@ void setup() {
   
   Serial.begin(115200);
 
+  //Optional: set Zigbee device name and model
+  zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");
+
+  //Optional to allow multiple light to bind to the switch
+  zbSwitch.allowMultipleBinding(true);
+
   //Add endpoint to Zigbee Core
   log_d("Adding ZigbeeSwitch endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbSwitch);
@@ -110,6 +132,7 @@ void setup() {
   //Open network for 180 seconds after boot
   Zigbee.setRebootOpenNetwork(180);
   
+
   // Init button switch
   for (int i = 0; i < PAIR_SIZE(button_func_pair); i++) {
     pinMode(button_func_pair[i].pin, INPUT_PULLUP);
@@ -168,5 +191,12 @@ void loop() {
       break;
     }
     vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+
+  // print the bound lights every 10 seconds
+  static uint32_t last_print = 0;
+  if (millis() - last_print > 10000) {
+    last_print = millis();
+    zbSwitch.printBoundLights();
   }
 }

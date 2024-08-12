@@ -39,6 +39,7 @@
 #include "ha/esp_zigbee_ha_standard.h"
 
 #define LED_PIN RGB_BUILTIN
+#define BUTTON_PIN 9  // C6/H2 Boot button
 #define ZIGBEE_LIGHT_ENDPOINT       10                                   /* esp light bulb device endpoint, used to process light controlling commands */
 
 class MyZigbeeLight : public ZigbeeLight {
@@ -48,7 +49,6 @@ public:
 
     // Override the set_on_off function
     void setOnOff(bool value) override {
-      log_v("Overwritten method, set on/off: %d", value);
       neopixelWrite(LED_PIN, 255 * value, 255 * value, 255 * value);  // Toggle light
     }
 };
@@ -60,6 +60,12 @@ void setup() {
   // Init RMT and leave light OFF
   neopixelWrite(LED_PIN, 0, 0, 0);
 
+  // Init button for factory reset
+  pinMode(BUTTON_PIN, INPUT);
+
+  //Optional: set Zigbee device name and model
+  zbLight.setManufacturerAndModel("Espressif", "ZBLightBulb");
+
   //Add endpoint to Zigbee Core
   log_d("Adding ZigbeeLight endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbLight);
@@ -70,5 +76,19 @@ void setup() {
 }
 
 void loop() {
-  //empty, zigbee running in task
+  // Cheking button for factory reset
+  if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
+    // Key debounce handling
+    delay(100);
+    int startTime = millis();
+    while (digitalRead(BUTTON_PIN) == LOW) {
+      delay(50);
+      if((millis() - startTime) > 3000) {
+        // If key pressed for more than 3secs, factory reset Zigbee and reboot
+        Serial.printf("Reseting Zigbee to factory settings, reboot.\n");
+        Zigbee.factoryReset();
+      }
+    }
+  }
+  delay(100);
 }

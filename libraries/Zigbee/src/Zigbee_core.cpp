@@ -3,6 +3,7 @@
 #include "Zigbee_handlers.cpp"
 #include "Arduino.h"
 
+
 Zigbee_Core::Zigbee_Core() {
   _radio_config = ZIGBEE_DEFAULT_RADIO_CONFIG();
   _host_config = ZIGBEE_DEFAULT_HOST_CONFIG();
@@ -254,9 +255,9 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
 
         //TODO: Save the device short address and endpoint to the list ????????
 
-        // for each endpoint in the list call the find_endpoint function if not bounded
+        // for each endpoint in the list call the find_endpoint function if not bounded or allowed to bind multiple devices
         for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-          if (!(*it)->_is_bound) {
+          if (!(*it)->_is_bound || (*it)->_allow_multiple_binding) {
             (*it)->find_endpoint(&cmd_req);
           }
         }
@@ -277,87 +278,10 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
   }
 }
 
-// // Zigbee action handlers
-// static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message) {
-//   esp_err_t ret = ESP_OK;
-//   /* TODO: 
-//     Implement handlers for different Zigbee actions (callback_id's)
-//   */
-//   // NOTE: Implement all Zigbee actions that can be handled by the Zigbee_Core class, or just call user defined callback function and let the user handle the action and read the message properly
-//   // NOTE: This may me harder for users, to know what callback_id's are available and what message type is received
-//   switch (callback_id) {
-//     case ESP_ZB_CORE_SET_ATTR_VALUE_CB_ID:          ret = zb_attribute_set_handler((esp_zb_zcl_set_attr_value_message_t *)message); break;
-//     case ESP_ZB_CORE_REPORT_ATTR_CB_ID:             ret = zb_attribute_reporting_handler((esp_zb_zcl_report_attr_message_t *)message); break;
-//     case ESP_ZB_CORE_CMD_READ_ATTR_RESP_CB_ID:      ret = zb_read_attr_resp_handler((esp_zb_zcl_cmd_read_attr_resp_message_t *)message); break;
-//     case ESP_ZB_CORE_CMD_REPORT_CONFIG_RESP_CB_ID:  ret = zb_configure_report_resp_handler((esp_zb_zcl_cmd_config_report_resp_message_t *)message); break;
-//     case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID:        log_i("Received default response"); break;
-//     default:                                 log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
-//   }
-
-//   //TODO: get destination endpoint from the message:
-//   uint8_t dst_endpoint = ((esp_zb_zcl_set_attr_value_message_t *)message)->info.dst_endpoint;
-
-
-
-//   return ret;
-// }
-
-// static esp_err_t zb_attribute_set_handler(const esp_zb_zcl_set_attr_value_message_t *message) {
-//   if (!message) {
-//     log_e("Empty message");
-//   }
-//   if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
-//     log_e("Received message: error status(%d)", message->info.status);
-//   }
-
-//   log_i(
-//     "Received message: endpoint(%d), cluster(0x%x), attribute(0x%x), data size(%d)", message->info.dst_endpoint, message->info.cluster, message->attribute.id,
-//     message->attribute.data.size
-//   );
-
-//   // List through all Zigbee EPs and call the callback function, with the message
-//   for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-//     if (message->info.dst_endpoint == (*it)->_endpoint) {
-//       //TODO: implement argument passing to the callback function
-//       //if Zigbee_EP argument is set, pass it to the callback function
-//       // if ((*it)->_arg) {
-//       //   (*it)->_cb(message, (*it)->_arg);
-//       // }
-//       // else {
-//       (*it)->_cb(message); //method zb_attribute_set_handler in the LIGHT EP
-//       // }
-//     }
-//   }
-//   return ESP_OK;
-// }
-
-// static esp_err_t zb_attribute_reporting_handler(const esp_zb_zcl_report_attr_message_t *message) {
-//   if (!message) {
-//     log_e("Empty message");
-//   }
-//   if (message->status != ESP_ZB_ZCL_STATUS_SUCCESS) {
-//     log_e("Received message: error status(%d)", message->status);
-//   }
-//   log_i(
-//     "Received report from address(0x%x) src endpoint(%d) to dst endpoint(%d) cluster(0x%x)", message->src_address.u.short_addr, message->src_endpoint,
-//     message->dst_endpoint, message->cluster
-//   );
-//     // List through all Zigbee EPs and call the callback function, with the message
-//   for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-//     if (message->info.dst_endpoint == (*it)->_endpoint) {
-//       //TODO: implement argument passing to the callback function
-//       //if Zigbee_EP argument is set, pass it to the callback function
-//       // if ((*it)->_arg) {
-//       //   (*it)->_cb(message, (*it)->_arg);
-//       // }
-//       // else {
-//       (*it)->_cb(message);
-//       // }
-//     }
-//   }
-//   return ESP_OK;
-// }
-
+void Zigbee_Core::factoryReset() {
+  log_v("Factory reseting Zigbee stack, device will reboot");
+  esp_zb_factory_reset();
+}
 
 
 // TODO: Implement scanning network
@@ -393,5 +317,49 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
 //     memcpy(&zdo_data.bind_req, cmd_req, sizeof(esp_zb_zdo_bind_req_param_t));
 //     esp_host_zb_output(ESP_ZNSP_ZDO_BIND_SET, &zdo_data, sizeof(esp_zb_zdo_bind_req_t), &output, &outlen);
 // }
+
+// Function to convert enum value to string
+const char* Zigbee_Core::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
+    switch (deviceId) {
+        case ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID: return "General On/Off switch";
+        case ESP_ZB_HA_LEVEL_CONTROL_SWITCH_DEVICE_ID: return "Level Control Switch";
+        case ESP_ZB_HA_ON_OFF_OUTPUT_DEVICE_ID: return "General On/Off output";
+        case ESP_ZB_HA_LEVEL_CONTROLLABLE_OUTPUT_DEVICE_ID: return "Level Controllable Output";
+        case ESP_ZB_HA_SCENE_SELECTOR_DEVICE_ID: return "Scene Selector";
+        case ESP_ZB_HA_CONFIGURATION_TOOL_DEVICE_ID: return "Configuration Tool";
+        case ESP_ZB_HA_REMOTE_CONTROL_DEVICE_ID: return "Remote Control";
+        case ESP_ZB_HA_COMBINED_INTERFACE_DEVICE_ID: return "Combined Interface";
+        case ESP_ZB_HA_RANGE_EXTENDER_DEVICE_ID: return "Range Extender";
+        case ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID: return "Mains Power Outlet";
+        case ESP_ZB_HA_DOOR_LOCK_DEVICE_ID: return "Door lock client";
+        case ESP_ZB_HA_DOOR_LOCK_CONTROLLER_DEVICE_ID: return "Door lock controller";
+        case ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID: return "Simple Sensor device";
+        case ESP_ZB_HA_CONSUMPTION_AWARENESS_DEVICE_ID: return "Consumption Awareness Device";
+        case ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID: return "Home Gateway";
+        case ESP_ZB_HA_SMART_PLUG_DEVICE_ID: return "Smart plug";
+        case ESP_ZB_HA_WHITE_GOODS_DEVICE_ID: return "White Goods";
+        case ESP_ZB_HA_METER_INTERFACE_DEVICE_ID: return "Meter Interface";
+        case ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID: return "On/Off Light Device";
+        case ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID: return "Dimmable Light Device";
+        case ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID: return "Color Dimmable Light Device";
+        case ESP_ZB_HA_DIMMER_SWITCH_DEVICE_ID: return "Dimmer Switch Device";
+        case ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID: return "Color Dimmer Switch Device";
+        case ESP_ZB_HA_SHADE_DEVICE_ID: return "Shade";
+        case ESP_ZB_HA_SHADE_CONTROLLER_DEVICE_ID: return "Shade controller";
+        case ESP_ZB_HA_WINDOW_COVERING_DEVICE_ID: return "Window Covering client";
+        case ESP_ZB_HA_WINDOW_COVERING_CONTROLLER_DEVICE_ID: return "Window Covering controller";
+        case ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID: return "Heating/Cooling Unit device";
+        case ESP_ZB_HA_THERMOSTAT_DEVICE_ID: return "Thermostat Device";
+        case ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID: return "Temperature Sensor";
+        case ESP_ZB_HA_IAS_CONTROL_INDICATING_EQUIPMENT_ID: return "IAS Control and Indicating Equipment";
+        case ESP_ZB_HA_IAS_ANCILLARY_CONTROL_EQUIPMENT_ID: return "IAS Ancillary Control Equipment";
+        case ESP_ZB_HA_IAS_ZONE_ID: return "IAS Zone";
+        case ESP_ZB_HA_IAS_WARNING_DEVICE_ID: return "IAS Warning Device";
+        case ESP_ZB_HA_TEST_DEVICE_ID: return "Custom HA device for test";
+        case ESP_ZB_HA_CUSTOM_TUNNEL_DEVICE_ID: return "Custom Tunnel device";
+        case ESP_ZB_HA_CUSTOM_ATTR_DEVICE_ID: return "Custom Attributes Device";
+        default: return "Unknown device type";
+    }
+}
 
 Zigbee_Core Zigbee = Zigbee_Core();

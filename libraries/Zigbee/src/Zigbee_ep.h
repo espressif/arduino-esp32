@@ -7,6 +7,12 @@
 
 /* Usefull defines */
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
+#define print_ieee_addr(addr) log_i("IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7])
+
+typedef struct zbstring_s {
+  uint8_t len;
+  char data[];
+} ESP_ZB_PACKED_STRUCT zbstring_t;
 
 /* Zigbee End Device Class */
 class Zigbee_EP {
@@ -23,6 +29,9 @@ class Zigbee_EP {
 
     esp_zb_endpoint_config_t _ep_config;
     esp_zb_cluster_list_t *_cluster_list;
+    esp_zb_attribute_list_t *_attribute_cluster;
+
+    esp_zb_identify_cluster_cfg_t *_identify_cluster;
 
     // Set ep config and cluster list
     void set_ep_config(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {
@@ -33,9 +42,19 @@ class Zigbee_EP {
     static bool _is_bound;
     static bool is_bound() { return _is_bound; }
 
+    static bool _allow_multiple_binding;
+    static void allowMultipleBinding(bool bind) { _allow_multiple_binding = bind; }
+
+    // Manufacturer name and model implemented
+    void setManufacturerAndModel(const char *name, const char *model);
+    void readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr);
+
+    virtual void readManufacturer(char* manufacturer) {};
+    virtual void readModel(char* model) {};
 
     //list of all handlers function calls, to be overide by EPs implementation
     virtual void attribute_set(const esp_zb_zcl_set_attr_value_message_t *message) {};
+    virtual void attribute_read_cmd(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute); //already implemented
 
     friend class ZigbeeCore;
 

@@ -5,13 +5,15 @@ ZigbeeLight::ZigbeeLight(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _version = 0;
 
     esp_zb_on_off_light_cfg_t light_cfg = ESP_ZB_DEFAULT_ON_OFF_LIGHT_CONFIG();
-    _cluster_list = esp_zb_on_off_light_clusters_create(&light_cfg);
+    _identify_cluster = &light_cfg.identify_cfg;
+    _cluster_list = esp_zb_on_off_light_clusters_create(&light_cfg); // use esp_zb_zcl_cluster_list_create() instead of esp_zb_on_off_light_clusters_create()
     _ep_config = {       
         .endpoint = _endpoint,
         .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID,
         .app_device_id = ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID,
         .app_device_version = _version
     };
+    _attribute_cluster = esp_zb_basic_cluster_create(&light_cfg.basic_cfg);
 }
 
 //set attribude method -> methon overriden in child class

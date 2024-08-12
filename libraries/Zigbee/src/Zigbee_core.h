@@ -108,6 +108,8 @@ class Zigbee_Core {
 
         void setPrimaryChannelMask(uint32_t mask);
         void setRebootOpenNetwork(uint8_t time);
+
+        void factoryReset();
 };
 
 extern Zigbee_Core Zigbee;
