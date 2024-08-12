@@ -23,13 +23,13 @@ static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_
     }
   } else if (event_base == RMAKER_COMMON_EVENT) {
     switch (event_id) {
-        case RMAKER_EVENT_REBOOT:            log_i("Rebooting in %d seconds.", *((uint8_t *)event_data)); break;
-        case RMAKER_EVENT_WIFI_RESET:        log_i("Wi-Fi credentials reset."); break;
-        case RMAKER_EVENT_FACTORY_RESET:     log_i("Node reset to factory defaults."); break;
-        case RMAKER_MQTT_EVENT_CONNECTED:    log_i("MQTT Connected."); break;
-        case RMAKER_MQTT_EVENT_DISCONNECTED: log_i("MQTT Disconnected."); break;
-        case RMAKER_MQTT_EVENT_PUBLISHED:    log_i("MQTT Published. Msg id: %d.", *((int *)event_data)); break;
-        default:                             log_w("Unhandled RainMaker Common Event: %"PRIi32, event_id);
+      case RMAKER_EVENT_REBOOT:            log_i("Rebooting in %d seconds.", *((uint8_t *)event_data)); break;
+      case RMAKER_EVENT_WIFI_RESET:        log_i("Wi-Fi credentials reset."); break;
+      case RMAKER_EVENT_FACTORY_RESET:     log_i("Node reset to factory defaults."); break;
+      case RMAKER_MQTT_EVENT_CONNECTED:    log_i("MQTT Connected."); break;
+      case RMAKER_MQTT_EVENT_DISCONNECTED: log_i("MQTT Disconnected."); break;
+      case RMAKER_MQTT_EVENT_PUBLISHED:    log_i("MQTT Published. Msg id: %d.", *((int *)event_data)); break;
+      default:                             log_w("Unhandled RainMaker Common Event: %" PRIi32, event_id);
     }
   } else if (event_base == RMAKER_OTA_EVENT) {
     if (event_data == NULL) {
