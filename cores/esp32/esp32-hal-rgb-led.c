@@ -15,12 +15,10 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
     return;
   }
 
-#ifdef RGB_BUILTIN_COLOR_ORDER_STRUCT
-  int color[] = RGB_BUILTIN_COLOR_ORDER_STRUCT;
-#else
-  // WS2812B color bit order is G, R, B
-  int color[] = {green_val, red_val, blue_val};
+#if !defined RGB_BUILTIN_COLOR_ORDER_STRUCT
+#define RGB_BUILTIN_COLOR_ORDER_STRUCT {green_val, red_val, blue_val}
 #endif
+  int color[] = RGB_BUILTIN_COLOR_ORDER_STRUCT;
   int i = 0;
   for (int col = 0; col < 3; col++) {
     for (int bit = 0; bit < 8; bit++) {
