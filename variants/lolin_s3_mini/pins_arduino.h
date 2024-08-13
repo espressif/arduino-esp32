@@ -12,6 +12,7 @@ static const uint8_t LED_BUILTIN = 47 + SOC_GPIO_PIN_COUNT;
 #define LED_BUILTIN    LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 #define RGB_BUILTIN    LED_BUILTIN
 #define RGB_BRIGHTNESS 64
+#define RGB_BUILTIN_COLOR_ORDER_STRUCT {red_val, green_val, blue_val}
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

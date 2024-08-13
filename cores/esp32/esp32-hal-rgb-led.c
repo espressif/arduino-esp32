@@ -3,10 +3,6 @@
 #include "esp32-hal-rgb-led.h"
 
 void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
-  neopixelWriteOrdered(pin, LED_COLOR_ORDER_GRB, red_val, green_val, blue_val);
-}
-
-void neopixelWriteOrdered(uint8_t pin, rgb_led_color_order_t rgb_led_color_order, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
 #if SOC_RMT_SUPPORTED
   rmt_data_t led_data[24];
 
@@ -19,39 +15,12 @@ void neopixelWriteOrdered(uint8_t pin, rgb_led_color_order_t rgb_led_color_order
     return;
   }
 
-  int color[3];
-  switch (rgb_led_color_order) {
-    case LED_COLOR_ORDER_RGB:
-      color[0] = red_val;
-      color[1] = green_val;
-      color[2] = blue_val;
-      break;
-    case LED_COLOR_ORDER_BGR:
-      color[0] = blue_val;
-      color[1] = green_val;
-      color[2] = red_val;
-      break;
-    case LED_COLOR_ORDER_BRG:
-      color[0] = blue_val;
-      color[1] = red_val;
-      color[2] = green_val;
-      break;
-    case LED_COLOR_ORDER_RBG:
-      color[0] = red_val;
-      color[1] = blue_val;
-      color[2] = green_val;
-      break;
-    case LED_COLOR_ORDER_GBR:
-      color[0] = green_val;
-      color[1] = blue_val;
-      color[2] = red_val;
-      break;
-    default:
-      color[0] = green_val;
-      color[1] = red_val;
-      color[2] = blue_val;
-      break;
-  }
+#ifdef RGB_BUILTIN_COLOR_ORDER_STRUCT
+  int color[] = RGB_BUILTIN_COLOR_ORDER_STRUCT;
+#else
+  // WS2812B color bit order is G, R, B
+  int color[] = {green_val, red_val, blue_val};
+#endif
   int i = 0;
   for (int col = 0; col < 3; col++) {
     for (int bit = 0; bit < 8; bit++) {
