@@ -321,7 +321,7 @@ tools.esptool_py.upload.network_pattern={network_cmd} -i "{serial.port}" -p "{ne
 tools.esp_ota.upload.protocol=network
 tools.esp_ota.upload.field.password=Password
 tools.esp_ota.upload.field.password.secret=true
-tools.esp_ota.upload.pattern={cmd} -i {upload.port.address} -p {upload.port.properties.port} --auth={upload.field.password} -f "{build.path}/{build.project_name}.bin"
+tools.esp_ota.upload.pattern={cmd} -i {upload.port.address} -p {upload.port.properties.port} "--auth={upload.field.password}" -f "{build.path}/{build.project_name}.bin"
 
 ## Upload Sketch Through DFU OTA
 ## -------------------------------------------
