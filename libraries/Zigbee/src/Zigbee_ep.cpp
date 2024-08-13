@@ -47,10 +47,13 @@ void Zigbee_EP::setManufacturerAndModel(const char *name, const char *model) {
     memcpy(zb_model + 1, model, length);
     zb_model[length + 1] = '\0';
 
+    // Get the basic cluster and update the manufacturer and model attributes
     esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
     esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
 
+    //NOTE:
+    // esp_zb_cluster_add_attr function
 }
 
 void Zigbee_EP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) {
@@ -95,5 +98,3 @@ void Zigbee_EP::attribute_read_cmd(uint16_t cluster_id, const esp_zb_zcl_attribu
         }
     }
 }
-//NOTE:
-// esp_zb_cluster_add_attr function
