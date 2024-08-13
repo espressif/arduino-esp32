@@ -3,31 +3,31 @@
 
 #include <stdint.h>
 
-#define USB_VID            0x303A
-#define USB_PID            0x80DB
-#define USB_MANUFACTURER   "CircuitART"
-#define USB_PRODUCT        "ZeroS3"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+#define USB_VID          0x303A
+#define USB_PID          0x80DB
+#define USB_MANUFACTURER "CircuitART"
+#define USB_PRODUCT      "ZeroS3"
+#define USB_SERIAL       ""  // Empty string for MAC adddress
 
 // User LED
 #define LED_BUILTIN 46
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
 // Neopixel
 #define PIN_NEOPIXEL 47
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN (PIN_NEOPIXEL+SOC_GPIO_PIN_COUNT)
+#define RGB_BUILTIN    (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
-#define NEOPIXEL_NUM        1     // number of neopixels
+#define NEOPIXEL_NUM   1  // number of neopixels
 
 static const uint8_t KEY_BUILTIN = 0;
 
-static const uint8_t TFT_DC        = 5;
-static const uint8_t TFT_CS        = 39;
-static const uint8_t TFT_RST       = 40;
-static const uint8_t TFT_RESET     = 40;
+static const uint8_t TFT_DC = 5;
+static const uint8_t TFT_CS = 39;
+static const uint8_t TFT_RST = 40;
+static const uint8_t TFT_RESET = 40;
 
-static const uint8_t SD_CS          = 42;
+static const uint8_t SD_CS = 42;
 static const uint8_t SD_CHIP_SELECT = 42;
 
 static const uint8_t TX = 43;
@@ -41,10 +41,10 @@ static const uint8_t RX2 = 41;
 static const uint8_t SDA = 33;
 static const uint8_t SCL = 34;
 
-static const uint8_t SS    = 39;
-static const uint8_t MOSI  = 35;
-static const uint8_t SCK   = 36;
-static const uint8_t MISO  = 37;
+static const uint8_t SS = 39;
+static const uint8_t MOSI = 35;
+static const uint8_t SCK = 36;
+static const uint8_t MISO = 37;
 
 static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;
@@ -114,24 +114,24 @@ static const uint8_t D40 = 40;
 static const uint8_t D41 = 41;
 
 // Camera
-#define TFT_CAM_POWER  21
+#define TFT_CAM_POWER 21
 
-#define PWDN_GPIO_NUM     -1 // connected through expander
-#define RESET_GPIO_NUM    -1 // connected through expander
-#define XCLK_GPIO_NUM     15
-#define SIOD_GPIO_NUM     SDA
-#define SIOC_GPIO_NUM     SCL
+#define PWDN_GPIO_NUM  -1  // connected through expander
+#define RESET_GPIO_NUM -1  // connected through expander
+#define XCLK_GPIO_NUM  15
+#define SIOD_GPIO_NUM  SDA
+#define SIOC_GPIO_NUM  SCL
 
-#define Y9_GPIO_NUM       14 //16
-#define Y8_GPIO_NUM       13 //14
-#define Y7_GPIO_NUM       11 //13
-#define Y6_GPIO_NUM       10
-#define Y5_GPIO_NUM       9 //8
-#define Y4_GPIO_NUM       8 //6
-#define Y3_GPIO_NUM       7
-#define Y2_GPIO_NUM       6 //9
-#define VSYNC_GPIO_NUM    38
-#define HREF_GPIO_NUM     48
-#define PCLK_GPIO_NUM     16 //11
+#define Y9_GPIO_NUM    14  //16
+#define Y8_GPIO_NUM    13  //14
+#define Y7_GPIO_NUM    11  //13
+#define Y6_GPIO_NUM    10
+#define Y5_GPIO_NUM    9  //8
+#define Y4_GPIO_NUM    8  //6
+#define Y3_GPIO_NUM    7
+#define Y2_GPIO_NUM    6  //9
+#define VSYNC_GPIO_NUM 38
+#define HREF_GPIO_NUM  48
+#define PCLK_GPIO_NUM  16  //11
 
 #endif /* Pins_Arduino_h */
