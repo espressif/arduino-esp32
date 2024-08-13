@@ -190,13 +190,19 @@ bool ESP_NOW_Class::end() {
   if (!_esp_now_has_begun) {
     return true;
   }
-  //remove all peers?
+  //remove all peers
+  for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
+    if (_esp_now_peers[i] != NULL) {
+      removePeer(*_esp_now_peers[i]);
+    }
+  }
   esp_err_t err = esp_now_deinit();
   if (err != ESP_OK) {
     log_e("esp_now_deinit failed! 0x%x", err);
     return false;
   }
   _esp_now_has_begun = false;
+  //clear the peer list
   memset(_esp_now_peers, 0, sizeof(ESP_NOW_Peer *) * ESP_NOW_MAX_TOTAL_PEER_NUM);
   return true;
 }
@@ -260,6 +266,10 @@ size_t ESP_NOW_Class::write(const uint8_t *data, size_t len) {
 void ESP_NOW_Class::onNewPeer(void (*cb)(const esp_now_recv_info_t *info, const uint8_t *data, int len, void *arg), void *arg) {
   new_cb = cb;
   new_arg = arg;
+}
+
+bool ESP_NOW_Class::removePeer(ESP_NOW_Peer &peer) {
+  return peer.remove();
 }
 
 ESP_NOW_Class ESP_NOW;
