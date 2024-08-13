@@ -109,7 +109,7 @@ void WiFiProvClass ::beginProvision(
 #endif
   config.app_event_handler.event_cb = NULL;
   config.app_event_handler.user_data = NULL;
-  wifiLowLevelInit(true);
+  WiFi.STA.begin(false);
   if (wifi_prov_mgr_init(config) != ESP_OK) {
     log_e("wifi_prov_mgr_init failed!");
     return;
