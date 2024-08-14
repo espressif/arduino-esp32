@@ -34,10 +34,10 @@
 
 #include <nvs_flash.h>
 #if CONFIG_BLUEDROID_ENABLED
-#include "wifi_provisioning/scheme_ble.h"
+#include "network_provisioning/scheme_ble.h"
 #endif
-#include <wifi_provisioning/scheme_softap.h>
-#include <wifi_provisioning/manager.h>
+#include <network_provisioning/scheme_softap.h>
+#include <network_provisioning/manager.h>
 #undef IPADDR_NONE
 #include "WiFiProv.h"
 #if CONFIG_IDF_TARGET_ESP32
@@ -61,7 +61,7 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
     return;
   }
 #if CONFIG_IDF_TARGET_ESP32 && defined(CONFIG_BLUEDROID_ENABLED)
-  if (prov_scheme == WIFI_PROV_SCHEME_BLE) {
+  if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
     snprintf(service_name, max, "%s%02X%02X%02X", SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
   } else {
 #endif
@@ -72,36 +72,36 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
 }
 
 void WiFiProvClass ::beginProvision(
-  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, wifi_prov_security_t security, const char *pop, const char *service_name, const char *service_key,
+  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, network_prov_security_t security, const char *pop, const char *service_name, const char *service_key,
   uint8_t *uuid, bool reset_provisioned
 ) {
   bool provisioned = false;
   static char service_name_temp[32];
 
-  wifi_prov_mgr_config_t config;
+  network_prov_mgr_config_t config;
 #if CONFIG_BLUEDROID_ENABLED
-  if (prov_scheme == WIFI_PROV_SCHEME_BLE) {
-    config.scheme = wifi_prov_scheme_ble;
+  if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
+    config.scheme = network_prov_scheme_ble;
   } else {
 #endif
-    config.scheme = wifi_prov_scheme_softap;
+    config.scheme = network_prov_scheme_softap;
 #if CONFIG_BLUEDROID_ENABLED
   }
 
-  if (scheme_handler == WIFI_PROV_SCHEME_HANDLER_NONE) {
+  if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_NONE) {
 #endif
-    wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE;
-    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
+    network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_EVENT_HANDLER_NONE;
+    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
 #if CONFIG_BLUEDROID_ENABLED
-  } else if (scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BTDM) {
-    wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
-    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
-  } else if (scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BT) {
-    wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BT;
-    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
-  } else if (scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BLE) {
-    wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BLE;
-    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
+  } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BTDM) {
+    network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
+    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
+  } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BT) {
+    network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BT;
+    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
+  } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BLE) {
+    network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BLE;
+    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
   } else {
     log_e("Unknown scheme handler!");
     return;
@@ -110,26 +110,26 @@ void WiFiProvClass ::beginProvision(
   config.app_event_handler.event_cb = NULL;
   config.app_event_handler.user_data = NULL;
   WiFi.STA.begin(false);
-  if (wifi_prov_mgr_init(config) != ESP_OK) {
-    log_e("wifi_prov_mgr_init failed!");
+  if (network_prov_mgr_init(config) != ESP_OK) {
+    log_e("network_prov_mgr_init failed!");
     return;
   }
   if (reset_provisioned) {
     log_i("Resetting provisioned data.");
-    wifi_prov_mgr_reset_provisioning();
-  } else if (wifi_prov_mgr_is_provisioned(&provisioned) != ESP_OK) {
-    log_e("wifi_prov_mgr_is_provisioned failed!");
-    wifi_prov_mgr_deinit();
+    network_prov_mgr_reset_wifi_provisioning();
+  } else if (network_prov_mgr_is_wifi_provisioned(&provisioned) != ESP_OK) {
+    log_e("network_prov_mgr_is_wifi_provisioned failed!");
+    network_prov_mgr_deinit();
     return;
   }
   if (provisioned == false) {
 #if CONFIG_BLUEDROID_ENABLED
-    if (prov_scheme == WIFI_PROV_SCHEME_BLE) {
+    if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
       service_key = NULL;
       if (uuid == NULL) {
         uuid = (uint8_t *)custom_service_uuid;
       }
-      wifi_prov_scheme_ble_set_service_uuid(uuid);
+      network_prov_scheme_ble_set_service_uuid(uuid);
     }
 #endif
 
@@ -139,7 +139,7 @@ void WiFiProvClass ::beginProvision(
     }
 
 #if CONFIG_BLUEDROID_ENABLED
-    if (prov_scheme == WIFI_PROV_SCHEME_BLE) {
+    if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
       log_i("Starting AP using BLE. service_name : %s, pop : %s", service_name, pop);
     } else {
 #endif
@@ -151,8 +151,8 @@ void WiFiProvClass ::beginProvision(
 #if CONFIG_BLUEDROID_ENABLED
     }
 #endif
-    if (wifi_prov_mgr_start_provisioning(security, pop, service_name, service_key) != ESP_OK) {
-      log_e("wifi_prov_mgr_start_provisioning failed!");
+    if (network_prov_mgr_start_provisioning(security, pop, service_name, service_key) != ESP_OK) {
+      log_e("network_prov_mgr_start_provisioning failed!");
       return;
     }
   } else {
@@ -163,7 +163,7 @@ void WiFiProvClass ::beginProvision(
     log_i("Attempting connect to AP: %s\n", conf.sta.ssid);
 #endif
     esp_wifi_start();
-    wifi_prov_mgr_deinit();
+    network_prov_mgr_deinit();
     WiFi.begin();
   }
 }
