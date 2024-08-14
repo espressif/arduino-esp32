@@ -62,7 +62,7 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
   // default WS2812B color order is G, R, B
   const int color[3] = {green_val, red_val, blue_val};
 #endif
-      
+
   int i = 0;
   for (int col = 0; col < 3; col++) {
     for (int bit = 0; bit < 8; bit++) {
