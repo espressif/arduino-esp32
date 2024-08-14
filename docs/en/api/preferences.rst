@@ -62,11 +62,11 @@ Preferences directly supports the following data types:
    +-------------------+-------------------+---------------+
    | ULong             | uint32_t          | 4             |
    +-------------------+-------------------+---------------+
+   | Float             | float_t           | 4             |
+   +-------------------+-------------------+---------------+
    | Long64            | int64_t           | 8             |
    +-------------------+-------------------+---------------+
    | ULong64           | uint64_t          | 8             |
-   +-------------------+-------------------+---------------+
-   | Float             | float_t           | 8             |
    +-------------------+-------------------+---------------+
    | Double            | double_t          | 8             |
    +-------------------+-------------------+---------------+
@@ -259,6 +259,8 @@ Arduino-esp32 Preferences API
 ********************
 ``putLong, putULong``
 **********************
+``putFloat``
+**********************
 
    Store a value against a given key in the currently open namespace.
 
@@ -268,6 +270,7 @@ Arduino-esp32 Preferences API
        size_t putUInt(const char* key, uint32_t value)
        size_t putLong(const char* key, int32_t value)
        size_t putULong(const char* key, uint32_t value)
+       size_t putFloat(const char* key, float_t value)
 
    ..
 
@@ -288,8 +291,8 @@ Arduino-esp32 Preferences API
 
 ``putLong64, putULong64``
 *************************
-``putFloat, putDouble``
-***********************
+``putDouble``
+*************************
 
    Store a value against a given key in the currently open namespace.
 
@@ -297,7 +300,6 @@ Arduino-esp32 Preferences API
 
        size_t putLong64(const char* key, int64_t value)
        size_t putULong64(const char* key, uint64_t value)
-       size_t putFloat(const char* key, float_t value)
        size_t putDouble(const char* key, double_t value)
 
    ..
