@@ -159,13 +159,19 @@ def is_latest_version(filename, destination, dirname, rename_to, cfile):
     try:
         if rename_to.startswith("esp32-arduino-libs"):
             # overwrite expected_version with the one from versions.txt
-            expected_version = cfile.read(os.path.join(dirname, "versions.txt")).decode("utf-8")
+            if filename.endswith("tar.gz") or filename.endswith("tar.xz"):
+                expected_version = cfile.extractfile(os.path.join(dirname, "versions.txt")).read().decode("utf-8")
+            else:
+                expected_version = cfile.read(os.path.join(dirname, "versions.txt")).decode("utf-8")
             with open(os.path.join(destination, rename_to, "versions.txt"), "r") as f:
                 # cfile is zip
                 current_version = f.read()
         elif rename_to.startswith("mklittlefs"):
             # overwrite expected_version with the one from package.json
-            expected_version = cfile.extractfile(os.path.join(dirname, "package.json")).read().decode("utf-8")
+            if filename.endswith("tar.gz") or filename.endswith("tar.xz"):
+                expected_version = cfile.extractfile(os.path.join(dirname, "package.json")).read().decode("utf-8")
+            else:
+                expected_version = cfile.read(os.path.join(dirname, "package.json")).decode("utf-8")
             with open(os.path.join(destination, rename_to, "package.json"), "r") as f:
                 # cfile is tar.gz
                 current_version = f.read()
