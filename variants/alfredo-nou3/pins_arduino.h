@@ -16,12 +16,12 @@
 //#define TX1 TX
 //#define RX1 RX
 
-static const uint8_t SDA = 33;
-static const uint8_t SCL = 34;
+static const uint8_t SDA = -1;
+static const uint8_t SCL = -1;
 
-static const uint8_t SS = 41;
-//static const uint8_t MOSI = 42;
-//static const uint8_t SCK = 10;
-//static const uint8_t MISO = 11;
+static const uint8_t SS = -1;
+static const uint8_t MOSI = -1;
+static const uint8_t SCK = -1;
+static const uint8_t MISO = -1;
 
 #endif /* Pins_Arduino_h */
