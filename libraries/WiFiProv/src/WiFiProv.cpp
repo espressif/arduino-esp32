@@ -72,8 +72,8 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
 }
 
 void WiFiProvClass ::beginProvision(
-  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, network_prov_security_t security, const char *pop, const char *service_name, const char *service_key,
-  uint8_t *uuid, bool reset_provisioned
+  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, network_prov_security_t security, const char *pop, const char *service_name,
+  const char *service_key, uint8_t *uuid, bool reset_provisioned
 ) {
   bool provisioned = false;
   static char service_name_temp[32];
