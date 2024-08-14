@@ -24,6 +24,7 @@ import zipfile
 import re
 import time
 import argparse
+import subprocess
 
 # Initialize start_time globally
 start_time = -1
@@ -146,6 +147,65 @@ def verify_files(filename, destination, rename_to):
 
     return True
 
+def is_latest_version(filename, destination, dirname, rename_to, cfile):
+    # Regex to extract version number from any of the sources below
+    regex = r'(?<![{,])(?:[ _\-vV])(\d+\.\d+(?:\.\d+)?)'
+    current_version = None
+    try:
+        expected_version = re.search(regex, filename).group(1)
+    except Exception as e:
+        expected_version = None
+
+    try:
+        if rename_to.startswith("esp32-arduino-libs"):
+            # overwrite expected_version with the one from versions.txt
+            expected_version = cfile.read(os.path.join(dirname, "versions.txt")).decode("utf-8")
+            with open(os.path.join(destination, rename_to, "versions.txt"), "r") as f:
+                # cfile is zip
+                current_version = f.read()
+        elif rename_to.startswith("mklittlefs"):
+            # overwrite expected_version with the one from package.json
+            expected_version = cfile.extractfile(os.path.join(dirname, "package.json")).read().decode("utf-8")
+            with open(os.path.join(destination, rename_to, "package.json"), "r") as f:
+                # cfile is tar.gz
+                current_version = f.read()
+        elif rename_to.startswith("esptool"):
+            bin_path = os.path.join(destination, rename_to, "esptool")
+            result = subprocess.run([bin_path, "--help"], text=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            current_version = re.search(regex, result.stdout).group(1)
+        else:
+            if rename_to.startswith("xtensa-esp-elf-gdb"):
+                bin_path = os.path.join(destination, rename_to, "bin/xtensa-esp32-elf-gdb")
+            elif rename_to.startswith("riscv32-esp-elf-gdb"):
+                bin_path = os.path.join(destination, rename_to, "bin/riscv32-esp-elf-gdb")
+            elif rename_to.startswith("openocd"):
+                bin_path = os.path.join(destination, rename_to, "bin/openocd")
+            elif rename_to.startswith("mkspiffs"):
+                bin_path = os.path.join(destination, rename_to, "mkspiffs")
+            else:
+                bin_path = os.path.join(destination, rename_to, "bin/" + rename_to + "-gcc")
+
+            result = subprocess.run([bin_path, "--version"], text=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            current_version = re.search(regex, result.stdout).group(1)
+
+        if verbose:
+            print(f"\nTool: {rename_to}")
+            print(f"Current version: {current_version}")
+            print(f"Expected version: {expected_version}")
+
+        if current_version and current_version == expected_version:
+            if verbose:
+                print("Latest version already installed. Skipping extraction")
+            return True
+
+        if verbose:
+            print("New version detected")
+
+    except Exception as e:
+        if verbose:
+            print(f"Falied to verify version for {rename_to}: {e}")
+
+    return False
 
 def unpack(filename, destination, force_extract):  # noqa: C901
     dirname = ""
@@ -196,11 +256,11 @@ def unpack(filename, destination, force_extract):  # noqa: C901
         rename_to = "esp32-arduino-libs"
 
     if not force_extract:
-        if verify_files(filename, destination, rename_to):
-            print(" Files ok. Skipping Extraction")
-            return True
-        else:
-            print(" Extracting archive...")
+        if is_latest_version(filename, destination, dirname, rename_to, cfile):
+            if verify_files(filename, destination, rename_to):
+                print(" Files ok. Skipping Extraction")
+                return True
+        print(" Extracting archive...")
     else:
         print(" Forcing extraction")
 
@@ -379,21 +439,21 @@ def identify_platform():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download and extract tools")
 
-    parser.add_argument("-v", "--verbose", type=bool, default=False, required=False, help="Print verbose output")
+    parser.add_argument("-v", "--verbose", action='store_true', required=False, help="Print verbose output")
 
     parser.add_argument(
-        "-d", "--force_download", type=bool, default=False, required=False, help="Force download of tools"
+        "-d", "--force_download", action='store_true', required=False, help="Force download of tools"
     )
 
     parser.add_argument(
-        "-e", "--force_extract", type=bool, default=False, required=False, help="Force extraction of tools"
+        "-e", "--force_extract", action='store_true', required=False, help="Force extraction of tools"
     )
 
     parser.add_argument(
-        "-f", "--force_all", type=bool, default=False, required=False, help="Force download and extraction of tools"
+        "-f", "--force_all", action='store_true', required=False, help="Force download and extraction of tools"
     )
 
-    parser.add_argument("-t", "--test", type=bool, default=False, required=False, help=argparse.SUPPRESS)
+    parser.add_argument("-t", "--test", action='store_true', required=False, help=argparse.SUPPRESS)
 
     args = parser.parse_args()
 
