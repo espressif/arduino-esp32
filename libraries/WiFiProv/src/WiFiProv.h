@@ -23,6 +23,7 @@
 #if SOC_WIFI_SUPPORTED
 
 #include "WiFi.h"
+#include "HardwareSerial.h"
 #include "network_provisioning/manager.h"
 //Select the scheme using which you want to provision
 typedef enum {
@@ -51,7 +52,9 @@ public:
     network_prov_security_t security = NETWORK_PROV_SECURITY_1, const char *pop = "abcd1234", const char *service_name = NULL, const char *service_key = NULL,
     uint8_t *uuid = NULL, bool reset_provisioned = false
   );
-  void printQR(const char *name, const char *pop, const char *transport);
+  void endProvision();
+  bool disableAutoStop(uint32_t cleanup_delay);
+  void printQR(const char *name, const char *pop, const char *transport, Print &out = Serial);
 };
 
 extern WiFiProvClass WiFiProv;

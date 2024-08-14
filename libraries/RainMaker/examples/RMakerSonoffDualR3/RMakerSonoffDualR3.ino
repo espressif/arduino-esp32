@@ -40,18 +40,18 @@ void sysProvEvent(arduino_event_t *sys_event) {
     case ARDUINO_EVENT_PROV_START:
 #if CONFIG_IDF_TARGET_ESP32
       Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
-      printQR(service_name, pop, "ble");
+      WiFiProv.printQR(service_name, pop, "ble");
 #else
       Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
-      printQR(service_name, pop, "softap");
+      WiFiProv.printQR(service_name, pop, "softap");
 #endif
       break;
     case ARDUINO_EVENT_WIFI_STA_CONNECTED:
       Serial.printf("\nConnected to Wi-Fi!\n");
       digitalWrite(gpio_led, true);
       break;
-    case ARDUINO_EVENT_PROV_INIT:         network_prov_mgr_disable_auto_stop(10000); break;
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS: network_prov_mgr_stop_provisioning(); break;
+    case ARDUINO_EVENT_PROV_INIT:         WiFiProv.disableAutoStop(10000); break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS: WiFiProv.endProvision(); break;
     default:                              ;
   }
 }
