@@ -11,19 +11,21 @@ typedef struct light_bulb_device_params_s {
     uint16_t short_addr;
 } light_bulb_device_params_t;
 
-class ZigbeeSwitch : public Zigbee_EP {
+class ZigbeeColorDimmerSwitch : public Zigbee_EP {
   public:
-    ZigbeeSwitch(uint8_t endpoint);
-    ~ZigbeeSwitch();
+    ZigbeeColorDimmerSwitch(uint8_t endpoint);
+    ~ZigbeeColorDimmerSwitch();
 
     // save instance of the class in order to use it in static functions
-    static ZigbeeSwitch* _instance;
+    static ZigbeeColorDimmerSwitch* _instance;
 
-    // list of bounded on/off lights
+    // list of bounded lights
     std::list<light_bulb_device_params_t*> _bound_lights;
     void printBoundLights();
 
-    // methods to control the on/off light
+    void calculateXY(uint8_t red, uint8_t green, uint8_t blue, uint16_t &x, uint16_t &y);
+
+    // methods to control the color dimmable light
     void lightToggle();
     void lightToggle(uint16_t group_addr);
     void lightToggle(uint8_t endpoint, uint16_t short_addr);
@@ -39,6 +41,22 @@ class ZigbeeSwitch : public Zigbee_EP {
     void lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant);
     void lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on, uint16_t time_off);
     void lightOnWithSceneRecall();
+
+    void setLightLevel(uint8_t level);
+    void setLightLevel(uint8_t level, uint16_t group_addr);
+    void setLightLevel(uint8_t level, uint8_t endpoint, uint16_t short_addr);
+
+    void setLightColor(uint8_t red, uint8_t green, uint8_t blue);
+    void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint16_t group_addr);
+    void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, uint16_t short_addr);
+
+    void setLightColorSaturation(uint8_t value);
+    void setLightColorSaturation(uint8_t value, uint16_t group_addr);
+    void setLightColorSaturation(uint8_t value, uint8_t endpoint, uint16_t short_addr);
+
+    void setLightColorHue(uint8_t value);
+    void setLightColorHue(uint8_t value, uint16_t group_addr);
+    void setLightColorHue(uint8_t value, uint8_t endpoint, uint16_t short_addr);
 
   private:
     void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);

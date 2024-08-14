@@ -18,7 +18,6 @@ ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : Zigbee_EP(endpoint) {
         .app_device_id = ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID,
         .app_device_version = _version
     };
-    _attribute_cluster = esp_zb_basic_cluster_create(&switch_cfg.basic_cfg);
 }
 
 void ZigbeeSwitch::bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {

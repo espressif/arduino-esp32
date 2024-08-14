@@ -12,7 +12,6 @@ ZigbeeLight::ZigbeeLight(uint8_t endpoint) : Zigbee_EP(endpoint) {
         .app_device_id = ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID,
         .app_device_version = _version
     };
-    _attribute_cluster = esp_zb_basic_cluster_create(&light_cfg.basic_cfg);
 }
 
 //set attribude method -> methon overriden in child class

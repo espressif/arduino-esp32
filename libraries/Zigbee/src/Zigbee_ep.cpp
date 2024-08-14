@@ -12,7 +12,6 @@ Zigbee_EP::Zigbee_EP(uint8_t endpoint) {
     _endpoint = endpoint;
     _ep_config.endpoint = 0;
     _cluster_list = nullptr;
-    _attribute_cluster = nullptr;
 }
 
 Zigbee_EP::~Zigbee_EP() {
