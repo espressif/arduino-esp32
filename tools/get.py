@@ -160,18 +160,18 @@ def is_latest_version(filename, destination, dirname, rename_to, cfile):
         if rename_to.startswith("esp32-arduino-libs"):
             # overwrite expected_version with the one from versions.txt
             if filename.endswith("tar.gz") or filename.endswith("tar.xz"):
-                expected_version = cfile.extractfile(os.path.join(dirname, "versions.txt")).read().decode("utf-8")
+                expected_version = cfile.extractfile(dirname + "/versions.txt").read().decode("utf-8")
             else:
-                expected_version = cfile.read(os.path.join(dirname, "versions.txt")).decode("utf-8")
+                expected_version = cfile.read(dirname + "/versions.txt").decode("utf-8")
             with open(os.path.join(destination, rename_to, "versions.txt"), "r") as f:
                 # cfile is zip
                 current_version = f.read()
         elif rename_to.startswith("mklittlefs"):
             # overwrite expected_version with the one from package.json
             if filename.endswith("tar.gz") or filename.endswith("tar.xz"):
-                expected_version = cfile.extractfile(os.path.join(dirname, "package.json")).read().decode("utf-8")
+                expected_version = cfile.extractfile(dirname + "/package.json").read().decode("utf-8")
             else:
-                expected_version = cfile.read(os.path.join(dirname, "package.json")).decode("utf-8")
+                expected_version = cfile.read(dirname + "/package.json").decode("utf-8")
             with open(os.path.join(destination, rename_to, "package.json"), "r") as f:
                 # cfile is tar.gz
                 current_version = f.read()
@@ -181,15 +181,15 @@ def is_latest_version(filename, destination, dirname, rename_to, cfile):
             current_version = re.search(regex, result.stdout).group(1)
         else:
             if rename_to.startswith("xtensa-esp-elf-gdb"):
-                bin_path = os.path.join(destination, rename_to, "bin/xtensa-esp32-elf-gdb")
+                bin_path = os.path.join(destination, rename_to, "bin", "xtensa-esp32-elf-gdb")
             elif rename_to.startswith("riscv32-esp-elf-gdb"):
-                bin_path = os.path.join(destination, rename_to, "bin/riscv32-esp-elf-gdb")
+                bin_path = os.path.join(destination, rename_to, "bin", "riscv32-esp-elf-gdb")
             elif rename_to.startswith("openocd"):
-                bin_path = os.path.join(destination, rename_to, "bin/openocd")
+                bin_path = os.path.join(destination, rename_to, "bin", "openocd")
             elif rename_to.startswith("mkspiffs"):
                 bin_path = os.path.join(destination, rename_to, "mkspiffs")
             else:
-                bin_path = os.path.join(destination, rename_to, "bin/" + rename_to + "-gcc")
+                bin_path = os.path.join(destination, rename_to, "bin", rename_to + "-gcc")
 
             result = subprocess.run([bin_path, "--version"], text=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             current_version = re.search(regex, result.stdout).group(1)
