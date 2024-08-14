@@ -10,7 +10,6 @@ ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _instance = this; // Set the static pointer to this instance
 
     esp_zb_on_off_switch_cfg_t switch_cfg = ESP_ZB_DEFAULT_ON_OFF_SWITCH_CONFIG();
-    _identify_cluster = &switch_cfg.identify_cfg;
     _cluster_list = esp_zb_on_off_switch_clusters_create(&switch_cfg);
 
     _ep_config = {       

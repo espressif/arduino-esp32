@@ -5,7 +5,6 @@ ZigbeeLight::ZigbeeLight(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _version = 0;
 
     esp_zb_on_off_light_cfg_t light_cfg = ESP_ZB_DEFAULT_ON_OFF_LIGHT_CONFIG();
-    _identify_cluster = &light_cfg.identify_cfg;
     _cluster_list = esp_zb_on_off_light_clusters_create(&light_cfg); // use esp_zb_zcl_cluster_list_create() instead of esp_zb_on_off_light_clusters_create()
     _ep_config = {       
         .endpoint = _endpoint,

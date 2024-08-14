@@ -31,8 +31,6 @@ class Zigbee_EP {
     esp_zb_cluster_list_t *_cluster_list;
     esp_zb_attribute_list_t *_attribute_cluster;
 
-    esp_zb_identify_cluster_cfg_t *_identify_cluster;
-
     // Set ep config and cluster list
     void set_ep_config(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {
         _ep_config = ep_config;
