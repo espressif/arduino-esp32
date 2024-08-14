@@ -29,10 +29,10 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
     return;
   }
 
-#if defined RGB_BUILTIN_LED_COLOR_ORDER_CHANGE
+#if defined RGB_BUILTIN_LED_COLOR_ORDER
   // the onboard RGB LED has a different color order
   const int color[3];
-  switch (RGB_BUILTIN_LED_COLOR_ORDER_CHANGE) {
+  switch (RGB_BUILTIN_LED_COLOR_ORDER) {
     case LED_COLOR_ORDER_RGB:
       color[0] = red_val;
       color[1] = green_val;
