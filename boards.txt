@@ -13822,8 +13822,6 @@ adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp
 
 
 adafruit_feather_esp32c6.name=Adafruit Feather ESP32-C6
-adafruit_feather_esp32c6.vid.0=0x303a
-adafruit_feather_esp32c6.pid.0=0x1001
 
 adafruit_feather_esp32c6.bootloader.tool=esptool_py
 adafruit_feather_esp32c6.bootloader.tool.default=esptool_py
