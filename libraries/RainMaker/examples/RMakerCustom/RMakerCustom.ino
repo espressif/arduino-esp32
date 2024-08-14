@@ -36,8 +36,8 @@ void sysProvEvent(arduino_event_t *sys_event) {
       printQR(service_name, pop, "ble");
 #endif
       break;
-    case ARDUINO_EVENT_PROV_INIT:         wifi_prov_mgr_disable_auto_stop(10000); break;
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS: wifi_prov_mgr_stop_provisioning(); break;
+    case ARDUINO_EVENT_PROV_INIT:         network_prov_mgr_disable_auto_stop(10000); break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS: network_prov_mgr_stop_provisioning(); break;
     default:                              ;
   }
 }

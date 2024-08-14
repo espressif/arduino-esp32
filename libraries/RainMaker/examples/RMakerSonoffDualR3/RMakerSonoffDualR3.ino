@@ -50,8 +50,8 @@ void sysProvEvent(arduino_event_t *sys_event) {
       Serial.printf("\nConnected to Wi-Fi!\n");
       digitalWrite(gpio_led, true);
       break;
-    case ARDUINO_EVENT_PROV_INIT:         wifi_prov_mgr_disable_auto_stop(10000); break;
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS: wifi_prov_mgr_stop_provisioning(); break;
+    case ARDUINO_EVENT_PROV_INIT:         network_prov_mgr_disable_auto_stop(10000); break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS: network_prov_mgr_stop_provisioning(); break;
     default:                              ;
   }
 }

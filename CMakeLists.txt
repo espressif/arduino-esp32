@@ -293,7 +293,7 @@ endforeach()
 set(includedirs variants/${CONFIG_ARDUINO_VARIANT}/ cores/esp32/ ${ARDUINO_LIBRARIES_INCLUDEDIRS})
 set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser espressif__network_provisioning)
+set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser)
 set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid usb esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
 
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
@@ -301,6 +301,12 @@ if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThre
   #if(CONFIG_OPENTHREAD_ENABLED) # Does not work!
   if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2") # Sadly only this works
     list(APPEND requires openthread)
+  endif()
+endif()
+
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_RainMaker OR CONFIG_ARDUINO_SELECTIVE_WiFiProv)
+  if(NOT IDF_TARGET STREQUAL "esp32c2")
+    list(APPEND requires espressif__network_provisioning)
   endif()
 endif()
 

@@ -38,7 +38,7 @@ void SysProvEvent(arduino_event_t *sys_event) {
     case ARDUINO_EVENT_PROV_CRED_FAIL:
     {
       Serial.println("\nProvisioning failed!\nPlease reset to factory and retry provisioning\n");
-      if (sys_event->event_info.prov_fail_reason == NETWORK_PROV_STA_AUTH_ERROR) {
+      if (sys_event->event_info.prov_fail_reason == NETWORK_PROV_WIFI_STA_AUTH_ERROR) {
         Serial.println("\nWi-Fi AP password incorrect");
       } else {
         Serial.println("\nWi-Fi AP not found....Add API \" nvs_flash_erase() \" before beginProvision()");
