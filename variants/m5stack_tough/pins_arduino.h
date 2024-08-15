@@ -3,9 +3,6 @@
 
 #include <stdint.h>
 
-#define TX2 14
-#define RX2 13
-
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
