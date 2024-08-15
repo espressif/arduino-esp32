@@ -8,6 +8,7 @@
 set(min_supported_idf_version "5.1.0")
 set(max_supported_idf_version "5.1.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
+set(ENV{IDF_COMPONENT_OVERWRITE_MANAGED_COMPONENTS} 1)
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
   if (idf_version VERSION_LESS min_supported_idf_version)
