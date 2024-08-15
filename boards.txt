@@ -13822,8 +13822,6 @@ adafruit_feather_esp32s3_reversetft.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp
 
 
 adafruit_feather_esp32c6.name=Adafruit Feather ESP32-C6
-adafruit_feather_esp32c6.vid.0=0x303a
-adafruit_feather_esp32c6.pid.0=0x1001
 
 adafruit_feather_esp32c6.bootloader.tool=esptool_py
 adafruit_feather_esp32c6.bootloader.tool.default=esptool_py
@@ -19435,6 +19433,7 @@ m5stack_stickc.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_stickc.menu.EraseFlash.all=Enabled
 m5stack_stickc.menu.EraseFlash.all.upload.erase_cmd=-e
 
+
 ##############################################################
 
 m5stack_stickc_plus.name=M5StickCPlus
@@ -19588,8 +19587,6 @@ m5stack_stickc_plus.menu.EraseFlash.none=Disabled
 m5stack_stickc_plus.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_stickc_plus.menu.EraseFlash.all=Enabled
 m5stack_stickc_plus.menu.EraseFlash.all.upload.erase_cmd=-e
-
-
 
 ##############################################################
 
@@ -19754,7 +19751,6 @@ m5stack_stickc_plus2.menu.EraseFlash.none=Disabled
 m5stack_stickc_plus2.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_stickc_plus2.menu.EraseFlash.all=Enabled
 m5stack_stickc_plus2.menu.EraseFlash.all.upload.erase_cmd=-e
-
 
 ##############################################################
 
@@ -20534,7 +20530,6 @@ m5stack_timer_cam.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_timer_cam.menu.EraseFlash.all=Enabled
 m5stack_timer_cam.menu.EraseFlash.all.upload.erase_cmd=-e
 
-
 ##############################################################
 
 
@@ -20688,6 +20683,7 @@ m5stack_unit_cam.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+
 m5stack_unit_cams3.name=M5UnitCAMS3
 m5stack_unit_cams3.bootloader.tool=esptool_py
 m5stack_unit_cams3.bootloader.tool.default=esptool_py
@@ -20728,7 +20724,7 @@ m5stack_unit_cams3.build.partitions=default
 m5stack_unit_cams3.build.defines=
 m5stack_unit_cams3.build.loop_core=
 m5stack_unit_cams3.build.event_core=
-m5stack_unit_cams3.build.psram_type=opi
+m5stack_unit_cams3.build.psram_type=qspi
 m5stack_unit_cams3.build.memory_type={build.boot}_{build.psram_type}
 
 ## IDE 2.0 Seems to not update the value
@@ -20744,12 +20740,15 @@ m5stack_unit_cams3.menu.JTAGAdapter.bridge=ESP USB Bridge
 m5stack_unit_cams3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_unit_cams3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-m5stack_unit_cams3.menu.PSRAM.opi=OPI PSRAM
-m5stack_unit_cams3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-m5stack_unit_cams3.menu.PSRAM.opi.build.psram_type=opi
+m5stack_unit_cams3.menu.PSRAM.enabled=QSPI PSRAM
+m5stack_unit_cams3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_unit_cams3.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_unit_cams3.menu.PSRAM.disabled=Disabled
 m5stack_unit_cams3.menu.PSRAM.disabled.build.defines=
 m5stack_unit_cams3.menu.PSRAM.disabled.build.psram_type=qspi
+m5stack_unit_cams3.menu.PSRAM.opi=OPI PSRAM
+m5stack_unit_cams3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_unit_cams3.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_unit_cams3.menu.FlashMode.qio=QIO 80MHz
 m5stack_unit_cams3.menu.FlashMode.qio.build.flash_mode=dio
@@ -20917,7 +20916,6 @@ m5stack_unit_cams3.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_unit_cams3.menu.EraseFlash.all=Enabled
 m5stack_unit_cams3.menu.EraseFlash.all.upload.erase_cmd=-e
 
-
 ##############################################################
 
 m5stack_poe_cam.name=M5PoECAM
@@ -21067,7 +21065,6 @@ m5stack_poe_cam.menu.EraseFlash.none=Disabled
 m5stack_poe_cam.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_poe_cam.menu.EraseFlash.all=Enabled
 m5stack_poe_cam.menu.EraseFlash.all.upload.erase_cmd=-e
-
 
 ##############################################################
 
@@ -21243,7 +21240,6 @@ m5stack_paper.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_paper.menu.EraseFlash.all=Enabled
 m5stack_paper.menu.EraseFlash.all.upload.erase_cmd=-e
 
-
 ##############################################################
 
 m5stack_coreink.name=M5CoreInk
@@ -21398,7 +21394,6 @@ m5stack_coreink.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_coreink.menu.EraseFlash.all=Enabled
 m5stack_coreink.menu.EraseFlash.all.upload.erase_cmd=-e
 
-
 ###############################################################
 
 m5stack_stamp_pico.name=M5StampPico
@@ -21552,7 +21547,6 @@ m5stack_stamp_pico.menu.EraseFlash.none=Disabled
 m5stack_stamp_pico.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_stamp_pico.menu.EraseFlash.all=Enabled
 m5stack_stamp_pico.menu.EraseFlash.all.upload.erase_cmd=-e
-
 
 ##############################################################
 
@@ -21938,7 +21932,6 @@ m5stack_stamp_s3.menu.EraseFlash.none=Disabled
 m5stack_stamp_s3.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_stamp_s3.menu.EraseFlash.all=Enabled
 m5stack_stamp_s3.menu.EraseFlash.all.upload.erase_cmd=-e
-
 
 ##############################################################
 
@@ -22659,6 +22652,245 @@ m5stack_dial.menu.EraseFlash.none=Disabled
 m5stack_dial.menu.EraseFlash.none.upload.erase_cmd=
 m5stack_dial.menu.EraseFlash.all=Enabled
 m5stack_dial.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+m5stack_dinmeter.name=M5DinMeter
+m5stack_dinmeter.bootloader.tool=esptool_py
+m5stack_dinmeter.bootloader.tool.default=esptool_py
+
+m5stack_dinmeter.upload.tool=esptool_py
+m5stack_dinmeter.upload.tool.default=esptool_py
+m5stack_dinmeter.upload.tool.network=esp_ota
+
+m5stack_dinmeter.upload.maximum_size=1310720
+m5stack_dinmeter.upload.maximum_data_size=327680
+m5stack_dinmeter.upload.flags=
+m5stack_dinmeter.upload.extra_flags=
+m5stack_dinmeter.upload.use_1200bps_touch=false
+m5stack_dinmeter.upload.wait_for_upload_port=false
+
+m5stack_dinmeter.serial.disableDTR=false
+m5stack_dinmeter.serial.disableRTS=false
+
+m5stack_dinmeter.build.tarch=xtensa
+m5stack_dinmeter.build.bootloader_addr=0x0
+m5stack_dinmeter.build.target=esp32s3
+m5stack_dinmeter.build.mcu=esp32s3
+m5stack_dinmeter.build.core=esp32
+m5stack_dinmeter.build.variant=m5stack_dinmeter
+m5stack_dinmeter.build.board=M5STACK_DINMETER
+
+m5stack_dinmeter.build.usb_mode=1
+m5stack_dinmeter.build.cdc_on_boot=1
+m5stack_dinmeter.build.msc_on_boot=0
+m5stack_dinmeter.build.dfu_on_boot=0
+m5stack_dinmeter.build.f_cpu=240000000L
+m5stack_dinmeter.build.flash_size=8MB
+m5stack_dinmeter.build.flash_freq=80m
+m5stack_dinmeter.build.flash_mode=dio
+m5stack_dinmeter.build.boot=qio
+m5stack_dinmeter.build.boot_freq=80m
+m5stack_dinmeter.build.partitions=default
+m5stack_dinmeter.build.defines=
+m5stack_dinmeter.build.loop_core=
+m5stack_dinmeter.build.event_core=
+m5stack_dinmeter.build.psram_type=qspi
+m5stack_dinmeter.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+m5stack_dinmeter.menu.JTAGAdapter.default=Disabled
+m5stack_dinmeter.menu.JTAGAdapter.default.build.copy_jtag_files=0
+m5stack_dinmeter.menu.JTAGAdapter.builtin=Integrated USB JTAG
+m5stack_dinmeter.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+m5stack_dinmeter.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+m5stack_dinmeter.menu.JTAGAdapter.external=FTDI Adapter
+m5stack_dinmeter.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+m5stack_dinmeter.menu.JTAGAdapter.external.build.copy_jtag_files=1
+m5stack_dinmeter.menu.JTAGAdapter.bridge=ESP USB Bridge
+m5stack_dinmeter.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+m5stack_dinmeter.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+m5stack_dinmeter.menu.PSRAM.disabled=Disabled
+m5stack_dinmeter.menu.PSRAM.disabled.build.defines=
+m5stack_dinmeter.menu.PSRAM.disabled.build.psram_type=qspi
+m5stack_dinmeter.menu.PSRAM.enabled=QSPI PSRAM
+m5stack_dinmeter.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_dinmeter.menu.PSRAM.enabled.build.psram_type=qspi
+m5stack_dinmeter.menu.PSRAM.opi=OPI PSRAM
+m5stack_dinmeter.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_dinmeter.menu.PSRAM.opi.build.psram_type=opi
+
+m5stack_dinmeter.menu.FlashMode.qio=QIO 80MHz
+m5stack_dinmeter.menu.FlashMode.qio.build.flash_mode=dio
+m5stack_dinmeter.menu.FlashMode.qio.build.boot=qio
+m5stack_dinmeter.menu.FlashMode.qio.build.boot_freq=80m
+m5stack_dinmeter.menu.FlashMode.qio.build.flash_freq=80m
+m5stack_dinmeter.menu.FlashMode.qio120=QIO 120MHz
+m5stack_dinmeter.menu.FlashMode.qio120.build.flash_mode=dio
+m5stack_dinmeter.menu.FlashMode.qio120.build.boot=qio
+m5stack_dinmeter.menu.FlashMode.qio120.build.boot_freq=120m
+m5stack_dinmeter.menu.FlashMode.qio120.build.flash_freq=80m
+m5stack_dinmeter.menu.FlashMode.dio=DIO 80MHz
+m5stack_dinmeter.menu.FlashMode.dio.build.flash_mode=dio
+m5stack_dinmeter.menu.FlashMode.dio.build.boot=dio
+m5stack_dinmeter.menu.FlashMode.dio.build.boot_freq=80m
+m5stack_dinmeter.menu.FlashMode.dio.build.flash_freq=80m
+m5stack_dinmeter.menu.FlashMode.opi=OPI 80MHz
+m5stack_dinmeter.menu.FlashMode.opi.build.flash_mode=dout
+m5stack_dinmeter.menu.FlashMode.opi.build.boot=opi
+m5stack_dinmeter.menu.FlashMode.opi.build.boot_freq=80m
+m5stack_dinmeter.menu.FlashMode.opi.build.flash_freq=80m
+
+m5stack_dinmeter.menu.FlashSize.4M=4MB (32Mb)
+m5stack_dinmeter.menu.FlashSize.4M.build.flash_size=4MB
+m5stack_dinmeter.menu.FlashSize.8M=8MB (64Mb)
+m5stack_dinmeter.menu.FlashSize.8M.build.flash_size=8MB
+m5stack_dinmeter.menu.FlashSize.8M.build.partitions=default_8MB
+m5stack_dinmeter.menu.FlashSize.16M=16MB (128Mb)
+m5stack_dinmeter.menu.FlashSize.16M.build.flash_size=16MB
+m5stack_dinmeter.menu.FlashSize.32M=32MB (256Mb)
+m5stack_dinmeter.menu.FlashSize.32M.build.flash_size=32MB
+m5stack_dinmeter.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
+
+m5stack_dinmeter.menu.LoopCore.1=Core 1
+m5stack_dinmeter.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+m5stack_dinmeter.menu.LoopCore.0=Core 0
+m5stack_dinmeter.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+m5stack_dinmeter.menu.EventsCore.1=Core 1
+m5stack_dinmeter.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+m5stack_dinmeter.menu.EventsCore.0=Core 0
+m5stack_dinmeter.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+m5stack_dinmeter.menu.USBMode.hwcdc=Hardware CDC and JTAG
+m5stack_dinmeter.menu.USBMode.hwcdc.build.usb_mode=1
+m5stack_dinmeter.menu.USBMode.default=USB-OTG (TinyUSB)
+m5stack_dinmeter.menu.USBMode.default.build.usb_mode=0
+
+m5stack_dinmeter.menu.CDCOnBoot.cdc=Enabled
+m5stack_dinmeter.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+m5stack_dinmeter.menu.CDCOnBoot.default=Disabled
+m5stack_dinmeter.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+m5stack_dinmeter.menu.MSCOnBoot.default=Disabled
+m5stack_dinmeter.menu.MSCOnBoot.default.build.msc_on_boot=0
+m5stack_dinmeter.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+m5stack_dinmeter.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+m5stack_dinmeter.menu.DFUOnBoot.default=Disabled
+m5stack_dinmeter.menu.DFUOnBoot.default.build.dfu_on_boot=0
+m5stack_dinmeter.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+m5stack_dinmeter.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+m5stack_dinmeter.menu.UploadMode.default=UART0 / Hardware CDC
+m5stack_dinmeter.menu.UploadMode.default.upload.use_1200bps_touch=false
+m5stack_dinmeter.menu.UploadMode.default.upload.wait_for_upload_port=false
+m5stack_dinmeter.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+m5stack_dinmeter.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+m5stack_dinmeter.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+m5stack_dinmeter.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+m5stack_dinmeter.menu.PartitionScheme.default.build.partitions=default
+m5stack_dinmeter.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+m5stack_dinmeter.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+m5stack_dinmeter.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+m5stack_dinmeter.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+m5stack_dinmeter.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+m5stack_dinmeter.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+m5stack_dinmeter.menu.PartitionScheme.minimal.build.partitions=minimal
+m5stack_dinmeter.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+m5stack_dinmeter.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stack_dinmeter.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+m5stack_dinmeter.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+m5stack_dinmeter.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+m5stack_dinmeter.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+m5stack_dinmeter.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+m5stack_dinmeter.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+m5stack_dinmeter.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+m5stack_dinmeter.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+m5stack_dinmeter.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+m5stack_dinmeter.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+m5stack_dinmeter.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+m5stack_dinmeter.menu.PartitionScheme.huge_app.build.partitions=huge_app
+m5stack_dinmeter.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+m5stack_dinmeter.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+m5stack_dinmeter.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stack_dinmeter.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+m5stack_dinmeter.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+m5stack_dinmeter.menu.PartitionScheme.fatflash.build.partitions=ffat
+m5stack_dinmeter.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+m5stack_dinmeter.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+m5stack_dinmeter.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+m5stack_dinmeter.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+m5stack_dinmeter.menu.PartitionScheme.rainmaker=RainMaker 4MB
+m5stack_dinmeter.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+m5stack_dinmeter.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+m5stack_dinmeter.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+m5stack_dinmeter.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+m5stack_dinmeter.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+m5stack_dinmeter.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+m5stack_dinmeter.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+m5stack_dinmeter.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+m5stack_dinmeter.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+m5stack_dinmeter.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+m5stack_dinmeter.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+m5stack_dinmeter.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+m5stack_dinmeter.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+m5stack_dinmeter.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+m5stack_dinmeter.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+m5stack_dinmeter.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+m5stack_dinmeter.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+m5stack_dinmeter.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+m5stack_dinmeter.menu.PartitionScheme.custom=Custom
+m5stack_dinmeter.menu.PartitionScheme.custom.build.partitions=
+m5stack_dinmeter.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+m5stack_dinmeter.menu.CPUFreq.240=240MHz (WiFi)
+m5stack_dinmeter.menu.CPUFreq.240.build.f_cpu=240000000L
+m5stack_dinmeter.menu.CPUFreq.160=160MHz (WiFi)
+m5stack_dinmeter.menu.CPUFreq.160.build.f_cpu=160000000L
+m5stack_dinmeter.menu.CPUFreq.80=80MHz (WiFi)
+m5stack_dinmeter.menu.CPUFreq.80.build.f_cpu=80000000L
+m5stack_dinmeter.menu.CPUFreq.40=40MHz
+m5stack_dinmeter.menu.CPUFreq.40.build.f_cpu=40000000L
+m5stack_dinmeter.menu.CPUFreq.20=20MHz
+m5stack_dinmeter.menu.CPUFreq.20.build.f_cpu=20000000L
+m5stack_dinmeter.menu.CPUFreq.10=10MHz
+m5stack_dinmeter.menu.CPUFreq.10.build.f_cpu=10000000L
+
+m5stack_dinmeter.menu.UploadSpeed.921600=921600
+m5stack_dinmeter.menu.UploadSpeed.921600.upload.speed=921600
+m5stack_dinmeter.menu.UploadSpeed.115200=115200
+m5stack_dinmeter.menu.UploadSpeed.115200.upload.speed=115200
+m5stack_dinmeter.menu.UploadSpeed.256000.windows=256000
+m5stack_dinmeter.menu.UploadSpeed.256000.upload.speed=256000
+m5stack_dinmeter.menu.UploadSpeed.230400.windows.upload.speed=256000
+m5stack_dinmeter.menu.UploadSpeed.230400=230400
+m5stack_dinmeter.menu.UploadSpeed.230400.upload.speed=230400
+m5stack_dinmeter.menu.UploadSpeed.460800.linux=460800
+m5stack_dinmeter.menu.UploadSpeed.460800.macosx=460800
+m5stack_dinmeter.menu.UploadSpeed.460800.upload.speed=460800
+m5stack_dinmeter.menu.UploadSpeed.512000.windows=512000
+m5stack_dinmeter.menu.UploadSpeed.512000.upload.speed=512000
+
+m5stack_dinmeter.menu.DebugLevel.none=None
+m5stack_dinmeter.menu.DebugLevel.none.build.code_debug=0
+m5stack_dinmeter.menu.DebugLevel.error=Error
+m5stack_dinmeter.menu.DebugLevel.error.build.code_debug=1
+m5stack_dinmeter.menu.DebugLevel.warn=Warn
+m5stack_dinmeter.menu.DebugLevel.warn.build.code_debug=2
+m5stack_dinmeter.menu.DebugLevel.info=Info
+m5stack_dinmeter.menu.DebugLevel.info.build.code_debug=3
+m5stack_dinmeter.menu.DebugLevel.debug=Debug
+m5stack_dinmeter.menu.DebugLevel.debug.build.code_debug=4
+m5stack_dinmeter.menu.DebugLevel.verbose=Verbose
+m5stack_dinmeter.menu.DebugLevel.verbose.build.code_debug=5
+
+m5stack_dinmeter.menu.EraseFlash.none=Disabled
+m5stack_dinmeter.menu.EraseFlash.none.upload.erase_cmd=
+m5stack_dinmeter.menu.EraseFlash.all=Enabled
+m5stack_dinmeter.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -38246,6 +38478,404 @@ ws_esp32_s3_matrix.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+waveshare_esp32_s3_touch_lcd_169.name=Waveshare ESP32-S3-Touch-LCD-1.69
+waveshare_esp32_s3_touch_lcd_169.vid.0=0x303a
+waveshare_esp32_s3_touch_lcd_169.pid.0=0x821E
+waveshare_esp32_s3_touch_lcd_169.upload_port.0.vid=0x303a
+waveshare_esp32_s3_touch_lcd_169.upload_port.0.pid=0x821E
+
+waveshare_esp32_s3_touch_lcd_169.bootloader.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_169.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_touch_lcd_169.upload.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_169.upload.tool.default=esptool_py
+waveshare_esp32_s3_touch_lcd_169.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_touch_lcd_169.upload.maximum_size=1310720
+
+waveshare_esp32_s3_touch_lcd_169.upload.maximum_data_size=327680
+waveshare_esp32_s3_touch_lcd_169.upload.flags=
+waveshare_esp32_s3_touch_lcd_169.upload.extra_flags=
+waveshare_esp32_s3_touch_lcd_169.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_169.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_touch_lcd_169.serial.disableDTR=false
+waveshare_esp32_s3_touch_lcd_169.serial.disableRTS=false
+
+waveshare_esp32_s3_touch_lcd_169.build.tarch=xtensa
+waveshare_esp32_s3_touch_lcd_169.build.bootloader_addr=0x0
+waveshare_esp32_s3_touch_lcd_169.build.target=esp32s3
+waveshare_esp32_s3_touch_lcd_169.build.mcu=esp32s3
+waveshare_esp32_s3_touch_lcd_169.build.core=esp32
+waveshare_esp32_s3_touch_lcd_169.build.variant=waveshare_esp32_s3_touch_lcd_169
+waveshare_esp32_s3_touch_lcd_169.build.board=WAVESHARE_ESP32_S3_TOUCH_LCD_169
+
+waveshare_esp32_s3_touch_lcd_169.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_169.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_169.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_169.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_169.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_169.build.flash_size=16MB
+waveshare_esp32_s3_touch_lcd_169.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_169.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_169.build.boot=qio
+waveshare_esp32_s3_touch_lcd_169.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_169.build.partitions=default
+waveshare_esp32_s3_touch_lcd_169.build.defines=
+waveshare_esp32_s3_touch_lcd_169.build.loop_core=
+waveshare_esp32_s3_touch_lcd_169.build.event_core=
+waveshare_esp32_s3_touch_lcd_169.build.psram_type=qspi
+waveshare_esp32_s3_touch_lcd_169.build.memory_type={build.boot}_{build.psram_type}
+
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.psram_type=qspi
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.psram_type=opi
+
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio120.build.flash_freq=80m
+
+waveshare_esp32_s3_touch_lcd_169.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_169.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_169.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_169.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_169.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_169.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_169.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_169.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_169.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_touch_lcd_169.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_169.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_touch_lcd_169.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_touch_lcd_169.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_169.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_169.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_touch_lcd_169.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_169.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_169.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_169.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_169.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_169.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_169.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_169.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_169.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.all_app.upload.maximum_size=4128768
+
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_touch_lcd_169.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_touch_lcd_169.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.none=None
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.error=Error
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.info=Info
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_touch_lcd_169.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_touch_lcd_169.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_touch_lcd_169.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_touch_lcd_169.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_touch_lcd_169.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+waveshare_esp32_s3_lcd_169.name=Waveshare ESP32-S3-LCD-1.69
+waveshare_esp32_s3_lcd_169.vid.0=0x303a
+waveshare_esp32_s3_lcd_169.pid.0=0x8221
+waveshare_esp32_s3_lcd_169.upload_port.0.vid=0x303a
+waveshare_esp32_s3_lcd_169.upload_port.0.pid=0x8221
+
+waveshare_esp32_s3_lcd_169.bootloader.tool=esptool_py
+waveshare_esp32_s3_lcd_169.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_lcd_169.upload.tool=esptool_py
+waveshare_esp32_s3_lcd_169.upload.tool.default=esptool_py
+waveshare_esp32_s3_lcd_169.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_lcd_169.upload.maximum_size=1310720
+
+waveshare_esp32_s3_lcd_169.upload.maximum_data_size=327680
+waveshare_esp32_s3_lcd_169.upload.flags=
+waveshare_esp32_s3_lcd_169.upload.extra_flags=
+waveshare_esp32_s3_lcd_169.upload.use_1200bps_touch=false
+waveshare_esp32_s3_lcd_169.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_lcd_169.serial.disableDTR=false
+waveshare_esp32_s3_lcd_169.serial.disableRTS=false
+
+waveshare_esp32_s3_lcd_169.build.tarch=xtensa
+waveshare_esp32_s3_lcd_169.build.bootloader_addr=0x0
+waveshare_esp32_s3_lcd_169.build.target=esp32s3
+waveshare_esp32_s3_lcd_169.build.mcu=esp32s3
+waveshare_esp32_s3_lcd_169.build.core=esp32
+waveshare_esp32_s3_lcd_169.build.variant=waveshare_esp32_s3_lcd_169
+waveshare_esp32_s3_lcd_169.build.board=WAVESHARE_ESP32_S3_LCD_169
+
+waveshare_esp32_s3_lcd_169.build.usb_mode=1
+waveshare_esp32_s3_lcd_169.build.cdc_on_boot=0
+waveshare_esp32_s3_lcd_169.build.msc_on_boot=0
+waveshare_esp32_s3_lcd_169.build.dfu_on_boot=0
+waveshare_esp32_s3_lcd_169.build.f_cpu=240000000L
+waveshare_esp32_s3_lcd_169.build.flash_size=16MB
+waveshare_esp32_s3_lcd_169.build.flash_freq=80m
+waveshare_esp32_s3_lcd_169.build.flash_mode=dio
+waveshare_esp32_s3_lcd_169.build.boot=qio
+waveshare_esp32_s3_lcd_169.build.boot_freq=80m
+waveshare_esp32_s3_lcd_169.build.partitions=default
+waveshare_esp32_s3_lcd_169.build.defines=
+waveshare_esp32_s3_lcd_169.build.loop_core=
+waveshare_esp32_s3_lcd_169.build.event_core=
+waveshare_esp32_s3_lcd_169.build.psram_type=qspi
+waveshare_esp32_s3_lcd_169.build.memory_type={build.boot}_{build.psram_type}
+
+waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.psram_type=qspi
+waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.psram_type=opi
+
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_lcd_169.menu.FlashMode.qio120.build.flash_freq=80m
+
+waveshare_esp32_s3_lcd_169.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_lcd_169.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_lcd_169.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_lcd_169.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_lcd_169.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_lcd_169.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+waveshare_esp32_s3_lcd_169.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_lcd_169.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+waveshare_esp32_s3_lcd_169.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_lcd_169.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_lcd_169.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_lcd_169.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_lcd_169.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_169.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_lcd_169.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_lcd_169.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_lcd_169.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_169.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_lcd_169.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_lcd_169.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_lcd_169.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_169.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_lcd_169.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_lcd_169.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_lcd_169.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_lcd_169.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_lcd_169.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_lcd_169.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_lcd_169.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_lcd_169.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.all_app.upload.maximum_size=4128768
+
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_lcd_169.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_lcd_169.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.none=None
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.error=Error
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.info=Info
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_lcd_169.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_lcd_169.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_lcd_169.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_lcd_169.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_lcd_169.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 waveshare_esp32s3_touch_lcd_128.name=Waveshare ESP32S3 Touch LCD 128
 waveshare_esp32s3_touch_lcd_128.vid.0=0x1a86
 waveshare_esp32s3_touch_lcd_128.pid.0=0x55d3
@@ -39062,5 +39692,332 @@ elecrow_crowpanel_7.menu.EraseFlash.none=Disabled
 elecrow_crowpanel_7.menu.EraseFlash.none.upload.erase_cmd=
 elecrow_crowpanel_7.menu.EraseFlash.all=Enabled
 elecrow_crowpanel_7.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+circuitart_zero_s3.name=CircuitART Zero S3
+circuitart_zero_s3.vid.0=0x303a
+circuitart_zero_s3.pid.0=0x80DB
+
+circuitart_zero_s3.bootloader.tool=esptool_py
+circuitart_zero_s3.bootloader.tool.default=esptool_py
+
+circuitart_zero_s3.upload.tool=esptool_py
+circuitart_zero_s3.upload.tool.default=esptool_py
+circuitart_zero_s3.upload.tool.network=esp_ota
+
+circuitart_zero_s3.upload.maximum_size=1310720
+circuitart_zero_s3.upload.maximum_data_size=327680
+circuitart_zero_s3.upload.flags=
+circuitart_zero_s3.upload.extra_flags=
+circuitart_zero_s3.upload.use_1200bps_touch=false
+circuitart_zero_s3.upload.wait_for_upload_port=false
+
+circuitart_zero_s3.serial.disableDTR=false
+circuitart_zero_s3.serial.disableRTS=false
+
+circuitart_zero_s3.build.tarch=xtensa
+circuitart_zero_s3.build.bootloader_addr=0x0
+circuitart_zero_s3.build.target=esp32s3
+circuitart_zero_s3.build.mcu=esp32s3
+circuitart_zero_s3.build.core=esp32
+circuitart_zero_s3.build.variant=circuitart_zero_s3
+circuitart_zero_s3.build.board=CIRCUITART_ZERO_S3
+
+circuitart_zero_s3.build.usb_mode=1
+circuitart_zero_s3.build.cdc_on_boot=0
+circuitart_zero_s3.build.msc_on_boot=0
+circuitart_zero_s3.build.dfu_on_boot=0
+circuitart_zero_s3.build.f_cpu=240000000L
+circuitart_zero_s3.build.flash_size=16MB
+circuitart_zero_s3.build.flash_freq=80m
+circuitart_zero_s3.build.flash_mode=dio
+circuitart_zero_s3.build.boot=qio
+circuitart_zero_s3.build.partitions=default
+circuitart_zero_s3.build.defines=
+circuitart_zero_s3.build.loop_core=
+circuitart_zero_s3.build.event_core=
+circuitart_zero_s3.build.flash_type=qio
+circuitart_zero_s3.build.psram_type=qspi
+circuitart_zero_s3.build.memory_type=qio_qspi
+
+circuitart_zero_s3.menu.LoopCore.1=Core 1
+circuitart_zero_s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+circuitart_zero_s3.menu.LoopCore.0=Core 0
+circuitart_zero_s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+circuitart_zero_s3.menu.EventsCore.1=Core 1
+circuitart_zero_s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+circuitart_zero_s3.menu.EventsCore.0=Core 0
+circuitart_zero_s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+circuitart_zero_s3.menu.USBMode.default=USB-OTG (TinyUSB)
+circuitart_zero_s3.menu.USBMode.default.build.usb_mode=0
+circuitart_zero_s3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+circuitart_zero_s3.menu.USBMode.hwcdc.build.usb_mode=1
+
+circuitart_zero_s3.menu.CDCOnBoot.cdc=Enabled
+circuitart_zero_s3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+circuitart_zero_s3.menu.CDCOnBoot.default=Disabled
+circuitart_zero_s3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+circuitart_zero_s3.menu.MSCOnBoot.default=Disabled
+circuitart_zero_s3.menu.MSCOnBoot.default.build.msc_on_boot=0
+circuitart_zero_s3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+circuitart_zero_s3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+circuitart_zero_s3.menu.DFUOnBoot.default=Disabled
+circuitart_zero_s3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+circuitart_zero_s3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+circuitart_zero_s3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+circuitart_zero_s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+circuitart_zero_s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+circuitart_zero_s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+circuitart_zero_s3.menu.UploadMode.default=UART0 / Hardware CDC
+circuitart_zero_s3.menu.UploadMode.default.upload.use_1200bps_touch=false
+circuitart_zero_s3.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+circuitart_zero_s3.menu.PSRAM.enabled=Enabled
+circuitart_zero_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+circuitart_zero_s3.menu.PSRAM.disabled=Disabled
+circuitart_zero_s3.menu.PSRAM.disabled.build.defines=
+
+circuitart_zero_s3.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+circuitart_zero_s3.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+circuitart_zero_s3.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+circuitart_zero_s3.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/12MB FFAT)
+circuitart_zero_s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+circuitart_zero_s3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions_tinyuf2
+circuitart_zero_s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+circuitart_zero_s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+circuitart_zero_s3.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+circuitart_zero_s3.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+circuitart_zero_s3.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+circuitart_zero_s3.menu.PartitionScheme.app3M_fat9M_16MB=FFAT (3MB APP/9MB FATFS)
+circuitart_zero_s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+circuitart_zero_s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+circuitart_zero_s3.menu.PartitionScheme.fatflash=Large FFAT (2MB APP/12.5MB FATFS)
+circuitart_zero_s3.menu.PartitionScheme.fatflash.build.partitions=ffat
+circuitart_zero_s3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+
+circuitart_zero_s3.menu.CPUFreq.240=240MHz (WiFi)
+circuitart_zero_s3.menu.CPUFreq.240.build.f_cpu=240000000L
+circuitart_zero_s3.menu.CPUFreq.160=160MHz (WiFi)
+circuitart_zero_s3.menu.CPUFreq.160.build.f_cpu=160000000L
+circuitart_zero_s3.menu.CPUFreq.80=80MHz (WiFi)
+circuitart_zero_s3.menu.CPUFreq.80.build.f_cpu=80000000L
+circuitart_zero_s3.menu.CPUFreq.40=40MHz
+circuitart_zero_s3.menu.CPUFreq.40.build.f_cpu=40000000L
+circuitart_zero_s3.menu.CPUFreq.20=20MHz
+circuitart_zero_s3.menu.CPUFreq.20.build.f_cpu=20000000L
+circuitart_zero_s3.menu.CPUFreq.10=10MHz
+circuitart_zero_s3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+circuitart_zero_s3.menu.FlashMode.qio=QIO
+circuitart_zero_s3.menu.FlashMode.qio.build.flash_mode=dio
+circuitart_zero_s3.menu.FlashMode.qio.build.boot=qio
+circuitart_zero_s3.menu.FlashMode.dio=DIO
+circuitart_zero_s3.menu.FlashMode.dio.build.flash_mode=dio
+circuitart_zero_s3.menu.FlashMode.dio.build.boot=dio
+
+circuitart_zero_s3.menu.UploadSpeed.921600=921600
+circuitart_zero_s3.menu.UploadSpeed.921600.upload.speed=921600
+circuitart_zero_s3.menu.UploadSpeed.115200=115200
+circuitart_zero_s3.menu.UploadSpeed.115200.upload.speed=115200
+circuitart_zero_s3.menu.UploadSpeed.256000.windows=256000
+circuitart_zero_s3.menu.UploadSpeed.256000.upload.speed=256000
+circuitart_zero_s3.menu.UploadSpeed.230400.windows.upload.speed=256000
+circuitart_zero_s3.menu.UploadSpeed.230400=230400
+circuitart_zero_s3.menu.UploadSpeed.230400.upload.speed=230400
+circuitart_zero_s3.menu.UploadSpeed.460800.linux=460800
+circuitart_zero_s3.menu.UploadSpeed.460800.macosx=460800
+circuitart_zero_s3.menu.UploadSpeed.460800.upload.speed=460800
+circuitart_zero_s3.menu.UploadSpeed.512000.windows=512000
+circuitart_zero_s3.menu.UploadSpeed.512000.upload.speed=512000
+
+circuitart_zero_s3.menu.DebugLevel.none=None
+circuitart_zero_s3.menu.DebugLevel.none.build.code_debug=0
+circuitart_zero_s3.menu.DebugLevel.error=Error
+circuitart_zero_s3.menu.DebugLevel.error.build.code_debug=1
+circuitart_zero_s3.menu.DebugLevel.warn=Warn
+circuitart_zero_s3.menu.DebugLevel.warn.build.code_debug=2
+circuitart_zero_s3.menu.DebugLevel.info=Info
+circuitart_zero_s3.menu.DebugLevel.info.build.code_debug=3
+circuitart_zero_s3.menu.DebugLevel.debug=Debug
+circuitart_zero_s3.menu.DebugLevel.debug.build.code_debug=4
+circuitart_zero_s3.menu.DebugLevel.verbose=Verbose
+circuitart_zero_s3.menu.DebugLevel.verbose.build.code_debug=5
+
+circuitart_zero_s3.menu.EraseFlash.none=Disabled
+circuitart_zero_s3.menu.EraseFlash.none.upload.erase_cmd=
+circuitart_zero_s3.menu.EraseFlash.all=Enabled
+circuitart_zero_s3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+# Alfredo NoU3
+
+alfredo-nou3.name=Alfredo NoU3
+alfredo-nou3.vid.0=0xAFD0
+alfredo-nou3.pid.0=0x0003
+alfredo-nou3.upload_port.0.vid=0xAFD0
+alfredo-nou3.upload_port.0.pid=0x0003
+
+alfredo-nou3.bootloader.tool=esptool_py
+alfredo-nou3.bootloader.tool.default=esptool_py
+
+alfredo-nou3.upload.tool=esptool_py
+alfredo-nou3.upload.tool.default=esptool_py
+alfredo-nou3.upload.tool.network=esp_ota
+
+alfredo-nou3.upload.maximum_size=3342336
+alfredo-nou3.upload.maximum_data_size=327680
+alfredo-nou3.upload.flags=
+alfredo-nou3.upload.extra_flags=
+alfredo-nou3.upload.use_1200bps_touch=false
+alfredo-nou3.upload.wait_for_upload_port=false
+
+alfredo-nou3.serial.disableDTR=false
+alfredo-nou3.serial.disableRTS=false
+
+alfredo-nou3.build.tarch=xtensa
+alfredo-nou3.build.bootloader_addr=0x0
+alfredo-nou3.build.target=esp32s3
+alfredo-nou3.build.mcu=esp32s3
+alfredo-nou3.build.core=esp32
+alfredo-nou3.build.variant=alfredo-nou3
+alfredo-nou3.build.board=ALFREDO_NOU3
+
+alfredo-nou3.build.usb_mode=1
+alfredo-nou3.build.cdc_on_boot=1
+alfredo-nou3.build.msc_on_boot=0
+alfredo-nou3.build.dfu_on_boot=0
+alfredo-nou3.build.f_cpu=240000000L
+alfredo-nou3.build.flash_size=8MB
+alfredo-nou3.build.flash_freq=80m
+alfredo-nou3.build.flash_mode=dio
+alfredo-nou3.build.boot=qio
+alfredo-nou3.build.partitions=default
+alfredo-nou3.build.defines=
+alfredo-nou3.build.loop_core=
+alfredo-nou3.build.event_core=
+alfredo-nou3.build.flash_type=qio
+alfredo-nou3.build.psram_type=qspi
+alfredo-nou3.build.memory_type={build.flash_type}_{build.psram_type}
+
+alfredo-nou3.menu.LoopCore.1=Core 1
+alfredo-nou3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+alfredo-nou3.menu.LoopCore.0=Core 0
+alfredo-nou3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+alfredo-nou3.menu.EventsCore.1=Core 1
+alfredo-nou3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+alfredo-nou3.menu.EventsCore.0=Core 0
+alfredo-nou3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+alfredo-nou3.menu.USBMode.default=Hardware CDC and JTAG
+alfredo-nou3.menu.USBMode.default.build.usb_mode=1
+alfredo-nou3.menu.USBMode.usbotg=USB-OTG (TinyUSB)
+alfredo-nou3.menu.USBMode.usbotg.build.usb_mode=0
+
+alfredo-nou3.menu.CDCOnBoot.cdc=Enabled
+alfredo-nou3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+alfredo-nou3.menu.CDCOnBoot.default=Disabled
+alfredo-nou3.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+alfredo-nou3.menu.MSCOnBoot.default=Disabled
+alfredo-nou3.menu.MSCOnBoot.default.build.msc_on_boot=0
+alfredo-nou3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+alfredo-nou3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+alfredo-nou3.menu.DFUOnBoot.default=Disabled
+alfredo-nou3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+alfredo-nou3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+alfredo-nou3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+alfredo-nou3.menu.UploadMode.default=UART0 / Hardware CDC
+alfredo-nou3.menu.UploadMode.default.upload.use_1200bps_touch=false
+alfredo-nou3.menu.UploadMode.default.upload.wait_for_upload_port=false
+alfredo-nou3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+alfredo-nou3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+alfredo-nou3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+alfredo-nou3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+alfredo-nou3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+alfredo-nou3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+alfredo-nou3.menu.PartitionScheme.big_8MB=Max App (8MB APP)
+alfredo-nou3.menu.PartitionScheme.big_8MB.build.partitions=max_app_8MB
+alfredo-nou3.menu.PartitionScheme.big_8MB.upload.maximum_size=8257536
+
+alfredo-nou3.menu.CPUFreq.240=240MHz (WiFi)
+alfredo-nou3.menu.CPUFreq.240.build.f_cpu=240000000L
+alfredo-nou3.menu.CPUFreq.160=160MHz (WiFi)
+alfredo-nou3.menu.CPUFreq.160.build.f_cpu=160000000L
+alfredo-nou3.menu.CPUFreq.80=80MHz (WiFi)
+alfredo-nou3.menu.CPUFreq.80.build.f_cpu=80000000L
+alfredo-nou3.menu.CPUFreq.40=40MHz
+alfredo-nou3.menu.CPUFreq.40.build.f_cpu=40000000L
+alfredo-nou3.menu.CPUFreq.20=20MHz
+alfredo-nou3.menu.CPUFreq.20.build.f_cpu=20000000L
+alfredo-nou3.menu.CPUFreq.10=10MHz
+alfredo-nou3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+alfredo-nou3.menu.FlashMode.qio=QIO 80MHz
+alfredo-nou3.menu.FlashMode.qio.build.flash_mode=dio
+alfredo-nou3.menu.FlashMode.qio.build.boot=qio
+alfredo-nou3.menu.FlashMode.qio.build.boot_freq=80m
+alfredo-nou3.menu.FlashMode.qio.build.flash_freq=80m
+alfredo-nou3.menu.FlashMode.qio120=QIO 120MHz
+alfredo-nou3.menu.FlashMode.qio120.build.flash_mode=dio
+alfredo-nou3.menu.FlashMode.qio120.build.boot=qio
+alfredo-nou3.menu.FlashMode.qio120.build.boot_freq=120m
+alfredo-nou3.menu.FlashMode.qio120.build.flash_freq=80m
+alfredo-nou3.menu.FlashMode.dio=DIO 80MHz
+alfredo-nou3.menu.FlashMode.dio.build.flash_mode=dio
+alfredo-nou3.menu.FlashMode.dio.build.boot=dio
+alfredo-nou3.menu.FlashMode.dio.build.boot_freq=80m
+alfredo-nou3.menu.FlashMode.dio.build.flash_freq=80m
+alfredo-nou3.menu.FlashMode.opi=OPI 80MHz
+alfredo-nou3.menu.FlashMode.opi.build.flash_mode=dout
+alfredo-nou3.menu.FlashMode.opi.build.boot=opi
+alfredo-nou3.menu.FlashMode.opi.build.boot_freq=80m
+alfredo-nou3.menu.FlashMode.opi.build.flash_freq=80m
+
+alfredo-nou3.menu.FlashSize.8M=8MB (64Mb)
+alfredo-nou3.menu.FlashSize.8M.build.flash_size=8MB
+
+alfredo-nou3.menu.UploadSpeed.921600=921600
+alfredo-nou3.menu.UploadSpeed.921600.upload.speed=921600
+alfredo-nou3.menu.UploadSpeed.512000.windows=512000
+alfredo-nou3.menu.UploadSpeed.512000.upload.speed=512000
+alfredo-nou3.menu.UploadSpeed.460800.linux=460800
+alfredo-nou3.menu.UploadSpeed.460800.macosx=460800
+alfredo-nou3.menu.UploadSpeed.460800.upload.speed=460800
+alfredo-nou3.menu.UploadSpeed.256000.windows=256000
+alfredo-nou3.menu.UploadSpeed.256000.upload.speed=256000
+alfredo-nou3.menu.UploadSpeed.230400.windows.upload.speed=256000
+alfredo-nou3.menu.UploadSpeed.230400=230400
+alfredo-nou3.menu.UploadSpeed.230400.upload.speed=230400
+alfredo-nou3.menu.UploadSpeed.115200=115200
+alfredo-nou3.menu.UploadSpeed.115200.upload.speed=115200
+
+alfredo-nou3.menu.DebugLevel.none=None
+alfredo-nou3.menu.DebugLevel.none.build.code_debug=0
+alfredo-nou3.menu.DebugLevel.error=Error
+alfredo-nou3.menu.DebugLevel.error.build.code_debug=1
+alfredo-nou3.menu.DebugLevel.warn=Warn
+alfredo-nou3.menu.DebugLevel.warn.build.code_debug=2
+alfredo-nou3.menu.DebugLevel.info=Info
+alfredo-nou3.menu.DebugLevel.info.build.code_debug=3
+alfredo-nou3.menu.DebugLevel.debug=Debug
+alfredo-nou3.menu.DebugLevel.debug.build.code_debug=4
+alfredo-nou3.menu.DebugLevel.verbose=Verbose
+alfredo-nou3.menu.DebugLevel.verbose.build.code_debug=5
+
+alfredo-nou3.menu.EraseFlash.none=Disabled
+alfredo-nou3.menu.EraseFlash.none.upload.erase_cmd=
+alfredo-nou3.menu.EraseFlash.all=Enabled
+alfredo-nou3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
