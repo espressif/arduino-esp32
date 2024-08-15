@@ -34,10 +34,10 @@
 
 #include <nvs_flash.h>
 #if CONFIG_BLUEDROID_ENABLED
-#include "wifi_provisioning/scheme_ble.h"
+#include "network_provisioning/scheme_ble.h"
 #endif
-#include <wifi_provisioning/scheme_softap.h>
-#include <wifi_provisioning/manager.h>
+#include <network_provisioning/scheme_softap.h>
+#include <network_provisioning/manager.h>
 #undef IPADDR_NONE
 #include "WiFiProv.h"
 #if CONFIG_IDF_TARGET_ESP32
@@ -61,7 +61,7 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
     return;
   }
 #if CONFIG_IDF_TARGET_ESP32 && defined(CONFIG_BLUEDROID_ENABLED)
-  if (prov_scheme == WIFI_PROV_SCHEME_BLE) {
+  if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
     snprintf(service_name, max, "%s%02X%02X%02X", SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
   } else {
 #endif
@@ -72,36 +72,36 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
 }
 
 void WiFiProvClass ::beginProvision(
-  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, wifi_prov_security_t security, const char *pop, const char *service_name, const char *service_key,
-  uint8_t *uuid, bool reset_provisioned
+  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, network_prov_security_t security, const char *pop, const char *service_name,
+  const char *service_key, uint8_t *uuid, bool reset_provisioned
 ) {
   bool provisioned = false;
   static char service_name_temp[32];
 
-  wifi_prov_mgr_config_t config;
+  network_prov_mgr_config_t config;
 #if CONFIG_BLUEDROID_ENABLED
-  if (prov_scheme == WIFI_PROV_SCHEME_BLE) {
-    config.scheme = wifi_prov_scheme_ble;
+  if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
+    config.scheme = network_prov_scheme_ble;
   } else {
 #endif
-    config.scheme = wifi_prov_scheme_softap;
+    config.scheme = network_prov_scheme_softap;
 #if CONFIG_BLUEDROID_ENABLED
   }
 
-  if (scheme_handler == WIFI_PROV_SCHEME_HANDLER_NONE) {
+  if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_NONE) {
 #endif
-    wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE;
-    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
+    network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_EVENT_HANDLER_NONE;
+    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
 #if CONFIG_BLUEDROID_ENABLED
-  } else if (scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BTDM) {
-    wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
-    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
-  } else if (scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BT) {
-    wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BT;
-    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
-  } else if (scheme_handler == WIFI_PROV_SCHEME_HANDLER_FREE_BLE) {
-    wifi_prov_event_handler_t scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BLE;
-    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(wifi_prov_event_handler_t));
+  } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BTDM) {
+    network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
+    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
+  } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BT) {
+    network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BT;
+    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
+  } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BLE) {
+    network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BLE;
+    memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
   } else {
     log_e("Unknown scheme handler!");
     return;
@@ -110,26 +110,26 @@ void WiFiProvClass ::beginProvision(
   config.app_event_handler.event_cb = NULL;
   config.app_event_handler.user_data = NULL;
   WiFi.STA.begin(false);
-  if (wifi_prov_mgr_init(config) != ESP_OK) {
-    log_e("wifi_prov_mgr_init failed!");
+  if (network_prov_mgr_init(config) != ESP_OK) {
+    log_e("network_prov_mgr_init failed!");
     return;
   }
   if (reset_provisioned) {
     log_i("Resetting provisioned data.");
-    wifi_prov_mgr_reset_provisioning();
-  } else if (wifi_prov_mgr_is_provisioned(&provisioned) != ESP_OK) {
-    log_e("wifi_prov_mgr_is_provisioned failed!");
-    wifi_prov_mgr_deinit();
+    network_prov_mgr_reset_wifi_provisioning();
+  } else if (network_prov_mgr_is_wifi_provisioned(&provisioned) != ESP_OK) {
+    log_e("network_prov_mgr_is_wifi_provisioned failed!");
+    network_prov_mgr_deinit();
     return;
   }
   if (provisioned == false) {
 #if CONFIG_BLUEDROID_ENABLED
-    if (prov_scheme == WIFI_PROV_SCHEME_BLE) {
+    if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
       service_key = NULL;
       if (uuid == NULL) {
         uuid = (uint8_t *)custom_service_uuid;
       }
-      wifi_prov_scheme_ble_set_service_uuid(uuid);
+      network_prov_scheme_ble_set_service_uuid(uuid);
     }
 #endif
 
@@ -139,7 +139,7 @@ void WiFiProvClass ::beginProvision(
     }
 
 #if CONFIG_BLUEDROID_ENABLED
-    if (prov_scheme == WIFI_PROV_SCHEME_BLE) {
+    if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
       log_i("Starting AP using BLE. service_name : %s, pop : %s", service_name, pop);
     } else {
 #endif
@@ -151,8 +151,8 @@ void WiFiProvClass ::beginProvision(
 #if CONFIG_BLUEDROID_ENABLED
     }
 #endif
-    if (wifi_prov_mgr_start_provisioning(security, pop, service_name, service_key) != ESP_OK) {
-      log_e("wifi_prov_mgr_start_provisioning failed!");
+    if (network_prov_mgr_start_provisioning(security, pop, service_name, service_key) != ESP_OK) {
+      log_e("network_prov_mgr_start_provisioning failed!");
       return;
     }
   } else {
@@ -163,13 +163,80 @@ void WiFiProvClass ::beginProvision(
     log_i("Attempting connect to AP: %s\n", conf.sta.ssid);
 #endif
     esp_wifi_start();
-    wifi_prov_mgr_deinit();
+    network_prov_mgr_deinit();
     WiFi.begin();
   }
 }
 
+void WiFiProvClass::endProvision() {
+  network_prov_mgr_stop_provisioning();
+}
+
+bool WiFiProvClass::disableAutoStop(uint32_t cleanup_delay) {
+  esp_err_t err = network_prov_mgr_disable_auto_stop(cleanup_delay);
+  if (err != ESP_OK) {
+    log_e("disable_auto_stop failed!");
+  }
+  return err == ESP_OK;
+}
+
 // Copied from IDF example
-void WiFiProvClass ::printQR(const char *name, const char *pop, const char *transport) {
+
+#if __has_include("qrcode.h")
+static const char *lt[] = {
+  /* 0 */ "  ",
+  /* 1 */ "\u2580 ",
+  /* 2 */ " \u2580",
+  /* 3 */ "\u2580\u2580",
+  /* 4 */ "\u2584 ",
+  /* 5 */ "\u2588 ",
+  /* 6 */ "\u2584\u2580",
+  /* 7 */ "\u2588\u2580",
+  /* 8 */ " \u2584",
+  /* 9 */ "\u2580\u2584",
+  /* 10 */ " \u2588",
+  /* 11 */ "\u2580\u2588",
+  /* 12 */ "\u2584\u2584",
+  /* 13 */ "\u2588\u2584",
+  /* 14 */ "\u2584\u2588",
+  /* 15 */ "\u2588\u2588",
+};
+
+static Print *qr_out = NULL;
+
+static void _qrcode_print_console(esp_qrcode_handle_t qrcode) {
+  int size = esp_qrcode_get_size(qrcode);
+  int border = 2;
+  unsigned char num = 0;
+
+  if (qr_out == NULL) {
+    return;
+  }
+
+  for (int y = -border; y < size + border; y += 2) {
+    for (int x = -border; x < size + border; x += 2) {
+      num = 0;
+      if (esp_qrcode_get_module(qrcode, x, y)) {
+        num |= 1 << 0;
+      }
+      if ((x < size + border) && esp_qrcode_get_module(qrcode, x + 1, y)) {
+        num |= 1 << 1;
+      }
+      if ((y < size + border) && esp_qrcode_get_module(qrcode, x, y + 1)) {
+        num |= 1 << 2;
+      }
+      if ((x < size + border) && (y < size + border) && esp_qrcode_get_module(qrcode, x + 1, y + 1)) {
+        num |= 1 << 3;
+      }
+      qr_out->print(lt[num]);
+    }
+    qr_out->print("\n");
+  }
+  qr_out->print("\n");
+}
+#endif
+
+void WiFiProvClass::printQR(const char *name, const char *pop, const char *transport, Print &out) {
   if (!name || !transport) {
     log_w("Cannot generate QR code payload. Data missing.");
     return;
@@ -191,12 +258,15 @@ void WiFiProvClass ::printQR(const char *name, const char *pop, const char *tran
     );
   }
 #if __has_include("qrcode.h")
-  log_i("Scan this QR code from the provisioning application for Provisioning.");
   esp_qrcode_config_t cfg = ESP_QRCODE_CONFIG_DEFAULT();
+  cfg.display_func = _qrcode_print_console;
+  out.printf("Scan this QR code from the provisioning application for Provisioning.\n");
+  qr_out = &out;
   esp_qrcode_generate(&cfg, payload);
+  qr_out = NULL;
+  out.printf("If QR code is not visible, copy paste the below URL in a browser.\nhttps://rainmaker.espressif.com/qrcode.html?data=%s\n", payload);
 #else
-  log_i("If QR code is not visible, copy paste the below URL in a browser.\n%s?data=%s", "https://espressif.github.io/esp-jumpstart/qrcode.html", payload);
-  log_i("If you are using Arduino as IDF component, install ESP Rainmaker:\nhttps://github.com/espressif/esp-rainmaker");
+  out.println("If you are using Arduino as IDF component, install ESP Rainmaker:\nhttps://github.com/espressif/esp-rainmaker");
 #endif
 }
 
