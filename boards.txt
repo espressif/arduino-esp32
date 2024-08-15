@@ -39636,3 +39636,43 @@ circuitart_zero_s3.menu.EraseFlash.all=Enabled
 circuitart_zero_s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+codecell.name=CodeCell
+codecell.vid.0=0x303a
+codecell.pid.0=0x1002
+
+codecell.bootloader.tool=esptool_py
+codecell.upload.tool=esptool_py
+codecell.upload.maximum_size=4194304
+codecell.upload.maximum_data_size=327680
+codecell.upload.use_1200bps_touch=false
+codecell.upload.wait_for_upload_port=false
+
+codecell.upload.speed=921600
+codecell.serial.disableDTR=false
+codecell.serial.disableRTS=false
+
+codecell.build.tarch=riscv32
+codecell.build.target=esp
+codecell.build.mcu=esp32c3
+codecell.build.core=esp32
+codecell.build.variant=codecell
+codecell.build.board=ESP32C3_DEV
+codecell.build.bootloader_addr=0x0
+codecell.build.cdc_on_boot=1   
+codecell.build.f_cpu=160000000L
+codecell.build.flash_size=4MB
+codecell.build.flash_freq=80m
+codecell.build.flash_mode=qio
+codecell.build.boot=qio
+codecell.build.partitions=default
+
+codecell.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+codecell.menu.CPUFreq.160=160MHz
+codecell.menu.FlashMode.qio=QIO
+codecell.menu.FlashFreq.80=80MHz
+codecell.menu.FlashSize.4M=4MB (32Mb)
+codecell.menu.UploadSpeed.921600=921600
+codecell.menu.DebugLevel.none=None
+codecell.menu.EraseFlash.none=Disabled
+
+##############################################################
