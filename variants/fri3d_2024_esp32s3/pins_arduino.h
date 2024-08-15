@@ -7,12 +7,9 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-
 static const uint8_t LED_BUILTIN = 21;
 #define BUILTIN_LED  LED_BUILTIN // backward compatibility
 #define LED_BUILTIN LED_BUILTIN
-#define RGB_BUILTIN LED_BUILTIN
-#define RGB_BRIGHTNESS 64
 
 
 static const uint8_t TX = 43;
@@ -26,42 +23,72 @@ static const uint8_t MOSI  = 6;
 static const uint8_t MISO  = 8;
 static const uint8_t SCK   = 7;
 
-// Fri3d Badge 2024 LCD
-#define X_BOARD_HAS_SPI_LCD
-#define X_LCD_MODEL   ST7789
-#define X_LCD_WIDTH	  240
-#define X_LCD_HEIGHT  296
-#define X_LCD_MISO    MISO
-#define X_LCD_DC      4
-#define X_LCD_CS      5
-#define X_LCD_CLK     SCK // SCLK
-#define X_LCD_MOSI    MOSI
-#define X_LCD_RST     48 // used to reset LCD, low level to reset.
+#define X_FRI3D_BADGE_2024 // General Define for use in sketches or lib files
+#define X_WS2812_NUM_LEDS 5 // Number of RBG LEDs
 
-// Fri3d Badge 2024 WS2812
-#define X_WS2812_LED 12
-#define X_BATTERY_MONITOR 13
-#define X_BLASTER 10
-#define X_BUZZER 46
-#define X_IR_RECEIVER 11
+#define PIN_I2C_SDA     SDA
+#define PIN_I2C_SCL     SCL
+#define PIN_WS2812       12
+#define X_WS2812_NUM_LEDS 5
 
-// Fri3d Badge 2024 Buttons
-#define X_BUTTON_A 39
-#define X_BUTTON_B 40
-#define X_BUTTON_X 38
-#define X_BUTTON_Y 41
-#define X_BUTTON_MENU 45
-#define X_BUTTON_START 0
+#define PIN_LED          21
+#define PIN_IR_RECEIVER  11
+#define PIN_BLASTER      10
+#define PIN_BUZZER       46
+#define PIN_BATTERY      13
 
-// Fri3d Badge 2024 Joystick
-#define X_JOYSTICK_VERTICAL 3
-#define X_JOYSTICK_HORIZONTAL 1
+#define PIN_SDCARD_CS    SS
 
-// Fri3d Badge 2024 Aux Pwr
-#define X_AUX_PWR 42
+#define PIN_JOY_X         1
+#define PIN_JOY_Y         3
+
+#define PIN_A            39
+#define PIN_B            40
+#define PIN_X            38
+#define PIN_Y            41
+#define PIN_MENU         45
+#define PIN_START         0
+
+#define PIN_AUX          42 // Fri3d Badge 2024 Aux Pwr
+
+#define CHANNEL_BUZZER 0
 
 // Fri3d Badge 2024 Accelero Gyro
 #define X_ACCELERO_GYRO 21
+
+// I2S microphone on communicator addon
+#define I2S_MIC_CHANNEL I2S_CHANNEL_FMT_ONLY_LEFT
+#define I2S_MIC_SERIAL_CLOCK 17 //serial clock SCLK: pin SCK
+#define I2S_MIC_LEFT_RIGHT_CLOCK 47 //left/right clock LRCK: pin WS
+#define I2S_MIC_SERIAL_DATA 15 //serial data DIN: pin SD
+
+
+// Fri3d Badge 2024 LCD
+// For using display with TFT_eSPI library
+#define USER_SETUP_LOADED
+#define SPI_FREQUENCY  80000000
+#define ST7789_DRIVER
+#define USE_HSPI_PORT
+
+#define TFT_RGB_ORDER TFT_BGR //# swap red and blue byte order
+#define TFT_INVERSION_OFF
+#define TFT_WIDTH 296  //;setting these will init the eSPI lib with correct dimensions
+#define TFT_HEIGHT 240 //;setting these will init the eSPI lib with correct dimensions
+#define TFT_MISO MISO
+#define TFT_MOSI MOSI
+#define TFT_SCLK SCK
+#define TFT_CS 5
+#define TFT_DC 4
+#define TFT_RST 48
+#define LOAD_GLCD 1
+#define LOAD_FONT2
+#define LOAD_FONT4
+#define LOAD_FONT6
+#define LOAD_FONT7
+#define LOAD_FONT8
+#define LOAD_GFXFF
+#define SMOOTH_FONT
+#define SPI_FREQUENCY 80000000
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
