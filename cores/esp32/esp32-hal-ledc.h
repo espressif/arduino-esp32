@@ -26,6 +26,7 @@ extern "C" {
 #include <stdbool.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "hal/ledc_types.h"
 
 typedef enum {
   NOTE_C,
@@ -56,6 +57,20 @@ typedef struct {
   SemaphoreHandle_t lock;  //xSemaphoreCreateBinary
 #endif
 } ledc_channel_handle_t;
+
+/**
+ * @brief Read the LEDC clock source.
+ *
+ * @return LEDC clock source.
+ */
+ledc_clk_cfg_t ledcReadClockSource(void);
+
+/**
+ * @brief Set the LEDC clock source.
+ *
+ * @return true if LEDC clock source was successfully set, false otherwise.
+ */
+bool ledcWriteClockSource(ledc_clk_cfg_t source);
 
 /**
  * @brief Attach a pin to the LEDC driver, with a given frequency and resolution.
