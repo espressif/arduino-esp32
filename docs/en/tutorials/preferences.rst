@@ -70,16 +70,16 @@ Preferences directly supports the following data types:
    +-------------------+-------------------+---------------+
    | ULong             | uint32_t          | 4             |
    +-------------------+-------------------+---------------+
+   | Float             | float_t           | 4             |
+   +-------------------+-------------------+---------------+
    | Long64            | int64_t           | 8             |
    +-------------------+-------------------+---------------+
    | ULong64           | uint64_t          | 8             |
    +-------------------+-------------------+---------------+
-   | Float             | float_t           | 8             |
-   +-------------------+-------------------+---------------+
    | Double            | double_t          | 8             |
    +-------------------+-------------------+---------------+
-   |                   | const char*       |               |
-   | String            +-------------------+ variable      |
+   |                   | const char*       | variable      |
+   | String            +-------------------+               |
    |                   | String            |               |
    +-------------------+-------------------+---------------+
    | Bytes             | uint8_t           | variable      |
@@ -233,9 +233,9 @@ Like so:
 
 .. code-block:: arduino
 
-   float myFloat = myPreferences.getFloat("pi");
+   float_t myFloat = myPreferences.getFloat("pi");
 
-This will retrieve the float value from the namespace key ``"pi"`` and assign it to the float type variable ``myFloat``.
+This will retrieve the float_t value from the namespace key ``"pi"`` and assign it to the float_t type variable ``myFloat``.
 
 
 Summary
