@@ -44,6 +44,9 @@ private:
   IPType _type;
   uint8_t _zone;
 
+  // Helper for parsing IPv4 address sections
+  bool parseIPv4Part(const char*& address, uint8_t& result);
+  
   // Access the raw byte array containing the address.  Because this returns a pointer
   // to the internal structure rather than a copy of the address this function should only
   // be used when you know that the usage of the returned uint8_t* will be transient and not

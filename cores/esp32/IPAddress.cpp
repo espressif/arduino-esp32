@@ -116,48 +116,79 @@ bool IPAddress::fromString(const char *address) {
 }
 
 bool IPAddress::fromString4(const char *address) {
-  // TODO: add support for "a", "a.b", "a.b.c" formats
 
-  int16_t acc = -1;  // Accumulator
-  uint8_t dots = 0;
+    // 192 will be interpreted as 192.0.0.0
+    // 192.168 will be interpreted as 192.168.0.0
+    // 192.168.1 will be interpreted as 192.168.1.0
+    // 192.168.1.1 will be interpreted as 192.168.1.1
 
-  memset(_address.bytes, 0, sizeof(_address.bytes));
-  while (*address) {
-    char c = *address++;
-    if (c >= '0' && c <= '9') {
-      acc = (acc < 0) ? (c - '0') : acc * 10 + (c - '0');
-      if (acc > 255) {
-        // Value out of [0..255] range
-        return false;
-      }
-    } else if (c == '.') {
-      if (dots == 3) {
-        // Too many dots (there must be 3 dots)
-        return false;
-      }
-      if (acc < 0) {
-        /* No value between dots, e.g. '1..' */
-        return false;
-      }
-      _address.bytes[IPADDRESS_V4_BYTES_INDEX + dots++] = acc;
-      acc = -1;
-    } else {
-      // Invalid char
-      return false;
+    // Should we have made it end in .1?
+
+    uint8_t parts[4] = {0};
+    int part = 0;
+
+    memset(_address.bytes, 0, sizeof(_address.bytes));
+
+    while (*address && part < 4) {
+        if (!parseIPv4Part(address, parts[part])) {
+            return false;
+        }
+        part++;
+
+        if (*address == '.') {
+            address++;
+
+        } else if (*address != '\0') {
+
+            return false;  
+        }
     }
-  }
 
-  if (dots != 3) {
-    // Too few dots (there must be 3 dots)
-    return false;
-  }
-  if (acc < 0) {
-    /* No value between dots, e.g. '1..' */
-    return false;
-  }
-  _address.bytes[IPADDRESS_V4_BYTES_INDEX + 3] = acc;
-  _type = IPv4;
-  return true;
+    // If address is incomplete, simply add more zeros until it's full
+    for (int i = part; i < 4; i++) {
+        parts[i] = 0;
+    }
+
+    // Build the address
+    for (int i = 0; i < 4; i++) {
+        _address.bytes[IPADDRESS_V4_BYTES_INDEX + i] = parts[i];
+    }
+
+    _type = IPv4;
+    return true;
+}
+
+bool IPAddress::parseIPv4Part(const char*& address, uint8_t& result) {
+
+  // This works by parsing each section of the IP address
+  // It checks if the value is within the value space (<= 255)
+  // Uses the 'dot' as a delineater 
+
+
+    int acc = 0;
+    int dots = 0;
+
+    while (*address) {
+        char c = *address;
+        if (c >= '0' && c <= '9') {
+            acc = acc * 10 + (c - '0');
+            if (acc > 255) {
+                return false; 
+            }
+        } else if (c == '.' || c == '\0') {
+            if (dots == 3 || acc > 255) {
+                return false; 
+            }
+            result = acc;
+            return true;
+        } else {
+            return false;  
+        }
+        address++;
+    }
+
+    result = acc;
+    return true;
 }
 
 bool IPAddress::fromString6(const char *address) {
