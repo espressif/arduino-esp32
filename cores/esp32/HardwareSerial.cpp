@@ -241,8 +241,11 @@ void HardwareSerial::_uartEventTask(void *args) {
         hardwareSerial_error_t currentErr = UART_NO_ERROR;
         switch (event.type) {
           case UART_DATA:
-            if (uart->_onReceiveCB && uart->available() > 0 && ((uart->_onReceiveTimeout && event.timeout_flag) || !uart->_onReceiveTimeout)) {
-              uart->_onReceiveCB();
+            if (uart->_onReceiveCB && uart->available() > 0) {
+              size_t available = uart->available();
+              if ((uart->_onReceiveTimeout && event.timeout_flag) || (!uart->_onReceiveTimeout && available >= uart->_rxFIFOFull)) {
+                uart->_onReceiveCB(available);
+              }
             }
             break;
           case UART_FIFO_OVF:
