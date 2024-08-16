@@ -522,8 +522,8 @@ bool HardwareSerial::setMode(SerialMode mode) {
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {
 
   if (_uart) {
-    log_e("RX Buffer can't be resized when Serial is already running. Set it before calling begin().");
-    return 0;
+    log_e("RX Buffer can't be resized when Serial is already running. Call end() first.");
+    return _rxBufferSize;
   }
 
   if (new_size <= SOC_UART_FIFO_LEN) {
