@@ -369,7 +369,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
   }
   // create a task to deal with Serial Events when, for example, calling begin() twice to change the baudrate,
   // or when setting the callback before calling begin()
-  if (_uart != NULL && (_onReceiveCB != NULL || _onReceiveErrorCB != NULL) && _eventTask == NULL) {
+  if (_uart != NULL && (_onReceiveCB != NULL || _onReceiveErrorCB != NULL)) {
+    _destroyEventTask(); 
     _createEventTask(this);
   }
 
