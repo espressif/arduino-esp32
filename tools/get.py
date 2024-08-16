@@ -147,52 +147,20 @@ def verify_files(filename, destination, rename_to):
 
     return True
 
-def is_latest_version(filename, destination, dirname, rename_to, cfile):
-    # Regex to extract version number from any of the sources below
-    regex = r'(?<![{,])(?:[ _\-vV])(\d+\.\d+(?:\.\d+)?)'
+def is_latest_version(filename, destination, dirname, rename_to, cfile, checksum):
     current_version = None
-    try:
-        expected_version = re.search(regex, filename).group(1)
-    except Exception as e:
-        expected_version = None
+    expected_version = None
 
     try:
         if rename_to.startswith("esp32-arduino-libs"):
-            # overwrite expected_version with the one from versions.txt
-            if filename.endswith("tar.gz") or filename.endswith("tar.xz"):
-                expected_version = cfile.extractfile(dirname + "/versions.txt").read().decode("utf-8")
-            else:
-                expected_version = cfile.read(dirname + "/versions.txt").decode("utf-8")
+            expected_version = cfile.read(dirname + "/versions.txt").decode("utf-8")
             with open(os.path.join(destination, rename_to, "versions.txt"), "r") as f:
                 # cfile is zip
                 current_version = f.read()
-        elif rename_to.startswith("mklittlefs"):
-            # overwrite expected_version with the one from package.json
-            if filename.endswith("tar.gz") or filename.endswith("tar.xz"):
-                expected_version = cfile.extractfile(dirname + "/package.json").read().decode("utf-8")
-            else:
-                expected_version = cfile.read(dirname + "/package.json").decode("utf-8")
-            with open(os.path.join(destination, rename_to, "package.json"), "r") as f:
-                # cfile is tar.gz
-                current_version = f.read()
-        elif rename_to.startswith("esptool"):
-            bin_path = os.path.join(destination, rename_to, "esptool")
-            result = subprocess.run([bin_path, "--help"], text=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            current_version = re.search(regex, result.stdout).group(1)
         else:
-            if rename_to.startswith("xtensa-esp-elf-gdb"):
-                bin_path = os.path.join(destination, rename_to, "bin", "xtensa-esp32-elf-gdb")
-            elif rename_to.startswith("riscv32-esp-elf-gdb"):
-                bin_path = os.path.join(destination, rename_to, "bin", "riscv32-esp-elf-gdb")
-            elif rename_to.startswith("openocd"):
-                bin_path = os.path.join(destination, rename_to, "bin", "openocd")
-            elif rename_to.startswith("mkspiffs"):
-                bin_path = os.path.join(destination, rename_to, "mkspiffs")
-            else:
-                bin_path = os.path.join(destination, rename_to, "bin", rename_to + "-gcc")
-
-            result = subprocess.run([bin_path, "--version"], text=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            current_version = re.search(regex, result.stdout).group(1)
+            expected_version = checksum
+            with open(os.path.join(destination, rename_to, ".package_checksum"), "r") as f:
+                current_version = f.read()
 
         if verbose:
             print(f"\nTool: {rename_to}")
@@ -213,7 +181,7 @@ def is_latest_version(filename, destination, dirname, rename_to, cfile):
 
     return False
 
-def unpack(filename, destination, force_extract):  # noqa: C901
+def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     dirname = ""
     cfile = None  # Compressed file
     file_is_corrupted = False
@@ -262,7 +230,7 @@ def unpack(filename, destination, force_extract):  # noqa: C901
         rename_to = "esp32-arduino-libs"
 
     if not force_extract:
-        if is_latest_version(filename, destination, dirname, rename_to, cfile):
+        if is_latest_version(filename, destination, dirname, rename_to, cfile, checksum):
             if verify_files(filename, destination, rename_to):
                 print(" Files ok. Skipping Extraction")
                 return True
@@ -290,6 +258,9 @@ def unpack(filename, destination, force_extract):  # noqa: C901
         if os.path.isdir(rename_to):
             shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
+
+    with open(os.path.join(destination, rename_to, ".package_checksum"), "w") as f:
+        f.write(checksum)
 
     if verify_files(filename, destination, rename_to):
         print(" Files extracted successfully.")
@@ -394,7 +365,7 @@ def get_tool(tool, force_download, force_extract):
         print("Checksum mismatch for {0}".format(archive_name))
         return False
 
-    return unpack(local_path, ".", force_extract)
+    return unpack(local_path, ".", force_extract, checksum)
 
 
 def load_tools_list(filename, platform):
