@@ -64,19 +64,7 @@ static const uint8_t SCK = 3;
 #define LORA_BUSY       (7)
 #define LORA_IRQ        (9)
 
-
 #define GPS_TX          (TX)
 #define GPS_RX          (RX)
-
-
-
-
-
-
-
-
-
-
-
 
 #endif /* Pins_Arduino_h */
