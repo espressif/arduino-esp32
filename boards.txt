@@ -5083,6 +5083,326 @@ lilygo_t3s3.menu.Revision.Radio_SX1280PA.build.variant=lilygo_t3_s3_sx1280pa
 lilygo_t3s3.menu.Revision.Radio_LR1121=Radio-LR1121
 lilygo_t3s3.menu.Revision.Radio_LR1121.build.board=LILYGO_T3S3_LR1121
 lilygo_t3s3.menu.Revision.Radio_LR1121.build.variant=lilygo_t3_s3_lr1121
+
+##############################################################
+
+twatchs3.name=LilyGo T-Watch-S3
+
+twatchs3.bootloader.tool=esptool_py
+twatchs3.bootloader.tool.default=esptool_py
+
+twatchs3.upload.tool=esptool_py
+twatchs3.upload.tool.default=esptool_py
+twatchs3.upload.tool.network=esp_ota
+
+twatchs3.upload.maximum_size=1310720
+twatchs3.upload.maximum_data_size=327680
+twatchs3.upload.flags=
+twatchs3.upload.extra_flags=
+twatchs3.upload.use_1200bps_touch=false
+twatchs3.upload.wait_for_upload_port=false
+
+twatchs3.serial.disableDTR=false
+twatchs3.serial.disableRTS=false
+
+twatchs3.build.tarch=xtensa
+twatchs3.build.bootloader_addr=0x0
+twatchs3.build.target=esp32s3
+twatchs3.build.mcu=esp32s3
+twatchs3.build.core=esp32
+twatchs3.build.variant=lilygo_twatch_s3
+twatchs3.build.board=T_WATCH_S3
+
+twatchs3.build.usb_mode=1
+twatchs3.build.cdc_on_boot=0
+twatchs3.build.msc_on_boot=0
+twatchs3.build.dfu_on_boot=0
+twatchs3.build.f_cpu=240000000L
+twatchs3.build.flash_size=16MB
+twatchs3.build.flash_freq=80m
+twatchs3.build.flash_mode=dio
+twatchs3.build.boot=qio
+twatchs3.build.boot_freq=80m
+twatchs3.build.partitions=app3M_fat9M_16MB
+twatchs3.build.defines=-DBOARD_HAS_PSRAM -DARDUINO_T_WATCH_S3
+twatchs3.build.loop_core=
+twatchs3.build.event_core=
+twatchs3.build.psram_type=opi
+twatchs3.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+twatchs3.menu.JTAGAdapter.default=Disabled
+twatchs3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+twatchs3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+twatchs3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+twatchs3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+twatchs3.menu.LoopCore.1=Core 1
+twatchs3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+twatchs3.menu.LoopCore.0=Core 0
+twatchs3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+twatchs3.menu.EventsCore.1=Core 1
+twatchs3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+twatchs3.menu.EventsCore.0=Core 0
+twatchs3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+twatchs3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+twatchs3.menu.USBMode.hwcdc.build.usb_mode=1
+twatchs3.menu.USBMode.default=USB-OTG (TinyUSB)
+twatchs3.menu.USBMode.default.build.usb_mode=0
+
+twatchs3.menu.CDCOnBoot.default=Enabled
+twatchs3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+twatchs3.menu.CDCOnBoot.cdc=Disabled
+twatchs3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+twatchs3.menu.MSCOnBoot.default=Disabled
+twatchs3.menu.MSCOnBoot.default.build.msc_on_boot=0
+twatchs3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+twatchs3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+twatchs3.menu.DFUOnBoot.default=Disabled
+twatchs3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+twatchs3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+twatchs3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+twatchs3.menu.UploadMode.default=UART0 / Hardware CDC
+twatchs3.menu.UploadMode.default.upload.use_1200bps_touch=false
+twatchs3.menu.UploadMode.default.upload.wait_for_upload_port=false
+twatchs3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+twatchs3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+twatchs3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+twatchs3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+twatchs3.menu.PartitionScheme.fatflash.build.partitions=ffat
+twatchs3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+twatchs3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+twatchs3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+twatchs3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+twatchs3.menu.PartitionScheme.rainmaker=RainMaker
+twatchs3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+twatchs3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+twatchs3.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+twatchs3.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+twatchs3.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+twatchs3.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+twatchs3.menu.PartitionScheme.custom=Custom
+twatchs3.menu.PartitionScheme.custom.build.partitions=
+twatchs3.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+twatchs3.menu.CPUFreq.240=240MHz (WiFi)
+twatchs3.menu.CPUFreq.240.build.f_cpu=240000000L
+twatchs3.menu.CPUFreq.160=160MHz (WiFi)
+twatchs3.menu.CPUFreq.160.build.f_cpu=160000000L
+twatchs3.menu.CPUFreq.80=80MHz (WiFi)
+twatchs3.menu.CPUFreq.80.build.f_cpu=80000000L
+twatchs3.menu.CPUFreq.40=40MHz
+twatchs3.menu.CPUFreq.40.build.f_cpu=40000000L
+twatchs3.menu.CPUFreq.20=20MHz
+twatchs3.menu.CPUFreq.20.build.f_cpu=20000000L
+twatchs3.menu.CPUFreq.10=10MHz
+twatchs3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+twatchs3.menu.UploadSpeed.921600=921600
+twatchs3.menu.UploadSpeed.921600.upload.speed=921600
+twatchs3.menu.UploadSpeed.115200=115200
+twatchs3.menu.UploadSpeed.115200.upload.speed=115200
+twatchs3.menu.UploadSpeed.256000.windows=256000
+twatchs3.menu.UploadSpeed.256000.upload.speed=256000
+twatchs3.menu.UploadSpeed.230400.windows.upload.speed=256000
+twatchs3.menu.UploadSpeed.230400=230400
+twatchs3.menu.UploadSpeed.230400.upload.speed=230400
+twatchs3.menu.UploadSpeed.460800.linux=460800
+twatchs3.menu.UploadSpeed.460800.macosx=460800
+twatchs3.menu.UploadSpeed.460800.upload.speed=460800
+twatchs3.menu.UploadSpeed.512000.windows=512000
+twatchs3.menu.UploadSpeed.512000.upload.speed=512000
+
+twatchs3.menu.DebugLevel.none=None
+twatchs3.menu.DebugLevel.none.build.code_debug=0
+twatchs3.menu.DebugLevel.error=Error
+twatchs3.menu.DebugLevel.error.build.code_debug=1
+twatchs3.menu.DebugLevel.warn=Warn
+twatchs3.menu.DebugLevel.warn.build.code_debug=2
+twatchs3.menu.DebugLevel.info=Info
+twatchs3.menu.DebugLevel.info.build.code_debug=3
+twatchs3.menu.DebugLevel.debug=Debug
+twatchs3.menu.DebugLevel.debug.build.code_debug=4
+twatchs3.menu.DebugLevel.verbose=Verbose
+twatchs3.menu.DebugLevel.verbose.build.code_debug=5
+
+twatchs3.menu.EraseFlash.none=Disabled
+twatchs3.menu.EraseFlash.none.upload.erase_cmd=
+twatchs3.menu.EraseFlash.all=Enabled
+twatchs3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+twatchs3.menu.Revision.Radio_SX1280=Radio-SX1280
+twatchs3.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
+twatchs3.menu.Revision.Radio_SX1262=Radio-SX1262
+twatchs3.menu.Revision.Radio_SX1262.build.board=LILYGO_LORA_SX1262
+
+##############################################################
+
+
+twatch_ultra.name=LilyGo T-Watch-Ultra
+
+twatch_ultra.bootloader.tool=esptool_py
+twatch_ultra.bootloader.tool.default=esptool_py
+
+twatch_ultra.upload.tool=esptool_py
+twatch_ultra.upload.tool.default=esptool_py
+twatch_ultra.upload.tool.network=esp_ota
+
+twatch_ultra.upload.maximum_size=1310720
+twatch_ultra.upload.maximum_data_size=327680
+twatch_ultra.upload.flags=
+twatch_ultra.upload.extra_flags=
+twatch_ultra.upload.use_1200bps_touch=false
+twatch_ultra.upload.wait_for_upload_port=false
+
+twatch_ultra.serial.disableDTR=false
+twatch_ultra.serial.disableRTS=false
+
+twatch_ultra.build.tarch=xtensa
+twatch_ultra.build.bootloader_addr=0x0
+twatch_ultra.build.target=esp32s3
+twatch_ultra.build.mcu=esp32s3
+twatch_ultra.build.core=esp32
+twatch_ultra.build.variant=lilygo_twatch_ultra
+twatch_ultra.build.board=T_WATCH_S3_ULTRA
+
+twatch_ultra.build.usb_mode=1
+twatch_ultra.build.cdc_on_boot=1
+twatch_ultra.build.msc_on_boot=0
+twatch_ultra.build.dfu_on_boot=0
+twatch_ultra.build.f_cpu=240000000L
+twatch_ultra.build.flash_size=16MB
+twatch_ultra.build.flash_freq=80m
+twatch_ultra.build.flash_mode=dio
+twatch_ultra.build.boot=qio
+twatch_ultra.build.boot_freq=80m
+twatch_ultra.build.partitions=app3M_fat9M_16MB
+twatch_ultra.build.defines=-DBOARD_HAS_PSRAM -DARDUINO_T_WATCH_S3_ULTRA
+twatch_ultra.build.loop_core=
+twatch_ultra.build.event_core=
+twatch_ultra.build.psram_type=qspi
+twatch_ultra.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+twatch_ultra.menu.JTAGAdapter.default=Disabled
+twatch_ultra.menu.JTAGAdapter.default.build.copy_jtag_files=0
+twatch_ultra.menu.JTAGAdapter.builtin=Integrated USB JTAG
+twatch_ultra.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+twatch_ultra.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+twatch_ultra.menu.LoopCore.1=Core 1
+twatch_ultra.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+twatch_ultra.menu.LoopCore.0=Core 0
+twatch_ultra.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+twatch_ultra.menu.EventsCore.1=Core 1
+twatch_ultra.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+twatch_ultra.menu.EventsCore.0=Core 0
+twatch_ultra.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+twatch_ultra.menu.USBMode.hwcdc=Hardware CDC and JTAG
+twatch_ultra.menu.USBMode.hwcdc.build.usb_mode=1
+twatch_ultra.menu.USBMode.default=USB-OTG (TinyUSB)
+twatch_ultra.menu.USBMode.default.build.usb_mode=0
+
+twatch_ultra.menu.CDCOnBoot.default=Enabled
+twatch_ultra.menu.CDCOnBoot.default.build.cdc_on_boot=1
+twatch_ultra.menu.CDCOnBoot.cdc=Disabled
+twatch_ultra.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+twatch_ultra.menu.MSCOnBoot.default=Disabled
+twatch_ultra.menu.MSCOnBoot.default.build.msc_on_boot=0
+twatch_ultra.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+twatch_ultra.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+twatch_ultra.menu.DFUOnBoot.default=Disabled
+twatch_ultra.menu.DFUOnBoot.default.build.dfu_on_boot=0
+twatch_ultra.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+twatch_ultra.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+twatch_ultra.menu.UploadMode.default=UART0 / Hardware CDC
+twatch_ultra.menu.UploadMode.default.upload.use_1200bps_touch=false
+twatch_ultra.menu.UploadMode.default.upload.wait_for_upload_port=false
+twatch_ultra.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+twatch_ultra.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+twatch_ultra.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+twatch_ultra.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+twatch_ultra.menu.PartitionScheme.fatflash.build.partitions=ffat
+twatch_ultra.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+twatch_ultra.menu.PartitionScheme.rainmaker=RainMaker
+twatch_ultra.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+twatch_ultra.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+twatch_ultra.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+twatch_ultra.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+twatch_ultra.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+twatch_ultra.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+twatch_ultra.menu.PartitionScheme.custom=Custom
+twatch_ultra.menu.PartitionScheme.custom.build.partitions=
+twatch_ultra.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+twatch_ultra.menu.CPUFreq.240=240MHz (WiFi)
+twatch_ultra.menu.CPUFreq.240.build.f_cpu=240000000L
+twatch_ultra.menu.CPUFreq.160=160MHz (WiFi)
+twatch_ultra.menu.CPUFreq.160.build.f_cpu=160000000L
+twatch_ultra.menu.CPUFreq.80=80MHz (WiFi)
+twatch_ultra.menu.CPUFreq.80.build.f_cpu=80000000L
+twatch_ultra.menu.CPUFreq.40=40MHz
+twatch_ultra.menu.CPUFreq.40.build.f_cpu=40000000L
+twatch_ultra.menu.CPUFreq.20=20MHz
+twatch_ultra.menu.CPUFreq.20.build.f_cpu=20000000L
+twatch_ultra.menu.CPUFreq.10=10MHz
+twatch_ultra.menu.CPUFreq.10.build.f_cpu=10000000L
+
+twatch_ultra.menu.UploadSpeed.921600=921600
+twatch_ultra.menu.UploadSpeed.921600.upload.speed=921600
+twatch_ultra.menu.UploadSpeed.115200=115200
+twatch_ultra.menu.UploadSpeed.115200.upload.speed=115200
+twatch_ultra.menu.UploadSpeed.256000.windows=256000
+twatch_ultra.menu.UploadSpeed.256000.upload.speed=256000
+twatch_ultra.menu.UploadSpeed.230400.windows.upload.speed=256000
+twatch_ultra.menu.UploadSpeed.230400=230400
+twatch_ultra.menu.UploadSpeed.230400.upload.speed=230400
+twatch_ultra.menu.UploadSpeed.460800.linux=460800
+twatch_ultra.menu.UploadSpeed.460800.macosx=460800
+twatch_ultra.menu.UploadSpeed.460800.upload.speed=460800
+twatch_ultra.menu.UploadSpeed.512000.windows=512000
+twatch_ultra.menu.UploadSpeed.512000.upload.speed=512000
+
+twatch_ultra.menu.DebugLevel.none=None
+twatch_ultra.menu.DebugLevel.none.build.code_debug=0
+twatch_ultra.menu.DebugLevel.error=Error
+twatch_ultra.menu.DebugLevel.error.build.code_debug=1
+twatch_ultra.menu.DebugLevel.warn=Warn
+twatch_ultra.menu.DebugLevel.warn.build.code_debug=2
+twatch_ultra.menu.DebugLevel.info=Info
+twatch_ultra.menu.DebugLevel.info.build.code_debug=3
+twatch_ultra.menu.DebugLevel.debug=Debug
+twatch_ultra.menu.DebugLevel.debug.build.code_debug=4
+twatch_ultra.menu.DebugLevel.verbose=Verbose
+twatch_ultra.menu.DebugLevel.verbose.build.code_debug=5
+
+twatch_ultra.menu.EraseFlash.none=Disabled
+twatch_ultra.menu.EraseFlash.none.upload.erase_cmd=
+twatch_ultra.menu.EraseFlash.all=Enabled
+twatch_ultra.menu.EraseFlash.all.upload.erase_cmd=-e
+
+
+twatch_ultra.menu.Revision.Radio_SX1280=Radio-SX1280
+twatch_ultra.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
+twatch_ultra.menu.Revision.Radio_SX1262=Radio-SX1262
+twatch_ultra.menu.Revision.Radio_SX1262.build.board=LILYGO_LORA_SX1262
+
+
 ##############################################################
 
 micros2.name=microS2
