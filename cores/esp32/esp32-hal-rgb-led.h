@@ -11,6 +11,7 @@ extern "C" {
 #define RGB_BRIGHTNESS 64
 #endif
 
+#if defined RGB_BUILTIN_LED_COLOR_ORDER
 typedef enum {
   LED_COLOR_ORDER_RGB,
   LED_COLOR_ORDER_BGR,
@@ -19,6 +20,7 @@ typedef enum {
   LED_COLOR_ORDER_GBR,
   LED_COLOR_ORDER_GRB
 } rgb_led_color_order_t;
+#endif
 
 void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
