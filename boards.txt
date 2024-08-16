@@ -5182,7 +5182,7 @@ twatchs3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 twatchs3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 twatchs3.menu.PartitionScheme.rainmaker=RainMaker
 twatchs3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
-twatchs3.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+twatchs3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
 twatchs3.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
 twatchs3.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 twatchs3.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
@@ -5341,7 +5341,7 @@ twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_
 twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 twatch_ultra.menu.PartitionScheme.rainmaker=RainMaker
 twatch_ultra.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
-twatch_ultra.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+twatch_ultra.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
 twatch_ultra.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
 twatch_ultra.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 twatch_ultra.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
@@ -5395,7 +5395,6 @@ twatch_ultra.menu.EraseFlash.none=Disabled
 twatch_ultra.menu.EraseFlash.none.upload.erase_cmd=
 twatch_ultra.menu.EraseFlash.all=Enabled
 twatch_ultra.menu.EraseFlash.all.upload.erase_cmd=-e
-
 
 twatch_ultra.menu.Revision.Radio_SX1280=Radio-SX1280
 twatch_ultra.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
