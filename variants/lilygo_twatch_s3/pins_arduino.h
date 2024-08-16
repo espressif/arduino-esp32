@@ -8,38 +8,37 @@
 #define USB_MANUFACTURER "LILYGO"
 #define USB_PRODUCT      "T-Watch-S3"
 
+#define DISP_WIDTH  (240)
+#define DISP_HEIGHT (240)
 
-#define DISP_WIDTH      (240)
-#define DISP_HEIGHT     (240)
-
-#define DISP_MOSI       (13)
-#define DISP_MISO       (-1)
-#define DISP_SCK        (18)
-#define DISP_RST        (-1)
-#define DISP_CS         (12)
-#define DISP_DC         (38)
-#define DISP_BL         (45)
+#define DISP_MOSI (13)
+#define DISP_MISO (-1)
+#define DISP_SCK  (18)
+#define DISP_RST  (-1)
+#define DISP_CS   (12)
+#define DISP_DC   (38)
+#define DISP_BL   (45)
 
 // touch screen
-#define TP_INT          (16)
-#define TP_SDA          (39)
-#define TP_SCL          (40)
+#define TP_INT (16)
+#define TP_SDA (39)
+#define TP_SCL (40)
 
 // Interrupt IO port
-#define RTC_INT         (17)
-#define PMU_INT         (21)
-#define SENSOR_INT      (14)
+#define RTC_INT    (17)
+#define PMU_INT    (21)
+#define SENSOR_INT (14)
 
 // PDM microphone
-#define MIC_SCK         (44)
-#define MIC_DAT         (47)
+#define MIC_SCK (44)
+#define MIC_DAT (47)
 
-// MAX98357A 
-#define I2S_BCLK        (48)
-#define I2S_WCLK        (15)
-#define I2S_DOUT        (46)
+// MAX98357A
+#define I2S_BCLK (48)
+#define I2S_WCLK (15)
+#define I2S_DOUT (46)
 
-#define IR_SEND         (2)
+#define IR_SEND (2)
 
 // TX, RX pin connected to GPS
 static const uint8_t TX = 42;
@@ -56,15 +55,15 @@ static const uint8_t MISO = 4;
 static const uint8_t SCK = 3;
 
 // LoRa and SD card share SPI bus
-#define LORA_SCK        (SCK)     // share spi bus
-#define LORA_MISO       (MISO)    // share spi bus
-#define LORA_MOSI       (MOSI)    // share spi bus
-#define LORA_CS         (5)
-#define LORA_RST        (8)
-#define LORA_BUSY       (7)
-#define LORA_IRQ        (9)
+#define LORA_SCK  (SCK)   // share spi bus
+#define LORA_MISO (MISO)  // share spi bus
+#define LORA_MOSI (MOSI)  // share spi bus
+#define LORA_CS   (5)
+#define LORA_RST  (8)
+#define LORA_BUSY (7)
+#define LORA_IRQ  (9)
 
-#define GPS_TX          (TX)
-#define GPS_RX          (RX)
+#define GPS_TX (TX)
+#define GPS_RX (RX)
 
 #endif /* Pins_Arduino_h */
