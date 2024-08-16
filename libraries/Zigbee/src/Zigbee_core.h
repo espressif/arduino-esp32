@@ -18,6 +18,8 @@ typedef struct {
   void *arg;
 } zigbee_cb_t;
 
+typedef esp_zb_network_descriptor_t zigbee_scan_result_t;
+
 // enum of Zigbee Roles
 typedef enum {
     ZIGBEE_COORDINATOR = 0, 
@@ -30,6 +32,9 @@ typedef enum {
 #define ED_AGING_TIMEOUT            ESP_ZB_ED_AGING_TIMEOUT_64MIN
 #define ED_KEEP_ALIVE               3000 /* 3000 millisecond */
 #define MAX_CHILDREN                10
+
+#define ZB_SCAN_RUNNING (-1)
+#define ZB_SCAN_FAILED  (-2)
 
 #define ZIGBEE_DEFAULT_ED_CONFIG()                         \
   {                                                        \
@@ -81,20 +86,26 @@ class Zigbee_Core {
         esp_zb_radio_config_t _radio_config;
         esp_zb_host_config_t _host_config;
         uint32_t _primary_channel_mask;
+        int16_t _scan_status;
+
 
         bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
+        static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
 
     public:
         esp_zb_ep_list_t *_zb_ep_list;
         zigbee_role_t _role;
+        bool _started;
         uint8_t _open_network;
         std::list<Zigbee_EP*> ep_objects;
+        zigbee_scan_result_t *_scan_result;
 
         Zigbee_Core();
         ~Zigbee_Core();
 
         bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
         bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
+        bool isStarted();
         // bool end();
 
         void addEndpoint(Zigbee_EP *ep);
@@ -108,6 +119,13 @@ class Zigbee_Core {
 
         void setPrimaryChannelMask(uint32_t mask);
         void setRebootOpenNetwork(uint8_t time);
+
+        //scan_duration Time spent scanning each channel, in units of ((1 << scan_duration) + 1) * a beacon time. (15.36 microseconds)
+        void scanNetworks(uint32_t channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
+        // Zigbee scan complete status check, -2: failed or not started, -1: running, 0: no networks found, >0: number of networks found
+        int16_t scanComplete();
+        zigbee_scan_result_t* getScanResult();
+        void scanDelete();
 
         void factoryReset();
 

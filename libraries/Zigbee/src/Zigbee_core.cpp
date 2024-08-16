@@ -10,6 +10,8 @@ Zigbee_Core::Zigbee_Core() {
   _zb_ep_list = esp_zb_ep_list_create();
   _primary_channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK;
   _open_network = 0;
+  _scan_status = ZB_SCAN_FAILED;
+  _started = false;
 }
 Zigbee_Core::~Zigbee_Core() {}
 
@@ -91,19 +93,22 @@ bool Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   esp_zb_init(zb_cfg);
 
   // Register all Zigbee EPs in list 
-  log_d("Register all Zigbee EPs in list");
-  err = esp_zb_device_register(_zb_ep_list);
-  if (err != ESP_OK) {
-    log_e("Failed to register Zigbee EPs");
-    return false;
+  if(ep_objects.empty()) {
+    log_w("No Zigbee EPs to register");
+  } else {
+    log_d("Register all Zigbee EPs in list");
+    err = esp_zb_device_register(_zb_ep_list);
+    if (err != ESP_OK) {
+      log_e("Failed to register Zigbee EPs");
+      return false;
+    }
+    
+    //print the list of Zigbee EPs from ep_objects
+    log_i("List of registered Zigbee EPs:");
+    for (std::list<Zigbee_EP*>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
+      log_i("Device type: %s, Endpoint: %d, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
+    }
   }
-  
-  //print the list of Zigbee EPs from ep_objects
-  log_i("List of registered Zigbee EPs:");
-  for (std::list<Zigbee_EP*>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
-    log_i("Device type: %s, Endpoint: %d, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
-  }
-
   // Register Zigbee action handler
   esp_zb_core_action_handler_register(zb_action_handler);
   err = esp_zb_set_primary_network_channel_set(_primary_channel_mask);
@@ -159,7 +164,6 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
   //coordinator variables
   esp_zb_zdo_signal_device_annce_params_t *dev_annce_params = NULL;
 
-  log_d("Zigbee role: %d", Zigbee._role);
   //main switch
   switch (sig_type) {
     case ESP_ZB_ZDO_SIGNAL_SKIP_STARTUP: // Common
@@ -183,8 +187,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
 
         } else {
           log_i("Device rebooted");
-
-          // Implement opening network for joining after reboot if set
+          Zigbee._started = true;
           if ((zigbee_role_t)Zigbee._role == ZIGBEE_COORDINATOR && Zigbee._open_network > 0) {
             log_i("Openning network for joining for %d seconds", Zigbee._open_network);
             esp_zb_bdb_open_network(Zigbee._open_network);
@@ -213,6 +216,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       }
       break;
     case ESP_ZB_BDB_SIGNAL_STEERING: // Router and End Device
+      Zigbee._started = true;
       if ((zigbee_role_t)Zigbee._role == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           log_i("Network steering started");
@@ -283,18 +287,56 @@ void Zigbee_Core::factoryReset() {
   esp_zb_factory_reset();
 }
 
+bool Zigbee_Core::isStarted() {
+  return _started;
+}
 
-// TODO: Implement scanning network
-// /**
-//  * @brief   Active scan available network.
-//  *
-//  * Network discovery service for scanning available network
-//  *
-//  * @param[in] channel_mask Valid channel mask is from 0x00000800 (only channel 11) to 0x07FFF800 (all channels from 11 to 26)
-//  * @param[in] scan_duration Time to spend scanning each channel
-//  * @param[in] user_cb   A user callback to get the active scan result please refer to esp_zb_zdo_scan_complete_callback_t
-//  */
-// void esp_zb_zdo_active_scan_request(uint32_t channel_mask, uint8_t scan_duration, esp_zb_zdo_scan_complete_callback_t user_cb);
+void Zigbee_Core::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor){
+  log_v("Zigbee network scan complete");
+  if(zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
+    log_v("Found %d networks", count);
+    //print Zigbee networks
+    for (int i = 0; i < count; i++) {
+      log_v("Network %d: PAN ID: 0x%04hx, Permit Joining: %s, Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, Channel: %d, Router Capacity: %s, End Device Capacity: %s",
+        i, nwk_descriptor[i].short_pan_id, nwk_descriptor[i].permit_joining ? "Yes" : "No", nwk_descriptor[i].extended_pan_id[7], nwk_descriptor[i].extended_pan_id[6], nwk_descriptor[i].extended_pan_id[5], nwk_descriptor[i].extended_pan_id[4], nwk_descriptor[i].extended_pan_id[3], nwk_descriptor[i].extended_pan_id[2], nwk_descriptor[i].extended_pan_id[1], nwk_descriptor[i].extended_pan_id[0], nwk_descriptor[i].logic_channel, nwk_descriptor[i].router_capacity ? "Yes" : "No", nwk_descriptor[i].end_device_capacity ? "Yes" : "No");
+    }
+    //save scan result and update scan status
+    //copy network descriptor to _scan_result to keep the data after the callback
+    Zigbee._scan_result = (esp_zb_network_descriptor_t *)malloc(count * sizeof(esp_zb_network_descriptor_t));
+    memcpy(Zigbee._scan_result, nwk_descriptor, count * sizeof(esp_zb_network_descriptor_t));
+    Zigbee._scan_status = count;
+  } else {
+    log_e("Failed to scan Zigbee network (status: 0x%x)", zdo_status);
+    Zigbee._scan_status = ZB_SCAN_FAILED;
+    Zigbee._scan_result = nullptr;
+  }
+}
+
+void Zigbee_Core::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
+  if(!_started) {
+    log_e("Zigbee stack is not started, cannot scan networks");
+    return;
+  }
+  log_v("Scanning Zigbee networks");
+  esp_zb_zdo_active_scan_request(channel_mask, scan_duration, scanCompleteCallback);
+  _scan_status = ZB_SCAN_RUNNING;
+}
+
+int16_t Zigbee_Core::scanComplete(){
+  return _scan_status;
+}
+
+zigbee_scan_result_t* Zigbee_Core::getScanResult() {
+  return _scan_result;
+}
+
+void Zigbee_Core::scanDelete() {
+  if (_scan_result != nullptr) {
+    free(_scan_result);
+    _scan_result = nullptr;
+  }
+  _scan_status = ZB_SCAN_FAILED;
+}
 
 // NOTE: Binding functions to not forget
 // void esp_zb_zdo_device_bind_req(esp_zb_zdo_bind_req_param_t *cmd_req, esp_zb_zdo_bind_callback_t user_cb, void *user_ctx)
