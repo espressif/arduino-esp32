@@ -29,9 +29,11 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
     return;
   }
 
+  // default WS2812B color order is G, R, B
+  const int color[3] = {green_val, red_val, blue_val};
+
 #if defined RGB_BUILTIN_LED_COLOR_ORDER
   // the onboard RGB LED has a different color order
-  const int color[3];
   switch (RGB_BUILTIN_LED_COLOR_ORDER) {
     case LED_COLOR_ORDER_RGB:
       color[0] = red_val;
@@ -58,9 +60,6 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
       color[1] = blue_val;
       color[2] = red_val;
   }
-#else
-  // default WS2812B color order is G, R, B
-  const int color[3] = {green_val, red_val, blue_val};
 #endif
 
   int i = 0;
