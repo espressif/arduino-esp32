@@ -69,25 +69,28 @@ def report_progress(count, blockSize, totalSize):
 
 def unpack(filename, destination):
     dirname = ''
-    print('Extracting {0} ...'.format(os.path.basename(filename)))
-    sys.stdout.flush()
     if filename.endswith('tar.gz'):
-        tfile = tarfile.open(filename, 'r:gz')
-        tfile.extractall(destination)
-        dirname = tfile.getnames()[0]
+        cfile = tarfile.open(filename, 'r:gz')
+        dirname = cfile.getnames()[0].split('/')[0]
     elif filename.endswith('zip'):
-        zfile = zipfile.ZipFile(filename)
-        zfile.extractall(destination)
-        dirname = zfile.namelist()[0]
+        cfile = zipfile.ZipFile(filename)
+        dirname = cfile.namelist()[0].split('/')[0]
     else:
         raise NotImplementedError('Unsupported archive type')
 
     # a little trick to rename tool directories so they don't contain version number
     rename_to = re.match(r'^([a-z][^\-]*\-*)+', dirname).group(0).strip('-')
+
+    if os.path.isdir(os.path.join(destination, rename_to)):
+        print('Removing existing {0} ...'.format(rename_to))
+        shutil.rmtree(os.path.join(destination, rename_to), ignore_errors=True)
+
+    print('Extracting {0} ...'.format(os.path.basename(filename)))
+    sys.stdout.flush()
+    cfile.extractall(destination)
+
     if rename_to != dirname:
         print('Renaming {0} to {1} ...'.format(dirname, rename_to))
-        if os.path.isdir(rename_to):
-            shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
 
 def download_file_with_progress(url,filename):
