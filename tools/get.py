@@ -24,7 +24,6 @@ import zipfile
 import re
 import time
 import argparse
-import subprocess
 
 # Initialize start_time globally
 start_time = -1
@@ -147,12 +146,13 @@ def verify_files(filename, destination, rename_to):
 
     return True
 
-def is_latest_version(filename, destination, dirname, rename_to, cfile, checksum):
+def is_latest_version(destination, dirname, rename_to, cfile, checksum):
     current_version = None
     expected_version = None
 
     try:
         if rename_to.startswith("esp32-arduino-libs"):
+            # Remove this when moving to new release system
             expected_version = cfile.read(dirname + "/versions.txt").decode("utf-8")
             with open(os.path.join(destination, rename_to, "versions.txt"), "r") as f:
                 # cfile is zip
@@ -230,7 +230,7 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
         rename_to = "esp32-arduino-libs"
 
     if not force_extract:
-        if is_latest_version(filename, destination, dirname, rename_to, cfile, checksum):
+        if is_latest_version(destination, dirname, rename_to, cfile, checksum):
             if verify_files(filename, destination, rename_to):
                 print(" Files ok. Skipping Extraction")
                 return True
