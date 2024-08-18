@@ -202,7 +202,7 @@ uint64_t timerReadMicros(hw_timer_t *timer) {
   return timer_val * 1000000 / frequency;
 }
 
-uint64_t timerReadMilis(hw_timer_t *timer) {
+uint64_t timerReadMillis(hw_timer_t *timer) {
   uint64_t timer_val = timerRead(timer);
   uint32_t frequency = timerGetFrequency(timer);
   return timer_val * 1000 / frequency;

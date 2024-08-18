@@ -42,7 +42,7 @@ void timerWrite(hw_timer_t *timer, uint64_t val);
 
 uint64_t timerRead(hw_timer_t *timer);
 uint64_t timerReadMicros(hw_timer_t *timer);
-uint64_t timerReadMilis(hw_timer_t *timer);
+uint64_t timerReadMillis(hw_timer_t *timer);
 double timerReadSeconds(hw_timer_t *timer);
 
 uint32_t timerGetFrequency(hw_timer_t *timer);
