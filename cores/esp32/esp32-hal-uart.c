@@ -503,8 +503,20 @@ uart_t *uartBegin(
   uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
   uart_config.rx_flow_ctrl_thresh = rxfifo_full_thrhd;
   uart_config.baud_rate = baudrate;
-  // CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6
-  uart_config.source_clk = UART_SCLK_DEFAULT;
+  // there is an issue when returning from light sleep with the C6 and H2: the uart baud rate is not restored
+  // therefore, uart clock source will set to XTAL for all SoC that support it. This fix solves the C6|H2 issue.
+#if SOC_UART_SUPPORT_XTAL_CLK
+  uart_config.source_clk = UART_SCLK_XTAL;  // valid for C2, S3, C3, C6, H2 and P4
+#elif SOC_UART_SUPPORT_REF_TICK
+  if (baudrate <= 250000) {
+    uart_config.source_clk = UART_SCLK_REF_TICK;  // valid for ESP32, S2 - MAX supported baud rate is 250 Kbps
+  } else {
+    uart_config.source_clk = UART_SCLK_APB;  // baudrate may change with the APB Frequency!
+  }
+#else
+  // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6
+  uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
+#endif
 
   UART_MUTEX_LOCK();
   bool retCode = ESP_OK == uart_driver_install(uart_nr, rx_buffer_size, tx_buffer_size, 20, &(uart->uart_event_queue), 0);
@@ -513,12 +525,16 @@ uart_t *uartBegin(
     retCode &= ESP_OK == uart_param_config(uart_nr, &uart_config);
   }
 
-  // Is it right or the idea is to swap rx and tx pins?
-  if (retCode && inverted) {
-    // invert signal for both Rx and Tx
-    retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
+  if (retCode) {
+    if (inverted) {
+      // invert signal for both Rx and Tx
+      retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
+    } else {
+      // disable invert signal for both Rx and Tx
+      retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_INV_DISABLE);
+    }
   }
-
+  // if all fine, set internal parameters
   if (retCode) {
     uart->_baudrate = baudrate;
     uart->_config = config;
@@ -774,25 +790,25 @@ void uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
     return;
   }
   UART_MUTEX_LOCK();
-  uint32_t sclk_freq;
-  if (uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK) {
-    uart_ll_set_baudrate(UART_LL_GET_HW(uart->num), baud_rate, sclk_freq);
+  if (uart_set_baudrate(uart->num, baud_rate) == ESP_OK) {
+    uart->_baudrate = baud_rate;
+  } else {
+    log_e("Setting UART%d baud rate to %d has failed.", uart->num, baud_rate);
   }
-  uart->_baudrate = baud_rate;
   UART_MUTEX_UNLOCK();
 }
 
 uint32_t uartGetBaudRate(uart_t *uart) {
   uint32_t baud_rate = 0;
-  uint32_t sclk_freq;
 
   if (uart == NULL) {
     return 0;
   }
 
   UART_MUTEX_LOCK();
-  if (uart_get_sclk_freq(UART_SCLK_DEFAULT, &sclk_freq) == ESP_OK) {
-    baud_rate = uart_ll_get_baudrate(UART_LL_GET_HW(uart->num), sclk_freq);
+  if (uart_get_baudrate(uart->num, &baud_rate) != ESP_OK) {
+    log_e("Getting UART%d baud rate has failed.", uart->num);
+    baud_rate = (uint32_t)-1;  // return value when failed
   }
   UART_MUTEX_UNLOCK();
   return baud_rate;
@@ -879,7 +895,8 @@ int log_printfv(const char *format, va_list arg) {
     }
 #endif
 */
-#if CONFIG_IDF_TARGET_ESP32C3 || ((CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6) && ARDUINO_USB_CDC_ON_BOOT)
+#if (ARDUINO_USB_CDC_ON_BOOT == 1 && ARDUINO_USB_MODE == 0) || CONFIG_IDF_TARGET_ESP32C3 \
+  || ((CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6) && ARDUINO_USB_CDC_ON_BOOT == 1)
   vsnprintf(temp, len + 1, format, arg);
   ets_printf("%s", temp);
 #else

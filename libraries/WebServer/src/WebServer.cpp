@@ -306,20 +306,63 @@ void WebServer::requestAuthentication(HTTPAuthMethod mode, const char *realm, co
   send(401, String(FPSTR(mimeTable[html].mimeType)), authFailMsg);
 }
 
-void WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
-  on(uri, HTTP_ANY, handler);
+RequestHandler &WebServer::on(const Uri &uri, WebServer::THandlerFunction handler) {
+  return on(uri, HTTP_ANY, handler);
 }
 
-void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
-  on(uri, method, fn, _fileUploadHandler);
+RequestHandler &WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn) {
+  return on(uri, method, fn, _fileUploadHandler);
 }
 
-void WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
-  _addRequestHandler(new FunctionRequestHandler(fn, ufn, uri, method));
+RequestHandler &WebServer::on(const Uri &uri, HTTPMethod method, WebServer::THandlerFunction fn, WebServer::THandlerFunction ufn) {
+  FunctionRequestHandler *handler = new FunctionRequestHandler(fn, ufn, uri, method);
+  _addRequestHandler(handler);
+  return *handler;
+}
+
+bool WebServer::removeRoute(const char *uri) {
+  return removeRoute(String(uri), HTTP_ANY);
+}
+
+bool WebServer::removeRoute(const char *uri, HTTPMethod method) {
+  return removeRoute(String(uri), method);
+}
+
+bool WebServer::removeRoute(const String &uri) {
+  return removeRoute(uri, HTTP_ANY);
+}
+
+bool WebServer::removeRoute(const String &uri, HTTPMethod method) {
+  bool anyHandlerRemoved = false;
+  RequestHandler *handler = _firstHandler;
+  RequestHandler *previousHandler = nullptr;
+
+  while (handler) {
+    if (handler->canHandle(method, uri)) {
+      if (_removeRequestHandler(handler)) {
+        anyHandlerRemoved = true;
+        // Move to the next handler
+        if (previousHandler) {
+          handler = previousHandler->next();
+        } else {
+          handler = _firstHandler;
+        }
+        continue;
+      }
+    }
+    previousHandler = handler;
+    handler = handler->next();
+  }
+
+  return anyHandlerRemoved;
 }
 
 void WebServer::addHandler(RequestHandler *handler) {
   _addRequestHandler(handler);
+}
+
+bool WebServer::removeHandler(RequestHandler *handler) {
+  return _removeRequestHandler(handler);
 }
 
 void WebServer::_addRequestHandler(RequestHandler *handler) {
@@ -330,6 +373,32 @@ void WebServer::_addRequestHandler(RequestHandler *handler) {
     _lastHandler->next(handler);
     _lastHandler = handler;
   }
+}
+
+bool WebServer::_removeRequestHandler(RequestHandler *handler) {
+  RequestHandler *current = _firstHandler;
+  RequestHandler *previous = nullptr;
+
+  while (current != nullptr) {
+    if (current == handler) {
+      if (previous == nullptr) {
+        _firstHandler = current->next();
+      } else {
+        previous->next(current->next());
+      }
+
+      if (current == _lastHandler) {
+        _lastHandler = previous;
+      }
+
+      // Delete 'matching' handler
+      delete current;
+      return true;
+    }
+    previous = current;
+    current = current->next();
+  }
+  return false;
 }
 
 void WebServer::serveStatic(const char *uri, FS &fs, const char *path, const char *cache_header) {
@@ -363,10 +432,8 @@ void WebServer::handleClient() {
       case HC_WAIT_READ:
         // Wait for data from client to become available
         if (_currentClient.available()) {
+          _currentClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
           if (_parseRequest(_currentClient)) {
-            // because HTTP_MAX_SEND_WAIT is expressed in milliseconds,
-            // it must be divided by 1000
-            _currentClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
             _contentLength = CONTENT_LENGTH_NOT_SET;
             _handleRequest();
 

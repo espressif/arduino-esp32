@@ -126,34 +126,34 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
     /*
 	 * Provisioning
 	 * */
-  } else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_INIT) {
+  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_INIT) {
     log_v("Provisioning Initialized!");
     arduino_event.event_id = ARDUINO_EVENT_PROV_INIT;
-  } else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_DEINIT) {
+  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_DEINIT) {
     log_v("Provisioning Uninitialized!");
     arduino_event.event_id = ARDUINO_EVENT_PROV_DEINIT;
-  } else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_START) {
+  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_START) {
     log_v("Provisioning Start!");
     arduino_event.event_id = ARDUINO_EVENT_PROV_START;
-  } else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_END) {
+  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_END) {
     log_v("Provisioning End!");
-    wifi_prov_mgr_deinit();
+    network_prov_mgr_deinit();
     arduino_event.event_id = ARDUINO_EVENT_PROV_END;
-  } else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_CRED_RECV) {
+  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_WIFI_CRED_RECV) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     wifi_sta_config_t *event = (wifi_sta_config_t *)event_data;
     log_v("Provisioned Credentials: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
 #endif
     arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_RECV;
     memcpy(&arduino_event.event_info.prov_cred_recv, event_data, sizeof(wifi_sta_config_t));
-  } else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_CRED_FAIL) {
+  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_WIFI_CRED_FAIL) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-    wifi_prov_sta_fail_reason_t *reason = (wifi_prov_sta_fail_reason_t *)event_data;
-    log_e("Provisioning Failed: Reason : %s", (*reason == WIFI_PROV_STA_AUTH_ERROR) ? "Authentication Failed" : "AP Not Found");
+    network_prov_wifi_sta_fail_reason_t *reason = (network_prov_wifi_sta_fail_reason_t *)event_data;
+    log_e("Provisioning Failed: Reason : %s", (*reason == NETWORK_PROV_WIFI_STA_AUTH_ERROR) ? "Authentication Failed" : "AP Not Found");
 #endif
     arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_FAIL;
-    memcpy(&arduino_event.event_info.prov_fail_reason, event_data, sizeof(wifi_prov_sta_fail_reason_t));
-  } else if (event_base == WIFI_PROV_EVENT && event_id == WIFI_PROV_CRED_SUCCESS) {
+    memcpy(&arduino_event.event_info.prov_fail_reason, event_data, sizeof(network_prov_wifi_sta_fail_reason_t));
+  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_WIFI_CRED_SUCCESS) {
     log_v("Provisioning Success!");
     arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_SUCCESS;
   }
@@ -174,8 +174,8 @@ static bool initWiFiEvents() {
     return false;
   }
 
-  if (esp_event_handler_instance_register(WIFI_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
-    log_e("event_handler_instance_register for WIFI_PROV_EVENT Failed!");
+  if (esp_event_handler_instance_register(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
+    log_e("event_handler_instance_register for NETWORK_PROV_EVENT Failed!");
     return false;
   }
 
@@ -193,8 +193,8 @@ static bool deinitWiFiEvents() {
     return false;
   }
 
-  if (esp_event_handler_unregister(WIFI_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
-    log_e("esp_event_handler_unregister for WIFI_PROV_EVENT Failed!");
+  if (esp_event_handler_unregister(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
+    log_e("esp_event_handler_unregister for NETWORK_PROV_EVENT Failed!");
     return false;
   }
 
@@ -639,7 +639,11 @@ bool WiFiGenericClass::setTxPower(wifi_power_t power) {
     log_w("Neither AP or STA has been started");
     return false;
   }
-  return esp_wifi_set_max_tx_power(power) == ESP_OK;
+  esp_err_t err = esp_wifi_set_max_tx_power(power);
+  if (err != ESP_OK) {
+    log_e("Failed to set TX Power: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
 }
 
 wifi_power_t WiFiGenericClass::getTxPower() {
@@ -648,7 +652,9 @@ wifi_power_t WiFiGenericClass::getTxPower() {
     log_w("Neither AP or STA has been started");
     return WIFI_POWER_19_5dBm;
   }
-  if (esp_wifi_get_max_tx_power(&power)) {
+  esp_err_t err = esp_wifi_get_max_tx_power(&power);
+  if (err != ESP_OK) {
+    log_e("Failed to get TX Power: 0x%x: %s", err, esp_err_to_name(err));
     return WIFI_POWER_19_5dBm;
   }
   return (wifi_power_t)power;

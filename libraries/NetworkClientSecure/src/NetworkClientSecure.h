@@ -31,7 +31,10 @@ protected:
   std::shared_ptr<sslclient_context> sslclient;
 
   bool _use_insecure;
-  bool _stillinPlainStart = false;
+  bool _stillinPlainStart;
+  bool _ca_cert_free;
+  bool _cert_free;
+  bool _private_key_free;
   const char *_CA_cert;
   const char *_cert;
   const char *_private_key;
@@ -70,7 +73,7 @@ public:
   void setCertificate(const char *client_ca);
   void setPrivateKey(const char *private_key);
   bool loadCACert(Stream &stream, size_t size);
-  void setCACertBundle(const uint8_t *bundle);
+  void setCACertBundle(const uint8_t *bundle, size_t size);
   bool loadCertificate(Stream &stream, size_t size);
   bool loadPrivateKey(Stream &stream, size_t size);
   bool verify(const char *fingerprint, const char *domain_name);

@@ -43,7 +43,7 @@
 #elif CONFIG_IDF_TARGET_ESP32S3
 #if defined __has_include && __has_include("hal/usb_phy_ll.h")
 #include "hal/usb_phy_ll.h"
-#else
+#elif defined __has_include && __has_include("hal/usb_fsls_phy_ll.h")
 #include "hal/usb_fsls_phy_ll.h"
 #endif
 #include "hal/usb_serial_jtag_ll.h"
@@ -503,8 +503,13 @@ static void usb_switch_to_cdc_jtag() {
 // Initialize CDC+JTAG ISR to listen for BUS_RESET
 #if defined __has_include && __has_include("hal/usb_phy_ll.h")
   usb_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
-#else
+#elif defined __has_include && __has_include("hal/usb_fsls_phy_ll.h")
   usb_fsls_phy_ll_int_jtag_enable(&USB_SERIAL_JTAG);
+#else
+  // usb_serial_jtag_ll_phy_set_defaults();
+  const usb_serial_jtag_pull_override_vals_t pull_conf = {.dp_pu = 1, .dm_pu = 0, .dp_pd = 0, .dm_pd = 0};
+  usb_serial_jtag_ll_phy_enable_pull_override(&pull_conf);
+  usb_serial_jtag_ll_phy_disable_pull_override();
 #endif
   usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_LL_INTR_MASK);
   usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_LL_INTR_MASK);

@@ -96,7 +96,9 @@ static void printChipInfo(void) {
   chip_report_printf("  Cores             : %d\n", info.cores);
   rtc_cpu_freq_config_t conf;
   rtc_clk_cpu_freq_get_config(&conf);
-  chip_report_printf("  Frequency         : %lu MHz\n", conf.freq_mhz);
+  chip_report_printf("  CPU Frequency     : %lu MHz\n", conf.freq_mhz);
+  chip_report_printf("  XTAL Frequency    : %d MHz\n", rtc_clk_xtal_freq_get());
+  chip_report_printf("  Features Bitfield : %#010x\n", info.features);
   chip_report_printf("  Embedded Flash    : %s\n", (info.features & CHIP_FEATURE_EMB_FLASH) ? "Yes" : "No");
   chip_report_printf("  Embedded PSRAM    : %s\n", (info.features & CHIP_FEATURE_EMB_PSRAM) ? "Yes" : "No");
   chip_report_printf("  2.4GHz WiFi       : %s\n", (info.features & CHIP_FEATURE_WIFI_BGN) ? "Yes" : "No");
@@ -113,9 +115,10 @@ static void printFlashInfo(void) {
 #endif
 // REG_SPI_BASE is not defined for S3/C3 ??
 #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
-#ifndef REG_SPI_BASE
-#define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
+#ifdef REG_SPI_BASE
+#undef REG_SPI_BASE
 #endif  // REG_SPI_BASE
+#define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
 #endif  // TARGET
 
   chip_report_printf("Flash Info:\n");

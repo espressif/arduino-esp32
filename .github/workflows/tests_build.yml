@@ -1,0 +1,87 @@
+name: Build tests
+
+on:
+  workflow_call:
+    inputs:
+      type:
+        type: string
+        description: 'Type of tests to build'
+        required: true
+      chip:
+        type: string
+        description: 'Chip to build tests for'
+        required: true
+
+jobs:
+  build-tests:
+    name: Build ${{ inputs.type }} tests for ${{ inputs.chip }}
+    runs-on: ubuntu-latest
+    env:
+      id: ${{ github.event.pull_request.number || github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ inputs.chip }}-${{ inputs.type }}
+    steps:
+      - name: Check if already built
+        id: cache-build-binaries
+        if: github.event.pull_request.number != null
+        uses: actions/cache/restore@v4
+        with:
+          key: tests-${{ env.id }}-bin
+          path: |
+            ~/.arduino/tests/**/build*.tmp/*.bin
+            ~/.arduino/tests/**/build*.tmp/*.elf
+            ~/.arduino/tests/**/build*.tmp/*.json
+
+      - name: Evaluate if tests should be built
+        id: check-build
+        run: |
+          cache_exists=${{ steps.cache-build-binaries.outputs.cache-hit == 'true' }}
+          enabled=true
+
+          if [[ $cache_exists == 'true' ]]; then
+            echo "Already built, skipping"
+            enabled=false
+          fi
+
+          echo "enabled=$enabled" >> $GITHUB_OUTPUT
+
+      - name: Checkout user repository
+        if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        uses: actions/checkout@v4
+
+      - name: Get libs cache
+        uses: actions/cache@v4
+        if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        with:
+          key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
+          path: |
+            ./tools/dist
+            ./tools/esp32-arduino-libs
+            ./tools/esptool
+            ./tools/mk*
+            ./tools/openocd-esp32
+            ./tools/riscv32-*
+            ./tools/xtensa-*
+
+      - name: Build sketches
+        if: ${{ steps.check-build.outputs.enabled == 'true' }}
+        run: |
+          bash .github/scripts/tests_build.sh -c -type ${{ inputs.type }} -t ${{ inputs.chip }}
+
+      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as cache
+        uses: actions/cache/save@v4
+        if: steps.check-build.outputs.enabled == 'true' && github.event.pull_request.number != null
+        with:
+          key: tests-${{ env.id }}-bin
+          path: |
+            ~/.arduino/tests/**/build*.tmp/*.bin
+            ~/.arduino/tests/**/build*.tmp/*.elf
+            ~/.arduino/tests/**/build*.tmp/*.json
+
+      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
+          overwrite: true
+          path: |
+            ~/.arduino/tests/**/build*.tmp/*.bin
+            ~/.arduino/tests/**/build*.tmp/*.elf
+            ~/.arduino/tests/**/build*.tmp/*.json

@@ -66,7 +66,7 @@ enum HTTPAuthMethod {
 #define HTTP_MAX_DATA_WAIT      5000  //ms to wait for the client to send the request
 #define HTTP_MAX_POST_WAIT      5000  //ms to wait for POST data to arrive
 #define HTTP_MAX_SEND_WAIT      5000  //ms to wait for data chunk to be ACKed
-#define HTTP_MAX_CLOSE_WAIT     2000  //ms to wait for the client to close the connection
+#define HTTP_MAX_CLOSE_WAIT     5000  //ms to wait for the client to close the connection
 #define HTTP_MAX_BASIC_AUTH_LEN 256   // maximum length of a basic Auth base64 encoded username:password string
 
 #define CONTENT_LENGTH_UNKNOWN ((size_t) - 1)
@@ -88,7 +88,7 @@ typedef struct {
   HTTPRawStatus status;
   size_t totalSize;    // content size
   size_t currentSize;  // size of data currently in buf
-  uint8_t buf[HTTP_UPLOAD_BUFLEN];
+  uint8_t buf[HTTP_RAW_BUFLEN];
   void *data;  // additional data
 } HTTPRaw;
 
@@ -144,10 +144,16 @@ public:
   void requestAuthentication(HTTPAuthMethod mode = BASIC_AUTH, const char *realm = NULL, const String &authFailMsg = String(""));
 
   typedef std::function<void(void)> THandlerFunction;
-  void on(const Uri &uri, THandlerFunction fn);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
-  void on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);  //ufn handles file uploads
+  typedef std::function<bool(WebServer &server)> FilterFunction;
+  RequestHandler &on(const Uri &uri, THandlerFunction fn);
+  RequestHandler &on(const Uri &uri, HTTPMethod method, THandlerFunction fn);
+  RequestHandler &on(const Uri &uri, HTTPMethod method, THandlerFunction fn, THandlerFunction ufn);  //ufn handles file uploads
+  bool removeRoute(const char *uri);
+  bool removeRoute(const char *uri, HTTPMethod method);
+  bool removeRoute(const String &uri);
+  bool removeRoute(const String &uri, HTTPMethod method);
   void addHandler(RequestHandler *handler);
+  bool removeHandler(RequestHandler *handler);
   void serveStatic(const char *uri, fs::FS &fs, const char *path, const char *cache_header = NULL);
   void onNotFound(THandlerFunction fn);     //called when handler is not assigned
   void onFileUpload(THandlerFunction ufn);  //handle file uploads
@@ -230,6 +236,7 @@ protected:
     return _currentClient.write_P(b, l);
   }
   void _addRequestHandler(RequestHandler *handler);
+  bool _removeRequestHandler(RequestHandler *handler);
   void _handleRequest();
   void _finalizeResponse();
   bool _parseRequest(NetworkClient &client);

@@ -19,6 +19,8 @@ SoC       USB Peripheral Support
 ESP32-S2  CDC and DFU
 ESP32-C3  CDC only
 ESP32-S3  CDC and DFU
+ESP32-C6  CDC only
+ESP32-H2  CDC only
 ========= =======================
 
 It's important that your board includes the USB connector attached to the embedded USB from the SoC. If your board doesn't have the USB connector, you can attach an external one to the USB pins.

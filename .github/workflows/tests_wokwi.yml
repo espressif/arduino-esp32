@@ -1,0 +1,294 @@
+name: Wokwi tests
+
+on:
+  workflow_run:
+    workflows: ["Runtime Tests"]
+    types:
+      - completed
+
+# No permissions by default
+permissions: { contents: read }
+
+env:
+  WOKWI_TIMEOUT: 600000 # Milliseconds
+
+jobs:
+  get-artifacts:
+    name: Get required artifacts
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      statuses: write
+    outputs:
+      pr_num: ${{ steps.set-ref.outputs.pr_num }}
+      ref: ${{ steps.set-ref.outputs.ref }}
+    steps:
+      - name: Report pending
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Runtime Tests / Wokwi (Get artifacts) (${{ github.event.workflow_run.event }} -> workflow_run)',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: 'pending',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+
+      - name: Download and extract event file
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: event_file
+          path: artifacts/event_file
+
+      - name: Try to read PR number
+        id: set-ref
+        run: |
+          pr_num=$(jq -r '.pull_request.number' artifacts/event_file/event.json)
+          if [ -z "$pr_num" ] || [ "$pr_num" == "null" ]; then
+            pr_num=""
+          fi
+
+          ref=$pr_num
+          if [ -z "$ref" ] || [ "$ref" == "null" ]; then
+            ref=${{ github.ref }}
+          fi
+
+          action=$(jq -r '.action' artifacts/event_file/event.json)
+          if [ "$action" == "null" ]; then
+            action=""
+          fi
+
+          echo "pr_num = $pr_num"
+
+          printf "$ref" >> artifacts/ref.txt
+          printf "Ref = "
+          cat artifacts/ref.txt
+
+          printf "${{ github.event.workflow_run.event }}" >> artifacts/event.txt
+          printf "\nEvent name = "
+          cat artifacts/event.txt
+
+          printf "${{ github.event.workflow_run.head_sha || github.sha }}" >> artifacts/sha.txt
+          printf "\nHead SHA = "
+          cat artifacts/sha.txt
+
+          printf "$action" >> artifacts/action.txt
+          printf "\nAction = "
+          cat artifacts/action.txt
+
+          if [ -z "$ref" ] || [ "$ref" == "null" ]; then
+            echo "Failed to get PR number or ref"
+            exit 1
+          fi
+
+          conclusion="${{ github.event.workflow_run.conclusion }}"
+          printf "$conclusion" >> artifacts/conclusion.txt
+          printf "\nConclusion = "
+          cat artifacts/conclusion.txt
+
+          echo "pr_num=$pr_num" >> $GITHUB_OUTPUT
+          echo "ref=$ref" >> $GITHUB_OUTPUT
+
+      - name: Download and extract parent hardware results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          pattern: tests-results-hw-*
+          merge-multiple: true
+          path: artifacts/results/hw
+
+      - name: Download and extract parent QEMU results
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          pattern: tests-results-qemu-*
+          merge-multiple: true
+          path: artifacts/results/qemu
+
+      - name: Upload parent artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent-artifacts
+          path: artifacts
+          if-no-files-found: error
+
+      - name: Report conclusion
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Runtime Tests / Wokwi (Get artifacts) (${{ github.event.workflow_run.event }} -> workflow_run)',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: '${{ job.status }}',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+
+  wokwi-test:
+    name: Wokwi ${{ matrix.chip }} ${{ matrix.type }} tests
+    if: |
+      github.event.workflow_run.conclusion == 'success' ||
+      github.event.workflow_run.conclusion == 'failure' ||
+      github.event.workflow_run.conclusion == 'timed_out'
+    runs-on: ubuntu-latest
+    needs: get-artifacts
+    env:
+      id: ${{ needs.get-artifacts.outputs.ref }}-${{ github.event.workflow_run.head_sha || github.sha }}-${{ matrix.chip }}-${{ matrix.type }}
+    permissions:
+      actions: read
+      statuses: write
+    strategy:
+      fail-fast: false
+      matrix:
+        type: ['validation']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+    steps:
+      - name: Report pending
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Runtime Tests / Wokwi (${{ matrix.type }}, ${{ matrix.chip }}) / Wokwi ${{ matrix.chip }} ${{ matrix.type }} tests (${{ github.event.workflow_run.event }} -> workflow_run)',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: 'pending',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+
+      - name: Check if already passed
+        id: get-cache-results
+        if: needs.get-artifacts.outputs.pr_num
+        uses: actions/cache/restore@v4
+        with:
+          key: tests-${{ env.id }}-results-wokwi
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Evaluate if tests should be run
+        id: check-tests
+        run: |
+          cache_exists=${{ steps.get-cache-results.outputs.cache-hit == 'true' }}
+          enabled=true
+
+          if [[ $cache_exists == 'true' ]]; then
+            echo "Already ran, skipping"
+            enabled=false
+          fi
+
+          echo "enabled=$enabled" >> $GITHUB_OUTPUT
+
+      # Note that changes to the workflows and tests will only be picked up after the PR is merged
+      - name: Checkout repository
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        with:
+          cache-dependency-path: tests/requirements.txt
+          cache: 'pip'
+          python-version: '3.x'
+
+      - name: Install dependencies
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+
+      - name: Install Wokwi CLI
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: curl -L https://wokwi.com/ci/install.sh | sh
+
+      - name: Wokwi CI Server
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: wokwi/wokwi-ci-server-action@v1
+
+      - name: Get binaries
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: tests-bin-${{ matrix.chip }}-${{ matrix.type }}
+          path: |
+            ~/.arduino/tests
+
+      - name: Run Tests
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        env:
+          WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+        run: |
+          bash .github/scripts/tests_run.sh -c -type ${{ matrix.type }} -t ${{ matrix.chip }} -i 0 -m 1 -W ${{ env.WOKWI_TIMEOUT }}
+
+      - name: Upload ${{ matrix.chip }} ${{ matrix.type }} Wokwi results as cache
+        uses: actions/cache/save@v4
+        if: steps.check-tests.outputs.enabled == 'true' && needs.get-artifacts.outputs.pr_num
+        with:
+          key: tests-${{ env.id }}-results-wokwi
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Upload ${{ matrix.chip }} ${{ matrix.type }} Wokwi results as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tests-results-wokwi-${{ matrix.chip }}-${{ matrix.type }}
+          overwrite: true
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Report conclusion
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Runtime Tests / Wokwi (${{ matrix.type }}, ${{ matrix.chip }}) / Wokwi ${{ matrix.chip }} ${{ matrix.type }} tests (${{ github.event.workflow_run.event }} -> workflow_run)',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: '${{ job.status }}',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })).data;
+            core.info(`${name} is ${state}`);

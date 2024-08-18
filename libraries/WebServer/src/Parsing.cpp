@@ -124,7 +124,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
   //attach handler
   RequestHandler *handler;
   for (handler = _firstHandler; handler; handler = handler->next()) {
-    if (handler->canHandle(_currentMethod, _currentUri)) {
+    if (handler->canHandle(*this, _currentMethod, _currentUri)) {
       break;
     }
   }
@@ -176,7 +176,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       }
     }
 
-    if (!isForm && _currentHandler && _currentHandler->canRaw(_currentUri)) {
+    if (!isForm && _currentHandler && _currentHandler->canRaw(*this, _currentUri)) {
       log_v("Parse raw");
       _currentRaw.reset(new HTTPRaw());
       _currentRaw->status = RAW_START;
@@ -334,7 +334,7 @@ void WebServer::_parseArguments(String data) {
 
 void WebServer::_uploadWriteByte(uint8_t b) {
   if (_currentUpload->currentSize == HTTP_UPLOAD_BUFLEN) {
-    if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+    if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
       _currentHandler->upload(*this, _currentUri, *_currentUpload);
     }
     _currentUpload->totalSize += _currentUpload->currentSize;
@@ -347,11 +347,41 @@ int WebServer::_uploadReadByte(NetworkClient &client) {
   int res = client.read();
 
   if (res < 0) {
-    while (!client.available() && client.connected()) {
-      delay(2);
-    }
+    // keep trying until you either read a valid byte or timeout
+    const unsigned long startMillis = millis();
+    const long timeoutIntervalMillis = client.getTimeout();
+    bool timedOut = false;
+    for (;;) {
+      if (!client.connected()) {
+        return -1;
+      }
+      // loosely modeled after blinkWithoutDelay pattern
+      while (!timedOut && !client.available() && client.connected()) {
+        delay(2);
+        timedOut = (millis() - startMillis) >= timeoutIntervalMillis;
+      }
 
-    res = client.read();
+      res = client.read();
+      if (res >= 0) {
+        return res;  // exit on a valid read
+      }
+      // NOTE: it is possible to get here and have all of the following
+      //       assertions hold true
+      //
+      //       -- client.available() > 0
+      //       -- client.connected == true
+      //       -- res == -1
+      //
+      //       a simple retry strategy overcomes this which is to say the
+      //       assertion is not permanent, but the reason that this works
+      //       is elusive, and possibly indicative of a more subtle underlying
+      //       issue
+
+      timedOut = (millis() - startMillis) >= timeoutIntervalMillis;
+      if (timedOut) {
+        return res;  // exit on a timeout
+      }
+    }
   }
 
   return res;
@@ -449,7 +479,7 @@ bool WebServer::_parseForm(NetworkClient &client, String boundary, uint32_t len)
             _currentUpload->totalSize = 0;
             _currentUpload->currentSize = 0;
             log_v("Start File: %s Type: %s", _currentUpload->filename.c_str(), _currentUpload->type.c_str());
-            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+            if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             }
             _currentUpload->status = UPLOAD_FILE_WRITE;
@@ -488,12 +518,12 @@ bool WebServer::_parseForm(NetworkClient &client, String boundary, uint32_t len)
               }
             }
             // Found the boundary string, finish processing this file upload
-            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+            if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             }
             _currentUpload->totalSize += _currentUpload->currentSize;
             _currentUpload->status = UPLOAD_FILE_END;
-            if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+            if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             }
             log_v("End File: %s Type: %s Size: %d", _currentUpload->filename.c_str(), _currentUpload->type.c_str(), (int)_currentUpload->totalSize);
@@ -567,7 +597,7 @@ String WebServer::urlDecode(const String &text) {
 
 bool WebServer::_parseFormUploadAborted() {
   _currentUpload->status = UPLOAD_FILE_ABORTED;
-  if (_currentHandler && _currentHandler->canUpload(_currentUri)) {
+  if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
     _currentHandler->upload(*this, _currentUri, *_currentUpload);
   }
   return false;

@@ -54,7 +54,7 @@ do
     break
     fi
     board_name=$(echo "$line" | cut -d '.' -f1 | cut -d '#' -f1)
-    if [ "$board_name" != "" ]
+    if [ "$board_name" != "" ] && [ "$board_name" != "esp32_family" ]
     then
         if [ "$board_name" != "$previous_board" ]
         then

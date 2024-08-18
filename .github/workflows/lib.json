@@ -36,6 +36,14 @@
         ]
     },
     {
+        "name": "EthernetESP32",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/EthernetESP32/examples/LegacyEthernetTest/LegacyEthernetTest.ino",
+            "~/Arduino/libraries/EthernetESP32/examples/TwoEthernets/TwoEthernets.ino"
+        ]
+    },
+    {
         "name": "FastLED",
         "exclude_targets": [],
         "sketch_path": [
@@ -61,6 +69,14 @@
         "exclude_targets": [],
         "sketch_path": [
             "~/Arduino/libraries/WS2812FX/examples/ws2812fx_spi/ws2812fx_spi.ino"
+        ]
+    },
+    {
+        "name": "ZACwire for TSic",
+        "exclude_targets": [],
+        "sketch_path": [
+            "~/Arduino/libraries/ZACwire_for_TSic/examples/ReadingTwoTSICs/ReadingTwoTSICs.ino",
+            "~/Arduino/libraries/ZACwire_for_TSic/examples/ReadSingleTSIC206/ReadSingleTSIC206.ino"
         ]
     }
 ]

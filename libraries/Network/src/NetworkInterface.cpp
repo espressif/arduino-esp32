@@ -34,6 +34,18 @@ NetworkInterface *getNetifByID(Network_Interface_ID id) {
   return NULL;
 }
 
+#if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
+extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) __attribute__((weak));
+extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) {
+  if (ip6_addr_isany_val(inp->ip6_addr[0].u_addr.ip6)) {
+    // We don't have an LL address -> eat this packet here, so it won't get accepted on input netif
+    pbuf_free(p);
+    return 1;
+  }
+  return 0;
+}
+#endif
+
 static void _ip_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == IP_EVENT) {
     NetworkInterface *netif = NULL;
@@ -239,8 +251,21 @@ int NetworkInterface::waitStatusBits(int bits, uint32_t timeout_ms) const {
 
 void NetworkInterface::destroyNetif() {
   if (_ip_ev_instance != NULL) {
-    esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, &_ip_event_cb);
-    _ip_ev_instance = NULL;
+    bool do_not_unreg_ev_handler = false;
+    for (int i = 0; i < ESP_NETIF_ID_MAX; ++i) {
+      if (_interfaces[i] != NULL && _interfaces[i] != this) {
+        do_not_unreg_ev_handler = true;
+        break;
+      }
+    }
+    if (!do_not_unreg_ev_handler) {
+      if (esp_event_handler_unregister(IP_EVENT, ESP_EVENT_ANY_ID, &_ip_event_cb) == ESP_OK) {
+        _ip_ev_instance = NULL;
+        log_v("Unregistered event handler");
+      } else {
+        log_e("Failed to unregister event handler");
+      }
+    }
   }
   if (_esp_netif != NULL) {
     esp_netif_destroy(_esp_netif);
@@ -250,6 +275,12 @@ void NetworkInterface::destroyNetif() {
     vEventGroupDelete(_interface_event_group);
     _interface_event_group = NULL;
     _initial_bits = 0;
+  }
+  for (int i = 0; i < ESP_NETIF_ID_MAX; ++i) {
+    if (_interfaces[i] != NULL && _interfaces[i] == this) {
+      _interfaces[i] = NULL;
+      break;
+    }
   }
 }
 
@@ -301,6 +332,15 @@ bool NetworkInterface::hasGlobalIPv6() const {
 bool NetworkInterface::enableIPv6(bool en) {
   if (en) {
     setStatusBits(ESP_NETIF_WANT_IP6_BIT);
+    if (_esp_netif != NULL && connected()) {
+      // If we are already connected, try to enable IPv6 immediately
+      esp_err_t err = esp_netif_create_ip6_linklocal(_esp_netif);
+      if (err != ESP_OK) {
+        log_e("Failed to enable IPv6 Link Local on %s: [%d] %s", desc(), err, esp_err_to_name(err));
+      } else {
+        log_v("Enabled IPv6 Link Local on %s", desc());
+      }
+    }
   } else {
     clearStatusBits(ESP_NETIF_WANT_IP6_BIT);
   }

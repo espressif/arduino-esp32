@@ -42,14 +42,15 @@
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
 
-static ETHClass *_ethernets[3] = {NULL, NULL, NULL};
+#define NUM_SUPPORTED_ETH_PORTS 3
+static ETHClass *_ethernets[NUM_SUPPORTED_ETH_PORTS] = {NULL, NULL, NULL};
 static esp_event_handler_instance_t _eth_ev_instance = NULL;
 
 static void _eth_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
 
   if (event_base == ETH_EVENT) {
     esp_eth_handle_t eth_handle = *((esp_eth_handle_t *)event_data);
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
       if (_ethernets[i] != NULL && _ethernets[i]->handle() == eth_handle) {
         _ethernets[i]->_onEthEvent(event_id, event_data);
       }
@@ -60,14 +61,14 @@ static void _eth_event_cb(void *arg, esp_event_base_t event_base, int32_t event_
 // This callback needs to be aware of which interface it should match against
 static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info) {
   if (event == ARDUINO_EVENT_ETH_CONNECTED) {
-    uint8_t index = 3;
-    for (int i = 0; i < 3; ++i) {
+    uint8_t index = NUM_SUPPORTED_ETH_PORTS;
+    for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
       if (_ethernets[i] != NULL && _ethernets[i]->handle() == info.eth_connected) {
         index = i;
         break;
       }
     }
-    if (index == 3) {
+    if (index == NUM_SUPPORTED_ETH_PORTS) {
       log_e("Could not find ETH interface with that handle!");
       return;
     }
@@ -118,7 +119,7 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
 }
 
 ETHClass::ETHClass(uint8_t eth_index)
-  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL)
+  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL), _mac(NULL), _phy(NULL)
 #if ETH_SPI_SUPPORTS_CUSTOM
     ,
     _spi(NULL)
@@ -129,7 +130,8 @@ ETHClass::ETHClass(uint8_t eth_index)
     ,
     _pin_mcd(-1), _pin_mdio(-1), _pin_power(-1), _pin_rmii_clock(-1)
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
-{
+    ,
+    _task_stack_size(4096) {
 }
 
 ETHClass::~ETHClass() {}
@@ -138,6 +140,10 @@ bool ETHClass::ethDetachBus(void *bus_pointer) {
   ETHClass *bus = (ETHClass *)bus_pointer;
   bus->end();
   return true;
+}
+
+void ETHClass::setTaskStackSize(size_t size) {
+  _task_stack_size = size;
 }
 
 #if CONFIG_ETH_USE_ESP32_EMAC
@@ -213,6 +219,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
   eth_mac_config.sw_reset_timeout_ms = 1000;
+  eth_mac_config.rx_task_stack_size = _task_stack_size;
 
   esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
   if (mac == NULL) {
@@ -357,11 +364,11 @@ err:
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 
 #if ETH_SPI_SUPPORTS_CUSTOM
-static void *_eth_spi_init(const void *ctx) {
+__unused static void *_eth_spi_init(const void *ctx) {
   return (void *)ctx;
 }
 
-static esp_err_t _eth_spi_deinit(void *ctx) {
+__unused static esp_err_t _eth_spi_deinit(void *ctx) {
   return ESP_OK;
 }
 
@@ -534,7 +541,11 @@ bool ETHClass::beginSPI(
   if (_spi != NULL) {
     pinMode(_pin_cs, OUTPUT);
     digitalWrite(_pin_cs, HIGH);
-    perimanSetPinBusExtraType(_pin_cs, "ETH_CS");
+    char cs_num_str[3];
+    itoa(_eth_index, cs_num_str, 10);
+    strcat(strcpy(_cs_str, "ETH_CS["), cs_num_str);
+    strcat(_cs_str, "]");
+    perimanSetPinBusExtraType(_pin_cs, _cs_str);
   }
 #endif
 
@@ -553,7 +564,7 @@ bool ETHClass::beginSPI(
     buscfg.data7_io_num = -1;
     buscfg.max_transfer_sz = -1;
     ret = spi_bus_initialize(spi_host, &buscfg, SPI_DMA_CH_AUTO);
-    if (ret != ESP_OK) {
+    if (ret != ESP_OK && ret != ESP_ERR_INVALID_STATE) {
       log_e("SPI bus initialize failed: %d", ret);
       return false;
     }
@@ -570,8 +581,11 @@ bool ETHClass::beginSPI(
   }
 
   // Init common MAC and PHY configs to default
-  eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
-  eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
+  __unused eth_mac_config_t eth_mac_config = ETH_MAC_DEFAULT_CONFIG();
+  __unused eth_phy_config_t phy_config = ETH_PHY_DEFAULT_CONFIG();
+
+  // Set RX Task Stack Size
+  eth_mac_config.rx_task_stack_size = _task_stack_size;
 
   // Update PHY config based on board specific configuration
   phy_config.phy_addr = phy_addr;
@@ -586,8 +600,6 @@ bool ETHClass::beginSPI(
   spi_devcfg.spics_io_num = _pin_cs;
   spi_devcfg.queue_size = 20;
 
-  esp_eth_mac_t *mac = NULL;
-  esp_eth_phy_t *phy = NULL;
 #if CONFIG_ETH_SPI_ETHERNET_W5500
   if (type == ETH_PHY_W5500) {
     eth_w5500_config_t mac_config = ETH_W5500_DEFAULT_CONFIG(spi_host, &spi_devcfg);
@@ -606,8 +618,8 @@ bool ETHClass::beginSPI(
       mac_config.custom_spi_driver.write = _eth_spi_write;
     }
 #endif
-    mac = esp_eth_mac_new_w5500(&mac_config, &eth_mac_config);
-    phy = esp_eth_phy_new_w5500(&phy_config);
+    _mac = esp_eth_mac_new_w5500(&mac_config, &eth_mac_config);
+    _phy = esp_eth_phy_new_w5500(&phy_config);
   } else
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -623,8 +635,8 @@ bool ETHClass::beginSPI(
       mac_config.custom_spi_driver.write = _eth_spi_write;
     }
 #endif
-    mac = esp_eth_mac_new_dm9051(&mac_config, &eth_mac_config);
-    phy = esp_eth_phy_new_dm9051(&phy_config);
+    _mac = esp_eth_mac_new_dm9051(&mac_config, &eth_mac_config);
+    _phy = esp_eth_phy_new_dm9051(&phy_config);
   } else
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
@@ -640,8 +652,8 @@ bool ETHClass::beginSPI(
       mac_config.custom_spi_driver.write = _eth_spi_write;
     }
 #endif
-    mac = esp_eth_mac_new_ksz8851snl(&mac_config, &eth_mac_config);
-    phy = esp_eth_phy_new_ksz8851snl(&phy_config);
+    _mac = esp_eth_mac_new_ksz8851snl(&mac_config, &eth_mac_config);
+    _phy = esp_eth_phy_new_ksz8851snl(&phy_config);
   } else
 #endif
   {
@@ -650,7 +662,7 @@ bool ETHClass::beginSPI(
   }
 
   // Init Ethernet driver to default and install it
-  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(mac, phy);
+  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(_mac, _phy);
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("SPI Ethernet driver install failed: %d", ret);
@@ -743,40 +755,46 @@ bool ETHClass::beginSPI(
 #if ETH_SPI_SUPPORTS_CUSTOM
   if (_spi == NULL) {
 #endif
-    if (!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_cs, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_cs, "ETH_SPI_CS");
 #if ETH_SPI_SUPPORTS_CUSTOM
   }
 #endif
 #if ETH_SPI_SUPPORTS_NO_IRQ
   if (_pin_irq != -1) {
 #endif
-    if (!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_irq, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_irq, "ETH_IRQ");
 #if ETH_SPI_SUPPORTS_NO_IRQ
   }
 #endif
   if (_pin_sck != -1) {
-    if (!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_sck, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_sck, "ETH_SPI_SCK");
   }
   if (_pin_miso != -1) {
-    if (!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_miso, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_miso, "ETH_SPI_MISO");
   }
   if (_pin_mosi != -1) {
-    if (!perimanSetPinBus(_pin_mosi, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_mosi, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_mosi, "ETH_SPI_MOSI");
   }
   if (_pin_rst != -1) {
-    if (!perimanSetPinBus(_pin_rst, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), -1, -1)) {
+    if (!perimanSetPinBus(_pin_rst, ESP32_BUS_TYPE_ETHERNET_SPI, (void *)(this), _eth_index, -1)) {
       goto err;
     }
+    perimanSetPinBusExtraType(_pin_rst, "ETH_RST");
   }
 
   Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
@@ -840,11 +858,33 @@ void ETHClass::end(void) {
       return;
     }
     _eth_handle = NULL;
+    //delete mac
+    if (_mac != NULL) {
+      _mac->del(_mac);
+      _mac = NULL;
+    }
+    //delete phy
+    if (_phy != NULL) {
+      _phy->del(_phy);
+      _phy = NULL;
+    }
   }
 
   if (_eth_ev_instance != NULL) {
-    if (esp_event_handler_unregister(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb) == ESP_OK) {
-      _eth_ev_instance = NULL;
+    bool do_not_unreg_ev_handler = false;
+    for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
+      if (_ethernets[i] != NULL && _ethernets[i]->netif() != NULL && _ethernets[i]->netif() != _esp_netif) {
+        do_not_unreg_ev_handler = true;
+        break;
+      }
+    }
+    if (!do_not_unreg_ev_handler) {
+      if (esp_event_handler_unregister(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb) == ESP_OK) {
+        _eth_ev_instance = NULL;
+        log_v("Unregistered event handler");
+      } else {
+        log_e("Failed to unregister event handler");
+      }
     }
   }
 

@@ -9,7 +9,7 @@ const char *service_name = "PROV_1234";
 const char *pop = "abcd1234";
 
 // GPIO for push button
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
 static int gpio_0 = 9;
 static int gpio_switch = 7;
 #else
@@ -31,14 +31,14 @@ void sysProvEvent(arduino_event_t *sys_event) {
     case ARDUINO_EVENT_PROV_START:
 #if CONFIG_IDF_TARGET_ESP32S2
       Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on SoftAP\n", service_name, pop);
-      printQR(service_name, pop, "softap");
+      WiFiProv.printQR(service_name, pop, "softap");
 #else
       Serial.printf("\nProvisioning Started with name \"%s\" and PoP \"%s\" on BLE\n", service_name, pop);
-      printQR(service_name, pop, "ble");
+      WiFiProv.printQR(service_name, pop, "ble");
 #endif
       break;
-    case ARDUINO_EVENT_PROV_INIT:         wifi_prov_mgr_disable_auto_stop(10000); break;
-    case ARDUINO_EVENT_PROV_CRED_SUCCESS: wifi_prov_mgr_stop_provisioning(); break;
+    case ARDUINO_EVENT_PROV_INIT:         WiFiProv.disableAutoStop(10000); break;
+    case ARDUINO_EVENT_PROV_CRED_SUCCESS: WiFiProv.endProvision(); break;
     default:                              ;
   }
 }
@@ -98,9 +98,9 @@ void setup() {
 
   WiFi.onEvent(sysProvEvent);  // Will call sysProvEvent() from another thread.
 #if CONFIG_IDF_TARGET_ESP32S2
-  WiFiProv.beginProvision(WIFI_PROV_SCHEME_SOFTAP, WIFI_PROV_SCHEME_HANDLER_NONE, WIFI_PROV_SECURITY_1, pop, service_name);
+  WiFiProv.beginProvision(NETWORK_PROV_SCHEME_SOFTAP, NETWORK_PROV_SCHEME_HANDLER_NONE, NETWORK_PROV_SECURITY_1, pop, service_name);
 #else
-  WiFiProv.beginProvision(WIFI_PROV_SCHEME_BLE, WIFI_PROV_SCHEME_HANDLER_FREE_BTDM, WIFI_PROV_SECURITY_1, pop, service_name);
+  WiFiProv.beginProvision(NETWORK_PROV_SCHEME_BLE, NETWORK_PROV_SCHEME_HANDLER_FREE_BTDM, NETWORK_PROV_SECURITY_1, pop, service_name);
 #endif
 }
 

@@ -34,7 +34,9 @@
 #include <memory>
 #include <Arduino.h>
 #include <NetworkClient.h>
+#ifndef HTTPCLIENT_NOSECURE
 #include <NetworkClientSecure.h>
+#endif  // HTTPCLIENT_NOSECURE
 
 /// Cookie jar support
 #include <vector>
@@ -182,10 +184,23 @@ public:
 
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
   bool begin(String url);
-  bool begin(String url, const char *CAcert);
   bool begin(String host, uint16_t port, String uri = "/");
+#ifndef HTTPCLIENT_NOSECURE
+  bool begin(String url, const char *CAcert);
   bool begin(String host, uint16_t port, String uri, const char *CAcert);
   bool begin(String host, uint16_t port, String uri, const char *CAcert, const char *cli_cert, const char *cli_key);
+#else
+  bool begin(String url, const char *CAcert) {
+    return false;
+  };
+  bool begin(String host, uint16_t port, String uri, const char *CAcert) {
+    return false;
+  };
+  bool begin(String host, uint16_t port, String uri, const char *CAcert, const char *cli_cert, const char *cli_key) {
+    return false;
+  };
+#endif  // HTTPCLIENT_NOSECURE
+
 #endif
 
   void end(void);
@@ -194,6 +209,7 @@ public:
 
   void setReuse(bool reuse);  /// keep-alive
   void setUserAgent(const String &userAgent);
+  void setAcceptEncoding(const String &acceptEncoding);
   void setAuthorization(const char *user, const char *password);
   void setAuthorization(const char *auth);
   void setAuthorizationType(const char *authType);
@@ -285,6 +301,7 @@ protected:
   String _userAgent = "ESP32HTTPClient";
   String _base64Authorization;
   String _authorizationType = "Basic";
+  String _acceptEncoding = "identity;q=1,chunked;q=0.1,*;q=0";
 
   /// Response handling
   RequestArgument *_currentHeaders = nullptr;

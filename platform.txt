@@ -1,7 +1,8 @@
 name=ESP32 Arduino
-version=3.0.0
+version=3.0.4
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
+tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
 tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
 tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
 tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
@@ -30,6 +31,7 @@ compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
 compiler.prefix={build.tarch}-{build.target}-elf-
 
 compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.mcu}
+compiler.sdk.path.windows={tools.esp32-arduino-libs.path}\{build.mcu}
 
 # EXPERIMENTAL feature: optimization flags
 #  - this is alpha and may be subject to change without notice
@@ -319,7 +321,7 @@ tools.esptool_py.upload.network_pattern={network_cmd} -i "{serial.port}" -p "{ne
 tools.esp_ota.upload.protocol=network
 tools.esp_ota.upload.field.password=Password
 tools.esp_ota.upload.field.password.secret=true
-tools.esp_ota.upload.pattern={cmd} -i {upload.port.address} -p {upload.port.properties.port} --auth={upload.field.password} -f "{build.path}/{build.project_name}.bin"
+tools.esp_ota.upload.pattern={cmd} -i {upload.port.address} -p {upload.port.properties.port} "--auth={upload.field.password}" -f "{build.path}/{build.project_name}.bin"
 
 ## Upload Sketch Through DFU OTA
 ## -------------------------------------------

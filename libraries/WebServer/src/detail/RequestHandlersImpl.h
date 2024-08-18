@@ -36,6 +36,7 @@ public:
 
     return true;
   }
+
   bool canRaw(String requestUri) override {
     if (!_ufn || _method == HTTP_GET) {
       return false;
@@ -44,9 +45,32 @@ public:
     return true;
   }
 
+  bool canHandle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
+    if (_method != HTTP_ANY && _method != requestMethod) {
+      return false;
+    }
+
+    return _uri->canHandle(requestUri, pathArgs) && (_filter != NULL ? _filter(server) : true);
+  }
+
+  bool canUpload(WebServer &server, String requestUri) override {
+    if (!_ufn || !canHandle(server, HTTP_POST, requestUri)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool canRaw(WebServer &server, String requestUri) override {
+    if (!_ufn || _method == HTTP_GET || (_filter != NULL ? _filter(server) == false : false)) {
+      return false;
+    }
+
+    return true;
+  }
+
   bool handle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
-    (void)server;
-    if (!canHandle(requestMethod, requestUri)) {
+    if (!canHandle(server, requestMethod, requestUri)) {
       return false;
     }
 
@@ -55,24 +79,30 @@ public:
   }
 
   void upload(WebServer &server, String requestUri, HTTPUpload &upload) override {
-    (void)server;
     (void)upload;
-    if (canUpload(requestUri)) {
+    if (canUpload(server, requestUri)) {
       _ufn();
     }
   }
 
   void raw(WebServer &server, String requestUri, HTTPRaw &raw) override {
-    (void)server;
     (void)raw;
-    if (canRaw(requestUri)) {
+    if (canRaw(server, requestUri)) {
       _ufn();
     }
+  }
+
+  FunctionRequestHandler &setFilter(WebServer::FilterFunction filter) {
+    _filter = filter;
+    return *this;
   }
 
 protected:
   WebServer::THandlerFunction _fn;
   WebServer::THandlerFunction _ufn;
+  // _filter should return 'true' when the request should be handled
+  // and 'false' when the request should be ignored
+  WebServer::FilterFunction _filter;
   Uri *_uri;
   HTTPMethod _method;
 };
@@ -100,8 +130,24 @@ public:
     return true;
   }
 
+  bool canHandle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
+    if (requestMethod != HTTP_GET) {
+      return false;
+    }
+
+    if ((_isFile && requestUri != _uri) || !requestUri.startsWith(_uri)) {
+      return false;
+    }
+
+    if (_filter != NULL ? _filter(server) == false : false) {
+      return false;
+    }
+
+    return true;
+  }
+
   bool handle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
-    if (!canHandle(requestMethod, requestUri)) {
+    if (!canHandle(server, requestMethod, requestUri)) {
       return false;
     }
 
@@ -197,7 +243,15 @@ public:
     return (result);
   }  // calcETag
 
+  StaticRequestHandler &setFilter(WebServer::FilterFunction filter) {
+    _filter = filter;
+    return *this;
+  }
+
 protected:
+  // _filter should return 'true' when the request should be handled
+  // and 'false' when the request should be ignored
+  WebServer::FilterFunction _filter;
   FS _fs;
   String _uri;
   String _path;
