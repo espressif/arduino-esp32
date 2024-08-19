@@ -3,9 +3,9 @@ version=3.0.4
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
-tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
-tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
-tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
+tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp-elf
+tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp-elf
+tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp-elf
 tools.xtensa-esp-elf-gdb.path={runtime.platform.path}/tools/xtensa-esp-elf-gdb
 tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
 tools.riscv32-esp-elf-gdb.path={runtime.platform.path}/tools/riscv32-esp-elf-gdb

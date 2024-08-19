@@ -22,11 +22,6 @@
 #error Serial Port Profile for Bluetooth is not available or not enabled. It is only available for the ESP32 chip.
 #endif
 
-// Check Simple Secure Pairing
-#if !defined(CONFIG_BT_SSP_ENABLED)
-#error Simple Secure Pairing for Bluetooth is not available or not enabled.
-#endif
-
 const char *deviceName = "ESP32_SSP_example";
 
 // The following lines defines the method of pairing
