@@ -279,7 +279,7 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
   dte_config.uart_config.flow_control = _flow_ctrl;
   dte_config.uart_config.rx_buffer_size = _rx_buffer_size;
   dte_config.uart_config.tx_buffer_size = _tx_buffer_size;
-  dte_config.uart_config.port_num = _uart_num;
+  dte_config.uart_config.port_num = (uart_port_t)_uart_num;
   dte_config.uart_config.baud_rate = baud_rate;
 
   /* Configure the DCE */

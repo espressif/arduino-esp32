@@ -146,7 +146,7 @@ typedef enum {
 
 // Default pins for UART1 are arbitrary, and defined here for convenience.
 
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
 #ifndef RX1
 #if CONFIG_IDF_TARGET_ESP32
 #define RX1 (gpio_num_t)26
@@ -182,11 +182,11 @@ typedef enum {
 #define TX1 (gpio_num_t)1
 #endif
 #endif
-#endif /* SOC_UART_NUM > 1 */
+#endif /* SOC_UART_HP_NUM > 1 */
 
 // Default pins for UART2 are arbitrary, and defined here for convenience.
 
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
 #ifndef RX2
 #if CONFIG_IDF_TARGET_ESP32
 #define RX2 (gpio_num_t)4
@@ -202,7 +202,7 @@ typedef enum {
 #define TX2 (gpio_num_t)20
 #endif
 #endif
-#endif /* SOC_UART_NUM > 2 */
+#endif /* SOC_UART_HP_NUM > 2 */
 
 typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
@@ -357,10 +357,10 @@ extern void serialEventRun(void) __attribute__((weak));
 #endif  // ARDUINO_USB_CDC_ON_BOOT
 // There is always Seria0 for UART0
 extern HardwareSerial Serial0;
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
 extern HardwareSerial Serial1;
 #endif
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
 extern HardwareSerial Serial2;
 #endif
 #endif  //!defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)

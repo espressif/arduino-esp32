@@ -3,9 +3,7 @@ version=3.0.4
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
-tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
-tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
-tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
+tools.xtensa-esp-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp-elf
 tools.xtensa-esp-elf-gdb.path={runtime.platform.path}/tools/xtensa-esp-elf-gdb
 tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
 tools.riscv32-esp-elf-gdb.path={runtime.platform.path}/tools/riscv32-esp-elf-gdb
@@ -27,7 +25,7 @@ tools.gen_esp32part.cmd.windows="{runtime.platform.path}\tools\gen_esp32part.exe
 tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
 tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}\tools\gen_insights_package.exe"
 
-compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
+compiler.path={tools.{build.tarch}-esp-elf-gcc.path}/bin/
 compiler.prefix={build.tarch}-{build.target}-elf-
 
 compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.mcu}
