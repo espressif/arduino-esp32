@@ -698,7 +698,7 @@ static bool _init_bt(const char *deviceName, bt_mode mode) {
   }
 
   log_i("device name set");
-  esp_bt_dev_set_device_name(deviceName);
+  esp_bt_gap_set_device_name(deviceName);
 
   if (_enableSSP) {
     log_i("Simple Secure Pairing");

@@ -31,7 +31,7 @@
 #include "soc/rtc.h"
 #if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "soc/rtc_cntl_reg.h"
-#include "soc/apb_ctrl_reg.h"
+#include "soc/syscon_reg.h"
 #endif
 #include "esp_task_wdt.h"
 #include "esp32-hal.h"
@@ -147,14 +147,14 @@ void feedLoopWDT() {
 #endif
 
 void enableCore0WDT() {
-  TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCPU(0);
+  TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCore(0);
   if (idle_0 == NULL || esp_task_wdt_add(idle_0) != ESP_OK) {
     log_e("Failed to add Core 0 IDLE task to WDT");
   }
 }
 
 void disableCore0WDT() {
-  TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCPU(0);
+  TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCore(0);
   if (idle_0 == NULL || esp_task_wdt_delete(idle_0) != ESP_OK) {
     log_e("Failed to remove Core 0 IDLE task from WDT");
   }
@@ -162,14 +162,14 @@ void disableCore0WDT() {
 
 #ifndef CONFIG_FREERTOS_UNICORE
 void enableCore1WDT() {
-  TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCPU(1);
+  TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCore(1);
   if (idle_1 == NULL || esp_task_wdt_add(idle_1) != ESP_OK) {
     log_e("Failed to add Core 1 IDLE task to WDT");
   }
 }
 
 void disableCore1WDT() {
-  TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCPU(1);
+  TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCore(1);
   if (idle_1 == NULL || esp_task_wdt_delete(idle_1) != ESP_OK) {
     log_e("Failed to remove Core 1 IDLE task from WDT");
   }

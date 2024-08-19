@@ -181,8 +181,8 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
                                             : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO
                                             : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO
                                                                 : EMAC_CLK_IN_GPIO;
-  mac_config.smi_mdc_gpio_num = digitalPinToGPIONumber(mdc);
-  mac_config.smi_mdio_gpio_num = digitalPinToGPIONumber(mdio);
+  mac_config.smi_gpio.mdc_num = digitalPinToGPIONumber(mdc);
+  mac_config.smi_gpio.mdio_num = digitalPinToGPIONumber(mdio);
 
   _pin_mcd = digitalPinToGPIONumber(mdc);
   _pin_mdio = digitalPinToGPIONumber(mdio);
