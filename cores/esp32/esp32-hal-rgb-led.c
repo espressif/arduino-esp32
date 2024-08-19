@@ -16,7 +16,11 @@
 
 #include "esp32-hal-rgb-led.h"
 
-void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
+void rgbLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
+  rgbLedWriteOrdered(pin, RGB_BUILTIN_LED_COLOR_ORDER, red_val, green_val, blue_val);
+}
+
+void rgbLedWriteOrdered(uint8_t pin, rgb_led_color_order_t order, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
 #if SOC_RMT_SUPPORTED
   rmt_data_t led_data[24];
 
@@ -32,9 +36,7 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
   // default WS2812B color order is G, R, B
   const int color[3] = {green_val, red_val, blue_val};
 
-#if defined RGB_BUILTIN_LED_COLOR_ORDER
-  // the onboard RGB LED has a different color order
-  switch (RGB_BUILTIN_LED_COLOR_ORDER) {
+  switch (order) {
     case LED_COLOR_ORDER_RGB:
       color[0] = red_val;
       color[1] = green_val;
@@ -59,8 +61,10 @@ void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue
       color[0] = green_val;
       color[1] = blue_val;
       color[2] = red_val;
+      break;
+    default: // GRB
+      break;
   }
-#endif
 
   int i = 0;
   for (int col = 0; col < 3; col++) {
