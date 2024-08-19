@@ -12,6 +12,13 @@ on:
         description: 'Chip to run tests for'
         required: true
 
+env:
+  DEBIAN_FRONTEND: noninteractive
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   hardware-test:
     name: Hardware ${{ inputs.chip }} ${{ inputs.type }} tests
@@ -48,6 +55,13 @@ jobs:
       - name: Checkout user repository
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            *
+
+      - name: List files
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: ls -la
 
       # setup-python currently only works on ubuntu images
       # - uses: actions/setup-python@v5

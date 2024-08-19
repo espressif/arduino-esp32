@@ -49,6 +49,8 @@ dependencies:
     require: public
   espressif/esp_modem:
     version: "^1.1.0"
+  espressif/network_provisioning:
+    version: "~1.0.0"
   espressif/esp-zboss-lib:
     version: "^1.0.1"
     rules:
