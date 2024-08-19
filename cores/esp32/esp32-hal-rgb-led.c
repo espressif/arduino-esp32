@@ -34,7 +34,7 @@ void rgbLedWriteOrdered(uint8_t pin, rgb_led_color_order_t order, uint8_t red_va
   }
 
   // default WS2812B color order is G, R, B
-  const int color[3] = {green_val, red_val, blue_val};
+  int color[3] = {green_val, red_val, blue_val};
 
   switch (order) {
     case LED_COLOR_ORDER_RGB:
