@@ -170,6 +170,11 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   Network.begin();
   _ethernets[_eth_index] = this;
 
+#if CONFIG_IDF_TARGET_ESP32
+  #undef DEFAULT_RMII_CLK_GPIO
+  #define DEFAULT_RMII_CLK_GPIO (emac_rmii_clock_gpio_t)(CONFIG_ETH_RMII_CLK_IN_GPIO)
+#endif
+
   eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
   mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
   mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode)   ? EMAC_APPL_CLK_OUT_GPIO

@@ -216,6 +216,7 @@ jobs:
     - name: Build Sketches
       run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO
 
+  # ESP-IDF component build
   build-esp-idf-component:
     name: Build with ESP-IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
     needs: gen-chunks
@@ -231,7 +232,7 @@ jobs:
         # See https://hub.docker.com/r/espressif/idf/tags and
         # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
         # for details.
-        idf_ver: ["release-v5.1"]
+        idf_ver: ["release-v5.3"]
         idf_target: ["esp32", "esp32s2", "esp32s3", "esp32c2", "esp32c3", "esp32c6", "esp32h2"]
     container: espressif/idf:${{ matrix.idf_ver }}
     steps:
