@@ -25575,8 +25575,6 @@ heltec_ht_de01.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_vision_master_e290.name=Heltec Vision Master E290
-heltec_vision_master_e290.vid.0=0x303a
-heltec_vision_master_e290.pid.0=0x1001
 
 heltec_vision_master_e290.bootloader.tool=esptool_py
 heltec_vision_master_e290.bootloader.tool.default=esptool_py
@@ -25752,8 +25750,6 @@ heltec_vision_master_e290.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_vision_master_t190.name=Heltec Vision Master T190
-heltec_vision_master_t190.vid.0=0x303a
-heltec_vision_master_t190.pid.0=0x1001
 
 heltec_vision_master_t190.bootloader.tool=esptool_py
 heltec_vision_master_t190.bootloader.tool.default=esptool_py
@@ -25929,8 +25925,6 @@ heltec_vision_master_t190.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 heltec_vision_master_e_213.name=Heltec Vision Master E213
-heltec_vision_master_e_213.vid.0=0x303a
-heltec_vision_master_e_213.pid.0=0x1001
 
 heltec_vision_master_e_213.bootloader.tool=esptool_py
 heltec_vision_master_e_213.bootloader.tool.default=esptool_py
