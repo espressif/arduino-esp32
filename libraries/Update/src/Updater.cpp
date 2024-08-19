@@ -328,7 +328,7 @@ bool UpdateClass::_decryptBuffer() {
         return false;
       }
     }
-    if (mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_ENCRYPT, _cryptBuffer, _cryptBuffer)) {  //use MBEDTLS_AES_ENCRYPT to decrypt flash code
+    if (mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_DECRYPT, _cryptBuffer, _cryptBuffer)) {  //use MBEDTLS_AES_DECRYPT to decrypt flash code
       return false;
     }
     for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
