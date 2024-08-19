@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 #ifndef RGB_BUILTIN_LED_COLOR_ORDER
-#define RGB_BUILTIN_LED_COLOR_ORDER LED_COLOR_ORDER_GRB // default WS2812B color order
+#define RGB_BUILTIN_LED_COLOR_ORDER LED_COLOR_ORDER_GRB  // default WS2812B color order
 #endif
 
 typedef enum {
@@ -30,7 +30,7 @@ void rgbLedWriteOrdered(uint8_t pin, rgb_led_color_order_t order, uint8_t red_va
 void rgbLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
 // Backward compatibility
-#define neopixelWrite(p,r,g,b) rgbLedWrite(p,r,g,b)
+#define neopixelWrite(p, r, g, b) rgbLedWrite(p, r, g, b)
 
 #ifdef __cplusplus
 }
