@@ -819,7 +819,7 @@ size_t I2SClass::readBytes(char *buffer, size_t size) {
   return total_size;
 }
 
-size_t I2SClass::write(uint8_t *buffer, size_t size) {
+size_t I2SClass::write(const uint8_t *buffer, size_t size) {
   size_t written = 0;
   size_t bytes_sent = 0;
   last_error = ESP_FAIL;
