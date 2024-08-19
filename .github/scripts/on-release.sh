@@ -229,7 +229,9 @@ sed "s/version=.*/version=$RELEASE_TAG/g" | \
 sed 's/tools\.esp32-arduino-libs\.path\.windows=.*//g' | \
 sed 's/{runtime\.platform\.path}.tools.esp32-arduino-libs/\{runtime.tools.esp32-arduino-libs.path\}/g' | \
 sed 's/{runtime\.platform\.path}.tools.xtensa-esp-elf-gdb/\{runtime.tools.xtensa-esp-elf-gdb.path\}/g' | \
-sed "s/{runtime\.platform\.path}.tools.xtensa-esp-elf/\\{runtime.tools.$X32TC_NEW_NAME.path\\}/g" | \
+sed "s/{runtime\.platform\.path}.tools.xtensa-esp32-elf/\\{runtime.tools.$X32TC_NEW_NAME.path\\}/g" | \
+sed "s/{runtime\.platform\.path}.tools.xtensa-esp32s2-elf/\\{runtime.tools.$X32TC_NEW_NAME.path\\}/g" | \
+sed "s/{runtime\.platform\.path}.tools.xtensa-esp32s3-elf/\\{runtime.tools.$X32TC_NEW_NAME.path\\}/g" | \
 sed 's/{runtime\.platform\.path}.tools.riscv32-esp-elf-gdb/\{runtime.tools.riscv32-esp-elf-gdb.path\}/g' | \
 sed "s/{runtime\.platform\.path}.tools.riscv32-esp-elf/\\{runtime.tools.$RVTC_NEW_NAME.path\\}/g" | \
 sed 's/{runtime\.platform\.path}.tools.esptool/\{runtime.tools.esptool_py.path\}/g' | \

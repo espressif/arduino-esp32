@@ -563,7 +563,7 @@ esp32s3.serial.disableRTS=false
 
 esp32s3.build.tarch=xtensa
 esp32s3.build.bootloader_addr=0x0
-esp32s3.build.target=esp
+esp32s3.build.target=esp32s3
 esp32s3.build.mcu=esp32s3
 esp32s3.build.core=esp32
 esp32s3.build.variant=esp32s3
@@ -1002,7 +1002,7 @@ esp32s2.serial.disableRTS=false
 
 esp32s2.build.tarch=xtensa
 esp32s2.build.bootloader_addr=0x1000
-esp32s2.build.target=esp
+esp32s2.build.target=esp32s2
 esp32s2.build.mcu=esp32s2
 esp32s2.build.core=esp32
 esp32s2.build.variant=esp32s2
@@ -1205,7 +1205,7 @@ esp32.serial.disableRTS=true
 
 esp32.build.tarch=xtensa
 esp32.build.bootloader_addr=0x1000
-esp32.build.target=esp
+esp32.build.target=esp32
 esp32.build.mcu=esp32
 esp32.build.core=esp32
 esp32.build.variant=esp32
@@ -1401,7 +1401,7 @@ esp32da.serial.disableRTS=true
 
 esp32da.build.tarch=xtensa
 esp32da.build.bootloader_addr=0x1000
-esp32da.build.target=esp
+esp32da.build.target=esp32
 esp32da.build.mcu=esp32
 esp32da.build.core=esp32
 esp32da.build.variant=esp32da
@@ -1567,7 +1567,7 @@ esp32wrover.serial.disableRTS=true
 
 esp32wrover.build.tarch=xtensa
 esp32wrover.build.bootloader_addr=0x1000
-esp32wrover.build.target=esp
+esp32wrover.build.target=esp32
 esp32wrover.build.mcu=esp32
 esp32wrover.build.core=esp32
 esp32wrover.build.variant=esp32
@@ -1688,7 +1688,7 @@ pico32.serial.disableRTS=true
 
 pico32.build.tarch=xtensa
 pico32.build.bootloader_addr=0x1000
-pico32.build.target=esp
+pico32.build.target=esp32
 pico32.build.mcu=esp32
 pico32.build.core=esp32
 pico32.build.variant=pico32
@@ -1769,7 +1769,7 @@ esp32s3-octal.serial.disableRTS=false
 
 esp32s3-octal.build.tarch=xtensa
 esp32s3-octal.build.bootloader_addr=0x0
-esp32s3-octal.build.target=esp
+esp32s3-octal.build.target=esp32s3
 esp32s3-octal.build.mcu=esp32s3
 esp32s3-octal.build.core=esp32
 esp32s3-octal.build.variant=esp32s3
@@ -2005,7 +2005,7 @@ esp32s3box.serial.disableRTS=false
 
 esp32s3box.build.tarch=xtensa
 esp32s3box.build.bootloader_addr=0x0
-esp32s3box.build.target=esp
+esp32s3box.build.target=esp32s3
 esp32s3box.build.mcu=esp32s3
 esp32s3box.build.core=esp32
 esp32s3box.build.variant=esp32s3box
@@ -2104,7 +2104,7 @@ esp32s3usbotg.serial.disableRTS=false
 
 esp32s3usbotg.build.tarch=xtensa
 esp32s3usbotg.build.bootloader_addr=0x0
-esp32s3usbotg.build.target=esp
+esp32s3usbotg.build.target=esp32s3
 esp32s3usbotg.build.mcu=esp32s3
 esp32s3usbotg.build.core=esp32
 esp32s3usbotg.build.variant=esp32s3usbotg
@@ -2215,7 +2215,7 @@ esp32s3camlcd.serial.disableRTS=false
 
 esp32s3camlcd.build.tarch=xtensa
 esp32s3camlcd.build.bootloader_addr=0x0
-esp32s3camlcd.build.target=esp
+esp32s3camlcd.build.target=esp32s3
 esp32s3camlcd.build.mcu=esp32s3
 esp32s3camlcd.build.core=esp32
 esp32s3camlcd.build.variant=esp32s3camlcd
@@ -2341,7 +2341,7 @@ esp32s2usb.serial.disableRTS=false
 
 esp32s2usb.build.tarch=xtensa
 esp32s2usb.build.bootloader_addr=0x1000
-esp32s2usb.build.target=esp
+esp32s2usb.build.target=esp32s2
 esp32s2usb.build.mcu=esp32s2
 esp32s2usb.build.core=esp32
 esp32s2usb.build.variant=esp32s2usb
@@ -2444,7 +2444,7 @@ esp32wroverkit.serial.disableRTS=true
 
 esp32wroverkit.build.tarch=xtensa
 esp32wroverkit.build.bootloader_addr=0x1000
-esp32wroverkit.build.target=esp
+esp32wroverkit.build.target=esp32
 esp32wroverkit.build.mcu=esp32
 esp32wroverkit.build.core=esp32
 esp32wroverkit.build.variant=esp32
@@ -2602,7 +2602,7 @@ aventen_s3_sync.serial.disableRTS=false
 
 aventen_s3_sync.build.tarch=xtensa
 aventen_s3_sync.build.bootloader_addr=0x0
-aventen_s3_sync.build.target=esp
+aventen_s3_sync.build.target=esp32s3
 aventen_s3_sync.build.mcu=esp32s3
 aventen_s3_sync.build.core=esp32
 aventen_s3_sync.build.variant=Aventen_S3_Sync
@@ -2825,7 +2825,7 @@ um_bling.serial.disableRTS=false
 
 um_bling.build.tarch=xtensa
 um_bling.build.bootloader_addr=0x0
-um_bling.build.target=esp
+um_bling.build.target=esp32s3
 um_bling.build.mcu=esp32s3
 um_bling.build.core=esp32
 um_bling.build.variant=um_bling
@@ -2979,7 +2979,7 @@ um_feathers2.serial.disableRTS=false
 
 um_feathers2.build.tarch=xtensa
 um_feathers2.build.bootloader_addr=0x1000
-um_feathers2.build.target=esp
+um_feathers2.build.target=esp32s2
 um_feathers2.build.mcu=esp32s2
 um_feathers2.build.core=esp32
 um_feathers2.build.variant=um_feathers2
@@ -3132,7 +3132,7 @@ um_feathers2neo.serial.disableRTS=false
 
 um_feathers2neo.build.tarch=xtensa
 um_feathers2neo.build.bootloader_addr=0x1000
-um_feathers2neo.build.target=esp
+um_feathers2neo.build.target=esp32s2
 um_feathers2neo.build.mcu=esp32s2
 um_feathers2neo.build.core=esp32
 um_feathers2neo.build.variant=um_feathers2neo
@@ -3271,7 +3271,7 @@ um_feathers3.serial.disableRTS=false
 
 um_feathers3.build.tarch=xtensa
 um_feathers3.build.bootloader_addr=0x0
-um_feathers3.build.target=esp
+um_feathers3.build.target=esp32s3
 um_feathers3.build.mcu=esp32s3
 um_feathers3.build.core=esp32
 um_feathers3.build.variant=um_feathers3
@@ -3434,7 +3434,7 @@ um_feathers3neo.serial.disableRTS=false
 
 um_feathers3neo.build.tarch=xtensa
 um_feathers3neo.build.bootloader_addr=0x0
-um_feathers3neo.build.target=esp
+um_feathers3neo.build.target=esp32s3
 um_feathers3neo.build.mcu=esp32s3
 um_feathers3neo.build.core=esp32
 um_feathers3neo.build.variant=um_feathers3neo
@@ -3603,7 +3603,7 @@ um_nanos3.serial.disableRTS=false
 
 um_nanos3.build.tarch=xtensa
 um_nanos3.build.bootloader_addr=0x0
-um_nanos3.build.target=esp
+um_nanos3.build.target=esp32s3
 um_nanos3.build.mcu=esp32s3
 um_nanos3.build.core=esp32
 um_nanos3.build.variant=um_nanos3
@@ -3757,7 +3757,7 @@ um_pros3.serial.disableRTS=false
 
 um_pros3.build.tarch=xtensa
 um_pros3.build.bootloader_addr=0x0
-um_pros3.build.target=esp
+um_pros3.build.target=esp32s3
 um_pros3.build.mcu=esp32s3
 um_pros3.build.core=esp32
 um_pros3.build.variant=um_pros3
@@ -3914,7 +3914,7 @@ um_tinypico.serial.disableRTS=true
 
 um_tinypico.build.tarch=xtensa
 um_tinypico.build.bootloader_addr=0x1000
-um_tinypico.build.target=esp
+um_tinypico.build.target=esp32
 um_tinypico.build.mcu=esp32
 um_tinypico.build.core=esp32
 um_tinypico.build.variant=um_tinypico
@@ -4167,7 +4167,7 @@ um_tinys2.serial.disableRTS=false
 
 um_tinys2.build.tarch=xtensa
 um_tinys2.build.bootloader_addr=0x1000
-um_tinys2.build.target=esp
+um_tinys2.build.target=esp32s2
 um_tinys2.build.mcu=esp32s2
 um_tinys2.build.core=esp32
 um_tinys2.build.variant=um_tinys2
@@ -4306,7 +4306,7 @@ um_tinys3.serial.disableRTS=false
 
 um_tinys3.build.tarch=xtensa
 um_tinys3.build.bootloader_addr=0x0
-um_tinys3.build.target=esp
+um_tinys3.build.target=esp32s3
 um_tinys3.build.mcu=esp32s3
 um_tinys3.build.core=esp32
 um_tinys3.build.variant=um_tinys3
@@ -4455,7 +4455,7 @@ S_ODI_Ultra.serial.disableRTS=true
 
 S_ODI_Ultra.build.tarch=xtensa
 S_ODI_Ultra.build.bootloader_addr=0x1000
-S_ODI_Ultra.build.target=esp
+S_ODI_Ultra.build.target=esp32
 S_ODI_Ultra.build.mcu=esp32
 S_ODI_Ultra.build.core=esp32
 S_ODI_Ultra.build.variant=S_ODI_Ultra_v1
@@ -4530,7 +4530,7 @@ lilygo_t_display.build.tarch=xtensa
 lilygo_t_display.build.bootloader_addr=0x1000
 lilygo_t_display.build.mcu=esp32
 lilygo_t_display.build.core=esp32
-lilygo_t_display.build.target=esp
+lilygo_t_display.build.target=esp32
 lilygo_t_display.build.variant=lilygo_t_display
 lilygo_t_display.build.board=LILYGO_T_DISPLAY
 
@@ -4679,7 +4679,7 @@ lilygo_t_display_s3.serial.disableRTS=false
 
 lilygo_t_display_s3.build.tarch=xtensa
 lilygo_t_display_s3.build.bootloader_addr=0x0
-lilygo_t_display_s3.build.target=esp
+lilygo_t_display_s3.build.target=esp32s3
 lilygo_t_display_s3.build.mcu=esp32s3
 lilygo_t_display_s3.build.core=esp32
 lilygo_t_display_s3.build.variant=lilygo_t_display_s3
@@ -4801,7 +4801,7 @@ lilygo_t_eth_lite.serial.disableRTS=false
 
 lilygo_t_eth_lite.build.tarch=xtensa
 lilygo_t_eth_lite.build.bootloader_addr=0x0
-lilygo_t_eth_lite.build.target=esp
+lilygo_t_eth_lite.build.target=esp32s3
 lilygo_t_eth_lite.build.mcu=esp32s3
 lilygo_t_eth_lite.build.core=esp32
 lilygo_t_eth_lite.build.variant=lilygo_t_eth_lite
@@ -4924,7 +4924,7 @@ lilygo_t3s3.build.tarch=xtensa
 lilygo_t3s3.build.bootloader_addr=0x0
 lilygo_t3s3.build.mcu=esp32s3
 lilygo_t3s3.build.core=esp32
-lilygo_t3s3.build.target=esp
+lilygo_t3s3.build.target=esp32s3
 lilygo_t3s3.build.board=LILYGO_T3_S3
 
 lilygo_t3s3.build.usb_mode=1
@@ -5107,7 +5107,7 @@ twatchs3.serial.disableRTS=false
 
 twatchs3.build.tarch=xtensa
 twatchs3.build.bootloader_addr=0x0
-twatchs3.build.target=esp
+twatchs3.build.target=esp32s3
 twatchs3.build.mcu=esp32s3
 twatchs3.build.core=esp32
 twatchs3.build.variant=lilygo_twatch_s3
@@ -5266,7 +5266,7 @@ twatch_ultra.serial.disableRTS=false
 
 twatch_ultra.build.tarch=xtensa
 twatch_ultra.build.bootloader_addr=0x0
-twatch_ultra.build.target=esp
+twatch_ultra.build.target=esp32s3
 twatch_ultra.build.mcu=esp32s3
 twatch_ultra.build.core=esp32
 twatch_ultra.build.variant=lilygo_twatch_ultra
@@ -5427,7 +5427,7 @@ micros2.serial.disableRTS=false
 
 micros2.build.tarch=xtensa
 micros2.build.bootloader_addr=0x1000
-micros2.build.target=esp
+micros2.build.target=esp32s2
 micros2.build.mcu=esp32s2
 micros2.build.core=esp32
 micros2.build.variant=micro_s2
@@ -5574,7 +5574,7 @@ magicbit.serial.disableRTS=true
 
 magicbit.build.tarch=xtensa
 magicbit.build.bootloader_addr=0x1000
-magicbit.build.target=esp
+magicbit.build.target=esp32
 magicbit.build.mcu=esp32
 magicbit.build.core=esp32
 magicbit.build.variant=magicbit
@@ -5639,7 +5639,7 @@ turta_iot_node.serial.disableRTS=true
 
 turta_iot_node.build.tarch=xtensa
 turta_iot_node.build.bootloader_addr=0x1000
-turta_iot_node.build.target=esp
+turta_iot_node.build.target=esp32
 turta_iot_node.build.mcu=esp32
 turta_iot_node.build.core=esp32
 turta_iot_node.build.variant=pico32
@@ -5697,7 +5697,7 @@ ttgo-lora32.serial.disableRTS=true
 
 ttgo-lora32.build.tarch=xtensa
 ttgo-lora32.build.bootloader_addr=0x1000
-ttgo-lora32.build.target=esp
+ttgo-lora32.build.target=esp32
 ttgo-lora32.build.mcu=esp32
 ttgo-lora32.build.core=esp32
 ttgo-lora32.build.board=TTGO_LoRa32
@@ -5779,7 +5779,7 @@ ttgo-t1.serial.disableRTS=true
 
 ttgo-t1.build.tarch=xtensa
 ttgo-t1.build.bootloader_addr=0x1000
-ttgo-t1.build.target=esp
+ttgo-t1.build.target=esp32
 ttgo-t1.build.mcu=esp32
 ttgo-t1.build.core=esp32
 ttgo-t1.build.variant=ttgo-t1
@@ -5911,7 +5911,7 @@ ttgo-t7-v13-mini32.serial.disableRTS=true
 
 ttgo-t7-v13-mini32.build.tarch=xtensa
 ttgo-t7-v13-mini32.build.bootloader_addr=0x1000
-ttgo-t7-v13-mini32.build.target=esp
+ttgo-t7-v13-mini32.build.target=esp32
 ttgo-t7-v13-mini32.build.mcu=esp32
 ttgo-t7-v13-mini32.build.core=esp32
 ttgo-t7-v13-mini32.build.variant=ttgo-t7-v13-mini32
@@ -6037,7 +6037,7 @@ ttgo-t7-v14-mini32.serial.disableRTS=true
 
 ttgo-t7-v14-mini32.build.tarch=xtensa
 ttgo-t7-v14-mini32.build.bootloader_addr=0x1000
-ttgo-t7-v14-mini32.build.target=esp
+ttgo-t7-v14-mini32.build.target=esp32
 ttgo-t7-v14-mini32.build.mcu=esp32
 ttgo-t7-v14-mini32.build.core=esp32
 ttgo-t7-v14-mini32.build.variant=ttgo-t7-v14-mini32
@@ -6282,7 +6282,7 @@ cw02.serial.disableRTS=true
 
 cw02.build.tarch=xtensa
 cw02.build.bootloader_addr=0x1000
-cw02.build.target=esp
+cw02.build.target=esp32
 cw02.build.mcu=esp32
 cw02.build.core=esp32
 cw02.build.variant=xinabox
@@ -6367,7 +6367,7 @@ esp32thing.serial.disableRTS=true
 
 esp32thing.build.tarch=xtensa
 esp32thing.build.bootloader_addr=0x1000
-esp32thing.build.target=esp
+esp32thing.build.target=esp32
 esp32thing.build.mcu=esp32
 esp32thing.build.core=esp32
 esp32thing.build.variant=esp32thing
@@ -6449,7 +6449,7 @@ esp32thing_plus.serial.disableRTS=true
 
 esp32thing_plus.build.tarch=xtensa
 esp32thing_plus.build.bootloader_addr=0x1000
-esp32thing_plus.build.target=esp
+esp32thing_plus.build.target=esp32
 esp32thing_plus.build.mcu=esp32
 esp32thing_plus.build.core=esp32
 esp32thing_plus.build.variant=esp32thing_plus
@@ -6529,7 +6529,7 @@ esp32thing_plus_c.serial.disableRTS=true
 
 esp32thing_plus_c.build.tarch=xtensa
 esp32thing_plus_c.build.bootloader_addr=0x1000
-esp32thing_plus_c.build.target=esp
+esp32thing_plus_c.build.target=esp32
 esp32thing_plus_c.build.mcu=esp32
 esp32thing_plus_c.build.core=esp32
 esp32thing_plus_c.build.variant=esp32thing_plus_c
@@ -6612,7 +6612,7 @@ sparkfun_esp32s2_thing_plus.serial.disableRTS=false
 
 sparkfun_esp32s2_thing_plus.build.tarch=xtensa
 sparkfun_esp32s2_thing_plus.build.bootloader_addr=0x1000
-sparkfun_esp32s2_thing_plus.build.target=esp
+sparkfun_esp32s2_thing_plus.build.target=esp32s2
 sparkfun_esp32s2_thing_plus.build.mcu=esp32s2
 sparkfun_esp32s2_thing_plus.build.core=esp32
 sparkfun_esp32s2_thing_plus.build.variant=esp32s2thing_plus
@@ -6962,7 +6962,7 @@ esp32micromod.serial.disableRTS=true
 
 esp32micromod.build.tarch=xtensa
 esp32micromod.build.bootloader_addr=0x1000
-esp32micromod.build.target=esp
+esp32micromod.build.target=esp32
 esp32micromod.build.mcu=esp32
 esp32micromod.build.core=esp32
 esp32micromod.build.variant=esp32micromod
@@ -7109,7 +7109,7 @@ sparkfun_lora_gateway_1-channel.serial.disableRTS=true
 
 sparkfun_lora_gateway_1-channel.build.tarch=xtensa
 sparkfun_lora_gateway_1-channel.build.bootloader_addr=0x1000
-sparkfun_lora_gateway_1-channel.build.target=esp
+sparkfun_lora_gateway_1-channel.build.target=esp32
 sparkfun_lora_gateway_1-channel.build.mcu=esp32
 sparkfun_lora_gateway_1-channel.build.core=esp32
 sparkfun_lora_gateway_1-channel.build.variant=sparkfun_lora_gateway_1-channel
@@ -7202,7 +7202,7 @@ sparkfun_esp32_iot_redboard.serial.disableRTS=true
 
 sparkfun_esp32_iot_redboard.build.tarch=xtensa
 sparkfun_esp32_iot_redboard.build.bootloader_addr=0x1000
-sparkfun_esp32_iot_redboard.build.target=esp
+sparkfun_esp32_iot_redboard.build.target=esp32
 sparkfun_esp32_iot_redboard.build.mcu=esp32
 sparkfun_esp32_iot_redboard.build.core=esp32
 sparkfun_esp32_iot_redboard.build.variant=sparkfun_esp32_iot_redboard
@@ -7709,7 +7709,7 @@ nina_w10.serial.disableRTS=true
 
 nina_w10.build.tarch=xtensa
 nina_w10.build.bootloader_addr=0x1000
-nina_w10.build.target=esp
+nina_w10.build.target=esp32
 nina_w10.build.mcu=esp32
 nina_w10.build.core=esp32
 nina_w10.build.variant=nina_w10
@@ -7860,7 +7860,7 @@ nora_w10.serial.disableRTS=false
 
 nora_w10.build.tarch=xtensa
 nora_w10.build.bootloader_addr=0x0
-nora_w10.build.target=esp
+nora_w10.build.target=esp32s3
 nora_w10.build.mcu=esp32s3
 nora_w10.build.core=esp32
 nora_w10.build.variant=nora_w10
@@ -8071,7 +8071,7 @@ widora-air.serial.disableRTS=true
 
 widora-air.build.tarch=xtensa
 widora-air.build.bootloader_addr=0x1000
-widora-air.build.target=esp
+widora-air.build.target=esp32
 widora-air.build.mcu=esp32
 widora-air.build.core=esp32
 widora-air.build.variant=widora-air
@@ -8143,7 +8143,7 @@ esp320.serial.disableRTS=true
 
 esp320.build.tarch=xtensa
 esp320.build.bootloader_addr=0x1000
-esp320.build.target=esp
+esp320.build.target=esp32
 esp320.build.mcu=esp32
 esp320.build.core=esp32
 esp320.build.variant=esp320
@@ -8215,7 +8215,7 @@ nano32.serial.disableRTS=true
 
 nano32.build.tarch=xtensa
 nano32.build.bootloader_addr=0x1000
-nano32.build.target=esp
+nano32.build.target=esp32
 nano32.build.mcu=esp32
 nano32.build.core=esp32
 nano32.build.variant=nano32
@@ -8287,7 +8287,7 @@ d32.serial.disableRTS=true
 
 d32.build.tarch=xtensa
 d32.build.bootloader_addr=0x1000
-d32.build.target=esp
+d32.build.target=esp32
 d32.build.mcu=esp32
 d32.build.core=esp32
 d32.build.variant=d32
@@ -8371,7 +8371,7 @@ d32_pro.serial.disableRTS=true
 
 d32_pro.build.tarch=xtensa
 d32_pro.build.bootloader_addr=0x1000
-d32_pro.build.target=esp
+d32_pro.build.target=esp32
 d32_pro.build.mcu=esp32
 d32_pro.build.core=esp32
 d32_pro.build.variant=d32_pro
@@ -8696,7 +8696,7 @@ lolin_s2_mini.serial.disableRTS=false
 
 lolin_s2_mini.build.tarch=xtensa
 lolin_s2_mini.build.bootloader_addr=0x1000
-lolin_s2_mini.build.target=esp
+lolin_s2_mini.build.target=esp32s2
 lolin_s2_mini.build.mcu=esp32s2
 lolin_s2_mini.build.core=esp32
 lolin_s2_mini.build.variant=lolin_s2_mini
@@ -8794,7 +8794,7 @@ lolin_s2_pico.serial.disableRTS=false
 
 lolin_s2_pico.build.tarch=xtensa
 lolin_s2_pico.build.bootloader_addr=0x1000
-lolin_s2_pico.build.target=esp
+lolin_s2_pico.build.target=esp32s2
 lolin_s2_pico.build.mcu=esp32s2
 lolin_s2_pico.build.core=esp32
 lolin_s2_pico.build.variant=lolin_s2_pico
@@ -8889,7 +8889,7 @@ lolin_s3.serial.disableRTS=false
 
 lolin_s3.build.tarch=xtensa
 lolin_s3.build.bootloader_addr=0x0
-lolin_s3.build.target=esp
+lolin_s3.build.target=esp32s3
 lolin_s3.build.mcu=esp32s3
 lolin_s3.build.core=esp32
 lolin_s3.build.variant=lolin_s3
@@ -9047,7 +9047,7 @@ lolin_s3_mini.serial.disableRTS=false
 
 lolin_s3_mini.build.tarch=xtensa
 lolin_s3_mini.build.bootloader_addr=0x0
-lolin_s3_mini.build.target=esp
+lolin_s3_mini.build.target=esp32s3
 lolin_s3_mini.build.mcu=esp32s3
 lolin_s3_mini.build.core=esp32
 lolin_s3_mini.build.variant=lolin_s3_mini
@@ -9218,7 +9218,7 @@ lolin_s3_mini_pro.serial.disableRTS=false
 
 lolin_s3_mini_pro.build.tarch=xtensa
 lolin_s3_mini_pro.build.bootloader_addr=0x0
-lolin_s3_mini_pro.build.target=esp
+lolin_s3_mini_pro.build.target=esp32s3
 lolin_s3_mini_pro.build.mcu=esp32s3
 lolin_s3_mini_pro.build.core=esp32
 lolin_s3_mini_pro.build.variant=lolin_s3_mini_pro
@@ -9389,7 +9389,7 @@ lolin_s3_pro.serial.disableRTS=false
 
 lolin_s3_pro.build.tarch=xtensa
 lolin_s3_pro.build.bootloader_addr=0x0
-lolin_s3_pro.build.target=esp
+lolin_s3_pro.build.target=esp32s3
 lolin_s3_pro.build.mcu=esp32s3
 lolin_s3_pro.build.core=esp32
 lolin_s3_pro.build.variant=lolin_s3_pro
@@ -9543,7 +9543,7 @@ lolin32.serial.disableRTS=true
 
 lolin32.build.tarch=xtensa
 lolin32.build.bootloader_addr=0x1000
-lolin32.build.target=esp
+lolin32.build.target=esp32
 lolin32.build.mcu=esp32
 lolin32.build.core=esp32
 lolin32.build.variant=lolin32
@@ -9641,7 +9641,7 @@ viralink32g01.serial.disableRTS=true
 
 viralink32g01.build.tarch=xtensa
 viralink32g01.build.bootloader_addr=0x1000
-viralink32g01.build.target=esp
+viralink32g01.build.target=esp32
 viralink32g01.build.mcu=esp32
 viralink32g01.build.core=esp32
 viralink32g01.build.variant=ViraLink-G0.1
@@ -9739,7 +9739,7 @@ viralink32g11.serial.disableRTS=true
 
 viralink32g11.build.tarch=xtensa
 viralink32g11.build.bootloader_addr=0x1000
-viralink32g11.build.target=esp
+viralink32g11.build.target=esp32
 viralink32g11.build.mcu=esp32
 viralink32g11.build.core=esp32
 viralink32g11.build.variant=ViraLink-G1.1
@@ -9838,7 +9838,7 @@ lolin32-lite.serial.disableRTS=true
 
 lolin32-lite.build.tarch=xtensa
 lolin32-lite.build.bootloader_addr=0x1000
-lolin32-lite.build.target=esp
+lolin32-lite.build.target=esp32
 lolin32-lite.build.mcu=esp32
 lolin32-lite.build.core=esp32
 lolin32-lite.build.variant=lolin32-lite
@@ -9936,7 +9936,7 @@ pocket_32.serial.disableRTS=true
 
 pocket_32.build.tarch=xtensa
 pocket_32.build.bootloader_addr=0x1000
-pocket_32.build.target=esp
+pocket_32.build.target=esp32
 pocket_32.build.mcu=esp32
 pocket_32.build.core=esp32
 pocket_32.build.variant=pocket_32
@@ -10008,7 +10008,7 @@ WeMosBat.serial.disableRTS=true
 
 WeMosBat.build.tarch=xtensa
 WeMosBat.build.bootloader_addr=0x1000
-WeMosBat.build.target=esp
+WeMosBat.build.target=esp32
 WeMosBat.build.mcu=esp32
 WeMosBat.build.core=esp32
 WeMosBat.build.variant=pocket_32
@@ -10120,7 +10120,7 @@ espea32.serial.disableRTS=true
 
 espea32.build.tarch=xtensa
 espea32.build.bootloader_addr=0x1000
-espea32.build.target=esp
+espea32.build.target=esp32
 espea32.build.mcu=esp32
 espea32.build.core=esp32
 espea32.build.variant=espea32
@@ -10192,7 +10192,7 @@ quantum.serial.disableRTS=true
 
 quantum.build.tarch=xtensa
 quantum.build.bootloader_addr=0x1000
-quantum.build.target=esp
+quantum.build.target=esp32
 quantum.build.mcu=esp32
 quantum.build.core=esp32
 quantum.build.variant=quantum
@@ -10264,7 +10264,7 @@ node32s.serial.disableRTS=true
 
 node32s.build.tarch=xtensa
 node32s.build.bootloader_addr=0x1000
-node32s.build.target=esp
+node32s.build.target=esp32
 node32s.build.mcu=esp32
 node32s.build.core=esp32
 node32s.build.variant=node32s
@@ -10345,7 +10345,7 @@ hornbill32dev.serial.disableRTS=true
 
 hornbill32dev.build.tarch=xtensa
 hornbill32dev.build.bootloader_addr=0x1000
-hornbill32dev.build.target=esp
+hornbill32dev.build.target=esp32
 hornbill32dev.build.mcu=esp32
 hornbill32dev.build.core=esp32
 hornbill32dev.build.variant=hornbill32dev
@@ -10417,7 +10417,7 @@ hornbill32minima.serial.disableRTS=true
 
 hornbill32minima.build.tarch=xtensa
 hornbill32minima.build.bootloader_addr=0x1000
-hornbill32minima.build.target=esp
+hornbill32minima.build.target=esp32
 hornbill32minima.build.mcu=esp32
 hornbill32minima.build.core=esp32
 hornbill32minima.build.variant=hornbill32minima
@@ -10793,7 +10793,7 @@ dfrobot_firebeetle2_esp32e.serial.disableRTS=true
 
 dfrobot_firebeetle2_esp32e.build.tarch=xtensa
 dfrobot_firebeetle2_esp32e.build.bootloader_addr=0x1000
-dfrobot_firebeetle2_esp32e.build.target=esp
+dfrobot_firebeetle2_esp32e.build.target=esp32
 dfrobot_firebeetle2_esp32e.build.mcu=esp32
 dfrobot_firebeetle2_esp32e.build.core=esp32
 dfrobot_firebeetle2_esp32e.build.variant=dfrobot_firebeetle2_esp32e
@@ -10965,7 +10965,7 @@ dfrobot_firebeetle2_esp32s3.serial.disableRTS=false
 
 dfrobot_firebeetle2_esp32s3.build.tarch=xtensa
 dfrobot_firebeetle2_esp32s3.build.bootloader_addr=0x0
-dfrobot_firebeetle2_esp32s3.build.target=esp
+dfrobot_firebeetle2_esp32s3.build.target=esp32s3
 dfrobot_firebeetle2_esp32s3.build.mcu=esp32s3
 dfrobot_firebeetle2_esp32s3.build.core=esp32
 dfrobot_firebeetle2_esp32s3.build.variant=dfrobot_firebeetle2_esp32s3
@@ -11353,7 +11353,7 @@ dfrobot_romeo_esp32s3.serial.disableRTS=false
 
 dfrobot_romeo_esp32s3.build.tarch=xtensa
 dfrobot_romeo_esp32s3.build.bootloader_addr=0x0
-dfrobot_romeo_esp32s3.build.target=esp
+dfrobot_romeo_esp32s3.build.target=esp32s3
 dfrobot_romeo_esp32s3.build.mcu=esp32s3
 dfrobot_romeo_esp32s3.build.core=esp32
 dfrobot_romeo_esp32s3.build.variant=dfrobot_romeo_esp32s3
@@ -11547,7 +11547,7 @@ firebeetle32.serial.disableRTS=true
 
 firebeetle32.build.tarch=xtensa
 firebeetle32.build.bootloader_addr=0x1000
-firebeetle32.build.target=esp
+firebeetle32.build.target=esp32
 firebeetle32.build.mcu=esp32
 firebeetle32.build.core=esp32
 firebeetle32.build.variant=firebeetle32
@@ -11619,7 +11619,7 @@ intorobot-fig.serial.disableRTS=true
 
 intorobot-fig.build.tarch=xtensa
 intorobot-fig.build.bootloader_addr=0x1000
-intorobot-fig.build.target=esp
+intorobot-fig.build.target=esp32
 intorobot-fig.build.mcu=esp32
 intorobot-fig.build.core=esp32
 intorobot-fig.build.variant=intorobot-fig
@@ -11691,7 +11691,7 @@ onehorse32dev.serial.disableRTS=true
 
 onehorse32dev.build.tarch=xtensa
 onehorse32dev.build.bootloader_addr=0x1000
-onehorse32dev.build.target=esp
+onehorse32dev.build.target=esp32
 onehorse32dev.build.mcu=esp32
 onehorse32dev.build.core=esp32
 onehorse32dev.build.variant=onehorse32dev
@@ -11778,7 +11778,7 @@ adafruit_metro_esp32s2.serial.disableRTS=false
 
 adafruit_metro_esp32s2.build.tarch=xtensa
 adafruit_metro_esp32s2.build.bootloader_addr=0x1000
-adafruit_metro_esp32s2.build.target=esp
+adafruit_metro_esp32s2.build.target=esp32s2
 adafruit_metro_esp32s2.build.mcu=esp32s2
 adafruit_metro_esp32s2.build.core=esp32
 adafruit_metro_esp32s2.build.variant=adafruit_metro_esp32s2
@@ -11961,7 +11961,7 @@ adafruit_metro_esp32s3.serial.disableRTS=false
 
 adafruit_metro_esp32s3.build.tarch=xtensa
 adafruit_metro_esp32s3.build.bootloader_addr=0x0
-adafruit_metro_esp32s3.build.target=esp
+adafruit_metro_esp32s3.build.target=esp32s3
 adafruit_metro_esp32s3.build.mcu=esp32s3
 adafruit_metro_esp32s3.build.core=esp32
 adafruit_metro_esp32s3.build.variant=adafruit_metro_esp32s3
@@ -12164,7 +12164,7 @@ adafruit_magtag29_esp32s2.serial.disableRTS=false
 
 adafruit_magtag29_esp32s2.build.tarch=xtensa
 adafruit_magtag29_esp32s2.build.bootloader_addr=0x1000
-adafruit_magtag29_esp32s2.build.target=esp
+adafruit_magtag29_esp32s2.build.target=esp32s2
 adafruit_magtag29_esp32s2.build.mcu=esp32s2
 adafruit_magtag29_esp32s2.build.core=esp32
 adafruit_magtag29_esp32s2.build.variant=adafruit_magtag29_esp32s2
@@ -12347,7 +12347,7 @@ adafruit_funhouse_esp32s2.serial.disableRTS=false
 
 adafruit_funhouse_esp32s2.build.tarch=xtensa
 adafruit_funhouse_esp32s2.build.bootloader_addr=0x1000
-adafruit_funhouse_esp32s2.build.target=esp
+adafruit_funhouse_esp32s2.build.target=esp32s2
 adafruit_funhouse_esp32s2.build.mcu=esp32s2
 adafruit_funhouse_esp32s2.build.core=esp32
 adafruit_funhouse_esp32s2.build.variant=adafruit_funhouse_esp32s2
@@ -12516,7 +12516,7 @@ featheresp32.serial.disableRTS=true
 
 featheresp32.build.tarch=xtensa
 featheresp32.build.bootloader_addr=0x1000
-featheresp32.build.target=esp
+featheresp32.build.target=esp32
 featheresp32.build.mcu=esp32
 featheresp32.build.core=esp32
 featheresp32.build.variant=feather_esp32
@@ -12650,7 +12650,7 @@ adafruit_feather_esp32_v2.serial.disableRTS=true
 
 adafruit_feather_esp32_v2.build.tarch=xtensa
 adafruit_feather_esp32_v2.build.bootloader_addr=0x1000
-adafruit_feather_esp32_v2.build.target=esp
+adafruit_feather_esp32_v2.build.target=esp32
 adafruit_feather_esp32_v2.build.mcu=esp32
 adafruit_feather_esp32_v2.build.core=esp32
 adafruit_feather_esp32_v2.build.variant=adafruit_feather_esp32_v2
@@ -12782,7 +12782,7 @@ adafruit_feather_esp32s2.serial.disableRTS=false
 
 adafruit_feather_esp32s2.build.tarch=xtensa
 adafruit_feather_esp32s2.build.bootloader_addr=0x1000
-adafruit_feather_esp32s2.build.target=esp
+adafruit_feather_esp32s2.build.target=esp32s2
 adafruit_feather_esp32s2.build.mcu=esp32s2
 adafruit_feather_esp32s2.build.core=esp32
 adafruit_feather_esp32s2.build.variant=adafruit_feather_esp32s2
@@ -12965,7 +12965,7 @@ adafruit_feather_esp32s2_tft.serial.disableRTS=false
 
 adafruit_feather_esp32s2_tft.build.tarch=xtensa
 adafruit_feather_esp32s2_tft.build.bootloader_addr=0x1000
-adafruit_feather_esp32s2_tft.build.target=esp
+adafruit_feather_esp32s2_tft.build.target=esp32s2
 adafruit_feather_esp32s2_tft.build.mcu=esp32s2
 adafruit_feather_esp32s2_tft.build.core=esp32
 adafruit_feather_esp32s2_tft.build.variant=adafruit_feather_esp32s2_tft
@@ -13148,7 +13148,7 @@ adafruit_feather_esp32s2_reversetft.serial.disableRTS=false
 
 adafruit_feather_esp32s2_reversetft.build.tarch=xtensa
 adafruit_feather_esp32s2_reversetft.build.bootloader_addr=0x1000
-adafruit_feather_esp32s2_reversetft.build.target=esp
+adafruit_feather_esp32s2_reversetft.build.target=esp32s2
 adafruit_feather_esp32s2_reversetft.build.mcu=esp32s2
 adafruit_feather_esp32s2_reversetft.build.core=esp32
 adafruit_feather_esp32s2_reversetft.build.variant=adafruit_feather_esp32s2_reversetft
@@ -13331,7 +13331,7 @@ adafruit_feather_esp32s3.serial.disableRTS=false
 
 adafruit_feather_esp32s3.build.tarch=xtensa
 adafruit_feather_esp32s3.build.bootloader_addr=0x0
-adafruit_feather_esp32s3.build.target=esp
+adafruit_feather_esp32s3.build.target=esp32s3
 adafruit_feather_esp32s3.build.mcu=esp32s3
 adafruit_feather_esp32s3.build.core=esp32
 adafruit_feather_esp32s3.build.variant=adafruit_feather_esp32s3
@@ -13549,7 +13549,7 @@ adafruit_feather_esp32s3_nopsram.serial.disableRTS=false
 
 adafruit_feather_esp32s3_nopsram.build.tarch=xtensa
 adafruit_feather_esp32s3_nopsram.build.bootloader_addr=0x0
-adafruit_feather_esp32s3_nopsram.build.target=esp
+adafruit_feather_esp32s3_nopsram.build.target=esp32s3
 adafruit_feather_esp32s3_nopsram.build.mcu=esp32s3
 adafruit_feather_esp32s3_nopsram.build.core=esp32
 adafruit_feather_esp32s3_nopsram.build.variant=adafruit_feather_esp32s3_nopsram
@@ -13736,7 +13736,7 @@ adafruit_feather_esp32s3_tft.serial.disableRTS=false
 
 adafruit_feather_esp32s3_tft.build.tarch=xtensa
 adafruit_feather_esp32s3_tft.build.bootloader_addr=0x0
-adafruit_feather_esp32s3_tft.build.target=esp
+adafruit_feather_esp32s3_tft.build.target=esp32s3
 adafruit_feather_esp32s3_tft.build.mcu=esp32s3
 adafruit_feather_esp32s3_tft.build.core=esp32
 adafruit_feather_esp32s3_tft.build.variant=adafruit_feather_esp32s3_tft
@@ -13954,7 +13954,7 @@ adafruit_feather_esp32s3_reversetft.serial.disableRTS=false
 
 adafruit_feather_esp32s3_reversetft.build.tarch=xtensa
 adafruit_feather_esp32s3_reversetft.build.bootloader_addr=0x0
-adafruit_feather_esp32s3_reversetft.build.target=esp
+adafruit_feather_esp32s3_reversetft.build.target=esp32s3
 adafruit_feather_esp32s3_reversetft.build.mcu=esp32s3
 adafruit_feather_esp32s3_reversetft.build.core=esp32
 adafruit_feather_esp32s3_reversetft.build.variant=adafruit_feather_esp32s3_reversetft
@@ -14338,7 +14338,7 @@ adafruit_qtpy_esp32_pico.serial.disableRTS=true
 
 adafruit_qtpy_esp32_pico.build.tarch=xtensa
 adafruit_qtpy_esp32_pico.build.bootloader_addr=0x1000
-adafruit_qtpy_esp32_pico.build.target=esp
+adafruit_qtpy_esp32_pico.build.target=esp32
 adafruit_qtpy_esp32_pico.build.mcu=esp32
 adafruit_qtpy_esp32_pico.build.core=esp32
 adafruit_qtpy_esp32_pico.build.variant=adafruit_qtpy_esp32
@@ -14605,7 +14605,7 @@ adafruit_qtpy_esp32s2.serial.disableRTS=false
 
 adafruit_qtpy_esp32s2.build.tarch=xtensa
 adafruit_qtpy_esp32s2.build.bootloader_addr=0x1000
-adafruit_qtpy_esp32s2.build.target=esp
+adafruit_qtpy_esp32s2.build.target=esp32s2
 adafruit_qtpy_esp32s2.build.mcu=esp32s2
 adafruit_qtpy_esp32s2.build.core=esp32
 adafruit_qtpy_esp32s2.build.variant=adafruit_qtpy_esp32s2
@@ -14788,7 +14788,7 @@ adafruit_qtpy_esp32s3_nopsram.serial.disableRTS=false
 
 adafruit_qtpy_esp32s3_nopsram.build.tarch=xtensa
 adafruit_qtpy_esp32s3_nopsram.build.bootloader_addr=0x0
-adafruit_qtpy_esp32s3_nopsram.build.target=esp
+adafruit_qtpy_esp32s3_nopsram.build.target=esp32s3
 adafruit_qtpy_esp32s3_nopsram.build.mcu=esp32s3
 adafruit_qtpy_esp32s3_nopsram.build.core=esp32
 adafruit_qtpy_esp32s3_nopsram.build.variant=adafruit_qtpy_esp32s3_nopsram
@@ -14975,7 +14975,7 @@ adafruit_qtpy_esp32s3_n4r2.serial.disableRTS=false
 
 adafruit_qtpy_esp32s3_n4r2.build.tarch=xtensa
 adafruit_qtpy_esp32s3_n4r2.build.bootloader_addr=0x0
-adafruit_qtpy_esp32s3_n4r2.build.target=esp
+adafruit_qtpy_esp32s3_n4r2.build.target=esp32s3
 adafruit_qtpy_esp32s3_n4r2.build.mcu=esp32s3
 adafruit_qtpy_esp32s3_n4r2.build.core=esp32
 adafruit_qtpy_esp32s3_n4r2.build.variant=adafruit_qtpy_esp32s3_n4r2
@@ -15179,7 +15179,7 @@ adafruit_itsybitsy_esp32.serial.disableRTS=true
 
 adafruit_itsybitsy_esp32.build.tarch=xtensa
 adafruit_itsybitsy_esp32.build.bootloader_addr=0x1000
-adafruit_itsybitsy_esp32.build.target=esp
+adafruit_itsybitsy_esp32.build.target=esp32
 adafruit_itsybitsy_esp32.build.mcu=esp32
 adafruit_itsybitsy_esp32.build.core=esp32
 adafruit_itsybitsy_esp32.build.variant=adafruit_itsybitsy_esp32
@@ -15311,7 +15311,7 @@ adafruit_matrixportal_esp32s3.serial.disableRTS=false
 
 adafruit_matrixportal_esp32s3.build.tarch=xtensa
 adafruit_matrixportal_esp32s3.build.bootloader_addr=0x0
-adafruit_matrixportal_esp32s3.build.target=esp
+adafruit_matrixportal_esp32s3.build.target=esp32s3
 adafruit_matrixportal_esp32s3.build.mcu=esp32s3
 adafruit_matrixportal_esp32s3.build.core=esp32
 adafruit_matrixportal_esp32s3.build.variant=adafruit_matrixportal_esp32s3
@@ -15508,7 +15508,7 @@ adafruit_camera_esp32s3.serial.disableRTS=false
 
 adafruit_camera_esp32s3.build.tarch=xtensa
 adafruit_camera_esp32s3.build.bootloader_addr=0x0
-adafruit_camera_esp32s3.build.target=esp
+adafruit_camera_esp32s3.build.target=esp32s3
 adafruit_camera_esp32s3.build.mcu=esp32s3
 adafruit_camera_esp32s3.build.core=esp32
 adafruit_camera_esp32s3.build.variant=adafruit_camera_esp32s3
@@ -15726,7 +15726,7 @@ adafruit_qualia_s3_rgb666.serial.disableRTS=false
 
 adafruit_qualia_s3_rgb666.build.tarch=xtensa
 adafruit_qualia_s3_rgb666.build.bootloader_addr=0x0
-adafruit_qualia_s3_rgb666.build.target=esp
+adafruit_qualia_s3_rgb666.build.target=esp32s3
 adafruit_qualia_s3_rgb666.build.mcu=esp32s3
 adafruit_qualia_s3_rgb666.build.core=esp32
 adafruit_qualia_s3_rgb666.build.variant=adafruit_qualia_s3_rgb666
@@ -15914,7 +15914,7 @@ nodemcu-32s.serial.disableRTS=true
 
 nodemcu-32s.build.tarch=xtensa
 nodemcu-32s.build.bootloader_addr=0x1000
-nodemcu-32s.build.target=esp
+nodemcu-32s.build.target=esp32
 nodemcu-32s.build.mcu=esp32
 nodemcu-32s.build.core=esp32
 nodemcu-32s.build.variant=nodemcu-32s
@@ -16126,7 +16126,7 @@ nologo_esp32s3_pico.serial.disableRTS=false
 
 nologo_esp32s3_pico.build.tarch=xtensa
 nologo_esp32s3_pico.build.bootloader_addr=0x0
-nologo_esp32s3_pico.build.target=esp
+nologo_esp32s3_pico.build.target=esp32s3
 nologo_esp32s3_pico.build.mcu=esp32s3
 nologo_esp32s3_pico.build.core=esp32
 nologo_esp32s3_pico.build.variant=nologo_esp32s3_pico
@@ -16369,7 +16369,7 @@ mhetesp32devkit.serial.disableRTS=true
 
 mhetesp32devkit.build.tarch=xtensa
 mhetesp32devkit.build.bootloader_addr=0x1000
-mhetesp32devkit.build.target=esp
+mhetesp32devkit.build.target=esp32
 mhetesp32devkit.build.mcu=esp32
 mhetesp32devkit.build.core=esp32
 mhetesp32devkit.build.variant=mhetesp32devkit
@@ -16450,7 +16450,7 @@ mhetesp32minikit.serial.disableRTS=true
 
 mhetesp32minikit.build.tarch=xtensa
 mhetesp32minikit.build.bootloader_addr=0x1000
-mhetesp32minikit.build.target=esp
+mhetesp32minikit.build.target=esp32
 mhetesp32minikit.build.mcu=esp32
 mhetesp32minikit.build.core=esp32
 mhetesp32minikit.build.variant=mhetesp32minikit
@@ -16533,7 +16533,7 @@ esp32vn-iot-uno.serial.disableRTS=true
 
 esp32vn-iot-uno.build.tarch=xtensa
 esp32vn-iot-uno.build.bootloader_addr=0x1000
-esp32vn-iot-uno.build.target=esp
+esp32vn-iot-uno.build.target=esp32
 esp32vn-iot-uno.build.mcu=esp32
 esp32vn-iot-uno.build.core=esp32
 esp32vn-iot-uno.build.variant=esp32vn-iot-uno
@@ -16605,7 +16605,7 @@ esp32doit-devkit-v1.serial.disableRTS=true
 
 esp32doit-devkit-v1.build.tarch=xtensa
 esp32doit-devkit-v1.build.bootloader_addr=0x1000
-esp32doit-devkit-v1.build.target=esp
+esp32doit-devkit-v1.build.target=esp32
 esp32doit-devkit-v1.build.mcu=esp32
 esp32doit-devkit-v1.build.core=esp32
 esp32doit-devkit-v1.build.variant=doitESP32devkitV1
@@ -16676,7 +16676,7 @@ esp32doit-espduino.serial.disableRTS=true
 
 esp32doit-espduino.build.tarch=xtensa
 esp32doit-espduino.build.bootloader_addr=0x1000
-esp32doit-espduino.build.target=esp
+esp32doit-espduino.build.target=esp32
 esp32doit-espduino.build.mcu=esp32
 esp32doit-espduino.build.core=esp32
 esp32doit-espduino.build.variant=doitESPduino32
@@ -16774,7 +16774,7 @@ esp32-evb.serial.disableRTS=true
 
 esp32-evb.build.tarch=xtensa
 esp32-evb.build.bootloader_addr=0x1000
-esp32-evb.build.target=esp
+esp32-evb.build.target=esp32
 esp32-evb.build.mcu=esp32
 esp32-evb.build.core=esp32
 esp32-evb.build.variant=esp32-evb
@@ -16855,7 +16855,7 @@ esp32-gateway.serial.disableRTS=true
 
 esp32-gateway.build.tarch=xtensa
 esp32-gateway.build.bootloader_addr=0x1000
-esp32-gateway.build.target=esp
+esp32-gateway.build.target=esp32
 esp32-gateway.build.mcu=esp32
 esp32-gateway.build.core=esp32
 esp32-gateway.build.variant=esp32-gateway
@@ -16932,7 +16932,7 @@ esp32-poe.serial.disableRTS=true
 
 esp32-poe.build.tarch=xtensa
 esp32-poe.build.bootloader_addr=0x1000
-esp32-poe.build.target=esp
+esp32-poe.build.target=esp32
 esp32-poe.build.mcu=esp32
 esp32-poe.build.core=esp32
 esp32-poe.build.variant=esp32-poe
@@ -17075,7 +17075,7 @@ esp32-poe-iso.serial.disableRTS=true
 
 esp32-poe-iso.build.tarch=xtensa
 esp32-poe-iso.build.bootloader_addr=0x1000
-esp32-poe-iso.build.target=esp
+esp32-poe-iso.build.target=esp32
 esp32-poe-iso.build.mcu=esp32
 esp32-poe-iso.build.core=esp32
 esp32-poe-iso.build.variant=esp32-poe-iso
@@ -17218,7 +17218,7 @@ esp32-devkitlipo.serial.disableRTS=true
 
 esp32-devkitlipo.build.tarch=xtensa
 esp32-devkitlipo.build.bootloader_addr=0x1000
-esp32-devkitlipo.build.target=esp
+esp32-devkitlipo.build.target=esp32
 esp32-devkitlipo.build.mcu=esp32
 esp32-devkitlipo.build.core=esp32
 esp32-devkitlipo.build.variant=esp32-devkit-lipo
@@ -17323,7 +17323,7 @@ esp32s2-devkitlipo.serial.disableRTS=false
 
 esp32s2-devkitlipo.build.tarch=xtensa
 esp32s2-devkitlipo.build.bootloader_addr=0x1000
-esp32s2-devkitlipo.build.target=esp
+esp32s2-devkitlipo.build.target=esp32s2
 esp32s2-devkitlipo.build.mcu=esp32s2
 esp32s2-devkitlipo.build.core=esp32
 esp32s2-devkitlipo.build.variant=esp32s2-devkit-lipo
@@ -17520,7 +17520,7 @@ esp32s2-devkitlipo-usb.serial.disableRTS=false
 
 esp32s2-devkitlipo-usb.build.tarch=xtensa
 esp32s2-devkitlipo-usb.build.bootloader_addr=0x1000
-esp32s2-devkitlipo-usb.build.target=esp
+esp32s2-devkitlipo-usb.build.target=esp32s2
 esp32s2-devkitlipo-usb.build.mcu=esp32s2
 esp32s2-devkitlipo-usb.build.core=esp32
 esp32s2-devkitlipo-usb.build.variant=esp32s2-devkit-lipo-usb
@@ -17717,7 +17717,7 @@ esp32s3-devkitlipo.serial.disableRTS=false
 
 esp32s3-devkitlipo.build.tarch=xtensa
 esp32s3-devkitlipo.build.bootloader_addr=0x0
-esp32s3-devkitlipo.build.target=esp
+esp32s3-devkitlipo.build.target=esp32s3
 esp32s3-devkitlipo.build.mcu=esp32s3
 esp32s3-devkitlipo.build.core=esp32
 esp32s3-devkitlipo.build.variant=esp32s3-devkit-lipo
@@ -18500,7 +18500,7 @@ esp32-sbc-fabgl.serial.disableRTS=true
 
 esp32-sbc-fabgl.build.tarch=xtensa
 esp32-sbc-fabgl.build.bootloader_addr=0x1000
-esp32-sbc-fabgl.build.target=esp
+esp32-sbc-fabgl.build.target=esp32
 esp32-sbc-fabgl.build.mcu=esp32
 esp32-sbc-fabgl.build.core=esp32
 esp32-sbc-fabgl.build.variant=esp32-sbc-fabgl
@@ -18693,7 +18693,7 @@ espino32.serial.disableRTS=true
 
 espino32.build.tarch=xtensa
 espino32.build.bootloader_addr=0x1000
-espino32.build.target=esp
+espino32.build.target=esp32
 espino32.build.mcu=esp32
 espino32.build.core=esp32
 espino32.build.variant=espino32
@@ -18765,7 +18765,7 @@ m5stack_core.serial.disableRTS=true
 
 m5stack_core.build.tarch=xtensa
 m5stack_core.build.bootloader_addr=0x1000
-m5stack_core.build.target=esp
+m5stack_core.build.target=esp32
 m5stack_core.build.mcu=esp32
 m5stack_core.build.core=esp32
 m5stack_core.build.variant=m5stack_core
@@ -18930,7 +18930,7 @@ m5stack_fire.serial.disableRTS=true
 
 m5stack_fire.build.tarch=xtensa
 m5stack_fire.build.bootloader_addr=0x1000
-m5stack_fire.build.target=esp
+m5stack_fire.build.target=esp32
 m5stack_fire.build.mcu=esp32
 m5stack_fire.build.core=esp32
 m5stack_fire.build.variant=m5stack_fire
@@ -19104,7 +19104,7 @@ m5stack_core2.serial.disableRTS=true
 
 m5stack_core2.build.tarch=xtensa
 m5stack_core2.build.bootloader_addr=0x1000
-m5stack_core2.build.target=esp
+m5stack_core2.build.target=esp32
 m5stack_core2.build.mcu=esp32
 m5stack_core2.build.core=esp32
 m5stack_core2.build.variant=m5stack_core2
@@ -19278,7 +19278,7 @@ m5stack_tough.serial.disableRTS=true
 
 m5stack_tough.build.tarch=xtensa
 m5stack_tough.build.bootloader_addr=0x1000
-m5stack_tough.build.target=esp
+m5stack_tough.build.target=esp32
 m5stack_tough.build.mcu=esp32
 m5stack_tough.build.core=esp32
 m5stack_tough.build.variant=m5stack_tough
@@ -19452,7 +19452,7 @@ m5stack_station.serial.disableRTS=true
 
 m5stack_station.build.tarch=xtensa
 m5stack_station.build.bootloader_addr=0x1000
-m5stack_station.build.target=esp
+m5stack_station.build.target=esp32
 m5stack_station.build.mcu=esp32
 m5stack_station.build.core=esp32
 m5stack_station.build.variant=m5stack_station
@@ -19619,7 +19619,7 @@ m5stack_stickc.serial.disableRTS=true
 
 m5stack_stickc.build.tarch=xtensa
 m5stack_stickc.build.bootloader_addr=0x1000
-m5stack_stickc.build.target=esp
+m5stack_stickc.build.target=esp32
 m5stack_stickc.build.mcu=esp32
 m5stack_stickc.build.core=esp32
 m5stack_stickc.build.variant=m5stack_stickc
@@ -19774,7 +19774,7 @@ m5stack_stickc_plus.serial.disableRTS=true
 
 m5stack_stickc_plus.build.tarch=xtensa
 m5stack_stickc_plus.build.bootloader_addr=0x1000
-m5stack_stickc_plus.build.target=esp
+m5stack_stickc_plus.build.target=esp32
 m5stack_stickc_plus.build.mcu=esp32
 m5stack_stickc_plus.build.core=esp32
 m5stack_stickc_plus.build.variant=m5stack_stickc_plus
@@ -19928,7 +19928,7 @@ m5stack_stickc_plus2.serial.disableRTS=true
 
 m5stack_stickc_plus2.build.tarch=xtensa
 m5stack_stickc_plus2.build.bootloader_addr=0x1000
-m5stack_stickc_plus2.build.target=esp
+m5stack_stickc_plus2.build.target=esp32
 m5stack_stickc_plus2.build.mcu=esp32
 m5stack_stickc_plus2.build.core=esp32
 m5stack_stickc_plus2.build.variant=m5stack_stickc_plus2
@@ -20092,7 +20092,7 @@ m5stack_atom.serial.disableRTS=true
 
 m5stack_atom.build.tarch=xtensa
 m5stack_atom.build.bootloader_addr=0x1000
-m5stack_atom.build.target=esp
+m5stack_atom.build.target=esp32
 m5stack_atom.build.mcu=esp32
 m5stack_atom.build.core=esp32
 m5stack_atom.build.variant=m5stack_atom
@@ -20247,7 +20247,7 @@ m5stack_atoms3.serial.disableRTS=false
 
 m5stack_atoms3.build.tarch=xtensa
 m5stack_atoms3.build.bootloader_addr=0x0
-m5stack_atoms3.build.target=esp
+m5stack_atoms3.build.target=esp32s3
 m5stack_atoms3.build.mcu=esp32s3
 m5stack_atoms3.build.core=esp32
 m5stack_atoms3.build.variant=m5stack_atoms3
@@ -20480,7 +20480,7 @@ m5stack_cores3.serial.disableRTS=false
 
 m5stack_cores3.build.tarch=xtensa
 m5stack_cores3.build.bootloader_addr=0x0
-m5stack_cores3.build.target=esp
+m5stack_cores3.build.target=esp32s3
 m5stack_cores3.build.mcu=esp32s3
 m5stack_cores3.build.core=esp32
 m5stack_cores3.build.variant=m5stack_cores3
@@ -20721,7 +20721,7 @@ m5stack_timer_cam.serial.disableRTS=true
 
 m5stack_timer_cam.build.tarch=xtensa
 m5stack_timer_cam.build.bootloader_addr=0x1000
-m5stack_timer_cam.build.target=esp
+m5stack_timer_cam.build.target=esp32
 m5stack_timer_cam.build.mcu=esp32
 m5stack_timer_cam.build.core=esp32
 m5stack_timer_cam.build.variant=m5stack_timer_cam
@@ -20872,7 +20872,7 @@ m5stack_unit_cam.serial.disableRTS=true
 
 m5stack_unit_cam.build.tarch=xtensa
 m5stack_unit_cam.build.bootloader_addr=0x1000
-m5stack_unit_cam.build.target=esp
+m5stack_unit_cam.build.target=esp32
 m5stack_unit_cam.build.mcu=esp32
 m5stack_unit_cam.build.core=esp32
 m5stack_unit_cam.build.variant=m5stack_unit_cam
@@ -21023,7 +21023,7 @@ m5stack_unit_cams3.serial.disableRTS=false
 
 m5stack_unit_cams3.build.tarch=xtensa
 m5stack_unit_cams3.build.bootloader_addr=0x0
-m5stack_unit_cams3.build.target=esp
+m5stack_unit_cams3.build.target=esp32s3
 m5stack_unit_cams3.build.mcu=esp32s3
 m5stack_unit_cams3.build.core=esp32
 m5stack_unit_cams3.build.variant=m5stack_unit_cams3
@@ -21257,7 +21257,7 @@ m5stack_poe_cam.serial.disableRTS=true
 
 m5stack_poe_cam.build.tarch=xtensa
 m5stack_poe_cam.build.bootloader_addr=0x1000
-m5stack_poe_cam.build.target=esp
+m5stack_poe_cam.build.target=esp32
 m5stack_poe_cam.build.mcu=esp32
 m5stack_poe_cam.build.core=esp32
 m5stack_poe_cam.build.variant=m5stack_poe_cam
@@ -21406,7 +21406,7 @@ m5stack_paper.serial.disableRTS=true
 
 m5stack_paper.build.tarch=xtensa
 m5stack_paper.build.bootloader_addr=0x1000
-m5stack_paper.build.target=esp
+m5stack_paper.build.target=esp32
 m5stack_paper.build.mcu=esp32
 m5stack_paper.build.core=esp32
 m5stack_paper.build.variant=m5stack_paper
@@ -21580,7 +21580,7 @@ m5stack_coreink.serial.disableRTS=true
 
 m5stack_coreink.build.tarch=xtensa
 m5stack_coreink.build.bootloader_addr=0x1000
-m5stack_coreink.build.target=esp
+m5stack_coreink.build.target=esp32
 m5stack_coreink.build.mcu=esp32
 m5stack_coreink.build.core=esp32
 m5stack_coreink.build.variant=m5stack_coreink
@@ -21734,7 +21734,7 @@ m5stack_stamp_pico.serial.disableRTS=true
 
 m5stack_stamp_pico.build.tarch=xtensa
 m5stack_stamp_pico.build.bootloader_addr=0x1000
-m5stack_stamp_pico.build.target=esp
+m5stack_stamp_pico.build.target=esp32
 m5stack_stamp_pico.build.mcu=esp32
 m5stack_stamp_pico.build.core=esp32
 m5stack_stamp_pico.build.variant=m5stack_stamp_pico
@@ -22035,7 +22035,7 @@ m5stack_stamp_s3.serial.disableRTS=false
 
 m5stack_stamp_s3.build.tarch=xtensa
 m5stack_stamp_s3.build.bootloader_addr=0x0
-m5stack_stamp_s3.build.target=esp
+m5stack_stamp_s3.build.target=esp32s3
 m5stack_stamp_s3.build.mcu=esp32s3
 m5stack_stamp_s3.build.core=esp32
 m5stack_stamp_s3.build.variant=m5stack_stamp_s3
@@ -22274,7 +22274,7 @@ m5stack_capsule.serial.disableRTS=false
 
 m5stack_capsule.build.tarch=xtensa
 m5stack_capsule.build.bootloader_addr=0x0
-m5stack_capsule.build.target=esp
+m5stack_capsule.build.target=esp32s3
 m5stack_capsule.build.mcu=esp32s3
 m5stack_capsule.build.core=esp32
 m5stack_capsule.build.variant=m5stack_capsule
@@ -22516,7 +22516,7 @@ m5stack_cardputer.serial.disableRTS=false
 
 m5stack_cardputer.build.tarch=xtensa
 m5stack_cardputer.build.bootloader_addr=0x0
-m5stack_cardputer.build.target=esp
+m5stack_cardputer.build.target=esp32s3
 m5stack_cardputer.build.mcu=esp32s3
 m5stack_cardputer.build.core=esp32
 m5stack_cardputer.build.variant=m5stack_cardputer
@@ -22755,7 +22755,7 @@ m5stack_dial.serial.disableRTS=false
 
 m5stack_dial.build.tarch=xtensa
 m5stack_dial.build.bootloader_addr=0x0
-m5stack_dial.build.target=esp
+m5stack_dial.build.target=esp32s3
 m5stack_dial.build.mcu=esp32s3
 m5stack_dial.build.core=esp32
 m5stack_dial.build.variant=m5stack_dial
@@ -22994,7 +22994,7 @@ m5stack_dinmeter.serial.disableRTS=false
 
 m5stack_dinmeter.build.tarch=xtensa
 m5stack_dinmeter.build.bootloader_addr=0x0
-m5stack_dinmeter.build.target=esp
+m5stack_dinmeter.build.target=esp32s3
 m5stack_dinmeter.build.mcu=esp32s3
 m5stack_dinmeter.build.core=esp32
 m5stack_dinmeter.build.variant=m5stack_dinmeter
@@ -23386,7 +23386,7 @@ odroid_esp32.serial.disableRTS=true
 
 odroid_esp32.build.tarch=xtensa
 odroid_esp32.build.bootloader_addr=0x1000
-odroid_esp32.build.target=esp
+odroid_esp32.build.target=esp32
 odroid_esp32.build.mcu=esp32
 odroid_esp32.build.core=esp32
 odroid_esp32.build.variant=odroid_esp32
@@ -23475,7 +23475,7 @@ heltec_wifi_kit_32.serial.disableRTS=true
 
 heltec_wifi_kit_32.build.tarch=xtensa
 heltec_wifi_kit_32.build.bootloader_addr=0x1000
-heltec_wifi_kit_32.build.target=esp
+heltec_wifi_kit_32.build.target=esp32
 heltec_wifi_kit_32.build.mcu=esp32
 heltec_wifi_kit_32.build.core=esp32
 heltec_wifi_kit_32.build.variant=heltec_wifi_kit_32
@@ -23574,7 +23574,7 @@ heltec_wifi_kit_32_V3.serial.disableRTS=false
 
 heltec_wifi_kit_32_V3.build.tarch=xtensa
 heltec_wifi_kit_32_V3.build.bootloader_addr=0x0
-heltec_wifi_kit_32_V3.build.target=esp
+heltec_wifi_kit_32_V3.build.target=esp32s3
 heltec_wifi_kit_32_V3.build.mcu=esp32s3
 heltec_wifi_kit_32_V3.build.core=esp32
 heltec_wifi_kit_32_V3.build.variant=heltec_wifi_kit_32_V3
@@ -23673,7 +23673,7 @@ heltec_wifi_lora_32.serial.disableRTS=true
 
 heltec_wifi_lora_32.build.tarch=xtensa
 heltec_wifi_lora_32.build.bootloader_addr=0x1000
-heltec_wifi_lora_32.build.target=esp
+heltec_wifi_lora_32.build.target=esp32
 heltec_wifi_lora_32.build.mcu=esp32
 heltec_wifi_lora_32.build.core=esp32
 heltec_wifi_lora_32.build.variant=heltec_wifi_lora_32
@@ -23810,7 +23810,7 @@ heltec_wifi_lora_32_V2.serial.disableRTS=true
 
 heltec_wifi_lora_32_V2.build.tarch=xtensa
 heltec_wifi_lora_32_V2.build.bootloader_addr=0x1000
-heltec_wifi_lora_32_V2.build.target=esp
+heltec_wifi_lora_32_V2.build.target=esp32
 heltec_wifi_lora_32_V2.build.mcu=esp32
 heltec_wifi_lora_32_V2.build.core=esp32
 heltec_wifi_lora_32_V2.build.variant=heltec_wifi_lora_32_V2
@@ -23928,7 +23928,7 @@ heltec_wifi_lora_32_V3.serial.disableRTS=false
 
 heltec_wifi_lora_32_V3.build.tarch=xtensa
 heltec_wifi_lora_32_V3.build.bootloader_addr=0x0
-heltec_wifi_lora_32_V3.build.target=esp
+heltec_wifi_lora_32_V3.build.target=esp32s3
 heltec_wifi_lora_32_V3.build.mcu=esp32s3
 heltec_wifi_lora_32_V3.build.core=esp32
 heltec_wifi_lora_32_V3.build.variant=heltec_wifi_lora_32_V3
@@ -24076,7 +24076,7 @@ heltec_wireless_stick_V3.serial.disableRTS=false
 
 heltec_wireless_stick_V3.build.tarch=xtensa
 heltec_wireless_stick_V3.build.bootloader_addr=0x0
-heltec_wireless_stick_V3.build.target=esp
+heltec_wireless_stick_V3.build.target=esp32s3
 heltec_wireless_stick_V3.build.mcu=esp32s3
 heltec_wireless_stick_V3.build.core=esp32
 heltec_wireless_stick_V3.build.variant=heltec_wireless_stick_v3
@@ -24224,7 +24224,7 @@ heltec_wireless_stick_lite_V3.serial.disableRTS=false
 
 heltec_wireless_stick_lite_V3.build.tarch=xtensa
 heltec_wireless_stick_lite_V3.build.bootloader_addr=0x0
-heltec_wireless_stick_lite_V3.build.target=esp
+heltec_wireless_stick_lite_V3.build.target=esp32s3
 heltec_wireless_stick_lite_V3.build.mcu=esp32s3
 heltec_wireless_stick_lite_V3.build.core=esp32
 heltec_wireless_stick_lite_V3.build.variant=heltec_wireless_stick_lite_v3
@@ -24372,7 +24372,7 @@ heltec_wireless_shell_V3.serial.disableRTS=false
 
 heltec_wireless_shell_V3.build.tarch=xtensa
 heltec_wireless_shell_V3.build.bootloader_addr=0x0
-heltec_wireless_shell_V3.build.target=esp
+heltec_wireless_shell_V3.build.target=esp32s3
 heltec_wireless_shell_V3.build.mcu=esp32s3
 heltec_wireless_shell_V3.build.core=esp32
 heltec_wireless_shell_V3.build.variant=heltec_wireless_shell_v3
@@ -24520,7 +24520,7 @@ heltec_capsule_sensor_V3.serial.disableRTS=false
 
 heltec_capsule_sensor_V3.build.tarch=xtensa
 heltec_capsule_sensor_V3.build.bootloader_addr=0x0
-heltec_capsule_sensor_V3.build.target=esp
+heltec_capsule_sensor_V3.build.target=esp32s3
 heltec_capsule_sensor_V3.build.mcu=esp32s3
 heltec_capsule_sensor_V3.build.core=esp32
 heltec_capsule_sensor_V3.build.variant=heltec_capsule_sensor_v3
@@ -24678,7 +24678,7 @@ heltec_wireless_paper.serial.disableRTS=false
 
 heltec_wireless_paper.build.tarch=xtensa
 heltec_wireless_paper.build.bootloader_addr=0x0
-heltec_wireless_paper.build.target=esp
+heltec_wireless_paper.build.target=esp32s3
 heltec_wireless_paper.build.mcu=esp32s3
 heltec_wireless_paper.build.core=esp32
 heltec_wireless_paper.build.variant=heltec_wireless_paper
@@ -24826,7 +24826,7 @@ heltec_wireless_tracker.serial.disableRTS=false
 
 heltec_wireless_tracker.build.tarch=xtensa
 heltec_wireless_tracker.build.bootloader_addr=0x0
-heltec_wireless_tracker.build.target=esp
+heltec_wireless_tracker.build.target=esp32s3
 heltec_wireless_tracker.build.mcu=esp32s3
 heltec_wireless_tracker.build.core=esp32
 heltec_wireless_tracker.build.variant=heltec_wireless_tracker
@@ -25122,7 +25122,7 @@ heltec_wireless_stick.serial.disableRTS=true
 
 heltec_wireless_stick.build.tarch=xtensa
 heltec_wireless_stick.build.bootloader_addr=0x1000
-heltec_wireless_stick.build.target=esp
+heltec_wireless_stick.build.target=esp32
 heltec_wireless_stick.build.mcu=esp32
 heltec_wireless_stick.build.core=esp32
 heltec_wireless_stick.build.variant=heltec_wireless_stick
@@ -25238,7 +25238,7 @@ heltec_wireless_stick_lite.serial.disableRTS=true
 
 heltec_wireless_stick_lite.build.tarch=xtensa
 heltec_wireless_stick_lite.build.bootloader_addr=0x1000
-heltec_wireless_stick_lite.build.target=esp
+heltec_wireless_stick_lite.build.target=esp32
 heltec_wireless_stick_lite.build.mcu=esp32
 heltec_wireless_stick_lite.build.core=esp32
 heltec_wireless_stick_lite.build.variant=heltec_wireless_stick_lite
@@ -25355,7 +25355,7 @@ heltec_wireless_bridge.serial.disableRTS=true
 
 heltec_wireless_bridge.build.tarch=xtensa
 heltec_wireless_bridge.build.bootloader_addr=0x1000
-heltec_wireless_bridge.build.target=esp
+heltec_wireless_bridge.build.target=esp32
 heltec_wireless_bridge.build.mcu=esp32
 heltec_wireless_bridge.build.core=esp32
 heltec_wireless_bridge.build.variant=heltec_wireless_bridge
@@ -25483,7 +25483,7 @@ heltec_ht_de01.serial.disableRTS=false
 
 heltec_ht_de01.build.tarch=xtensa
 heltec_ht_de01.build.bootloader_addr=0x0
-heltec_ht_de01.build.target=esp
+heltec_ht_de01.build.target=esp32s3
 heltec_ht_de01.build.mcu=esp32s3
 heltec_ht_de01.build.core=esp32
 heltec_ht_de01.build.variant=heltec_ht_de01
@@ -25593,7 +25593,7 @@ espectro32.serial.disableRTS=true
 
 espectro32.build.tarch=xtensa
 espectro32.build.bootloader_addr=0x1000
-espectro32.build.target=esp
+espectro32.build.target=esp32
 espectro32.build.mcu=esp32
 espectro32.build.core=esp32
 espectro32.build.variant=espectro32
@@ -25678,7 +25678,7 @@ CoreESP32.serial.disableRTS=false
 
 CoreESP32.build.tarch=xtensa
 CoreESP32.build.bootloader_addr=0x1000
-CoreESP32.build.target=esp
+CoreESP32.build.target=esp32
 CoreESP32.build.mcu=esp32
 CoreESP32.build.core=esp32
 CoreESP32.build.variant=Microduino-esp32
@@ -25770,7 +25770,7 @@ alksesp32.serial.disableRTS=true
 
 alksesp32.build.tarch=xtensa
 alksesp32.build.bootloader_addr=0x1000
-alksesp32.build.target=esp
+alksesp32.build.target=esp32
 alksesp32.build.mcu=esp32
 alksesp32.build.core=esp32
 alksesp32.build.variant=alksesp32
@@ -25910,7 +25910,7 @@ wipy3.serial.disableRTS=true
 
 wipy3.build.tarch=xtensa
 wipy3.build.bootloader_addr=0x1000
-wipy3.build.target=esp
+wipy3.build.target=esp32
 wipy3.build.mcu=esp32
 wipy3.build.core=esp32
 wipy3.build.variant=wipy3
@@ -25982,7 +25982,7 @@ wt32-eth01.serial.disableRTS=true
 
 wt32-eth01.build.tarch=xtensa
 wt32-eth01.build.bootloader_addr=0x1000
-wt32-eth01.build.target=esp
+wt32-eth01.build.target=esp32
 wt32-eth01.build.mcu=esp32
 wt32-eth01.build.core=esp32
 wt32-eth01.build.variant=wt32-eth01
@@ -26092,7 +26092,7 @@ wt32-sc01-plus.serial.disableRTS=false
 
 wt32-sc01-plus.build.tarch=xtensa
 wt32-sc01-plus.build.bootloader_addr=0x0
-wt32-sc01-plus.build.target=esp
+wt32-sc01-plus.build.target=esp32s3
 wt32-sc01-plus.build.mcu=esp32s3
 wt32-sc01-plus.build.core=esp32
 wt32-sc01-plus.build.variant=wt32-sc01-plus
@@ -26240,7 +26240,7 @@ bpi-bit.serial.disableRTS=true
 
 bpi-bit.build.tarch=xtensa
 bpi-bit.build.bootloader_addr=0x1000
-bpi-bit.build.target=esp
+bpi-bit.build.target=esp32
 bpi-bit.build.mcu=esp32
 bpi-bit.build.core=esp32
 bpi-bit.build.variant=bpi-bit
@@ -26315,7 +26315,7 @@ bpi_leaf_s3.serial.disableRTS=false
 
 bpi_leaf_s3.build.tarch=xtensa
 bpi_leaf_s3.build.bootloader_addr=0x0
-bpi_leaf_s3.build.target=esp
+bpi_leaf_s3.build.target=esp32s3
 bpi_leaf_s3.build.mcu=esp32s3
 bpi_leaf_s3.build.core=esp32
 bpi_leaf_s3.build.variant=bpi_leaf_s3
@@ -26526,7 +26526,7 @@ wesp32.serial.disableRTS=true
 
 wesp32.build.tarch=xtensa
 wesp32.build.bootloader_addr=0x1000
-wesp32.build.target=esp
+wesp32.build.target=esp32
 wesp32.build.mcu=esp32
 wesp32.build.core=esp32
 wesp32.build.variant=wesp32
@@ -26598,7 +26598,7 @@ t-beam.serial.disableRTS=true
 
 t-beam.build.tarch=xtensa
 t-beam.build.bootloader_addr=0x1000
-t-beam.build.target=esp
+t-beam.build.target=esp32
 t-beam.build.mcu=esp32
 t-beam.build.core=esp32
 t-beam.build.variant=tbeam
@@ -26687,7 +26687,7 @@ d-duino-32.serial.disableRTS=true
 
 d-duino-32.build.tarch=xtensa
 d-duino-32.build.bootloader_addr=0x1000
-d-duino-32.build.target=esp
+d-duino-32.build.target=esp32
 d-duino-32.build.mcu=esp32
 d-duino-32.build.core=esp32
 d-duino-32.build.variant=d-duino-32
@@ -26773,7 +26773,7 @@ lopy.serial.disableRTS=true
 
 lopy.build.tarch=xtensa
 lopy.build.bootloader_addr=0x1000
-lopy.build.target=esp
+lopy.build.target=esp32
 lopy.build.mcu=esp32
 lopy.build.core=esp32
 lopy.build.variant=lopy
@@ -26844,7 +26844,7 @@ lopy4.serial.disableRTS=true
 
 lopy4.build.tarch=xtensa
 lopy4.build.bootloader_addr=0x1000
-lopy4.build.target=esp
+lopy4.build.target=esp32
 lopy4.build.mcu=esp32
 lopy4.build.core=esp32
 lopy4.build.variant=lopy4
@@ -26922,7 +26922,7 @@ oroca_edubot.serial.disableRTS=true
 
 oroca_edubot.build.tarch=xtensa
 oroca_edubot.build.bootloader_addr=0x1000
-oroca_edubot.build.target=esp
+oroca_edubot.build.target=esp32
 oroca_edubot.build.mcu=esp32
 oroca_edubot.build.core=esp32
 oroca_edubot.build.variant=oroca_edubot
@@ -26998,7 +26998,7 @@ fm-devkit.serial.disableRTS=true
 
 fm-devkit.build.tarch=xtensa
 fm-devkit.build.bootloader_addr=0x1000
-fm-devkit.build.target=esp
+fm-devkit.build.target=esp32
 fm-devkit.build.mcu=esp32
 fm-devkit.build.core=esp32
 fm-devkit.build.variant=fm-devkit
@@ -27071,7 +27071,7 @@ fri3d_2024_esp32s3.serial.disableRTS=false
 
 fri3d_2024_esp32s3.build.tarch=xtensa
 fri3d_2024_esp32s3.build.bootloader_addr=0x0
-fri3d_2024_esp32s3.build.target=esp
+fri3d_2024_esp32s3.build.target=esp32s3
 fri3d_2024_esp32s3.build.mcu=esp32s3
 fri3d_2024_esp32s3.build.core=esp32
 fri3d_2024_esp32s3.build.variant=fri3d_2024_esp32s3
@@ -27285,7 +27285,7 @@ frogboard.serial.disableRTS=true
 
 frogboard.build.tarch=xtensa
 frogboard.build.bootloader_addr=0x1000
-frogboard.build.target=esp
+frogboard.build.target=esp32
 frogboard.build.mcu=esp32
 frogboard.build.core=esp32
 frogboard.build.variant=frog32
@@ -27387,7 +27387,7 @@ esp32cam.serial.disableRTS=true
 
 esp32cam.build.tarch=xtensa
 esp32cam.build.bootloader_addr=0x1000
-esp32cam.build.target=esp
+esp32cam.build.target=esp32
 esp32cam.build.mcu=esp32
 esp32cam.build.core=esp32
 esp32cam.build.variant=esp32
@@ -27492,7 +27492,7 @@ twatch.serial.disableRTS=true
 
 twatch.build.tarch=xtensa
 twatch.build.bootloader_addr=0x1000
-twatch.build.target=esp
+twatch.build.target=esp32
 twatch.build.mcu=esp32
 twatch.build.core=esp32
 twatch.build.variant=twatch
@@ -27587,7 +27587,7 @@ d1_mini32.serial.disableRTS=true
 
 d1_mini32.build.tarch=xtensa
 d1_mini32.build.bootloader_addr=0x1000
-d1_mini32.build.target=esp
+d1_mini32.build.target=esp32
 d1_mini32.build.mcu=esp32
 d1_mini32.build.core=esp32
 d1_mini32.build.variant=d1_mini32
@@ -27685,7 +27685,7 @@ d1_uno32.serial.disableRTS=true
 
 d1_uno32.build.tarch=xtensa
 d1_uno32.build.bootloader_addr=0x1000
-d1_uno32.build.target=esp
+d1_uno32.build.target=esp32
 d1_uno32.build.mcu=esp32
 d1_uno32.build.core=esp32
 d1_uno32.build.variant=d1_uno32
@@ -27783,7 +27783,7 @@ gpy.serial.disableRTS=true
 
 gpy.build.tarch=xtensa
 gpy.build.bootloader_addr=0x1000
-gpy.build.target=esp
+gpy.build.target=esp32
 gpy.build.mcu=esp32
 gpy.build.core=esp32
 gpy.build.variant=gpy
@@ -27854,7 +27854,7 @@ vintlabs-devkit-v1.serial.disableRTS=true
 
 vintlabs-devkit-v1.build.tarch=xtensa
 vintlabs-devkit-v1.build.bootloader_addr=0x1000
-vintlabs-devkit-v1.build.target=esp
+vintlabs-devkit-v1.build.target=esp32
 vintlabs-devkit-v1.build.mcu=esp32
 vintlabs-devkit-v1.build.core=esp32
 vintlabs-devkit-v1.build.variant=vintlabsdevkitv1
@@ -27971,7 +27971,7 @@ honeylemon.serial.disableRTS=true
 
 honeylemon.build.tarch=xtensa
 honeylemon.build.bootloader_addr=0x1000
-honeylemon.build.target=esp
+honeylemon.build.target=esp32
 honeylemon.build.mcu=esp32
 honeylemon.build.core=esp32
 honeylemon.build.variant=honeylemon
@@ -28043,7 +28043,7 @@ mgbot-iotik32a.serial.disableRTS=true
 
 mgbot-iotik32a.build.tarch=xtensa
 mgbot-iotik32a.build.bootloader_addr=0x1000
-mgbot-iotik32a.build.target=esp
+mgbot-iotik32a.build.target=esp32
 mgbot-iotik32a.build.mcu=esp32
 mgbot-iotik32a.build.core=esp32
 mgbot-iotik32a.build.variant=mgbot-iotik32a
@@ -28192,7 +28192,7 @@ mgbot-iotik32b.serial.disableRTS=true
 
 mgbot-iotik32b.build.tarch=xtensa
 mgbot-iotik32b.build.bootloader_addr=0x1000
-mgbot-iotik32b.build.target=esp
+mgbot-iotik32b.build.target=esp32
 mgbot-iotik32b.build.mcu=esp32
 mgbot-iotik32b.build.core=esp32
 mgbot-iotik32b.build.variant=mgbot-iotik32b
@@ -28341,7 +28341,7 @@ piranha_esp-32.serial.disableRTS=true
 
 piranha_esp-32.build.tarch=xtensa
 piranha_esp-32.build.bootloader_addr=0x1000
-piranha_esp-32.build.target=esp
+piranha_esp-32.build.target=esp32
 piranha_esp-32.build.mcu=esp32
 piranha_esp-32.build.core=esp32
 piranha_esp-32.build.variant=piranha_esp-32
@@ -28422,7 +28422,7 @@ metro_esp-32.serial.disableRTS=true
 
 metro_esp-32.build.tarch=xtensa
 metro_esp-32.build.bootloader_addr=0x1000
-metro_esp-32.build.target=esp
+metro_esp-32.build.target=esp32
 metro_esp-32.build.mcu=esp32
 metro_esp-32.build.core=esp32
 metro_esp-32.build.variant=metro_esp-32
@@ -28503,7 +28503,7 @@ sensesiot_weizen.serial.disableRTS=true
 
 sensesiot_weizen.build.tarch=xtensa
 sensesiot_weizen.build.bootloader_addr=0x1000
-sensesiot_weizen.build.target=esp
+sensesiot_weizen.build.target=esp32
 sensesiot_weizen.build.mcu=esp32
 sensesiot_weizen.build.core=esp32
 sensesiot_weizen.build.variant=esp32
@@ -28576,7 +28576,7 @@ kits-edu.serial.disableRTS=true
 
 kits-edu.build.tarch=xtensa
 kits-edu.build.bootloader_addr=0x1000
-kits-edu.build.target=esp
+kits-edu.build.target=esp32
 kits-edu.build.mcu=esp32
 kits-edu.build.core=esp32
 kits-edu.build.variant=pico32
@@ -28652,7 +28652,7 @@ mPython.serial.disableRTS=true
 
 mPython.build.tarch=xtensa
 mPython.build.bootloader_addr=0x1000
-mPython.build.target=esp
+mPython.build.target=esp32
 mPython.build.mcu=esp32
 mPython.build.core=esp32
 mPython.build.variant=mpython
@@ -28773,7 +28773,7 @@ OpenKB.serial.disableRTS=true
 
 OpenKB.build.tarch=xtensa
 OpenKB.build.bootloader_addr=0x1000
-OpenKB.build.target=esp
+OpenKB.build.target=esp32
 OpenKB.build.mcu=esp32
 OpenKB.build.core=esp32
 OpenKB.build.variant=openkb
@@ -28846,7 +28846,7 @@ wifiduino32.serial.disableRTS=true
 
 wifiduino32.build.tarch=xtensa
 wifiduino32.build.bootloader_addr=0x1000
-wifiduino32.build.target=esp
+wifiduino32.build.target=esp32
 wifiduino32.build.mcu=esp32
 wifiduino32.build.core=esp32
 wifiduino32.build.variant=wifiduino32
@@ -29082,7 +29082,7 @@ wifiduino32s3.serial.disableRTS=false
 
 wifiduino32s3.build.tarch=xtensa
 wifiduino32s3.build.bootloader_addr=0x0
-wifiduino32s3.build.target=esp
+wifiduino32s3.build.target=esp32s3
 wifiduino32s3.build.mcu=esp32s3
 wifiduino32s3.build.core=esp32
 wifiduino32s3.build.variant=wifiduino32s3
@@ -29294,7 +29294,7 @@ imbrios-logsens-v1p1.serial.disableRTS=true
 
 imbrios-logsens-v1p1.build.tarch=xtensa
 imbrios-logsens-v1p1.build.bootloader_addr=0x1000
-imbrios-logsens-v1p1.build.target=esp
+imbrios-logsens-v1p1.build.target=esp32
 imbrios-logsens-v1p1.build.mcu=esp32
 imbrios-logsens-v1p1.build.core=esp32
 imbrios-logsens-v1p1.build.variant=imbrios-logsens-v1p1
@@ -29393,7 +29393,7 @@ healthypi4.serial.disableRTS=true
 
 healthypi4.build.tarch=xtensa
 healthypi4.build.bootloader_addr=0x1000
-healthypi4.build.target=esp
+healthypi4.build.target=esp32
 healthypi4.build.mcu=esp32
 healthypi4.build.core=esp32
 healthypi4.build.variant=healthypi4
@@ -29475,7 +29475,7 @@ ET-Board.serial.disableRTS=true
 
 ET-Board.build.tarch=xtensa
 ET-Board.build.bootloader_addr=0x1000
-ET-Board.build.target=esp
+ET-Board.build.target=esp32
 ET-Board.build.mcu=esp32
 ET-Board.build.core=esp32
 ET-Board.build.variant=ET-Board
@@ -29555,7 +29555,7 @@ ch_denky.serial.disableRTS=true
 
 ch_denky.build.tarch=xtensa
 ch_denky.build.bootloader_addr=0x1000
-ch_denky.build.target=esp
+ch_denky.build.target=esp32
 ch_denky.build.mcu=esp32
 ch_denky.build.core=esp32
 ch_denky.build.variant=ch_denky
@@ -29646,7 +29646,7 @@ uPesy_wrover.serial.disableRTS=true
 
 uPesy_wrover.build.tarch=xtensa
 uPesy_wrover.build.bootloader_addr=0x1000
-uPesy_wrover.build.target=esp
+uPesy_wrover.build.target=esp32
 uPesy_wrover.build.mcu=esp32
 uPesy_wrover.build.core=esp32
 uPesy_wrover.build.variant=uPesy_esp32_wrover_devkit
@@ -29763,7 +29763,7 @@ uPesy_wroom.serial.disableRTS=true
 
 uPesy_wroom.build.tarch=xtensa
 uPesy_wroom.build.bootloader_addr=0x1000
-uPesy_wroom.build.target=esp
+uPesy_wroom.build.target=esp32
 uPesy_wroom.build.mcu=esp32
 uPesy_wroom.build.core=esp32
 uPesy_wroom.build.variant=uPesy_esp32_wroom_devkit
@@ -29873,7 +29873,7 @@ uPesy_edu_esp32.serial.disableRTS=true
 
 uPesy_edu_esp32.build.tarch=xtensa
 uPesy_edu_esp32.build.bootloader_addr=0x1000
-uPesy_edu_esp32.build.target=esp
+uPesy_edu_esp32.build.target=esp32
 uPesy_edu_esp32.build.mcu=esp32
 uPesy_edu_esp32.build.core=esp32
 uPesy_edu_esp32.build.variant=uPesy_edu_esp32
@@ -30215,7 +30215,7 @@ upesy_esp32s3_basic.serial.disableRTS=false
 
 upesy_esp32s3_basic.build.tarch=xtensa
 upesy_esp32s3_basic.build.bootloader_addr=0x0
-upesy_esp32s3_basic.build.target=esp
+upesy_esp32s3_basic.build.target=esp32s3
 upesy_esp32s3_basic.build.mcu=esp32s3
 upesy_esp32s3_basic.build.core=esp32
 upesy_esp32s3_basic.build.variant=uPesy_esp32s3_basic
@@ -30373,7 +30373,7 @@ kb32.serial.disableRTS=true
 
 kb32.build.tarch=xtensa
 kb32.build.bootloader_addr=0x1000
-kb32.build.target=esp
+kb32.build.target=esp32
 kb32.build.mcu=esp32
 kb32.build.core=esp32
 kb32.build.variant=esp32
@@ -30543,7 +30543,7 @@ deneyapkart.serial.disableRTS=true
 
 deneyapkart.build.tarch=xtensa
 deneyapkart.build.bootloader_addr=0x1000
-deneyapkart.build.target=esp
+deneyapkart.build.target=esp32
 deneyapkart.build.mcu=esp32
 deneyapkart.build.core=esp32
 deneyapkart.build.variant=deneyapkart
@@ -30723,7 +30723,7 @@ deneyapkart1A.serial.disableRTS=true
 
 deneyapkart1A.build.tarch=xtensa
 deneyapkart1A.build.bootloader_addr=0x1000
-deneyapkart1A.build.target=esp
+deneyapkart1A.build.target=esp32
 deneyapkart1A.build.mcu=esp32
 deneyapkart1A.build.core=esp32
 deneyapkart1A.build.variant=deneyapkart1A
@@ -30908,7 +30908,7 @@ deneyapkart1Av2.serial.disableRTS=false
 
 deneyapkart1Av2.build.tarch=xtensa
 deneyapkart1Av2.build.bootloader_addr=0x0
-deneyapkart1Av2.build.target=esp
+deneyapkart1Av2.build.target=esp32s3
 deneyapkart1Av2.build.mcu=esp32s3
 deneyapkart1Av2.build.core=esp32
 deneyapkart1Av2.build.variant=deneyapkart1Av2
@@ -31137,7 +31137,7 @@ deneyapmini.serial.disableRTS=false
 
 deneyapmini.build.tarch=xtensa
 deneyapmini.build.bootloader_addr=0x1000
-deneyapmini.build.target=esp
+deneyapmini.build.target=esp32s2
 deneyapmini.build.mcu=esp32s2
 deneyapmini.build.core=esp32
 deneyapmini.build.variant=deneyapmini
@@ -31329,7 +31329,7 @@ deneyapminiv2.serial.disableRTS=false
 
 deneyapminiv2.build.tarch=xtensa
 deneyapminiv2.build.bootloader_addr=0x1000
-deneyapminiv2.build.target=esp
+deneyapminiv2.build.target=esp32s2
 deneyapminiv2.build.mcu=esp32s2
 deneyapminiv2.build.core=esp32
 deneyapminiv2.build.variant=deneyapminiv2
@@ -31685,7 +31685,7 @@ esp32-trueverit-iot-driver.serial.disableRTS=true
 
 esp32-trueverit-iot-driver.build.tarch=xtensa
 esp32-trueverit-iot-driver.build.bootloader_addr=0x1000
-esp32-trueverit-iot-driver.build.target=esp
+esp32-trueverit-iot-driver.build.target=esp32
 esp32-trueverit-iot-driver.build.mcu=esp32
 esp32-trueverit-iot-driver.build.core=esp32
 esp32-trueverit-iot-driver.build.variant=esp32-trueverit-iot-driver
@@ -31753,7 +31753,7 @@ esp32-trueverit-iot-driver-mkii.serial.disableRTS=true
 
 esp32-trueverit-iot-driver-mkii.build.tarch=xtensa
 esp32-trueverit-iot-driver-mkii.build.bootloader_addr=0x1000
-esp32-trueverit-iot-driver-mkii.build.target=esp
+esp32-trueverit-iot-driver-mkii.build.target=esp32
 esp32-trueverit-iot-driver-mkii.build.mcu=esp32
 esp32-trueverit-iot-driver-mkii.build.core=esp32
 esp32-trueverit-iot-driver-mkii.build.variant=esp32-trueverit-iot-driver-mkii
@@ -31825,7 +31825,7 @@ atmegazero_esp32s2.serial.disableRTS=false
 
 atmegazero_esp32s2.build.tarch=xtensa
 atmegazero_esp32s2.build.bootloader_addr=0x1000
-atmegazero_esp32s2.build.target=esp
+atmegazero_esp32s2.build.target=esp32s2
 atmegazero_esp32s2.build.mcu=esp32s2
 atmegazero_esp32s2.build.core=esp32
 atmegazero_esp32s2.build.variant=atmegazero_esp32s2
@@ -31997,7 +31997,7 @@ franzininho_wifi_esp32s2.serial.disableRTS=false
 
 franzininho_wifi_esp32s2.build.tarch=xtensa
 franzininho_wifi_esp32s2.build.bootloader_addr=0x1000
-franzininho_wifi_esp32s2.build.target=esp
+franzininho_wifi_esp32s2.build.target=esp32s2
 franzininho_wifi_esp32s2.build.mcu=esp32s2
 franzininho_wifi_esp32s2.build.core=esp32
 franzininho_wifi_esp32s2.build.variant=franzininho_wifi_esp32s2
@@ -32105,7 +32105,7 @@ franzininho_wifi_msc_esp32s2.serial.disableRTS=false
 
 franzininho_wifi_msc_esp32s2.build.tarch=xtensa
 franzininho_wifi_msc_esp32s2.build.bootloader_addr=0x1000
-franzininho_wifi_msc_esp32s2.build.target=esp
+franzininho_wifi_msc_esp32s2.build.target=esp32s2
 franzininho_wifi_msc_esp32s2.build.mcu=esp32s2
 franzininho_wifi_msc_esp32s2.build.core=esp32
 franzininho_wifi_msc_esp32s2.build.variant=franzininho_wifi_msc_esp32s2
@@ -32210,7 +32210,7 @@ tamc_termod_s3.serial.disableRTS=false
 
 tamc_termod_s3.build.tarch=xtensa
 tamc_termod_s3.build.bootloader_addr=0x0
-tamc_termod_s3.build.target=esp
+tamc_termod_s3.build.target=esp32s3
 tamc_termod_s3.build.mcu=esp32s3
 tamc_termod_s3.build.core=esp32
 tamc_termod_s3.build.variant=tamc_termod_s3
@@ -32419,7 +32419,7 @@ dpu_esp32.serial.disableRTS=true
 
 dpu_esp32.build.tarch=xtensa
 dpu_esp32.build.bootloader_addr=0x1000
-dpu_esp32.build.target=esp
+dpu_esp32.build.target=esp32
 dpu_esp32.build.mcu=esp32
 dpu_esp32.build.core=esp32
 dpu_esp32.build.variant=dpu_esp32
@@ -32533,7 +32533,7 @@ sonoff_dualr3.serial.disableRTS=true
 
 sonoff_dualr3.build.tarch=xtensa
 sonoff_dualr3.build.bootloader_addr=0x1000
-sonoff_dualr3.build.target=esp
+sonoff_dualr3.build.target=esp32
 sonoff_dualr3.build.mcu=esp32
 sonoff_dualr3.build.core=esp32
 sonoff_dualr3.build.variant=esp32
@@ -32641,7 +32641,7 @@ lionbit.serial.disableRTS=true
 
 lionbit.build.tarch=xtensa
 lionbit.build.bootloader_addr=0x1000
-lionbit.build.target=esp
+lionbit.build.target=esp32
 lionbit.build.mcu=esp32
 lionbit.build.core=esp32
 lionbit.build.variant=lionbit
@@ -32795,7 +32795,7 @@ watchy.serial.disableRTS=true
 
 watchy.build.tarch=xtensa
 watchy.build.bootloader_addr=0x1000
-watchy.build.target=esp
+watchy.build.target=esp32
 watchy.build.mcu=esp32
 watchy.build.core=esp32
 watchy.build.variant=watchy
@@ -33299,7 +33299,7 @@ XIAO_ESP32S3.serial.disableRTS=false
 
 XIAO_ESP32S3.build.tarch=xtensa
 XIAO_ESP32S3.build.bootloader_addr=0x0
-XIAO_ESP32S3.build.target=esp
+XIAO_ESP32S3.build.target=esp32s3
 XIAO_ESP32S3.build.mcu=esp32s3
 XIAO_ESP32S3.build.core=esp32
 XIAO_ESP32S3.build.variant=XIAO_ESP32S3
@@ -33474,7 +33474,7 @@ connaxio_espoir.serial.disableRTS=true
 
 connaxio_espoir.build.tarch=xtensa
 connaxio_espoir.build.bootloader_addr=0x1000
-connaxio_espoir.build.target=esp
+connaxio_espoir.build.target=esp32
 connaxio_espoir.build.mcu=esp32
 connaxio_espoir.build.core=esp32
 connaxio_espoir.build.variant=connaxio_espoir
@@ -33593,7 +33593,7 @@ aw2eth.serial.disableRTS=true
 
 aw2eth.build.tarch=xtensa
 aw2eth.build.bootloader_addr=0x1000
-aw2eth.build.target=esp
+aw2eth.build.target=esp32
 aw2eth.build.mcu=esp32
 aw2eth.build.core=esp32
 aw2eth.build.variant=cnrs_aw2eth
@@ -33674,7 +33674,7 @@ department_of_alchemy_minimain_esp32s2.serial.disableRTS=false
 
 department_of_alchemy_minimain_esp32s2.build.tarch=xtensa
 department_of_alchemy_minimain_esp32s2.build.bootloader_addr=0x1000
-department_of_alchemy_minimain_esp32s2.build.target=esp
+department_of_alchemy_minimain_esp32s2.build.target=esp32s2
 department_of_alchemy_minimain_esp32s2.build.mcu=esp32s2
 department_of_alchemy_minimain_esp32s2.build.core=esp32
 department_of_alchemy_minimain_esp32s2.build.variant=department_of_alchemy_minimain_esp32s2
@@ -33846,7 +33846,7 @@ Bee_Data_Logger.serial.disableRTS=false
 
 Bee_Data_Logger.build.tarch=xtensa
 Bee_Data_Logger.build.bootloader_addr=0x0
-Bee_Data_Logger.build.target=esp
+Bee_Data_Logger.build.target=esp32s3
 Bee_Data_Logger.build.mcu=esp32s3
 Bee_Data_Logger.build.core=esp32
 Bee_Data_Logger.build.variant=Bee_Data_Logger
@@ -33957,7 +33957,7 @@ Bee_Motion_S3.serial.disableRTS=false
 
 Bee_Motion_S3.build.tarch=xtensa
 Bee_Motion_S3.build.bootloader_addr=0x0
-Bee_Motion_S3.build.target=esp
+Bee_Motion_S3.build.target=esp32s3
 Bee_Motion_S3.build.mcu=esp32s3
 Bee_Motion_S3.build.core=esp32
 Bee_Motion_S3.build.variant=Bee_Motion_S3
@@ -34068,7 +34068,7 @@ Bee_Motion.serial.disableRTS=false
 
 Bee_Motion.build.tarch=xtensa
 Bee_Motion.build.bootloader_addr=0x1000
-Bee_Motion.build.target=esp
+Bee_Motion.build.target=esp32s2
 Bee_Motion.build.mcu=esp32s2
 Bee_Motion.build.core=esp32
 Bee_Motion.build.variant=Bee_Motion
@@ -34286,7 +34286,7 @@ Bee_S3.serial.disableRTS=false
 
 Bee_S3.build.tarch=xtensa
 Bee_S3.build.bootloader_addr=0x0
-Bee_S3.build.target=esp
+Bee_S3.build.target=esp32s3
 Bee_S3.build.mcu=esp32s3
 Bee_S3.build.core=esp32
 Bee_S3.build.variant=Bee_S3
@@ -34436,7 +34436,7 @@ unphone7.serial.disableRTS=true
 
 unphone7.build.tarch=xtensa
 unphone7.build.bootloader_addr=0x1000
-unphone7.build.target=esp
+unphone7.build.target=esp32
 unphone7.build.mcu=esp32
 unphone7.build.core=esp32
 unphone7.build.variant=feather_esp32
@@ -34521,7 +34521,7 @@ unphone8.serial.disableRTS=false
 
 unphone8.build.tarch=xtensa
 unphone8.build.bootloader_addr=0x0
-unphone8.build.target=esp
+unphone8.build.target=esp32s3
 unphone8.build.mcu=esp32s3
 unphone8.build.core=esp32
 unphone8.build.variant=unphone8
@@ -34677,7 +34677,7 @@ unphone9.serial.disableRTS=false
 
 unphone9.build.tarch=xtensa
 unphone9.build.bootloader_addr=0x0
-unphone9.build.target=esp
+unphone9.build.target=esp32s3
 unphone9.build.mcu=esp32s3
 unphone9.build.core=esp32
 unphone9.build.variant=unphone9
@@ -34839,7 +34839,7 @@ cytron_maker_feather_aiot_s3.serial.disableRTS=false
 
 cytron_maker_feather_aiot_s3.build.tarch=xtensa
 cytron_maker_feather_aiot_s3.build.bootloader_addr=0x0
-cytron_maker_feather_aiot_s3.build.target=esp
+cytron_maker_feather_aiot_s3.build.target=esp32s3
 cytron_maker_feather_aiot_s3.build.mcu=esp32s3
 cytron_maker_feather_aiot_s3.build.core=esp32
 cytron_maker_feather_aiot_s3.build.variant=cytron_maker_feather_aiot_s3
@@ -35012,7 +35012,7 @@ redpill_esp32s3.serial.disableRTS=false
 
 redpill_esp32s3.build.tarch=xtensa
 redpill_esp32s3.build.bootloader_addr=0x0
-redpill_esp32s3.build.target=esp
+redpill_esp32s3.build.target=esp32s3
 redpill_esp32s3.build.mcu=esp32s3
 redpill_esp32s3.build.core=esp32
 redpill_esp32s3.build.variant=redpill_esp32s3
@@ -35296,7 +35296,7 @@ roboheart_hercules.serial.disableRTS=true
 
 roboheart_hercules.build.tarch=xtensa
 roboheart_hercules.build.bootloader_addr=0x1000
-roboheart_hercules.build.target=esp
+roboheart_hercules.build.target=esp32
 roboheart_hercules.build.mcu=esp32
 roboheart_hercules.build.core=esp32
 roboheart_hercules.build.variant=roboheart_hercules
@@ -35737,7 +35737,7 @@ Edgebox-ESP-100.serial.disableRTS=false
 
 Edgebox-ESP-100.build.tarch=xtensa
 Edgebox-ESP-100.build.bootloader_addr=0x0
-Edgebox-ESP-100.build.target=esp
+Edgebox-ESP-100.build.target=esp32s3
 Edgebox-ESP-100.build.mcu=esp32s3
 Edgebox-ESP-100.build.core=esp32
 Edgebox-ESP-100.build.variant=Edgebox-ESP-100
@@ -35951,7 +35951,7 @@ crabik_slot_esp32_s3.serial.disableRTS=false
 
 crabik_slot_esp32_s3.build.tarch=xtensa
 crabik_slot_esp32_s3.build.bootloader_addr=0x0
-crabik_slot_esp32_s3.build.target=esp
+crabik_slot_esp32_s3.build.target=esp32s3
 crabik_slot_esp32_s3.build.mcu=esp32s3
 crabik_slot_esp32_s3.build.core=esp32
 crabik_slot_esp32_s3.build.variant=crabik_slot_esp32_s3
@@ -36097,7 +36097,7 @@ nebulas3.serial.disableRTS=false
 
 nebulas3.build.tarch=xtensa
 nebulas3.build.bootloader_addr=0x0
-nebulas3.build.target=esp
+nebulas3.build.target=esp32s3
 nebulas3.build.mcu=esp32s3
 nebulas3.build.core=esp32
 nebulas3.build.variant=Nebula_S3
@@ -36321,7 +36321,7 @@ lionbits3.serial.disableRTS=false
 
 lionbits3.build.tarch=xtensa
 lionbits3.build.bootloader_addr=0x0
-lionbits3.build.target=esp
+lionbits3.build.target=esp32s3
 lionbits3.build.mcu=esp32s3
 lionbits3.build.core=esp32
 lionbits3.build.variant=lionbits3
@@ -36549,7 +36549,7 @@ gen4-ESP32-S3R8n16.serial.disableRTS=false
 
 gen4-ESP32-S3R8n16.build.tarch=xtensa
 gen4-ESP32-S3R8n16.build.bootloader_addr=0x0
-gen4-ESP32-S3R8n16.build.target=esp
+gen4-ESP32-S3R8n16.build.target=esp32s3
 gen4-ESP32-S3R8n16.build.mcu=esp32s3
 gen4-ESP32-S3R8n16.build.core=esp32
 gen4-ESP32-S3R8n16.build.variant=esp32_s3r8n16
@@ -36705,7 +36705,7 @@ namino_rosso.serial.disableRTS=false
 
 namino_rosso.build.tarch=xtensa
 namino_rosso.build.bootloader_addr=0x0
-namino_rosso.build.target=esp
+namino_rosso.build.target=esp32s3
 namino_rosso.build.mcu=esp32s3
 namino_rosso.build.core=esp32
 namino_rosso.build.variant=namino_rosso
@@ -36894,7 +36894,7 @@ namino_arancio.serial.disableRTS=false
 
 namino_arancio.build.tarch=xtensa
 namino_arancio.build.bootloader_addr=0x0
-namino_arancio.build.target=esp
+namino_arancio.build.target=esp32s3
 namino_arancio.build.mcu=esp32s3
 namino_arancio.build.core=esp32
 namino_arancio.build.variant=namino_arancio
@@ -37083,7 +37083,7 @@ namino_bianco.serial.disableRTS=false
 
 namino_bianco.build.tarch=xtensa
 namino_bianco.build.bootloader_addr=0x0
-namino_bianco.build.target=esp
+namino_bianco.build.target=esp32s3
 namino_bianco.build.mcu=esp32s3
 namino_bianco.build.core=esp32
 namino_bianco.build.variant=namino_bianco
@@ -37268,7 +37268,7 @@ ioxesp32.serial.disableRTS=true
 
 ioxesp32.build.tarch=xtensa
 ioxesp32.build.bootloader_addr=0x1000
-ioxesp32.build.target=esp
+ioxesp32.build.target=esp32
 ioxesp32.build.mcu=esp32
 ioxesp32.build.core=esp32
 ioxesp32.build.variant=ioxesp32
@@ -37379,7 +37379,7 @@ ioxesp32ps.serial.disableRTS=true
 
 ioxesp32ps.build.tarch=xtensa
 ioxesp32ps.build.bootloader_addr=0x1000
-ioxesp32ps.build.target=esp
+ioxesp32ps.build.target=esp32
 ioxesp32ps.build.mcu=esp32
 ioxesp32ps.build.core=esp32
 ioxesp32ps.build.variant=ioxesp32
@@ -37492,7 +37492,7 @@ atd147_s3.serial.disableRTS=false
 
 atd147_s3.build.tarch=xtensa
 atd147_s3.build.bootloader_addr=0x0
-atd147_s3.build.target=esp
+atd147_s3.build.target=esp32s3
 atd147_s3.build.mcu=esp32s3
 atd147_s3.build.core=esp32
 atd147_s3.build.variant=atd147_s3
@@ -37677,7 +37677,7 @@ esp32s3_powerfeather.serial.disableRTS=false
 
 esp32s3_powerfeather.build.tarch=xtensa
 esp32s3_powerfeather.build.bootloader_addr=0x0
-esp32s3_powerfeather.build.target=esp
+esp32s3_powerfeather.build.target=esp32s3
 esp32s3_powerfeather.build.mcu=esp32s3
 esp32s3_powerfeather.build.core=esp32
 esp32s3_powerfeather.build.variant=esp32s3_powerfeather
@@ -37853,7 +37853,7 @@ sensebox_mcu_esp32s2.serial.disableRTS=false
 
 sensebox_mcu_esp32s2.build.tarch=xtensa
 sensebox_mcu_esp32s2.build.bootloader_addr=0x1000
-sensebox_mcu_esp32s2.build.target=esp
+sensebox_mcu_esp32s2.build.target=esp32s2
 sensebox_mcu_esp32s2.build.mcu=esp32s2
 sensebox_mcu_esp32s2.build.core=esp32
 sensebox_mcu_esp32s2.build.variant=sensebox_mcu_esp32s2
@@ -38019,7 +38019,7 @@ nano_nora.serial.disableRTS=false
 
 nano_nora.build.tarch=xtensa
 nano_nora.build.bootloader_addr=0x0
-nano_nora.build.target=esp
+nano_nora.build.target=esp32s3
 nano_nora.build.mcu=esp32s3
 nano_nora.build.core=esp32
 nano_nora.build.variant=arduino_nano_nora
@@ -38208,7 +38208,7 @@ epulse_feather.serial.disableRTS=true
 
 epulse_feather.build.tarch=xtensa
 epulse_feather.build.bootloader_addr=0x1000
-epulse_feather.build.target=esp
+epulse_feather.build.target=esp32
 epulse_feather.build.mcu=esp32
 epulse_feather.build.core=esp32
 epulse_feather.build.variant=thingpulse_epulse_feather
@@ -38628,7 +38628,7 @@ ws_esp32_s3_matrix.serial.disableRTS=false
 
 ws_esp32_s3_matrix.build.tarch=xtensa
 ws_esp32_s3_matrix.build.bootloader_addr=0x0
-ws_esp32_s3_matrix.build.target=esp
+ws_esp32_s3_matrix.build.target=esp32s3
 ws_esp32_s3_matrix.build.mcu=esp32s3
 ws_esp32_s3_matrix.build.core=esp32
 ws_esp32_s3_matrix.build.variant=ws_esp32_s3_matrix
@@ -38823,7 +38823,7 @@ waveshare_esp32_s3_touch_lcd_169.serial.disableRTS=false
 
 waveshare_esp32_s3_touch_lcd_169.build.tarch=xtensa
 waveshare_esp32_s3_touch_lcd_169.build.bootloader_addr=0x0
-waveshare_esp32_s3_touch_lcd_169.build.target=esp
+waveshare_esp32_s3_touch_lcd_169.build.target=esp32s3
 waveshare_esp32_s3_touch_lcd_169.build.mcu=esp32s3
 waveshare_esp32_s3_touch_lcd_169.build.core=esp32
 waveshare_esp32_s3_touch_lcd_169.build.variant=waveshare_esp32_s3_touch_lcd_169
@@ -39022,7 +39022,7 @@ waveshare_esp32_s3_lcd_169.serial.disableRTS=false
 
 waveshare_esp32_s3_lcd_169.build.tarch=xtensa
 waveshare_esp32_s3_lcd_169.build.bootloader_addr=0x0
-waveshare_esp32_s3_lcd_169.build.target=esp
+waveshare_esp32_s3_lcd_169.build.target=esp32s3
 waveshare_esp32_s3_lcd_169.build.mcu=esp32s3
 waveshare_esp32_s3_lcd_169.build.core=esp32
 waveshare_esp32_s3_lcd_169.build.variant=waveshare_esp32_s3_lcd_169
@@ -39219,7 +39219,7 @@ waveshare_esp32s3_touch_lcd_128.build.tarch=xtensa
 waveshare_esp32s3_touch_lcd_128.build.bootloader_addr=0x0
 waveshare_esp32s3_touch_lcd_128.build.mcu=esp32s3
 waveshare_esp32s3_touch_lcd_128.build.core=esp32
-waveshare_esp32s3_touch_lcd_128.build.target=esp
+waveshare_esp32s3_touch_lcd_128.build.target=esp32s3
 waveshare_esp32s3_touch_lcd_128.build.variant=waveshare_esp32s3_touch_lcd_128
 waveshare_esp32s3_touch_lcd_128.build.board=WAVESHARE_ESP32S3_TOUCH_LCD_128
 
@@ -39508,7 +39508,7 @@ aslcanx2.serial.disableRTS=false
 
 aslcanx2.build.tarch=xtensa
 aslcanx2.build.bootloader_addr=0x0
-aslcanx2.build.target=esp
+aslcanx2.build.target=esp32s3
 aslcanx2.build.mcu=esp32s3
 aslcanx2.build.core=esp32
 aslcanx2.build.variant=aslcanx2
@@ -39714,7 +39714,7 @@ walter.serial.disableRTS=false
 
 walter.build.tarch=xtensa
 walter.build.bootloader_addr=0x0
-walter.build.target=esp
+walter.build.target=esp32s3
 walter.build.mcu=esp32s3
 walter.build.core=esp32
 walter.build.variant=walter
@@ -39890,7 +39890,7 @@ elecrow_crowpanel_7.build.tarch=xtensa
 elecrow_crowpanel_7.build.bootloader_addr=0x0
 elecrow_crowpanel_7.build.mcu=esp32s3
 elecrow_crowpanel_7.build.core=esp32
-elecrow_crowpanel_7.build.target=esp
+elecrow_crowpanel_7.build.target=esp32s3
 elecrow_crowpanel_7.build.variant=elecrow_crowpanel_7
 elecrow_crowpanel_7.build.board=ELECROW_CROWPANEL_7
 
@@ -40037,7 +40037,7 @@ circuitart_zero_s3.serial.disableRTS=false
 
 circuitart_zero_s3.build.tarch=xtensa
 circuitart_zero_s3.build.bootloader_addr=0x0
-circuitart_zero_s3.build.target=esp
+circuitart_zero_s3.build.target=esp32s3
 circuitart_zero_s3.build.mcu=esp32s3
 circuitart_zero_s3.build.core=esp32
 circuitart_zero_s3.build.variant=circuitart_zero_s3
@@ -40202,7 +40202,7 @@ alfredo-nou3.serial.disableRTS=false
 
 alfredo-nou3.build.tarch=xtensa
 alfredo-nou3.build.bootloader_addr=0x0
-alfredo-nou3.build.target=esp
+alfredo-nou3.build.target=esp32s3
 alfredo-nou3.build.mcu=esp32s3
 alfredo-nou3.build.core=esp32
 alfredo-nou3.build.variant=alfredo-nou3
