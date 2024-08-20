@@ -25599,7 +25599,7 @@ heltec_vision_master_e290.build.target=esp32s3
 heltec_vision_master_e290.build.mcu=esp32s3
 heltec_vision_master_e290.build.core=esp32
 heltec_vision_master_e290.build.variant=heltec_vision_master_e290
-heltec_vision_master_e290.build.board=Heltec_Vision_Master_E290
+heltec_vision_master_e290.build.board=HELTEC_VISION_MASTER_E290
 
 heltec_vision_master_e290.build.usb_mode=1
 heltec_vision_master_e290.build.cdc_on_boot=0
@@ -25740,7 +25740,7 @@ heltec_vision_master_e290.menu.SLOW_CLK_TPYE.0.build.SLOW_CLK_TPYE=0
 heltec_vision_master_e290.menu.SLOW_CLK_TPYE.1=External 32K
 heltec_vision_master_e290.menu.SLOW_CLK_TPYE.1.build.SLOW_CLK_TPYE=1
 
-heltec_vision_master_e290.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=37 -DVision_Master_E290 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+heltec_vision_master_e290.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=37 -DHELTEC_VISION_MASTER_E290 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
 
 heltec_vision_master_e290.menu.EraseFlash.none=Disabled
 heltec_vision_master_e290.menu.EraseFlash.none.upload.erase_cmd=
@@ -25774,7 +25774,7 @@ heltec_vision_master_t190.build.target=esp32s3
 heltec_vision_master_t190.build.mcu=esp32s3
 heltec_vision_master_t190.build.core=esp32
 heltec_vision_master_t190.build.variant=heltec_vision_master_t190
-heltec_vision_master_t190.build.board=Heltec_Vision_Master_T190
+heltec_vision_master_t190.build.board=HELTEC_VISION_MASTER_T190
 
 heltec_vision_master_t190.build.usb_mode=1
 heltec_vision_master_t190.build.cdc_on_boot=0
@@ -25915,7 +25915,7 @@ heltec_vision_master_t190.menu.SLOW_CLK_TPYE.0.build.SLOW_CLK_TPYE=0
 heltec_vision_master_t190.menu.SLOW_CLK_TPYE.1=External 32K
 heltec_vision_master_t190.menu.SLOW_CLK_TPYE.1.build.SLOW_CLK_TPYE=1
 
-heltec_vision_master_t190.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=38 -DVision_Master_T190 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+heltec_vision_master_t190.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=38 -DHELTEC_VISION_MASTER_T190 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
 
 heltec_vision_master_t190.menu.EraseFlash.none=Disabled
 heltec_vision_master_t190.menu.EraseFlash.none.upload.erase_cmd=
@@ -25949,7 +25949,7 @@ heltec_vision_master_e_213.build.target=esp32s3
 heltec_vision_master_e_213.build.mcu=esp32s3
 heltec_vision_master_e_213.build.core=esp32
 heltec_vision_master_e_213.build.variant=heltec_vision_master_e_213
-heltec_vision_master_e_213.build.board=Heltec_Vision_Master_E_213
+heltec_vision_master_e_213.build.board=HELTEC_VISION_MASTER_E_213
 
 heltec_vision_master_e_213.build.usb_mode=1
 heltec_vision_master_e_213.build.cdc_on_boot=0
@@ -26090,7 +26090,7 @@ heltec_vision_master_e_213.menu.SLOW_CLK_TPYE.0.build.SLOW_CLK_TPYE=0
 heltec_vision_master_e_213.menu.SLOW_CLK_TPYE.1=External 32K
 heltec_vision_master_e_213.menu.SLOW_CLK_TPYE.1.build.SLOW_CLK_TPYE=1
 
-heltec_vision_master_e_213.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=36 -DVision_Master_E_213 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+heltec_vision_master_e_213.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=36 -DHELTEC_VISION_MASTER_E_213 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
 
 heltec_vision_master_e_213.menu.EraseFlash.none=Disabled
 heltec_vision_master_e_213.menu.EraseFlash.none.upload.erase_cmd=
