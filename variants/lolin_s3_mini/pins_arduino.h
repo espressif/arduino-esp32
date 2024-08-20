@@ -12,6 +12,9 @@ static const uint8_t LED_BUILTIN = 47 + SOC_GPIO_PIN_COUNT;
 #define LED_BUILTIN    LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 #define RGB_BUILTIN    LED_BUILTIN
 #define RGB_BRIGHTNESS 64
+// This board has a builtin RGB LED that works with a different signal color order
+// Other order options can be found in https://github.com/espressif/arduino-esp32/blob/master/cores/esp32/esp32-hal-rgb-led.h
+#define RGB_BUILTIN_LED_COLOR_ORDER LED_COLOR_ORDER_RGB
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
