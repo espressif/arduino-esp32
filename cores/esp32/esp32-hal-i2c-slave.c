@@ -41,6 +41,7 @@
 #include "esp_intr_alloc.h"
 #include "soc/i2c_reg.h"
 #include "soc/i2c_struct.h"
+#include "soc/periph_defs.h"
 #include "hal/i2c_ll.h"
 #include "hal/clk_gate_ll.h"
 #include "esp32-hal-log.h"
@@ -49,6 +50,7 @@
 
 #define I2C_SLAVE_USE_RX_QUEUE 0  // 1: Queue, 0: RingBuffer
 
+#if !defined(CONFIG_IDF_TARGET_ESP32P4)
 #if SOC_HP_I2C_NUM > 1
 #define I2C_SCL_IDX(p) ((p == 0) ? I2CEXT0_SCL_OUT_IDX : ((p == 1) ? I2CEXT1_SCL_OUT_IDX : 0))
 #define I2C_SDA_IDX(p) ((p == 0) ? I2CEXT0_SDA_OUT_IDX : ((p == 1) ? I2CEXT1_SDA_OUT_IDX : 0))
@@ -56,6 +58,12 @@
 #define I2C_SCL_IDX(p) I2CEXT0_SCL_OUT_IDX
 #define I2C_SDA_IDX(p) I2CEXT0_SDA_OUT_IDX
 #endif
+#endif // !defined(CONFIG_IDF_TARGET_ESP32P4)
+
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+#define I2C_SCL_IDX(p) ((p == 0) ? I2C0_SCL_PAD_OUT_IDX : ((p == 1) ? I2C1_SCL_PAD_OUT_IDX : 0))
+#define I2C_SDA_IDX(p) ((p == 0) ? I2C0_SDA_PAD_OUT_IDX : ((p == 1) ? I2C1_SDA_PAD_OUT_IDX : 0))
+#endif // ifdef CONFIG_IDF_TARGET_ESP32P4
 
 #if CONFIG_IDF_TARGET_ESP32
 #define I2C_TXFIFO_WM_INT_ENA I2C_TXFIFO_EMPTY_INT_ENA
@@ -173,7 +181,7 @@ static inline void i2c_ll_stretch_clr(i2c_dev_t *hw) {
 }
 
 static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw) {
-#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
   return hw->sr.slave_addressed;
 #else
   return hw->status_reg.slave_addressed;
@@ -182,7 +190,7 @@ static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw) {
 
 static inline bool i2c_ll_slave_rw(i2c_dev_t *hw)  //not exposed by hal_ll
 {
-#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
   return hw->sr.slave_rw;
 #else
   return hw->status_reg.slave_rw;
@@ -306,7 +314,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     frequency = 100000L;
   }
   frequency = (frequency * 5) / 4;
-
+#if !defined(CONFIG_IDF_TARGET_ESP32P4)
   if (i2c->num == 0) {
     periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
 #if SOC_HP_I2C_NUM > 1
@@ -314,6 +322,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
 #endif
   }
+#endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
   i2c_ll_slave_init(i2c->dev);
   i2c_ll_slave_set_fifo_mode(i2c->dev, true);
@@ -341,12 +350,22 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
 
   if (!i2c->intr_handle) {
     uint32_t flags = ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_SHARED;
+#if !defined(CONFIG_IDF_TARGET_ESP32P4)
     if (i2c->num == 0) {
       ret = esp_intr_alloc(ETS_I2C_EXT0_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
 #if SOC_HP_I2C_NUM > 1
     } else {
       ret = esp_intr_alloc(ETS_I2C_EXT1_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
 #endif
+#endif // !defined(CONFIG_IDF_TARGET_ESP32P4)
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+    if (i2c->num == 0) {
+      ret = esp_intr_alloc(ETS_I2C0_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
+#if SOC_I2C_NUM > 1
+    } else {
+      ret = esp_intr_alloc(ETS_I2C1_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
+#endif
+#endif // #ifdef CONFIG_IDF_TARGET_ESP32P4
     }
 
     if (ret != ESP_OK) {

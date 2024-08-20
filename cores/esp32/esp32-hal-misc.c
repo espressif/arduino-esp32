@@ -29,7 +29,7 @@
 #endif  //CONFIG_BT_ENABLED
 #include <sys/time.h>
 #include "soc/rtc.h"
-#if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
+#if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4)
 #include "soc/rtc_cntl_reg.h"
 #include "soc/syscon_reg.h"
 #endif
@@ -53,6 +53,8 @@
 #include "esp32c6/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32H2
 #include "esp32h2/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32P4
+#include "esp32p4/rom/rtc.h"
 
 #else
 #error Target CONFIG_IDF_TARGET is not supported
