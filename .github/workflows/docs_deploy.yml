@@ -5,7 +5,7 @@ on:
     types: [published]
   push:
     branches:
-    - release/*
+    - release/v2.x
     - master
     paths:
     - 'docs/**'

@@ -4,7 +4,7 @@ on:
   push:
     branches:
     - master
-    - release/*
+    - release/v2.x
     paths:
     - 'docs/**'
     - '.github/workflows/docs_build.yml'
