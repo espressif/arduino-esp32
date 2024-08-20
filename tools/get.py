@@ -151,16 +151,9 @@ def is_latest_version(destination, dirname, rename_to, cfile, checksum):
     expected_version = None
 
     try:
-        if rename_to.startswith("esp32-arduino-libs"):
-            # Remove this when moving to new release system
-            expected_version = cfile.read(dirname + "/versions.txt").decode("utf-8")
-            with open(os.path.join(destination, rename_to, "versions.txt"), "r") as f:
-                # cfile is zip
-                current_version = f.read()
-        else:
-            expected_version = checksum
-            with open(os.path.join(destination, rename_to, ".package_checksum"), "r") as f:
-                current_version = f.read()
+        expected_version = checksum
+        with open(os.path.join(destination, rename_to, ".package_checksum"), "r") as f:
+            current_version = f.read()
 
         if verbose:
             print(f"\nTool: {rename_to}")
@@ -361,7 +354,7 @@ def get_tool(tool, force_download, force_extract):
         print("Tool {0} already downloaded".format(archive_name))
         sys.stdout.flush()
 
-    if "esp32-arduino-libs" not in archive_name and sha256sum(local_path) != checksum:
+    if sha256sum(local_path) != checksum:
         print("Checksum mismatch for {0}".format(archive_name))
         return False
 
