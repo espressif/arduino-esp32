@@ -146,6 +146,7 @@ def verify_files(filename, destination, rename_to):
 
     return True
 
+
 def is_latest_version(destination, dirname, rename_to, cfile, checksum):
     current_version = None
     expected_version = None
@@ -173,6 +174,7 @@ def is_latest_version(destination, dirname, rename_to, cfile, checksum):
             print(f"Falied to verify version for {rename_to}: {e}")
 
     return False
+
 
 def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     dirname = ""
@@ -409,21 +411,17 @@ def identify_platform():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download and extract tools")
 
-    parser.add_argument("-v", "--verbose", action='store_true', required=False, help="Print verbose output")
+    parser.add_argument("-v", "--verbose", action="store_true", required=False, help="Print verbose output")
+
+    parser.add_argument("-d", "--force_download", action="store_true", required=False, help="Force download of tools")
+
+    parser.add_argument("-e", "--force_extract", action="store_true", required=False, help="Force extraction of tools")
 
     parser.add_argument(
-        "-d", "--force_download", action='store_true', required=False, help="Force download of tools"
+        "-f", "--force_all", action="store_true", required=False, help="Force download and extraction of tools"
     )
 
-    parser.add_argument(
-        "-e", "--force_extract", action='store_true', required=False, help="Force extraction of tools"
-    )
-
-    parser.add_argument(
-        "-f", "--force_all", action='store_true', required=False, help="Force download and extraction of tools"
-    )
-
-    parser.add_argument("-t", "--test", action='store_true', required=False, help=argparse.SUPPRESS)
+    parser.add_argument("-t", "--test", action="store_true", required=False, help=argparse.SUPPRESS)
 
     args = parser.parse_args()
 
