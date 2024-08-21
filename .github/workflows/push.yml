@@ -5,7 +5,7 @@ on:
   push:
     branches:
     - master
-    - release/*
+    - release/v2.x
   pull_request:
     paths:
       - 'cores/**'
