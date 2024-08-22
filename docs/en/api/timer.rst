@@ -120,7 +120,7 @@ This function is used to read counter value in microseconds of the timer.
 This function will return ``counter value`` of the timer in microseconds.
 
 timerReadMillis
-**************
+***************
 
 This function is used to read counter value in milliseconds of the timer.
 
