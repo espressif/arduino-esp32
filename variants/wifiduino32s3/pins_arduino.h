@@ -6,7 +6,7 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-// No USER LED or NeoLED
+// No USER LED or RGB LED
 
 static const uint8_t TX = 45;
 static const uint8_t RX = 44;

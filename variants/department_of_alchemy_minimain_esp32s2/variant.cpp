@@ -30,8 +30,8 @@ extern "C" {
 // Initialize variant/board, called before setup()
 void initVariant(void) {
   // This board has a power control pin, and we must set it to output and high
-  // in order to enable the NeoPixels.
-  pinMode(NEOPIXEL_POWER, OUTPUT);
-  digitalWrite(NEOPIXEL_POWER, HIGH);
+  // in order to enable the RGB_LEDs.
+  pinMode(RGB_LED_POWER, OUTPUT);
+  digitalWrite(RGB_LED_POWER, HIGH);
 }
 }

@@ -16,9 +16,9 @@
 #define USB_FW_MSC_VOLUME_NAME      "senseBox"        // max 11 chars
 #define USB_FW_MSC_SERIAL_NUMBER    0x00000000
 
-#define PIN_NEOPIXEL 1  // NeoPixel LED
-#define NEOPIXEL_PIN 1  // NeoPixel LED
-#define NEOPIXEL_NUM 1  // number of neopixels
+#define PIN_RGB_LED 1  // RGB_LED LED
+#define RGB_LED_PIN 1  // RGB_LED LED
+#define RGB_LED_NUM 1  // number of RGB_LEDs
 
 // Default I2C QWIIC-Ports
 static const uint8_t SDA = 39;

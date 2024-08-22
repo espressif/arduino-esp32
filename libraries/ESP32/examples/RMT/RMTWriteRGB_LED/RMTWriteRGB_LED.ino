@@ -20,17 +20,17 @@
  */
 
 // The effect seen in (Espressif devkits) ESP32C6, ESP32H2, ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
-#ifdef PIN_NEOPIXEL
-#define BUILTIN_RGBLED_PIN PIN_NEOPIXEL
+#ifdef PIN_RGB_LED
+#define BUILTIN_RGB_LED_PIN PIN_RGB_LED
 #else
-#define BUILTIN_RGBLED_PIN 21  // ESP32 has no builtin RGB LED (PIN_NEOPIXEL)
+#define BUILTIN_RGB_LED_PIN 21  // ESP32 has no builtin RGB LED (PIN_RGB_LED)
 #endif
 
 #define NR_OF_LEDS     8 * 4
 #define NR_OF_ALL_BITS 24 * NR_OF_LEDS
 
 //
-// Note: This example uses Neopixel LED board, 32 LEDs chained one
+// Note: This example uses RGB LED board, 32 LEDs chained one
 //      after another, each RGB LED has its 24 bit value
 //      for color configuration (8b for each color)
 //
@@ -58,7 +58,7 @@ rmt_data_t led_data[NR_OF_ALL_BITS];
 
 void setup() {
   Serial.begin(115200);
-  if (!rmtInit(BUILTIN_RGBLED_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
+  if (!rmtInit(BUILTIN_RGB_LED_PIN, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
     Serial.println("init sender failed\n");
   }
   Serial.println("real tick set to: 100ns");
@@ -94,6 +94,6 @@ void loop() {
     led_index = 0;
   }
   // Send the data and wait until it is done
-  rmtWrite(BUILTIN_RGBLED_PIN, led_data, NR_OF_ALL_BITS, RMT_WAIT_FOR_EVER);
+  rmtWrite(BUILTIN_RGB_LED_PIN, led_data, NR_OF_ALL_BITS, RMT_WAIT_FOR_EVER);
   delay(100);
 }

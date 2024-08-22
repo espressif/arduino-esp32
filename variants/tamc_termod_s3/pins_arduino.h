@@ -6,7 +6,7 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-// This board has no NeoLED or any User LED
+// This board has no RGB LED or any User LED
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

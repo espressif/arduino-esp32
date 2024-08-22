@@ -16,8 +16,8 @@
  * @brief This example demonstrates usage of RGB LED driven by RMT to verify
  * that RMT works on any CPU/APB Frequency.
  *
- * It uses an ESP32 Arduino builtin RGB NeoLED function based on RMT:
- * void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
+ * It uses an ESP32 Arduino builtin RGB LED function based on RMT:
+ * void rgbLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
  *
  * The output is a visual WS2812 RGB LED color change routine using each time a
  * different CPU Frequency, just to illustrate how it works. Serial output indicates
@@ -26,10 +26,10 @@
 
 // Default DevKit RGB LED GPIOs:
 // The effect seen in (Espressif devkits) ESP32C6, ESP32H2, ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
-#ifdef PIN_NEOPIXEL
-#define MY_LED_GPIO PIN_NEOPIXEL
+#ifdef PIN_RGB_LED
+#define MY_LED_GPIO PIN_RGB_LED
 #else
-#define MY_LED_GPIO 21  // ESP32 has no builtin RGB LED (PIN_NEOPIXEL)
+#define MY_LED_GPIO 21  // ESP32 has no builtin RGB LED (PIN_RGB_LED)
 #endif
 
 // Set the correct GPIO to any necessary by changing RGB_LED_GPIO value
@@ -58,29 +58,29 @@ void loop() {
 
   // Changing the CPU Freq demands RMT to reset internals parameters setting it correctly
   // This is fixed by reinitializing the RMT peripheral as done below
-  // 100ns RMT Tick for driving the NeoLED as in the code of esp32-hal-rgb-led.c (github)
+  // 100ns RMT Tick for driving the RGB LED as in the code of esp32-hal-rgb-led.c (github)
   rmtInit(RGB_LED_GPIO, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000);
 
   // resets also UART to adapt to the new CPU Freq
   Serial.updateBaudRate(115200);
   Serial.printf("\n--changed CPU Frequency to %lu MHz\n", getCpuFrequencyMhz());
 
-  neopixelWrite(RGB_LED_GPIO, BRIGHTNESS, BRIGHTNESS, BRIGHTNESS);  // White
+  rgbLedWrite(RGB_LED_GPIO, BRIGHTNESS, BRIGHTNESS, BRIGHTNESS);  // White
   Serial.println("White");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
+  rgbLedWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
   Serial.println("Off");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, BRIGHTNESS, 0, 0);  // Red
+  rgbLedWrite(RGB_LED_GPIO, BRIGHTNESS, 0, 0);  // Red
   Serial.println("Red");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, 0, BRIGHTNESS, 0);  // Green
+  rgbLedWrite(RGB_LED_GPIO, 0, BRIGHTNESS, 0);  // Green
   Serial.println("Green");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, 0, 0, BRIGHTNESS);  // Blue
+  rgbLedWrite(RGB_LED_GPIO, 0, 0, BRIGHTNESS);  // Blue
   Serial.println("Blue");
   delay(1000);
-  neopixelWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
+  rgbLedWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
   Serial.println("Off");
   delay(1000);
 }

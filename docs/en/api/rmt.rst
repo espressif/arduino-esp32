@@ -17,7 +17,7 @@ To get started with RMT, you can try:
 RMT Write Neo Pixel
 *******************
 
-.. literalinclude:: ../../../libraries/ESP32/examples/RMT/RMTWriteNeoPixel/RMTWriteNeoPixel.ino
+.. literalinclude:: ../../../libraries/ESP32/examples/RMT/RMTWriteRGB_LED/RMTWriteRGB_LED.ino
     :language: arduino
 
 
