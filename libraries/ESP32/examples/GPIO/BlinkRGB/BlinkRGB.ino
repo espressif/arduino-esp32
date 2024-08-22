@@ -6,7 +6,7 @@
   Calling digitalWrite(RGB_BUILTIN, HIGH) will use hidden RGB driver.
 
   RGBLedWrite demonstrates control of each channel:
-  void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
+  void rgbledWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
 
   WARNING: After using digitalWrite to drive RGB LED it will be impossible to drive the same pin
     with normal HIGH/LOW level
@@ -27,13 +27,13 @@ void loop() {
   digitalWrite(RGB_BUILTIN, LOW);  // Turn the RGB LED off
   delay(1000);
 
-  neopixelWrite(RGB_BUILTIN, RGB_BRIGHTNESS, 0, 0);  // Red
+  rgbledWrite(RGB_BUILTIN, RGB_BRIGHTNESS, 0, 0);  // Red
   delay(1000);
-  neopixelWrite(RGB_BUILTIN, 0, RGB_BRIGHTNESS, 0);  // Green
+  rgbledWrite(RGB_BUILTIN, 0, RGB_BRIGHTNESS, 0);  // Green
   delay(1000);
-  neopixelWrite(RGB_BUILTIN, 0, 0, RGB_BRIGHTNESS);  // Blue
+  rgbledWrite(RGB_BUILTIN, 0, 0, RGB_BRIGHTNESS);  // Blue
   delay(1000);
-  neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // Off / black
+  rgbledWrite(RGB_BUILTIN, 0, 0, 0);  // Off / black
   delay(1000);
 #endif
 }

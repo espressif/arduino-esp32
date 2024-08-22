@@ -155,7 +155,7 @@ static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t 
       if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
         light_state = message->attribute.data.value ? *(bool *)message->attribute.data.value : light_state;
         log_i("Light sets to %s", light_state ? "On" : "Off");
-        neopixelWrite(LED_PIN, 255 * light_state, 255 * light_state, 255 * light_state);  // Toggle light
+        rgbledWrite(LED_PIN, 255 * light_state, 255 * light_state, 255 * light_state);  // Toggle light
       }
     }
   }
@@ -172,7 +172,7 @@ void setup() {
   ESP_ERROR_CHECK(esp_zb_platform_config(&config));
 
   // Init RMT and leave light OFF
-  neopixelWrite(LED_PIN, 0, 0, 0);
+  rgbledWrite(LED_PIN, 0, 0, 0);
 
   // Start Zigbee task
   xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);

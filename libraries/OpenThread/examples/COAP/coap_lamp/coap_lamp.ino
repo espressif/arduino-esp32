@@ -55,7 +55,7 @@ bool otDeviceSetup(const char **otSetupCmds, uint8_t nCmds1, const char **otCoap
   }
   if (i != nCmds1) {
     log_e("Sorry, OpenThread Network setup failed!");
-    neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
+    rgbledWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
     return false;
   }
   Serial.println("OpenThread started.\r\nWaiting for activating correct Device Role.");
@@ -69,7 +69,7 @@ bool otDeviceSetup(const char **otSetupCmds, uint8_t nCmds1, const char **otCoap
   Serial.println();
   if (!tries) {
     log_e("Sorry, Device Role failed by timeout! Current Role: %s.", otGetStringDeviceRole());
-    neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
+    rgbledWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
     return false;
   }
   Serial.printf("Device is %s.\r\n", otGetStringDeviceRole());
@@ -80,12 +80,12 @@ bool otDeviceSetup(const char **otSetupCmds, uint8_t nCmds1, const char **otCoap
   }
   if (i != nCmds2) {
     log_e("Sorry, OpenThread CoAP setup failed!");
-    neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
+    rgbledWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
     return false;
   }
   Serial.println("OpenThread setup done. Node is ready.");
   // all fine! LED goes Green
-  neopixelWrite(RGB_BUILTIN, 0, 64, 8);  // GREEN ... Lamp is ready!
+  rgbledWrite(RGB_BUILTIN, 0, 64, 8);  // GREEN ... Lamp is ready!
   return true;
 }
 
@@ -118,16 +118,16 @@ void otCOAPListen() {
       log_i("CoAP PUT [%s]\r\n", payload == '0' ? "OFF" : "ON");
       if (payload == '0') {
         for (int16_t c = 248; c > 16; c -= 8) {
-          neopixelWrite(RGB_BUILTIN, c, c, c);  // ramp down
+          rgbledWrite(RGB_BUILTIN, c, c, c);  // ramp down
           delay(5);
         }
-        neopixelWrite(RGB_BUILTIN, 0, 0, 0);  // Lamp Off
+        rgbledWrite(RGB_BUILTIN, 0, 0, 0);  // Lamp Off
       } else {
         for (int16_t c = 16; c < 248; c += 8) {
-          neopixelWrite(RGB_BUILTIN, c, c, c);  // ramp up
+          rgbledWrite(RGB_BUILTIN, c, c, c);  // ramp up
           delay(5);
         }
-        neopixelWrite(RGB_BUILTIN, 255, 255, 255);  // Lamp On
+        rgbledWrite(RGB_BUILTIN, 255, 255, 255);  // Lamp On
       }
     }
   }
@@ -136,7 +136,7 @@ void otCOAPListen() {
 void setup() {
   Serial.begin(115200);
   // LED starts RED, indicating not connected to Thread network.
-  neopixelWrite(RGB_BUILTIN, 64, 0, 0);
+  rgbledWrite(RGB_BUILTIN, 64, 0, 0);
   OThreadCLI.begin(false);     // No AutoStart is necessary
   OThreadCLI.setTimeout(250);  // waits 250ms for the OpenThread CLI response
   setupNode();
