@@ -15,7 +15,8 @@ Before Contributing
 
 Before sending us a Pull Request, please consider this:
 
-* Is the contribution entirely your own work, or is it already licensed under an LGPL 2.1 compatible Open Source License? If not, cannot accept it.
+* Is the contribution entirely your own work, or is it already licensed under an LGPL 2.1 compatible Open Source License?
+  If not, cannot accept it.
 
 * Is the code adequately commented and can people understand how it is structured?
 
@@ -25,9 +26,10 @@ Before sending us a Pull Request, please consider this:
 
 * Example contributions are also welcome.
 
-  * If you are contributing by adding a new example, please use the `Arduino style guide`_ and the example guideline below.
+  * If you are contributing by adding a new example, please use the `Arduino style guide`_ and the example guideline below.
 
-* If the contribution contains multiple commits, are they grouped together into logical changes (one major change per pull request)? Are any commits with names like "fixed typo" `squashed into previous commits <https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit/>`_?
+* If the contribution contains multiple commits, are they grouped together into logical changes (one major change per pull request)?
+  Are any commits with names like "fixed typo" `squashed into previous commits <https://eli.thegreenplace.net/2014/02/19/squashing-github-pull-requests-into-a-single-commit/>`_?
 
 If you're unsure about any of these points, please open the Pull Request anyhow and then ask us for feedback.
 
@@ -49,20 +51,22 @@ Checklist
 * Check if your example proposal has no similarities to the project (**already existing examples**)
 * Use the `Arduino style guide`_
 * Add the header to all source files
-* Add the `README.md` file
+* Add the ``README.md`` file
 * Add inline comments if needed
 * Test the example
 
 Header
 ******
 
-All the source files must include the header with the example name and license, if applicable. You can change this header as you wish, but it will be reviewed by the community and may not be accepted.
+All the source files must include the header with the example name and license, if applicable. You can change this header as you wish,
+but it will be reviewed by the community and may not be accepted.
 
-Ideally, you can add some description about the example, links to the documentation, or the author's name. Just have in mind to keep it simple and short.
+Ideally, you can add some description about the example, links to the documentation, or the author's name.
+Just have in mind to keep it simple and short.
 
 **Header Example**
 
-.. code-block:: arduino
+.. code-block:: arduino
 
     /* Wi-Fi FTM Initiator Arduino Example
 
@@ -77,9 +81,9 @@ Ideally, you can add some description about the example, links to the documentat
 README file
 ***********
 
-The **README.md** file should contain the example details.
+The ``README.md`` file should contain the example details.
 
-Please see the recommended **README.md** file in the `example template folder <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Template/ExampleTemplate>`_.
+Please see the recommended ``README.md`` file in the `example template folder <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Template/ExampleTemplate>`_.
 
 Inline Comments
 ***************
@@ -88,17 +92,16 @@ Inline comments are important if the example contains complex algorithms or spec
 
 Brief and clear inline comments are really helpful for the example understanding and it's fast usage.
 
-**Example**
+See the `FTM example <https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/FTM/FTM_Initiator/FTM_Initiator.ino>`_
+as a reference:
 
-See the `FTM example <https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFi/examples/FTM/FTM_Initiator/FTM_Initiator.ino>`_ as a reference.
-
-.. code-block:: arduino
+.. code-block:: arduino
 
     // Number of FTM frames requested in terms of 4 or 8 bursts (allowed values - 0 (No pref), 16, 24, 32, 64)
 
-and
+Also:
 
-.. code-block:: arduino
+.. code-block:: arduino
 
     const char * WIFI_FTM_SSID = "WiFi_FTM_Responder"; // SSID of AP that has FTM Enabled
     const char * WIFI_FTM_PASS = "ftm_responder"; // STA Password
@@ -106,19 +109,33 @@ and
 Testing
 *******
 
-Be sure you have tested the example in all the supported targets. If the example works only with specific targets, add this information in the **README.md** file on the **Supported Targets** and in the example code as an inline comment.
+Be sure you have tested the example in all the supported targets. If the example works only with specific targets,
+edit/add the ``ci.json`` in the same folder as the sketch to specify the supported targets. By default,
+all targets are assumed to be supported.
 
-**Example**
+Here is an example of the ``ci.json`` file where the example does not support ESP32-H2 and ESP32-S2:
 
-.. code-block:: arduino
+.. code-block:: json
+
+    {
+      "targets": {
+        "esp32h2": false,
+        "esp32s2": false
+      }
+    }
+
+You also need to add this information in the ``README.md`` file, on the **Supported Targets**, and in the example code as an inline comment.
+For example, in the sketch:
+
+.. code-block:: arduino
 
     /*
       THIS FEATURE IS SUPPORTED ONLY BY ESP32-S2 AND ESP32-C3
     */
 
-and
+And in the ``README.md`` file:
 
-.. code-block:: markdown
+.. code-block:: markdown
 
     Currently, this example supports the following targets.
 
@@ -128,11 +145,262 @@ and
 Example Template
 ****************
 
-The example template can be found `here <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Template/ExampleTemplate>`_ and can be used as a reference.
+The example template can be found `here <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Template/ExampleTemplate>`_
+and can be used as a reference.
+
+Documentation
+-------------
+
+If you are contributing to the documentation, please follow the instructions described in the
+`documentation guidelines <guides/docs_contributing>`_ to properly format and test your changes.
+
+Testing and CI
+--------------
+
+After you have made your changes, you should test them. You can do this in different ways depending on the type of change you have made.
+
+Examples
+********
+
+The easiest way to test an example is to load it into the Arduino IDE and run it on your board. If you have multiple boards,
+you should test it on all of them to ensure that the example works on all supported targets.
+
+You can refer to the `Example Contribution Guideline`_ section for more information on how to write and test examples.
+
+Library Changes
+***************
+
+If you have made changes to a library, you should test it on all supported targets. You can do this by loading the library examples (or creating new ones)
+into the Arduino IDE and running them on your board. If you have multiple boards, you should test it on all of them to ensure that the library
+works as expected on all targets.
+
+You can also add a new test suite to automatically check the library. You can refer to the `Adding a New Test Suite`_ section for more information.
+
+Core Changes
+************
+
+If you have made changes to the core, it is important to ensure that the changes do not break the existing functionality. You can do this by running the
+tests on all supported targets. You can refer to the `Runtime Tests`_ section for more information.
+
+CI
+**
+
+In our repository, we have a Continuous Integration (CI) system that runs tests and fixes on every Pull Request. This system will run the tests
+on all supported targets and check if everything is working as expected.
+
+We have many types of tests and checks, including:
+
+* Compilation tests;
+* Runtime tests;
+* Documentation checks;
+* Code style checks;
+* And more.
+
+Let's go deeper into each type of test in the CI system:
+
+Compilation Tests
+^^^^^^^^^^^^^^^^^
+
+The compilation tests are the first type of tests in the CI system. They check if the code compiles on all supported targets.
+If the code does not compile, the CI system will fail the test and the Pull Request will not be merged.
+This is important to ensure that the code is compatible with all supported targets and no broken code is merged.
+
+It will go through all the sketches in the repository and check if they compile on all supported targets. This process is automated and controlled
+by GitHub Actions. The CI system will run the ``arduino-cli`` tool to compile the sketches on all supported targets.
+
+Testing it locally using the CI scripts would be too time consuming, so we recommend running the tests locally using the Arduino IDE with
+a sketch that uses the changes you made (you can also add the sketch as an example if your change is not covered by the existing ones).
+Make sure to set ``Compiler Warnings`` to ``All`` in the Arduino IDE to catch any potential issues.
+
+Runtime Tests
+^^^^^^^^^^^^^
+
+Another type of test is the runtime tests. They check if the code runs and behaves as expected on all supported targets. If the
+code does not run as expected, the CI system will fail the test and the Pull Request will not be merged. This is important to ensure that the code
+works as expected on all supported targets and no unintended crashes or bugs are introduced.
+
+These tests are specialized sketches that run on the target board and check if the code behaves as expected. This process is automated and
+controlled by the ``pytest_embedded`` tool. You can read more about this tool in its
+`documentation <https://docs.espressif.com/projects/pytest-embedded/en/latest/>`_.
+
+The tests are devided into two categories inside the ``tests`` folder:
+
+* ``validation``: These tests are used to validate the behavior of the Arduino core and libraries. They are used to check if the core and libraries
+  are working as expected;
+* ``performance``: These tests are used to check the performance of the Arduino core and libraries. They are used to check if the changes made
+  to the core and libraries have any big impact on the performance. These tests usually run for a longer time than the validation tests and include
+  common benchmark tools like `CoreMark <https://github.com/eembc/coremark>`_.
+
+To run the runtime tests locally, first install the required dependencies by running:
+
+.. code-block:: bash
+
+    pip install -U -r tests/requirements.txt
+
+Before running the test, we need to build it by running:
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_build.sh -s <test_name> -t <target>
+
+The ``<test_name>`` is the name of the test you want to run (you can check the available tests in the ``tests/validation`` and
+``tests/performance`` folders), and the ``<target>`` is the target board you want to run the test on. For example, to run the ``uart`` test on the
+ESP32-C3 target, you would run:
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_build.sh -s uart -t esp32c3
+
+You should see the output of the build process and the test binary should be generated in the ``~/.arduino/tests/<test_name>/build.tmp`` folder.
+
+Now that the test is built, you can run it in the target board. Connect the target board to your computer and run:
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_run.sh -s <test_name> -t <target>
+
+For example, to run the ``uart`` test on the ESP32-C3 target, you would run:
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_run.sh -s uart -t esp32c3
+
+The test will run on the target board and you should see the output of the test in the terminal:
+
+.. code-block:: bash
+
+    lucassvaz@Lucas--MacBook-Pro esp32 % ./.github/scripts/tests_run.sh -s uart -t esp32c3
+    Sketch uart test type: validation
+    Running test: uart -- Config: Default
+    pytest tests --build-dir /Users/lucassvaz/.arduino/tests/uart/build.tmp -k test_uart --junit-xml=/Users/lucassvaz/Espressif/Arduino/hardware/espressif/esp32/tests/validation/uart/esp32c3/uart.xml --embedded-services esp,arduino
+    =============================================================================================== test session starts ================================================================================================
+    platform darwin -- Python 3.12.3, pytest-8.2.2, pluggy-1.5.0
+    rootdir: /Users/lucassvaz/Espressif/Arduino/hardware/espressif/esp32/tests
+    configfile: pytest.ini
+    plugins: cov-5.0.0, embedded-1.11.5, anyio-4.4.0
+    collected 15 items / 14 deselected / 1 selected
+
+    tests/validation/uart/test_uart.py::test_uart
+    -------------------------------------------------------------------------------------------------- live log setup --------------------------------------------------------------------------------------------------
+    2024-08-22 11:49:30 INFO Target: esp32c3, Port: /dev/cu.usbserial-2120
+    PASSED                                                                                                                                                                                                       [100%]
+    ------------------------------------------------------------------------------------------------ live log teardown -------------------------------------------------------------------------------------------------
+    2024-08-22 11:49:52 INFO Created unity output junit report: /private/var/folders/vp/g9wctsvn7b91k3pv_7cwpt_h0000gn/T/pytest-embedded/2024-08-22_14-49-30-392993/test_uart/dut.xml
+
+
+    ---------------------------------------------- generated xml file: /Users/lucassvaz/Espressif/Arduino/hardware/espressif/esp32/tests/validation/uart/esp32c3/uart.xml ----------------------------------------------
+    ======================================================================================== 1 passed, 14 deselected in 22.18s =========================================================================================
+
+After the test is finished, you can check the output in the terminal and the generated XML file in the test folder.
+Additionally, for performance tests, you can check the generated JSON file in the same folder.
+
+You can also run the tests in `Wokwi <https://docs.wokwi.com/>`_ or `Espressif's QEMU <https://github.com/espressif/esp-toolchain-docs/tree/main/qemu>`_
+by using the ``-W <timeout_in_ms>`` and ``-Q`` flags respectively. You will need to have the Wokwi and/or QEMU installed in your system
+and set the ``WOKWI_CLI_TOKEN`` and/or ``QEMU_PATH`` environment variables. The ``WOKWI_CLI_TOKEN`` is the CI token that can be obtained from the
+`Wokwi website <https://wokwi.com/dashboard/ci>`_ and the ``QEMU_PATH`` is the path to the QEMU binary.
+
+For example, to run the ``uart`` test using Wokwi, you would run:
+
+.. code-block:: bash
+
+    WOKWI_CLI_TOKEN=<your_wokwi_token> ./.github/scripts/tests_run.sh -s uart -t esp32c3 -W <timeout_in_ms>
+
+And to run the ``uart`` test using QEMU, you would run:
+
+.. code-block:: bash
+
+    QEMU_PATH=<path_to_qemu_binary> ./.github/scripts/tests_run.sh -s uart -t esp32c3 -Q
+
+.. note::
+
+    Not all tests are supported by Wokwi and QEMU. QEMU is only supported for ESP32 and ESP32-C3 targets.
+    Wokwi support depends on the `currently implemented peripherals <https://docs.wokwi.com/guides/esp32#simulation-features>`_.
+
+Adding a New Test Suite
+#######################
+
+If you want to add a new test suite, you can create a new folder inside ``tests/validation`` or ``tests/performance`` with the name of the test suite.
+You can use the ``hello_world`` test suite as a starting point and the other test suites as a reference.
+
+A test suite contains the following files:
+
+* ``test_<test_name>.py``: The test file that contains the test cases. Required.
+* ``<test_name>.ino``: The sketch that will be tested. Required.
+* ``ci.json``: The file that specifies how the test suite will be run in the CI system. Optional.
+* ``diagram.<target>.json``: The diagram file that specifies the connections between the components in Wokwi. Optional.
+* ``scenario.yaml``: The scenario file that specifies how Wokwi will interact with the components. Optional.
+* Any other files that are needed for the test suite.
+
+You can read more about the test python API in the `pytest-embedded documentation <https://docs.espressif.com/projects/pytest-embedded/en/latest/usages/expecting.html>`_.
+For more information about the Unity testing framework, you can check the `Unity documentation <https://github.com/ThrowTheSwitch/Unity>`_.
+
+After creating the test suite, make sure to test it locally and run it in the CI system to ensure that it works as expected.
+
+CI JSON File
+############
+
+The ``ci.json`` file is used to specify how the test suite and sketches will handled by the CI system. It can contain the following fields:
+
+* ``targets``: A dictionary that specifies the supported targets. The key is the target name and the value is a boolean that specifies if the
+  target is supported. By default, all targets are assumed to be supported. This field is also valid for examples.
+* ``platforms``: A dictionary that specifies the supported platforms. The key is the platform name and the value is a boolean that specifies if
+  the platform is supported. By default, all platforms are assumed to be supported.
+* ``extra_tags``: A list of extra tags that the runner will require when running the test suite in hardware. By default, no extra tags are required.
+* ``fqbn``: A dictionary that specifies the FQBNs that will be used to compile the sketch. The key is the target name and the value is a list
+  of FQBNs. The `default FQBNs <https://github.com/espressif/arduino-esp32/blob/a31a5fca1739993173caba995f7785b8eed6b30e/.github/scripts/sketch_utils.sh#L86-L91>`_
+  are used if this field is not specified.
+
+The ``wifi`` test suite is a good example of how to use the ``ci.json`` file:
+
+.. literalinclude:: ../../../tests/validation/wifi/ci.json
+    :language: json
+
+Documentation Checks
+^^^^^^^^^^^^^^^^^^^^
+
+The CI also checks the documentation for any compilation errors. This is important to ensure that the documentation layout is not broken.
+To build the documentation locally, please refer to the `documentation guidelines <guides/docs_contributing>`_.
+
+Code Style Checks
+^^^^^^^^^^^^^^^^^
+
+For checking the code style and other code quality checks, we use pre-commit hooks.
+These hooks will be automatically run by the CI when a Pull Request is marked as ``Status: Pending Merge``.
+You can check which hooks are being run in the ``.pre-commit-config.yaml`` file.
+
+You can read more about the pre-commit hooks in the `pre-commit documentation <https://pre-commit.com/>`_.
+
+If you want to run the pre-commit hooks locally, you first need to install the required dependencies by running:
+
+.. code-block:: bash
+
+    pip install -U -r tools/pre-commit/requirements.txt
+
+Then, you can run the pre-commit hooks staging your changes and running:
+
+.. code-block:: bash
+
+    pre-commit run
+
+To run a specific hook, you can use the hook name as an argument. For example, to run the ``codespell`` hook, you would run:
+
+.. code-block:: bash
+
+    pre-commit run codespell --hook-stage manual
+
+As some hooks are only enabled to run manually, you need to use the ``--hook-stage manual`` flag to run them.
+
+If you want to run the pre-commit hooks automatically against the changed files on every ``git commit``,
+you can install the pre-commit hooks by running:
+
+.. code-block:: bash
+
+    pre-commit install
 
 Legal Part
 ----------
 
-Before a contribution can be accepted, you will need to sign our contributor agreement. You will be prompted for this automatically as part of the Pull Request process.
+Before a contribution can be accepted, you will need to sign our contributor agreement. You will be prompted for this automatically as part of
+the Pull Request process.
 
 .. _Arduino style guide: https://docs.arduino.cc/learn/contributions/arduino-writing-style-guide
