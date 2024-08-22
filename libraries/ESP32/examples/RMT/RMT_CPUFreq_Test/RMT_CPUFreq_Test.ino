@@ -17,7 +17,7 @@
  * that RMT works on any CPU/APB Frequency.
  *
  * It uses an ESP32 Arduino builtin RGB NeoLED function based on RMT:
- * void rgbledWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
+ * void rgbLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
  *
  * The output is a visual WS2812 RGB LED color change routine using each time a
  * different CPU Frequency, just to illustrate how it works. Serial output indicates
@@ -65,22 +65,22 @@ void loop() {
   Serial.updateBaudRate(115200);
   Serial.printf("\n--changed CPU Frequency to %lu MHz\n", getCpuFrequencyMhz());
 
-  rgbledWrite(RGB_LED_GPIO, BRIGHTNESS, BRIGHTNESS, BRIGHTNESS);  // White
+  rgbLedWrite(RGB_LED_GPIO, BRIGHTNESS, BRIGHTNESS, BRIGHTNESS);  // White
   Serial.println("White");
   delay(1000);
-  rgbledWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
+  rgbLedWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
   Serial.println("Off");
   delay(1000);
-  rgbledWrite(RGB_LED_GPIO, BRIGHTNESS, 0, 0);  // Red
+  rgbLedWrite(RGB_LED_GPIO, BRIGHTNESS, 0, 0);  // Red
   Serial.println("Red");
   delay(1000);
-  rgbledWrite(RGB_LED_GPIO, 0, BRIGHTNESS, 0);  // Green
+  rgbLedWrite(RGB_LED_GPIO, 0, BRIGHTNESS, 0);  // Green
   Serial.println("Green");
   delay(1000);
-  rgbledWrite(RGB_LED_GPIO, 0, 0, BRIGHTNESS);  // Blue
+  rgbLedWrite(RGB_LED_GPIO, 0, 0, BRIGHTNESS);  // Blue
   Serial.println("Blue");
   delay(1000);
-  rgbledWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
+  rgbLedWrite(RGB_LED_GPIO, 0, 0, 0);  // Off
   Serial.println("Off");
   delay(1000);
 }

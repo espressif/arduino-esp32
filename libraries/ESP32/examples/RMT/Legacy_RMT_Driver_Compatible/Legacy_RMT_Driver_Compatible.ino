@@ -17,7 +17,7 @@
 #else
 
 // add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NO_RGB_BUILTIN" to use the RMT Legacy driver
-// rgbledWrite() is a function that writes to the RGB LED and it won't be available here
+// rgbLedWrite() is a function that writes to the RGB LED and it won't be available here
 #include "driver/rmt.h"
 
 bool installed = false;
