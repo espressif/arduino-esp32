@@ -67,7 +67,7 @@ static const uint8_t I2S_AMP_WS = 1;
 static const uint8_t RTC_INT = 7;
 
 static const uint8_t RGB_DATA = 18;
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbledWrite()
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
 #define RGB_BUILTIN    (RGB_DATA + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino

@@ -66,7 +66,7 @@ static const uint8_t LED_BUILTIN = 21;
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t PIXEL_BUILTIN = 33;
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbledWrite()
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
 #define RGB_BUILTIN    (PIXEL_BUILTIN + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 

@@ -15,7 +15,7 @@
 
 // RGB LED
 #define PIN_RGB_LED 47
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbledWrite() and digitalWrite() for blinking
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite() and digitalWrite() for blinking
 #define RGB_BUILTIN    (PIN_RGB_LED + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 #define RGBLED_NUM   1  // number of RGB LEDs
