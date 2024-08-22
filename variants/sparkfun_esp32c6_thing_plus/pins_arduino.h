@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define PIN_NEOPIXEL 23
+#define PIN_RGB_LED 23
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_NEOPIXEL;
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbledWrite()

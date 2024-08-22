@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define PIN_NEOPIXEL   18
-#define RGB_BUILTIN    PIN_NEOPIXEL
+#define PIN_RGB_LED   18
+#define RGB_BUILTIN    PIN_RGB_LED
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t BUT_BUILTIN = 0;

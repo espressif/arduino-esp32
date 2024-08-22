@@ -34,8 +34,8 @@ void initVariant(void) {
   digitalWrite(IO_ENABLE, LOW);
 
   //reset RGB
-  pinMode(PIN_NEOPIXEL, OUTPUT);
-  digitalWrite(PIN_NEOPIXEL, LOW);
+  pinMode(PIN_RGB_LED, OUTPUT);
+  digitalWrite(PIN_RGB_LED, LOW);
 
   //enable XBEE by default
   pinMode(PIN_XB1_ENABLE, OUTPUT);

@@ -16,8 +16,8 @@
 #define LORA_RST  NOT_A_PIN
 
 // Neopixel
-#define PIN_NEOPIXEL 0  // ->2812 RGB !!!
-static const uint8_t LED_BUILTIN = PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT;
+#define PIN_RGB_LED 0  // ->2812 RGB !!!
+static const uint8_t LED_BUILTIN = PIN_RGB_LED + SOC_GPIO_PIN_COUNT;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbledWrite()

@@ -5,11 +5,11 @@
 #include "soc/soc_caps.h"
 
 // GPIO pin for Saola-1 & DevKitM-1 = 18
-#define PIN_NEOPIXEL 18
+#define PIN_RGB_LED 18
 // GPIO pin for Kaluga = 45
-//#define PIN_NEOPIXEL 45
+//#define PIN_RGB_LED 45
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_NEOPIXEL;
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbledWrite()

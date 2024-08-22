@@ -18,9 +18,9 @@
 #define USB_FW_MSC_VOLUME_NAME      "S2-Firmware"   //max 11 chars
 #define USB_FW_MSC_SERIAL_NUMBER    0x00000000
 
-static const uint8_t PIN_NEOPIXEL = 18;
+static const uint8_t PIN_RGB_LED = 18;
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT);
+static const uint8_t LED_BUILTIN = (PIN_RGB_LED + SOC_GPIO_PIN_COUNT);
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbledWrite()
