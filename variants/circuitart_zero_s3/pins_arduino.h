@@ -15,7 +15,7 @@
 
 // Neopixel
 #define PIN_NEOPIXEL 47
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbledWrite() and digitalWrite() for blinking
 #define RGB_BUILTIN    (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 #define NEOPIXEL_NUM   1  // number of neopixels
