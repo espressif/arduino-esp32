@@ -26,10 +26,10 @@
 
 // Default DevKit RGB LED GPIOs:
 // The effect seen in (Espressif devkits) ESP32C6, ESP32H2, ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
-#ifdef PIN_NEOPIXEL
-#define MY_LED_GPIO PIN_NEOPIXEL
+#ifdef PIN_RGB_LED
+#define MY_LED_GPIO PIN_RGB_LED
 #else
-#define MY_LED_GPIO 21  // ESP32 has no builtin RGB LED (PIN_NEOPIXEL)
+#define MY_LED_GPIO 21  // ESP32 has no builtin RGB LED (PIN_RGB_LED)
 #endif
 
 // Set the correct GPIO to any necessary by changing RGB_LED_GPIO value
