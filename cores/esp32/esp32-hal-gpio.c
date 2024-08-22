@@ -166,7 +166,7 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val) {
     //use RMT to set all channels on/off
     RGB_BUILTIN_storage = val;
     const uint8_t comm_val = val != 0 ? RGB_BRIGHTNESS : 0;
-    neopixelWrite(RGB_BUILTIN, comm_val, comm_val, comm_val);
+    rgbledWrite(RGB_BUILTIN, comm_val, comm_val, comm_val);
     return;
   }
 #endif  // RGB_BUILTIN

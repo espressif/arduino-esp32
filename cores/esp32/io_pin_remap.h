@@ -77,7 +77,7 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
 #define pinMatrixOutDetach(pin, invertOut, invertEnable)           pinMatrixOutDetach(digitalPinToGPIONumber(pin), invertOut, invertEnable)
 
 // cores/esp32/esp32-hal-rgb-led.h
-#define neopixelWrite(pin, red_val, green_val, blue_val) neopixelWrite(digitalPinToGPIONumber(pin), red_val, green_val, blue_val)
+#define rgbledWrite(pin, red_val, green_val, blue_val) rgbledWrite(digitalPinToGPIONumber(pin), red_val, green_val, blue_val)
 
 // cores/esp32/esp32-hal-rmt.h
 #define rmtInit(pin, channel_direction, memsize, frequency_Hz) rmtInit(digitalPinToGPIONumber(pin), channel_direction, memsize, frequency_Hz)
