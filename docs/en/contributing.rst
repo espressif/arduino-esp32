@@ -352,7 +352,7 @@ The ``ci.json`` file is used to specify how the test suite and sketches will han
 
 The ``wifi`` test suite is a good example of how to use the ``ci.json`` file:
 
-.. literalinclude:: ../../../tests/validation/wifi/ci.json
+.. literalinclude:: ../../tests/validation/wifi/ci.json
     :language: json
 
 Documentation Checks
