@@ -15,7 +15,7 @@
 #define LTE_WAKE 27  // GPIO27 - Sequans modem wake-up interrupt
 #define LTE_BAUD 921600
 
-// Neopixel
+// RGB LED
 #define PIN_RGB_LED 0  // ->2812 RGB !!!
 static const uint8_t LED_BUILTIN = PIN_RGB_LED + SOC_GPIO_PIN_COUNT;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

@@ -15,7 +15,7 @@
 #define LORA_IO1  LORA_IRQ  // tied by diode to IO0
 #define LORA_IO2  LORA_IRQ  // tied by diode to IO0
 
-// Neopixel
+// RGB LED
 #define PIN_RGB_LED 0  // ->2812 RGB !!!
 static const uint8_t LED_BUILTIN = PIN_RGB_LED + SOC_GPIO_PIN_COUNT;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility

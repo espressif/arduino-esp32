@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-// Neopixel
+// RGB LED
 #define PIN_RGB_LED 0  // ->2812 RGB !!!
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = (PIN_RGB_LED + SOC_GPIO_PIN_COUNT);

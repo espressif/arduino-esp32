@@ -9,7 +9,7 @@ static const uint8_t BUZZER = 25;
 static const uint8_t BUTTON_A = 35;
 static const uint8_t BUTTON_B = 27;
 
-// NeoPixel Matrix 5 x 5
+// RGB LED Matrix 5 x 5
 static const uint8_t RGB_LED = 4;
 
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
