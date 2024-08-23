@@ -2,6 +2,7 @@ exclude: |
   (?x)(
       ^\.github\/|
       ^tests\/performance\/coremark\/.*\.[ch]$|
+      ^tests\/performance\/superpi\/.*\.(cpp|h)$|
       LICENSE\.md$
   )
 

@@ -79,12 +79,12 @@ bool otDeviceSetup(
   }
   Serial.println("OpenThread setup done. Node is ready.");
   // all fine! LED goes and stays Blue
-  neopixelWrite(RGB_BUILTIN, 0, 0, 64);  // BLUE ... Swtich is ready!
+  neopixelWrite(RGB_BUILTIN, 0, 0, 64);  // BLUE ... Switch is ready!
   return true;
 }
 
 void setupNode() {
-  // tries to set the Thread Network node and only returns when succeded
+  // tries to set the Thread Network node and only returns when succeeded
   bool startedCorrectly = false;
   while (!startedCorrectly) {
     startedCorrectly |= otDeviceSetup(
@@ -138,11 +138,11 @@ bool otCoapPUT(bool lampState) {
   return false;
 }
 
-// this fucntion is used by the Switch mode to check the BOOT Button and send the user action to the Lamp node
+// this function is used by the Switch mode to check the BOOT Button and send the user action to the Lamp node
 void checkUserButton() {
   static long unsigned int lastPress = 0;
   const long unsigned int debounceTime = 500;
-  static bool lastLampState = true;  // first button press will turn the Lamp OFF from inital Green
+  static bool lastLampState = true;  // first button press will turn the Lamp OFF from initial Green
 
   pinMode(USER_BUTTON, INPUT_PULLUP);  // C6/H2 User Button
   if (millis() > lastPress + debounceTime && digitalRead(USER_BUTTON) == LOW) {
@@ -150,7 +150,7 @@ void checkUserButton() {
     if (!otCoapPUT(lastLampState)) {  // failed: Lamp Node is not responding due to be off or unreachable
       // timeout from the CoAP PUT message... restart the node.
       neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... something failed!
-      Serial.println("Reseting the Node as Switch... wait.");
+      Serial.println("Resetting the Node as Switch... wait.");
       // start over...
       setupNode();
     }
