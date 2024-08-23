@@ -65,4 +65,4 @@ Deleting file: /test.txt
 - file deleted
 Test complete
 ```
-- If you have a module with more than 4MB flash, you can uncomment **partitions_custom.csv** in **platformio.ini** and modify the csv file accordingly
+- If you have a module with more than 4 MB flash, you can uncomment **partitions_custom.csv** in **platformio.ini** and modify the csv file accordingly

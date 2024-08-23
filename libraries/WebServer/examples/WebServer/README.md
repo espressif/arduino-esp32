@@ -6,8 +6,8 @@ It is a small project in it's own and has some files to use on the web server to
 
 This example requires some space for a filesystem and runs fine on supported SoCs with 4 MByte or more flash by selecting the proper partition table:
 
-* For using SPIFFS(LittleFS): Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)  
-* For using FATFS: Default 4MB with ffat (1.2MB APP/1.5MB FATFS)  
+* For using SPIFFS(LittleFS): `Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)`
+* For using FATFS: `Default 4MB with ffat (1.2MB APP/1.5MB FATFS)`
 
 
 It features
@@ -36,7 +36,7 @@ Currently, this example supports the following targets.
 
 How to install the Arduino IDE: [Install Arduino IDE](https://github.com/espressif/arduino-esp32/tree/master/docs/arduino-ide).
 
-* In the file `secrets.h` you can add the home WiFi network name ans password.
+* In the file `secrets.h` you can add the home Wi-Fi network name ans password.
 * Compile and upload to the device.
 * Have a look into the monitoring output.
 * Open <http://webserver> or <http://(ip-address)> using a browser.
@@ -56,9 +56,9 @@ It offers plug-in capabilities by registering specific functionalities that will
 
 In the setup() function in the webserver.ino sketch file the following steps are implemented to make the webserver available on the local network.
 
-* Create a webserver listening to port 80 for http requests.
+* Create a webserver listening to port 80 for HTTP requests.
 * Initialize the access to the filesystem in the free flash memory.
-* Connect to the local WiFi network. Here is only a straight-forward implementation hard-coding network name and passphrase. You may consider to use something like the WiFiManager library in real applications.
+* Connect to the local Wi-Fi network. Here is only a straight-forward implementation hard-coding network name and passphrase. You may consider to use something like the WiFiManager library in real applications.
 * Register the device in DNS using a known hostname.
 * Registering several plug-ins (see below).
 * Starting the web server.

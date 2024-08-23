@@ -217,8 +217,8 @@ Functional changes
 * ``begin(baud)`` will not change any pins that have been set before this call, through a previous ``begin(baud, rx, tx)`` or ``setPin()``.
 * If the application only uses RX or TX, ``begin(baud, -1, tx)`` or ``begin(baud, rx)`` will change only the assigned pin and keep the other unchanged.
 
-WiFi
-****
+Wi-Fi
+*****
 
 Functional changes
 ^^^^^^^^^^^^^^^^^^

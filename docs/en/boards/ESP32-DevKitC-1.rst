@@ -7,7 +7,7 @@ The `ESP32-DevKitC-1`_ development board is one of Espressif's official boards. 
 Specifications
 --------------
 
-- Wi-Fi 802.11 b/g/n (802.11n up to 150 Mbps)
+- Wi-Fi 802.11b/g/n (802.11n up to 150 Mbps)
 - Bluetooth v4.2 BR/EDR and BLE specification
 - Built around ESP32 series of SoCs
 - Integrated 4 MB SPI flash
@@ -28,7 +28,7 @@ Specifications
     - ADC
     - DAC
     - Two-Wire Automotive Interface (TWAI®, compatible with ISO11898-1)
-- On­board PCB antenna or external antenna connector
+- Onboard PCB antenna or external antenna connector
 
 Header Block
 ------------
@@ -38,6 +38,9 @@ Header Block
 
 J1
 ^^^
+
+.. vale off
+
 ===  ====  =====  ===================================
 No.  Name  Type   Function
 ===  ====  =====  ===================================
@@ -61,6 +64,8 @@ No.  Name  Type   Function
 18   IO11  I/O    GPIO11, CMD
 19   5V0   P      5 V power supply
 ===  ====  =====  ===================================
+
+.. vale on
 
 J3
 ^^^
@@ -110,7 +115,7 @@ Some of the GPIO's have important features during the booting process. Here is t
 ====  =========  =====================================================================  ============  ==============
 GPIO   Default    Function                                                               Pull-up       Pull-down
 ====  =========  =====================================================================  ============  ==============
-IO12  Pull-down  Voltage of Internal LDO (VDD_SDIO)                                     1V8           3V3
+IO12  Pull-down  Voltage of Internal LDO (VDD_SDIO)                                     1.8 V         3.3 V
 IO0   Pull-up    Booting Mode                                                           SPI Boot      Download Boot
 IO2   Pull-down  Booting Mode                                                           Don't Care    Download Boot
 IO15  Pull-up    Enabling/Disabling Log Print During Booting and Timing of SDIO Slave   U0TXD Active  U0TXD Silent
