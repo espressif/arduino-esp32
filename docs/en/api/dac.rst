@@ -33,7 +33,7 @@ This function is used to set the DAC value for a given pin/DAC channel.
     void dacWrite(uint8_t pin, uint8_t value);
 
 * ``pin`` GPIO pin.
-* ``value`` to be set. Range is 0 - 255 (equals 0V - 3.3V).
+* ``value`` to be set. Range is 0 - 255 (equals 0 V - 3.3 V).
 
 dacDisable
 **********

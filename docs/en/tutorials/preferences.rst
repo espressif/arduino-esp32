@@ -386,7 +386,7 @@ To send to the serial monitor the number of available entries the following coul
 
 The number of available entries in the key table changes depending on the number of keys in the namespace and also the dynamic size of certain types of data stored in the namespace. Details are in the `Preferences API Reference`_.
 
-Do note that the number of entries in the key table does not guarantee that there is room in the opened NVS namespace for all the data to be stored in that namespace. Refer to the espressif `Non-volatile storage library`_ documentation for full details.
+Do note that the number of entries in the key table does not guarantee that there is room in the opened NVS namespace for all the data to be stored in that namespace. Refer to the Espressif `Non-volatile storage library`_ documentation for full details.
 
 
 Determining the Type of a key-value Pair

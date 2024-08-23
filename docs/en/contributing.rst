@@ -223,7 +223,7 @@ These tests are specialized sketches that run on the target board and check if t
 controlled by the ``pytest_embedded`` tool. You can read more about this tool in its
 `documentation <https://docs.espressif.com/projects/pytest-embedded/en/latest/>`_.
 
-The tests are devided into two categories inside the ``tests`` folder:
+The tests are divided into two categories inside the ``tests`` folder:
 
 * ``validation``: These tests are used to validate the behavior of the Arduino core and libraries. They are used to check if the core and libraries
   are working as expected;

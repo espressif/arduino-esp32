@@ -7,8 +7,8 @@ The ESP32-C3-DevKitM-1 development board is one of Espressif's official boards. 
 Specifications
 --------------
 
-- Small­ sized 2.4 GHz Wi­Fi (802.11 b/g/n) and Bluetooth® 5 module
-- Built around ESP32­C3 series of SoCs, RISC­V single­core microprocessor
+- Small sized 2.4 GHz Wi-Fi (802.11b/g/n) and Bluetooth® 5 module
+- Built around ESP32-C3 series of SoCs, RISC-V single-core microprocessor
 - 4 MB flash in chip package
 - 15 available GPIOs (module)
 - Peripherals
@@ -30,7 +30,7 @@ Specifications
         - 2 × 54-bit general-purpose timers
         - 3 × watchdog timers
         - 1 × 52-bit system timer
-- On­board PCB antenna or external antenna connector
+- Onboard PCB antenna or external antenna connector
 
 Header Block
 ------------
@@ -40,6 +40,9 @@ Header Block
 
 J1
 ^^^
+
+.. vale off
+
 ===  ====  ==========  ===================================
 No.  Name  Type [1]_   Function
 ===  ====  ==========  ===================================
@@ -59,6 +62,8 @@ No.  Name  Type [1]_   Function
 14   5V    P           5 V power supply
 15   GND   G           Ground
 ===  ====  ==========  ===================================
+
+.. vale on
 
 J3
 ^^^

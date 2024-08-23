@@ -104,7 +104,7 @@ Create an instance of the `ESP_NOW_Peer` class.
 
 * ``mac_addr``: MAC address of the peer device.
 * ``channel``: Communication channel.
-* ``iface``: WiFi interface.
+* ``iface``: Wi-Fi interface.
 * ``lmk``: Optional. Pass the local master key (LMK) if encryption is enabled.
 
 add
@@ -190,24 +190,24 @@ Set the communication channel of the peer.
 getInterface
 ^^^^^^^^^^^^
 
-Get the WiFi interface of the peer.
+Get the Wi-Fi interface of the peer.
 
 .. code-block:: cpp
 
     wifi_interface_t getInterface() const;
 
-Returns the WiFi interface.
+Returns the Wi-Fi interface.
 
 setInterface
 ^^^^^^^^^^^^
 
-Set the WiFi interface of the peer.
+Set the Wi-Fi interface of the peer.
 
 .. code-block:: cpp
 
     void setInterface(wifi_interface_t iface);
 
-* ``iface``: WiFi interface.
+* ``iface``: Wi-Fi interface.
 
 isEncrypted
 ^^^^^^^^^^^

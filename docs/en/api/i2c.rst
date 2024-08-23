@@ -103,7 +103,7 @@ This function will return the current frequency configuration.
 setTimeOut
 ^^^^^^^^^^
 
-Set the bus timeout given in milliseconds. The default value is 50ms.
+Set the bus timeout given in milliseconds. The default value is 50 ms.
 
 .. code-block:: arduino
 

@@ -1,6 +1,6 @@
 # WiFiScanTime Example
 
-This example demonstrates how to use the WiFi library to scan available WiFi networks with custom scan timing and print the results.
+This example demonstrates how to use the Wi-Fi library to scan available Wi-Fi networks with custom scan timing and print the results.
 
 ## Supported Targets
 

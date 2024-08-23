@@ -102,7 +102,7 @@ Tip: If you are using a microSD card and have a spare adapter to full-sized SD, 
 #### What is the difference between SD and SD_MMC libraries?
 
 SD runs on SPI, and SD_MMC uses the SDMMC hardware bus on the ESP32.
-The SPI uses 4 communication pins + 2 power connections and operates on up to 80MHz. The SPI option offers flexibility on pin connection because the data connections can be routed through GPIO matrix to any data pin.
+The SPI uses 4 communication pins + 2 power connections and operates on up to 80 MHz. The SPI option offers flexibility on pin connection because the data connections can be routed through GPIO matrix to any data pin.
 SD-SPI speed is approximately half of the SD-MMC even when used on 1-bit line.
 You can read more about SD SPI in the [documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/sdspi_host.html)
 
