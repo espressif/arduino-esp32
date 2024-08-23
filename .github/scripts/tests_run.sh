@@ -132,6 +132,10 @@ while [ ! -z "$1" ]; do
     -W )
         shift
         wokwi_timeout=$1
+        if [[ -z $WOKWI_CLI_TOKEN ]]; then
+            echo "Wokwi CLI token is not set"
+            exit 1
+        fi
         platform="wokwi"
         ;;
     -o )
