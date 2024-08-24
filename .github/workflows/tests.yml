@@ -4,7 +4,9 @@
 # As the Wokwi tests require access to secrets, they are run in a separate workflow.
 # We need to ensure that the artifacts from previous tests in the chain are propagated for publishing the results.
 # This is the current trigger sequence for the tests:
-#  tests.yml -> tests_wokwi.yml -> tests_results.yml
+#  tests.yml
+#   ⌙> tests_wokwi.yml
+#          ⌙> tests_results.yml
 #   ⌙> tests_build.yml
 #   ⌙> tests_hw.yml
 #   ⌙> tests_qemu.yml
