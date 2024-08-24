@@ -40398,3 +40398,169 @@ codecell.menu.EraseFlash.all=Enabled
 codecell.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+jczn_2432s028r.name=ESP32-2432S028R CYD
+
+jczn_2432s028r.bootloader.tool=esptool_py
+jczn_2432s028r.bootloader.tool.default=esptool_py
+
+jczn_2432s028r.upload.tool=esptool_py
+jczn_2432s028r.upload.tool.default=esptool_py
+jczn_2432s028r.upload.tool.network=esp_ota
+
+jczn_2432s028r.upload.maximum_size=1310720
+jczn_2432s028r.upload.maximum_data_size=327680
+jczn_2432s028r.upload.flags=
+jczn_2432s028r.upload.extra_flags=
+
+jczn_2432s028r.serial.disableDTR=true
+jczn_2432s028r.serial.disableRTS=true
+
+jczn_2432s028r.build.tarch=xtensa
+jczn_2432s028r.build.bootloader_addr=0x1000
+jczn_2432s028r.build.target=esp32
+jczn_2432s028r.build.mcu=esp32
+jczn_2432s028r.build.core=esp32
+jczn_2432s028r.build.variant=jczn_2432s028r
+jczn_2432s028r.build.board=ESP32_2432S028R
+
+jczn_2432s028r.build.f_cpu=240000000L
+jczn_2432s028r.build.flash_size=4MB
+jczn_2432s028r.build.flash_freq=40m
+jczn_2432s028r.build.flash_mode=dio
+jczn_2432s028r.build.boot=dio
+jczn_2432s028r.build.partitions=default
+jczn_2432s028r.build.defines=
+jczn_2432s028r.build.loop_core=
+jczn_2432s028r.build.event_core=
+
+## IDE 2.0 Seems to not update the value
+jczn_2432s028r.menu.JTAGAdapter.default=Disabled
+jczn_2432s028r.menu.JTAGAdapter.default.build.copy_jtag_files=0
+jczn_2432s028r.menu.JTAGAdapter.external=FTDI Adapter
+jczn_2432s028r.menu.JTAGAdapter.external.build.openocdscript=esp32-wrover-kit-3.3v.cfg
+jczn_2432s028r.menu.JTAGAdapter.external.build.copy_jtag_files=1
+jczn_2432s028r.menu.JTAGAdapter.bridge=ESP USB Bridge
+jczn_2432s028r.menu.JTAGAdapter.bridge.build.openocdscript=esp32-bridge.cfg
+jczn_2432s028r.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+jczn_2432s028r.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.default.build.partitions=default
+jczn_2432s028r.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+jczn_2432s028r.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+jczn_2432s028r.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.no_ota.build.partitions=no_ota
+jczn_2432s028r.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+jczn_2432s028r.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+jczn_2432s028r.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+jczn_2432s028r.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+jczn_2432s028r.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+jczn_2432s028r.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+jczn_2432s028r.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+jczn_2432s028r.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+jczn_2432s028r.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+jczn_2432s028r.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.huge_app.build.partitions=huge_app
+jczn_2432s028r.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+jczn_2432s028r.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+jczn_2432s028r.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+jczn_2432s028r.menu.PartitionScheme.rainmaker=RainMaker 4MB
+jczn_2432s028r.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+jczn_2432s028r.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+jczn_2432s028r.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+jczn_2432s028r.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+jczn_2432s028r.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+jczn_2432s028r.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+jczn_2432s028r.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+jczn_2432s028r.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+
+jczn_2432s028r.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
+jczn_2432s028r.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
+jczn_2432s028r.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
+jczn_2432s028r.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
+jczn_2432s028r.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
+jczn_2432s028r.menu.PartitionScheme.all_app.upload.maximum_size=4128768
+
+jczn_2432s028r.menu.PartitionScheme.custom=Custom
+jczn_2432s028r.menu.PartitionScheme.custom.build.partitions=
+jczn_2432s028r.menu.PartitionScheme.custom.upload.maximum_size=4128768
+
+jczn_2432s028r.menu.CPUFreq.240=240MHz (WiFi/BT)
+jczn_2432s028r.menu.CPUFreq.240.build.f_cpu=240000000L
+jczn_2432s028r.menu.CPUFreq.160=160MHz (WiFi/BT)
+jczn_2432s028r.menu.CPUFreq.160.build.f_cpu=160000000L
+jczn_2432s028r.menu.CPUFreq.80=80MHz (WiFi/BT)
+jczn_2432s028r.menu.CPUFreq.80.build.f_cpu=80000000L
+jczn_2432s028r.menu.CPUFreq.40=40MHz
+jczn_2432s028r.menu.CPUFreq.40.build.f_cpu=40000000L
+jczn_2432s028r.menu.CPUFreq.20=20MHz
+jczn_2432s028r.menu.CPUFreq.20.build.f_cpu=20000000L
+jczn_2432s028r.menu.CPUFreq.10=10MHz
+jczn_2432s028r.menu.CPUFreq.10.build.f_cpu=10000000L
+
+jczn_2432s028r.menu.FlashMode.qio=QIO
+jczn_2432s028r.menu.FlashMode.qio.build.flash_mode=dio
+jczn_2432s028r.menu.FlashMode.qio.build.boot=qio
+
+jczn_2432s028r.menu.FlashFreq.80=80MHz
+jczn_2432s028r.menu.FlashFreq.80.build.flash_freq=80m
+jczn_2432s028r.menu.FlashFreq.40=40MHz
+jczn_2432s028r.menu.FlashFreq.40.build.flash_freq=40m
+
+jczn_2432s028r.menu.FlashSize.4M=4MB
+jczn_2432s028r.menu.FlashSize.4M.build.flash_size=4MB
+
+jczn_2432s028r.menu.UploadSpeed.921600=921600
+jczn_2432s028r.menu.UploadSpeed.921600.upload.speed=921600
+jczn_2432s028r.menu.UploadSpeed.115200=115200
+jczn_2432s028r.menu.UploadSpeed.115200.upload.speed=115200
+jczn_2432s028r.menu.UploadSpeed.256000.windows=256000
+jczn_2432s028r.menu.UploadSpeed.256000.upload.speed=256000
+jczn_2432s028r.menu.UploadSpeed.230400.windows.upload.speed=256000
+jczn_2432s028r.menu.UploadSpeed.230400=230400
+jczn_2432s028r.menu.UploadSpeed.230400.upload.speed=230400
+jczn_2432s028r.menu.UploadSpeed.460800.linux=460800
+jczn_2432s028r.menu.UploadSpeed.460800.macosx=460800
+jczn_2432s028r.menu.UploadSpeed.460800.upload.speed=460800
+jczn_2432s028r.menu.UploadSpeed.512000.windows=512000
+jczn_2432s028r.menu.UploadSpeed.512000.upload.speed=512000
+
+jczn_2432s028r.menu.LoopCore.1=Core 1
+jczn_2432s028r.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+jczn_2432s028r.menu.LoopCore.0=Core 0
+jczn_2432s028r.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+jczn_2432s028r.menu.EventsCore.1=Core 1
+jczn_2432s028r.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+jczn_2432s028r.menu.EventsCore.0=Core 0
+jczn_2432s028r.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+jczn_2432s028r.menu.DebugLevel.none=None
+jczn_2432s028r.menu.DebugLevel.none.build.code_debug=0
+jczn_2432s028r.menu.DebugLevel.error=Error
+jczn_2432s028r.menu.DebugLevel.error.build.code_debug=1
+jczn_2432s028r.menu.DebugLevel.warn=Warn
+jczn_2432s028r.menu.DebugLevel.warn.build.code_debug=2
+jczn_2432s028r.menu.DebugLevel.info=Info
+jczn_2432s028r.menu.DebugLevel.info.build.code_debug=3
+jczn_2432s028r.menu.DebugLevel.debug=Debug
+jczn_2432s028r.menu.DebugLevel.debug.build.code_debug=4
+jczn_2432s028r.menu.DebugLevel.verbose=Verbose
+jczn_2432s028r.menu.DebugLevel.verbose.build.code_debug=5
+
+jczn_2432s028r.menu.EraseFlash.none=Disabled
+jczn_2432s028r.menu.EraseFlash.none.upload.erase_cmd=
+jczn_2432s028r.menu.EraseFlash.all=Enabled
+jczn_2432s028r.menu.EraseFlash.all.upload.erase_cmd=-e
+
+jczn_2432s028r.menu.ZigbeeMode.default=Disabled
+jczn_2432s028r.menu.ZigbeeMode.default.build.zigbee_mode=
+jczn_2432s028r.menu.ZigbeeMode.default.build.zigbee_libs=
+jczn_2432s028r.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+jczn_2432s028r.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+jczn_2432s028r.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
+
