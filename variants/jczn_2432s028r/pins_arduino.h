@@ -50,10 +50,10 @@ static const uint8_t SCK  = 18;
 #define CYD_SCREEN_WIDTH  CYD_TFT_WIDTH
 #define CYD_SCREEN_HEIGHT CYD_TFT_HEIGHT
 
-#define CYD_TFT_BL        21
-#define CYD_TFT_BL_ENABLE ( ( pinMode( CYD_TFT_BL, OUTPUT ) ) )
-#define CYD_TFT_BL_OFF    ( digitalWrite( CYD_TFT_BL, 0 ) )
-#define CYD_TFT_BL_ON     ( digitalWrite( CYD_TFT_BL, 1 ) )
+#define CYD_TFT_BL  21
+#define CYD_TFT_BL_ENABLE() ( ( pinMode( CYD_TFT_BL, OUTPUT ) ) )
+#define CYD_TFT_BL_OFF()    ( digitalWrite( CYD_TFT_BL, 0 ) )
+#define CYD_TFT_BL_ON()     ( digitalWrite( CYD_TFT_BL, 1 ) )
 
 #define CYD_LED_RED    4
 #define CYD_LED_GREEN 16
@@ -71,15 +71,15 @@ static const uint8_t SCK  = 18;
 
 #define CYD_LDR  34
 
-#define CYD_LED_RED_OFF    ( digitalWrite( CYD_LED_RED, 1 ) )
-#define CYD_LED_RED_ON     ( digitalWrite( CYD_LED_RED, 0 ) )
-#define CYD_LED_GREEN_OFF  ( digitalWrite( CYD_LED_GREEN, 1 ) )
-#define CYD_LED_GREEN_ON   ( digitalWrite( CYD_LED_GREEN, 0 ) )
-#define CYD_LED_BLUE_OFF   ( digitalWrite( CYD_LED_BLUE, 1 ) )
-#define CYD_LED_BLUE_ON    ( digitalWrite( CYD_LED_BLUE, 0 ) )
-#define CYD_LED_RGB_OFF    CYD_LED_RED_OFF; CYD_LED_GREEN_OFF; CYD_LED_BLUE_OFF
-#define CYD_LED_RGB_ON     CYD_LED_RED_ON; CYD_LED_GREEN_ON; CYD_LED_BLUE_ON
-#define CYD_LED_WHITE_OFF  CYD_LED_RGB_OFF
-#define CYD_LED_WHITE_ON   CYD_LED_RGB_ON
+#define CYD_LED_RED_OFF()    ( digitalWrite( CYD_LED_RED, 1 ) )
+#define CYD_LED_RED_ON()     ( digitalWrite( CYD_LED_RED, 0 ) )
+#define CYD_LED_GREEN_OFF()  ( digitalWrite( CYD_LED_GREEN, 1 ) )
+#define CYD_LED_GREEN_ON()   ( digitalWrite( CYD_LED_GREEN, 0 ) )
+#define CYD_LED_BLUE_OFF()   ( digitalWrite( CYD_LED_BLUE, 1 ) )
+#define CYD_LED_BLUE_ON()    ( digitalWrite( CYD_LED_BLUE, 0 ) )
+#define CYD_LED_RGB_OFF()    CYD_LED_RED_OFF(); CYD_LED_GREEN_OFF(); CYD_LED_BLUE_OFF()
+#define CYD_LED_RGB_ON()     CYD_LED_RED_ON(); CYD_LED_GREEN_ON(); CYD_LED_BLUE_ON()
+#define CYD_LED_WHITE_OFF()  CYD_LED_RGB_OFF()
+#define CYD_LED_WHITE_ON()   CYD_LED_RGB_ON()
 
 #endif /* Pins_Arduino_h */

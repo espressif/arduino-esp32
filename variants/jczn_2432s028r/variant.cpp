@@ -8,6 +8,6 @@ extern "C" {
         pinMode( CYD_LED_RED, OUTPUT );
         pinMode( CYD_LED_GREEN, OUTPUT );
         pinMode( CYD_LED_BLUE, OUTPUT );
-        CYD_LED_RGB_OFF;
+        CYD_LED_RGB_OFF();
     }
 }
