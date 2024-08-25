@@ -292,7 +292,10 @@ void NetworkUDP::flush() {}
 
 int NetworkUDP::parsePacket() {
   if (rx_buffer) {
-    return 0;
+    if (rx_buffer->full()) { // packet was not read yet
+      return rx_buffer->available();
+    }
+    clear(); // discard the rest of the packet
   }
   struct sockaddr_storage si_other_storage;  // enough storage for v4 and v6
   socklen_t slen = sizeof(sockaddr_storage);
