@@ -28,7 +28,7 @@ Specifications
     - 1 × LCD interface (8-bit serial RGB/8080/6800), implemented using the hardware resources of SPI2
     - 1 × LCD interface (8/16/24-bit parallel), implemented using the hardware resources of I2S
     - 1 × TWAI® controller (compatible with ISO 11898-1)
-- Onboard PCB antenna or external antenna connector
+- PCB antenna or external antenna connector
 
 Header Block
 ------------

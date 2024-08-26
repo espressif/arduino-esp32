@@ -30,7 +30,7 @@ Specifications
         - 2 × 54-bit general-purpose timers
         - 3 × watchdog timers
         - 1 × 52-bit system timer
-- Onboard PCB antenna or external antenna connector
+- PCB antenna or external antenna connector
 
 Header Block
 ------------

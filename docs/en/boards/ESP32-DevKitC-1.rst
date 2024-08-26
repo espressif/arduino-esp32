@@ -28,7 +28,7 @@ Specifications
     - ADC
     - DAC
     - Two-Wire Automotive Interface (TWAI®, compatible with ISO11898-1)
-- Onboard PCB antenna or external antenna connector
+- PCB antenna or external antenna connector
 
 Header Block
 ------------
