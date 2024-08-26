@@ -38739,7 +38739,7 @@ waveshare_esp32_s3_zero.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA
 waveshare_esp32_s3_zero.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_zero.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_zero.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
-waveshare_esp32_s3_zero.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
+waveshare_esp32_s3_zero.menu.PartitionScheme.all_app.build.custom_partitions=partitions_4MB
 waveshare_esp32_s3_zero.menu.PartitionScheme.all_app.upload.maximum_size=4128768
 
 waveshare_esp32_s3_zero.menu.PartitionScheme.custom=Custom
