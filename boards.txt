@@ -25574,6 +25574,531 @@ heltec_ht_de01.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+heltec_vision_master_e290.name=Heltec Vision Master E290
+
+heltec_vision_master_e290.bootloader.tool=esptool_py
+heltec_vision_master_e290.bootloader.tool.default=esptool_py
+
+heltec_vision_master_e290.upload.tool=esptool_py
+heltec_vision_master_e290.upload.tool.default=esptool_py
+heltec_vision_master_e290.upload.tool.network=esp_ota
+
+heltec_vision_master_e290.upload.maximum_size=3342336
+heltec_vision_master_e290.upload.maximum_data_size=327680
+heltec_vision_master_e290.upload.flags=
+heltec_vision_master_e290.upload.extra_flags=
+heltec_vision_master_e290.upload.use_1200bps_touch=false
+heltec_vision_master_e290.upload.wait_for_upload_port=false
+
+heltec_vision_master_e290.serial.disableDTR=false
+heltec_vision_master_e290.serial.disableRTS=false
+
+heltec_vision_master_e290.build.tarch=xtensa
+heltec_vision_master_e290.build.bootloader_addr=0x0
+heltec_vision_master_e290.build.target=esp32s3
+heltec_vision_master_e290.build.mcu=esp32s3
+heltec_vision_master_e290.build.core=esp32
+heltec_vision_master_e290.build.variant=heltec_vision_master_e290
+heltec_vision_master_e290.build.board=HELTEC_VISION_MASTER_E290
+
+heltec_vision_master_e290.build.usb_mode=1
+heltec_vision_master_e290.build.cdc_on_boot=0
+heltec_vision_master_e290.build.msc_on_boot=0
+heltec_vision_master_e290.build.dfu_on_boot=0
+heltec_vision_master_e290.build.f_cpu=240000000L
+heltec_vision_master_e290.build.flash_size=8MB
+heltec_vision_master_e290.build.flash_freq=80m
+heltec_vision_master_e290.build.flash_mode=dio
+heltec_vision_master_e290.build.boot=qio
+heltec_vision_master_e290.build.boot_freq=80m
+heltec_vision_master_e290.build.partitions=default_8MB
+heltec_vision_master_e290.build.loop_core=
+heltec_vision_master_e290.build.event_core=
+heltec_vision_master_e290.build.psram_type=qspi
+heltec_vision_master_e290.build.memory_type={build.boot}_{build.psram_type}
+
+heltec_vision_master_e290.menu.LoopCore.1=Core 1
+heltec_vision_master_e290.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+heltec_vision_master_e290.menu.LoopCore.0=Core 0
+heltec_vision_master_e290.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+heltec_vision_master_e290.menu.EventsCore.1=Core 1
+heltec_vision_master_e290.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+heltec_vision_master_e290.menu.EventsCore.0=Core 0
+heltec_vision_master_e290.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+heltec_vision_master_e290.menu.USBMode.hwcdc=Hardware CDC and JTAG
+heltec_vision_master_e290.menu.USBMode.hwcdc.build.usb_mode=1
+heltec_vision_master_e290.menu.USBMode.default=USB-OTG (TinyUSB)
+heltec_vision_master_e290.menu.USBMode.default.build.usb_mode=0
+
+heltec_vision_master_e290.menu.CDCOnBoot.default=Enabled
+heltec_vision_master_e290.menu.CDCOnBoot.default.build.cdc_on_boot=1
+heltec_vision_master_e290.menu.CDCOnBoot.cdc=Disabled
+heltec_vision_master_e290.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+heltec_vision_master_e290.menu.MSCOnBoot.default=Disabled
+heltec_vision_master_e290.menu.MSCOnBoot.default.build.msc_on_boot=0
+heltec_vision_master_e290.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+heltec_vision_master_e290.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+heltec_vision_master_e290.menu.DFUOnBoot.default=Disabled
+heltec_vision_master_e290.menu.DFUOnBoot.default.build.dfu_on_boot=0
+heltec_vision_master_e290.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+heltec_vision_master_e290.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+heltec_vision_master_e290.menu.UploadMode.default=UART0 / Hardware CDC
+heltec_vision_master_e290.menu.UploadMode.default.upload.use_1200bps_touch=false
+heltec_vision_master_e290.menu.UploadMode.default.upload.wait_for_upload_port=false
+heltec_vision_master_e290.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+heltec_vision_master_e290.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+heltec_vision_master_e290.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+heltec_vision_master_e290.menu.CPUFreq.240=240MHz (WiFi)
+heltec_vision_master_e290.menu.CPUFreq.240.build.f_cpu=240000000L
+heltec_vision_master_e290.menu.CPUFreq.160=160MHz (WiFi)
+heltec_vision_master_e290.menu.CPUFreq.160.build.f_cpu=160000000L
+heltec_vision_master_e290.menu.CPUFreq.80=80MHz (WiFi)
+heltec_vision_master_e290.menu.CPUFreq.80.build.f_cpu=80000000L
+heltec_vision_master_e290.menu.CPUFreq.40=40MHz
+heltec_vision_master_e290.menu.CPUFreq.40.build.f_cpu=40000000L
+heltec_vision_master_e290.menu.CPUFreq.20=20MHz
+heltec_vision_master_e290.menu.CPUFreq.20.build.f_cpu=20000000L
+heltec_vision_master_e290.menu.CPUFreq.10=10MHz
+heltec_vision_master_e290.menu.CPUFreq.10.build.f_cpu=10000000L
+
+heltec_vision_master_e290.menu.UploadSpeed.921600=921600
+heltec_vision_master_e290.menu.UploadSpeed.921600.upload.speed=921600
+heltec_vision_master_e290.menu.UploadSpeed.115200=115200
+heltec_vision_master_e290.menu.UploadSpeed.115200.upload.speed=115200
+heltec_vision_master_e290.menu.UploadSpeed.256000.windows=256000
+heltec_vision_master_e290.menu.UploadSpeed.256000.upload.speed=256000
+heltec_vision_master_e290.menu.UploadSpeed.230400.windows.upload.speed=256000
+heltec_vision_master_e290.menu.UploadSpeed.230400=230400
+heltec_vision_master_e290.menu.UploadSpeed.230400.upload.speed=230400
+heltec_vision_master_e290.menu.UploadSpeed.460800.linux=460800
+heltec_vision_master_e290.menu.UploadSpeed.460800.macosx=460800
+heltec_vision_master_e290.menu.UploadSpeed.460800.upload.speed=460800
+heltec_vision_master_e290.menu.UploadSpeed.512000.windows=512000
+heltec_vision_master_e290.menu.UploadSpeed.512000.upload.speed=512000
+
+heltec_vision_master_e290.menu.DebugLevel.none=None
+heltec_vision_master_e290.menu.DebugLevel.none.build.code_debug=0
+heltec_vision_master_e290.menu.DebugLevel.error=Error
+heltec_vision_master_e290.menu.DebugLevel.error.build.code_debug=1
+heltec_vision_master_e290.menu.DebugLevel.warn=Warn
+heltec_vision_master_e290.menu.DebugLevel.warn.build.code_debug=2
+heltec_vision_master_e290.menu.DebugLevel.info=Info
+heltec_vision_master_e290.menu.DebugLevel.info.build.code_debug=3
+heltec_vision_master_e290.menu.DebugLevel.debug=Debug
+heltec_vision_master_e290.menu.DebugLevel.debug.build.code_debug=4
+heltec_vision_master_e290.menu.DebugLevel.verbose=Verbose
+heltec_vision_master_e290.menu.DebugLevel.verbose.build.code_debug=5
+
+heltec_vision_master_e290.menu.LORAWAN_REGION.0=REGION_EU868
+heltec_vision_master_e290.menu.LORAWAN_REGION.0.build.band=REGION_EU868
+heltec_vision_master_e290.menu.LORAWAN_REGION.1=REGION_EU433
+heltec_vision_master_e290.menu.LORAWAN_REGION.1.build.band=REGION_EU433
+heltec_vision_master_e290.menu.LORAWAN_REGION.2=REGION_CN470
+heltec_vision_master_e290.menu.LORAWAN_REGION.2.build.band=REGION_CN470
+heltec_vision_master_e290.menu.LORAWAN_REGION.3=REGION_US915
+heltec_vision_master_e290.menu.LORAWAN_REGION.3.build.band=REGION_US915
+heltec_vision_master_e290.menu.LORAWAN_REGION.4=REGION_AU915
+heltec_vision_master_e290.menu.LORAWAN_REGION.4.build.band=REGION_AU915
+heltec_vision_master_e290.menu.LORAWAN_REGION.5=REGION_CN779
+heltec_vision_master_e290.menu.LORAWAN_REGION.5.build.band=REGION_CN779
+heltec_vision_master_e290.menu.LORAWAN_REGION.6=REGION_AS923
+heltec_vision_master_e290.menu.LORAWAN_REGION.6.build.band=REGION_AS923
+heltec_vision_master_e290.menu.LORAWAN_REGION.7=REGION_KR920
+heltec_vision_master_e290.menu.LORAWAN_REGION.7.build.band=REGION_KR920
+heltec_vision_master_e290.menu.LORAWAN_REGION.8=REGION_IN865
+heltec_vision_master_e290.menu.LORAWAN_REGION.8.build.band=REGION_IN865
+heltec_vision_master_e290.menu.LORAWAN_REGION.9=REGION_US915_HYBRID
+heltec_vision_master_e290.menu.LORAWAN_REGION.9.build.band=REGION_US915_HYBRID
+
+heltec_vision_master_e290.menu.LoRaWanDebugLevel.0=None
+heltec_vision_master_e290.menu.LoRaWanDebugLevel.0.build.LoRaWanDebugLevel=0
+heltec_vision_master_e290.menu.LoRaWanDebugLevel.1=Freq
+heltec_vision_master_e290.menu.LoRaWanDebugLevel.1.build.LoRaWanDebugLevel=1
+heltec_vision_master_e290.menu.LoRaWanDebugLevel.2=Freq && DIO
+heltec_vision_master_e290.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
+heltec_vision_master_e290.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
+heltec_vision_master_e290.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
+
+heltec_vision_master_e290.menu.LORAWAN_DEVEUI.0=CUSTOM
+heltec_vision_master_e290.menu.LORAWAN_DEVEUI.0.build.LORAWAN_DEVEUI_AUTO=0
+heltec_vision_master_e290.menu.LORAWAN_DEVEUI.1=Generate By ChipID
+heltec_vision_master_e290.menu.LORAWAN_DEVEUI.1.build.LORAWAN_DEVEUI_AUTO=1
+
+heltec_vision_master_e290.menu.LORAWAN_PREAMBLE_LENGTH.0=8(default)
+heltec_vision_master_e290.menu.LORAWAN_PREAMBLE_LENGTH.0.build.LORAWAN_PREAMBLE_LENGTH=8
+heltec_vision_master_e290.menu.LORAWAN_PREAMBLE_LENGTH.1=16(For M00 and M00L)
+heltec_vision_master_e290.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_LENGTH=16
+
+heltec_vision_master_e290.menu.SLOW_CLK_TPYE.0=Internal (default)
+heltec_vision_master_e290.menu.SLOW_CLK_TPYE.0.build.SLOW_CLK_TPYE=0
+heltec_vision_master_e290.menu.SLOW_CLK_TPYE.1=External 32K
+heltec_vision_master_e290.menu.SLOW_CLK_TPYE.1.build.SLOW_CLK_TPYE=1
+
+heltec_vision_master_e290.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=37 -DHELTEC_VISION_MASTER_E290 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+
+heltec_vision_master_e290.menu.EraseFlash.none=Disabled
+heltec_vision_master_e290.menu.EraseFlash.none.upload.erase_cmd=
+heltec_vision_master_e290.menu.EraseFlash.all=Enabled
+heltec_vision_master_e290.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+heltec_vision_master_t190.name=Heltec Vision Master T190
+
+heltec_vision_master_t190.bootloader.tool=esptool_py
+heltec_vision_master_t190.bootloader.tool.default=esptool_py
+
+heltec_vision_master_t190.upload.tool=esptool_py
+heltec_vision_master_t190.upload.tool.default=esptool_py
+heltec_vision_master_t190.upload.tool.network=esp_ota
+
+heltec_vision_master_t190.upload.maximum_size=3342336
+heltec_vision_master_t190.upload.maximum_data_size=327680
+heltec_vision_master_t190.upload.flags=
+heltec_vision_master_t190.upload.extra_flags=
+heltec_vision_master_t190.upload.use_1200bps_touch=false
+heltec_vision_master_t190.upload.wait_for_upload_port=false
+
+heltec_vision_master_t190.serial.disableDTR=false
+heltec_vision_master_t190.serial.disableRTS=false
+
+heltec_vision_master_t190.build.tarch=xtensa
+heltec_vision_master_t190.build.bootloader_addr=0x0
+heltec_vision_master_t190.build.target=esp32s3
+heltec_vision_master_t190.build.mcu=esp32s3
+heltec_vision_master_t190.build.core=esp32
+heltec_vision_master_t190.build.variant=heltec_vision_master_t190
+heltec_vision_master_t190.build.board=HELTEC_VISION_MASTER_T190
+
+heltec_vision_master_t190.build.usb_mode=1
+heltec_vision_master_t190.build.cdc_on_boot=0
+heltec_vision_master_t190.build.msc_on_boot=0
+heltec_vision_master_t190.build.dfu_on_boot=0
+heltec_vision_master_t190.build.f_cpu=240000000L
+heltec_vision_master_t190.build.flash_size=8MB
+heltec_vision_master_t190.build.flash_freq=80m
+heltec_vision_master_t190.build.flash_mode=dio
+heltec_vision_master_t190.build.boot=qio
+heltec_vision_master_t190.build.boot_freq=80m
+heltec_vision_master_t190.build.partitions=default_8MB
+heltec_vision_master_t190.build.loop_core=
+heltec_vision_master_t190.build.event_core=
+heltec_vision_master_t190.build.psram_type=qspi
+heltec_vision_master_t190.build.memory_type={build.boot}_{build.psram_type}
+
+heltec_vision_master_t190.menu.LoopCore.1=Core 1
+heltec_vision_master_t190.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+heltec_vision_master_t190.menu.LoopCore.0=Core 0
+heltec_vision_master_t190.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+heltec_vision_master_t190.menu.EventsCore.1=Core 1
+heltec_vision_master_t190.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+heltec_vision_master_t190.menu.EventsCore.0=Core 0
+heltec_vision_master_t190.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+heltec_vision_master_t190.menu.USBMode.hwcdc=Hardware CDC and JTAG
+heltec_vision_master_t190.menu.USBMode.hwcdc.build.usb_mode=1
+heltec_vision_master_t190.menu.USBMode.default=USB-OTG (TinyUSB)
+heltec_vision_master_t190.menu.USBMode.default.build.usb_mode=0
+
+heltec_vision_master_t190.menu.CDCOnBoot.default=Enabled
+heltec_vision_master_t190.menu.CDCOnBoot.default.build.cdc_on_boot=1
+heltec_vision_master_t190.menu.CDCOnBoot.cdc=Disabled
+heltec_vision_master_t190.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+heltec_vision_master_t190.menu.MSCOnBoot.default=Disabled
+heltec_vision_master_t190.menu.MSCOnBoot.default.build.msc_on_boot=0
+heltec_vision_master_t190.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+heltec_vision_master_t190.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+heltec_vision_master_t190.menu.DFUOnBoot.default=Disabled
+heltec_vision_master_t190.menu.DFUOnBoot.default.build.dfu_on_boot=0
+heltec_vision_master_t190.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+heltec_vision_master_t190.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+heltec_vision_master_t190.menu.UploadMode.default=UART0 / Hardware CDC
+heltec_vision_master_t190.menu.UploadMode.default.upload.use_1200bps_touch=false
+heltec_vision_master_t190.menu.UploadMode.default.upload.wait_for_upload_port=false
+heltec_vision_master_t190.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+heltec_vision_master_t190.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+heltec_vision_master_t190.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+heltec_vision_master_t190.menu.CPUFreq.240=240MHz (WiFi)
+heltec_vision_master_t190.menu.CPUFreq.240.build.f_cpu=240000000L
+heltec_vision_master_t190.menu.CPUFreq.160=160MHz (WiFi)
+heltec_vision_master_t190.menu.CPUFreq.160.build.f_cpu=160000000L
+heltec_vision_master_t190.menu.CPUFreq.80=80MHz (WiFi)
+heltec_vision_master_t190.menu.CPUFreq.80.build.f_cpu=80000000L
+heltec_vision_master_t190.menu.CPUFreq.40=40MHz
+heltec_vision_master_t190.menu.CPUFreq.40.build.f_cpu=40000000L
+heltec_vision_master_t190.menu.CPUFreq.20=20MHz
+heltec_vision_master_t190.menu.CPUFreq.20.build.f_cpu=20000000L
+heltec_vision_master_t190.menu.CPUFreq.10=10MHz
+heltec_vision_master_t190.menu.CPUFreq.10.build.f_cpu=10000000L
+
+heltec_vision_master_t190.menu.UploadSpeed.921600=921600
+heltec_vision_master_t190.menu.UploadSpeed.921600.upload.speed=921600
+heltec_vision_master_t190.menu.UploadSpeed.115200=115200
+heltec_vision_master_t190.menu.UploadSpeed.115200.upload.speed=115200
+heltec_vision_master_t190.menu.UploadSpeed.256000.windows=256000
+heltec_vision_master_t190.menu.UploadSpeed.256000.upload.speed=256000
+heltec_vision_master_t190.menu.UploadSpeed.230400.windows.upload.speed=256000
+heltec_vision_master_t190.menu.UploadSpeed.230400=230400
+heltec_vision_master_t190.menu.UploadSpeed.230400.upload.speed=230400
+heltec_vision_master_t190.menu.UploadSpeed.460800.linux=460800
+heltec_vision_master_t190.menu.UploadSpeed.460800.macosx=460800
+heltec_vision_master_t190.menu.UploadSpeed.460800.upload.speed=460800
+heltec_vision_master_t190.menu.UploadSpeed.512000.windows=512000
+heltec_vision_master_t190.menu.UploadSpeed.512000.upload.speed=512000
+
+heltec_vision_master_t190.menu.DebugLevel.none=None
+heltec_vision_master_t190.menu.DebugLevel.none.build.code_debug=0
+heltec_vision_master_t190.menu.DebugLevel.error=Error
+heltec_vision_master_t190.menu.DebugLevel.error.build.code_debug=1
+heltec_vision_master_t190.menu.DebugLevel.warn=Warn
+heltec_vision_master_t190.menu.DebugLevel.warn.build.code_debug=2
+heltec_vision_master_t190.menu.DebugLevel.info=Info
+heltec_vision_master_t190.menu.DebugLevel.info.build.code_debug=3
+heltec_vision_master_t190.menu.DebugLevel.debug=Debug
+heltec_vision_master_t190.menu.DebugLevel.debug.build.code_debug=4
+heltec_vision_master_t190.menu.DebugLevel.verbose=Verbose
+heltec_vision_master_t190.menu.DebugLevel.verbose.build.code_debug=5
+
+heltec_vision_master_t190.menu.LORAWAN_REGION.0=REGION_EU868
+heltec_vision_master_t190.menu.LORAWAN_REGION.0.build.band=REGION_EU868
+heltec_vision_master_t190.menu.LORAWAN_REGION.1=REGION_EU433
+heltec_vision_master_t190.menu.LORAWAN_REGION.1.build.band=REGION_EU433
+heltec_vision_master_t190.menu.LORAWAN_REGION.2=REGION_CN470
+heltec_vision_master_t190.menu.LORAWAN_REGION.2.build.band=REGION_CN470
+heltec_vision_master_t190.menu.LORAWAN_REGION.3=REGION_US915
+heltec_vision_master_t190.menu.LORAWAN_REGION.3.build.band=REGION_US915
+heltec_vision_master_t190.menu.LORAWAN_REGION.4=REGION_AU915
+heltec_vision_master_t190.menu.LORAWAN_REGION.4.build.band=REGION_AU915
+heltec_vision_master_t190.menu.LORAWAN_REGION.5=REGION_CN779
+heltec_vision_master_t190.menu.LORAWAN_REGION.5.build.band=REGION_CN779
+heltec_vision_master_t190.menu.LORAWAN_REGION.6=REGION_AS923
+heltec_vision_master_t190.menu.LORAWAN_REGION.6.build.band=REGION_AS923
+heltec_vision_master_t190.menu.LORAWAN_REGION.7=REGION_KR920
+heltec_vision_master_t190.menu.LORAWAN_REGION.7.build.band=REGION_KR920
+heltec_vision_master_t190.menu.LORAWAN_REGION.8=REGION_IN865
+heltec_vision_master_t190.menu.LORAWAN_REGION.8.build.band=REGION_IN865
+heltec_vision_master_t190.menu.LORAWAN_REGION.9=REGION_US915_HYBRID
+heltec_vision_master_t190.menu.LORAWAN_REGION.9.build.band=REGION_US915_HYBRID
+
+heltec_vision_master_t190.menu.LoRaWanDebugLevel.0=None
+heltec_vision_master_t190.menu.LoRaWanDebugLevel.0.build.LoRaWanDebugLevel=0
+heltec_vision_master_t190.menu.LoRaWanDebugLevel.1=Freq
+heltec_vision_master_t190.menu.LoRaWanDebugLevel.1.build.LoRaWanDebugLevel=1
+heltec_vision_master_t190.menu.LoRaWanDebugLevel.2=Freq && DIO
+heltec_vision_master_t190.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
+heltec_vision_master_t190.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
+heltec_vision_master_t190.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
+
+heltec_vision_master_t190.menu.LORAWAN_DEVEUI.0=CUSTOM
+heltec_vision_master_t190.menu.LORAWAN_DEVEUI.0.build.LORAWAN_DEVEUI_AUTO=0
+heltec_vision_master_t190.menu.LORAWAN_DEVEUI.1=Generate By ChipID
+heltec_vision_master_t190.menu.LORAWAN_DEVEUI.1.build.LORAWAN_DEVEUI_AUTO=1
+
+heltec_vision_master_t190.menu.LORAWAN_PREAMBLE_LENGTH.0=8(default)
+heltec_vision_master_t190.menu.LORAWAN_PREAMBLE_LENGTH.0.build.LORAWAN_PREAMBLE_LENGTH=8
+heltec_vision_master_t190.menu.LORAWAN_PREAMBLE_LENGTH.1=16(For M00 and M00L)
+heltec_vision_master_t190.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_LENGTH=16
+
+heltec_vision_master_t190.menu.SLOW_CLK_TPYE.0=Internal (default)
+heltec_vision_master_t190.menu.SLOW_CLK_TPYE.0.build.SLOW_CLK_TPYE=0
+heltec_vision_master_t190.menu.SLOW_CLK_TPYE.1=External 32K
+heltec_vision_master_t190.menu.SLOW_CLK_TPYE.1.build.SLOW_CLK_TPYE=1
+
+heltec_vision_master_t190.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=38 -DHELTEC_VISION_MASTER_T190 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+
+heltec_vision_master_t190.menu.EraseFlash.none=Disabled
+heltec_vision_master_t190.menu.EraseFlash.none.upload.erase_cmd=
+heltec_vision_master_t190.menu.EraseFlash.all=Enabled
+heltec_vision_master_t190.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+heltec_vision_master_e_213.name=Heltec Vision Master E213
+
+heltec_vision_master_e_213.bootloader.tool=esptool_py
+heltec_vision_master_e_213.bootloader.tool.default=esptool_py
+
+heltec_vision_master_e_213.upload.tool=esptool_py
+heltec_vision_master_e_213.upload.tool.default=esptool_py
+heltec_vision_master_e_213.upload.tool.network=esp_ota
+
+heltec_vision_master_e_213.upload.maximum_size=3342336
+heltec_vision_master_e_213.upload.maximum_data_size=327680
+heltec_vision_master_e_213.upload.flags=
+heltec_vision_master_e_213.upload.extra_flags=
+heltec_vision_master_e_213.upload.use_1200bps_touch=false
+heltec_vision_master_e_213.upload.wait_for_upload_port=false
+
+heltec_vision_master_e_213.serial.disableDTR=false
+heltec_vision_master_e_213.serial.disableRTS=false
+
+heltec_vision_master_e_213.build.tarch=xtensa
+heltec_vision_master_e_213.build.bootloader_addr=0x0
+heltec_vision_master_e_213.build.target=esp32s3
+heltec_vision_master_e_213.build.mcu=esp32s3
+heltec_vision_master_e_213.build.core=esp32
+heltec_vision_master_e_213.build.variant=heltec_vision_master_e_213
+heltec_vision_master_e_213.build.board=HELTEC_VISION_MASTER_E_213
+
+heltec_vision_master_e_213.build.usb_mode=1
+heltec_vision_master_e_213.build.cdc_on_boot=0
+heltec_vision_master_e_213.build.msc_on_boot=0
+heltec_vision_master_e_213.build.dfu_on_boot=0
+heltec_vision_master_e_213.build.f_cpu=240000000L
+heltec_vision_master_e_213.build.flash_size=8MB
+heltec_vision_master_e_213.build.flash_freq=80m
+heltec_vision_master_e_213.build.flash_mode=dio
+heltec_vision_master_e_213.build.boot=qio
+heltec_vision_master_e_213.build.boot_freq=80m
+heltec_vision_master_e_213.build.partitions=default_8MB
+heltec_vision_master_e_213.build.loop_core=
+heltec_vision_master_e_213.build.event_core=
+heltec_vision_master_e_213.build.psram_type=qspi
+heltec_vision_master_e_213.build.memory_type={build.boot}_{build.psram_type}
+
+heltec_vision_master_e_213.menu.LoopCore.1=Core 1
+heltec_vision_master_e_213.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+heltec_vision_master_e_213.menu.LoopCore.0=Core 0
+heltec_vision_master_e_213.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+heltec_vision_master_e_213.menu.EventsCore.1=Core 1
+heltec_vision_master_e_213.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+heltec_vision_master_e_213.menu.EventsCore.0=Core 0
+heltec_vision_master_e_213.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+heltec_vision_master_e_213.menu.USBMode.hwcdc=Hardware CDC and JTAG
+heltec_vision_master_e_213.menu.USBMode.hwcdc.build.usb_mode=1
+heltec_vision_master_e_213.menu.USBMode.default=USB-OTG (TinyUSB)
+heltec_vision_master_e_213.menu.USBMode.default.build.usb_mode=0
+
+heltec_vision_master_e_213.menu.CDCOnBoot.default=Enabled
+heltec_vision_master_e_213.menu.CDCOnBoot.default.build.cdc_on_boot=1
+heltec_vision_master_e_213.menu.CDCOnBoot.cdc=Disabled
+heltec_vision_master_e_213.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+heltec_vision_master_e_213.menu.MSCOnBoot.default=Disabled
+heltec_vision_master_e_213.menu.MSCOnBoot.default.build.msc_on_boot=0
+heltec_vision_master_e_213.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+heltec_vision_master_e_213.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+heltec_vision_master_e_213.menu.DFUOnBoot.default=Disabled
+heltec_vision_master_e_213.menu.DFUOnBoot.default.build.dfu_on_boot=0
+heltec_vision_master_e_213.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+heltec_vision_master_e_213.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+heltec_vision_master_e_213.menu.UploadMode.default=UART0 / Hardware CDC
+heltec_vision_master_e_213.menu.UploadMode.default.upload.use_1200bps_touch=false
+heltec_vision_master_e_213.menu.UploadMode.default.upload.wait_for_upload_port=false
+heltec_vision_master_e_213.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+heltec_vision_master_e_213.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+heltec_vision_master_e_213.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+heltec_vision_master_e_213.menu.CPUFreq.240=240MHz (WiFi)
+heltec_vision_master_e_213.menu.CPUFreq.240.build.f_cpu=240000000L
+heltec_vision_master_e_213.menu.CPUFreq.160=160MHz (WiFi)
+heltec_vision_master_e_213.menu.CPUFreq.160.build.f_cpu=160000000L
+heltec_vision_master_e_213.menu.CPUFreq.80=80MHz (WiFi)
+heltec_vision_master_e_213.menu.CPUFreq.80.build.f_cpu=80000000L
+heltec_vision_master_e_213.menu.CPUFreq.40=40MHz
+heltec_vision_master_e_213.menu.CPUFreq.40.build.f_cpu=40000000L
+heltec_vision_master_e_213.menu.CPUFreq.20=20MHz
+heltec_vision_master_e_213.menu.CPUFreq.20.build.f_cpu=20000000L
+heltec_vision_master_e_213.menu.CPUFreq.10=10MHz
+heltec_vision_master_e_213.menu.CPUFreq.10.build.f_cpu=10000000L
+
+heltec_vision_master_e_213.menu.UploadSpeed.921600=921600
+heltec_vision_master_e_213.menu.UploadSpeed.921600.upload.speed=921600
+heltec_vision_master_e_213.menu.UploadSpeed.115200=115200
+heltec_vision_master_e_213.menu.UploadSpeed.115200.upload.speed=115200
+heltec_vision_master_e_213.menu.UploadSpeed.256000.windows=256000
+heltec_vision_master_e_213.menu.UploadSpeed.256000.upload.speed=256000
+heltec_vision_master_e_213.menu.UploadSpeed.230400.windows.upload.speed=256000
+heltec_vision_master_e_213.menu.UploadSpeed.230400=230400
+heltec_vision_master_e_213.menu.UploadSpeed.230400.upload.speed=230400
+heltec_vision_master_e_213.menu.UploadSpeed.460800.linux=460800
+heltec_vision_master_e_213.menu.UploadSpeed.460800.macosx=460800
+heltec_vision_master_e_213.menu.UploadSpeed.460800.upload.speed=460800
+heltec_vision_master_e_213.menu.UploadSpeed.512000.windows=512000
+heltec_vision_master_e_213.menu.UploadSpeed.512000.upload.speed=512000
+
+heltec_vision_master_e_213.menu.DebugLevel.none=None
+heltec_vision_master_e_213.menu.DebugLevel.none.build.code_debug=0
+heltec_vision_master_e_213.menu.DebugLevel.error=Error
+heltec_vision_master_e_213.menu.DebugLevel.error.build.code_debug=1
+heltec_vision_master_e_213.menu.DebugLevel.warn=Warn
+heltec_vision_master_e_213.menu.DebugLevel.warn.build.code_debug=2
+heltec_vision_master_e_213.menu.DebugLevel.info=Info
+heltec_vision_master_e_213.menu.DebugLevel.info.build.code_debug=3
+heltec_vision_master_e_213.menu.DebugLevel.debug=Debug
+heltec_vision_master_e_213.menu.DebugLevel.debug.build.code_debug=4
+heltec_vision_master_e_213.menu.DebugLevel.verbose=Verbose
+heltec_vision_master_e_213.menu.DebugLevel.verbose.build.code_debug=5
+
+heltec_vision_master_e_213.menu.LORAWAN_REGION.0=REGION_EU868
+heltec_vision_master_e_213.menu.LORAWAN_REGION.0.build.band=REGION_EU868
+heltec_vision_master_e_213.menu.LORAWAN_REGION.1=REGION_EU433
+heltec_vision_master_e_213.menu.LORAWAN_REGION.1.build.band=REGION_EU433
+heltec_vision_master_e_213.menu.LORAWAN_REGION.2=REGION_CN470
+heltec_vision_master_e_213.menu.LORAWAN_REGION.2.build.band=REGION_CN470
+heltec_vision_master_e_213.menu.LORAWAN_REGION.3=REGION_US915
+heltec_vision_master_e_213.menu.LORAWAN_REGION.3.build.band=REGION_US915
+heltec_vision_master_e_213.menu.LORAWAN_REGION.4=REGION_AU915
+heltec_vision_master_e_213.menu.LORAWAN_REGION.4.build.band=REGION_AU915
+heltec_vision_master_e_213.menu.LORAWAN_REGION.5=REGION_CN779
+heltec_vision_master_e_213.menu.LORAWAN_REGION.5.build.band=REGION_CN779
+heltec_vision_master_e_213.menu.LORAWAN_REGION.6=REGION_AS923
+heltec_vision_master_e_213.menu.LORAWAN_REGION.6.build.band=REGION_AS923
+heltec_vision_master_e_213.menu.LORAWAN_REGION.7=REGION_KR920
+heltec_vision_master_e_213.menu.LORAWAN_REGION.7.build.band=REGION_KR920
+heltec_vision_master_e_213.menu.LORAWAN_REGION.8=REGION_IN865
+heltec_vision_master_e_213.menu.LORAWAN_REGION.8.build.band=REGION_IN865
+heltec_vision_master_e_213.menu.LORAWAN_REGION.9=REGION_US915_HYBRID
+heltec_vision_master_e_213.menu.LORAWAN_REGION.9.build.band=REGION_US915_HYBRID
+
+heltec_vision_master_e_213.menu.LoRaWanDebugLevel.0=None
+heltec_vision_master_e_213.menu.LoRaWanDebugLevel.0.build.LoRaWanDebugLevel=0
+heltec_vision_master_e_213.menu.LoRaWanDebugLevel.1=Freq
+heltec_vision_master_e_213.menu.LoRaWanDebugLevel.1.build.LoRaWanDebugLevel=1
+heltec_vision_master_e_213.menu.LoRaWanDebugLevel.2=Freq && DIO
+heltec_vision_master_e_213.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
+heltec_vision_master_e_213.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
+heltec_vision_master_e_213.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
+
+heltec_vision_master_e_213.menu.LORAWAN_DEVEUI.0=CUSTOM
+heltec_vision_master_e_213.menu.LORAWAN_DEVEUI.0.build.LORAWAN_DEVEUI_AUTO=0
+heltec_vision_master_e_213.menu.LORAWAN_DEVEUI.1=Generate By ChipID
+heltec_vision_master_e_213.menu.LORAWAN_DEVEUI.1.build.LORAWAN_DEVEUI_AUTO=1
+
+heltec_vision_master_e_213.menu.LORAWAN_PREAMBLE_LENGTH.0=8(default)
+heltec_vision_master_e_213.menu.LORAWAN_PREAMBLE_LENGTH.0.build.LORAWAN_PREAMBLE_LENGTH=8
+heltec_vision_master_e_213.menu.LORAWAN_PREAMBLE_LENGTH.1=16(For M00 and M00L)
+heltec_vision_master_e_213.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_LENGTH=16
+
+heltec_vision_master_e_213.menu.SLOW_CLK_TPYE.0=Internal (default)
+heltec_vision_master_e_213.menu.SLOW_CLK_TPYE.0.build.SLOW_CLK_TPYE=0
+heltec_vision_master_e_213.menu.SLOW_CLK_TPYE.1=External 32K
+heltec_vision_master_e_213.menu.SLOW_CLK_TPYE.1.build.SLOW_CLK_TPYE=1
+
+heltec_vision_master_e_213.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=36 -DHELTEC_VISION_MASTER_E_213 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -D{build.board}
+
+heltec_vision_master_e_213.menu.EraseFlash.none=Disabled
+heltec_vision_master_e_213.menu.EraseFlash.none.upload.erase_cmd=
+heltec_vision_master_e_213.menu.EraseFlash.all=Enabled
+heltec_vision_master_e_213.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 espectro32.name=ESPectro32
 
 espectro32.bootloader.tool=esptool_py
@@ -40588,5 +41113,170 @@ codecell.menu.EraseFlash.none=Disabled
 codecell.menu.EraseFlash.none.upload.erase_cmd=
 codecell.menu.EraseFlash.all=Enabled
 codecell.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+jczn_2432s028r.name=ESP32-2432S028R CYD
+
+jczn_2432s028r.bootloader.tool=esptool_py
+jczn_2432s028r.bootloader.tool.default=esptool_py
+
+jczn_2432s028r.upload.tool=esptool_py
+jczn_2432s028r.upload.tool.default=esptool_py
+jczn_2432s028r.upload.tool.network=esp_ota
+
+jczn_2432s028r.upload.maximum_size=1310720
+jczn_2432s028r.upload.maximum_data_size=327680
+jczn_2432s028r.upload.flags=
+jczn_2432s028r.upload.extra_flags=
+
+jczn_2432s028r.serial.disableDTR=true
+jczn_2432s028r.serial.disableRTS=true
+
+jczn_2432s028r.build.tarch=xtensa
+jczn_2432s028r.build.bootloader_addr=0x1000
+jczn_2432s028r.build.target=esp32
+jczn_2432s028r.build.mcu=esp32
+jczn_2432s028r.build.core=esp32
+jczn_2432s028r.build.variant=jczn_2432s028r
+jczn_2432s028r.build.board=ESP32_2432S028R
+
+jczn_2432s028r.build.f_cpu=240000000L
+jczn_2432s028r.build.flash_size=4MB
+jczn_2432s028r.build.flash_freq=40m
+jczn_2432s028r.build.flash_mode=dio
+jczn_2432s028r.build.boot=dio
+jczn_2432s028r.build.partitions=default
+jczn_2432s028r.build.defines=
+jczn_2432s028r.build.loop_core=
+jczn_2432s028r.build.event_core=
+
+## IDE 2.0 Seems to not update the value
+jczn_2432s028r.menu.JTAGAdapter.default=Disabled
+jczn_2432s028r.menu.JTAGAdapter.default.build.copy_jtag_files=0
+jczn_2432s028r.menu.JTAGAdapter.external=FTDI Adapter
+jczn_2432s028r.menu.JTAGAdapter.external.build.openocdscript=esp32-wrover-kit-3.3v.cfg
+jczn_2432s028r.menu.JTAGAdapter.external.build.copy_jtag_files=1
+jczn_2432s028r.menu.JTAGAdapter.bridge=ESP USB Bridge
+jczn_2432s028r.menu.JTAGAdapter.bridge.build.openocdscript=esp32-bridge.cfg
+jczn_2432s028r.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+jczn_2432s028r.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.default.build.partitions=default
+jczn_2432s028r.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+jczn_2432s028r.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+jczn_2432s028r.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.no_ota.build.partitions=no_ota
+jczn_2432s028r.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+jczn_2432s028r.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+jczn_2432s028r.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+jczn_2432s028r.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+jczn_2432s028r.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+jczn_2432s028r.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+jczn_2432s028r.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+jczn_2432s028r.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+jczn_2432s028r.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+jczn_2432s028r.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.huge_app.build.partitions=huge_app
+jczn_2432s028r.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+jczn_2432s028r.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+jczn_2432s028r.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+jczn_2432s028r.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+jczn_2432s028r.menu.PartitionScheme.rainmaker=RainMaker 4MB
+jczn_2432s028r.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+jczn_2432s028r.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+jczn_2432s028r.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+jczn_2432s028r.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+jczn_2432s028r.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+jczn_2432s028r.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+jczn_2432s028r.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+jczn_2432s028r.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+
+jczn_2432s028r.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
+jczn_2432s028r.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
+jczn_2432s028r.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
+jczn_2432s028r.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
+jczn_2432s028r.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
+jczn_2432s028r.menu.PartitionScheme.all_app.upload.maximum_size=4128768
+
+jczn_2432s028r.menu.PartitionScheme.custom=Custom
+jczn_2432s028r.menu.PartitionScheme.custom.build.partitions=
+jczn_2432s028r.menu.PartitionScheme.custom.upload.maximum_size=4128768
+
+jczn_2432s028r.menu.CPUFreq.240=240MHz (WiFi/BT)
+jczn_2432s028r.menu.CPUFreq.240.build.f_cpu=240000000L
+jczn_2432s028r.menu.CPUFreq.160=160MHz (WiFi/BT)
+jczn_2432s028r.menu.CPUFreq.160.build.f_cpu=160000000L
+jczn_2432s028r.menu.CPUFreq.80=80MHz (WiFi/BT)
+jczn_2432s028r.menu.CPUFreq.80.build.f_cpu=80000000L
+jczn_2432s028r.menu.CPUFreq.40=40MHz
+jczn_2432s028r.menu.CPUFreq.40.build.f_cpu=40000000L
+jczn_2432s028r.menu.CPUFreq.20=20MHz
+jczn_2432s028r.menu.CPUFreq.20.build.f_cpu=20000000L
+jczn_2432s028r.menu.CPUFreq.10=10MHz
+jczn_2432s028r.menu.CPUFreq.10.build.f_cpu=10000000L
+
+jczn_2432s028r.menu.FlashMode.qio=QIO
+jczn_2432s028r.menu.FlashMode.qio.build.flash_mode=dio
+jczn_2432s028r.menu.FlashMode.qio.build.boot=qio
+
+jczn_2432s028r.menu.FlashFreq.80=80MHz
+jczn_2432s028r.menu.FlashFreq.80.build.flash_freq=80m
+jczn_2432s028r.menu.FlashFreq.40=40MHz
+jczn_2432s028r.menu.FlashFreq.40.build.flash_freq=40m
+
+jczn_2432s028r.menu.FlashSize.4M=4MB
+jczn_2432s028r.menu.FlashSize.4M.build.flash_size=4MB
+
+jczn_2432s028r.menu.UploadSpeed.921600=921600
+jczn_2432s028r.menu.UploadSpeed.921600.upload.speed=921600
+jczn_2432s028r.menu.UploadSpeed.115200=115200
+jczn_2432s028r.menu.UploadSpeed.115200.upload.speed=115200
+jczn_2432s028r.menu.UploadSpeed.256000.windows=256000
+jczn_2432s028r.menu.UploadSpeed.256000.upload.speed=256000
+jczn_2432s028r.menu.UploadSpeed.230400.windows.upload.speed=256000
+jczn_2432s028r.menu.UploadSpeed.230400=230400
+jczn_2432s028r.menu.UploadSpeed.230400.upload.speed=230400
+jczn_2432s028r.menu.UploadSpeed.460800.linux=460800
+jczn_2432s028r.menu.UploadSpeed.460800.macosx=460800
+jczn_2432s028r.menu.UploadSpeed.460800.upload.speed=460800
+jczn_2432s028r.menu.UploadSpeed.512000.windows=512000
+jczn_2432s028r.menu.UploadSpeed.512000.upload.speed=512000
+
+jczn_2432s028r.menu.LoopCore.1=Core 1
+jczn_2432s028r.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+jczn_2432s028r.menu.LoopCore.0=Core 0
+jczn_2432s028r.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+jczn_2432s028r.menu.EventsCore.1=Core 1
+jczn_2432s028r.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+jczn_2432s028r.menu.EventsCore.0=Core 0
+jczn_2432s028r.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+jczn_2432s028r.menu.DebugLevel.none=None
+jczn_2432s028r.menu.DebugLevel.none.build.code_debug=0
+jczn_2432s028r.menu.DebugLevel.error=Error
+jczn_2432s028r.menu.DebugLevel.error.build.code_debug=1
+jczn_2432s028r.menu.DebugLevel.warn=Warn
+jczn_2432s028r.menu.DebugLevel.warn.build.code_debug=2
+jczn_2432s028r.menu.DebugLevel.info=Info
+jczn_2432s028r.menu.DebugLevel.info.build.code_debug=3
+jczn_2432s028r.menu.DebugLevel.debug=Debug
+jczn_2432s028r.menu.DebugLevel.debug.build.code_debug=4
+jczn_2432s028r.menu.DebugLevel.verbose=Verbose
+jczn_2432s028r.menu.DebugLevel.verbose.build.code_debug=5
+
+jczn_2432s028r.menu.EraseFlash.none=Disabled
+jczn_2432s028r.menu.EraseFlash.none.upload.erase_cmd=
+jczn_2432s028r.menu.EraseFlash.all=Enabled
+jczn_2432s028r.menu.EraseFlash.all.upload.erase_cmd=-e
+
+jczn_2432s028r.menu.ZigbeeMode.default=Disabled
+jczn_2432s028r.menu.ZigbeeMode.default.build.zigbee_mode=
+jczn_2432s028r.menu.ZigbeeMode.default.build.zigbee_libs=
+jczn_2432s028r.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator)
+jczn_2432s028r.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+jczn_2432s028r.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
