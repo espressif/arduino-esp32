@@ -14,7 +14,7 @@ Example
 
 To get started with RMT, you can try:
 
-RMT Write Neo Pixel
+RMT Write RGB LED
 *******************
 
 .. literalinclude:: ../../../libraries/ESP32/examples/RMT/RMTWrite_RGB_LED/RMTWrite_RGB_LED.ino
