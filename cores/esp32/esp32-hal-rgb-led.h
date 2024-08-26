@@ -29,12 +29,8 @@ void rgbLedWriteOrdered(uint8_t pin, rgb_led_color_order_t order, uint8_t red_va
 // Will use RGB_BUILTIN_LED_COLOR_ORDER
 void rgbLedWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val);
 
-// Backward compatibility
-void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) __attribute__((deprecated("Use rgbLedWrite().")))
-{
-  log_w("neopixelWrite() is deprecated. Use rgbLedWrite().");
-  rgbLedWrite(pin, red_val, green_val, blue_val);
-}
+// Backward compatibility - Deprecated. It will be removed in future releases.
+void neopixelWrite(uint8_t p, uint8_t r, uint8_t g, uint8_t b) __attribute__((deprecated("Use rgbLedWrite().")));
 
 #ifdef __cplusplus
 }
