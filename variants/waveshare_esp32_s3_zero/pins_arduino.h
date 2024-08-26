@@ -27,6 +27,16 @@ static const uint8_t OUTPUT_IO11 = 11;
 static const uint8_t OUTPUT_IO12 = 12;
 static const uint8_t OUTPUT_IO13 = 13;
 
+// Def for I2C that shares the IMU I2C pins
+static const uint8_t SDA = -1;
+static const uint8_t SCL = -1;
+
+// Mapping based on the ESP32S3 data sheet - alternate for SPI2
+static const uint8_t SS = 34;    // FSPICS0
+static const uint8_t MOSI = 35;  // FSPID
+static const uint8_t MISO = 37;  // FSPIQ
+static const uint8_t SCK = 36;   // FSPICLK
+
 // UART0 pins
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
