@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 #define Vision_Master_E213 true
-#define DISPLAY_HEIGHT 122
-#define DISPLAY_WIDTH  250
+#define DISPLAY_HEIGHT     122
+#define DISPLAY_WIDTH      250
 
 #define USB_VID 0x303a
 #define USB_PID 0x1001
@@ -16,10 +16,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 39;
 static const uint8_t SCL = 38;
 
-static const uint8_t SS    = 8;
-static const uint8_t MOSI  = 10;
-static const uint8_t MISO  = 11;
-static const uint8_t SCK   = 9;
+static const uint8_t SS = 8;
+static const uint8_t MOSI = 10;
+static const uint8_t MISO = 11;
+static const uint8_t SCK = 9;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
