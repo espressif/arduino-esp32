@@ -497,7 +497,8 @@ uart_t *uartBegin(
     log_v("UART%d not installed. Starting installation", uart_nr);
   }
   uart_config_t uart_config;
-  uart_config.flags.backup_before_sleep = false; // necessary within IDF v5.3
+  memset(&uart_config, 0, sizeof(uart_config_t);
+  uart_config.flags.backup_before_sleep = false; // new flag from IDF v5.3
   uart_config.data_bits = (config & 0xc) >> 2;
   uart_config.parity = (config & 0x3);
   uart_config.stop_bits = (config & 0x30) >> 4;
