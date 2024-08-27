@@ -20,9 +20,9 @@
 #define RGB_BUILTIN    (PIN_RGB_LED + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
 
-#define RGBLED_NUM       1     // number of RGB LEDs
-#define RGBLED_POWER     21    // power pin
-#define RGBLED_POWER_ON  HIGH  // power pin state when on
+#define RGBLED_NUM         1     // number of RGB LEDs
+#define RGBLED_POWER       21    // power pin
+#define RGBLED_POWER_ON    HIGH  // power pin state when on
 #define PIN_SERVO          2     // servo pin
 #define PIN_ISOLATED_INPUT 40    // optocoupled input
 

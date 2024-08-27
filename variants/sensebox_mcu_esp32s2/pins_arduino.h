@@ -17,8 +17,8 @@
 #define USB_FW_MSC_SERIAL_NUMBER    0x00000000
 
 #define PIN_RGB_LED 1  // RGB LED
-#define RGBLED_PIN 1  // RGB LED
-#define RGBLED_NUM 1  // number of RGB LEDs
+#define RGBLED_PIN  1  // RGB LED
+#define RGBLED_NUM  1  // number of RGB LEDs
 
 // Default I2C QWIIC-Ports
 static const uint8_t SDA = 39;

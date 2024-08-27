@@ -17,8 +17,7 @@
 #include "esp32-hal-rgb-led.h"
 
 // Backward compatibility - Deprecated. It will be removed in future releases.
-void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val)
-{
+void neopixelWrite(uint8_t pin, uint8_t red_val, uint8_t green_val, uint8_t blue_val) {
   log_w("neopixelWrite() is deprecated. Use rgbLedWrite().");
   rgbLedWrite(pin, red_val, green_val, blue_val);
 }

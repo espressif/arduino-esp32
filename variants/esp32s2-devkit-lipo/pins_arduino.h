@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define PIN_RGB_LED   18
+#define PIN_RGB_LED    18
 #define RGB_BUILTIN    PIN_RGB_LED
 #define RGB_BRIGHTNESS 64
 
