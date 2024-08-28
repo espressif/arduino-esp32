@@ -49,7 +49,7 @@ bool otDeviceSetup(
   }
   if (i != nCmds1) {
     log_e("Sorry, OpenThread Network setup failed!");
-    neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
+    rgbLedWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
     return false;
   }
   Serial.println("OpenThread started.\r\nWaiting for activating correct Device Role.");
@@ -63,7 +63,7 @@ bool otDeviceSetup(
   Serial.println();
   if (!tries) {
     log_e("Sorry, Device Role failed by timeout! Current Role: %s.", otGetStringDeviceRole());
-    neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
+    rgbLedWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
     return false;
   }
   Serial.printf("Device is %s.\r\n", otGetStringDeviceRole());
@@ -74,12 +74,12 @@ bool otDeviceSetup(
   }
   if (i != nCmds2) {
     log_e("Sorry, OpenThread CoAP setup failed!");
-    neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
+    rgbLedWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... failed!
     return false;
   }
   Serial.println("OpenThread setup done. Node is ready.");
   // all fine! LED goes and stays Blue
-  neopixelWrite(RGB_BUILTIN, 0, 0, 64);  // BLUE ... Swtich is ready!
+  rgbLedWrite(RGB_BUILTIN, 0, 0, 64);  // BLUE ... Swtich is ready!
   return true;
 }
 
@@ -149,7 +149,7 @@ void checkUserButton() {
     lastLampState = !lastLampState;
     if (!otCoapPUT(lastLampState)) {  // failed: Lamp Node is not responding due to be off or unreachable
       // timeout from the CoAP PUT message... restart the node.
-      neopixelWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... something failed!
+      rgbLedWrite(RGB_BUILTIN, 255, 0, 0);  // RED ... something failed!
       Serial.println("Reseting the Node as Switch... wait.");
       // start over...
       setupNode();
@@ -161,7 +161,7 @@ void checkUserButton() {
 void setup() {
   Serial.begin(115200);
   // LED starts RED, indicating not connected to Thread network.
-  neopixelWrite(RGB_BUILTIN, 64, 0, 0);
+  rgbLedWrite(RGB_BUILTIN, 64, 0, 0);
   OThreadCLI.begin(false);     // No AutoStart is necessary
   OThreadCLI.setTimeout(250);  // waits 250ms for the OpenThread CLI response
   setupNode();
