@@ -67,6 +67,8 @@ ledc_clk_cfg_t ledcGetClockSource(void);
 
 /**
  * @brief Set the LEDC clock source.
+ * 
+ * @param source LEDC clock source to set.
  *
  * @return true if LEDC clock source was successfully set, false otherwise.
  */
