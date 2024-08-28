@@ -33,7 +33,7 @@ The default clock source is XTAL clock (``LEDC_USE_XTAL_CLK``) if supported by t
 
     bool ledcSetClockSource(ledc_clk_cfg_t source);
 
-* ``source`` select the clock source for LEDC peripheral. 
+* ``source`` select the clock source for LEDC peripheral.
 
   * ``LEDC_APB_CLK`` - APB clock.
   * ``LEDC_REF_CLK`` - REF clock.
