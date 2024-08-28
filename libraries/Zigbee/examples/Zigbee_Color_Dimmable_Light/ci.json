@@ -1,0 +1,16 @@
+{
+  "targets": {
+    "esp32": false,
+    "esp32c3": false,
+    "esp32s2": false,
+    "esp32s3": false
+  },
+  "fqbn": { 
+    "esp32c6": [
+      "espressif:esp32:esp32c6:PartitionScheme=zigbee,ZigbeeMode=ed"
+    ],
+    "esp32h2": [
+      "espressif:esp32:esp32h2:PartitionScheme=zigbee,ZigbeeMode=ed"
+    ]
+  }
+}

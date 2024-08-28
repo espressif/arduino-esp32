@@ -1,6 +1,6 @@
-# Arduino-ESP32 Zigbee On/Off Light Example
+# Arduino-ESP32 Zigbee Networks Scan Example
 
-This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) on/off light.
+This example shows how to scan Zigbee Networks.
 
 # Supported Targets
 
@@ -9,16 +9,20 @@ Currently, this example supports the following targets.
 | Supported Targets | ESP32-C6 | ESP32-H2 |
 | ----------------- | -------- | -------- |
 
+## Example Output
+
+//TODO:
+
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) acting  as Zigbee coordinator (loaded with Zigbee_On_Off_switch example)
+* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee coordinator (loaded with `Zigbee_Thermostat` example)
 * A USB cable for power supply and programming
-* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee end device and upload the Zigbee_On_Off_Light example
+* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee end device (loaded with `Zigbee_Temperature_Sensor` example)
 
 ### Configure the Project
 
-Set the LED GPIO by changing the `LED_PIN` definition. By default, the LED_PIN is `RGB_BUILTIN`.
-By default, the `neoPixelWrite` function is used to control the LED. You can change it to digitalWrite to control a simple LED.
+In this example, the internal temperature sensor task is reading the chip temperature.
+Set the Button Switch GPIO by changing the `GPIO_INPUT_IO_TOGGLE_SWITCH` definition. By default, it's the `GPIO_NUM_9` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE
 

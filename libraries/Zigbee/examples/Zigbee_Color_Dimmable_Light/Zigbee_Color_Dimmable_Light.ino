@@ -13,9 +13,10 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates simple Zigbee light bulb.
+ * @brief This example demonstrates Zigbee Color Dimmable light bulb.
  *
- * The example demonstrates how to use ESP Zigbee stack to create a end device light bulb.
+ * The example demonstrates how to use Zigbee library to create an end device with 
+ * color dimmable light end point.
  * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
@@ -32,11 +33,6 @@
 
 #include "Zigbee_core.h"
 #include "ep/ep_color_dimmable_light.h"
-
-#include "esp_zigbee_core.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 #define LED_PIN RGB_BUILTIN
 #define BUTTON_PIN 9  // C6/H2 Boot button

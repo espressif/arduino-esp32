@@ -74,26 +74,24 @@ void Zigbee_EP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) 
     esp_zb_zcl_read_attr_cmd_req(&read_req);
 }
 
-void Zigbee_EP::attribute_read_cmd(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
+void Zigbee_EP::readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
     /* Basic cluster attributes */
-    if (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_BASIC) {
-        if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
-            zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-            char *string = (char *)malloc(zbstr->len + 1);
-            memcpy(string, zbstr->data, zbstr->len);
-            string[zbstr->len] = '\0';
-            log_i("Peer Manufacturer is \"%s\"", string);
-            readManufacturer(string);
-            free(string);
-        }
-        if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
-            zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-            char *string = (char *)malloc(zbstr->len + 1);
-            memcpy(string, zbstr->data, zbstr->len);
-            string[zbstr->len] = '\0';
-            log_i("Peer Model is \"%s\"", string);
-            readModel(string);
-            free(string);
-        }
+    if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
+        zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
+        char *string = (char *)malloc(zbstr->len + 1);
+        memcpy(string, zbstr->data, zbstr->len);
+        string[zbstr->len] = '\0';
+        log_i("Peer Manufacturer is \"%s\"", string);
+        readManufacturer(string);
+        free(string);
+    }
+    if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
+        zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
+        char *string = (char *)malloc(zbstr->len + 1);
+        memcpy(string, zbstr->data, zbstr->len);
+        string[zbstr->len] = '\0';
+        log_i("Peer Model is \"%s\"", string);
+        readModel(string);
+        free(string);
     }
 }

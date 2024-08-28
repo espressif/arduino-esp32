@@ -13,11 +13,15 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates simple Zigbee light switch.
+ * @brief This example demonstrates Zigbee color dimmer switch.
  *
- * The example demonstrates how to use ESP Zigbee stack to control a light bulb.
- * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator (Switch).
- * Button switch and Zigbee runs in separate tasks.
+ * The example demonstrates how to use Zigbee library to control a RGB light bulb.
+ * The RGB light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator (Switch).
+ * To turn on/off the light, push the button on the switch.
+ * To change the color or level of the light, send serial commands to the switch.
+ * 
+ * By setting the switch to allow multiple binding, so it can bind to multiple lights.
+ * Also every 30 seconds, all bound lights are printed to the serial console.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
@@ -34,15 +38,9 @@
 #include "Zigbee_core.h"
 #include "ep/ep_color_dimmer_switch.h"
 
-#include "esp_zigbee_core.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "ha/esp_zigbee_ha_standard.h"
-
-#define SWITCH_ENDPOINT_NUMBER 5
-
 /* Switch configuration */
-#define GPIO_SWITCH GPIO_NUM_9 //Boot button for C6/H2
+#define SWITCH_PIN 9 //Boot button for C6/H2
+#define SWITCH_ENDPOINT_NUMBER 5
 
 /* Zigbee switch */
 ZigbeeColorDimmerSwitch zbSwitch = ZigbeeColorDimmerSwitch(SWITCH_ENDPOINT_NUMBER);
@@ -52,8 +50,8 @@ void setup() {
   
   Serial.begin(115200);
 
-  // Init button switch
-  pinMode(GPIO_SWITCH, INPUT);
+  //Init button switch
+  pinMode(SWITCH_PIN, INPUT);
 
   //Optional: set Zigbee device name and model
   zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");
@@ -67,7 +65,7 @@ void setup() {
   //Open network for 180 seconds after boot
   Zigbee.setRebootOpenNetwork(180);
   
-  // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
+  //When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
   Zigbee.begin(ZIGBEE_COORDINATOR);
   
   Serial.println("Waiting for Light to bound to the switch");
@@ -82,10 +80,9 @@ void setup() {
 
 void loop() {
   // Handle button switch in loop()
-  if (digitalRead(GPIO_SWITCH) == LOW) {  // Push button pressed
-
+  if (digitalRead(SWITCH_PIN) == LOW) {  // Push button pressed
     // Key debounce handling
-    while (digitalRead(GPIO_SWITCH) == LOW) {
+    while (digitalRead(SWITCH_PIN) == LOW) {
       delay(50);
     }
     // Toggle light

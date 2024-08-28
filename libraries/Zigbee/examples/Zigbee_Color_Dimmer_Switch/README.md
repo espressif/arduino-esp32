@@ -1,8 +1,6 @@
-# Arduino-ESP32 Zigbee Light Switch Example
+# Arduino-ESP32 Zigbee Color Dimmer Switch Example
 
-This example shows how to configure Zigbee Coordinator and use it as a Home Automation (HA) on/off light switch.
-
-**This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_on_off_switch.**
+This example shows how to configure Zigbee Coordinator and use it as a Home Automation (HA) color dimmer light switch.
 
 # Supported Targets
 
@@ -13,13 +11,13 @@ Currently, this example supports the following targets.
 
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee end device (loaded with Zigbee_Light_bulb example).
+* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee end device (loaded with Zigbee_Color_Dimmable_Light example).
 * A USB cable for power supply and programming.
-* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee coordinator (loaded with Zigbee_Light_switch example).
+* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee coordinator and upload the Zigbee_Color_Dimmable_Light example.
 
 ### Configure the Project
 
-Set the Button Switch GPIO by changing the `GPIO_INPUT_IO_TOGGLE_SWITCH` definition. By default, the LED_PIN is `GPIO_NUM_9`.
+Set the Button Switch GPIO by changing the `GPIO_SWITCH` definition. By default, it's the pin `9` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE
 
@@ -60,14 +58,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 ## Resources
 
-The ESP Zigbee SDK provides more examples:
-* ESP Zigbee SDK Docs: [Link](https://docs.espressif.com/projects/esp-zigbee-sdk)
-* ESP Zigbee SDK Repo: [Link](https://github.com/espressif/esp-zigbee-sdk)
-
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
-* ESP32 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)
-* ESP32-S2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf)
-* ESP32-C3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf)
-* ESP32-S3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf)
+* ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
+* ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)

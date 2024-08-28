@@ -15,7 +15,7 @@
 /**
  * @brief This example demonstrates simple Zigbee light switch.
  *
- * The example demonstrates how to use ESP Zigbee stack to control a light bulb.
+ * The example demonstrates how to use Zigbee library to control a light bulb.
  * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator (Switch).
  * Button switch and Zigbee runs in separate tasks.
  *
@@ -33,11 +33,6 @@
 
 #include "Zigbee_core.h"
 #include "ep/ep_on_off_switch.h"
-
-#include "esp_zigbee_core.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 #define SWITCH_ENDPOINT_NUMBER 5
 
