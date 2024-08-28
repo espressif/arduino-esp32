@@ -376,7 +376,7 @@ void ArduinoOTAClass::handle() {
   if (_udp_ota.parsePacket()) {
     _onRx();
   }
-  _udp_ota.flush();  // always flush, even zero length packets must be flushed.
+  _udp_ota.clear();  // always clear, even zero length packets must be cleared.
 }
 
 int ArduinoOTAClass::getCommand() {
