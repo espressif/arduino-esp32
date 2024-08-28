@@ -26,8 +26,8 @@ Arduino-ESP32 LEDC API
 ledcSetCLockSource
 ******************
 
-This function is used to set the LEDC peripheral clock source. The default clock source is XTAL clock (``LEDC_USE_XTAL_CLK``) if supported by the SoC, 
-otherwise it is AUTO clock (``LEDC_AUTO_CLK``).
+This function is used to set the LEDC peripheral clock source. Must be called before any LEDC channel is used.
+The default clock source is XTAL clock (``LEDC_USE_XTAL_CLK``) if supported by the SoC, otherwise it is AUTO clock (``LEDC_AUTO_CLK``).
 
 .. code-block:: arduino
 
