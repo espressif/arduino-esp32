@@ -274,68 +274,6 @@ echo "Download URL: $PACKAGE_URL"
 echo
 
 ##
-## LIBS PACKAGE ZIP
-##
-
-LIBS_PROJ_NAME="esp32-arduino-libs"
-LIBS_PKG_DIR="$OUTPUT_DIR/$LIBS_PROJ_NAME"
-LIBS_PACKAGE_ZIP="$LIBS_PROJ_NAME-$RELEASE_TAG.zip"
-
-# Get the libs package URL from the template
-LIBS_PACKAGE_SRC_ZIP="$OUTPUT_DIR/src-$LIBS_PROJ_NAME.zip"
-LIBS_PACKAGE_SRC_URL=`cat $PACKAGE_JSON_TEMPLATE | jq -r ".packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\") | .systems[0].url"`
-
-# Download the libs package
-echo "Downloading the libs archive ..."
-curl -o "$LIBS_PACKAGE_SRC_ZIP" -LJO --url "$LIBS_PACKAGE_SRC_URL" || exit 1
-
-# Extract the libs package
-echo "Extracting the archive ..."
-unzip -q -d "$OUTPUT_DIR" "$LIBS_PACKAGE_SRC_ZIP" || exit 1
-EXTRACTED_DIR=`ls "$OUTPUT_DIR" | grep "^$LIBS_PROJ_NAME"`
-mv "$OUTPUT_DIR/$EXTRACTED_DIR" "$LIBS_PKG_DIR" || exit 1
-
-# Remove unnecessary files in the package folder
-echo "Cleaning up folders ..."
-find "$LIBS_PKG_DIR" -name '*.DS_Store' -exec rm -f {} \;
-find "$LIBS_PKG_DIR" -name '*.git*' -type f -delete
-
-# Compress package folder
-echo "Creating ZIP ..."
-pushd "$OUTPUT_DIR" >/dev/null
-zip -qr "$LIBS_PACKAGE_ZIP" "$LIBS_PROJ_NAME"
-if [ $? -ne 0 ]; then echo "ERROR: Failed to create $LIBS_PACKAGE_ZIP ($?)"; exit 1; fi
-
-# Calculate SHA-256
-echo "Calculating SHA sum ..."
-LIBS_PACKAGE_PATH="$OUTPUT_DIR/$LIBS_PACKAGE_ZIP"
-LIBS_PACKAGE_SHA=`shasum -a 256 "$LIBS_PACKAGE_ZIP" | cut -f 1 -d ' '`
-LIBS_PACKAGE_SIZE=`get_file_size "$LIBS_PACKAGE_ZIP"`
-popd >/dev/null
-rm -rf "$LIBS_PKG_DIR"
-echo "'$LIBS_PACKAGE_ZIP' Created! Size: $LIBS_PACKAGE_SIZE, SHA-256: $LIBS_PACKAGE_SHA"
-echo
-
-# Upload package to release page
-echo "Uploading libs package to release page ..."
-LIBS_PACKAGE_URL=`git_safe_upload_asset "$LIBS_PACKAGE_PATH"`
-echo "Libs Package Uploaded"
-echo "Libs Download URL: $LIBS_PACKAGE_URL"
-echo
-
-# Construct JQ argument with libs package data
-libs_jq_arg="\
-    (.packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\")).systems[].url = \"$LIBS_PACKAGE_URL\" |\
-    (.packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\")).systems[].archiveFileName = \"$LIBS_PACKAGE_ZIP\" |\
-    (.packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\")).systems[].size = \"$LIBS_PACKAGE_SIZE\" |\
-    (.packages[0].tools[] | select(.name==\"$LIBS_PROJ_NAME\")).systems[].checksum = \"SHA-256:$LIBS_PACKAGE_SHA\""
-
-# Update template values for the libs package and store it in the build folder
-cat "$PACKAGE_JSON_TEMPLATE" | jq "$libs_jq_arg" > "$OUTPUT_DIR/package-$LIBS_PROJ_NAME.json"
-# Overwrite the template location with the newly edited one
-PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME.json"
-
-##
 ## TEMP WORKAROUND FOR RV32 LONG PATH ON WINDOWS
 ##
 RVTC_VERSION=`cat $PACKAGE_JSON_TEMPLATE | jq -r ".packages[0].platforms[0].toolsDependencies[] | select(.name == \"$RVTC_NAME\") | .version" | cut -d '_' -f 2`
@@ -350,8 +288,8 @@ rvtc_jq_arg="\
     (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$X32TC_NAME\")).name = \"$X32TC_NEW_NAME\" |\
     (.packages[0].tools[] | select(.name==\"$X32TC_NAME\")).version = \"$RVTC_VERSION\" |\
     (.packages[0].tools[] | select(.name==\"$X32TC_NAME\")).name = \"$X32TC_NEW_NAME\""
-cat "$PACKAGE_JSON_TEMPLATE" | jq "$rvtc_jq_arg" > "$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
-PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
+cat "$PACKAGE_JSON_TEMPLATE" | jq "$rvtc_jq_arg" > "$OUTPUT_DIR/package-rvfix.json"
+PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-rvfix.json"
 
 ##
 ## PACKAGE JSON
