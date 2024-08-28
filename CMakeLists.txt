@@ -320,7 +320,7 @@ target_compile_options(${COMPONENT_TARGET} PUBLIC
     -DARDUINO_ARCH_ESP32
     -DARDUINO_BOARD="${idf_target_caps}_DEV"
     -DARDUINO_VARIANT="${CONFIG_ARDUINO_VARIANT}"
-    -DESP32)
+    -DESP32=ESP32)
 
 if(CONFIG_AUTOSTART_ARDUINO)
     # in autostart mode, arduino-esp32 contains app_main() function and needs to
