@@ -565,7 +565,7 @@ If you need to access a different namespace, close the one before opening the ot
 
       currentNamespace.end();                              // closes 'myNamespace'
 
-      currentNamespace.begin("myOtherNamespace", false);   // opens a different Preferences namesspace.
+      currentNamespace.begin("myOtherNamespace", false);   // opens a different Preferences namespace.
          // do other stuff...
 
       currentNamespace.end();                              // closes 'myOtherNamespace'
@@ -644,7 +644,7 @@ Returning to the example above:
 
 ..
 
-will assign to the variable ``dessert`` the String ``gravel`` if an error occurred, or the value stored against the key ``favourites`` if not.
+will assign to the variable ``dessert`` the String ``gravel`` if an error occurred, or the value stored against the key ``favorites`` if not.
 
 If we predetermine a default value that is outside all legitimate values, we now have a way to test if an error actually occurred.
 

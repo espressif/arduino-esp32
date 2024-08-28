@@ -1,7 +1,9 @@
 exclude: |
   (?x)(
       ^\.github\/|
-      ^tests\/performance\/coremark\/.*\.[ch]$
+      ^tests\/performance\/coremark\/.*\.[ch]$|
+      ^tests\/performance\/superpi\/.*\.(cpp|h)$|
+      LICENSE\.md$
   )
 
 default_language_version:
@@ -24,11 +26,10 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.2.4"
+    rev: "v2.3.0"
     hooks:
       - id: codespell
         exclude: ^.*\.(svd|SVD)$
-        stages: [manual]
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: "v18.1.3"
     hooks:

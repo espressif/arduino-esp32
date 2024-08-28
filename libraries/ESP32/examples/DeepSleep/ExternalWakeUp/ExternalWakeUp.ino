@@ -81,7 +81,7 @@ void setup() {
   /*
     If there are no external pull-up/downs, tie wakeup pins to inactive level with internal pull-up/downs via RTC IO
          during deepsleep. However, RTC IO relies on the RTC_PERIPH power domain. Keeping this power domain on will
-         increase some power comsumption. However, if we turn off the RTC_PERIPH domain or if certain chips lack the RTC_PERIPH
+         increase some power consumption. However, if we turn off the RTC_PERIPH domain or if certain chips lack the RTC_PERIPH
          domain, we will use the HOLD feature to maintain the pull-up and pull-down on the pins during sleep.
   */
   rtc_gpio_pulldown_en(WAKEUP_GPIO);  // GPIO33 is tie to GND in order to wake up in HIGH
