@@ -366,12 +366,9 @@ export PATH="/home/runner/bin:$PATH"
 source ./.github/scripts/install-arduino-cli.sh
 
 echo "Testing $PACKAGE_JSON_DEV install ..."
-echo "Updating index ..."
-arduino-cli core update-index --additional-urls "file://$OUTPUT_DIR/$PACKAGE_JSON_DEV"
-if [ $? -ne 0 ]; then echo "ERROR: Failed to update index ($?)"; exit 1; fi
 
 echo "Installing esp32 ..."
-arduino-cli core install esp32:esp32
+arduino-cli core install esp32:esp32 --additional-urls "file://$OUTPUT_DIR/$PACKAGE_JSON_DEV"
 if [ $? -ne 0 ]; then echo "ERROR: Failed to install esp32 ($?)"; exit 1; fi
 
 echo "Compiling example ..."
@@ -386,12 +383,9 @@ echo "Test successful!"
 
 if [ "$RELEASE_PRE" == "false" ]; then
     echo "Testing $PACKAGE_JSON_REL install ..."
-    echo "Updating index ..."
-    arduino-cli core update-index --additional-urls "file://$OUTPUT_DIR/$PACKAGE_JSON_REL"
-    if [ $? -ne 0 ]; then echo "ERROR: Failed to update index ($?)"; exit 1; fi
 
     echo "Installing esp32 ..."
-    arduino-cli core install esp32:esp32
+    arduino-cli core install esp32:esp32 --additional-urls "file://$OUTPUT_DIR/$PACKAGE_JSON_REL"
     if [ $? -ne 0 ]; then echo "ERROR: Failed to install esp32 ($?)"; exit 1; fi
 
     echo "Compiling example ..."
