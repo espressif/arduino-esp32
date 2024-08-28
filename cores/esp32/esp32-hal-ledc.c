@@ -49,11 +49,11 @@ static bool fade_initialized = false;
 
 ledc_clk_cfg_t clock_source = LEDC_DEFAULT_CLK;
 
-ledc_clk_cfg_t ledcReadClockSource(void) {
+ledc_clk_cfg_t ledcGetClockSource(void) {
   return clock_source;
 }
 
-bool ledcWriteClockSource(ledc_clk_cfg_t source) {
+bool ledcSetClockSource(ledc_clk_cfg_t source) {
   if (ledc_handle.used_channels) {
     log_e("Cannot change LEDC clock source! LEDC channels in use.");
     return false;

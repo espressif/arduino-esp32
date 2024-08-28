@@ -59,18 +59,18 @@ typedef struct {
 } ledc_channel_handle_t;
 
 /**
- * @brief Read the LEDC clock source.
+ * @brief Get the LEDC clock source.
  *
  * @return LEDC clock source.
  */
-ledc_clk_cfg_t ledcReadClockSource(void);
+ledc_clk_cfg_t ledcGetClockSource(void);
 
 /**
  * @brief Set the LEDC clock source.
  *
  * @return true if LEDC clock source was successfully set, false otherwise.
  */
-bool ledcWriteClockSource(ledc_clk_cfg_t source);
+bool ledcSetClockSource(ledc_clk_cfg_t source);
 
 /**
  * @brief Attach a pin to the LEDC driver, with a given frequency and resolution.
