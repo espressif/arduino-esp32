@@ -1,8 +1,10 @@
 name: Documentation Build and Production Deploy CI
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["ESP32 Arduino Release"]
+    types:
+      - completed
   push:
     branches:
     - release/v2.x
@@ -12,7 +14,6 @@ on:
     - '.github/workflows/docs_deploy.yml'
 
 jobs:
-
   deploy-prod-docs:
     name: Deploy Documentation on Production
     runs-on: ubuntu-22.04
@@ -20,6 +21,11 @@ jobs:
       run:
         shell: bash
     steps:
+    - name: Check if release workflow is successful
+      if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion != 'success' }}
+      run: |
+        echo "Release workflow failed. Exiting..."
+        exit 1
     - uses: actions/checkout@v4
       with:
         submodules: true
