@@ -47,7 +47,7 @@ ledc_periph_t ledc_handle = {0};
 
 static bool fade_initialized = false;
 
-ledc_clk_cfg_t clock_source = LEDC_DEFAULT_CLK;
+static ledc_clk_cfg_t clock_source = LEDC_DEFAULT_CLK;
 
 ledc_clk_cfg_t ledcGetClockSource(void) {
   return clock_source;
