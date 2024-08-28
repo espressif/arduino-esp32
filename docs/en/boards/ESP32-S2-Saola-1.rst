@@ -7,7 +7,7 @@ The `ESP32-S2-Saola-1`_ development board is one of Espressif's official boards.
 Specifications
 --------------
 
-- Wi-Fi 802.11 b/g/n (802.11n up to 150 Mbps)
+- Wi-Fi 802.11b/g/n (802.11n up to 150 Mbps)
 - Built around ESP32-S2 series of SoCs Xtensa® single-core
 - Integrated 4 MB SPI flash
 - Integrated 2 MB PSRAM
@@ -28,7 +28,7 @@ Specifications
     - 1 × LCD interface (8-bit serial RGB/8080/6800), implemented using the hardware resources of SPI2
     - 1 × LCD interface (8/16/24-bit parallel), implemented using the hardware resources of I2S
     - 1 × TWAI® controller (compatible with ISO 11898-1)
-- On­board PCB antenna or external antenna connector
+- PCB antenna or external antenna connector
 
 Header Block
 ------------
@@ -38,6 +38,9 @@ Header Block
 
 J2
 ^^^
+
+.. vale off
+
 ===  ====  =====  ===================================
 No.  Name  Type   Function
 ===  ====  =====  ===================================
@@ -63,6 +66,8 @@ No.  Name  Type   Function
 20   5V0   P      5 V power supply
 21   GND   G      Ground
 ===  ====  =====  ===================================
+
+.. vale on
 
 J3
 ^^^
@@ -114,7 +119,7 @@ Some of the GPIO's have important features during the booting process. Here is t
 ====  =========  =====================================================================  ============  ==============
 GPIO   Default    Function                                                               Pull-up       Pull-down
 ====  =========  =====================================================================  ============  ==============
-IO45  Pull-down  Voltage of Internal LDO (VDD_SDIO)                                     1V8           3V3
+IO45  Pull-down  Voltage of Internal LDO (VDD_SDIO)                                     1.8 V         3.3 V
 IO0   Pull-up    Booting Mode                                                           SPI Boot      Download Boot
 IO46  Pull-down  Booting Mode                                                           Don't Care    Download Boot
 IO46  Pull-up    Enabling/Disabling Log Print During Booting and Timing of SDIO Slave   U0TXD Active  U0TXD Silent

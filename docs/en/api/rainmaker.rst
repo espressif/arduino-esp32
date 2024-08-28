@@ -29,7 +29,7 @@ ESP RainMaker Agent API
 RMaker.initNode
 ***************
 
-This initializes the ESP RainMaker agent, wifi and creates the node.
+This initializes the ESP RainMaker agent, Wi-Fi and creates the node.
 
 You can also set the configuration of the node using the following API
 
@@ -54,7 +54,7 @@ It starts the ESP RainMaker agent.
 **NOTE**:
 
 1. ESP RainMaker agent should be initialized before this call.
-2. Once ESP RainMaker agent starts, compulsorily call WiFi.beginProvision() API.
+2. Once ESP RainMaker agent starts, compulsorily call ``WiFi.beginProvision()`` API.
 
 .. code-block:: arduino
 

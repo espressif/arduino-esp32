@@ -39,25 +39,25 @@ Where:
        ``ota``
 
            The ota subtype is used to store the OTA information. This partition is used only when the OTA is used to select the initialization partition, otherwise no need to add it to your custom partition table.
-           The size of this partition should be a fixed size of 8kB (0x2000 bytes).
+           The size of this partition should be a fixed size of 8 kB (0x2000 bytes).
 
        ``nvs``
 
-           The nvs partition subtype is used to define the partition to store general data, like the WiFi data, device PHY calibration data and any other data to be stored on the non-volatile memory.
+           The nvs partition subtype is used to define the partition to store general data, like the Wi-Fi data, device PHY calibration data and any other data to be stored on the non-volatile memory.
            This kind of partition is suitable for small custom configuration data, cloud certificates, etc. Another usage for the NVS is to store sensitive data, since the NVS supports encryption.
-           It is highly recommended to add at least one nvs partition, labeled with the name nvs, in your custom partition tables with size of at least 12kB (0x3000 bytes). If needed, you can increase the size of the nvs partition.
-           The recommended size for this partition is from 12kb to 64kb. Although larger NVS partitions can be defined, we recommend using FAT or SPIFFS filesystem for storage of larger amounts of data.
+           It is highly recommended to add at least one nvs partition, labeled with the name nvs, in your custom partition tables with size of at least 12 kB (0x3000 bytes). If needed, you can increase the size of the nvs partition.
+           The recommended size for this partition is from 12 kB to 64 kB. Although larger NVS partitions can be defined, we recommend using FAT or SPIFFS filesystem for storage of larger amounts of data.
 
        ``coredump``
 
            The coredump partition subtype is used to store the core dump on the flash. The core dump is used to analyze critical errors like crash and panic.
            This function must be enabled in the project configuration menu and set the data destination to flash.
-           The recommended size for this partition is 64kB (0x10000).
+           The recommended size for this partition is 64 kB (0x10000).
 
        ``nvs_keys``
 
            The nvs_keys partition subtype is used to store the keys when the NVS encryption is used.
-           The size for this partition is 4kB (0x1000).
+           The size for this partition is 4 kB (0x1000).
 
        ``fat``
 
@@ -90,7 +90,7 @@ Where:
     The offset defines the partition start address. The offset is defined by the sum of the offset and the size of the earlier partition.
 
 .. note::
-    Offset must be multiple of 4kB (0x1000) and for app partitions it must be aligned by 64kB (0x10000).
+    Offset must be multiple of 4 kB (0x1000) and for app partitions it must be aligned by 64 kB (0x10000).
     If left blank, the offset will be automatically calculated based on the end of the previous partition, including any necessary alignment, however, the offset for the first partition must be always set as **0x9000** and for the first application partition **0x10000**.
 
 5. **Size**
@@ -129,13 +129,13 @@ Here is an example you can use for a custom partition table:
     app1,     app,  ota_1,   ,        2M,
     spiffs,   data, spiffs,  ,        8M,
 
-This partition will use about 12MB of the 16MB flash. The offset will be automatically calculated after the first application partition and the units are in K and M.
+This partition will use about 12 MB of the 16 MB flash. The offset will be automatically calculated after the first application partition and the units are in K and M.
 
 An alternative is to create the new partition table as a new file in the `tools/partitions <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>`_ folder and edit the `boards.txt <https://github.com/espressif/arduino-esp32/tree/master/boards.txt>`_ file to add your custom partition table.
 
 Another alternative is to create the new partition table as a new file, and place it in the `variants <https://github.com/espressif/arduino-esp32/tree/master/variants>`_ folder under your boards folder, and edit the `boards.txt <https://github.com/espressif/arduino-esp32/tree/master/boards.txt>`_ file to add your custom partition table, noting that in order for the compiler to find your custom partition table file you must use the '.build.custom_partitions=' option in the boards.txt file, rather than the standard '.build.partitions=' option. The '.build.variant=' option has the name of the folder holding your custom partition table in the variants folder.
 
-An example of the PartitionScheme listing using the ESP32S3 Dev Module as a reference, would be to have the following:
+An example of the PartitionScheme listing using the ESP32-S3 Dev Module as a reference, would be to have the following:
 
 **Custom Partition - CSV file in /variants/custom_esp32s3/ folder**
 
@@ -150,7 +150,7 @@ An example of the PartitionScheme listing using the ESP32S3 Dev Module as a refe
 Examples
 --------
 
-**2MB no OTA**
+**2 MB no OTA**
 
 .. code-block::
 
@@ -158,7 +158,7 @@ Examples
     nvs,      data, nvs,     36K,     20K,
     factory,  app,  factory, 64K,     1900K,
 
-**4MB no OTA**
+**4 MB no OTA**
 
 .. code-block::
 
@@ -166,7 +166,7 @@ Examples
     nvs,      data, nvs,     36K,     20K,
     factory,  app,  factory, 64K,     4000K,
 
-**4MB with OTA**
+**4 MB with OTA**
 
 .. code-block::
 
@@ -176,7 +176,7 @@ Examples
     app0,     app,  ota_0,   64K,     1900K,
     app1,     app,  ota_1,   ,        1900K,
 
-**8MB no OTA with Storage**
+**8 MB no OTA with Storage**
 
 .. code-block::
 
@@ -185,7 +185,7 @@ Examples
     factory,  app,  factory, 64K,     2M,
     spiffs,   data, spiffs,  ,        5M,
 
-**8MB with OTA and Storage**
+**8 MB with OTA and Storage**
 
 .. code-block::
 

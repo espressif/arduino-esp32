@@ -65,8 +65,6 @@ repos:
         pass_filenames: false
         args: [sync]
         types_or: [markdown, rst]
-        stages: [manual]
       - id: vale
         language_version: "1.21.6"
         types_or: [markdown, rst]
-        stages: [manual]

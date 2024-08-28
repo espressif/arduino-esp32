@@ -172,7 +172,7 @@ Set the build type. ex. 'build' to build the project and prepare for uploading t
 Additional Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Specify additional configs to be applied. ex. 'qio 80m' to compile for QIO Flash@80MHz.
+Specify additional configs to be applied. ex. ``qio 80m`` to compile for QIO Flash at 80 MHz.
 
 .. note:: This command requires the ``-b`` to work properly.
 
