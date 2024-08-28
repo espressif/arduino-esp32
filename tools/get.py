@@ -233,6 +233,10 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     else:
         print(" Forcing extraction")
 
+    if os.path.isdir(os.path.join(destination, rename_to)):
+        print("Removing existing {0} ...".format(rename_to))
+        shutil.rmtree(os.path.join(destination, rename_to), ignore_errors=True)
+
     if filename.endswith("tar.gz"):
         if not cfile:
             cfile = tarfile.open(filename, "r:gz")
@@ -250,8 +254,6 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
 
     if rename_to != dirname:
         print("Renaming {0} to {1} ...".format(dirname, rename_to))
-        if os.path.isdir(rename_to):
-            shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
 
     with open(os.path.join(destination, rename_to, ".package_checksum"), "w") as f:
