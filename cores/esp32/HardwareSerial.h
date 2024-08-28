@@ -228,7 +228,7 @@ public:
 
   // onReceive will setup a callback that will be called whenever an UART interruption occurs (UART_INTR_RXFIFO_FULL or UART_INTR_RXFIFO_TOUT)
   // UART_INTR_RXFIFO_FULL interrupt triggers at UART_FULL_THRESH_DEFAULT bytes received (defined as 120 bytes by default in IDF)
-  // UART_INTR_RXFIFO_TOUT interrupt triggers at UART_TOUT_THRESH_DEFAULT symbols passed without any reception (defined as 10 symbos by default in IDF)
+  // UART_INTR_RXFIFO_TOUT interrupt triggers at UART_TOUT_THRESH_DEFAULT symbols passed without any reception (defined as 10 symbols by default in IDF)
   // onlyOnTimeout parameter will define how onReceive will behave:
   // Default: true -- The callback will only be called when RX Timeout happens.
   //                  Whole stream of bytes will be ready for being read on the callback function at once.

@@ -43,7 +43,7 @@ This is the mode to be used if you want to connect your project to the Internet.
 API Description
 ---------------
 
-Here is the description of the WiFi API.
+Here is the description of the Wi-Fi API.
 
 Common API
 ----------
@@ -53,7 +53,7 @@ Here are the common APIs that are used for both modes, AP and STA.
 onEvent (and removeEvent)
 *************************
 
-Registers a caller-supplied function to be called when WiFi events
+Registers a caller-supplied function to be called when Wi-Fi events
 occur. Several forms are available.
 
 Function pointer callback taking the event ID:
@@ -92,7 +92,7 @@ A similar set of functions are available to remove callbacks:
 
 In all cases, the subscribing function accepts an optional event type to
 invoke the callback only for that specific event; with the default
-``ARDUINO_EVENT_MAX``, the callback will be invoked for all WiFi events.
+``ARDUINO_EVENT_MAX``, the callback will be invoked for all Wi-Fi events.
 
 Any callback function is given the event type in a parameter.
 Some of the possible callback function formats also take an
@@ -141,9 +141,9 @@ may be retrieved:
 
 .. warning::
 
-    The ``setHostname()`` function must be called BEFORE WiFi is started with
+    The ``setHostname()`` function must be called BEFORE Wi-Fi is started with
     ``WiFi.begin()``, ``WiFi.softAP()``, ``WiFi.mode()``, or ``WiFi.run()``.
-    To change the name, reset WiFi with ``WiFi.mode(WIFI_MODE_NULL)``,
+    To change the name, reset Wi-Fi with ``WiFi.mode(WIFI_MODE_NULL)``,
     then proceed with ``WiFi.setHostname(...)`` and restart WiFi from scratch.
 
 useStaticBuffers
@@ -619,7 +619,7 @@ WiFiScan
 
 To perform the Wi-Fi scan for networks, you can use the following functions:
 
-Start scan WiFi networks available.
+Start scan Wi-Fi networks available.
 
 .. code-block:: arduino
 
@@ -637,7 +637,7 @@ Delete last scan result from RAM.
 
     void scanDelete();
 
-Loads all infos from a scanned wifi in to the ptr parameters.
+Loads all infos from a scanned Wi-Fi in to the ptr parameters.
 
 .. code-block:: arduino
 
@@ -648,7 +648,7 @@ To see how to use the ``WiFiScan``, take a look at the ``WiFiScan.ino`` or ``WiF
 Examples
 --------
 
-`Complete list of WiFi examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi/examples>`_.
+`Complete list of Wi-Fi examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi/examples>`_.
 
 .. _ap example:
 

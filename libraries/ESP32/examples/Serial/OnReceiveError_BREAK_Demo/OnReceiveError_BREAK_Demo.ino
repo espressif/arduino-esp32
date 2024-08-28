@@ -35,7 +35,7 @@
    before reading data, if necessary.
 
    In long UART transmissions, some data will be received based on FIFO Full parameter, and whenever
-   an error ocurs, it will raise the UART error interrupt.
+   an error occurs, it will raise the UART error interrupt.
 
    This sketch produces BREAK UART error in the beginning of a transmission and also at the end of a
    transmission. It will be possible to understand the order of the events in the logs.

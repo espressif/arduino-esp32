@@ -178,12 +178,14 @@ If you are writing code that does not require Arduino to compile and you want yo
 FreeRTOS Tick Rate (Hz)
 -----------------------
 
-The Arduino component requires the FreeRTOS tick rate `CONFIG_FREERTOS_HZ` set to 1000Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
+The Arduino component requires the FreeRTOS tick rate `CONFIG_FREERTOS_HZ` set to 1000 Hz in `make menuconfig` -> `Component config` -> `FreeRTOS` -> `Tick rate`.
 
 Compilation Errors
 ------------------
 
-As commits are made to esp-idf and submodules, the codebases can develop incompatibilities that cause compilation errors.  If you have problems compiling, follow the instructions in `Issue #1142 <https://github.com/espressif/arduino-esp32/issues/1142>`_ to roll esp-idf back to a different version.
+As commits are made to ESP-IDF and submodules, the codebases can develop incompatibilities that cause compilation errors.
+If you have problems compiling, follow the instructions in `Issue #1142 <https://github.com/espressif/arduino-esp32/issues/1142>`_
+to roll ESP-IDF back to a different version.
 
 Adding arduino library
 ----------------------

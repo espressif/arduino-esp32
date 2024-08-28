@@ -69,7 +69,7 @@ void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp
       } else {
         m_value = "";
       }
-      // Unlock the semaphore to ensure that the requestor of the data can continue.
+      // Unlock the semaphore to ensure that the requester of the data can continue.
       m_semaphoreReadDescrEvt.give();
       break;
 

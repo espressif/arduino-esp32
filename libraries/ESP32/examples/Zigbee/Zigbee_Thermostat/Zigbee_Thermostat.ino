@@ -279,7 +279,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
           esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_FORMATION);
         } else {
           log_i("Device rebooted");
-          log_i("Openning network for joining for %d seconds", 180);
+          log_i("Opening network for joining for %d seconds", 180);
           esp_zb_bdb_open_network(180);
         }
       } else {

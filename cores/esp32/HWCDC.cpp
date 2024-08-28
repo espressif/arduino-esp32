@@ -443,7 +443,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
       if (connected) {
         usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
       }
-      // tracks CDC trasmission progress to avoid hanging if CDC is unplugged while still sending data
+      // tracks CDC transmission progress to avoid hanging if CDC is unplugged while still sending data
       size_t last_toSend = to_send;
       uint32_t tries = tx_timeout_ms;  // waits 1ms per sending data attempt, in case CDC is unplugged
       while (connected && to_send) {
@@ -479,7 +479,7 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
         }
       }
     }
-    // CDC was diconnected while sending data ==> flush the TX buffer keeping the last data
+    // CDC was disconnected while sending data ==> flush the TX buffer keeping the last data
     if (to_send && !usb_serial_jtag_ll_txfifo_writable()) {
       connected = false;
       flushTXBuffer(buffer + so_far, to_send);

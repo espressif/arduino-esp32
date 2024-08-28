@@ -91,9 +91,9 @@ void testAndReport(uint8_t fifoFull) {
     }
   }
 
-  uint32_t pastTime = millis() - now;
+  uint32_t pastTime = millis() - now;  // codespell:ignore pasttime
   Serial.printf("\nIt has sent %d bytes from Serial1 TX to Serial1 RX\n", sentBytes);
-  Serial.printf("It took %lu milliseconds to read %d bytes\n", pastTime, bytesReceived);
+  Serial.printf("It took %lu milliseconds to read %d bytes\n", pastTime, bytesReceived);  // codespell:ignore pasttime
   Serial.printf("Per execution Serial.read() number of bytes data and time information:\n");
   for (i = 0; i < DATA_SIZE; i++) {
     Serial.printf("#%03d - Received %03lu bytes after %lu ms.\n", i, bytesJustReceived[i], i > 0 ? timeStamp[i] - timeStamp[i - 1] : timeStamp[i] - now);

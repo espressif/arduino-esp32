@@ -90,7 +90,7 @@ bool otDeviceSetup(const char **otSetupCmds, uint8_t nCmds1, const char **otCoap
 }
 
 void setupNode() {
-  // tries to set the Thread Network node and only returns when succeded
+  // tries to set the Thread Network node and only returns when succeeded
   bool startedCorrectly = false;
   while (!startedCorrectly) {
     startedCorrectly |=

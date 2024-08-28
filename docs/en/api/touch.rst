@@ -36,7 +36,7 @@ touchSetCycles
 ^^^^^^^^^^^^^^
 
 This function is used to set cycles that measurement operation takes. The result from touchRead, threshold and detection accuracy depend on these values.
-The defaults are setting touchRead to take ~0.5ms.
+The defaults are setting touchRead to take ~0.5 ms.
 
 .. code-block:: arduino
 
@@ -112,8 +112,8 @@ the threshold value. Default is lower.
 
     void touchInterruptSetThresholdDirection(bool mustbeLower);
 
-TOUCH API specific for ESP32S2 and ESP32S3 chip (TOUCH_V2)
-**********************************************************
+TOUCH API specific for ESP32-S2 and ESP32-S3 chip (TOUCH_V2)
+************************************************************
 
 touchInterruptGetLastStatus
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

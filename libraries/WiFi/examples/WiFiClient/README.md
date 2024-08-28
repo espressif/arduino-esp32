@@ -4,7 +4,7 @@ This example demonstrates reading and writing data from and to a web service whi
 
 # Supported Targets
 
-Currently, this example supports all SoC with WiFi.
+Currently, this example supports all SoC with Wi-Fi.
 
 
 | Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
@@ -18,7 +18,7 @@ Please note that this public channel can be accessed by anyone and it is possibl
 
 ### Configure the Project
 
-Change `SSID` and `password` to connect to your WiFi.
+Change `SSID` and `password` to connect to your Wi-Fi.
 Default values will allow you to use this example without any changes. If you want to use your own channel and you don't have one already follow these steps:
 
 * Create an account on [thingspeak.com](https://www.thingspeak.com).
@@ -79,7 +79,7 @@ load:0x403cc710,len:0x918
 load:0x403ce710,len:0x24e4
 entry 0x403cc710
 ```
-Follows the setup output where connection to your WiFi happens:
+Follows the setup output where connection to your Wi-Fi happens:
 ```
 ******************************************************
 Connecting to your-ssid
@@ -139,7 +139,7 @@ After this the write+read log repeat every 10 seconds.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 
-* **WiFi not connected:** Check the SSID and password and also that the signal has sufficient strength.
+* **Wi-Fi not connected:** Check the SSID and password and also that the signal has sufficient strength.
 * **400 Bad Request:** Check the writeApiKey.
 * **404 Not Found:** Check the channel ID.
 * **No data on chart / reading NULL:** Data must be sent as an integer, without commas.
