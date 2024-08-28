@@ -1,6 +1,6 @@
 # WiFiScan Example
 
-This example demonstrates how to use the WiFi library to scan available WiFi networks and print the results.
+This example demonstrates how to use the Wi-Fi library to scan available Wi-Fi networks and print the results.
 
 ## Supported Targets
 

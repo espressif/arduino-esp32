@@ -45,7 +45,7 @@ struct uart_struct_t {
   bool has_peek;                   // flag to indicate that there is a peek byte pending to be read
   uint8_t peek_byte;               // peek byte that has been read but not consumed
   QueueHandle_t uart_event_queue;  // export it by some uartGetEventQueue() function
-  // configuration data:: Arduino API tipical data
+  // configuration data:: Arduino API typical data
   int8_t _rxPin, _txPin, _ctsPin, _rtsPin;  // UART GPIOs
   uint32_t _baudrate, _config;              // UART baudrate and config
   // UART ESP32 specific data
@@ -508,8 +508,8 @@ uart_t *uartBegin(
 #if SOC_UART_SUPPORT_XTAL_CLK
   uart_config.source_clk = UART_SCLK_XTAL;  // valid for C2, S3, C3, C6, H2 and P4
 #elif SOC_UART_SUPPORT_REF_TICK
-  if (baudrate <= 1000000) {
-    uart_config.source_clk = UART_SCLK_REF_TICK;  // valid for ESP32, S2 - MAX supported baud rate is 1MHz
+  if (baudrate <= 250000) {
+    uart_config.source_clk = UART_SCLK_REF_TICK;  // valid for ESP32, S2 - MAX supported baud rate is 250 Kbps
   } else {
     uart_config.source_clk = UART_SCLK_APB;  // baudrate may change with the APB Frequency!
   }

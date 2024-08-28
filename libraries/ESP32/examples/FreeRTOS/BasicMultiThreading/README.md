@@ -32,7 +32,7 @@ It is also worth mentioning that two or more tasks running the same function wil
 ```
   - **pxTaskCode**      is the name of your function which will run as a task
   - **pcName**          is a string of human-readable descriptions for your task
-  - **usStackDepth**    is the number of words (word = 4B) available to the task. If you see an error similar to this "Debug exception reason: Stack canary watchpoint triggered (Task Blink)" you should increase it
+  - **usStackDepth**    is the number of words (word = 4 B) available to the task. If you see an error similar to this "Debug exception reason: Stack canary watchpoint triggered (Task Blink)" you should increase it
   - **pvParameters**    is a parameter that will be passed to the task function - it must be explicitly converted to (void*) and in your function explicitly converted back to the intended data type.
   - **uxPriority**      is a number from 0 to configMAX_PRIORITIES which determines how the FreeRTOS will allow the tasks to run. 0 is the lowest priority.
   - **pxCreatedTask**   task handle is a pointer to the task which allows you to manipulate the task - delete it, suspend and resume.

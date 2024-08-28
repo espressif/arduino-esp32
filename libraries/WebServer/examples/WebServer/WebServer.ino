@@ -243,7 +243,7 @@ void setup(void) {
 
   TRACE("Starting WebServer example...\n");
 
-  // ----- check partitions for finding the fileystem type -----
+  // ----- check partitions for finding the filesystem type -----
   esp_partition_iterator_t i;
 
   i = esp_partition_find(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, nullptr);

@@ -1,6 +1,6 @@
 # NetworkClientConnect Example
 
-This example demonstrates how to connect to the WiFi and manage the status and disconnection from STA.
+This example demonstrates how to connect to the Wi-Fi and manage the status and disconnection from STA.
 
 # Supported Targets
 

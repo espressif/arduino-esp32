@@ -1,4 +1,4 @@
-// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,17 +20,17 @@
  */
 
 // The effect seen in (Espressif devkits) ESP32C6, ESP32H2, ESP32C3, ESP32S2 and ESP32S3 is like a Blink of RGB LED
-#ifdef PIN_NEOPIXEL
-#define BUILTIN_RGBLED_PIN PIN_NEOPIXEL
+#ifdef PIN_LED_RGB
+#define BUILTIN_RGBLED_PIN PIN_LED_RGB
 #else
-#define BUILTIN_RGBLED_PIN 21  // ESP32 has no builtin RGB LED (PIN_NEOPIXEL)
+#define BUILTIN_RGBLED_PIN 21  // ESP32 has no builtin RGB LED (PIN_LED_RGB)
 #endif
 
 #define NR_OF_LEDS     8 * 4
 #define NR_OF_ALL_BITS 24 * NR_OF_LEDS
 
 //
-// Note: This example uses Neopixel LED board, 32 LEDs chained one
+// Note: This example uses a board with 32 WS2812b LEDs chained one
 //      after another, each RGB LED has its 24 bit value
 //      for color configuration (8b for each color)
 //

@@ -1101,7 +1101,7 @@ static esp_err_t win_handler(httpd_req_t *req) {
   int offsetX = parse_get_var(buf, "offx", 0);
   int offsetY = parse_get_var(buf, "offy", 0);
   int totalX = parse_get_var(buf, "tx", 0);
-  int totalY = parse_get_var(buf, "ty", 0);
+  int totalY = parse_get_var(buf, "ty", 0);  // codespell:ignore totaly
   int outputX = parse_get_var(buf, "ox", 0);
   int outputY = parse_get_var(buf, "oy", 0);
   bool scale = parse_get_var(buf, "scale", 0) == 1;
@@ -1110,10 +1110,10 @@ static esp_err_t win_handler(httpd_req_t *req) {
 
   log_i(
     "Set Window: Start: %d %d, End: %d %d, Offset: %d %d, Total: %d %d, Output: %d %d, Scale: %u, Binning: %u", startX, startY, endX, endY, offsetX, offsetY,
-    totalX, totalY, outputX, outputY, scale, binning
+    totalX, totalY, outputX, outputY, scale, binning  // codespell:ignore totaly
   );
   sensor_t *s = esp_camera_sensor_get();
-  int res = s->set_res_raw(s, startX, startY, endX, endY, offsetX, offsetY, totalX, totalY, outputX, outputY, scale, binning);
+  int res = s->set_res_raw(s, startX, startY, endX, endY, offsetX, offsetY, totalX, totalY, outputX, outputY, scale, binning);  // codespell:ignore totaly
   if (res) {
     return httpd_resp_send_500(req);
   }

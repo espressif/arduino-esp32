@@ -179,7 +179,7 @@ void initArduino(void);
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
 unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout);
 
-uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
+uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);  // codespell:ignore shiftin
 void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 
 #ifdef __cplusplus

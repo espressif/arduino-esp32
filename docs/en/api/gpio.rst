@@ -9,7 +9,7 @@ One of the most used and versatile peripheral in a microcontroller is the GPIO. 
 
 GPIO stands to General Purpose Input Output, and is responsible to control or read the state of a specific pin in the digital world. For example, this peripheral is widely used to create the LED blinking or to read a simple button.
 
-.. note:: There are some GPIOs with special restrictions, and not all GPIOs are accessible through the developemnt board. For more information about it, see the corresponding board pin layout information.
+.. note:: There are some GPIOs with special restrictions, and not all GPIOs are accessible through the development board. For more information about it, see the corresponding board pin layout information.
 
 GPIOs Modes
 ***********

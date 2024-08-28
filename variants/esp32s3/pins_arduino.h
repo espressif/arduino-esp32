@@ -10,12 +10,12 @@
 // Some boards have too low voltage on this pin (board design bug)
 // Use different pin with 3V and connect with 48
 // and change this setup for the chosen pin (for example 38)
-#define PIN_NEOPIXEL 48
+#define PIN_RGB_LED 48
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_NEOPIXEL;
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite()
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
 #define RGB_BUILTIN    LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 

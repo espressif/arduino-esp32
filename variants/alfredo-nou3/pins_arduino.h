@@ -5,7 +5,7 @@
 #define USB_PID          0x0003
 #define USB_MANUFACTURER "Alfredo"
 #define USB_PRODUCT      "NoU3"
-#define USB_SERIAL       ""  // Empty string for MAC adddress
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 // User LED
 #define LED_BUILTIN 45
