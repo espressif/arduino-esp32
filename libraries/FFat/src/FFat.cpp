@@ -46,7 +46,10 @@ bool F_Fat::begin(bool formatOnFail, const char *basePath, uint8_t maxOpenFiles,
   }
 
   esp_vfs_fat_mount_config_t conf = {
-    .format_if_mount_failed = formatOnFail, .max_files = maxOpenFiles, .allocation_unit_size = CONFIG_WL_SECTOR_SIZE, .disk_status_check_enable = false,
+    .format_if_mount_failed = formatOnFail,
+    .max_files = maxOpenFiles,
+    .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
+    .disk_status_check_enable = false,
     .use_one_fat = false
   };
   esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(basePath, partitionLabel, &conf, &_wl_handle);
@@ -99,8 +102,7 @@ bool F_Fat::format(bool full_wipe, char *partitionLabel) {
   }
   // Now do a mount with format_if_fail (which it will)
   esp_vfs_fat_mount_config_t conf = {
-    .format_if_mount_failed = true, .max_files = 1, .allocation_unit_size = CONFIG_WL_SECTOR_SIZE, .disk_status_check_enable = false,
-    .use_one_fat = false
+    .format_if_mount_failed = true, .max_files = 1, .allocation_unit_size = CONFIG_WL_SECTOR_SIZE, .disk_status_check_enable = false, .use_one_fat = false
   };
   result = esp_vfs_fat_spiflash_mount_rw_wl("/format_ffat", partitionLabel, &conf, &temp_handle);
   esp_vfs_fat_spiflash_unmount_rw_wl("/format_ffat", temp_handle);
