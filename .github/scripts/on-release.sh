@@ -282,7 +282,6 @@ echo
 ##
 ## TEMP WORKAROUND FOR RV32 LONG PATH ON WINDOWS
 ##
-LIBS_PROJ_NAME="esp32-arduino-libs"
 RVTC_VERSION=`cat $PACKAGE_JSON_TEMPLATE | jq -r ".packages[0].platforms[0].toolsDependencies[] | select(.name == \"$RVTC_NAME\") | .version" | cut -d '_' -f 2`
 # RVTC_VERSION=`date -j -f '%Y%m%d' "$RVTC_VERSION" '+%y%m'` # MacOS
 RVTC_VERSION=`date -d "$RVTC_VERSION" '+%y%m'`
@@ -303,8 +302,8 @@ rvtc_jq_arg="\
     (.packages[0].platforms[0].toolsDependencies[] | select(.name==\"$XS3TC_NAME\")).name = \"$XS3TC_NEW_NAME\" |\
     (.packages[0].tools[] | select(.name==\"$XS3TC_NAME\")).version = \"$RVTC_VERSION\" |\
     (.packages[0].tools[] | select(.name==\"$XS3TC_NAME\")).name = \"$XS3TC_NEW_NAME\""
-cat "$PACKAGE_JSON_TEMPLATE" | jq "$rvtc_jq_arg" > "$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
-PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-$LIBS_PROJ_NAME-rvfix.json"
+cat "$PACKAGE_JSON_TEMPLATE" | jq "$rvtc_jq_arg" > "$OUTPUT_DIR/package-rvfix.json"
+PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-rvfix.json"
 
 ##
 ## PACKAGE JSON
