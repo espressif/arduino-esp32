@@ -127,7 +127,7 @@ static void esp_zb_task(void *pvParameters) {
   esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
 
   //Erase NVRAM before creating connection to new Coordinator
-  esp_zb_nvram_erase_at_start(true);  //Comment out this line to erase NVRAM data if you are conneting to new Coordinator
+  esp_zb_nvram_erase_at_start(true);  //Comment out this line to erase NVRAM data if you are connecting to new Coordinator
 
   ESP_ERROR_CHECK(esp_zb_start(false));
   esp_zb_main_loop_iteration();

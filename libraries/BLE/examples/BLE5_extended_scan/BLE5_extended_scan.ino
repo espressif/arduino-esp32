@@ -25,7 +25,7 @@ class MyBLEExtAdvertisingCallbacks : public BLEExtAdvertisingCallbacks {
       // here we can receive regular advertising data from BLE4.x devices
       Serial.println("BLE4.2");
     } else {
-      // here we will get extended advertising data that are advertised over data channel by BLE5 divices
+      // here we will get extended advertising data that are advertised over data channel by BLE5 devices
       Serial.printf("Ext advertise: data_le: %d, data_status: %d \n", report.adv_data_len, report.data_status);
     }
   }

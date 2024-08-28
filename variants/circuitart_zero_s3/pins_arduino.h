@@ -7,7 +7,7 @@
 #define USB_PID          0x80DB
 #define USB_MANUFACTURER "CircuitART"
 #define USB_PRODUCT      "ZeroS3"
-#define USB_SERIAL       ""  // Empty string for MAC adddress
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 // User LED
 #define LED_BUILTIN 46

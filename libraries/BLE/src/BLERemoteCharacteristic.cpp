@@ -177,7 +177,7 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
       }
 
       // At this point, we have determined that the event is for us, so now we save the value
-      // and unlock the semaphore to ensure that the requestor of the data can continue.
+      // and unlock the semaphore to ensure that the requester of the data can continue.
       if (evtParam->read.status == ESP_GATT_OK) {
         m_value = String((char *)evtParam->read.value, evtParam->read.value_len);
         if (m_rawData != nullptr) {

@@ -45,7 +45,7 @@ struct uart_struct_t {
   bool has_peek;                   // flag to indicate that there is a peek byte pending to be read
   uint8_t peek_byte;               // peek byte that has been read but not consumed
   QueueHandle_t uart_event_queue;  // export it by some uartGetEventQueue() function
-  // configuration data:: Arduino API tipical data
+  // configuration data:: Arduino API typical data
   int8_t _rxPin, _txPin, _ctsPin, _rtsPin;  // UART GPIOs
   uint32_t _baudrate, _config;              // UART baudrate and config
   // UART ESP32 specific data

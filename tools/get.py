@@ -171,7 +171,7 @@ def is_latest_version(destination, dirname, rename_to, cfile, checksum):
 
     except Exception as e:
         if verbose:
-            print(f"Falied to verify version for {rename_to}: {e}")
+            print(f"Failed to verify version for {rename_to}: {e}")
 
     return False
 
