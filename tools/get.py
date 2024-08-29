@@ -147,7 +147,36 @@ def verify_files(filename, destination, rename_to):
     return True
 
 
-def unpack(filename, destination, force_extract):  # noqa: C901
+def is_latest_version(destination, dirname, rename_to, cfile, checksum):
+    current_version = None
+    expected_version = None
+
+    try:
+        expected_version = checksum
+        with open(os.path.join(destination, rename_to, ".package_checksum"), "r") as f:
+            current_version = f.read()
+
+        if verbose:
+            print(f"\nTool: {rename_to}")
+            print(f"Current version: {current_version}")
+            print(f"Expected version: {expected_version}")
+
+        if current_version and current_version == expected_version:
+            if verbose:
+                print("Latest version already installed. Skipping extraction")
+            return True
+
+        if verbose:
+            print("New version detected")
+
+    except Exception as e:
+        if verbose:
+            print(f"Failed to verify version for {rename_to}: {e}")
+
+    return False
+
+
+def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     dirname = ""
     cfile = None  # Compressed file
     file_is_corrupted = False
@@ -196,13 +225,17 @@ def unpack(filename, destination, force_extract):  # noqa: C901
         rename_to = "esp32-arduino-libs"
 
     if not force_extract:
-        if verify_files(filename, destination, rename_to):
-            print(" Files ok. Skipping Extraction")
-            return True
-        else:
-            print(" Extracting archive...")
+        if is_latest_version(destination, dirname, rename_to, cfile, checksum):
+            if verify_files(filename, destination, rename_to):
+                print(" Files ok. Skipping Extraction")
+                return True
+        print(" Extracting archive...")
     else:
         print(" Forcing extraction")
+
+    if os.path.isdir(os.path.join(destination, rename_to)):
+        print("Removing existing {0} ...".format(rename_to))
+        shutil.rmtree(os.path.join(destination, rename_to), ignore_errors=True)
 
     if filename.endswith("tar.gz"):
         if not cfile:
@@ -221,9 +254,10 @@ def unpack(filename, destination, force_extract):  # noqa: C901
 
     if rename_to != dirname:
         print("Renaming {0} to {1} ...".format(dirname, rename_to))
-        if os.path.isdir(rename_to):
-            shutil.rmtree(rename_to)
         shutil.move(dirname, rename_to)
+
+    with open(os.path.join(destination, rename_to, ".package_checksum"), "w") as f:
+        f.write(checksum)
 
     if verify_files(filename, destination, rename_to):
         print(" Files extracted successfully.")
@@ -324,11 +358,11 @@ def get_tool(tool, force_download, force_extract):
         print("Tool {0} already downloaded".format(archive_name))
         sys.stdout.flush()
 
-    if "esp32-arduino-libs" not in archive_name and sha256sum(local_path) != checksum:
+    if sha256sum(local_path) != checksum:
         print("Checksum mismatch for {0}".format(archive_name))
         return False
 
-    return unpack(local_path, ".", force_extract)
+    return unpack(local_path, ".", force_extract, checksum)
 
 
 def load_tools_list(filename, platform):
@@ -379,21 +413,17 @@ def identify_platform():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download and extract tools")
 
-    parser.add_argument("-v", "--verbose", type=bool, default=False, required=False, help="Print verbose output")
+    parser.add_argument("-v", "--verbose", action="store_true", required=False, help="Print verbose output")
+
+    parser.add_argument("-d", "--force_download", action="store_true", required=False, help="Force download of tools")
+
+    parser.add_argument("-e", "--force_extract", action="store_true", required=False, help="Force extraction of tools")
 
     parser.add_argument(
-        "-d", "--force_download", type=bool, default=False, required=False, help="Force download of tools"
+        "-f", "--force_all", action="store_true", required=False, help="Force download and extraction of tools"
     )
 
-    parser.add_argument(
-        "-e", "--force_extract", type=bool, default=False, required=False, help="Force extraction of tools"
-    )
-
-    parser.add_argument(
-        "-f", "--force_all", type=bool, default=False, required=False, help="Force download and extraction of tools"
-    )
-
-    parser.add_argument("-t", "--test", type=bool, default=False, required=False, help=argparse.SUPPRESS)
+    parser.add_argument("-t", "--test", action="store_true", required=False, help=argparse.SUPPRESS)
 
     args = parser.parse_args()
 

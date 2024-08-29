@@ -10,7 +10,7 @@
 // This board uses pin mapping but the build system has disabled it
 #warning The build system forces the Arduino API to use GPIO numbers on a board that has custom pin mapping.
 #elif defined(BOARD_USES_HW_GPIO_NUMBERS)
-// The user has chosen to disable pin mappin.
+// The user has chosen to disable pin mapping.
 #warning The Arduino API will use GPIO numbers for this build.
 #endif
 

@@ -52,7 +52,7 @@ void Device::addCb(deviceWriteCb writeCb, deviceReadCb readCb) {
 esp_err_t Device::addDeviceAttr(const char *attr_name, const char *val) {
   err = esp_rmaker_device_add_attribute(getDeviceHandle(), attr_name, val);
   if (err != ESP_OK) {
-    log_e("Failed to add attriute to the device");
+    log_e("Failed to add attribute to the device");
     return err;
   }
   return ESP_OK;

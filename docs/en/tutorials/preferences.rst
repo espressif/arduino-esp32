@@ -70,16 +70,16 @@ Preferences directly supports the following data types:
    +-------------------+-------------------+---------------+
    | ULong             | uint32_t          | 4             |
    +-------------------+-------------------+---------------+
+   | Float             | float_t           | 4             |
+   +-------------------+-------------------+---------------+
    | Long64            | int64_t           | 8             |
    +-------------------+-------------------+---------------+
    | ULong64           | uint64_t          | 8             |
    +-------------------+-------------------+---------------+
-   | Float             | float_t           | 8             |
-   +-------------------+-------------------+---------------+
    | Double            | double_t          | 8             |
    +-------------------+-------------------+---------------+
-   |                   | const char*       |               |
-   | String            +-------------------+ variable      |
+   |                   | const char*       | variable      |
+   | String            +-------------------+               |
    |                   | String            |               |
    +-------------------+-------------------+---------------+
    | Bytes             | uint8_t           | variable      |
@@ -233,9 +233,9 @@ Like so:
 
 .. code-block:: arduino
 
-   float myFloat = myPreferences.getFloat("pi");
+   float_t myFloat = myPreferences.getFloat("pi");
 
-This will retrieve the float value from the namespace key ``"pi"`` and assign it to the float type variable ``myFloat``.
+This will retrieve the float_t value from the namespace key ``"pi"`` and assign it to the float_t type variable ``myFloat``.
 
 
 Summary
@@ -386,7 +386,7 @@ To send to the serial monitor the number of available entries the following coul
 
 The number of available entries in the key table changes depending on the number of keys in the namespace and also the dynamic size of certain types of data stored in the namespace. Details are in the `Preferences API Reference`_.
 
-Do note that the number of entries in the key table does not guarantee that there is room in the opened NVS namespace for all the data to be stored in that namespace. Refer to the espressif `Non-volatile storage library`_ documentation for full details.
+Do note that the number of entries in the key table does not guarantee that there is room in the opened NVS namespace for all the data to be stored in that namespace. Refer to the Espressif `Non-volatile storage library`_ documentation for full details.
 
 
 Determining the Type of a key-value Pair
@@ -565,7 +565,7 @@ If you need to access a different namespace, close the one before opening the ot
 
       currentNamespace.end();                              // closes 'myNamespace'
 
-      currentNamespace.begin("myOtherNamespace", false);   // opens a different Preferences namesspace.
+      currentNamespace.begin("myOtherNamespace", false);   // opens a different Preferences namespace.
          // do other stuff...
 
       currentNamespace.end();                              // closes 'myOtherNamespace'
@@ -644,7 +644,7 @@ Returning to the example above:
 
 ..
 
-will assign to the variable ``dessert`` the String ``gravel`` if an error occurred, or the value stored against the key ``favourites`` if not.
+will assign to the variable ``dessert`` the String ``gravel`` if an error occurred, or the value stored against the key ``favorites`` if not.
 
 If we predetermine a default value that is outside all legitimate values, we now have a way to test if an error actually occurred.
 

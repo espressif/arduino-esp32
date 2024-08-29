@@ -132,7 +132,7 @@ static void esp_zb_task(void *pvParameters) {
   esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
 
   //Erase NVRAM before creating connection to new Coordinator
-  esp_zb_nvram_erase_at_start(true); //Comment out this line to erase NVRAM data if you are conneting to new Coordinator
+  esp_zb_nvram_erase_at_start(true);  //Comment out this line to erase NVRAM data if you are connecting to new Coordinator
 
   ESP_ERROR_CHECK(esp_zb_start(false));
   esp_zb_main_loop_iteration();
@@ -160,7 +160,7 @@ static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t 
       if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
         light_state = message->attribute.data.value ? *(bool *)message->attribute.data.value : light_state;
         log_i("Light sets to %s", light_state ? "On" : "Off");
-        neopixelWrite(LED_PIN, 255 * light_state, 255 * light_state, 255 * light_state);  // Toggle light
+        rgbLedWrite(LED_PIN, 255 * light_state, 255 * light_state, 255 * light_state);  // Toggle light
       }
     }
   }
@@ -177,7 +177,7 @@ void setup() {
   ESP_ERROR_CHECK(esp_zb_platform_config(&config));
 
   // Init RMT and leave light OFF
-  neopixelWrite(LED_PIN, 0, 0, 0);
+  rgbLedWrite(LED_PIN, 0, 0, 0);
 
   // Start Zigbee task
   xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);

@@ -19,7 +19,7 @@ static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT + 46;  // RGB LED.
 
 #define LED            LED_BUILTIN
 #define RGB            RGB_BUILTIN
-#define NEOPIXEL       RGB_BUILTIN
+#define RGB_LED_PIN    RGB_BUILTIN
 #define RGB_BRIGHTNESS 65
 
 #define VP_EN  11  // V Peripheral Enable.

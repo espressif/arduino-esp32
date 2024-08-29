@@ -23,8 +23,8 @@ Copy Auth Key to the example
 const char insights_auth_key[] = "<ENTER YOUR AUTH KEY>";
 ```
 
-### Enter WiFi Credentials
-Inside the example sketch, enter your WiFi credentials in `WIFI_SSID` and `WIFI_PASSPHRASE` macros.
+### Enter Wi-Fi Credentials
+Inside the example sketch, enter your Wi-Fi credentials in `WIFI_SSID` and `WIFI_PASSPHRASE` macros.
 
 ### Setup
 * Build and flash the sketch and monitor the console

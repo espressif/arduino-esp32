@@ -5,7 +5,7 @@ ESP Insights
 About
 -----
 
-ESP Insights is a remote diagnostics solution that allows users to remotely monitor the health of ESP devices in the field.
+ESP Insights is a remote diagnostics solution that allows users to remotely monitor the health of Espressif devices in the field.
 
 Developers normally prefer debugging issues by physically probing them using gdb or observing the logs. This surely helps debug issues, but there are often cases wherein issues are seen only in specific environments under specific conditions. Even things like casings and placement of the product can affect the behavior. A few examples are
 
@@ -156,8 +156,8 @@ This function will return
 Insights.metrics.dumpWiFi
 *************************
 
-Dumps the wifi metrics and prints them to the console.
-This API can be used to collect wifi metrics at any given point in time.
+Dumps the Wi-Fi metrics and prints them to the console.
+This API can be used to collect Wi-Fi metrics at any given point in time.
 
 .. code-block:: arduino
 
@@ -185,8 +185,8 @@ Insights.metrics.setWiFiPeriod
 ******************************
 
 Reset the periodic interval
-By default, wifi metrics are collected every 30 seconds, this function can be used to change the interval.
-If the interval is set to 0, wifi metrics collection disabled.
+By default, Wi-Fi metrics are collected every 30 seconds, this function can be used to change the interval.
+If the interval is set to 0, Wi-Fi metrics collection disabled.
 
 .. code-block:: arduino
 

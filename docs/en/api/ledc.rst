@@ -23,6 +23,34 @@ ESP32-H2  6
 Arduino-ESP32 LEDC API
 ----------------------
 
+ledcSetCLockSource
+******************
+
+This function is used to set the LEDC peripheral clock source. Must be called before any LEDC channel is used.
+The default clock source is XTAL clock (``LEDC_USE_XTAL_CLK``) if supported by the SoC, otherwise it is AUTO clock (``LEDC_AUTO_CLK``).
+
+.. code-block:: arduino
+
+    bool ledcSetClockSource(ledc_clk_cfg_t source);
+
+* ``source`` select the clock source for LEDC peripheral.
+
+  * ``LEDC_APB_CLK`` - APB clock.
+  * ``LEDC_REF_CLK`` - REF clock.
+
+This function will return ``true`` if setting the clock source is successful, otherwise it will return ``false``.
+
+ledcGetClockSource
+******************
+
+This function is used to get the LEDC peripheral clock source.
+
+.. code-block:: arduino
+
+    ledc_clk_cfg_t ledcGetClockSource(void);
+
+This function will return the clock source for the LEDC peripheral.
+
 ledcAttach
 **********
 

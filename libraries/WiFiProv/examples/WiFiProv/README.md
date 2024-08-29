@@ -8,12 +8,16 @@ This example allows Arduino users to choose either BLE or SOFTAP as the mode of 
 
 ## APIs introduced for provisioning
 
+<!-- vale off -->
 ### WiFi.onEvent()
+<!-- vale on -->
 
 This API can be used to register a function to be called from another
-thread for WiFi Events and Provisioning Events.
+thread for Wi-Fi Events and Provisioning Events.
 
+<!-- vale off -->
 ### WiFi.beginProvision()
+<!-- vale on -->
 
 ```
 WiFi.beginProvision(void (*scheme_cb)(), wifi_prov_scheme_event_handler_t scheme_event_handler, wifi_prov_security_t security, char *pop, char *service_name, char *service_key, uint8_t *uuid);
@@ -50,7 +54,7 @@ WiFi.beginProvision(void (*scheme_cb)(), wifi_prov_scheme_event_handler_t scheme
 { 0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02 }
 ```
 
-- `reset_provisioned`: Resets previously provisioned data before initializing. Using this prevents problem when the device automatically connects to previously connected WiFi and therefore cannot be found.
+- `reset_provisioned`: Resets previously provisioned data before initializing. Using this prevents problem when the device automatically connects to previously connected Wi-Fi and therefore cannot be found.
 
 **NOTE:** If none of the parameters are specified in `beginProvision`, default provisioning takes place using SoftAP with the following settings:
 - `scheme = WIFI_PROV_SCHEME_SOFTAP`
@@ -65,7 +69,7 @@ WiFi.beginProvision(void (*scheme_cb)(), wifi_prov_scheme_event_handler_t scheme
 ## Flashing
 This sketch takes up a lot of space for the app and may not be able to flash with default setting on some chips.
 If you see Error like this: "Sketch too big"
-In Arduino IDE go to: Tools > Partition scheme > chose anything that has more than 1.4MB APP for example `No OTA (2MB APP/2MB SPIFFS)`
+In Arduino IDE go to: Tools > Partition scheme > chose anything that has more than 1.4 MB APP for example `No OTA (2MB APP/2MB SPIFFS)`
 
 ## Log Output
 - To enable debugging: Go to Tools -> Core Debug Level -> Info.

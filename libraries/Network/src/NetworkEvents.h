@@ -20,7 +20,7 @@
 #if SOC_WIFI_SUPPORTED
 #include "esp_wifi_types.h"
 #include "esp_smartconfig.h"
-#include "wifi_provisioning/wifi_config.h"
+#include "network_provisioning/network_config.h"
 #endif
 
 #if SOC_WIFI_SUPPORTED
@@ -105,7 +105,7 @@ typedef union {
   wifi_event_ap_stadisconnected_t wifi_ap_stadisconnected;
   wifi_event_ftm_report_t wifi_ftm_report;
   wifi_sta_config_t prov_cred_recv;
-  wifi_prov_sta_fail_reason_t prov_fail_reason;
+  network_prov_wifi_sta_fail_reason_t prov_fail_reason;
   smartconfig_event_got_ssid_pswd_t sc_got_ssid_pswd;
 #endif
 } arduino_event_info_t;

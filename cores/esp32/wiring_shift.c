@@ -20,7 +20,7 @@
 #include "esp32-hal.h"
 #include "wiring_private.h"
 
-uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder) {
+uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder) {  // codespell:ignore shiftin
   uint8_t value = 0;
   uint8_t i;
 

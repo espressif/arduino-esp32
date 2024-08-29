@@ -1,7 +1,7 @@
 /*
 
 This is an example how to use Touch Intrrerupts
-The sketh will tell when it is touched and then relesased as like a push-button
+The sketch will tell when it is touched and then released as like a push-button
 
 This method based on touchInterruptSetThresholdDirection() is only available for ESP32
 */

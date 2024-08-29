@@ -80,7 +80,7 @@ void setup() {
       Serial.println("Didn't find any devices");
     }
   } else {
-    Serial.println("Error on discoverAsync f.e. not workin after a \"connect\"");
+    Serial.println("Error on discoverAsync f.e. not working after a \"connect\"");
   }
 }
 

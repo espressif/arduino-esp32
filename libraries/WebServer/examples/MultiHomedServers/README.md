@@ -2,7 +2,7 @@
 
 This example tests support for multi-homed servers, i.e. a distinct web servers on distinct IP interface.
 
-It only tests the case n=2 because on a basic ESP32 device, we only have two IP interfaces, namely the WiFi station interfaces and the WiFi soft AP interface.
+It only tests the case n=2 because on a basic ESP32 device, we only have two IP interfaces, namely the Wi-Fi station interfaces and the Wi-Fi soft AP interface.
 For this to work, the WebServer and the NetworkServer classes must correctly handle the case where an IP address is passed to their relevant constructor.
 It also requires WebServer to work with multiple, simultaneous instances.
 
@@ -55,7 +55,7 @@ Currently, this example supports the following targets.
 
 ## How to Use Example
 
-Change the SSID and password in the example to your WiFi and flash the example.
+Change the SSID and password in the example to your Wi-Fi and flash the example.
 Open a serial terminal and the example will write the exact addresses with used IP addresses you can use to test the servers.
 
 * How to install the Arduino IDE: [Install Arduino IDE](https://github.com/espressif/arduino-esp32/tree/master/docs/arduino-ide).

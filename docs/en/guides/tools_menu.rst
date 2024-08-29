@@ -66,12 +66,12 @@ Flash Frequency
 
 Use this function to select the flash memory frequency. The frequency will be dependent on the memory model.
 
-* **40MHz**
-* **80MHz**
+* **40 MHz**
+* **80 MHz**
 
-If you don't know if your memory supports **80Mhz**, you can try to upload the sketch using the **80MHz** option and watch the log output via the serial monitor.
+If you don't know if your memory supports **80 MHz**, you can try to upload the sketch using the **80 MHz** option and watch the log output via the serial monitor.
 
-.. note:: In some boards/SoC, the flash frequency is automatically selected according to the flash mode. In some cases (i.e ESP32-S3), the flash frequency is up to 120MHz.
+.. note:: In some boards/SoC, the flash frequency is automatically selected according to the flash mode. In some cases (i.e ESP32-S3), the flash frequency is up to 120 MHz.
 
 Flash Mode
 **********
@@ -95,17 +95,17 @@ Depending on the application, this mode can be changed in order to increase the 
 * **OPI** - Octal I/O
     * Eight SPI pins are used to write and to read from the flash.
 
-If you don't know how the board flash is physically connected or the flash memory model, try the **QIO** at **80MHz** first.
+If you don't know how the board flash is physically connected or the flash memory model, try the **QIO** at **80 MHz** first.
 
 Flash Size
 **********
 
 This option is used to select the flash size. The flash size should be selected according to the flash model used on your board.
 
-* **2MB** (16Mb)
-* **4MB** (32Mb)
-* **8MB** (64Mb)
-* **16MB** (128Mb)
+* **2 MB** (16 Mb)
+* **4 MB** (32 Mb)
+* **8 MB** (64 Mb)
+* **16 MB** (128 Mb)
 
 If you choose the wrong size, you may have issues when selecting the partition scheme.
 
@@ -118,13 +118,13 @@ Some SoC has embedded flash. The ESP32-S3 is a good example.
 
 Example: **ESP32-S3FH4R2**
 
-This particular ESP32-S3 variant comes with 4MB Flash and 2MB PSRAM.
+This particular ESP32-S3 variant comes with 4 MB Flash and 2 MB PSRAM.
 
 **Options for Embedded Flash**
 
-* **Fx4** 4MB Flash (*QIO*)
-* **Fx8** 8MB Flash (*QIO*)
-* **V** 1.8V SPI
+* **Fx4** 4 MB Flash (*QIO*)
+* **Fx8** 8 MB Flash (*QIO*)
+* **V** 1.8 V SPI
 
 The **x** stands for the temperature range specification.
 
@@ -169,13 +169,13 @@ Some SoC has embedded PSRAM. The ESP32-S3 is a good example.
 
 Example: **ESP32-S3FH4R2**
 
-This particular ESP32-S3 comes with 4MB Flash and 2MB PSRAM.
+This particular ESP32-S3 comes with 4 MB Flash and 2 MB PSRAM.
 
 **Options for Embedded Flash and PSRAM**
 
-* **R2** 2MB PSRAM (*QSPI*)
-* **R8** 8MB PSRAM (*OPI*)
-* **V** 1.8V SPI
+* **R2** 2 MB PSRAM (*QSPI*)
+* **R8** 8 MB PSRAM (*OPI*)
+* **V** 1.8 V SPI
 
 The **x** stands for the temperature range specification.
 
