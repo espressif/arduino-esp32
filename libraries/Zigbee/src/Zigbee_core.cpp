@@ -71,7 +71,7 @@ void Zigbee_Core::addEndpoint(Zigbee_EP *ep) {
 static void esp_zb_task(void *pvParameters) {
   /* initialize Zigbee stack */
   ESP_ERROR_CHECK(esp_zb_start(false));
-  esp_zb_main_loop_iteration();
+  esp_zb_stack_main_loop();
 }
 
 // Zigbee core init function
