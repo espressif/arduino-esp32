@@ -244,7 +244,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         esp_zb_zdo_match_desc_req_param_t cmd_req;
         cmd_req.dst_nwk_addr = dev_annce_params->device_short_addr;
         cmd_req.addr_of_interest = dev_annce_params->device_short_addr;
-        log_i("Device capabilities: 0x%02x", dev_annce_params->capability);
+        log_v("Device capabilities: 0x%02x", dev_annce_params->capability);
         /*
             capability: 
             Bit 0 – Alternate PAN Coordinator
@@ -256,8 +256,6 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
             Bit 6 – Security capability
             Bit 7 – Reserved
         */
-
-        //TODO: Save the device short address and endpoint to the list ????????
 
         // for each endpoint in the list call the find_endpoint function if not bounded or allowed to bind multiple devices
         for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
@@ -278,7 +276,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         }
       }
       break;
-    default: log_i("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;
+    default: log_v("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;
   }
 }
 
@@ -338,28 +336,6 @@ void Zigbee_Core::scanDelete() {
   _scan_status = ZB_SCAN_FAILED;
 }
 
-// NOTE: Binding functions to not forget
-// void esp_zb_zdo_device_bind_req(esp_zb_zdo_bind_req_param_t *cmd_req, esp_zb_zdo_bind_callback_t user_cb, void *user_ctx)
-// {
-//     uint8_t output = 0;
-//     uint16_t outlen = sizeof(uint8_t);
-
-//     typedef struct {
-//         esp_zb_zdo_bind_req_param_t bind_req;
-//         esp_zb_user_cb_t            bind_usr;
-//     } esp_zb_zdo_bind_req_t;
-
-//     esp_zb_zdo_bind_req_t zdo_data = {
-//         .bind_usr = {
-//             .user_ctx = (uint32_t)user_ctx,
-//             .user_cb = (uint32_t)user_cb,
-//         },
-//     };
-
-//     memcpy(&zdo_data.bind_req, cmd_req, sizeof(esp_zb_zdo_bind_req_param_t));
-//     esp_host_zb_output(ESP_ZNSP_ZDO_BIND_SET, &zdo_data, sizeof(esp_zb_zdo_bind_req_t), &output, &outlen);
-// }
-
 // Function to convert enum value to string
 const char* Zigbee_Core::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
     switch (deviceId) {
@@ -386,6 +362,7 @@ const char* Zigbee_Core::getDeviceTypeString(esp_zb_ha_standard_devices_t device
         case ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID: return "Color Dimmable Light Device";
         case ESP_ZB_HA_DIMMER_SWITCH_DEVICE_ID: return "Dimmer Switch Device";
         case ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID: return "Color Dimmer Switch Device";
+        case ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID: return "Light Sensor";
         case ESP_ZB_HA_SHADE_DEVICE_ID: return "Shade";
         case ESP_ZB_HA_SHADE_CONTROLLER_DEVICE_ID: return "Shade controller";
         case ESP_ZB_HA_WINDOW_COVERING_DEVICE_ID: return "Window Covering client";

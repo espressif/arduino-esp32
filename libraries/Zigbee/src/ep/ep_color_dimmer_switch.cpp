@@ -5,8 +5,6 @@ ZigbeeColorDimmerSwitch* ZigbeeColorDimmerSwitch::_instance = nullptr;
 
 ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _device_id = ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID;
-    _version = 0;
-
     _instance = this; // Set the static pointer to this instance
 
     esp_zb_color_dimmable_switch_cfg_t switch_cfg = ESP_ZB_DEFAULT_COLOR_DIMMABLE_SWITCH_CONFIG();
@@ -16,7 +14,7 @@ ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : Zigbee_EP(e
         .endpoint = _endpoint,
         .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID,
         .app_device_id = ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID,
-        .app_device_version = _version
+        .app_device_version = 0
     };
 }
 
@@ -42,14 +40,16 @@ void ZigbeeColorDimmerSwitch::bind_cb(esp_zb_zdp_status_t zdo_status, void *user
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
         log_i("Bound successfully!");
         if (user_ctx) {
-            light_bulb_device_params_t *light = (light_bulb_device_params_t *)user_ctx;
+            zb_device_params_t *light = (zb_device_params_t *)user_ctx;
             //Read manufacturer and model automatically after successful bind
             _instance->readManufacturerAndModel(light->endpoint, light->short_addr);
             log_i("The light originating from address(0x%x) on endpoint(%d)", light->short_addr, light->endpoint);
             //TODO: call user method to notify about the light and pass all the info ????
-            _instance->_bound_lights.push_back(light);
+            _instance->_bound_devices.push_back(light);
         }
         _is_bound = true;
+    } else {
+        log_e("Binding failed!");
     }
 }
 
@@ -57,12 +57,12 @@ void ZigbeeColorDimmerSwitch::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t a
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
         log_d("Found light endpoint");
         esp_zb_zdo_bind_req_param_t bind_req;
-        light_bulb_device_params_t *light = (light_bulb_device_params_t *)malloc(sizeof(light_bulb_device_params_t));
+        zb_device_params_t *light = (zb_device_params_t *)malloc(sizeof(zb_device_params_t));
         light->endpoint = endpoint;
         light->short_addr = addr;
         esp_zb_ieee_address_by_short(light->short_addr, light->ieee_addr);
         esp_zb_get_long_address(bind_req.src_address);
-        bind_req.src_endp = _endpoint; //_dev_endpoint;
+        bind_req.src_endp = _endpoint;
         bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_ON_OFF;
         bind_req.dst_addr_mode = ESP_ZB_ZDO_BIND_DST_ADDR_MODE_64_BIT_EXTENDED;
         memcpy(bind_req.dst_address_u.addr_long, light->ieee_addr, sizeof(esp_zb_ieee_addr_t));
@@ -93,16 +93,7 @@ void ZigbeeColorDimmerSwitch::find_endpoint(esp_zb_zdo_match_desc_req_param_t *c
         .num_out_clusters = 3,
         .cluster_list = cluster_list,
     };
-    //esp_zb_zdo_find_color_dimmable_light(&cmd_req, user_find_cb, NULL);
     esp_zb_zdo_match_cluster(&color_dimmable_light_req, find_cb, NULL);
-}
-
-void ZigbeeColorDimmerSwitch::printBoundLights() {
-    log_i("Bound lights:");
-    for(const auto& light : _bound_lights) {
-        log_i("Light on endpoint %d, short address: 0x%x", light->endpoint, light->short_addr);
-        print_ieee_addr(light->ieee_addr);
-    }
 }
 
 // Methods to control the light

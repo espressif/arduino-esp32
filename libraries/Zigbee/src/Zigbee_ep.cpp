@@ -18,6 +18,10 @@ Zigbee_EP::~Zigbee_EP() {
 
 }
 
+void Zigbee_EP::setVersion(uint8_t version) {
+    _ep_config.app_device_version = version;
+}
+
 void Zigbee_EP::setManufacturerAndModel(const char *name, const char *model) {
     // Convert manufacturer to ZCL string
     size_t length = strlen(name);
@@ -72,6 +76,14 @@ void Zigbee_EP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) 
     read_req.attr_field = attributes;
 
     esp_zb_zcl_read_attr_cmd_req(&read_req);
+}
+
+void Zigbee_EP::printBoundDevices() {
+    log_i("Bound devices:");
+    for(const auto& device : _bound_devices) {
+        log_i("Device on endpoint %d, short address: 0x%x", device->endpoint, device->short_addr);
+        print_ieee_addr(device->ieee_addr);
+    }
 }
 
 void Zigbee_EP::readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {

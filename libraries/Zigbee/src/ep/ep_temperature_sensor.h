@@ -13,8 +13,8 @@ class ZigbeeTempSensor : public Zigbee_EP {
     // Set the temperature value in 0,01°C
     void setTemperature(float value);
 
-    // Set the min and max value for the temperature sensor in °C
-    void setMinMaxValue(int16_t min, int16_t max);
+    // Set the min and max value for the temperature sensor in 0,01°C
+    void setMinMaxValue(float min, float max);
 
     // Set the tolerance value for the temperature sensor in 0,01°C
     void setTolerance(float tolerance);

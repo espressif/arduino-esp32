@@ -5,8 +5,6 @@ ZigbeeSwitch* ZigbeeSwitch::_instance = nullptr;
 
 ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _device_id = ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID;
-    _version = 0;
-
     _instance = this; // Set the static pointer to this instance
 
     esp_zb_on_off_switch_cfg_t switch_cfg = ESP_ZB_DEFAULT_ON_OFF_SWITCH_CONFIG();
@@ -16,7 +14,7 @@ ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : Zigbee_EP(endpoint) {
         .endpoint = _endpoint,
         .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID,
         .app_device_id = ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID,
-        .app_device_version = _version
+        .app_device_version = 0
     };
 }
 
@@ -24,12 +22,12 @@ void ZigbeeSwitch::bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
         log_i("Bound successfully!");
         if (user_ctx) {
-            light_bulb_device_params_t *light = (light_bulb_device_params_t *)user_ctx;
+            zb_device_params_t *light = (zb_device_params_t *)user_ctx;
             //Read manufacturer and model automatically after successful bind
             _instance->readManufacturerAndModel(light->endpoint, light->short_addr);
             log_i("The light originating from address(0x%x) on endpoint(%d)", light->short_addr, light->endpoint);
             //TODO: call user method to notify about the light and pass all the info ????
-            _instance->_bound_lights.push_back(light);
+            _instance->_bound_devices.push_back(light);
             //free(light);
         }
         _is_bound = true;
@@ -40,7 +38,7 @@ void ZigbeeSwitch::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
         log_d("Found light endpoint");
         esp_zb_zdo_bind_req_param_t bind_req;
-        light_bulb_device_params_t *light = (light_bulb_device_params_t *)malloc(sizeof(light_bulb_device_params_t));
+        zb_device_params_t *light = (zb_device_params_t *)malloc(sizeof(zb_device_params_t));
         light->endpoint = endpoint;
         light->short_addr = addr;
         esp_zb_ieee_address_by_short(light->short_addr, light->ieee_addr);
@@ -73,30 +71,7 @@ void ZigbeeSwitch::find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
     esp_zb_zdo_match_cluster(&on_off_req, find_cb, NULL);
 }
 
-void ZigbeeSwitch::printBoundLights() {
-    log_i("Bound lights:");
-    // for (std::list<light_bulb_device_params_t*>::iterator it = _bound_lights.begin(); it != _bound_lights.end(); ++it) {
-    //     log_i("Light on endpoint %d, short address: 0x%x", (*it)->endpoint, (*it)->short_addr);
-    //     print_ieee_addr((*it)->ieee_addr);
-    // }
-    for(const auto& light : _bound_lights) {
-        log_i("Light on endpoint %d, short address: 0x%x", light->endpoint, light->short_addr);
-        print_ieee_addr(light->ieee_addr);
-    }
-}
-// TODO: add endpont + adress optional parameters
-// typedef enum {
-//     ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT   =   0x0,  /*!< DstAddress and DstEndpoint not present,
-//                                                                     only for APSDE-DATA request and confirm  */
-//     ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT   =   0x1,  /*!< 16-bit group address for DstAddress; DstEndpoint not present */
-//     ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT             =   0x2,  /*!< 16-bit address for DstAddress and DstEndpoint present */
-//     ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT             =   0x3,  /*!< 64-bit extended address for DstAddress and DstEndpoint present */
-//     ESP_ZB_APS_ADDR_MODE_64_PRESENT_ENDP_NOT_PRESENT =   0x4,  /*!< 64-bit extended address for DstAddress, but DstEndpoint NOT present,
-//                                                                     only for APSDE indication */
-// } esp_zb_aps_address_mode_t;
-
-
-// Call to control the light
+// Methods to control the light
 void ZigbeeSwitch::lightToggle() {
     if (_is_bound) {
         esp_zb_zcl_on_off_cmd_t cmd_req;

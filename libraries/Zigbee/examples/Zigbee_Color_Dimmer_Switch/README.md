@@ -24,7 +24,7 @@ Set the Button Switch GPIO by changing the `GPIO_SWITCH` definition. By default,
 To get more information about the Espressif boards see [Espressif Development Kits](https://www.espressif.com/en/products/devkits).
 
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
-* Select the Coordinator Zigbee mode: `Tools -> Zigbee mode: Zigbee ZCZR (coordinator)`.
+* Select the Coordinator Zigbee mode: `Tools -> Zigbee mode: Zigbee ZCZR (coordinator/router)`.
 * Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 4MB with spiffs`.
 * Select the COM port: `Tools -> Port: xxx where the `xxx` is the detected COM port.
 * Optional: Set debug level to info to see logs from Zigbee stack: `Tools -> Core Debug Level: Info`.

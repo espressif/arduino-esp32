@@ -93,7 +93,7 @@ void setup() {
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
   Zigbee.begin(ZIGBEE_COORDINATOR);
   
-  Serial.println("Waiting for Light to bound to the switch");
+  Serial.println("Waiting for Temperature sensor to bound to the switch");
   //Wait for switch to bound to a light:
   while(!zbThermostat.is_bound()) 
   {

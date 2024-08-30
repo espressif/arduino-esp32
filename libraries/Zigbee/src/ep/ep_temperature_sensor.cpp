@@ -2,15 +2,15 @@
 
 ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : Zigbee_EP(endpoint) {
     _device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID;
-    _version = 0;
 
     esp_zb_temperature_sensor_cfg_t temp_sensor_cfg = ESP_ZB_DEFAULT_TEMPERATURE_SENSOR_CONFIG();
     _cluster_list = esp_zb_temperature_sensor_clusters_create(&temp_sensor_cfg);
+    
     _ep_config = {       
         .endpoint = _endpoint,
         .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID,
         .app_device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID,
-        .app_device_version = _version
+        .app_device_version = 0
     };
 }
 
@@ -18,10 +18,12 @@ static int16_t zb_temperature_to_s16(float temp) {
   return (int16_t)(temp * 100);
 }
 
-void ZigbeeTempSensor::setMinMaxValue(int16_t min, int16_t max) {
+void ZigbeeTempSensor::setMinMaxValue(float min, float max) {
+    int16_t zb_min = zb_temperature_to_s16(min);
+    int16_t zb_max = zb_temperature_to_s16(max);
     esp_zb_attribute_list_t *temp_measure_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, (void *)&min);
-    esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, (void *)&max);
+    esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, (void *)&zb_min);
+    esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, (void *)&zb_max);
 }
 
 void ZigbeeTempSensor::setTolerance(float tolerance) {
@@ -65,6 +67,7 @@ void ZigbeeTempSensor::setTemperature(float temperature) {
     int16_t zb_temperature = zb_temperature_to_s16(temperature);
     log_v("Updating temperature sensor value...");
     /* Update temperature sensor measured value */
+    log_d("Setting temperature to %d", zb_temperature);
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &zb_temperature, false);
     esp_zb_lock_release();

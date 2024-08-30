@@ -31,6 +31,12 @@ typedef struct zbstring_s {
 } ESP_ZB_PACKED_STRUCT
 zbstring_t;
 
+typedef struct zb_device_params_s {
+  esp_zb_ieee_addr_t ieee_addr;
+  uint8_t endpoint;
+  uint16_t short_addr;
+} zb_device_params_t;
+
 /* Zigbee End Device Class */
 class Zigbee_EP {
   public:
@@ -42,10 +48,12 @@ class Zigbee_EP {
 
     static uint8_t _endpoint;
     esp_zb_ha_standard_devices_t _device_id; //type of device
-    uint8_t _version;
 
     esp_zb_endpoint_config_t _ep_config;
     esp_zb_cluster_list_t *_cluster_list;
+    std::list<zb_device_params_t*> _bound_devices;
+
+    static bool _is_bound;
 
     // Set ep config and cluster list
     void set_ep_config(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {
@@ -53,8 +61,10 @@ class Zigbee_EP {
         _cluster_list = cluster_list;
     }
 
-    static bool _is_bound;
+    void setVersion(uint8_t version);
+
     static bool is_bound() { return _is_bound; }
+    void printBoundDevices();
 
     static bool _allow_multiple_binding;
     static void allowMultipleBinding(bool bind) { _allow_multiple_binding = bind; }
@@ -72,7 +82,4 @@ class Zigbee_EP {
     virtual void readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute); //already implemented
 
     friend class ZigbeeCore;
-
-    // List of Zigbee EP classes 
-    friend class ZigbeeLight;
 };

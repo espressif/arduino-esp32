@@ -5,12 +5,6 @@
 #include "Zigbee_ep.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
-typedef struct light_bulb_device_params_s {
-    esp_zb_ieee_addr_t ieee_addr;
-    uint8_t  endpoint;
-    uint16_t short_addr;
-} light_bulb_device_params_t;
-
 class ZigbeeSwitch : public Zigbee_EP {
   public:
     ZigbeeSwitch(uint8_t endpoint);
@@ -18,10 +12,6 @@ class ZigbeeSwitch : public Zigbee_EP {
 
     // save instance of the class in order to use it in static functions
     static ZigbeeSwitch* _instance;
-
-    // list of bounded on/off lights
-    std::list<light_bulb_device_params_t*> _bound_lights;
-    void printBoundLights();
 
     // methods to control the on/off light
     void lightToggle();
