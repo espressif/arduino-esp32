@@ -137,10 +137,10 @@ void loop() {
     }
   }
 
-  // print the bound lights every 30 seconds
+  // print the bound devices (lights) every 30 seconds
   static uint32_t last_print = 0;
   if (millis() - last_print > 30000) {
     last_print = millis();
-    zbSwitch.printBoundLights();
+    zbSwitch.printBoundDevices();
   }
 }

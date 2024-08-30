@@ -46,7 +46,7 @@ public:
     // Override the set_on_off function
     void setOnOff(bool value) override {
       if (value == false) {
-        neopixelWrite(LED_PIN, 0, 0, 0);  // Turn off light
+        rgbLedWrite(LED_PIN, 0, 0, 0);  // Turn off light
       } else {
         updateLight(); // Turn on light on last color and level
       }
@@ -55,7 +55,7 @@ public:
     // Override the set_level function
     void setLevel(uint8_t level) override {
       if (level == 0) {
-        neopixelWrite(LED_PIN, 0, 0, 0);  // Turn off light and dont update ratio
+        rgbLedWrite(LED_PIN, 0, 0, 0);  // Turn off light and dont update ratio
         return;
       }
       _ratio = (float)level / 255;
@@ -71,7 +71,7 @@ public:
     }
 
     void updateLight() {
-      neopixelWrite(LED_PIN, _red * _ratio, _green * _ratio, _blue * _ratio);  // Update light
+      rgbLedWrite(LED_PIN, _red * _ratio, _green * _ratio, _blue * _ratio);  // Update light
     }
 private:
     // Add your custom attributes and methods here
@@ -87,7 +87,7 @@ MyZigbeeColorLight zbColorLight = MyZigbeeColorLight(ZIGBEE_LIGHT_ENDPOINT);
 /********************* Arduino functions **************************/
 void setup() {
   // Init RMT and leave light OFF
-  neopixelWrite(LED_PIN, 0, 0, 0);
+  rgbLedWrite(LED_PIN, 0, 0, 0);
 
   // Init button for factory reset
   pinMode(BUTTON_PIN, INPUT);

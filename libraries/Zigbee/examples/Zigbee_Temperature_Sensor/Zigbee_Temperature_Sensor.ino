@@ -34,8 +34,8 @@
 #include "ep/ep_temperature_sensor.h"
 
 #define BUTTON_PIN 9  //Boot button for C6/H2
-
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
+
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
 /************************ Temp sensor *****************************/

@@ -44,7 +44,7 @@ public:
 
     // Override the set_on_off function
     void setOnOff(bool value) override {
-      neopixelWrite(LED_PIN, 255 * value, 255 * value, 255 * value);  // Toggle light
+      rgbLedWrite(LED_PIN, 255 * value, 255 * value, 255 * value);  // Toggle light
     }
 };
 
@@ -53,7 +53,7 @@ MyZigbeeLight zbLight = MyZigbeeLight(ZIGBEE_LIGHT_ENDPOINT);
 /********************* Arduino functions **************************/
 void setup() {
   // Init RMT and leave light OFF
-  neopixelWrite(LED_PIN, 0, 0, 0);
+  rgbLedWrite(LED_PIN, 0, 0, 0);
 
   // Init button for factory reset
   pinMode(BUTTON_PIN, INPUT);
