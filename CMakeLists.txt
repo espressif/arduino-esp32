@@ -112,6 +112,7 @@ set(ARDUINO_ALL_LIBRARIES
   WiFi
   WiFiProv
   Wire
+  Zigbee
   )
 
 set(ARDUINO_LIBRARY_ArduinoOTA_SRCS libraries/ArduinoOTA/src/ArduinoOTA.cpp)
@@ -239,6 +240,18 @@ set(ARDUINO_LIBRARY_WiFi_SRCS
 set(ARDUINO_LIBRARY_WiFiProv_SRCS libraries/WiFiProv/src/WiFiProv.cpp)
 
 set(ARDUINO_LIBRARY_Wire_SRCS libraries/Wire/src/Wire.cpp)
+
+set(ARDUINO_LIBRARY_Zigbee_SRCS
+  libraries/Zigbee/src/Zigbee_core.cpp
+  libraries/Zigbee/src/Zigbee_ep.cpp
+  libraries/Zigbee/src/Zigbee_handlers.cpp
+  libraries/Zigbee/src/ep/ep_color_dimmable_light.cpp
+  libraries/Zigbee/src/ep/ep_color_dimmer_switch.cpp
+  libraries/Zigbee/src/ep/ep_on_off_light.cpp
+  libraries/Zigbee/src/ep/ep_on_off_switch.cpp
+  libraries/Zigbee/src/ep/ep_temperature_sensor.cpp
+  libraries/Zigbee/src/ep/ep_thermostat.cpp
+  )
 
 set(ARDUINO_LIBRARY_BLE_SRCS
   libraries/BLE/src/BLE2901.cpp
