@@ -113,14 +113,14 @@ Examples
 #### NetworkClientInsecure
 Demonstrates usage of insecure connection using `NetworkClientSecure::setInsecure()`
 #### NetworkClientPSK
-Wifi secure connection example for ESP32 using a pre-shared key (PSK)
+Wi-Fi secure connection example for ESP32 using a pre-shared key (PSK)
 This is useful with MQTT servers instead of using a self-signed cert, tested with mosquitto.
 Running on TLS 1.2 using mbedTLS
 #### NetworkClientSecure
-Wifi secure connection example for ESP32
+Wi-Fi secure connection example for ESP32
 Running on TLS 1.2 using mbedTLS
 #### NetworkClientSecureEnterprise
-This example demonstrates a secure connection to a WiFi network using WPA/WPA2 Enterprise (for example eduroam),
+This example demonstrates a secure connection to a Wi-Fi network using WPA/WPA2 Enterprise (for example eduroam),
 and establishing a secure HTTPS connection with an external server (for example arduino.php5.sk) using the defined anonymous identity, user identity, and password.
 
 .. note::

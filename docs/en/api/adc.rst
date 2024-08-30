@@ -53,7 +53,7 @@ analogReadResolution
 ^^^^^^^^^^^^^^^^^^^^
 
 This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095)
-for all chips except ESP32S3 where default is 13 bits (range from 0 to 8191).
+for all chips except ESP32-S3 where default is 13 bits (range from 0 to 8191).
 When different resolution is set, the values read will be shifted to match the given resolution.
 
 Range is 1 - 16 .The default value will be used, if this function is not used.
@@ -146,7 +146,7 @@ analogSetWidth
 .. note:: This function is only available for ESP32 chip.
 
 This function is used to set the hardware sample bits and read resolution.
-Default is 12bit (0 - 4095).
+Default is 12 bits (0 - 4095).
 Range is 9 - 12.
 
 .. code-block:: arduino
@@ -250,13 +250,13 @@ This function is used to set the attenuation for ADC continuous peripheral. For 
 
     void analogContinuousSetAtten(adc_attenuation_t attenuation);
 
-* ``attenuation`` sets the attenuation (default is 11db).
+* ``attenuation`` sets the attenuation (default is 11 dB).
 
 analogContinuousSetWidth
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 This function is used to set the hardware resolution bits.
-Default value for all chips is 12bit (0 - 4095).
+Default value for all chips is 12 bits (0 - 4095).
 
 .. note:: This function will take effect only for ESP32 chip, as it allows to set resolution in range 9-12 bits.
 

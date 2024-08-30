@@ -154,7 +154,7 @@ Get the USB power configuration.
 
     uint16_t usbPower(void);
 
-Return the current in mA. The default value is: ``0x500`` (500mA).
+Return the current in mA. The default value is: ``0x500`` (500 mA).
 
 usbClass
 ^^^^^^^^

@@ -242,7 +242,7 @@ uint64_t timerReadMicros(hw_timer_t *timer) {
   return timer_val * 1000000 / frequency;
 }
 
-uint64_t timerReadMilis(hw_timer_t *timer) {
+uint64_t timerReadMillis(hw_timer_t *timer) {
   if (timer == NULL) {
     log_e("Timer handle is NULL");
     return 0;

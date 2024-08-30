@@ -45,7 +45,7 @@
 
 static const int spiClk = 1000000;  // 1 MHz
 
-//uninitialised pointers to SPI objects
+//uninitialized pointers to SPI objects
 SPIClass *vspi = NULL;
 SPIClass *hspi = NULL;
 

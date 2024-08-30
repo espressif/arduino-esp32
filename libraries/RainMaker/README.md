@@ -41,7 +41,7 @@ NOTE : ESP RainMaker library is currently supported for ESP32 board only.
 ## ESP RainMaker Agent API
 
 ### RMaker.initNode()
-This initializes the ESP RainMaker agent, wifi and creates the node.
+This initializes the ESP RainMaker agent, Wi-Fi and creates the node.
 ```
 Node initNode(const char *name, const char *type);
 ```
@@ -67,7 +67,7 @@ esp_err_t start()
 
 > NOTE :
 > 1. ESP RainMaker agent should be initialized before this call.
-> 2. Once ESP RainMaker agent starts, compulsorily call WiFi.beginProvision() API.
+> 2. Once ESP RainMaker agent starts, compulsorily call `WiFi.beginProvision()` API.
 
 ### RMaker.stop()
 It stops the ESP RainMaker agent which was started using `RMaker.start()`.

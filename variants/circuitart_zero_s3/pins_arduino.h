@@ -7,18 +7,18 @@
 #define USB_PID          0x80DB
 #define USB_MANUFACTURER "CircuitART"
 #define USB_PRODUCT      "ZeroS3"
-#define USB_SERIAL       ""  // Empty string for MAC adddress
+#define USB_SERIAL       ""  // Empty string for MAC address
 
 // User LED
 #define LED_BUILTIN 46
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
-// Neopixel
-#define PIN_NEOPIXEL 47
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API neopixelWrite() and digitalWrite() for blinking
-#define RGB_BUILTIN    (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
+// RGB LED
+#define PIN_RGB_LED 47
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite() and digitalWrite() for blinking
+#define RGB_BUILTIN    (PIN_RGB_LED + SOC_GPIO_PIN_COUNT)
 #define RGB_BRIGHTNESS 64
-#define NEOPIXEL_NUM   1  // number of neopixels
+#define RGBLED_NUM     1  // number of RGB LEDs
 
 static const uint8_t KEY_BUILTIN = 0;
 

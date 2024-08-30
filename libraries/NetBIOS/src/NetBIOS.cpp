@@ -12,7 +12,7 @@ typedef struct {
   uint8_t flags1;
   uint8_t flags2;
   uint16_t qcount;
-  uint16_t acount;
+  uint16_t acount;  // codespell:ignore acount
   uint16_t nscount;
   uint16_t adcount;
   uint8_t name_len;
@@ -26,7 +26,7 @@ typedef struct {
   uint8_t flags1;
   uint8_t flags2;
   uint16_t qcount;
-  uint16_t acount;
+  uint16_t acount;  // codespell:ignore acount
   uint16_t nscount;
   uint16_t adcount;
   uint8_t name_len;
@@ -84,7 +84,7 @@ void NetBIOS::_onPacket(AsyncUDPPacket &packet) {
         nbnsa.flags1 = 0x85;
         nbnsa.flags2 = 0;
         append_16((void *)&nbnsa.qcount, 0);
-        append_16((void *)&nbnsa.acount, 1);
+        append_16((void *)&nbnsa.acount, 1);  // codespell:ignore acount
         append_16((void *)&nbnsa.nscount, 0);
         append_16((void *)&nbnsa.adcount, 0);
         nbnsa.name_len = question->name_len;
