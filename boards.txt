@@ -4507,8 +4507,6 @@ S_ODI_Ultra.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 lilygo_t_display.name=LilyGo T-Display
-lilygo_t_display.vid.0=0x1a86
-lilygo_t_display.pid.0=0x55d4
 
 lilygo_t_display.upload.tool=esptool_py
 lilygo_t_display.upload.tool.default=esptool_py
@@ -27574,8 +27572,6 @@ fm-devkit.menu.EraseFlash.all.upload.erase_cmd=-e
 ### Fri3d Badge 2024 (ESP32-S3-WROOM-1)
 
 fri3d_2024_esp32s3.name=Fri3d Badge 2024 (ESP32-S3-WROOM-1)
-fri3d_2024_esp32s3.vid.0=0x303a
-fri3d_2024_esp32s3.pid.0=0x1001
 
 fri3d_2024_esp32s3.bootloader.tool=esptool_py
 fri3d_2024_esp32s3.bootloader.tool.default=esptool_py
@@ -39913,8 +39909,6 @@ waveshare_esp32_s3_lcd_169.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 waveshare_esp32s3_touch_lcd_128.name=Waveshare ESP32S3 Touch LCD 128
-waveshare_esp32s3_touch_lcd_128.vid.0=0x1a86
-waveshare_esp32s3_touch_lcd_128.pid.0=0x55d3
 
 waveshare_esp32s3_touch_lcd_128.upload.tool=esptool_py
 waveshare_esp32s3_touch_lcd_128.upload.tool.default=esptool_py
@@ -40584,8 +40578,6 @@ walter.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 elecrow_crowpanel_7.name=Elecrow CrowPanel 7.0P
-elecrow_crowpanel_7.vid.0=0x1a86
-elecrow_crowpanel_7.pid.0=0x7523
 
 elecrow_crowpanel_7.upload.tool=esptool_py
 elecrow_crowpanel_7.upload.tool.default=esptool_py
