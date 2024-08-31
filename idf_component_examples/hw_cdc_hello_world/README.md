@@ -34,7 +34,7 @@ Below is the minimum list of files in the project folder.
 ```
 ├── CMakeLists.txt             Global project CMake configuration file
 ├── sdkconfig.defaults         sdkconfig setting for an Arduino project
-├── main                       
+├── main  
 │   ├── CMakeLists.txt         Arduino sketch CMake configuration file
 │   ├── idf_component.yml      List of IDF components necessary to build the project
 │   └── main.cpp               Arduino Sketch code - don't forget to add "#include <Arduino.h>" on it
@@ -60,4 +60,4 @@ list(APPEND compile_definitions "ARDUINO_USB_MODE=1")
 
 Those two lines will add a `-DSYMBOL=VAL` when compiling every source code file.
 
-In order to make sure that it is actually working correctly, the [sketch](main/main.cpp) will execute `Serial.begin();` with no baudrate, which only works for USB CDC. 
+In order to make sure that it is actually working correctly, the [sketch](main/main.cpp) will execute `Serial.begin();` with no baudrate, which only works for USB CDC.

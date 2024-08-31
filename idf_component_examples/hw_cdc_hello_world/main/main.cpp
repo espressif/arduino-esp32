@@ -3,12 +3,12 @@
 void setup() {
   // USB CDC doens't need a baud rate
   Serial.begin();
-  
+
   // wait for the Serial Monitor to be open
-  while(!Serial) {
+  while (!Serial) {
     delay(100);
   }
-  
+
   Serial.println("\r\nStarting...\r\n");
 }
 
