@@ -386,9 +386,7 @@ To run a specific hook, you can use the hook name as an argument. For example, t
 
 .. code-block:: bash
 
-    pre-commit run codespell --hook-stage manual
-
-As some hooks are only enabled to run manually, you need to use the ``--hook-stage manual`` flag to run them.
+    pre-commit run codespell
 
 If you want to run the pre-commit hooks automatically against the changed files on every ``git commit``,
 you can install the pre-commit hooks by running:
