@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 void setup() {
-  // USB CDC doens't need a baud rate
+  // USB CDC doesn't need a baud rate
   Serial.begin();
 
   // wait for the Serial Monitor to be open
