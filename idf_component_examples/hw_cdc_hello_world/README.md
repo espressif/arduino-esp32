@@ -3,7 +3,7 @@
 
 # _HW Serial USB CDC example_
 
-This is the simplest buildable example made to be used as a template for new projects running Arduino-ESP32 as an ESP-IDF component that will redefine the `Serial` interface to be attached to the USB CDC Harware Serial port.\
+This is the simplest buildable example made to be used as a template for new projects running Arduino-ESP32 as an ESP-IDF component that will redefine the `Serial` interface to be attached to the USB CDC Hardware Serial port.\
 See [arduino-esp32](https://components.espressif.com/components/espressif/arduino-esp32) in ESP Registry.
 
 ## How to use example
