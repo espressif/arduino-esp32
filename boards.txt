@@ -34347,9 +34347,9 @@ department_of_alchemy_minimain_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 Bee_Data_Logger.name=Bee Data Logger
 Bee_Data_Logger.vid.0=0x303a
-Bee_Data_Logger.pid.0=815C
+Bee_Data_Logger.pid.0=0x815C
 Bee_Data_Logger.upload_port.0.vid=0x303a
-Bee_Data_Logger.upload_port.0.pid=815C
+Bee_Data_Logger.upload_port.0.pid=0x815C
 
 Bee_Data_Logger.bootloader.tool=esptool_py
 Bee_Data_Logger.bootloader.tool.default=esptool_py
