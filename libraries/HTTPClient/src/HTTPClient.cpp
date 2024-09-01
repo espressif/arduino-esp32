@@ -371,7 +371,7 @@ void HTTPClient::disconnect(bool preserveClient) {
   if (connected()) {
     if (_client->available() > 0) {
       log_d("still data in buffer (%d), clean up.\n", _client->available());
-      _client->flush();
+      _client->clear();
     }
 
     if (_reuse && _canReuse) {
