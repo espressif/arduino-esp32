@@ -34571,7 +34571,7 @@ Bee_Motion.name=Bee Motion
 Bee_Motion.vid.0=0x303a
 Bee_Motion.pid.0=0x810D
 Bee_Motion.vid.upload_port.0.vid=0x303a
-Bee_Motion.pid.upload_port.0.vid=0x810D
+Bee_Motion.pid.upload_port.0.pid=0x810D
 
 Bee_Motion.bootloader.tool=esptool_py
 Bee_Motion.bootloader.tool.default=esptool_py
@@ -34790,7 +34790,7 @@ Bee_S3.name=Bee S3
 Bee_S3.vid.0=0x303a
 Bee_S3.pid.0=0x8110
 Bee_S3.vid.upload_port.0.vid=0x303a
-Bee_S3.pid.upload_port.0.vid=0x8110
+Bee_S3.pid.upload_port.0.pid=0x8110
 
 Bee_S3.bootloader.tool=esptool_py
 Bee_S3.bootloader.tool.default=esptool_py
