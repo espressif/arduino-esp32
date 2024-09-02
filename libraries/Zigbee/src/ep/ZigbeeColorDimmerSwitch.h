@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_IEEE802154_SUPPORTED
+
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
@@ -54,3 +57,5 @@ class ZigbeeColorDimmerSwitch : public ZigbeeEP {
     static void find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
 
 };
+
+#endif //SOC_IEEE802154_SUPPORTED

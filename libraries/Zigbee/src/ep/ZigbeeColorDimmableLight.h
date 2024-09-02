@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_IEEE802154_SUPPORTED
+
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
@@ -29,3 +32,5 @@ class ZigbeeColorDimmableLight : public ZigbeeEP {
     void attribute_set(const esp_zb_zcl_set_attr_value_message_t *message) override;
 
 };
+
+#endif //SOC_IEEE802154_SUPPORTED

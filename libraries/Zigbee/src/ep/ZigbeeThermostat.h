@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_IEEE802154_SUPPORTED
+
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
@@ -50,3 +53,5 @@ class ZigbeeThermostat : public ZigbeeEP {
         void attribute_read(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) override;
 
 };
+
+#endif //SOC_IEEE802154_SUPPORTED

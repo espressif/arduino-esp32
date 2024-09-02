@@ -1,4 +1,5 @@
 #include "ZigbeeThermostat.h"
+#if SOC_IEEE802154_SUPPORTED
 
 static float zb_s16_to_temperature(int16_t value) {
   return 1.0 * value / 100;
@@ -193,3 +194,5 @@ void ZigbeeThermostat::temperatureMax(float temp){
 void ZigbeeThermostat::temperatureTolerance(float tolerance){
     log_v("Function not overwritten, temperature tolerance: %.2f °C", tolerance);
 }
+
+#endif //SOC_IEEE802154_SUPPORTED

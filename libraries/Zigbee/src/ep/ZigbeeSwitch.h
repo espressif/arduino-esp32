@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_IEEE802154_SUPPORTED
+
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
@@ -37,13 +40,4 @@ class ZigbeeSwitch : public ZigbeeEP {
 
 };
 
-//NOTE:
-/* ON/OFF switch commands for light control */
-// typedef enum {
-//     ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID                         = 0x00, /*!< "Turn off" command. */
-//     ESP_ZB_ZCL_CMD_ON_OFF_ON_ID                          = 0x01, /*!< "Turn on" command. */
-//     ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID                      = 0x02, /*!< "Toggle state" command. */
-//     ESP_ZB_ZCL_CMD_ON_OFF_OFF_WITH_EFFECT_ID             = 0x40, /*!< "Off with effect" command. */
-//     ESP_ZB_ZCL_CMD_ON_OFF_ON_WITH_RECALL_GLOBAL_SCENE_ID = 0x41, /*!< "On with recall global scene" command. */
-//     ESP_ZB_ZCL_CMD_ON_OFF_ON_WITH_TIMED_OFF_ID           = 0x42, /*!< "On with timed off" command. */
-// } esp_zb_zcl_on_off_cmd_id_t;
+#endif //SOC_IEEE802154_SUPPORTED

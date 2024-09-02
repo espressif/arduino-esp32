@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_IEEE802154_SUPPORTED
+
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
@@ -23,3 +26,5 @@ class ZigbeeTempSensor : public ZigbeeEP {
     void setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
     void reportTemperature();
 };
+
+#endif //SOC_IEEE802154_SUPPORTED

@@ -1,4 +1,5 @@
 #include "ZigbeeColorDimmableLight.h"
+#if SOC_IEEE802154_SUPPORTED
 
 ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID;
@@ -148,3 +149,5 @@ void ZigbeeColorDimmableLight::setColorHue(uint8_t value) {
     //set color hue
     log_v("Function not overwritten, set color hue: %d", value);
 }
+
+#endif //SOC_IEEE802154_SUPPORTED

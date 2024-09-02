@@ -1,4 +1,5 @@
 #include "ZigbeeSwitch.h"
+#if SOC_IEEE802154_SUPPORTED
 
 // Initialize the static instance pointer
 ZigbeeSwitch* ZigbeeSwitch::_instance = nullptr;
@@ -237,3 +238,5 @@ void ZigbeeSwitch::lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on,
         log_e("Light not bound");
     }
 }
+
+#endif //SOC_IEEE802154_SUPPORTED

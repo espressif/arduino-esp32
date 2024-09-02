@@ -1,4 +1,5 @@
 #include "ZigbeeLight.h"
+#if SOC_IEEE802154_SUPPORTED
 
 ZigbeeLight::ZigbeeLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID;
@@ -61,3 +62,5 @@ void ZigbeeLight::setOffWaitTime(uint16_t value) {
     //set off wait time
     log_v("Function not overwritten, set off wait time: %d", value);
 }
+
+#endif //SOC_IEEE802154_SUPPORTED
