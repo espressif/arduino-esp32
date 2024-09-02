@@ -52,7 +52,7 @@ void printScannedNetworks(uint16_t networksFound) {
       Serial.print(" | ");
       Serial.printf("0x%04hx", scan_result[i].short_pan_id);
       Serial.print(" | ");
-      Serial.printf("%2ld", scan_result[i].logic_channel);
+      Serial.printf("%2d", scan_result[i].logic_channel);
       Serial.print(" | ");
       Serial.printf("%-14.14s", scan_result[i].permit_joining ? "Yes" : "No");
       Serial.print(" | ");

@@ -125,6 +125,6 @@ void loop() {
   if (millis() - last_print > 10000) {
     last_print = millis();
     int temp_percent = (int)((zbThermostat.temperature - zbThermostat.min_temperature) / (zbThermostat.max_temperature - zbThermostat.min_temperature) * 100);
-    Serial.printf("Temperature: %.2f°C (%d '%')\n", zbThermostat.temperature, temp_percent);
+    Serial.printf("Temperature: %.2f°C (%d %%)\n", zbThermostat.temperature, temp_percent);
   }
 }

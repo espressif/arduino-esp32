@@ -192,6 +192,6 @@ void loop() {
   static uint32_t last_print = 0;
   if (millis() - last_print > 10000) {
     last_print = millis();
-    zbSwitch.printBoundLights();
+    zbSwitch.printBoundDevices();
   }
 }
