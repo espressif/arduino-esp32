@@ -152,13 +152,4 @@ size_t F_Fat::freeBytes() {
   return free_sect * sect_size;
 }
 
-bool F_Fat::exists(const char *path) {
-  File f = open(path, "r", false);
-  return (f == true) && !f.isDirectory();
-}
-
-bool F_Fat::exists(const String &path) {
-  return exists(path.c_str());
-}
-
 F_Fat FFat = F_Fat(FSImplPtr(new VFSImpl()));
