@@ -87,12 +87,7 @@ static void printChipInfo(void) {
     default:           chip_report_printf("Unknown %d\n", info.model); break;
   }
   printPkgVersion();
-  chip_report_printf("  Revision          : ");
-  if (info.revision > 0xFF) {
-    chip_report_printf("%d.%d\n", info.revision >> 8, info.revision & 0xFF);
-  } else {
-    chip_report_printf("%d\n", info.revision);
-  }
+  chip_report_printf("  Revision          : %.2f\n", (float)(info.revision) / 100.0);
   chip_report_printf("  Cores             : %d\n", info.cores);
   rtc_cpu_freq_config_t conf;
   rtc_clk_cpu_freq_get_config(&conf);
