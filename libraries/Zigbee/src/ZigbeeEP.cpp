@@ -81,6 +81,9 @@ void ZigbeeEP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) {
     esp_zb_zcl_read_attr_cmd_req(&read_req);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+
 void ZigbeeEP::printBoundDevices() {
     log_i("Bound devices:");
     for(const auto& device : _bound_devices) {
@@ -88,6 +91,8 @@ void ZigbeeEP::printBoundDevices() {
         print_ieee_addr(device->ieee_addr);
     }
 }
+
+#pragma GCC diagnostic pop
 
 void ZigbeeEP::readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
     /* Basic cluster attributes */
