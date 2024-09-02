@@ -1,6 +1,6 @@
-#include "ep_color_dimmable_light.h"
+#include "ZigbeeColorDimmableLight.h"
 
-ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : Zigbee_EP(endpoint) {
+ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID;
 
     esp_zb_color_dimmable_light_cfg_t light_cfg = ESP_ZB_DEFAULT_COLOR_DIMMABLE_LIGHT_CONFIG();

@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "Zigbee_ep.h"
+#include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
-class ZigbeeLight : public Zigbee_EP {
+class ZigbeeLight : public ZigbeeEP {
   public:
     ZigbeeLight(uint8_t endpoint);
     ~ZigbeeLight();

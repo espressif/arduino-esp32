@@ -1,28 +1,31 @@
 /* Common Class for Zigbee End Point */
 
-#include "Zigbee_ep.h"
+#include "ZigbeeEP.h"
+
+#if SOC_IEEE802154_SUPPORTED
+
 #include "esp_zigbee_cluster.h"
 
-uint8_t Zigbee_EP::_endpoint = 0;
-bool Zigbee_EP::_is_bound = false;
-bool Zigbee_EP::_allow_multiple_binding = false;
+uint8_t ZigbeeEP::_endpoint = 0;
+bool ZigbeeEP::_is_bound = false;
+bool ZigbeeEP::_allow_multiple_binding = false;
 
 /* Zigbee End Device Class */
-Zigbee_EP::Zigbee_EP(uint8_t endpoint) {
+ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
     _endpoint = endpoint;
     _ep_config.endpoint = 0;
     _cluster_list = nullptr;
 }
 
-Zigbee_EP::~Zigbee_EP() {
+ZigbeeEP::~ZigbeeEP() {
 
 }
 
-void Zigbee_EP::setVersion(uint8_t version) {
+void ZigbeeEP::setVersion(uint8_t version) {
     _ep_config.app_device_version = version;
 }
 
-void Zigbee_EP::setManufacturerAndModel(const char *name, const char *model) {
+void ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
     // Convert manufacturer to ZCL string
     size_t length = strlen(name);
     if (length > 32) {
@@ -59,7 +62,7 @@ void Zigbee_EP::setManufacturerAndModel(const char *name, const char *model) {
     // esp_zb_cluster_add_attr function
 }
 
-void Zigbee_EP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) {
+void ZigbeeEP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) {
     /* Read peer Manufacture Name & Model Identifier */
     esp_zb_zcl_read_attr_cmd_t read_req;
     read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
@@ -78,7 +81,7 @@ void Zigbee_EP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) 
     esp_zb_zcl_read_attr_cmd_req(&read_req);
 }
 
-void Zigbee_EP::printBoundDevices() {
+void ZigbeeEP::printBoundDevices() {
     log_i("Bound devices:");
     for(const auto& device : _bound_devices) {
         log_i("Device on endpoint %d, short address: 0x%x", device->endpoint, device->short_addr);
@@ -86,7 +89,7 @@ void Zigbee_EP::printBoundDevices() {
     }
 }
 
-void Zigbee_EP::readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
+void ZigbeeEP::readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
     /* Basic cluster attributes */
     if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
         zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
@@ -107,3 +110,5 @@ void Zigbee_EP::readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute
         free(string);
     }
 }
+
+#endif //SOC_IEEE802154_SUPPORTED

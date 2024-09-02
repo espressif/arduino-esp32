@@ -2,12 +2,15 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_IEEE802154_SUPPORTED
+
 #include "esp_zigbee_core.h"
 #include "zdo/esp_zigbee_zdo_common.h"
 #include <esp32-hal-log.h>
 #include <list>
-#include "Zigbee_ep.h"
-class Zigbee_EP;
+#include "ZigbeeEP.h"
+class ZigbeeEP;
 
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrArg)(void *);
@@ -28,10 +31,10 @@ typedef enum {
 } zigbee_role_t;
 
 // default Zigbee configuration for each role
-#define INSTALLCODE_POLICY_ENABLE   false /* enable the install code policy for security */
-#define ED_AGING_TIMEOUT            ESP_ZB_ED_AGING_TIMEOUT_64MIN
-#define ED_KEEP_ALIVE               3000 /* 3000 millisecond */
-#define MAX_CHILDREN                10
+#define INSTALLCODE_POLICY_ENABLE false /* enable the install code policy for security */
+#define ED_AGING_TIMEOUT ESP_ZB_ED_AGING_TIMEOUT_64MIN
+#define ED_KEEP_ALIVE 3000 /* 3000 millisecond */
+#define MAX_CHILDREN 10
 
 #define ZB_SCAN_RUNNING (-1)
 #define ZB_SCAN_FAILED  (-2)
@@ -51,7 +54,7 @@ typedef enum {
 
 #define ZIGBEE_DEFAULT_ROUTER_CONFIG()                     \
   {                                                        \
-    .esp_zb_role = ESP_ZB_DEVICE_TYPE_COORDINATOR,         \
+    .esp_zb_role = ESP_ZB_DEVICE_TYPE_ROUTER,              \
     .install_code_policy = INSTALLCODE_POLICY_ENABLE,      \
     .nwk_cfg = {                                           \
       .zczr_cfg =                                          \
@@ -81,7 +84,7 @@ typedef enum {
 #define ZIGBEE_DEFAULT_HOST_CONFIG() \
   { .host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE, }
 
-class Zigbee_Core {
+class ZigbeeCore {
     private:
         esp_zb_radio_config_t _radio_config;
         esp_zb_host_config_t _host_config;
@@ -97,19 +100,19 @@ class Zigbee_Core {
         zigbee_role_t _role;
         bool _started;
         uint8_t _open_network;
-        std::list<Zigbee_EP*> ep_objects;
+        std::list<ZigbeeEP*> ep_objects;
         zigbee_scan_result_t *_scan_result;
 
-        Zigbee_Core();
-        ~Zigbee_Core();
+        ZigbeeCore();
+        ~ZigbeeCore();
 
         bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
         bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
         bool isStarted();
         // bool end();
 
-        void addEndpoint(Zigbee_EP *ep);
-        //void removeEndpoint(Zigbee_EP *ep);
+        void addEndpoint(ZigbeeEP *ep);
+        //void removeEndpoint(ZigbeeEP *ep);
 
         void setRadioConfig(esp_zb_radio_config_t config);
         esp_zb_radio_config_t getRadioConfig();
@@ -132,4 +135,6 @@ class Zigbee_Core {
         const char* getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
 };
 
-extern Zigbee_Core Zigbee;
+extern ZigbeeCore Zigbee;
+
+#endif //SOC_IEEE802154_SUPPORTED

@@ -1,9 +1,9 @@
-#include "ep_on_off_switch.h"
+#include "ZigbeeSwitch.h"
 
 // Initialize the static instance pointer
 ZigbeeSwitch* ZigbeeSwitch::_instance = nullptr;
 
-ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : Zigbee_EP(endpoint) {
+ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID;
     _instance = this; // Set the static pointer to this instance
 

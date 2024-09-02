@@ -1,6 +1,6 @@
-#include "ep_temperature_sensor.h"
+#include "ZigbeeTempSensor.h"
 
-ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : Zigbee_EP(endpoint) {
+ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID;
 
     esp_zb_temperature_sensor_cfg_t temp_sensor_cfg = ESP_ZB_DEFAULT_TEMPERATURE_SENSOR_CONFIG();

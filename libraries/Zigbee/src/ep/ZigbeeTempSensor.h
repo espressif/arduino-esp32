@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "Zigbee_ep.h"
+#include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
-class ZigbeeTempSensor : public Zigbee_EP {
+class ZigbeeTempSensor : public ZigbeeEP {
   public:
     ZigbeeTempSensor(uint8_t endpoint);
     ~ZigbeeTempSensor();

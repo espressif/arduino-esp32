@@ -1,9 +1,9 @@
-#include "ep_color_dimmer_switch.h"
+#include "ZigbeeColorDimmerSwitch.h"
 
 // Initialize the static instance pointer
 ZigbeeColorDimmerSwitch* ZigbeeColorDimmerSwitch::_instance = nullptr;
 
-ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : Zigbee_EP(endpoint) {
+ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID;
     _instance = this; // Set the static pointer to this instance
 

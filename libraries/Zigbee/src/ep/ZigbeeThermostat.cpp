@@ -1,4 +1,4 @@
-#include "ep_thermostat.h"
+#include "ZigbeeThermostat.h"
 
 static float zb_s16_to_temperature(int16_t value) {
   return 1.0 * value / 100;
@@ -7,7 +7,7 @@ static float zb_s16_to_temperature(int16_t value) {
 // Initialize the static instance of the class
 ZigbeeThermostat* ZigbeeThermostat::_instance = nullptr;
 
-ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : Zigbee_EP(endpoint) {
+ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID;
     _instance = this; // Set the static pointer to this instance
 

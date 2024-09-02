@@ -1,6 +1,6 @@
-#include "ep_on_off_light.h"
+#include "ZigbeeLight.h"
 
-ZigbeeLight::ZigbeeLight(uint8_t endpoint) : Zigbee_EP(endpoint) {
+ZigbeeLight::ZigbeeLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID;
 
     esp_zb_on_off_light_cfg_t light_cfg = ESP_ZB_DEFAULT_ON_OFF_LIGHT_CONFIG();

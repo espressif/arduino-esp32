@@ -35,8 +35,8 @@
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "Zigbee_core.h"
-#include "ep/ep_color_dimmer_switch.h"
+#include "ZigbeeCore.h"
+#include "ep/ZigbeeColorDimmerSwitch.h"
 
 /* Switch configuration */
 #define SWITCH_PIN 9 //Boot button for C6/H2

@@ -30,8 +30,8 @@
 #error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "Zigbee_core.h"
-#include "ep/ep_on_off_light.h"
+#include "ZigbeeCore.h"
+#include "ep/ZigbeeLight.h"
 
 #define LED_PIN RGB_BUILTIN
 #define BUTTON_PIN 9  // C6/H2 Boot button

@@ -1,6 +1,8 @@
 /* Zigbee Common Functions */
-#include "Zigbee_core.h"
+#include "ZigbeeCore.h"
 #include "Arduino.h"
+
+#if SOC_IEEE802154_SUPPORTED
 
 // forward declaration of all implemented handlers
 static esp_err_t zb_attribute_set_handler(const esp_zb_zcl_set_attr_value_message_t *message);
@@ -37,7 +39,7 @@ static esp_err_t zb_attribute_set_handler(const esp_zb_zcl_set_attr_value_messag
   );
 
   // List through all Zigbee EPs and call the callback function, with the message
-  for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+  for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_endpoint == (*it)->_endpoint) {
       (*it)->attribute_set(message); //method zb_attribute_set_handler in the EP
     }
@@ -57,7 +59,7 @@ static esp_err_t zb_attribute_reporting_handler(const esp_zb_zcl_report_attr_mes
     message->dst_endpoint, message->cluster
   );
     // List through all Zigbee EPs and call the callback function, with the message
-  for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+  for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->dst_endpoint == (*it)->_endpoint) {
       (*it)->attribute_read(message->cluster, &message->attribute); //method attribute_read must be implemented in specific EP class
     }
@@ -77,7 +79,7 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_re
     message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster
   );
 
-  for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+  for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_endpoint == (*it)->_endpoint) {
       esp_zb_zcl_read_attr_resp_variable_t *variable = message->variables;
       while (variable) {
@@ -131,3 +133,5 @@ static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_m
   );
   return ESP_OK;
 }
+
+#endif //SOC_IEEE802154_SUPPORTED

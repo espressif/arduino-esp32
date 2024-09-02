@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Zigbee_ep.h"
+#include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
 //define the thermostat configuration to avoid narrowing conversion issue in zigbee-sdk
@@ -26,7 +26,7 @@
                 .system_mode = ESP_ZB_ZCL_THERMOSTAT_CONTROL_SYSTEM_MODE_DEFAULT_VALUE,                             \
             },                                                                                                      \
     }
-class ZigbeeThermostat : public Zigbee_EP {
+class ZigbeeThermostat : public ZigbeeEP {
     public:
         ZigbeeThermostat(uint8_t endpoint);
         ~ZigbeeThermostat();

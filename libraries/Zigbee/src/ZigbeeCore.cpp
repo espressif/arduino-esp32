@@ -1,10 +1,12 @@
-/* Zigbee Common Functions */
-#include "Zigbee_core.h"
-#include "Zigbee_handlers.cpp"
+/* Zigbee Core Functions */
+
+#include "ZigbeeCore.h"
+#if SOC_IEEE802154_SUPPORTED
+
+#include "ZigbeeHandlers.cpp"
 #include "Arduino.h"
 
-
-Zigbee_Core::Zigbee_Core() {
+ZigbeeCore::ZigbeeCore() {
   _radio_config = ZIGBEE_DEFAULT_RADIO_CONFIG();
   _host_config = ZIGBEE_DEFAULT_HOST_CONFIG();
   _zb_ep_list = esp_zb_ep_list_create();
@@ -13,12 +15,12 @@ Zigbee_Core::Zigbee_Core() {
   _scan_status = ZB_SCAN_FAILED;
   _started = false;
 }
-Zigbee_Core::~Zigbee_Core() {}
+ZigbeeCore::~ZigbeeCore() {}
 
 //forward declaration
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message);
 
-bool Zigbee_Core::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
+bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
   if (!zigbeeInit(role_cfg, erase_nvs)){
     return false;
   }
@@ -26,7 +28,7 @@ bool Zigbee_Core::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
   return true;
 }
 
-bool Zigbee_Core::begin(zigbee_role_t role, bool erase_nvs) {
+bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
   bool status = true;
   switch (role)
   {
@@ -55,13 +57,13 @@ bool Zigbee_Core::begin(zigbee_role_t role, bool erase_nvs) {
   return status;
 }
 
-void Zigbee_Core::addEndpoint(Zigbee_EP *ep) {
+void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
   ep_objects.push_back(ep);
   
   log_d("Endpoint: %d, Device ID: 0x%04x", ep->_endpoint, ep->_device_id);
-  //Register clusters and ep_list to the Zigbee_Core class's ep_list
+  //Register clusters and ep_list to the ZigbeeCore class's ep_list
   if (ep->_ep_config.endpoint == 0 || ep->_cluster_list == nullptr) {
-    log_e("Endpoint config or Cluster list is not initialized, EP not added to Zigbee_Core's EP list");
+    log_e("Endpoint config or Cluster list is not initialized, EP not added to ZigbeeCore's EP list");
     return;
   }
 
@@ -75,7 +77,7 @@ static void esp_zb_task(void *pvParameters) {
 }
 
 // Zigbee core init function
-bool Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
+bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   // Zigbee platform configuration
   esp_zb_platform_config_t platform_config = {
     .radio_config = _radio_config,
@@ -105,7 +107,7 @@ bool Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
     
     //print the list of Zigbee EPs from ep_objects
     log_i("List of registered Zigbee EPs:");
-    for (std::list<Zigbee_EP*>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
+    for (std::list<ZigbeeEP*>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
       log_i("Device type: %s, Endpoint: %d, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
     }
   }
@@ -128,27 +130,27 @@ bool Zigbee_Core::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   return true;
 }
 
-void Zigbee_Core::setRadioConfig(esp_zb_radio_config_t config) {
+void ZigbeeCore::setRadioConfig(esp_zb_radio_config_t config) {
   _radio_config = config;
 }
 
-esp_zb_radio_config_t Zigbee_Core::getRadioConfig() {
+esp_zb_radio_config_t ZigbeeCore::getRadioConfig() {
   return _radio_config;
 }
 
-void Zigbee_Core::setHostConfig(esp_zb_host_config_t config) {
+void ZigbeeCore::setHostConfig(esp_zb_host_config_t config) {
   _host_config = config;
 }
 
-esp_zb_host_config_t Zigbee_Core::getHostConfig() {
+esp_zb_host_config_t ZigbeeCore::getHostConfig() {
   return _host_config;
 }
 
-void Zigbee_Core::setPrimaryChannelMask(uint32_t mask) {
+void ZigbeeCore::setPrimaryChannelMask(uint32_t mask) {
   _primary_channel_mask = mask;
 }
 
-void Zigbee_Core::setRebootOpenNetwork(uint8_t time) {
+void ZigbeeCore::setRebootOpenNetwork(uint8_t time) {
   _open_network = time;
 }
 
@@ -258,7 +260,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         */
 
         // for each endpoint in the list call the find_endpoint function if not bounded or allowed to bind multiple devices
-        for (std::list<Zigbee_EP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+        for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
           if (!(*it)->_is_bound || (*it)->_allow_multiple_binding) {
             (*it)->find_endpoint(&cmd_req);
           }
@@ -280,16 +282,16 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
   }
 }
 
-void Zigbee_Core::factoryReset() {
+void ZigbeeCore::factoryReset() {
   log_v("Factory reseting Zigbee stack, device will reboot");
   esp_zb_factory_reset();
 }
 
-bool Zigbee_Core::isStarted() {
+bool ZigbeeCore::isStarted() {
   return _started;
 }
 
-void Zigbee_Core::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor){
+void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor){
   log_v("Zigbee network scan complete");
   if(zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_v("Found %d networks", count);
@@ -310,7 +312,7 @@ void Zigbee_Core::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t c
   }
 }
 
-void Zigbee_Core::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
+void ZigbeeCore::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
   if(!_started) {
     log_e("Zigbee stack is not started, cannot scan networks");
     return;
@@ -320,15 +322,15 @@ void Zigbee_Core::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
   _scan_status = ZB_SCAN_RUNNING;
 }
 
-int16_t Zigbee_Core::scanComplete(){
+int16_t ZigbeeCore::scanComplete(){
   return _scan_status;
 }
 
-zigbee_scan_result_t* Zigbee_Core::getScanResult() {
+zigbee_scan_result_t* ZigbeeCore::getScanResult() {
   return _scan_result;
 }
 
-void Zigbee_Core::scanDelete() {
+void ZigbeeCore::scanDelete() {
   if (_scan_result != nullptr) {
     free(_scan_result);
     _scan_result = nullptr;
@@ -337,7 +339,7 @@ void Zigbee_Core::scanDelete() {
 }
 
 // Function to convert enum value to string
-const char* Zigbee_Core::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
+const char* ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
     switch (deviceId) {
         case ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID: return "General On/Off switch";
         case ESP_ZB_HA_LEVEL_CONTROL_SWITCH_DEVICE_ID: return "Level Control Switch";
@@ -381,4 +383,6 @@ const char* Zigbee_Core::getDeviceTypeString(esp_zb_ha_standard_devices_t device
     }
 }
 
-Zigbee_Core Zigbee = Zigbee_Core();
+ZigbeeCore Zigbee = ZigbeeCore();
+
+#endif //SOC_IEEE802154_SUPPORTED

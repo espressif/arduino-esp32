@@ -1,21 +1,23 @@
-/* Common Class for Zigbee End Device */
+/* Common Class for Zigbee End point */
 
 #pragma once
 
-#include "Zigbee_core.h"
+#include "ZigbeeCore.h"
+#if SOC_IEEE802154_SUPPORTED
+
 #include <Arduino.h>
 
 /* Usefull defines */
-#define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ZB_ARRAY_LENTH(arr) (sizeof(arr)/ sizeof(arr[0]))
 #define print_ieee_addr(addr) log_i("IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7])
 #define XYZ_to_RGB(X, Y, Z, r, g, b)                        \
 {                                                           \
   r = (float)( 3.240479*(X) -1.537150*(Y) -0.498535*(Z));   \
   g = (float)(-0.969256*(X) +1.875992*(Y) +0.041556*(Z));   \
   b = (float)( 0.055648*(X) -0.204043*(Y) +1.057311*(Z));   \
-  if(r>1){r=1;}                                             \
-  if(g>1){g=1;}                                             \
-  if(b>1){b=1;}                                             \
+  if(r > 1){r = 1;}                                             \
+  if(g > 1){g = 1;}                                             \
+  if(b > 1){b = 1;}                                             \
 }
 
 #define RGB_to_XYZ(r, g, b, X, Y, Z)                          \
@@ -38,10 +40,10 @@ typedef struct zb_device_params_s {
 } zb_device_params_t;
 
 /* Zigbee End Device Class */
-class Zigbee_EP {
+class ZigbeeEP {
   public:
-    Zigbee_EP(uint8_t endpoint = 10);
-    ~Zigbee_EP();
+    ZigbeeEP(uint8_t endpoint = 10);
+    ~ZigbeeEP();
 
     // Find endpoint may be implemented by EPs
     virtual void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
@@ -83,3 +85,5 @@ class Zigbee_EP {
 
     friend class ZigbeeCore;
 };
+
+#endif //SOC_IEEE802154_SUPPORTED

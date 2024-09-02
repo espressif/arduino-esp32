@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "Zigbee_ep.h"
+#include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
-class ZigbeeColorDimmerSwitch : public Zigbee_EP {
+class ZigbeeColorDimmerSwitch : public ZigbeeEP {
   public:
     ZigbeeColorDimmerSwitch(uint8_t endpoint);
     ~ZigbeeColorDimmerSwitch();
