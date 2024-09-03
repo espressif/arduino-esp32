@@ -10,7 +10,7 @@
 /* Usefull defines */
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr)/ sizeof(arr[0]))
 #define print_ieee_addr(addr) log_i("IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7])
-#define XYZ_to_RGB(X, Y, Z, r, g, b)                        \
+#define XYZ_TO_RGB(X, Y, Z, r, g, b)                        \
 {                                                           \
   r = (float)( 3.240479*(X) -1.537150*(Y) -0.498535*(Z));   \
   g = (float)(-0.969256*(X) +1.875992*(Y) +0.041556*(Z));   \
@@ -20,7 +20,7 @@
   if(b > 1){b = 1;}                                             \
 }
 
-#define RGB_to_XYZ(r, g, b, X, Y, Z)                          \
+#define RGB_TO_XYZ(r, g, b, X, Y, Z)                          \
 {                                                             \
     X = (float)(0.412453*(r) + 0.357580*(g) + 0.180423*(b));  \
     Y = (float)(0.212671*(r) + 0.715160*(g) + 0.072169*(b));  \
@@ -67,6 +67,7 @@ class ZigbeeEP {
 
     static bool is_bound() { return _is_bound; }
     void printBoundDevices();
+    //TODO: getBoundDevices() method to recieve list of bound devices
 
     static bool _allow_multiple_binding;
     static void allowMultipleBinding(bool bind) { _allow_multiple_binding = bind; }

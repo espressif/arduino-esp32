@@ -34,7 +34,7 @@ void ZigbeeColorDimmableLight::calculateRGB( uint16_t x, uint16_t y, uint8_t &re
     float color_X = color_x / color_y;
     float color_Z = (1 - color_x - color_y) / color_y;
 
-    XYZ_to_RGB(color_X, 1, color_Z, r, g, b);
+    XYZ_TO_RGB(color_X, 1, color_Z, r, g, b);
 
     red = (uint8_t)(r * (float)255);
     green = (uint8_t)(g * (float)255);

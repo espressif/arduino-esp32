@@ -26,7 +26,7 @@ void ZigbeeColorDimmerSwitch::calculateXY(uint8_t red, uint8_t green, uint8_t bl
     float b = (float)blue / 255.0f;
 
     float X, Y, Z;
-    RGB_to_XYZ(r, g, b, X, Y, Z);
+    RGB_TO_XYZ(r, g, b, X, Y, Z);
 
     // Convert XYZ to xy chromaticity coordinates
     float color_x = X / (X + Y + Z);

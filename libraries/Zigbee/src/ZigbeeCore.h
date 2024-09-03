@@ -15,12 +15,6 @@ class ZigbeeEP;
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrArg)(void *);
 
-// structure to store callback function and argument
-typedef struct {
-  voidFuncPtr fn;
-  void *arg;
-} zigbee_cb_t;
-
 typedef esp_zb_network_descriptor_t zigbee_scan_result_t;
 
 // enum of Zigbee Roles
@@ -30,24 +24,18 @@ typedef enum {
     ZIGBEE_END_DEVICE = 2
 } zigbee_role_t;
 
-// default Zigbee configuration for each role
-#define INSTALLCODE_POLICY_ENABLE false /* enable the install code policy for security */
-#define ED_AGING_TIMEOUT ESP_ZB_ED_AGING_TIMEOUT_64MIN
-#define ED_KEEP_ALIVE 3000 /* 3000 millisecond */
-#define MAX_CHILDREN 10
-
 #define ZB_SCAN_RUNNING (-1)
 #define ZB_SCAN_FAILED  (-2)
 
 #define ZIGBEE_DEFAULT_ED_CONFIG()                         \
   {                                                        \
     .esp_zb_role = ESP_ZB_DEVICE_TYPE_ED,                  \
-    .install_code_policy = INSTALLCODE_POLICY_ENABLE,      \
+    .install_code_policy = false,                          \
     .nwk_cfg = {                                           \
       .zed_cfg =                                           \
         {                                                  \
-          .ed_timeout = ED_AGING_TIMEOUT,                  \
-          .keep_alive = ED_KEEP_ALIVE,                     \
+          .ed_timeout = ESP_ZB_ED_AGING_TIMEOUT_64MIN,     \
+          .keep_alive = 3000,                              \
         },                                                 \
     },                                                     \
   }
@@ -55,11 +43,11 @@ typedef enum {
 #define ZIGBEE_DEFAULT_ROUTER_CONFIG()                     \
   {                                                        \
     .esp_zb_role = ESP_ZB_DEVICE_TYPE_ROUTER,              \
-    .install_code_policy = INSTALLCODE_POLICY_ENABLE,      \
+    .install_code_policy = false,                          \
     .nwk_cfg = {                                           \
       .zczr_cfg =                                          \
         {                                                  \
-          .max_children = MAX_CHILDREN,                    \
+          .max_children = 10,                              \
         },                                                 \
     }                                                      \
   }
@@ -68,11 +56,11 @@ typedef enum {
 #define ZIGBEE_DEFAULT_COORDINATOR_CONFIG()                \
   {                                                        \
     .esp_zb_role = ESP_ZB_DEVICE_TYPE_COORDINATOR,         \
-    .install_code_policy = INSTALLCODE_POLICY_ENABLE,      \
+    .install_code_policy = false,                          \
     .nwk_cfg = {                                           \
       .zczr_cfg =                                          \
         {                                                  \
-          .max_children = MAX_CHILDREN,                    \
+          .max_children = 10,                              \
         },                                                 \
     }                                                      \
   }
@@ -90,7 +78,6 @@ class ZigbeeCore {
         esp_zb_host_config_t _host_config;
         uint32_t _primary_channel_mask;
         int16_t _scan_status;
-
 
         bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
         static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
