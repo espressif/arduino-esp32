@@ -264,9 +264,10 @@ void ESP_NOW_Serial_Class::onSent(bool success) {
       //the data is lost in this case
       vRingbufferReturnItem(tx_ring_buf, queued_buff);
       queued_buff = NULL;
-      xSemaphoreGive(tx_sem);
-      end();
       log_e(MACSTR " : RE-SEND_MAX[%u]", MAC2STR(addr()), resend_count);
+      //send next packet?
+      //log_d(MACSTR ": NEXT", MAC2STR(addr()));
+      checkForTxData();
     }
   }
 }
