@@ -2,8 +2,8 @@
 #include "OThreadCLI_Util.h"
 
 // Leader node shall use the same Network Key and channel
-#define CLI_NETWORK_KEY    "dataset networkkey 00112233445566778899aabbccddeeff"
-#define CLI_NETWORK_CHANEL "dataset channel 24"
+#define CLI_NETWORK_KEY    "00112233445566778899aabbccddeeff"
+#define CLI_NETWORK_CHANEL "24"
 bool otStatus = true;
 
 void setup() {
@@ -12,14 +12,12 @@ void setup() {
   Serial.println("Setting up OpenThread Node as Router/Child");
   Serial.println("Make sure the Leader Node is already running");
 
-  // This sketch will use CLI responses, therefore, it shall always process each CLI return
-  char resp[256];
-  otStatus &= otGetRespCmd("dataset clear", resp);
-  otStatus &= otGetRespCmd(CLI_NETWORK_KEY, resp);
-  otStatus &= otGetRespCmd(CLI_NETWORK_CHANEL, resp);
-  otStatus &= otGetRespCmd("dataset commit active", resp);
-  otStatus &= otGetRespCmd("ifconfig up", resp);
-  otStatus &= otGetRespCmd("thread start", resp);
+  otStatus &= otExecCommand("dataset", "clear");
+  otStatus &= otExecCommand("dataset networkkey", CLI_NETWORK_KEY);
+  otStatus &= otExecCommand("dataset channel", CLI_NETWORK_CHANEL);
+  otStatus &= otExecCommand("dataset", "commit active");
+  otStatus &= otExecCommand("ifconfig", "up");
+  otStatus &= otExecCommand("thread", "start");
 
   if (!otStatus) {
     Serial.println("\r\n\t===> Failed starting Thread Network!");
@@ -41,6 +39,7 @@ void setup() {
     // print the PanID using 2 methods
 
     // CLI
+    char resp[256];
     if (otGetRespCmd("panid", resp)) {
       Serial.printf("\r\nPanID[using CLI]: %s\r\n", resp);
     } else {
