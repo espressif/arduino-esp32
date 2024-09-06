@@ -416,10 +416,17 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     echo "Start Sketch: $start_num"
     echo "End Sketch  : $end_index"
 
+    #if fqbn is not passed then set it to default for compilation log
+    if [ -z $fqbn ]; then
+        log_fqbn="espressif:esp32:$target"
+    else
+        log_fqbn=$fqbn
+    fi
+
     sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
     if [ $log_compilation ]; then
         #echo board,target and start of sketches to sizes_file json
-        echo "{ \"board\": \"$fqbn\",
+        echo "{ \"board\": \"$log_fqbn\",
                 \"target\": \"$target\",
                 \"sketches\": [" >> "$sizes_file"
     fi
