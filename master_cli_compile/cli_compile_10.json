@@ -329,6 +329,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Ticker/examples/TickerBasic",
+                    "sizes": [{
+                            "flash_bytes": 221218,
+                            "flash_percentage": 7,
+                            "ram_bytes": 13056,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "Ticker/examples/TickerParameter",
                     "sizes": [{
                             "flash_bytes": 220954,
@@ -424,14 +432,6 @@
                             "ram_bytes": 44344,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "WebServer/examples/HttpAuthCallback",
-                    "sizes": [{
-                            "flash_bytes": 995086,
-                            "flash_percentage": 31,
-                            "ram_bytes": 44472,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
@@ -470,9 +470,17 @@
                             "ram_percentage": 14
                             }]
                     },
+{"name": "OpenThread/examples/SimpleThreadNetwork/ExtendedRouterNode",
+                    "sizes": [{
+                            "flash_bytes": 980024,
+                            "flash_percentage": 31,
+                            "ram_bytes": 48304,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
                     "sizes": [{
-                            "flash_bytes": 977106,
+                            "flash_bytes": 978026,
                             "flash_percentage": 31,
                             "ram_bytes": 48296,
                             "ram_percentage": 14
@@ -480,15 +488,7 @@
                     },
 {"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
-                            "flash_bytes": 977162,
-                            "flash_percentage": 31,
-                            "ram_bytes": 48296,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "OpenThread/examples/ThreadScan",
-                    "sizes": [{
-                            "flash_bytes": 977642,
+                            "flash_bytes": 978096,
                             "flash_percentage": 31,
                             "ram_bytes": 48296,
                             "ram_percentage": 14

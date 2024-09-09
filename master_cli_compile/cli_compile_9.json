@@ -329,6 +329,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Preferences/examples/Prefs2Struct",
+                    "sizes": [{
+                            "flash_bytes": 219214,
+                            "flash_percentage": 6,
+                            "ram_bytes": 12552,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "Preferences/examples/StartCounter",
                     "sizes": [{
                             "flash_bytes": 219046,
@@ -422,14 +430,6 @@
                             "flash_bytes": 221318,
                             "flash_percentage": 7,
                             "ram_bytes": 13096,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "Ticker/examples/TickerBasic",
-                    "sizes": [{
-                            "flash_bytes": 221218,
-                            "flash_percentage": 7,
-                            "ram_bytes": 13056,
                             "ram_percentage": 3
                             }]
                     }

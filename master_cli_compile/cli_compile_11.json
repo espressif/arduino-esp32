@@ -169,7 +169,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1",
                     "sizes": [{
-                            "flash_bytes": 949650,
+                            "flash_bytes": 949642,
                             "flash_percentage": 30,
                             "ram_bytes": 42444,
                             "ram_percentage": 12
@@ -329,6 +329,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "WebServer/examples/HttpAuthCallback",
+                    "sizes": [{
+                            "flash_bytes": 995086,
+                            "flash_percentage": 31,
+                            "ram_bytes": 44472,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
                             "flash_bytes": 994466,
@@ -424,20 +432,20 @@
                             "ram_bytes": 37960,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "WiFi/examples/FTM/FTM_Responder",
-                    "sizes": [{
-                            "flash_bytes": 883150,
-                            "flash_percentage": 28,
-                            "ram_bytes": 37952,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "OpenThread/examples/ThreadScan",
+                    "sizes": [{
+                            "flash_bytes": 977642,
+                            "flash_percentage": 31,
+                            "ram_bytes": 48296,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "OpenThread/examples/onReceive",
                     "sizes": [{
                             "flash_bytes": 977298,
@@ -484,14 +492,6 @@
                             "flash_percentage": 9,
                             "ram_bytes": 13280,
                             "ram_percentage": 4
-                            }]
-                    },
-{"name": "SimpleBLE/examples/SimpleBleDevice",
-                    "sizes": [{
-                            "flash_bytes": 1128422,
-                            "flash_percentage": 35,
-                            "ram_bytes": 36752,
-                            "ram_percentage": 11
                             }]
                     }
 ]

@@ -377,19 +377,27 @@
                             "ram_percentage": 14
                             }]
                     },
+{"name": "OpenThread/examples/SimpleThreadNetwork/ExtendedRouterNode",
+                    "sizes": [{
+                            "flash_bytes": 952240,
+                            "flash_percentage": 30,
+                            "ram_bytes": 48968,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
                     "sizes": [{
-                            "flash_bytes": 949318,
+                            "flash_bytes": 950132,
                             "flash_percentage": 30,
-                            "ram_bytes": 48960,
+                            "ram_bytes": 48968,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
-                            "flash_bytes": 949374,
+                            "flash_bytes": 950200,
                             "flash_percentage": 30,
-                            "ram_bytes": 48960,
+                            "ram_bytes": 48968,
                             "ram_percentage": 14
                             }]
                     },
@@ -423,14 +431,6 @@
                             "flash_percentage": 30,
                             "ram_bytes": 38648,
                             "ram_percentage": 11
-                            }]
-                    },
-{"name": "Preferences/examples/Prefs2Struct",
-                    "sizes": [{
-                            "flash_bytes": 219214,
-                            "flash_percentage": 6,
-                            "ram_bytes": 12552,
-                            "ram_percentage": 3
                             }]
                     }
 ]

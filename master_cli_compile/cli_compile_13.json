@@ -329,6 +329,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "WiFi/examples/WiFiMulti",
+                    "sizes": [{
+                            "flash_bytes": 885536,
+                            "flash_percentage": 28,
+                            "ram_bytes": 37984,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "WiFi/examples/WiFiMultiAdvanced",
                     "sizes": [{
                             "flash_bytes": 1017398,
@@ -430,6 +438,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Wire/examples/WireScan",
+                    "sizes": [{
+                            "flash_bytes": 276300,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13040,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "Wire/examples/WireSlave",
                     "sizes": [{
                             "flash_bytes": 276396,
