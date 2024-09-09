@@ -58,7 +58,7 @@ void loop() {
       Serial.printf("%02x", extPanId->m8[i]);
     }
     Serial.println();
-    // Nettwork Key
+    // Network Key
     otNetworkKey networkKey;
     otThreadGetNetworkKey(aInstance, &networkKey);
     Serial.printf("Network Key: ");
