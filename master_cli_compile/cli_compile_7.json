@@ -1,10 +1,10 @@
 {"boards": [
-{ "board": "",
+{ "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
 {"name": "HTTPClient/examples/ReuseConnection",
                     "sizes": [{
-                            "flash_bytes": 990753,
+                            "flash_bytes": 990757,
                             "flash_percentage": 31,
                             "ram_bytes": 42440,
                             "ram_percentage": 12
@@ -12,7 +12,7 @@
                     },
 {"name": "HTTPClient/examples/StreamHttpClient",
                     "sizes": [{
-                            "flash_bytes": 990545,
+                            "flash_bytes": 990549,
                             "flash_percentage": 31,
                             "ram_bytes": 42232,
                             "ram_percentage": 12
@@ -20,7 +20,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
-                            "flash_bytes": 945741,
+                            "flash_bytes": 945761,
                             "flash_percentage": 30,
                             "ram_bytes": 42640,
                             "ram_percentage": 13
@@ -28,7 +28,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSPIFFS",
                     "sizes": [{
-                            "flash_bytes": 944965,
+                            "flash_bytes": 944969,
                             "flash_percentage": 30,
                             "ram_bytes": 42640,
                             "ram_percentage": 13
@@ -36,7 +36,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSecure",
                     "sizes": [{
-                            "flash_bytes": 1032005,
+                            "flash_bytes": 1032009,
                             "flash_percentage": 32,
                             "ram_bytes": 43192,
                             "ram_percentage": 13
@@ -52,7 +52,7 @@
                     },
 {"name": "Insights/examples/DiagnosticsSmokeTest",
                     "sizes": [{
-                            "flash_bytes": 994781,
+                            "flash_bytes": 994765,
                             "flash_percentage": 31,
                             "ram_bytes": 44080,
                             "ram_percentage": 13
@@ -60,7 +60,7 @@
                     },
 {"name": "Insights/examples/MinimalDiagnostics",
                     "sizes": [{
-                            "flash_bytes": 994237,
+                            "flash_bytes": 994233,
                             "flash_percentage": 31,
                             "ram_bytes": 43952,
                             "ram_percentage": 13
@@ -68,7 +68,7 @@
                     },
 {"name": "LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
-                            "flash_bytes": 325141,
+                            "flash_bytes": 325125,
                             "flash_percentage": 10,
                             "ram_bytes": 18688,
                             "ram_percentage": 5
@@ -76,7 +76,7 @@
                     },
 {"name": "LittleFS/examples/LITTLEFS_time",
                     "sizes": [{
-                            "flash_bytes": 919937,
+                            "flash_bytes": 919921,
                             "flash_percentage": 29,
                             "ram_bytes": 41744,
                             "ram_percentage": 12
@@ -92,7 +92,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientInsecure",
                     "sizes": [{
-                            "flash_bytes": 952329,
+                            "flash_bytes": 952325,
                             "flash_percentage": 30,
                             "ram_bytes": 42160,
                             "ram_percentage": 12
@@ -108,7 +108,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 954153,
+                            "flash_bytes": 954137,
                             "flash_percentage": 30,
                             "ram_bytes": 42176,
                             "ram_percentage": 12
@@ -116,12 +116,12 @@
                     }
 ]
 },
-{ "board": "",
+{ "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
 {"name": "NetworkClientSecure/examples/WiFiClientInsecure",
                     "sizes": [{
-                            "flash_bytes": 931174,
+                            "flash_bytes": 931166,
                             "flash_percentage": 29,
                             "ram_bytes": 37916,
                             "ram_percentage": 11
@@ -129,7 +129,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientPSK",
                     "sizes": [{
-                            "flash_bytes": 931186,
+                            "flash_bytes": 931178,
                             "flash_percentage": 29,
                             "ram_bytes": 37948,
                             "ram_percentage": 11
@@ -137,7 +137,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 932990,
+                            "flash_bytes": 932974,
                             "flash_percentage": 29,
                             "ram_bytes": 37916,
                             "ram_percentage": 11
@@ -145,7 +145,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                     "sizes": [{
-                            "flash_bytes": 981894,
+                            "flash_bytes": 981878,
                             "flash_percentage": 31,
                             "ram_bytes": 38396,
                             "ram_percentage": 11
@@ -153,7 +153,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 931882,
+                            "flash_bytes": 931874,
                             "flash_percentage": 29,
                             "ram_bytes": 37916,
                             "ram_percentage": 11
@@ -161,7 +161,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 973462,
+                            "flash_bytes": 973446,
                             "flash_percentage": 30,
                             "ram_bytes": 37924,
                             "ram_percentage": 11
@@ -169,7 +169,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                     "sizes": [{
-                            "flash_bytes": 944566,
+                            "flash_bytes": 944558,
                             "flash_percentage": 30,
                             "ram_bytes": 38268,
                             "ram_percentage": 11
@@ -177,7 +177,7 @@
                     },
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
-                            "flash_bytes": 498146,
+                            "flash_bytes": 498138,
                             "flash_percentage": 15,
                             "ram_bytes": 18648,
                             "ram_percentage": 5
@@ -185,7 +185,7 @@
                     },
 {"name": "PPP/examples/PPP_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 916562,
+                            "flash_bytes": 916554,
                             "flash_percentage": 29,
                             "ram_bytes": 36748,
                             "ram_percentage": 11
@@ -193,7 +193,7 @@
                     },
 {"name": "Preferences/examples/Prefs2Struct",
                     "sizes": [{
-                            "flash_bytes": 261222,
+                            "flash_bytes": 261206,
                             "flash_percentage": 8,
                             "ram_bytes": 13624,
                             "ram_percentage": 4
@@ -201,7 +201,7 @@
                     },
 {"name": "Preferences/examples/StartCounter",
                     "sizes": [{
-                            "flash_bytes": 261998,
+                            "flash_bytes": 261990,
                             "flash_percentage": 8,
                             "ram_bytes": 13632,
                             "ram_percentage": 4
@@ -209,7 +209,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
-                            "flash_bytes": 1282766,
+                            "flash_bytes": 1282758,
                             "flash_percentage": 40,
                             "ram_bytes": 40996,
                             "ram_percentage": 12
@@ -217,7 +217,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1269206,
+                            "flash_bytes": 1269198,
                             "flash_percentage": 40,
                             "ram_bytes": 41068,
                             "ram_percentage": 12
@@ -225,12 +225,12 @@
                     }
 ]
 },
-{ "board": "",
+{ "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
 {"name": "FFat/examples/FFat_Test",
                     "sizes": [{
-                            "flash_bytes": 315756,
+                            "flash_bytes": 315764,
                             "flash_percentage": 10,
                             "ram_bytes": 12448,
                             "ram_percentage": 3
@@ -238,7 +238,7 @@
                     },
 {"name": "FFat/examples/FFat_time",
                     "sizes": [{
-                            "flash_bytes": 963634,
+                            "flash_bytes": 963650,
                             "flash_percentage": 30,
                             "ram_bytes": 34980,
                             "ram_percentage": 10
@@ -246,7 +246,7 @@
                     },
 {"name": "HTTPClient/examples/Authorization",
                     "sizes": [{
-                            "flash_bytes": 1037416,
+                            "flash_bytes": 1037438,
                             "flash_percentage": 32,
                             "ram_bytes": 35364,
                             "ram_percentage": 10
@@ -254,7 +254,7 @@
                     },
 {"name": "HTTPClient/examples/BasicHttpClient",
                     "sizes": [{
-                            "flash_bytes": 1037400,
+                            "flash_bytes": 1037430,
                             "flash_percentage": 32,
                             "ram_bytes": 35364,
                             "ram_percentage": 10
@@ -262,7 +262,7 @@
                     },
 {"name": "HTTPClient/examples/BasicHttpsClient",
                     "sizes": [{
-                            "flash_bytes": 1042332,
+                            "flash_bytes": 1042354,
                             "flash_percentage": 33,
                             "ram_bytes": 35396,
                             "ram_percentage": 10
@@ -270,7 +270,7 @@
                     },
 {"name": "HTTPClient/examples/HTTPClientEnterprise",
                     "sizes": [{
-                            "flash_bytes": 1086374,
+                            "flash_bytes": 1086390,
                             "flash_percentage": 34,
                             "ram_bytes": 35732,
                             "ram_percentage": 10
@@ -278,7 +278,7 @@
                     },
 {"name": "HTTPClient/examples/ReuseConnection",
                     "sizes": [{
-                            "flash_bytes": 1036826,
+                            "flash_bytes": 1036848,
                             "flash_percentage": 32,
                             "ram_bytes": 35572,
                             "ram_percentage": 10
@@ -286,7 +286,7 @@
                     },
 {"name": "HTTPClient/examples/StreamHttpClient",
                     "sizes": [{
-                            "flash_bytes": 1036612,
+                            "flash_bytes": 1036642,
                             "flash_percentage": 32,
                             "ram_bytes": 35364,
                             "ram_percentage": 10
@@ -294,7 +294,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
-                            "flash_bytes": 980420,
+                            "flash_bytes": 980442,
                             "flash_percentage": 31,
                             "ram_bytes": 35740,
                             "ram_percentage": 10
@@ -302,7 +302,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSPIFFS",
                     "sizes": [{
-                            "flash_bytes": 979998,
+                            "flash_bytes": 980020,
                             "flash_percentage": 31,
                             "ram_bytes": 35740,
                             "ram_percentage": 10
@@ -310,7 +310,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSecure",
                     "sizes": [{
-                            "flash_bytes": 1073396,
+                            "flash_bytes": 1073426,
                             "flash_percentage": 34,
                             "ram_bytes": 36276,
                             "ram_percentage": 11
@@ -318,7 +318,7 @@
                     },
 {"name": "HTTPUpdateServer/examples/WebUpdater",
                     "sizes": [{
-                            "flash_bytes": 1011808,
+                            "flash_bytes": 1011816,
                             "flash_percentage": 32,
                             "ram_bytes": 37820,
                             "ram_percentage": 11
@@ -326,12 +326,12 @@
                     }
 ]
 },
-{ "board": "",
+{ "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
 {"name": "HTTPClient/examples/StreamHttpClient",
                     "sizes": [{
-                            "flash_bytes": 1017674,
+                            "flash_bytes": 1017704,
                             "flash_percentage": 32,
                             "ram_bytes": 39896,
                             "ram_percentage": 12
@@ -339,7 +339,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
-                            "flash_bytes": 957790,
+                            "flash_bytes": 957812,
                             "flash_percentage": 30,
                             "ram_bytes": 40256,
                             "ram_percentage": 12
@@ -347,7 +347,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSPIFFS",
                     "sizes": [{
-                            "flash_bytes": 957368,
+                            "flash_bytes": 957390,
                             "flash_percentage": 30,
                             "ram_bytes": 40256,
                             "ram_percentage": 12
@@ -355,7 +355,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSecure",
                     "sizes": [{
-                            "flash_bytes": 1054624,
+                            "flash_bytes": 1054654,
                             "flash_percentage": 33,
                             "ram_bytes": 40808,
                             "ram_percentage": 12
@@ -363,7 +363,7 @@
                     },
 {"name": "HTTPUpdateServer/examples/WebUpdater",
                     "sizes": [{
-                            "flash_bytes": 998288,
+                            "flash_bytes": 998296,
                             "flash_percentage": 31,
                             "ram_bytes": 42328,
                             "ram_percentage": 12
@@ -371,7 +371,7 @@
                     },
 {"name": "LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
-                            "flash_bytes": 261028,
+                            "flash_bytes": 261044,
                             "flash_percentage": 8,
                             "ram_bytes": 13104,
                             "ram_percentage": 3
@@ -379,7 +379,7 @@
                     },
 {"name": "LittleFS/examples/LITTLEFS_time",
                     "sizes": [{
-                            "flash_bytes": 940350,
+                            "flash_bytes": 940366,
                             "flash_percentage": 29,
                             "ram_bytes": 39400,
                             "ram_percentage": 12
@@ -387,7 +387,7 @@
                     },
 {"name": "NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
-                            "flash_bytes": 886700,
+                            "flash_bytes": 886708,
                             "flash_percentage": 28,
                             "ram_bytes": 38008,
                             "ram_percentage": 11
@@ -395,7 +395,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientInsecure",
                     "sizes": [{
-                            "flash_bytes": 990390,
+                            "flash_bytes": 990406,
                             "flash_percentage": 31,
                             "ram_bytes": 39824,
                             "ram_percentage": 12
@@ -403,7 +403,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientPSK",
                     "sizes": [{
-                            "flash_bytes": 990404,
+                            "flash_bytes": 990420,
                             "flash_percentage": 31,
                             "ram_bytes": 39864,
                             "ram_percentage": 12
@@ -411,7 +411,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 992232,
+                            "flash_bytes": 992240,
                             "flash_percentage": 31,
                             "ram_bytes": 39832,
                             "ram_percentage": 12
@@ -419,7 +419,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                     "sizes": [{
-                            "flash_bytes": 1043440,
+                            "flash_bytes": 1043448,
                             "flash_percentage": 33,
                             "ram_bytes": 40264,
                             "ram_percentage": 12
@@ -427,7 +427,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 991252,
+                            "flash_bytes": 991268,
                             "flash_percentage": 31,
                             "ram_bytes": 39824,
                             "ram_percentage": 12
@@ -435,12 +435,12 @@
                     }
 ]
 },
-{ "board": "",
+{ "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
 {"name": "ESP32/examples/Serial/OnReceive_Demo",
                     "sizes": [{
-                            "flash_bytes": 258696,
+                            "flash_bytes": 258712,
                             "flash_percentage": 8,
                             "ram_bytes": 12720,
                             "ram_percentage": 3
@@ -448,7 +448,7 @@
                     },
 {"name": "ESP32/examples/Serial/RS485_Echo_Demo",
                     "sizes": [{
-                            "flash_bytes": 257816,
+                            "flash_bytes": 257832,
                             "flash_percentage": 8,
                             "ram_bytes": 12712,
                             "ram_percentage": 3
@@ -456,7 +456,7 @@
                     },
 {"name": "ESP32/examples/Serial/RxFIFOFull_Demo",
                     "sizes": [{
-                            "flash_bytes": 258162,
+                            "flash_bytes": 258178,
                             "flash_percentage": 8,
                             "ram_bytes": 12712,
                             "ram_percentage": 3
@@ -464,7 +464,7 @@
                     },
 {"name": "ESP32/examples/Serial/RxTimeout_Demo",
                     "sizes": [{
-                            "flash_bytes": 257932,
+                            "flash_bytes": 257940,
                             "flash_percentage": 8,
                             "ram_bytes": 12720,
                             "ram_percentage": 3
@@ -472,7 +472,7 @@
                     },
 {"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
                     "sizes": [{
-                            "flash_bytes": 257902,
+                            "flash_bytes": 257918,
                             "flash_percentage": 8,
                             "ram_bytes": 12728,
                             "ram_percentage": 3
@@ -480,7 +480,7 @@
                     },
 {"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
                     "sizes": [{
-                            "flash_bytes": 258430,
+                            "flash_bytes": 258438,
                             "flash_percentage": 8,
                             "ram_bytes": 12712,
                             "ram_percentage": 3
@@ -488,7 +488,7 @@
                     },
 {"name": "ESP32/examples/Serial/onReceiveExample",
                     "sizes": [{
-                            "flash_bytes": 258036,
+                            "flash_bytes": 258044,
                             "flash_percentage": 8,
                             "ram_bytes": 12736,
                             "ram_percentage": 3
@@ -496,12 +496,12 @@
                     }
 ]
 },
-{ "board": "",
+{ "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
 {"name": "ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
-                            "flash_bytes": 952705,
+                            "flash_bytes": 952709,
                             "flash_percentage": 30,
                             "ram_bytes": 46876,
                             "ram_percentage": 14
@@ -509,7 +509,7 @@
                     },
 {"name": "Ethernet/examples/ETH_LAN8720",
                     "sizes": [{
-                            "flash_bytes": 509149,
+                            "flash_bytes": 509141,
                             "flash_percentage": 16,
                             "ram_bytes": 25064,
                             "ram_percentage": 7
@@ -517,7 +517,7 @@
                     },
 {"name": "Ethernet/examples/ETH_TLK110",
                     "sizes": [{
-                            "flash_bytes": 509153,
+                            "flash_bytes": 509145,
                             "flash_percentage": 16,
                             "ram_bytes": 25064,
                             "ram_percentage": 7
@@ -525,7 +525,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 549489,
+                            "flash_bytes": 549473,
                             "flash_percentage": 17,
                             "ram_bytes": 25208,
                             "ram_percentage": 7
@@ -533,7 +533,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 547937,
+                            "flash_bytes": 547925,
                             "flash_percentage": 17,
                             "ram_bytes": 25208,
                             "ram_percentage": 7
@@ -541,7 +541,7 @@
                     },
 {"name": "Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 993061,
+                            "flash_bytes": 993049,
                             "flash_percentage": 31,
                             "ram_bytes": 44100,
                             "ram_percentage": 13
@@ -549,7 +549,7 @@
                     },
 {"name": "FFat/examples/FFat_Test",
                     "sizes": [{
-                            "flash_bytes": 348597,
+                            "flash_bytes": 348585,
                             "flash_percentage": 11,
                             "ram_bytes": 21352,
                             "ram_percentage": 6
@@ -557,7 +557,7 @@
                     },
 {"name": "FFat/examples/FFat_time",
                     "sizes": [{
-                            "flash_bytes": 970585,
+                            "flash_bytes": 970589,
                             "flash_percentage": 30,
                             "ram_bytes": 45564,
                             "ram_percentage": 13
@@ -565,7 +565,7 @@
                     },
 {"name": "HTTPClient/examples/Authorization",
                     "sizes": [{
-                            "flash_bytes": 1042285,
+                            "flash_bytes": 1042305,
                             "flash_percentage": 33,
                             "ram_bytes": 46920,
                             "ram_percentage": 14
@@ -573,7 +573,7 @@
                     },
 {"name": "HTTPClient/examples/BasicHttpClient",
                     "sizes": [{
-                            "flash_bytes": 1042285,
+                            "flash_bytes": 1042289,
                             "flash_percentage": 33,
                             "ram_bytes": 46920,
                             "ram_percentage": 14
@@ -581,7 +581,7 @@
                     },
 {"name": "HTTPClient/examples/BasicHttpsClient",
                     "sizes": [{
-                            "flash_bytes": 1046997,
+                            "flash_bytes": 1047017,
                             "flash_percentage": 33,
                             "ram_bytes": 47136,
                             "ram_percentage": 14
@@ -589,7 +589,7 @@
                     },
 {"name": "HTTPClient/examples/HTTPClientEnterprise",
                     "sizes": [{
-                            "flash_bytes": 1089969,
+                            "flash_bytes": 1089973,
                             "flash_percentage": 34,
                             "ram_bytes": 47408,
                             "ram_percentage": 14
@@ -597,7 +597,7 @@
                     },
 {"name": "HTTPClient/examples/ReuseConnection",
                     "sizes": [{
-                            "flash_bytes": 1041833,
+                            "flash_bytes": 1041837,
                             "flash_percentage": 33,
                             "ram_bytes": 47128,
                             "ram_percentage": 14
