@@ -4,9 +4,11 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 
+#if SOC_LEDC_SUPPORTED
 static TaskHandle_t _tone_task = NULL;
 static QueueHandle_t _tone_queue = NULL;
 static int8_t _pin = -1;
+static uint8_t _channel = 255;
 
 typedef enum {
   TONE_START,
@@ -20,6 +22,12 @@ typedef struct {
   unsigned long duration;
 } tone_msg_t;
 
+#ifdef SOC_LEDC_SUPPORT_HS_MODE
+#define LEDC_CHANNELS (SOC_LEDC_CHANNEL_NUM << 1)
+#else
+#define LEDC_CHANNELS (SOC_LEDC_CHANNEL_NUM)
+#endif
+
 static void tone_task(void *) {
   tone_msg_t tone_msg;
   while (1) {
@@ -29,7 +37,13 @@ static void tone_task(void *) {
         log_d("Task received from queue TONE_START: pin=%d, frequency=%u Hz, duration=%lu ms", tone_msg.pin, tone_msg.frequency, tone_msg.duration);
 
         if (_pin == -1) {
-          if (ledcAttach(tone_msg.pin, tone_msg.frequency, 10) == 0) {
+          bool ret = true;
+          if (_channel == 255) {
+            ret = ledcAttach(tone_msg.pin, tone_msg.frequency, 10);
+          } else {
+            ret = ledcAttachChannel(tone_msg.pin, tone_msg.frequency, 10, _channel);
+          }
+          if (!ret) {
             log_e("Tone start failed");
             break;
           }
@@ -73,7 +87,7 @@ static int tone_init() {
       "toneTask",  // Name of the task
       3500,        // Stack size in words
       NULL,        // Task input parameter
-      1,           // Priority of the task
+      10,          // Priority of the task must be higher than Arduino task
       &_tone_task  // Task handle.
     );
     if (_tone_task == NULL) {
@@ -126,3 +140,13 @@ void tone(uint8_t pin, unsigned int frequency, unsigned long duration) {
     return;
   }
 }
+
+void setToneChannel(uint8_t channel) {
+  if (channel >= LEDC_CHANNELS) {
+    log_e("Channel %u is not available (maximum %u)!", channel, LEDC_CHANNELS);
+    return;
+  }
+  _channel = channel;
+}
+
+#endif /* SOC_LEDC_SUPPORTED */
