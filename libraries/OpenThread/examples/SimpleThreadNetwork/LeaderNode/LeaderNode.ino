@@ -40,7 +40,7 @@ void loop() {
   Serial.println(otGetStringDeviceRole());
 
   // Native OpenThread API calls:
-  // wait until the node become Child or Router 
+  // wait until the node become Child or Router
   if (otGetDeviceRole() == OT_ROLE_LEADER) {
     // Network Name
     const char *networkName = otThreadGetNetworkName(aInstance);

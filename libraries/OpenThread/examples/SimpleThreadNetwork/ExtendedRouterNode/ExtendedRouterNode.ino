@@ -24,7 +24,7 @@ void setup() {
     return;
   }
   // wait for the node to enter in the router state
-  uint32_t timeout = millis() + 90000; // waits 90 seconds to
+  uint32_t timeout = millis() + 90000;  // waits 90 seconds to
   while (otGetDeviceRole() != OT_ROLE_CHILD && otGetDeviceRole() != OT_ROLE_ROUTER) {
     Serial.print(".");
     if (millis() > timeout) {
@@ -47,7 +47,7 @@ void setup() {
     }
 
     // OpenThread API
-    Serial.printf("PanID[using OT API]: 0x%x\r\n", (uint16_t) otLinkGetPanId(esp_openthread_get_instance()));
+    Serial.printf("PanID[using OT API]: 0x%x\r\n", (uint16_t)otLinkGetPanId(esp_openthread_get_instance()));
   }
   Serial.println("\r\n");
 }
