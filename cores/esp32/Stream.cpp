@@ -122,10 +122,11 @@ int Stream::findMulti(struct Stream::MultiTarget *targets, int tCount) {
   }
 
   while (1) {
-    int c = timedRead();
-    if (c < 0) {
+    int cc = timedRead();
+    if (cc < 0) {
       return -1;
     }
+    char c = cc;
 
     for (struct MultiTarget *t = targets; t < targets + tCount; ++t) {
       // the simple case is if we match, deal with that first.
