@@ -225,10 +225,8 @@ void NetworkEvents::removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event
   }
 }
 
-template<typename T, typename... U> static size_t getStdFunctionAddress(std::function<T(U...)> f) {
-  typedef T(fnType)(U...);
-  fnType **fnPointer = f.template target<fnType *>();
-  return (size_t)*fnPointer;
+static size_t getStdFunctionAddress(NetworkEventFuncCb cbEvent) {
+  return *(size_t *)(void *)&cbEvent;
 }
 
 void NetworkEvents::removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event) {
