@@ -19,7 +19,7 @@ ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
     };
 }
 
-void ZigbeeSwitch::bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
+void ZigbeeSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
         log_i("Bound successfully!");
         if (user_ctx) {
@@ -35,7 +35,7 @@ void ZigbeeSwitch::bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
     }
 }
 
-void ZigbeeSwitch::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
+void ZigbeeSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
         log_d("Found light endpoint");
         esp_zb_zdo_bind_req_param_t bind_req;
@@ -51,14 +51,14 @@ void ZigbeeSwitch::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_
         bind_req.dst_endp = endpoint;
         bind_req.req_dst_addr = esp_zb_get_short_address();
         log_i("Try to bind On/Off");
-        esp_zb_zdo_device_bind_req(&bind_req, bind_cb, (void *)light);
+        esp_zb_zdo_device_bind_req(&bind_req, bindCb, (void *)light);
     } else {
         log_d("No light endpoint found");
     }
 }
 
 // find on_off light endpoint
-void ZigbeeSwitch::find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
+void ZigbeeSwitch::findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
     uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF};
     esp_zb_zdo_match_desc_req_param_t on_off_req = {
         .dst_nwk_addr = cmd_req->dst_nwk_addr,
@@ -69,7 +69,7 @@ void ZigbeeSwitch::find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
         .cluster_list = cluster_list,
     };
 
-    esp_zb_zdo_match_cluster(&on_off_req, find_cb, NULL);
+    esp_zb_zdo_match_cluster(&on_off_req, findCb, NULL);
 }
 
 // Methods to control the light

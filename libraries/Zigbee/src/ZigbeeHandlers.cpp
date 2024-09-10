@@ -46,8 +46,8 @@ static esp_err_t zb_attribute_set_handler(const esp_zb_zcl_set_attr_value_messag
 
   // List through all Zigbee EPs and call the callback function, with the message
   for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-    if (message->info.dst_endpoint == (*it)->_endpoint) {
-      (*it)->attribute_set(message); //method zb_attribute_set_handler in the EP
+    if (message->info.dst_endpoint == (*it)->getEndpoint()){
+      (*it)->zbAttributeSet(message); //method zbAttributeSet must be implemented in specific EP class
     }
   }
   return ESP_OK;
@@ -66,8 +66,8 @@ static esp_err_t zb_attribute_reporting_handler(const esp_zb_zcl_report_attr_mes
   );
     // List through all Zigbee EPs and call the callback function, with the message
   for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-    if (message->dst_endpoint == (*it)->_endpoint) {
-      (*it)->attribute_read(message->cluster, &message->attribute); //method attribute_read must be implemented in specific EP class
+    if (message->dst_endpoint == (*it)->getEndpoint()) {
+      (*it)->zbAttributeRead(message->cluster, &message->attribute); //method zbAttributeRead must be implemented in specific EP class
     }
   }
   return ESP_OK;
@@ -86,7 +86,7 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_re
   );
 
   for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-    if (message->info.dst_endpoint == (*it)->_endpoint) {
+    if (message->info.dst_endpoint == (*it)->getEndpoint()) {
       esp_zb_zcl_read_attr_resp_variable_t *variable = message->variables;
       while (variable) {
         log_v(
@@ -95,10 +95,10 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_re
         );
         if (variable->status == ESP_ZB_ZCL_STATUS_SUCCESS) {
           if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_BASIC) {
-            (*it)->readBasicCluster(message->info.cluster, &variable->attribute); //method readBasicCluster implemented in the common EP class
+            (*it)->zbReadBasicCluster(message->info.cluster, &variable->attribute); //method zbReadBasicCluster implemented in the common EP class
           }
           else {
-            (*it)->attribute_read(message->info.cluster, &variable->attribute); //method attribute_read must be implemented in specific EP class
+            (*it)->zbAttributeRead(message->info.cluster, &variable->attribute); //method zbAttributeRead must be implemented in specific EP class
           }
         }
         variable = variable->next;

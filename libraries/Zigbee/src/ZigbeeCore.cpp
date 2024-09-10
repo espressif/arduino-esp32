@@ -178,7 +178,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         log_i("Device started up in %s factory-reset mode", esp_zb_bdb_is_factory_new() ? "" : "non");
         if (esp_zb_bdb_is_factory_new()) {
           // Role specific code
-          if ((zigbee_role_t)Zigbee._role == ZIGBEE_COORDINATOR) {
+          if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
             log_i("Start network formation");
             esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_FORMATION);
           } else {
@@ -190,7 +190,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         } else {
           log_i("Device rebooted");
           Zigbee._started = true;
-          if ((zigbee_role_t)Zigbee._role == ZIGBEE_COORDINATOR && Zigbee._open_network > 0) {
+          if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR && Zigbee._open_network > 0) {
             log_i("Openning network for joining for %d seconds", Zigbee._open_network);
             esp_zb_bdb_open_network(Zigbee._open_network);
           }
@@ -201,7 +201,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       }
       break;
     case ESP_ZB_BDB_SIGNAL_FORMATION: // Coordinator
-      if ((zigbee_role_t)Zigbee._role == ZIGBEE_COORDINATOR) {
+      if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           esp_zb_ieee_addr_t extended_pan_id;
           esp_zb_get_extended_pan_id(extended_pan_id);
@@ -219,7 +219,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       break;
     case ESP_ZB_BDB_SIGNAL_STEERING: // Router and End Device
       Zigbee._started = true;
-      if ((zigbee_role_t)Zigbee._role == ZIGBEE_COORDINATOR) {
+      if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           log_i("Network steering started");
         }
@@ -240,7 +240,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       }
       break;
     case ESP_ZB_ZDO_SIGNAL_DEVICE_ANNCE: // Coordinator
-      if ((zigbee_role_t)Zigbee._role == ZIGBEE_COORDINATOR) {
+      if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         dev_annce_params = (esp_zb_zdo_signal_device_annce_params_t *)esp_zb_app_signal_get_params(p_sg_p);
         log_i("New device commissioned or rejoined (short: 0x%04hx)", dev_annce_params->device_short_addr);
         esp_zb_zdo_match_desc_req_param_t cmd_req;
@@ -259,16 +259,16 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
             Bit 7 – Reserved
         */
 
-        // for each endpoint in the list call the find_endpoint function if not bounded or allowed to bind multiple devices
+        // for each endpoint in the list call the findEndpoint function if not bounded or allowed to bind multiple devices
         for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-          if (!(*it)->_is_bound || (*it)->_allow_multiple_binding) {
-            (*it)->find_endpoint(&cmd_req);
+          if (!(*it)->isBound() || (*it)->epAllowMultipleBinding()) {
+            (*it)->findEndpoint(&cmd_req);
           }
         }
       }
       break;
     case ESP_ZB_NWK_SIGNAL_PERMIT_JOIN_STATUS: // Coordinator
-      if ((zigbee_role_t)Zigbee._role == ZIGBEE_COORDINATOR) {
+      if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           if (*(uint8_t *)esp_zb_app_signal_get_params(p_sg_p)) {
             log_i("Network(0x%04hx) is open for %d seconds", esp_zb_get_pan_id(), *(uint8_t *)esp_zb_app_signal_get_params(p_sg_p));
@@ -285,10 +285,6 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
 void ZigbeeCore::factoryReset() {
   log_v("Factory reseting Zigbee stack, device will reboot");
   esp_zb_factory_reset();
-}
-
-bool ZigbeeCore::isStarted() {
-  return _started;
 }
 
 void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor){

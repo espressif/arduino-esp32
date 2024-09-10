@@ -78,25 +78,30 @@ class ZigbeeCore {
         esp_zb_host_config_t _host_config;
         uint32_t _primary_channel_mask;
         int16_t _scan_status;
-
-        bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
-        static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
-
-    public:
+        
         esp_zb_ep_list_t *_zb_ep_list;
         zigbee_role_t _role;
         bool _started;
+
         uint8_t _open_network;
-        std::list<ZigbeeEP*> ep_objects;
         zigbee_scan_result_t *_scan_result;
 
+        bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
+        static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
+        const char* getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
+
+    public:
         ZigbeeCore();
         ~ZigbeeCore();
 
+        std::list<ZigbeeEP*> ep_objects;
+
         bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
         bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
-        bool isStarted();
         // bool end();
+
+        bool isStarted() { return _started; }
+        zigbee_role_t getRole() { return _role; }
 
         void addEndpoint(ZigbeeEP *ep);
         //void removeEndpoint(ZigbeeEP *ep);
@@ -119,7 +124,9 @@ class ZigbeeCore {
 
         void factoryReset();
 
-        const char* getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
+    // Friend function declaration to allow access to private members
+    friend void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct);
+
 };
 
 extern ZigbeeCore Zigbee;

@@ -45,46 +45,50 @@ class ZigbeeEP {
     ZigbeeEP(uint8_t endpoint = 10);
     ~ZigbeeEP();
 
-    // Find endpoint may be implemented by EPs
-    virtual void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
-
-    static uint8_t _endpoint;
-    esp_zb_ha_standard_devices_t _device_id; //type of device
-
-    esp_zb_endpoint_config_t _ep_config;
-    esp_zb_cluster_list_t *_cluster_list;
-    std::list<zb_device_params_t*> _bound_devices;
-
-    static bool _is_bound;
-
     // Set ep config and cluster list
-    void set_ep_config(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {
+    void setEpConfig(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {
         _ep_config = ep_config;
         _cluster_list = cluster_list;
     }
 
     void setVersion(uint8_t version);
+    uint8_t getEndpoint() { return _endpoint; }
 
-    static bool is_bound() { return _is_bound; }
     void printBoundDevices();
-    //TODO: getBoundDevices() method to recieve list of bound devices
+    std::list<zb_device_params_t*> getBoundDevices() const { return _bound_devices;}
 
-    static bool _allow_multiple_binding;
+    static bool isBound() { return _is_bound; }
     static void allowMultipleBinding(bool bind) { _allow_multiple_binding = bind; }
 
     // Manufacturer name and model implemented
     void setManufacturerAndModel(const char *name, const char *model);
     void readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr);
-
+    // Methods to be implemented by EPs to recieve manufacturer and model name
     virtual void readManufacturer(char* manufacturer) {};
     virtual void readModel(char* model) {};
 
-    //list of all handlers function calls, to be overide by EPs implementation
-    virtual void attribute_set(const esp_zb_zcl_set_attr_value_message_t *message) {};
-    virtual void attribute_read(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
-    virtual void readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute); //already implemented
+    bool epAllowMultipleBinding() { return _allow_multiple_binding; }
 
-    friend class ZigbeeCore;
+    // findEndpoind may be implemented by EPs to find and bind devices
+    virtual void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
+
+    //list of all handlers function calls, to be overide by EPs implementation
+    virtual void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {};
+    virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
+    virtual void zbReadBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute); //already implemented
+
+  private:
+    static bool _allow_multiple_binding;
+
+  protected:
+    static uint8_t _endpoint;
+    esp_zb_ha_standard_devices_t _device_id;
+    esp_zb_endpoint_config_t _ep_config;
+    esp_zb_cluster_list_t *_cluster_list;
+    static bool _is_bound;
+    std::list<zb_device_params_t*> _bound_devices;
+
+  friend class ZigbeeCore;
 };
 
 #endif //SOC_IEEE802154_SUPPORTED

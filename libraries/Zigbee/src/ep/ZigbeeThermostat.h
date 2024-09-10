@@ -34,13 +34,6 @@ class ZigbeeThermostat : public ZigbeeEP {
         ZigbeeThermostat(uint8_t endpoint);
         ~ZigbeeThermostat();
 
-        // save instance of the class in order to use it in static functions
-        static ZigbeeThermostat* _instance;
-
-        void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-        static void bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-        static void find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
-
         virtual void temperatureRead(float temp);
         virtual void temperatureMin(float temp);
         virtual void temperatureMax(float temp);
@@ -50,8 +43,14 @@ class ZigbeeThermostat : public ZigbeeEP {
         void setTemperatureReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
     private:
-        void attribute_read(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) override;
+        // save instance of the class in order to use it in static functions
+        static ZigbeeThermostat* _instance;
 
+        void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
+        static void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
+        static void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+
+        void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) override;
 };
 
 #endif //SOC_IEEE802154_SUPPORTED

@@ -20,7 +20,7 @@ class ZigbeeLight : public ZigbeeEP {
     virtual void setOffWaitTime(uint16_t value);
 
   private:
-    void attribute_set(const esp_zb_zcl_set_attr_value_message_t *message) override;
+    void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
 
 };
 

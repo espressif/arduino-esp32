@@ -16,7 +16,7 @@ class ZigbeeColorDimmableLight : public ZigbeeEP {
     uint8_t getCurrentLevel();
     uint16_t getCurrentColorX();
     uint16_t getCurrentColorY();
-    void calculateRGB(uint16_t x, uint16_t y, uint8_t &red, uint8_t &green, uint8_t &blue);
+
 
     // methods to be implemented by the user by overwritting them
     virtual void setOnOff(bool value);
@@ -29,7 +29,8 @@ class ZigbeeColorDimmableLight : public ZigbeeEP {
     virtual void setColorHue(uint8_t value);
 
   private:
-    void attribute_set(const esp_zb_zcl_set_attr_value_message_t *message) override;
+    void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+    void calculateRGB(uint16_t x, uint16_t y, uint8_t &red, uint8_t &green, uint8_t &blue);
 
 };
 

@@ -37,7 +37,7 @@ void ZigbeeColorDimmerSwitch::calculateXY(uint8_t red, uint8_t green, uint8_t bl
     y = (uint16_t)(color_y * 65535.0f);
 }
 
-void ZigbeeColorDimmerSwitch::bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
+void ZigbeeColorDimmerSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
         log_i("Bound successfully!");
         if (user_ctx) {
@@ -54,7 +54,7 @@ void ZigbeeColorDimmerSwitch::bind_cb(esp_zb_zdp_status_t zdo_status, void *user
     }
 }
 
-void ZigbeeColorDimmerSwitch::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
+void ZigbeeColorDimmerSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
     if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
         log_d("Found light endpoint");
         esp_zb_zdo_bind_req_param_t bind_req;
@@ -70,20 +70,20 @@ void ZigbeeColorDimmerSwitch::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t a
         bind_req.dst_endp = endpoint;
         bind_req.req_dst_addr = esp_zb_get_short_address();
         log_v("Try to bind on/off control of dimmable light");
-        esp_zb_zdo_device_bind_req(&bind_req, bind_cb, NULL);
+        esp_zb_zdo_device_bind_req(&bind_req, bindCb, NULL);
         bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL;
         log_v("Try to bind level control of dimmable light");
-        esp_zb_zdo_device_bind_req(&bind_req, bind_cb, NULL);
+        esp_zb_zdo_device_bind_req(&bind_req, bindCb, NULL);
         bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL;
         log_v("Try to bind color control of dimmable light");
-        esp_zb_zdo_device_bind_req(&bind_req, bind_cb, (void *)light);
+        esp_zb_zdo_device_bind_req(&bind_req, bindCb, (void *)light);
     } else {
         log_v("No color dimmable light endpoint found");
     }
 }
 
 // find on_off light endpoint
-void ZigbeeColorDimmerSwitch::find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
+void ZigbeeColorDimmerSwitch::findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
     uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_ON_OFF,  ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL,  ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, 
                                ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL};
     esp_zb_zdo_match_desc_req_param_t color_dimmable_light_req = {
@@ -94,7 +94,7 @@ void ZigbeeColorDimmerSwitch::find_endpoint(esp_zb_zdo_match_desc_req_param_t *c
         .num_out_clusters = 3,
         .cluster_list = cluster_list,
     };
-    esp_zb_zdo_match_cluster(&color_dimmable_light_req, find_cb, NULL);
+    esp_zb_zdo_match_cluster(&color_dimmable_light_req, findCb, NULL);
 }
 
 // Methods to control the light

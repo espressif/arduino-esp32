@@ -13,9 +13,6 @@ class ZigbeeSwitch : public ZigbeeEP {
     ZigbeeSwitch(uint8_t endpoint);
     ~ZigbeeSwitch();
 
-    // save instance of the class in order to use it in static functions
-    static ZigbeeSwitch* _instance;
-
     // methods to control the on/off light
     void lightToggle();
     void lightToggle(uint16_t group_addr);
@@ -34,9 +31,12 @@ class ZigbeeSwitch : public ZigbeeEP {
     void lightOnWithSceneRecall();
 
   private:
-    void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-    static void bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-    static void find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+    // save instance of the class in order to use it in static functions
+    static ZigbeeSwitch* _instance;
+
+    void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
+    static void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
+    static void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
 
 };
 

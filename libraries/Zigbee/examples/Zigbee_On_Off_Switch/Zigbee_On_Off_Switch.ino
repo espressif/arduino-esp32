@@ -146,7 +146,7 @@ void setup() {
   
   Serial.println("Waiting for Light to bound to the switch");
   //Wait for switch to bound to a light:
-  while(!zbSwitch.is_bound()) 
+  while(!zbSwitch.isBound()) 
   {
     Serial.printf(".");
     delay(500);

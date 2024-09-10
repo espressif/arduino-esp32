@@ -13,11 +13,6 @@ class ZigbeeColorDimmerSwitch : public ZigbeeEP {
     ZigbeeColorDimmerSwitch(uint8_t endpoint);
     ~ZigbeeColorDimmerSwitch();
 
-    // save instance of the class in order to use it in static functions
-    static ZigbeeColorDimmerSwitch* _instance;
-
-    void calculateXY(uint8_t red, uint8_t green, uint8_t blue, uint16_t &x, uint16_t &y);
-
     // methods to control the color dimmable light
     void lightToggle();
     void lightToggle(uint16_t group_addr);
@@ -52,10 +47,14 @@ class ZigbeeColorDimmerSwitch : public ZigbeeEP {
     void setLightColorHue(uint8_t value, uint8_t endpoint, uint16_t short_addr);
 
   private:
-    void find_endpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-    static void bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-    static void find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+    // save instance of the class in order to use it in static functions
+    static ZigbeeColorDimmerSwitch* _instance;
 
+    void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
+    static void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
+    static void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+
+    void calculateXY(uint8_t red, uint8_t green, uint8_t blue, uint16_t &x, uint16_t &y);
 };
 
 #endif //SOC_IEEE802154_SUPPORTED

@@ -95,7 +95,7 @@ void setup() {
   
   Serial.println("Waiting for Temperature sensor to bound to the switch");
   //Wait for switch to bound to a light:
-  while(!zbThermostat.is_bound()) 
+  while(!zbThermostat.isBound()) 
   {
     Serial.printf(".");
     delay(500);

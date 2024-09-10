@@ -33,7 +33,7 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
     };
 }
 
-void ZigbeeThermostat::bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
+void ZigbeeThermostat::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
       if (user_ctx) {
         zb_device_params_t *sensor = (zb_device_params_t *)user_ctx;
@@ -51,7 +51,7 @@ void ZigbeeThermostat::bind_cb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
   }
 }
 
-void ZigbeeThermostat::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
+void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_i("Found temperature sensor");
     esp_zb_zdo_bind_req_param_t bind_req;
@@ -78,7 +78,7 @@ void ZigbeeThermostat::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, ui
     bind_req.dst_endp = _endpoint;
 
     log_i("Request temperature sensor to bind us");
-    esp_zb_zdo_device_bind_req(&bind_req, bind_cb, NULL);
+    esp_zb_zdo_device_bind_req(&bind_req, bindCb, NULL);
 
     /* 2. Send binding request to self */
     bind_req.req_dst_addr = esp_zb_get_short_address();
@@ -94,20 +94,20 @@ void ZigbeeThermostat::find_cb(esp_zb_zdp_status_t zdo_status, uint16_t addr, ui
     bind_req.dst_endp = endpoint;
 
     log_i("Bind temperature sensor");
-    esp_zb_zdo_device_bind_req(&bind_req, bind_cb, (void *)sensor);
+    esp_zb_zdo_device_bind_req(&bind_req, bindCb, (void *)sensor);
   }
 }
 
-void ZigbeeThermostat::find_endpoint(esp_zb_zdo_match_desc_req_param_t *param) {
+void ZigbeeThermostat::findEndpoint(esp_zb_zdo_match_desc_req_param_t *param) {
     uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT};
     param->profile_id = ESP_ZB_AF_HA_PROFILE_ID;
     param->num_in_clusters = 1;
     param->num_out_clusters = 0;
     param->cluster_list = cluster_list;
-    esp_zb_zdo_match_cluster(param, find_cb, NULL);
+    esp_zb_zdo_match_cluster(param, findCb, NULL);
 }
 
-void ZigbeeThermostat::attribute_read(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
+void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
    if (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT) {
     if (attribute->id == ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S16) {
       int16_t value = attribute->data.value ? *(int16_t *)attribute->data.value : 0;

@@ -42,7 +42,7 @@ void ZigbeeColorDimmableLight::calculateRGB( uint16_t x, uint16_t y, uint8_t &re
 }
 
 //set attribude method -> methon overriden in child class
-void ZigbeeColorDimmableLight::attribute_set(const esp_zb_zcl_set_attr_value_message_t *message) {
+void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
     //check the data and call right method
     if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
         if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {

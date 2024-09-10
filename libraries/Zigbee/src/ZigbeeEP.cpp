@@ -94,7 +94,7 @@ void ZigbeeEP::printBoundDevices() {
 
 #pragma GCC diagnostic pop
 
-void ZigbeeEP::readBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
+void ZigbeeEP::zbReadBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
     /* Basic cluster attributes */
     if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
         zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
