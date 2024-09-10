@@ -45,7 +45,6 @@ void ZigbeeColorDimmerSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_
             //Read manufacturer and model automatically after successful bind
             _instance->readManufacturerAndModel(light->endpoint, light->short_addr);
             log_i("The light originating from address(0x%x) on endpoint(%d)", light->short_addr, light->endpoint);
-            //TODO: call user method to notify about the light and pass all the info ????
             _instance->_bound_devices.push_back(light);
         }
         _is_bound = true;
