@@ -7,9 +7,9 @@
 // Please read file README.md in the folder containing this example.
 
 #if CONFIG_FREERTOS_UNICORE
-#define ARDUINO_RUNNING_CORE 0
+#define TASK_RUNNING_CORE 0
 #else
-#define ARDUINO_RUNNING_CORE 1
+#define TASK_RUNNING_CORE 1
 #endif
 
 #define ANALOG_INPUT_PIN A0
@@ -51,7 +51,7 @@ void setup() {
     ,
     &analog_read_task_handle  // With task handle we will be able to manipulate with this task.
     ,
-    ARDUINO_RUNNING_CORE  // Core on which the task will run
+    TASK_RUNNING_CORE  // Core on which the task will run
   );
 
   Serial.printf("Basic Multi Threading Arduino Example\n");
