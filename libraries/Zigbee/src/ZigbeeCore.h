@@ -65,13 +65,6 @@ typedef enum {
     }                                                      \
   }
 
-// default Zigbee radio and host configuration
-#define ZIGBEE_DEFAULT_RADIO_CONFIG() \
-  { .radio_mode = ZB_RADIO_MODE_NATIVE, }
-
-#define ZIGBEE_DEFAULT_HOST_CONFIG() \
-  { .host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE, }
-
 class ZigbeeCore {
     private:
         esp_zb_radio_config_t _radio_config;

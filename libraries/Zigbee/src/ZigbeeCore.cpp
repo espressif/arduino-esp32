@@ -7,8 +7,8 @@
 #include "Arduino.h"
 
 ZigbeeCore::ZigbeeCore() {
-  _radio_config = ZIGBEE_DEFAULT_RADIO_CONFIG();
-  _host_config = ZIGBEE_DEFAULT_HOST_CONFIG();
+  _radio_config.radio_mode = ZB_RADIO_MODE_NATIVE; // Use the native 15.4 radio
+  _host_config.host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE; // Disable host connection
   _zb_ep_list = esp_zb_ep_list_create();
   _primary_channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK;
   _open_network = 0;
