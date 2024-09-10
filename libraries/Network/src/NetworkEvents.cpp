@@ -221,6 +221,7 @@ void NetworkEvents::removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event
     NetworkEventCbList_t entry = cbEventList[i];
     if (entry.cb == cbEvent && entry.event == event) {
       cbEventList.erase(cbEventList.begin() + i);
+      i--; // Don't skip over any entries in the list
     }
   }
 }
@@ -240,6 +241,7 @@ void NetworkEvents::removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t e
     NetworkEventCbList_t entry = cbEventList[i];
     if (getStdFunctionAddress(entry.fcb) == getStdFunctionAddress(cbEvent) && entry.event == event) {
       cbEventList.erase(cbEventList.begin() + i);
+      i--; // Don't skip over any entries in the list
     }
   }
 }
@@ -253,6 +255,7 @@ void NetworkEvents::removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t ev
     NetworkEventCbList_t entry = cbEventList[i];
     if (entry.scb == cbEvent && entry.event == event) {
       cbEventList.erase(cbEventList.begin() + i);
+      i--; // Don't skip over any entries in the list
     }
   }
 }
@@ -262,6 +265,7 @@ void NetworkEvents::removeEvent(network_event_handle_t id) {
     NetworkEventCbList_t entry = cbEventList[i];
     if (entry.id == id) {
       cbEventList.erase(cbEventList.begin() + i);
+      i--; // Don't skip over any entries in the list
     }
   }
 }
