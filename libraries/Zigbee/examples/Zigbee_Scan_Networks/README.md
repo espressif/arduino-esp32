@@ -11,7 +11,17 @@ Currently, this example supports the following targets.
 
 ## Example Output
 
-//TODO:
+    Setup done
+    Loop running...
+    Loop running...
+    Loop running...
+    Loop running...
+
+    Scan done
+    2 networks found:
+    Nr | PAN ID | CH | Permit Joining | Router Capacity | End Device Capacity | Extended PAN ID
+     1 | 0xe6f0 | 14 | Yes            | Yes             | Yes                 | f0:f5:bd:ff:fe:02:3f:24
+     2 | 0xa9bb | 24 | No             | Yes             | Yes                 | 60:55:f9:00:00:f7:52:d0
 
 ## Hardware Required
 
