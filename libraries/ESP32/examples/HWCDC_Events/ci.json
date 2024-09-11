@@ -1,11 +1,11 @@
 {
-  "targets": {
-    "esp32": false,
-    "esp32s2": false
-  },
   "fqbn": {
     "esp32s3": [
       "espressif:esp32:esp32s3:USBMode=hwcdc,PartitionScheme=huge_app,FlashMode=dio"
     ]
+  },
+  "targets": {
+    "esp32": false,
+    "esp32s2": false
   }
 }
