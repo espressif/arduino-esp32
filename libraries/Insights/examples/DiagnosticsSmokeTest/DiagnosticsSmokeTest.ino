@@ -37,7 +37,7 @@ static void smoke_test() {
       } else {
         log_e("[count][%d] [crash_count][%" PRIu32 "] [excvaddr][0x0f] Crashing...", count, s_reset_count);
         //ToDo: find better way to crash
-        //*(int *)0x0F = 0x10;
+        abort();
       }
     }
 

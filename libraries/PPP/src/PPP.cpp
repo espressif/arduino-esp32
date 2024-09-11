@@ -324,8 +324,17 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
   } else {
     // try to communicate with the modem
     if (esp_modem_sync(_dce) != ESP_OK) {
-      log_v("Modem does not respond to AT, maybe in DATA mode? ...exiting network mode");
+      log_v("Modem does not respond to AT! Switching to COMMAND mode.");
       esp_modem_set_mode(_dce, ESP_MODEM_MODE_COMMAND);
+      if (esp_modem_sync(_dce) != ESP_OK) {
+        log_v("Modem does not respond to AT! Switching to CMUX mode.");
+        if (esp_modem_set_mode(_dce, ESP_MODEM_MODE_CMUX) != ESP_OK) {
+          log_v("Modem failed to switch to CMUX mode!");
+        } else {
+          log_v("Switching back to COMMAND mode");
+          esp_modem_set_mode(_dce, ESP_MODEM_MODE_COMMAND);
+        }
+      }
       if (esp_modem_sync(_dce) != ESP_OK) {
         log_e("Modem failed to respond to AT!");
         goto err;

@@ -104,7 +104,7 @@ If everything is ok, you will see some output logs similar to this one:
     dumping object inventory... done
     build succeeded.
 
-The HTML pages are in `_build/en/generic/html`.
+The HTML pages are in ``_build/en/generic/html``.
 
 Sections
 --------

@@ -1,4 +1,9 @@
 {
+  "fqbn": {
+    "esp32s3": [
+      "espressif:esp32:esp32s3:USBMode=default,PartitionScheme=esp_sr_16,FlashSize=16M,FlashMode=dio"
+    ]
+  },
   "targets": {
     "esp32": false,
     "esp32c3": false,
