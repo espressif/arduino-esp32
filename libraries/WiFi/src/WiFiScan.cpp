@@ -119,7 +119,11 @@ void WiFiScanClass::_scanDone() {
   esp_wifi_scan_get_ap_num(&(WiFiScanClass::_scanCount));
   if (WiFiScanClass::_scanCount) {
     WiFiScanClass::_scanResult = new wifi_ap_record_t[WiFiScanClass::_scanCount];
-    if (!WiFiScanClass::_scanResult || esp_wifi_scan_get_ap_records(&(WiFiScanClass::_scanCount), (wifi_ap_record_t *)_scanResult) != ESP_OK) {
+    if (!WiFiScanClass::_scanResult) {
+      WiFiScanClass::_scanCount = 0;
+    } else if (esp_wifi_scan_get_ap_records(&(WiFiScanClass::_scanCount), (wifi_ap_record_t *)_scanResult) != ESP_OK) {
+      delete[] reinterpret_cast<wifi_ap_record_t *>(WiFiScanClass::_scanResult);
+      WiFiScanClass::_scanResult = 0;
       WiFiScanClass::_scanCount = 0;
     }
   }

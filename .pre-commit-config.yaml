@@ -25,6 +25,15 @@ repos:
         args: [--fix=lf]
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+      - id: pretty-format-json
+        args: [--autofix]
+        types_or: [json]
+        exclude: |
+          (?x)(
+              diagram\..*\.json$|
+              package\.json$|
+              ^package\/.*$
+          )
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.3.0"
     hooks:

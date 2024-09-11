@@ -36,7 +36,7 @@ static void smoke_test() {
         Insights.event(TAG, "[count][%d]", count);
       } else {
         log_e("[count][%d] [crash_count][%" PRIu32 "] [excvaddr][0x0f] Crashing...", count, s_reset_count);
-        *(int *)0x0F = 0x10;
+        abort();
       }
     }
 
