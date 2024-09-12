@@ -9,8 +9,8 @@ const char *password = "........";
 WebServer server(80);
 
 typedef struct credentials_t {
-  char *username;
-  char *password;
+  const char *username;
+  const char *password;
 } credentials_t;
 
 credentials_t passwdfile[] = {{"admin", "esp32"}, {"fred", "41234123"}, {"charlie", "sdfsd"}, {"alice", "vambdnkuhj"}, {"bob", "svcdbjhws12"}, {NULL, NULL}};
