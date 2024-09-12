@@ -280,7 +280,7 @@ bool WebServer::_collectHeader(const char *headerName, const char *headerValue) 
   return false;
 }
 
-void WebServer::_parseArguments(String data) {
+void WebServer::_parseArguments(const String& data) {
   log_v("args: %s", data.c_str());
   if (_currentArgs) {
     delete[] _currentArgs;
@@ -387,7 +387,7 @@ int WebServer::_uploadReadByte(NetworkClient &client) {
   return res;
 }
 
-bool WebServer::_parseForm(NetworkClient &client, String boundary, uint32_t len) {
+bool WebServer::_parseForm(NetworkClient &client, const String& boundary, uint32_t len) {
   (void)len;
   log_v("Parse Form: Boundary: %s Length: %d", boundary.c_str(), len);
   String line;

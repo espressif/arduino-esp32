@@ -158,10 +158,10 @@ public:
   void onNotFound(THandlerFunction fn);     //called when handler is not assigned
   void onFileUpload(THandlerFunction ufn);  //handle file uploads
 
-  String uri() {
+  String uri() const {
     return _currentUri;
   }
-  HTTPMethod method() {
+  HTTPMethod method() const {
     return _currentMethod;
   }
   virtual NetworkClient &client() {
@@ -174,24 +174,24 @@ public:
     return *_currentRaw;
   }
 
-  String pathArg(unsigned int i);                                               // get request path argument by number
-  String arg(String name);                                                      // get request argument value by name
-  String arg(int i);                                                            // get request argument value by number
-  String argName(int i);                                                        // get request argument name by number
-  int args();                                                                   // get arguments count
-  bool hasArg(String name);                                                     // check if argument exists
+  String pathArg(unsigned int i) const;                                               // get request path argument by number
+  String arg(const String& name) const;                                                      // get request argument value by name
+  String arg(int i) const;                                                            // get request argument value by number
+  String argName(int i) const;                                                        // get request argument name by number
+  int args() const;                                                                   // get arguments count
+  bool hasArg(const String& name) const;                                                     // check if argument exists
   void collectHeaders(const char *headerKeys[], const size_t headerKeysCount);  // set the request headers to collect
-  String header(String name);                                                   // get request header value by name
-  String header(int i);                                                         // get request header value by number
-  String headerName(int i);                                                     // get request header name by number
-  int headers();                                                                // get header count
-  bool hasHeader(String name);                                                  // check if header exists
+  String header(const String& name) const;                                                   // get request header value by name
+  String header(int i) const;                                                         // get request header value by number
+  String headerName(int i) const;                                                     // get request header name by number
+  int headers() const;                                                                // get header count
+  bool hasHeader(const String& name) const;                                                  // check if header exists
 
-  int clientContentLength() {
+  int clientContentLength() const {
     return _clientContentLength;
   }  // return "content-length" of incoming HTTP header from "_currentClient"
 
-  String hostHeader();  // get request host header if available or empty String if not
+  String hostHeader() const;  // get request host header if available or empty String if not
 
   // send response to the client
   // code - HTTP response code, can be 200 or 404
@@ -240,9 +240,9 @@ protected:
   void _handleRequest();
   void _finalizeResponse();
   bool _parseRequest(NetworkClient &client);
-  void _parseArguments(String data);
+  void _parseArguments(const String& data);
   static String _responseCodeToString(int code);
-  bool _parseForm(NetworkClient &client, String boundary, uint32_t len);
+  bool _parseForm(NetworkClient &client, const String& boundary, uint32_t len);
   bool _parseFormUploadAborted();
   void _uploadWriteByte(uint8_t b);
   int _uploadReadByte(NetworkClient &client);
