@@ -46,7 +46,7 @@ typedef struct {
 class BuiltInLED {
 private:
     uint8_t pin_number;
-    bool state;BuiltInLED
+    bool state;
     led_indicator_color_hsv_t hsv_color;
         
 public:
