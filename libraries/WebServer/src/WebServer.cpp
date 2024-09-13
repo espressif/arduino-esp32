@@ -268,6 +268,7 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     String *ret = fn(OTHER_AUTH, authReq, {});
     if (ret) {
       log_v("Authentication Success");
+      delete ret;
       return true;
     }
   }
