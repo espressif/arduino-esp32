@@ -680,7 +680,7 @@ String WebServer::pathArg(unsigned int i) const {
   return "";
 }
 
-String WebServer::arg(const String& name) const {
+String WebServer::arg(const String &name) const {
   for (int j = 0; j < _postArgsLen; ++j) {
     if (_postArgs[j].key == name) {
       return _postArgs[j].value;
@@ -712,7 +712,7 @@ int WebServer::args() const {
   return _currentArgCount;
 }
 
-bool WebServer::hasArg(const String& name) const {
+bool WebServer::hasArg(const String &name) const {
   for (int j = 0; j < _postArgsLen; ++j) {
     if (_postArgs[j].key == name) {
       return true;
@@ -726,7 +726,7 @@ bool WebServer::hasArg(const String& name) const {
   return false;
 }
 
-String WebServer::header(const String& name) const {
+String WebServer::header(const String &name) const {
   for (int i = 0; i < _headerKeysCount; ++i) {
     if (_currentHeaders[i].key.equalsIgnoreCase(name)) {
       return _currentHeaders[i].value;
@@ -766,7 +766,7 @@ int WebServer::headers() const {
   return _headerKeysCount;
 }
 
-bool WebServer::hasHeader(const String& name) const {
+bool WebServer::hasHeader(const String &name) const {
   for (int i = 0; i < _headerKeysCount; ++i) {
     if ((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0)) {
       return true;

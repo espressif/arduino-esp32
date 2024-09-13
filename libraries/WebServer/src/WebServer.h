@@ -174,18 +174,18 @@ public:
     return *_currentRaw;
   }
 
-  String pathArg(unsigned int i) const;                                               // get request path argument by number
-  String arg(const String& name) const;                                                      // get request argument value by name
-  String arg(int i) const;                                                            // get request argument value by number
-  String argName(int i) const;                                                        // get request argument name by number
-  int args() const;                                                                   // get arguments count
-  bool hasArg(const String& name) const;                                                     // check if argument exists
+  String pathArg(unsigned int i) const;                                         // get request path argument by number
+  String arg(const String &name) const;                                         // get request argument value by name
+  String arg(int i) const;                                                      // get request argument value by number
+  String argName(int i) const;                                                  // get request argument name by number
+  int args() const;                                                             // get arguments count
+  bool hasArg(const String &name) const;                                        // check if argument exists
   void collectHeaders(const char *headerKeys[], const size_t headerKeysCount);  // set the request headers to collect
-  String header(const String& name) const;                                                   // get request header value by name
-  String header(int i) const;                                                         // get request header value by number
-  String headerName(int i) const;                                                     // get request header name by number
-  int headers() const;                                                                // get header count
-  bool hasHeader(const String& name) const;                                                  // check if header exists
+  String header(const String &name) const;                                      // get request header value by name
+  String header(int i) const;                                                   // get request header value by number
+  String headerName(int i) const;                                               // get request header name by number
+  int headers() const;                                                          // get header count
+  bool hasHeader(const String &name) const;                                     // check if header exists
 
   int clientContentLength() const {
     return _clientContentLength;
@@ -240,9 +240,9 @@ protected:
   void _handleRequest();
   void _finalizeResponse();
   bool _parseRequest(NetworkClient &client);
-  void _parseArguments(const String& data);
+  void _parseArguments(const String &data);
   static String _responseCodeToString(int code);
-  bool _parseForm(NetworkClient &client, const String& boundary, uint32_t len);
+  bool _parseForm(NetworkClient &client, const String &boundary, uint32_t len);
   bool _parseFormUploadAborted();
   void _uploadWriteByte(uint8_t b);
   int _uploadReadByte(NetworkClient &client);
