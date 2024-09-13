@@ -146,16 +146,16 @@ public:
   // @param requestMethod method of the http request line.
   // @param requestUri request resource from the http request line.
   // @return true when method can be handled.
-  bool canHandle(WebServer &server, HTTPMethod requestMethod, String uri) override {
+  bool canHandle(WebServer &server, HTTPMethod requestMethod, const String&  uri) override {
     return ((requestMethod == HTTP_POST) || (requestMethod == HTTP_DELETE));
   }  // canHandle()
 
-  bool canUpload(WebServer &server, String uri) override {
+  bool canUpload(WebServer &server, const String&  uri) override {
     // only allow upload on root fs level.
     return (uri == "/");
   }  // canUpload()
 
-  bool handle(WebServer &server, HTTPMethod requestMethod, String requestUri) override {
+  bool handle(WebServer &server, HTTPMethod requestMethod, const String&  requestUri) override {
     // ensure that filename starts with '/'
     String fName = requestUri;
     if (!fName.startsWith("/")) {
@@ -177,7 +177,7 @@ public:
   }  // handle()
 
   // uploading process
-  void upload(WebServer UNUSED &server, String requestUri, HTTPUpload &upload) override {
+  void upload(WebServer UNUSED &server, const String&  requestUri, HTTPUpload &upload) override {
     // ensure that filename starts with '/'
     static size_t uploadSize;
 
