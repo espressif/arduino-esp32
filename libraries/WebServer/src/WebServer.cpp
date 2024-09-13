@@ -674,14 +674,14 @@ void WebServer::_streamFileCore(const size_t fileSize, const String &fileName, c
   send(code, contentType, "");
 }
 
-String WebServer::pathArg(unsigned int i) {
+String WebServer::pathArg(unsigned int i) const {
   if (_currentHandler != nullptr) {
     return _currentHandler->pathArg(i);
   }
   return "";
 }
 
-String WebServer::arg(String name) {
+String WebServer::arg(const String &name) const {
   for (int j = 0; j < _postArgsLen; ++j) {
     if (_postArgs[j].key == name) {
       return _postArgs[j].value;
@@ -695,25 +695,25 @@ String WebServer::arg(String name) {
   return "";
 }
 
-String WebServer::arg(int i) {
+String WebServer::arg(int i) const {
   if (i < _currentArgCount) {
     return _currentArgs[i].value;
   }
   return "";
 }
 
-String WebServer::argName(int i) {
+String WebServer::argName(int i) const {
   if (i < _currentArgCount) {
     return _currentArgs[i].key;
   }
   return "";
 }
 
-int WebServer::args() {
+int WebServer::args() const {
   return _currentArgCount;
 }
 
-bool WebServer::hasArg(String name) {
+bool WebServer::hasArg(const String &name) const {
   for (int j = 0; j < _postArgsLen; ++j) {
     if (_postArgs[j].key == name) {
       return true;
@@ -727,7 +727,7 @@ bool WebServer::hasArg(String name) {
   return false;
 }
 
-String WebServer::header(String name) {
+String WebServer::header(const String &name) const {
   for (int i = 0; i < _headerKeysCount; ++i) {
     if (_currentHeaders[i].key.equalsIgnoreCase(name)) {
       return _currentHeaders[i].value;
@@ -749,25 +749,25 @@ void WebServer::collectHeaders(const char *headerKeys[], const size_t headerKeys
   }
 }
 
-String WebServer::header(int i) {
+String WebServer::header(int i) const {
   if (i < _headerKeysCount) {
     return _currentHeaders[i].value;
   }
   return "";
 }
 
-String WebServer::headerName(int i) {
+String WebServer::headerName(int i) const {
   if (i < _headerKeysCount) {
     return _currentHeaders[i].key;
   }
   return "";
 }
 
-int WebServer::headers() {
+int WebServer::headers() const {
   return _headerKeysCount;
 }
 
-bool WebServer::hasHeader(String name) {
+bool WebServer::hasHeader(const String &name) const {
   for (int i = 0; i < _headerKeysCount; ++i) {
     if ((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0)) {
       return true;
@@ -776,7 +776,7 @@ bool WebServer::hasHeader(String name) {
   return false;
 }
 
-String WebServer::hostHeader() {
+String WebServer::hostHeader() const {
   return _hostHeader;
 }
 
