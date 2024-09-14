@@ -419,17 +419,3 @@ void loop() {
 
   delay(50); // WDT is happier with a delay
 }
-
-//#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-    // If Thread is Provisioned, publish the dns service
-//    if (chip::DeviceLayer::ConnectivityMgr().IsThreadProvisioned() &&
-//        (chip::Server::GetInstance().GetFabricTable().FabricCount() != 0)) {
-//        chip::app::DnssdServer::Instance().StartServer();
-//    }
-//#endif
-
-//        chip::DeviceLayer::PlatformMgr().LockChipStack();
-//        chip::DeviceLayer::ConnectivityMgr().ClearWiFiStationProvision();
-//        chip::DeviceLayer::PlatformMgr().UnlockChipStack();
-
-//    return chip::DeviceLayer::ConnectivityMgr().IsWiFiStationProvisioned();
