@@ -91,7 +91,5 @@ app_driver_handle_t light_accessory_init()
 
     const uint8_t pin = WS2812_PIN; // set your board WS2812b pin here
     builtinLED.begin(pin);
-    // builtinLED.setHSV({DEFAULT_HUE, DEFAULT_SATURATION, DEFAULT_BRIGHTNESS});
-    // builtinLED.write();    
     return (app_driver_handle_t) &builtinLED;
 }
