@@ -61,7 +61,6 @@ public:
   Stream() {
     _timeout = 1000;
   }
-  virtual ~Stream() {}
 
   // parsing methods
 
