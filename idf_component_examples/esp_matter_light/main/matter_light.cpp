@@ -1,6 +1,5 @@
 /*
    This example code is in the Public Domain (or CC0 licensed, at your option.)
-
    Unless required by applicable law or agreed to in writing, this
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
@@ -37,6 +36,9 @@
     }
 #endif
 
+// set your board button pin here
+const uint8_t button_gpio = BUTTON_PIN;   // GPIO BOOT Button
+
 uint16_t light_endpoint_id = 0;
 
 using namespace esp_matter;
@@ -54,11 +56,29 @@ static const char *s_decryption_key = decryption_key_start;
 static const uint16_t s_decryption_key_len = decryption_key_end - decryption_key_start;
 #endif // CONFIG_ENABLE_ENCRYPTED_OTA
 
+bool isAccessoryCommissioned() {
+    return chip::Server::GetInstance().GetFabricTable().FabricCount() > 0;
+}
+
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+bool isWifiConnected() {
+    return chip::DeviceLayer::ConnectivityMgr().IsWiFiStationConnected();
+}
+#endif
+
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+bool isThreadConnected() {
+    return chip::DeviceLayer::ConnectivityMgr().IsThreadAttached();
+}
+#endif
+
 static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
 {
     switch (event->Type) {
     case chip::DeviceLayer::DeviceEventType::kInterfaceIpAddressChanged:
-        log_i("Interface IP Address changed");
+        log_i("Interface %s Address changed",
+          event->InterfaceIpAddressChanged.Type == chip::DeviceLayer::InterfaceIpChangeType::kIpV4_Assigned ?
+          "IPv4" : "IPV6" );
         break;
 
     case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:
@@ -127,40 +147,6 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg)
     default:
         break;
     }
-}
-
-static uint32_t button_time_stamp = 0;
-static void button_driver_down_cb()
-{
-    button_time_stamp = millis();
-}
-
-
-static void button_driver_up_cb()
-{
-    uint32_t time_diff = millis() - button_time_stamp;
-    // Factory reset is triggered if the button is pressed for more than 3 seconds
-    if (time_diff > 3000) {
-        log_i("Factory reset triggered. Light will retored to factory settings.");
-        esp_matter::factory_reset();
-        return;
-    }
-
-    // Toggle button is pressed - toggle the light
-    log_i("Toggle button pressed");
-    uint16_t endpoint_id = light_endpoint_id;
-    uint32_t cluster_id = OnOff::Id;
-    uint32_t attribute_id = OnOff::Attributes::OnOff::Id;
-
-    node_t *node = node::get();
-    endpoint_t *endpoint = endpoint::get(node, endpoint_id);
-    cluster_t *cluster = cluster::get(endpoint, cluster_id);
-    attribute_t *attribute = attribute::get(cluster, attribute_id);
-
-    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-    attribute::get_val(attribute, &val);
-    val.val.b = !val.val.b;
-    attribute::update(endpoint_id, cluster_id, attribute_id, &val);
 }
 
 esp_err_t matter_light_attribute_update(app_driver_handle_t driver_handle, uint16_t endpoint_id, uint32_t cluster_id,
@@ -241,10 +227,7 @@ esp_err_t matter_light_set_defaults(uint16_t endpoint_id)
 void button_driver_init()
 {
     /* Initialize button */
-    uint8_t pin = 0; // set your board button pin here
-    pinMode(pin, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(pin), button_driver_down_cb, FALLING); // pressed
-    attachInterrupt(digitalPinToInterrupt(pin), button_driver_up_cb, RISING);    // released
+    pinMode(button_gpio, INPUT_PULLUP);
 }
 
 // This callback is called for every attribute update. The callback implementation shall
@@ -277,9 +260,6 @@ void setup()
 {
     esp_err_t err = ESP_OK;
 
-    /* Initialize the ESP NVS layer */
-    //nvs_flash_init();
-
     /* Initialize driver */
     app_driver_handle_t light_handle = light_accessory_init();
     button_driver_init();
@@ -309,7 +289,7 @@ void setup()
         log_e("Failed to create extended color light endpoint");
         abort();
     }
-    
+
     light_endpoint_id = endpoint::get_id(endpoint);
     log_i("Light created with endpoint_id %d", light_endpoint_id);
 
@@ -343,9 +323,6 @@ void setup()
         abort();
     }
 
-    /* Starting driver with default values */
-    matter_light_set_defaults(light_endpoint_id);
-
 #if CONFIG_ENABLE_ENCRYPTED_OTA
     err = esp_matter_ota_requestor_encrypted_init(s_decryption_key, s_decryption_key_len);
     if (err != ESP_OK) {
@@ -365,5 +342,94 @@ void setup()
 }
 
 void loop() {
-  delay(1000);
+  static uint32_t button_time_stamp = 0;
+  static bool button_state = false;
+  static bool started = false;
+  
+  if(!isAccessoryCommissioned()) {
+    log_w("Accessory not commissioned yet. Waiting for commissioning.");
+#ifdef RGB_BUILTIN
+    rgbLedWrite(RGB_BUILTIN, 48, 0, 20); // Purple indicates accessory not commissioned
+#endif
+    delay(5000);
+    return;        
+  }
+
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  if (!isWifiConnected()) {
+    log_w("Wi-Fi not connected yet. Waiting for connection.");
+#ifdef RGB_BUILTIN
+    rgbLedWrite(RGB_BUILTIN, 48, 20, 0); // Orange indicates accessory not connected to Wi-Fi
+#endif
+    delay(5000);
+    return;
+  }
+#endif
+
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+  if (!isThreadConnected()) {
+    log_w("Thread not connected yet. Waiting for connection.");
+#ifdef RGB_BUILTIN
+    rgbLedWrite(RGB_BUILTIN, 0, 20, 48); // Blue indicates accessory not connected to Trhead
+#endif
+    delay(5000);
+    return;
+  }
+#endif
+
+  // Once all network connections are established, the accessory is ready for use
+  // Run it only once
+  if (!started) {
+    log_i("Accessory is commissioned and connected to Wi-Fi. Ready for use.");
+    started = true;
+    // Starting driver with default values
+    matter_light_set_defaults(light_endpoint_id);
+  }
+
+  // Check if the button is pressed and toggle the light right away
+  if (digitalRead(button_gpio) == LOW && !button_state) {
+    // deals with button debounce
+    button_time_stamp = millis(); // record the time while the button is pressed.
+    button_state = true; // pressed.
+
+     // Toggle button is pressed - toggle the light
+    log_i("Toggle button pressed");
+
+    endpoint_t *endpoint = endpoint::get(node::get(), light_endpoint_id);
+    cluster_t *cluster = cluster::get(endpoint, OnOff::Id);
+    attribute_t *attribute = attribute::get(cluster, OnOff::Attributes::OnOff::Id);
+
+    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+    attribute::get_val(attribute, &val);
+    val.val.b = !val.val.b;
+    attribute::update(light_endpoint_id, OnOff::Id, OnOff::Attributes::OnOff::Id, &val);
+  }
+
+  // Check if the button is released and handle the factory reset
+  uint32_t time_diff = millis() - button_time_stamp;  
+  if (button_state && time_diff > 100 && digitalRead(button_gpio) == HIGH) {
+      button_state = false; // released. It can be pressed again after 100ms debounce.
+
+    // Factory reset is triggered if the button is pressed for more than 10 seconds
+    if (time_diff > 10000) {
+        log_i("Factory reset triggered. Light will retored to factory settings.");
+        esp_matter::factory_reset();
+    }
+  }
+
+  delay(50); // WDT is happier with a delay
 }
+
+//#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+    // If Thread is Provisioned, publish the dns service
+//    if (chip::DeviceLayer::ConnectivityMgr().IsThreadProvisioned() &&
+//        (chip::Server::GetInstance().GetFabricTable().FabricCount() != 0)) {
+//        chip::app::DnssdServer::Instance().StartServer();
+//    }
+//#endif
+
+//        chip::DeviceLayer::PlatformMgr().LockChipStack();
+//        chip::DeviceLayer::ConnectivityMgr().ClearWiFiStationProvision();
+//        chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+
+//    return chip::DeviceLayer::ConnectivityMgr().IsWiFiStationProvisioned();

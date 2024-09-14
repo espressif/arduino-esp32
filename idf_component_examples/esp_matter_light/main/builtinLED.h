@@ -1,10 +1,8 @@
 /*
     This example code is in the Public Domain (or CC0 licensed, at your option.)
-
     Unless required by applicable law or agreed to in writing, this
     software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
     CONDITIONS OF ANY KIND, either express or implied.
-
         This will implement the onboard WS2812b LED as a LED indicator
         It can be used to indicate some state or status of the device
         The LED can be controlled using RGB, HSV or color temperature, brightness
@@ -48,7 +46,7 @@ private:
     uint8_t pin_number;
     bool state;
     led_indicator_color_hsv_t hsv_color;
-        
+
 public:
     BuiltInLED();
     ~BuiltInLED();

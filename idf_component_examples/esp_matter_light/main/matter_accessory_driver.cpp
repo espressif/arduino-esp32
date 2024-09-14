@@ -1,6 +1,5 @@
 /*
    This example code is in the Public Domain (or CC0 licensed, at your option.)
-
    Unless required by applicable law or agreed to in writing, this
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
@@ -10,9 +9,6 @@
 #include <esp_matter_attribute_utils.h>
 #include "builtinLED.h"
 #include "matter_accessory_driver.h"
-
-// set your board WS2812b pin here (e.g. 48 is the default pin for the ESP32-S3 devkit)
-#define WS2812_PIN 48
 
 /* Do any conversions/remapping for the actual value here */
 esp_err_t light_accessory_set_power(void *led, uint8_t val)
@@ -95,7 +91,7 @@ app_driver_handle_t light_accessory_init()
 
     const uint8_t pin = WS2812_PIN; // set your board WS2812b pin here
     builtinLED.begin(pin);
-    builtinLED.setHSV({DEFAULT_HUE, DEFAULT_SATURATION, DEFAULT_BRIGHTNESS});
-    builtinLED.write();    
+    // builtinLED.setHSV({DEFAULT_HUE, DEFAULT_SATURATION, DEFAULT_BRIGHTNESS});
+    // builtinLED.write();    
     return (app_driver_handle_t) &builtinLED;
 }

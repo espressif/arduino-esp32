@@ -1,4 +1,23 @@
 #include <esp_err.h>
+#include <sdkconfig.h>
+
+// set your board WS2812b pin here (e.g. 48 is the default pin for the ESP32-S3 devkit)
+#ifndef CONFIG_WS2812_PIN
+#define WS2812_PIN 48                 // ESP32-S3 DevKitC built-in LED
+#else
+#define WS2812_PIN CONFIG_WS2812_PIN  // From sdkconfig.defaults.<soc> 
+#endif
+
+#ifndef RGB_BUILTIN
+#define RGB_BUILTIN WS2812_PIN
+#endif
+
+// Set your board button pin here (e.g. 0 is the default pin for the ESP32-S3 devkit)
+#ifndef CONFIG_BUTTON_PIN
+#define BUTTON_PIN 0                       // ESP32-S3 DevKitC built-in button
+#else
+#define BUTTON_PIN CONFIG_BUTTON_PIN       // From sdkconfig.defaults.<soc>
+#endif
 
 /** Standard max values (used for remapping attributes) */
 #define STANDARD_BRIGHTNESS 255
