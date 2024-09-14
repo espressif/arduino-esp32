@@ -1,0 +1,87 @@
+| Supported Targets | ESP32-S3 | ESP32-C3 | ESP32-C6 |
+| ----------------- | -------- | -------- | -------- |
+
+
+# Managed Component Light
+
+This example is configured by default to work with the ESP32-S3, which has the RGB LED GPIO set as pin 48 and the BOOT button on GPIO 0.
+
+This example creates a Color Temperature Light device using the esp_matter component downloaded from the [Espressif Component Registry](https://components.espressif.com/) instead of an extra component locally, so the example can work without setting up the esp-matter environment.
+
+See the [docs](https://docs.espressif.com/projects/esp-matter/en/latest/esp32/developing.html) for more information about building and flashing the firmware.
+
+The code is based on the Arduino API and uses Arduino as an IDF Component.
+
+## How to use it
+
+Once the device runs for the first time, it must be commissioned to the Matter Fabric of the available Matter Environment.  
+Possible Matter Environments are:  
+- Amazon Alexa
+- Google Home Assistant
+- Apple Home
+- Open Source Home Assistant
+
+There is no QR Code to be used when the Smartphone APP wants to add the Matter Device.  
+Please enter the code manually: `34970112332`
+
+The devboard has a built-in LED that will be used as the Matter Light.  
+The default setting of the code uses pin 48 for the ESP32-S3.  
+Please change it in `main/matter_accessory_driver.h` or in the `sdkconfig.defaults.<SOC>` file.
+
+## LED Status and Factory Mode
+
+The WS2812b built-in LED will turn purple as soon as the device is flashed and runs for the first time.  
+The purple color indicates that the Matter Accessory has not been commissioned yet.  
+After using a Matter provider Smartphone APP to add a Matter device to your Home Application, it may turn orange to indicate that it has no WiFi connection.
+
+Once it connects to the WiFi network, the LED will turn white to indicate that Matter is working and the device is connected to the Matter Environment.
+
+The Matter and WiFi configuration will be stored in NVS to ensure that it will connect to the Matter Fabric and WiFi Network again once it is reset.
+
+The Matter Smartphone APP will control the light state (ON/OFF), temperature (Warm/Cold White), and brightness.
+
+## On Board Light toggle button
+
+The built-in BOOT button will toggle On/Off and replicate the new state to the Matter Environment, making it visible in the Matter Smartphone APP as well.
+
+## Returning to the Factory State
+
+Holding the BOOT button pressed for more than 10 seconds and then releasing it will erase all Matter and WiFi configuration, forcing it to reset to factory state. After that, the device needs to be commissioned again. Previous setups done in the Smartphone APP won't work again; therefore, the virtual device shall be removed from the APP.
+
+## Building the Application using WiFi and Matter
+
+Use ESP-IDF 5.1.4 from https://github.com/espressif/esp-idf/tree/release/v5.1  
+This example has been tested with Arduino Core 3.0.4
+
+The project will download all necessary components, inluding the Arduino Core.  
+Run `idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.<SOC>.idf" -p <PORT> flash monitor`
+
+Example for ESP32-S3/Linux|MacOS:  
+`idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32s3" -p /dev/ttyACM0 flash monitor`
+Example for ESP32-C3/Windows:  
+`idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32c3" -p com3 flash monitor`
+
+It may be necessary to delete some folders and files  before running `idf.py`   
+Linux/MacOS: `rm -rf build managed_components sdkconfig dependencies.lock`  
+Windows: `rmdir /s/q build managed_components` and `del sdkconfig dependencies.lock`
+
+There is a configuration file for these SoC: esp32s3, esp32c3, esp32c6.
+Those are the tested devices that have a WS2812 RGB LED and can run BLE, WiFi and Matter.
+
+In case it is necessary to change the Button Pin or the REG LED Pin, please use the `menuconfig`
+`idf.py menuconfig` and change the Menu Option `Light Matter Accessory`
+
+## Using OpenThread with Matter
+
+This is possible with the ESP32-C6.  
+It is neessasy to have a Thread Border Routed in the Matter Environment. Check you matter hardware provider.  
+In order to build the application that will use Thread Networking instead of WiFi, please execute:
+
+Example for ESP32-S3/Linux|MacOS:  
+`idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p /dev/ttyACM0 flash monitor`
+Example for ESP32-C3/Windows:  
+`idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p com3 flash monitor`
+
+It may be necessary to delete some folders and files before running `idf.py`  
+Linux/MacOS: `rm -rf build managed_components sdkconfig dependencies.lock`  
+Windows: `rmdir /s/q build managed_components` and `del sdkconfig dependencies.lock`
