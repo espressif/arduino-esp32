@@ -197,7 +197,7 @@ network_event_handle_t NetworkEvents::onEvent(NetworkEventCb cbEvent, arduino_ev
   }
 
   if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_e("Attempt to add duplicate event handler!");
+    log_w("Attempt to add duplicate event handler!");
     return 0;
   }
 
@@ -216,7 +216,7 @@ network_event_handle_t NetworkEvents::onEvent(NetworkEventFuncCb cbEvent, arduin
   }
 
   if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_e("Attempt to add duplicate event handler!");
+    log_w("Attempt to add duplicate event handler!");
     return 0;
   }
 
@@ -235,7 +235,7 @@ network_event_handle_t NetworkEvents::onEvent(NetworkEventSysCb cbEvent, arduino
   }
 
   if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_e("Attempt to add duplicate event handler!");
+    log_w("Attempt to add duplicate event handler!");
     return 0;
   }
 
@@ -254,7 +254,7 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventCb cbEvent, arduino
   }
 
   if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_e("Attempt to add duplicate event handler!");
+    log_w("Attempt to add duplicate event handler!");
     return 0;
   }
 
@@ -273,7 +273,7 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventFuncCb cbEvent, ard
   }
 
   if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_e("Attempt to add duplicate event handler!");
+    log_w("Attempt to add duplicate event handler!");
     return 0;
   }
 
@@ -292,7 +292,7 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventSysCb cbEvent, ardu
   }
 
   if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_e("Attempt to add duplicate event handler!");
+    log_w("Attempt to add duplicate event handler!");
     return 0;
   }
 
@@ -314,7 +314,7 @@ void NetworkEvents::removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event
 
   i = findEvent(cbEvent, event);
   if (i >= cbEventList.size()) {
-    log_e("Event handler not found!");
+    log_w("Event handler not found!");
     return;
   }
 
@@ -330,7 +330,7 @@ void NetworkEvents::removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t e
 
   i = findEvent(cbEvent, event);
   if (i >= cbEventList.size()) {
-    log_e("Event handler not found!");
+    log_w("Event handler not found!");
     return;
   }
 
@@ -346,7 +346,7 @@ void NetworkEvents::removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t ev
 
   i = findEvent(cbEvent, event);
   if (i >= cbEventList.size()) {
-    log_e("Event handler not found!");
+    log_w("Event handler not found!");
     return;
   }
 
@@ -361,7 +361,7 @@ void NetworkEvents::removeEvent(network_event_handle_t id) {
       return;
     }
   }
-  log_e("Event handler not found!");
+  log_w("Event handler not found!");
 }
 
 int NetworkEvents::setStatusBits(int bits) {
