@@ -41,6 +41,24 @@ jobs:
           original_sha=$(cat ./artifacts/parent-artifacts/sha.txt)
           original_ref=$(cat ./artifacts/parent-artifacts/ref.txt)
           original_conclusion=$(cat ./artifacts/parent-artifacts/conclusion.txt)
+
+          # Sanitize the values to avoid security issues
+
+          # Event: Allow alphabetical characters and underscores
+          original_event=$(echo "$original_event" | tr -cd '[:alpha:]_')
+
+          # Action: Allow alphabetical characters and underscores
+          original_action=$(echo "$original_action" | tr -cd '[:alpha:]_')
+
+          # SHA: Allow alphanumeric characters
+          original_sha=$(echo "$original_sha" | tr -cd '[:alnum:]')
+
+          # Ref: Allow alphanumeric characters, slashes, underscores, dots, and dashes
+          original_ref=$(echo "$original_ref" | tr -cd '[:alnum:]/_.-')
+
+          # Conclusion: Allow alphabetical characters and underscores
+          original_conclusion=$(echo "$original_conclusion" | tr -cd '[:alpha:]_')
+
           echo "original_event=$original_event" >> $GITHUB_ENV
           echo "original_action=$original_action" >> $GITHUB_ENV
           echo "original_sha=$original_sha" >> $GITHUB_ENV
@@ -71,10 +89,10 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const ref = '${{ env.original_ref }}';
+            const ref = process.env.original_ref;
             const key_prefix = 'tests-' + ref + '-';
 
-            if ('${{ env.original_event }}' == 'pull_request' && '${{ env.original_action }}' != 'closed') {
+            if (process.env.original_event == 'pull_request' && process.env.original_action != 'closed') {
               console.log('Skipping cache cleanup for open PR');
               return;
             }
@@ -104,12 +122,12 @@ jobs:
           script: |
             const owner = '${{ github.repository_owner }}';
             const repo = '${{ github.repository }}'.split('/')[1];
-            const sha = '${{ env.original_sha }}';
+            const sha = process.env.original_sha;
             core.debug(`owner: ${owner}`);
             core.debug(`repo: ${repo}`);
             core.debug(`sha: ${sha}`);
             const { context: name, state } = (await github.rest.repos.createCommitStatus({
-              context: 'Runtime Tests / Report results (${{ env.original_event }} -> workflow_run -> workflow_run)',
+              context: `Runtime Tests / Report results (${process.env.original_event} -> workflow_run -> workflow_run)`,
               owner: owner,
               repo: repo,
               sha: sha,
