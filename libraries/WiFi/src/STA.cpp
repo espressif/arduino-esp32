@@ -396,6 +396,9 @@ bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel
       conf.sta.bssid_set = 1;
       memcpy(conf.sta.bssid, bssid, 6);
     }
+    else {
+      conf.sta.bssid_set = 0;
+    }
   }
 
   esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &conf);
