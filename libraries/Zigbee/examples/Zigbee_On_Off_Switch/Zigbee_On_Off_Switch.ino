@@ -37,7 +37,7 @@
 #define SWITCH_ENDPOINT_NUMBER 5
 
 /* Switch configuration */
-#define GPIO_INPUT_IO_TOGGLE_SWITCH GPIO_NUM_9
+#define GPIO_INPUT_IO_TOGGLE_SWITCH 9
 #define PAIR_SIZE(TYPE_STR_PAIR)    (sizeof(TYPE_STR_PAIR) / sizeof(TYPE_STR_PAIR[0]))
 
 typedef enum {
@@ -48,12 +48,12 @@ typedef enum {
   SWITCH_LEVEL_DOWN_CONTROL,
   SWITCH_LEVEL_CYCLE_CONTROL,
   SWITCH_COLOR_CONTROL,
-} switch_func_t;
+} SwitchFunction;
 
 typedef struct {
   uint8_t pin;
-  switch_func_t func;
-} switch_func_pair_t;
+  SwitchFunction func;
+} SwitchData;
 
 typedef enum {
   SWITCH_IDLE,
@@ -61,9 +61,9 @@ typedef enum {
   SWITCH_PRESS_DETECTED,
   SWITCH_PRESSED,
   SWITCH_RELEASE_DETECTED,
-} switch_state_t;
+} SwitchState;
 
-static switch_func_pair_t button_func_pair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}};
+static SwitchData buttonFunctionPair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_ONOFF_TOGGLE_CONTROL}};
 
 /* Zigbee switch */
 class MyZigbeeSwitch : public ZigbeeSwitch {
@@ -85,7 +85,7 @@ public:
 MyZigbeeSwitch zbSwitch = MyZigbeeSwitch(SWITCH_ENDPOINT_NUMBER);
 
 /********************* Zigbee functions **************************/
-static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair) {
+static void onZbButton(SwitchData *button_func_pair) {
   if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
     // Send toggle command to the light
     zbSwitch.lightToggle();
@@ -95,16 +95,16 @@ static void esp_zb_buttons_handler(switch_func_pair_t *button_func_pair) {
 /********************* GPIO functions **************************/
 static QueueHandle_t gpio_evt_queue = NULL;
 
-static void IRAM_ATTR gpio_isr_handler(void *arg) {
-  xQueueSendFromISR(gpio_evt_queue, (switch_func_pair_t *)arg, NULL);
+static void IRAM_ATTR onGpioInterrupt(void *arg) {
+  xQueueSendFromISR(gpio_evt_queue, (SwitchData *)arg, NULL);
 }
 
-static void switch_gpios_intr_enabled(bool enabled) {
-  for (int i = 0; i < PAIR_SIZE(button_func_pair); ++i) {
+static void enableGpioInterrupt(bool enabled) {
+  for (int i = 0; i < PAIR_SIZE(buttonFunctionPair); ++i) {
     if (enabled) {
-      enableInterrupt((button_func_pair[i]).pin);
+      enableInterrupt((buttonFunctionPair[i]).pin);
     } else {
-      disableInterrupt((button_func_pair[i]).pin);
+      disableInterrupt((buttonFunctionPair[i]).pin);
     }
   }
 }
@@ -129,15 +129,15 @@ void setup() {
   
 
   // Init button switch
-  for (int i = 0; i < PAIR_SIZE(button_func_pair); i++) {
-    pinMode(button_func_pair[i].pin, INPUT_PULLUP);
+  for (int i = 0; i < PAIR_SIZE(buttonFunctionPair); i++) {
+    pinMode(buttonFunctionPair[i].pin, INPUT_PULLUP);
     /* create a queue to handle gpio event from isr */
-    gpio_evt_queue = xQueueCreate(10, sizeof(switch_func_pair_t));
+    gpio_evt_queue = xQueueCreate(10, sizeof(SwitchData));
     if (gpio_evt_queue == 0) {
       log_e("Queue was not created and must not be used");
       while (1);
     }
-    attachInterruptArg(button_func_pair[i].pin, gpio_isr_handler, (void *)(button_func_pair + i), FALLING);
+    attachInterruptArg(buttonFunctionPair[i].pin, onGpioInterrupt, (void *)(buttonFunctionPair + i), FALLING);
   }
 
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
@@ -157,41 +157,41 @@ void setup() {
 void loop() {
   // Handle button switch in loop()
   uint8_t pin = 0;
-  switch_func_pair_t button_func_pair;
-  static switch_state_t switch_state = SWITCH_IDLE;
-  bool evt_flag = false;
+  SwitchData buttonSwitch;
+  static SwitchState buttonState = SWITCH_IDLE;
+  bool eventFlag = false;
   
 
-  /* check if there is any queue received, if yes read out the button_func_pair */
-  if (xQueueReceive(gpio_evt_queue, &button_func_pair, portMAX_DELAY)) {
-    pin = button_func_pair.pin;
-    switch_gpios_intr_enabled(false);
-    evt_flag = true;
+  /* check if there is any queue received, if yes read out the buttonSwitch */
+  if (xQueueReceive(gpio_evt_queue, &buttonSwitch, portMAX_DELAY)) {
+    pin = buttonSwitch.pin;
+    enableGpioInterrupt(false);
+    eventFlag = true;
   }
-  while (evt_flag) {
+  while (eventFlag) {
     bool value = digitalRead(pin);
-    switch (switch_state) {
-      case SWITCH_IDLE:           switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_IDLE; break;
-      case SWITCH_PRESS_DETECTED: switch_state = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_RELEASE_DETECTED; break;
+    switch (buttonState) {
+      case SWITCH_IDLE:           buttonState = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_IDLE; break;
+      case SWITCH_PRESS_DETECTED: buttonState = (value == LOW) ? SWITCH_PRESS_DETECTED : SWITCH_RELEASE_DETECTED; break;
       case SWITCH_RELEASE_DETECTED:
-        switch_state = SWITCH_IDLE;
+        buttonState = SWITCH_IDLE;
         /* callback to button_handler */
-        (*esp_zb_buttons_handler)(&button_func_pair);
+        (*onZbButton)(&buttonSwitch);
         break;
       default: break;
     }
-    if (switch_state == SWITCH_IDLE) {
-      switch_gpios_intr_enabled(true);
-      evt_flag = false;
+    if (buttonState == SWITCH_IDLE) {
+      enableGpioInterrupt(true);
+      eventFlag = false;
       break;
     }
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 
   // print the bound lights every 10 seconds
-  static uint32_t last_print = 0;
-  if (millis() - last_print > 10000) {
-    last_print = millis();
+  static uint32_t lastPrint = 0;
+  if (millis() - lastPrint > 10000) {
+    lastPrint = millis();
     zbSwitch.printBoundDevices();
   }
 }
