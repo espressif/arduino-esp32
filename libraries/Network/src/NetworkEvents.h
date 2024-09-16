@@ -155,6 +155,9 @@ public:
 
 protected:
   bool initNetworkEvents();
+  uint32_t findEvent(NetworkEventCb cbEvent, arduino_event_id_t event);
+  uint32_t findEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event);
+  uint32_t findEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event);
   network_event_handle_t onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   network_event_handle_t onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   network_event_handle_t onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
