@@ -35,6 +35,7 @@ The purple color indicates that the Matter Accessory has not been commissioned y
 After using a Matter provider Smartphone APP to add a Matter device to your Home Application, it may turn orange to indicate that it has no WiFi connection.
 
 Once it connects to the WiFi network, the LED will turn white to indicate that Matter is working and the device is connected to the Matter Environment.
+Please note that Matter over WiFi using an ESP32 device will connect to a 2.4GHz WiFi SSID, therefore the Commissioner APP Smartphone shall be connected to this SSID.
 
 The Matter and WiFi configuration will be stored in NVS to ensure that it will connect to the Matter Fabric and WiFi Network again once it is reset.
 
