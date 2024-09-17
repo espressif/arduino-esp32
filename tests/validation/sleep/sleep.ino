@@ -58,7 +58,7 @@ void setup_touchpad() {
 }
 
 void setup_rtc_io() {
-#if SOC_RTCIO_WAKE_SUPPORTED
+#if SOC_RTCIO_WAKE_SUPPORTED && SOC_PM_SUPPORT_EXT0_WAKEUP
   esp_sleep_enable_ext0_wakeup(WAKEUP_GPIO, 1);
   rtc_gpio_pullup_en(WAKEUP_GPIO);
   rtc_gpio_pulldown_dis(WAKEUP_GPIO);
@@ -66,7 +66,7 @@ void setup_rtc_io() {
 }
 
 void setup_rtc_cntl() {
-#if SOC_RTCIO_WAKE_SUPPORTED
+#if SOC_RTCIO_WAKE_SUPPORTED && SOC_PM_SUPPORT_EXT1_WAKEUP
   esp_sleep_enable_ext1_wakeup_io(BUTTON_PIN_BITMASK(WAKEUP_GPIO), ESP_EXT1_WAKEUP_ANY_HIGH);
   rtc_gpio_pulldown_dis(WAKEUP_GPIO);
   rtc_gpio_pullup_en(WAKEUP_GPIO);
