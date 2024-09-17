@@ -52,25 +52,31 @@ void setup_timer() {
 }
 
 void setup_touchpad() {
+#if SOC_TOUCH_SENSOR_SUPPORTED
   touchSleepWakeUpEnable(T1, THRESHOLD);
+#endif
 }
 
 void setup_rtc_io() {
+#if SOC_RTCIO_WAKE_SUPPORTED
   esp_sleep_enable_ext0_wakeup(WAKEUP_GPIO, 1);
   rtc_gpio_pullup_en(WAKEUP_GPIO);
   rtc_gpio_pulldown_dis(WAKEUP_GPIO);
+#endif
 }
 
 void setup_rtc_cntl() {
+#if SOC_RTCIO_WAKE_SUPPORTED
   esp_sleep_enable_ext1_wakeup_io(BUTTON_PIN_BITMASK(WAKEUP_GPIO), ESP_EXT1_WAKEUP_ANY_HIGH);
   rtc_gpio_pulldown_dis(WAKEUP_GPIO);
   rtc_gpio_pullup_en(WAKEUP_GPIO);
+#endif
 }
 
 void setup_gpio() {
   esp_sleep_pd_config(ESP_PD_DOMAIN_VDDSDIO, ESP_PD_OPTION_ON);
-  rtc_gpio_pullup_dis(WAKEUP_GPIO);
-  rtc_gpio_pulldown_en(WAKEUP_GPIO);
+  gpio_pullup_dis(WAKEUP_GPIO);
+  gpio_pulldown_en(WAKEUP_GPIO);
   gpio_wakeup_enable(WAKEUP_GPIO, GPIO_INTR_HIGH_LEVEL);
   esp_sleep_enable_gpio_wakeup();
 }
@@ -156,6 +162,6 @@ void loop() {
     Serial.println("Woke up from light sleep");
     print_wakeup_reason();
     Serial.flush();
-    rtc_gpio_hold_dis(WAKEUP_GPIO);
+    gpio_hold_dis(WAKEUP_GPIO);
   }
 }
