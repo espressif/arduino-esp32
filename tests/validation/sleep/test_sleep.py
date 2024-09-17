@@ -34,7 +34,7 @@ def test_sleep(dut):
                 dut.write("aaa") # Send 9 positive edges
             dut.expect_exact("Woke up from light sleep")
             dut.expect_exact("Wakeup reason: {}".format(capability))
-
-
-
-
+            if capability == "timer":
+                dut.write("timer_freq_light")
+                dut.expect_exact("Woke up from light sleep")
+                dut.expect_exact("Wakeup reason: timer")

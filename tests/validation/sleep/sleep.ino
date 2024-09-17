@@ -22,11 +22,14 @@
 
 #if CONFIG_IDF_TARGET_ESP32H2
 #define WAKEUP_GPIO              GPIO_NUM_7     // Only RTC IO are allowed
+#define TARGET_FREQ              32
 #else
 #define WAKEUP_GPIO              GPIO_NUM_4     // Only RTC IO are allowed
+#define TARGET_FREQ              40
 #endif
 
-RTC_DATA_ATTR int bootCount = 0;
+RTC_DATA_ATTR int boot_count = 0;
+uint32_t orig_freq = 0;
 
 void print_wakeup_reason() {
   esp_sleep_wakeup_cause_t wakeup_reason;
@@ -86,17 +89,17 @@ void setup_uart() {
   esp_sleep_enable_uart_wakeup(UART_NUM_0);
 }
 
-
-
 void setup() {
   Serial.begin(115200);
   while (!Serial) {
     delay(10);
   }
 
+  orig_freq = getCpuFrequencyMhz();
+
   //Increment boot number and print it every reboot
-  ++bootCount;
-  Serial.println("Boot number: " + String(bootCount));
+  boot_count++;
+  Serial.println("Boot number: " + String(boot_count));
 
   //Print the wakeup reason for ESP32
   print_wakeup_reason();
@@ -138,6 +141,10 @@ void loop() {
     } else if (command == "timer_light") {
       // Test timer wakeup from light sleep
       setup_timer();
+    } else if (command == "timer_freq_light") {
+      // Test timer wakeup from light sleep while changing CPU frequency
+      setCpuFrequencyMhz(TARGET_FREQ);
+      setup_timer();
     } else if (command == "touchpad_light") {
       // Test touchpad wakeup from light sleep
       setup_touchpad();
@@ -163,5 +170,6 @@ void loop() {
     print_wakeup_reason();
     Serial.flush();
     gpio_hold_dis(WAKEUP_GPIO);
+    setCpuFrequencyMhz(orig_freq);
   }
 }
