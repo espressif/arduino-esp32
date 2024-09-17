@@ -17,12 +17,13 @@ private:
   size_t queued_size;
   uint8_t *queued_buff;
   size_t resend_count;
+  bool _remove_on_fail;
 
   bool checkForTxData();
   size_t tryToSend();
 
 public:
-  ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = NULL);
+  ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = NULL, bool remove_on_fail = true);
   ~ESP_NOW_Serial_Class();
   size_t setRxBufferSize(size_t);
   size_t setTxBufferSize(size_t);
