@@ -11,7 +11,7 @@
  *
 */
 
-ESP_NOW_Serial_Class::ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk)
+ESP_NOW_Serial_Class::ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, bool remove_on_fail)
   : ESP_NOW_Peer(mac_addr, channel, iface, lmk) {
   tx_ring_buf = NULL;
   rx_queue = NULL;
@@ -19,6 +19,7 @@ ESP_NOW_Serial_Class::ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t chan
   queued_size = 0;
   queued_buff = NULL;
   resend_count = 0;
+  _remove_on_fail = remove_on_fail;
 }
 
 ESP_NOW_Serial_Class::~ESP_NOW_Serial_Class() {
@@ -264,9 +265,15 @@ void ESP_NOW_Serial_Class::onSent(bool success) {
       //the data is lost in this case
       vRingbufferReturnItem(tx_ring_buf, queued_buff);
       queued_buff = NULL;
-      xSemaphoreGive(tx_sem);
-      end();
       log_e(MACSTR " : RE-SEND_MAX[%u]", MAC2STR(addr()), resend_count);
+      //if we are not able to send the data and remove_on_fail is set, remove the peer
+      if (_remove_on_fail) {
+        xSemaphoreGive(tx_sem);
+        end();
+        return;
+      }
+      //log_d(MACSTR ": NEXT", MAC2STR(addr()));
+      checkForTxData();
     }
   }
 }
