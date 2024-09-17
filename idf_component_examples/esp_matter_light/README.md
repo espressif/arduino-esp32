@@ -17,9 +17,11 @@ The code is based on the Arduino API and uses Arduino as an IDF Component.
 Once the device runs for the first time, it must be commissioned to the Matter Fabric of the available Matter Environment.  
 Possible Matter Environments are:  
 - Amazon Alexa
-- Google Home Assistant
+- Google Home Assistant (*)
 - Apple Home
 - Open Source Home Assistant
+
+(*) Google Home Assistant requires the user to set up a Matter Light using the [Google Home Developer Console](https://developers.home.google.com/codelabs/matter-device#2). It is necessary to create a Matter Light device with VID = 0xFFF1 and PID = 0x8000. Otherwise, the Light won't show up in the GHA APP. This action is necessary because the Firmware uses Testing credentials and Google requires the user to create the testing device before using it. 
 
 There is no QR Code to be used when the Smartphone APP wants to add the Matter Device.  
 Please enter the code manually: `34970112332`
