@@ -39,7 +39,7 @@ After using a Matter provider Smartphone APP to add a Matter device to your Home
 Once it connects to the Wi-Fi network, the LED will turn white to indicate that Matter is working and the device is connected to the Matter Environment.
 Please note that Matter over Wi-Fi using an ESP32 device will connect to a 2.4 GHz Wi-Fi SSID, therefore the Commissioner APP Smartphone shall be connected to this SSID.
 
-The Matter and WiFi configuration will be stored in NVS to ensure that it will connect to the Matter Fabric and WiFi Network again once it is reset.
+The Matter and Wi-Fi configuration will be stored in NVS to ensure that it will connect to the Matter Fabric and Wi-Fi Network again once it is reset.
 
 The Matter Smartphone APP will control the light state (ON/OFF), temperature (Warm/Cold White), and brightness.
 
