@@ -21,7 +21,7 @@ Possible Matter Environments are:
 - Apple Home
 - Open Source Home Assistant
 
-(*) Google Home Assistant requires the user to set up a Matter Light using the [Google Home Developer Console](https://developers.home.google.com/codelabs/matter-device#2). It is necessary to create a Matter Light device with VID = 0xFFF1 and PID = 0x8000. Otherwise, the Light won't show up in the GHA APP. This action is necessary because the Firmware uses Testing credentials and Google requires the user to create the testing device before using it. 
+(*) Google Home Assistant requires the user to set up a Matter Light using the [Google Home Developer Console](https://developers.home.google.com/codelabs/matter-device#2). It is necessary to create a Matter Light device with VID = 0xFFF1 and PID = 0x8000. Otherwise, the Light won't show up in the GHA APP. This action is necessary because the Firmware uses Testing credentials and Google requires the user to create the testing device before using it.
 
 There is no QR Code to be used when the Smartphone APP wants to add the Matter Device.  
 Please enter the code manually: `34970112332`
@@ -64,7 +64,7 @@ Example for ESP32-S3/Linux|MacOS:
 Example for ESP32-C3/Windows:  
 `idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32c3" -p com3 flash monitor`
 
-It may be necessary to delete some folders and files  before running `idf.py`   
+It may be necessary to delete some folders and files  before running `idf.py`  
 Linux/MacOS: `rm -rf build managed_components sdkconfig dependencies.lock`  
 Windows: `rmdir /s/q build managed_components` and `del sdkconfig dependencies.lock`
 

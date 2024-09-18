@@ -5,7 +5,7 @@ CONFIG_FREERTOS_HZ=1000
 CONFIG_AUTOSTART_ARDUINO=y
 
 # Log Levels
-# Boot Messages - Log level 
+# Boot Messages - Log level
 CONFIG_BOOTLOADER_LOG_LEVEL_ERROR=y
 # Arduino Log Level
 CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL_INFO=y
@@ -77,4 +77,3 @@ CONFIG_MRP_MAX_RETRANS=3
 
 # Enable HKDF in mbedtls
 CONFIG_MBEDTLS_HKDF_C=y
-

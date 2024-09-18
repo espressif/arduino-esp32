@@ -6,8 +6,7 @@ dependencies:
     version: "^3.0.5"
     override_path: "../../../"
     pre_release: true
-    
-    # testing - using Arduino from the repository
-    # version: "master"  # branch or commit 
-    # git: https://github.com/espressif/arduino-esp32.git
 
+    # testing - using Arduino from the repository
+    # version: "master"  # branch or commit
+    # git: https://github.com/espressif/arduino-esp32.git
