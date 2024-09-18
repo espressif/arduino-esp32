@@ -86,5 +86,5 @@ Example for ESP32-C3/Windows:
 `idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p com3 flash monitor`
 
 It may be necessary to delete some folders and files before running `idf.py`  
-Linux/MacOS: `rm -rf build managed_components sdkconfig dependencies.lock`  
+Linux/macOS: `rm -rf build managed_components sdkconfig dependencies.lock`  
 Windows: `rmdir /s/q build managed_components` and `del sdkconfig dependencies.lock`
