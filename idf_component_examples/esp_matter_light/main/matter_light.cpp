@@ -264,7 +264,8 @@ void setup() {
   cluster_t *color_control_cluster = cluster::get(endpoint, ColorControl::Id);
   attribute_t *current_x_attribute = attribute::get(color_control_cluster, ColorControl::Attributes::CurrentX::Id);
   attribute::set_deferred_persistence(current_x_attribute);
-  attribute_t *current_y_attribute = attribute::get(color_control_cluster, ColorControl::Attributes::CurrentY::Id);  // spell-check-ignore
+  // spell-check-ignore
+  attribute_t *current_y_attribute = attribute::get(color_control_cluster, ColorControl::Attributes::CurrentY::Id);
   attribute::set_deferred_persistence(current_y_attribute);
   attribute_t *color_temp_attribute = attribute::get(color_control_cluster, ColorControl::Attributes::ColorTemperatureMireds::Id);
   attribute::set_deferred_persistence(color_temp_attribute);
