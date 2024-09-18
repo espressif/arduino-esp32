@@ -41,7 +41,6 @@
 #define QMI8658_ADDRESS 0x6b
 #define QMI8658_INT1    -1
 
-
 // Partial voltage measurement method
 #define BAT_ADC 17
 
@@ -54,8 +53,8 @@ static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
 //esp32s3-PSFlash   SPI1/SPI0
-static const uint8_t SS  =  34;   // FSPICS0
-static const uint8_t MOSI = 35;   // FSPID
-static const uint8_t MISO = 37;   // FSPIQ
-static const uint8_t SCK  = 36;   // FSPICLK
-#endif /* Pins_Arduino_h */
+static const uint8_t SS = 34;    // FSPICS0
+static const uint8_t MOSI = 35;  // FSPID
+static const uint8_t MISO = 37;  // FSPIQ
+static const uint8_t SCK = 36;   // FSPICLK
+#endif                           /* Pins_Arduino_h */
