@@ -34,7 +34,7 @@ Please change it in `main/matter_accessory_driver.h` or in the `sdkconfig.defaul
 
 The WS2812b built-in LED will turn purple as soon as the device is flashed and runs for the first time.  
 The purple color indicates that the Matter Accessory has not been commissioned yet.  
-After using a Matter provider Smartphone APP to add a Matter device to your Home Application, it may turn orange to indicate that it has no WiFi connection.
+After using a Matter provider Smartphone APP to add a Matter device to your Home Application, it may turn orange to indicate that it has no Wi-Fi connection.
 
 Once it connects to the WiFi network, the LED will turn white to indicate that Matter is working and the device is connected to the Matter Environment.
 Please note that Matter over WiFi using an ESP32 device will connect to a 2.4GHz WiFi SSID, therefore the Commissioner APP Smartphone shall be connected to this SSID.
