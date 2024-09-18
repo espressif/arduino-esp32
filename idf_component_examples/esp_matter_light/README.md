@@ -69,7 +69,7 @@ Linux/macOS: `rm -rf build managed_components sdkconfig dependencies.lock`
 Windows: `rmdir /s/q build managed_components` and `del sdkconfig dependencies.lock`
 
 There is a configuration file for these SoC: esp32s3, esp32c3, esp32c6.
-Those are the tested devices that have a WS2812 RGB LED and can run BLE, WiFi and Matter.
+Those are the tested devices that have a WS2812 RGB LED and can run BLE, Wi-Fi and Matter.
 
 In case it is necessary to change the Button Pin or the REG LED Pin, please use the `menuconfig`
 `idf.py menuconfig` and change the Menu Option `Light Matter Accessory`
