@@ -6,12 +6,11 @@ export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
 
 function build(){
     local target=$1
-    local fqbn=$2
-    local chunk_index=$3
-    local chunks_cnt=$4
-    local build_log=$5
-    local sketches_file=$6
-    shift; shift; shift; shift; shift; shift;
+    local chunk_index=$2
+    local chunks_cnt=$3
+    local build_log=$4
+    local sketches_file=$5
+    shift; shift; shift; shift; shift;
     local sketches=$*
 
     local BUILD_SKETCH="${SCRIPTS_DIR}/sketch_utils.sh build"
@@ -19,7 +18,7 @@ function build(){
 
     local args="-ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH"
 
-    args+=" -t $target -fqbn $fqbn"
+    args+=" -t $target"
 
     if [ "$OS_IS_LINUX" == "1" ]; then
         args+=" -p $ARDUINO_ESP32_PATH/libraries"
@@ -77,13 +76,6 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     source ${SCRIPTS_DIR}/install-arduino-cli.sh
     source ${SCRIPTS_DIR}/install-arduino-core-esp32.sh
 
-    FQBN_ESP32="espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app"
-    FQBN_ESP32S2="espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app"
-    FQBN_ESP32S3="espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
-    FQBN_ESP32C3="espressif:esp32:esp32c3:PartitionScheme=huge_app"
-    FQBN_ESP32C6="espressif:esp32:esp32c6:PartitionScheme=huge_app"
-    FQBN_ESP32H2="espressif:esp32:esp32h2:PartitionScheme=huge_app"
-
     SKETCHES_ESP32="\
       $ARDUINO_ESP32_PATH/libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino\
       $ARDUINO_ESP32_PATH/libraries/BLE/examples/Server/Server.ino\
@@ -99,12 +91,12 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     fi
 
     #build sketches for different targets
-    build "esp32s3" $FQBN_ESP32S3 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
-    build "esp32s2" $FQBN_ESP32S2 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
-    build "esp32c3" $FQBN_ESP32C3 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
-    build "esp32c6" $FQBN_ESP32C6 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
-    build "esp32h2" $FQBN_ESP32H2 "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
-    build "esp32"   $FQBN_ESP32   "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32s3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32s2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32c3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32c6" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32h2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
+    build "esp32"   "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
 
     if [ "$BUILD_LOG" -eq 1 ]; then
         #remove last comma from the last JSON object

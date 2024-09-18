@@ -148,9 +148,13 @@ public:
 
   void clear() {
     if (r_available()) {
-      fillBuffer();
+      _pos = _fill;
+      while (fillBuffer()) {
+        _pos = _fill;
+      }
     }
-    _pos = _fill;
+    _pos = 0;
+    _fill = 0;
   }
 };
 

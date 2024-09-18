@@ -1,12 +1,42 @@
 name: Push components to https://components.espressif.com
+
 on:
-  push:
-    tags:
-      - '*'
+  workflow_run:
+    workflows: ["ESP32 Arduino Release"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
 jobs:
   upload_components:
     runs-on: ubuntu-latest
     steps:
+      - name: Get the release tag
+        env:
+          head_branch: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "Release workflow failed. Exiting..."
+            exit 1
+          fi
+
+          # Read and sanitize the branch/tag name
+          branch=$(echo "$head_branch" | tr -cd '[:alnum:]/_.-')
+
+          if [[ $branch == refs/tags/* ]]; then
+            tag="${branch#refs/tags/}"
+          elif [[ $branch =~ ^[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
+            tag=$branch
+          else
+            echo "Tag not found in $branch. Exiting..."
+            exit 1
+          fi
+
+          echo "Tag: $tag"
+          echo "RELEASE_TAG=$tag" >> $GITHUB_ENV
+
       - uses: actions/checkout@v4
         with:
           submodules: "recursive"
@@ -15,6 +45,6 @@ jobs:
         uses: espressif/upload-components-ci-action@v1
         with:
           name: arduino-esp32
-          version: ${{ github.ref_name }}
+          version: ${{ env.RELEASE_TAG }}
           namespace: espressif
           api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}

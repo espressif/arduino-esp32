@@ -28,7 +28,7 @@ void setup() {
 }
 
 void loop() {
-  midiEventPacket_t midi_packet_in = {0};
+  midiEventPacket_t midi_packet_in = {0, 0, 0, 0};
 
   if (MIDI.readPacket(&midi_packet_in)) {
     printDetails(midi_packet_in);
