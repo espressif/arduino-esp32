@@ -80,11 +80,18 @@ This is possible with the ESP32-C6.
 It is necessary to have a Thread Border Router in the Matter Environment. Check you Matter hardware provider.  
 In order to build the application that will use Thread Networking instead of Wi-Fi, please execute:
 
-Example for ESP32-S3/Linux | macOS:  
+Example for ESP32-C6/Linux | macOS:  
 `idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p /dev/ttyACM0 flash monitor`
-Example for ESP32-C3/Windows:  
+Example for ESP32-C6/Windows:  
 `idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p com3 flash monitor`
 
 It may be necessary to delete some folders and files before running `idf.py`  
-Linux/macOS: `rm -rf build managed_components sdkconfig dependencies.lock`  
-Windows: `rmdir /s/q build managed_components` and `del sdkconfig dependencies.lock`
+- Linux/macOS
+  ```
+  rm -rf build managed_components sdkconfig dependencies.lock
+  ```  
+- Windows
+  ```
+  rmdir /s/q build managed_components
+  del sdkconfig dependencies.lock
+  ```
