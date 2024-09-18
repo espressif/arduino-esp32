@@ -56,7 +56,7 @@ Holding the BOOT button pressed for more than 10 seconds and then releasing it w
 Use ESP-IDF 5.1.4 from https://github.com/espressif/esp-idf/tree/release/v5.1  
 This example has been tested with Arduino Core 3.0.4
 
-The project will download all necessary components, inluding the Arduino Core.  
+The project will download all necessary components, including the Arduino Core.  
 Run `idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.<SOC>.idf" -p <PORT> flash monitor`
 
 Example for ESP32-S3/Linux|MacOS:  
