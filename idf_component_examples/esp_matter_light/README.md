@@ -60,13 +60,23 @@ The project will download all necessary components, including the Arduino Core.
 Run `idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.<SOC>.idf" -p <PORT> flash monitor`
 
 Example for ESP32-S3/Linux | macOS:  
-`idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32s3" -p /dev/ttyACM0 flash monitor`
+```
+idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32s3" -p /dev/ttyACM0 flash monitor
+```
 Example for ESP32-C3/Windows:  
-`idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32c3" -p com3 flash monitor`
+```
+idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32c3" -p com3 flash monitor`
+```
 
 It may be necessary to delete some folders and files  before running `idf.py`  
-Linux/macOS: `rm -rf build managed_components sdkconfig dependencies.lock`  
-Windows: `rmdir /s/q build managed_components` and `del sdkconfig dependencies.lock`
+- Linux/macOS:
+  ```
+  rm -rf build managed_components sdkconfig dependencies.lock`
+  ```  
+- Windows:
+  ```
+  rmdir /s/q build managed_components && del sdkconfig dependencies.lock
+  ```
 
 There is a configuration file for these SoC: esp32s3, esp32c3, esp32c6.
 Those are the tested devices that have a WS2812 RGB LED and can run BLE, Wi-Fi and Matter.
@@ -81,9 +91,13 @@ It is necessary to have a Thread Border Router in the Matter Environment. Check 
 In order to build the application that will use Thread Networking instead of Wi-Fi, please execute:
 
 Example for ESP32-C6/Linux | macOS:  
-`idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p /dev/ttyACM0 flash monitor`
+```
+idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p /dev/ttyACM0 flash monitor
+```
 Example for ESP32-C6/Windows:  
-`idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p com3 flash monitor`
+```
+idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p com3 flash monitor
+```
 
 It may be necessary to delete some folders and files before running `idf.py`  
 - Linux/macOS
@@ -92,6 +106,5 @@ It may be necessary to delete some folders and files before running `idf.py`
   ```  
 - Windows
   ```
-  rmdir /s/q build managed_components
-  del sdkconfig dependencies.lock
+  rmdir /s/q build managed_components && del sdkconfig dependencies.lock
   ```
