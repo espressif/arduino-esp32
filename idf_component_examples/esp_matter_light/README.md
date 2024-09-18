@@ -4,7 +4,7 @@
 
 # Managed Component Light
 
-This example is configured by default to work with the ESP32-S3, which has the RGB LED GPIO set as pin 48 and the BOOT button on GPIO 0.
+This example sets automatically the RGB LED GPIO and BOOT Button GPIO based on the default pin used by the selected Devkit Board.
 
 This example creates a Color Temperature Light device using the esp_matter component downloaded from the [Espressif Component Registry](https://components.espressif.com/) instead of an extra component locally, so the example can work without setting up the esp-matter environment.
 
@@ -26,9 +26,10 @@ Possible Matter Environments are:
 There is no QR Code to be used when the Smartphone APP wants to add the Matter Device.  
 Please enter the code manually: `34970112332`
 
-The devboard has a built-in LED that will be used as the Matter Light.  
-The default setting of the code uses pin 48 for the ESP32-S3.  
-Please change it in `main/matter_accessory_driver.h` or in the `sdkconfig.defaults.<SOC>` file.
+Each Devkit Board has a built-in LED that will be used as the Matter Light.  
+The default setting for ESP32-S3 is pin 48, for ESP32-C3 and ESP32-C6, it is pin 8.  
+The BOOT Button pin of ESP32-S3 is GPIO 0, by toher hand, the ESP32-C3 and ESP32-C6 use GPIO 9.  
+Please change it in using the MenuConfig executing `idf.py menuconfig` and selecting `Menu->Light Matter Accessory` options.
 
 ## LED Status and Factory Mode
 
