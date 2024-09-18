@@ -49,7 +49,7 @@ The built-in BOOT button will toggle On/Off and replicate the new state to the M
 
 ## Returning to the Factory State
 
-Holding the BOOT button pressed for more than 10 seconds and then releasing it will erase all Matter and WiFi configuration, forcing it to reset to factory state. After that, the device needs to be commissioned again. Previous setups done in the Smartphone APP won't work again; therefore, the virtual device shall be removed from the APP.
+Holding the BOOT button pressed for more than 10 seconds and then releasing it will erase all Matter and Wi-Fi configuration, forcing it to reset to factory state. After that, the device needs to be commissioned again. Previous setups done in the Smartphone APP won't work again; therefore, the virtual device shall be removed from the APP.
 
 ## Building the Application using Wi-Fi and Matter
 
