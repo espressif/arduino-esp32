@@ -111,7 +111,7 @@ Create a new project and select one of the available boards. You can change afte
 .. code-block:: bash
 
    [env:esp32dev]
-   platform = espressif32@6.7.0 
+   platform = espressif32@6.8.1
    board = esp32dev
    framework = arduino
 
@@ -120,7 +120,7 @@ Create a new project and select one of the available boards. You can change afte
 .. code-block:: bash
 
    [env:esp32-s2-saola-1]
-   platform = espressif32@6.7.0
+   platform = espressif32@6.8.1
    board = esp32-s2-saola-1
    framework = arduino
 
@@ -129,7 +129,7 @@ Create a new project and select one of the available boards. You can change afte
 .. code-block:: bash
 
    [env:esp32-c3-devkitm-1]
-   platform = espressif32@6.7.0
+   platform = espressif32@6.8.1
    board = esp32-c3-devkitm-1
    framework = arduino
 
@@ -143,7 +143,7 @@ The following configuration uses the community version ``pioarduino`` and the la
 .. code-block:: bash
 
    [env:esp32-c3-devkitm-1]
-   platform = https://github.com/pioarduino/platform-espressif32/releases/download/51.03.04/platform-espressif32.zip
+   platform = https://github.com/pioarduino/platform-espressif32/releases/download/51.03.05/platform-espressif32.zip
    board = esp32-c3-devkitm-1
    framework = arduino
 
