@@ -375,7 +375,7 @@ void loop() {
 
     // Factory reset is triggered if the button is pressed for more than 10 seconds
     if (time_diff > 10000) {
-      log_i("Factory reset triggered. Light will retored to factory settings.");
+      log_i("Factory reset triggered. Light will restored to factory settings.");
       esp_matter::factory_reset();
     }
   }
