@@ -51,7 +51,7 @@ The built-in BOOT button will toggle On/Off and replicate the new state to the M
 
 Holding the BOOT button pressed for more than 10 seconds and then releasing it will erase all Matter and WiFi configuration, forcing it to reset to factory state. After that, the device needs to be commissioned again. Previous setups done in the Smartphone APP won't work again; therefore, the virtual device shall be removed from the APP.
 
-## Building the Application using WiFi and Matter
+## Building the Application using Wi-Fi and Matter
 
 Use ESP-IDF 5.1.4 from https://github.com/espressif/esp-idf/tree/release/v5.1  
 This example has been tested with Arduino Core 3.0.4
