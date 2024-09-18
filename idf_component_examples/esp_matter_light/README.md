@@ -87,7 +87,7 @@ In case it is necessary to change the Button Pin or the REG LED Pin, please use 
 ## Building the Application using OpenThread and Matter
 
 This is possible with the ESP32-C6.  
-It is necessary to have a Thread Border Router in the Matter Environment. Check you Matter hardware provider.  
+It is necessary to have a Thread Border Router in the Matter Environment. Check your Matter hardware provider.  
 In order to build the application that will use Thread Networking instead of Wi-Fi, please execute:
 
 Example for ESP32-C6/Linux | macOS:  
