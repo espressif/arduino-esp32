@@ -59,7 +59,7 @@ This example has been tested with Arduino Core 3.0.4
 The project will download all necessary components, including the Arduino Core.  
 Run `idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.<SOC>.idf" -p <PORT> flash monitor`
 
-Example for ESP32-S3/Linux|MacOS:  
+Example for ESP32-S3/Linux | macOS:  
 `idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32s3" -p /dev/ttyACM0 flash monitor`
 Example for ESP32-C3/Windows:  
 `idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32c3" -p com3 flash monitor`
