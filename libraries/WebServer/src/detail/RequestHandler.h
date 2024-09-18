@@ -12,16 +12,16 @@ public:
     note: old handler API for backward compatibility
   */
 
-  virtual bool canHandle(HTTPMethod method, const String& uri) {
+  virtual bool canHandle(HTTPMethod method, const String &uri) {
     (void)method;
     (void)uri;
     return false;
   }
-  virtual bool canUpload(const String& uri) {
+  virtual bool canUpload(const String &uri) {
     (void)uri;
     return false;
   }
-  virtual bool canRaw(const String& uri) {
+  virtual bool canRaw(const String &uri) {
     (void)uri;
     return false;
   }
@@ -30,34 +30,34 @@ public:
     note: new handler API with support for filters etc.
   */
 
-  virtual bool canHandle(WebServer &server, HTTPMethod method, const String& uri) {
+  virtual bool canHandle(WebServer &server, HTTPMethod method, const String &uri) {
     (void)server;
     (void)method;
     (void)uri;
     return false;
   }
-  virtual bool canUpload(WebServer &server, const String& uri) {
+  virtual bool canUpload(WebServer &server, const String &uri) {
     (void)server;
     (void)uri;
     return false;
   }
-  virtual bool canRaw(WebServer &server, const String& uri) {
+  virtual bool canRaw(WebServer &server, const String &uri) {
     (void)server;
     (void)uri;
     return false;
   }
-  virtual bool handle(WebServer &server, HTTPMethod requestMethod, const String&  requestUri) {
+  virtual bool handle(WebServer &server, HTTPMethod requestMethod, const String &requestUri) {
     (void)server;
     (void)requestMethod;
     (void)requestUri;
     return false;
   }
-  virtual void upload(WebServer &server, const String&  requestUri, HTTPUpload &upload) {
+  virtual void upload(WebServer &server, const String &requestUri, HTTPUpload &upload) {
     (void)server;
     (void)requestUri;
     (void)upload;
   }
-  virtual void raw(WebServer &server, const String&  requestUri, HTTPRaw &raw) {
+  virtual void raw(WebServer &server, const String &requestUri, HTTPRaw &raw) {
     (void)server;
     (void)requestUri;
     (void)raw;
