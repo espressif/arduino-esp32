@@ -78,7 +78,7 @@ In case it is necessary to change the Button Pin or the REG LED Pin, please use 
 
 This is possible with the ESP32-C6.  
 It is neessasy to have a Thread Border Routed in the Matter Environment. Check you matter hardware provider.  
-In order to build the application that will use Thread Networking instead of WiFi, please execute:
+In order to build the application that will use Thread Networking instead of Wi-Fi, please execute:
 
 Example for ESP32-S3/Linux|MacOS:  
 `idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p /dev/ttyACM0 flash monitor`
