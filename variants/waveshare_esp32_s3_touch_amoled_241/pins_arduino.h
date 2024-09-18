@@ -9,7 +9,7 @@
 #define USB_PID 0x8242
 
 #define USB_MANUFACTURER "Waveshare"
-#define USB_PRODUCT      "ESP32-Touch-AMOLED-2.41"
+#define USB_PRODUCT      "ESP32-S3-Touch-AMOLED-2.41"
 #define USB_SERIAL       ""
 
 // display QSPI SPI2
