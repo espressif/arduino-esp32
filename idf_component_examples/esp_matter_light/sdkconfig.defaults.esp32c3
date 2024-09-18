@@ -38,7 +38,7 @@ CONFIG_PARTITION_TABLE_OFFSET=0xC000
 # Disable chip shell
 CONFIG_ENABLE_CHIP_SHELL=n
 
-# Enable OTA Requestor
+# Enable OTA Requester
 CONFIG_ENABLE_OTA_REQUESTOR=n
 
 #enable lwIP route hooks
