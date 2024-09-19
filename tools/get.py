@@ -24,6 +24,7 @@ import zipfile
 import re
 import time
 import argparse
+import stat
 
 # Initialize start_time globally
 start_time = -1
@@ -177,6 +178,7 @@ def is_latest_version(destination, dirname, rename_to, cfile, checksum):
 
 
 def unpack(filename, destination, force_extract, checksum):  # noqa: C901
+    sys_name = platform.system()
     dirname = ""
     cfile = None  # Compressed file
     file_is_corrupted = False
@@ -223,6 +225,8 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     rename_to = re.match(r"^([a-z][^\-]*\-*)+", dirname).group(0).strip("-")
     if rename_to == dirname and dirname.startswith("esp32-arduino-libs-"):
         rename_to = "esp32-arduino-libs"
+    elif rename_to == dirname and dirname.startswith("esptool-"):
+        rename_to = "esptool"
 
     if not force_extract:
         if is_latest_version(destination, dirname, rename_to, cfile, checksum):
@@ -255,6 +259,11 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     if rename_to != dirname:
         print("Renaming {0} to {1} ...".format(dirname, rename_to))
         shutil.move(dirname, rename_to)
+
+    # Add execute permission to esptool on non-Windows platforms
+    if rename_to.startswith("esptool") and "CYGWIN_NT" not in sys_name:
+        st = os.stat(os.path.join(destination, rename_to, "esptool"))
+        os.chmod(os.path.join(destination, rename_to, "esptool"), st.st_mode | 0o111)
 
     with open(os.path.join(destination, rename_to, ".package_checksum"), "w") as f:
         f.write(checksum)
