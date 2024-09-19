@@ -261,7 +261,7 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
         shutil.move(dirname, rename_to)
 
     # Add execute permission to esptool on non-Windows platforms
-    if rename_to.startswith("esptool") and "CYGWIN_NT" not in sys_name:
+    if rename_to.startswith("esptool") and "CYGWIN_NT" not in sys_name and "Windows" not in sys_name:
         st = os.stat(os.path.join(destination, rename_to, "esptool"))
         os.chmod(os.path.join(destination, rename_to, "esptool"), st.st_mode | 0o111)
 
