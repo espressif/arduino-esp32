@@ -47,6 +47,19 @@
 #include "esp32-hal-log.h"
 #include "esp32-hal-i2c-slave.h"
 #include "esp32-hal-periman.h"
+#include "esp_private/periph_ctrl.h"
+
+#if SOC_PERIPH_CLK_CTRL_SHARED
+#define I2C_CLOCK_SRC_ATOMIC() PERIPH_RCC_ATOMIC()
+#else
+#define I2C_CLOCK_SRC_ATOMIC()
+#endif
+
+#if !SOC_RCC_IS_INDEPENDENT
+#define I2C_RCC_ATOMIC() PERIPH_RCC_ATOMIC()
+#else
+#define I2C_RCC_ATOMIC()
+#endif
 
 #define I2C_SLAVE_USE_RX_QUEUE 0  // 1: Queue, 0: RingBuffer
 
@@ -535,10 +548,14 @@ static bool i2c_slave_set_frequency(i2c_slave_struct_t *i2c, uint32_t clk_speed)
   i2c_hal_clk_config_t clk_cal;
 #if SOC_I2C_SUPPORT_APB
   i2c_ll_master_cal_bus_clk(APB_CLK_FREQ, clk_speed, &clk_cal);
-  i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_APB); /*!< I2C source clock from APB, 80M*/
+  I2C_CLOCK_SRC_ATOMIC() {
+    i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_APB); /*!< I2C source clock from APB, 80M*/
+  }
 #elif SOC_I2C_SUPPORT_XTAL
   i2c_ll_master_cal_bus_clk(XTAL_CLK_FREQ, clk_speed, &clk_cal);
-  i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_XTAL); /*!< I2C source clock from XTAL, 40M */
+  I2C_CLOCK_SRC_ATOMIC() {
+    i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_XTAL); /*!< I2C source clock from XTAL, 40M */
+  }
 #endif
   i2c_ll_set_txfifo_empty_thr(i2c->dev, a);
   i2c_ll_set_rxfifo_full_thr(i2c->dev, SOC_I2C_FIFO_LEN - a);
