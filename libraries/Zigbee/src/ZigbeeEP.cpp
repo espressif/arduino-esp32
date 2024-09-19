@@ -62,6 +62,7 @@ void ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
     // esp_zb_cluster_add_attr function
 }
 
+//TODO: Separate manufacturer and model reading
 void ZigbeeEP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) {
     /* Read peer Manufacture Name & Model Identifier */
     esp_zb_zcl_read_attr_cmd_t read_req;
@@ -79,7 +80,12 @@ void ZigbeeEP::readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr) {
     read_req.attr_field = attributes;
 
     esp_zb_zcl_read_attr_cmd_req(&read_req);
+
+    //Wait for response or timeout
+    //Semaphore take
 }
+
+
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"

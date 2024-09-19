@@ -137,7 +137,25 @@ void ZigbeeThermostat::getTemperature(){
     read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
 
     uint16_t attributes[] = {
-      ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
+      ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID
+    };
+    read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+    read_req.attr_field = attributes;
+
+    log_i("Sending 'read temperature' command");
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_read_attr_cmd_req(&read_req);
+    esp_zb_lock_release();
+}
+
+void ZigbeeThermostat::getSensorSettings(){
+    /* Send "read attributes" command to the bound sensor */
+    esp_zb_zcl_read_attr_cmd_t read_req;
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+
+    uint16_t attributes[] = {
       ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID,
       ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID,
       ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID
