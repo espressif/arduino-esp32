@@ -163,7 +163,6 @@ esp32c2.menu.EraseFlash.all.upload.erase_cmd=-e
 ##############################################################
 
 esp32p4.name=ESP32P4 Dev Module
-esp32p4.hide=true
 
 esp32p4.bootloader.tool=esptool_py
 esp32p4.bootloader.tool.default=esptool_py
