@@ -148,6 +148,9 @@ def verify_files(filename, destination, rename_to):
     return True
 
 
+
+
+
 def is_latest_version(destination, dirname, rename_to, cfile, checksum):
     current_version = None
     expected_version = None
