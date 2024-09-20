@@ -105,7 +105,7 @@ bool File::seek(uint32_t pos, SeekMode mode) {
 
 size_t File::position() const {
   if (!*this) {
-    return (size_t)-1;
+    return 0;
   }
 
   return _p->position();
