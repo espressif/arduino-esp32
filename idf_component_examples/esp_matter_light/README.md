@@ -8,7 +8,7 @@ This example sets automatically the RGB LED GPIO and BOOT Button GPIO based on t
 
 This example creates a Color Temperature Light device using the esp_matter component downloaded from the [Espressif Component Registry](https://components.espressif.com/) instead of an extra component locally, so the example can work without setting up the esp-matter environment.
 
-See the [docs](https://docs.espressif.com/projects/esp-matter/en/latest/esp32/developing.html) for more information about building and flashing the firmware.
+Read the [documentation](https://docs.espressif.com/projects/esp-matter/en/latest/esp32/developing.html) for more information about building and flashing the firmware.
 
 The code is based on the Arduino API and uses Arduino as an IDF Component.
 
@@ -23,10 +23,10 @@ Possible Matter Environments are:
 
 (*) Google Home Assistant requires the user to set up a Matter Light using the [Google Home Developer Console](https://developers.home.google.com/codelabs/matter-device#2). It is necessary to create a Matter Light device with VID = 0xFFF1 and PID = 0x8000. Otherwise, the Light won't show up in the GHA APP. This action is necessary because the Firmware uses Testing credentials and Google requires the user to create the testing device before using it.
 
-There is no QR Code to be used when the Smartphone APP wants to add the Matter Device.  
+**There is no QR Code** to be used when the Smartphone APP wants to add the Matter Device.  
 Please enter the code manually: `34970112332`
 
-Each Devkit Board has a built-in LED that will be used as the Matter Light.
+Each Devkit Board has a built-in LED that will be used as the Matter Light.  
 The default setting for ESP32-S3 is pin 48, for ESP32-C3 and ESP32-C6, it is pin 8.  
 The BOOT Button pin of ESP32-S3 is GPIO 0, by toher hand, the ESP32-C3 and ESP32-C6 use GPIO 9.  
 Please change it in using the MenuConfig executing `idf.py menuconfig` and selecting `Menu->Light Matter Accessory` options.
@@ -50,7 +50,8 @@ The built-in BOOT button will toggle On/Off and replicate the new state to the M
 
 ## Returning to the Factory State
 
-Holding the BOOT button pressed for more than 10 seconds and then releasing it will erase all Matter and Wi-Fi configuration, forcing it to reset to factory state. After that, the device needs to be commissioned again. Previous setups done in the Smartphone APP won't work again; therefore, the virtual device shall be removed from the APP.
+Holding the BOOT button pressed for more than 10 seconds and then releasing it will erase all Matter and Wi-Fi configuration, forcing it to reset to factory state. After that, the device needs to be commissioned again.  
+Previous setups done in the Smartphone APP won't work again; therefore, the virtual device shall be removed from the APP.
 
 ## Building the Application using Wi-Fi and Matter
 
@@ -61,13 +62,23 @@ The project will download all necessary components, including the Arduino Core.
 Run `idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.<SOC>.idf" -p <PORT> flash monitor`
 
 Example for ESP32-S3/Linux | macOS:  
-`idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32s3" -p /dev/ttyACM0 flash monitor`
+```
+idf.py SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32s3" -p /dev/ttyACM0 flash monitor
+```
 Example for ESP32-C3/Windows:  
-`idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32c3" -p com3 flash monitor`
+```
+idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32c3" -p com3 flash monitor
+```
 
 It may be necessary to delete some folders and files  before running `idf.py`  
-Linux/macOS: `rm -rf build managed_components sdkconfig dependencies.lock`  
-Windows: `rmdir /s/q build managed_components` and `del sdkconfig dependencies.lock`
+- Linux/macOS:
+  ```
+  rm -rf build managed_components sdkconfig dependencies.lock
+  ```  
+- Windows:
+  ```
+  rmdir /s/q build managed_components && del sdkconfig dependencies.lock
+  ```
 
 There is a configuration file for these SoC: esp32s3, esp32c3, esp32c6.
 Those are the tested devices that have a WS2812 RGB LED and can run BLE, Wi-Fi and Matter.
@@ -78,7 +89,8 @@ In case it is necessary to change the Button Pin or the REG LED Pin, please use 
 ## Building the Application using OpenThread and Matter
 
 This is possible with the ESP32-C6.
-It is necessary to have a Thread Border Router in the Matter Environment. Check your Matter hardware provider.  
+It is necessary to have a Thread Border Router in the Matter Environment.  
+Check your Matter hardware provider.  
 In order to build the application that will use Thread Networking instead of Wi-Fi, please execute:
 
 Example for ESP32-C6/Linux | macOS:  
