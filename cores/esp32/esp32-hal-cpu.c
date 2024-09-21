@@ -237,7 +237,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   }
   //Make the frequency change
   rtc_clk_cpu_freq_set_config_fast(&conf);
-#if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3)
   if (capb != apb) {
     //Update REF_TICK (uncomment if REF_TICK is different than 1MHz)
     //if(conf.freq_mhz < 80){

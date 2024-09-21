@@ -63,7 +63,10 @@
 
 #define I2C_SLAVE_USE_RX_QUEUE 0  // 1: Queue, 0: RingBuffer
 
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+#define I2C_SCL_IDX(p) ((p == 0) ? I2C0_SCL_PAD_OUT_IDX : ((p == 1) ? I2C1_SCL_PAD_OUT_IDX : 0))
+#define I2C_SDA_IDX(p) ((p == 0) ? I2C0_SDA_PAD_OUT_IDX : ((p == 1) ? I2C1_SDA_PAD_OUT_IDX : 0))
+#else
 #if SOC_HP_I2C_NUM > 1
 #define I2C_SCL_IDX(p) ((p == 0) ? I2CEXT0_SCL_OUT_IDX : ((p == 1) ? I2CEXT1_SCL_OUT_IDX : 0))
 #define I2C_SDA_IDX(p) ((p == 0) ? I2CEXT0_SDA_OUT_IDX : ((p == 1) ? I2CEXT1_SDA_OUT_IDX : 0))
@@ -71,11 +74,6 @@
 #define I2C_SCL_IDX(p) I2CEXT0_SCL_OUT_IDX
 #define I2C_SDA_IDX(p) I2CEXT0_SDA_OUT_IDX
 #endif
-#endif // !defined(CONFIG_IDF_TARGET_ESP32P4)
-
-#ifdef CONFIG_IDF_TARGET_ESP32P4
-#define I2C_SCL_IDX(p) ((p == 0) ? I2C0_SCL_PAD_OUT_IDX : ((p == 1) ? I2C1_SCL_PAD_OUT_IDX : 0))
-#define I2C_SDA_IDX(p) ((p == 0) ? I2C0_SDA_PAD_OUT_IDX : ((p == 1) ? I2C1_SDA_PAD_OUT_IDX : 0))
 #endif // ifdef CONFIG_IDF_TARGET_ESP32P4
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -194,19 +192,19 @@ static inline void i2c_ll_stretch_clr(i2c_dev_t *hw) {
 }
 
 static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw) {
-#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
-  return hw->sr.slave_addressed;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
   return hw->status_reg.slave_addressed;
+#else
+  return hw->sr.slave_addressed;
 #endif
 }
 
 static inline bool i2c_ll_slave_rw(i2c_dev_t *hw)  //not exposed by hal_ll
 {
-#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
-  return hw->sr.slave_rw;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
   return hw->status_reg.slave_rw;
+#else
+  return hw->sr.slave_rw;
 #endif
 }
 

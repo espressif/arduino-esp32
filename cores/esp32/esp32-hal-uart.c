@@ -1105,7 +1105,18 @@ unsigned long uartDetectBaudrate(uart_t *uart) {
 */
 
 // gets the right TX or RX SIGNAL, based on the UART number from gpio_sig_map.h
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? UART0_TXD_PAD_OUT_IDX \
+                                 : (uartNumber == UART_NUM_1 ? UART1_TXD_PAD_OUT_IDX \
+                                 : (uartNumber == UART_NUM_2 ? UART2_TXD_PAD_OUT_IDX \
+                                 : (uartNumber == UART_NUM_3 ? UART3_TXD_PAD_OUT_IDX \
+                                                             : UART4_TXD_PAD_OUT_IDX))))
+#define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? UART0_RXD_PAD_IN_IDX \
+                                 : (uartNumber == UART_NUM_1 ? UART1_RXD_PAD_IN_IDX \
+                                 : (uartNumber == UART_NUM_2 ? UART2_RXD_PAD_IN_IDX \
+                                 : (uartNumber == UART_NUM_3 ? UART3_RXD_PAD_IN_IDX \
+                                                             : UART4_RXD_PAD_IN_IDX))))
+#else
 #if SOC_UART_HP_NUM > 2
 #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
 #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : (uartNumber == UART_NUM_1 ? U1RXD_IN_IDX : U2RXD_IN_IDX))
@@ -1113,12 +1124,8 @@ unsigned long uartDetectBaudrate(uart_t *uart) {
 #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
 #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : U1RXD_IN_IDX)
 #endif
-#endif // if !defined(CONFIG_IDF_TARGET_ESP32P4)
-// todo ESP32-P4 has 4 UART not 3 See IDF soc/esp32p4/uart_periph.c
-#ifdef CONFIG_IDF_TARGET_ESP32P4
-#define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? UART0_TXD_PAD_OUT_IDX : (uartNumber == UART_NUM_1 ? UART1_TXD_PAD_OUT_IDX : UART2_TXD_PAD_OUT_IDX))
-#define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? UART0_RXD_PAD_IN_IDX : (uartNumber == UART_NUM_1 ? UART1_RXD_PAD_IN_IDX : UART2_RXD_PAD_IN_IDX))
 #endif // ifdef CONFIG_IDF_TARGET_ESP32P4
+
 /*
    This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
    This creates a loop that lets us receive anything we send on the UART without external wires.

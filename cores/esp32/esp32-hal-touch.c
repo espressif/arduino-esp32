@@ -15,6 +15,8 @@
 
 #if SOC_TOUCH_SENSOR_SUPPORTED
 #if SOC_TOUCH_SENSOR_VERSION == 3  // ESP32P4
+// ToDo: Implement touch sensor for ESP32P4
+#warning "Touch sensor not implemented for ESP32P4 yet"
 #else
 #include "driver/touch_sensor.h"
 #include "esp32-hal-touch.h"
