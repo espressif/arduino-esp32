@@ -190,7 +190,7 @@ esp32p4.build.board=ESP32P4_DEV
 esp32p4.build.bootloader_addr=0x2000
 
 esp32p4.build.cdc_on_boot=0
-esp32p4.build.f_cpu=400000000L
+esp32p4.build.f_cpu=360000000L
 esp32p4.build.flash_size=4MB
 esp32p4.build.flash_freq=80m
 esp32p4.build.img_freq=80m
