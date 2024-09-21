@@ -163,13 +163,13 @@ bool removeApbChangeCallback(void *arg, apb_change_cb_t cb) {
 }
 
 static uint32_t calculateApb(rtc_cpu_freq_config_t *conf) {
-#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
-  return APB_CLK_FREQ;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
   if (conf->freq_mhz >= 80) {
     return 80 * MHZ;
   }
   return (conf->source_freq_mhz * MHZ) / conf->div;
+#else
+  return APB_CLK_FREQ;
 #endif
 }
 
@@ -250,11 +250,8 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   }
 #endif
   //Update FreeRTOS Tick Divisor
-#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
 
-#elif CONFIG_IDF_TARGET_ESP32S3
-
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
   uint32_t fcpu = (conf.freq_mhz >= 80) ? (conf.freq_mhz * MHZ) : (apb);
   _xt_tick_divisor = fcpu / XT_TICK_PER_SEC;
 #endif
@@ -265,13 +262,19 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
 #ifdef SOC_CLK_APLL_SUPPORTED
   log_d(
     "%s: %u / %u = %u Mhz, APB: %u Hz",
-    (conf.source == RTC_CPU_FREQ_SRC_PLL) ? "PLL"
-                                          : ((conf.source == RTC_CPU_FREQ_SRC_APLL) ? "APLL" : ((conf.source == RTC_CPU_FREQ_SRC_XTAL) ? "XTAL" : "8M")),
+    (conf.source == SOC_CPU_CLK_SRC_PLL) ? "PLL"
+                                          : ((conf.source == SOC_CPU_CLK_SRC_APLL) ? "APLL"
+                                          : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL"
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+                                          : "17.5M"),
+#else
+                                          : "8M")),
+#endif
     conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
   );
 #else
   log_d(
-    "%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == RTC_CPU_FREQ_SRC_PLL) ? "PLL" : ((conf.source == RTC_CPU_FREQ_SRC_XTAL) ? "XTAL" : "17.5M"),
+    "%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == SOC_CPU_CLK_SRC_PLL) ? "PLL" : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL" : "17.5M"),
     conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
   );
 #endif
