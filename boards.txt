@@ -202,6 +202,25 @@ esp32p4.build.defines=
 ## IDE 2.0 Seems to not update the value
 esp32p4.menu.JTAGAdapter.default=Disabled
 esp32p4.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp32p4.menu.JTAGAdapter.builtin=Integrated USB JTAG
+esp32p4.menu.JTAGAdapter.builtin.build.openocdscript=esp32p4-builtin.cfg
+esp32p4.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+esp32p4.menu.JTAGAdapter.external=FTDI Adapter
+esp32p4.menu.JTAGAdapter.external.build.openocdscript=esp32p4-ftdi.cfg
+esp32p4.menu.JTAGAdapter.external.build.copy_jtag_files=1
+esp32p4.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32p4.menu.JTAGAdapter.bridge.build.openocdscript=esp32p4-bridge.cfg
+esp32p4.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+esp32p4.menu.CDCOnBoot.default=Disabled
+esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32p4.menu.CDCOnBoot.cdc=Enabled
+esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32p4.menu.PSRAM.disabled=Disabled
+esp32p4.menu.PSRAM.disabled.build.defines=
+esp32p4.menu.PSRAM.enabled=Enabled
+esp32p4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 
 esp32p4.menu.CDCOnBoot.default=Disabled
 esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -210,20 +229,87 @@ esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
 
 esp32p4.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32p4.menu.PartitionScheme.default.build.partitions=default
+esp32p4.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32p4.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32p4.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32p4.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32p4.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32p4.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32p4.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32p4.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
 esp32p4.menu.PartitionScheme.no_fs.build.partitions=no_fs
 esp32p4.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+esp32p4.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32p4.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32p4.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32p4.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32p4.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32p4.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32p4.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32p4.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32p4.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32p4.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32p4.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32p4.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 esp32p4.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 esp32p4.menu.PartitionScheme.huge_app.build.partitions=huge_app
 esp32p4.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32p4.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32p4.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32p4.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32p4.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp32p4.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32p4.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32p4.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32p4.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32p4.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32p4.menu.PartitionScheme.custom=Custom
 esp32p4.menu.PartitionScheme.custom.build.partitions=
 esp32p4.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+## From https://docs.espressif.com/projects/esp-idf/en/latest/esp32p4/api-reference/kconfig.html#config-esp-default-cpu-freq-mhz
+esp32p4.menu.CPUFreq.360=360MHz
+esp32p4.menu.CPUFreq.360.build.f_cpu=360000000L
+esp32p4.menu.CPUFreq.40=40MHz
+esp32p4.menu.CPUFreq.40.build.f_cpu=40000000L
+
+esp32p4.menu.FlashMode.qio=QIO
+esp32p4.menu.FlashMode.qio.build.flash_mode=dio
+esp32p4.menu.FlashMode.qio.build.boot=qio
+esp32p4.menu.FlashMode.dio=DIO
+esp32p4.menu.FlashMode.dio.build.flash_mode=dio
+esp32p4.menu.FlashMode.dio.build.boot=dio
+
+esp32p4.menu.FlashFreq.80=80MHz
+esp32p4.menu.FlashFreq.80.build.flash_freq=80m
+esp32p4.menu.FlashFreq.40=40MHz
+esp32p4.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32p4.menu.FlashSize.4M=4MB (32Mb)
+esp32p4.menu.FlashSize.4M.build.flash_size=4MB
+esp32p4.menu.FlashSize.8M=8MB (64Mb)
+esp32p4.menu.FlashSize.8M.build.flash_size=8MB
+esp32p4.menu.FlashSize.8M.build.partitions=default_8MB
+esp32p4.menu.FlashSize.2M=2MB (16Mb)
+esp32p4.menu.FlashSize.2M.build.flash_size=2MB
+esp32p4.menu.FlashSize.2M.build.partitions=minimal
+esp32p4.menu.FlashSize.16M=16MB (128Mb)
+esp32p4.menu.FlashSize.16M.build.flash_size=16MB
 
 esp32p4.menu.UploadSpeed.921600=921600
 esp32p4.menu.UploadSpeed.921600.upload.speed=921600
 esp32p4.menu.UploadSpeed.115200=115200
 esp32p4.menu.UploadSpeed.115200.upload.speed=115200
+esp32p4.menu.UploadSpeed.256000.windows=256000
+esp32p4.menu.UploadSpeed.256000.upload.speed=256000
+esp32p4.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32p4.menu.UploadSpeed.230400=230400
+esp32p4.menu.UploadSpeed.230400.upload.speed=230400
+esp32p4.menu.UploadSpeed.460800.linux=460800
+esp32p4.menu.UploadSpeed.460800.macosx=460800
+esp32p4.menu.UploadSpeed.460800.upload.speed=460800
+esp32p4.menu.UploadSpeed.512000.windows=512000
+esp32p4.menu.UploadSpeed.512000.upload.speed=512000
 
 esp32p4.menu.DebugLevel.none=None
 esp32p4.menu.DebugLevel.none.build.code_debug=0
