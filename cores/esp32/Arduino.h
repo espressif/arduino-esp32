@@ -142,7 +142,7 @@
 #endif
 #define EXTERNAL_NUM_INTERRUPTS    NUM_DIGITAL_PINS  // All GPIOs
 #define analogInputToDigitalPin(p) (((p) < NUM_ANALOG_INPUTS) ? (analogChannelToDigitalPin(p)) : -1)
-#define digitalPinToInterrupt(p)   ((((uint8_t)digitalPinToGPIONumber(p)) < NUM_DIGITAL_PINS) ? digitalPinToGPIONumber(p) : NOT_AN_INTERRUPT)
+#define digitalPinToInterrupt(p)   ((((uint8_t)digitalPinToGPIONumber(p)) < NUM_DIGITAL_PINS) ? (p) : NOT_AN_INTERRUPT)
 #define digitalPinHasPWM(p)        (((uint8_t)digitalPinToGPIONumber(p)) < NUM_DIGITAL_PINS)
 
 typedef bool boolean;
