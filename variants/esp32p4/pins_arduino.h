@@ -27,4 +27,19 @@ static const uint8_t MOSI = 11;
 static const uint8_t MISO = 12;
 static const uint8_t SCK = 13;
 
+static const uint8_t T0 = 2;
+static const uint8_t T1 = 3;
+static const uint8_t T2 = 4;
+static const uint8_t T3 = 5;
+static const uint8_t T4 = 6;
+static const uint8_t T5 = 7;
+static const uint8_t T6 = 8;
+static const uint8_t T7 = 9;
+static const uint8_t T8 = 10;
+static const uint8_t T9 = 11;
+static const uint8_t T10 = 12;
+static const uint8_t T11 = 13;
+static const uint8_t T12 = 14;
+static const uint8_t T13 = 15;
+
 #endif /* Pins_Arduino_h */
