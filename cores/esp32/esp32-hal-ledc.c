@@ -332,7 +332,7 @@ bool ledcOutputInvert(uint8_t pin, bool out_invert) {
 #else
     esp_rom_gpio_connect_out_signal(pin, LEDC_LS_SIG_OUT0_IDX + ((bus->channel) % 8), out_invert, 0);
 #endif
-#endif // ifdef CONFIG_IDF_TARGET_ESP32P4
+#endif  // ifdef CONFIG_IDF_TARGET_ESP32P4
     return true;
   }
   return false;

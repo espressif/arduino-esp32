@@ -366,7 +366,7 @@ FlashMode_t EspClass::getFlashChipMode(void) {
   }
   return (FM_DOUT);
 }
-#endif // if !defined(CONFIG_IDF_TARGET_ESP32P4)
+#endif  // if !defined(CONFIG_IDF_TARGET_ESP32P4)
 
 uint32_t EspClass::magicFlashChipSize(uint8_t byte) {
   /*

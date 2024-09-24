@@ -268,7 +268,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
 #ifdef CONFIG_IDF_TARGET_ESP32P4
                                           : "17.5M"),
 #else
-                                          : "8M")),
+                                                                                                                           : "8M")),
 #endif
     conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
   );
