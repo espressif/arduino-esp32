@@ -7,6 +7,7 @@
 #include <string>
 #include "driver/uart.h"
 #include "hal/uart_ll.h"
+#include "esp_private/uart_share_hw_ctrl.h"
 
 #define PPP_CMD_MODE_CHECK(x)                                    \
   if (_dce == NULL) {                                            \
@@ -653,7 +654,10 @@ bool PPPClass::setBaudrate(int baudrate) {
     log_e("uart_get_sclk_freq failed with %d %s", err, esp_err_to_name(err));
     return false;
   }
-  uart_ll_set_baudrate(UART_LL_GET_HW(_uart_num), (uint32_t)baudrate, sclk_freq);
+
+  HP_UART_SRC_CLK_ATOMIC() {
+    uart_ll_set_baudrate(UART_LL_GET_HW(_uart_num), (uint32_t)baudrate, sclk_freq);
+  }
 
   return true;
 }

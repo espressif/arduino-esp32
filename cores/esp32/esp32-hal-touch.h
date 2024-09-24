@@ -37,6 +37,8 @@ extern "C" {
 typedef uint16_t touch_value_t;
 #elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32S2 ESP32S3
 typedef uint32_t touch_value_t;
+#elif SOC_TOUCH_SENSOR_VERSION == 3  // ESP32P4
+typedef uint32_t touch_value_t;
 #endif
 
 /*

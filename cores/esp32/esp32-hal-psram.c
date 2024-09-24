@@ -27,6 +27,8 @@
 #include "esp32s2/rom/cache.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/cache.h"
+#elif CONFIG_IDF_TARGET_ESP32P4
+#include "esp32p4/rom/cache.h"
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif

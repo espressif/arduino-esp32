@@ -88,7 +88,7 @@ jobs:
     strategy:
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.build-types) }}
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2', 'esp32p4']
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
@@ -105,7 +105,7 @@ jobs:
       fail-fast: false
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.hw-types) }}
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2', 'esp32p4']
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}

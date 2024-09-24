@@ -60,6 +60,9 @@ extern "C" {
 #elif CONFIG_IDF_TARGET_ESP32H2
 #include "esp32h2/rom/spi_flash.h"
 #define ESP_FLASH_IMAGE_BASE 0x0000  // Esp32h2 is located at 0x0000
+#elif CONFIG_IDF_TARGET_ESP32P4
+#include "esp32p4/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x2000  // Esp32p4 is located at 0x2000
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -335,6 +338,8 @@ uint32_t EspClass::getFlashChipSpeed(void) {
   return magicFlashChipSpeed(fhdr.spi_speed);
 }
 
+// FIXME for P4
+#if !defined(CONFIG_IDF_TARGET_ESP32P4)
 FlashMode_t EspClass::getFlashChipMode(void) {
 #if CONFIG_IDF_TARGET_ESP32S2
   uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
@@ -361,6 +366,7 @@ FlashMode_t EspClass::getFlashChipMode(void) {
   }
   return (FM_DOUT);
 }
+#endif  // if !defined(CONFIG_IDF_TARGET_ESP32P4)
 
 uint32_t EspClass::magicFlashChipSize(uint8_t byte) {
   /*
