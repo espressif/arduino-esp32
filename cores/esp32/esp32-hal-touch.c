@@ -29,7 +29,7 @@
 #if SOC_TOUCH_SENSOR_VERSION == 1    // ESP32
 static uint16_t __touchSleepCycles = 0x1000;
 static uint16_t __touchMeasureCycles = 0x1000;
-#elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32S2, ESP32S3
+#elif SOC_TOUCH_SENSOR_VERSION >= 2  // ESP32S2, ESP32S3, ESP32P4
 static uint16_t __touchSleepCycles = TOUCH_PAD_SLEEP_CYCLE_DEFAULT;
 static uint16_t __touchMeasureCycles = TOUCH_PAD_MEASURE_CYCLE_DEFAULT;
 #endif
