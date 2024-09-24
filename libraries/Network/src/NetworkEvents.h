@@ -110,16 +110,20 @@ typedef union {
 #endif
 } arduino_event_info_t;
 
-typedef struct {
+/**
+ * @brief struct combines arduino event id and event's data object
+ * 
+ */
+struct arduino_event_t {
   arduino_event_id_t event_id;
   arduino_event_info_t event_info;
-} arduino_event_t;
+};
 
-typedef void (*NetworkEventCb)(arduino_event_id_t event);
-typedef std::function<void(arduino_event_id_t event, arduino_event_info_t info)> NetworkEventFuncCb;
-typedef void (*NetworkEventSysCb)(arduino_event_t *event);
-
-typedef size_t network_event_handle_t;
+// type aliases
+using NetworkEventCb = void(*)(arduino_event_id_t event);
+using NetworkEventFuncCb = std::function<void(arduino_event_id_t event, arduino_event_info_t info)>;
+using NetworkEventSysCb = void(*)(arduino_event_t *event);
+using network_event_handle_t = size_t;
 
 class NetworkEvents {
 public:

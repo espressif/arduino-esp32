@@ -8,7 +8,14 @@
 #include "esp_task.h"
 #include "esp32-hal.h"
 
-typedef struct NetworkEventCbList {
+/**
+ * @brief an object holds callback's definitions:
+ * - callback id
+ * - callback function pointers
+ * - binded event id
+ * 
+ */
+struct NetworkEventCbList_t {
   static network_event_handle_t current_id;
   network_event_handle_t id;
   NetworkEventCb cb;
@@ -16,9 +23,10 @@ typedef struct NetworkEventCbList {
   NetworkEventSysCb scb;
   arduino_event_id_t event;
 
-  NetworkEventCbList() : id(current_id++), cb(NULL), fcb(NULL), scb(NULL), event(ARDUINO_EVENT_NONE) {}
-} NetworkEventCbList_t;
-network_event_handle_t NetworkEventCbList::current_id = 1;
+  NetworkEventCbList_t() : id(current_id++), cb(NULL), fcb(NULL), scb(NULL), event(ARDUINO_EVENT_NONE) {}
+};
+// define initial id's value
+network_event_handle_t NetworkEventCbList_t::current_id = 1;
 
 // arduino dont like std::vectors move static here
 static std::vector<NetworkEventCbList_t> cbEventList;
