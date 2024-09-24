@@ -8,28 +8,6 @@
 #include "esp_task.h"
 #include "esp32-hal.h"
 
-/**
- * @brief an object holds callback's definitions:
- * - callback id
- * - callback function pointers
- * - binded event id
- * 
- */
-struct NetworkEventCbList_t {
-  static network_event_handle_t current_id;
-  network_event_handle_t id;
-  NetworkEventCb cb;
-  NetworkEventFuncCb fcb;
-  NetworkEventSysCb scb;
-  arduino_event_id_t event;
-
-  NetworkEventCbList_t() : id(current_id++), cb(NULL), fcb(NULL), scb(NULL), event(ARDUINO_EVENT_NONE) {}
-};
-// define initial id's value
-network_event_handle_t NetworkEventCbList_t::current_id = 1;
-
-// arduino dont like std::vectors move static here
-static std::vector<NetworkEventCbList_t> cbEventList;
 
 static void _network_event_task(void *arg) {
   for (;;) {
@@ -142,22 +120,6 @@ void NetworkEvents::checkForEvent() {
   free(event);
 }
 
-uint32_t NetworkEvents::findEvent(NetworkEventCb cbEvent, arduino_event_id_t event) {
-  uint32_t i;
-
-  if (!cbEvent) {
-    return cbEventList.size();
-  }
-
-  for (i = 0; i < cbEventList.size(); i++) {
-    NetworkEventCbList_t entry = cbEventList[i];
-    if (entry.cb == cbEvent && entry.event == event) {
-      break;
-    }
-  }
-  return i;
-}
-
 template<typename T, typename... U> static size_t getStdFunctionAddress(std::function<T(U...)> f) {
   typedef T(fnType)(U...);
   fnType **fnPointer = f.template target<fnType *>();
@@ -167,55 +129,13 @@ template<typename T, typename... U> static size_t getStdFunctionAddress(std::fun
   return (size_t)fnPointer;
 }
 
-uint32_t NetworkEvents::findEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event) {
-  uint32_t i;
-
-  if (!cbEvent) {
-    return cbEventList.size();
-  }
-
-  for (i = 0; i < cbEventList.size(); i++) {
-    NetworkEventCbList_t entry = cbEventList[i];
-    if (getStdFunctionAddress(entry.fcb) == getStdFunctionAddress(cbEvent) && entry.event == event) {
-      break;
-    }
-  }
-  return i;
-}
-
-uint32_t NetworkEvents::findEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event) {
-  uint32_t i;
-
-  if (!cbEvent) {
-    return cbEventList.size();
-  }
-
-  for (i = 0; i < cbEventList.size(); i++) {
-    NetworkEventCbList_t entry = cbEventList[i];
-    if (entry.scb == cbEvent && entry.event == event) {
-      break;
-    }
-  }
-  return i;
-}
-
 network_event_handle_t NetworkEvents::onEvent(NetworkEventCb cbEvent, arduino_event_id_t event) {
   if (!cbEvent) {
     return 0;
   }
 
-  if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_w("Attempt to add duplicate event handler!");
-    return 0;
-  }
-
-  NetworkEventCbList_t newEventHandler;
-  newEventHandler.cb = cbEvent;
-  newEventHandler.fcb = NULL;
-  newEventHandler.scb = NULL;
-  newEventHandler.event = event;
-  cbEventList.push_back(newEventHandler);
-  return newEventHandler.id;
+  cbEventList.emplace_back(++_current_id, cbEvent, nullptr, nullptr, event);
+  return cbEventList.back().id;
 }
 
 network_event_handle_t NetworkEvents::onEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event) {
@@ -223,18 +143,8 @@ network_event_handle_t NetworkEvents::onEvent(NetworkEventFuncCb cbEvent, arduin
     return 0;
   }
 
-  if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_w("Attempt to add duplicate event handler!");
-    return 0;
-  }
-
-  NetworkEventCbList_t newEventHandler;
-  newEventHandler.cb = NULL;
-  newEventHandler.fcb = cbEvent;
-  newEventHandler.scb = NULL;
-  newEventHandler.event = event;
-  cbEventList.push_back(newEventHandler);
-  return newEventHandler.id;
+  cbEventList.emplace_back(++_current_id, nullptr, cbEvent, nullptr, event);
+  return cbEventList.back().id;
 }
 
 network_event_handle_t NetworkEvents::onEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event) {
@@ -242,18 +152,8 @@ network_event_handle_t NetworkEvents::onEvent(NetworkEventSysCb cbEvent, arduino
     return 0;
   }
 
-  if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_w("Attempt to add duplicate event handler!");
-    return 0;
-  }
-
-  NetworkEventCbList_t newEventHandler;
-  newEventHandler.cb = NULL;
-  newEventHandler.fcb = NULL;
-  newEventHandler.scb = cbEvent;
-  newEventHandler.event = event;
-  cbEventList.push_back(newEventHandler);
-  return newEventHandler.id;
+  cbEventList.emplace_back(++_current_id, nullptr, nullptr, cbEvent, event);
+  return cbEventList.back().id;
 }
 
 network_event_handle_t NetworkEvents::onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event) {
@@ -261,18 +161,8 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventCb cbEvent, arduino
     return 0;
   }
 
-  if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_w("Attempt to add duplicate event handler!");
-    return 0;
-  }
-
-  NetworkEventCbList_t newEventHandler;
-  newEventHandler.cb = cbEvent;
-  newEventHandler.fcb = NULL;
-  newEventHandler.scb = NULL;
-  newEventHandler.event = event;
-  cbEventList.insert(cbEventList.begin(), newEventHandler);
-  return newEventHandler.id;
+  cbEventList.emplace(cbEventList.begin(), ++_current_id, cbEvent, nullptr, nullptr, event);
+  return cbEventList.front().id;
 }
 
 network_event_handle_t NetworkEvents::onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event) {
@@ -280,18 +170,8 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventFuncCb cbEvent, ard
     return 0;
   }
 
-  if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_w("Attempt to add duplicate event handler!");
-    return 0;
-  }
-
-  NetworkEventCbList_t newEventHandler;
-  newEventHandler.cb = NULL;
-  newEventHandler.fcb = cbEvent;
-  newEventHandler.scb = NULL;
-  newEventHandler.event = event;
-  cbEventList.insert(cbEventList.begin(), newEventHandler);
-  return newEventHandler.id;
+  cbEventList.emplace(cbEventList.begin(), ++_current_id, nullptr, cbEvent, nullptr, event);
+  return cbEventList.front().id;
 }
 
 network_event_handle_t NetworkEvents::onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event) {
@@ -299,77 +179,36 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventSysCb cbEvent, ardu
     return 0;
   }
 
-  if (findEvent(cbEvent, event) < cbEventList.size()) {
-    log_w("Attempt to add duplicate event handler!");
-    return 0;
-  }
-
-  NetworkEventCbList_t newEventHandler;
-  newEventHandler.cb = NULL;
-  newEventHandler.fcb = NULL;
-  newEventHandler.scb = cbEvent;
-  newEventHandler.event = event;
-  cbEventList.insert(cbEventList.begin(), newEventHandler);
-  return newEventHandler.id;
+  cbEventList.emplace(cbEventList.begin(), ++_current_id, nullptr, nullptr, cbEvent, event);
+  return cbEventList.front().id;
 }
 
 void NetworkEvents::removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event) {
-  uint32_t i;
-
   if (!cbEvent) {
     return;
   }
 
-  i = findEvent(cbEvent, event);
-  if (i >= cbEventList.size()) {
-    log_w("Event handler not found!");
-    return;
-  }
-
-  cbEventList.erase(cbEventList.begin() + i);
+  cbEventList.erase(std::remove_if(cbEventList.begin(), cbEventList.end(), [cbEvent, event](const NetworkEventCbList_t& e) { return e.cb == cbEvent && e.event == event; }), cbEventList.end());
 }
 
 void NetworkEvents::removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event) {
-  uint32_t i;
-
   if (!cbEvent) {
     return;
   }
 
-  i = findEvent(cbEvent, event);
-  if (i >= cbEventList.size()) {
-    log_w("Event handler not found!");
-    return;
-  }
-
-  cbEventList.erase(cbEventList.begin() + i);
+  cbEventList.erase(std::remove_if(cbEventList.begin(), cbEventList.end(), [cbEvent, event](const NetworkEventCbList_t& e) { return getStdFunctionAddress(e.fcb) == getStdFunctionAddress(cbEvent) && e.event == event; }), cbEventList.end());
 }
 
 void NetworkEvents::removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event) {
-  uint32_t i;
-
   if (!cbEvent) {
     return;
   }
 
-  i = findEvent(cbEvent, event);
-  if (i >= cbEventList.size()) {
-    log_w("Event handler not found!");
-    return;
-  }
-
-  cbEventList.erase(cbEventList.begin() + i);
+  cbEventList.erase(std::remove_if(cbEventList.begin(), cbEventList.end(), [cbEvent, event](const NetworkEventCbList_t& e) { return e.scb == cbEvent && e.event == event; }), cbEventList.end());
 }
 
 void NetworkEvents::removeEvent(network_event_handle_t id) {
-  for (uint32_t i = 0; i < cbEventList.size(); i++) {
-    NetworkEventCbList_t entry = cbEventList[i];
-    if (entry.id == id) {
-      cbEventList.erase(cbEventList.begin() + i);
-      return;
-    }
-  }
-  log_w("Event handler not found!");
+  cbEventList.erase(std::remove_if(cbEventList.begin(), cbEventList.end(), [id](const NetworkEventCbList_t& e) { return e.id == id; }), cbEventList.end());
 }
 
 int NetworkEvents::setStatusBits(int bits) {

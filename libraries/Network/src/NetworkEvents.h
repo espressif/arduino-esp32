@@ -134,7 +134,7 @@ public:
   network_event_handle_t onEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   network_event_handle_t onEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   void removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
-  void removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  void removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX) __attribute__((deprecated("removing functional callbacks via pointer is deprecated, use removeEvent(network_event_handle_t event_handle) instead")));
   void removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   void removeEvent(network_event_handle_t event_handle);
 
@@ -159,15 +159,37 @@ public:
 
 protected:
   bool initNetworkEvents();
-  uint32_t findEvent(NetworkEventCb cbEvent, arduino_event_id_t event);
-  uint32_t findEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event);
-  uint32_t findEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event);
   network_event_handle_t onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   network_event_handle_t onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   network_event_handle_t onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
 
 private:
+  /**
+   * @brief an object holds callback's definitions:
+   * - callback id
+   * - callback function pointers
+   * - binded event id
+   * 
+   */
+  struct NetworkEventCbList_t {
+    network_event_handle_t id;
+    NetworkEventCb cb;
+    NetworkEventFuncCb fcb;
+    NetworkEventSysCb scb;
+    arduino_event_id_t event;
+
+    explicit NetworkEventCbList_t(network_event_handle_t id, NetworkEventCb cb = nullptr, NetworkEventFuncCb fcb = nullptr, NetworkEventSysCb scb = nullptr, arduino_event_id_t event = ARDUINO_EVENT_MAX) :
+      id(id), cb(cb), fcb(fcb), scb(scb), event(event) {}
+  };
+
+  // define initial id's value
+  network_event_handle_t _current_id{0};
+
   EventGroupHandle_t _arduino_event_group;
   QueueHandle_t _arduino_event_queue;
   TaskHandle_t _arduino_event_task_handle;
+
+  // registred events callbacks containter
+  std::vector<NetworkEventCbList_t> cbEventList;
+
 };
