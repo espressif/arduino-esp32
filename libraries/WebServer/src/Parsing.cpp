@@ -78,8 +78,14 @@ bool WebServer::_parseRequest(NetworkClient &client) {
   String req = client.readStringUntil('\r');
   client.readStringUntil('\n');
   //reset header value
-  for (int i = 0; i < _headerKeysCount; ++i) {
-    _currentHeaders[i].value = String();
+  if (_collectAllHeaders) {
+    // clear previous headers
+    collectAllHeaders();
+  } else {
+    // clear previous headers
+    for (RequestArgument *header = _currentHeaders; header; header = header->next) {
+      header->value = String();
+    }
   }
 
   // First line of HTTP request looks like "GET /path HTTP/1.1"
@@ -153,9 +159,6 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       headerValue = req.substring(headerDiv + 1);
       headerValue.trim();
       _collectHeader(headerName.c_str(), headerValue.c_str());
-
-      log_v("headerName: %s", headerName.c_str());
-      log_v("headerValue: %s", headerValue.c_str());
 
       if (headerName.equalsIgnoreCase(FPSTR(Content_Type))) {
         using namespace mime;
@@ -253,9 +256,6 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       headerValue = req.substring(headerDiv + 2);
       _collectHeader(headerName.c_str(), headerValue.c_str());
 
-      log_v("headerName: %s", headerName.c_str());
-      log_v("headerValue: %s", headerValue.c_str());
-
       if (headerName.equalsIgnoreCase("Host")) {
         _hostHeader = headerValue;
       }
@@ -271,12 +271,29 @@ bool WebServer::_parseRequest(NetworkClient &client) {
 }
 
 bool WebServer::_collectHeader(const char *headerName, const char *headerValue) {
-  for (int i = 0; i < _headerKeysCount; i++) {
-    if (_currentHeaders[i].key.equalsIgnoreCase(headerName)) {
-      _currentHeaders[i].value = headerValue;
+  RequestArgument *last = nullptr;
+  for (RequestArgument *header = _currentHeaders; header; header = header->next) {
+    if (header->next == nullptr) {
+      last = header;
+    }
+    if (header->key.equalsIgnoreCase(headerName)) {
+      header->value = headerValue;
+      log_v("header collected: %s: %s", headerName, headerValue);
       return true;
     }
   }
+  assert(last);
+  if (_collectAllHeaders) {
+    last->next = new RequestArgument();
+    last->next->key = headerName;
+    last->next->value = headerValue;
+    _headerKeysCount++;
+    log_v("header collected: %s: %s", headerName, headerValue);
+    return true;
+  }
+
+  log_v("header skipped: %s: %s", headerName, headerValue);
+
   return false;
 }
 

@@ -92,6 +92,7 @@ typedef struct {
   void *data;  // additional data
 } HTTPRaw;
 
+#include "middleware/Middleware.h"
 #include "detail/RequestHandler.h"
 
 namespace fs {
@@ -158,6 +159,10 @@ public:
   void onNotFound(THandlerFunction fn);     //called when handler is not assigned
   void onFileUpload(THandlerFunction ufn);  //handle file uploads
 
+  WebServer &addMiddleware(Middleware *middleware);
+  WebServer &addMiddleware(Middleware::Function fn);
+  WebServer &removeMiddleware(Middleware *middleware);
+
   String uri() const {
     return _currentUri;
   }
@@ -181,17 +186,23 @@ public:
   int args() const;                                                             // get arguments count
   bool hasArg(const String &name) const;                                        // check if argument exists
   void collectHeaders(const char *headerKeys[], const size_t headerKeysCount);  // set the request headers to collect
+  void collectAllHeaders();                                                     // collect all request headers
   String header(const String &name) const;                                      // get request header value by name
   String header(int i) const;                                                   // get request header value by number
   String headerName(int i) const;                                               // get request header name by number
   int headers() const;                                                          // get header count
   bool hasHeader(const String &name) const;                                     // check if header exists
 
-  int clientContentLength() const {
-    return _clientContentLength;
-  }  // return "content-length" of incoming HTTP header from "_currentClient"
+  int clientContentLength() const;                                              // return "content-length" of incoming HTTP header from "_currentClient"
+  const String version() const;                                                 // get the HTTP version string
+  String hostHeader() const;                                                    // get request host header if available or empty String if not
 
-  String hostHeader() const;  // get request host header if available or empty String if not
+  int responseCode() const;                                                     // get the HTTP response code set
+  int responseHeaders() const;                                                  // get the HTTP response headers count
+  const String &responseHeader(String name) const;                              // get the HTTP response header value by name
+  const String &responseHeader(int i) const;                                    // get the HTTP response header value by number
+  const String &responseHeaderName(int i) const;                                // get the HTTP response header name by number
+  bool hasResponseHeader(const String& name) const;                             // check if response header exists
 
   // send response to the client
   // code - HTTP response code, can be 200 or 404
@@ -228,6 +239,8 @@ public:
   bool _eTagEnabled = false;
   ETagFunction _eTagFunction = nullptr;
 
+  static String responseCodeToString(int code);
+
 protected:
   virtual size_t _currentClientWrite(const char *b, size_t l) {
     return _currentClient.write(b, l);
@@ -237,11 +250,10 @@ protected:
   }
   void _addRequestHandler(RequestHandler *handler);
   bool _removeRequestHandler(RequestHandler *handler);
-  void _handleRequest();
+  bool _handleRequest();
   void _finalizeResponse();
   bool _parseRequest(NetworkClient &client);
   void _parseArguments(const String &data);
-  static String _responseCodeToString(int code);
   bool _parseForm(NetworkClient &client, const String &boundary, uint32_t len);
   bool _parseFormUploadAborted();
   void _uploadWriteByte(uint8_t b);
@@ -255,48 +267,57 @@ protected:
   // for extracting Auth parameters
   String _extractParam(String &authReq, const String &param, const char delimit = '"');
 
+  void _clearResponseHeaders();
+  void _clearRequestHeaders();
+
   struct RequestArgument {
     String key;
     String value;
+    RequestArgument *next;
   };
 
-  boolean _corsEnabled;
+  boolean _corsEnabled = false;
   NetworkServer _server;
 
   NetworkClient _currentClient;
-  HTTPMethod _currentMethod;
+  HTTPMethod _currentMethod = HTTP_ANY;
   String _currentUri;
-  uint8_t _currentVersion;
-  HTTPClientStatus _currentStatus;
-  unsigned long _statusChange;
-  boolean _nullDelay;
+  uint8_t _currentVersion = 0;
+  HTTPClientStatus _currentStatus = HC_NONE;
+  unsigned long _statusChange = 0;
+  boolean _nullDelay = true;
 
-  RequestHandler *_currentHandler;
-  RequestHandler *_firstHandler;
-  RequestHandler *_lastHandler;
-  THandlerFunction _notFoundHandler;
-  THandlerFunction _fileUploadHandler;
+  RequestHandler *_currentHandler = nullptr;
+  RequestHandler *_firstHandler = nullptr;
+  RequestHandler *_lastHandler = nullptr;
+  THandlerFunction _notFoundHandler = nullptr;
+  THandlerFunction _fileUploadHandler = nullptr;
 
-  int _currentArgCount;
-  RequestArgument *_currentArgs;
-  int _postArgsLen;
-  RequestArgument *_postArgs;
+  int _currentArgCount = 0;
+  RequestArgument *_currentArgs = nullptr;
+  int _postArgsLen = 0;
+  RequestArgument *_postArgs = nullptr;
 
   std::unique_ptr<HTTPUpload> _currentUpload;
   std::unique_ptr<HTTPRaw> _currentRaw;
 
-  int _headerKeysCount;
-  RequestArgument *_currentHeaders;
-  size_t _contentLength;
-  int _clientContentLength;  // "Content-Length" from header of incoming POST or GET request
-  String _responseHeaders;
+  int _headerKeysCount = 0;
+  RequestArgument *_currentHeaders = nullptr;
+  size_t _contentLength = 0;
+  int _clientContentLength = 0;  // "Content-Length" from header of incoming POST or GET request
+  RequestArgument *_responseHeaders = nullptr;
 
   String _hostHeader;
-  bool _chunked;
+  bool _chunked = false;
 
   String _snonce;  // Store noance and opaque for future comparison
   String _sopaque;
   String _srealm;  // Store the Auth realm between Calls
+
+  int _responseHeaderCount = 0;
+  int _responseCode = 0;
+  bool _collectAllHeaders = false;
+  MiddlewareChain *_chain = nullptr;
 };
 
 #endif  //ESP8266WEBSERVER_H
