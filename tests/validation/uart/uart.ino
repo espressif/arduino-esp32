@@ -100,7 +100,7 @@ void transmit_and_check_msg(const String msg_append, bool perform_assert = true)
   if (perform_assert) {
     TEST_ASSERT_EQUAL_STRING(("Hello from Serial1 (UART1) >>> via loopback >>> Serial1 (UART1) " + msg_append).c_str(), recv_msg.c_str());
   }
-#elif SOC_UART_HP_NUM == 3
+#elif SOC_UART_HP_NUM >= 3
   Serial1.print("Hello from Serial1 (UART1) >>> to >>> Serial2 (UART2) " + msg_append);
   Serial1.flush();
   delay(100);
@@ -128,7 +128,7 @@ void task_delayed_msg(void *pvParameters) {
 
 #if SOC_UART_HP_NUM == 2
   selected_serial = &Serial;
-#elif SOC_UART_HP_NUM == 3
+#elif SOC_UART_HP_NUM >= 3
   selected_serial = &Serial1;
 #endif
 
@@ -150,7 +150,7 @@ void setUp(void) {
     onReceive_cb(Serial1);
   });
   uart_internal_loopback(1, RX1);
-#elif SOC_UART_HP_NUM == 3
+#elif SOC_UART_HP_NUM >= 3
   log_d("Setup internal loop-back between Serial1 (UART1) <<--->> Serial2 (UART2)");
 
   Serial1.onReceive([]() {
@@ -225,7 +225,7 @@ void change_baudrate_test(void) {
   Serial1.updateBaudRate(9600);
   TEST_ASSERT_UINT_WITHIN(192, 9600, Serial1.baudRate());
 
-#if SOC_UART_HP_NUM == 3
+#if SOC_UART_HP_NUM >= 3
   Serial2.updateBaudRate(9600);
   TEST_ASSERT_UINT_WITHIN(192, 9600, Serial2.baudRate());
 #endif
@@ -239,7 +239,7 @@ void change_baudrate_test(void) {
   //Baudrate error should be within 2% of the target baudrate
   TEST_ASSERT_UINT_WITHIN(2304, 115200, Serial1.baudRate());
 
-#if SOC_UART_HP_NUM == 3
+#if SOC_UART_HP_NUM >= 3
   TEST_ASSERT_UINT_WITHIN(2304, 115200, Serial2.baudRate());
 #endif
 
@@ -421,7 +421,7 @@ void change_pins_test(void) {
 
 #if SOC_UART_HP_NUM == 2
   esp_rom_gpio_connect_out_signal(SOC_RX0, SIG_GPIO_OUT_IDX, false, false);
-#elif SOC_UART_HP_NUM == 3
+#elif SOC_UART_HP_NUM >= 3
   esp_rom_gpio_connect_out_signal(RX1, SIG_GPIO_OUT_IDX, false, false);
   esp_rom_gpio_connect_out_signal(RX2, SIG_GPIO_OUT_IDX, false, false);
 #endif
@@ -432,7 +432,7 @@ void change_pins_test(void) {
   Serial1.setPins(NEW_RX1, NEW_TX1);
   TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
   TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
-#elif SOC_UART_HP_NUM == 3
+#elif SOC_UART_HP_NUM >= 3
   Serial1.setPins(RX2, TX2);
   Serial2.setPins(RX1, TX1);
   TEST_ASSERT_EQUAL(RX2, uart_get_RxPin(1));
@@ -447,7 +447,7 @@ void change_pins_test(void) {
 
 #if SOC_UART_HP_NUM == 2
   uart_internal_loopback(1, NEW_RX1);
-#elif SOC_UART_HP_NUM == 3
+#elif SOC_UART_HP_NUM >= 3
   uart_internal_loopback(1, RX1);
   uart_internal_loopback(2, RX2);
 #endif
@@ -470,7 +470,7 @@ void auto_baudrate_test(void) {
 #if SOC_UART_HP_NUM == 2
   selected_serial = &Serial1;
   uart_internal_loopback(0, RX1);
-#elif SOC_UART_HP_NUM == 3
+#elif SOC_UART_HP_NUM >= 3
   selected_serial = &Serial2;
 #endif
 
@@ -504,7 +504,7 @@ void periman_test(void) {
 
   Wire.begin(RX1, TX1);
 
-#if SOC_UART_HP_NUM == 3
+#if SOC_UART_HP_NUM >= 3
   Wire1.begin(RX2, TX2);
 #endif
 
@@ -518,7 +518,7 @@ void periman_test(void) {
 
   Serial1.setPins(RX1, TX1);
 
-#if SOC_UART_HP_NUM == 3
+#if SOC_UART_HP_NUM >= 3
   Serial2.setPins(RX2, TX2);
   uart_internal_loopback(1, RX2);
   uart_internal_loopback(2, RX1);
@@ -577,7 +577,7 @@ void setup() {
     onReceive_cb(Serial1);
   });
   uart_internal_loopback(1, RX1);
-#elif SOC_UART_HP_NUM == 3
+#elif SOC_UART_HP_NUM >= 3
   log_d("Setup internal loop-back between Serial1 (UART1) <<--->> Serial2 (UART2)");
 
   Serial1.onReceive([]() {
