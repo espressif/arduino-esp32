@@ -221,7 +221,11 @@ set(ARDUINO_LIBRARY_USB_SRCS
 set(ARDUINO_LIBRARY_WebServer_SRCS
   libraries/WebServer/src/WebServer.cpp
   libraries/WebServer/src/Parsing.cpp
-  libraries/WebServer/src/detail/mimetable.cpp)
+  libraries/WebServer/src/detail/mimetable.cpp
+  libraries/WebServer/src/middleware/MiddlewareChain.cpp
+  libraries/WebServer/src/middleware/AuthenticationMiddleware.cpp
+  libraries/WebServer/src/middleware/CorsMiddleware.cpp
+  libraries/WebServer/src/middleware/LoggingMiddleware.cpp)
 
 set(ARDUINO_LIBRARY_NetworkClientSecure_SRCS
   libraries/NetworkClientSecure/src/ssl_client.cpp
