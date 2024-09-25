@@ -140,7 +140,6 @@ public:
 
   const char *eventName(arduino_event_id_t id);
 
-  void checkForEvent();
   bool postEvent(arduino_event_t *event);
 
   int getStatusBits();
@@ -191,5 +190,11 @@ private:
 
   // registred events callbacks containter
   std::vector<NetworkEventCbList_t> cbEventList;
+
+  /**
+   * @brief task that picks events from a event queue and calls registered callbacks
+   * 
+   */
+  void _checkForEvent();
 
 };

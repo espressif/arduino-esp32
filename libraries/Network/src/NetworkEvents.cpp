@@ -9,13 +9,6 @@
 #include "esp32-hal.h"
 
 
-static void _network_event_task(void *arg) {
-  for (;;) {
-    ((NetworkEvents *)arg)->checkForEvent();
-  }
-  vTaskDelete(NULL);
-}
-
 NetworkEvents::NetworkEvents() : _arduino_event_group(NULL), _arduino_event_queue(NULL), _arduino_event_task_handle(NULL) {}
 
 NetworkEvents::~NetworkEvents() {
@@ -64,7 +57,13 @@ bool NetworkEvents::initNetworkEvents() {
   }
 
   if (!_arduino_event_task_handle) {
-    xTaskCreateUniversal(_network_event_task, "arduino_events", 4096, this, ESP_TASKD_EVENT_PRIO - 1, &_arduino_event_task_handle, ARDUINO_EVENT_RUNNING_CORE);
+    xTaskCreateUniversal( [](void* self){ static_cast<NetworkEvents*>(self)->_checkForEvent(); },
+                          "arduino_events",       // label
+                          4096,                   // event task's stack size
+                          this,
+                          ESP_TASKD_EVENT_PRIO - 1,
+                          &_arduino_event_task_handle,
+                          ARDUINO_EVENT_RUNNING_CORE);
     if (!_arduino_event_task_handle) {
       log_e("Network Event Task Start Failed!");
       return false;
@@ -91,33 +90,49 @@ bool NetworkEvents::postEvent(arduino_event_t *data) {
   return true;
 }
 
-void NetworkEvents::checkForEvent() {
-  arduino_event_t *event = NULL;
+void NetworkEvents::_checkForEvent() {
+  // this task can't run without the queue
   if (_arduino_event_queue == NULL) {
+    _arduino_event_task_handle = NULL;
+    vTaskDelete(NULL);
     return;
   }
-  if (xQueueReceive(_arduino_event_queue, &event, portMAX_DELAY) != pdTRUE) {
-    return;
-  }
-  if (event == NULL) {
-    return;
-  }
-  log_v("Network Event: %d - %s", event->event_id, eventName(event->event_id));
-  for (uint32_t i = 0; i < cbEventList.size(); i++) {
-    NetworkEventCbList_t entry = cbEventList[i];
-    if (entry.cb || entry.fcb || entry.scb) {
-      if (entry.event == (arduino_event_id_t)event->event_id || entry.event == ARDUINO_EVENT_MAX) {
-        if (entry.cb) {
-          entry.cb((arduino_event_id_t)event->event_id);
-        } else if (entry.fcb) {
-          entry.fcb((arduino_event_id_t)event->event_id, (arduino_event_info_t)event->event_info);
-        } else {
-          entry.scb(event);
+
+  for (;;) {
+    arduino_event_t *event = NULL;
+    // wait for an event on a queue
+    if (xQueueReceive(_arduino_event_queue, &event, portMAX_DELAY) != pdTRUE) {
+      continue;
+    }
+    if (event == NULL) {
+      continue;
+    }
+    log_v("Network Event: %d - %s", event->event_id, eventName(event->event_id));
+
+    // iterate over registered callbacks
+    for (auto &i : cbEventList){
+      if (i.cb || i.fcb || i.scb) {
+        if (i.event == (arduino_event_id_t)event->event_id || i.event == ARDUINO_EVENT_MAX) {
+          if (i.cb) {
+            i.cb((arduino_event_id_t)event->event_id);
+            continue;
+          }
+
+          if (i.fcb) {
+            i.fcb((arduino_event_id_t)event->event_id, (arduino_event_info_t)event->event_info);
+            continue;
+          }
+
+          i.scb(event);
         }
       }
     }
+
+    // release the event object's memory
+    free(event);
   }
-  free(event);
+
+  vTaskDelete(NULL);
 }
 
 template<typename T, typename... U> static size_t getStdFunctionAddress(std::function<T(U...)> f) {
