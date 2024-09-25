@@ -148,13 +148,15 @@ struct spi_struct_t {
 #if CONFIG_DISABLE_HAL_LOCKS
 #define SPI_MUTEX_LOCK()
 #define SPI_MUTEX_UNLOCK()
-+ static spi_t _spi_bus_array[] = {
+// clang-format off
+static spi_t _spi_bus_array[] = {
 #if CONFIG_IDF_TARGET_ESP32S2
   {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 0, -1, -1, -1, -1},
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 1, -1, -1, -1, -1},
   {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 2, -1, -1, -1, -1}
 #elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
-  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1}, {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 1, -1, -1, -1, -1}
+  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1},
+  {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 1, -1, -1, -1, -1}
 #elif CONFIG_IDF_TARGET_ESP32C2
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1}
 #elif CONFIG_IDF_TARGET_ESP32C3
@@ -168,6 +170,7 @@ struct spi_struct_t {
   {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 3, -1, -1, -1, -1}
 #endif
 };
+// clang-format on
 #else
 #define SPI_MUTEX_LOCK() \
   do {                   \
