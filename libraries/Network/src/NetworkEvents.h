@@ -16,6 +16,9 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+#include <mutex>
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
 #if SOC_WIFI_SUPPORTED
 #include "esp_wifi_types.h"
@@ -276,6 +279,11 @@ private:
 
   // registred events callbacks containter
   std::vector<NetworkEventCbList_t> _cbEventList;
+
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  // containter access mutex
+  std::mutex _mtx;
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
   /**
    * @brief task function that picks events from an event queue and calls registered callbacks

@@ -111,6 +111,10 @@ void NetworkEvents::_checkForEvent() {
     }
     log_v("Network Event: %d - %s", event->event_id, eventName(event->event_id));
 
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+    std::unique_lock<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+
     // iterate over registered callbacks
     for (auto &i : _cbEventList){
       if (i.cb || i.fcb || i.scb) {
@@ -129,6 +133,10 @@ void NetworkEvents::_checkForEvent() {
         }
       }
     }
+
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+    lock.unlock();
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
     // release the event object's memory
     delete event;
@@ -151,6 +159,10 @@ network_event_handle_t NetworkEvents::onEvent(NetworkEventCb cbEvent, arduino_ev
     return 0;
   }
 
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+
   _cbEventList.emplace_back(++_current_id, cbEvent, nullptr, nullptr, event);
   return _cbEventList.back().id;
 }
@@ -159,6 +171,10 @@ network_event_handle_t NetworkEvents::onEvent(NetworkEventFuncCb cbEvent, arduin
   if (!cbEvent) {
     return 0;
   }
+
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
   _cbEventList.emplace_back(++_current_id, nullptr, cbEvent, nullptr, event);
   return _cbEventList.back().id;
@@ -169,6 +185,10 @@ network_event_handle_t NetworkEvents::onEvent(NetworkEventSysCb cbEvent, arduino
     return 0;
   }
 
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+
   _cbEventList.emplace_back(++_current_id, nullptr, nullptr, cbEvent, event);
   return _cbEventList.back().id;
 }
@@ -177,6 +197,10 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventCb cbEvent, arduino
   if (!cbEvent) {
     return 0;
   }
+
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
   _cbEventList.emplace(_cbEventList.begin(), ++_current_id, cbEvent, nullptr, nullptr, event);
   return _cbEventList.front().id;
@@ -187,6 +211,10 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventFuncCb cbEvent, ard
     return 0;
   }
 
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+
   _cbEventList.emplace(_cbEventList.begin(), ++_current_id, nullptr, cbEvent, nullptr, event);
   return _cbEventList.front().id;
 }
@@ -195,6 +223,10 @@ network_event_handle_t NetworkEvents::onSysEvent(NetworkEventSysCb cbEvent, ardu
   if (!cbEvent) {
     return 0;
   }
+
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
   _cbEventList.emplace(_cbEventList.begin(), ++_current_id, nullptr, nullptr, cbEvent, event);
   return _cbEventList.front().id;
@@ -205,6 +237,10 @@ void NetworkEvents::removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event
     return;
   }
 
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+
   _cbEventList.erase(std::remove_if(_cbEventList.begin(), _cbEventList.end(), [cbEvent, event](const NetworkEventCbList_t& e) { return e.cb == cbEvent && e.event == event; }), _cbEventList.end());
 }
 
@@ -212,6 +248,10 @@ void NetworkEvents::removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t e
   if (!cbEvent) {
     return;
   }
+
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
   _cbEventList.erase(std::remove_if(_cbEventList.begin(), _cbEventList.end(), [cbEvent, event](const NetworkEventCbList_t& e) { return getStdFunctionAddress(e.fcb) == getStdFunctionAddress(cbEvent) && e.event == event; }), _cbEventList.end());
 }
@@ -221,10 +261,18 @@ void NetworkEvents::removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t ev
     return;
   }
 
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+
   _cbEventList.erase(std::remove_if(_cbEventList.begin(), _cbEventList.end(), [cbEvent, event](const NetworkEventCbList_t& e) { return e.scb == cbEvent && e.event == event; }), _cbEventList.end());
 }
 
 void NetworkEvents::removeEvent(network_event_handle_t id) {
+#if defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  std::lock_guard<std::mutex> lock(_mtx);
+#endif // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+
   _cbEventList.erase(std::remove_if(_cbEventList.begin(), _cbEventList.end(), [id](const NetworkEventCbList_t& e) { return e.id == id; }), _cbEventList.end());
 }
 
