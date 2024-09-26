@@ -13,15 +13,17 @@ class ZigbeeLight : public ZigbeeEP {
     ZigbeeLight(uint8_t endpoint);
     ~ZigbeeLight();
 
-    // methods to be implemented by the user by overwritting them
-    virtual void setOnOff(bool value);
-    virtual void sceneControl(bool value);
-    virtual void setOnOffTime(uint16_t value);
-    virtual void setOffWaitTime(uint16_t value);
+    // Use tp set a cb function to be called on light change
+    void onLightChange(void (*callback)(bool)) { _on_light_change = callback; }
+    void restoreLight() { lightChanged(); }
 
   private:
     void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
-
+    //callback function to be called on light change
+    void (*_on_light_change)(bool);
+    void lightChanged();
+    
+    bool _current_state;
 };
 
 #endif //SOC_IEEE802154_SUPPORTED

@@ -36,53 +36,28 @@
 
 #define LED_PIN RGB_BUILTIN
 #define BUTTON_PIN 9  // C6/H2 Boot button
-#define ZIGBEE_LIGHT_ENDPOINT       10                                   /* esp light bulb device endpoint, used to process light controlling commands */
+#define ZIGBEE_LIGHT_ENDPOINT 10 
 
-class MyZigbeeColorLight : public ZigbeeColorDimmableLight {
-public:
-    // Constructor that passes parameters to the base class constructor
-    MyZigbeeColorLight(uint8_t endpoint) : ZigbeeColorDimmableLight(endpoint) {}
+ZigbeeColorDimmableLight zbColorLight = ZigbeeColorDimmableLight(ZIGBEE_LIGHT_ENDPOINT);
 
-    // Override the set_on_off function
-    void setOnOff(bool value) override {
-      if (value == false) {
-        rgbLedWrite(LED_PIN, 0, 0, 0);  // Turn off light
-      } else {
-        updateLight(); // Turn on light on last color and level
-      }
-    }
+/********************* RGB LED functions **************************/
+void setRGBLight(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t level) {
+  float brightness = (float)level / 255;
+  rgbLedWrite(LED_PIN, red * brightness, green * brightness, blue * brightness);
+}
 
-    // Override the set_level function
-    void setLevel(uint8_t level) override {
-      if (level == 0) {
-        rgbLedWrite(LED_PIN, 0, 0, 0);  // Turn off light and dont update ratio
-        return;
-      }
-      _ratio = (float)level / 255;
-      updateLight();
-    }
-
-    // Override the set_color function
-    void setColor(uint8_t red, uint8_t green, uint8_t blue) override {
-      _red = red;
-      _green = green;
-      _blue = blue;
-      updateLight();
-    }
-
-    void updateLight() {
-      rgbLedWrite(LED_PIN, _red * _ratio, _green * _ratio, _blue * _ratio);  // Update light
-    }
-private:
-    // Add your custom attributes and methods here
-    float _ratio = 1.0;
-    uint8_t _red = 255;
-    uint8_t _green = 255;
-    uint8_t _blue = 255;
-
-};
-
-MyZigbeeColorLight zbColorLight = MyZigbeeColorLight(ZIGBEE_LIGHT_ENDPOINT);
+// Create a task on identify call to handle the identify function
+void identify(uint16_t time) {
+  static uint8_t blink = 1;
+  log_d("Identify called for %d seconds", time);
+  if (time == 0) {
+    // If identify time is 0, stop blinking and restore light as it was used for identify
+      zbColorLight.restoreLight();
+    return;
+  }
+  rgbLedWrite(LED_PIN, 255 * blink, 255 * blink, 255 * blink);
+  blink = !blink;
+}
 
 /********************* Arduino functions **************************/
 void setup() {
@@ -92,10 +67,16 @@ void setup() {
   // Init button for factory reset
   pinMode(BUTTON_PIN, INPUT);
 
-  //Optional: set Zigbee device name and model
+  // Set callback function for light change
+  zbColorLight.onLightChange(setRGBLight);
+
+  // Optional: Set callback function for device identify
+  zbColorLight.onIdentify(identify);
+
+  // Optional: Set Zigbee device name and model
   zbColorLight.setManufacturerAndModel("Espressif", "ZBColorLightBulb");
 
-  //Add endpoint to Zigbee Core
+  // Add endpoint to Zigbee Core
   log_d("Adding ZigbeeLight endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbColorLight);
   

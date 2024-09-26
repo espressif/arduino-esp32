@@ -19,20 +19,9 @@ void ZigbeeLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mess
     //check the data and call right method
     if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
         if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-            setOnOff(*(bool *)message->attribute.data.value);
+            _current_state = *(bool *)message->attribute.data.value;
+            lightChanged();
         }
-        else if(message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-            sceneControl(*(bool *)message->attribute.data.value);
-        }
-        else if(message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_TIME && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-            setOnOffTime(*(uint16_t *)message->attribute.data.value);
-        }
-        else if(message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-            setOffWaitTime(*(uint16_t *)message->attribute.data.value);
-        }
-        // else if(message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_START_UP_ON_OFF && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-        //     //TODO: more info needed, not implemented for now
-        // }
         else {
             log_w("Recieved message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
         }
@@ -42,25 +31,12 @@ void ZigbeeLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mess
     }
 }
 
-//default method to set on/off
-void ZigbeeLight::setOnOff(bool value) {
-    //set on/off
-    log_v("Function not overwritten, set on/off: %d", value);
-}
-
-void ZigbeeLight::sceneControl(bool value) {
-    //set scene control
-    log_v("Function not overwritten, set scene control: %d", value);
-}
-
-void ZigbeeLight::setOnOffTime(uint16_t value) {
-    //set on/off time
-    log_v("Function not overwritten, set on/off time: %d", value);
-}
-
-void ZigbeeLight::setOffWaitTime(uint16_t value) {
-    //set off wait time
-    log_v("Function not overwritten, set off wait time: %d", value);
+void ZigbeeLight::lightChanged() {
+    if(_on_light_change) {
+        _on_light_change(_current_state);
+    } else {
+        log_w("No callback function set for light change");
+    }
 }
 
 #endif //SOC_IEEE802154_SUPPORTED

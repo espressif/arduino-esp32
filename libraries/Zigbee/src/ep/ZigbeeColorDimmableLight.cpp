@@ -12,10 +12,13 @@ ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(
         .app_device_id = ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID,
         .app_device_version = 0
     };
-}
 
-uint8_t ZigbeeColorDimmableLight::getCurrentLevel(){
-    return (*(uint8_t *)esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID)->data_p);
+    //set default values
+    _current_state = false;
+    _current_level = 255;
+    _current_red = 255;
+    _current_green = 255;
+    _current_blue = 255;
 }
 
 uint16_t ZigbeeColorDimmableLight::getCurrentColorX(){
@@ -46,27 +49,23 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
     //check the data and call right method
     if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
         if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-            setOnOff(*(bool *)message->attribute.data.value);
+            if(_current_state != *(bool *)message->attribute.data.value) {
+                _current_state = *(bool *)message->attribute.data.value;
+                lightChanged();
+            }
+            return;
         }
-        else if(message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_GLOBAL_SCENE_CONTROL && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-            sceneControl(*(bool *)message->attribute.data.value);
-        }
-        else if(message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_TIME && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-            setOnOffTime(*(uint16_t *)message->attribute.data.value);
-        }
-        else if(message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_OFF_WAIT_TIME && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-            setOffWaitTime(*(uint16_t *)message->attribute.data.value);
-        }
-        // else if(message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_START_UP_ON_OFF && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-        //     //TODO: more info needed, not implemented for now
-        // }
         else {
             log_w("Recieved message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
         }
     }
     else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL) {
         if (message->attribute.id == ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
-            setLevel(*(uint8_t *)message->attribute.data.value);
+            if (_current_level != *(uint8_t *)message->attribute.data.value) {
+                _current_level = *(uint8_t *)message->attribute.data.value;
+                lightChanged();
+            }
+            return;
         }
         else {
             log_w("Recieved message ignored. Attribute ID: %d not supported for Level Control", message->attribute.id);
@@ -75,33 +74,32 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
     }
     else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL) {
         if (message->attribute.id == ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-            log_v("Light color x changes to 0x%x", *(uint16_t *)message->attribute.data.value);
             uint16_t light_color_x = (*(uint16_t *)message->attribute.data.value);
             uint16_t light_color_y = getCurrentColorY();
             //calculate RGB from XY and call setColor()
             uint8_t red, green, blue;
             calculateRGB(light_color_x, light_color_y, red, green, blue);
-            setColor(red, green, blue);
+            _current_blue = blue;
+            _current_green = green;
+            _current_red = red;
+            lightChanged();
+            return;
 
         }
         else if (message->attribute.id == ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-            log_v("Light color x changes to 0x%x", *(uint16_t *)message->attribute.data.value);
             uint16_t light_color_x = getCurrentColorX();
             uint16_t light_color_y = (*(uint16_t *)message->attribute.data.value);
             //calculate RGB from XY and call setColor()
             uint8_t red, green, blue;
             calculateRGB(light_color_x, light_color_y, red, green, blue);
-            setColor(red, green, blue);
-        }
-        else if (message->attribute.id == ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
-            setColorSaturation(*(uint8_t *)message->attribute.data.value);
-        }
-        else if (message->attribute.id == ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
-            setColorHue(*(uint8_t *)message->attribute.data.value);
+            _current_blue = blue;
+            _current_green = green;
+            _current_red = red;
+            lightChanged();
+            return;
         }
         else {
             log_w("Recieved message ignored. Attribute ID: %d not supported for Color Control", message->attribute.id);
-            //TODO: implement more attributes -> includes/zcl/esp_zigbee_zcl_color_control.h
         }
     }
     else {
@@ -109,45 +107,10 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
     }
 }
 
-//default method to set on/off
-void ZigbeeColorDimmableLight::setOnOff(bool value) {
-    //set on/off
-    log_v("Function not overwritten, set on/off: %d", value);
-}
-
-void ZigbeeColorDimmableLight::sceneControl(bool value) {
-    //set scene control
-    log_v("Function not overwritten, set scene control: %d", value);
-}
-
-void ZigbeeColorDimmableLight::setOnOffTime(uint16_t value) {
-    //set on/off time
-    log_v("Function not overwritten, set on/off time: %d", value);
-}
-
-void ZigbeeColorDimmableLight::setOffWaitTime(uint16_t value) {
-    //set off wait time
-    log_v("Function not overwritten, set off wait time: %d", value);
-}
-
-void ZigbeeColorDimmableLight::setLevel(uint8_t value) {
-    //set level
-    log_v("Function not overwritten, set level: %d", value);
-}
-
-void ZigbeeColorDimmableLight::setColor(uint8_t r, uint8_t g, uint8_t b) {
-    //set color
-    log_v("Function not overwritten, set color: r: %d, g: %d, b: %d", r, g, b);
-}
-
-void ZigbeeColorDimmableLight::setColorSaturation(uint8_t value) {
-    //set color saturation
-    log_v("Function not overwritten, set color saturation: %d", value);
-}
-
-void ZigbeeColorDimmableLight::setColorHue(uint8_t value) {
-    //set color hue
-    log_v("Function not overwritten, set color hue: %d", value);
+void ZigbeeColorDimmableLight::lightChanged() {
+    if(_on_light_change) {
+        _on_light_change(_current_state, _current_red, _current_green, _current_blue, _current_level);
+    }
 }
 
 #endif //SOC_IEEE802154_SUPPORTED

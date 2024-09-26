@@ -39,6 +39,11 @@ typedef struct zb_device_params_s {
   uint16_t short_addr;
 } zb_device_params_t;
 
+typedef enum {
+    SINGLE_COLOR = 0,
+    RGB = 1
+} zb_identify_led_type_t;
+
 /* Zigbee End Device Class */
 class ZigbeeEP {
   public:
@@ -62,10 +67,10 @@ class ZigbeeEP {
 
     // Manufacturer name and model implemented
     void setManufacturerAndModel(const char *name, const char *model);
-    void readManufacturerAndModel(uint8_t endpoint, uint16_t short_addr);
-    // Methods to be implemented by EPs to recieve manufacturer and model name
-    virtual void readManufacturer(char* manufacturer) {};
-    virtual void readModel(char* model) {};
+
+    // Methods to read manufacturer and model name from selected endpoint and short address
+    char* readManufacturer(uint8_t endpoint, uint16_t short_addr);
+    char* readModel(uint8_t endpoint, uint16_t short_addr);
 
     bool epAllowMultipleBinding() { return _allow_multiple_binding; }
 
@@ -75,10 +80,16 @@ class ZigbeeEP {
     //list of all handlers function calls, to be overide by EPs implementation
     virtual void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {};
     virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
-    virtual void zbReadBasicCluster(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute); //already implemented
+    virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute); //already implemented
+    virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
+
+    void onIdentify(void (*callback)(uint16_t)) { _on_identify = callback; }
 
   private:
     static bool _allow_multiple_binding;
+    char* _read_manufacturer;
+    char* _read_model;
+    void (*_on_identify)(uint16_t time);
 
   protected:
     static uint8_t _endpoint;
@@ -87,6 +98,7 @@ class ZigbeeEP {
     esp_zb_cluster_list_t *_cluster_list;
     static bool _is_bound;
     std::list<zb_device_params_t*> _bound_devices;
+    SemaphoreHandle_t lock;
 
   friend class ZigbeeCore;
 };

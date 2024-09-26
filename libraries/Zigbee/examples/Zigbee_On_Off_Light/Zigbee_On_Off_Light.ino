@@ -34,21 +34,15 @@
 #include "ep/ZigbeeLight.h"
 
 #define LED_PIN RGB_BUILTIN
-#define BUTTON_PIN 9  // C6/H2 Boot button
-#define ZIGBEE_LIGHT_ENDPOINT       10         /* esp light bulb device endpoint, used to process light controlling commands */
+#define BUTTON_PIN 9  // ESP32-C6/H2 Boot button
+#define ZIGBEE_LIGHT_ENDPOINT 10
 
-class MyZigbeeLight : public ZigbeeLight {
-public:
-    // Constructor that passes parameters to the base class constructor
-    MyZigbeeLight(uint8_t endpoint) : ZigbeeLight(endpoint) {}
+ZigbeeLight zbLight = ZigbeeLight(ZIGBEE_LIGHT_ENDPOINT);
 
-    // Override the set_on_off function
-    void setOnOff(bool value) override {
-      rgbLedWrite(LED_PIN, 255 * value, 255 * value, 255 * value);  // Toggle light
-    }
-};
-
-MyZigbeeLight zbLight = MyZigbeeLight(ZIGBEE_LIGHT_ENDPOINT);
+/********************* RGB LED functions **************************/
+void setLED(bool value) {
+  rgbLedWrite(LED_PIN, 255 * value, 255 * value, 255 * value);
+}
 
 /********************* Arduino functions **************************/
 void setup() {
@@ -60,6 +54,9 @@ void setup() {
 
   //Optional: set Zigbee device name and model
   zbLight.setManufacturerAndModel("Espressif", "ZBLightBulb");
+
+  // Set callback function for light change
+  zbLight.onLightChange(setLED);
 
   //Add endpoint to Zigbee Core
   log_d("Adding ZigbeeLight endpoint to Zigbee Core");

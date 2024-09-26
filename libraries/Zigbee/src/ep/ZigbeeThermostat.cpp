@@ -37,8 +37,6 @@ void ZigbeeThermostat::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
       if (user_ctx) {
         zb_device_params_t *sensor = (zb_device_params_t *)user_ctx;
-        //Read manufacturer and model automatically after successful bind
-        _instance->readManufacturerAndModel(sensor->endpoint, sensor->short_addr);
         log_i("The temperature sensor originating from address(0x%x) on endpoint(%d)", sensor->short_addr, sensor->endpoint);
         _instance->_bound_devices.push_back(sensor);
       }
@@ -108,23 +106,32 @@ void ZigbeeThermostat::findEndpoint(esp_zb_zdo_match_desc_req_param_t *param) {
 }
 
 void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
+   static uint8_t read_config = 0;
    if (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT) {
     if (attribute->id == ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S16) {
       int16_t value = attribute->data.value ? *(int16_t *)attribute->data.value : 0;
-      log_v("Raw temperature value: %d", value);
-      temperatureRead(zb_s16_to_temperature(value));
+      if(_on_temp_recieve){
+        _on_temp_recieve(zb_s16_to_temperature(value));
+      }
     }
     if (attribute->id == ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S16) {
       int16_t min_value = attribute->data.value ? *(int16_t *)attribute->data.value : 0;
-      temperatureMin(zb_s16_to_temperature(min_value));
+      _min_temp = zb_s16_to_temperature(min_value);
+      read_config++;
     }
     if (attribute->id == ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S16) {
       int16_t max_value = attribute->data.value ? *(int16_t *)attribute->data.value : 0;
-      temperatureMax(zb_s16_to_temperature(max_value));
+      _max_temp = zb_s16_to_temperature(max_value);
+      read_config++;
     }
     if (attribute->id == ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
       uint16_t tolerance = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
-      temperatureTolerance(1.0 * tolerance / 100);
+      _tolerance = 1.0 * tolerance / 100;
+      read_config++;
+    }
+    if(read_config == 3){
+      read_config = 0;
+      xSemaphoreGive(lock);
     }
   }
 }
@@ -167,6 +174,16 @@ void ZigbeeThermostat::getSensorSettings(){
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_read_attr_cmd_req(&read_req);
     esp_zb_lock_release();
+
+    //Take semaphore to wait for response of all attributes
+    if(xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE){
+      log_e("Error while reading attributes");
+      return;
+    }
+    else{
+      //Call the callback function when all attributes are read
+      _on_config_recieve(_min_temp, _max_temp, _tolerance);
+    }
 }
 
 void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t max_interval, float delta){
@@ -194,23 +211,6 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_config_report_cmd_req(&report_cmd);
     esp_zb_lock_release();
-}
-
-// default methods for thermostat
-void ZigbeeThermostat::temperatureRead(float temp){
-    log_v("Function not overwritten, measured temperature: %.2f °C", temp);
-}
-
-void ZigbeeThermostat::temperatureMin(float temp){
-    log_v("Function not overwritten, min temperature: %.2f °C", temp);
-}
-
-void ZigbeeThermostat::temperatureMax(float temp){
-    log_v("Function not overwritten, max temperature: %.2f °C", temp);
-}
-
-void ZigbeeThermostat::temperatureTolerance(float tolerance){
-    log_v("Function not overwritten, temperature tolerance: %.2f °C", tolerance);
 }
 
 #endif //SOC_IEEE802154_SUPPORTED

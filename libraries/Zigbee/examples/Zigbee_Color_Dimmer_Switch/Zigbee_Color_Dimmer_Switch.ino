@@ -39,7 +39,7 @@
 #include "ep/ZigbeeColorDimmerSwitch.h"
 
 /* Switch configuration */
-#define SWITCH_PIN 9 //Boot button for C6/H2
+#define SWITCH_PIN 9 // ESP32-C6/H2 Boot button
 #define SWITCH_ENDPOINT_NUMBER 5
 
 /* Zigbee switch */

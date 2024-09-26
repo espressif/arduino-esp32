@@ -37,49 +37,36 @@
 #define BUTTON_PIN 9 // Boot button for C6/H2
 #define THERMOSTAT_ENDPOINT_NUMBER 5
 
-class MyZigbeeThermostat : public ZigbeeThermostat {
-  public:
-    // Constructor that passes parameters to the base class constructor
-    MyZigbeeThermostat(uint8_t endpoint) : ZigbeeThermostat(endpoint) {}
+ZigbeeThermostat zbThermostat = ZigbeeThermostat(THERMOSTAT_ENDPOINT_NUMBER);
 
-    // Override virtual functions from ZigbeeThermostat to handle temperature sensor data
-    void temperatureRead(float temp) override {
-      if (temperature != temp) {
-        Serial.printf("Temperature sensor value changed to: %.2f°C\n", temp);
-        temperature = temp;
-      }
-    }
+// Save temperature sensor data
+float sensor_temp;
+float sensor_max_temp;
+float sensor_min_temp;
+float sensor_tolerance;
 
-    void temperatureMin(float temp) override {
-      Serial.printf("Temperature sensor min value: %.2f°C\n", temp);
-      min_temperature = temp;
-    }
+/****************** Temperature sensor handling *******************/
+void recieveSensorTemp(float temperature) {
+  Serial.printf("Temperature sensor value: %.2f°C\n", temperature);
+  sensor_temp = temperature;
+}
 
-    void temperatureMax(float temp) override {
-      Serial.printf("Temperature sensor max value: %.2f°C\n", temp);
-      max_temperature = temp;
-    }
-
-    void temperatureTolerance(float tolerance) override {
-      Serial.printf("Temperature sensor tolerance: %.2f°C\n", tolerance);
-      temp_tolerance = tolerance;
-    }
-
-    float temperature;
-    float max_temperature;
-    float min_temperature;
-    float temp_tolerance;
-};
-
-MyZigbeeThermostat zbThermostat = MyZigbeeThermostat(THERMOSTAT_ENDPOINT_NUMBER);
-
+void recieveSensorConfig(float min_temp, float max_temp, float tolerance) {
+  Serial.printf("Temperature sensor settings: min %.2f°C, max %.2f°C, tolerance %.2f°C\n", min_temp, max_temp, tolerance);
+  sensor_min_temp = min_temp;
+  sensor_max_temp = max_temp;
+  sensor_tolerance = tolerance;
+}
 /********************* Arduino functions **************************/
 void setup() {
-  
   Serial.begin(115200);
 
   // Init button switch
   pinMode(BUTTON_PIN, INPUT);
+
+  // Set callback functions for temperature and configuration recieve
+  zbThermostat.onTempRecieve(recieveSensorTemp);
+  zbThermostat.onConfigRecieve(recieveSensorConfig);
 
   //Optional: set Zigbee device name and model
   zbThermostat.setManufacturerAndModel("Espressif", "ZigbeeThermostat");
@@ -94,6 +81,7 @@ void setup() {
   Zigbee.begin(ZIGBEE_COORDINATOR);
   
   Serial.println("Waiting for Temperature sensor to bound to the switch");
+
   //Wait for switch to bound to a light:
   while(!zbThermostat.isBound()) 
   {
@@ -101,9 +89,8 @@ void setup() {
     delay(500);
   }
 
-  // Get temperature sensor value to update min and max values
-  zbThermostat.getTemperature();
-
+  // Get temperature sensor configuration
+  zbThermostat.getSensorSettings();
   Serial.println();
 }
 
@@ -124,7 +111,7 @@ void loop() {
   static uint32_t last_print = 0;
   if (millis() - last_print > 10000) {
     last_print = millis();
-    int temp_percent = (int)((zbThermostat.temperature - zbThermostat.min_temperature) / (zbThermostat.max_temperature - zbThermostat.min_temperature) * 100);
-    Serial.printf("Temperature: %.2f°C (%d %%)\n", zbThermostat.temperature, temp_percent);
+    int temp_percent = (int)((sensor_temp - sensor_min_temp) / (sensor_max_temp - sensor_min_temp) * 100);
+    Serial.printf("Loop temperature info: %.2f°C (%d %%)\n", sensor_temp, temp_percent);
   }
 }

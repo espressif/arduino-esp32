@@ -47,7 +47,12 @@ static esp_err_t zb_attribute_set_handler(const esp_zb_zcl_set_attr_value_messag
   // List through all Zigbee EPs and call the callback function, with the message
   for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_endpoint == (*it)->getEndpoint()){
-      (*it)->zbAttributeSet(message); //method zbAttributeSet must be implemented in specific EP class
+      if(message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY){
+        (*it)->zbIdentify(message); //method zbIdentify implemented in the common EP class
+      }
+      else {
+        (*it)->zbAttributeSet(message); //method zbAttributeSet must be implemented in specific EP class
+      }
     }
   }
   return ESP_OK;
@@ -95,7 +100,7 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_re
         );
         if (variable->status == ESP_ZB_ZCL_STATUS_SUCCESS) {
           if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_BASIC) {
-            (*it)->zbReadBasicCluster(message->info.cluster, &variable->attribute); //method zbReadBasicCluster implemented in the common EP class
+            (*it)->zbReadBasicCluster(&variable->attribute); //method zbReadBasicCluster implemented in the common EP class
           }
           else {
             (*it)->zbAttributeRead(message->info.cluster, &variable->attribute); //method zbAttributeRead must be implemented in specific EP class
