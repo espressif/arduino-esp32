@@ -26,6 +26,7 @@ WPS (pin is 00000000)
 
 void wpsStart() {
   esp_wps_config_t config;
+  memset(&config, 0, sizeof(esp_wps_config_t));
   //Same as config = WPS_CONFIG_INIT_DEFAULT(ESP_WPS_MODE);
   config.wps_type = ESP_WPS_MODE;
   strcpy(config.factory_info.manufacturer, "ESPRESSIF");
