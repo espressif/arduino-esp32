@@ -25,6 +25,7 @@ static const uint8_t Q_EN = 45;
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
+//static const uint8_t SS = 10;
 static const uint8_t MISO = 13;	//POCI
 static const uint8_t MOSI = 11; //PICO
 static const uint8_t SCK = 12;
