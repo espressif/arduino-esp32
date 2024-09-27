@@ -41,13 +41,14 @@ ZigbeeLight zbLight = ZigbeeLight(ZIGBEE_LIGHT_ENDPOINT);
 
 /********************* RGB LED functions **************************/
 void setLED(bool value) {
-  rgbLedWrite(LED_PIN, 255 * value, 255 * value, 255 * value);
+  digitalWrite(LED_PIN, value);
 }
 
 /********************* Arduino functions **************************/
 void setup() {
-  // Init RMT and leave light OFF
-  rgbLedWrite(LED_PIN, 0, 0, 0);
+  // Init LED and turn it OFF (if LED_PIN == RGB_BUILTIN, the rgbLedWrite() will be used under the hood)
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
 
   // Init button for factory reset
   pinMode(BUTTON_PIN, INPUT);
