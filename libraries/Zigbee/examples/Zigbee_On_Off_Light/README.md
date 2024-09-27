@@ -18,7 +18,7 @@ Currently, this example supports the following targets.
 ### Configure the Project
 
 Set the LED GPIO by changing the `LED_PIN` definition. By default, the LED_PIN is `RGB_BUILTIN`.
-By default, the `neoPixelWrite` function is used to control the LED. You can change it to digitalWrite to control a simple LED.
+By default, the `rgbLedWrite` function is used to control the LED. You can change it to digitalWrite to control a simple LED.
 
 #### Using Arduino IDE
 

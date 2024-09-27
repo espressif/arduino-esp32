@@ -54,6 +54,9 @@ static void temp_sensor_value_update(void *arg) {
 void setup() {
   
   Serial.begin(115200);
+  while (!Serial) {
+    delay(10);
+  }
 
   // Init button switch
   pinMode(BUTTON_PIN, INPUT);

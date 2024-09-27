@@ -49,6 +49,9 @@ ZigbeeColorDimmerSwitch zbSwitch = ZigbeeColorDimmerSwitch(SWITCH_ENDPOINT_NUMBE
 void setup() {
   
   Serial.begin(115200);
+  while (!Serial) {
+    delay(10);
+  }
 
   //Init button switch
   pinMode(SWITCH_PIN, INPUT);

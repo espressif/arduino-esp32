@@ -26,7 +26,6 @@ void ZigbeeSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
             zb_device_params_t *light = (zb_device_params_t *)user_ctx;
             log_i("The light originating from address(0x%x) on endpoint(%d)", light->short_addr, light->endpoint);
             _instance->_bound_devices.push_back(light);
-            //free(light);
         }
         _is_bound = true;
     }
