@@ -126,7 +126,7 @@ char* ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr) {
 
 void ZigbeeEP::printBoundDevices() {
     log_i("Bound devices:");
-    for(const auto& device : _bound_devices) {
+    for( [[maybe_unused]] const auto& device : _bound_devices) {
         log_i("Device on endpoint %d, short address: 0x%x", device->endpoint, device->short_addr);
         print_ieee_addr(device->ieee_addr);
     }
