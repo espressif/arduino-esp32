@@ -42,17 +42,9 @@ To get more information about the Espressif boards see [Espressif Development Ki
 * Select the End device Zigbee mode: `Tools -> Zigbee mode: Zigbee ED (end device)`
 * Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 4MB with spiffs`
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
+* Optional: Set debug level to verbose to see all logs from Zigbee stack: `Tools -> Core Debug Level: Verbose`.
 
 ## Troubleshooting
-
-If the End device flashed with this example is not connecting to the coordinator, erase the flash before flashing it to the board. It is recommended to do this if you did changes to the coordinator.
-You can do the following:
-
-* In the Arduino IDE go to the Tools menu and set `Erase All Flash Before Sketch Upload` to `Enabled`
-* In the sketch uncomment function `esp_zb_nvram_erase_at_start(true);` located in `esp_zb_task` function.
-
-By default, the coordinator network is open for 180s after rebooting or flashing new firmware. After that, the network is closed for adding new devices.
-You can change it by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 

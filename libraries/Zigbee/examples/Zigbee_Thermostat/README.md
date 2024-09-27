@@ -38,7 +38,7 @@ To get more information about the Espressif boards see [Espressif Development Ki
 * Select the Coordinator Zigbee mode: `Tools -> Zigbee mode: Zigbee ZCZR (coordinator/router)`.
 * Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 4MB with spiffs`.
 * Select the COM port: `Tools -> Port: xxx where the `xxx` is the detected COM port.
-* Optional: Set debug level to info to see logs from Zigbee stack: `Tools -> Core Debug Level: Info`.
+* Optional: Set debug level to verbose to see all logs from Zigbee stack: `Tools -> Core Debug Level: Verbose`.
 
 ## Troubleshooting
 
@@ -46,10 +46,13 @@ If the End device flashed with the example `Zigbee_Temperature_Sensor` is not co
 You can do the following:
 
 * In the Arduino IDE go to the Tools menu and set `Erase All Flash Before Sketch Upload` to `Enabled`.
-* In the `Zigbee_Temperature_Sensor` example sketch uncomment function `esp_zb_nvram_erase_at_start(true);` located in `esp_zb_task` function.
+* In the `Zigbee_Temperature_Sensor` example sketch call `Zigbee.factoryReset();`.
 
-By default, the coordinator network is open for 180s after rebooting or flashing new firmware. After that, the network is closed for adding new devices.
-You can change it by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
+By default, the coordinator network is closed after rebooting or flashing new firmware.
+To open the network you have 2 options:
+
+* Open network after reboot by setting `Zigbee.setRebootOpenNetwork(time);` before calling `Zigbee.begin();`.
+* In application you can anytime call `Zigbee.openNetwork(time);` to open the network for devices to join.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 

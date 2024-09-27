@@ -107,6 +107,7 @@ class ZigbeeCore {
 
         void setPrimaryChannelMask(uint32_t mask);
         void setRebootOpenNetwork(uint8_t time);
+        void openNetwork(uint8_t time);
 
         //scan_duration Time spent scanning each channel, in units of ((1 << scan_duration) + 1) * a beacon time. (15.36 microseconds)
         void scanNetworks(uint32_t channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);

@@ -154,6 +154,13 @@ void ZigbeeCore::setRebootOpenNetwork(uint8_t time) {
   _open_network = time;
 }
 
+void ZigbeeCore::openNetwork(uint8_t time) {
+  if (_started) {
+    log_v("Openning network for joining for %d seconds", time);
+    esp_zb_bdb_open_network(time);
+  }
+}
+
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask) {
   ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
 }
