@@ -48,7 +48,7 @@ uint32_t WiFiScanClass::_scanTimeout = 60000;
 uint16_t WiFiScanClass::_scanCount = 0;
 uint32_t WiFiScanClass::_scanActiveMinTime = 100;
 
-void *WiFiScanClass::_scanResult = 0;
+void *WiFiScanClass::_scanResult = nullptr;
 
 void WiFiScanClass::setScanTimeout(uint32_t ms) {
   WiFiScanClass::_scanTimeout = ms;
@@ -117,9 +117,18 @@ int16_t
  */
 void WiFiScanClass::_scanDone() {
   esp_wifi_scan_get_ap_num(&(WiFiScanClass::_scanCount));
+  if (WiFiScanClass::_scanResult) {
+    delete[] reinterpret_cast<wifi_ap_record_t *>(WiFiScanClass::_scanResult);
+    WiFiScanClass::_scanResult = nullptr;
+  }
+
   if (WiFiScanClass::_scanCount) {
-    WiFiScanClass::_scanResult = new wifi_ap_record_t[WiFiScanClass::_scanCount];
-    if (!WiFiScanClass::_scanResult || esp_wifi_scan_get_ap_records(&(WiFiScanClass::_scanCount), (wifi_ap_record_t *)_scanResult) != ESP_OK) {
+    WiFiScanClass::_scanResult = new (std::nothrow) wifi_ap_record_t[WiFiScanClass::_scanCount];
+    if (!WiFiScanClass::_scanResult) {
+      WiFiScanClass::_scanCount = 0;
+    } else if (esp_wifi_scan_get_ap_records(&(WiFiScanClass::_scanCount), (wifi_ap_record_t *)_scanResult) != ESP_OK) {
+      delete[] reinterpret_cast<wifi_ap_record_t *>(WiFiScanClass::_scanResult);
+      WiFiScanClass::_scanResult = nullptr;
       WiFiScanClass::_scanCount = 0;
     }
   }
@@ -172,7 +181,7 @@ void WiFiScanClass::scanDelete() {
   WiFiGenericClass::clearStatusBits(WIFI_SCAN_DONE_BIT);
   if (WiFiScanClass::_scanResult) {
     delete[] reinterpret_cast<wifi_ap_record_t *>(WiFiScanClass::_scanResult);
-    WiFiScanClass::_scanResult = 0;
+    WiFiScanClass::_scanResult = nullptr;
     WiFiScanClass::_scanCount = 0;
   }
 }

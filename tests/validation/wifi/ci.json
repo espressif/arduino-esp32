@@ -1,17 +1,7 @@
 {
-  "platforms": {
-    "qemu": false,
-    "hardware": false
-  },
-
-  "targets": {
-    "esp32h2": false
-  },
-
   "extra_tags": [
     "wifi"
   ],
-
   "fqbn": {
     "esp32": [
       "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio",
@@ -26,5 +16,12 @@
       "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio",
       "espressif:esp32:esp32s3:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio"
     ]
+  },
+  "platforms": {
+    "hardware": false,
+    "qemu": false
+  },
+  "targets": {
+    "esp32h2": false
   }
 }
