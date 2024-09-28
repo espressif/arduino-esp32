@@ -109,17 +109,39 @@ Also:
 Testing
 *******
 
-Be sure you have tested the example in all the supported targets. If the example works only with specific targets,
-edit/add the ``ci.json`` in the same folder as the sketch to specify the supported targets. By default,
-all targets are assumed to be supported.
+Be sure you have tested the example in all the supported targets. If the example some specific hardware requirements,
+edit/add the ``ci.json`` in the same folder as the sketch to specify the required configurations from ``sdkconfig``.
+This will ensure that the CI system will run the test only on the targets that have the required configurations.
+You can check the available configurations in the ``sdkconfig`` file in the ``tools/esp32-arduino-libs/<target>`` folder.
 
-Here is an example of the ``ci.json`` file where the example does not support ESP32-H2 and ESP32-S2:
+Here is an example of the ``ci.json`` file where the example requires Wi-Fi to work properly:
 
 .. code-block:: json
 
     {
+      "requires": [
+        "CONFIG_SOC_WIFI_SUPPORTED=y"
+      ]
+    }
+
+.. note::
+
+    The list of configurations will be checked against the ``sdkconfig`` file in the target folder. If the configuration is not present in the ``sdkconfig``,
+    the test will be skipped for that target. That means that the test will only run on the targets that have **ALL** the required configurations.
+
+Sometimes, the example might not be supported by some target, even if the target has the required configurations
+(like resources limitations or requiring a specific SoC). To avoid compilation errors, you can add the target to the ``ci.json``
+file so the CI system will force to skip the test on that target.
+
+Here is an example of the ``ci.json`` file where the example is requires Wi-Fi to work properly but is also not supported by the ESP32-S2 target:
+
+.. code-block:: json
+
+    {
+      "requires": [
+        "CONFIG_SOC_WIFI_SUPPORTED=y"
+      ],
       "targets": {
-        "esp32h2": false,
         "esp32s2": false
       }
     }
@@ -130,17 +152,17 @@ For example, in the sketch:
 .. code-block:: arduino
 
     /*
-      THIS FEATURE IS SUPPORTED ONLY BY ESP32-S2 AND ESP32-C3
+      THIS FEATURE REQUIRES WI-FI SUPPORT AND IS NOT AVAILABLE FOR ESP32-S2 AS IT DOES NOT HAVE ENOUGH RAM.
     */
 
 And in the ``README.md`` file:
 
 .. code-block:: markdown
 
-    Currently, this example supports the following targets.
+    Currently, this example requires Wi-Fi and supports the following targets.
 
-    | Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
-    | ----------------- | ----- | -------- | -------- | -------- |
+    | Supported Targets | ESP32 | ESP32-H2 | ESP32-S3 | ESP32-C3 | ESP32-C6 |
+    | ----------------- | ----- | -------- | -------- | -------- | -------- |
 
 Example Template
 ****************
@@ -341,8 +363,11 @@ CI JSON File
 
 The ``ci.json`` file is used to specify how the test suite and sketches will handled by the CI system. It can contain the following fields:
 
-* ``targets``: A dictionary that specifies the supported targets. The key is the target name and the value is a boolean that specifies if the
-  target is supported. By default, all targets are assumed to be supported. This field is also valid for examples.
+* ``requires``: A list of configurations in ``sdkconfig`` that are required to run the test suite. The test suite will only run on the targets
+  that have the required configurations. By default, no configurations are required.
+* ``targets``: A dictionary that specifies the targets for which the tests will be run. The key is the target name and the value is a boolean
+  that specifies if the test should be run for that target. By default, all targets are enabled as long as they have the required configurations
+  specified in the ``requires`` field. This field is also valid for examples.
 * ``platforms``: A dictionary that specifies the supported platforms. The key is the platform name and the value is a boolean that specifies if
   the platform is supported. By default, all platforms are assumed to be supported.
 * ``extra_tags``: A list of extra tags that the runner will require when running the test suite in hardware. By default, no extra tags are required.
