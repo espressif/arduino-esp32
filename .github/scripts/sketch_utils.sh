@@ -1,5 +1,7 @@
 #!/bin/bash
 
+LIBS_DIR="tools/esp32-arduino-libs"
+
 function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
     while [ ! -z "$1" ]; do
         case "$1" in
@@ -140,16 +142,25 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
     sketchname=$(basename $sketchdir)
 
-    # If the target is listed as false, skip the sketch. Otherwise, include it.
     if [ -f $sketchdir/ci.json ]; then
+        # If the target is listed as false, skip the sketch. Otherwise, include it.
         is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
-    else
-        is_target="true"
-    fi
+        if [[ "$is_target" == "false" ]]; then
+            echo "Skipping $sketchname for target $target"
+            exit 0
+        fi
 
-    if [[ "$is_target" == "false" ]]; then
-        echo "Skipping $sketchname for target $target"
-        exit 0
+        # Check if the sketch requires any configuration options
+        requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
+        if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+            for requirement in $requirements; do
+                found_line=$(grep "$requirement" $LIBS_DIR/$target/sdkconfig)
+                if [[ "$found_line" == "" ]]; then
+                    echo "Target $target does not meet the requirement $requirement for $sketchname. Skipping."
+                    exit 0
+                fi
+            done
+        fi
     fi
 
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
@@ -288,15 +299,22 @@ function count_sketches(){ # count_sketches <path> [target] [file]
         local sketchname=$(basename $sketch)
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]]; then
+        elif [[ -n $target ]] && [[ -f $sketchdir/ci.json ]]; then
             # If the target is listed as false, skip the sketch. Otherwise, include it.
-            if [ -f $sketchdir/ci.json ]; then
-                is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
-            else
-                is_target="true"
-            fi
+            is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
             if [[ "$is_target" == "false" ]]; then
                 continue
+            fi
+
+            # Check if the sketch requires any configuration options
+            requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
+            if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+                for requirement in $requirements; do
+                    found_line=$(grep "$requirement" $LIBS_DIR/$target/sdkconfig)
+                    if [[ "$found_line" == "" ]]; then
+                        continue 2
+                    fi
+                done
             fi
         fi
         echo $sketch >> sketches.txt

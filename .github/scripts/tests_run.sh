@@ -10,19 +10,29 @@ function run_test() {
     local result=0
     local error=0
 
-    # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
     if [ -f $sketchdir/ci.json ]; then
+        # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
         is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
         selected_platform=$(jq -r --arg platform $platform '.platforms[$platform]' $sketchdir/ci.json)
-    else
-        is_target="true"
-        selected_platform="true"
-    fi
 
-    if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
-      printf "\033[93mSkipping $sketchname test for $target, platform: $platform\033[0m\n"
-      printf "\n\n\n"
-      return 0
+        if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
+            printf "\033[93mSkipping $sketchname test for $target, platform: $platform\033[0m\n"
+            printf "\n\n\n"
+            return 0
+        fi
+
+        # Check if the sketch requires any configuration options
+        requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
+        if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+            for requirement in $requirements; do
+                found_line=$(grep "$requirement" $LIBS_DIR/$target/sdkconfig)
+                if [[ "$found_line" == "" ]]; then
+                    printf "\033[93mTarget $target does not meet the requirement $requirement for $sketchname. Skipping.\033[0m\n"
+                    printf "\n\n\n"
+                    return 0
+                fi
+            done
+        fi
     fi
 
     if [ $options -eq 0 ] && [ -f $sketchdir/ci.json ]; then
@@ -110,6 +120,7 @@ function run_test() {
 
 SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
+LIBS_DIR="tools/esp32-arduino-libs"
 
 platform="hardware"
 wokwi_timeout=60000
