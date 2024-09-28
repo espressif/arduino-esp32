@@ -110,8 +110,10 @@ Testing
 *******
 
 Be sure you have tested the example in all the supported targets. If the example some specific hardware requirements,
-edit/add the ``ci.json`` in the same folder as the sketch to specify the required configurations from ``sdkconfig``.
+edit/add the ``ci.json`` in the same folder as the sketch to specify the regular expression for the
+required configurations from ``sdkconfig``.
 This will ensure that the CI system will run the test only on the targets that have the required configurations.
+
 You can check the available configurations in the ``sdkconfig`` file in the ``tools/esp32-arduino-libs/<target>`` folder.
 
 Here is an example of the ``ci.json`` file where the example requires Wi-Fi to work properly:
@@ -128,6 +130,9 @@ Here is an example of the ``ci.json`` file where the example requires Wi-Fi to w
 
     The list of configurations will be checked against the ``sdkconfig`` file in the target folder. If the configuration is not present in the ``sdkconfig``,
     the test will be skipped for that target. That means that the test will only run on the targets that have **ALL** the required configurations.
+
+    Also, by default, the "match start of line" character (``^``) will be added to the beginning of each configuration.
+    That means that the configuration must be at the beginning of the line in the ``sdkconfig`` file.
 
 Sometimes, the example might not be supported by some target, even if the target has the required configurations
 (like resources limitations or requiring a specific SoC). To avoid compilation errors, you can add the target to the ``ci.json``
