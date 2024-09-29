@@ -80,7 +80,7 @@ void setup_gpio() {
   esp_sleep_pd_config(ESP_PD_DOMAIN_VDDSDIO, ESP_PD_OPTION_ON);
   gpio_pullup_dis(WAKEUP_GPIO);
   gpio_pulldown_en(WAKEUP_GPIO);
-  gpio_wakeup_enable(WAKEUP_GPIO, GPIO_INTR_HIGH_LEVEL);
+  gpio_wakeup_enable(WAKEUP_GPIO, GPIO_INTR_LOW_LEVEL);
   esp_sleep_enable_gpio_wakeup();
 }
 
