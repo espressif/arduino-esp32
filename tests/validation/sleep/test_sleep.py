@@ -35,6 +35,7 @@ def test_sleep(dut):
             dut.expect_exact("Woke up from light sleep")
             dut.expect_exact("Wakeup reason: {}".format(capability))
             if capability == "timer":
+                LOGGER.info("Testing timer light sleep capability with low frequency")
                 dut.write("timer_freq_light")
                 dut.expect_exact("Woke up from light sleep")
                 dut.expect_exact("Wakeup reason: timer")
