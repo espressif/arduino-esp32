@@ -1,4 +1,5 @@
 import logging
+import time
 
 capabilities = {
     "timer": ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6", "esp32h2"],
@@ -31,6 +32,8 @@ def test_sleep(dut):
             LOGGER.info("Testing {} light sleep capability".format(capability))
             dut.write("{}_light".format(capability))
             if capability == "uart":
+                time.sleep(5)
+                LOGGER.info("Sending 9 positive edges")
                 dut.write("aaa") # Send 9 positive edges
             dut.expect_exact("Woke up from light sleep")
             dut.expect_exact("Wakeup reason: {}".format(capability))
