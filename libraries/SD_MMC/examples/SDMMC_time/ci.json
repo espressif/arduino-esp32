@@ -1,8 +1,6 @@
 {
-  "targets": {
-    "esp32c3": false,
-    "esp32c6": false,
-    "esp32h2": false,
-    "esp32s2": false
-  }
+  "requires": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y",
+    "CONFIG_SOC_SDMMC_HOST_SUPPORTED=y"
+  ]
 }

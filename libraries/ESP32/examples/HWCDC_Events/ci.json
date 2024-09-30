@@ -4,8 +4,7 @@
       "espressif:esp32:esp32s3:USBMode=hwcdc,PartitionScheme=huge_app,FlashMode=dio"
     ]
   },
-  "targets": {
-    "esp32": false,
-    "esp32s2": false
-  }
+  "requires": [
+    "CONFIG_SOC_USB_SERIAL_JTAG_SUPPORTED=y"
+  ]
 }

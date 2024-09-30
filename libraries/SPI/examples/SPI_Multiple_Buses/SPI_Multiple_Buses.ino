@@ -39,7 +39,7 @@
 #define HSPI_SS   15
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#if !defined(CONFIG_IDF_TARGET_ESP32)
 #define VSPI FSPI
 #endif
 
