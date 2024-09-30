@@ -7,9 +7,9 @@
 //#define USB_PID          0x1001
 //#define USB_MANUFACTURER "Sparkfun"
 //#define USB_PRODUCT      "ESP32-S3 Thing Plus"
-#define USB_SERIAL       ""
+#define USB_SERIAL ""
 
-#define LED_PIN     46 //Pin 46 on Thing Plus C S3 is connected to WS2812 LED
+#define LED_PIN     46  //Pin 46 on Thing Plus C S3 is connected to WS2812 LED
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812
 #define NUM_LEDS    1
@@ -26,8 +26,8 @@ static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
 static const uint8_t SS = 10;
-static const uint8_t MISO = 13;	//POCI
-static const uint8_t MOSI = 11; //PICO
+static const uint8_t MISO = 13;  //POCI
+static const uint8_t MOSI = 11;  //PICO
 static const uint8_t SCK = 12;
 
 static const uint8_t SCL = 9;
@@ -57,7 +57,5 @@ static const uint8_t SDIO2 = 47;
 static const uint8_t SDIO3 = 33;
 static const uint8_t SDIO_CLK = 38;
 static const uint8_t SDIO_CMD = 34;
-
-
 
 #endif /* Pins_Arduino_h */
