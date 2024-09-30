@@ -228,6 +228,22 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "WebServer/examples/SDWebServer",
+                    "sizes": [{
+                            "flash_bytes": 1051030,
+                            "flash_percentage": 33,
+                            "ram_bytes": 37940,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "WebServer/examples/SimpleAuthentification",
+                    "sizes": [{
+                            "flash_bytes": 941752,
+                            "flash_percentage": 29,
+                            "ram_bytes": 35172,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "WebServer/examples/UploadHugeFile",
                     "sizes": [{
                             "flash_bytes": 1239814,
@@ -307,28 +323,36 @@
                             "ram_bytes": 34876,
                             "ram_percentage": 10
                             }]
-                    },
-{"name": "WiFi/examples/WiFiClientBasic",
-                    "sizes": [{
-                            "flash_bytes": 915204,
-                            "flash_percentage": 29,
-                            "ram_bytes": 34844,
-                            "ram_percentage": 10
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiClientConnect",
-                    "sizes": [{
-                            "flash_bytes": 902128,
-                            "flash_percentage": 28,
-                            "ram_bytes": 33868,
-                            "ram_percentage": 10
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "WebServer/examples/WebServer",
+                    "sizes": [{
+                            "flash_bytes": 1019312,
+                            "flash_percentage": 32,
+                            "ram_bytes": 40036,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/WebUpdate",
+                    "sizes": [{
+                            "flash_bytes": 980168,
+                            "flash_percentage": 31,
+                            "ram_bytes": 42396,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WiFi/examples/FTM/FTM_Initiator",
+                    "sizes": [{
+                            "flash_bytes": 886602,
+                            "flash_percentage": 28,
+                            "ram_bytes": 38100,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "WiFi/examples/FTM/FTM_Responder",
                     "sizes": [{
                             "flash_bytes": 884444,
@@ -408,36 +432,36 @@
                             "ram_bytes": 38092,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "WiFi/examples/WiFiClientStaticIP",
-                    "sizes": [{
-                            "flash_bytes": 900022,
-                            "flash_percentage": 28,
-                            "ram_bytes": 39492,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiExtender",
-                    "sizes": [{
-                            "flash_bytes": 887020,
-                            "flash_percentage": 28,
-                            "ram_bytes": 38196,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiIPv6",
-                    "sizes": [{
-                            "flash_bytes": 897884,
-                            "flash_percentage": 28,
-                            "ram_bytes": 39764,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "SD/examples/SD_Test",
+                    "sizes": [{
+                            "flash_bytes": 340714,
+                            "flash_percentage": 10,
+                            "ram_bytes": 14020,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "SPI/examples/SPI_Multiple_Buses",
+                    "sizes": [{
+                            "flash_bytes": 268660,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13280,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "SPIFFS/examples/SPIFFS_Test",
+                    "sizes": [{
+                            "flash_bytes": 298374,
+                            "flash_percentage": 9,
+                            "ram_bytes": 13280,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "SimpleBLE/examples/SimpleBleDevice",
                     "sizes": [{
                             "flash_bytes": 1128332,
@@ -468,30 +492,6 @@
                             "flash_percentage": 8,
                             "ram_bytes": 13240,
                             "ram_percentage": 4
-                            }]
-                    },
-{"name": "Ticker/examples/TickerParameter",
-                    "sizes": [{
-                            "flash_bytes": 265640,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13280,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "Update/examples/SD_Update",
-                    "sizes": [{
-                            "flash_bytes": 345812,
-                            "flash_percentage": 10,
-                            "ram_bytes": 13844,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "Wire/examples/WireMaster",
-                    "sizes": [{
-                            "flash_bytes": 276610,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13048,
-                            "ram_percentage": 3
                             }]
                     }
 ]

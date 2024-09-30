@@ -438,6 +438,22 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/AnalogOut/SigmaDelta",
+                    "sizes": [{
+                            "flash_bytes": 248260,
+                            "flash_percentage": 7,
+                            "ram_bytes": 12736,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/ledcFrequency",
+                    "sizes": [{
+                            "flash_bytes": 254552,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12816,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
                     "sizes": [{
                             "flash_bytes": 263678,
@@ -475,22 +491,6 @@
                             "flash_bytes": 298660,
                             "flash_percentage": 9,
                             "ram_bytes": 13584,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/ChipID/GetChipID",
-                    "sizes": [{
-                            "flash_bytes": 258032,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12752,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/FreeRTOS/BasicMultiThreading",
-                    "sizes": [{
-                            "flash_bytes": 288322,
-                            "flash_percentage": 9,
-                            "ram_bytes": 13464,
                             "ram_percentage": 4
                             }]
                     }

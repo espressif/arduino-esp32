@@ -369,6 +369,22 @@
                             "ram_percentage": 12
                             }]
                     },
+{"name": "Insights/examples/DiagnosticsSmokeTest",
+                    "sizes": [{
+                            "flash_bytes": 1066490,
+                            "flash_percentage": 33,
+                            "ram_bytes": 41876,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "Insights/examples/MinimalDiagnostics",
+                    "sizes": [{
+                            "flash_bytes": 1065964,
+                            "flash_percentage": 33,
+                            "ram_bytes": 41772,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
                             "flash_bytes": 261006,
@@ -416,28 +432,28 @@
                             "ram_bytes": 39964,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
-                    "sizes": [{
-                            "flash_bytes": 1044740,
-                            "flash_percentage": 33,
-                            "ram_bytes": 40396,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
-                    "sizes": [{
-                            "flash_bytes": 992544,
-                            "flash_percentage": 31,
-                            "ram_bytes": 39956,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/Serial/BaudRateDetect_Demo",
+                    "sizes": [{
+                            "flash_bytes": 257052,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12712,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/OnReceiveError_BREAK_Demo",
+                    "sizes": [{
+                            "flash_bytes": 260016,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12744,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/Serial/OnReceive_Demo",
                     "sizes": [{
                             "flash_bytes": 258678,
@@ -475,22 +491,6 @@
                             "flash_bytes": 257882,
                             "flash_percentage": 8,
                             "ram_bytes": 12728,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
-                    "sizes": [{
-                            "flash_bytes": 258406,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12712,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/onReceiveExample",
-                    "sizes": [{
-                            "flash_bytes": 258012,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12736,
                             "ram_percentage": 3
                             }]
                     }

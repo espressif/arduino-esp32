@@ -329,6 +329,22 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
+                    "sizes": [{
+                            "flash_bytes": 1044740,
+                            "flash_percentage": 33,
+                            "ram_bytes": 40396,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
+                    "sizes": [{
+                            "flash_bytes": 992544,
+                            "flash_percentage": 31,
+                            "ram_bytes": 39956,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
                             "flash_bytes": 1023332,
@@ -416,28 +432,28 @@
                             "ram_bytes": 48960,
                             "ram_percentage": 14
                             }]
-                    },
-{"name": "PPP/examples/PPP_Basic",
-                    "sizes": [{
-                            "flash_bytes": 460944,
-                            "flash_percentage": 14,
-                            "ram_bytes": 17736,
-                            "ram_percentage": 5
-                            }]
-                    },
-{"name": "PPP/examples/PPP_WIFI_BRIDGE",
-                    "sizes": [{
-                            "flash_bytes": 965216,
-                            "flash_percentage": 30,
-                            "ram_bytes": 38788,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
+                    "sizes": [{
+                            "flash_bytes": 258406,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12712,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/onReceiveExample",
+                    "sizes": [{
+                            "flash_bytes": 258012,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12736,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/TWAI/TWAIreceive",
                     "sizes": [{
                             "flash_bytes": 263634,
@@ -475,22 +491,6 @@
                             "flash_bytes": 266562,
                             "flash_percentage": 8,
                             "ram_bytes": 13048,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Utilities/HEXBuilder",
-                    "sizes": [{
-                            "flash_bytes": 258916,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12712,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Utilities/MD5Builder",
-                    "sizes": [{
-                            "flash_bytes": 259002,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12712,
                             "ram_percentage": 3
                             }]
                     }

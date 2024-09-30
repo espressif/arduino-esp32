@@ -145,7 +145,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 942370,
+                            "flash_bytes": 942362,
                             "flash_percentage": 29,
                             "ram_bytes": 42728,
                             "ram_percentage": 13
@@ -228,6 +228,22 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "WebServer/examples/AdvancedWebServer",
+                    "sizes": [{
+                            "flash_bytes": 989100,
+                            "flash_percentage": 31,
+                            "ram_bytes": 37644,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "WebServer/examples/FSBrowser",
+                    "sizes": [{
+                            "flash_bytes": 1019926,
+                            "flash_percentage": 32,
+                            "ram_bytes": 37316,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
                             "flash_bytes": 989802,
@@ -307,28 +323,36 @@
                             "ram_bytes": 42500,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "WebServer/examples/SDWebServer",
-                    "sizes": [{
-                            "flash_bytes": 1051030,
-                            "flash_percentage": 33,
-                            "ram_bytes": 37940,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "WebServer/examples/SimpleAuthentification",
-                    "sizes": [{
-                            "flash_bytes": 941752,
-                            "flash_percentage": 29,
-                            "ram_bytes": 35172,
-                            "ram_percentage": 10
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "WebServer/examples/Filters",
+                    "sizes": [{
+                            "flash_bytes": 976198,
+                            "flash_percentage": 31,
+                            "ram_bytes": 42180,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/HelloServer",
+                    "sizes": [{
+                            "flash_bytes": 974356,
+                            "flash_percentage": 30,
+                            "ram_bytes": 42172,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "WebServer/examples/HttpAdvancedAuth",
+                    "sizes": [{
+                            "flash_bytes": 993764,
+                            "flash_percentage": 31,
+                            "ram_bytes": 44484,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "WebServer/examples/HttpAuthCallback",
                     "sizes": [{
                             "flash_bytes": 994464,
@@ -408,36 +432,28 @@
                             "ram_bytes": 45660,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "WebServer/examples/WebServer",
-                    "sizes": [{
-                            "flash_bytes": 1019312,
-                            "flash_percentage": 32,
-                            "ram_bytes": 40036,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WebServer/examples/WebUpdate",
-                    "sizes": [{
-                            "flash_bytes": 980168,
-                            "flash_percentage": 31,
-                            "ram_bytes": 42396,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WiFi/examples/FTM/FTM_Initiator",
-                    "sizes": [{
-                            "flash_bytes": 886602,
-                            "flash_percentage": 28,
-                            "ram_bytes": 38100,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
+                    "sizes": [{
+                            "flash_bytes": 977994,
+                            "flash_percentage": 31,
+                            "ram_bytes": 48296,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
+                    "sizes": [{
+                            "flash_bytes": 978062,
+                            "flash_percentage": 31,
+                            "ram_bytes": 48296,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "OpenThread/examples/ThreadScan",
                     "sizes": [{
                             "flash_bytes": 977608,
@@ -476,22 +492,6 @@
                             "flash_percentage": 8,
                             "ram_bytes": 12736,
                             "ram_percentage": 3
-                            }]
-                    },
-{"name": "SD/examples/SD_Test",
-                    "sizes": [{
-                            "flash_bytes": 340714,
-                            "flash_percentage": 10,
-                            "ram_bytes": 14020,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "SPIFFS/examples/SPIFFS_Test",
-                    "sizes": [{
-                            "flash_bytes": 298374,
-                            "flash_percentage": 9,
-                            "ram_bytes": 13280,
-                            "ram_percentage": 4
                             }]
                     }
 ]

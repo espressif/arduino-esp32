@@ -438,6 +438,22 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "BLE/examples/iBeacon",
+                    "sizes": [{
+                            "flash_bytes": 1166908,
+                            "flash_percentage": 37,
+                            "ram_bytes": 36808,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "EEPROM/examples/eeprom_class",
+                    "sizes": [{
+                            "flash_bytes": 265470,
+                            "flash_percentage": 8,
+                            "ram_bytes": 12808,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
                             "flash_bytes": 267608,
@@ -475,22 +491,6 @@
                             "flash_bytes": 249636,
                             "flash_percentage": 7,
                             "ram_bytes": 12776,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogOut/SigmaDelta",
-                    "sizes": [{
-                            "flash_bytes": 248260,
-                            "flash_percentage": 7,
-                            "ram_bytes": 12736,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogOut/ledcFrequency",
-                    "sizes": [{
-                            "flash_bytes": 254552,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12816,
                             "ram_percentage": 3
                             }]
                     }

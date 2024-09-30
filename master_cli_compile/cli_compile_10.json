@@ -228,6 +228,22 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "SPIFFS/examples/SPIFFS_time",
+                    "sizes": [{
+                            "flash_bytes": 959594,
+                            "flash_percentage": 30,
+                            "ram_bytes": 35012,
+                            "ram_percentage": 10
+                            }]
+                    },
+{"name": "SimpleBLE/examples/SimpleBleDevice",
+                    "sizes": [{
+                            "flash_bytes": 969862,
+                            "flash_percentage": 30,
+                            "ram_bytes": 37260,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
                             "flash_bytes": 279202,
@@ -307,28 +323,36 @@
                             "ram_bytes": 12768,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "WebServer/examples/AdvancedWebServer",
-                    "sizes": [{
-                            "flash_bytes": 989100,
-                            "flash_percentage": 31,
-                            "ram_bytes": 37644,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "WebServer/examples/FSBrowser",
-                    "sizes": [{
-                            "flash_bytes": 1019926,
-                            "flash_percentage": 32,
-                            "ram_bytes": 37316,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "SimpleBLE/examples/SimpleBleDevice",
+                    "sizes": [{
+                            "flash_bytes": 1074778,
+                            "flash_percentage": 34,
+                            "ram_bytes": 37460,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "TFLiteMicro/examples/hello_world",
+                    "sizes": [{
+                            "flash_bytes": 236866,
+                            "flash_percentage": 7,
+                            "ram_bytes": 14840,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Ticker/examples/Blinker",
+                    "sizes": [{
+                            "flash_bytes": 221286,
+                            "flash_percentage": 7,
+                            "ram_bytes": 13096,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "Ticker/examples/TickerBasic",
                     "sizes": [{
                             "flash_bytes": 221186,
@@ -408,36 +432,28 @@
                             "ram_bytes": 42020,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "WebServer/examples/Filters",
-                    "sizes": [{
-                            "flash_bytes": 976198,
-                            "flash_percentage": 31,
-                            "ram_bytes": 42180,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WebServer/examples/HelloServer",
-                    "sizes": [{
-                            "flash_bytes": 974356,
-                            "flash_percentage": 30,
-                            "ram_bytes": 42172,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WebServer/examples/HttpAdvancedAuth",
-                    "sizes": [{
-                            "flash_bytes": 993764,
-                            "flash_percentage": 31,
-                            "ram_bytes": 44484,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "FFat/examples/FFat_Test",
+                    "sizes": [{
+                            "flash_bytes": 318452,
+                            "flash_percentage": 10,
+                            "ram_bytes": 13532,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "LittleFS/examples/LITTLEFS_test",
+                    "sizes": [{
+                            "flash_bytes": 305568,
+                            "flash_percentage": 9,
+                            "ram_bytes": 13288,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "OpenThread/examples/COAP/coap_lamp",
                     "sizes": [{
                             "flash_bytes": 998156,
@@ -475,22 +491,6 @@
                             "flash_bytes": 979990,
                             "flash_percentage": 31,
                             "ram_bytes": 48304,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
-                    "sizes": [{
-                            "flash_bytes": 977994,
-                            "flash_percentage": 31,
-                            "ram_bytes": 48296,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
-                    "sizes": [{
-                            "flash_bytes": 978062,
-                            "flash_percentage": 31,
-                            "ram_bytes": 48296,
                             "ram_percentage": 14
                             }]
                     }

@@ -438,6 +438,22 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
+                    "sizes": [{
+                            "flash_bytes": 262368,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13384,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/GPIOInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 263008,
+                            "flash_percentage": 8,
+                            "ram_bytes": 13392,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/HWCDC_Events",
                     "sizes": [{
                             "flash_bytes": 286268,
@@ -475,22 +491,6 @@
                             "flash_bytes": 279502,
                             "flash_percentage": 8,
                             "ram_bytes": 15272,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMTReadXJT",
-                    "sizes": [{
-                            "flash_bytes": 278804,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13704,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMTWrite_RGB_LED",
-                    "sizes": [{
-                            "flash_bytes": 277452,
-                            "flash_percentage": 8,
-                            "ram_bytes": 16304,
                             "ram_percentage": 4
                             }]
                     }

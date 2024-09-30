@@ -438,6 +438,22 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "BLE/examples/EddystoneURL_Beacon",
+                    "sizes": [{
+                            "flash_bytes": 1163464,
+                            "flash_percentage": 36,
+                            "ram_bytes": 37076,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "BLE/examples/Notify",
+                    "sizes": [{
+                            "flash_bytes": 1165142,
+                            "flash_percentage": 37,
+                            "ram_bytes": 36808,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "BLE/examples/Scan",
                     "sizes": [{
                             "flash_bytes": 1153854,
@@ -476,22 +492,6 @@
                             "flash_percentage": 36,
                             "ram_bytes": 36792,
                             "ram_percentage": 11
-                            }]
-                    },
-{"name": "BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 1166908,
-                            "flash_percentage": 37,
-                            "ram_bytes": 36808,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "EEPROM/examples/eeprom_class",
-                    "sizes": [{
-                            "flash_bytes": 265470,
-                            "flash_percentage": 8,
-                            "ram_bytes": 12808,
-                            "ram_percentage": 3
                             }]
                     }
 ]
