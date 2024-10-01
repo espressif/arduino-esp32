@@ -253,7 +253,8 @@ extern bool btInUse();
 #if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
 #ifndef CONFIG_SPIRAM_BOOT_INIT
 ESP_SYSTEM_INIT_FN(init_psram_new, BIT(0), 99) {
-  return psramInit() ? ESP_OK : ESP_FAIL;
+  psramInit();
+  return ESP_OK;
 }
 #endif
 #endif
@@ -261,6 +262,11 @@ ESP_SYSTEM_INIT_FN(init_psram_new, BIT(0), 99) {
 void initArduino() {
   //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
   //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
+#ifndef CONFIG_SPIRAM_BOOT_INIT
+  psramAddToHeap();
+#endif
+#endif
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
   if (!verifyRollbackLater()) {
     const esp_partition_t *running = esp_ota_get_running_partition();
