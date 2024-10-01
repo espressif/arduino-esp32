@@ -81,7 +81,7 @@ bool psramInit() {
     ESP_EARLY_LOGE(TAG, "PSRAM test failed!");
     return false;
   }
-  ESP_EARLY_LOGI(TAG, "PSRAM enabled");
+  //ESP_EARLY_LOGI(TAG, "PSRAM enabled");
 #endif /* CONFIG_SPIRAM_BOOT_INIT */
   spiramDetected = true;
   return true;
