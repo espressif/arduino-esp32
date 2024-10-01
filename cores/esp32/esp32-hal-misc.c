@@ -254,7 +254,7 @@ extern bool btInUse();
 
 #if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
 #ifndef CONFIG_SPIRAM_BOOT_INIT
-ESP_SYSTEM_INIT_FN(init_psram_new, BIT(0), 99) {
+ESP_SYSTEM_INIT_FN(init_psram_new, CORE, BIT(0), 99) {
   return psramInit() ? ESP_OK : ESP_FAIL;
 }
 #endif
