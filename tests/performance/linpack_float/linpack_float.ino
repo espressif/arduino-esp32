@@ -527,7 +527,7 @@ int dgefa(floating_point_t a[], int lda, int n, int ipvt[])
   Parameters:
 
     Input/output, floating_point_t A[LDA*N].
-    On intput, the matrix to be factored.
+    On input, the matrix to be factored.
     On output, an upper triangular matrix and the multipliers used to obtain
     it.  The factorization can be written A=L*U, where L is a product of
     permutation and unit lower triangular matrices, and U is upper triangular.
