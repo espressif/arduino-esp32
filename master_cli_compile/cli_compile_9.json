@@ -121,7 +121,7 @@
                 "sketches": [
 {"name": "USB/examples/CustomHIDDevice",
                     "sizes": [{
-                            "flash_bytes": 298218,
+                            "flash_bytes": 298242,
                             "flash_percentage": 9,
                             "ram_bytes": 26272,
                             "ram_percentage": 8
@@ -129,7 +129,7 @@
                     },
 {"name": "USB/examples/FirmwareMSC",
                     "sizes": [{
-                            "flash_bytes": 321174,
+                            "flash_bytes": 321198,
                             "flash_percentage": 10,
                             "ram_bytes": 25944,
                             "ram_percentage": 7
@@ -137,7 +137,7 @@
                     },
 {"name": "USB/examples/Gamepad",
                     "sizes": [{
-                            "flash_bytes": 298546,
+                            "flash_bytes": 298570,
                             "flash_percentage": 9,
                             "ram_bytes": 26288,
                             "ram_percentage": 8
@@ -145,7 +145,7 @@
                     },
 {"name": "USB/examples/HIDVendor",
                     "sizes": [{
-                            "flash_bytes": 300610,
+                            "flash_bytes": 300634,
                             "flash_percentage": 9,
                             "ram_bytes": 26352,
                             "ram_percentage": 8
@@ -153,7 +153,7 @@
                     },
 {"name": "USB/examples/Keyboard/KeyboardLogout",
                     "sizes": [{
-                            "flash_bytes": 287138,
+                            "flash_bytes": 287162,
                             "flash_percentage": 9,
                             "ram_bytes": 26280,
                             "ram_percentage": 8
@@ -161,7 +161,7 @@
                     },
 {"name": "USB/examples/Keyboard/KeyboardMessage",
                     "sizes": [{
-                            "flash_bytes": 287286,
+                            "flash_bytes": 287310,
                             "flash_percentage": 9,
                             "ram_bytes": 26280,
                             "ram_percentage": 8
@@ -169,7 +169,7 @@
                     },
 {"name": "USB/examples/Keyboard/KeyboardReprogram",
                     "sizes": [{
-                            "flash_bytes": 287498,
+                            "flash_bytes": 287522,
                             "flash_percentage": 9,
                             "ram_bytes": 26280,
                             "ram_percentage": 8
@@ -177,7 +177,7 @@
                     },
 {"name": "USB/examples/Keyboard/KeyboardSerial",
                     "sizes": [{
-                            "flash_bytes": 295078,
+                            "flash_bytes": 295102,
                             "flash_percentage": 9,
                             "ram_bytes": 25960,
                             "ram_percentage": 7
@@ -185,7 +185,7 @@
                     },
 {"name": "USB/examples/KeyboardAndMouseControl",
                     "sizes": [{
-                            "flash_bytes": 299250,
+                            "flash_bytes": 299274,
                             "flash_percentage": 9,
                             "ram_bytes": 26312,
                             "ram_percentage": 8
@@ -193,7 +193,7 @@
                     },
 {"name": "USB/examples/MIDI/MidiController",
                     "sizes": [{
-                            "flash_bytes": 306878,
+                            "flash_bytes": 306902,
                             "flash_percentage": 9,
                             "ram_bytes": 26392,
                             "ram_percentage": 8
@@ -201,7 +201,7 @@
                     },
 {"name": "USB/examples/MIDI/MidiInterface",
                     "sizes": [{
-                            "flash_bytes": 293946,
+                            "flash_bytes": 293970,
                             "flash_percentage": 9,
                             "ram_bytes": 25920,
                             "ram_percentage": 7
@@ -209,7 +209,7 @@
                     },
 {"name": "USB/examples/MIDI/MidiMusicBox",
                     "sizes": [{
-                            "flash_bytes": 297506,
+                            "flash_bytes": 297530,
                             "flash_percentage": 9,
                             "ram_bytes": 26264,
                             "ram_percentage": 8
@@ -217,7 +217,7 @@
                     },
 {"name": "USB/examples/MIDI/ReceiveMidi",
                     "sizes": [{
-                            "flash_bytes": 294954,
+                            "flash_bytes": 294978,
                             "flash_percentage": 9,
                             "ram_bytes": 25920,
                             "ram_percentage": 7
@@ -501,7 +501,7 @@
                 "sketches": [
 {"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                     "sizes": [{
-                            "flash_bytes": 1056289,
+                            "flash_bytes": 1056317,
                             "flash_percentage": 33,
                             "ram_bytes": 46160,
                             "ram_percentage": 14
@@ -509,7 +509,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 1005513,
+                            "flash_bytes": 1005541,
                             "flash_percentage": 31,
                             "ram_bytes": 45632,
                             "ram_percentage": 13
@@ -517,7 +517,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 1047497,
+                            "flash_bytes": 1047521,
                             "flash_percentage": 33,
                             "ram_bytes": 47012,
                             "ram_percentage": 14
@@ -525,7 +525,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                     "sizes": [{
-                            "flash_bytes": 1016577,
+                            "flash_bytes": 1016601,
                             "flash_percentage": 32,
                             "ram_bytes": 45696,
                             "ram_percentage": 13
@@ -533,7 +533,7 @@
                     },
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
-                            "flash_bytes": 527821,
+                            "flash_bytes": 527853,
                             "flash_percentage": 16,
                             "ram_bytes": 24904,
                             "ram_percentage": 7
@@ -541,7 +541,7 @@
                     },
 {"name": "PPP/examples/PPP_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 975485,
+                            "flash_bytes": 975513,
                             "flash_percentage": 31,
                             "ram_bytes": 43952,
                             "ram_percentage": 13
@@ -549,7 +549,7 @@
                     },
 {"name": "Preferences/examples/Prefs2Struct",
                     "sizes": [{
-                            "flash_bytes": 297149,
+                            "flash_bytes": 297181,
                             "flash_percentage": 9,
                             "ram_bytes": 20320,
                             "ram_percentage": 6
@@ -557,7 +557,7 @@
                     },
 {"name": "Preferences/examples/StartCounter",
                     "sizes": [{
-                            "flash_bytes": 297941,
+                            "flash_bytes": 297973,
                             "flash_percentage": 9,
                             "ram_bytes": 20320,
                             "ram_percentage": 6
@@ -565,7 +565,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
-                            "flash_bytes": 2079201,
+                            "flash_bytes": 2079229,
                             "flash_percentage": 66,
                             "ram_bytes": 63288,
                             "ram_percentage": 19
@@ -573,7 +573,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 2056693,
+                            "flash_bytes": 2056721,
                             "flash_percentage": 65,
                             "ram_bytes": 63400,
                             "ram_percentage": 19
@@ -581,7 +581,7 @@
                     },
 {"name": "RainMaker/examples/RMakerSonoffDualR3",
                     "sizes": [{
-                            "flash_bytes": 2082525,
+                            "flash_bytes": 2082553,
                             "flash_percentage": 66,
                             "ram_bytes": 63784,
                             "ram_percentage": 19
@@ -589,7 +589,7 @@
                     },
 {"name": "RainMaker/examples/RMakerSwitch",
                     "sizes": [{
-                            "flash_bytes": 2091445,
+                            "flash_bytes": 2091473,
                             "flash_percentage": 66,
                             "ram_bytes": 63368,
                             "ram_percentage": 19
@@ -597,7 +597,7 @@
                     },
 {"name": "SD/examples/SD_Test",
                     "sizes": [{
-                            "flash_bytes": 353257,
+                            "flash_bytes": 353289,
                             "flash_percentage": 11,
                             "ram_bytes": 21360,
                             "ram_percentage": 6
