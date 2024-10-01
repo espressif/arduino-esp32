@@ -9,9 +9,10 @@
 #include <math.h>
 
 // Number of runs to average
-#define N_RUNS 100
+#define N_RUNS 1000
 
 using floating_point_t = double;
+bool type_float;
 
 floating_point_t benchmark(void);
 floating_point_t cpu_time(void);
@@ -38,10 +39,14 @@ void setup()
 
   if (sizeof(floating_point_t) == sizeof(float)) {
     data_type = "float";
+    type_float = true;
   } else if (sizeof(floating_point_t) == sizeof(double)) {
     data_type = "double";
+    type_float = false;
   } else {
     data_type = "unknown";
+    log_e("Unknown data type size. Aborting.");
+    while (1);
   }
 
 	log_d("Starting Linpack %s test", data_type.c_str());
@@ -52,7 +57,7 @@ void setup()
 	floating_point_t minMflops = 1000000000.0, maxMflops = 0.0, avgMflops = 0.0;
 	for (int i = 0; i < N_RUNS; ++i)
 	{
-    Serial.printf("Run %d", i);
+    Serial.printf("Run %d\n", i);
 		const auto mflops = benchmark();
 		avgMflops += mflops;
 		minMflops = fmin(mflops, minMflops);
@@ -111,7 +116,7 @@ floating_point_t benchmark(void)
 	floating_point_t ops;
 	static floating_point_t resid[N];
 	floating_point_t resid_max;
-	floating_point_t residn;
+	[[maybe_unused]] floating_point_t residn;
 	static floating_point_t rhs[N];
 	floating_point_t t1;
 	floating_point_t t2;
@@ -119,20 +124,18 @@ floating_point_t benchmark(void)
 	floating_point_t total;
 	floating_point_t x[N];
 
-	Serial.print("\n");
-	Serial.print("LINPACK_BENCH\n");
-	Serial.print("  C version\n");
-	Serial.print("\n");
-	Serial.print("  The LINPACK benchmark.\n");
-	Serial.print("  Language: C\n");
-	if (sizeof(floating_point_t) == 8)
-		Serial.print("  Datatype: Double precision real\n");
-	else if (sizeof(floating_point_t) == 4)
-		Serial.print("  Datatype: Single precision real\n");
-	else
-		Serial.print("  Datatype: uknown\n");
-	Serial.println(String("  Matrix order N               =") + N);
-	Serial.println("  Leading matrix dimension LDA = " + LDA);
+	log_d("LINPACK_BENCH");
+	log_d("  C version");
+	log_d("  The LINPACK benchmark.");
+	log_d("  Language: C");
+	if (!type_float)
+		log_d("  Datatype: Double precision real");
+	else if (type_float)
+		log_d("  Datatype: Single precision real");
+  else
+    log_d("  Datatype: unknown");
+	log_d("  Matrix order N               = %d", N);
+	log_d("  Leading matrix dimension LDA = %d", LDA);
 
 	ops = (floating_point_t)(2L * N * N * N) / 3.0 + 2.0 * (floating_point_t)((long)N * N);
 
@@ -169,10 +172,9 @@ floating_point_t benchmark(void)
 
 	if (info != 0)
 	{
-		Serial.print("\n");
-		Serial.print("LINPACK_BENCH - Fatal error!\n");
-		Serial.print("  The matrix A is apparently singular.\n");
-		Serial.print("  Abnormal end of execution.\n");
+		log_d("LINPACK_BENCH - Fatal error!");
+		log_d("  The matrix A is apparently singular.");
+		log_d("  Abnormal end of execution.");
 		return 1;
 	}
 
@@ -245,40 +247,20 @@ floating_point_t benchmark(void)
 	time[4] = 2.0 / time[3];
 	time[5] = total / cray;
 
-	Serial.print("\n");
-	Serial.print("     Norm. Resid      Resid           MACHEP         X[1]          X[N]\n");
-	Serial.print("\n");
-	Serial.print("  ");
-	Serial.print(residn, 14);
-	Serial.print("  ");
-	Serial.print(resid_max, 14);
-	Serial.print("  ");
-	Serial.print(eps, 14);
-	Serial.print("  ");
-	Serial.print(b[0], 14);
-	Serial.print("  ");
-	Serial.print(b[N - 1], 14);
-	Serial.print("  ");
-	//printf ( "  %14f  %14f  %14e  %14f  %14f\n", residn, resid_max, eps, b[0], b[N-1] );
-	Serial.print("\n");
-	Serial.print("      Factor     Solve      Total     MFLOPS       Unit      Cray-Ratio\n");
-	Serial.print("\n");
-	for (int i = 0; i < 6; i++)
-	{
-		Serial.print("  ");
-		Serial.print(time[i], 9);
-	}
-	//printf ( "  %9f  %9f  %9f  %9f  %9f  %9f\n",
-	//  time[0], time[1], time[2], time[3], time[4], time[5] );
+	log_d("");
+	log_d("     Norm. Resid      Resid           MACHEP         X[1]          X[N]");
+	log_d("  %14f  %14f  %14e  %14f  %14f", residn, resid_max, eps, b[0], b[N-1]);
+	log_d("");
+	log_d("      Factor     Solve      Total     MFLOPS       Unit      Cray-Ratio");
+	log_d("  %9f  %9f  %9f  %9f  %9f  %9f", time[0], time[1], time[2], time[3], time[4], time[5]);
 
 	/*
   Terminate.
 */
-	Serial.print("\n");
-	Serial.print("LINPACK_BENCH\n");
-	Serial.print("  Normal end of execution.\n");
-
-	Serial.print("\n");
+	log_d("");
+	log_d("LINPACK_BENCH");
+	log_d("  Normal end of execution.");
+	log_d("");
 
 	return time[3];
 #undef LDA
