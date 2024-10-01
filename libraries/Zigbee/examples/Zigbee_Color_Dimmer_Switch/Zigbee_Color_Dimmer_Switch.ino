@@ -19,7 +19,7 @@
  * The RGB light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator (Switch).
  * To turn on/off the light, push the button on the switch.
  * To change the color or level of the light, send serial commands to the switch.
- * 
+ *
  * By setting the switch to allow multiple binding, so it can bind to multiple lights.
  * Also every 30 seconds, all bound lights are printed to the serial console.
  *
@@ -27,7 +27,7 @@
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
- * 
+ *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
@@ -39,7 +39,7 @@
 #include "ep/ZigbeeColorDimmerSwitch.h"
 
 /* Switch configuration */
-#define SWITCH_PIN 9 // ESP32-C6/H2 Boot button
+#define SWITCH_PIN             9  // ESP32-C6/H2 Boot button
 #define SWITCH_ENDPOINT_NUMBER 5
 
 /* Zigbee switch */
@@ -47,7 +47,7 @@ ZigbeeColorDimmerSwitch zbSwitch = ZigbeeColorDimmerSwitch(SWITCH_ENDPOINT_NUMBE
 
 /********************* Arduino functions **************************/
 void setup() {
-  
+
   Serial.begin(115200);
   while (!Serial) {
     delay(10);
@@ -67,14 +67,13 @@ void setup() {
 
   //Open network for 180 seconds after boot
   Zigbee.setRebootOpenNetwork(180);
-  
+
   //When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
   Zigbee.begin(ZIGBEE_COORDINATOR);
-  
+
   Serial.println("Waiting for Light to bound to the switch");
   //Wait for switch to bound to a light:
-  while(!zbSwitch.isBound()) 
-  {
+  while (!zbSwitch.isBound()) {
     Serial.printf(".");
     delay(500);
   }

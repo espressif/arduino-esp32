@@ -21,7 +21,7 @@
  * with proper Zigbee partition scheme in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
- * 
+ *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
@@ -32,9 +32,9 @@
 #include "ZigbeeCore.h"
 
 #ifdef ZIGBEE_MODE_ZCZR
-zigbee_role_t role = ZIGBEE_ROUTER; // or can be ZIGBEE_COORDINATOR, but it wont scan itself
+zigbee_role_t role = ZIGBEE_ROUTER;  // or can be ZIGBEE_COORDINATOR, but it wont scan itself
 #else
-zigbee_role_t role = ZIGBEE_END_DEVICE; 
+zigbee_role_t role = ZIGBEE_END_DEVICE;
 #endif
 
 void printScannedNetworks(uint16_t networksFound) {
@@ -60,10 +60,11 @@ void printScannedNetworks(uint16_t networksFound) {
       Serial.print(" | ");
       Serial.printf("%-19.19s", scan_result[i].end_device_capacity ? "Yes" : "No");
       Serial.print(" | ");
-      Serial.printf("%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",  scan_result[i].extended_pan_id[7], scan_result[i].extended_pan_id[6], 
-                                                                scan_result[i].extended_pan_id[5], scan_result[i].extended_pan_id[4], 
-                                                                scan_result[i].extended_pan_id[3], scan_result[i].extended_pan_id[2], 
-                                                                scan_result[i].extended_pan_id[1], scan_result[i].extended_pan_id[0]);
+      Serial.printf(
+        "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", scan_result[i].extended_pan_id[7], scan_result[i].extended_pan_id[6], scan_result[i].extended_pan_id[5],
+        scan_result[i].extended_pan_id[4], scan_result[i].extended_pan_id[3], scan_result[i].extended_pan_id[2], scan_result[i].extended_pan_id[1],
+        scan_result[i].extended_pan_id[0]
+      );
       Serial.println();
       delay(10);
     }

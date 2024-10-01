@@ -15,7 +15,7 @@
 /**
  * @brief This example demonstrates Zigbee Color Dimmable light bulb.
  *
- * The example demonstrates how to use Zigbee library to create an end device with 
+ * The example demonstrates how to use Zigbee library to create an end device with
  * color dimmable light end point.
  * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator.
  *
@@ -23,7 +23,7 @@
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
- * 
+ *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
@@ -34,9 +34,9 @@
 #include "ZigbeeCore.h"
 #include "ep/ZigbeeColorDimmableLight.h"
 
-#define LED_PIN RGB_BUILTIN
-#define BUTTON_PIN 9  // C6/H2 Boot button
-#define ZIGBEE_LIGHT_ENDPOINT 10 
+#define LED_PIN               RGB_BUILTIN
+#define BUTTON_PIN            9  // C6/H2 Boot button
+#define ZIGBEE_LIGHT_ENDPOINT 10
 
 ZigbeeColorDimmableLight zbColorLight = ZigbeeColorDimmableLight(ZIGBEE_LIGHT_ENDPOINT);
 
@@ -52,7 +52,7 @@ void identify(uint16_t time) {
   log_d("Identify called for %d seconds", time);
   if (time == 0) {
     // If identify time is 0, stop blinking and restore light as it was used for identify
-      zbColorLight.restoreLight();
+    zbColorLight.restoreLight();
     return;
   }
   rgbLedWrite(LED_PIN, 255 * blink, 255 * blink, 255 * blink);
@@ -79,7 +79,7 @@ void setup() {
   // Add endpoint to Zigbee Core
   log_d("Adding ZigbeeLight endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbColorLight);
-  
+
   // When all EPs are registered, start Zigbee. By default acts as ZIGBEE_END_DEVICE
   log_d("Calling Zigbee.begin()");
   Zigbee.begin();
@@ -93,7 +93,7 @@ void loop() {
     int startTime = millis();
     while (digitalRead(BUTTON_PIN) == LOW) {
       delay(50);
-      if((millis() - startTime) > 3000) {
+      if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
         Serial.printf("Reseting Zigbee to factory settings, reboot.\n");
         Zigbee.factoryReset();

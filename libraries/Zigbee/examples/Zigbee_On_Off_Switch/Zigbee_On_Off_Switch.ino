@@ -23,7 +23,7 @@
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
- * 
+ *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
@@ -94,7 +94,7 @@ static void enableGpioInterrupt(bool enabled) {
 
 /********************* Arduino functions **************************/
 void setup() {
-  
+
   Serial.begin(115200);
   while (!Serial) {
     delay(10);
@@ -112,7 +112,7 @@ void setup() {
 
   //Open network for 180 seconds after boot
   Zigbee.setRebootOpenNetwork(180);
-  
+
   // Init button switch
   for (int i = 0; i < PAIR_SIZE(buttonFunctionPair); i++) {
     pinMode(buttonFunctionPair[i].pin, INPUT_PULLUP);
@@ -128,21 +128,23 @@ void setup() {
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
   log_d("Calling Zigbee.begin()");
   Zigbee.begin(ZIGBEE_COORDINATOR);
-  
+
   Serial.println("Waiting for Light to bound to the switch");
   //Wait for switch to bound to a light:
-  while(!zbSwitch.isBound()) 
-  {
+  while (!zbSwitch.isBound()) {
     Serial.printf(".");
     delay(500);
   }
 
   // Optional: read manufacturer and model name from the bound light
-  std::list<zb_device_params_t*> boundLights = zbSwitch.getBoundDevices();
+  std::list<zb_device_params_t *> boundLights = zbSwitch.getBoundDevices();
   //List all bound lights
-  for (const auto& device : boundLights) {
+  for (const auto &device : boundLights) {
     Serial.printf("Device on endpoint %d, short address: 0x%x\n", device->endpoint, device->short_addr);
-    Serial.printf("IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n", device->ieee_addr[0], device->ieee_addr[1], device->ieee_addr[2], device->ieee_addr[3], device->ieee_addr[4], device->ieee_addr[5], device->ieee_addr[6], device->ieee_addr[7]);
+    Serial.printf(
+      "IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n", device->ieee_addr[0], device->ieee_addr[1], device->ieee_addr[2], device->ieee_addr[3],
+      device->ieee_addr[4], device->ieee_addr[5], device->ieee_addr[6], device->ieee_addr[7]
+    );
     Serial.printf("Light manufacturer: %s", zbSwitch.readManufacturer(device->endpoint, device->short_addr));
     Serial.printf("Light model: %s", zbSwitch.readModel(device->endpoint, device->short_addr));
   }
@@ -156,7 +158,6 @@ void loop() {
   SwitchData buttonSwitch;
   static SwitchState buttonState = SWITCH_IDLE;
   bool eventFlag = false;
-  
 
   /* check if there is any queue received, if yes read out the buttonSwitch */
   if (xQueueReceive(gpio_evt_queue, &buttonSwitch, portMAX_DELAY)) {

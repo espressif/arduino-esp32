@@ -7,8 +7,8 @@
 #include "Arduino.h"
 
 ZigbeeCore::ZigbeeCore() {
-  _radio_config.radio_mode = ZB_RADIO_MODE_NATIVE; // Use the native 15.4 radio
-  _host_config.host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE; // Disable host connection
+  _radio_config.radio_mode = ZB_RADIO_MODE_NATIVE;                   // Use the native 15.4 radio
+  _host_config.host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE;  // Disable host connection
   _zb_ep_list = esp_zb_ep_list_create();
   _primary_channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK;
   _open_network = 0;
@@ -21,7 +21,7 @@ ZigbeeCore::~ZigbeeCore() {}
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message);
 
 bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
-  if (!zigbeeInit(role_cfg, erase_nvs)){
+  if (!zigbeeInit(role_cfg, erase_nvs)) {
     return false;
   }
   _role = (zigbee_role_t)role_cfg->esp_zb_role;
@@ -30,36 +30,36 @@ bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
 
 bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
   bool status = true;
-  switch (role)
-  {
-    case ZIGBEE_COORDINATOR: {
+  switch (role) {
+    case ZIGBEE_COORDINATOR:
+    {
       _role = ZIGBEE_COORDINATOR;
       esp_zb_cfg_t zb_nwk_cfg = ZIGBEE_DEFAULT_COORDINATOR_CONFIG();
       status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
       break;
     }
-    case ZIGBEE_ROUTER: {
+    case ZIGBEE_ROUTER:
+    {
       _role = ZIGBEE_ROUTER;
       esp_zb_cfg_t zb_nwk_cfg = ZIGBEE_DEFAULT_ROUTER_CONFIG();
       status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
       break;
     }
-    case ZIGBEE_END_DEVICE: {
+    case ZIGBEE_END_DEVICE:
+    {
       _role = ZIGBEE_END_DEVICE;
       esp_zb_cfg_t zb_nwk_cfg = ZIGBEE_DEFAULT_ED_CONFIG();
       status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
       break;
     }
-    default:
-      log_e("Invalid Zigbee Role");
-      return false;
+    default: log_e("Invalid Zigbee Role"); return false;
   }
   return status;
 }
 
 void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
   ep_objects.push_back(ep);
-  
+
   log_d("Endpoint: %d, Device ID: 0x%04x", ep->_endpoint, ep->_device_id);
   //Register clusters and ep_list to the ZigbeeCore class's ep_list
   if (ep->_ep_config.endpoint == 0 || ep->_cluster_list == nullptr) {
@@ -84,7 +84,7 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
     .host_config = _host_config,
   };
 
-  esp_err_t err  = esp_zb_platform_config(&platform_config);
+  esp_err_t err = esp_zb_platform_config(&platform_config);
   if (err != ESP_OK) {
     log_e("Failed to configure Zigbee platform");
     return false;
@@ -94,8 +94,8 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   log_d("Initialize Zigbee stack");
   esp_zb_init(zb_cfg);
 
-  // Register all Zigbee EPs in list 
-  if(ep_objects.empty()) {
+  // Register all Zigbee EPs in list
+  if (ep_objects.empty()) {
     log_w("No Zigbee EPs to register");
   } else {
     log_d("Register all Zigbee EPs in list");
@@ -104,10 +104,10 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
       log_e("Failed to register Zigbee EPs");
       return false;
     }
-    
+
     //print the list of Zigbee EPs from ep_objects
     log_i("List of registered Zigbee EPs:");
-    for (std::list<ZigbeeEP*>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
+    for (std::list<ZigbeeEP *>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
       log_i("Device type: %s, Endpoint: %d, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
     }
   }
@@ -175,12 +175,12 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
 
   //main switch
   switch (sig_type) {
-    case ESP_ZB_ZDO_SIGNAL_SKIP_STARTUP: // Common
+    case ESP_ZB_ZDO_SIGNAL_SKIP_STARTUP:  // Common
       log_i("Zigbee stack initialized");
       esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_INITIALIZATION);
       break;
-    case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START: // Common
-    case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT: // Common
+    case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:  // Common
+    case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:       // Common
       if (err_status == ESP_OK) {
         log_i("Device started up in %s factory-reset mode", esp_zb_bdb_is_factory_new() ? "" : "non");
         if (esp_zb_bdb_is_factory_new()) {
@@ -207,7 +207,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         log_e("Failed to initialize Zigbee stack (status: %s)", esp_err_to_name(err_status));
       }
       break;
-    case ESP_ZB_BDB_SIGNAL_FORMATION: // Coordinator
+    case ESP_ZB_BDB_SIGNAL_FORMATION:  // Coordinator
       if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           esp_zb_ieee_addr_t extended_pan_id;
@@ -224,14 +224,13 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         }
       }
       break;
-    case ESP_ZB_BDB_SIGNAL_STEERING: // Router and End Device
+    case ESP_ZB_BDB_SIGNAL_STEERING:  // Router and End Device
       Zigbee._started = true;
       if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           log_i("Network steering started");
         }
-      } 
-      else {
+      } else {
         if (err_status == ESP_OK) {
           esp_zb_ieee_addr_t extended_pan_id;
           esp_zb_get_extended_pan_id(extended_pan_id);
@@ -246,7 +245,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         }
       }
       break;
-    case ESP_ZB_ZDO_SIGNAL_DEVICE_ANNCE: // Coordinator
+    case ESP_ZB_ZDO_SIGNAL_DEVICE_ANNCE:  // Coordinator
       if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         dev_annce_params = (esp_zb_zdo_signal_device_annce_params_t *)esp_zb_app_signal_get_params(p_sg_p);
         log_i("New device commissioned or rejoined (short: 0x%04hx)", dev_annce_params->device_short_addr);
@@ -255,26 +254,26 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         cmd_req.addr_of_interest = dev_annce_params->device_short_addr;
         log_v("Device capabilities: 0x%02x", dev_annce_params->capability);
         /*
-            capability: 
+            capability:
             Bit 0 – Alternate PAN Coordinator
             Bit 1 – Device type: 1- ZigBee Router; 0 – End Device
-            Bit 2 – Power Source: 1 Main powered  
+            Bit 2 – Power Source: 1 Main powered
             Bit 3 – Receiver on when Idle
-            Bit 4 – Reserved   
-            Bit 5 – Reserved  
+            Bit 4 – Reserved
+            Bit 5 – Reserved
             Bit 6 – Security capability
             Bit 7 – Reserved
         */
 
         // for each endpoint in the list call the findEndpoint function if not bounded or allowed to bind multiple devices
-        for (std::list<ZigbeeEP*>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+        for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
           if (!(*it)->isBound() || (*it)->epAllowMultipleBinding()) {
             (*it)->findEndpoint(&cmd_req);
           }
         }
       }
       break;
-    case ESP_ZB_NWK_SIGNAL_PERMIT_JOIN_STATUS: // Coordinator
+    case ESP_ZB_NWK_SIGNAL_PERMIT_JOIN_STATUS:  // Coordinator
       if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           if (*(uint8_t *)esp_zb_app_signal_get_params(p_sg_p)) {
@@ -294,14 +293,20 @@ void ZigbeeCore::factoryReset() {
   esp_zb_factory_reset();
 }
 
-void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor){
+void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor) {
   log_v("Zigbee network scan complete");
-  if(zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
+  if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_v("Found %d networks", count);
     //print Zigbee networks
     for (int i = 0; i < count; i++) {
-      log_v("Network %d: PAN ID: 0x%04hx, Permit Joining: %s, Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, Channel: %d, Router Capacity: %s, End Device Capacity: %s",
-        i, nwk_descriptor[i].short_pan_id, nwk_descriptor[i].permit_joining ? "Yes" : "No", nwk_descriptor[i].extended_pan_id[7], nwk_descriptor[i].extended_pan_id[6], nwk_descriptor[i].extended_pan_id[5], nwk_descriptor[i].extended_pan_id[4], nwk_descriptor[i].extended_pan_id[3], nwk_descriptor[i].extended_pan_id[2], nwk_descriptor[i].extended_pan_id[1], nwk_descriptor[i].extended_pan_id[0], nwk_descriptor[i].logic_channel, nwk_descriptor[i].router_capacity ? "Yes" : "No", nwk_descriptor[i].end_device_capacity ? "Yes" : "No");
+      log_v(
+        "Network %d: PAN ID: 0x%04hx, Permit Joining: %s, Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, Channel: %d, Router Capacity: %s, End "
+        "Device Capacity: %s",
+        i, nwk_descriptor[i].short_pan_id, nwk_descriptor[i].permit_joining ? "Yes" : "No", nwk_descriptor[i].extended_pan_id[7],
+        nwk_descriptor[i].extended_pan_id[6], nwk_descriptor[i].extended_pan_id[5], nwk_descriptor[i].extended_pan_id[4], nwk_descriptor[i].extended_pan_id[3],
+        nwk_descriptor[i].extended_pan_id[2], nwk_descriptor[i].extended_pan_id[1], nwk_descriptor[i].extended_pan_id[0], nwk_descriptor[i].logic_channel,
+        nwk_descriptor[i].router_capacity ? "Yes" : "No", nwk_descriptor[i].end_device_capacity ? "Yes" : "No"
+      );
     }
     //save scan result and update scan status
     //copy network descriptor to _scan_result to keep the data after the callback
@@ -316,7 +321,7 @@ void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t co
 }
 
 void ZigbeeCore::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
-  if(!_started) {
+  if (!_started) {
     log_e("Zigbee stack is not started, cannot scan networks");
     return;
   }
@@ -325,11 +330,11 @@ void ZigbeeCore::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
   _scan_status = ZB_SCAN_RUNNING;
 }
 
-int16_t ZigbeeCore::scanComplete(){
+int16_t ZigbeeCore::scanComplete() {
   return _scan_status;
 }
 
-zigbee_scan_result_t* ZigbeeCore::getScanResult() {
+zigbee_scan_result_t *ZigbeeCore::getScanResult() {
   return _scan_result;
 }
 
@@ -342,50 +347,50 @@ void ZigbeeCore::scanDelete() {
 }
 
 // Function to convert enum value to string
-const char* ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
-    switch (deviceId) {
-        case ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID: return "General On/Off switch";
-        case ESP_ZB_HA_LEVEL_CONTROL_SWITCH_DEVICE_ID: return "Level Control Switch";
-        case ESP_ZB_HA_ON_OFF_OUTPUT_DEVICE_ID: return "General On/Off output";
-        case ESP_ZB_HA_LEVEL_CONTROLLABLE_OUTPUT_DEVICE_ID: return "Level Controllable Output";
-        case ESP_ZB_HA_SCENE_SELECTOR_DEVICE_ID: return "Scene Selector";
-        case ESP_ZB_HA_CONFIGURATION_TOOL_DEVICE_ID: return "Configuration Tool";
-        case ESP_ZB_HA_REMOTE_CONTROL_DEVICE_ID: return "Remote Control";
-        case ESP_ZB_HA_COMBINED_INTERFACE_DEVICE_ID: return "Combined Interface";
-        case ESP_ZB_HA_RANGE_EXTENDER_DEVICE_ID: return "Range Extender";
-        case ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID: return "Mains Power Outlet";
-        case ESP_ZB_HA_DOOR_LOCK_DEVICE_ID: return "Door lock client";
-        case ESP_ZB_HA_DOOR_LOCK_CONTROLLER_DEVICE_ID: return "Door lock controller";
-        case ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID: return "Simple Sensor device";
-        case ESP_ZB_HA_CONSUMPTION_AWARENESS_DEVICE_ID: return "Consumption Awareness Device";
-        case ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID: return "Home Gateway";
-        case ESP_ZB_HA_SMART_PLUG_DEVICE_ID: return "Smart plug";
-        case ESP_ZB_HA_WHITE_GOODS_DEVICE_ID: return "White Goods";
-        case ESP_ZB_HA_METER_INTERFACE_DEVICE_ID: return "Meter Interface";
-        case ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID: return "On/Off Light Device";
-        case ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID: return "Dimmable Light Device";
-        case ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID: return "Color Dimmable Light Device";
-        case ESP_ZB_HA_DIMMER_SWITCH_DEVICE_ID: return "Dimmer Switch Device";
-        case ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID: return "Color Dimmer Switch Device";
-        case ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID: return "Light Sensor";
-        case ESP_ZB_HA_SHADE_DEVICE_ID: return "Shade";
-        case ESP_ZB_HA_SHADE_CONTROLLER_DEVICE_ID: return "Shade controller";
-        case ESP_ZB_HA_WINDOW_COVERING_DEVICE_ID: return "Window Covering client";
-        case ESP_ZB_HA_WINDOW_COVERING_CONTROLLER_DEVICE_ID: return "Window Covering controller";
-        case ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID: return "Heating/Cooling Unit device";
-        case ESP_ZB_HA_THERMOSTAT_DEVICE_ID: return "Thermostat Device";
-        case ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID: return "Temperature Sensor";
-        case ESP_ZB_HA_IAS_CONTROL_INDICATING_EQUIPMENT_ID: return "IAS Control and Indicating Equipment";
-        case ESP_ZB_HA_IAS_ANCILLARY_CONTROL_EQUIPMENT_ID: return "IAS Ancillary Control Equipment";
-        case ESP_ZB_HA_IAS_ZONE_ID: return "IAS Zone";
-        case ESP_ZB_HA_IAS_WARNING_DEVICE_ID: return "IAS Warning Device";
-        case ESP_ZB_HA_TEST_DEVICE_ID: return "Custom HA device for test";
-        case ESP_ZB_HA_CUSTOM_TUNNEL_DEVICE_ID: return "Custom Tunnel device";
-        case ESP_ZB_HA_CUSTOM_ATTR_DEVICE_ID: return "Custom Attributes Device";
-        default: return "Unknown device type";
-    }
+const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
+  switch (deviceId) {
+    case ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID:              return "General On/Off switch";
+    case ESP_ZB_HA_LEVEL_CONTROL_SWITCH_DEVICE_ID:       return "Level Control Switch";
+    case ESP_ZB_HA_ON_OFF_OUTPUT_DEVICE_ID:              return "General On/Off output";
+    case ESP_ZB_HA_LEVEL_CONTROLLABLE_OUTPUT_DEVICE_ID:  return "Level Controllable Output";
+    case ESP_ZB_HA_SCENE_SELECTOR_DEVICE_ID:             return "Scene Selector";
+    case ESP_ZB_HA_CONFIGURATION_TOOL_DEVICE_ID:         return "Configuration Tool";
+    case ESP_ZB_HA_REMOTE_CONTROL_DEVICE_ID:             return "Remote Control";
+    case ESP_ZB_HA_COMBINED_INTERFACE_DEVICE_ID:         return "Combined Interface";
+    case ESP_ZB_HA_RANGE_EXTENDER_DEVICE_ID:             return "Range Extender";
+    case ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID:         return "Mains Power Outlet";
+    case ESP_ZB_HA_DOOR_LOCK_DEVICE_ID:                  return "Door lock client";
+    case ESP_ZB_HA_DOOR_LOCK_CONTROLLER_DEVICE_ID:       return "Door lock controller";
+    case ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID:              return "Simple Sensor device";
+    case ESP_ZB_HA_CONSUMPTION_AWARENESS_DEVICE_ID:      return "Consumption Awareness Device";
+    case ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID:               return "Home Gateway";
+    case ESP_ZB_HA_SMART_PLUG_DEVICE_ID:                 return "Smart plug";
+    case ESP_ZB_HA_WHITE_GOODS_DEVICE_ID:                return "White Goods";
+    case ESP_ZB_HA_METER_INTERFACE_DEVICE_ID:            return "Meter Interface";
+    case ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID:               return "On/Off Light Device";
+    case ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID:             return "Dimmable Light Device";
+    case ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID:       return "Color Dimmable Light Device";
+    case ESP_ZB_HA_DIMMER_SWITCH_DEVICE_ID:              return "Dimmer Switch Device";
+    case ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID:        return "Color Dimmer Switch Device";
+    case ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID:               return "Light Sensor";
+    case ESP_ZB_HA_SHADE_DEVICE_ID:                      return "Shade";
+    case ESP_ZB_HA_SHADE_CONTROLLER_DEVICE_ID:           return "Shade controller";
+    case ESP_ZB_HA_WINDOW_COVERING_DEVICE_ID:            return "Window Covering client";
+    case ESP_ZB_HA_WINDOW_COVERING_CONTROLLER_DEVICE_ID: return "Window Covering controller";
+    case ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID:       return "Heating/Cooling Unit device";
+    case ESP_ZB_HA_THERMOSTAT_DEVICE_ID:                 return "Thermostat Device";
+    case ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID:         return "Temperature Sensor";
+    case ESP_ZB_HA_IAS_CONTROL_INDICATING_EQUIPMENT_ID:  return "IAS Control and Indicating Equipment";
+    case ESP_ZB_HA_IAS_ANCILLARY_CONTROL_EQUIPMENT_ID:   return "IAS Ancillary Control Equipment";
+    case ESP_ZB_HA_IAS_ZONE_ID:                          return "IAS Zone";
+    case ESP_ZB_HA_IAS_WARNING_DEVICE_ID:                return "IAS Warning Device";
+    case ESP_ZB_HA_TEST_DEVICE_ID:                       return "Custom HA device for test";
+    case ESP_ZB_HA_CUSTOM_TUNNEL_DEVICE_ID:              return "Custom Tunnel device";
+    case ESP_ZB_HA_CUSTOM_ATTR_DEVICE_ID:                return "Custom Attributes Device";
+    default:                                             return "Unknown device type";
+  }
 }
 
 ZigbeeCore Zigbee = ZigbeeCore();
 
-#endif //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED

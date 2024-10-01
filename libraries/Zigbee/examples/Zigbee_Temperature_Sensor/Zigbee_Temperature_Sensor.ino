@@ -33,7 +33,7 @@
 #include "ZigbeeCore.h"
 #include "ep/ZigbeeTempSensor.h"
 
-#define BUTTON_PIN 9  //Boot button for C6/H2
+#define BUTTON_PIN                  9  //Boot button for C6/H2
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
@@ -52,7 +52,7 @@ static void temp_sensor_value_update(void *arg) {
 
 /********************* Arduino functions **************************/
 void setup() {
-  
+
   Serial.begin(115200);
   while (!Serial) {
     delay(10);
@@ -65,7 +65,7 @@ void setup() {
   zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
 
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
-  zbTempSensor.setMinMaxValue(10,50);
+  zbTempSensor.setMinMaxValue(10, 50);
 
   // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
@@ -95,7 +95,7 @@ void loop() {
     int startTime = millis();
     while (digitalRead(BUTTON_PIN) == LOW) {
       delay(50);
-      if((millis() - startTime) > 3000) {
+      if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
         Serial.printf("Reseting Zigbee to factory settings, reboot.\n");
         Zigbee.factoryReset();

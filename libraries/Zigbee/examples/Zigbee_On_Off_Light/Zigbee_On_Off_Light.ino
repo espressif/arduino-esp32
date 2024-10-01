@@ -22,7 +22,7 @@
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
- * 
+ *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
@@ -33,8 +33,8 @@
 #include "ZigbeeCore.h"
 #include "ep/ZigbeeLight.h"
 
-#define LED_PIN RGB_BUILTIN
-#define BUTTON_PIN 9  // ESP32-C6/H2 Boot button
+#define LED_PIN               RGB_BUILTIN
+#define BUTTON_PIN            9  // ESP32-C6/H2 Boot button
 #define ZIGBEE_LIGHT_ENDPOINT 10
 
 ZigbeeLight zbLight = ZigbeeLight(ZIGBEE_LIGHT_ENDPOINT);
@@ -62,7 +62,7 @@ void setup() {
   //Add endpoint to Zigbee Core
   log_d("Adding ZigbeeLight endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbLight);
-  
+
   // When all EPs are registered, start Zigbee. By default acts as ZIGBEE_END_DEVICE
   log_d("Calling Zigbee.begin()");
   Zigbee.begin();
@@ -76,7 +76,7 @@ void loop() {
     int startTime = millis();
     while (digitalRead(BUTTON_PIN) == LOW) {
       delay(50);
-      if((millis() - startTime) > 3000) {
+      if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
         Serial.printf("Reseting Zigbee to factory settings, reboot.\n");
         Zigbee.factoryReset();

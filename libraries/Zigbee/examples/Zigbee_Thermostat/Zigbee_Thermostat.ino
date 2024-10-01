@@ -23,7 +23,7 @@
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
- * 
+ *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
@@ -34,7 +34,7 @@
 #include "ZigbeeCore.h"
 #include "ep/ZigbeeThermostat.h"
 
-#define BUTTON_PIN 9 // Boot button for C6/H2
+#define BUTTON_PIN                 9  // Boot button for C6/H2
 #define THERMOSTAT_ENDPOINT_NUMBER 5
 
 ZigbeeThermostat zbThermostat = ZigbeeThermostat(THERMOSTAT_ENDPOINT_NUMBER);
@@ -79,15 +79,14 @@ void setup() {
 
   //Open network for 180 seconds after boot
   Zigbee.setRebootOpenNetwork(180);
-  
+
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
   Zigbee.begin(ZIGBEE_COORDINATOR);
-  
+
   Serial.println("Waiting for Temperature sensor to bound to the switch");
 
   //Wait for switch to bound to a light:
-  while(!zbThermostat.isBound()) 
-  {
+  while (!zbThermostat.isBound()) {
     Serial.printf(".");
     delay(500);
   }
@@ -109,7 +108,7 @@ void loop() {
     // Set reporting interval for temperature sensor
     zbThermostat.setTemperatureReporting(0, 10, 2);
   }
-  
+
   // Print temperature sensor data each 10 seconds
   static uint32_t last_print = 0;
   if (millis() - last_print > 10000) {
