@@ -79,17 +79,25 @@ bool psramInit() {
     ESP_EARLY_LOGE(TAG, "PSRAM test failed!");
     return false;
   }
+  ESP_EARLY_LOGI(TAG, "PSRAM enabled");
+#endif /* CONFIG_SPIRAM_BOOT_INIT */
+  spiramDetected = true;
+  return true;
+}
+
+bool psramAddToHeap() {
+  if (!spiramDetected) {
+    log_e("PSRAM not initialized!");
+    return false;
+  }
   if (esp_psram_extram_add_to_heap_allocator() != ESP_OK) {
-    spiramFailed = true;
-    ESP_EARLY_LOGE(TAG, "PSRAM could not be added to the heap!");
+    log_e("PSRAM could not be added to the heap!");
     return false;
   }
 #if CONFIG_SPIRAM_USE_MALLOC && !CONFIG_ARDUINO_ISR_IRAM
   heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
 #endif
-  ESP_EARLY_LOGI(TAG, "PSRAM enabled");
-#endif /* CONFIG_SPIRAM_BOOT_INIT */
-  spiramDetected = true;
+  log_i("PSRAM added to the heap.");
   return true;
 }
 
