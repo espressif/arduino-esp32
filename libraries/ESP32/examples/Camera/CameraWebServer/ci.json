@@ -14,10 +14,7 @@
       "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=custom,FlashMode=qio"
     ]
   },
-  "targets": {
-    "esp32c3": false,
-    "esp32c6": false,
-    "esp32h2": false,
-    "esp32p4": false
-  }
+  "requires": [
+    "CONFIG_CAMERA_TASK_STACK_SIZE=[0-9]+"
+  ]
 }
