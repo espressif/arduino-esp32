@@ -45,14 +45,7 @@ def test_linpack_double(dut, request):
     # Create JSON with results and write it to file
     # Always create a JSON with this format (so it can be merged later on):
     # { TEST_NAME_STR: TEST_RESULTS_DICT }
-    results = {
-        "linpack_double": {
-            "runs": runs,
-            "avg_score": avg_score,
-            "min_score": min_score,
-            "max_score": max_score
-        }
-    }
+    results = {"linpack_double": {"runs": runs, "avg_score": avg_score, "min_score": min_score, "max_score": max_score}}
 
     current_folder = os.path.dirname(request.path)
     file_index = 0
