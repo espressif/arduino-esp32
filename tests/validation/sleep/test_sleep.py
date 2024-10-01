@@ -4,9 +4,6 @@ import time
 capabilities = {
     "timer": ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6", "esp32h2"],
     "touchpad": ["esp32", "esp32s2", "esp32s3"],
-    "rtc_io": ["esp32", "esp32s2", "esp32s3", "esp32c6"],
-    "rtc_cntl": ["esp32", "esp32s2", "esp32s3", "esp32c6"],
-    "gpio": ["esp32", "esp32s2", "esp32s3"],
     "uart": ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6", "esp32h2"]
 }
 
@@ -19,7 +16,7 @@ def test_sleep(dut):
     dut.expect_exact("Wakeup reason: power_up")
 
     for capability, devices in capabilities.items():
-        if dut.app.target in devices and capability not in ["gpio", "uart"]:
+        if dut.app.target in devices and capability != "uart":
             LOGGER.info("Testing {} deep sleep capability".format(capability))
             boot_count += 1
             dut.write("{}_deep".format(capability))

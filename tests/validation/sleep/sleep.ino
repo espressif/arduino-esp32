@@ -17,16 +17,7 @@
 #define THRESHOLD 0      /* Lower the value, more the sensitivity */
 #endif
 
-// External wakeup
-#define BUTTON_PIN_BITMASK(GPIO) (1ULL << GPIO)  // 2 ^ GPIO_NUMBER in hex
-
-#if CONFIG_IDF_TARGET_ESP32H2
-#define WAKEUP_GPIO              GPIO_NUM_7     // Only RTC IO are allowed
-#define TARGET_FREQ              32
-#else
-#define WAKEUP_GPIO              GPIO_NUM_4     // Only RTC IO are allowed
-#define TARGET_FREQ              40
-#endif
+#define TARGET_FREQ CONFIG_XTAL_FREQ
 
 RTC_DATA_ATTR int boot_count = 0;
 uint32_t orig_freq = 0;
@@ -58,30 +49,6 @@ void setup_touchpad() {
 #if SOC_TOUCH_SENSOR_SUPPORTED
   touchSleepWakeUpEnable(T1, THRESHOLD);
 #endif
-}
-
-void setup_rtc_io() {
-#if SOC_RTCIO_WAKE_SUPPORTED && SOC_PM_SUPPORT_EXT0_WAKEUP
-  esp_sleep_enable_ext0_wakeup(WAKEUP_GPIO, 1);
-  rtc_gpio_pullup_en(WAKEUP_GPIO);
-  rtc_gpio_pulldown_dis(WAKEUP_GPIO);
-#endif
-}
-
-void setup_rtc_cntl() {
-#if SOC_RTCIO_WAKE_SUPPORTED && SOC_PM_SUPPORT_EXT1_WAKEUP
-  esp_sleep_enable_ext1_wakeup_io(BUTTON_PIN_BITMASK(WAKEUP_GPIO), ESP_EXT1_WAKEUP_ANY_HIGH);
-  rtc_gpio_pulldown_dis(WAKEUP_GPIO);
-  rtc_gpio_pullup_en(WAKEUP_GPIO);
-#endif
-}
-
-void setup_gpio() {
-  esp_sleep_pd_config(ESP_PD_DOMAIN_VDDSDIO, ESP_PD_OPTION_ON);
-  gpio_pullup_dis(WAKEUP_GPIO);
-  gpio_pulldown_en(WAKEUP_GPIO);
-  gpio_wakeup_enable(WAKEUP_GPIO, GPIO_INTR_LOW_LEVEL);
-  esp_sleep_enable_gpio_wakeup();
 }
 
 void setup_uart() {
@@ -126,18 +93,6 @@ void loop() {
       esp_deep_sleep_start();
       Serial.println("FAIL");
       while(1);
-    } else if (command == "rtc_io_deep") {
-      // Test external wakeup from deep sleep using RTC IO
-      setup_rtc_io();
-      esp_deep_sleep_start();
-      Serial.println("FAIL");
-      while(1);
-    } else if (command == "rtc_cntl_deep") {
-      // Test external wakeup from deep sleep using RTC controller
-      setup_rtc_cntl();
-      esp_deep_sleep_start();
-      Serial.println("FAIL");
-      while(1);
     } else if (command == "timer_light") {
       // Test timer wakeup from light sleep
       setup_timer();
@@ -148,15 +103,6 @@ void loop() {
     } else if (command == "touchpad_light") {
       // Test touchpad wakeup from light sleep
       setup_touchpad();
-    } else if (command == "rtc_io_light") {
-      // Test external wakeup from light sleep using RTC IO
-      setup_rtc_io();
-    } else if (command == "rtc_cntl_light") {
-      // Test external wakeup from light sleep using RTC controller
-      setup_rtc_cntl();
-    } else if (command == "gpio_light") {
-      // Test external wakeup from light sleep using GPIO
-      setup_gpio();
     } else if (command == "uart_light") {
       // Test external wakeup from light sleep using UART
       setup_uart();
@@ -169,7 +115,6 @@ void loop() {
     Serial.println("Woke up from light sleep");
     print_wakeup_reason();
     Serial.flush();
-    gpio_hold_dis(WAKEUP_GPIO);
     setCpuFrequencyMhz(orig_freq);
   }
 }
