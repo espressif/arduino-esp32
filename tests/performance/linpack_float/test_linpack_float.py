@@ -18,12 +18,11 @@ def test_linpack_float(dut, request):
     LOGGER.info("Data type: {}".format(data_type))
     assert data_type == "float", "Invalid data type"
 
-    for i in range(runs):
-        # Match "Run %d"
-        res = dut.expect(r"Run (\d+)", timeout=120)
-        run = int(res.group(0).decode("utf-8").split(" ")[1])
-        LOGGER.info("Run {}".format(run))
-        assert run == i, "Invalid run number"
+    # Match "Runs completed: %d"
+    res = dut.expect(r"Runs completed: (\d+)", timeout=120)
+    runs_completed = int(res.group(0).decode("utf-8").split(" ")[2])
+    LOGGER.info("Runs completed: {}".format(runs_completed))
+    assert runs_completed == runs, "Invalid number of runs completed"
 
     # Match "Average MFLOPS: %f"
     res = dut.expect(r"Average MFLOPS: (\d+\.\d+)", timeout=120)

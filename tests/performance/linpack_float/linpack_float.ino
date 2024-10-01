@@ -53,9 +53,10 @@ void setup()
   Serial.printf("Runs: %d\n", N_RUNS);
   Serial.printf("Type: %s\n", data_type.c_str());
   Serial.flush();
+  int i = 0;
 
 	floating_point_t minMflops = 1000000000.0, maxMflops = 0.0, avgMflops = 0.0;
-	for (int i = 0; i < N_RUNS; ++i)
+	for (i = 0; i < N_RUNS; ++i)
 	{
     Serial.printf("Run %d\n", i);
 		const auto mflops = benchmark();
@@ -66,6 +67,7 @@ void setup()
 	}
 
 	avgMflops /= N_RUNS;
+	Serial.println(String("Runs completed: ") + i);
 	Serial.println(String("Average MFLOPS: ") + avgMflops);
 	Serial.println(String("Min MFLOPS: ") + minMflops);
 	Serial.println(String("Max MFLOPS: ") + maxMflops);
