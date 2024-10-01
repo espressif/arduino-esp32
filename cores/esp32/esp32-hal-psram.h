@@ -31,6 +31,7 @@ extern "C" {
 #endif
 
 bool psramInit();
+bool psramAddToHeap();
 bool psramFound();
 
 void *ps_malloc(size_t size);
