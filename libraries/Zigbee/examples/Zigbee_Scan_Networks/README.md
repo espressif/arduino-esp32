@@ -1,8 +1,6 @@
-# Arduino-ESP32 Zigbee Temperature Sensor Example
+# Arduino-ESP32 Zigbee Networks Scan Example
 
-This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) temperature sensor.
-
-**This example is based on ESP-Zigbee-SDK example esp_zigbee_HA_sample/HA_temperature_sensor.**
+This example shows how to scan Zigbee Networks.
 
 # Supported Targets
 
@@ -11,15 +9,19 @@ Currently, this example supports the following targets.
 | Supported Targets | ESP32-C6 | ESP32-H2 |
 | ----------------- | -------- | -------- |
 
-## Temperature Sensor Functions
+## Example Output
 
-Note:
- * This board means the board (e.g. ESP32-H2) loaded with `Zigbee_Temperature_Sensor` example.
- * The remote board means the board (e.g. ESP32-H2) loaded with `Zigbee_Thermostat` example.
+    Setup done
+    Loop running...
+    Loop running...
+    Loop running...
+    Loop running...
 
-Functions:
- * After this board first starts up, it would be configured locally to report the temperature on 1 degree change and no periodic reporting to the remote board.
- * By clicking the switch button (BOOT) on this board, this board will immediately send a report of the current measured temperature to the remote board.
+    Scan done
+    2 networks found:
+    Nr | PAN ID | CH | Permit Joining | Router Capacity | End Device Capacity | Extended PAN ID
+     1 | 0xe6f0 | 14 | Yes            | Yes             | Yes                 | f0:f5:bd:ff:fe:02:3f:24
+     2 | 0xa9bb | 24 | No             | Yes             | Yes                 | 60:55:f9:00:00:f7:52:d0
 
 ## Hardware Required
 
@@ -40,17 +42,9 @@ To get more information about the Espressif boards see [Espressif Development Ki
 * Select the End device Zigbee mode: `Tools -> Zigbee mode: Zigbee ED (end device)`
 * Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 4MB with spiffs`
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
+* Optional: Set debug level to verbose to see all logs from Zigbee stack: `Tools -> Core Debug Level: Verbose`.
 
 ## Troubleshooting
-
-If the End device flashed with this example is not connecting to the coordinator, erase the flash before flashing it to the board. It is recommended to do this if you did changes to the coordinator.
-You can do the following:
-
-* In the Arduino IDE go to the Tools menu and set `Erase All Flash Before Sketch Upload` to `Enabled`
-* In the sketch uncomment function `esp_zb_nvram_erase_at_start(true);` located in `esp_zb_task` function.
-
-By default, the coordinator network is open for 180 s after rebooting or flashing new firmware. After that, the network is closed for adding new devices.
-You can change it by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 
@@ -70,14 +64,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 ## Resources
 
-The ESP Zigbee SDK provides more examples:
-* ESP Zigbee SDK Docs: [Link](https://docs.espressif.com/projects/esp-zigbee-sdk)
-* ESP Zigbee SDK Repo: [Link](https://github.com/espressif/esp-zigbee-sdk)
-
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
-* ESP32 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)
-* ESP32-S2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf)
-* ESP32-C3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf)
-* ESP32-S3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf)
+* ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
+* ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)
