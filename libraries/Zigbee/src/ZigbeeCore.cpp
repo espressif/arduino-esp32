@@ -156,7 +156,7 @@ void ZigbeeCore::setRebootOpenNetwork(uint8_t time) {
 
 void ZigbeeCore::openNetwork(uint8_t time) {
   if (_started) {
-    log_v("Openning network for joining for %d seconds", time);
+    log_v("Opening network for joining for %d seconds", time);
     esp_zb_bdb_open_network(time);
   }
 }
@@ -198,7 +198,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
           log_i("Device rebooted");
           Zigbee._started = true;
           if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR && Zigbee._open_network > 0) {
-            log_i("Openning network for joining for %d seconds", Zigbee._open_network);
+            log_i("Opening network for joining for %d seconds", Zigbee._open_network);
             esp_zb_bdb_open_network(Zigbee._open_network);
           }
         }
@@ -289,7 +289,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
 }
 
 void ZigbeeCore::factoryReset() {
-  log_v("Factory reseting Zigbee stack, device will reboot");
+  log_v("Factory resetting Zigbee stack, device will reboot");
   esp_zb_factory_reset();
 }
 

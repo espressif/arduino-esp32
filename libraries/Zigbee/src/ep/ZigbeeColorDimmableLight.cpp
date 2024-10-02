@@ -47,7 +47,7 @@ void ZigbeeColorDimmableLight::calculateRGB(uint16_t x, uint16_t y, uint8_t &red
   blue = (uint8_t)(b * (float)255);
 }
 
-//set attribude method -> methon overriden in child class
+//set attribute method -> method overridden in child class
 void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
   //check the data and call right method
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
@@ -58,7 +58,7 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       }
       return;
     } else {
-      log_w("Recieved message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
     }
   } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
@@ -68,7 +68,7 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       }
       return;
     } else {
-      log_w("Recieved message ignored. Attribute ID: %d not supported for Level Control", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %d not supported for Level Control", message->attribute.id);
       //TODO: implement more attributes -> includes/zcl/esp_zigbee_zcl_level.h
     }
   } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL) {
@@ -96,10 +96,10 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       lightChanged();
       return;
     } else {
-      log_w("Recieved message ignored. Attribute ID: %d not supported for Color Control", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %d not supported for Color Control", message->attribute.id);
     }
   } else {
-    log_w("Recieved message ignored. Cluster ID: %d not supported for Color dimmable Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %d not supported for Color dimmable Light", message->info.cluster);
   }
 }
 

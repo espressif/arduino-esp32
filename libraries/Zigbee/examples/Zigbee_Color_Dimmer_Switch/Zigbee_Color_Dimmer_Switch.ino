@@ -90,7 +90,7 @@ void loop() {
     // Toggle light
     zbSwitch.lightToggle();
   }
-  // Handle serial input to controll color and level of the light
+  // Handle serial input to control color and level of the light
   if (Serial.available()) {
     String command = Serial.readString();
 

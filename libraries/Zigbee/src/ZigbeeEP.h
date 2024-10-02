@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 
-/* Usefull defines */
+/* Useful defines */
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
 #define print_ieee_addr(addr) \
   log_i("IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7])
@@ -93,7 +93,7 @@ public:
   // findEndpoind may be implemented by EPs to find and bind devices
   virtual void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
 
-  //list of all handlers function calls, to be overide by EPs implementation
+  //list of all handlers function calls, to be override by EPs implementation
   virtual void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {};
   virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented

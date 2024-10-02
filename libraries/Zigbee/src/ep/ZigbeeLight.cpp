@@ -9,7 +9,7 @@ ZigbeeLight::ZigbeeLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID, .app_device_version = 0};
 }
 
-//set attribude method -> methon overriden in child class
+//set attribute method -> method overridden in child class
 void ZigbeeLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
   //check the data and call right method
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
@@ -17,10 +17,10 @@ void ZigbeeLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mess
       _current_state = *(bool *)message->attribute.data.value;
       lightChanged();
     } else {
-      log_w("Recieved message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
     }
   } else {
-    log_w("Recieved message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
   }
 }
 

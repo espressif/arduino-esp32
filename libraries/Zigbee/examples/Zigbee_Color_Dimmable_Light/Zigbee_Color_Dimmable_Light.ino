@@ -86,7 +86,7 @@ void setup() {
 }
 
 void loop() {
-  // Cheking button for factory reset
+  // Checking button for factory reset
   if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
     // Key debounce handling
     delay(100);
@@ -95,7 +95,7 @@ void loop() {
       delay(50);
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
-        Serial.printf("Reseting Zigbee to factory settings, reboot.\n");
+        Serial.printf("Resetting Zigbee to factory settings, reboot.\n");
         Zigbee.factoryReset();
       }
     }

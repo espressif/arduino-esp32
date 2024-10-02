@@ -67,7 +67,7 @@ void setup() {
   // Init button switch
   pinMode(BUTTON_PIN, INPUT);
 
-  // Set callback functions for temperature and configuration recieve
+  // Set callback functions for temperature and configuration receive
   zbThermostat.onTempRecieve(recieveSensorTemp);
   zbThermostat.onConfigRecieve(recieveSensorConfig);
 
