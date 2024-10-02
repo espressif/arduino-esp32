@@ -7,11 +7,7 @@
       "espressif:esp32:esp32h2:PartitionScheme=zigbee,ZigbeeMode=ed"
     ]
   },
-  "targets": {
-    "esp32": false,
-    "esp32c3": false,
-    "esp32s2": false,
-    "esp32s3": false,
-    "esp32p4": false
-  }
+  "requires": [
+    "CONFIG_SOC_IEEE802154_SUPPORTED=y"
+  ]
 }
