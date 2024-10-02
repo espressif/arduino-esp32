@@ -453,7 +453,15 @@ __attribute__((weak)) int32_t tud_msc_scsi_cb(uint8_t lun, uint8_t const scsi_cm
 __attribute__((weak)) bool tud_msc_is_writable_cb(uint8_t lun) {
   return false;
 }
-
+#endif
+#if CFG_TUD_NCM
+__attribute__((weak)) bool tud_network_recv_cb(const uint8_t *src, uint16_t size) {
+  return false;
+}
+__attribute__((weak)) uint16_t tud_network_xmit_cb(uint8_t *dst, void *ref, uint16_t arg) {
+  return 0;
+}
+__attribute__((weak)) void tud_network_init_cb(void) {}
 #endif
 
 /*
