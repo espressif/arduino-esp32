@@ -212,20 +212,37 @@ esp32p4.menu.JTAGAdapter.bridge=ESP USB Bridge
 esp32p4.menu.JTAGAdapter.bridge.build.openocdscript=esp32p4-bridge.cfg
 esp32p4.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-esp32p4.menu.CDCOnBoot.default=Disabled
-esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
-esp32p4.menu.CDCOnBoot.cdc=Enabled
-esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
-
 esp32p4.menu.PSRAM.disabled=Disabled
 esp32p4.menu.PSRAM.disabled.build.defines=
 esp32p4.menu.PSRAM.enabled=Enabled
 esp32p4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 
+esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG
+esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
+esp32p4.menu.USBMode.default=USB-OTG (TinyUSB)
+esp32p4.menu.USBMode.default.build.usb_mode=0
+
 esp32p4.menu.CDCOnBoot.default=Disabled
 esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
 esp32p4.menu.CDCOnBoot.cdc=Enabled
 esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32p4.menu.MSCOnBoot.default=Disabled
+esp32p4.menu.MSCOnBoot.default.build.msc_on_boot=0
+esp32p4.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+esp32p4.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+esp32p4.menu.DFUOnBoot.default=Disabled
+esp32p4.menu.DFUOnBoot.default.build.dfu_on_boot=0
+esp32p4.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+esp32p4.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+esp32p4.menu.UploadMode.default=UART0 / Hardware CDC
+esp32p4.menu.UploadMode.default.upload.use_1200bps_touch=false
+esp32p4.menu.UploadMode.default.upload.wait_for_upload_port=false
+esp32p4.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+esp32p4.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+esp32p4.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 esp32p4.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32p4.menu.PartitionScheme.default.build.partitions=default

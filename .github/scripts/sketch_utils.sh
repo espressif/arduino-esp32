@@ -91,7 +91,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             esp32c3_opts="PartitionScheme=huge_app,FlashMode=dio"
             esp32c6_opts="PartitionScheme=huge_app,FlashMode=dio"
             esp32h2_opts="PartitionScheme=huge_app,FlashMode=dio"
-            esp32p4_opts="PartitionScheme=huge_app,FlashMode=dio"
+            esp32p4_opts="PartitionScheme=huge_app,FlashMode=dio,USBMode=default"
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
