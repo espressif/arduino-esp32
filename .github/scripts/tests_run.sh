@@ -131,10 +131,6 @@ function run_test() {
 SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
 
-if [ -d $ARDUINO_ESP32_PATH/tools/esp32-arduino-libs ]; then
-    SDKCONFIG_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
-fi
-
 platform="hardware"
 wokwi_timeout=60000
 chunk_run=0

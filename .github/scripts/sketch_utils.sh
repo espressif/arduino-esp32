@@ -83,14 +83,21 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             len=1
 
+            if [ -f $sketchdir/ci.json ]; then
+                fqbn_append=`jq -r '.fqbn_append' $sketchdir/ci.json`
+                if [ $fqbn_append == "null" ]; then
+                    fqbn_append=""
+                fi
+            fi
+
             # Default FQBN options if none were passed in the command line.
 
-            esp32_opts="PSRAM=enabled,FlashMode=dio"
-            esp32s2_opts="PSRAM=enabled,FlashMode=dio"
-            esp32s3_opts="PSRAM=opi,USBMode=default,FlashMode=dio"
-            esp32c3_opts="FlashMode=dio"
-            esp32c6_opts="FlashMode=dio"
-            esp32h2_opts="FlashMode=dio"
+            esp32_opts="PSRAM=enabled,FlashMode=dio${fqbn_append:+,$fqbn_append}"
+            esp32s2_opts="PSRAM=enabled,FlashMode=dio${fqbn_append:+,$fqbn_append}"
+            esp32s3_opts="PSRAM=opi,USBMode=default,FlashMode=dio${fqbn_append:+,$fqbn_append}"
+            esp32c3_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
+            esp32c6_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
+            esp32h2_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
