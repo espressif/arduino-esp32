@@ -100,6 +100,7 @@ function count_sketches(){ # count_sketches <examples-path>
             requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
             if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
                 for requirement in $requirements; do
+                    requirement=$(echo $requirement | xargs)
                     found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/esp32/sdkconfig")
                     if [[ "$found_line" == "" ]]; then
                         continue 2
@@ -190,6 +191,7 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
             requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
             if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
                 for requirement in $requirements; do
+                    requirement=$(echo $requirement | xargs)
                     found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/esp32/sdkconfig")
                     if [[ "$found_line" == "" ]]; then
                         continue 2

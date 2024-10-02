@@ -44,6 +44,7 @@ function run_test() {
         requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
         if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
             for requirement in $requirements; do
+                requirement=$(echo $requirement | xargs)
                 found_line=$(grep -E "^$requirement" "$SDKCONFIG_PATH")
                 if [[ "$found_line" == "" ]]; then
                     printf "\033[93mTarget $target does not meet the requirement $requirement for $sketchname. Skipping.\033[0m\n"

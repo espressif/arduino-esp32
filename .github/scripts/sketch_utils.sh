@@ -161,6 +161,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
         if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
             for requirement in $requirements; do
+                requirement=$(echo $requirement | xargs)
                 found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/$target/sdkconfig")
                 if [[ "$found_line" == "" ]]; then
                     echo "Target $target does not meet the requirement $requirement for $sketchname. Skipping."
@@ -317,6 +318,7 @@ function count_sketches(){ # count_sketches <path> [target] [file]
             requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
             if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
                 for requirement in $requirements; do
+                    requirement=$(echo $requirement | xargs)
                     found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
                     if [[ "$found_line" == "" ]]; then
                         continue 2
