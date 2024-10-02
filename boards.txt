@@ -2800,6 +2800,479 @@ aventen_s3_sync.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+BharatPi-Node-Wifi.name=BharatPi Node Wifi Module
+
+BharatPi-Node-Wifi.bootloader.tool=esptool_py
+BharatPi-Node-Wifi.bootloader.tool.default=esptool_py
+
+BharatPi-Node-Wifi.upload.tool=esptool_py
+BharatPi-Node-Wifi.upload.tool.default=esptool_py
+BharatPi-Node-Wifi.upload.tool.network=esp_ota
+
+BharatPi-Node-Wifi.upload.maximum_size=1310720
+BharatPi-Node-Wifi.upload.maximum_data_size=327680
+BharatPi-Node-Wifi.upload.flags=
+BharatPi-Node-Wifi.upload.extra_flags=
+
+BharatPi-Node-Wifi.serial.disableDTR=true
+BharatPi-Node-Wifi.serial.disableRTS=true
+
+BharatPi-Node-Wifi.build.tarch=xtensa
+BharatPi-Node-Wifi.build.bootloader_addr=0x1000
+BharatPi-Node-Wifi.build.target=esp32
+BharatPi-Node-Wifi.build.mcu=esp32
+BharatPi-Node-Wifi.build.core=esp32
+BharatPi-Node-Wifi.build.variant=BharatPi-Node-Wifi
+BharatPi-Node-Wifi.build.board=ESP32_WROOM_DA
+
+BharatPi-Node-Wifi.build.f_cpu=240000000L
+BharatPi-Node-Wifi.build.flash_size=4MB
+BharatPi-Node-Wifi.build.flash_freq=40m
+BharatPi-Node-Wifi.build.flash_mode=dio
+BharatPi-Node-Wifi.build.boot=dio
+BharatPi-Node-Wifi.build.partitions=default
+BharatPi-Node-Wifi.build.defines=
+BharatPi-Node-Wifi.build.loop_core=
+BharatPi-Node-Wifi.build.event_core=
+
+BharatPi-Node-Wifi.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.default.build.partitions=default
+BharatPi-Node-Wifi.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+BharatPi-Node-Wifi.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+BharatPi-Node-Wifi.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+BharatPi-Node-Wifi.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.minimal.build.partitions=minimal
+BharatPi-Node-Wifi.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.no_ota.build.partitions=no_ota
+BharatPi-Node-Wifi.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+BharatPi-Node-Wifi.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+BharatPi-Node-Wifi.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.huge_app.build.partitions=huge_app
+BharatPi-Node-Wifi.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+BharatPi-Node-Wifi.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+BharatPi-Node-Wifi.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+BharatPi-Node-Wifi.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.fatflash.build.partitions=ffat
+BharatPi-Node-Wifi.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+BharatPi-Node-Wifi.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+BharatPi-Node-Wifi.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+BharatPi-Node-Wifi.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+BharatPi-Node-Wifi.menu.PartitionScheme.rainmaker=RainMaker
+BharatPi-Node-Wifi.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+BharatPi-Node-Wifi.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+BharatPi-Node-Wifi.menu.PartitionScheme.custom=Custom
+BharatPi-Node-Wifi.menu.PartitionScheme.custom.build.partitions=
+BharatPi-Node-Wifi.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+BharatPi-Node-Wifi.menu.CPUFreq.240=240MHz (WiFi/BT)
+BharatPi-Node-Wifi.menu.CPUFreq.240.build.f_cpu=240000000L
+BharatPi-Node-Wifi.menu.CPUFreq.160=160MHz (WiFi/BT)
+BharatPi-Node-Wifi.menu.CPUFreq.160.build.f_cpu=160000000L
+BharatPi-Node-Wifi.menu.CPUFreq.80=80MHz (WiFi/BT)
+BharatPi-Node-Wifi.menu.CPUFreq.80.build.f_cpu=80000000L
+BharatPi-Node-Wifi.menu.CPUFreq.40=40MHz (40MHz XTAL)
+BharatPi-Node-Wifi.menu.CPUFreq.40.build.f_cpu=40000000L
+BharatPi-Node-Wifi.menu.CPUFreq.26=26MHz (26MHz XTAL)
+BharatPi-Node-Wifi.menu.CPUFreq.26.build.f_cpu=26000000L
+BharatPi-Node-Wifi.menu.CPUFreq.20=20MHz (40MHz XTAL)
+BharatPi-Node-Wifi.menu.CPUFreq.20.build.f_cpu=20000000L
+BharatPi-Node-Wifi.menu.CPUFreq.13=13MHz (26MHz XTAL)
+BharatPi-Node-Wifi.menu.CPUFreq.13.build.f_cpu=13000000L
+BharatPi-Node-Wifi.menu.CPUFreq.10=10MHz (40MHz XTAL)
+BharatPi-Node-Wifi.menu.CPUFreq.10.build.f_cpu=10000000L
+
+BharatPi-Node-Wifi.menu.FlashMode.qio=QIO
+BharatPi-Node-Wifi.menu.FlashMode.qio.build.flash_mode=dio
+BharatPi-Node-Wifi.menu.FlashMode.qio.build.boot=qio
+BharatPi-Node-Wifi.menu.FlashMode.dio=DIO
+BharatPi-Node-Wifi.menu.FlashMode.dio.build.flash_mode=dio
+BharatPi-Node-Wifi.menu.FlashMode.dio.build.boot=dio
+
+BharatPi-Node-Wifi.menu.FlashFreq.80=80MHz
+BharatPi-Node-Wifi.menu.FlashFreq.80.build.flash_freq=80m
+BharatPi-Node-Wifi.menu.FlashFreq.40=40MHz
+BharatPi-Node-Wifi.menu.FlashFreq.40.build.flash_freq=40m
+
+BharatPi-Node-Wifi.menu.FlashSize.4M=4MB (32Mb)
+BharatPi-Node-Wifi.menu.FlashSize.4M.build.flash_size=4MB
+BharatPi-Node-Wifi.menu.FlashSize.8M=8MB (64Mb)
+BharatPi-Node-Wifi.menu.FlashSize.8M.build.flash_size=8MB
+BharatPi-Node-Wifi.menu.FlashSize.8M.build.partitions=default_8MB
+BharatPi-Node-Wifi.menu.FlashSize.16M=16MB (128Mb)
+BharatPi-Node-Wifi.menu.FlashSize.16M.build.flash_size=16MB
+
+BharatPi-Node-Wifi.menu.UploadSpeed.921600=921600
+BharatPi-Node-Wifi.menu.UploadSpeed.921600.upload.speed=921600
+BharatPi-Node-Wifi.menu.UploadSpeed.115200=115200
+BharatPi-Node-Wifi.menu.UploadSpeed.115200.upload.speed=115200
+BharatPi-Node-Wifi.menu.UploadSpeed.256000.windows=256000
+BharatPi-Node-Wifi.menu.UploadSpeed.256000.upload.speed=256000
+BharatPi-Node-Wifi.menu.UploadSpeed.230400.windows.upload.speed=256000
+BharatPi-Node-Wifi.menu.UploadSpeed.230400=230400
+BharatPi-Node-Wifi.menu.UploadSpeed.230400.upload.speed=230400
+BharatPi-Node-Wifi.menu.UploadSpeed.460800.linux=460800
+BharatPi-Node-Wifi.menu.UploadSpeed.460800.macosx=460800
+BharatPi-Node-Wifi.menu.UploadSpeed.460800.upload.speed=460800
+BharatPi-Node-Wifi.menu.UploadSpeed.512000.windows=512000
+BharatPi-Node-Wifi.menu.UploadSpeed.512000.upload.speed=512000
+
+BharatPi-Node-Wifi.menu.LoopCore.1=Core 1
+BharatPi-Node-Wifi.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+BharatPi-Node-Wifi.menu.LoopCore.0=Core 0
+BharatPi-Node-Wifi.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+BharatPi-Node-Wifi.menu.EventsCore.1=Core 1
+BharatPi-Node-Wifi.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+BharatPi-Node-Wifi.menu.EventsCore.0=Core 0
+BharatPi-Node-Wifi.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+BharatPi-Node-Wifi.menu.DebugLevel.none=None
+BharatPi-Node-Wifi.menu.DebugLevel.none.build.code_debug=0
+BharatPi-Node-Wifi.menu.DebugLevel.error=Error
+BharatPi-Node-Wifi.menu.DebugLevel.error.build.code_debug=1
+BharatPi-Node-Wifi.menu.DebugLevel.warn=Warn
+BharatPi-Node-Wifi.menu.DebugLevel.warn.build.code_debug=2
+BharatPi-Node-Wifi.menu.DebugLevel.info=Info
+BharatPi-Node-Wifi.menu.DebugLevel.info.build.code_debug=3
+BharatPi-Node-Wifi.menu.DebugLevel.debug=Debug
+BharatPi-Node-Wifi.menu.DebugLevel.debug.build.code_debug=4
+BharatPi-Node-Wifi.menu.DebugLevel.verbose=Verbose
+BharatPi-Node-Wifi.menu.DebugLevel.verbose.build.code_debug=5
+
+BharatPi-Node-Wifi.menu.EraseFlash.none=Disabled
+BharatPi-Node-Wifi.menu.EraseFlash.none.upload.erase_cmd=
+BharatPi-Node-Wifi.menu.EraseFlash.all=Enabled
+BharatPi-Node-Wifi.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+
+BharatPi-A7672S-4G.name=BharatPi A7672S 4G Module
+
+BharatPi-A7672S-4G.bootloader.tool=esptool_py
+BharatPi-A7672S-4G.bootloader.tool.default=esptool_py
+
+BharatPi-A7672S-4G.upload.tool=esptool_py
+BharatPi-A7672S-4G.upload.tool.default=esptool_py
+BharatPi-A7672S-4G.upload.tool.network=esp_ota
+
+BharatPi-A7672S-4G.upload.maximum_size=1310720
+BharatPi-A7672S-4G.upload.maximum_data_size=327680
+BharatPi-A7672S-4G.upload.flags=
+BharatPi-A7672S-4G.upload.extra_flags=
+
+BharatPi-A7672S-4G.serial.disableDTR=true
+BharatPi-A7672S-4G.serial.disableRTS=true
+
+BharatPi-A7672S-4G.build.tarch=xtensa
+BharatPi-A7672S-4G.build.bootloader_addr=0x1000
+BharatPi-A7672S-4G.build.target=esp32
+BharatPi-A7672S-4G.build.mcu=esp32
+BharatPi-A7672S-4G.build.core=esp32
+BharatPi-A7672S-4G.build.variant=BharatPi-A7672S-4G
+BharatPi-A7672S-4G.build.board=ESP32_WROOM_DA
+
+BharatPi-A7672S-4G.build.f_cpu=240000000L
+BharatPi-A7672S-4G.build.flash_size=4MB
+BharatPi-A7672S-4G.build.flash_freq=40m
+BharatPi-A7672S-4G.build.flash_mode=dio
+BharatPi-A7672S-4G.build.boot=dio
+BharatPi-A7672S-4G.build.partitions=default
+BharatPi-A7672S-4G.build.defines=
+BharatPi-A7672S-4G.build.loop_core=
+BharatPi-A7672S-4G.build.event_core=
+
+BharatPi-A7672S-4G.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.default.build.partitions=default
+BharatPi-A7672S-4G.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+BharatPi-A7672S-4G.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+BharatPi-A7672S-4G.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+BharatPi-A7672S-4G.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.minimal.build.partitions=minimal
+BharatPi-A7672S-4G.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.no_ota.build.partitions=no_ota
+BharatPi-A7672S-4G.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+BharatPi-A7672S-4G.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+BharatPi-A7672S-4G.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.huge_app.build.partitions=huge_app
+BharatPi-A7672S-4G.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+BharatPi-A7672S-4G.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+BharatPi-A7672S-4G.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+BharatPi-A7672S-4G.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.fatflash.build.partitions=ffat
+BharatPi-A7672S-4G.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+BharatPi-A7672S-4G.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+BharatPi-A7672S-4G.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+BharatPi-A7672S-4G.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+BharatPi-A7672S-4G.menu.PartitionScheme.rainmaker=RainMaker
+BharatPi-A7672S-4G.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+BharatPi-A7672S-4G.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+BharatPi-A7672S-4G.menu.PartitionScheme.custom=Custom
+BharatPi-A7672S-4G.menu.PartitionScheme.custom.build.partitions=
+BharatPi-A7672S-4G.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+BharatPi-A7672S-4G.menu.CPUFreq.240=240MHz (WiFi/BT)
+BharatPi-A7672S-4G.menu.CPUFreq.240.build.f_cpu=240000000L
+BharatPi-A7672S-4G.menu.CPUFreq.160=160MHz (WiFi/BT)
+BharatPi-A7672S-4G.menu.CPUFreq.160.build.f_cpu=160000000L
+BharatPi-A7672S-4G.menu.CPUFreq.80=80MHz (WiFi/BT)
+BharatPi-A7672S-4G.menu.CPUFreq.80.build.f_cpu=80000000L
+BharatPi-A7672S-4G.menu.CPUFreq.40=40MHz (40MHz XTAL)
+BharatPi-A7672S-4G.menu.CPUFreq.40.build.f_cpu=40000000L
+BharatPi-A7672S-4G.menu.CPUFreq.26=26MHz (26MHz XTAL)
+BharatPi-A7672S-4G.menu.CPUFreq.26.build.f_cpu=26000000L
+BharatPi-A7672S-4G.menu.CPUFreq.20=20MHz (40MHz XTAL)
+BharatPi-A7672S-4G.menu.CPUFreq.20.build.f_cpu=20000000L
+BharatPi-A7672S-4G.menu.CPUFreq.13=13MHz (26MHz XTAL)
+BharatPi-A7672S-4G.menu.CPUFreq.13.build.f_cpu=13000000L
+BharatPi-A7672S-4G.menu.CPUFreq.10=10MHz (40MHz XTAL)
+BharatPi-A7672S-4G.menu.CPUFreq.10.build.f_cpu=10000000L
+
+BharatPi-A7672S-4G.menu.FlashMode.qio=QIO
+BharatPi-A7672S-4G.menu.FlashMode.qio.build.flash_mode=dio
+BharatPi-A7672S-4G.menu.FlashMode.qio.build.boot=qio
+BharatPi-A7672S-4G.menu.FlashMode.dio=DIO
+BharatPi-A7672S-4G.menu.FlashMode.dio.build.flash_mode=dio
+BharatPi-A7672S-4G.menu.FlashMode.dio.build.boot=dio
+
+BharatPi-A7672S-4G.menu.FlashFreq.80=80MHz
+BharatPi-A7672S-4G.menu.FlashFreq.80.build.flash_freq=80m
+BharatPi-A7672S-4G.menu.FlashFreq.40=40MHz
+BharatPi-A7672S-4G.menu.FlashFreq.40.build.flash_freq=40m
+
+BharatPi-A7672S-4G.menu.FlashSize.4M=4MB (32Mb)
+BharatPi-A7672S-4G.menu.FlashSize.4M.build.flash_size=4MB
+BharatPi-A7672S-4G.menu.FlashSize.8M=8MB (64Mb)
+BharatPi-A7672S-4G.menu.FlashSize.8M.build.flash_size=8MB
+BharatPi-A7672S-4G.menu.FlashSize.8M.build.partitions=default_8MB
+BharatPi-A7672S-4G.menu.FlashSize.16M=16MB (128Mb)
+BharatPi-A7672S-4G.menu.FlashSize.16M.build.flash_size=16MB
+
+BharatPi-A7672S-4G.menu.UploadSpeed.921600=921600
+BharatPi-A7672S-4G.menu.UploadSpeed.921600.upload.speed=921600
+BharatPi-A7672S-4G.menu.UploadSpeed.115200=115200
+BharatPi-A7672S-4G.menu.UploadSpeed.115200.upload.speed=115200
+BharatPi-A7672S-4G.menu.UploadSpeed.256000.windows=256000
+BharatPi-A7672S-4G.menu.UploadSpeed.256000.upload.speed=256000
+BharatPi-A7672S-4G.menu.UploadSpeed.230400.windows.upload.speed=256000
+BharatPi-A7672S-4G.menu.UploadSpeed.230400=230400
+BharatPi-A7672S-4G.menu.UploadSpeed.230400.upload.speed=230400
+BharatPi-A7672S-4G.menu.UploadSpeed.460800.linux=460800
+BharatPi-A7672S-4G.menu.UploadSpeed.460800.macosx=460800
+BharatPi-A7672S-4G.menu.UploadSpeed.460800.upload.speed=460800
+BharatPi-A7672S-4G.menu.UploadSpeed.512000.windows=512000
+BharatPi-A7672S-4G.menu.UploadSpeed.512000.upload.speed=512000
+
+BharatPi-A7672S-4G.menu.LoopCore.1=Core 1
+BharatPi-A7672S-4G.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+BharatPi-A7672S-4G.menu.LoopCore.0=Core 0
+BharatPi-A7672S-4G.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+BharatPi-A7672S-4G.menu.EventsCore.1=Core 1
+BharatPi-A7672S-4G.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+BharatPi-A7672S-4G.menu.EventsCore.0=Core 0
+BharatPi-A7672S-4G.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+BharatPi-A7672S-4G.menu.DebugLevel.none=None
+BharatPi-A7672S-4G.menu.DebugLevel.none.build.code_debug=0
+BharatPi-A7672S-4G.menu.DebugLevel.error=Error
+BharatPi-A7672S-4G.menu.DebugLevel.error.build.code_debug=1
+BharatPi-A7672S-4G.menu.DebugLevel.warn=Warn
+BharatPi-A7672S-4G.menu.DebugLevel.warn.build.code_debug=2
+BharatPi-A7672S-4G.menu.DebugLevel.info=Info
+BharatPi-A7672S-4G.menu.DebugLevel.info.build.code_debug=3
+BharatPi-A7672S-4G.menu.DebugLevel.debug=Debug
+BharatPi-A7672S-4G.menu.DebugLevel.debug.build.code_debug=4
+BharatPi-A7672S-4G.menu.DebugLevel.verbose=Verbose
+BharatPi-A7672S-4G.menu.DebugLevel.verbose.build.code_debug=5
+
+BharatPi-A7672S-4G.menu.EraseFlash.none=Disabled
+BharatPi-A7672S-4G.menu.EraseFlash.none.upload.erase_cmd=
+BharatPi-A7672S-4G.menu.EraseFlash.all=Enabled
+BharatPi-A7672S-4G.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+
+BharatPi-LoRa.name=BharatPi LoRa Module
+
+BharatPi-LoRa.bootloader.tool=esptool_py
+BharatPi-LoRa.bootloader.tool.default=esptool_py
+
+BharatPi-LoRa.upload.tool=esptool_py
+BharatPi-LoRa.upload.tool.default=esptool_py
+BharatPi-LoRa.upload.tool.network=esp_ota
+
+BharatPi-LoRa.upload.maximum_size=1310720
+BharatPi-LoRa.upload.maximum_data_size=327680
+BharatPi-LoRa.upload.flags=
+BharatPi-LoRa.upload.extra_flags=
+
+BharatPi-LoRa.serial.disableDTR=true
+BharatPi-LoRa.serial.disableRTS=true
+
+BharatPi-LoRa.build.tarch=xtensa
+BharatPi-LoRa.build.bootloader_addr=0x1000
+BharatPi-LoRa.build.target=esp32
+BharatPi-LoRa.build.mcu=esp32
+BharatPi-LoRa.build.core=esp32
+BharatPi-LoRa.build.variant=BharatPi-LoRa
+BharatPi-LoRa.build.board=ESP32_WROOM_DA
+
+BharatPi-LoRa.build.f_cpu=240000000L
+BharatPi-LoRa.build.flash_size=4MB
+BharatPi-LoRa.build.flash_freq=40m
+BharatPi-LoRa.build.flash_mode=dio
+BharatPi-LoRa.build.boot=dio
+BharatPi-LoRa.build.partitions=default
+BharatPi-LoRa.build.defines=
+BharatPi-LoRa.build.loop_core=
+BharatPi-LoRa.build.event_core=
+
+BharatPi-LoRa.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+BharatPi-LoRa.menu.PartitionScheme.default.build.partitions=default
+BharatPi-LoRa.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+BharatPi-LoRa.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+BharatPi-LoRa.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+BharatPi-LoRa.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+BharatPi-LoRa.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+BharatPi-LoRa.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+BharatPi-LoRa.menu.PartitionScheme.minimal.build.partitions=minimal
+BharatPi-LoRa.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+BharatPi-LoRa.menu.PartitionScheme.no_ota.build.partitions=no_ota
+BharatPi-LoRa.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+BharatPi-LoRa.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+BharatPi-LoRa.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+BharatPi-LoRa.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+BharatPi-LoRa.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+BharatPi-LoRa.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+BharatPi-LoRa.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+BharatPi-LoRa.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+BharatPi-LoRa.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+BharatPi-LoRa.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+BharatPi-LoRa.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+BharatPi-LoRa.menu.PartitionScheme.huge_app.build.partitions=huge_app
+BharatPi-LoRa.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+BharatPi-LoRa.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+BharatPi-LoRa.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+BharatPi-LoRa.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+BharatPi-LoRa.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+BharatPi-LoRa.menu.PartitionScheme.fatflash.build.partitions=ffat
+BharatPi-LoRa.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+BharatPi-LoRa.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+BharatPi-LoRa.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+BharatPi-LoRa.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+BharatPi-LoRa.menu.PartitionScheme.rainmaker=RainMaker
+BharatPi-LoRa.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+BharatPi-LoRa.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+BharatPi-LoRa.menu.PartitionScheme.custom=Custom
+BharatPi-LoRa.menu.PartitionScheme.custom.build.partitions=
+BharatPi-LoRa.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+BharatPi-LoRa.menu.CPUFreq.240=240MHz (WiFi/BT)
+BharatPi-LoRa.menu.CPUFreq.240.build.f_cpu=240000000L
+BharatPi-LoRa.menu.CPUFreq.160=160MHz (WiFi/BT)
+BharatPi-LoRa.menu.CPUFreq.160.build.f_cpu=160000000L
+BharatPi-LoRa.menu.CPUFreq.80=80MHz (WiFi/BT)
+BharatPi-LoRa.menu.CPUFreq.80.build.f_cpu=80000000L
+BharatPi-LoRa.menu.CPUFreq.40=40MHz (40MHz XTAL)
+BharatPi-LoRa.menu.CPUFreq.40.build.f_cpu=40000000L
+BharatPi-LoRa.menu.CPUFreq.26=26MHz (26MHz XTAL)
+BharatPi-LoRa.menu.CPUFreq.26.build.f_cpu=26000000L
+BharatPi-LoRa.menu.CPUFreq.20=20MHz (40MHz XTAL)
+BharatPi-LoRa.menu.CPUFreq.20.build.f_cpu=20000000L
+BharatPi-LoRa.menu.CPUFreq.13=13MHz (26MHz XTAL)
+BharatPi-LoRa.menu.CPUFreq.13.build.f_cpu=13000000L
+BharatPi-LoRa.menu.CPUFreq.10=10MHz (40MHz XTAL)
+BharatPi-LoRa.menu.CPUFreq.10.build.f_cpu=10000000L
+
+BharatPi-LoRa.menu.FlashMode.qio=QIO
+BharatPi-LoRa.menu.FlashMode.qio.build.flash_mode=dio
+BharatPi-LoRa.menu.FlashMode.qio.build.boot=qio
+BharatPi-LoRa.menu.FlashMode.dio=DIO
+BharatPi-LoRa.menu.FlashMode.dio.build.flash_mode=dio
+BharatPi-LoRa.menu.FlashMode.dio.build.boot=dio
+
+BharatPi-LoRa.menu.FlashFreq.80=80MHz
+BharatPi-LoRa.menu.FlashFreq.80.build.flash_freq=80m
+BharatPi-LoRa.menu.FlashFreq.40=40MHz
+BharatPi-LoRa.menu.FlashFreq.40.build.flash_freq=40m
+
+BharatPi-LoRa.menu.FlashSize.4M=4MB (32Mb)
+BharatPi-LoRa.menu.FlashSize.4M.build.flash_size=4MB
+BharatPi-LoRa.menu.FlashSize.8M=8MB (64Mb)
+BharatPi-LoRa.menu.FlashSize.8M.build.flash_size=8MB
+BharatPi-LoRa.menu.FlashSize.8M.build.partitions=default_8MB
+BharatPi-LoRa.menu.FlashSize.16M=16MB (128Mb)
+BharatPi-LoRa.menu.FlashSize.16M.build.flash_size=16MB
+
+BharatPi-LoRa.menu.UploadSpeed.921600=921600
+BharatPi-LoRa.menu.UploadSpeed.921600.upload.speed=921600
+BharatPi-LoRa.menu.UploadSpeed.115200=115200
+BharatPi-LoRa.menu.UploadSpeed.115200.upload.speed=115200
+BharatPi-LoRa.menu.UploadSpeed.256000.windows=256000
+BharatPi-LoRa.menu.UploadSpeed.256000.upload.speed=256000
+BharatPi-LoRa.menu.UploadSpeed.230400.windows.upload.speed=256000
+BharatPi-LoRa.menu.UploadSpeed.230400=230400
+BharatPi-LoRa.menu.UploadSpeed.230400.upload.speed=230400
+BharatPi-LoRa.menu.UploadSpeed.460800.linux=460800
+BharatPi-LoRa.menu.UploadSpeed.460800.macosx=460800
+BharatPi-LoRa.menu.UploadSpeed.460800.upload.speed=460800
+BharatPi-LoRa.menu.UploadSpeed.512000.windows=512000
+BharatPi-LoRa.menu.UploadSpeed.512000.upload.speed=512000
+
+BharatPi-LoRa.menu.LoopCore.1=Core 1
+BharatPi-LoRa.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+BharatPi-LoRa.menu.LoopCore.0=Core 0
+BharatPi-LoRa.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+BharatPi-LoRa.menu.EventsCore.1=Core 1
+BharatPi-LoRa.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+BharatPi-LoRa.menu.EventsCore.0=Core 0
+BharatPi-LoRa.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+BharatPi-LoRa.menu.DebugLevel.none=None
+BharatPi-LoRa.menu.DebugLevel.none.build.code_debug=0
+BharatPi-LoRa.menu.DebugLevel.error=Error
+BharatPi-LoRa.menu.DebugLevel.error.build.code_debug=1
+BharatPi-LoRa.menu.DebugLevel.warn=Warn
+BharatPi-LoRa.menu.DebugLevel.warn.build.code_debug=2
+BharatPi-LoRa.menu.DebugLevel.info=Info
+BharatPi-LoRa.menu.DebugLevel.info.build.code_debug=3
+BharatPi-LoRa.menu.DebugLevel.debug=Debug
+BharatPi-LoRa.menu.DebugLevel.debug.build.code_debug=4
+BharatPi-LoRa.menu.DebugLevel.verbose=Verbose
+BharatPi-LoRa.menu.DebugLevel.verbose.build.code_debug=5
+
+BharatPi-LoRa.menu.EraseFlash.none=Disabled
+BharatPi-LoRa.menu.EraseFlash.none.upload.erase_cmd=
+BharatPi-LoRa.menu.EraseFlash.all=Enabled
+BharatPi-LoRa.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 um_bling.name=UM BLING
 um_bling.vid.0=0x303a
 um_bling.pid.0=0x817F
