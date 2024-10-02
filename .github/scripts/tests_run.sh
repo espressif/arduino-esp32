@@ -25,7 +25,7 @@ function run_test() {
         requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
         if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
             for requirement in $requirements; do
-                found_line=$(grep -E "^$requirement" $LIBS_DIR/$target/sdkconfig)
+                found_line=$(grep -E "^$requirement" "$LIBS_DIR/$target/sdkconfig")
                 if [[ "$found_line" == "" ]]; then
                     printf "\033[93mTarget $target does not meet the requirement $requirement for $sketchname. Skipping.\033[0m\n"
                     printf "\n\n\n"
@@ -120,7 +120,7 @@ function run_test() {
 
 SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
-LIBS_DIR="tools/esp32-arduino-libs"
+LIBS_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
 
 platform="hardware"
 wokwi_timeout=60000
