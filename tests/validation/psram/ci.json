@@ -1,0 +1,26 @@
+{
+  "fqbn": {
+    "esp32": [
+      "espressif:esp32:esp32:PSRAM=enabled"
+    ],
+    "esp32s2": [
+      "espressif:esp32:esp32s2:PSRAM=enabled"
+    ],
+    "esp32s3": [
+      "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default",
+      "espressif:esp32:esp32s3:PSRAM=enabled,USBMode=default"
+    ]
+  },
+  "platforms": {
+    "qemu": false,
+    "wokwi": false
+  },
+  "requires": [
+    "CONFIG_SPIRAM=y"
+  ],
+  "targets": {
+    "esp32c3": false,
+    "esp32c6": false,
+    "esp32h2": false
+  }
+}
