@@ -10,6 +10,15 @@ function run_test() {
     local result=0
     local error=0
 
+    if [ $options -eq 0 ] && [ -f $sketchdir/ci.json ]; then
+        len=`jq -r --arg target $target '.fqbn[$target] | length' $sketchdir/ci.json`
+        if [ $len -eq 0 ]; then
+            len=1
+        fi
+    else
+        len=1
+    fi
+
     if [ -f $sketchdir/ci.json ]; then
         # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
         is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
@@ -21,11 +30,21 @@ function run_test() {
             return 0
         fi
 
+        if [ -d $ARDUINO_ESP32_PATH/tools/esp32-arduino-libs ]; then
+            SDKCONFIG_PATH="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs/$target/sdkconfig"
+        else
+            if [ $len -eq 1 ]; then
+                SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
+            else
+                SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
+            fi
+        fi
+
         # Check if the sketch requires any configuration options
         requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
         if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
             for requirement in $requirements; do
-                found_line=$(grep -E "^$requirement" "$LIBS_DIR/$target/sdkconfig")
+                found_line=$(grep -E "^$requirement" "$SDKCONFIG_PATH")
                 if [[ "$found_line" == "" ]]; then
                     printf "\033[93mTarget $target does not meet the requirement $requirement for $sketchname. Skipping.\033[0m\n"
                     printf "\n\n\n"
@@ -33,15 +52,6 @@ function run_test() {
                 fi
             done
         fi
-    fi
-
-    if [ $options -eq 0 ] && [ -f $sketchdir/ci.json ]; then
-        len=`jq -r --arg target $target '.fqbn[$target] | length' $sketchdir/ci.json`
-        if [ $len -eq 0 ]; then
-            len=1
-        fi
-    else
-        len=1
     fi
 
     if [ $len -eq 1 ]; then
@@ -120,7 +130,10 @@ function run_test() {
 
 SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
-LIBS_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
+
+if [ -d $ARDUINO_ESP32_PATH/tools/esp32-arduino-libs ]; then
+    SDKCONFIG_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
+fi
 
 platform="hardware"
 wokwi_timeout=60000

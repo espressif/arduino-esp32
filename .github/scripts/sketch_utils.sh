@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LIBS_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
+SDKCONFIG_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
 
 function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
     while [ ! -z "$1" ]; do
@@ -154,7 +154,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
         if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
             for requirement in $requirements; do
-                found_line=$(grep -E "^$requirement" "$LIBS_DIR/$target/sdkconfig")
+                found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/$target/sdkconfig")
                 if [[ "$found_line" == "" ]]; then
                     echo "Target $target does not meet the requirement $requirement for $sketchname. Skipping."
                     exit 0
@@ -310,7 +310,7 @@ function count_sketches(){ # count_sketches <path> [target] [file]
             requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
             if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
                 for requirement in $requirements; do
-                    found_line=$(grep -E "^$requirement" $LIBS_DIR/$target/sdkconfig)
+                    found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
                     if [[ "$found_line" == "" ]]; then
                         continue 2
                     fi
