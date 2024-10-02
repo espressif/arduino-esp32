@@ -1,5 +1,5 @@
 {
-  "targets": {
-    "esp32c2": false
-  }
+  "requires": [
+    "CONFIG_SOC_I2C_SUPPORT_SLAVE=y"
+  ]
 }

@@ -1,9 +1,6 @@
 {
-  "targets": {
-    "esp32": false,
-    "esp32c2": false,
-    "esp32c3": false,
-    "esp32s2": false,
-    "esp32s3": false
-  }
+  "requires": [
+    "CONFIG_OPENTHREAD_ENABLED=y",
+    "CONFIG_SOC_IEEE802154_SUPPORTED=y"
+  ]
 }

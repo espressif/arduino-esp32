@@ -1,5 +1,6 @@
 {
-  "targets": {
-    "esp32h2": false
-  }
+  "requires": [
+    "CONFIG_LWIP_PPP_SUPPORT=y",
+    "CONFIG_SOC_WIFI_SUPPORTED=y"
+  ]
 }

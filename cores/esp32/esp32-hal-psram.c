@@ -31,6 +31,8 @@
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
 
+#define TAG "arduino-psram"
+
 static volatile bool spiramDetected = false;
 static volatile bool spiramFailed = false;
 
@@ -52,7 +54,7 @@ bool psramInit() {
   uint32_t pkg_ver = chip_ver & 0x7;
   if (pkg_ver == EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 || pkg_ver == EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2) {
     spiramFailed = true;
-    log_w("PSRAM not supported!");
+    ESP_EARLY_LOGW(TAG, "PSRAM not supported!");
     return false;
   }
 #elif CONFIG_IDF_TARGET_ESP32S2
@@ -62,7 +64,7 @@ bool psramInit() {
 #endif
   if (esp_psram_init() != ESP_OK) {
     spiramFailed = true;
-    log_w("PSRAM init failed!");
+    ESP_EARLY_LOGW(TAG, "PSRAM init failed!");
 #if CONFIG_IDF_TARGET_ESP32
     if (pkg_ver != EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4) {
       pinMatrixOutDetach(16, false, false);
@@ -71,24 +73,31 @@ bool psramInit() {
 #endif
     return false;
   }
-
   //testSPIRAM() allows user to bypass SPI RAM test routine
   if (!testSPIRAM()) {
     spiramFailed = true;
-    log_e("PSRAM test failed!");
+    ESP_EARLY_LOGE(TAG, "PSRAM test failed!");
+    return false;
+  }
+  ESP_EARLY_LOGI(TAG, "PSRAM enabled");
+#endif /* CONFIG_SPIRAM_BOOT_INIT */
+  spiramDetected = true;
+  return true;
+}
+
+bool psramAddToHeap() {
+  if (!spiramDetected) {
+    log_e("PSRAM not initialized!");
     return false;
   }
   if (esp_psram_extram_add_to_heap_allocator() != ESP_OK) {
-    spiramFailed = true;
     log_e("PSRAM could not be added to the heap!");
     return false;
   }
 #if CONFIG_SPIRAM_USE_MALLOC && !CONFIG_ARDUINO_ISR_IRAM
   heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
 #endif
-#endif /* CONFIG_SPIRAM_BOOT_INIT */
-  log_i("PSRAM enabled");
-  spiramDetected = true;
+  log_i("PSRAM added to the heap.");
   return true;
 }
 

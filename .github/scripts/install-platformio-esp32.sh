@@ -6,6 +6,7 @@ PLATFORMIO_ESP32_URL="https://github.com/platformio/platform-espressif32.git"
 TOOLCHAIN_VERSION="12.2.0+20230208"
 ESPTOOLPY_VERSION="~1.40501.0"
 ESPRESSIF_ORGANIZATION_NAME="espressif"
+LIBS_DIR="tools/esp32-arduino-libs"
 
 echo "Installing Python Wheel ..."
 pip install wheel > /dev/null 2>&1
@@ -88,12 +89,25 @@ function count_sketches(){ # count_sketches <examples-path>
         local sketchname=$(basename $sketch)
         if [[ "${sketchdirname}.ino" != "$sketchname" ]]; then
             continue
+        elif [ -f $sketchdir/ci.json ]; then
+            # If the target is listed as false, skip the sketch. Otherwise, include it.
+            is_target=$(jq -r '.targets[esp32]' $sketchdir/ci.json)
+            if [[ "$is_target" == "false" ]]; then
+                continue
+            fi
+
+            # Check if the sketch requires any configuration options
+            requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
+            if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+                for requirement in $requirements; do
+                    found_line=$(grep -E "^$requirement" $LIBS_DIR/esp32/sdkconfig)
+                    if [[ "$found_line" == "" ]]; then
+                        continue 2
+                    fi
+                done
+            fi
         fi
-        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
-        # If the target is listed as false, skip the sketch. Otherwise, include it.
-        if [[ "$is_target" == "false" ]]; then
-            continue
-        fi
+
         echo $sketch >> sketches.txt
         sketchnum=$(($sketchnum + 1))
     done
@@ -163,12 +177,27 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
         local sketchdir=$(dirname $sketch)
         local sketchdirname=$(basename $sketchdir)
         local sketchname=$(basename $sketch)
-        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
-        # If the target is listed as false, skip the sketch. Otherwise, include it.
-        if [ "${sketchdirname}.ino" != "$sketchname" ] \
-        || [[ "$is_target" == "false" ]]; then
+        if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
+        elif [ -f $sketchdir/ci.json ]; then
+            # If the target is listed as false, skip the sketch. Otherwise, include it.
+            is_target=$(jq -r '.targets[esp32]' $sketchdir/ci.json)
+            if [[ "$is_target" == "false" ]]; then
+                continue
+            fi
+
+            # Check if the sketch requires any configuration options
+            requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
+            if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+                for requirement in $requirements; do
+                    found_line=$(grep -E "^$requirement" $LIBS_DIR/esp32/sdkconfig)
+                    if [[ "$found_line" == "" ]]; then
+                        continue 2
+                    fi
+                done
+            fi
         fi
+
         sketchnum=$(($sketchnum + 1))
         if [ "$sketchnum" -le "$start_index" ] \
         || [ "$sketchnum" -gt "$end_index" ]; then

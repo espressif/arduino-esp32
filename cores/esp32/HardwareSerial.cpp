@@ -291,6 +291,10 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
   }
 #endif
 
+  // map logical pins to GPIO numbers
+  rxPin = digitalPinToGPIONumber(rxPin);
+  txPin = digitalPinToGPIONumber(txPin);
+
   HSERIAL_MUTEX_LOCK();
   // First Time or after end() --> set default Pins
   if (!uartIsDriverInstalled(_uart)) {
@@ -326,9 +330,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
   }
 
-  // map logical pins to GPIO numbers
-  rxPin = digitalPinToGPIONumber(rxPin);
-  txPin = digitalPinToGPIONumber(txPin);
   // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
   // it will detach previous UART attached pins
 

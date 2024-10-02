@@ -16,6 +16,9 @@
     "qemu": false,
     "wokwi": true
   },
+  "requires": [
+    "CONFIG_SOC_UART_SUPPORTED=y"
+  ],
   "targets": {
     "esp32": true,
     "esp32c3": true,
