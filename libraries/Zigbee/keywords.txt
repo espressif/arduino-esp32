@@ -1,0 +1,105 @@
+#######################################
+# Syntax Coloring Map For Zigbee
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+# Base Classes
+ZigbeeCore	KEYWORD1
+Zigbee	KEYWORD1
+ZigbeeEP	KEYWORD1
+
+# Endpoint Classes
+ZigbeeLight	KEYWORD1
+ZigbeeSwitch	KEYWORD1
+ZigbeeColorDimmableLight	KEYWORD1
+ZigbeeColorDimmerSwitch	KEYWORD1
+ZigbeeTempSensor	KEYWORD1
+ZigbeeThermostat	KEYWORD1
+
+# Other
+zigbee_role_t	KEYWORD1
+zbstring_t	KEYWORD1
+zb_device_params_t	KEYWORD1
+zigbee_scan_result_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# ZigbeeCore
+isStarted	KEYWORD2
+addEndpoint	KEYWORD2
+setRadioConfig	KEYWORD2
+setHostConfig	KEYWORD2
+getRadioConfig	KEYWORD2
+getHostConfig	KEYWORD2
+setPrimaryChannelMask	KEYWORD2
+setRebootOpenNetwork	KEYWORD2
+scanNetworks	KEYWORD2
+scanComplete	KEYWORD2
+getScanResult	KEYWORD2
+scanDelete	KEYWORD2
+factoryReset	KEYWORD2
+
+# Common ZigbeeEP
+setVersion	KEYWORD2
+setManufacturerAndModel	KEYWORD2
+is_bound	KEYWORD2
+printBoundDevices	KEYWORD2
+allowMultipleBinding	KEYWORD2
+
+# ZigbeeLight + ZigbeeColorDimmableLight
+setOnOff	KEYWORD2
+sceneControl	KEYWORD2
+setOnOffTime	KEYWORD2
+setOffWaitTime	KEYWORD2
+setLevel	KEYWORD2
+setColor	KEYWORD2
+setColorSaturation	KEYWORD2
+setColorHue	KEYWORD2
+
+# ZigbeeSwitch + ZigbeeColorDimmerSwitch
+lightToggle	KEYWORD2
+lightOn	KEYWORD2
+lightOff	KEYWORD2
+lightOffWithEffect	KEYWORD2
+lightOnWithTimedOff	KEYWORD2
+lightOnWithSceneRecall	KEYWORD2
+setLightLevel	KEYWORD2
+setLightColor	KEYWORD2
+setLightColorSaturation	KEYWORD2
+setLightColorHue	KEYWORD2
+
+# ZigbeeTempSensor
+setTemperature	KEYWORD2
+setMinMaxValue	KEYWORD2
+setTolerance	KEYWORD2
+setReporting	KEYWORD2
+reportTemperature	KEYWORD2
+
+# ZigbeeThermostat
+temperatureRead	KEYWORD2
+temperatureMin	KEYWORD2
+temperatureMax	KEYWORD2
+temperatureTolerance	KEYWORD2
+getTemperature	KEYWORD2
+setTemperatureReporting	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+ZIGBEE_COORDINATOR	LITERAL1
+ZIGBEE_ROUTER	LITERAL1
+ZIGBEE_END_DEVICE	LITERAL1
+ZIGBEE_DEFAULT_ED_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_ROUTER_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_COORDINATOR_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_RADIO_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_HOST_CONFIG	LITERAL1
+ZB_ARRAY_LENTH	LITERAL1
+XYZ_TO_RGB	LITERAL1
+RGB_TO_XYZ	LITERAL1
