@@ -166,8 +166,47 @@ And in the ``README.md`` file:
 
     Currently, this example requires Wi-Fi and supports the following targets.
 
-    | Supported Targets | ESP32 | ESP32-H2 | ESP32-S3 | ESP32-C3 | ESP32-C6 |
-    | ----------------- | ----- | -------- | -------- | -------- | -------- |
+    | Supported Targets | ESP32 | ESP32-S3 | ESP32-C3 | ESP32-C6 |
+    | ----------------- | ----- | -------- | -------- | -------- |
+
+By default, the CI system will use the FQBNs specified in the ``.github/scripts/sketch_utils.sh`` file to compile the sketches.
+Currently, the default FQBNs are:
+
+* ``espressif:esp32:esp32:PSRAM=enabled,FlashMode=dio``
+* ``espressif:esp32:esp32s2:PSRAM=enabled,FlashMode=dio``
+* ``espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,FlashMode=dio``
+* ``espressif:esp32:esp32c3:FlashMode=dio``
+* ``espressif:esp32:esp32c6:FlashMode=dio``
+* ``espressif:esp32:esp32h2:FlashMode=dio``
+
+There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.json`` file.
+
+If you just want to append a string to the default FQBNs, you can use the ``fqbn_append`` field. For example, to add the ``DebugLevel=debug`` to the FQBNs, you would use:
+
+.. code-block:: json
+
+    {
+      "fqbn_append": "DebugLevel=debug"
+    }
+
+If you want to override the default FQBNs, you can use the ``fqbn`` field. It is a dictionary where the key is the target name and the value is a list of FQBNs.
+The FQBNs in the list will be used in sequence to compile the sketch. For example, to compile a sketch for ESP32-S2 with and without PSRAM enabled, you would use:
+
+.. code-block:: json
+
+    {
+      "fqbn": {
+        "esp32s2": [
+          "espressif:esp32:esp32s2:PSRAM=enabled,FlashMode=dio",
+          "espressif:esp32:esp32s2:PSRAM=disabled,FlashMode=dio"
+        ]
+      }
+    }
+
+.. note::
+
+    The FQBNs specified in the ``fqbn`` field will also override the options specified in the ``fqbn_append`` field.
+    That means that if the ``fqbn`` field is specified, the ``fqbn_append`` field will be ignored and will have no effect.
 
 Example Template
 ****************
@@ -376,9 +415,10 @@ The ``ci.json`` file is used to specify how the test suite and sketches will han
 * ``platforms``: A dictionary that specifies the supported platforms. The key is the platform name and the value is a boolean that specifies if
   the platform is supported. By default, all platforms are assumed to be supported.
 * ``extra_tags``: A list of extra tags that the runner will require when running the test suite in hardware. By default, no extra tags are required.
+* ``fqbn_append``: A string to be appended to the default FQBNs. By default, no string is appended. This has no effect if ``fqbn`` is specified.
 * ``fqbn``: A dictionary that specifies the FQBNs that will be used to compile the sketch. The key is the target name and the value is a list
   of FQBNs. The `default FQBNs <https://github.com/espressif/arduino-esp32/blob/a31a5fca1739993173caba995f7785b8eed6b30e/.github/scripts/sketch_utils.sh#L86-L91>`_
-  are used if this field is not specified.
+  are used if this field is not specified. This overrides the default FQBNs and the ``fqbn_append`` field.
 
 The ``wifi`` test suite is a good example of how to use the ``ci.json`` file:
 
