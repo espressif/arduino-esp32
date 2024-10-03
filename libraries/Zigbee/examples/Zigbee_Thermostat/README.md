@@ -18,7 +18,7 @@ Note:
  * The remote board means the board (e.g. ESP32-H2) loaded with `Zigbee_Temperature_Sensor` example.
 
 Functions:
- * By clicking the switch button (BOOT) on this board, this board will read temperature value, temperature measurement range and temperature tolerance from the remote board. Also, this board will configure the remote board to report the measured temperature value every 10 seconds or every 2 degree changes.
+ * By clicking the button (BOOT) on this board, this board will read temperature value, temperature measurement range and temperature tolerance from the remote board. Also, this board will configure the remote board to report the measured temperature value every 10 seconds or every 2 degree changes.
 
 ## Hardware Required
 
@@ -28,17 +28,17 @@ Functions:
 
 ### Configure the Project
 
-Set the Button Switch GPIO by changing the `GPIO_INPUT_IO_TOGGLE_SWITCH` definition. By default, it's the `GPIO_NUM_9` (BOOT button on ESP32-C6 and ESP32-H2).
+Set the Button GPIO by changing the `BUTTON_PIN` definition. By default, it's the pin `9` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE
 
 To get more information about the Espressif boards see [Espressif Development Kits](https://www.espressif.com/en/products/devkits).
 
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
-* Select the Coordinator Zigbee mode: `Tools -> Zigbee mode: Zigbee ZCZR (coordinator)`.
+* Select the Coordinator Zigbee mode: `Tools -> Zigbee mode: Zigbee ZCZR (coordinator/router)`.
 * Select Partition Scheme for Zigbee: `Tools -> Partition Scheme: Zigbee 4MB with spiffs`.
 * Select the COM port: `Tools -> Port: xxx where the `xxx` is the detected COM port.
-* Optional: Set debug level to info to see logs from Zigbee stack: `Tools -> Core Debug Level: Info`.
+* Optional: Set debug level to verbose to see all logs from Zigbee stack: `Tools -> Core Debug Level: Verbose`.
 
 ## Troubleshooting
 
@@ -46,10 +46,13 @@ If the End device flashed with the example `Zigbee_Temperature_Sensor` is not co
 You can do the following:
 
 * In the Arduino IDE go to the Tools menu and set `Erase All Flash Before Sketch Upload` to `Enabled`.
-* In the `Zigbee_Temperature_Sensor` example sketch uncomment function `esp_zb_nvram_erase_at_start(true);` located in `esp_zb_task` function.
+* In the `Zigbee_Temperature_Sensor` example sketch call `Zigbee.factoryReset();`.
 
-By default, the coordinator network is open for 180 s after rebooting or flashing new firmware. After that, the network is closed for adding new devices.
-You can change it by editing `esp_zb_bdb_open_network(180);` in `esp_zb_app_signal_handler` function.
+By default, the coordinator network is closed after rebooting or flashing new firmware.
+To open the network you have 2 options:
+
+* Open network after reboot by setting `Zigbee.setRebootOpenNetwork(time);` before calling `Zigbee.begin();`.
+* In application you can anytime call `Zigbee.openNetwork(time);` to open the network for devices to join.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 
@@ -69,14 +72,8 @@ Before creating a new issue, be sure to try Troubleshooting and check if the sam
 
 ## Resources
 
-The ESP Zigbee SDK provides more examples:
-* ESP Zigbee SDK Docs: [Link](https://docs.espressif.com/projects/esp-zigbee-sdk)
-* ESP Zigbee SDK Repo: [Link](https://github.com/espressif/esp-zigbee-sdk)
-
 * Official ESP32 Forum: [Link](https://esp32.com)
 * Arduino-ESP32 Official Repository: [espressif/arduino-esp32](https://github.com/espressif/arduino-esp32)
-* ESP32 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)
-* ESP32-S2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf)
-* ESP32-C3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf)
-* ESP32-S3 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf)
+* ESP32-C6 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)
+* ESP32-H2 Datasheet: [Link to datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf)
 * Official ESP-IDF documentation: [ESP-IDF](https://idf.espressif.com)

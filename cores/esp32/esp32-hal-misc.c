@@ -251,12 +251,10 @@ extern bool btInUse();
 #endif
 
 #if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
-#ifndef CONFIG_SPIRAM_BOOT_INIT
 ESP_SYSTEM_INIT_FN(init_psram_new, BIT(0), 99) {
   psramInit();
   return ESP_OK;
 }
-#endif
 #endif
 
 void initArduino() {
