@@ -29,6 +29,7 @@ jobs:
             ~/.arduino/tests/**/build*.tmp/*.bin
             ~/.arduino/tests/**/build*.tmp/*.elf
             ~/.arduino/tests/**/build*.tmp/*.json
+            ~/.arduino/tests/**/build*.tmp/sdkconfig
 
       - name: Evaluate if tests should be built
         id: check-build

@@ -19,6 +19,12 @@ function run_test() {
         len=1
     fi
 
+    if [ $len -eq 1 ]; then
+        SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
+    else
+        SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
+    fi
+
     if [ -f $sketchdir/ci.json ]; then
         # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
         is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
@@ -28,16 +34,6 @@ function run_test() {
             printf "\033[93mSkipping $sketchname test for $target, platform: $platform\033[0m\n"
             printf "\n\n\n"
             return 0
-        fi
-
-        if [ -d $ARDUINO_ESP32_PATH/tools/esp32-arduino-libs ]; then
-            SDKCONFIG_PATH="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs/$target/sdkconfig"
-        else
-            if [ $len -eq 1 ]; then
-                SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
-            else
-                SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
-            fi
         fi
 
         # Check if the sketch requires any configuration options
@@ -233,7 +229,8 @@ else
   fi
 
   set +e
-  ${COUNT_SKETCHES} $test_folder $target
+  # Ignore requirements as we don't have the libs. The requirements will be checked in the run_test function
+  ${COUNT_SKETCHES} "$test_folder" "$target" "1"
   sketchcount=$?
   set -e
   sketches=$(cat sketches.txt)

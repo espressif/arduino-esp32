@@ -1,6 +1,12 @@
 #!/bin/bash
 
-SDKCONFIG_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
+if [ -d "$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs" ]; then
+    SDKCONFIG_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
+elif [ -d "$GITHUB_WORKSPACE/tools/esp32-arduino-libs" ]; then
+    SDKCONFIG_DIR="$GITHUB_WORKSPACE/tools/esp32-arduino-libs"
+else
+    SDKCONFIG_DIR="tools/esp32-arduino-libs"
+fi
 
 function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
     while [ ! -z "$1" ]; do
@@ -278,10 +284,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     unset options
 }
 
-function count_sketches(){ # count_sketches <path> [target] [file]
+function count_sketches(){ # count_sketches <path> [target] [file] [ignore-requirements]
     local path=$1
     local target=$2
-    local file=$3
+    local ignore_requirements=$3
+    local file=$4
 
     if [ $# -lt 1 ]; then
       echo "ERROR: Illegal number of parameters"
@@ -294,7 +301,7 @@ function count_sketches(){ # count_sketches <path> [target] [file]
         return 0
     fi
 
-    if [ -n "$file" ]; then
+    if [ -f "$file" ]; then
         local sketches=$(cat $file)
     else
         local sketches=$(find $path -name *.ino | sort)
@@ -314,16 +321,18 @@ function count_sketches(){ # count_sketches <path> [target] [file]
                 continue
             fi
 
-            # Check if the sketch requires any configuration options
-            requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-            if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
-                for requirement in $requirements; do
-                    requirement=$(echo $requirement | xargs)
-                    found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
-                    if [[ "$found_line" == "" ]]; then
-                        continue 2
-                    fi
-                done
+            if [ "$ignore_requirements" != "1" ]; then
+                # Check if the sketch requires any configuration options
+                requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
+                if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+                    for requirement in $requirements; do
+                        requirement=$(echo $requirement | xargs)
+                        found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
+                        if [[ "$found_line" == "" ]]; then
+                            continue 2
+                        fi
+                    done
+                fi
             fi
         fi
         echo $sketch >> sketches.txt
@@ -401,7 +410,7 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
 
     set +e
     if [ -n "$sketches_file" ]; then
-        count_sketches "$path" "$target" "$sketches_file"
+        count_sketches "$path" "$target" "0" "$sketches_file"
         local sketchcount=$?
     else
         count_sketches "$path" "$target"
