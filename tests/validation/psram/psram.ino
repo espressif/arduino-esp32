@@ -73,6 +73,9 @@ void test_memcpy(void) {
   memset(buf, 0x55, MAX_TEST_SIZE);
   memset(buf2, 0xAA, 1024);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-arith"
+
   for (size_t i = 0; i < MAX_TEST_SIZE; i += 1024) {
     memcpy(buf + i, buf2, 1024);
   }
@@ -80,6 +83,8 @@ void test_memcpy(void) {
   for (size_t i = 0; i < MAX_TEST_SIZE; i += 1024) {
     TEST_ASSERT_NULL(memcmp(buf + i, buf2, 1024));
   }
+
+#pragma GCC diagnostic pop
 
   free(buf2);
 }
