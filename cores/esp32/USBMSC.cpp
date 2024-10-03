@@ -24,7 +24,7 @@ extern "C" uint16_t tusb_msc_load_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t ep_num = tinyusb_get_free_duplex_endpoint();
   TU_VERIFY(ep_num != 0);
   uint8_t descriptor[TUD_MSC_DESC_LEN] = {// Interface number, string index, EP Out & EP In address, EP size
-                                          TUD_MSC_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), 64)
+                                          TUD_MSC_DESCRIPTOR(*itf, str_index, ep_num, (uint8_t)(0x80 | ep_num), CFG_TUD_ENDOINT_SIZE)
   };
   *itf += 1;
   memcpy(dst, descriptor, TUD_MSC_DESC_LEN);

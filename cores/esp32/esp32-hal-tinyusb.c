@@ -131,7 +131,11 @@ esp_err_t init_usb_hal(bool external_phy) {
     .controller = USB_PHY_CTRL_OTG,
     .target = USB_PHY_TARGET_INT,
     .otg_mode = USB_OTG_MODE_DEVICE,
+#if CONFIG_IDF_TARGET_ESP32P4
+    .otg_speed = USB_PHY_SPEED_HIGH,
+#else
     .otg_speed = USB_PHY_SPEED_FULL,
+#endif
     .ext_io_conf = NULL,
     .otg_io_conf = NULL,
   };
@@ -169,7 +173,11 @@ void deinit_usb_hal() {
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
   init_usb_hal(config->external_phy);
-  if (!tusb_init()) {
+#if CONFIG_IDF_TARGET_ESP32P4
+  if (!tud_init(1)) {
+#else
+  if (!tud_init(0)) {
+#endif
     log_e("Can't initialize the TinyUSB stack.");
     return ESP_FAIL;
   }
