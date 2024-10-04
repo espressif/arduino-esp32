@@ -68,7 +68,7 @@ void test_memset_random(void) {
 }
 
 void test_memcpy(void) {
-  void *buf2 = malloc(1024); // 1KB
+  void *buf2 = malloc(1024);  // 1KB
   TEST_ASSERT_NOT_NULL(buf2);
   memset(buf, 0x55, MAX_TEST_SIZE);
   memset(buf2, 0xAA, 1024);
