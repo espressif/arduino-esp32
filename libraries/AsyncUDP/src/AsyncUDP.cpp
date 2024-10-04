@@ -488,6 +488,7 @@ bool AsyncUDP::_init() {
   UDP_MUTEX_LOCK();
   _pcb = udp_new();
   if (!_pcb) {
+    UDP_MUTEX_UNLOCK();
     return false;
   }
   udp_recv(_pcb, &_udp_recv, (void *)this);
