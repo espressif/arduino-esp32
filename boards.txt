@@ -123,7 +123,6 @@ esp32c2.menu.FlashFreq.30.build.flash_freq=30m
 
 esp32c2.menu.FlashSize.2M=2MB (16Mb)
 esp32c2.menu.FlashSize.2M.build.flash_size=2MB
-esp32c2.menu.FlashSize.2M.build.partitions=minimal
 esp32c2.menu.FlashSize.4M=4MB (32Mb)
 esp32c2.menu.FlashSize.4M.build.flash_size=4MB
 
@@ -293,10 +292,8 @@ esp32h2.menu.FlashSize.4M=4MB (32Mb)
 esp32h2.menu.FlashSize.4M.build.flash_size=4MB
 esp32h2.menu.FlashSize.8M=8MB (64Mb)
 esp32h2.menu.FlashSize.8M.build.flash_size=8MB
-esp32h2.menu.FlashSize.8M.build.partitions=default_8MB
 esp32h2.menu.FlashSize.2M=2MB (16Mb)
 esp32h2.menu.FlashSize.2M.build.flash_size=2MB
-esp32h2.menu.FlashSize.2M.build.partitions=minimal
 esp32h2.menu.FlashSize.16M=16MB (128Mb)
 esp32h2.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -487,10 +484,8 @@ esp32c6.menu.FlashSize.4M=4MB (32Mb)
 esp32c6.menu.FlashSize.4M.build.flash_size=4MB
 esp32c6.menu.FlashSize.8M=8MB (64Mb)
 esp32c6.menu.FlashSize.8M.build.flash_size=8MB
-esp32c6.menu.FlashSize.8M.build.partitions=default_8MB
 esp32c6.menu.FlashSize.2M=2MB (16Mb)
 esp32c6.menu.FlashSize.2M.build.flash_size=2MB
-esp32c6.menu.FlashSize.2M.build.partitions=minimal
 esp32c6.menu.FlashSize.16M=16MB (128Mb)
 esp32c6.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -634,12 +629,10 @@ esp32s3.menu.FlashSize.4M=4MB (32Mb)
 esp32s3.menu.FlashSize.4M.build.flash_size=4MB
 esp32s3.menu.FlashSize.8M=8MB (64Mb)
 esp32s3.menu.FlashSize.8M.build.flash_size=8MB
-esp32s3.menu.FlashSize.8M.build.partitions=default_8MB
 esp32s3.menu.FlashSize.16M=16MB (128Mb)
 esp32s3.menu.FlashSize.16M.build.flash_size=16MB
 esp32s3.menu.FlashSize.32M=32MB (256Mb)
 esp32s3.menu.FlashSize.32M.build.flash_size=32MB
-esp32s3.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 esp32s3.menu.LoopCore.1=Core 1
 esp32s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -928,10 +921,8 @@ esp32c3.menu.FlashSize.4M=4MB (32Mb)
 esp32c3.menu.FlashSize.4M.build.flash_size=4MB
 esp32c3.menu.FlashSize.8M=8MB (64Mb)
 esp32c3.menu.FlashSize.8M.build.flash_size=8MB
-esp32c3.menu.FlashSize.8M.build.partitions=default_8MB
 esp32c3.menu.FlashSize.2M=2MB (16Mb)
 esp32c3.menu.FlashSize.2M.build.flash_size=2MB
-esp32c3.menu.FlashSize.2M.build.partitions=minimal
 esp32c3.menu.FlashSize.16M=16MB (128Mb)
 esp32c3.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -1137,10 +1128,8 @@ esp32s2.menu.FlashSize.4M=4MB (32Mb)
 esp32s2.menu.FlashSize.4M.build.flash_size=4MB
 esp32s2.menu.FlashSize.8M=8MB (64Mb)
 esp32s2.menu.FlashSize.8M.build.flash_size=8MB
-esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
 esp32s2.menu.FlashSize.2M=2MB (16Mb)
 esp32s2.menu.FlashSize.2M.build.flash_size=2MB
-esp32s2.menu.FlashSize.2M.build.partitions=minimal
 esp32s2.menu.FlashSize.16M=16MB (128Mb)
 esp32s2.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -1323,10 +1312,8 @@ esp32.menu.FlashSize.4M=4MB (32Mb)
 esp32.menu.FlashSize.4M.build.flash_size=4MB
 esp32.menu.FlashSize.8M=8MB (64Mb)
 esp32.menu.FlashSize.8M.build.flash_size=8MB
-esp32.menu.FlashSize.8M.build.partitions=default_8MB
 esp32.menu.FlashSize.2M=2MB (16Mb)
 esp32.menu.FlashSize.2M.build.flash_size=2MB
-esp32.menu.FlashSize.2M.build.partitions=minimal
 esp32.menu.FlashSize.16M=16MB (128Mb)
 esp32.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -1499,7 +1486,6 @@ esp32da.menu.FlashSize.4M=4MB (32Mb)
 esp32da.menu.FlashSize.4M.build.flash_size=4MB
 esp32da.menu.FlashSize.8M=8MB (64Mb)
 esp32da.menu.FlashSize.8M.build.flash_size=8MB
-esp32da.menu.FlashSize.8M.build.partitions=default_8MB
 esp32da.menu.FlashSize.16M=16MB (128Mb)
 esp32da.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -1841,12 +1827,10 @@ esp32s3-octal.menu.FlashSize.4M=4MB (32Mb)
 esp32s3-octal.menu.FlashSize.4M.build.flash_size=4MB
 esp32s3-octal.menu.FlashSize.8M=8MB (64Mb)
 esp32s3-octal.menu.FlashSize.8M.build.flash_size=8MB
-esp32s3-octal.menu.FlashSize.8M.build.partitions=default_8MB
 esp32s3-octal.menu.FlashSize.16M=16MB (128Mb)
 esp32s3-octal.menu.FlashSize.16M.build.flash_size=16MB
 esp32s3-octal.menu.FlashSize.32M=32MB (256Mb)
 esp32s3-octal.menu.FlashSize.32M.build.flash_size=32MB
-esp32s3-octal.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 esp32s3-octal.menu.LoopCore.1=Core 1
 esp32s3-octal.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -2367,7 +2351,6 @@ esp32s2usb.menu.FlashSize.4M=4MB (32Mb)
 esp32s2usb.menu.FlashSize.4M.build.flash_size=4MB
 esp32s2usb.menu.FlashSize.8M=8MB (64Mb)
 esp32s2usb.menu.FlashSize.8M.build.flash_size=8MB
-esp32s2usb.menu.FlashSize.8M.build.partitions=default_8MB
 esp32s2usb.menu.FlashSize.16M=16MB (128Mb)
 esp32s2usb.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -2461,13 +2444,10 @@ esp32wroverkit.menu.FlashSize.4M=4MB (32Mb)
 esp32wroverkit.menu.FlashSize.4M.build.flash_size=4MB
 esp32wroverkit.menu.FlashSize.8M=8MB (64Mb)
 esp32wroverkit.menu.FlashSize.8M.build.flash_size=8MB
-esp32wroverkit.menu.FlashSize.8M.build.partitions=default_8MB
 esp32wroverkit.menu.FlashSize.2M=2MB (16Mb)
 esp32wroverkit.menu.FlashSize.2M.build.flash_size=2MB
-esp32wroverkit.menu.FlashSize.2M.build.partitions=minimal
 esp32wroverkit.menu.FlashSize.16M=16MB (128Mb)
 esp32wroverkit.menu.FlashSize.16M.build.flash_size=16MB
-esp32wroverkit.menu.FlashSize.16M.build.partitions=default_16MB
 
 esp32wroverkit.menu.PSRAM.enabled=Enabled
 esp32wroverkit.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
@@ -3069,10 +3049,8 @@ um_feathers2.menu.FlashSize.4M=4MB (32Mb)
 um_feathers2.menu.FlashSize.4M.build.flash_size=4MB
 um_feathers2.menu.FlashSize.8M=8MB (64Mb)
 um_feathers2.menu.FlashSize.8M.build.flash_size=8MB
-um_feathers2.menu.FlashSize.8M.build.partitions=default_8MB
 um_feathers2.menu.FlashSize.2M=2MB (16Mb)
 um_feathers2.menu.FlashSize.2M.build.flash_size=2MB
-um_feathers2.menu.FlashSize.2M.build.partitions=minimal
 
 um_feathers2.menu.UploadSpeed.921600=921600
 um_feathers2.menu.UploadSpeed.921600.upload.speed=921600
@@ -3211,7 +3189,6 @@ um_feathers2neo.menu.FlashSize.4M=4MB (32Mb)
 um_feathers2neo.menu.FlashSize.4M.build.flash_size=4MB
 um_feathers2neo.menu.FlashSize.2M=2MB (16Mb)
 um_feathers2neo.menu.FlashSize.2M.build.flash_size=2MB
-um_feathers2neo.menu.FlashSize.2M.build.partitions=minimal
 
 um_feathers2neo.menu.UploadSpeed.921600=921600
 um_feathers2neo.menu.UploadSpeed.921600.upload.speed=921600
@@ -4246,7 +4223,6 @@ um_tinyc6.menu.FlashFreq.40.build.flash_freq=40m
 
 um_tinyc6.menu.FlashSize.8M=8MB (64Mb)
 um_tinyc6.menu.FlashSize.8M.build.flash_size=8MB
-um_tinyc6.menu.FlashSize.8M.build.partitions=default_8MB
 
 um_tinyc6.menu.UploadSpeed.921600=921600
 um_tinyc6.menu.UploadSpeed.921600.upload.speed=921600
@@ -4400,7 +4376,6 @@ um_tinys2.menu.FlashSize.4M=4MB (32Mb)
 um_tinys2.menu.FlashSize.4M.build.flash_size=4MB
 um_tinys2.menu.FlashSize.2M=2MB (16Mb)
 um_tinys2.menu.FlashSize.2M.build.flash_size=2MB
-um_tinys2.menu.FlashSize.2M.build.partitions=minimal
 
 um_tinys2.menu.UploadSpeed.921600=921600
 um_tinys2.menu.UploadSpeed.921600.upload.speed=921600
@@ -5669,10 +5644,8 @@ micros2.menu.FlashSize.4M=4MB (32Mb)
 micros2.menu.FlashSize.4M.build.flash_size=4MB
 micros2.menu.FlashSize.8M=8MB (64Mb)
 micros2.menu.FlashSize.8M.build.flash_size=8MB
-micros2.menu.FlashSize.8M.build.partitions=default_8MB
 micros2.menu.FlashSize.2M=2MB (16Mb)
 micros2.menu.FlashSize.2M.build.flash_size=2MB
-micros2.menu.FlashSize.2M.build.partitions=minimal
 
 micros2.menu.UploadSpeed.921600=921600
 micros2.menu.UploadSpeed.921600.upload.speed=921600
@@ -6003,10 +5976,8 @@ ttgo-t1.menu.FlashSize.4M=4MB (32Mb)
 ttgo-t1.menu.FlashSize.4M.build.flash_size=4MB
 ttgo-t1.menu.FlashSize.2M=2MB (16Mb)
 ttgo-t1.menu.FlashSize.2M.build.flash_size=2MB
-ttgo-t1.menu.FlashSize.2M.build.partitions=minimal
 ttgo-t1.menu.FlashSize.16M=16MB (128Mb)
 ttgo-t1.menu.FlashSize.16M.build.flash_size=16MB
-ttgo-t1.menu.FlashSize.16M.build.partitions=ffat
 
 ttgo-t1.menu.UploadSpeed.921600=921600
 ttgo-t1.menu.UploadSpeed.921600.upload.speed=921600
@@ -6463,7 +6434,6 @@ cw02.menu.FlashSize.4M=4MB (32Mb)
 cw02.menu.FlashSize.4M.build.flash_size=4MB
 cw02.menu.FlashSize.2M=2MB (16Mb)
 cw02.menu.FlashSize.2M.build.flash_size=2MB
-cw02.menu.FlashSize.2M.build.partitions=minimal
 
 cw02.menu.UploadSpeed.921600=921600
 cw02.menu.UploadSpeed.921600.upload.speed=921600
@@ -6864,10 +6834,8 @@ sparkfun_esp32s2_thing_plus.menu.FlashSize.4M=4MB (32Mb)
 sparkfun_esp32s2_thing_plus.menu.FlashSize.4M.build.flash_size=4MB
 sparkfun_esp32s2_thing_plus.menu.FlashSize.8M=8MB (64Mb)
 sparkfun_esp32s2_thing_plus.menu.FlashSize.8M.build.flash_size=8MB
-sparkfun_esp32s2_thing_plus.menu.FlashSize.8M.build.partitions=default_8MB
 sparkfun_esp32s2_thing_plus.menu.FlashSize.2M=2MB (16Mb)
 sparkfun_esp32s2_thing_plus.menu.FlashSize.2M.build.flash_size=2MB
-sparkfun_esp32s2_thing_plus.menu.FlashSize.2M.build.partitions=minimal
 sparkfun_esp32s2_thing_plus.menu.FlashSize.16M=16MB (128Mb)
 sparkfun_esp32s2_thing_plus.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -7256,10 +7224,8 @@ sparkfun_esp32c6_thing_plus.menu.FlashSize.4M=4MB (32Mb)
 sparkfun_esp32c6_thing_plus.menu.FlashSize.4M.build.flash_size=4MB
 sparkfun_esp32c6_thing_plus.menu.FlashSize.8M=8MB (64Mb)
 sparkfun_esp32c6_thing_plus.menu.FlashSize.8M.build.flash_size=8MB
-sparkfun_esp32c6_thing_plus.menu.FlashSize.8M.build.partitions=default_8MB
 sparkfun_esp32c6_thing_plus.menu.FlashSize.2M=2MB (16Mb)
 sparkfun_esp32c6_thing_plus.menu.FlashSize.2M.build.flash_size=2MB
-sparkfun_esp32c6_thing_plus.menu.FlashSize.2M.build.partitions=minimal
 sparkfun_esp32c6_thing_plus.menu.FlashSize.16M=16MB (128Mb)
 sparkfun_esp32c6_thing_plus.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -7417,10 +7383,8 @@ esp32micromod.menu.FlashSize.4M=4MB (32Mb)
 esp32micromod.menu.FlashSize.4M.build.flash_size=4MB
 esp32micromod.menu.FlashSize.8M=8MB (64Mb)
 esp32micromod.menu.FlashSize.8M.build.flash_size=8MB
-esp32micromod.menu.FlashSize.8M.build.partitions=default_8MB
 esp32micromod.menu.FlashSize.2M=2MB (16Mb)
 esp32micromod.menu.FlashSize.2M.build.flash_size=2MB
-esp32micromod.menu.FlashSize.2M.build.partitions=minimal
 esp32micromod.menu.FlashSize.16M=16MB (128Mb)
 esp32micromod.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -7670,10 +7634,8 @@ sparkfun_esp32_iot_redboard.menu.FlashSize.4M=4MB (32Mb)
 sparkfun_esp32_iot_redboard.menu.FlashSize.4M.build.flash_size=4MB
 sparkfun_esp32_iot_redboard.menu.FlashSize.8M=8MB (64Mb)
 sparkfun_esp32_iot_redboard.menu.FlashSize.8M.build.flash_size=8MB
-sparkfun_esp32_iot_redboard.menu.FlashSize.8M.build.partitions=default_8MB
 sparkfun_esp32_iot_redboard.menu.FlashSize.2M=2MB (16Mb)
 sparkfun_esp32_iot_redboard.menu.FlashSize.2M.build.flash_size=2MB
-sparkfun_esp32_iot_redboard.menu.FlashSize.2M.build.partitions=minimal
 sparkfun_esp32_iot_redboard.menu.FlashSize.16M=16MB (128Mb)
 sparkfun_esp32_iot_redboard.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -7855,10 +7817,8 @@ sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.4M=4MB (32Mb)
 sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.4M.build.flash_size=4MB
 sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.8M=8MB (64Mb)
 sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.8M.build.flash_size=8MB
-sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.8M.build.partitions=default_8MB
 sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.2M=2MB (16Mb)
 sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.2M.build.flash_size=2MB
-sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.2M.build.partitions=minimal
 sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.16M=16MB (128Mb)
 sparkfun_esp32c6_qwiic_pocket.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -8111,13 +8071,10 @@ nina_w10.menu.UploadSpeed.512000.upload.speed=512000
 
 nina_w10.menu.FlashSize.2M=2MB (16Mb, NINA-W101/W102)
 nina_w10.menu.FlashSize.2M.build.flash_size=2MB
-nina_w10.menu.FlashSize.2M.build.partitions=minimal
 nina_w10.menu.FlashSize.4M=4MB (32Mb, NINA-W106-00B)
 nina_w10.menu.FlashSize.4M.build.flash_size=4MB
-nina_w10.menu.FlashSize.4M.build.partitions=default
 nina_w10.menu.FlashSize.8M=8MB (64Mb, NINA-W106-10B)
 nina_w10.menu.FlashSize.8M.build.flash_size=8MB
-nina_w10.menu.FlashSize.8M.build.partitions=default_8MB
 
 nina_w10.menu.FlashFreq.80=80MHz
 nina_w10.menu.FlashFreq.80.build.flash_freq=80m
@@ -8287,7 +8244,6 @@ nora_w10.menu.FlashSize.4M=4MB (32Mb)
 nora_w10.menu.FlashSize.4M.build.flash_size=4MB
 nora_w10.menu.FlashSize.8M=8MB (64Mb)
 nora_w10.menu.FlashSize.8M.build.flash_size=8MB
-nora_w10.menu.FlashSize.8M.build.partitions=default_8MB
 #nora_w10.menu.FlashSize.16M=16MB (128Mb)
 #nora_w10.menu.FlashSize.16M.build.flash_size=16MB
 #nora_w10.menu.FlashSize.32M=32MB (256Mb)
@@ -11261,10 +11217,8 @@ dfrobot_firebeetle2_esp32e.menu.FlashSize.4M=4MB (32Mb)
 dfrobot_firebeetle2_esp32e.menu.FlashSize.4M.build.flash_size=4MB
 dfrobot_firebeetle2_esp32e.menu.FlashSize.8M=8MB (64Mb)
 dfrobot_firebeetle2_esp32e.menu.FlashSize.8M.build.flash_size=8MB
-dfrobot_firebeetle2_esp32e.menu.FlashSize.8M.build.partitions=default_8MB
 dfrobot_firebeetle2_esp32e.menu.FlashSize.2M=2MB (16Mb)
 dfrobot_firebeetle2_esp32e.menu.FlashSize.2M.build.flash_size=2MB
-dfrobot_firebeetle2_esp32e.menu.FlashSize.2M.build.partitions=minimal
 dfrobot_firebeetle2_esp32e.menu.FlashSize.16M=16MB (128Mb)
 dfrobot_firebeetle2_esp32e.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -11398,7 +11352,6 @@ dfrobot_firebeetle2_esp32s3.menu.FlashSize.4M=4MB (32Mb)
 dfrobot_firebeetle2_esp32s3.menu.FlashSize.4M.build.flash_size=4MB
 dfrobot_firebeetle2_esp32s3.menu.FlashSize.8M=8MB (64Mb)
 dfrobot_firebeetle2_esp32s3.menu.FlashSize.8M.build.flash_size=8MB
-dfrobot_firebeetle2_esp32s3.menu.FlashSize.8M.build.partitions=default_8MB
 dfrobot_firebeetle2_esp32s3.menu.FlashSize.16M=16MB (128Mb)
 dfrobot_firebeetle2_esp32s3.menu.FlashSize.16M.build.flash_size=16MB
 #dfrobot_firebeetle2_esp32s3.menu.FlashSize.32M=32MB (256Mb)
@@ -16564,7 +16517,6 @@ nologo_esp32s3_pico.menu.FlashMode.opi.build.flash_freq=80m
 
 nologo_esp32s3_pico.menu.FlashSize.8M=8MB (64Mb)
 nologo_esp32s3_pico.menu.FlashSize.8M.build.flash_size=8MB
-nologo_esp32s3_pico.menu.FlashSize.8M.build.partitions=default_8MB
 nologo_esp32s3_pico.menu.FlashSize.16M=16MB (128Mb)
 nologo_esp32s3_pico.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -17826,10 +17778,8 @@ esp32s2-devkitlipo.menu.FlashSize.4M=4MB (32Mb)
 esp32s2-devkitlipo.menu.FlashSize.4M.build.flash_size=4MB
 esp32s2-devkitlipo.menu.FlashSize.8M=8MB (64Mb)
 esp32s2-devkitlipo.menu.FlashSize.8M.build.flash_size=8MB
-esp32s2-devkitlipo.menu.FlashSize.8M.build.partitions=default_8MB
 esp32s2-devkitlipo.menu.FlashSize.2M=2MB (16Mb)
 esp32s2-devkitlipo.menu.FlashSize.2M.build.flash_size=2MB
-esp32s2-devkitlipo.menu.FlashSize.2M.build.partitions=minimal
 esp32s2-devkitlipo.menu.FlashSize.16M=16MB (128Mb)
 esp32s2-devkitlipo.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -18023,10 +17973,8 @@ esp32s2-devkitlipo-usb.menu.FlashSize.4M=4MB (32Mb)
 esp32s2-devkitlipo-usb.menu.FlashSize.4M.build.flash_size=4MB
 esp32s2-devkitlipo-usb.menu.FlashSize.8M=8MB (64Mb)
 esp32s2-devkitlipo-usb.menu.FlashSize.8M.build.flash_size=8MB
-esp32s2-devkitlipo-usb.menu.FlashSize.8M.build.partitions=default_8MB
 esp32s2-devkitlipo-usb.menu.FlashSize.2M=2MB (16Mb)
 esp32s2-devkitlipo-usb.menu.FlashSize.2M.build.flash_size=2MB
-esp32s2-devkitlipo-usb.menu.FlashSize.2M.build.partitions=minimal
 esp32s2-devkitlipo-usb.menu.FlashSize.16M=16MB (128Mb)
 esp32s2-devkitlipo-usb.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -18157,12 +18105,10 @@ esp32s3-devkitlipo.menu.FlashSize.4M=4MB (32Mb)
 esp32s3-devkitlipo.menu.FlashSize.4M.build.flash_size=4MB
 esp32s3-devkitlipo.menu.FlashSize.8M=8MB (64Mb)
 esp32s3-devkitlipo.menu.FlashSize.8M.build.flash_size=8MB
-esp32s3-devkitlipo.menu.FlashSize.8M.build.partitions=default_8MB
 esp32s3-devkitlipo.menu.FlashSize.16M=16MB (128Mb)
 esp32s3-devkitlipo.menu.FlashSize.16M.build.flash_size=16MB
 esp32s3-devkitlipo.menu.FlashSize.32M=32MB (256Mb)
 esp32s3-devkitlipo.menu.FlashSize.32M.build.flash_size=32MB
-esp32s3-devkitlipo.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 esp32s3-devkitlipo.menu.LoopCore.1=Core 1
 esp32s3-devkitlipo.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -18438,10 +18384,8 @@ esp32c3-devkitlipo.menu.FlashSize.4M=4MB (32Mb)
 esp32c3-devkitlipo.menu.FlashSize.4M.build.flash_size=4MB
 esp32c3-devkitlipo.menu.FlashSize.8M=8MB (64Mb)
 esp32c3-devkitlipo.menu.FlashSize.8M.build.flash_size=8MB
-esp32c3-devkitlipo.menu.FlashSize.8M.build.partitions=default_8MB
 esp32c3-devkitlipo.menu.FlashSize.2M=2MB (16Mb)
 esp32c3-devkitlipo.menu.FlashSize.2M.build.flash_size=2MB
-esp32c3-devkitlipo.menu.FlashSize.2M.build.partitions=minimal
 esp32c3-devkitlipo.menu.FlashSize.16M=16MB (128Mb)
 esp32c3-devkitlipo.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -18613,10 +18557,8 @@ esp32c6-evb.menu.FlashSize.4M=4MB (32Mb)
 esp32c6-evb.menu.FlashSize.4M.build.flash_size=4MB
 esp32c6-evb.menu.FlashSize.8M=8MB (64Mb)
 esp32c6-evb.menu.FlashSize.8M.build.flash_size=8MB
-esp32c6-evb.menu.FlashSize.8M.build.partitions=default_8MB
 esp32c6-evb.menu.FlashSize.2M=2MB (16Mb)
 esp32c6-evb.menu.FlashSize.2M.build.flash_size=2MB
-esp32c6-evb.menu.FlashSize.2M.build.partitions=minimal
 esp32c6-evb.menu.FlashSize.16M=16MB (128Mb)
 esp32c6-evb.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -18795,10 +18737,8 @@ esp32h2-devkitlipo.menu.FlashSize.4M=4MB (32Mb)
 esp32h2-devkitlipo.menu.FlashSize.4M.build.flash_size=4MB
 esp32h2-devkitlipo.menu.FlashSize.8M=8MB (64Mb)
 esp32h2-devkitlipo.menu.FlashSize.8M.build.flash_size=8MB
-esp32h2-devkitlipo.menu.FlashSize.8M.build.partitions=default_8MB
 esp32h2-devkitlipo.menu.FlashSize.2M=2MB (16Mb)
 esp32h2-devkitlipo.menu.FlashSize.2M.build.flash_size=2MB
-esp32h2-devkitlipo.menu.FlashSize.2M.build.partitions=minimal
 esp32h2-devkitlipo.menu.FlashSize.16M=16MB (128Mb)
 esp32h2-devkitlipo.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -18984,10 +18924,8 @@ esp32-sbc-fabgl.menu.FlashSize.4M=4MB (32Mb)
 esp32-sbc-fabgl.menu.FlashSize.4M.build.flash_size=4MB
 esp32-sbc-fabgl.menu.FlashSize.8M=8MB (64Mb)
 esp32-sbc-fabgl.menu.FlashSize.8M.build.flash_size=8MB
-esp32-sbc-fabgl.menu.FlashSize.8M.build.partitions=default_8MB
 esp32-sbc-fabgl.menu.FlashSize.2M=2MB (16Mb)
 esp32-sbc-fabgl.menu.FlashSize.2M.build.flash_size=2MB
-esp32-sbc-fabgl.menu.FlashSize.2M.build.partitions=minimal
 esp32-sbc-fabgl.menu.FlashSize.16M=16MB (128Mb)
 esp32-sbc-fabgl.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -20686,7 +20624,6 @@ m5stack_atoms3.menu.FlashMode.opi.build.flash_freq=80m
 
 m5stack_atoms3.menu.FlashSize.8M=8MB (64Mb)
 m5stack_atoms3.menu.FlashSize.8M.build.flash_size=8MB
-m5stack_atoms3.menu.FlashSize.8M.build.partitions=default_8MB
 
 m5stack_atoms3.menu.LoopCore.1=Core 1
 m5stack_atoms3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -20920,7 +20857,6 @@ m5stack_cores3.menu.FlashSize.16M=16MB (128Mb)
 m5stack_cores3.menu.FlashSize.16M.build.flash_size=16MB
 m5stack_cores3.menu.FlashSize.32M=32MB (256Mb)
 m5stack_cores3.menu.FlashSize.32M.build.flash_size=32MB
-m5stack_cores3.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 m5stack_cores3.menu.LoopCore.1=Core 1
 m5stack_cores3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -21463,7 +21399,6 @@ m5stack_unit_cams3.menu.FlashSize.16M=16MB (128Mb)
 m5stack_unit_cams3.menu.FlashSize.16M.build.flash_size=16MB
 m5stack_unit_cams3.menu.FlashSize.32M=32MB (256Mb)
 m5stack_unit_cams3.menu.FlashSize.32M.build.flash_size=32MB
-m5stack_unit_cams3.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 m5stack_unit_cams3.menu.LoopCore.1=Core 1
 m5stack_unit_cams3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -22475,12 +22410,10 @@ m5stack_stamp_s3.menu.FlashSize.4M=4MB (32Mb)
 m5stack_stamp_s3.menu.FlashSize.4M.build.flash_size=4MB
 m5stack_stamp_s3.menu.FlashSize.8M=8MB (64Mb)
 m5stack_stamp_s3.menu.FlashSize.8M.build.flash_size=8MB
-m5stack_stamp_s3.menu.FlashSize.8M.build.partitions=default_8MB
 m5stack_stamp_s3.menu.FlashSize.16M=16MB (128Mb)
 m5stack_stamp_s3.menu.FlashSize.16M.build.flash_size=16MB
 m5stack_stamp_s3.menu.FlashSize.32M=32MB (256Mb)
 m5stack_stamp_s3.menu.FlashSize.32M.build.flash_size=32MB
-m5stack_stamp_s3.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 m5stack_stamp_s3.menu.LoopCore.1=Core 1
 m5stack_stamp_s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -22714,12 +22647,10 @@ m5stack_capsule.menu.FlashSize.4M=4MB (32Mb)
 m5stack_capsule.menu.FlashSize.4M.build.flash_size=4MB
 m5stack_capsule.menu.FlashSize.8M=8MB (64Mb)
 m5stack_capsule.menu.FlashSize.8M.build.flash_size=8MB
-m5stack_capsule.menu.FlashSize.8M.build.partitions=default_8MB
 m5stack_capsule.menu.FlashSize.16M=16MB (128Mb)
 m5stack_capsule.menu.FlashSize.16M.build.flash_size=16MB
 m5stack_capsule.menu.FlashSize.32M=32MB (256Mb)
 m5stack_capsule.menu.FlashSize.32M.build.flash_size=32MB
-m5stack_capsule.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 m5stack_capsule.menu.LoopCore.1=Core 1
 m5stack_capsule.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -22956,12 +22887,10 @@ m5stack_cardputer.menu.FlashSize.4M=4MB (32Mb)
 m5stack_cardputer.menu.FlashSize.4M.build.flash_size=4MB
 m5stack_cardputer.menu.FlashSize.8M=8MB (64Mb)
 m5stack_cardputer.menu.FlashSize.8M.build.flash_size=8MB
-m5stack_cardputer.menu.FlashSize.8M.build.partitions=default_8MB
 m5stack_cardputer.menu.FlashSize.16M=16MB (128Mb)
 m5stack_cardputer.menu.FlashSize.16M.build.flash_size=16MB
 m5stack_cardputer.menu.FlashSize.32M=32MB (256Mb)
 m5stack_cardputer.menu.FlashSize.32M.build.flash_size=32MB
-m5stack_cardputer.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 m5stack_cardputer.menu.LoopCore.1=Core 1
 m5stack_cardputer.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -23195,12 +23124,10 @@ m5stack_dial.menu.FlashSize.4M=4MB (32Mb)
 m5stack_dial.menu.FlashSize.4M.build.flash_size=4MB
 m5stack_dial.menu.FlashSize.8M=8MB (64Mb)
 m5stack_dial.menu.FlashSize.8M.build.flash_size=8MB
-m5stack_dial.menu.FlashSize.8M.build.partitions=default_8MB
 m5stack_dial.menu.FlashSize.16M=16MB (128Mb)
 m5stack_dial.menu.FlashSize.16M.build.flash_size=16MB
 m5stack_dial.menu.FlashSize.32M=32MB (256Mb)
 m5stack_dial.menu.FlashSize.32M.build.flash_size=32MB
-m5stack_dial.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 m5stack_dial.menu.LoopCore.1=Core 1
 m5stack_dial.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -23434,12 +23361,10 @@ m5stack_dinmeter.menu.FlashSize.4M=4MB (32Mb)
 m5stack_dinmeter.menu.FlashSize.4M.build.flash_size=4MB
 m5stack_dinmeter.menu.FlashSize.8M=8MB (64Mb)
 m5stack_dinmeter.menu.FlashSize.8M.build.flash_size=8MB
-m5stack_dinmeter.menu.FlashSize.8M.build.partitions=default_8MB
 m5stack_dinmeter.menu.FlashSize.16M=16MB (128Mb)
 m5stack_dinmeter.menu.FlashSize.16M.build.flash_size=16MB
 m5stack_dinmeter.menu.FlashSize.32M=32MB (256Mb)
 m5stack_dinmeter.menu.FlashSize.32M.build.flash_size=32MB
-m5stack_dinmeter.menu.FlashSize.32M.build.partitions=app5M_fat24M_32MB
 
 m5stack_dinmeter.menu.LoopCore.1=Core 1
 m5stack_dinmeter.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -26516,7 +26441,6 @@ espectro32.menu.FlashSize.4M=4MB (32Mb)
 espectro32.menu.FlashSize.4M.build.flash_size=4MB
 espectro32.menu.FlashSize.2M=2MB (16Mb)
 espectro32.menu.FlashSize.2M.build.flash_size=2MB
-espectro32.menu.FlashSize.2M.build.partitions=minimal
 
 espectro32.menu.UploadSpeed.921600=921600
 espectro32.menu.UploadSpeed.921600.upload.speed=921600
@@ -26745,10 +26669,8 @@ alksesp32.menu.FlashSize.4M=4MB (32Mb)
 alksesp32.menu.FlashSize.4M.build.flash_size=4MB
 alksesp32.menu.FlashSize.2M=2MB (16Mb)
 alksesp32.menu.FlashSize.2M.build.flash_size=2MB
-alksesp32.menu.FlashSize.2M.build.partitions=minimal
 alksesp32.menu.FlashSize.16M=16MB (128Mb)
 alksesp32.menu.FlashSize.16M.build.flash_size=16MB
-alksesp32.menu.FlashSize.16M.build.partitions=ffat
 
 alksesp32.menu.UploadSpeed.921600=921600
 alksesp32.menu.UploadSpeed.921600.upload.speed=921600
@@ -27265,7 +27187,6 @@ bpi_leaf_s3.menu.FlashMode.opi.build.flash_freq=80m
 
 bpi_leaf_s3.menu.FlashSize.8M=8MB (64Mb)
 bpi_leaf_s3.menu.FlashSize.8M.build.flash_size=8MB
-bpi_leaf_s3.menu.FlashSize.8M.build.partitions=default_8MB
 bpi_leaf_s3.menu.FlashSize.4M=4MB (32Mb)
 bpi_leaf_s3.menu.FlashSize.4M.build.flash_size=4MB
 bpi_leaf_s3.menu.FlashSize.16M=16MB (128Mb)
@@ -28222,7 +28143,6 @@ frogboard.menu.FlashSize.4M=4MB (32Mb)
 frogboard.menu.FlashSize.4M.build.flash_size=4MB
 frogboard.menu.FlashSize.2M=2MB (16Mb)
 frogboard.menu.FlashSize.2M.build.flash_size=2MB
-frogboard.menu.FlashSize.2M.build.partitions=minimal
 
 frogboard.menu.UploadSpeed.921600=921600
 frogboard.menu.UploadSpeed.921600.upload.speed=921600
@@ -28819,10 +28739,8 @@ vintlabs-devkit-v1.menu.FlashSize.4M=4MB (32Mb)
 vintlabs-devkit-v1.menu.FlashSize.4M.build.flash_size=4MB
 vintlabs-devkit-v1.menu.FlashSize.8M=8MB (64Mb)
 vintlabs-devkit-v1.menu.FlashSize.8M.build.flash_size=8MB
-vintlabs-devkit-v1.menu.FlashSize.8M.build.partitions=default_8MB
 vintlabs-devkit-v1.menu.FlashSize.2M=2MB (16Mb)
 vintlabs-devkit-v1.menu.FlashSize.2M.build.flash_size=2MB
-vintlabs-devkit-v1.menu.FlashSize.2M.build.partitions=minimal
 vintlabs-devkit-v1.menu.FlashSize.16M=16MB (128Mb)
 vintlabs-devkit-v1.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -29023,10 +28941,8 @@ mgbot-iotik32a.menu.FlashSize.4M=4MB (32Mb)
 mgbot-iotik32a.menu.FlashSize.4M.build.flash_size=4MB
 mgbot-iotik32a.menu.FlashSize.8M=8MB (64Mb)
 mgbot-iotik32a.menu.FlashSize.8M.build.flash_size=8MB
-mgbot-iotik32a.menu.FlashSize.8M.build.partitions=default_8MB
 mgbot-iotik32a.menu.FlashSize.2M=2MB (16Mb)
 mgbot-iotik32a.menu.FlashSize.2M.build.flash_size=2MB
-mgbot-iotik32a.menu.FlashSize.2M.build.partitions=minimal
 mgbot-iotik32a.menu.FlashSize.16M=16MB (128Mb)
 mgbot-iotik32a.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -29172,10 +29088,8 @@ mgbot-iotik32b.menu.FlashSize.4M=4MB (32Mb)
 mgbot-iotik32b.menu.FlashSize.4M.build.flash_size=4MB
 mgbot-iotik32b.menu.FlashSize.8M=8MB (64Mb)
 mgbot-iotik32b.menu.FlashSize.8M.build.flash_size=8MB
-mgbot-iotik32b.menu.FlashSize.8M.build.partitions=default_8MB
 mgbot-iotik32b.menu.FlashSize.2M=2MB (16Mb)
 mgbot-iotik32b.menu.FlashSize.2M.build.flash_size=2MB
-mgbot-iotik32b.menu.FlashSize.2M.build.partitions=minimal
 mgbot-iotik32b.menu.FlashSize.16M=16MB (128Mb)
 mgbot-iotik32b.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -29911,10 +29825,8 @@ wifiduino32c3.menu.FlashSize.4M=4MB (32Mb)
 wifiduino32c3.menu.FlashSize.4M.build.flash_size=4MB
 wifiduino32c3.menu.FlashSize.8M=8MB (64Mb)
 wifiduino32c3.menu.FlashSize.8M.build.flash_size=8MB
-wifiduino32c3.menu.FlashSize.8M.build.partitions=default_8MB
 wifiduino32c3.menu.FlashSize.2M=2MB (16Mb)
 wifiduino32c3.menu.FlashSize.2M.build.flash_size=2MB
-wifiduino32c3.menu.FlashSize.2M.build.partitions=minimal
 wifiduino32c3.menu.FlashSize.16M=16MB (128Mb)
 wifiduino32c3.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -30032,7 +29944,6 @@ wifiduino32s3.menu.FlashSize.4M=4MB (32Mb)
 wifiduino32s3.menu.FlashSize.4M.build.flash_size=4MB
 wifiduino32s3.menu.FlashSize.8M=8MB (64Mb)
 wifiduino32s3.menu.FlashSize.8M.build.flash_size=8MB
-wifiduino32s3.menu.FlashSize.8M.build.partitions=default_8MB
 wifiduino32s3.menu.FlashSize.16M=16MB (128Mb)
 wifiduino32s3.menu.FlashSize.16M.build.flash_size=16MB
 #wifiduino32s3.menu.FlashSize.32M=32MB (256Mb)
@@ -31364,10 +31275,8 @@ kb32.menu.FlashSize.4M=4MB (32Mb)
 kb32.menu.FlashSize.4M.build.flash_size=4MB
 kb32.menu.FlashSize.8M=8MB (64Mb)
 kb32.menu.FlashSize.8M.build.flash_size=8MB
-kb32.menu.FlashSize.8M.build.partitions=default_8MB
 kb32.menu.FlashSize.2M=2MB (16Mb)
 kb32.menu.FlashSize.2M.build.flash_size=2MB
-kb32.menu.FlashSize.2M.build.partitions=minimal
 kb32.menu.FlashSize.16M=16MB (128Mb)
 kb32.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -31544,10 +31453,8 @@ deneyapkart.menu.FlashSize.4M=4MB (32Mb)
 deneyapkart.menu.FlashSize.4M.build.flash_size=4MB
 deneyapkart.menu.FlashSize.8M=8MB (64Mb)
 deneyapkart.menu.FlashSize.8M.build.flash_size=8MB
-deneyapkart.menu.FlashSize.8M.build.partitions=default_8MB
 deneyapkart.menu.FlashSize.2M=2MB (16Mb)
 deneyapkart.menu.FlashSize.2M.build.flash_size=2MB
-deneyapkart.menu.FlashSize.2M.build.partitions=minimal
 deneyapkart.menu.FlashSize.16M=16MB (128Mb)
 deneyapkart.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -31724,10 +31631,8 @@ deneyapkart1A.menu.FlashSize.4M=4MB (32Mb)
 deneyapkart1A.menu.FlashSize.4M.build.flash_size=4MB
 deneyapkart1A.menu.FlashSize.8M=8MB (64Mb)
 deneyapkart1A.menu.FlashSize.8M.build.flash_size=8MB
-deneyapkart1A.menu.FlashSize.8M.build.partitions=default_8MB
 deneyapkart1A.menu.FlashSize.2M=2MB (16Mb)
 deneyapkart1A.menu.FlashSize.2M.build.flash_size=2MB
-deneyapkart1A.menu.FlashSize.2M.build.partitions=minimal
 deneyapkart1A.menu.FlashSize.16M=16MB (128Mb)
 deneyapkart1A.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -31871,7 +31776,6 @@ deneyapkart1Av2.menu.FlashSize.4M=4MB (32Mb)
 deneyapkart1Av2.menu.FlashSize.4M.build.flash_size=4MB
 deneyapkart1Av2.menu.FlashSize.8M=8MB (64Mb)
 deneyapkart1Av2.menu.FlashSize.8M.build.flash_size=8MB
-deneyapkart1Av2.menu.FlashSize.8M.build.partitions=default_8MB
 deneyapkart1Av2.menu.FlashSize.16M=16MB (128Mb)
 deneyapkart1Av2.menu.FlashSize.16M.build.flash_size=16MB
 #deneyapkart1Av2.menu.FlashSize.32M=32MB (256Mb)
@@ -32155,10 +32059,8 @@ deneyapmini.menu.FlashSize.4M=4MB (32Mb)
 deneyapmini.menu.FlashSize.4M.build.flash_size=4MB
 deneyapmini.menu.FlashSize.8M=8MB (64Mb)
 deneyapmini.menu.FlashSize.8M.build.flash_size=8MB
-deneyapmini.menu.FlashSize.8M.build.partitions=default_8MB
 deneyapmini.menu.FlashSize.2M=2MB (16Mb)
 deneyapmini.menu.FlashSize.2M.build.flash_size=2MB
-deneyapmini.menu.FlashSize.2M.build.partitions=minimal
 deneyapmini.menu.FlashSize.16M=16MB (128Mb)
 deneyapmini.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -32347,10 +32249,8 @@ deneyapminiv2.menu.FlashSize.4M=4MB (32Mb)
 deneyapminiv2.menu.FlashSize.4M.build.flash_size=4MB
 deneyapminiv2.menu.FlashSize.8M=8MB (64Mb)
 deneyapminiv2.menu.FlashSize.8M.build.flash_size=8MB
-deneyapminiv2.menu.FlashSize.8M.build.partitions=default_8MB
 deneyapminiv2.menu.FlashSize.2M=2MB (16Mb)
 deneyapminiv2.menu.FlashSize.2M.build.flash_size=2MB
-deneyapminiv2.menu.FlashSize.2M.build.partitions=minimal
 deneyapminiv2.menu.FlashSize.16M=16MB (128Mb)
 deneyapminiv2.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -32516,10 +32416,8 @@ deneyapkartg.menu.FlashSize.4M=4MB (32Mb)
 deneyapkartg.menu.FlashSize.4M.build.flash_size=4MB
 deneyapkartg.menu.FlashSize.8M=8MB (64Mb)
 deneyapkartg.menu.FlashSize.8M.build.flash_size=8MB
-deneyapkartg.menu.FlashSize.8M.build.partitions=default_8MB
 deneyapkartg.menu.FlashSize.2M=2MB (16Mb)
 deneyapkartg.menu.FlashSize.2M.build.flash_size=2MB
-deneyapkartg.menu.FlashSize.2M.build.partitions=minimal
 deneyapkartg.menu.FlashSize.16M=16MB (128Mb)
 deneyapkartg.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -32823,10 +32721,8 @@ atmegazero_esp32s2.menu.FlashSize.4M=4MB (32Mb)
 atmegazero_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
 atmegazero_esp32s2.menu.FlashSize.8M=8MB (64Mb)
 atmegazero_esp32s2.menu.FlashSize.8M.build.flash_size=8MB
-atmegazero_esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
 atmegazero_esp32s2.menu.FlashSize.2M=2MB (16Mb)
 atmegazero_esp32s2.menu.FlashSize.2M.build.flash_size=2MB
-atmegazero_esp32s2.menu.FlashSize.2M.build.partitions=minimal
 atmegazero_esp32s2.menu.FlashSize.16M=16MB (128Mb)
 atmegazero_esp32s2.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -32915,7 +32811,6 @@ franzininho_wifi_esp32s2.menu.FlashSize.4M=4MB (32Mb)
 franzininho_wifi_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
 franzininho_wifi_esp32s2.menu.FlashSize.8M=8MB (64Mb)
 franzininho_wifi_esp32s2.menu.FlashSize.8M.build.flash_size=8MB
-franzininho_wifi_esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
 franzininho_wifi_esp32s2.menu.FlashSize.16M=16MB (128Mb)
 franzininho_wifi_esp32s2.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -33023,7 +32918,6 @@ franzininho_wifi_msc_esp32s2.menu.FlashSize.4M=4MB (32Mb)
 franzininho_wifi_msc_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
 franzininho_wifi_msc_esp32s2.menu.FlashSize.8M=8MB (64Mb)
 franzininho_wifi_msc_esp32s2.menu.FlashSize.8M.build.flash_size=8MB
-franzininho_wifi_msc_esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
 franzininho_wifi_msc_esp32s2.menu.FlashSize.16M=16MB (128Mb)
 franzininho_wifi_msc_esp32s2.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -33160,7 +33054,6 @@ tamc_termod_s3.menu.FlashSize.4M=4MB (32Mb)
 tamc_termod_s3.menu.FlashSize.4M.build.flash_size=4MB
 tamc_termod_s3.menu.FlashSize.8M=8MB (64Mb)
 tamc_termod_s3.menu.FlashSize.8M.build.flash_size=8MB
-tamc_termod_s3.menu.FlashSize.8M.build.partitions=default_8MB
 tamc_termod_s3.menu.FlashSize.16M=16MB (128Mb)
 tamc_termod_s3.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -33622,7 +33515,6 @@ lionbit.menu.FlashFreq.40.build.flash_freq=40m
 
 lionbit.menu.FlashSize.4M=4MB (32Mb)
 lionbit.menu.FlashSize.4M.build.flash_size=4MB
-lionbit.menu.FlashSize.4M.build.partitions=default
 
 
 
@@ -33970,10 +33862,8 @@ XIAO_ESP32C3.menu.FlashSize.4M=4MB (32Mb)
 XIAO_ESP32C3.menu.FlashSize.4M.build.flash_size=4MB
 XIAO_ESP32C3.menu.FlashSize.8M=8MB (64Mb)
 XIAO_ESP32C3.menu.FlashSize.8M.build.flash_size=8MB
-XIAO_ESP32C3.menu.FlashSize.8M.build.partitions=default_8MB
 XIAO_ESP32C3.menu.FlashSize.2M=2MB (16Mb)
 XIAO_ESP32C3.menu.FlashSize.2M.build.flash_size=2MB
-XIAO_ESP32C3.menu.FlashSize.2M.build.partitions=minimal
 XIAO_ESP32C3.menu.FlashSize.16M=16MB (128Mb)
 XIAO_ESP32C3.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -34246,7 +34136,6 @@ XIAO_ESP32S3.menu.FlashMode.dio.build.flash_freq=80m
 
 XIAO_ESP32S3.menu.FlashSize.8M=8MB (64Mb)
 XIAO_ESP32S3.menu.FlashSize.8M.build.flash_size=8MB
-XIAO_ESP32S3.menu.FlashSize.8M.build.partitions=default_8MB
 
 XIAO_ESP32S3.menu.LoopCore.1=Core 1
 XIAO_ESP32S3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -34669,10 +34558,8 @@ department_of_alchemy_minimain_esp32s2.menu.FlashSize.4M=4MB (32Mb)
 department_of_alchemy_minimain_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
 department_of_alchemy_minimain_esp32s2.menu.FlashSize.8M=8MB (64Mb)
 department_of_alchemy_minimain_esp32s2.menu.FlashSize.8M.build.flash_size=8MB
-department_of_alchemy_minimain_esp32s2.menu.FlashSize.8M.build.partitions=default_8MB
 department_of_alchemy_minimain_esp32s2.menu.FlashSize.2M=2MB (16Mb)
 department_of_alchemy_minimain_esp32s2.menu.FlashSize.2M.build.flash_size=2MB
-department_of_alchemy_minimain_esp32s2.menu.FlashSize.2M.build.partitions=minimal
 department_of_alchemy_minimain_esp32s2.menu.FlashSize.16M=16MB (128Mb)
 department_of_alchemy_minimain_esp32s2.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -36413,10 +36300,8 @@ VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.4M=4MB (32Mb)
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.4M.build.flash_size=4MB
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.8M=8MB (64Mb)
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.8M.build.flash_size=8MB
-VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.8M.build.partitions=default_8MB
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.2M=2MB (16Mb)
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.2M.build.flash_size=2MB
-VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.2M.build.partitions=minimal
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.16M=16MB (128Mb)
 VALTRACK_V4_VTS_ESP32_C3.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -36566,10 +36451,8 @@ VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.4M=4MB (32Mb)
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.4M.build.flash_size=4MB
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.8M=8MB (64Mb)
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.8M.build.flash_size=8MB
-VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.8M.build.partitions=default_8MB
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.2M=2MB (16Mb)
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.2M.build.flash_size=2MB
-VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.2M.build.partitions=minimal
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.16M=16MB (128Mb)
 VALTRACK_V4_MFW_ESP32_C3.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -36687,7 +36570,6 @@ Edgebox-ESP-100.menu.FlashSize.4M=4MB (32Mb)
 Edgebox-ESP-100.menu.FlashSize.4M.build.flash_size=4MB
 Edgebox-ESP-100.menu.FlashSize.8M=8MB (64Mb)
 Edgebox-ESP-100.menu.FlashSize.8M.build.flash_size=8MB
-Edgebox-ESP-100.menu.FlashSize.8M.build.partitions=default_8MB
 Edgebox-ESP-100.menu.FlashSize.16M=16MB (128Mb)
 Edgebox-ESP-100.menu.FlashSize.16M.build.flash_size=16MB
 #Edgebox-ESP-100.menu.FlashSize.32M=32MB (256Mb)
@@ -37060,7 +36942,6 @@ nebulas3.menu.FlashSize.4M=4MB (32Mb)
 nebulas3.menu.FlashSize.4M.build.flash_size=4MB
 nebulas3.menu.FlashSize.8M=8MB (64Mb)
 nebulas3.menu.FlashSize.8M.build.flash_size=8MB
-nebulas3.menu.FlashSize.8M.build.partitions=default_8MB
 nebulas3.menu.FlashSize.16M=16MB (128Mb)
 nebulas3.menu.FlashSize.16M.build.flash_size=16MB
 
@@ -37285,7 +37166,6 @@ lionbits3.menu.FlashSize.4M=4MB (32Mb)
 lionbits3.menu.FlashSize.4M.build.flash_size=4MB
 lionbits3.menu.FlashSize.8M=8MB (64Mb)
 lionbits3.menu.FlashSize.8M.build.flash_size=8MB
-lionbits3.menu.FlashSize.8M.build.partitions=default_8MB
 lionbits3.menu.FlashSize.16M=16MB (128Mb)
 lionbits3.menu.FlashSize.16M.build.flash_size=16MB
 #lionbits3.menu.FlashSize.32M=32MB (256Mb)
@@ -39314,7 +39194,6 @@ epulse_feather_c6.menu.FlashSize.4M=4MB (32Mb)
 epulse_feather_c6.menu.FlashSize.4M.build.flash_size=4MB
 epulse_feather_c6.menu.FlashSize.2M=2MB (16Mb)
 epulse_feather_c6.menu.FlashSize.2M.build.flash_size=2MB
-epulse_feather_c6.menu.FlashSize.2M.build.partitions=minimal
 
 epulse_feather_c6.menu.UploadSpeed.921600=921600
 epulse_feather_c6.menu.UploadSpeed.921600.upload.speed=921600
@@ -39457,7 +39336,6 @@ Geekble_ESP32C3.menu.FlashSize.4M=4MB (Default)
 Geekble_ESP32C3.menu.FlashSize.4M.build.flash_size=4MB
 Geekble_ESP32C3.menu.FlashSize.2M=2MB
 Geekble_ESP32C3.menu.FlashSize.2M.build.flash_size=2MB
-Geekble_ESP32C3.menu.FlashSize.2M.build.partitions=minimal
 
 Geekble_ESP32C3.menu.UploadSpeed.921600=921600 (Default)
 Geekble_ESP32C3.menu.UploadSpeed.921600.upload.speed=921600
