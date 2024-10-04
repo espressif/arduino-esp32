@@ -300,6 +300,7 @@ const char *EspClass::getChipModel(void) {
     case CHIP_ESP32C2: return "ESP32-C2";
     case CHIP_ESP32C6: return "ESP32-C6";
     case CHIP_ESP32H2: return "ESP32-H2";
+    case CHIP_ESP32P4: return "ESP32-P4";
     default:           return "UNKNOWN";
   }
 #endif
