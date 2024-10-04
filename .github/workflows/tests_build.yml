@@ -29,6 +29,7 @@ jobs:
             ~/.arduino/tests/**/build*.tmp/*.bin
             ~/.arduino/tests/**/build*.tmp/*.elf
             ~/.arduino/tests/**/build*.tmp/*.json
+            ~/.arduino/tests/**/build*.tmp/sdkconfig
 
       - name: Evaluate if tests should be built
         id: check-build
@@ -75,6 +76,7 @@ jobs:
             ~/.arduino/tests/**/build*.tmp/*.bin
             ~/.arduino/tests/**/build*.tmp/*.elf
             ~/.arduino/tests/**/build*.tmp/*.json
+            ~/.arduino/tests/**/build*.tmp/sdkconfig
 
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as artifacts
         uses: actions/upload-artifact@v4
@@ -85,3 +87,4 @@ jobs:
             ~/.arduino/tests/**/build*.tmp/*.bin
             ~/.arduino/tests/**/build*.tmp/*.elf
             ~/.arduino/tests/**/build*.tmp/*.json
+            ~/.arduino/tests/**/build*.tmp/sdkconfig
