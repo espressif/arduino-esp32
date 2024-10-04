@@ -1,16 +1,6 @@
 {
-  "fqbn": {
-    "esp32c6": [
-      "espressif:esp32:esp32c6:PartitionScheme=zigbee_zczr,ZigbeeMode=zczr"
-    ],
-    "esp32h2": [
-      "espressif:esp32:esp32h2:PartitionScheme=zigbee_zczr,ZigbeeMode=zczr"
-    ]
-  },
-  "targets": {
-    "esp32": false,
-    "esp32c3": false,
-    "esp32s2": false,
-    "esp32s3": false
-  }
+  "fqbn_append": "PartitionScheme=zigbee_zczr,ZigbeeMode=zczr",
+  "requires": [
+    "CONFIG_SOC_IEEE802154_SUPPORTED=y"
+  ]
 }
