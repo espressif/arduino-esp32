@@ -2803,7 +2803,7 @@ BharatPi-Node-Wifi.build.target=esp32
 BharatPi-Node-Wifi.build.mcu=esp32
 BharatPi-Node-Wifi.build.core=esp32
 BharatPi-Node-Wifi.build.variant=BharatPi-Node-Wifi
-BharatPi-Node-Wifi.build.board=ESP32_WROOM_DA
+BharatPi-Node-Wifi.build.board=BHARATPI_NODE_WIFI
 
 BharatPi-Node-Wifi.build.f_cpu=240000000L
 BharatPi-Node-Wifi.build.flash_size=4MB
@@ -2961,7 +2961,7 @@ BharatPi-A7672S-4G.build.target=esp32
 BharatPi-A7672S-4G.build.mcu=esp32
 BharatPi-A7672S-4G.build.core=esp32
 BharatPi-A7672S-4G.build.variant=BharatPi-A7672S-4G
-BharatPi-A7672S-4G.build.board=ESP32_WROOM_DA
+BharatPi-A7672S-4G.build.board=BHARATPI_A7672s_4G
 
 BharatPi-A7672S-4G.build.f_cpu=240000000L
 BharatPi-A7672S-4G.build.flash_size=4MB
@@ -3119,7 +3119,7 @@ BharatPi-LoRa.build.target=esp32
 BharatPi-LoRa.build.mcu=esp32
 BharatPi-LoRa.build.core=esp32
 BharatPi-LoRa.build.variant=BharatPi-LoRa
-BharatPi-LoRa.build.board=ESP32_WROOM_DA
+BharatPi-LoRa.build.board=BHARATPI_LORA
 
 BharatPi-LoRa.build.f_cpu=240000000L
 BharatPi-LoRa.build.flash_size=4MB
