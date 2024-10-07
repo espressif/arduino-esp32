@@ -1,4 +1,4 @@
-# Arduino core for the ESP32, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6 and ESP32-H2
+# Arduino core for the ESP32, ESP32-P4, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6 and ESP32-H2
 
 [![Build Status](https://github.com/espressif/arduino-esp32/actions/workflows/push.yml/badge.svg?branch=master&event=push)](https://github.com/espressif/arduino-esp32/actions/workflows/push.yml) [![External Libraries Test](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=master&event=schedule)](https://github.com/espressif/arduino-esp32/blob/gh-pages/LIBRARIES_TEST.md) [![Hardware Tests](https://github.com/espressif/arduino-esp32/blob/gh-pages/runtime-tests-results/badge.svg)](https://github.com/espressif/arduino-esp32/actions/workflows/tests_results.yml)
 
