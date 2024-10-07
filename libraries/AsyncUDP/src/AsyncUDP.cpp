@@ -16,17 +16,19 @@ extern "C" {
 #include "lwip/priv/tcpip_priv.h"
 
 #ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
-#define UDP_MUTEX_LOCK()      if (!sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) { \
-                                LOCK_TCPIP_CORE();                                  \
-                              }
+#define UDP_MUTEX_LOCK()                                \
+  if (!sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) { \
+    LOCK_TCPIP_CORE();                                  \
+  }
 
-#define UDP_MUTEX_UNLOCK()    if (sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) {  \
-                                UNLOCK_TCPIP_CORE();                                \
-                              }
-#else // CONFIG_LWIP_TCPIP_CORE_LOCKING
+#define UDP_MUTEX_UNLOCK()                             \
+  if (sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) { \
+    UNLOCK_TCPIP_CORE();                               \
+  }
+#else  // CONFIG_LWIP_TCPIP_CORE_LOCKING
 #define UDP_MUTEX_LOCK()
 #define UDP_MUTEX_UNLOCK()
-#endif // CONFIG_LWIP_TCPIP_CORE_LOCKING
+#endif  // CONFIG_LWIP_TCPIP_CORE_LOCKING
 
 static const char *netif_ifkeys[TCPIP_ADAPTER_IF_MAX] = {"WIFI_STA_DEF", "WIFI_AP_DEF", "ETH_DEF", "PPP_DEF"};
 
