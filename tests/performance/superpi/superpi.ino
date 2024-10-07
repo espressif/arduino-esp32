@@ -25,7 +25,7 @@ void setup() {
   Serial.printf("Digits: %d\n", DIGITS);
   Serial.flush();
   for (int i = 0; i < N_RUNS; i++) {
-    Serial.printf("Run %d", i);
+    Serial.printf("Run %d\n", i);
     unsigned long start = millis();
     pi_calc(DIGITS);
     unsigned long elapsed = millis() - start;
