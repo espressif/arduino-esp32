@@ -23,16 +23,13 @@
 #endif
 
 void serialEvent(void) __attribute__((weak));
-void serialEvent(void) {}
 
 #if SOC_UART_NUM > 1
 void serialEvent1(void) __attribute__((weak));
-void serialEvent1(void) {}
 #endif /* SOC_UART_NUM > 1 */
 
 #if SOC_UART_NUM > 2
 void serialEvent2(void) __attribute__((weak));
-void serialEvent2(void) {}
 #endif /* SOC_UART_NUM > 2 */
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
@@ -51,18 +48,18 @@ HardwareSerial Serial2(2);
 void serialEventRun(void)
 {
 #if HWCDC_SERIAL_IS_DEFINED == 1        // Hardware JTAG CDC Event
-    if(HWCDCSerial.available()) HWCDCSerialEvent();
+    if(HWCDCSerialEvent && HWCDCSerial.available()) HWCDCSerialEvent();
 #endif    
 #if USB_SERIAL_IS_DEFINED == 1          // Native USB CDC Event
-    if(USBSerial.available()) USBSerialEvent();
+    if(USBSerialEvent && USBSerial.available()) USBSerialEvent();
 #endif    
     // UART0 is default serialEvent()
-    if(Serial.available()) serialEvent();
+    if(serialEvent && Serial.available()) serialEvent();
 #if SOC_UART_NUM > 1
-    if(Serial1.available()) serialEvent1();
+    if(serialEvent1 && Serial1.available()) serialEvent1();
 #endif
 #if SOC_UART_NUM > 2
-    if(Serial2.available()) serialEvent2();
+    if(serialEvent2 && Serial2.available()) serialEvent2();
 #endif
 }
 #endif
