@@ -47,12 +47,6 @@ HardwareSerial Serial2(2);
 
 void serialEventRun(void)
 {
-#if HWCDC_SERIAL_IS_DEFINED == 1        // Hardware JTAG CDC Event
-    if(HWCDCSerialEvent && HWCDCSerial.available()) HWCDCSerialEvent();
-#endif    
-#if USB_SERIAL_IS_DEFINED == 1          // Native USB CDC Event
-    if(USBSerialEvent && USBSerial.available()) USBSerialEvent();
-#endif    
     // UART0 is default serialEvent()
     if(serialEvent && Serial.available()) serialEvent();
 #if SOC_UART_NUM > 1
