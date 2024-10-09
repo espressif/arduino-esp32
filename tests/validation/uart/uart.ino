@@ -469,7 +469,7 @@ void auto_baudrate_test(void) {
 
 #if SOC_UART_NUM == 2
   selected_serial = &Serial1;
-  uart_internal_loopback(0, RX1);  // it was suppose to cross connect TX0 to RX1
+  uart_internal_loopback(0, true);  // it was suppose to cross connect TX0 to RX1
 #elif SOC_UART_NUM == 3
   selected_serial = &Serial2;
 #endif
