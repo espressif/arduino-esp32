@@ -149,7 +149,7 @@ void setUp(void) {
   Serial1.onReceive([]() {
     onReceive_cb(Serial1);
   });
-  uart_internal_loopback(1, RX1);
+  uart_internal_loopback(1, true);
 #elif SOC_UART_NUM == 3
   log_d("Setup internal loop-back between Serial1 (UART1) <<--->> Serial2 (UART2)");
 
@@ -159,8 +159,8 @@ void setUp(void) {
   Serial2.onReceive([]() {
     onReceive_cb(Serial2);
   });
-  uart_internal_loopback(1, RX2);
-  uart_internal_loopback(2, RX1);
+  uart_internal_loopback(1, true);  // it was suppose to cross connect TX1 to RX2!
+  uart_internal_loopback(2, true);  // it was suppose to cross connect TX2 to RX1!
 #endif
 }
 
@@ -446,10 +446,10 @@ void change_pins_test(void) {
   log_d("Re-enabling UART loopback");
 
 #if SOC_UART_NUM == 2
-  uart_internal_loopback(1, NEW_RX1);
+  uart_internal_loopback(1, true);
 #elif SOC_UART_NUM == 3
-  uart_internal_loopback(1, RX1);
-  uart_internal_loopback(2, RX2);
+  uart_internal_loopback(1, true);
+  uart_internal_loopback(2, true);
 #endif
 
   transmit_and_check_msg("using new pins");
@@ -469,7 +469,7 @@ void auto_baudrate_test(void) {
 
 #if SOC_UART_NUM == 2
   selected_serial = &Serial1;
-  uart_internal_loopback(0, RX1);
+  uart_internal_loopback(0, RX1);  // it was suppose to cross connect TX0 to RX1
 #elif SOC_UART_NUM == 3
   selected_serial = &Serial2;
 #endif
@@ -520,10 +520,10 @@ void periman_test(void) {
 
 #if SOC_UART_NUM == 3
   Serial2.setPins(RX2, TX2);
-  uart_internal_loopback(1, RX2);
-  uart_internal_loopback(2, RX1);
+  uart_internal_loopback(1, true);  // it was suppose to cross connect TX2 to RX1
+  uart_internal_loopback(2, true);  // it was suppose to cross connect TX1 to RX2
 #elif SOC_UART_NUM == 2
-  uart_internal_loopback(1, RX1);
+  uart_internal_loopback(1, true);
 #endif
 
   log_d("Trying to send message using UART with I2C disabled");
@@ -576,7 +576,7 @@ void setup() {
   Serial1.onReceive([]() {
     onReceive_cb(Serial1);
   });
-  uart_internal_loopback(1, RX1);
+  uart_internal_loopback(1, true);
 #elif SOC_UART_NUM == 3
   log_d("Setup internal loop-back between Serial1 (UART1) <<--->> Serial2 (UART2)");
 
@@ -586,8 +586,8 @@ void setup() {
   Serial2.onReceive([]() {
     onReceive_cb(Serial2);
   });
-  uart_internal_loopback(1, RX2);
-  uart_internal_loopback(2, RX1);
+  uart_internal_loopback(1, true);  // it was suppose to cross connect TX2 to RX1
+  uart_internal_loopback(2, true);  // it was suppose to cross connect TX1 to RX2
 #endif
 
   log_d("Setup done. Starting tests");
