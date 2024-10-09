@@ -57,29 +57,25 @@ jobs:
       hw-types: ${{ steps.set-matrix.outputs.hw-types }}
       wokwi-types: ${{ steps.set-matrix.outputs.wokwi-types }}
       qemu-types: ${{ steps.set-matrix.outputs.qemu-types }}
+      targets: ${{ steps.set-matrix.outputs.targets }}
+    env:
+      IS_PR: ${{ github.event.pull_request.number != null }}
+      PERFORMANCE_ENABLED: ${{ contains(github.event.pull_request.labels.*.name, 'perf_test') }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts/tests_matrix.sh
+
       - name: Set matrix
         id: set-matrix
-        run: |
-          build_types='["validation"'
-          hw_types='["validation"'
-          wokwi_types='["validation"'
-          qemu_types='["validation"'
+        run: bash .github/scripts/tests_matrix.sh
 
-          is_pr=${{ github.event.pull_request.number != null }}
-          is_performance_enabled=${{ contains(github.event.pull_request.labels.*.name, 'perf_test') }}
-
-          if [[ $is_pr != 'true' ]] || [[ $is_performance_enabled == 'true' ]]; then
-            build_types+=',"performance"'
-            hw_types+=',"performance"'
-            #wokwi_types+=',"performance"'
-            #qemu_types+=',"performance"'
-          fi
-
-          echo "build-types=$build_types]" >> $GITHUB_OUTPUT
-          echo "hw-types=$hw_types]" >> $GITHUB_OUTPUT
-          echo "wokwi-types=$wokwi_types]" >> $GITHUB_OUTPUT
-          echo "qemu-types=$qemu_types]" >> $GITHUB_OUTPUT
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix_info
+          path: info/*
 
   call-build-tests:
     name: Build
@@ -88,7 +84,7 @@ jobs:
     strategy:
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.build-types) }}
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        chip: ${{ fromJson(needs.gen-matrix.outputs.targets) }}
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
@@ -105,7 +101,7 @@ jobs:
       fail-fast: false
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.hw-types) }}
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        chip: ${{ fromJson(needs.gen-matrix.outputs.targets) }}
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}

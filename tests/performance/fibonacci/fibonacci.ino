@@ -31,7 +31,7 @@ void setup() {
   Serial.printf("N: %d\n", FIB_N);
   Serial.flush();
   for (int i = 0; i < N_RUNS; i++) {
-    Serial.printf("Run %d", i);
+    Serial.printf("Run %d\n", i);
     unsigned long start = millis();
     fibonacci = fib(FIB_N);
     unsigned long elapsed = millis() - start;
