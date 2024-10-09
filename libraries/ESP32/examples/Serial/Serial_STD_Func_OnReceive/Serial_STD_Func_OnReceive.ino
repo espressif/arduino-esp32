@@ -89,7 +89,7 @@ void setup() {
   // creating a loopback that will allow to write to TEST_UART number
   // and send it to RX with no need to physically connect both pins
 #if TEST_UART > 0
-  uart_internal_loopback(TEST_UART, RXPIN);
+  uart_internal_loopback(TEST_UART, true);
 #else
   // when UART0 is used for testing, it is necessary to send data using the Serial Monitor/Terminal
   // Data must be sent by the CP2102, manually using  the Serial Monitor/Terminal
