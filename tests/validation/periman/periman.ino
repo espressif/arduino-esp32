@@ -72,7 +72,7 @@ void setup_test(String test_name, int8_t rx_pin = UART1_RX_DEFAULT, int8_t tx_pi
   pinMode(uart1_rx_pin, INPUT_PULLUP);
   pinMode(uart1_tx_pin, OUTPUT);
   Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
-  uart_internal_loopback(1, uart1_rx_pin);
+  uart_internal_loopback(1, true);
   delay(100);
   log_v("Running %s test", test_name.c_str());
 }
@@ -88,7 +88,7 @@ void teardown_test(void) {
     Serial1.flush();
 
     Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
-    uart_internal_loopback(1, uart1_rx_pin);
+    uart_internal_loopback(1, true);
     delay(100);
   }
 
@@ -280,7 +280,7 @@ void setup() {
     delay(10);
   }
   Serial1.onReceive(onReceive_cb);
-  uart_internal_loopback(1, uart1_rx_pin);
+  uart_internal_loopback(1, true);
 
   gpio_test();
   sigmadelta_test();
