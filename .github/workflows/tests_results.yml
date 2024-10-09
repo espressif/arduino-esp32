@@ -79,6 +79,7 @@ jobs:
           event_name: ${{ env.original_event }}
           files: ./artifacts/**/*.xml
           action_fail: true
+          compare_to_earlier_commit: false
 
       - name: Fail if tests failed
         if: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' }}
