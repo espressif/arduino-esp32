@@ -243,18 +243,18 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     } else {
       _timestamp.tv_sec = fb->timestamp.tv_sec;
       _timestamp.tv_usec = fb->timestamp.tv_usec;
-        if (fb->format != PIXFORMAT_JPEG) {
-          bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
-          esp_camera_fb_return(fb);
-          fb = NULL;
-          if (!jpeg_converted) {
-            log_e("JPEG compression failed");
-            res = ESP_FAIL;
-          }
-        } else {
-          _jpg_buf_len = fb->len;
-          _jpg_buf = fb->buf;
+      if (fb->format != PIXFORMAT_JPEG) {
+        bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+        esp_camera_fb_return(fb);
+        fb = NULL;
+        if (!jpeg_converted) {
+          log_e("JPEG compression failed");
+          res = ESP_FAIL;
         }
+      } else {
+        _jpg_buf_len = fb->len;
+        _jpg_buf = fb->buf;
+      }
     }
     if (res == ESP_OK) {
       res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
@@ -286,9 +286,8 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
 #endif
     log_i(
-      "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
-      ,
-      (uint32_t)(_jpg_buf_len), (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time, avg_frame_time, 1000.0 / avg_frame_time
+      "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)", (uint32_t)(_jpg_buf_len), (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time, avg_frame_time,
+      1000.0 / avg_frame_time
     );
   }
 
