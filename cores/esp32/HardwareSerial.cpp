@@ -81,12 +81,12 @@ void serialEventRun(void) {
   if (serialEvent && Serial0.available()) {
     serialEvent();
   }
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
   if (serialEvent1 && Serial1.available()) {
     serialEvent1();
   }
 #endif
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
   if (serialEvent2 && Serial2.available()) {
     serialEvent2();
   }
