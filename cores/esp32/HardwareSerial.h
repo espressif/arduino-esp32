@@ -375,6 +375,12 @@ extern HardwareSerial Serial1;
 #if SOC_UART_HP_NUM > 2
 extern HardwareSerial Serial2;
 #endif
+#if SOC_UART_HP_NUM > 3
+extern HardwareSerial Serial3;
+#endif
+#if SOC_UART_HP_NUM > 4
+extern HardwareSerial Serial4;
+#endif
 #endif  //!defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 
 #endif  // HardwareSerial_h
