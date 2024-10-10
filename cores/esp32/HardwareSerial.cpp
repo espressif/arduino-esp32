@@ -27,11 +27,11 @@ void serialEvent(void) __attribute__((weak));
 
 #if SOC_UART_HP_NUM > 1
 void serialEvent1(void) __attribute__((weak));
-#endif /* SOC_UART_NUM > 1 */
+#endif /* SOC_UART_HP_NUM > 1 */
 
 #if SOC_UART_HP_NUM > 2
 void serialEvent2(void) __attribute__((weak));
-#endif /* SOC_UART_NUM > 2 */
+#endif /* SOC_UART_HP_NUM > 2 */
 
 #if SOC_UART_HP_NUM > 3
 void serialEvent3(void) __attribute__((weak));
