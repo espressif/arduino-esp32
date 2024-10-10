@@ -15,6 +15,21 @@ extern "C" {
 
 #include "lwip/priv/tcpip_priv.h"
 
+#ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
+#define UDP_MUTEX_LOCK()                                \
+  if (!sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) { \
+    LOCK_TCPIP_CORE();                                  \
+  }
+
+#define UDP_MUTEX_UNLOCK()                             \
+  if (sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) { \
+    UNLOCK_TCPIP_CORE();                               \
+  }
+#else  // CONFIG_LWIP_TCPIP_CORE_LOCKING
+#define UDP_MUTEX_LOCK()
+#define UDP_MUTEX_UNLOCK()
+#endif  // CONFIG_LWIP_TCPIP_CORE_LOCKING
+
 static const char *netif_ifkeys[TCPIP_ADAPTER_IF_MAX] = {"WIFI_STA_DEF", "WIFI_AP_DEF", "ETH_DEF", "PPP_DEF"};
 
 static esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void **netif) {
@@ -28,7 +43,9 @@ static esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void **net
     if (netif_index < 0) {
       return ESP_FAIL;
     }
+    UDP_MUTEX_LOCK();
     *netif = (void *)netif_get_by_index(netif_index);
+    UDP_MUTEX_UNLOCK();
   } else {
     *netif = netif_default;
   }
@@ -231,9 +248,6 @@ static bool _udp_task_stop(){
     _udp_queue = NULL;
 }
 */
-
-#define UDP_MUTEX_LOCK()    //xSemaphoreTake(_lock, portMAX_DELAY)
-#define UDP_MUTEX_UNLOCK()  //xSemaphoreGive(_lock)
 
 AsyncUDPMessage::AsyncUDPMessage(size_t size) {
   _index = 0;
@@ -473,12 +487,14 @@ bool AsyncUDP::_init() {
   if (_pcb) {
     return true;
   }
+  UDP_MUTEX_LOCK();
   _pcb = udp_new();
   if (!_pcb) {
+    UDP_MUTEX_UNLOCK();
     return false;
   }
-  //_lock = xSemaphoreCreateMutex();
   udp_recv(_pcb, &_udp_recv, (void *)this);
+  UDP_MUTEX_UNLOCK();
   return true;
 }
 
@@ -493,14 +509,12 @@ AsyncUDP::~AsyncUDP() {
   close();
   UDP_MUTEX_LOCK();
   udp_recv(_pcb, NULL, NULL);
+  UDP_MUTEX_UNLOCK();
   _udp_remove(_pcb);
   _pcb = NULL;
-  UDP_MUTEX_UNLOCK();
-  //vSemaphoreDelete(_lock);
 }
 
 void AsyncUDP::close() {
-  UDP_MUTEX_LOCK();
   if (_pcb != NULL) {
     if (_connected) {
       _udp_disconnect(_pcb);
@@ -508,7 +522,6 @@ void AsyncUDP::close() {
     _connected = false;
     //todo: unjoin multicast group
   }
-  UDP_MUTEX_UNLOCK();
 }
 
 bool AsyncUDP::connect(const ip_addr_t *addr, uint16_t port) {
@@ -520,14 +533,11 @@ bool AsyncUDP::connect(const ip_addr_t *addr, uint16_t port) {
     return false;
   }
   close();
-  UDP_MUTEX_LOCK();
   _lastErr = _udp_connect(_pcb, addr, port);
   if (_lastErr != ERR_OK) {
-    UDP_MUTEX_UNLOCK();
     return false;
   }
   _connected = true;
-  UDP_MUTEX_UNLOCK();
   return true;
 }
 
@@ -544,13 +554,10 @@ bool AsyncUDP::listen(const ip_addr_t *addr, uint16_t port) {
     IP_SET_TYPE_VAL(_pcb->local_ip, addr->type);
     IP_SET_TYPE_VAL(_pcb->remote_ip, addr->type);
   }
-  UDP_MUTEX_LOCK();
   if (_udp_bind(_pcb, addr, port) != ERR_OK) {
-    UDP_MUTEX_UNLOCK();
     return false;
   }
   _connected = true;
-  UDP_MUTEX_UNLOCK();
   return true;
 }
 
@@ -624,12 +631,10 @@ bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl
     return false;
   }
 
-  UDP_MUTEX_LOCK();
   _pcb->mcast_ttl = ttl;
   _pcb->remote_port = port;
   ip_addr_copy(_pcb->remote_ip, *addr);
   //ip_addr_copy(_pcb->remote_ip, ip_addr_any_type);
-  UDP_MUTEX_UNLOCK();
 
   return true;
 }
@@ -651,7 +656,6 @@ size_t AsyncUDP::writeTo(const uint8_t *data, size_t len, const ip_addr_t *addr,
   if (pbt != NULL) {
     uint8_t *dst = reinterpret_cast<uint8_t *>(pbt->payload);
     memcpy(dst, data, len);
-    UDP_MUTEX_LOCK();
     if (tcpip_if < TCPIP_ADAPTER_IF_MAX) {
       void *nif = NULL;
       tcpip_adapter_get_netif((tcpip_adapter_if_t)tcpip_if, &nif);
@@ -663,7 +667,6 @@ size_t AsyncUDP::writeTo(const uint8_t *data, size_t len, const ip_addr_t *addr,
     } else {
       _lastErr = _udp_sendto(_pcb, pbt, addr, port);
     }
-    UDP_MUTEX_UNLOCK();
     pbuf_free(pbt);
     if (_lastErr < ERR_OK) {
       return 0;
