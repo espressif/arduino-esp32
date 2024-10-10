@@ -27,11 +27,19 @@ void serialEvent(void) __attribute__((weak));
 
 #if SOC_UART_HP_NUM > 1
 void serialEvent1(void) __attribute__((weak));
-#endif /* SOC_UART_NUM > 1 */
+#endif /* SOC_UART_HP_NUM > 1 */
 
 #if SOC_UART_HP_NUM > 2
 void serialEvent2(void) __attribute__((weak));
-#endif /* SOC_UART_NUM > 2 */
+#endif /* SOC_UART_HP_NUM > 2 */
+
+#if SOC_UART_HP_NUM > 3
+void serialEvent3(void) __attribute__((weak));
+#endif /* SOC_UART_HP_NUM > 3 */
+
+#if SOC_UART_HP_NUM > 4
+void serialEvent4(void) __attribute__((weak));
+#endif /* SOC_UART_HP_NUM > 4 */
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 // There is always Seria0 for UART0
@@ -41,6 +49,12 @@ HardwareSerial Serial1(1);
 #endif
 #if SOC_UART_HP_NUM > 2
 HardwareSerial Serial2(2);
+#endif
+#if SOC_UART_HP_NUM > 3
+HardwareSerial Serial3(3);
+#endif
+#if SOC_UART_HP_NUM > 4
+HardwareSerial Serial4(4);
 #endif
 
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
@@ -67,14 +81,24 @@ void serialEventRun(void) {
   if (serialEvent && Serial0.available()) {
     serialEvent();
   }
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
   if (serialEvent1 && Serial1.available()) {
     serialEvent1();
   }
 #endif
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
   if (serialEvent2 && Serial2.available()) {
     serialEvent2();
+  }
+#endif
+#if SOC_UART_HP_NUM > 3
+  if (serialEvent3 && Serial3.available()) {
+    serialEvent3();
+  }
+#endif
+#if SOC_UART_HP_NUM > 4
+  if (serialEvent4 && Serial4.available()) {
+    serialEvent4();
   }
 #endif
 }
