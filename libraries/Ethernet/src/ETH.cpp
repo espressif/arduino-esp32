@@ -30,7 +30,9 @@
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #if CONFIG_ETH_USE_ESP32_EMAC
+#if defined __has_include && __has_include("soc/emac_ext_struct.h")
 #include "soc/emac_ext_struct.h"
+#endif /* __has_include("soc/emac_ext_struct.h" */
 #include "soc/rtc.h"
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #include "esp32-hal-periman.h"
@@ -146,7 +148,7 @@ void ETHClass::setTaskStackSize(size_t size) {
   _task_stack_size = size;
 }
 
-#if CONFIG_ETH_USE_ESP32_EMAC
+#if (CONFIG_ETH_USE_ESP32_EMAC && !defined(CONFIG_IDF_TARGET_ESP32P4))
 bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clock_mode) {
   esp_err_t ret = ESP_OK;
   if (_eth_index > 2) {
@@ -170,14 +172,19 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   Network.begin();
   _ethernets[_eth_index] = this;
 
+#if CONFIG_IDF_TARGET_ESP32
+#undef DEFAULT_RMII_CLK_GPIO
+#define DEFAULT_RMII_CLK_GPIO (emac_rmii_clock_gpio_t)(CONFIG_ETH_RMII_CLK_IN_GPIO)
+#endif
+
   eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
   mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
   mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode)   ? EMAC_APPL_CLK_OUT_GPIO
                                             : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO
                                             : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO
                                                                 : EMAC_CLK_IN_GPIO;
-  mac_config.smi_mdc_gpio_num = digitalPinToGPIONumber(mdc);
-  mac_config.smi_mdio_gpio_num = digitalPinToGPIONumber(mdio);
+  mac_config.smi_gpio.mdc_num = digitalPinToGPIONumber(mdc);
+  mac_config.smi_gpio.mdio_num = digitalPinToGPIONumber(mdio);
 
   _pin_mcd = digitalPinToGPIONumber(mdc);
   _pin_mdio = digitalPinToGPIONumber(mdio);
@@ -893,7 +900,7 @@ void ETHClass::end(void) {
 #if ETH_SPI_SUPPORTS_CUSTOM
   _spi = NULL;
 #endif
-#if CONFIG_ETH_USE_ESP32_EMAC
+#if (CONFIG_ETH_USE_ESP32_EMAC && !defined(CONFIG_IDF_TARGET_ESP32P4))
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, empty_ethDetachBus);

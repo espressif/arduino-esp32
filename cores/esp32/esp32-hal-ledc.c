@@ -323,11 +323,16 @@ bool ledcOutputInvert(uint8_t pin, bool out_invert) {
   ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
   if (bus != NULL) {
     gpio_set_level(pin, out_invert);
+
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+    esp_rom_gpio_connect_out_signal(pin, LEDC_LS_SIG_OUT_PAD_OUT0_IDX + ((bus->channel) % 8), out_invert, 0);
+#else
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
     esp_rom_gpio_connect_out_signal(pin, ((bus->channel / 8 == 0) ? LEDC_HS_SIG_OUT0_IDX : LEDC_LS_SIG_OUT0_IDX) + ((bus->channel) % 8), out_invert, 0);
 #else
     esp_rom_gpio_connect_out_signal(pin, LEDC_LS_SIG_OUT0_IDX + ((bus->channel) % 8), out_invert, 0);
 #endif
+#endif  // ifdef CONFIG_IDF_TARGET_ESP32P4
     return true;
   }
   return false;

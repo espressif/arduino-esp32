@@ -1,5 +1,8 @@
 {
   "requires": [
     "CONFIG_SOC_TOUCH_SENSOR_SUPPORTED=y"
-  ]
+  ],
+  "targets": {
+    "esp32p4": false
+  }
 }

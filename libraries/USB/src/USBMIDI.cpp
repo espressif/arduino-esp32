@@ -24,7 +24,7 @@ extern "C" uint16_t tusb_midi_load_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t ep_out = tinyusb_get_free_out_endpoint();
   TU_VERIFY(ep_out != 0);
   uint8_t descriptor[TUD_MIDI_DESC_LEN] = {
-    TUD_MIDI_DESCRIPTOR(*itf, str_index, ep_out, (uint8_t)(0x80 | ep_in), 64),
+    TUD_MIDI_DESCRIPTOR(*itf, str_index, ep_out, (uint8_t)(0x80 | ep_in), CFG_TUD_ENDOINT_SIZE),
   };
   *itf += 2;
   memcpy(dst, descriptor, TUD_MIDI_DESC_LEN);

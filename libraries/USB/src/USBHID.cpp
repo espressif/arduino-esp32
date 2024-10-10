@@ -206,7 +206,7 @@ extern "C" uint16_t tusb_hid_load_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t descriptor[TUD_HID_INOUT_DESC_LEN] = {
     // HID Input & Output descriptor
     // Interface number, string index, protocol, report descriptor len, EP OUT & IN address, size & polling interval
-    TUD_HID_INOUT_DESCRIPTOR(*itf, str_index, tinyusb_interface_protocol, tinyusb_hid_device_descriptor_len, ep_out, (uint8_t)(0x80 | ep_in), 64, 1)
+    TUD_HID_INOUT_DESCRIPTOR(*itf, str_index, tinyusb_interface_protocol, tinyusb_hid_device_descriptor_len, ep_out, (uint8_t)(0x80 | ep_in), CFG_TUD_ENDOINT_SIZE, 1)
   };
   *itf += 1;
   memcpy(dst, descriptor, TUD_HID_INOUT_DESC_LEN);
