@@ -141,7 +141,6 @@ void test_touch_read(void) {
   touch_value_t touch_unpressed[sizeof(TOUCH_GPIOS)];
   for (int i = 0; i < sizeof(TOUCH_GPIOS); i++) {
      touch_unpressed[i] = touchRead(TOUCH_GPIOS[i]);
-     Serial.printf("\nUNPRESSED for CH%d = %d", i, touch_unpressed[i]);
   }
 
   // TEST PRESS STATE
@@ -153,7 +152,6 @@ void test_touch_read(void) {
   touch_value_t touch_pressed[sizeof(TOUCH_GPIOS)];
   for (int k = 0; k < sizeof(TOUCH_GPIOS); k++) {
      touch_pressed[k] = touchRead(TOUCH_GPIOS[k]);
-     Serial.printf("\nPRESSED for CH%d = %d", k, touch_pressed[k]);
   }
 
   // COMPARE PRESSED > UNPRESSED
