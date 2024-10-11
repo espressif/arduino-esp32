@@ -58,11 +58,11 @@ void loop() {
     // Check if last fade was fade on
     if (fade_on) {
       ledcFadeWithInterrupt(LED_PIN, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
-      Serial.println("LED Fade off started.");
+      Serial.println("LED Fade on started.");
       fade_on = false;
     } else {
       ledcFadeWithInterrupt(LED_PIN, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
-      Serial.println("LED Fade on started.");
+      Serial.println("LED Fade off started.");
       fade_on = true;
     }
   }
