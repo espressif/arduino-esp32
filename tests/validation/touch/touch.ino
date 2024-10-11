@@ -135,8 +135,8 @@ void test_touch_read(void) {
 #else
     TEST_ASSERT_GREATER_THAN(PRESSED_VALUE, touchRead(TOUCH_GPIOS[k]));
 #endif
+  }
 #else //TOUCH V3
-
 //TEST RELEASE STATE
   touch_value_t touch_unpressed[sizeof(TOUCH_GPIOS)];
   for (int i = 0; i < sizeof(TOUCH_GPIOS); i++) {
