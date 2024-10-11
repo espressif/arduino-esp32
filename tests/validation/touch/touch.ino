@@ -19,10 +19,6 @@ uint8_t TOUCH_GPIOS[] = {4, 2, 15, 13, 12, 14, 27, 33, 32};
 
 #define NO_TOUCH_GPIO 25
 
-#define RELEASED_VALUE      75  //75+ read value to pass test
-#define PRESSED_VALUE       20  //20- read value to pass test
-#define INTERRUPT_THRESHOLD 40
-
 #elif (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3) 
 
 #define TEST_TOUCH_CHANNEL (12)  //14
@@ -50,7 +46,11 @@ uint8_t TOUCH_GPIOS[] = {2, 3, 4, 5, 6/*, 7, 8, 9, 10, 11, 12 ,13, 14, 15*/};
 #define NO_TOUCH_GPIO 17
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32
+#define RELEASED_VALUE      75  //75+ read value to pass test
+#define PRESSED_VALUE       20  //20- read value to pass test
+#define INTERRUPT_THRESHOLD 40
+#elif CONFIG_IDF_TARGET_ESP32S2
 #define RELEASED_VALUE      10000  //10000- read value to pass test
 #define PRESSED_VALUE       42000  //40000+ read value to pass test
 #define INTERRUPT_THRESHOLD 30000
