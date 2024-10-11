@@ -144,9 +144,9 @@ public:
 };
 
 extern TwoWire Wire;
-#if SOC_I2C_NUM > 1
+#if SOC_HP_I2C_NUM > 1
 extern TwoWire Wire1;
-#endif /* SOC_I2C_NUM */
+#endif /* SOC_HP_I2C_NUM */
 
 #endif /* SOC_I2C_SUPPORTED */
 #endif /* TwoWire_h */
