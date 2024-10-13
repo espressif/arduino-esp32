@@ -42,7 +42,8 @@ ZigbeeWindSpeedSensor zbWindSpeedSensor = ZigbeeWindSpeedSensor(WIND_SPEED_SENSO
 static void windspeed_sensor_value_update(void *arg) {
   for (;;) {
     // Read wind speed sensor value
-    float wssens_value = windspeedRead();
+    // float wssens_value = windspeedRead();
+    float wssens_value = 5.2;
     log_v("Wind speed sensor value: %.2fm/s", wssens_value);
     // Update windspeed value in Windspeed sensor EP
     zbWindSpeedSensor.setWindSpeed(wssens_value);
