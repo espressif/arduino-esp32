@@ -38,14 +38,14 @@
 
 ZigbeeWindSpeedSensor zbWindSpeedSensor = ZigbeeWindSpeedSensor(WIND_SPEED_SENSOR_ENDPOINT_NUMBER);
 
-/************************ Temp sensor *****************************/
+/************************ WindSpeed sensor *****************************/
 static void windspeed_sensor_value_update(void *arg) {
   for (;;) {
     // Read wind speed sensor value
-    float tsens_value = windspeedRead();
-    log_v("Temperature sensor value: %.2f°C", tsens_value);
+    float wssens_value = windspeedRead();
+    log_v("Wind speed sensor value: %.2fm/s", wssens_value);
     // Update windspeed value in Windspeed sensor EP
-    zbWindSpeedSensor.setWindspeed(tsens_value);
+    zbWindSpeedSensor.setWindspeed(wssens_value);
     delay(1000);
   }
 }
@@ -80,7 +80,7 @@ void setup() {
   xTaskCreate(windspeed_sensor_value_update, "wind_speed_sensor_update", 2048, NULL, 10, NULL);
 
   // Set reporting interval for windspeed measurement in seconds, must be called after Zigbee.begin()
-  // min_interval and max_interval in seconds, delta (temp change in °C)
+  // min_interval and max_interval in seconds, delta (WindSpeed change in °C)
   // if min = 1 and max = 0, reporting is sent only when windspeed changes by delta
   // if min = 0 and max = 10, reporting is sent every 10 seconds or windspeed changes by delta
   // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of windspeed change
