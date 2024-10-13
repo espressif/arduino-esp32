@@ -45,7 +45,7 @@ static void windspeed_sensor_value_update(void *arg) {
     float wssens_value = windspeedRead();
     log_v("Wind speed sensor value: %.2fm/s", wssens_value);
     // Update windspeed value in Windspeed sensor EP
-    zbWindSpeedSensor.setWindspeed(wssens_value);
+    zbWindSpeedSensor.setWindSpeed(wssens_value);
     delay(1000);
   }
 }
