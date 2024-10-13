@@ -14,8 +14,8 @@ ZigbeeWindSpeedSensor::ZigbeeWindSpeedSensor(uint8_t endpoint) : ZigbeeEP(endpoi
   };
 }
 
-static int16_t zb_windspeed_to_s16(float temp) {
-  return (int16_t)(temp * 100);
+static int16_t zb_windspeed_to_s16(float windspeed) {
+  return (int16_t)(windspeed * 100);
 }
 
 /** @brief Wind_Speed_Measurement cluster server attribute identifiers
@@ -29,19 +29,19 @@ typedef enum {
 void ZigbeeWindSpeedSensor::setMinMaxValue(float min, float max) {
   int16_t zb_min = zb_windspeed_to_s16(min);
   int16_t zb_max = zb_windspeed_to_s16(max);
-  esp_zb_attribute_list_t *temp_measure_cluster =
+  esp_zb_attribute_list_t *windspeed_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   // 
-  esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, (void *)&zb_min);
-  esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, (void *)&zb_max);
+  esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&zb_min);
+  esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&zb_max);
 }
 
 void ZigbeeWindSpeedSensor::setTolerance(float tolerance) {
   // Convert tolerance to ZCL uint16_t
   uint16_t zb_tolerance = (uint16_t)(tolerance * 100);
-  esp_zb_attribute_list_t *temp_measure_cluster =
+  esp_zb_attribute_list_t *windspeed_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_windspeed_meas_cluster_add_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
+  esp_zb_windspeed_meas_cluster_add_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
 }
 
 void ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
@@ -50,7 +50,6 @@ void ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_int
     .ep = _endpoint,
     .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT,
     .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-    //.attr_id = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
     .attr_id = ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_ID,
     .u =
       {
