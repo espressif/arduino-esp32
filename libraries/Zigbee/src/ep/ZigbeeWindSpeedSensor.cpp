@@ -74,7 +74,7 @@ void ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_int
   esp_zb_zcl_update_reporting_info(&reporting_info);
 }
 
-void ZigbeeWindSpeedSensor::setWindspeed(float windspeed) {
+void ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
   int16_t zb_windspeed = zb_windspeed_to_s16(windspeed);
   log_v("Updating windspeed sensor value...");
   /* Update windspeed sensor measured value */
@@ -86,7 +86,7 @@ void ZigbeeWindSpeedSensor::setWindspeed(float windspeed) {
   esp_zb_lock_release();
 }
 
-void ZigbeeWindSpeedSensor::reportWindspeed() {
+void ZigbeeWindSpeedSensor::reportWindSpeed() {
   /* Send report attributes command */
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
