@@ -251,6 +251,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeSwitch.cpp
   libraries/Zigbee/src/ep/ZigbeeTempSensor.cpp
   libraries/Zigbee/src/ep/ZigbeeThermostat.cpp
+  libraries/Zigbee/src/ep/ZigbeeWindSpeedSensor.cpp
   )
 
 set(ARDUINO_LIBRARY_BLE_SRCS
