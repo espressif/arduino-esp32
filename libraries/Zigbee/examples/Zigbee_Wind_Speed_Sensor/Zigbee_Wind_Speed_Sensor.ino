@@ -101,7 +101,7 @@ void loop() {
         Zigbee.factoryReset();
       }
     }
-    zbWindSpeedSensor.reportWindspeed();
+    zbWindSpeedSensor.reportWindSpeed();
   }
   delay(100);
 }
