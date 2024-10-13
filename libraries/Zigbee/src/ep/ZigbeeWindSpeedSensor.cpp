@@ -1,4 +1,4 @@
-#include "ZigbeeTempSensor.h"
+#include "ZigbeeWindSpeedSensor.h"
 #if SOC_IEEE802154_SUPPORTED
 
 // CLUSTER_FN_ENTRY(wind_speed_measurement, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT),
