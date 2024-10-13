@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee temperature sensor.
+ * @brief This example demonstrates Zigbee windspeed sensor.
  *
  * The example demonstrates how to use Zigbee library to create a end device wind speed sensor.
  * The wind speed sensor is a Zigbee end device, which is controlled by a Zigbee coordinator.
@@ -34,17 +34,17 @@
 #include "ep/ZigbeeWindSpeedSensor.h"
 
 #define BUTTON_PIN                  9  //Boot button for C6/H2
-#define TEMP_SENSOR_ENDPOINT_NUMBER 10
+#define WIND_SPEED_SENSOR_ENDPOINT_NUMBER 10
 
-ZigbeeWindSpeedSensor zbWindSpeedSensor = ZigbeeWindSpeedSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
+ZigbeeWindSpeedSensor zbWindSpeedSensor = ZigbeeWindSpeedSensor(WIND_SPEED_SENSOR_ENDPOINT_NUMBER);
 
 /************************ Temp sensor *****************************/
 static void windspeed_sensor_value_update(void *arg) {
   for (;;) {
-    // Read temperature sensor value
-    float tsens_value = temperatureRead();
+    // Read wind speed sensor value
+    float tsens_value = windspeedRead();
     log_v("Temperature sensor value: %.2f°C", tsens_value);
-    // Update temperature value in Temperature sensor EP
+    // Update windspeed value in Windspeed sensor EP
     zbWindSpeedSensor.setWindspeed(tsens_value);
     delay(1000);
   }
@@ -64,10 +64,10 @@ void setup() {
   // Optional: set Zigbee device name and model
   zbWindSpeedSensor.setManufacturerAndModel("Espressif", "ZigbeeWindSpeedSensor");
 
-  // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
+  // Set minimum and maximum windspeed measurement value (10-50°C is default range for chip windspeed measurement)
   zbWindSpeedSensor.setMinMaxValue(10, 50);
 
-  // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
+  // Set tolerance for windspeed measurement in °C (lowest possible value is 0.01°C)
   zbWindSpeedSensor.setTolerance(1);
 
   // Add endpoint to Zigbee Core
@@ -79,11 +79,11 @@ void setup() {
   // Start Wind speed sensor reading task
   xTaskCreate(windspeed_sensor_value_update, "wind_speed_sensor_update", 2048, NULL, 10, NULL);
 
-  // Set reporting interval for temperature measurement in seconds, must be called after Zigbee.begin()
+  // Set reporting interval for windspeed measurement in seconds, must be called after Zigbee.begin()
   // min_interval and max_interval in seconds, delta (temp change in °C)
-  // if min = 1 and max = 0, reporting is sent only when temperature changes by delta
-  // if min = 0 and max = 10, reporting is sent every 10 seconds or temperature changes by delta
-  // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of temperature change
+  // if min = 1 and max = 0, reporting is sent only when windspeed changes by delta
+  // if min = 0 and max = 10, reporting is sent every 10 seconds or windspeed changes by delta
+  // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of windspeed change
   zbWindSpeedSensor.setReporting(1, 0, 1);
 }
 
