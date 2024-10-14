@@ -24,7 +24,7 @@
 
 #include "WiFi.h"
 #include "WiFiGeneric.h"
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 extern "C" {
 #include <stdint.h>
@@ -39,7 +39,9 @@ extern "C" {
 #include <esp_event.h>
 #include <esp_mac.h>
 #include <esp_netif.h>
+#if SOC_WIFI_SUPPORTED
 #include <esp_phy.h>
+#endif
 #include "lwip/ip_addr.h"
 #include "lwip/opt.h"
 #include "lwip/err.h"
@@ -103,6 +105,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
     arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
     memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
 
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
     /*
 	 * SMART CONFIG
 	 * */
@@ -157,6 +160,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
   } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_WIFI_CRED_SUCCESS) {
     log_v("Provisioning Success!");
     arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_SUCCESS;
+#endif
   }
 
   if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
@@ -170,6 +174,7 @@ static bool initWiFiEvents() {
     return false;
   }
 
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
   if (esp_event_handler_instance_register(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
     log_e("event_handler_instance_register for SC_EVENT Failed!");
     return false;
@@ -179,6 +184,7 @@ static bool initWiFiEvents() {
     log_e("event_handler_instance_register for NETWORK_PROV_EVENT Failed!");
     return false;
   }
+#endif
 
   return true;
 }
@@ -189,6 +195,7 @@ static bool deinitWiFiEvents() {
     return false;
   }
 
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
   if (esp_event_handler_unregister(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
     log_e("esp_event_handler_unregister for SC_EVENT Failed!");
     return false;
@@ -198,6 +205,7 @@ static bool deinitWiFiEvents() {
     log_e("esp_event_handler_unregister for NETWORK_PROV_EVENT Failed!");
     return false;
   }
+#endif
 
   return true;
 }
@@ -370,6 +378,7 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
   // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
   if (event->event_id == ARDUINO_EVENT_WIFI_SCAN_DONE) {
     WiFiScanClass::_scanDone();
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
   } else if (event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
     WiFi.begin(
       (const char *)event->event_info.sc_got_ssid_pswd.ssid, (const char *)event->event_info.sc_got_ssid_pswd.password, 0,
@@ -378,6 +387,7 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
   } else if (event->event_id == ARDUINO_EVENT_SC_SEND_ACK_DONE) {
     esp_smartconfig_stop();
     WiFiSTAClass::_smartConfigDone = true;
+#endif
   }
 }
 
@@ -693,6 +703,7 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
  * @return true on success
  */
 bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode) {
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
 
   esp_phy_ant_gpio_config_t wifi_ant_io;
 
@@ -759,7 +770,7 @@ set_ant:
     log_e("Failed to set antenna configuration");
     return false;
   }
-
+#endif
   return true;
 }
 

@@ -24,7 +24,7 @@
  */
 
 #include "WiFiMulti.h"
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 #include <limits.h>
 #include <string.h>
 #include <esp32-hal.h>
