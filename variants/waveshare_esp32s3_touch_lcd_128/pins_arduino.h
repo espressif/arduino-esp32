@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 
-#define USB_VID          0x1A86
-#define USB_PID          0x55D3
+#define USB_VID          0x303a
+#define USB_PID          0x8281
 #define USB_MANUFACTURER "Waveshare"
-#define USB_PRODUCT      "ESP32-S3 Touch LCD 1.28"
+#define USB_PRODUCT      "ESP32-S3-Touch-LCD-1.28"
 #define USB_SERIAL       ""  // Empty string for MAC address
 
 #define LCD_BACKLIGHT 2
