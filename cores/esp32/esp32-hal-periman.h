@@ -79,12 +79,15 @@ typedef enum {
   ESP32_BUS_TYPE_SPI_MASTER_SS,    // IO is used as SPI master SS pin
 #endif
 #if SOC_SDMMC_HOST_SUPPORTED
-  ESP32_BUS_TYPE_SDMMC_CLK,  // IO is used as SDMMC CLK pin
-  ESP32_BUS_TYPE_SDMMC_CMD,  // IO is used as SDMMC CMD pin
-  ESP32_BUS_TYPE_SDMMC_D0,   // IO is used as SDMMC D0 pin
-  ESP32_BUS_TYPE_SDMMC_D1,   // IO is used as SDMMC D1 pin
-  ESP32_BUS_TYPE_SDMMC_D2,   // IO is used as SDMMC D2 pin
-  ESP32_BUS_TYPE_SDMMC_D3,   // IO is used as SDMMC D3 pin
+  ESP32_BUS_TYPE_SDMMC_CLK,   // IO is used as SDMMC CLK pin
+  ESP32_BUS_TYPE_SDMMC_CMD,   // IO is used as SDMMC CMD pin
+  ESP32_BUS_TYPE_SDMMC_D0,    // IO is used as SDMMC D0 pin
+  ESP32_BUS_TYPE_SDMMC_D1,    // IO is used as SDMMC D1 pin
+  ESP32_BUS_TYPE_SDMMC_D2,    // IO is used as SDMMC D2 pin
+  ESP32_BUS_TYPE_SDMMC_D3,    // IO is used as SDMMC D3 pin
+#if SOC_SDMMC_IO_POWER_EXTERNAL
+  ESP32_BUS_TYPE_SDMMC_POWER, // IO is used as SDMMC POWER pin
+#endif
 #endif
 #if SOC_TOUCH_SENSOR_SUPPORTED
   ESP32_BUS_TYPE_TOUCH,  // IO is used as TOUCH pin
