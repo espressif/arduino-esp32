@@ -14,7 +14,7 @@
  * Connections for     ║   ║   ╔═══╩═║═║═══╗   ║  ║    ║
  * full-sized          ║   ║   ║   ╔═╝ ║   ║   ║  ║    ║
  * SD card             ║   ║   ║   ║   ║   ║   ║  ║    ║
- * ESP32-P4 Func EV | 40  39  GND  43 3V3 GND  44 43  42  |
+ * ESP32-P4 Func EV | 40  39  GND  43 3V3 GND  44 43  42  | + POWER (4)
  * ESP32-S3 DevKit  | 21  47  GND  39 3V3 GND  40 41  42  |
  * ESP32-S3-USB-OTG | 38  37  GND  36 3V3 GND  35 34  33  |
  * ESP32            |  4   2  GND  14 3V3 GND  15 13  12  |
