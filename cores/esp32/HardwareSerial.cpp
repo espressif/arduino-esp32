@@ -24,17 +24,22 @@
 #endif
 
 void serialEvent(void) __attribute__((weak));
-void serialEvent(void) {}
 
 #if SOC_UART_HP_NUM > 1
 void serialEvent1(void) __attribute__((weak));
-void serialEvent1(void) {}
 #endif /* SOC_UART_HP_NUM > 1 */
 
 #if SOC_UART_HP_NUM > 2
 void serialEvent2(void) __attribute__((weak));
-void serialEvent2(void) {}
 #endif /* SOC_UART_HP_NUM > 2 */
+
+#if SOC_UART_HP_NUM > 3
+void serialEvent3(void) __attribute__((weak));
+#endif /* SOC_UART_HP_NUM > 3 */
+
+#if SOC_UART_HP_NUM > 4
+void serialEvent4(void) __attribute__((weak));
+#endif /* SOC_UART_HP_NUM > 4 */
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 // There is always Seria0 for UART0
@@ -45,41 +50,55 @@ HardwareSerial Serial1(1);
 #if SOC_UART_HP_NUM > 2
 HardwareSerial Serial2(2);
 #endif
+#if SOC_UART_HP_NUM > 3
+HardwareSerial Serial3(3);
+#endif
+#if SOC_UART_HP_NUM > 4
+HardwareSerial Serial4(4);
+#endif
 
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
 extern void HWCDCSerialEvent(void) __attribute__((weak));
-void HWCDCSerialEvent(void) {}
 #endif
 
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
 extern void USBSerialEvent(void) __attribute__((weak));
-void USBSerialEvent(void) {}
 #endif
 
 void serialEventRun(void) {
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
-  if (HWCDCSerial.available()) {
+  if (HWCDCSerialEvent && HWCDCSerial.available()) {
     HWCDCSerialEvent();
   }
 #endif
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
-  if (USBSerial.available()) {
+  if (USBSerialEvent && USBSerial.available()) {
     USBSerialEvent();
   }
 #endif
   // UART0 is default serialEvent()
-  if (Serial0.available()) {
+  if (serialEvent && Serial0.available()) {
     serialEvent();
   }
 #if SOC_UART_HP_NUM > 1
-  if (Serial1.available()) {
+  if (serialEvent1 && Serial1.available()) {
     serialEvent1();
   }
 #endif
 #if SOC_UART_HP_NUM > 2
-  if (Serial2.available()) {
+  if (serialEvent2 && Serial2.available()) {
     serialEvent2();
+  }
+#endif
+#if SOC_UART_HP_NUM > 3
+  if (serialEvent3 && Serial3.available()) {
+    serialEvent3();
+  }
+#endif
+#if SOC_UART_HP_NUM > 4
+  if (serialEvent4 && Serial4.available()) {
+    serialEvent4();
   }
 #endif
 }

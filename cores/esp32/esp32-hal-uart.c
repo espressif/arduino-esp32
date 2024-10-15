@@ -67,6 +67,12 @@ static uart_t _uart_bus_array[] = {
 #if SOC_UART_HP_NUM > 2
   {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
+#if SOC_UART_HP_NUM > 3
+  {3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+#endif
+#if SOC_UART_HP_NUM > 4
+  {4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+#endif
 };
 
 #else
@@ -86,6 +92,12 @@ static uart_t _uart_bus_array[] = {
 #endif
 #if SOC_UART_HP_NUM > 2
   {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+#endif
+#if SOC_UART_HP_NUM > 3
+  {NULL, 3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+#endif
+#if SOC_UART_HP_NUM > 4
+  {NULL, 4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 };
 
@@ -835,6 +847,20 @@ static void ARDUINO_ISR_ATTR uart2_write_char(char c) {
 }
 #endif
 
+#if SOC_UART_HP_NUM > 3
+static void ARDUINO_ISR_ATTR uart3_write_char(char c) {
+  while (uart_ll_get_txfifo_len(&UART3) == 0);
+  uart_ll_write_txfifo(&UART3, (const uint8_t *)&c, 1);
+}
+#endif
+
+#if SOC_UART_HP_NUM > 4
+static void ARDUINO_ISR_ATTR uart4_write_char(char c) {
+  while (uart_ll_get_txfifo_len(&UART4) == 0);
+  uart_ll_write_txfifo(&UART4, (const uint8_t *)&c, 1);
+}
+#endif
+
 void uart_install_putc() {
   switch (s_uart_debug_nr) {
     case 0: ets_install_putc1((void (*)(char)) & uart0_write_char); break;
@@ -843,6 +869,12 @@ void uart_install_putc() {
 #endif
 #if SOC_UART_HP_NUM > 2
     case 2: ets_install_putc1((void (*)(char)) & uart2_write_char); break;
+#endif
+#if SOC_UART_HP_NUM > 3
+    case 3: ets_install_putc1((void (*)(char)) & uart3_write_char); break;
+#endif
+#if SOC_UART_HP_NUM > 4
+    case 4: ets_install_putc1((void (*)(char)) & uart4_write_char); break;
 #endif
     default: ets_install_putc1(NULL); break;
   }
