@@ -56,11 +56,11 @@ dependencies:
   espressif/esp-zboss-lib:
     version: "^1.0.1"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/esp-zigbee-lib:
     version: "^1.0.1"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/esp-dsp:
     version: "^1.3.4"
     rules:
@@ -68,23 +68,31 @@ dependencies:
   espressif/esp_rainmaker:
     version: "^1.0.0"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/rmaker_common:
     version: "^1.4.6"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/esp_insights:
     version: "^1.2.1"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/qrcode:
     version: "^0.1.0~1"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/esp-sr:
     version: "^1.4.2"
     rules:
       - if: "target in [esp32s3]"
+  espressif/esp_hosted:
+    version: "^0.0.22"
+    rules:
+      - if: "target == esp32p4"
+  espressif/esp_wifi_remote:
+    version: "^0.4.1"
+    rules:
+      - if: "target == esp32p4"
   espressif/libsodium:
     version: "^1.0.20~1"
     require: public

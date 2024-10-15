@@ -26,7 +26,7 @@
 #pragma once
 
 #include "soc/soc_caps.h"
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 #include "WiFi.h"
 #include <vector>
