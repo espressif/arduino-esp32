@@ -5,7 +5,7 @@
 #include "soc/soc_caps.h"
 
 #define USB_VID          0x303A
-#define USB_PID          0x8299
+#define USB_PID          0x1001
 #define USB_MANUFACTURER "RFtek Electronics"
 #define USB_PRODUCT      "cezerio dev ESP32C6"
 #define USB_SERIAL       ""
