@@ -74,7 +74,7 @@ dependencies:
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/esp_insights:
-    version: "^1.0.1"
+    version: "^1.2.1"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/qrcode:
