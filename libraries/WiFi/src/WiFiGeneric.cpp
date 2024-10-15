@@ -233,9 +233,41 @@ void WiFiGenericClass::useStaticBuffers(bool bufferMode) {
 extern "C" void phy_bbpll_en_usb(bool en);
 #endif
 
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+extern "C" esp_err_t esp_hosted_init(void *);
+
+static bool wifiHostedInit() {
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    if (esp_hosted_init(NULL) != ESP_OK) {
+      log_e("esp_hosted_init failed!");
+      return false;
+    }
+  }
+  // Attach pins to periman here
+  // Slave chip model is CONFIG_IDF_SLAVE_TARGET
+  // CONFIG_ESP_SDIO_PIN_CMD
+  // CONFIG_ESP_SDIO_PIN_CLK
+  // CONFIG_ESP_SDIO_PIN_D0
+  // CONFIG_ESP_SDIO_PIN_D1
+  // CONFIG_ESP_SDIO_PIN_D2
+  // CONFIG_ESP_SDIO_PIN_D3
+  // CONFIG_ESP_SDIO_GPIO_RESET_SLAVE
+
+  return true;
+}
+#endif
+
 bool wifiLowLevelInit(bool persistent) {
   if (!lowLevelInitDone) {
     lowLevelInitDone = true;
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+    if (!wifiHostedInit()) {
+      lowLevelInitDone = false;
+      return lowLevelInitDone;
+    }
+#endif
     if (!Network.begin()) {
       lowLevelInitDone = false;
       return lowLevelInitDone;

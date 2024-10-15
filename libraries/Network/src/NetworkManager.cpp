@@ -10,10 +10,6 @@
 #include "esp_mac.h"
 #include "netdb.h"
 
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
-extern "C" esp_err_t esp_hosted_init(void *);
-#endif
-
 NetworkManager::NetworkManager() {}
 
 NetworkInterface *getNetifByID(Network_Interface_ID id);
@@ -22,9 +18,6 @@ bool NetworkManager::begin() {
   static bool initialized = false;
   if (!initialized) {
     initialized = true;
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
-    esp_hosted_init(NULL);
-#endif
 #if CONFIG_IDF_TARGET_ESP32
     uint8_t mac[8];
     if (esp_efuse_mac_get_default(mac) == ESP_OK) {
