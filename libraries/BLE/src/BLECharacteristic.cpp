@@ -471,8 +471,21 @@ void BLECharacteristic::notify(bool is_notification) {
 
   m_pCallbacks->onNotify(this);  // Invoke the notify callback.
 
+  // GeneralUtils::hexDump() doesn't output anything if the log level is not
+  // "VERBOSE". Additionally, it is very CPU intensive, even when it doesn't
+  // output anything! So it is much better to *not* call it at all if not needed.
+  // In a simple program which calls BLECharacteristic::notify() every 50 ms,
+  // the performance gain of this little optimization is 37% in release mode
+  // (-O3) and 57% in debug mode.
+  // Of course, the "#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE" guard
+  // could also be put inside the GeneralUtils::hexDump() function itself. But
+  // it's better to put it here also, as it is clearer (indicating a verbose log
+  // thing) and it allows to remove the "m_value.getValue().c_str()" call, which
+  // is, in itself, quite CPU intensive.
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE  
   GeneralUtils::hexDump((uint8_t *)m_value.getValue().c_str(), m_value.getValue().length());
-
+#endif
+  
   if (getService()->getServer()->getConnectedCount() == 0) {
     log_v("<< notify: No connected clients.");
     m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NO_CLIENT, 0);
