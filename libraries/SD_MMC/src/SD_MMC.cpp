@@ -204,16 +204,16 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   _mode1bit = mode1bit;
 
 #ifdef SOC_SDMMC_IO_POWER_EXTERNAL
-    sd_pwr_ctrl_ldo_config_t ldo_config = {
-        .ldo_chan_id = _pin_power,
-    };
-    sd_pwr_ctrl_handle_t pwr_ctrl_handle = NULL;
+  sd_pwr_ctrl_ldo_config_t ldo_config = {
+    .ldo_chan_id = _pin_power,
+  };
+  sd_pwr_ctrl_handle_t pwr_ctrl_handle = NULL;
 
-    if(sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle) != ESP_OK) {
-        log_e("Failed to create a new on-chip LDO power control driver");
-        return false;
-    }
-    host.pwr_ctrl_handle = pwr_ctrl_handle;
+  if (sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle) != ESP_OK) {
+    log_e("Failed to create a new on-chip LDO power control driver");
+    return false;
+  }
+  host.pwr_ctrl_handle = pwr_ctrl_handle;
 #endif
 
   esp_vfs_fat_sdmmc_mount_config_t mount_config = {
@@ -263,7 +263,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   }
 #ifdef SOC_SDMMC_IO_POWER_EXTERNAL
   if (!perimanSetPinBus(_pin_power, ESP32_BUS_TYPE_SDMMC_POWER, (void *)(this), -1, -1)) {
-      goto err;
+    goto err;
   }
 #endif
   return true;

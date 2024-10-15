@@ -55,8 +55,8 @@ int cmd = 35;
 int d0 = 37;
 int d1 = 38;
 int d2 = 33;
-int d3 = 39;  // GPIO 34 is not broken-out on ESP32-S3-DevKitC-1 v1.1
-int power = -1; // SDMMC IO power controlled internally
+int d3 = 39;     // GPIO 34 is not broken-out on ESP32-S3-DevKitC-1 v1.1
+int power = -1;  // SDMMC IO power controlled internally
 
 #elif CONFIG_IDF_TARGET_ESP32P4
 // Pin definition for ESP32-P4 Function EV board V1.4
@@ -235,7 +235,7 @@ void setup() {
     //    return;
     //}
   */
-  
+
   if (!SD_MMC.begin()) {
     Serial.println("Card Mount Failed");
     return;
@@ -279,4 +279,4 @@ void setup() {
 
 void loop() {
   delay(10);
-  }
+}
