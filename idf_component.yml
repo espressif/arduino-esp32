@@ -85,8 +85,12 @@ dependencies:
     version: "^1.4.2"
     rules:
       - if: "target in [esp32s3]"
+  espressif/esp_hosted:
+    version: "^0.0.22"
+    rules:
+      - if: "target == esp32p4"
   espressif/esp_wifi_remote:
-    version: "*"
+    version: "^0.4.1"
     rules:
       - if: "target == esp32p4"
   espressif/libsodium:
