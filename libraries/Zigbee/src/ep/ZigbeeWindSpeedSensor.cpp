@@ -1,16 +1,15 @@
 #include "ZigbeeWindSpeedSensor.h"
 #if SOC_IEEE802154_SUPPORTED
 
-// CLUSTER_FN_ENTRY(wind_speed_measurement, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT),
-
+// There is no device_id for wind speed sensor, we use a generic one
 ZigbeeWindSpeedSensor::ZigbeeWindSpeedSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID;
+  _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
 
   esp_zb_windspeed_sensor_cfg_t windspeed_sensor_cfg = ESP_ZB_DEFAULT_TEMPERATURE_SENSOR_CONFIG();
   _cluster_list = esp_zb_windspeed_sensor_clusters_create(&windspeed_sensor_cfg);
 
   _ep_config = {
-    .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID, .app_device_version = 0
+    .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0
   };
 }
 
