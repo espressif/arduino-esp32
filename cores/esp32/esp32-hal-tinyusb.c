@@ -287,15 +287,14 @@ enum {
   VENDOR_REQUEST_MICROSOFT = 2
 };
 
-static uint8_t const tinyusb_bos_descriptor[] = {
-  // total length, number of device caps
-  TUD_BOS_DESCRIPTOR(BOS_TOTAL_LEN, 2),
+static uint8_t const tinyusb_bos_descriptor[] = {// total length, number of device caps
+                                                 TUD_BOS_DESCRIPTOR(BOS_TOTAL_LEN, 2),
 
-  // Vendor Code, iLandingPage
-  TUD_BOS_WEBUSB_DESCRIPTOR(VENDOR_REQUEST_WEBUSB, 1),
+                                                 // Vendor Code, iLandingPage
+                                                 TUD_BOS_WEBUSB_DESCRIPTOR(VENDOR_REQUEST_WEBUSB, 1),
 
-  // Microsoft OS 2.0 descriptor
-  TUD_BOS_MS_OS_20_DESCRIPTOR(MS_OS_20_DESC_LEN, VENDOR_REQUEST_MICROSOFT)
+                                                 // Microsoft OS 2.0 descriptor
+                                                 TUD_BOS_MS_OS_20_DESCRIPTOR(MS_OS_20_DESC_LEN, VENDOR_REQUEST_MICROSOFT)
 };
 
 /*
@@ -831,7 +830,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
   }
 #endif
-  
+
   tinyusb_config_t tusb_cfg = {
     .external_phy = false  // In the most cases you need to use a `false` value
   };
