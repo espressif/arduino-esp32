@@ -1,6 +1,6 @@
 {
-  "targets": {
-    "esp32c3": false,
-    "esp32s2": false
-  }
+  "requires": [
+    "CONFIG_BT_ENABLED=y",
+    "CONFIG_BLUEDROID_ENABLED=y"
+  ]
 }

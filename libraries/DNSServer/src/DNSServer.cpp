@@ -22,10 +22,13 @@ bool DNSServer::start() {
 #if SOC_WIFI_SUPPORTED
     if (WiFi.getMode() & WIFI_AP) {
       _resolvedIP = WiFi.softAPIP();
-      return true;
+    } else {
+      return false;  // won't run if WiFi is not in AP mode, or no WiFi
     }
+#else
+    return false;  // for other non WiFi-AP networking an overloaded method must be used to get device's IP
+                   // start(uint16_t port, const String &domainName, const IPAddress &resolvedIP)
 #endif
-    return false;  // won't run if WiFi is not in AP mode
   }
 
   _udp.close();

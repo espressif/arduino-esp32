@@ -24,16 +24,13 @@
 #endif
 
 void serialEvent(void) __attribute__((weak));
-void serialEvent(void) {}
 
 #if SOC_UART_NUM > 1
 void serialEvent1(void) __attribute__((weak));
-void serialEvent1(void) {}
 #endif /* SOC_UART_NUM > 1 */
 
 #if SOC_UART_NUM > 2
 void serialEvent2(void) __attribute__((weak));
-void serialEvent2(void) {}
 #endif /* SOC_UART_NUM > 2 */
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
@@ -48,37 +45,35 @@ HardwareSerial Serial2(2);
 
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
 extern void HWCDCSerialEvent(void) __attribute__((weak));
-void HWCDCSerialEvent(void) {}
 #endif
 
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
 extern void USBSerialEvent(void) __attribute__((weak));
-void USBSerialEvent(void) {}
 #endif
 
 void serialEventRun(void) {
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
-  if (HWCDCSerial.available()) {
+  if (HWCDCSerialEvent && HWCDCSerial.available()) {
     HWCDCSerialEvent();
   }
 #endif
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
-  if (USBSerial.available()) {
+  if (USBSerialEvent && USBSerial.available()) {
     USBSerialEvent();
   }
 #endif
   // UART0 is default serialEvent()
-  if (Serial0.available()) {
+  if (serialEvent && Serial0.available()) {
     serialEvent();
   }
 #if SOC_UART_NUM > 1
-  if (Serial1.available()) {
+  if (serialEvent1 && Serial1.available()) {
     serialEvent1();
   }
 #endif
 #if SOC_UART_NUM > 2
-  if (Serial2.available()) {
+  if (serialEvent2 && Serial2.available()) {
     serialEvent2();
   }
 #endif
@@ -291,6 +286,10 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
   }
 #endif
 
+  // map logical pins to GPIO numbers
+  rxPin = digitalPinToGPIONumber(rxPin);
+  txPin = digitalPinToGPIONumber(txPin);
+
   HSERIAL_MUTEX_LOCK();
   // First Time or after end() --> set default Pins
   if (!uartIsDriverInstalled(_uart)) {
@@ -326,9 +325,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     }
   }
 
-  // map logical pins to GPIO numbers
-  rxPin = digitalPinToGPIONumber(rxPin);
-  txPin = digitalPinToGPIONumber(txPin);
   // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
   // it will detach previous UART attached pins
 

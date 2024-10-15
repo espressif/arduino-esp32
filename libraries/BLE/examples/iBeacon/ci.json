@@ -1,5 +1,5 @@
 {
-  "targets": {
-    "esp32s2": false
-  }
+  "requires": [
+    "CONFIG_SOC_BLE_SUPPORTED=y"
+  ]
 }

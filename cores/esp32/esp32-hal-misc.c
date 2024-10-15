@@ -24,6 +24,7 @@
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
 #include "esp_ota_ops.h"
 #endif  //CONFIG_APP_ROLLBACK_ENABLE
+#include "esp_private/startup_internal.h"
 #ifdef CONFIG_BT_ENABLED
 #include "esp_bt.h"
 #endif  //CONFIG_BT_ENABLED
@@ -249,11 +250,20 @@ extern bool btInUse();
 #endif
 #endif
 
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
+ESP_SYSTEM_INIT_FN(init_psram_new, BIT(0), 99) {
+  psramInit();
+  return ESP_OK;
+}
+#endif
+
 void initArduino() {
   //init proper ref tick value for PLL (uncomment if REF_TICK is different than 1MHz)
   //ESP_REG(APB_CTRL_PLL_TICK_CONF_REG) = APB_CLK_FREQ / REF_CLK_FREQ - 1;
 #if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
-  psramInit();
+#ifndef CONFIG_SPIRAM_BOOT_INIT
+  psramAddToHeap();
+#endif
 #endif
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
   if (!verifyRollbackLater()) {

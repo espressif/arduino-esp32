@@ -646,6 +646,8 @@ void TwoWire::onRequestService(uint8_t num, void *arg) {
 #endif /* SOC_I2C_SUPPORT_SLAVE */
 
 TwoWire Wire = TwoWire(0);
+#if SOC_I2C_NUM > 1
 TwoWire Wire1 = TwoWire(1);
+#endif /* SOC_I2C_NUM */
 
 #endif /* SOC_I2C_SUPPORTED */

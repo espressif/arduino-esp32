@@ -1,0 +1,14 @@
+{
+  "platforms": {
+    "qemu": false,
+    "wokwi": false
+  },
+  "requires": [
+    "CONFIG_SPIRAM=y"
+  ],
+  "targets": {
+    "esp32c3": false,
+    "esp32c6": false,
+    "esp32h2": false
+  }
+}
