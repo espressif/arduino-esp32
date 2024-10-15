@@ -173,10 +173,15 @@ void deinit_usb_hal() {
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
   init_usb_hal(config->external_phy);
+  tusb_rhport_init_t tinit;
+  memset(&tinit, 0, sizeof(tusb_rhport_init_t));
+  tinit.role = TUSB_ROLE_DEVICE;
 #if CONFIG_IDF_TARGET_ESP32P4
-  if (!tusb_init(1, TUSB_ROLE_DEVICE)) {
+  tinit.speed = TUSB_SPEED_HIGH;
+  if (!tusb_init(1, &tinit)) {
 #else
-  if (!tusb_init(0, TUSB_ROLE_DEVICE)) {
+  tinit.speed = TUSB_SPEED_FULL;
+  if (!tusb_init(0, &tinit)) {
 #endif
     log_e("Can't initialize the TinyUSB stack.");
     return ESP_FAIL;
