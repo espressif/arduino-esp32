@@ -1,5 +1,5 @@
-#include <sdkconfig.h>
-#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
+//#include <sdkconfig.h>
+//#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 #include <Arduino.h>
 #include <WiFi.h>
 
@@ -68,7 +68,7 @@ void loop() {
   Serial.println("Matter Node is decommissioned. Commsssioning widget shall start over.");
 }
 
-#else
-void setup() {}
-void loop() {}
-#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
+//#else
+//void setup() {}
+//void loop() {}
+//#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
