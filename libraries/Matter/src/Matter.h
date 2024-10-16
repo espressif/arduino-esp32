@@ -1,6 +1,4 @@
 #pragma once
-#include <sdkconfig.h>
-#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Arduino.h>
 #include <esp_matter.h>
@@ -31,5 +29,3 @@ class ArduinoMatter {
 };
 
 extern ArduinoMatter Matter;
-
-#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

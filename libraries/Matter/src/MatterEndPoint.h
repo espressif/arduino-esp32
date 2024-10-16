@@ -1,7 +1,4 @@
 #pragma once
-#include <sdkconfig.h>
-#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
-
 #include <Matter.h>
 #include <functional>
 
@@ -20,4 +17,3 @@ class MatterEndPoint {
   protected:
     uint16_t endpoint_id = 0;
 };
-#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
