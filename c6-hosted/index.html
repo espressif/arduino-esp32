@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>ESP32-C6 SDIO-Hosted</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.19.0/css/xterm.css">
+        <link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet">
+        <link rel="icon" href="favicon.ee2246ac.ico">
+         <script src="https://cdn.jsdelivr.net/npm/xterm@4.19.0/lib/xterm.min.js"></script>
+         <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <h1 align="center"><p><img src="esp-logo.e558125a.png" width="42" height="42" style="vertical-align: middle" crossorigin=""> ESP Tool</p></h1>
+        <h4 align="center">A Serial Flasher utility for Espressif chips</h4>
+        <div id="safariErr" style="display: none"><p align="center" style="color: red">This tool is not supported on Safari browser!</p>
+        </div>
+        <div class="container" id="main">
+            <hr>
+            <div id="program">
+
+                <h3> Program ESP32-C6 as SDIO ESP-Hosted adapter </h3>
+                <input class="btn btn-success" type="button" id="connectButton" value="Connect">
+                <input class="btn btn-primary" type="button" id="copyTraceButton" value="Copy Trace">
+                <input class="btn btn-danger" type="button" id="disconnectButton" value="Disconnect">
+                <input class="btn btn-warning" type="button" id="eraseButton" value="Erase Flash">
+                <input class="btn btn-warning" type="button" id="resetButton" value="Reset">
+                <label for="baudrates" id="lblBaudrate">Baudrate:</label>
+                <select name="baudrates" id="baudrates">
+                    <option value="921600">921600</option>
+                    <option value="460800">460800</option>
+                    <option value="230400">230400</option>
+                    <option value="115200">115200</option>
+                </select>
+                <br>
+                <label style="display: none" id="lblConnTo">Connected to device: </label>
+
+                <div id="files">
+                    <table class="table table-striped" id="fileTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="12%">Flash Address</th>
+                                <th width="30%">File</th>
+                                <th width="8%">Size</th>
+                                <th width="50%">Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                    <input class="btn btn-success" type="button" id="programButton" value="Program">
+                </div>
+
+                <output id="list"></output>
+
+            </div>
+            <div id="terminal"></div>
+        </div>
+        <script src="index.4e6113ae.js" type="module"></script>
+        <script>var isSafari = /constructor/i.test(window.HTMLElement) || function(p) {
+    return p.toString() === "[object SafariRemoteNotification]";
+}(!window["safari"] || typeof safari !== "undefined" && window["safari"].pushNotification);
+if (isSafari) {
+    document.getElementById("safariErr").style.display = "inline";
+    document.getElementById("main").style.display = "none";
+}
+
+</script>
+    </body>
+</html>
