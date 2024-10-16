@@ -221,9 +221,9 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 --build-cache-path "$ARDUINO_CACHE_DIR" \
                 --build-path "$build_dir" \
                 $xtra_opts "${sketchdir}" \
-                > $output_file
+                2>&1 | tee $output_file
 
-            exit_status=$?
+            exit_status=${PIPESTATUS[0]}
             if [ $exit_status -ne 0 ]; then
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
