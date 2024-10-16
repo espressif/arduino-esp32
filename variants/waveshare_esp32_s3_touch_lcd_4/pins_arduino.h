@@ -7,7 +7,7 @@
 
 // BN: ESP32 Family Device
 #define USB_VID 0x303a
-#define USB_PID 0x823D 
+#define USB_PID 0x823D
 
 #define USB_MANUFACTURER "Waveshare"
 #define USB_PRODUCT      "ESP32-S3-Touch-LCD-4"

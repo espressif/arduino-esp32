@@ -7,36 +7,36 @@
 
 // BN: ESP32 Family Device
 #define USB_VID 0x303a
-#define USB_PID 0x8237 
+#define USB_PID 0x8237
 
 #define USB_MANUFACTURER "Waveshare"
 #define USB_PRODUCT      "ESP32-S3-Touch-LCD-5"
 #define USB_SERIAL       ""
 
 // display for ST7262
-#define WS_LCD_B3  14
-#define WS_LCD_B4  38
-#define WS_LCD_B5  18
-#define WS_LCD_B6  17
-#define WS_LCD_B7  10
+#define WS_LCD_B3 14
+#define WS_LCD_B4 38
+#define WS_LCD_B5 18
+#define WS_LCD_B6 17
+#define WS_LCD_B7 10
 
-#define WS_LCD_G2  39
-#define WS_LCD_G3  0
-#define WS_LCD_G4  45
-#define WS_LCD_G5  48
-#define WS_LCD_G6  47
-#define WS_LCD_G7  21
+#define WS_LCD_G2 39
+#define WS_LCD_G3 0
+#define WS_LCD_G4 45
+#define WS_LCD_G5 48
+#define WS_LCD_G6 47
+#define WS_LCD_G7 21
 
-#define WS_LCD_R3  1
-#define WS_LCD_R4  2
-#define WS_LCD_R5  42
-#define WS_LCD_R6  41
-#define WS_LCD_R7  40
+#define WS_LCD_R3 1
+#define WS_LCD_R4 2
+#define WS_LCD_R5 42
+#define WS_LCD_R6 41
+#define WS_LCD_R7 40
 
-#define WS_LCD_VSYNC  3
-#define WS_LCD_HSYNC  46
-#define WS_LCD_PCLK   7
-#define WS_LCD_DE     5
+#define WS_LCD_VSYNC 3
+#define WS_LCD_HSYNC 46
+#define WS_LCD_PCLK  7
+#define WS_LCD_DE    5
 
 // Touch for gt911
 #define WS_TP_SDA 8
@@ -55,7 +55,6 @@
 //Onboard CH422G IO expander
 #define WS_CH422G_SDA 8
 #define WS_CH422G_SCL 9
-
 
 // UART0 pins
 static const uint8_t TX = 43;
