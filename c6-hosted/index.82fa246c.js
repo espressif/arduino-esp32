@@ -3556,7 +3556,14 @@ $382e02c9bbd5d50b$var$connectButton.onclick = async ()=>{
         }
     } catch (e) {
         console.error(e);
+        $382e02c9bbd5d50b$var$term.writeln("");
         $382e02c9bbd5d50b$var$term.writeln(`Error: ${e.message}`);
+        await $382e02c9bbd5d50b$var$transport.disconnect();
+        $382e02c9bbd5d50b$var$cleanUp();
+        $382e02c9bbd5d50b$var$lblBaudrate.style.display = "initial";
+        $382e02c9bbd5d50b$var$baudrates.style.display = "initial";
+        $382e02c9bbd5d50b$var$connectButton.style.display = "initial";
+        return;
     }
     console.log("Settings done for :" + $382e02c9bbd5d50b$var$chip);
     $382e02c9bbd5d50b$var$lblBaudrate.style.display = "none";
@@ -3682,4 +3689,4 @@ $382e02c9bbd5d50b$var$addFileForFlashing($382e02c9bbd5d50b$var$fileArray, "0xd00
 $382e02c9bbd5d50b$var$addFileForFlashing($382e02c9bbd5d50b$var$fileArray, "0x10000", "network_adapter.bin");
 
 
-//# sourceMappingURL=index.4e6113ae.js.map
+//# sourceMappingURL=index.82fa246c.js.map
