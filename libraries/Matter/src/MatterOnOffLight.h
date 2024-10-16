@@ -1,4 +1,6 @@
 #pragma once
+#include <sdkconfig.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
 #include <MatterEndPoint.h>
@@ -29,3 +31,4 @@ class MatterOnOffLight : public MatterEndPoint {
     bool state = false;   // default initial state is off, but it can be changed by begin(bool)
     EndPointCB _onChangeCB = NULL;
 };
+#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

@@ -1,3 +1,5 @@
+#include <sdkconfig.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 #include <Arduino.h>
 #include <WiFi.h>
 
@@ -96,3 +98,8 @@ void loop() {
   Serial.printf("Matter Light #3 is %s\r\n", OnOffLight3.getOnOff() ? "ON" : "OFF");
   delay(3000);
 }
+
+#else
+void setup() {}
+void loop() {}
+#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

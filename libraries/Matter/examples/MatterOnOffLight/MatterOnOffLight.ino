@@ -1,3 +1,5 @@
+#include <sdkconfig.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 #include <Arduino.h>
 #include <WiFi.h>
 
@@ -103,3 +105,8 @@ void loop() {
     OnOffLight.toggle();  // Matter Controller also can see the change
   }
 }
+
+#else
+void setup() {}
+void loop() {}
+#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
