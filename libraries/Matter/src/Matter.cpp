@@ -91,9 +91,8 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
   }
 }
 
-void ArduinoMatter::begin() {
+void ArduinoMatter::_init() {
   if (_matter_has_started) {
-    log_w("Matter has already started.");
     return;
   }
 
@@ -102,15 +101,15 @@ void ArduinoMatter::begin() {
   deviceNode = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
   if (deviceNode == nullptr) {
     log_e("Failed to create Matter node");
-    abort();
+    return;
   }
 
   _matter_has_started = true;
 }
 
-void ArduinoMatter::start() {
+void ArduinoMatter::begin() {
   if (!_matter_has_started) {
-    log_w("No Matter Node has been created. Execute Matter.begin() first.");
+    log_w("No Matter endpoint has been created. Please create an endpoint first.");
     return;
   }
 

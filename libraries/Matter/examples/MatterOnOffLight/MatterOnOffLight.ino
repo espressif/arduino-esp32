@@ -59,15 +59,12 @@ void setup() {
   Serial.println(WiFi.localIP());
   delay(500);
 
-  // Initialize Matter Node
-  Matter.begin();
-
   // Initialize Matter EndPoint
   OnOffLight.begin(true);
   OnOffLight.onChangeOnOff(setLightOnOff);
 
-  // Matter start - Last step, after all EndPoints are initialized
-  Matter.start();
+  // Matter begining - Last step, after all EndPoints are initialized
+  Matter.begin();
 }
 
 uint32_t lastMillis = millis();

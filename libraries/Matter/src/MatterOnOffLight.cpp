@@ -40,7 +40,7 @@ MatterOnOffLight::~MatterOnOffLight() {
 }
 
 bool MatterOnOffLight::begin(bool initialState) {
-
+  ArduinoMatter::_init();
   on_off_light::config_t light_config;
   light_config.on_off.on_off = initialState;
   state = initialState;
@@ -50,7 +50,7 @@ bool MatterOnOffLight::begin(bool initialState) {
   endpoint_t *endpoint = on_off_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *) this);
   if (endpoint == nullptr) {
     log_e("Failed to create on-off light endpoint");
-    abort();
+    return false;
   }
 
   setEndPointId(endpoint::get_id(endpoint));

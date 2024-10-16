@@ -39,13 +39,11 @@ void setup() {
   Serial.println(WiFi.localIP());
   delay(500);
 
-  // Initialize Matter Node
-  Matter.begin();
-  // Initialize Matter EndPoint
+  // Initialize at least one Matter EndPoint
   OnOffLight.begin();
-  // Matter start - Last step, after all EndPoints are initialized
-
-  Matter.start();
+  
+  // Matter begining - Last step, after all EndPoints are initialized
+  Matter.begin();
 }
 
 void loop() {

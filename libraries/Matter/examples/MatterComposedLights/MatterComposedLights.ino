@@ -57,9 +57,6 @@ void setup() {
   Serial.println(WiFi.localIP());
   delay(500);
 
-  // Initialize Matter Node
-  Matter.begin();
-
   // Initialize all 3 Matter EndPoints
   OnOffLight1.begin();
   OnOffLight2.begin();
@@ -68,8 +65,8 @@ void setup() {
   OnOffLight2.onChangeOnOff(setLightOnOff2);
   OnOffLight3.onChangeOnOff(setLightOnOff3);
 
-  // Matter start - Last step, after all EndPoints are initialized
-  Matter.start();
+  // Matter begining - Last step, after all EndPoints are initialized
+  Matter.begin();
 }
 
 void loop() {
