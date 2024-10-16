@@ -43,7 +43,8 @@ void setup() {
   Matter.begin();
   // Initialize Matter EndPoint
   OnOffLight.begin();
-  // Matter start
+  // Matter start - Last step, after all EndPoints are initialized
+
   Matter.start();
 }
 
