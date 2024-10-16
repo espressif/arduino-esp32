@@ -1,13 +1,9 @@
 #pragma once
+#include <sdkconfig.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
+
 #include <Arduino.h>
 #include <esp_matter.h>
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_THREAD
-#define DEVICE_HAS_MATTER 1
-#else
-#define DEVICE_HAS_MATTER 0
-#endif
-
-#if DEVICE_HAS_MATTER
 
 using namespace esp_matter;
 
@@ -36,4 +32,4 @@ class ArduinoMatter {
 
 extern ArduinoMatter Matter;
 
-#endif /* DEVICE_HAS_MATTER */
+#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

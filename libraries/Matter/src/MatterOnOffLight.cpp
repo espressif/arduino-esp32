@@ -1,7 +1,7 @@
-#include <Matter.h>
-#if DEVICE_HAS_MATTER
+#include <sdkconfig.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
-#include <Arduino.h>
+#include <Matter.h>
 #include <app/server/Server.h>
 #include <MatterOnOffLight.h>
 
@@ -105,4 +105,4 @@ MatterOnOffLight::operator bool() {
 void MatterOnOffLight::operator=(bool newState) {
   setOnOff(newState);
 }
-#endif /* DEVICE_HAS_MATTER */
+#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

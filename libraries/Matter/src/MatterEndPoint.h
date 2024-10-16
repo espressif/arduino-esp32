@@ -1,8 +1,8 @@
 #pragma once
+#include <sdkconfig.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#if DEVICE_HAS_MATTER
-
 #include <functional>
 
 // Matter Endpoint Base Class. Controls the endpoint ID and allows the child class to overwrite attribute change call
@@ -20,4 +20,4 @@ class MatterEndPoint {
   protected:
     uint16_t endpoint_id = 0;
 };
-#endif /* DEVICE_HAS_MATTER */
+#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

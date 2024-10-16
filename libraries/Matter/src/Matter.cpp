@@ -1,7 +1,7 @@
-#include <Matter.h>
-#if DEVICE_HAS_MATTER
+#include <sdkconfig.h>
+#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
-#include <Arduino.h>
+#include <Matter.h>
 #include <app/server/Server.h>
 #include "MatterEndPoint.h"
 
@@ -156,4 +156,4 @@ void ArduinoMatter::decommission() {
 // Global Matter Object
 ArduinoMatter Matter;
 
-#endif /* DEVICE_HAS_MATTER */
+#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
