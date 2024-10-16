@@ -98,34 +98,42 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             # Default FQBN options if none were passed in the command line.
 
-            esp32_opts="PSRAM=enabled,FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32s2_opts="PSRAM=enabled,FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32s3_opts="PSRAM=opi,USBMode=default,FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32c3_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32c6_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32h2_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
+            esp32_opts="PSRAM=enabled${fqbn_append:+,$fqbn_append}"
+            esp32s2_opts="PSRAM=enabled${fqbn_append:+,$fqbn_append}"
+            esp32s3_opts="PSRAM=opi,USBMode=default${fqbn_append:+,$fqbn_append}"
+            esp32c3_opts="$fqbn_append"
+            esp32c6_opts="$fqbn_append"
+            esp32h2_opts="$fqbn_append"
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
 
+            opt=""
+
             case "$target" in
                 "esp32")
-                    fqbn="espressif:esp32:esp32:${options:-$esp32_opts}"
+                    [ -n "${options:-$esp32_opts}" ] && opt=":${options:-$esp32_opts}"
+                    fqbn="espressif:esp32:esp32$opt"
                 ;;
                 "esp32s2")
-                    fqbn="espressif:esp32:esp32s2:${options:-$esp32s2_opts}"
+                    [ -n "${options:-$esp32s2_opts}" ] && opt=":${options:-$esp32s2_opts}"
+                    fqbn="espressif:esp32:esp32s2$opt"
                 ;;
                 "esp32c3")
-                    fqbn="espressif:esp32:esp32c3:${options:-$esp32c3_opts}"
+                    [ -n "${options:-$esp32c3_opts}" ] && opt=":${options:-$esp32c3_opts}"
+                    fqbn="espressif:esp32:esp32c3$opt"
                 ;;
                 "esp32s3")
-                    fqbn="espressif:esp32:esp32s3:${options:-$esp32s3_opts}"
+                    [ -n "${options:-$esp32s3_opts}" ] && opt=":${options:-$esp32s3_opts}"
+                    fqbn="espressif:esp32:esp32s3$opt"
                 ;;
                 "esp32c6")
-                    fqbn="espressif:esp32:esp32c6:${options:-$esp32c6_opts}"
+                    [ -n "${options:-$esp32c6_opts}" ] && opt=":${options:-$esp32c6_opts}"
+                    fqbn="espressif:esp32:esp32c6$opt"
                 ;;
                 "esp32h2")
-                    fqbn="espressif:esp32:esp32h2:${options:-$esp32h2_opts}"
+                    [ -n "${options:-$esp32h2_opts}" ] && opt=":${options:-$esp32h2_opts}"
+                    fqbn="espressif:esp32:esp32h2$opt"
                 ;;
             esac
 

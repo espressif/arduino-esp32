@@ -172,12 +172,12 @@ And in the ``README.md`` file:
 By default, the CI system will use the FQBNs specified in the ``.github/scripts/sketch_utils.sh`` file to compile the sketches.
 Currently, the default FQBNs are:
 
-* ``espressif:esp32:esp32:PSRAM=enabled,FlashMode=dio``
-* ``espressif:esp32:esp32s2:PSRAM=enabled,FlashMode=dio``
-* ``espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,FlashMode=dio``
-* ``espressif:esp32:esp32c3:FlashMode=dio``
-* ``espressif:esp32:esp32c6:FlashMode=dio``
-* ``espressif:esp32:esp32h2:FlashMode=dio``
+* ``espressif:esp32:esp32:PSRAM=enabled``
+* ``espressif:esp32:esp32s2:PSRAM=enabled``
+* ``espressif:esp32:esp32s3:PSRAM=opi,USBMode=default``
+* ``espressif:esp32:esp32c3``
+* ``espressif:esp32:esp32c6``
+* ``espressif:esp32:esp32h2``
 
 There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.json`` file.
 
