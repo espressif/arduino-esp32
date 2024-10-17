@@ -21,7 +21,7 @@
 #define LEDC_FADE_TIME   (3000)
 
 bool fade_ended = false;  // status of LED fade
-bool fade_on = true;
+bool fade_in = true;
 
 void ARDUINO_ISR_ATTR LED_FADE_ISR() {
   fade_ended = true;
@@ -55,15 +55,15 @@ void loop() {
     Serial.println("LED fade ended");
     fade_ended = false;
 
-    // Check if last fade was fade on
-    if (fade_on) {
+    // Check what fade should be started next
+    if (fade_in) {
       ledcFadeWithInterrupt(LED_PIN, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
-      Serial.println("LED Fade off started.");
-      fade_on = false;
+      Serial.println("LED Fade in started.");
+      fade_in = false;
     } else {
       ledcFadeWithInterrupt(LED_PIN, LEDC_TARGET_DUTY, LEDC_START_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
-      Serial.println("LED Fade on started.");
-      fade_on = true;
+      Serial.println("LED Fade out started.");
+      fade_in = true;
     }
   }
 }
