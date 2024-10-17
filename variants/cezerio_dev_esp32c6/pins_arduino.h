@@ -13,17 +13,17 @@
 #define PIN_RGB_LED 3
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
-#define BUILTIN_LED   LED_BUILTIN  // backward compatibility
-#define LED_BUILTIN   LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
-#define RGB_BUILTIN   LED_BUILTIN
-#define RGBLED        LED_BUILTIN
+#define RGB_BUILTIN LED_BUILTIN
+#define RGBLED      LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
 static const uint8_t BUT_BUILTIN = 9;
-#define BUILTIN_BUT   BUT_BUILTIN  // backward compatibility
-#define BUT_BUILTIN   BUT_BUILTIN  // allow testing #ifdef BUT_BUILTIN
-#define BOOT          BUT_BUILTIN
+#define BUILTIN_BUT BUT_BUILTIN  // backward compatibility
+#define BUT_BUILTIN BUT_BUILTIN  // allow testing #ifdef BUT_BUILTIN
+#define BOOT        BUT_BUILTIN
 
 static const uint8_t TX = 16;
 static const uint8_t RX = 17;
