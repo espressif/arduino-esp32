@@ -21,8 +21,8 @@
 
 static TaskHandle_t s_cli_task = NULL;
 static TaskHandle_t s_console_cli_task = NULL;
-static xQueueHandle rx_queue = NULL;
-static xQueueHandle tx_queue = NULL;
+static QueueHandle_t rx_queue = NULL;
+static QueueHandle_t tx_queue = NULL;
 
 static esp_openthread_platform_config_t ot_native_config;
 static TaskHandle_t s_ot_task = NULL;
@@ -389,7 +389,7 @@ size_t OpenThreadCLI::write(uint8_t c) {
   return 1;
 }
 
-size_t OpenThreadCLI::setBuffer(xQueueHandle &queue, size_t queue_len) {
+size_t OpenThreadCLI::setBuffer(QueueHandle_t &queue, size_t queue_len) {
   if (queue) {
     vQueueDelete(queue);
     queue = NULL;
