@@ -248,7 +248,7 @@ void setup() {
   Serial.printf("Max test size: %d\n", MAX_TEST_SIZE);
   Serial.flush();
   for (int i = 0; i < N_RUNS; i++) {
-    Serial.printf("Run %d", i);
+    Serial.printf("Run %d\n", i);
     memcpy_speed_test(dest, src, MAX_TEST_SIZE, N_COPIES);
     Serial.flush();
     memset_speed_test(dest, FILL_VALUE, MAX_TEST_SIZE, N_COPIES);
