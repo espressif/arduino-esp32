@@ -65,7 +65,7 @@
 #endif
 
 struct spi_struct_t {
-  spi_dev_t *dev;
+  volatile spi_dev_t *dev;
 #if !CONFIG_DISABLE_HAL_LOCKS
   SemaphoreHandle_t lock;
 #endif

@@ -22,10 +22,11 @@ static const uint8_t RX = 38;
 static const uint8_t SDA = 7;
 static const uint8_t SCL = 8;
 
-static const uint8_t SS = 27;
-static const uint8_t MOSI = 46;
-static const uint8_t MISO = 47;
-static const uint8_t SCK = 48;
+// Use GPIOs 36 or lower on the P4 DevKit to avoid LDO power issues with high numbered GPIOs.
+static const uint8_t SS = 26;
+static const uint8_t MOSI = 32;
+static const uint8_t MISO = 33;
+static const uint8_t SCK = 36;
 
 static const uint8_t A0 = 16;
 static const uint8_t A1 = 17;
