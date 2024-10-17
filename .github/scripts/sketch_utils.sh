@@ -171,9 +171,9 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             exit 0
         fi
 
-        # Check if the sketch requires any configuration options
+        # Check if the sketch requires any configuration options (AND)
         requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-        if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+        if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
             for requirement in $requirements; do
                 requirement=$(echo $requirement | xargs)
                 found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/$target/sdkconfig")
@@ -182,6 +182,24 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                     exit 0
                 fi
             done
+        fi
+
+        # Check if the sketch excludes any configuration options (OR)
+        requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
+        if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+            found=false
+            for requirement in $requirements_or; do
+                requirement=$(echo $requirement | xargs)
+                found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/$target/sdkconfig")
+                if [[ "$found_line" != "" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            if [[ "$found" == "false" ]]; then
+                echo "Target $target meets none of the requirements in requires_any for $sketchname. Skipping."
+                exit 0
+            fi
         fi
     fi
 
@@ -330,9 +348,9 @@ function count_sketches(){ # count_sketches <path> [target] [file] [ignore-requi
             fi
 
             if [ "$ignore_requirements" != "1" ]; then
-                # Check if the sketch requires any configuration options
+                # Check if the sketch requires any configuration options (AND)
                 requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-                if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+                if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
                     for requirement in $requirements; do
                         requirement=$(echo $requirement | xargs)
                         found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
@@ -340,6 +358,23 @@ function count_sketches(){ # count_sketches <path> [target] [file] [ignore-requi
                             continue 2
                         fi
                     done
+                fi
+
+                # Check if the sketch excludes any configuration options (OR)
+                requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
+                if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+                    found=false
+                    for requirement in $requirements_or; do
+                        requirement=$(echo $requirement | xargs)
+                        found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
+                        if [[ "$found_line" != "" ]]; then
+                            found=true
+                            break
+                        fi
+                    done
+                    if [[ "$found" == "false" ]]; then
+                        continue 2
+                    fi
                 fi
             fi
         fi
