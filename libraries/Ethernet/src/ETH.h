@@ -93,16 +93,16 @@ typedef enum {
 typedef emac_rmii_clock_mode_t eth_clock_mode_t;
 #include "pins_arduino.h"
 #ifndef ETH_RMII_TX_EN
-#define ETH_RMII_TX_EN  49
+#define ETH_RMII_TX_EN 49
 #endif
 #ifndef ETH_RMII_TX0
-#define ETH_RMII_TX0    34
+#define ETH_RMII_TX0 34
 #endif
 #ifndef ETH_RMII_TX1
-#define ETH_RMII_TX1    35
+#define ETH_RMII_TX1 35
 #endif
 #ifndef ETH_RMII_RX0
-#define ETH_RMII_RX0    29
+#define ETH_RMII_RX0 29
 #endif
 #ifndef ETH_RMII_RX1_EN
 #define ETH_RMII_RX1_EN 30
@@ -111,7 +111,7 @@ typedef emac_rmii_clock_mode_t eth_clock_mode_t;
 #define ETH_RMII_CRS_DV 28
 #endif
 #ifndef ETH_RMII_CLK
-#define ETH_RMII_CLK    50
+#define ETH_RMII_CLK 50
 #endif
 #endif
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */

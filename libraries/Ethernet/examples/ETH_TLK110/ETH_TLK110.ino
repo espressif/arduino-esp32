@@ -6,7 +6,7 @@
 #include <ETH.h>
 
 #ifndef ETH_PHY_MDC
-#define ETH_PHY_TYPE  ETH_PHY_TLK110
+#define ETH_PHY_TYPE ETH_PHY_TLK110
 #if CONFIG_IDF_TARGET_ESP32
 #define ETH_PHY_ADDR  31
 #define ETH_PHY_MDC   23
