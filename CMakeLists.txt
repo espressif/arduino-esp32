@@ -45,6 +45,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-timer.c
   cores/esp32/esp32-hal-tinyusb.c
   cores/esp32/esp32-hal-touch.c
+  cores/esp32/esp32-hal-touch-ng.c
   cores/esp32/esp32-hal-uart.c
   cores/esp32/esp32-hal-rmt.c
   cores/esp32/Esp.cpp
@@ -315,6 +316,10 @@ if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThre
   if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2") # Sadly only this works
     list(APPEND requires openthread)
   endif()
+endif()
+
+if(IDF_TARGET STREQUAL "esp32p4")
+  list(APPEND requires esp_driver_touch_sens)
 endif()
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
