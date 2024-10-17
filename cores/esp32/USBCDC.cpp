@@ -31,7 +31,7 @@ USBCDC *devices[MAX_USB_CDC_DEVICES] = {NULL, NULL};
 static uint16_t load_cdc_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB CDC");
   uint8_t descriptor[TUD_CDC_DESC_LEN] = {// Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-                                          TUD_CDC_DESCRIPTOR(*itf, str_index, 0x85, 64, 0x03, 0x84, 64)
+                                          TUD_CDC_DESCRIPTOR(*itf, str_index, 0x85, CFG_TUD_ENDOINT_SIZE, 0x03, 0x84, CFG_TUD_ENDOINT_SIZE)
   };
   *itf += 2;
   memcpy(dst, descriptor, TUD_CDC_DESC_LEN);

@@ -62,7 +62,7 @@ public:
   bool end();
 
   size_t readBytes(char *buffer, size_t size);
-  size_t write(uint8_t *buffer, size_t size);
+  size_t write(const uint8_t *buffer, size_t size);
 
   i2s_chan_handle_t txChan();
   uint32_t txSampleRate();
