@@ -55,7 +55,7 @@ void loop() {
     Serial.println("LED fade ended");
     fade_ended = false;
 
-    // Check what fade shoud be started next
+    // Check what fade should be started next
     if (fade_in) {
       ledcFadeWithInterrupt(LED_PIN, LEDC_START_DUTY, LEDC_TARGET_DUTY, LEDC_FADE_TIME, LED_FADE_ISR);
       Serial.println("LED Fade in started.");
