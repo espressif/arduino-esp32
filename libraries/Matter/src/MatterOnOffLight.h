@@ -10,7 +10,7 @@ class MatterOnOffLight : public MatterEndPoint {
     MatterOnOffLight();
     ~MatterOnOffLight();
     virtual bool begin(bool initialState = false); // default initial state is off
-    void end(); // this will just stop proessing Light Matter events
+    void end(); // this will just stop processing Light Matter events
 
     bool setOnOff(bool newState); // returns true if successful
     bool getOnOff();              // returns current light state
