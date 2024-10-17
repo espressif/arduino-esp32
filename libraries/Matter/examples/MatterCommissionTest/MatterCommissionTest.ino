@@ -1,10 +1,6 @@
-//#include <sdkconfig.h>
-//#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
-#include <Arduino.h>
-#include <WiFi.h>
-
 // Matter Manager
 #include <Matter.h>
+#include <WiFi.h>
 
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
@@ -67,8 +63,3 @@ void loop() {
   Matter.decommission();
   Serial.println("Matter Node is decommissioned. Commsssioning widget shall start over.");
 }
-
-//#else
-//void setup() {}
-//void loop() {}
-//#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

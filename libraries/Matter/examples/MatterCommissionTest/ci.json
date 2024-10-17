@@ -1,24 +1,8 @@
 {
-    "fqbn": {
-      "esp32s3": [
-        "espressif:esp32:esp32s3:PartitionScheme=huge_app,FlashMode=qio"
-      ],
-      "esp32s2": [
-        "espressif:esp32:esp32s2:PartitionScheme=huge_app,FlashMode=qio"
-      ],
-      "esp32": [
-        "espressif:esp32:esp32:PartitionScheme=huge_app,FlashMode=qio"
-      ],
-      "esp32c3": [
-        "espressif:esp32:esp32c3:PartitionScheme=huge_app,FlashMode=qio"
-      ],
-      "esp32c6": [
-        "espressif:esp32:esp32c6:PartitionScheme=huge_app,FlashMode=qio"
-      ]
-    },
-    "requires": [
-      "CONFIG_SOC_WIFI_SUPPORTED=y",
-      "CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y"
-    ]
+  "fqbn_append": "PartitionScheme=huge_app",
+  "requires": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y",
+    "CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y"
+  ]
 }
   

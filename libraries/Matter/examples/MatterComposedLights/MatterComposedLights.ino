@@ -1,10 +1,6 @@
-#include <sdkconfig.h>
-#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
-#include <Arduino.h>
-#include <WiFi.h>
-
 // Matter Manager
 #include <Matter.h>
+#include <WiFi.h>
 
 // List of Matter Endpoints for this Node
 // There will be 3 On/Off Light Endpoints in the same Node
@@ -96,8 +92,3 @@ void loop() {
   Serial.printf("Matter Light #3 is %s\r\n", OnOffLight3.getOnOff() ? "ON" : "OFF");
   delay(3000);
 }
-
-#else
-void setup() {}
-void loop() {}
-#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

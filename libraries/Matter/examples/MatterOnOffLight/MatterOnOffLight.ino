@@ -1,10 +1,6 @@
-#include <sdkconfig.h>
-#ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
-#include <Arduino.h>
-#include <WiFi.h>
-
 // Matter Manager
 #include <Matter.h>
+#include <WiFi.h>
 
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
@@ -103,8 +99,3 @@ void loop() {
     OnOffLight.toggle();  // Matter Controller also can see the change
   }
 }
-
-#else
-void setup() {}
-void loop() {}
-#endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
