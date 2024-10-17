@@ -7,11 +7,19 @@
 
 #ifndef ETH_PHY_TYPE
 #define ETH_PHY_TYPE  ETH_PHY_TLK110
+#if CONFIG_IDF_TARGET_ESP32
 #define ETH_PHY_ADDR  31
 #define ETH_PHY_MDC   23
 #define ETH_PHY_MDIO  18
 #define ETH_PHY_POWER 17
 #define ETH_CLK_MODE  ETH_CLOCK_GPIO0_IN
+#elif CONFIG_IDF_TARGET_ESP32P4
+#define ETH_PHY_ADDR  1
+#define ETH_PHY_MDC   31
+#define ETH_PHY_MDIO  52
+#define ETH_PHY_POWER 51
+#define ETH_CLK_MODE  EMAC_CLK_EXT_IN
+#endif
 #endif
 
 static bool eth_connected = false;

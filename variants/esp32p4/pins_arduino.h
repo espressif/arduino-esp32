@@ -57,4 +57,18 @@ static const uint8_t T11 = 13;
 static const uint8_t T12 = 14;
 static const uint8_t T13 = 15;
 
+#define ETH_PHY_TYPE  	ETH_PHY_TLK110
+#define ETH_PHY_ADDR  	1
+#define ETH_PHY_MDC   	31
+#define ETH_PHY_MDIO  	52
+#define ETH_PHY_POWER 	51
+#define ETH_RMII_TX_EN  49
+#define ETH_RMII_TX0    34
+#define ETH_RMII_TX1    35
+#define ETH_RMII_RX0    29
+#define ETH_RMII_RX1_EN 30
+#define ETH_RMII_CRS_DV 28
+#define ETH_RMII_CLK    50
+#define ETH_CLK_MODE  	EMAC_CLK_EXT_IN
+
 #endif /* Pins_Arduino_h */

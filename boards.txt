@@ -188,7 +188,10 @@ esp32p4.build.variant=esp32p4
 esp32p4.build.board=ESP32P4_DEV
 esp32p4.build.bootloader_addr=0x2000
 
+esp32p4.build.usb_mode=0
 esp32p4.build.cdc_on_boot=0
+esp32p4.build.msc_on_boot=0
+esp32p4.build.dfu_on_boot=0
 esp32p4.build.f_cpu=360000000L
 esp32p4.build.flash_size=4MB
 esp32p4.build.flash_freq=80m
@@ -216,10 +219,10 @@ esp32p4.menu.PSRAM.disabled.build.defines=
 esp32p4.menu.PSRAM.enabled=Enabled
 esp32p4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 
-esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG
-esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
 esp32p4.menu.USBMode.default=USB-OTG (TinyUSB)
 esp32p4.menu.USBMode.default.build.usb_mode=0
+esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG
+esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
 
 esp32p4.menu.CDCOnBoot.default=Disabled
 esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
