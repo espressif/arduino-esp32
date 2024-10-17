@@ -61,5 +61,4 @@ static const uint8_t T12 = 12;
 static const uint8_t T13 = 13;
 static const uint8_t T14 = 14;
 
-
-#endif                           /* Pins_Arduino_h */
+#endif /* Pins_Arduino_h */
