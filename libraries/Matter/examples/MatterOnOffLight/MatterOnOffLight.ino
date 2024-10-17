@@ -15,6 +15,9 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 #warning "Do not forget to set the LED pin"
 #endif
 
+// set your board USER BUTTON pin here
+const uint8_t buttonPin = 0; // Set your pin here. Using BOOT Button. C6/C3 use GPIO9.
+
 // Matter Protocol Endpoint Callback
 bool setLightOnOff(bool state) {
   Serial.printf("User Callback :: New Light State = %s\r\n", state ? "ON" : "OFF");
@@ -64,7 +67,7 @@ void setup() {
 }
 
 uint32_t lastMillis = millis();
-const uint32_t toggle_interval = 15000; // light will toggle every 15 seconds
+const uint32_t debouceTime = 70; // button debounce time
 void loop() {
   // Check Matter Light Commissioning state
   if (!Matter.isDeviceCommissioned()) {
@@ -82,6 +85,8 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
+    // Initializa the USER BUTTON (Boot button) GPIO that will act as a toggle switch
+    pinMode(buttonPin, INPUT_PULLUP);
     // Initialize the LED (light) GPIO and Matter End Point
     pinMode(ledPin, OUTPUT);
     Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
@@ -90,11 +95,9 @@ void loop() {
     delay(10000);
   }
 
-  //displays the Light state every 3 seconds
-  Serial.printf("Matter Light is %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-  delay(3000);
-  if (millis() - lastMillis > toggle_interval) {
-    Serial.println("Toggling Light!");
+  // Onboard User Button is used as a Light toggle switch
+  if (digitalRead(buttonPin) == 0 && millis() - lastMillis > debouceTime) {
+    Serial.println("User button pressed. Toggling Light!");
     lastMillis = millis();
     OnOffLight.toggle();  // Matter Controller also can see the change
   }
