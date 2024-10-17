@@ -19,10 +19,11 @@ static const uint8_t SDA = 11;
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
-static const uint8_t SS = 10;
-static const uint8_t MOSI = 11;
-static const uint8_t MISO = 13;
-static const uint8_t SCK = 12;
+// Mapping based on the ESP32S3 data sheet - alternate for SPI2
+static const uint8_t SS = 34;    // FSPICS0
+static const uint8_t MOSI = 35;  // FSPID
+static const uint8_t MISO = 37;  // FSPIQ
+static const uint8_t SCK = 36;   // FSPICLK
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
