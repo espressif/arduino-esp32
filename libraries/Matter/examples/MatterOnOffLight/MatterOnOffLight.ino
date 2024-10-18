@@ -36,6 +36,9 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 void setup() {
+  // Initializa the USER BUTTON (Boot button) GPIO that will act as a toggle switch
+  pinMode(buttonPin, INPUT_PULLUP);
+  
   Serial.begin(115200);
   while (!Serial) {
     delay(100);
@@ -89,8 +92,6 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    // Initializa the USER BUTTON (Boot button) GPIO that will act as a toggle switch
-    pinMode(buttonPin, INPUT_PULLUP);
     // Initialize the LED (light) GPIO and Matter End Point
     pinMode(ledPin, OUTPUT);
     Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
