@@ -29,13 +29,14 @@ static esp_err_t app_attribute_update_cb(
   uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
 {
   esp_err_t err = ESP_OK;
+  MatterEndPoint *ep = (MatterEndPoint *) priv_data;  // endpoint pointer to base class
+  if (ep == NULL) {
+    return err;
+  }
   switch(type) {
     case PRE_UPDATE: // Callback before updating the value in the database
       log_i("Attribute update callback: PRE_UPDATE");
-      MatterEndPoint *ep = (MatterEndPoint *) priv_data;  // endpoint pointer to base class
-      if (ep != NULL) {
-        err = ep->attributeChangeCB(endpoint_id, cluster_id, attribute_id, val) ? ESP_OK : ESP_FAIL;
-      }
+      err = ep->attributeChangeCB(endpoint_id, cluster_id, attribute_id, val) ? ESP_OK : ESP_FAIL;
       break;
     case POST_UPDATE: // Callback after updating the value in the database
       log_i("Attribute update callback: POST_UPDATE");
