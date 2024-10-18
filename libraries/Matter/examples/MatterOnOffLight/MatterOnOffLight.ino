@@ -66,8 +66,12 @@ void setup() {
   Matter.begin();
 }
 
-uint32_t lastMillis = millis();
-const uint32_t debouceTime = 70; // button debounce time
+// Button control
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t debouceTime = 250;              // button debouncing time (ms)
+const uint32_t decommissioningTimeout = 10000; // keep the button pressed for 10s to decommission the light
+
 void loop() {
   // Check Matter Light Commissioning state
   if (!Matter.isDeviceCommissioned()) {
@@ -92,13 +96,29 @@ void loop() {
     Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
     setLightOnOff(OnOffLight.getOnOff()); // configure the Light based on initial state
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
-    delay(10000);
   }
 
-  // Onboard User Button is used as a Light toggle switch
-  if (digitalRead(buttonPin) == 0 && millis() - lastMillis > debouceTime) {
-    Serial.println("User button pressed. Toggling Light!");
-    lastMillis = millis();
+  // A button is also used to control the light
+  // Check if the button has been pressed
+  if (digitalRead(buttonPin) == LOW && !button_state) {
+    // deals with button debouncing
+    button_time_stamp = millis();  // record the time while the button is pressed.
+    button_state = true;           // pressed.
+  }
+
+  // Onboard User Button is used as a Light toggle switch or to decommission it
+  uint32_t time_diff = millis() - button_time_stamp;
+  if (button_state && time_diff > debouceTime && digitalRead(buttonPin) == HIGH) {
+    button_state = false;  // released
+    // Toggle button is released - toggle the light
+    Serial.println("User button released. Toggling Light!");
     OnOffLight.toggle();  // Matter Controller also can see the change
+
+    // Factory reset is triggered if the button is pressed longer than 10 seconds
+    if (time_diff > decommissioningTimeout) {
+      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+      OnOffLight.setOnOff(false); // turn the light off
+      Matter.decommission();
+    }
   }
 }
