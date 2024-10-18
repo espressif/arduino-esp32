@@ -11,8 +11,11 @@
 
 #define I2S_READ_CHUNK_SIZE 1920
 
-#define I2S_DEFAULT_CFG() \
-  { .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, }
+#define I2S_DEFAULT_CFG()                                                                                                                    \
+  {                                                                                                                                          \
+    .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
+    .intr_priority = 0                                                                                                                       \
+  }
 
 #define I2S_STD_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode)                                                                   \
   {                                                                                                                                   \
@@ -819,7 +822,7 @@ size_t I2SClass::readBytes(char *buffer, size_t size) {
   return total_size;
 }
 
-size_t I2SClass::write(uint8_t *buffer, size_t size) {
+size_t I2SClass::write(const uint8_t *buffer, size_t size) {
   size_t written = 0;
   size_t bytes_sent = 0;
   last_error = ESP_FAIL;
