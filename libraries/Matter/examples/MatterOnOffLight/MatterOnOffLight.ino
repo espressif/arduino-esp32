@@ -1,11 +1,15 @@
 // Matter Manager
 #include <Matter.h>
 #include <WiFi.h>
+#include <Preferences.h>
 
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
 #include <MatterOnOffLight.h>
 MatterOnOffLight OnOffLight;
+
+// it will keep last OnOff state stored, using Preferences
+Preferences lastStatePref;
 
 // set your board LED pin here
 #ifdef LED_BUILTIN
@@ -26,19 +30,23 @@ bool setLightOnOff(bool state) {
   } else {
     digitalWrite(ledPin, LOW);
   }
+  // store last OnOff state for when the Light is restarted / power goes off
+  lastStatePref.putBool("lastOnOffState", state);
   // This callback must return the success state to Matter core
   return true;
 }
 
 // WiFi is manually set and started
 
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
+const char *ssid = "Apartment B15";          // Change this to your WiFi SSID
+const char *password = "flat-pony-body";  // Change this to your WiFi password
 
 void setup() {
   // Initializa the USER BUTTON (Boot button) GPIO that will act as a toggle switch
   pinMode(buttonPin, INPUT_PULLUP);
-  
+  // Initialize the LED (light) GPIO and Matter End Point
+  pinMode(ledPin, OUTPUT);
+
   Serial.begin(115200);
   while (!Serial) {
     delay(100);
@@ -62,13 +70,20 @@ void setup() {
   delay(500);
 
   // Initialize Matter EndPoint
-  OnOffLight.begin(true);
+  lastStatePref.begin("matterLight", false);
+  bool lastOnOffState = lastStatePref.getBool("lastOnOffState", true);
+  OnOffLight.begin(lastOnOffState);
   OnOffLight.onChangeOnOff(setLightOnOff);
 
   // Matter begining - Last step, after all EndPoints are initialized
   Matter.begin();
+  // This may be a restart of a already commissioned Matter accessory
+  if (Matter.isDeviceCommissioned()) {
+    Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
+    Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
+    setLightOnOff(OnOffLight.getOnOff()); // configure the Light based on initial state
+  }
 }
-
 // Button control
 uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
@@ -76,7 +91,7 @@ const uint32_t debouceTime = 250;              // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 10000; // keep the button pressed for 10s to decommission the light
 
 void loop() {
-  // Check Matter Light Commissioning state
+  // Check Matter Light Commissioning state, which may change during execution of loop()
   if (!Matter.isDeviceCommissioned()) {
     Serial.println("");
     Serial.println("Matter Node is not commissioned yet.");
@@ -92,8 +107,6 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    // Initialize the LED (light) GPIO and Matter End Point
-    pinMode(ledPin, OUTPUT);
     Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
     setLightOnOff(OnOffLight.getOnOff()); // configure the Light based on initial state
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
