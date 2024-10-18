@@ -29,17 +29,25 @@ static esp_err_t app_attribute_update_cb(
   uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
 {
   esp_err_t err = ESP_OK;
-  if (type == PRE_UPDATE) { /** Callback before updating the value in the database */
-    MatterEndPoint *ep = (MatterEndPoint *) priv_data;  // end point pointer
-    if (ep != NULL) {
-      err = ep->attributeChangeCB(endpoint_id, cluster_id, attribute_id, val) ? ESP_OK : ESP_FAIL;
-    }
-  }
-  if (type == POST_UPDATE) { /** Callback after updating the value in the database */
-  }
-  if (type == READ) { /** Callback for reading the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set. */
-  }
-  if (type == WRITE) { /** Callback for writing the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set. */
+  switch(type) {
+    case PRE_UPDATE: // Callback before updating the value in the database
+      log_i("Attribute update callback: PRE_UPDATE");
+      MatterEndPoint *ep = (MatterEndPoint *) priv_data;  // endpoint pointer to base class
+      if (ep != NULL) {
+        err = ep->attributeChangeCB(endpoint_id, cluster_id, attribute_id, val) ? ESP_OK : ESP_FAIL;
+      }
+      break;
+    case POST_UPDATE: // Callback after updating the value in the database
+      log_i("Attribute update callback: POST_UPDATE");
+      break;
+    case READ: // Callback for reading the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set.
+      log_i("Attribute update callback: READ");
+      break;
+    case WRITE: // Callback for writing the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set.
+      log_i("Attribute update callback: WRITE");
+      break;
+    default:
+      log_i("Attribute update callback: Unknown type %d", type);
   }
   return err;
 }
