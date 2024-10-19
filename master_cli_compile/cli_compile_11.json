@@ -12,7 +12,7 @@
                     },
 {"name": "USB/examples/USBSerial",
                     "sizes": [{
-                            "flash_bytes": 344749,
+                            "flash_bytes": 344733,
                             "flash_percentage": 26,
                             "ram_bytes": 30840,
                             "ram_percentage": 9
@@ -20,7 +20,7 @@
                     },
 {"name": "USB/examples/USBVendor",
                     "sizes": [{
-                            "flash_bytes": 349801,
+                            "flash_bytes": 349785,
                             "flash_percentage": 26,
                             "ram_bytes": 31000,
                             "ram_percentage": 9
@@ -36,7 +36,7 @@
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 984189,
+                            "flash_bytes": 984173,
                             "flash_percentage": 75,
                             "ram_bytes": 42892,
                             "ram_percentage": 13
@@ -44,7 +44,7 @@
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 946041,
+                            "flash_bytes": 946025,
                             "flash_percentage": 72,
                             "ram_bytes": 42556,
                             "ram_percentage": 12
@@ -60,7 +60,7 @@
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 957817,
+                            "flash_bytes": 957801,
                             "flash_percentage": 73,
                             "ram_bytes": 44756,
                             "ram_percentage": 13
@@ -68,7 +68,7 @@
                     },
 {"name": "Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 372925,
+                            "flash_bytes": 372909,
                             "flash_percentage": 28,
                             "ram_bytes": 19248,
                             "ram_percentage": 5
@@ -76,7 +76,7 @@
                     },
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
-                            "flash_bytes": 948397,
+                            "flash_bytes": 948381,
                             "flash_percentage": 72,
                             "ram_bytes": 44524,
                             "ram_percentage": 13
@@ -84,7 +84,7 @@
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 975637,
+                            "flash_bytes": 975621,
                             "flash_percentage": 74,
                             "ram_bytes": 44356,
                             "ram_percentage": 13
@@ -92,7 +92,7 @@
                     },
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 948993,
+                            "flash_bytes": 948977,
                             "flash_percentage": 72,
                             "ram_bytes": 44540,
                             "ram_percentage": 13
@@ -100,7 +100,7 @@
                     },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
-                            "flash_bytes": 947189,
+                            "flash_bytes": 947173,
                             "flash_percentage": 72,
                             "ram_bytes": 44524,
                             "ram_percentage": 13
@@ -108,7 +108,7 @@
                     },
 {"name": "WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 967917,
+                            "flash_bytes": 967901,
                             "flash_percentage": 73,
                             "ram_bytes": 46836,
                             "ram_percentage": 14
@@ -121,7 +121,7 @@
                 "sketches": [
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 922550,
+                            "flash_bytes": 922526,
                             "flash_percentage": 70,
                             "ram_bytes": 40304,
                             "ram_percentage": 12
@@ -129,7 +129,7 @@
                     },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
-                            "flash_bytes": 920738,
+                            "flash_bytes": 920714,
                             "flash_percentage": 70,
                             "ram_bytes": 40288,
                             "ram_percentage": 12
@@ -137,7 +137,7 @@
                     },
 {"name": "WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 941762,
+                            "flash_bytes": 941738,
                             "flash_percentage": 71,
                             "ram_bytes": 42600,
                             "ram_percentage": 13
@@ -145,7 +145,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 942378,
+                            "flash_bytes": 942362,
                             "flash_percentage": 71,
                             "ram_bytes": 42728,
                             "ram_percentage": 13
@@ -153,7 +153,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 941850,
+                            "flash_bytes": 941834,
                             "flash_percentage": 71,
                             "ram_bytes": 42616,
                             "ram_percentage": 13
@@ -161,7 +161,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuth",
                     "sizes": [{
-                            "flash_bytes": 941806,
+                            "flash_bytes": 941782,
                             "flash_percentage": 71,
                             "ram_bytes": 42584,
                             "ram_percentage": 12
@@ -169,7 +169,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1",
                     "sizes": [{
-                            "flash_bytes": 949334,
+                            "flash_bytes": 949310,
                             "flash_percentage": 72,
                             "ram_bytes": 42600,
                             "ram_percentage": 13
@@ -177,7 +177,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                     "sizes": [{
-                            "flash_bytes": 949950,
+                            "flash_bytes": 949926,
                             "flash_percentage": 72,
                             "ram_bytes": 42616,
                             "ram_percentage": 13
@@ -185,7 +185,7 @@
                     },
 {"name": "WebServer/examples/MultiHomedServers",
                     "sizes": [{
-                            "flash_bytes": 923426,
+                            "flash_bytes": 923402,
                             "flash_percentage": 70,
                             "ram_bytes": 39960,
                             "ram_percentage": 12
@@ -193,7 +193,7 @@
                     },
 {"name": "WebServer/examples/PathArgServer",
                     "sizes": [{
-                            "flash_bytes": 1191618,
+                            "flash_bytes": 1191594,
                             "flash_percentage": 90,
                             "ram_bytes": 44912,
                             "ram_percentage": 13
@@ -201,7 +201,7 @@
                     },
 {"name": "WebServer/examples/SDWebServer",
                     "sizes": [{
-                            "flash_bytes": 982498,
+                            "flash_bytes": 982474,
                             "flash_percentage": 74,
                             "ram_bytes": 40600,
                             "ram_percentage": 12
@@ -209,7 +209,7 @@
                     },
 {"name": "WebServer/examples/SimpleAuthentification",
                     "sizes": [{
-                            "flash_bytes": 878758,
+                            "flash_bytes": 878742,
                             "flash_percentage": 67,
                             "ram_bytes": 37792,
                             "ram_percentage": 11
@@ -217,7 +217,7 @@
                     },
 {"name": "WebServer/examples/UploadHugeFile",
                     "sizes": [{
-                            "flash_bytes": 1223330,
+                            "flash_bytes": 1223306,
                             "flash_percentage": 93,
                             "ram_bytes": 43616,
                             "ram_percentage": 13
@@ -230,7 +230,7 @@
                 "sketches": [
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
-                            "flash_bytes": 989092,
+                            "flash_bytes": 989068,
                             "flash_percentage": 75,
                             "ram_bytes": 37644,
                             "ram_percentage": 11
@@ -238,7 +238,7 @@
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1019918,
+                            "flash_bytes": 1019894,
                             "flash_percentage": 77,
                             "ram_bytes": 37316,
                             "ram_percentage": 11
@@ -246,7 +246,7 @@
                     },
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 989794,
+                            "flash_bytes": 989770,
                             "flash_percentage": 75,
                             "ram_bytes": 37652,
                             "ram_percentage": 11
@@ -254,7 +254,7 @@
                     },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
-                            "flash_bytes": 987952,
+                            "flash_bytes": 987928,
                             "flash_percentage": 75,
                             "ram_bytes": 37644,
                             "ram_percentage": 11
@@ -262,7 +262,7 @@
                     },
 {"name": "WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 1007352,
+                            "flash_bytes": 1007328,
                             "flash_percentage": 76,
                             "ram_bytes": 39972,
                             "ram_percentage": 12
@@ -270,7 +270,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 1008032,
+                            "flash_bytes": 1008008,
                             "flash_percentage": 76,
                             "ram_bytes": 40100,
                             "ram_percentage": 12
@@ -278,7 +278,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 1007450,
+                            "flash_bytes": 1007426,
                             "flash_percentage": 76,
                             "ram_bytes": 39988,
                             "ram_percentage": 12
@@ -286,7 +286,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuth",
                     "sizes": [{
-                            "flash_bytes": 1007408,
+                            "flash_bytes": 1007384,
                             "flash_percentage": 76,
                             "ram_bytes": 39948,
                             "ram_percentage": 12
@@ -294,7 +294,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1",
                     "sizes": [{
-                            "flash_bytes": 1016172,
+                            "flash_bytes": 1016148,
                             "flash_percentage": 77,
                             "ram_bytes": 39964,
                             "ram_percentage": 12
@@ -302,7 +302,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                     "sizes": [{
-                            "flash_bytes": 1016710,
+                            "flash_bytes": 1016686,
                             "flash_percentage": 77,
                             "ram_bytes": 39980,
                             "ram_percentage": 12
@@ -310,7 +310,7 @@
                     },
 {"name": "WebServer/examples/MultiHomedServers",
                     "sizes": [{
-                            "flash_bytes": 990702,
+                            "flash_bytes": 990678,
                             "flash_percentage": 75,
                             "ram_bytes": 37308,
                             "ram_percentage": 11
@@ -318,7 +318,7 @@
                     },
 {"name": "WebServer/examples/PathArgServer",
                     "sizes": [{
-                            "flash_bytes": 1209756,
+                            "flash_bytes": 1209740,
                             "flash_percentage": 92,
                             "ram_bytes": 42500,
                             "ram_percentage": 12
@@ -331,7 +331,7 @@
                 "sketches": [
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 976190,
+                            "flash_bytes": 976166,
                             "flash_percentage": 74,
                             "ram_bytes": 42180,
                             "ram_percentage": 12
@@ -339,7 +339,7 @@
                     },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
-                            "flash_bytes": 974348,
+                            "flash_bytes": 974324,
                             "flash_percentage": 74,
                             "ram_bytes": 42172,
                             "ram_percentage": 12
@@ -347,7 +347,7 @@
                     },
 {"name": "WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 993756,
+                            "flash_bytes": 993732,
                             "flash_percentage": 75,
                             "ram_bytes": 44484,
                             "ram_percentage": 13
@@ -355,7 +355,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 994456,
+                            "flash_bytes": 994432,
                             "flash_percentage": 75,
                             "ram_bytes": 44612,
                             "ram_percentage": 13
@@ -363,7 +363,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 993838,
+                            "flash_bytes": 993814,
                             "flash_percentage": 75,
                             "ram_bytes": 44500,
                             "ram_percentage": 13
@@ -371,7 +371,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuth",
                     "sizes": [{
-                            "flash_bytes": 993830,
+                            "flash_bytes": 993806,
                             "flash_percentage": 75,
                             "ram_bytes": 44460,
                             "ram_percentage": 13
@@ -379,7 +379,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1",
                     "sizes": [{
-                            "flash_bytes": 1002584,
+                            "flash_bytes": 1002560,
                             "flash_percentage": 76,
                             "ram_bytes": 44476,
                             "ram_percentage": 13
@@ -387,7 +387,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                     "sizes": [{
-                            "flash_bytes": 1003134,
+                            "flash_bytes": 1003110,
                             "flash_percentage": 76,
                             "ram_bytes": 44492,
                             "ram_percentage": 13
@@ -395,7 +395,7 @@
                     },
 {"name": "WebServer/examples/MultiHomedServers",
                     "sizes": [{
-                            "flash_bytes": 977124,
+                            "flash_bytes": 977100,
                             "flash_percentage": 74,
                             "ram_bytes": 41844,
                             "ram_percentage": 12
@@ -403,7 +403,7 @@
                     },
 {"name": "WebServer/examples/PathArgServer",
                     "sizes": [{
-                            "flash_bytes": 1191600,
+                            "flash_bytes": 1191584,
                             "flash_percentage": 90,
                             "ram_bytes": 47020,
                             "ram_percentage": 14
@@ -411,7 +411,7 @@
                     },
 {"name": "WebServer/examples/SDWebServer",
                     "sizes": [{
-                            "flash_bytes": 1026886,
+                            "flash_bytes": 1026862,
                             "flash_percentage": 78,
                             "ram_bytes": 42460,
                             "ram_percentage": 12
@@ -419,7 +419,7 @@
                     },
 {"name": "WebServer/examples/SimpleAuthentification",
                     "sizes": [{
-                            "flash_bytes": 927894,
+                            "flash_bytes": 927870,
                             "flash_percentage": 70,
                             "ram_bytes": 39692,
                             "ram_percentage": 12
@@ -427,7 +427,7 @@
                     },
 {"name": "WebServer/examples/UploadHugeFile",
                     "sizes": [{
-                            "flash_bytes": 1221936,
+                            "flash_bytes": 1221904,
                             "flash_percentage": 93,
                             "ram_bytes": 45660,
                             "ram_percentage": 13
@@ -440,7 +440,7 @@
                 "sketches": [
 {"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
                     "sizes": [{
-                            "flash_bytes": 977990,
+                            "flash_bytes": 977966,
                             "flash_percentage": 74,
                             "ram_bytes": 48296,
                             "ram_percentage": 14
@@ -448,7 +448,7 @@
                     },
 {"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
-                            "flash_bytes": 978058,
+                            "flash_bytes": 978034,
                             "flash_percentage": 74,
                             "ram_bytes": 48296,
                             "ram_percentage": 14
@@ -456,7 +456,7 @@
                     },
 {"name": "OpenThread/examples/ThreadScan",
                     "sizes": [{
-                            "flash_bytes": 977604,
+                            "flash_bytes": 977580,
                             "flash_percentage": 74,
                             "ram_bytes": 48296,
                             "ram_percentage": 14
@@ -464,7 +464,7 @@
                     },
 {"name": "OpenThread/examples/onReceive",
                     "sizes": [{
-                            "flash_bytes": 977262,
+                            "flash_bytes": 977238,
                             "flash_percentage": 74,
                             "ram_bytes": 48296,
                             "ram_percentage": 14
@@ -472,7 +472,7 @@
                     },
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
-                            "flash_bytes": 505178,
+                            "flash_bytes": 505154,
                             "flash_percentage": 38,
                             "ram_bytes": 17920,
                             "ram_percentage": 5
@@ -480,7 +480,7 @@
                     },
 {"name": "Preferences/examples/Prefs2Struct",
                     "sizes": [{
-                            "flash_bytes": 263754,
+                            "flash_bytes": 263730,
                             "flash_percentage": 20,
                             "ram_bytes": 12736,
                             "ram_percentage": 3
@@ -488,7 +488,7 @@
                     },
 {"name": "Preferences/examples/StartCounter",
                     "sizes": [{
-                            "flash_bytes": 263604,
+                            "flash_bytes": 263580,
                             "flash_percentage": 20,
                             "ram_bytes": 12736,
                             "ram_percentage": 3
@@ -501,7 +501,7 @@
                 "sketches": [
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 976373,
+                            "flash_bytes": 976349,
                             "flash_percentage": 74,
                             "ram_bytes": 46748,
                             "ram_percentage": 14
@@ -509,7 +509,7 @@
                     },
 {"name": "Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1001985,
+                            "flash_bytes": 1001977,
                             "flash_percentage": 76,
                             "ram_bytes": 47696,
                             "ram_percentage": 14
@@ -517,7 +517,7 @@
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 988405,
+                            "flash_bytes": 988381,
                             "flash_percentage": 75,
                             "ram_bytes": 47708,
                             "ram_percentage": 14
@@ -525,7 +525,7 @@
                     },
 {"name": "Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 357729,
+                            "flash_bytes": 357713,
                             "flash_percentage": 27,
                             "ram_bytes": 21072,
                             "ram_percentage": 6
@@ -533,7 +533,7 @@
                     },
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
-                            "flash_bytes": 980277,
+                            "flash_bytes": 980253,
                             "flash_percentage": 74,
                             "ram_bytes": 47444,
                             "ram_percentage": 14
@@ -541,7 +541,7 @@
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1025689,
+                            "flash_bytes": 1025665,
                             "flash_percentage": 78,
                             "ram_bytes": 47512,
                             "ram_percentage": 14
@@ -549,7 +549,7 @@
                     },
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 980621,
+                            "flash_bytes": 980597,
                             "flash_percentage": 74,
                             "ram_bytes": 47352,
                             "ram_percentage": 14
@@ -557,7 +557,7 @@
                     },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
-                            "flash_bytes": 978741,
+                            "flash_bytes": 978717,
                             "flash_percentage": 74,
                             "ram_bytes": 47336,
                             "ram_percentage": 14
@@ -565,7 +565,7 @@
                     },
 {"name": "WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 998381,
+                            "flash_bytes": 998357,
                             "flash_percentage": 76,
                             "ram_bytes": 49664,
                             "ram_percentage": 15
@@ -573,7 +573,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 998977,
+                            "flash_bytes": 998953,
                             "flash_percentage": 76,
                             "ram_bytes": 49792,
                             "ram_percentage": 15
@@ -581,7 +581,7 @@
                     },
 {"name": "WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 998457,
+                            "flash_bytes": 998433,
                             "flash_percentage": 76,
                             "ram_bytes": 49680,
                             "ram_percentage": 15
@@ -589,7 +589,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuth",
                     "sizes": [{
-                            "flash_bytes": 998429,
+                            "flash_bytes": 998405,
                             "flash_percentage": 76,
                             "ram_bytes": 49648,
                             "ram_percentage": 15
@@ -597,7 +597,7 @@
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1",
                     "sizes": [{
-                            "flash_bytes": 1005789,
+                            "flash_bytes": 1005765,
                             "flash_percentage": 76,
                             "ram_bytes": 49664,
                             "ram_percentage": 15
