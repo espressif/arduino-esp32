@@ -98,34 +98,42 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
             # Default FQBN options if none were passed in the command line.
 
-            esp32_opts="PSRAM=enabled,FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32s2_opts="PSRAM=enabled,FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32s3_opts="PSRAM=opi,USBMode=default,FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32c3_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32c6_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
-            esp32h2_opts="FlashMode=dio${fqbn_append:+,$fqbn_append}"
+            esp32_opts="PSRAM=enabled${fqbn_append:+,$fqbn_append}"
+            esp32s2_opts="PSRAM=enabled${fqbn_append:+,$fqbn_append}"
+            esp32s3_opts="PSRAM=opi,USBMode=default${fqbn_append:+,$fqbn_append}"
+            esp32c3_opts="$fqbn_append"
+            esp32c6_opts="$fqbn_append"
+            esp32h2_opts="$fqbn_append"
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
 
+            opt=""
+
             case "$target" in
                 "esp32")
-                    fqbn="espressif:esp32:esp32:${options:-$esp32_opts}"
+                    [ -n "${options:-$esp32_opts}" ] && opt=":${options:-$esp32_opts}"
+                    fqbn="espressif:esp32:esp32$opt"
                 ;;
                 "esp32s2")
-                    fqbn="espressif:esp32:esp32s2:${options:-$esp32s2_opts}"
+                    [ -n "${options:-$esp32s2_opts}" ] && opt=":${options:-$esp32s2_opts}"
+                    fqbn="espressif:esp32:esp32s2$opt"
                 ;;
                 "esp32c3")
-                    fqbn="espressif:esp32:esp32c3:${options:-$esp32c3_opts}"
+                    [ -n "${options:-$esp32c3_opts}" ] && opt=":${options:-$esp32c3_opts}"
+                    fqbn="espressif:esp32:esp32c3$opt"
                 ;;
                 "esp32s3")
-                    fqbn="espressif:esp32:esp32s3:${options:-$esp32s3_opts}"
+                    [ -n "${options:-$esp32s3_opts}" ] && opt=":${options:-$esp32s3_opts}"
+                    fqbn="espressif:esp32:esp32s3$opt"
                 ;;
                 "esp32c6")
-                    fqbn="espressif:esp32:esp32c6:${options:-$esp32c6_opts}"
+                    [ -n "${options:-$esp32c6_opts}" ] && opt=":${options:-$esp32c6_opts}"
+                    fqbn="espressif:esp32:esp32c6$opt"
                 ;;
                 "esp32h2")
-                    fqbn="espressif:esp32:esp32h2:${options:-$esp32h2_opts}"
+                    [ -n "${options:-$esp32h2_opts}" ] && opt=":${options:-$esp32h2_opts}"
+                    fqbn="espressif:esp32:esp32h2$opt"
                 ;;
             esac
 
@@ -163,9 +171,9 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             exit 0
         fi
 
-        # Check if the sketch requires any configuration options
+        # Check if the sketch requires any configuration options (AND)
         requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-        if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+        if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
             for requirement in $requirements; do
                 requirement=$(echo $requirement | xargs)
                 found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/$target/sdkconfig")
@@ -174,6 +182,24 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                     exit 0
                 fi
             done
+        fi
+
+        # Check if the sketch excludes any configuration options (OR)
+        requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
+        if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+            found=false
+            for requirement in $requirements_or; do
+                requirement=$(echo $requirement | xargs)
+                found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/$target/sdkconfig")
+                if [[ "$found_line" != "" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            if [[ "$found" == "false" ]]; then
+                echo "Target $target meets none of the requirements in requires_any for $sketchname. Skipping."
+                exit 0
+            fi
         fi
     fi
 
@@ -213,9 +239,9 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 --build-cache-path "$ARDUINO_CACHE_DIR" \
                 --build-path "$build_dir" \
                 $xtra_opts "${sketchdir}" \
-                > $output_file
+                2>&1 | tee $output_file
 
-            exit_status=$?
+            exit_status=${PIPESTATUS[0]}
             if [ $exit_status -ne 0 ]; then
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
@@ -322,9 +348,9 @@ function count_sketches(){ # count_sketches <path> [target] [file] [ignore-requi
             fi
 
             if [ "$ignore_requirements" != "1" ]; then
-                # Check if the sketch requires any configuration options
+                # Check if the sketch requires any configuration options (AND)
                 requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-                if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+                if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
                     for requirement in $requirements; do
                         requirement=$(echo $requirement | xargs)
                         found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
@@ -332,6 +358,23 @@ function count_sketches(){ # count_sketches <path> [target] [file] [ignore-requi
                             continue 2
                         fi
                     done
+                fi
+
+                # Check if the sketch excludes any configuration options (OR)
+                requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
+                if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+                    found=false
+                    for requirement in $requirements_or; do
+                        requirement=$(echo $requirement | xargs)
+                        found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
+                        if [[ "$found_line" != "" ]]; then
+                            found=true
+                            break
+                        fi
+                    done
+                    if [[ "$found" == "false" ]]; then
+                        continue 2
+                    fi
                 fi
             fi
         fi
