@@ -246,7 +246,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
 
 #ifdef SOC_SDMMC_IO_POWER_EXTERNAL
     sd_pwr_ctrl_ldo_config_t ldo_config = {
-        .ldo_chan_id = _pin_power,
+        .ldo_chan_id = _power_channel,
     };
     sd_pwr_ctrl_handle_t pwr_ctrl_handle = NULL;
 
