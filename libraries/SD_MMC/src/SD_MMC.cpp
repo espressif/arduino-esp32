@@ -302,11 +302,6 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
       goto err;
     }
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
-  if (!perimanSetPinBus(_pin_power, ESP32_BUS_TYPE_SDMMC_POWER, (void *)(this), -1, -1)) {
-      goto err;
-  }
-#endif
   return true;
 
 err:
