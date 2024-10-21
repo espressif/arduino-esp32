@@ -87,9 +87,6 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
     case ESP32_BUS_TYPE_SDMMC_D1:  return "SDMMC_D1";
     case ESP32_BUS_TYPE_SDMMC_D2:  return "SDMMC_D2";
     case ESP32_BUS_TYPE_SDMMC_D3:  return "SDMMC_D3";
-#if SOC_SDMMC_IO_POWER_EXTERNAL
-    case ESP32_BUS_TYPE_SDMMC_POWER: return "SDMMC_POWER";
-#endif
 #endif
 #if SOC_TOUCH_SENSOR_SUPPORTED
     case ESP32_BUS_TYPE_TOUCH: return "TOUCH";
