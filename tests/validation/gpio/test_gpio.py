@@ -1,5 +1,6 @@
 import logging
 
+
 def test_gpio(dut):
     LOGGER = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
 import logging
 
+
 def test_periman(dut):
     LOGGER = logging.getLogger(__name__)
     peripherals = [
