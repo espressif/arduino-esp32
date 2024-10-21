@@ -247,6 +247,9 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   _mode1bit = mode1bit;
 
 #ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+  if(_power_channel == -1) {
+    log_i("On-chip power channel specified, use external power for SDMMC");
+  } else {
     sd_pwr_ctrl_ldo_config_t ldo_config = {
         .ldo_chan_id = _power_channel,
     };
@@ -257,6 +260,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
         return false;
     }
     host.pwr_ctrl_handle = pwr_ctrl_handle;
+  }
 #endif
 
 #if defined(BOARD_SDMMC_POWER_PIN)
