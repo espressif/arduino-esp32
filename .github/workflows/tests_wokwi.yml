@@ -22,6 +22,9 @@ jobs:
     outputs:
       pr_num: ${{ steps.set-ref.outputs.pr_num }}
       ref: ${{ steps.set-ref.outputs.ref }}
+      base: ${{ steps.set-ref.outputs.base }}
+      targets: ${{ steps.set-ref.outputs.targets }}
+      types: ${{ steps.set-ref.outputs.types }}
     steps:
       - name: Report pending
         uses: actions/github-script@v7
@@ -51,10 +54,18 @@ jobs:
           name: event_file
           path: artifacts/event_file
 
+      - name: Download and extract matrix info
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: matrix_info
+          path: artifacts/matrix_info
+
       - name: Try to read PR number
         id: set-ref
         run: |
-          pr_num=$(jq -r '.pull_request.number' artifacts/event_file/event.json)
+          pr_num=$(jq -r '.pull_request.number' artifacts/event_file/event.json | tr -cd "[:digit:]")
           if [ -z "$pr_num" ] || [ "$pr_num" == "null" ]; then
             pr_num=""
           fi
@@ -64,11 +75,22 @@ jobs:
             ref=${{ github.ref }}
           fi
 
-          action=$(jq -r '.action' artifacts/event_file/event.json)
+          action=$(jq -r '.action' artifacts/event_file/event.json | tr -cd "[:alpha:]_")
           if [ "$action" == "null" ]; then
             action=""
           fi
 
+          base=$(jq -r '.pull_request.base.ref' artifacts/event_file/event.json | tr -cd "[:alnum:]/_.-")
+          if [ -z "$base" ] || [ "$base" == "null" ]; then
+            base=${{ github.ref }}
+          fi
+
+          types=$(cat artifacts/matrix_info/wokwi_types.txt | tr -cd "[:alpha:],[]'")
+          targets=$(cat artifacts/matrix_info/targets.txt | tr -cd "[:alnum:],[]'")
+
+          echo "base = $base"
+          echo "targets = $targets"
+          echo "types = $types"
           echo "pr_num = $pr_num"
 
           printf "$ref" >> artifacts/ref.txt
@@ -98,6 +120,9 @@ jobs:
           cat artifacts/conclusion.txt
 
           echo "pr_num=$pr_num" >> $GITHUB_OUTPUT
+          echo "base=$base" >> $GITHUB_OUTPUT
+          echo "targets=$targets" >> $GITHUB_OUTPUT
+          echo "types=$types" >> $GITHUB_OUTPUT
           echo "ref=$ref" >> $GITHUB_OUTPUT
 
       - name: Download and extract parent hardware results
@@ -164,8 +189,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        type: ['validation']
-        chip: ['esp32', 'esp32s2', 'esp32s3', 'esp32c3', 'esp32c6', 'esp32h2']
+        type: ${{ fromJson(needs.get-artifacts.outputs.types) }}
+        chip: ${{ fromJson(needs.get-artifacts.outputs.targets) }}
     steps:
       - name: Report pending
         uses: actions/github-script@v7
@@ -211,9 +236,12 @@ jobs:
           echo "enabled=$enabled" >> $GITHUB_OUTPUT
 
       # Note that changes to the workflows and tests will only be picked up after the PR is merged
+      # DO NOT CHECKOUT THE USER'S REPOSITORY IN THIS WORKFLOW. IT HAS HIGH SECURITY RISKS.
       - name: Checkout repository
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.get-artifacts.outputs.base || github.ref }}
 
       - uses: actions/setup-python@v5
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}

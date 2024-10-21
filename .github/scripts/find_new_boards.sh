@@ -8,53 +8,32 @@ url="https://api.github.com/repos/$owner_repository/pulls/$pr_number/files"
 echo $url
 
 # Get changes in boards.txt file from PR
-Patch=$(curl $url | jq -r '.[] | select(.filename == "boards.txt") | .patch ')
+Boards_modified_url=$(curl -s $url | jq -r '.[] | select(.filename == "boards.txt") | .raw_url')
 
-# Extract only changed lines number and count
-substring_patch=$(echo "$Patch" | grep -o '@@[^@]*@@')
+# Echo the modified boards.txt file URL
+echo "Modified boards.txt file URL:"
+echo $Boards_modified_url
 
-params_array=()
+# Download the modified boards.txt file
+curl -L -o boards_pr.txt $Boards_modified_url
 
-IFS=$'\n' read -d '' -ra params <<< $(echo "$substring_patch" | grep -oE '[-+][0-9]+,[0-9]+')
+# Compare boards.txt file in the repo with the modified file
+diff=$(diff -u boards.txt boards_pr.txt)
 
-for param in "${params[@]}"
-do
-    echo "The parameter is $param"
-    params_array+=("$param")
-done
+# Extract added or modified lines (lines starting with '+' or '-')
+modified_lines=$(echo "$diff" | grep -E '^[+-][^+-]')
 
 boards_array=()
 previous_board=""
 file="boards.txt"
 
-# Loop through boards.txt file and extract all boards that were added
-for (( c=0; c<${#params_array[@]}; c+=2 ))
+# Extract board names from the modified lines, and add them to the boards_array
+while read -r line
 do
-    deletion_count=$( echo "${params_array[c]}" | cut -d',' -f2 | cut -d' ' -f1 )
-    addition_line=$( echo "${params_array[c+1]}" | cut -d'+' -f2 | cut -d',' -f1 )
-    addition_count=$( echo "${params_array[c+1]}" | cut -d'+' -f2 | cut -d',' -f2 | cut -d' ' -f1 )
-    addition_end=$(($addition_line+$addition_count))
-    
-    addition_line=$(($addition_line + 3))
-    addition_end=$(($addition_end - $deletion_count))
-
-    echo $addition_line
-    echo $addition_end
-
-    i=0
-
-    while read -r line
-    do
-    i=$((i+1))
-    if [ $i -lt $addition_line ]
-    then
-    continue
-    elif [ $i -gt $addition_end ]
-    then
-    break
-    fi
     board_name=$(echo "$line" | cut -d '.' -f1 | cut -d '#' -f1)
-    if [ "$board_name" != "" ] && [ "$board_name" != "esp32_family" ]
+    # remove + or - from the board name at the beginning
+    board_name=$(echo "$board_name" | sed 's/^[+-]//')
+    if [ "$board_name" != "" ] && [ "$board_name" != "+" ] && [ "$board_name" != "-" ] && [ "$board_name" != "esp32_family" ]
     then
         if [ "$board_name" != "$previous_board" ]
         then
@@ -63,8 +42,7 @@ do
             echo "Added 'espressif:esp32:$board_name' to array"
         fi
     fi
-    done < "$file"
-done
+done <<< "$modified_lines"
 
 # Create JSON like string with all boards found and pass it to env variable
 board_count=${#boards_array[@]}
