@@ -260,8 +260,13 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
 #endif
 
 #if defined(BOARD_SDMMC_POWER_PIN)
+#ifndef BOARD_SDMMC_POWER_ON_LEVEL
+  #error "BOARD_SDMMC_POWER_ON_LEVEL not defined, please define it in pins_arduino.h"
+#endif
   pinMode(BOARD_SDMMC_POWER_PIN, OUTPUT);
-  digitalWrite(BOARD_SDMMC_POWER_PIN, HIGH);
+  digitalWrite(BOARD_SDMMC_POWER_PIN, !BOARD_SDMMC_POWER_ON_LEVEL);
+  delay(200);
+  digitalWrite(BOARD_SDMMC_POWER_PIN, BOARD_SDMMC_POWER_ON_LEVEL);
   perimanSetPinBusExtraType(BOARD_SDMMC_POWER_PIN, "SDMMC_POWER");
 #endif
 
@@ -331,6 +336,9 @@ void SDMMCFS::end() {
       perimanClearPinBus(_pin_d2);
       perimanClearPinBus(_pin_d3);
     }
+  #if defined(BOARD_SDMMC_POWER_PIN)
+    perimanClearPinBus(BOARD_SDMMC_POWER_PIN);
+  #endif
   }
 }
 
