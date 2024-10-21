@@ -15,10 +15,10 @@ Pranav Cherukupalli <cherukupallip@gmail.com>
 */
 
 #if CONFIG_IDF_TARGET_ESP32
-#define THRESHOLD 40   /* Greater the value, more the sensitivity */
+#define THRESHOLD 40 /* Greater the value, more the sensitivity */
 #elif (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #define THRESHOLD 5000 /* Lower the value, more the sensitivity */
-#else // ESP32-P4 + default for other chips (to be adjusted) */
+#else                  // ESP32-P4 + default for other chips (to be adjusted) */
 #define THRESHOLD 500  /* Lower the value, more the sensitivity */
 #endif
 

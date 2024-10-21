@@ -24,7 +24,7 @@
     Internal Private Touch Data Structure and Functions
 */
 
-#if SOC_TOUCH_SENSOR_VERSION == 1    // ESP32
+#if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
 static uint16_t __touchSleepCycles = 0x1000;
 static uint16_t __touchMeasureCycles = 0x1000;
 #elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32S2, ESP32S3
@@ -53,7 +53,7 @@ static bool initialized = false;
 static bool channels_initialized[SOC_TOUCH_SENSOR_NUM] = {false};
 
 static void ARDUINO_ISR_ATTR __touchISR(void *arg) {
-#if SOC_TOUCH_SENSOR_VERSION == 1    // ESP32
+#if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
   uint32_t pad_intr = touch_pad_get_status();
   //clear interrupt
   touch_pad_clear_status();
@@ -95,7 +95,7 @@ static void ARDUINO_ISR_ATTR __touchISR(void *arg) {
 static void __touchSetCycles(uint16_t measure, uint16_t sleep) {
   __touchSleepCycles = sleep;
   __touchMeasureCycles = measure;
-#if SOC_TOUCH_SENSOR_VERSION == 1    // ESP32
+#if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
   touch_pad_set_measurement_clock_cycles(measure);
 #elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32S2, ESP32S3
   touch_pad_set_charge_discharge_times(measure);
@@ -125,7 +125,7 @@ static void __touchInit() {
 
   esp_err_t err = ESP_OK;
 
-#if SOC_TOUCH_SENSOR_VERSION == 1    // ESP32
+#if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
   err = touch_pad_init();
   if (err != ESP_OK) {
     goto err;
@@ -145,7 +145,7 @@ static void __touchInit() {
   if (err != ESP_OK) {
     goto err;
   }
-  touch_pad_intr_enable();  // returns ESP_OK
+  touch_pad_intr_enable();           // returns ESP_OK
 #elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32S2, ESP32S3
   err = touch_pad_init();
   if (err != ESP_OK) {
@@ -180,11 +180,11 @@ static void __touchChannelInit(int pad) {
     return;
   }
 
-#if SOC_TOUCH_SENSOR_VERSION == 1    // ESP32
+#if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
   // Initial no Threshold and setup
   __touchInterruptHandlers[pad].fn = NULL;
   touch_pad_config(pad, TOUCH_PAD_THRESHOLD_MAX);  // returns ESP_OK
-#elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32S2, ESP32S3
+#elif SOC_TOUCH_SENSOR_VERSION == 2                // ESP32S2, ESP32S3
   // Initial no Threshold and setup
   __touchInterruptHandlers[pad].fn = NULL;
   touch_pad_config(pad);  // returns ESP_OK
@@ -271,7 +271,7 @@ static void __touchDettachInterrupt(uint8_t pin) {
     External Public Touch API Functions
 */
 
-#if SOC_TOUCH_SENSOR_VERSION == 1    // Only for ESP32 SoC
+#if SOC_TOUCH_SENSOR_VERSION == 1  // Only for ESP32 SoC
 void touchInterruptSetThresholdDirection(bool mustbeLower) {
   if (mustbeLower) {
     touch_pad_set_trigger_mode(TOUCH_TRIGGER_BELOW);

@@ -34,7 +34,9 @@ typedef struct {
   bool lastStatusIsPressed;
 } TouchInterruptHandle_t;
 
-static TouchInterruptHandle_t __touchInterruptHandlers[SOC_TOUCH_SENSOR_NUM] = { 0,};
+static TouchInterruptHandle_t __touchInterruptHandlers[SOC_TOUCH_SENSOR_NUM] = {
+  0,
+};
 
 static uint8_t _sample_num = 1;
 static uint32_t _div_num = 1;
@@ -52,7 +54,7 @@ static bool enabled = false;
 static bool running = false;
 static bool channels_initialized[SOC_TOUCH_SENSOR_NUM] = {false};
 
-static touch_sensor_handle_t  touch_sensor_handle = NULL;
+static touch_sensor_handle_t touch_sensor_handle = NULL;
 static touch_channel_handle_t touch_channel_handle[SOC_TOUCH_SENSOR_NUM] = {};
 
 // Active threshold to benchmark ratio. (i.e., touch will be activated when data >= benchmark * (1 + ratio))
@@ -61,7 +63,7 @@ static float s_thresh2bm_ratio = 0.015f;  // 1.5% for all channels
 static bool ARDUINO_ISR_ATTR __touchOnActiveISR(touch_sensor_handle_t sens_handle, const touch_active_event_data_t *event, void *user_ctx) {
   uint8_t pad_num = (uint8_t)event->chan_id;
   __touchInterruptHandlers[pad_num].lastStatusIsPressed = true;
-  if(__touchInterruptHandlers[pad_num].fn) {
+  if (__touchInterruptHandlers[pad_num].fn) {
     // keeping backward compatibility with "void cb(void)" and with new "void cb(void *)"
     if (__touchInterruptHandlers[pad_num].callWithArgs) {
       ((voidArgFuncPtr)__touchInterruptHandlers[pad_num].fn)(__touchInterruptHandlers[pad_num].arg);
@@ -75,7 +77,7 @@ static bool ARDUINO_ISR_ATTR __touchOnActiveISR(touch_sensor_handle_t sens_handl
 static bool ARDUINO_ISR_ATTR __touchOnInactiveISR(touch_sensor_handle_t sens_handle, const touch_inactive_event_data_t *event, void *user_ctx) {
   uint8_t pad_num = (uint8_t)event->chan_id;
   __touchInterruptHandlers[pad_num].lastStatusIsPressed = false;
-  if(__touchInterruptHandlers[pad_num].fn) {
+  if (__touchInterruptHandlers[pad_num].fn) {
     // keeping backward compatibility with "void cb(void)" and with new "void cb(void *)"
     if (__touchInterruptHandlers[pad_num].callWithArgs) {
       ((voidArgFuncPtr)__touchInterruptHandlers[pad_num].fn)(__touchInterruptHandlers[pad_num].arg);
@@ -87,10 +89,10 @@ static bool ARDUINO_ISR_ATTR __touchOnInactiveISR(touch_sensor_handle_t sens_han
 }
 
 bool touchStop() {
-  if (!running) { // Already stopped
+  if (!running) {  // Already stopped
     return true;
   }
-  if(touch_sensor_stop_continuous_scanning(touch_sensor_handle) != ESP_OK) {
+  if (touch_sensor_stop_continuous_scanning(touch_sensor_handle) != ESP_OK) {
     log_e("Touch sensor stop scanning failed!");
     return false;
   }
@@ -99,10 +101,10 @@ bool touchStop() {
 }
 
 bool touchDisable() {
-  if (!enabled) { // Already disabled
+  if (!enabled) {  // Already disabled
     return true;
   }
-  if(!running && (touch_sensor_disable(touch_sensor_handle) != ESP_OK)) {
+  if (!running && (touch_sensor_disable(touch_sensor_handle) != ESP_OK)) {
     log_e("Touch sensor still running or disable failed!");
     return false;
   }
@@ -111,10 +113,10 @@ bool touchDisable() {
 }
 
 bool touchStart() {
-  if (running) { // Already running
+  if (running) {  // Already running
     return true;
   }
-  if(enabled && (touch_sensor_start_continuous_scanning(touch_sensor_handle) != ESP_OK)) {
+  if (enabled && (touch_sensor_start_continuous_scanning(touch_sensor_handle) != ESP_OK)) {
     log_e("Touch sensor not enabled or failed to start continuous scanning failed!");
     return false;
   }
@@ -123,10 +125,10 @@ bool touchStart() {
 }
 
 bool touchEnable() {
-  if (enabled) { // Already enabled
+  if (enabled) {  // Already enabled
     return true;
   }
-  if(touch_sensor_enable(touch_sensor_handle) != ESP_OK) {
+  if (touch_sensor_enable(touch_sensor_handle) != ESP_OK) {
     log_e("Touch sensor enable failed!");
     return false;
   }
@@ -135,22 +137,26 @@ bool touchEnable() {
 }
 
 bool touchBenchmarkThreshold(uint8_t pad) {
-  if (!touchEnable()) {return false;}
+  if (!touchEnable()) {
+    return false;
+  }
 
   /* Scan the enabled touch channels for several times, to make sure the initial channel data is stable */
   for (int i = 0; i < 3; i++) {
-    if(touch_sensor_trigger_oneshot_scanning(touch_sensor_handle, 2000) != ESP_OK) {
+    if (touch_sensor_trigger_oneshot_scanning(touch_sensor_handle, 2000) != ESP_OK) {
       log_e("Touch sensor trigger oneshot scanning failed!");
       return false;
     }
   }
 
   /* Disable the touch channel to rollback the state */
-  if (!touchDisable()) {return false;}
+  if (!touchDisable()) {
+    return false;
+  }
 
   // Reconfigure passed pad with new threshold
   uint32_t benchmark[_sample_num] = {};
-  if(touch_channel_read_data(touch_channel_handle[pad], TOUCH_CHAN_DATA_TYPE_BENCHMARK, benchmark) != ESP_OK) {
+  if (touch_channel_read_data(touch_channel_handle[pad], TOUCH_CHAN_DATA_TYPE_BENCHMARK, benchmark) != ESP_OK) {
     log_e("Touch channel read data failed!");
     return false;
   }
@@ -158,10 +164,10 @@ bool touchBenchmarkThreshold(uint8_t pad) {
   touch_channel_config_t chan_cfg = {};
   for (int i = 0; i < _sample_num; i++) {
     chan_cfg.active_thresh[i] = (uint32_t)(benchmark[i] * s_thresh2bm_ratio);
-    log_v("Configured [CH %d] sample %d: benchmark = %"PRIu32", threshold = %"PRIu32"\t", pad, i, benchmark[i], chan_cfg.active_thresh[i]);
+    log_v("Configured [CH %d] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.active_thresh[i]);
   }
   /* Update the channel configuration */
-  if(touch_sensor_reconfig_channel(touch_channel_handle[pad], &chan_cfg) != ESP_OK) {
+  if (touch_sensor_reconfig_channel(touch_channel_handle[pad], &chan_cfg) != ESP_OK) {
     log_e("Touch sensor threshold reconfig channel failed!");
     return false;
   }
@@ -187,8 +193,6 @@ static bool touchDetachBus(void *pin) {
   return true;
 }
 
-
-
 static void __touchInit() {
   if (initialized) {
     return;
@@ -199,9 +203,9 @@ static void __touchInit() {
   sample_cfg[0] = single_sample_cfg;
 
   /* Allocate new touch controller handle */
-  touch_sensor_config_t sens_cfg =  {
+  touch_sensor_config_t sens_cfg = {
     .power_on_wait_us = __touchSleepTime,
-    .meas_interval_us = __touchMeasureTime, 
+    .meas_interval_us = __touchMeasureTime,
     .max_meas_time_us = 0,
     .output_mode = TOUCH_PAD_OUT_AS_CLOCK,
     .sample_cfg_num = _sample_num,
@@ -250,10 +254,10 @@ static void __touchChannelInit(int pad) {
   __touchInterruptHandlers[pad].fn = NULL;
 
   touch_channel_config_t chan_cfg = {
-    .active_thresh = {1000} // default threshold, will be updated after benchmark
+    .active_thresh = {1000}  // default threshold, will be updated after benchmark
   };
-  
-  if(!touchStop() || !touchDisable()) {
+
+  if (!touchStop() || !touchDisable()) {
     log_e("Touch sensor stop and disable failed!");
     return;
   }
@@ -272,7 +276,7 @@ static void __touchChannelInit(int pad) {
   channels_initialized[pad] = true;
   used_pads++;
 
-  if(!touchEnable() || !touchStart()) {
+  if (!touchEnable() || !touchStart()) {
     log_e("Touch sensor enable and start failed!");
   }
 }
@@ -300,9 +304,9 @@ static touch_value_t __touchRead(uint8_t pin) {
 
   uint32_t touch_read[_sample_num] = {};
   touch_channel_read_data(touch_channel_handle[pad], TOUCH_CHAN_DATA_TYPE_SMOOTH, touch_read);
-  touch_value_t touch_value = touch_read[0]; // only one sample configuration for now
+  touch_value_t touch_value = touch_read[0];  // only one sample configuration for now
 
-  return touch_value; 
+  return touch_value;
 }
 
 static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Args, bool callWithArgs, touch_value_t threshold) {
@@ -326,25 +330,25 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
     __touchInterruptHandlers[pad].arg = Args;
   }
 
- if(threshold != 0) {
-  if(!touchStop() || !touchDisable()) {
-    log_e("Touch sensor stop and disable failed!");
-    return;
-  }
+  if (threshold != 0) {
+    if (!touchStop() || !touchDisable()) {
+      log_e("Touch sensor stop and disable failed!");
+      return;
+    }
 
-  touch_channel_config_t chan_cfg = {};
-  for (int i = 0; i < _sample_num; i++) {
-    chan_cfg.active_thresh[i] = threshold;
-  }
+    touch_channel_config_t chan_cfg = {};
+    for (int i = 0; i < _sample_num; i++) {
+      chan_cfg.active_thresh[i] = threshold;
+    }
 
-  if(touch_sensor_reconfig_channel(touch_channel_handle[pad], &chan_cfg) != ESP_OK) {
-    log_e("Touch sensor threshold reconfig channel failed!");
-  }
+    if (touch_sensor_reconfig_channel(touch_channel_handle[pad], &chan_cfg) != ESP_OK) {
+      log_e("Touch sensor threshold reconfig channel failed!");
+    }
 
-  if(!touchEnable() || !touchStart()) {
-    log_e("Touch sensor enable and start failed!");
+    if (!touchEnable() || !touchStart()) {
+      log_e("Touch sensor enable and start failed!");
+    }
   }
- }
 }
 
 // it keeps backwards compatibility
@@ -394,28 +398,27 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold) {
   }
 
   log_v("Touch sensor deep sleep wake-up configuration for pad %d with threshold %d", pad, threshold);
-  if(!touchStop() || !touchDisable()) {
+  if (!touchStop() || !touchDisable()) {
     log_e("Touch sensor stop and disable failed!");
     return;
   }
 
   touch_sleep_config_t deep_slp_cfg = {
-      .slp_wakeup_lvl = TOUCH_DEEP_SLEEP_WAKEUP,
-      .deep_slp_chan = touch_channel_handle[pad],
-      .deep_slp_thresh = {threshold},
-      .deep_slp_sens_cfg = NULL, // Use the original touch sensor configuration
+    .slp_wakeup_lvl = TOUCH_DEEP_SLEEP_WAKEUP,
+    .deep_slp_chan = touch_channel_handle[pad],
+    .deep_slp_thresh = {threshold},
+    .deep_slp_sens_cfg = NULL,  // Use the original touch sensor configuration
   };
 
   // Register the deep sleep wake-up
-  if(touch_sensor_config_sleep_wakeup(touch_sensor_handle, &deep_slp_cfg) != ESP_OK) {
-      log_e("Touch sensor deep sleep wake-up failed!");
-      return;
+  if (touch_sensor_config_sleep_wakeup(touch_sensor_handle, &deep_slp_cfg) != ESP_OK) {
+    log_e("Touch sensor deep sleep wake-up failed!");
+    return;
   }
 
-  if(!touchEnable() || !touchStart()) {
+  if (!touchEnable() || !touchStart()) {
     log_e("Touch sensor enable and start failed!");
   }
-
 }
 
 void touchSetDefaultThreshold(float percentage) {
@@ -423,7 +426,7 @@ void touchSetDefaultThreshold(float percentage) {
 }
 
 void touchSetTiming(float measure, uint32_t sleep) {
-  if(initialized) {
+  if (initialized) {
     log_e("Touch sensor already initialized. Cannot set cycles.");
     return;
   }
@@ -432,7 +435,7 @@ void touchSetTiming(float measure, uint32_t sleep) {
 }
 
 void touchSetConfig(uint32_t div_num, uint8_t coarse_freq_tune, uint8_t fine_freq_tune) {
-  if(initialized) {
+  if (initialized) {
     log_e("Touch sensor already initialized. Cannot set configuration.");
     return;
   }
