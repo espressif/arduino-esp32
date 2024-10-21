@@ -49,7 +49,7 @@ static const uint8_t T11 = 13;
 static const uint8_t T12 = 14;
 static const uint8_t T13 = 15;
 
-/* ESP32-P4 EV Function board specific definitons */
+/* ESP32-P4 EV Function board specific definitions */
 //ETH
 #define ETH_PHY_TYPE    ETH_PHY_TLK110
 #define ETH_PHY_ADDR    1
