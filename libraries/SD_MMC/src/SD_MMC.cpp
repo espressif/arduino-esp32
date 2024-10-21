@@ -49,7 +49,7 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
   _pin_d3 = SDMMC_D3;
 #endif  // BOARD_HAS_1BIT_SDMMC
 
-#elif  defined(SOC_SDMMC_USE_IOMUX) && defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32)
+#elif defined(SOC_SDMMC_USE_IOMUX) && defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32)
   _pin_clk = SDMMC_SLOT1_IOMUX_PIN_NUM_CLK;
   _pin_cmd = SDMMC_SLOT1_IOMUX_PIN_NUM_CMD;
   _pin_d0 = SDMMC_SLOT1_IOMUX_PIN_NUM_D0;
@@ -80,7 +80,7 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
   _pin_d3 = SDMMC_D3;
 #endif  // BOARD_HAS_1BIT_SDMMC
 #endif  // BOARD_SDMMC_SLOT_NO
-#endif  
+#endif
 #if defined(SOC_SDMMC_IO_POWER_EXTERNAL) && defined(BOARD_SDMMC_POWER_CHANNEL)
   _power_channel = BOARD_SDMMC_POWER_CHANNEL;
 #endif
@@ -183,8 +183,9 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   }
   //mount
   sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-#if (defined(SOC_SDMMC_USE_GPIO_MATRIX) && !defined(CONFIG_IDF_TARGET_ESP32P4)) || (defined(CONFIG_IDF_TARGET_ESP32P4) && ((defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 1)) || !defined(BOARD_HAS_SDMMC))) 
- log_d("pin_cmd: %d, pin_clk: %d, pin_d0: %d, pin_d1: %d, pin_d2: %d, pin_d3: %d", _pin_cmd, _pin_clk, _pin_d0, _pin_d1, _pin_d2, _pin_d3);
+#if (defined(SOC_SDMMC_USE_GPIO_MATRIX) && !defined(CONFIG_IDF_TARGET_ESP32P4)) \
+  || (defined(CONFIG_IDF_TARGET_ESP32P4) && ((defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 1)) || !defined(BOARD_HAS_SDMMC)))
+  log_d("pin_cmd: %d, pin_clk: %d, pin_d0: %d, pin_d1: %d, pin_d2: %d, pin_d3: %d", _pin_cmd, _pin_clk, _pin_d0, _pin_d1, _pin_d2, _pin_d3);
   // SoC supports SDMMC pin configuration via GPIO matrix.
   // Check that the pins have been set either in the constructor or setPins function.
   if (_pin_cmd == -1 || _pin_clk == -1 || _pin_d0 == -1 || (!mode1bit && (_pin_d1 == -1 || _pin_d2 == -1 || _pin_d3 == -1))) {
@@ -247,17 +248,17 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   _mode1bit = mode1bit;
 
 #ifdef SOC_SDMMC_IO_POWER_EXTERNAL
-  if(_power_channel == -1) {
+  if (_power_channel == -1) {
     log_i("On-chip power channel specified, use external power for SDMMC");
   } else {
     sd_pwr_ctrl_ldo_config_t ldo_config = {
-        .ldo_chan_id = _power_channel,
+      .ldo_chan_id = _power_channel,
     };
     sd_pwr_ctrl_handle_t pwr_ctrl_handle = NULL;
 
-    if(sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle) != ESP_OK) {
-        log_e("Failed to create a new on-chip LDO power control driver");
-        return false;
+    if (sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle) != ESP_OK) {
+      log_e("Failed to create a new on-chip LDO power control driver");
+      return false;
     }
     host.pwr_ctrl_handle = pwr_ctrl_handle;
   }
@@ -265,7 +266,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
 
 #if defined(BOARD_SDMMC_POWER_PIN)
 #ifndef BOARD_SDMMC_POWER_ON_LEVEL
-  #error "BOARD_SDMMC_POWER_ON_LEVEL not defined, please define it in pins_arduino.h"
+#error "BOARD_SDMMC_POWER_ON_LEVEL not defined, please define it in pins_arduino.h"
 #endif
   pinMode(BOARD_SDMMC_POWER_PIN, OUTPUT);
   digitalWrite(BOARD_SDMMC_POWER_PIN, !BOARD_SDMMC_POWER_ON_LEVEL);
@@ -340,9 +341,9 @@ void SDMMCFS::end() {
       perimanClearPinBus(_pin_d2);
       perimanClearPinBus(_pin_d3);
     }
-  #if defined(BOARD_SDMMC_POWER_PIN)
+#if defined(BOARD_SDMMC_POWER_PIN)
     perimanClearPinBus(BOARD_SDMMC_POWER_PIN);
-  #endif
+#endif
   }
 }
 
