@@ -49,6 +49,8 @@ static const uint8_t T11 = 13;
 static const uint8_t T12 = 14;
 static const uint8_t T13 = 15;
 
+/* ESP32-P4 EV Function board specific definitons */
+//ETH
 #define ETH_PHY_TYPE    ETH_PHY_TLK110
 #define ETH_PHY_ADDR    1
 #define ETH_PHY_MDC     31
@@ -62,5 +64,20 @@ static const uint8_t T13 = 15;
 #define ETH_RMII_CRS_DV 28
 #define ETH_RMII_CLK    50
 #define ETH_CLK_MODE    EMAC_CLK_EXT_IN
+
+//SDMMC
+#define BOARD_HAS_SDMMC
+#define BOARD_SDMMC_SLOT 0
+#define BOARD_SDMMC_POWER_CHANNEL 4
+
+//WIFI - ESP32C6
+#define BOARD_HAS_SDIO_ESP_HOSTED
+#define BOARD_SDIO_ESP_HOSTED_CLK 18
+#define BOARD_SDIO_ESP_HOSTED_CMD 19
+#define BOARD_SDIO_ESP_HOSTED_D0 14
+#define BOARD_SDIO_ESP_HOSTED_D1 15
+#define BOARD_SDIO_ESP_HOSTED_D2 16
+#define BOARD_SDIO_ESP_HOSTED_D3 17
+#define BOARD_SDIO_ESP_HOSTED_RESET 54
 
 #endif /* Pins_Arduino_h */
