@@ -22,6 +22,10 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 // set your board USER BUTTON pin here
 const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use GPIO9.
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // Matter Protocol Endpoint Callback
 bool setLightOnOff(bool state) {
   Serial.printf("User Callback :: New Light State = %s\r\n", state ? "ON" : "OFF");
@@ -35,10 +39,6 @@ bool setLightOnOff(bool state) {
   // This callback must return the success state to Matter core
   return true;
 }
-
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) GPIO that will act as a toggle switch
