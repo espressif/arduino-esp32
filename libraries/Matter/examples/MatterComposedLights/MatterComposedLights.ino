@@ -9,6 +9,10 @@ MatterOnOffLight OnOffLight1;
 MatterOnOffLight OnOffLight2;
 MatterOnOffLight OnOffLight3;
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // Matter Protocol Endpoint Callback for each Light Accessory
 bool setLightOnOff1(bool state) {
   Serial.printf("CB-Light1 changed state to: %s\r\n", state ? "ON" : "OFF");
@@ -24,11 +28,6 @@ bool setLightOnOff3(bool state) {
   Serial.printf("CB-Light3 changed state to: %s\r\n", state ? "ON" : "OFF");
   return true;
 }
-
-// WiFi is manually set and started
-
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
 
 void setup() {
   Serial.begin(115200);
