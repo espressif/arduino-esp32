@@ -32,11 +32,14 @@
 #include "ff.h"
 #include "esp32-hal-periman.h"
 
+#if SOC_SDMMC_IO_POWER_EXTERNAL
+#include "sd_pwr_ctrl_by_on_chip_ldo.h"
+#endif
+
 using namespace fs;
 
 SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
-#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC)
+#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC) && !defined(CONFIG_IDF_TARGET_ESP32P4)
   _pin_clk = SDMMC_CLK;
   _pin_cmd = SDMMC_CMD;
   _pin_d0 = SDMMC_D0;
@@ -45,9 +48,8 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
   _pin_d2 = SDMMC_D2;
   _pin_d3 = SDMMC_D3;
 #endif  // BOARD_HAS_1BIT_SDMMC
-#endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
-#elif SOC_SDMMC_USE_IOMUX && defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32)
+#elif defined(SOC_SDMMC_USE_IOMUX) && defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32)
   _pin_clk = SDMMC_SLOT1_IOMUX_PIN_NUM_CLK;
   _pin_cmd = SDMMC_SLOT1_IOMUX_PIN_NUM_CMD;
   _pin_d0 = SDMMC_SLOT1_IOMUX_PIN_NUM_D0;
@@ -57,7 +59,9 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
   _pin_d3 = SDMMC_SLOT1_IOMUX_PIN_NUM_D3;
 #endif  // BOARD_HAS_1BIT_SDMMC
 
-#elif SOC_SDMMC_USE_IOMUX && defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32P4)
+// ESP32-P4 can use either IOMUX or GPIO matrix
+#elif defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
   _pin_clk = SDMMC_SLOT0_IOMUX_PIN_NUM_CLK;
   _pin_cmd = SDMMC_SLOT0_IOMUX_PIN_NUM_CMD;
   _pin_d0 = SDMMC_SLOT0_IOMUX_PIN_NUM_D0;
@@ -66,6 +70,19 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
   _pin_d2 = SDMMC_SLOT0_IOMUX_PIN_NUM_D2;
   _pin_d3 = SDMMC_SLOT0_IOMUX_PIN_NUM_D3;
 #endif  // BOARD_HAS_1BIT_SDMMC
+#else
+  _pin_clk = SDMMC_CLK;
+  _pin_cmd = SDMMC_CMD;
+  _pin_d0 = SDMMC_D0;
+#ifndef BOARD_HAS_1BIT_SDMMC
+  _pin_d1 = SDMMC_D1;
+  _pin_d2 = SDMMC_D2;
+  _pin_d3 = SDMMC_D3;
+#endif  // BOARD_HAS_1BIT_SDMMC
+#endif  // BOARD_SDMMC_SLOT_NO
+#endif
+#if defined(SOC_SDMMC_IO_POWER_EXTERNAL) && defined(BOARD_SDMMC_POWER_CHANNEL)
+  _power_channel = BOARD_SDMMC_POWER_CHANNEL;
 #endif
 }
 
@@ -95,7 +112,7 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3) {
   d2 = digitalPinToGPIONumber(d2);
   d3 = digitalPinToGPIONumber(d3);
 
-#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && !defined(CONFIG_IDF_TARGET_ESP32P4)
   // SoC supports SDMMC pin configuration via GPIO matrix. Save the pins for later use in SDMMCFS::begin.
   _pin_clk = (int8_t)clk;
   _pin_cmd = (int8_t)cmd;
@@ -116,10 +133,41 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3) {
     return false;
   }
   return true;
+#elif defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
+  // ESP32-P4 can use either IOMUX or GPIO matrix
+  bool pins_ok =
+    (clk == (int)SDMMC_SLOT0_IOMUX_PIN_NUM_CLK) && (cmd == (int)SDMMC_SLOT0_IOMUX_PIN_NUM_CMD) && (d0 == (int)SDMMC_SLOT0_IOMUX_PIN_NUM_D0)
+    && (((d1 == -1) && (d2 == -1) && (d3 == -1)) || ((d1 == (int)SDMMC_SLOT0_IOMUX_PIN_NUM_D1) && (d2 == (int)SDMMC_SLOT0_IOMUX_PIN_NUM_D2) && (d3 == (int)SDMMC_SLOT0_IOMUX_PIN_NUM_D3)));
+  if (!pins_ok) {
+    log_e("SDMMCFS: specified pins are not supported when using IOMUX (SDMMC SLOT 0).");
+    return false;
+  }
+  return true;
+#else
+  _pin_clk = (int8_t)clk;
+  _pin_cmd = (int8_t)cmd;
+  _pin_d0 = (int8_t)d0;
+  _pin_d1 = (int8_t)d1;
+  _pin_d2 = (int8_t)d2;
+  _pin_d3 = (int8_t)d3;
+  return true;
+#endif
 #else
 #error SoC not supported
 #endif
 }
+
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+bool SDMMCFS::setPowerChannel(int power_channel) {
+  if (_card != nullptr) {
+    log_e("SD_MMC.setPowerChannel must be called before SD_MMC.begin");
+    return false;
+  }
+  _power_channel = power_channel;
+  return true;
+}
+#endif
 
 bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_failed, int sdmmc_frequency, uint8_t maxOpenFiles) {
   if (_card) {
@@ -135,7 +183,9 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   }
   //mount
   sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+#if (defined(SOC_SDMMC_USE_GPIO_MATRIX) && !defined(CONFIG_IDF_TARGET_ESP32P4)) \
+  || (defined(CONFIG_IDF_TARGET_ESP32P4) && ((defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 1)) || !defined(BOARD_HAS_SDMMC)))
+  log_d("pin_cmd: %d, pin_clk: %d, pin_d0: %d, pin_d1: %d, pin_d2: %d, pin_d3: %d", _pin_cmd, _pin_clk, _pin_d0, _pin_d1, _pin_d2, _pin_d3);
   // SoC supports SDMMC pin configuration via GPIO matrix.
   // Check that the pins have been set either in the constructor or setPins function.
   if (_pin_cmd == -1 || _pin_clk == -1 || _pin_d0 == -1 || (!mode1bit && (_pin_d1 == -1 || _pin_d2 == -1 || _pin_d3 == -1))) {
@@ -175,7 +225,18 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
 
   sdmmc_host_t host = SDMMC_HOST_DEFAULT();
   host.flags = SDMMC_HOST_FLAG_4BIT;
+#if defined(CONFIG_IDF_TARGET_ESP32P4) && defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
+  host.slot = SDMMC_HOST_SLOT_0;
+  // reconfigure slot_config to remove all pins in order to use IO_MUX
+  slot_config = {
+    .cd = SDMMC_SLOT_NO_CD,
+    .wp = SDMMC_SLOT_NO_WP,
+    .width = 4,
+    .flags = 0,
+  };
+#else
   host.slot = SDMMC_HOST_SLOT_1;
+#endif
   host.max_freq_khz = sdmmc_frequency;
 #ifdef BOARD_HAS_1BIT_SDMMC
   mode1bit = true;
@@ -185,6 +246,34 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
     slot_config.width = 1;
   }
   _mode1bit = mode1bit;
+
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+  if (_power_channel == -1) {
+    log_i("On-chip power channel specified, use external power for SDMMC");
+  } else {
+    sd_pwr_ctrl_ldo_config_t ldo_config = {
+      .ldo_chan_id = _power_channel,
+    };
+    sd_pwr_ctrl_handle_t pwr_ctrl_handle = NULL;
+
+    if (sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle) != ESP_OK) {
+      log_e("Failed to create a new on-chip LDO power control driver");
+      return false;
+    }
+    host.pwr_ctrl_handle = pwr_ctrl_handle;
+  }
+#endif
+
+#if defined(BOARD_SDMMC_POWER_PIN)
+#ifndef BOARD_SDMMC_POWER_ON_LEVEL
+#error "BOARD_SDMMC_POWER_ON_LEVEL not defined, please define it in pins_arduino.h"
+#endif
+  pinMode(BOARD_SDMMC_POWER_PIN, OUTPUT);
+  digitalWrite(BOARD_SDMMC_POWER_PIN, !BOARD_SDMMC_POWER_ON_LEVEL);
+  delay(200);
+  digitalWrite(BOARD_SDMMC_POWER_PIN, BOARD_SDMMC_POWER_ON_LEVEL);
+  perimanSetPinBusExtraType(BOARD_SDMMC_POWER_PIN, "SDMMC_POWER");
+#endif
 
   esp_vfs_fat_sdmmc_mount_config_t mount_config = {
     .format_if_mount_failed = format_if_mount_failed,
@@ -252,6 +341,9 @@ void SDMMCFS::end() {
       perimanClearPinBus(_pin_d2);
       perimanClearPinBus(_pin_d3);
     }
+#if defined(BOARD_SDMMC_POWER_PIN)
+    perimanClearPinBus(BOARD_SDMMC_POWER_PIN);
+#endif
   }
 }
 
