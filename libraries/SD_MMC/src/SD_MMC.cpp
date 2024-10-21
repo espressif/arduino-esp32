@@ -158,6 +158,7 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3) {
 #endif
 }
 
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
 bool SDMMCFS::setPowerChannel(int power_channel) {
   if (_card != nullptr) {
     log_e("SD_MMC.setPowerChannel must be called before SD_MMC.begin");
@@ -166,6 +167,7 @@ bool SDMMCFS::setPowerChannel(int power_channel) {
   _power_channel = power_channel;
   return true;
 }
+#endif
 
 bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_failed, int sdmmc_frequency, uint8_t maxOpenFiles) {
   if (_card) {

@@ -54,7 +54,9 @@ public:
   SDMMCFS(FSImplPtr impl);
   bool setPins(int clk, int cmd, int d0);
   bool setPins(int clk, int cmd, int d0, int d1, int d2, int d3);
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
   bool setPowerChannel(int power_channel);
+#endif
   bool begin(
     const char *mountpoint = "/sdcard", bool mode1bit = false, bool format_if_mount_failed = false, int sdmmc_frequency = BOARD_MAX_SDMMC_FREQ,
     uint8_t maxOpenFiles = 5
