@@ -257,6 +257,12 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
     host.pwr_ctrl_handle = pwr_ctrl_handle;
 #endif
 
+#if defined(BOARD_SDMMC_POWER_PIN)
+  pinMode(BOARD_SDMMC_POWER_PIN, OUTPUT);
+  digitalWrite(BOARD_SDMMC_POWER_PIN, HIGH);
+  perimanSetPinBusExtraType(BOARD_SDMMC_POWER_PIN, "SDMMC_POWER");
+#endif
+
   esp_vfs_fat_sdmmc_mount_config_t mount_config = {
     .format_if_mount_failed = format_if_mount_failed,
     .max_files = maxOpenFiles,
