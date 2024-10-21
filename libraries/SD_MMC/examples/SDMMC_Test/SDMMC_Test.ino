@@ -14,7 +14,7 @@
  * Connections for     ║   ║   ╔═══╩═║═║═══╗   ║  ║    ║
  * full-sized          ║   ║   ║   ╔═╝ ║   ║   ║  ║    ║
  * SD card             ║   ║   ║   ║   ║   ║   ║  ║    ║
- * ESP32-P4 Func EV | 40  39  GND  43 3V3 GND  44 43  42  | + POWER (4)
+ * ESP32-P4 Func EV | 40  39  GND  43 3V3 GND  44 43  42  | SLOT 0 (IO_MUX)
  * ESP32-S3 DevKit  | 21  47  GND  39 3V3 GND  40 41  42  |
  * ESP32-S3-USB-OTG | 38  37  GND  36 3V3 GND  35 34  33  |
  * ESP32            |  4   2  GND  14 3V3 GND  15 13  12  |
@@ -55,10 +55,10 @@ int cmd = 35;
 int d0 = 37;
 int d1 = 38;
 int d2 = 33;
-int d3 = 39;     // GPIO 34 is not broken-out on ESP32-S3-DevKitC-1 v1.1
-int power = -1;  // SDMMC IO power controlled internally
+int d3 = 39;  // GPIO 34 is not broken-out on ESP32-S3-DevKitC-1 v1.1
 
-#elif CONFIG_IDF_TARGET_ESP32P4
+#elif defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(BOARD_HAS_SDMMC) 
+// define BOARD_HAS_SDMMC for ESP32-P4 Function EV board V1.4, as it uses SLOT 0 (IO_MUX)
 // Pin definition for ESP32-P4 Function EV board V1.4
 int clk = 43;
 int cmd = 44;
@@ -225,12 +225,12 @@ void testFileIO(fs::FS &fs, const char *path) {
 void setup() {
   Serial.begin(115200);
   /*
-    // If you want to change the pin assignment or you get an error that some pins or power pin
-    // is not assigned on ESP32-S3/ESP32-P4 uncomment this block and the appropriate
+    // If you want to change the pin assignment or you get an error that some pins
+    // are not assigned on ESP32-S3/ESP32-P4 uncomment this block and the appropriate
     // line depending if you want to use 1-bit or 4-bit line.
     // Please note that ESP32 does not allow pin change and setPins() will always fail.
-    //if(! SD_MMC.setPins(clk, cmd, d0, power)){
-    //if(! SD_MMC.setPins(clk, cmd, d0, d1, d2, d3, power)){
+    //if(! SD_MMC.setPins(clk, cmd, d0)){
+    //if(! SD_MMC.setPins(clk, cmd, d0, d1, d2, d3)){
     //    Serial.println("Pin change failed!");
     //    return;
     //}
