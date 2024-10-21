@@ -37,9 +37,8 @@ bool setLightOnOff(bool state) {
 }
 
 // WiFi is manually set and started
-
-const char *ssid = "Apartment B15";       // Change this to your WiFi SSID
-const char *password = "flat-pony-body";  // Change this to your WiFi password
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) GPIO that will act as a toggle switch
