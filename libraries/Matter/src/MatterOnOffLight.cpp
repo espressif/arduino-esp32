@@ -32,8 +32,7 @@ bool MatterOnOffLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
   return ret;
 }
 
-MatterOnOffLight::MatterOnOffLight() {
-}
+MatterOnOffLight::MatterOnOffLight() {}
 
 MatterOnOffLight::~MatterOnOffLight() {
   end();
@@ -47,7 +46,7 @@ bool MatterOnOffLight::begin(bool initialState) {
   light_config.on_off.lighting.start_up_on_off = nullptr;
 
   // endpoint handles can be used to add/modify clusters.
-  endpoint_t *endpoint = on_off_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *) this);
+  endpoint_t *endpoint = on_off_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create on-off light endpoint");
     return false;

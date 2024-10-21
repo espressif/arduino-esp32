@@ -25,29 +25,27 @@ esp_err_t matter_light_attribute_update(
 // handle the desired attributes and return an appropriate error code. If the attribute
 // is not of your interest, please do not return an error code and strictly return ESP_OK.
 static esp_err_t app_attribute_update_cb(
-  attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id,
-  uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data)
-{
+  attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data
+) {
   esp_err_t err = ESP_OK;
-  MatterEndPoint *ep = (MatterEndPoint *) priv_data;  // endpoint pointer to base class
-  switch(type) {
-    case PRE_UPDATE: // Callback before updating the value in the database
+  MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
+  switch (type) {
+    case PRE_UPDATE:  // Callback before updating the value in the database
       log_i("Attribute update callback: PRE_UPDATE");
       if (ep != NULL) {
         err = ep->attributeChangeCB(endpoint_id, cluster_id, attribute_id, val) ? ESP_OK : ESP_FAIL;
       }
       break;
-    case POST_UPDATE: // Callback after updating the value in the database
+    case POST_UPDATE:  // Callback after updating the value in the database
       log_i("Attribute update callback: POST_UPDATE");
       break;
-    case READ: // Callback for reading the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set.
+    case READ:  // Callback for reading the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set.
       log_i("Attribute update callback: READ");
       break;
-    case WRITE: // Callback for writing the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set.
+    case WRITE:  // Callback for writing the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set.
       log_i("Attribute update callback: WRITE");
       break;
-    default:
-      log_i("Attribute update callback: Unknown type %d", type);
+    default: log_i("Attribute update callback: Unknown type %d", type);
   }
   return err;
 }
@@ -59,7 +57,6 @@ static esp_err_t app_identification_cb(identification::callback_type_t type, uin
   return ESP_OK;
 }
 
-
 // This callback is invoked for all Matter events. The application can handle the events as required.
 static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
   switch (event->Type) {
@@ -68,34 +65,34 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
         "Interface %s Address changed", event->InterfaceIpAddressChanged.Type == chip::DeviceLayer::InterfaceIpChangeType::kIpV4_Assigned ? "IPv4" : "IPV6"
       );
       break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningComplete: log_i("Commissioning complete"); break;
-    case chip::DeviceLayer::DeviceEventType::kFailSafeTimerExpired: log_i("Commissioning failed, fail safe timer expired"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:       log_i("Commissioning complete"); break;
+    case chip::DeviceLayer::DeviceEventType::kFailSafeTimerExpired:        log_i("Commissioning failed, fail safe timer expired"); break;
     case chip::DeviceLayer::DeviceEventType::kCommissioningSessionStarted: log_i("Commissioning session started"); break;
     case chip::DeviceLayer::DeviceEventType::kCommissioningSessionStopped: log_i("Commissioning session stopped"); break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningWindowOpened: log_i("Commissioning window opened"); break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningWindowClosed: log_i("Commissioning window closed"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningWindowOpened:   log_i("Commissioning window opened"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningWindowClosed:   log_i("Commissioning window closed"); break;
     case chip::DeviceLayer::DeviceEventType::kFabricRemoved:
     {
-        log_i("Fabric removed successfully");
-        if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0) {
-          log_i("No fabric left, opening commissioning window");
-          chip::CommissioningWindowManager &commissionMgr = chip::Server::GetInstance().GetCommissioningWindowManager();
-          constexpr auto kTimeoutSeconds = chip::System::Clock::Seconds16(k_timeout_seconds);
-          if (!commissionMgr.IsCommissioningWindowOpen()) {
-            // After removing last fabric, it does not remove the Wi-Fi credentials and still has IP connectivity so, only advertising on DNS-SD.
-            CHIP_ERROR err = commissionMgr.OpenBasicCommissioningWindow(kTimeoutSeconds, chip::CommissioningWindowAdvertisement::kDnssdOnly);
-            if (err != CHIP_NO_ERROR) {
-              log_e("Failed to open commissioning window, err:%" CHIP_ERROR_FORMAT, err.Format());
-            }
+      log_i("Fabric removed successfully");
+      if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0) {
+        log_i("No fabric left, opening commissioning window");
+        chip::CommissioningWindowManager &commissionMgr = chip::Server::GetInstance().GetCommissioningWindowManager();
+        constexpr auto kTimeoutSeconds = chip::System::Clock::Seconds16(k_timeout_seconds);
+        if (!commissionMgr.IsCommissioningWindowOpen()) {
+          // After removing last fabric, it does not remove the Wi-Fi credentials and still has IP connectivity so, only advertising on DNS-SD.
+          CHIP_ERROR err = commissionMgr.OpenBasicCommissioningWindow(kTimeoutSeconds, chip::CommissioningWindowAdvertisement::kDnssdOnly);
+          if (err != CHIP_NO_ERROR) {
+            log_e("Failed to open commissioning window, err:%" CHIP_ERROR_FORMAT, err.Format());
           }
         }
-        break;
       }
+      break;
+    }
     case chip::DeviceLayer::DeviceEventType::kFabricWillBeRemoved: log_i("Fabric will be removed"); break;
-    case chip::DeviceLayer::DeviceEventType::kFabricUpdated: log_i("Fabric is updated"); break;
-    case chip::DeviceLayer::DeviceEventType::kFabricCommitted: log_i("Fabric is committed"); break;
-    case chip::DeviceLayer::DeviceEventType::kBLEDeinitialized: log_i("BLE deinitialized and memory reclaimed"); break;
-    default: break;
+    case chip::DeviceLayer::DeviceEventType::kFabricUpdated:       log_i("Fabric is updated"); break;
+    case chip::DeviceLayer::DeviceEventType::kFabricCommitted:     log_i("Fabric is committed"); break;
+    case chip::DeviceLayer::DeviceEventType::kBLEDeinitialized:    log_i("BLE deinitialized and memory reclaimed"); break;
+    default:                                                       break;
   }
 }
 
@@ -131,7 +128,7 @@ void ArduinoMatter::begin() {
 
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 bool ArduinoMatter::isThreadConnected() {
-  return false; // Thread Network TBD
+  return false;  // Thread Network TBD
 }
 #endif
 
@@ -146,12 +143,12 @@ bool ArduinoMatter::isWiFiConnected() {
 #endif
 
 bool ArduinoMatter::isDeviceConnected() {
-  bool retCode = false;  
+  bool retCode = false;
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-    retCode |= ArduinoMatter::isThreadConnected();
+  retCode |= ArduinoMatter::isThreadConnected();
 #endif
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-    retCode |= ArduinoMatter::isWiFiConnected();
+  retCode |= ArduinoMatter::isWiFiConnected();
 #endif
   return retCode;
 }

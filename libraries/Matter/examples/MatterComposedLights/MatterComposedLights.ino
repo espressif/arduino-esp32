@@ -61,7 +61,7 @@ void setup() {
   OnOffLight2.onChangeOnOff(setLightOnOff2);
   OnOffLight3.onChangeOnOff(setLightOnOff3);
 
-  // Matter begining - Last step, after all EndPoints are initialized
+  // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
 }
 
@@ -78,7 +78,7 @@ void loop() {
     uint32_t timeCount = 0;
     while (!Matter.isDeviceCommissioned()) {
       delay(100);
-      if ((timeCount++ % 50) == 0) { // 50*100ms = 5 sec
+      if ((timeCount++ % 50) == 0) {  // 50*100ms = 5 sec
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
