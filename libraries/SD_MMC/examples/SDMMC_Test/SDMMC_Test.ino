@@ -56,17 +56,6 @@ int d0 = 37;
 int d1 = 38;
 int d2 = 33;
 int d3 = 39;  // GPIO 34 is not broken-out on ESP32-S3-DevKitC-1 v1.1
-
-#elif defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(BOARD_HAS_SDMMC) 
-// define BOARD_HAS_SDMMC for ESP32-P4 Function EV board V1.4, as it uses SLOT 0 (IO_MUX)
-// Pin definition for ESP32-P4 Function EV board V1.4
-int clk = 43;
-int cmd = 44;
-int d0 = 39;
-int d1 = 40;
-int d2 = 41;
-int d3 = 42;
-int power = 4;
 #endif
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
