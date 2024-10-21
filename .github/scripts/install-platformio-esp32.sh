@@ -96,9 +96,9 @@ function count_sketches(){ # count_sketches <examples-path>
                 continue
             fi
 
-            # Check if the sketch requires any configuration options
+            # Check if the sketch requires any configuration options (AND)
             requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-            if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+            if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
                 for requirement in $requirements; do
                     requirement=$(echo $requirement | xargs)
                     found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/esp32/sdkconfig")
@@ -106,6 +106,23 @@ function count_sketches(){ # count_sketches <examples-path>
                         continue 2
                     fi
                 done
+            fi
+
+            # Check if the sketch requires any configuration options (OR)
+            requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
+            if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+                found=false
+                for requirement in $requirements_or; do
+                    requirement=$(echo $requirement | xargs)
+                    found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/esp32/sdkconfig")
+                    if [[ "$found_line" != "" ]]; then
+                        found=true
+                        break
+                    fi
+                done
+                if [[ "$found" == "false" ]]; then
+                    continue
+                fi
             fi
         fi
 
@@ -187,9 +204,9 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
                 continue
             fi
 
-            # Check if the sketch requires any configuration options
+            # Check if the sketch requires any configuration options (AND)
             requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-            if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+            if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
                 for requirement in $requirements; do
                     requirement=$(echo $requirement | xargs)
                     found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/esp32/sdkconfig")
@@ -197,6 +214,23 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
                         continue 2
                     fi
                 done
+            fi
+
+            # Check if the sketch requires any configuration options (OR)
+            requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
+            if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+                found=false
+                for requirement in $requirements_or; do
+                    requirement=$(echo $requirement | xargs)
+                    found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/esp32/sdkconfig")
+                    if [[ "$found_line" != "" ]]; then
+                        found=true
+                        break
+                    fi
+                done
+                if [[ "$found" == "false" ]]; then
+                    continue
+                fi
             fi
         fi
 

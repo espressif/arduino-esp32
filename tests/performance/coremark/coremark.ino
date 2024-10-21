@@ -40,7 +40,7 @@ void setup() {
   Serial.printf("Cores: %d\n", CONFIG_SOC_CPU_CORES_NUM);
   Serial.flush();
   for (int i = 0; i < N_RUNS; i++) {
-    Serial.printf("Run %d", i);
+    Serial.printf("Run %d\n", i);
     coremark_main();
     Serial.flush();
   }

@@ -1,7 +1,7 @@
 cryptography==43.0.1
 --only-binary cryptography
 pytest-cov==5.0.0
-pytest-embedded-serial-esp==1.11.5
-pytest-embedded-arduino==1.11.5
-pytest-embedded-wokwi==1.11.5
-pytest-embedded-qemu==1.11.5
+pytest-embedded-serial-esp==1.11.6
+pytest-embedded-arduino==1.11.6
+pytest-embedded-wokwi==1.11.6
+pytest-embedded-qemu==1.11.6
