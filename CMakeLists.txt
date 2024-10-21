@@ -94,6 +94,7 @@ set(ARDUINO_ALL_LIBRARIES
   HTTPUpdate
   Insights
   LittleFS
+  Matter
   NetBIOS
   Network
   OpenThread
@@ -164,6 +165,10 @@ set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
 set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThreadCLI.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp)
+
+set(ARDUINO_LIBRARY_Matter_SRCS
+  libraries/Matter/src/MatterOnOffLight.cpp
+  libraries/Matter/src/Matter.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS
   libraries/PPP/src/PPP.cpp
