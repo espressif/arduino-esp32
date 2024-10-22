@@ -28,6 +28,13 @@ on:
       - '!.github/scripts/on-release.sh'
       - '!.github/scripts/tests_*'
       - '!.github/scripts/upload_*'
+      - "variants/esp32/**/*"
+      - "variants/esp32s2/**/*"
+      - "variants/esp32s3/**/*"
+      - "variants/esp32c2/**/*"
+      - "variants/esp32c3/**/*"
+      - "variants/esp32c6/**/*"
+      - "variants/esp32h2/**/*"
 
 concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
@@ -75,6 +82,13 @@ jobs:
               - '!tools/platformio-build.py'
               - 'platform.txt'
               - 'programmers.txt'
+              - "variants/esp32/**/*"
+              - "variants/esp32s2/**/*"
+              - "variants/esp32s3/**/*"
+              - "variants/esp32c2/**/*"
+              - "variants/esp32c3/**/*"
+              - "variants/esp32c6/**/*"
+              - "variants/esp32h2/**/*"
             libraries:
               - 'libraries/**/examples/**'
               - 'libraries/**/src/**'
