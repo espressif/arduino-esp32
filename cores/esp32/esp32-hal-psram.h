@@ -21,12 +21,18 @@ extern "C" {
 
 #include "sdkconfig.h"
 
-#ifndef BOARD_HAS_PSRAM
+#if defined(BOARD_HAS_PSRAM) && BOARD_HAS_PSRAM == 0 // Arduino Build with PSRAM Off
 #ifdef CONFIG_SPIRAM_SUPPORT
 #undef CONFIG_SPIRAM_SUPPORT
 #endif
 #ifdef CONFIG_SPIRAM
 #undef CONFIG_SPIRAM
+#endif
+#elif !defined(BOARD_HAS_PSRAM) // ESP-IDF Build with undefined BOARD_HAS_PSRAM
+#if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
+#define BOARD_HAS_PSRAM 1
+#else
+#define BOARD_HAS_PSRAM 0
 #endif
 #endif
 

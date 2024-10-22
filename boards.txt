@@ -79,7 +79,7 @@ esp32c2.build.flash_freq=60m
 esp32c2.build.flash_mode=qio
 esp32c2.build.boot=qio
 esp32c2.build.partitions=minimal
-esp32c2.build.defines=
+esp32c2.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32c2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32c2.menu.PartitionScheme.minimal.build.partitions=minimal
@@ -196,7 +196,7 @@ esp32h2.build.img_freq=48m
 esp32h2.build.flash_mode=qio
 esp32h2.build.boot=qio
 esp32h2.build.partitions=default
-esp32h2.build.defines=
+esp32h2.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 esp32h2.menu.JTAGAdapter.default=Disabled
@@ -380,7 +380,7 @@ esp32c6.build.flash_freq=80m
 esp32c6.build.flash_mode=qio
 esp32c6.build.boot=qio
 esp32c6.build.partitions=default
-esp32c6.build.defines=
+esp32c6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 esp32c6.menu.JTAGAdapter.default=Disabled
@@ -575,7 +575,7 @@ esp32s3.build.flash_mode=dio
 esp32s3.build.boot=qio
 esp32s3.build.boot_freq=80m
 esp32s3.build.partitions=default
-esp32s3.build.defines=
+esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3.build.loop_core=
 esp32s3.build.event_core=
 esp32s3.build.psram_type=qspi
@@ -595,13 +595,13 @@ esp32s3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 esp32s3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 esp32s3.menu.PSRAM.disabled=Disabled
-esp32s3.menu.PSRAM.disabled.build.defines=
+esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
 esp32s3.menu.PSRAM.enabled=QSPI PSRAM
-esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
 esp32s3.menu.PSRAM.opi=OPI PSRAM
-esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
 esp32s3.menu.FlashMode.qio=QIO 80MHz
@@ -822,7 +822,7 @@ esp32c3.build.flash_freq=80m
 esp32c3.build.flash_mode=qio
 esp32c3.build.boot=qio
 esp32c3.build.partitions=default
-esp32c3.build.defines=
+esp32c3.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 esp32c3.menu.JTAGAdapter.default=Disabled
@@ -1008,7 +1008,7 @@ esp32s2.build.flash_freq=80m
 esp32s2.build.flash_mode=dio
 esp32s2.build.boot=qio
 esp32s2.build.partitions=default
-esp32s2.build.defines=
+esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 esp32s2.menu.JTAGAdapter.default=Disabled
@@ -1043,9 +1043,9 @@ esp32s2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 esp32s2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 esp32s2.menu.PSRAM.disabled=Disabled
-esp32s2.menu.PSRAM.disabled.build.defines=
+esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s2.menu.PSRAM.enabled=Enabled
-esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32s2.menu.PartitionScheme.default.build.partitions=default
@@ -1206,7 +1206,7 @@ esp32.build.flash_freq=40m
 esp32.build.flash_mode=dio
 esp32.build.boot=dio
 esp32.build.partitions=default
-esp32.build.defines=
+esp32.build.defines=-DBOARD_HAS_PSRAM=0
 esp32.build.loop_core=
 esp32.build.event_core=
 
@@ -1221,10 +1221,10 @@ esp32.menu.JTAGAdapter.bridge.build.openocdscript=esp32-bridge.cfg
 esp32.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 esp32.menu.PSRAM.disabled=Disabled
-esp32.menu.PSRAM.disabled.build.defines=
+esp32.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32.menu.PSRAM.disabled.build.extra_libs=
 esp32.menu.PSRAM.enabled=Enabled
-esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32.menu.PSRAM.enabled.build.extra_libs=
 
 esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -1400,7 +1400,7 @@ esp32da.build.flash_freq=40m
 esp32da.build.flash_mode=dio
 esp32da.build.boot=dio
 esp32da.build.partitions=default
-esp32da.build.defines=
+esp32da.build.defines=-DBOARD_HAS_PSRAM=0
 esp32da.build.loop_core=
 esp32da.build.event_core=
 
@@ -1565,7 +1565,7 @@ esp32wrover.build.flash_freq=40m
 esp32wrover.build.flash_mode=dio
 esp32wrover.build.boot=dio
 esp32wrover.build.partitions=default
-esp32wrover.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32wrover.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32wrover.build.extra_libs=
 
 esp32wrover.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -1686,7 +1686,7 @@ pico32.build.flash_freq=80m
 pico32.build.flash_mode=dio
 pico32.build.boot=dio
 pico32.build.partitions=default
-pico32.build.defines=
+pico32.build.defines=-DBOARD_HAS_PSRAM=0
 
 pico32.menu.PartitionScheme.default=Default
 pico32.menu.PartitionScheme.default.build.partitions=default
@@ -1773,7 +1773,7 @@ esp32s3-octal.build.flash_mode=dio
 esp32s3-octal.build.boot=opi
 esp32s3-octal.build.boot_freq=80m
 esp32s3-octal.build.partitions=default
-esp32s3-octal.build.defines=
+esp32s3-octal.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3-octal.build.loop_core=
 esp32s3-octal.build.event_core=
 esp32s3-octal.build.psram_type=opi
@@ -1792,13 +1792,13 @@ esp32s3-octal.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 esp32s3-octal.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 esp32s3-octal.menu.PSRAM.opi=OPI PSRAM
-esp32s3-octal.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+esp32s3-octal.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3-octal.menu.PSRAM.opi.build.psram_type=opi
 esp32s3-octal.menu.PSRAM.enabled=QSPI PSRAM
-esp32s3-octal.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3-octal.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3-octal.menu.PSRAM.enabled.build.psram_type=qspi
 esp32s3-octal.menu.PSRAM.disabled=Disabled
-esp32s3-octal.menu.PSRAM.disabled.build.defines=
+esp32s3-octal.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3-octal.menu.PSRAM.disabled.build.psram_type=qspi
 
 esp32s3-octal.menu.FlashMode.opi=OPI 80MHz
@@ -2005,7 +2005,7 @@ esp32s3box.build.flash_freq=80m
 esp32s3box.build.flash_mode=dio
 esp32s3box.build.boot=qio
 esp32s3box.build.partitions=default
-esp32s3box.build.defines=-DBOARD_HAS_PSRAM
+esp32s3box.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3box.build.memory_type=qio_opi
 esp32s3box.build.loop_core=-DARDUINO_RUNNING_CORE=1
 esp32s3box.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
@@ -2104,7 +2104,7 @@ esp32s3usbotg.build.flash_freq=80m
 esp32s3usbotg.build.flash_mode=dio
 esp32s3usbotg.build.boot=qio
 esp32s3usbotg.build.partitions=default
-esp32s3usbotg.build.defines=
+esp32s3usbotg.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3usbotg.build.memory_type=qio_qspi
 esp32s3usbotg.build.loop_core=-DARDUINO_RUNNING_CORE=1
 esp32s3usbotg.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
@@ -2215,7 +2215,7 @@ esp32s3camlcd.build.flash_freq=80m
 esp32s3camlcd.build.flash_mode=dout
 esp32s3camlcd.build.boot=opi
 esp32s3camlcd.build.partitions=default
-esp32s3camlcd.build.defines=-DBOARD_HAS_PSRAM
+esp32s3camlcd.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3camlcd.build.memory_type=opi_opi
 esp32s3camlcd.build.loop_core=
 esp32s3camlcd.build.event_core=
@@ -2340,12 +2340,12 @@ esp32s2usb.build.flash_freq=80m
 esp32s2usb.build.flash_mode=dio
 esp32s2usb.build.boot=qio
 esp32s2usb.build.partitions=default
-esp32s2usb.build.defines=
+esp32s2usb.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32s2usb.menu.PSRAM.disabled=Disabled
-esp32s2usb.menu.PSRAM.disabled.build.defines=
+esp32s2usb.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s2usb.menu.PSRAM.enabled=Enabled
-esp32s2usb.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s2usb.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 esp32s2usb.menu.FlashSize.4M=4MB (32Mb)
 esp32s2usb.menu.FlashSize.4M.build.flash_size=4MB
@@ -2450,9 +2450,9 @@ esp32wroverkit.menu.FlashSize.16M=16MB (128Mb)
 esp32wroverkit.menu.FlashSize.16M.build.flash_size=16MB
 
 esp32wroverkit.menu.PSRAM.enabled=Enabled
-esp32wroverkit.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32wroverkit.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32wroverkit.menu.PSRAM.disabled=Disabled
-esp32wroverkit.menu.PSRAM.disabled.build.defines=
+esp32wroverkit.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32wroverkit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32wroverkit.menu.PartitionScheme.default.build.partitions=default
@@ -2599,7 +2599,7 @@ aventen_s3_sync.build.flash_mode=dio
 aventen_s3_sync.build.boot=qio
 aventen_s3_sync.build.boot_freq=80m
 aventen_s3_sync.build.partitions=default
-aventen_s3_sync.build.defines=
+aventen_s3_sync.build.defines=-DBOARD_HAS_PSRAM=0
 aventen_s3_sync.build.loop_core=
 aventen_s3_sync.build.event_core=
 aventen_s3_sync.build.psram_type=qspi
@@ -2619,13 +2619,13 @@ aventen_s3_sync.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 aventen_s3_sync.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 aventen_s3_sync.menu.PSRAM.disabled=Disabled
-aventen_s3_sync.menu.PSRAM.disabled.build.defines=
+aventen_s3_sync.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 aventen_s3_sync.menu.PSRAM.disabled.build.psram_type=qspi
 aventen_s3_sync.menu.PSRAM.enabled=QSPI PSRAM
-aventen_s3_sync.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+aventen_s3_sync.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 aventen_s3_sync.menu.PSRAM.enabled.build.psram_type=qspi
 aventen_s3_sync.menu.PSRAM.opi=OPI PSRAM
-aventen_s3_sync.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+aventen_s3_sync.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 aventen_s3_sync.menu.PSRAM.opi.build.psram_type=opi
 
 aventen_s3_sync.menu.FlashMode.qio=QIO 80MHz
@@ -2811,7 +2811,7 @@ BharatPi-Node-Wifi.build.flash_freq=40m
 BharatPi-Node-Wifi.build.flash_mode=dio
 BharatPi-Node-Wifi.build.boot=dio
 BharatPi-Node-Wifi.build.partitions=default
-BharatPi-Node-Wifi.build.defines=
+BharatPi-Node-Wifi.build.defines=-DBOARD_HAS_PSRAM=0
 BharatPi-Node-Wifi.build.loop_core=
 BharatPi-Node-Wifi.build.event_core=
 
@@ -2969,7 +2969,7 @@ BharatPi-A7672S-4G.build.flash_freq=40m
 BharatPi-A7672S-4G.build.flash_mode=dio
 BharatPi-A7672S-4G.build.boot=dio
 BharatPi-A7672S-4G.build.partitions=default
-BharatPi-A7672S-4G.build.defines=
+BharatPi-A7672S-4G.build.defines=-DBOARD_HAS_PSRAM=0
 BharatPi-A7672S-4G.build.loop_core=
 BharatPi-A7672S-4G.build.event_core=
 
@@ -3127,7 +3127,7 @@ BharatPi-LoRa.build.flash_freq=40m
 BharatPi-LoRa.build.flash_mode=dio
 BharatPi-LoRa.build.boot=dio
 BharatPi-LoRa.build.partitions=default
-BharatPi-LoRa.build.defines=
+BharatPi-LoRa.build.defines=-DBOARD_HAS_PSRAM=0
 BharatPi-LoRa.build.loop_core=
 BharatPi-LoRa.build.event_core=
 
@@ -3294,7 +3294,7 @@ um_bling.build.flash_freq=80m
 um_bling.build.flash_mode=dio
 um_bling.build.boot=qio
 um_bling.build.partitions=default
-um_bling.build.defines=
+um_bling.build.defines=-DBOARD_HAS_PSRAM=0
 um_bling.build.loop_core=
 um_bling.build.event_core=
 um_bling.build.flash_type=qio
@@ -3339,9 +3339,9 @@ um_bling.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 um_bling.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 um_bling.menu.PSRAM.enabled=Enabled
-um_bling.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_bling.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_bling.menu.PSRAM.disabled=Disabled
-um_bling.menu.PSRAM.disabled.build.defines=
+um_bling.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_bling.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 um_bling.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -3447,7 +3447,7 @@ um_feathers2.build.flash_freq=80m
 um_feathers2.build.flash_mode=dio
 um_feathers2.build.boot=qio
 um_feathers2.build.partitions=fatflash
-um_feathers2.build.defines=
+um_feathers2.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_feathers2.menu.CDCOnBoot.cdc=Enabled
 um_feathers2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -3465,9 +3465,9 @@ um_feathers2.menu.DFUOnBoot.dfu=Enabled
 um_feathers2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 um_feathers2.menu.PSRAM.enabled=Enabled
-um_feathers2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_feathers2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_feathers2.menu.PSRAM.disabled=Disabled
-um_feathers2.menu.PSRAM.disabled.build.defines=
+um_feathers2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_feathers2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 um_feathers2.menu.PartitionScheme.fatflash.build.partitions=ffat
@@ -3598,7 +3598,7 @@ um_feathers2neo.build.flash_freq=80m
 um_feathers2neo.build.flash_mode=dio
 um_feathers2neo.build.boot=qio
 um_feathers2neo.build.partitions=default
-um_feathers2neo.build.defines=
+um_feathers2neo.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_feathers2neo.menu.CDCOnBoot.cdc=Enabled
 um_feathers2neo.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -3616,9 +3616,9 @@ um_feathers2neo.menu.DFUOnBoot.dfu=Enabled
 um_feathers2neo.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 um_feathers2neo.menu.PSRAM.enabled=Enabled
-um_feathers2neo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_feathers2neo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_feathers2neo.menu.PSRAM.disabled=Disabled
-um_feathers2neo.menu.PSRAM.disabled.build.defines=
+um_feathers2neo.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_feathers2neo.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 um_feathers2neo.menu.PartitionScheme.default.build.partitions=default
@@ -3737,7 +3737,7 @@ um_feathers3.build.flash_freq=80m
 um_feathers3.build.flash_mode=dio
 um_feathers3.build.boot=qio
 um_feathers3.build.partitions=default
-um_feathers3.build.defines=
+um_feathers3.build.defines=-DBOARD_HAS_PSRAM=0
 um_feathers3.build.loop_core=
 um_feathers3.build.event_core=
 um_feathers3.build.flash_type=qio
@@ -3782,9 +3782,9 @@ um_feathers3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_feathers3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 um_feathers3.menu.PSRAM.enabled=Enabled
-um_feathers3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_feathers3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_feathers3.menu.PSRAM.disabled=Disabled
-um_feathers3.menu.PSRAM.disabled.build.defines=
+um_feathers3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_feathers3.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
 um_feathers3.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
@@ -3900,7 +3900,7 @@ um_feathers3neo.build.flash_freq=80m
 um_feathers3neo.build.flash_mode=dio
 um_feathers3neo.build.boot=qio
 um_feathers3neo.build.partitions=default
-um_feathers3neo.build.defines=
+um_feathers3neo.build.defines=-DBOARD_HAS_PSRAM=0
 um_feathers3neo.build.loop_core=
 um_feathers3neo.build.event_core=
 um_feathers3neo.build.flash_type=qio
@@ -3945,9 +3945,9 @@ um_feathers3neo.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_feathers3neo.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 um_feathers3neo.menu.PSRAM.enabled=Enabled
-um_feathers3neo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_feathers3neo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_feathers3neo.menu.PSRAM.disabled=Disabled
-um_feathers3neo.menu.PSRAM.disabled.build.defines=
+um_feathers3neo.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_feathers3neo.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 um_feathers3neo.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -4069,7 +4069,7 @@ um_nanos3.build.flash_freq=80m
 um_nanos3.build.flash_mode=dio
 um_nanos3.build.boot=qio
 um_nanos3.build.partitions=default
-um_nanos3.build.defines=
+um_nanos3.build.defines=-DBOARD_HAS_PSRAM=0
 um_nanos3.build.loop_core=
 um_nanos3.build.event_core=
 um_nanos3.build.flash_type=qio
@@ -4114,9 +4114,9 @@ um_nanos3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_nanos3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 um_nanos3.menu.PSRAM.enabled=Enabled
-um_nanos3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_nanos3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_nanos3.menu.PSRAM.disabled=Disabled
-um_nanos3.menu.PSRAM.disabled.build.defines=
+um_nanos3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_nanos3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 um_nanos3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -4223,7 +4223,7 @@ um_omgs3.build.flash_freq=80m
 um_omgs3.build.flash_mode=dio
 um_omgs3.build.boot=qio
 um_omgs3.build.partitions=default
-um_omgs3.build.defines=
+um_omgs3.build.defines=-DBOARD_HAS_PSRAM=0
 um_omgs3.build.loop_core=
 um_omgs3.build.event_core=
 um_omgs3.build.flash_type=qio
@@ -4268,9 +4268,9 @@ um_omgs3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_omgs3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 um_omgs3.menu.PSRAM.enabled=Enabled
-um_omgs3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_omgs3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_omgs3.menu.PSRAM.disabled=Disabled
-um_omgs3.menu.PSRAM.disabled.build.defines=
+um_omgs3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_omgs3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 um_omgs3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -4377,7 +4377,7 @@ um_pros3.build.flash_freq=80m
 um_pros3.build.flash_mode=dio
 um_pros3.build.boot=qio
 um_pros3.build.partitions=default
-um_pros3.build.defines=
+um_pros3.build.defines=-DBOARD_HAS_PSRAM=0
 um_pros3.build.loop_core=
 um_pros3.build.event_core=
 um_pros3.build.flash_type=qio
@@ -4422,9 +4422,9 @@ um_pros3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_pros3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 um_pros3.menu.PSRAM.enabled=Enabled
-um_pros3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_pros3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_pros3.menu.PSRAM.disabled=Disabled
-um_pros3.menu.PSRAM.disabled.build.defines=
+um_pros3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_pros3.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
 um_pros3.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
@@ -4530,7 +4530,7 @@ um_tinypico.build.flash_freq=80m
 um_tinypico.build.flash_mode=dio
 um_tinypico.build.boot=dio
 um_tinypico.build.partitions=default
-um_tinypico.build.defines=
+um_tinypico.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_tinypico.menu.PartitionScheme.default=Default
 um_tinypico.menu.PartitionScheme.default.build.partitions=default
@@ -4569,10 +4569,10 @@ um_tinypico.menu.FlashFreq.40=40MHz
 um_tinypico.menu.FlashFreq.40.build.flash_freq=40m
 
 um_tinypico.menu.PSRAM.enabled=Enabled
-um_tinypico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+um_tinypico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 um_tinypico.menu.PSRAM.enabled.build.extra_libs=
 um_tinypico.menu.PSRAM.disabled=Disabled
-um_tinypico.menu.PSRAM.disabled.build.defines=
+um_tinypico.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 um_tinypico.menu.PSRAM.disabled.build.extra_libs=
 
 um_tinypico.menu.DebugLevel.none=None
@@ -4629,7 +4629,7 @@ um_tinyc6.build.flash_freq=80m
 um_tinyc6.build.flash_mode=qio
 um_tinyc6.build.boot=qio
 um_tinyc6.build.partitions=default
-um_tinyc6.build.defines=
+um_tinyc6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 um_tinyc6.menu.JTAGAdapter.default=Disabled
@@ -4785,7 +4785,7 @@ um_tinys2.build.flash_freq=80m
 um_tinys2.build.flash_mode=dio
 um_tinys2.build.boot=qio
 um_tinys2.build.partitions=default
-um_tinys2.build.defines=
+um_tinys2.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_tinys2.menu.CDCOnBoot.cdc=Enabled
 um_tinys2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -4803,9 +4803,9 @@ um_tinys2.menu.DFUOnBoot.dfu=Enabled
 um_tinys2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 um_tinys2.menu.PSRAM.enabled=Enabled
-um_tinys2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_tinys2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_tinys2.menu.PSRAM.disabled=Disabled
-um_tinys2.menu.PSRAM.disabled.build.defines=
+um_tinys2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_tinys2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 um_tinys2.menu.PartitionScheme.default.build.partitions=default
@@ -4924,7 +4924,7 @@ um_tinys3.build.flash_freq=80m
 um_tinys3.build.flash_mode=dio
 um_tinys3.build.boot=qio
 um_tinys3.build.partitions=default
-um_tinys3.build.defines=
+um_tinys3.build.defines=-DBOARD_HAS_PSRAM=0
 um_tinys3.build.loop_core=
 um_tinys3.build.event_core=
 um_tinys3.build.flash_type=qio
@@ -4969,9 +4969,9 @@ um_tinys3.menu.UploadMode.default.upload.use_1200bps_touch=false
 um_tinys3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 um_tinys3.menu.PSRAM.enabled=Enabled
-um_tinys3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_tinys3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 um_tinys3.menu.PSRAM.disabled=Disabled
-um_tinys3.menu.PSRAM.disabled.build.defines=
+um_tinys3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 um_tinys3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 um_tinys3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -5068,7 +5068,7 @@ S_ODI_Ultra.build.flash_mode=dio
 S_ODI_Ultra.build.flash_size=4MB
 S_ODI_Ultra.build.boot=dio
 S_ODI_Ultra.build.partitions=default
-S_ODI_Ultra.build.defines=
+S_ODI_Ultra.build.defines=-DBOARD_HAS_PSRAM=0
 
 S_ODI_Ultra.menu.FlashFreq.80=80MHz
 S_ODI_Ultra.menu.FlashFreq.80.build.flash_freq=80m
@@ -5142,9 +5142,9 @@ lilygo_t_display.build.boot=dio
 lilygo_t_display.build.partitions=default
 
 lilygo_t_display.menu.PSRAM.disabled=Disabled
-lilygo_t_display.menu.PSRAM.disabled.build.defines=
+lilygo_t_display.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 lilygo_t_display.menu.PSRAM.enabled=Enabled
-lilygo_t_display.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+lilygo_t_display.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 lilygo_t_display.menu.PSRAM.enabled.build.extra_libs=
 
 lilygo_t_display.menu.LoopCore.1=Core 1
@@ -5296,7 +5296,7 @@ lilygo_t_display_s3.build.flash_mode=dio
 lilygo_t_display_s3.build.boot=qio
 lilygo_t_display_s3.build.boot_freq=80m
 lilygo_t_display_s3.build.partitions=app3M_fat9M_16MB
-lilygo_t_display_s3.build.defines=
+lilygo_t_display_s3.build.defines=-DBOARD_HAS_PSRAM=0
 lilygo_t_display_s3.build.loop_core=
 lilygo_t_display_s3.build.event_core=
 lilygo_t_display_s3.build.psram_type=opi
@@ -5418,7 +5418,7 @@ lilygo_t_eth_lite.build.flash_mode=dio
 lilygo_t_eth_lite.build.boot=qio
 lilygo_t_eth_lite.build.boot_freq=80m
 lilygo_t_eth_lite.build.partitions=app3M_fat9M_16MB
-lilygo_t_eth_lite.build.defines=
+lilygo_t_eth_lite.build.defines=-DBOARD_HAS_PSRAM=0
 lilygo_t_eth_lite.build.loop_core=
 lilygo_t_eth_lite.build.event_core=
 lilygo_t_eth_lite.build.psram_type=opi
@@ -5538,12 +5538,12 @@ lilygo_t3s3.build.flash_freq=80m
 lilygo_t3s3.build.flash_mode=dio
 lilygo_t3s3.build.boot=dio
 lilygo_t3s3.build.partitions=default
-lilygo_t3s3.build.defines=
+lilygo_t3s3.build.defines=-DBOARD_HAS_PSRAM=0
 
 lilygo_t3s3.menu.PSRAM.disabled=Disabled
-lilygo_t3s3.menu.PSRAM.disabled.build.defines=
+lilygo_t3s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 lilygo_t3s3.menu.PSRAM.enabled=Enabled
-lilygo_t3s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+lilygo_t3s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 lilygo_t3s3.menu.PSRAM.enabled.build.psram_type=qspi
 
 lilygo_t3s3.menu.LoopCore.1=Core 1
@@ -5724,7 +5724,7 @@ twatchs3.build.flash_mode=dio
 twatchs3.build.boot=qio
 twatchs3.build.boot_freq=80m
 twatchs3.build.partitions=app3M_fat9M_16MB
-twatchs3.build.defines=-DBOARD_HAS_PSRAM -DARDUINO_T_WATCH_S3
+twatchs3.build.defines=-DBOARD_HAS_PSRAM=1 -DARDUINO_T_WATCH_S3
 twatchs3.build.loop_core=
 twatchs3.build.event_core=
 twatchs3.build.psram_type=opi
@@ -5883,7 +5883,7 @@ twatch_ultra.build.flash_mode=dio
 twatch_ultra.build.boot=qio
 twatch_ultra.build.boot_freq=80m
 twatch_ultra.build.partitions=app3M_fat9M_16MB
-twatch_ultra.build.defines=-DBOARD_HAS_PSRAM -DARDUINO_T_WATCH_S3_ULTRA
+twatch_ultra.build.defines=-DBOARD_HAS_PSRAM=1 -DARDUINO_T_WATCH_S3_ULTRA
 twatch_ultra.build.loop_core=
 twatch_ultra.build.event_core=
 twatch_ultra.build.psram_type=qspi
@@ -6042,7 +6042,7 @@ micros2.build.flash_freq=80m
 micros2.build.flash_mode=dio
 micros2.build.boot=qio
 micros2.build.partitions=fatflash
-micros2.build.defines=
+micros2.build.defines=-DBOARD_HAS_PSRAM=0
 
 micros2.menu.CDCOnBoot.cdc=Enabled
 micros2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -6060,9 +6060,9 @@ micros2.menu.DFUOnBoot.dfu=Enabled
 micros2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 micros2.menu.PSRAM.enabled=Enabled
-micros2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+micros2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 micros2.menu.PSRAM.disabled=Disabled
-micros2.menu.PSRAM.disabled.build.defines=
+micros2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 micros2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 micros2.menu.PartitionScheme.fatflash.build.partitions=ffat
@@ -6249,7 +6249,7 @@ turta_iot_node.build.flash_freq=80m
 turta_iot_node.build.flash_mode=dio
 turta_iot_node.build.boot=dio
 turta_iot_node.build.partitions=default
-turta_iot_node.build.defines=
+turta_iot_node.build.defines=-DBOARD_HAS_PSRAM=0
 
 turta_iot_node.menu.UploadSpeed.921600=921600
 turta_iot_node.menu.UploadSpeed.921600.upload.speed=921600
@@ -6389,7 +6389,7 @@ ttgo-t1.build.flash_freq=40m
 ttgo-t1.build.flash_mode=dio
 ttgo-t1.build.boot=dio
 ttgo-t1.build.partitions=default
-ttgo-t1.build.defines=
+ttgo-t1.build.defines=-DBOARD_HAS_PSRAM=0
 
 ttgo-t1.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 ttgo-t1.menu.PartitionScheme.default.build.partitions=default
@@ -6519,7 +6519,7 @@ ttgo-t7-v13-mini32.build.flash_freq=40m
 ttgo-t7-v13-mini32.build.flash_mode=dio
 ttgo-t7-v13-mini32.build.boot=dio
 ttgo-t7-v13-mini32.build.partitions=default
-ttgo-t7-v13-mini32.build.defines=
+ttgo-t7-v13-mini32.build.defines=-DBOARD_HAS_PSRAM=0
 
 ttgo-t7-v13-mini32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 ttgo-t7-v13-mini32.menu.PartitionScheme.default.build.partitions=default
@@ -6645,7 +6645,7 @@ ttgo-t7-v14-mini32.build.flash_freq=40m
 ttgo-t7-v14-mini32.build.flash_mode=dio
 ttgo-t7-v14-mini32.build.boot=dio
 ttgo-t7-v14-mini32.build.partitions=default
-ttgo-t7-v14-mini32.build.defines=
+ttgo-t7-v14-mini32.build.defines=-DBOARD_HAS_PSRAM=0
 
 ttgo-t7-v14-mini32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 ttgo-t7-v14-mini32.menu.PartitionScheme.default.build.partitions=default
@@ -6771,7 +6771,7 @@ ttgo-t-oi-plus.build.flash_freq=80m
 ttgo-t-oi-plus.build.flash_mode=qio
 ttgo-t-oi-plus.build.boot=qio
 ttgo-t-oi-plus.build.partitions=default
-ttgo-t-oi-plus.build.defines=
+ttgo-t-oi-plus.build.defines=-DBOARD_HAS_PSRAM=0
 
 ttgo-t-oi-plus.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 ttgo-t-oi-plus.menu.PartitionScheme.default.build.partitions=default
@@ -6973,7 +6973,7 @@ esp32thing.build.flash_mode=dio
 esp32thing.build.flash_size=4MB
 esp32thing.build.boot=dio
 esp32thing.build.partitions=default
-esp32thing.build.defines=
+esp32thing.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32thing.menu.FlashFreq.80=80MHz
 esp32thing.menu.FlashFreq.80.build.flash_freq=80m
@@ -7055,7 +7055,7 @@ esp32thing_plus.build.flash_mode=dio
 esp32thing_plus.build.flash_size=16MB
 esp32thing_plus.build.boot=dio
 esp32thing_plus.build.partitions=default
-esp32thing_plus.build.defines=
+esp32thing_plus.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32thing_plus.menu.FlashFreq.80=80MHz
 esp32thing_plus.menu.FlashFreq.80.build.flash_freq=80m
@@ -7135,7 +7135,7 @@ esp32thing_plus_c.build.flash_mode=dio
 esp32thing_plus_c.build.flash_size=16MB
 esp32thing_plus_c.build.boot=dio
 esp32thing_plus_c.build.partitions=default
-esp32thing_plus_c.build.defines=
+esp32thing_plus_c.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32thing_plus_c.menu.FlashFreq.80=80MHz
 esp32thing_plus_c.menu.FlashFreq.80.build.flash_freq=80m
@@ -7222,7 +7222,7 @@ sparkfun_esp32s2_thing_plus.build.flash_freq=80m
 sparkfun_esp32s2_thing_plus.build.flash_mode=qio
 sparkfun_esp32s2_thing_plus.build.boot=qio
 sparkfun_esp32s2_thing_plus.build.partitions=default
-sparkfun_esp32s2_thing_plus.build.defines=
+sparkfun_esp32s2_thing_plus.build.defines=-DBOARD_HAS_PSRAM=0
 
 sparkfun_esp32s2_thing_plus.menu.CDCOnBoot.default=Disabled
 sparkfun_esp32s2_thing_plus.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -7240,9 +7240,9 @@ sparkfun_esp32s2_thing_plus.menu.DFUOnBoot.dfu=Enabled
 sparkfun_esp32s2_thing_plus.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 sparkfun_esp32s2_thing_plus.menu.PSRAM.disabled=Disabled
-sparkfun_esp32s2_thing_plus.menu.PSRAM.disabled.build.defines=
+sparkfun_esp32s2_thing_plus.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 sparkfun_esp32s2_thing_plus.menu.PSRAM.enabled=Enabled
-sparkfun_esp32s2_thing_plus.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+sparkfun_esp32s2_thing_plus.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 sparkfun_esp32s2_thing_plus.menu.PartitionScheme.default.build.partitions=default
@@ -7385,7 +7385,7 @@ sparkfun_esp32s3_thing_plus.build.flash_mode=dio
 sparkfun_esp32s3_thing_plus.build.boot=qio
 sparkfun_esp32s3_thing_plus.build.boot_freq=80m
 sparkfun_esp32s3_thing_plus.build.partitions=default
-sparkfun_esp32s3_thing_plus.build.defines=
+sparkfun_esp32s3_thing_plus.build.defines=-DBOARD_HAS_PSRAM=0
 sparkfun_esp32s3_thing_plus.build.loop_core=
 sparkfun_esp32s3_thing_plus.build.event_core=
 sparkfun_esp32s3_thing_plus.build.psram_type=qspi
@@ -7405,14 +7405,14 @@ sparkfun_esp32s3_thing_plus.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-
 sparkfun_esp32s3_thing_plus.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 sparkfun_esp32s3_thing_plus.menu.PSRAM.enabled=QSPI PSRAM
-sparkfun_esp32s3_thing_plus.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+sparkfun_esp32s3_thing_plus.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 sparkfun_esp32s3_thing_plus.menu.PSRAM.enabled.build.psram_type=qspi
 
 sparkfun_esp32s3_thing_plus.menu.PSRAM.disabled=Disabled
-sparkfun_esp32s3_thing_plus.menu.PSRAM.disabled.build.defines=
+sparkfun_esp32s3_thing_plus.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 sparkfun_esp32s3_thing_plus.menu.PSRAM.disabled.build.psram_type=qspi
 sparkfun_esp32s3_thing_plus.menu.PSRAM.opi=OPI PSRAM
-sparkfun_esp32s3_thing_plus.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+sparkfun_esp32s3_thing_plus.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 sparkfun_esp32s3_thing_plus.menu.PSRAM.opi.build.psram_type=opi
 
 sparkfun_esp32s3_thing_plus.menu.FlashMode.qio=QIO 80MHz
@@ -7598,7 +7598,7 @@ sparkfun_esp32c6_thing_plus.build.flash_freq=80m
 sparkfun_esp32c6_thing_plus.build.flash_mode=qio
 sparkfun_esp32c6_thing_plus.build.boot=qio
 sparkfun_esp32c6_thing_plus.build.partitions=default
-sparkfun_esp32c6_thing_plus.build.defines=
+sparkfun_esp32c6_thing_plus.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 sparkfun_esp32c6_thing_plus.menu.JTAGAdapter.default=Disabled
@@ -7782,12 +7782,12 @@ esp32micromod.build.flash_freq=40m
 esp32micromod.build.flash_mode=dio
 esp32micromod.build.boot=dio
 esp32micromod.build.partitions=default
-esp32micromod.build.defines=
+esp32micromod.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32micromod.menu.PSRAM.disabled=Disabled
-esp32micromod.menu.PSRAM.disabled.build.defines=
+esp32micromod.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32micromod.menu.PSRAM.enabled=Enabled
-esp32micromod.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue
+esp32micromod.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue
 
 esp32micromod.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32micromod.menu.PartitionScheme.default.build.partitions=default
@@ -8020,15 +8020,15 @@ sparkfun_esp32_iot_redboard.build.flash_freq=40m
 sparkfun_esp32_iot_redboard.build.flash_mode=dio
 sparkfun_esp32_iot_redboard.build.boot=dio
 sparkfun_esp32_iot_redboard.build.partitions=default
-sparkfun_esp32_iot_redboard.build.defines=
+sparkfun_esp32_iot_redboard.build.defines=-DBOARD_HAS_PSRAM=0
 sparkfun_esp32_iot_redboard.build.loop_core=
 sparkfun_esp32_iot_redboard.build.event_core=
 
 sparkfun_esp32_iot_redboard.menu.PSRAM.disabled=Disabled
-sparkfun_esp32_iot_redboard.menu.PSRAM.disabled.build.defines=
+sparkfun_esp32_iot_redboard.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 sparkfun_esp32_iot_redboard.menu.PSRAM.disabled.build.extra_libs=
 sparkfun_esp32_iot_redboard.menu.PSRAM.enabled=Enabled
-sparkfun_esp32_iot_redboard.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+sparkfun_esp32_iot_redboard.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 sparkfun_esp32_iot_redboard.menu.PSRAM.enabled.build.extra_libs=
 
 sparkfun_esp32_iot_redboard.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -8191,7 +8191,7 @@ sparkfun_esp32c6_qwiic_pocket.build.flash_freq=80m
 sparkfun_esp32c6_qwiic_pocket.build.flash_mode=qio
 sparkfun_esp32c6_qwiic_pocket.build.boot=qio
 sparkfun_esp32c6_qwiic_pocket.build.partitions=default
-sparkfun_esp32c6_qwiic_pocket.build.defines=
+sparkfun_esp32c6_qwiic_pocket.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 sparkfun_esp32c6_qwiic_pocket.menu.JTAGAdapter.default=Disabled
@@ -8381,7 +8381,7 @@ sparkfun_pro_micro_esp32c3.build.flash_freq=80m
 sparkfun_pro_micro_esp32c3.build.flash_mode=dio
 sparkfun_pro_micro_esp32c3.build.boot=qio
 sparkfun_pro_micro_esp32c3.build.partitions=default
-sparkfun_pro_micro_esp32c3.build.defines=
+sparkfun_pro_micro_esp32c3.build.defines=-DBOARD_HAS_PSRAM=0
 
 sparkfun_pro_micro_esp32c3.menu.JTAGAdapter.default=Disabled
 sparkfun_pro_micro_esp32c3.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -8522,7 +8522,7 @@ nina_w10.build.partitions=minimal
 nina_w10.build.flash_mode=dio
 nina_w10.build.flash_size=2MB
 nina_w10.build.flash_freq=40m
-nina_w10.build.defines=
+nina_w10.build.defines=-DBOARD_HAS_PSRAM=0
 nina_w10.build.extra_libs=
 nina_w10.build.loop_core=
 nina_w10.build.event_core=
@@ -8676,20 +8676,20 @@ nora_w10.build.flash_mode=dio
 nora_w10.build.boot=qio
 nora_w10.build.boot_freq=80m
 nora_w10.build.partitions=default
-nora_w10.build.defines=
+nora_w10.build.defines=-DBOARD_HAS_PSRAM=0
 nora_w10.build.loop_core=
 nora_w10.build.event_core=
 nora_w10.build.psram_type=qspi
 nora_w10.build.memory_type={build.boot}_{build.psram_type}
 
 nora_w10.menu.PSRAM.disabled=Disabled
-nora_w10.menu.PSRAM.disabled.build.defines=
+nora_w10.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 nora_w10.menu.PSRAM.disabled.build.psram_type=qspi
 nora_w10.menu.PSRAM.enabled=QSPI PSRAM
-nora_w10.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+nora_w10.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 nora_w10.menu.PSRAM.enabled.build.psram_type=qspi
 nora_w10.menu.PSRAM.opi=OPI PSRAM
-nora_w10.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+nora_w10.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 nora_w10.menu.PSRAM.opi.build.psram_type=opi
 
 nora_w10.menu.FlashMode.qio=QIO 80MHz
@@ -8880,7 +8880,7 @@ widora-air.build.flash_mode=dio
 widora-air.build.flash_size=16MB
 widora-air.build.boot=dio
 widora-air.build.partitions=default
-widora-air.build.defines=
+widora-air.build.defines=-DBOARD_HAS_PSRAM=0
 
 widora-air.menu.FlashFreq.80=80MHz
 widora-air.menu.FlashFreq.80.build.flash_freq=80m
@@ -8952,7 +8952,7 @@ esp320.build.flash_mode=qio
 esp320.build.flash_size=4MB
 esp320.build.boot=dio
 esp320.build.partitions=default
-esp320.build.defines=
+esp320.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp320.menu.FlashFreq.80=80MHz
 esp320.menu.FlashFreq.80.build.flash_freq=80m
@@ -9024,7 +9024,7 @@ nano32.build.flash_mode=dio
 nano32.build.flash_size=4MB
 nano32.build.boot=dio
 nano32.build.partitions=default
-nano32.build.defines=
+nano32.build.defines=-DBOARD_HAS_PSRAM=0
 
 nano32.menu.FlashFreq.80=80MHz
 nano32.menu.FlashFreq.80.build.flash_freq=80m
@@ -9097,7 +9097,7 @@ d32.build.flash_freq=40m
 d32.build.flash_mode=dio
 d32.build.boot=dio
 d32.build.partitions=default
-d32.build.defines=
+d32.build.defines=-DBOARD_HAS_PSRAM=0
 
 d32.menu.PartitionScheme.default=Default
 d32.menu.PartitionScheme.default.build.partitions=default
@@ -9181,13 +9181,13 @@ d32_pro.build.flash_freq=40m
 d32_pro.build.flash_mode=dio
 d32_pro.build.boot=dio
 d32_pro.build.partitions=default
-d32_pro.build.defines=
+d32_pro.build.defines=-DBOARD_HAS_PSRAM=0
 
 d32_pro.menu.PSRAM.disabled=Disabled
-d32_pro.menu.PSRAM.disabled.build.defines=
+d32_pro.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 d32_pro.menu.PSRAM.disabled.build.extra_libs=
 d32_pro.menu.PSRAM.enabled=Enabled
-d32_pro.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+d32_pro.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 d32_pro.menu.PSRAM.enabled.build.extra_libs=
 
 d32_pro.menu.PartitionScheme.default=Default
@@ -9277,7 +9277,7 @@ lolin_c3_mini.build.flash_freq=80m
 lolin_c3_mini.build.flash_mode=dio
 lolin_c3_mini.build.boot=qio
 lolin_c3_mini.build.partitions=default
-lolin_c3_mini.build.defines=
+lolin_c3_mini.build.defines=-DBOARD_HAS_PSRAM=0
 
 lolin_c3_mini.menu.CDCOnBoot.default=Enabled
 lolin_c3_mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -9392,7 +9392,7 @@ lolin_c3_pico.build.flash_freq=80m
 lolin_c3_pico.build.flash_mode=dio
 lolin_c3_pico.build.boot=qio
 lolin_c3_pico.build.partitions=default
-lolin_c3_pico.build.defines=
+lolin_c3_pico.build.defines=-DBOARD_HAS_PSRAM=0
 
 lolin_c3_pico.menu.CDCOnBoot.default=Enabled
 lolin_c3_pico.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -9509,9 +9509,9 @@ lolin_s2_mini.build.flash_freq=80m
 lolin_s2_mini.build.flash_mode=dio
 lolin_s2_mini.build.boot=qio
 lolin_s2_mini.build.partitions=default
-lolin_s2_mini.build.defines=
+lolin_s2_mini.build.defines=-DBOARD_HAS_PSRAM=0
 
-lolin_s2_mini.build.defines=-DBOARD_HAS_PSRAM
+lolin_s2_mini.build.defines=-DBOARD_HAS_PSRAM=1
 
 lolin_s2_mini.menu.CDCOnBoot.default=Enabled
 lolin_s2_mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -9607,9 +9607,9 @@ lolin_s2_pico.build.flash_freq=80m
 lolin_s2_pico.build.flash_mode=dio
 lolin_s2_pico.build.boot=qio
 lolin_s2_pico.build.partitions=default
-lolin_s2_pico.build.defines=
+lolin_s2_pico.build.defines=-DBOARD_HAS_PSRAM=0
 
-lolin_s2_pico.build.defines=-DBOARD_HAS_PSRAM
+lolin_s2_pico.build.defines=-DBOARD_HAS_PSRAM=1
 
 lolin_s2_pico.menu.CDCOnBoot.default=Enabled
 lolin_s2_pico.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -9704,7 +9704,7 @@ lolin_s3.build.flash_mode=dio
 lolin_s3.build.boot=qio
 lolin_s3.build.boot_freq=80m
 lolin_s3.build.partitions=default
-lolin_s3.build.defines=-DBOARD_HAS_PSRAM
+lolin_s3.build.defines=-DBOARD_HAS_PSRAM=1
 lolin_s3.build.loop_core=
 lolin_s3.build.event_core=
 lolin_s3.build.psram_type=opi
@@ -9862,7 +9862,7 @@ lolin_s3_mini.build.flash_mode=dio
 lolin_s3_mini.build.boot=qio
 lolin_s3_mini.build.boot_freq=80m
 lolin_s3_mini.build.partitions=default
-lolin_s3_mini.build.defines=-DBOARD_HAS_PSRAM
+lolin_s3_mini.build.defines=-DBOARD_HAS_PSRAM=1
 lolin_s3_mini.build.loop_core=
 lolin_s3_mini.build.event_core=
 lolin_s3_mini.build.psram_type=qspi
@@ -10033,7 +10033,7 @@ lolin_s3_mini_pro.build.flash_mode=dio
 lolin_s3_mini_pro.build.boot=qio
 lolin_s3_mini_pro.build.boot_freq=80m
 lolin_s3_mini_pro.build.partitions=default
-lolin_s3_mini_pro.build.defines=-DBOARD_HAS_PSRAM
+lolin_s3_mini_pro.build.defines=-DBOARD_HAS_PSRAM=1
 lolin_s3_mini_pro.build.loop_core=
 lolin_s3_mini_pro.build.event_core=
 lolin_s3_mini_pro.build.psram_type=qspi
@@ -10204,7 +10204,7 @@ lolin_s3_pro.build.flash_mode=dio
 lolin_s3_pro.build.boot=qio
 lolin_s3_pro.build.boot_freq=80m
 lolin_s3_pro.build.partitions=default
-lolin_s3_pro.build.defines=-DBOARD_HAS_PSRAM
+lolin_s3_pro.build.defines=-DBOARD_HAS_PSRAM=1
 lolin_s3_pro.build.loop_core=
 lolin_s3_pro.build.event_core=
 lolin_s3_pro.build.psram_type=opi
@@ -10352,7 +10352,7 @@ lolin32.build.flash_mode=dio
 lolin32.build.flash_size=4MB
 lolin32.build.boot=dio
 lolin32.build.partitions=default
-lolin32.build.defines=
+lolin32.build.defines=-DBOARD_HAS_PSRAM=0
 
 lolin32.menu.FlashFreq.80=80MHz
 lolin32.menu.FlashFreq.80.build.flash_freq=80m
@@ -10450,7 +10450,7 @@ viralink32g01.build.flash_mode=dio
 viralink32g01.build.flash_size=4MB
 viralink32g01.build.boot=dio
 viralink32g01.build.partitions=default
-viralink32g01.build.defines=
+viralink32g01.build.defines=-DBOARD_HAS_PSRAM=0
 
 viralink32g01.menu.FlashFreq.80=80MHz
 viralink32g01.menu.FlashFreq.80.build.flash_freq=80m
@@ -10548,7 +10548,7 @@ viralink32g11.build.flash_mode=dio
 viralink32g11.build.flash_size=4MB
 viralink32g11.build.boot=dio
 viralink32g11.build.partitions=default
-viralink32g11.build.defines=
+viralink32g11.build.defines=-DBOARD_HAS_PSRAM=0
 
 viralink32g11.menu.FlashFreq.80=80MHz
 viralink32g11.menu.FlashFreq.80.build.flash_freq=80m
@@ -10647,7 +10647,7 @@ lolin32-lite.build.flash_mode=dio
 lolin32-lite.build.flash_size=4MB
 lolin32-lite.build.boot=dio
 lolin32-lite.build.partitions=default
-lolin32-lite.build.defines=
+lolin32-lite.build.defines=-DBOARD_HAS_PSRAM=0
 
 lolin32-lite.menu.FlashFreq.80=80MHz
 lolin32-lite.menu.FlashFreq.80.build.flash_freq=80m
@@ -10745,7 +10745,7 @@ pocket_32.build.flash_mode=dio
 pocket_32.build.flash_size=4MB
 pocket_32.build.boot=dio
 pocket_32.build.partitions=default
-pocket_32.build.defines=
+pocket_32.build.defines=-DBOARD_HAS_PSRAM=0
 
 pocket_32.menu.FlashFreq.80=80MHz
 pocket_32.menu.FlashFreq.80.build.flash_freq=80m
@@ -10817,7 +10817,7 @@ WeMosBat.build.flash_mode=dio
 WeMosBat.build.flash_size=4MB
 WeMosBat.build.boot=dio
 WeMosBat.build.partitions=default
-WeMosBat.build.defines=
+WeMosBat.build.defines=-DBOARD_HAS_PSRAM=0
 
 WeMosBat.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 WeMosBat.menu.PartitionScheme.default.build.partitions=default
@@ -10929,7 +10929,7 @@ espea32.build.flash_mode=dio
 espea32.build.flash_size=4MB
 espea32.build.boot=dio
 espea32.build.partitions=default
-espea32.build.defines=
+espea32.build.defines=-DBOARD_HAS_PSRAM=0
 
 espea32.menu.FlashFreq.80=80MHz
 espea32.menu.FlashFreq.80.build.flash_freq=80m
@@ -11001,7 +11001,7 @@ quantum.build.flash_mode=qio
 quantum.build.flash_size=16MB
 quantum.build.boot=dio
 quantum.build.partitions=default
-quantum.build.defines=
+quantum.build.defines=-DBOARD_HAS_PSRAM=0
 
 quantum.menu.FlashFreq.80=80MHz
 quantum.menu.FlashFreq.80.build.flash_freq=80m
@@ -11073,7 +11073,7 @@ node32s.build.flash_mode=dio
 node32s.build.flash_size=4MB
 node32s.build.boot=dio
 node32s.build.partitions=default
-node32s.build.defines=
+node32s.build.defines=-DBOARD_HAS_PSRAM=0
 
 node32s.menu.PartitionScheme.default=Default
 node32s.menu.PartitionScheme.default.build.partitions=default
@@ -11154,7 +11154,7 @@ hornbill32dev.build.flash_mode=dio
 hornbill32dev.build.flash_size=4MB
 hornbill32dev.build.boot=dio
 hornbill32dev.build.partitions=default
-hornbill32dev.build.defines=
+hornbill32dev.build.defines=-DBOARD_HAS_PSRAM=0
 
 hornbill32dev.menu.FlashFreq.80=80MHz
 hornbill32dev.menu.FlashFreq.80.build.flash_freq=80m
@@ -11225,7 +11225,7 @@ hornbill32minima.build.flash_mode=dio
 hornbill32minima.build.flash_size=4MB
 hornbill32minima.build.boot=dio
 hornbill32minima.build.partitions=default
-hornbill32minima.build.defines=
+hornbill32minima.build.defines=-DBOARD_HAS_PSRAM=0
 
 hornbill32minima.menu.FlashFreq.80=80MHz
 hornbill32minima.menu.FlashFreq.80.build.flash_freq=80m
@@ -11301,7 +11301,7 @@ dfrobot_beetle_esp32c3.build.flash_freq=80m
 dfrobot_beetle_esp32c3.build.flash_mode=qio
 dfrobot_beetle_esp32c3.build.boot=qio
 dfrobot_beetle_esp32c3.build.partitions=default
-dfrobot_beetle_esp32c3.build.defines=
+dfrobot_beetle_esp32c3.build.defines=-DBOARD_HAS_PSRAM=0
 
 dfrobot_beetle_esp32c3.menu.CDCOnBoot.default=Disabled
 dfrobot_beetle_esp32c3.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -11443,7 +11443,7 @@ dfrobot_beetle_esp32c6.build.flash_freq=80m
 dfrobot_beetle_esp32c6.build.flash_mode=qio
 dfrobot_beetle_esp32c6.build.boot=qio
 dfrobot_beetle_esp32c6.build.partitions=default
-dfrobot_beetle_esp32c6.build.defines=
+dfrobot_beetle_esp32c6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 dfrobot_beetle_esp32c6.menu.JTAGAdapter.default=Disabled
@@ -11603,15 +11603,15 @@ dfrobot_firebeetle2_esp32e.build.flash_freq=40m
 dfrobot_firebeetle2_esp32e.build.flash_mode=dio
 dfrobot_firebeetle2_esp32e.build.boot=dio
 dfrobot_firebeetle2_esp32e.build.partitions=default
-dfrobot_firebeetle2_esp32e.build.defines=
+dfrobot_firebeetle2_esp32e.build.defines=-DBOARD_HAS_PSRAM=0
 dfrobot_firebeetle2_esp32e.build.loop_core=
 dfrobot_firebeetle2_esp32e.build.event_core=
 
 dfrobot_firebeetle2_esp32e.menu.PSRAM.disabled=Disabled
-dfrobot_firebeetle2_esp32e.menu.PSRAM.disabled.build.defines=
+dfrobot_firebeetle2_esp32e.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 dfrobot_firebeetle2_esp32e.menu.PSRAM.disabled.build.extra_libs=
 dfrobot_firebeetle2_esp32e.menu.PSRAM.enabled=Enabled
-dfrobot_firebeetle2_esp32e.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+dfrobot_firebeetle2_esp32e.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 dfrobot_firebeetle2_esp32e.menu.PSRAM.enabled.build.extra_libs=
 
 dfrobot_firebeetle2_esp32e.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -11779,7 +11779,7 @@ dfrobot_firebeetle2_esp32s3.build.flash_mode=dio
 dfrobot_firebeetle2_esp32s3.build.boot=qio
 dfrobot_firebeetle2_esp32s3.build.boot_freq=80m
 dfrobot_firebeetle2_esp32s3.build.partitions=default
-dfrobot_firebeetle2_esp32s3.build.defines=
+dfrobot_firebeetle2_esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 dfrobot_firebeetle2_esp32s3.build.loop_core=
 dfrobot_firebeetle2_esp32s3.build.event_core=
 dfrobot_firebeetle2_esp32s3.build.flash_type=qio
@@ -11787,13 +11787,13 @@ dfrobot_firebeetle2_esp32s3.build.psram_type=qspi
 dfrobot_firebeetle2_esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
 
 dfrobot_firebeetle2_esp32s3.menu.PSRAM.disabled=Disabled
-dfrobot_firebeetle2_esp32s3.menu.PSRAM.disabled.build.defines=
+dfrobot_firebeetle2_esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 dfrobot_firebeetle2_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
 dfrobot_firebeetle2_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
-dfrobot_firebeetle2_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+dfrobot_firebeetle2_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 dfrobot_firebeetle2_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
 dfrobot_firebeetle2_esp32s3.menu.PSRAM.opi=OPI PSRAM
-dfrobot_firebeetle2_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+dfrobot_firebeetle2_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 dfrobot_firebeetle2_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
 dfrobot_firebeetle2_esp32s3.menu.FlashMode.qio=QIO 80MHz
@@ -11992,7 +11992,7 @@ dfrobot_firebeetle2_esp32c6.build.flash_freq=80m
 dfrobot_firebeetle2_esp32c6.build.flash_mode=qio
 dfrobot_firebeetle2_esp32c6.build.boot=qio
 dfrobot_firebeetle2_esp32c6.build.partitions=default
-dfrobot_firebeetle2_esp32c6.build.defines=
+dfrobot_firebeetle2_esp32c6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 dfrobot_firebeetle2_esp32c6.menu.JTAGAdapter.default=Disabled
@@ -12166,7 +12166,7 @@ dfrobot_romeo_esp32s3.build.flash_mode=qio
 dfrobot_romeo_esp32s3.build.boot=qio
 dfrobot_romeo_esp32s3.build.boot_freq=80m
 dfrobot_romeo_esp32s3.build.partitions=default
-dfrobot_romeo_esp32s3.build.defines=
+dfrobot_romeo_esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 dfrobot_romeo_esp32s3.build.loop_core=
 dfrobot_romeo_esp32s3.build.event_core=
 dfrobot_romeo_esp32s3.build.flash_type=qio
@@ -12174,13 +12174,13 @@ dfrobot_romeo_esp32s3.build.psram_type=qspi
 dfrobot_romeo_esp32s3.build.memory_type={build.flash_type}_{build.psram_type}
 
 dfrobot_romeo_esp32s3.menu.PSRAM.opi=OPI PSRAM
-dfrobot_romeo_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+dfrobot_romeo_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 dfrobot_romeo_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 dfrobot_romeo_esp32s3.menu.PSRAM.disabled=Disabled
-dfrobot_romeo_esp32s3.menu.PSRAM.disabled.build.defines=
+dfrobot_romeo_esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 dfrobot_romeo_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
 dfrobot_romeo_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
-dfrobot_romeo_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+dfrobot_romeo_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 dfrobot_romeo_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
 
 
@@ -12353,7 +12353,7 @@ firebeetle32.build.flash_mode=dio
 firebeetle32.build.flash_size=4MB
 firebeetle32.build.boot=dio
 firebeetle32.build.partitions=default
-firebeetle32.build.defines=
+firebeetle32.build.defines=-DBOARD_HAS_PSRAM=0
 
 firebeetle32.menu.FlashFreq.80=80MHz
 firebeetle32.menu.FlashFreq.80.build.flash_freq=80m
@@ -12425,7 +12425,7 @@ intorobot-fig.build.flash_mode=dio
 intorobot-fig.build.flash_size=4MB
 intorobot-fig.build.boot=dio
 intorobot-fig.build.partitions=default
-intorobot-fig.build.defines=
+intorobot-fig.build.defines=-DBOARD_HAS_PSRAM=0
 
 intorobot-fig.menu.FlashFreq.80=80MHz
 intorobot-fig.menu.FlashFreq.80.build.flash_freq=80m
@@ -12497,7 +12497,7 @@ onehorse32dev.build.flash_mode=dout
 onehorse32dev.build.flash_size=4MB
 onehorse32dev.build.boot=dio
 onehorse32dev.build.partitions=default
-onehorse32dev.build.defines=
+onehorse32dev.build.defines=-DBOARD_HAS_PSRAM=0
 
 onehorse32dev.menu.FlashFreq.80=80MHz
 onehorse32dev.menu.FlashFreq.80.build.flash_freq=80m
@@ -12588,7 +12588,7 @@ adafruit_metro_esp32s2.build.flash_freq=80m
 adafruit_metro_esp32s2.build.flash_mode=dio
 adafruit_metro_esp32s2.build.boot=qio
 adafruit_metro_esp32s2.build.partitions=default
-adafruit_metro_esp32s2.build.defines=
+adafruit_metro_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_metro_esp32s2.menu.CDCOnBoot.cdc=Enabled
 adafruit_metro_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -12613,9 +12613,9 @@ adafruit_metro_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_metro_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_metro_esp32s2.menu.PSRAM.enabled=Enabled
-adafruit_metro_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_metro_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_metro_esp32s2.menu.PSRAM.disabled=Disabled
-adafruit_metro_esp32s2.menu.PSRAM.disabled.build.defines=
+adafruit_metro_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
 adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -12772,7 +12772,7 @@ adafruit_metro_esp32s3.build.flash_freq=80m
 adafruit_metro_esp32s3.build.flash_mode=dio
 adafruit_metro_esp32s3.build.boot=qio
 adafruit_metro_esp32s3.build.partitions=default
-adafruit_metro_esp32s3.build.defines=
+adafruit_metro_esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_metro_esp32s3.build.loop_core=
 adafruit_metro_esp32s3.build.event_core=
 adafruit_metro_esp32s3.build.flash_type=qio
@@ -12817,10 +12817,10 @@ adafruit_metro_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_metro_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_metro_esp32s3.menu.PSRAM.opi=OPI PSRAM
-adafruit_metro_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_metro_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_metro_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 adafruit_metro_esp32s3.menu.PSRAM.disabled=Disabled
-adafruit_metro_esp32s3.menu.PSRAM.disabled.build.defines=
+adafruit_metro_esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_metro_esp32s3.menu.PSRAM.disabled.build.psram_type=opi
 
 adafruit_metro_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FATFS)
@@ -12974,7 +12974,7 @@ adafruit_magtag29_esp32s2.build.flash_freq=80m
 adafruit_magtag29_esp32s2.build.flash_mode=dio
 adafruit_magtag29_esp32s2.build.boot=qio
 adafruit_magtag29_esp32s2.build.partitions=default
-adafruit_magtag29_esp32s2.build.defines=
+adafruit_magtag29_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_magtag29_esp32s2.menu.CDCOnBoot.cdc=Enabled
 adafruit_magtag29_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -12999,9 +12999,9 @@ adafruit_magtag29_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_magtag29_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_magtag29_esp32s2.menu.PSRAM.enabled=Enabled
-adafruit_magtag29_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_magtag29_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_magtag29_esp32s2.menu.PSRAM.disabled=Disabled
-adafruit_magtag29_esp32s2.menu.PSRAM.disabled.build.defines=
+adafruit_magtag29_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
 adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -13157,7 +13157,7 @@ adafruit_funhouse_esp32s2.build.flash_freq=80m
 adafruit_funhouse_esp32s2.build.flash_mode=dio
 adafruit_funhouse_esp32s2.build.boot=qio
 adafruit_funhouse_esp32s2.build.partitions=default
-adafruit_funhouse_esp32s2.build.defines=
+adafruit_funhouse_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_funhouse_esp32s2.menu.CDCOnBoot.cdc=Enabled
 adafruit_funhouse_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -13182,9 +13182,9 @@ adafruit_funhouse_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_funhouse_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_funhouse_esp32s2.menu.PSRAM.enabled=Enabled
-adafruit_funhouse_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_funhouse_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_funhouse_esp32s2.menu.PSRAM.disabled=Disabled
-adafruit_funhouse_esp32s2.menu.PSRAM.disabled.build.defines=
+adafruit_funhouse_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
 adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -13323,7 +13323,7 @@ featheresp32.build.flash_freq=80m
 featheresp32.build.flash_mode=dio
 featheresp32.build.boot=dio
 featheresp32.build.partitions=default
-featheresp32.build.defines=
+featheresp32.build.defines=-DBOARD_HAS_PSRAM=0
 featheresp32.build.loop_core=
 featheresp32.build.event_core=
 
@@ -13457,7 +13457,7 @@ adafruit_feather_esp32_v2.build.flash_freq=80m
 adafruit_feather_esp32_v2.build.flash_mode=dio
 adafruit_feather_esp32_v2.build.boot=dio
 adafruit_feather_esp32_v2.build.partitions=default
-adafruit_feather_esp32_v2.build.defines=
+adafruit_feather_esp32_v2.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_feather_esp32_v2.build.loop_core=
 adafruit_feather_esp32_v2.build.event_core=
 
@@ -13472,9 +13472,9 @@ adafruit_feather_esp32_v2.menu.EventsCore.0=Core 0
 adafruit_feather_esp32_v2.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 adafruit_feather_esp32_v2.menu.PSRAM.enabled=Enabled
-adafruit_feather_esp32_v2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+adafruit_feather_esp32_v2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 adafruit_feather_esp32_v2.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32_v2.menu.PSRAM.disabled.build.defines=
+adafruit_feather_esp32_v2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_feather_esp32_v2.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 adafruit_feather_esp32_v2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -13592,7 +13592,7 @@ adafruit_feather_esp32s2.build.flash_freq=80m
 adafruit_feather_esp32s2.build.flash_mode=dio
 adafruit_feather_esp32s2.build.boot=qio
 adafruit_feather_esp32s2.build.partitions=default
-adafruit_feather_esp32s2.build.defines=
+adafruit_feather_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_feather_esp32s2.menu.CDCOnBoot.cdc=Enabled
 adafruit_feather_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -13617,9 +13617,9 @@ adafruit_feather_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_feather_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_feather_esp32s2.menu.PSRAM.enabled=Enabled
-adafruit_feather_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s2.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32s2.menu.PSRAM.disabled.build.defines=
+adafruit_feather_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
 adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -13775,7 +13775,7 @@ adafruit_feather_esp32s2_tft.build.flash_freq=80m
 adafruit_feather_esp32s2_tft.build.flash_mode=dio
 adafruit_feather_esp32s2_tft.build.boot=qio
 adafruit_feather_esp32s2_tft.build.partitions=default
-adafruit_feather_esp32s2_tft.build.defines=
+adafruit_feather_esp32s2_tft.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_feather_esp32s2_tft.menu.CDCOnBoot.cdc=Enabled
 adafruit_feather_esp32s2_tft.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -13800,9 +13800,9 @@ adafruit_feather_esp32s2_tft.menu.UploadMode.default.upload.use_1200bps_touch=fa
 adafruit_feather_esp32s2_tft.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_feather_esp32s2_tft.menu.PSRAM.enabled=Enabled
-adafruit_feather_esp32s2_tft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s2_tft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s2_tft.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32s2_tft.menu.PSRAM.disabled.build.defines=
+adafruit_feather_esp32s2_tft.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -13958,7 +13958,7 @@ adafruit_feather_esp32s2_reversetft.build.flash_freq=80m
 adafruit_feather_esp32s2_reversetft.build.flash_mode=dio
 adafruit_feather_esp32s2_reversetft.build.boot=qio
 adafruit_feather_esp32s2_reversetft.build.partitions=default
-adafruit_feather_esp32s2_reversetft.build.defines=
+adafruit_feather_esp32s2_reversetft.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_feather_esp32s2_reversetft.menu.CDCOnBoot.cdc=Enabled
 adafruit_feather_esp32s2_reversetft.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -13983,9 +13983,9 @@ adafruit_feather_esp32s2_reversetft.menu.UploadMode.default.upload.use_1200bps_t
 adafruit_feather_esp32s2_reversetft.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_feather_esp32s2_reversetft.menu.PSRAM.enabled=Enabled
-adafruit_feather_esp32s2_reversetft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s2_reversetft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s2_reversetft.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32s2_reversetft.menu.PSRAM.disabled.build.defines=
+adafruit_feather_esp32s2_reversetft.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -14142,7 +14142,7 @@ adafruit_feather_esp32s3.build.flash_freq=80m
 adafruit_feather_esp32s3.build.flash_mode=dio
 adafruit_feather_esp32s3.build.boot=qio
 adafruit_feather_esp32s3.build.partitions=default
-adafruit_feather_esp32s3.build.defines=
+adafruit_feather_esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_feather_esp32s3.build.loop_core=
 adafruit_feather_esp32s3.build.event_core=
 adafruit_feather_esp32s3.build.flash_type=qio
@@ -14187,13 +14187,13 @@ adafruit_feather_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_feather_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_feather_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
-adafruit_feather_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
 adafruit_feather_esp32s3.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32s3.menu.PSRAM.disabled.build.defines=
+adafruit_feather_esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_feather_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
 adafruit_feather_esp32s3.menu.PSRAM.opi=OPI PSRAM
-adafruit_feather_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
 adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
@@ -14360,7 +14360,7 @@ adafruit_feather_esp32s3_nopsram.build.flash_freq=80m
 adafruit_feather_esp32s3_nopsram.build.flash_mode=dio
 adafruit_feather_esp32s3_nopsram.build.boot=qio
 adafruit_feather_esp32s3_nopsram.build.partitions=default
-adafruit_feather_esp32s3_nopsram.build.defines=
+adafruit_feather_esp32s3_nopsram.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_feather_esp32s3_nopsram.build.loop_core=
 adafruit_feather_esp32s3_nopsram.build.event_core=
 adafruit_feather_esp32s3_nopsram.build.flash_type=qio
@@ -14547,7 +14547,7 @@ adafruit_feather_esp32s3_tft.build.flash_freq=80m
 adafruit_feather_esp32s3_tft.build.flash_mode=dio
 adafruit_feather_esp32s3_tft.build.boot=qio
 adafruit_feather_esp32s3_tft.build.partitions=default
-adafruit_feather_esp32s3_tft.build.defines=
+adafruit_feather_esp32s3_tft.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_feather_esp32s3_tft.build.loop_core=
 adafruit_feather_esp32s3_tft.build.event_core=
 adafruit_feather_esp32s3_tft.build.flash_type=qio
@@ -14592,13 +14592,13 @@ adafruit_feather_esp32s3_tft.menu.UploadMode.default.upload.use_1200bps_touch=fa
 adafruit_feather_esp32s3_tft.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_feather_esp32s3_tft.menu.PSRAM.enabled=QSPI PSRAM
-adafruit_feather_esp32s3_tft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s3_tft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s3_tft.menu.PSRAM.enabled.build.psram_type=qspi
 adafruit_feather_esp32s3_tft.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32s3_tft.menu.PSRAM.disabled.build.defines=
+adafruit_feather_esp32s3_tft.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_feather_esp32s3_tft.menu.PSRAM.disabled.build.psram_type=qspi
 adafruit_feather_esp32s3_tft.menu.PSRAM.opi=OPI PSRAM
-adafruit_feather_esp32s3_tft.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s3_tft.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s3_tft.menu.PSRAM.opi.build.psram_type=opi
 
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
@@ -14765,7 +14765,7 @@ adafruit_feather_esp32s3_reversetft.build.flash_freq=80m
 adafruit_feather_esp32s3_reversetft.build.flash_mode=dio
 adafruit_feather_esp32s3_reversetft.build.boot=qio
 adafruit_feather_esp32s3_reversetft.build.partitions=default
-adafruit_feather_esp32s3_reversetft.build.defines=
+adafruit_feather_esp32s3_reversetft.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_feather_esp32s3_reversetft.build.loop_core=
 adafruit_feather_esp32s3_reversetft.build.event_core=
 adafruit_feather_esp32s3_reversetft.build.flash_type=qio
@@ -14810,13 +14810,13 @@ adafruit_feather_esp32s3_reversetft.menu.UploadMode.default.upload.use_1200bps_t
 adafruit_feather_esp32s3_reversetft.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_feather_esp32s3_reversetft.menu.PSRAM.enabled=QSPI PSRAM
-adafruit_feather_esp32s3_reversetft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s3_reversetft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s3_reversetft.menu.PSRAM.enabled.build.psram_type=qspi
 adafruit_feather_esp32s3_reversetft.menu.PSRAM.disabled=Disabled
-adafruit_feather_esp32s3_reversetft.menu.PSRAM.disabled.build.defines=
+adafruit_feather_esp32s3_reversetft.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_feather_esp32s3_reversetft.menu.PSRAM.disabled.build.psram_type=qspi
 adafruit_feather_esp32s3_reversetft.menu.PSRAM.opi=OPI PSRAM
-adafruit_feather_esp32s3_reversetft.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s3_reversetft.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_feather_esp32s3_reversetft.menu.PSRAM.opi.build.psram_type=opi
 
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
@@ -14969,7 +14969,7 @@ adafruit_feather_esp32c6.build.flash_freq=80m
 adafruit_feather_esp32c6.build.flash_mode=qio
 adafruit_feather_esp32c6.build.boot=qio
 adafruit_feather_esp32c6.build.partitions=default
-adafruit_feather_esp32c6.build.defines=
+adafruit_feather_esp32c6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 adafruit_feather_esp32c6.menu.JTAGAdapter.default=Disabled
@@ -15145,7 +15145,7 @@ adafruit_qtpy_esp32_pico.build.flash_freq=80m
 adafruit_qtpy_esp32_pico.build.flash_mode=dio
 adafruit_qtpy_esp32_pico.build.boot=dio
 adafruit_qtpy_esp32_pico.build.partitions=default
-adafruit_qtpy_esp32_pico.build.defines=
+adafruit_qtpy_esp32_pico.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_qtpy_esp32_pico.build.loop_core=
 adafruit_qtpy_esp32_pico.build.event_core=
 
@@ -15160,9 +15160,9 @@ adafruit_qtpy_esp32_pico.menu.EventsCore.0=Core 0
 adafruit_qtpy_esp32_pico.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 adafruit_qtpy_esp32_pico.menu.PSRAM.enabled=Enabled
-adafruit_qtpy_esp32_pico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+adafruit_qtpy_esp32_pico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 adafruit_qtpy_esp32_pico.menu.PSRAM.disabled=Disabled
-adafruit_qtpy_esp32_pico.menu.PSRAM.disabled.build.defines=
+adafruit_qtpy_esp32_pico.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_qtpy_esp32_pico.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 adafruit_qtpy_esp32_pico.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -15266,7 +15266,7 @@ adafruit_qtpy_esp32c3.build.flash_freq=80m
 adafruit_qtpy_esp32c3.build.flash_mode=dio
 adafruit_qtpy_esp32c3.build.boot=qio
 adafruit_qtpy_esp32c3.build.partitions=default
-adafruit_qtpy_esp32c3.build.defines=
+adafruit_qtpy_esp32c3.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_qtpy_esp32c3.menu.CDCOnBoot.cdc=Enabled
 adafruit_qtpy_esp32c3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -15415,7 +15415,7 @@ adafruit_qtpy_esp32s2.build.flash_freq=80m
 adafruit_qtpy_esp32s2.build.flash_mode=dio
 adafruit_qtpy_esp32s2.build.boot=qio
 adafruit_qtpy_esp32s2.build.partitions=default
-adafruit_qtpy_esp32s2.build.defines=
+adafruit_qtpy_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_qtpy_esp32s2.menu.CDCOnBoot.cdc=Enabled
 adafruit_qtpy_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -15440,9 +15440,9 @@ adafruit_qtpy_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_qtpy_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_qtpy_esp32s2.menu.PSRAM.enabled=Enabled
-adafruit_qtpy_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_qtpy_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_qtpy_esp32s2.menu.PSRAM.disabled=Disabled
-adafruit_qtpy_esp32s2.menu.PSRAM.disabled.build.defines=
+adafruit_qtpy_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
 adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -15599,7 +15599,7 @@ adafruit_qtpy_esp32s3_nopsram.build.flash_freq=80m
 adafruit_qtpy_esp32s3_nopsram.build.flash_mode=dio
 adafruit_qtpy_esp32s3_nopsram.build.boot=qio
 adafruit_qtpy_esp32s3_nopsram.build.partitions=default
-adafruit_qtpy_esp32s3_nopsram.build.defines=
+adafruit_qtpy_esp32s3_nopsram.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_qtpy_esp32s3_nopsram.build.loop_core=
 adafruit_qtpy_esp32s3_nopsram.build.event_core=
 adafruit_qtpy_esp32s3_nopsram.build.flash_type=qio
@@ -15786,7 +15786,7 @@ adafruit_qtpy_esp32s3_n4r2.build.flash_freq=80m
 adafruit_qtpy_esp32s3_n4r2.build.flash_mode=dio
 adafruit_qtpy_esp32s3_n4r2.build.boot=qio
 adafruit_qtpy_esp32s3_n4r2.build.partitions=default
-adafruit_qtpy_esp32s3_n4r2.build.defines=
+adafruit_qtpy_esp32s3_n4r2.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_qtpy_esp32s3_n4r2.build.loop_core=
 adafruit_qtpy_esp32s3_n4r2.build.event_core=
 adafruit_qtpy_esp32s3_n4r2.build.flash_type=qio
@@ -15831,13 +15831,13 @@ adafruit_qtpy_esp32s3_n4r2.menu.UploadMode.default.upload.use_1200bps_touch=fals
 adafruit_qtpy_esp32s3_n4r2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.enabled=QSPI PSRAM
-adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.enabled.build.psram_type=qspi
 adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.disabled=Disabled
-adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.disabled.build.defines=
+adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.disabled.build.psram_type=qspi
 adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.opi=OPI PSRAM
-adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.opi.build.psram_type=opi
 
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
@@ -15986,7 +15986,7 @@ adafruit_itsybitsy_esp32.build.flash_freq=80m
 adafruit_itsybitsy_esp32.build.flash_mode=dio
 adafruit_itsybitsy_esp32.build.boot=dio
 adafruit_itsybitsy_esp32.build.partitions=default
-adafruit_itsybitsy_esp32.build.defines=
+adafruit_itsybitsy_esp32.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_itsybitsy_esp32.build.loop_core=
 adafruit_itsybitsy_esp32.build.event_core=
 
@@ -16001,9 +16001,9 @@ adafruit_itsybitsy_esp32.menu.EventsCore.0=Core 0
 adafruit_itsybitsy_esp32.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 adafruit_itsybitsy_esp32.menu.PSRAM.enabled=Enabled
-adafruit_itsybitsy_esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+adafruit_itsybitsy_esp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 adafruit_itsybitsy_esp32.menu.PSRAM.disabled=Disabled
-adafruit_itsybitsy_esp32.menu.PSRAM.disabled.build.defines=
+adafruit_itsybitsy_esp32.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 adafruit_itsybitsy_esp32.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 adafruit_itsybitsy_esp32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -16122,7 +16122,7 @@ adafruit_matrixportal_esp32s3.build.flash_freq=80m
 adafruit_matrixportal_esp32s3.build.flash_mode=dio
 adafruit_matrixportal_esp32s3.build.boot=qio
 adafruit_matrixportal_esp32s3.build.partitions=default
-adafruit_matrixportal_esp32s3.build.defines=
+adafruit_matrixportal_esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_matrixportal_esp32s3.build.loop_core=
 adafruit_matrixportal_esp32s3.build.event_core=
 adafruit_matrixportal_esp32s3.build.flash_type=qio
@@ -16167,13 +16167,13 @@ adafruit_matrixportal_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=f
 adafruit_matrixportal_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_matrixportal_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
-adafruit_matrixportal_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_matrixportal_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_matrixportal_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
 adafruit_matrixportal_esp32s3.menu.PSRAM.disabled=Disabled
-adafruit_matrixportal_esp32s3.menu.PSRAM.disabled.build.defines=
+adafruit_matrixportal_esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_matrixportal_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
 adafruit_matrixportal_esp32s3.menu.PSRAM.opi=OPI PSRAM
-adafruit_matrixportal_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_matrixportal_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_matrixportal_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
 adafruit_matrixportal_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FATFS)
@@ -16319,7 +16319,7 @@ adafruit_camera_esp32s3.build.flash_freq=80m
 adafruit_camera_esp32s3.build.flash_mode=dio
 adafruit_camera_esp32s3.build.boot=qio
 adafruit_camera_esp32s3.build.partitions=default
-adafruit_camera_esp32s3.build.defines=
+adafruit_camera_esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_camera_esp32s3.build.loop_core=
 adafruit_camera_esp32s3.build.event_core=
 adafruit_camera_esp32s3.build.flash_type=qio
@@ -16364,13 +16364,13 @@ adafruit_camera_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_camera_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_camera_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
-adafruit_camera_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+adafruit_camera_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_camera_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
 adafruit_camera_esp32s3.menu.PSRAM.disabled=Disabled
-adafruit_camera_esp32s3.menu.PSRAM.disabled.build.defines=
+adafruit_camera_esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_camera_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
 adafruit_camera_esp32s3.menu.PSRAM.opi=OPI PSRAM
-adafruit_camera_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_camera_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_camera_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
 adafruit_camera_esp32s3.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
@@ -16537,7 +16537,7 @@ adafruit_qualia_s3_rgb666.build.flash_freq=80m
 adafruit_qualia_s3_rgb666.build.flash_mode=dio
 adafruit_qualia_s3_rgb666.build.boot=qio
 adafruit_qualia_s3_rgb666.build.partitions=default
-adafruit_qualia_s3_rgb666.build.defines=
+adafruit_qualia_s3_rgb666.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_qualia_s3_rgb666.build.loop_core=
 adafruit_qualia_s3_rgb666.build.event_core=
 adafruit_qualia_s3_rgb666.build.flash_type=qio
@@ -16582,10 +16582,10 @@ adafruit_qualia_s3_rgb666.menu.UploadMode.default.upload.use_1200bps_touch=false
 adafruit_qualia_s3_rgb666.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 adafruit_qualia_s3_rgb666.menu.PSRAM.opi=OPI PSRAM
-adafruit_qualia_s3_rgb666.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+adafruit_qualia_s3_rgb666.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 adafruit_qualia_s3_rgb666.menu.PSRAM.opi.build.psram_type=opi
 adafruit_qualia_s3_rgb666.menu.PSRAM.disabled=Disabled
-adafruit_qualia_s3_rgb666.menu.PSRAM.disabled.build.defines=
+adafruit_qualia_s3_rgb666.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 adafruit_qualia_s3_rgb666.menu.PSRAM.disabled.build.psram_type=opi
 
 adafruit_qualia_s3_rgb666.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FATFS)
@@ -16720,7 +16720,7 @@ nodemcu-32s.build.flash_mode=dio
 nodemcu-32s.build.flash_size=4MB
 nodemcu-32s.build.boot=dio
 nodemcu-32s.build.partitions=default
-nodemcu-32s.build.defines=
+nodemcu-32s.build.defines=-DBOARD_HAS_PSRAM=0
 
 nodemcu-32s.menu.FlashFreq.80=80MHz
 nodemcu-32s.menu.FlashFreq.80.build.flash_freq=80m
@@ -16793,7 +16793,7 @@ nologo_esp32c3_super_mini.build.flash_freq=80m
 nologo_esp32c3_super_mini.build.flash_mode=qio
 nologo_esp32c3_super_mini.build.boot=qio
 nologo_esp32c3_super_mini.build.partitions=default
-nologo_esp32c3_super_mini.build.defines=
+nologo_esp32c3_super_mini.build.defines=-DBOARD_HAS_PSRAM=0
 
 nologo_esp32c3_super_mini.menu.USBMode.hwcdc=Hardware CDC and JTAG
 nologo_esp32c3_super_mini.menu.USBMode.hwcdc.build.usb_mode=1
@@ -16938,7 +16938,7 @@ nologo_esp32s3_pico.build.flash_mode=dio
 nologo_esp32s3_pico.build.boot=qio
 nologo_esp32s3_pico.build.boot_freq=80m
 nologo_esp32s3_pico.build.partitions=default
-nologo_esp32s3_pico.build.defines=
+nologo_esp32s3_pico.build.defines=-DBOARD_HAS_PSRAM=0
 nologo_esp32s3_pico.build.loop_core=
 nologo_esp32s3_pico.build.event_core=
 nologo_esp32s3_pico.build.psram_type=qspi
@@ -16958,13 +16958,13 @@ nologo_esp32s3_pico.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.c
 nologo_esp32s3_pico.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 nologo_esp32s3_pico.menu.PSRAM.disabled=Disabled
-nologo_esp32s3_pico.menu.PSRAM.disabled.build.defines=
+nologo_esp32s3_pico.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 nologo_esp32s3_pico.menu.PSRAM.disabled.build.psram_type=qspi
 nologo_esp32s3_pico.menu.PSRAM.enabled=QSPI PSRAM
-nologo_esp32s3_pico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+nologo_esp32s3_pico.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 nologo_esp32s3_pico.menu.PSRAM.enabled.build.psram_type=qspi
 nologo_esp32s3_pico.menu.PSRAM.opi=OPI PSRAM
-nologo_esp32s3_pico.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+nologo_esp32s3_pico.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 nologo_esp32s3_pico.menu.PSRAM.opi.build.psram_type=opi
 
 nologo_esp32s3_pico.menu.FlashMode.qio=QIO 80MHz
@@ -17174,7 +17174,7 @@ mhetesp32devkit.build.flash_mode=dio
 mhetesp32devkit.build.flash_size=4MB
 mhetesp32devkit.build.boot=dio
 mhetesp32devkit.build.partitions=default
-mhetesp32devkit.build.defines=
+mhetesp32devkit.build.defines=-DBOARD_HAS_PSRAM=0
 
 mhetesp32devkit.menu.FlashFreq.80=80MHz
 mhetesp32devkit.menu.FlashFreq.80.build.flash_freq=80m
@@ -17255,7 +17255,7 @@ mhetesp32minikit.build.flash_mode=dio
 mhetesp32minikit.build.flash_size=4MB
 mhetesp32minikit.build.boot=dio
 mhetesp32minikit.build.partitions=default
-mhetesp32minikit.build.defines=
+mhetesp32minikit.build.defines=-DBOARD_HAS_PSRAM=0
 
 mhetesp32minikit.menu.FlashFreq.80=80MHz
 mhetesp32minikit.menu.FlashFreq.80.build.flash_freq=80m
@@ -17338,7 +17338,7 @@ esp32vn-iot-uno.build.flash_mode=dio
 esp32vn-iot-uno.build.flash_size=4MB
 esp32vn-iot-uno.build.boot=dio
 esp32vn-iot-uno.build.partitions=default
-esp32vn-iot-uno.build.defines=
+esp32vn-iot-uno.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32vn-iot-uno.menu.FlashFreq.80=80MHz
 esp32vn-iot-uno.menu.FlashFreq.80.build.flash_freq=80m
@@ -17410,7 +17410,7 @@ esp32doit-devkit-v1.build.flash_mode=dio
 esp32doit-devkit-v1.build.flash_size=4MB
 esp32doit-devkit-v1.build.boot=dio
 esp32doit-devkit-v1.build.partitions=default
-esp32doit-devkit-v1.build.defines=
+esp32doit-devkit-v1.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32doit-devkit-v1.menu.FlashFreq.80=80MHz
 esp32doit-devkit-v1.menu.FlashFreq.80.build.flash_freq=80m
@@ -17481,7 +17481,7 @@ esp32doit-espduino.build.flash_mode=dio
 esp32doit-espduino.build.flash_size=4MB
 esp32doit-espduino.build.boot=dio
 esp32doit-espduino.build.partitions=default
-esp32doit-espduino.build.defines=
+esp32doit-espduino.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32doit-espduino.menu.FlashFreq.80=80MHz
 esp32doit-espduino.menu.FlashFreq.80.build.flash_freq=80m
@@ -17579,7 +17579,7 @@ esp32-evb.build.flash_mode=dio
 esp32-evb.build.flash_size=4MB
 esp32-evb.build.boot=dio
 esp32-evb.build.partitions=default
-esp32-evb.build.defines=
+esp32-evb.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32-evb.menu.FlashFreq.80=80MHz
 esp32-evb.menu.FlashFreq.80.build.flash_freq=80m
@@ -17666,7 +17666,7 @@ esp32-gateway.build.flash_mode=dio
 esp32-gateway.build.flash_size=4MB
 esp32-gateway.build.boot=dio
 esp32-gateway.build.partitions=default
-esp32-gateway.build.defines=
+esp32-gateway.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32-gateway.menu.FlashFreq.80=80MHz
 esp32-gateway.menu.FlashFreq.80.build.flash_freq=80m
@@ -17738,15 +17738,15 @@ esp32-poe.build.flash_freq=40m
 esp32-poe.build.flash_mode=dio
 esp32-poe.build.boot=dio
 esp32-poe.build.partitions=default
-esp32-poe.build.defines=
+esp32-poe.build.defines=-DBOARD_HAS_PSRAM=0
 esp32-poe.build.loop_core=
 esp32-poe.build.event_core=
 
 esp32-poe.menu.PSRAM.disabled=Disabled (WROOM)
-esp32-poe.menu.PSRAM.disabled.build.defines=
+esp32-poe.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32-poe.menu.PSRAM.disabled.build.extra_libs=
 esp32-poe.menu.PSRAM.enabled=Enabled (WROVER)
-esp32-poe.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32-poe.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32-poe.menu.PSRAM.enabled.build.extra_libs=
 
 esp32-poe.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -17881,15 +17881,15 @@ esp32-poe-iso.build.flash_freq=40m
 esp32-poe-iso.build.flash_mode=dio
 esp32-poe-iso.build.boot=dio
 esp32-poe-iso.build.partitions=default
-esp32-poe-iso.build.defines=
+esp32-poe-iso.build.defines=-DBOARD_HAS_PSRAM=0
 esp32-poe-iso.build.loop_core=
 esp32-poe-iso.build.event_core=
 
 esp32-poe-iso.menu.PSRAM.disabled=Disabled (WROOM)
-esp32-poe-iso.menu.PSRAM.disabled.build.defines=
+esp32-poe-iso.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32-poe-iso.menu.PSRAM.disabled.build.extra_libs=
 esp32-poe-iso.menu.PSRAM.enabled=Enabled (WROVER)
-esp32-poe-iso.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32-poe-iso.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32-poe-iso.menu.PSRAM.enabled.build.extra_libs=
 
 esp32-poe-iso.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -18024,13 +18024,13 @@ esp32-devkitlipo.build.flash_freq=40m
 esp32-devkitlipo.build.flash_mode=dio
 esp32-devkitlipo.build.boot=dio
 esp32-devkitlipo.build.partitions=default
-esp32-devkitlipo.build.defines=
+esp32-devkitlipo.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32-devkitlipo.menu.PSRAM.disabled=Disabled (WROOM)
-esp32-devkitlipo.menu.PSRAM.disabled.build.defines=
+esp32-devkitlipo.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32-devkitlipo.menu.PSRAM.disabled.build.extra_libs=
 esp32-devkitlipo.menu.PSRAM.enabled=Enabled (WROVER)
-esp32-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32-devkitlipo.menu.PSRAM.enabled.build.extra_libs=
 
 esp32-devkitlipo.menu.PartitionScheme.default=Default
@@ -18132,7 +18132,7 @@ esp32s2-devkitlipo.build.flash_freq=80m
 esp32s2-devkitlipo.build.flash_mode=dio
 esp32s2-devkitlipo.build.boot=qio
 esp32s2-devkitlipo.build.partitions=default
-esp32s2-devkitlipo.build.defines=
+esp32s2-devkitlipo.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32s2-devkitlipo.menu.JTAGAdapter.default=Disabled
 esp32s2-devkitlipo.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -18166,9 +18166,9 @@ esp32s2-devkitlipo.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 esp32s2-devkitlipo.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 esp32s2-devkitlipo.menu.PSRAM.disabled=Disabled (WROOM)
-esp32s2-devkitlipo.menu.PSRAM.disabled.build.defines=
+esp32s2-devkitlipo.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s2-devkitlipo.menu.PSRAM.enabled=Enabled (WROVER)
-esp32s2-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s2-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 esp32s2-devkitlipo.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32s2-devkitlipo.menu.PartitionScheme.default.build.partitions=default
@@ -18327,7 +18327,7 @@ esp32s2-devkitlipo-usb.build.flash_freq=80m
 esp32s2-devkitlipo-usb.build.flash_mode=dio
 esp32s2-devkitlipo-usb.build.boot=qio
 esp32s2-devkitlipo-usb.build.partitions=default
-esp32s2-devkitlipo-usb.build.defines=
+esp32s2-devkitlipo-usb.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32s2-devkitlipo-usb.menu.JTAGAdapter.default=Disabled
 esp32s2-devkitlipo-usb.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -18361,9 +18361,9 @@ esp32s2-devkitlipo-usb.menu.UploadMode.UART0.upload.use_1200bps_touch=false
 esp32s2-devkitlipo-usb.menu.UploadMode.UART0.upload.wait_for_upload_port=false
 
 esp32s2-devkitlipo-usb.menu.PSRAM.disabled=Disabled (WROOM)
-esp32s2-devkitlipo-usb.menu.PSRAM.disabled.build.defines=
+esp32s2-devkitlipo-usb.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s2-devkitlipo-usb.menu.PSRAM.enabled=Enabled (WROVER)
-esp32s2-devkitlipo-usb.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s2-devkitlipo-usb.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 esp32s2-devkitlipo-usb.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32s2-devkitlipo-usb.menu.PartitionScheme.default.build.partitions=default
@@ -18524,7 +18524,7 @@ esp32s3-devkitlipo.build.flash_mode=dio
 esp32s3-devkitlipo.build.boot=qio
 esp32s3-devkitlipo.build.boot_freq=80m
 esp32s3-devkitlipo.build.partitions=default
-esp32s3-devkitlipo.build.defines=
+esp32s3-devkitlipo.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3-devkitlipo.build.loop_core=
 esp32s3-devkitlipo.build.event_core=
 esp32s3-devkitlipo.build.psram_type=qspi
@@ -18544,13 +18544,13 @@ esp32s3-devkitlipo.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cf
 esp32s3-devkitlipo.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 esp32s3-devkitlipo.menu.PSRAM.disabled=Disabled
-esp32s3-devkitlipo.menu.PSRAM.disabled.build.defines=
+esp32s3-devkitlipo.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3-devkitlipo.menu.PSRAM.disabled.build.psram_type=qspi
 esp32s3-devkitlipo.menu.PSRAM.enabled=QSPI PSRAM
-esp32s3-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3-devkitlipo.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3-devkitlipo.menu.PSRAM.enabled.build.psram_type=qspi
 esp32s3-devkitlipo.menu.PSRAM.opi=OPI PSRAM
-esp32s3-devkitlipo.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+esp32s3-devkitlipo.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3-devkitlipo.menu.PSRAM.opi.build.psram_type=opi
 
 esp32s3-devkitlipo.menu.FlashMode.qio=QIO 80MHz
@@ -18758,7 +18758,7 @@ esp32c3-devkitlipo.build.flash_freq=80m
 esp32c3-devkitlipo.build.flash_mode=qio
 esp32c3-devkitlipo.build.boot=qio
 esp32c3-devkitlipo.build.partitions=default
-esp32c3-devkitlipo.build.defines=
+esp32c3-devkitlipo.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 esp32c3-devkitlipo.menu.JTAGAdapter.default=Disabled
@@ -18931,7 +18931,7 @@ esp32c6-evb.build.flash_freq=80m
 esp32c6-evb.build.flash_mode=qio
 esp32c6-evb.build.boot=qio
 esp32c6-evb.build.partitions=default
-esp32c6-evb.build.defines=
+esp32c6-evb.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 esp32c6-evb.menu.JTAGAdapter.default=Disabled
@@ -19118,7 +19118,7 @@ esp32h2-devkitlipo.build.img_freq=48m
 esp32h2-devkitlipo.build.flash_mode=qio
 esp32h2-devkitlipo.build.boot=qio
 esp32h2-devkitlipo.build.partitions=default
-esp32h2-devkitlipo.build.defines=
+esp32h2-devkitlipo.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32h2-devkitlipo.menu.JTAGAdapter.default=Disabled
 esp32h2-devkitlipo.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -19294,7 +19294,7 @@ esp32-sbc-fabgl.build.flash_freq=40m
 esp32-sbc-fabgl.build.flash_mode=dio
 esp32-sbc-fabgl.build.boot=dio
 esp32-sbc-fabgl.build.partitions=default
-esp32-sbc-fabgl.build.defines=
+esp32-sbc-fabgl.build.defines=-DBOARD_HAS_PSRAM=0
 esp32-sbc-fabgl.build.loop_core=
 esp32-sbc-fabgl.build.event_core=
 
@@ -19309,10 +19309,10 @@ esp32-sbc-fabgl.menu.JTAGAdapter.bridge.build.openocdscript=esp32-bridge.cfg
 esp32-sbc-fabgl.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 esp32-sbc-fabgl.menu.PSRAM.enabled=Enabled
-esp32-sbc-fabgl.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32-sbc-fabgl.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 esp32-sbc-fabgl.menu.PSRAM.enabled.build.extra_libs=
 esp32-sbc-fabgl.menu.PSRAM.disabled=Disabled
-esp32-sbc-fabgl.menu.PSRAM.disabled.build.defines=
+esp32-sbc-fabgl.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32-sbc-fabgl.menu.PSRAM.disabled.build.extra_libs=
 
 esp32-sbc-fabgl.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -19484,7 +19484,7 @@ espino32.build.flash_mode=dio
 espino32.build.flash_size=4MB
 espino32.build.boot=dio
 espino32.build.partitions=default
-espino32.build.defines=
+espino32.build.defines=-DBOARD_HAS_PSRAM=0
 
 espino32.menu.FlashFreq.80=80MHz
 espino32.menu.FlashFreq.80.build.flash_freq=80m
@@ -19557,7 +19557,7 @@ m5stack_core.build.flash_freq=80m
 m5stack_core.build.flash_mode=dio
 m5stack_core.build.boot=dio
 m5stack_core.build.partitions=default
-m5stack_core.build.defines=
+m5stack_core.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_core.build.loop_core=
 m5stack_core.build.event_core=
 
@@ -19722,15 +19722,15 @@ m5stack_fire.build.flash_freq=80m
 m5stack_fire.build.flash_mode=dio
 m5stack_fire.build.boot=dio
 m5stack_fire.build.partitions=default
-m5stack_fire.build.defines=
+m5stack_fire.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_fire.build.loop_core=
 m5stack_fire.build.event_core=
 
 m5stack_fire.menu.PSRAM.enabled=Enabled
-m5stack_fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack_fire.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 m5stack_fire.menu.PSRAM.enabled.build.extra_libs=
 m5stack_fire.menu.PSRAM.disabled=Disabled
-m5stack_fire.menu.PSRAM.disabled.build.defines=
+m5stack_fire.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_fire.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack_fire.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
@@ -19896,15 +19896,15 @@ m5stack_core2.build.flash_freq=80m
 m5stack_core2.build.flash_mode=dio
 m5stack_core2.build.boot=dio
 m5stack_core2.build.partitions=default
-m5stack_core2.build.defines=
+m5stack_core2.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_core2.build.loop_core=
 m5stack_core2.build.event_core=
 
 m5stack_core2.menu.PSRAM.enabled=Enabled
-m5stack_core2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack_core2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 m5stack_core2.menu.PSRAM.enabled.build.extra_libs=
 m5stack_core2.menu.PSRAM.disabled=Disabled
-m5stack_core2.menu.PSRAM.disabled.build.defines=
+m5stack_core2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_core2.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack_core2.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
@@ -20070,15 +20070,15 @@ m5stack_tough.build.flash_freq=80m
 m5stack_tough.build.flash_mode=dio
 m5stack_tough.build.boot=dio
 m5stack_tough.build.partitions=default
-m5stack_tough.build.defines=
+m5stack_tough.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_tough.build.loop_core=
 m5stack_tough.build.event_core=
 
 m5stack_tough.menu.PSRAM.enabled=Enabled
-m5stack_tough.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack_tough.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 m5stack_tough.menu.PSRAM.enabled.build.extra_libs=
 m5stack_tough.menu.PSRAM.disabled=Disabled
-m5stack_tough.menu.PSRAM.disabled.build.defines=
+m5stack_tough.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_tough.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack_tough.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
@@ -20244,7 +20244,7 @@ m5stack_station.build.flash_freq=80m
 m5stack_station.build.flash_mode=dio
 m5stack_station.build.boot=dio
 m5stack_station.build.partitions=default
-m5stack_station.build.defines=
+m5stack_station.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_station.build.loop_core=
 m5stack_station.build.event_core=
 
@@ -20411,7 +20411,7 @@ m5stack_stickc.build.flash_freq=80m
 m5stack_stickc.build.flash_mode=dio
 m5stack_stickc.build.boot=dio
 m5stack_stickc.build.partitions=huge_app
-m5stack_stickc.build.defines=
+m5stack_stickc.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_stickc.build.loop_core=
 m5stack_stickc.build.event_core=
 
@@ -20566,7 +20566,7 @@ m5stack_stickc_plus.build.flash_freq=80m
 m5stack_stickc_plus.build.flash_mode=dio
 m5stack_stickc_plus.build.boot=dio
 m5stack_stickc_plus.build.partitions=huge_app
-m5stack_stickc_plus.build.defines=
+m5stack_stickc_plus.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_stickc_plus.build.loop_core=
 m5stack_stickc_plus.build.event_core=
 
@@ -20720,15 +20720,15 @@ m5stack_stickc_plus2.build.flash_freq=80m
 m5stack_stickc_plus2.build.flash_mode=dio
 m5stack_stickc_plus2.build.boot=dio
 m5stack_stickc_plus2.build.partitions=default_8MB
-m5stack_stickc_plus2.build.defines=
+m5stack_stickc_plus2.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_stickc_plus2.build.loop_core=
 m5stack_stickc_plus2.build.event_core=
 
 m5stack_stickc_plus2.menu.PSRAM.enabled=Enabled
-m5stack_stickc_plus2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack_stickc_plus2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 m5stack_stickc_plus2.menu.PSRAM.enabled.build.extra_libs=
 m5stack_stickc_plus2.menu.PSRAM.disabled=Disabled
-m5stack_stickc_plus2.menu.PSRAM.disabled.build.defines=
+m5stack_stickc_plus2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_stickc_plus2.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack_stickc_plus2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
@@ -20884,7 +20884,7 @@ m5stack_atom.build.flash_freq=80m
 m5stack_atom.build.flash_mode=dio
 m5stack_atom.build.boot=dio
 m5stack_atom.build.partitions=huge_app
-m5stack_atom.build.defines=
+m5stack_atom.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_atom.build.loop_core=
 m5stack_atom.build.event_core=
 
@@ -21044,7 +21044,7 @@ m5stack_atoms3.build.flash_mode=dio
 m5stack_atoms3.build.boot=qio
 m5stack_atoms3.build.boot_freq=80m
 m5stack_atoms3.build.partitions=default
-m5stack_atoms3.build.defines=
+m5stack_atoms3.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_atoms3.build.loop_core=
 m5stack_atoms3.build.event_core=
 m5stack_atoms3.build.psram_type=qspi
@@ -21064,13 +21064,13 @@ m5stack_atoms3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_atoms3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack_atoms3.menu.PSRAM.disabled=Disabled
-m5stack_atoms3.menu.PSRAM.disabled.build.defines=
+m5stack_atoms3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_atoms3.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_atoms3.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_atoms3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_atoms3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_atoms3.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_atoms3.menu.PSRAM.opi=OPI PSRAM
-m5stack_atoms3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_atoms3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_atoms3.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_atoms3.menu.FlashMode.qio=QIO 80MHz
@@ -21276,7 +21276,7 @@ m5stack_cores3.build.flash_mode=dio
 m5stack_cores3.build.boot=qio
 m5stack_cores3.build.boot_freq=80m
 m5stack_cores3.build.partitions=default
-m5stack_cores3.build.defines=
+m5stack_cores3.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_cores3.build.loop_core=
 m5stack_cores3.build.event_core=
 m5stack_cores3.build.psram_type=qspi
@@ -21296,13 +21296,13 @@ m5stack_cores3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_cores3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack_cores3.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_cores3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_cores3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_cores3.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_cores3.menu.PSRAM.disabled=Disabled
-m5stack_cores3.menu.PSRAM.disabled.build.defines=
+m5stack_cores3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_cores3.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_cores3.menu.PSRAM.opi=OPI PSRAM
-m5stack_cores3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_cores3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_cores3.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_cores3.menu.FlashMode.qio=QIO 80MHz
@@ -21511,15 +21511,15 @@ m5stack_timer_cam.build.flash_freq=80m
 m5stack_timer_cam.build.flash_mode=dio
 m5stack_timer_cam.build.boot=dio
 m5stack_timer_cam.build.partitions=default
-m5stack_timer_cam.build.defines=
+m5stack_timer_cam.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_timer_cam.build.loop_core=
 m5stack_timer_cam.build.event_core=
 
 m5stack_timer_cam.menu.PSRAM.enabled=Enabled
-m5stack_timer_cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack_timer_cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 m5stack_timer_cam.menu.PSRAM.enabled.build.extra_libs=
 m5stack_timer_cam.menu.PSRAM.disabled=Disabled
-m5stack_timer_cam.menu.PSRAM.disabled.build.defines=
+m5stack_timer_cam.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_timer_cam.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack_timer_cam.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -21662,15 +21662,15 @@ m5stack_unit_cam.build.flash_freq=80m
 m5stack_unit_cam.build.flash_mode=dio
 m5stack_unit_cam.build.boot=dio
 m5stack_unit_cam.build.partitions=default
-m5stack_unit_cam.build.defines=
+m5stack_unit_cam.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_unit_cam.build.loop_core=
 m5stack_unit_cam.build.event_core=
 
 m5stack_unit_cam.menu.PSRAM.enabled=Enabled
-m5stack_unit_cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack_unit_cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 m5stack_unit_cam.menu.PSRAM.enabled.build.extra_libs=
 m5stack_unit_cam.menu.PSRAM.disabled=Disabled
-m5stack_unit_cam.menu.PSRAM.disabled.build.defines=
+m5stack_unit_cam.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_unit_cam.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack_unit_cam.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -21818,7 +21818,7 @@ m5stack_unit_cams3.build.flash_mode=dio
 m5stack_unit_cams3.build.boot=qio
 m5stack_unit_cams3.build.boot_freq=80m
 m5stack_unit_cams3.build.partitions=default
-m5stack_unit_cams3.build.defines=
+m5stack_unit_cams3.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_unit_cams3.build.loop_core=
 m5stack_unit_cams3.build.event_core=
 m5stack_unit_cams3.build.psram_type=qspi
@@ -21838,13 +21838,13 @@ m5stack_unit_cams3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cf
 m5stack_unit_cams3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack_unit_cams3.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_unit_cams3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_unit_cams3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_unit_cams3.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_unit_cams3.menu.PSRAM.disabled=Disabled
-m5stack_unit_cams3.menu.PSRAM.disabled.build.defines=
+m5stack_unit_cams3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_unit_cams3.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_unit_cams3.menu.PSRAM.opi=OPI PSRAM
-m5stack_unit_cams3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_unit_cams3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_unit_cams3.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_unit_cams3.menu.FlashMode.qio=QIO 80MHz
@@ -22046,15 +22046,15 @@ m5stack_poe_cam.build.flash_freq=80m
 m5stack_poe_cam.build.flash_mode=dio
 m5stack_poe_cam.build.boot=dio
 m5stack_poe_cam.build.partitions=default
-m5stack_poe_cam.build.defines=
+m5stack_poe_cam.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_poe_cam.build.loop_core=
 m5stack_poe_cam.build.event_core=
 
 m5stack_poe_cam.menu.PSRAM.enabled=Enabled
-m5stack_poe_cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack_poe_cam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 m5stack_poe_cam.menu.PSRAM.enabled.build.extra_libs=
 m5stack_poe_cam.menu.PSRAM.disabled=Disabled
-m5stack_poe_cam.menu.PSRAM.disabled.build.defines=
+m5stack_poe_cam.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_poe_cam.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack_poe_cam.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -22195,15 +22195,15 @@ m5stack_paper.build.flash_freq=80m
 m5stack_paper.build.flash_mode=dio
 m5stack_paper.build.boot=dio
 m5stack_paper.build.partitions=default
-m5stack_paper.build.defines=
+m5stack_paper.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_paper.build.loop_core=
 m5stack_paper.build.event_core=
 
 m5stack_paper.menu.PSRAM.enabled=Enabled
-m5stack_paper.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+m5stack_paper.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 m5stack_paper.menu.PSRAM.enabled.build.extra_libs=
 m5stack_paper.menu.PSRAM.disabled=Disabled
-m5stack_paper.menu.PSRAM.disabled.build.defines=
+m5stack_paper.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_paper.menu.PSRAM.disabled.build.extra_libs=
 
 m5stack_paper.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
@@ -22369,7 +22369,7 @@ m5stack_coreink.build.flash_freq=80m
 m5stack_coreink.build.flash_mode=dio
 m5stack_coreink.build.boot=dio
 m5stack_coreink.build.partitions=default
-m5stack_coreink.build.defines=
+m5stack_coreink.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_coreink.build.loop_core=
 m5stack_coreink.build.event_core=
 
@@ -22523,7 +22523,7 @@ m5stack_stamp_pico.build.flash_freq=80m
 m5stack_stamp_pico.build.flash_mode=dio
 m5stack_stamp_pico.build.boot=dio
 m5stack_stamp_pico.build.partitions=default
-m5stack_stamp_pico.build.defines=
+m5stack_stamp_pico.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_stamp_pico.build.loop_core=
 m5stack_stamp_pico.build.event_core=
 
@@ -22679,7 +22679,7 @@ m5stack_stamp_c3.build.flash_freq=80m
 m5stack_stamp_c3.build.flash_mode=qio
 m5stack_stamp_c3.build.boot=qio
 m5stack_stamp_c3.build.partitions=default
-m5stack_stamp_c3.build.defines=
+m5stack_stamp_c3.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 m5stack_stamp_c3.menu.JTAGAdapter.default=Disabled
@@ -22829,7 +22829,7 @@ m5stack_stamp_s3.build.flash_mode=dio
 m5stack_stamp_s3.build.boot=qio
 m5stack_stamp_s3.build.boot_freq=80m
 m5stack_stamp_s3.build.partitions=default_8MB
-m5stack_stamp_s3.build.defines=
+m5stack_stamp_s3.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_stamp_s3.build.loop_core=
 m5stack_stamp_s3.build.event_core=
 m5stack_stamp_s3.build.psram_type=qspi
@@ -22849,13 +22849,13 @@ m5stack_stamp_s3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_stamp_s3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack_stamp_s3.menu.PSRAM.disabled=Disabled
-m5stack_stamp_s3.menu.PSRAM.disabled.build.defines=
+m5stack_stamp_s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_stamp_s3.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_stamp_s3.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_stamp_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_stamp_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_stamp_s3.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_stamp_s3.menu.PSRAM.opi=OPI PSRAM
-m5stack_stamp_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_stamp_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_stamp_s3.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_stamp_s3.menu.FlashMode.qio=QIO 80MHz
@@ -23066,7 +23066,7 @@ m5stack_capsule.build.flash_mode=dio
 m5stack_capsule.build.boot=qio
 m5stack_capsule.build.boot_freq=80m
 m5stack_capsule.build.partitions=default
-m5stack_capsule.build.defines=
+m5stack_capsule.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_capsule.build.loop_core=
 m5stack_capsule.build.event_core=
 m5stack_capsule.build.psram_type=qspi
@@ -23086,13 +23086,13 @@ m5stack_capsule.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_capsule.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack_capsule.menu.PSRAM.disabled=Disabled
-m5stack_capsule.menu.PSRAM.disabled.build.defines=
+m5stack_capsule.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_capsule.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_capsule.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_capsule.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_capsule.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_capsule.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_capsule.menu.PSRAM.opi=OPI PSRAM
-m5stack_capsule.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_capsule.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_capsule.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_capsule.menu.FlashMode.qio=QIO 80MHz
@@ -23306,7 +23306,7 @@ m5stack_cardputer.build.flash_mode=dio
 m5stack_cardputer.build.boot=qio
 m5stack_cardputer.build.boot_freq=80m
 m5stack_cardputer.build.partitions=default
-m5stack_cardputer.build.defines=
+m5stack_cardputer.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_cardputer.build.loop_core=
 m5stack_cardputer.build.event_core=
 m5stack_cardputer.build.psram_type=qspi
@@ -23326,13 +23326,13 @@ m5stack_cardputer.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_cardputer.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack_cardputer.menu.PSRAM.disabled=Disabled
-m5stack_cardputer.menu.PSRAM.disabled.build.defines=
+m5stack_cardputer.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_cardputer.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_cardputer.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_cardputer.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_cardputer.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_cardputer.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_cardputer.menu.PSRAM.opi=OPI PSRAM
-m5stack_cardputer.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_cardputer.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_cardputer.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_cardputer.menu.FlashMode.qio=QIO 80MHz
@@ -23543,7 +23543,7 @@ m5stack_dial.build.flash_mode=dio
 m5stack_dial.build.boot=qio
 m5stack_dial.build.boot_freq=80m
 m5stack_dial.build.partitions=default_8MB
-m5stack_dial.build.defines=
+m5stack_dial.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_dial.build.loop_core=
 m5stack_dial.build.event_core=
 m5stack_dial.build.psram_type=qspi
@@ -23563,13 +23563,13 @@ m5stack_dial.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_dial.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack_dial.menu.PSRAM.disabled=Disabled
-m5stack_dial.menu.PSRAM.disabled.build.defines=
+m5stack_dial.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_dial.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_dial.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_dial.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_dial.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_dial.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_dial.menu.PSRAM.opi=OPI PSRAM
-m5stack_dial.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_dial.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_dial.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_dial.menu.FlashMode.qio=QIO 80MHz
@@ -23780,7 +23780,7 @@ m5stack_dinmeter.build.flash_mode=dio
 m5stack_dinmeter.build.boot=qio
 m5stack_dinmeter.build.boot_freq=80m
 m5stack_dinmeter.build.partitions=default
-m5stack_dinmeter.build.defines=
+m5stack_dinmeter.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_dinmeter.build.loop_core=
 m5stack_dinmeter.build.event_core=
 m5stack_dinmeter.build.psram_type=qspi
@@ -23800,13 +23800,13 @@ m5stack_dinmeter.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 m5stack_dinmeter.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 m5stack_dinmeter.menu.PSRAM.disabled=Disabled
-m5stack_dinmeter.menu.PSRAM.disabled.build.defines=
+m5stack_dinmeter.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 m5stack_dinmeter.menu.PSRAM.disabled.build.psram_type=qspi
 m5stack_dinmeter.menu.PSRAM.enabled=QSPI PSRAM
-m5stack_dinmeter.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_dinmeter.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_dinmeter.menu.PSRAM.enabled.build.psram_type=qspi
 m5stack_dinmeter.menu.PSRAM.opi=OPI PSRAM
-m5stack_dinmeter.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+m5stack_dinmeter.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 m5stack_dinmeter.menu.PSRAM.opi.build.psram_type=opi
 
 m5stack_dinmeter.menu.FlashMode.qio=QIO 80MHz
@@ -24014,7 +24014,7 @@ m5stack_nanoc6.build.flash_freq=80m
 m5stack_nanoc6.build.flash_mode=qio
 m5stack_nanoc6.build.boot=qio
 m5stack_nanoc6.build.partitions=default
-m5stack_nanoc6.build.defines=
+m5stack_nanoc6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 m5stack_nanoc6.menu.JTAGAdapter.default=Disabled
@@ -24164,7 +24164,7 @@ odroid_esp32.build.flash_size=16MB
 odroid_esp32.build.flash_mode=dio
 odroid_esp32.build.boot=dio
 odroid_esp32.build.partitions=default
-odroid_esp32.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+odroid_esp32.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 odroid_esp32.build.extra_libs=
 
 odroid_esp32.menu.FlashMode.qio=QIO
@@ -24254,7 +24254,7 @@ heltec_wifi_kit_32.build.flash_freq=80m
 heltec_wifi_kit_32.build.flash_mode=dio
 heltec_wifi_kit_32.build.boot=dio
 heltec_wifi_kit_32.build.partitions=default
-heltec_wifi_kit_32.build.defines=
+heltec_wifi_kit_32.build.defines=-DBOARD_HAS_PSRAM=0
 heltec_wifi_kit_32.build.band=LoRaWAN_NONE
 heltec_wifi_kit_32.build.LoRaWanDebugLevel=0
 
@@ -26896,7 +26896,7 @@ espectro32.build.flash_size=4MB
 espectro32.build.flash_mode=dio
 espectro32.build.boot=dio
 espectro32.build.partitions=default
-espectro32.build.defines=
+espectro32.build.defines=-DBOARD_HAS_PSRAM=0
 
 espectro32.menu.FlashMode.qio=QIO
 espectro32.menu.FlashMode.qio.build.flash_mode=dio
@@ -26980,13 +26980,13 @@ CoreESP32.build.flash_mode=dio
 CoreESP32.build.flash_size=4MB
 CoreESP32.build.boot=dio
 CoreESP32.build.partitions=default
-CoreESP32.build.defines=
+CoreESP32.build.defines=-DBOARD_HAS_PSRAM=0
 
 CoreESP32.menu.PSRAM.disabled=Disabled
-CoreESP32.menu.PSRAM.disabled.build.defines=
+CoreESP32.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 CoreESP32.menu.PSRAM.disabled.build.extra_libs=
 CoreESP32.menu.PSRAM.enabled=Enabled
-CoreESP32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+CoreESP32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 CoreESP32.menu.PSRAM.enabled.build.extra_libs=
 
 CoreESP32.menu.PartitionScheme.default=Default
@@ -27073,13 +27073,13 @@ alksesp32.build.flash_freq=40m
 alksesp32.build.flash_mode=dio
 alksesp32.build.boot=dio
 alksesp32.build.partitions=default
-alksesp32.build.defines=
+alksesp32.build.defines=-DBOARD_HAS_PSRAM=0
 
 alksesp32.menu.PSRAM.disabled=Disabled
-alksesp32.menu.PSRAM.disabled.build.defines=
+alksesp32.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 alksesp32.menu.PSRAM.disabled.build.extra_libs=
 alksesp32.menu.PSRAM.enabled=Enabled
-alksesp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+alksesp32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 alksesp32.menu.PSRAM.enabled.build.extra_libs=
 
 alksesp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -27210,7 +27210,7 @@ wipy3.build.flash_mode=dio
 wipy3.build.flash_size=8MB
 wipy3.build.boot=dio
 wipy3.build.partitions=default
-wipy3.build.defines=
+wipy3.build.defines=-DBOARD_HAS_PSRAM=0
 
 wipy3.menu.FlashFreq.80=80MHz
 wipy3.menu.FlashFreq.80.build.flash_freq=80m
@@ -27283,7 +27283,7 @@ wt32-eth01.build.flash_freq=40m
 wt32-eth01.build.flash_mode=dio
 wt32-eth01.build.boot=dio
 wt32-eth01.build.partitions=default
-wt32-eth01.build.defines=
+wt32-eth01.build.defines=-DBOARD_HAS_PSRAM=0
 wt32-eth01.build.extra_libs=
 
 wt32-eth01.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -27397,7 +27397,7 @@ wt32-sc01-plus.build.flash_freq=80m
 wt32-sc01-plus.build.flash_mode=dio
 wt32-sc01-plus.build.boot=qio
 wt32-sc01-plus.build.partitions=default
-wt32-sc01-plus.build.defines=
+wt32-sc01-plus.build.defines=-DBOARD_HAS_PSRAM=0
 wt32-sc01-plus.build.loop_core=
 wt32-sc01-plus.build.event_core=
 wt32-sc01-plus.build.flash_type=qio
@@ -27442,9 +27442,9 @@ wt32-sc01-plus.menu.UploadMode.default.upload.use_1200bps_touch=false
 wt32-sc01-plus.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 wt32-sc01-plus.menu.PSRAM.enabled=Enabled
-wt32-sc01-plus.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+wt32-sc01-plus.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 wt32-sc01-plus.menu.PSRAM.disabled=Disabled
-wt32-sc01-plus.menu.PSRAM.disabled.build.defines=
+wt32-sc01-plus.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 wt32-sc01-plus.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 wt32-sc01-plus.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
@@ -27621,20 +27621,20 @@ bpi_leaf_s3.build.flash_mode=dio
 bpi_leaf_s3.build.boot=qio
 bpi_leaf_s3.build.boot_freq=80m
 bpi_leaf_s3.build.partitions=default
-bpi_leaf_s3.build.defines=
+bpi_leaf_s3.build.defines=-DBOARD_HAS_PSRAM=0
 bpi_leaf_s3.build.loop_core=
 bpi_leaf_s3.build.event_core=
 bpi_leaf_s3.build.psram_type=qspi
 bpi_leaf_s3.build.memory_type={build.boot}_{build.psram_type}
 
 bpi_leaf_s3.menu.PSRAM.enabled=QSPI PSRAM
-bpi_leaf_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+bpi_leaf_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 bpi_leaf_s3.menu.PSRAM.enabled.build.psram_type=qspi
 bpi_leaf_s3.menu.PSRAM.disabled=Disabled
-bpi_leaf_s3.menu.PSRAM.disabled.build.defines=
+bpi_leaf_s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 bpi_leaf_s3.menu.PSRAM.disabled.build.psram_type=qspi
 bpi_leaf_s3.menu.PSRAM.opi=OPI PSRAM
-bpi_leaf_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+bpi_leaf_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 bpi_leaf_s3.menu.PSRAM.opi.build.psram_type=opi
 
 bpi_leaf_s3.menu.FlashMode.qio=QIO 80MHz
@@ -27825,7 +27825,7 @@ wesp32.build.flash_mode=dio
 wesp32.build.flash_size=4MB
 wesp32.build.boot=dio
 wesp32.build.partitions=default
-wesp32.build.defines=
+wesp32.build.defines=-DBOARD_HAS_PSRAM=0
 
 wesp32.menu.FlashFreq.80=80MHz
 wesp32.menu.FlashFreq.80.build.flash_freq=80m
@@ -27910,10 +27910,10 @@ t-beam.build.boot=dio
 t-beam.build.partitions=default
 
 t-beam.menu.PSRAM.disabled=Disabled
-t-beam.menu.PSRAM.disabled.build.defines=
+t-beam.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 t-beam.menu.PSRAM.disabled.build.extra_libs=
 t-beam.menu.PSRAM.enabled=Enabled
-t-beam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+t-beam.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 t-beam.menu.PSRAM.enabled.build.extra_libs=
 
 t-beam.menu.FlashFreq.80=80MHz
@@ -27987,7 +27987,7 @@ d-duino-32.build.flash_freq=40m
 d-duino-32.build.flash_mode=dio
 d-duino-32.build.boot=dio
 d-duino-32.build.partitions=default
-d-duino-32.build.defines=
+d-duino-32.build.defines=-DBOARD_HAS_PSRAM=0
 
 d-duino-32.menu.PartitionScheme.default=Default
 d-duino-32.menu.PartitionScheme.default.build.partitions=default
@@ -28145,10 +28145,10 @@ lopy4.build.boot=dio
 lopy4.build.partitions=default
 
 lopy4.menu.PSRAM.disabled=Disabled
-lopy4.menu.PSRAM.disabled.build.defines=
+lopy4.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 lopy4.menu.PSRAM.disabled.build.extra_libs=
 lopy4.menu.PSRAM.enabled=Enabled
-lopy4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+lopy4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 lopy4.menu.PSRAM.enabled.build.extra_libs=
 
 lopy4.menu.FlashFreq.80=80MHz
@@ -28221,7 +28221,7 @@ oroca_edubot.build.flash_mode=dio
 oroca_edubot.build.flash_size=4MB
 oroca_edubot.build.boot=dio
 oroca_edubot.build.partitions=huge_app
-oroca_edubot.build.defines=
+oroca_edubot.build.defines=-DBOARD_HAS_PSRAM=0
 
 oroca_edubot.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA)
 oroca_edubot.menu.PartitionScheme.huge_app.build.partitions=huge_app
@@ -28298,7 +28298,7 @@ fm-devkit.build.flash_freq=80m
 fm-devkit.build.flash_mode=dio
 fm-devkit.build.boot=dio
 fm-devkit.build.partitions=default
-fm-devkit.build.defines=
+fm-devkit.build.defines=-DBOARD_HAS_PSRAM=0
 
 fm-devkit.menu.UploadSpeed.921600=921600
 fm-devkit.menu.UploadSpeed.921600.upload.speed=921600
@@ -28374,7 +28374,7 @@ fri3d_2024_esp32s3.build.flash_mode=dio
 fri3d_2024_esp32s3.build.boot=qio
 fri3d_2024_esp32s3.build.boot_freq=80m
 fri3d_2024_esp32s3.build.partitions=default
-fri3d_2024_esp32s3.build.defines=
+fri3d_2024_esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 fri3d_2024_esp32s3.build.loop_core=
 fri3d_2024_esp32s3.build.event_core=
 fri3d_2024_esp32s3.build.psram_type=opi
@@ -28394,10 +28394,10 @@ fri3d_2024_esp32s3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cf
 fri3d_2024_esp32s3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 fri3d_2024_esp32s3.menu.PSRAM.default=OPI PSRAM
-fri3d_2024_esp32s3.menu.PSRAM.default.build.defines=-DBOARD_HAS_PSRAM
+fri3d_2024_esp32s3.menu.PSRAM.default.build.defines=-DBOARD_HAS_PSRAM=1
 fri3d_2024_esp32s3.menu.PSRAM.default.build.psram_type=opi
 fri3d_2024_esp32s3.menu.PSRAM.disabled=Disabled
-fri3d_2024_esp32s3.menu.PSRAM.disabled.build.defines=
+fri3d_2024_esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 fri3d_2024_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
 
 fri3d_2024_esp32s3.menu.FlashMode.qio=QIO 80MHz
@@ -28582,13 +28582,13 @@ frogboard.build.flash_freq=40m
 frogboard.build.flash_mode=dio
 frogboard.build.boot=dio
 frogboard.build.partitions=default
-frogboard.build.defines=
+frogboard.build.defines=-DBOARD_HAS_PSRAM=0
 
 frogboard.menu.PSRAM.disabled=Disabled
-frogboard.menu.PSRAM.disabled.build.defines=
+frogboard.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 frogboard.menu.PSRAM.disabled.build.extra_libs=
 frogboard.menu.PSRAM.enabled=Enabled
-frogboard.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+frogboard.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 frogboard.menu.PSRAM.enabled.build.extra_libs=
 
 frogboard.menu.PartitionScheme.default=Default
@@ -28679,7 +28679,7 @@ esp32cam.build.variant=esp32
 esp32cam.build.board=ESP32_DEV
 esp32cam.build.flash_size=4MB
 esp32cam.build.partitions=huge_app
-esp32cam.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+esp32cam.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 esp32cam.build.extra_libs=
 esp32cam.build.code_debug=0
 
@@ -28798,13 +28798,13 @@ twatch.build.flash_freq=80m
 twatch.build.flash_mode=dio
 twatch.build.boot=dio
 twatch.build.partitions=default_16MB
-twatch.build.defines=
+twatch.build.defines=-DBOARD_HAS_PSRAM=0
 
 twatch.menu.PSRAM.enabled=Enabled
-twatch.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+twatch.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 twatch.menu.PSRAM.enabled.build.extra_libs=
 twatch.menu.PSRAM.disabled=Disabled
-twatch.menu.PSRAM.disabled.build.defines=
+twatch.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 twatch.menu.PSRAM.disabled.build.extra_libs=
 
 twatch.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
@@ -28883,7 +28883,7 @@ d1_mini32.build.flash_mode=dio
 d1_mini32.build.flash_size=4MB
 d1_mini32.build.boot=dio
 d1_mini32.build.partitions=default
-d1_mini32.build.defines=
+d1_mini32.build.defines=-DBOARD_HAS_PSRAM=0
 
 d1_mini32.menu.FlashFreq.80=80MHz
 d1_mini32.menu.FlashFreq.80.build.flash_freq=80m
@@ -28981,7 +28981,7 @@ d1_uno32.build.flash_mode=dio
 d1_uno32.build.flash_size=4MB
 d1_uno32.build.boot=dio
 d1_uno32.build.partitions=default
-d1_uno32.build.defines=
+d1_uno32.build.defines=-DBOARD_HAS_PSRAM=0
 
 d1_uno32.menu.FlashFreq.80=80MHz
 d1_uno32.menu.FlashFreq.80.build.flash_freq=80m
@@ -29150,7 +29150,7 @@ vintlabs-devkit-v1.build.flash_mode=dio
 vintlabs-devkit-v1.build.flash_size=4MB
 vintlabs-devkit-v1.build.boot=dio
 vintlabs-devkit-v1.build.partitions=default
-vintlabs-devkit-v1.build.defines=
+vintlabs-devkit-v1.build.defines=-DBOARD_HAS_PSRAM=0
 
 vintlabs-devkit-v1.menu.FlashFreq.80=80MHz
 vintlabs-devkit-v1.menu.FlashFreq.80.build.flash_freq=80m
@@ -29265,7 +29265,7 @@ honeylemon.build.flash_mode=dio
 honeylemon.build.flash_size=4MB
 honeylemon.build.boot=dio
 honeylemon.build.partitions=default
-honeylemon.build.defines=
+honeylemon.build.defines=-DBOARD_HAS_PSRAM=0
 
 honeylemon.menu.FlashFreq.80=80MHz
 honeylemon.menu.FlashFreq.80.build.flash_freq=80m
@@ -29338,13 +29338,13 @@ mgbot-iotik32a.build.flash_freq=40m
 mgbot-iotik32a.build.flash_mode=dio
 mgbot-iotik32a.build.boot=dio
 mgbot-iotik32a.build.partitions=default
-mgbot-iotik32a.build.defines=
+mgbot-iotik32a.build.defines=-DBOARD_HAS_PSRAM=0
 
 mgbot-iotik32a.menu.PSRAM.disabled=Disabled
-mgbot-iotik32a.menu.PSRAM.disabled.build.defines=
+mgbot-iotik32a.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 mgbot-iotik32a.menu.PSRAM.disabled.build.extra_libs=
 mgbot-iotik32a.menu.PSRAM.enabled=Enabled
-mgbot-iotik32a.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+mgbot-iotik32a.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 mgbot-iotik32a.menu.PSRAM.enabled.build.extra_libs=
 
 mgbot-iotik32a.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -29485,13 +29485,13 @@ mgbot-iotik32b.build.flash_freq=40m
 mgbot-iotik32b.build.flash_mode=dio
 mgbot-iotik32b.build.boot=dio
 mgbot-iotik32b.build.partitions=default
-mgbot-iotik32b.build.defines=
+mgbot-iotik32b.build.defines=-DBOARD_HAS_PSRAM=0
 
 mgbot-iotik32b.menu.PSRAM.disabled=Disabled
-mgbot-iotik32b.menu.PSRAM.disabled.build.defines=
+mgbot-iotik32b.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 mgbot-iotik32b.menu.PSRAM.disabled.build.extra_libs=
 mgbot-iotik32b.menu.PSRAM.enabled=Enabled
-mgbot-iotik32b.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+mgbot-iotik32b.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 mgbot-iotik32b.menu.PSRAM.enabled.build.extra_libs=
 
 mgbot-iotik32b.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -29631,7 +29631,7 @@ piranha_esp-32.build.flash_mode=dio
 piranha_esp-32.build.flash_size=4MB
 piranha_esp-32.build.boot=dio
 piranha_esp-32.build.partitions=default
-piranha_esp-32.build.defines=
+piranha_esp-32.build.defines=-DBOARD_HAS_PSRAM=0
 
 piranha_esp-32.menu.PartitionScheme.default=Default
 piranha_esp-32.menu.PartitionScheme.default.build.partitions=default
@@ -29712,7 +29712,7 @@ metro_esp-32.build.flash_mode=dio
 metro_esp-32.build.flash_size=4MB
 metro_esp-32.build.boot=dio
 metro_esp-32.build.partitions=default
-metro_esp-32.build.defines=
+metro_esp-32.build.defines=-DBOARD_HAS_PSRAM=0
 
 metro_esp-32.menu.PartitionScheme.default=Default
 metro_esp-32.menu.PartitionScheme.default.build.partitions=default
@@ -29793,7 +29793,7 @@ sensesiot_weizen.build.flash_mode=dio
 sensesiot_weizen.build.flash_size=4MB
 sensesiot_weizen.build.boot=dio
 sensesiot_weizen.build.partitions=default
-sensesiot_weizen.build.defines=
+sensesiot_weizen.build.defines=-DBOARD_HAS_PSRAM=0
 
 sensesiot_weizen.menu.FlashFreq.80=80MHz
 sensesiot_weizen.menu.FlashFreq.80.build.flash_freq=80m
@@ -29867,7 +29867,7 @@ kits-edu.build.flash_freq=80m
 kits-edu.build.flash_mode=dio
 kits-edu.build.boot=dio
 kits-edu.build.partitions=default
-kits-edu.build.defines=
+kits-edu.build.defines=-DBOARD_HAS_PSRAM=0
 
 kits-edu.menu.PartitionScheme.default=Default
 kits-edu.menu.PartitionScheme.default.build.partitions=default
@@ -29943,13 +29943,13 @@ mPython.build.flash_freq=40m
 mPython.build.flash_mode=dio
 mPython.build.boot=dio
 mPython.build.partitions=huge_app
-mPython.build.defines=
+mPython.build.defines=-DBOARD_HAS_PSRAM=0
 
 mPython.menu.PSRAM.disabled=Disabled
-mPython.menu.PSRAM.disabled.build.defines=
+mPython.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 mPython.menu.PSRAM.disabled.build.extra_libs=
 mPython.menu.PSRAM.enabled=Enabled
-mPython.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+mPython.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 mPython.menu.PSRAM.enabled.build.extra_libs=
 
 mPython.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
@@ -30063,7 +30063,7 @@ OpenKB.build.flash_mode=dio
 OpenKB.build.flash_size=4MB
 OpenKB.build.boot=dio
 OpenKB.build.partitions=default
-OpenKB.build.defines=
+OpenKB.build.defines=-DBOARD_HAS_PSRAM=0
 
 OpenKB.menu.FlashFreq.80=80MHz
 OpenKB.menu.FlashFreq.80.build.flash_freq=80m
@@ -30136,7 +30136,7 @@ wifiduino32.build.flash_mode=dio
 wifiduino32.build.flash_size=4MB
 wifiduino32.build.boot=dio
 wifiduino32.build.partitions=default
-wifiduino32.build.defines=
+wifiduino32.build.defines=-DBOARD_HAS_PSRAM=0
 
 wifiduino32.menu.PartitionScheme.default=Default
 wifiduino32.menu.PartitionScheme.default.build.partitions=default
@@ -30221,7 +30221,7 @@ wifiduino32c3.build.flash_freq=80m
 wifiduino32c3.build.flash_mode=qio
 wifiduino32c3.build.boot=qio
 wifiduino32c3.build.partitions=default
-wifiduino32c3.build.defines=
+wifiduino32c3.build.defines=-DBOARD_HAS_PSRAM=0
 
 wifiduino32c3.menu.CDCOnBoot.default=Disabled
 wifiduino32c3.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -30376,20 +30376,20 @@ wifiduino32s3.build.flash_mode=dio
 wifiduino32s3.build.boot=qio
 wifiduino32s3.build.boot_freq=80m
 wifiduino32s3.build.partitions=default
-wifiduino32s3.build.defines=
+wifiduino32s3.build.defines=-DBOARD_HAS_PSRAM=0
 wifiduino32s3.build.loop_core=
 wifiduino32s3.build.event_core=
 wifiduino32s3.build.psram_type=qspi
 wifiduino32s3.build.memory_type={build.boot}_{build.psram_type}
 
 wifiduino32s3.menu.PSRAM.disabled=Disabled
-wifiduino32s3.menu.PSRAM.disabled.build.defines=
+wifiduino32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 wifiduino32s3.menu.PSRAM.disabled.build.psram_type=qspi
 wifiduino32s3.menu.PSRAM.enabled=QSPI PSRAM
-wifiduino32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+wifiduino32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 wifiduino32s3.menu.PSRAM.enabled.build.psram_type=qspi
 wifiduino32s3.menu.PSRAM.opi=OPI PSRAM
-wifiduino32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+wifiduino32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 wifiduino32s3.menu.PSRAM.opi.build.psram_type=opi
 
 wifiduino32s3.menu.FlashMode.qio=QIO 80MHz
@@ -30581,7 +30581,7 @@ imbrios-logsens-v1p1.build.flash_mode=dio
 imbrios-logsens-v1p1.build.flash_size=4MB
 imbrios-logsens-v1p1.build.boot=dio
 imbrios-logsens-v1p1.build.partitions=default
-imbrios-logsens-v1p1.build.defines=
+imbrios-logsens-v1p1.build.defines=-DBOARD_HAS_PSRAM=0
 
 imbrios-logsens-v1p1.menu.FlashFreq.80=80MHz
 imbrios-logsens-v1p1.menu.FlashFreq.80.build.flash_freq=80m
@@ -30680,7 +30680,7 @@ healthypi4.build.flash_mode=dio
 healthypi4.build.flash_size=4MB
 healthypi4.build.boot=dio
 healthypi4.build.partitions=min_spiffs
-healthypi4.build.defines=
+healthypi4.build.defines=-DBOARD_HAS_PSRAM=0
 
 healthypi4.menu.FlashFreq.80=80MHz
 healthypi4.menu.FlashFreq.80.build.flash_freq=80m
@@ -30761,7 +30761,7 @@ ET-Board.build.flash_mode=dio
 ET-Board.build.flash_size=4MB
 ET-Board.build.boot=dio
 ET-Board.build.partitions=default
-ET-Board.build.defines=
+ET-Board.build.defines=-DBOARD_HAS_PSRAM=0
 
 ET-Board.menu.PartitionScheme.default=Default
 ET-Board.menu.PartitionScheme.default.build.partitions=default
@@ -30843,7 +30843,7 @@ ch_denky.build.flash_freq=80m
 ch_denky.build.flash_mode=dio
 ch_denky.build.boot=dio
 ch_denky.build.partitions=default
-ch_denky.build.defines=
+ch_denky.build.defines=-DBOARD_HAS_PSRAM=0
 
 ch_denky.menu.Revision.denkyd4=PICO-V3-02
 ch_denky.menu.Revision.denkyd4.build.board=DENKY_PICOV3
@@ -30877,10 +30877,10 @@ ch_denky.menu.UploadSpeed.512000.windows=512000
 ch_denky.menu.UploadSpeed.512000.upload.speed=512000
 
 ch_denky.menu.PSRAM.enabled=Enabled
-ch_denky.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+ch_denky.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 ch_denky.menu.PSRAM.enabled.build.extra_libs=
 ch_denky.menu.PSRAM.disabled=Disabled
-ch_denky.menu.PSRAM.disabled.build.defines=
+ch_denky.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 ch_denky.menu.PSRAM.disabled.build.extra_libs=
 
 ch_denky.menu.DebugLevel.none=None
@@ -30934,7 +30934,7 @@ uPesy_wrover.build.flash_freq=80m
 uPesy_wrover.build.flash_mode=dio
 uPesy_wrover.build.boot=dio
 uPesy_wrover.build.partitions=default
-uPesy_wrover.build.defines=
+uPesy_wrover.build.defines=-DBOARD_HAS_PSRAM=0
 
 uPesy_wrover.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 uPesy_wrover.menu.PartitionScheme.default.build.partitions=default
@@ -30994,10 +30994,10 @@ uPesy_wrover.menu.FlashFreq.40=40MHz
 uPesy_wrover.menu.FlashFreq.40.build.flash_freq=40m
 
 uPesy_wrover.menu.PSRAM.enabled=Enabled
-uPesy_wrover.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+uPesy_wrover.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 uPesy_wrover.menu.PSRAM.enabled.build.extra_libs=
 uPesy_wrover.menu.PSRAM.disabled=Disabled
-uPesy_wrover.menu.PSRAM.disabled.build.defines=
+uPesy_wrover.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 uPesy_wrover.menu.PSRAM.disabled.build.extra_libs=
 
 uPesy_wrover.menu.DebugLevel.none=None
@@ -31051,7 +31051,7 @@ uPesy_wroom.build.flash_freq=80m
 uPesy_wroom.build.flash_mode=dio
 uPesy_wroom.build.boot=dio
 uPesy_wroom.build.partitions=default
-uPesy_wroom.build.defines=
+uPesy_wroom.build.defines=-DBOARD_HAS_PSRAM=0
 
 uPesy_wroom.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 uPesy_wroom.menu.PartitionScheme.default.build.partitions=default
@@ -31161,7 +31161,7 @@ uPesy_edu_esp32.build.flash_freq=80m
 uPesy_edu_esp32.build.flash_mode=dio
 uPesy_edu_esp32.build.boot=dio
 uPesy_edu_esp32.build.partitions=default
-uPesy_edu_esp32.build.defines=
+uPesy_edu_esp32.build.defines=-DBOARD_HAS_PSRAM=0
 
 uPesy_edu_esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 uPesy_edu_esp32.menu.PartitionScheme.default.build.partitions=default
@@ -31276,7 +31276,7 @@ upesy_esp32c3_basic.build.flash_freq=80m
 upesy_esp32c3_basic.build.flash_mode=dio
 upesy_esp32c3_basic.build.boot=qio
 upesy_esp32c3_basic.build.partitions=default
-upesy_esp32c3_basic.build.defines=
+upesy_esp32c3_basic.build.defines=-DBOARD_HAS_PSRAM=0
 
 upesy_esp32c3_basic.menu.CDCOnBoot.default=Enabled
 upesy_esp32c3_basic.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -31390,7 +31390,7 @@ upesy_esp32c3_mini.build.flash_freq=80m
 upesy_esp32c3_mini.build.flash_mode=dio
 upesy_esp32c3_mini.build.boot=qio
 upesy_esp32c3_mini.build.partitions=default
-upesy_esp32c3_mini.build.defines=
+upesy_esp32c3_mini.build.defines=-DBOARD_HAS_PSRAM=0
 
 upesy_esp32c3_mini.menu.CDCOnBoot.default=Enabled
 upesy_esp32c3_mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -31508,7 +31508,7 @@ upesy_esp32s3_basic.build.flash_mode=dio
 upesy_esp32s3_basic.build.boot=qio
 upesy_esp32s3_basic.build.boot_freq=80m
 upesy_esp32s3_basic.build.partitions=default
-upesy_esp32s3_basic.build.defines=-DBOARD_HAS_PSRAM
+upesy_esp32s3_basic.build.defines=-DBOARD_HAS_PSRAM=1
 upesy_esp32s3_basic.build.loop_core=
 upesy_esp32s3_basic.build.event_core=
 upesy_esp32s3_basic.build.psram_type=opi
@@ -31661,15 +31661,15 @@ kb32.build.flash_freq=40m
 kb32.build.flash_mode=dio
 kb32.build.boot=dio
 kb32.build.partitions=default
-kb32.build.defines=
+kb32.build.defines=-DBOARD_HAS_PSRAM=0
 kb32.build.loop_core=
 kb32.build.event_core=
 
 kb32.menu.PSRAM.disabled=Disabled
-kb32.menu.PSRAM.disabled.build.defines=
+kb32.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 kb32.menu.PSRAM.disabled.build.extra_libs=
 kb32.menu.PSRAM.enabled=Enabled
-kb32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+kb32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 kb32.menu.PSRAM.enabled.build.extra_libs=
 
 kb32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -31829,7 +31829,7 @@ deneyapkart.build.flash_freq=80m
 deneyapkart.build.flash_mode=dio
 deneyapkart.build.boot=qio
 deneyapkart.build.partitions=default
-deneyapkart.build.defines=
+deneyapkart.build.defines=-DBOARD_HAS_PSRAM=0
 deneyapkart.build.loop_core=
 deneyapkart.build.event_core=
 
@@ -31844,10 +31844,10 @@ deneyapkart.menu.JTAGAdapter.bridge.build.openocdscript=esp32-bridge.cfg
 deneyapkart.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 deneyapkart.menu.PSRAM.enabled=Enabled
-deneyapkart.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+deneyapkart.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 deneyapkart.menu.PSRAM.enabled.build.extra_libs=
 deneyapkart.menu.PSRAM.disabled=Disabled
-deneyapkart.menu.PSRAM.disabled.build.defines=
+deneyapkart.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 deneyapkart.menu.PSRAM.disabled.build.extra_libs=
 
 deneyapkart.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -32007,7 +32007,7 @@ deneyapkart1A.build.flash_freq=80m
 deneyapkart1A.build.flash_mode=dio
 deneyapkart1A.build.boot=qio
 deneyapkart1A.build.partitions=default
-deneyapkart1A.build.defines=
+deneyapkart1A.build.defines=-DBOARD_HAS_PSRAM=0
 deneyapkart1A.build.loop_core=
 deneyapkart1A.build.event_core=
 
@@ -32022,10 +32022,10 @@ deneyapkart1A.menu.JTAGAdapter.bridge.build.openocdscript=esp32-bridge.cfg
 deneyapkart1A.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 deneyapkart1A.menu.PSRAM.enabled=Enabled
-deneyapkart1A.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+deneyapkart1A.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 deneyapkart1A.menu.PSRAM.enabled.build.extra_libs=
 deneyapkart1A.menu.PSRAM.disabled=Disabled
-deneyapkart1A.menu.PSRAM.disabled.build.defines=
+deneyapkart1A.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 deneyapkart1A.menu.PSRAM.disabled.build.extra_libs=
 
 deneyapkart1A.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -32195,7 +32195,7 @@ deneyapkart1Av2.build.flash_mode=dio
 deneyapkart1Av2.build.boot=qio
 deneyapkart1Av2.build.boot_freq=80m
 deneyapkart1Av2.build.partitions=default
-deneyapkart1Av2.build.defines=-DBOARD_HAS_PSRAM
+deneyapkart1Av2.build.defines=-DBOARD_HAS_PSRAM=1
 deneyapkart1Av2.build.loop_core=
 deneyapkart1Av2.build.event_core=
 deneyapkart1Av2.build.psram_type=opi
@@ -32215,13 +32215,13 @@ deneyapkart1Av2.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 deneyapkart1Av2.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 deneyapkart1Av2.menu.PSRAM.opi=OPI PSRAM
-deneyapkart1Av2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+deneyapkart1Av2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 deneyapkart1Av2.menu.PSRAM.opi.build.psram_type=opi
 deneyapkart1Av2.menu.PSRAM.disabled=Disabled
-deneyapkart1Av2.menu.PSRAM.disabled.build.defines=
+deneyapkart1Av2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 deneyapkart1Av2.menu.PSRAM.disabled.build.psram_type=qspi
 deneyapkart1Av2.menu.PSRAM.enabled=QSPI PSRAM
-deneyapkart1Av2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+deneyapkart1Av2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 deneyapkart1Av2.menu.PSRAM.enabled.build.psram_type=qspi
 
 deneyapkart1Av2.menu.FlashMode.qio=QIO 80MHz
@@ -32421,7 +32421,7 @@ deneyapmini.build.flash_freq=80m
 deneyapmini.build.flash_mode=dio
 deneyapmini.build.boot=qio
 deneyapmini.build.partitions=default
-deneyapmini.build.defines=
+deneyapmini.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 deneyapmini.menu.JTAGAdapter.default=Disabled
@@ -32456,9 +32456,9 @@ deneyapmini.menu.UploadMode.default.upload.use_1200bps_touch=false
 deneyapmini.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 deneyapmini.menu.PSRAM.disabled=Disabled
-deneyapmini.menu.PSRAM.disabled.build.defines=
+deneyapmini.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 deneyapmini.menu.PSRAM.enabled=Enabled
-deneyapmini.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+deneyapmini.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 deneyapmini.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 deneyapmini.menu.PartitionScheme.default.build.partitions=default
@@ -32611,7 +32611,7 @@ deneyapminiv2.build.flash_freq=80m
 deneyapminiv2.build.flash_mode=dio
 deneyapminiv2.build.boot=qio
 deneyapminiv2.build.partitions=default
-deneyapminiv2.build.defines=-DBOARD_HAS_PSRAM
+deneyapminiv2.build.defines=-DBOARD_HAS_PSRAM=1
 
 ## IDE 2.0 Seems to not update the value
 deneyapminiv2.menu.JTAGAdapter.default=Disabled
@@ -32646,9 +32646,9 @@ deneyapminiv2.menu.UploadMode.default.upload.use_1200bps_touch=false
 deneyapminiv2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 deneyapminiv2.menu.PSRAM.enabled=Enabled
-deneyapminiv2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+deneyapminiv2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 deneyapminiv2.menu.PSRAM.disabled=Disabled
-deneyapminiv2.menu.PSRAM.disabled.build.defines=
+deneyapminiv2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 deneyapminiv2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 deneyapminiv2.menu.PartitionScheme.default.build.partitions=default
@@ -32799,7 +32799,7 @@ deneyapkartg.build.flash_freq=80m
 deneyapkartg.build.flash_mode=dio
 deneyapkartg.build.boot=qio
 deneyapkartg.build.partitions=default
-deneyapkartg.build.defines=
+deneyapkartg.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 deneyapkartg.menu.JTAGAdapter.default=Disabled
@@ -32959,7 +32959,7 @@ esp32-trueverit-iot-driver.build.flash_mode=dio
 esp32-trueverit-iot-driver.build.flash_size=4MB
 esp32-trueverit-iot-driver.build.boot=dio
 esp32-trueverit-iot-driver.build.partitions=default
-esp32-trueverit-iot-driver.build.defines=
+esp32-trueverit-iot-driver.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32-trueverit-iot-driver.menu.FlashFreq.80=80MHz
 esp32-trueverit-iot-driver.menu.FlashFreq.80.build.flash_freq=80m
@@ -33027,7 +33027,7 @@ esp32-trueverit-iot-driver-mkii.build.flash_mode=dio
 esp32-trueverit-iot-driver-mkii.build.flash_size=4MB
 esp32-trueverit-iot-driver-mkii.build.boot=dio
 esp32-trueverit-iot-driver-mkii.build.partitions=default
-esp32-trueverit-iot-driver-mkii.build.defines=
+esp32-trueverit-iot-driver-mkii.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32-trueverit-iot-driver-mkii.menu.FlashFreq.80=80MHz
 esp32-trueverit-iot-driver-mkii.menu.FlashFreq.80.build.flash_freq=80m
@@ -33104,7 +33104,7 @@ atmegazero_esp32s2.build.flash_freq=40m
 atmegazero_esp32s2.build.flash_mode=qio
 atmegazero_esp32s2.build.boot=qio
 atmegazero_esp32s2.build.partitions=default
-atmegazero_esp32s2.build.defines=
+atmegazero_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 atmegazero_esp32s2.menu.CDCOnBoot.cdc=Enabled
 atmegazero_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -33122,9 +33122,9 @@ atmegazero_esp32s2.menu.DFUOnBoot.dfu=Enabled
 atmegazero_esp32s2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
 atmegazero_esp32s2.menu.PSRAM.disabled=Disabled
-atmegazero_esp32s2.menu.PSRAM.disabled.build.defines=
+atmegazero_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 atmegazero_esp32s2.menu.PSRAM.enabled=Enabled
-atmegazero_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+atmegazero_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 atmegazero_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FFAT)
 atmegazero_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -33273,12 +33273,12 @@ franzininho_wifi_esp32s2.build.flash_freq=80m
 franzininho_wifi_esp32s2.build.flash_mode=dio
 franzininho_wifi_esp32s2.build.boot=qio
 franzininho_wifi_esp32s2.build.partitions=default
-franzininho_wifi_esp32s2.build.defines=
+franzininho_wifi_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 franzininho_wifi_esp32s2.menu.PSRAM.disabled=Disabled
-franzininho_wifi_esp32s2.menu.PSRAM.disabled.build.defines=
+franzininho_wifi_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 franzininho_wifi_esp32s2.menu.PSRAM.enabled=Enabled
-franzininho_wifi_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+franzininho_wifi_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 franzininho_wifi_esp32s2.menu.FlashSize.4M=4MB (32Mb)
 franzininho_wifi_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
@@ -33380,12 +33380,12 @@ franzininho_wifi_msc_esp32s2.build.flash_freq=80m
 franzininho_wifi_msc_esp32s2.build.flash_mode=dio
 franzininho_wifi_msc_esp32s2.build.boot=qio
 franzininho_wifi_msc_esp32s2.build.partitions=default
-franzininho_wifi_msc_esp32s2.build.defines=
+franzininho_wifi_msc_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 franzininho_wifi_msc_esp32s2.menu.PSRAM.disabled=Disabled
-franzininho_wifi_msc_esp32s2.menu.PSRAM.disabled.build.defines=
+franzininho_wifi_msc_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 franzininho_wifi_msc_esp32s2.menu.PSRAM.enabled=Enabled
-franzininho_wifi_msc_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+franzininho_wifi_msc_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 
 franzininho_wifi_msc_esp32s2.menu.FlashSize.4M=4MB (32Mb)
 franzininho_wifi_msc_esp32s2.menu.FlashSize.4M.build.flash_size=4MB
@@ -33486,20 +33486,20 @@ tamc_termod_s3.build.flash_mode=dio
 tamc_termod_s3.build.boot=qio
 tamc_termod_s3.build.boot_freq=80m
 tamc_termod_s3.build.partitions=default
-tamc_termod_s3.build.defines=
+tamc_termod_s3.build.defines=-DBOARD_HAS_PSRAM=0
 tamc_termod_s3.build.loop_core=
 tamc_termod_s3.build.event_core=
 tamc_termod_s3.build.psram_type=qspi
 tamc_termod_s3.build.memory_type={build.boot}_{build.psram_type}
 
 tamc_termod_s3.menu.PSRAM.enabled=QSPI PSRAM
-tamc_termod_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+tamc_termod_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 tamc_termod_s3.menu.PSRAM.enabled.build.psram_type=qspi
 tamc_termod_s3.menu.PSRAM.disabled=Disabled
-tamc_termod_s3.menu.PSRAM.disabled.build.defines=
+tamc_termod_s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 tamc_termod_s3.menu.PSRAM.disabled.build.psram_type=qspi
 tamc_termod_s3.menu.PSRAM.opi=OPI PSRAM
-tamc_termod_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+tamc_termod_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 tamc_termod_s3.menu.PSRAM.opi.build.psram_type=opi
 
 tamc_termod_s3.menu.FlashMode.qio=QIO 80MHz
@@ -33689,7 +33689,7 @@ dpu_esp32.build.flash_freq=40m
 dpu_esp32.build.flash_mode=dio
 dpu_esp32.build.boot=dio
 dpu_esp32.build.partitions=default_8MB
-dpu_esp32.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+dpu_esp32.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 dpu_esp32.build.extra_libs=
 
 dpu_esp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -33803,7 +33803,7 @@ sonoff_dualr3.build.flash_freq=40m
 sonoff_dualr3.build.flash_mode=dio
 sonoff_dualr3.build.boot=dio
 sonoff_dualr3.build.partitions=rainmaker
-sonoff_dualr3.build.defines=
+sonoff_dualr3.build.defines=-DBOARD_HAS_PSRAM=0
 sonoff_dualr3.build.loop_core=
 sonoff_dualr3.build.event_core=
 
@@ -33911,7 +33911,7 @@ lionbit.build.flash_freq=80m
 lionbit.build.flash_mode=dio
 lionbit.build.boot=dio
 lionbit.build.partitions=default
-lionbit.build.defines=
+lionbit.build.defines=-DBOARD_HAS_PSRAM=0
 lionbit.build.loop_core=
 lionbit.build.event_core=
 
@@ -34064,7 +34064,7 @@ watchy.build.flash_freq=80m
 watchy.build.flash_mode=dio
 watchy.build.boot=qio
 watchy.build.partitions=min_spiffs
-watchy.build.defines=
+watchy.build.defines=-DBOARD_HAS_PSRAM=0
 
 watchy.menu.Revision.v10=Watchy v1.0
 watchy.menu.Revision.v10.build.board=WATCHY_V10
@@ -34145,7 +34145,7 @@ AirM2M_CORE_ESP32C3.build.flash_freq=80m
 AirM2M_CORE_ESP32C3.build.flash_mode=dio
 AirM2M_CORE_ESP32C3.build.boot=dio
 AirM2M_CORE_ESP32C3.build.partitions=default
-AirM2M_CORE_ESP32C3.build.defines=
+AirM2M_CORE_ESP32C3.build.defines=-DBOARD_HAS_PSRAM=0
 
 AirM2M_CORE_ESP32C3.menu.CDCOnBoot.default=Disabled
 AirM2M_CORE_ESP32C3.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -34258,7 +34258,7 @@ XIAO_ESP32C3.build.flash_freq=80m
 XIAO_ESP32C3.build.flash_mode=qio
 XIAO_ESP32C3.build.boot=qio
 XIAO_ESP32C3.build.partitions=default
-XIAO_ESP32C3.build.defines=
+XIAO_ESP32C3.build.defines=-DBOARD_HAS_PSRAM=0
 
 XIAO_ESP32C3.menu.CDCOnBoot.default=Enabled
 XIAO_ESP32C3.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -34409,7 +34409,7 @@ XIAO_ESP32C6.build.flash_freq=80m
 XIAO_ESP32C6.build.flash_mode=qio
 XIAO_ESP32C6.build.boot=qio
 XIAO_ESP32C6.build.partitions=default
-XIAO_ESP32C6.build.defines=
+XIAO_ESP32C6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 XIAO_ESP32C6.menu.JTAGAdapter.default=Disabled
@@ -34571,7 +34571,7 @@ XIAO_ESP32S3.build.flash_mode=dio
 XIAO_ESP32S3.build.boot=qio
 XIAO_ESP32S3.build.boot_freq=80m
 XIAO_ESP32S3.build.partitions=default_8MB
-XIAO_ESP32S3.build.defines=
+XIAO_ESP32S3.build.defines=-DBOARD_HAS_PSRAM=0
 XIAO_ESP32S3.build.loop_core=
 XIAO_ESP32S3.build.event_core=
 XIAO_ESP32S3.build.psram_type=qspi
@@ -34590,10 +34590,10 @@ XIAO_ESP32S3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 XIAO_ESP32S3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 XIAO_ESP32S3.menu.PSRAM.disabled=Disabled
-XIAO_ESP32S3.menu.PSRAM.disabled.build.defines=
+XIAO_ESP32S3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 XIAO_ESP32S3.menu.PSRAM.disabled.build.psram_type=qspi
 XIAO_ESP32S3.menu.PSRAM.opi=OPI PSRAM
-XIAO_ESP32S3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+XIAO_ESP32S3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 XIAO_ESP32S3.menu.PSRAM.opi.build.psram_type=opi
 
 XIAO_ESP32S3.menu.FlashMode.qio=QIO 80MHz
@@ -34740,7 +34740,7 @@ connaxio_espoir.build.flash_freq=80m
 connaxio_espoir.build.flash_mode=dio
 connaxio_espoir.build.boot=dio
 connaxio_espoir.build.partitions=default
-connaxio_espoir.build.defines=
+connaxio_espoir.build.defines=-DBOARD_HAS_PSRAM=0
 connaxio_espoir.build.loop_core=
 connaxio_espoir.build.event_core=
 
@@ -34859,7 +34859,7 @@ aw2eth.build.flash_freq=80m
 aw2eth.build.flash_mode=dio
 aw2eth.build.boot=dio
 aw2eth.build.partitions=default
-aw2eth.build.defines=
+aw2eth.build.defines=-DBOARD_HAS_PSRAM=0
 
 aw2eth.menu.PartitionScheme.default=Default
 aw2eth.menu.PartitionScheme.default.build.partitions=default
@@ -34943,7 +34943,7 @@ department_of_alchemy_minimain_esp32s2.build.flash_freq=80m
 department_of_alchemy_minimain_esp32s2.build.flash_mode=qio
 department_of_alchemy_minimain_esp32s2.build.boot=qio
 department_of_alchemy_minimain_esp32s2.build.partitions=default
-department_of_alchemy_minimain_esp32s2.build.defines=
+department_of_alchemy_minimain_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 department_of_alchemy_minimain_esp32s2.menu.CDCOnBoot.cdc=Enabled
 department_of_alchemy_minimain_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -34968,9 +34968,9 @@ department_of_alchemy_minimain_esp32s2.menu.UploadMode.default.upload.use_1200bp
 department_of_alchemy_minimain_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 department_of_alchemy_minimain_esp32s2.menu.PSRAM.enabled=Enabled
-department_of_alchemy_minimain_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+department_of_alchemy_minimain_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 department_of_alchemy_minimain_esp32s2.menu.PSRAM.disabled=Disabled
-department_of_alchemy_minimain_esp32s2.menu.PSRAM.disabled.build.defines=
+department_of_alchemy_minimain_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 department_of_alchemy_minimain_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FFAT)
 department_of_alchemy_minimain_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -35112,12 +35112,12 @@ Bee_Data_Logger.build.flash_size=8MB
 Bee_Data_Logger.build.flash_freq=80m
 Bee_Data_Logger.build.flash_mode=dio
 Bee_Data_Logger.build.partitions=default_8MB
-Bee_Data_Logger.build.defines=
+Bee_Data_Logger.build.defines=-DBOARD_HAS_PSRAM=0
 Bee_Data_Logger.build.loop_core=-DARDUINO_RUNNING_CORE=1
 Bee_Data_Logger.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 Bee_Data_Logger.build.boot=qio
 Bee_Data_Logger.build.partitions=default
-Bee_Data_Logger.build.defines=
+Bee_Data_Logger.build.defines=-DBOARD_HAS_PSRAM=0
 
 Bee_Data_Logger.menu.CDCOnBoot.default=Enabled
 Bee_Data_Logger.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -35223,12 +35223,12 @@ Bee_Motion_S3.build.flash_size=8MB
 Bee_Motion_S3.build.flash_freq=80m
 Bee_Motion_S3.build.flash_mode=dio
 Bee_Motion_S3.build.partitions=default_8MB
-Bee_Motion_S3.build.defines=
+Bee_Motion_S3.build.defines=-DBOARD_HAS_PSRAM=0
 Bee_Motion_S3.build.loop_core=-DARDUINO_RUNNING_CORE=1
 Bee_Motion_S3.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 Bee_Motion_S3.build.boot=qio
 Bee_Motion_S3.build.partitions=default
-Bee_Motion_S3.build.defines=
+Bee_Motion_S3.build.defines=-DBOARD_HAS_PSRAM=0
 
 Bee_Motion_S3.menu.CDCOnBoot.default=Enabled
 Bee_Motion_S3.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -35335,7 +35335,7 @@ Bee_Motion.build.flash_freq=80m
 Bee_Motion.build.flash_mode=dio
 Bee_Motion.build.boot=qio
 Bee_Motion.build.partitions=default
-Bee_Motion.build.defines=
+Bee_Motion.build.defines=-DBOARD_HAS_PSRAM=0
 
 Bee_Motion.menu.CDCOnBoot.default=Enabled
 Bee_Motion.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -35435,7 +35435,7 @@ Bee_Motion_Mini.build.flash_freq=80m
 Bee_Motion_Mini.build.flash_mode=dio
 Bee_Motion_Mini.build.boot=qio
 Bee_Motion_Mini.build.partitions=default
-Bee_Motion_Mini.build.defines=
+Bee_Motion_Mini.build.defines=-DBOARD_HAS_PSRAM=0
 
 Bee_Motion_Mini.menu.CDCOnBoot.default=Enabled
 Bee_Motion_Mini.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -35554,7 +35554,7 @@ Bee_S3.build.flash_freq=80m
 Bee_S3.build.flash_mode=dio
 Bee_S3.build.boot=qio
 Bee_S3.build.partitions=default_8MB
-Bee_S3.build.defines=
+Bee_S3.build.defines=-DBOARD_HAS_PSRAM=0
 Bee_S3.build.loop_core=-DARDUINO_RUNNING_CORE=1
 Bee_S3.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 
@@ -35790,7 +35790,7 @@ unphone8.build.flash_mode=dio
 unphone8.build.boot=qio
 unphone8.build.boot_freq=80m
 unphone8.build.partitions=default_8MB
-unphone8.build.defines=-DBOARD_HAS_PSRAM -DUNPHONE_SPIN=8
+unphone8.build.defines=-DBOARD_HAS_PSRAM=1 -DUNPHONE_SPIN=8
 unphone8.build.loop_core=-DARDUINO_RUNNING_CORE=1
 unphone8.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 unphone8.build.flash_type=qio
@@ -35946,7 +35946,7 @@ unphone9.build.flash_mode=dio
 unphone9.build.boot=qio
 unphone9.build.boot_freq=80m
 unphone9.build.partitions=default_8MB
-unphone9.build.defines=-DBOARD_HAS_PSRAM -DUNPHONE_SPIN=9
+unphone9.build.defines=-DBOARD_HAS_PSRAM=1 -DUNPHONE_SPIN=9
 unphone9.build.loop_core=-DARDUINO_RUNNING_CORE=1
 unphone9.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 unphone9.build.flash_type=qio
@@ -36107,7 +36107,7 @@ cytron_maker_feather_aiot_s3.build.flash_freq=80m
 cytron_maker_feather_aiot_s3.build.flash_mode=dio
 cytron_maker_feather_aiot_s3.build.boot=qio
 cytron_maker_feather_aiot_s3.build.partitions=default
-cytron_maker_feather_aiot_s3.build.defines=
+cytron_maker_feather_aiot_s3.build.defines=-DBOARD_HAS_PSRAM=0
 cytron_maker_feather_aiot_s3.build.loop_core=
 cytron_maker_feather_aiot_s3.build.event_core=
 cytron_maker_feather_aiot_s3.build.flash_type=qio
@@ -36152,13 +36152,13 @@ cytron_maker_feather_aiot_s3.menu.UploadMode.default.upload.use_1200bps_touch=fa
 cytron_maker_feather_aiot_s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 cytron_maker_feather_aiot_s3.menu.PSRAM.opi=OPI PSRAM
-cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 cytron_maker_feather_aiot_s3.menu.PSRAM.opi.build.psram_type=opi
 cytron_maker_feather_aiot_s3.menu.PSRAM.enabled=QSPI PSRAM
-cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 cytron_maker_feather_aiot_s3.menu.PSRAM.enabled.build.psram_type=qspi
 cytron_maker_feather_aiot_s3.menu.PSRAM.disabled=Disabled
-cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.defines=
+cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 cytron_maker_feather_aiot_s3.menu.PSRAM.disabled.build.psram_type=qspi
 
 cytron_maker_feather_aiot_s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
@@ -36280,7 +36280,7 @@ redpill_esp32s3.build.flash_freq=80m
 redpill_esp32s3.build.flash_mode=dio
 redpill_esp32s3.build.boot=qio
 redpill_esp32s3.build.partitions=default
-redpill_esp32s3.build.defines=
+redpill_esp32s3.build.defines=-DBOARD_HAS_PSRAM=0
 redpill_esp32s3.build.loop_core=
 redpill_esp32s3.build.event_core=
 redpill_esp32s3.build.flash_type=qio
@@ -36325,13 +36325,13 @@ redpill_esp32s3.menu.UploadMode.default.upload.use_1200bps_touch=false
 redpill_esp32s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 redpill_esp32s3.menu.PSRAM.enabled=QSPI PSRAM
-redpill_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+redpill_esp32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 redpill_esp32s3.menu.PSRAM.enabled.build.psram_type=qspi
 redpill_esp32s3.menu.PSRAM.disabled=Disabled
-redpill_esp32s3.menu.PSRAM.disabled.build.defines=
+redpill_esp32s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 redpill_esp32s3.menu.PSRAM.disabled.build.psram_type=qspi
 redpill_esp32s3.menu.PSRAM.opi=OPI PSRAM
-redpill_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+redpill_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 redpill_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
 redpill_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
@@ -36449,7 +36449,7 @@ esp32c3m1IKit.build.flash_freq=80m
 esp32c3m1IKit.build.flash_mode=qio
 esp32c3m1IKit.build.boot=qio
 esp32c3m1IKit.build.partitions=default
-esp32c3m1IKit.build.defines=
+esp32c3m1IKit.build.defines=-DBOARD_HAS_PSRAM=0
 
 esp32c3m1IKit.menu.CDCOnBoot.default=Disabled
 esp32c3m1IKit.menu.CDCOnBoot.default.build.cdc_on_boot=0
@@ -36560,7 +36560,7 @@ roboheart_hercules.build.flash_freq=40m
 roboheart_hercules.build.flash_mode=dio
 roboheart_hercules.build.boot=dio
 roboheart_hercules.build.partitions=default
-roboheart_hercules.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+roboheart_hercules.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 roboheart_hercules.build.extra_libs=
 
 roboheart_hercules.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -36696,7 +36696,7 @@ VALTRACK_V4_VTS_ESP32_C3.build.flash_freq=80m
 VALTRACK_V4_VTS_ESP32_C3.build.flash_mode=qio
 VALTRACK_V4_VTS_ESP32_C3.build.boot=qio
 VALTRACK_V4_VTS_ESP32_C3.build.partitions=default
-VALTRACK_V4_VTS_ESP32_C3.build.defines=
+VALTRACK_V4_VTS_ESP32_C3.build.defines=-DBOARD_HAS_PSRAM=0
 
 VALTRACK_V4_VTS_ESP32_C3.menu.CDCOnBoot.default=Enabled
 VALTRACK_V4_VTS_ESP32_C3.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -36847,7 +36847,7 @@ VALTRACK_V4_MFW_ESP32_C3.build.flash_freq=80m
 VALTRACK_V4_MFW_ESP32_C3.build.flash_mode=qio
 VALTRACK_V4_MFW_ESP32_C3.build.boot=qio
 VALTRACK_V4_MFW_ESP32_C3.build.partitions=default
-VALTRACK_V4_MFW_ESP32_C3.build.defines=
+VALTRACK_V4_MFW_ESP32_C3.build.defines=-DBOARD_HAS_PSRAM=0
 
 VALTRACK_V4_MFW_ESP32_C3.menu.CDCOnBoot.default=Enabled
 VALTRACK_V4_MFW_ESP32_C3.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -37002,20 +37002,20 @@ Edgebox-ESP-100.build.flash_mode=dio
 Edgebox-ESP-100.build.boot=qio
 Edgebox-ESP-100.build.boot_freq=80m
 Edgebox-ESP-100.build.partitions=default
-Edgebox-ESP-100.build.defines=
+Edgebox-ESP-100.build.defines=-DBOARD_HAS_PSRAM=0
 Edgebox-ESP-100.build.loop_core=
 Edgebox-ESP-100.build.event_core=
 Edgebox-ESP-100.build.psram_type=qspi
 Edgebox-ESP-100.build.memory_type={build.boot}_{build.psram_type}
 
 Edgebox-ESP-100.menu.PSRAM.disabled=Disabled
-Edgebox-ESP-100.menu.PSRAM.disabled.build.defines=
+Edgebox-ESP-100.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 Edgebox-ESP-100.menu.PSRAM.disabled.build.psram_type=qspi
 Edgebox-ESP-100.menu.PSRAM.enabled=QSPI PSRAM
-Edgebox-ESP-100.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+Edgebox-ESP-100.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 Edgebox-ESP-100.menu.PSRAM.enabled.build.psram_type=qspi
 Edgebox-ESP-100.menu.PSRAM.opi=OPI PSRAM
-Edgebox-ESP-100.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+Edgebox-ESP-100.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 Edgebox-ESP-100.menu.PSRAM.opi.build.psram_type=opi
 
 Edgebox-ESP-100.menu.FlashMode.qio=QIO 80MHz
@@ -37214,7 +37214,7 @@ crabik_slot_esp32_s3.build.flash_freq=80m
 crabik_slot_esp32_s3.build.flash_mode=dio
 crabik_slot_esp32_s3.build.boot=qio
 crabik_slot_esp32_s3.build.partitions=default
-crabik_slot_esp32_s3.build.defines=
+crabik_slot_esp32_s3.build.defines=-DBOARD_HAS_PSRAM=0
 crabik_slot_esp32_s3.build.memory_type=qio_qspi
 crabik_slot_esp32_s3.build.loop_core=
 crabik_slot_esp32_s3.build.event_core=
@@ -37361,7 +37361,7 @@ nebulas3.build.flash_mode=dio
 nebulas3.build.boot=qio
 nebulas3.build.boot_freq=80m
 nebulas3.build.partitions=default
-nebulas3.build.defines=
+nebulas3.build.defines=-DBOARD_HAS_PSRAM=0
 nebulas3.build.loop_core=
 nebulas3.build.event_core=
 nebulas3.build.psram_type=qspi
@@ -37381,13 +37381,13 @@ nebulas3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 nebulas3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 nebulas3.menu.PSRAM.disabled=Disabled
-nebulas3.menu.PSRAM.disabled.build.defines=
+nebulas3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 nebulas3.menu.PSRAM.disabled.build.psram_type=qspi
 nebulas3.menu.PSRAM.enabled=QSPI PSRAM
-nebulas3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+nebulas3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 nebulas3.menu.PSRAM.enabled.build.psram_type=qspi
 nebulas3.menu.PSRAM.opi=OPI PSRAM
-nebulas3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+nebulas3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 nebulas3.menu.PSRAM.opi.build.psram_type=opi
 
 nebulas3.menu.FlashMode.qio=QIO 80MHz
@@ -37585,7 +37585,7 @@ lionbits3.build.flash_mode=dio
 lionbits3.build.boot=qio
 lionbits3.build.boot_freq=80m
 lionbits3.build.partitions=default
-lionbits3.build.defines=
+lionbits3.build.defines=-DBOARD_HAS_PSRAM=0
 lionbits3.build.loop_core=
 lionbits3.build.event_core=
 lionbits3.build.psram_type=qspi
@@ -37605,13 +37605,13 @@ lionbits3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 lionbits3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 lionbits3.menu.PSRAM.disabled=Disabled
-lionbits3.menu.PSRAM.disabled.build.defines=
+lionbits3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 lionbits3.menu.PSRAM.disabled.build.psram_type=qspi
 lionbits3.menu.PSRAM.enabled=QSPI PSRAM
-lionbits3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+lionbits3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 lionbits3.menu.PSRAM.enabled.build.psram_type=qspi
 lionbits3.menu.PSRAM.opi=OPI PSRAM
-lionbits3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+lionbits3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 lionbits3.menu.PSRAM.opi.build.psram_type=opi
 
 lionbits3.menu.FlashMode.qio=QIO 80MHz
@@ -37811,14 +37811,14 @@ gen4-ESP32-S3R8n16.build.flash_mode=dio
 gen4-ESP32-S3R8n16.build.boot=qio
 gen4-ESP32-S3R8n16.build.boot_freq=80m
 gen4-ESP32-S3R8n16.build.partitions=default
-gen4-ESP32-S3R8n16.build.defines=-DBOARD_HAS_PSRAM
+gen4-ESP32-S3R8n16.build.defines=-DBOARD_HAS_PSRAM=1
 gen4-ESP32-S3R8n16.build.loop_core=
 gen4-ESP32-S3R8n16.build.event_core=
 gen4-ESP32-S3R8n16.build.psram_type=opi
 gen4-ESP32-S3R8n16.build.memory_type={build.boot}_{build.psram_type}
 
 gen4-ESP32-S3R8n16.menu.PSRAM.opi=OPI PSRAM
-gen4-ESP32-S3R8n16.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+gen4-ESP32-S3R8n16.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 gen4-ESP32-S3R8n16.menu.PSRAM.opi.build.psram_type=opi
 
 gen4-ESP32-S3R8n16.menu.FlashMode.qio=QIO 80MHz
@@ -37966,7 +37966,7 @@ namino_rosso.build.flash_freq=80m
 namino_rosso.build.flash_mode=dio
 namino_rosso.build.boot=qio
 namino_rosso.build.partitions=default
-namino_rosso.build.defines=
+namino_rosso.build.defines=-DBOARD_HAS_PSRAM=0
 namino_rosso.build.loop_core=
 namino_rosso.build.event_core=
 namino_rosso.build.flash_type=qio
@@ -38011,13 +38011,13 @@ namino_rosso.menu.UploadMode.default.upload.use_1200bps_touch=false
 namino_rosso.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 namino_rosso.menu.PSRAM.disabled=Disabled
-namino_rosso.menu.PSRAM.disabled.build.defines=
+namino_rosso.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 namino_rosso.menu.PSRAM.disabled.build.psram_type=qspi
 namino_rosso.menu.PSRAM.enabled=QSPI PSRAM
-namino_rosso.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+namino_rosso.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 namino_rosso.menu.PSRAM.enabled.build.psram_type=qspi
 namino_rosso.menu.PSRAM.opi=OPI PSRAM
-namino_rosso.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+namino_rosso.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 namino_rosso.menu.PSRAM.opi.build.psram_type=opi
 
 namino_rosso.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -38155,7 +38155,7 @@ namino_arancio.build.flash_freq=80m
 namino_arancio.build.flash_mode=dio
 namino_arancio.build.boot=qio
 namino_arancio.build.partitions=default
-namino_arancio.build.defines=
+namino_arancio.build.defines=-DBOARD_HAS_PSRAM=0
 namino_arancio.build.loop_core=
 namino_arancio.build.event_core=
 namino_arancio.build.flash_type=qio
@@ -38200,13 +38200,13 @@ namino_arancio.menu.UploadMode.default.upload.use_1200bps_touch=false
 namino_arancio.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 namino_arancio.menu.PSRAM.disabled=Disabled
-namino_arancio.menu.PSRAM.disabled.build.defines=
+namino_arancio.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 namino_arancio.menu.PSRAM.disabled.build.psram_type=qspi
 namino_arancio.menu.PSRAM.enabled=QSPI PSRAM
-namino_arancio.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+namino_arancio.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 namino_arancio.menu.PSRAM.enabled.build.psram_type=qspi
 namino_arancio.menu.PSRAM.opi=OPI PSRAM
-namino_arancio.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+namino_arancio.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 namino_arancio.menu.PSRAM.opi.build.psram_type=opi
 
 namino_arancio.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -38344,7 +38344,7 @@ namino_bianco.build.flash_freq=80m
 namino_bianco.build.flash_mode=dio
 namino_bianco.build.boot=qio
 namino_bianco.build.partitions=default
-namino_bianco.build.defines=
+namino_bianco.build.defines=-DBOARD_HAS_PSRAM=0
 namino_bianco.build.loop_core=
 namino_bianco.build.event_core=
 namino_bianco.build.flash_type=qio
@@ -38389,13 +38389,13 @@ namino_bianco.menu.UploadMode.default.upload.use_1200bps_touch=false
 namino_bianco.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 namino_bianco.menu.PSRAM.disabled=Disabled
-namino_bianco.menu.PSRAM.disabled.build.defines=
+namino_bianco.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 namino_bianco.menu.PSRAM.disabled.build.psram_type=qspi
 namino_bianco.menu.PSRAM.enabled=QSPI PSRAM
-namino_bianco.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+namino_bianco.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 namino_bianco.menu.PSRAM.enabled.build.psram_type=qspi
 namino_bianco.menu.PSRAM.opi=OPI PSRAM
-namino_bianco.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+namino_bianco.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 namino_bianco.menu.PSRAM.opi.build.psram_type=opi
 
 namino_bianco.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -38527,7 +38527,7 @@ ioxesp32.build.flash_size=4MB
 ioxesp32ps.build.flash_freq=40m
 ioxesp32.build.boot=dio
 ioxesp32.build.partitions=default
-ioxesp32.build.defines=
+ioxesp32.build.defines=-DBOARD_HAS_PSRAM=0
 ioxesp32.build.extra_libs=
 
 ioxesp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -38639,7 +38639,7 @@ ioxesp32ps.build.flash_size=4MB
 ioxesp32ps.build.flash_freq=40m
 ioxesp32ps.build.boot=dio
 ioxesp32ps.build.partitions=default
-ioxesp32ps.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+ioxesp32ps.build.defines=-DBOARD_HAS_PSRAM=1 -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 ioxesp32ps.build.extra_libs=
 
 ioxesp32ps.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
@@ -38754,7 +38754,7 @@ ioxesp32c6.build.flash_freq=80m
 ioxesp32c6.build.flash_mode=qio
 ioxesp32c6.build.boot=qio
 ioxesp32c6.build.partitions=default
-ioxesp32c6.build.defines=
+ioxesp32c6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 ioxesp32c6.menu.JTAGAdapter.default=Disabled
@@ -38929,7 +38929,7 @@ atd147_s3.build.flash_mode=dio
 atd147_s3.build.boot=qio
 atd147_s3.build.boot_freq=80m
 atd147_s3.build.partitions=default_8MB
-atd147_s3.build.defines=
+atd147_s3.build.defines=-DBOARD_HAS_PSRAM=0
 atd147_s3.build.loop_core=
 atd147_s3.build.event_core=
 atd147_s3.build.psram_type=opi
@@ -38949,10 +38949,10 @@ atd147_s3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 atd147_s3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 atd147_s3.menu.PSRAM.disabled=Disabled
-atd147_s3.menu.PSRAM.disabled.build.defines=
+atd147_s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 atd147_s3.menu.PSRAM.disabled.build.psram_type=opi
 atd147_s3.menu.PSRAM.enabled=Enable
-atd147_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+atd147_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 atd147_s3.menu.PSRAM.enabled.build.psram_type=opi
 
 atd147_s3.menu.LoopCore.1=Core 1
@@ -39112,7 +39112,7 @@ atd35s3.build.flash_mode=dio
 atd35s3.build.boot=qio
 atd35s3.build.boot_freq=80m
 atd35s3.build.partitions=default_8MB
-atd35s3.build.defines=
+atd35s3.build.defines=-DBOARD_HAS_PSRAM=0
 atd35s3.build.loop_core=
 atd35s3.build.event_core=
 atd35s3.build.psram_type=opi
@@ -39132,10 +39132,10 @@ atd35s3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 atd35s3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 atd35s3.menu.PSRAM.disabled=Disabled
-atd35s3.menu.PSRAM.disabled.build.defines=
+atd35s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 atd35s3.menu.PSRAM.disabled.build.psram_type=opi
 atd35s3.menu.PSRAM.enabled=Enable
-atd35s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+atd35s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 atd35s3.menu.PSRAM.enabled.build.psram_type=opi
 
 atd35s3.menu.LoopCore.1=Core 1
@@ -39297,7 +39297,7 @@ esp32s3_powerfeather.build.flash_mode=dio
 esp32s3_powerfeather.build.boot=qio
 esp32s3_powerfeather.build.boot_freq=80m
 esp32s3_powerfeather.build.partitions=default_8MB
-esp32s3_powerfeather.build.defines=
+esp32s3_powerfeather.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3_powerfeather.build.loop_core=
 esp32s3_powerfeather.build.event_core=
 esp32s3_powerfeather.build.flash_type=qio
@@ -39305,10 +39305,10 @@ esp32s3_powerfeather.build.psram_type=qspi
 esp32s3_powerfeather.build.memory_type={build.flash_type}_{build.psram_type}
 
 esp32s3_powerfeather.menu.PSRAM.disabled=Disabled
-esp32s3_powerfeather.menu.PSRAM.disabled.build.defines=
+esp32s3_powerfeather.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 esp32s3_powerfeather.menu.PSRAM.disabled.build.psram_type=qspi
 esp32s3_powerfeather.menu.PSRAM.enabled=QSPI PSRAM
-esp32s3_powerfeather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3_powerfeather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 esp32s3_powerfeather.menu.PSRAM.enabled.build.psram_type=qspi
 
 esp32s3_powerfeather.menu.FlashMode.qio=QIO 80MHz
@@ -39471,7 +39471,7 @@ sensebox_mcu_esp32s2.build.flash_freq=80m
 sensebox_mcu_esp32s2.build.flash_mode=dio
 sensebox_mcu_esp32s2.build.boot=qio
 sensebox_mcu_esp32s2.build.partitions=default
-sensebox_mcu_esp32s2.build.defines=
+sensebox_mcu_esp32s2.build.defines=-DBOARD_HAS_PSRAM=0
 
 sensebox_mcu_esp32s2.menu.CDCOnBoot.cdc=Enabled
 sensebox_mcu_esp32s2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -39496,9 +39496,9 @@ sensebox_mcu_esp32s2.menu.UploadMode.default.upload.use_1200bps_touch=false
 sensebox_mcu_esp32s2.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 sensebox_mcu_esp32s2.menu.PSRAM.enabled=Enabled
-sensebox_mcu_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+sensebox_mcu_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 sensebox_mcu_esp32s2.menu.PSRAM.disabled=Disabled
-sensebox_mcu_esp32s2.menu.PSRAM.disabled.build.defines=
+sensebox_mcu_esp32s2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
 sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
@@ -39711,7 +39711,7 @@ makergo_c3_supermini.build.flash_freq=80m
 makergo_c3_supermini.build.flash_mode=dio
 makergo_c3_supermini.build.boot=qio
 makergo_c3_supermini.build.partitions=default
-makergo_c3_supermini.build.defines=
+makergo_c3_supermini.build.defines=-DBOARD_HAS_PSRAM=0
 
 makergo_c3_supermini.menu.CDCOnBoot.default=Enabled
 makergo_c3_supermini.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -39823,14 +39823,14 @@ epulse_feather.build.flash_freq=80m
 epulse_feather.build.flash_mode=dio
 epulse_feather.build.boot=dio
 epulse_feather.build.partitions=default_8MB
-epulse_feather.build.defines=
+epulse_feather.build.defines=-DBOARD_HAS_PSRAM=0
 epulse_feather.build.loop_core=
 epulse_feather.build.event_core=
 
 epulse_feather.menu.PSRAM.enabled=Enabled
-epulse_feather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+epulse_feather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 epulse_feather.menu.PSRAM.disabled=Disabled
-epulse_feather.menu.PSRAM.disabled.build.defines=
+epulse_feather.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 epulse_feather.menu.LoopCore.1=Core 1
 epulse_feather.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -39937,7 +39937,7 @@ epulse_feather_c6.build.flash_freq=80m
 epulse_feather_c6.build.flash_mode=qio
 epulse_feather_c6.build.boot=qio
 epulse_feather_c6.build.partitions=default
-epulse_feather_c6.build.defines=
+epulse_feather_c6.build.defines=-DBOARD_HAS_PSRAM=0
 
 epulse_feather_c6.menu.JTAGAdapter.default=Disabled
 epulse_feather_c6.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -40108,7 +40108,7 @@ Geekble_ESP32C3.build.flash_freq=80m
 Geekble_ESP32C3.build.flash_mode=dio
 Geekble_ESP32C3.build.boot=qio
 Geekble_ESP32C3.build.partitions=default
-Geekble_ESP32C3.build.defines=
+Geekble_ESP32C3.build.defines=-DBOARD_HAS_PSRAM=0
 
 Geekble_ESP32C3.menu.CDCOnBoot.default=Enabled
 Geekble_ESP32C3.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -40246,17 +40246,17 @@ waveshare_esp32_s3_zero.build.flash_mode=dio
 waveshare_esp32_s3_zero.build.boot=qio
 waveshare_esp32_s3_zero.build.boot_freq=80m
 waveshare_esp32_s3_zero.build.partitions=default
-waveshare_esp32_s3_zero.build.defines=
+waveshare_esp32_s3_zero.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_zero.build.loop_core=
 waveshare_esp32_s3_zero.build.event_core=
 waveshare_esp32_s3_zero.build.psram_type=qspi
 waveshare_esp32_s3_zero.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_zero.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_zero.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_zero.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_zero.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_zero.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_zero.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_zero.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_zero.menu.PSRAM.enabled.build.psram_type=qspi
 
 waveshare_esp32_s3_zero.menu.FlashMode.qio=QIO 80MHz
@@ -40438,17 +40438,17 @@ ws_esp32_s3_matrix.build.flash_mode=dio
 ws_esp32_s3_matrix.build.boot=qio
 ws_esp32_s3_matrix.build.boot_freq=80m
 ws_esp32_s3_matrix.build.partitions=default
-ws_esp32_s3_matrix.build.defines=
+ws_esp32_s3_matrix.build.defines=-DBOARD_HAS_PSRAM=0
 ws_esp32_s3_matrix.build.loop_core=
 ws_esp32_s3_matrix.build.event_core=
 ws_esp32_s3_matrix.build.psram_type=qspi
 ws_esp32_s3_matrix.build.memory_type={build.boot}_{build.psram_type}
 
 ws_esp32_s3_matrix.menu.PSRAM.disabled=Disabled
-ws_esp32_s3_matrix.menu.PSRAM.disabled.build.defines=
+ws_esp32_s3_matrix.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 ws_esp32_s3_matrix.menu.PSRAM.disabled.build.psram_type=qspi
 ws_esp32_s3_matrix.menu.PSRAM.enabled=Enabled
-ws_esp32_s3_matrix.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+ws_esp32_s3_matrix.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 ws_esp32_s3_matrix.menu.PSRAM.enabled.build.psram_type=qspi
 
 ws_esp32_s3_matrix.menu.FlashMode.qio=QIO 80MHz
@@ -40633,17 +40633,17 @@ waveshare_esp32_s3_touch_lcd_169.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_169.build.boot=qio
 waveshare_esp32_s3_touch_lcd_169.build.boot_freq=80m
 waveshare_esp32_s3_touch_lcd_169.build.partitions=default
-waveshare_esp32_s3_touch_lcd_169.build.defines=
+waveshare_esp32_s3_touch_lcd_169.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_169.build.loop_core=
 waveshare_esp32_s3_touch_lcd_169.build.event_core=
 waveshare_esp32_s3_touch_lcd_169.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_169.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_lcd_169.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_lcd_169.menu.FlashMode.qio=QIO 80MHz
@@ -40832,17 +40832,17 @@ waveshare_esp32_s3_touch_amoled_18.build.flash_mode=dio
 waveshare_esp32_s3_touch_amoled_18.build.boot=qio
 waveshare_esp32_s3_touch_amoled_18.build.boot_freq=80m
 waveshare_esp32_s3_touch_amoled_18.build.partitions=default
-waveshare_esp32_s3_touch_amoled_18.build.defines=
+waveshare_esp32_s3_touch_amoled_18.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_amoled_18.build.loop_core=
 waveshare_esp32_s3_touch_amoled_18.build.event_core=
 waveshare_esp32_s3_touch_amoled_18.build.psram_type=qspi
 waveshare_esp32_s3_touch_amoled_18.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_amoled_18.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_amoled_18.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_amoled_18.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_amoled_18.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_amoled_18.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_amoled_18.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_amoled_18.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_amoled_18.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_amoled_18.menu.FlashMode.qio=QIO 80MHz
@@ -41031,17 +41031,17 @@ waveshare_esp32_s3_lcd_169.build.flash_mode=dio
 waveshare_esp32_s3_lcd_169.build.boot=qio
 waveshare_esp32_s3_lcd_169.build.boot_freq=80m
 waveshare_esp32_s3_lcd_169.build.partitions=default
-waveshare_esp32_s3_lcd_169.build.defines=
+waveshare_esp32_s3_lcd_169.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_lcd_169.build.loop_core=
 waveshare_esp32_s3_lcd_169.build.event_core=
 waveshare_esp32_s3_lcd_169.build.psram_type=qspi
 waveshare_esp32_s3_lcd_169.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_lcd_169.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_lcd_169.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_lcd_169.menu.FlashMode.qio=QIO 80MHz
@@ -41226,9 +41226,9 @@ waveshare_esp32s3_touch_lcd_128.build.boot=dio
 waveshare_esp32s3_touch_lcd_128.build.partitions=default
 
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled=Disabled
-waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled.build.defines=
+waveshare_esp32s3_touch_lcd_128.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled=Enabled
-waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32s3_touch_lcd_128.menu.PSRAM.enabled.build.psram_type=qspi
 
 waveshare_esp32s3_touch_lcd_128.menu.LoopCore.1=Core 1
@@ -41370,7 +41370,7 @@ weact_studio_esp32c3.build.flash_freq=80m
 weact_studio_esp32c3.build.flash_mode=qio
 weact_studio_esp32c3.build.boot=qio
 weact_studio_esp32c3.build.partitions=default
-weact_studio_esp32c3.build.defines=
+weact_studio_esp32c3.build.defines=-DBOARD_HAS_PSRAM=0
 
 weact_studio_esp32c3.menu.USBMode.hwcdc=Hardware CDC and JTAG
 weact_studio_esp32c3.menu.USBMode.hwcdc.build.usb_mode=1
@@ -41515,7 +41515,7 @@ aslcanx2.build.flash_mode=dio
 aslcanx2.build.boot=qio
 aslcanx2.build.boot_freq=80m
 aslcanx2.build.partitions=default_8MB
-aslcanx2.build.defines=
+aslcanx2.build.defines=-DBOARD_HAS_PSRAM=0
 aslcanx2.build.loop_core=
 aslcanx2.build.event_core=
 aslcanx2.build.psram_type=qspi
@@ -41535,10 +41535,10 @@ aslcanx2.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 aslcanx2.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 aslcanx2.menu.PSRAM.disabled=Disabled
-aslcanx2.menu.PSRAM.disabled.build.defines=
+aslcanx2.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 aslcanx2.menu.PSRAM.disabled.build.psram_type=qspi
 aslcanx2.menu.PSRAM.opi=OPI PSRAM
-aslcanx2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+aslcanx2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM=1
 aslcanx2.menu.PSRAM.opi.build.psram_type=opi
 
 aslcanx2.menu.FlashMode.qio=QIO 80MHz
@@ -41721,7 +41721,7 @@ walter.build.flash_mode=dio
 walter.build.boot=qio
 walter.build.boot_freq=80m
 walter.build.partitions=default
-walter.build.defines=
+walter.build.defines=-DBOARD_HAS_PSRAM=0
 walter.build.loop_core=
 walter.build.event_core=
 walter.build.psram_type=qspi
@@ -41741,10 +41741,10 @@ walter.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
 walter.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 walter.menu.PSRAM.enabled=QSPI PSRAM
-walter.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+walter.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 walter.menu.PSRAM.enabled.build.psram_type=qspi
 walter.menu.PSRAM.disabled=Disabled
-walter.menu.PSRAM.disabled.build.defines=
+walter.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 walter.menu.PSRAM.disabled.build.psram_type=qspi
 
 walter.menu.FlashMode.qio=QIO 80MHz
@@ -41895,9 +41895,9 @@ elecrow_crowpanel_7.build.boot=dio
 elecrow_crowpanel_7.build.partitions=default
 
 elecrow_crowpanel_7.menu.PSRAM.disabled=Disabled
-elecrow_crowpanel_7.menu.PSRAM.disabled.build.defines=
+elecrow_crowpanel_7.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 elecrow_crowpanel_7.menu.PSRAM.enabled=Enabled
-elecrow_crowpanel_7.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+elecrow_crowpanel_7.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 elecrow_crowpanel_7.menu.PSRAM.enabled.build.psram_type=opi
 
 elecrow_crowpanel_7.menu.LoopCore.1=Core 1
@@ -42041,7 +42041,7 @@ circuitart_zero_s3.build.flash_freq=80m
 circuitart_zero_s3.build.flash_mode=dio
 circuitart_zero_s3.build.boot=qio
 circuitart_zero_s3.build.partitions=default
-circuitart_zero_s3.build.defines=
+circuitart_zero_s3.build.defines=-DBOARD_HAS_PSRAM=0
 circuitart_zero_s3.build.loop_core=
 circuitart_zero_s3.build.event_core=
 circuitart_zero_s3.build.flash_type=qio
@@ -42086,9 +42086,9 @@ circuitart_zero_s3.menu.UploadMode.default.upload.use_1200bps_touch=false
 circuitart_zero_s3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 circuitart_zero_s3.menu.PSRAM.enabled=Enabled
-circuitart_zero_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+circuitart_zero_s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 circuitart_zero_s3.menu.PSRAM.disabled=Disabled
-circuitart_zero_s3.menu.PSRAM.disabled.build.defines=
+circuitart_zero_s3.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 
 circuitart_zero_s3.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
 circuitart_zero_s3.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
@@ -42206,7 +42206,7 @@ alfredo-nou3.build.flash_freq=80m
 alfredo-nou3.build.flash_mode=dio
 alfredo-nou3.build.boot=qio
 alfredo-nou3.build.partitions=default
-alfredo-nou3.build.defines=
+alfredo-nou3.build.defines=-DBOARD_HAS_PSRAM=0
 alfredo-nou3.build.loop_core=
 alfredo-nou3.build.event_core=
 alfredo-nou3.build.flash_type=qio
@@ -42418,7 +42418,7 @@ jczn_2432s028r.build.flash_freq=40m
 jczn_2432s028r.build.flash_mode=dio
 jczn_2432s028r.build.boot=dio
 jczn_2432s028r.build.partitions=default
-jczn_2432s028r.build.defines=
+jczn_2432s028r.build.defines=-DBOARD_HAS_PSRAM=0
 jczn_2432s028r.build.loop_core=
 jczn_2432s028r.build.event_core=
 
@@ -42596,17 +42596,17 @@ waveshare_esp32_s3_touch_amoled_241.build.flash_mode=dio
 waveshare_esp32_s3_touch_amoled_241.build.boot=qio
 waveshare_esp32_s3_touch_amoled_241.build.boot_freq=80m
 waveshare_esp32_s3_touch_amoled_241.build.partitions=default
-waveshare_esp32_s3_touch_amoled_241.build.defines=
+waveshare_esp32_s3_touch_amoled_241.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_amoled_241.build.loop_core=
 waveshare_esp32_s3_touch_amoled_241.build.event_core=
 waveshare_esp32_s3_touch_amoled_241.build.psram_type=qspi
 waveshare_esp32_s3_touch_amoled_241.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_amoled_241.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_amoled_241.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_amoled_241.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_amoled_241.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_amoled_241.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_amoled_241.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_amoled_241.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_amoled_241.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_amoled_241.menu.FlashMode.qio=QIO 80MHz
@@ -42797,17 +42797,17 @@ waveshare_esp32_s3_touch_lcd_43.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_43.build.boot=qio
 waveshare_esp32_s3_touch_lcd_43.build.boot_freq=80m
 waveshare_esp32_s3_touch_lcd_43.build.partitions=default
-waveshare_esp32_s3_touch_lcd_43.build.defines=
+waveshare_esp32_s3_touch_lcd_43.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_43.build.loop_core=
 waveshare_esp32_s3_touch_lcd_43.build.event_core=
 waveshare_esp32_s3_touch_lcd_43.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_43.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_lcd_43.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_lcd_43.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_43.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_43.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_43.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_lcd_43.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_43.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_lcd_43.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_lcd_43.menu.FlashMode.qio=QIO 80MHz
@@ -43001,17 +43001,17 @@ waveshare_esp32_s3_touch_lcd_43B.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_43B.build.boot=qio
 waveshare_esp32_s3_touch_lcd_43B.build.boot_freq=80m
 waveshare_esp32_s3_touch_lcd_43B.build.partitions=default
-waveshare_esp32_s3_touch_lcd_43B.build.defines=
+waveshare_esp32_s3_touch_lcd_43B.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_43B.build.loop_core=
 waveshare_esp32_s3_touch_lcd_43B.build.event_core=
 waveshare_esp32_s3_touch_lcd_43B.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_43B.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_lcd_43B.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_lcd_43B.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_43B.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_43B.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_43B.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_lcd_43B.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_43B.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_lcd_43B.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_lcd_43B.menu.FlashMode.qio=QIO 80MHz
@@ -43200,17 +43200,17 @@ waveshare_esp32_s3_touch_lcd_7.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_7.build.boot=qio
 waveshare_esp32_s3_touch_lcd_7.build.boot_freq=80m
 waveshare_esp32_s3_touch_lcd_7.build.partitions=default
-waveshare_esp32_s3_touch_lcd_7.build.defines=
+waveshare_esp32_s3_touch_lcd_7.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_7.build.loop_core=
 waveshare_esp32_s3_touch_lcd_7.build.event_core=
 waveshare_esp32_s3_touch_lcd_7.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_7.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_lcd_7.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_lcd_7.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_7.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_7.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_7.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_lcd_7.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_7.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_lcd_7.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_lcd_7.menu.FlashMode.qio=QIO 80MHz
@@ -43404,17 +43404,17 @@ waveshare_esp32_s3_touch_lcd_5.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_5.build.boot=qio
 waveshare_esp32_s3_touch_lcd_5.build.boot_freq=80m
 waveshare_esp32_s3_touch_lcd_5.build.partitions=default
-waveshare_esp32_s3_touch_lcd_5.build.defines=
+waveshare_esp32_s3_touch_lcd_5.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_5.build.loop_core=
 waveshare_esp32_s3_touch_lcd_5.build.event_core=
 waveshare_esp32_s3_touch_lcd_5.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_5.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_lcd_5.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_lcd_5.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_5.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_5.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_5.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_lcd_5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_lcd_5.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_lcd_5.menu.FlashMode.qio=QIO 80MHz
@@ -43603,17 +43603,17 @@ waveshare_esp32_s3_touch_lcd_5B.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_5B.build.boot=qio
 waveshare_esp32_s3_touch_lcd_5B.build.boot_freq=80m
 waveshare_esp32_s3_touch_lcd_5B.build.partitions=default
-waveshare_esp32_s3_touch_lcd_5B.build.defines=
+waveshare_esp32_s3_touch_lcd_5B.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_5B.build.loop_core=
 waveshare_esp32_s3_touch_lcd_5B.build.event_core=
 waveshare_esp32_s3_touch_lcd_5B.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_5B.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_lcd_5B.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_lcd_5B.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_5B.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_5B.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_5B.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_lcd_5B.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_5B.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_lcd_5B.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_lcd_5B.menu.FlashMode.qio=QIO 80MHz
@@ -43802,17 +43802,17 @@ waveshare_esp32_s3_touch_lcd_4.build.flash_mode=dio
 waveshare_esp32_s3_touch_lcd_4.build.boot=qio
 waveshare_esp32_s3_touch_lcd_4.build.boot_freq=80m
 waveshare_esp32_s3_touch_lcd_4.build.partitions=default
-waveshare_esp32_s3_touch_lcd_4.build.defines=
+waveshare_esp32_s3_touch_lcd_4.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_4.build.loop_core=
 waveshare_esp32_s3_touch_lcd_4.build.event_core=
 waveshare_esp32_s3_touch_lcd_4.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_4.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_lcd_4.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_lcd_4.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_4.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_4.menu.PSRAM.disabled.build.psram_type=qspi
 waveshare_esp32_s3_touch_lcd_4.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_lcd_4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_lcd_4.menu.PSRAM.enabled.build.psram_type=opi
 
 waveshare_esp32_s3_touch_lcd_4.menu.FlashMode.qio=QIO 80MHz
@@ -44000,7 +44000,7 @@ waveshare_esp32_s3_touch_lcd_185.build.flash_mode=qio
 waveshare_esp32_s3_touch_lcd_185.build.boot=qio
 waveshare_esp32_s3_touch_lcd_185.build.boot_freq=80m
 waveshare_esp32_s3_touch_lcd_185.build.partitions=default
-waveshare_esp32_s3_touch_lcd_185.build.defines=
+waveshare_esp32_s3_touch_lcd_185.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_185.build.loop_core=
 waveshare_esp32_s3_touch_lcd_185.build.event_core=
 waveshare_esp32_s3_touch_lcd_185.build.psram_type=opi
@@ -44020,10 +44020,10 @@ waveshare_esp32_s3_touch_lcd_185.menu.JTAGAdapter.bridge.build.openocdscript=esp
 waveshare_esp32_s3_touch_lcd_185.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 waveshare_esp32_s3_touch_lcd_185.menu.PSRAM.enabled=Enabled
-waveshare_esp32_s3_touch_lcd_185.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_185.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM=1
 waveshare_esp32_s3_touch_lcd_185.menu.PSRAM.enabled.build.psram_type=opi
 waveshare_esp32_s3_touch_lcd_185.menu.PSRAM.disabled=Disabled
-waveshare_esp32_s3_touch_lcd_185.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_185.menu.PSRAM.disabled.build.defines=-DBOARD_HAS_PSRAM=0
 waveshare_esp32_s3_touch_lcd_185.menu.PSRAM.disabled.build.psram_type=qspi
 
 waveshare_esp32_s3_touch_lcd_185.menu.FlashMode.qio120=QIO 120MHz
@@ -44229,7 +44229,7 @@ cezerio_dev_esp32c6.build.flash_freq=80m
 cezerio_dev_esp32c6.build.flash_mode=qio
 cezerio_dev_esp32c6.build.boot=qio
 cezerio_dev_esp32c6.build.partitions=default
-cezerio_dev_esp32c6.build.defines=
+cezerio_dev_esp32c6.build.defines=-DBOARD_HAS_PSRAM=0
 
 ## IDE 2.0 Seems to not update the value
 cezerio_dev_esp32c6.menu.JTAGAdapter.default=Disabled

@@ -326,7 +326,7 @@ protected:
     unsigned char len   : 7;  // Ensure only one byte is allocated by GCC for the bitfields
     unsigned char isSSO : 1;
   } __attribute__((packed));  // Ensure that GCC doesn't expand the flag byte to a 32-bit word for alignment issues
-#ifdef BOARD_HAS_PSRAM
+#if BOARD_HAS_PSRAM
   enum {
     CAPACITY_MAX = 3145728
   };
