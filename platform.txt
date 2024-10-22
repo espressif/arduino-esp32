@@ -100,7 +100,7 @@ build.bootloader_addr=0x1000
 build.custom_bootloader=bootloader
 build.custom_partitions=partitions
 build.code_debug=0
-build.defines=
+build.defines=-DBOARD_HAS_PSRAM=0
 build.loop_core=
 build.event_core=
 build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32=ESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}} {build.zigbee_mode}
