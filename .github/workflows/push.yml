@@ -85,7 +85,6 @@ jobs:
               - "variants/esp32/**/*"
               - "variants/esp32s2/**/*"
               - "variants/esp32s3/**/*"
-              - "variants/esp32c2/**/*"
               - "variants/esp32c3/**/*"
               - "variants/esp32c6/**/*"
               - "variants/esp32h2/**/*"
@@ -108,6 +107,7 @@ jobs:
               - 'idf_component.yml'
               - 'Kconfig.projbuild'
               - 'CMakeLists.txt'
+              - "variants/esp32c2/**/*"
             platformio:
               - 'package.json'
               - '.github/scripts/install-platformio-esp32.sh'
