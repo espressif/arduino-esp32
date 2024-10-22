@@ -21,6 +21,7 @@ on:
       - 'idf_component.yml'
       - 'Kconfig.projbuild'
       - 'package.json'
+      - 'CMakeLists.txt'
       - '.github/workflows/push.yml'
       - '.github/scripts/**'
       - '!.github/scripts/find_*'
@@ -92,6 +93,7 @@ jobs:
             idf:
               - 'idf_component.yml'
               - 'Kconfig.projbuild'
+              - 'CMakeLists.txt'
             platformio:
               - 'package.json'
               - '.github/scripts/install-platformio-esp32.sh'
