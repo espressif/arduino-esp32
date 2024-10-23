@@ -36,9 +36,9 @@ function run_test() {
             return 0
         fi
 
-        # Check if the sketch requires any configuration options
+        # Check if the sketch requires any configuration options (AND)
         requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-        if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
+        if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
             for requirement in $requirements; do
                 requirement=$(echo $requirement | xargs)
                 found_line=$(grep -E "^$requirement" "$SDKCONFIG_PATH")
@@ -48,6 +48,25 @@ function run_test() {
                     return 0
                 fi
             done
+        fi
+
+        # Check if the sketch requires any configuration options (OR)
+        requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
+        if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+            found=false
+            for requirement in $requirements_or; do
+                requirement=$(echo $requirement | xargs)
+                found_line=$(grep -E "^$requirement" "$SDKCONFIG_PATH")
+                if [[ "$found_line" != "" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            if [[ "$found" == "false" ]]; then
+                printf "\033[93mTarget $target meets none of the requirements in requires_any for $sketchname. Skipping.\033[0m\n"
+                printf "\n\n\n"
+                return 0
+            fi
         fi
     fi
 
