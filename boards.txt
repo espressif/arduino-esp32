@@ -44556,3 +44556,1902 @@ cezerio_dev_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 cezerio_dev_esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
+
+waveshare_esp32_s3_lcd_185.name=Waveshare ESP32-S3-LCD-1.85
+waveshare_esp32_s3_lcd_185.vid.0=0x303a
+waveshare_esp32_s3_lcd_185.pid.0=0x8242
+waveshare_esp32_s3_lcd_185.upload_port.0.vid=0x303a
+waveshare_esp32_s3_lcd_185.upload_port.0.pid=0x8242
+
+waveshare_esp32_s3_lcd_185.bootloader.tool=esptool_py
+waveshare_esp32_s3_lcd_185.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_lcd_185.upload.tool=esptool_py
+waveshare_esp32_s3_lcd_185.upload.tool.default=esptool_py
+waveshare_esp32_s3_lcd_185.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_lcd_185.upload.maximum_size=1310720
+waveshare_esp32_s3_lcd_185.upload.maximum_data_size=327680
+waveshare_esp32_s3_lcd_185.upload.flags=
+waveshare_esp32_s3_lcd_185.upload.extra_flags=
+waveshare_esp32_s3_lcd_185.upload.use_1200bps_touch=false
+waveshare_esp32_s3_lcd_185.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_lcd_185.serial.disableDTR=false
+waveshare_esp32_s3_lcd_185.serial.disableRTS=false
+
+waveshare_esp32_s3_lcd_185.build.tarch=xtensa
+waveshare_esp32_s3_lcd_185.build.bootloader_addr=0x0
+waveshare_esp32_s3_lcd_185.build.target=esp32s3
+waveshare_esp32_s3_lcd_185.build.mcu=esp32s3
+waveshare_esp32_s3_lcd_185.build.core=esp32
+waveshare_esp32_s3_lcd_185.build.variant=waveshare_esp32_s3_lcd_185
+waveshare_esp32_s3_lcd_185.build.board=WAVESHARE_ESP32_S3_LCD_185
+
+waveshare_esp32_s3_lcd_185.build.usb_mode=1
+waveshare_esp32_s3_lcd_185.build.cdc_on_boot=0
+waveshare_esp32_s3_lcd_185.build.msc_on_boot=0
+waveshare_esp32_s3_lcd_185.build.dfu_on_boot=0
+waveshare_esp32_s3_lcd_185.build.f_cpu=240000000L
+waveshare_esp32_s3_lcd_185.build.flash_size=16MB
+waveshare_esp32_s3_lcd_185.build.flash_freq=120m
+waveshare_esp32_s3_lcd_185.build.flash_mode=qio
+waveshare_esp32_s3_lcd_185.build.boot=qio
+waveshare_esp32_s3_lcd_185.build.boot_freq=80m
+waveshare_esp32_s3_lcd_185.build.partitions=default
+waveshare_esp32_s3_lcd_185.build.defines=
+waveshare_esp32_s3_lcd_185.build.loop_core=
+waveshare_esp32_s3_lcd_185.build.event_core=
+waveshare_esp32_s3_lcd_185.build.psram_type=opi
+waveshare_esp32_s3_lcd_185.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_lcd_185.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_lcd_185.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_lcd_185.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_lcd_185.menu.PSRAM.enabled.build.psram_type=opi
+waveshare_esp32_s3_lcd_185.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_lcd_185.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_lcd_185.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio120.build.flash_freq=80m
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_lcd_185.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_lcd_185.menu.FlashMode.dio=DIO 80MHz
+waveshare_esp32_s3_lcd_185.menu.FlashMode.dio.build.flash_mode=dio
+waveshare_esp32_s3_lcd_185.menu.FlashMode.dio.build.boot=dio
+waveshare_esp32_s3_lcd_185.menu.FlashMode.dio.build.boot_freq=80m
+waveshare_esp32_s3_lcd_185.menu.FlashMode.dio.build.flash_freq=80m
+waveshare_esp32_s3_lcd_185.menu.FlashMode.opi=OPI 80MHz
+waveshare_esp32_s3_lcd_185.menu.FlashMode.opi.build.flash_mode=dout
+waveshare_esp32_s3_lcd_185.menu.FlashMode.opi.build.boot=opi
+waveshare_esp32_s3_lcd_185.menu.FlashMode.opi.build.boot_freq=80m
+waveshare_esp32_s3_lcd_185.menu.FlashMode.opi.build.flash_freq=80m
+
+waveshare_esp32_s3_lcd_185.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_lcd_185.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_lcd_185.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_lcd_185.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_lcd_185.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_lcd_185.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+waveshare_esp32_s3_lcd_185.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_lcd_185.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+
+waveshare_esp32_s3_lcd_185.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_lcd_185.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_lcd_185.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_lcd_185.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_lcd_185.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_185.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_lcd_185.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_lcd_185.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_lcd_185.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_185.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_lcd_185.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_lcd_185.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_lcd_185.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_185.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_lcd_185.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_lcd_185.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_lcd_185.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_lcd_185.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_lcd_185.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_lcd_185.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_lcd_185.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_lcd_185.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_lcd_185.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_lcd_185.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_lcd_185.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.none=None
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.error=Error
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.info=Info
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_lcd_185.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_lcd_185.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_lcd_185.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_lcd_185.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_lcd_185.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_s3_lcd_185.menu.ZigbeeMode.default=Disabled
+waveshare_esp32_s3_lcd_185.menu.ZigbeeMode.default.build.zigbee_mode=
+waveshare_esp32_s3_lcd_185.menu.ZigbeeMode.default.build.zigbee_libs=
+waveshare_esp32_s3_lcd_185.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+waveshare_esp32_s3_lcd_185.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+waveshare_esp32_s3_lcd_185.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
+
+waveshare_esp32_s3_touch_lcd_146.name=Waveshare ESP32-S3-Touch-LCD-1.46
+waveshare_esp32_s3_touch_lcd_146.vid.0=0x303a
+waveshare_esp32_s3_touch_lcd_146.pid.0=0x8242
+waveshare_esp32_s3_touch_lcd_146.upload_port.0.vid=0x303a
+waveshare_esp32_s3_touch_lcd_146.upload_port.0.pid=0x8242
+
+waveshare_esp32_s3_touch_lcd_146.bootloader.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_146.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_touch_lcd_146.upload.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_146.upload.tool.default=esptool_py
+waveshare_esp32_s3_touch_lcd_146.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_touch_lcd_146.upload.maximum_size=1310720
+waveshare_esp32_s3_touch_lcd_146.upload.maximum_data_size=327680
+waveshare_esp32_s3_touch_lcd_146.upload.flags=
+waveshare_esp32_s3_touch_lcd_146.upload.extra_flags=
+waveshare_esp32_s3_touch_lcd_146.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_146.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_touch_lcd_146.serial.disableDTR=false
+waveshare_esp32_s3_touch_lcd_146.serial.disableRTS=false
+
+waveshare_esp32_s3_touch_lcd_146.build.tarch=xtensa
+waveshare_esp32_s3_touch_lcd_146.build.bootloader_addr=0x0
+waveshare_esp32_s3_touch_lcd_146.build.target=esp32s3
+waveshare_esp32_s3_touch_lcd_146.build.mcu=esp32s3
+waveshare_esp32_s3_touch_lcd_146.build.core=esp32
+waveshare_esp32_s3_touch_lcd_146.build.variant=waveshare_esp32_s3_touch_lcd_146
+waveshare_esp32_s3_touch_lcd_146.build.board=WAVESHARE_ESP32_S3_TOUCH_LCD_146
+
+waveshare_esp32_s3_touch_lcd_146.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_146.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_146.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_146.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_146.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_146.build.flash_size=16MB
+waveshare_esp32_s3_touch_lcd_146.build.flash_freq=120m
+waveshare_esp32_s3_touch_lcd_146.build.flash_mode=qio
+waveshare_esp32_s3_touch_lcd_146.build.boot=qio
+waveshare_esp32_s3_touch_lcd_146.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_146.build.partitions=default
+waveshare_esp32_s3_touch_lcd_146.build.defines=
+waveshare_esp32_s3_touch_lcd_146.build.loop_core=
+waveshare_esp32_s3_touch_lcd_146.build.event_core=
+waveshare_esp32_s3_touch_lcd_146.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_146.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_touch_lcd_146.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_touch_lcd_146.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_touch_lcd_146.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_146.menu.PSRAM.enabled.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_146.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_touch_lcd_146.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_146.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio120.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.dio=DIO 80MHz
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.dio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.dio.build.boot=dio
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.dio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.dio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.opi=OPI 80MHz
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.opi.build.flash_mode=dout
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.opi.build.boot=opi
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.opi.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_146.menu.FlashMode.opi.build.flash_freq=80m
+
+waveshare_esp32_s3_touch_lcd_146.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_146.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_146.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_146.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_146.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_146.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+waveshare_esp32_s3_touch_lcd_146.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_146.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+
+waveshare_esp32_s3_touch_lcd_146.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_touch_lcd_146.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_146.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_touch_lcd_146.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_touch_lcd_146.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_146.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_146.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_touch_lcd_146.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_146.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_146.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_146.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_146.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_146.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_146.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_146.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_146.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_146.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_touch_lcd_146.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_146.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_touch_lcd_146.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_touch_lcd_146.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_touch_lcd_146.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_touch_lcd_146.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_touch_lcd_146.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_touch_lcd_146.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.none=None
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.error=Error
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.info=Info
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_touch_lcd_146.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_touch_lcd_146.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_touch_lcd_146.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_touch_lcd_146.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_touch_lcd_146.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_s3_touch_lcd_146.menu.ZigbeeMode.default=Disabled
+waveshare_esp32_s3_touch_lcd_146.menu.ZigbeeMode.default.build.zigbee_mode=
+waveshare_esp32_s3_touch_lcd_146.menu.ZigbeeMode.default.build.zigbee_libs=
+waveshare_esp32_s3_touch_lcd_146.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+waveshare_esp32_s3_touch_lcd_146.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+waveshare_esp32_s3_touch_lcd_146.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
+
+waveshare_esp32_s3_lcd_146.name=Waveshare ESP32-S3-LCD-1.46
+waveshare_esp32_s3_lcd_146.vid.0=0x303a
+waveshare_esp32_s3_lcd_146.pid.0=0x8242
+waveshare_esp32_s3_lcd_146.upload_port.0.vid=0x303a
+waveshare_esp32_s3_lcd_146.upload_port.0.pid=0x8242
+
+waveshare_esp32_s3_lcd_146.bootloader.tool=esptool_py
+waveshare_esp32_s3_lcd_146.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_lcd_146.upload.tool=esptool_py
+waveshare_esp32_s3_lcd_146.upload.tool.default=esptool_py
+waveshare_esp32_s3_lcd_146.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_lcd_146.upload.maximum_size=1310720
+waveshare_esp32_s3_lcd_146.upload.maximum_data_size=327680
+waveshare_esp32_s3_lcd_146.upload.flags=
+waveshare_esp32_s3_lcd_146.upload.extra_flags=
+waveshare_esp32_s3_lcd_146.upload.use_1200bps_touch=false
+waveshare_esp32_s3_lcd_146.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_lcd_146.serial.disableDTR=false
+waveshare_esp32_s3_lcd_146.serial.disableRTS=false
+
+waveshare_esp32_s3_lcd_146.build.tarch=xtensa
+waveshare_esp32_s3_lcd_146.build.bootloader_addr=0x0
+waveshare_esp32_s3_lcd_146.build.target=esp32s3
+waveshare_esp32_s3_lcd_146.build.mcu=esp32s3
+waveshare_esp32_s3_lcd_146.build.core=esp32
+waveshare_esp32_s3_lcd_146.build.variant=waveshare_esp32_s3_lcd_146
+waveshare_esp32_s3_lcd_146.build.board=WAVESHARE_ESP32_S3_LCD_146
+
+waveshare_esp32_s3_lcd_146.build.usb_mode=1
+waveshare_esp32_s3_lcd_146.build.cdc_on_boot=0
+waveshare_esp32_s3_lcd_146.build.msc_on_boot=0
+waveshare_esp32_s3_lcd_146.build.dfu_on_boot=0
+waveshare_esp32_s3_lcd_146.build.f_cpu=240000000L
+waveshare_esp32_s3_lcd_146.build.flash_size=16MB
+waveshare_esp32_s3_lcd_146.build.flash_freq=120m
+waveshare_esp32_s3_lcd_146.build.flash_mode=qio
+waveshare_esp32_s3_lcd_146.build.boot=qio
+waveshare_esp32_s3_lcd_146.build.boot_freq=80m
+waveshare_esp32_s3_lcd_146.build.partitions=default
+waveshare_esp32_s3_lcd_146.build.defines=
+waveshare_esp32_s3_lcd_146.build.loop_core=
+waveshare_esp32_s3_lcd_146.build.event_core=
+waveshare_esp32_s3_lcd_146.build.psram_type=opi
+waveshare_esp32_s3_lcd_146.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_lcd_146.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_lcd_146.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_lcd_146.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_lcd_146.menu.PSRAM.enabled.build.psram_type=opi
+waveshare_esp32_s3_lcd_146.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_lcd_146.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_lcd_146.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio120.build.flash_freq=80m
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_lcd_146.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_lcd_146.menu.FlashMode.dio=DIO 80MHz
+waveshare_esp32_s3_lcd_146.menu.FlashMode.dio.build.flash_mode=dio
+waveshare_esp32_s3_lcd_146.menu.FlashMode.dio.build.boot=dio
+waveshare_esp32_s3_lcd_146.menu.FlashMode.dio.build.boot_freq=80m
+waveshare_esp32_s3_lcd_146.menu.FlashMode.dio.build.flash_freq=80m
+waveshare_esp32_s3_lcd_146.menu.FlashMode.opi=OPI 80MHz
+waveshare_esp32_s3_lcd_146.menu.FlashMode.opi.build.flash_mode=dout
+waveshare_esp32_s3_lcd_146.menu.FlashMode.opi.build.boot=opi
+waveshare_esp32_s3_lcd_146.menu.FlashMode.opi.build.boot_freq=80m
+waveshare_esp32_s3_lcd_146.menu.FlashMode.opi.build.flash_freq=80m
+
+waveshare_esp32_s3_lcd_146.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_lcd_146.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_lcd_146.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_lcd_146.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_lcd_146.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_lcd_146.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+waveshare_esp32_s3_lcd_146.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_lcd_146.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+
+waveshare_esp32_s3_lcd_146.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_lcd_146.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_lcd_146.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_lcd_146.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_lcd_146.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_146.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_lcd_146.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_lcd_146.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_lcd_146.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_146.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_lcd_146.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_lcd_146.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_lcd_146.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_146.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_lcd_146.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_lcd_146.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_lcd_146.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_lcd_146.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_lcd_146.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_lcd_146.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_lcd_146.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_lcd_146.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_lcd_146.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_lcd_146.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_lcd_146.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.none=None
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.error=Error
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.info=Info
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_lcd_146.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_lcd_146.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_lcd_146.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_lcd_146.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_lcd_146.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_s3_lcd_146.menu.ZigbeeMode.default=Disabled
+waveshare_esp32_s3_lcd_146.menu.ZigbeeMode.default.build.zigbee_mode=
+waveshare_esp32_s3_lcd_146.menu.ZigbeeMode.default.build.zigbee_libs=
+waveshare_esp32_s3_lcd_146.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+waveshare_esp32_s3_lcd_146.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+waveshare_esp32_s3_lcd_146.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
+
+waveshare_esp32_s3_touch_lcd_185_box.name=Waveshare ESP32-S3-Touch-LCD-1.85-BOX
+waveshare_esp32_s3_touch_lcd_185_box.vid.0=0x303a
+waveshare_esp32_s3_touch_lcd_185_box.pid.0=0x8242
+waveshare_esp32_s3_touch_lcd_185_box.upload_port.0.vid=0x303a
+waveshare_esp32_s3_touch_lcd_185_box.upload_port.0.pid=0x8242
+
+waveshare_esp32_s3_touch_lcd_185_box.bootloader.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_185_box.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_touch_lcd_185_box.upload.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_185_box.upload.tool.default=esptool_py
+waveshare_esp32_s3_touch_lcd_185_box.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_touch_lcd_185_box.upload.maximum_size=1310720
+waveshare_esp32_s3_touch_lcd_185_box.upload.maximum_data_size=327680
+waveshare_esp32_s3_touch_lcd_185_box.upload.flags=
+waveshare_esp32_s3_touch_lcd_185_box.upload.extra_flags=
+waveshare_esp32_s3_touch_lcd_185_box.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_185_box.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_touch_lcd_185_box.serial.disableDTR=false
+waveshare_esp32_s3_touch_lcd_185_box.serial.disableRTS=false
+
+waveshare_esp32_s3_touch_lcd_185_box.build.tarch=xtensa
+waveshare_esp32_s3_touch_lcd_185_box.build.bootloader_addr=0x0
+waveshare_esp32_s3_touch_lcd_185_box.build.target=esp32s3
+waveshare_esp32_s3_touch_lcd_185_box.build.mcu=esp32s3
+waveshare_esp32_s3_touch_lcd_185_box.build.core=esp32
+waveshare_esp32_s3_touch_lcd_185_box.build.variant=waveshare_esp32_s3_touch_lcd_185_box
+waveshare_esp32_s3_touch_lcd_185_box.build.board=WAVESHARE_ESP32_S3_TOUCH_LCD_185_BOX
+
+waveshare_esp32_s3_touch_lcd_185_box.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_185_box.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_185_box.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_185_box.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_185_box.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_185_box.build.flash_size=16MB
+waveshare_esp32_s3_touch_lcd_185_box.build.flash_freq=120m
+waveshare_esp32_s3_touch_lcd_185_box.build.flash_mode=qio
+waveshare_esp32_s3_touch_lcd_185_box.build.boot=qio
+waveshare_esp32_s3_touch_lcd_185_box.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_185_box.build.partitions=default
+waveshare_esp32_s3_touch_lcd_185_box.build.defines=
+waveshare_esp32_s3_touch_lcd_185_box.build.loop_core=
+waveshare_esp32_s3_touch_lcd_185_box.build.event_core=
+waveshare_esp32_s3_touch_lcd_185_box.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_185_box.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_touch_lcd_185_box.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_185_box.menu.PSRAM.enabled.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_185_box.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_185_box.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio120.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.dio=DIO 80MHz
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.dio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.dio.build.boot=dio
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.dio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.dio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.opi=OPI 80MHz
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.opi.build.flash_mode=dout
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.opi.build.boot=opi
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.opi.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_185_box.menu.FlashMode.opi.build.flash_freq=80m
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_185_box.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_185_box.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_185_box.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_185_box.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+waveshare_esp32_s3_touch_lcd_185_box.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_185_box.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_touch_lcd_185_box.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_185_box.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_touch_lcd_185_box.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_185_box.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_185_box.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_185_box.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_185_box.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_185_box.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_touch_lcd_185_box.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_touch_lcd_185_box.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_touch_lcd_185_box.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.none=None
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.error=Error
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.info=Info
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_touch_lcd_185_box.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_touch_lcd_185_box.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_s3_touch_lcd_185_box.menu.ZigbeeMode.default=Disabled
+waveshare_esp32_s3_touch_lcd_185_box.menu.ZigbeeMode.default.build.zigbee_mode=
+waveshare_esp32_s3_touch_lcd_185_box.menu.ZigbeeMode.default.build.zigbee_libs=
+waveshare_esp32_s3_touch_lcd_185_box.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+waveshare_esp32_s3_touch_lcd_185_box.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+waveshare_esp32_s3_touch_lcd_185_box.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
+
+waveshare_esp32_s3_lcd_147.name=Waveshare ESP32-S3-LCD-1.47
+waveshare_esp32_s3_lcd_147.vid.0=0x303a
+waveshare_esp32_s3_lcd_147.pid.0=0x8242
+waveshare_esp32_s3_lcd_147.upload_port.0.vid=0x303a
+waveshare_esp32_s3_lcd_147.upload_port.0.pid=0x8242
+
+waveshare_esp32_s3_lcd_147.bootloader.tool=esptool_py
+waveshare_esp32_s3_lcd_147.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_lcd_147.upload.tool=esptool_py
+waveshare_esp32_s3_lcd_147.upload.tool.default=esptool_py
+waveshare_esp32_s3_lcd_147.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_lcd_147.upload.maximum_size=1310720
+waveshare_esp32_s3_lcd_147.upload.maximum_data_size=327680
+waveshare_esp32_s3_lcd_147.upload.flags=
+waveshare_esp32_s3_lcd_147.upload.extra_flags=
+waveshare_esp32_s3_lcd_147.upload.use_1200bps_touch=false
+waveshare_esp32_s3_lcd_147.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_lcd_147.serial.disableDTR=false
+waveshare_esp32_s3_lcd_147.serial.disableRTS=false
+
+waveshare_esp32_s3_lcd_147.build.tarch=xtensa
+waveshare_esp32_s3_lcd_147.build.bootloader_addr=0x0
+waveshare_esp32_s3_lcd_147.build.target=esp32s3
+waveshare_esp32_s3_lcd_147.build.mcu=esp32s3
+waveshare_esp32_s3_lcd_147.build.core=esp32
+waveshare_esp32_s3_lcd_147.build.variant=waveshare_esp32_s3_lcd_147
+waveshare_esp32_s3_lcd_147.build.board=WAVESHARE_ESP32_S3_LCD_147
+
+waveshare_esp32_s3_lcd_147.build.usb_mode=1
+waveshare_esp32_s3_lcd_147.build.cdc_on_boot=0
+waveshare_esp32_s3_lcd_147.build.msc_on_boot=0
+waveshare_esp32_s3_lcd_147.build.dfu_on_boot=0
+waveshare_esp32_s3_lcd_147.build.f_cpu=240000000L
+waveshare_esp32_s3_lcd_147.build.flash_size=16MB
+waveshare_esp32_s3_lcd_147.build.flash_freq=80m
+waveshare_esp32_s3_lcd_147.build.flash_mode=qio
+waveshare_esp32_s3_lcd_147.build.boot=qio
+waveshare_esp32_s3_lcd_147.build.boot_freq=80m
+waveshare_esp32_s3_lcd_147.build.partitions=default
+waveshare_esp32_s3_lcd_147.build.defines=
+waveshare_esp32_s3_lcd_147.build.loop_core=
+waveshare_esp32_s3_lcd_147.build.event_core=
+waveshare_esp32_s3_lcd_147.build.psram_type=opi
+waveshare_esp32_s3_lcd_147.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_lcd_147.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_lcd_147.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_lcd_147.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_lcd_147.menu.PSRAM.enabled.build.psram_type=opi
+waveshare_esp32_s3_lcd_147.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_lcd_147.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_lcd_147.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_lcd_147.menu.FlashMode.qio120.build.flash_freq=80m
+waveshare_esp32_s3_lcd_147.menu.FlashMode.dio=DIO 80MHz
+waveshare_esp32_s3_lcd_147.menu.FlashMode.dio.build.flash_mode=dio
+waveshare_esp32_s3_lcd_147.menu.FlashMode.dio.build.boot=dio
+waveshare_esp32_s3_lcd_147.menu.FlashMode.dio.build.boot_freq=80m
+waveshare_esp32_s3_lcd_147.menu.FlashMode.dio.build.flash_freq=80m
+waveshare_esp32_s3_lcd_147.menu.FlashMode.opi=OPI 80MHz
+waveshare_esp32_s3_lcd_147.menu.FlashMode.opi.build.flash_mode=dout
+waveshare_esp32_s3_lcd_147.menu.FlashMode.opi.build.boot=opi
+waveshare_esp32_s3_lcd_147.menu.FlashMode.opi.build.boot_freq=80m
+waveshare_esp32_s3_lcd_147.menu.FlashMode.opi.build.flash_freq=80m
+
+waveshare_esp32_s3_lcd_147.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_lcd_147.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_lcd_147.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_lcd_147.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_lcd_147.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_lcd_147.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+waveshare_esp32_s3_lcd_147.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_lcd_147.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+waveshare_esp32_s3_lcd_147.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_lcd_147.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_lcd_147.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_lcd_147.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_lcd_147.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_147.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_lcd_147.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_lcd_147.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_lcd_147.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_147.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_lcd_147.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_lcd_147.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_lcd_147.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_lcd_147.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_lcd_147.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_lcd_147.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_lcd_147.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_lcd_147.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_lcd_147.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_lcd_147.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_lcd_147.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_lcd_147.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_lcd_147.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_lcd_147.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_lcd_147.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.none=None
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.error=Error
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.info=Info
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_lcd_147.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_lcd_147.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_lcd_147.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_lcd_147.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_lcd_147.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_s3_lcd_147.menu.ZigbeeMode.default=Disabled
+waveshare_esp32_s3_lcd_147.menu.ZigbeeMode.default.build.zigbee_mode=
+waveshare_esp32_s3_lcd_147.menu.ZigbeeMode.default.build.zigbee_libs=
+waveshare_esp32_s3_lcd_147.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+waveshare_esp32_s3_lcd_147.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+waveshare_esp32_s3_lcd_147.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
+
+waveshare_esp32_s3_touch_lcd_21.name=Waveshare ESP32-S3-Touch-LCD-2.1
+waveshare_esp32_s3_touch_lcd_21.vid.0=0x303a
+waveshare_esp32_s3_touch_lcd_21.pid.0=0x8242
+waveshare_esp32_s3_touch_lcd_21.upload_port.0.vid=0x303a
+waveshare_esp32_s3_touch_lcd_21.upload_port.0.pid=0x8242
+
+waveshare_esp32_s3_touch_lcd_21.bootloader.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_21.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_touch_lcd_21.upload.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_21.upload.tool.default=esptool_py
+waveshare_esp32_s3_touch_lcd_21.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_touch_lcd_21.upload.maximum_size=1310720
+waveshare_esp32_s3_touch_lcd_21.upload.maximum_data_size=327680
+waveshare_esp32_s3_touch_lcd_21.upload.flags=
+waveshare_esp32_s3_touch_lcd_21.upload.extra_flags=
+waveshare_esp32_s3_touch_lcd_21.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_21.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_touch_lcd_21.serial.disableDTR=false
+waveshare_esp32_s3_touch_lcd_21.serial.disableRTS=false
+
+waveshare_esp32_s3_touch_lcd_21.build.tarch=xtensa
+waveshare_esp32_s3_touch_lcd_21.build.bootloader_addr=0x0
+waveshare_esp32_s3_touch_lcd_21.build.target=esp32s3
+waveshare_esp32_s3_touch_lcd_21.build.mcu=esp32s3
+waveshare_esp32_s3_touch_lcd_21.build.core=esp32
+waveshare_esp32_s3_touch_lcd_21.build.variant=waveshare_esp32_s3_touch_lcd_21
+waveshare_esp32_s3_touch_lcd_21.build.board=WAVESHARE_ESP32_S3_TOUCH_LCD_21
+
+waveshare_esp32_s3_touch_lcd_21.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_21.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_21.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_21.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_21.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_21.build.flash_size=16MB
+waveshare_esp32_s3_touch_lcd_21.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_21.build.flash_mode=qio
+waveshare_esp32_s3_touch_lcd_21.build.boot=qio
+waveshare_esp32_s3_touch_lcd_21.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_21.build.partitions=default
+waveshare_esp32_s3_touch_lcd_21.build.defines=
+waveshare_esp32_s3_touch_lcd_21.build.loop_core=
+waveshare_esp32_s3_touch_lcd_21.build.event_core=
+waveshare_esp32_s3_touch_lcd_21.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_21.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_touch_lcd_21.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_touch_lcd_21.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_touch_lcd_21.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_21.menu.PSRAM.enabled.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_21.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_touch_lcd_21.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_21.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.qio120.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.dio=DIO 80MHz
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.dio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.dio.build.boot=dio
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.dio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.dio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.opi=OPI 80MHz
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.opi.build.flash_mode=dout
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.opi.build.boot=opi
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.opi.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_21.menu.FlashMode.opi.build.flash_freq=80m
+
+waveshare_esp32_s3_touch_lcd_21.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_21.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_21.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_21.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_21.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_21.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_21.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_21.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_21.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_touch_lcd_21.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_21.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_touch_lcd_21.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_touch_lcd_21.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_21.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_21.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_touch_lcd_21.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_21.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_21.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_21.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_21.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_21.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_21.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_21.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_21.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_21.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_touch_lcd_21.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_21.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_touch_lcd_21.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_touch_lcd_21.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_touch_lcd_21.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_touch_lcd_21.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_touch_lcd_21.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_touch_lcd_21.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.none=None
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.error=Error
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.info=Info
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_touch_lcd_21.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_touch_lcd_21.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_touch_lcd_21.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_touch_lcd_21.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_touch_lcd_21.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_s3_touch_lcd_21.menu.ZigbeeMode.default=Disabled
+waveshare_esp32_s3_touch_lcd_21.menu.ZigbeeMode.default.build.zigbee_mode=
+waveshare_esp32_s3_touch_lcd_21.menu.ZigbeeMode.default.build.zigbee_libs=
+waveshare_esp32_s3_touch_lcd_21.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+waveshare_esp32_s3_touch_lcd_21.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+waveshare_esp32_s3_touch_lcd_21.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
+
+waveshare_esp32_s3_touch_lcd_28.name=Waveshare ESP32-S3-Touch-LCD-2.8
+waveshare_esp32_s3_touch_lcd_28.vid.0=0x303a
+waveshare_esp32_s3_touch_lcd_28.pid.0=0x8242
+waveshare_esp32_s3_touch_lcd_28.upload_port.0.vid=0x303a
+waveshare_esp32_s3_touch_lcd_28.upload_port.0.pid=0x8242
+
+waveshare_esp32_s3_touch_lcd_28.bootloader.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_28.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_touch_lcd_28.upload.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_28.upload.tool.default=esptool_py
+waveshare_esp32_s3_touch_lcd_28.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_touch_lcd_28.upload.maximum_size=1310720
+waveshare_esp32_s3_touch_lcd_28.upload.maximum_data_size=327680
+waveshare_esp32_s3_touch_lcd_28.upload.flags=
+waveshare_esp32_s3_touch_lcd_28.upload.extra_flags=
+waveshare_esp32_s3_touch_lcd_28.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_28.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_touch_lcd_28.serial.disableDTR=false
+waveshare_esp32_s3_touch_lcd_28.serial.disableRTS=false
+
+waveshare_esp32_s3_touch_lcd_28.build.tarch=xtensa
+waveshare_esp32_s3_touch_lcd_28.build.bootloader_addr=0x0
+waveshare_esp32_s3_touch_lcd_28.build.target=esp32s3
+waveshare_esp32_s3_touch_lcd_28.build.mcu=esp32s3
+waveshare_esp32_s3_touch_lcd_28.build.core=esp32
+waveshare_esp32_s3_touch_lcd_28.build.variant=waveshare_esp32_s3_touch_lcd_28
+waveshare_esp32_s3_touch_lcd_28.build.board=WAVESHARE_ESP32_S3_TOUCH_LCD_28
+
+waveshare_esp32_s3_touch_lcd_28.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_28.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_28.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_28.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_28.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_28.build.flash_size=16MB
+waveshare_esp32_s3_touch_lcd_28.build.flash_freq=120m
+waveshare_esp32_s3_touch_lcd_28.build.flash_mode=qio
+waveshare_esp32_s3_touch_lcd_28.build.boot=qio
+waveshare_esp32_s3_touch_lcd_28.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_28.build.partitions=default
+waveshare_esp32_s3_touch_lcd_28.build.defines=
+waveshare_esp32_s3_touch_lcd_28.build.loop_core=
+waveshare_esp32_s3_touch_lcd_28.build.event_core=
+waveshare_esp32_s3_touch_lcd_28.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_28.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_touch_lcd_28.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_touch_lcd_28.menu.PSRAM.enabled=Enabled
+waveshare_esp32_s3_touch_lcd_28.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_28.menu.PSRAM.enabled.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_28.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_touch_lcd_28.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_28.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio120.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.dio=DIO 80MHz
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.dio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.dio.build.boot=dio
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.dio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.dio.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.opi=OPI 80MHz
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.opi.build.flash_mode=dout
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.opi.build.boot=opi
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.opi.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_28.menu.FlashMode.opi.build.flash_freq=80m
+
+waveshare_esp32_s3_touch_lcd_28.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_28.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_28.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_28.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_28.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_28.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+waveshare_esp32_s3_touch_lcd_28.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_28.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+
+waveshare_esp32_s3_touch_lcd_28.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_touch_lcd_28.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_28.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_touch_lcd_28.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_touch_lcd_28.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_28.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_touch_lcd_28.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_touch_lcd_28.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_28.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_28.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_28.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_28.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_28.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_28.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_28.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_28.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_28.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_touch_lcd_28.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_28.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_touch_lcd_28.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_touch_lcd_28.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_touch_lcd_28.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_touch_lcd_28.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_touch_lcd_28.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_touch_lcd_28.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.none=None
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.error=Error
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.info=Info
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_touch_lcd_28.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_touch_lcd_28.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_touch_lcd_28.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_touch_lcd_28.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_touch_lcd_28.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_s3_touch_lcd_28.menu.ZigbeeMode.default=Disabled
+waveshare_esp32_s3_touch_lcd_28.menu.ZigbeeMode.default.build.zigbee_mode=
+waveshare_esp32_s3_touch_lcd_28.menu.ZigbeeMode.default.build.zigbee_libs=
+waveshare_esp32_s3_touch_lcd_28.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+waveshare_esp32_s3_touch_lcd_28.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+waveshare_esp32_s3_touch_lcd_28.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
+
+waveshare_esp32_s3_relay_6ch.name=Waveshare ESP32-S3-Relay-6CH
+waveshare_esp32_s3_relay_6ch.vid.0=0x303a
+waveshare_esp32_s3_relay_6ch.pid.0=0x8242
+waveshare_esp32_s3_relay_6ch.upload_port.0.vid=0x303a
+waveshare_esp32_s3_relay_6ch.upload_port.0.pid=0x8242
+
+waveshare_esp32_s3_relay_6ch.bootloader.tool=esptool_py
+waveshare_esp32_s3_relay_6ch.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_relay_6ch.upload.tool=esptool_py
+waveshare_esp32_s3_relay_6ch.upload.tool.default=esptool_py
+waveshare_esp32_s3_relay_6ch.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_relay_6ch.upload.maximum_size=1310720
+waveshare_esp32_s3_relay_6ch.upload.maximum_data_size=327680
+waveshare_esp32_s3_relay_6ch.upload.flags=
+waveshare_esp32_s3_relay_6ch.upload.extra_flags=
+waveshare_esp32_s3_relay_6ch.upload.use_1200bps_touch=false
+waveshare_esp32_s3_relay_6ch.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_relay_6ch.serial.disableDTR=false
+waveshare_esp32_s3_relay_6ch.serial.disableRTS=false
+
+waveshare_esp32_s3_relay_6ch.build.tarch=xtensa
+waveshare_esp32_s3_relay_6ch.build.bootloader_addr=0x0
+waveshare_esp32_s3_relay_6ch.build.target=esp32s3
+waveshare_esp32_s3_relay_6ch.build.mcu=esp32s3
+waveshare_esp32_s3_relay_6ch.build.core=esp32
+waveshare_esp32_s3_relay_6ch.build.variant=waveshare_esp32_s3_relay_6ch
+waveshare_esp32_s3_relay_6ch.build.board=WAVESHARE_ESP32_S3_RELAY_6CH
+
+waveshare_esp32_s3_relay_6ch.build.usb_mode=1
+waveshare_esp32_s3_relay_6ch.build.cdc_on_boot=0
+waveshare_esp32_s3_relay_6ch.build.msc_on_boot=0
+waveshare_esp32_s3_relay_6ch.build.dfu_on_boot=0
+waveshare_esp32_s3_relay_6ch.build.f_cpu=240000000L
+waveshare_esp32_s3_relay_6ch.build.flash_size=8MB
+waveshare_esp32_s3_relay_6ch.build.flash_freq=80m
+waveshare_esp32_s3_relay_6ch.build.flash_mode=qio
+waveshare_esp32_s3_relay_6ch.build.boot=qio
+waveshare_esp32_s3_relay_6ch.build.boot_freq=80m
+waveshare_esp32_s3_relay_6ch.build.partitions=default
+waveshare_esp32_s3_relay_6ch.build.defines=
+waveshare_esp32_s3_relay_6ch.build.loop_core=
+waveshare_esp32_s3_relay_6ch.build.event_core=
+waveshare_esp32_s3_relay_6ch.build.psram_type=
+waveshare_esp32_s3_relay_6ch.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_relay_6ch.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_relay_6ch.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_relay_6ch.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_relay_6ch.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio.build.flash_freq=80m
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio120=QIO 120MHz
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio120.build.flash_mode=dio
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio120.build.boot=qio
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio120.build.boot_freq=120m
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.qio120.build.flash_freq=80m
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.dio=DIO 80MHz
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.dio.build.flash_mode=dio
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.dio.build.boot=dio
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.dio.build.boot_freq=80m
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.dio.build.flash_freq=80m
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.opi=OPI 80MHz
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.opi.build.flash_mode=dout
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.opi.build.boot=opi
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.opi.build.boot_freq=80m
+waveshare_esp32_s3_relay_6ch.menu.FlashMode.opi.build.flash_freq=80m
+
+waveshare_esp32_s3_relay_6ch.menu.FlashSize.8M=8MB (64Mb)
+waveshare_esp32_s3_relay_6ch.menu.FlashSize.8M.build.flash_size=8MB
+waveshare_esp32_s3_relay_6ch.menu.FlashSize.8M.build.partitions=default_8MB
+waveshare_esp32_s3_relay_6ch.menu.FlashSize.16M=16MB (128Mb)
+waveshare_esp32_s3_relay_6ch.menu.FlashSize.16M.build.flash_size=16MB
+
+waveshare_esp32_s3_relay_6ch.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_relay_6ch.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_relay_6ch.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_relay_6ch.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_relay_6ch.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_relay_6ch.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+waveshare_esp32_s3_relay_6ch.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_relay_6ch.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+waveshare_esp32_s3_relay_6ch.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_relay_6ch.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_relay_6ch.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_relay_6ch.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_relay_6ch.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_relay_6ch.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_esp32_s3_relay_6ch.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_relay_6ch.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_esp32_s3_relay_6ch.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_relay_6ch.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_relay_6ch.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_relay_6ch.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_relay_6ch.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_relay_6ch.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_relay_6ch.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_relay_6ch.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_relay_6ch.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_relay_6ch.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_relay_6ch.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_relay_6ch.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_relay_6ch.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_relay_6ch.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.default.build.partitions=default
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker=RainMaker 4MB
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_relay_6ch.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_relay_6ch.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_relay_6ch.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.none=None
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.error=Error
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.info=Info
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_relay_6ch.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_relay_6ch.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_relay_6ch.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_esp32_s3_relay_6ch.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_relay_6ch.menu.EraseFlash.all.upload.erase_cmd=-e
+
+waveshare_esp32_s3_relay_6ch.menu.ZigbeeMode.default=Disabled
+waveshare_esp32_s3_relay_6ch.menu.ZigbeeMode.default.build.zigbee_mode=
+waveshare_esp32_s3_relay_6ch.menu.ZigbeeMode.default.build.zigbee_libs=
+waveshare_esp32_s3_relay_6ch.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+waveshare_esp32_s3_relay_6ch.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+waveshare_esp32_s3_relay_6ch.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+
+##############################################################
