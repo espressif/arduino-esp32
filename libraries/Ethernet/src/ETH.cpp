@@ -210,7 +210,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
 #if CONFIG_IDF_TARGET_ESP32
 #undef DEFAULT_RMII_CLK_GPIO
-#define DEFAULT_RMII_CLK_GPIO (emac_rmii_clock_gpio_t)(CONFIG_ETH_RMII_CLK_IN_GPIO)
+#define DEFAULT_RMII_CLK_GPIO (emac_rmii_clock_gpio_t)(0)
 #endif
 
   eth_esp32_emac_config_t mac_config = ETH_EMAC_DEFAULT_CONFIG();
