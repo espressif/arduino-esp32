@@ -137,8 +137,9 @@ public:
 
   /*
       sets the expected MD5 for the firmware (hexString)
+      calc_post_decryption if true che update library calc MD5 after decryption, if false the calc is before decryption
     */
-  bool setMD5(const char *expected_md5);
+  bool setMD5(const char *expected_md5, bool calc_post_decryption);
 
   /*
       returns the MD5 String of the successfully ended firmware
@@ -256,8 +257,9 @@ private:
   uint32_t _command;
   const esp_partition_t *_partition;
 
-  String _target_md5;
-  MD5Builder _md5;
+  String _target_md5; 
+  bool _target_md5_decrypted=true;
+  MD5Builder _md5; 
 
   int _ledPin;
   uint8_t _ledOn;
