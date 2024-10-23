@@ -6,15 +6,15 @@
 
 // BN: ESP32 Family Device
 #define USB_VID 0x303a
-#define USB_PID 0x8287
+#define USB_PID 0x825B
 
 #define USB_MANUFACTURER "Waveshare"
-#define USB_PRODUCT      "ESP32-S3-Touch-LCD-1.85-Box"
+#define USB_PRODUCT      "ESP32-S3-Touch-LCD-2.1"
 #define USB_SERIAL       ""
 
 // I2C pins
-static const uint8_t SCL = 10;
-static const uint8_t SDA = 11;
+static const uint8_t SCL = 7;
+static const uint8_t SDA = 15;
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -61,5 +61,4 @@ static const uint8_t T12 = 12;
 static const uint8_t T13 = 13;
 static const uint8_t T14 = 14;
 
-
-#endif                           /* Pins_Arduino_h */
+#endif /* Pins_Arduino_h */
