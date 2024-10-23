@@ -5,8 +5,7 @@
  */
 
 #include "Update.h"
-#include "Arduino.h"
-#include "spi_flash_mmap.h"
+#include "Arduino.h" 
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 #include "mbedtls/aes.h"
@@ -124,7 +123,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   _reset();
   _error = 0;
   _target_md5 = emptyString;
-  _md5 = MD5Builder();
+  _md5 = MD5Builder(); 
 
   if (size == 0) {
     _error = UPDATE_ERROR_SIZE;
@@ -171,7 +170,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   }
   _size = size;
   _command = command;
-  _md5.begin();
+  _md5.begin(); 
   return true;
 }
 
@@ -348,6 +347,11 @@ bool UpdateClass::_writeBuffer() {
       log_d("Decrypting OTA Image");
     }
   }
+
+  if(!_target_md5_decrypted){
+    _md5.add(_buffer, _bufferLen);
+  }
+
   //check if data in buffer needs decrypting
   if (_cryptMode & U_AES_IMAGE_DECRYPTING_BIT) {
     if (!_decryptBuffer()) {
@@ -404,7 +408,9 @@ bool UpdateClass::_writeBuffer() {
   if (!_progress && _command == U_FLASH) {
     _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
   }
-  _md5.add(_buffer, _bufferLen);
+  if(_target_md5_decrypted){
+    _md5.add(_buffer, _bufferLen);
+  } 
   _progress += _bufferLen;
   _bufferLen = 0;
   if (_progress_callback) {
@@ -446,12 +452,14 @@ bool UpdateClass::_verifyEnd() {
   return false;
 }
 
-bool UpdateClass::setMD5(const char *expected_md5) {
+bool UpdateClass::setMD5(const char *expected_md5, bool calc_post_decryption=true) {
   if (strlen(expected_md5) != 32) {
     return false;
   }
   _target_md5 = expected_md5;
   _target_md5.toLowerCase();
+
+  _target_md5_decrypted=calc_post_decryption;
   return true;
 }
 
@@ -473,7 +481,8 @@ bool UpdateClass::end(bool evenIfRemaining) {
     _size = progress();
   }
 
-  _md5.calculate();
+  _md5.calculate(); 
+
   if (_target_md5.length()) {
     if (_target_md5 != _md5.toString()) {
       _abort(UPDATE_ERROR_MD5);
