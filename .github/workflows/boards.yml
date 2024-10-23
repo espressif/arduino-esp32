@@ -42,6 +42,7 @@ jobs:
           name: "espressif:esp32"
 
     strategy:
+      fail-fast: false
       matrix: ${{ fromJson(needs.find-boards.outputs.fqbns) }}
 
     steps:
