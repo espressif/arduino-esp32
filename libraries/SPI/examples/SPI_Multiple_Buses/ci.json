@@ -1,7 +1,5 @@
 {
-  "targets": {
-    "esp32c3": false,
-    "esp32c6": false,
-    "esp32h2": false
-  }
+  "requires": [
+    "CONFIG_SOC_SPI_PERIPH_NUM=[2-9]"
+  ]
 }

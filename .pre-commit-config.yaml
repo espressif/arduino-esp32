@@ -26,6 +26,7 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
       - id: pretty-format-json
+        stages: [manual]
         args: [--autofix]
         types_or: [json]
         exclude: |

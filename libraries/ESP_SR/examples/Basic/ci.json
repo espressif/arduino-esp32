@@ -4,6 +4,9 @@
       "espressif:esp32:esp32s3:USBMode=default,PartitionScheme=esp_sr_16,FlashSize=16M,FlashMode=dio"
     ]
   },
+  "requires": [
+    "CONFIG_SOC_I2S_SUPPORTED=y"
+  ],
   "targets": {
     "esp32": false,
     "esp32c3": false,

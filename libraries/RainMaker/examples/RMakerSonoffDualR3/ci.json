@@ -1,5 +1,7 @@
 {
-  "targets": {
-    "esp32h2": false
-  }
+  "fqbn_append": "PartitionScheme=rainmaker_4MB",
+  "requires": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y",
+    "CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK=[1-9][0-9]*"
+  ]
 }

@@ -2,23 +2,21 @@ import json
 import logging
 import os
 
+fib_results = {}
+
+
+def fib(n):
+    if n < 2:
+        return n
+    elif str(n) in fib_results:
+        return fib_results[str(n)]
+    else:
+        fib_results[str(n)] = fib(n - 1) + fib(n - 2)
+        return fib_results[str(n)]
+
 
 def test_fibonacci(dut, request):
     LOGGER = logging.getLogger(__name__)
-
-    # Fibonacci results starting from fib(35) to fib(45)
-    fib_results = [
-        9227465,
-        14930352,
-        24157817,
-        39088169,
-        63245986,
-        102334155,
-        165580141,
-        267914296,
-        433494437,
-        701408733,
-    ]
 
     # Match "Runs: %d"
     res = dut.expect(r"Runs: (\d+)", timeout=60)
@@ -30,7 +28,11 @@ def test_fibonacci(dut, request):
     res = dut.expect(r"N: (\d+)", timeout=300)
     fib_n = int(res.group(0).decode("utf-8").split(" ")[1])
     LOGGER.info("Calculating Fibonacci({})".format(fib_n))
-    assert fib_n > 30 and fib_n < 50, "Invalid Fibonacci number"
+    assert fib_n > 0, "Invalid Fibonacci number"
+
+    # Calculate Fibonacci results
+    expected_result = fib(fib_n)
+    LOGGER.info("Expected Fibonacci result: {}".format(expected_result))
 
     list_time = []
 
@@ -48,7 +50,7 @@ def test_fibonacci(dut, request):
         assert fib_result > 0, "Invalid Fibonacci result"
 
         # Check if the result is correct
-        assert fib_result == fib_results[fib_n - 35]
+        assert fib_result == expected_result
 
         # Match "Time: %lu.%03lu s"
         res = dut.expect(r"Time: (\d+)\.(\d+) s", timeout=300)

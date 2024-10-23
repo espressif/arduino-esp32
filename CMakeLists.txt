@@ -112,6 +112,7 @@ set(ARDUINO_ALL_LIBRARIES
   WiFi
   WiFiProv
   Wire
+  Zigbee
   )
 
 set(ARDUINO_LIBRARY_ArduinoOTA_SRCS libraries/ArduinoOTA/src/ArduinoOTA.cpp)
@@ -156,6 +157,7 @@ set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
 set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
 
 set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
+set(ARDUINO_LIBRARY_LittleFS_REQUIRES joltwallet__littlefs)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
 
@@ -239,6 +241,18 @@ set(ARDUINO_LIBRARY_WiFi_SRCS
 set(ARDUINO_LIBRARY_WiFiProv_SRCS libraries/WiFiProv/src/WiFiProv.cpp)
 
 set(ARDUINO_LIBRARY_Wire_SRCS libraries/Wire/src/Wire.cpp)
+
+set(ARDUINO_LIBRARY_Zigbee_SRCS
+  libraries/Zigbee/src/ZigbeeCore.cpp
+  libraries/Zigbee/src/ZigbeeEP.cpp
+  libraries/Zigbee/src/ZigbeeHandlers.cpp
+  libraries/Zigbee/src/ep/ZigbeeColorDimmableLight.cpp
+  libraries/Zigbee/src/ep/ZigbeeColorDimmerSwitch.cpp
+  libraries/Zigbee/src/ep/ZigbeeLight.cpp
+  libraries/Zigbee/src/ep/ZigbeeSwitch.cpp
+  libraries/Zigbee/src/ep/ZigbeeTempSensor.cpp
+  libraries/Zigbee/src/ep/ZigbeeThermostat.cpp
+  )
 
 set(ARDUINO_LIBRARY_BLE_SRCS
   libraries/BLE/src/BLE2901.cpp

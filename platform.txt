@@ -103,7 +103,7 @@ build.code_debug=0
 build.defines=
 build.loop_core=
 build.event_core=
-build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}} {build.zigbee_mode}
+build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32=ESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}} {build.zigbee_mode}
 build.extra_libs=
 build.memory_type={build.boot}_qspi
 
@@ -142,6 +142,10 @@ recipe.hooks.core.postbuild.1.pattern=/usr/bin/env bash -c ": > '{file_opts.path
 recipe.hooks.prebuild.7.pattern.windows=cmd /c type nul > "{file_opts.path}"
 recipe.hooks.core.prebuild.1.pattern.windows=cmd /c echo "-DARDUINO_CORE_BUILD" > "{file_opts.path}"
 recipe.hooks.core.postbuild.1.pattern.windows=cmd /c type nul > "{file_opts.path}"
+
+# Copy sdkconfig to build folder
+recipe.hooks.prebuild.8.pattern=/usr/bin/env bash -c "cp -f "{compiler.sdk.path}"/sdkconfig "{build.path}"/sdkconfig"
+recipe.hooks.prebuild.8.pattern.windows=cmd /c COPY /y "{compiler.sdk.path}\sdkconfig" "{build.path}\sdkconfig"
 
 ## Compile c files
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.extra_flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "@{file_opts.path}" "{source_file}" -o "{object_file}"

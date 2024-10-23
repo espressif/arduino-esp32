@@ -10,21 +10,6 @@ function run_test() {
     local result=0
     local error=0
 
-    # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
-    if [ -f $sketchdir/ci.json ]; then
-        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
-        selected_platform=$(jq -r --arg platform $platform '.platforms[$platform]' $sketchdir/ci.json)
-    else
-        is_target="true"
-        selected_platform="true"
-    fi
-
-    if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
-      printf "\033[93mSkipping $sketchname test for $target, platform: $platform\033[0m\n"
-      printf "\n\n\n"
-      return 0
-    fi
-
     if [ $options -eq 0 ] && [ -f $sketchdir/ci.json ]; then
         len=`jq -r --arg target $target '.fqbn[$target] | length' $sketchdir/ci.json`
         if [ $len -eq 0 ]; then
@@ -32,6 +17,57 @@ function run_test() {
         fi
     else
         len=1
+    fi
+
+    if [ $len -eq 1 ]; then
+        SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
+    else
+        SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
+    fi
+
+    if [ -f $sketchdir/ci.json ]; then
+        # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
+        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
+        selected_platform=$(jq -r --arg platform $platform '.platforms[$platform]' $sketchdir/ci.json)
+
+        if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
+            printf "\033[93mSkipping $sketchname test for $target, platform: $platform\033[0m\n"
+            printf "\n\n\n"
+            return 0
+        fi
+
+        # Check if the sketch requires any configuration options (AND)
+        requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
+        if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
+            for requirement in $requirements; do
+                requirement=$(echo $requirement | xargs)
+                found_line=$(grep -E "^$requirement" "$SDKCONFIG_PATH")
+                if [[ "$found_line" == "" ]]; then
+                    printf "\033[93mTarget $target does not meet the requirement $requirement for $sketchname. Skipping.\033[0m\n"
+                    printf "\n\n\n"
+                    return 0
+                fi
+            done
+        fi
+
+        # Check if the sketch requires any configuration options (OR)
+        requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
+        if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+            found=false
+            for requirement in $requirements_or; do
+                requirement=$(echo $requirement | xargs)
+                found_line=$(grep -E "^$requirement" "$SDKCONFIG_PATH")
+                if [[ "$found_line" != "" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            if [[ "$found" == "false" ]]; then
+                printf "\033[93mTarget $target meets none of the requirements in requires_any for $sketchname. Skipping.\033[0m\n"
+                printf "\n\n\n"
+                return 0
+            fi
+        fi
     fi
 
     if [ $len -eq 1 ]; then
@@ -212,7 +248,8 @@ else
   fi
 
   set +e
-  ${COUNT_SKETCHES} $test_folder $target
+  # Ignore requirements as we don't have the libs. The requirements will be checked in the run_test function
+  ${COUNT_SKETCHES} "$test_folder" "$target" "1"
   sketchcount=$?
   set -e
   sketches=$(cat sketches.txt)
