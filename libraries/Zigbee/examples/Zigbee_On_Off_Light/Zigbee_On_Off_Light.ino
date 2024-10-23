@@ -51,7 +51,7 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   // Init button for factory reset
-  pinMode(BUTTON_PIN, INPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   //Optional: set Zigbee device name and model
   zbLight.setManufacturerAndModel("Espressif", "ZBLightBulb");

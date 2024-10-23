@@ -59,7 +59,7 @@ void setup() {
   }
 
   // Init button switch
-  pinMode(BUTTON_PIN, INPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   // Optional: set Zigbee device name and model
   zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
