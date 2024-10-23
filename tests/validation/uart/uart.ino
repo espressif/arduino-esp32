@@ -434,7 +434,7 @@ void auto_baudrate_test(void) {
 
   log_d("Stopping test serial. Using Serial2 for ESP32 and Serial1 for ESP32-S2.");
 
-#if SOC_UART_NUM == 2
+#if SOC_UART_HP_NUM == 2
   selected_serial = &Serial1;
   uart_internal_loopback(0, true);  // it was suppose to cross connect TX0 to RX1
 #elif SOC_UART_NUM >= 3
@@ -452,7 +452,7 @@ void auto_baudrate_test(void) {
   selected_serial->begin(0);
   baudrate = selected_serial->baudRate();
 
-#if SOC_UART_NUM == 2
+#if SOC_UART_HP_NUM == 2
   Serial.end();
   Serial.begin(115200);
 #endif
@@ -525,7 +525,7 @@ void setup() {
   while (!Serial) {
     delay(10);
   }
-  log_d("SOC_UART_NUM = %d", SOC_UART_NUM);
+  log_d("SOC_UART_HP_NUM = %d", SOC_UART_HP_NUM);
 
   for (i = 0; i < SOC_UART_NUM; i++) {
     peeked_char[i] = -1;

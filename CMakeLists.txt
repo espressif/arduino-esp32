@@ -5,8 +5,8 @@
 #   export ARDUINO_SKIP_IDF_VERSION_CHECK=1
 #   idf.py build
 
-set(min_supported_idf_version "5.1.0")
-set(max_supported_idf_version "5.1.99")
+set(min_supported_idf_version "5.3.0")
+set(max_supported_idf_version "5.3.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -45,6 +45,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-timer.c
   cores/esp32/esp32-hal-tinyusb.c
   cores/esp32/esp32-hal-touch.c
+  cores/esp32/esp32-hal-touch-ng.c
   cores/esp32/esp32-hal-uart.c
   cores/esp32/esp32-hal-rmt.c
   cores/esp32/Esp.cpp
@@ -93,6 +94,7 @@ set(ARDUINO_ALL_LIBRARIES
   HTTPUpdate
   Insights
   LittleFS
+  Matter
   NetBIOS
   Network
   OpenThread
@@ -157,12 +159,17 @@ set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
 set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
 
 set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
+set(ARDUINO_LIBRARY_LittleFS_REQUIRES joltwallet__littlefs)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
 
 set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThreadCLI.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp)
+
+set(ARDUINO_LIBRARY_Matter_SRCS
+  libraries/Matter/src/MatterOnOffLight.cpp
+  libraries/Matter/src/Matter.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS
   libraries/PPP/src/PPP.cpp
@@ -306,7 +313,7 @@ endforeach()
 set(includedirs variants/${CONFIG_ARDUINO_VARIANT}/ cores/esp32/ ${ARDUINO_LIBRARIES_INCLUDEDIRS})
 set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser espressif__network_provisioning)
+set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver espressif__network_provisioning)
 set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid usb esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
 
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
@@ -315,6 +322,10 @@ if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThre
   if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2") # Sadly only this works
     list(APPEND requires openthread)
   endif()
+endif()
+
+if(IDF_TARGET STREQUAL "esp32p4")
+  list(APPEND requires esp_driver_touch_sens)
 endif()
 
 idf_component_register(INCLUDE_DIRS ${includedirs} PRIV_INCLUDE_DIRS ${priv_includes} SRCS ${srcs} REQUIRES ${requires} PRIV_REQUIRES ${priv_requires})
@@ -356,9 +367,15 @@ function(maybe_add_component component_name)
     endif()
 endfunction()
 
-if(IDF_TARGET MATCHES "esp32s2|esp32s3" AND CONFIG_TINYUSB_ENABLED)
+if(IDF_TARGET MATCHES "esp32s2|esp32s3|esp32p4" AND CONFIG_TINYUSB_ENABLED)
     maybe_add_component(arduino_tinyusb)
 endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
     maybe_add_component(esp_https_ota)
+endif()
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ESP_SR)
+    maybe_add_component(espressif__esp_sr)
+endif()
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_Matter)
+    maybe_add_component(espressif__esp_matter)
 endif()

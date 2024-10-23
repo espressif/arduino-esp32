@@ -115,14 +115,10 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
       setStatusBits(ESP_NETIF_HAS_LOCAL_IP6_BIT);
     }
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    char if_name[NETIF_NAMESIZE] = {
-      0,
-    };
-    netif_index_to_name(event->ip6_info.ip.zone, if_name);
     static const char *addr_types[] = {"UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6"};
     log_v(
-      "IF %s Got IPv6: Interface: %d, IP Index: %d, Type: %s, Zone: %d (%s), Address: " IPV6STR, desc(), _interface_id, event->ip_index, addr_types[addr_type],
-      event->ip6_info.ip.zone, if_name, IPV62STR(event->ip6_info.ip)
+      "IF %s Got IPv6: Interface: %d, IP Index: %d, Type: %s, Zone: %d, Address: " IPV6STR, desc(), _interface_id, event->ip_index, addr_types[addr_type],
+      event->ip6_info.ip.zone, IPV62STR(event->ip6_info.ip)
     );
 #endif
     memcpy(&arduino_event.event_info.got_ip6, event_data, sizeof(ip_event_got_ip6_t));

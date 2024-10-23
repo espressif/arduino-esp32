@@ -91,6 +91,7 @@ if [ "$BUILD_PIO" -eq 0 ]; then
     fi
 
     #build sketches for different targets
+    build "esp32p4" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
     build "esp32s3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
     build "esp32s2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"
     build "esp32c3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$SKETCHES_FILE" "$SKETCHES_ESP32"

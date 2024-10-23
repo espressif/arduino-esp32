@@ -1,18 +1,16 @@
 name=ESP32 Arduino
-version=3.0.5
+version=3.1.0
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
-tools.xtensa-esp32-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32-elf
-tools.xtensa-esp32s2-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s2-elf
-tools.xtensa-esp32s3-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp32s3-elf
+tools.xtensa-esp-elf-gcc.path={runtime.platform.path}/tools/xtensa-esp-elf
 tools.xtensa-esp-elf-gdb.path={runtime.platform.path}/tools/xtensa-esp-elf-gdb
 tools.riscv32-esp-elf-gcc.path={runtime.platform.path}/tools/riscv32-esp-elf
 tools.riscv32-esp-elf-gdb.path={runtime.platform.path}/tools/riscv32-esp-elf-gdb
 
 tools.esptool_py.path={runtime.platform.path}/tools/esptool
 tools.esptool_py.cmd=esptool
-tools.esptool_py.cmd.linux=esptool.py
+tools.esptool_py.cmd.linux=esptool
 tools.esptool_py.cmd.windows=esptool.exe
 
 tools.esptool_py.network_cmd=python3 "{runtime.platform.path}/tools/espota.py" -r
@@ -27,7 +25,7 @@ tools.gen_esp32part.cmd.windows="{runtime.platform.path}\tools\gen_esp32part.exe
 tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
 tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}\tools\gen_insights_package.exe"
 
-compiler.path={tools.{build.tarch}-{build.target}-elf-gcc.path}/bin/
+compiler.path={tools.{build.tarch}-esp-elf-gcc.path}/bin/
 compiler.prefix={build.tarch}-{build.target}-elf-
 
 compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.mcu}
@@ -52,10 +50,10 @@ compiler.common_werror_flags=-Werror=return-type
 
 # Compile Flags
 compiler.cpreprocessor.flags="@{compiler.sdk.path}/flags/defines" "-I{build.source.path}" -iprefix "{compiler.sdk.path}/include/" "@{compiler.sdk.path}/flags/includes" "-I{compiler.sdk.path}/{build.memory_type}/include"
-compiler.c.flags="@{compiler.sdk.path}/flags/c_flags" {compiler.warning_flags} {compiler.optimization_flags} {compiler.common_werror_flags}
-compiler.cpp.flags="@{compiler.sdk.path}/flags/cpp_flags" {compiler.warning_flags} {compiler.optimization_flags} {compiler.common_werror_flags}
-compiler.S.flags="@{compiler.sdk.path}/flags/S_flags" {compiler.warning_flags} {compiler.optimization_flags}
-compiler.c.elf.flags="@{compiler.sdk.path}/flags/ld_flags" "@{compiler.sdk.path}/flags/ld_scripts"
+compiler.c.flags=-MMD -c "@{compiler.sdk.path}/flags/c_flags" {compiler.warning_flags} {compiler.optimization_flags} {compiler.common_werror_flags}
+compiler.cpp.flags=-MMD -c "@{compiler.sdk.path}/flags/cpp_flags" {compiler.warning_flags} {compiler.optimization_flags} {compiler.common_werror_flags}
+compiler.S.flags=-MMD -c -x assembler-with-cpp "@{compiler.sdk.path}/flags/S_flags" {compiler.warning_flags} {compiler.optimization_flags}
+compiler.c.elf.flags="-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" "-L{compiler.sdk.path}/{build.memory_type}" "-Wl,--wrap=esp_panic_handler" "@{compiler.sdk.path}/flags/ld_flags" "@{compiler.sdk.path}/flags/ld_scripts"
 compiler.c.elf.libs="@{compiler.sdk.path}/flags/ld_libs"
 compiler.ar.flags=cr
 
@@ -69,10 +67,10 @@ compiler.ar.cmd={compiler.prefix}gcc-ar
 compiler.size.cmd={compiler.prefix}size
 
 # These can be overridden in platform.local.txt
-compiler.c.extra_flags=-MMD -c
-compiler.cpp.extra_flags=-MMD -c
-compiler.S.extra_flags=-MMD -c -x assembler-with-cpp
-compiler.c.elf.extra_flags="-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" "-L{compiler.sdk.path}/{build.memory_type}" "-Wl,--wrap=esp_panic_handler"
+compiler.c.extra_flags=
+compiler.cpp.extra_flags=
+compiler.S.extra_flags=
+compiler.c.elf.extra_flags=
 compiler.ar.extra_flags=
 compiler.objcopy.eep.extra_flags=
 compiler.elf2hex.extra_flags=
@@ -86,6 +84,7 @@ build.extra_flags.esp32c2=-DARDUINO_USB_CDC_ON_BOOT=0
 build.extra_flags.esp32c3=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
+build.extra_flags.esp32p4=-DARDUINO_USB_MODE={build.usb_mode} -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
 
 # This can be overriden in boards.txt
 build.zigbee_mode=
@@ -123,7 +122,6 @@ recipe.hooks.prebuild.3.pattern.windows=cmd /c if not exist "{build.path}\partit
 # Check if custom bootloader exist: source > variant > build.boot
 recipe.hooks.prebuild.4.pattern_args=--chip {build.mcu} elf2image --flash_mode {build.flash_mode} --flash_freq {build.img_freq} --flash_size {build.flash_size} -o
 recipe.hooks.prebuild.4.pattern=/usr/bin/env bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
-recipe.hooks.prebuild.4.pattern.linux=/usr/bin/env bash -c "[ -f "{build.source.path}"/bootloader.bin ] && cp -f "{build.source.path}"/bootloader.bin "{build.path}"/{build.project_name}.bootloader.bin || ( [ -f "{build.variant.path}"/{build.custom_bootloader}.bin ] && cp "{build.variant.path}"/{build.custom_bootloader}.bin "{build.path}"/{build.project_name}.bootloader.bin || python3 "{tools.esptool_py.path}"/{tools.esptool_py.cmd} {recipe.hooks.prebuild.4.pattern_args} "{build.path}"/{build.project_name}.bootloader.bin "{compiler.sdk.path}"/bin/bootloader_{build.boot}_{build.boot_freq}.elf )"
 recipe.hooks.prebuild.4.pattern.windows=cmd /c IF EXIST "{build.source.path}\bootloader.bin" ( COPY /y "{build.source.path}\bootloader.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( IF EXIST "{build.variant.path}\{build.custom_bootloader}.bin" ( COPY "{build.variant.path}\{build.custom_bootloader}.bin" "{build.path}\{build.project_name}.bootloader.bin" ) ELSE ( "{tools.esptool_py.path}\{tools.esptool_py.cmd}" {recipe.hooks.prebuild.4.pattern_args} "{build.path}\{build.project_name}.bootloader.bin" "{compiler.sdk.path}\bin\bootloader_{build.boot}_{build.boot_freq}.elf" ) )
 
 # Check if custom build options exist in the sketch folder
@@ -144,8 +142,8 @@ recipe.hooks.core.prebuild.1.pattern.windows=cmd /c echo "-DARDUINO_CORE_BUILD" 
 recipe.hooks.core.postbuild.1.pattern.windows=cmd /c type nul > "{file_opts.path}"
 
 # Copy sdkconfig to build folder
-recipe.hooks.prebuild.8.pattern=/usr/bin/env bash -c "cp -f "{runtime.platform.path}"/tools/esp32-arduino-libs/{build.mcu}/sdkconfig "{build.path}"/sdkconfig"
-recipe.hooks.prebuild.8.pattern.windows=cmd /c COPY /y "{runtime.platform.path}\tools\esp32-arduino-libs\{build.mcu}\sdkconfig" "{build.path}\sdkconfig"
+recipe.hooks.prebuild.8.pattern=/usr/bin/env bash -c "cp -f "{compiler.sdk.path}"/sdkconfig "{build.path}"/sdkconfig"
+recipe.hooks.prebuild.8.pattern.windows=cmd /c COPY /y "{compiler.sdk.path}\sdkconfig" "{build.path}\sdkconfig"
 
 ## Compile c files
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.extra_flags} {compiler.c.flags} -DF_CPU={build.f_cpu} -DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch} -DARDUINO_BOARD="{build.board}" -DARDUINO_VARIANT="{build.variant}" -DARDUINO_PARTITION_{build.partitions} {build.extra_flags} {compiler.cpreprocessor.flags} {includes} "@{build.opt.path}" "@{file_opts.path}" "{source_file}" -o "{object_file}"
@@ -168,7 +166,6 @@ recipe.objcopy.partitions.bin.pattern={tools.gen_esp32part.cmd} -q "{build.path}
 ## Create bin
 recipe.objcopy.bin.pattern_args=--chip {build.mcu} elf2image --flash_mode "{build.flash_mode}" --flash_freq "{build.img_freq}" --flash_size "{build.flash_size}" --elf-sha256-offset 0xb0 -o "{build.path}/{build.project_name}.bin" "{build.path}/{build.project_name}.elf"
 recipe.objcopy.bin.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
-recipe.objcopy.bin.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.objcopy.bin.pattern_args}
 
 ## Create Insights Firmware Package
 recipe.hooks.objcopy.postobjcopy.1.pattern_args={build.path} {build.project_name} "{build.source.path}"
@@ -182,7 +179,6 @@ recipe.hooks.objcopy.postobjcopy.2.pattern.windows=cmd /c if exist "{build.path}
 # Create merged binary
 recipe.hooks.objcopy.postobjcopy.3.pattern_args=--chip {build.mcu} merge_bin -o "{build.path}/{build.project_name}.merged.bin" --fill-flash-size {build.flash_size} --flash_mode keep --flash_freq keep --flash_size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin"
 recipe.hooks.objcopy.postobjcopy.3.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.objcopy.postobjcopy.3.pattern_args}
-recipe.hooks.objcopy.postobjcopy.3.pattern.linux=python3 "{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.objcopy.postobjcopy.3.pattern_args}
 
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin
@@ -292,7 +288,6 @@ tools.esptool_py.upload.params.verbose=
 tools.esptool_py.upload.params.quiet=
 tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash {upload.erase_cmd} -z --flash_mode keep --flash_freq keep --flash_size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
 tools.esptool_py.upload.pattern="{path}/{cmd}" {upload.pattern_args}
-tools.esptool_py.upload.pattern.linux=python3 "{path}/{cmd}" {upload.pattern_args}
 
 ## Program Application
 ## -------------------
@@ -300,7 +295,6 @@ tools.esptool_py.program.params.verbose=
 tools.esptool_py.program.params.quiet=
 tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash -z --flash_mode keep --flash_freq keep --flash_size keep 0x10000 "{build.path}/{build.project_name}.bin"
 tools.esptool_py.program.pattern="{path}/{cmd}" {program.pattern_args}
-tools.esptool_py.program.pattern.linux=python3 "{path}/{cmd}" {program.pattern_args}
 
 ## Erase Chip (before burning the bootloader)
 ## ------------------------------------------
@@ -309,7 +303,6 @@ tools.esptool_py.erase.params.verbose=
 tools.esptool_py.erase.params.quiet=
 tools.esptool_py.erase.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset erase_flash
 tools.esptool_py.erase.pattern="{path}/{cmd}" {erase.pattern_args}
-tools.esptool_py.erase.pattern.linux=python3 "{path}/{cmd}" {erase.pattern_args}
 
 ## Burn Bootloader
 ## ---------------

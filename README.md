@@ -1,4 +1,4 @@
-# Arduino core for the ESP32, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6 and ESP32-H2
+# Arduino core for the ESP32, ESP32-P4, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6 and ESP32-H2
 
 [![Build Status](https://github.com/espressif/arduino-esp32/actions/workflows/push.yml/badge.svg?branch=master&event=push)](https://github.com/espressif/arduino-esp32/actions/workflows/push.yml) [![External Libraries Test](https://github.com/espressif/arduino-esp32/actions/workflows/lib.yml/badge.svg?branch=master&event=schedule)](https://github.com/espressif/arduino-esp32/blob/gh-pages/LIBRARIES_TEST.md) [![Hardware Tests](https://github.com/espressif/arduino-esp32/blob/gh-pages/runtime-tests-results/badge.svg)](https://github.com/espressif/arduino-esp32/actions/workflows/tests_results.yml)
 
@@ -59,6 +59,7 @@ Here are the ESP32 series supported by the Arduino-ESP32 project:
 | ESP32-S3 |     Yes    |       Yes       | [ESP32-S3](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf) |
 | ESP32-C6 |     Yes    |       Yes       | [ESP32-C6](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf) |
 | ESP32-H2 |     Yes    |       Yes       | [ESP32-H2](https://www.espressif.com/sites/default/files/documentation/esp32-h2_datasheet_en.pdf) |
+| ESP32-P4 |     No     |       No        | [ESP32-P4](https://www.espressif.com/sites/default/files/documentation/esp32-p4_datasheet_en.pdf) |
 
 > [!NOTE]
 > ESP32-C2 is also supported by Arduino-ESP32 but requires rebuilding the static libraries. This is not trivial and requires a good understanding of the ESP-IDF

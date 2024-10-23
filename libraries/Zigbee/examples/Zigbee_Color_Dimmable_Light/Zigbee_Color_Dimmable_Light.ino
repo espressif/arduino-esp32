@@ -65,7 +65,7 @@ void setup() {
   rgbLedWrite(LED_PIN, 0, 0, 0);
 
   // Init button for factory reset
-  pinMode(BUTTON_PIN, INPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   // Set callback function for light change
   zbColorLight.onLightChange(setRGBLight);

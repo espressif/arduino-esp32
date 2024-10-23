@@ -71,11 +71,9 @@ static esp_bd_addr_t _peer_bd_addr;
 static char _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
 static bool _isRemoteAddressSet;
 static bool _isMaster;
-#ifdef CONFIG_BT_SSP_ENABLED
 static bool _enableSSP;
 static bool _IO_CAP_INPUT;
 static bool _IO_CAP_OUTPUT;
-#endif
 esp_bt_pin_code_t _pin_code = {0};
 uint8_t _pin_code_len = 0;  // Number of valid Bytes in the esp_bt_pin_code_t array
 static esp_spp_sec_t _sec_mask;
@@ -538,7 +536,6 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         esp_bt_gap_pin_reply(param->pin_req.bda, true, _pin_code_len, _pin_code);
       }
       break;
-#ifdef CONFIG_BT_SSP_ENABLED
     case ESP_BT_GAP_CFM_REQ_EVT:  // Enum 6 - Security Simple Pairing User Confirmation request.
       log_i("ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
       if (confirm_request_callback) {
@@ -549,13 +546,10 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, false);
       }
       break;
-#endif
 
     case ESP_BT_GAP_KEY_NOTIF_EVT:  // Enum 7 - Security Simple Pairing Passkey Notification
       log_i("ESP_BT_GAP_KEY_NOTIF_EVT passkey:%d", param->key_notif.passkey);
       break;
-
-#ifdef CONFIG_BT_SSP_ENABLED
     case ESP_BT_GAP_KEY_REQ_EVT:  // Enum 8 - Security Simple Pairing Passkey request
       log_i("ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
       if (key_request_callback) {
@@ -566,7 +560,6 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, false);
       }
       break;
-#endif
 
     case ESP_BT_GAP_READ_RSSI_DELTA_EVT:  // Enum 9 - Read rssi event
       log_i("ESP_BT_GAP_READ_RSSI_DELTA_EVT Read rssi event");
@@ -705,9 +698,8 @@ static bool _init_bt(const char *deviceName, bt_mode mode) {
   }
 
   log_i("device name set");
-  esp_bt_dev_set_device_name(deviceName);
+  esp_bt_gap_set_device_name(deviceName);
 
-#ifdef CONFIG_BT_SSP_ENABLED
   if (_enableSSP) {
     log_i("Simple Secure Pairing");
     esp_bt_sp_param_t param_type = ESP_BT_SP_IOCAP_MODE;
@@ -723,7 +715,6 @@ static bool _init_bt(const char *deviceName, bt_mode mode) {
     }
     esp_bt_gap_set_security_param(param_type, &iocap, sizeof(uint8_t));
   }
-#endif
 
   // the default BTA_DM_COD_LOUDSPEAKER does not work with the macOS BT stack
   esp_bt_cod_t cod;
@@ -894,7 +885,6 @@ void BluetoothSerial::memrelease() {
   esp_bt_mem_release(ESP_BT_MODE_BTDM);
 }
 
-#ifdef CONFIG_BT_SSP_ENABLED
 void BluetoothSerial::onConfirmRequest(ConfirmRequestCb cb) {
   confirm_request_callback = cb;
 }
@@ -906,7 +896,6 @@ void BluetoothSerial::onKeyRequest(KeyRequestCb cb) {
 void BluetoothSerial::respondPasskey(uint32_t passkey) {
   esp_bt_gap_ssp_passkey_reply(current_bd_addr, true, passkey);
 }
-#endif
 
 void BluetoothSerial::onAuthComplete(AuthCompleteCb cb) {
   auth_complete_callback = cb;
@@ -921,7 +910,6 @@ esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t callback) {
   return ESP_OK;
 }
 
-#ifdef CONFIG_BT_SSP_ENABLED
 // Enable Simple Secure Pairing (using generated PIN)
 // This must be called before calling begin, otherwise has no effect!
 void BluetoothSerial::enableSSP() {
@@ -957,8 +945,6 @@ void BluetoothSerial::disableSSP() {
   _enableSSP = false;
 }
 
-#else
-
 bool BluetoothSerial::setPin(const char *pin, uint8_t pin_code_len) {
   if (pin_code_len == 0 || pin_code_len > 16) {
     log_e("PIN code must be 1-16 Bytes long! Called with length %d", pin_code_len);
@@ -968,7 +954,6 @@ bool BluetoothSerial::setPin(const char *pin, uint8_t pin_code_len) {
   memcpy(_pin_code, pin, pin_code_len);
   return (esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_FIXED, _pin_code_len, _pin_code) == ESP_OK);
 }
-#endif
 
 bool BluetoothSerial::connect(String remoteName) {
   bool retval = false;

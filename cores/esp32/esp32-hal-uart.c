@@ -61,11 +61,17 @@ struct uart_struct_t {
 
 static uart_t _uart_bus_array[] = {
   {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
   {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
   {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+#endif
+#if SOC_UART_HP_NUM > 3
+  {3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+#endif
+#if SOC_UART_HP_NUM > 4
+  {4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 };
 
@@ -81,11 +87,17 @@ static uart_t _uart_bus_array[] = {
 
 static uart_t _uart_bus_array[] = {
   {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
   {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
   {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+#endif
+#if SOC_UART_HP_NUM > 3
+  {NULL, 3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+#endif
+#if SOC_UART_HP_NUM > 4
+  {NULL, 4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
 #endif
 };
 
@@ -94,8 +106,8 @@ static uart_t _uart_bus_array[] = {
 // Negative Pin Number will keep it unmodified, thus this function can detach individual pins
 // This function will also unset the pins in the Peripheral Manager and set the pin to -1 after detaching
 static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin) {
-  if (uart_num >= SOC_UART_NUM) {
-    log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+  if (uart_num >= SOC_UART_HP_NUM) {
+    log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_HP_NUM - 1);
     return false;
   }
   // get UART information
@@ -181,8 +193,8 @@ static bool _uartDetachBus_RTS(void *busptr) {
 // Attach function for UART
 // connects the IO Pad, set Paripheral Manager and internal UART structure data
 static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin) {
-  if (uart_num >= SOC_UART_NUM) {
-    log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+  if (uart_num >= SOC_UART_HP_NUM) {
+    log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_HP_NUM - 1);
     return false;
   }
   // get UART information
@@ -308,8 +320,8 @@ bool uartIsDriverInstalled(uart_t *uart) {
 // Negative Pin Number will keep it unmodified, thus this function can set individual pins
 // When pins are changed, it will detach the previous one
 bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin) {
-  if (uart_num >= SOC_UART_NUM) {
-    log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+  if (uart_num >= SOC_UART_HP_NUM) {
+    log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_HP_NUM - 1);
     return false;
   }
   // get UART information
@@ -378,7 +390,7 @@ bool _testUartBegin(
   uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint32_t rx_buffer_size, uint32_t tx_buffer_size, bool inverted,
   uint8_t rxfifo_full_thrhd
 ) {
-  if (uart_nr >= SOC_UART_NUM) {
+  if (uart_nr >= SOC_UART_HP_NUM) {
     return false;  // no new driver has to be installed
   }
   uart_t *uart = &_uart_bus_array[uart_nr];
@@ -400,8 +412,8 @@ uart_t *uartBegin(
   uint8_t uart_nr, uint32_t baudrate, uint32_t config, int8_t rxPin, int8_t txPin, uint32_t rx_buffer_size, uint32_t tx_buffer_size, bool inverted,
   uint8_t rxfifo_full_thrhd
 ) {
-  if (uart_nr >= SOC_UART_NUM) {
-    log_e("UART number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+  if (uart_nr >= SOC_UART_HP_NUM) {
+    log_e("UART number is invalid, please use number from 0 to %u", SOC_UART_HP_NUM - 1);
     return NULL;  // no new driver was installed
   }
   uart_t *uart = &_uart_bus_array[uart_nr];
@@ -497,6 +509,8 @@ uart_t *uartBegin(
     log_v("UART%d not installed. Starting installation", uart_nr);
   }
   uart_config_t uart_config;
+  memset(&uart_config, 0, sizeof(uart_config_t));
+  uart_config.flags.backup_before_sleep = false;  // new flag from IDF v5.3
   uart_config.data_bits = (config & 0xc) >> 2;
   uart_config.parity = (config & 0x3);
   uart_config.stop_bits = (config & 0x30) >> 4;
@@ -604,8 +618,8 @@ bool uartSetRxFIFOFull(uart_t *uart, uint8_t numBytesFIFOFull) {
 }
 
 void uartEnd(uint8_t uart_num) {
-  if (uart_num >= SOC_UART_NUM) {
-    log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_NUM - 1);
+  if (uart_num >= SOC_UART_HP_NUM) {
+    log_e("Serial number is invalid, please use number from 0 to %u", SOC_UART_HP_NUM - 1);
     return;
   }
   // get UART information
@@ -623,7 +637,7 @@ void uartSetRxInvert(uart_t *uart, bool invert) {
   if (uart == NULL) {
     return;
   }
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
+#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
   // POTENTIAL ISSUE :: original code only set/reset rxd_inv bit
   // IDF or LL set/reset the whole inv_mask!
   // if (invert)
@@ -819,28 +833,48 @@ static void ARDUINO_ISR_ATTR uart0_write_char(char c) {
   uart_ll_write_txfifo(&UART0, (const uint8_t *)&c, 1);
 }
 
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
 static void ARDUINO_ISR_ATTR uart1_write_char(char c) {
   while (uart_ll_get_txfifo_len(&UART1) == 0);
   uart_ll_write_txfifo(&UART1, (const uint8_t *)&c, 1);
 }
 #endif
 
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
 static void ARDUINO_ISR_ATTR uart2_write_char(char c) {
   while (uart_ll_get_txfifo_len(&UART2) == 0);
   uart_ll_write_txfifo(&UART2, (const uint8_t *)&c, 1);
 }
 #endif
 
+#if SOC_UART_HP_NUM > 3
+static void ARDUINO_ISR_ATTR uart3_write_char(char c) {
+  while (uart_ll_get_txfifo_len(&UART3) == 0);
+  uart_ll_write_txfifo(&UART3, (const uint8_t *)&c, 1);
+}
+#endif
+
+#if SOC_UART_HP_NUM > 4
+static void ARDUINO_ISR_ATTR uart4_write_char(char c) {
+  while (uart_ll_get_txfifo_len(&UART4) == 0);
+  uart_ll_write_txfifo(&UART4, (const uint8_t *)&c, 1);
+}
+#endif
+
 void uart_install_putc() {
   switch (s_uart_debug_nr) {
     case 0: ets_install_putc1((void (*)(char)) & uart0_write_char); break;
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
     case 1: ets_install_putc1((void (*)(char)) & uart1_write_char); break;
 #endif
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
     case 2: ets_install_putc1((void (*)(char)) & uart2_write_char); break;
+#endif
+#if SOC_UART_HP_NUM > 3
+    case 3: ets_install_putc1((void (*)(char)) & uart3_write_char); break;
+#endif
+#if SOC_UART_HP_NUM > 4
+    case 4: ets_install_putc1((void (*)(char)) & uart4_write_char); break;
 #endif
     default: ets_install_putc1(NULL); break;
   }
@@ -850,7 +884,7 @@ void uart_install_putc() {
 // Routines that take care of UART mode in the HardwareSerial Class code
 // used to set UART_MODE_RS485_HALF_DUPLEX auto RTS for TXD for ESP32 chips
 bool uartSetMode(uart_t *uart, uart_mode_t mode) {
-  if (uart == NULL || uart->num >= SOC_UART_NUM) {
+  if (uart == NULL || uart->num >= SOC_UART_HP_NUM) {
     return false;
   }
 
@@ -861,7 +895,7 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
 }
 
 void uartSetDebug(uart_t *uart) {
-  if (uart == NULL || uart->num >= SOC_UART_NUM) {
+  if (uart == NULL || uart->num >= SOC_UART_HP_NUM) {
     s_uart_debug_nr = -1;
   } else {
     s_uart_debug_nr = uart->num;
@@ -896,7 +930,7 @@ int log_printfv(const char *format, va_list arg) {
 #endif
 */
 #if (ARDUINO_USB_CDC_ON_BOOT == 1 && ARDUINO_USB_MODE == 0) || CONFIG_IDF_TARGET_ESP32C3 \
-  || ((CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6) && ARDUINO_USB_CDC_ON_BOOT == 1)
+  || ((CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32P4) && ARDUINO_USB_CDC_ON_BOOT == 1)
   vsnprintf(temp, len + 1, format, arg);
   ets_printf("%s", temp);
 #else
@@ -1103,19 +1137,35 @@ unsigned long uartDetectBaudrate(uart_t *uart) {
 */
 
 // gets the right TX or RX SIGNAL, based on the UART number from gpio_sig_map.h
-#if SOC_UART_NUM > 2
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+#define UART_TX_SIGNAL(uartNumber) \
+  (uartNumber == UART_NUM_0        \
+     ? UART0_TXD_PAD_OUT_IDX       \
+     : (uartNumber == UART_NUM_1   \
+          ? UART1_TXD_PAD_OUT_IDX  \
+          : (uartNumber == UART_NUM_2 ? UART2_TXD_PAD_OUT_IDX : (uartNumber == UART_NUM_3 ? UART3_TXD_PAD_OUT_IDX : UART4_TXD_PAD_OUT_IDX))))
+#define UART_RX_SIGNAL(uartNumber) \
+  (uartNumber == UART_NUM_0        \
+     ? UART0_RXD_PAD_IN_IDX        \
+     : (uartNumber == UART_NUM_1   \
+          ? UART1_RXD_PAD_IN_IDX   \
+          : (uartNumber == UART_NUM_2 ? UART2_RXD_PAD_IN_IDX : (uartNumber == UART_NUM_3 ? UART3_RXD_PAD_IN_IDX : UART4_RXD_PAD_IN_IDX))))
+#else
+#if SOC_UART_HP_NUM > 2
 #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : (uartNumber == UART_NUM_1 ? U1TXD_OUT_IDX : U2TXD_OUT_IDX))
 #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : (uartNumber == UART_NUM_1 ? U1RXD_IN_IDX : U2RXD_IN_IDX))
 #else
 #define UART_TX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0TXD_OUT_IDX : U1TXD_OUT_IDX)
 #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : U1RXD_IN_IDX)
 #endif
+#endif  // ifdef CONFIG_IDF_TARGET_ESP32P4
+
 /*
    This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
    This creates a loop that lets us receive anything we send on the UART without external wires.
 */
 void uart_internal_loopback(uint8_t uartNum, bool loop_back_en) {
-  if (uartNum > SOC_UART_NUM - 1) {
+  if (uartNum > SOC_UART_HP_NUM - 1) {
     return;
   }
   uart_set_loop_back(uartNum, loop_back_en);
