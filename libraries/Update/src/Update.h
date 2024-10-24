@@ -137,7 +137,7 @@ public:
 
   /*
       sets the expected MD5 for the firmware (hexString)
-      calc_post_decryption if true che update library calc MD5 after decryption, if false the calc is before decryption
+      If calc_post_decryption is true, the update library will calculate the MD5 after the decryption, if false the calculation occurs before the decryption
     */
   bool setMD5(const char *expected_md5, bool calc_post_decryption);
 
