@@ -85,7 +85,7 @@ const test_uart_t test_uarts[SOC_UART_NUM] = {
     .tx_pin = TX1,
 #endif
     .serial = Serial4,
-  },
+  }
 #endif  // SOC_UART_NUM >= 5
 };
 
