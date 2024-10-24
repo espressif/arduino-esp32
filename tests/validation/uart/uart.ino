@@ -16,8 +16,8 @@
 // UART0 TX | SOC_TX0 |   1   | 43 | 43 | 21 | 16 | 24 | 37 |
 // UART1 RX |   RX1   |  26   |  4 | 15 | 18 |  4 |  0 | 11 |
 // UART1 TX |   TX1   |  27   |  5 | 16 | 19 |  5 |  1 | 10 |
-// UART2 RX |   RX2   |   4   | -- | 19 | -- | -- | -- | 15 |
-// UART2 TX |   TX2   |  25   | -- | 20 | -- | -- | -- | 14 |
+// UART2 RX |   RX2   |   4   | -- | 19 | -- | -- | -- | -- |
+// UART2 TX |   TX2   |  25   | -- | 20 | -- | -- | -- | -- |
 
 /*
  * For each UART:
@@ -53,22 +53,37 @@ const test_uart_t test_uarts[SOC_UART_NUM] = {
   },
 #if SOC_UART_NUM >= 3
   {
+#ifdef RX2
     .rx_pin = RX2,
     .tx_pin = TX2,
+#else
+    .rx_pin = RX1,
+    .tx_pin = TX1,
+#endif
     .serial = Serial2,
   },
 #endif
 #if SOC_UART_NUM >= 4
   {
+#ifdef RX3
     .rx_pin = RX3,
     .tx_pin = TX3,
+#else
+    .rx_pin = RX1,
+    .tx_pin = TX1,
+#endif
     .serial = Serial3,
   },
 #endif
 #if SOC_UART_NUM >= 5
   {
+#ifdef RX4
     .rx_pin = RX4,
     .tx_pin = TX4,
+#else
+    .rx_pin = RX1,
+    .tx_pin = TX1,
+#endif
     .serial = Serial4,
   },
 #endif
