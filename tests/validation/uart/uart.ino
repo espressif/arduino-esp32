@@ -1,9 +1,9 @@
 /* UART test
- *
- * This test is using UART0 (Serial) only for reporting test status and helping with the auto
- * baudrate detection test.
- * UART1 (Serial1) and UART2 (Serial2), where available, are used for testing.
- */
+
+   This test is using UART0 (Serial) only for reporting test status and helping with the auto
+   baudrate detection test.
+   UART1 (Serial1) and UART2 (Serial2), where available, are used for testing.
+*/
 
 #include <unity.h>
 #include "HardwareSerial.h"
@@ -16,42 +16,42 @@
 // UART0 TX | SOC_TX0 |   1   | 43 | 43 | 21 | 16 | 24 | 37 |
 // UART1 RX |   RX1   |  26   |  4 | 15 | 18 |  4 |  0 | 11 |
 // UART1 TX |   TX1   |  27   |  5 | 16 | 19 |  5 |  1 | 10 |
-// UART2 RX |   RX2   |   4   | -- | 19 | -- | -- | -- | -- |
-// UART2 TX |   TX2   |  25   | -- | 20 | -- | -- | -- | -- |
+// UART2 RX |   RX2   |   4   | -- | 19 | -- | -- | -- | UU |
+// UART2 TX |   TX2   |  25   | -- | 20 | -- | -- | -- | UU |
 
 /*
- * For each UART:
- *
- *           terminal
- *          |       ^
- *          v UART0 |
- *          RX  ^  TX
- *              |
- *        report status
- *              |
- *         TX <---> RX
- *            UARTx
- */
+   For each UART:
+
+             terminal
+            |       ^
+            v UART0 |
+            RX  ^  TX
+                |
+          report status
+                |
+           TX <---> RX
+              UARTx
+*/
 
 typedef struct test_uart_t
 {
   uint8_t rx_pin;
   uint8_t tx_pin;
-  HardwareSerial &serial;
+  HardwareSerial *serial;
 } test_uart_t;
 
-const test_uart_t test_uarts[SOC_UART_NUM] = {
+const test_uart_t test_uarts[SOC_UART_HP_NUM] = {
   {
     .rx_pin = SOC_RX0,
     .tx_pin = SOC_TX0,
-    .serial = Serial,
+    .serial = &Serial,
   },
   {
     .rx_pin = RX1,
     .tx_pin = TX1,
-    .serial = Serial1,
+    .serial = &Serial1,
   },
-#if SOC_UART_NUM >= 3
+#if SOC_UART_HP_NUM >= 3
   {
 #ifdef RX2
     .rx_pin = RX2,
@@ -60,10 +60,10 @@ const test_uart_t test_uarts[SOC_UART_NUM] = {
     .rx_pin = RX1,
     .tx_pin = TX1,
 #endif
-    .serial = Serial2,
+    .serial = &Serial2,
   },
-#endif  // SOC_UART_NUM >= 3
-#if SOC_UART_NUM >= 4
+#endif  // SOC_UART_HP_NUM >= 3
+#if SOC_UART_HP_NUM >= 4
   {
 #ifdef RX3
     .rx_pin = RX3,
@@ -72,10 +72,10 @@ const test_uart_t test_uarts[SOC_UART_NUM] = {
     .rx_pin = RX1,
     .tx_pin = TX1,
 #endif
-    .serial = Serial3,
+    .serial = &Serial3,
   },
-#endif  // SOC_UART_NUM >= 4
-#if SOC_UART_NUM >= 5
+#endif  // SOC_UART_HP_NUM >= 4
+#if SOC_UART_HP_NUM >= 5
   {
 #ifdef RX4
     .rx_pin = RX4,
@@ -84,16 +84,16 @@ const test_uart_t test_uarts[SOC_UART_NUM] = {
     .rx_pin = RX1,
     .tx_pin = TX1,
 #endif
-    .serial = Serial4,
+    .serial = &Serial4,
   }
-#endif  // SOC_UART_NUM >= 5
+#endif  // SOC_UART_HP_NUM >= 5
 };
 
 /* Utility global variables */
 
 uint8_t i;
 static String recv_msg = "";
-static int peeked_char[SOC_UART_NUM];
+static int peeked_char[SOC_UART_HP_NUM];
 
 /* Utility functions */
 
@@ -102,8 +102,8 @@ extern int8_t uart_get_TxPin(uint8_t uart_num);
 
 // This function starts all the available test UARTs
 void start_serial(unsigned long baudrate = 115200) {
-  for (i = 1; i < SOC_UART_NUM; i++) {
-    test_uarts[i].serial.begin(baudrate, SERIAL_8N1, test_uarts[i].rx_pin, test_uarts[i].tx_pin);
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
+    test_uarts[i].serial->begin(baudrate, SERIAL_8N1, test_uarts[i].rx_pin, test_uarts[i].tx_pin);
     while (!test_uarts[i].serial) {
       delay(10);
     }
@@ -112,17 +112,17 @@ void start_serial(unsigned long baudrate = 115200) {
 
 // This function stops all the available test UARTs
 void stop_serial() {
-  for (i = 1; i < SOC_UART_NUM; i++) {
-    test_uarts[i].serial.end();
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
+    test_uarts[i].serial->end();
   }
 }
 
 // This function transmits a message and checks if it was received correctly
 void transmit_and_check_msg(const String msg_append, bool perform_assert = true) {
   delay(100);  // Wait for some settings changes to take effect
-  for (i = 1; i < SOC_UART_NUM; i++) {
-    test_uarts[i].serial.print("Hello from Serial" + String(i) + " (UART" + String(i) + ") >>> via loopback >>> Serial" + String(i) + " (UART" + String(i) + ") " + msg_append);
-    test_uarts[i].serial.flush();
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
+    test_uarts[i].serial->print("Hello from Serial" + String(i) + " (UART" + String(i) + ") >>> via loopback >>> Serial" + String(i) + " (UART" + String(i) + ") " + msg_append);
+    test_uarts[i].serial->flush();
     delay(100);
     if (perform_assert) {
       TEST_ASSERT_EQUAL_STRING(("Hello from Serial" + String(i) + " (UART" + String(i) + ") >>> via loopback >>> Serial" + String(i) + " (UART" + String(i) + ") " + msg_append).c_str(), recv_msg.c_str());
@@ -133,21 +133,21 @@ void transmit_and_check_msg(const String msg_append, bool perform_assert = true)
 /* Tasks */
 
 /*
-// This task is used to send a message after a delay to test the auto baudrate detection
-void task_delayed_msg(void *pvParameters) {
+  // This task is used to send a message after a delay to test the auto baudrate detection
+  void task_delayed_msg(void *pvParameters) {
   HardwareSerial *selected_serial;
 
-#if SOC_UART_NUM >= 3
+  #if SOC_UART_HP_NUM >= 3
   selected_serial = &Serial1;
-#else
+  #else
   selected_serial = &Serial;
-#endif
+  #endif
 
   delay(2000);
   selected_serial->println("Hello from Serial to detect baudrate");
   selected_serial->flush();
   vTaskDelete(NULL);
-}
+  }
 */
 
 /* Unity functions */
@@ -156,10 +156,10 @@ void task_delayed_msg(void *pvParameters) {
 void setUp(void) {
   start_serial(115200);
 
-  for (i = 1; i < SOC_UART_NUM; i++) {
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
     log_d("Setup internal loop-back from and back to Serial%d (UART%d) TX >> Serial%d (UART%d) RX", i, i, i, i);
 
-    test_uarts[i].serial.onReceive([]() {
+    test_uarts[i].serial->onReceive([]() {
       onReceive_cb(i);
     });
     uart_internal_loopback(i, true);
@@ -175,18 +175,18 @@ void tearDown(void) {
 
 // This is a callback function that will be activated on UART RX events
 void onReceive_cb(int uart_num) {
-  HardwareSerial &selected_serial = test_uarts[uart_num].serial;
+  HardwareSerial *selected_serial = test_uarts[uart_num].serial;
   char c;
 
   recv_msg = "";
-  size_t available = selected_serial.available();
+  size_t available = selected_serial->available();
 
   if (available != 0) {
-    peeked_char[uart_num] = selected_serial.peek();
+    peeked_char[uart_num] = selected_serial->peek();
   }
 
   while (available--) {
-    c = (char)selected_serial.read();
+    c = (char)selected_serial->read();
     recv_msg += c;
   }
 
@@ -209,10 +209,10 @@ void change_baudrate_test(void) {
   //Test first using the updateBaudRate method and then using the begin method
   log_d("Changing baudrate to 9600");
 
-  for (i = 1; i < SOC_UART_NUM; i++) {
-    test_uarts[i].serial.updateBaudRate(9600);
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
+    test_uarts[i].serial->updateBaudRate(9600);
     //Baudrate error should be within 2% of the target baudrate
-    TEST_ASSERT_UINT_WITHIN(192, 9600, test_uarts[i].serial.baudRate());
+    TEST_ASSERT_UINT_WITHIN(192, 9600, test_uarts[i].serial->baudRate());
   }
 
   log_d("Sending string using 9600 baudrate");
@@ -221,9 +221,9 @@ void change_baudrate_test(void) {
   log_d("Changing baudrate back to 115200");
   start_serial(115200);
 
-  for (i = 1; i < SOC_UART_NUM; i++) {
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
     //Baudrate error should be within 2% of the target baudrate
-    TEST_ASSERT_UINT_WITHIN(2304, 115200, test_uarts[i].serial.baudRate());
+    TEST_ASSERT_UINT_WITHIN(2304, 115200, test_uarts[i].serial->baudRate());
   }
 
   log_d("Sending string using 115200 baudrate");
@@ -401,22 +401,22 @@ void change_pins_test(void) {
   log_d("Disabling UART loopback");
   //stop_serial();
 
-  for (i = 1; i < SOC_UART_NUM; i++) {
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
     uart_internal_loopback(i, false);
   }
 
   log_d("Swapping UART pins");
 
-#if SOC_UART_NUM == 2
+#if SOC_UART_HP_NUM == 2
   Serial1.setPins(TX1, RX1);  // Invert TX and RX pins
   TEST_ASSERT_EQUAL(TX1, uart_get_RxPin(1));  // TX1 is now RX pin
   TEST_ASSERT_EQUAL(RX1, uart_get_TxPin(1));  // RX1 is now TX pin
-#elif SOC_UART_NUM >= 3
-  for (i = 1; i < SOC_UART_NUM; i++) {
+#elif SOC_UART_HP_NUM >= 3
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
     // Swapping pins with the next available UART
-    int uart_replacement = (i + 1) % SOC_UART_NUM;
+    int uart_replacement = (i + 1) % SOC_UART_HP_NUM;
     uart_replacement = uart_replacement == 0 ? 1 : uart_replacement;
-    test_uarts[i].serial.setPins(test_uarts[uart_replacement].rx_pin, test_uarts[uart_replacement].tx_pin);
+    test_uarts[i].serial->setPins(test_uarts[uart_replacement].rx_pin, test_uarts[uart_replacement].tx_pin);
     TEST_ASSERT_EQUAL(test_uarts[uart_replacement].tx_pin, uart_get_TxPin(i));
     TEST_ASSERT_EQUAL(test_uarts[uart_replacement].rx_pin, uart_get_RxPin(i));
   }
@@ -426,7 +426,7 @@ void change_pins_test(void) {
 
   log_d("Re-enabling UART loopback");
 
-  for (i = 1; i < SOC_UART_NUM; i++) {
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
     uart_internal_loopback(i, true);
   }
 
@@ -437,11 +437,11 @@ void change_pins_test(void) {
 
 /*
 
-// The new loopback API does not allow cross connecting UARTs. This test is disabled for now.
+  // The new loopback API does not allow cross connecting UARTs. This test is disabled for now.
 
-// This test checks if the auto baudrate detection works on ESP32 and ESP32-S2
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-void auto_baudrate_test(void) {
+  // This test checks if the auto baudrate detection works on ESP32 and ESP32-S2
+  #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+  void auto_baudrate_test(void) {
   log_d("Starting auto baudrate test");
 
   HardwareSerial *selected_serial;
@@ -449,12 +449,12 @@ void auto_baudrate_test(void) {
 
   log_d("Stopping test serial. Using Serial2 for ESP32 and Serial1 for ESP32-S2.");
 
-#if SOC_UART_HP_NUM == 2
+  #if SOC_UART_HP_NUM == 2
   selected_serial = &Serial1;
   uart_internal_loopback(0, true);  // it was suppose to cross connect TX0 to RX1
-#elif SOC_UART_NUM >= 3
+  #elif SOC_UART_HP_NUM >= 3
   selected_serial = &Serial2;
-#endif
+  #endif
 
   //selected_serial->end(false);
 
@@ -467,31 +467,31 @@ void auto_baudrate_test(void) {
   selected_serial->begin(0);
   baudrate = selected_serial->baudRate();
 
-#if SOC_UART_HP_NUM == 2
+  #if SOC_UART_HP_NUM == 2
   Serial.end();
   Serial.begin(115200);
-#endif
+  #endif
 
   TEST_ASSERT_UINT_WITHIN(2304, 115200, baudrate);
 
   Serial.println("Auto baudrate test successful");
-}
-#endif
+  }
+  #endif
 */
 
 // This test checks if the peripheral manager can properly manage UART pins
 void periman_test(void) {
   log_d("Checking if peripheral manager can properly manage UART pins");
 
-  for (i = 1; i < SOC_UART_NUM; i++) {
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
     log_d("Setting up I2C on the same pins as UART%d", i);
     Wire.begin(test_uarts[i].rx_pin, test_uarts[i].tx_pin);
 
     recv_msg = "";
 
     log_d("Trying to send message using UART%d with I2C enabled", i);
-    test_uarts[i].serial.print("Hello from Serial" + String(i) + " (UART" + String(i) + ") >>> via loopback >>> Serial" + String(i) + " (UART" + String(i) + ") while used by I2C");
-    test_uarts[i].serial.flush();
+    test_uarts[i].serial->print("Hello from Serial" + String(i) + " (UART" + String(i) + ") >>> via loopback >>> Serial" + String(i) + " (UART" + String(i) + ") while used by I2C");
+    test_uarts[i].serial->flush();
     delay(100);
     TEST_ASSERT_EQUAL_STRING("", recv_msg.c_str());
 
@@ -542,16 +542,16 @@ void setup() {
   }
   log_d("SOC_UART_HP_NUM = %d", SOC_UART_HP_NUM);
 
-  for (i = 0; i < SOC_UART_NUM; i++) {
+  for (i = 0; i < SOC_UART_HP_NUM; i++) {
     peeked_char[i] = -1;
   }
 
   // Begin needs to be called before setting up the loopback because it creates the serial object
   start_serial(115200);
 
-  for (i = 1; i < SOC_UART_NUM; i++) {
+  for (i = 1; i < SOC_UART_HP_NUM; i++) {
     log_d("Setup internal loop-back from and back to Serial%d (UART%d) TX >> Serial%d (UART%d) RX", i, i, i, i);
-    test_uarts[i].serial.onReceive([]() {
+    test_uarts[i].serial->onReceive([]() {
       onReceive_cb(i);
     });
     uart_internal_loopback(i, true);
@@ -567,11 +567,11 @@ void setup() {
   RUN_TEST(change_cpu_frequency_test);
   RUN_TEST(disabled_uart_calls_test);
   RUN_TEST(enabled_uart_calls_test);
-/*
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
-  RUN_TEST(auto_baudrate_test);
-#endif
-*/
+  /*
+    #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+    RUN_TEST(auto_baudrate_test);
+    #endif
+  */
   RUN_TEST(periman_test);
   RUN_TEST(change_pins_test);
   RUN_TEST(end_when_stopped_test);
