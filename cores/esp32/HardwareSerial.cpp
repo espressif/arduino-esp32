@@ -377,77 +377,77 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         break;
 #endif
     }
-
-    // if no RX/TX pins are defined, it will not start the UART driver
-    if (rxPin < 0 && txPin < 0) {
-      log_e("No RX/TX pins defined. Please set RX/TX pins.");
-      HSERIAL_MUTEX_UNLOCK();
-      return;
-    }
-
-    // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
-    // it will detach previous UART attached pins
-
-    // indicates that uartbegin() has to initialize a new IDF driver
-    if (_testUartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd)) {
-      _destroyEventTask();  // when IDF uart driver must be restarted, _eventTask must finish too
-    }
-
-    // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
-    // it will detach previous UART attached pins
-    _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
-    if (_uart == NULL) {
-      log_e("UART driver failed to start. Please check the logs.");
-      HSERIAL_MUTEX_UNLOCK();
-      return;
-    }
-    if (!baud) {
-      // using baud rate as zero, forces it to try to detect the current baud rate in place
-      uartStartDetectBaudrate(_uart);
-      time_t startMillis = millis();
-      unsigned long detectedBaudRate = 0;
-      while (millis() - startMillis < timeout_ms && !(detectedBaudRate = uartDetectBaudrate(_uart))) {
-        yield();
-      }
-
-      if (detectedBaudRate) {
-        delay(100);  // Give some time...
-        _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
-        if (_uart == NULL) {
-          log_e("UART driver failed to start. Please check the logs.");
-          HSERIAL_MUTEX_UNLOCK();
-          return;
-        }
-      } else {
-        log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
-        _uart = NULL;
-      }
-    }
-    // create a task to deal with Serial Events when, for example, calling begin() twice to change the baudrate,
-    // or when setting the callback before calling begin()
-    if (_uart != NULL && (_onReceiveCB != NULL || _onReceiveErrorCB != NULL) && _eventTask == NULL) {
-      _createEventTask(this);
-    }
-
-    // Set UART RX timeout
-    uartSetRxTimeout(_uart, _rxTimeout);
-
-    // Set UART FIFO Full depending on the baud rate.
-    // Lower baud rates will force to emulate byte-by-byte reading
-    // Higher baud rates will keep IDF default of 120 bytes for FIFO FULL Interrupt
-    // It can also be changed by the application at any time
-    if (!_rxFIFOFull) {  // it has not being changed before calling begin()
-      //  set a default FIFO Full value for the IDF driver
-      uint8_t fifoFull = 1;
-      if (baud > 57600 || (_onReceiveCB != NULL && _onReceiveTimeout)) {
-        fifoFull = 120;
-      }
-      uartSetRxFIFOFull(_uart, fifoFull);
-      _rxFIFOFull = fifoFull;
-    }
-
-    HSERIAL_MUTEX_UNLOCK();
   }
+  
+  // if no RX/TX pins are defined, it will not start the UART driver
+  if (rxPin < 0 && txPin < 0) {
+    log_e("No RX/TX pins defined. Please set RX/TX pins.");
+    HSERIAL_MUTEX_UNLOCK();
+    return;
+  }
+
+  // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
+  // it will detach previous UART attached pins
+
+  // indicates that uartbegin() has to initialize a new IDF driver
+  if (_testUartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd)) {
+    _destroyEventTask();  // when IDF uart driver must be restarted, _eventTask must finish too
+  }
+
+  // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
+  // it will detach previous UART attached pins
+  _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
+  if (_uart == NULL) {
+    log_e("UART driver failed to start. Please check the logs.");
+    HSERIAL_MUTEX_UNLOCK();
+    return;
+  }
+  if (!baud) {
+    // using baud rate as zero, forces it to try to detect the current baud rate in place
+    uartStartDetectBaudrate(_uart);
+    time_t startMillis = millis();
+    unsigned long detectedBaudRate = 0;
+    while (millis() - startMillis < timeout_ms && !(detectedBaudRate = uartDetectBaudrate(_uart))) {
+      yield();
+    }
+
+    if (detectedBaudRate) {
+      delay(100);  // Give some time...
+      _uart = uartBegin(_uart_nr, detectedBaudRate, config, rxPin, txPin, _rxBufferSize, _txBufferSize, invert, rxfifo_full_thrhd);
+      if (_uart == NULL) {
+        log_e("UART driver failed to start. Please check the logs.");
+        HSERIAL_MUTEX_UNLOCK();
+        return;
+      }
+    } else {
+      log_e("Could not detect baudrate. Serial data at the port must be present within the timeout for detection to be possible");
+      _uart = NULL;
+    }
+  }
+  // create a task to deal with Serial Events when, for example, calling begin() twice to change the baudrate,
+  // or when setting the callback before calling begin()
+  if (_uart != NULL && (_onReceiveCB != NULL || _onReceiveErrorCB != NULL) && _eventTask == NULL) {
+    _createEventTask(this);
+  }
+
+  // Set UART RX timeout
+  uartSetRxTimeout(_uart, _rxTimeout);
+
+  // Set UART FIFO Full depending on the baud rate.
+  // Lower baud rates will force to emulate byte-by-byte reading
+  // Higher baud rates will keep IDF default of 120 bytes for FIFO FULL Interrupt
+  // It can also be changed by the application at any time
+  if (!_rxFIFOFull) {  // it has not being changed before calling begin()
+    //  set a default FIFO Full value for the IDF driver
+    uint8_t fifoFull = 1;
+    if (baud > 57600 || (_onReceiveCB != NULL && _onReceiveTimeout)) {
+      fifoFull = 120;
+    }
+    uartSetRxFIFOFull(_uart, fifoFull);
+    _rxFIFOFull = fifoFull;
+  }
+
+  HSERIAL_MUTEX_UNLOCK();
 }
 
 void HardwareSerial::updateBaudRate(unsigned long baud) {
