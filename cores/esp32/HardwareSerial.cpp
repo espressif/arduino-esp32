@@ -341,14 +341,25 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
       case UART_NUM_2:
         if (rxPin < 0 && txPin < 0) {
           // do not change RX2/TX2 if it has already been set before
+#ifdef RX2
           rxPin = _rxPin < 0 ? (int8_t)RX2 : _rxPin;
+#endif
+#ifdef TX2
           txPin = _txPin < 0 ? (int8_t)TX2 : _txPin;
+#endif
         }
         break;
 #endif
     }
   }
 
+  // if no RX/TX pins are defined, it will not start the UART driver
+  if (rxPin < 0 && txPin < 0) {
+    log_e("No RX/TX pins defined. Please set RX/TX pins.");
+    HSERIAL_MUTEX_UNLOCK();
+    return;
+  }
+  
   // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
   // it will detach previous UART attached pins
 
