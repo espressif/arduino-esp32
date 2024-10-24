@@ -12,7 +12,7 @@ if [[ $IS_PR != 'true' ]] || [[ $PERFORMANCE_ENABLED == 'true' ]]; then
   #qemu_types+=",'performance'"
 fi
 
-targets="'esp32','esp32s2','esp32s3','esp32c3','esp32c6','esp32h2'"
+targets="'esp32','esp32s2','esp32s3','esp32c3','esp32c6','esp32h2','esp32p4'"
 
 mkdir -p info
 

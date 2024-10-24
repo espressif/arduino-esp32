@@ -178,6 +178,7 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32c3``
 * ``espressif:esp32:esp32c6``
 * ``espressif:esp32:esp32h2``
+* ``espressif:esp32:esp32p4:USBMode=default``
 
 There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.json`` file.
 

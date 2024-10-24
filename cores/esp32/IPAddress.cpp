@@ -344,13 +344,13 @@ size_t IPAddress::printTo(Print &p, bool includeZone) const {
         n += p.print(':');
       }
     }
-    // add a zone if zone-id is non-zero
-    if (_zone > 0 && includeZone) {
-      n += p.print('%');
-      char if_name[NETIF_NAMESIZE];
-      netif_index_to_name(_zone, if_name);
-      n += p.print(if_name);
-    }
+    // add a zone if zone-id is non-zero (causes exception on recent IDF builds)
+    // if (_zone > 0 && includeZone) {
+    //   n += p.print('%');
+    //   char if_name[NETIF_NAMESIZE];
+    //   netif_index_to_name(_zone, if_name);
+    //   n += p.print(if_name);
+    // }
     return n;
   }
 

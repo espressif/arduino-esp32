@@ -16,17 +16,18 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
+#include "sdkconfig.h"
 #if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
 #include <mutex>
 #endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 #include "esp_wifi_types.h"
 #include "esp_smartconfig.h"
 #include "network_provisioning/network_config.h"
 #endif
 
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 constexpr int WIFI_SCANNING_BIT = BIT0;
 constexpr int WIFI_SCAN_DONE_BIT = BIT1;
 #endif
@@ -44,7 +45,7 @@ typedef enum {
   ARDUINO_EVENT_ETH_GOT_IP,
   ARDUINO_EVENT_ETH_LOST_IP,
   ARDUINO_EVENT_ETH_GOT_IP6,
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
   ARDUINO_EVENT_WIFI_OFF = 100,
   ARDUINO_EVENT_WIFI_READY,
   ARDUINO_EVENT_WIFI_SCAN_DONE,
@@ -96,7 +97,7 @@ typedef union {
   ip_event_got_ip_t got_ip;
   ip_event_got_ip6_t got_ip6;
   esp_eth_handle_t eth_connected;
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
   wifi_event_sta_scan_done_t wifi_scan_done;
   wifi_event_sta_authmode_change_t wifi_sta_authmode_change;
   wifi_event_sta_connected_t wifi_sta_connected;
@@ -107,6 +108,8 @@ typedef union {
   wifi_event_ap_staconnected_t wifi_ap_staconnected;
   wifi_event_ap_stadisconnected_t wifi_ap_stadisconnected;
   wifi_event_ftm_report_t wifi_ftm_report;
+#endif
+#if SOC_WIFI_SUPPORTED
   wifi_sta_config_t prov_cred_recv;
   network_prov_wifi_sta_fail_reason_t prov_fail_reason;
   smartconfig_event_got_ssid_pswd_t sc_got_ssid_pswd;
@@ -237,7 +240,7 @@ public:
   friend class ESP_NetworkInterface;
   friend class ETHClass;
   friend class PPPClass;
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
   friend class STAClass;
   friend class APClass;
   friend class WiFiGenericClass;
