@@ -131,7 +131,7 @@ using network_event_handle_t = size_t;
 /**
  * @brief Class that provides network events callback handling
  * it registers user callback functions for event handling,
- * maintans the queue of events and propagates the event amoung subscribed callbacks
+ * maintains the queue of events and propagates the event among subscribed callbacks
  * callback are called in the context of a dedicated task consuming the queue
  *
  */
@@ -245,11 +245,11 @@ public:
 
 protected:
   bool initNetworkEvents();
-  // same as onEvent() but places newly added handler at the begining of registered events list
+  // same as onEvent() but places newly added handler at the beginning of registered events list
   network_event_handle_t onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
-  // same as onEvent() but places newly added handler at the begining of registered events list
+  // same as onEvent() but places newly added handler at the beginning of registered events list
   network_event_handle_t onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
-  // same as onEvent() but places newly added handler at the begining of registered events list
+  // same as onEvent() but places newly added handler at the beginning of registered events list
   network_event_handle_t onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
 
 private:
@@ -281,11 +281,11 @@ private:
   QueueHandle_t _arduino_event_queue;
   TaskHandle_t _arduino_event_task_handle;
 
-  // registred events callbacks containter
+  // registered events callbacks container
   std::vector<NetworkEventCbList_t> _cbEventList;
 
 #if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
-  // containter access mutex
+  // container access mutex
   std::mutex _mtx;
 #endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
