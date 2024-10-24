@@ -16,6 +16,9 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
+#if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
+#include <mutex>
+#endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
 #if SOC_WIFI_SUPPORTED
 #include "esp_wifi_types.h"
@@ -24,8 +27,8 @@
 #endif
 
 #if SOC_WIFI_SUPPORTED
-static const int WIFI_SCANNING_BIT = BIT0;
-static const int WIFI_SCAN_DONE_BIT = BIT1;
+constexpr int WIFI_SCANNING_BIT = BIT0;
+constexpr int WIFI_SCAN_DONE_BIT = BIT1;
 #endif
 
 #define NET_HAS_IP6_GLOBAL_BIT 0
@@ -33,7 +36,7 @@ static const int WIFI_SCAN_DONE_BIT = BIT1;
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);
 
 typedef enum {
-  ARDUINO_EVENT_NONE,
+  ARDUINO_EVENT_NONE = 0,
   ARDUINO_EVENT_ETH_START,
   ARDUINO_EVENT_ETH_STOP,
   ARDUINO_EVENT_ETH_CONNECTED,
@@ -42,10 +45,11 @@ typedef enum {
   ARDUINO_EVENT_ETH_LOST_IP,
   ARDUINO_EVENT_ETH_GOT_IP6,
 #if SOC_WIFI_SUPPORTED
-  ARDUINO_EVENT_WIFI_OFF,
+  ARDUINO_EVENT_WIFI_OFF = 100,
   ARDUINO_EVENT_WIFI_READY,
   ARDUINO_EVENT_WIFI_SCAN_DONE,
-  ARDUINO_EVENT_WIFI_STA_START,
+  ARDUINO_EVENT_WIFI_FTM_REPORT,
+  ARDUINO_EVENT_WIFI_STA_START = 110,
   ARDUINO_EVENT_WIFI_STA_STOP,
   ARDUINO_EVENT_WIFI_STA_CONNECTED,
   ARDUINO_EVENT_WIFI_STA_DISCONNECTED,
@@ -53,24 +57,23 @@ typedef enum {
   ARDUINO_EVENT_WIFI_STA_GOT_IP,
   ARDUINO_EVENT_WIFI_STA_GOT_IP6,
   ARDUINO_EVENT_WIFI_STA_LOST_IP,
-  ARDUINO_EVENT_WIFI_AP_START,
+  ARDUINO_EVENT_WIFI_AP_START = 130,
   ARDUINO_EVENT_WIFI_AP_STOP,
   ARDUINO_EVENT_WIFI_AP_STACONNECTED,
   ARDUINO_EVENT_WIFI_AP_STADISCONNECTED,
   ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED,
   ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED,
   ARDUINO_EVENT_WIFI_AP_GOT_IP6,
-  ARDUINO_EVENT_WIFI_FTM_REPORT,
-  ARDUINO_EVENT_WPS_ER_SUCCESS,
+  ARDUINO_EVENT_WPS_ER_SUCCESS = 140,
   ARDUINO_EVENT_WPS_ER_FAILED,
   ARDUINO_EVENT_WPS_ER_TIMEOUT,
   ARDUINO_EVENT_WPS_ER_PIN,
   ARDUINO_EVENT_WPS_ER_PBC_OVERLAP,
-  ARDUINO_EVENT_SC_SCAN_DONE,
+  ARDUINO_EVENT_SC_SCAN_DONE = 150,
   ARDUINO_EVENT_SC_FOUND_CHANNEL,
   ARDUINO_EVENT_SC_GOT_SSID_PSWD,
   ARDUINO_EVENT_SC_SEND_ACK_DONE,
-  ARDUINO_EVENT_PROV_INIT,
+  ARDUINO_EVENT_PROV_INIT = 160,
   ARDUINO_EVENT_PROV_DEINIT,
   ARDUINO_EVENT_PROV_START,
   ARDUINO_EVENT_PROV_END,
@@ -78,7 +81,7 @@ typedef enum {
   ARDUINO_EVENT_PROV_CRED_FAIL,
   ARDUINO_EVENT_PROV_CRED_SUCCESS,
 #endif
-  ARDUINO_EVENT_PPP_START,
+  ARDUINO_EVENT_PPP_START = 200,
   ARDUINO_EVENT_PPP_STOP,
   ARDUINO_EVENT_PPP_CONNECTED,
   ARDUINO_EVENT_PPP_DISCONNECTED,
@@ -110,36 +113,123 @@ typedef union {
 #endif
 } arduino_event_info_t;
 
-typedef struct {
+/**
+ * @brief struct combines arduino event id and event's data object
+ *
+ */
+struct arduino_event_t {
   arduino_event_id_t event_id;
   arduino_event_info_t event_info;
-} arduino_event_t;
+};
 
-typedef void (*NetworkEventCb)(arduino_event_id_t event);
-typedef std::function<void(arduino_event_id_t event, arduino_event_info_t info)> NetworkEventFuncCb;
-typedef void (*NetworkEventSysCb)(arduino_event_t *event);
+// type aliases
+using NetworkEventCb = void (*)(arduino_event_id_t event);
+using NetworkEventFuncCb = std::function<void(arduino_event_id_t event, arduino_event_info_t info)>;
+using NetworkEventSysCb = void (*)(arduino_event_t *event);
+using network_event_handle_t = size_t;
 
-typedef size_t network_event_handle_t;
-
+/**
+ * @brief Class that provides network events callback handling
+ * it registers user callback functions for event handling,
+ * maintains the queue of events and propagates the event among subscribed callbacks
+ * callback are called in the context of a dedicated task consuming the queue
+ *
+ */
 class NetworkEvents {
 public:
   NetworkEvents();
   ~NetworkEvents();
 
+  /**
+   * @brief register callback function to be executed on arduino event(s)
+   * @note if same handler is registered twice or more than same handler would be called twice or more times
+   *
+   * @param cbEvent static callback function
+   * @param event event to process, any event by default
+   * @return network_event_handle_t
+   */
   network_event_handle_t onEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+
+  /**
+   * @brief register functional callback to be executed on arduino event(s)
+   * also used for lambda callbacks
+   * @note if same handler is registered twice or more than same handler would be called twice or more times
+   *
+   * @param cbEvent static callback function
+   * @param event event to process, any event by default
+   * @return network_event_handle_t
+   */
   network_event_handle_t onEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+
+  /**
+   * @brief register static system callback to be executed on arduino event(s)
+   * callback function would be supplied with a pointer to arduino_event_t structure as an argument
+   *
+   * @note if same handler is registered twice or more than same handler would be called twice or more times
+   *
+   * @param cbEvent static callback function
+   * @param event event to process, any event by default
+   * @return network_event_handle_t
+   */
   network_event_handle_t onEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+
+  /**
+   * @brief unregister static function callback
+   * @note a better way to unregister callbacks is to save/unregister via network_event_handle_t
+   *
+   * @param cbEvent static callback function
+   * @param event event to process, any event by default
+   */
   void removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
-  void removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+
+  /**
+   * @brief unregister functional callback
+   * @note a better way to unregister callbacks is to save/unregister via network_event_handle_t
+   * @note this does not work for lambda's! Do unregister via network_event_handle_t
+   *
+   * @param cbEvent functional callback
+   * @param event event to process, any event by default
+   */
+  void removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX)
+    __attribute__((deprecated("removing functional callbacks via pointer is deprecated, use removeEvent(network_event_handle_t) instead")));
+
+  /**
+   * @brief unregister static system function callback
+   * @note a better way to unregister callbacks is to save/unregister via network_event_handle_t
+   *
+   * @param cbEvent static callback function
+   * @param event event to process, any event by default
+   */
   void removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+
+  /**
+   * @brief unregister event callback via handler
+   *
+   * @param cbEvent static callback function
+   * @param event event to process, any event by default
+   */
   void removeEvent(network_event_handle_t event_handle);
 
-  const char *eventName(arduino_event_id_t id);
+  /**
+   * @brief get a human-readable name of an event by it's id
+   *
+   * @param id event id code
+   * @return const char* event name string
+   */
+  static const char *eventName(arduino_event_id_t id);
 
-  void checkForEvent();
-  bool postEvent(arduino_event_t *event);
+  /**
+   * @brief post an event to the queue
+   * and propagade and event to subscribed handlers
+   * @note posting an event will trigger context switch from a lower priority task
+   *
+   * @param event a pointer to arduino_event_t struct
+   * @return true if event was queued susccessfuly
+   * @return false on memrory allocation error or queue is full
+   */
+  bool postEvent(const arduino_event_t *event);
 
-  int getStatusBits();
+  int getStatusBits() const;
   int waitStatusBits(int bits, uint32_t timeout_ms);
   int setStatusBits(int bits);
   int clearStatusBits(int bits);
@@ -155,15 +245,53 @@ public:
 
 protected:
   bool initNetworkEvents();
-  uint32_t findEvent(NetworkEventCb cbEvent, arduino_event_id_t event);
-  uint32_t findEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event);
-  uint32_t findEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event);
+  // same as onEvent() but places newly added handler at the beginning of registered events list
   network_event_handle_t onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  // same as onEvent() but places newly added handler at the beginning of registered events list
   network_event_handle_t onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  // same as onEvent() but places newly added handler at the beginning of registered events list
   network_event_handle_t onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
 
 private:
+  /**
+   * @brief an object holds callback's definitions:
+   * - callback id
+   * - callback function pointers
+   * - binded event id
+   *
+   */
+  struct NetworkEventCbList_t {
+    network_event_handle_t id;
+    NetworkEventCb cb;
+    NetworkEventFuncCb fcb;
+    NetworkEventSysCb scb;
+    arduino_event_id_t event;
+
+    explicit NetworkEventCbList_t(
+      network_event_handle_t id, NetworkEventCb cb = nullptr, NetworkEventFuncCb fcb = nullptr, NetworkEventSysCb scb = nullptr,
+      arduino_event_id_t event = ARDUINO_EVENT_MAX
+    )
+      : id(id), cb(cb), fcb(fcb), scb(scb), event(event) {}
+  };
+
+  // define initial id's value
+  network_event_handle_t _current_id{0};
+
   EventGroupHandle_t _arduino_event_group;
   QueueHandle_t _arduino_event_queue;
   TaskHandle_t _arduino_event_task_handle;
+
+  // registered events callbacks container
+  std::vector<NetworkEventCbList_t> _cbEventList;
+
+#if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
+  // container access mutex
+  std::mutex _mtx;
+#endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+
+  /**
+   * @brief task function that picks events from an event queue and calls registered callbacks
+   *
+   */
+  void _checkForEvent();
 };
