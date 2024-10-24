@@ -343,9 +343,13 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           // do not change RX2/TX2 if it has already been set before
 #ifdef RX2
           rxPin = _rxPin < 0 ? (int8_t)RX2 : _rxPin;
+#else
+          rxPin = _rxPin;
 #endif
 #ifdef TX2
           txPin = _txPin < 0 ? (int8_t)TX2 : _txPin;
+#else
+          txPin = _txPin;
 #endif
         }
         break;
@@ -356,9 +360,13 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           // do not change RX2/TX2 if it has already been set before
 #ifdef RX3
           rxPin = _rxPin < 0 ? (int8_t)RX3 : _rxPin;
+#else
+          rxPin = _rxPin;
 #endif
 #ifdef TX3
           txPin = _txPin < 0 ? (int8_t)TX3 : _txPin;
+#else
+          txPin = _txPin;
 #endif
         }
         break;
@@ -369,9 +377,13 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           // do not change RX2/TX2 if it has already been set before
 #ifdef RX4
           rxPin = _rxPin < 0 ? (int8_t)RX4 : _rxPin;
+#else
+          rxPin = _rxPin;
 #endif
 #ifdef TX4
           txPin = _txPin < 0 ? (int8_t)TX4 : _txPin;
+#else
+          txPin = _txPin;
 #endif
         }
         break;
