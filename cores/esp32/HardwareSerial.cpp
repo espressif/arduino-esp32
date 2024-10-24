@@ -340,13 +340,23 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 #if SOC_UART_HP_NUM > 2  // may save some flash bytes...
       case UART_NUM_2:
         if (rxPin < 0 && txPin < 0) {
+#ifdef RX2
           // do not change RX2/TX2 if it has already been set before
           rxPin = _rxPin < 0 ? (int8_t)RX2 : _rxPin;
+#endif
+#ifdef TX2
           txPin = _txPin < 0 ? (int8_t)TX2 : _txPin;
+#endif
         }
         break;
 #endif
     }
+  }
+  // if no RX/TX pins are defined, it will not start the UART driver
+  if (rxPin < 0 && txPin < 0) {
+    log_e("No RX/TX pins defined. Please set RX/TX pins.");
+    HSERIAL_MUTEX_UNLOCK();
+    return;
   }
 
   // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
@@ -425,6 +435,7 @@ void HardwareSerial::end() {
   if (uartGetDebug() == _uart_nr) {
     uartSetDebug(0);
   }
+  uart_set_loop_back(_uart_nr, false);  // disable loopback mode, if previously enabled
   _rxFIFOFull = 0;
   uartEnd(_uart_nr);    // fully detach all pins and delete the UART driver
   _destroyEventTask();  // when IDF uart driver is deleted, _eventTask must finish too

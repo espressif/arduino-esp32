@@ -166,6 +166,7 @@ static bool _uartDetachBus_RX(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_RX bus NULL pointer.");
   uart_t *bus = (uart_t *)busptr;
+  uart_set_loop_back(bus->num, false); // disable loopback
   return _uartDetachPins(bus->num, bus->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
@@ -173,6 +174,7 @@ static bool _uartDetachBus_TX(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_TX bus NULL pointer.");
   uart_t *bus = (uart_t *)busptr;
+  uart_set_loop_back(bus->num, false); // disable loopback
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
