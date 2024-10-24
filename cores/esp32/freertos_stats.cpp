@@ -53,7 +53,7 @@ void printRunningTasks(Print & printer) {
     );
     printer.printf("Num\t            Name"
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-      "\t     Load"
+      "\tLoad"
 #endif
       "\tPrio\t Free"
 #if CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID
@@ -72,7 +72,7 @@ void printRunningTasks(Print & printer) {
 #endif
       printer.printf("%3u\t%16s"
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-      "\t%8lu%%"
+      "\t%3lu%%"
 #endif
       "\t%4u\t%5lu"
 #if CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID
