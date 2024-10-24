@@ -5,7 +5,7 @@
  */
 
 #include "Update.h"
-#include "Arduino.h" 
+#include "Arduino.h"
 #include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
