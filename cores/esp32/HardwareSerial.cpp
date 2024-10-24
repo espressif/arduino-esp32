@@ -363,7 +363,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         }
         break;
 #endif
-    }
 #if SOC_UART_HP_NUM > 4  // may save some flash bytes...
       case UART_NUM_4:
         if (rxPin < 0 && txPin < 0) {
