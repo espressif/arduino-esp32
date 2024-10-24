@@ -435,7 +435,6 @@ void HardwareSerial::end() {
   if (uartGetDebug() == _uart_nr) {
     uartSetDebug(0);
   }
-  uart_set_loop_back(_uart_nr, false);  // disable loopback mode, if previously enabled
   _rxFIFOFull = 0;
   uartEnd(_uart_nr);    // fully detach all pins and delete the UART driver
   _destroyEventTask();  // when IDF uart driver is deleted, _eventTask must finish too
