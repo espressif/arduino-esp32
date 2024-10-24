@@ -44,7 +44,7 @@ void printRunningTasks(Print & printer) {
 #endif
     printer.printf("Tasks: %u"
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-      ", Runtime: %us, Period: %uus"
+      ", Runtime: %lus, Period: %luus"
 #endif
       "\n", uxArraySize
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
