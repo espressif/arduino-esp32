@@ -166,6 +166,7 @@ static bool _uartDetachBus_RX(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_RX bus NULL pointer.");
   uart_t *bus = (uart_t *)busptr;
+  uart_set_loop_back(bus->num, false); // disable loopback
   return _uartDetachPins(bus->num, bus->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
@@ -173,6 +174,7 @@ static bool _uartDetachBus_TX(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_TX bus NULL pointer.");
   uart_t *bus = (uart_t *)busptr;
+  uart_set_loop_back(bus->num, false); // disable loopback
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
@@ -1164,11 +1166,11 @@ unsigned long uartDetectBaudrate(uart_t *uart) {
    This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
    This creates a loop that lets us receive anything we send on the UART without external wires.
 */
-void uart_internal_loopback(uint8_t uartNum, int8_t rxPin) {
-  if (uartNum > SOC_UART_HP_NUM - 1 || !GPIO_IS_VALID_GPIO(rxPin)) {
+void uart_internal_loopback(uint8_t uartNum, bool loop_back_en) {
+  if (uartNum > SOC_UART_HP_NUM - 1) {
     return;
   }
-  esp_rom_gpio_connect_out_signal(rxPin, UART_TX_SIGNAL(uartNum), false, false);
+  uart_set_loop_back(uartNum, loop_back_en);
 }
 
 /*

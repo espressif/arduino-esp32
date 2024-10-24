@@ -75,7 +75,7 @@ void setup() {
   // GPIO4 <--> GPIO5 using external wire
   Serial1.begin(BAUD, SERIAL_8N1, RXPIN, TXPIN);  // Rx = 4, Tx = 5 will work for ESP32, S2, S3 and C3
 #if USE_INTERNAL_PIN_LOOPBACK
-  uart_internal_loopback(TEST_UART, RXPIN);
+  uart_internal_loopback(TEST_UART, true);
 #endif
 
   for (uint8_t i = 0; i < sizeof(fifoFullTestCases); i++) {

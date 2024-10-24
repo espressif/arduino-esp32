@@ -106,7 +106,7 @@ unsigned long uartDetectBaudrate(uart_t *uart);
 
 // Make sure UART's RX signal is connected to TX pin
 // This creates a loop that lets us receive anything we send on the UART
-void uart_internal_loopback(uint8_t uartNum, int8_t rxPin);
+void uart_internal_loopback(uint8_t uartNum, bool loop_back_en);
 
 // Routines that generate BREAK in the UART for testing purpose
 
