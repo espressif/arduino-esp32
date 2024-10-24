@@ -161,47 +161,47 @@
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 873322,
+                            "flash_bytes": 873518,
                             "flash_percentage": 66,
-                            "ram_bytes": 38264,
+                            "ram_bytes": 38256,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 962798,
+                            "flash_bytes": 962982,
                             "flash_percentage": 73,
-                            "ram_bytes": 38624,
+                            "ram_bytes": 38632,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 919134,
+                            "flash_bytes": 919338,
                             "flash_percentage": 70,
-                            "ram_bytes": 38336,
+                            "ram_bytes": 38328,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 945326,
+                            "flash_bytes": 945610,
                             "flash_percentage": 72,
-                            "ram_bytes": 40632,
+                            "ram_bytes": 40640,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 931554,
+                            "flash_bytes": 931814,
                             "flash_percentage": 71,
-                            "ram_bytes": 40536,
+                            "ram_bytes": 40528,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 339578,
+                            "flash_bytes": 339590,
                             "flash_percentage": 25,
                             "ram_bytes": 14768,
                             "ram_percentage": 4
@@ -209,17 +209,17 @@
                     },
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
-                            "flash_bytes": 922230,
+                            "flash_bytes": 922482,
                             "flash_percentage": 70,
-                            "ram_bytes": 40288,
+                            "ram_bytes": 40296,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 950310,
+                            "flash_bytes": 950570,
                             "flash_percentage": 72,
-                            "ram_bytes": 39912,
+                            "ram_bytes": 39920,
                             "ram_percentage": 12
                             }]
                     }
@@ -230,9 +230,9 @@
                 "sketches": [
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 959562,
+                            "flash_bytes": 959850,
                             "flash_percentage": 73,
-                            "ram_bytes": 35012,
+                            "ram_bytes": 35004,
                             "ram_percentage": 10
                             }]
                     },
@@ -278,47 +278,47 @@
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 940198,
+                            "flash_bytes": 940516,
                             "flash_percentage": 71,
-                            "ram_bytes": 35612,
+                            "ram_bytes": 35620,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1035356,
-                            "flash_percentage": 78,
-                            "ram_bytes": 36012,
+                            "flash_bytes": 1035668,
+                            "flash_percentage": 79,
+                            "ram_bytes": 36028,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 982336,
+                            "flash_bytes": 982656,
                             "flash_percentage": 74,
-                            "ram_bytes": 35700,
+                            "ram_bytes": 35692,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1010880,
+                            "flash_bytes": 1011252,
                             "flash_percentage": 77,
-                            "ram_bytes": 38012,
+                            "ram_bytes": 38020,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 997642,
+                            "flash_bytes": 998020,
                             "flash_percentage": 76,
-                            "ram_bytes": 37900,
+                            "ram_bytes": 37892,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 342670,
+                            "flash_bytes": 342702,
                             "flash_percentage": 26,
                             "ram_bytes": 12768,
                             "ram_percentage": 3
@@ -371,23 +371,23 @@
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 926616,
+                            "flash_bytes": 926942,
                             "flash_percentage": 70,
-                            "ram_bytes": 40132,
+                            "ram_bytes": 40140,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1051800,
+                            "flash_bytes": 1052108,
                             "flash_percentage": 80,
-                            "ram_bytes": 40540,
+                            "ram_bytes": 40548,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 963046,
+                            "flash_bytes": 963368,
                             "flash_percentage": 73,
                             "ram_bytes": 40212,
                             "ram_percentage": 12
@@ -395,23 +395,23 @@
                     },
 {"name": "Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 997274,
+                            "flash_bytes": 997660,
                             "flash_percentage": 76,
-                            "ram_bytes": 42524,
+                            "ram_bytes": 42532,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 984034,
+                            "flash_bytes": 984414,
                             "flash_percentage": 75,
-                            "ram_bytes": 42412,
+                            "ram_bytes": 42404,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 290144,
+                            "flash_bytes": 290176,
                             "flash_percentage": 22,
                             "ram_bytes": 13660,
                             "ram_percentage": 4
@@ -419,7 +419,7 @@
                     },
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
-                            "flash_bytes": 975464,
+                            "flash_bytes": 975820,
                             "flash_percentage": 74,
                             "ram_bytes": 42172,
                             "ram_percentage": 12
@@ -427,9 +427,9 @@
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1010650,
+                            "flash_bytes": 1010998,
                             "flash_percentage": 77,
-                            "ram_bytes": 42020,
+                            "ram_bytes": 42028,
                             "ram_percentage": 12
                             }]
                     }
@@ -501,7 +501,7 @@
                 "sketches": [
 {"name": "SD/examples/SD_time",
                     "sizes": [{
-                            "flash_bytes": 976389,
+                            "flash_bytes": 976569,
                             "flash_percentage": 74,
                             "ram_bytes": 45728,
                             "ram_percentage": 13
@@ -517,9 +517,9 @@
                     },
 {"name": "SD_MMC/examples/SDMMC_time",
                     "sizes": [{
-                            "flash_bytes": 990441,
+                            "flash_bytes": 990633,
                             "flash_percentage": 75,
-                            "ram_bytes": 45848,
+                            "ram_bytes": 45856,
                             "ram_percentage": 13
                             }]
                     },
@@ -541,7 +541,7 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 965929,
+                            "flash_bytes": 966133,
                             "flash_percentage": 73,
                             "ram_bytes": 45504,
                             "ram_percentage": 13
@@ -589,17 +589,17 @@
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 930493,
-                            "flash_percentage": 70,
-                            "ram_bytes": 45328,
+                            "flash_bytes": 930685,
+                            "flash_percentage": 71,
+                            "ram_bytes": 45320,
                             "ram_percentage": 13
                             }]
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1031709,
+                            "flash_bytes": 1031905,
                             "flash_percentage": 78,
-                            "ram_bytes": 45896,
+                            "ram_bytes": 45904,
                             "ram_percentage": 14
                             }]
                     }

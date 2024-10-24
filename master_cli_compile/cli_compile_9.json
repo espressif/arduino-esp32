@@ -20,9 +20,9 @@
                     },
 {"name": "SD_MMC/examples/SDMMC_time",
                     "sizes": [{
-                            "flash_bytes": 941913,
+                            "flash_bytes": 942125,
                             "flash_percentage": 71,
-                            "ram_bytes": 42468,
+                            "ram_bytes": 42476,
                             "ram_percentage": 12
                             }]
                     },
@@ -44,9 +44,9 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 915605,
+                            "flash_bytes": 915817,
                             "flash_percentage": 69,
-                            "ram_bytes": 41876,
+                            "ram_bytes": 41884,
                             "ram_percentage": 12
                             }]
                     },
@@ -230,17 +230,17 @@
                 "sketches": [
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
-                            "flash_bytes": 502334,
+                            "flash_bytes": 502452,
                             "flash_percentage": 38,
-                            "ram_bytes": 16668,
+                            "ram_bytes": 16660,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "PPP/examples/PPP_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 978660,
+                            "flash_bytes": 979284,
                             "flash_percentage": 74,
-                            "ram_bytes": 34252,
+                            "ram_bytes": 34244,
                             "ram_percentage": 10
                             }]
                     },
@@ -262,23 +262,23 @@
                     },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
-                            "flash_bytes": 2011206,
+                            "flash_bytes": 2011352,
                             "flash_percentage": 49,
-                            "ram_bytes": 58644,
+                            "ram_bytes": 58636,
                             "ram_percentage": 17
                             }]
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1996410,
+                            "flash_bytes": 1996552,
                             "flash_percentage": 49,
-                            "ram_bytes": 58684,
+                            "ram_bytes": 58676,
                             "ram_percentage": 17
                             }]
                     },
 {"name": "RainMaker/examples/RMakerSonoffDualR3",
                     "sizes": [{
-                            "flash_bytes": 2013432,
+                            "flash_bytes": 2013596,
                             "flash_percentage": 49,
                             "ram_bytes": 58924,
                             "ram_percentage": 17
@@ -286,9 +286,9 @@
                     },
 {"name": "RainMaker/examples/RMakerSwitch",
                     "sizes": [{
-                            "flash_bytes": 2035228,
+                            "flash_bytes": 2035368,
                             "flash_percentage": 50,
-                            "ram_bytes": 60212,
+                            "ram_bytes": 60204,
                             "ram_percentage": 18
                             }]
                     },
@@ -302,9 +302,9 @@
                     },
 {"name": "SD/examples/SD_time",
                     "sizes": [{
-                            "flash_bytes": 985168,
+                            "flash_bytes": 985448,
                             "flash_percentage": 75,
-                            "ram_bytes": 35580,
+                            "ram_bytes": 35588,
                             "ram_percentage": 10
                             }]
                     },
@@ -331,17 +331,17 @@
                 "sketches": [
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
-                            "flash_bytes": 460914,
+                            "flash_bytes": 461028,
                             "flash_percentage": 35,
-                            "ram_bytes": 17736,
+                            "ram_bytes": 17728,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "PPP/examples/PPP_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 965184,
+                            "flash_bytes": 965808,
                             "flash_percentage": 73,
-                            "ram_bytes": 38788,
+                            "ram_bytes": 38780,
                             "ram_percentage": 11
                             }]
                     },
@@ -363,15 +363,15 @@
                     },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
-                            "flash_bytes": 2125090,
+                            "flash_bytes": 2125246,
                             "flash_percentage": 52,
-                            "ram_bytes": 62684,
+                            "ram_bytes": 62700,
                             "ram_percentage": 19
                             }]
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 2110364,
+                            "flash_bytes": 2110516,
                             "flash_percentage": 52,
                             "ram_bytes": 62724,
                             "ram_percentage": 19
@@ -379,17 +379,17 @@
                     },
 {"name": "RainMaker/examples/RMakerSonoffDualR3",
                     "sizes": [{
-                            "flash_bytes": 2127470,
+                            "flash_bytes": 2127628,
                             "flash_percentage": 52,
-                            "ram_bytes": 63076,
+                            "ram_bytes": 63068,
                             "ram_percentage": 19
                             }]
                     },
 {"name": "RainMaker/examples/RMakerSwitch",
                     "sizes": [{
-                            "flash_bytes": 2149118,
+                            "flash_bytes": 2149276,
                             "flash_percentage": 53,
-                            "ram_bytes": 64252,
+                            "ram_bytes": 64268,
                             "ram_percentage": 19
                             }]
                     },
@@ -403,9 +403,9 @@
                     },
 {"name": "SD/examples/SD_time",
                     "sizes": [{
-                            "flash_bytes": 961084,
+                            "flash_bytes": 961374,
                             "flash_percentage": 73,
-                            "ram_bytes": 40108,
+                            "ram_bytes": 40100,
                             "ram_percentage": 12
                             }]
                     },
@@ -427,9 +427,9 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 935218,
+                            "flash_bytes": 935508,
                             "flash_percentage": 71,
-                            "ram_bytes": 39548,
+                            "ram_bytes": 39540,
                             "ram_percentage": 12
                             }]
                     }
@@ -480,7 +480,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 541462,
+                            "flash_bytes": 541536,
                             "flash_percentage": 41,
                             "ram_bytes": 18180,
                             "ram_percentage": 5
@@ -488,7 +488,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 538960,
+                            "flash_bytes": 539034,
                             "flash_percentage": 41,
                             "ram_bytes": 18164,
                             "ram_percentage": 5
@@ -501,7 +501,7 @@
                 "sketches": [
 {"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                     "sizes": [{
-                            "flash_bytes": 1056269,
+                            "flash_bytes": 1056461,
                             "flash_percentage": 80,
                             "ram_bytes": 46160,
                             "ram_percentage": 14
@@ -509,7 +509,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 1005493,
+                            "flash_bytes": 1005681,
                             "flash_percentage": 76,
                             "ram_bytes": 45632,
                             "ram_percentage": 13
@@ -517,15 +517,15 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 1047461,
+                            "flash_bytes": 1047641,
                             "flash_percentage": 79,
-                            "ram_bytes": 47012,
+                            "ram_bytes": 47020,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                     "sizes": [{
-                            "flash_bytes": 1016537,
+                            "flash_bytes": 1016733,
                             "flash_percentage": 77,
                             "ram_bytes": 45696,
                             "ram_percentage": 13
@@ -533,7 +533,7 @@
                     },
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
-                            "flash_bytes": 527825,
+                            "flash_bytes": 527861,
                             "flash_percentage": 40,
                             "ram_bytes": 24904,
                             "ram_percentage": 7
@@ -541,9 +541,9 @@
                     },
 {"name": "PPP/examples/PPP_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 975465,
+                            "flash_bytes": 976033,
                             "flash_percentage": 74,
-                            "ram_bytes": 43952,
+                            "ram_bytes": 43960,
                             "ram_percentage": 13
                             }]
                     },
@@ -565,15 +565,15 @@
                     },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
-                            "flash_bytes": 2079217,
+                            "flash_bytes": 2079325,
                             "flash_percentage": 51,
-                            "ram_bytes": 63288,
+                            "ram_bytes": 63296,
                             "ram_percentage": 19
                             }]
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 2056713,
+                            "flash_bytes": 2056797,
                             "flash_percentage": 50,
                             "ram_bytes": 63400,
                             "ram_percentage": 19
@@ -581,17 +581,17 @@
                     },
 {"name": "RainMaker/examples/RMakerSonoffDualR3",
                     "sizes": [{
-                            "flash_bytes": 2082521,
+                            "flash_bytes": 2082613,
                             "flash_percentage": 51,
-                            "ram_bytes": 63784,
+                            "ram_bytes": 63776,
                             "ram_percentage": 19
                             }]
                     },
 {"name": "RainMaker/examples/RMakerSwitch",
                     "sizes": [{
-                            "flash_bytes": 2091465,
+                            "flash_bytes": 2091541,
                             "flash_percentage": 51,
-                            "ram_bytes": 63368,
+                            "ram_bytes": 63376,
                             "ram_percentage": 19
                             }]
                     },
