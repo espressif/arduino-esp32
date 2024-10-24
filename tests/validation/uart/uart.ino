@@ -62,7 +62,7 @@ const test_uart_t test_uarts[SOC_UART_NUM] = {
 #endif
     .serial = Serial2,
   },
-#endif
+#endif  // SOC_UART_NUM >= 3
 #if SOC_UART_NUM >= 4
   {
 #ifdef RX3
@@ -74,7 +74,7 @@ const test_uart_t test_uarts[SOC_UART_NUM] = {
 #endif
     .serial = Serial3,
   },
-#endif
+#endif  // SOC_UART_NUM >= 4
 #if SOC_UART_NUM >= 5
   {
 #ifdef RX4
@@ -86,7 +86,7 @@ const test_uart_t test_uarts[SOC_UART_NUM] = {
 #endif
     .serial = Serial4,
   },
-#endif
+#endif  // SOC_UART_NUM >= 5
 };
 
 /* Utility global variables */
