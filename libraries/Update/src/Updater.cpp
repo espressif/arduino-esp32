@@ -453,7 +453,7 @@ bool UpdateClass::_verifyEnd() {
   return false;
 }
 
-bool UpdateClass::setMD5(const char *expected_md5, bool calc_post_decryption=true) {
+bool UpdateClass::setMD5(const char *expected_md5, bool calc_post_decryption) {
   if (strlen(expected_md5) != 32) {
     return false;
   }
