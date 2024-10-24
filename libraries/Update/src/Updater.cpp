@@ -349,7 +349,7 @@ bool UpdateClass::_writeBuffer() {
     }
   }
 
-  if(!_target_md5_decrypted){
+  if (!_target_md5_decrypted) {
     _md5.add(_buffer, _bufferLen);
   }
 
@@ -409,9 +409,9 @@ bool UpdateClass::_writeBuffer() {
   if (!_progress && _command == U_FLASH) {
     _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
   }
-  if(_target_md5_decrypted){
+  if (_target_md5_decrypted) {
     _md5.add(_buffer, _bufferLen);
-  } 
+  }
   _progress += _bufferLen;
   _bufferLen = 0;
   if (_progress_callback) {
@@ -459,7 +459,7 @@ bool UpdateClass::setMD5(const char *expected_md5, bool calc_post_decryption) {
   }
   _target_md5 = expected_md5;
   _target_md5.toLowerCase();
-  _target_md5_decrypted=calc_post_decryption;
+  _target_md5_decrypted = calc_post_decryption;
   return true;
 }
 
