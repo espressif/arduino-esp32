@@ -89,6 +89,14 @@ const test_uart_t test_uarts[SOC_UART_HP_NUM] = {
 #endif  // SOC_UART_HP_NUM >= 5
 };
 
+// ESP32-P4 has no UART pin definition for RX2, TX2, RX3, TX3, RX4, TX4
+#ifndef RX2
+#define RX2 RX1
+#endif
+#ifndef TX2
+#define TX2 RX1
+#endif
+
 /* Utility global variables */
 
 uint8_t i;

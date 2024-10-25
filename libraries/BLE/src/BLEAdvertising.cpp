@@ -352,7 +352,7 @@ void BLEAdvertisementData::setCompleteServices(BLEUUID uuid) {
   switch (uuid.bitSize()) {
     case 16:
     {
-      // [Len] [0x02] [LL] [HH]
+      // [Len] [0x03] [LL] [HH]
       cdata[0] = 3;
       cdata[1] = ESP_BLE_AD_TYPE_16SRV_CMPL;  // 0x03
       addData(String(cdata, 2) + String((char *)&uuid.getNative()->uuid.uuid16, 2));
@@ -361,7 +361,7 @@ void BLEAdvertisementData::setCompleteServices(BLEUUID uuid) {
 
     case 32:
     {
-      // [Len] [0x04] [LL] [LL] [HH] [HH]
+      // [Len] [0x05] [LL] [LL] [HH] [HH]
       cdata[0] = 5;
       cdata[1] = ESP_BLE_AD_TYPE_32SRV_CMPL;  // 0x05
       addData(String(cdata, 2) + String((char *)&uuid.getNative()->uuid.uuid32, 4));
@@ -370,7 +370,7 @@ void BLEAdvertisementData::setCompleteServices(BLEUUID uuid) {
 
     case 128:
     {
-      // [Len] [0x04] [0] [1] ... [15]
+      // [Len] [0x07] [0] [1] ... [15]
       cdata[0] = 17;
       cdata[1] = ESP_BLE_AD_TYPE_128SRV_CMPL;  // 0x07
       addData(String(cdata, 2) + String((char *)uuid.getNative()->uuid.uuid128, 16));
@@ -453,7 +453,7 @@ void BLEAdvertisementData::setPartialServices(BLEUUID uuid) {
 
     case 128:
     {
-      // [Len] [0x04] [0] [1] ... [15]
+      // [Len] [0x06] [0] [1] ... [15]
       cdata[0] = 17;
       cdata[1] = ESP_BLE_AD_TYPE_128SRV_PART;  // 0x06
       addData(String(cdata, 2) + String((char *)&uuid.getNative()->uuid.uuid128, 16));
