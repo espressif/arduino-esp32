@@ -23,6 +23,6 @@
  * the scheduler to be blocked for some time.
  * Please use only for debugging purposes.
  */
-void printRunningTasks(Print & printer);
+void printRunningTasks(Print &printer);
 
 #endif
