@@ -52,6 +52,14 @@
 #define NEW_TX1 10
 #endif
 
+// ESP32-P4 has no UART pin definition for RX2, TX2, RX3, TX3, RX4, TX4
+#ifndef RX2
+#define RX2 RX1
+#endif
+#ifndef TX2
+#define TX2 RX1
+#endif
+
 /* Utility global variables */
 
 static String recv_msg = "";

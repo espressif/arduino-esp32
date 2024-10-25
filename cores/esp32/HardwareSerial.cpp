@@ -313,6 +313,11 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
   // map logical pins to GPIO numbers
   rxPin = digitalPinToGPIONumber(rxPin);
   txPin = digitalPinToGPIONumber(txPin);
+  int8_t _rxPin = uart_get_RxPin(_uart_nr);
+  int8_t _txPin = uart_get_TxPin(_uart_nr);
+
+  rxPin = rxPin < 0 ? _rxPin : rxPin;
+  txPin = txPin < 0 ? _txPin : txPin;
 
   HSERIAL_MUTEX_LOCK();
   // First Time or after end() --> set default Pins
@@ -341,12 +346,49 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
       case UART_NUM_2:
         if (rxPin < 0 && txPin < 0) {
           // do not change RX2/TX2 if it has already been set before
+#ifdef RX2
           rxPin = _rxPin < 0 ? (int8_t)RX2 : _rxPin;
+#endif
+#ifdef TX2
           txPin = _txPin < 0 ? (int8_t)TX2 : _txPin;
+#endif
+        }
+        break;
+#endif
+#if SOC_UART_HP_NUM > 3  // may save some flash bytes...
+      case UART_NUM_3:
+        if (rxPin < 0 && txPin < 0) {
+          // do not change RX2/TX2 if it has already been set before
+#ifdef RX3
+          rxPin = _rxPin < 0 ? (int8_t)RX3 : _rxPin;
+#endif
+#ifdef TX3
+          txPin = _txPin < 0 ? (int8_t)TX3 : _txPin;
+#endif
+        }
+        break;
+#endif
+#if SOC_UART_HP_NUM > 4  // may save some flash bytes...
+      case UART_NUM_4:
+        if (rxPin < 0 && txPin < 0) {
+          // do not change RX2/TX2 if it has already been set before
+#ifdef RX4
+          rxPin = _rxPin < 0 ? (int8_t)RX4 : _rxPin;
+#endif
+#ifdef TX4
+          txPin = _txPin < 0 ? (int8_t)TX4 : _txPin;
+#endif
         }
         break;
 #endif
     }
+  }
+
+  // if no RX/TX pins are defined, it will not start the UART driver
+  if (rxPin < 0 && txPin < 0) {
+    log_e("No RX/TX pins defined. Please set RX/TX pins.");
+    HSERIAL_MUTEX_UNLOCK();
+    return;
   }
 
   // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
