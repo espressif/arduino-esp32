@@ -364,7 +364,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 #endif
 #ifdef TX3
           txPin = _txPin < 0 ? (int8_t)TX3 : _txPin;
-#else
 #endif
         }
         break;
@@ -383,13 +382,6 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         break;
 #endif
     }
-  }
-  
-  // if no RX/TX pins are defined, it will not start the UART driver
-  if (rxPin < 0 && txPin < 0) {
-    log_e("No RX/TX pins defined. Please set RX/TX pins.");
-    HSERIAL_MUTEX_UNLOCK();
-    return;
   }
 
   // if no RX/TX pins are defined, it will not start the UART driver
