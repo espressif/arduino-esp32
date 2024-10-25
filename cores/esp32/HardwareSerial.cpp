@@ -313,6 +313,11 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
   // map logical pins to GPIO numbers
   rxPin = digitalPinToGPIONumber(rxPin);
   txPin = digitalPinToGPIONumber(txPin);
+  int8_t _rxPin = uart_get_RxPin(_uart_nr);
+  int8_t _txPin = uart_get_TxPin(_uart_nr);
+
+  rxPin = rxPin < 0 ? _rxPin : rxPin;
+  txPin = txPin < 0 ? _txPin : txPin;
 
   HSERIAL_MUTEX_LOCK();
   // First Time or after end() --> set default Pins
@@ -343,13 +348,9 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           // do not change RX2/TX2 if it has already been set before
 #ifdef RX2
           rxPin = _rxPin < 0 ? (int8_t)RX2 : _rxPin;
-#else
-          rxPin = _rxPin;
 #endif
 #ifdef TX2
           txPin = _txPin < 0 ? (int8_t)TX2 : _txPin;
-#else
-          txPin = _txPin;
 #endif
         }
         break;
@@ -360,13 +361,9 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           // do not change RX2/TX2 if it has already been set before
 #ifdef RX3
           rxPin = _rxPin < 0 ? (int8_t)RX3 : _rxPin;
-#else
-          rxPin = _rxPin;
 #endif
 #ifdef TX3
           txPin = _txPin < 0 ? (int8_t)TX3 : _txPin;
-#else
-          txPin = _txPin;
 #endif
         }
         break;
@@ -377,13 +374,9 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           // do not change RX2/TX2 if it has already been set before
 #ifdef RX4
           rxPin = _rxPin < 0 ? (int8_t)RX4 : _rxPin;
-#else
-          rxPin = _rxPin;
 #endif
 #ifdef TX4
           txPin = _txPin < 0 ? (int8_t)TX4 : _txPin;
-#else
-          txPin = _txPin;
 #endif
         }
         break;
