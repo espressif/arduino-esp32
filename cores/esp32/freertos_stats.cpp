@@ -24,13 +24,14 @@
 void printRunningTasks(Print & printer) {
 #if CONFIG_FREERTOS_USE_TRACE_FACILITY
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-#define FREERTOS_TASK_NUMBER_MAX_NUM 256
-  static UBaseType_t ulRunTimeCounters[FREERTOS_TASK_NUMBER_MAX_NUM];
+#define FREERTOS_TASK_NUMBER_MAX_NUM 256 // RunTime stats for how many Tasks to be stored
+  static configRUN_TIME_COUNTER_TYPE ulRunTimeCounters[FREERTOS_TASK_NUMBER_MAX_NUM];
   static configRUN_TIME_COUNTER_TYPE ulLastRunTime = 0;
+  configRUN_TIME_COUNTER_TYPE ulCurrentRunTime = 0, ulTaskRunTime = 0;
 #endif
+  configRUN_TIME_COUNTER_TYPE ulTotalRunTime = 0;
   TaskStatus_t *pxTaskStatusArray = NULL;
   volatile UBaseType_t uxArraySize = 0, x = 0;
-  configRUN_TIME_COUNTER_TYPE ulTotalRunTime = 0, uiCurrentRunTime = 0, uiTaskRunTime = 0;
   const char * taskStates[] = {
     "Running",
     "Ready",
@@ -42,16 +43,16 @@ void printRunningTasks(Print & printer) {
 
   // Take a snapshot of the number of tasks in case it changes while this function is executing.
   uxArraySize = uxTaskGetNumberOfTasks();
-  //printer.printf("Running tasks: %u\n", uxArraySize);
 
   // Allocate a TaskStatus_t structure for each task.
-  pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) );
+  pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
 
-  if( pxTaskStatusArray != NULL ) {
+  if (pxTaskStatusArray != NULL) {
     // Generate raw status information about each task.
-    uxArraySize = uxTaskGetSystemState( pxTaskStatusArray, uxArraySize, &ulTotalRunTime );
+    uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, uxArraySize, &ulTotalRunTime);
+
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-    uiCurrentRunTime = ulTotalRunTime - ulLastRunTime;
+    ulCurrentRunTime = ulTotalRunTime - ulLastRunTime;
     ulLastRunTime = ulTotalRunTime;
 #endif
     printer.printf("Tasks: %u"
@@ -60,7 +61,7 @@ void printRunningTasks(Print & printer) {
 #endif
       "\n", uxArraySize
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-      , ulTotalRunTime / 1000000, uiCurrentRunTime
+      , ulTotalRunTime / 1000000, ulCurrentRunTime
 #endif
     );
     printer.printf("Num\t            Name"
@@ -72,14 +73,14 @@ void printRunningTasks(Print & printer) {
       "\tCore"
 #endif
       "\tState\r\n");
-    for( x = 0; x < uxArraySize; x++ ) {
+    for (x = 0; x < uxArraySize; x++) {
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-      if (pxTaskStatusArray[ x ].xTaskNumber < FREERTOS_TASK_NUMBER_MAX_NUM) {
-        uiTaskRunTime = (pxTaskStatusArray[ x ].ulRunTimeCounter - ulRunTimeCounters[pxTaskStatusArray[ x ].xTaskNumber]);
-        ulRunTimeCounters[pxTaskStatusArray[ x ].xTaskNumber] = pxTaskStatusArray[ x ].ulRunTimeCounter;
-        uiTaskRunTime = (uiTaskRunTime * 100) / uiCurrentRunTime; // in percentage
+      if (pxTaskStatusArray[x].xTaskNumber < FREERTOS_TASK_NUMBER_MAX_NUM) {
+        ulTaskRunTime = (pxTaskStatusArray[x].ulRunTimeCounter - ulRunTimeCounters[pxTaskStatusArray[x].xTaskNumber]);
+        ulRunTimeCounters[pxTaskStatusArray[x].xTaskNumber] = pxTaskStatusArray[x].ulRunTimeCounter;
+        ulTaskRunTime = (ulTaskRunTime * 100) / ulCurrentRunTime; // in percentage
       } else {
-        uiTaskRunTime = 0;
+        ulTaskRunTime = 0;
       }
 #endif
       printer.printf("%3u\t%16s"
@@ -91,22 +92,22 @@ void printRunningTasks(Print & printer) {
       "\t%4c"
 #endif
       "\t%s\r\n",
-        pxTaskStatusArray[ x ].xTaskNumber,
-        pxTaskStatusArray[ x ].pcTaskName,
+        pxTaskStatusArray[x].xTaskNumber,
+        pxTaskStatusArray[x].pcTaskName,
 #if CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
-        uiTaskRunTime,
+        ulTaskRunTime,
 #endif
-        pxTaskStatusArray[ x ].uxCurrentPriority,
-        pxTaskStatusArray[ x ].usStackHighWaterMark,
+        pxTaskStatusArray[x].uxCurrentPriority,
+        pxTaskStatusArray[x].usStackHighWaterMark,
 #if CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID
-        (pxTaskStatusArray[ x ].xCoreID == tskNO_AFFINITY)?'*':('0'+pxTaskStatusArray[ x ].xCoreID),
+        (pxTaskStatusArray[x].xCoreID == tskNO_AFFINITY)?'*':('0'+pxTaskStatusArray[x].xCoreID),
 #endif
-        taskStates[pxTaskStatusArray[ x ].eCurrentState]
+        taskStates[pxTaskStatusArray[x].eCurrentState]
       );
     }
 
     // The array is no longer needed, free the memory it consumes.
-    vPortFree( pxTaskStatusArray );
+    vPortFree(pxTaskStatusArray);
     printer.println();
   }
 #else
