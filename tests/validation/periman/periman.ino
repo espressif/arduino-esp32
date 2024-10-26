@@ -62,7 +62,7 @@ void onReceive_cb(void) {
 
 // This function is called by before each test is run
 void setup_test(String test_name, int8_t rx_pin = UART1_RX_DEFAULT, int8_t tx_pin = UART1_TX_DEFAULT) {
-  log_d("Setting up %s test", test_name.c_str());
+  log_v("Setting up %s test", test_name.c_str());
 
   current_test = test_name;
   uart1_rx_pin = rx_pin;
@@ -74,12 +74,12 @@ void setup_test(String test_name, int8_t rx_pin = UART1_RX_DEFAULT, int8_t tx_pi
   Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
   uart_internal_loopback(1, true);
   delay(100);
-  log_d("Running %s test", test_name.c_str());
+  log_v("Running %s test", test_name.c_str());
 }
 
 // This function is called after each test is run
 void teardown_test(void) {
-  log_d("Tearing down %s test", current_test.c_str());
+  log_v("Tearing down %s test", current_test.c_str());
   if (test_executed) {
     pinMode(uart1_rx_pin, INPUT_PULLUP);
     pinMode(uart1_tx_pin, OUTPUT);
@@ -96,7 +96,7 @@ void teardown_test(void) {
   Serial1.println(" test: This should be printed");
   Serial1.flush();
 
-  log_d("Finished %s test", current_test.c_str());
+  log_v("Finished %s test", current_test.c_str());
 }
 
 /* Test functions */
