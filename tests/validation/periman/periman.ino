@@ -62,7 +62,7 @@ void onReceive_cb(void) {
 
 // This function is called by before each test is run
 void setup_test(String test_name, int8_t rx_pin = UART1_RX_DEFAULT, int8_t tx_pin = UART1_TX_DEFAULT) {
-  log_i("Setting up %s test", test_name.c_str());
+  log_d("Setting up %s test", test_name.c_str());
 
   current_test = test_name;
   uart1_rx_pin = rx_pin;
@@ -74,12 +74,12 @@ void setup_test(String test_name, int8_t rx_pin = UART1_RX_DEFAULT, int8_t tx_pi
   Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
   uart_internal_loopback(1, true);
   delay(100);
-  log_i("Running %s test", test_name.c_str());
+  log_d("Running %s test", test_name.c_str());
 }
 
 // This function is called after each test is run
 void teardown_test(void) {
-  log_i("Tearing down %s test", current_test.c_str());
+  log_d("Tearing down %s test", current_test.c_str());
   if (test_executed) {
     pinMode(uart1_rx_pin, INPUT_PULLUP);
     pinMode(uart1_tx_pin, OUTPUT);
@@ -154,7 +154,7 @@ void ARDUINO_ISR_ATTR adcComplete() {
 
 void adc_continuous_test(void) {
 #if !SOC_ADC_SUPPORTED || CONFIG_IDF_TARGET_ESP32P4
-  setup_test("ADC_Continuous - NO ADC Support");
+  setup_test("ADC_Continuous - NO Support ** P4 fails");
 #else
   setup_test("ADC_Continuous", ADC1_DEFAULT, ADC2_DEFAULT);
   test_executed = true;
@@ -168,10 +168,8 @@ void adc_continuous_test(void) {
   analogContinuous(adc_pins, adc_pins_count, 6, 20000, &adcComplete);
   analogContinuousStart();
 
-  Serial.println();
   while (adc_coversion_done == false) {
-    Serial.print(".");
-    delay(500);
+    delay(1);
   }
 
   if (!analogContinuousRead(&result, 0)) {
@@ -230,13 +228,11 @@ void i2s_test(void) {
   I2SClass i2s;
 
   i2s.setPins(uart1_rx_pin, uart1_tx_pin, -1);
-
   i2s.setTimeout(1000);
   if (!i2s.begin(I2S_MODE_STD, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO)) {
   }
 #endif
   teardown_test();
-  delay(500); Serial.println("Exting I2S driver..."); delay(500);
 }
 
 void i2c_test(void) {
@@ -287,34 +283,18 @@ void setup() {
   Serial1.onReceive(onReceive_cb);
   uart_internal_loopback(1, true);
 
-  Serial.println("starting gpio_test()");
   gpio_test();
-  Serial.println("starting sigmadelta_test()");
   sigmadelta_test();
-  Serial.println("starting ledc_test()");
   ledc_test();
-  Serial.println("starting rmt_test()");
   rmt_test();
-  Serial.println("\t ==>starting i2s_test()");
-  i2s_test();  // apos esta linha temos um [E][esp32-hal-periman.c:122] perimanSetPinBus(): Invalid pin: 255
-  Serial.println("\t ==>Back to setup()");
-  Serial.println("\t ==>starting spi_test()");
+  i2s_test();
   spi_test();
-  Serial.println("\t ==>starting i2c_test()");
   i2c_test();
-  Serial.println("\t ==>ended i2c_test()");
-  Serial.println("starting adc_oneshot_test()");
   adc_oneshot_test();
-  Serial.println("starting adc_continuous_test()");
   adc_continuous_test();
-  Serial.println("starting dac_test()");
   dac_test();
-  Serial.println("starting touch_test()");
   touch_test();
-  Serial.println("starting gpio_test()");
 
   // Print to Serial1 to avoid buffering issues
   Serial1.println("Peripheral Manager test done");
 }
-
-void loop() {}
