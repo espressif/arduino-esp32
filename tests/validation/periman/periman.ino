@@ -96,9 +96,7 @@ void teardown_test(void) {
   Serial1.println(" test: This should be printed");
   Serial1.flush();
 
-  log_i("Finished %s test", current_test.c_str());
-  Serial.println("=========================================================================================");
-  delay(2000);
+  log_d("Finished %s test", current_test.c_str());
 }
 
 /* Test functions */
@@ -288,8 +286,8 @@ void setup() {
   ledc_test();
   rmt_test();
   i2s_test();
-  spi_test();
   i2c_test();
+  spi_test();
   adc_oneshot_test();
   adc_continuous_test();
   dac_test();
@@ -298,3 +296,5 @@ void setup() {
   // Print to Serial1 to avoid buffering issues
   Serial1.println("Peripheral Manager test done");
 }
+
+void loop() {}
