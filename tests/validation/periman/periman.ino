@@ -228,6 +228,7 @@ void i2s_test(void) {
   i2s.setPins(uart1_rx_pin, uart1_tx_pin, -1);
   i2s.setTimeout(1000);
   if (!i2s.begin(I2S_MODE_STD, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO)) {
+    Serial.println("I2S init failed");
   }
 #endif
   teardown_test();
