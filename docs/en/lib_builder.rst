@@ -204,6 +204,48 @@ You can then run the UI using the following command:
 
     ./tools/config_editor/app.py
 
+Pre-Configuring the UI
+**********************
+
+The UI can be pre-configured using command line arguments. The following arguments are available:
+
+- ``-t, --target <target>``: Comma-separated list of targets to be compiled.
+  Choose from: *all*, *esp32*, *esp32s2*, *esp32s3*, *esp32c2*, *esp32c3*, *esp32c6*, *esp32h2*. Default: all except *esp32c2*;
+- ``--copy, --no-copy``: Enable/disable copying the compiled libraries to ``arduino-esp32``. Enabled by default;
+- ``-c, --arduino-path <path>``: Path to ``arduino-esp32`` directory. Default: OS dependent;
+- ``-A, --arduino-branch <branch>``: Branch of the ``arduino-esp32`` repository to be used. Default: set by the build script;
+- ``-I, --idf-branch <branch>``: Branch of the ``ESP-IDF`` repository to be used. Default: set by the build script;
+- ``-i, --idf-commit <commit>``: Commit of the ``ESP-IDF`` repository to be used. Default: set by the build script;
+- ``-D, --debug-level <level>``: Debug level to be set in ``ESP-IDF``.
+  Choose from: *default*, *none*, *error*, *warning*, *info*, *debug*, *verbose*. Default: *default*.
+
+Please note that all these options can be changed in the UI itself and are only used for automation purposes.
+
+Screens
+*******
+
+There are many screens in the UI that are used to configure the libraries to be compiled.
+Note that in all screens you can also use the shortcut keys shown in the footer bar to navigate.
+The UI consists of the following screens:
+
+- **Main Menu**: The main screen shows buttons to navigate to the other screens.
+- **Compile Screen**: The compile screen shows the output of the compilation process and any errors that may have occurred.
+- **Sdkconfig Editor**: The sdkconfig editor screen is a simple text editor that shows you the sdkconfig files that will be used for compilation.
+  You can edit the files here to customize the generated libraries.
+- **Settings Screen**: The settings screen allows you to change the settings of the compilation process. Here you can change:
+
+  - The targets that the libraries will be compiled for. To save time, you can compile the libraries only for the target you are using;
+  - Whether the compiled libraries will be copied to the ``arduino-esp32`` directory after compilation so that they can be used in the Arduino IDE;
+  - The path to the ``arduino-esp32`` directory. This will be automatically set if the ``arduino-esp32`` repository is in one of the default locations.
+    If not, you can set it manually here. If using the docker image, it should not be changed as the mount point is fixed;
+  - The branch of the ``arduino-esp32`` repository to be used. This is useful if you want to compile the libraries for a
+    specific branch or pull request of the ``arduino-esp32`` repository. Leave empty to use the default branch for this ``ESP-IDF`` version;
+  - The branch of the ``ESP-IDF`` repository to be used. This is useful if you want to compile the libraries for a specific branch of the ``ESP-IDF`` repository.
+    Leave empty to use the default branch for this IDF version;
+  - The commit of the ``ESP-IDF`` repository to be used. This is useful if you want to compile the libraries for a specific commit on the selected branch.
+    Leave empty to use the latest commit;
+  - The debug level to be set in ``ESP-IDF``.
+
 Docker Image
 ------------
 
@@ -224,8 +266,9 @@ Tags
 
 Multiple tags of this image are maintained:
 
-- ``latest``: tracks ``master`` branch of the Lib Builder
-- ``release-vX.Y``: tracks ``release/vX.Y`` branch of the Lib Builder
+- ``latest``: tracks ``master`` branch of the Lib Builder. Note that the ``latest`` tag is not recommended for use as, depending on the
+  development stage of the Lib Builder, it might not be stable or might not contain the latest changes;
+- ``release-vX.Y``: tracks ``release/vX.Y`` branch of the Lib Builder.
 
 .. note::
     Versions of Lib Builder released before this feature was introduced do not have corresponding Docker image versions.
@@ -234,7 +277,7 @@ Multiple tags of this image are maintained:
 Usage
 *****
 
-Before using the ``espressif/esp32-arduino-lib-builder`` Docker image locally, make sure you have Docker installed.
+Before using the ``espressif/esp32-arduino-lib-builder`` Docker image locally, make sure you have Docker installed and running on your machine.
 Follow the instructions at https://docs.docker.com/install/, if it is not installed yet.
 
 If using the image in a CI environment, consult the documentation of your CI service on how to specify the image used for the build process.
@@ -248,7 +291,7 @@ To run the Docker image manually, use the following command from the root of the
 
 .. code-block:: bash
 
-    docker run --rm -it -v $PWD:/arduino-esp32 -e TERM=xterm-256color espressif/esp32-arduino-lib-builder
+    docker run --rm -it -v $PWD:/arduino-esp32 -e TERM=xterm-256color espressif/esp32-arduino-lib-builder:release-v5.1
 
 This will start the Lib Builder UI for compiling the libraries. The above command explained:
 
@@ -258,7 +301,8 @@ This will start the Lib Builder UI for compiling the libraries. The above comman
 - ``-t`` Allocate a pseudo-TTY;
 - ``-e TERM=xterm-256color``: Optional. Sets the terminal type to ``xterm-256color`` to display colors correctly;
 - ``-v $PWD:/arduino-esp32``: Optional. Mounts the current folder at ``/arduino-esp32`` inside the container. If not provided, the container will not copy the compiled libraries to the host machine;
-- ``espressif/esp32-arduino-lib-builder``: uses Docker image ``espressif/esp32-arduino-lib-builder`` with tag ``latest``. The ``latest`` tag is implicitly added by Docker when no tag is specified.
+- ``espressif/esp32-arduino-lib-builder:release-v5.1``: uses Docker image ``espressif/esp32-arduino-lib-builder`` with tag ``release-v5.1``.
+  The ``latest`` tag is implicitly added by Docker when no tag is specified. It is recommended to use a specific version tag to ensure reproducibility of the build process.
 
 .. warning::
     The ``-v`` option is used to mount a folder from the host machine to the container. Make sure the folder already exists on the host machine before running the command.
@@ -278,14 +322,15 @@ For example, to run a terminal inside the container, you can run:
 
 .. code-block:: bash
 
-    docker run -it espressif/esp32-arduino-lib-builder:latest /bin/bash
+    docker run -it espressif/esp32-arduino-lib-builder:release-v5.1 /bin/bash
 
 Running the Docker image using the provided run script will depend on the host OS.
-Use the following command from the root of the ``arduino-esp32`` repository to execute the image in a Linux or macOS environment:
+Use the following command from the root of the ``arduino-esp32`` repository to execute the image in a Linux or macOS environment for
+the ``release-v5.1`` tag:
 
 .. code-block:: bash
 
-    curl -LJO https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/master/tools/docker/run.sh
+    curl -LJO https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/refs/heads/release/v5.1/tools/docker/run.sh
     chmod +x run.sh
     ./run.sh $PWD
 
@@ -293,8 +338,15 @@ For Windows, use the following command in PowerShell from the root of the ``ardu
 
 .. code-block:: powershell
 
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/master/tools/docker/run.ps1" -OutFile "run.ps1"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/refs/heads/release/v5.1/tools/docker/run.ps1" -OutFile "run.ps1"
     .\run.ps1 $pwd
+
+As the script is unsigned, you may need to change the execution policy of the current session before running the script.
+To do so, run the following command in PowerShell:
+
+.. code-block:: powershell
+
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 .. warning::
     It is always a good practice to understand what the script does before running it.
