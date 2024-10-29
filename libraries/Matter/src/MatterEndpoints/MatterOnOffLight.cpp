@@ -12,9 +12,11 @@ using namespace chip::app::Clusters;
 bool MatterOnOffLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
   if (!started) {
-    log_w("Matter On-Off Light device has not begun.");
+    log_e("Matter On-Off Light device has not begun.");
     return false;
   }
+  
+  log_d("OnOff Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId()) {
     if (cluster_id == OnOff::Id) {
@@ -41,9 +43,10 @@ MatterOnOffLight::~MatterOnOffLight() {
 bool MatterOnOffLight::begin(bool initialState) {
   ArduinoMatter::_init();
   on_off_light::config_t light_config;
+
   light_config.on_off.on_off = initialState;
-  state = initialState;
   light_config.on_off.lighting.start_up_on_off = nullptr;
+  state = initialState;
 
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = on_off_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -64,7 +67,7 @@ void MatterOnOffLight::end() {
 
 bool MatterOnOffLight::setOnOff(bool newState) {
   if (!started) {
-    log_w("Matter On-Off Light device has not begun.");
+    log_e("Matter On-Off Light device has not begun.");
     return false;
   }
 
