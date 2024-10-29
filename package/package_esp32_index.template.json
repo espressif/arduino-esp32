@@ -484,11 +484,18 @@
               "size": "45868720"
             },
             {
-              "host": "x86_64-apple-darwin",
+              "host": "arm64-apple-darwin",
               "url": "https://github.com/espressif/arduino-esp32/releases/download/3.1.0-RC1/esptool-v4.8.1-macos.tar.gz",
               "archiveFileName": "esptool-v4.8.1-macos.tar.gz",
               "checksum": "SHA-256:6e1fc5ea04490e849c925c48d5cee590164fcf9b9bd419a7b014c2fb48a13743",
               "size": "29828542"
+            },
+            {
+              "host": "i686-mingw32",
+              "url": "https://github.com/espressif/arduino-esp32/releases/download/3.1.0-RC1/esptool-v4.8.1-win64.zip",
+              "archiveFileName": "esptool-v4.8.1-win64.zip",
+              "checksum": "SHA-256:3e97fb990fdd721b923b478eaaa046967c7919dbc9cbd04c445307571177918a",
+              "size": "33612728"
             },
             {
               "host": "x86_64-mingw32",
