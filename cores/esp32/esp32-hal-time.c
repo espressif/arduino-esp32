@@ -17,6 +17,10 @@
 //#include "tcpip_adapter.h"
 #include "esp_netif.h"
 
+#ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
+#include "lwip/priv/tcpip_priv.h"
+#endif
+
 static void setTimeZone(long offset, int daylight) {
   char cst[17] = {0};
   char cdt[17] = "DST";
@@ -50,11 +54,25 @@ void configTime(long gmtOffset_sec, int daylightOffset_sec, const char *server1,
   if (sntp_enabled()) {
     sntp_stop();
   }
+
+#ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
+  if (!sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) {
+    LOCK_TCPIP_CORE();
+  }
+#endif
+
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, (char *)server1);
   sntp_setservername(1, (char *)server2);
   sntp_setservername(2, (char *)server3);
   sntp_init();
+
+#ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
+  if (sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) {
+    UNLOCK_TCPIP_CORE();
+  }
+#endif
+
   setTimeZone(-gmtOffset_sec, daylightOffset_sec);
 }
 
@@ -68,11 +86,25 @@ void configTzTime(const char *tz, const char *server1, const char *server2, cons
   if (sntp_enabled()) {
     sntp_stop();
   }
+
+#ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
+  if (!sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) {
+    LOCK_TCPIP_CORE();
+  }
+#endif
+
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, (char *)server1);
   sntp_setservername(1, (char *)server2);
   sntp_setservername(2, (char *)server3);
   sntp_init();
+
+#ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
+  if (sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) {
+    UNLOCK_TCPIP_CORE();
+  }
+#endif
+
   setenv("TZ", tz, 1);
   tzset();
 }
