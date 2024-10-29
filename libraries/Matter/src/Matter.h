@@ -30,6 +30,7 @@ public:
 
   // list of Matter EndPoints Friend Classes
   friend class MatterOnOffLight;
+  friend class MatterDimmableLight;
 
 protected:
   static void _init();

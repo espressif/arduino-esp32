@@ -27,25 +27,26 @@ esp_err_t matter_light_attribute_update(
 static esp_err_t app_attribute_update_cb(
   attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data
 ) {
+  log_d("Attribute update callback: type: %u, endpoint: %u, cluster: %u, attribute: %u, val: %u", type, endpoint_id, cluster_id, attribute_id, val->val.u32);
   esp_err_t err = ESP_OK;
   MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
   switch (type) {
     case PRE_UPDATE:  // Callback before updating the value in the database
-      log_i("Attribute update callback: PRE_UPDATE");
+      log_v("Attribute update callback: PRE_UPDATE");
       if (ep != NULL) {
         err = ep->attributeChangeCB(endpoint_id, cluster_id, attribute_id, val) ? ESP_OK : ESP_FAIL;
       }
       break;
     case POST_UPDATE:  // Callback after updating the value in the database
-      log_i("Attribute update callback: POST_UPDATE");
+      log_v("Attribute update callback: POST_UPDATE");
       break;
     case READ:  // Callback for reading the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set.
-      log_i("Attribute update callback: READ");
+      log_v("Attribute update callback: READ");
       break;
     case WRITE:  // Callback for writing the attribute value. This is used when the `ATTRIBUTE_FLAG_OVERRIDE` is set.
-      log_i("Attribute update callback: WRITE");
+      log_v("Attribute update callback: WRITE");
       break;
-    default: log_i("Attribute update callback: Unknown type %d", type);
+    default: log_v("Attribute update callback: Unknown type %d", type);
   }
   return err;
 }
@@ -114,7 +115,7 @@ void ArduinoMatter::_init() {
 
 void ArduinoMatter::begin() {
   if (!_matter_has_started) {
-    log_w("No Matter endpoint has been created. Please create an endpoint first.");
+    log_e("No Matter endpoint has been created. Please create an endpoint first.");
     return;
   }
 
