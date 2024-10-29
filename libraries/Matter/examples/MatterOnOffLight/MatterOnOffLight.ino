@@ -5,7 +5,7 @@
 
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
-#include <MatterOnOffLight.h>
+#include <MatterEndpoints/MatterOnOffLight.h>
 MatterOnOffLight OnOffLight;
 
 // it will keep last OnOff state stored, using Preferences

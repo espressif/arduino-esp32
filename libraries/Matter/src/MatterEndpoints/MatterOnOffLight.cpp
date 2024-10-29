@@ -3,7 +3,7 @@
 
 #include <Matter.h>
 #include <app/server/Server.h>
-#include <MatterOnOffLight.h>
+#include <MatterEndpoints/MatterOnOffLight.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
