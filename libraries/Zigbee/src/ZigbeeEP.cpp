@@ -16,6 +16,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _endpoint = endpoint;
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
+  _on_identify = nullptr;
 #if !CONFIG_DISABLE_HAL_LOCKS
   if (!lock) {
     lock = xSemaphoreCreateBinary();
@@ -193,7 +194,9 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
 
 void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
   if (message->attribute.id == ESP_ZB_ZCL_CMD_IDENTIFY_IDENTIFY_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-    _on_identify(*(uint16_t *)message->attribute.data.value);
+    if(_on_identify != NULL) {
+      _on_identify(*(uint16_t *)message->attribute.data.value);
+    }
   } else {
     log_w("Other identify commands are not implemented yet.");
   }
