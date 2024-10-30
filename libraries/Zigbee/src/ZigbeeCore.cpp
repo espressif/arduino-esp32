@@ -155,7 +155,7 @@ void ZigbeeCore::setRebootOpenNetwork(uint8_t time) {
 }
 
 void ZigbeeCore::openNetwork(uint8_t time) {
-  if (_started) {
+  if (isStarted()) {
     log_v("Opening network for joining for %d seconds", time);
     esp_zb_bdb_open_network(time);
   }
@@ -201,10 +201,15 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
             log_i("Opening network for joining for %d seconds", Zigbee._open_network);
             esp_zb_bdb_open_network(Zigbee._open_network);
           }
+          if(Zigbee._sleepy_device) {
+            log_i("Device is a sleepy end device");
+            Zigbee._can_sleep = true;
+          }
         }
       } else {
         /* commissioning failed */
         log_e("Failed to initialize Zigbee stack (status: %s)", esp_err_to_name(err_status));
+        esp_restart();
       }
       break;
     case ESP_ZB_BDB_SIGNAL_FORMATION:  // Coordinator
@@ -225,11 +230,11 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       }
       break;
     case ESP_ZB_BDB_SIGNAL_STEERING:  // Router and End Device
-      Zigbee._started = true;
       if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           log_i("Network steering started");
         }
+        Zigbee._started = true;
       } else {
         if (err_status == ESP_OK) {
           esp_zb_ieee_addr_t extended_pan_id;
@@ -239,6 +244,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
             extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4], extended_pan_id[3], extended_pan_id[2], extended_pan_id[1],
             extended_pan_id[0], esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address()
           );
+          Zigbee._started = true;
         } else {
           log_i("Network steering was not successful (status: %s)", esp_err_to_name(err_status));
           esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
@@ -321,7 +327,7 @@ void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t co
 }
 
 void ZigbeeCore::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
-  if (!_started) {
+  if (!isStarted()) {
     log_e("Zigbee stack is not started, cannot scan networks");
     return;
   }

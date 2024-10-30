@@ -46,9 +46,10 @@ typedef struct zb_device_params_s {
 } zb_device_params_t;
 
 typedef enum {
-  SINGLE_COLOR = 0,
-  RGB = 1
-} zb_identify_led_type_t;
+  ZB_POWER_SOURCE_UNKNOWN = 0x00,
+  ZB_POWER_SOURCE_MAINS = 0x01,
+  ZB_POWER_SOURCE_BATTERY = 0x03,
+} zb_power_source_t;
 
 /* Zigbee End Device Class */
 class ZigbeeEP {
@@ -81,6 +82,9 @@ public:
 
   // Manufacturer name and model implemented
   void setManufacturerAndModel(const char *name, const char *model);
+  void setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
+  void setBatteryPercentage(uint8_t percentage);
+  void reportBatteryPercentage();
 
   // Methods to read manufacturer and model name from selected endpoint and short address
   char *readManufacturer(uint8_t endpoint, uint16_t short_addr);

@@ -5,6 +5,7 @@
 #if SOC_IEEE802154_SUPPORTED
 
 #include "esp_zigbee_cluster.h"
+#include "zcl/esp_zigbee_zcl_power_config.h"
 
 uint8_t ZigbeeEP::_endpoint = 0;
 bool ZigbeeEP::_is_bound = false;
@@ -63,6 +64,45 @@ void ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
   esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
+}
+
+void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t percentage) {
+  esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_update_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, (void *)&power_source);
+
+  if(power_source == ZB_POWER_SOURCE_BATTERY){
+    //TODO:
+      //UPDATE MAC CAPABILITIES TO SET POWER SOURCE TO BATTERY
+      //currently its not possible to update mac capabilities
+    // Add power config cluster and battery percentage attribute
+    esp_zb_attribute_list_t *power_config_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG);
+    esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&percentage);
+    esp_zb_cluster_list_add_power_config_cluster(_cluster_list, power_config_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  }
+}
+
+void ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &percentage, false
+  );
+  esp_zb_lock_release();
+  log_v("Battery percentage updated");
+}
+
+void ZigbeeEP::reportBatteryPercentage() {
+    /* Send report attributes command */
+  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
+  report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID;
+  report_attr_cmd.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+  report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG;
+  report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
+
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
+  esp_zb_lock_release();
+  log_v("Battery percentage reported");
 }
 
 char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr) {
