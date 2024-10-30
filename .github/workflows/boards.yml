@@ -29,7 +29,7 @@ jobs:
 
       - name: Get board name
         run:
-          bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{github.event.number}}
+          bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{github.base_ref}}
 
   test-boards:
     needs: find-boards
@@ -42,6 +42,7 @@ jobs:
           name: "espressif:esp32"
 
     strategy:
+      fail-fast: false
       matrix: ${{ fromJson(needs.find-boards.outputs.fqbns) }}
 
     steps:

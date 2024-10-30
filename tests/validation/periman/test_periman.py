@@ -1,4 +1,8 @@
+import logging
+
+
 def test_periman(dut):
+    LOGGER = logging.getLogger(__name__)
     peripherals = [
         "GPIO",
         "SigmaDelta",
@@ -29,9 +33,10 @@ def test_periman(dut):
 
         if peripheral in peripherals:
             if "not" in console_output:
-                assert False, f"Peripheral {peripheral} printed when it should not"
+                assert False, f"Output printed when it should not after peripheral {peripheral}"
+            LOGGER.info(f"Correct output after peripheral: {peripheral}")
             peripherals.remove(peripheral)
         else:
             assert False, f"Unknown peripheral: {peripheral}"
 
-    assert peripherals == [], f"Missing peripherals output: {peripherals}"
+    assert peripherals == [], f"Missing output after peripherals: {peripherals}"
