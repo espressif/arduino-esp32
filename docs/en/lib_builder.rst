@@ -226,13 +226,15 @@ Screens
 
 There are many screens in the UI that are used to configure the libraries to be compiled.
 Note that in all screens you can also use the shortcut keys shown in the footer bar to navigate.
+
 The UI consists of the following screens:
 
 - **Main Menu**: The main screen shows buttons to navigate to the other screens.
 - **Compile Screen**: The compile screen shows the output of the compilation process and any errors that may have occurred.
 - **Sdkconfig Editor**: The sdkconfig editor screen is a simple text editor that shows you the sdkconfig files that will be used for compilation.
   You can edit the files here to customize the generated libraries.
-- **Settings Screen**: The settings screen allows you to change the settings of the compilation process. Here you can change:
+- **Settings Screen**: The settings screen allows you to change the settings of the compilation process.
+  Here you can change:
 
   - The targets that the libraries will be compiled for. To save time, you can compile the libraries only for the target you are using;
   - Whether the compiled libraries will be copied to the ``arduino-esp32`` directory after compilation so that they can be used in the Arduino IDE;
