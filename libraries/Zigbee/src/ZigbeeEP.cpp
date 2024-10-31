@@ -11,6 +11,8 @@ uint8_t ZigbeeEP::_endpoint = 0;
 bool ZigbeeEP::_is_bound = false;
 bool ZigbeeEP::_allow_multiple_binding = false;
 
+extern void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
+
 /* Zigbee End Device Class */
 ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _endpoint = endpoint;
@@ -75,6 +77,7 @@ void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t percentage
     //TODO:
       //UPDATE MAC CAPABILITIES TO SET POWER SOURCE TO BATTERY
       //currently its not possible to update mac capabilities
+    zb_set_ed_node_descriptor(0,0,0);
     // Add power config cluster and battery percentage attribute
     esp_zb_attribute_list_t *power_config_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG);
     esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&percentage);

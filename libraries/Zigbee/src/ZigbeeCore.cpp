@@ -201,10 +201,6 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
             log_i("Opening network for joining for %d seconds", Zigbee._open_network);
             esp_zb_bdb_open_network(Zigbee._open_network);
           }
-          if(Zigbee._sleepy_device) {
-            log_i("Device is a sleepy end device");
-            Zigbee._can_sleep = true;
-          }
         }
       } else {
         /* commissioning failed */
