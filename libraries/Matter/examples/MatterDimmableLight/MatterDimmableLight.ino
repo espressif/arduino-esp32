@@ -44,7 +44,11 @@ const char *password = "your-password";  // Change this to your WiFi password
 bool setRGBLight(bool state, uint8_t brightness) {
   Serial.printf("Setting Light to State: %s and Brightness: %d\r\n", DimmableLight ? "ON" : "OFF", brightness);
   if (state) {
+#ifdef RGB_BUILTIN
     rgbLedWrite(ledPin, brightness, brightness, brightness);
+#else
+    analogWrite(ledPin, brightness);
+#endif
   } else {
     digitalWrite(ledPin, LOW);
   }
