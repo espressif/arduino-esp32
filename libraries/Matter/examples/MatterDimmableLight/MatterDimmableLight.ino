@@ -41,33 +41,28 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 // Set the RGB LED Light based on the current state of the Dimmable Light
-void setRGBLight(bool state, uint8_t brightness) {
+bool setRGBLight(bool state, uint8_t brightness) {
   Serial.printf("Setting Light to State: %s and Brightness: %d\r\n", DimmableLight ? "ON" : "OFF", brightness);
   if (state) {
     rgbLedWrite(ledPin, brightness, brightness, brightness);
   } else {
     digitalWrite(ledPin, LOW);
   }
-}
-
-// Matter Protocol Endpoint On-Off Change Callback
-bool setLightOnOff(bool state) {
-  Serial.printf("User Callback :: New Light State = %s\r\n", state ? "ON" : "OFF");
-  setRGBLight(state, DimmableLight.getBrightness());
-  // store last OnOff state for when the Light is restarted / power goes off
+  // store last Brightness and OnOff state for when the Light is restarted / power goes off
+  lastStatePref.putUChar("lastBrightness", brightness);
   lastStatePref.putBool("lastOnOffState", state);
   // This callback must return the success state to Matter core
   return true;
 }
 
+// Matter Protocol Endpoint On-Off Change Callback
+bool setLightOnOff(bool state) {
+  return setRGBLight(state, DimmableLight.getBrightness());
+}
+
 // Matter Protocol Endpoint Brightness Change Callback
 bool setLightBrightness(uint8_t brightness) {
-  Serial.printf("User Callback :: New Light Brigthness = %.2f%% [Val = %d]\r\n", ((float) brightness * 100) / MatterDimmableLight::MAX_BRIGHTNESS, brightness);
-  setRGBLight(DimmableLight.getOnOff(), brightness);
-  // store last Brightness for when the Light is restarted / power goes off
-  lastStatePref.putUChar("lastBrightness", brightness);
-  // This callback must return the success state to Matter core
-  return true;
+  return setRGBLight(DimmableLight.getOnOff(), brightness);
 }
 
 void setup() {
