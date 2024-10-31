@@ -41,8 +41,8 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 // Set the RGB LED Light based on the current state of the Dimmable Light
-bool setRGBLight(bool state, uint8_t brightness) {
-  Serial.printf("Setting Light to State: %s and Brightness: %d\r\n", DimmableLight ? "ON" : "OFF", brightness);
+bool setLightState(bool state, uint8_t brightness) {
+  Serial.printf("Changing Light: old[%s,%d]->new[%s,%d]\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness(), state ? "ON" : "OFF", brightness);
   if (state) {
 #ifdef RGB_BUILTIN
     rgbLedWrite(ledPin, brightness, brightness, brightness);
@@ -57,16 +57,6 @@ bool setRGBLight(bool state, uint8_t brightness) {
   lastStatePref.putBool("lastOnOffState", state);
   // This callback must return the success state to Matter core
   return true;
-}
-
-// Matter Protocol Endpoint On-Off Change Callback
-bool setLightOnOff(bool state) {
-  return setRGBLight(state, DimmableLight.getBrightness());
-}
-
-// Matter Protocol Endpoint Brightness Change Callback
-bool setLightBrightness(uint8_t brightness) {
-  return setRGBLight(DimmableLight.getOnOff(), brightness);
 }
 
 void setup() {
@@ -102,8 +92,14 @@ void setup() {
   bool lastOnOffState = lastStatePref.getBool("lastOnOffState", true);
   uint8_t lastBrightness = lastStatePref.getUChar("lastBrightness", 15); // default brightness = 12%
   DimmableLight.begin(lastOnOffState, lastBrightness);
-  DimmableLight.onChangeOnOff(setLightOnOff);
-  DimmableLight.onChangeBrightness(setLightBrightness);
+
+  // lambda functions are used to set the attribute change callbacks
+  DimmableLight.onChangeOnOff([](bool state) { 
+    return setLightState(state, DimmableLight.getBrightness()); 
+  });
+  DimmableLight.onChangeBrightness([](uint8_t level) { 
+    return setLightState(DimmableLight.getOnOff(), level); 
+  });
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
@@ -111,8 +107,8 @@ void setup() {
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
     Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
-    setLightOnOff(DimmableLight.getOnOff());            // configure the Light based on initial state
-    setLightBrightness(DimmableLight.getBrightness());  // configure the Light based on initial brightness
+    // configure the Light based on initial on-off state and brightness 
+    setLightState(DimmableLight.getOnOff(), DimmableLight.getBrightness());
   }
 }
 // Button control
@@ -139,8 +135,8 @@ void loop() {
       }
     }
     Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
-    setLightOnOff(DimmableLight.getOnOff());            // configure the Light based on initial state
-    setLightBrightness(DimmableLight.getBrightness());  // configure the Light based on initial brightness
+    // configure the Light based on initial on-off state and brightness 
+    setLightState(DimmableLight.getOnOff(), DimmableLight.getBrightness());
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
   }
 
