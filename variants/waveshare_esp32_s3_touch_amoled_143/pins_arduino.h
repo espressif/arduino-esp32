@@ -29,11 +29,11 @@
 #define TP_INT -1
 
 // RTC
-#define RTC_INT     15
+#define RTC_INT 15
 // Partial voltage measurement method
 #define BAT_ADC 4
 // Onboard  QMI8658 IMU
-#define QMI_INT1   8
+#define QMI_INT1 8
 
 static const uint8_t SDA = 47;
 static const uint8_t SCL = 48;

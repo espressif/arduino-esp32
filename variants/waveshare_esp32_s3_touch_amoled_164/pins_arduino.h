@@ -35,10 +35,10 @@
 #define BAT_ADC 4
 
 //SD_CARD
-#define SD_CS 38
+#define SD_CS   38
 #define SD_MOSI 39
 #define SD_MISO 40
-#define SD_SCLK 41 
+#define SD_SCLK 41
 
 static const uint8_t SDA = 47;
 static const uint8_t SCL = 48;

@@ -28,18 +28,17 @@
 #define TP_RST -1
 #define TP_INT -1
 
-
 // Partial voltage measurement method
 #define BAT_ADC 1
 // Onboard  QMI8658 IMU
-#define QMI_INT1   45
-#define QMI_INT1   46
+#define QMI_INT1 45
+#define QMI_INT1 46
 
-//SD 
-#define SD_CS 9
+//SD
+#define SD_CS   9
 #define SD_MISO 8
 #define SD_MOSI 42
-#define SD_CLK 47
+#define SD_CLK  47
 
 //i2c
 
