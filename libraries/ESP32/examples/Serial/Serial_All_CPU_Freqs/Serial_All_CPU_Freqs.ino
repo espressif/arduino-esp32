@@ -46,7 +46,6 @@ void setup() {
     Serial.printf("\n------- Trying CPU Freq = %d ---------\n", cpufreqs[i]);
     Serial.flush();  // wait to empty the UART FIFO before changing the CPU Freq.
     setCpuFrequencyMhz(cpufreqs[i]);
-    Serial.updateBaudRate(115200);
 
     Freq = getCpuFrequencyMhz();
     Serial.print("CPU Freq = ");
