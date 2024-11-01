@@ -7,15 +7,27 @@
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 
-uint8_t ZigbeeEP::_endpoint = 0;
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+extern void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
+
+#ifdef __cplusplus
+}
+#endif
+
+// uint8_t ZigbeeEP::_endpoint = 0;
 bool ZigbeeEP::_is_bound = false;
 bool ZigbeeEP::_allow_multiple_binding = false;
 
-extern void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
+//TODO: is_bound and allow_multiple_binding to make not static
 
 /* Zigbee End Device Class */
 ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _endpoint = endpoint;
+  log_v("Endpoint: %d", _endpoint);
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
@@ -69,23 +81,27 @@ void ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
 }
 
-void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t percentage) {
+void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_percentage) {
   esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_zb_cluster_update_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, (void *)&power_source);
 
   if(power_source == ZB_POWER_SOURCE_BATTERY){
-    //TODO:
-      //UPDATE MAC CAPABILITIES TO SET POWER SOURCE TO BATTERY
-      //currently its not possible to update mac capabilities
-    zb_set_ed_node_descriptor(0,0,0);
     // Add power config cluster and battery percentage attribute
+    battery_percentage = battery_percentage * 2;
     esp_zb_attribute_list_t *power_config_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG);
-    esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&percentage);
+    esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&battery_percentage);
     esp_zb_cluster_list_add_power_config_cluster(_cluster_list, power_config_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   }
+  _power_source = power_source;
 }
 
 void ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
+  // 100% = 200 in decimal, 0% = 0
+  // Convert percentage to 0-200 range
+  if (percentage > 100) {
+    percentage = 100;
+  }
+  percentage = percentage * 2;
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &percentage, false

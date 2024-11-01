@@ -57,7 +57,7 @@ void ZigbeeColorDimmerSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t ad
     light->short_addr = addr;
     esp_zb_ieee_address_by_short(light->short_addr, light->ieee_addr);
     esp_zb_get_long_address(bind_req.src_address);
-    bind_req.src_endp = _endpoint;
+    bind_req.src_endp = *((uint8_t*)user_ctx); //_endpoint;
     bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_ON_OFF;
     bind_req.dst_addr_mode = ESP_ZB_ZDO_BIND_DST_ADDR_MODE_64_BIT_EXTENDED;
     memcpy(bind_req.dst_address_u.addr_long, light->ieee_addr, sizeof(esp_zb_ieee_addr_t));
@@ -88,7 +88,7 @@ void ZigbeeColorDimmerSwitch::findEndpoint(esp_zb_zdo_match_desc_req_param_t *cm
     .num_out_clusters = 3,
     .cluster_list = cluster_list,
   };
-  esp_zb_zdo_match_cluster(&color_dimmable_light_req, findCb, NULL);
+  esp_zb_zdo_match_cluster(&color_dimmable_light_req, findCb, &_endpoint);
 }
 
 // Methods to control the light

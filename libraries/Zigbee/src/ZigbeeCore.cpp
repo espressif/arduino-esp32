@@ -6,6 +6,9 @@
 #include "ZigbeeHandlers.cpp"
 #include "Arduino.h"
 
+extern "C" void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
+static bool edBatteryPowered = false;
+
 ZigbeeCore::ZigbeeCore() {
   _radio_config.radio_mode = ZB_RADIO_MODE_NATIVE;                   // Use the native 15.4 radio
   _host_config.host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE;  // Disable host connection
@@ -73,6 +76,12 @@ void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
 static void esp_zb_task(void *pvParameters) {
   /* initialize Zigbee stack */
   ESP_ERROR_CHECK(esp_zb_start(false));
+
+  //NOTE: This is a workaround to make battery powered devices to be discovered as battery powered
+  if(((zigbee_role_t)Zigbee.getRole() == ZIGBEE_END_DEVICE) && edBatteryPowered ) {
+    zb_set_ed_node_descriptor(0,0,0);
+  }
+
   esp_zb_stack_main_loop();
 }
 
@@ -109,6 +118,9 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
     log_i("List of registered Zigbee EPs:");
     for (std::list<ZigbeeEP *>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
       log_i("Device type: %s, Endpoint: %d, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
+      if((*it)->_power_source == ZB_POWER_SOURCE_BATTERY) {
+        edBatteryPowered = true;
+      }
     }
   }
   // Register Zigbee action handler

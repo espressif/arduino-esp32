@@ -114,13 +114,14 @@ private:
   void (*_on_identify)(uint16_t time);
 
 protected:
-  static uint8_t _endpoint;
+  uint8_t _endpoint;
   esp_zb_ha_standard_devices_t _device_id;
   esp_zb_endpoint_config_t _ep_config;
   esp_zb_cluster_list_t *_cluster_list;
   static bool _is_bound;
   std::list<zb_device_params_t *> _bound_devices;
   SemaphoreHandle_t lock;
+  zb_power_source_t _power_source;
 
   friend class ZigbeeCore;
 };

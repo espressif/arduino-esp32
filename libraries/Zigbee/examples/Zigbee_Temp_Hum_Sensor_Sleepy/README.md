@@ -1,6 +1,6 @@
-# Arduino-ESP32 Zigbee Temperature Sensor Example
+# Arduino-ESP32 Zigbee Temperature and Humidity Sensor Sleepy Device Example
 
-This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) temperature sensor.
+This example demonstrates how to use the Zigbee library to create an end device temperature/humidity sensor and use it as a Home Automation (HA) extended temperature sensor.
 
 # Supported Targets
 
@@ -11,23 +11,19 @@ Currently, this example supports the following targets.
 
 ## Temperature Sensor Functions
 
-Note:
- * This board means the board (e.g. ESP32-H2 / C6) loaded with `Zigbee_Temperature_Sensor` example.
- * The remote board means the board (e.g. ESP32-H2 / C6) loaded with `Zigbee_Thermostat` example.
-
-Functions:
- * After this board first starts up, it would be configured locally to report the temperature on 1 degree change and no periodic reporting to the remote board.
- * By clicking the button (BOOT) on this board, this board will immediately send a report of the current measured temperature to the remote board.
+1. Initialize a Zigbee temperature and humidity sensor.
+2. Measure temperature and humidity values.
+3. Report the measured values to the Zigbee network.
+4. Put the device to sleep to save power.
 
 ## Hardware Required
 
-* One development board (ESP32-H2 or ESP32-C6) acting as Zigbee coordinator (loaded with `Zigbee_Thermostat` example)
+* ESP32-H2 or ESP32-C6 development board
 * A USB cable for power supply and programming
-* Choose another board (ESP32-H2 or ESP32-C6) as Zigbee end device and upload the `Zigbee_Temperature_Sensor` example
 
 ### Configure the Project
 
-In this example, the internal temperature sensor task is reading the chip temperature.
+In this example, to demonstrate the funcionality the chip temperature is used and reported as temperature and humidity.
 Set the Button GPIO by changing the `BUTTON_PIN` definition. By default, it's the pin `9` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE

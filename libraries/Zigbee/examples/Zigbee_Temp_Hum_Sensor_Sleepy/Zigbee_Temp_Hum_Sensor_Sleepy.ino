@@ -13,10 +13,10 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee temperature sensor Sleepy device.
+ * @brief This example demonstrates Zigbee temperature and humidity sensor Sleepy device.
  *
- * The example demonstrates how to use Zigbee library to create a end device temperature sensor.
- * The temperature sensor is a Zigbee end device, which is controlled by a Zigbee coordinator.
+ * The example demonstrates how to use Zigbee library to create an end device temperature and humidity sensor.
+ * The sensor is a Zigbee end device, which is reporting data to the Zigbee network.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
@@ -32,42 +32,32 @@
 
 #include "ZigbeeCore.h"
 #include "ep/ZigbeeTempSensor.h"
-#include <ctime>
 
 #define BUTTON_PIN                  9  //Boot button for C6/H2
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
 
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP  30         /* Time ESP32 will go to sleep (in seconds) */
+#define TIME_TO_SLEEP  55         /* Sleep for 55s will + 5s delay for establishing connection => data reported every 1 minute */
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
 /************************ Temp sensor *****************************/
 void meausureAndSleep(){
   // Measure temperature sensor value
-  float tsens_value = temperatureRead();
+  float temperature = temperatureRead();
 
-  // Initialize random seed
-  std::srand(static_cast<unsigned int>(std::time(0)));
+  // Use temparture value as humidity value to demonstrate both temperature and humidity
+  float humidity = temperature;
 
-  // Calculate the 1% fluctuation range
-  float fluctuation = tsens_value * 0.01f;
+  // Update temperature and humidity values in Temperature sensor EP
+  zbTempSensor.setTemperature(temperature);
+  zbTempSensor.setHumidity(humidity);
 
-  // Generate a random number between -1% and +1%
-  float randomFactor = (static_cast<float>(std::rand()) / RAND_MAX) * 2.0f - 1.0f;
-
-  // Apply the fluctuation to the original temperature
-  tsens_value = tsens_value + randomFactor * fluctuation;
-
-  // Update temperature value in Temperature sensor EP
-  zbTempSensor.setTemperature(tsens_value);
-
-  // Report temperature value
+  // Report temperature and humidity values
   zbTempSensor.reportTemperature();
+  zbTempSensor.reportHumidity();
 
-  // Set battery percentage to 80% and report it
-  zbTempSensor.setBatteryPercentage(80);
-  zbTempSensor.reportBatteryPercentage();
+  log_d("Temperature: %.2f°C, Humidity: %.2f%", temperature, humidity);
 
   // Put device to deep sleep
   esp_deep_sleep_start();
@@ -78,8 +68,11 @@ void setup() {
   // Init button switch
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
+  // Configure the wake up source and set to wake up every 5 seconds
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+
   // Optional: set Zigbee device name and model
-  zbTempSensor.setManufacturerAndModel("Espressif", "SleepyZigbeeTempSensor");
+  zbTempSensor.setManufacturerAndModel("Espressif", "SleepyZigbeeTempSensorTest");
 
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
   zbTempSensor.setMinMaxValue(10, 50);
@@ -87,16 +80,17 @@ void setup() {
   // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
 
-  // Set power source to battery and battery percentage to 100%
+  // Set power source to battery and set battery percentage to measured value (now 100% for demonstration)
+  // The value can be also updated by calling zbTempSensor.setBatteryPercentage(percentage) anytime
   zbTempSensor.setPowerSource(ZB_POWER_SOURCE_BATTERY, 100);
+
+  // Add humidity cluster to the temperature sensor device with min, max and tolerance values
+  zbTempSensor.addHumiditySensor(0,100,1);
 
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
-  // Configure the wake up source and set to wake up every 5 seconds
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
-
-  // Create a custom Zigbee configuration for End Device
+  // Create a custom Zigbee configuration for End Device with keep alive 10s to avoid interference with reporting data
   esp_zb_cfg_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
   zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
 
