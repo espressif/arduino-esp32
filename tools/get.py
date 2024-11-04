@@ -377,6 +377,10 @@ def load_tools_list(filename, platform):
     tools_info = json.load(open(filename))["packages"][0]["tools"]
     tools_to_download = []
     for t in tools_info:
+        if platform == "x86_64-mingw32":
+            if "i686-mingw32" not in [p["host"] for p in t["systems"]]:
+                raise Exception("Windows x64 requires both i686-mingw32 and x86_64-mingw32 tools")
+
         tool_platform = [p for p in t["systems"] if p["host"] == platform]
         if len(tool_platform) == 0:
             # Fallback to x86 on Apple ARM
@@ -390,6 +394,8 @@ def load_tools_list(filename, platform):
                 if len(tool_platform) == 0:
                     continue
             else:
+                if verbose:
+                    print(f"Tool {t['name']} is not available for platform {platform}")
                 continue
         tools_to_download.append(tool_platform[0])
     return tools_to_download
@@ -440,6 +446,12 @@ if __name__ == "__main__":
     force_extract = args.force_extract
     force_all = args.force_all
     is_test = args.test
+
+    # Set current directory to the script location
+    if getattr(sys, "frozen", False):
+        os.chdir(os.path.dirname(sys.executable))
+    else:
+        os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     if is_test and (force_download or force_extract or force_all):
         print("Cannot combine test (-t) and forced execution (-d | -e | -f)")
