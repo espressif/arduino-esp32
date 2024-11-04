@@ -33,14 +33,18 @@ bool MatterOnOffLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
   log_d("OnOff Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId()) {
+    log_d("OnOffLight state changed to %d", val->val.b);
+    bool ret = true;
     if (cluster_id == OnOff::Id) {
       if (attribute_id == OnOff::Attributes::OnOff::Id) {
+        if (_onChangeOnOffCB != NULL) {
+          ret &= _onChangeOnOffCB(val->val.b);
+        }
         if (_onChangeCB != NULL) {
-          ret = _onChangeCB(val->val.b);
-          log_d("OnOffLight state changed to %d", val->val.b);
-          if (ret == true) {
-            onOffState = val->val.b;
-          }
+          ret &= _onChangeCB(val->val.b);
+        }
+        if (ret == true) {
+          onOffState = val->val.b;
         }
       }
     }

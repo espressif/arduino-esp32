@@ -33,16 +33,16 @@ bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
   log_d("Dimmable Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId()) {
-    bool ret = false;
+    bool ret = true;
     switch(cluster_id) {
       case OnOff::Id:
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
           log_d("DimmableLight On/Off State changed to %d", val->val.b);
           if (_onChangeOnOffCB != NULL) {
-            ret |= _onChangeOnOffCB(val->val.b);
+            ret &= _onChangeOnOffCB(val->val.b);
           }
           if (_onChangeCB != NULL) {
-            ret |= _onChangeCB(val->val.b, brightnessLevel);
+            ret &= _onChangeCB(val->val.b, brightnessLevel);
           }
           if (ret == true) {
             onOffState = val->val.b;
@@ -53,10 +53,10 @@ bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
           log_d("DimmableLight Brightness changed to %d", val->val.u8);
           if (_onChangeBrightnessCB != NULL) {
-            ret |= _onChangeBrightnessCB(val->val.u8);
+            ret &= _onChangeBrightnessCB(val->val.u8);
           }
           if (_onChangeCB != NULL) {
-            ret |= _onChangeCB(onOffState, val->val.u8);
+            ret &= _onChangeCB(onOffState, val->val.u8);
           }
           if (ret == true) {
             brightnessLevel = val->val.u8;

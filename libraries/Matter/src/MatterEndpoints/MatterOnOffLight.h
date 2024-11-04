@@ -43,10 +43,14 @@ public:
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
+  void onChangeOnOff(EndPointCB onChangeCB) {
+    _onChangeOnOffCB = onChangeCB;
+  }
 
 protected:
   bool started = false;
   bool onOffState = false;  // default initial state is off, but it can be changed by begin(bool)
   EndPointCB _onChangeCB = NULL;
+  EndPointCB _onChangeOnOffCB = NULL;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
