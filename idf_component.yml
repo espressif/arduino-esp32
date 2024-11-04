@@ -52,11 +52,11 @@ dependencies:
   espressif/network_provisioning:
     version: "~1.0.0"
   espressif/esp-zboss-lib:
-    version: "^1.0.1"
+    version: "==1.6.0"
     rules:
       - if: "target != esp32c2"
   espressif/esp-zigbee-lib:
-    version: "^1.0.1"
+    version: "==1.6.0"
     rules:
       - if: "target != esp32c2"
   espressif/esp-dsp:
