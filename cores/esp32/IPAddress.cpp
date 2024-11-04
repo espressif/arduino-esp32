@@ -204,10 +204,10 @@ bool IPAddress::fromString6(const char *address) {
       // netif_index_to_name crashes on latest esp-idf
       // _zone = netif_name_to_index(address);
       // in the interim, we parse the suffix as a zone number
-      while ((*address != '\0') && (!isdigit(*address))) {    // skip all non-digit after '%'
+      while ((*address != '\0') && (!isdigit(*address))) {  // skip all non-digit after '%'
         address++;
       }
-      _zone = atol(address) + 1;    // increase by one by convention, so we can have zone '0'
+      _zone = atol(address) + 1;  // increase by one by convention, so we can have zone '0'
       while (*address != '\0') {
         address++;
       }
@@ -361,7 +361,7 @@ size_t IPAddress::printTo(Print &p, bool includeZone) const {
     if (_zone > 0 && includeZone) {
       n += p.print('%');
       // look for the interface name
-      for (netif* intf = netif_list; intf != nullptr; intf = intf->next) {
+      for (netif *intf = netif_list; intf != nullptr; intf = intf->next) {
         if (_zone - 1 == intf->num) {
           n += p.print(intf->name[0]);
           n += p.print(intf->name[1]);
