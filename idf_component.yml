@@ -52,11 +52,11 @@ dependencies:
   espressif/esp_modem:
     version: "^1.1.0"
   espressif/esp-zboss-lib:
-    version: "^1.0.1"
+    version: "==1.6.0"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/esp-zigbee-lib:
-    version: "^1.0.1"
+    version: "==1.6.0"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/esp-dsp:
