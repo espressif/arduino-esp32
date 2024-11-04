@@ -185,7 +185,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
   int16_t report_change = (int16_t)delta * 100;
   esp_zb_zcl_config_report_record_t records[] = {
     {
-      .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
+      .direction = ESP_ZB_ZCL_REPORT_DIRECTION_SEND,
       .attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
