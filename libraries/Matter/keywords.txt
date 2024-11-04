@@ -7,7 +7,9 @@
 #######################################
 
 Matter	KEYWORD1
+ArduinoMatter	KEYWORD1
 MatterOnOffLight	KEYWORD1
+MatterDimmableLight	KEYWORD1
 MatterEndPoint	KEYWORD1
 
 #######################################
@@ -16,7 +18,6 @@ MatterEndPoint	KEYWORD1
 
 begin	KEYWORD2
 end	KEYWORD2
-start	KEYWORD2
 getManualPairingCode	KEYWORD2
 getOnboardingQRCodeUrl	KEYWORD2
 isDeviceCommissioned	KEYWORD2
@@ -27,8 +28,13 @@ decommission	KEYWORD2
 attributeChangeCB	KEYWORD2
 setOnOff	KEYWORD2
 getOnOff	KEYWORD2
+setBrightness	KEYWORD2
+getBrightness	KEYWORD2
 toggle	KEYWORD2
+updateAccessory	KEYWORD2
+onChange	KEYWORD2
 onChangeOnOff	KEYWORD2
+onChangeBrightness	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
