@@ -6,7 +6,7 @@ on:
     branches:
       - master
   pull_request:
-    types: [opened, reopened, synchronize, labeled, unlabeled]
+    types: [opened, reopened, synchronize, labeled]
 
 concurrency:
   group: pre-commit-${{github.event.pull_request.number || github.ref}}
@@ -15,8 +15,10 @@ concurrency:
 jobs:
   lint:
     if: |
+      github.event_name != 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'Status: Pending Merge') ||
-      github.event_name != 'pull_request'
+      contains(github.event.pull_request.labels.*.name, 'Re-trigger Pre-commit Hooks')
+
     name: Check if fixes are needed
     runs-on: ubuntu-latest
     steps:
@@ -24,6 +26,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
+
+      - name: Remove Label
+        if: contains(github.event.pull_request.labels.*.name, 'Re-trigger Pre-commit Hooks')
+        run: gh pr edit ${{ github.event.number }} --remove-label 'Re-trigger Pre-commit Hooks'
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Python 3
         uses: actions/setup-python@v5
@@ -65,7 +73,7 @@ jobs:
           key: ${{ steps.restore-cache.outputs.cache-primary-key }}
 
       - name: Push changes using pre-commit-ci-lite
-        uses: pre-commit-ci/lite-action@v1.0.2
+        uses: pre-commit-ci/lite-action@v1.1.0
         # Only push changes in PRs
         if: ${{ always() && github.event_name == 'pull_request' }}
         with:
