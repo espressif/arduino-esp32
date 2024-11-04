@@ -42,7 +42,6 @@ const char *password = "your-password";  // Change this to your WiFi password
 
 // Set the RGB LED Light based on the current state of the Dimmable Light
 bool setLightState(bool state, uint8_t brightness) {
-  Serial.printf("Changing Light: old[%s,%d]->new[%s,%d]\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness(), state ? "ON" : "OFF", brightness);
   if (state) {
 #ifdef RGB_BUILTIN
     rgbLedWrite(ledPin, brightness, brightness, brightness);
@@ -92,13 +91,17 @@ void setup() {
   bool lastOnOffState = lastStatePref.getBool("lastOnOffState", true);
   uint8_t lastBrightness = lastStatePref.getUChar("lastBrightness", 15); // default brightness = 12%
   DimmableLight.begin(lastOnOffState, lastBrightness);
+  // set the callback function to handle the Light state change
+  DimmableLight.onChange(setLightState);
 
   // lambda functions are used to set the attribute change callbacks
   DimmableLight.onChangeOnOff([](bool state) { 
-    return setLightState(state, DimmableLight.getBrightness()); 
+    Serial.printf("Light OnOff changed to %s\r\n", state ? "ON" : "OFF"); 
+    return true;
   });
   DimmableLight.onChangeBrightness([](uint8_t level) { 
-    return setLightState(DimmableLight.getOnOff(), level); 
+    Serial.printf("Light Brightness changed to %d\r\n", level);
+    return true;
   });
 
   // Matter beginning - Last step, after all EndPoints are initialized
@@ -108,7 +111,7 @@ void setup() {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
     Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
     // configure the Light based on initial on-off state and brightness 
-    setLightState(DimmableLight.getOnOff(), DimmableLight.getBrightness());
+    DimmableLight.updateAccessory();
   }
 }
 // Button control
@@ -136,7 +139,7 @@ void loop() {
     }
     Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
     // configure the Light based on initial on-off state and brightness 
-    setLightState(DimmableLight.getOnOff(), DimmableLight.getBrightness());
+    DimmableLight.updateAccessory();
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
   }
 

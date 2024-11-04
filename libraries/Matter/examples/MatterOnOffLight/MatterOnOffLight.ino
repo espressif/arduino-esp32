@@ -86,7 +86,7 @@ void setup() {
   lastStatePref.begin("matterLight", false);
   bool lastOnOffState = lastStatePref.getBool("lastOnOffState", true);
   OnOffLight.begin(lastOnOffState);
-  OnOffLight.onChangeOnOff(setLightOnOff);
+  OnOffLight.onChange(setLightOnOff);
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
@@ -94,7 +94,7 @@ void setup() {
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
     Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-    setLightOnOff(OnOffLight.getOnOff());  // configure the Light based on initial state
+    OnOffLight.updateAccessory();  // configure the Light based on initial state
   }
 }
 // Button control
@@ -121,7 +121,7 @@ void loop() {
       }
     }
     Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-    setLightOnOff(OnOffLight.getOnOff());  // configure the Light based on initial state
+    OnOffLight.updateAccessory();  // configure the Light based on initial state
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
   }
 

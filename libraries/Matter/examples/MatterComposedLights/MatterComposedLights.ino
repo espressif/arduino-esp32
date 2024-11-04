@@ -70,9 +70,9 @@ void setup() {
   OnOffLight1.begin();
   OnOffLight2.begin();
   OnOffLight3.begin();
-  OnOffLight1.onChangeOnOff(setLightOnOff1);
-  OnOffLight2.onChangeOnOff(setLightOnOff2);
-  OnOffLight3.onChangeOnOff(setLightOnOff3);
+  OnOffLight1.onChange(setLightOnOff1);
+  OnOffLight2.onChange(setLightOnOff2);
+  OnOffLight3.onChange(setLightOnOff3);
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
