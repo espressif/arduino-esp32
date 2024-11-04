@@ -5,7 +5,7 @@ on:
   push:
     branches:
     - master
-    - release/v2.x
+    - release/*
   pull_request:
     paths:
       - 'cores/**'
@@ -47,6 +47,7 @@ jobs:
   cmake-check:
     name: Check cmake file
     runs-on: ubuntu-latest
+    if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     steps:
     - uses: actions/checkout@v4
     - run: bash ./.github/scripts/check-cmakelists.sh
@@ -54,6 +55,7 @@ jobs:
   gen-chunks:
     name: Generate chunks
     runs-on: ubuntu-latest
+    if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     outputs:
       build_all: ${{ steps.set-chunks.outputs.build_all }}
       build_libraries: ${{ steps.set-chunks.outputs.build_libraries }}
@@ -307,7 +309,7 @@ jobs:
   #Upload PR number as artifact
   upload-pr-number:
     name: Upload PR number
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Save the PR number in an artifact
