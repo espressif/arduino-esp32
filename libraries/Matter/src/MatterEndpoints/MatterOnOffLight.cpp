@@ -39,7 +39,7 @@ bool MatterOnOffLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
           ret = _onChangeCB(val->val.b);
           log_d("OnOffLight state changed to %d", val->val.b);
           if (ret == true) {
-            state = val->val.b;
+            onOffState = val->val.b;
           }
         }
       }
@@ -60,7 +60,7 @@ bool MatterOnOffLight::begin(bool initialState) {
 
   light_config.on_off.on_off = initialState;
   light_config.on_off.lighting.start_up_on_off = nullptr;
-  state = initialState;
+  onOffState = initialState;
 
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = on_off_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -79,6 +79,12 @@ void MatterOnOffLight::end() {
   started = false;
 }
 
+void MatterOnOffLight::updateAccessory() {
+  if (_onChangeCB != NULL) {
+    _onChangeCB(onOffState);
+  }
+}
+
 bool MatterOnOffLight::setOnOff(bool newState) {
   if (!started) {
     log_e("Matter On-Off Light device has not begun.");
@@ -86,11 +92,11 @@ bool MatterOnOffLight::setOnOff(bool newState) {
   }
 
   // avoid processing the a "no-change"
-  if (state == newState) {
+  if (onOffState == newState) {
     return true;
   }
 
-  state = newState;
+  onOffState = newState;
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, OnOff::Id);
@@ -99,19 +105,19 @@ bool MatterOnOffLight::setOnOff(bool newState) {
   esp_matter_attr_val_t val = esp_matter_invalid(NULL);
   attribute::get_val(attribute, &val);
 
-  if (val.val.b != state) {
-    val.val.b = state;
+  if (val.val.b != onOffState) {
+    val.val.b = onOffState;
     attribute::update(endpoint_id, OnOff::Id, OnOff::Attributes::OnOff::Id, &val);
   }
   return true;
 }
 
 bool MatterOnOffLight::getOnOff() {
-  return state;
+  return onOffState;
 }
 
 bool MatterOnOffLight::toggle() {
-  return setOnOff(!state);
+  return setOnOff(!onOffState);
 }
 
 MatterOnOffLight::operator bool() {
