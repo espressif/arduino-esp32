@@ -36,13 +36,19 @@ function run_test() {
             printf "\n\n\n"
             return 0
         fi
+    fi
 
-        local has_requirements=$(${CHECK_REQUIREMENTS} $sketchdir "$sdkconfig_path")
-        if [ "$has_requirements" == "0" ]; then
-            printf "\033[93mTarget $target does not meet the requirements for $sketchname. Skipping.\033[0m\n"
-            printf "\n\n\n"
-            return 0
-        fi
+    if [ ! -f $sdkconfig_path ]; then
+        printf "\033[93mSketch $sketchname not built\nMight be due to missing target requirements or build failure\033[0m\n"
+        printf "\n\n\n"
+        return 0
+    fi
+
+    local right_target=$(grep -E "^CONFIG_IDF_TARGET=\"$target\"$" "$sdkconfig_path")
+    if [ -z "$right_target" ]; then
+        printf "\033[91mError: Sketch $sketchname compiled for different target\n\033[0m\n"
+        printf "\n\n\n"
+        return 1
     fi
 
     if [ $len -eq 1 ]; then
@@ -121,7 +127,6 @@ function run_test() {
 
 SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
-CHECK_REQUIREMENTS="${SCRIPTS_DIR}/sketch_utils.sh check_requirements"
 
 platform="hardware"
 wokwi_timeout=60000
