@@ -1,5 +1,5 @@
 #include "ZigbeeLight.h"
-#if SOC_IEEE802154_SUPPORTED
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 ZigbeeLight::ZigbeeLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID;
@@ -32,4 +32,4 @@ void ZigbeeLight::lightChanged() {
   }
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

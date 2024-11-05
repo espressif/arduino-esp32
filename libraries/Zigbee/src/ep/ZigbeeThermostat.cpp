@@ -1,5 +1,5 @@
 #include "ZigbeeThermostat.h"
-#if SOC_IEEE802154_SUPPORTED
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 static float zb_s16_to_temperature(int16_t value) {
   return 1.0 * value / 100;
@@ -202,4 +202,4 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
   esp_zb_lock_release();
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

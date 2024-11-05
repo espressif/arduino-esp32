@@ -1,5 +1,5 @@
 #include "ZigbeeColorDimmerSwitch.h"
-#if SOC_IEEE802154_SUPPORTED
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 // Initialize the static instance pointer
 ZigbeeColorDimmerSwitch *ZigbeeColorDimmerSwitch::_instance = nullptr;
@@ -400,4 +400,4 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
   }
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
