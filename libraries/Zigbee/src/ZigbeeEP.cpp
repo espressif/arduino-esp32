@@ -7,18 +7,6 @@
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-extern void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
-
-#ifdef __cplusplus
-}
-#endif
-
-// uint8_t ZigbeeEP::_endpoint = 0;
 bool ZigbeeEP::_is_bound = false;
 bool ZigbeeEP::_allow_multiple_binding = false;
 
