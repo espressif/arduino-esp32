@@ -34,7 +34,6 @@ bool MatterOnOffLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
 
   if (endpoint_id == getEndPointId()) {
     log_d("OnOffLight state changed to %d", val->val.b);
-    bool ret = true;
     if (cluster_id == OnOff::Id) {
       if (attribute_id == OnOff::Attributes::OnOff::Id) {
         if (_onChangeOnOffCB != NULL) {
