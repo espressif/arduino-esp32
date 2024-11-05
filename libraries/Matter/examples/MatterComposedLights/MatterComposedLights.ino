@@ -1,10 +1,23 @@
+// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // Matter Manager
 #include <Matter.h>
 #include <WiFi.h>
 
 // List of Matter Endpoints for this Node
 // There will be 3 On/Off Light Endpoints in the same Node
-#include <MatterOnOffLight.h>
 MatterOnOffLight OnOffLight1;
 MatterOnOffLight OnOffLight2;
 MatterOnOffLight OnOffLight3;
@@ -56,9 +69,9 @@ void setup() {
   OnOffLight1.begin();
   OnOffLight2.begin();
   OnOffLight3.begin();
-  OnOffLight1.onChangeOnOff(setLightOnOff1);
-  OnOffLight2.onChangeOnOff(setLightOnOff2);
-  OnOffLight3.onChangeOnOff(setLightOnOff3);
+  OnOffLight1.onChange(setLightOnOff1);
+  OnOffLight2.onChange(setLightOnOff2);
+  OnOffLight3.onChange(setLightOnOff3);
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();

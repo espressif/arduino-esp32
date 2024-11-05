@@ -169,7 +169,8 @@ set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThreadCLI_Util.cpp)
 
 set(ARDUINO_LIBRARY_Matter_SRCS
-  libraries/Matter/src/MatterOnOffLight.cpp
+  libraries/Matter/src/MatterEndpoints/MatterOnOffLight.cpp
+  libraries/Matter/src/MatterEndpoints/MatterDimmableLight.cpp
   libraries/Matter/src/Matter.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS

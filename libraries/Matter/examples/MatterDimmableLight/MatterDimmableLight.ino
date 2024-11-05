@@ -18,18 +18,18 @@
 #include <Preferences.h>
 
 // List of Matter Endpoints for this Node
-// On/Off Light Endpoint
-MatterOnOffLight OnOffLight;
+// Dimmable Light Endpoint
+MatterDimmableLight DimmableLight;
 
-// it will keep last OnOff state stored, using Preferences
+// it will keep last OnOff & Brightness state stored, using Preferences
 Preferences lastStatePref;
 
-// set your board LED pin here
-#ifdef LED_BUILTIN
-const uint8_t ledPin = LED_BUILTIN;
+// set your board RGB LED pin here
+#ifdef RGB_BUILTIN
+const uint8_t ledPin = RGB_BUILTIN;
 #else
 const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LED_BUILTIN
-#warning "Do not forget to set the LED pin"
+#warning "Do not forget to set the RGB LED pin"
 #endif
 
 // set your board USER BUTTON pin here
@@ -39,15 +39,19 @@ const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
-// Matter Protocol Endpoint Callback
-bool setLightOnOff(bool state) {
-  Serial.printf("User Callback :: New Light State = %s\r\n", state ? "ON" : "OFF");
+// Set the RGB LED Light based on the current state of the Dimmable Light
+bool setLightState(bool state, uint8_t brightness) {
   if (state) {
-    digitalWrite(ledPin, HIGH);
+#ifdef RGB_BUILTIN
+    rgbLedWrite(ledPin, brightness, brightness, brightness);
+#else
+    analogWrite(ledPin, brightness);
+#endif
   } else {
     digitalWrite(ledPin, LOW);
   }
-  // store last OnOff state for when the Light is restarted / power goes off
+  // store last Brightness and OnOff state for when the Light is restarted / power goes off
+  lastStatePref.putUChar("lastBrightness", brightness);
   lastStatePref.putBool("lastOnOffState", state);
   // This callback must return the success state to Matter core
   return true;
@@ -83,17 +87,32 @@ void setup() {
 
   // Initialize Matter EndPoint
   lastStatePref.begin("matterLight", false);
+  // default OnOff state is ON if not stored before
   bool lastOnOffState = lastStatePref.getBool("lastOnOffState", true);
-  OnOffLight.begin(lastOnOffState);
-  OnOffLight.onChange(setLightOnOff);
+  // default brightness ~= 6% (15/255)
+  uint8_t lastBrightness = lastStatePref.getUChar("lastBrightness", 15);
+  DimmableLight.begin(lastOnOffState, lastBrightness);
+  // set the callback function to handle the Light state change
+  DimmableLight.onChange(setLightState);
+
+  // lambda functions are used to set the attribute change callbacks
+  DimmableLight.onChangeOnOff([](bool state) {
+    Serial.printf("Light OnOff changed to %s\r\n", state ? "ON" : "OFF");
+    return true;
+  });
+  DimmableLight.onChangeBrightness([](uint8_t level) {
+    Serial.printf("Light Brightness changed to %d\r\n", level);
+    return true;
+  });
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
-    Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-    OnOffLight.updateAccessory();  // configure the Light based on initial state
+    Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
+    // configure the Light based on initial on-off state and brightness
+    DimmableLight.updateAccessory();
   }
 }
 // Button control
@@ -119,8 +138,9 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-    OnOffLight.updateAccessory();  // configure the Light based on initial state
+    Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
+    // configure the Light based on initial on-off state and brightness
+    DimmableLight.updateAccessory();
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
   }
 
@@ -138,12 +158,12 @@ void loop() {
     button_state = false;  // released
     // Toggle button is released - toggle the light
     Serial.println("User button released. Toggling Light!");
-    OnOffLight.toggle();  // Matter Controller also can see the change
+    DimmableLight.toggle();  // Matter Controller also can see the change
 
     // Factory reset is triggered if the button is pressed longer than 10 seconds
     if (time_diff > decommissioningTimeout) {
       Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-      OnOffLight.setOnOff(false);  // turn the light off
+      DimmableLight = false;  // turn the light off
       Matter.decommission();
     }
   }
