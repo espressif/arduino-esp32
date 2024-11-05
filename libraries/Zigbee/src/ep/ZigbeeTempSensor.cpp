@@ -1,5 +1,5 @@
 #include "ZigbeeTempSensor.h"
-#if SOC_IEEE802154_SUPPORTED
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID;
@@ -160,4 +160,4 @@ void ZigbeeTempSensor::setHumidityReporting(uint16_t min_interval, uint16_t max_
   esp_zb_zcl_update_reporting_info(&reporting_info);
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
