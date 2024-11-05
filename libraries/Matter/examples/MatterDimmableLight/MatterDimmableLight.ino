@@ -19,7 +19,6 @@
 
 // List of Matter Endpoints for this Node
 // Dimmable Light Endpoint
-#include <MatterEndpoints/MatterDimmableLight.h>
 MatterDimmableLight DimmableLight;
 
 // it will keep last OnOff & Brightness state stored, using Preferences
@@ -88,8 +87,10 @@ void setup() {
 
   // Initialize Matter EndPoint
   lastStatePref.begin("matterLight", false);
+  // default OnOff state is ON if not stored before
   bool lastOnOffState = lastStatePref.getBool("lastOnOffState", true);
-  uint8_t lastBrightness = lastStatePref.getUChar("lastBrightness", 15); // default brightness = 12%
+  // default brightness ~= 6% (15/255)
+  uint8_t lastBrightness = lastStatePref.getUChar("lastBrightness", 15);
   DimmableLight.begin(lastOnOffState, lastBrightness);
   // set the callback function to handle the Light state change
   DimmableLight.onChange(setLightState);

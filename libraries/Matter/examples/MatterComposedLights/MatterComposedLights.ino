@@ -18,7 +18,6 @@
 
 // List of Matter Endpoints for this Node
 // There will be 3 On/Off Light Endpoints in the same Node
-#include <MatterEndpoints/MatterOnOffLight.h>
 MatterOnOffLight OnOffLight1;
 MatterOnOffLight OnOffLight2;
 MatterOnOffLight OnOffLight3;

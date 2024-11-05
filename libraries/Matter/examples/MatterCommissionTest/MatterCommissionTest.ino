@@ -18,7 +18,6 @@
 
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
-#include <MatterEndpoints/MatterOnOffLight.h>
 MatterOnOffLight OnOffLight;
 
 // WiFi is manually set and started
