@@ -33,7 +33,7 @@ bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
   log_d("Dimmable Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId()) {
-    switch(cluster_id) {
+    switch (cluster_id) {
       case OnOff::Id:
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
           log_d("DimmableLight On/Off State changed to %d", val->val.b);
@@ -61,7 +61,7 @@ bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
             brightnessLevel = val->val.u8;
           }
         }
-        break;  
+        break;
     }
   }
   return ret;

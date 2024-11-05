@@ -29,7 +29,7 @@ bool MatterOnOffLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
     log_e("Matter On-Off Light device has not begun.");
     return false;
   }
-  
+
   log_d("OnOff Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId()) {

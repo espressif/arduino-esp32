@@ -30,6 +30,7 @@ public:
   }
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   virtual bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) = 0;
+
 protected:
   uint16_t endpoint_id = 0;
 };

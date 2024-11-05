@@ -96,11 +96,11 @@ void setup() {
   DimmableLight.onChange(setLightState);
 
   // lambda functions are used to set the attribute change callbacks
-  DimmableLight.onChangeOnOff([](bool state) { 
-    Serial.printf("Light OnOff changed to %s\r\n", state ? "ON" : "OFF"); 
+  DimmableLight.onChangeOnOff([](bool state) {
+    Serial.printf("Light OnOff changed to %s\r\n", state ? "ON" : "OFF");
     return true;
   });
-  DimmableLight.onChangeBrightness([](uint8_t level) { 
+  DimmableLight.onChangeBrightness([](uint8_t level) {
     Serial.printf("Light Brightness changed to %d\r\n", level);
     return true;
   });
@@ -111,7 +111,7 @@ void setup() {
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
     Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
-    // configure the Light based on initial on-off state and brightness 
+    // configure the Light based on initial on-off state and brightness
     DimmableLight.updateAccessory();
   }
 }
@@ -139,7 +139,7 @@ void loop() {
       }
     }
     Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
-    // configure the Light based on initial on-off state and brightness 
+    // configure the Light based on initial on-off state and brightness
     DimmableLight.updateAccessory();
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
   }
