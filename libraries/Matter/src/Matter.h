@@ -18,6 +18,8 @@
 
 #include <Arduino.h>
 #include <esp_matter.h>
+#include <MatterEndpoints/MatterOnOffLight.h>
+#include <MatterEndpoints/MatterDimmableLight.h>
 
 using namespace esp_matter;
 
