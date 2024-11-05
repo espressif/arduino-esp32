@@ -30,8 +30,7 @@
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "ZigbeeCore.h"
-#include "ep/ZigbeeTempSensor.h"
+#include "Zigbee.h"
 
 #define BUTTON_PIN                  9  //Boot button for C6/H2
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10

@@ -31,8 +31,7 @@
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "ZigbeeCore.h"
-#include "ep/ZigbeeSwitch.h"
+#include "Zigbee.h"
 
 #define SWITCH_ENDPOINT_NUMBER 5
 
