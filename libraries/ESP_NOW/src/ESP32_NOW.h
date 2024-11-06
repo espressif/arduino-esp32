@@ -11,8 +11,6 @@
 #include "esp32-hal-log.h"
 #include "esp_mac.h"
 
-
-
 class ESP_NOW_Peer;  //forward declaration for friend function
 
 class ESP_NOW_Class : public Print {
