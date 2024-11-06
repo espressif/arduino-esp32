@@ -1,5 +1,5 @@
 #include "ZigbeeTempSensor.h"
-#if SOC_IEEE802154_SUPPORTED
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID;
@@ -80,7 +80,6 @@ void ZigbeeTempSensor::reportTemperature() {
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
-  report_attr_cmd.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
 
@@ -121,7 +120,6 @@ void ZigbeeTempSensor::reportHumidity() {
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID;
-  report_attr_cmd.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
 
@@ -161,4 +159,4 @@ void ZigbeeTempSensor::setHumidityReporting(uint16_t min_interval, uint16_t max_
   esp_zb_zcl_update_reporting_info(&reporting_info);
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
