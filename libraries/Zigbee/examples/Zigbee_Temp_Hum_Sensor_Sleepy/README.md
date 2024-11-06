@@ -23,7 +23,7 @@ Currently, this example supports the following targets.
 
 ### Configure the Project
 
-In this example, to demonstrate the funcionality the chip temperature is used and reported as temperature and humidity.
+In this example, to demonstrate the functionality the chip temperature is used and reported as temperature and humidity.
 Set the Button GPIO by changing the `BUTTON_PIN` definition. By default, it's the pin `9` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE
