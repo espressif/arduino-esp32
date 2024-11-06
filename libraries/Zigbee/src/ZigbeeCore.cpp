@@ -6,6 +6,9 @@
 #include "ZigbeeHandlers.cpp"
 #include "Arduino.h"
 
+extern "C" void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
+static bool edBatteryPowered = false;
+
 ZigbeeCore::ZigbeeCore() {
   _radio_config.radio_mode = ZB_RADIO_MODE_NATIVE;                   // Use the native 15.4 radio
   _host_config.host_connection_mode = ZB_HOST_CONNECTION_MODE_NONE;  // Disable host connection
@@ -73,6 +76,12 @@ void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
 static void esp_zb_task(void *pvParameters) {
   /* initialize Zigbee stack */
   ESP_ERROR_CHECK(esp_zb_start(false));
+
+  //NOTE: This is a workaround to make battery powered devices to be discovered as battery powered
+  if (((zigbee_role_t)Zigbee.getRole() == ZIGBEE_END_DEVICE) && edBatteryPowered) {
+    zb_set_ed_node_descriptor(0, 0, 0);
+  }
+
   esp_zb_stack_main_loop();
 }
 
@@ -109,6 +118,9 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
     log_i("List of registered Zigbee EPs:");
     for (std::list<ZigbeeEP *>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
       log_i("Device type: %s, Endpoint: %d, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
+      if ((*it)->_power_source == ZB_POWER_SOURCE_BATTERY) {
+        edBatteryPowered = true;
+      }
     }
   }
   // Register Zigbee action handler
@@ -155,7 +167,7 @@ void ZigbeeCore::setRebootOpenNetwork(uint8_t time) {
 }
 
 void ZigbeeCore::openNetwork(uint8_t time) {
-  if (_started) {
+  if (isStarted()) {
     log_v("Opening network for joining for %d seconds", time);
     esp_zb_bdb_open_network(time);
   }
@@ -205,6 +217,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       } else {
         /* commissioning failed */
         log_e("Failed to initialize Zigbee stack (status: %s)", esp_err_to_name(err_status));
+        esp_restart();
       }
       break;
     case ESP_ZB_BDB_SIGNAL_FORMATION:  // Coordinator
@@ -225,11 +238,11 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       }
       break;
     case ESP_ZB_BDB_SIGNAL_STEERING:  // Router and End Device
-      Zigbee._started = true;
       if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
         if (err_status == ESP_OK) {
           log_i("Network steering started");
         }
+        Zigbee._started = true;
       } else {
         if (err_status == ESP_OK) {
           esp_zb_ieee_addr_t extended_pan_id;
@@ -239,6 +252,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
             extended_pan_id[7], extended_pan_id[6], extended_pan_id[5], extended_pan_id[4], extended_pan_id[3], extended_pan_id[2], extended_pan_id[1],
             extended_pan_id[0], esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address()
           );
+          Zigbee._started = true;
         } else {
           log_i("Network steering was not successful (status: %s)", esp_err_to_name(err_status));
           esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
@@ -321,7 +335,7 @@ void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t co
 }
 
 void ZigbeeCore::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
-  if (!_started) {
+  if (!isStarted()) {
     log_e("Zigbee stack is not started, cannot scan networks");
     return;
   }

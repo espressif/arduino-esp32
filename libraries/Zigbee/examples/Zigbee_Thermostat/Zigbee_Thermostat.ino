@@ -31,8 +31,7 @@
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "ZigbeeCore.h"
-#include "ep/ZigbeeThermostat.h"
+#include "Zigbee.h"
 
 #define BUTTON_PIN                 9  // Boot button for C6/H2
 #define THERMOSTAT_ENDPOINT_NUMBER 5

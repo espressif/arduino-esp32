@@ -1,5 +1,5 @@
 /*
-   Simple BLE5 multi advertising example on esp32 C3/S3
+   Simple BLE5 periodic advertising example on esp32 C3/S3
    only ESP_BLE_GAP_SET_EXT_ADV_PROP_NONCONN_NONSCANNABLE_UNDIRECTED can be used for periodic advertising
 
    author: chegewara
