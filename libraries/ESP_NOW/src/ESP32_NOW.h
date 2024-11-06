@@ -1,10 +1,17 @@
 #pragma once
 
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
+#else
+
 #include "esp_wifi_types.h"
 #include "Print.h"
 #include "esp_now.h"
 #include "esp32-hal-log.h"
 #include "esp_mac.h"
+
+
 
 class ESP_NOW_Peer;  //forward declaration for friend function
 
@@ -77,3 +84,5 @@ public:
 };
 
 extern ESP_NOW_Class ESP_NOW;
+
+#endif
