@@ -41,7 +41,7 @@
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
 /************************ Temp sensor *****************************/
-void meausureAndSleep(){
+void meausureAndSleep() {
   // Measure temperature sensor value
   float temperature = temperatureRead();
 
@@ -84,7 +84,7 @@ void setup() {
   zbTempSensor.setPowerSource(ZB_POWER_SOURCE_BATTERY, 100);
 
   // Add humidity cluster to the temperature sensor device with min, max and tolerance values
-  zbTempSensor.addHumiditySensor(0,100,1);
+  zbTempSensor.addHumiditySensor(0, 100, 1);
 
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
@@ -97,7 +97,7 @@ void setup() {
   Zigbee.begin(&zigbeeConfig, false);
 
   // Wait for Zigbee to start
-  while(!Zigbee.isStarted()){
+  while (!Zigbee.isStarted()) {
     delay(100);
   }
 
