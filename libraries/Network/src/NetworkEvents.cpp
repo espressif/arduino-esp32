@@ -368,7 +368,7 @@ const char *NetworkEvents::eventName(arduino_event_id_t id) {
     case ARDUINO_EVENT_PPP_GOT_IP:       return "PPP_GOT_IP";
     case ARDUINO_EVENT_PPP_LOST_IP:      return "PPP_LOST_IP";
     case ARDUINO_EVENT_PPP_GOT_IP6:      return "PPP_GOT_IP6";
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
     case ARDUINO_EVENT_WIFI_OFF:                 return "WIFI_OFF";
     case ARDUINO_EVENT_WIFI_READY:               return "WIFI_READY";
     case ARDUINO_EVENT_WIFI_SCAN_DONE:           return "SCAN_DONE";

@@ -27,6 +27,8 @@
 #include "esp32s2/rom/cache.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "esp32s3/rom/cache.h"
+#elif CONFIG_IDF_TARGET_ESP32P4
+#include "esp32p4/rom/cache.h"
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -79,7 +81,7 @@ bool psramInit() {
     ESP_EARLY_LOGE(TAG, "PSRAM test failed!");
     return false;
   }
-  ESP_EARLY_LOGI(TAG, "PSRAM enabled");
+  //ESP_EARLY_LOGI(TAG, "PSRAM enabled");
 #endif /* CONFIG_SPIRAM_BOOT_INIT */
   spiramDetected = true;
   return true;

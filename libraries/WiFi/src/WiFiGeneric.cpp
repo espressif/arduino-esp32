@@ -24,7 +24,7 @@
 
 #include "WiFi.h"
 #include "WiFiGeneric.h"
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 extern "C" {
 #include <stdint.h>
@@ -39,6 +39,9 @@ extern "C" {
 #include <esp_event.h>
 #include <esp_mac.h>
 #include <esp_netif.h>
+#if SOC_WIFI_SUPPORTED
+#include <esp_phy.h>
+#endif
 #include "lwip/ip_addr.h"
 #include "lwip/opt.h"
 #include "lwip/err.h"
@@ -102,6 +105,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
     arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
     memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
 
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
     /*
 	 * SMART CONFIG
 	 * */
@@ -156,6 +160,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
   } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_WIFI_CRED_SUCCESS) {
     log_v("Provisioning Success!");
     arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_SUCCESS;
+#endif
   }
 
   if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
@@ -169,6 +174,7 @@ static bool initWiFiEvents() {
     return false;
   }
 
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
   if (esp_event_handler_instance_register(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
     log_e("event_handler_instance_register for SC_EVENT Failed!");
     return false;
@@ -178,6 +184,7 @@ static bool initWiFiEvents() {
     log_e("event_handler_instance_register for NETWORK_PROV_EVENT Failed!");
     return false;
   }
+#endif
 
   return true;
 }
@@ -188,6 +195,7 @@ static bool deinitWiFiEvents() {
     return false;
   }
 
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
   if (esp_event_handler_unregister(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
     log_e("esp_event_handler_unregister for SC_EVENT Failed!");
     return false;
@@ -197,6 +205,7 @@ static bool deinitWiFiEvents() {
     log_e("esp_event_handler_unregister for NETWORK_PROV_EVENT Failed!");
     return false;
   }
+#endif
 
   return true;
 }
@@ -224,9 +233,41 @@ void WiFiGenericClass::useStaticBuffers(bool bufferMode) {
 extern "C" void phy_bbpll_en_usb(bool en);
 #endif
 
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+extern "C" esp_err_t esp_hosted_init(void *);
+
+static bool wifiHostedInit() {
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    if (esp_hosted_init(NULL) != ESP_OK) {
+      log_e("esp_hosted_init failed!");
+      return false;
+    }
+  }
+  // Attach pins to periman here
+  // Slave chip model is CONFIG_IDF_SLAVE_TARGET
+  // CONFIG_ESP_SDIO_PIN_CMD
+  // CONFIG_ESP_SDIO_PIN_CLK
+  // CONFIG_ESP_SDIO_PIN_D0
+  // CONFIG_ESP_SDIO_PIN_D1
+  // CONFIG_ESP_SDIO_PIN_D2
+  // CONFIG_ESP_SDIO_PIN_D3
+  // CONFIG_ESP_SDIO_GPIO_RESET_SLAVE
+
+  return true;
+}
+#endif
+
 bool wifiLowLevelInit(bool persistent) {
   if (!lowLevelInitDone) {
     lowLevelInitDone = true;
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+    if (!wifiHostedInit()) {
+      lowLevelInitDone = false;
+      return lowLevelInitDone;
+    }
+#endif
     if (!Network.begin()) {
       lowLevelInitDone = false;
       return lowLevelInitDone;
@@ -369,6 +410,7 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
   // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
   if (event->event_id == ARDUINO_EVENT_WIFI_SCAN_DONE) {
     WiFiScanClass::_scanDone();
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
   } else if (event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
     WiFi.begin(
       (const char *)event->event_info.sc_got_ssid_pswd.ssid, (const char *)event->event_info.sc_got_ssid_pswd.password, 0,
@@ -377,6 +419,7 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
   } else if (event->event_id == ARDUINO_EVENT_SC_SEND_ACK_DONE) {
     esp_smartconfig_stop();
     WiFiSTAClass::_smartConfigDone = true;
+#endif
   }
 }
 
@@ -692,10 +735,11 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
  * @return true on success
  */
 bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode) {
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
 
-  wifi_ant_gpio_config_t wifi_ant_io;
+  esp_phy_ant_gpio_config_t wifi_ant_io;
 
-  if (ESP_OK != esp_wifi_get_ant_gpio(&wifi_ant_io)) {
+  if (ESP_OK != esp_phy_get_ant_gpio(&wifi_ant_io)) {
     log_e("Failed to get antenna configuration");
     return false;
   }
@@ -705,60 +749,60 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
   wifi_ant_io.gpio_cfg[1].gpio_num = gpio_ant2;
   wifi_ant_io.gpio_cfg[1].gpio_select = 1;
 
-  if (ESP_OK != esp_wifi_set_ant_gpio(&wifi_ant_io)) {
+  if (ESP_OK != esp_phy_set_ant_gpio(&wifi_ant_io)) {
     log_e("Failed to set antenna GPIO configuration");
     return false;
   }
 
   // Set antenna default configuration
-  wifi_ant_config_t ant_config = {
-    .rx_ant_mode = WIFI_ANT_MODE_AUTO,
-    .rx_ant_default = WIFI_ANT_MAX,  // Ignored in AUTO mode
-    .tx_ant_mode = WIFI_ANT_MODE_AUTO,
+  esp_phy_ant_config_t ant_config = {
+    .rx_ant_mode = ESP_PHY_ANT_MODE_AUTO,
+    .rx_ant_default = ESP_PHY_ANT_MAX,  // Ignored in AUTO mode
+    .tx_ant_mode = ESP_PHY_ANT_MODE_AUTO,
     .enabled_ant0 = 1,
     .enabled_ant1 = 2,
   };
 
   switch (rx_mode) {
-    case WIFI_RX_ANT0: ant_config.rx_ant_mode = WIFI_ANT_MODE_ANT0; break;
-    case WIFI_RX_ANT1: ant_config.rx_ant_mode = WIFI_ANT_MODE_ANT1; break;
+    case WIFI_RX_ANT0: ant_config.rx_ant_mode = ESP_PHY_ANT_MODE_ANT0; break;
+    case WIFI_RX_ANT1: ant_config.rx_ant_mode = ESP_PHY_ANT_MODE_ANT1; break;
     case WIFI_RX_ANT_AUTO:
       log_i("TX Antenna will be automatically selected");
-      ant_config.rx_ant_default = WIFI_ANT_ANT0;
-      ant_config.rx_ant_mode = WIFI_ANT_MODE_AUTO;
+      ant_config.rx_ant_default = ESP_PHY_ANT_ANT0;
+      ant_config.rx_ant_mode = ESP_PHY_ANT_MODE_AUTO;
       // Force TX for AUTO if RX is AUTO
-      ant_config.tx_ant_mode = WIFI_ANT_MODE_AUTO;
+      ant_config.tx_ant_mode = ESP_PHY_ANT_MODE_AUTO;
       goto set_ant;
       break;
     default:
       log_e("Invalid default antenna! Falling back to AUTO");
-      ant_config.rx_ant_mode = WIFI_ANT_MODE_AUTO;
+      ant_config.rx_ant_mode = ESP_PHY_ANT_MODE_AUTO;
       break;
   }
 
   switch (tx_mode) {
-    case WIFI_TX_ANT0: ant_config.tx_ant_mode = WIFI_ANT_MODE_ANT0; break;
-    case WIFI_TX_ANT1: ant_config.tx_ant_mode = WIFI_ANT_MODE_ANT1; break;
+    case WIFI_TX_ANT0: ant_config.tx_ant_mode = ESP_PHY_ANT_MODE_ANT0; break;
+    case WIFI_TX_ANT1: ant_config.tx_ant_mode = ESP_PHY_ANT_MODE_ANT1; break;
     case WIFI_TX_ANT_AUTO:
       log_i("RX Antenna will be automatically selected");
-      ant_config.rx_ant_default = WIFI_ANT_ANT0;
-      ant_config.tx_ant_mode = WIFI_ANT_MODE_AUTO;
+      ant_config.rx_ant_default = ESP_PHY_ANT_ANT0;
+      ant_config.tx_ant_mode = ESP_PHY_ANT_MODE_AUTO;
       // Force RX for AUTO if RX is AUTO
-      ant_config.rx_ant_mode = WIFI_ANT_MODE_AUTO;
+      ant_config.rx_ant_mode = ESP_PHY_ANT_MODE_AUTO;
       break;
     default:
       log_e("Invalid default antenna! Falling back to AUTO");
-      ant_config.rx_ant_default = WIFI_ANT_ANT0;
-      ant_config.tx_ant_mode = WIFI_ANT_MODE_AUTO;
+      ant_config.rx_ant_default = ESP_PHY_ANT_ANT0;
+      ant_config.tx_ant_mode = ESP_PHY_ANT_MODE_AUTO;
       break;
   }
 
 set_ant:
-  if (ESP_OK != esp_wifi_set_ant(&ant_config)) {
+  if (ESP_OK != esp_phy_set_ant(&ant_config)) {
     log_e("Failed to set antenna configuration");
     return false;
   }
-
+#endif
   return true;
 }
 

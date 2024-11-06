@@ -147,6 +147,7 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             esp32c3_opts="$fqbn_append"
             esp32c6_opts="$fqbn_append"
             esp32h2_opts="$fqbn_append"
+            esp32p4_opts="USBMode=default${fqbn_append:+,$fqbn_append}"
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
@@ -177,6 +178,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
                 "esp32h2")
                     [ -n "${options:-$esp32h2_opts}" ] && opt=":${options:-$esp32h2_opts}"
                     fqbn="espressif:esp32:esp32h2$opt"
+                ;;
+                "esp32p4")
+                    [ -n "${options:-$esp32p4_opts}" ] && opt=":${options:-$esp32p4_opts}"
+                    fqbn="espressif:esp32:esp32p4$opt"
                 ;;
             esac
 

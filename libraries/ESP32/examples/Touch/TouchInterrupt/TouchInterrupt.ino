@@ -3,7 +3,12 @@ This is an example how to use Touch Intrrerupts
 The bigger the threshold, the more sensible is the touch
 */
 
+#if CONFIG_IDF_TARGET_ESP32P4
+int threshold = 0;  // when 0 is used, the benchmarked value will be used
+#else
 int threshold = 40;
+#endif
+
 bool touch1detected = false;
 bool touch2detected = false;
 
