@@ -13,10 +13,10 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee temperature sensor.
+ * @brief This example demonstrates Zigbee temperature and humidity sensor Sleepy device.
  *
- * The example demonstrates how to use Zigbee library to create a end device temperature sensor.
- * The temperature sensor is a Zigbee end device, which is controlled by a Zigbee coordinator.
+ * The example demonstrates how to use Zigbee library to create an end device temperature and humidity sensor.
+ * The sensor is a Zigbee end device, which is reporting data to the Zigbee network.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
@@ -35,33 +35,43 @@
 #define BUTTON_PIN                  9  //Boot button for C6/H2
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
 
+#define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  55         /* Sleep for 55s will + 5s delay for establishing connection => data reported every 1 minute */
+
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
 /************************ Temp sensor *****************************/
-static void temp_sensor_value_update(void *arg) {
-  for (;;) {
-    // Read temperature sensor value
-    float tsens_value = temperatureRead();
-    log_v("Temperature sensor value: %.2f°C", tsens_value);
-    // Update temperature value in Temperature sensor EP
-    zbTempSensor.setTemperature(tsens_value);
-    delay(1000);
-  }
+void meausureAndSleep() {
+  // Measure temperature sensor value
+  float temperature = temperatureRead();
+
+  // Use temparture value as humidity value to demonstrate both temperature and humidity
+  float humidity = temperature;
+
+  // Update temperature and humidity values in Temperature sensor EP
+  zbTempSensor.setTemperature(temperature);
+  zbTempSensor.setHumidity(humidity);
+
+  // Report temperature and humidity values
+  zbTempSensor.reportTemperature();
+  zbTempSensor.reportHumidity();
+
+  log_d("Temperature: %.2f°C, Humidity: %.2f%", temperature, humidity);
+
+  // Put device to deep sleep
+  esp_deep_sleep_start();
 }
 
 /********************* Arduino functions **************************/
 void setup() {
-
-  Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
-
   // Init button switch
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
+  // Configure the wake up source and set to wake up every 5 seconds
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+
   // Optional: set Zigbee device name and model
-  zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
+  zbTempSensor.setManufacturerAndModel("Espressif", "SleepyZigbeeTempSensorTest");
 
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
   zbTempSensor.setMinMaxValue(10, 50);
@@ -69,21 +79,30 @@ void setup() {
   // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
 
+  // Set power source to battery and set battery percentage to measured value (now 100% for demonstration)
+  // The value can be also updated by calling zbTempSensor.setBatteryPercentage(percentage) anytime
+  zbTempSensor.setPowerSource(ZB_POWER_SOURCE_BATTERY, 100);
+
+  // Add humidity cluster to the temperature sensor device with min, max and tolerance values
+  zbTempSensor.addHumiditySensor(0, 100, 1);
+
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
+  // Create a custom Zigbee configuration for End Device with keep alive 10s to avoid interference with reporting data
+  esp_zb_cfg_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
+  zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
+
   // When all EPs are registered, start Zigbee in End Device mode
-  Zigbee.begin();
+  Zigbee.begin(&zigbeeConfig, false);
 
-  // Start Temperature sensor reading task
-  xTaskCreate(temp_sensor_value_update, "temp_sensor_update", 2048, NULL, 10, NULL);
+  // Wait for Zigbee to start
+  while (!Zigbee.isStarted()) {
+    delay(100);
+  }
 
-  // Set reporting interval for temperature measurement in seconds, must be called after Zigbee.begin()
-  // min_interval and max_interval in seconds, delta (temp change in °C)
-  // if min = 1 and max = 0, reporting is sent only when temperature changes by delta
-  // if min = 0 and max = 10, reporting is sent every 10 seconds or temperature changes by delta
-  // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of temperature change
-  zbTempSensor.setReporting(1, 0, 1);
+  // Delay 5s to allow establishing connection with coordinator, needed for sleepy devices
+  delay(5000);
 }
 
 void loop() {
@@ -96,11 +115,11 @@ void loop() {
       delay(50);
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
-        Serial.printf("Resetting Zigbee to factory settings, reboot.\n");
         Zigbee.factoryReset();
       }
     }
-    zbTempSensor.reportTemperature();
   }
-  delay(100);
+
+  // Call the function to measure temperature and put the device to sleep
+  meausureAndSleep();
 }
