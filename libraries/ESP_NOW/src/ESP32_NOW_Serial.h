@@ -1,5 +1,10 @@
 #pragma once
 
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
+#else
+
 #include "esp_wifi_types.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -48,3 +53,5 @@ public:
   void onReceive(const uint8_t *data, size_t len, bool broadcast);
   void onSent(bool success);
 };
+
+#endif
