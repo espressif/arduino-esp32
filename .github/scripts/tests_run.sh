@@ -9,6 +9,7 @@ function run_test() {
     local sketchname=$(basename $sketchdir)
     local result=0
     local error=0
+    local sdkconfig_path
 
     if [ $options -eq 0 ] && [ -f $sketchdir/ci.json ]; then
         len=`jq -r --arg target $target '.fqbn[$target] | length' $sketchdir/ci.json`
@@ -20,9 +21,9 @@ function run_test() {
     fi
 
     if [ $len -eq 1 ]; then
-        SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
+        sdkconfig_path="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
     else
-        SDKCONFIG_PATH="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
+        sdkconfig_path="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
     fi
 
     if [ -f $sketchdir/ci.json ]; then
@@ -35,39 +36,19 @@ function run_test() {
             printf "\n\n\n"
             return 0
         fi
+    fi
 
-        # Check if the sketch requires any configuration options (AND)
-        requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-        if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
-            for requirement in $requirements; do
-                requirement=$(echo $requirement | xargs)
-                found_line=$(grep -E "^$requirement" "$SDKCONFIG_PATH")
-                if [[ "$found_line" == "" ]]; then
-                    printf "\033[93mTarget $target does not meet the requirement $requirement for $sketchname. Skipping.\033[0m\n"
-                    printf "\n\n\n"
-                    return 0
-                fi
-            done
-        fi
+    if [ ! -f $sdkconfig_path ]; then
+        printf "\033[93mSketch $sketchname not built\nMight be due to missing target requirements or build failure\033[0m\n"
+        printf "\n\n\n"
+        return 0
+    fi
 
-        # Check if the sketch requires any configuration options (OR)
-        requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
-        if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
-            found=false
-            for requirement in $requirements_or; do
-                requirement=$(echo $requirement | xargs)
-                found_line=$(grep -E "^$requirement" "$SDKCONFIG_PATH")
-                if [[ "$found_line" != "" ]]; then
-                    found=true
-                    break
-                fi
-            done
-            if [[ "$found" == "false" ]]; then
-                printf "\033[93mTarget $target meets none of the requirements in requires_any for $sketchname. Skipping.\033[0m\n"
-                printf "\n\n\n"
-                return 0
-            fi
-        fi
+    local right_target=$(grep -E "^CONFIG_IDF_TARGET=\"$target\"$" "$sdkconfig_path")
+    if [ -z "$right_target" ]; then
+        printf "\033[91mError: Sketch $sketchname compiled for different target\n\033[0m\n"
+        printf "\n\n\n"
+        return 1
     fi
 
     if [ $len -eq 1 ]; then
