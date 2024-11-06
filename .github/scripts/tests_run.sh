@@ -125,6 +125,8 @@ function run_test() {
             extra_args="--embedded-services esp,arduino"
         fi
 
+        rm $sketchdir/diagram.json 2>/dev/null || true
+
         result=0
         printf "\033[95mpytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args\033[0m\n"
         bash -c "set +e; pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args; exit \$?" || result=$?

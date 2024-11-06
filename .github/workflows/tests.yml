@@ -26,10 +26,9 @@ on:
       - '!.github/scripts/upload_py_tools.sh'
       - 'tests/**'
       - 'cores/**'
-      - 'libraries/**'
-      - '!libraries/**.md'
-      - '!libraries/**.txt'
-      - '!libraries/**.properties'
+      - 'libraries/*/src/**.cpp'
+      - 'libraries/*/src/**.h'
+      - 'libraries/*/src/**.c'
       - 'package/**'
   schedule:
     - cron: '0 2 * * *'
