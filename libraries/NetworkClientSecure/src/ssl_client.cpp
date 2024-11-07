@@ -83,6 +83,7 @@ int start_ssl_client(
 
   fcntl(ssl_client->socket, F_SETFL, fcntl(ssl_client->socket, F_GETFL, 0) | O_NONBLOCK);
   struct sockaddr_storage serv_addr = {};
+#if CONFIG_LWIP_IPV6
   if (domain == AF_INET6) {
     struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serv_addr;
     tmpaddr->sin6_family = AF_INET6;
@@ -92,11 +93,14 @@ int start_ssl_client(
     tmpaddr->sin6_port = htons(port);
     tmpaddr->sin6_scope_id = ip.zone();
   } else {
+#endif
     struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serv_addr;
     tmpaddr->sin_family = AF_INET;
     tmpaddr->sin_addr.s_addr = ip;
     tmpaddr->sin_port = htons(port);
+#if CONFIG_LWIP_IPV6
   }
+#endif
 
   if (timeout <= 0) {
     timeout = 30000;  // Milli seconds.

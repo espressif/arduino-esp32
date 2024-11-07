@@ -255,6 +255,7 @@ int NetworkUDP::endPacket() {
       log_e("could not send data: %d", errno);
       return 0;
     }
+#if LWIP_IPV6
   } else {
     struct sockaddr_in6 recipient;
     recipient.sin6_flowinfo = 0;
@@ -267,6 +268,7 @@ int NetworkUDP::endPacket() {
       log_e("could not send data: %d", errno);
       return 0;
     }
+#endif
   }
   return 1;
 }
@@ -337,11 +339,16 @@ int NetworkUDP::parsePacket() {
     }
     remote_port = ntohs(si_other.sin6_port);
   }
-#endif  // LWIP_IPV6=1
   else {
     remote_ip = ip_addr_any.u_addr.ip4.addr;
     remote_port = 0;
   }
+#else
+  else {
+    remote_ip = ip_addr_any.addr;
+    remote_port = 0;
+  }
+#endif  // LWIP_IPV6=1
   if (len > 0) {
     rx_buffer = new (std::nothrow) cbuf(len);
     rx_buffer->write(buf, len);

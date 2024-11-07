@@ -251,9 +251,11 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
         bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb
       );
 
+#if CONFIG_LWIP_IPV6
       if (ipv6_support == true) {
         WiFi.enableIPv6();
       }
+#endif
       WiFi.disconnect();
       delay(10);
       WiFi.begin(bestNetwork.ssid, (_bAllowOpenAP && bestNetworkSec == WIFI_AUTH_OPEN) ? NULL : bestNetwork.passphrase, bestChannel, bestBSSID);
@@ -318,9 +320,11 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
   return status;
 }
 
+#if CONFIG_LWIP_IPV6
 void WiFiMulti::enableIPv6(bool state) {
   ipv6_support = state;
 }
+#endif
 
 void WiFiMulti::markAsFailed(int32_t i) {
   APlist[i].hasFailed = true;

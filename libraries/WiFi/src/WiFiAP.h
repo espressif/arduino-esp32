@@ -23,6 +23,7 @@
 #pragma once
 
 #include "soc/soc_caps.h"
+#include "sdkconfig.h"
 #if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 #include "esp_wifi_types.h"
@@ -100,8 +101,10 @@ public:
   IPAddress softAPSubnetMask();
   uint8_t softAPSubnetCIDR();
 
+#if CONFIG_LWIP_IPV6
   bool softAPenableIPv6(bool enable = true);
   IPAddress softAPlinkLocalIPv6();
+#endif
 
   const char *softAPgetHostname();
   bool softAPsetHostname(const char *hostname);
