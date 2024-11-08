@@ -234,18 +234,32 @@ extern "C" void phy_bbpll_en_usb(bool en);
 #endif
 
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
-extern "C" esp_err_t esp_hosted_init(void *);
+extern "C" {
+//#include "esp_hosted.h"
+#include "esp_hosted_transport_config.h"
+extern esp_err_t esp_hosted_init();
+extern esp_err_t esp_hosted_deinit();
+};
+static bool hosted_initialized = false;
 
 static bool wifiHostedInit() {
-  static bool initialized = false;
-  if (!initialized) {
-    initialized = true;
-    if (esp_hosted_init(NULL) != ESP_OK) {
+  if (!hosted_initialized) {
+    hosted_initialized = true;
+    struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
+    conf.pin_clk.pin = CONFIG_ESP_SDIO_PIN_CLK;
+    conf.pin_cmd.pin = CONFIG_ESP_SDIO_PIN_CMD;
+    conf.pin_d0.pin = CONFIG_ESP_SDIO_PIN_D0;
+    conf.pin_d1.pin = CONFIG_ESP_SDIO_PIN_D1;
+    conf.pin_d2.pin = CONFIG_ESP_SDIO_PIN_D2;
+    conf.pin_d3.pin = CONFIG_ESP_SDIO_PIN_D3;
+    //conf.pin_rst.pin = CONFIG_ESP_SDIO_GPIO_RESET_SLAVE;
+    if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
       log_e("esp_hosted_init failed!");
+      hosted_initialized = false;
       return false;
     }
   }
-  // Attach pins to periman here
+  // Attach pins to PeriMan here
   // Slave chip model is CONFIG_IDF_SLAVE_TARGET
   // CONFIG_ESP_SDIO_PIN_CMD
   // CONFIG_ESP_SDIO_PIN_CLK
@@ -331,6 +345,12 @@ static bool wifiLowLevelDeinit() {
       arduino_event_t arduino_event;
       arduino_event.event_id = ARDUINO_EVENT_WIFI_OFF;
       Network.postEvent(&arduino_event);
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+      if (!hosted_initialized && esp_hosted_deinit() == ESP_OK) {
+        hosted_initialized = false;
+        // detach SDIO pins from PeriMan
+      }
+#endif
     }
   }
   return !lowLevelInitDone;
