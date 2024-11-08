@@ -86,6 +86,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             shift
             log_compilation=$1
             ;;
+        -d )
+            shift
+            debug_level="DebugLevel=$1"
+            ;;
         * )
             break
             ;;
@@ -140,13 +144,15 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             fi
 
             # Default FQBN options if none were passed in the command line.
+            # Replace any double commas with a single one and strip leading and
+            # trailing commas.
 
-            esp32_opts="PSRAM=enabled${fqbn_append:+,$fqbn_append}"
-            esp32s2_opts="PSRAM=enabled${fqbn_append:+,$fqbn_append}"
-            esp32s3_opts="PSRAM=opi,USBMode=default${fqbn_append:+,$fqbn_append}"
-            esp32c3_opts="$fqbn_append"
-            esp32c6_opts="$fqbn_append"
-            esp32h2_opts="$fqbn_append"
+            esp32_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32s2_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32s3_opts=$(echo "PSRAM=opi,USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32c3_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32c6_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32h2_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
