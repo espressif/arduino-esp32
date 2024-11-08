@@ -45,7 +45,7 @@ void meausureAndSleep() {
   // Measure temperature sensor value
   float temperature = temperatureRead();
 
-  // Use temparture value as humidity value to demonstrate both temperature and humidity
+  // Use temperature value as humidity value to demonstrate both temperature and humidity
   float humidity = temperature;
 
   // Update temperature and humidity values in Temperature sensor EP
