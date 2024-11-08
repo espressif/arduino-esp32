@@ -253,11 +253,13 @@ static bool wifiHostedInit() {
     conf.pin_d2.pin = CONFIG_ESP_SDIO_PIN_D2;
     conf.pin_d3.pin = CONFIG_ESP_SDIO_PIN_D3;
     //conf.pin_rst.pin = CONFIG_ESP_SDIO_GPIO_RESET_SLAVE;
+    // esp_hosted_sdio_set_config() will fail on second attempt but here temporarily to not cause exception on reinit
     if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
       log_e("esp_hosted_init failed!");
       hosted_initialized = false;
       return false;
     }
+    log_v("ESP-HOSTED initialized!");
   }
   // Attach pins to PeriMan here
   // Slave chip model is CONFIG_IDF_SLAVE_TARGET
@@ -346,8 +348,9 @@ static bool wifiLowLevelDeinit() {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_OFF;
       Network.postEvent(&arduino_event);
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
-      if (!hosted_initialized && esp_hosted_deinit() == ESP_OK) {
+      if (hosted_initialized && esp_hosted_deinit() == ESP_OK) {
         hosted_initialized = false;
+        log_v("ESP-HOSTED uninitialized!");
         // detach SDIO pins from PeriMan
       }
 #endif
