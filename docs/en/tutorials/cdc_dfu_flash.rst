@@ -66,8 +66,8 @@ Go to the Tools menu in the Arduino IDE and set the following options:
 
 * USB DFU On Boot -> Enabled
 
-Setp 3 - Flash
-^^^^^^^^^^^^^^
+3. Flash
+^^^^^^^^
 
 Now you can upload your sketch to the device. After flashing, you need to manually reset the device.
 
