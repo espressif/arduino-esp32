@@ -27,11 +27,11 @@
 //  Keyboard
 
 // es_ES keys
-#define KEY_MASCULINE_ORDINAL    (0x88+0x35)
-#define KEY_INVERTED_EXCLAMATION (0x88+0x2e)
-#define KEY_GRAVE                (0x88+0x2f)
-#define KEY_N_TILDE              (0x88+0x33)
-#define KEY_ACUTE                (0x88+0x34)
-#define KEY_C_CEDILLA            (0x88+0x31)
+#define KEY_MASCULINE_ORDINAL    (0x88 + 0x35)
+#define KEY_INVERTED_EXCLAMATION (0x88 + 0x2e)
+#define KEY_GRAVE                (0x88 + 0x2f)
+#define KEY_N_TILDE              (0x88 + 0x33)
+#define KEY_ACUTE                (0x88 + 0x34)
+#define KEY_C_CEDILLA            (0x88 + 0x31)
 
 #endif

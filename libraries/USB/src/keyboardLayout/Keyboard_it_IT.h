@@ -26,10 +26,10 @@
 //  Keyboard
 
 // it_IT keys
-#define KEY_I_GRAVE       (0x88+0x2e)
-#define KEY_E_GRAVE       (0x88+0x2f)
-#define KEY_O_GRAVE       (0x88+0x33)
-#define KEY_A_GRAVE       (0x88+0x34)
-#define KEY_U_GRAVE       (0x88+0x31)
+#define KEY_I_GRAVE (0x88 + 0x2e)
+#define KEY_E_GRAVE (0x88 + 0x2f)
+#define KEY_O_GRAVE (0x88 + 0x33)
+#define KEY_A_GRAVE (0x88 + 0x34)
+#define KEY_U_GRAVE (0x88 + 0x31)
 
 #endif

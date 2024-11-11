@@ -68,14 +68,14 @@ extern const uint8_t KeyboardLayout_pt_BR[];
 #define KEY_LEFT_GUI    0x83
 #define KEY_RIGHT_CTRL  0x84
 #define KEY_RIGHT_SHIFT 0x85
-#define KEY_RIGHT_ALT   0x86   // AltGr (Right Alt) Key
+#define KEY_RIGHT_ALT   0x86  // AltGr (Right Alt) Key
 #define KEY_RIGHT_GUI   0x87
 
 #define KEY_UP_ARROW     0xDA
 #define KEY_DOWN_ARROW   0xD9
 #define KEY_LEFT_ARROW   0xD8
 #define KEY_RIGHT_ARROW  0xD7
-#define KEY_MENU         0xED //  "Keyboard Application" in USB standard
+#define KEY_MENU         0xED  //  "Keyboard Application" in USB standard
 #define KEY_SPACE        0x20
 #define KEY_BACKSPACE    0xB2
 #define KEY_TAB          0xB3
@@ -124,22 +124,22 @@ extern const uint8_t KeyboardLayout_pt_BR[];
 #define LED_KANA       0x10
 
 // Numeric keypad
-#define KEY_KP_SLASH      0xDC
-#define KEY_KP_ASTERISK   0xDD
-#define KEY_KP_MINUS      0xDE
-#define KEY_KP_PLUS       0xDF
-#define KEY_KP_ENTER      0xE0
-#define KEY_KP_1          0xE1
-#define KEY_KP_2          0xE2
-#define KEY_KP_3          0xE3
-#define KEY_KP_4          0xE4
-#define KEY_KP_5          0xE5
-#define KEY_KP_6          0xE6
-#define KEY_KP_7          0xE7
-#define KEY_KP_8          0xE8
-#define KEY_KP_9          0xE9
-#define KEY_KP_0          0xEA
-#define KEY_KP_DOT        0xEB
+#define KEY_KP_SLASH    0xDC
+#define KEY_KP_ASTERISK 0xDD
+#define KEY_KP_MINUS    0xDE
+#define KEY_KP_PLUS     0xDF
+#define KEY_KP_ENTER    0xE0
+#define KEY_KP_1        0xE1
+#define KEY_KP_2        0xE2
+#define KEY_KP_3        0xE3
+#define KEY_KP_4        0xE4
+#define KEY_KP_5        0xE5
+#define KEY_KP_6        0xE6
+#define KEY_KP_7        0xE7
+#define KEY_KP_8        0xE8
+#define KEY_KP_9        0xE9
+#define KEY_KP_0        0xEA
+#define KEY_KP_DOT      0xEB
 
 //  Low level key report: up to 6 keys and shift, ctrl etc at once
 typedef struct {

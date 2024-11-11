@@ -26,10 +26,10 @@
 //  Keyboard
 
 // pt_PT keys
-#define KEY_LEFT_GUILLEMET       (0x88+0x2e)
-#define KEY_ACUTE                (0x88+0x30)
-#define KEY_C_CEDILLA            (0x88+0x33)
-#define KEY_MASCULINE_ORDINAL    (0x88+0x34)
-#define KEY_TILDE                (0x88+0x31)
+#define KEY_LEFT_GUILLEMET    (0x88 + 0x2e)
+#define KEY_ACUTE             (0x88 + 0x30)
+#define KEY_C_CEDILLA         (0x88 + 0x33)
+#define KEY_MASCULINE_ORDINAL (0x88 + 0x34)
+#define KEY_TILDE             (0x88 + 0x31)
 
 #endif

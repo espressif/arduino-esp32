@@ -26,11 +26,11 @@
 //  Keyboard
 
 // de_DE keys
-#define KEY_CIRCUMFLEX    (0x88+0x35)
-#define KEY_ESZETT        (0x88+0x2d)
-#define KEY_ACUTE         (0x88+0x2e)
-#define KEY_U_UMLAUT      (0x88+0x2f)
-#define KEY_O_UMLAUT      (0x88+0x33)
-#define KEY_A_UMLAUT      (0x88+0x34)
+#define KEY_CIRCUMFLEX (0x88 + 0x35)
+#define KEY_ESZETT     (0x88 + 0x2d)
+#define KEY_ACUTE      (0x88 + 0x2e)
+#define KEY_U_UMLAUT   (0x88 + 0x2f)
+#define KEY_O_UMLAUT   (0x88 + 0x33)
+#define KEY_A_UMLAUT   (0x88 + 0x34)
 
 #endif

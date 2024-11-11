@@ -26,12 +26,12 @@
 //  Keyboard
 
 // fr_FR keys
-#define KEY_SUPERSCRIPT_TWO (0x88+0x35)
-#define KEY_E_ACUTE         (0x88+0x1f)
-#define KEY_E_GRAVE         (0x88+0x24)
-#define KEY_C_CEDILLA       (0x88+0x26)
-#define KEY_A_GRAVE         (0x88+0x27)
-#define KEY_CIRCUMFLEX      (0x88+0x2f)
-#define KEY_U_GRAVE         (0x88+0x34)
+#define KEY_SUPERSCRIPT_TWO (0x88 + 0x35)
+#define KEY_E_ACUTE         (0x88 + 0x1f)
+#define KEY_E_GRAVE         (0x88 + 0x24)
+#define KEY_C_CEDILLA       (0x88 + 0x26)
+#define KEY_A_GRAVE         (0x88 + 0x27)
+#define KEY_CIRCUMFLEX      (0x88 + 0x2f)
+#define KEY_U_GRAVE         (0x88 + 0x34)
 
 #endif

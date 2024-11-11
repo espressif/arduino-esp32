@@ -155,12 +155,12 @@ size_t USBHIDKeyboard::press(uint8_t k) {
       k &= ~SHIFT;
     }
     if ((k & ALT_GR) == ALT_GR) {
-			_keyReport.modifiers |= 0x40;   // AltGr = right Alt
-			k &= ~ALT_GR;
-		} 
-		if (k == ISO_REPLACEMENT) {
-			k = ISO_KEY;
-		}
+      _keyReport.modifiers |= 0x40;  // AltGr = right Alt
+      k &= ~ALT_GR;
+    }
+    if (k == ISO_REPLACEMENT) {
+      k = ISO_KEY;
+    }
   }
   return pressRaw(k);
 }
@@ -186,15 +186,15 @@ size_t USBHIDKeyboard::release(uint8_t k) {
       } else {
         _keyReport.modifiers &= ~(0x02);  // the left shift modifier
         k &= ~SHIFT;
-      } 
+      }
     }
     if ((k & ALT_GR) == ALT_GR) {
-			_keyReport.modifiers &= ~(0x40);   // AltGr = right Alt
-			k &= ~ALT_GR;
-		} 
-		if (k == ISO_REPLACEMENT) {
-			k = ISO_KEY;
-		}
+      _keyReport.modifiers &= ~(0x40);  // AltGr = right Alt
+      k &= ~ALT_GR;
+    }
+    if (k == ISO_REPLACEMENT) {
+      k = ISO_KEY;
+    }
   }
   return releaseRaw(k);
 }

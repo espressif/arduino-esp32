@@ -26,10 +26,10 @@
 //  Keyboard
 
 // DA_DK keys
-#define KEY_A_RING        (0x88+0x2f)
-#define KEY_SLASHED_O     (0x88+0x34)
-#define KEY_ASH           (0x88+0x33)
-#define KEY_UMLAUT        (0x88+0x30)
-#define KEY_ACUTE_ACC     (0x88+0x2e)
+#define KEY_A_RING    (0x88 + 0x2f)
+#define KEY_SLASHED_O (0x88 + 0x34)
+#define KEY_ASH       (0x88 + 0x33)
+#define KEY_UMLAUT    (0x88 + 0x30)
+#define KEY_ACUTE_ACC (0x88 + 0x2e)
 
 #endif

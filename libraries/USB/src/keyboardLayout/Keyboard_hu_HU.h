@@ -26,18 +26,18 @@
 //  Keyboard
 
 // hu_HU keys
-#define KEY_O_ACUTE             (0x88+0x2e)
-#define KEY_O_UMLAUT            (0x88+0x27)
-#define KEY_O_DOUBLE_ACUTE      (0x88+0x2f)
+#define KEY_O_ACUTE        (0x88 + 0x2e)
+#define KEY_O_UMLAUT       (0x88 + 0x27)
+#define KEY_O_DOUBLE_ACUTE (0x88 + 0x2f)
 
-#define KEY_U_ACUTE             (0x88+0x30)
-#define KEY_U_UMLAUT            (0x88+0x2d)
-#define KEY_U_DOUBLE_ACUTE      (0x88+0x31)
+#define KEY_U_ACUTE        (0x88 + 0x30)
+#define KEY_U_UMLAUT       (0x88 + 0x2d)
+#define KEY_U_DOUBLE_ACUTE (0x88 + 0x31)
 
-#define KEY_A_ACUTE             (0x88+0x34)
+#define KEY_A_ACUTE (0x88 + 0x34)
 
-#define KEY_E_ACUTE             (0x88+0x33)
+#define KEY_E_ACUTE (0x88 + 0x33)
 
-#define KEY_I_ACUTE             (0x88+0x32)
+#define KEY_I_ACUTE (0x88 + 0x32)
 
 #endif
