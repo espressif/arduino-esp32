@@ -347,8 +347,8 @@ AsyncUDPPacket::AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *raddr, 
     _localIp.u_addr.ip4.addr = iphdr->dest.addr;
     _remoteIp.u_addr.ip4.addr = iphdr->src.addr;
 #else
-    _localIp.addr = iphdr->dest.addr;
-    _remoteIp.addr = iphdr->src.addr;
+  _localIp.addr = iphdr->dest.addr;
+  _remoteIp.addr = iphdr->src.addr;
 #endif
 #if CONFIG_LWIP_IPV6
   } else {

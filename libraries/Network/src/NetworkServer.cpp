@@ -136,11 +136,11 @@ bool NetworkServer::hasClient() {
     return true;
   }
 #if CONFIG_LWIP_IPV6
-    struct sockaddr_in6 _client;
-    int cs = sizeof(struct sockaddr_in6);
+  struct sockaddr_in6 _client;
+  int cs = sizeof(struct sockaddr_in6);
 #else
-    struct sockaddr _client;
-    int cs = sizeof(struct sockaddr);
+  struct sockaddr _client;
+  int cs = sizeof(struct sockaddr);
 #endif
 #ifdef ESP_IDF_VERSION_MAJOR
   _accepted_sockfd = lwip_accept(sockfd, (struct sockaddr *)&_client, (socklen_t *)&cs);

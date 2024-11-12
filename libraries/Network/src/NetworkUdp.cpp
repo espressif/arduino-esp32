@@ -338,8 +338,7 @@ int NetworkUDP::parsePacket() {
       remote_ip.from_ip_addr_t(&addr);
     }
     remote_port = ntohs(si_other.sin6_port);
-  }
-  else {
+  } else {
     remote_ip = ip_addr_any.u_addr.ip4.addr;
     remote_port = 0;
   }

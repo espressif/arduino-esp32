@@ -406,7 +406,7 @@ void IPAddress::to_ip_addr_t(ip_addr_t *addr) const {
     addr->u_addr.ip4.addr = _address.dword[IPADDRESS_V4_DWORD_INDEX];
   }
 #else
-    addr->addr = _address.dword[IPADDRESS_V4_DWORD_INDEX];
+  addr->addr = _address.dword[IPADDRESS_V4_DWORD_INDEX];
 #endif
 }
 
@@ -428,7 +428,7 @@ IPAddress &IPAddress::from_ip_addr_t(const ip_addr_t *addr) {
 #if CONFIG_LWIP_IPV6
     _address.dword[IPADDRESS_V4_DWORD_INDEX] = addr->u_addr.ip4.addr;
 #else
-    _address.dword[IPADDRESS_V4_DWORD_INDEX] = addr->addr;
+  _address.dword[IPADDRESS_V4_DWORD_INDEX] = addr->addr;
 #endif
 #if CONFIG_LWIP_IPV6
   }
