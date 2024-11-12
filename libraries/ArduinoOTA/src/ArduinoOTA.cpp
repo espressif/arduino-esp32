@@ -120,10 +120,12 @@ void ArduinoOTAClass::begin() {
     sprintf(tmp, "esp32-%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     _hostname = tmp;
   }
+#ifdef CONFIG_MDNS_MAX_INTERFACES
   if (_mdnsEnabled) {
     MDNS.begin(_hostname.c_str());
     MDNS.enableArduino(_port, (_password.length() > 0));
   }
+#endif
   _initialized = true;
   _state = OTA_IDLE;
   log_i("OTA server at: %s.local:%u", _hostname.c_str(), _port);
@@ -358,9 +360,11 @@ void ArduinoOTAClass::_runUpdate() {
 void ArduinoOTAClass::end() {
   _initialized = false;
   _udp_ota.stop();
+#ifdef CONFIG_MDNS_MAX_INTERFACES
   if (_mdnsEnabled) {
     MDNS.end();
   }
+#endif
   _state = OTA_IDLE;
   log_i("OTA server stopped.");
 }
