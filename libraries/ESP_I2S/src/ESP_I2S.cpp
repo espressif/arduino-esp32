@@ -7,7 +7,9 @@
 
 #include "esp32-hal-periman.h"
 #include "wav_header.h"
+#if ARDUINO_HAS_MP3_DECODER
 #include "mp3dec.h"
+#endif
 
 #define I2S_READ_CHUNK_SIZE 1920
 
@@ -1014,6 +1016,7 @@ void I2SClass::playWAV(uint8_t *data, size_t len) {
   write(data + WAVE_HEADER_SIZE + data_offset, data_chunk->subchunk_size);
 }
 
+#if ARDUINO_HAS_MP3_DECODER
 bool I2SClass::playMP3(uint8_t *src, size_t src_len) {
   int16_t outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
   uint8_t *readPtr = NULL;
@@ -1051,5 +1054,6 @@ bool I2SClass::playMP3(uint8_t *src, size_t src_len) {
   MP3FreeDecoder(decoder);
   return true;
 }
+#endif
 
 #endif /* SOC_I2S_SUPPORTED */

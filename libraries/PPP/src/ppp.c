@@ -1,5 +1,5 @@
 #include "sdkconfig.h"
-#if CONFIG_LWIP_PPP_SUPPORT
+#if CONFIG_LWIP_PPP_SUPPORT && defined __has_include && __has_include("esp_modem_api.h")
 #include "esp_modem_api.h"
 
 esp_err_t _esp_modem_at(esp_modem_dce_t *dce_wrap, const char *at, char *p_out, int timeout) {
