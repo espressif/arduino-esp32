@@ -109,14 +109,14 @@ function run_test() {
         rm $sketchdir/diagram.json 2>/dev/null || true
 
         result=0
-        printf "\033[95mpytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args\033[0m\n"
-        bash -c "set +e; pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args; exit \$?" || result=$?
+        printf "\033[95mpytest $sketchdir/test_$sketchname.py --build-dir $build_dir --junit-xml=$report_file $extra_args\033[0m\n"
+        bash -c "set +e; pytest $sketchdir/test_$sketchname.py --build-dir $build_dir --junit-xml=$report_file $extra_args; exit \$?" || result=$?
         printf "\n"
         if [ $result -ne 0 ]; then
             result=0
             printf "\033[95mRetrying test: $sketchname -- Config: $i\033[0m\n"
-            printf "\033[95mpytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args\033[0m\n"
-            bash -c "set +e; pytest tests --build-dir $build_dir -k test_$sketchname --junit-xml=$report_file $extra_args; exit \$?" || result=$?
+            printf "\033[95mpytest $sketchdir/test_$sketchname.py --build-dir $build_dir --junit-xml=$report_file $extra_args\033[0m\n"
+            bash -c "set +e; pytest $sketchdir/test_$sketchname.py --build-dir $build_dir --junit-xml=$report_file $extra_args; exit \$?" || result=$?
             printf "\n"
             if [ $result -ne 0 ]; then
               printf "\033[91mFailed test: $sketchname -- Config: $i\033[0m\n\n"
