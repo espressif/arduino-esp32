@@ -118,6 +118,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
     _sta_network_if->_setStatus(WL_STOPPED);
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
     _sta_network_if->_setStatus(WL_IDLE_STATUS);
+#if CONFIG_LWIP_IPV6
     if (_sta_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
       esp_err_t err = esp_netif_create_ip6_linklocal(_sta_network_if->netif());
       if (err != ESP_OK) {
@@ -126,6 +127,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
         log_v("Enabled IPv6 Link Local on %s", _sta_network_if->desc());
       }
     }
+#endif
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
     uint8_t reason = ev->event_info.wifi_sta_disconnected.reason;
     // Reason 0 causes crash, use reason 1 (UNSPECIFIED) instead

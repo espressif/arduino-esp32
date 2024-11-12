@@ -386,6 +386,7 @@ int8_t WiFiSTAClass::RSSI(void) {
   return STA.RSSI();
 }
 
+#if CONFIG_LWIP_IPV6
 /**
  * Enable IPv6 on the station interface.
  * Should be called before WiFi.begin()
@@ -411,6 +412,7 @@ IPAddress WiFiSTAClass::linkLocalIPv6() {
 IPAddress WiFiSTAClass::globalIPv6() {
   return STA.globalIPv6();
 }
+#endif
 
 bool WiFiSTAClass::_smartConfigStarted = false;
 bool WiFiSTAClass::_smartConfigDone = false;
