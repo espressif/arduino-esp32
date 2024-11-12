@@ -128,5 +128,5 @@ private:
 
 extern MDNSResponder MDNS;
 
-#endif /* CONFIG_MDNS_MAX_INTERFACES */
+#endif  /* CONFIG_MDNS_MAX_INTERFACES */
 #endif  //ESP32MDNS_H
