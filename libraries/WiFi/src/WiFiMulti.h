@@ -26,6 +26,7 @@
 #pragma once
 
 #include "soc/soc_caps.h"
+#include "sdkconfig.h"
 #if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 #include "WiFi.h"
@@ -46,7 +47,9 @@ public:
 
   bool addAP(const char *ssid, const char *passphrase = NULL);
   uint8_t run(uint32_t connectTimeout = 5000, bool scanHidden = false);
+#if CONFIG_LWIP_IPV6
   void enableIPv6(bool state);
+#endif
 
   // Force (default: true) to only keep connected or to connect to an AP from the provided WiFiMulti list.
   // When bStrict is false, it will keep the last/current connected AP even if not in the WiFiMulti List.

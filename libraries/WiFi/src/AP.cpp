@@ -87,6 +87,7 @@ static void _onApArduinoEvent(arduino_event_t *ev) {
   }
   log_v("Arduino AP Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
   if (ev->event_id == ARDUINO_EVENT_WIFI_AP_START) {
+#if CONFIG_LWIP_IPV6
     if (_ap_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
       esp_err_t err = esp_netif_create_ip6_linklocal(_ap_network_if->netif());
       if (err != ESP_OK) {
@@ -95,6 +96,7 @@ static void _onApArduinoEvent(arduino_event_t *ev) {
         log_v("Enabled IPv6 Link Local on %s", _ap_network_if->desc());
       }
     }
+#endif
   }
 }
 

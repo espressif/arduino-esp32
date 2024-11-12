@@ -8,6 +8,49 @@ else
     SDKCONFIG_DIR="tools/esp32-arduino-libs"
 fi
 
+function check_requirements(){ # check_requirements <sketchdir> <sdkconfig_path>
+    local sketchdir=$1
+    local sdkconfig_path=$2
+    local has_requirements=1
+
+    if [ ! -f "$sdkconfig_path" ] || [ ! -f "$sketchdir/ci.json" ]; then
+        echo "ERROR: sdkconfig or ci.json not found" 1>&2
+        # Return 1 on error to force the sketch to be built and fail. This way the
+        # CI will fail and the user will know that the sketch has a problem.
+    else
+        # Check if the sketch requires any configuration options (AND)
+        local requirements=$(jq -r '.requires[]? // empty' "$sketchdir/ci.json")
+        if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
+            for requirement in $requirements; do
+                requirement=$(echo $requirement | xargs)
+                found_line=$(grep -E "^$requirement" "$sdkconfig_path")
+                if [[ "$found_line" == "" ]]; then
+                    has_requirements=0
+                fi
+            done
+        fi
+
+        # Check if the sketch requires any configuration options (OR)
+        local requirements_or=$(jq -r '.requires_any[]? // empty' "$sketchdir/ci.json")
+        if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+            local found=false
+            for requirement in $requirements_or; do
+                requirement=$(echo $requirement | xargs)
+                found_line=$(grep -E "^$requirement" "$sdkconfig_path")
+                if [[ "$found_line" != "" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            if [[ "$found" == "false" ]]; then
+                has_requirements=0
+            fi
+        fi
+    fi
+
+    echo $has_requirements
+}
+
 function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
     while [ ! -z "$1" ]; do
         case "$1" in
@@ -42,6 +85,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         -l )
             shift
             log_compilation=$1
+            ;;
+        -d )
+            shift
+            debug_level="DebugLevel=$1"
             ;;
         * )
             break
@@ -97,14 +144,16 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             fi
 
             # Default FQBN options if none were passed in the command line.
+            # Replace any double commas with a single one and strip leading and
+            # trailing commas.
 
-            esp32_opts="PSRAM=enabled${fqbn_append:+,$fqbn_append}"
-            esp32s2_opts="PSRAM=enabled${fqbn_append:+,$fqbn_append}"
-            esp32s3_opts="PSRAM=opi,USBMode=default${fqbn_append:+,$fqbn_append}"
-            esp32c3_opts="$fqbn_append"
-            esp32c6_opts="$fqbn_append"
-            esp32h2_opts="$fqbn_append"
-            esp32p4_opts="USBMode=default${fqbn_append:+,$fqbn_append}"
+            esp32_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32s2_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32s3_opts=$(echo "PSRAM=opi,USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32c3_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32c6_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32h2_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32p4_opts=$(echo "PSRAM=enabled,USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
@@ -176,35 +225,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             exit 0
         fi
 
-        # Check if the sketch requires any configuration options (AND)
-        requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-        if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
-            for requirement in $requirements; do
-                requirement=$(echo $requirement | xargs)
-                found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/$target/sdkconfig")
-                if [[ "$found_line" == "" ]]; then
-                    echo "Target $target does not meet the requirement $requirement for $sketchname. Skipping."
-                    exit 0
-                fi
-            done
-        fi
-
-        # Check if the sketch excludes any configuration options (OR)
-        requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
-        if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
-            found=false
-            for requirement in $requirements_or; do
-                requirement=$(echo $requirement | xargs)
-                found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/$target/sdkconfig")
-                if [[ "$found_line" != "" ]]; then
-                    found=true
-                    break
-                fi
-            done
-            if [[ "$found" == "false" ]]; then
-                echo "Target $target meets none of the requirements in requires_any for $sketchname. Skipping."
-                exit 0
-            fi
+        local has_requirements=$(check_requirements "$sketchdir" "$SDKCONFIG_DIR/$target/sdkconfig")
+        if [ "$has_requirements" == "0" ]; then
+            echo "Target $target does not meet the requirements for $sketchname. Skipping."
+            exit 0
         fi
     fi
 
@@ -353,33 +377,9 @@ function count_sketches(){ # count_sketches <path> [target] [file] [ignore-requi
             fi
 
             if [ "$ignore_requirements" != "1" ]; then
-                # Check if the sketch requires any configuration options (AND)
-                requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-                if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
-                    for requirement in $requirements; do
-                        requirement=$(echo $requirement | xargs)
-                        found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
-                        if [[ "$found_line" == "" ]]; then
-                            continue 2
-                        fi
-                    done
-                fi
-
-                # Check if the sketch excludes any configuration options (OR)
-                requirements_or=$(jq -r '.requires_any[]? // empty' $sketchdir/ci.json)
-                if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
-                    found=false
-                    for requirement in $requirements_or; do
-                        requirement=$(echo $requirement | xargs)
-                        found_line=$(grep -E "^$requirement" $SDKCONFIG_DIR/$target/sdkconfig)
-                        if [[ "$found_line" != "" ]]; then
-                            found=true
-                            break
-                        fi
-                    done
-                    if [[ "$found" == "false" ]]; then
-                        continue 2
-                    fi
+                local has_requirements=$(check_requirements "$sketchdir" "$SDKCONFIG_DIR/$target/sdkconfig")
+                if [ "$has_requirements" == "0" ]; then
+                    continue
                 fi
             fi
         fi
@@ -557,6 +557,7 @@ Available commands:
   count: Count sketches.
   build: Build a sketch.
   chunk_build: Build a chunk of sketches.
+  check_requirements: Check if target meets sketch requirements.
 "
 
 cmd=$1
@@ -573,6 +574,8 @@ case "$cmd" in
     "build") build_sketch $*
     ;;
     "chunk_build") build_sketches $*
+    ;;
+    "check_requirements") check_requirements $*
     ;;
     *)
         echo "ERROR: Unrecognized command"

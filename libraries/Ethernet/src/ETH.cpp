@@ -74,6 +74,7 @@ static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info) 
       log_e("Could not find ETH interface with that handle!");
       return;
     }
+#if CONFIG_LWIP_IPV6
     if (_ethernets[index]->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
       esp_err_t err = esp_netif_create_ip6_linklocal(_ethernets[index]->netif());
       if (err != ESP_OK) {
@@ -82,6 +83,7 @@ static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info) 
         log_v("Enabled IPv6 Link Local on %s", _ethernets[index]->desc());
       }
     }
+#endif
   }
 }
 

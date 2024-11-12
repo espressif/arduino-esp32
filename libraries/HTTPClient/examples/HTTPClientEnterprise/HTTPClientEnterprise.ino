@@ -3,6 +3,12 @@
 /*|TESTED BOARDS: Devkit v1 DOIT, Devkitc v4                 |*/
 /*|CORE: June 2018                                           |*/
 /*|----------------------------------------------------------|*/
+
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#error "WPA-Enterprise is only supported in SoCs with native Wi-Fi support"
+#endif
+
 #include <WiFi.h>
 #include <HTTPClient.h>
 #if __has_include("esp_eap_client.h")

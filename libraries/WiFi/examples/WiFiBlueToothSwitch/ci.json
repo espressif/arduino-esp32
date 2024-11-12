@@ -1,8 +1,9 @@
 {
   "requires": [
-    "CONFIG_SOC_WIFI_SUPPORTED=y"
+    "CONFIG_BT_ENABLED=y"
   ],
-  "targets": {
-    "esp32s2": false
-  }
+  "requires_any": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y",
+    "CONFIG_ESP_WIFI_REMOTE_ENABLED=y"
+  ]
 }

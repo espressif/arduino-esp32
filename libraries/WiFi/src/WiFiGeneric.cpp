@@ -127,6 +127,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
     log_v("SC Send Ack Done");
     arduino_event.event_id = ARDUINO_EVENT_SC_SEND_ACK_DONE;
 
+#if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
     /*
 	 * Provisioning
 	 * */
@@ -161,6 +162,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
     log_v("Provisioning Success!");
     arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_SUCCESS;
 #endif
+#endif
   }
 
   if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
@@ -180,10 +182,12 @@ static bool initWiFiEvents() {
     return false;
   }
 
+#if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
   if (esp_event_handler_instance_register(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
     log_e("event_handler_instance_register for NETWORK_PROV_EVENT Failed!");
     return false;
   }
+#endif
 #endif
 
   return true;
@@ -201,10 +205,12 @@ static bool deinitWiFiEvents() {
     return false;
   }
 
+#if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
   if (esp_event_handler_unregister(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
     log_e("esp_event_handler_unregister for NETWORK_PROV_EVENT Failed!");
     return false;
   }
+#endif
 #endif
 
   return true;

@@ -24,7 +24,9 @@
 #if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 #include "esp_wifi_types.h"
 #include "esp_smartconfig.h"
+#if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
 #include "network_provisioning/network_config.h"
+#endif
 #endif
 
 #if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
@@ -111,7 +113,9 @@ typedef union {
 #endif
 #if SOC_WIFI_SUPPORTED
   wifi_sta_config_t prov_cred_recv;
+#if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
   network_prov_wifi_sta_fail_reason_t prov_fail_reason;
+#endif
   smartconfig_event_got_ssid_pswd_t sc_got_ssid_pswd;
 #endif
 } arduino_event_info_t;
