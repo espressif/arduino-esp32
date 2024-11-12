@@ -14,6 +14,10 @@
 #ifndef _LITTLEFS_H_
 #define _LITTLEFS_H_
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_LITTLEFS_PAGE_SIZE
+
 #include "FS.h"
 
 namespace fs {
@@ -36,4 +40,5 @@ private:
 
 extern fs::LittleFSFS LittleFS;
 
+#endif /* CONFIG_LITTLEFS_PAGE_SIZE */
 #endif

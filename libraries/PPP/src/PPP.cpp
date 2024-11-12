@@ -1,6 +1,6 @@
 #define ARDUINO_CORE_BUILD
 #include "PPP.h"
-#if CONFIG_LWIP_PPP_SUPPORT
+#if CONFIG_LWIP_PPP_SUPPORT && ARDUINO_HAS_ESP_MODEM
 #include "esp32-hal-periman.h"
 #include "esp_netif.h"
 #include "esp_netif_ppp.h"
