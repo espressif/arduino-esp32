@@ -20,3 +20,5 @@ jobs:
       uses: espressif/shared-github-dangerjs@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        rule-max-commits: 'false'
+        commit-messages-min-summary-length: '10'

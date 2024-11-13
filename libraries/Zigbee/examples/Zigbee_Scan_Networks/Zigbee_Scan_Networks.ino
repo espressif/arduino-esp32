@@ -29,7 +29,7 @@
 #error "Zigbee device mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "ZigbeeCore.h"
+#include "Zigbee.h"
 
 #ifdef ZIGBEE_MODE_ZCZR
 zigbee_role_t role = ZIGBEE_ROUTER;  // or can be ZIGBEE_COORDINATOR, but it wont scan itself

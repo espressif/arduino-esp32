@@ -7,6 +7,9 @@ TOOLCHAIN_VERSION="12.2.0+20230208"
 ESPTOOLPY_VERSION="~1.40501.0"
 ESPRESSIF_ORGANIZATION_NAME="espressif"
 SDKCONFIG_DIR="$PLATFORMIO_ESP32_PATH/tools/esp32-arduino-libs"
+SCRIPTS_DIR="./.github/scripts"
+COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
+CHECK_REQUIREMENTS="${SCRIPTS_DIR}/sketch_utils.sh check_requirements"
 
 echo "Installing Python Wheel ..."
 pip install wheel > /dev/null 2>&1
@@ -74,47 +77,6 @@ function build_pio_sketch(){ # build_pio_sketch <board> <options> <path-to-ino>
     python -m platformio ci --board "$board" "$sketch_dir" --project-option="$options"
 }
 
-function count_sketches(){ # count_sketches <examples-path>
-    local examples="$1"
-    rm -rf sketches.txt
-    if [ ! -d "$examples" ]; then
-        touch sketches.txt
-        return 0
-    fi
-    local sketches=$(find $examples -name *.ino)
-    local sketchnum=0
-    for sketch in $sketches; do
-        local sketchdir=$(dirname $sketch)
-        local sketchdirname=$(basename $sketchdir)
-        local sketchname=$(basename $sketch)
-        if [[ "${sketchdirname}.ino" != "$sketchname" ]]; then
-            continue
-        elif [ -f $sketchdir/ci.json ]; then
-            # If the target is listed as false, skip the sketch. Otherwise, include it.
-            is_target=$(jq -r '.targets[esp32]' $sketchdir/ci.json)
-            if [[ "$is_target" == "false" ]]; then
-                continue
-            fi
-
-            # Check if the sketch requires any configuration options
-            requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-            if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
-                for requirement in $requirements; do
-                    requirement=$(echo $requirement | xargs)
-                    found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/esp32/sdkconfig")
-                    if [[ "$found_line" == "" ]]; then
-                        continue 2
-                    fi
-                done
-            fi
-        fi
-
-        echo $sketch >> sketches.txt
-        sketchnum=$(($sketchnum + 1))
-    done
-    return $sketchnum
-}
-
 function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-path> <chunk> <total-chunks>
     if [ "$#" -lt 3 ]; then
         echo "ERROR: Illegal number of parameters"
@@ -143,7 +105,7 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
     fi
 
     set +e
-    count_sketches "$examples"
+    ${COUNT_SKETCHES} "$examples" "esp32"
     local sketchcount=$?
     set -e
     local sketches=$(cat sketches.txt)
@@ -187,16 +149,9 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
                 continue
             fi
 
-            # Check if the sketch requires any configuration options
-            requirements=$(jq -r '.requires[]? // empty' $sketchdir/ci.json)
-            if [[ "$requirements" != "null" ]] || [[ "$requirements" != "" ]]; then
-                for requirement in $requirements; do
-                    requirement=$(echo $requirement | xargs)
-                    found_line=$(grep -E "^$requirement" "$SDKCONFIG_DIR/esp32/sdkconfig")
-                    if [[ "$found_line" == "" ]]; then
-                        continue 2
-                    fi
-                done
+            local has_requirements=$(${CHECK_REQUIREMENTS} $sketchdir "$SDKCONFIG_DIR/esp32/sdkconfig")
+            if [ "$has_requirements" == "0" ]; then
+                continue
             fi
         fi
 
