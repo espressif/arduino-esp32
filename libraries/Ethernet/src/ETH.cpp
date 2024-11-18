@@ -19,13 +19,10 @@
  */
 
 // Disable the automatic pin remapping of the API calls in this file
-
-#include "sdkconfig.h"
-#if CONFIG_ETH_ENABLED
-
 #define ARDUINO_CORE_BUILD
 
 #include "ETH.h"
+#if CONFIG_ETH_ENABLED
 #include "esp_system.h"
 #include "esp_event.h"
 #include "esp_eth.h"
