@@ -22,8 +22,8 @@
 MatterOnOffLight OnOffLight;
 
 // it will keep last OnOff state stored, using Preferences
-Preferences lastStatePref;
-#define ON_OFF_PREF_KEY     "lastOnOffState"
+Preferences statePref;
+const char *OnOffPrefKey = "OnOffState";
 
 // set your board LED pin here
 #ifdef LED_BUILTIN
@@ -49,7 +49,7 @@ bool setLightOnOff(bool state) {
     digitalWrite(ledPin, LOW);
   }
   // store last OnOff state for when the Light is restarted / power goes off
-  lastStatePref.putBool(ON_OFF_PREF_KEY, state);
+  statePref.putBool(OnOffPrefKey, state);
   // This callback must return the success state to Matter core
   return true;
 }
@@ -83,8 +83,8 @@ void setup() {
   delay(500);
 
   // Initialize Matter EndPoint
-  lastStatePref.begin("matterLight", false);
-  bool lastOnOffState = lastStatePref.getBool(ON_OFF_PREF_KEY, true);
+  statePref.begin("matterLight", false);
+  bool lastOnOffState = statePref.getBool(OnOffPrefKey, true);
   OnOffLight.begin(lastOnOffState);
   OnOffLight.onChange(setLightOnOff);
 
