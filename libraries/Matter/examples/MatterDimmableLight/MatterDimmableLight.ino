@@ -23,8 +23,8 @@ MatterDimmableLight DimmableLight;
 
 // it will keep last OnOff & Brightness state stored, using Preferences
 Preferences matterPref;
-const char *onOffPrefKey = "OnOffState"
-const char *brightnessPrefKey = "BrightnessState"
+const char *onOffPrefKey = "OnOffState";
+const char *brightnessPrefKey = "BrightnessState";
 
 // set your board RGB LED pin here
 #ifdef RGB_BUILTIN
