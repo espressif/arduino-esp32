@@ -54,11 +54,13 @@ public:
 
   bool connect();
   bool connect(const char *ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t *bssid = NULL, bool connect = true);
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
   bool connect(
     const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity = NULL, const char *wpa2_username = NULL, const char *wpa2_password = NULL,
     const char *ca_pem = NULL, const char *client_crt = NULL, const char *client_key = NULL, int ttls_phase2_type = -1, int32_t channel = 0,
     const uint8_t *bssid = 0, bool connect = true
   );
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
   bool disconnect(bool eraseap = false, unsigned long timeout = 0);
   bool reconnect();
   bool erase();
@@ -109,11 +111,13 @@ class WiFiSTAClass {
 public:
   STAClass STA;
 
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
   wl_status_t begin(
     const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity = NULL, const char *wpa2_username = NULL, const char *wpa2_password = NULL,
     const char *ca_pem = NULL, const char *client_crt = NULL, const char *client_key = NULL, int ttls_phase2_type = -1, int32_t channel = 0,
     const uint8_t *bssid = 0, bool connect = true
   );
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
   wl_status_t begin(
     const String &wpa2_ssid, wpa2_auth_method_t method, const String &wpa2_identity = (const char *)NULL, const String &wpa2_username = (const char *)NULL,
     const String &wpa2_password = (const char *)NULL, const String &ca_pem = (const char *)NULL, const String &client_crt = (const char *)NULL,
