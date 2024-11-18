@@ -23,6 +23,8 @@ MatterDimmableLight DimmableLight;
 
 // it will keep last OnOff & Brightness state stored, using Preferences
 Preferences lastStatePref;
+#define ON_OFF_PREF_KEY     "lastOnOffState"
+#define BRIGHTNESS_PREF_KEY "lastBrightness"
 
 // set your board RGB LED pin here
 #ifdef RGB_BUILTIN
@@ -51,8 +53,8 @@ bool setLightState(bool state, uint8_t brightness) {
     digitalWrite(ledPin, LOW);
   }
   // store last Brightness and OnOff state for when the Light is restarted / power goes off
-  lastStatePref.putUChar("lastBrightness", brightness);
-  lastStatePref.putBool("lastOnOffState", state);
+  lastStatePref.putUChar(BRIGHTNESS_PREF_KEY, brightness);
+  lastStatePref.putBool(ON_OFF_PREF_KEY, state);
   // This callback must return the success state to Matter core
   return true;
 }
@@ -88,9 +90,9 @@ void setup() {
   // Initialize Matter EndPoint
   lastStatePref.begin("matterLight", false);
   // default OnOff state is ON if not stored before
-  bool lastOnOffState = lastStatePref.getBool("lastOnOffState", true);
+  bool lastOnOffState = lastStatePref.getBool(ON_OFF_PREF_KEY, true);
   // default brightness ~= 6% (15/255)
-  uint8_t lastBrightness = lastStatePref.getUChar("lastBrightness", 15);
+  uint8_t lastBrightness = lastStatePref.getUChar(BRIGHTNESS_PREF_KEY, 15);
   DimmableLight.begin(lastOnOffState, lastBrightness);
   // set the callback function to handle the Light state change
   DimmableLight.onChange(setLightState);
