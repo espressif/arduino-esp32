@@ -421,6 +421,7 @@ bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel
   return true;
 }
 
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
 /**
  * Start Wifi connection with a WPA2 Enterprise AP
  * if passphrase is set the most secure supported mode will be automatically selected
@@ -519,6 +520,7 @@ bool STAClass::connect(
 
   return connect(wpa2_ssid, NULL, channel, bssid, tryConnect);  //connect to wifi
 }
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
 
 bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
   if (eraseap) {
