@@ -85,7 +85,7 @@ void setup() {
   // Initialize Matter EndPoint
   lastStatePref.begin("matterLight", false);
   bool lastOnOffState = lastStatePref.getBool(ON_OFF_PREF_KEY, true);
-   OnOffLight.begin(lastOnOffState);
+  OnOffLight.begin(lastOnOffState);
   OnOffLight.onChange(setLightOnOff);
 
   // Matter beginning - Last step, after all EndPoints are initialized
