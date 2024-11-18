@@ -111,18 +111,19 @@ class WiFiSTAClass {
 public:
   STAClass STA;
 
-#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
   wl_status_t begin(
     const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity = NULL, const char *wpa2_username = NULL, const char *wpa2_password = NULL,
     const char *ca_pem = NULL, const char *client_crt = NULL, const char *client_key = NULL, int ttls_phase2_type = -1, int32_t channel = 0,
     const uint8_t *bssid = 0, bool connect = true
   );
-#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
   wl_status_t begin(
     const String &wpa2_ssid, wpa2_auth_method_t method, const String &wpa2_identity = (const char *)NULL, const String &wpa2_username = (const char *)NULL,
     const String &wpa2_password = (const char *)NULL, const String &ca_pem = (const char *)NULL, const String &client_crt = (const char *)NULL,
     const String &client_key = (const char *)NULL, int ttls_phase2_type = -1, int32_t channel = 0, const uint8_t *bssid = 0, bool connect = true
-  ) {
+  )
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
+  {
     return begin(
       wpa2_ssid.c_str(), method, wpa2_identity.c_str(), wpa2_username.c_str(), wpa2_password.c_str(), ca_pem.c_str(), client_crt.c_str(), client_key.c_str(),
       ttls_phase2_type, channel, bssid, connect
