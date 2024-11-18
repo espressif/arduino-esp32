@@ -100,7 +100,7 @@ typedef union {
   ip_event_ap_staipassigned_t wifi_ap_staipassigned;
   ip_event_got_ip_t got_ip;
   ip_event_got_ip6_t got_ip6;
-#if CONFIG_ETH_ENABLED 
+#if CONFIG_ETH_ENABLED
   esp_eth_handle_t eth_connected;
 #endif
 #if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
