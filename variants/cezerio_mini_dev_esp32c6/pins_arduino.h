@@ -10,7 +10,7 @@
 #define USB_PRODUCT      "cezerio mini dev ESP32C6"
 #define USB_SERIAL       ""
 
-#define PIN_RGB_LED 15
+#define PIN_RGB_LED 20
 // BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
@@ -28,12 +28,12 @@ static const uint8_t BUT_BUILTIN = 9;
 static const uint8_t TX = 16;
 static const uint8_t RX = 17;
 
-static const uint8_t SDA = 8;
-static const uint8_t SCL = 7;
+static const uint8_t SDA = 22;
+static const uint8_t SCL = 23;
 
 static const uint8_t SS = 14;
-static const uint8_t MOSI = 22;
-static const uint8_t MISO = 23;
+static const uint8_t MOSI = 18;
+static const uint8_t MISO = 19;
 static const uint8_t SCK = 21;
 
 static const uint8_t A0 = 0;
@@ -42,6 +42,6 @@ static const uint8_t A2 = 2;
 static const uint8_t A3 = 3;
 static const uint8_t A6 = 6;
 
-static const uint8_t MATRIX = 8;
+static const uint8_t MATRIX = 4;
 
 #endif /* Pins_Arduino_h */
