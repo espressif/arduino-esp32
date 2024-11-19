@@ -2,7 +2,7 @@
 
 #include "ZigbeeEP.h"
 
-#if SOC_IEEE802154_SUPPORTED
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
@@ -210,4 +210,4 @@ void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
   }
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

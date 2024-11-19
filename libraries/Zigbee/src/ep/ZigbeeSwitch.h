@@ -3,7 +3,8 @@
 #pragma once
 
 #include "soc/soc_caps.h"
-#if SOC_IEEE802154_SUPPORTED
+#include "sdkconfig.h"
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -39,4 +40,4 @@ private:
   static void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
 };
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

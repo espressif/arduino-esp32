@@ -157,6 +157,7 @@ This build command will build for the ESP32-S3 target. You can specify other tar
 * esp32c3
 * esp32c6
 * esp32h2
+* esp32p4
 
 Set Build Type
 ^^^^^^^^^^^^^^
