@@ -18,6 +18,9 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "sdkconfig.h"
+#if CONFIG_ETH_ENABLED
+
 #ifndef _ETH_H_
 #define _ETH_H_
 
@@ -249,3 +252,4 @@ private:
 extern ETHClass ETH;
 
 #endif /* _ETH_H_ */
+#endif /* CONFIG_ETH_ENABLED */
