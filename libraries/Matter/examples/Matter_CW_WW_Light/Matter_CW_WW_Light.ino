@@ -18,19 +18,21 @@
 #include <Preferences.h>
 
 // List of Matter Endpoints for this Node
-// On/Off Light Endpoint
-MatterOnOffLight OnOffLight;
+// Color Temperature CW/WW Light Endpoint
+MatterColorTemperatureLight CW_WW_Light;
 
-// it will keep last OnOff state stored, using Preferences
+// it will keep last OnOff & Brightness state stored, using Preferences
 Preferences matterPref;
 const char *onOffPrefKey = "OnOff";
+const char *brightnessPrefKey = "Brightness";
+const char *temperaturePrefKey = "Temperature";
 
-// set your board LED pin here
-#ifdef LED_BUILTIN
-const uint8_t ledPin = LED_BUILTIN;
+// set your board RGB LED pin here
+#ifdef RGB_BUILTIN
+const uint8_t ledPin = RGB_BUILTIN;
 #else
 const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LED_BUILTIN
-#warning "Do not forget to set the LED pin"
+#warning "Do not forget to set the RGB LED pin"
 #endif
 
 // set your board USER BUTTON pin here
@@ -40,16 +42,31 @@ const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
-// Matter Protocol Endpoint Callback
-bool setLightOnOff(bool state) {
-  Serial.printf("User Callback :: New Light State = %s\r\n", state ? "ON" : "OFF");
+// Set the RGB LED Light based on the current state of the Color Temperature Light
+bool setLightState(bool state, uint8_t brightness, uint16_t temperature_Mireds) {
+
   if (state) {
-    digitalWrite(ledPin, HIGH);
+#ifdef RGB_BUILTIN
+    CtColor_t ct = { temperature_Mireds };
+    RgbColor_t rgb_ct = CTToRgb(ct);
+    // simple intensity correction
+    float brightnessPercent = (float)brightness / MatterColorTemperatureLight::MAX_BRIGHTNESS;
+    rgb_ct.r = brightnessPercent * rgb_ct.r;
+    rgb_ct.g = brightnessPercent * rgb_ct.g;
+    rgb_ct.b = brightnessPercent * rgb_ct.b;
+    // set the RGB LED
+    rgbLedWrite(ledPin, rgb_ct.r, rgb_ct.g, rgb_ct.b);
+#else
+    // No Color RGB LED, just use the brightness to control the LED
+    analogWrite(ledPin, _brightness);
+#endif
   } else {
     digitalWrite(ledPin, LOW);
   }
-  // store last OnOff state for when the Light is restarted / power goes off
+  // store last Brightness and OnOff state for when the Light is restarted / power goes off
+  matterPref.putUChar(brightnessPrefKey, brightness);
   matterPref.putBool(onOffPrefKey, state);
+  matterPref.putUShort(temperaturePrefKey, temperature_Mireds);
   // This callback must return the success state to Matter core
   return true;
 }
@@ -84,17 +101,38 @@ void setup() {
 
   // Initialize Matter EndPoint
   matterPref.begin("MatterPrefs", false);
+  // default OnOff state is ON if not stored before
   bool lastOnOffState = matterPref.getBool(onOffPrefKey, true);
-  OnOffLight.begin(lastOnOffState);
-  OnOffLight.onChange(setLightOnOff);
+  // default brightness ~= 6% (15/255)
+  uint8_t lastBrightness = matterPref.getUChar(brightnessPrefKey, 15);
+  // default temperature ~= 454 Mireds (Warm White)
+  uint16_t lastTemperature = matterPref.getUShort(temperaturePrefKey, MatterColorTemperatureLight::WARM_WHITE_COLOR_TEMPERATURE);
+  CW_WW_Light.begin(lastOnOffState, lastBrightness, lastTemperature);
+  // set the callback function to handle the Light state change
+  CW_WW_Light.onChange(setLightState);
+
+  // lambda functions are used to set the attribute change callbacks
+  CW_WW_Light.onChangeOnOff([](bool state) {
+    Serial.printf("Light OnOff changed to %s\r\n", state ? "ON" : "OFF");
+    return true;
+  });
+  CW_WW_Light.onChangeBrightness([](uint8_t level) {
+    Serial.printf("Light Brightness changed to %d\r\n", level);
+    return true;
+  });
+  CW_WW_Light.onChangeColorTemperature([](uint16_t temperature) {
+    Serial.printf("Light Color Temperature changed to %d\r\n", temperature);
+    return true;
+  });
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
-    Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-    OnOffLight.updateAccessory();  // configure the Light based on initial state
+    Serial.printf("Initial state: %s | brightness: %d | Color Temperature: %d mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(), CW_WW_Light.getColorTemperature());
+    // configure the Light based on initial on-off state and brightness
+    CW_WW_Light.updateAccessory();
   }
 }
 // Button control
@@ -120,8 +158,9 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
-    OnOffLight.updateAccessory();  // configure the Light based on initial state
+    Serial.printf("Initial state: %s | brightness: %d | Color Temperature: %d mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(), CW_WW_Light.getColorTemperature());
+    // configure the Light based on initial on-off state and brightness
+    CW_WW_Light.updateAccessory();
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
   }
 
@@ -139,12 +178,12 @@ void loop() {
     button_state = false;  // released
     // Toggle button is released - toggle the light
     Serial.println("User button released. Toggling Light!");
-    OnOffLight.toggle();  // Matter Controller also can see the change
+    CW_WW_Light.toggle();  // Matter Controller also can see the change
 
     // Factory reset is triggered if the button is pressed longer than 10 seconds
     if (time_diff > decommissioningTimeout) {
       Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-      OnOffLight.setOnOff(false);  // turn the light off
+      CW_WW_Light = false;  // turn the light off
       Matter.decommission();
     }
   }

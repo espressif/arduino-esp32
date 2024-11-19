@@ -19,14 +19,22 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
-class MatterDimmableLight : public MatterEndPoint {
+class MatterColorTemperatureLight : public MatterEndPoint {
 public:
-  static const uint8_t MAX_BRIGHTNESS = 255;
+  static const uint8_t MAX_BRIGHTNESS =   255;
+  static const uint16_t MAX_COLOR_TEMPERATURE = 500;
+  static const uint16_t MIN_COLOR_TEMPERATURE = 100;
+  // main color temperature values
+  static const uint16_t COOL_WHITE_COLOR_TEMPERATURE =        142;
+  static const uint16_t DAYLIGHT_WHITE_COLOR_TEMPERATURE =    181;
+  static const uint16_t WHITE_COLOR_TEMPERATURE =             250;
+  static const uint16_t SOFT_WHITE_COLOR_TEMPERATURE =        370;
+  static const uint16_t WARM_WHITE_COLOR_TEMPERATURE =        454;
 
-  MatterDimmableLight();
-  ~MatterDimmableLight();
-  // default initial state is off and brightness is 64 (25%)
-  virtual bool begin(bool initialState = false, uint8_t brightness = 64);
+  MatterColorTemperatureLight();
+  ~MatterColorTemperatureLight();
+  // default initial state is off, brightness is 64 (25%) and temperature is 370 (Soft White)
+  virtual bool begin(bool initialState = false, uint8_t brightness = 64, uint16_t colorTemperature = 370);
   // this will just stop processing Light Matter events
   void end();
 
@@ -37,14 +45,19 @@ public:
   bool setBrightness(uint8_t newBrightness);  // returns true if successful
   uint8_t getBrightness();                    // returns current brightness
 
+  bool setColorTemperature(uint16_t newTemperature);  // returns true if successful
+  uint16_t getColorTemperature();                     // returns current temperature
+
   // used to update the state of the light using the current Matter Light internal state
   // It is necessary to set a user callback function using onChange() to handle the physical light state
   void updateAccessory();
 
   operator bool();             // returns current on/off light state
   void operator=(bool state);  // turns light on or off
+
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
+
   // User Callback for whenever the Light On/Off state is changed by the Matter Controller
   using EndPointOnOffCB = std::function<bool(bool)>;
   void onChangeOnOff(EndPointOnOffCB onChangeCB) {
@@ -56,18 +69,26 @@ public:
     _onChangeBrightnessCB = onChangeCB;
   }
 
+  // User Callbqck for whenever the Light temperature value is changed by the Matter Controller
+  using EndPointTemperatureCB = std::function<bool(uint16_t)>;
+  void onChangeColorTemperature(EndPointTemperatureCB onChangeCB) {
+    _onChangeTemperatureCB = onChangeCB;
+  }
+
   // User Callback for whenever any parameter is changed by the Matter Controller
-  using EndPointCB = std::function<bool(bool, uint8_t)>;
+  using EndPointCB = std::function<bool(bool, uint8_t, uint16_t)>;
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
 
 protected:
   bool started = false;
-  bool onOffState = false;      // default initial state is off, but it can be changed by begin(bool)
-  uint8_t brightnessLevel = 0;  // default initial brightness is 0, but it can be changed by begin(bool, uint8_t)
+  bool onOffState = false;             // default initial state is off, but it can be changed by begin(bool)
+  uint8_t brightnessLevel = 0;         // default initial brightness is 0, but it can be changed by begin(bool, uint8_t)
+  uint16_t colorTemperatureLevel = 0;  // default initial color temperature is 0, but it can be changed by begin(bool, uint8_t, uint16_t)
   EndPointOnOffCB _onChangeOnOffCB = NULL;
   EndPointBrightnessCB _onChangeBrightnessCB = NULL;
+  EndPointTemperatureCB _onChangeTemperatureCB = NULL;
   EndPointCB _onChangeCB = NULL;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
