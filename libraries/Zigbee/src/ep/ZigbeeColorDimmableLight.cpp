@@ -47,6 +47,24 @@ void ZigbeeColorDimmableLight::calculateRGB(uint16_t x, uint16_t y, uint8_t &red
   blue = (uint8_t)(b * (float)255);
 }
 
+void ZigbeeColorDimmableLight::calculateXY(uint8_t red, uint8_t green, uint8_t blue, uint16_t &x, uint16_t &y) {
+  // Convert RGB to XYZ
+  float r = (float)red / 255.0f;
+  float g = (float)green / 255.0f;
+  float b = (float)blue / 255.0f;
+
+  float X, Y, Z;
+  RGB_TO_XYZ(r, g, b, X, Y, Z);
+
+  // Convert XYZ to xy chromaticity coordinates
+  float color_x = X / (X + Y + Z);
+  float color_y = Y / (X + Y + Z);
+
+  // Convert normalized xy to 16-bit values
+  x = (uint16_t)(color_x * 65535.0f);
+  y = (uint16_t)(color_y * 65535.0f);
+}
+
 //set attribute method -> method overridden in child class
 void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
   //check the data and call right method
@@ -107,6 +125,50 @@ void ZigbeeColorDimmableLight::lightChanged() {
   if (_on_light_change) {
     _on_light_change(_current_state, _current_red, _current_green, _current_blue, _current_level);
   }
+}
+
+void ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, uint8_t green, uint8_t blue) {
+  //Update all attributes
+  _current_state = state;
+  _current_level = level;
+  _current_red = red;
+  _current_green = green;
+  _current_blue = blue;
+  lightChanged();
+
+  log_v("Updating on/off light state to %d", state);
+  /* Update light clusters */
+  esp_zb_lock_acquire(portMAX_DELAY);
+  //set on/off state
+  esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false
+  );
+  //set level
+  esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
+  );
+  //set color
+  uint16_t color_x, color_y;
+  calculateXY(red, green, blue, color_x, color_y);
+  esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID, &color_x, false
+  );
+  esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID, &color_y, false
+  );
+  esp_zb_lock_release();
+}
+
+void ZigbeeColorDimmableLight::setLightState(bool state) {
+  setLight(state, _current_level, _current_red, _current_green, _current_blue);
+}
+
+void ZigbeeColorDimmableLight::setLightLevel(uint8_t level) {
+  setLight(_current_state, level, _current_red, _current_green, _current_blue);
+}
+
+void ZigbeeColorDimmableLight::setLightColor(uint8_t red, uint8_t green, uint8_t blue) {
+  setLight(_current_state, _current_level, red, green, blue);
 }
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
