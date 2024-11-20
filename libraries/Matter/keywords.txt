@@ -31,14 +31,14 @@ setOnOff	KEYWORD2
 getOnOff	KEYWORD2
 setBrightness	KEYWORD2
 getBrightness	KEYWORD2
-setTemperature	KEYWORD2
-getTemperature	KEYWORD2
+setColorTemperature	KEYWORD2
+getColorTemperature	KEYWORD2
 toggle	KEYWORD2
 updateAccessory	KEYWORD2
 onChange	KEYWORD2
 onChangeOnOff	KEYWORD2
 onChangeBrightness	KEYWORD2
-onChangeTemperature KEYWORD2
+onChangeColorTemperature KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
