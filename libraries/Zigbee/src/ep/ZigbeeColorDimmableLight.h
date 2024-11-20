@@ -21,9 +21,31 @@ public:
     lightChanged();
   }
 
+  void setLightState(bool state);
+  void setLightLevel(uint8_t level);
+  void setLightColor(uint8_t red, uint8_t green, uint8_t blue);
+  void setLight(bool state, uint8_t level, uint8_t red, uint8_t green, uint8_t blue);
+
+  bool getLightState() {
+    return _current_state;
+  }
+  uint8_t getLightLevel() {
+    return _current_level;
+  }
+  uint8_t getLightRed() {
+    return _current_red;
+  }
+  uint8_t getLightGreen() {
+    return _current_green;
+  }
+  uint8_t getLightBlue() {
+    return _current_blue;
+  }
+
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
   void calculateRGB(uint16_t x, uint16_t y, uint8_t &red, uint8_t &green, uint8_t &blue);
+  void calculateXY(uint8_t red, uint8_t green, uint8_t blue, uint16_t &x, uint16_t &y);
 
   uint16_t getCurrentColorX();
   uint16_t getCurrentColorY();

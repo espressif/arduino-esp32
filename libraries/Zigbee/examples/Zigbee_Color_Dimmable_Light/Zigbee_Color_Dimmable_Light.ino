@@ -41,6 +41,10 @@ ZigbeeColorDimmableLight zbColorLight = ZigbeeColorDimmableLight(ZIGBEE_LIGHT_EN
 
 /********************* RGB LED functions **************************/
 void setRGBLight(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t level) {
+  if (!state) {
+    rgbLedWrite(LED_PIN, 0, 0, 0);
+    return;
+  }
   float brightness = (float)level / 255;
   rgbLedWrite(LED_PIN, red * brightness, green * brightness, blue * brightness);
 }
@@ -98,6 +102,8 @@ void loop() {
         Zigbee.factoryReset();
       }
     }
+    // Increase blightness by 50 every time the button is pressed
+    zbColorLight.setLightLevel(zbColorLight.getLightLevel() + 50);
   }
   delay(100);
 }

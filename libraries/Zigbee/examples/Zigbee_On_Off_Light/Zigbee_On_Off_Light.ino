@@ -81,6 +81,8 @@ void loop() {
         Zigbee.factoryReset();
       }
     }
+    // Toggle light by pressing the button
+    zbLight.setLight(!zbLight.getLightState());
   }
   delay(100);
 }

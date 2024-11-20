@@ -33,4 +33,17 @@ void ZigbeeLight::lightChanged() {
   }
 }
 
+void ZigbeeLight::setLight(bool state) {
+  _current_state = state;
+  lightChanged();
+
+  log_v("Updating on/off light state to %d", state);
+  /* Update on/off light state */
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false
+  );
+  esp_zb_lock_release();
+}
+
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
