@@ -41,7 +41,7 @@ ZigbeeColorDimmableLight zbColorLight = ZigbeeColorDimmableLight(ZIGBEE_LIGHT_EN
 
 /********************* RGB LED functions **************************/
 void setRGBLight(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t level) {
-  if(!state) {
+  if (!state) {
     rgbLedWrite(LED_PIN, 0, 0, 0);
     return;
   }
