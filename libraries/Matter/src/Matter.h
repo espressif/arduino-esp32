@@ -18,8 +18,10 @@
 
 #include <Arduino.h>
 #include <esp_matter.h>
+#include <MatterUtil/ColorFormat.h>
 #include <MatterEndpoints/MatterOnOffLight.h>
 #include <MatterEndpoints/MatterDimmableLight.h>
+#include <MatterEndpoints/MatterColorTemperatureLight.h>
 
 using namespace esp_matter;
 
@@ -47,6 +49,7 @@ public:
   // list of Matter EndPoints Friend Classes
   friend class MatterOnOffLight;
   friend class MatterDimmableLight;
+  friend class MatterColorTemperatureLight;
 
 protected:
   static void _init();

@@ -10,7 +10,12 @@ Matter	KEYWORD1
 ArduinoMatter	KEYWORD1
 MatterOnOffLight	KEYWORD1
 MatterDimmableLight	KEYWORD1
+MatterColorTemperatureLight KEYWORD1
 MatterEndPoint	KEYWORD1
+CtColor_t	KEYWORD1
+XyColor_t	KEYWORD1
+HsvColor_t	KEYWORD1
+RgbColor_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -30,12 +35,28 @@ setOnOff	KEYWORD2
 getOnOff	KEYWORD2
 setBrightness	KEYWORD2
 getBrightness	KEYWORD2
+setColorTemperature	KEYWORD2
+getColorTemperature	KEYWORD2
 toggle	KEYWORD2
 updateAccessory	KEYWORD2
 onChange	KEYWORD2
 onChangeOnOff	KEYWORD2
 onChangeBrightness	KEYWORD2
+onChangeColorTemperature KEYWORD2
+XYToRgb KEYWORD2
+HsvToRgb KEYWORD2
+CTToRgb KEYWORD2
+RgbToHsv KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
+
+MAX_BRIGHTNESS  LITERAL1
+MAX_COLOR_TEMPERATURE  LITERAL1
+MIN_COLOR_TEMPERATURE  LITERAL1
+COOL_WHITE_COLOR_TEMPERATURE  LITERAL1
+DAYLIGHT_WHITE_COLOR_TEMPERATURE  LITERAL1
+WHITE_COLOR_TEMPERATURE  LITERAL1
+SOFT_WHITE_COLOR_TEMPERATURE  LITERAL1
+WARM_WHITE_COLOR_TEMPERATURE  LITERAL1
