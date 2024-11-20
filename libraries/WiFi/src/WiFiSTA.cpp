@@ -63,6 +63,7 @@ wl_status_t WiFiSTAClass::status() {
   return STA.status();
 }
 
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
 wl_status_t WiFiSTAClass::begin(
   const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity, const char *wpa2_username, const char *wpa2_password, const char *ca_pem,
   const char *client_crt, const char *client_key, int ttls_phase2_type, int32_t channel, const uint8_t *bssid, bool connect
@@ -77,6 +78,7 @@ wl_status_t WiFiSTAClass::begin(
 
   return STA.status();
 }
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
 
 wl_status_t WiFiSTAClass::begin(const char *ssid, const char *passphrase, int32_t channel, const uint8_t *bssid, bool connect) {
   if (!STA.begin()) {
