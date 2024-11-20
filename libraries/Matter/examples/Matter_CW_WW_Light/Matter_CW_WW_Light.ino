@@ -47,7 +47,7 @@ bool setLightState(bool state, uint8_t brightness, uint16_t temperature_Mireds) 
 
   if (state) {
 #ifdef RGB_BUILTIN
-    CtColor_t ct = { temperature_Mireds };
+    CtColor_t ct = {temperature_Mireds};
     RgbColor_t rgb_ct = CTToRgb(ct);
     // simple intensity correction
     float brightnessPercent = (float)brightness / MatterColorTemperatureLight::MAX_BRIGHTNESS;
@@ -130,7 +130,10 @@ void setup() {
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
-    Serial.printf("Initial state: %s | brightness: %d | Color Temperature: %d mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(), CW_WW_Light.getColorTemperature());
+    Serial.printf(
+      "Initial state: %s | brightness: %d | Color Temperature: %d mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(),
+      CW_WW_Light.getColorTemperature()
+    );
     // configure the Light based on initial on-off state and brightness
     CW_WW_Light.updateAccessory();
   }
@@ -158,7 +161,10 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    Serial.printf("Initial state: %s | brightness: %d | Color Temperature: %d mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(), CW_WW_Light.getColorTemperature());
+    Serial.printf(
+      "Initial state: %s | brightness: %d | Color Temperature: %d mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(),
+      CW_WW_Light.getColorTemperature()
+    );
     // configure the Light based on initial on-off state and brightness
     CW_WW_Light.updateAccessory();
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");

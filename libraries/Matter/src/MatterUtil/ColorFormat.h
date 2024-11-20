@@ -20,29 +20,25 @@
 
 #include <stdint.h>
 
-struct RgbColor_t
-{
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
+struct RgbColor_t {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
 };
 
-struct HsvColor_t
-{
-    int16_t h;
-    uint8_t s;
-    uint8_t v;
+struct HsvColor_t {
+  int16_t h;
+  uint8_t s;
+  uint8_t v;
 };
 
-struct XyColor_t
-{
-    uint16_t x;
-    uint16_t y;
+struct XyColor_t {
+  uint16_t x;
+  uint16_t y;
 };
 
-struct CtColor_t
-{
-    uint16_t ctMireds;
+struct CtColor_t {
+  uint16_t ctMireds;
 };
 
 RgbColor_t XYToRgb(uint8_t Level, uint16_t currentX, uint16_t currentY);
