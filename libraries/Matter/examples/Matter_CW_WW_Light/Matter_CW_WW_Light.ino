@@ -58,7 +58,7 @@ bool setLightState(bool state, uint8_t brightness, uint16_t temperature_Mireds) 
     rgbLedWrite(ledPin, rgb_ct.r, rgb_ct.g, rgb_ct.b);
 #else
     // No Color RGB LED, just use the brightness to control the LED
-    analogWrite(ledPin, _brightness);
+    analogWrite(ledPin, brightness);
 #endif
   } else {
     digitalWrite(ledPin, LOW);
