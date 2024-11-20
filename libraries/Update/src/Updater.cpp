@@ -75,9 +75,9 @@ UpdateClass::UpdateClass()
 #ifdef UPDATE_CRYPT
 _cryptKey(0), _cryptBuffer(0),
 #endif /* UPDATE_CRYPT */
-_buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0), _command(U_FLASH), _partition(NULL),
+_buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0), _command(U_FLASH), _partition(NULL)
 #ifdef UPDATE_CRYPT
-_cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
+, _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
 #endif /* UPDATE_CRYPT */
 {}
 
