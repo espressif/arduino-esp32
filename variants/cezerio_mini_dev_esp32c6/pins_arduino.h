@@ -25,16 +25,16 @@ static const uint8_t BUT_BUILTIN = 9;
 #define BUT_BUILTIN BUT_BUILTIN  // allow testing #ifdef BUT_BUILTIN
 #define BOOT        BUT_BUILTIN
 
-static const uint8_t TX = 16;
-static const uint8_t RX = 17;
+static const uint8_t TX = 7;
+static const uint8_t RX = 14;
 
-static const uint8_t SDA = 22;
-static const uint8_t SCL = 23;
+static const uint8_t SDA = 23;
+static const uint8_t SCL = 22;
 
-static const uint8_t SS = 14;
-static const uint8_t MOSI = 18;
-static const uint8_t MISO = 19;
-static const uint8_t SCK = 21;
+static const uint8_t MOSI = 19;
+static const uint8_t MISO = 21;
+static const uint8_t SCK = 18;
+static const uint8_t SS = 17;
 
 static const uint8_t A0 = 0;
 static const uint8_t A1 = 1;
