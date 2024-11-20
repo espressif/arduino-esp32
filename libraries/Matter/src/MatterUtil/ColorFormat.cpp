@@ -99,17 +99,17 @@ HsvColor_t RgbToHsv(RgbColor_t rgb) {
   return hsv;
 }
 
-RgbColor_t XYToRgb(uint8_t Level, uint16_t currentX, uint16_t currentY) {
+RgbColor_t XYToRgb(uint8_t Level, uint16_t current_X, uint16_t current_Y) {
   // convert xyY color space to RGB
 
   // https://www.easyrgb.com/en/math.php
   // https://en.wikipedia.org/wiki/SRGB
   // refer https://en.wikipedia.org/wiki/CIE_1931_color_space#CIE_xy_chromaticity_diagram_and_the_CIE_xyY_color_space
 
-  // The currentX/currentY attribute contains the current value of the normalized chromaticity value of x/y.
-  // The value of x/y shall be related to the currentX/currentY attribute by the relationship
-  // x = currentX/65536
-  // y = currentY/65536
+  // The current_X/current_Y attribute contains the current value of the normalized chromaticity value of x/y.
+  // The value of x/y shall be related to the current_X/current_Y attribute by the relationship
+  // x = current_X/65536
+  // y = current_Y/65536
   // z = 1-x-y
 
   RgbColor_t rgb;
@@ -118,8 +118,8 @@ RgbColor_t XYToRgb(uint8_t Level, uint16_t currentX, uint16_t currentY) {
   float X, Y, Z;
   float r, g, b;
 
-  x = ((float)currentX) / 65535.0f;
-  y = ((float)currentY) / 65535.0f;
+  x = ((float)current_X) / 65535.0f;
+  y = ((float)current_Y) / 65535.0f;
 
   z = 1.0f - x - y;
 
