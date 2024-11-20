@@ -9,7 +9,9 @@
 #include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
+#ifdef UPDATE_CRYPT
 #include "mbedtls/aes.h"
+#endif /* UPDATE_CRYPT */
 
 static const char *_err2str(uint8_t _error) {
   if (_error == UPDATE_ERROR_OK) {
@@ -38,8 +40,10 @@ static const char *_err2str(uint8_t _error) {
     return ("Bad Argument");
   } else if (_error == UPDATE_ERROR_ABORT) {
     return ("Aborted");
+#ifdef UPDATE_CRYPT
   } else if (_error == UPDATE_ERROR_DECRYPT) {
     return ("Decryption error");
+#endif /* UPDATE_CRYPT */
   }
   return ("UNKNOWN");
 }
@@ -67,8 +71,15 @@ bool UpdateClass::_enablePartition(const esp_partition_t *partition) {
 }
 
 UpdateClass::UpdateClass()
-  : _error(0), _cryptKey(0), _cryptBuffer(0), _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0),
-    _command(U_FLASH), _partition(NULL), _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf) {}
+  : _error(0),
+#ifdef UPDATE_CRYPT
+_cryptKey(0), _cryptBuffer(0),
+#endif /* UPDATE_CRYPT */
+_buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0), _command(U_FLASH), _partition(NULL),
+#ifdef UPDATE_CRYPT
+_cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
+#endif /* UPDATE_CRYPT */
+{}
 
 UpdateClass &UpdateClass::onProgress(THandlerFunction_Progress fn) {
   _progress_callback = fn;
@@ -83,7 +94,9 @@ void UpdateClass::_reset() {
     delete[] _skipBuffer;
   }
 
+#ifdef UPDATE_CRYPT
   _cryptBuffer = nullptr;
+#endif /* UPDATE_CRYPT */
   _buffer = nullptr;
   _skipBuffer = nullptr;
   _bufferLen = 0;
@@ -175,6 +188,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   return true;
 }
 
+#ifdef UPDATE_CRYPT
 bool UpdateClass::setupCrypt(const uint8_t *cryptKey, size_t cryptAddress, uint8_t cryptConfig, int cryptMode) {
   if (setCryptKey(cryptKey)) {
     if (setCryptMode(cryptMode)) {
@@ -216,6 +230,7 @@ bool UpdateClass::setCryptMode(const int cryptMode) {
   }
   return true;
 }
+#endif /* UPDATE_CRYPT */
 
 void UpdateClass::_abort(uint8_t err) {
   _reset();
@@ -226,6 +241,7 @@ void UpdateClass::abort() {
   _abort(UPDATE_ERROR_ABORT);
 }
 
+#ifdef UPDATE_CRYPT
 void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key) {
   memcpy(tweaked_key, _cryptKey, ENCRYPTED_KEY_SIZE);
   if (_cryptCfg == 0) {
@@ -338,8 +354,10 @@ bool UpdateClass::_decryptBuffer() {
   }
   return true;
 }
+#endif /* UPDATE_CRYPT */
 
 bool UpdateClass::_writeBuffer() {
+#ifdef UPDATE_CRYPT
   //first bytes of loading image, check to see if loading image needs decrypting
   if (!_progress) {
     _cryptMode &= U_AES_DECRYPT_MODE_MASK;
@@ -360,6 +378,7 @@ bool UpdateClass::_writeBuffer() {
       return false;
     }
   }
+  #endif /* UPDATE_CRYPT */
   //first bytes of new firmware
   uint8_t skip = 0;
   if (!_progress && _command == U_FLASH) {
@@ -409,9 +428,13 @@ bool UpdateClass::_writeBuffer() {
   if (!_progress && _command == U_FLASH) {
     _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
   }
+#ifdef UPDATE_CRYPT
   if (_target_md5_decrypted) {
+#endif /* UPDATE_CRYPT */
     _md5.add(_buffer, _bufferLen);
+#ifdef UPDATE_CRYPT
   }
+#endif /* UPDATE_CRYPT */
   _progress += _bufferLen;
   _bufferLen = 0;
   if (_progress_callback) {
@@ -453,13 +476,19 @@ bool UpdateClass::_verifyEnd() {
   return false;
 }
 
-bool UpdateClass::setMD5(const char *expected_md5, bool calc_post_decryption) {
+bool UpdateClass::setMD5(const char *expected_md5
+#ifdef UPDATE_CRYPT
+,bool calc_post_decryption
+#endif /* UPDATE_CRYPT */
+) {
   if (strlen(expected_md5) != 32) {
     return false;
   }
   _target_md5 = expected_md5;
   _target_md5.toLowerCase();
+#ifdef UPDATE_CRYPT
   _target_md5_decrypted = calc_post_decryption;
+#endif /* UPDATE_CRYPT */
   return true;
 }
 
@@ -532,12 +561,16 @@ size_t UpdateClass::writeStream(Stream &data) {
     return 0;
   }
 
+#ifdef UPDATE_CRYPT
   if (_command == U_FLASH && !_cryptMode) {
+#endif /* UPDATE_CRYPT */
     if (!_verifyHeader(data.peek())) {
       _reset();
       return 0;
     }
+#ifdef UPDATE_CRYPT
   }
+#endif /* UPDATE_CRYPT */
 
   if (_ledPin != -1) {
     pinMode(_ledPin, OUTPUT);
