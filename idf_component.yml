@@ -42,7 +42,7 @@ files:
     - "platform.txt"
     - "programmers.txt"
 dependencies:
-  idf: ">=5.1,<5.2"
+  idf: ">=5.3"
   # mdns 1.2.1 is necessary to build H2 with no WiFi
   espressif/mdns:
     version: "^1.2.3"
