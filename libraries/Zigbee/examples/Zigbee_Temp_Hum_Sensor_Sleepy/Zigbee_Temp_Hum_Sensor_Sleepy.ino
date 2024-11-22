@@ -27,7 +27,7 @@
  */
 
 #ifndef ZIGBEE_MODE_ED
-#error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
+#error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
 
 #include "Zigbee.h"
@@ -56,14 +56,19 @@ void meausureAndSleep() {
   zbTempSensor.reportTemperature();
   zbTempSensor.reportHumidity();
 
-  log_d("Temperature: %.2f°C, Humidity: %.2f%", temperature, humidity);
+  Serial.printf("Reported temperature: %.2f°C, Humidity: %.2f%\n", temperature, humidity);
 
   // Put device to deep sleep
+  Serial.println("Going to sleep now");
   esp_deep_sleep_start();
 }
 
 /********************* Arduino functions **************************/
 void setup() {
+  Serial.begin(115200);
+  while (!Serial) {
+    delay(10);
+  }
   // Init button switch
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
@@ -94,14 +99,20 @@ void setup() {
   zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
 
   // When all EPs are registered, start Zigbee in End Device mode
-  Zigbee.begin(&zigbeeConfig, false);
-
-  // Wait for Zigbee to start
-  while (!Zigbee.isStarted()) {
+  if (!Zigbee.begin(&zigbeeConfig, false)){
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
+  Serial.println("Connecting to network");
+  while (!Zigbee.connected()) {
+    Serial.print(".");
     delay(100);
   }
+  Serial.println();
+  Serial.println("Sucessfully connected to Zigbee network");
 
-  // Delay 5s to allow establishing connection with coordinator, needed for sleepy devices
+  // Delay 5s (may be adjusted) to allow establishing proper connection with coordinator, needed for sleepy devices
   delay(5000);
 }
 
@@ -115,7 +126,8 @@ void loop() {
       delay(50);
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
-        Zigbee.factoryReset();
+        Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
+        delay(1000);
       }
     }
   }

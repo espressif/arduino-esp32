@@ -73,7 +73,7 @@ public:
     return _bound_devices;
   }
 
-  static bool isBound() {
+  static bool bound() {
     return _is_bound;
   }
   static void allowMultipleBinding(bool bind) {

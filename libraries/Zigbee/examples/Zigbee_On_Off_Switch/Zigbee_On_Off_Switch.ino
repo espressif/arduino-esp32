@@ -70,6 +70,7 @@ ZigbeeSwitch zbSwitch = ZigbeeSwitch(SWITCH_ENDPOINT_NUMBER);
 static void onZbButton(SwitchData *button_func_pair) {
   if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
     // Send toggle command to the light
+    Serial.println("Toggling light");
     zbSwitch.lightToggle();
   }
 }
@@ -93,7 +94,6 @@ static void enableGpioInterrupt(bool enabled) {
 
 /********************* Arduino functions **************************/
 void setup() {
-
   Serial.begin(115200);
   while (!Serial) {
     delay(10);
@@ -106,7 +106,7 @@ void setup() {
   zbSwitch.allowMultipleBinding(true);
 
   //Add endpoint to Zigbee Core
-  log_d("Adding ZigbeeSwitch endpoint to Zigbee Core");
+  Serial.println("Adding ZigbeeSwitch endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbSwitch);
 
   //Open network for 180 seconds after boot
@@ -118,19 +118,22 @@ void setup() {
     /* create a queue to handle gpio event from isr */
     gpio_evt_queue = xQueueCreate(10, sizeof(SwitchData));
     if (gpio_evt_queue == 0) {
-      log_e("Queue was not created and must not be used");
-      while (1);
+      Serial.println("Queue creating failed, rebooting...");
+      ESP.restart();
     }
     attachInterruptArg(buttonFunctionPair[i].pin, onGpioInterrupt, (void *)(buttonFunctionPair + i), FALLING);
   }
 
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
-  log_d("Calling Zigbee.begin()");
-  Zigbee.begin(ZIGBEE_COORDINATOR);
-
+  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
+  
   Serial.println("Waiting for Light to bound to the switch");
   //Wait for switch to bound to a light:
-  while (!zbSwitch.isBound()) {
+  while (!zbSwitch.bound()) {
     Serial.printf(".");
     delay(500);
   }

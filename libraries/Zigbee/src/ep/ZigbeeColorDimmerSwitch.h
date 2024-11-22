@@ -39,14 +39,6 @@ public:
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint16_t group_addr);
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, uint16_t short_addr);
 
-  void setLightColorSaturation(uint8_t value);
-  void setLightColorSaturation(uint8_t value, uint16_t group_addr);
-  void setLightColorSaturation(uint8_t value, uint8_t endpoint, uint16_t short_addr);
-
-  void setLightColorHue(uint8_t value);
-  void setLightColorHue(uint8_t value, uint16_t group_addr);
-  void setLightColorHue(uint8_t value, uint8_t endpoint, uint16_t short_addr);
-
 private:
   // save instance of the class in order to use it in static functions
   static ZigbeeColorDimmerSwitch *_instance;

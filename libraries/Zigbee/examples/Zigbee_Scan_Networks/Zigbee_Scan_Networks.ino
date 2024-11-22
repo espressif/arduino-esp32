@@ -32,7 +32,7 @@
 #include "Zigbee.h"
 
 #ifdef ZIGBEE_MODE_ZCZR
-zigbee_role_t role = ZIGBEE_ROUTER;  // or can be ZIGBEE_COORDINATOR, but it wont scan itself
+zigbee_role_t role = ZIGBEE_ROUTER;  // or can be ZIGBEE_COORDINATOR, but it won't scan itself
 #else
 zigbee_role_t role = ZIGBEE_END_DEVICE;
 #endif
@@ -81,14 +81,13 @@ void setup() {
   }
 
   // Initialize Zigbee stack without any EPs just for scanning
-  Zigbee.begin(role);
-
-  // Waint until Zigbee stack is ready
-  while (!Zigbee.isStarted()) {
-    delay(100);
+  if (!Zigbee.begin(role)) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
   }
 
-  Serial.println("Setup done");
+  Serial.println("Setup done, starting Zigbee network scan...");
   // Start Zigbee Network Scan with default parameters (all channels, scan time 5)
   Zigbee.scanNetworks();
 }
@@ -98,7 +97,7 @@ void loop() {
   int16_t ZigbeeScanStatus = Zigbee.scanComplete();
   if (ZigbeeScanStatus < 0) {  // it is busy scanning or got an error
     if (ZigbeeScanStatus == ZB_SCAN_FAILED) {
-      Serial.println("WiFi Scan has failed. Starting again.");
+      Serial.println("Zigbee scan has failed. Starting again.");
       Zigbee.scanNetworks();
     }
     // other option is status ZB_SCAN_RUNNING - just wait.
