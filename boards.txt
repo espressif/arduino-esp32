@@ -531,7 +531,15 @@ esp32h2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_co
 esp32h2.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
 esp32h2.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 esp32h2.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
-
+esp32h2.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+esp32h2.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32h2.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api_ed.debug -lesp_zb_cli_command -lzboss_stack.ed.debug -lzboss_port.debug
+esp32h2.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+esp32h2.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32h2.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api_zczr.debug -lesp_zb_cli_command -lzboss_stack.zczr.debug -lzboss_port.debug
+esp32h2.menu.ZigbeeMode.rcp_debug=Zigbee RCP (radio co-processor) - Debug
+esp32h2.menu.ZigbeeMode.rcp_debug.build.zigbee_mode=-DZIGBEE_MODE_RCP
+esp32h2.menu.ZigbeeMode.rcp_debug.build.zigbee_libs=-lesp_zb_api_rcp.debug -lesp_zb_cli_command -lzboss_stack.rcp.debug -lzboss_port.debug
 
 ##############################################################
 
@@ -723,6 +731,15 @@ esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_co
 esp32c6.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
 esp32c6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 esp32c6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
+esp32c6.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+esp32c6.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32c6.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api_ed.debug -lesp_zb_cli_command -lzboss_stack.ed.debug -lzboss_port.debug
+esp32c6.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+esp32c6.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32c6.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api_zczr.debug -lesp_zb_cli_command -lzboss_stack.zczr.debug -lzboss_port.debug
+esp32c6.menu.ZigbeeMode.rcp_debug=Zigbee RCP (radio co-processor) - Debug
+esp32c6.menu.ZigbeeMode.rcp_debug.build.zigbee_mode=-DZIGBEE_MODE_RCP
+esp32c6.menu.ZigbeeMode.rcp_debug.build.zigbee_libs=-lesp_zb_api_rcp.debug -lesp_zb_cli_command -lzboss_stack.rcp.debug -lzboss_port.debug
 
 ##############################################################
 
