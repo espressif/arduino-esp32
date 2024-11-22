@@ -77,7 +77,7 @@ void setup() {
     ESP.restart();
   }
   Serial.println("Connecting to network");
-  while (!Zigbee.isConnected()) {
+  while (!Zigbee.connected()) {
     Serial.print(".");
     delay(100);
   }
