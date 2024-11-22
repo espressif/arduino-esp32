@@ -6,7 +6,7 @@
 #include "ZigbeeHandlers.cpp"
 #include "Arduino.h"
 
-#define ZB_INIT_TIMEOUT 6000 // 6 seconds
+#define ZB_INIT_TIMEOUT 10000 // 10 seconds
 
 extern "C" void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
 static bool edBatteryPowered = false;
@@ -34,6 +34,7 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
 
 bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
   if (!zigbeeInit(role_cfg, erase_nvs)) {
+    log_e("ZigbeeCore begin failed");
     return false;
   }
   _role = (zigbee_role_t)role_cfg->esp_zb_role;
@@ -69,7 +70,10 @@ bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
     }
     default: log_e("Invalid Zigbee Role"); return false;
   }
-  return status;
+  if(!status || xSemaphoreTake(lock, ZB_INIT_TIMEOUT) != pdTRUE) {
+    log_e("ZigbeeCore begin failed or timeout");
+  }
+  return started();
 }
 
 void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {

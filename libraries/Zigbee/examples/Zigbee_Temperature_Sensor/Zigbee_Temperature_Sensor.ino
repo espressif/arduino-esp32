@@ -70,11 +70,14 @@ void setup() {
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
+  Serial.println("Starting Zigbee...");
   // When all EPs are registered, start Zigbee in End Device mode
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {
