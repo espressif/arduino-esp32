@@ -27,11 +27,28 @@
 // Single On/Off Light Endpoint - at least one per node
 MatterOnOffLight OnOffLight;
 
+// Light GPIO that can be controlled by Matter APP
+#ifdef LED_BUILTIN
+const uint8_t ledPin = LED_BUILTIN;
+#else
+const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LED_BUILTIN
+#endif
+
+// Matter Protocol Endpoint (On/OFF Light) Callback
+bool matterCB(bool state) {
+  digitalWrite(ledPin, state ? HIGH : LOW);
+  // This callback must return the success state to Matter core
+  return true;
+}
+
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 void setup() {
+  // Initialise the LED GPIO
+  pinMode(ledPin, OUTPUT);
+  
   WiFi.enableIPv6(true);
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
@@ -42,6 +59,9 @@ void setup() {
 
   // Initialize at least one Matter EndPoint
   OnOffLight.begin();
+
+  // Associate a callback to the Matter Controller
+  OnOffLight.onChange(matterCB);
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
