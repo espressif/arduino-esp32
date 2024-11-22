@@ -267,7 +267,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
                                           : ((conf.source == SOC_CPU_CLK_SRC_APLL) ? "APLL"
                                           : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL"
 #ifdef CONFIG_IDF_TARGET_ESP32P4
-                                          : "17.5M"),
+                                          : "17.5M")),
 #else
                                           : "8M")),
 #endif
