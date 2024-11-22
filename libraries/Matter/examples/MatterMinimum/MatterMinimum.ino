@@ -17,7 +17,7 @@
  * commissioned and controlled from a Matter Environment APP.
  * It controls a GPIO that could be attached to a LED for visualization.
  * Additionally the ESP32 will send debug messages indicating the Matter activity.
- * Turning DEBUG Level may be useful to follow Matter Accessory and Controller messages.
+ * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
  */
 
 // Matter Manager
