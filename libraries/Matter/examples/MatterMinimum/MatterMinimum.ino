@@ -47,7 +47,7 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 void setup() {
-  // Initialise the LED GPIO
+  // Initialize the LED GPIO
   pinMode(ledPin, OUTPUT);
 
   WiFi.enableIPv6(true);
