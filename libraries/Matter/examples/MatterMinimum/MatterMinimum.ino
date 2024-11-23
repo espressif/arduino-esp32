@@ -49,7 +49,7 @@ const char *password = "your-password";  // Change this to your WiFi password
 void setup() {
   // Initialise the LED GPIO
   pinMode(ledPin, OUTPUT);
-  
+
   WiFi.enableIPv6(true);
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
