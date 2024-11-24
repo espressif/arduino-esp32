@@ -26,76 +26,72 @@
 RgbColor_t HsvToRgb(HsvColor_t hsv) {
   RgbColor_t rgb;
 
-  uint16_t i = hsv.h / 60;
-  uint16_t rgb_max = hsv.v;
-  uint16_t rgb_min = (uint16_t)(rgb_max * (100 - hsv.s)) / 100;
-  uint16_t diff = hsv.h % 60;
-  uint16_t rgb_adj = (uint16_t)((rgb_max - rgb_min) * diff) / 60;
+    uint8_t region, p, q, t;
+    uint32_t h, s, v, remainder;
 
-  switch (i) {
-    case 0:
-      rgb.r = (uint8_t)rgb_max;
-      rgb.g = (uint8_t)(rgb_min + rgb_adj);
-      rgb.b = (uint8_t)rgb_min;
-      break;
-    case 1:
-      rgb.r = (uint8_t)(rgb_max - rgb_adj);
-      rgb.g = (uint8_t)rgb_max;
-      rgb.b = (uint8_t)rgb_min;
-      break;
-    case 2:
-      rgb.r = (uint8_t)rgb_min;
-      rgb.g = (uint8_t)rgb_max;
-      rgb.b = (uint8_t)(rgb_min + rgb_adj);
-      break;
-    case 3:
-      rgb.r = (uint8_t)rgb_min;
-      rgb.g = (uint8_t)(rgb_max - rgb_adj);
-      rgb.b = (uint8_t)rgb_max;
-      break;
-    case 4:
-      rgb.r = (uint8_t)(rgb_min + rgb_adj);
-      rgb.g = (uint8_t)rgb_min;
-      rgb.b = (uint8_t)rgb_max;
-      break;
-    default:
-      rgb.r = (uint8_t)rgb_max;
-      rgb.g = (uint8_t)rgb_min;
-      rgb.b = (uint8_t)(rgb_max - rgb_adj);
-      break;
-  }
+    if (hsv.s == 0) {
+        rgb.r = rgb.g = rgb.b = hsv.v;
+    } else {
+      h = hsv.h;
+      s = hsv.s;
+      v = hsv.v;
 
-  return rgb;
+      region    = h / 43;
+      remainder = (h - (region * 43)) * 6;
+      p         = (v * (255 - s)) >> 8;
+      q         = (v * (255 - ((s * remainder) >> 8))) >> 8;
+      t         = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+      switch (region) {
+        case 0:
+          rgb.r = v, rgb.g = t, rgb.b = p;
+          break;
+        case 1:
+          rgb.r = q, rgb.g = v, rgb.b = p;
+          break;
+        case 2:
+          rgb.r = p, rgb.g = v, rgb.b = t;
+          break;
+        case 3:
+          rgb.r = p, rgb.g = q, rgb.b = v;
+          break;
+        case 4:
+          rgb.r = t, rgb.g = p, rgb.b = v;
+          break;
+        case 5:
+        default:
+          rgb.r = v, rgb.g = p, rgb.b = q;
+          break;
+        }
+    }
+    return rgb;
 }
 
 HsvColor_t RgbToHsv(RgbColor_t rgb) {
   HsvColor_t hsv;
+  uint8_t rgbMin, rgbMax;
 
-  uint16_t rgb_max = rgb.r > rgb.g ? (rgb.r > rgb.b ? rgb.r : rgb.b) : (rgb.g > rgb.b ? rgb.g : rgb.b);
-  uint16_t rgb_min = rgb.r < rgb.g ? (rgb.r < rgb.b ? rgb.r : rgb.b) : (rgb.g < rgb.b ? rgb.g : rgb.b);
-  uint16_t diff = rgb_max - rgb_min;
+  rgbMin = rgb.r < rgb.g ? (rgb.r < rgb.b ? rgb.r : rgb.b) : (rgb.g < rgb.b ? rgb.g : rgb.b);
+  rgbMax = rgb.r > rgb.g ? (rgb.r > rgb.b ? rgb.r : rgb.b) : (rgb.g > rgb.b ? rgb.g : rgb.b);
 
-  if (diff == 0) {
-    hsv.h = 0;
-  } else if (rgb_max == rgb.r) {
-    hsv.h = (uint8_t)(60 * ((rgb.g - rgb.b) * 100) / diff);
-  } else if (rgb_max == rgb.g) {
-    hsv.h = (uint8_t)(60 * (((rgb.b - rgb.r) * 100) / diff + 2 * 100));
+  hsv.v = rgbMax;
+  if (hsv.v == 0) {
+      hsv.h = 0;
+      hsv.s = 0;
+      return hsv;
+  }
+
+  hsv.s = 255 * (rgbMax - rgbMin) / hsv.v;
+  if (hsv.s == 0) {
+      hsv.h = 0;
+      return hsv;
+  }
+  if (rgbMax == rgb.r) {
+      hsv.h = 0 + 43 * (rgb.g - rgb.b) / (rgbMax - rgbMin);
+  } else if (rgbMax == rgb.g) {
+      hsv.h = 85 + 43 * (rgb.b - rgb.r) / (rgbMax - rgbMin);
   } else {
-    hsv.h = (uint8_t)(60 * (((rgb.r - rgb.g) * 100) / diff + 4 * 100));
+      hsv.h = 171 + 43 * (rgb.r - rgb.g) / (rgbMax - rgbMin);
   }
-
-  if (rgb_max == 0) {
-    hsv.s = 0;
-  } else {
-    hsv.s = (uint8_t)((diff * 100) / rgb_max);
-  }
-
-  hsv.v = (uint8_t)rgb_max;
-  if (hsv.h < 0) {
-    hsv.h += 360;
-  }
-
   return hsv;
 }
 
@@ -158,6 +154,50 @@ RgbColor_t XYToRgb(uint8_t Level, uint16_t current_X, uint16_t current_Y) {
 
   return rgb;
 }
+
+XyColor_t RgbToXY(RgbColor_t rgb) {
+  // convert RGB to xy color space
+
+  // https://www.easyrgb.com/en/math.php
+  // https://en.wikipedia.org/wiki/SRGB
+  // refer https://en.wikipedia.org/wiki/CIE_1931_color_space#CIE_xy_chromaticity_diagram_and_the_CIE_xyY_color_space
+
+  XyColor_t xy;
+
+  float r, g, b;
+  float X, Y, Z;
+  float x, y;
+
+  r = ((float)rgb.r) / 255.0f;
+  g = ((float)rgb.g) / 255.0f;
+  b = ((float)rgb.b) / 255.0f;
+
+  // convert RGB to XYZ - sRGB to CIE XYZ
+  r = (r <= 0.04045f ? r / 12.92f : pow((r + 0.055f) / 1.055f, 2.4f));
+  g = (g <= 0.04045f ? g / 12.92f : pow((g + 0.055f) / 1.055f, 2.4f));
+  b = (b <= 0.04045f ? b / 12.92f : pow((b + 0.055f) / 1.055f, 2.4f));
+
+  // https://gist.github.com/popcorn245/30afa0f98eea1c2fd34d
+  X = r * 0.649926f + g * 0.103455f + b * 0.197109f;
+  Y = r * 0.234327f + g * 0.743075f + b * 0.022598f;
+  Z = r * 0.0000000f + g * 0.053077f + b * 1.035763f;
+
+  // sR, sG and sB (standard RGB) input range = 0 ÷ 255
+  // X, Y and Z output refer to a D65/2° standard illuminant.
+  X = r * 0.4124564f + g * 0.3575761f + b * 0.1804375f;
+  Y = r * 0.2126729f + g * 0.7151522f + b * 0.0721750f;
+  Z = r * 0.0193339f + g * 0.1191920f + b * 0.9503041f;
+
+  // Calculate xy values
+  x = X / (X + Y + Z);
+  y = Y / (X + Y + Z);
+
+  // convert to 0-65535 range
+  xy.x = (uint16_t)(x * 65535);
+  xy.y = (uint16_t)(y * 65535);
+  return xy;
+}
+
 
 RgbColor_t CTToRgb(CtColor_t ct) {
   RgbColor_t rgb = {0, 0, 0};

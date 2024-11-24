@@ -170,6 +170,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterOnOffLight.cpp
   libraries/Matter/src/MatterEndpoints/MatterDimmableLight.cpp
   libraries/Matter/src/MatterEndpoints/MatterColorTemperatureLight.cpp
+  libraries/Matter/src/MatterEndpoints/MatterColorLight.cpp
   libraries/Matter/src/MatterUtil/ColorFormat.cpp
   libraries/Matter/src/Matter.cpp)
 
