@@ -42,7 +42,7 @@ static void temp_sensor_value_update(void *arg) {
   for (;;) {
     // Read temperature sensor value
     float tsens_value = temperatureRead();
-    Serial.printf("Updated temperature sensor value to %.2f°C\n", tsens_value);
+    Serial.printf("Updated temperature sensor value to %.2f°C\r\n", tsens_value);
     // Update temperature value in Temperature sensor EP
     zbTempSensor.setTemperature(tsens_value);
     delay(1000);
