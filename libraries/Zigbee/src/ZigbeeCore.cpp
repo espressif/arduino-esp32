@@ -6,7 +6,7 @@
 #include "ZigbeeHandlers.cpp"
 #include "Arduino.h"
 
-#define ZB_INIT_TIMEOUT 10000  // 10 seconds
+#define ZB_INIT_TIMEOUT 30000  // 30 seconds
 
 extern "C" void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
 static bool edBatteryPowered = false;
@@ -20,6 +20,7 @@ ZigbeeCore::ZigbeeCore() {
   _scan_status = ZB_SCAN_FAILED;
   _started = false;
   _connected = false;
+  _scan_duration = 4;  // maximum scan duration
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
@@ -90,6 +91,8 @@ void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
 }
 
 static void esp_zb_task(void *pvParameters) {
+  esp_zb_bdb_set_scan_duration(Zigbee.getScanDuration());
+
   /* initialize Zigbee stack */
   ESP_ERROR_CHECK(esp_zb_start(false));
 
@@ -178,6 +181,14 @@ void ZigbeeCore::setPrimaryChannelMask(uint32_t mask) {
   _primary_channel_mask = mask;
 }
 
+void ZigbeeCore::setScanDuration(uint8_t duration) {
+  if (duration < 1 || duration > 4) {
+    log_e("Invalid scan duration, must be between 1 and 4");
+    return;
+  }
+  _scan_duration = duration;
+}
+
 void ZigbeeCore::setRebootOpenNetwork(uint8_t time) {
   _open_network = time;
 }
@@ -235,8 +246,8 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         }
       } else {
         /* commissioning failed */
-        log_e("Failed to initialize Zigbee stack (status: %s)", esp_err_to_name(err_status));
-        xSemaphoreGive(Zigbee.lock);
+        log_w("Commissioning failed, trying again...", esp_err_to_name(err_status));
+        esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_INITIALIZATION, 500);
       }
       break;
     case ESP_ZB_BDB_SIGNAL_FORMATION:  // Coordinator

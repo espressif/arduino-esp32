@@ -66,6 +66,7 @@ private:
   esp_zb_host_config_t _host_config;
   uint32_t _primary_channel_mask;
   int16_t _scan_status;
+  uint8_t _scan_duration;
 
   esp_zb_ep_list_t *_zb_ep_list;
   zigbee_role_t _role;
@@ -109,7 +110,12 @@ public:
   void setHostConfig(esp_zb_host_config_t config);
   esp_zb_host_config_t getHostConfig();
 
-  void setPrimaryChannelMask(uint32_t mask);
+  void setPrimaryChannelMask(uint32_t mask);  // By default all channels are scanned (11-26) -> mask 0x07FFF800
+  void setScanDuration(uint8_t duration);     // Can be set from 1 - 4. 1 is fastest, 4 is slowest
+  uint8_t getScanDuration() {
+    return _scan_duration;
+  }
+
   void setRebootOpenNetwork(uint8_t time);
   void openNetwork(uint8_t time);
 
