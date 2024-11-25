@@ -70,9 +70,11 @@ private:
   esp_zb_ep_list_t *_zb_ep_list;
   zigbee_role_t _role;
   bool _started;
+  bool _connected;
 
   uint8_t _open_network;
   zigbee_scan_result_t *_scan_result;
+  SemaphoreHandle_t lock;
 
   bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
   static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
@@ -88,8 +90,11 @@ public:
   bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
   // bool end();
 
-  bool isStarted() {
+  bool started() {
     return _started;
+  }
+  bool connected() {
+    return _connected;
   }
   zigbee_role_t getRole() {
     return _role;

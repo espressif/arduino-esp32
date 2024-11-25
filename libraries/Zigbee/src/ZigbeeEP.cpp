@@ -19,14 +19,12 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
-#if !CONFIG_DISABLE_HAL_LOCKS
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
       log_e("Semaphore creation failed");
     }
   }
-#endif
 }
 
 ZigbeeEP::~ZigbeeEP() {}

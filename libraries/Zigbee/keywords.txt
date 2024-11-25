@@ -30,14 +30,18 @@ zigbee_scan_result_t	KEYWORD1
 #######################################
 
 # ZigbeeCore
-isStarted	KEYWORD2
+begin	KEYWORD2
+started	KEYWORD2
+connected	KEYWORD2
+getRole	KEYWORD2
 addEndpoint	KEYWORD2
 setRadioConfig	KEYWORD2
-setHostConfig	KEYWORD2
 getRadioConfig	KEYWORD2
+setHostConfig	KEYWORD2
 getHostConfig	KEYWORD2
 setPrimaryChannelMask	KEYWORD2
 setRebootOpenNetwork	KEYWORD2
+openNetwork	KEYWORD2
 scanNetworks	KEYWORD2
 scanComplete	KEYWORD2
 getScanResult	KEYWORD2
@@ -45,21 +49,33 @@ scanDelete	KEYWORD2
 factoryReset	KEYWORD2
 
 # Common ZigbeeEP
+setEpConfig	KEYWORD2
 setVersion	KEYWORD2
-setManufacturerAndModel	KEYWORD2
-is_bound	KEYWORD2
+getEndpoint	KEYWORD2
 printBoundDevices	KEYWORD2
+getBoundDevices	KEYWORD2
+bound	KEYWORD2
 allowMultipleBinding	KEYWORD2
+setManufacturerAndModel	KEYWORD2
+setPowerSource	KEYWORD2
+setBatteryPercentage	KEYWORD2
+reportBatteryPercentage	KEYWORD2
+readManufacturer	KEYWORD2
+readModel	KEYWORD2
+onIdentify	KEYWORD2
 
 # ZigbeeLight + ZigbeeColorDimmableLight
-setOnOff	KEYWORD2
-sceneControl	KEYWORD2
-setOnOffTime	KEYWORD2
-setOffWaitTime	KEYWORD2
-setLevel	KEYWORD2
-setColor	KEYWORD2
-setColorSaturation	KEYWORD2
-setColorHue	KEYWORD2
+onLightChange	KEYWORD2
+restoreLight	KEYWORD2
+setLight	KEYWORD2
+setLightState	KEYWORD2
+setLightLevel	KEYWORD2
+setLightColor	KEYWORD2
+getLightState	KEYWORD2
+getLightLevel	KEYWORD2
+getLightRed	KEYWORD2
+getLightGreen	KEYWORD2
+getLightBlue	KEYWORD2
 
 # ZigbeeSwitch + ZigbeeColorDimmerSwitch
 lightToggle	KEYWORD2
@@ -70,22 +86,23 @@ lightOnWithTimedOff	KEYWORD2
 lightOnWithSceneRecall	KEYWORD2
 setLightLevel	KEYWORD2
 setLightColor	KEYWORD2
-setLightColorSaturation	KEYWORD2
-setLightColorHue	KEYWORD2
 
-# ZigbeeTempSensor
+# ZigbeeTempSensor + humidity
 setTemperature	KEYWORD2
 setMinMaxValue	KEYWORD2
 setTolerance	KEYWORD2
 setReporting	KEYWORD2
 reportTemperature	KEYWORD2
+addHumiditySensor	KEYWORD2
+setHumidity	KEYWORD2
+setHumidityReporting	KEYWORD2
+reportHumidity	KEYWORD2
 
 # ZigbeeThermostat
-temperatureRead	KEYWORD2
-temperatureMin	KEYWORD2
-temperatureMax	KEYWORD2
-temperatureTolerance	KEYWORD2
+onTempRecieve	KEYWORD2
+onConfigRecieve	KEYWORD2
 getTemperature	KEYWORD2
+getSensorSettings	KEYWORD2
 setTemperatureReporting	KEYWORD2
 
 #######################################

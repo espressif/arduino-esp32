@@ -46,7 +46,6 @@ ZigbeeColorDimmerSwitch zbSwitch = ZigbeeColorDimmerSwitch(SWITCH_ENDPOINT_NUMBE
 
 /********************* Arduino functions **************************/
 void setup() {
-
   Serial.begin(115200);
   while (!Serial) {
     delay(10);
@@ -68,11 +67,15 @@ void setup() {
   Zigbee.setRebootOpenNetwork(180);
 
   //When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
-  Zigbee.begin(ZIGBEE_COORDINATOR);
+  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
 
   Serial.println("Waiting for Light to bound to the switch");
   //Wait for switch to bound to a light:
-  while (!zbSwitch.isBound()) {
+  while (!zbSwitch.bound()) {
     Serial.printf(".");
     delay(500);
   }
