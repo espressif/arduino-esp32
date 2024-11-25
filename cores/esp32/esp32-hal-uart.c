@@ -33,7 +33,7 @@
 #include "hal/gpio_hal.h"
 #include "esp_rom_gpio.h"
 
-static int s_uart_debug_nr = 0;  // UART number for debug output
+static int s_uart_debug_nr = 0;         // UART number for debug output
 #define REF_TICK_BAUDRATE_LIMIT 250000  // this is maximum UART badrate using REF_TICK as clock source
 
 struct uart_struct_t {
