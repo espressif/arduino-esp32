@@ -18,24 +18,13 @@
 
 #include <Matter.h>
 #include <MatterEndPoint.h>
-#include <MatterUtil/ColorFormat.h>
 
 class MatterColorLight : public MatterEndPoint {
 public:
-  const HsvColor_t HSV_BLACK =   {0,   0,   0};
-  const HsvColor_t HSV_WHITE =   {0,   0,   254};
-  const HsvColor_t HSV_RED =     {0,   254, 254};
-  const HsvColor_t HSV_YELLOW =  {42,  254, 254};
-  const HsvColor_t HSV_GREEN =   {84,  254, 254};
-  const HsvColor_t HSV_CIAN =    {127, 254, 254};
-  const HsvColor_t HSV_BLUE =    {169, 254, 254};
-  const HsvColor_t HSV_MAGENTA = {211, 254, 254};
-
-
   MatterColorLight();
   ~MatterColorLight();
   // default initial state is off, color is red 12% intensity HSV(0, 254, 31)
-  virtual bool begin(bool initialState = false, HsvColor_t colorHSV = { 0, 254, 31});
+  virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = { 0, 254, 31});
   // this will just stop processing Light Matter events
   void end();
 
@@ -43,10 +32,10 @@ public:
   bool getOnOff();               // returns current light state
   bool toggle();                 // returns true if successful
 
-  bool setColorRGB(RgbColor_t rgbColor);  // returns true if successful
-  RgbColor_t getColorRGB();               // returns current RGB Color
-  bool setColorHSV(HsvColor_t hsvColor);  // returns true if successful
-  HsvColor_t getColorHSV();               // returns current HSV Color
+  bool setColorRGB(espRgbColor_t rgbColor);  // returns true if successful
+  espRgbColor_t getColorRGB();               // returns current RGB Color
+  bool setColorHSV(espHsvColor_t hsvColor);  // returns true if successful
+  espHsvColor_t getColorHSV();               // returns current HSV Color
 
 
   // used to update the state of the light using the current Matter Light internal state
@@ -65,13 +54,13 @@ public:
     _onChangeOnOffCB = onChangeCB;
   }
   // User Callback for whenever the HSV Color value is changed by the Matter Controller
-  using EndPointRGBColorCB = std::function<bool(HsvColor_t)>;
+  using EndPointRGBColorCB = std::function<bool(espHsvColor_t)>;
   void onChangeColorHSV(EndPointRGBColorCB onChangeCB) {
     _onChangeColorCB = onChangeCB;
   }
 
   // User Callback for whenever any parameter is changed by the Matter Controller
-  using EndPointCB = std::function<bool(bool, HsvColor_t)>;
+  using EndPointCB = std::function<bool(bool, espHsvColor_t)>;
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
@@ -79,7 +68,7 @@ public:
 protected:
   bool started = false;
   bool onOffState = false;             // default initial state is off, but it can be changed by begin(bool)
-  HsvColor_t colorHSV = { 0 };         // default initial color HSV is black, but it can be changed by begin(bool, HsvColor_t)
+  espHsvColor_t colorHSV = { 0 };         // default initial color HSV is black, but it can be changed by begin(bool, espHsvColor_t)
   EndPointOnOffCB _onChangeOnOffCB = NULL;
   EndPointRGBColorCB _onChangeColorCB = NULL;
   EndPointCB _onChangeCB = NULL;

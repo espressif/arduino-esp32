@@ -23,8 +23,38 @@
 // define a clamp macro to substitute the std::clamp macro which is available from C++17 onwards
 #define clamp(a, min, max) ((a) < (min) ? (min) : ((a) > (max) ? (max) : (a)))
 
-RgbColor_t HsvToRgb(HsvColor_t hsv) {
-  RgbColor_t rgb;
+const espHsvColor_t HSV_BLACK =   {0,   0,   0};
+const espHsvColor_t HSV_WHITE =   {0,   0,   254};
+const espHsvColor_t HSV_RED =     {0,   254, 254};
+const espHsvColor_t HSV_YELLOW =  {42,  254, 254};
+const espHsvColor_t HSV_GREEN =   {84,  254, 254};
+const espHsvColor_t HSV_CYAN =    {127, 254, 254};
+const espHsvColor_t HSV_BLUE =    {169, 254, 254};
+const espHsvColor_t HSV_MAGENTA = {211, 254, 254};
+
+const espRgbColor_t RGB_BLACK =   {0,   0,   0};
+const espRgbColor_t RGB_WHITE =   {255, 255, 255};
+const espRgbColor_t RGB_RED =     {255, 0,   0};
+const espRgbColor_t RGB_YELLOW =  {255, 255, 0};
+const espRgbColor_t RGB_GREEN =   {0,   255, 0};
+const espRgbColor_t RGB_CYAN =    {0,   255, 255};
+const espRgbColor_t RGB_BLUE =    {0,   0,   255};
+const espRgbColor_t RGB_MAGENTA = {255, 0,   255};
+
+// main color temperature values
+const espCtColor_t COOL_WHITE_COLOR_TEMPERATURE     = { 142 };
+const espCtColor_t DAYLIGHT_WHITE_COLOR_TEMPERATURE = { 181 };
+const espCtColor_t WHITE_COLOR_TEMPERATURE          = { 250 };
+const espCtColor_t SOFT_WHITE_COLOR_TEMPERATURE     = { 370 };
+const espCtColor_t WARM_WHITE_COLOR_TEMPERATURE     = { 454 };
+
+espRgbColor_t espHsvToRgbColor(uint16_t h, uint8_t s, uint8_t v) {
+  espHsvColor_t hsv = {h, s, v};
+  return espHsvColorToRgbColor(hsv);
+}
+
+espRgbColor_t espHsvColorToRgbColor(espHsvColor_t hsv) {
+  espRgbColor_t rgb;
 
     uint8_t region, p, q, t;
     uint32_t h, s, v, remainder;
@@ -66,8 +96,13 @@ RgbColor_t HsvToRgb(HsvColor_t hsv) {
     return rgb;
 }
 
-HsvColor_t RgbToHsv(RgbColor_t rgb) {
-  HsvColor_t hsv;
+espHsvColor_t espRgbToHsvColor(uint8_t r, uint8_t g, uint8_t b) {
+  espRgbColor_t rgb = {r, g, b};
+  return espRgbColorToHsvColor(rgb);
+}
+
+espHsvColor_t espRgbColorToHsvColor(espRgbColor_t rgb) {
+  espHsvColor_t hsv;
   uint8_t rgbMin, rgbMax;
 
   rgbMin = rgb.r < rgb.g ? (rgb.r < rgb.b ? rgb.r : rgb.b) : (rgb.g < rgb.b ? rgb.g : rgb.b);
@@ -95,7 +130,11 @@ HsvColor_t RgbToHsv(RgbColor_t rgb) {
   return hsv;
 }
 
-RgbColor_t XYToRgb(uint8_t Level, uint16_t current_X, uint16_t current_Y) {
+espRgbColor_t espXYColorToRgbColor(uint8_t Level, espXyColor_t xy) {
+  return espXYToRgbColor(Level, xy.x, xy.y);
+}
+
+espRgbColor_t espXYToRgbColor(uint8_t Level, uint16_t current_X, uint16_t current_Y) {
   // convert xyY color space to RGB
 
   // https://www.easyrgb.com/en/math.php
@@ -108,7 +147,7 @@ RgbColor_t XYToRgb(uint8_t Level, uint16_t current_X, uint16_t current_Y) {
   // y = current_Y/65536
   // z = 1-x-y
 
-  RgbColor_t rgb;
+  espRgbColor_t rgb;
 
   float x, y, z;
   float X, Y, Z;
@@ -155,14 +194,19 @@ RgbColor_t XYToRgb(uint8_t Level, uint16_t current_X, uint16_t current_Y) {
   return rgb;
 }
 
-XyColor_t RgbToXY(RgbColor_t rgb) {
+espXyColor_t  espRgbToXYColor(uint8_t r, uint8_t g, uint8_t b){
+  espRgbColor_t rgb = {r, g, b};
+  return espRgbColorToXYColor(rgb);
+}
+
+espXyColor_t espRgbColorToXYColor(espRgbColor_t rgb) {
   // convert RGB to xy color space
 
   // https://www.easyrgb.com/en/math.php
   // https://en.wikipedia.org/wiki/SRGB
   // refer https://en.wikipedia.org/wiki/CIE_1931_color_space#CIE_xy_chromaticity_diagram_and_the_CIE_xyY_color_space
 
-  XyColor_t xy;
+  espXyColor_t xy;
 
   float r, g, b;
   float X, Y, Z;
@@ -198,9 +242,13 @@ XyColor_t RgbToXY(RgbColor_t rgb) {
   return xy;
 }
 
+espRgbColor_t espCTToRgbColor(uint16_t ct){
+  espCtColor_t ctColor = {ct};
+  return espCTColorToRgbColor(ctColor);
+}
 
-RgbColor_t CTToRgb(CtColor_t ct) {
-  RgbColor_t rgb = {0, 0, 0};
+espRgbColor_t espCTColorToRgbColor(espCtColor_t ct) {
+  espRgbColor_t rgb = {0, 0, 0};
   float r, g, b;
 
   if (ct.ctMireds == 0) {

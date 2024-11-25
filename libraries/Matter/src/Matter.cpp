@@ -17,7 +17,6 @@
 
 #include <Matter.h>
 #include <app/server/Server.h>
-#include "MatterEndPoint.h"
 
 using namespace esp_matter;
 using namespace esp_matter::attribute;

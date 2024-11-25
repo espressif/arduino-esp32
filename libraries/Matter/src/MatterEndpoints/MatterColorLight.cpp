@@ -128,7 +128,7 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
           log_i("Color Control Attribute ID [%x] not processed.", attribute_id);
           break;
         }
-        HsvColor_t hsvColor = {colorHSV.h, colorHSV.s, colorHSV.v};
+        espHsvColor_t hsvColor = {colorHSV.h, colorHSV.s, colorHSV.v};
         if (attribute_id == ColorControl::Attributes::CurrentHue::Id) {
           log_d("RGB Light Hue changed to %d", val->val.u8);
           hsvColor.h = val->val.u8;
@@ -158,7 +158,7 @@ MatterColorLight::~MatterColorLight() {
   end();
 }
 
-bool MatterColorLight::begin(bool initialState, HsvColor_t _colorHSV) {
+bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
   ArduinoMatter::_init();
   rgb_color_light::config_t light_config;
 
@@ -239,15 +239,15 @@ bool MatterColorLight::toggle() {
   return setOnOff(!onOffState);
 }
 
-bool MatterColorLight::setColorRGB(RgbColor_t _rgbColor) {
-  return setColorHSV(RgbToHsv(_rgbColor));
+bool MatterColorLight::setColorRGB(espRgbColor_t _rgbColor) {
+  return setColorHSV(espRgbColorToHsvColor(_rgbColor));
 }
 
-RgbColor_t MatterColorLight::getColorRGB() {
-  return HsvToRgb(colorHSV);
+espRgbColor_t MatterColorLight::getColorRGB() {
+  return espHsvColorToRgbColor(colorHSV);
 }
 
-bool MatterColorLight::setColorHSV(HsvColor_t _hsvColor) {
+bool MatterColorLight::setColorHSV(espHsvColor_t _hsvColor) {
 
   if (!started) {
     log_w("Matter RGB Color Light device has not begun.");
@@ -291,7 +291,7 @@ bool MatterColorLight::setColorHSV(HsvColor_t _hsvColor) {
   return true;
 }
 
-HsvColor_t MatterColorLight::getColorHSV() {
+espHsvColor_t MatterColorLight::getColorHSV() {
   return colorHSV;
 }
 

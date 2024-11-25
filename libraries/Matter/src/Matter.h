@@ -18,7 +18,7 @@
 
 #include <Arduino.h>
 #include <esp_matter.h>
-#include <MatterUtil/ColorFormat.h>
+#include <ColorFormat.h>
 #include <MatterEndpoints/MatterOnOffLight.h>
 #include <MatterEndpoints/MatterDimmableLight.h>
 #include <MatterEndpoints/MatterColorTemperatureLight.h>

@@ -47,8 +47,7 @@ bool setLightState(bool state, uint8_t brightness, uint16_t temperature_Mireds) 
 
   if (state) {
 #ifdef RGB_BUILTIN
-    CtColor_t ct = {temperature_Mireds};
-    RgbColor_t rgb_ct = CTToRgb(ct);
+    espRgbColor_t rgb_ct = espCTToRgbColor(temperature_Mireds);
     // simple intensity correction
     float brightnessPercent = (float)brightness / MatterColorTemperatureLight::MAX_BRIGHTNESS;
     rgb_ct.r = brightnessPercent * rgb_ct.r;
@@ -106,7 +105,7 @@ void setup() {
   // default brightness ~= 6% (15/255)
   uint8_t lastBrightness = matterPref.getUChar(brightnessPrefKey, 15);
   // default temperature ~= 454 Mireds (Warm White)
-  uint16_t lastTemperature = matterPref.getUShort(temperaturePrefKey, MatterColorTemperatureLight::WARM_WHITE_COLOR_TEMPERATURE);
+  uint16_t lastTemperature = matterPref.getUShort(temperaturePrefKey, WARM_WHITE_COLOR_TEMPERATURE.ctMireds);
   CW_WW_Light.begin(lastOnOffState, lastBrightness, lastTemperature);
   // set the callback function to handle the Light state change
   CW_WW_Light.onChange(setLightState);

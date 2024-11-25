@@ -42,11 +42,11 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 // Set the RGB LED Light based on the current state of the Color Light
-bool setLightState(bool state, HsvColor_t colorHSV) {
+bool setLightState(bool state, espHsvColor_t colorHSV) {
 
   if (state) {
 #ifdef RGB_BUILTIN
-    RgbColor_t rgbColor = HsvToRgb(colorHSV);
+    espRgbColor_t rgbColor = espHsvColorToRgbColor(colorHSV);
     // set the RGB LED
     rgbLedWrite(ledPin, rgbColor.r, rgbColor.g, rgbColor.b);
 #else
@@ -97,7 +97,7 @@ void setup() {
   bool lastOnOffState = matterPref.getBool(onOffPrefKey, true);
   // default HSV color is blue HSV(169, 254, 254)
   uint32_t prefHsvColor = matterPref.getUInt(hsvColorPrefKey, 169 << 16 | 254 << 8 | 254);
-  HsvColor_t lastHsvColor = {uint8_t(prefHsvColor >> 16), uint8_t(prefHsvColor >> 8), uint8_t(prefHsvColor)};
+  espHsvColor_t lastHsvColor = {uint8_t(prefHsvColor >> 16), uint8_t(prefHsvColor >> 8), uint8_t(prefHsvColor)};
   ColorLight.begin(lastOnOffState, lastHsvColor);
   // set the callback function to handle the Light state change
   ColorLight.onChange(setLightState);
