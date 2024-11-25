@@ -143,11 +143,13 @@ public:
       sets the expected MD5 for the firmware (hexString)
       If calc_post_decryption is true, the update library will calculate the MD5 after the decryption, if false the calculation occurs before the decryption
     */
-  bool setMD5(const char *expected_md5
+  bool setMD5(
+    const char *expected_md5
 #ifndef UPDATE_NOCRYPT
-, bool calc_post_decryption = true
+    , 
+    bool calc_post_decryption = true
 #endif /* #ifdef UPDATE_NOCRYPT */
-);
+  );
 
   /*
       returns the MD5 String of the successfully ended firmware
