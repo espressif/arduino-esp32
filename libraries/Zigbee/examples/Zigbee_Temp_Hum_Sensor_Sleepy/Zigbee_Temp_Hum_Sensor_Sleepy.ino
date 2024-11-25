@@ -99,7 +99,7 @@ void setup() {
   zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
 
   // When all EPs are registered, start Zigbee in End Device mode
-  if (!Zigbee.begin(&zigbeeConfig, false)){
+  if (!Zigbee.begin(&zigbeeConfig, false)) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();

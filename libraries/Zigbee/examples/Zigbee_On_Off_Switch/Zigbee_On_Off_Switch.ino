@@ -130,7 +130,7 @@ void setup() {
     Serial.println("Rebooting...");
     ESP.restart();
   }
-  
+
   Serial.println("Waiting for Light to bound to the switch");
   //Wait for switch to bound to a light:
   while (!zbSwitch.bound()) {

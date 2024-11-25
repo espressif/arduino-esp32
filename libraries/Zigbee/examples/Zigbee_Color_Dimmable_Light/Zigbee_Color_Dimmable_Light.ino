@@ -68,7 +68,7 @@ void setup() {
   while (!Serial) {
     delay(10);
   }
-  
+
   // Init RMT and leave light OFF
   rgbLedWrite(LED_PIN, 0, 0, 0);
 
