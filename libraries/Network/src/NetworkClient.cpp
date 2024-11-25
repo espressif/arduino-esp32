@@ -553,7 +553,7 @@ uint8_t NetworkClient::connected() {
   }
   if (_connected) {
     uint8_t dummy;
-    int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
+    int res = recv(fd(), &dummy, 1, MSG_DONTWAIT | MSG_PEEK);
     // avoid unused var warning by gcc
     (void)res;
     // recv only sets errno if res is <= 0
