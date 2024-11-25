@@ -146,7 +146,7 @@ public:
   bool setMD5(
     const char *expected_md5
 #ifndef UPDATE_NOCRYPT
-    , 
+    ,
     bool calc_post_decryption = true
 #endif /* #ifdef UPDATE_NOCRYPT */
   );
