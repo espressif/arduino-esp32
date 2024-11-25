@@ -20,7 +20,7 @@ ZigbeeCore::ZigbeeCore() {
   _scan_status = ZB_SCAN_FAILED;
   _started = false;
   _connected = false;
-  _scan_duration = 4; // maximum scan duration
+  _scan_duration = 4;  // maximum scan duration
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
@@ -182,7 +182,7 @@ void ZigbeeCore::setPrimaryChannelMask(uint32_t mask) {
 }
 
 void ZigbeeCore::setScanDuration(uint8_t duration) {
-  if(duration < 1 || duration > 4) {
+  if (duration < 1 || duration > 4) {
     log_e("Invalid scan duration, must be between 1 and 4");
     return;
   }
