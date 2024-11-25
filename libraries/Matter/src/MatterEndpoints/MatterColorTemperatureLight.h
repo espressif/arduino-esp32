@@ -24,12 +24,6 @@ public:
   static const uint8_t MAX_BRIGHTNESS = 255;
   static const uint16_t MAX_COLOR_TEMPERATURE = 500;
   static const uint16_t MIN_COLOR_TEMPERATURE = 100;
-  // main color temperature values
-  static const uint16_t COOL_WHITE_COLOR_TEMPERATURE = 142;
-  static const uint16_t DAYLIGHT_WHITE_COLOR_TEMPERATURE = 181;
-  static const uint16_t WHITE_COLOR_TEMPERATURE = 250;
-  static const uint16_t SOFT_WHITE_COLOR_TEMPERATURE = 370;
-  static const uint16_t WARM_WHITE_COLOR_TEMPERATURE = 454;
 
   MatterColorTemperatureLight();
   ~MatterColorTemperatureLight();
