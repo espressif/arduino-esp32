@@ -73,13 +73,15 @@ bool UpdateClass::_enablePartition(const esp_partition_t *partition) {
 UpdateClass::UpdateClass()
   : _error(0),
 #ifndef UPDATE_NOCRYPT
-_cryptKey(0), _cryptBuffer(0),
+    _cryptKey(0), _cryptBuffer(0),
 #endif /* UPDATE_NOCRYPT */
-_buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0), _command(U_FLASH), _partition(NULL)
+    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0), _command(U_FLASH), _partition(NULL)
 #ifndef UPDATE_NOCRYPT
-, _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
+    ,
+    _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
 #endif /* UPDATE_NOCRYPT */
-{}
+{
+}
 
 UpdateClass &UpdateClass::onProgress(THandlerFunction_Progress fn) {
   _progress_callback = fn;
@@ -378,7 +380,7 @@ bool UpdateClass::_writeBuffer() {
       return false;
     }
   }
-  #endif /* UPDATE_NOCRYPT */
+#endif /* UPDATE_NOCRYPT */
   //first bytes of new firmware
   uint8_t skip = 0;
   if (!_progress && _command == U_FLASH) {
@@ -476,9 +478,11 @@ bool UpdateClass::_verifyEnd() {
   return false;
 }
 
-bool UpdateClass::setMD5(const char *expected_md5
+bool UpdateClass::setMD5(
+  const char *expected_md5
 #ifndef UPDATE_NOCRYPT
-,bool calc_post_decryption
+  ,
+  bool calc_post_decryption
 #endif /* UPDATE_NOCRYPT */
 ) {
   if (strlen(expected_md5) != 32) {
