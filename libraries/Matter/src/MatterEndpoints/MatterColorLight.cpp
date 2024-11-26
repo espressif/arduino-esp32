@@ -78,7 +78,7 @@ endpoint_t *create(node_t *node, config_t *config, uint8_t flags, void *priv_dat
     add(endpoint, config);
     return endpoint;
 }
-} /* extended_color_light */
+} /* rgb_color_light */
 } /* endpoint */
 } /* esp_matter */
 
@@ -132,7 +132,7 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
         if (attribute_id == ColorControl::Attributes::CurrentHue::Id) {
           log_d("RGB Light Hue changed to %d", val->val.u8);
           hsvColor.h = val->val.u8;
-        } else if (attribute_id == ColorControl::Attributes::CurrentSaturation::Id) {
+        } else { // attribute_id == ColorControl::Attributes::CurrentSaturation::Id)
           log_d("RGB Light Saturation changed to %d", val->val.u8);
           hsvColor.s = val->val.u8;
         }
