@@ -25,63 +25,62 @@ using namespace chip::app::Clusters;
 
 // endpoint for color light device
 namespace esp_matter {
-  using namespace cluster;
-namespace endpoint { 
+using namespace cluster;
+namespace endpoint {
 namespace rgb_color_light {
 typedef struct config {
-    cluster::descriptor::config_t descriptor;
-    cluster::identify::config_t identify;
-    cluster::groups::config_t groups;
-    cluster::scenes_management::config_t scenes_management;
-    cluster::on_off::config_t on_off;
-    cluster::level_control::config_t level_control;
-    cluster::color_control::config_t color_control;
+  cluster::descriptor::config_t descriptor;
+  cluster::identify::config_t identify;
+  cluster::groups::config_t groups;
+  cluster::scenes_management::config_t scenes_management;
+  cluster::on_off::config_t on_off;
+  cluster::level_control::config_t level_control;
+  cluster::color_control::config_t color_control;
 } config_t;
 
 uint32_t get_device_type_id() {
-    return ESP_MATTER_EXTENDED_COLOR_LIGHT_DEVICE_TYPE_ID;
+  return ESP_MATTER_EXTENDED_COLOR_LIGHT_DEVICE_TYPE_ID;
 }
 
 uint8_t get_device_type_version() {
-    return ESP_MATTER_EXTENDED_COLOR_LIGHT_DEVICE_TYPE_VERSION;
+  return ESP_MATTER_EXTENDED_COLOR_LIGHT_DEVICE_TYPE_VERSION;
 }
 
 esp_err_t add(endpoint_t *endpoint, config_t *config) {
-    if (!endpoint) {
-        log_e("Endpoint cannot be NULL");
-        return ESP_ERR_INVALID_ARG;
-    }
-    esp_err_t err = add_device_type(endpoint, get_device_type_id(), get_device_type_version());
-    if (err != ESP_OK) {
-        log_e("Failed to add device type id:%" PRIu32 ",err: %d", get_device_type_id(), err);
-        return err;
-    }
+  if (!endpoint) {
+    log_e("Endpoint cannot be NULL");
+    return ESP_ERR_INVALID_ARG;
+  }
+  esp_err_t err = add_device_type(endpoint, get_device_type_id(), get_device_type_version());
+  if (err != ESP_OK) {
+    log_e("Failed to add device type id:%" PRIu32 ",err: %d", get_device_type_id(), err);
+    return err;
+  }
 
-    descriptor::create(endpoint, &(config->descriptor), CLUSTER_FLAG_SERVER);
-    cluster_t *identify_cluster = identify::create(endpoint, &(config->identify), CLUSTER_FLAG_SERVER);
-    identify::command::create_trigger_effect(identify_cluster);
-    groups::create(endpoint, &(config->groups), CLUSTER_FLAG_SERVER);
-    cluster_t *scenes_cluster = scenes_management::create(endpoint, &(config->scenes_management), CLUSTER_FLAG_SERVER);
-    scenes_management::command::create_copy_scene(scenes_cluster);
-    scenes_management::command::create_copy_scene_response(scenes_cluster);
+  descriptor::create(endpoint, &(config->descriptor), CLUSTER_FLAG_SERVER);
+  cluster_t *identify_cluster = identify::create(endpoint, &(config->identify), CLUSTER_FLAG_SERVER);
+  identify::command::create_trigger_effect(identify_cluster);
+  groups::create(endpoint, &(config->groups), CLUSTER_FLAG_SERVER);
+  cluster_t *scenes_cluster = scenes_management::create(endpoint, &(config->scenes_management), CLUSTER_FLAG_SERVER);
+  scenes_management::command::create_copy_scene(scenes_cluster);
+  scenes_management::command::create_copy_scene_response(scenes_cluster);
 
-    on_off::create(endpoint, &(config->on_off), CLUSTER_FLAG_SERVER, on_off::feature::lighting::get_id());
-    level_control::create(endpoint, &(config->level_control), CLUSTER_FLAG_SERVER,
-                          level_control::feature::on_off::get_id() | level_control::feature::lighting::get_id());
-    color_control::create(endpoint, &(config->color_control), CLUSTER_FLAG_SERVER,
-                          color_control::feature::hue_saturation::get_id());
-    return ESP_OK;
+  on_off::create(endpoint, &(config->on_off), CLUSTER_FLAG_SERVER, on_off::feature::lighting::get_id());
+  level_control::create(
+    endpoint, &(config->level_control), CLUSTER_FLAG_SERVER, level_control::feature::on_off::get_id() | level_control::feature::lighting::get_id()
+  );
+  color_control::create(endpoint, &(config->color_control), CLUSTER_FLAG_SERVER, color_control::feature::hue_saturation::get_id());
+  return ESP_OK;
 }
 
 endpoint_t *create(node_t *node, config_t *config, uint8_t flags, void *priv_data) {
-    endpoint_t *endpoint = endpoint::create(node, flags, priv_data);
-    add(endpoint, config);
-    return endpoint;
+  endpoint_t *endpoint = endpoint::create(node, flags, priv_data);
+  add(endpoint, config);
+  return endpoint;
 }
-} /* rgb_color_light */
-} /* endpoint */
-} /* esp_matter */
-
+}  // namespace rgb_color_light
+}  // namespace endpoint
+}  // namespace esp_matter
 
 bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
@@ -90,7 +89,10 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
     return false;
   }
 
-  log_d("RGB Color Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u, type: %u", endpoint_id, cluster_id, attribute_id, val->val.u32, val->type);
+  log_d(
+    "RGB Color Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u, type: %u", endpoint_id, cluster_id, attribute_id, val->val.u32,
+    val->type
+  );
 
   if (endpoint_id == getEndPointId()) {
     switch (cluster_id) {
@@ -132,13 +134,13 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
         if (attribute_id == ColorControl::Attributes::CurrentHue::Id) {
           log_d("RGB Light Hue changed to %d", val->val.u8);
           hsvColor.h = val->val.u8;
-        } else { // attribute_id == ColorControl::Attributes::CurrentSaturation::Id)
+        } else {  // attribute_id == ColorControl::Attributes::CurrentSaturation::Id)
           log_d("RGB Light Saturation changed to %d", val->val.u8);
           hsvColor.s = val->val.u8;
         }
         if (_onChangeColorCB != NULL) {
           ret &= _onChangeColorCB(hsvColor);
-        }  
+        }
         if (_onChangeCB != NULL) {
           ret &= _onChangeCB(onOffState, hsvColor);
         }
@@ -259,7 +261,7 @@ bool MatterColorLight::setColorHSV(espHsvColor_t _hsvColor) {
     return true;
   }
 
-  colorHSV = { _hsvColor.h, _hsvColor.s, _hsvColor.v };
+  colorHSV = {_hsvColor.h, _hsvColor.s, _hsvColor.v};
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, ColorControl::Id);

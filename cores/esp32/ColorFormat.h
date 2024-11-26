@@ -24,20 +24,20 @@ extern "C" {
 #endif
 
 struct RgbColor_t {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
 };
 
 struct HsvColor_t {
-    uint16_t h;
-    uint8_t s;
-    uint8_t v;
+  uint16_t h;
+  uint8_t s;
+  uint8_t v;
 };
 
 struct XyColor_t {
-    uint16_t x;
-    uint16_t y;
+  uint16_t x;
+  uint16_t y;
 };
 
 struct CtColor_t {
@@ -51,8 +51,8 @@ typedef struct CtColor_t espCtColor_t;
 
 espRgbColor_t espXYToRgbColor(uint8_t Level, uint16_t current_X, uint16_t current_Y);
 espRgbColor_t espXYColorToRgb(uint8_t Level, espXyColor_t xy);
-espXyColor_t  espRgbColorToXYColor(espRgbColor_t rgb);
-espXyColor_t  espRgbToXYColor(uint8_t r, uint8_t g, uint8_t b);
+espXyColor_t espRgbColorToXYColor(espRgbColor_t rgb);
+espXyColor_t espRgbToXYColor(uint8_t r, uint8_t g, uint8_t b);
 espRgbColor_t espHsvColorToRgbColor(espHsvColor_t hsv);
 espRgbColor_t espHsvToRgbColor(uint16_t h, uint8_t s, uint8_t v);
 espRgbColor_t espCTColorToRgbColor(espCtColor_t ct);
@@ -61,7 +61,8 @@ espHsvColor_t espRgbColorToHsvColor(espRgbColor_t rgb);
 espHsvColor_t espRgbToHsvColor(uint8_t r, uint8_t g, uint8_t b);
 
 extern const espHsvColor_t HSV_BLACK, HSV_WHITE, HSV_RED, HSV_YELLOW, HSV_GREEN, HSV_CYAN, HSV_BLUE, HSV_MAGENTA;
-extern const espCtColor_t COOL_WHITE_COLOR_TEMPERATURE, DAYLIGHT_WHITE_COLOR_TEMPERATURE, WHITE_COLOR_TEMPERATURE, SOFT_WHITE_COLOR_TEMPERATURE, WARM_WHITE_COLOR_TEMPERATURE;
+extern const espCtColor_t COOL_WHITE_COLOR_TEMPERATURE, DAYLIGHT_WHITE_COLOR_TEMPERATURE, WHITE_COLOR_TEMPERATURE, SOFT_WHITE_COLOR_TEMPERATURE,
+  WARM_WHITE_COLOR_TEMPERATURE;
 extern const espRgbColor_t RGB_BLACK, RGB_WHITE, RGB_RED, RGB_YELLOW, RGB_GREEN, RGB_CYAN, RGB_BLUE, RGB_MAGENTA;
 
 #ifdef __cplusplus

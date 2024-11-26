@@ -23,30 +23,30 @@
 // define a clamp macro to substitute the std::clamp macro which is available from C++17 onwards
 #define clamp(a, min, max) ((a) < (min) ? (min) : ((a) > (max) ? (max) : (a)))
 
-const espHsvColor_t HSV_BLACK =   {0,   0,   0};
-const espHsvColor_t HSV_WHITE =   {0,   0,   254};
-const espHsvColor_t HSV_RED =     {0,   254, 254};
-const espHsvColor_t HSV_YELLOW =  {42,  254, 254};
-const espHsvColor_t HSV_GREEN =   {84,  254, 254};
-const espHsvColor_t HSV_CYAN =    {127, 254, 254};
-const espHsvColor_t HSV_BLUE =    {169, 254, 254};
+const espHsvColor_t HSV_BLACK = {0, 0, 0};
+const espHsvColor_t HSV_WHITE = {0, 0, 254};
+const espHsvColor_t HSV_RED = {0, 254, 254};
+const espHsvColor_t HSV_YELLOW = {42, 254, 254};
+const espHsvColor_t HSV_GREEN = {84, 254, 254};
+const espHsvColor_t HSV_CYAN = {127, 254, 254};
+const espHsvColor_t HSV_BLUE = {169, 254, 254};
 const espHsvColor_t HSV_MAGENTA = {211, 254, 254};
 
-const espRgbColor_t RGB_BLACK =   {0,   0,   0};
-const espRgbColor_t RGB_WHITE =   {255, 255, 255};
-const espRgbColor_t RGB_RED =     {255, 0,   0};
-const espRgbColor_t RGB_YELLOW =  {255, 255, 0};
-const espRgbColor_t RGB_GREEN =   {0,   255, 0};
-const espRgbColor_t RGB_CYAN =    {0,   255, 255};
-const espRgbColor_t RGB_BLUE =    {0,   0,   255};
-const espRgbColor_t RGB_MAGENTA = {255, 0,   255};
+const espRgbColor_t RGB_BLACK = {0, 0, 0};
+const espRgbColor_t RGB_WHITE = {255, 255, 255};
+const espRgbColor_t RGB_RED = {255, 0, 0};
+const espRgbColor_t RGB_YELLOW = {255, 255, 0};
+const espRgbColor_t RGB_GREEN = {0, 255, 0};
+const espRgbColor_t RGB_CYAN = {0, 255, 255};
+const espRgbColor_t RGB_BLUE = {0, 0, 255};
+const espRgbColor_t RGB_MAGENTA = {255, 0, 255};
 
 // main color temperature values
-const espCtColor_t COOL_WHITE_COLOR_TEMPERATURE     = { 142 };
-const espCtColor_t DAYLIGHT_WHITE_COLOR_TEMPERATURE = { 181 };
-const espCtColor_t WHITE_COLOR_TEMPERATURE          = { 250 };
-const espCtColor_t SOFT_WHITE_COLOR_TEMPERATURE     = { 370 };
-const espCtColor_t WARM_WHITE_COLOR_TEMPERATURE     = { 454 };
+const espCtColor_t COOL_WHITE_COLOR_TEMPERATURE = {142};
+const espCtColor_t DAYLIGHT_WHITE_COLOR_TEMPERATURE = {181};
+const espCtColor_t WHITE_COLOR_TEMPERATURE = {250};
+const espCtColor_t SOFT_WHITE_COLOR_TEMPERATURE = {370};
+const espCtColor_t WARM_WHITE_COLOR_TEMPERATURE = {454};
 
 espRgbColor_t espHsvToRgbColor(uint16_t h, uint8_t s, uint8_t v) {
   espHsvColor_t hsv = {h, s, v};
@@ -56,44 +56,32 @@ espRgbColor_t espHsvToRgbColor(uint16_t h, uint8_t s, uint8_t v) {
 espRgbColor_t espHsvColorToRgbColor(espHsvColor_t hsv) {
   espRgbColor_t rgb;
 
-    uint8_t region, p, q, t;
-    uint32_t h, s, v, remainder;
+  uint8_t region, p, q, t;
+  uint32_t h, s, v, remainder;
 
-    if (hsv.s == 0) {
-        rgb.r = rgb.g = rgb.b = hsv.v;
-    } else {
-      h = hsv.h;
-      s = hsv.s;
-      v = hsv.v;
+  if (hsv.s == 0) {
+    rgb.r = rgb.g = rgb.b = hsv.v;
+  } else {
+    h = hsv.h;
+    s = hsv.s;
+    v = hsv.v;
 
-      region    = h / 43;
-      remainder = (h - (region * 43)) * 6;
-      p         = (v * (255 - s)) >> 8;
-      q         = (v * (255 - ((s * remainder) >> 8))) >> 8;
-      t         = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
-      switch (region) {
-        case 0:
-          rgb.r = v, rgb.g = t, rgb.b = p;
-          break;
-        case 1:
-          rgb.r = q, rgb.g = v, rgb.b = p;
-          break;
-        case 2:
-          rgb.r = p, rgb.g = v, rgb.b = t;
-          break;
-        case 3:
-          rgb.r = p, rgb.g = q, rgb.b = v;
-          break;
-        case 4:
-          rgb.r = t, rgb.g = p, rgb.b = v;
-          break;
-        case 5:
-        default:
-          rgb.r = v, rgb.g = p, rgb.b = q;
-          break;
-        }
+    region = h / 43;
+    remainder = (h - (region * 43)) * 6;
+    p = (v * (255 - s)) >> 8;
+    q = (v * (255 - ((s * remainder) >> 8))) >> 8;
+    t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+    switch (region) {
+      case 0:  rgb.r = v, rgb.g = t, rgb.b = p; break;
+      case 1:  rgb.r = q, rgb.g = v, rgb.b = p; break;
+      case 2:  rgb.r = p, rgb.g = v, rgb.b = t; break;
+      case 3:  rgb.r = p, rgb.g = q, rgb.b = v; break;
+      case 4:  rgb.r = t, rgb.g = p, rgb.b = v; break;
+      case 5:
+      default: rgb.r = v, rgb.g = p, rgb.b = q; break;
     }
-    return rgb;
+  }
+  return rgb;
 }
 
 espHsvColor_t espRgbToHsvColor(uint8_t r, uint8_t g, uint8_t b) {
@@ -110,22 +98,22 @@ espHsvColor_t espRgbColorToHsvColor(espRgbColor_t rgb) {
 
   hsv.v = rgbMax;
   if (hsv.v == 0) {
-      hsv.h = 0;
-      hsv.s = 0;
-      return hsv;
+    hsv.h = 0;
+    hsv.s = 0;
+    return hsv;
   }
 
   hsv.s = 255 * (rgbMax - rgbMin) / hsv.v;
   if (hsv.s == 0) {
-      hsv.h = 0;
-      return hsv;
+    hsv.h = 0;
+    return hsv;
   }
   if (rgbMax == rgb.r) {
-      hsv.h = 0 + 43 * (rgb.g - rgb.b) / (rgbMax - rgbMin);
+    hsv.h = 0 + 43 * (rgb.g - rgb.b) / (rgbMax - rgbMin);
   } else if (rgbMax == rgb.g) {
-      hsv.h = 85 + 43 * (rgb.b - rgb.r) / (rgbMax - rgbMin);
+    hsv.h = 85 + 43 * (rgb.b - rgb.r) / (rgbMax - rgbMin);
   } else {
-      hsv.h = 171 + 43 * (rgb.r - rgb.g) / (rgbMax - rgbMin);
+    hsv.h = 171 + 43 * (rgb.r - rgb.g) / (rgbMax - rgbMin);
   }
   return hsv;
 }
@@ -194,7 +182,7 @@ espRgbColor_t espXYToRgbColor(uint8_t Level, uint16_t current_X, uint16_t curren
   return rgb;
 }
 
-espXyColor_t  espRgbToXYColor(uint8_t r, uint8_t g, uint8_t b){
+espXyColor_t espRgbToXYColor(uint8_t r, uint8_t g, uint8_t b) {
   espRgbColor_t rgb = {r, g, b};
   return espRgbColorToXYColor(rgb);
 }
@@ -242,7 +230,7 @@ espXyColor_t espRgbColorToXYColor(espRgbColor_t rgb) {
   return xy;
 }
 
-espRgbColor_t espCTToRgbColor(uint16_t ct){
+espRgbColor_t espCTToRgbColor(uint16_t ct) {
   espCtColor_t ctColor = {ct};
   return espCTColorToRgbColor(ctColor);
 }

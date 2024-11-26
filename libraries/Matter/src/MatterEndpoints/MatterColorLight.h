@@ -24,7 +24,7 @@ public:
   MatterColorLight();
   ~MatterColorLight();
   // default initial state is off, color is red 12% intensity HSV(0, 254, 31)
-  virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = { 0, 254, 31});
+  virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = {0, 254, 31});
   // this will just stop processing Light Matter events
   void end();
 
@@ -36,7 +36,6 @@ public:
   espRgbColor_t getColorRGB();               // returns current RGB Color
   bool setColorHSV(espHsvColor_t hsvColor);  // returns true if successful
   espHsvColor_t getColorHSV();               // returns current HSV Color
-
 
   // used to update the state of the light using the current Matter Light internal state
   // It is necessary to set a user callback function using onChange() to handle the physical light state
@@ -67,8 +66,8 @@ public:
 
 protected:
   bool started = false;
-  bool onOffState = false;             // default initial state is off, but it can be changed by begin(bool)
-  espHsvColor_t colorHSV = { 0 };         // default initial color HSV is black, but it can be changed by begin(bool, espHsvColor_t)
+  bool onOffState = false;       // default initial state is off, but it can be changed by begin(bool)
+  espHsvColor_t colorHSV = {0};  // default initial color HSV is black, but it can be changed by begin(bool, espHsvColor_t)
   EndPointOnOffCB _onChangeOnOffCB = NULL;
   EndPointRGBColorCB _onChangeColorCB = NULL;
   EndPointCB _onChangeCB = NULL;

@@ -118,8 +118,8 @@ void setup() {
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
     Serial.printf(
-      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", ColorLight ? "ON" : "OFF", 
-      ColorLight.getColorRGB().r, ColorLight.getColorRGB().g, ColorLight.getColorRGB().b
+      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", ColorLight ? "ON" : "OFF", ColorLight.getColorRGB().r, ColorLight.getColorRGB().g,
+      ColorLight.getColorRGB().b
     );
     // configure the Light based on initial on-off state and its color
     ColorLight.updateAccessory();
@@ -149,8 +149,8 @@ void loop() {
       }
     }
     Serial.printf(
-      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", ColorLight ? "ON" : "OFF", 
-      ColorLight.getColorRGB().r, ColorLight.getColorRGB().g, ColorLight.getColorRGB().b
+      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", ColorLight ? "ON" : "OFF", ColorLight.getColorRGB().r, ColorLight.getColorRGB().g,
+      ColorLight.getColorRGB().b
     );
     // configure the Light based on initial on-off state and its color
     ColorLight.updateAccessory();
