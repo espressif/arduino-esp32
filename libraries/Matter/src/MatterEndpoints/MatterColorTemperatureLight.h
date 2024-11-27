@@ -57,6 +57,7 @@ public:
   void onChangeOnOff(EndPointOnOffCB onChangeCB) {
     _onChangeOnOffCB = onChangeCB;
   }
+ 
   // User Callback for whenever the Light brightness value [0..255] is changed by the Matter Controller
   using EndPointBrightnessCB = std::function<bool(uint8_t)>;
   void onChangeBrightness(EndPointBrightnessCB onChangeCB) {
