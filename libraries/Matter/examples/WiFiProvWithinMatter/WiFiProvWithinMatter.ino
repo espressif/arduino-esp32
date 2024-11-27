@@ -114,7 +114,7 @@ void setup() {
     Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
     Serial.println();
     // waits 30 seconds for Matter Commissioning, keeping it blocked until done
-    delay(30000)
+    delay(30000);
   }
 }
 
