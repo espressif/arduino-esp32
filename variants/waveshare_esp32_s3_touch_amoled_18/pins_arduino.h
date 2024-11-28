@@ -14,15 +14,37 @@
 #define USB_SERIAL       ""
 
 // display for SH8601
-#define WS_LCD_CS    12
-#define WS_QSPI_SIO0 4
-#define WS_QSPI_SI1  5
-#define WS_QSPI_SI2  6
-#define WS_QSPI_SI3  7
-#define WS_QSPI_SCL  11
+#define LCD_SDIO0 4
+#define LCD_SDIO1 5
+#define LCD_SDIO2 6
+#define LCD_SDIO3 7
+#define LCD_SCLK 11
+#define LCD_CS 12
+#define LCD_WIDTH 368
+#define LCD_HEIGHT 448
 
-// Touch for FT3168
-#define WS_TP_INT 21
+// TOUCH
+#define TP_INT 21
+
+// ES8311
+#define I2S_MCK_IO 16
+#define I2S_BCK_IO 9
+#define I2S_DI_IO 10
+#define I2S_WS_IO 45
+#define I2S_DO_IO 8
+
+
+#define MCLKPIN             16
+#define BCLKPIN              9
+#define WSPIN               45
+#define DOPIN               10
+#define DIPIN                8
+#define PA                  46
+
+// SD
+const int SDMMC_CLK = 2;
+const int SDMMC_CMD = 1;
+const int SDMMC_DATA = 3;
 
 // Onboard Electric buzzer & Custom buttons
 // GPIO and PSRAM conflict, need to pay attention when using
@@ -32,8 +54,8 @@ static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
 // Def for I2C that shares the IMU I2C pins
-static const uint8_t SDA = 14;
-static const uint8_t SCL = 15;
+static const uint8_t SDA = 15;
+static const uint8_t SCL = 14;
 
 // Mapping based on the ESP32S3 data sheet - alternate for SPI2
 static const uint8_t SS = 34;    // FSPICS0
