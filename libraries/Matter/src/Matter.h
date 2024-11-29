@@ -19,6 +19,7 @@
 #include <Arduino.h>
 #include <esp_matter.h>
 #include <ColorFormat.h>
+#include <MatterEndpoints/MatterGenericSwitch.h>
 #include <MatterEndpoints/MatterOnOffLight.h>
 #include <MatterEndpoints/MatterDimmableLight.h>
 #include <MatterEndpoints/MatterColorTemperatureLight.h>
@@ -48,6 +49,7 @@ public:
   static void decommission();
 
   // list of Matter EndPoints Friend Classes
+  friend class MatterGenericSwitch;
   friend class MatterOnOffLight;
   friend class MatterDimmableLight;
   friend class MatterColorTemperatureLight;

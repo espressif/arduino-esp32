@@ -8,6 +8,7 @@
 
 Matter	KEYWORD1
 ArduinoMatter	KEYWORD1
+MatterGenericSwitch	KEYWORD1
 MatterOnOffLight	KEYWORD1
 MatterDimmableLight	KEYWORD1
 MatterColorTemperatureLight	KEYWORD1
@@ -45,7 +46,7 @@ onChangeOnOff	KEYWORD2
 onChangeBrightness	KEYWORD2
 onChangeColorTemperature	KEYWORD2
 onChangeColorHSV	KEYWORD2
-
+click	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
