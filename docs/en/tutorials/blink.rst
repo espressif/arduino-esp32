@@ -7,7 +7,7 @@ Introduction
 
 This is the interactive blink tutorial using `Wokwi`_. For this tutorial, you don't need the ESP32 board or the Arduino toolchain.
 
-.. note:: If you don't want to use this tutorial with the simulation, you can copy and paste the :ref:`blink_example_code` from `Wokwi`_ editor and use it on the `Arduino IDE`_ or `PlatformIO`_.
+.. note:: If you don't want to use this tutorial with the simulation, you can copy and paste the :ref:`blink_example_code` from `Wokwi`_ editor and use it on the `Arduino IDE` _.
 
 About this Tutorial
 -------------------
@@ -109,5 +109,4 @@ Resources
 
 .. _ESP32 Datasheet: https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
 .. _Wokwi: https://wokwi.com/
-.. _PlatformIO: https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#platformio
 .. _Arduino IDE: https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-boards-manager
