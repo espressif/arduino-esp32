@@ -30,8 +30,7 @@
 #error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "ZigbeeCore.h"
-#include "ep/ZigbeeLight.h"
+#include "Zigbee.h"
 
 #define LED_PIN               RGB_BUILTIN
 #define BUTTON_PIN            9  // ESP32-C6/H2 Boot button
@@ -51,7 +50,7 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   // Init button for factory reset
-  pinMode(BUTTON_PIN, INPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   //Optional: set Zigbee device name and model
   zbLight.setManufacturerAndModel("Espressif", "ZBLightBulb");

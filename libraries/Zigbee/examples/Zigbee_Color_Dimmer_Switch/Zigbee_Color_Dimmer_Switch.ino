@@ -35,8 +35,7 @@
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "ZigbeeCore.h"
-#include "ep/ZigbeeColorDimmerSwitch.h"
+#include "Zigbee.h"
 
 /* Switch configuration */
 #define SWITCH_PIN             9  // ESP32-C6/H2 Boot button
@@ -54,7 +53,7 @@ void setup() {
   }
 
   //Init button switch
-  pinMode(SWITCH_PIN, INPUT);
+  pinMode(SWITCH_PIN, INPUT_PULLUP);
 
   //Optional: set Zigbee device name and model
   zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");

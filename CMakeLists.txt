@@ -157,6 +157,7 @@ set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
 set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
 
 set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
+set(ARDUINO_LIBRARY_LittleFS_REQUIRES joltwallet__littlefs)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
 
@@ -204,6 +205,16 @@ set(ARDUINO_LIBRARY_USB_SRCS
   libraries/USB/src/USBMIDI.cpp
   libraries/USB/src/USBHIDMouse.cpp
   libraries/USB/src/USBHIDKeyboard.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_da_DK.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_de_DE.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_en_US.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_es_ES.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_fr_FR.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_hu_HU.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_it_IT.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_pt_BR.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_pt_PT.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_sv_SE.cpp
   libraries/USB/src/USBHIDGamepad.cpp
   libraries/USB/src/USBHIDConsumerControl.cpp
   libraries/USB/src/USBHIDSystemControl.cpp
