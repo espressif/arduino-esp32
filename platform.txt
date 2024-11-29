@@ -47,7 +47,6 @@ compiler.warning_flags.more=-Wall
 compiler.warning_flags.all=-Wall -Wextra
 
 # Additional flags specific to Arduino (not based on IDF flags).
-# Update tools/platformio-build.py when changing these flags.
 compiler.common_werror_flags=-Werror=return-type
 
 # Compile Flags
