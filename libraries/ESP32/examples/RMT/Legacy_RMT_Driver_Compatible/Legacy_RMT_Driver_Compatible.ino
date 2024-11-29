@@ -12,7 +12,6 @@
 // add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NO_RGB_BUILTIN" to use the RMT Legacy driver
 #error "ESP32_ARDUINO_NO_RGB_BUILTIN is not defined, this example is intended to demonstrate the RMT Legacy driver."
 #error "Please add the file 'build_opt.h' with '-DESP32_ARDUINO_NO_RGB_BUILTIN' to your Arduino project folder."
-#error "Another way to disable the RGB_BUILTIN is to define it in the platformio.ini file, for instance: '-D ESP32_ARDUINO_NO_RGB_BUILTIN'"
 
 #else
 
