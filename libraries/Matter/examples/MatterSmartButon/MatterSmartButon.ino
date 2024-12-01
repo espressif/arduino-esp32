@@ -15,7 +15,6 @@
 // Matter Manager
 #include <Matter.h>
 #include <WiFi.h>
-#include <Preferences.h>
 
 // List of Matter Endpoints for this Node
 // Generic Switch Endpoint - works as a smart button with a single click
