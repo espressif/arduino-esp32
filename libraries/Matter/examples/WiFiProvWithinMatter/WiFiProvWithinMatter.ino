@@ -15,14 +15,13 @@
   This same Example could be used for any other WiFi Provisioning method.
 */
 
-
 // Matter Manager
 #include <Matter.h>
 #include <WiFiProv.h>
 #include <WiFi.h>
 
 #if !CONFIG_BLUEDROID_ENABLED
-#define USE_SOFT_AP // ESP32-S2 has no BLE, therefore, it shall use SoftAP Provisioning
+#define USE_SOFT_AP  // ESP32-S2 has no BLE, therefore, it shall use SoftAP Provisioning
 #endif
 //#define USE_SOFT_AP // Uncomment if you want to enforce using the Soft AP method instead of BLE
 
@@ -81,7 +80,7 @@ void setup() {
       Serial.println("\r\n================================================");
       Serial.println("Already 10 minutes past. The device will reboot.");
       Serial.println("================================================\r\n");
-      Serial.flush(); // wait until the Serial has sent the whole message.
+      Serial.flush();  // wait until the Serial has sent the whole message.
       ESP.restart();
     }
     // WiFi searching feedback
@@ -93,10 +92,10 @@ void setup() {
       Serial.println();
     }
   }
-  
+
   // WiFi shall be connected by now
   Serial.println();
-  
+
   // Initialize at least one Matter EndPoint
   OnOffLight.begin();
 
