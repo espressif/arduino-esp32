@@ -27,7 +27,7 @@ public:
 
   MatterEnhancedColorLight();
   ~MatterEnhancedColorLight();
-  // default initial state is off, brigthness = 25 (10%), HSV(21, 216, 25), color temperature is 454 (Warm White)
+  // default initial state is off, brightness = 25 (10%), HSV(21, 216, 25), color temperature is 454 (Warm White)
   virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = {21, 216, 25}, uint8_t newBrightness = 25, uint16_t colorTemperature = 454);
   // this will just stop processing Light Matter events
   void end();
