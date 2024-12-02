@@ -115,7 +115,7 @@ void setup() {
     Serial.printf("Light Color Temperature changed to %d\r\n", colorTemperature);
     // get correspondent Hue and Saturation of the color temperature
     HsvColor_t hsvTemperature = espRgbColorToHsvColor(espCTToRgbColor(colorTemperature));
-    // keep previous the brightness and just change the Hue and Saturation 
+    // keep previous the brightness and just change the Hue and Saturation
     currentHSVColor.h = hsvTemperature.h;
     currentHSVColor.s = hsvTemperature.s;
     return true;
@@ -128,7 +128,7 @@ void setup() {
   });
   EnhancedColorLight.onChangeColorHSV([](HsvColor_t hsvColor) {
     Serial.printf("Light HSV Color changed to (%d,%d,%d)\r\n", hsvColor.h, hsvColor.s, hsvColor.v);
-    // keep the current brightness and just change Hue and Saturation 
+    // keep the current brightness and just change Hue and Saturation
     currentHSVColor.h = hsvColor.h;
     currentHSVColor.s = hsvColor.s;
     return true;
@@ -140,8 +140,8 @@ void setup() {
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
     Serial.printf(
-      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", EnhancedColorLight ? "ON" : "OFF",
-      EnhancedColorLight.getColorRGB().r, EnhancedColorLight.getColorRGB().g, EnhancedColorLight.getColorRGB().b
+      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r,
+      EnhancedColorLight.getColorRGB().g, EnhancedColorLight.getColorRGB().b
     );
     // configure the Light based on initial on-off state and its color
     EnhancedColorLight.updateAccessory();
@@ -171,8 +171,8 @@ void loop() {
       }
     }
     Serial.printf(
-      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", EnhancedColorLight ? "ON" : "OFF",
-      EnhancedColorLight.getColorRGB().r, EnhancedColorLight.getColorRGB().g, EnhancedColorLight.getColorRGB().b
+      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r,
+      EnhancedColorLight.getColorRGB().g, EnhancedColorLight.getColorRGB().b
     );
     // configure the Light based on initial on-off state and its color
     EnhancedColorLight.updateAccessory();

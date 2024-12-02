@@ -28,7 +28,7 @@ public:
   MatterEnhancedColorLight();
   ~MatterEnhancedColorLight();
   // default initial state is off, brigthness = 25 (10%), HSV(21, 216, 25), color temperature is 454 (Warm White)
-  virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = { 21, 216, 25}, uint8_t newBrightness = 25, uint16_t colorTemperature = 454);
+  virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = {21, 216, 25}, uint8_t newBrightness = 25, uint16_t colorTemperature = 454);
   // this will just stop processing Light Matter events
   void end();
 
@@ -46,7 +46,6 @@ public:
   espRgbColor_t getColorRGB();               // returns current RGB Color
   bool setColorHSV(espHsvColor_t hsvColor);  // returns true if successful
   espHsvColor_t getColorHSV();               // returns current HSV Color
-
 
   // used to update the state of the light using the current Matter Light internal state
   // It is necessary to set a user callback function using onChange() to handle the physical light state
@@ -90,10 +89,10 @@ public:
 
 protected:
   bool started = false;
-  bool onOffState = false;                // default initial state is off, but it can be changed by begin(bool)
-  uint8_t brightnessLevel = 0;            // default initial brightness is 0, but it can be changed by begin(bool, uint8_t)
-  espHsvColor_t colorHSV = { 0 };         // default initial color HSV is black, but it can be changed by begin(bool, uint8_t, espHsvColor_t)
-  uint16_t colorTemperatureLevel = 0;     // default initial color temperature is 0, but it can be changed by begin(bool, uint8_t, espHsvColor_t, uint16_t)
+  bool onOffState = false;             // default initial state is off, but it can be changed by begin(bool)
+  uint8_t brightnessLevel = 0;         // default initial brightness is 0, but it can be changed by begin(bool, uint8_t)
+  espHsvColor_t colorHSV = {0};        // default initial color HSV is black, but it can be changed by begin(bool, uint8_t, espHsvColor_t)
+  uint16_t colorTemperatureLevel = 0;  // default initial color temperature is 0, but it can be changed by begin(bool, uint8_t, espHsvColor_t, uint16_t)
   EndPointOnOffCB _onChangeOnOffCB = NULL;
   EndPointBrightnessCB _onChangeBrightnessCB = NULL;
   EndPointRGBColorCB _onChangeColorCB = NULL;
