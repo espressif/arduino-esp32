@@ -279,13 +279,13 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
 
         log_d(" - Response to write event: New value: handle: %.2x, uuid: %s", getHandle(), getUUID().toString().c_str());
 
-        // The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
-        // "DEBUG". As it is quite CPU intensive, it is much better to not call it if not needed.
-        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG    
-          char *pHexData = BLEUtils::buildHexData(nullptr, param->write.value, param->write.len);
-          log_d(" - Data: length: %d, data: %s", param->write.len, pHexData);
-          free(pHexData);
-        #endif
+// The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
+// "DEBUG". As it is quite CPU intensive, it is much better to not call it if not needed.
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+        char *pHexData = BLEUtils::buildHexData(nullptr, param->write.value, param->write.len);
+        log_d(" - Data: length: %d, data: %s", param->write.len, pHexData);
+        free(pHexData);
+#endif
 
         if (param->write.need_rsp) {
           esp_gatt_rsp_t rsp;
@@ -394,13 +394,13 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
           rsp.attr_value.handle = param->read.handle;
           rsp.attr_value.auth_req = ESP_GATT_AUTH_REQ_NONE;
 
-          // The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
-          // "DEBUG". As it is quite CPU intensive, it is much better to not call it if not needed.
-          #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-            char *pHexData = BLEUtils::buildHexData(nullptr, rsp.attr_value.value, rsp.attr_value.len);
-            log_d(" - Data: length=%d, data=%s, offset=%d", rsp.attr_value.len, pHexData, rsp.attr_value.offset);
-            free(pHexData);
-          #endif
+// The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
+// "DEBUG". As it is quite CPU intensive, it is much better to not call it if not needed.
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+          char *pHexData = BLEUtils::buildHexData(nullptr, rsp.attr_value.value, rsp.attr_value.len);
+          log_d(" - Data: length=%d, data=%s, offset=%d", rsp.attr_value.len, pHexData, rsp.attr_value.offset);
+          free(pHexData);
+#endif
 
           esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->read.conn_id, param->read.trans_id, ESP_GATT_OK, &rsp);
           if (errRc != ESP_OK) {
@@ -490,10 +490,10 @@ void BLECharacteristic::notify(bool is_notification) {
   // it's better to put it here also, as it is clearer (indicating a verbose log
   // thing) and it allows to remove the "m_value.getValue().c_str()" call, which
   // is, in itself, quite CPU intensive.
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE  
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
   GeneralUtils::hexDump((uint8_t *)m_value.getValue().c_str(), m_value.getValue().length());
 #endif
-  
+
   if (getService()->getServer()->getConnectedCount() == 0) {
     log_v("<< notify: No connected clients.");
     m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NO_CLIENT, 0);
@@ -645,13 +645,13 @@ void BLECharacteristic::setReadProperty(bool value) {
  * @param [in] length The length of the data in bytes.
  */
 void BLECharacteristic::setValue(uint8_t *data, size_t length) {
-  // The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
-  // "VERBOSE". As it is quite CPU intensive, it is much better to not call it if not needed.
-  #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE    
-    char *pHex = BLEUtils::buildHexData(nullptr, data, length);
-    log_v(">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
-    free(pHex);
-  #endif
+// The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
+// "VERBOSE". As it is quite CPU intensive, it is much better to not call it if not needed.
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+  char *pHex = BLEUtils::buildHexData(nullptr, data, length);
+  log_v(">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
+  free(pHex);
+#endif
   if (length > ESP_GATT_MAX_ATTR_LEN) {
     log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
     return;
