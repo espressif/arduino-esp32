@@ -1,4 +1,4 @@
-/*
+  /*
     WiFiProv.cpp - WiFiProv class for provisioning
     All rights reserved.
 
@@ -72,13 +72,11 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
 #endif
 }
 
-void WiFiProvClass ::beginProvision(
-  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, network_prov_security_t security, const char *pop, const char *service_name,
-  const char *service_key, uint8_t *uuid, bool reset_provisioned
-) {
-  bool provisioned = false;
-  static char service_name_temp[32];
-
+void WiFiProvClass ::initProvision(prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, bool reset_provisioned) {
+  if (this->provInitDone) {
+    log_i("provInit was already done!");
+    return;
+  }
   network_prov_mgr_config_t config;
 #if CONFIG_BLUEDROID_ENABLED
   if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
@@ -118,11 +116,22 @@ void WiFiProvClass ::beginProvision(
   if (reset_provisioned) {
     log_i("Resetting provisioned data.");
     network_prov_mgr_reset_wifi_provisioning();
-  } else if (network_prov_mgr_is_wifi_provisioned(&provisioned) != ESP_OK) {
+  } else if (network_prov_mgr_is_wifi_provisioned(&(this->provisioned)) != ESP_OK) {
     log_e("network_prov_mgr_is_wifi_provisioned failed!");
     network_prov_mgr_deinit();
     return;
   }
+  this->provInitDone = true;
+}
+
+void WiFiProvClass ::beginProvision(
+  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, network_prov_security_t security, const char *pop, const char *service_name,
+  const char *service_key, uint8_t *uuid, bool reset_provisioned
+) {
+  if (!this->provInitDone) {
+    WiFiProvClass ::initProvision( prov_scheme, scheme_handler, reset_provisioned);
+  }
+  static char service_name_temp[32];
   if (provisioned == false) {
 #if CONFIG_BLUEDROID_ENABLED
     if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
