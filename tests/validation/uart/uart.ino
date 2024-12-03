@@ -95,9 +95,11 @@ public:
 
 /* Utility global variables */
 
-[[maybe_unused]] static const int NEW_RX1 = 9;
-[[maybe_unused]] static const int NEW_TX1 = 10;
-std::vector<UARTTestConfig*> uart_test_configs;
+[[maybe_unused]]
+static const int NEW_RX1 = 9;
+[[maybe_unused]]
+static const int NEW_TX1 = 10;
+std::vector<UARTTestConfig *> uart_test_configs;
 
 /* Utility functions */
 
@@ -119,8 +121,8 @@ void task_delayed_msg(void *pvParameters) {
 
 // This function is automatically called by unity before each test is run
 void setUp(void) {
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     //log_d("Setup internal loop-back from and back to UART%d TX >> UART%d RX", config.uart_num, config.uart_num);
     config.begin(115200);
     config.serial.onReceive([&config]() {
@@ -132,8 +134,8 @@ void setUp(void) {
 
 // This function is automatically called by unity after each test is run
 void tearDown(void) {
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     config.end();
   }
 }
@@ -144,8 +146,8 @@ void tearDown(void) {
 void basic_transmission_test(void) {
   log_d("Performing basic transmission test");
 
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     config.transmit_and_check_msg("");
   }
 
@@ -154,8 +156,8 @@ void basic_transmission_test(void) {
 
 // This test checks if the baudrate can be changed and if the message can be transmitted and received correctly after the change
 void change_baudrate_test(void) {
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     log_d("Changing baudrate of UART%d to 9600", config.uart_num);
 
     //Baudrate error should be within 2% of the target baudrate
@@ -203,8 +205,8 @@ void resize_buffers_test(void) {
 // This test checks if the begin function can be called when the UART is already running
 void begin_when_running_test(void) {
   log_d("Trying to set up serial twice");
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     // Calling twice should not crash
     config.begin(115200);
     config.begin(115200);
@@ -216,8 +218,8 @@ void begin_when_running_test(void) {
 void end_when_stopped_test(void) {
   log_d("Trying to end serial twice");
 
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     // Calling twice should not crash
     config.end();
     config.end();
@@ -281,8 +283,8 @@ void disabled_uart_calls_test(void) {
   int integer_ret;
   uint8_t test_buf[1];
 
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     config.end();
   }
 
@@ -354,15 +356,15 @@ void disabled_uart_calls_test(void) {
 void change_pins_test(void) {
   log_d("Disabling UART loopback");
 
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     esp_rom_gpio_connect_out_signal(config.default_rx_pin, SIG_GPIO_OUT_IDX, false, false);
   }
 
   log_d("Swapping UART pins and testing transmission");
 
   if (TEST_UART_NUM == 1) {
-    UARTTestConfig& config = *uart_test_configs[0];
+    UARTTestConfig &config = *uart_test_configs[0];
     config.serial.setPins(NEW_RX1, NEW_TX1);
     TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(config.uart_num));
     TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(config.uart_num));
@@ -371,8 +373,8 @@ void change_pins_test(void) {
     config.transmit_and_check_msg("using new pins");
   } else {
     for (int i = 0; i < TEST_UART_NUM; i++) {
-      UARTTestConfig& config = *uart_test_configs[i];
-      UARTTestConfig& next_uart = *uart_test_configs[(i + 1) % TEST_UART_NUM];
+      UARTTestConfig &config = *uart_test_configs[i];
+      UARTTestConfig &next_uart = *uart_test_configs[(i + 1) % TEST_UART_NUM];
       config.serial.setPins(next_uart.default_rx_pin, next_uart.default_tx_pin);
       TEST_ASSERT_EQUAL(uart_get_RxPin(config.uart_num), next_uart.default_rx_pin);
       TEST_ASSERT_EQUAL(uart_get_TxPin(config.uart_num), next_uart.default_tx_pin);
@@ -433,8 +435,8 @@ void periman_test(void) {
 
   log_d("Setting up I2C on the same pins as UART");
 
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     Wire.begin(config.default_rx_pin, config.default_tx_pin);
     config.recv_msg = "";
 
@@ -465,8 +467,8 @@ void change_cpu_frequency_test(void) {
 
   Serial.updateBaudRate(115200);
 
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     log_d("Trying to send message with the new CPU frequency on UART%d", config.uart_num);
     config.transmit_and_check_msg("with new CPU frequency");
   }
@@ -477,8 +479,8 @@ void change_cpu_frequency_test(void) {
 
   Serial.updateBaudRate(115200);
 
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     log_d("Trying to send message with the original CPU frequency on UART%d", config.uart_num);
     config.transmit_and_check_msg("with the original CPU frequency");
   }
@@ -496,7 +498,7 @@ void setup() {
 
   uart_test_configs = {
 #if SOC_UART_HP_NUM >= 2 && defined(RX1) && defined(TX1)
-// inverting RX1<->TX1 because ESP32-P4 has a problem with loopback on RX1 :: GPIO11 <-- UART_TX SGINAL
+    // inverting RX1<->TX1 because ESP32-P4 has a problem with loopback on RX1 :: GPIO11 <-- UART_TX SGINAL
     new UARTTestConfig(1, Serial1, TX1, RX1),
 #endif
 #if SOC_UART_HP_NUM >= 3 && defined(RX2) && defined(TX2)
@@ -517,8 +519,8 @@ void setup() {
 
   log_d("TEST_UART_NUM = %d", TEST_UART_NUM);
 
-  for (auto* ref : uart_test_configs) {
-    UARTTestConfig& config = *ref;
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
     config.begin(115200);
     log_d("Setup internal loop-back from and back to UART%d TX >> UART%d RX", config.uart_num, config.uart_num);
     config.serial.onReceive([&config]() {
