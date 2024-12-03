@@ -49,8 +49,8 @@ public:
   int8_t default_tx_pin;
   String recv_msg;
 
-  UARTTestConfig(int num, HardwareSerial &ser, int8_t rx_pin, int8_t tx_pin)
-    : uart_num(num), serial(ser), peeked_char(-1), default_rx_pin(rx_pin), default_tx_pin(tx_pin), recv_msg("") {}
+  UARTTestConfig(int num, HardwareSerial &serial_ref, int8_t rx_pin, int8_t tx_pin)
+    : uart_num(num), serial(serial_ref), peeked_char(-1), default_rx_pin(rx_pin), default_tx_pin(tx_pin), recv_msg("") {}
 
   void begin(unsigned long baudrate) {
     serial.begin(baudrate, SERIAL_8N1, default_rx_pin, default_tx_pin);
