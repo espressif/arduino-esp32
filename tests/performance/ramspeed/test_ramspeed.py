@@ -74,7 +74,7 @@ def test_ramspeed(dut, request):
         sums[(test, size, impl)]["time_sum"] += time
 
     avg_results = {}
-    for (test, size, impl) in sums:
+    for test, size, impl in sums:
         rate_avg = round(sums[(test, size, impl)]["rate_sum"] / runs, 2)
         time_avg = round(sums[(test, size, impl)]["time_sum"] / runs, 2)
         LOGGER.info(
