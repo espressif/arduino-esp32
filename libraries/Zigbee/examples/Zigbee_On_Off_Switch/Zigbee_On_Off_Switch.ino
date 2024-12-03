@@ -147,8 +147,8 @@ void setup() {
       "IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n", device->ieee_addr[0], device->ieee_addr[1], device->ieee_addr[2], device->ieee_addr[3],
       device->ieee_addr[4], device->ieee_addr[5], device->ieee_addr[6], device->ieee_addr[7]
     );
-    Serial.printf("Light manufacturer: %s", zbSwitch.readManufacturer(device->endpoint, device->short_addr));
-    Serial.printf("Light model: %s", zbSwitch.readModel(device->endpoint, device->short_addr));
+    Serial.printf("Light manufacturer: %s", zbSwitch.readManufacturer(device->endpoint, device->short_addr, device->ieee_addr));
+    Serial.printf("Light model: %s", zbSwitch.readModel(device->endpoint, device->short_addr, device->ieee_addr));
   }
 
   Serial.println();
