@@ -25,7 +25,7 @@ public:
   MatterGenericSwitch();
   ~MatterGenericSwitch();
   virtual bool begin();
-  void end();            // this will just stop processing Matter events
+  void end();  // this will just stop processing Matter events
 
   // send a simple click event to the Matter Controller
   void click();

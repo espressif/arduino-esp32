@@ -24,8 +24,7 @@ using namespace esp_matter::endpoint;
 using namespace esp_matter::cluster;
 using namespace chip::app::Clusters;
 
-MatterGenericSwitch::MatterGenericSwitch() {
-}
+MatterGenericSwitch::MatterGenericSwitch() {}
 
 MatterGenericSwitch::~MatterGenericSwitch() {
   end();
@@ -55,7 +54,7 @@ bool MatterGenericSwitch::begin() {
   cluster::groups::config_t groups_config;
   cluster::groups::create(endpoint, &groups_config, CLUSTER_FLAG_SERVER | CLUSTER_FLAG_CLIENT);
 
-  cluster_t* aCluster = cluster::get(endpoint,Descriptor::Id);
+  cluster_t *aCluster = cluster::get(endpoint, Descriptor::Id);
   esp_matter::cluster::descriptor::feature::taglist::add(aCluster);
 
   cluster::fixed_label::config_t fl_config;
