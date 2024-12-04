@@ -94,6 +94,12 @@ void setup() {
 
   RMaker.enableSystemService(SYSTEM_SERV_FLAGS_ALL, 2, 2, 2);
 
+#if CONFIG_IDF_TARGET_ESP32S2
+  WiFiProv.initProvision(NETWORK_PROV_SCHEME_SOFTAP, NETWORK_PROV_SCHEME_HANDLER_NONE);
+#else
+  WiFiProv.initProvision(NETWORK_PROV_SCHEME_BLE, NETWORK_PROV_SCHEME_HANDLER_FREE_BTDM);
+#endif
+
   RMaker.start();
 
   WiFi.onEvent(sysProvEvent);  // Will call sysProvEvent() from another thread.
