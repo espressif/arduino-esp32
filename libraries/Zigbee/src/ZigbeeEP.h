@@ -9,8 +9,6 @@
 
 /* Useful defines */
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
-#define print_ieee_addr(addr) \
-  log_i("IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7])
 #define XYZ_TO_RGB(X, Y, Z, r, g, b)                                \
   {                                                                 \
     r = (float)(3.240479 * (X) - 1.537150 * (Y) - 0.498535 * (Z));  \
@@ -68,7 +66,7 @@ public:
     return _endpoint;
   }
 
-  void printBoundDevices();
+  void printBoundDevices(Print *print = nullptr);
   std::list<zb_device_params_t *> getBoundDevices() const {
     return _bound_devices;
   }
@@ -128,7 +126,6 @@ protected:
     _bound_devices.push_back(device);
     _is_bound = true;
   }
-  
   friend class ZigbeeCore;
 };
 

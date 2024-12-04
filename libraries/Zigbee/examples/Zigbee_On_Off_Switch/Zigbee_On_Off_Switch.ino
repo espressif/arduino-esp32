@@ -137,18 +137,17 @@ void setup() {
     Serial.printf(".");
     delay(500);
   }
-
-  // Optional: read manufacturer and model name from the bound light
+  
+  // Optional: List all bound devices and read manufacturer and model name
   std::list<zb_device_params_t *> boundLights = zbSwitch.getBoundDevices();
-  //List all bound lights
   for (const auto &device : boundLights) {
-    Serial.printf("Device on endpoint %d, short address: 0x%x\n", device->endpoint, device->short_addr);
+    Serial.printf("Device on endpoint %d, short address: 0x%x\r\n", device->endpoint, device->short_addr);
     Serial.printf(
-      "IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n", device->ieee_addr[0], device->ieee_addr[1], device->ieee_addr[2], device->ieee_addr[3],
-      device->ieee_addr[4], device->ieee_addr[5], device->ieee_addr[6], device->ieee_addr[7]
+      "IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n", device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], 
+      device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]
     );
-    Serial.printf("Light manufacturer: %s", zbSwitch.readManufacturer(device->endpoint, device->short_addr, device->ieee_addr));
-    Serial.printf("Light model: %s", zbSwitch.readModel(device->endpoint, device->short_addr, device->ieee_addr));
+    Serial.printf("Light manufacturer: %s\r\n", zbSwitch.readManufacturer(device->endpoint, device->short_addr, device->ieee_addr));
+    Serial.printf("Light model: %s\r\n", zbSwitch.readModel(device->endpoint, device->short_addr, device->ieee_addr));
   }
 
   Serial.println();
@@ -191,6 +190,6 @@ void loop() {
   static uint32_t lastPrint = 0;
   if (millis() - lastPrint > 10000) {
     lastPrint = millis();
-    zbSwitch.printBoundDevices();
+    zbSwitch.printBoundDevices(&Serial);
   }
 }

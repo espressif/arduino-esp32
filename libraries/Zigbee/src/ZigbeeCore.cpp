@@ -411,8 +411,6 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
     esp_zb_zdo_binding_table_record_t *record = table_info->record;
     for (int i = 0; i < table_info->count; i++) {
       log_d("Binding table record: src_endp %d, dst_endp %d, cluster_id 0x%04x, dst_addr_mode %d", record->src_endp, record->dst_endp, record->cluster_id, record->dst_addr_mode);
-      log_d("Short address: 0x%04x", record->dst_address.addr_short);
-      log_d("ieee_address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", record->dst_address.addr_long[7], record->dst_address.addr_long[6], record->dst_address.addr_long[5], record->dst_address.addr_long[4], record->dst_address.addr_long[3], record->dst_address.addr_long[2], record->dst_address.addr_long[1], record->dst_address.addr_long[0]); 
 
       zb_device_params_t *device = (zb_device_params_t *)calloc(1, sizeof(zb_device_params_t));
       device->endpoint = record->dst_endp;
@@ -421,12 +419,13 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
       } else { //ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT
         memcpy(device->ieee_addr, record->dst_address.addr_long, sizeof(esp_zb_ieee_addr_t));
       }
-      log_d("Bound device: endpoint %d, short address 0x%04x to endpoint %d", record->dst_endp, record->dst_address.addr_short, record->src_endp);
 
       // Add to list of bound devices of proper endpoint
       for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
         if ((*it)->getEndpoint() == record->src_endp) {
           (*it)->addBoundDevice(device);
+          log_d("Device bound to EP %d -> device endpoint: %d, short addr: 0x%04x, ieee addr: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", record->src_endp, device->endpoint, device->short_addr, 
+          device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]);
         }
       }
       record = record->next;

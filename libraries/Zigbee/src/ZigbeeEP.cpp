@@ -139,7 +139,9 @@ char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_i
   // clear read manufacturer
   _read_manufacturer = nullptr;
 
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
@@ -173,22 +175,32 @@ char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_add
   // clear read model
   _read_model = nullptr;
 
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
 
   //Wait for response or timeout
-  //Semaphore take
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
     log_e("Error while reading model");
   }
   return _read_model;
 }
 
-void ZigbeeEP::printBoundDevices() {
-  log_i("Bound devices:");
-  for ([[maybe_unused]]
-       const auto &device : _bound_devices) {
-    log_i("Device on endpoint %d, short address: 0x%x", device->endpoint, device->short_addr);
-    print_ieee_addr(device->ieee_addr);
+void ZigbeeEP::printBoundDevices(Print *print) {
+  if (print == nullptr) {
+    log_i("Bound devices:");
+    for ([[maybe_unused]]
+    const auto &device : _bound_devices) {
+      log_i("Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint, device->short_addr, 
+      device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]);
+      }
+  } else {
+    print->println("Bound devices:");
+    for ([[maybe_unused]]
+    const auto &device : _bound_devices) {
+      print->printf("Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n", device->endpoint, device->short_addr, 
+      device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]);
+    }
   }
 }
 
