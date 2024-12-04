@@ -12,7 +12,7 @@ default_language_version:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.5.0"
+    rev: "v5.0.0"
     hooks:
       - id: check-case-conflict
       - id: check-symlinks
@@ -47,13 +47,13 @@ repos:
         types_or: [c, c++]
         exclude: ^.*\/build_opt\.h$
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: "22.10.0"
+    rev: "24.10.0"
     hooks:
       - id: black
         types_or: [python]
         args: [--line-length=120] #From the arduino code style. Add as argument rather than creating a new config file.
   - repo: https://github.com/PyCQA/flake8
-    rev: "7.0.0"
+    rev: "7.1.1"
     hooks:
       - id: flake8
         types_or: [python]
@@ -67,7 +67,7 @@ repos:
       - id: prettier
         types_or: [yaml]
   - repo: https://github.com/errata-ai/vale
-    rev: "v3.0.7"
+    rev: "v3.9.1"
     hooks:
       - id: vale
         name: vale-sync
