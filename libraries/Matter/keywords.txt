@@ -1,0 +1,58 @@
+#######################################
+# Syntax Coloring Map For Matter
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Matter	KEYWORD1
+ArduinoMatter	KEYWORD1
+MatterGenericSwitch	KEYWORD1
+MatterOnOffLight	KEYWORD1
+MatterDimmableLight	KEYWORD1
+MatterColorTemperatureLight	KEYWORD1
+MatterColorLight	KEYWORD1
+MatterEnhancedColorLight	KEYWORD1
+MatterEndPoint	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+getManualPairingCode	KEYWORD2
+getOnboardingQRCodeUrl	KEYWORD2
+isDeviceCommissioned	KEYWORD2
+isWiFiConnected	KEYWORD2
+isThreadConnected	KEYWORD2
+isDeviceConnected	KEYWORD2
+decommission	KEYWORD2
+attributeChangeCB	KEYWORD2
+setOnOff	KEYWORD2
+getOnOff	KEYWORD2
+setBrightness	KEYWORD2
+getBrightness	KEYWORD2
+setColorTemperature	KEYWORD2
+getColorTemperature	KEYWORD2
+setColorRGB	KEYWORD2
+getColorRGB	KEYWORD2
+setColorHSV	KEYWORD2
+getColorHSV	KEYWORD2
+toggle	KEYWORD2
+updateAccessory	KEYWORD2
+onChange	KEYWORD2
+onChangeOnOff	KEYWORD2
+onChangeBrightness	KEYWORD2
+onChangeColorTemperature	KEYWORD2
+onChangeColorHSV	KEYWORD2
+click	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+MAX_BRIGHTNESS	LITERAL1
+MAX_COLOR_TEMPERATURE	LITERAL1
+MIN_COLOR_TEMPERATURE	LITERAL1

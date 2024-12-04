@@ -14,6 +14,7 @@
  * Connections for     ║   ║   ╔═══╩═║═║═══╗   ║  ║    ║
  * full-sized          ║   ║   ║   ╔═╝ ║   ║   ║  ║    ║
  * SD card             ║   ║   ║   ║   ║   ║   ║  ║    ║
+ * ESP32-P4 Func EV | 40  39  GND  43 3V3 GND  44 43  42  | SLOT 0 (IO_MUX)
  * ESP32-S3 DevKit  | 21  47  GND  39 3V3 GND  40 41  42  |
  * ESP32-S3-USB-OTG | 38  37  GND  36 3V3 GND  35 34  33  |
  * ESP32            |  4   2  GND  14 3V3 GND  15 13  12  |
@@ -42,6 +43,7 @@
 #include "FS.h"
 #include "SD_MMC.h"
 
+#ifdef CONFIG_IDF_TARGET_ESP32S3
 // Default pins for ESP-S3
 // Warning: ESP32-S3-WROOM-2 is using most of the default GPIOs (33-37) to interface with on-board OPI flash.
 //   If the SD_MMC is initialized with default pins it will result in rebooting loop - please
@@ -54,6 +56,7 @@ int d0 = 37;
 int d1 = 38;
 int d2 = 33;
 int d3 = 39;  // GPIO 34 is not broken-out on ESP32-S3-DevKitC-1 v1.1
+#endif
 
 void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
   Serial.printf("Listing directory: %s\n", dirname);
@@ -211,15 +214,16 @@ void testFileIO(fs::FS &fs, const char *path) {
 void setup() {
   Serial.begin(115200);
   /*
-    // If you want to change the pin assignment on ESP32-S3 uncomment this block and the appropriate
+    // If you want to change the pin assignment or you get an error that some pins
+    // are not assigned on ESP32-S3/ESP32-P4 uncomment this block and the appropriate
     // line depending if you want to use 1-bit or 4-bit line.
-    // Please note that ESP32 does not allow pin change and will always fail.
+    // Please note that ESP32 does not allow pin change and setPins() will always fail.
     //if(! SD_MMC.setPins(clk, cmd, d0)){
     //if(! SD_MMC.setPins(clk, cmd, d0, d1, d2, d3)){
-        Serial.println("Pin change failed!");
-        return;
-    }
-    */
+    //    Serial.println("Pin change failed!");
+    //    return;
+    //}
+  */
 
   if (!SD_MMC.begin()) {
     Serial.println("Card Mount Failed");
@@ -262,4 +266,6 @@ void setup() {
   Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
 }
 
-void loop() {}
+void loop() {
+  delay(10);
+}

@@ -18,6 +18,9 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "sdkconfig.h"
+#if CONFIG_ETH_ENABLED
+
 #ifndef _ETH_H_
 #define _ETH_H_
 
@@ -75,6 +78,7 @@
 
 #if CONFIG_ETH_USE_ESP32_EMAC
 #define ETH_PHY_IP101 ETH_PHY_TLK110
+#if CONFIG_IDF_TARGET_ESP32
 typedef enum {
   ETH_CLOCK_GPIO0_IN,
   ETH_CLOCK_GPIO0_OUT,
@@ -88,6 +92,31 @@ typedef enum {
 #define ETH_RMII_RX0    25
 #define ETH_RMII_RX1_EN 26
 #define ETH_RMII_CRS_DV 27
+#elif CONFIG_IDF_TARGET_ESP32P4
+typedef emac_rmii_clock_mode_t eth_clock_mode_t;
+#include "pins_arduino.h"
+#ifndef ETH_RMII_TX_EN
+#define ETH_RMII_TX_EN 49
+#endif
+#ifndef ETH_RMII_TX0
+#define ETH_RMII_TX0 34
+#endif
+#ifndef ETH_RMII_TX1
+#define ETH_RMII_TX1 35
+#endif
+#ifndef ETH_RMII_RX0
+#define ETH_RMII_RX0 29
+#endif
+#ifndef ETH_RMII_RX1_EN
+#define ETH_RMII_RX1_EN 30
+#endif
+#ifndef ETH_RMII_CRS_DV
+#define ETH_RMII_CRS_DV 28
+#endif
+#ifndef ETH_RMII_CLK
+#define ETH_RMII_CLK 50
+#endif
+#endif
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 
 #ifndef ETH_PHY_SPI_FREQ_MHZ
@@ -223,3 +252,4 @@ private:
 extern ETHClass ETH;
 
 #endif /* _ETH_H_ */
+#endif /* CONFIG_ETH_ENABLED */

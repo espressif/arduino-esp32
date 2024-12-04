@@ -80,19 +80,22 @@ void setup() {
   Zigbee.setRebootOpenNetwork(180);
 
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
-  Zigbee.begin(ZIGBEE_COORDINATOR);
+  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
 
-  Serial.println("Waiting for Temperature sensor to bound to the switch");
-
-  //Wait for switch to bound to a light:
-  while (!zbThermostat.isBound()) {
+  Serial.println("Waiting for Temperature sensor to bound to the thermostat");
+  while (!zbThermostat.bound()) {
     Serial.printf(".");
     delay(500);
   }
 
+  Serial.println();
+
   // Get temperature sensor configuration
   zbThermostat.getSensorSettings();
-  Serial.println();
 }
 
 void loop() {

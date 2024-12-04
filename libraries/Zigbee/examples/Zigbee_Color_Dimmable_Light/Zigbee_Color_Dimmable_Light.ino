@@ -41,6 +41,10 @@ ZigbeeColorDimmableLight zbColorLight = ZigbeeColorDimmableLight(ZIGBEE_LIGHT_EN
 
 /********************* RGB LED functions **************************/
 void setRGBLight(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t level) {
+  if (!state) {
+    rgbLedWrite(LED_PIN, 0, 0, 0);
+    return;
+  }
   float brightness = (float)level / 255;
   rgbLedWrite(LED_PIN, red * brightness, green * brightness, blue * brightness);
 }
@@ -60,6 +64,11 @@ void identify(uint16_t time) {
 
 /********************* Arduino functions **************************/
 void setup() {
+  Serial.begin(115200);
+  while (!Serial) {
+    delay(10);
+  }
+
   // Init RMT and leave light OFF
   rgbLedWrite(LED_PIN, 0, 0, 0);
 
@@ -76,12 +85,21 @@ void setup() {
   zbColorLight.setManufacturerAndModel("Espressif", "ZBColorLightBulb");
 
   // Add endpoint to Zigbee Core
-  log_d("Adding ZigbeeLight endpoint to Zigbee Core");
+  Serial.println("Adding ZigbeeLight endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbColorLight);
 
-  // When all EPs are registered, start Zigbee. By default acts as ZIGBEE_END_DEVICE
-  log_d("Calling Zigbee.begin()");
-  Zigbee.begin();
+  // When all EPs are registered, start Zigbee in End Device mode
+  if (!Zigbee.begin()) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
+  Serial.println("Connecting to network");
+  while (!Zigbee.connected()) {
+    Serial.print(".");
+    delay(100);
+  }
+  Serial.println();
 }
 
 void loop() {
@@ -94,10 +112,13 @@ void loop() {
       delay(50);
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
-        Serial.printf("Resetting Zigbee to factory settings, reboot.\n");
+        Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
+        delay(1000);
         Zigbee.factoryReset();
       }
     }
+    // Increase blightness by 50 every time the button is pressed
+    zbColorLight.setLightLevel(zbColorLight.getLightLevel() + 50);
   }
   delay(100);
 }
