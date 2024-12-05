@@ -441,6 +441,16 @@ For checking the code style and other code quality checks, we use pre-commit hoo
 These hooks will be automatically run by the CI when a Pull Request is marked as ``Status: Pending Merge``.
 You can check which hooks are being run in the ``.pre-commit-config.yaml`` file.
 
+Currently, we have hooks for the following tasks:
+
+* Formatters for C, C++, Python, Bash, JSON, Markdown and ReStructuredText files;
+* Linters for Python, Bash and prose (spoken language);
+* Checking for spelling errors in the code and documentation;
+* Removing trailing whitespaces and tabs in the code;
+* Checking for the presence of private keys and other sensitive information in the code;
+* Fixing the line endings and end of files (EOF) in the code;
+* And more.
+
 You can read more about the pre-commit hooks in the `pre-commit documentation <https://pre-commit.com/>`_.
 
 If you want to run the pre-commit hooks locally, you first need to install the required dependencies by running:
