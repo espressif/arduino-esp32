@@ -52,7 +52,7 @@ python -c "$replace_script"
 
 if [ "$GITHUB_REPOSITORY" == "espressif/arduino-esp32" ];  then
     echo "Linking Core..."
-    ln -s $GITHUB_WORKSPACE "$PLATFORMIO_ESP32_PATH"
+    ln -s "$GITHUB_WORKSPACE" "$PLATFORMIO_ESP32_PATH"
 else
     echo "Cloning Core Repository ..."
     git clone --recursive https://github.com/espressif/arduino-esp32.git "$PLATFORMIO_ESP32_PATH" > /dev/null 2>&1
@@ -61,7 +61,7 @@ fi
 echo "PlatformIO for ESP32 has been installed"
 echo ""
 
-function build_pio_sketch(){ # build_pio_sketch <board> <options> <path-to-ino>
+function build_pio_sketch { # build_pio_sketch <board> <options> <path-to-ino>
     if [ "$#" -lt 3 ]; then
         echo "ERROR: Illegal number of parameters"
         echo "USAGE: build_pio_sketch <board> <options> <path-to-ino>"
@@ -71,13 +71,15 @@ function build_pio_sketch(){ # build_pio_sketch <board> <options> <path-to-ino>
     local board="$1"
     local options="$2"
     local sketch="$3"
-    local sketch_dir=$(dirname "$sketch")
+    local sketch_dir
+
+    sketch_dir=$(dirname "$sketch")
     echo ""
-    echo "Compiling '"$(basename "$sketch")"' ..."
+    echo "Compiling '$(basename "$sketch")' ..."
     python -m platformio ci --board "$board" "$sketch_dir" --project-option="$options"
 }
 
-function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-path> <chunk> <total-chunks>
+function build_pio_sketches { # build_pio_sketches <board> <options> <examples-path> <chunk> <total-chunks>
     if [ "$#" -lt 3 ]; then
         echo "ERROR: Illegal number of parameters"
         echo "USAGE: build_pio_sketches <board> <options> <examples-path> [<chunk> <total-chunks>]"
@@ -108,27 +110,34 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
     ${COUNT_SKETCHES} "$examples" "esp32"
     local sketchcount=$?
     set -e
-    local sketches=$(cat sketches.txt)
+    local sketches
+    sketches=$(cat sketches.txt)
     rm -rf sketches.txt
 
-    local chunk_size=$(( $sketchcount / $chunks_num ))
-    local all_chunks=$(( $chunks_num * $chunk_size ))
+    local chunk_size
+    local all_chunks
+    local start_index
+    local end_index
+    local start_num
+
+    chunk_size=$(( sketchcount / chunks_num ))
+    all_chunks=$(( chunks_num * chunk_size ))
     if [ "$all_chunks" -lt "$sketchcount" ]; then
-        chunk_size=$(( $chunk_size + 1 ))
+        chunk_size=$(( chunk_size + 1 ))
     fi
 
-    local start_index=$(( $chunk_idex * $chunk_size ))
+    start_index=$(( chunk_idex * chunk_size ))
     if [ "$sketchcount" -le "$start_index" ]; then
         echo "Skipping job"
         return 0
     fi
 
-    local end_index=$(( $(( $chunk_idex + 1 )) * $chunk_size ))
+    end_index=$(( $(( chunk_idex + 1 )) * chunk_size ))
     if [ "$end_index" -gt "$sketchcount" ]; then
         end_index=$sketchcount
     fi
 
-    local start_num=$(( $start_index + 1 ))
+    start_num=$(( start_index + 1 ))
     echo "Found $sketchcount Sketches";
     echo "Chunk Count : $chunks_num"
     echo "Chunk Size  : $chunk_size"
@@ -137,25 +146,32 @@ function build_pio_sketches(){ # build_pio_sketches <board> <options> <examples-
 
     local sketchnum=0
     for sketch in $sketches; do
-        local sketchdir=$(dirname $sketch)
-        local sketchdirname=$(basename $sketchdir)
-        local sketchname=$(basename $sketch)
+        local sketchdir
+        local sketchdirname
+        local sketchname
+        local is_target
+        local has_requirements
+
+        sketchdir=$(dirname "$sketch")
+        sketchdirname=$(basename "$sketchdir")
+        sketchname=$(basename "$sketch")
+
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [ -f $sketchdir/ci.json ]; then
+        elif [ -f "$sketchdir"/ci.json ]; then
             # If the target is listed as false, skip the sketch. Otherwise, include it.
-            is_target=$(jq -r '.targets[esp32]' $sketchdir/ci.json)
+            is_target=$(jq -r '.targets[esp32]' "$sketchdir"/ci.json)
             if [[ "$is_target" == "false" ]]; then
                 continue
             fi
 
-            local has_requirements=$(${CHECK_REQUIREMENTS} $sketchdir "$SDKCONFIG_DIR/esp32/sdkconfig")
+            has_requirements=$(${CHECK_REQUIREMENTS} "$sketchdir" "$SDKCONFIG_DIR/esp32/sdkconfig")
             if [ "$has_requirements" == "0" ]; then
                 continue
             fi
         fi
 
-        sketchnum=$(($sketchnum + 1))
+        sketchnum=$((sketchnum + 1))
         if [ "$sketchnum" -le "$start_index" ] \
         || [ "$sketchnum" -gt "$end_index" ]; then
             continue
