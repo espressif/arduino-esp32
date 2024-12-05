@@ -14,6 +14,7 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: "v4.5.0"
     hooks:
+      # Generic checks
       - id: check-case-conflict
       - id: check-symlinks
       - id: debug-statements
@@ -25,6 +26,8 @@ repos:
         args: [--fix=lf]
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+
+      # JSON formatting
       - id: pretty-format-json
         stages: [manual]
         args: [--autofix]
@@ -35,40 +38,67 @@ repos:
               package\.json$|
               ^package\/.*$
           )
+
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.3.0"
     hooks:
+      # Spell checking
       - id: codespell
         exclude: ^.*\.(svd|SVD)$
+
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: "v18.1.3"
     hooks:
+      # C/C++ formatting
       - id: clang-format
         types_or: [c, c++]
         exclude: ^.*\/build_opt\.h$
+
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: "22.10.0"
     hooks:
+      # Python formatting
       - id: black
         types_or: [python]
         args: [--line-length=120] #From the arduino code style. Add as argument rather than creating a new config file.
+
   - repo: https://github.com/PyCQA/flake8
     rev: "7.0.0"
     hooks:
+      # Python linting
       - id: flake8
         types_or: [python]
         additional_dependencies:
           - flake8-bugbear
           - flake8-comprehensions
           - flake8-simplify
+
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v3.1.0"
     hooks:
+      # YAML formatting
       - id: prettier
         types_or: [yaml]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: "v0.10.0.1"
+    hooks:
+      # Bash linting
+      - id: shellcheck
+        types: [shell]
+
+  - repo: https://github.com/openstack/bashate
+    rev: "2.1.1"
+    hooks:
+      # Bash formatting
+      - id: bashate
+        types: [shell]
+        args: ["-i", "E006"] # Ignore E006: Line too long
+
   - repo: https://github.com/errata-ai/vale
     rev: "v3.0.7"
     hooks:
+      # Sync vale styles and lint markdown and reStructuredText
       - id: vale
         name: vale-sync
         language_version: "1.21.6"
