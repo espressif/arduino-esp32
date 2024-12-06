@@ -149,7 +149,8 @@ void loop() {
   uint32_t time_diff = millis() - button_time_stamp;
   if (button_state && time_diff > debouceTime && digitalRead(buttonPin) == HIGH) {
     button_state = false;  // released
-    // builtin button is released - send a click event to the Matter Controller
+    // builtin button is released - toggle Fan on/off
+
     Fan.toggle();
     Serial.printf("User button released. Setting the Fan %s.\r\n", Fan > 0 ? "ON" : "OFF");
 
