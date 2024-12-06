@@ -72,7 +72,8 @@ public:
   bool getOnOff();               // returns current Fan state
   bool toggle(bool performUpdate = true);                 // toggle Fun on/off state
 
-  // Fan Control of current and last speed percent 
+  // Fan Control of current speed percent 
+
   bool setSpeedPercent(uint8_t newPercent, bool performUpdate = true);  // returns true if successful
   uint8_t getSpeedPercent() {                 // returns current Fan Speed Percent
     return currentPercent;
