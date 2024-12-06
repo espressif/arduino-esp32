@@ -24,7 +24,7 @@ public:
   MatterColorLight();
   ~MatterColorLight();
   // default initial state is off, color is red 12% intensity HSV(0, 254, 31)
-  virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = { 0, 254, 31});
+  virtual bool begin(bool initialState = false, espHsvColor_t colorHSV = {0, 254, 31});
   // this will just stop processing Light Matter events
   void end();
 
@@ -67,7 +67,7 @@ public:
 protected:
   bool started = false;
   bool onOffState = false;       // default initial state is off, but it can be changed by begin(bool)
-  espHsvColor_t colorHSV = {0};  // default initial color HSV is black, but it can be changed by begin(bool, espHsvColor_t)```
+  espHsvColor_t colorHSV = {0};  // default initial color HSV is black, but it can be changed by begin(bool, espHsvColor_t)
   EndPointOnOffCB _onChangeOnOffCB = NULL;
   EndPointRGBColorCB _onChangeColorCB = NULL;
   EndPointCB _onChangeCB = NULL;
