@@ -25,6 +25,7 @@
 #include <MatterEndpoints/MatterColorTemperatureLight.h>
 #include <MatterEndpoints/MatterColorLight.h>
 #include <MatterEndpoints/MatterEnhancedColorLight.h>
+#include <MatterEndpoints/MatterFan.h>
 
 using namespace esp_matter;
 
@@ -56,6 +57,7 @@ public:
   friend class MatterColorTemperatureLight;
   friend class MatterColorLight;
   friend class MatterEnhancedColorLight;
+  friend class MatterFan;
 
 protected:
   static void _init();
