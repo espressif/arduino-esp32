@@ -47,7 +47,7 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
     return false;
   }
 
-  log_i("===> Fan Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d("Fan Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId() && cluster_id == FanControl::Id) {
     switch (attribute_id) {
