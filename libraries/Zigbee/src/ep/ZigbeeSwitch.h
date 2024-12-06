@@ -18,14 +18,17 @@ public:
   void lightToggle();
   void lightToggle(uint16_t group_addr);
   void lightToggle(uint8_t endpoint, uint16_t short_addr);
+  void lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
 
   void lightOn();
   void lightOn(uint16_t group_addr);
   void lightOn(uint8_t endpoint, uint16_t short_addr);
+  void lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
 
   void lightOff();
   void lightOff(uint16_t group_addr);
   void lightOff(uint8_t endpoint, uint16_t short_addr);
+  void lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
 
   void lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant);
   void lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on, uint16_t time_off);

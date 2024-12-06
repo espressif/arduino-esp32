@@ -60,7 +60,9 @@ void ZigbeeTempSensor::setReporting(uint16_t min_interval, uint16_t max_interval
       },
     .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
   };
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
+  esp_zb_lock_release();
 }
 
 void ZigbeeTempSensor::setTemperature(float temperature) {
@@ -158,7 +160,9 @@ void ZigbeeTempSensor::setHumidityReporting(uint16_t min_interval, uint16_t max_
       },
     .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
   };
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
+  esp_zb_lock_release();
 }
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

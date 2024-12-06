@@ -80,6 +80,8 @@ private:
   bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
   static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
   const char *getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
+  void searchBindings();
+  static void bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_info, void *user_ctx);
 
 public:
   ZigbeeCore();
