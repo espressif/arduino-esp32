@@ -8,10 +8,12 @@
 
 Matter	KEYWORD1
 ArduinoMatter	KEYWORD1
+MatterGenericSwitch	KEYWORD1
 MatterOnOffLight	KEYWORD1
 MatterDimmableLight	KEYWORD1
 MatterColorTemperatureLight	KEYWORD1
 MatterColorLight	KEYWORD1
+MatterEnhancedColorLight	KEYWORD1
 MatterEndPoint	KEYWORD1
 MatterFan	KEYWORD1
 FanMode_t	KEYWORD1
@@ -59,6 +61,7 @@ setMode	KEYWORD2
 getMode	KEYWORD2
 onChangeMode	KEYWORD2
 onChangeSpeedPercent	KEYWORD2
+click	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
