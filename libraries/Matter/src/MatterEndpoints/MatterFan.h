@@ -31,7 +31,8 @@ public:
   static const uint8_t MIN_SPEED = 1;              // minimum Low speed
   static const uint8_t OFF_SPEED = 0;              // speed set by Matter when FAN_MODE_OFF
 
-  // Default Fan Modes: ON, SMART, LOW and OFF
+  // Default Fan Modes: ON, SMART, HIGH and OFF
+
   // Other mode will depend on what is the configured Fan Mode Sequence
   enum FanMode_t {
     FAN_MODE_OFF =    (uint8_t) FanModeEnum::kOff,
