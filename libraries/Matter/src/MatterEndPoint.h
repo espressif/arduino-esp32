@@ -72,7 +72,7 @@ public:
       log_v("GET_VAL Suceess for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
       return true;
     }
-    log_v("GET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_e("GET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
     return false;
   }
 
@@ -86,7 +86,7 @@ public:
       log_v("SET_VAL Suceess for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
       return true;
     }
-    log_v("SET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_e("SET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
     return false;
   }
 
@@ -96,7 +96,7 @@ public:
       log_v("Update Suceess for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
       return true;
     }
-    log_v("Update FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_e("Update FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
     return false;
   }
 

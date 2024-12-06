@@ -50,13 +50,6 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
   log_i("===> Fan Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId() && cluster_id == FanControl::Id) {
-    //endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
-    //cluster_t *cluster = cluster::get(endpoint, FanControl::Id);
-
-    //attribute_t *attr_percent_setting = attribute::get(cluster, Attributes::PercentSetting::Id);
-    //attribute_t *attribute_percent_current = attribute::get(cluster, Attributes::PercentCurrent::Id);
-    //attribute_t *attr_fan_mode = attribute::get(cluster, Attributes::FanMode::Id);
-
     switch (attribute_id) {
         case FanControl::Attributes::FanMode::Id:
             log_d("FanControl Fan Mode changed to %s (%x)", val->val.u8 < 7 ? fanModeString[val->val.u8] : "Unknown", val->val.u8);
