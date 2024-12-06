@@ -66,8 +66,8 @@ public:
 
 protected:
   bool started = false;
-  bool onOffState = false;             // default initial state is off, but it can be changed by begin(bool)
-  espHsvColor_t colorHSV = { 0 };         // default initial color HSV is black, but it can be changed by begin(bool, espHsvColor_t)
+  bool onOffState = false;       // default initial state is off, but it can be changed by begin(bool)
+  espHsvColor_t colorHSV = {0};  // default initial color HSV is black, but it can be changed by begin(bool, espHsvColor_t)```
   EndPointOnOffCB _onChangeOnOffCB = NULL;
   EndPointRGBColorCB _onChangeColorCB = NULL;
   EndPointCB _onChangeCB = NULL;
