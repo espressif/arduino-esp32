@@ -91,12 +91,12 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
 }
 
 void ZigbeeThermostat::findEndpoint(esp_zb_zdo_match_desc_req_param_t *param) {
-    uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT};
-    param->profile_id = ESP_ZB_AF_HA_PROFILE_ID;
-    param->num_in_clusters = 1;
-    param->num_out_clusters = 0;
-    param->cluster_list = cluster_list;
-    esp_zb_zdo_match_cluster(param, findCb, &_endpoint);
+  uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT};
+  param->profile_id = ESP_ZB_AF_HA_PROFILE_ID;
+  param->num_in_clusters = 1;
+  param->num_out_clusters = 0;
+  param->cluster_list = cluster_list;
+  esp_zb_zdo_match_cluster(param, findCb, &_endpoint);
 }
 
 void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {

@@ -50,16 +50,16 @@ void ZigbeeSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t
 
 // find on_off light endpoint
 void ZigbeeSwitch::findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
-    uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF};
-    esp_zb_zdo_match_desc_req_param_t on_off_req = {
-      .dst_nwk_addr = cmd_req->dst_nwk_addr,
-      .addr_of_interest = cmd_req->addr_of_interest,
-      .profile_id = ESP_ZB_AF_HA_PROFILE_ID,
-      .num_in_clusters = 1,
-      .num_out_clusters = 1,
-      .cluster_list = cluster_list,
-    };
-    esp_zb_zdo_match_cluster(&on_off_req, findCb, &_endpoint);
+  uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF};
+  esp_zb_zdo_match_desc_req_param_t on_off_req = {
+    .dst_nwk_addr = cmd_req->dst_nwk_addr,
+    .addr_of_interest = cmd_req->addr_of_interest,
+    .profile_id = ESP_ZB_AF_HA_PROFILE_ID,
+    .num_in_clusters = 1,
+    .num_out_clusters = 1,
+    .cluster_list = cluster_list,
+  };
+  esp_zb_zdo_match_cluster(&on_off_req, findCb, &_endpoint);
 }
 
 // Methods to control the light
