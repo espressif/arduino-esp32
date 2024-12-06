@@ -81,7 +81,6 @@ public:
 
   // Fan Control of current Fan Mode
 
-  // Turning Fan using setOnOff() or toggle() will change current speed, but not the last setting
   bool setMode(FanMode_t newMode, bool performUpdate = true);   // returns true if successful
   FanMode_t getMode() {                // returns current Fan Mode
     return currentFanMode;
