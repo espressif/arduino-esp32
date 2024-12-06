@@ -128,8 +128,6 @@ protected:
   bool started = false;
   uint8_t validFanModes = 0;  // bitmap for valid Fan Modes - index of fanModeSequence[]
 
-  // tuning fan off will set the speed to 0, but it won't change the internal mode or speed percent
-  // therefore, turining it back on will resume the last mode and speed percent
   uint8_t currentPercent = 0;               // current speed percent
   FanMode_t currentFanMode = FAN_MODE_OFF;  // current Fan Mode
   EndPointModeCB _onChangeModeCB = NULL;
