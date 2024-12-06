@@ -66,7 +66,8 @@ public:
     return fanModeString[mode];
   }  
 
-  // Fan Control of current on off state
+  // Fan Control of current on/off state
+
   bool setOnOff(bool newState, bool performUpdate = true);  // sets Fan on/off state
   bool getOnOff();               // returns current Fan state
   bool toggle(bool performUpdate = true);                 // toggle Fun on/off state
