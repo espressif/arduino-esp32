@@ -86,7 +86,8 @@ public:
     return currentFanMode;
   }
   // used to update the state of the Fan using the current Matter Fan internal state
-  // It is necessary to set a user callback function using onChange() to handle the physical light state
+  // It is necessary to set a user callback function using onChange() to handle the physical Fan motor state
+
   void updateAccessory() {
     if (_onChangeCB != NULL) {
         _onChangeCB(currentFanMode, currentPercent);
