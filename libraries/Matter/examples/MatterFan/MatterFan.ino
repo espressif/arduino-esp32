@@ -87,7 +87,7 @@ void setup() {
   Fan.onChangeMode([](MatterFan::FanMode_t fanMode) {
     // when the Fan is turned on using Mode Selection, while it is OFF, shall start it by setting the speed to 50%
     if (Fan.getSpeedPercent() == 0 && fanMode != MatterFan::FAN_MODE_OFF) {
-      Serial.printf("Fan set to %s mode -- speed percentage will go to 50%\r\n", Fan.getFanModeString(fanMode));
+      Serial.printf("Fan set to %s mode -- speed percentage will go to 50%%\r\n", Fan.getFanModeString(fanMode));
       // ATTR_SET do not update the attribute, just set it to avoid inifinite loop
       return Fan.setSpeedPercent(50, Fan.ATTR_SET);
     }
