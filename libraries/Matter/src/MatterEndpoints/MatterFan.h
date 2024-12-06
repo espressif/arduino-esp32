@@ -22,7 +22,8 @@
 
 using namespace chip::app::Clusters::FanControl;
 
-// Matter Generic Switch Endpoint that works as a single click smart button
+// Matter Fan endpoint with on/off, Mode and Speed control
+
 class MatterFan : public MatterEndPoint {
 public:
   // Fan feature constants
