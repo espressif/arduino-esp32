@@ -47174,6 +47174,9 @@ yb_esp32s3_amp_v2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 yb_esp32s3_amp_v2.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
 yb_esp32s3_amp_v2.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 yb_esp32s3_amp_v2.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+yb_esp32s3_amp_v2.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+yb_esp32s3_amp_v2.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+yb_esp32s3_amp_v2.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 
 yb_esp32s3_amp_v2.menu.CPUFreq.240=240MHz (WiFi)
 yb_esp32s3_amp_v2.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -47380,6 +47383,9 @@ yb_esp32s3_amp_v3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 yb_esp32s3_amp_v3.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
 yb_esp32s3_amp_v3.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 yb_esp32s3_amp_v3.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+yb_esp32s3_amp_v3.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+yb_esp32s3_amp_v3.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+yb_esp32s3_amp_v3.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 
 yb_esp32s3_amp_v3.menu.CPUFreq.240=240MHz (WiFi)
 yb_esp32s3_amp_v3.menu.CPUFreq.240.build.f_cpu=240000000L
