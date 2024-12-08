@@ -47174,9 +47174,6 @@ yb_esp32s3_amp_v2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 yb_esp32s3_amp_v2.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
 yb_esp32s3_amp_v2.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 yb_esp32s3_amp_v2.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
-yb_esp32s3_amp_v2.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
-yb_esp32s3_amp_v2.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
-yb_esp32s3_amp_v2.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 
 yb_esp32s3_amp_v2.menu.CPUFreq.240=240MHz (WiFi)
 yb_esp32s3_amp_v2.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -47251,13 +47248,6 @@ yb_esp32s3_amp_v2.menu.EraseFlash.none=Disabled
 yb_esp32s3_amp_v2.menu.EraseFlash.none.upload.erase_cmd=
 yb_esp32s3_amp_v2.menu.EraseFlash.all=Enabled
 yb_esp32s3_amp_v2.menu.EraseFlash.all.upload.erase_cmd=-e
-
-yb_esp32s3_amp_v2.menu.ZigbeeMode.default=Disabled
-yb_esp32s3_amp_v2.menu.ZigbeeMode.default.build.zigbee_mode=
-yb_esp32s3_amp_v2.menu.ZigbeeMode.default.build.zigbee_libs=
-yb_esp32s3_amp_v2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
-yb_esp32s3_amp_v2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-yb_esp32s3_amp_v2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
 # YelloByte YB-ESP32-S3-AMP 2MB PSRAM (Rev.3)
@@ -47383,9 +47373,6 @@ yb_esp32s3_amp_v3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 yb_esp32s3_amp_v3.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
 yb_esp32s3_amp_v3.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 yb_esp32s3_amp_v3.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
-yb_esp32s3_amp_v3.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
-yb_esp32s3_amp_v3.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
-yb_esp32s3_amp_v3.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 
 yb_esp32s3_amp_v3.menu.CPUFreq.240=240MHz (WiFi)
 yb_esp32s3_amp_v3.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -47460,12 +47447,5 @@ yb_esp32s3_amp_v3.menu.EraseFlash.none=Disabled
 yb_esp32s3_amp_v3.menu.EraseFlash.none.upload.erase_cmd=
 yb_esp32s3_amp_v3.menu.EraseFlash.all=Enabled
 yb_esp32s3_amp_v3.menu.EraseFlash.all.upload.erase_cmd=-e
-
-yb_esp32s3_amp_v3.menu.ZigbeeMode.default=Disabled
-yb_esp32s3_amp_v3.menu.ZigbeeMode.default.build.zigbee_mode=
-yb_esp32s3_amp_v3.menu.ZigbeeMode.default.build.zigbee_libs=
-yb_esp32s3_amp_v3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
-yb_esp32s3_amp_v3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-yb_esp32s3_amp_v3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
 
 ##############################################################
