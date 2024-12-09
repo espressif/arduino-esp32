@@ -7,6 +7,8 @@
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 
+#define ZB_CMD_TIMEOUT 10000  // 10 seconds
+
 bool ZigbeeEP::_is_bound = false;
 bool ZigbeeEP::_allow_multiple_binding = false;
 
@@ -112,13 +114,20 @@ void ZigbeeEP::reportBatteryPercentage() {
   log_v("Battery percentage reported");
 }
 
-char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr) {
+char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
   /* Read peer Manufacture Name & Model Identifier */
   esp_zb_zcl_read_attr_cmd_t read_req;
-  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+
+  if (short_addr != 0) {
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+    read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+  } else {
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+    memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+  }
+
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
-  read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BASIC;
 
   uint16_t attributes[] = {
@@ -130,22 +139,31 @@ char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr) {
   // clear read manufacturer
   _read_manufacturer = nullptr;
 
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
 
   //Wait for response or timeout
-  if (xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE) {
+  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
     log_e("Error while reading manufacturer");
   }
   return _read_manufacturer;
 }
 
-char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr) {
+char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
   /* Read peer Manufacture Name & Model Identifier */
   esp_zb_zcl_read_attr_cmd_t read_req;
-  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+
+  if (short_addr != 0) {
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+    read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+  } else {
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+    memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+  }
+
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
-  read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BASIC;
 
   uint16_t attributes[] = {
@@ -157,11 +175,12 @@ char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr) {
   // clear read model
   _read_model = nullptr;
 
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
 
   //Wait for response or timeout
-  //Semaphore take
-  if (xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE) {
+  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
     log_e("Error while reading model");
   }
   return _read_model;
@@ -171,8 +190,23 @@ void ZigbeeEP::printBoundDevices() {
   log_i("Bound devices:");
   for ([[maybe_unused]]
        const auto &device : _bound_devices) {
-    log_i("Device on endpoint %d, short address: 0x%x", device->endpoint, device->short_addr);
-    print_ieee_addr(device->ieee_addr);
+    log_i(
+      "Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint, device->short_addr,
+      device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1],
+      device->ieee_addr[0]
+    );
+  }
+}
+
+void ZigbeeEP::printBoundDevices(Print &print) {
+  print.println("Bound devices:");
+  for ([[maybe_unused]]
+       const auto &device : _bound_devices) {
+    print.printf(
+      "Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n", device->endpoint, device->short_addr,
+      device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1],
+      device->ieee_addr[0]
+    );
   }
 }
 
