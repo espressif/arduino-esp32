@@ -26,9 +26,34 @@ const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use
 // set your board Analog Pin here - used for changing the Fan speed
 const uint8_t analogPin = A0; // Analog Pin depends on each board
 
+// set your board PWM Pin here - used for controlling the Fan speed (DC motor example)
+// for this example, it will use the builtin board RGB LED to simulate the Fan DC motor using its brightness
+#ifdef RGB_BUILTIN
+const uint8_t dcMotorPin = RGB_BUILTIN;
+#else
+const uint8_t dcMotorPin = 2;  // Set your pin here if your board has not defined LED_BUILTIN
+#warning "Do not forget to set the RGB LED pin"
+#endif
+
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
+
+void fanDCMotorDrive(bool fanState, uint8_t speedPercent) {
+    // drive the Fan DC motor
+    if (fanState == false) {
+      // turn off the Fan
+      digitalWrite(dcMotorPin, LOW);
+    } else {
+      // set the Fan speed
+      uint8_t fanDCMotorPWM = map(speedPercent, 0, 100, 0, 255);
+#ifdef RGB_BUILTIN
+      rgbLedWrite(dcMotorPin, fanDCMotorPWM, fanDCMotorPWM, fanDCMotorPWM);
+#else
+      analogWrite(dcMotorPin, fanDCMotorPWM);
+#endif
+    }
+}
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) GPIO that will toggle the Fan (On/Off)
@@ -36,7 +61,9 @@ void setup() {
   // Initialize the Analog Pin A0 used to read input voltage and to set the Fan speed accordingly
   pinMode(analogPin, INPUT);
   analogReadResolution(10); // 10 bits resolution reading 0..1023
-  
+  // Initialize the PWM output pin for a Fan DC motor
+  pinMode(dcMotorPin, OUTPUT);
+
   Serial.begin(115200);
   while (!Serial) {
     delay(100);
@@ -99,6 +126,8 @@ void setup() {
   Fan.onChange([](MatterFan::FanMode_t fanMode, uint8_t speedPercent) {
     // just report state
     Serial.printf("Fan State: Mode %s | %d%% speed.\r\n", Fan.getFanModeString(fanMode), speedPercent);
+    // drive the Fan DC motor
+    fanDCMotorDrive(fanMode != MatterFan::FAN_MODE_OFF, speedPercent);
     // returns success
     return true;
   });
