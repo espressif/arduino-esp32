@@ -66,7 +66,9 @@ public:
     return _endpoint;
   }
 
-  void printBoundDevices(Print *print = nullptr);
+  void printBoundDevices();
+  void printBoundDevices(Print &print);
+
   std::list<zb_device_params_t *> getBoundDevices() const {
     return _bound_devices;
   }
