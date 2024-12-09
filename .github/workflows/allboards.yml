@@ -1,6 +1,6 @@
 name: Boards Test - Remote trigger
 
-# The workflow will run on remote dispath with event-type set to "test-boards"
+# The workflow will run on remote dispatch with event-type set to "test-boards"
 on:
   repository_dispatch:
     types: [test-boards]
@@ -20,8 +20,7 @@ jobs:
           ref: ${{ github.event.client_payload.branch }}
 
       - name: Get boards fqbns
-        run: 
-          bash .github/scripts/find_all_boards.sh
+        run: bash .github/scripts/find_all_boards.sh
 
   setup-chunks:
     needs: find-boards
@@ -43,8 +42,7 @@ jobs:
 
       - id: set-test-chunks
         name: Set Chunks
-        run: 
-          echo "test-chunks<<EOF" >> $GITHUB_OUTPUT
+        run: echo "test-chunks<<EOF" >> $GITHUB_OUTPUT
 
           echo "$( jq -nc '${{ needs.find-boards.outputs.fqbns }} | [_nwise( ${{ needs.find-boards.outputs.board-count }}/15 | ceil)]')" >> $GITHUB_OUTPUT
 
@@ -61,7 +59,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
         chunk: ${{ fromJSON(needs.setup-chunks.outputs['test-chunks']) }}
 
     steps:
@@ -71,9 +69,8 @@ jobs:
           ref: ${{ github.event.client_payload.branch }}
 
       - name: Echo FQBNS to file
-        run:
-          echo "$FQBN" > fqbns.json
-        env: 
+        run: echo "$FQBN" > fqbns.json
+        env:
           FQBN: ${{ toJSON(matrix.chunk) }}
 
       - name: Compile sketch
@@ -88,5 +85,4 @@ jobs:
           enable-warnings-report: false
           cli-compile-flags: |
             - --warnings="all"
-          sketch-paths:
-            "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
+          sketch-paths: "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"

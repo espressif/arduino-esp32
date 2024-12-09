@@ -16,22 +16,22 @@ on:
   pull_request:
     types: [opened, reopened, closed, synchronize, labeled, unlabeled]
     paths:
-      - '.github/workflows/tests*'
-      - '.github/scripts/*.sh'
-      - '!.github/scripts/check-cmakelists.sh'
-      - '!.github/scripts/find_*'
-      - '!.github/scripts/on-*.sh'
-      - '!.github/scripts/set_push_chunks.sh'
-      - '!.github/scripts/update-version.sh'
-      - '!.github/scripts/upload_py_tools.sh'
-      - 'tests/**'
-      - 'cores/**'
-      - 'libraries/*/src/**.cpp'
-      - 'libraries/*/src/**.h'
-      - 'libraries/*/src/**.c'
-      - 'package/**'
+      - ".github/workflows/tests*"
+      - ".github/scripts/*.sh"
+      - "!.github/scripts/check-cmakelists.sh"
+      - "!.github/scripts/find_*"
+      - "!.github/scripts/on-*.sh"
+      - "!.github/scripts/set_push_chunks.sh"
+      - "!.github/scripts/update-version.sh"
+      - "!.github/scripts/upload_py_tools.sh"
+      - "tests/**"
+      - "cores/**"
+      - "libraries/*/src/**.cpp"
+      - "libraries/*/src/**.h"
+      - "libraries/*/src/**.c"
+      - "package/**"
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
 
 concurrency:
   group: tests-${{ github.event.pull_request.number || github.ref }}
@@ -115,7 +115,7 @@ jobs:
       fail-fast: false
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.qemu-types) }}
-        chip: ['esp32', 'esp32c3']
+        chip: ["esp32", "esp32c3"]
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
