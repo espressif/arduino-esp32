@@ -90,19 +90,19 @@ void setup() {
   Fan.begin(0, MatterFan::FAN_MODE_OFF, MatterFan::FAN_MODE_SEQ_OFF_HIGH);
 
   // callback functions would control Fan motor
-  // the Matter Controller will send new data whenver the User APP or Automation request
+  // the Matter Controller will send new data whenever the User APP or Automation request
 
   // single feature callbacks take place before the generic (all features) callback
   // This callback will be executed whenever the speed percent matter attribute is updated
   Fan.onChangeSpeedPercent([](uint8_t speedPercent) {
     // setting speed to Zero, while the Fan is ON, shall turn the Fan OFF
     if (speedPercent == MatterFan::OFF_SPEED && Fan.getMode() != MatterFan::FAN_MODE_OFF) {
-      // ATTR_SET do not update the attribute, just SET it to avoid inifinite loop
+      // ATTR_SET do not update the attribute, just SET it to avoid infinite loop
       return Fan.setOnOff(false, Fan.ATTR_SET);
     }
     // changing the speed to higher than Zero, while the Fan is OFF, shall turn the Fan ON
     if (speedPercent > MatterFan::OFF_SPEED && Fan.getMode() == MatterFan::FAN_MODE_OFF) {
-      // ATTR_SET do not update the attribute, just SET it to avoid inifinite loop
+      // ATTR_SET do not update the attribute, just SET it to avoid infinite loop
       return Fan.setOnOff(true, Fan.ATTR_SET);
     }
     // for other case, just return true
@@ -115,7 +115,7 @@ void setup() {
     // when the Fan is turned ON using Mode Selection, while it is OFF, shall start it by setting the speed to 50%
     if (Fan.getSpeedPercent() == MatterFan::OFF_SPEED && fanMode != MatterFan::FAN_MODE_OFF) {
       Serial.printf("Fan set to %s mode -- speed percentage will go to 50%%\r\n", Fan.getFanModeString(fanMode));
-      // ATTR_SET do not update the attribute, just SET it to avoid inifinite loop
+      // ATTR_SET do not update the attribute, just SET it to avoid infinite loop
       return Fan.setSpeedPercent(50, Fan.ATTR_SET);
     }
     return true;

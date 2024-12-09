@@ -68,7 +68,7 @@ public:
       return false;
     }
     if (attribute::get_val(attribute, attrVal) == ESP_OK) {
-      log_v("GET_VAL Suceess for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+      log_v("GET_VAL Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
       return true;
     }
     log_e("GET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
@@ -82,7 +82,7 @@ public:
       return false;
     }
     if (attribute::set_val(attribute, attrVal) == ESP_OK) {
-      log_v("SET_VAL Suceess for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+      log_v("SET_VAL Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
       return true;
     }
     log_e("SET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
@@ -92,7 +92,7 @@ public:
   // update the value of an attribute from its cluster id and attribute it
   bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
     if (attribute::update(endpoint_id, cluster_id, attribute_id, attrVal) == ESP_OK) {
-      log_v("Update Suceess for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+      log_v("Update Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
       return true;
     }
     log_e("Update FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);

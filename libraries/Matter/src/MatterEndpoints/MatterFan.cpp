@@ -96,7 +96,7 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
   endpoint_t *endpoint = fan::create(node::get(), &fan_config, ENDPOINT_FLAG_NONE, (void *)this);
 
   if (endpoint == nullptr) {
-    log_e("Failed to create Generic swtich endpoint");
+    log_e("Failed to create Fan endpoint");
     return false;
   }
 
@@ -152,7 +152,7 @@ bool MatterFan::setMode(FanMode_t newMode, bool performUpdate) {
   return true;
 }
 
-// this function will change the Fan Speed by callin the user application callback
+// this function will change the Fan Speed by calling the user application callback
 // it is up to the application to decide to turn on, off or change the speed of the fan
 bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
   if (!started) {
