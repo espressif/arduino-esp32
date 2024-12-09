@@ -1,126 +1,130 @@
 #!/bin/bash
 
-function run_test() {
+function run_test {
     local target=$1
     local sketch=$2
     local options=$3
     local erase_flash=$4
-    local sketchdir=$(dirname $sketch)
-    local sketchname=$(basename $sketchdir)
+    local sketchdir
+    local sketchname
     local result=0
     local error=0
     local sdkconfig_path
+    local extra_args
 
-    if [ $options -eq 0 ] && [ -f $sketchdir/ci.json ]; then
-        len=`jq -r --arg target $target '.fqbn[$target] | length' $sketchdir/ci.json`
-        if [ $len -eq 0 ]; then
+    sketchdir=$(dirname "$sketch")
+    sketchname=$(basename "$sketchdir")
+
+    if [ "$options" -eq 0 ] && [ -f "$sketchdir"/ci.json ]; then
+        len=$(jq -r --arg target "$target" '.fqbn[$target] | length' "$sketchdir"/ci.json)
+        if [ "$len" -eq 0 ]; then
             len=1
         fi
     else
         len=1
     fi
 
-    if [ $len -eq 1 ]; then
+    if [ "$len" -eq 1 ]; then
         sdkconfig_path="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
     else
         sdkconfig_path="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
     fi
 
-    if [ -f $sketchdir/ci.json ]; then
+    if [ -f "$sketchdir"/ci.json ]; then
         # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
-        is_target=$(jq -r --arg target $target '.targets[$target]' $sketchdir/ci.json)
-        selected_platform=$(jq -r --arg platform $platform '.platforms[$platform]' $sketchdir/ci.json)
+        is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
+        selected_platform=$(jq -r --arg platform "$platform" '.platforms[$platform]' "$sketchdir"/ci.json)
 
         if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
-            printf "\033[93mSkipping $sketchname test for $target, platform: $platform\033[0m\n"
+            printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$sketchname" "$target" "$platform"
             printf "\n\n\n"
             return 0
         fi
     fi
 
-    if [ ! -f $sdkconfig_path ]; then
-        printf "\033[93mSketch $sketchname not built\nMight be due to missing target requirements or build failure\033[0m\n"
+    if [ ! -f "$sdkconfig_path" ]; then
+        printf "\033[93mSketch %s not built\nMight be due to missing target requirements or build failure\033[0m\n" "$sketchname"
         printf "\n\n\n"
         return 0
     fi
 
-    local right_target=$(grep -E "^CONFIG_IDF_TARGET=\"$target\"$" "$sdkconfig_path")
+    local right_target
+    right_target=$(grep -E "^CONFIG_IDF_TARGET=\"$target\"$" "$sdkconfig_path")
     if [ -z "$right_target" ]; then
-        printf "\033[91mError: Sketch $sketchname compiled for different target\n\033[0m\n"
+        printf "\033[91mError: Sketch %s compiled for different target\n\033[0m\n" "$sketchname"
         printf "\n\n\n"
         return 1
     fi
 
-    if [ $len -eq 1 ]; then
-      # build_dir="$sketchdir/build"
-      build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
-      report_file="$sketchdir/$target/$sketchname.xml"
+    if [ "$len" -eq 1 ]; then
+        # build_dir="$sketchdir/build"
+        build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
+        report_file="$sketchdir/$target/$sketchname.xml"
     fi
 
-    for i in `seq 0 $(($len - 1))`
-    do
+    for i in $(seq 0 $((len - 1))); do
         fqbn="Default"
 
-        if [ $len -ne 1 ]; then
-            fqbn=`jq -r --arg target $target --argjson i $i '.fqbn[$target] | sort | .[$i]' $sketchdir/ci.json`
-        elif [ -f $sketchdir/ci.json ]; then
-            has_fqbn=`jq -r --arg target $target '.fqbn[$target]' $sketchdir/ci.json`
+        if [ "$len" -ne 1 ]; then
+            fqbn=$(jq -r --arg target "$target" --argjson i "$i" '.fqbn[$target] | sort | .[$i]' "$sketchdir"/ci.json)
+        elif [ -f "$sketchdir"/ci.json ]; then
+            has_fqbn=$(jq -r --arg target "$target" '.fqbn[$target]' "$sketchdir"/ci.json)
             if [ "$has_fqbn" != "null" ]; then
-                fqbn=`jq -r --arg target $target '.fqbn[$target] | .[0]' $sketchdir/ci.json`
+                fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | .[0]' "$sketchdir"/ci.json)
             fi
         fi
 
-        printf "\033[95mRunning test: $sketchname -- Config: $fqbn\033[0m\n"
-        if [ $erase_flash -eq 1 ]; then
-            esptool.py -c $target erase_flash
+        printf "\033[95mRunning test: %s -- Config: %s\033[0m\n" "$sketchname" "$fqbn"
+        if [ "$erase_flash" -eq 1 ]; then
+            esptool.py -c "$target" erase_flash
         fi
 
-        if [ $len -ne 1 ]; then
+        if [ "$len" -ne 1 ]; then
             # build_dir="$sketchdir/build$i"
             build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
             report_file="$sketchdir/$target/$sketchname$i.xml"
         fi
 
         if [ $platform == "wokwi" ]; then
-            extra_args="--target $target --embedded-services arduino,wokwi --wokwi-timeout=$wokwi_timeout"
+            extra_args=("--target" "$target" "--embedded-services" "arduino,wokwi" "--wokwi-timeout=$wokwi_timeout")
             if [[ -f "$sketchdir/scenario.yaml" ]]; then
-                extra_args+=" --wokwi-scenario $sketchdir/scenario.yaml"
+                extra_args+=("--wokwi-scenario" "$sketchdir/scenario.yaml")
             fi
             if [[ -f "$sketchdir/diagram.$target.json" ]]; then
-                extra_args+=" --wokwi-diagram $sketchdir/diagram.$target.json"
+                extra_args+=("--wokwi-diagram" "$sketchdir/diagram.$target.json")
             fi
 
         elif [ $platform == "qemu" ]; then
             PATH=$HOME/qemu/bin:$PATH
-            extra_args="--embedded-services qemu --qemu-image-path $build_dir/$sketchname.ino.merged.bin"
+            extra_args=("--embedded-services" "qemu" "--qemu-image-path" "$build_dir/$sketchname.ino.merged.bin")
 
-            if [ $target == "esp32" ] || [ $target == "esp32s3" ]; then
-                extra_args+=" --qemu-prog-path qemu-system-xtensa --qemu-cli-args=\"-machine $target -m 4M -nographic\""
-            elif [ $target == "esp32c3" ]; then
-                extra_args+=" --qemu-prog-path qemu-system-riscv32 --qemu-cli-args=\"-machine $target -icount 3 -nographic\""
+            if [ "$target" == "esp32" ] || [ "$target" == "esp32s3" ]; then
+                extra_args+=("--qemu-prog-path" "qemu-system-xtensa" "--qemu-cli-args=\"-machine $target -m 4M -nographic\"")
+            elif [ "$target" == "esp32c3" ]; then
+                extra_args+=("--qemu-prog-path" "qemu-system-riscv32" "--qemu-cli-args=\"-machine $target -icount 3 -nographic\"")
             else
-                printf "\033[91mUnsupported QEMU target: $target\033[0m\n"
+                printf "\033[91mUnsupported QEMU target: %s\033[0m\n" "$target"
                 exit 1
             fi
         else
-            extra_args="--embedded-services esp,arduino"
+            extra_args=("--embedded-services" "esp,arduino")
         fi
 
-        rm $sketchdir/diagram.json 2>/dev/null || true
+        rm "$sketchdir"/diagram.json 2>/dev/null || true
 
         result=0
-        printf "\033[95mpytest $sketchdir/test_$sketchname.py --build-dir $build_dir --junit-xml=$report_file $extra_args\033[0m\n"
-        bash -c "set +e; pytest $sketchdir/test_$sketchname.py --build-dir $build_dir --junit-xml=$report_file $extra_args; exit \$?" || result=$?
+        printf "\033[95mpytest \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "${extra_args[*]@Q}"
+        bash -c "set +e; pytest \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" ${extra_args[*]@Q}; exit \$?" || result=$?
         printf "\n"
         if [ $result -ne 0 ]; then
             result=0
-            printf "\033[95mRetrying test: $sketchname -- Config: $i\033[0m\n"
-            printf "\033[95mpytest $sketchdir/test_$sketchname.py --build-dir $build_dir --junit-xml=$report_file $extra_args\033[0m\n"
-            bash -c "set +e; pytest $sketchdir/test_$sketchname.py --build-dir $build_dir --junit-xml=$report_file $extra_args; exit \$?" || result=$?
+            printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
+            printf "\033[95mpytest \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "${extra_args[*]@Q}"
+            bash -c "set +e; pytest \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" ${extra_args[*]@Q}; exit \$?" || result=$?
             printf "\n"
             if [ $result -ne 0 ]; then
-              printf "\033[91mFailed test: $sketchname -- Config: $i\033[0m\n\n"
-              error=$result
+                printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$sketchname" "$i"
+                error=$result
             fi
         fi
     done
@@ -136,13 +140,13 @@ chunk_run=0
 options=0
 erase=0
 
-while [ ! -z "$1" ]; do
+while [ -n "$1" ]; do
     case $1 in
     -c )
         chunk_run=1
         ;;
     -Q )
-        if [ ! -d $QEMU_PATH ]; then
+        if [ ! -d "$QEMU_PATH" ]; then
             echo "QEMU path $QEMU_PATH does not exist"
             exit 1
         fi
@@ -188,98 +192,97 @@ while [ ! -z "$1" ]; do
         test_type=$1
         ;;
     * )
-      break
-      ;;
+        break
+        ;;
     esac
     shift
 done
 
 if [ ! $platform == "qemu" ]; then
-    source ${SCRIPTS_DIR}/install-arduino-ide.sh
+    source "${SCRIPTS_DIR}/install-arduino-ide.sh"
 fi
 
 # If sketch is provided and test type is not, test type is inferred from the sketch path
 if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
     if [ -n "$sketch" ]; then
-        tmp_sketch_path=$(find tests -name $sketch.ino)
-        test_type=$(basename $(dirname $(dirname "$tmp_sketch_path")))
+        tmp_sketch_path=$(find tests -name "$sketch".ino)
+        test_type=$(basename "$(dirname "$(dirname "$tmp_sketch_path")")")
         echo "Sketch $sketch test type: $test_type"
         test_folder="$PWD/tests/$test_type"
     else
-      test_folder="$PWD/tests"
+        test_folder="$PWD/tests"
     fi
 else
     test_folder="$PWD/tests/$test_type"
 fi
 
 if [ $chunk_run -eq 0 ]; then
-    if [ -z $sketch ]; then
+    if [ -z "$sketch" ]; then
         echo "ERROR: Sketch name is required for single test run"
         exit 1
     fi
-    run_test $target $test_folder/$sketch/$sketch.ino $options $erase
+    run_test "$target" "$test_folder"/"$sketch"/"$sketch".ino $options $erase
     exit $?
 else
-  if [ "$chunk_max" -le 0 ]; then
-      echo "ERROR: Chunks count must be positive number"
-      exit 1
-  fi
+    if [ "$chunk_max" -le 0 ]; then
+        echo "ERROR: Chunks count must be positive number"
+        exit 1
+    fi
 
-  if [ "$chunk_index" -ge "$chunk_max" ] && [ "$chunk_max" -ge 2 ]; then
-      echo "ERROR: Chunk index must be less than chunks count"
-      exit 1
-  fi
+    if [ "$chunk_index" -ge "$chunk_max" ] && [ "$chunk_max" -ge 2 ]; then
+        echo "ERROR: Chunk index must be less than chunks count"
+        exit 1
+    fi
 
-  set +e
-  # Ignore requirements as we don't have the libs. The requirements will be checked in the run_test function
-  ${COUNT_SKETCHES} "$test_folder" "$target" "1"
-  sketchcount=$?
-  set -e
-  sketches=$(cat sketches.txt)
-  rm -rf sketches.txt
+    set +e
+    # Ignore requirements as we don't have the libs. The requirements will be checked in the run_test function
+    ${COUNT_SKETCHES} "$test_folder" "$target" "1"
+    sketchcount=$?
+    set -e
+    sketches=$(cat sketches.txt)
+    rm -rf sketches.txt
 
-  chunk_size=$(( $sketchcount / $chunk_max ))
-  all_chunks=$(( $chunk_max * $chunk_size ))
-  if [ "$all_chunks" -lt "$sketchcount" ]; then
-      chunk_size=$(( $chunk_size + 1 ))
-  fi
+    chunk_size=$(( sketchcount / chunk_max ))
+    all_chunks=$(( chunk_max * chunk_size ))
+    if [ "$all_chunks" -lt "$sketchcount" ]; then
+        chunk_size=$(( chunk_size + 1 ))
+    fi
 
-  start_index=0
-  end_index=0
-  if [ "$chunk_index" -ge "$chunk_max" ]; then
-      start_index=$chunk_index
-      end_index=$sketchcount
-  else
-      start_index=$(( $chunk_index * $chunk_size ))
-      if [ "$sketchcount" -le "$start_index" ]; then
-          exit 0
-      fi
+    start_index=0
+    end_index=0
+    if [ "$chunk_index" -ge "$chunk_max" ]; then
+        start_index=$chunk_index
+        end_index=$sketchcount
+    else
+        start_index=$(( chunk_index * chunk_size ))
+        if [ "$sketchcount" -le "$start_index" ]; then
+            exit 0
+        fi
 
-      end_index=$(( $(( $chunk_index + 1 )) * $chunk_size ))
-      if [ "$end_index" -gt "$sketchcount" ]; then
-          end_index=$sketchcount
-      fi
-  fi
+        end_index=$(( $(( chunk_index + 1 )) * chunk_size ))
+        if [ "$end_index" -gt "$sketchcount" ]; then
+            end_index=$sketchcount
+        fi
+    fi
 
-  start_num=$(( $start_index + 1 ))
-  sketchnum=0
-  error=0
+    sketchnum=0
+    error=0
 
-  for sketch in $sketches; do
+    for sketch in $sketches; do
 
-      sketchnum=$(($sketchnum + 1))
-      if [ "$sketchnum" -le "$start_index" ] \
-      || [ "$sketchnum" -gt "$end_index" ]; then
-          continue
-      fi
+        sketchnum=$((sketchnum + 1))
+        if [ "$sketchnum" -le "$start_index" ] \
+        || [ "$sketchnum" -gt "$end_index" ]; then
+            continue
+        fi
 
-      printf "\033[95mSketch Index $(($sketchnum - 1))\033[0m\n"
+        printf "\033[95mSketch Index %s\033[0m\n" "$((sketchnum - 1))"
 
-      exit_code=0
-      run_test $target $sketch $options $erase || exit_code=$?
-      if [ $exit_code -ne 0 ]; then
-          error=$exit_code
-      fi
-  done
-  exit $error
+        exit_code=0
+        run_test "$target" "$sketch" $options $erase || exit_code=$?
+        if [ $exit_code -ne 0 ]; then
+            error=$exit_code
+        fi
+    done
+    exit $error
 fi
