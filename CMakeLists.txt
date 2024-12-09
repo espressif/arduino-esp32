@@ -175,6 +175,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterColorLight.cpp
   libraries/Matter/src/MatterEndpoints/MatterEnhancedColorLight.cpp
   libraries/Matter/src/MatterEndpoints/MatterFan.cpp
+  libraries/Matter/src/MatterEndpoints/MatterTemperatureSensor.cpp
   libraries/Matter/src/Matter.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS
@@ -401,3 +402,4 @@ endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_WiFiProv)
     maybe_add_component(espressif__network_provisioning)
 endif()
+
