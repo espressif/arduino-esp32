@@ -23,13 +23,13 @@ class MatterTemperatureSensor : public MatterEndPoint {
 public:
   MatterTemperatureSensor();
   ~MatterTemperatureSensor();
-  // default initial raw temperature
+  // begin Matter Temperature Sensor endpoint
   virtual bool begin(int16_t _rawTemperature = 0);
   bool begin(double temperatureCelcius) {
     int16_t rawValue = static_cast<int16_t>(temperatureCelcius * 100.0f);
     return begin(rawValue);
   }
-  // this will just stop processing Temperature Sensor Matter events
+  // this will stop processing Temperature Sensor Matter events
   void end();
 
   // set the reported raw temperature
@@ -38,23 +38,25 @@ public:
     int16_t rawValue = static_cast<int16_t>(temperatureCelcius * 100.0f);
     return setRawTemperature(rawValue);
   }
-  int16_t getRawTemperature() {                             // returns the reported raw temperature
+  // returns the reported raw temperature (in 1/100th of a degree)
+  int16_t getRawTemperature() {
     return rawTemperature;
   }
-  double getTemperatureCelsius() {                           // returns the reported temperature in Celcius
+  // returns the reported temperature in Celcius
+  double getTemperatureCelsius() {
     return (double)rawTemperature / 100.0;
   }
-  void operator=(double temperatureCelcius) {               // sets the reported temperature in Celcius
+  // sets the reported temperature in Celcius
+  void operator=(double temperatureCelcius) {
     int16_t rawValue = static_cast<int16_t>(temperatureCelcius * 100.0f);
     setRawTemperature(rawValue);
   }
-  operator double() {                                       // returns the reported temperature in Celcius
+  operator double() {
     return (double) getTemperatureCelsius();
   }
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
-  // User Callback for whenever the Light state is changed by the Matter Controller
 
 protected:
   bool started = false;

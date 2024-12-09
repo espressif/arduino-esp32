@@ -16,7 +16,6 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <Matter.h>
-#include <app/server/Server.h>
 #include <MatterEndpoints/MatterTemperatureSensor.h>
 
 using namespace esp_matter;
@@ -48,7 +47,7 @@ bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
   temperature_sensor_config.temperature_measurement.min_measured_value = nullptr;
   temperature_sensor_config.temperature_measurement.max_measured_value = nullptr;
 
-  // endpoint handles can be used to add/modify clusters.
+  // endpoint handles can be used to add/modify clusters
   endpoint_t *endpoint = temperature_sensor::create(node::get(), &temperature_sensor_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create Temperature Sensor endpoint");

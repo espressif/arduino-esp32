@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /*
- * This example is the smallest code that will create a Matter Device which can be
+ * This example is an example code that will create a Matter Device which can be
  * commissioned and controlled from a Matter Environment APP.
  * Additionally the ESP32 will send debug messages indicating the Matter activity.
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
@@ -25,8 +25,6 @@
 
 // List of Matter Endpoints for this Node
 // Celcius Temperature Sensor Endpoint
-
-
 MatterTemperatureSensor CelciusTempSensor;
 
 // WiFi is manually set and started
@@ -34,7 +32,6 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 // Simulate a temperature sensor - add your prefered temperature sensor library code here
-
 float getTemperature() {
   static float CelciusTempHWSensor = -10.0;
   
@@ -60,7 +57,7 @@ void setup() {
   Serial.println();
   
   // set initial temperature sensor measurement
-  // Simulated Sensor - it shall print -25C first and then move to the -10C to 10C range
+  // Simulated Sensor - it shall initially print -25C and then move to the -10C to 10C range
   CelciusTempSensor.begin(-25.00);
 
   // Matter beginning - Last step, after all EndPoints are initialized
@@ -89,8 +86,7 @@ void setup() {
 void loop() {
   Serial.printf("Current Temperature is %.02fC\r\n", (float)CelciusTempSensor);
   // update the temperature sensor value every 5 seconds
-  // Matter phone APP shall display the temperature change 
-
+  // Matter APP shall display the updated temperature
   delay(5000);
   CelciusTempSensor = getTemperature();
 }
