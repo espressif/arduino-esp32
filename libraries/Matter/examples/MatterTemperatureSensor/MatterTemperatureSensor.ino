@@ -31,7 +31,7 @@ MatterTemperatureSensor SimulatedTemperatureSensor;
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
-// Simulate a temperature sensor - add your prefered temperature sensor library code here
+// Simulate a temperature sensor - add your preferred temperature sensor library code here
 float getSimulatedTemperature() {
   // The Endpoint implementation keeps an int16_t as internal value information,
   // which stores data in 1/100th of any temperature unit

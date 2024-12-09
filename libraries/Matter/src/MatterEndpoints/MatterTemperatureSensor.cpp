@@ -91,7 +91,7 @@ bool MatterTemperatureSensor::setRawTemperature(int16_t _rawTemperature) {
     }
     rawTemperature = _rawTemperature;
   }
-  log_v("Temperature Sensor set to %.02f Celcius Degrees", (float)_rawTemperature / 100.00);
+  log_v("Temperature Sensor set to %.02f Degrees", (float)_rawTemperature / 100.00);
 
   return true;
 }
