@@ -329,6 +329,12 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         }
       }
       break;
+    case ESP_ZB_ZDO_SIGNAL_LEAVE: // End Device
+      // Device was removed from the network, factory reset the device
+      if ((zigbee_role_t)Zigbee.getRole() != ZIGBEE_COORDINATOR) {
+        Zigbee.factoryReset();
+      }
+      break;
     default: log_v("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;
   }
 }
