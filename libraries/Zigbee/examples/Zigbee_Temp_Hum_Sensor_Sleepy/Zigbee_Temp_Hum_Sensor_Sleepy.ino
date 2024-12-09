@@ -128,6 +128,7 @@ void loop() {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
         Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
         delay(1000);
+        Zigbee.factoryReset();
       }
     }
   }

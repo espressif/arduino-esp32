@@ -190,6 +190,6 @@ void loop() {
   static uint32_t lastPrint = 0;
   if (millis() - lastPrint > 10000) {
     lastPrint = millis();
-    zbSwitch.printBoundDevices(&Serial);
+    zbSwitch.printBoundDevices(Serial);
   }
 }
