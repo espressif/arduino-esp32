@@ -25,7 +25,7 @@ public:
   ~MatterTemperatureSensor();
   // begin Matter Temperature Sensor endpoint with initial float temperature
   bool begin(double temperature) {
-    return setTemperature(temperature);
+    return begin(static_cast<int16_t>(temperature * 100.0f));
   }
   // this will stop processing Temperature Sensor Matter events
   void end();
