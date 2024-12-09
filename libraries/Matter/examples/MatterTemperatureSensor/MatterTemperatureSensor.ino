@@ -88,7 +88,8 @@ void setup() {
 void loop() {
   Serial.printf("Current Temperature is %.02fC\r\n", (float)CelciusTempSensor);
   // update the temperature sensor value every 5 seconds
-  // Matter phone APP shall display the change in temperature
+  // Matter phone APP shall display the temperature change 
+
   delay(5000);
   CelciusTempSensor = getTemperature();
 }
