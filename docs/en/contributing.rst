@@ -178,6 +178,7 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32c3``
 * ``espressif:esp32:esp32c6``
 * ``espressif:esp32:esp32h2``
+* ``espressif:esp32:esp32p4:USBMode=default``
 
 There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.json`` file.
 
@@ -439,6 +440,16 @@ Code Style Checks
 For checking the code style and other code quality checks, we use pre-commit hooks.
 These hooks will be automatically run by the CI when a Pull Request is marked as ``Status: Pending Merge``.
 You can check which hooks are being run in the ``.pre-commit-config.yaml`` file.
+
+Currently, we have hooks for the following tasks:
+
+* Formatters for C, C++, Python, Bash, JSON, Markdown and ReStructuredText files;
+* Linters for Python, Bash and prose (spoken language);
+* Checking for spelling errors in the code and documentation;
+* Removing trailing whitespaces and tabs in the code;
+* Checking for the presence of private keys and other sensitive information in the code;
+* Fixing the line endings and end of files (EOF) in the code;
+* And more.
 
 You can read more about the pre-commit hooks in the `pre-commit documentation <https://pre-commit.com/>`_.
 

@@ -8,6 +8,11 @@ Note: This sketch takes up a lot of space for the app and may not be able to fla
    - for example "No OTA (2MB APP/2MB SPIFFS)"
 */
 
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#error "WiFiProv is only supported in SoCs with native Wi-Fi support"
+#endif
+
 #include "WiFiProv.h"
 #include "WiFi.h"
 

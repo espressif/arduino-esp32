@@ -79,10 +79,14 @@ public:
   tcpip_adapter_if_t interface();
 
   IPAddress localIP();
+#if CONFIG_LWIP_IPV6
   IPAddress localIPv6();
+#endif
   uint16_t localPort();
   IPAddress remoteIP();
+#if CONFIG_LWIP_IPV6
   IPAddress remoteIPv6();
+#endif
   uint16_t remotePort();
   void remoteMac(uint8_t *mac);
 
@@ -146,7 +150,9 @@ public:
   size_t broadcast(AsyncUDPMessage &message);
 
   IPAddress listenIP();
+#if CONFIG_LWIP_IPV6
   IPAddress listenIPv6();
+#endif
   bool connected();
   esp_err_t lastErr();
   operator bool();

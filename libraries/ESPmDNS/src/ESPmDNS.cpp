@@ -39,6 +39,7 @@ License (MIT license):
 #endif
 
 #include "ESPmDNS.h"
+#ifdef CONFIG_MDNS_MAX_INTERFACES
 #include <functional>
 #include "esp_mac.h"
 #include "soc/soc_caps.h"
@@ -391,3 +392,5 @@ String MDNSResponder::txtKey(int idx, int txtIdx) {
 }
 
 MDNSResponder MDNS;
+
+#endif /* CONFIG_MDNS_MAX_INTERFACES */

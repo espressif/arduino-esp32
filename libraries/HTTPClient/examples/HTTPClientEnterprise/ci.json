@@ -1,6 +1,6 @@
 {
-  "requires_any": [
-    "CONFIG_SOC_WIFI_SUPPORTED=y",
-    "CONFIG_ESP_WIFI_REMOTE_ENABLED=y"
+  "fqbn_append": "PartitionScheme=huge_app",
+  "requires": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y"
   ]
 }

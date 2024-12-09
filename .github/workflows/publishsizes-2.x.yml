@@ -11,11 +11,11 @@ env:
 
 jobs:
   sizes-test-results:
-    name: Sizes Comparsion Results
+    name: Sizes Comparison Results
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # This step checks out the repository's code at gh-pages branch
+        uses: actions/checkout@v4 # This step checks out the repository's code at gh-pages branch
         with:
           ref: gh-pages
 
@@ -41,8 +41,7 @@ jobs:
           destination-file: ${{ env.RESULT_SIZES_TEST_FILE }}
 
       - name: Append file with action URL
-        run:
-          echo "/ [GitHub Action Link](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})" >> ${{ env.RESULT_SIZES_TEST_FILE }}
+        run: echo "/ [GitHub Action Link](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})" >> ${{ env.RESULT_SIZES_TEST_FILE }}
 
       - name: Push to github repo
         run: |

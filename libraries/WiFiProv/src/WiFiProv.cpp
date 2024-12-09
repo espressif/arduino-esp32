@@ -18,7 +18,8 @@
 
 */
 #include "soc/soc_caps.h"
-#if SOC_WIFI_SUPPORTED
+#include "sdkconfig.h"
+#if SOC_WIFI_SUPPORTED && CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
 
 #include <stdio.h>
 #include <stdint.h>

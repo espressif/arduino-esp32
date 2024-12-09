@@ -74,7 +74,7 @@ private:
   arduino_usb_vendor_control_request_handler_t cb;
 
 public:
-  USBVendor(uint8_t endpoint_size = 64);
+  USBVendor(uint16_t endpoint_size = 0);
   void begin(void);
   void end(void);
   size_t setRxBufferSize(size_t);
