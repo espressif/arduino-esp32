@@ -141,7 +141,7 @@ const uint8_t BOOT_PIN = 0;
 #elif CONFIG_IDF_TARGET_ESP32P4
 const uint8_t BOOT_PIN = 35;
 #else
-// All other series C and HSoC use GPIO 9 as BOOT PIN
+// All other series C and H SoC use GPIO 9 as BOOT PIN
 const uint8_t BOOT_PIN = 9;
 #endif
 
