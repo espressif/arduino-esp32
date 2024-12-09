@@ -63,10 +63,8 @@ setMode	KEYWORD2
 getMode	KEYWORD2
 onChangeMode	KEYWORD2
 onChangeSpeedPercent	KEYWORD2
-setRawTemperature	KEYWORD2
-getRawTemperature	KEYWORD2
-setTemperatureCelsius	KEYWORD2
-getTemperatureCelsius	KEYWORD2
+setTemperature	KEYWORD2
+getTemperature	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
