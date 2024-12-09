@@ -27,62 +27,62 @@ using namespace chip::app::Clusters::FanControl;
 class MatterFan : public MatterEndPoint {
 public:
   // Fan feature constants
-  static const uint8_t MAX_SPEED = 100;            // maximum High speed
-  static const uint8_t MIN_SPEED = 1;              // minimum Low speed
-  static const uint8_t OFF_SPEED = 0;              // speed set by Matter when FAN_MODE_OFF
+  static const uint8_t MAX_SPEED = 100;  // maximum High speed
+  static const uint8_t MIN_SPEED = 1;    // minimum Low speed
+  static const uint8_t OFF_SPEED = 0;    // speed set by Matter when FAN_MODE_OFF
 
   // Default Fan Modes: ON, SMART, HIGH and OFF
 
   // Other mode will depend on what is the configured Fan Mode Sequence
   enum FanMode_t {
-    FAN_MODE_OFF =    (uint8_t) FanModeEnum::kOff,
-    FAN_MODE_LOW =    (uint8_t) FanModeEnum::kLow,
-    FAN_MODE_MEDIUM = (uint8_t) FanModeEnum::kMedium,
-    FAN_MODE_HIGH =   (uint8_t) FanModeEnum::kHigh,
-    FAN_MODE_ON =     (uint8_t) FanModeEnum::kOn,
-    FAN_MODE_AUTO =   (uint8_t) FanModeEnum::kAuto,
-    FAN_MODE_SMART =  (uint8_t) FanModeEnum::kSmart
+    FAN_MODE_OFF = (uint8_t)FanModeEnum::kOff,
+    FAN_MODE_LOW = (uint8_t)FanModeEnum::kLow,
+    FAN_MODE_MEDIUM = (uint8_t)FanModeEnum::kMedium,
+    FAN_MODE_HIGH = (uint8_t)FanModeEnum::kHigh,
+    FAN_MODE_ON = (uint8_t)FanModeEnum::kOn,
+    FAN_MODE_AUTO = (uint8_t)FanModeEnum::kAuto,
+    FAN_MODE_SMART = (uint8_t)FanModeEnum::kSmart
   };
 
   // Menu will always have ON, OFF, HIGH and SMART.
   // AUTO will show up only when a AUTO SEQ is CONFIGURED
   // LOW and MEDIUM depend on the SEQ MODE configuration
   enum FanModeSequence_t {
-    FAN_MODE_SEQ_OFF_LOW_MED_HIGH =      (uint8_t) FanModeSequenceEnum::kOffLowMedHigh,
-    FAN_MODE_SEQ_OFF_LOW_HIGH =          (uint8_t) FanModeSequenceEnum::kOffLowHigh,
-    FAN_MODE_SEQ_OFF_LOW_MED_HIGH_AUTO = (uint8_t) FanModeSequenceEnum::kOffLowMedHighAuto,
-    FAN_MODE_SEQ_OFF_LOW_HIGH_AUTO =     (uint8_t) FanModeSequenceEnum::kOffLowHighAuto,
-    FAN_MODE_SEQ_OFF_HIGH_AUTO =         (uint8_t) FanModeSequenceEnum::kOffHighAuto,
-    FAN_MODE_SEQ_OFF_HIGH =              (uint8_t) FanModeSequenceEnum::kOffHigh
+    FAN_MODE_SEQ_OFF_LOW_MED_HIGH = (uint8_t)FanModeSequenceEnum::kOffLowMedHigh,
+    FAN_MODE_SEQ_OFF_LOW_HIGH = (uint8_t)FanModeSequenceEnum::kOffLowHigh,
+    FAN_MODE_SEQ_OFF_LOW_MED_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffLowMedHighAuto,
+    FAN_MODE_SEQ_OFF_LOW_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffLowHighAuto,
+    FAN_MODE_SEQ_OFF_HIGH_AUTO = (uint8_t)FanModeSequenceEnum::kOffHighAuto,
+    FAN_MODE_SEQ_OFF_HIGH = (uint8_t)FanModeSequenceEnum::kOffHigh
   };
-  
+
   MatterFan();
   ~MatterFan();
   virtual bool begin(uint8_t percent = 0, FanMode_t fanMode = FAN_MODE_OFF, FanModeSequence_t fanModeSeq = FAN_MODE_SEQ_OFF_HIGH);
-  void end();            // this will just stop processing Matter events
+  void end();  // this will just stop processing Matter events
 
   // returns a friendly string for the Fan Mode
   static const char *getFanModeString(uint8_t mode) {
     return fanModeString[mode];
-  }  
+  }
 
   // Fan Control of current On/Off state
 
   bool setOnOff(bool newState, bool performUpdate = true);  // sets Fan On/Off state
-  bool getOnOff();               // returns current Fan state
-  bool toggle(bool performUpdate = true);                 // toggle Fun On/Off state
+  bool getOnOff();                                          // returns current Fan state
+  bool toggle(bool performUpdate = true);                   // toggle Fun On/Off state
 
-  // Fan Control of current speed percent 
+  // Fan Control of current speed percent
 
   bool setSpeedPercent(uint8_t newPercent, bool performUpdate = true);  // returns true if successful
-  uint8_t getSpeedPercent() {                 // returns current Fan Speed Percent
+  uint8_t getSpeedPercent() {                                           // returns current Fan Speed Percent
     return currentPercent;
   }
 
   // Fan Control of current Fan Mode
 
-  bool setMode(FanMode_t newMode, bool performUpdate = true);   // returns true if successful
-  FanMode_t getMode() {                // returns current Fan Mode
+  bool setMode(FanMode_t newMode, bool performUpdate = true);  // returns true if successful
+  FanMode_t getMode() {                                        // returns current Fan Mode
     return currentFanMode;
   }
   // used to update the state of the Fan using the current Matter Fan internal state
@@ -90,12 +90,12 @@ public:
 
   void updateAccessory() {
     if (_onChangeCB != NULL) {
-        _onChangeCB(currentFanMode, currentPercent);
+      _onChangeCB(currentFanMode, currentPercent);
     }
   }
 
   // returns current Fan speed percent
-  operator uint8_t() {                   
+  operator uint8_t() {
     return getSpeedPercent();
   }
   // sets Fan speed percent
@@ -135,16 +135,16 @@ protected:
   EndPointCB _onChangeCB = NULL;
 
   // bitmap for Fan Sequence Modes (OFF, LOW, MEDIUM, HIGH, AUTO)
-  static const uint8_t fanSeqModeOff =    0x01;
-  static const uint8_t fanSeqModeLow =    0x02;
+  static const uint8_t fanSeqModeOff = 0x01;
+  static const uint8_t fanSeqModeLow = 0x02;
   static const uint8_t fanSeqModeMedium = 0x04;
-  static const uint8_t fanSeqModeHigh =   0x08;
-  static const uint8_t fanSeqModeOn =     0x10;
-  static const uint8_t fanSeqModeAuto =   0x20;
-  static const uint8_t fanSeqModeSmart =  0x40;
+  static const uint8_t fanSeqModeHigh = 0x08;
+  static const uint8_t fanSeqModeOn = 0x10;
+  static const uint8_t fanSeqModeAuto = 0x20;
+  static const uint8_t fanSeqModeSmart = 0x40;
 
   // bitmap for common modes: ON, OFF, HIGH and SMART
-  static const uint8_t fanSeqCommonModes = fanSeqModeOff | fanSeqModeOn | fanSeqModeHigh | fanSeqModeSmart;  
+  static const uint8_t fanSeqCommonModes = fanSeqModeOff | fanSeqModeOn | fanSeqModeHigh | fanSeqModeSmart;
 
   static const uint8_t fanSeqModeOffLowMedHigh = fanSeqCommonModes | fanSeqModeLow | fanSeqModeMedium;
   static const uint8_t fanSeqModeOffLowHigh = fanSeqCommonModes | fanSeqModeLow;

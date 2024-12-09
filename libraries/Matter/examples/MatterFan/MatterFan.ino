@@ -24,7 +24,7 @@ MatterFan Fan;
 const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use GPIO9.
 
 // set your board Analog Pin here - used for changing the Fan speed
-const uint8_t analogPin = A0; // Analog Pin depends on each board
+const uint8_t analogPin = A0;  // Analog Pin depends on each board
 
 // set your board PWM Pin here - used for controlling the Fan speed (DC motor example)
 // for this example, it will use the builtin board RGB LED to simulate the Fan DC motor using its brightness
@@ -40,19 +40,19 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 void fanDCMotorDrive(bool fanState, uint8_t speedPercent) {
-    // drive the Fan DC motor
-    if (fanState == false) {
-      // turn off the Fan
-      digitalWrite(dcMotorPin, LOW);
-    } else {
-      // set the Fan speed
-      uint8_t fanDCMotorPWM = map(speedPercent, 0, 100, 0, 255);
+  // drive the Fan DC motor
+  if (fanState == false) {
+    // turn off the Fan
+    digitalWrite(dcMotorPin, LOW);
+  } else {
+    // set the Fan speed
+    uint8_t fanDCMotorPWM = map(speedPercent, 0, 100, 0, 255);
 #ifdef RGB_BUILTIN
-      rgbLedWrite(dcMotorPin, fanDCMotorPWM, fanDCMotorPWM, fanDCMotorPWM);
+    rgbLedWrite(dcMotorPin, fanDCMotorPWM, fanDCMotorPWM, fanDCMotorPWM);
 #else
-      analogWrite(dcMotorPin, fanDCMotorPWM);
+    analogWrite(dcMotorPin, fanDCMotorPWM);
 #endif
-    }
+  }
 }
 
 void setup() {
@@ -60,7 +60,7 @@ void setup() {
   pinMode(buttonPin, INPUT_PULLUP);
   // Initialize the Analog Pin A0 used to read input voltage and to set the Fan speed accordingly
   pinMode(analogPin, INPUT);
-  analogReadResolution(10); // 10 bits resolution reading 0..1023
+  analogReadResolution(10);  // 10 bits resolution reading 0..1023
   // Initialize the PWM output pin for a Fan DC motor
   pinMode(dcMotorPin, OUTPUT);
 
@@ -90,8 +90,8 @@ void setup() {
   Fan.begin(0, MatterFan::FAN_MODE_OFF, MatterFan::FAN_MODE_SEQ_OFF_HIGH);
 
   // callback functions would control Fan motor
-  // the Matter Controller will send new data whenver the User APP or Automation request 
-  
+  // the Matter Controller will send new data whenver the User APP or Automation request
+
   // single feature callbacks take place before the generic (all features) callback
   // This callback will be executed whenever the speed percent matter attribute is updated
   Fan.onChangeSpeedPercent([](uint8_t speedPercent) {
@@ -105,10 +105,10 @@ void setup() {
       // ATTR_SET do not update the attribute, just SET it to avoid inifinite loop
       return Fan.setOnOff(true, Fan.ATTR_SET);
     }
-    // for other case, just return true 
+    // for other case, just return true
     return true;
   });
-  
+
   // This callback will be executed whenever the fan mode matter attribute is updated
   // This will take action when user APP starts the Fan by changing the mode
   Fan.onChangeMode([](MatterFan::FanMode_t fanMode) {
@@ -120,7 +120,7 @@ void setup() {
     }
     return true;
   });
-  
+
   // Generic callback will be executed as soon as a single feature callback is done
   // In this example, it will just print status messages
   Fan.onChange([](MatterFan::FanMode_t fanMode, uint8_t speedPercent) {
@@ -193,7 +193,7 @@ void loop() {
   static int lastRead = 0;
   // analog values (0..1023) / 103 => mapped into 10 steps (0..9)
   int anaVal = analogRead(analogPin) / 103;
-  if (lastRead != anaVal) { 
+  if (lastRead != anaVal) {
     // speed percent moves in steps of 10. Range is 10..100
     if (Fan.setSpeedPercent((anaVal + 1) * 10)) {
       lastRead = anaVal;

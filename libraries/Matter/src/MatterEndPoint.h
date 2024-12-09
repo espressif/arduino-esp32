@@ -24,22 +24,21 @@ using namespace esp_matter;
 // Matter Endpoint Base Class. Controls the endpoint ID and allows the child class to overwrite attribute change call
 class MatterEndPoint {
 public:
-
   enum attrOperation_t {
-    ATTR_SET    = false,
+    ATTR_SET = false,
     ATTR_UPDATE = true
   };
 
   uint16_t getEndPointId() {
     return endpoint_id;
   }
-  
+
   void setEndPointId(uint16_t ep) {
     endpoint_id = ep;
   }
 
   // helper functions for attribute manipulation
-  attribute_t * getAttribute(uint32_t cluster_id, uint32_t attribute_id){
+  attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id) {
     if (endpoint_id == 0) {
       log_e("Endpoint ID is not set");
       return NULL;
@@ -63,7 +62,7 @@ public:
   }
 
   // get the value of an attribute from its cluster id and attribute it
-  bool getAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal){
+  bool getAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
     attribute_t *attribute = getAttribute(cluster_id, attribute_id);
     if (attribute == NULL) {
       return false;
@@ -77,7 +76,7 @@ public:
   }
 
   // set the value of an attribute from its cluster id and attribute it
-  bool setAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal){
+  bool setAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
     attribute_t *attribute = getAttribute(cluster_id, attribute_id);
     if (attribute == NULL) {
       return false;
@@ -91,7 +90,7 @@ public:
   }
 
   // update the value of an attribute from its cluster id and attribute it
-  bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal){
+  bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
     if (attribute::update(endpoint_id, cluster_id, attribute_id, attrVal) == ESP_OK) {
       log_v("Update Suceess for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
       return true;

@@ -26,14 +26,11 @@ using namespace chip::app::Clusters;
 // string helper for the FAN MODE
 const char *MatterFan::fanModeString[7] = {"OFF", "LOW", "MEDIUM", "HIGH", "ON", "AUTO", "SMART"};
 // bitmap for valid Fan Modes based on order defined in Zap Generated Cluster Enums
-const uint8_t MatterFan::fanModeSequence[6] = {
-  fanSeqModeOffLowMedHigh, fanSeqModeOffLowHigh, fanSeqModeOffLowMedHighAuto,
-  fanSeqModeOffLowHighAuto, fanSeqModeOffHighAuto, fanSeqModeOffHigh
-};
+const uint8_t MatterFan::fanModeSequence[6] = {fanSeqModeOffLowMedHigh,  fanSeqModeOffLowHigh,  fanSeqModeOffLowMedHighAuto,
+                                               fanSeqModeOffLowHighAuto, fanSeqModeOffHighAuto, fanSeqModeOffHigh};
 
 // Constructor and Method Definitions
-MatterFan::MatterFan() {
-}
+MatterFan::MatterFan() {}
 
 MatterFan::~MatterFan() {
   end();
@@ -51,34 +48,34 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
 
   if (endpoint_id == getEndPointId() && cluster_id == FanControl::Id) {
     switch (attribute_id) {
-        case FanControl::Attributes::FanMode::Id:
-            log_v("FanControl Fan Mode changed to %s (%x)", val->val.u8 < 7 ? fanModeString[val->val.u8] : "Unknown", val->val.u8);
-            if (_onChangeModeCB != NULL) {
-                ret &= _onChangeModeCB((FanMode_t) val->val.u8);
-            }
-            if ( _onChangeCB != NULL) {
-                ret &= _onChangeCB((FanMode_t) val->val.u8, currentPercent);
-            }
-            if (ret == true) {
-                currentFanMode = (FanMode_t) val->val.u8;
-            }
-            break;
-        case FanControl::Attributes::PercentSetting::Id:
-        case  FanControl::Attributes::PercentCurrent::Id:
-            log_v("FanControl Percent %s changed to %d", attribute_id ==  FanControl::Attributes::PercentSetting::Id ? "SETTING" : "CURRENT", val->val.u8);
-            if (_onChangeSpeedCB != NULL) {
-                ret &= _onChangeSpeedCB(val->val.u8);
-            }
-            if ( _onChangeCB != NULL) {
-                ret &= _onChangeCB(currentFanMode, val->val.u8);
-            }
-            if (ret == true) {
-                // change setting speed percent
-                currentPercent = val->val.u8;
-                setAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, val);
-                setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, val);
-            }
-            break;
+      case FanControl::Attributes::FanMode::Id:
+        log_v("FanControl Fan Mode changed to %s (%x)", val->val.u8 < 7 ? fanModeString[val->val.u8] : "Unknown", val->val.u8);
+        if (_onChangeModeCB != NULL) {
+          ret &= _onChangeModeCB((FanMode_t)val->val.u8);
+        }
+        if (_onChangeCB != NULL) {
+          ret &= _onChangeCB((FanMode_t)val->val.u8, currentPercent);
+        }
+        if (ret == true) {
+          currentFanMode = (FanMode_t)val->val.u8;
+        }
+        break;
+      case FanControl::Attributes::PercentSetting::Id:
+      case FanControl::Attributes::PercentCurrent::Id:
+        log_v("FanControl Percent %s changed to %d", attribute_id == FanControl::Attributes::PercentSetting::Id ? "SETTING" : "CURRENT", val->val.u8);
+        if (_onChangeSpeedCB != NULL) {
+          ret &= _onChangeSpeedCB(val->val.u8);
+        }
+        if (_onChangeCB != NULL) {
+          ret &= _onChangeCB(currentFanMode, val->val.u8);
+        }
+        if (ret == true) {
+          // change setting speed percent
+          currentPercent = val->val.u8;
+          setAttributeVal(FanControl::Id, FanControl::Attributes::PercentSetting::Id, val);
+          setAttributeVal(FanControl::Id, FanControl::Attributes::PercentCurrent::Id, val);
+        }
+        break;
     }
   }
 
@@ -102,7 +99,7 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
     log_e("Failed to create Generic swtich endpoint");
     return false;
   }
-  
+
   currentFanMode = fanMode;
   currentPercent = percent;
 
@@ -137,8 +134,8 @@ bool MatterFan::setMode(FanMode_t newMode, bool performUpdate) {
     log_e("Failed to get Fan Mode Attribute.");
     return false;
   }
-  if (modeVal.val.u8 != (uint8_t) newMode) {
-    modeVal.val.u8 = (uint8_t) newMode;
+  if (modeVal.val.u8 != (uint8_t)newMode) {
+    modeVal.val.u8 = (uint8_t)newMode;
     bool ret;
     if (performUpdate) {
       ret = updateAttributeVal(FanControl::Id, FanControl::Attributes::FanMode::Id, &modeVal);
@@ -153,7 +150,6 @@ bool MatterFan::setMode(FanMode_t newMode, bool performUpdate) {
   currentFanMode = newMode;
   log_v("Fan Mode %s to %s ==> onOffState[%s]", performUpdate ? "updated" : "set", fanModeString[currentFanMode], getOnOff() ? "ON" : "OFF");
   return true;
-
 }
 
 // this function will change the Fan Speed by callin the user application callback
@@ -189,13 +185,13 @@ bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
   }
   currentPercent = newPercent;
   log_v("Fan Speed %s to %d ==> onOffState[%s]", performUpdate ? "updated" : "set", currentPercent, getOnOff() ? "ON" : "OFF");
-  return true;  
+  return true;
 }
 
 bool MatterFan::setOnOff(bool newState, bool performUpdate) {
   if (!started) {
     log_w("Matter Fan device has not begun.");
-    return false; 
+    return false;
   }
   // avoid processing the a "no-change"
   if (getOnOff() == newState) {
@@ -207,13 +203,15 @@ bool MatterFan::setOnOff(bool newState, bool performUpdate) {
     log_e("Failed to get Fan Mode Attribute.");
     return false;
   }
-  if (modeVal.val.u8 != (uint8_t) newState) {
+  if (modeVal.val.u8 != (uint8_t)newState) {
     FanMode_t newMode = newState ? FAN_MODE_ON : FAN_MODE_OFF;
     if (!setMode(newMode, performUpdate)) {
       return false;
     }
   }
-  log_v("Fan State %s to %s :: Mode[%s]|Speed[%d]", performUpdate ? "updated" : "set", getOnOff() ? "ON" : "OFF", fanModeString[currentFanMode], currentPercent);
+  log_v(
+    "Fan State %s to %s :: Mode[%s]|Speed[%d]", performUpdate ? "updated" : "set", getOnOff() ? "ON" : "OFF", fanModeString[currentFanMode], currentPercent
+  );
   return true;
 }
 
@@ -228,6 +226,5 @@ bool MatterFan::toggle(bool performUpdate) {
     return setOnOff(true, performUpdate);
   }
 }
-
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
