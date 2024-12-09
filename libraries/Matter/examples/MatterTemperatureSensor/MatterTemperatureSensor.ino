@@ -24,7 +24,8 @@
 #include <WiFi.h>
 
 // List of Matter Endpoints for this Node
-// Celcius Temperature Sensor Endpoint - at least one per node
+// Celcius Temperature Sensor Endpoint
+
 MatterTemperatureSensor CelciusTempSensor;
 
 // WiFi is manually set and started
