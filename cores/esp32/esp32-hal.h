@@ -61,6 +61,19 @@ extern "C" {
 #define ARDUINO_EVENT_RUNNING_CORE CONFIG_ARDUINO_EVENT_RUNNING_CORE
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+static const uint8_t BOOT_PIN = 0;
+#elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C61
+static const uint8_t BOOT_PIN = 9;
+#elif CONFIG_IDF_TARGET_ESP32P4
+static const uint8_t BOOT_PIN = 35;
+#elif CONFIG_IDF_TARGET_ESP32C5
+static const uint8_t BOOT_PIN = 28;
+#else
+#error BOOT_PIN not defined for this chip!
+#endif
+#define BOOT_PIN BOOT_PIN
+
 //forward declaration from freertos/portmacro.h
 void vPortYield(void);
 void yield(void);
