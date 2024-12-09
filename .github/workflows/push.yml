@@ -225,14 +225,13 @@ jobs:
   #     fail-fast: false
   #     matrix:
   #       os: [ubuntu-latest, windows-latest, macOS-latest]
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-      - name: Build Sketches
-        run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.x"
+  #     - name: Build Sketches
+  #       run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO
 
   # ESP-IDF component build
   build-esp-idf-component:
