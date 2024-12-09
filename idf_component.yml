@@ -65,20 +65,14 @@ dependencies:
       - if: "target != esp32c2"
   espressif/esp_rainmaker:
     version: "^1.0.0"
-    rules:
-      - if: "target != esp32c2"
   espressif/rmaker_common:
     version: "^1.4.6"
-    rules:
-      - if: "target != esp32c2"
   espressif/esp_insights:
     version: "^1.2.1"
     rules:
       - if: "target != esp32c2"
   espressif/qrcode:
     version: "^0.1.0~1"
-    rules:
-      - if: "target != esp32c2"
   espressif/esp-sr:
     version: "^1.4.2"
     rules:
