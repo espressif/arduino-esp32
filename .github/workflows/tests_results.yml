@@ -18,11 +18,11 @@ jobs:
       github.event.workflow_run.conclusion == 'timed_out'
     runs-on: ubuntu-latest
     permissions:
-        actions: write
-        statuses: write
-        checks: write
-        pull-requests: write
-        contents: write
+      actions: write
+      statuses: write
+      checks: write
+      pull-requests: write
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -139,13 +139,13 @@ jobs:
             core.info(`${name} is ${state}`);
 
       - name: Create output folder
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
         run: |
           rm -rf artifacts
           mkdir -p runtime-tests-results
 
       - name: Generate badge
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
         uses: jaywcjlove/generated-badges@v1.0.13
         with:
           label: Runtime Tests
@@ -154,7 +154,7 @@ jobs:
           color: ${{ job.status == 'success' && 'green' || 'red' }}
 
       - name: Push badge
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }}
+        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

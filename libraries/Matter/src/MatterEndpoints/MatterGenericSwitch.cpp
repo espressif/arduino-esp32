@@ -47,7 +47,7 @@ bool MatterGenericSwitch::begin() {
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = generic_switch::create(node::get(), &switch_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
-    log_e("Failed to create Generic swtich endpoint");
+    log_e("Failed to create Generic switch endpoint");
     return false;
   }
   // Add group cluster to the switch endpoint

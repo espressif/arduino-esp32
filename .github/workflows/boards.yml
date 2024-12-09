@@ -4,9 +4,9 @@ name: Boards Test
 on:
   pull_request:
     paths:
-      - 'boards.txt'
-      - 'libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino'
-      - '.github/workflows/boards.yml'
+      - "boards.txt"
+      - "libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
+      - ".github/workflows/boards.yml"
 
 env:
   # It's convenient to set variables for values used multiple times in the workflow
@@ -28,8 +28,7 @@ jobs:
         uses: dcarbone/install-jq-action@v1.0.1
 
       - name: Get board name
-        run:
-          bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{github.base_ref}}
+        run: bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{github.base_ref}}
 
   test-boards:
     needs: find-boards
@@ -72,7 +71,7 @@ jobs:
             ./tools/openocd-esp32
             ./tools/riscv32-*
             ./tools/xtensa-*
-            
+
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@main
         with:
@@ -85,6 +84,5 @@ jobs:
           cli-compile-flags: |
             - --warnings="all"
           exit-on-fail: true
-          sketch-paths:
-            "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
+          sketch-paths: "- ./libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino"
           verbose: true

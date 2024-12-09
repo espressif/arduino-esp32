@@ -3,11 +3,11 @@ name: Build Python Tools
 on:
   pull_request:
     paths:
-      - '.github/workflows/build_py_tools.yml'
-      - 'tools/get.py'
-      - 'tools/espota.py'
-      - 'tools/gen_esp32part.py'
-      - 'tools/gen_insights_package.py'
+      - ".github/workflows/build_py_tools.yml"
+      - "tools/get.py"
+      - "tools/espota.py"
+      - "tools/gen_esp32part.py"
+      - "tools/gen_insights_package.py"
 
 jobs:
   find-changed-tools:
@@ -33,8 +33,8 @@ jobs:
         uses: tj-actions/changed-files@v41
         id: verify-changed-files
         with:
-          fetch_depth: '2'
-          since_last_remote_commit: 'true'
+          fetch_depth: "2"
+          since_last_remote_commit: "true"
           files: |
             tools/get.py
             tools/espota.py
@@ -57,20 +57,20 @@ jobs:
       matrix:
         os: [windows-latest, macos-latest, ubuntu-20.04, ARM]
         include:
-        - os: windows-latest
-          TARGET: win64
-          EXTEN: .exe
-          SEPARATOR: ';'
-        - os: macos-latest
-          TARGET: macos
-          SEPARATOR: ':'
-        - os: ubuntu-20.04
-          TARGET: linux-amd64
-          SEPARATOR: ':'
-        - os: ARM
-          CONTAINER: python:3.8-bullseye
-          TARGET: arm
-          SEPARATOR: ':'
+          - os: windows-latest
+            TARGET: win64
+            EXTEN: .exe
+            SEPARATOR: ";"
+          - os: macos-latest
+            TARGET: macos
+            SEPARATOR: ":"
+          - os: ubuntu-20.04
+            TARGET: linux-amd64
+            SEPARATOR: ":"
+          - os: ARM
+            CONTAINER: python:3.8-bullseye
+            TARGET: arm
+            SEPARATOR: ":"
     container: ${{ matrix.CONTAINER }} # use python container on ARM
     env:
       DISTPATH: pytools-${{ matrix.TARGET }}

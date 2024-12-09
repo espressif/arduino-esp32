@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        * Before reporting a new issue please check and search in [List of existing issues](https://github.com/espressif/arduino-esp32/issues?q=is%3Aissue) 
+        * Before reporting a new issue please check and search in [List of existing issues](https://github.com/espressif/arduino-esp32/issues?q=is%3Aissue)
         * Please check [Online Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/index.html)
         * Take a look on [Troubleshooting guide](https://docs.espressif.com/projects/arduino-esp32/en/latest/troubleshooting.html)
         * If still experiencing the issue, please provide as many details as possible below about your hardware, computer setup and code.
@@ -24,7 +24,7 @@ body:
       description: What development board or other hardware is the chip attached to?
       placeholder: ex. DevKitC, plain module on breadboard, etc. If your hardware is custom or unusual, please attach a photo.
     validations:
-       required: true
+      required: true
   - type: textarea
     id: other-hw
     attributes:
@@ -60,7 +60,7 @@ body:
         - v2.0.8
         - v2.0.7
         - v2.0.6
-        - v2.0.5 
+        - v2.0.5
         - v2.0.4
         - v2.0.3
         - v2.0.2
@@ -77,7 +77,7 @@ body:
      description: What IDE are you using?
      placeholder: eg. Arduino IDE, PlatformIO, Sloeber...
     validations:
-     required: true
+      required: true
   - type: input
     id: os
     attributes:
@@ -95,13 +95,13 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: PSRAM 
+    id: PSRAM
     attributes:
       label: PSRAM enabled
       description: Is PSRAM enabled?
       options:
-        - 'yes'
-        - 'no' 
+        - "yes"
+        - "no"
     validations:
       required: true
   - type: input
@@ -116,8 +116,8 @@ body:
     id: Description
     attributes:
       label: Description
-      description: Please describe your problem here and expected behaviour
-      placeholder: ex. Can't connect/weird behaviour/wrong function/missing parameter..
+      description: Please describe your problem here and expected behavior
+      placeholder: ex. Can't connect/weird behavior/wrong function/missing parameter..
     validations:
       required: true
   - type: textarea
@@ -128,7 +128,7 @@ body:
       placeholder: ex. Related part of the code to replicate the issue
       render: cpp
     validations:
-     required: true
+      required: true
   - type: textarea
     id: Debug
     attributes:
@@ -137,11 +137,11 @@ body:
       placeholder: Enable Core debug level - Debug on tools menu of Arduino IDE, then put the serial output here.
       render: plain
     validations:
-      required: true      
+      required: true
   - type: textarea
     id: other-remarks
     attributes:
-      label: Other Steps to Reproduce 
+      label: Other Steps to Reproduce
       description: Is there any other information you can think of which will help us reproduce this problem? Any additional info can be added as well.
       placeholder: ex. I also tried on other OS, HW...it works correctly on that setup.
   - type: checkboxes
