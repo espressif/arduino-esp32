@@ -32,7 +32,8 @@ MatterTemperatureSensor CelciusTempSensor;
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
-// Simulate a temperature sensor - add you prefered library code here
+// Simulate a temperature sensor - add your prefered temperature sensor library code here
+
 float getTemperature() {
   static float CelciusTempHWSensor = -10.0;
   
