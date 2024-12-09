@@ -33,15 +33,15 @@ const char *password = "your-password";  // Change this to your WiFi password
 
 // Simulate a temperature sensor - add your prefered temperature sensor library code here
 float getTemperature() {
-  static float CelciusTempHWSensor = -10.0;
+  static float celciusTempHWSensor = -10.0;
   
   // it will increase from -10C to 10C in 0.5C steps to simulate a temperature sensor
-  CelciusTempHWSensor = CelciusTempHWSensor + 0.5;
-  if (CelciusTempHWSensor > 10) {
-    CelciusTempHWSensor = -10;
+  celciusTempHWSensor = celciusTempHWSensor + 0.5;
+  if (celciusTempHWSensor > 10) {
+    celciusTempHWSensor = -10;
   }
 
-  return CelciusTempHWSensor;
+  return celciusTempHWSensor;
 }
 
 void setup() {
