@@ -24,24 +24,26 @@
 #include <WiFi.h>
 
 // List of Matter Endpoints for this Node
-// Celcius Temperature Sensor Endpoint
-MatterTemperatureSensor CelciusTempSensor;
+// Matter Temperature Sensor Endpoint
+MatterTemperatureSensor SimulatedTemperatureSensor;
 
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 // Simulate a temperature sensor - add your prefered temperature sensor library code here
-float getTemperature() {
-  static float celciusTempHWSensor = -10.0;
+float getSimulatedTemperature() {
+  // The Endpoint implementation keeps an int16_t as internal value information, 
+  // which stores data in 1/100th of any temperature unit
+  static float simulatedTempHWSensor = -10.0;
   
   // it will increase from -10C to 10C in 0.5C steps to simulate a temperature sensor
-  celciusTempHWSensor = celciusTempHWSensor + 0.5;
-  if (celciusTempHWSensor > 10) {
-    celciusTempHWSensor = -10;
+  simulatedTempHWSensor = simulatedTempHWSensor + 0.5;
+  if (simulatedTempHWSensor > 10) {
+    simulatedTempHWSensor = -10;
   }
 
-  return celciusTempHWSensor;
+  return simulatedTempHWSensor;
 }
 
 void setup() {
@@ -57,8 +59,8 @@ void setup() {
   Serial.println();
   
   // set initial temperature sensor measurement
-  // Simulated Sensor - it shall initially print -25C and then move to the -10C to 10C range
-  CelciusTempSensor.begin(-25.00);
+  // Simulated Sensor - it shall initially print -25 degrees and then move to the -10 to 10 range
+  SimulatedTemperatureSensor.begin(-25.00);
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
@@ -84,9 +86,9 @@ void setup() {
 }
 
 void loop() {
-  Serial.printf("Current Temperature is %.02fC\r\n", (float)CelciusTempSensor);
+  Serial.printf("Current Temperature is %.02f <Temperature Units>\r\n", SimulatedTemperatureSensor.getTemperature());
   // update the temperature sensor value every 5 seconds
   // Matter APP shall display the updated temperature
   delay(5000);
-  CelciusTempSensor = getTemperature();
+  SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());
 }

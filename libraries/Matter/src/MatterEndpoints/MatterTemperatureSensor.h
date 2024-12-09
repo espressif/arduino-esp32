@@ -23,36 +23,30 @@ class MatterTemperatureSensor : public MatterEndPoint {
 public:
   MatterTemperatureSensor();
   ~MatterTemperatureSensor();
-  // begin Matter Temperature Sensor endpoint
-  virtual bool begin(int16_t _rawTemperature = 0);
-  bool begin(double temperatureCelcius) {
-    int16_t rawValue = static_cast<int16_t>(temperatureCelcius * 100.0f);
-    return begin(rawValue);
+  // begin Matter Temperature Sensor endpoint with initial float temperature
+  bool begin(double temperature) {
+    return setTemperature(temperature);
   }
   // this will stop processing Temperature Sensor Matter events
   void end();
 
   // set the reported raw temperature
-  bool setRawTemperature(int16_t _rawTemperature);
-  bool setTemperatureCelsius(double temperatureCelcius) {
-    int16_t rawValue = static_cast<int16_t>(temperatureCelcius * 100.0f);
+  bool setTemperature(double temperature) {
+    // stores up to 1/100th of a degree precision
+    int16_t rawValue = static_cast<int16_t>(temperature * 100.0f);
     return setRawTemperature(rawValue);
   }
-  // returns the reported raw temperature (in 1/100th of a degree)
-  int16_t getRawTemperature() {
-    return rawTemperature;
-  }
-  // returns the reported temperature in Celcius
-  double getTemperatureCelsius() {
+  // returns the reported float temperature with 1/100th of a degree precision
+  double getTemperature() {
     return (double)rawTemperature / 100.0;
   }
-  // sets the reported temperature in Celcius
-  void operator=(double temperatureCelcius) {
-    int16_t rawValue = static_cast<int16_t>(temperatureCelcius * 100.0f);
-    setRawTemperature(rawValue);
+  // double conversion operator
+  void operator=(double temperature) {
+    setTemperature(temperature);
   }
+  // double conversion operator
   operator double() {
-    return (double) getTemperatureCelsius();
+    return (double) getTemperature();
   }
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
@@ -60,6 +54,10 @@ public:
 
 protected:
   bool started = false;
-  int16_t rawTemperature = 0;  // default initial reported temperature
+  // implementation keeps temperature in 1/100th of a degree, any temperature unit
+  int16_t rawTemperature = 0;
+  // internal function to set the raw temperature value (Matter Cluster)
+  bool setRawTemperature(int16_t _rawTemperature);
+  bool begin(int16_t _rawTemperature);
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
