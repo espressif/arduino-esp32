@@ -402,4 +402,3 @@ endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_WiFiProv)
     maybe_add_component(espressif__network_provisioning)
 endif()
-

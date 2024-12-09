@@ -46,7 +46,7 @@ public:
   }
   // double conversion operator
   operator double() {
-    return (double) getTemperature();
+    return (double)getTemperature();
   }
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
