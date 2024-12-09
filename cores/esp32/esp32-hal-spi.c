@@ -1135,6 +1135,11 @@ void spiTransaction(spi_t * spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bi
         spi->dev->ctrl.wr_bit_order = 1;
         spi->dev->ctrl.rd_bit_order = 1;
     }
+#if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+    // Sync new config with hardware, backported from https://github.com/espressif/arduino-esp32/pull/9333
+    spi->dev->cmd.update = 1;
+    while (spi->dev->cmd.update);
+#endif
 }
 
 void spiSimpleTransaction(spi_t * spi)
