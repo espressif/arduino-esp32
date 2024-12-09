@@ -15,7 +15,6 @@
 /*
  * This example is the smallest code that will create a Matter Device which can be
  * commissioned and controlled from a Matter Environment APP.
- * It controls a GPIO that could be attached to a LED for visualization.
  * Additionally the ESP32 will send debug messages indicating the Matter activity.
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
  */
