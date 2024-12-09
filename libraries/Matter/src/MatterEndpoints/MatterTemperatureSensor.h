@@ -44,7 +44,7 @@ public:
   double getTemperatureCelsius() {                           // returns the reported temperature in Celcius
     return (double)rawTemperature / 100.0;
   }
-  void operator=(double temperatureCelcius) {               // sets the reported temperature in Celcius{
+  void operator=(double temperatureCelcius) {               // sets the reported temperature in Celcius
     int16_t rawValue = static_cast<int16_t>(temperatureCelcius * 100.0f);
     setRawTemperature(rawValue);
   }
