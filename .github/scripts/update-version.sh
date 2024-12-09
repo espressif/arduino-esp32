@@ -1,20 +1,21 @@
 #!/bin/bash
+# shellcheck disable=SC2002
 
 # For reference: add tools for all boards by replacing one line in each board
 # "[board].upload.tool=esptool_py" to "[board].upload.tool=esptool_py\n[board].upload.tool.default=esptool_py\n[board].upload.tool.network=esp_ota"
 #cat boards.txt | sed "s/\([a-zA-Z0-9_\-]*\)\.upload\.tool\=esptool_py/\1\.upload\.tool\=esptool_py\\n\1\.upload\.tool\.default\=esptool_py\\n\1\.upload\.tool\.network\=esp_ota/"
 
 if [ ! $# -eq 3 ]; then
-	echo "Bad number of arguments: $#" >&2
-	echo "usage: $0 <major> <minor> <patch>" >&2
-	exit 1
+    echo "Bad number of arguments: $#" >&2
+    echo "usage: $0 <major> <minor> <patch>" >&2
+    exit 1
 fi
 
 re='^[0-9]+$'
 if [[ ! $1 =~ $re ]] || [[ ! $2 =~ $re ]] || [[ ! $3 =~ $re ]] ; then
-	echo "error: Not a valid version: $1.$2.$3" >&2
-	echo "usage: $0 <major> <minor> <patch>" >&2
-	exit 1
+    echo "error: Not a valid version: $1.$2.$3" >&2
+    echo "usage: $0 <major> <minor> <patch>" >&2
+    exit 1
 fi
 
 ESP_ARDUINO_VERSION_MAJOR="$1"
@@ -36,11 +37,12 @@ sed "s/#define ESP_ARDUINO_VERSION_MAJOR.*/#define ESP_ARDUINO_VERSION_MAJOR $ES
 sed "s/#define ESP_ARDUINO_VERSION_MINOR.*/#define ESP_ARDUINO_VERSION_MINOR $ESP_ARDUINO_VERSION_MINOR/g" | \
 sed "s/#define ESP_ARDUINO_VERSION_PATCH.*/#define ESP_ARDUINO_VERSION_PATCH $ESP_ARDUINO_VERSION_PATCH/g" > __esp_arduino_version.h && mv __esp_arduino_version.h cores/esp32/esp_arduino_version.h
 
-for lib in `ls libraries`; do
-	if [ -f "libraries/$lib/library.properties" ]; then
-		echo "Updating Library $lib..."
-		cat "libraries/$lib/library.properties" | sed "s/version=.*/version=$ESP_ARDUINO_VERSION/g" > "libraries/$lib/__library.properties" && mv "libraries/$lib/__library.properties" "libraries/$lib/library.properties"
-	fi
+libraries=$(find libraries -maxdepth 1 -mindepth 1 -type d -exec basename {} \;)
+for lib in $libraries; do
+    if [ -f "libraries/$lib/library.properties" ]; then
+        echo "Updating Library $lib..."
+        cat "libraries/$lib/library.properties" | sed "s/version=.*/version=$ESP_ARDUINO_VERSION/g" > "libraries/$lib/__library.properties" && mv "libraries/$lib/__library.properties" "libraries/$lib/library.properties"
+    fi
 done
 
 exit 0
