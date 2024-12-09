@@ -108,7 +108,6 @@ public:
   }
 
 private:
-
   char *_read_manufacturer;
   char *_read_model;
   void (*_on_identify)(uint16_t time);

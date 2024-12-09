@@ -118,7 +118,7 @@ char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_i
   /* Read peer Manufacture Name & Model Identifier */
   esp_zb_zcl_read_attr_cmd_t read_req;
 
-  if(short_addr != 0){
+  if (short_addr != 0) {
     read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
   } else {
@@ -154,7 +154,7 @@ char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_add
   /* Read peer Manufacture Name & Model Identifier */
   esp_zb_zcl_read_attr_cmd_t read_req;
 
-  if(short_addr != 0){
+  if (short_addr != 0) {
     read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
   } else {
@@ -189,18 +189,24 @@ char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_add
 void ZigbeeEP::printBoundDevices() {
   log_i("Bound devices:");
   for ([[maybe_unused]]
-  const auto &device : _bound_devices) {
-    log_i("Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint, device->short_addr, 
-    device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]);
-    }
+       const auto &device : _bound_devices) {
+    log_i(
+      "Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint, device->short_addr,
+      device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1],
+      device->ieee_addr[0]
+    );
+  }
 }
 
 void ZigbeeEP::printBoundDevices(Print &print) {
   print.println("Bound devices:");
   for ([[maybe_unused]]
-  const auto &device : _bound_devices) {
-    print.printf("Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n", device->endpoint, device->short_addr, 
-    device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]);
+       const auto &device : _bound_devices) {
+    print.printf(
+      "Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n", device->endpoint, device->short_addr,
+      device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1],
+      device->ieee_addr[0]
+    );
   }
 }
 

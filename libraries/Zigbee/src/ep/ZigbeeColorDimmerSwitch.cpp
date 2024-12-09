@@ -79,7 +79,7 @@ void ZigbeeColorDimmerSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t ad
 // find on_off light endpoint
 void ZigbeeColorDimmerSwitch::findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
   uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL,
-                            ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL};
+                             ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL};
   esp_zb_zdo_match_desc_req_param_t color_dimmable_light_req = {
     .dst_nwk_addr = cmd_req->dst_nwk_addr,
     .addr_of_interest = cmd_req->addr_of_interest,
@@ -148,8 +148,10 @@ void ZigbeeColorDimmerSwitch::lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t i
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
     memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
-    log_v("Sending 'light toggle' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", 
-    endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]);
+    log_v(
+      "Sending 'light toggle' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+      ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    );
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
     esp_zb_lock_release();
@@ -214,8 +216,10 @@ void ZigbeeColorDimmerSwitch::lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
     memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
-    log_v("Sending 'light on' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", 
-    endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]);
+    log_v(
+      "Sending 'light on' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+      ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    );
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
     esp_zb_lock_release();
@@ -280,8 +284,10 @@ void ZigbeeColorDimmerSwitch::lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
     memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
-    log_v("Sending 'light off' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", 
-    endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]);
+    log_v(
+      "Sending 'light off' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+      ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    );
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
     esp_zb_lock_release();
@@ -397,8 +403,10 @@ void ZigbeeColorDimmerSwitch::setLightLevel(uint8_t level, uint8_t endpoint, esp
     memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
     cmd_req.level = level;
     cmd_req.transition_time = 0xffff;
-    log_v("Sending 'set light level' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", 
-    endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]);
+    log_v(
+      "Sending 'set light level' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
+      ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    );
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_level_move_to_level_cmd_req(&cmd_req);
     esp_zb_lock_release();
@@ -406,7 +414,6 @@ void ZigbeeColorDimmerSwitch::setLightLevel(uint8_t level, uint8_t endpoint, esp
     log_e("Light not bound");
   }
 }
-
 
 void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t blue) {
   if (_is_bound) {
@@ -488,8 +495,10 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
     cmd_req.color_x = color_x;
     cmd_req.color_y = color_y;
     cmd_req.transition_time = 0;
-    log_v("Sending 'set light color' command to endpoint %d,  ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", 
-    endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]);
+    log_v(
+      "Sending 'set light color' command to endpoint %d,  ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
+      ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    );
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_color_move_to_color_cmd_req(&cmd_req);
     esp_zb_lock_release();
