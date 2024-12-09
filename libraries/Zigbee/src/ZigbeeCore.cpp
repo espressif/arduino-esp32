@@ -329,7 +329,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         }
       }
       break;
-    case ESP_ZB_ZDO_SIGNAL_LEAVE: // End Device
+    case ESP_ZB_ZDO_SIGNAL_LEAVE: // End Device + Router
       // Device was removed from the network, factory reset the device
       if ((zigbee_role_t)Zigbee.getRole() != ZIGBEE_COORDINATOR) {
         Zigbee.factoryReset();
