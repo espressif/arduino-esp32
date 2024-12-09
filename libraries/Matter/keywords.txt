@@ -18,6 +18,7 @@ MatterEndPoint	KEYWORD1
 MatterFan	KEYWORD1
 FanMode_t	KEYWORD1
 FanModeSequence_t	KEYWORD1
+MatterTemperatureSensor	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -62,6 +63,8 @@ setMode	KEYWORD2
 getMode	KEYWORD2
 onChangeMode	KEYWORD2
 onChangeSpeedPercent	KEYWORD2
+setTemperature	KEYWORD2
+getTemperature	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
