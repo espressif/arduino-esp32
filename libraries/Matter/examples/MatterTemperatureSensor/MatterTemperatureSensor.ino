@@ -27,6 +27,14 @@
 // Matter Temperature Sensor Endpoint
 MatterTemperatureSensor SimulatedTemperatureSensor;
 
+// set your board USER BUTTON pin here - decommissioning button
+const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
+
+// Button control - decommision the Matter Node
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
+
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
@@ -47,6 +55,9 @@ float getSimulatedTemperature() {
 }
 
 void setup() {
+  // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
+  pinMode(buttonPin, INPUT_PULLUP);
+
   Serial.begin(115200);
 
   // Manually connect to WiFi
@@ -86,9 +97,35 @@ void setup() {
 }
 
 void loop() {
-  Serial.printf("Current Temperature is %.02f <Temperature Units>\r\n", SimulatedTemperatureSensor.getTemperature());
-  // update the temperature sensor value every 5 seconds
-  // Matter APP shall display the updated temperature
-  delay(5000);
-  SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());
+  static uint32_t timeCounter = 0;
+
+  // Print the current temperature value every 5s
+  if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
+    // Print the current temperature value
+    Serial.printf("Current Temperature is %.02f <Temperature Units>\r\n", SimulatedTemperatureSensor.getTemperature());
+    // Update Temperature from the (Simulated) Hardware Sensor
+    // Matter APP shall display the updated temperature percent
+    SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());
+  }
+
+  // Check if the button has been pressed
+  if (digitalRead(buttonPin) == LOW && !button_state) {
+    // deals with button debouncing
+    button_time_stamp = millis();  // record the time while the button is pressed.
+    button_state = true;           // pressed.
+  }
+
+  if (digitalRead(buttonPin) == HIGH && button_state) {
+    button_state = false;  // released
+  }
+
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  uint32_t time_diff = millis() - button_time_stamp;
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+    Matter.decommission();
+    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+  }
+
+  delay(500);
 }

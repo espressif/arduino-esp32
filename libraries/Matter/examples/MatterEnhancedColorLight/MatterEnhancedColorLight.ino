@@ -38,7 +38,13 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 #endif
 
 // set your board USER BUTTON pin here
-const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use GPIO9.
+const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
+
+// Button control
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t debouceTime = 250;              // button debouncing time (ms)
+const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
@@ -147,11 +153,6 @@ void setup() {
     EnhancedColorLight.updateAccessory();
   }
 }
-// Button control
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t debouceTime = 250;               // button debouncing time (ms)
-const uint32_t decommissioningTimeout = 10000;  // keep the button pressed for 10s to decommission the light
 
 void loop() {
   // Check Matter Light Commissioning state, which may change during execution of loop()
@@ -194,12 +195,13 @@ void loop() {
     // Toggle button is released - toggle the light
     Serial.println("User button released. Toggling Light!");
     EnhancedColorLight.toggle();  // Matter Controller also can see the change
+  }
 
-    // Factory reset is triggered if the button is pressed longer than 10 seconds
-    if (time_diff > decommissioningTimeout) {
-      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-      EnhancedColorLight = false;  // turn the light off
-      Matter.decommission();
-    }
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+    EnhancedColorLight = false;  // turn the light off
+    Matter.decommission();
+    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
 }

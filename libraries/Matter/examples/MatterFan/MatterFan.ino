@@ -20,8 +20,14 @@
 // Fan Endpoint - On/Off control + Speed Percent Control + Fan Modes
 MatterFan Fan;
 
-// set your board USER BUTTON pin here - used for toggling On/Off
-const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use GPIO9.
+// set your board USER BUTTON pin here - used for toggling On/Off and decommission the Matter Node
+const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
+
+// Button control
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t debouceTime = 250;              // button debouncing time (ms)
+const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // set your board Analog Pin here - used for changing the Fan speed
 const uint8_t analogPin = A0;  // Analog Pin depends on each board
@@ -56,7 +62,7 @@ void fanDCMotorDrive(bool fanState, uint8_t speedPercent) {
 }
 
 void setup() {
-  // Initialize the USER BUTTON (Boot button) GPIO that will toggle the Fan (On/Off)
+  // Initialize the USER BUTTON (Boot button) GPIO that will toggle the Fan (On/Off) and decommission the Matter Node
   pinMode(buttonPin, INPUT_PULLUP);
   // Initialize the Analog Pin A0 used to read input voltage and to set the Fan speed accordingly
   pinMode(analogPin, INPUT);
@@ -140,12 +146,6 @@ void setup() {
   }
 }
 
-// Builtin Button control
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t debouceTime = 250;               // button debouncing time (ms)
-const uint32_t decommissioningTimeout = 10000;  // keep the button pressed for 10s to decommission the Matter Fabric
-
 void loop() {
   // Check Matter Accessory Commissioning state, which may change during execution of loop()
   if (!Matter.isDeviceCommissioned()) {
@@ -181,12 +181,13 @@ void loop() {
     // button is released - toggle Fan On/Off
     Fan.toggle();
     Serial.printf("User button released. Setting the Fan %s.\r\n", Fan > 0 ? "ON" : "OFF");
+  }
 
-    // Factory reset is triggered if the button is pressed longer than 10 seconds
-    if (time_diff > decommissioningTimeout) {
-      Serial.println("Decommissioning the Generic Switch Matter Accessory. It shall be commissioned again.");
-      Matter.decommission();
-    }
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning the Generic Switch Matter Accessory. It shall be commissioned again.");
+    Matter.decommission();
+    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
 
   // checks Analog pin and adjust the speed only if it has changed
