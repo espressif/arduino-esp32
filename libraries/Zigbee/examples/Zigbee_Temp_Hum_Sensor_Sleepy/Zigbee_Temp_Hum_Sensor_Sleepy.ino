@@ -114,8 +114,8 @@ void setup() {
   Serial.println();
   Serial.println("Successfully connected to Zigbee network");
 
-  // Delay 5s (may be adjusted) to allow establishing proper connection with coordinator, needed for sleepy devices
-  delay(5000);
+  // Delay approx 1s (may be adjusted) to allow establishing proper connection with coordinator, needed for sleepy devices
+  delay(1000);
 }
 
 void loop() {
