@@ -47505,7 +47505,6 @@ Pcbcupid_GLYPH_C6.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
 Pcbcupid_GLYPH_C6.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
 
 ##############################################################
-# YelloByte YB-ESP32-S3-AMP 2MB PSRAM (Rev.2)
 
 yb_esp32s3_amp_v2.name=YelloByte YB-ESP32-S3-AMP (Rev.2)
 
@@ -47713,7 +47712,6 @@ yb_esp32s3_amp_v2.menu.EraseFlash.all=Enabled
 yb_esp32s3_amp_v2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
-# YelloByte YB-ESP32-S3-AMP 2MB PSRAM (Rev.3)
 
 yb_esp32s3_amp_v3.name=YelloByte YB-ESP32-S3-AMP (Rev.3)
 
