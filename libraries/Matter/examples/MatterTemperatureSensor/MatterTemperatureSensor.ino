@@ -27,6 +27,14 @@
 // Matter Temperature Sensor Endpoint
 MatterTemperatureSensor SimulatedTemperatureSensor;
 
+// set your board USER BUTTON pin here - decommissioning button
+#ifdef BOOT_PIN
+const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
+#else
+const uint8_t buttonPin = 0;  // Set your button pin here.
+#warning "Do not forget to set the USER BUTTON pin"
+#endif
+
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
@@ -47,6 +55,9 @@ float getSimulatedTemperature() {
 }
 
 void setup() {
+  // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
+  pinMode(buttonPin, INPUT_PULLUP);
+
   Serial.begin(115200);
 
   // Manually connect to WiFi
@@ -85,10 +96,34 @@ void setup() {
   }
 }
 
+// Button control - decommision the Matter Node
+uint32_t button_time_stamp = 0;                 // debouncing control
+bool button_state = false;                      // false = released | true = pressed
+const uint32_t decommissioningTimeout = 10000;  // keep the button pressed for 10s to decommission
+
 void loop() {
   Serial.printf("Current Temperature is %.02f <Temperature Units>\r\n", SimulatedTemperatureSensor.getTemperature());
+
+  // Check if the button has been pressed
+  if (digitalRead(buttonPin) == LOW && !button_state) {
+    // deals with button debouncing
+    button_time_stamp = millis();  // record the time while the button is pressed.
+    button_state = true;           // pressed.
+  }
+
+  // Onboard User Button is used to decommission matter node
+  uint32_t time_diff = millis() - button_time_stamp;
+  if (button_state && time_diff > decommissioningTimeout && digitalRead(buttonPin) == HIGH) {
+    button_state = false;  // released
+    // Factory reset is triggered if the button is pressed longer than 10 seconds
+    if (time_diff > decommissioningTimeout) {
+      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+      Matter.decommission();
+    }
+  }
+  
   // update the temperature sensor value every 5 seconds
-  // Matter APP shall display the updated temperature
   delay(5000);
-  SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());
+  // Matter APP shall display the updated temperature
+  SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());  
 }
