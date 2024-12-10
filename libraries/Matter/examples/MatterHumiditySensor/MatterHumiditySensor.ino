@@ -35,9 +35,9 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 // Button control - decommision the Matter Node
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Simulate a humidity sensor - add your preferred humidity sensor library code here
 float getSimulatedHumidity() {
@@ -98,7 +98,7 @@ void setup() {
 
 void loop() {
   static uint32_t timeCounter = 0;
- 
+
   // Print the current humidity value every 5s
   if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
     // Print the current humidity value
@@ -125,6 +125,6 @@ void loop() {
     Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
   }
-  
+
   delay(500);
 }

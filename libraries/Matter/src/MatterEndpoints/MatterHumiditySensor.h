@@ -25,10 +25,10 @@ public:
   ~MatterHumiditySensor();
   // begin Matter Humidity Sensor endpoint with initial float humidity percent
   bool begin(double humidityPercent = 0.00) {
-  if (humidityPercent < 0.0 || humidityPercent > 100.0) {
-    log_e("Humidity Sensor Percentage value out of range [0..100].");
-    return false;
-  }
+    if (humidityPercent < 0.0 || humidityPercent > 100.0) {
+      log_e("Humidity Sensor Percentage value out of range [0..100].");
+      return false;
+    }
     return begin(static_cast<uint16_t>(humidityPercent * 100.0f));
   }
   // this will just stop processing Humidity Sensor Matter events
@@ -52,7 +52,7 @@ public:
   }
   // double conversion operator
   operator double() {
-    return (double) getHumidity();
+    return (double)getHumidity();
   }
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
