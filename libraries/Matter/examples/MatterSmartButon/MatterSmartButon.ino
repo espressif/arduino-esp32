@@ -21,12 +21,13 @@
 MatterGenericSwitch SmartButton;
 
 // set your board USER BUTTON pin here
-#ifdef BOOT_PIN
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-#else
-const uint8_t buttonPin = 0;  // Set your button pin here.
-#warning "Do not forget to set the USER BUTTON pin"
-#endif
+
+// Button control
+uint32_t button_time_stamp = 0;                 // debouncing control
+bool button_state = false;                      // false = released | true = pressed
+const uint32_t debouceTime = 250;               // button debouncing time (ms)
+const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
 
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
@@ -68,11 +69,6 @@ void setup() {
     Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
   }
 }
-// Button control
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t debouceTime = 250;               // button debouncing time (ms)
-const uint32_t decommissioningTimeout = 10000;  // keep the button pressed for 10s to decommission the Matter Fabric
 
 void loop() {
   // Check Matter Accessory Commissioning state, which may change during execution of loop()
@@ -110,11 +106,12 @@ void loop() {
     Serial.println("User button released. Sending Click to the Matter Controller!");
     // Matter Controller will receive an event and, if programmed, it will trigger an action
     SmartButton.click();
+  }
 
-    // Factory reset is triggered if the button is pressed longer than 10 seconds
-    if (time_diff > decommissioningTimeout) {
-      Serial.println("Decommissioning the Generic Switch Matter Accessory. It shall be commissioned again.");
-      Matter.decommission();
-    }
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning the Generic Switch Matter Accessory. It shall be commissioned again.");
+    Matter.decommission();
+    button_time_stamp = millis(); // avoid running decommissining again, reboot takes a second or so
   }
 }

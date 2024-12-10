@@ -27,12 +27,12 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 // set your board USER BUTTON pin here -  USED to decommission the Matter Node
-#ifdef BOOT_PIN
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-#else
-const uint8_t buttonPin = 0;  // Set your button pin here.
-#warning "Do not forget to set the USER BUTTON pin"
-#endif
+
+// Button control
+uint32_t button_time_stamp = 0;                 // debouncing control
+bool button_state = false;                      // false = released | true = pressed
+const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
 
 // Matter Protocol Endpoint Callback for each Light Accessory
 bool setLightOnOff1(bool state) {
@@ -89,12 +89,9 @@ void setup() {
   Matter.begin();
 }
 
-// Button control
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t decommissioningTimeout = 10000;  // keep the button pressed for 10s to decommission the light
-
 void loop() {
+  static uint32_t timeCounter = 0;
+
   // Check Matter Light Commissioning state
   if (!Matter.isDeviceCommissioned()) {
     Serial.println("");
@@ -115,10 +112,12 @@ void loop() {
   }
 
   //displays the Light state every 5 seconds
-  Serial.println("======================");
-  Serial.printf("Matter Light #1 is %s\r\n", Light1.getOnOff() ? "ON" : "OFF");
-  Serial.printf("Matter Light #2 is %s\r\n", Light2.getOnOff() ? "ON" : "OFF");
-  Serial.printf("Matter Light #3 is %s\r\n", Light3.getOnOff() ? "ON" : "OFF");
+  if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
+    Serial.println("======================");
+    Serial.printf("Matter Light #1 is %s\r\n", Light1.getOnOff() ? "ON" : "OFF");
+    Serial.printf("Matter Light #2 is %s\r\n", Light2.getOnOff() ? "ON" : "OFF");
+    Serial.printf("Matter Light #3 is %s\r\n", Light3.getOnOff() ? "ON" : "OFF");
+  }
 
   // Check if the button has been pressed
   if (digitalRead(buttonPin) == LOW && !button_state) {
@@ -127,16 +126,17 @@ void loop() {
     button_state = true;           // pressed.
   }
 
-  // Onboard User Button is used to decommission matter fabric
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout && digitalRead(buttonPin) == HIGH) {
+  if (digitalRead(buttonPin) == HIGH && button_state) {
     button_state = false;  // released
-    // Factory reset is triggered if the button is pressed longer than 10 seconds
-    if (time_diff > decommissioningTimeout) {
-      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-      Matter.decommission();
-    }
   }
 
-  delay(5000);
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  uint32_t time_diff = millis() - button_time_stamp;
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+    Matter.decommission();
+    button_time_stamp = millis(); // avoid running decommissining again, reboot takes a second or so
+  }
+
+  delay(500);
 }

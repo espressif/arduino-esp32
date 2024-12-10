@@ -41,13 +41,13 @@ const uint8_t ledPin = LED_BUILTIN;
 const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LED_BUILTIN
 #endif
 
-// set your board USER BUTTON pin here
-#ifdef BOOT_PIN
+// set your board USER BUTTON pin here - decommissioning button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-#else
-const uint8_t buttonPin = 0;  // Set your button pin here.
-#warning "Do not forget to set the USER BUTTON pin"
-#endif
+
+// Button control - decommision the Matter Node
+uint32_t button_time_stamp = 0;                 // debouncing control
+bool button_state = false;                      // false = released | true = pressed
+const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
 
 // Matter Protocol Endpoint (On/OFF Light) Callback
 bool matterCB(bool state) {
@@ -128,11 +128,6 @@ void setup() {
   }
 }
 
-// Button control - decommision the Matter Node
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t decommissioningTimeout = 10000;  // keep the button pressed for 10s to decommission
-
 void loop() {
   // Check if the button has been pressed
   if (digitalRead(buttonPin) == LOW && !button_state) {
@@ -141,16 +136,17 @@ void loop() {
     button_state = true;           // pressed.
   }
 
-  // Onboard User Button is used to decommission matter node
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout && digitalRead(buttonPin) == HIGH) {
+  if (digitalRead(buttonPin) == HIGH && button_state) {
     button_state = false;  // released
-    // Factory reset is triggered if the button is pressed longer than 10 seconds
-    if (time_diff > decommissioningTimeout) {
-      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-      Matter.decommission();
-    }
   }
 
-  delay(5000);
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  uint32_t time_diff = millis() - button_time_stamp;
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+    Matter.decommission();
+    button_time_stamp = millis(); // avoid running decommissining again, reboot takes a second or so
+  }
+
+  delay(500);
 }

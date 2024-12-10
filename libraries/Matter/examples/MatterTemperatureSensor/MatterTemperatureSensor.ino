@@ -28,12 +28,12 @@
 MatterTemperatureSensor SimulatedTemperatureSensor;
 
 // set your board USER BUTTON pin here - decommissioning button
-#ifdef BOOT_PIN
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-#else
-const uint8_t buttonPin = 0;  // Set your button pin here.
-#warning "Do not forget to set the USER BUTTON pin"
-#endif
+
+// Button control - decommision the Matter Node
+uint32_t button_time_stamp = 0;                 // debouncing control
+bool button_state = false;                      // false = released | true = pressed
+const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
 
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
@@ -96,13 +96,17 @@ void setup() {
   }
 }
 
-// Button control - decommision the Matter Node
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t decommissioningTimeout = 10000;  // keep the button pressed for 10s to decommission
-
 void loop() {
-  Serial.printf("Current Temperature is %.02f <Temperature Units>\r\n", SimulatedTemperatureSensor.getTemperature());
+  static uint32_t timeCounter = 0;
+ 
+  // Print the current temperature value every 5s
+  if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
+    // Print the current temperature value
+    Serial.printf("Current Temperature is %.02f <Temperature Units>\r\n", SimulatedTemperatureSensor.getTemperature());
+    // Update Temperature from the (Simulated) Hardware Sensor
+    // Matter APP shall display the updated temperature percent
+    SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());  
+  }
 
   // Check if the button has been pressed
   if (digitalRead(buttonPin) == LOW && !button_state) {
@@ -111,19 +115,17 @@ void loop() {
     button_state = true;           // pressed.
   }
 
-  // Onboard User Button is used to decommission matter node
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout && digitalRead(buttonPin) == HIGH) {
+  if (digitalRead(buttonPin) == HIGH && button_state) {
     button_state = false;  // released
-    // Factory reset is triggered if the button is pressed longer than 10 seconds
-    if (time_diff > decommissioningTimeout) {
-      Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
-      Matter.decommission();
-    }
+  }
+
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  uint32_t time_diff = millis() - button_time_stamp;
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
+    Matter.decommission();
+    button_time_stamp = millis(); // avoid running decommissining again, reboot takes a second or so
   }
   
-  // update the temperature sensor value every 5 seconds
-  delay(5000);
-  // Matter APP shall display the updated temperature
-  SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());  
+  delay(500);
 }
