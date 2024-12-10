@@ -33,20 +33,21 @@
 
 #include "Zigbee.h"
 
-#define LED_PIN               RGB_BUILTIN
-#define BUTTON_PIN            9  // C6/H2 Boot button
-#define ZIGBEE_LIGHT_ENDPOINT 10
+/* Zigbee color dimmable light configuration */
+#define ZIGBEE_RGB_LIGHT_ENDPOINT 10
+uint8_t led = RGB_BUILTIN;
+uint8_t button = BOOT_PIN;
 
-ZigbeeColorDimmableLight zbColorLight = ZigbeeColorDimmableLight(ZIGBEE_LIGHT_ENDPOINT);
+ZigbeeColorDimmableLight zbColorLight = ZigbeeColorDimmableLight(ZIGBEE_RGB_LIGHT_ENDPOINT);
 
 /********************* RGB LED functions **************************/
 void setRGBLight(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t level) {
   if (!state) {
-    rgbLedWrite(LED_PIN, 0, 0, 0);
+    rgbLedWrite(led, 0, 0, 0);
     return;
   }
   float brightness = (float)level / 255;
-  rgbLedWrite(LED_PIN, red * brightness, green * brightness, blue * brightness);
+  rgbLedWrite(led, red * brightness, green * brightness, blue * brightness);
 }
 
 // Create a task on identify call to handle the identify function
@@ -58,7 +59,7 @@ void identify(uint16_t time) {
     zbColorLight.restoreLight();
     return;
   }
-  rgbLedWrite(LED_PIN, 255 * blink, 255 * blink, 255 * blink);
+  rgbLedWrite(led, 255 * blink, 255 * blink, 255 * blink);
   blink = !blink;
 }
 
@@ -70,10 +71,10 @@ void setup() {
   }
 
   // Init RMT and leave light OFF
-  rgbLedWrite(LED_PIN, 0, 0, 0);
+  rgbLedWrite(led, 0, 0, 0);
 
   // Init button for factory reset
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   // Set callback function for light change
   zbColorLight.onLightChange(setRGBLight);
@@ -104,11 +105,11 @@ void setup() {
 
 void loop() {
   // Checking button for factory reset
-  if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
     delay(100);
     int startTime = millis();
-    while (digitalRead(BUTTON_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot

@@ -33,10 +33,10 @@
 
 #include "Zigbee.h"
 
+/* Zigbee switch configuration */
 #define SWITCH_ENDPOINT_NUMBER 5
 
-/* Switch configuration */
-#define GPIO_INPUT_IO_TOGGLE_SWITCH 9
+#define GPIO_INPUT_IO_TOGGLE_SWITCH BOOT_PIN
 #define PAIR_SIZE(TYPE_STR_PAIR)    (sizeof(TYPE_STR_PAIR) / sizeof(TYPE_STR_PAIR[0]))
 
 typedef enum {

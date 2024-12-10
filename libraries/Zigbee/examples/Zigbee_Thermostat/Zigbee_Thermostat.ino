@@ -33,8 +33,9 @@
 
 #include "Zigbee.h"
 
-#define BUTTON_PIN                 9  // Boot button for C6/H2
+/* Zigbee thermostat configuration */
 #define THERMOSTAT_ENDPOINT_NUMBER 5
+uint8_t button = BOOT_PIN;
 
 ZigbeeThermostat zbThermostat = ZigbeeThermostat(THERMOSTAT_ENDPOINT_NUMBER);
 
@@ -64,7 +65,7 @@ void setup() {
   }
 
   // Init button switch
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   // Set callback functions for temperature and configuration receive
   zbThermostat.onTempRecieve(recieveSensorTemp);
@@ -100,10 +101,10 @@ void setup() {
 
 void loop() {
   // Handle button switch in loop()
-  if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
 
     // Key debounce handling
-    while (digitalRead(BUTTON_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
     }
 
