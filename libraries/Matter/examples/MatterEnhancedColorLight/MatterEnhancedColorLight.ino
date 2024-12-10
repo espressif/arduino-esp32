@@ -38,7 +38,12 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 #endif
 
 // set your board USER BUTTON pin here
-const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use GPIO9.
+#ifdef BOOT_PIN
+const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
+#else
+const uint8_t buttonPin = 0;  // Set your button pin here.
+#warning "Do not forget to set the USER BUTTON pin"
+#endif
 
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID

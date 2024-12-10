@@ -21,14 +21,19 @@
 MatterGenericSwitch SmartButton;
 
 // set your board USER BUTTON pin here
-const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use GPIO9.
+#ifdef BOOT_PIN
+const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
+#else
+const uint8_t buttonPin = 0;  // Set your button pin here.
+#warning "Do not forget to set the USER BUTTON pin"
+#endif
 
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 void setup() {
-  // Initialize the USER BUTTON (Boot button) GPIO that will act as a toggle switch
+  // Initialize the USER BUTTON (Boot button) GPIO that will act as a smart button or to decommission the Matter Node
   pinMode(buttonPin, INPUT_PULLUP);
 
   Serial.begin(115200);

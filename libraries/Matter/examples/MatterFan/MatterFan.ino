@@ -20,8 +20,14 @@
 // Fan Endpoint - On/Off control + Speed Percent Control + Fan Modes
 MatterFan Fan;
 
-// set your board USER BUTTON pin here - used for toggling On/Off
-const uint8_t buttonPin = 0;  // Set your pin here. Using BOOT Button. C6/C3 use GPIO9.
+// set your board USER BUTTON pin here - used for toggling On/Off and decommission the Matter Node
+#ifdef BOOT_PIN
+const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
+#else
+const uint8_t buttonPin = 0;  // Set your button pin here.
+#warning "Do not forget to set the USER BUTTON pin"
+#endif
+
 
 // set your board Analog Pin here - used for changing the Fan speed
 const uint8_t analogPin = A0;  // Analog Pin depends on each board
@@ -56,7 +62,7 @@ void fanDCMotorDrive(bool fanState, uint8_t speedPercent) {
 }
 
 void setup() {
-  // Initialize the USER BUTTON (Boot button) GPIO that will toggle the Fan (On/Off)
+  // Initialize the USER BUTTON (Boot button) GPIO that will toggle the Fan (On/Off) and decommission the Matter Node
   pinMode(buttonPin, INPUT_PULLUP);
   // Initialize the Analog Pin A0 used to read input voltage and to set the Fan speed accordingly
   pinMode(analogPin, INPUT);
