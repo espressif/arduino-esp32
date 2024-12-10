@@ -39,9 +39,9 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
 // Button control - decommision the Matter Node
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Matter Protocol Endpoint (On/OFF Light) Callback
 bool matterCB(bool state) {
@@ -103,7 +103,7 @@ void loop() {
   if (button_state && time_diff > decommissioningTimeout) {
     Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
-    button_time_stamp = millis(); // avoid running decommissining again, reboot takes a second or so
+    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
 
   delay(500);

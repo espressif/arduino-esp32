@@ -24,10 +24,10 @@ MatterFan Fan;
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
 // Button control
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t debouceTime = 250;               // button debouncing time (ms)
-const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t debouceTime = 250;              // button debouncing time (ms)
+const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // set your board Analog Pin here - used for changing the Fan speed
 const uint8_t analogPin = A0;  // Analog Pin depends on each board
@@ -187,8 +187,8 @@ void loop() {
   if (button_state && time_diff > decommissioningTimeout) {
     Serial.println("Decommissioning the Generic Switch Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
-    button_time_stamp = millis(); // avoid running decommissining again, reboot takes a second or so
- }
+    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+  }
 
   // checks Analog pin and adjust the speed only if it has changed
   static int lastRead = 0;

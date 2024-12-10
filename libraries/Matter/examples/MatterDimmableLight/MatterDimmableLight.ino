@@ -38,10 +38,10 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
 // Button control
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t debouceTime = 250;               // button debouncing time (ms)
-const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t debouceTime = 250;              // button debouncing time (ms)
+const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
@@ -161,7 +161,7 @@ void loop() {
     // Toggle button is released - toggle the light
     Serial.println("User button released. Toggling Light!");
     DimmableLight.toggle();  // Matter Controller also can see the change
-    button_state = false;  // released
+    button_state = false;    // released
   }
 
   // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
@@ -169,6 +169,6 @@ void loop() {
     Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
     DimmableLight = false;  // turn the light off
     Matter.decommission();
-    button_time_stamp = millis(); // avoid running decommissining again, reboot takes a second or so
+    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
 }
