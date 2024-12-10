@@ -35,7 +35,7 @@ public:
   void end();
 
   // set the humidity percent with 1/100th of a percent precision
-  bool setHumidityPercent(double humidityPercent) {
+  bool setHumidity(double humidityPercent) {
     if (humidityPercent < 0.0 || humidityPercent > 100.0) {
       log_e("Humidity Sensor Percentage value out of range [0..100].");
       return false;
@@ -43,16 +43,16 @@ public:
     return setRawHumidity(static_cast<uint16_t>(humidityPercent * 100.0f));
   }
   // returns the reported float humidity percent with 1/100th of precision
-  double getHumidityPercent() {
+  double getHumidity() {
     return (double)rawHumidity / 100.0;
   }
   // double conversion operator
   void operator=(double humidityPercent) {
-    setHumidityPercent(humidityPercent);
+    setHumidity(humidityPercent);
   }
   // double conversion operator
   operator double() {
-    return (double) getHumidityPercent();
+    return (double) getHumidity();
   }
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
