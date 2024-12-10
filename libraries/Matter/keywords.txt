@@ -20,6 +20,7 @@ FanMode_t	KEYWORD1
 FanModeSequence_t	KEYWORD1
 MatterTemperatureSensor	KEYWORD1
 MatterHumiditySensor	KEYWORD1
+MatterPressureSensor	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -68,6 +69,8 @@ setTemperature	KEYWORD2
 getTemperature	KEYWORD2
 setHumidity	KEYWORD2
 getHumidity	KEYWORD2
+setPressure	KEYWORD2
+getPressure	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
