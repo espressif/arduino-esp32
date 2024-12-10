@@ -122,7 +122,6 @@ void loop() {
   // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
   uint32_t time_diff = millis() - button_time_stamp;
   if (button_state && time_diff > decommissioningTimeout) {
-    // Factory reset is triggered if the button is pressed longer than 10 seconds
     Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
   }
