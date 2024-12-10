@@ -176,6 +176,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterEnhancedColorLight.cpp
   libraries/Matter/src/MatterEndpoints/MatterFan.cpp
   libraries/Matter/src/MatterEndpoints/MatterTemperatureSensor.cpp
+  libraries/Matter/src/MatterEndpoints/MatterHumiditySensor.cpp
   libraries/Matter/src/Matter.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS
