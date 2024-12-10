@@ -20,7 +20,7 @@ ZigbeeCore::ZigbeeCore() {
   _scan_status = ZB_SCAN_FAILED;
   _started = false;
   _connected = false;
-  _scan_duration = 4;  // maximum scan duration
+  _scan_duration = 3;  // default scan duration
   _rx_on_when_idle = true;
   if (!lock) {
     lock = xSemaphoreCreateBinary();

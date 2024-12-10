@@ -113,7 +113,6 @@ public:
   void setHostConfig(esp_zb_host_config_t config);
   esp_zb_host_config_t getHostConfig();
 
-  void setPrimaryChannelMask(uint32_t mask);
   void setPrimaryChannelMask(uint32_t mask);  // By default all channels are scanned (11-26) -> mask 0x07FFF800
   void setScanDuration(uint8_t duration);     // Can be set from 1 - 4. 1 is fastest, 4 is slowest
   uint8_t getScanDuration() {
