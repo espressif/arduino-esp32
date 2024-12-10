@@ -21,6 +21,7 @@ ZigbeeCore::ZigbeeCore() {
   _started = false;
   _connected = false;
   _scan_duration = 4;  // maximum scan duration
+  _rx_on_when_idle = true;
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
@@ -98,7 +99,7 @@ static void esp_zb_task(void *pvParameters) {
 
   //NOTE: This is a workaround to make battery powered devices to be discovered as battery powered
   if (((zigbee_role_t)Zigbee.getRole() == ZIGBEE_END_DEVICE) && edBatteryPowered) {
-    zb_set_ed_node_descriptor(0, 0, 0);
+    zb_set_ed_node_descriptor(0, _rx_on_when_idle, 1);
   }
 
   esp_zb_stack_main_loop();
