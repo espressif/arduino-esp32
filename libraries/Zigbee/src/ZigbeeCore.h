@@ -122,6 +122,9 @@ public:
   void setRxOnWhenIdle(bool rx_on_when_idle) {
     _rx_on_when_idle = rx_on_when_idle;
   }
+  bool getRxOnWhenIdle() {
+    return _rx_on_when_idle;
+  }
 
   void setRebootOpenNetwork(uint8_t time);
   void openNetwork(uint8_t time);
