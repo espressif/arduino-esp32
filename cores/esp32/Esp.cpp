@@ -277,7 +277,7 @@ const char *EspClass::getChipModel(void) {
         return "ESP32-D0WD";
       }
     case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:   return "ESP32-D2WD";
-    case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2:   return "ESP32-PICO-D2";
+    case EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH:    return "ESP32-U4WDH";
     case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4:   return "ESP32-PICO-D4";
     case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302: return "ESP32-PICO-V3-02";
     case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDR2V3: return "ESP32-D0WDR2-V3";
