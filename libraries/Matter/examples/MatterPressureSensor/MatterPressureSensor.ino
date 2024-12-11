@@ -35,14 +35,14 @@ const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
 
 // Button control - decommision the Matter Node
-uint32_t button_time_stamp = 0;                 // debouncing control
-bool button_state = false;                      // false = released | true = pressed
-const uint32_t decommissioningTimeout = 5000;   // keep the button pressed for 5s, or longer, to decommission
+uint32_t button_time_stamp = 0;                // debouncing control
+bool button_state = false;                     // false = released | true = pressed
+const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Simulate a pressure sensor - add your preferred pressure sensor library code here
 float getSimulatedPressure() {
   // The Endpoint implementation keeps an uint16_t as internal value information,
-  // which stores data in hPa (pressure measurement unit) 
+  // which stores data in hPa (pressure measurement unit)
   static float simulatedPressureHWSensor = 950;
 
   // it will increase from 950 to 1100 hPa in steps of 10 hPa to simulate a pressure sensor
@@ -98,7 +98,7 @@ void setup() {
 
 void loop() {
   static uint32_t timeCounter = 0;
- 
+
   // Print the current pressure value every 5s
   if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
     // Print the current pressure value
@@ -126,6 +126,6 @@ void loop() {
     Serial.println("Decommissioning the Light Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
   }
-  
+
   delay(500);
 }
