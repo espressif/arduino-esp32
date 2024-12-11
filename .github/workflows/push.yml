@@ -61,7 +61,6 @@ jobs:
       build_libraries: ${{ steps.set-chunks.outputs.build_libraries }}
       build_static_sketches: ${{ steps.set-chunks.outputs.build_static_sketches }}
       build_idf: ${{ steps.set-chunks.outputs.build_idf }}
-      build_platformio: ${{ steps.set-chunks.outputs.build_platformio }}
       chunk_count: ${{ steps.set-chunks.outputs.chunk_count }}
       chunks: ${{ steps.set-chunks.outputs.chunks }}
     steps:
@@ -77,11 +76,9 @@ jobs:
           files_yaml: |
             core:
               - '.github/**'
-              - '!.github/scripts/install-platformio-esp32.sh'
               - 'cores/**'
               - 'package/**'
               - 'tools/**'
-              - '!tools/platformio-build.py'
               - 'platform.txt'
               - 'programmers.txt'
               - "variants/esp32/**/*"
@@ -110,10 +107,6 @@ jobs:
               - 'Kconfig.projbuild'
               - 'CMakeLists.txt'
               - "variants/esp32c2/**/*"
-            platformio:
-              - 'package.json'
-              - '.github/scripts/install-platformio-esp32.sh'
-              - 'tools/platformio-build.py'
 
       - name: Set chunks
         id: set-chunks
@@ -121,7 +114,6 @@ jobs:
           LIB_FILES: ${{ steps.changed-files.outputs.libraries_all_changed_files }}
           IS_PR: ${{ github.event_name == 'pull_request' }}
           MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
-          BUILD_PLATFORMIO: ${{ steps.changed-files.outputs.platformio_any_changed == 'true' }}
           BUILD_IDF: ${{ steps.changed-files.outputs.idf_any_changed == 'true' }}
           BUILD_LIBRARIES: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
           BUILD_STATIC_SKETCHES: ${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
@@ -212,28 +204,6 @@ jobs:
       - name: Build Sketches
         run: bash ./.github/scripts/on-push.sh
 
-  # # PlatformIO on Windows, Ubuntu and Mac
-  # build-platformio:
-  #   name: PlatformIO on ${{ matrix.os }}
-  #   needs: gen-chunks
-  #   if: |
-  #     needs.gen-chunks.outputs.build_all == 'true' ||
-  #     needs.gen-chunks.outputs.build_static_sketches == 'true' ||
-  #     needs.gen-chunks.outputs.build_platformio == 'true'
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ubuntu-latest, windows-latest, macOS-latest]
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: "3.x"
-  #     - name: Build Sketches
-  #       run: bash ./.github/scripts/on-push.sh 1 1 #equal and non-zero to trigger PIO
-
-  # ESP-IDF component build
   build-esp-idf-component:
     name: Build with ESP-IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
     needs: gen-chunks
