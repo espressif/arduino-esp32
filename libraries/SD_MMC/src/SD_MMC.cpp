@@ -49,7 +49,7 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
   _pin_d3 = SDMMC_D3;
 #endif  // BOARD_HAS_1BIT_SDMMC
 
-#elif defined(SOC_SDMMC_USE_IOMUX) && defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32)
+#elif defined(SOC_SDMMC_USE_IOMUX) && defined(CONFIG_IDF_TARGET_ESP32)
   _pin_clk = SDMMC_SLOT1_IOMUX_PIN_NUM_CLK;
   _pin_cmd = SDMMC_SLOT1_IOMUX_PIN_NUM_CMD;
   _pin_d0 = SDMMC_SLOT1_IOMUX_PIN_NUM_D0;
