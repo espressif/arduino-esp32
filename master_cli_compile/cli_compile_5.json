@@ -52,7 +52,7 @@
                     },
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
-                            "flash_bytes": 284241,
+                            "flash_bytes": 284201,
                             "flash_percentage": 21,
                             "ram_bytes": 18128,
                             "ram_percentage": 5
@@ -60,7 +60,7 @@
                     },
 {"name": "ESP32/examples/Utilities/MD5Builder",
                     "sizes": [{
-                            "flash_bytes": 284737,
+                            "flash_bytes": 284693,
                             "flash_percentage": 21,
                             "ram_bytes": 18128,
                             "ram_percentage": 5
@@ -68,7 +68,7 @@
                     },
 {"name": "ESP32/examples/Utilities/SHA1Builder",
                     "sizes": [{
-                            "flash_bytes": 289637,
+                            "flash_bytes": 289593,
                             "flash_percentage": 22,
                             "ram_bytes": 18128,
                             "ram_percentage": 5
@@ -76,7 +76,7 @@
                     },
 {"name": "ESP_I2S/examples/ES8388_loopback",
                     "sizes": [{
-                            "flash_bytes": 352361,
+                            "flash_bytes": 352317,
                             "flash_percentage": 26,
                             "ram_bytes": 19000,
                             "ram_percentage": 5
@@ -84,7 +84,7 @@
                     },
 {"name": "ESP_I2S/examples/Record_to_WAV",
                     "sizes": [{
-                            "flash_bytes": 377749,
+                            "flash_bytes": 377709,
                             "flash_percentage": 28,
                             "ram_bytes": 18504,
                             "ram_percentage": 5
@@ -100,7 +100,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 868745,
+                            "flash_bytes": 868705,
                             "flash_percentage": 66,
                             "ram_bytes": 40652,
                             "ram_percentage": 12
@@ -108,7 +108,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 868913,
+                            "flash_bytes": 868865,
                             "flash_percentage": 66,
                             "ram_bytes": 40628,
                             "ram_percentage": 12
@@ -121,7 +121,7 @@
                 "sketches": [
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 845506,
+                            "flash_bytes": 845462,
                             "flash_percentage": 64,
                             "ram_bytes": 36408,
                             "ram_percentage": 11
@@ -129,7 +129,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 845690,
+                            "flash_bytes": 845654,
                             "flash_percentage": 64,
                             "ram_bytes": 36376,
                             "ram_percentage": 11
@@ -137,7 +137,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
-                            "flash_bytes": 849346,
+                            "flash_bytes": 849302,
                             "flash_percentage": 64,
                             "ram_bytes": 36472,
                             "ram_percentage": 11
@@ -310,7 +310,7 @@
                     },
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
-                            "flash_bytes": 258050,
+                            "flash_bytes": 258024,
                             "flash_percentage": 19,
                             "ram_bytes": 11660,
                             "ram_percentage": 3
@@ -318,7 +318,7 @@
                     },
 {"name": "ESP32/examples/Utilities/MD5Builder",
                     "sizes": [{
-                            "flash_bytes": 258138,
+                            "flash_bytes": 258094,
                             "flash_percentage": 19,
                             "ram_bytes": 11660,
                             "ram_percentage": 3
@@ -371,7 +371,7 @@
                     },
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
-                            "flash_bytes": 214186,
+                            "flash_bytes": 214160,
                             "flash_percentage": 16,
                             "ram_bytes": 12536,
                             "ram_percentage": 3
@@ -379,7 +379,7 @@
                     },
 {"name": "ESP32/examples/Utilities/MD5Builder",
                     "sizes": [{
-                            "flash_bytes": 214266,
+                            "flash_bytes": 214222,
                             "flash_percentage": 16,
                             "ram_bytes": 12536,
                             "ram_percentage": 3
@@ -387,7 +387,7 @@
                     },
 {"name": "ESP32/examples/Utilities/SHA1Builder",
                     "sizes": [{
-                            "flash_bytes": 220462,
+                            "flash_bytes": 220420,
                             "flash_percentage": 16,
                             "ram_bytes": 12536,
                             "ram_percentage": 3
@@ -395,7 +395,7 @@
                     },
 {"name": "ESP_I2S/examples/ES8388_loopback",
                     "sizes": [{
-                            "flash_bytes": 280062,
+                            "flash_bytes": 280038,
                             "flash_percentage": 21,
                             "ram_bytes": 13232,
                             "ram_percentage": 4
@@ -411,7 +411,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 895646,
+                            "flash_bytes": 895620,
                             "flash_percentage": 68,
                             "ram_bytes": 38308,
                             "ram_percentage": 11
@@ -419,7 +419,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 895580,
+                            "flash_bytes": 895554,
                             "flash_percentage": 68,
                             "ram_bytes": 38292,
                             "ram_percentage": 11
@@ -427,7 +427,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
-                            "flash_bytes": 898858,
+                            "flash_bytes": 898834,
                             "flash_percentage": 68,
                             "ram_bytes": 38388,
                             "ram_percentage": 11
@@ -464,7 +464,7 @@
                     },
 {"name": "ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
-                            "flash_bytes": 260010,
+                            "flash_bytes": 259982,
                             "flash_percentage": 19,
                             "ram_bytes": 12848,
                             "ram_percentage": 3
@@ -501,7 +501,7 @@
                 "sketches": [
 {"name": "ESP32/examples/Serial/RS485_Echo_Demo",
                     "sizes": [{
-                            "flash_bytes": 290553,
+                            "flash_bytes": 290521,
                             "flash_percentage": 22,
                             "ram_bytes": 20296,
                             "ram_percentage": 6
