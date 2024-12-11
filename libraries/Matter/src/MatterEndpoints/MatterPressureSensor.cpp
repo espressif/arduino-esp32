@@ -86,7 +86,7 @@ bool MatterPressureSensor::setRawPressure(int16_t _rawPressure) {
     bool ret;
     ret = updateAttributeVal(PressureMeasurement::Id, PressureMeasurement::Attributes::MeasuredValue::Id, &pressureVal);
     if (!ret) {
-      log_e("Failed to update Fan Speed Percent Attribute.");
+      log_e("Failed to update Pressure Sensor Measurement Attribute.");
       return false;
     }
     rawPressure = _rawPressure;
