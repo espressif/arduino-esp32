@@ -17,9 +17,7 @@ void Task(void *pvParameters);
 void setup() {
   // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-  while (!Serial) {
-    delay(100);
-  }
+
   Serial.printf(" Task 0          | Task 1\n");
 
 #ifdef USE_MUTEX

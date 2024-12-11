@@ -248,9 +248,6 @@ void setup() {
   uint8_t self_mac[6];
 
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Initialize the Wi-Fi module
   WiFi.mode(WIFI_STA);
