@@ -22,7 +22,7 @@ kinds of creative coding, interactive objects, spaces or physical experiences.
 http://arduino.cc/en/Reference/HomePage
 """
 
-# Extends: https://github.com/platformio/platform-espressif32/blob/develop/builder/main.py
+# Extends: https://github.com/pioarduino/platform-espressif32/blob/develop/builder/main.py
 
 from os.path import abspath, basename, isdir, isfile, join
 from copy import deepcopy
@@ -160,7 +160,7 @@ SConscript(
     join(
         FRAMEWORK_LIBS_DIR,
         build_mcu,
-        "platformio-build.py",
+        "pioarduino-build.py",
     )
 )
 
