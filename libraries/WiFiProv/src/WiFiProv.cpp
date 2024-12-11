@@ -1,4 +1,4 @@
-  /*
+/*
     WiFiProv.cpp - WiFiProv class for provisioning
     All rights reserved.
 
@@ -129,7 +129,7 @@ void WiFiProvClass ::beginProvision(
   const char *service_key, uint8_t *uuid, bool reset_provisioned
 ) {
   if (!this->provInitDone) {
-    WiFiProvClass ::initProvision( prov_scheme, scheme_handler, reset_provisioned);
+    WiFiProvClass ::initProvision(prov_scheme, scheme_handler, reset_provisioned);
   }
   static char service_name_temp[32];
   if (provisioned == false) {

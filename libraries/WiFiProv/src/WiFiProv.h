@@ -50,10 +50,10 @@ class WiFiProvClass {
 private:
   bool provInitDone = false;
   bool provisioned = false;
+
 public:
   void initProvision(
-    prov_scheme_t prov_scheme = NETWORK_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = NETWORK_PROV_SCHEME_HANDLER_NONE,
-    bool reset_provisioned = false
+    prov_scheme_t prov_scheme = NETWORK_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = NETWORK_PROV_SCHEME_HANDLER_NONE, bool reset_provisioned = false
   );
   void beginProvision(
     prov_scheme_t prov_scheme = NETWORK_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = NETWORK_PROV_SCHEME_HANDLER_NONE,
