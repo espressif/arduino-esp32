@@ -22,10 +22,10 @@
  * The Contact Sensor state can be toggled by pressing the onboard button.
  * The Contact Sensor state will be indicated by the onboard LED.
  * The Contact Sensor state will be simulated to change every 20 seconds.
- * 
+ *
  * The onboard button can be kept pressed for 5 seconds to decommission the Matter Node.
  * The example will also show the manual commissioning code and QR code to be used in the Matter environment.
- * 
+ *
  */
 
 // Matter Manager
@@ -78,7 +78,7 @@ void setup() {
 
   // set initial contact sensor state as false (default)
   ContactSensor.begin();
-  digitalWrite(ledPin, LOW); // LED OFF
+  digitalWrite(ledPin, LOW);  // LED OFF
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
@@ -104,16 +104,16 @@ void setup() {
 }
 
 bool simulatedHWContactSensor() {
-    // Simulated Contact Sensor
-    static bool contactState = false;
-    static uint32_t lastTime = 0;
+  // Simulated Contact Sensor
+  static bool contactState = false;
+  static uint32_t lastTime = 0;
 
-    // Simulate a Contact Sensor state change every 20 seconds
-    if (millis() - lastTime > 20000) {
-        contactState = !contactState;
-        lastTime = millis();
-    }
-    return contactState;
+  // Simulate a Contact Sensor state change every 20 seconds
+  if (millis() - lastTime > 20000) {
+    contactState = !contactState;
+    lastTime = millis();
+  }
+  return contactState;
 }
 
 void loop() {
@@ -128,7 +128,7 @@ void loop() {
   if (button_state && time_diff > debouceTime && digitalRead(buttonPin) == HIGH) {
     button_state = false;  // released
     // button is released - toggle Contact State (Open/Closed)
-    ContactSensor.setContact(!ContactSensor.getContact()); // same as ContactSensor = !ContactSensor;
+    ContactSensor.setContact(!ContactSensor.getContact());  // same as ContactSensor = !ContactSensor;
     Serial.printf("User button released. Setting the Contact Sensor to %s.\r\n", ContactSensor ? "Closed" : "Open");
     // LED will indicate the Contact Sensor state
     if (ContactSensor) {

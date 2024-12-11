@@ -75,7 +75,7 @@ bool MatterContactSensor::setContact(bool _contactState) {
   }
 
   esp_matter_attr_val_t contactVal = esp_matter_invalid(NULL);
-  
+
   if (!getAttributeVal(BooleanState::Id, BooleanState::Attributes::StateValue::Id, &contactVal)) {
     log_e("Failed to get Contact Sensor Attribute.");
     return false;
