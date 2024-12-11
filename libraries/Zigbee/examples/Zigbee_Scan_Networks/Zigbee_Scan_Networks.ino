@@ -76,9 +76,6 @@ void printScannedNetworks(uint16_t networksFound) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Initialize Zigbee stack without any EPs just for scanning
   if (!Zigbee.begin(role)) {

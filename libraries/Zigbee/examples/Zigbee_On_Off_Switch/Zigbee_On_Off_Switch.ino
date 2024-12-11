@@ -95,9 +95,6 @@ static void enableGpioInterrupt(bool enabled) {
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   //Optional: set Zigbee device name and model
   zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");

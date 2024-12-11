@@ -53,9 +53,7 @@ static void temp_sensor_value_update(void *arg) {
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
+
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 

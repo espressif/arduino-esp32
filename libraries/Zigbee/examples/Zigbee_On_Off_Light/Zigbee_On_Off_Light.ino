@@ -47,9 +47,7 @@ void setLED(bool value) {
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
+
   // Init LED and turn it OFF (if LED_PIN == RGB_BUILTIN, the rgbLedWrite() will be used under the hood)
   pinMode(led, OUTPUT);
   digitalWrite(led, LOW);

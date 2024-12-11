@@ -66,9 +66,6 @@ void identify(uint16_t time) {
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Init RMT and leave light OFF
   rgbLedWrite(led, 0, 0, 0);
