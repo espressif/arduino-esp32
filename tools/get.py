@@ -243,11 +243,11 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     if filename.endswith("tar.gz"):
         if not cfile:
             cfile = tarfile.open(filename, "r:gz")
-        cfile.extractall(destination)
+        cfile.extractall(destination, filter='tar')
     elif filename.endswith("tar.xz"):
         if not cfile:
             cfile = tarfile.open(filename, "r:xz")
-        cfile.extractall(destination)
+        cfile.extractall(destination, filter='tar')
     elif filename.endswith("zip"):
         if not cfile:
             cfile = zipfile.ZipFile(filename)
