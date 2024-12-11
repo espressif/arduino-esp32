@@ -2,9 +2,7 @@
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
+
   Serial.println("\n\n\nStart.");
 
   // Convert a HEX string like 6c6c6f20576f726c64 to a binary buffer
