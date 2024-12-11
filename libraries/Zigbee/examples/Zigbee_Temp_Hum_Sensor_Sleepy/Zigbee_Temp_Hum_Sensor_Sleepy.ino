@@ -32,11 +32,13 @@
 
 #include "Zigbee.h"
 
-#define BUTTON_PIN                  9  //Boot button for C6/H2
+/* Zigbee temperature + humidity sensor configuration */
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
 
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP  55         /* Sleep for 55s will + 5s delay for establishing connection => data reported every 1 minute */
+
+uint8_t button = BOOT_PIN;
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
@@ -66,11 +68,9 @@ void meausureAndSleep() {
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
+
   // Init button switch
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   // Configure the wake up source and set to wake up every 5 seconds
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
@@ -112,17 +112,17 @@ void setup() {
   Serial.println();
   Serial.println("Successfully connected to Zigbee network");
 
-  // Delay 5s (may be adjusted) to allow establishing proper connection with coordinator, needed for sleepy devices
-  delay(5000);
+  // Delay approx 1s (may be adjusted) to allow establishing proper connection with coordinator, needed for sleepy devices
+  delay(1000);
 }
 
 void loop() {
   // Checking button for factory reset
-  if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
     delay(100);
     int startTime = millis();
-    while (digitalRead(BUTTON_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot

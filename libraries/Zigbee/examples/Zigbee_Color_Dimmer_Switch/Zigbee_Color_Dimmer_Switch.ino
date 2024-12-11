@@ -37,9 +37,9 @@
 
 #include "Zigbee.h"
 
-/* Switch configuration */
-#define SWITCH_PIN             9  // ESP32-C6/H2 Boot button
+/* Zigbee color dimmer switch configuration */
 #define SWITCH_ENDPOINT_NUMBER 5
+uint8_t button = BOOT_PIN;
 
 /* Zigbee switch */
 ZigbeeColorDimmerSwitch zbSwitch = ZigbeeColorDimmerSwitch(SWITCH_ENDPOINT_NUMBER);
@@ -47,12 +47,9 @@ ZigbeeColorDimmerSwitch zbSwitch = ZigbeeColorDimmerSwitch(SWITCH_ENDPOINT_NUMBE
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   //Init button switch
-  pinMode(SWITCH_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   //Optional: set Zigbee device name and model
   zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");
@@ -84,9 +81,9 @@ void setup() {
 
 void loop() {
   // Handle button switch in loop()
-  if (digitalRead(SWITCH_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
-    while (digitalRead(SWITCH_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
     }
     // Toggle light

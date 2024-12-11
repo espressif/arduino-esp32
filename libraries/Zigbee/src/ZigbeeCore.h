@@ -67,6 +67,7 @@ private:
   uint32_t _primary_channel_mask;
   int16_t _scan_status;
   uint8_t _scan_duration;
+  bool _rx_on_when_idle;
 
   esp_zb_ep_list_t *_zb_ep_list;
   zigbee_role_t _role;
@@ -116,6 +117,13 @@ public:
   void setScanDuration(uint8_t duration);     // Can be set from 1 - 4. 1 is fastest, 4 is slowest
   uint8_t getScanDuration() {
     return _scan_duration;
+  }
+
+  void setRxOnWhenIdle(bool rx_on_when_idle) {
+    _rx_on_when_idle = rx_on_when_idle;
+  }
+  bool getRxOnWhenIdle() {
+    return _rx_on_when_idle;
   }
 
   void setRebootOpenNetwork(uint8_t time);
