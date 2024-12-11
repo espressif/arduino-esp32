@@ -31,9 +31,7 @@ const char *www_password_base64 = "jLEk+MJ3wW7Asu4AVp/RUaCONCs=";
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   if (WiFi.waitForConnectResult() != WL_CONNECTED) {

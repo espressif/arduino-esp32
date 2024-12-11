@@ -40,9 +40,6 @@ void setup() {
 
   // Initialize the serial port
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   pinMode(PA_ENABLE, OUTPUT);
   digitalWrite(PA_ENABLE, HIGH);
