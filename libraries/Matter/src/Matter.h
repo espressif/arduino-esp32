@@ -30,6 +30,7 @@
 #include <MatterEndpoints/MatterHumiditySensor.h>
 #include <MatterEndpoints/MatterContactSensor.h>
 #include <MatterEndpoints/MatterPressureSensor.h>
+#include <MatterEndpoints/MatterOccupancySensor.h>
 
 using namespace esp_matter;
 
@@ -66,6 +67,7 @@ public:
   friend class MatterHumiditySensor;
   friend class MatterContactSensor;
   friend class MatterPressureSensor;
+  friend class MatterOccupancySensor;
 
 protected:
   static void _init();

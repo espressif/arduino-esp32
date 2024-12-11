@@ -22,6 +22,7 @@ MatterTemperatureSensor	KEYWORD1
 MatterHumiditySensor	KEYWORD1
 MatterContactSensor	KEYWORD1
 MatterPressureSensor	KEYWORD1
+MatterOccupancySensor	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -74,6 +75,8 @@ setContact	KEYWORD2
 getContact	KEYWORD2
 setPressure	KEYWORD2
 getPressure	KEYWORD2
+setOccupancy	KEYWORD2
+getOccupancy	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

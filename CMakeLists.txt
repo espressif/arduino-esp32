@@ -179,6 +179,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterHumiditySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterContactSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterPressureSensor.cpp
+  libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
   libraries/Matter/src/Matter.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS
