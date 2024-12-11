@@ -24,9 +24,6 @@ typedef struct {
 void setup() {
   // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Create the queue which will have <QueueElementSize> number of elements, each of size `message_t` and pass the address to <QueueHandle>.
   QueueHandle = xQueueCreate(QueueElementSize, sizeof(message_t));
