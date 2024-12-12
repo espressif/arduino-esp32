@@ -40,6 +40,14 @@ public:
 
   // Report the humidity value
   void reportHumidity();
+
+  // Report the temperature and humidity values if humidity sensor is added
+  void report();
+
+private:
+  bool _humidity_sensor;
+  
 };
+
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

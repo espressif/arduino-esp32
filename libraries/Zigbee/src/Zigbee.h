@@ -13,3 +13,6 @@
 #include "ep/ZigbeeColorDimmerSwitch.h"
 #include "ep/ZigbeeTempSensor.h"
 #include "ep/ZigbeeThermostat.h"
+#include "ep/ZigbeePressureSensor.h"
+#include "ep/ZigbeeFlowSensor.h"
+#include "ep/ZigbeeOccupancySensor.h"
