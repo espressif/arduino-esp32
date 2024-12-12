@@ -24,10 +24,8 @@ using namespace esp_matter::endpoint;
 using namespace chip::app::Clusters;
 
 const uint8_t MatterOccupancySensor::occupancySensorTypeBitmap[4] = {
-  MatterOccupancySensor::occupancySensorTypePir,
-  MatterOccupancySensor::occupancySensorTypePir | MatterOccupancySensor::occupancySensorTypeUltrasonic,
-  MatterOccupancySensor::occupancySensorTypeUltrasonic,
-  MatterOccupancySensor::occupancySensorTypePhysicalContact
+  MatterOccupancySensor::occupancySensorTypePir, MatterOccupancySensor::occupancySensorTypePir | MatterOccupancySensor::occupancySensorTypeUltrasonic,
+  MatterOccupancySensor::occupancySensorTypeUltrasonic, MatterOccupancySensor::occupancySensorTypePhysicalContact
 };
 
 bool MatterOccupancySensor::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
