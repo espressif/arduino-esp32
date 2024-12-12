@@ -39,7 +39,7 @@ public:
   ZigbeeFlowSensor(uint8_t endpoint);
   ~ZigbeeFlowSensor();
 
-  // Set the flow value in 0,01 m3/h
+  // Set the flow value in 0,1 m3/h
   void setFlow(float value);
 
   // Set the min and max value for the flow sensor in 0,1 m3/h
@@ -48,7 +48,7 @@ public:
   // Set the tolerance value for the flow sensor in 0,01 m3/h
   void setTolerance(float tolerance);
 
-  // Set the reporting interval for flow measurement in seconds and delta (temp change in 0,01 m3/h)
+  // Set the reporting interval for flow measurement in seconds and delta (temp change in 0,1 m3/h)
   void setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
   // Report the flow value
