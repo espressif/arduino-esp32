@@ -55,10 +55,11 @@ void meausureAndSleep() {
   zbTempSensor.setHumidity(humidity);
 
   // Report temperature and humidity values
-  zbTempSensor.reportTemperature();
-  zbTempSensor.reportHumidity();
-
+  zbTempSensor.report();
   Serial.printf("Reported temperature: %.2f°C, Humidity: %.2f%%\r\n", temperature, humidity);
+
+  // Add small delay to allow the data to be sent before going to sleep
+  delay(100);
 
   // Put device to deep sleep
   Serial.println("Going to sleep now");
