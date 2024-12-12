@@ -34,9 +34,6 @@ int fieldNumber = 1;      // Field number which will be read out
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(100);
-  }
 
   // We start by connecting to a WiFi network
 

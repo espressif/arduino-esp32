@@ -30,9 +30,6 @@ void ARDUINO_ISR_ATTR LED_FADE_ISR() {
 void setup() {
   // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Setup timer with given frequency, resolution and attach it to a led pin with auto-selected channel
   ledcAttach(LED_PIN, LEDC_BASE_FREQ, LEDC_TIMER_12_BIT);
