@@ -49,7 +49,7 @@ static void sensors_reading(void *arg) {
     uint16_t pressure_value = (uint16_t)temperatureRead()*100; //*100 for demonstration so the value is in 1-3hPa
     Serial.printf("Updating flow sensor value to %.2f\r\n", flow_value);
     zbFlowSensor.setFlow(flow_value);
-    Serial.printf("Updating pressure sensor value to %.2f\r\n", pressure_value);
+    Serial.printf("Updating pressure sensor value to %d\r\n", pressure_value);
     zbPressureSensor.setPressure(pressure_value);
     delay(1000);
   }
