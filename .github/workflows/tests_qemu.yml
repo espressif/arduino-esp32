@@ -64,8 +64,8 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         with:
           cache-dependency-path: tests/requirements.txt
-          cache: 'pip'
-          python-version: '3.x'
+          cache: "pip"
+          python-version: "3.x"
 
       - name: Install Python dependencies
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}

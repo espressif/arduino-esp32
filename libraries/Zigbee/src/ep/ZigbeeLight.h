@@ -3,7 +3,8 @@
 #pragma once
 
 #include "soc/soc_caps.h"
-#if SOC_IEEE802154_SUPPORTED
+#include "sdkconfig.h"
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -13,12 +14,19 @@ public:
   ZigbeeLight(uint8_t endpoint);
   ~ZigbeeLight();
 
-  // Use tp set a cb function to be called on light change
+  // Use to set a cb function to be called on light change
   void onLightChange(void (*callback)(bool)) {
     _on_light_change = callback;
   }
+  // Use to restore light state
   void restoreLight() {
     lightChanged();
+  }
+  // Use to control light state
+  void setLight(bool state);
+  // Use to get light state
+  bool getLightState() {
+    return _current_state;
   }
 
 private:
@@ -30,4 +38,4 @@ private:
   bool _current_state;
 };
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

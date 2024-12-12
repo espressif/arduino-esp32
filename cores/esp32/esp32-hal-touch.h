@@ -22,6 +22,7 @@
 
 #include "soc/soc_caps.h"
 #if SOC_TOUCH_SENSOR_SUPPORTED
+#if SOC_TOUCH_SENSOR_VERSION <= 2  // ESP32 ESP32S2 ESP32S3
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,13 +30,13 @@ extern "C" {
 
 #include "esp32-hal.h"
 
-#if !defined(SOC_TOUCH_VERSION_1) && !defined(SOC_TOUCH_VERSION_2)
+#if !SOC_TOUCH_SENSOR_SUPPORTED
 #error Touch IDF driver Not supported!
 #endif
 
-#if SOC_TOUCH_VERSION_1  // ESP32
+#if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
 typedef uint16_t touch_value_t;
-#elif SOC_TOUCH_VERSION_2  // ESP32S2 ESP32S3
+#elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32S2 ESP32S3
 typedef uint32_t touch_value_t;
 #endif
 
@@ -71,7 +72,7 @@ void touchDetachInterrupt(uint8_t pin);
  * Default if Lower.
  **/
 
-#if SOC_TOUCH_VERSION_1  // Only for ESP32 SoC
+#if SOC_TOUCH_SENSOR_VERSION == 1  // Only for ESP32 SoC
 void touchInterruptSetThresholdDirection(bool mustbeLower);
 #endif
 
@@ -83,7 +84,7 @@ void touchInterruptSetThresholdDirection(bool mustbeLower);
  * as soon as the touchpad is touched and/or released
  **/
 
-#if SOC_TOUCH_VERSION_2  // Only for ESP32S2 and ESP32S3
+#if SOC_TOUCH_SENSOR_VERSION == 2  // Only for ESP32S2 and ESP32S3
 // returns true if touch pad has been and continues pressed and false otherwise
 bool touchInterruptGetLastStatus(uint8_t pin);
 #endif
@@ -97,5 +98,6 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold);
 }
 #endif
 
+#endif /* SOC_TOUCH_SENSOR_VERSION <= 2 */
 #endif /* SOC_TOUCH_SENSOR_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_TOUCH_H_ */

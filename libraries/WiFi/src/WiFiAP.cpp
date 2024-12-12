@@ -25,7 +25,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiAP.h"
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -177,6 +177,7 @@ bool WiFiAPClass::softAPsetHostname(const char *hostname) {
   return AP.setHostname(hostname);
 }
 
+#if CONFIG_LWIP_IPV6
 /**
  * Enable IPv6 on the softAP interface.
  * @return true on success
@@ -193,5 +194,5 @@ bool WiFiAPClass::softAPenableIPv6(bool enable) {
 IPAddress WiFiAPClass::softAPlinkLocalIPv6() {
   return AP.linkLocalIPv6();
 }
-
+#endif
 #endif /* SOC_WIFI_SUPPORTED */

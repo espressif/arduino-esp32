@@ -5,11 +5,11 @@ on:
     inputs:
       type:
         type: string
-        description: 'Type of tests to build'
+        description: "Type of tests to build"
         required: true
       chip:
         type: string
-        description: 'Chip to build tests for'
+        description: "Chip to build tests for"
         required: true
 
 jobs:

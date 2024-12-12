@@ -5,11 +5,11 @@ on:
     inputs:
       type:
         type: string
-        description: 'Type of tests to run'
+        description: "Type of tests to run"
         required: true
       chip:
         type: string
-        description: 'Chip to run tests for'
+        description: "Chip to run tests for"
         required: true
 
 env:

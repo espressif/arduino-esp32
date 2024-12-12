@@ -9,6 +9,7 @@ targets:
   - esp32c3
   - esp32c6
   - esp32h2
+  - esp32p4
 tags:
   - arduino
 files:
@@ -20,6 +21,7 @@ files:
     - "variants/esp32c3/**/*"
     - "variants/esp32c6/**/*"
     - "variants/esp32h2/**/*"
+    - "variants/esp32p4/**/*"
   exclude:
     - "docs/"
     - "docs/**/*"
@@ -42,47 +44,72 @@ files:
     - "platform.txt"
     - "programmers.txt"
 dependencies:
-  idf: ">=5.1,<5.2"
+  idf: ">=5.3,<5.4"
   # mdns 1.2.1 is necessary to build H2 with no WiFi
   espressif/mdns:
     version: "^1.2.3"
     require: public
   espressif/esp_modem:
     version: "^1.1.0"
-  espressif/network_provisioning:
-    version: "~1.0.0"
   espressif/esp-zboss-lib:
-    version: "^1.0.1"
+    version: "==1.6.0"
+    require: public
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/esp-zigbee-lib:
-    version: "^1.0.1"
+    version: "==1.6.0"
+    require: public
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/esp-dsp:
     version: "^1.3.4"
     rules:
       - if: "target != esp32c2"
+  # RainMaker Start (Fixed versions, because Matter supports only Insights 1.0.1)
+  espressif/network_provisioning:
+    version: "1.0.2"
   espressif/esp_rainmaker:
-    version: "^1.0.0"
+    version: "1.5.0"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/rmaker_common:
-    version: "^1.4.6"
+    version: "1.4.6"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/esp_insights:
-    version: "^1.2.1"
+    version: "1.0.1"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
+  # New version breaks esp_insights 1.0.1
+  espressif/esp_diag_data_store:
+    version: "1.0.1"
+    rules:
+      - if: "target not in [esp32c2, esp32p4]"
+  espressif/esp_diagnostics:
+    version: "1.0.2"
+    rules:
+      - if: "target not in [esp32c2, esp32p4]"
+  espressif/cbor:
+    version: "0.6.0~1"
+    rules:
+      - if: "target not in [esp32c2, esp32p4]"
   espressif/qrcode:
-    version: "^0.1.0~1"
+    version: "0.1.0~2"
     rules:
-      - if: "target != esp32c2"
+      - if: "target not in [esp32c2, esp32p4]"
+  # RainMaker End
   espressif/esp-sr:
     version: "^1.4.2"
     rules:
       - if: "target in [esp32s3]"
+  espressif/esp_hosted:
+    version: "^0.0.25"
+    rules:
+      - if: "target == esp32p4"
+  espressif/esp_wifi_remote:
+    version: "^0.4.1"
+    rules:
+      - if: "target == esp32p4"
   espressif/libsodium:
     version: "^1.0.20~1"
     require: public

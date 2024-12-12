@@ -1,0 +1,11 @@
+# Shellcheck configuration file for ESP32 Arduino core
+
+# Optional checks. https://github.com/koalaman/shellcheck/wiki/optional
+enable=add-default-case,deprecate-which,avoid-nullary-conditions
+
+# Enable search for external sources
+external-sources=true
+
+# Search folder for sourced files.
+# Set to the folder where the original script is located.
+source-path=SCRIPTDIR

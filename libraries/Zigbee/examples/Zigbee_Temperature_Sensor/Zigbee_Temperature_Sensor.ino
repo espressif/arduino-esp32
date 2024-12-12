@@ -27,13 +27,14 @@
  */
 
 #ifndef ZIGBEE_MODE_ED
-#error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
+#error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
 
 #include "Zigbee.h"
 
-#define BUTTON_PIN                  9  //Boot button for C6/H2
+/* Zigbee temperature sensor configuration */
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
+uint8_t button = BOOT_PIN;
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
@@ -42,7 +43,7 @@ static void temp_sensor_value_update(void *arg) {
   for (;;) {
     // Read temperature sensor value
     float tsens_value = temperatureRead();
-    log_v("Temperature sensor value: %.2f°C", tsens_value);
+    Serial.printf("Updated temperature sensor value to %.2f°C\r\n", tsens_value);
     // Update temperature value in Temperature sensor EP
     zbTempSensor.setTemperature(tsens_value);
     delay(1000);
@@ -51,14 +52,10 @@ static void temp_sensor_value_update(void *arg) {
 
 /********************* Arduino functions **************************/
 void setup() {
-
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Init button switch
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   // Optional: set Zigbee device name and model
   zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
@@ -72,8 +69,21 @@ void setup() {
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
+  Serial.println("Starting Zigbee...");
   // When all EPs are registered, start Zigbee in End Device mode
-  Zigbee.begin();
+  if (!Zigbee.begin()) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
+  }
+  Serial.println("Connecting to network");
+  while (!Zigbee.connected()) {
+    Serial.print(".");
+    delay(100);
+  }
+  Serial.println();
 
   // Start Temperature sensor reading task
   xTaskCreate(temp_sensor_value_update, "temp_sensor_update", 2048, NULL, 10, NULL);
@@ -88,15 +98,16 @@ void setup() {
 
 void loop() {
   // Checking button for factory reset
-  if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
     delay(100);
     int startTime = millis();
-    while (digitalRead(BUTTON_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
-        Serial.printf("Resetting Zigbee to factory settings, reboot.\n");
+        Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
+        delay(1000);
         Zigbee.factoryReset();
       }
     }

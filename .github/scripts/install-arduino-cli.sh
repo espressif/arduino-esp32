@@ -1,6 +1,6 @@
 #!/bin/bash
 
-OSBITS=`uname -m`
+OSBITS=$(uname -m)
 if [[ "$OSTYPE" == "linux"* ]]; then
     export OS_IS_LINUX="1"
     if [[ "$OSBITS" == "i686" ]]; then
@@ -49,4 +49,3 @@ if [ ! -d "$ARDUINO_IDE_PATH" ] || [ ! -f "$ARDUINO_IDE_PATH/arduino-cli" ]; the
         curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$ARDUINO_IDE_PATH" sh
     fi
 fi
-

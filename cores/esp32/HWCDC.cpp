@@ -286,14 +286,14 @@ bool HWCDC::deinit(void *busptr) {
   running = true;
   // Setting USB D+ D- pins
   bool retCode = true;
-  retCode &= perimanClearPinBus(USB_DM_GPIO_NUM);
-  retCode &= perimanClearPinBus(USB_DP_GPIO_NUM);
+  retCode &= perimanClearPinBus(USB_INT_PHY0_DM_GPIO_NUM);
+  retCode &= perimanClearPinBus(USB_INT_PHY0_DP_GPIO_NUM);
   if (retCode) {
     // Force the host to re-enumerate (BUS_RESET)
-    pinMode(USB_DM_GPIO_NUM, OUTPUT_OPEN_DRAIN);
-    pinMode(USB_DP_GPIO_NUM, OUTPUT_OPEN_DRAIN);
-    digitalWrite(USB_DM_GPIO_NUM, LOW);
-    digitalWrite(USB_DP_GPIO_NUM, LOW);
+    pinMode(USB_INT_PHY0_DM_GPIO_NUM, OUTPUT_OPEN_DRAIN);
+    pinMode(USB_INT_PHY0_DP_GPIO_NUM, OUTPUT_OPEN_DRAIN);
+    digitalWrite(USB_INT_PHY0_DM_GPIO_NUM, LOW);
+    digitalWrite(USB_INT_PHY0_DP_GPIO_NUM, LOW);
   }
   // release the flag
   running = false;
@@ -323,11 +323,11 @@ void HWCDC::begin(unsigned long baud) {
   // delay(10);  // USB Host has to enumerate it again
 
   // Peripheral Manager setting for USB D+ D- pins
-  uint8_t pin = USB_DM_GPIO_NUM;
+  uint8_t pin = USB_INT_PHY0_DM_GPIO_NUM;
   if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *)this, -1, -1)) {
     goto err;
   }
-  pin = USB_DP_GPIO_NUM;
+  pin = USB_INT_PHY0_DP_GPIO_NUM;
   if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) {
     goto err;
   }

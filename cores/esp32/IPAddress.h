@@ -24,6 +24,7 @@
 #include "WString.h"
 #include "lwip/ip_addr.h"
 #include "esp_netif_ip_addr.h"
+#include "sdkconfig.h"
 
 #define IPADDRESS_V4_BYTES_INDEX 12
 #define IPADDRESS_V4_DWORD_INDEX 3
@@ -115,7 +116,9 @@ public:
   IPAddress(const ip_addr_t *addr);
   void to_ip_addr_t(ip_addr_t *addr) const;
   IPAddress &from_ip_addr_t(const ip_addr_t *addr);
+#if CONFIG_LWIP_IPV6
   esp_ip6_addr_type_t addr_type() const;
+#endif
   uint8_t zone() const {
     return (type() == IPv6) ? _zone : 0;
   }

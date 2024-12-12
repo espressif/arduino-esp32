@@ -1,5 +1,10 @@
 #pragma once
 
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
+#else
+
 #include "esp_wifi_types.h"
 #include "Print.h"
 #include "esp_now.h"
@@ -77,3 +82,5 @@ public:
 };
 
 extern ESP_NOW_Class ESP_NOW;
+
+#endif

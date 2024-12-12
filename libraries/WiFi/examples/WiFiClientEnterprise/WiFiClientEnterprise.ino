@@ -1,3 +1,8 @@
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#error "WPA-Enterprise is only supported in SoCs with native Wi-Fi support"
+#endif
+
 #include <WiFi.h>                      //Wifi library
 #define EAP_IDENTITY "login"           //if connecting from another corporation, use identity@organization.domain in Eduroam
 #define EAP_USERNAME "login"           //oftentimes just a repeat of the identity

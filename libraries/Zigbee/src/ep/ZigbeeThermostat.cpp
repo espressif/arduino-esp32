@@ -1,5 +1,5 @@
 #include "ZigbeeThermostat.h"
-#if SOC_IEEE802154_SUPPORTED
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 static float zb_s16_to_temperature(int16_t value) {
   return 1.0 * value / 100;
@@ -185,7 +185,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
   int16_t report_change = (int16_t)delta * 100;
   esp_zb_zcl_config_report_record_t records[] = {
     {
-      .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
+      .direction = ESP_ZB_ZCL_REPORT_DIRECTION_SEND,
       .attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
@@ -202,4 +202,4 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
   esp_zb_lock_release();
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

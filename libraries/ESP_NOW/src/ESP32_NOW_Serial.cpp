@@ -1,3 +1,8 @@
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
+#else
+
 #include "ESP32_NOW_Serial.h"
 #include <string.h>
 #include "esp_now.h"
@@ -277,3 +282,5 @@ void ESP_NOW_Serial_Class::onSent(bool success) {
     }
   }
 }
+
+#endif

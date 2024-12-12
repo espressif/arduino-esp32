@@ -9,7 +9,7 @@
 // Set this to 1 to enable dual Ethernet support
 #define USE_TWO_ETH_PORTS 0
 
-#ifndef ETH_PHY_TYPE
+#ifndef ETH_PHY_CS
 #define ETH_PHY_TYPE ETH_PHY_W5500
 #define ETH_PHY_ADDR 1
 #define ETH_PHY_CS   15
@@ -24,7 +24,7 @@
 
 #if USE_TWO_ETH_PORTS
 // Second port on shared SPI bus
-#ifndef ETH1_PHY_TYPE
+#ifndef ETH1_PHY_CS
 #define ETH1_PHY_TYPE ETH_PHY_W5500
 #define ETH1_PHY_ADDR 1
 #define ETH1_PHY_CS   32

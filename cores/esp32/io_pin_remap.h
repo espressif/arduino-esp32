@@ -106,7 +106,7 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber);
 #define spiAttachMOSI(spi, mosi)     spiAttachMOSI(spi, digitalPinToGPIONumber(mosi))
 #define spiAttachSS(spi, cs_num, ss) spiAttachSS(spi, cs_num, digitalPinToGPIONumber(ss))
 
-// cores/esp32/esp32-hal-touch.h
+// cores/esp32/esp32-hal-touch.h && cores/esp32/esp32-hal-touch-ng.h
 #define touchInterruptGetLastStatus(pin)                       touchInterruptGetLastStatus(digitalPinToGPIONumber(pin))
 #define touchRead(pin)                                         touchRead(digitalPinToGPIONumber(pin))
 #define touchAttachInterruptArg(pin, userFunc, arg, threshold) touchAttachInterruptArg(digitalPinToGPIONumber(pin), userFunc, arg, threshold)
