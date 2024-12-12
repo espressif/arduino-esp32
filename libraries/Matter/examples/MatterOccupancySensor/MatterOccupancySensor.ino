@@ -48,7 +48,6 @@ const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
-  // The button will also be used to manually toggle the Occupancy Sensor state
   pinMode(buttonPin, INPUT_PULLUP);
 
   Serial.begin(115200);
