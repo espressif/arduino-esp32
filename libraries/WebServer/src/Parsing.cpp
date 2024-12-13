@@ -186,8 +186,12 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       _currentHandler->raw(*this, _currentUri, *_currentRaw);
       _currentRaw->status = RAW_WRITE;
 
-      while (_currentRaw->totalSize < _clientContentLength) {
-        _currentRaw->currentSize = client.readBytes(_currentRaw->buf, HTTP_RAW_BUFLEN);
+      while (1) {
+        size_t read_len = std::min(_clientContentLength - _currentRaw->totalSize, (size_t) HTTP_RAW_BUFLEN);
+        if (read_len == 0) {
+          break;
+        }
+        _currentRaw->currentSize = client.readBytes(_currentRaw->buf, read_len);
         _currentRaw->totalSize += _currentRaw->currentSize;
         if (_currentRaw->currentSize == 0) {
           _currentRaw->status = RAW_ABORTED;
