@@ -40,7 +40,6 @@ uint8_t sensor_pin = 4;
 
 ZigbeeOccupancySensor zbOccupancySensor = ZigbeeOccupancySensor(OCCUPANCY_SENSOR_ENDPOINT_NUMBER);
 
-/********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
 

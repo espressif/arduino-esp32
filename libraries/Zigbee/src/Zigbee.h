@@ -16,3 +16,4 @@
 #include "ep/ZigbeePressureSensor.h"
 #include "ep/ZigbeeFlowSensor.h"
 #include "ep/ZigbeeOccupancySensor.h"
+#include "ep/ZigbeeCarbonDioxideSensor.h"

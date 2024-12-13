@@ -281,6 +281,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeFlowSensor.cpp
   libraries/Zigbee/src/ep/ZigbeePressureSensor.cpp
   libraries/Zigbee/src/ep/ZigbeeOccupancySensor.cpp
+  libraries/Zigbee/src/ep/ZigbeeCarbonDioxideSensor.cpp
   )
 
 set(ARDUINO_LIBRARY_BLE_SRCS
