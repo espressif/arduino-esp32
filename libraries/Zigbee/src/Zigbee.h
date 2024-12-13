@@ -9,6 +9,7 @@
 // Endpoints
 #include "ep/ZigbeeLight.h"
 #include "ep/ZigbeeSwitch.h"
+#include "ep/ZigbeeDimmableLight.h"
 #include "ep/ZigbeeColorDimmableLight.h"
 #include "ep/ZigbeeColorDimmerSwitch.h"
 #include "ep/ZigbeeTempSensor.h"
