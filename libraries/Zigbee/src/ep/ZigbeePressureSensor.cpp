@@ -55,7 +55,7 @@ void ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_inte
             .max_interval = max_interval,
             .delta =
               {
-                .u16 = delta, // x Pa
+                .u16 = delta, // x hPa
               },
             .def_min_interval = min_interval,
             .def_max_interval = max_interval,
@@ -75,7 +75,7 @@ void ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_inte
 void ZigbeePressureSensor::setPressure(int16_t pressure) {
   log_v("Updating pressure sensor value...");
   /* Update temperature sensor measured value */
-  log_d("Setting pressure to %d Pa", pressure);
+  log_d("Setting pressure to %d hPa", pressure);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID, &pressure, false

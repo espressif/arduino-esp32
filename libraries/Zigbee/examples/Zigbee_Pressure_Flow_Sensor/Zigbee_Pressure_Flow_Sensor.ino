@@ -41,21 +41,6 @@ uint8_t button = BOOT_PIN;
 ZigbeeFlowSensor zbFlowSensor = ZigbeeFlowSensor(FLOW_SENSOR_ENDPOINT_NUMBER);
 ZigbeePressureSensor zbPressureSensor = ZigbeePressureSensor(PRESSURE_SENSOR_ENDPOINT_NUMBER);
 
-/************************ Temp sensor *****************************/
-static void sensors_reading(void *arg) {
-  for (;;) {
-    // Read Pressure and Flow sensors value - here is chip temperature used as a dummy value for demonstration
-    float flow_value = temperatureRead();
-    uint16_t pressure_value = (uint16_t)temperatureRead()*100; //*100 for demonstration so the value is in 1-3hPa
-    Serial.printf("Updating flow sensor value to %.2f\r\n", flow_value);
-    zbFlowSensor.setFlow(flow_value);
-    Serial.printf("Updating pressure sensor value to %d\r\n", pressure_value);
-    zbPressureSensor.setPressure(pressure_value);
-    delay(1000);
-  }
-}
-
-/********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
 
@@ -65,19 +50,19 @@ void setup() {
   // Optional: set Zigbee device name and model
   zbFlowSensor.setManufacturerAndModel("Espressif", "ZigbeeFlowSensor");
 
-  // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
-  zbFlowSensor.setMinMaxValue(0, 100);
+  // Set minimum and maximum flow measurement value in 0,1 m3/h
+  zbFlowSensor.setMinMaxValue(0.0, 100.0);
 
-  // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
-  zbFlowSensor.setTolerance(1);
+  // Set tolerance for flow measurement in 0,1 m3/h
+  zbFlowSensor.setTolerance(1.0);
 
   // Optional: set Zigbee device name and model
   zbPressureSensor.setManufacturerAndModel("Espressif", "ZigbeePressureSensor");
 
-  // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
-  zbPressureSensor.setMinMaxValue(0, 30);
+  // Set minimum and maximum pressure measurement value in hPa
+  zbPressureSensor.setMinMaxValue(0, 10000);
 
-  // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
+  // Set tolerance for temperature measurement in hPa
   zbPressureSensor.setTolerance(1);
 
   // Add endpoints to Zigbee Core
@@ -100,19 +85,28 @@ void setup() {
   }
   Serial.println();
 
-  // Start Flow and Pressure sensor reading task
-  xTaskCreate(sensors_reading, "flow_pressure_sensors_read", 2048, NULL, 10, NULL);
-
   // Set reporting interval for flow and pressure measurement in seconds, must be called after Zigbee.begin()
-  // min_interval and max_interval in seconds, delta (pressure change in Pa, flow change in 0,1 m3/h)
+  // min_interval and max_interval in seconds, delta (pressure change in hPa, flow change in 0,1 m3/h)
   // if min = 1 and max = 0, reporting is sent only when temperature changes by delta
   // if min = 0 and max = 10, reporting is sent every 10 seconds or temperature changes by delta
   // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of delta change
-  zbFlowSensor.setReporting(0, 30, 1);
+  zbFlowSensor.setReporting(0, 30, 1.0);
   zbPressureSensor.setReporting(0, 30, 1);
 }
 
 void loop() {
+  static uint32_t timeCounter = 0;
+
+  // Read flow nad pressure sensors every 2s
+  if (!(timeCounter++ % 20)) {  // delaying for 100ms x 20 = 2s
+    float flow_value = temperatureRead();
+    uint16_t pressure_value = (uint16_t)temperatureRead()*100; //*100 for demonstration so the value is in 1000-3000hPa
+    Serial.printf("Updating flow sensor value to %.2f m3/h\r\n", flow_value);
+    zbFlowSensor.setFlow(flow_value);
+    Serial.printf("Updating pressure sensor value to %d hPa\r\n", pressure_value);
+    zbPressureSensor.setPressure(pressure_value);
+  }
+
   // Checking button for factory reset
   if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
