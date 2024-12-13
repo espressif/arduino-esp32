@@ -44,6 +44,7 @@ void ZigbeeFlowSensor::setTolerance(float tolerance) {
 }
 
 void ZigbeeFlowSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
+  // clang-format off
   esp_zb_zcl_reporting_info_t reporting_info = {
     .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
     .ep = _endpoint,
@@ -70,6 +71,7 @@ void ZigbeeFlowSensor::setReporting(uint16_t min_interval, uint16_t max_interval
       },
     .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
   };
+  // clang-format on
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();

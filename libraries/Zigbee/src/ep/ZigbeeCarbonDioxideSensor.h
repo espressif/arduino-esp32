@@ -9,6 +9,7 @@
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
+// clang-format off
 #define ZIGBEE_DEFAULT_CARBON_DIOXIDE_SENSOR_CONFIG()                             \
     {                                                                             \
         .basic_cfg =                                                              \
@@ -27,6 +28,7 @@
                 .max_measured_value = 1.0,                                        \
             },                                                                    \
     }
+// clang-format on
 
 typedef struct zigbee_carbon_dioxide_sensor_cfg_s {
     esp_zb_basic_cluster_cfg_t basic_cfg;     

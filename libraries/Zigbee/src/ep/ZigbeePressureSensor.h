@@ -9,6 +9,7 @@
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
+// clang-format off
 #define ZIGBEE_DEFAULT_PRESSURE_SENSOR_CONFIG()                                                     \
     {                                                                                               \
         .basic_cfg =                                                                                \
@@ -27,6 +28,7 @@
                 .max_value = ESP_ZB_ZCL_PATTR_RESSURE_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE,          \
             },                                                                                      \
     }
+// clang-format on
 
 typedef struct zigbee_pressure_sensor_cfg_s {
     esp_zb_basic_cluster_cfg_t basic_cfg;     

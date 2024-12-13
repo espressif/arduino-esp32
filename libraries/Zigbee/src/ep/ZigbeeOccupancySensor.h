@@ -9,6 +9,7 @@
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
+// clang-format off
 #define ZIGBEE_DEFAULT_OCCUPANCY_SENSOR_CONFIG()                                                     \
     {                                                                                                \
         .basic_cfg =                                                                                 \
@@ -27,6 +28,7 @@
                 .sensor_type_bitmap = (1 << ESP_ZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR), \
             },                                                                                       \
     }
+// clang-format on
 
 typedef struct zigbee_occupancy_sensor_cfg_s {
     esp_zb_basic_cluster_cfg_t basic_cfg;     
