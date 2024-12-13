@@ -57,7 +57,7 @@ void ZigbeeDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message
   }
   else
   {
-    log_w("Received message ignored. Cluster ID: %d not supported for Color dimmable Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %d not supported for dimmable Light", message->info.cluster);
   }
 }
 
@@ -67,6 +67,35 @@ void ZigbeeDimmableLight::lightChanged()
   {
     _on_light_change(_current_state, _current_level);
   }
+}
+
+void ZigbeeDimmableLight::setLight(bool state, uint8_t level)
+{
+  // Update all attributes
+  _current_state = state;
+  _current_level = level;
+  lightChanged();
+
+  log_v("Updating on/off light state to %d", state);
+  /* Update light clusters */
+  esp_zb_lock_acquire(portMAX_DELAY);
+  // set on/off state
+  esp_zb_zcl_set_attribute_val(
+      _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
+  // set level
+  esp_zb_zcl_set_attribute_val(
+      _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false);
+  esp_zb_lock_release();
+}
+
+void ZigbeeDimmableLight::setLightState(bool state)
+{
+  setLight(state, _current_level);
+}
+
+void ZigbeeDimmableLight::setLightLevel(uint8_t level)
+{
+  setLight(_current_state, level);
 }
 
 esp_zb_cluster_list_t *ZigbeeDimmableLight::esp_zb_dimmable_light_clusters_create(esp_zb_dimmable_light_cfg_t *light_cfg)

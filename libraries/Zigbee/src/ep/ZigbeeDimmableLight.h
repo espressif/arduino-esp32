@@ -3,7 +3,8 @@
 #pragma once
 
 #include "soc/soc_caps.h"
-#if SOC_IEEE802154_SUPPORTED
+#include "sdkconfig.h"
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -75,6 +76,19 @@ public:
   void restoreLight()
   {
     lightChanged();
+  }
+
+  void setLightState(bool state);
+  void setLightLevel(uint8_t level);
+  void setLight(bool state, uint8_t level);
+
+  bool getLightState()
+  {
+    return _current_state;
+  }
+  uint8_t getLightLevel()
+  {
+    return _current_level;
   }
 
 private:

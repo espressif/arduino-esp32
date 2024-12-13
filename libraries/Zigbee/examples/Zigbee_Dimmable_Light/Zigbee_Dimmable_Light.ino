@@ -33,16 +33,22 @@
 
 #include "Zigbee.h"
 
-#define LED_PIN RGB_BUILTIN
-#define BUTTON_PIN 9 // C6/H2 Boot button
+/* Zigbee dimmable light configuration */
 #define ZIGBEE_LIGHT_ENDPOINT 10
+uint8_t led = RGB_BUILTIN;
+uint8_t button = BOOT_PIN;
 
 ZigbeeDimmableLight zbDimmableLight = ZigbeeDimmableLight(ZIGBEE_LIGHT_ENDPOINT);
 
-/********************* LED functions **************************/
+/********************* RGB LED functions **************************/
 void setLight(bool state, uint8_t level)
 {
-  rgbLedWrite(LED_PIN, level, level, level);
+  if (!state)
+  {
+    rgbLedWrite(led, 0, 0, 0);
+    return;
+  }
+  rgbLedWrite(led, level, level, level);
 }
 
 // Create a task on identify call to handle the identify function
@@ -56,18 +62,20 @@ void identify(uint16_t time)
     zbDimmableLight.restoreLight();
     return;
   }
-  rgbLedWrite(LED_PIN, 255 * blink, 255 * blink, 255 * blink);
+  rgbLedWrite(led, 255 * blink, 255 * blink, 255 * blink);
   blink = !blink;
 }
 
 /********************* Arduino functions **************************/
 void setup()
 {
+  Serial.begin(115200);
+
   // Init RMT and leave light OFF
-  rgbLedWrite(LED_PIN, 0, 0, 0);
+  rgbLedWrite(led, 0, 0, 0);
 
   // Init button for factory reset
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   // Set callback function for light change
   zbDimmableLight.onLightChange(setLight);
@@ -79,32 +87,46 @@ void setup()
   zbDimmableLight.setManufacturerAndModel("Espressif", "ZBLightBulb");
 
   // Add endpoint to Zigbee Core
-  log_d("Adding ZigbeeLight endpoint to Zigbee Core");
+  Serial.println("Adding ZigbeeLight endpoint to Zigbee Core");
   Zigbee.addEndpoint(&zbDimmableLight);
 
-  // When all EPs are registered, start Zigbee. By default acts as ZIGBEE_END_DEVICE
-  log_d("Calling Zigbee.begin()");
-  Zigbee.begin();
+  // When all EPs are registered, start Zigbee in End Device mode
+  if (!Zigbee.begin())
+  {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
+  Serial.println("Connecting to network");
+  while (!Zigbee.connected())
+  {
+    Serial.print(".");
+    delay(100);
+  }
+  Serial.println();
 }
 
 void loop()
 {
   // Checking button for factory reset
-  if (digitalRead(BUTTON_PIN) == LOW)
+  if (digitalRead(button) == LOW)
   { // Push button pressed
     // Key debounce handling
     delay(100);
     int startTime = millis();
-    while (digitalRead(BUTTON_PIN) == LOW)
+    while (digitalRead(button) == LOW)
     {
       delay(50);
       if ((millis() - startTime) > 3000)
       {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
-        Serial.printf("Resetting Zigbee to factory settings, reboot.\n");
+        Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
+        delay(1000);
         Zigbee.factoryReset();
       }
     }
+    // Increase blightness by 50 every time the button is pressed
+    zbDimmableLight.setLightLevel(zbDimmableLight.getLightLevel() + 50);
   }
   delay(100);
 }
