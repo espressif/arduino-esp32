@@ -43,6 +43,9 @@ void ZigbeeCarbonDioxideSensor::setTolerance(float tolerance) {
 }
 
 void ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
+  if(delta > 0) {
+    log_e("Delta reporting is currently not supported by the carbon dioxide sensor");
+  }
   esp_zb_zcl_reporting_info_t reporting_info = {
     .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
     .ep = _endpoint,
@@ -57,7 +60,7 @@ void ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max
             .max_interval = max_interval,
             .delta =
               {
-                .u16 = delta, // x ppm
+                .u16 = delta,
               },
             .def_min_interval = min_interval,
             .def_max_interval = max_interval,

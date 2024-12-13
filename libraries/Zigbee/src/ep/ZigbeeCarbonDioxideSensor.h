@@ -49,6 +49,7 @@ public:
   void setTolerance(float tolerance);
 
   // Set the reporting interval for carbon dioxide measurement in seconds and delta (carbon dioxide change in ppm)
+  // NOTE: Delta reporting is currently not supported by the carbon dioxide sensor
   void setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
 
   // Report the carbon dioxide value
