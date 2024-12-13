@@ -10,24 +10,24 @@
 #include "ha/esp_zigbee_ha_standard.h"
 
 // clang-format off
-#define ZIGBEE_DEFAULT_OCCUPANCY_SENSOR_CONFIG()                                                     \
-    {                                                                                                \
-        .basic_cfg =                                                                                 \
-            {                                                                                        \
-                .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                           \
-                .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                         \
-            },                                                                                       \
-        .identify_cfg =                                                                              \
-            {                                                                                        \
-                .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                    \
-            },                                                                                       \
-        .occupancy_meas_cfg =                                                                        \
-            {                                                                                        \
-                .occupancy = ESP_ZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_UNOCCUPIED,                      \
-                .sensor_type = ESP_ZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR,               \
-                .sensor_type_bitmap = (1 << ESP_ZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR), \
-            },                                                                                       \
-    }
+#define ZIGBEE_DEFAULT_OCCUPANCY_SENSOR_CONFIG()                                             \
+  {                                                                                          \
+    .basic_cfg =                                                                             \
+      {                                                                                      \
+        .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                           \
+        .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                         \
+      },                                                                                     \
+    .identify_cfg =                                                                          \
+      {                                                                                      \
+        .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                    \
+      },                                                                                     \
+    .occupancy_meas_cfg =                                                                    \
+      {                                                                                      \
+        .occupancy = ESP_ZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_UNOCCUPIED,                      \
+        .sensor_type = ESP_ZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR,               \
+        .sensor_type_bitmap = (1 << ESP_ZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR), \
+      },                                                                                     \
+  }
 // clang-format on
 
 typedef struct zigbee_occupancy_sensor_cfg_s {

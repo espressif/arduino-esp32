@@ -10,24 +10,24 @@
 #include "ha/esp_zigbee_ha_standard.h"
 
 // clang-format off
-#define ZIGBEE_DEFAULT_CARBON_DIOXIDE_SENSOR_CONFIG()                             \
-    {                                                                             \
-        .basic_cfg =                                                              \
-            {                                                                     \
-                .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,        \
-                .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,      \
-            },                                                                    \
-        .identify_cfg =                                                           \
-            {                                                                     \
-                .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE, \
-            },                                                                    \
-        .carbon_dioxide_meas_cfg =                                                \
-            {                                                                     \
-                .measured_value = 0.0,                                            \
-                .min_measured_value = 0.0,                                        \
-                .max_measured_value = 1.0,                                        \
-            },                                                                    \
-    }
+#define ZIGBEE_DEFAULT_CARBON_DIOXIDE_SENSOR_CONFIG()                     \
+  {                                                                       \
+    .basic_cfg =                                                          \
+      {                                                                   \
+        .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,        \
+        .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,      \
+      },                                                                  \
+    .identify_cfg =                                                       \
+      {                                                                   \
+        .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE, \
+      },                                                                  \
+    .carbon_dioxide_meas_cfg =                                            \
+      {                                                                   \
+        .measured_value = 0.0,                                            \
+        .min_measured_value = 0.0,                                        \
+        .max_measured_value = 1.0,                                        \
+      },                                                                  \
+  }
 // clang-format on
 
 typedef struct zigbee_carbon_dioxide_sensor_cfg_s {

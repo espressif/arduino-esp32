@@ -10,24 +10,24 @@
 #include "ha/esp_zigbee_ha_standard.h"
 
 // clang-format off
-#define ZIGBEE_DEFAULT_FLOW_SENSOR_CONFIG()                                                         \
-    {                                                                                               \
-        .basic_cfg =                                                                                \
-            {                                                                                       \
-                .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                          \
-                .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                        \
-            },                                                                                      \
-        .identify_cfg =                                                                             \
-            {                                                                                       \
-                .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                   \
-            },                                                                                      \
-        .flow_meas_cfg =                                                                            \
-            {                                                                                       \
-                .measured_value = 0,                                                                \
-                .min_value = 0,                                                                     \
-                .max_value = 0x7FFF,                                                                \
-            },                                                                                      \
-    }
+#define ZIGBEE_DEFAULT_FLOW_SENSOR_CONFIG()                               \
+  {                                                                       \
+    .basic_cfg =                                                          \
+      {                                                                   \
+        .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,        \
+        .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,      \
+      },                                                                  \
+    .identify_cfg =                                                       \
+      {                                                                   \
+        .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE, \
+      },                                                                  \
+    .flow_meas_cfg =                                                      \
+      {                                                                   \
+        .measured_value = 0,                                              \
+        .min_value = 0,                                                   \
+        .max_value = 0x7FFF,                                              \
+      },                                                                  \
+  }
 // clang-format on
 
 typedef struct zigbee_flow_sensor_cfg_s {
