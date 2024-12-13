@@ -33,7 +33,7 @@
 #include "Zigbee.h"
 
 /* Zigbee flow + pressure sensor configuration */
-#define FLOW_SENSOR_ENDPOINT_NUMBER 10
+#define FLOW_SENSOR_ENDPOINT_NUMBER     10
 #define PRESSURE_SENSOR_ENDPOINT_NUMBER 11
 
 uint8_t button = BOOT_PIN;
@@ -100,7 +100,7 @@ void loop() {
   // Read flow and pressure sensors every 2s
   if (!(timeCounter++ % 20)) {  // delaying for 100ms x 20 = 2s
     float flow_value = temperatureRead();
-    uint16_t pressure_value = (uint16_t)temperatureRead()*100; //*100 for demonstration so the value is in 1000-3000hPa
+    uint16_t pressure_value = (uint16_t)temperatureRead() * 100;  //*100 for demonstration so the value is in 1000-3000hPa
     Serial.printf("Updating flow sensor value to %.2f m3/h\r\n", flow_value);
     zbFlowSensor.setFlow(flow_value);
     Serial.printf("Updating pressure sensor value to %d hPa\r\n", pressure_value);

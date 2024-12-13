@@ -73,7 +73,7 @@ void setup() {
 void loop() {
   // Checking PIR sensor for occupancy change
   static bool occupancy = false;
-  if(digitalRead(sensor_pin) == HIGH && !occupancy) {
+  if (digitalRead(sensor_pin) == HIGH && !occupancy) {
     // Update occupancy sensor value
     zbOccupancySensor.setOccupancy(true);
     zbOccupancySensor.report();

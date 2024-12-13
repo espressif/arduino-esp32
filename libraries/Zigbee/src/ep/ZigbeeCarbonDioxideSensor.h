@@ -31,9 +31,9 @@
 // clang-format on
 
 typedef struct zigbee_carbon_dioxide_sensor_cfg_s {
-    esp_zb_basic_cluster_cfg_t basic_cfg;     
-    esp_zb_identify_cluster_cfg_t identify_cfg;
-    esp_zb_carbon_dioxide_measurement_cluster_cfg_t carbon_dioxide_meas_cfg;
+  esp_zb_basic_cluster_cfg_t basic_cfg;
+  esp_zb_identify_cluster_cfg_t identify_cfg;
+  esp_zb_carbon_dioxide_measurement_cluster_cfg_t carbon_dioxide_meas_cfg;
 } zigbee_carbon_dioxide_sensor_cfg_t;
 
 class ZigbeeCarbonDioxideSensor : public ZigbeeEP {

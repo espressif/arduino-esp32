@@ -1,17 +1,16 @@
 #include "ZigbeeFlowSensor.h"
 #if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
-esp_zb_cluster_list_t  *zigbee_flow_sensor_clusters_create(zigbee_flow_sensor_cfg_t *flow_sensor)
-{
-    esp_zb_basic_cluster_cfg_t *basic_cfg = flow_sensor ? &(flow_sensor->basic_cfg) : NULL;
-    esp_zb_identify_cluster_cfg_t *identify_cfg = flow_sensor ? &(flow_sensor->identify_cfg) : NULL;
-    esp_zb_flow_meas_cluster_cfg_t *flow_meas_cfg = flow_sensor ? &(flow_sensor->flow_meas_cfg) : NULL;
-    esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
-    esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_cluster_list_add_flow_meas_cluster(cluster_list, esp_zb_flow_meas_cluster_create(flow_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    return cluster_list;
+esp_zb_cluster_list_t *zigbee_flow_sensor_clusters_create(zigbee_flow_sensor_cfg_t *flow_sensor) {
+  esp_zb_basic_cluster_cfg_t *basic_cfg = flow_sensor ? &(flow_sensor->basic_cfg) : NULL;
+  esp_zb_identify_cluster_cfg_t *identify_cfg = flow_sensor ? &(flow_sensor->identify_cfg) : NULL;
+  esp_zb_flow_meas_cluster_cfg_t *flow_meas_cfg = flow_sensor ? &(flow_sensor->flow_meas_cfg) : NULL;
+  esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
+  esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_list_add_flow_meas_cluster(cluster_list, esp_zb_flow_meas_cluster_create(flow_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  return cluster_list;
 }
 
 ZigbeeFlowSensor::ZigbeeFlowSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
@@ -21,9 +20,7 @@ ZigbeeFlowSensor::ZigbeeFlowSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   zigbee_flow_sensor_cfg_t flow_sensor_cfg = ZIGBEE_DEFAULT_FLOW_SENSOR_CONFIG();
   _cluster_list = zigbee_flow_sensor_clusters_create(&flow_sensor_cfg);
 
-  _ep_config = {
-    .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0
-  };
+  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
 }
 
 void ZigbeeFlowSensor::setMinMaxValue(float min, float max) {

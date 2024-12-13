@@ -46,8 +46,6 @@ public:
 
 private:
   bool _humidity_sensor;
-  
 };
-
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

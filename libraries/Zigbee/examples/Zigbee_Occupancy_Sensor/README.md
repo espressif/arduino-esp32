@@ -30,7 +30,7 @@ To get more information about the Espressif boards see [Espressif Development Ki
 
 ## Troubleshooting
 
-If the End device flashed with this example is not connecting to the coordinator, erase the flash of the End device before flashing the example to the board. 
+If the End device flashed with this example is not connecting to the coordinator, erase the flash of the End device before flashing the example to the board.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 

@@ -31,9 +31,9 @@
 // clang-format on
 
 typedef struct zigbee_flow_sensor_cfg_s {
-    esp_zb_basic_cluster_cfg_t basic_cfg;     
-    esp_zb_identify_cluster_cfg_t identify_cfg;
-    esp_zb_flow_meas_cluster_cfg_t flow_meas_cfg;
+  esp_zb_basic_cluster_cfg_t basic_cfg;
+  esp_zb_identify_cluster_cfg_t identify_cfg;
+  esp_zb_flow_meas_cluster_cfg_t flow_meas_cfg;
 } zigbee_flow_sensor_cfg_t;
 
 class ZigbeeFlowSensor : public ZigbeeEP {

@@ -31,9 +31,9 @@
 // clang-format on
 
 typedef struct zigbee_occupancy_sensor_cfg_s {
-    esp_zb_basic_cluster_cfg_t basic_cfg;     
-    esp_zb_identify_cluster_cfg_t identify_cfg;
-    esp_zb_occupancy_sensing_cluster_cfg_t occupancy_meas_cfg;
+  esp_zb_basic_cluster_cfg_t basic_cfg;
+  esp_zb_identify_cluster_cfg_t identify_cfg;
+  esp_zb_occupancy_sensing_cluster_cfg_t occupancy_meas_cfg;
 } zigbee_occupancy_sensor_cfg_t;
 
 class ZigbeeOccupancySensor : public ZigbeeEP {

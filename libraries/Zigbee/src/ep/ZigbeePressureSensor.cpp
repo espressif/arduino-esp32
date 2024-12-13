@@ -1,17 +1,16 @@
 #include "ZigbeePressureSensor.h"
 #if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
-esp_zb_cluster_list_t  *zigbee_pressure_sensor_clusters_create(zigbee_pressure_sensor_cfg_t *pressure_sensor)
-{
-    esp_zb_basic_cluster_cfg_t *basic_cfg = pressure_sensor ? &(pressure_sensor->basic_cfg) : NULL;
-    esp_zb_identify_cluster_cfg_t *identify_cfg = pressure_sensor ? &(pressure_sensor->identify_cfg) : NULL;
-    esp_zb_pressure_meas_cluster_cfg_t *pressure_meas_cfg = pressure_sensor ? &(pressure_sensor->pressure_meas_cfg) : NULL;
-    esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
-    esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_cluster_list_add_pressure_meas_cluster(cluster_list, esp_zb_pressure_meas_cluster_create(pressure_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    return cluster_list;
+esp_zb_cluster_list_t *zigbee_pressure_sensor_clusters_create(zigbee_pressure_sensor_cfg_t *pressure_sensor) {
+  esp_zb_basic_cluster_cfg_t *basic_cfg = pressure_sensor ? &(pressure_sensor->basic_cfg) : NULL;
+  esp_zb_identify_cluster_cfg_t *identify_cfg = pressure_sensor ? &(pressure_sensor->identify_cfg) : NULL;
+  esp_zb_pressure_meas_cluster_cfg_t *pressure_meas_cfg = pressure_sensor ? &(pressure_sensor->pressure_meas_cfg) : NULL;
+  esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
+  esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_list_add_pressure_meas_cluster(cluster_list, esp_zb_pressure_meas_cluster_create(pressure_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  return cluster_list;
 }
 
 ZigbeePressureSensor::ZigbeePressureSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
@@ -21,9 +20,7 @@ ZigbeePressureSensor::ZigbeePressureSensor(uint8_t endpoint) : ZigbeeEP(endpoint
   zigbee_pressure_sensor_cfg_t presssure_sensor_cfg = ZIGBEE_DEFAULT_PRESSURE_SENSOR_CONFIG();
   _cluster_list = zigbee_pressure_sensor_clusters_create(&presssure_sensor_cfg);
 
-  _ep_config = {
-    .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0
-  };
+  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
 }
 
 void ZigbeePressureSensor::setMinMaxValue(int16_t min, int16_t max) {
