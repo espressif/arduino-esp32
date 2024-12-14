@@ -24,7 +24,7 @@
  *
  * Please check the README.md for instructions and more detailed description.
  *
- * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
+ * Created by [FaBjE](https://github.com/FaBjE) based on examples by [Jan Procházka](https://github.com/P-R-O-C-H-Y/)
  */
 
 #ifndef ZIGBEE_MODE_ED
