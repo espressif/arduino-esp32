@@ -3,6 +3,7 @@
 
 ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID;
+  _humidity_sensor = false;
 
   esp_zb_temperature_sensor_cfg_t temp_sensor_cfg = ESP_ZB_DEFAULT_TEMPERATURE_SENSOR_CONFIG();
   _cluster_list = esp_zb_temperature_sensor_clusters_create(&temp_sensor_cfg);
@@ -103,6 +104,7 @@ void ZigbeeTempSensor::addHumiditySensor(float min, float max, float tolerance) 
   esp_zb_humidity_meas_cluster_add_attr(humidity_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, &zb_max);
   esp_zb_humidity_meas_cluster_add_attr(humidity_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_TOLERANCE_ID, &zb_tolerance);
   esp_zb_cluster_list_add_humidity_meas_cluster(_cluster_list, humidity_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  _humidity_sensor = true;
 }
 
 void ZigbeeTempSensor::setHumidity(float humidity) {
@@ -163,6 +165,13 @@ void ZigbeeTempSensor::setHumidityReporting(uint16_t min_interval, uint16_t max_
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
+}
+
+void ZigbeeTempSensor::report() {
+  reportTemperature();
+  if (_humidity_sensor) {
+    reportHumidity();
+  }
 }
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

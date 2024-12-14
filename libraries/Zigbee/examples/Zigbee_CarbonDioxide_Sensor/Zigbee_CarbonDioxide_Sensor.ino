@@ -13,10 +13,9 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee temperature sensor.
+ * @brief This example demonstrates Zigbee carbon dioxide sensor.
  *
- * The example demonstrates how to use Zigbee library to create a end device temperature sensor.
- * The temperature sensor is a Zigbee end device, which is controlled by a Zigbee coordinator.
+ * The example demonstrates how to use Zigbee library to create a end device carbon dioxide sensor.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
@@ -32,25 +31,12 @@
 
 #include "Zigbee.h"
 
-/* Zigbee temperature sensor configuration */
-#define TEMP_SENSOR_ENDPOINT_NUMBER 10
+/* Zigbee carbon dioxide sensor configuration */
+#define CARBON_DIOXIDE_SENSOR_ENDPOINT_NUMBER 10
 uint8_t button = BOOT_PIN;
 
-ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
+ZigbeeCarbonDioxideSensor zbCarbonDioxideSensor = ZigbeeCarbonDioxideSensor(CARBON_DIOXIDE_SENSOR_ENDPOINT_NUMBER);
 
-/************************ Temp sensor *****************************/
-static void temp_sensor_value_update(void *arg) {
-  for (;;) {
-    // Read temperature sensor value
-    float tsens_value = temperatureRead();
-    Serial.printf("Updated temperature sensor value to %.2f°C\r\n", tsens_value);
-    // Update temperature value in Temperature sensor EP
-    zbTempSensor.setTemperature(tsens_value);
-    delay(1000);
-  }
-}
-
-/********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
 
@@ -58,16 +44,13 @@ void setup() {
   pinMode(button, INPUT_PULLUP);
 
   // Optional: set Zigbee device name and model
-  zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
+  zbCarbonDioxideSensor.setManufacturerAndModel("Espressif", "ZigbeeCarbonDioxideSensor");
 
-  // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
-  zbTempSensor.setMinMaxValue(10, 50);
+  // Set minimum and maximum carbon dioxide measurement value in ppm
+  zbCarbonDioxideSensor.setMinMaxValue(0, 1500);
 
-  // Optional: Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
-  zbTempSensor.setTolerance(1);
-
-  // Add endpoint to Zigbee Core
-  Zigbee.addEndpoint(&zbTempSensor);
+  // Add endpoints to Zigbee Core
+  Zigbee.addEndpoint(&zbCarbonDioxideSensor);
 
   Serial.println("Starting Zigbee...");
   // When all EPs are registered, start Zigbee in End Device mode
@@ -85,19 +68,25 @@ void setup() {
   }
   Serial.println();
 
-  // Start Temperature sensor reading task
-  xTaskCreate(temp_sensor_value_update, "temp_sensor_update", 2048, NULL, 10, NULL);
-
-  // Set reporting interval for temperature measurement in seconds, must be called after Zigbee.begin()
-  // min_interval and max_interval in seconds, delta (temp change in 0,1 °C)
-  // if min = 1 and max = 0, reporting is sent only when temperature changes by delta
-  // if min = 0 and max = 10, reporting is sent every 10 seconds or temperature changes by delta
-  // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of temperature change
-  zbTempSensor.setReporting(1, 0, 1);
+  // Set reporting interval for carbon dioxide measurement to be done every 30 seconds, must be called after Zigbee.begin()
+  // min_interval and max_interval in seconds, delta (carbon dioxide change in ppm)
+  // if min = 1 and max = 0, reporting is sent only when carbon dioxide changes by delta
+  // if min = 0 and max = 10, reporting is sent every 10 seconds or when carbon dioxide changes by delta
+  // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of delta change
+  zbCarbonDioxideSensor.setReporting(0, 30, 0);
 }
 
 void loop() {
-  // Checking button for factory reset
+  static uint32_t timeCounter = 0;
+  // Read carbon dioxide sensor every 2s
+  if (!(timeCounter++ % 20)) {  // delaying for 100ms x 20 = 2s
+    // Read sensor value - here is chip temperature used + 300 as a dummy value for demonstration
+    uint16_t carbon_dioxide_value = 300 + (uint16_t)temperatureRead();
+    Serial.printf("Updating carbon dioxide sensor value to %d ppm\r\n", carbon_dioxide_value);
+    zbCarbonDioxideSensor.setCarbonDioxide(carbon_dioxide_value);
+  }
+
+  // Checking button for factory reset and reporting
   if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
     delay(100);
@@ -111,7 +100,7 @@ void loop() {
         Zigbee.factoryReset();
       }
     }
-    zbTempSensor.reportTemperature();
+    zbCarbonDioxideSensor.report();
   }
   delay(100);
 }

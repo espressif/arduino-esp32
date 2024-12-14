@@ -13,10 +13,11 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee temperature sensor.
+ * @brief This example demonstrates Zigbee occupancy sensor.
  *
- * The example demonstrates how to use Zigbee library to create a end device temperature sensor.
- * The temperature sensor is a Zigbee end device, which is controlled by a Zigbee coordinator.
+ * The example demonstrates how to use Zigbee library to create a end device occupancy sensor.
+ * The occupancy sensor is a Zigbee end device, which is reporting data to the Zigbee network.
+ * Tested with PIR sensor HC-SR501 connected to GPIO4.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
@@ -32,42 +33,25 @@
 
 #include "Zigbee.h"
 
-/* Zigbee temperature sensor configuration */
-#define TEMP_SENSOR_ENDPOINT_NUMBER 10
+/* Zigbee occupancy sensor configuration */
+#define OCCUPANCY_SENSOR_ENDPOINT_NUMBER 10
 uint8_t button = BOOT_PIN;
+uint8_t sensor_pin = 4;
 
-ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
+ZigbeeOccupancySensor zbOccupancySensor = ZigbeeOccupancySensor(OCCUPANCY_SENSOR_ENDPOINT_NUMBER);
 
-/************************ Temp sensor *****************************/
-static void temp_sensor_value_update(void *arg) {
-  for (;;) {
-    // Read temperature sensor value
-    float tsens_value = temperatureRead();
-    Serial.printf("Updated temperature sensor value to %.2f°C\r\n", tsens_value);
-    // Update temperature value in Temperature sensor EP
-    zbTempSensor.setTemperature(tsens_value);
-    delay(1000);
-  }
-}
-
-/********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
 
-  // Init button switch
+  // Init button + PIR sensor
   pinMode(button, INPUT_PULLUP);
+  pinMode(sensor_pin, INPUT);
 
   // Optional: set Zigbee device name and model
-  zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
-
-  // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
-  zbTempSensor.setMinMaxValue(10, 50);
-
-  // Optional: Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
-  zbTempSensor.setTolerance(1);
+  zbOccupancySensor.setManufacturerAndModel("Espressif", "ZigbeeOccupancyPIRSensor");
 
   // Add endpoint to Zigbee Core
-  Zigbee.addEndpoint(&zbTempSensor);
+  Zigbee.addEndpoint(&zbOccupancySensor);
 
   Serial.println("Starting Zigbee...");
   // When all EPs are registered, start Zigbee in End Device mode
@@ -84,19 +68,22 @@ void setup() {
     delay(100);
   }
   Serial.println();
-
-  // Start Temperature sensor reading task
-  xTaskCreate(temp_sensor_value_update, "temp_sensor_update", 2048, NULL, 10, NULL);
-
-  // Set reporting interval for temperature measurement in seconds, must be called after Zigbee.begin()
-  // min_interval and max_interval in seconds, delta (temp change in 0,1 °C)
-  // if min = 1 and max = 0, reporting is sent only when temperature changes by delta
-  // if min = 0 and max = 10, reporting is sent every 10 seconds or temperature changes by delta
-  // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of temperature change
-  zbTempSensor.setReporting(1, 0, 1);
 }
 
 void loop() {
+  // Checking PIR sensor for occupancy change
+  static bool occupancy = false;
+  if (digitalRead(sensor_pin) == HIGH && !occupancy) {
+    // Update occupancy sensor value
+    zbOccupancySensor.setOccupancy(true);
+    zbOccupancySensor.report();
+    occupancy = true;
+  } else if (digitalRead(sensor_pin) == LOW && occupancy) {
+    zbOccupancySensor.setOccupancy(false);
+    zbOccupancySensor.report();
+    occupancy = false;
+  }
+
   // Checking button for factory reset
   if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
@@ -111,7 +98,6 @@ void loop() {
         Zigbee.factoryReset();
       }
     }
-    zbTempSensor.reportTemperature();
   }
   delay(100);
 }

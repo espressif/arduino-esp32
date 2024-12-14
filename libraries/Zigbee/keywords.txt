@@ -18,6 +18,9 @@ ZigbeeColorDimmableLight	KEYWORD1
 ZigbeeColorDimmerSwitch	KEYWORD1
 ZigbeeTempSensor	KEYWORD1
 ZigbeeThermostat	KEYWORD1
+ZigbeeFlowSensor	KEYWORD1
+ZigbeePressureSensor	KEYWORD1
+ZigbeeOccupancySensor	KEYWORD1
 
 # Other
 zigbee_role_t	KEYWORD1
@@ -89,23 +92,39 @@ lightOnWithSceneRecall	KEYWORD2
 setLightLevel	KEYWORD2
 setLightColor	KEYWORD2
 
-# ZigbeeTempSensor + humidity
-setTemperature	KEYWORD2
-setMinMaxValue	KEYWORD2
-setTolerance	KEYWORD2
-setReporting	KEYWORD2
-reportTemperature	KEYWORD2
-addHumiditySensor	KEYWORD2
-setHumidity	KEYWORD2
-setHumidityReporting	KEYWORD2
-reportHumidity	KEYWORD2
-
 # ZigbeeThermostat
 onTempRecieve	KEYWORD2
 onConfigRecieve	KEYWORD2
 getTemperature	KEYWORD2
 getSensorSettings	KEYWORD2
 setTemperatureReporting	KEYWORD2
+
+# Common Zigbee Sensor
+setMinMaxValue	KEYWORD2
+setTolerance	KEYWORD2
+setReporting	KEYWORD2
+report	KEYWORD2
+
+# ZigbeeTempSensor + humidity
+setTemperature	KEYWORD2
+reportTemperature	KEYWORD2
+addHumiditySensor	KEYWORD2
+setHumidity	KEYWORD2
+setHumidityReporting	KEYWORD2
+reportHumidity	KEYWORD2
+
+# ZigbeeFlowSensor
+setFlow	KEYWORD2
+
+# ZigbeePressureSensor
+setPressure	KEYWORD2
+
+# ZigbeeOccupancySensor
+setOccupancy	KEYWORD2
+setSensorType	KEYWORD2
+
+# ZigbeeCarbonDioxideSensor
+setCarbonDioxide	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
