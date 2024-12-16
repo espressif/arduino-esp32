@@ -42,6 +42,11 @@ MatterTemperatureSensor::~MatterTemperatureSensor() {
 bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
   ArduinoMatter::_init();
 
+  if (getEndPointId() != 0) {
+    log_e("Temperature Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    return false;
+  }
+
   temperature_sensor::config_t temperature_sensor_config;
   temperature_sensor_config.temperature_measurement.measured_value = _rawTemperature;
   temperature_sensor_config.temperature_measurement.min_measured_value = nullptr;

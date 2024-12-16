@@ -43,6 +43,11 @@ MatterContactSensor::~MatterContactSensor() {
 bool MatterContactSensor::begin(bool _contactState) {
   ArduinoMatter::_init();
 
+  if (getEndPointId() != 0) {
+    log_e("Matter Contact Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    return false;
+  }
+
   contact_sensor::config_t contact_sensor_config;
   contact_sensor_config.boolean_state.state_value = _contactState;
 

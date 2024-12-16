@@ -178,8 +178,13 @@ MatterEnhancedColorLight::~MatterEnhancedColorLight() {
 
 bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV, uint8_t brightness, uint16_t ColorTemperature) {
   ArduinoMatter::_init();
-  enhanced_color_light::config_t light_config;
 
+  if (getEndPointId() != 0) {
+    log_e("Matter Enhanced ColorLight with Endpoint Id %d device has already been created.", getEndPointId());
+    return false;
+  }
+
+  enhanced_color_light::config_t light_config;
   light_config.on_off.on_off = initialState;
   light_config.on_off.lighting.start_up_on_off = nullptr;
   onOffState = initialState;

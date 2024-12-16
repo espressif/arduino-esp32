@@ -26,17 +26,17 @@ using namespace chip::app::Clusters;
 bool MatterColorTemperatureLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
   if (!started) {
-    log_e("Matter CW_WW Light device has not begun.");
+    log_e("Matter Temperature Light device has not begun.");
     return false;
   }
 
-  log_d("CW_WW Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d("Temperature Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId()) {
     switch (cluster_id) {
       case OnOff::Id:
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
-          log_d("CW_WW Light On/Off State changed to %d", val->val.b);
+          log_d("Temperature Light On/Off State changed to %d", val->val.b);
           if (_onChangeOnOffCB != NULL) {
             ret &= _onChangeOnOffCB(val->val.b);
           }
@@ -50,7 +50,7 @@ bool MatterColorTemperatureLight::attributeChangeCB(uint16_t endpoint_id, uint32
         break;
       case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-          log_d("CW_WW Light Brightness changed to %d", val->val.u8);
+          log_d("Temperature Light Brightness changed to %d", val->val.u8);
           if (_onChangeBrightnessCB != NULL) {
             ret &= _onChangeBrightnessCB(val->val.u8);
           }
@@ -64,7 +64,7 @@ bool MatterColorTemperatureLight::attributeChangeCB(uint16_t endpoint_id, uint32
         break;
       case ColorControl::Id:
         if (attribute_id == ColorControl::Attributes::ColorTemperatureMireds::Id) {
-          log_d("CW_WW Light Temperature changed to %d", val->val.u16);
+          log_d("Temperature Light Temperature changed to %d", val->val.u16);
           if (_onChangeTemperatureCB != NULL) {
             ret &= _onChangeTemperatureCB(val->val.u16);
           }
@@ -89,8 +89,13 @@ MatterColorTemperatureLight::~MatterColorTemperatureLight() {
 
 bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, uint16_t ColorTemperature) {
   ArduinoMatter::_init();
-  color_temperature_light::config_t light_config;
 
+  if (getEndPointId() != 0) {
+    log_e("Matter Temperature Light with Endpoint Id %d device has already been created.", getEndPointId());
+    return false;
+  }
+
+  color_temperature_light::config_t light_config;
   light_config.on_off.on_off = initialState;
   light_config.on_off.lighting.start_up_on_off = nullptr;
   onOffState = initialState;
@@ -108,12 +113,12 @@ bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, u
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = color_temperature_light::create(node::get(), &light_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
-    log_e("Failed to create CW_WW light endpoint");
+    log_e("Failed to create Temperature Light endpoint");
     return false;
   }
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("CW_WW Light created with endpoint_id %d", getEndPointId());
+  log_i("Temperature Light created with endpoint_id %d", getEndPointId());
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */
   cluster_t *level_control_cluster = cluster::get(endpoint, LevelControl::Id);
@@ -134,7 +139,7 @@ void MatterColorTemperatureLight::end() {
 
 bool MatterColorTemperatureLight::setOnOff(bool newState) {
   if (!started) {
-    log_e("Matter CW_WW Light device has not begun.");
+    log_e("Matter Temperature Light device has not begun.");
     return false;
   }
 
@@ -175,7 +180,7 @@ bool MatterColorTemperatureLight::toggle() {
 
 bool MatterColorTemperatureLight::setBrightness(uint8_t newBrightness) {
   if (!started) {
-    log_w("Matter CW_WW Light device has not begun.");
+    log_w("Matter Temperature Light device has not begun.");
     return false;
   }
 
@@ -206,7 +211,7 @@ uint8_t MatterColorTemperatureLight::getBrightness() {
 
 bool MatterColorTemperatureLight::setColorTemperature(uint16_t newTemperature) {
   if (!started) {
-    log_w("Matter CW_WW Light device has not begun.");
+    log_w("Matter Temperature Light device has not begun.");
     return false;
   }
 

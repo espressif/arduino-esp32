@@ -52,6 +52,11 @@ MatterOccupancySensor::~MatterOccupancySensor() {
 bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _occupancySensorType) {
   ArduinoMatter::_init();
 
+  if (getEndPointId() != 0) {
+    log_e("Matter Occupancy Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    return false;
+  }
+
   occupancy_sensor::config_t occupancy_sensor_config;
   occupancy_sensor_config.occupancy_sensing.occupancy = _occupancyState;
   occupancy_sensor_config.occupancy_sensing.occupancy_sensor_type = _occupancySensorType;

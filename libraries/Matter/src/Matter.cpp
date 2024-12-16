@@ -21,6 +21,7 @@
 using namespace esp_matter;
 using namespace esp_matter::attribute;
 using namespace esp_matter::endpoint;
+using namespace esp_matter::identification;
 using namespace chip::app::Clusters;
 
 constexpr auto k_timeout_seconds = 300;
@@ -28,11 +29,6 @@ constexpr auto k_timeout_seconds = 300;
 static bool _matter_has_started = false;
 static node::config_t node_config;
 static node_t *deviceNode = NULL;
-
-typedef void *app_driver_handle_t;
-esp_err_t matter_light_attribute_update(
-  app_driver_handle_t driver_handle, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val
-);
 
 // This callback is called for every attribute update. The callback implementation shall
 // handle the desired attributes and return an appropriate error code. If the attribute
@@ -67,8 +63,26 @@ static esp_err_t app_attribute_update_cb(
 // This callback is invoked when clients interact with the Identify Cluster.
 // In the callback implementation, an endpoint can identify itself. (e.g., by flashing an LED or light).
 static esp_err_t app_identification_cb(identification::callback_type_t type, uint16_t endpoint_id, uint8_t effect_id, uint8_t effect_variant, void *priv_data) {
-  log_i("Identification callback: type: %u, effect: %u, variant: %u", type, effect_id, effect_variant);
-  return ESP_OK;
+  log_d("Identification callback to endpoint %d: type: %u, effect: %u, variant: %u", endpoint_id, type, effect_id, effect_variant);
+  esp_err_t err = ESP_OK;
+  MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
+  // Identify the endpoint sending a counter to the application
+  bool identifyIsActive = false;
+
+  if (type == identification::callback_type_t::START) {
+    log_v("Identification callback: START");
+    identifyIsActive = true;
+  } else if (type == identification::callback_type_t::EFFECT) {
+    log_v("Identification callback: EFFECT");
+  } else if (type == identification::callback_type_t::STOP) {
+    identifyIsActive = false;
+    log_v("Identification callback: STOP");
+  }
+  if (ep != NULL) {
+    err = ep->endpointIdentifyCB(endpoint_id, identifyIsActive) ? ESP_OK : ESP_FAIL;
+  }
+
+  return err;
 }
 
 // This callback is invoked for all Matter events. The application can handle the events as required.
