@@ -35,7 +35,7 @@ public:
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
-  
+
   // User Callback for whenever the On/Off state is changed by the Matter Controller
   void onChangeOnOff(EndPointCB onChangeCB) {
     _onChangeOnOffCB = onChangeCB;

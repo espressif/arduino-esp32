@@ -37,7 +37,7 @@ public:
   bool setBrightness(uint8_t newBrightness);  // returns true if successful
   uint8_t getBrightness();                    // returns current brightness
 
-    // User Callback for whenever the Light On/Off state is changed by the Matter Controller
+  // User Callback for whenever the Light On/Off state is changed by the Matter Controller
   using EndPointOnOffCB = std::function<bool(bool)>;
   void onChangeOnOff(EndPointOnOffCB onChangeCB) {
     _onChangeOnOffCB = onChangeCB;
@@ -59,7 +59,7 @@ public:
   // It is necessary to set a user callback function using onChange() to handle the physical light state
   void updateAccessory();
 
-operator bool();             // returns current on/off light state
+  operator bool();             // returns current on/off light state
   void operator=(bool state);  // turns light on or off
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
