@@ -15,8 +15,7 @@
  *
  *
  */
-typedef struct zigbee_dimmable_light_cfg_s
-{
+typedef struct zigbee_dimmable_light_cfg_s {
   esp_zb_basic_cluster_cfg_t basic_cfg;       /*!<  Basic cluster configuration, @ref esp_zb_basic_cluster_cfg_s */
   esp_zb_identify_cluster_cfg_t identify_cfg; /*!<  Identify cluster configuration, @ref esp_zb_identify_cluster_cfg_s */
   esp_zb_groups_cluster_cfg_t groups_cfg;     /*!<  Groups cluster configuration, @ref esp_zb_groups_cluster_cfg_s */
@@ -65,18 +64,15 @@ typedef struct zigbee_dimmable_light_cfg_s
   }
 // clang-format on
 
-class ZigbeeDimmableLight : public ZigbeeEP
-{
+class ZigbeeDimmableLight : public ZigbeeEP {
 public:
   ZigbeeDimmableLight(uint8_t endpoint);
   ~ZigbeeDimmableLight();
 
-  void onLightChange(void (*callback)(bool, uint8_t))
-  {
+  void onLightChange(void (*callback)(bool, uint8_t)) {
     _on_light_change = callback;
   }
-  void restoreLight()
-  {
+  void restoreLight() {
     lightChanged();
   }
 
@@ -84,12 +80,10 @@ public:
   void setLightLevel(uint8_t level);
   void setLight(bool state, uint8_t level);
 
-  bool getLightState()
-  {
+  bool getLightState() {
     return _current_state;
   }
-  uint8_t getLightLevel()
-  {
+  uint8_t getLightLevel() {
     return _current_level;
   }
 
@@ -116,4 +110,4 @@ private:
   uint8_t _current_level;
 };
 
-#endif // SOC_IEEE802154_SUPPORTED
+#endif  // SOC_IEEE802154_SUPPORTED
