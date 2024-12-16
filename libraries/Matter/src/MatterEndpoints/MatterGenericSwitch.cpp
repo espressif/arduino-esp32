@@ -42,12 +42,17 @@ bool MatterGenericSwitch::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
 
 bool MatterGenericSwitch::begin() {
   ArduinoMatter::_init();
-  generic_switch::config_t switch_config;
 
+   if (getEndPointId() != 0) {
+    log_e("Matter Generic Switch with Endpoint Id %d device has already been created.", getEndPointId());
+    return false;
+  }
+
+  generic_switch::config_t switch_config;
   // endpoint handles can be used to add/modify clusters.
   endpoint_t *endpoint = generic_switch::create(node::get(), &switch_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
-    log_e("Failed to create Generic switch endpoint");
+    log_e("Failed to create Generic Switch endpoint");
     return false;
   }
   // Add group cluster to the switch endpoint

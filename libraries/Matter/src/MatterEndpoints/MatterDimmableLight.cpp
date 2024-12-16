@@ -75,8 +75,12 @@ MatterDimmableLight::~MatterDimmableLight() {
 
 bool MatterDimmableLight::begin(bool initialState, uint8_t brightness) {
   ArduinoMatter::_init();
-  dimmable_light::config_t light_config;
+  if (getEndPointId() != 0) {
+    log_e("Matter Dimmable Light with Endpoint Id %d device has already been created.", getEndPointId());
+    return false;
+  }
 
+  dimmable_light::config_t light_config;
   light_config.on_off.on_off = initialState;
   light_config.on_off.lighting.start_up_on_off = nullptr;
   onOffState = initialState;

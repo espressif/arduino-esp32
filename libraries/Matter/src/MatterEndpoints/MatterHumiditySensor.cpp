@@ -43,6 +43,11 @@ MatterHumiditySensor::~MatterHumiditySensor() {
 bool MatterHumiditySensor::begin(uint16_t _rawHumidity) {
   ArduinoMatter::_init();
 
+  if (getEndPointId() != 0) {
+    log_e("Matter Humidity Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    return false;
+  }
+
   // is it a valid percentage value?
   if (_rawHumidity > 10000) {
     log_e("Humidity Sensor Percentage value out of range [0..100].");

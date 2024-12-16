@@ -51,6 +51,11 @@ uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
+// Identify Flag and blink time - Blink the LED
+const uint8_t identifyLedPin = ledPin;  // uses the same LED as the Light - change if needed
+volatile bool identifyFlag = false;     // Flag to start the Blink when in Identify state
+bool identifyBlink = false;             // Blink state when in Identify state
+
 // Matter Protocol Endpoint (On/OFF Light) Callback
 bool onOffLightCallback(bool state) {
   digitalWrite(ledPin, state ? HIGH : LOW);
@@ -58,14 +63,19 @@ bool onOffLightCallback(bool state) {
   return true;
 }
 
-bool onIdentifyLightCallback(bool identifyIsActive, uint8_t counter) {
-  log_i("Identify Cluster is %s, counter: %d", identifyIsActive ? "Active" : "Inactive", counter);
+// Identification shall be done by Blink in Red or just the GPIO when no LED_BUILTIN is not defined
+bool onIdentifyLightCallback(bool identifyIsActive) {
+  log_i("Identify Cluster is %s", identifyIsActive ? "Active" : "Inactive");
   if (identifyIsActive) {
-    // Start Blinking the light
-    OnOffLight.toggle();
+    // Start Blinking the light in loop()
+    identifyFlag = true;
+    identifyBlink = !OnOffLight; // Start with the inverted light state
   } else {
     // Stop Blinking and restore the light to the its last state
-    OnOffLight.updateAccessory();
+    identifyFlag = false;
+    // force returning to the original state by toggling the light twice
+    OnOffLight.toggle();
+    OnOffLight.toggle();
   }
   return true;
 }
@@ -76,12 +86,16 @@ void setup() {
   // Initialize the LED GPIO
   pinMode(ledPin, OUTPUT);
 
+  Serial.begin(115200);
+
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
+    Serial.print(".");
   }
+  Serial.println();
 
   // Initialize at least one Matter EndPoint
   OnOffLight.begin();
@@ -95,16 +109,38 @@ void setup() {
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
 
+  // Check Matter Accessory Commissioning state, which may change during execution of loop()
   if (!Matter.isDeviceCommissioned()) {
-    log_i("Matter Node is not commissioned yet.");
-    log_i("Initiate the device discovery in your Matter environment.");
-    log_i("Commission it to your Matter hub with the manual pairing code or QR code");
-    log_i("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    log_i("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
+    Serial.println("");
+    Serial.println("Matter Node is not commissioned yet.");
+    Serial.println("Initiate the device discovery in your Matter environment.");
+    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
+    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
+    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
+    // waits for Matter Occupancy Sensor Commissioning.
+    uint32_t timeCount = 0;
+    while (!Matter.isDeviceCommissioned()) {
+      delay(100);
+      if ((timeCount++ % 50) == 0) {  // 50*100ms = 5 sec
+        Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
+      }
+    }
+    Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
   }
 }
 
 void loop() {
+  // check if the Ligth is in  identify state and blink it every 500ms (delay loop time)
+  if (identifyFlag) {
+#ifdef LED_BUILTIN
+    uint8_t brightness = 32 * identifyBlink;
+    rgbLedWrite(identifyLedPin, brightness, 0, 0);
+#else
+  digitalWrite(identifyLedPin, identifyBlink ? HIGH : LOW);
+#endif
+    identifyBlink = !identifyBlink;
+  }  
+
   // Check if the button has been pressed
   if (digitalRead(buttonPin) == LOW && !button_state) {
     // deals with button debouncing
@@ -124,5 +160,5 @@ void loop() {
     button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
 
-  delay(500);
+  delay(500); // works as a debounce for the button and also for the LED blink
 }

@@ -30,11 +30,6 @@ static bool _matter_has_started = false;
 static node::config_t node_config;
 static node_t *deviceNode = NULL;
 
-typedef void *app_driver_handle_t;
-esp_err_t matter_light_attribute_update(
-  app_driver_handle_t driver_handle, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val
-);
-
 // This callback is called for every attribute update. The callback implementation shall
 // handle the desired attributes and return an appropriate error code. If the attribute
 // is not of your interest, please do not return an error code and strictly return ESP_OK.
@@ -72,22 +67,19 @@ static esp_err_t app_identification_cb(identification::callback_type_t type, uin
   esp_err_t err = ESP_OK;
   MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
   // Identify the endpoint sending a counter to the application
-  static uint8_t counter = 0;
   bool identifyIsActive = false;
 
   if (type == identification::callback_type_t::START) {
     log_v("Identification callback: START");
-    counter = 0;
     identifyIsActive = true;
   } else if (type == identification::callback_type_t::EFFECT) {
     log_v("Identification callback: EFFECT");
-    counter++;
   } else if (type == identification::callback_type_t::STOP) {
     identifyIsActive = false;
     log_v("Identification callback: STOP");
   }
   if (ep != NULL) {
-    err = ep->endpointIdentifyCB(endpoint_id, identifyIsActive, counter) ? ESP_OK : ESP_FAIL;
+    err = ep->endpointIdentifyCB(endpoint_id, identifyIsActive) ? ESP_OK : ESP_FAIL;
   }
   
   return err;
