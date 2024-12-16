@@ -68,7 +68,7 @@ static esp_err_t app_attribute_update_cb(
 // This callback is invoked when clients interact with the Identify Cluster.
 // In the callback implementation, an endpoint can identify itself. (e.g., by flashing an LED or light).
 static esp_err_t app_identification_cb(identification::callback_type_t type, uint16_t endpoint_id, uint8_t effect_id, uint8_t effect_variant, void *priv_data) {
-  log_d("Identification callback to endpoint %d: type: %u, effect: %u, variant: %u", endpoint_id, effect_id, effect_variant);
+  log_d("Identification callback to endpoint %d: type: %u, effect: %u, variant: %u", endpoint_id, type, effect_id, effect_variant);
   esp_err_t err = ESP_OK;
   MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
   // Identify the endpoint sending a counter to the application
