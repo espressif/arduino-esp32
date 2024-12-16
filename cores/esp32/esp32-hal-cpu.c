@@ -259,18 +259,10 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   if (apb_change_callbacks) {
     triggerApbChangeCallback(APB_AFTER_CHANGE, capb, apb);
   }
-  // clang-format off
-#ifdef SOC_CLK_APLL_SUPPORTED
+#if defined(SOC_CLK_APLL_SUPPORTED) && !defined(CONFIG_IDF_TARGET_ESP32P4)  // APLL not yet supported in ESP32-P4
   log_d(
     "%s: %u / %u = %u Mhz, APB: %u Hz",
-    (conf.source == SOC_CPU_CLK_SRC_PLL) ? "PLL"
-                                          : ((conf.source == SOC_CPU_CLK_SRC_APLL) ? "APLL"
-                                          : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL"
-#ifdef CONFIG_IDF_TARGET_ESP32P4
-                                          : "17.5M")),
-#else
-                                          : "8M")),
-#endif
+    (conf.source == SOC_CPU_CLK_SRC_PLL) ? "PLL" : ((conf.source == SOC_CPU_CLK_SRC_APLL) ? "APLL" : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL" : "8M")),
     conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
   );
 #else
@@ -279,7 +271,6 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
     conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
   );
 #endif
-  // clang-format on
   return true;
 }
 
