@@ -36,6 +36,10 @@
 // Matter Contact Sensor Endpoint
 MatterContactSensor ContactSensor;
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // LED will be used to indicate the Contact Sensor state
 // set your board RGB LED pin here
 #ifdef RGB_BUILTIN
@@ -47,10 +51,6 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined LE
 
 // set your board USER BUTTON pin here - decommissioning and Manual Contact Sensor toggle button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
-
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
 
 // Button control
 uint32_t button_time_stamp = 0;                // debouncing control

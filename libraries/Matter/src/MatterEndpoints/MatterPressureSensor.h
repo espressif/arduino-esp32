@@ -39,6 +39,7 @@ public:
   double getPressure() {
     return (double)rawPressure;
   }
+
   // double conversion operator
   void operator=(double pressure) {
     setPressure(pressure);

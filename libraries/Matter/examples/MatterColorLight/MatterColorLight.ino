@@ -21,6 +21,10 @@
 // Color Light Endpoint
 MatterColorLight ColorLight;
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // it will keep last OnOff & HSV Color state stored, using Preferences
 Preferences matterPref;
 const char *onOffPrefKey = "OnOff";
@@ -42,10 +46,6 @@ uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
 const uint32_t debouceTime = 250;              // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
-
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
 
 // Set the RGB LED Light based on the current state of the Color Light
 bool setLightState(bool state, espHsvColor_t colorHSV) {
