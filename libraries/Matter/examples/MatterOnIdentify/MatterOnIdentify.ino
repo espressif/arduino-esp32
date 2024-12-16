@@ -65,7 +65,7 @@ bool onOffLightCallback(bool state) {
 
 // Identification shall be done by Blink in Red or just the GPIO when no LED_BUILTIN is not defined
 bool onIdentifyLightCallback(bool identifyIsActive) {
-  log_i("Identify Cluster is %s", identifyIsActive ? "Active" : "Inactive");
+  Serial.printf("Identify Cluster is %s\r\n", identifyIsActive ? "Active" : "Inactive");
   if (identifyIsActive) {
     // Start Blinking the light in loop()
     identifyFlag = true;
