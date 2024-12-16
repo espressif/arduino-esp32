@@ -69,7 +69,7 @@ bool onIdentifyLightCallback(bool identifyIsActive) {
   if (identifyIsActive) {
     // Start Blinking the light in loop()
     identifyFlag = true;
-    identifyBlink = !OnOffLight; // Start with the inverted light state
+    identifyBlink = !OnOffLight;  // Start with the inverted light state
   } else {
     // Stop Blinking and restore the light to the its last state
     identifyFlag = false;
@@ -136,7 +136,7 @@ void loop() {
     uint8_t brightness = 32 * identifyBlink;
     rgbLedWrite(identifyLedPin, brightness, 0, 0);
 #else
-  digitalWrite(identifyLedPin, identifyBlink ? HIGH : LOW);
+    digitalWrite(identifyLedPin, identifyBlink ? HIGH : LOW);
 #endif
     identifyBlink = !identifyBlink;
   }
@@ -160,5 +160,5 @@ void loop() {
     button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
 
-  delay(500); // works as a debounce for the button and also for the LED blink
+  delay(500);  // works as a debounce for the button and also for the LED blink
 }
