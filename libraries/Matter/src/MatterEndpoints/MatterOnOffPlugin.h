@@ -30,22 +30,26 @@ public:
   bool getOnOff();               // returns current plugin state
   bool toggle();                 // returns true if successful
 
+  // User Callback for whenever the Plugin state is changed by the Matter Controller
+  using EndPointCB = std::function<bool(bool)>;
+  void onChange(EndPointCB onChangeCB) {
+    _onChangeCB = onChangeCB;
+  }
+
+  // User Callback for whenever the On/Off state is changed by the Matter Controller
+  void onChangeOnOff(EndPointCB onChangeCB) {
+    _onChangeOnOffCB = onChangeCB;
+  }
+
   // used to update the state of the plugin using the current Matter Plugin internal state
   // It is necessary to set a user callback function using onChange() to handle the physical plugin state
   void updateAccessory();
 
   operator bool();             // returns current plugin state
   void operator=(bool state);  // turns plugin on or off
+
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
-  // User Callback for whenever the Plugin state is changed by the Matter Controller
-  using EndPointCB = std::function<bool(bool)>;
-  void onChange(EndPointCB onChangeCB) {
-    _onChangeCB = onChangeCB;
-  }
-  void onChangeOnOff(EndPointCB onChangeCB) {
-    _onChangeOnOffCB = onChangeCB;
-  }
 
 protected:
   bool started = false;

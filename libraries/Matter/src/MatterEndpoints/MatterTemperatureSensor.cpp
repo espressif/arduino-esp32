@@ -70,7 +70,7 @@ bool MatterTemperatureSensor::setRawTemperature(int16_t _rawTemperature) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (rawTemperature == _rawTemperature) {
     return true;
   }
@@ -86,7 +86,7 @@ bool MatterTemperatureSensor::setRawTemperature(int16_t _rawTemperature) {
     bool ret;
     ret = updateAttributeVal(TemperatureMeasurement::Id, TemperatureMeasurement::Attributes::MeasuredValue::Id, &temperatureVal);
     if (!ret) {
-      log_e("Failed to update Fan Speed Percent Attribute.");
+      log_e("Failed to update Temperature Sensor Attribute.");
       return false;
     }
     rawTemperature = _rawTemperature;

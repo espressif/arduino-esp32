@@ -21,6 +21,10 @@
 // Color Temperature CW/WW Light Endpoint
 MatterColorTemperatureLight CW_WW_Light;
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // it will keep last OnOff & Brightness state stored, using Preferences
 Preferences matterPref;
 const char *onOffPrefKey = "OnOff";
@@ -43,10 +47,6 @@ uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
 const uint32_t debouceTime = 250;              // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
-
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
 
 // Set the RGB LED Light based on the current state of the Color Temperature Light
 bool setLightState(bool state, uint8_t brightness, uint16_t temperature_Mireds) {
@@ -83,15 +83,10 @@ void setup() {
   pinMode(ledPin, OUTPUT);
 
   Serial.begin(115200);
-  while (!Serial) {
-    delay(100);
-  }
 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  // enable IPv6
-  WiFi.enableIPv6(true);
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection

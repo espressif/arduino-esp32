@@ -40,6 +40,7 @@ public:
   double getTemperature() {
     return (double)rawTemperature / 100.0;
   }
+
   // double conversion operator
   void operator=(double temperature) {
     setTemperature(temperature);
