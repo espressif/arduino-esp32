@@ -20,6 +20,10 @@
 // Fan Endpoint - On/Off control + Speed Percent Control + Fan Modes
 MatterFan Fan;
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // set your board USER BUTTON pin here - used for toggling On/Off and decommission the Matter Node
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
@@ -40,10 +44,6 @@ const uint8_t dcMotorPin = RGB_BUILTIN;
 const uint8_t dcMotorPin = 2;  // Set your pin here if your board has not defined LED_BUILTIN
 #warning "Do not forget to set the RGB LED pin"
 #endif
-
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
 
 void fanDCMotorDrive(bool fanState, uint8_t speedPercent) {
   // drive the Fan DC motor
@@ -71,15 +71,10 @@ void setup() {
   pinMode(dcMotorPin, OUTPUT);
 
   Serial.begin(115200);
-  while (!Serial) {
-    delay(100);
-  }
 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  // enable IPv6
-  WiFi.enableIPv6(true);
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection

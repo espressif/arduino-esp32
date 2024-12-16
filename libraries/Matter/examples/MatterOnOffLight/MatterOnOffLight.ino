@@ -17,6 +17,10 @@
 #include <WiFi.h>
 #include <Preferences.h>
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
 MatterOnOffLight OnOffLight;
@@ -42,10 +46,6 @@ bool button_state = false;                     // false = released | true = pres
 const uint32_t debouceTime = 250;              // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
-
 // Matter Protocol Endpoint Callback
 bool setLightOnOff(bool state) {
   Serial.printf("User Callback :: New Light State = %s\r\n", state ? "ON" : "OFF");
@@ -67,15 +67,10 @@ void setup() {
   pinMode(ledPin, OUTPUT);
 
   Serial.begin(115200);
-  while (!Serial) {
-    delay(100);
-  }
 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  // enable IPv6
-  WiFi.enableIPv6(true);
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection

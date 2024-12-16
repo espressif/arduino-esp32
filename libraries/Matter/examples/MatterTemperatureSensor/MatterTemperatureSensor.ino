@@ -27,6 +27,10 @@
 // Matter Temperature Sensor Endpoint
 MatterTemperatureSensor SimulatedTemperatureSensor;
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // set your board USER BUTTON pin here - decommissioning button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
@@ -34,10 +38,6 @@ const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
-
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
 
 // Simulate a temperature sensor - add your preferred temperature sensor library code here
 float getSimulatedTemperature() {

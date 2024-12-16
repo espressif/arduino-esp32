@@ -69,7 +69,7 @@ bool MatterContactSensor::setContact(bool _contactState) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (contactState == _contactState) {
     return true;
   }

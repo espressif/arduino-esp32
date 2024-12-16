@@ -94,7 +94,7 @@ bool MatterOnOffLight::setOnOff(bool newState) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (onOffState == newState) {
     return true;
   }

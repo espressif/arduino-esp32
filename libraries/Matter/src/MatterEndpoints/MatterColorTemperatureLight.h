@@ -42,16 +42,6 @@ public:
   bool setColorTemperature(uint16_t newTemperature);  // returns true if successful
   uint16_t getColorTemperature();                     // returns current temperature
 
-  // used to update the state of the light using the current Matter Light internal state
-  // It is necessary to set a user callback function using onChange() to handle the physical light state
-  void updateAccessory();
-
-  operator bool();             // returns current on/off light state
-  void operator=(bool state);  // turns light on or off
-
-  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
-  bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
-
   // User Callback for whenever the Light On/Off state is changed by the Matter Controller
   using EndPointOnOffCB = std::function<bool(bool)>;
   void onChangeOnOff(EndPointOnOffCB onChangeCB) {
@@ -75,6 +65,16 @@ public:
   void onChange(EndPointCB onChangeCB) {
     _onChangeCB = onChangeCB;
   }
+
+  // used to update the state of the light using the current Matter Light internal state
+  // It is necessary to set a user callback function using onChange() to handle the physical light state
+  void updateAccessory();
+
+  operator bool();             // returns current on/off light state
+  void operator=(bool state);  // turns light on or off
+
+  // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
+  bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
 protected:
   bool started = false;

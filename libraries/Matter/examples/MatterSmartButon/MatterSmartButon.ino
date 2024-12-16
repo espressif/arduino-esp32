@@ -20,6 +20,10 @@
 // Generic Switch Endpoint - works as a smart button with a single click
 MatterGenericSwitch SmartButton;
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // set your board USER BUTTON pin here
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
@@ -29,24 +33,16 @@ bool button_state = false;                     // false = released | true = pres
 const uint32_t debouceTime = 250;              // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
-
 void setup() {
   // Initialize the USER BUTTON (Boot button) GPIO that will act as a smart button or to decommission the Matter Node
   pinMode(buttonPin, INPUT_PULLUP);
 
   Serial.begin(115200);
-  while (!Serial) {
-    delay(100);
-  }
 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  // enable IPv6
-  WiFi.enableIPv6(true);
+
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection
