@@ -80,7 +80,7 @@ bool MatterOccupancySensor::setOccupancy(bool _occupancyState) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (occupancyState == _occupancyState) {
     return true;
   }

@@ -70,7 +70,7 @@ bool MatterPressureSensor::setRawPressure(int16_t _rawPressure) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (rawPressure == _rawPressure) {
     return true;
   }

@@ -118,7 +118,7 @@ bool MatterFan::setMode(FanMode_t newMode, bool performUpdate) {
     log_w("Matter Fan device has not begun.");
     return false;
   }
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (currentFanMode == newMode) {
     return true;
   }
@@ -159,7 +159,7 @@ bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
     log_w("Matter Fan device has not begun.");
     return false;
   }
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (currentPercent == newPercent) {
     return true;
   }
@@ -193,7 +193,7 @@ bool MatterFan::setOnOff(bool newState, bool performUpdate) {
     log_w("Matter Fan device has not begun.");
     return false;
   }
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (getOnOff() == newState) {
     return true;
   }

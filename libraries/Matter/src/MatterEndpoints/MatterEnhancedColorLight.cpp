@@ -226,7 +226,7 @@ bool MatterEnhancedColorLight::setOnOff(bool newState) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (onOffState == newState) {
     return true;
   }
@@ -267,7 +267,7 @@ bool MatterEnhancedColorLight::setBrightness(uint8_t newBrightness) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (brightnessLevel == newBrightness) {
     return true;
   }
@@ -298,7 +298,7 @@ bool MatterEnhancedColorLight::setColorTemperature(uint16_t newTemperature) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (colorTemperatureLevel == newTemperature) {
     return true;
   }
@@ -338,7 +338,7 @@ bool MatterEnhancedColorLight::setColorHSV(espHsvColor_t _hsvColor) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (colorHSV.h == _hsvColor.h && colorHSV.s == _hsvColor.s && colorHSV.v == _hsvColor.v) {
     return true;
   }

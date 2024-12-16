@@ -138,7 +138,7 @@ bool MatterColorTemperatureLight::setOnOff(bool newState) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (onOffState == newState) {
     return true;
   }
@@ -179,7 +179,7 @@ bool MatterColorTemperatureLight::setBrightness(uint8_t newBrightness) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (brightnessLevel == newBrightness) {
     return true;
   }
@@ -210,7 +210,7 @@ bool MatterColorTemperatureLight::setColorTemperature(uint16_t newTemperature) {
     return false;
   }
 
-  // avoid processing the a "no-change"
+  // avoid processing if there was no change
   if (colorTemperatureLevel == newTemperature) {
     return true;
   }
