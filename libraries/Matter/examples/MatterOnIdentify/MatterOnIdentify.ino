@@ -32,6 +32,10 @@
 // Single On/Off Light Endpoint - at least one per node
 MatterOnOffLight OnOffLight;
 
+// WiFi is manually set and started
+const char *ssid = "your-ssid";          // Change this to your WiFi SSID
+const char *password = "your-password";  // Change this to your WiFi password
+
 // Light GPIO that can be controlled by Matter APP
 #ifdef LED_BUILTIN
 const uint8_t ledPin = LED_BUILTIN;
@@ -48,15 +52,23 @@ bool button_state = false;                     // false = released | true = pres
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Matter Protocol Endpoint (On/OFF Light) Callback
-bool matterCB(bool state) {
+bool onOffLightCallback(bool state) {
   digitalWrite(ledPin, state ? HIGH : LOW);
   // This callback must return the success state to Matter core
   return true;
 }
 
-// WiFi is manually set and started
-const char *ssid = "your-ssid";          // Change this to your WiFi SSID
-const char *password = "your-password";  // Change this to your WiFi password
+bool onIdentifyLightCallback(bool identifyIsActive, uint8_t counter) {
+  log_i("Identify Cluster is %s, counter: %d", identifyIsActive ? "Active" : "Inactive", counter);
+  if (identifyIsActive) {
+    // Start Blinking the light
+    OnOffLight.toggle();
+  } else {
+    // Stop Blinking and restore the light to the its last state
+    OnOffLight.updateAccessory();
+  }
+  return true;
+}
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
@@ -75,20 +87,10 @@ void setup() {
   OnOffLight.begin();
 
   // On Identify Callback - Blink the LED
-  OnOffLight.onIdentify([](bool identifyIsActive, uint8_t counter) {
-    log_i("Identify Cluster is %s, counter: %d", identifyIsActive ? "Active" : "Inactive", counter);
-    if (identifyIsActive) {
-      // Start Blinking the light
-      OnOffLight.toggle();
-    } else {
-      // Stop Blinking and restore the light to the its last state
-      OnOffLight.updateAccessory();
-    }
-    return true;
-  });
+  OnOffLight.onIdentify(onIdentifyLightCallback);
 
   // Associate a callback to the Matter Controller
-  OnOffLight.onChange(matterCB);
+  OnOffLight.onChange(onOffLightCallback);
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
