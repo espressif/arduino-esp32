@@ -21,6 +21,7 @@
 using namespace esp_matter;
 using namespace esp_matter::attribute;
 using namespace esp_matter::endpoint;
+using namespace esp_matter::identification;
 using namespace chip::app::Clusters;
 
 constexpr auto k_timeout_seconds = 300;
@@ -67,8 +68,29 @@ static esp_err_t app_attribute_update_cb(
 // This callback is invoked when clients interact with the Identify Cluster.
 // In the callback implementation, an endpoint can identify itself. (e.g., by flashing an LED or light).
 static esp_err_t app_identification_cb(identification::callback_type_t type, uint16_t endpoint_id, uint8_t effect_id, uint8_t effect_variant, void *priv_data) {
-  log_i("Identification callback: type: %u, effect: %u, variant: %u", type, effect_id, effect_variant);
-  return ESP_OK;
+  log_d("Identification callback to endpoint %d: type: %u, effect: %u, variant: %u", endpoint_id, effect_id, effect_variant);
+  esp_err_t err = ESP_OK;
+  MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
+  // Identify the endpoint sending a counter to the application
+  static uint8_t counter = 0;
+  bool identifyIsActive = false;
+
+  if (type == identification::callback_type_t::START) {
+    log_v("Identification callback: START");
+    counter = 0;
+    identifyIsActive = true;
+  } else if (type == identification::callback_type_t::EFFECT) {
+    log_v("Identification callback: EFFECT");
+    counter++;
+  } else if (type == identification::callback_type_t::STOP) {
+    identifyIsActive = false;
+    log_v("Identification callback: STOP");
+  }
+  if (ep != NULL) {
+    err = ep->endpointIdentifyCB(endpoint_id, identifyIsActive, counter) ? ESP_OK : ESP_FAIL;
+  }
+  
+  return err;
 }
 
 // This callback is invoked for all Matter events. The application can handle the events as required.
