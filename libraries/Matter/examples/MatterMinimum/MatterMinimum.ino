@@ -60,7 +60,6 @@ void setup() {
   // Initialize the LED GPIO
   pinMode(ledPin, OUTPUT);
 
-  WiFi.enableIPv6(true);
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection

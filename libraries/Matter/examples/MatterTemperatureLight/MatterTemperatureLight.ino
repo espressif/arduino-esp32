@@ -83,15 +83,10 @@ void setup() {
   pinMode(ledPin, OUTPUT);
 
   Serial.begin(115200);
-  while (!Serial) {
-    delay(100);
-  }
 
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
-  // enable IPv6
-  WiFi.enableIPv6(true);
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection
