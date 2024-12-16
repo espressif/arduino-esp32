@@ -18,7 +18,7 @@
  * It controls a GPIO that could be attached to a LED for visualization.
  * Additionally the ESP32 will send debug messages indicating the Matter activity.
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
- * 
+ *
  * This example is a simple Matter On/Off Light that can be controlled by a Matter Controller.
  * It demonstrates how to use On Identify callback when the Identify Cluster is called.
  * The Matter user APP can be used to request the device to identify itself by blinking the LED.
@@ -69,7 +69,7 @@ bool onIdentifyLightCallback(bool identifyIsActive) {
   if (identifyIsActive) {
     // Start Blinking the light in loop()
     identifyFlag = true;
-    identifyBlink = !OnOffLight; // Start with the inverted light state
+    identifyBlink = !OnOffLight;  // Start with the inverted light state
   } else {
     // Stop Blinking and restore the light to the its last state
     identifyFlag = false;
@@ -136,10 +136,10 @@ void loop() {
     uint8_t brightness = 32 * identifyBlink;
     rgbLedWrite(identifyLedPin, brightness, 0, 0);
 #else
-  digitalWrite(identifyLedPin, identifyBlink ? HIGH : LOW);
+    digitalWrite(identifyLedPin, identifyBlink ? HIGH : LOW);
 #endif
     identifyBlink = !identifyBlink;
-  }  
+  }
 
   // Check if the button has been pressed
   if (digitalRead(buttonPin) == LOW && !button_state) {
@@ -160,5 +160,5 @@ void loop() {
     button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
 
-  delay(500); // works as a debounce for the button and also for the LED blink
+  delay(500);  // works as a debounce for the button and also for the LED blink
 }

@@ -81,7 +81,7 @@ static esp_err_t app_identification_cb(identification::callback_type_t type, uin
   if (ep != NULL) {
     err = ep->endpointIdentifyCB(endpoint_id, identifyIsActive) ? ESP_OK : ESP_FAIL;
   }
-  
+
   return err;
 }
 

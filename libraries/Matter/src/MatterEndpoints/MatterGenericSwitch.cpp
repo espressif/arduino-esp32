@@ -43,7 +43,7 @@ bool MatterGenericSwitch::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
 bool MatterGenericSwitch::begin() {
   ArduinoMatter::_init();
 
-   if (getEndPointId() != 0) {
+  if (getEndPointId() != 0) {
     log_e("Matter Generic Switch with Endpoint Id %d device has already been created.", getEndPointId());
     return false;
   }

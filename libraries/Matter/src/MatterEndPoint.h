@@ -115,7 +115,6 @@ public:
     _onEndPointIdentifyCB = onEndPointIdentifyCB;
   }
 
-
 protected:
   uint16_t endpoint_id = 0;
   EndPointIdentifyCB _onEndPointIdentifyCB = NULL;
