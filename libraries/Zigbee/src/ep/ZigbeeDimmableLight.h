@@ -104,7 +104,7 @@ private:
    * @return Pointer to cluster list  @ref esp_zb_cluster_list_s
    *
    */
-  esp_zb_cluster_list_t *esp_zb_dimmable_light_clusters_create(zigbee_dimmable_light_cfg_t *light_cfg);
+  esp_zb_cluster_list_t *zigbee_dimmable_light_clusters_create(zigbee_dimmable_light_cfg_t *light_cfg);
 
   bool _current_state;
   uint8_t _current_level;

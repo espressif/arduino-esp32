@@ -8,7 +8,7 @@ ZigbeeDimmableLight::ZigbeeDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) 
   _device_id = ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID;
 
   zigbee_dimmable_light_cfg_t light_cfg = ZIGBEE_DEFAULT_DIMMABLE_LIGHT_CONFIG();
-  _cluster_list = esp_zb_dimmable_light_clusters_create(&light_cfg);
+  _cluster_list = zigbee_dimmable_light_clusters_create(&light_cfg);
 
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0};
 
@@ -80,7 +80,7 @@ void ZigbeeDimmableLight::setLightLevel(uint8_t level) {
   setLight(_current_state, level);
 }
 
-esp_zb_cluster_list_t *ZigbeeDimmableLight::esp_zb_dimmable_light_clusters_create(zigbee_dimmable_light_cfg_t *light_cfg) {
+esp_zb_cluster_list_t *ZigbeeDimmableLight::zigbee_dimmable_light_clusters_create(zigbee_dimmable_light_cfg_t *light_cfg) {
   esp_zb_attribute_list_t *esp_zb_basic_cluster = esp_zb_basic_cluster_create(&light_cfg->basic_cfg);
   esp_zb_attribute_list_t *esp_zb_identify_cluster = esp_zb_identify_cluster_create(&light_cfg->identify_cfg);
   esp_zb_attribute_list_t *esp_zb_groups_cluster = esp_zb_groups_cluster_create(&light_cfg->groups_cfg);
