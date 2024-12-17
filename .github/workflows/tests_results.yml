@@ -149,9 +149,10 @@ jobs:
         uses: jaywcjlove/generated-badges@v1.0.13
         with:
           label: Runtime Tests
-          status: ${{ job.status }}
+          status: ${{ job.status == 'success' && 'passing' || 'failing' }}
           output: runtime-tests-results/badge.svg
           color: ${{ job.status == 'success' && 'green' || 'red' }}
+          style: flat
 
       - name: Push badge
         if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
