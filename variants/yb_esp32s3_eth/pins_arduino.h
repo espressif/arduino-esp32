@@ -22,7 +22,7 @@ static const uint8_t MISO = 13;
 static const uint8_t SCK = 12;
 
 // Definitions for onboard WIZnet W5500 ethernet controller chip
-static const uint8_t W5500_SS = 14;  // W5500 chip select
+static const uint8_t W5500_SS = 14;   // W5500 chip select
 static const uint8_t W5500_INT = 18;  // available only if solder bridge "INT" is closed (default open)
 static const uint8_t W5500_RST = 21;  // set GPIO21 to INPUT (high impedance) if RST signal is unused
 
