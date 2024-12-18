@@ -13,7 +13,7 @@ About
 
 Wokwi is an online Electronics simulator. You can use it to simulate Arduino, ESP32, and many other popular boards, parts and sensors.
 
-The advantages of using Wokwi inlcude:
+The advantages of using Wokwi include:
 
 - Immediate start: No need to wait for components or download large software. Everything required is available in your browser, enabling you to begin coding your IoT project within seconds.
 - Safe experimentation: Virtual hardware cannot be damaged, allowing users to experiment freely without the risk of destroying components. Mistakes can be easily undone.
