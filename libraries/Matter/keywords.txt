@@ -24,6 +24,19 @@ MatterContactSensor	KEYWORD1
 MatterPressureSensor	KEYWORD1
 MatterOccupancySensor	KEYWORD1
 MatterOnOffPlugin	KEYWORD1
+MatterThermostat	KEYWORD1
+ControlSequenceOfOperation_t	KEYWORD1
+ThermostatMode_t	KEYWORD1
+EndPointCB	KEYWORD1
+EndPointHeatingSetpointCB	KEYWORD1
+EndPointCoolingSetpointCB	KEYWORD1
+EndPointTemperatureCB	KEYWORD1
+EndPointModeCB	KEYWORD1
+EndPointSpeedCB	KEYWORD1
+EndPointOnOffCB	KEYWORD1
+EndPointBrightnessCB	KEYWORD1
+EndPointRGBColorCB	KEYWORD1
+EndPointTemperatureCB	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -78,6 +91,24 @@ setPressure	KEYWORD2
 getPressure	KEYWORD2
 setOccupancy	KEYWORD2
 getOccupancy	KEYWORD2
+getControlSequence	KEYWORD2
+getMinHeatSetpoint	KEYWORD2
+getMaxHeatSetpoint	KEYWORD2
+getMinCoolSetpoint	KEYWORD2
+getMaxCoolSetpoint	KEYWORD2
+getDeadBand	KEYWORD2
+setCoolingSetpoint	KEYWORD2
+getCoolingSetpoint	KEYWORD2
+setHeatingSetpoint	KEYWORD2
+getHeatingSetpoint	KEYWORD2
+setCoolingHeatingSetpoints	KEYWORD2
+setLocalTemperature	KEYWORD2
+getLocalTemperature	KEYWORD2
+getThermostatModeString	KEYWORD2
+onChangeMode	KEYWORD2
+onChangeLocalTemperature	KEYWORD2
+onChangeCoolingSetpoint	KEYWORD2
+onChangeHeatingSetpoint	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -104,3 +135,13 @@ FAN_MODE_SEQ_OFF_LOW_MED_HIGH_AUTO	LITERAL1
 FAN_MODE_SEQ_OFF_LOW_HIGH_AUTO	LITERAL1
 FAN_MODE_SEQ_OFF_HIGH_AUTO	LITERAL1
 FAN_MODE_SEQ_OFF_HIGH	LITERAL1
+THERMOSTAT_SEQ_OP_COOLING	LITERAL1
+THERMOSTAT_SEQ_OP_COOLING_REHEAT	LITERAL1
+THERMOSTAT_SEQ_OP_HEATING	LITERAL1
+THERMOSTAT_SEQ_OP_HEATING_REHEAT	LITERAL1
+THERMOSTAT_SEQ_OP_COOLING_HEATING	LITERAL1
+THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT	LITERAL1
+THERMOSTAT_MODE_OFF	LITERAL1
+THERMOSTAT_MODE_AUTO	LITERAL1
+THERMOSTAT_MODE_COOL	LITERAL1
+THERMOSTAT_MODE_HEAT	LITERAL1
