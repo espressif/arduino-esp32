@@ -7,12 +7,17 @@
 
 #include "esp32-hal-periman.h"
 #include "wav_header.h"
+#if ARDUINO_HAS_MP3_DECODER
 #include "mp3dec.h"
+#endif
 
 #define I2S_READ_CHUNK_SIZE 1920
 
-#define I2S_DEFAULT_CFG() \
-  { .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, }
+#define I2S_DEFAULT_CFG()                                                                                                                    \
+  {                                                                                                                                          \
+    .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
+    .intr_priority = 0                                                                                                                       \
+  }
 
 #define I2S_STD_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode)                                                                   \
   {                                                                                                                                   \
@@ -803,32 +808,36 @@ bool I2SClass::configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slo
 
 size_t I2SClass::readBytes(char *buffer, size_t size) {
   size_t bytes_read = 0;
+  size_t bytes_to_read = 0;
   size_t total_size = 0;
   last_error = ESP_FAIL;
   if (rx_chan == NULL) {
     return total_size;
   }
   while (total_size < size) {
-    bytes_read = size - total_size;
-    if (rx_transform_buf != NULL && bytes_read > I2S_READ_CHUNK_SIZE) {
-      bytes_read = I2S_READ_CHUNK_SIZE;
+    bytes_read = 0;
+    bytes_to_read = size - total_size;
+    if (rx_transform_buf != NULL && bytes_to_read > I2S_READ_CHUNK_SIZE) {
+      bytes_to_read = I2S_READ_CHUNK_SIZE;
     }
-    I2S_ERROR_CHECK_RETURN(rx_fn(rx_chan, rx_transform_buf, (char *)(buffer + total_size), bytes_read, &bytes_read, _timeout), 0);
+    I2S_ERROR_CHECK_RETURN(rx_fn(rx_chan, rx_transform_buf, (char *)(buffer + total_size), bytes_to_read, &bytes_read, _timeout), 0);
     total_size += bytes_read;
   }
   return total_size;
 }
 
-size_t I2SClass::write(uint8_t *buffer, size_t size) {
+size_t I2SClass::write(const uint8_t *buffer, size_t size) {
   size_t written = 0;
   size_t bytes_sent = 0;
+  size_t bytes_to_send = 0;
   last_error = ESP_FAIL;
   if (tx_chan == NULL) {
     return written;
   }
   while (written < size) {
-    bytes_sent = size - written;
-    esp_err_t err = i2s_channel_write(tx_chan, (char *)(buffer + written), bytes_sent, &bytes_sent, _timeout);
+    bytes_sent = 0;
+    bytes_to_send = size - written;
+    esp_err_t err = i2s_channel_write(tx_chan, (char *)(buffer + written), bytes_to_send, &bytes_sent, _timeout);
     setWriteError(err);
     I2S_ERROR_CHECK_RETURN(err, written);
     written += bytes_sent;
@@ -1007,6 +1016,7 @@ void I2SClass::playWAV(uint8_t *data, size_t len) {
   write(data + WAVE_HEADER_SIZE + data_offset, data_chunk->subchunk_size);
 }
 
+#if ARDUINO_HAS_MP3_DECODER
 bool I2SClass::playMP3(uint8_t *src, size_t src_len) {
   int16_t outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
   uint8_t *readPtr = NULL;
@@ -1044,5 +1054,6 @@ bool I2SClass::playMP3(uint8_t *src, size_t src_len) {
   MP3FreeDecoder(decoder);
   return true;
 }
+#endif
 
 #endif /* SOC_I2S_SUPPORTED */

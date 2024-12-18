@@ -21,8 +21,7 @@
     "hardware": false,
     "qemu": false
   },
-  "requires_any": [
-    "CONFIG_SOC_WIFI_SUPPORTED=y",
-    "CONFIG_ESP_WIFI_REMOTE_ENABLED=y"
+  "requires": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y"
   ]
 }

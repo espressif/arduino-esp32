@@ -33,8 +33,9 @@
 
 #include "Zigbee.h"
 
-#define BUTTON_PIN                 9  // Boot button for C6/H2
+/* Zigbee thermostat configuration */
 #define THERMOSTAT_ENDPOINT_NUMBER 5
+uint8_t button = BOOT_PIN;
 
 ZigbeeThermostat zbThermostat = ZigbeeThermostat(THERMOSTAT_ENDPOINT_NUMBER);
 
@@ -59,12 +60,9 @@ void recieveSensorConfig(float min_temp, float max_temp, float tolerance) {
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Init button switch
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   // Set callback functions for temperature and configuration receive
   zbThermostat.onTempRecieve(recieveSensorTemp);
@@ -80,27 +78,30 @@ void setup() {
   Zigbee.setRebootOpenNetwork(180);
 
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
-  Zigbee.begin(ZIGBEE_COORDINATOR);
+  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
 
-  Serial.println("Waiting for Temperature sensor to bound to the switch");
-
-  //Wait for switch to bound to a light:
-  while (!zbThermostat.isBound()) {
+  Serial.println("Waiting for Temperature sensor to bound to the thermostat");
+  while (!zbThermostat.bound()) {
     Serial.printf(".");
     delay(500);
   }
 
+  Serial.println();
+
   // Get temperature sensor configuration
   zbThermostat.getSensorSettings();
-  Serial.println();
 }
 
 void loop() {
   // Handle button switch in loop()
-  if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
 
     // Key debounce handling
-    while (digitalRead(BUTTON_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
     }
 

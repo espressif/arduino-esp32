@@ -27,16 +27,18 @@
  */
 
 #ifndef ZIGBEE_MODE_ED
-#error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
+#error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
 
 #include "Zigbee.h"
 
-#define BUTTON_PIN                  9  //Boot button for C6/H2
+/* Zigbee temperature + humidity sensor configuration */
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
 
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP  55         /* Sleep for 55s will + 5s delay for establishing connection => data reported every 1 minute */
+
+uint8_t button = BOOT_PIN;
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
@@ -53,19 +55,23 @@ void meausureAndSleep() {
   zbTempSensor.setHumidity(humidity);
 
   // Report temperature and humidity values
-  zbTempSensor.reportTemperature();
-  zbTempSensor.reportHumidity();
+  zbTempSensor.report();
+  Serial.printf("Reported temperature: %.2f°C, Humidity: %.2f%%\r\n", temperature, humidity);
 
-  log_d("Temperature: %.2f°C, Humidity: %.2f%", temperature, humidity);
+  // Add small delay to allow the data to be sent before going to sleep
+  delay(100);
 
   // Put device to deep sleep
+  Serial.println("Going to sleep now");
   esp_deep_sleep_start();
 }
 
 /********************* Arduino functions **************************/
 void setup() {
+  Serial.begin(115200);
+
   // Init button switch
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   // Configure the wake up source and set to wake up every 5 seconds
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
@@ -94,27 +100,35 @@ void setup() {
   zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
 
   // When all EPs are registered, start Zigbee in End Device mode
-  Zigbee.begin(&zigbeeConfig, false);
-
-  // Wait for Zigbee to start
-  while (!Zigbee.isStarted()) {
+  if (!Zigbee.begin(&zigbeeConfig, false)) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
+  Serial.println("Connecting to network");
+  while (!Zigbee.connected()) {
+    Serial.print(".");
     delay(100);
   }
+  Serial.println();
+  Serial.println("Successfully connected to Zigbee network");
 
-  // Delay 5s to allow establishing connection with coordinator, needed for sleepy devices
-  delay(5000);
+  // Delay approx 1s (may be adjusted) to allow establishing proper connection with coordinator, needed for sleepy devices
+  delay(1000);
 }
 
 void loop() {
   // Checking button for factory reset
-  if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
     delay(100);
     int startTime = millis();
-    while (digitalRead(BUTTON_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
+        Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
+        delay(1000);
         Zigbee.factoryReset();
       }
     }

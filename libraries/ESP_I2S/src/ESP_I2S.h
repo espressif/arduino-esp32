@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined __has_include && __has_include("mp3dec.h")
+#define ARDUINO_HAS_MP3_DECODER 1
+#endif
+
 #include "soc/soc_caps.h"
 #if SOC_I2S_SUPPORTED
 
@@ -62,7 +66,7 @@ public:
   bool end();
 
   size_t readBytes(char *buffer, size_t size);
-  size_t write(uint8_t *buffer, size_t size);
+  size_t write(const uint8_t *buffer, size_t size);
 
   i2s_chan_handle_t txChan();
   uint32_t txSampleRate();
@@ -85,8 +89,10 @@ public:
   uint8_t *recordWAV(size_t rec_seconds, size_t *out_size);
   // Play short PCM WAV from memory
   void playWAV(uint8_t *data, size_t len);
+#if ARDUINO_HAS_MP3_DECODER
   // Play short MP3 from memory
   bool playMP3(uint8_t *src, size_t src_len);
+#endif
 
 private:
   esp_err_t last_error;

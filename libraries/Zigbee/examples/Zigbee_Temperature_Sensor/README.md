@@ -28,7 +28,7 @@ Functions:
 ### Configure the Project
 
 In this example, the internal temperature sensor task is reading the chip temperature.
-Set the Button GPIO by changing the `BUTTON_PIN` definition. By default, it's the pin `9` (BOOT button on ESP32-C6 and ESP32-H2).
+Set the Button GPIO by changing the `button` variable. By default, it's the pin `BOOT_PIN` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE
 

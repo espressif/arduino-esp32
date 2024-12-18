@@ -1,0 +1,106 @@
+#######################################
+# Syntax Coloring Map For Matter
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Matter	KEYWORD1
+ArduinoMatter	KEYWORD1
+MatterGenericSwitch	KEYWORD1
+MatterOnOffLight	KEYWORD1
+MatterDimmableLight	KEYWORD1
+MatterColorTemperatureLight	KEYWORD1
+MatterColorLight	KEYWORD1
+MatterEnhancedColorLight	KEYWORD1
+MatterEndPoint	KEYWORD1
+MatterFan	KEYWORD1
+FanMode_t	KEYWORD1
+FanModeSequence_t	KEYWORD1
+MatterTemperatureSensor	KEYWORD1
+MatterHumiditySensor	KEYWORD1
+MatterContactSensor	KEYWORD1
+MatterPressureSensor	KEYWORD1
+MatterOccupancySensor	KEYWORD1
+MatterOnOffPlugin	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+getManualPairingCode	KEYWORD2
+getOnboardingQRCodeUrl	KEYWORD2
+isDeviceCommissioned	KEYWORD2
+isWiFiConnected	KEYWORD2
+isThreadConnected	KEYWORD2
+isDeviceConnected	KEYWORD2
+decommission	KEYWORD2
+attributeChangeCB	KEYWORD2
+setOnOff	KEYWORD2
+getOnOff	KEYWORD2
+toggle	KEYWORD2
+setBrightness	KEYWORD2
+getBrightness	KEYWORD2
+setColorTemperature	KEYWORD2
+getColorTemperature	KEYWORD2
+setColorRGB	KEYWORD2
+getColorRGB	KEYWORD2
+setColorHSV	KEYWORD2
+getColorHSV	KEYWORD2
+updateAccessory	KEYWORD2
+onChange	KEYWORD2
+onChangeOnOff	KEYWORD2
+onChangeBrightness	KEYWORD2
+onChangeColorTemperature	KEYWORD2
+onChangeColorHSV	KEYWORD2
+click	KEYWORD2
+getAttribute	KEYWORD2
+getAttributeVal	KEYWORD2
+setAttributeVal	KEYWORD2
+updateAttributeVal	KEYWORD2
+getFanModeString	KEYWORD2
+setSpeedPercent	KEYWORD2
+getSpeedPercent	KEYWORD2
+setMode	KEYWORD2
+getMode	KEYWORD2
+onChangeMode	KEYWORD2
+onChangeSpeedPercent	KEYWORD2
+setTemperature	KEYWORD2
+getTemperature	KEYWORD2
+setHumidity	KEYWORD2
+getHumidity	KEYWORD2
+setContact	KEYWORD2
+getContact	KEYWORD2
+setPressure	KEYWORD2
+getPressure	KEYWORD2
+setOccupancy	KEYWORD2
+getOccupancy	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+MAX_BRIGHTNESS	LITERAL1
+MAX_COLOR_TEMPERATURE	LITERAL1
+MIN_COLOR_TEMPERATURE	LITERAL1
+ATTR_SET	LITERAL1
+ATTR_UPDATE	LITERAL1
+MAX_SPEED	LITERAL1
+MIN_SPEED	LITERAL1
+OFF_SPEED	LITERAL1
+FAN_MODE_OFF	LITERAL1
+FAN_MODE_LOW	LITERAL1
+FAN_MODE_MEDIUM	LITERAL1
+FAN_MODE_HIGH	LITERAL1
+FAN_MODE_ON	LITERAL1
+FAN_MODE_AUTO	LITERAL1
+FAN_MODE_SMART	LITERAL1
+FAN_MODE_SEQ_OFF_LOW_MED_HIGH	LITERAL1
+FAN_MODE_SEQ_OFF_LOW_HIGH	LITERAL1
+FAN_MODE_SEQ_OFF_LOW_MED_HIGH_AUTO	LITERAL1
+FAN_MODE_SEQ_OFF_LOW_HIGH_AUTO	LITERAL1
+FAN_MODE_SEQ_OFF_HIGH_AUTO	LITERAL1
+FAN_MODE_SEQ_OFF_HIGH	LITERAL1
