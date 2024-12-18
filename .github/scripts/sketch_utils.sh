@@ -443,6 +443,11 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
             shift
             sketches_file=$1
             ;;
+        -d )
+            shift
+            debug_level="$1"
+            args+=("-d" "$debug_level")
+            ;;
         * )
             break
             ;;
