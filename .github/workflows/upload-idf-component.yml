@@ -20,9 +20,9 @@ jobs:
     steps:
       - name: Get the release tag
         env:
-          head_branch: ${{ github.event.inputs.tag || github.event.workflow_run.head_branch }}
+          head_branch: ${{ inputs.tag || github.event.workflow_run.head_branch }}
         run: |
-          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ] && [ "${{ github.event_name }}" == "workflow_run" ]; then
             echo "Release workflow failed. Exiting..."
             exit 1
           fi
