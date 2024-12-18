@@ -2,6 +2,22 @@ name: Compilation Tests
 
 on:
   workflow_dispatch:
+    inputs:
+      log_level:
+        description: "Log level"
+        default: "none"
+        type: "choice"
+        required: true
+        options:
+          - "none"
+          - "error"
+          - "warn"
+          - "info"
+          - "debug"
+          - "verbose"
+  schedule:
+    # Every Sunday at 2:00 UTC run a build with verbose log level
+    - cron: "0 2 * * SUN"
   push:
     branches:
       - master
@@ -163,9 +179,19 @@ jobs:
             ./tools/riscv32-*
             ./tools/xtensa-*
 
+      - name: Set Log Level
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "LOG_LEVEL=${{ github.event.inputs.log_level }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "LOG_LEVEL=verbose" >> $GITHUB_ENV
+          else
+            echo "LOG_LEVEL=none" >> $GITHUB_ENV
+          fi
+
       - name: Build all sketches
         if: ${{ needs.gen-chunks.outputs.build_all == 'true' }}
-        run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ env.MAX_CHUNKS }} 1
+        run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ env.MAX_CHUNKS }} 1 ${{ env.LOG_LEVEL }}
 
       - name: Download sketches found
         if: ${{ needs.gen-chunks.outputs.build_all == 'false' && needs.gen-chunks.outputs.build_libraries == 'true' }}
@@ -175,7 +201,7 @@ jobs:
 
       - name: Build selected sketches
         if: ${{ needs.gen-chunks.outputs.build_all == 'false' && needs.gen-chunks.outputs.build_libraries == 'true' }}
-        run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ needs.gen-chunks.outputs.chunk_count }} 1 sketches_found.txt
+        run: bash ./.github/scripts/on-push.sh ${{ matrix.chunk }} ${{ needs.gen-chunks.outputs.chunk_count }} 1 ${{ env.LOG_LEVEL }} sketches_found.txt
 
       #Upload cli compile json as artifact
       - name: Upload cli compile json
