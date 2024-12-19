@@ -97,58 +97,7 @@ public:
   // Heating Setpoint must be lower than Cooling Setpoint
   // When using AUTO mode the Cooling Setpoint must be higher than Heating Setpoint by at least the 2.5C (deadband)
   // Thermostat Matter Server will enforce those rules and the Max/Min setpoints limits as in the Matter Specification 
-  bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCollingTemperature) {
-    // at least one of the setpoints must be valid
-    bool settingCooling = _setpointCollingTemperature != (float)0xffff;
-    bool settingHeating = _setpointHeatingTemperature != (float)0xffff;
-    if (!settingCooling && !settingHeating) {
-      log_e("Invalid Setpoints values. Set correctly at leat one of them in Celsius.");
-      return false;
-    }
-    int16_t _rawHeatValue = static_cast<int16_t>(_setpointHeatingTemperature * 100.0f);
-    int16_t _rawCoolValue = static_cast<int16_t>(_setpointCollingTemperature * 100.0f);
-
-    // check limits for the setpoints
-    if (settingHeating && (_rawHeatValue < kDefaultMinHeatSetpointLimit || _rawHeatValue > kDefaultMaxHeatSetpointLimit)) {
-      log_e("Invalid Heating Setpoint value: %.01fC - valid range %d..%d", _setpointHeatingTemperature, kDefaultMinHeatSetpointLimit / 100, kDefaultMaxHeatSetpointLimit / 100);
-      return false;
-    }
-    if (settingCooling && (_rawCoolValue < kDefaultMinCoolSetpointLimit || _rawCoolValue > kDefaultMaxCoolSetpointLimit)) {
-      log_e("Invalid Cooling Setpoint value: %.01fC - valid range %d..%d", _setpointCollingTemperature, kDefaultMinCoolSetpointLimit / 100, kDefaultMaxCoolSetpointLimit / 100);
-      return false;
-    }
-
-    // AUTO mode requires both setpoints to be valid to each other and respect the deadband
-    if (currentMode ==  THERMOSTAT_MODE_AUTO) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-      float deadband = getDeadBand();
-#endif
-      // only setting Cooling Setpoint
-      if (settingCooling && !settingHeating && _rawCoolValue < (heatingSetpointTemperature + (kDefaultDeadBand * 10))) {
-        log_e("AutoMode :: Invalid Cooling Setpoint value: %.01fC - must be higher or equal than %.01fC", _setpointCollingTemperature, getHeatingSetpoint() + deadband);
-        return false;
-      }
-      // only setting Heating Setpoint
-      if (!settingCooling && settingHeating && _rawHeatValue > (coolingSetpointTemperature - (kDefaultDeadBand * 10))) {
-        log_e("AutoMode :: Invalid Heating Setpoint value: %.01fC - must be lower or equal than %.01fC", _setpointHeatingTemperature, getCoolingSetpoint() - deadband);
-        return false;
-      }
-      // setting both setpoints
-      if (settingCooling && settingHeating && (_rawCoolValue <= _rawHeatValue || _rawCoolValue - _rawHeatValue < kDefaultDeadBand * 10.0)) {
-        log_e("AutoMode :: Error - Heating Setpoint %.01fC must be lower than Cooling Setpoint %.01fC with a minimum difference of %0.1fC", _setpointHeatingTemperature, _setpointCollingTemperature, deadband);
-        return false;
-      }
-    }
-
-    bool ret = true;
-    if (settingCooling) {
-      ret &= setRawTemperature(_rawCoolValue, Thermostat::Attributes::OccupiedCoolingSetpoint::Id, &coolingSetpointTemperature);
-    }
-    if (settingHeating) {
-      ret &= setRawTemperature(_rawHeatValue, Thermostat::Attributes::OccupiedHeatingSetpoint::Id, &heatingSetpointTemperature);
-    }
-    return ret;
-  }
+  bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCollingTemperature);
 
   // set the heating setpoint in 1/100th of a Celsio degree
   bool setHeatingSetpoint(double _setpointHeatingTemperature) {

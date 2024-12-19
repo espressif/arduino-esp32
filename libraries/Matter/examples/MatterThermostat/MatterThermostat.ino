@@ -43,7 +43,7 @@ const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s
 float getSimulatedTemperature(bool isHeating, bool isCooling) {
   // read sensor temperature and apply heating/cooling
   float simulatedTempHWSensor = SimulatedThermostat.getLocalTemperature();
-  
+
   if (isHeating) {
     // it will increase to simulate a heating system
     simulatedTempHWSensor = simulatedTempHWSensor + 0.5;
@@ -167,64 +167,54 @@ void loop() {
     SimulatedThermostat.setLocalTemperature(localTemperature); // publish the new temperature value
 
     // Simulate the thermostat control system - User has 4 modes: OFF, HEAT, COOL, AUTO
-    if (SimulatedThermostat.getMode() == MatterThermostat::THERMOSTAT_MODE_OFF) {
-      // turn off the heating and cooling systems
-      isHeating = false;
-      isCooling = false;
-    }
-    // User APP has set the thermostat to AUTO mode -- keeping the tempeature between both setpoints
-    if (SimulatedThermostat.getMode() == MatterThermostat::THERMOSTAT_MODE_AUTO) {
-      // check if the heating system should be turned on or off
-      if (localTemperature < SimulatedThermostat.getHeatingSetpoint() + SimulatedThermostat.getDeadBand()) {
-        // turn on the heating system and turn off the cooling system
+    switch (SimulatedThermostat.getMode()) {
+      case MatterThermostat::THERMOSTAT_MODE_OFF:
+        // turn off the heating and cooling systems
+        isHeating = false;
+        isCooling = false;
+        break;
+      case MatterThermostat::THERMOSTAT_MODE_AUTO:
+        // User APP has set the thermostat to AUTO mode -- keeping the tempeature between both setpoints
+        // check if the heating system should be turned on or off
+        if (localTemperature < SimulatedThermostat.getHeatingSetpoint() + SimulatedThermostat.getDeadBand()) {
+          // turn on the heating system and turn off the cooling system
+          isHeating = true;
+          isCooling = false;
+        }
+        if (localTemperature > SimulatedThermostat.getCoolingSetpoint() - SimulatedThermostat.getDeadBand()) {
+          // turn off the heating system and turn on the cooling system
+          isHeating = false;
+          isCooling = true;
+        }
+        break;
+      case MatterThermostat::THERMOSTAT_MODE_HEAT:
+        // Simulate the heating system - User has turned the heating system ON
         isHeating = true;
-        isCooling = false;
-      }
-      if (localTemperature > SimulatedThermostat.getCoolingSetpoint() - SimulatedThermostat.getDeadBand()) {
-        // turn off the heating system and turn on the cooling system
-        isHeating = false;
-        isCooling = true;
-      }
+        isCooling = false; // keep the cooling system off as it is in heating mode
+        // when the heating system is in HEATING mode, it will be turned off as soon as the local temperature is above the setpoint
+        if (localTemperature > SimulatedThermostat.getHeatingSetpoint()) {
+          // turn off the heating system
+          isHeating = false;
+        }
+        break;
+      case MatterThermostat::THERMOSTAT_MODE_COOL:
+        // Simulate the cooling system - User has turned the cooling system ON
+        if (SimulatedThermostat.getMode() == MatterThermostat::THERMOSTAT_MODE_COOL) {
+          isCooling = true;
+          isHeating = false; // keep the heating system off as it is in cooling mode
+          // when the cooling system is in COOLING mode, it will be turned off as soon as the local temperature is bellow the setpoint
+          if (localTemperature < SimulatedThermostat.getCoolingSetpoint()) {
+            // turn off the cooling system
+            isCooling = false;
+          }
+        }
+        break;
+      default:
+        log_e("Invalid Thermostat Mode %d", SimulatedThermostat.getMode());
     }
-    // User APP has set the thermostat to AUTO mode -- keeping the tempeature between both setpoints
-    if (SimulatedThermostat.getMode() == MatterThermostat::THERMOSTAT_MODE_AUTO) {
-      // check if the heating system should be turned on or off
-      if (localTemperature < SimulatedThermostat.getHeatingSetpoint() + SimulatedThermostat.getDeadBand()) {
-        // turn on the heating system and turn off the cooling system
-        isHeating = true;
-        isCooling = false;
-      }
-      if (localTemperature > SimulatedThermostat.getCoolingSetpoint() - SimulatedThermostat.getDeadBand()) {
-        // turn off the heating system and turn on the cooling system
-        isHeating = false;
-        isCooling = true;
-      }
-    }
-    // Simulate the heating system - User has turned the heating system ON
-    if (SimulatedThermostat.getMode() == MatterThermostat::THERMOSTAT_MODE_HEAT) {
-      isHeating = true;
-      isCooling = false; // keep the cooling system off as it is in heating mode
-      // when the heating system is in HEATING mode, it will be turned off as soon as the local temperature is above the setpoint
-      if (localTemperature > SimulatedThermostat.getHeatingSetpoint()) {
-        // turn off the heating system
-        isHeating = false;
-      }
-    }
-    // Simulate the cooling system - User has turned the cooling system ON
-    if (SimulatedThermostat.getMode() == MatterThermostat::THERMOSTAT_MODE_COOL) {
-      isCooling = true;
-      isHeating = false; // keep the heating system off as it is in cooling mode
-      // when the cooling system is in COOLING mode, it will be turned off as soon as the local temperature is bellow the setpoint
-      if (localTemperature < SimulatedThermostat.getCoolingSetpoint()) {
-        // turn off the cooling system
-        isCooling = false;
-      }
-    }
-
     // Reporting Heating and Cooling status
     Serial.printf("\tThermostat Mode: %s >>> Heater is %s -- Cooler is %s\r\n", MatterThermostat::getThermostatModeString(SimulatedThermostat.getMode()), isHeating ? "ON" : "OFF", isCooling ? "ON" : "OFF");
   }
-
   // Check if the button has been pressed
   if (digitalRead(buttonPin) == LOW && !button_state) {
     // deals with button debouncing
