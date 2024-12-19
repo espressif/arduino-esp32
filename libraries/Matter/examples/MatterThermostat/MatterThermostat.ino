@@ -73,7 +73,7 @@ void setup() {
 
   // Simulated Thermostat in COOLING and HEATING mode with Auto Mode to keep the temperature between setpoints
   // Auto Mode can only be used when the control sequence of operation is Cooling & Heating
-  SimulatedThermostat.begin(MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING, true);
+  SimulatedThermostat.begin(MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING, MatterThermostat::THERMOSTAT_AUTO_MODE_ENABLED);
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();

@@ -165,7 +165,7 @@ MatterThermostat::~MatterThermostat() {
   end();
 }
 
-bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, bool _hasAutoMode) {
+bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, ThermostatAutoMode_t _autoMode) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
@@ -174,7 +174,7 @@ bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, bool
   }
   
   // check if auto mode is allowed with the control sequence of operation - only allowed for Cooling & Heating
-  if (_hasAutoMode && _controlSequence != THERMOSTAT_SEQ_OP_COOLING_HEATING && _controlSequence != THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT) {
+  if (_autoMode == THERMOSTAT_AUTO_MODE_ENABLED && _controlSequence != THERMOSTAT_SEQ_OP_COOLING_HEATING && _controlSequence != THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT) {
     log_e("Thermostat in Auto Mode requires a Cooling & Heating Control Sequence of Operation.");
     return false;
   }
@@ -197,14 +197,14 @@ bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, bool
     log_e("Failed to create Thermostat endpoint");
     return false;
   }
-  if (_hasAutoMode) {
+  if (_autoMode == THERMOSTAT_AUTO_MODE_ENABLED) {
     cluster_t *cluster = cluster::get(endpoint, Thermostat::Id);
     thermostat_config.thermostat.auto_mode.min_setpoint_dead_band = kDefaultDeadBand; // fixed by default to 2.5C
     cluster::thermostat::feature::auto_mode::add(cluster, &thermostat_config.thermostat.auto_mode);
   }
 
   controlSequence = _controlSequence;
-  hasAutoMode = _hasAutoMode;
+  autoMode = _autoMode;
   coolingSetpointTemperature = _coolingSetpointTemperature;
   heatingSetpointTemperature = _heatingSetpointTemperature;
   localTemperature = _localTemperature;
@@ -226,7 +226,7 @@ bool MatterThermostat::setMode(ThermostatMode_t _mode) {
     return false;
   }
   
-  if (!hasAutoMode && _mode == THERMOSTAT_MODE_AUTO) {
+  if (autoMode == THERMOSTAT_AUTO_MODE_DISABLED && _mode == THERMOSTAT_MODE_AUTO) {
     log_e("Thermostat can't set Auto Mode.");
     return false;
   }

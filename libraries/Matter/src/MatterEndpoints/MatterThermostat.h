@@ -40,12 +40,17 @@ public:
     THERMOSTAT_MODE_COOL = (uint8_t) Thermostat::SystemModeEnum::kCool,
     THERMOSTAT_MODE_HEAT = (uint8_t) Thermostat::SystemModeEnum::kHeat,
   };
+
+  enum ThermostatAutoMode_t {
+    THERMOSTAT_AUTO_MODE_DISABLED = (uint8_t) Thermostat::SystemModeEnum::kOff,
+    THERMOSTAT_AUTO_MODE_ENABLED  = (uint8_t) Thermostat::SystemModeEnum::kAuto,
+  };
   // clang-format on
 
   MatterThermostat();
   ~MatterThermostat();
   // begin Matter Thermostat endpoint with initial Operation Mode
-  bool begin(ControlSequenceOfOperation_t controlSequence = THERMOSTAT_SEQ_OP_COOLING, bool hasAutoMode = false);
+  bool begin(ControlSequenceOfOperation_t controlSequence = THERMOSTAT_SEQ_OP_COOLING, ThermostatAutoMode_t autoMode = THERMOSTAT_AUTO_MODE_DISABLED);
   // this will stop processing Thermostat Matter events
   void end();
 
@@ -218,7 +223,7 @@ protected:
 
   ThermostatMode_t currentMode = THERMOSTAT_MODE_OFF;
   ControlSequenceOfOperation_t controlSequence = THERMOSTAT_SEQ_OP_COOLING;
-  bool hasAutoMode = false;
+  ThermostatAutoMode_t autoMode = THERMOSTAT_AUTO_MODE_DISABLED;
 
   EndPointModeCB _onChangeModeCB = NULL;
   EndPointTemperatureCB _onChangeTemperatureCB = NULL;
