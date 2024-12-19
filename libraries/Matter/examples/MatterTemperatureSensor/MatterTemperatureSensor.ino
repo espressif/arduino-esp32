@@ -42,7 +42,7 @@ const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s
 // Simulate a temperature sensor - add your preferred temperature sensor library code here
 float getSimulatedTemperature() {
   // The Endpoint implementation keeps an int16_t as internal value information,
-  // which stores data in 1/100th of any temperature unit
+  // which stores data in 1/100th Celsius.
   static float simulatedTempHWSensor = -10.0;
 
   // it will increase from -10C to 10C in 0.5C steps to simulate a temperature sensor
@@ -70,7 +70,7 @@ void setup() {
   Serial.println();
 
   // set initial temperature sensor measurement
-  // Simulated Sensor - it shall initially print -25 degrees and then move to the -10 to 10 range
+  // Simulated Sensor - it shall initially print -25C and then move to the -10C to 10C range
   SimulatedTemperatureSensor.begin(-25.00);
 
   // Matter beginning - Last step, after all EndPoints are initialized
@@ -102,7 +102,7 @@ void loop() {
   // Print the current temperature value every 5s
   if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
     // Print the current temperature value
-    Serial.printf("Current Temperature is %.02f <Temperature Units>\r\n", SimulatedTemperatureSensor.getTemperature());
+    Serial.printf("Current Temperature is %.02fC\r\n", SimulatedTemperatureSensor.getTemperature());
     // Update Temperature from the (Simulated) Hardware Sensor
     // Matter APP shall display the updated temperature percent
     SimulatedTemperatureSensor.setTemperature(getSimulatedTemperature());
