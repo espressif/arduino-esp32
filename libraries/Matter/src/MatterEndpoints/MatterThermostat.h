@@ -35,15 +35,15 @@ public:
   };
   
   enum ThermostatMode_t {
-    THERMOSTAT_MODE_OFF           = (uint8_t) Thermostat::SystemModeEnum::kOff,
-    THERMOSTAT_MODE_AUTO          = (uint8_t) Thermostat::SystemModeEnum::kAuto,
-    THERMOSTAT_MODE_COOL          = (uint8_t) Thermostat::SystemModeEnum::kCool,
-    THERMOSTAT_MODE_HEAT          = (uint8_t) Thermostat::SystemModeEnum::kHeat,
-    THERMOSTAT_MODE_EMERENCY_HEAT = (uint8_t) Thermostat::SystemModeEnum::kEmergencyHeat,
-    THERMOSTAT_MODE_PRECOOLING    = (uint8_t) Thermostat::SystemModeEnum::kPrecooling,
-    THERMOSTAT_MODE_FAN_ONLY      = (uint8_t) Thermostat::SystemModeEnum::kFanOnly,
-    THERMOSTAT_MODE_DRY           = (uint8_t) Thermostat::SystemModeEnum::kDry,
-    THERMOSTAT_MODE_SLEEP         = (uint8_t) Thermostat::SystemModeEnum::kSleep
+    THERMOSTAT_MODE_OFF            = (uint8_t) Thermostat::SystemModeEnum::kOff,
+    THERMOSTAT_MODE_AUTO           = (uint8_t) Thermostat::SystemModeEnum::kAuto,
+    THERMOSTAT_MODE_COOL           = (uint8_t) Thermostat::SystemModeEnum::kCool,
+    THERMOSTAT_MODE_HEAT           = (uint8_t) Thermostat::SystemModeEnum::kHeat,
+    THERMOSTAT_MODE_EMERGENCY_HEAT = (uint8_t) Thermostat::SystemModeEnum::kEmergencyHeat,
+    THERMOSTAT_MODE_PRECOOLING     = (uint8_t) Thermostat::SystemModeEnum::kPrecooling,
+    THERMOSTAT_MODE_FAN_ONLY       = (uint8_t) Thermostat::SystemModeEnum::kFanOnly,
+    THERMOSTAT_MODE_DRY            = (uint8_t) Thermostat::SystemModeEnum::kDry,
+    THERMOSTAT_MODE_SLEEP          = (uint8_t) Thermostat::SystemModeEnum::kSleep
   };
 
   enum ThermostatAutoMode_t {
