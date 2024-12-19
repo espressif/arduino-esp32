@@ -169,7 +169,7 @@ bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, Ther
     return false;
   }
 
-  const int16_t _localTemperature = 2000;            // initial value to be automaticaly changed by the Matter Thermostat
+  const int16_t _localTemperature = 2000;            // initial value to be automatically changed by the Matter Thermostat
   const int16_t _coolingSetpointTemperature = 2400;  // 24C cooling setpoint
   const int16_t _heatingSetpointTemperature = 1600;  // 16C heating setpoint
   const ThermostatMode_t _currentMode = THERMOSTAT_MODE_OFF;
@@ -306,7 +306,7 @@ bool MatterThermostat::setCoolingHeatingSetpoints(double _setpointHeatingTempera
   bool settingCooling = _setpointCollingTemperature != (float)0xffff;
   bool settingHeating = _setpointHeatingTemperature != (float)0xffff;
   if (!settingCooling && !settingHeating) {
-    log_e("Invalid Setpoints values. Set correctly at leat one of them in Celsius.");
+    log_e("Invalid Setpoints values. Set correctly at least one of them in Celsius.");
     return false;
   }
   int16_t _rawHeatValue = static_cast<int16_t>(_setpointHeatingTemperature * 100.0f);
