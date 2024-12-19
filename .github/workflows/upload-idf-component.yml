@@ -1,6 +1,11 @@
 name: Push components to https://components.espressif.com
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to push to the component registry'
+        required: true
   workflow_run:
     workflows: ["ESP32 Arduino Release"]
     types:
@@ -15,9 +20,9 @@ jobs:
     steps:
       - name: Get the release tag
         env:
-          head_branch: ${{ github.event.workflow_run.head_branch }}
+          head_branch: ${{ inputs.tag || github.event.workflow_run.head_branch }}
         run: |
-          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ] && [ "${{ github.event_name }}" == "workflow_run" ]; then
             echo "Release workflow failed. Exiting..."
             exit 1
           fi
@@ -39,6 +44,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_TAG }}
           submodules: "recursive"
 
       - name: Upload components to the component registry
