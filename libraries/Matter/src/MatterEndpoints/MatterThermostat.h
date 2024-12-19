@@ -23,7 +23,7 @@
 using namespace chip::app::Clusters;
 
 class MatterThermostat : public MatterEndPoint {
-public: 
+public:
   // clang-format off
   enum ControlSequenceOfOperation_t {
     THERMOSTAT_SEQ_OP_COOLING                = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingOnly,
@@ -33,7 +33,7 @@ public:
     THERMOSTAT_SEQ_OP_COOLING_HEATING        = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingAndHeating,
     THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT = (uint8_t) Thermostat::ControlSequenceOfOperationEnum::kCoolingAndHeatingWithReheat,
   };
-  
+
   enum ThermostatMode_t {
     THERMOSTAT_MODE_OFF            = (uint8_t) Thermostat::SystemModeEnum::kOff,
     THERMOSTAT_MODE_AUTO           = (uint8_t) Thermostat::SystemModeEnum::kAuto,
@@ -70,7 +70,6 @@ public:
     return thermostatModeString[mode];
   }
 
-
   // get the Thermostat Control Sequence of Operation
   ControlSequenceOfOperation_t getControlSequence() {
     return controlSequence;
@@ -101,12 +100,12 @@ public:
   // it can be used to set both setpoints at the same time or only one of them, by setting the other to (float)0xffff
   // Heating Setpoint must be lower than Cooling Setpoint
   // When using AUTO mode the Cooling Setpoint must be higher than Heating Setpoint by at least the 2.5C (deadband)
-  // Thermostat Matter Server will enforce those rules and the Max/Min setpoints limits as in the Matter Specification 
+  // Thermostat Matter Server will enforce those rules and the Max/Min setpoints limits as in the Matter Specification
   bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCollingTemperature);
 
   // set the heating setpoint in 1/100th of a Celsio degree
   bool setHeatingSetpoint(double _setpointHeatingTemperature) {
-    return setCoolingHeatingSetpoints((double) 0xffff, _setpointHeatingTemperature);
+    return setCoolingHeatingSetpoints((double)0xffff, _setpointHeatingTemperature);
   }
   // get the heating setpoint in 1/100th of a Celsio degree
   double getHeatingSetpoint() {
@@ -114,13 +113,12 @@ public:
   }
   // set the cooling setpoint in 1/100th of a Celsio degree
   bool setCoolingSetpoint(double _setpointCollingTemperature) {
-    return setCoolingHeatingSetpoints(_setpointCollingTemperature, (double) 0xffff);
+    return setCoolingHeatingSetpoints(_setpointCollingTemperature, (double)0xffff);
   }
   // get the cooling setpoint in 1/100th of a Celsio degree
   double getCoolingSetpoint() {
     return coolingSetpointTemperature / 100.0;
   }
-
 
   // set the local Thermostat temperature in  Celsio degrees
   bool setLocalTemperature(double temperature) {
@@ -156,7 +154,7 @@ public:
   void onChangeHeatingSetpoint(EndPointHeatingSetpointCB onChangeCB) {
     _onChangeHeatingSetpointCB = onChangeCB;
   }
-  
+
   // User Callback for whenever any parameter is changed by the Matter Controller
   // Main parameters are Thermostat Mode, Local Temperature, Cooling Setpoint and Heating Setpoint
   // Those can be obtained using getMode(), getTemperature(), getCoolingSetpoint() and getHeatingSetpoint()
@@ -171,7 +169,7 @@ public:
 protected:
   bool started = false;
   // implementation keeps temperature in 1/100th of a Celsio degree
-  int16_t coolingSetpointTemperature = 2400;     // 24C cooling setpoint
+  int16_t coolingSetpointTemperature = 2400;  // 24C cooling setpoint
   int16_t localTemperature = 2000;            // 20C local temperature
   int16_t heatingSetpointTemperature = 1600;  // 16C heating setpoint
 

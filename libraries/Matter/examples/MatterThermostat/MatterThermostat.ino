@@ -105,7 +105,10 @@ void setup() {
     SimulatedThermostat.setLocalTemperature(12.50);
 
     Serial.println();
-    Serial.printf("Initial Setpoints are %.01fC to %.01fC with a minimum 2.5C difference\r\n", SimulatedThermostat.getHeatingSetpoint(), SimulatedThermostat.getCoolingSetpoint());
+    Serial.printf(
+      "Initial Setpoints are %.01fC to %.01fC with a minimum 2.5C difference\r\n", SimulatedThermostat.getHeatingSetpoint(),
+      SimulatedThermostat.getCoolingSetpoint()
+    );
     Serial.printf("Auto mode is ON. Initial Temperature of %.01fC \r\n", SimulatedThermostat.getLocalTemperature());
     Serial.println("Local Temperature Sensor will be simulated every 10 seconds and changed by a simulated heater and cooler to move in between setpoints.");
   }
@@ -164,7 +167,7 @@ void loop() {
     float localTemperature = getSimulatedTemperature(isHeating, isCooling);
     // Print the current thermostat local temperature value
     Serial.printf("Current Local Temperature is %.01fC\r\n", localTemperature);
-    SimulatedThermostat.setLocalTemperature(localTemperature); // publish the new temperature value
+    SimulatedThermostat.setLocalTemperature(localTemperature);  // publish the new temperature value
 
     // Simulate the thermostat control system - User has 4 modes: OFF, HEAT, COOL, AUTO
     switch (SimulatedThermostat.getMode()) {
@@ -190,7 +193,7 @@ void loop() {
       case MatterThermostat::THERMOSTAT_MODE_HEAT:
         // Simulate the heating system - User has turned the heating system ON
         isHeating = true;
-        isCooling = false; // keep the cooling system off as it is in heating mode
+        isCooling = false;  // keep the cooling system off as it is in heating mode
         // when the heating system is in HEATING mode, it will be turned off as soon as the local temperature is above the setpoint
         if (localTemperature > SimulatedThermostat.getHeatingSetpoint()) {
           // turn off the heating system
@@ -201,7 +204,7 @@ void loop() {
         // Simulate the cooling system - User has turned the cooling system ON
         if (SimulatedThermostat.getMode() == MatterThermostat::THERMOSTAT_MODE_COOL) {
           isCooling = true;
-          isHeating = false; // keep the heating system off as it is in cooling mode
+          isHeating = false;  // keep the heating system off as it is in cooling mode
           // when the cooling system is in COOLING mode, it will be turned off as soon as the local temperature is bellow the setpoint
           if (localTemperature < SimulatedThermostat.getCoolingSetpoint()) {
             // turn off the cooling system
@@ -209,11 +212,13 @@ void loop() {
           }
         }
         break;
-      default:
-        log_e("Invalid Thermostat Mode %d", SimulatedThermostat.getMode());
+      default: log_e("Invalid Thermostat Mode %d", SimulatedThermostat.getMode());
     }
     // Reporting Heating and Cooling status
-    Serial.printf("\tThermostat Mode: %s >>> Heater is %s -- Cooler is %s\r\n", MatterThermostat::getThermostatModeString(SimulatedThermostat.getMode()), isHeating ? "ON" : "OFF", isCooling ? "ON" : "OFF");
+    Serial.printf(
+      "\tThermostat Mode: %s >>> Heater is %s -- Cooler is %s\r\n", MatterThermostat::getThermostatModeString(SimulatedThermostat.getMode()),
+      isHeating ? "ON" : "OFF", isCooling ? "ON" : "OFF"
+    );
   }
   // Check if the button has been pressed
   if (digitalRead(buttonPin) == LOW && !button_state) {
