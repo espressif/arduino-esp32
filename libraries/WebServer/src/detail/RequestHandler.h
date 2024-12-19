@@ -6,7 +6,9 @@
 
 class RequestHandler {
 public:
-  virtual ~RequestHandler() {}
+  virtual ~RequestHandler() {
+    delete _chain;
+  }
 
   /*
     note: old handler API for backward compatibility
@@ -75,8 +77,14 @@ public:
     _next = r;
   }
 
+  RequestHandler &addMiddleware(Middleware *middleware);
+  RequestHandler &addMiddleware(Middleware::Function fn);
+  RequestHandler &removeMiddleware(Middleware *middleware);
+  bool process(WebServer &server, HTTPMethod requestMethod, String requestUri);
+
 private:
   RequestHandler *_next = nullptr;
+  MiddlewareChain *_chain = nullptr;
 
 protected:
   std::vector<String> pathArgs;
