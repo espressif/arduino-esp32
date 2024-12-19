@@ -115,7 +115,9 @@ public:
 
     // AUTO mode requires both setpoints to be valid to each other and respect the deadband
     if (currentMode ==  THERMOSTAT_MODE_AUTO) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
       float deadband = getDeadBand();
+#endif
       // only setting Cooling Setpoint
       if (settingCooling && !settingHeating && _rawCoolValue < (heatingSetpointTemperature + (kDefaultDeadBand * 10))) {
         log_e("AutoMode :: Invalid Cooling Setpoint value: %.01fC - must be higher or equal than %.01fC", _setpointCollingTemperature, getHeatingSetpoint() + deadband);
