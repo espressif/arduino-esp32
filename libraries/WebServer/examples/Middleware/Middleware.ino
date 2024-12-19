@@ -1,17 +1,17 @@
 /**
  * Basic example of using Middlewares with WebServer
- * 
+ *
  * Middleware are common request/response processing functions that can be applied globally to all incoming requests or to specific handlers.
  * They allow for a common processing thus saving memory and space to avoid duplicating code or states on multiple handlers.
- * 
+ *
  * Once the example is flashed (with the correct WiFi credentials), you can test the following scenarios with the listed curl commands:
  * - CORS Middleware: answers to OPTIONS requests with the specified CORS headers and also add CORS headers to the response when the request has the Origin header
  * - Logging Middleware: logs the request and response to an output in a curl-like format
- * - Authentication Middleware: test the authentication with Digest Auth 
- * 
+ * - Authentication Middleware: test the authentication with Digest Auth
+ *
  * You can also add your own Middleware by extending the Middleware class and implementing the run method.
  * When implementing a Middleware, you can decide when to call the next Middleware in the chain by calling next().
- * 
+ *
  * Middleware are execute in order of addition, the ones attached to the server will be executed first.
  */
 #include <WiFi.h>

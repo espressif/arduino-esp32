@@ -10,7 +10,6 @@
 
 using namespace mime;
 
-
 RequestHandler &RequestHandler::addMiddleware(Middleware *middleware) {
   if (!_chain) {
     _chain = new MiddlewareChain();
@@ -43,7 +42,6 @@ bool RequestHandler::process(WebServer &server, HTTPMethod requestMethod, String
     return handle(server, requestMethod, requestUri);
   }
 }
-
 
 class FunctionRequestHandler : public RequestHandler {
 public:

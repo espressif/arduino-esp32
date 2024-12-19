@@ -193,16 +193,16 @@ public:
   int headers() const;                                                          // get header count
   bool hasHeader(const String &name) const;                                     // check if header exists
 
-  int clientContentLength() const;                                              // return "content-length" of incoming HTTP header from "_currentClient"
-  const String version() const;                                                 // get the HTTP version string
-  String hostHeader() const;                                                    // get request host header if available or empty String if not
+  int clientContentLength() const;  // return "content-length" of incoming HTTP header from "_currentClient"
+  const String version() const;     // get the HTTP version string
+  String hostHeader() const;        // get request host header if available or empty String if not
 
-  int responseCode() const;                                                     // get the HTTP response code set
-  int responseHeaders() const;                                                  // get the HTTP response headers count
-  const String &responseHeader(String name) const;                              // get the HTTP response header value by name
-  const String &responseHeader(int i) const;                                    // get the HTTP response header value by number
-  const String &responseHeaderName(int i) const;                                // get the HTTP response header name by number
-  bool hasResponseHeader(const String& name) const;                             // check if response header exists
+  int responseCode() const;                          // get the HTTP response code set
+  int responseHeaders() const;                       // get the HTTP response headers count
+  const String &responseHeader(String name) const;   // get the HTTP response header value by name
+  const String &responseHeader(int i) const;         // get the HTTP response header value by number
+  const String &responseHeaderName(int i) const;     // get the HTTP response header name by number
+  bool hasResponseHeader(const String &name) const;  // check if response header exists
 
   // send response to the client
   // code - HTTP response code, can be 200 or 404
