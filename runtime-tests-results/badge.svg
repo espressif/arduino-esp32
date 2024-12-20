@@ -1,20 +1,14 @@
-<svg width="134.3" height="20" viewBox="0 0 1343 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Runtime Tests: failure">
-  <title>Runtime Tests: failure</title>
-  <linearGradient id="a" x2="0" y2="100%">
-    <stop offset="0" stop-opacity=".1" stop-color="#EEE"/>
-    <stop offset="1" stop-opacity=".1"/>
-  </linearGradient>
-  <mask id="m"><rect width="1343" height="200" rx="30" fill="#FFF"/></mask>
-  <g mask="url(#m)">
-    <rect width="895" height="200" fill="#555"/>
-    <rect width="448" height="200" fill="#E43" x="895"/>
-    <rect width="1343" height="200" fill="url(#a)"/>
+<svg width="132.9" height="20" viewBox="0 0 1329 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Runtime Tests: failing">
+  <title>Runtime Tests: failing</title>
+  <g>
+    <rect fill="#555" width="895" height="200"/>
+    <rect fill="#E43" x="895" width="434" height="200"/>
   </g>
   <g aria-hidden="true" fill="#fff" text-anchor="start" font-family="Verdana,DejaVu Sans,sans-serif" font-size="110">
-    <text x="60" y="148" textLength="795" fill="#000" opacity="0.25">Runtime Tests</text>
+    <text x="60" y="148" textLength="795" fill="#000" opacity="0.1">Runtime Tests</text>
     <text x="50" y="138" textLength="795">Runtime Tests</text>
-    <text x="950" y="148" textLength="348" fill="#000" opacity="0.25">failure</text>
-    <text x="940" y="138" textLength="348">failure</text>
+    <text x="950" y="148" textLength="334" fill="#000" opacity="0.1">failing</text>
+    <text x="940" y="138" textLength="334">failing</text>
   </g>
   
 </svg>
