@@ -24,7 +24,7 @@ The advantages of using Wokwi include:
 
 Unique features provided by Wokwi:
 
-- WiFi simulation - Connect your simulated project to the internet. You can use MQTT, HTTP, NTP, and many other network protocols.
+- Wi-Fi simulation - Connect your simulated project to the internet. You can use MQTT, HTTP, NTP, and many other network protocols.
 - Virtual Logic Analyzer - Capture digital signals in your simulation (e.g. UART, I2C, SPI) and analyze them on your computer.
 - Advanced debugging with GDB - Powerful Arduino debugger for advanced users.
 - SD card simulation - Store and retrieve files and directories from your code. Paying users can also upload binary files (such as images)
