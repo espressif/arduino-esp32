@@ -12,5 +12,3 @@ About
 -----
 
 For more information, please refer to the `official documentation <https://github.com/pioarduino/platform-espressif32>`_.
-
-
