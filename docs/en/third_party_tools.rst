@@ -12,5 +12,5 @@ Here you will find documentation pages for third party tools that can be used wi
   :maxdepth: 1
   :caption: Contents:
 
-  pioarduino <thirdparty/pioarduino>
-  Wokwi <thirdparty/wokwi>
+  pioarduino <third_party/pioarduino>
+  Wokwi <third_party/wokwi>
