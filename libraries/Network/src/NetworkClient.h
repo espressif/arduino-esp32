@@ -29,6 +29,8 @@ class NetworkClientRxBuffer;
 class ESPLwIPClient : public Client {
 public:
   virtual void setConnectionTimeout(uint32_t milliseconds) = 0;
+  virtual int connect(const char *host, uint16_t port) = 0;
+  virtual int connect(const char *host, uint16_t port, int32_t timeout) = 0;
 };
 
 class NetworkClient : public ESPLwIPClient {
