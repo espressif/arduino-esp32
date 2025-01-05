@@ -194,7 +194,7 @@ bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */
   cluster_t *level_control_cluster = cluster::get(endpoint, LevelControl::Id);
-  attribute_t *current_level_attribute = attribute::get(level_control_cluster, LevelControl::Attributes::CurrentLevel::Id);
+  esp_matter::attribute_t *current_level_attribute = attribute::get(level_control_cluster, LevelControl::Attributes::CurrentLevel::Id);
   attribute::set_deferred_persistence(current_level_attribute);
 
   started = true;
@@ -220,7 +220,7 @@ bool MatterColorLight::setOnOff(bool newState) {
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, OnOff::Id);
-  attribute_t *attribute = attribute::get(cluster, OnOff::Attributes::OnOff::Id);
+  esp_matter::attribute_t *attribute = attribute::get(cluster, OnOff::Attributes::OnOff::Id);
 
   esp_matter_attr_val_t val = esp_matter_invalid(NULL);
   attribute::get_val(attribute, &val);
@@ -271,7 +271,7 @@ bool MatterColorLight::setColorHSV(espHsvColor_t _hsvColor) {
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, ColorControl::Id);
   // update hue
-  attribute_t *attribute = attribute::get(cluster, ColorControl::Attributes::CurrentHue::Id);
+  esp_matter::attribute_t *attribute = attribute::get(cluster, ColorControl::Attributes::CurrentHue::Id);
   esp_matter_attr_val_t val = esp_matter_invalid(NULL);
   attribute::get_val(attribute, &val);
   if (val.val.u8 != colorHSV.h) {
