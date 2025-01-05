@@ -108,7 +108,7 @@ bool MatterOnOffLight::setOnOff(bool newState) {
 
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   cluster_t *cluster = cluster::get(endpoint, OnOff::Id);
-  attribute_t *attribute = attribute::get(cluster, OnOff::Attributes::OnOff::Id);
+  esp_matter::attribute_t *attribute = attribute::get(cluster, OnOff::Attributes::OnOff::Id);
 
   esp_matter_attr_val_t val = esp_matter_invalid(NULL);
   attribute::get_val(attribute, &val);
