@@ -10,12 +10,15 @@
 
 #include "soc/soc.h"
 #include "soc/efuse_reg.h"
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 #include "soc/rtc_cntl_reg.h"
 #include "soc/usb_struct.h"
 #include "soc/usb_reg.h"
 #include "soc/usb_wrap_reg.h"
 #include "soc/usb_wrap_struct.h"
 #include "soc/usb_periph.h"
+#endif
+
 #include "soc/periph_defs.h"
 #include "soc/timer_group_struct.h"
 #include "soc/system_reg.h"
@@ -34,8 +37,8 @@
 
 #include "esp32-hal.h"
 #include "esp32-hal-periman.h"
-
 #include "esp32-hal-tinyusb.h"
+
 #if CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/usb/usb_persist.h"
 #include "esp32s2/rom/usb/usb_dc.h"
@@ -50,6 +53,7 @@
 #include "esp32s3/rom/usb/usb_persist.h"
 #include "esp32s3/rom/usb/usb_dc.h"
 #include "esp32s3/rom/usb/chip_usb_dw_wrapper.h"
+#elif CONFIG_IDF_TARGET_ESP32P4
 #endif
 
 typedef enum {
@@ -127,7 +131,11 @@ esp_err_t init_usb_hal(bool external_phy) {
     .controller = USB_PHY_CTRL_OTG,
     .target = USB_PHY_TARGET_INT,
     .otg_mode = USB_OTG_MODE_DEVICE,
+#if CONFIG_IDF_TARGET_ESP32P4
+    .otg_speed = USB_PHY_SPEED_HIGH,
+#else
     .otg_speed = USB_PHY_SPEED_FULL,
+#endif
     .ext_io_conf = NULL,
     .otg_io_conf = NULL,
   };
@@ -165,7 +173,16 @@ void deinit_usb_hal() {
 
 esp_err_t tinyusb_driver_install(const tinyusb_config_t *config) {
   init_usb_hal(config->external_phy);
-  if (!tusb_init()) {
+  tusb_rhport_init_t tinit;
+  memset(&tinit, 0, sizeof(tusb_rhport_init_t));
+  tinit.role = TUSB_ROLE_DEVICE;
+#if CONFIG_IDF_TARGET_ESP32P4
+  tinit.speed = TUSB_SPEED_HIGH;
+  if (!tusb_init(1, &tinit)) {
+#else
+  tinit.speed = TUSB_SPEED_FULL;
+  if (!tusb_init(0, &tinit)) {
+#endif
     log_e("Can't initialize the TinyUSB stack.");
     return ESP_FAIL;
   }
@@ -275,15 +292,14 @@ enum {
   VENDOR_REQUEST_MICROSOFT = 2
 };
 
-static uint8_t const tinyusb_bos_descriptor[] = {
-  // total length, number of device caps
-  TUD_BOS_DESCRIPTOR(BOS_TOTAL_LEN, 2),
+static uint8_t const tinyusb_bos_descriptor[] = {// total length, number of device caps
+                                                 TUD_BOS_DESCRIPTOR(BOS_TOTAL_LEN, 2),
 
-  // Vendor Code, iLandingPage
-  TUD_BOS_WEBUSB_DESCRIPTOR(VENDOR_REQUEST_WEBUSB, 1),
+                                                 // Vendor Code, iLandingPage
+                                                 TUD_BOS_WEBUSB_DESCRIPTOR(VENDOR_REQUEST_WEBUSB, 1),
 
-  // Microsoft OS 2.0 descriptor
-  TUD_BOS_MS_OS_20_DESCRIPTOR(MS_OS_20_DESC_LEN, VENDOR_REQUEST_MICROSOFT)
+                                                 // Microsoft OS 2.0 descriptor
+                                                 TUD_BOS_MS_OS_20_DESCRIPTOR(MS_OS_20_DESC_LEN, VENDOR_REQUEST_MICROSOFT)
 };
 
 /*
@@ -467,8 +483,10 @@ __attribute__((weak)) void tud_network_init_cb(void) {}
 /*
  * Private API
  * */
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 static bool usb_persist_enabled = false;
 static restart_type_t usb_persist_mode = RESTART_NO_PERSIST;
+#endif
 
 #if CONFIG_IDF_TARGET_ESP32S3
 
@@ -549,6 +567,7 @@ static void usb_switch_to_cdc_jtag() {
 }
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
 static void IRAM_ATTR usb_persist_shutdown_handler(void) {
   if (usb_persist_mode != RESTART_NO_PERSIST) {
     if (usb_persist_enabled) {
@@ -580,8 +599,10 @@ static void IRAM_ATTR usb_persist_shutdown_handler(void) {
     }
   }
 }
+#endif
 
 void usb_persist_restart(restart_type_t mode) {
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   if (mode < RESTART_TYPE_MAX && esp_register_shutdown_handler(usb_persist_shutdown_handler) == ESP_OK) {
     usb_persist_mode = mode;
 #if CONFIG_IDF_TARGET_ESP32S3
@@ -591,6 +612,7 @@ void usb_persist_restart(restart_type_t mode) {
 #endif
     esp_restart();
   }
+#endif
 }
 
 static bool tinyusb_reserve_in_endpoint(uint8_t endpoint) {
@@ -674,8 +696,13 @@ static inline char nibble_to_hex_char(uint8_t b) {
 
 static void set_usb_serial_num(void) {
   /* Get the MAC address */
+#if CONFIG_IDF_TARGET_ESP32P4
+  const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_0_REG, EFUSE_MAC_0);
+  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_0_REG, EFUSE_MAC_1);
+#else
   const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_0_REG, EFUSE_MAC_0);
   const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_1_REG, EFUSE_MAC_1);
+#endif
   uint8_t mac_bytes[6];
   memcpy(mac_bytes, &mac0, 4);
   memcpy(mac_bytes + 4, &mac1, 2);
@@ -794,6 +821,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     return ESP_FAIL;
   }
 
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   bool usb_did_persist = (USB_WRAP.date.val == USBDC_PERSIST_ENA);
 
   //if(usb_did_persist && usb_persist_enabled){
@@ -806,6 +834,7 @@ esp_err_t tinyusb_init(tinyusb_device_config_t *config) {
     periph_ll_reset(PERIPH_USB_MODULE);
     periph_ll_enable_clk_clear_rst(PERIPH_USB_MODULE);
   }
+#endif
 
   tinyusb_config_t tusb_cfg = {
     .external_phy = false  // In the most cases you need to use a `false` value

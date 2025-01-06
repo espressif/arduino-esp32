@@ -3,7 +3,8 @@
 #pragma once
 
 #include "soc/soc_caps.h"
-#if SOC_IEEE802154_SUPPORTED
+#include "sdkconfig.h"
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 #include "esp_zigbee_core.h"
 #include "zdo/esp_zigbee_zdo_common.h"
@@ -65,17 +66,23 @@ private:
   esp_zb_host_config_t _host_config;
   uint32_t _primary_channel_mask;
   int16_t _scan_status;
+  uint8_t _scan_duration;
+  bool _rx_on_when_idle;
 
   esp_zb_ep_list_t *_zb_ep_list;
   zigbee_role_t _role;
   bool _started;
+  bool _connected;
 
   uint8_t _open_network;
   zigbee_scan_result_t *_scan_result;
+  SemaphoreHandle_t lock;
 
   bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
   static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
   const char *getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
+  void searchBindings();
+  static void bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_info, void *user_ctx);
 
 public:
   ZigbeeCore();
@@ -87,8 +94,11 @@ public:
   bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
   // bool end();
 
-  bool isStarted() {
+  bool started() {
     return _started;
+  }
+  bool connected() {
+    return _connected;
   }
   zigbee_role_t getRole() {
     return _role;
@@ -103,7 +113,19 @@ public:
   void setHostConfig(esp_zb_host_config_t config);
   esp_zb_host_config_t getHostConfig();
 
-  void setPrimaryChannelMask(uint32_t mask);
+  void setPrimaryChannelMask(uint32_t mask);  // By default all channels are scanned (11-26) -> mask 0x07FFF800
+  void setScanDuration(uint8_t duration);     // Can be set from 1 - 4. 1 is fastest, 4 is slowest
+  uint8_t getScanDuration() {
+    return _scan_duration;
+  }
+
+  void setRxOnWhenIdle(bool rx_on_when_idle) {
+    _rx_on_when_idle = rx_on_when_idle;
+  }
+  bool getRxOnWhenIdle() {
+    return _rx_on_when_idle;
+  }
+
   void setRebootOpenNetwork(uint8_t time);
   void openNetwork(uint8_t time);
 
@@ -122,4 +144,4 @@ public:
 
 extern ZigbeeCore Zigbee;
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

@@ -56,21 +56,16 @@ public:
   void onData(BluetoothSerialDataCb cb);
   esp_err_t register_callback(esp_spp_cb_t callback);
 
-#ifdef CONFIG_BT_SSP_ENABLED
   void onConfirmRequest(ConfirmRequestCb cb);
   void onKeyRequest(KeyRequestCb cb);
   void respondPasskey(uint32_t passkey);
-#endif
   void onAuthComplete(AuthCompleteCb cb);
   void confirmReply(boolean confirm);
 
-#ifdef CONFIG_BT_SSP_ENABLED
   void enableSSP();
   void enableSSP(bool inputCapability, bool outputCapability);
   void disableSSP();
-#else
   bool setPin(const char *pin, uint8_t pin_code_len);
-#endif
   bool connect(String remoteName);
   bool connect(
     uint8_t remoteAddress[], int channel = 0, esp_spp_sec_t sec_mask = (ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE),

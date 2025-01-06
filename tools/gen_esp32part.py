@@ -529,7 +529,7 @@ class PartitionDefinition(object):
     def to_csv(self, simple_formatting=False):
         def addr_format(a, include_sizes):
             if not simple_formatting and include_sizes:
-                for (val, suffix) in [(0x100000, "M"), (0x400, "K")]:
+                for val, suffix in [(0x100000, "M"), (0x400, "K")]:
                     if a % val == 0:
                         return "%d%s" % (a // val, suffix)
             return "0x%x" % a

@@ -9,7 +9,9 @@
 #include "spi_flash_mmap.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
+#ifndef UPDATE_NOCRYPT
 #include "mbedtls/aes.h"
+#endif /* UPDATE_NOCRYPT */
 
 static const char *_err2str(uint8_t _error) {
   if (_error == UPDATE_ERROR_OK) {
@@ -38,8 +40,10 @@ static const char *_err2str(uint8_t _error) {
     return ("Bad Argument");
   } else if (_error == UPDATE_ERROR_ABORT) {
     return ("Aborted");
+#ifndef UPDATE_NOCRYPT
   } else if (_error == UPDATE_ERROR_DECRYPT) {
     return ("Decryption error");
+#endif /* UPDATE_NOCRYPT */
   }
   return ("UNKNOWN");
 }
@@ -67,8 +71,17 @@ bool UpdateClass::_enablePartition(const esp_partition_t *partition) {
 }
 
 UpdateClass::UpdateClass()
-  : _error(0), _cryptKey(0), _cryptBuffer(0), _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0),
-    _command(U_FLASH), _partition(NULL), _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf) {}
+  : _error(0),
+#ifndef UPDATE_NOCRYPT
+    _cryptKey(0), _cryptBuffer(0),
+#endif /* UPDATE_NOCRYPT */
+    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0), _command(U_FLASH), _partition(NULL)
+#ifndef UPDATE_NOCRYPT
+    ,
+    _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
+#endif /* UPDATE_NOCRYPT */
+{
+}
 
 UpdateClass &UpdateClass::onProgress(THandlerFunction_Progress fn) {
   _progress_callback = fn;
@@ -83,7 +96,9 @@ void UpdateClass::_reset() {
     delete[] _skipBuffer;
   }
 
+#ifndef UPDATE_NOCRYPT
   _cryptBuffer = nullptr;
+#endif /* UPDATE_NOCRYPT */
   _buffer = nullptr;
   _skipBuffer = nullptr;
   _bufferLen = 0;
@@ -175,6 +190,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   return true;
 }
 
+#ifndef UPDATE_NOCRYPT
 bool UpdateClass::setupCrypt(const uint8_t *cryptKey, size_t cryptAddress, uint8_t cryptConfig, int cryptMode) {
   if (setCryptKey(cryptKey)) {
     if (setCryptMode(cryptMode)) {
@@ -216,6 +232,7 @@ bool UpdateClass::setCryptMode(const int cryptMode) {
   }
   return true;
 }
+#endif /* UPDATE_NOCRYPT */
 
 void UpdateClass::_abort(uint8_t err) {
   _reset();
@@ -226,6 +243,7 @@ void UpdateClass::abort() {
   _abort(UPDATE_ERROR_ABORT);
 }
 
+#ifndef UPDATE_NOCRYPT
 void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key) {
   memcpy(tweaked_key, _cryptKey, ENCRYPTED_KEY_SIZE);
   if (_cryptCfg == 0) {
@@ -338,8 +356,10 @@ bool UpdateClass::_decryptBuffer() {
   }
   return true;
 }
+#endif /* UPDATE_NOCRYPT */
 
 bool UpdateClass::_writeBuffer() {
+#ifndef UPDATE_NOCRYPT
   //first bytes of loading image, check to see if loading image needs decrypting
   if (!_progress) {
     _cryptMode &= U_AES_DECRYPT_MODE_MASK;
@@ -360,6 +380,7 @@ bool UpdateClass::_writeBuffer() {
       return false;
     }
   }
+#endif /* UPDATE_NOCRYPT */
   //first bytes of new firmware
   uint8_t skip = 0;
   if (!_progress && _command == U_FLASH) {
@@ -409,9 +430,13 @@ bool UpdateClass::_writeBuffer() {
   if (!_progress && _command == U_FLASH) {
     _buffer[0] = ESP_IMAGE_HEADER_MAGIC;
   }
+#ifndef UPDATE_NOCRYPT
   if (_target_md5_decrypted) {
+#endif /* UPDATE_NOCRYPT */
     _md5.add(_buffer, _bufferLen);
+#ifndef UPDATE_NOCRYPT
   }
+#endif /* UPDATE_NOCRYPT */
   _progress += _bufferLen;
   _bufferLen = 0;
   if (_progress_callback) {
@@ -453,13 +478,21 @@ bool UpdateClass::_verifyEnd() {
   return false;
 }
 
-bool UpdateClass::setMD5(const char *expected_md5, bool calc_post_decryption) {
+bool UpdateClass::setMD5(
+  const char *expected_md5
+#ifndef UPDATE_NOCRYPT
+  ,
+  bool calc_post_decryption
+#endif /* UPDATE_NOCRYPT */
+) {
   if (strlen(expected_md5) != 32) {
     return false;
   }
   _target_md5 = expected_md5;
   _target_md5.toLowerCase();
+#ifndef UPDATE_NOCRYPT
   _target_md5_decrypted = calc_post_decryption;
+#endif /* UPDATE_NOCRYPT */
   return true;
 }
 
@@ -532,12 +565,16 @@ size_t UpdateClass::writeStream(Stream &data) {
     return 0;
   }
 
+#ifndef UPDATE_NOCRYPT
   if (_command == U_FLASH && !_cryptMode) {
+#endif /* UPDATE_NOCRYPT */
     if (!_verifyHeader(data.peek())) {
       _reset();
       return 0;
     }
+#ifndef UPDATE_NOCRYPT
   }
+#endif /* UPDATE_NOCRYPT */
 
   if (_ledPin != -1) {
     pinMode(_ledPin, OUTPUT);

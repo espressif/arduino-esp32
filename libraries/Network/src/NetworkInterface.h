@@ -70,8 +70,10 @@ public:
   IPAddress broadcastIP() const;
   IPAddress networkID() const;
   uint8_t subnetCIDR() const;
+#if CONFIG_LWIP_IPV6
   IPAddress linkLocalIPv6() const;
   IPAddress globalIPv6() const;
+#endif
 
   size_t printTo(Print &out) const;
 

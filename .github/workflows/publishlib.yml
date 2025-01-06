@@ -47,7 +47,7 @@ jobs:
         uses: juliangruber/read-file-action@v1
         with:
           path: ./artifacts/workflows/pr_num.txt
-    
+
       - name: Report results
         uses: P-R-O-C-H-Y/report-size-deltas@libs
         with:
