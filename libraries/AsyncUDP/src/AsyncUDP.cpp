@@ -675,7 +675,7 @@ static esp_err_t joinMulticastGroup(const ip_addr_t *addr, bool join, tcpip_adap
     UDP_MUTEX_UNLOCK();
   }
   return ESP_OK;
-  
+
 igmp_fail:
   UDP_MUTEX_UNLOCK();
   return ESP_ERR_INVALID_STATE;
