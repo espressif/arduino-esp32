@@ -146,10 +146,10 @@ void setup() {
     char* manufacturer = zbSwitch.readManufacturer(device->endpoint, device->short_addr, device->ieee_addr);
     char* model = zbSwitch.readModel(device->endpoint, device->short_addr, device->ieee_addr);
     if(manufacturer != nullptr) {
-      Serial.printf("Light manufacturer: %s\r\n", zbSwitch.readManufacturer(device->endpoint, device->short_addr, device->ieee_addr));
+      Serial.printf("Light manufacturer: %s\r\n", manufacturer);
     }
     if(model != nullptr) {
-      Serial.printf("Light model: %s\r\n", zbSwitch.readModel(device->endpoint, device->short_addr, device->ieee_addr));
+      Serial.printf("Light model: %s\r\n", model);
     }
   }
 
