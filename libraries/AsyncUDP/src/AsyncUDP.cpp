@@ -601,76 +601,84 @@ static esp_err_t joinMulticastGroup(const ip_addr_t *addr, bool join, tcpip_adap
       return ESP_ERR_INVALID_ARG;
     }
     netif = (struct netif *)nif;
+    UDP_MUTEX_LOCK();
 
 #if CONFIG_LWIP_IPV6
     if (addr->type == IPADDR_TYPE_V4) {
       if (join) {
         if (igmp_joingroup_netif(netif, (const ip4_addr *)&(addr->u_addr.ip4))) {
-          return ESP_ERR_INVALID_STATE;
+          goto igmp_fail;
         }
       } else {
         if (igmp_leavegroup_netif(netif, (const ip4_addr *)&(addr->u_addr.ip4))) {
-          return ESP_ERR_INVALID_STATE;
+          goto igmp_fail;
         }
       }
     } else {
       if (join) {
         if (mld6_joingroup_netif(netif, &(addr->u_addr.ip6))) {
-          return ESP_ERR_INVALID_STATE;
+          goto igmp_fail;
         }
       } else {
         if (mld6_leavegroup_netif(netif, &(addr->u_addr.ip6))) {
-          return ESP_ERR_INVALID_STATE;
+          goto igmp_fail;
         }
       }
     }
 #else
     if (join) {
       if (igmp_joingroup_netif(netif, (const ip4_addr *)(addr))) {
-        return ESP_ERR_INVALID_STATE;
+        goto igmp_fail;
       }
     } else {
       if (igmp_leavegroup_netif(netif, (const ip4_addr *)(addr))) {
-        return ESP_ERR_INVALID_STATE;
+        goto igmp_fail;
       }
     }
 #endif
+    UDP_MUTEX_UNLOCK();
   } else {
+    UDP_MUTEX_LOCK();
 #if CONFIG_LWIP_IPV6
     if (addr->type == IPADDR_TYPE_V4) {
       if (join) {
         if (igmp_joingroup((const ip4_addr *)IP4_ADDR_ANY, (const ip4_addr *)&(addr->u_addr.ip4))) {
-          return ESP_ERR_INVALID_STATE;
+          goto igmp_fail;
         }
       } else {
         if (igmp_leavegroup((const ip4_addr *)IP4_ADDR_ANY, (const ip4_addr *)&(addr->u_addr.ip4))) {
-          return ESP_ERR_INVALID_STATE;
+          goto igmp_fail;
         }
       }
     } else {
       if (join) {
         if (mld6_joingroup((const ip6_addr *)IP6_ADDR_ANY, &(addr->u_addr.ip6))) {
-          return ESP_ERR_INVALID_STATE;
+          goto igmp_fail;
         }
       } else {
         if (mld6_leavegroup((const ip6_addr *)IP6_ADDR_ANY, &(addr->u_addr.ip6))) {
-          return ESP_ERR_INVALID_STATE;
+          goto igmp_fail;
         }
       }
     }
 #else
     if (join) {
       if (igmp_joingroup((const ip4_addr *)IP4_ADDR_ANY, (const ip4_addr *)(addr))) {
-        return ESP_ERR_INVALID_STATE;
+        goto igmp_fail;
       }
     } else {
       if (igmp_leavegroup((const ip4_addr *)IP4_ADDR_ANY, (const ip4_addr *)(addr))) {
-        return ESP_ERR_INVALID_STATE;
+        goto igmp_fail;
       }
     }
 #endif
+    UDP_MUTEX_UNLOCK();
   }
   return ESP_OK;
+
+igmp_fail:
+  UDP_MUTEX_UNLOCK();
+  return ESP_ERR_INVALID_STATE;
 }
 
 bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl, tcpip_adapter_if_t tcpip_if) {
