@@ -36,7 +36,7 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 663499,
+                            "flash_bytes": 665381,
                             "flash_percentage": 50,
                             "ram_bytes": 27108,
                             "ram_percentage": 8
@@ -105,7 +105,7 @@
                 "sketches": [
 {"name": "ArduinoOTA/examples/BasicOTA",
                     "sizes": [{
-                            "flash_bytes": 927588,
+                            "flash_bytes": 927576,
                             "flash_percentage": 70,
                             "ram_bytes": 49228,
                             "ram_percentage": 15
@@ -121,7 +121,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 853832,
+                            "flash_bytes": 853940,
                             "flash_percentage": 65,
                             "ram_bytes": 43420,
                             "ram_percentage": 13
@@ -222,6 +222,14 @@
                             "ram_bytes": 47876,
                             "ram_percentage": 14
                             }]
+                    },
+{"name": "BLE/examples/Server_multiconnect",
+                    "sizes": [{
+                            "flash_bytes": 986408,
+                            "flash_percentage": 31,
+                            "ram_bytes": 47892,
+                            "ram_percentage": 14
+                            }]
                     }
 ]
 },
@@ -230,7 +238,7 @@
                 "sketches": [
 {"name": "ArduinoOTA/examples/BasicOTA",
                     "sizes": [{
-                            "flash_bytes": 895579,
+                            "flash_bytes": 895563,
                             "flash_percentage": 68,
                             "ram_bytes": 44652,
                             "ram_percentage": 13
@@ -246,7 +254,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 826547,
+                            "flash_bytes": 826655,
                             "flash_percentage": 63,
                             "ram_bytes": 38888,
                             "ram_percentage": 11
@@ -262,7 +270,7 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 869987,
+                            "flash_bytes": 873011,
                             "flash_percentage": 66,
                             "ram_bytes": 40560,
                             "ram_percentage": 12
@@ -363,7 +371,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 897322,
+                            "flash_bytes": 897436,
                             "flash_percentage": 68,
                             "ram_bytes": 34548,
                             "ram_percentage": 10
@@ -448,6 +456,14 @@
                             "ram_bytes": 38460,
                             "ram_percentage": 11
                             }]
+                    },
+{"name": "BLE/examples/Scan",
+                    "sizes": [{
+                            "flash_bytes": 1036914,
+                            "flash_percentage": 32,
+                            "ram_bytes": 38436,
+                            "ram_percentage": 11
+                            }]
                     }
 ]
 },
@@ -472,7 +488,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 903463,
+                            "flash_bytes": 903577,
                             "flash_percentage": 68,
                             "ram_bytes": 40352,
                             "ram_percentage": 12
@@ -650,7 +666,7 @@
                 "sketches": [
 {"name": "ArduinoOTA/examples/BasicOTA",
                     "sizes": [{
-                            "flash_bytes": 955984,
+                            "flash_bytes": 955976,
                             "flash_percentage": 72,
                             "ram_bytes": 49968,
                             "ram_percentage": 15
@@ -666,7 +682,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 901868,
+                            "flash_bytes": 901964,
                             "flash_percentage": 68,
                             "ram_bytes": 44488,
                             "ram_percentage": 13

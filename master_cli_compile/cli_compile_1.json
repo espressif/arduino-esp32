@@ -103,14 +103,6 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
-{"name": "BLE/examples/Server_multiconnect",
-                    "sizes": [{
-                            "flash_bytes": 986408,
-                            "flash_percentage": 31,
-                            "ram_bytes": 47892,
-                            "ram_percentage": 14
-                            }]
-                    },
 {"name": "BLE/examples/UART",
                     "sizes": [{
                             "flash_bytes": 986744,
@@ -137,7 +129,7 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 896960,
+                            "flash_bytes": 899916,
                             "flash_percentage": 68,
                             "ram_bytes": 45092,
                             "ram_percentage": 13
@@ -222,6 +214,22 @@
                             "ram_bytes": 20492,
                             "ram_percentage": 6
                             }]
+                    },
+{"name": "ESP32/examples/AnalogReadContinuous",
+                    "sizes": [{
+                            "flash_bytes": 322320,
+                            "flash_percentage": 24,
+                            "ram_bytes": 20492,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/ArduinoStackSize",
+                    "sizes": [{
+                            "flash_bytes": 303564,
+                            "flash_percentage": 23,
+                            "ram_bytes": 20204,
+                            "ram_percentage": 6
+                            }]
                     }
 ]
 },
@@ -262,7 +270,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 964547,
+                            "flash_bytes": 963863,
                             "flash_percentage": 5,
                             "ram_bytes": 55544,
                             "ram_percentage": 16
@@ -270,7 +278,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 968475,
+                            "flash_bytes": 967791,
                             "flash_percentage": 5,
                             "ram_bytes": 55580,
                             "ram_percentage": 16
@@ -353,14 +361,6 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
-{"name": "BLE/examples/Scan",
-                    "sizes": [{
-                            "flash_bytes": 1036914,
-                            "flash_percentage": 32,
-                            "ram_bytes": 38436,
-                            "ram_percentage": 11
-                            }]
-                    },
 {"name": "BLE/examples/Server",
                     "sizes": [{
                             "flash_bytes": 1042994,
@@ -403,7 +403,7 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 936838,
+                            "flash_bytes": 938724,
                             "flash_percentage": 71,
                             "ram_bytes": 36212,
                             "ram_percentage": 11
@@ -456,6 +456,22 @@
                             "ram_bytes": 11860,
                             "ram_percentage": 3
                             }]
+                    },
+{"name": "ESP32/examples/AnalogOut/SigmaDelta",
+                    "sizes": [{
+                            "flash_bytes": 260072,
+                            "flash_percentage": 19,
+                            "ram_bytes": 11744,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/ledcFrequency",
+                    "sizes": [{
+                            "flash_bytes": 264578,
+                            "flash_percentage": 20,
+                            "ram_bytes": 11852,
+                            "ram_percentage": 3
+                            }]
                     }
 ]
 },
@@ -496,7 +512,7 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 946297,
+                            "flash_bytes": 948179,
                             "flash_percentage": 72,
                             "ram_bytes": 64248,
                             "ram_percentage": 19
@@ -730,9 +746,9 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 946144,
+                            "flash_bytes": 949144,
                             "flash_percentage": 72,
-                            "ram_bytes": 46144,
+                            "ram_bytes": 46152,
                             "ram_percentage": 14
                             }]
                     },

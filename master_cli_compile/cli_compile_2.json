@@ -103,22 +103,6 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
-{"name": "ESP32/examples/AnalogReadContinuous",
-                    "sizes": [{
-                            "flash_bytes": 322320,
-                            "flash_percentage": 24,
-                            "ram_bytes": 20492,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "ESP32/examples/ArduinoStackSize",
-                    "sizes": [{
-                            "flash_bytes": 303564,
-                            "flash_percentage": 23,
-                            "ram_bytes": 20204,
-                            "ram_percentage": 6
-                            }]
-                    },
 {"name": "ESP32/examples/CI/CIBoardsTest",
                     "sizes": [{
                             "flash_bytes": 348904,
@@ -129,7 +113,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 985956,
+                            "flash_bytes": 985272,
                             "flash_percentage": 5,
                             "ram_bytes": 59584,
                             "ram_percentage": 18
@@ -137,7 +121,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 988724,
+                            "flash_bytes": 988040,
                             "flash_percentage": 5,
                             "ram_bytes": 59728,
                             "ram_percentage": 18
@@ -145,7 +129,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 990916,
+                            "flash_bytes": 990232,
                             "flash_percentage": 5,
                             "ram_bytes": 60080,
                             "ram_percentage": 18
@@ -236,6 +220,30 @@
                             "flash_bytes": 307116,
                             "flash_percentage": 23,
                             "ram_bytes": 20828,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/GPIOInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 307768,
+                            "flash_percentage": 23,
+                            "ram_bytes": 20828,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/HWCDC_Events",
+                    "sizes": [{
+                            "flash_bytes": 329996,
+                            "flash_percentage": 10,
+                            "ram_bytes": 20188,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/MacAddress/GetMacAddress",
+                    "sizes": [{
+                            "flash_bytes": 307324,
+                            "flash_percentage": 23,
+                            "ram_bytes": 20300,
                             "ram_percentage": 6
                             }]
                     }
@@ -361,22 +369,6 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
-{"name": "ESP32/examples/AnalogOut/SigmaDelta",
-                    "sizes": [{
-                            "flash_bytes": 260072,
-                            "flash_percentage": 19,
-                            "ram_bytes": 11744,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogOut/ledcFrequency",
-                    "sizes": [{
-                            "flash_bytes": 264578,
-                            "flash_percentage": 20,
-                            "ram_bytes": 11852,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
                     "sizes": [{
                             "flash_bytes": 276996,
@@ -462,6 +454,30 @@
                             "flash_bytes": 269546,
                             "flash_percentage": 20,
                             "ram_bytes": 11744,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/BlinkRGB",
+                    "sizes": [{
+                            "flash_bytes": 277182,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12660,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/FunctionalInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 273278,
+                            "flash_percentage": 20,
+                            "ram_bytes": 12028,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
+                    "sizes": [{
+                            "flash_bytes": 272652,
+                            "flash_percentage": 20,
+                            "ram_bytes": 12036,
                             "ram_percentage": 3
                             }]
                     }
@@ -738,7 +754,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1031664,
+                            "flash_bytes": 1030980,
                             "flash_percentage": 6,
                             "ram_bytes": 61160,
                             "ram_percentage": 18
@@ -746,7 +762,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1044308,
+                            "flash_bytes": 1043624,
                             "flash_percentage": 6,
                             "ram_bytes": 61236,
                             "ram_percentage": 18
