@@ -38,7 +38,7 @@ public:
   }
 
   // helper functions for attribute manipulation
-  attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id) {
+  esp_matter::attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id) {
     if (endpoint_id == 0) {
       log_e("Endpoint ID is not set");
       return NULL;
@@ -53,7 +53,7 @@ public:
       log_e("Cluster [%d] not found", cluster_id);
       return NULL;
     }
-    attribute_t *attribute = attribute::get(cluster, attribute_id);
+    esp_matter::attribute_t *attribute = attribute::get(cluster, attribute_id);
     if (attribute == NULL) {
       log_e("Attribute [%d] not found", attribute_id);
       return NULL;
@@ -63,7 +63,7 @@ public:
 
   // get the value of an attribute from its cluster id and attribute it
   bool getAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
-    attribute_t *attribute = getAttribute(cluster_id, attribute_id);
+    esp_matter::attribute_t *attribute = getAttribute(cluster_id, attribute_id);
     if (attribute == NULL) {
       return false;
     }
@@ -77,7 +77,7 @@ public:
 
   // set the value of an attribute from its cluster id and attribute it
   bool setAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
-    attribute_t *attribute = getAttribute(cluster_id, attribute_id);
+    esp_matter::attribute_t *attribute = getAttribute(cluster_id, attribute_id);
     if (attribute == NULL) {
       return false;
     }
