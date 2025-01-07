@@ -48615,3 +48615,309 @@ yb_esp32s3_eth.menu.EraseFlash.all=Enabled
 yb_esp32s3_eth.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+# Huidu HD-WF2 - esp32-s3 HUB75 driver board
+# https://www.hdwell.com/Product/index46.html
+
+huidu_hd_wf2.name=Huidu HD-WF2
+
+huidu_hd_wf2.bootloader.tool=esptool_py
+huidu_hd_wf2.bootloader.tool.default=esptool_py
+
+huidu_hd_wf2.upload.tool=esptool_py
+huidu_hd_wf2.upload.tool.default=esptool_py
+huidu_hd_wf2.upload.tool.network=esp_ota
+
+huidu_hd_wf2.upload.maximum_size=1310720
+huidu_hd_wf2.upload.maximum_data_size=327680
+huidu_hd_wf2.upload.flags=
+huidu_hd_wf2.upload.extra_flags=
+huidu_hd_wf2.upload.use_1200bps_touch=true
+huidu_hd_wf2.upload.wait_for_upload_port=true
+
+huidu_hd_wf2.serial.disableDTR=false
+huidu_hd_wf2.serial.disableRTS=false
+
+huidu_hd_wf2.build.tarch=xtensa
+huidu_hd_wf2.build.bootloader_addr=0x0
+huidu_hd_wf2.build.target=esp32s3
+huidu_hd_wf2.build.mcu=esp32s3
+huidu_hd_wf2.build.core=esp32
+huidu_hd_wf2.build.variant=huidu_hd_wf2
+huidu_hd_wf2.build.board=HUIDU_HD_WF2
+
+huidu_hd_wf2.build.usb_mode=0
+huidu_hd_wf2.build.cdc_on_boot=1
+huidu_hd_wf2.build.msc_on_boot=0
+huidu_hd_wf2.build.dfu_on_boot=0
+huidu_hd_wf2.build.f_cpu=240000000L
+huidu_hd_wf2.build.flash_size=8MB
+huidu_hd_wf2.build.flash_freq=80m
+huidu_hd_wf2.build.flash_mode=qio
+huidu_hd_wf2.build.boot=qio
+huidu_hd_wf2.build.partitions=default
+huidu_hd_wf2.build.defines=
+huidu_hd_wf2.build.loop_core=
+huidu_hd_wf2.build.event_core=
+huidu_hd_wf2.build.flash_type=qio
+huidu_hd_wf2.build.psram_type=qspi
+huidu_hd_wf2.build.memory_type={build.flash_type}_{build.psram_type}
+
+huidu_hd_wf2.menu.FlashSize.8M=8MB (64Mb)
+huidu_hd_wf2.menu.FlashSize.8M.build.flash_size=8MB
+
+huidu_hd_wf2.menu.LoopCore.1=Core 1
+huidu_hd_wf2.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+huidu_hd_wf2.menu.LoopCore.0=Core 0
+huidu_hd_wf2.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+huidu_hd_wf2.menu.EventsCore.1=Core 1
+huidu_hd_wf2.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+huidu_hd_wf2.menu.EventsCore.0=Core 0
+huidu_hd_wf2.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+huidu_hd_wf2.menu.USBMode.hwcdc=Hardware CDC and JTAG
+huidu_hd_wf2.menu.USBMode.hwcdc.build.usb_mode=1
+huidu_hd_wf2.menu.USBMode.default=USB-OTG (TinyUSB)
+huidu_hd_wf2.menu.USBMode.default.build.usb_mode=0
+
+huidu_hd_wf2.menu.CDCOnBoot.default=Enabled
+huidu_hd_wf2.menu.CDCOnBoot.default.build.cdc_on_boot=1
+huidu_hd_wf2.menu.CDCOnBoot.cdc=Disabled
+huidu_hd_wf2.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+huidu_hd_wf2.menu.MSCOnBoot.default=Disabled
+huidu_hd_wf2.menu.MSCOnBoot.default.build.msc_on_boot=0
+huidu_hd_wf2.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+huidu_hd_wf2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+huidu_hd_wf2.menu.DFUOnBoot.default=Disabled
+huidu_hd_wf2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+huidu_hd_wf2.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+huidu_hd_wf2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+huidu_hd_wf2.menu.UploadMode.default=UART0 / Hardware CDC
+huidu_hd_wf2.menu.UploadMode.default.upload.use_1200bps_touch=false
+huidu_hd_wf2.menu.UploadMode.default.upload.wait_for_upload_port=false
+huidu_hd_wf2.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+huidu_hd_wf2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+huidu_hd_wf2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+huidu_hd_wf2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+huidu_hd_wf2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+huidu_hd_wf2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+huidu_hd_wf2.menu.PartitionScheme.large_spiffs_8MB=Large SPIFFS (1.3MB APP/5.5MiB SPIFFS)
+huidu_hd_wf2.menu.PartitionScheme.large_spiffs_8MB.build.partitions=large_spiffs_8MB
+huidu_hd_wf2.menu.PartitionScheme.large_spiffs_8MB.upload.maximum_size=1310720
+huidu_hd_wf2.menu.PartitionScheme.default_ffat_8MB=8MiB fatfs (3MB APP/1.5MB FATFS)
+huidu_hd_wf2.menu.PartitionScheme.default_ffat_8MB.build.partitions=default_ffat_8MB
+huidu_hd_wf2.menu.PartitionScheme.default_ffat_8MB.upload.maximum_size=3342336
+
+huidu_hd_wf2.menu.CPUFreq.240=240MHz (WiFi)
+huidu_hd_wf2.menu.CPUFreq.240.build.f_cpu=240000000L
+huidu_hd_wf2.menu.CPUFreq.160=160MHz (WiFi)
+huidu_hd_wf2.menu.CPUFreq.160.build.f_cpu=160000000L
+huidu_hd_wf2.menu.CPUFreq.80=80MHz (WiFi)
+huidu_hd_wf2.menu.CPUFreq.80.build.f_cpu=80000000L
+huidu_hd_wf2.menu.CPUFreq.40=40MHz
+huidu_hd_wf2.menu.CPUFreq.40.build.f_cpu=40000000L
+
+huidu_hd_wf2.menu.PSRAM.enabled=QSPI Flash fix
+huidu_hd_wf2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+huidu_hd_wf2.menu.PSRAM.enabled.build.psram_type=qspi
+
+huidu_hd_wf2.menu.FlashMode.qio=QIO 80MHz
+huidu_hd_wf2.menu.FlashMode.qio.build.flash_mode=dio
+huidu_hd_wf2.menu.FlashMode.qio.build.boot=qio
+huidu_hd_wf2.menu.FlashMode.qio.build.boot_freq=80m
+huidu_hd_wf2.menu.FlashMode.qio.build.flash_freq=80m
+huidu_hd_wf2.menu.FlashMode.qio120=QIO 120MHz
+huidu_hd_wf2.menu.FlashMode.qio120.build.flash_mode=dio
+huidu_hd_wf2.menu.FlashMode.qio120.build.boot=qio
+huidu_hd_wf2.menu.FlashMode.qio120.build.boot_freq=120m
+huidu_hd_wf2.menu.FlashMode.qio120.build.flash_freq=80m
+huidu_hd_wf2.menu.FlashMode.dio=DIO 80MHz
+huidu_hd_wf2.menu.FlashMode.dio.build.flash_mode=dio
+huidu_hd_wf2.menu.FlashMode.dio.build.boot=dio
+huidu_hd_wf2.menu.FlashMode.dio.build.boot_freq=80m
+huidu_hd_wf2.menu.FlashMode.dio.build.flash_freq=80m
+
+huidu_hd_wf2.menu.UploadSpeed.921600=921600
+huidu_hd_wf2.menu.UploadSpeed.921600.upload.speed=921600
+huidu_hd_wf2.menu.UploadSpeed.115200=115200
+huidu_hd_wf2.menu.UploadSpeed.115200.upload.speed=115200
+huidu_hd_wf2.menu.UploadSpeed.460800.linux=460800
+huidu_hd_wf2.menu.UploadSpeed.460800.macosx=460800
+huidu_hd_wf2.menu.UploadSpeed.460800.upload.speed=460800
+
+huidu_hd_wf2.menu.DebugLevel.none=None
+huidu_hd_wf2.menu.DebugLevel.none.build.code_debug=0
+huidu_hd_wf2.menu.DebugLevel.error=Error
+huidu_hd_wf2.menu.DebugLevel.error.build.code_debug=1
+huidu_hd_wf2.menu.DebugLevel.warn=Warn
+huidu_hd_wf2.menu.DebugLevel.warn.build.code_debug=2
+huidu_hd_wf2.menu.DebugLevel.info=Info
+huidu_hd_wf2.menu.DebugLevel.info.build.code_debug=3
+huidu_hd_wf2.menu.DebugLevel.debug=Debug
+huidu_hd_wf2.menu.DebugLevel.debug.build.code_debug=4
+huidu_hd_wf2.menu.DebugLevel.verbose=Verbose
+huidu_hd_wf2.menu.DebugLevel.verbose.build.code_debug=5
+
+huidu_hd_wf2.menu.EraseFlash.none=Disabled
+huidu_hd_wf2.menu.EraseFlash.none.upload.erase_cmd=
+huidu_hd_wf2.menu.EraseFlash.all=Enabled
+huidu_hd_wf2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+# Huidu HD-WF4 - esp32-s3 HUB75 driver board
+# https://www.hdwell.com/Product/index46.html
+
+huidu_hd_wf4.name=Huidu HD-WF4
+
+huidu_hd_wf4.bootloader.tool=esptool_py
+huidu_hd_wf4.bootloader.tool.default=esptool_py
+
+huidu_hd_wf4.upload.tool=esptool_py
+huidu_hd_wf4.upload.tool.default=esptool_py
+huidu_hd_wf4.upload.tool.network=esp_ota
+
+huidu_hd_wf4.upload.maximum_size=1310720
+huidu_hd_wf4.upload.maximum_data_size=327680
+huidu_hd_wf4.upload.flags=
+huidu_hd_wf4.upload.extra_flags=
+huidu_hd_wf4.upload.use_1200bps_touch=true
+huidu_hd_wf4.upload.wait_for_upload_port=true
+
+huidu_hd_wf4.serial.disableDTR=false
+huidu_hd_wf4.serial.disableRTS=false
+
+huidu_hd_wf4.build.tarch=xtensa
+huidu_hd_wf4.build.bootloader_addr=0x0
+huidu_hd_wf4.build.target=esp32s3
+huidu_hd_wf4.build.mcu=esp32s3
+huidu_hd_wf4.build.core=esp32
+huidu_hd_wf4.build.variant=huidu_hd_wf4
+huidu_hd_wf4.build.board=HUIDU_HD_WF4
+
+huidu_hd_wf4.build.usb_mode=0
+huidu_hd_wf4.build.cdc_on_boot=1
+huidu_hd_wf4.build.msc_on_boot=0
+huidu_hd_wf4.build.dfu_on_boot=0
+huidu_hd_wf4.build.f_cpu=240000000L
+huidu_hd_wf4.build.flash_size=8MB
+huidu_hd_wf4.build.flash_freq=80m
+huidu_hd_wf4.build.flash_mode=qio
+huidu_hd_wf4.build.boot=qio
+huidu_hd_wf4.build.partitions=default
+huidu_hd_wf4.build.defines=
+huidu_hd_wf4.build.loop_core=
+huidu_hd_wf4.build.event_core=
+huidu_hd_wf4.build.flash_type=qio
+huidu_hd_wf4.build.psram_type=qspi
+huidu_hd_wf4.build.memory_type={build.flash_type}_{build.psram_type}
+
+huidu_hd_wf4.menu.FlashSize.8M=8MB (64Mb)
+huidu_hd_wf4.menu.FlashSize.8M.build.flash_size=8MB
+
+huidu_hd_wf4.menu.LoopCore.1=Core 1
+huidu_hd_wf4.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+huidu_hd_wf4.menu.LoopCore.0=Core 0
+huidu_hd_wf4.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+huidu_hd_wf4.menu.EventsCore.1=Core 1
+huidu_hd_wf4.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+huidu_hd_wf4.menu.EventsCore.0=Core 0
+huidu_hd_wf4.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+huidu_hd_wf4.menu.USBMode.hwcdc=Hardware CDC and JTAG
+huidu_hd_wf4.menu.USBMode.hwcdc.build.usb_mode=1
+huidu_hd_wf4.menu.USBMode.default=USB-OTG (TinyUSB)
+huidu_hd_wf4.menu.USBMode.default.build.usb_mode=0
+
+huidu_hd_wf4.menu.CDCOnBoot.default=Enabled
+huidu_hd_wf4.menu.CDCOnBoot.default.build.cdc_on_boot=1
+huidu_hd_wf4.menu.CDCOnBoot.cdc=Disabled
+huidu_hd_wf4.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+huidu_hd_wf4.menu.MSCOnBoot.default=Disabled
+huidu_hd_wf4.menu.MSCOnBoot.default.build.msc_on_boot=0
+huidu_hd_wf4.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+huidu_hd_wf4.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+huidu_hd_wf4.menu.DFUOnBoot.default=Disabled
+huidu_hd_wf4.menu.DFUOnBoot.default.build.dfu_on_boot=0
+huidu_hd_wf4.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+huidu_hd_wf4.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+huidu_hd_wf4.menu.UploadMode.default=UART0 / Hardware CDC
+huidu_hd_wf4.menu.UploadMode.default.upload.use_1200bps_touch=false
+huidu_hd_wf4.menu.UploadMode.default.upload.wait_for_upload_port=false
+huidu_hd_wf4.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+huidu_hd_wf4.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+huidu_hd_wf4.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+huidu_hd_wf4.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+huidu_hd_wf4.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+huidu_hd_wf4.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+huidu_hd_wf4.menu.PartitionScheme.large_spiffs_8MB=Large SPIFFS (1.3MB APP/5.5MiB SPIFFS)
+huidu_hd_wf4.menu.PartitionScheme.large_spiffs_8MB.build.partitions=large_spiffs_8MB
+huidu_hd_wf4.menu.PartitionScheme.large_spiffs_8MB.upload.maximum_size=1310720
+huidu_hd_wf4.menu.PartitionScheme.default_ffat_8MB=8MiB fatfs (3MB APP/1.5MB FATFS)
+huidu_hd_wf4.menu.PartitionScheme.default_ffat_8MB.build.partitions=default_ffat_8MB
+huidu_hd_wf4.menu.PartitionScheme.default_ffat_8MB.upload.maximum_size=3342336
+
+huidu_hd_wf4.menu.CPUFreq.240=240MHz (WiFi)
+huidu_hd_wf4.menu.CPUFreq.240.build.f_cpu=240000000L
+huidu_hd_wf4.menu.CPUFreq.160=160MHz (WiFi)
+huidu_hd_wf4.menu.CPUFreq.160.build.f_cpu=160000000L
+huidu_hd_wf4.menu.CPUFreq.80=80MHz (WiFi)
+huidu_hd_wf4.menu.CPUFreq.80.build.f_cpu=80000000L
+huidu_hd_wf4.menu.CPUFreq.40=40MHz
+huidu_hd_wf4.menu.CPUFreq.40.build.f_cpu=40000000L
+
+huidu_hd_wf4.menu.PSRAM.enabled=QSPI Flash fix
+huidu_hd_wf4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+huidu_hd_wf4.menu.PSRAM.enabled.build.psram_type=qspi
+
+huidu_hd_wf4.menu.FlashMode.qio=QIO 80MHz
+huidu_hd_wf4.menu.FlashMode.qio.build.flash_mode=dio
+huidu_hd_wf4.menu.FlashMode.qio.build.boot=qio
+huidu_hd_wf4.menu.FlashMode.qio.build.boot_freq=80m
+huidu_hd_wf4.menu.FlashMode.qio.build.flash_freq=80m
+huidu_hd_wf4.menu.FlashMode.qio120=QIO 120MHz
+huidu_hd_wf4.menu.FlashMode.qio120.build.flash_mode=dio
+huidu_hd_wf4.menu.FlashMode.qio120.build.boot=qio
+huidu_hd_wf4.menu.FlashMode.qio120.build.boot_freq=120m
+huidu_hd_wf4.menu.FlashMode.qio120.build.flash_freq=80m
+huidu_hd_wf4.menu.FlashMode.dio=DIO 80MHz
+huidu_hd_wf4.menu.FlashMode.dio.build.flash_mode=dio
+huidu_hd_wf4.menu.FlashMode.dio.build.boot=dio
+huidu_hd_wf4.menu.FlashMode.dio.build.boot_freq=80m
+huidu_hd_wf4.menu.FlashMode.dio.build.flash_freq=80m
+
+huidu_hd_wf4.menu.UploadSpeed.921600=921600
+huidu_hd_wf4.menu.UploadSpeed.921600.upload.speed=921600
+huidu_hd_wf4.menu.UploadSpeed.115200=115200
+huidu_hd_wf4.menu.UploadSpeed.115200.upload.speed=115200
+huidu_hd_wf4.menu.UploadSpeed.460800.linux=460800
+huidu_hd_wf4.menu.UploadSpeed.460800.macosx=460800
+huidu_hd_wf4.menu.UploadSpeed.460800.upload.speed=460800
+
+huidu_hd_wf4.menu.DebugLevel.none=None
+huidu_hd_wf4.menu.DebugLevel.none.build.code_debug=0
+huidu_hd_wf4.menu.DebugLevel.error=Error
+huidu_hd_wf4.menu.DebugLevel.error.build.code_debug=1
+huidu_hd_wf4.menu.DebugLevel.warn=Warn
+huidu_hd_wf4.menu.DebugLevel.warn.build.code_debug=2
+huidu_hd_wf4.menu.DebugLevel.info=Info
+huidu_hd_wf4.menu.DebugLevel.info.build.code_debug=3
+huidu_hd_wf4.menu.DebugLevel.debug=Debug
+huidu_hd_wf4.menu.DebugLevel.debug.build.code_debug=4
+huidu_hd_wf4.menu.DebugLevel.verbose=Verbose
+huidu_hd_wf4.menu.DebugLevel.verbose.build.code_debug=5
+
+huidu_hd_wf4.menu.EraseFlash.none=Disabled
+huidu_hd_wf4.menu.EraseFlash.none.upload.erase_cmd=
+huidu_hd_wf4.menu.EraseFlash.all=Enabled
+huidu_hd_wf4.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
