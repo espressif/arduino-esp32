@@ -103,6 +103,8 @@ public:
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
 
+  virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
+
   void onIdentify(void (*callback)(uint16_t)) {
     _on_identify = callback;
   }
