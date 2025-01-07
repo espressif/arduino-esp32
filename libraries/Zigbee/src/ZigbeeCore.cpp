@@ -314,7 +314,20 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
         // for each endpoint in the list call the findEndpoint function if not bounded or allowed to bind multiple devices
         for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
           if (!(*it)->bound() || (*it)->epAllowMultipleBinding()) {
-            (*it)->findEndpoint(&cmd_req);
+            // Check if the device is already bound
+            bool found = false;
+            // Gte the list of devices bound to the EP
+            std::list<zb_device_params_t *> bound_devices = (*it)->getBoundDevices();
+            for (std::list<zb_device_params_t *>::iterator device = bound_devices.begin(); device != bound_devices.end(); ++device) {
+              if (((*device)->short_addr == dev_annce_params->device_short_addr) || (memcmp((*device)->ieee_addr, dev_annce_params->ieee_addr, 8) == 0)) {
+                found = true;
+                log_d("Device already bound to endpoint %d", (*it)->getEndpoint());
+                break;
+              }
+            }
+            if (!found) {
+              (*it)->findEndpoint(&cmd_req);
+            }
           }
         }
       }
