@@ -308,7 +308,6 @@ String MDNSResponder::instanceName(int idx) {
   return String(result->instance_name);
 }
 
-
 IPAddress MDNSResponder::address(int idx) {
   mdns_result_t *result = _getResult(idx);
   if (!result) {
