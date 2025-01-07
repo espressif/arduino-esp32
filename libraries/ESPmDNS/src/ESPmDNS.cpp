@@ -299,6 +299,15 @@ String MDNSResponder::hostname(int idx) {
   return String(result->hostname);
 }
 
+String MDNSResponder::instanceName(int idx) {
+  mdns_result_t *result = _getResult(idx);
+  if (!result) {
+    log_e("Result %d not found", idx);
+    return String();
+  }
+  return String(result->instance_name);
+}
+
 IPAddress MDNSResponder::address(int idx) {
   mdns_result_t *result = _getResult(idx);
   if (!result) {

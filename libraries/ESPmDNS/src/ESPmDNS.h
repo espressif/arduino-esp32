@@ -110,6 +110,7 @@ public:
   }
 
   String hostname(int idx);
+  String instanceName(int idx);
   IPAddress address(int idx);
   IPAddress addressV6(int idx);
   uint16_t port(int idx);
