@@ -8,6 +8,8 @@
 #include <Arduino.h>
 
 /* Useful defines */
+#define ZB_CMD_TIMEOUT 10000  // 10 seconds
+
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
 #define XYZ_TO_RGB(X, Y, Z, r, g, b)                                \
   {                                                                 \
