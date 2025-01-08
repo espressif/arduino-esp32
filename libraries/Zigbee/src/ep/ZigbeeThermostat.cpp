@@ -166,7 +166,7 @@ void ZigbeeThermostat::getSensorSettings() {
   esp_zb_lock_release();
 
   //Take semaphore to wait for response of all attributes
-  if (xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE) {
+  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
     log_e("Error while reading attributes");
     return;
   } else {

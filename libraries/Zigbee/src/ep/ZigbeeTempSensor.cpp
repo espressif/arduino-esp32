@@ -35,33 +35,20 @@ void ZigbeeTempSensor::setTolerance(float tolerance) {
 }
 
 void ZigbeeTempSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
-  esp_zb_zcl_reporting_info_t reporting_info = {
-    .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
-    .ep = _endpoint,
-    .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT,
-    .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-    .attr_id = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
-    .u =
-      {
-        .send_info =
-          {
-            .min_interval = min_interval,
-            .max_interval = max_interval,
-            .delta =
-              {
-                .u16 = (uint16_t)(delta * 100),  // Convert delta to ZCL uint16_t
-              },
-            .def_min_interval = min_interval,
-            .def_max_interval = max_interval,
-          },
-      },
-    .dst =
-      {
-        .profile_id = ESP_ZB_AF_HA_PROFILE_ID,
-      },
-    .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
-  };
-  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_reporting_info_t reporting_info;
+  memset(&reporting_info, 0, sizeof(esp_zb_zcl_reporting_info_t));
+  reporting_info.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV;
+  reporting_info.ep = _endpoint;
+  reporting_info.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+  reporting_info.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+  reporting_info.attr_id = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
+  reporting_info.u.send_info.min_interval = min_interval;
+  reporting_info.u.send_info.max_interval = max_interval;
+  reporting_info.u.send_info.def_min_interval = min_interval;
+  reporting_info.u.send_info.def_max_interval = max_interval;
+  reporting_info.u.send_info.delta.u16 = (uint16_t)(delta * 100);  // Convert delta to ZCL uint16_t
+  reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
+  reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC, esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
 }
@@ -136,32 +123,20 @@ void ZigbeeTempSensor::reportHumidity() {
 }
 
 void ZigbeeTempSensor::setHumidityReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
-  esp_zb_zcl_reporting_info_t reporting_info = {
-    .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
-    .ep = _endpoint,
-    .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT,
-    .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-    .attr_id = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID,
-    .u =
-      {
-        .send_info =
-          {
-            .min_interval = min_interval,
-            .max_interval = max_interval,
-            .delta =
-              {
-                .u16 = (uint16_t)(delta * 100),  // Convert delta to ZCL uint16_t
-              },
-            .def_min_interval = min_interval,
-            .def_max_interval = max_interval,
-          },
-      },
-    .dst =
-      {
-        .profile_id = ESP_ZB_AF_HA_PROFILE_ID,
-      },
-    .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
-  };
+  esp_zb_zcl_reporting_info_t reporting_info;
+  memset(&reporting_info, 0, sizeof(esp_zb_zcl_reporting_info_t));
+  reporting_info.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV;
+  reporting_info.ep = _endpoint;
+  reporting_info.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+  reporting_info.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+  reporting_info.attr_id = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID;
+  reporting_info.u.send_info.min_interval = min_interval;
+  reporting_info.u.send_info.max_interval = max_interval;
+  reporting_info.u.send_info.def_min_interval = min_interval;
+  reporting_info.u.send_info.def_max_interval = max_interval;
+  reporting_info.u.send_info.delta.u16 = (uint16_t)(delta * 100);  // Convert delta to ZCL uint16_t
+  reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
+  reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
