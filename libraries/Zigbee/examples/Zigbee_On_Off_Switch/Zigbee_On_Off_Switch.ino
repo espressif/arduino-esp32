@@ -143,12 +143,12 @@ void setup() {
       "IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n", device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4],
       device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]
     );
-    char* manufacturer = zbSwitch.readManufacturer(device->endpoint, device->short_addr, device->ieee_addr);
-    char* model = zbSwitch.readModel(device->endpoint, device->short_addr, device->ieee_addr);
-    if(manufacturer != nullptr) {
+    char *manufacturer = zbSwitch.readManufacturer(device->endpoint, device->short_addr, device->ieee_addr);
+    char *model = zbSwitch.readModel(device->endpoint, device->short_addr, device->ieee_addr);
+    if (manufacturer != nullptr) {
       Serial.printf("Light manufacturer: %s\r\n", manufacturer);
     }
-    if(model != nullptr) {
+    if (model != nullptr) {
       Serial.printf("Light model: %s\r\n", model);
     }
   }
