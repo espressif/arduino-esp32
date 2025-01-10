@@ -719,13 +719,13 @@ bool I2SClass::end() {
 #if SOC_I2S_SUPPORTS_TDM
     case I2S_MODE_TDM:
 #endif
-      if(_mclk >= 0) {
+      if (_mclk >= 0) {
         perimanClearPinBus(_mclk);
       }
-      if(_bclk >= 0) {
+      if (_bclk >= 0) {
         perimanClearPinBus(_bclk);
       }
-      if(_ws >= 0) {
+      if (_ws >= 0) {
         perimanClearPinBus(_ws);
       }
       if (_dout >= 0) {
