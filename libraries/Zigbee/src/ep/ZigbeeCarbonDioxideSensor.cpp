@@ -56,9 +56,11 @@ void ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max
   reporting_info.u.send_info.max_interval = max_interval;
   reporting_info.u.send_info.def_min_interval = min_interval;
   reporting_info.u.send_info.def_max_interval = max_interval;
-  reporting_info.u.send_info.delta.u16 = delta;
   reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
   reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  float delta_f = delta / 1000000.0f;
+  memcpy(&reporting_info.u.send_info.delta.s32, &delta_f, sizeof(float));
+
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
