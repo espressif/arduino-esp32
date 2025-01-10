@@ -12,7 +12,7 @@
 class ZigbeeColorDimmerSwitch : public ZigbeeEP {
 public:
   ZigbeeColorDimmerSwitch(uint8_t endpoint);
-  ~ZigbeeColorDimmerSwitch();
+  ~ZigbeeColorDimmerSwitch() {}
 
   // methods to control the color dimmable light
   void lightToggle();
