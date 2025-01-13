@@ -102,7 +102,7 @@ Here are some community channels where you may find information and ask for some
 - `ESP32 Forum`_: Official Espressif Forum.
 - `ESP32 Forum - Arduino`_: Official Espressif Forum for Arduino related discussions.
 - `ESP32 Forum - Hardware`_: Official Espressif Forum for Hardware related discussions.
-- `Gitter`_
+- `Arduino Core for Espressif (Discord)`_: Official Espressif Discord channel for the Arduino Core.
 - `Espressif MCUs (Discord)`_
 - `ESP32 on Reddit`_
 
@@ -153,7 +153,7 @@ Resources
 .. _ESP32 Forum: https://esp32.com
 .. _ESP32 Forum - Arduino: https://esp32.com/viewforum.php?f=19
 .. _ESP32 Forum - Hardware: https://esp32.com/viewforum.php?f=12
-.. _Gitter: https://gitter.im/espressif/arduino-esp32
+.. _Arduino Core for Espressif (Discord): https://discord.gg/8xY6e9crwv
 .. _Adafruit (Discord): https://discord.gg/adafruit
-.. _Espressif MCUs (Discord): https://discord.gg/nKxMTnkD
+.. _Espressif MCUs (Discord): https://discord.com/invite/XqnZPbF
 .. _ESP32 on Reddit: https://www.reddit.com/r/esp32
