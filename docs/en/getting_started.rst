@@ -102,6 +102,7 @@ Here are some community channels where you may find information and ask for some
 - `ESP32 Forum`_: Official Espressif Forum.
 - `ESP32 Forum - Arduino`_: Official Espressif Forum for Arduino related discussions.
 - `ESP32 Forum - Hardware`_: Official Espressif Forum for Hardware related discussions.
+- `Espressif Developer Portal`_: Official Espressif Developer Portal with tutorials, examples, workshops, and more.
 - `Arduino Core for Espressif (Discord)`_: Official Espressif Discord channel for the Arduino Core.
 - `Espressif MCUs (Discord)`_
 - `ESP32 on Reddit`_
@@ -148,6 +149,7 @@ Resources
 
 .. _Espressif Systems: https://www.espressif.com
 .. _Espressif Product Selector: https://products.espressif.com/
+.. _Espressif Developer Portal: https://developer.espressif.com/
 .. _Arduino.cc: https://www.arduino.cc/en/Main/Software
 .. _Arduino Reference: https://www.arduino.cc/reference/en/
 .. _ESP32 Forum: https://esp32.com
