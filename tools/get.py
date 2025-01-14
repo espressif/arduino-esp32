@@ -305,7 +305,7 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     else:
         raise NotImplementedError("Unsupported archive type")
 
-    if sys.platform != 'win32' and filename.endswith('zip') and isinstance(cfile, ZipFile):
+    if sys.platform != 'win32' and filename.endswith('zip') and isinstance(cfile, zipfile.ZipFile):
         for file_info in cfile.infolist():
             extracted_file = os.path.join(destination, file_info.filename)
             extracted_permissions = file_info.external_attr >> 16 & 0o777  # Extract Unix permissions
