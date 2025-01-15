@@ -241,10 +241,7 @@ void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
 }
 
 void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
-  // default values for time cluster
   time_t utc_time = 0;
-  time_t undefined_time = 0xffffffff;
-  uint8_t time_status = 0;
 
   // Check if time is set
   if (time.tm_year > 0) {
