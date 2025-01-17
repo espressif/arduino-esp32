@@ -27,8 +27,6 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   }
 }
 
-ZigbeeEP::~ZigbeeEP() {}
-
 void ZigbeeEP::setVersion(uint8_t version) {
   _ep_config.app_device_version = version;
 }
