@@ -7,12 +7,12 @@ ArduinoBLE|1 :white_check_mark: |1 :white_check_mark: |1 :x: |1 :x: |1 :x: |N/A|
 ESP32Servo|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: 
 ESPAsyncWebServer|3 :white_check_mark: 1 :x: |3 :white_check_mark: 1 :x: |3 :white_check_mark: 1 :x: |4 :x: |3 :white_check_mark: 1 :x: |3 :white_check_mark: 1 :x: |3 :white_check_mark: 1 :x: 
 EthernetESP32|2 :warning: |2 :white_check_mark: |2 :white_check_mark: |2 :white_check_mark: |2 :x: |2 :white_check_mark: |2 :white_check_mark: 
-FastLED|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :warning: |1 :warning: |1 :white_check_mark: |1 :warning: 
+FastLED|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :warning: |1 :warning: |1 :white_check_mark: |1 :white_check_mark: 
 IRremote|1 :warning: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :warning: |1 :white_check_mark: |1 :white_check_mark: 
 MFRC522|1 :x: |1 :x: |1 :x: |1 :x: |1 :x: |1 :x: |1 :x: 
 WS2812FX|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: 
 ZACwire for TSic|2 :white_check_mark: |2 :white_check_mark: |2 :white_check_mark: |2 :white_check_mark: |2 :white_check_mark: |2 :white_check_mark: |2 :white_check_mark: 
 
 
-Generated on: Jan-12-2025 04:08:51
-/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/12730263044)
+Generated on: Jan-19-2025 04:08:36
+/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/12850166378)
