@@ -35045,7 +35045,7 @@ XIAO_ESP32S3_PLUS.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 XIAO_ESP32S3_PLUS.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
 XIAO_ESP32S3_PLUS.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
 XIAO_ESP32S3_PLUS.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-XIAO_ESP32S3_PLUS.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB-tinyuf2
+XIAO_ESP32S3_PLUS.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB
 XIAO_ESP32S3_PLUS.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
 XIAO_ESP32S3_PLUS.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 
