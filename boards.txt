@@ -35211,6 +35211,184 @@ XIAO_ESP32S3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+XIAO_ESP32S3_Plus.name=XIAO_ESP32S3_PLUS
+XIAO_ESP32S3_Plus.vid.0=0x2886
+XIAO_ESP32S3_Plus.pid.0=0x0063
+XIAO_ESP32S3_Plus.vid.1=0x2886
+XIAO_ESP32S3_Plus.pid.1=0x8063
+
+XIAO_ESP32S3_Plus.bootloader.tool=esptool_py
+XIAO_ESP32S3_Plus.bootloader.tool.default=esptool_py
+
+XIAO_ESP32S3_Plus.upload.tool=esptool_py
+XIAO_ESP32S3_Plus.upload.tool.default=esptool_py
+XIAO_ESP32S3_Plus.upload.tool.network=esp_ota
+
+XIAO_ESP32S3_Plus.upload.maximum_size=1310720
+XIAO_ESP32S3_Plus.upload.maximum_data_size=327680
+XIAO_ESP32S3_Plus.upload.flags=
+XIAO_ESP32S3_Plus.upload.extra_flags=
+XIAO_ESP32S3_Plus.upload.use_1200bps_touch=false
+XIAO_ESP32S3_Plus.upload.wait_for_upload_port=false
+
+XIAO_ESP32S3_Plus.serial.disableDTR=false
+XIAO_ESP32S3_Plus.serial.disableRTS=false
+
+XIAO_ESP32S3_Plus.build.tarch=xtensa
+XIAO_ESP32S3_Plus.build.bootloader_addr=0x0
+XIAO_ESP32S3_Plus.build.target=esp32s3
+XIAO_ESP32S3_Plus.build.mcu=esp32s3
+XIAO_ESP32S3_Plus.build.core=esp32
+XIAO_ESP32S3_Plus.build.variant=XIAO_ESP32S3_Plus
+XIAO_ESP32S3_Plus.build.board=XIAO_ESP32S3_PLUS
+
+XIAO_ESP32S3_Plus.build.usb_mode=0
+XIAO_ESP32S3_Plus.build.cdc_on_boot=1
+XIAO_ESP32S3_Plus.build.msc_on_boot=0
+XIAO_ESP32S3_Plus.build.dfu_on_boot=0
+XIAO_ESP32S3_Plus.build.f_cpu=240000000L
+XIAO_ESP32S3_Plus.build.flash_size=8MB
+XIAO_ESP32S3_Plus.build.flash_freq=80m
+XIAO_ESP32S3_Plus.build.flash_mode=dio
+XIAO_ESP32S3_Plus.build.boot=qio
+XIAO_ESP32S3_Plus.build.boot_freq=80m
+XIAO_ESP32S3_Plus.build.partitions=default_8MB
+XIAO_ESP32S3_Plus.build.defines=
+XIAO_ESP32S3_Plus.build.loop_core=
+XIAO_ESP32S3_Plus.build.event_core=
+XIAO_ESP32S3_Plus.build.psram_type=qspi
+XIAO_ESP32S3_Plus.build.memory_type={build.boot}_{build.psram_type}
+
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.default=Disabled
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.default.build.copy_jtag_files=0
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.builtin=Integrated USB JTAG
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.external=FTDI Adapter
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.external.build.copy_jtag_files=1
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.bridge=ESP USB Bridge
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+XIAO_ESP32S3_Plus.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+XIAO_ESP32S3_Plus.menu.PSRAM.disabled=Disabled
+XIAO_ESP32S3_Plus.menu.PSRAM.disabled.build.defines=
+XIAO_ESP32S3_Plus.menu.PSRAM.disabled.build.psram_type=qspi
+XIAO_ESP32S3_Plus.menu.PSRAM.opi=OPI PSRAM
+XIAO_ESP32S3_Plus.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+XIAO_ESP32S3_Plus.menu.PSRAM.opi.build.psram_type=opi
+
+XIAO_ESP32S3_Plus.menu.FlashMode.qio=QIO 80MHz
+XIAO_ESP32S3_Plus.menu.FlashMode.qio.build.flash_mode=dio
+XIAO_ESP32S3_Plus.menu.FlashMode.qio.build.boot=qio
+XIAO_ESP32S3_Plus.menu.FlashMode.qio.build.boot_freq=80m
+XIAO_ESP32S3_Plus.menu.FlashMode.qio.build.flash_freq=80m
+XIAO_ESP32S3_Plus.menu.FlashMode.dio=DIO 80MHz
+XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.flash_mode=dio
+XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.boot=dio
+XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.boot_freq=80m
+XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.flash_freq=80m
+
+XIAO_ESP32S3_Plus.menu.FlashSize.8M=8MB (64Mb)
+XIAO_ESP32S3_Plus.menu.FlashSize.8M.build.flash_size=8MB
+
+XIAO_ESP32S3_Plus.menu.LoopCore.1=Core 1
+XIAO_ESP32S3_Plus.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+XIAO_ESP32S3_Plus.menu.LoopCore.0=Core 0
+XIAO_ESP32S3_Plus.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+XIAO_ESP32S3_Plus.menu.EventsCore.1=Core 1
+XIAO_ESP32S3_Plus.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+XIAO_ESP32S3_Plus.menu.EventsCore.0=Core 0
+XIAO_ESP32S3_Plus.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+XIAO_ESP32S3_Plus.menu.USBMode.hwcdc=Hardware CDC and JTAG
+XIAO_ESP32S3_Plus.menu.USBMode.hwcdc.build.usb_mode=1
+XIAO_ESP32S3_Plus.menu.USBMode.default=USB-OTG (TinyUSB)
+XIAO_ESP32S3_Plus.menu.USBMode.default.build.usb_mode=0
+
+XIAO_ESP32S3_Plus.menu.CDCOnBoot.default=Enabled
+XIAO_ESP32S3_Plus.menu.CDCOnBoot.default.build.cdc_on_boot=1
+XIAO_ESP32S3_Plus.menu.CDCOnBoot.cdc=Disabled
+XIAO_ESP32S3_Plus.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+XIAO_ESP32S3_Plus.menu.MSCOnBoot.default=Disabled
+XIAO_ESP32S3_Plus.menu.MSCOnBoot.default.build.msc_on_boot=0
+XIAO_ESP32S3_Plus.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+XIAO_ESP32S3_Plus.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+XIAO_ESP32S3_Plus.menu.DFUOnBoot.default=Disabled
+XIAO_ESP32S3_Plus.menu.DFUOnBoot.default.build.dfu_on_boot=0
+XIAO_ESP32S3_Plus.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+XIAO_ESP32S3_Plus.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+XIAO_ESP32S3_Plus.menu.UploadMode.default=UART0 / Hardware CDC
+XIAO_ESP32S3_Plus.menu.UploadMode.default.upload.use_1200bps_touch=false
+XIAO_ESP32S3_Plus.menu.UploadMode.default.upload.wait_for_upload_port=false
+XIAO_ESP32S3_Plus.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+XIAO_ESP32S3_Plus.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+XIAO_ESP32S3_Plus.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB=Default with spiffs (3MB APP/1.5MB SPIFFS)
+XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+XIAO_ESP32S3_Plus.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
+XIAO_ESP32S3_Plus.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
+XIAO_ESP32S3_Plus.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+XIAO_ESP32S3_Plus.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
+XIAO_ESP32S3_Plus.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+XIAO_ESP32S3_Plus.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB
+XIAO_ESP32S3_Plus.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+XIAO_ESP32S3_Plus.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+
+XIAO_ESP32S3_Plus.menu.CPUFreq.240=240MHz (WiFi)
+XIAO_ESP32S3_Plus.menu.CPUFreq.240.build.f_cpu=240000000L
+XIAO_ESP32S3_Plus.menu.CPUFreq.160=160MHz (WiFi)
+XIAO_ESP32S3_Plus.menu.CPUFreq.160.build.f_cpu=160000000L
+XIAO_ESP32S3_Plus.menu.CPUFreq.80=80MHz (WiFi)
+XIAO_ESP32S3_Plus.menu.CPUFreq.80.build.f_cpu=80000000L
+XIAO_ESP32S3_Plus.menu.CPUFreq.40=40MHz
+XIAO_ESP32S3_Plus.menu.CPUFreq.40.build.f_cpu=40000000L
+XIAO_ESP32S3_Plus.menu.CPUFreq.20=20MHz
+XIAO_ESP32S3_Plus.menu.CPUFreq.20.build.f_cpu=20000000L
+XIAO_ESP32S3_Plus.menu.CPUFreq.10=10MHz
+XIAO_ESP32S3_Plus.menu.CPUFreq.10.build.f_cpu=10000000L
+
+XIAO_ESP32S3_Plus.menu.UploadSpeed.921600=921600
+XIAO_ESP32S3_Plus.menu.UploadSpeed.921600.upload.speed=921600
+XIAO_ESP32S3_Plus.menu.UploadSpeed.115200=115200
+XIAO_ESP32S3_Plus.menu.UploadSpeed.115200.upload.speed=115200
+XIAO_ESP32S3_Plus.menu.UploadSpeed.256000.windows=256000
+XIAO_ESP32S3_Plus.menu.UploadSpeed.256000.upload.speed=256000
+XIAO_ESP32S3_Plus.menu.UploadSpeed.230400.windows.upload.speed=256000
+XIAO_ESP32S3_Plus.menu.UploadSpeed.230400=230400
+XIAO_ESP32S3_Plus.menu.UploadSpeed.230400.upload.speed=230400
+XIAO_ESP32S3_Plus.menu.UploadSpeed.460800.linux=460800
+XIAO_ESP32S3_Plus.menu.UploadSpeed.460800.macosx=460800
+XIAO_ESP32S3_Plus.menu.UploadSpeed.460800.upload.speed=460800
+XIAO_ESP32S3_Plus.menu.UploadSpeed.512000.windows=512000
+XIAO_ESP32S3_Plus.menu.UploadSpeed.512000.upload.speed=512000
+
+XIAO_ESP32S3_Plus.menu.DebugLevel.none=None
+XIAO_ESP32S3_Plus.menu.DebugLevel.none.build.code_debug=0
+XIAO_ESP32S3_Plus.menu.DebugLevel.error=Error
+XIAO_ESP32S3_Plus.menu.DebugLevel.error.build.code_debug=1
+XIAO_ESP32S3_Plus.menu.DebugLevel.warn=Warn
+XIAO_ESP32S3_Plus.menu.DebugLevel.warn.build.code_debug=2
+XIAO_ESP32S3_Plus.menu.DebugLevel.info=Info
+XIAO_ESP32S3_Plus.menu.DebugLevel.info.build.code_debug=3
+XIAO_ESP32S3_Plus.menu.DebugLevel.debug=Debug
+XIAO_ESP32S3_Plus.menu.DebugLevel.debug.build.code_debug=4
+XIAO_ESP32S3_Plus.menu.DebugLevel.verbose=Verbose
+XIAO_ESP32S3_Plus.menu.DebugLevel.verbose.build.code_debug=5
+
+XIAO_ESP32S3_Plus.menu.EraseFlash.none=Disabled
+XIAO_ESP32S3_Plus.menu.EraseFlash.none.upload.erase_cmd=
+XIAO_ESP32S3_Plus.menu.EraseFlash.all=Enabled
+XIAO_ESP32S3_Plus.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 connaxio_espoir.name=Connaxio's Espoir
 connaxio_espoir.vid.0=0x10C4
 connaxio_espoir.pid.0=0x8D9A
