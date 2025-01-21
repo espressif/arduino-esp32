@@ -29,8 +29,8 @@ static const uint8_t MISO1 = 12;
 static const uint8_t SCK1 = 13;
 
 static const uint8_t I2S_SCK = 39;
-static const uint8_t I2S_SD  = 38;
-static const uint8_t I2S_WS  = 40;
+static const uint8_t I2S_SD = 38;
+static const uint8_t I2S_WS = 40;
 
 static const uint8_t MTCK = 39;
 static const uint8_t MTDO = 40;
