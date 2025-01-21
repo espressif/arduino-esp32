@@ -123,7 +123,9 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
   bus_config.intr_priority = 0; // auto
   bus_config.trans_queue_depth = 0; // only valid in asynchronous transaction, which Arduino does not use
   bus_config.flags.enable_internal_pullup = 1;
+#if SOC_I2C_SUPPORT_SLEEP_RETENTION
   bus_config.flags.allow_pd = 1; // backup/restore the I2C registers before/after entering/exist sleep mode
+#endif
 
   ret = i2c_new_master_bus(&bus_config, &bus_handle);
   if (ret != ESP_OK) {
