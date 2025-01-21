@@ -63,6 +63,9 @@ extern "C" {
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/spi_flash.h"
 #define ESP_FLASH_IMAGE_BASE 0x2000  // Esp32p4 is located at 0x2000
+#elif CONFIG_IDF_TARGET_ESP32C5
+#include "esp32c5/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x0000  // Esp32c5 is located at 0x0000
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
