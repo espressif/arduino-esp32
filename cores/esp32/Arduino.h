@@ -33,13 +33,16 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "esp32-hal.h"
 #include "esp8266-compat.h"
 #include "soc/gpio_reg.h"
 
 #include "stdlib_noniso.h"
 #include "binary.h"
 #include "extra_attr.h"
+
+#include "pins_arduino.h"
+#include "io_pin_remap.h"
+#include "esp32-hal.h"
 
 #define PI         3.1415926535897932384626433832795
 #define HALF_PI    1.5707963267948966192313216916398
@@ -248,8 +251,4 @@ void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0);
 void noTone(uint8_t _pin);
 
 #endif /* __cplusplus */
-
-#include "pins_arduino.h"
-#include "io_pin_remap.h"
-
 #endif /* _ESP32_CORE_ARDUINO_H_ */

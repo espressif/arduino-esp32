@@ -8,6 +8,8 @@
 #include <Arduino.h>
 
 /* Useful defines */
+#define ZB_CMD_TIMEOUT 10000  // 10 seconds
+
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
 #define XYZ_TO_RGB(X, Y, Z, r, g, b)                                \
   {                                                                 \
@@ -53,7 +55,7 @@ typedef enum {
 class ZigbeeEP {
 public:
   ZigbeeEP(uint8_t endpoint = 10);
-  ~ZigbeeEP();
+  ~ZigbeeEP() {}
 
   // Set ep config and cluster list
   void setEpConfig(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {

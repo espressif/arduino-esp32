@@ -7,8 +7,6 @@
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 
-#define ZB_CMD_TIMEOUT 10000  // 10 seconds
-
 bool ZigbeeEP::_is_bound = false;
 bool ZigbeeEP::_allow_multiple_binding = false;
 
@@ -28,8 +26,6 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
     }
   }
 }
-
-ZigbeeEP::~ZigbeeEP() {}
 
 void ZigbeeEP::setVersion(uint8_t version) {
   _ep_config.app_device_version = version;
