@@ -29,7 +29,6 @@
 #include "driver/i2c_master.h"
 #include "esp32-hal-periman.h"
 
-
 typedef volatile struct {
   bool initialized;
   uint32_t frequency;
@@ -114,17 +113,17 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
 #if SOC_LP_I2C_SUPPORTED
   if (i2c_num >= SOC_HP_I2C_NUM) {
     bus_config.lp_source_clk = LP_I2C_SCLK_DEFAULT;
-  } else 
+  } else
 #endif
   {
     bus_config.clk_source = I2C_CLK_SRC_DEFAULT;
   }
   bus_config.glitch_ignore_cnt = 7;
-  bus_config.intr_priority = 0; // auto
-  bus_config.trans_queue_depth = 0; // only valid in asynchronous transaction, which Arduino does not use
+  bus_config.intr_priority = 0;      // auto
+  bus_config.trans_queue_depth = 0;  // only valid in asynchronous transaction, which Arduino does not use
   bus_config.flags.enable_internal_pullup = 1;
 #if SOC_I2C_SUPPORT_SLEEP_RETENTION
-  bus_config.flags.allow_pd = 1; // backup/restore the I2C registers before/after entering/exist sleep mode
+  bus_config.flags.allow_pd = 1;  // backup/restore the I2C registers before/after entering/exist sleep mode
 #endif
 
   ret = i2c_new_master_bus(&bus_config, &bus_handle);
@@ -208,7 +207,7 @@ static esp_err_t i2cAddDeviceIfNeeded(uint8_t i2c_num, uint16_t address) {
     i2c_master_dev_handle_t dev_handle = NULL;
     i2c_device_config_t dev_config;
     memset(&dev_config, 0, sizeof(i2c_device_config_t));
-    dev_config.dev_addr_length = I2C_ADDR_BIT_LEN_7; // Arduino supports only 7bit addresses
+    dev_config.dev_addr_length = I2C_ADDR_BIT_LEN_7;  // Arduino supports only 7bit addresses
     dev_config.device_address = address;
     dev_config.scl_speed_hz = bus[i2c_num].frequency;
     dev_config.scl_wait_us = 0;
