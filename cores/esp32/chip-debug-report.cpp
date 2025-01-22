@@ -88,6 +88,11 @@ static void printChipInfo(void) {
     case CHIP_ESP32C6: chip_report_printf("ESP32-C6\n"); break;
     case CHIP_ESP32H2: chip_report_printf("ESP32-H2\n"); break;
     case CHIP_ESP32P4: chip_report_printf("ESP32-P4\n"); break;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+    case CHIP_ESP32C5: chip_report_printf("ESP32-C5\n"); break;
+    case CHIP_ESP32C61: chip_report_printf("ESP32-C61\n"); break;
+    case CHIP_ESP32H21: chip_report_printf("ESP32-H21\n"); break;
+#endif
     default:           chip_report_printf("Unknown %d\n", info.model); break;
   }
   printPkgVersion();
