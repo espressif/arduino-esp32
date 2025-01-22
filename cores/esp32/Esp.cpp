@@ -21,6 +21,7 @@
 #include "Esp.h"
 #include "esp_sleep.h"
 #include "spi_flash_mmap.h"
+#include "esp_idf_version.h"
 #include <memory>
 #include <soc/soc.h>
 #include <esp_partition.h>
@@ -304,6 +305,11 @@ const char *EspClass::getChipModel(void) {
     case CHIP_ESP32C6: return "ESP32-C6";
     case CHIP_ESP32H2: return "ESP32-H2";
     case CHIP_ESP32P4: return "ESP32-P4";
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+    case CHIP_ESP32C5: return "ESP32-C5";
+    case CHIP_ESP32C61: return "ESP32-C61";
+    case CHIP_ESP32H21: return "ESP32-H21";
+#endif
     default:           return "UNKNOWN";
   }
 #endif
