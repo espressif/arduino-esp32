@@ -267,6 +267,12 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
     (conf.source == SOC_CPU_CLK_SRC_PLL) ? "PLL" : ((conf.source == SOC_CPU_CLK_SRC_APLL) ? "APLL" : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL" : "8M")),
     conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
   );
+#elif defined(CONFIG_IDF_TARGET_ESP32C5)
+  log_d(
+    "%s: %u / %u = %u Mhz, APB: %u Hz",
+    (conf.source == SOC_CPU_CLK_SRC_PLL_F240M || conf.source == SOC_CPU_CLK_SRC_PLL_F160M) ? "PLL" : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL" : "8M"),
+    conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
+  );
 #else
   log_d(
     "%s: %u / %u = %u Mhz, APB: %u Hz", (conf.source == SOC_CPU_CLK_SRC_PLL) ? "PLL" : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL" : "17.5M"),
