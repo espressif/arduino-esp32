@@ -186,7 +186,7 @@ esp32c5.build.mcu=esp32c5
 esp32c5.build.core=esp32
 esp32c5.build.variant=esp32c5
 esp32c5.build.board=ESP32C5_DEV
-esp32c5.build.bootloader_addr=0x0
+esp32c5.build.bootloader_addr=0x2000
 
 esp32c5.build.cdc_on_boot=0
 esp32c5.build.f_cpu=240000000L
