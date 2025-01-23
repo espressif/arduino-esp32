@@ -177,7 +177,9 @@ bool disableCore1WDT() {
   TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCore(1);
   if (idle_1 == NULL || esp_task_wdt_status(idle_1) || esp_task_wdt_delete(idle_1) != ESP_OK) {
     log_e("Failed to remove Core 1 IDLE task from WDT");
+    return false;
   }
+  return true;
 }
 #endif
 
