@@ -95,9 +95,9 @@ void LittleFSFS::end() {
 }
 
 bool LittleFSFS::format() {
-  disableCore0WDT();
+  bool wdt_active = disableCore0WDT();
   esp_err_t err = esp_littlefs_format(partitionLabel_);
-  enableCore0WDT();
+  if (wdt_active) enableCore0WDT();
   if (err) {
     log_e("Formatting LittleFS failed! Error: %d", err);
     return false;
