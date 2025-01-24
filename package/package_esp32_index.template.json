@@ -42,7 +42,7 @@
             {
               "packager": "esp32",
               "name": "esp32-arduino-libs",
-              "version": "idf-master-d30e4d99-v1"
+              "version": "idf-master-5950be0d-v1"
             },
             {
               "packager": "esp32",
@@ -95,63 +95,63 @@
       "tools": [
         {
           "name": "esp32-arduino-libs",
-          "version": "idf-master-d30e4d99-v1",
+          "version": "idf-master-5950be0d-v1",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "checksum": "SHA-256:cc170c8b1415dc02b0f4e4ec13c587d49a3beaf50e60051f802b5697240f95d7",
-              "size": "408571055"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "checksum": "SHA-256:6124d3cc98cc2b379dafb6088c4457edf5ccc92c7b0314844d65920d1da6eae9",
+              "size": "408679818"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "checksum": "SHA-256:cc170c8b1415dc02b0f4e4ec13c587d49a3beaf50e60051f802b5697240f95d7",
-              "size": "408571055"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "checksum": "SHA-256:6124d3cc98cc2b379dafb6088c4457edf5ccc92c7b0314844d65920d1da6eae9",
+              "size": "408679818"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "checksum": "SHA-256:cc170c8b1415dc02b0f4e4ec13c587d49a3beaf50e60051f802b5697240f95d7",
-              "size": "408571055"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "checksum": "SHA-256:6124d3cc98cc2b379dafb6088c4457edf5ccc92c7b0314844d65920d1da6eae9",
+              "size": "408679818"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "checksum": "SHA-256:cc170c8b1415dc02b0f4e4ec13c587d49a3beaf50e60051f802b5697240f95d7",
-              "size": "408571055"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "checksum": "SHA-256:6124d3cc98cc2b379dafb6088c4457edf5ccc92c7b0314844d65920d1da6eae9",
+              "size": "408679818"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "checksum": "SHA-256:cc170c8b1415dc02b0f4e4ec13c587d49a3beaf50e60051f802b5697240f95d7",
-              "size": "408571055"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "checksum": "SHA-256:6124d3cc98cc2b379dafb6088c4457edf5ccc92c7b0314844d65920d1da6eae9",
+              "size": "408679818"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "checksum": "SHA-256:cc170c8b1415dc02b0f4e4ec13c587d49a3beaf50e60051f802b5697240f95d7",
-              "size": "408571055"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "checksum": "SHA-256:6124d3cc98cc2b379dafb6088c4457edf5ccc92c7b0314844d65920d1da6eae9",
+              "size": "408679818"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "checksum": "SHA-256:cc170c8b1415dc02b0f4e4ec13c587d49a3beaf50e60051f802b5697240f95d7",
-              "size": "408571055"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "checksum": "SHA-256:6124d3cc98cc2b379dafb6088c4457edf5ccc92c7b0314844d65920d1da6eae9",
+              "size": "408679818"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-master-d30e4d99-v1.zip",
-              "checksum": "SHA-256:cc170c8b1415dc02b0f4e4ec13c587d49a3beaf50e60051f802b5697240f95d7",
-              "size": "408571055"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-master/esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-master-5950be0d-v1.zip",
+              "checksum": "SHA-256:6124d3cc98cc2b379dafb6088c4457edf5ccc92c7b0314844d65920d1da6eae9",
+              "size": "408679818"
             }
           ]
         },
