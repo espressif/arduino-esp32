@@ -134,22 +134,6 @@ static esp_err_t zb_configure_report_resp_handler(const esp_zb_zcl_cmd_config_re
   return ESP_OK;
 }
 
-static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_message_t *message) {
-  if (!message) {
-    log_e("Empty message");
-    return ESP_FAIL;
-  }
-  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Received message: error status(%d)", message->info.status);
-    return ESP_ERR_INVALID_ARG;
-  }
-  log_v(
-    "Received default response: from address(0x%x), src_endpoint(%d) to dst_endpoint(%d), cluster(0x%x) with status 0x%x",
-    message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->status_code
-  );
-  return ESP_OK;
-}
-
 static esp_err_t zb_cmd_ias_zone_status_change_handler(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {
   if (!message) {
     log_e("Empty message");
@@ -169,6 +153,22 @@ static esp_err_t zb_cmd_ias_zone_status_change_handler(const esp_zb_zcl_ias_zone
       (*it)->zbIASZoneStatusChangeNotification(message);
     }
   }
+  return ESP_OK;
+}
+
+static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received message: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+  log_v(
+    "Received default response: from address(0x%x), src_endpoint(%d) to dst_endpoint(%d), cluster(0x%x) with status 0x%x",
+    message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->status_code
+  );
   return ESP_OK;
 }
 
