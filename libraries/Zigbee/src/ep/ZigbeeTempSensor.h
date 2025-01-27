@@ -12,7 +12,7 @@
 class ZigbeeTempSensor : public ZigbeeEP {
 public:
   ZigbeeTempSensor(uint8_t endpoint);
-  ~ZigbeeTempSensor();
+  ~ZigbeeTempSensor() {}
 
   // Set the temperature value in 0,01°C
   void setTemperature(float value);

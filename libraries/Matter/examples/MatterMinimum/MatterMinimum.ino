@@ -55,6 +55,8 @@ bool onOffLightCallback(bool state) {
 }
 
 void setup() {
+  Serial.begin(115200);
+
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
   pinMode(buttonPin, INPUT_PULLUP);
   // Initialize the LED GPIO
@@ -63,9 +65,14 @@ void setup() {
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
   while (WiFi.status() != WL_CONNECTED) {
+    Serial.print('.');
     delay(500);
   }
+  Serial.println();
 
   // Initialize at least one Matter EndPoint
   OnOffLight.begin();
@@ -77,11 +84,11 @@ void setup() {
   Matter.begin();
 
   if (!Matter.isDeviceCommissioned()) {
-    log_i("Matter Node is not commissioned yet.");
-    log_i("Initiate the device discovery in your Matter environment.");
-    log_i("Commission it to your Matter hub with the manual pairing code or QR code");
-    log_i("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    log_i("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
+    Serial.println("Matter Node is not commissioned yet.");
+    Serial.println("Initiate the device discovery in your Matter environment.");
+    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
+    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
+    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
   }
 }
 

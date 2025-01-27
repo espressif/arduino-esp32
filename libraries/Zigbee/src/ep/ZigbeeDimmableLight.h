@@ -67,7 +67,7 @@ typedef struct zigbee_dimmable_light_cfg_s {
 class ZigbeeDimmableLight : public ZigbeeEP {
 public:
   ZigbeeDimmableLight(uint8_t endpoint);
-  ~ZigbeeDimmableLight();
+  ~ZigbeeDimmableLight() {}
 
   void onLightChange(void (*callback)(bool, uint8_t)) {
     _on_light_change = callback;
