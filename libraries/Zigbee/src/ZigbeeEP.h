@@ -95,14 +95,13 @@ public:
   void reportBatteryPercentage();
 
   // Set time
-  void addTimeCluster(tm time = {0}, int32_t gmt_offset = 0); // gmt offset in seconds
+  void addTimeCluster(tm time = {0}, int32_t gmt_offset = 0);  // gmt offset in seconds
   void setTime(tm time);
   void setTimezone(int32_t gmt_offset);
 
   // Get time from Coordinator or specific endpoint (blocking until response)
   struct tm getTime(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {0});
-  int32_t getTimezone(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {0}); // gmt offset in seconds
-
+  int32_t getTimezone(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {0});  // gmt offset in seconds
 
   bool epAllowMultipleBinding() {
     return _allow_multiple_binding;
@@ -116,7 +115,7 @@ public:
   virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
-  virtual void zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute);   //already implemented
+  virtual void zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
 
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
 

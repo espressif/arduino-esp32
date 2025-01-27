@@ -256,7 +256,6 @@ void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   // Add time clusters to cluster list
   esp_zb_cluster_list_add_time_cluster(_cluster_list, time_cluster_server, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_zb_cluster_list_add_time_cluster(_cluster_list, time_cluster_client, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
-
 }
 
 void ZigbeeEP::setTime(tm time) {
@@ -356,8 +355,7 @@ void ZigbeeEP::zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute) {
     log_v("Time: %lld", *(uint32_t *)attribute->data.value);
     _read_time = *(uint32_t *)attribute->data.value;
     xSemaphoreGive(lock);
-  }
-  else if (attribute->id == ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S32) {
+  } else if (attribute->id == ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S32) {
     log_v("Timezone attribute received");
     log_v("Timezone: %d", *(int32_t *)attribute->data.value);
     _read_timezone = *(int32_t *)attribute->data.value;

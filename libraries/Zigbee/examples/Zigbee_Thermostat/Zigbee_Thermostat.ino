@@ -45,7 +45,7 @@ float sensor_max_temp;
 float sensor_min_temp;
 float sensor_tolerance;
 
-struct tm timeinfo = {}; // Time structure for Time cluster
+struct tm timeinfo = {};  // Time structure for Time cluster
 
 /****************** Temperature sensor handling *******************/
 void recieveSensorTemp(float temperature) {
@@ -75,16 +75,16 @@ void setup() {
 
   //Optional Time cluster configuration
   //example time January 13, 2025 13:30:30 CET
-  timeinfo.tm_year = 2025 - 1900; // = 2025
-  timeinfo.tm_mon = 0; // January
-  timeinfo.tm_mday = 13; // 13th
-  timeinfo.tm_hour = 12; // 12 hours - 1 hour (CET)
-  timeinfo.tm_min = 30; // 30 minutes
-  timeinfo.tm_sec = 30; // 30 seconds
+  timeinfo.tm_year = 2025 - 1900;  // = 2025
+  timeinfo.tm_mon = 0;             // January
+  timeinfo.tm_mday = 13;           // 13th
+  timeinfo.tm_hour = 12;           // 12 hours - 1 hour (CET)
+  timeinfo.tm_min = 30;            // 30 minutes
+  timeinfo.tm_sec = 30;            // 30 seconds
   timeinfo.tm_isdst = -1;
 
   // Set time and gmt offset (timezone in seconds -> CET = +3600 seconds)
-  zbThermostat.addTimeCluster(timeinfo, 3600); 
+  zbThermostat.addTimeCluster(timeinfo, 3600);
 
   //Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbThermostat);
