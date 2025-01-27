@@ -105,6 +105,13 @@ public:
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
 
+  virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
+
+  virtual void addBoundDevice(zb_device_params_t *device) {
+    _bound_devices.push_back(device);
+    _is_bound = true;
+  }
+
   void onIdentify(void (*callback)(uint16_t)) {
     _on_identify = callback;
   }
@@ -125,10 +132,6 @@ protected:
   SemaphoreHandle_t lock;
   zb_power_source_t _power_source;
 
-  void addBoundDevice(zb_device_params_t *device) {
-    _bound_devices.push_back(device);
-    _is_bound = true;
-  }
   friend class ZigbeeCore;
 };
 
