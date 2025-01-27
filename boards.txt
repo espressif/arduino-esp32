@@ -210,6 +210,11 @@ esp32c5.menu.JTAGAdapter.bridge=ESP USB Bridge
 esp32c5.menu.JTAGAdapter.bridge.build.openocdscript=esp32c5-bridge.cfg
 esp32c5.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
+esp32c5.menu.PSRAM.disabled=Disabled
+esp32c5.menu.PSRAM.disabled.build.defines=
+esp32c5.menu.PSRAM.enabled=Enabled
+esp32c5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
 esp32c5.menu.CDCOnBoot.default=Disabled
 esp32c5.menu.CDCOnBoot.default.build.cdc_on_boot=0
 esp32c5.menu.CDCOnBoot.cdc=Enabled

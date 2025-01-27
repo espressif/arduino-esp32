@@ -67,6 +67,9 @@ static void printPkgVersion(void) {
 #elif CONFIG_IDF_TARGET_ESP32P4
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SYS_2_REG, EFUSE_PKG_VERSION);
   chip_report_printf("%lu", pkg_ver);
+#elif CONFIG_IDF_TARGET_ESP32C5
+  uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SYS2_REG, EFUSE_PKG_VERSION);
+  chip_report_printf("%lu", pkg_ver);
 #else
   chip_report_printf("Unknown");
 #endif
