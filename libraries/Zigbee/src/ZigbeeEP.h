@@ -106,6 +106,7 @@ public:
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
 
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
+  virtual void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {};
 
   virtual void addBoundDevice(zb_device_params_t *device) {
     _bound_devices.push_back(device);
