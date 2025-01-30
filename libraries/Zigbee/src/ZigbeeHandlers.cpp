@@ -105,6 +105,8 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_re
         if (variable->status == ESP_ZB_ZCL_STATUS_SUCCESS) {
           if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_BASIC) {
             (*it)->zbReadBasicCluster(&variable->attribute);  //method zbReadBasicCluster implemented in the common EP class
+          } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_TIME) {
+            (*it)->zbReadTimeCluster(&variable->attribute);  //method zbReadTimeCluster implemented in the common EP class
           } else {
             (*it)->zbAttributeRead(message->info.cluster, &variable->attribute);  //method zbAttributeRead must be implemented in specific EP class
           }
