@@ -1,6 +1,6 @@
 # Arduino-ESP32 Zigbee Contact Switch Example
 
-This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) contact switch (IAS Zone), 
+This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) contact switch (IAS Zone),
 that can be used for example as window/door sensor having 2 states - closed/open.
 
 # Supported Targets

@@ -25,7 +25,9 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
     case ESP_ZB_CORE_CMD_IAS_ZONE_ZONE_STATUS_CHANGE_NOT_ID:
       ret = zb_cmd_ias_zone_status_change_handler((esp_zb_zcl_ias_zone_status_change_notification_message_t *)message);
       break;
-    case ESP_ZB_CORE_IAS_ZONE_ENROLL_RESPONSE_VALUE_CB_ID: ret = zb_cmd_ias_zone_enroll_response_handler((esp_zb_zcl_ias_zone_enroll_response_message_t *)message); break;
+    case ESP_ZB_CORE_IAS_ZONE_ENROLL_RESPONSE_VALUE_CB_ID:
+      ret = zb_cmd_ias_zone_enroll_response_handler((esp_zb_zcl_ias_zone_enroll_response_message_t *)message);
+      break;
     case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID: ret = zb_cmd_default_resp_handler((esp_zb_zcl_cmd_default_resp_message_t *)message); break;
     default:                                 log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
   }

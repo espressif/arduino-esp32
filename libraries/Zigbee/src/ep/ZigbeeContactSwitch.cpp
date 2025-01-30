@@ -31,7 +31,7 @@ void ZigbeeContactSwitch::setIASClientEndpoint(uint8_t ep_number) {
 
 void ZigbeeContactSwitch::setClosed() {
   log_v("Setting Contact switch to closed");
-  uint8_t closed = 0; // ALARM1 = 0, ALARM2 = 0
+  uint8_t closed = 0;  // ALARM1 = 0, ALARM2 = 0
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &closed, false
@@ -43,11 +43,9 @@ void ZigbeeContactSwitch::setClosed() {
 
 void ZigbeeContactSwitch::setOpen() {
   log_v("Setting Contact switch to open");
-  uint8_t open = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2; // ALARM1 = 1, ALARM2 = 1
+  uint8_t open = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2;  // ALARM1 = 1, ALARM2 = 1
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false
-  );
+  esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false);
   esp_zb_lock_release();
   _zone_status = open;
   report();
@@ -59,7 +57,7 @@ void ZigbeeContactSwitch::report() {
   esp_zb_zcl_ias_zone_status_change_notif_cmd_t status_change_notif_cmd;
   status_change_notif_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
   status_change_notif_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  status_change_notif_cmd.zcl_basic_cmd.dst_endpoint = _ias_cie_endpoint; //default is 1
+  status_change_notif_cmd.zcl_basic_cmd.dst_endpoint = _ias_cie_endpoint;  //default is 1
   memcpy(status_change_notif_cmd.zcl_basic_cmd.dst_addr_u.addr_long, _ias_cie_addr, sizeof(esp_zb_ieee_addr_t));
 
   status_change_notif_cmd.zone_status = _zone_status;
@@ -76,14 +74,20 @@ void ZigbeeContactSwitch::report() {
 void ZigbeeContactSwitch::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE) {
     log_v("IAS Zone Enroll Response: zone id(%d), status(%d)", message->zone_id, message->response_code);
-    if(message->response_code == ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS) {
+    if (message->response_code == ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS) {
       log_v("IAS Zone Enroll Response: success");
       esp_zb_lock_acquire(portMAX_DELAY);
-      memcpy(_ias_cie_addr, (*(esp_zb_ieee_addr_t *)esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID)->data_p),sizeof(esp_zb_ieee_addr_t));
+      memcpy(
+        _ias_cie_addr,
+        (*(esp_zb_ieee_addr_t *)
+            esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID)
+              ->data_p),
+        sizeof(esp_zb_ieee_addr_t)
+      );
       esp_zb_lock_release();
       _zone_id = message->zone_id;
-    } 
-    
+    }
+
   } else {
     log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
   }
