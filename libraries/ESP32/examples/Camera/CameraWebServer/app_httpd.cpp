@@ -216,8 +216,12 @@ static esp_err_t stream_handler(httpd_req_t *req) {
   size_t _jpg_buf_len = 0;
   uint8_t *_jpg_buf = NULL;
   char *part_buf[128];
+
   static int64_t last_frame = 0;
-  
+  if (!last_frame) {
+    last_frame = esp_timer_get_time();
+  }
+
   res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
   if (res != ESP_OK) {
     return res;
@@ -232,11 +236,6 @@ static esp_err_t stream_handler(httpd_req_t *req) {
 #endif
 
   while (true) {
-    
-    if (!last_frame) {
-    last_frame = esp_timer_get_time();
-    }
-
     fb = esp_camera_fb_get();
     if (!fb) {
       log_e("Camera capture failed");
