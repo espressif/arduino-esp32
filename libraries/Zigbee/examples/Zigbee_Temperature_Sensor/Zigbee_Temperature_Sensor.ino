@@ -36,6 +36,11 @@
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
 uint8_t button = BOOT_PIN;
 
+// Optional Time cluster variables
+struct tm timeinfo;
+struct tm *localTime;
+int32_t timezone;
+
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
 /************************ Temp sensor *****************************/
@@ -66,6 +71,9 @@ void setup() {
   // Optional: Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
 
+  // Optional: Time cluster configuration (default params, as this device will revieve time from coordinator)
+  zbTempSensor.addTimeCluster();
+
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
@@ -84,6 +92,19 @@ void setup() {
     delay(100);
   }
   Serial.println();
+
+  // Optional: If time cluster is added, time can be read from the coordinator
+  timeinfo = zbTempSensor.getTime();
+  timezone = zbTempSensor.getTimezone();
+
+  Serial.println("UTC time:");
+  Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+
+  time_t local = mktime(&timeinfo) + timezone;
+  localTime = localtime(&local);
+
+  Serial.println("Local time with timezone:");
+  Serial.println(localTime, "%A, %B %d %Y %H:%M:%S");
 
   // Start Temperature sensor reading task
   xTaskCreate(temp_sensor_value_update, "temp_sensor_update", 2048, NULL, 10, NULL);
