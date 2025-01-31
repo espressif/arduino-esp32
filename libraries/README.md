@@ -88,6 +88,9 @@ arduino-esp32 includes libraries for Arduino compatibility along with some objec
 ### SPIFFS
   SPI Flash Filesystem (see [spiffs-plugin](https://github.com/me-no-dev/arduino-esp32fs-plugin) to upload to device)
 
+### SR
+  ESP-SR helps users build AI speech solutions based on ESP32-S3 or ESP32-P4 chips
+
 ### Ticker
   A timer to call functions on an interval
 
