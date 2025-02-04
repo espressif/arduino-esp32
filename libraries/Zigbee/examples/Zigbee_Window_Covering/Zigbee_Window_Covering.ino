@@ -121,7 +121,7 @@ void loop() {
         delay(30000);
       }
     }
-    // Manual lift controll simulation by pressing button
+    // Manual lift control simulation by pressing button
     manualControl();
   }
   delay(500);
@@ -160,9 +160,9 @@ void goToLiftPercentage(uint8_t liftPercentage) {
   // Our simulated cover updates instantly!
   currentLift = (liftPercentage * MAX_LIFT) / 100;
   currentLiftPercentage = liftPercentage;
-  Serial.printf("New requsted lift from Zigbee: %d (%d)\n", currentLift, liftPercentage);
+  Serial.printf("New requested lift from Zigbee: %d (%d)\n", currentLift, liftPercentage);
 
-  //Update the current position
+  // Update the current position
   zbCovering.setLiftPercentage(currentLiftPercentage);  //or setLiftPosition()
 }
 
@@ -173,9 +173,9 @@ void goToTiltPercentage(uint8_t tiltPercentage) {
   // Our simulated cover updates instantly!
   currentTilt = (tiltPercentage * MAX_TILT) / 100;
   currentTiltPercentage = tiltPercentage;
-  Serial.printf("New requsted tilt from Zigbee: %d (%d)\n", currentTilt, tiltPercentage);
+  Serial.printf("New requested tilt from Zigbee: %d (%d)\n", currentTilt, tiltPercentage);
 
-  //Update the current position
+  // Update the current position
   zbCovering.setTiltPercentage(currentTiltPercentage);  //or setTiltPosition()
 }
 

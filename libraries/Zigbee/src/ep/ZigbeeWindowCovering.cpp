@@ -71,7 +71,7 @@ ZigbeeWindowCovering::ZigbeeWindowCovering(uint8_t endpoint) : ZigbeeEP(endpoint
   };
 }
 
-// Confiuration methods for window covering
+// Configuration methods for window covering
 void ZigbeeWindowCovering::setCoveringType(ZigbeeWindowCoveringType covering_type) {
   esp_zb_attribute_list_t *window_covering_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
