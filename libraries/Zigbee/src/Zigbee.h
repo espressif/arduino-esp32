@@ -20,3 +20,4 @@
 #include "ep/ZigbeeCarbonDioxideSensor.h"
 #include "ep/ZigbeeContactSwitch.h"
 #include "ep/ZigbeeDoorWindowHandle.h"
+#include "ep/ZigbeeWindowCovering.h"

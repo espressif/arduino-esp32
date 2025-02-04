@@ -292,6 +292,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeCarbonDioxideSensor.cpp
   libraries/Zigbee/src/ep/ZigbeeContactSwitch.cpp
   libraries/Zigbee/src/ep/ZigbeeDoorWindowHandle.cpp
+  libraries/Zigbee/src/ep/ZigbeeWindowCovering.cpp
   )
 
 set(ARDUINO_LIBRARY_BLE_SRCS
