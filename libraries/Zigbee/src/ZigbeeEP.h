@@ -8,6 +8,8 @@
 #include <Arduino.h>
 
 /* Useful defines */
+#define ZB_CMD_TIMEOUT 10000  // 10 seconds
+
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
 #define XYZ_TO_RGB(X, Y, Z, r, g, b)                                \
   {                                                                 \
@@ -53,7 +55,7 @@ typedef enum {
 class ZigbeeEP {
 public:
   ZigbeeEP(uint8_t endpoint = 10);
-  ~ZigbeeEP();
+  ~ZigbeeEP() {}
 
   // Set ep config and cluster list
   void setEpConfig(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {
@@ -80,15 +82,26 @@ public:
     _allow_multiple_binding = bind;
   }
 
-  // Manufacturer name and model implemented
+  // Set Manufacturer name and model
   void setManufacturerAndModel(const char *name, const char *model);
-  void setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
-  void setBatteryPercentage(uint8_t percentage);
-  void reportBatteryPercentage();
 
   // Methods to read manufacturer and model name from selected endpoint and short address
   char *readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
   char *readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
+
+  // Set Power source and battery percentage for battery powered devices
+  void setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
+  void setBatteryPercentage(uint8_t percentage);
+  void reportBatteryPercentage();
+
+  // Set time
+  void addTimeCluster(tm time = {0}, int32_t gmt_offset = 0);  // gmt offset in seconds
+  void setTime(tm time);
+  void setTimezone(int32_t gmt_offset);
+
+  // Get time from Coordinator or specific endpoint (blocking until response)
+  struct tm getTime(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {0});
+  int32_t getTimezone(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {0});  // gmt offset in seconds
 
   bool epAllowMultipleBinding() {
     return _allow_multiple_binding;
@@ -102,6 +115,14 @@ public:
   virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
+  virtual void zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
+
+  virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
+
+  virtual void addBoundDevice(zb_device_params_t *device) {
+    _bound_devices.push_back(device);
+    _is_bound = true;
+  }
 
   void onIdentify(void (*callback)(uint16_t)) {
     _on_identify = callback;
@@ -111,6 +132,8 @@ private:
   char *_read_manufacturer;
   char *_read_model;
   void (*_on_identify)(uint16_t time);
+  time_t _read_time;
+  int32_t _read_timezone;
 
 protected:
   uint8_t _endpoint;
@@ -123,10 +146,6 @@ protected:
   SemaphoreHandle_t lock;
   zb_power_source_t _power_source;
 
-  void addBoundDevice(zb_device_params_t *device) {
-    _bound_devices.push_back(device);
-    _is_bound = true;
-  }
   friend class ZigbeeCore;
 };
 

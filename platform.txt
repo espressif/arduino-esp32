@@ -1,5 +1,5 @@
 name=ESP32 Arduino
-version=3.1.0
+version=3.1.1
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
@@ -185,8 +185,8 @@ recipe.output.save_file={build.project_name}.{build.variant}.bin
 
 ## Compute size
 recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build.project_name}.elf"
-recipe.size.regex=^(?:\.iram0\.text|\.iram0\.vectors|\.dram0\.data|\.flash\.text|\.flash\.rodata|)\s+([0-9]+).*
-recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss|\.noinit)\s+([0-9]+).*
+recipe.size.regex=^(?:\.iram0\.text|\.iram0\.vectors|\.dram0\.data|\.dram1\.data|\.flash\.text|\.flash\.rodata|\.flash\.appdesc|\.flash\.init_array|\.eh_frame|)\s+([0-9]+).*
+recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss|\.dram1\.data|\.dram1\.bss|\.noinit)\s+([0-9]+).*
 
 ## Required discoveries and monitors
 ## ---------------------------------

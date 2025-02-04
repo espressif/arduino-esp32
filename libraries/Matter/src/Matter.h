@@ -32,6 +32,7 @@
 #include <MatterEndpoints/MatterPressureSensor.h>
 #include <MatterEndpoints/MatterOccupancySensor.h>
 #include <MatterEndpoints/MatterOnOffPlugin.h>
+#include <MatterEndpoints/MatterThermostat.h>
 
 using namespace esp_matter;
 
@@ -70,6 +71,7 @@ public:
   friend class MatterPressureSensor;
   friend class MatterOccupancySensor;
   friend class MatterOnOffPlugin;
+  friend class MatterThermostat;
 
 protected:
   static void _init();

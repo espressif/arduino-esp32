@@ -9,7 +9,6 @@ esp_zb_cluster_list_t *zigbee_pressure_sensor_clusters_create(zigbee_pressure_se
   esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_zb_cluster_list_add_pressure_meas_cluster(cluster_list, esp_zb_pressure_meas_cluster_create(pressure_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   return cluster_list;
 }
 
@@ -38,34 +37,20 @@ void ZigbeePressureSensor::setTolerance(uint16_t tolerance) {
 }
 
 void ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
-  // clang-format off
-  esp_zb_zcl_reporting_info_t reporting_info = {
-    .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
-    .ep = _endpoint,
-    .cluster_id = ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT,
-    .cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-    .attr_id = ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID,
-    .u =
-      {
-        .send_info =
-          {
-            .min_interval = min_interval,
-            .max_interval = max_interval,
-            .delta =
-              {
-                .u16 = delta, // x hPa
-              },
-            .def_min_interval = min_interval,
-            .def_max_interval = max_interval,
-          },
-      },
-    .dst =
-      {
-        .profile_id = ESP_ZB_AF_HA_PROFILE_ID,
-      },
-    .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
-  };
-  // clang-format on
+  esp_zb_zcl_reporting_info_t reporting_info;
+  memset(&reporting_info, 0, sizeof(esp_zb_zcl_reporting_info_t));
+  reporting_info.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV;
+  reporting_info.ep = _endpoint;
+  reporting_info.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT;
+  reporting_info.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
+  reporting_info.attr_id = ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID;
+  reporting_info.u.send_info.min_interval = min_interval;
+  reporting_info.u.send_info.max_interval = max_interval;
+  reporting_info.u.send_info.def_min_interval = min_interval;
+  reporting_info.u.send_info.def_max_interval = max_interval;
+  reporting_info.u.send_info.delta.u16 = delta;  // x hPa
+  reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
+  reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();

@@ -86,7 +86,7 @@ private:
 
 public:
   ZigbeeCore();
-  ~ZigbeeCore();
+  ~ZigbeeCore() {}
 
   std::list<ZigbeeEP *> ep_objects;
 

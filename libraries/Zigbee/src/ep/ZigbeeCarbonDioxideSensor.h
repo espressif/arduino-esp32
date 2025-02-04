@@ -39,7 +39,7 @@ typedef struct zigbee_carbon_dioxide_sensor_cfg_s {
 class ZigbeeCarbonDioxideSensor : public ZigbeeEP {
 public:
   ZigbeeCarbonDioxideSensor(uint8_t endpoint);
-  ~ZigbeeCarbonDioxideSensor();
+  ~ZigbeeCarbonDioxideSensor() {}
 
   // Set the carbon dioxide value in ppm
   void setCarbonDioxide(float carbon_dioxide);

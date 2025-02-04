@@ -12,7 +12,7 @@
 class ZigbeeLight : public ZigbeeEP {
 public:
   ZigbeeLight(uint8_t endpoint);
-  ~ZigbeeLight();
+  ~ZigbeeLight() {}
 
   // Use to set a cb function to be called on light change
   void onLightChange(void (*callback)(bool)) {
