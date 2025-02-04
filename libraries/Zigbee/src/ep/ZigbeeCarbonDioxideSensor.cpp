@@ -11,7 +11,6 @@ esp_zb_cluster_list_t *zigbee_carbon_dioxide_sensor_clusters_create(zigbee_carbo
   esp_zb_cluster_list_add_carbon_dioxide_measurement_cluster(
     cluster_list, esp_zb_carbon_dioxide_measurement_cluster_create(carbon_dioxide_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE
   );
-  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   return cluster_list;
 }
 

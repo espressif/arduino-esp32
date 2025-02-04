@@ -156,11 +156,13 @@ void enableCore0WDT() {
   }
 }
 
-void disableCore0WDT() {
+bool disableCore0WDT() {
   TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCore(0);
-  if (idle_0 == NULL || esp_task_wdt_delete(idle_0) != ESP_OK) {
+  if (idle_0 == NULL || esp_task_wdt_status(idle_0) || esp_task_wdt_delete(idle_0) != ESP_OK) {
     log_e("Failed to remove Core 0 IDLE task from WDT");
+    return false;
   }
+  return true;
 }
 
 #ifndef CONFIG_FREERTOS_UNICORE
@@ -171,11 +173,13 @@ void enableCore1WDT() {
   }
 }
 
-void disableCore1WDT() {
+bool disableCore1WDT() {
   TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCore(1);
-  if (idle_1 == NULL || esp_task_wdt_delete(idle_1) != ESP_OK) {
+  if (idle_1 == NULL || esp_task_wdt_status(idle_1) || esp_task_wdt_delete(idle_1) != ESP_OK) {
     log_e("Failed to remove Core 1 IDLE task from WDT");
+    return false;
   }
+  return true;
 }
 #endif
 

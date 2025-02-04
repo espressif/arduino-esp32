@@ -9,6 +9,8 @@ static esp_err_t zb_attribute_set_handler(const esp_zb_zcl_set_attr_value_messag
 static esp_err_t zb_attribute_reporting_handler(const esp_zb_zcl_report_attr_message_t *message);
 static esp_err_t zb_cmd_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_resp_message_t *message);
 static esp_err_t zb_configure_report_resp_handler(const esp_zb_zcl_cmd_config_report_resp_message_t *message);
+static esp_err_t zb_cmd_ias_zone_status_change_handler(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message);
+static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const esp_zb_zcl_ias_zone_enroll_response_message_t *message);
 static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_message_t *message);
 
 // Zigbee action handlers
@@ -20,8 +22,14 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
     case ESP_ZB_CORE_REPORT_ATTR_CB_ID:            ret = zb_attribute_reporting_handler((esp_zb_zcl_report_attr_message_t *)message); break;
     case ESP_ZB_CORE_CMD_READ_ATTR_RESP_CB_ID:     ret = zb_cmd_read_attr_resp_handler((esp_zb_zcl_cmd_read_attr_resp_message_t *)message); break;
     case ESP_ZB_CORE_CMD_REPORT_CONFIG_RESP_CB_ID: ret = zb_configure_report_resp_handler((esp_zb_zcl_cmd_config_report_resp_message_t *)message); break;
-    case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID:       ret = zb_cmd_default_resp_handler((esp_zb_zcl_cmd_default_resp_message_t *)message); break;
-    default:                                       log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
+    case ESP_ZB_CORE_CMD_IAS_ZONE_ZONE_STATUS_CHANGE_NOT_ID:
+      ret = zb_cmd_ias_zone_status_change_handler((esp_zb_zcl_ias_zone_status_change_notification_message_t *)message);
+      break;
+    case ESP_ZB_CORE_IAS_ZONE_ENROLL_RESPONSE_VALUE_CB_ID:
+      ret = zb_cmd_ias_zone_enroll_response_handler((esp_zb_zcl_ias_zone_enroll_response_message_t *)message);
+      break;
+    case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID: ret = zb_cmd_default_resp_handler((esp_zb_zcl_cmd_default_resp_message_t *)message); break;
+    default:                                 log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
   }
   return ret;
 }
@@ -101,6 +109,8 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_re
         if (variable->status == ESP_ZB_ZCL_STATUS_SUCCESS) {
           if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_BASIC) {
             (*it)->zbReadBasicCluster(&variable->attribute);  //method zbReadBasicCluster implemented in the common EP class
+          } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_TIME) {
+            (*it)->zbReadTimeCluster(&variable->attribute);  //method zbReadTimeCluster implemented in the common EP class
           } else {
             (*it)->zbAttributeRead(message->info.cluster, &variable->attribute);  //method zbAttributeRead must be implemented in specific EP class
           }
@@ -128,6 +138,46 @@ static esp_err_t zb_configure_report_resp_handler(const esp_zb_zcl_cmd_config_re
       variable->attribute_id
     );
     variable = variable->next;
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_cmd_ias_zone_status_change_handler(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received message: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+  log_v(
+    "IAS Zone Status Notification: from address(0x%x) src endpoint(%d) to dst endpoint(%d) cluster(0x%x)", message->info.src_address.u.short_addr,
+    message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster
+  );
+
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_endpoint == (*it)->getEndpoint()) {
+      (*it)->zbIASZoneStatusChangeNotification(message);
+    }
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received message: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+  log_v("IAS Zone Enroll Response received");
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_endpoint == (*it)->getEndpoint()) {
+      (*it)->zbIASZoneEnrollResponse(message);
+    }
   }
   return ESP_OK;
 }
