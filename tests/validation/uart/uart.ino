@@ -399,7 +399,8 @@ void auto_baudrate_test(void) {
 
   if (TEST_UART_NUM == 1) {
     selected_serial = &Serial1;
-    uart_internal_loopback(0, RX1);
+    // UART1 pins were swapped because of ESP32-P4
+    uart_internal_loopback(0, /*RX1*/ TX1);
   } else {
 #ifdef RX2
     selected_serial = &Serial2;
