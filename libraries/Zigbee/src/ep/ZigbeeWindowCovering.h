@@ -11,16 +11,16 @@
 
 // Window covering types supported by Zigbee Window Covering cluster
 enum ZigbeeWindowCoveringType {
-    ROLLERSHADE = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE,                                   // LIFT support
-    ROLLERSHADE_2_MOTOR = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE_2_MOTOR,                   // LIFT support
-    ROLLERSHADE_EXTERIOR = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE_EXTERIOR,                 // LIFT support
-    ROLLERSHADE_EXTERIOR_2_MOTOR = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE_EXTERIOR_2_MOTOR, // LIFT support
-    DRAPERY = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_DRAPERY,                                           // LIFT support
-    AWNING = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_AWNING,                                             // LIFT support
-    SHUTTER = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_SHUTTER,                                           // TILT support
-    BLIND_TILT_ONLY = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_TILT_BLIND_TILT_ONLY,                      // TILT support
-    BLIND_LIFT_AND_TILT = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_TILT_BLIND_LIFT_AND_TILT,              // LIFT and TILT support
-    PROJECTOR_SCREEN = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_PROJECTOR_SCREEN,                         // LIFT support
+  ROLLERSHADE = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE,                                    // LIFT support
+  ROLLERSHADE_2_MOTOR = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE_2_MOTOR,                    // LIFT support
+  ROLLERSHADE_EXTERIOR = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE_EXTERIOR,                  // LIFT support
+  ROLLERSHADE_EXTERIOR_2_MOTOR = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE_EXTERIOR_2_MOTOR,  // LIFT support
+  DRAPERY = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_DRAPERY,                                            // LIFT support
+  AWNING = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_AWNING,                                              // LIFT support
+  SHUTTER = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_SHUTTER,                                            // TILT support
+  BLIND_TILT_ONLY = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_TILT_BLIND_TILT_ONLY,                       // TILT support
+  BLIND_LIFT_AND_TILT = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_TILT_BLIND_LIFT_AND_TILT,               // LIFT and TILT support
+  PROJECTOR_SCREEN = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_PROJECTOR_SCREEN,                          // LIFT support
 };
 
 // clang-format off
@@ -96,16 +96,19 @@ public:
   void setCoveringType(ZigbeeWindowCoveringType covering_type);
 
   // Set window covering config/status, for more info see esp_zb_zcl_window_covering_config_status_t
-  void setConfigStatus(bool operational, bool online, bool commands_reversed,
-                       bool lift_closed_loop, bool tilt_closed_loop,
-                       bool lift_encoder_controlled, bool tilt_encoder_controlled);
+  void setConfigStatus(
+    bool operational, bool online, bool commands_reversed, bool lift_closed_loop, bool tilt_closed_loop, bool lift_encoder_controlled,
+    bool tilt_encoder_controlled
+  );
 
   // Set configuration mode of window covering, for more info see esp_zb_zcl_window_covering_mode_t
   void setMode(bool motor_reversed, bool calibration_mode, bool maintenance_mode, bool leds_on);
 
   // Set limits of motion, for more info see esp_zb_zcl_window_covering_info_attr_t
-  void setLimits(uint16_t installed_open_limit_lift, uint16_t installed_closed_limit_lift,
-                 uint16_t installed_open_limit_tilt, uint16_t installed_closed_limit_tilt);
+  void setLimits(
+    uint16_t installed_open_limit_lift, uint16_t installed_closed_limit_lift, uint16_t installed_open_limit_tilt, uint16_t installed_closed_limit_tilt
+  );
+
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
   void zbWindowCoveringMovementCmd(const esp_zb_zcl_window_covering_movement_message_t *message) override;
@@ -130,7 +133,7 @@ private:
   uint8_t _current_lift_percentage;
   uint16_t _current_lift_position;
   uint16_t _installed_open_limit_lift;
-  uint16_t _installed_closed_limit_lift;  
+  uint16_t _installed_closed_limit_lift;
   uint16_t _physical_closed_limit_lift;
 
   // Windows covering tilt attributes

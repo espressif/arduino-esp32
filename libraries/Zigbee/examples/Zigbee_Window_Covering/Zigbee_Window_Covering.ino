@@ -16,11 +16,11 @@
  * @brief This example demonstrates Zigbee Window Covering.
  *
  * The example demonstrates how to use Zigbee library to create a end device window covering device.
- * The window covering is a Zigbee end device, which is moving the blinds (lift+tilt) and reporting 
+ * The window covering is a Zigbee end device, which is moving the blinds (lift+tilt) and reporting
  * its current position to the Zigbee network.
- * 
+ *
  * Use setCoveringType() to set the type of covering (blind, shade, etc.).
- * 
+ *
  * The example also demonstrates how to use the button to manually control the lift position.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
@@ -38,15 +38,14 @@
 #include "ZigbeeCore.h"
 #include "ep/ZigbeeWindowCovering.h"
 
-
 #define ZIGBEE_COVERING_ENDPOINT 10
-#define BUTTON_PIN                9  // ESP32-C6/H2 Boot button
+#define BUTTON_PIN               9  // ESP32-C6/H2 Boot button
 
-#define MAX_LIFT 200 // centimeters from open position (0-900)
-#define MIN_LIFT   0
+#define MAX_LIFT 200  // centimeters from open position (0-900)
+#define MIN_LIFT 0
 
-#define MAX_TILT 40 // centimeters from open position (0-900)
-#define MIN_TILT   0
+#define MAX_TILT 40  // centimeters from open position (0-900)
+#define MIN_TILT 0
 
 uint16_t currentLift = MAX_LIFT;
 uint8_t currentLiftPercentage = 100;
@@ -57,7 +56,7 @@ uint8_t currentTiltPercentage = 100;
 ZigbeeWindowCovering zbCovering = ZigbeeWindowCovering(ZIGBEE_COVERING_ENDPOINT);
 
 void setup() {
-  Serial.begin(115200); 
+  Serial.begin(115200);
 
   // Init button for factory reset
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -100,7 +99,7 @@ void setup() {
     Serial.print(".");
     delay(100);
   }
-  Serial.println(); 
+  Serial.println();
 
   // Set initial position
   zbCovering.setLiftPercentage(currentLiftPercentage);
@@ -124,11 +123,11 @@ void loop() {
     }
     // Manual lift controll simulation by pressing button
     manualControl();
-  } 
+  }
   delay(500);
 }
 
-void fullOpen(){
+void fullOpen() {
   /* This is where you would trigger your motor to go to full open state, currentLift should
      be updated until full open has been reached in order to provide feedback to controller of actual position
      The stop can be always called, so the movement can be stopped at any time */
@@ -141,7 +140,7 @@ void fullOpen(){
   zbCovering.setLiftPercentage(currentLiftPercentage);
 }
 
-void fullClose(){
+void fullClose() {
   /* This is where you would trigger your motor to go to full close state, currentLift should
      be updated until full close has been reached in order to provide feedback to controller of actual position
      The stop can be always called, so the movement can be stopped at any time */
@@ -164,7 +163,7 @@ void goToLiftPercentage(uint8_t liftPercentage) {
   Serial.printf("New requsted lift from Zigbee: %d (%d)\n", currentLift, liftPercentage);
 
   //Update the current position
-  zbCovering.setLiftPercentage(currentLiftPercentage); //or setLiftPosition()
+  zbCovering.setLiftPercentage(currentLiftPercentage);  //or setLiftPosition()
 }
 
 void goToTiltPercentage(uint8_t tiltPercentage) {
@@ -177,13 +176,12 @@ void goToTiltPercentage(uint8_t tiltPercentage) {
   Serial.printf("New requsted tilt from Zigbee: %d (%d)\n", currentTilt, tiltPercentage);
 
   //Update the current position
-  zbCovering.setTiltPercentage(currentTiltPercentage); //or setTiltPosition()
+  zbCovering.setTiltPercentage(currentTiltPercentage);  //or setTiltPosition()
 }
-
 
 void stopMotor() {
   // Motor can be stopped while moving cover toward current target, when stopped the actual position should be updated
-  Serial.println("Stopping motor"); 
+  Serial.println("Stopping motor");
   // Update the current position of both lift and tilt
   zbCovering.setLiftPercentage(currentLiftPercentage);
   zbCovering.setTiltPercentage(currentTiltPercentage);
@@ -192,7 +190,7 @@ void stopMotor() {
 void manualControl() {
   // Simulate lift percentage move by increasing it by 20% each time
   currentLiftPercentage += 20;
-  if(currentLiftPercentage > 100) {
+  if (currentLiftPercentage > 100) {
     currentLiftPercentage = 0;
   }
   zbCovering.setLiftPercentage(currentLiftPercentage);

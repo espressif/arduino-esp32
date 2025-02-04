@@ -125,7 +125,6 @@ public:
     _is_bound = true;
   }
 
-
   void onIdentify(void (*callback)(uint16_t)) {
     _on_identify = callback;
   }
