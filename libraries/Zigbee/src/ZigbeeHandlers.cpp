@@ -171,7 +171,7 @@ static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const esp_zb_zcl_ias_zo
     log_e("Received message: error status(%d)", message->info.status);
     return ESP_ERR_INVALID_ARG;
   }
-  log_v("IAS Zone Enroll Response recieved");
+  log_v("IAS Zone Enroll Response received");
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_endpoint == (*it)->getEndpoint()) {
       (*it)->zbIASZoneEnrollResponse(message);
