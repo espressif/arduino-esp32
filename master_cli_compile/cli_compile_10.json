@@ -696,22 +696,6 @@
                             "ram_percentage": 19
                             }]
                     },
-{"name": "RainMaker/examples/RMakerCustomAirCooler",
-                    "sizes": [{
-                            "flash_bytes": 2059952,
-                            "flash_percentage": 51,
-                            "ram_bytes": 62656,
-                            "ram_percentage": 19
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerSonoffDualR3",
-                    "sizes": [{
-                            "flash_bytes": 2084960,
-                            "flash_percentage": 51,
-                            "ram_bytes": 62968,
-                            "ram_percentage": 19
-                            }]
-                    },
 {"name": "RainMaker/examples/RMakerSwitch",
                     "sizes": [{
                             "flash_bytes": 2102440,
@@ -774,6 +758,22 @@
                             "flash_percentage": 72,
                             "ram_bytes": 46180,
                             "ram_percentage": 14
+                            }]
+                    },
+{"name": "SimpleBLE/examples/SimpleBleDevice",
+                    "sizes": [{
+                            "flash_bytes": 1140324,
+                            "flash_percentage": 86,
+                            "ram_bytes": 39068,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "TFLiteMicro/examples/hello_world",
+                    "sizes": [{
+                            "flash_bytes": 329544,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22620,
+                            "ram_percentage": 6
                             }]
                     }
 ]

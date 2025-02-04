@@ -342,7 +342,7 @@
                     },
 {"name": "WiFi/examples/WiFiScanTime",
                     "sizes": [{
-                            "flash_bytes": 822531,
+                            "flash_bytes": 822539,
                             "flash_percentage": 62,
                             "ram_bytes": 38864,
                             "ram_percentage": 11
@@ -552,7 +552,7 @@
                     },
 {"name": "Zigbee/examples/Zigbee_CarbonDioxide_Sensor",
                     "sizes": [{
-                            "flash_bytes": 525249,
+                            "flash_bytes": 525351,
                             "flash_percentage": 40,
                             "ram_bytes": 29000,
                             "ram_percentage": 8
@@ -560,7 +560,7 @@
                     },
 {"name": "Zigbee/examples/Zigbee_Color_Dimmable_Light",
                     "sizes": [{
-                            "flash_bytes": 576203,
+                            "flash_bytes": 576305,
                             "flash_percentage": 43,
                             "ram_bytes": 30408,
                             "ram_percentage": 9
@@ -568,26 +568,26 @@
                     },
 {"name": "Zigbee/examples/Zigbee_Color_Dimmer_Switch",
                     "sizes": [{
-                            "flash_bytes": 663161,
+                            "flash_bytes": 663263,
                             "flash_percentage": 50,
                             "ram_bytes": 32584,
                             "ram_percentage": 9
                             }]
                     },
+{"name": "Zigbee/examples/Zigbee_Contact_Switch",
+                    "sizes": [{
+                            "flash_bytes": 525127,
+                            "flash_percentage": 40,
+                            "ram_bytes": 29040,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Dimmable_Light",
                     "sizes": [{
-                            "flash_bytes": 563167,
+                            "flash_bytes": 563269,
                             "flash_percentage": 42,
                             "ram_bytes": 30352,
                             "ram_percentage": 9
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Occupancy_Sensor",
-                    "sizes": [{
-                            "flash_bytes": 521067,
-                            "flash_percentage": 39,
-                            "ram_bytes": 28976,
-                            "ram_percentage": 8
                             }]
                     }
 ]
@@ -595,9 +595,17 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Pressure_Flow_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 542217,
+                            "flash_percentage": 41,
+                            "ram_bytes": 28256,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Scan_Networks",
                     "sizes": [{
-                            "flash_bytes": 527327,
+                            "flash_bytes": 527399,
                             "flash_percentage": 40,
                             "ram_bytes": 28012,
                             "ram_percentage": 8
@@ -605,7 +613,7 @@
                     },
 {"name": "Zigbee/examples/Zigbee_Temp_Hum_Sensor_Sleepy",
                     "sizes": [{
-                            "flash_bytes": 550089,
+                            "flash_bytes": 550191,
                             "flash_percentage": 41,
                             "ram_bytes": 28344,
                             "ram_percentage": 8
@@ -613,7 +621,7 @@
                     },
 {"name": "Zigbee/examples/Zigbee_Temperature_Sensor",
                     "sizes": [{
-                            "flash_bytes": 562123,
+                            "flash_bytes": 562225,
                             "flash_percentage": 42,
                             "ram_bytes": 28344,
                             "ram_percentage": 8
@@ -621,7 +629,7 @@
                     },
 {"name": "Zigbee/examples/Zigbee_Thermostat",
                     "sizes": [{
-                            "flash_bytes": 677927,
+                            "flash_bytes": 678029,
                             "flash_percentage": 51,
                             "ram_bytes": 31920,
                             "ram_percentage": 9
@@ -632,22 +640,6 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "WebServer/examples/WebUpdate",
-                    "sizes": [{
-                            "flash_bytes": 977272,
-                            "flash_percentage": 74,
-                            "ram_bytes": 48288,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "WiFi/examples/FTM/FTM_Initiator",
-                    "sizes": [{
-                            "flash_bytes": 897380,
-                            "flash_percentage": 68,
-                            "ram_bytes": 44464,
-                            "ram_percentage": 13
-                            }]
-                    },
 {"name": "WiFi/examples/FTM/FTM_Responder",
                     "sizes": [{
                             "flash_bytes": 896560,
@@ -741,6 +733,22 @@
                             "flash_bytes": 898832,
                             "flash_percentage": 68,
                             "ram_bytes": 44568,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "WiFi/examples/WiFiIPv6",
+                    "sizes": [{
+                            "flash_bytes": 909704,
+                            "flash_percentage": 69,
+                            "ram_bytes": 46136,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "WiFi/examples/WiFiMulti",
+                    "sizes": [{
+                            "flash_bytes": 898832,
+                            "flash_percentage": 68,
+                            "ram_bytes": 44504,
                             "ram_percentage": 13
                             }]
                     }

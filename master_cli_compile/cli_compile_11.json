@@ -664,22 +664,6 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "SimpleBLE/examples/SimpleBleDevice",
-                    "sizes": [{
-                            "flash_bytes": 1140324,
-                            "flash_percentage": 86,
-                            "ram_bytes": 39068,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "TFLiteMicro/examples/hello_world",
-                    "sizes": [{
-                            "flash_bytes": 329544,
-                            "flash_percentage": 25,
-                            "ram_bytes": 22620,
-                            "ram_percentage": 6
-                            }]
-                    },
 {"name": "Ticker/examples/Blinker",
                     "sizes": [{
                             "flash_bytes": 296168,
@@ -774,6 +758,22 @@
                             "flash_percentage": 74,
                             "ram_bytes": 48064,
                             "ram_percentage": 14
+                            }]
+                    },
+{"name": "WebServer/examples/HelloServer",
+                    "sizes": [{
+                            "flash_bytes": 972168,
+                            "flash_percentage": 74,
+                            "ram_bytes": 48048,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "WebServer/examples/HttpAdvancedAuth",
+                    "sizes": [{
+                            "flash_bytes": 992136,
+                            "flash_percentage": 75,
+                            "ram_bytes": 50376,
+                            "ram_percentage": 15
                             }]
                     }
 ]
