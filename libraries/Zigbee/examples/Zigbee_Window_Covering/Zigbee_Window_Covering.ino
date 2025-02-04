@@ -19,7 +19,7 @@
  * The window covering is a Zigbee end device, which is moving the blinds (lift+tilt) and reporting 
  * its current position to the Zigbee network.
  * 
- * Use setCoveingType() to set the type of covering (blind, shade, etc.).
+ * Use setCoveringType() to set the type of covering (blind, shade, etc.).
  * 
  * The example also demonstrates how to use the button to manually control the lift position.
  *

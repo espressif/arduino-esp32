@@ -1,6 +1,6 @@
-# Arduino-ESP32 Widnow Covering Example
+# Arduino-ESP32 Window Covering Example
 
-This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) window covering or port.
+This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) window covering device.
 
 To see if the communication with your Zigbee network works, use the Serial monitor and watch for output there.
 
