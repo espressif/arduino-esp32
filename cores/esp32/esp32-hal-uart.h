@@ -17,6 +17,7 @@
 
 #include "soc/soc_caps.h"
 #if SOC_UART_SUPPORTED
+#include "soc/uart_pins.h"
 
 #ifdef __cplusplus
 extern "C" {

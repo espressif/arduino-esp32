@@ -212,6 +212,16 @@ typedef enum {
 #endif
 #endif /* SOC_UART_HP_NUM > 2 */
 
+#if SOC_UART_LP_NUM >= 1
+#ifndef LP_RX0
+#define LP_RX0 (gpio_num_t)LP_U0RXD_GPIO_NUM
+#endif
+
+#ifndef LP_TX0
+#define LP_TX0 (gpio_num_t)LP_U0TXD_GPIO_NUM
+#endif
+#endif /* SOC_UART_LP_NUM >= 1 */
+
 typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 
@@ -259,7 +269,7 @@ public:
   // rxfifo_full_thrhd if the UART Flow Control Threshold in the UART FIFO (max 127)
   void begin(
     unsigned long baud, uint32_t config = SERIAL_8N1, int8_t rxPin = -1, int8_t txPin = -1, bool invert = false, unsigned long timeout_ms = 20000UL,
-    uint8_t rxfifo_full_thrhd = 112
+    uint8_t rxfifo_full_thrhd = 120
   );
   void end(void);
   void updateBaudRate(unsigned long baud);
@@ -365,17 +375,20 @@ extern void serialEventRun(void) __attribute__((weak));
 #endif  // ARDUINO_USB_CDC_ON_BOOT
 // There is always Seria0 for UART0
 extern HardwareSerial Serial0;
-#if SOC_UART_HP_NUM > 1
+#if SOC_UART_NUM > 1
 extern HardwareSerial Serial1;
 #endif
-#if SOC_UART_HP_NUM > 2
+#if SOC_UART_NUM > 2
 extern HardwareSerial Serial2;
 #endif
-#if SOC_UART_HP_NUM > 3
+#if SOC_UART_NUM > 3
 extern HardwareSerial Serial3;
 #endif
-#if SOC_UART_HP_NUM > 4
+#if SOC_UART_NUM > 4
 extern HardwareSerial Serial4;
+#endif
+#if SOC_UART_NUM > 5
+extern HardwareSerial Serial5;
 #endif
 #endif  //!defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 
