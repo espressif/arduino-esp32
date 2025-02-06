@@ -242,7 +242,7 @@ void String::move(String &rhs) {
       // Use case: When 'reserve()' was called and the first
       // assignment/append is the return value of a function.
       if (rhs.len() && rhs.buffer()) {
-        memmove(wbuffer(), rhs.buffer(), rhs.length() + 1);
+        memmove(wbuffer(), rhs.buffer(), rhs.length());
       }
       setLen(rhs.len());
       rhs.invalidate();
