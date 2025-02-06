@@ -343,10 +343,10 @@ bool String::concat(const char *cstr, unsigned int length) {
   }
   if (cstr >= wbuffer() && cstr < wbuffer() + len()) {
     // compatible with SSO in ram #6155 (case "x += x.c_str()")
-    memmove(wbuffer() + len(), cstr, length + 1);
+    memmove(wbuffer() + len(), cstr, length);
   } else {
     // compatible with source in flash #6367
-    memcpy_P(wbuffer() + len(), cstr, length + 1);
+    memcpy_P(wbuffer() + len(), cstr, length);
   }
   setLen(newlen);
   return true;
