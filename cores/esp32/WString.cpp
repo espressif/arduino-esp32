@@ -238,8 +238,12 @@ String &String::copy(const char *cstr, unsigned int length) {
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
 void String::move(String &rhs) {
   if (buffer()) {
-    if (capacity() >= rhs.len() && rhs.len() && rhs.buffer()) {
-      memmove(wbuffer(), rhs.buffer(), rhs.length() + 1);
+    if (capacity() >= rhs.len()) {
+      // Use case: When 'reserve()' was called and the first
+      // assignment/append is the return value of a function.
+      if (rhs.len() && rhs.buffer()) {
+        memmove(wbuffer(), rhs.buffer(), rhs.length() + 1);
+      }
       setLen(rhs.len());
       rhs.invalidate();
       return;
