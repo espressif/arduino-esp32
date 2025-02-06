@@ -4,6 +4,8 @@
 
 #if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
+#include "esp_ota_ops.h"
+
 // forward declaration of all implemented handlers
 static esp_err_t zb_attribute_set_handler(const esp_zb_zcl_set_attr_value_message_t *message);
 static esp_err_t zb_attribute_reporting_handler(const esp_zb_zcl_report_attr_message_t *message);
@@ -13,6 +15,9 @@ static esp_err_t zb_cmd_ias_zone_status_change_handler(const esp_zb_zcl_ias_zone
 static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const esp_zb_zcl_ias_zone_enroll_response_message_t *message);
 static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_message_t *message);
 static esp_err_t zb_window_covering_movement_resp_handler(const esp_zb_zcl_window_covering_movement_message_t *message);
+static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_value_message_t *message);
+static esp_err_t zb_ota_upgrade_query_image_resp_handler(const esp_zb_zcl_ota_upgrade_query_image_resp_message_t *message);
+
 
 // Zigbee action handlers
 [[maybe_unused]]
@@ -31,6 +36,12 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
       break;
     case ESP_ZB_CORE_WINDOW_COVERING_MOVEMENT_CB_ID:
       ret = zb_window_covering_movement_resp_handler((esp_zb_zcl_window_covering_movement_message_t *)message);
+      break;
+    case ESP_ZB_CORE_OTA_UPGRADE_VALUE_CB_ID:
+      ret = zb_ota_upgrade_status_handler((esp_zb_zcl_ota_upgrade_value_message_t *)message);
+      break;
+    case ESP_ZB_CORE_OTA_UPGRADE_QUERY_IMAGE_RESP_CB_ID:
+      ret = zb_ota_upgrade_query_image_resp_handler((esp_zb_zcl_ota_upgrade_query_image_resp_message_t *)message);
       break;
     case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID: ret = zb_cmd_default_resp_handler((esp_zb_zcl_cmd_default_resp_message_t *)message); break;
     default:                                 log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
@@ -186,22 +197,6 @@ static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const esp_zb_zcl_ias_zo
   return ESP_OK;
 }
 
-static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_message_t *message) {
-  if (!message) {
-    log_e("Empty message");
-    return ESP_FAIL;
-  }
-  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Received message: error status(%d)", message->info.status);
-    return ESP_ERR_INVALID_ARG;
-  }
-  log_v(
-    "Received default response: from address(0x%x), src_endpoint(%d) to dst_endpoint(%d), cluster(0x%x) with status 0x%x",
-    message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->status_code
-  );
-  return ESP_OK;
-}
-
 static esp_err_t zb_window_covering_movement_resp_handler(const esp_zb_zcl_window_covering_movement_message_t *message) {
   if (!message) {
     log_e("Empty message");
@@ -221,6 +216,111 @@ static esp_err_t zb_window_covering_movement_resp_handler(const esp_zb_zcl_windo
       (*it)->zbWindowCoveringMovementCmd(message);  //method zbWindowCoveringMovementCmd must be implemented in specific EP class
     }
   }
+  return ESP_OK;
+}
+
+static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_value_message_t *message)
+{
+  static const esp_partition_t *s_ota_partition = NULL;
+  static esp_ota_handle_t s_ota_handle = 0;
+
+  static uint32_t total_size = 0;
+  static uint32_t offset = 0;
+  static int64_t start_time = 0;
+  esp_err_t ret = ESP_OK;
+
+  if (message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS) {
+    switch (message->upgrade_status) {
+      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_START:
+        log_i("Zigbee OTA - Upgrade start");
+        start_time = esp_timer_get_time();
+        s_ota_partition = esp_ota_get_next_update_partition(NULL);
+        assert(s_ota_partition);
+        ret = esp_ota_begin(s_ota_partition, 0, &s_ota_handle);
+        if(ret == ESP_OK) {
+          log_i("Zigbee OTA - OTA partition begin");
+        } else {
+          log_e("Zigbee OTA - Failed to begin OTA partition, status: %s", esp_err_to_name(ret));
+          return ret;
+        }
+        break;
+      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_RECEIVE:
+        total_size = message->ota_header.image_size;
+        offset += message->payload_size;
+        log_i("Zigbee OTA - Client receives data: progress [%ld/%ld]", offset, total_size);
+        if (message->payload_size && message->payload) {
+            ret = esp_ota_write(s_ota_handle, (const void *)message->payload, message->payload_size);
+            if(ret == ESP_OK) {
+              log_i("Zigbee OTA - Write OTA data to partition");
+            } else {
+              log_e("Zigbee OTA - Failed to write OTA data to partition, status: %s", esp_err_to_name(ret));
+              return ret;
+            }
+        }
+        break;
+      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_APPLY:
+        log_i("Zigbee OTA - Upgrade apply");
+        break;
+      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_CHECK:
+        ret = offset == total_size ? ESP_OK : ESP_FAIL;
+        log_i("Zigbee OTA - Upgrade check status: %s", esp_err_to_name(ret));
+        break;
+      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_FINISH:
+        log_i("Zigbee OTA - Finish");
+        log_i("Zigbee OTA - Information: version: 0x%lx, manufacturer code: 0x%x, image type: 0x%x, total size: %ld bytes, cost time: %lld ms",
+                  message->ota_header.file_version, message->ota_header.manufacturer_code, message->ota_header.image_type,
+                  message->ota_header.image_size, (esp_timer_get_time() - start_time) / 1000);
+        ret = esp_ota_end(s_ota_handle);
+        if(ret == ESP_OK) {
+          log_i("Zigbee OTA - OTA partition end");
+        } else {
+          log_e("Zigbee OTA - Failed to end OTA partition, status: %s", esp_err_to_name(ret));
+          return ret;
+        }
+        ret = esp_ota_set_boot_partition(s_ota_partition);
+        if(ret == ESP_OK) {
+          log_i("Zigbee OTA - Set OTA boot partition");
+        } else {
+          log_e("Zigbee OTA - Failed to set OTA boot partition, status: %s", esp_err_to_name(ret));
+          return ret;
+        }
+        log_w("Zigbee OTA - Prepare to restart system");
+        esp_restart();
+        break;
+      default:
+        log_i("Zigbee OTA - Status: %d", message->upgrade_status);
+        break;
+    }
+  }
+  return ret;
+}
+
+static esp_err_t zb_ota_upgrade_query_image_resp_handler(const esp_zb_zcl_ota_upgrade_query_image_resp_message_t *message)
+{
+  if (message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_i("Zigbee - Queried OTA image from address: 0x%04hx, endpoint: %d", message->server_addr.u.short_addr, message->server_endpoint);
+    log_i("Zigbee - Image version: 0x%lx, manufacturer code: 0x%x, image size: %ld", message->file_version, message->manufacturer_code,
+              message->image_size);
+    log_i("Zigbee - Approving OTA image upgrade");
+  } else {
+    log_i("Zigbee - OTA image upgrade response status: 0x%x", message->info.status);
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received message: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+  log_v(
+    "Received default response: from address(0x%x), src_endpoint(%d) to dst_endpoint(%d), cluster(0x%x) with status 0x%x",
+    message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->status_code
+  );
   return ESP_OK;
 }
 
