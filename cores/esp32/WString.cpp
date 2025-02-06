@@ -311,23 +311,21 @@ bool String::concat(const String &s) {
   // Special case if we're concatting ourself (s += s;) since we may end up
   // realloc'ing the buffer and moving s.buffer in the method called
   if (&s == this) {
-    unsigned int newlen = 2 * len();
-    if (!s.buffer()) {
-      return false;
-    }
     if (s.len() == 0) {
       return true;
     }
+    if (!s.buffer()) {
+      return false;
+    }
+    unsigned int newlen = 2 * len();
     if (!reserve(newlen)) {
       return false;
     }
     memmove(wbuffer() + len(), buffer(), len());
     setLen(newlen);
-    wbuffer()[len()] = 0;
     return true;
-  } else {
-    return concat(s.buffer(), s.len());
   }
+  return concat(s.buffer(), s.len());
 }
 
 bool String::concat(const char *cstr, unsigned int length) {
