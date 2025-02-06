@@ -226,7 +226,7 @@ bool String::changeBuffer(unsigned int maxStrLen) {
 /*********************************************/
 
 String &String::copy(const char *cstr, unsigned int length) {
-  if (!reserve(length)) {
+  if (cstr == nullptr || !reserve(length)) {
     invalidate();
     return *this;
   }
@@ -270,12 +270,7 @@ String &String::operator=(const String &rhs) {
   if (this == &rhs) {
     return *this;
   }
-  if (rhs.buffer()) {
-    copy(rhs.buffer(), rhs.len());
-  } else {
-    invalidate();
-  }
-  return *this;
+  return copy(rhs.buffer(), rhs.len());
 }
 
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
@@ -295,12 +290,7 @@ String &String::operator=(StringSumHelper &&rval) {
 #endif
 
 String &String::operator=(const char *cstr) {
-  if (cstr) {
-    copy(cstr, strlen(cstr));
-  } else {
-    invalidate();
-  }
-  return *this;
+  return copy(cstr, strlen(cstr));
 }
 
 /*********************************************/
