@@ -230,7 +230,7 @@ String &String::copy(const char *cstr, unsigned int length) {
     invalidate();
     return *this;
   }
-  memmove(wbuffer(), cstr, length + 1);
+  memmove(wbuffer(), cstr, length);
   setLen(length);
   return *this;
 }
