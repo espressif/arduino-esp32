@@ -238,16 +238,15 @@ String &String::copy(const char *cstr, unsigned int length) {
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
 void String::move(String &rhs) {
   if (buffer()) {
-    if (capacity() >= rhs.len()) {
+    if (capacity() >= rhs.len() && rhs.len() && rhs.buffer()) {
       memmove(wbuffer(), rhs.buffer(), rhs.length() + 1);
       setLen(rhs.len());
       rhs.invalidate();
       return;
-    } else {
-      if (!isSSO()) {
-        free(wbuffer());
-        setBuffer(nullptr);
-      }
+    }
+    if (!isSSO()) {
+      free(wbuffer());
+      setBuffer(nullptr);
     }
   }
   if (rhs.isSSO()) {
@@ -259,10 +258,7 @@ void String::move(String &rhs) {
   }
   setCapacity(rhs.capacity());
   setLen(rhs.len());
-  rhs.setSSO(false);
-  rhs.setCapacity(0);
-  rhs.setBuffer(nullptr);
-  rhs.setLen(0);
+  rhs.init();
 }
 #endif
 
