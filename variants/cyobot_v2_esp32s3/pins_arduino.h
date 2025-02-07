@@ -7,7 +7,7 @@
 #define USB_PRODUCT      "CYObrain ESP32S3"
 #define USB_SERIAL       ""  // Empty string for MAC address
 
-/* Welcome to CYObot World - This Pin header file is for CYObrain_v2_esp32s3 */
+/* Welcome to CYObot! - Pin header file is for CYObrain_v2_esp32s3 */
 // Last Updated: 02/06/2025 - by Phamm
 
 static const uint8_t BUTTON0 = 4;
