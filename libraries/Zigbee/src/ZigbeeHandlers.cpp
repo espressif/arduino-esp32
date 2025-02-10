@@ -301,6 +301,15 @@ static esp_err_t zb_ota_upgrade_query_image_resp_handler(const esp_zb_zcl_ota_up
     log_i("Zigbee - Queried OTA image from address: 0x%04hx, endpoint: %d", message->server_addr.u.short_addr, message->server_endpoint);
     log_i("Zigbee - Image version: 0x%lx, manufacturer code: 0x%x, image size: %ld", message->file_version, message->manufacturer_code,
               message->image_size);
+    //TODO: add more contidions to reject OTA image upgrade
+    if(message->image_size == 0) {
+      log_i("Zigbee - Rejecting OTA image upgrade, image size is 0");
+      return ESP_FAIL;
+    }
+    if(message->file_version == 0) {
+      log_i("Zigbee - Rejecting OTA image upgrade, file version is 0");
+      return ESP_FAIL;
+    }
     log_i("Zigbee - Approving OTA image upgrade");
   } else {
     log_i("Zigbee - OTA image upgrade response status: 0x%x", message->info.status);
