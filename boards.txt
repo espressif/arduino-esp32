@@ -48923,20 +48923,6 @@ huidu_hd_wf2.menu.CPUFreq.80.build.f_cpu=80000000L
 huidu_hd_wf2.menu.CPUFreq.40=40MHz
 huidu_hd_wf2.menu.CPUFreq.40.build.f_cpu=40000000L
 
-huidu_hd_wf2.menu.PSRAM.enabled=QSPI Flash fix
-huidu_hd_wf2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-huidu_hd_wf2.menu.PSRAM.enabled.build.psram_type=qspi
-
-huidu_hd_wf2.menu.FlashMode.qio=QIO 80MHz
-huidu_hd_wf2.menu.FlashMode.qio.build.flash_mode=dio
-huidu_hd_wf2.menu.FlashMode.qio.build.boot=qio
-huidu_hd_wf2.menu.FlashMode.qio.build.boot_freq=80m
-huidu_hd_wf2.menu.FlashMode.qio.build.flash_freq=80m
-huidu_hd_wf2.menu.FlashMode.qio120=QIO 120MHz
-huidu_hd_wf2.menu.FlashMode.qio120.build.flash_mode=dio
-huidu_hd_wf2.menu.FlashMode.qio120.build.boot=qio
-huidu_hd_wf2.menu.FlashMode.qio120.build.boot_freq=120m
-huidu_hd_wf2.menu.FlashMode.qio120.build.flash_freq=80m
 huidu_hd_wf2.menu.FlashMode.dio=DIO 80MHz
 huidu_hd_wf2.menu.FlashMode.dio.build.flash_mode=dio
 huidu_hd_wf2.menu.FlashMode.dio.build.boot=dio
@@ -49076,20 +49062,6 @@ huidu_hd_wf4.menu.CPUFreq.80.build.f_cpu=80000000L
 huidu_hd_wf4.menu.CPUFreq.40=40MHz
 huidu_hd_wf4.menu.CPUFreq.40.build.f_cpu=40000000L
 
-huidu_hd_wf4.menu.PSRAM.enabled=QSPI Flash fix
-huidu_hd_wf4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-huidu_hd_wf4.menu.PSRAM.enabled.build.psram_type=qspi
-
-huidu_hd_wf4.menu.FlashMode.qio=QIO 80MHz
-huidu_hd_wf4.menu.FlashMode.qio.build.flash_mode=dio
-huidu_hd_wf4.menu.FlashMode.qio.build.boot=qio
-huidu_hd_wf4.menu.FlashMode.qio.build.boot_freq=80m
-huidu_hd_wf4.menu.FlashMode.qio.build.flash_freq=80m
-huidu_hd_wf4.menu.FlashMode.qio120=QIO 120MHz
-huidu_hd_wf4.menu.FlashMode.qio120.build.flash_mode=dio
-huidu_hd_wf4.menu.FlashMode.qio120.build.boot=qio
-huidu_hd_wf4.menu.FlashMode.qio120.build.boot_freq=120m
-huidu_hd_wf4.menu.FlashMode.qio120.build.flash_freq=80m
 huidu_hd_wf4.menu.FlashMode.dio=DIO 80MHz
 huidu_hd_wf4.menu.FlashMode.dio.build.flash_mode=dio
 huidu_hd_wf4.menu.FlashMode.dio.build.boot=dio
