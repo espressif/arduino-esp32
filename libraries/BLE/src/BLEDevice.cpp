@@ -8,7 +8,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
 #include <freertos/task.h>
@@ -650,5 +650,5 @@ void BLEDevice::setCustomGattsHandler(gatts_event_handler handler) {
   m_customGattsHandler = handler;
 }
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

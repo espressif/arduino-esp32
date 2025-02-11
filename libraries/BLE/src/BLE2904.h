@@ -11,7 +11,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 #include "BLEDescriptor.h"
 
@@ -73,6 +73,6 @@ private:
   BLE2904_Data m_data;
 };  // BLE2904
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLE2904_H_ */

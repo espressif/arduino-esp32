@@ -12,7 +12,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if CONFIG_BLUEDROID_ENABLED
+#if CONFIG_BLUEDROID_ENABLED || defined(CONFIG_NIMBLE_ENABLED)
 #include <esp_gatt_defs.h>
 
 /**
@@ -39,6 +39,6 @@ private:
   bool m_valueSet = false;  // Is there a value set for this instance.
 };  // BLEUUID
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEUUID_H_ */

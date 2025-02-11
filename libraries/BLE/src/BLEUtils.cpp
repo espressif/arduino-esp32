@@ -8,7 +8,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #include "BLEAddress.h"
 #include "BLEClient.h"
 #include "BLEUtils.h"
@@ -1817,5 +1817,5 @@ const char *BLEUtils::searchEventTypeToString(esp_gap_search_evt_t searchEvt) {
   }
 }  // searchEventTypeToString
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

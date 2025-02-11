@@ -11,7 +11,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #include <esp_gap_ble_api.h>  // ESP32 BLE
 #include <esp_gattc_api.h>    // ESP32 BLE
 #include <map>                // Part of C++ STL
@@ -93,6 +93,6 @@ public:
 
 };  // class BLE
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* MAIN_BLEDevice_H_ */

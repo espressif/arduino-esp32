@@ -13,6 +13,9 @@
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
+#include "sdkconfig.h"
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
 #include "BLEUUID.h"
 #include <BLEAdvertisedDevice.h>
 #include "esp_bt.h"
@@ -57,5 +60,6 @@ private:
   char BLEHeadder[12];
 };  // BLEEddystoneURL
 
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* _BLEEddystoneURL_H_ */

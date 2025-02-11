@@ -11,7 +11,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 #include <map>
 
@@ -80,6 +80,6 @@ private:
   uint16_t m_endHandle;    // The ending handle of this service.
 };  // BLERemoteService
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEREMOTESERVICE_H_ */

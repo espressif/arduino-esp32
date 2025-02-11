@@ -14,7 +14,7 @@
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #include <sstream>
 #include "BLEAdvertisedDevice.h"
 #include "BLEUtils.h"
@@ -595,5 +595,5 @@ size_t BLEAdvertisedDevice::getPayloadLength() {
   return m_payloadLength;
 }
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
