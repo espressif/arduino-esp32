@@ -6,26 +6,12 @@
 #if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 #include <Arduino.h>
+#include <ColorFormat.h>
 
 /* Useful defines */
 #define ZB_CMD_TIMEOUT 10000  // 10 seconds
 
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
-#define XYZ_TO_RGB(X, Y, Z, r, g, b)                                \
-  {                                                                 \
-    r = (float)(3.240479 * (X) - 1.537150 * (Y) - 0.498535 * (Z));  \
-    g = (float)(-0.969256 * (X) + 1.875992 * (Y) + 0.041556 * (Z)); \
-    b = (float)(0.055648 * (X) - 0.204043 * (Y) + 1.057311 * (Z));  \
-    if (r > 1) {                                                    \
-      r = 1;                                                        \
-    }                                                               \
-    if (g > 1) {                                                    \
-      g = 1;                                                        \
-    }                                                               \
-    if (b > 1) {                                                    \
-      b = 1;                                                        \
-    }                                                               \
-  }
 
 #define RGB_TO_XYZ(r, g, b, X, Y, Z)                               \
   {                                                                \

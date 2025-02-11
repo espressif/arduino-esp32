@@ -24,6 +24,8 @@ public:
   void setLightState(bool state);
   void setLightLevel(uint8_t level);
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue);
+  void setLightColor(espRgbColor_t rgb_color);
+  void setLightColor(espHsvColor_t hsv_color);
   void setLight(bool state, uint8_t level, uint8_t red, uint8_t green, uint8_t blue);
 
   bool getLightState() {
@@ -32,23 +34,26 @@ public:
   uint8_t getLightLevel() {
     return _current_level;
   }
+  espRgbColor_t getLightColor() {
+    return _current_color;
+  }
   uint8_t getLightRed() {
-    return _current_red;
+    return _current_color.r;
   }
   uint8_t getLightGreen() {
-    return _current_green;
+    return _current_color.g;
   }
   uint8_t getLightBlue() {
-    return _current_blue;
+    return _current_color.b;
   }
 
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
-  void calculateRGB(uint16_t x, uint16_t y, uint8_t &red, uint8_t &green, uint8_t &blue);
-  void calculateXY(uint8_t red, uint8_t green, uint8_t blue, uint16_t &x, uint16_t &y);
 
   uint16_t getCurrentColorX();
   uint16_t getCurrentColorY();
+  uint16_t getCurrentColorHue();
+  uint8_t getCurrentColorSaturation();
 
   void lightChanged();
   //callback function to be called on light change (State, R, G, B, Level)
@@ -56,9 +61,7 @@ private:
 
   bool _current_state;
   uint8_t _current_level;
-  uint16_t _current_red;
-  uint16_t _current_green;
-  uint16_t _current_blue;
+  espRgbColor_t _current_color;
 };
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
