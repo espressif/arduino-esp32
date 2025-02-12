@@ -95,7 +95,7 @@ public:
   void reportBatteryPercentage();
 
   // Set time
-  void addTimeCluster(tm time = {0}, int32_t gmt_offset = 0);  // gmt offset in seconds
+  void addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
   void setTime(tm time);
   void setTimezone(int32_t gmt_offset);
 
@@ -115,8 +115,8 @@ public:
   virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
+  virtual void zbWindowCoveringMovementCmd(const esp_zb_zcl_window_covering_movement_message_t *message) {};
   virtual void zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
-
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
   virtual void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {};
 
