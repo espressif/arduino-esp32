@@ -108,7 +108,21 @@ public:
     return _allow_multiple_binding;
   }
 
-  void addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer, uint16_t image_type, uint8_t max_data_size = 223);
+  // OTA methods
+  /**
+   * @brief Add OTA client to the Zigbee endpoint.
+   *
+   * @param file_version The current file version of the OTA client.
+   * @param downloaded_file_ver The version of the downloaded file.
+   * @param hw_version The hardware version of the device.
+   * @param manufacturer The manufacturer code (default: 0x1001).
+   * @param image_type The image type code (default: 0x1011).
+   * @param max_data_size The maximum data size for OTA transfer (default and recommended: 223).
+   */
+  void addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, uint8_t max_data_size = 223);
+  /** 
+   * @brief Request OTA update from the server, first request is within a minute and the next requests are sent every hour automatically.
+  */
   void requestOTAUpdate();
 
   // findEndpoind may be implemented by EPs to find and bind devices
