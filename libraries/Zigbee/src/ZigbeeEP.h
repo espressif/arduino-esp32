@@ -96,7 +96,7 @@ public:
   void reportBatteryPercentage();
 
   // Set time
-  void addTimeCluster(tm time = {0}, int32_t gmt_offset = 0);  // gmt offset in seconds
+  void addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
   void setTime(tm time);
   void setTimezone(int32_t gmt_offset);
 
