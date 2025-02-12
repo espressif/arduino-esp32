@@ -632,7 +632,7 @@ static bool tinyusb_reserve_out_endpoint(uint8_t endpoint) {
 }
 
 static bool tinyusb_has_available_fifos(void) {
-  uint8_t max_endpoints = CFG_TUD_NUM_IN_EPS-1, active_endpoints = 0;
+  uint8_t max_endpoints = CFG_TUD_NUM_IN_EPS - 1, active_endpoints = 0;
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   if (tinyusb_loaded_interfaces_mask & BIT(USB_INTERFACE_CDC)) {
     max_endpoints = CFG_TUD_NUM_IN_EPS;  //CDC endpoint 0x85 is actually not linked to FIFO and not used

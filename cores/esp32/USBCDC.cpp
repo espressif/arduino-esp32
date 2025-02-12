@@ -45,8 +45,9 @@ static uint16_t load_cdc_descriptor2(uint8_t *dst, uint8_t *itf) {
   TU_VERIFY(ep_in != 0);
   uint8_t ep_out = tinyusb_get_free_out_endpoint();
   TU_VERIFY(ep_out != 0);
-  uint8_t descriptor[TUD_CDC_DESC_LEN] = {// Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-                                          TUD_CDC_DESCRIPTOR(*itf, str_index, (uint8_t)(0x80 | ep_ntfy), CFG_TUD_ENDOINT_SIZE, ep_out, (uint8_t)(0x80 | ep_in), CFG_TUD_ENDOINT_SIZE)
+  uint8_t descriptor[TUD_CDC_DESC_LEN] = {
+    // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+    TUD_CDC_DESCRIPTOR(*itf, str_index, (uint8_t)(0x80 | ep_ntfy), CFG_TUD_ENDOINT_SIZE, ep_out, (uint8_t)(0x80 | ep_in), CFG_TUD_ENDOINT_SIZE)
   };
   *itf += 2;
   memcpy(dst, descriptor, TUD_CDC_DESC_LEN);

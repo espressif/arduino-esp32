@@ -39,10 +39,10 @@ extern "C" {
 #endif
 #endif
 #if CONFIG_IDF_TARGET_ESP32P4
-#define CFG_TUD_NUM_EPS 15
+#define CFG_TUD_NUM_EPS    15
 #define CFG_TUD_NUM_IN_EPS 8
 #else
-#define CFG_TUD_NUM_EPS 6
+#define CFG_TUD_NUM_EPS    6
 #define CFG_TUD_NUM_IN_EPS 5
 #endif
 
