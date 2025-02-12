@@ -108,7 +108,7 @@ public:
     return _allow_multiple_binding;
   }
 
-  void addOTAClient(uint32_t file_version = 0x01010101, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, 
+  void addOTAClient(uint32_t file_version = 0x01010100, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, 
     uint32_t downloaded_file_ver = 0x01010101, uint16_t hw_version = 0x0101, uint8_t max_data_size = 223);
   void requestOTAUpdate();
 

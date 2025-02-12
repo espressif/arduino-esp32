@@ -219,80 +219,149 @@ static esp_err_t zb_window_covering_movement_resp_handler(const esp_zb_zcl_windo
   return ESP_OK;
 }
 
+//OTA Upgrade
+#define OTA_ELEMENT_HEADER_LEN              6       /* OTA element format header size include tag identifier and length field */
+
+/**
+ * @name Enumeration for the tag identifier denotes the type and format of the data within the element
+ * @anchor esp_ota_element_tag_id_t
+ */
+typedef enum esp_ota_element_tag_id_e {
+    UPGRADE_IMAGE                               = 0x0000,           /*!< Upgrade image */
+} esp_ota_element_tag_id_t;
+
+static const esp_partition_t *s_ota_partition = NULL;
+static esp_ota_handle_t s_ota_handle = 0;
+static bool s_tagid_received = false;
+
+static esp_err_t esp_element_ota_data(uint32_t total_size, const void *payload, uint16_t payload_size, void **outbuf, uint16_t *outlen)
+{
+  static uint16_t tagid = 0;
+  void *data_buf = NULL;
+  uint16_t data_len;
+
+  if (!s_tagid_received) {
+    uint32_t length = 0;
+    if (!payload || payload_size <= OTA_ELEMENT_HEADER_LEN) {
+        log_e("Invalid element format");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    tagid  = *(const uint16_t *)payload;
+    length = *(const uint32_t *)(payload + sizeof(tagid));
+    if ((length + OTA_ELEMENT_HEADER_LEN) != total_size) {
+      log_e("Invalid element length [%ld/%ld]", length, total_size);
+      return ESP_ERR_INVALID_ARG;
+    }
+
+    s_tagid_received = true;
+
+    data_buf = (void *)(payload + OTA_ELEMENT_HEADER_LEN);
+    data_len = payload_size - OTA_ELEMENT_HEADER_LEN;
+  } else {
+    data_buf = (void *)payload;
+    data_len = payload_size;
+  }
+
+  switch (tagid) {
+    case UPGRADE_IMAGE:
+      *outbuf = data_buf;
+      *outlen = data_len;
+      break;
+    default:
+      log_e("Unsupported element tag identifier %d", tagid);
+      return ESP_ERR_INVALID_ARG;
+      break;
+  }
+
+  return ESP_OK;
+}
+
 static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_value_message_t *message)
 {
-  static const esp_partition_t *s_ota_partition = NULL;
-  static esp_ota_handle_t s_ota_handle = 0;
+    static uint32_t total_size = 0;
+    static uint32_t offset = 0;
+    static int64_t start_time = 0;
+    esp_err_t ret = ESP_OK;
 
-  static uint32_t total_size = 0;
-  static uint32_t offset = 0;
-  static int64_t start_time = 0;
-  esp_err_t ret = ESP_OK;
-
-  if (message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS) {
-    switch (message->upgrade_status) {
-      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_START:
-        log_i("Zigbee OTA - Upgrade start");
-        start_time = esp_timer_get_time();
-        s_ota_partition = esp_ota_get_next_update_partition(NULL);
-        assert(s_ota_partition);
-        ret = esp_ota_begin(s_ota_partition, 0, &s_ota_handle);
-        if(ret == ESP_OK) {
-          log_i("Zigbee OTA - OTA partition begin");
-        } else {
-          log_e("Zigbee OTA - Failed to begin OTA partition, status: %s", esp_err_to_name(ret));
-          return ret;
-        }
-        break;
-      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_RECEIVE:
-        total_size = message->ota_header.image_size;
-        offset += message->payload_size;
-        log_i("Zigbee OTA - Client receives data: progress [%ld/%ld]", offset, total_size);
-        if (message->payload_size && message->payload) {
-            ret = esp_ota_write(s_ota_handle, (const void *)message->payload, message->payload_size);
-            if(ret == ESP_OK) {
-              log_i("Zigbee OTA - Write OTA data to partition");
-            } else {
-              log_e("Zigbee OTA - Failed to write OTA data to partition, status: %s", esp_err_to_name(ret));
+    if (message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS) {
+        switch (message->upgrade_status) {
+        case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_START:
+            log_i("Zigbee - OTA upgrade start");
+            start_time = esp_timer_get_time();
+            s_ota_partition = esp_ota_get_next_update_partition(NULL);
+            assert(s_ota_partition);
+#if CONFIG_ZB_DELTA_OTA
+            ret = esp_delta_ota_begin(s_ota_partition, 0, &s_ota_handle);
+#else
+            ret = esp_ota_begin(s_ota_partition, 0, &s_ota_handle);
+#endif
+            if(ret != ESP_OK) {
+              log_e("Zigbee - Failed to begin OTA partition, status: %s", esp_err_to_name(ret));
               return ret;
             }
+            break;
+        case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_RECEIVE:
+            total_size = message->ota_header.image_size;
+            offset += message->payload_size;
+            log_i("Zigbee - OTA Client receives data: progress [%ld/%ld]", offset, total_size);
+            if (message->payload_size && message->payload) {
+                uint16_t payload_size = 0;
+                void    *payload = NULL;
+                ret = esp_element_ota_data(total_size, message->payload, message->payload_size, &payload, &payload_size);
+                if(ret != ESP_OK) {
+                  log_e("Zigbee - Failed to element OTA data, status: %s", esp_err_to_name(ret));
+                  return ret;
+                }
+#if CONFIG_ZB_DELTA_OTA
+                ret = esp_delta_ota_write(s_ota_handle, payload, payload_size);
+#else
+                ret = esp_ota_write(s_ota_handle, (const void *)payload, payload_size);
+#endif
+                if(ret != ESP_OK) {
+                  log_e("Zigbee - Failed to write OTA data to partition, status: %s", esp_err_to_name(ret));
+                  return ret;
+                }
+            }
+            break;
+        case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_APPLY:
+            log_i("Zigbee - OTA upgrade apply");
+            break;
+        case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_CHECK:
+            ret = offset == total_size ? ESP_OK : ESP_FAIL;
+            offset = 0;
+            total_size = 0;
+            s_tagid_received = false;
+            log_i("Zigbee - OTA upgrade check status: %s", esp_err_to_name(ret));
+            break;
+        case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_FINISH:
+            log_i("Zigbee - OTA Finish");
+            log_i("Zigbee - OTA Information: version: 0x%lx, manufacturer code: 0x%x, image type: 0x%x, total size: %ld bytes, cost time: %lld ms,",
+                     message->ota_header.file_version, message->ota_header.manufacturer_code, message->ota_header.image_type,
+                     message->ota_header.image_size, (esp_timer_get_time() - start_time) / 1000);
+#if CONFIG_ZB_DELTA_OTA
+            ret = esp_delta_ota_end(s_ota_handle);
+#else
+            ret = esp_ota_end(s_ota_handle);
+#endif
+            if(ret != ESP_OK) {
+              log_e("Zigbee - Failed to end OTA partition, status: %s", esp_err_to_name(ret));
+              return ret;
+            }
+            ret = esp_ota_set_boot_partition(s_ota_partition);
+            if(ret != ESP_OK) {
+              log_e("Zigbee - Failed to set OTA boot partition, status: %s", esp_err_to_name(ret));
+              return ret;
+            }
+            log_w("Zigbee - Prepare to restart system");
+            esp_restart();
+            break;
+        default:
+            log_i("Zigbee - OTA status: %d", message->upgrade_status);
+            break;
         }
-        break;
-      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_APPLY:
-        log_i("Zigbee OTA - Upgrade apply");
-        break;
-      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_CHECK:
-        ret = offset == total_size ? ESP_OK : ESP_FAIL;
-        log_i("Zigbee OTA - Upgrade check status: %s", esp_err_to_name(ret));
-        break;
-      case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_FINISH:
-        log_i("Zigbee OTA - Finish");
-        log_i("Zigbee OTA - Information: version: 0x%lx, manufacturer code: 0x%x, image type: 0x%x, total size: %ld bytes, cost time: %lld ms",
-                  message->ota_header.file_version, message->ota_header.manufacturer_code, message->ota_header.image_type,
-                  message->ota_header.image_size, (esp_timer_get_time() - start_time) / 1000);
-        ret = esp_ota_end(s_ota_handle);
-        if(ret == ESP_OK) {
-          log_i("Zigbee OTA - OTA partition end");
-        } else {
-          log_e("Zigbee OTA - Failed to end OTA partition, status: %s", esp_err_to_name(ret));
-          return ret;
-        }
-        ret = esp_ota_set_boot_partition(s_ota_partition);
-        if(ret == ESP_OK) {
-          log_i("Zigbee OTA - Set OTA boot partition");
-        } else {
-          log_e("Zigbee OTA - Failed to set OTA boot partition, status: %s", esp_err_to_name(ret));
-          return ret;
-        }
-        log_w("Zigbee OTA - Prepare to restart system");
-        esp_restart();
-        break;
-      default:
-        log_i("Zigbee OTA - Status: %d", message->upgrade_status);
-        break;
     }
-  }
-  return ret;
+    return ret;
 }
 
 static esp_err_t zb_ota_upgrade_query_image_resp_handler(const esp_zb_zcl_ota_upgrade_query_image_resp_message_t *message)
