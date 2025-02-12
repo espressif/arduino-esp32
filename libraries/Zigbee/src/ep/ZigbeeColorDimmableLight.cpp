@@ -73,7 +73,7 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       uint16_t light_color_x = (*(uint16_t *)message->attribute.data.value);
       uint16_t light_color_y = getCurrentColorY();
       //calculate RGB from XY and call setColor()
-      _current_color = espXYToRgbColor(255, light_color_x, light_color_y); //TODO: Check if level is correct
+      _current_color = espXYToRgbColor(255, light_color_x, light_color_y);  //TODO: Check if level is correct
       lightChanged();
       return;
 
@@ -81,7 +81,7 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       uint16_t light_color_x = getCurrentColorX();
       uint16_t light_color_y = (*(uint16_t *)message->attribute.data.value);
       //calculate RGB from XY and call setColor()
-      _current_color = espXYToRgbColor(255, light_color_x, light_color_y); //TODO: Check if level is correct
+      _current_color = espXYToRgbColor(255, light_color_x, light_color_y);  //TODO: Check if level is correct
       lightChanged();
       return;
     } else if (message->attribute.id == ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
