@@ -376,8 +376,7 @@ void ZigbeeEP::zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute) {
 //     uint8_t max_data_size; /*!< The maximum size of OTA data */
 // } esp_zb_zcl_ota_upgrade_client_variable_t;
 
-void ZigbeeEP::addOTAClient(uint32_t file_version, uint16_t manufacturer, uint16_t image_type, uint32_t downloaded_file_ver, 
-  uint16_t hw_version, uint8_t max_data_size) {
+void ZigbeeEP::addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer, uint16_t image_type, uint8_t max_data_size) {
 
   esp_zb_ota_cluster_cfg_t ota_cluster_cfg = {};
   ota_cluster_cfg.ota_upgrade_file_version = file_version;//OTA_UPGRADE_RUNNING_FILE_VERSION;

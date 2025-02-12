@@ -9,7 +9,7 @@
 
 /* Useful defines */
 #define ZB_CMD_TIMEOUT 10000  // 10 seconds
-#define OTA_UPGRADE_QUERY_INTERVAL (1 * 60) // 1 minutes
+#define OTA_UPGRADE_QUERY_INTERVAL (1 * 60) // 1 hour = 60 minutes
 
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
 #define XYZ_TO_RGB(X, Y, Z, r, g, b)                                \
@@ -108,8 +108,7 @@ public:
     return _allow_multiple_binding;
   }
 
-  void addOTAClient(uint32_t file_version = 0x01010100, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011, 
-    uint32_t downloaded_file_ver = 0x01010101, uint16_t hw_version = 0x0101, uint8_t max_data_size = 223);
+  void addOTAClient(uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer, uint16_t image_type, uint8_t max_data_size = 223);
   void requestOTAUpdate();
 
   // findEndpoind may be implemented by EPs to find and bind devices
