@@ -231,7 +231,7 @@ bool HardwareSerial::setRxFIFOFull(uint8_t fifoBytes) {
     log_w("OnReceive is set to Timeout only, thus FIFO Full is now 120 bytes.");
   }
   bool retCode = uartSetRxFIFOFull(_uart, fifoBytes);  // Set new timeout
-  if (fifoBytes > 0 && fifoBytes < UART_HW_FIFO_LEN(_uart_nr) - 2) {
+  if (fifoBytes > 0 && fifoBytes < UART_HW_FIFO_LEN(_uart_nr) - 1) {
     _rxFIFOFull = fifoBytes;
   }
   HSERIAL_MUTEX_UNLOCK();
