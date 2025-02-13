@@ -226,11 +226,11 @@ bool String::changeBuffer(unsigned int maxStrLen) {
 /*********************************************/
 
 String &String::copy(const char *cstr, unsigned int length) {
-  if (!reserve(length)) {
+  if (cstr == nullptr || !reserve(length)) {
     invalidate();
     return *this;
   }
-  memmove(wbuffer(), cstr, length + 1);
+  memmove(wbuffer(), cstr, length);
   setLen(length);
   return *this;
 }
@@ -239,15 +239,18 @@ String &String::copy(const char *cstr, unsigned int length) {
 void String::move(String &rhs) {
   if (buffer()) {
     if (capacity() >= rhs.len()) {
-      memmove(wbuffer(), rhs.buffer(), rhs.length() + 1);
+      // Use case: When 'reserve()' was called and the first
+      // assignment/append is the return value of a function.
+      if (rhs.len() && rhs.buffer()) {
+        memmove(wbuffer(), rhs.buffer(), rhs.length());
+      }
       setLen(rhs.len());
       rhs.invalidate();
       return;
-    } else {
-      if (!isSSO()) {
-        free(wbuffer());
-        setBuffer(nullptr);
-      }
+    }
+    if (!isSSO()) {
+      free(wbuffer());
+      setBuffer(nullptr);
     }
   }
   if (rhs.isSSO()) {
@@ -259,10 +262,7 @@ void String::move(String &rhs) {
   }
   setCapacity(rhs.capacity());
   setLen(rhs.len());
-  rhs.setSSO(false);
-  rhs.setCapacity(0);
-  rhs.setBuffer(nullptr);
-  rhs.setLen(0);
+  rhs.init();
 }
 #endif
 
@@ -270,12 +270,7 @@ String &String::operator=(const String &rhs) {
   if (this == &rhs) {
     return *this;
   }
-  if (rhs.buffer()) {
-    copy(rhs.buffer(), rhs.len());
-  } else {
-    invalidate();
-  }
-  return *this;
+  return copy(rhs.buffer(), rhs.len());
 }
 
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
@@ -295,12 +290,7 @@ String &String::operator=(StringSumHelper &&rval) {
 #endif
 
 String &String::operator=(const char *cstr) {
-  if (cstr) {
-    copy(cstr, strlen(cstr));
-  } else {
-    invalidate();
-  }
-  return *this;
+  return copy(cstr, strlen(cstr));
 }
 
 /*********************************************/
@@ -311,23 +301,21 @@ bool String::concat(const String &s) {
   // Special case if we're concatting ourself (s += s;) since we may end up
   // realloc'ing the buffer and moving s.buffer in the method called
   if (&s == this) {
-    unsigned int newlen = 2 * len();
-    if (!s.buffer()) {
-      return false;
-    }
     if (s.len() == 0) {
       return true;
     }
+    if (!s.buffer()) {
+      return false;
+    }
+    unsigned int newlen = 2 * len();
     if (!reserve(newlen)) {
       return false;
     }
     memmove(wbuffer() + len(), buffer(), len());
     setLen(newlen);
-    wbuffer()[len()] = 0;
     return true;
-  } else {
-    return concat(s.buffer(), s.len());
   }
+  return concat(s.buffer(), s.len());
 }
 
 bool String::concat(const char *cstr, unsigned int length) {
@@ -343,10 +331,10 @@ bool String::concat(const char *cstr, unsigned int length) {
   }
   if (cstr >= wbuffer() && cstr < wbuffer() + len()) {
     // compatible with SSO in ram #6155 (case "x += x.c_str()")
-    memmove(wbuffer() + len(), cstr, length + 1);
+    memmove(wbuffer() + len(), cstr, length);
   } else {
     // compatible with source in flash #6367
-    memcpy_P(wbuffer() + len(), cstr, length + 1);
+    memcpy_P(wbuffer() + len(), cstr, length);
   }
   setLen(newlen);
   return true;
