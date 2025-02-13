@@ -58,19 +58,4 @@ static const uint8_t MOSI = 11;
 static const uint8_t MISO = 13;
 static const uint8_t SCK = 12;
 
-static const uint8_t T1 = WF2_X1_R1_PIN;
-static const uint8_t T2 = WF2_X1_R2_PIN;
-static const uint8_t T3 = WF2_X1_G1_PIN;
-static const uint8_t T4 = WF2_X1_G2_PIN;
-static const uint8_t T5 = WF2_X1_B1_PIN;
-static const uint8_t T6 = WF2_X1_B2_PIN;
-static const uint8_t T7 = WF2_A_PIN;
-static const uint8_t T8 = WF2_B_PIN;
-static const uint8_t T9 = WF2_C_PIN;
-static const uint8_t T10 = WF2_D_PIN;
-static const uint8_t T11 = WF2_X1_E_PIN;
-static const uint8_t T12 = WF2_OE_PIN;
-static const uint8_t T13 = WF2_CLK_PIN;
-static const uint8_t T14 = WF2_LAT_PIN;
-
 #endif /* Pins_Arduino_h */
