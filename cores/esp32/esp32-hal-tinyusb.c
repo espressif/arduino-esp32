@@ -616,7 +616,7 @@ void usb_persist_restart(restart_type_t mode) {
 }
 
 static bool tinyusb_reserve_in_endpoint(uint8_t endpoint) {
-  if (endpoint > 6 || (tinyusb_endpoints.in & BIT(endpoint)) != 0) {
+  if (endpoint > CFG_TUD_NUM_EPS || (tinyusb_endpoints.in & BIT(endpoint)) != 0) {
     return false;
   }
   tinyusb_endpoints.in |= BIT(endpoint);
@@ -624,7 +624,7 @@ static bool tinyusb_reserve_in_endpoint(uint8_t endpoint) {
 }
 
 static bool tinyusb_reserve_out_endpoint(uint8_t endpoint) {
-  if (endpoint > 6 || (tinyusb_endpoints.out & BIT(endpoint)) != 0) {
+  if (endpoint > CFG_TUD_NUM_EPS || (tinyusb_endpoints.out & BIT(endpoint)) != 0) {
     return false;
   }
   tinyusb_endpoints.out |= BIT(endpoint);
@@ -632,11 +632,13 @@ static bool tinyusb_reserve_out_endpoint(uint8_t endpoint) {
 }
 
 static bool tinyusb_has_available_fifos(void) {
-  uint8_t max_endpoints = 4, active_endpoints = 0;
+  uint8_t max_endpoints = CFG_TUD_NUM_IN_EPS - 1, active_endpoints = 0;
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   if (tinyusb_loaded_interfaces_mask & BIT(USB_INTERFACE_CDC)) {
-    max_endpoints = 5;  //CDC endpoint 0x85 is actually not linked to FIFO and not used
+    max_endpoints = CFG_TUD_NUM_IN_EPS;  //CDC endpoint 0x85 is actually not linked to FIFO and not used
   }
-  for (uint8_t i = 1; i < 7; i++) {
+#endif
+  for (uint8_t i = 1; i <= CFG_TUD_NUM_EPS; i++) {
     if ((tinyusb_endpoints.in & BIT(i)) != 0) {
       active_endpoints++;
     }
@@ -771,7 +773,7 @@ static void usb_device_task(void *param) {
  * PUBLIC API
  * */
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "MIDI", "CUSTOM"};
+const char *tinyusb_interface_names[USB_INTERFACE_MAX] = {"MSC", "DFU", "HID", "VENDOR", "CDC", "CDC2", "MIDI", "CUSTOM"};
 #endif
 static bool tinyusb_is_initialized = false;
 
@@ -862,7 +864,7 @@ uint8_t tinyusb_get_free_duplex_endpoint(void) {
     log_e("No available IN endpoints");
     return 0;
   }
-  for (uint8_t i = 1; i < 7; i++) {
+  for (uint8_t i = 1; i <= CFG_TUD_NUM_IN_EPS; i++) {
     if ((tinyusb_endpoints.in & BIT(i)) == 0 && (tinyusb_endpoints.out & BIT(i)) == 0) {
       tinyusb_endpoints.in |= BIT(i);
       tinyusb_endpoints.out |= BIT(i);
@@ -878,13 +880,13 @@ uint8_t tinyusb_get_free_in_endpoint(void) {
     log_e("No available IN endpoints");
     return 0;
   }
-  for (uint8_t i = 1; i < 7; i++) {
+  for (uint8_t i = 1; i <= CFG_TUD_NUM_IN_EPS; i++) {
     if ((tinyusb_endpoints.in & BIT(i)) == 0 && (tinyusb_endpoints.out & BIT(i)) != 0) {
       tinyusb_endpoints.in |= BIT(i);
       return i;
     }
   }
-  for (uint8_t i = 1; i < 7; i++) {
+  for (uint8_t i = 1; i <= CFG_TUD_NUM_IN_EPS; i++) {
     if ((tinyusb_endpoints.in & BIT(i)) == 0) {
       tinyusb_endpoints.in |= BIT(i);
       return i;
@@ -894,13 +896,13 @@ uint8_t tinyusb_get_free_in_endpoint(void) {
 }
 
 uint8_t tinyusb_get_free_out_endpoint(void) {
-  for (uint8_t i = 1; i < 7; i++) {
+  for (uint8_t i = 1; i <= CFG_TUD_NUM_EPS; i++) {
     if ((tinyusb_endpoints.out & BIT(i)) == 0 && (tinyusb_endpoints.in & BIT(i)) != 0) {
       tinyusb_endpoints.out |= BIT(i);
       return i;
     }
   }
-  for (uint8_t i = 1; i < 7; i++) {
+  for (uint8_t i = 1; i <= CFG_TUD_NUM_EPS; i++) {
     if ((tinyusb_endpoints.out & BIT(i)) == 0) {
       tinyusb_endpoints.out |= BIT(i);
       return i;
