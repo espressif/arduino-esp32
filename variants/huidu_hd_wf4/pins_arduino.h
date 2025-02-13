@@ -56,39 +56,39 @@
 #define WF4_X4_CS_PIN WF4_X3_CS_PIN  // CS gpio must be set HIGH to enable X4 output
 
 // P1 is a UART connector
-#define WF4_P1_RX_PIN     44
-#define WF4_P1_TX_PIN     43
+#define WF4_P1_RX_PIN 44
+#define WF4_P1_TX_PIN 43
 
 // P2: PCB holes gpio/gnd
-#define WF4_P2_DATA_PIN    0  // GPIO0 boot
+#define WF4_P2_DATA_PIN 0  // GPIO0 boot
 
 // P5: temperature sensor connector
-#define WF4_P5_DATA_PIN   16
+#define WF4_P5_DATA_PIN 16
 
 // P7: VCC/GPIO holes on PCB
-#define WF4_P7_DATA_PIN    1
+#define WF4_P7_DATA_PIN 1
 
 // P11: IR connector
-#define WF4_P11_DATA_PIN  15
+#define WF4_P11_DATA_PIN 15
 
 // P12: two gpio's, Vcc, GND
 #define WF4_P12_DATA1_PIN 47
 #define WF4_P12_DATA2_PIN 18
 
 // S1 Button
-#define WF4_S1_DATA_PIN   17
+#define WF4_S1_DATA_PIN 17
 
 // S2-S3 PCB holes
-#define WF4_S2_DATA_PIN   48
-#define WF4_S3_DATA_PIN   26
-#define WF4_S4_DATA_PIN   46
+#define WF4_S2_DATA_PIN 48
+#define WF4_S3_DATA_PIN 26
+#define WF4_S4_DATA_PIN 46
 
 #define WF4_BUTTON_TEST    WF4_S1_PIN  // Test key button on PCB, 1=normal, 0=pressed
 #define WF4_LED_RUN_PIN    40          // Status LED on PCB
 #define WF4_BM8563_I2C_SDA 41          // RTC BM8563 I2C port
 #define WF4_BM8563_I2C_SCL 42
-#define WF4_USB_DN_PIN     19           // USB-A D-
-#define WF4_USB_DP_PIN     20           // USB-A D+
+#define WF4_USB_DN_PIN     19  // USB-A D-
+#define WF4_USB_DP_PIN     20  // USB-A D+
 
 #define LED_BUILTIN WF4_LED_RUN_PIN
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
