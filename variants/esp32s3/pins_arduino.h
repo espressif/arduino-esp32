@@ -4,8 +4,12 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
+#ifndef USB_VID
 #define USB_VID 0x303a
+#endif
+#ifndef USB_PID
 #define USB_PID 0x1001
+#endif
 
 // Some boards have too low voltage on this pin (board design bug)
 // Use different pin with 3V and connect with 48
