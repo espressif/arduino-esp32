@@ -12,7 +12,7 @@ on:
 jobs:
   find-changed-tools:
     name: Check if tools have been changed
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     outputs:
       any_changed: ${{ steps.verify-changed-files.outputs.any_changed }}
       all_changed_files: ${{ steps.verify-changed-files.outputs.all_changed_files }}
@@ -55,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-20.04, ARM]
+        os: [windows-latest, macos-latest, ubuntu-latest, ARM]
         include:
           - os: windows-latest
             TARGET: win64
@@ -64,7 +64,7 @@ jobs:
           - os: macos-latest
             TARGET: macos
             SEPARATOR: ":"
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             TARGET: linux-amd64
             SEPARATOR: ":"
           - os: ARM
