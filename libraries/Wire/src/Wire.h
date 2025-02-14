@@ -28,6 +28,7 @@
 
 #include "soc/soc_caps.h"
 #if SOC_I2C_SUPPORTED
+#include "esp_idf_version.h"
 
 #include <esp32-hal.h>
 #include <esp32-hal-log.h>
@@ -144,9 +145,17 @@ public:
 };
 
 extern TwoWire Wire;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+#if SOC_I2C_NUM > 1
+extern TwoWire Wire1;
+#elif SOC_I2C_NUM > 2
+extern TwoWire Wire2;
+#endif /* SOC_I2C_NUM */
+#else
 #if SOC_HP_I2C_NUM > 1
 extern TwoWire Wire1;
 #endif /* SOC_HP_I2C_NUM */
+#endif
 
 #endif /* SOC_I2C_SUPPORTED */
 #endif /* TwoWire_h */

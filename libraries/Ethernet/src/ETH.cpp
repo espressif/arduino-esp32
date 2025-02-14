@@ -283,6 +283,9 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   esp_eth_phy_t *phy = NULL;
   switch (type) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+    case ETH_PHY_GENERIC: phy = esp_eth_phy_new_generic(&phy_config); break;
+#endif
     case ETH_PHY_LAN8720: phy = esp_eth_phy_new_lan87xx(&phy_config); break;
     case ETH_PHY_TLK110:  phy = esp_eth_phy_new_ip101(&phy_config); break;
     case ETH_PHY_RTL8201: phy = esp_eth_phy_new_rtl8201(&phy_config); break;

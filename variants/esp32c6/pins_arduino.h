@@ -32,4 +32,9 @@ static const uint8_t A4 = 4;
 static const uint8_t A5 = 5;
 static const uint8_t A6 = 6;
 
+// LP I2C Pins are fixed on ESP32-C6
+#define WIRE1_PIN_DEFINED
+static const uint8_t SDA1 = 6;
+static const uint8_t SCL1 = 7;
+
 #endif /* Pins_Arduino_h */
