@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "author": "lucasssvaz",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-p4-function-ev",
+      "id": "esp32",
+      "top": -66.32,
+      "left": -277.63,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": -128.2,
+      "left": -19.2,
+      "attrs": { "color": "green", "bounce": "1" }
+    }
+  ],
+  "connections": [
+    [ "esp32:38", "$serialMonitor:TX", "", [] ],
+    [ "esp32:37", "$serialMonitor:RX", "", [] ],
+    [ "btn1:2.r", "esp32:GND.3", "black", [ "h19.4", "v29" ] ],
+    [ "esp32:0", "btn1:1.l", "blue", [ "h-48", "v-67.2" ] ]
+  ],
+  "dependencies": {}
+}

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "author": "lucasssvaz",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-s3-devkitc-1",
+      "id": "esp32",
+      "top": -57.6,
+      "left": -177.56,
+      "attrs": {}
+    },
+    { "type": "wokwi-ds1307", "id": "rtc1", "top": -43.8, "left": -19.1, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp32:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp32:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp32:GND.2", "rtc1:GND", "black", [ "v0" ] ],
+    [ "rtc1:5V", "esp32:5V", "red", [ "h-28.8", "v-67.6", "h-172.8", "v230.4" ] ],
+    [ "esp32:8", "rtc1:SDA", "green", [ "h-19.47", "v-119.51", "h144", "v32.93", "h38.35" ] ],
+    [ "esp32:9", "rtc1:SCL", "blue", [ "h-29.07", "v-138.71", "h144", "v32.93", "h47.95" ] ]
+  ],
+  "dependencies": {}
+}
