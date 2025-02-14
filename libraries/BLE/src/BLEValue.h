@@ -12,7 +12,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 /**
  * @brief The model of a %BLE value.
@@ -37,6 +37,6 @@ private:
   uint16_t m_readOffset;
   String m_value;
 };
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEVALUE_H_ */

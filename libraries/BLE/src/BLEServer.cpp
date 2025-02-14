@@ -8,7 +8,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #include <esp_bt.h>
 #include <esp_bt_main.h>
 #include "GeneralUtils.h"
@@ -423,5 +423,5 @@ void BLEServer::disconnect(uint16_t connId) {
   esp_ble_gatts_close(m_gatts_if, connId);
 }
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

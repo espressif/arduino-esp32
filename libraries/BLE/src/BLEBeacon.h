@@ -10,6 +10,9 @@
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
+#include "sdkconfig.h"
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
 #include "BLEUUID.h"
 /**
  * @brief Representation of a beacon.
@@ -44,5 +47,6 @@ public:
   void setSignalPower(int8_t signalPower);
 };  // BLEBeacon
 
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLEBEACON_H_ */

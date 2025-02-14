@@ -8,7 +8,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #include <stdio.h>
 #include <iomanip>
 #include "BLEService.h"
@@ -133,5 +133,5 @@ int BLEServiceMap::getRegisteredServiceCount() {
   return m_handleMap.size();
 }
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

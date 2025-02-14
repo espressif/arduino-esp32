@@ -13,7 +13,7 @@
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #include <string.h>
 #include <stdio.h>
 #include "esp32-hal-log.h"
@@ -176,5 +176,5 @@ void BLEEddystoneTLM::setTime(uint32_t tmil) {
   m_eddystoneData.tmil = tmil;
 }  // setTime
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
