@@ -290,7 +290,8 @@ String &String::operator=(StringSumHelper &&rval) {
 #endif
 
 String &String::operator=(const char *cstr) {
-  return copy(cstr, strlen(cstr));
+  const uint32_t length = cstr ? strlen(cstr) : 0u;
+  return copy(cstr, length);
 }
 
 /*********************************************/
