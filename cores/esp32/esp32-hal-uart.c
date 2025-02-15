@@ -117,7 +117,7 @@ static uart_t _uart_bus_array[] = {
 
 #if SOC_UART_LP_NUM >= 1
 // LP UART enable pins routine
-static bool lp_uart_config_io(int8_t pin, rtc_gpio_mode_t direction, uint32_t idx)
+static bool lp_uart_config_io(uint8_t uart_num, int8_t pin, rtc_gpio_mode_t direction, uint32_t idx)
 {
   /* Skip configuration if the LP_IO is -1 */
   if (pin < 0) {
@@ -137,7 +137,7 @@ static bool lp_uart_config_io(int8_t pin, rtc_gpio_mode_t direction, uint32_t id
   }
 
   // Connect pins
-  const uart_periph_sig_t *upin = &uart_periph_signal[LP_UART_NUM_0].pins[idx];
+  const uart_periph_sig_t *upin = &uart_periph_signal[uart_num].pins[idx];
 #if !SOC_LP_GPIO_MATRIX_SUPPORTED // ESP32-C6/C61/C5
   // When LP_IO Matrix is not support, LP_IO Mux must be connected to the pins
   if (rtc_gpio_iomux_func_sel(pin, upin->iomux_func) != ESP_OK) {
@@ -160,12 +160,12 @@ static bool lp_uart_config_io(int8_t pin, rtc_gpio_mode_t direction, uint32_t id
     // Connect the LP_IO to the LP UART peripheral signal
     esp_err_t ret;
     if (direction == RTC_GPIO_MODE_OUTPUT_ONLY) {
-      ret = lp_gpio_connect_out_signal(pin, UART_PERIPH_SIGNAL(LP_UART_NUM_0, idx), 0, 0);
+      ret = lp_gpio_connect_out_signal(pin, UART_PERIPH_SIGNAL(uart_num, idx), 0, 0);
     } else {
-      ret = lp_gpio_connect_in_signal(pin, UART_PERIPH_SIGNAL(LP_UART_NUM_0, idx), 0);
+      ret = lp_gpio_connect_in_signal(pin, UART_PERIPH_SIGNAL(uart_num, idx), 0);
     }
     if (ret != ESP_OK) {
-      log_e("Failed to connect LP_IO pin %d to UART%d signal", pin, LP_UART_NUM_0);
+      log_e("Failed to connect LP_IO pin %d to UART%d signal", pin, uart_num);
       return false;
     }
   }
@@ -178,21 +178,25 @@ static bool lp_uart_config_io(int8_t pin, rtc_gpio_mode_t direction, uint32_t id
 static bool lpuartCheckPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin, uint8_t uart_nr) {
   // check if LP UART is being used and if the pins are valid
   #if !SOC_LP_GPIO_MATRIX_SUPPORTED // ESP32-C6/C61/C5
-    if (uart_nr == LP_UART_NUM_0) {
-      if (rxPin > 0 && rxPin != LP_U0RXD_GPIO_NUM) {
-        log_e("UART%d LP UART requires RX pin to be set to %d.", uart_nr, LP_U0RXD_GPIO_NUM);
+    uint16_t lp_uart_fixed_pin = uart_periph_signal[uart_nr].pins[SOC_UART_RX_PIN_IDX].default_gpio;
+    if (uart_nr >= SOC_UART_HP_NUM) { // it is a LP UART NUM
+      if (rxPin > 0 && rxPin != lp_uart_fixed_pin) {
+        log_e("UART%d LP UART requires RX pin to be set to %d.", uart_nr, lp_uart_fixed_pin);
         return false;
       }
-      if (txPin > 0 && txPin != LP_U0TXD_GPIO_NUM) {
-        log_e("UART%d LP UART requires TX pin to be set to %d.", uart_nr, LP_U0TXD_GPIO_NUM);
+      lp_uart_fixed_pin = uart_periph_signal[uart_nr].pins[SOC_UART_TX_PIN_IDX].default_gpio;
+      if (txPin > 0 && txPin != lp_uart_fixed_pin) {
+        log_e("UART%d LP UART requires TX pin to be set to %d.", uart_nr, lp_uart_fixed_pin);
         return false;
       }
-      if (ctsPin > 0 && ctsPin != LP_U0CTS_GPIO_NUM) {
-        log_e("UART%d LP UART requires CTS pin to be set to %d.", uart_nr, LP_U0CTS_GPIO_NUM);
+      lp_uart_fixed_pin = uart_periph_signal[uart_nr].pins[SOC_UART_CTS_PIN_IDX].default_gpio;
+      if (ctsPin > 0 && ctsPin != lp_uart_fixed_pin) {
+        log_e("UART%d LP UART requires CTS pin to be set to %d.", uart_nr, lp_uart_fixed_pin);
         return false;
       }
-      if (rtsPin > 0 && rtsPin != LP_U0RTS_GPIO_NUM) {
-        log_e("UART%d LP UART requires RTS pin to be set to %d.", uart_nr, LP_U0RTS_GPIO_NUM);
+      lp_uart_fixed_pin = uart_periph_signal[uart_nr].pins[SOC_UART_RTS_PIN_IDX].default_gpio;
+      if (rtsPin > 0 && rtsPin != lp_uart_fixed_pin) {
+        log_e("UART%d LP UART requires RTS pin to be set to %d.", uart_nr, lp_uart_fixed_pin);
         return false;
       }
   }
@@ -313,8 +317,8 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     // connect RX Pad
     bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #if SOC_UART_LP_NUM >= 1
-    if (ret && uart_num == LP_UART_NUM_0) {
-      ret &= lp_uart_config_io(rxPin, RTC_GPIO_MODE_INPUT_ONLY, SOC_UART_RX_PIN_IDX);
+    if (ret && uart_num >= SOC_UART_HP_NUM) { // it is a LP UART NUM
+      ret &= lp_uart_config_io(uart->num, rxPin, RTC_GPIO_MODE_INPUT_ONLY, SOC_UART_RX_PIN_IDX);
     }
 #endif
     if (ret) {
@@ -336,8 +340,8 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     // connect TX Pad
     bool ret = ESP_OK == uart_set_pin(uart->num, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 #if SOC_UART_LP_NUM >= 1
-    if (ret && uart_num == LP_UART_NUM_0) {
-      ret &= lp_uart_config_io(txPin, RTC_GPIO_MODE_OUTPUT_ONLY, SOC_UART_TX_PIN_IDX);
+    if (ret && uart_num >= SOC_UART_HP_NUM) { // it is a LP UART NUM
+      ret &= lp_uart_config_io(uart->num, txPin, RTC_GPIO_MODE_OUTPUT_ONLY, SOC_UART_TX_PIN_IDX);
     }
 #endif
     if (ret) {
@@ -359,8 +363,8 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     // connect CTS Pad
     bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin);
 #if SOC_UART_LP_NUM >= 1
-    if (ret && uart_num == LP_UART_NUM_0) {
-      ret &= lp_uart_config_io(ctsPin, RTC_GPIO_MODE_INPUT_ONLY, SOC_UART_CTS_PIN_IDX);
+    if (ret && uart_num >= SOC_UART_HP_NUM) { // it is a LP UART NUM
+      ret &= lp_uart_config_io(uart->num, ctsPin, RTC_GPIO_MODE_INPUT_ONLY, SOC_UART_CTS_PIN_IDX);
     }
 #endif
     if (ret) {
@@ -382,8 +386,8 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     // connect RTS Pad
     bool ret = ESP_OK == uart_set_pin(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin, UART_PIN_NO_CHANGE);
 #if SOC_UART_LP_NUM >= 1
-    if (ret && uart_num == LP_UART_NUM_0) {
-      ret &= lp_uart_config_io(rtsPin, RTC_GPIO_MODE_OUTPUT_ONLY, SOC_UART_RTS_PIN_IDX);
+    if (ret && uart_num >= SOC_UART_HP_NUM) { // it is a LP UART NUM
+      ret &= lp_uart_config_io(uart->num, rtsPin, RTC_GPIO_MODE_OUTPUT_ONLY, SOC_UART_RTS_PIN_IDX);
     }
 #endif
     if (ret) {
@@ -664,7 +668,7 @@ uart_t *uartBegin(
   rxfifo_full_thrhd = uart_config.rx_flow_ctrl_thresh; // makes sure that it will be set correctly in the struct
   uart_config.baud_rate = baudrate;
 #if SOC_UART_LP_NUM >= 1
-  if (uart_nr == LP_UART_NUM_0) {
+  if (uart_nr >= SOC_UART_HP_NUM) { // it is a LP UART NUM
     uart_config.lp_source_clk = LP_UART_SCLK_DEFAULT;  // use default LP clock
     log_v("Setting UART%d to use LP clock", uart_nr);
   } else 
@@ -974,7 +978,7 @@ void uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
 #if SOC_UART_SUPPORT_XTAL_CLK  // ESP32-S3, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-H2 and ESP32-P4
   soc_module_clk_t newClkSrc = UART_SCLK_XTAL;
 #if SOC_UART_LP_NUM >= 1
-  if (uart->num == LP_UART_NUM_0) {
+  if (uart->num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
     newClkSrc = LP_UART_SCLK_DEFAULT;  // use default LP clock
   }
 #endif
@@ -1350,7 +1354,7 @@ unsigned long uartDetectBaudrate(uart_t *uart) {
 */
 void uart_internal_loopback(uint8_t uartNum, int8_t rxPin) {
   // LP UART is not supported for loopback
-  if (uartNum > SOC_UART_HP_NUM - 1 || !GPIO_IS_VALID_GPIO(rxPin)) {
+  if (uartNum >= SOC_UART_HP_NUM || !GPIO_IS_VALID_GPIO(rxPin)) {
     log_e("UART%d is not supported for loopback or RX pin %d is invalid.", uartNum, rxPin);
     return;
   }

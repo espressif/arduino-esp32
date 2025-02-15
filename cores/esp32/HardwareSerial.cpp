@@ -511,7 +511,7 @@ void HardwareSerial::setDebugOutput(bool en) {
     return;
   }
 #if (SOC_UART_LP_NUM >= 1)
-  if (_uart_nr == LP_UART_NUM_0) {
+  if (_uart_nr >= SOC_UART_HP_NUM) {
     log_e("LP UART does not support Debug Output.");
     return;
   }
