@@ -12,6 +12,88 @@
         {
           "name": "esp32",
           "architecture": "esp32",
+          "version": "3.1.3",
+          "category": "ESP32",
+          "url": "https://github.com/espressif/arduino-esp32/releases/download/3.1.3/esp32-3.1.3.zip",
+          "archiveFileName": "esp32-3.1.3.zip",
+          "checksum": "SHA-256:747160dbc81c6634c7bff9e8a57213e9982d52fe90d2a8f75a93a9f7b527defb",
+          "size": "25396700",
+          "help": {
+            "online": ""
+          },
+          "boards": [
+            {
+              "name": "ESP32 Dev Board"
+            },
+            {
+              "name": "ESP32-S2 Dev Board"
+            },
+            {
+              "name": "ESP32-S3 Dev Board"
+            },
+            {
+              "name": "ESP32-C3 Dev Board"
+            },
+            {
+              "name": "Arduino Nano ESP32"
+            }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "esp32-arduino-libs",
+              "version": "idf-release_v5.3-489d7a2b-v1"
+            },
+            {
+              "packager": "esp32",
+              "name": "esp-x32",
+              "version": "2405"
+            },
+            {
+              "packager": "esp32",
+              "name": "xtensa-esp-elf-gdb",
+              "version": "14.2_20240403"
+            },
+            {
+              "packager": "esp32",
+              "name": "esp-rv32",
+              "version": "2405"
+            },
+            {
+              "packager": "esp32",
+              "name": "riscv32-esp-elf-gdb",
+              "version": "14.2_20240403"
+            },
+            {
+              "packager": "esp32",
+              "name": "openocd-esp32",
+              "version": "v0.12.0-esp32-20241016"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool_py",
+              "version": "4.9.dev3"
+            },
+            {
+              "packager": "esp32",
+              "name": "mkspiffs",
+              "version": "0.2.3"
+            },
+            {
+              "packager": "esp32",
+              "name": "mklittlefs",
+              "version": "3.0.0-gnu12-dc7f933"
+            },
+            {
+              "packager": "arduino",
+              "name": "dfu-util",
+              "version": "0.11.0-arduino5"
+            }
+          ]
+        },
+        {
+          "name": "esp32",
+          "architecture": "esp32",
           "version": "3.1.2",
           "category": "ESP32",
           "url": "https://github.com/espressif/arduino-esp32/releases/download/3.1.2/esp32-3.1.2.zip",
