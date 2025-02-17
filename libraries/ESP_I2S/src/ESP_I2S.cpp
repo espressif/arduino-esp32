@@ -11,6 +11,12 @@
 #include "mp3dec.h"
 #endif
 
+#if SOC_I2S_HW_VERSION_2
+#undef I2S_STD_CLK_DEFAULT_CONFIG
+#define I2S_STD_CLK_DEFAULT_CONFIG(rate) \
+  { .sample_rate_hz = rate, .clk_src = I2S_CLK_SRC_DEFAULT, .ext_clk_freq_hz = 0, .mclk_multiple = I2S_MCLK_MULTIPLE_256, }
+#endif
+
 #define I2S_READ_CHUNK_SIZE 1920
 
 #define I2S_DEFAULT_CFG()                                                                                                                    \
@@ -719,9 +725,15 @@ bool I2SClass::end() {
 #if SOC_I2S_SUPPORTS_TDM
     case I2S_MODE_TDM:
 #endif
-      perimanClearPinBus(_mclk);
-      perimanClearPinBus(_bclk);
-      perimanClearPinBus(_ws);
+      if (_mclk >= 0) {
+        perimanClearPinBus(_mclk);
+      }
+      if (_bclk >= 0) {
+        perimanClearPinBus(_bclk);
+      }
+      if (_ws >= 0) {
+        perimanClearPinBus(_ws);
+      }
       if (_dout >= 0) {
         perimanClearPinBus(_dout);
       }

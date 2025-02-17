@@ -68,6 +68,8 @@ void browseService(const char *service, const char *proto) {
       Serial.print("  ");
       Serial.print(i + 1);
       Serial.print(": ");
+      Serial.print(MDNS.instanceName(i));
+      Serial.print(" - ");
       Serial.print(MDNS.hostname(i));
       Serial.print(" (");
       Serial.print(MDNS.address(i));

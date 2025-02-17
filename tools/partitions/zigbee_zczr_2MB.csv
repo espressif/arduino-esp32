@@ -1,0 +1,8 @@
+# Name,     Type, SubType, Offset,  Size, Flags
+nvs,        data, nvs,     0x9000,  0x5000,
+factory,    app,  factory, 0x10000, 0x140000,
+spiffs,     data, spiffs,  0x150000,0x9A000,
+zb_storage, data, fat,     0x1EA000,0x4000,
+zb_fct,     data, fat,     0x1EE000,0x1000,
+rcp_fw,     data, spiffs,  0x1EF000,0x1000,
+coredump,   data, coredump,0x1F0000,0x10000,

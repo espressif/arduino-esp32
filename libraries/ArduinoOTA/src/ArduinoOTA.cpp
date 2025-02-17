@@ -29,7 +29,7 @@ ArduinoOTAClass::ArduinoOTAClass()
     _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL) {}
 
 ArduinoOTAClass::~ArduinoOTAClass() {
-  _udp_ota.stop();
+  end();
 }
 
 ArduinoOTAClass &ArduinoOTAClass::onStart(THandlerFunction fn) {
