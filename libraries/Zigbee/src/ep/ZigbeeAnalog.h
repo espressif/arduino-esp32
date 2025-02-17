@@ -58,7 +58,11 @@ public:
   void setAnalogValue(float analog);
   void setAnalogInput(float analog);
 
-  void report();
+  // Report Analog Input
+  void reportAnalogInput();
+
+  // Set reporting for Analog Input
+  void setAnalogInputReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
