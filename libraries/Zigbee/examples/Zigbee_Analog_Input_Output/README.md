@@ -1,6 +1,6 @@
-# Arduino-ESP32 Zigbee Analog Sensor Example
+# Arduino-ESP32 Zigbee Analog Input Output Example
 
-This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) simple sensor device type with analog measuring.
+This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) analog input/output device.
 
 # Supported Targets
 
@@ -11,7 +11,7 @@ Currently, this example supports the following targets.
 
 ## Analog Sensor Functions
 
- * After this board first starts up, it would be configured locally to report an analog value on change or every 30 seconds.
+ * After this board first starts up, it would be configured locally to report an analog input on change or every 30 seconds.
  * By clicking the button (BOOT) on this board, this board will immediately send a report of the current measured  value to the network.
 
 ## Hardware Required
@@ -20,7 +20,7 @@ Currently, this example supports the following targets.
 
 ### Configure the Project
 
-In this example, the internal temperature sensor is used to demonstrate reading of the analog sensors.
+Set the ADC GPIO by changing the `analogPin` variable. By default, it's the pin `A0`.
 Set the Button GPIO by changing the `button` variable. By default, it's the pin `BOOT_PIN` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE

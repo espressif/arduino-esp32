@@ -10,7 +10,7 @@
 #include "ha/esp_zigbee_ha_standard.h"
 
 // clang-format off
-#define ZIGBEE_DEFAULT_ANALOG_SENSOR_CONFIG()                     \
+#define ZIGBEE_DEFAULT_ANALOG_CONFIG()                                    \
   {                                                                       \
     .basic_cfg =                                                          \
       {                                                                   \
@@ -21,40 +21,52 @@
       {                                                                   \
         .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE, \
       },                                                                  \
-    .analog_value_cfg =                                                   \
-    {                                                                     \
-        .out_of_service = 0,                                              \
-        .present_value = 0,                                               \
-        .status_flags = 1,                                                \
-      },                                                                  \
   }
 // clang-format on
 
-typedef struct zigbee_analog_sensor_cfg_s {
+//enum for bits set to check what analog cluster were added
+enum zigbee_analog_clusters {
+  ANALOG_VALUE = 1,
+  ANALOG_INPUT = 2,
+  ANALOG_OUTPUT = 4
+};
+
+typedef struct zigbee_analog_cfg_s {
   esp_zb_basic_cluster_cfg_t basic_cfg;
   esp_zb_identify_cluster_cfg_t identify_cfg;
   esp_zb_analog_value_cluster_cfg_t analog_value_cfg;
-} zigbee_analog_sensor_cfg_t;
+  esp_zb_analog_output_cluster_cfg_t analog_output_cfg;
+  esp_zb_analog_input_cluster_cfg_t analog_input_cfg;
+} zigbee_analog_cfg_t;
 
-class ZigbeeAnalogSensor : public ZigbeeEP {
+class ZigbeeAnalog : public ZigbeeEP {
 public:
-  ZigbeeAnalogSensor(uint8_t endpoint);
-  ~ZigbeeAnalogSensor() {}
+  ZigbeeAnalog(uint8_t endpoint);
+  ~ZigbeeAnalog() {}
 
-  // Set the value
-  void setAnalog(float analog);
-/*
-  // Set the min and max value for the sensor
-  void setMinMaxValue(float min, float max);
+  // Add analog clusters
+  void addAnalogValue();
+  void addAnalogInput();
+  void addAnalogOutput();
 
-  // Set the tolerance value for the sensor
-  void setTolerance(float tolerance);
-*/
-  // Set the reporting interval for  in seconds and delta
-  void setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
+  // Use to set a cb function to be called on analog output change
+  void onAnalogOutputChange(void (*callback)(float analog)) {
+    _on_analog_output_change = callback;
+  }
 
-  // Report the analog value
+  // Set the analog value / input
+  void setAnalogValue(float analog);
+  void setAnalogInput(float analog);
+
   void report();
+
+private:
+  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+    
+  void (*_on_analog_output_change)(float);
+  void analogOutputChanged(float analog_output);
+
+  uint8_t _analog_clusters;
 };
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

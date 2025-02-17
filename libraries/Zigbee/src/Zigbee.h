@@ -15,7 +15,7 @@
 #include "ep/ZigbeeTempSensor.h"
 #include "ep/ZigbeeThermostat.h"
 #include "ep/ZigbeePressureSensor.h"
-#include "ep/ZigbeeAnalogSensor.h"
+#include "ep/ZigbeeAnalog.h"
 #include "ep/ZigbeeFlowSensor.h"
 #include "ep/ZigbeeOccupancySensor.h"
 #include "ep/ZigbeeCarbonDioxideSensor.h"
