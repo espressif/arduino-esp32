@@ -214,11 +214,11 @@ typedef enum {
 
 #if SOC_UART_LP_NUM >= 1
 #ifndef LP_RX0
-#define LP_RX0 (gpio_num_t)LP_U0RXD_GPIO_NUM
+#define LP_RX0 (gpio_num_t) LP_U0RXD_GPIO_NUM
 #endif
 
 #ifndef LP_TX0
-#define LP_TX0 (gpio_num_t)LP_U0TXD_GPIO_NUM
+#define LP_TX0 (gpio_num_t) LP_U0TXD_GPIO_NUM
 #endif
 #endif /* SOC_UART_LP_NUM >= 1 */
 

@@ -360,7 +360,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           txPin = _txPin < 0 ? (int8_t)TX1 : _txPin;
         }
         break;
-#endif // UART_NUM_1
+#endif  // UART_NUM_1
 #if SOC_UART_HP_NUM > 2
       case UART_NUM_2:
         if (rxPin < 0 && txPin < 0) {
@@ -386,7 +386,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
 #endif
         }
         break;
-#endif // UART_NUM_3
+#endif  // UART_NUM_3
 #if SOC_UART_HP_NUM > 4
       case UART_NUM_4:
         if (rxPin < 0 && txPin < 0) {
@@ -405,14 +405,14 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
         if (rxPin < 0 && txPin < 0) {
           // do not change RX0_LP/TX0_LP if it has already been set before
 #ifdef LP_RX0
-          rxPin = _rxPin < 0 ? (int8_t)LP_RX0 : _rxPin;   
+          rxPin = _rxPin < 0 ? (int8_t)LP_RX0 : _rxPin;
 #endif
 #ifdef LP_TX0
           txPin = _txPin < 0 ? (int8_t)LP_TX0 : _txPin;
 #endif
         }
         break;
-#endif // LP_UART_NUM_0
+#endif  // LP_UART_NUM_0
     }
   }
 
@@ -628,7 +628,7 @@ size_t HardwareSerial::setRxBufferSize(size_t new_size) {
     return 0;
   }
   uint8_t FIFOLen = UART_HW_FIFO_LEN(_uart_nr);
-  // Valid value is higher than the FIFO length 
+  // Valid value is higher than the FIFO length
   if (new_size <= FIFOLen) {
     new_size = FIFOLen + 1;
     log_w("RX Buffer set to minimum value: %d.", new_size);
@@ -648,7 +648,7 @@ size_t HardwareSerial::setTxBufferSize(size_t new_size) {
   }
   uint8_t FIFOLen = UART_HW_FIFO_LEN(_uart_nr);
   // Valid values are zero or higher than the FIFO length
-  if (new_size > 0  && new_size <= FIFOLen) {
+  if (new_size > 0 && new_size <= FIFOLen) {
     new_size = FIFOLen + 1;
     log_w("TX Buffer set to minimum value: %d.", new_size);
   }
