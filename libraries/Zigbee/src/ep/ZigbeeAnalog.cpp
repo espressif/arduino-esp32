@@ -43,16 +43,15 @@ void ZigbeeAnalog::addAnalogOutput() {
 
 //set attribute method -> method overridden in child class
 void ZigbeeAnalog::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
-  //check the data and call right method
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_SINGLE) {
       float analog_output = *(float *)message->attribute.data.value;
       analogOutputChanged(analog_output);
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %d not supported for Analog Output", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %d not supported for Analog endpoint", message->info.cluster);
   }
 }
 
