@@ -359,22 +359,16 @@ esp32c5.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32c5.menu.ZigbeeMode.default.build.zigbee_libs=
 esp32c5.menu.ZigbeeMode.ed=Zigbee ED (end device)
 esp32c5.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
-esp32c5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api_ed -lesp_zb_cli_command -lzboss_stack.ed -lzboss_port
+esp32c5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
 esp32c5.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 esp32c5.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32c5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
-esp32c5.menu.ZigbeeMode.rcp=Zigbee RCP (radio co-processor)
-esp32c5.menu.ZigbeeMode.rcp.build.zigbee_mode=-DZIGBEE_MODE_RCP
-esp32c5.menu.ZigbeeMode.rcp.build.zigbee_libs=-lesp_zb_api_rcp -lesp_zb_cli_command -lzboss_stack.rcp -lzboss_port
+esp32c5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
 esp32c5.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
 esp32c5.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
-esp32c5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api_ed.debug -lesp_zb_cli_command -lzboss_stack.ed.debug -lzboss_port.debug
+esp32c5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
 esp32c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
 esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api_zczr.debug -lesp_zb_cli_command -lzboss_stack.zczr.debug -lzboss_port.debug
-esp32c5.menu.ZigbeeMode.rcp_debug=Zigbee RCP (radio co-processor) - Debug
-esp32c5.menu.ZigbeeMode.rcp_debug.build.zigbee_mode=-DZIGBEE_MODE_RCP
-esp32c5.menu.ZigbeeMode.rcp_debug.build.zigbee_libs=-lesp_zb_api_rcp.debug -lesp_zb_cli_command -lzboss_stack.rcp.debug -lzboss_port.debug
+esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
 ##############################################################
 
