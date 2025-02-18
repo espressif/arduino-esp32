@@ -62,7 +62,7 @@ void setup() {
 
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
-  
+
   // Optional: Set callback function for device identify
   zbExtender.onIdentify(identify);
 
@@ -76,8 +76,8 @@ void setup() {
 #if USE_CUSTOM_ZIGBEE_CONFIG
   // Optional: Create a custom Zigbee configuration for Zigbee Extender
   esp_zb_cfg_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
-  zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20; // 10 is default
-  
+  zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20;  // 10 is default
+
   // When all EPs are registered, start Zigbee with custom config
   if (!Zigbee.begin(&zigbeeConfig)) {
 #else

@@ -13,7 +13,6 @@ class ZigbeeRangeExtender : public ZigbeeEP {
 public:
   ZigbeeRangeExtender(uint8_t endpoint);
   ~ZigbeeRangeExtender() {}
-
 };
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
