@@ -1,4 +1,4 @@
-// Copyright 2015-2023 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 #include "soc/soc_caps.h"
 #if SOC_UART_SUPPORTED
+#include "soc/uart_pins.h"
 
 #ifdef __cplusplus
 extern "C" {
