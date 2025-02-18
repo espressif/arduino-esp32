@@ -6,26 +6,13 @@
 #if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 #include <Arduino.h>
+#include <ColorFormat.h>
 
 /* Useful defines */
-#define ZB_CMD_TIMEOUT 10000  // 10 seconds
+#define ZB_CMD_TIMEOUT             10000     // 10 seconds
+#define OTA_UPGRADE_QUERY_INTERVAL (1 * 60)  // 1 hour = 60 minutes
 
 #define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
-#define XYZ_TO_RGB(X, Y, Z, r, g, b)                                \
-  {                                                                 \
-    r = (float)(3.240479 * (X) - 1.537150 * (Y) - 0.498535 * (Z));  \
-    g = (float)(-0.969256 * (X) + 1.875992 * (Y) + 0.041556 * (Z)); \
-    b = (float)(0.055648 * (X) - 0.204043 * (Y) + 1.057311 * (Z));  \
-    if (r > 1) {                                                    \
-      r = 1;                                                        \
-    }                                                               \
-    if (g > 1) {                                                    \
-      g = 1;                                                        \
-    }                                                               \
-    if (b > 1) {                                                    \
-      b = 1;                                                        \
-    }                                                               \
-  }
 
 #define RGB_TO_XYZ(r, g, b, X, Y, Z)                               \
   {                                                                \
@@ -95,7 +82,7 @@ public:
   void reportBatteryPercentage();
 
   // Set time
-  void addTimeCluster(tm time = {0}, int32_t gmt_offset = 0);  // gmt offset in seconds
+  void addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
   void setTime(tm time);
   void setTimezone(int32_t gmt_offset);
 
@@ -106,6 +93,26 @@ public:
   bool epAllowMultipleBinding() {
     return _allow_multiple_binding;
   }
+
+  // OTA methods
+  /**
+   * @brief Add OTA client to the Zigbee endpoint.
+   *
+   * @param file_version The current file version of the OTA client.
+   * @param downloaded_file_ver The version of the downloaded file.
+   * @param hw_version The hardware version of the device.
+   * @param manufacturer The manufacturer code (default: 0x1001).
+   * @param image_type The image type code (default: 0x1011).
+   * @param max_data_size The maximum data size for OTA transfer (default and recommended: 223).
+   */
+  void addOTAClient(
+    uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011,
+    uint8_t max_data_size = 223
+  );
+  /**
+   * @brief Request OTA update from the server, first request is within a minute and the next requests are sent every hour automatically.
+  */
+  void requestOTAUpdate();
 
   // findEndpoind may be implemented by EPs to find and bind devices
   virtual void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
