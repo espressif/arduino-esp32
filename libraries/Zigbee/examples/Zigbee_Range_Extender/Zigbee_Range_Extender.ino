@@ -39,7 +39,7 @@ uint8_t button = BOOT_PIN;
 
 ZigbeeRangeExtender zbExtender = ZigbeeRangeExtender(ZIGBEE_EXTENDER_ENDPOINT);
 
-/************************* Indentify ******************************/
+/************************** Identify ******************************/
 // Create a task on identify call to handle the identify function
 void identify(uint16_t time) {
   static uint8_t blink = 1;
