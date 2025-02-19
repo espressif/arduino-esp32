@@ -25,11 +25,11 @@ static uint16_t read_year = 0;
 static int peek_data = -1;
 
 const auto BCD2DEC = [](uint8_t num) -> uint8_t {
-  return ((num/16 * 10) + (num % 16));
+  return ((num / 16 * 10) + (num % 16));
 };
 
 const auto DEC2BCD = [](uint8_t num) -> uint8_t {
-  return ((num/10 * 16) + (num % 10));
+  return ((num / 10 * 16) + (num % 10));
 };
 
 void reset_read_values() {
@@ -49,7 +49,7 @@ void ds1307_start(void) {
   Wire.write(0x00);
   Wire.endTransmission();
   Wire.requestFrom(DS1307_ADDR, 1);
-  sec = Wire.read() & 0x7F; //Seconds without halt bit
+  sec = Wire.read() & 0x7F;  //Seconds without halt bit
 
   //Set seconds and start clock
   Wire.beginTransmission(DS1307_ADDR);
@@ -66,7 +66,7 @@ void ds1307_stop(void) {
   Wire.write(0x00);
   Wire.endTransmission();
   Wire.requestFrom(DS1307_ADDR, 1);
-  sec = Wire.read() | 0x80; //Seconds with halt bit
+  sec = Wire.read() | 0x80;  //Seconds with halt bit
 
   //Set seconds and halt clock
   Wire.beginTransmission(DS1307_ADDR);
@@ -75,8 +75,7 @@ void ds1307_stop(void) {
   Wire.endTransmission();
 }
 
-void ds1307_get_time(uint8_t *sec, uint8_t *min, uint8_t *hour, uint8_t *day, uint8_t *month, uint16_t *year)
-{
+void ds1307_get_time(uint8_t *sec, uint8_t *min, uint8_t *hour, uint8_t *day, uint8_t *month, uint16_t *year) {
   //Get time
   Wire.beginTransmission(DS1307_ADDR);
   Wire.write(0x00);
@@ -89,24 +88,22 @@ void ds1307_get_time(uint8_t *sec, uint8_t *min, uint8_t *hour, uint8_t *day, ui
     peek_data = Wire.peek();
   }
 
-  *sec = BCD2DEC(Wire.read() & 0x7F); //Seconds without halt bit
+  *sec = BCD2DEC(Wire.read() & 0x7F);  //Seconds without halt bit
   *min = BCD2DEC(Wire.read());
   *hour = BCD2DEC(Wire.read() & 0x3F);
-  Wire.read(); //Ignore day of week
+  Wire.read();  //Ignore day of week
   *day = BCD2DEC(Wire.read());
   *month = BCD2DEC(Wire.read());
   *year = BCD2DEC(Wire.read()) + 2000;
 }
 
-
-void ds1307_set_time(uint8_t sec, uint8_t min, uint8_t hour, uint8_t day, uint8_t month, uint16_t year)
-{
+void ds1307_set_time(uint8_t sec, uint8_t min, uint8_t hour, uint8_t day, uint8_t month, uint16_t year) {
   Wire.beginTransmission(DS1307_ADDR);
   Wire.write(0x00);
   Wire.write(DEC2BCD(sec));
   Wire.write(DEC2BCD(min));
   Wire.write(DEC2BCD(hour));
-  Wire.write(DEC2BCD(0)); //Ignore day of week
+  Wire.write(DEC2BCD(0));  //Ignore day of week
   Wire.write(DEC2BCD(day));
   Wire.write(DEC2BCD(month));
   Wire.write(DEC2BCD(year - 2000));
@@ -157,7 +154,7 @@ void rtc_run_clock() {
   ds1307_get_time(&read_sec, &read_min, &read_hour, &read_day, &read_month, &read_year);
 
   //Check time
-  TEST_ASSERT_UINT8_WITHIN(2, start_sec+5, read_sec);
+  TEST_ASSERT_UINT8_WITHIN(2, start_sec + 5, read_sec);
   TEST_ASSERT_EQUAL(start_min, read_min);
   TEST_ASSERT_EQUAL(start_hour, read_hour);
   TEST_ASSERT_EQUAL(start_day, read_day);
@@ -180,7 +177,7 @@ void rtc_run_clock() {
   TEST_ASSERT_EQUAL(start_year, read_year);
 }
 
-void change_clock(){
+void change_clock() {
   //Get time
   ds1307_get_time(&read_sec, &read_min, &read_hour, &read_day, &read_month, &read_year);
 
@@ -209,7 +206,7 @@ void change_clock(){
   TEST_ASSERT_EQUAL(start_year, read_year);
 }
 
-void swap_pins(){
+void swap_pins() {
   Wire.setPins(SCL, SDA);
   Wire.begin();
   //Set time
