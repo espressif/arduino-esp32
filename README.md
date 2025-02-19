@@ -5,7 +5,9 @@
 [![External Libraries Test](https://img.shields.io/github/actions/workflow/status/espressif/arduino-esp32/lib.yml?branch=master&event=schedule&label=External%20Libraries%20Test)](https://github.com/espressif/arduino-esp32/blob/gh-pages/LIBRARIES_TEST.md)
 [![Runtime Tests](https://github.com/espressif/arduino-esp32/blob/gh-pages/runtime-tests-results/badge.svg)](https://github.com/espressif/arduino-esp32/actions/workflows/tests_results.yml)
 
-### Need help or have a question? Join the chat at [Gitter](https://gitter.im/espressif/arduino-esp32) or [open a new Discussion](https://github.com/espressif/arduino-esp32/discussions)
+### Need help or have a question? Join the chat at [Discord](https://discord.gg/8xY6e9crwv) or [open a new Discussion](https://github.com/espressif/arduino-esp32/discussions)
+
+[![Discord invite](https://img.shields.io/discord/1327272229427216425?logo=discord&logoColor=white&logoSize=auto&label=Discord)](https://discord.gg/8xY6e9crwv)
 
 ## Contents
 
