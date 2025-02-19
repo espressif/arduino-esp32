@@ -15,6 +15,8 @@
 #include "esp32-hal-i2c.h"
 
 #if SOC_I2C_SUPPORTED
+#include "esp_idf_version.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0)
 #include "esp32-hal.h"
 #if !CONFIG_DISABLE_HAL_LOCKS
 #include "freertos/FreeRTOS.h"
@@ -429,4 +431,5 @@ esp_err_t i2cGetClock(uint8_t i2c_num, uint32_t *frequency) {
   return ESP_OK;
 }
 
+#endif /* ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0) */
 #endif /* SOC_I2C_SUPPORTED */
