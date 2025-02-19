@@ -4,97 +4,97 @@
                 "sketches": [
 {"name": "ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
-                            "flash_bytes": 319241,
+                            "flash_bytes": 319715,
                             "flash_percentage": 24,
-                            "ram_bytes": 21464,
+                            "ram_bytes": 21560,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/GPIO/BlinkRGB",
                     "sizes": [{
-                            "flash_bytes": 302373,
+                            "flash_bytes": 302725,
                             "flash_percentage": 23,
-                            "ram_bytes": 21460,
+                            "ram_bytes": 21556,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterrupt",
                     "sizes": [{
-                            "flash_bytes": 326607,
+                            "flash_bytes": 327089,
                             "flash_percentage": 24,
-                            "ram_bytes": 22144,
+                            "ram_bytes": 22256,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
                     "sizes": [{
-                            "flash_bytes": 324829,
+                            "flash_bytes": 325303,
                             "flash_percentage": 24,
-                            "ram_bytes": 22152,
+                            "ram_bytes": 22264,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
-                            "flash_bytes": 325693,
+                            "flash_bytes": 326169,
                             "flash_percentage": 24,
-                            "ram_bytes": 22160,
+                            "ram_bytes": 22272,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/HWCDC_Events",
                     "sizes": [{
-                            "flash_bytes": 302373,
+                            "flash_bytes": 302725,
                             "flash_percentage": 23,
-                            "ram_bytes": 21460,
+                            "ram_bytes": 21556,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
-                            "flash_bytes": 322927,
+                            "flash_bytes": 323405,
                             "flash_percentage": 24,
-                            "ram_bytes": 21536,
+                            "ram_bytes": 21632,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                     "sizes": [{
-                            "flash_bytes": 322693,
+                            "flash_bytes": 323171,
                             "flash_percentage": 24,
-                            "ram_bytes": 21624,
+                            "ram_bytes": 21720,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
-                            "flash_bytes": 346815,
+                            "flash_bytes": 347291,
                             "flash_percentage": 26,
-                            "ram_bytes": 22744,
+                            "ram_bytes": 22840,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/RMT/RMTLoopback",
                     "sizes": [{
-                            "flash_bytes": 348067,
+                            "flash_bytes": 348541,
                             "flash_percentage": 26,
-                            "ram_bytes": 24168,
+                            "ram_bytes": 24264,
                             "ram_percentage": 7
                             }]
                     },
 {"name": "ESP32/examples/RMT/RMTReadXJT",
                     "sizes": [{
-                            "flash_bytes": 347411,
+                            "flash_bytes": 347889,
                             "flash_percentage": 26,
-                            "ram_bytes": 22600,
+                            "ram_bytes": 22712,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/RMT/RMTWrite_RGB_LED",
                     "sizes": [{
-                            "flash_bytes": 345473,
+                            "flash_bytes": 345949,
                             "flash_percentage": 26,
-                            "ram_bytes": 25216,
+                            "ram_bytes": 25312,
                             "ram_percentage": 7
                             }]
                     }
@@ -105,7 +105,7 @@
                 "sketches": [
 {"name": "ESP32/examples/CI/CIBoardsTest",
                     "sizes": [{
-                            "flash_bytes": 357106,
+                            "flash_bytes": 357138,
                             "flash_percentage": 27,
                             "ram_bytes": 22464,
                             "ram_percentage": 6
@@ -113,7 +113,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 993830,
+                            "flash_bytes": 993862,
                             "flash_percentage": 5,
                             "ram_bytes": 62344,
                             "ram_percentage": 19
@@ -121,7 +121,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 996518,
+                            "flash_bytes": 996554,
                             "flash_percentage": 5,
                             "ram_bytes": 62488,
                             "ram_percentage": 19
@@ -129,7 +129,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 998734,
+                            "flash_bytes": 998766,
                             "flash_percentage": 5,
                             "ram_bytes": 62816,
                             "ram_percentage": 19
@@ -137,7 +137,7 @@
                     },
 {"name": "ESP32/examples/ChipID/GetChipID",
                     "sizes": [{
-                            "flash_bytes": 305918,
+                            "flash_bytes": 305950,
                             "flash_percentage": 23,
                             "ram_bytes": 20428,
                             "ram_percentage": 6
@@ -145,7 +145,7 @@
                     },
 {"name": "ESP32/examples/DeepSleep/ExternalWakeUp",
                     "sizes": [{
-                            "flash_bytes": 311266,
+                            "flash_bytes": 311298,
                             "flash_percentage": 23,
                             "ram_bytes": 20508,
                             "ram_percentage": 6
@@ -153,7 +153,7 @@
                     },
 {"name": "ESP32/examples/DeepSleep/TimerWakeUp",
                     "sizes": [{
-                            "flash_bytes": 311030,
+                            "flash_bytes": 311062,
                             "flash_percentage": 23,
                             "ram_bytes": 20508,
                             "ram_percentage": 6
@@ -161,7 +161,7 @@
                     },
 {"name": "ESP32/examples/DeepSleep/TouchWakeUp",
                     "sizes": [{
-                            "flash_bytes": 318886,
+                            "flash_bytes": 318918,
                             "flash_percentage": 24,
                             "ram_bytes": 21092,
                             "ram_percentage": 6
@@ -169,7 +169,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/BasicMultiThreading",
                     "sizes": [{
-                            "flash_bytes": 340678,
+                            "flash_bytes": 340710,
                             "flash_percentage": 25,
                             "ram_bytes": 21352,
                             "ram_percentage": 6
@@ -177,7 +177,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Mutex",
                     "sizes": [{
-                            "flash_bytes": 303594,
+                            "flash_bytes": 303626,
                             "flash_percentage": 23,
                             "ram_bytes": 20412,
                             "ram_percentage": 6
@@ -185,7 +185,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
-                            "flash_bytes": 303662,
+                            "flash_bytes": 303694,
                             "flash_percentage": 23,
                             "ram_bytes": 20404,
                             "ram_percentage": 6
@@ -193,7 +193,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
-                            "flash_bytes": 303106,
+                            "flash_bytes": 303138,
                             "flash_percentage": 23,
                             "ram_bytes": 20404,
                             "ram_percentage": 6
@@ -209,7 +209,7 @@
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterrupt",
                     "sizes": [{
-                            "flash_bytes": 310422,
+                            "flash_bytes": 310454,
                             "flash_percentage": 23,
                             "ram_bytes": 21348,
                             "ram_percentage": 6
@@ -217,7 +217,7 @@
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
                     "sizes": [{
-                            "flash_bytes": 309050,
+                            "flash_bytes": 309082,
                             "flash_percentage": 23,
                             "ram_bytes": 21356,
                             "ram_percentage": 6
@@ -225,7 +225,7 @@
                     },
 {"name": "ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
-                            "flash_bytes": 309702,
+                            "flash_bytes": 309734,
                             "flash_percentage": 23,
                             "ram_bytes": 21356,
                             "ram_percentage": 6
@@ -233,7 +233,7 @@
                     },
 {"name": "ESP32/examples/HWCDC_Events",
                     "sizes": [{
-                            "flash_bytes": 333066,
+                            "flash_bytes": 333098,
                             "flash_percentage": 10,
                             "ram_bytes": 20748,
                             "ram_percentage": 6
@@ -241,7 +241,7 @@
                     },
 {"name": "ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
-                            "flash_bytes": 306634,
+                            "flash_bytes": 306666,
                             "flash_percentage": 23,
                             "ram_bytes": 20500,
                             "ram_percentage": 6
@@ -254,7 +254,7 @@
                 "sketches": [
 {"name": "ESP32/examples/GPIO/FunctionalInterrupt",
                     "sizes": [{
-                            "flash_bytes": 275169,
+                            "flash_bytes": 275209,
                             "flash_percentage": 20,
                             "ram_bytes": 16352,
                             "ram_percentage": 4
@@ -262,7 +262,7 @@
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
                     "sizes": [{
-                            "flash_bytes": 273797,
+                            "flash_bytes": 273837,
                             "flash_percentage": 20,
                             "ram_bytes": 16344,
                             "ram_percentage": 4
@@ -270,7 +270,7 @@
                     },
 {"name": "ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
-                            "flash_bytes": 274437,
+                            "flash_bytes": 274477,
                             "flash_percentage": 20,
                             "ram_bytes": 16352,
                             "ram_percentage": 4
@@ -278,7 +278,7 @@
                     },
 {"name": "ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
-                            "flash_bytes": 271537,
+                            "flash_bytes": 271577,
                             "flash_percentage": 20,
                             "ram_bytes": 15520,
                             "ram_percentage": 4
@@ -286,7 +286,7 @@
                     },
 {"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                     "sizes": [{
-                            "flash_bytes": 270713,
+                            "flash_bytes": 270753,
                             "flash_percentage": 20,
                             "ram_bytes": 15548,
                             "ram_percentage": 4
@@ -294,7 +294,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
-                            "flash_bytes": 286113,
+                            "flash_bytes": 286153,
                             "flash_percentage": 21,
                             "ram_bytes": 16836,
                             "ram_percentage": 5
@@ -302,7 +302,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTLoopback",
                     "sizes": [{
-                            "flash_bytes": 287077,
+                            "flash_bytes": 287117,
                             "flash_percentage": 21,
                             "ram_bytes": 18068,
                             "ram_percentage": 5
@@ -310,7 +310,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTReadXJT",
                     "sizes": [{
-                            "flash_bytes": 286545,
+                            "flash_bytes": 286585,
                             "flash_percentage": 21,
                             "ram_bytes": 16620,
                             "ram_percentage": 5
@@ -318,7 +318,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTWrite_RGB_LED",
                     "sizes": [{
-                            "flash_bytes": 285261,
+                            "flash_bytes": 285301,
                             "flash_percentage": 21,
                             "ram_bytes": 19092,
                             "ram_percentage": 5
@@ -326,7 +326,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
                     "sizes": [{
-                            "flash_bytes": 286137,
+                            "flash_bytes": 286177,
                             "flash_percentage": 21,
                             "ram_bytes": 16028,
                             "ram_percentage": 4
@@ -334,7 +334,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMT_EndOfTransmissionState",
                     "sizes": [{
-                            "flash_bytes": 285697,
+                            "flash_bytes": 285737,
                             "flash_percentage": 21,
                             "ram_bytes": 16084,
                             "ram_percentage": 4
@@ -342,7 +342,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMT_LED_Blink",
                     "sizes": [{
-                            "flash_bytes": 287645,
+                            "flash_bytes": 287685,
                             "flash_percentage": 21,
                             "ram_bytes": 16132,
                             "ram_percentage": 4
@@ -350,7 +350,7 @@
                     },
 {"name": "ESP32/examples/ResetReason/ResetReason",
                     "sizes": [{
-                            "flash_bytes": 274673,
+                            "flash_bytes": 274713,
                             "flash_percentage": 20,
                             "ram_bytes": 15496,
                             "ram_percentage": 4
@@ -358,7 +358,7 @@
                     },
 {"name": "ESP32/examples/ResetReason/ResetReason2",
                     "sizes": [{
-                            "flash_bytes": 267921,
+                            "flash_bytes": 267961,
                             "flash_percentage": 20,
                             "ram_bytes": 15432,
                             "ram_percentage": 4
@@ -371,7 +371,7 @@
                 "sketches": [
 {"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
                     "sizes": [{
-                            "flash_bytes": 290344,
+                            "flash_bytes": 290392,
                             "flash_percentage": 22,
                             "ram_bytes": 11840,
                             "ram_percentage": 3
@@ -379,7 +379,7 @@
                     },
 {"name": "ESP32/examples/AnalogRead",
                     "sizes": [{
-                            "flash_bytes": 296360,
+                            "flash_bytes": 296406,
                             "flash_percentage": 22,
                             "ram_bytes": 11916,
                             "ram_percentage": 3
@@ -387,7 +387,7 @@
                     },
 {"name": "ESP32/examples/AnalogReadContinuous",
                     "sizes": [{
-                            "flash_bytes": 302436,
+                            "flash_bytes": 302482,
                             "flash_percentage": 23,
                             "ram_bytes": 11916,
                             "ram_percentage": 3
@@ -395,7 +395,7 @@
                     },
 {"name": "ESP32/examples/ArduinoStackSize",
                     "sizes": [{
-                            "flash_bytes": 282050,
+                            "flash_bytes": 282096,
                             "flash_percentage": 21,
                             "ram_bytes": 11708,
                             "ram_percentage": 3
@@ -403,7 +403,7 @@
                     },
 {"name": "ESP32/examples/CI/CIBoardsTest",
                     "sizes": [{
-                            "flash_bytes": 334046,
+                            "flash_bytes": 334092,
                             "flash_percentage": 25,
                             "ram_bytes": 13656,
                             "ram_percentage": 4
@@ -411,7 +411,7 @@
                     },
 {"name": "ESP32/examples/ChipID/GetChipID",
                     "sizes": [{
-                            "flash_bytes": 284550,
+                            "flash_bytes": 284596,
                             "flash_percentage": 21,
                             "ram_bytes": 11748,
                             "ram_percentage": 3
@@ -419,7 +419,7 @@
                     },
 {"name": "ESP32/examples/DeepSleep/TimerWakeUp",
                     "sizes": [{
-                            "flash_bytes": 289206,
+                            "flash_bytes": 289252,
                             "flash_percentage": 22,
                             "ram_bytes": 11856,
                             "ram_percentage": 3
@@ -427,7 +427,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/BasicMultiThreading",
                     "sizes": [{
-                            "flash_bytes": 315990,
+                            "flash_bytes": 316036,
                             "flash_percentage": 24,
                             "ram_bytes": 13136,
                             "ram_percentage": 4
@@ -435,7 +435,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Mutex",
                     "sizes": [{
-                            "flash_bytes": 282890,
+                            "flash_bytes": 282936,
                             "flash_percentage": 21,
                             "ram_bytes": 11724,
                             "ram_percentage": 3
@@ -443,7 +443,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
-                            "flash_bytes": 283016,
+                            "flash_bytes": 283062,
                             "flash_percentage": 21,
                             "ram_bytes": 11708,
                             "ram_percentage": 3
@@ -451,7 +451,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
-                            "flash_bytes": 282262,
+                            "flash_bytes": 282310,
                             "flash_percentage": 21,
                             "ram_bytes": 11708,
                             "ram_percentage": 3
@@ -467,7 +467,7 @@
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterrupt",
                     "sizes": [{
-                            "flash_bytes": 289822,
+                            "flash_bytes": 289868,
                             "flash_percentage": 22,
                             "ram_bytes": 12304,
                             "ram_percentage": 3
@@ -475,7 +475,7 @@
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
                     "sizes": [{
-                            "flash_bytes": 288270,
+                            "flash_bytes": 288316,
                             "flash_percentage": 21,
                             "ram_bytes": 12312,
                             "ram_percentage": 3
@@ -488,121 +488,121 @@
                 "sketches": [
 {"name": "ESP32/examples/AnalogReadContinuous",
                     "sizes": [{
-                            "flash_bytes": 259601,
+                            "flash_bytes": 260229,
                             "flash_percentage": 19,
-                            "ram_bytes": 13096,
-                            "ram_percentage": 3
+                            "ram_bytes": 13208,
+                            "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/ArduinoStackSize",
                     "sizes": [{
-                            "flash_bytes": 239101,
+                            "flash_bytes": 239697,
                             "flash_percentage": 18,
-                            "ram_bytes": 12776,
+                            "ram_bytes": 12872,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "ESP32/examples/CI/CIBoardsTest",
                     "sizes": [{
-                            "flash_bytes": 292295,
+                            "flash_bytes": 292895,
                             "flash_percentage": 22,
-                            "ram_bytes": 15356,
+                            "ram_bytes": 15452,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/ChipID/GetChipID",
                     "sizes": [{
-                            "flash_bytes": 241867,
+                            "flash_bytes": 242471,
                             "flash_percentage": 18,
-                            "ram_bytes": 12832,
+                            "ram_bytes": 12928,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "ESP32/examples/DeepSleep/TimerWakeUp",
                     "sizes": [{
-                            "flash_bytes": 248599,
-                            "flash_percentage": 18,
-                            "ram_bytes": 13000,
-                            "ram_percentage": 3
+                            "flash_bytes": 249211,
+                            "flash_percentage": 19,
+                            "ram_bytes": 13112,
+                            "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/FreeRTOS/BasicMultiThreading",
                     "sizes": [{
-                            "flash_bytes": 273243,
+                            "flash_bytes": 273841,
                             "flash_percentage": 20,
-                            "ram_bytes": 14300,
+                            "ram_bytes": 14412,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/FreeRTOS/Mutex",
                     "sizes": [{
-                            "flash_bytes": 239803,
+                            "flash_bytes": 240401,
                             "flash_percentage": 18,
-                            "ram_bytes": 12792,
+                            "ram_bytes": 12888,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
-                            "flash_bytes": 240067,
+                            "flash_bytes": 240665,
                             "flash_percentage": 18,
-                            "ram_bytes": 12776,
+                            "ram_bytes": 12872,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
-                            "flash_bytes": 239317,
+                            "flash_bytes": 239911,
                             "flash_percentage": 18,
-                            "ram_bytes": 12776,
+                            "ram_bytes": 12872,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "ESP32/examples/GPIO/BlinkRGB",
                     "sizes": [{
-                            "flash_bytes": 245461,
+                            "flash_bytes": 245937,
                             "flash_percentage": 18,
-                            "ram_bytes": 14012,
+                            "ram_bytes": 14108,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterrupt",
                     "sizes": [{
-                            "flash_bytes": 247385,
+                            "flash_bytes": 247993,
                             "flash_percentage": 18,
-                            "ram_bytes": 13476,
+                            "ram_bytes": 13588,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
                     "sizes": [{
-                            "flash_bytes": 245645,
+                            "flash_bytes": 246251,
                             "flash_percentage": 18,
-                            "ram_bytes": 13484,
+                            "ram_bytes": 13596,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
-                            "flash_bytes": 246473,
+                            "flash_bytes": 247079,
                             "flash_percentage": 18,
-                            "ram_bytes": 13484,
+                            "ram_bytes": 13596,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/HWCDC_Events",
                     "sizes": [{
-                            "flash_bytes": 272409,
+                            "flash_bytes": 273017,
                             "flash_percentage": 20,
-                            "ram_bytes": 14156,
+                            "ram_bytes": 14252,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
-                            "flash_bytes": 243427,
+                            "flash_bytes": 244041,
                             "flash_percentage": 18,
-                            "ram_bytes": 12944,
+                            "ram_bytes": 13040,
                             "ram_percentage": 3
                             }]
                     }
@@ -613,7 +613,7 @@
                 "sketches": [
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
-                            "flash_bytes": 297189,
+                            "flash_bytes": 297235,
                             "flash_percentage": 22,
                             "ram_bytes": 12908,
                             "ram_percentage": 3
@@ -621,7 +621,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_write",
                     "sizes": [{
-                            "flash_bytes": 292685,
+                            "flash_bytes": 292731,
                             "flash_percentage": 22,
                             "ram_bytes": 12916,
                             "ram_percentage": 3
@@ -629,7 +629,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCFade",
                     "sizes": [{
-                            "flash_bytes": 295303,
+                            "flash_bytes": 295349,
                             "flash_percentage": 22,
                             "ram_bytes": 13024,
                             "ram_percentage": 3
@@ -669,7 +669,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
                     "sizes": [{
-                            "flash_bytes": 290609,
+                            "flash_bytes": 290655,
                             "flash_percentage": 22,
                             "ram_bytes": 13032,
                             "ram_percentage": 3
@@ -682,7 +682,7 @@
                 "sketches": [
 {"name": "ESP32/examples/AnalogOut/LEDCSingleChannel",
                     "sizes": [{
-                            "flash_bytes": 299022,
+                            "flash_bytes": 299018,
                             "flash_percentage": 22,
                             "ram_bytes": 20876,
                             "ram_percentage": 6
@@ -690,7 +690,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCSoftwareFade",
                     "sizes": [{
-                            "flash_bytes": 299102,
+                            "flash_bytes": 299098,
                             "flash_percentage": 22,
                             "ram_bytes": 20876,
                             "ram_percentage": 6
@@ -698,7 +698,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/SigmaDelta",
                     "sizes": [{
-                            "flash_bytes": 294614,
+                            "flash_bytes": 294610,
                             "flash_percentage": 22,
                             "ram_bytes": 20692,
                             "ram_percentage": 6
@@ -706,7 +706,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/ledcFrequency",
                     "sizes": [{
-                            "flash_bytes": 301006,
+                            "flash_bytes": 301002,
                             "flash_percentage": 22,
                             "ram_bytes": 20852,
                             "ram_percentage": 6
@@ -714,7 +714,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
                     "sizes": [{
-                            "flash_bytes": 312598,
+                            "flash_bytes": 312634,
                             "flash_percentage": 23,
                             "ram_bytes": 20900,
                             "ram_percentage": 6
@@ -722,7 +722,7 @@
                     },
 {"name": "ESP32/examples/AnalogRead",
                     "sizes": [{
-                            "flash_bytes": 313778,
+                            "flash_bytes": 313814,
                             "flash_percentage": 23,
                             "ram_bytes": 20764,
                             "ram_percentage": 6
@@ -730,7 +730,7 @@
                     },
 {"name": "ESP32/examples/AnalogReadContinuous",
                     "sizes": [{
-                            "flash_bytes": 320398,
+                            "flash_bytes": 320434,
                             "flash_percentage": 24,
                             "ram_bytes": 20796,
                             "ram_percentage": 6
@@ -738,7 +738,7 @@
                     },
 {"name": "ESP32/examples/ArduinoStackSize",
                     "sizes": [{
-                            "flash_bytes": 304642,
+                            "flash_bytes": 304678,
                             "flash_percentage": 23,
                             "ram_bytes": 20684,
                             "ram_percentage": 6
@@ -746,7 +746,7 @@
                     },
 {"name": "ESP32/examples/CI/CIBoardsTest",
                     "sizes": [{
-                            "flash_bytes": 334734,
+                            "flash_bytes": 334770,
                             "flash_percentage": 25,
                             "ram_bytes": 22100,
                             "ram_percentage": 6
@@ -754,7 +754,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1038530,
+                            "flash_bytes": 1038574,
                             "flash_percentage": 6,
                             "ram_bytes": 63800,
                             "ram_percentage": 19
@@ -762,7 +762,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1050738,
+                            "flash_bytes": 1050774,
                             "flash_percentage": 6,
                             "ram_bytes": 63892,
                             "ram_percentage": 19
@@ -770,7 +770,7 @@
                     },
 {"name": "ESP32/examples/ChipID/GetChipID",
                     "sizes": [{
-                            "flash_bytes": 308494,
+                            "flash_bytes": 308530,
                             "flash_percentage": 23,
                             "ram_bytes": 20732,
                             "ram_percentage": 6
@@ -778,7 +778,7 @@
                     },
 {"name": "ESP32/examples/DeepSleep/ExternalWakeUp",
                     "sizes": [{
-                            "flash_bytes": 311046,
+                            "flash_bytes": 311082,
                             "flash_percentage": 23,
                             "ram_bytes": 20716,
                             "ram_percentage": 6
@@ -786,7 +786,7 @@
                     },
 {"name": "ESP32/examples/DeepSleep/SmoothBlink_ULP_Code",
                     "sizes": [{
-                            "flash_bytes": 313670,
+                            "flash_bytes": 313706,
                             "flash_percentage": 23,
                             "ram_bytes": 20716,
                             "ram_percentage": 6
@@ -794,7 +794,7 @@
                     },
 {"name": "ESP32/examples/DeepSleep/TimerWakeUp",
                     "sizes": [{
-                            "flash_bytes": 310506,
+                            "flash_bytes": 310542,
                             "flash_percentage": 23,
                             "ram_bytes": 20716,
                             "ram_percentage": 6
