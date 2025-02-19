@@ -180,7 +180,7 @@ void loop() {
 
   // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
   if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Generic Switch Matter Accessory. It shall be commissioned again.");
+    Serial.println("Decommissioning Fan Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
     button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
