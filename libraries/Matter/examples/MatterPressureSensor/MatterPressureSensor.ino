@@ -123,7 +123,7 @@ void loop() {
   uint32_t time_diff = millis() - button_time_stamp;
   if (button_state && time_diff > decommissioningTimeout) {
     // Factory reset is triggered if the button is pressed longer than 5 seconds
-    Serial.println("Decommissioning the Matter Accessory. It shall be commissioned again.");
+    Serial.println("Decommissioning Pressure Sensor Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
   }
 
