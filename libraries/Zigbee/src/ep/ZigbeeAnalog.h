@@ -66,7 +66,7 @@ public:
 
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
-    
+
   void (*_on_analog_output_change)(float);
   void analogOutputChanged(float analog_output);
 

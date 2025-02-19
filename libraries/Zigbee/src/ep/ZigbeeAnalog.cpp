@@ -21,23 +21,17 @@ ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
 }
 
 void ZigbeeAnalog::addAnalogValue() {
-  esp_zb_cluster_list_add_analog_value_cluster(
-    _cluster_list, esp_zb_analog_value_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE
-  );
+  esp_zb_cluster_list_add_analog_value_cluster(_cluster_list, esp_zb_analog_value_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   _analog_clusters |= ANALOG_VALUE;
 }
 
 void ZigbeeAnalog::addAnalogInput() {
-  esp_zb_cluster_list_add_analog_input_cluster(
-    _cluster_list, esp_zb_analog_input_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE
-  );
+  esp_zb_cluster_list_add_analog_input_cluster(_cluster_list, esp_zb_analog_input_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   _analog_clusters |= ANALOG_INPUT;
 }
 
 void ZigbeeAnalog::addAnalogOutput() {
-  esp_zb_cluster_list_add_analog_output_cluster(
-    _cluster_list, esp_zb_analog_output_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE
-  );
+  esp_zb_cluster_list_add_analog_output_cluster(_cluster_list, esp_zb_analog_output_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   _analog_clusters |= ANALOG_OUTPUT;
 }
 
@@ -64,7 +58,7 @@ void ZigbeeAnalog::analogOutputChanged(float analog_output) {
 }
 
 void ZigbeeAnalog::setAnalogValue(float analog) {
-  if(!(_analog_clusters & ANALOG_VALUE)) {
+  if (!(_analog_clusters & ANALOG_VALUE)) {
     log_e("Analog Value cluster not added");
     return;
   }
@@ -72,14 +66,13 @@ void ZigbeeAnalog::setAnalogValue(float analog) {
   log_d("Setting analog value to %.1f", analog);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID,
-    &analog, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID, &analog, false
   );
   esp_zb_lock_release();
 }
 
 void ZigbeeAnalog::setAnalogInput(float analog) {
-  if(!(_analog_clusters & ANALOG_INPUT)) {
+  if (!(_analog_clusters & ANALOG_INPUT)) {
     log_e("Analog Input cluster not added");
     return;
   }
@@ -87,8 +80,7 @@ void ZigbeeAnalog::setAnalogInput(float analog) {
   log_d("Setting analog input to %.1f", analog);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID,
-    &analog, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID, &analog, false
   );
   esp_zb_lock_release();
 }
@@ -123,11 +115,10 @@ void ZigbeeAnalog::setAnalogInputReporting(uint16_t min_interval, uint16_t max_i
   reporting_info.u.send_info.delta.s32 = delta;
   reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
   reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
-  
+
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
 }
-
 
 #endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
