@@ -48,10 +48,10 @@ function run_test {
         return 0
     fi
 
-    local right_target
-    right_target=$(grep -E "^CONFIG_IDF_TARGET=\"$target\"$" "$sdkconfig_path")
-    if [ -z "$right_target" ]; then
-        printf "\033[91mError: Sketch %s compiled for different target\n\033[0m\n" "$sketchname"
+    local compiled_target
+    compiled_target=$(grep -E "CONFIG_IDF_TARGET=" "$sdkconfig_path" | cut -d'"' -f2)
+    if [ "$compiled_target" != "$target" ]; then
+        printf "\033[91mError: Sketch %s compiled for %s, expected %s\033[0m\n" "$sketchname" "$compiled_target" "$target"
         printf "\n\n\n"
         return 1
     fi
