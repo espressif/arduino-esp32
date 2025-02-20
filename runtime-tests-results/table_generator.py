@@ -5,6 +5,7 @@ from datetime import datetime
 
 SUCCESS_SYMBOL = ":white_check_mark:"
 FAILURE_SYMBOL = ":x:"
+ERROR_SYMBOL = ":fire:"
 
 # Load the JSON file passed as argument to the script
 with open(sys.argv[1], "r") as f:
@@ -51,11 +52,13 @@ for test in tests:
     if target not in proc_test_data[platform][test_name]:
         proc_test_data[platform][test_name][target] = {
             "failures": 0,
-            "total": 0
+            "total": 0,
+            "errors": 0
         }
 
     proc_test_data[platform][test_name][target]["total"] += test["tests"]
-    proc_test_data[platform][test_name][target]["failures"] += test["failures"] + test["errors"]
+    proc_test_data[platform][test_name][target]["failures"] += test["failures"]
+    proc_test_data[platform][test_name][target]["errors"] = test["errors"]
 
 target_list = sorted(target_list)
 
@@ -79,11 +82,14 @@ for platform in proc_test_data:
         for target in target_list:
             if target in targets:
                 test_data = targets[target]
-                print(f"|{test_data['total']-test_data['failures']}/{test_data['total']}", end="")
-                if test_data["failures"] > 0:
-                    print(f" {FAILURE_SYMBOL}", end="")
+                if test_data["errors"] > 0:
+                    print(f"|Error {ERROR_SYMBOL}", end="")
                 else:
-                    print(f" {SUCCESS_SYMBOL}", end="")
+                    print(f"|{test_data['total']-test_data['failures']}/{test_data['total']}", end="")
+                    if test_data["failures"] > 0:
+                        print(f" {FAILURE_SYMBOL}", end="")
+                    else:
+                        print(f" {SUCCESS_SYMBOL}", end="")
             else:
                 print("|-", end="")
         print("")
