@@ -57,7 +57,7 @@ void setup() {
   // Optional: set Zigbee device name and model
   zbAnalogDevice.setManufacturerAndModel("Espressif", "ZigbeeAnalogDevice");
 
-  // Add analog sensor cluster to Zigbee Analog accoding your needs
+  // Add analog clusters to Zigbee Analog according your needs
   zbAnalogDevice.addAnalogInput();
   zbAnalogDevice.addAnalogOutput();
 
