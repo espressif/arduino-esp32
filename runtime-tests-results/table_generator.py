@@ -58,7 +58,7 @@ for test in tests:
 
     proc_test_data[platform][test_name][target]["total"] += test["tests"]
     proc_test_data[platform][test_name][target]["failures"] += test["failures"]
-    proc_test_data[platform][test_name][target]["errors"] = test["errors"]
+    proc_test_data[platform][test_name][target]["errors"] += test["errors"]
 
 target_list = sorted(target_list)
 
