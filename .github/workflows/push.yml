@@ -237,7 +237,7 @@ jobs:
       needs.gen-chunks.outputs.build_all == 'true' ||
       needs.gen-chunks.outputs.build_libraries == 'true' ||
       needs.gen-chunks.outputs.build_idf == 'true'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
