@@ -113,6 +113,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Dimmable_Light",
+                    "sizes": [{
+                            "flash_bytes": 570395,
+                            "flash_percentage": 43,
+                            "ram_bytes": 29932,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_OTA_Client",
                     "sizes": [{
                             "flash_bytes": 582863,
@@ -214,6 +222,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Vibration_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 548647,
+                            "flash_percentage": 41,
+                            "ram_bytes": 27776,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Window_Covering",
                     "sizes": [{
                             "flash_bytes": 561185,

@@ -550,6 +550,14 @@
                             "ram_percentage": 4
                             }]
                     },
+{"name": "Zigbee/examples/Zigbee_Analog_Input_Output",
+                    "sizes": [{
+                            "flash_bytes": 538639,
+                            "flash_percentage": 41,
+                            "ram_bytes": 28944,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_CarbonDioxide_Sensor",
                     "sizes": [{
                             "flash_bytes": 533139,
@@ -581,20 +589,20 @@
                             "ram_bytes": 28680,
                             "ram_percentage": 8
                             }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Dimmable_Light",
-                    "sizes": [{
-                            "flash_bytes": 570395,
-                            "flash_percentage": 43,
-                            "ram_bytes": 29932,
-                            "ram_percentage": 9
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_On_Off_Light",
+                    "sizes": [{
+                            "flash_bytes": 583235,
+                            "flash_percentage": 44,
+                            "ram_bytes": 28976,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_On_Off_Switch",
                     "sizes": [{
                             "flash_bytes": 684881,
@@ -649,14 +657,6 @@
                             "flash_percentage": 52,
                             "ram_bytes": 31484,
                             "ram_percentage": 9
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Vibration_Sensor",
-                    "sizes": [{
-                            "flash_bytes": 548647,
-                            "flash_percentage": 41,
-                            "ram_bytes": 27776,
-                            "ram_percentage": 8
                             }]
                     }
 ]

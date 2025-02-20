@@ -595,6 +595,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Analog_Input_Output",
+                    "sizes": [{
+                            "flash_bytes": 554415,
+                            "flash_percentage": 42,
+                            "ram_bytes": 27952,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_CarbonDioxide_Sensor",
                     "sizes": [{
                             "flash_bytes": 549153,
@@ -648,14 +656,6 @@
                             "flash_bytes": 544909,
                             "flash_percentage": 41,
                             "ram_bytes": 27712,
-                            "ram_percentage": 8
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_On_Off_Light",
-                    "sizes": [{
-                            "flash_bytes": 583235,
-                            "flash_percentage": 44,
-                            "ram_bytes": 28976,
                             "ram_percentage": 8
                             }]
                     }
