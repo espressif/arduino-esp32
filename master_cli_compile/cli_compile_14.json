@@ -153,6 +153,14 @@
                             "ram_percentage": 8
                             }]
                     },
+{"name": "Zigbee/examples/Zigbee_Range_Extender",
+                    "sizes": [{
+                            "flash_bytes": 662343,
+                            "flash_percentage": 50,
+                            "ram_bytes": 33012,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Scan_Networks",
                     "sizes": [{
                             "flash_bytes": 518223,
@@ -198,6 +206,19 @@
                             "flash_bytes": 545379,
                             "flash_percentage": 41,
                             "ram_bytes": 28992,
+                            "ram_percentage": 8
+                            }]
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32h2",
+                "target": "esp32h2",
+                "sketches": [
+{"name": "Zigbee/examples/Zigbee_Window_Covering",
+                    "sizes": [{
+                            "flash_bytes": 561185,
+                            "flash_percentage": 42,
+                            "ram_bytes": 28088,
                             "ram_percentage": 8
                             }]
                     }
