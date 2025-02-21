@@ -1,5 +1,5 @@
 #include "ZigbeeAnalog.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 esp_zb_cluster_list_t *zigbee_analog_clusters_create(zigbee_analog_cfg_t *analog_sensor) {
   esp_zb_basic_cluster_cfg_t *basic_cfg = analog_sensor ? &(analog_sensor->basic_cfg) : NULL;
@@ -121,4 +121,4 @@ void ZigbeeAnalog::setAnalogInputReporting(uint16_t min_interval, uint16_t max_i
   esp_zb_lock_release();
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

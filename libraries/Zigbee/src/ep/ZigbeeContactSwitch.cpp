@@ -1,5 +1,5 @@
 #include "ZigbeeContactSwitch.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 esp_zb_cluster_list_t *zigbee_contact_switch_clusters_create(zigbee_contact_switch_cfg_t *contact_switch) {
   esp_zb_basic_cluster_cfg_t *basic_cfg = contact_switch ? &(contact_switch->basic_cfg) : NULL;
@@ -93,4 +93,4 @@ void ZigbeeContactSwitch::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enro
   }
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED
