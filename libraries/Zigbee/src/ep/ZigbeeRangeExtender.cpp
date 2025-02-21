@@ -1,5 +1,5 @@
 #include "ZigbeeRangeExtender.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 ZigbeeRangeExtender::ZigbeeRangeExtender(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_RANGE_EXTENDER_DEVICE_ID;
@@ -12,4 +12,4 @@ ZigbeeRangeExtender::ZigbeeRangeExtender(uint8_t endpoint) : ZigbeeEP(endpoint) 
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_RANGE_EXTENDER_DEVICE_ID, .app_device_version = 0};
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

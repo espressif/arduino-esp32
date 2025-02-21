@@ -2,7 +2,7 @@
 
 #include "ZigbeeEP.h"
 
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
@@ -431,4 +431,4 @@ void ZigbeeEP::requestOTAUpdate() {
   esp_zb_lock_release();
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

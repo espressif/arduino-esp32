@@ -1,5 +1,5 @@
 #include "ZigbeePressureSensor.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 esp_zb_cluster_list_t *zigbee_pressure_sensor_clusters_create(zigbee_pressure_sensor_cfg_t *pressure_sensor) {
   esp_zb_basic_cluster_cfg_t *basic_cfg = pressure_sensor ? &(pressure_sensor->basic_cfg) : NULL;
@@ -82,4 +82,4 @@ void ZigbeePressureSensor::report() {
   log_v("Pressure report sent");
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

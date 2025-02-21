@@ -3,7 +3,7 @@
 #pragma once
 
 #include "ZigbeeCore.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include <Arduino.h>
 #include <ColorFormat.h>
@@ -157,4 +157,4 @@ protected:
   friend class ZigbeeCore;
 };
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

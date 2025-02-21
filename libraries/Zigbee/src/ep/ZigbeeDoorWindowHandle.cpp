@@ -1,5 +1,5 @@
 #include "ZigbeeDoorWindowHandle.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 esp_zb_cluster_list_t *zigbee_door_window_handle_clusters_create(zigbee_door_window_handle_cfg_t *door_window_handle) {
   esp_zb_basic_cluster_cfg_t *basic_cfg = door_window_handle ? &(door_window_handle->basic_cfg) : NULL;
@@ -105,4 +105,4 @@ void ZigbeeDoorWindowHandle::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_e
   }
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED
