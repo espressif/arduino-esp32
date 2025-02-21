@@ -1,5 +1,5 @@
 #include "ZigbeeFlowSensor.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 esp_zb_cluster_list_t *zigbee_flow_sensor_clusters_create(zigbee_flow_sensor_cfg_t *flow_sensor) {
   esp_zb_basic_cluster_cfg_t *basic_cfg = flow_sensor ? &(flow_sensor->basic_cfg) : NULL;
@@ -86,4 +86,4 @@ void ZigbeeFlowSensor::report() {
   log_v("Flow report sent");
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

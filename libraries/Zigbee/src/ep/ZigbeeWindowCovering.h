@@ -4,7 +4,7 @@
 
 #include "soc/soc_caps.h"
 #include "sdkconfig.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -144,4 +144,4 @@ private:
   uint16_t _physical_closed_limit_tilt;
 };
 
-#endif  // SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED
