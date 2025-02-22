@@ -117,9 +117,11 @@ void setup() {
   RUN_TEST(test_memset_all_zeroes);
   RUN_TEST(test_memset_all_ones);
   RUN_TEST(test_memset_alternating);
-  //This test is disabled because it takes too long to run on some wokwi boards
-  //RUN_TEST(test_memset_random);
+#ifndef CONFIG_IDF_TARGET_ESP32P4
+  // These tests are taking too long on ESP32-P4 in Wokwi
+  RUN_TEST(test_memset_random);
   RUN_TEST(test_memcpy);
+#endif
   UNITY_END();
 }
 
