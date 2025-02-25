@@ -113,7 +113,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 853854,
+                            "flash_bytes": 853870,
                             "flash_percentage": 65,
                             "ram_bytes": 44140,
                             "ram_percentage": 13
@@ -773,6 +773,14 @@
                             "flash_bytes": 1120062,
                             "flash_percentage": 35,
                             "ram_bytes": 39996,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "BLE/examples/iBeacon",
+                    "sizes": [{
+                            "flash_bytes": 1125794,
+                            "flash_percentage": 35,
+                            "ram_bytes": 40004,
                             "ram_percentage": 12
                             }]
                     }

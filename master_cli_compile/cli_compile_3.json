@@ -664,30 +664,6 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "ESP32/examples/DeepSleep/TouchWakeUp",
-                    "sizes": [{
-                            "flash_bytes": 318830,
-                            "flash_percentage": 24,
-                            "ram_bytes": 20876,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "ESP32/examples/FreeRTOS/BasicMultiThreading",
-                    "sizes": [{
-                            "flash_bytes": 315494,
-                            "flash_percentage": 24,
-                            "ram_bytes": 20788,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "ESP32/examples/FreeRTOS/Mutex",
-                    "sizes": [{
-                            "flash_bytes": 305690,
-                            "flash_percentage": 23,
-                            "ram_bytes": 20808,
-                            "ram_percentage": 6
-                            }]
-                    },
 {"name": "ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
                             "flash_bytes": 305422,
@@ -773,6 +749,38 @@
                             "flash_bytes": 322678,
                             "flash_percentage": 24,
                             "ram_bytes": 22140,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMTWrite_RGB_LED",
+                    "sizes": [{
+                            "flash_bytes": 321482,
+                            "flash_percentage": 24,
+                            "ram_bytes": 24628,
+                            "ram_percentage": 7
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
+                    "sizes": [{
+                            "flash_bytes": 322358,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21540,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMT_EndOfTransmissionState",
+                    "sizes": [{
+                            "flash_bytes": 321898,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21596,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMT_LED_Blink",
+                    "sizes": [{
+                            "flash_bytes": 323866,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21660,
                             "ram_percentage": 6
                             }]
                     }

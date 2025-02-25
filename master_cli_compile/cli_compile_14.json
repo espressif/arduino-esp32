@@ -46,6 +46,38 @@
                             "ram_bytes": 21756,
                             "ram_percentage": 6
                             }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Color_Dimmer_Switch",
+                    "sizes": [{
+                            "flash_bytes": 636810,
+                            "flash_percentage": 48,
+                            "ram_bytes": 36492,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_On_Off_Switch",
+                    "sizes": [{
+                            "flash_bytes": 631750,
+                            "flash_percentage": 48,
+                            "ram_bytes": 37276,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Range_Extender",
+                    "sizes": [{
+                            "flash_bytes": 632082,
+                            "flash_percentage": 48,
+                            "ram_bytes": 36664,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Thermostat",
+                    "sizes": [{
+                            "flash_bytes": 634418,
+                            "flash_percentage": 48,
+                            "ram_bytes": 36628,
+                            "ram_percentage": 11
+                            }]
                     }
 ]
 },
@@ -106,6 +138,75 @@
                             "flash_percentage": 22,
                             "ram_bytes": 16776,
                             "ram_percentage": 5
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Color_Dimmer_Switch",
+                    "sizes": [{
+                            "flash_bytes": 604065,
+                            "flash_percentage": 46,
+                            "ram_bytes": 31504,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_On_Off_Switch",
+                    "sizes": [{
+                            "flash_bytes": 598813,
+                            "flash_percentage": 45,
+                            "ram_bytes": 32280,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Range_Extender",
+                    "sizes": [{
+                            "flash_bytes": 593017,
+                            "flash_percentage": 45,
+                            "ram_bytes": 31620,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Thermostat",
+                    "sizes": [{
+                            "flash_bytes": 601209,
+                            "flash_percentage": 45,
+                            "ram_bytes": 31656,
+                            "ram_percentage": 9
+                            }]
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32c3",
+                "target": "esp32c3",
+                "sketches": [
+{"name": "Zigbee/examples/Zigbee_Color_Dimmer_Switch",
+                    "sizes": [{
+                            "flash_bytes": 661606,
+                            "flash_percentage": 50,
+                            "ram_bytes": 27752,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_On_Off_Switch",
+                    "sizes": [{
+                            "flash_bytes": 653606,
+                            "flash_percentage": 49,
+                            "ram_bytes": 28216,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Range_Extender",
+                    "sizes": [{
+                            "flash_bytes": 646936,
+                            "flash_percentage": 49,
+                            "ram_bytes": 28544,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Thermostat",
+                    "sizes": [{
+                            "flash_bytes": 654910,
+                            "flash_percentage": 49,
+                            "ram_bytes": 27896,
+                            "ram_percentage": 8
                             }]
                     }
 ]
@@ -243,100 +344,20 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "WiFi/examples/WiFiMultiAdvanced",
+{"name": "Zigbee/examples/Zigbee_Range_Extender",
                     "sizes": [{
-                            "flash_bytes": 1032742,
-                            "flash_percentage": 78,
-                            "ram_bytes": 48392,
-                            "ram_percentage": 14
+                            "flash_bytes": 613986,
+                            "flash_percentage": 46,
+                            "ram_bytes": 36268,
+                            "ram_percentage": 11
                             }]
                     },
-{"name": "WiFi/examples/WiFiScan",
+{"name": "Zigbee/examples/Zigbee_Thermostat",
                     "sizes": [{
-                            "flash_bytes": 895266,
-                            "flash_percentage": 68,
-                            "ram_bytes": 45104,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiScanAsync",
-                    "sizes": [{
-                            "flash_bytes": 895522,
-                            "flash_percentage": 68,
-                            "ram_bytes": 45104,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiScanDualAntenna",
-                    "sizes": [{
-                            "flash_bytes": 899286,
-                            "flash_percentage": 68,
-                            "ram_bytes": 45104,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiScanTime",
-                    "sizes": [{
-                            "flash_bytes": 895362,
-                            "flash_percentage": 68,
-                            "ram_bytes": 45104,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiSmartConfig",
-                    "sizes": [{
-                            "flash_bytes": 931622,
-                            "flash_percentage": 71,
-                            "ram_bytes": 45392,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiTelnetToSerial",
-                    "sizes": [{
-                            "flash_bytes": 916542,
-                            "flash_percentage": 69,
-                            "ram_bytes": 46496,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiUDPClient",
-                    "sizes": [{
-                            "flash_bytes": 905022,
-                            "flash_percentage": 69,
-                            "ram_bytes": 46776,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "WiFiProv/examples/WiFiProv",
-                    "sizes": [{
-                            "flash_bytes": 1718878,
-                            "flash_percentage": 54,
-                            "ram_bytes": 59436,
-                            "ram_percentage": 18
-                            }]
-                    },
-{"name": "Wire/examples/WireMaster",
-                    "sizes": [{
-                            "flash_bytes": 330022,
-                            "flash_percentage": 25,
-                            "ram_bytes": 22012,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "Wire/examples/WireScan",
-                    "sizes": [{
-                            "flash_bytes": 329778,
-                            "flash_percentage": 25,
-                            "ram_bytes": 22004,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "Wire/examples/WireSlave",
-                    "sizes": [{
-                            "flash_bytes": 330270,
-                            "flash_percentage": 25,
-                            "ram_bytes": 22012,
-                            "ram_percentage": 6
+                            "flash_bytes": 639098,
+                            "flash_percentage": 48,
+                            "ram_bytes": 36836,
+                            "ram_percentage": 11
                             }]
                     }
 ]

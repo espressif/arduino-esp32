@@ -664,86 +664,6 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "PPP/examples/PPP_WIFI_BRIDGE",
-                    "sizes": [{
-                            "flash_bytes": 968338,
-                            "flash_percentage": 73,
-                            "ram_bytes": 45280,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "Preferences/examples/Prefs2Struct",
-                    "sizes": [{
-                            "flash_bytes": 312458,
-                            "flash_percentage": 23,
-                            "ram_bytes": 20708,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "Preferences/examples/StartCounter",
-                    "sizes": [{
-                            "flash_bytes": 313310,
-                            "flash_percentage": 23,
-                            "ram_bytes": 20716,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerCustom",
-                    "sizes": [{
-                            "flash_bytes": 2036486,
-                            "flash_percentage": 50,
-                            "ram_bytes": 64456,
-                            "ram_percentage": 19
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerSwitch",
-                    "sizes": [{
-                            "flash_bytes": 2048114,
-                            "flash_percentage": 50,
-                            "ram_bytes": 64528,
-                            "ram_percentage": 19
-                            }]
-                    },
-{"name": "SD/examples/SD_Test",
-                    "sizes": [{
-                            "flash_bytes": 368850,
-                            "flash_percentage": 9,
-                            "ram_bytes": 21740,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "SD/examples/SD_time",
-                    "sizes": [{
-                            "flash_bytes": 966358,
-                            "flash_percentage": 73,
-                            "ram_bytes": 47052,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "SD_MMC/examples/SDMMC_Test",
-                    "sizes": [{
-                            "flash_bytes": 388850,
-                            "flash_percentage": 29,
-                            "ram_bytes": 21924,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "SD_MMC/examples/SDMMC_time",
-                    "sizes": [{
-                            "flash_bytes": 990086,
-                            "flash_percentage": 75,
-                            "ram_bytes": 47340,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "SPI/examples/SPI_Multiple_Buses",
-                    "sizes": [{
-                            "flash_bytes": 300090,
-                            "flash_percentage": 22,
-                            "ram_bytes": 20764,
-                            "ram_percentage": 6
-                            }]
-                    },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
                             "flash_bytes": 342158,
@@ -754,7 +674,7 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 953682,
+                            "flash_bytes": 953698,
                             "flash_percentage": 72,
                             "ram_bytes": 46828,
                             "ram_percentage": 14
@@ -774,6 +694,94 @@
                             "flash_percentage": 24,
                             "ram_bytes": 22996,
                             "ram_percentage": 7
+                            }]
+                    },
+{"name": "Ticker/examples/Blinker",
+                    "sizes": [{
+                            "flash_bytes": 296598,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20740,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "Ticker/examples/TickerBasic",
+                    "sizes": [{
+                            "flash_bytes": 296386,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20684,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "Ticker/examples/TickerParameter",
+                    "sizes": [{
+                            "flash_bytes": 296322,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20724,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "Update/examples/AWS_S3_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 922546,
+                            "flash_percentage": 70,
+                            "ram_bytes": 46640,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "Update/examples/HTTPS_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 1021194,
+                            "flash_percentage": 77,
+                            "ram_bytes": 47248,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "Update/examples/HTTP_Client_AES_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 965914,
+                            "flash_percentage": 73,
+                            "ram_bytes": 48064,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "Update/examples/HTTP_Server_AES_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 994958,
+                            "flash_percentage": 75,
+                            "ram_bytes": 49392,
+                            "ram_percentage": 15
+                            }]
+                    },
+{"name": "Update/examples/OTAWebUpdater",
+                    "sizes": [{
+                            "flash_bytes": 981406,
+                            "flash_percentage": 74,
+                            "ram_bytes": 49388,
+                            "ram_percentage": 15
+                            }]
+                    },
+{"name": "Update/examples/SD_Update",
+                    "sizes": [{
+                            "flash_bytes": 373326,
+                            "flash_percentage": 28,
+                            "ram_bytes": 21436,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "WebServer/examples/AdvancedWebServer",
+                    "sizes": [{
+                            "flash_bytes": 975382,
+                            "flash_percentage": 74,
+                            "ram_bytes": 49156,
+                            "ram_percentage": 15
+                            }]
+                    },
+{"name": "WebServer/examples/FSBrowser",
+                    "sizes": [{
+                            "flash_bytes": 1019094,
+                            "flash_percentage": 77,
+                            "ram_bytes": 49208,
+                            "ram_percentage": 15
                             }]
                     }
 ]

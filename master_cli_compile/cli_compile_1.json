@@ -672,14 +672,6 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 1125794,
-                            "flash_percentage": 35,
-                            "ram_bytes": 40004,
-                            "ram_percentage": 12
-                            }]
-                    },
 {"name": "BluetoothSerial/examples/DiscoverConnect",
                     "sizes": [{
                             "flash_bytes": 1096114,
@@ -781,6 +773,22 @@
                             "flash_bytes": 315858,
                             "flash_percentage": 24,
                             "ram_bytes": 20884,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/LEDCSingleChannel",
+                    "sizes": [{
+                            "flash_bytes": 299018,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20876,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogOut/LEDCSoftwareFade",
+                    "sizes": [{
+                            "flash_bytes": 299098,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20876,
                             "ram_percentage": 6
                             }]
                     }
