@@ -49280,6 +49280,6 @@ cyobot_v2_esp32s3.menu.ZigbeeMode.default.build.zigbee_mode=
 cyobot_v2_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api_zczr -lesp_zb_cli_command -lzboss_stack.zczr -lzboss_port
+cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################

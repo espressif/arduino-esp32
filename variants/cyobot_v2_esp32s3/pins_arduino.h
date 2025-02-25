@@ -7,8 +7,6 @@
 #define USB_PRODUCT      "CYObrain ESP32S3"
 #define USB_SERIAL       ""  // Empty string for MAC address
 
-/* Welcome to CYObot! - Pin header file is for CYObrain_v2_esp32s3 */
-// Last Updated: 02/06/2025 - by Phamm
 
 static const uint8_t BUTTON0 = 4;
 static const uint8_t BUTTON1 = 38;
@@ -27,16 +25,10 @@ static const uint8_t I2S0_DSDIN = 8;
 static const uint8_t I2S0_SCLK = 9;
 static const uint8_t I2S0_LRCK = 45;
 
-/* static const uint8_t I2C_SDA = 17  - Naming convention */
+
 static const uint8_t SDA = 17;
-/* static const uint8_t I2C_SCL = 18 - Naming convention */
 static const uint8_t SCL = 18;
 
-/* Naming convention changes 
-static const uint8_t SPI_CS = 5;
-static const uint8_t SPI_SCK = 41;
-static const uint8_t SPI_MISO = 42;
-static const uint8_t SPI_MOSI = 2; */
 
 static const uint8_t SS = 5;
 static const uint8_t MOSI = 2;
