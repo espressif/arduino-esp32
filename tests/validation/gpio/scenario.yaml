@@ -6,31 +6,31 @@ steps:
   - wait-serial: "Button test"
 
   # Need for 1s delay for scenario to run properly
-  - delay: 1000ms
+  - delay: 5000ms
 
   # Press once
   - set-control:
       part-id: btn1
       control: pressed
       value: 1
-  - delay: 200ms
+  - delay: 2000ms
   - set-control:
       part-id: btn1
       control: pressed
       value: 0
-  - delay: 300ms
+  - delay: 3000ms
 
   # Press 2nd time
   - set-control:
       part-id: btn1
       control: pressed
       value: 1
-  - delay: 200ms
+  - delay: 2000ms
   - set-control:
       part-id: btn1
       control: pressed
       value: 0
-  - delay: 300ms
+  - delay: 3000ms
 
   # Press for the 3rd time
   - set-control:

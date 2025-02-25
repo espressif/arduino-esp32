@@ -48,7 +48,8 @@ void ZigbeeTempSensor::setReporting(uint16_t min_interval, uint16_t max_interval
   reporting_info.u.send_info.def_max_interval = max_interval;
   reporting_info.u.send_info.delta.u16 = (uint16_t)(delta * 100);  // Convert delta to ZCL uint16_t
   reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
-  reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC, esp_zb_lock_acquire(portMAX_DELAY);
+  reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
 }
