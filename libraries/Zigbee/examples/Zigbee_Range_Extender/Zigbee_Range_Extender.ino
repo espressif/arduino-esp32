@@ -34,6 +34,11 @@
 /* Zigbee light bulb configuration */
 #define USE_CUSTOM_ZIGBEE_CONFIG 1
 #define ZIGBEE_EXTENDER_ENDPOINT 1
+
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 4
+#endif
+
 uint8_t led = LED_BUILTIN;
 uint8_t button = BOOT_PIN;
 
