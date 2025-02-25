@@ -4,6 +4,12 @@
 #define MAX_TEST_SIZE 512 * 1024  // 512KB
 
 void *buf = NULL;
+uint32_t psram_size = 0;
+
+void psram_found(void) {
+  psram_size = ESP.getPsramSize();
+  TEST_ASSERT_TRUE(psram_size > 0);
+}
 
 void test_malloc_success(void) {
   buf = ps_malloc(MAX_TEST_SIZE);
@@ -96,6 +102,13 @@ void setup() {
   }
 
   UNITY_BEGIN();
+  RUN_TEST(psram_found);
+
+  if (psram_size == 0) {
+    UNITY_END();
+    return;
+  }
+
   RUN_TEST(test_malloc_success);
   RUN_TEST(test_malloc_fail);
   RUN_TEST(test_calloc_success);
@@ -104,8 +117,11 @@ void setup() {
   RUN_TEST(test_memset_all_zeroes);
   RUN_TEST(test_memset_all_ones);
   RUN_TEST(test_memset_alternating);
+#ifndef CONFIG_IDF_TARGET_ESP32P4
+  // These tests are taking too long on ESP32-P4 in Wokwi
   RUN_TEST(test_memset_random);
   RUN_TEST(test_memcpy);
+#endif
   UNITY_END();
 }
 

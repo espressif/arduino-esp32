@@ -1,5 +1,5 @@
 #include "ZigbeeVibrationSensor.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 esp_zb_cluster_list_t *zigbee_vibration_sensor_clusters_create(zigbee_vibration_sensor_cfg_t *vibration_sensor) {
   esp_zb_basic_cluster_cfg_t *basic_cfg = vibration_sensor ? &(vibration_sensor->basic_cfg) : NULL;
@@ -83,4 +83,4 @@ void ZigbeeVibrationSensor::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_en
   }
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED
