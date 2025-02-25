@@ -34,7 +34,7 @@
 /* Zigbee light bulb configuration */
 #define USE_CUSTOM_ZIGBEE_CONFIG 1
 #define ZIGBEE_EXTENDER_ENDPOINT 1
-uint8_t led = RGB_BUILTIN;
+uint8_t led = LED_BUILTIN;
 uint8_t button = BOOT_PIN;
 
 ZigbeeRangeExtender zbExtender = ZigbeeRangeExtender(ZIGBEE_EXTENDER_ENDPOINT);
