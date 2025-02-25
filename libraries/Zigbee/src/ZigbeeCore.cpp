@@ -1,7 +1,7 @@
 /* Zigbee Core Functions */
 
 #include "ZigbeeCore.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "ZigbeeHandlers.cpp"
 #include "Arduino.h"
@@ -526,4 +526,4 @@ const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceI
 
 ZigbeeCore Zigbee = ZigbeeCore();
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

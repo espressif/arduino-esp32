@@ -1,5 +1,5 @@
 #include "ZigbeeCarbonDioxideSensor.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 esp_zb_cluster_list_t *zigbee_carbon_dioxide_sensor_clusters_create(zigbee_carbon_dioxide_sensor_cfg_t *carbon_dioxide_sensor) {
   esp_zb_basic_cluster_cfg_t *basic_cfg = carbon_dioxide_sensor ? &(carbon_dioxide_sensor->basic_cfg) : NULL;
@@ -90,4 +90,4 @@ void ZigbeeCarbonDioxideSensor::report() {
   log_v("Carbon dioxide report sent");
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

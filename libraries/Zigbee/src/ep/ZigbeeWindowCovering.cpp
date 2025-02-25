@@ -1,6 +1,6 @@
 
 #include "ZigbeeWindowCovering.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 esp_zb_cluster_list_t *ZigbeeWindowCovering::zigbee_window_covering_clusters_create(zigbee_window_covering_cfg_t *window_covering_cfg) {
   esp_zb_attribute_list_t *esp_zb_basic_cluster = esp_zb_basic_cluster_create(&window_covering_cfg->basic_cfg);
@@ -305,4 +305,4 @@ void ZigbeeWindowCovering::setTiltPercentage(uint8_t tilt_percentage) {
   esp_zb_lock_release();
 }
 
-#endif  // SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

@@ -1,6 +1,6 @@
 
 #include "ZigbeeDimmableLight.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "esp_zigbee_cluster.h"
 

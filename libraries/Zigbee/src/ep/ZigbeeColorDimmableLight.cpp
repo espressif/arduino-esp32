@@ -1,5 +1,5 @@
 #include "ZigbeeColorDimmableLight.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID;
@@ -177,4 +177,4 @@ void ZigbeeColorDimmableLight::setLightColor(espHsvColor_t hsv_color) {
   setLight(_current_state, _current_level, rgb_color.r, rgb_color.g, rgb_color.b);
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

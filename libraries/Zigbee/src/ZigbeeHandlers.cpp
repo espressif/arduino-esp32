@@ -2,7 +2,7 @@
 #include "ZigbeeCore.h"
 #include "Arduino.h"
 
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "esp_ota_ops.h"
 #if CONFIG_ZB_DELTA_OTA  // Delta OTA, code is prepared for this feature but not enabled by default
@@ -397,4 +397,4 @@ static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_m
   return ESP_OK;
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED
