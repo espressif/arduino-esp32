@@ -14,17 +14,18 @@
   "platforms": {
     "hardware": true,
     "qemu": false,
-    "wokwi": true
+    "wokwi": false
   },
   "requires": [
     "CONFIG_SOC_UART_SUPPORTED=y"
   ],
   "targets": {
     "esp32": true,
-    "esp32c3": true,
+    "esp32c3": false,
     "esp32c6": true,
     "esp32h2": false,
     "esp32s2": true,
-    "esp32s3": true
+    "esp32s3": true,
+    "esp32p4": false
   }
 }
