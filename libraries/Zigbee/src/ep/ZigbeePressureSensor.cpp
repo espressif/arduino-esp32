@@ -33,7 +33,7 @@ void ZigbeePressureSensor::setMinMaxValue(int16_t min, int16_t max) {
 void ZigbeePressureSensor::setTolerance(uint16_t tolerance) {
   esp_zb_attribute_list_t *pressure_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_temperature_meas_cluster_add_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
+  esp_zb_pressure_meas_cluster_add_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
 }
 
 void ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
@@ -58,7 +58,7 @@ void ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_inte
 
 void ZigbeePressureSensor::setPressure(int16_t pressure) {
   log_v("Updating pressure sensor value...");
-  /* Update temperature sensor measured value */
+  /* Update pressure sensor measured value */
   log_d("Setting pressure to %d hPa", pressure);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(
