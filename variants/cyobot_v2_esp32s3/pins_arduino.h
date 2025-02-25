@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define USB_MANUFACTURER "CYObot"
-#define USB_PRODUCT      "CYObrain ESP32S3"
+#define USB_MANUFACTURER "CYOBot"
+#define USB_PRODUCT      "CYOBrain ESP32S3"
 #define USB_SERIAL       ""  // Empty string for MAC address
 
 
