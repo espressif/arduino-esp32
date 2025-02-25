@@ -87,7 +87,7 @@ void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
     return;
   }
 
-  if(ep->_device_id == ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID) {
+  if (ep->_device_id == ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID) {
     esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
   } else {
     esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);

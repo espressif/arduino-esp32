@@ -38,9 +38,9 @@
 
 /* Zigbee gateway configuration */
 #define GATEWAY_ENDPOINT_NUMBER 1
-#define GATEWAY_RCP_UART_PORT UART_NUM_1 // UART 0 is used for Serial communication
-#define GATEWAY_RCP_RX_PIN 4
-#define GATEWAY_RCP_TX_PIN 5
+#define GATEWAY_RCP_UART_PORT   UART_NUM_1  // UART 0 is used for Serial communication
+#define GATEWAY_RCP_RX_PIN      4
+#define GATEWAY_RCP_TX_PIN      5
 
 ZigbeeGateway zbGateway = ZigbeeGateway(GATEWAY_ENDPOINT_NUMBER);
 
@@ -90,12 +90,12 @@ void setup() {
   esp_zb_radio_config_t radio_config = ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG();
   radio_config.radio_uart_config.port = GATEWAY_RCP_UART_PORT;
   radio_config.radio_uart_config.rx_pin = (gpio_num_t)GATEWAY_RCP_RX_PIN;
-  radio_config.radio_uart_config.tx_pin = (gpio_num_t)GATEWAY_RCP_TX_PIN; 
+  radio_config.radio_uart_config.tx_pin = (gpio_num_t)GATEWAY_RCP_TX_PIN;
 
   Zigbee.setRadioConfig(radio_config);
 
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR or ZIGBEE_ROUTER mode
-  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) { 
+  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
@@ -103,7 +103,7 @@ void setup() {
 
   // set notification call-back function
   sntp_set_time_sync_notification_cb(timeavailable);
-  sntp_set_sync_interval(30000); // sync every 30 seconds
+  sntp_set_sync_interval(30000);  // sync every 30 seconds
 
   // config time zone and NTP servers
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
