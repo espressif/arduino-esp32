@@ -7,12 +7,9 @@
 #define USB_PRODUCT      "CYOBrain ESP32S3"
 #define USB_SERIAL       ""  // Empty string for MAC address
 
-
 static const uint8_t BUTTON0 = 4;
 static const uint8_t BUTTON1 = 38;
 static const uint8_t LED = 24;
-
-
 
 static const uint8_t BAT_MEAS = 6;
 static const uint8_t CHAR_DET = 23;
@@ -25,10 +22,8 @@ static const uint8_t I2S0_DSDIN = 8;
 static const uint8_t I2S0_SCLK = 9;
 static const uint8_t I2S0_LRCK = 45;
 
-
 static const uint8_t SDA = 17;
 static const uint8_t SCL = 18;
-
 
 static const uint8_t SS = 5;
 static const uint8_t MOSI = 2;
@@ -53,6 +48,5 @@ static const uint8_t SD_SPI_MISO = 13;
 static const uint8_t SD_SPI_CS = 14;
 
 static const uint8_t PA_CTRL = 25;
-
 
 #endif /* Pins_Arduino_h */
