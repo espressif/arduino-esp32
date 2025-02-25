@@ -19,6 +19,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
+  _time_status = 0;
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
@@ -240,7 +241,6 @@ void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
 
 void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   time_t utc_time = 0;
-
   // Check if time is set
   if (time.tm_year > 0) {
     // Convert time to UTC
@@ -251,6 +251,7 @@ void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   esp_zb_attribute_list_t *time_cluster_server = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TIME);
   esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, (void *)&gmt_offset);
   esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&utc_time);
+  esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_STATUS_ID, (void *)&_time_status);
   // Create time cluster client attributes
   esp_zb_attribute_list_t *time_cluster_client = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TIME);
   // Add time clusters to cluster list
@@ -260,6 +261,7 @@ void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
 
 void ZigbeeEP::setTime(tm time) {
   time_t utc_time = mktime(&time);
+  log_d("Setting time to %lld", utc_time);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
   esp_zb_lock_release();
@@ -306,6 +308,14 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
 
   struct tm *timeinfo = localtime(&_read_time);
   if (timeinfo) {
+    // Update time
+    setTime(*timeinfo);
+    // Update time status to synced
+    _time_status |= 0x02;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_STATUS_ID, &_time_status, false);
+    esp_zb_lock_release();
+
     return *timeinfo;
   } else {
     log_e("Error while converting time");
@@ -343,8 +353,9 @@ int32_t ZigbeeEP::getTimezone(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
     log_e("Error while reading timezone");
+    return 0;
   }
-
+  setTimezone(_read_timezone);
   return _read_timezone;
 }
 
