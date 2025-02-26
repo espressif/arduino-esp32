@@ -24,3 +24,4 @@
 #include "ep/ZigbeeWindowCovering.h"
 #include "ep/ZigbeeVibrationSensor.h"
 #include "ep/ZigbeeRangeExtender.h"
+#include "ep/ZigbeeGateway.h"
