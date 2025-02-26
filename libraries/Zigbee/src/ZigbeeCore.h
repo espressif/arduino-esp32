@@ -60,6 +60,26 @@ typedef enum {
     }                                                                                         \
   }
 
+#define ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG()   \
+  {                                              \
+    .radio_mode = ZB_RADIO_MODE_UART_RCP,        \
+    .radio_uart_config = {                       \
+      .port = UART_NUM_1,                        \
+      .rx_pin = GPIO_NUM_NC,                     \
+      .tx_pin = GPIO_NUM_NC,                     \
+      .uart_config =                             \
+        {                                        \
+          .baud_rate = 460800,                   \
+          .data_bits = UART_DATA_8_BITS,         \
+          .parity = UART_PARITY_DISABLE,         \
+          .stop_bits = UART_STOP_BITS_1,         \
+          .flow_ctrl = UART_HW_FLOWCTRL_DISABLE, \
+          .rx_flow_ctrl_thresh = 0,              \
+          .source_clk = UART_SCLK_DEFAULT,       \
+        },                                       \
+    },                                           \
+  }
+
 class ZigbeeCore {
 private:
   esp_zb_radio_config_t _radio_config;

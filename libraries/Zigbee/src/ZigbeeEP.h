@@ -153,6 +153,7 @@ protected:
   std::list<zb_device_params_t *> _bound_devices;
   SemaphoreHandle_t lock;
   zb_power_source_t _power_source;
+  uint8_t _time_status;
 
   friend class ZigbeeCore;
 };

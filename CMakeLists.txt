@@ -297,6 +297,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeVibrationSensor.cpp
   libraries/Zigbee/src/ep/ZigbeeAnalog.cpp
   libraries/Zigbee/src/ep/ZigbeeRangeExtender.cpp
+  libraries/Zigbee/src/ep/ZigbeeGateway.cpp
   )
 
 set(ARDUINO_LIBRARY_BLE_SRCS

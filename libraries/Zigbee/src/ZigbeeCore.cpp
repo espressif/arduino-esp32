@@ -87,7 +87,11 @@ void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
     return;
   }
 
-  esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+  if (ep->_device_id == ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID) {
+    esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+  } else {
+    esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+  }
 }
 
 static void esp_zb_task(void *pvParameters) {
@@ -156,7 +160,7 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   }
 
   // Create Zigbee task and start Zigbee stack
-  xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
+  xTaskCreate(esp_zb_task, "Zigbee_main", 8192, NULL, 5, NULL);
 
   return true;
 }
