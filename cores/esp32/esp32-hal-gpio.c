@@ -186,7 +186,7 @@ extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin) {
 
   // if the pin is not in GPIO mode, make it happen
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL) {
-    __pinMode(uint8_t pin, INPUT);
+    __pinMode(pin, INPUT);
   }
   return gpio_get_level((gpio_num_t)pin);
 }
