@@ -170,11 +170,11 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val) {
     return;
   }
 #endif  // RGB_BUILTIN
-  // if the pin is not in GPIO mode, make it happen
-  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL) {
-    __pinMode(pin, OUTPUT);
+  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL) {
+    gpio_set_level((gpio_num_t)pin, val);
+  } else {
+    log_e("IO %i is not set as GPIO. Execute digitalMode(pin, OUTPUT) first.", pin);
   }
-  gpio_set_level((gpio_num_t)pin, val);
 }
 
 extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin) {
