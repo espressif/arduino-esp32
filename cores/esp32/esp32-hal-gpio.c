@@ -182,11 +182,10 @@ extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin) {
   if (pin == RGB_BUILTIN) {
     return RGB_BUILTIN_storage;
   }
-#endif
-
-  // if the pin is not in GPIO mode, make it happen
-  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL) {
-    __pinMode(pin, INPUT);
+#endif  // RGB_BUILTIN
+  // This work when the pin is set as GPIO and in INPUT mode. For all other pin functions, it may return inconsistent response
+  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL) {
+    log_w("IO %i is not set as GPIO. digitalRead() may return an inconsistent value.");
   }
   return gpio_get_level((gpio_num_t)pin);
 }
