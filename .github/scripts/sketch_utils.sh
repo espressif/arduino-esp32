@@ -244,7 +244,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         build_dir="$ARDUINO_BUILD_DIR"
     elif [ "$len" -eq 1 ]; then
         # build_dir="$sketchdir/build"
-        build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
+        build_dir="$HOME/.arduino/tests/$target/$sketchname/build.tmp"
     fi
 
     output_file="$HOME/.arduino/cli_compile_output.txt"
@@ -254,7 +254,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     for i in $(seq 0 $((len - 1))); do
         if [ "$len" -ne 1 ]; then
             # build_dir="$sketchdir/build$i"
-            build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
+            build_dir="$HOME/.arduino/tests/$target/$sketchname/build$i.tmp"
         fi
         rm -rf "$build_dir"
         mkdir -p "$build_dir"
