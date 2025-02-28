@@ -254,7 +254,6 @@ void test_api() {
 }
 
 bool device_found() {
-  std::vector<uint8_t> found_addresses;
   uint8_t err;
 
   for (uint8_t address = 1; address < 127; ++address) {
@@ -263,16 +262,13 @@ bool device_found() {
     log_d("Address: 0x%02X, Error: %d", address, err);
     if (err == 0) {
       log_i("Found device at address: 0x%02X", address);
-      found_addresses.push_back(address);
     } else if (address == DS1307_ADDR) {
       log_e("Failed to find DS1307");
       return false;
     }
   }
 
-  // Find DS1307_ADDR in found_addresses
-  auto it = std::find(found_addresses.begin(), found_addresses.end(), DS1307_ADDR);
-  return it != found_addresses.end();
+  return true;
 }
 
 void scan_bus() {
