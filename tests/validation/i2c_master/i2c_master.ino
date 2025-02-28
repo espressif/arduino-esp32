@@ -7,6 +7,9 @@
 #include <Wire.h>
 #include <vector>
 #include <algorithm>
+#include <WiFi.h>
+
+#include "sdkconfig.h"
 
 /* DS1307 functions */
 
@@ -25,6 +28,9 @@ static uint8_t read_day = 0;
 static uint8_t read_month = 0;
 static uint16_t read_year = 0;
 static int peek_data = -1;
+
+const char *ssid = "Wokwi-GUEST";
+const char *password = "";
 
 const auto BCD2DEC = [](uint8_t num) -> uint8_t {
   return ((num / 16 * 10) + (num % 16));
@@ -247,7 +253,7 @@ void test_api() {
   Wire.flush();
 }
 
-void scan_bus() {
+bool device_found() {
   std::vector<uint8_t> found_addresses;
   uint8_t err;
 
@@ -259,14 +265,33 @@ void scan_bus() {
       log_i("Found device at address: 0x%02X", address);
       found_addresses.push_back(address);
     } else if (address == DS1307_ADDR) {
-      TEST_FAIL_MESSAGE("Failed to find DS1307");
+      log_e("Failed to find DS1307");
+      return false;
     }
   }
 
   // Find DS1307_ADDR in found_addresses
   auto it = std::find(found_addresses.begin(), found_addresses.end(), DS1307_ADDR);
-  TEST_ASSERT_TRUE(it != found_addresses.end());
+  return it != found_addresses.end();
 }
+
+void scan_bus() {
+  TEST_ASSERT_TRUE(device_found());
+}
+
+#if SOC_WIFI_SUPPORTED
+void scan_bus_with_wifi() {
+  // delete old config
+  WiFi.disconnect(true, true, 1000);
+  delay(1000);
+  WiFi.begin(ssid, password);
+  delay(5000);
+  bool found = device_found();
+  WiFi.disconnect(true, true, 1000);
+
+  TEST_ASSERT_TRUE(found);
+}
+#endif
 
 /* Main */
 
@@ -282,6 +307,9 @@ void setup() {
   log_d("Starting tests");
   UNITY_BEGIN();
   RUN_TEST(scan_bus);
+#if SOC_WIFI_SUPPORTED
+  RUN_TEST(scan_bus_with_wifi);
+#endif
   RUN_TEST(rtc_set_time);
   RUN_TEST(rtc_run_clock);
   RUN_TEST(change_clock);
