@@ -276,7 +276,7 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           name: tests-bin-${{ matrix.chip }}-${{ matrix.type }}
           path: |
-            ~/.arduino/tests
+            ~/.arduino/tests/${{ matrix.chip }}
 
       - name: Run Tests
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
