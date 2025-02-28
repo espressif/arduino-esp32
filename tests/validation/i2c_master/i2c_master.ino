@@ -5,6 +5,8 @@
 #include <Arduino.h>
 #include <unity.h>
 #include <Wire.h>
+#include <vector>
+#include <algorithm>
 
 /* DS1307 functions */
 
@@ -245,6 +247,27 @@ void test_api() {
   Wire.flush();
 }
 
+void scan_bus() {
+  std::vector<uint8_t> found_addresses;
+  uint8_t err;
+
+  for (uint8_t address = 1; address < 127; ++address) {
+    Wire.beginTransmission(address);
+    err = Wire.endTransmission();
+    log_d("Address: 0x%02X, Error: %d", address, err);
+    if (err == 0) {
+      log_i("Found device at address: 0x%02X", address);
+      found_addresses.push_back(address);
+    } else if (address == DS1307_ADDR) {
+      TEST_FAIL_MESSAGE("Failed to find DS1307");
+    }
+  }
+
+  // Find DS1307_ADDR in found_addresses
+  auto it = std::find(found_addresses.begin(), found_addresses.end(), DS1307_ADDR);
+  TEST_ASSERT_TRUE(it != found_addresses.end());
+}
+
 /* Main */
 
 void setup() {
@@ -258,6 +281,7 @@ void setup() {
 
   log_d("Starting tests");
   UNITY_BEGIN();
+  RUN_TEST(scan_bus);
   RUN_TEST(rtc_set_time);
   RUN_TEST(rtc_run_clock);
   RUN_TEST(change_clock);
