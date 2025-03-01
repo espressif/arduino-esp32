@@ -21,17 +21,17 @@ unity|Error :fire:|Error :fire:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/
 
 Test|ESP32|ESP32-C3|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-gpio|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:
-hello_world|0/1 :x:|1/1 :white_check_mark:|1/1 :white_check_mark:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:
-i2c_master|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:
-nvs|0/2 :x:|0/2 :x:|0/4 :x:|0/4 :x:|0/4 :x:|0/2 :x:|0/3 :x:
-psram|0/1 :x:|-|-|-|0/1 :x:|0/1 :x:|0/1 :x:
-timer|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:
-uart|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:
-unity|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:
-wifi|0/2 :x:|0/1 :x:|0/1 :x:|-|-|0/2 :x:|0/3 :x:
+gpio|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
+hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
+i2c_master|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:
+nvs|2/2 :white_check_mark:|2/2 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|2/2 :white_check_mark:|3/3 :white_check_mark:
+psram|10/10 :white_check_mark:|-|-|-|8/8 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:
+timer|3/3 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:
+uart|11/11 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:
+unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:
+wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2025/02/28 03:56:48
+Generated on: 2025/03/01 03:18:43
 
-[Build, Hardware and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/13580002473) / [Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/13580570732)
+[Build, Hardware and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/13600062400) / [Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/13600483968)
