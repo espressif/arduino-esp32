@@ -507,11 +507,11 @@ uart_t *uartBegin(
   // therefore, uart clock source will set to XTAL for all SoC that support it. This fix solves the C6|H2 issue.
 #if SOC_UART_SUPPORT_XTAL_CLK
   uart_config.source_clk = UART_SCLK_XTAL;  // valid for C2, S3, C3, C6, H2 and P4
-#elif SOC_UART_SUPPORT_REF_TICK
+#elif defined(CONFIG_PM_ENABLE) && SOC_UART_SUPPORT_REF_TICK
   if (baudrate <= 250000) {
     uart_config.source_clk = UART_SCLK_REF_TICK;  // valid for ESP32, S2 - MAX supported baud rate is 250 Kbps
   } else {
-    uart_config.source_clk = UART_SCLK_APB;  // baudrate may change with the APB Frequency!
+    uart_config.source_clk = UART_SCLK_APB;  // if power management is enabled baudrate may change with the APB Frequency!
   }
 #else
   // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6
