@@ -1,5 +1,5 @@
 #include "ZigbeeThermostat.h"
-#if SOC_IEEE802154_SUPPORTED
+#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
 
 static float zb_s16_to_temperature(int16_t value) {
   return 1.0 * value / 100;
@@ -67,7 +67,7 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
     /* populate the dst information of the binding */
     bind_req.dst_addr_mode = ESP_ZB_ZDO_BIND_DST_ADDR_MODE_64_BIT_EXTENDED;
     esp_zb_get_long_address(bind_req.dst_address_u.addr_long);
-    bind_req.dst_endp = _endpoint;
+    bind_req.dst_endp = *((uint8_t *)user_ctx);  //_endpoint;
 
     log_i("Request temperature sensor to bind us");
     esp_zb_zdo_device_bind_req(&bind_req, bindCb, NULL);
@@ -77,7 +77,7 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
 
     /* populate the src information of the binding */
     esp_zb_get_long_address(bind_req.src_address);
-    bind_req.src_endp = _endpoint;
+    bind_req.src_endp = *((uint8_t *)user_ctx);  //_endpoint;
     bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
 
     /* populate the dst information of the binding */
@@ -96,7 +96,7 @@ void ZigbeeThermostat::findEndpoint(esp_zb_zdo_match_desc_req_param_t *param) {
   param->num_in_clusters = 1;
   param->num_out_clusters = 0;
   param->cluster_list = cluster_list;
-  esp_zb_zdo_match_cluster(param, findCb, NULL);
+  esp_zb_zdo_match_cluster(param, findCb, &_endpoint);
 }
 
 void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {
@@ -185,7 +185,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
   int16_t report_change = (int16_t)delta * 100;
   esp_zb_zcl_config_report_record_t records[] = {
     {
-      .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV,
+      .direction = ESP_ZB_ZCL_REPORT_DIRECTION_SEND,
       .attributeID = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID,
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
@@ -202,4 +202,4 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
   esp_zb_lock_release();
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED

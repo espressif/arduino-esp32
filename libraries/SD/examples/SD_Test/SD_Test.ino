@@ -209,9 +209,6 @@ void testFileIO(fs::FS &fs, const char *path) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
 #ifdef REASSIGN_PINS
   SPI.begin(sck, miso, mosi, cs);

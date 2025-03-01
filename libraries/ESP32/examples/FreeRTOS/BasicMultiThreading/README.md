@@ -62,10 +62,6 @@ To get more information about the Espressif boards see [Espressif Development Ki
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
 
-#### Using Platform IO
-
-* Select the COM port: `Devices` or set the `upload_port` option on the `platformio.ini` file.
-
 ## Troubleshooting
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***

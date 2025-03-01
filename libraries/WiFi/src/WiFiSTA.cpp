@@ -215,7 +215,7 @@ bool WiFiSTAClass::bandwidth(wifi_bandwidth_t bandwidth) {
  * @return true if STA is connected to an AP
  */
 bool WiFiSTAClass::isConnected() {
-  return STA.connected();
+  return STA.connected() && STA.hasIP();
 }
 
 /**

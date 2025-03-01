@@ -5,7 +5,7 @@ on:
   push:
     branches:
     - master
-    - release/v2.x
+    - release/*
   pull_request:
     paths:
       - 'cores/**'
@@ -21,12 +21,20 @@ on:
       - 'idf_component.yml'
       - 'Kconfig.projbuild'
       - 'package.json'
+      - 'CMakeLists.txt'
       - '.github/workflows/push.yml'
       - '.github/scripts/**'
       - '!.github/scripts/find_*'
       - '!.github/scripts/on-release.sh'
       - '!.github/scripts/tests_*'
       - '!.github/scripts/upload_*'
+      - "variants/esp32/**/*"
+      - "variants/esp32s2/**/*"
+      - "variants/esp32s3/**/*"
+      - "variants/esp32c2/**/*"
+      - "variants/esp32c3/**/*"
+      - "variants/esp32c6/**/*"
+      - "variants/esp32h2/**/*"
 
 concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
@@ -39,6 +47,7 @@ jobs:
   cmake-check:
     name: Check cmake file
     runs-on: ubuntu-latest
+    if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     steps:
     - uses: actions/checkout@v4
     - run: bash ./.github/scripts/check-cmakelists.sh
@@ -46,6 +55,7 @@ jobs:
   gen-chunks:
     name: Generate chunks
     runs-on: ubuntu-latest
+    if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     outputs:
       build_all: ${{ steps.set-chunks.outputs.build_all }}
       build_libraries: ${{ steps.set-chunks.outputs.build_libraries }}
@@ -74,6 +84,12 @@ jobs:
               - '!tools/platformio-build.py'
               - 'platform.txt'
               - 'programmers.txt'
+              - "variants/esp32/**/*"
+              - "variants/esp32s2/**/*"
+              - "variants/esp32s3/**/*"
+              - "variants/esp32c3/**/*"
+              - "variants/esp32c6/**/*"
+              - "variants/esp32h2/**/*"
             libraries:
               - 'libraries/**/examples/**'
               - 'libraries/**/src/**'
@@ -92,6 +108,8 @@ jobs:
             idf:
               - 'idf_component.yml'
               - 'Kconfig.projbuild'
+              - 'CMakeLists.txt'
+              - "variants/esp32c2/**/*"
             platformio:
               - 'package.json'
               - '.github/scripts/install-platformio-esp32.sh'
@@ -291,7 +309,7 @@ jobs:
   #Upload PR number as artifact
   upload-pr-number:
     name: Upload PR number
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release/') }}
     runs-on: ubuntu-latest
     steps:
       - name: Save the PR number in an artifact

@@ -18,10 +18,6 @@ Currently, this example supports the following targets.
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
 
-#### Using Platform IO
-
-* Select the COM port: `Devices` or setting the `upload_port` option on the `platformio.ini` file.
-
 ## Example/Log Output
 
 ```

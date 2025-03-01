@@ -35,13 +35,13 @@ public:
 
 class NetworkClient : public ESPLwIPClient {
 protected:
-  std::shared_ptr<NetworkClientSocketHandle> clientSocketHandle;
-  std::shared_ptr<NetworkClientRxBuffer> _rxBuffer;
-  bool _connected;
-  bool _sse;
+  std::shared_ptr<NetworkClientSocketHandle> clientSocketHandle = nullptr;
+  std::shared_ptr<NetworkClientRxBuffer> _rxBuffer = nullptr;
+  bool _connected = false;
+  bool _sse = false;
   int _timeout;
-  int _lastWriteTimeout;
-  int _lastReadTimeout;
+  int _lastWriteTimeout = 0;
+  int _lastReadTimeout = 0;
 
 public:
   NetworkClient *next;

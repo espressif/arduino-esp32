@@ -80,9 +80,6 @@ void register_new_master(const esp_now_recv_info_t *info, const uint8_t *data, i
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Initialize the Wi-Fi module
   WiFi.mode(WIFI_STA);

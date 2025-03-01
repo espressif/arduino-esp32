@@ -80,7 +80,11 @@ void onReceiveFunction() {
   received_bytes = received_bytes + available;
   Serial.printf("onReceive Callback:: There are %d bytes available: {", available);
   while (available--) {
-    Serial.print((char)Serial1.read());
+    char c = Serial1.read();
+    Serial.printf("0x%x='%c'", c, c);
+    if (available) {
+      Serial.print(" ");
+    }
   }
   Serial.println("}");
 }

@@ -75,7 +75,7 @@ body:
     attributes:
      label: IDE Name
      description: What IDE are you using?
-     placeholder: eg. Arduino IDE, PlatformIO, Sloeber...
+     placeholder: eg. Arduino IDE, VSCode, Sloeber...
     validations:
      required: true
   - type: input
