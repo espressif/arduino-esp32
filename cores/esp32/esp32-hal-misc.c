@@ -25,7 +25,7 @@
 #include "esp_ota_ops.h"
 #endif  //CONFIG_APP_ROLLBACK_ENABLE
 #include "esp_private/startup_internal.h"
-#ifdef CONFIG_BT_ENABLED
+#ifdef CONFIG_BT_ENABLED && SOC_BT_SUPPORTED
 #include "esp_bt.h"
 #endif  //CONFIG_BT_ENABLED
 #include <sys/time.h>
@@ -305,7 +305,7 @@ void initArduino() {
   if (err) {
     log_e("Failed to initialize NVS! Error: %u", err);
   }
-#ifdef CONFIG_BT_ENABLED
+#ifdef CONFIG_BT_ENABLED && SOC_BT_SUPPORTED
   if (!btInUse()) {
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
   }
