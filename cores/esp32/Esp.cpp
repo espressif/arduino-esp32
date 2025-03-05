@@ -66,7 +66,7 @@ extern "C" {
 #define ESP_FLASH_IMAGE_BASE 0x2000  // Esp32p4 is located at 0x2000
 #elif CONFIG_IDF_TARGET_ESP32C5
 #include "esp32c5/rom/spi_flash.h"
-#define ESP_FLASH_IMAGE_BASE 0x0000  // Esp32c5 is located at 0x0000
+#define ESP_FLASH_IMAGE_BASE 0x2000  // Esp32c5 is located at 0x2000
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -306,11 +306,11 @@ const char *EspClass::getChipModel(void) {
     case CHIP_ESP32H2: return "ESP32-H2";
     case CHIP_ESP32P4: return "ESP32-P4";
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
-    case CHIP_ESP32C5: return "ESP32-C5";
+    case CHIP_ESP32C5:  return "ESP32-C5";
     case CHIP_ESP32C61: return "ESP32-C61";
     case CHIP_ESP32H21: return "ESP32-H21";
 #endif
-    default:           return "UNKNOWN";
+    default: return "UNKNOWN";
   }
 #endif
 }
