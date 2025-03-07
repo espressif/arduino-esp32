@@ -308,7 +308,7 @@ bool wifiLowLevelInit(bool persistent) {
 
     esp_err_t err = esp_wifi_init(&cfg);
     if (err) {
-      log_e("esp_wifi_init %d", err);
+      log_e("esp_wifi_init 0x%x: %s", err, esp_err_to_name(err));
       lowLevelInitDone = false;
       return lowLevelInitDone;
     }
@@ -375,7 +375,7 @@ static bool espWiFiStart() {
   esp_err_t err = esp_wifi_start();
   if (err != ESP_OK) {
     _esp_wifi_started = false;
-    log_e("esp_wifi_start %d", err);
+    log_e("esp_wifi_start 0x%x: %s", err, esp_err_to_name(err));
     return _esp_wifi_started;
   }
   return _esp_wifi_started;
@@ -389,7 +389,7 @@ static bool espWiFiStop() {
   _esp_wifi_started = false;
   err = esp_wifi_stop();
   if (err) {
-    log_e("Could not stop WiFi! %d", err);
+    log_e("Could not stop WiFi! 0x%x: %s", err, esp_err_to_name(err));
     _esp_wifi_started = true;
     return false;
   }
@@ -478,7 +478,7 @@ int WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary) 
 
   ret = esp_wifi_get_country(&country);
   if (ret != ESP_OK) {
-    log_e("Failed to get country info");
+    log_e("Failed to get country info 0x%x: %s", ret, esp_err_to_name(ret));
     return ret;
   }
 
@@ -492,7 +492,7 @@ int WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary) 
 
   ret = esp_wifi_set_channel(primary, secondary);
   if (ret != ESP_OK) {
-    log_e("Failed to set channel");
+    log_e("Failed to set channel 0x%x: %s", ret, esp_err_to_name(ret));
     return ret;
   }
 
@@ -562,13 +562,13 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
   if (((m & WIFI_MODE_STA) != 0) && ((cm & WIFI_MODE_STA) == 0)) {
     err = esp_netif_set_hostname(esp_netifs[ESP_IF_WIFI_STA], NetworkManager::getHostname());
     if (err) {
-      log_e("Could not set hostname! %d", err);
+      log_e("Could not set hostname! 0x%x: %s", err, esp_err_to_name(err));
       return false;
     }
   }
   err = esp_wifi_set_mode(m);
   if (err) {
-    log_e("Could not set mode! %d", err);
+    log_e("Could not set mode! 0x%x: %s", err, esp_err_to_name(err));
     return false;
   }
 
@@ -585,15 +585,42 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
     if (m & WIFI_MODE_STA) {
       err = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_LR);
       if (err != ESP_OK) {
-        log_e("Could not enable long range on STA! %d", err);
+        log_e("Could not enable long range on STA! 0x%x: %s", err, esp_err_to_name(err));
         return false;
       }
     }
     if (m & WIFI_MODE_AP) {
       err = esp_wifi_set_protocol(WIFI_IF_AP, WIFI_PROTOCOL_LR);
       if (err != ESP_OK) {
-        log_e("Could not enable long range on AP! %d", err);
+        log_e("Could not enable long range on AP! 0x%x: %s", err, esp_err_to_name(err));
         return false;
+      }
+    }
+  } else {
+#if CONFIG_SOC_WIFI_HE_SUPPORT
+#define WIFI_PROTOCOL_DEFAULT (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N|WIFI_PROTOCOL_11AX)
+#else
+#define WIFI_PROTOCOL_DEFAULT (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N)
+#endif
+    uint8_t current_protocol = 0;
+    if (m & WIFI_MODE_STA) {
+      err = esp_wifi_get_protocol(WIFI_IF_STA, &current_protocol);
+      if (err == ESP_OK && current_protocol == WIFI_PROTOCOL_LR) {
+        log_v("Disabling long range on STA");
+        err = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_DEFAULT);
+        if (err != ESP_OK) {
+          log_e("Could not disable long range on STA! 0x%x: %s", err, esp_err_to_name(err));
+        }
+      }
+    }
+    if (m & WIFI_MODE_AP) {
+      err = esp_wifi_get_protocol(WIFI_IF_AP, &current_protocol);
+      if (err == ESP_OK && current_protocol == WIFI_PROTOCOL_LR) {
+        log_v("Disabling long range on AP");
+        err = esp_wifi_set_protocol(WIFI_IF_AP, WIFI_PROTOCOL_DEFAULT);
+        if (err != ESP_OK) {
+          log_e("Could not disable long range on AP! 0x%x: %s", err, esp_err_to_name(err));
+        }
       }
     }
   }
@@ -683,8 +710,9 @@ bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType) {
   if (sleepType != _sleepEnabled) {
     _sleepEnabled = sleepType;
     if (WiFi.STA.started()) {
-      if (esp_wifi_set_ps(_sleepEnabled) != ESP_OK) {
-        log_e("esp_wifi_set_ps failed!");
+      esp_err_t err = esp_wifi_set_ps(_sleepEnabled);
+      if (err != ESP_OK) {
+        log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
         return false;
       }
     }
@@ -748,8 +776,9 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
     memcpy(ftmi_cfg.resp_mac, mac, 6);
   }
   // Request FTM session with the Responder
-  if (ESP_OK != esp_wifi_ftm_initiate_session(&ftmi_cfg)) {
-    log_e("Failed to initiate FTM session");
+  esp_err_t err = esp_wifi_ftm_initiate_session(&ftmi_cfg);
+  if (ESP_OK != err) {
+    log_e("Failed to initiate FTM session: 0x%x: %s", err, esp_err_to_name(err));
     return false;
   }
   return true;
@@ -768,8 +797,9 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
 
   esp_phy_ant_gpio_config_t wifi_ant_io;
 
-  if (ESP_OK != esp_phy_get_ant_gpio(&wifi_ant_io)) {
-    log_e("Failed to get antenna configuration");
+  esp_err_t err = esp_phy_get_ant_gpio(&wifi_ant_io);
+  if (ESP_OK != err) {
+    log_e("Failed to get antenna configuration: 0x%x: %s", err, esp_err_to_name(err));
     return false;
   }
 
@@ -778,8 +808,9 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
   wifi_ant_io.gpio_cfg[1].gpio_num = gpio_ant2;
   wifi_ant_io.gpio_cfg[1].gpio_select = 1;
 
-  if (ESP_OK != esp_phy_set_ant_gpio(&wifi_ant_io)) {
-    log_e("Failed to set antenna GPIO configuration");
+  err = esp_phy_set_ant_gpio(&wifi_ant_io);
+  if (ESP_OK != err) {
+    log_e("Failed to set antenna GPIO configuration: 0x%x: %s", err, esp_err_to_name(err));
     return false;
   }
 
@@ -827,8 +858,9 @@ bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2
   }
 
 set_ant:
-  if (ESP_OK != esp_phy_set_ant(&ant_config)) {
-    log_e("Failed to set antenna configuration");
+  err = esp_phy_set_ant(&ant_config);
+  if (ESP_OK != err) {
+    log_e("Failed to set antenna configuration: 0x%x: %s", err, esp_err_to_name(err));
     return false;
   }
 #endif
