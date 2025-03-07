@@ -69,7 +69,7 @@ dependencies:
   espressif/network_provisioning:
     version: "1.0.2"
   espressif/esp_rainmaker:
-    version: "1.5.0"
+    version: "1.5.2"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/rmaker_common:
