@@ -192,8 +192,14 @@ public:
 
   // ETH Handle APIs
   bool fullDuplex() const;
-  uint8_t linkSpeed() const;
+  bool setFullDuplex(bool on);
+  
+  uint16_t linkSpeed() const;
+  bool setLinkSpeed(uint16_t speed);//10 or 100
+
   bool autoNegotiation() const;
+  bool setAutoNegotiation(bool on);
+
   uint32_t phyAddr() const;
 
   esp_eth_handle_t handle() const;
