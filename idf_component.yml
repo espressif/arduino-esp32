@@ -132,25 +132,25 @@ dependencies:
     rules:
       - if: "target in [esp32s3]"
   # https://components.espressif.com/components/espressif/usb_host_ch34x_vcp
-  espressif/usb_host_ch34x_vcp:
-    version: "^2.0.0"
-    rules:
-      - if: "target in [esp32s3]"
+  #espressif/usb_host_ch34x_vcp:
+  #  version: "^2.0.0"
+  #  rules:
+  #    - if: "target in [esp32s3]"
   # https://components.espressif.com/components/espressif/usb_host_cp210x_vcp
-  espressif/usb_host_cp210x_vcp:
-    version: "^2.0.0"
-    rules:
-      - if: "target in [esp32s3]"
+  #espressif/usb_host_cp210x_vcp:
+  #  version: "^2.0.0"
+  #  rules:
+  #    - if: "target in [esp32s3]"
   # https://components.espressif.com/components/espressif/usb_host_ftdi_vcp
-  espressif/usb_host_ftdi_vcp:
-    version: "^2.0.0"
-    rules:
-      - if: "target in [esp32s3]"
+  #espressif/usb_host_ftdi_vcp:
+  #  version: "^2.0.0"
+  #  rules:
+  #    - if: "target in [esp32s3]"
   # https://components.espressif.com/components/espressif/usb_host_vcp
-  espressif/usb_host_vcp:
-    version: "^1.0.0~5"
-    rules:
-      - if: "target in [esp32s3]"
+  #espressif/usb_host_vcp:
+  #  version: "^1.0.0~5"
+  #  rules:
+  #    - if: "target in [esp32s3]"
   # https://components.espressif.com/components/espressif/usb_host_hid
   espressif/usb_host_hid:
     version: "^1.0.3"
