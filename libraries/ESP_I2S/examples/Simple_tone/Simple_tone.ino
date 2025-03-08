@@ -31,9 +31,9 @@
 #include <ESP_I2S.h>
 
 // In fact, the GPIO pins are not fixed, most other pins can be used for the I2S function.
-#define LRC 25
-#define BCLK 5
-#define DIN 26
+#define I2S_LRC 25
+#define I2S_BCLK 5
+#define I2S_DIN 26
 
 const int frequency = 440;    // frequency of square wave in Hz
 const int amplitude = 500;    // amplitude of square wave
@@ -54,7 +54,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("I2S simple tone");
 
-  i2s.setPins(BCLK, LRC, DIN);
+  i2s.setPins(I2S_BCLK, I2S_LRC, I2S_DIN);
 
   // start I2S at the sample rate with 16-bits per sample
   if (!i2s.begin(mode, sampleRate, bps, slot)) {
