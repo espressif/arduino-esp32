@@ -109,6 +109,10 @@ jobs:
           printf "\nAction = "
           cat artifacts/action.txt
 
+          printf "${{ github.event.workflow_run.id }}" >> artifacts/run_id.txt
+          printf "\nRun ID = "
+          cat artifacts/run_id.txt
+
           if [ -z "$ref" ] || [ "$ref" == "null" ]; then
             echo "Failed to get PR number or ref"
             exit 1

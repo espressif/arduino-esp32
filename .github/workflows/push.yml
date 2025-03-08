@@ -237,7 +237,7 @@ jobs:
       needs.gen-chunks.outputs.build_all == 'true' ||
       needs.gen-chunks.outputs.build_libraries == 'true' ||
       needs.gen-chunks.outputs.build_idf == 'true'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -245,7 +245,7 @@ jobs:
         # See https://hub.docker.com/r/espressif/idf/tags and
         # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
         # for details.
-        idf_ver: ["release-v5.3"]
+        idf_ver: ["release-v5.4"]
         idf_target:
           [
             "esp32",

@@ -1,7 +1,7 @@
 /* Zigbee Core Functions */
 
 #include "ZigbeeCore.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "ZigbeeHandlers.cpp"
 #include "Arduino.h"
@@ -87,7 +87,11 @@ void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
     return;
   }
 
-  esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+  if (ep->_device_id == ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID) {
+    esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+  } else {
+    esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+  }
 }
 
 static void esp_zb_task(void *pvParameters) {
@@ -156,7 +160,7 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   }
 
   // Create Zigbee task and start Zigbee stack
-  xTaskCreate(esp_zb_task, "Zigbee_main", 4096, NULL, 5, NULL);
+  xTaskCreate(esp_zb_task, "Zigbee_main", 8192, NULL, 5, NULL);
 
   return true;
 }
@@ -526,4 +530,4 @@ const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceI
 
 ZigbeeCore Zigbee = ZigbeeCore();
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

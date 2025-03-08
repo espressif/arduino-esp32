@@ -2,7 +2,7 @@
 
 #include "ZigbeeEP.h"
 
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
@@ -19,6 +19,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
+  _time_status = 0;
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
@@ -240,7 +241,6 @@ void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
 
 void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   time_t utc_time = 0;
-
   // Check if time is set
   if (time.tm_year > 0) {
     // Convert time to UTC
@@ -251,6 +251,7 @@ void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   esp_zb_attribute_list_t *time_cluster_server = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TIME);
   esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, (void *)&gmt_offset);
   esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&utc_time);
+  esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_STATUS_ID, (void *)&_time_status);
   // Create time cluster client attributes
   esp_zb_attribute_list_t *time_cluster_client = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TIME);
   // Add time clusters to cluster list
@@ -260,6 +261,7 @@ void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
 
 void ZigbeeEP::setTime(tm time) {
   time_t utc_time = mktime(&time);
+  log_d("Setting time to %lld", utc_time);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
   esp_zb_lock_release();
@@ -306,6 +308,16 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
 
   struct tm *timeinfo = localtime(&_read_time);
   if (timeinfo) {
+    // Update time
+    setTime(*timeinfo);
+    // Update time status to synced
+    _time_status |= 0x02;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_set_attribute_val(
+      _endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_STATUS_ID, &_time_status, false
+    );
+    esp_zb_lock_release();
+
     return *timeinfo;
   } else {
     log_e("Error while converting time");
@@ -343,8 +355,9 @@ int32_t ZigbeeEP::getTimezone(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
     log_e("Error while reading timezone");
+    return 0;
   }
-
+  setTimezone(_read_timezone);
   return _read_timezone;
 }
 
@@ -363,4 +376,72 @@ void ZigbeeEP::zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute) {
   }
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+// typedef struct esp_zb_ota_cluster_cfg_s {
+//     uint32_t ota_upgrade_file_version;            /*!<  The attribute indicates the file version of the running firmware image on the device */
+//     uint16_t ota_upgrade_manufacturer;            /*!<  The attribute indicates the value for the manufacturer of the device */
+//     uint16_t ota_upgrade_image_type;              /*!<  The attribute indicates the the image type of the file that the client is currently downloading */
+//     uint32_t ota_upgrade_downloaded_file_ver;     /*!<  The attribute indicates the file version of the downloaded image on the device*/
+// esp_zb_ota_cluster_cfg_t;
+
+// typedef struct esp_zb_zcl_ota_upgrade_client_variable_s {
+//     uint16_t timer_query;  /*!< The field indicates the time of querying OTA image for OTA upgrade client */
+//     uint16_t hw_version;   /*!< The hardware version */
+//     uint8_t max_data_size; /*!< The maximum size of OTA data */
+// } esp_zb_zcl_ota_upgrade_client_variable_t;
+
+void ZigbeeEP::addOTAClient(
+  uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer, uint16_t image_type, uint8_t max_data_size
+) {
+
+  esp_zb_ota_cluster_cfg_t ota_cluster_cfg = {};
+  ota_cluster_cfg.ota_upgrade_file_version = file_version;                //OTA_UPGRADE_RUNNING_FILE_VERSION;
+  ota_cluster_cfg.ota_upgrade_downloaded_file_ver = downloaded_file_ver;  //OTA_UPGRADE_DOWNLOADED_FILE_VERSION;
+  ota_cluster_cfg.ota_upgrade_manufacturer = manufacturer;                //OTA_UPGRADE_MANUFACTURER;
+  ota_cluster_cfg.ota_upgrade_image_type = image_type;                    //OTA_UPGRADE_IMAGE_TYPE;
+
+  esp_zb_attribute_list_t *ota_cluster = esp_zb_ota_cluster_create(&ota_cluster_cfg);
+
+  esp_zb_zcl_ota_upgrade_client_variable_t variable_config = {};
+  variable_config.timer_query = ESP_ZB_ZCL_OTA_UPGRADE_QUERY_TIMER_COUNT_DEF;
+  variable_config.hw_version = hw_version;        //OTA_UPGRADE_HW_VERSION;
+  variable_config.max_data_size = max_data_size;  //OTA_UPGRADE_MAX_DATA_SIZE;
+
+  uint16_t ota_upgrade_server_addr = 0xffff;
+  uint8_t ota_upgrade_server_ep = 0xff;
+
+  ESP_ERROR_CHECK(esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_CLIENT_DATA_ID, (void *)&variable_config));
+  ESP_ERROR_CHECK(esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ADDR_ID, (void *)&ota_upgrade_server_addr));
+  ESP_ERROR_CHECK(esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ENDPOINT_ID, (void *)&ota_upgrade_server_ep));
+
+  ESP_ERROR_CHECK(esp_zb_cluster_list_add_ota_cluster(_cluster_list, ota_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE));
+}
+
+static void findOTAServer(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
+  if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
+    esp_zb_ota_upgrade_client_query_interval_set(*((uint8_t *)user_ctx), OTA_UPGRADE_QUERY_INTERVAL);
+    esp_zb_ota_upgrade_client_query_image_req(addr, endpoint);
+    log_i("Query OTA upgrade from server endpoint: %d after %d seconds", endpoint, OTA_UPGRADE_QUERY_INTERVAL);
+  } else {
+    log_w("No OTA Server found");
+  }
+}
+
+void ZigbeeEP::requestOTAUpdate() {
+  esp_zb_zdo_match_desc_req_param_t req;
+  uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_OTA_UPGRADE};
+
+  /* Match the OTA server of coordinator */
+  req.addr_of_interest = 0x0000;
+  req.dst_nwk_addr = 0x0000;
+  req.num_in_clusters = 1;
+  req.num_out_clusters = 0;
+  req.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
+  req.cluster_list = cluster_list;
+  esp_zb_lock_acquire(portMAX_DELAY);
+  if (esp_zb_bdb_dev_joined()) {
+    esp_zb_zdo_match_cluster(&req, findOTAServer, &_endpoint);
+  }
+  esp_zb_lock_release();
+}
+
+#endif  // CONFIG_ZB_ENABLED
