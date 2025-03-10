@@ -49,11 +49,11 @@ void fanDCMotorDrive(bool fanState, uint8_t speedPercent) {
   // drive the Fan DC motor
   if (fanState == false) {
     // turn off the Fan
- #ifndef RGB_BUILTIN
+#ifndef RGB_BUILTIN
     // after analogWrite(), it is necessary to set the GPIO to digital mode first
     pinMode(dcMotorPin, OUTPUT);
 #endif
-   digitalWrite(dcMotorPin, LOW);
+    digitalWrite(dcMotorPin, LOW);
   } else {
     // set the Fan speed
     uint8_t fanDCMotorPWM = map(speedPercent, 0, 100, 0, 255);
