@@ -105,7 +105,7 @@ void ZigbeeAnalog::setAnalogInputReporting(uint16_t min_interval, uint16_t max_i
   memset(&reporting_info, 0, sizeof(esp_zb_zcl_reporting_info_t));
   reporting_info.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV;
   reporting_info.ep = _endpoint;
-  reporting_info.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+  reporting_info.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT;
   reporting_info.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
   reporting_info.attr_id = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
   reporting_info.u.send_info.min_interval = min_interval;
