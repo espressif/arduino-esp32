@@ -23,7 +23,7 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
-#define IN6_IS_ADDR_V4MAPPED(a) ((((__const uint32_t *)(a))[0] == 0) && (((__const uint32_t *)(a))[1] == 0) && (((__const uint32_t *)(a))[2] == htonl(0xffff)))
+#define _IN6_IS_ADDR_V4MAPPED(a) ((((__const uint32_t *)(a))[0] == 0) && (((__const uint32_t *)(a))[1] == 0) && (((__const uint32_t *)(a))[2] == htonl(0xffff)))
 
 #define WIFI_CLIENT_DEF_CONN_TIMEOUT_MS (3000)
 #define WIFI_CLIENT_MAX_WRITE_RETRY     (10)
@@ -598,7 +598,7 @@ IPAddress NetworkClient::remoteIP(int fd) const {
   // IPv6, but it might be IPv4 mapped address
   if (((struct sockaddr *)&addr)->sa_family == AF_INET6) {
     struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
-    if (IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
+    if (_IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
       return IPAddress(IPv4, (uint8_t *)saddr6->sin6_addr.s6_addr + IPADDRESS_V4_BYTES_INDEX);
     } else {
       return IPAddress(IPv6, (uint8_t *)(saddr6->sin6_addr.s6_addr), saddr6->sin6_scope_id);
@@ -640,7 +640,7 @@ IPAddress NetworkClient::localIP(int fd) const {
   // IPv6, but it might be IPv4 mapped address
   if (((struct sockaddr *)&addr)->sa_family == AF_INET6) {
     struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
-    if (IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
+    if (_IN6_IS_ADDR_V4MAPPED(saddr6->sin6_addr.un.u32_addr)) {
       return IPAddress(IPv4, (uint8_t *)saddr6->sin6_addr.s6_addr + IPADDRESS_V4_BYTES_INDEX);
     } else {
       return IPAddress(IPv6, (uint8_t *)(saddr6->sin6_addr.s6_addr), saddr6->sin6_scope_id);
