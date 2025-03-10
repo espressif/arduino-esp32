@@ -91,7 +91,7 @@ protected:
   bool started = false;
   bool onOffState = false;             // default initial state is off, but it can be changed by begin(bool)
   uint8_t brightnessLevel = 0;         // default initial brightness is 0, but it can be changed by begin(bool, uint8_t)
-  espHsvColor_t colorHSV = {0};        // default initial color HSV is black, but it can be changed by begin(bool, uint8_t, espHsvColor_t)
+  espHsvColor_t colorHSV = {0, 0, 0};  // default initial color HSV is black, but it can be changed by begin(bool, uint8_t, espHsvColor_t)
   uint16_t colorTemperatureLevel = 0;  // default initial color temperature is 0, but it can be changed by begin(bool, uint8_t, espHsvColor_t, uint16_t)
   EndPointOnOffCB _onChangeOnOffCB = NULL;
   EndPointBrightnessCB _onChangeBrightnessCB = NULL;
