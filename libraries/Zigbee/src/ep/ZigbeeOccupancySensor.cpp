@@ -49,6 +49,7 @@ void ZigbeeOccupancySensor::report() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
+  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
