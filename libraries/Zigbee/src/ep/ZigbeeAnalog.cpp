@@ -107,7 +107,7 @@ void ZigbeeAnalog::setAnalogInputReporting(uint16_t min_interval, uint16_t max_i
   reporting_info.ep = _endpoint;
   reporting_info.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT;
   reporting_info.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-  reporting_info.attr_id = ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID;
+  reporting_info.attr_id = ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID;
   reporting_info.u.send_info.min_interval = min_interval;
   reporting_info.u.send_info.max_interval = max_interval;
   reporting_info.u.send_info.def_min_interval = min_interval;
