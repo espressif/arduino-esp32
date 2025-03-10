@@ -1009,6 +1009,18 @@ bool ETHClass::fullDuplex() const {
   return (link_duplex == ETH_DUPLEX_FULL);
 }
 
+bool ETHClass::setFullDuplex(bool on) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  eth_duplex_t link_duplex = on ? ETH_DUPLEX_FULL : ETH_DUPLEX_HALF;
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_DUPLEX_MODE, &link_duplex);
+  if (err != ESP_OK) {
+    log_e("Failed to set duplex mode: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
 bool ETHClass::autoNegotiation() const {
   if (_eth_handle == NULL) {
     return false;
@@ -1016,6 +1028,17 @@ bool ETHClass::autoNegotiation() const {
   bool auto_nego;
   esp_eth_ioctl(_eth_handle, ETH_CMD_G_AUTONEGO, &auto_nego);
   return auto_nego;
+}
+
+bool ETHClass::setAutoNegotiation(bool on) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_AUTONEGO, &on);
+  if (err != ESP_OK) {
+    log_e("Failed to set auto negotiation: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
 }
 
 uint32_t ETHClass::phyAddr() const {
@@ -1027,13 +1050,25 @@ uint32_t ETHClass::phyAddr() const {
   return phy_addr;
 }
 
-uint8_t ETHClass::linkSpeed() const {
+uint16_t ETHClass::linkSpeed() const {
   if (_eth_handle == NULL) {
     return 0;
   }
   eth_speed_t link_speed;
   esp_eth_ioctl(_eth_handle, ETH_CMD_G_SPEED, &link_speed);
   return (link_speed == ETH_SPEED_10M) ? 10 : 100;
+}
+
+bool ETHClass::setLinkSpeed(uint16_t speed) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  eth_speed_t link_speed = (speed == 10) ? ETH_SPEED_10M : ETH_SPEED_100M;
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_SPEED, &link_speed);
+  if (err != ESP_OK) {
+    log_e("Failed to set link speed: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
 }
 
 // void ETHClass::getMac(uint8_t* mac)
