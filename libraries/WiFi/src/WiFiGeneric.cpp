@@ -740,7 +740,7 @@ bool WiFiGenericClass::setBandMode(wifi_band_mode_t band_mode) {
   delay(100);
   return true;
 #else
-  if (band_mode == WIFI_BAND_MODE_5G_ONLY){
+  if (band_mode == WIFI_BAND_MODE_5G_ONLY) {
     log_e("This chip supports only 2.4GHz WiFi");
   }
   return band_mode != WIFI_BAND_MODE_5G_ONLY;
