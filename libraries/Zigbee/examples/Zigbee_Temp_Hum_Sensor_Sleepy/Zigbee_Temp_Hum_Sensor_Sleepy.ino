@@ -125,8 +125,8 @@ void loop() {
     int startTime = millis();
     while (digitalRead(button) == LOW) {
       delay(50);
-      if ((millis() - startTime) > 3000) {
-        // If key pressed for more than 3secs, factory reset Zigbee and reboot
+      if ((millis() - startTime) > 10000) {
+        // If key pressed for more than 10secs, factory reset Zigbee and reboot
         Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
         delay(1000);
         Zigbee.factoryReset();
