@@ -64,6 +64,10 @@ bool setLightState(bool state, espHsvColor_t colorHSV, uint8_t brighteness, uint
     analogWrite(ledPin, colorHSV.v);
 #endif
   } else {
+#ifndef RGB_BUILTIN
+    // after analogWrite(), it is necessary to set the GPIO to digital mode first
+    pinMode(ledPin, OUTPUT);
+#endif    
     digitalWrite(ledPin, LOW);
   }
   // store last HSV Color and OnOff state for when the Light is restarted / power goes off
