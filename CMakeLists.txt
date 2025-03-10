@@ -103,7 +103,6 @@ set(ARDUINO_ALL_LIBRARIES
   OpenThread
   PPP
   Preferences
-  RainMaker
   SD_MMC
   SD
   SimpleBLE
@@ -191,15 +190,6 @@ set(ARDUINO_LIBRARY_PPP_SRCS
 
 set(ARDUINO_LIBRARY_Preferences_SRCS libraries/Preferences/src/Preferences.cpp)
 
-set(ARDUINO_LIBRARY_RainMaker_SRCS
-  libraries/RainMaker/src/RMaker.cpp
-  libraries/RainMaker/src/RMakerNode.cpp
-  libraries/RainMaker/src/RMakerParam.cpp
-  libraries/RainMaker/src/RMakerDevice.cpp
-  libraries/RainMaker/src/RMakerType.cpp
-  libraries/RainMaker/src/RMakerQR.cpp
-  libraries/RainMaker/src/RMakerUtils.cpp
-  libraries/RainMaker/src/AppInsights.cpp)
 
 set(ARDUINO_LIBRARY_SD_MMC_SRCS libraries/SD_MMC/src/SD_MMC.cpp)
 
