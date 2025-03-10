@@ -193,9 +193,9 @@ public:
   // ETH Handle APIs
   bool fullDuplex() const;
   bool setFullDuplex(bool on);
-  
+
   uint16_t linkSpeed() const;
-  bool setLinkSpeed(uint16_t speed);//10 or 100
+  bool setLinkSpeed(uint16_t speed);  //10 or 100
 
   bool autoNegotiation() const;
   bool setAutoNegotiation(bool on);

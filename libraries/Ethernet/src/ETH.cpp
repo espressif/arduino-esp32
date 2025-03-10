@@ -1014,7 +1014,7 @@ bool ETHClass::setFullDuplex(bool on) {
   if (_eth_handle == NULL) {
     return false;
   }
-  eth_duplex_t link_duplex = on?ETH_DUPLEX_FULL:ETH_DUPLEX_HALF;
+  eth_duplex_t link_duplex = on ? ETH_DUPLEX_FULL : ETH_DUPLEX_HALF;
   esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_DUPLEX_MODE, &link_duplex);
   if (err != ESP_OK) {
     log_e("Failed to set duplex mode: 0x%x: %s", err, esp_err_to_name(err));
@@ -1064,7 +1064,7 @@ bool ETHClass::setLinkSpeed(uint16_t speed) {
   if (_eth_handle == NULL) {
     return false;
   }
-  eth_speed_t link_speed = (speed == 10)?ETH_SPEED_10M:ETH_SPEED_100M;
+  eth_speed_t link_speed = (speed == 10) ? ETH_SPEED_10M : ETH_SPEED_100M;
   esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_SPEED, &link_speed);
   if (err != ESP_OK) {
     log_e("Failed to set link speed: 0x%x: %s", err, esp_err_to_name(err));
