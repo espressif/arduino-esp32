@@ -27,9 +27,9 @@ function run_test {
     fi
 
     if [ "$len" -eq 1 ]; then
-        sdkconfig_path="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
+        sdkconfig_path="$HOME/.arduino/tests/$target/$sketchname/build.tmp/sdkconfig"
     else
-        sdkconfig_path="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
+        sdkconfig_path="$HOME/.arduino/tests/$target/$sketchname/build0.tmp/sdkconfig"
     fi
 
     if [ -f "$sketchdir"/ci.json ]; then
@@ -45,7 +45,7 @@ function run_test {
     fi
 
     if [ ! -f "$sdkconfig_path" ]; then
-        printf "\033[93mSketch %s not built\nMight be due to missing target requirements or build failure\033[0m\n" "$sketchname"
+        printf "\033[93mSketch %s build not found in %s\nMight be due to missing target requirements or build failure\033[0m\n" "$(dirname "$sdkconfig_path")" "$sketchname"
         printf "\n\n\n"
         return 0
     fi
@@ -60,7 +60,7 @@ function run_test {
 
     if [ "$len" -eq 1 ]; then
         # build_dir="$sketchdir/build"
-        build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
+        build_dir="$HOME/.arduino/tests/$target/$sketchname/build.tmp"
         report_file="$sketchdir/$target/$sketchname.xml"
     fi
 
@@ -83,7 +83,7 @@ function run_test {
 
         if [ "$len" -ne 1 ]; then
             # build_dir="$sketchdir/build$i"
-            build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
+            build_dir="$HOME/.arduino/tests/$target/$sketchname/build$i.tmp"
             report_file="$sketchdir/$target/$sketchname$i.xml"
         fi
 

@@ -117,7 +117,7 @@ jobs:
         with:
           name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
           path: |
-            ~/.arduino/tests
+            ~/.arduino/tests/${{ inputs.chip }}
 
       - name: Run Tests
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
