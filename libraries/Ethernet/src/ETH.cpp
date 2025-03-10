@@ -271,8 +271,8 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   eth_mac_config.sw_reset_timeout_ms = 1000;
   eth_mac_config.rx_task_stack_size = _task_stack_size;
 
-  esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
-  if (mac == NULL) {
+  _mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
+  if (_mac == NULL) {
     log_e("esp_eth_mac_new_esp32 failed");
     return false;
   }
@@ -281,26 +281,25 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   phy_config.phy_addr = phy_addr;
   phy_config.reset_gpio_num = _pin_power;
 
-  esp_eth_phy_t *phy = NULL;
   switch (type) {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
-    case ETH_PHY_GENERIC: phy = esp_eth_phy_new_generic(&phy_config); break;
+    case ETH_PHY_GENERIC: _phy = esp_eth_phy_new_generic(&phy_config); break;
 #endif
-    case ETH_PHY_LAN8720: phy = esp_eth_phy_new_lan87xx(&phy_config); break;
-    case ETH_PHY_TLK110:  phy = esp_eth_phy_new_ip101(&phy_config); break;
-    case ETH_PHY_RTL8201: phy = esp_eth_phy_new_rtl8201(&phy_config); break;
-    case ETH_PHY_DP83848: phy = esp_eth_phy_new_dp83848(&phy_config); break;
-    case ETH_PHY_KSZ8041: phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
-    case ETH_PHY_KSZ8081: phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+    case ETH_PHY_LAN8720: _phy = esp_eth_phy_new_lan87xx(&phy_config); break;
+    case ETH_PHY_TLK110:  _phy = esp_eth_phy_new_ip101(&phy_config); break;
+    case ETH_PHY_RTL8201: _phy = esp_eth_phy_new_rtl8201(&phy_config); break;
+    case ETH_PHY_DP83848: _phy = esp_eth_phy_new_dp83848(&phy_config); break;
+    case ETH_PHY_KSZ8041: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+    case ETH_PHY_KSZ8081: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
     default:              log_e("Unsupported PHY %d", type); break;
   }
-  if (phy == NULL) {
+  if (_phy == NULL) {
     log_e("esp_eth_phy_new failed");
     return false;
   }
 
   _eth_handle = NULL;
-  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(mac, phy);
+  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(_mac, _phy);
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("Ethernet driver install failed: %d", ret);
