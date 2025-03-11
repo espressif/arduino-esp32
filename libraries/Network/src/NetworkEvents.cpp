@@ -62,6 +62,11 @@ bool NetworkEvents::postEvent(const arduino_event_t *data, TickType_t timeout) {
   return false;
 }
 
+bool NetworkEvents::postEvent(arduino_event_id_t event, TickType_t timeout){
+  return esp_event_post(ARDUINO_EVENTS, static_cast<int32_t>(event), NULL, 0, timeout) == pdTRUE;
+}
+
+
 void NetworkEvents::_evt_picker(int32_t id, arduino_event_info_t *info){
 #if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
   std::lock_guard<std::mutex> lock(_mtx);
@@ -76,14 +81,18 @@ void NetworkEvents::_evt_picker(int32_t id, arduino_event_info_t *info){
       }
 
       if (i.fcb) {
-        i.fcb(static_cast<arduino_event_id_t>(id), *info);
+        if (info)
+          i.fcb(static_cast<arduino_event_id_t>(id), *info);
+        else
+          i.fcb(static_cast<arduino_event_id_t>(id), {});
         continue;
       }
 
-      if (i.scb && info){
+      if (i.scb){
         // system event callback needs a ptr to struct
         arduino_event_t event{static_cast<arduino_event_id_t>(id), {}};
-        memcpy(&event.event_info, info, sizeof(arduino_event_info_t));
+        if (info)
+          memcpy(&event.event_info, info, sizeof(arduino_event_info_t));
         i.scb(&event);
       }
     }

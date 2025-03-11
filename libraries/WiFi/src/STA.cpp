@@ -30,6 +30,9 @@
 #include "esp_wpa2.h"
 #endif
 
+// a static handle for event callback
+static network_event_handle_t evt_handle{0};
+
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
 
 static size_t _wifi_strncpy(char *dst, const char *src, size_t dst_len) {
@@ -107,7 +110,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
     return;
   }
   static bool first_connect = true;
-  log_v("Arduino STA Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
+  log_v("Arduino STA Event: %d - %s", ev->event_id, NetworkEvents::eventName(ev->event_id));
 
   if (ev->event_id == ARDUINO_EVENT_WIFI_STA_START) {
     _sta_network_if->_setStatus(WL_DISCONNECTED);
@@ -180,7 +183,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
 
 void STAClass::_onStaEvent(int32_t event_id, void *event_data) {
   arduino_event_t arduino_event;
-  arduino_event.event_id = ARDUINO_EVENT_MAX;
+  arduino_event.event_id = ARDUINO_EVENT_ANY;
 
   if (event_id == WIFI_EVENT_STA_START) {
     log_v("STA Started");
@@ -222,7 +225,7 @@ void STAClass::_onStaEvent(int32_t event_id, void *event_data) {
     return;
   }
 
-  if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
+  if (arduino_event.event_id != ARDUINO_EVENT_ANY) {
     Network.postEvent(&arduino_event);
   }
 }
@@ -235,6 +238,8 @@ STAClass::STAClass()
 STAClass::~STAClass() {
   end();
   _sta_network_if = NULL;
+  Network.removeEvent(evt_handle);
+  evt_handle = 0;
 }
 
 wl_status_t STAClass::status() {
@@ -276,14 +281,16 @@ bool STAClass::onEnable() {
       return false;
     }
     /* attach to receive events */
-    Network.onSysEvent(_onStaArduinoEvent);
+    if (!evt_handle)
+      evt_handle = Network.onSysEvent(_onStaArduinoEvent);
     initNetif(ESP_NETIF_ID_STA);
   }
   return true;
 }
 
 bool STAClass::onDisable() {
-  Network.removeEvent(_onStaArduinoEvent);
+  Network.removeEvent(evt_handle);
+  evt_handle = 0;
   // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
   // That would be done by WiFi.enableSTA(false) if AP is not enabled, or when it gets disabled
   _esp_netif = NULL;

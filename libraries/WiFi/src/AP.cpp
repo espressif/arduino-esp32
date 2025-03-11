@@ -22,6 +22,9 @@
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp_netif.h"
 
+// a static handle for event callback
+static network_event_handle_t evt_handle{0};
+
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
 
 static size_t _wifi_strncpy(char *dst, const char *src, size_t dst_len) {
@@ -85,7 +88,7 @@ static void _onApArduinoEvent(arduino_event_t *ev) {
   if (_ap_network_if == NULL || ev->event_id < ARDUINO_EVENT_WIFI_AP_START || ev->event_id > ARDUINO_EVENT_WIFI_AP_GOT_IP6) {
     return;
   }
-  log_v("Arduino AP Event: %d - %s", ev->event_id, Network.eventName(ev->event_id));
+  log_v("Arduino AP Event: %d - %s", ev->event_id, NetworkEvents::eventName(ev->event_id));
   if (ev->event_id == ARDUINO_EVENT_WIFI_AP_START) {
 #if CONFIG_LWIP_IPV6
     if (_ap_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
@@ -102,7 +105,7 @@ static void _onApArduinoEvent(arduino_event_t *ev) {
 
 void APClass::_onApEvent(int32_t event_id, void *event_data) {
   arduino_event_t arduino_event;
-  arduino_event.event_id = ARDUINO_EVENT_MAX;
+  arduino_event.event_id = ARDUINO_EVENT_ANY;
 
   if (event_id == WIFI_EVENT_AP_START) {
     log_v("AP Started");
@@ -143,7 +146,7 @@ void APClass::_onApEvent(int32_t event_id, void *event_data) {
     return;
   }
 
-  if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
+  if (arduino_event.event_id != ARDUINO_EVENT_ANY) {
     Network.postEvent(&arduino_event);
   }
 }
@@ -155,6 +158,8 @@ APClass::APClass() {
 APClass::~APClass() {
   end();
   _ap_network_if = NULL;
+  Network.removeEvent(evt_handle);
+  evt_handle = 0;
 }
 
 bool APClass::onEnable() {
@@ -163,7 +168,8 @@ bool APClass::onEnable() {
     return false;
   }
   if (_esp_netif == NULL) {
-    Network.onSysEvent(_onApArduinoEvent);
+    if (!evt_handle)
+      evt_handle = Network.onSysEvent(_onApArduinoEvent);
     _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_AP);
     /* attach to receive events */
     initNetif(ESP_NETIF_ID_AP);
@@ -172,7 +178,8 @@ bool APClass::onEnable() {
 }
 
 bool APClass::onDisable() {
-  Network.removeEvent(_onApArduinoEvent);
+  Network.removeEvent(evt_handle);
+  evt_handle = 0;
   // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
   // That would be done by WiFi.enableAP(false) if STA is not enabled, or when it gets disabled
   _esp_netif = NULL;

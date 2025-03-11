@@ -94,7 +94,7 @@ esp_eth_handle_t ETHClass::handle() const {
 
 void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
   arduino_event_t arduino_event;
-  arduino_event.event_id = ARDUINO_EVENT_MAX;
+  arduino_event.event_id = ARDUINO_EVENT_ANY;
 
   if (event_id == ETHERNET_EVENT_CONNECTED) {
     log_v("%s Connected", desc());
@@ -118,7 +118,7 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
     );
   }
 
-  if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
+  if (arduino_event.event_id != ARDUINO_EVENT_ANY) {
     Network.postEvent(&arduino_event);
   }
 }

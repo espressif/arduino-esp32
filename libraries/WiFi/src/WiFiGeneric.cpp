@@ -57,6 +57,8 @@ extern "C" {
 #include "sdkconfig.h"
 
 static esp_netif_t *esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
+// a static handle for event callback
+static network_event_handle_t evt_handle{0};
 
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {
   if (interface < ESP_IF_MAX) {
@@ -67,7 +69,7 @@ esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {
 
 static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   arduino_event_t arduino_event;
-  arduino_event.event_id = ARDUINO_EVENT_MAX;
+  arduino_event.event_id = ARDUINO_EVENT_ANY;
 
   /*
 	 * SCAN
@@ -163,7 +165,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
 #endif
   }
 
-  if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
+  if (arduino_event.event_id != ARDUINO_EVENT_ANY) {
     Network.postEvent(&arduino_event);
   }
 }
@@ -409,12 +411,13 @@ wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_MIN_MODEM;
 
 WiFiGenericClass::WiFiGenericClass() {}
 
-const char *WiFiGenericClass::disconnectReasonName(wifi_err_reason_t reason) {
-  return WiFi.STA.disconnectReasonName(reason);
+WiFiGenericClass::~WiFiGenericClass(){
+  Network.removeEvent(evt_handle);
+  evt_handle = 0;
 }
 
-const char *WiFiGenericClass::eventName(arduino_event_id_t id) {
-  return Network.eventName(id);
+const char *WiFiGenericClass::disconnectReasonName(wifi_err_reason_t reason) {
+  return WiFi.STA.disconnectReasonName(reason);
 }
 
 const char *WiFiGenericClass::getHostname() {
@@ -437,8 +440,9 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
   // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
   if (event->event_id == ARDUINO_EVENT_WIFI_SCAN_DONE) {
     WiFiScanClass::_scanDone();
+  }
 #if !CONFIG_ESP_WIFI_REMOTE_ENABLED
-  } else if (event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
+  else if (event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
     WiFi.begin(
       (const char *)event->event_info.sc_got_ssid_pswd.ssid, (const char *)event->event_info.sc_got_ssid_pswd.password, 0,
       ((event->event_info.sc_got_ssid_pswd.bssid_set == true) ? event->event_info.sc_got_ssid_pswd.bssid : NULL)
@@ -446,8 +450,8 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
   } else if (event->event_id == ARDUINO_EVENT_SC_SEND_ACK_DONE) {
     esp_smartconfig_stop();
     WiFiSTAClass::_smartConfigDone = true;
-#endif
   }
+#endif
 }
 
 /**
@@ -527,7 +531,8 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
     if (!wifiLowLevelInit(_persistent)) {
       return false;
     }
-    Network.onSysEvent(_eventCallback);
+    if (!evt_handle)
+      evt_handle = Network.onSysEvent(_eventCallback);
   }
 
   if (((m & WIFI_MODE_STA) != 0) && ((cm & WIFI_MODE_STA) == 0)) {
@@ -552,7 +557,8 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
       // we are disabling AP interface
       WiFi.AP.onDisable();
     }
-    Network.removeEvent(_eventCallback);
+    Network.removeEvent(evt_handle);
+    evt_handle = 0;
     return true;
   }
 

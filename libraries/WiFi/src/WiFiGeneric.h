@@ -81,12 +81,13 @@ typedef enum {
 class WiFiGenericClass {
 public:
   WiFiGenericClass();
+  virtual ~WiFiGenericClass();
 
-  wifi_event_id_t onEvent(WiFiEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
-  wifi_event_id_t onEvent(WiFiEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
-  wifi_event_id_t onEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
-  void removeEvent(WiFiEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
-  void removeEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  wifi_event_id_t onEvent(WiFiEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
+  wifi_event_id_t onEvent(WiFiEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
+  wifi_event_id_t onEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
+  void removeEvent(WiFiEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
+  void removeEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
   void removeEvent(wifi_event_id_t id);
 
   static int getStatusBits();
@@ -131,9 +132,8 @@ public:
   static uint8_t calculateSubnetCIDR(IPAddress subnetMask);
 
   const char *disconnectReasonName(wifi_err_reason_t reason);
-  const char *eventName(arduino_event_id_t id);
+  static const char *eventName(arduino_event_id_t id){ return NetworkEvents::eventName(id); };
 
-  static void _eventCallback(arduino_event_t *event);
 
 protected:
   static bool _persistent;
@@ -144,6 +144,8 @@ protected:
 
   static int setStatusBits(int bits);
   static int clearStatusBits(int bits);
+
+  static void _eventCallback(arduino_event_t *event);
 
   friend class WiFiSTAClass;
   friend class WiFiScanClass;
