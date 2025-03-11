@@ -3,6 +3,7 @@
 #pragma once
 
 #include "soc/soc_caps.h"
+#include "sdkconfig.h"
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
