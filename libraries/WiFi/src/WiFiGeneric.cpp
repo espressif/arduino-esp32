@@ -56,8 +56,6 @@ extern "C" {
 #include <vector>
 #include "sdkconfig.h"
 
-ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
-
 static esp_netif_t *esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
 
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {

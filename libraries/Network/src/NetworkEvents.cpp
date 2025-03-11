@@ -3,38 +3,23 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include <algorithm>
 #include "NetworkEvents.h"
-#include "NetworkManager.h"
-#include "esp_task.h"
 #include "esp32-hal.h"
 
-#ifndef ARDUINO_NETWORK_EVENT_TASK_STACK_SIZE
-#define ARDUINO_NETWORK_EVENT_TASK_STACK_SIZE 4096
-#endif
-
-NetworkEvents::NetworkEvents() : _arduino_event_group(NULL), _arduino_event_queue(NULL), _arduino_event_task_handle(NULL) {}
+ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
 
 NetworkEvents::~NetworkEvents() {
-  if (_arduino_event_task_handle != NULL) {
-    vTaskDelete(_arduino_event_task_handle);
-    _arduino_event_task_handle = NULL;
-  }
   if (_arduino_event_group != NULL) {
     vEventGroupDelete(_arduino_event_group);
     _arduino_event_group = NULL;
   }
-  if (_arduino_event_queue != NULL) {
-    arduino_event_t *event = NULL;
-    // consume queue
-    while (xQueueReceive(_arduino_event_queue, &event, 0) == pdTRUE) {
-      delete event;
-    }
-    vQueueDelete(_arduino_event_queue);
-    _arduino_event_queue = NULL;
+  // unregister event bus handler
+  if (_evt_handler){
+    esp_event_handler_instance_unregister(ARDUINO_EVENTS, ESP_EVENT_ANY_ID, _evt_handler);
+    _evt_handler = nullptr;
   }
 }
-
-static uint32_t _initial_bits = 0;
 
 bool NetworkEvents::initNetworkEvents() {
   if (!_arduino_event_group) {
@@ -46,108 +31,63 @@ bool NetworkEvents::initNetworkEvents() {
     xEventGroupSetBits(_arduino_event_group, _initial_bits);
   }
 
-  if (!_arduino_event_queue) {
-    _arduino_event_queue = xQueueCreate(32, sizeof(arduino_event_t *));
-    if (!_arduino_event_queue) {
-      log_e("Network Event Queue Create Failed!");
-      return false;
-    }
-  }
-
+  // create default ESP event loop
   esp_err_t err = esp_event_loop_create_default();
   if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
     log_e("esp_event_loop_create_default failed!");
-    return err;
+    return false;
   }
 
-  if (!_arduino_event_task_handle) {
-    xTaskCreateUniversal(
-      [](void *self) {
-        static_cast<NetworkEvents *>(self)->_checkForEvent();
-      },
-      "arduino_events",                       // label
-      ARDUINO_NETWORK_EVENT_TASK_STACK_SIZE,  // event task's stack size
-      this, ESP_TASKD_EVENT_PRIO - 1, &_arduino_event_task_handle, ARDUINO_EVENT_RUNNING_CORE
+  // subscribe to default ESP event bus
+  if (!_evt_handler){
+    ESP_ERROR_CHECK(
+      esp_event_handler_instance_register(
+        ARDUINO_EVENTS, ESP_EVENT_ANY_ID,
+        [](void* self, esp_event_base_t base, int32_t id, void* data) { static_cast<NetworkEvents*>(self)->_evt_picker(id, reinterpret_cast<arduino_event_info_t*>(data)); },
+        this,
+        &_evt_handler
+      )
     );
-    if (!_arduino_event_task_handle) {
-      log_e("Network Event Task Start Failed!");
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool NetworkEvents::postEvent(const arduino_event_t *data) {
-  if (data == NULL || _arduino_event_queue == NULL) {
-    return false;
-  }
-  arduino_event_t *event = new arduino_event_t();
-  if (event == NULL) {
-    log_e("Arduino Event Malloc Failed!");
-    return false;
-  }
-
-  memcpy(event, data, sizeof(arduino_event_t));
-  if (xQueueSend(_arduino_event_queue, &event, portMAX_DELAY) != pdPASS) {
-    log_e("Arduino Event Send Failed!");
-    delete event;  // release mem on error
-    return false;
   }
   return true;
 }
 
-void NetworkEvents::_checkForEvent() {
-  // this task can't run without the queue
-  if (_arduino_event_queue == NULL) {
-    _arduino_event_task_handle = NULL;
-    vTaskDelete(NULL);
-    return;
-  }
+bool NetworkEvents::postEvent(const arduino_event_t *data, TickType_t timeout) {
+  if (!data) return false;
+  esp_err_t err = esp_event_post(ARDUINO_EVENTS, static_cast<int32_t>(data->event_id), &data->event_info, sizeof(data->event_info), timeout);
+  if (err == pdTRUE)
+    return true;
 
-  for (;;) {
-    arduino_event_t *event = NULL;
-    // wait for an event on a queue
-    if (xQueueReceive(_arduino_event_queue, &event, portMAX_DELAY) != pdTRUE) {
-      continue;
-    }
-    if (event == NULL) {
-      continue;
-    }
-    log_v("Network Event: %d - %s", event->event_id, eventName(event->event_id));
+  log_e("Arduino Event Send Failed!");
+  return false;
+}
 
+void NetworkEvents::_evt_picker(int32_t id, arduino_event_info_t *info){
 #if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
-    std::unique_lock<std::mutex> lock(_mtx);
+  std::lock_guard<std::mutex> lock(_mtx);
 #endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
-    // iterate over registered callbacks
-    for (auto &i : _cbEventList) {
-      if (i.cb || i.fcb || i.scb) {
-        if (i.event == (arduino_event_id_t)event->event_id || i.event == ARDUINO_EVENT_MAX) {
-          if (i.cb) {
-            i.cb((arduino_event_id_t)event->event_id);
-            continue;
-          }
+  // iterate over registered callbacks
+  for (auto &i : _cbEventList) {
+    if (i.event == static_cast<arduino_event_id_t>(id) || i.event == ARDUINO_EVENT_ANY) {
+      if (i.cb) {
+        i.cb(static_cast<arduino_event_id_t>(id));
+        continue;
+      }
 
-          if (i.fcb) {
-            i.fcb((arduino_event_id_t)event->event_id, (arduino_event_info_t)event->event_info);
-            continue;
-          }
+      if (i.fcb) {
+        i.fcb(static_cast<arduino_event_id_t>(id), *info);
+        continue;
+      }
 
-          i.scb(event);
-        }
+      if (i.scb && info){
+        // system event callback needs a ptr to struct
+        arduino_event_t event{static_cast<arduino_event_id_t>(id), {}};
+        memcpy(&event.event_info, info, sizeof(arduino_event_info_t));
+        i.scb(&event);
       }
     }
-
-#if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
-    lock.unlock();
-#endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
-
-    // release the event object's memory
-    delete event;
   }
-
-  vTaskDelete(NULL);
 }
 
 template<typename T, typename... U> static size_t getStdFunctionAddress(std::function<T(U...)> f) {
@@ -354,7 +294,6 @@ int NetworkEvents::waitStatusBits(int bits, uint32_t timeout_ms) {
  * @brief Convert arduino_event_id_t to a C string.
  * @param [in] id The event id to be converted.
  * @return A string representation of the event id.
- * @note: arduino_event_id_t values as of Mar 2023 (arduino-esp32 r2.0.7) are: 0-39 (ARDUINO_EVENT_MAX=40) and are defined in WiFiGeneric.h.
  */
 const char *NetworkEvents::eventName(arduino_event_id_t id) {
   switch (id) {

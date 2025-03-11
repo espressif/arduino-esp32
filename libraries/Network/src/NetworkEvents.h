@@ -15,9 +15,6 @@
 #endif
 #include <functional>
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
 #include "freertos/event_groups.h"
 #if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
 #include <mutex>
@@ -39,8 +36,11 @@ constexpr int WIFI_SCAN_DONE_BIT = BIT1;
 #define NET_HAS_IP6_GLOBAL_BIT 0
 
 ESP_EVENT_DECLARE_BASE(ARDUINO_EVENTS);
+// backward compatibility
+#define ARDUINO_EVENT_MAX ARDUINO_EVENT_ANY
 
 typedef enum {
+  ARDUINO_EVENT_ANY = ESP_EVENT_ANY_ID, // make all ARDUINO events compatibile with ANY ESP_EVENT
   ARDUINO_EVENT_NONE = 0,
   ARDUINO_EVENT_ETH_START,
   ARDUINO_EVENT_ETH_STOP,
@@ -93,8 +93,8 @@ typedef enum {
   ARDUINO_EVENT_PPP_GOT_IP,
   ARDUINO_EVENT_PPP_LOST_IP,
   ARDUINO_EVENT_PPP_GOT_IP6,
-  ARDUINO_EVENT_MAX
 } arduino_event_id_t;
+
 
 typedef union {
   ip_event_ap_staipassigned_t wifi_ap_staipassigned;
@@ -148,7 +148,7 @@ using network_event_handle_t = size_t;
  */
 class NetworkEvents {
 public:
-  NetworkEvents();
+  NetworkEvents(){};
   ~NetworkEvents();
 
   /**
@@ -159,7 +159,7 @@ public:
    * @param event event to process, any event by default
    * @return network_event_handle_t
    */
-  network_event_handle_t onEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  network_event_handle_t onEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
 
   /**
    * @brief register functional callback to be executed on arduino event(s)
@@ -170,7 +170,7 @@ public:
    * @param event event to process, any event by default
    * @return network_event_handle_t
    */
-  network_event_handle_t onEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  network_event_handle_t onEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
 
   /**
    * @brief register static system callback to be executed on arduino event(s)
@@ -182,7 +182,7 @@ public:
    * @param event event to process, any event by default
    * @return network_event_handle_t
    */
-  network_event_handle_t onEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  network_event_handle_t onEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
 
   /**
    * @brief unregister static function callback
@@ -191,7 +191,7 @@ public:
    * @param cbEvent static callback function
    * @param event event to process, any event by default
    */
-  void removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  void removeEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
 
   /**
    * @brief unregister functional callback
@@ -201,7 +201,7 @@ public:
    * @param cbEvent functional callback
    * @param event event to process, any event by default
    */
-  void removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX)
+  void removeEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY)
     __attribute__((deprecated("removing functional callbacks via pointer is deprecated, use removeEvent(network_event_handle_t) instead")));
 
   /**
@@ -211,13 +211,12 @@ public:
    * @param cbEvent static callback function
    * @param event event to process, any event by default
    */
-  void removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  void removeEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
 
   /**
    * @brief unregister event callback via handler
    *
-   * @param cbEvent static callback function
-   * @param event event to process, any event by default
+   * @param event_handle a handler to remove
    */
   void removeEvent(network_event_handle_t event_handle);
 
@@ -225,7 +224,6 @@ public:
    * @brief get a human-readable name of an event by it's id
    *
    * @param id event id code
-   * @return const char* event name string
    */
   static const char *eventName(arduino_event_id_t id);
 
@@ -238,7 +236,7 @@ public:
    * @return true if event was queued susccessfuly
    * @return false on memrory allocation error or queue is full
    */
-  bool postEvent(const arduino_event_t *event);
+  bool postEvent(const arduino_event_t *event, TickType_t timeout = portMAX_DELAY);
 
   int getStatusBits() const;
   int waitStatusBits(int bits, uint32_t timeout_ms);
@@ -257,11 +255,11 @@ public:
 protected:
   bool initNetworkEvents();
   // same as onEvent() but places newly added handler at the beginning of registered events list
-  network_event_handle_t onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  network_event_handle_t onSysEvent(NetworkEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
   // same as onEvent() but places newly added handler at the beginning of registered events list
-  network_event_handle_t onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  network_event_handle_t onSysEvent(NetworkEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
   // same as onEvent() but places newly added handler at the beginning of registered events list
-  network_event_handle_t onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
+  network_event_handle_t onSysEvent(NetworkEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_ANY);
 
 private:
   /**
@@ -280,17 +278,20 @@ private:
 
     explicit NetworkEventCbList_t(
       network_event_handle_t id, NetworkEventCb cb = nullptr, NetworkEventFuncCb fcb = nullptr, NetworkEventSysCb scb = nullptr,
-      arduino_event_id_t event = ARDUINO_EVENT_MAX
+      arduino_event_id_t event = ARDUINO_EVENT_ANY
     )
       : id(id), cb(cb), fcb(fcb), scb(scb), event(event) {}
   };
 
   // define initial id's value
   network_event_handle_t _current_id{0};
+  // EventGroup i.c.
+  uint32_t _initial_bits{0};
 
-  EventGroupHandle_t _arduino_event_group;
-  QueueHandle_t _arduino_event_queue;
-  TaskHandle_t _arduino_event_task_handle;
+  // ESP event bus handler
+  esp_event_handler_instance_t _evt_handler{nullptr};
+
+  EventGroupHandle_t _arduino_event_group{nullptr};
 
   // registered events callbacks container
   std::vector<NetworkEventCbList_t> _cbEventList;
@@ -300,9 +301,6 @@ private:
   std::mutex _mtx;
 #endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
-  /**
-   * @brief task function that picks events from an event queue and calls registered callbacks
-   *
-   */
-  void _checkForEvent();
+  // ESP event bus callback function, picks events from an event queue and calls registered callbacks
+  void _evt_picker(int32_t id, arduino_event_info_t *info);
 };
