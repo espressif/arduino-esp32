@@ -3,16 +3,16 @@ name: Build Python Tools
 on:
   pull_request:
     paths:
-      - '.github/workflows/build_py_tools.yml'
-      - 'tools/get.py'
-      - 'tools/espota.py'
-      - 'tools/gen_esp32part.py'
-      - 'tools/gen_insights_package.py'
+      - ".github/workflows/build_py_tools.yml"
+      - "tools/get.py"
+      - "tools/espota.py"
+      - "tools/gen_esp32part.py"
+      - "tools/gen_insights_package.py"
 
 jobs:
   find-changed-tools:
     name: Check if tools have been changed
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     outputs:
       any_changed: ${{ steps.verify-changed-files.outputs.any_changed }}
       all_changed_files: ${{ steps.verify-changed-files.outputs.all_changed_files }}
@@ -33,8 +33,8 @@ jobs:
         uses: tj-actions/changed-files@v41
         id: verify-changed-files
         with:
-          fetch_depth: '2'
-          since_last_remote_commit: 'true'
+          fetch_depth: "2"
+          since_last_remote_commit: "true"
           files: |
             tools/get.py
             tools/espota.py
@@ -55,23 +55,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-20.04, ARM]
+        os: [windows-latest, macos-latest, ubuntu-latest, ubuntu-24.04-arm]
         include:
-        - os: windows-latest
-          TARGET: win64
-          EXTEN: .exe
-          SEPARATOR: ';'
-        - os: macos-latest
-          TARGET: macos
-          SEPARATOR: ':'
-        - os: ubuntu-20.04
-          TARGET: linux-amd64
-          SEPARATOR: ':'
-        - os: ARM
-          CONTAINER: python:3.8-bullseye
-          TARGET: arm
-          SEPARATOR: ':'
-    container: ${{ matrix.CONTAINER }} # use python container on ARM
+          - os: windows-latest
+            TARGET: win64
+            EXTEN: .exe
+            SEPARATOR: ";"
+          - os: macos-latest
+            TARGET: macos
+            SEPARATOR: ":"
+          - os: ubuntu-latest
+            TARGET: linux-amd64
+            SEPARATOR: ":"
+          - os: ubuntu-24.04-arm
+            TARGET: arm
+            SEPARATOR: ":"
     env:
       DISTPATH: pytools-${{ matrix.TARGET }}
       PIP_EXTRA_INDEX_URL: "https://dl.espressif.com/pypi"
@@ -96,8 +94,6 @@ jobs:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Set up Python 3.8
-        # Skip setting python on ARM because of missing compatibility: https://github.com/actions/setup-python/issues/108
-        if: matrix.os != 'ARM'
         uses: actions/setup-python@master
         with:
           python-version: 3.8

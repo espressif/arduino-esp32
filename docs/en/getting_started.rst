@@ -78,14 +78,13 @@ Supported IDEs
 
 Here is the list of supported IDE for Arduino ESP32 support integration.
 
-+-------------------+-------------------+
-| |arduino-logo|    | |pio-logo|        |
-+-------------------+-------------------+
-| Arduino IDE       | PlatformIO        |
-+-------------------+-------------------+
++-------------------+
+| |arduino-logo|    |
++-------------------+
+| Arduino IDE       |
++-------------------+
 
 .. |arduino-logo| image:: ../_static/logo_arduino.png
-.. |pio-logo| image:: ../_static/logo_pio.png
 
 See `Installing Guides <installing.html>`_ for more details on how to install the Arduino ESP32 support.
 
@@ -103,7 +102,8 @@ Here are some community channels where you may find information and ask for some
 - `ESP32 Forum`_: Official Espressif Forum.
 - `ESP32 Forum - Arduino`_: Official Espressif Forum for Arduino related discussions.
 - `ESP32 Forum - Hardware`_: Official Espressif Forum for Hardware related discussions.
-- `Gitter`_
+- `Espressif Developer Portal`_: Official Espressif Developer Portal with tutorials, examples, workshops, and more.
+- `Arduino Core for Espressif (Discord)`_: Official Espressif Discord channel for the Arduino Core.
 - `Espressif MCUs (Discord)`_
 - `ESP32 on Reddit`_
 
@@ -149,12 +149,13 @@ Resources
 
 .. _Espressif Systems: https://www.espressif.com
 .. _Espressif Product Selector: https://products.espressif.com/
+.. _Espressif Developer Portal: https://developer.espressif.com/
 .. _Arduino.cc: https://www.arduino.cc/en/Main/Software
 .. _Arduino Reference: https://www.arduino.cc/reference/en/
 .. _ESP32 Forum: https://esp32.com
 .. _ESP32 Forum - Arduino: https://esp32.com/viewforum.php?f=19
 .. _ESP32 Forum - Hardware: https://esp32.com/viewforum.php?f=12
-.. _Gitter: https://gitter.im/espressif/arduino-esp32
+.. _Arduino Core for Espressif (Discord): https://discord.gg/8xY6e9crwv
 .. _Adafruit (Discord): https://discord.gg/adafruit
-.. _Espressif MCUs (Discord): https://discord.gg/nKxMTnkD
+.. _Espressif MCUs (Discord): https://discord.com/invite/XqnZPbF
 .. _ESP32 on Reddit: https://www.reddit.com/r/esp32

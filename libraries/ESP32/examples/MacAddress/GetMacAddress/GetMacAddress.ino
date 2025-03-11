@@ -34,9 +34,6 @@ esp_mac_type_t values:
 void setup() {
 
   Serial.begin(115200);
-  while (!Serial) {
-    delay(100);
-  }
 
   Serial.println("Interface\t\t\t\t\t\tMAC address (6 bytes, 4 universally administered, default)");
 

@@ -15,9 +15,11 @@ Pranav Cherukupalli <cherukupallip@gmail.com>
 */
 
 #if CONFIG_IDF_TARGET_ESP32
-#define THRESHOLD 40   /* Greater the value, more the sensitivity */
-#else                  //ESP32-S2 and ESP32-S3 + default for other chips (to be adjusted) */
+#define THRESHOLD 40 /* Greater the value, more the sensitivity */
+#elif (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 #define THRESHOLD 5000 /* Lower the value, more the sensitivity */
+#else                  // ESP32-P4 + default for other chips (to be adjusted) */
+#define THRESHOLD 500  /* Lower the value, more the sensitivity */
 #endif
 
 RTC_DATA_ATTR int bootCount = 0;
@@ -88,7 +90,7 @@ void setup() {
   touchSleepWakeUpEnable(T3, THRESHOLD);
   touchSleepWakeUpEnable(T7, THRESHOLD);
 
-#else  //ESP32-S2 + ESP32-S3
+#else  //ESP32-S2 + ESP32-S3 + ESP32-P4
   //Setup sleep wakeup on Touch Pad 3 (GPIO3)
   touchSleepWakeUpEnable(T3, THRESHOLD);
 

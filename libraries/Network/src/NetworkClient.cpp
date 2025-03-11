@@ -23,7 +23,11 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
-#define IN6_IS_ADDR_V4MAPPED(a) ((((__const uint32_t *)(a))[0] == 0) && (((__const uint32_t *)(a))[1] == 0) && (((__const uint32_t *)(a))[2] == htonl(0xffff)))
+// It is already defined in IDF as:
+//#define IN6_IS_ADDR_V4MAPPED(a)     ip6_addr_isipv4mappedipv6((ip6_addr_t*)(a))
+//#define ip6_addr_isipv4mappedipv6(ip6addr) (((ip6addr)->addr[0] == 0) && ((ip6addr)->addr[1] == 0) && (((ip6addr)->addr[2]) == PP_HTONL(0x0000FFFFUL)))
+// Keeping as a memory of the change.
+//#define _IN6_IS_ADDR_V4MAPPED(a) ((((__const uint32_t *)(a))[0] == 0) && (((__const uint32_t *)(a))[1] == 0) && (((__const uint32_t *)(a))[2] == htonl(0xffff)))
 
 #define WIFI_CLIENT_DEF_CONN_TIMEOUT_MS (3000)
 #define WIFI_CLIENT_MAX_WRITE_RETRY     (10)
@@ -210,6 +214,7 @@ int NetworkClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms) {
   _timeout = timeout_ms;
   int sockfd = -1;
 
+#if CONFIG_LWIP_IPV6
   if (ip.type() == IPv6) {
     struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serveraddr;
     sockfd = socket(AF_INET6, SOCK_STREAM, 0);
@@ -218,12 +223,15 @@ int NetworkClient::connect(IPAddress ip, uint16_t port, int32_t timeout_ms) {
     tmpaddr->sin6_port = htons(port);
     tmpaddr->sin6_scope_id = ip.zone();
   } else {
+#endif
     struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serveraddr;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     tmpaddr->sin_family = AF_INET;
     tmpaddr->sin_addr.s_addr = ip;
     tmpaddr->sin_port = htons(port);
+#if CONFIG_LWIP_IPV6
   }
+#endif
   if (sockfd < 0) {
     log_e("socket: %d", errno);
     return 0;
@@ -549,7 +557,7 @@ uint8_t NetworkClient::connected() {
   }
   if (_connected) {
     uint8_t dummy;
-    int res = recv(fd(), &dummy, 0, MSG_DONTWAIT);
+    int res = recv(fd(), &dummy, 1, MSG_DONTWAIT | MSG_PEEK);
     // avoid unused var warning by gcc
     (void)res;
     // recv only sets errno if res is <= 0
@@ -590,6 +598,7 @@ IPAddress NetworkClient::remoteIP(int fd) const {
     return IPAddress((uint32_t)(s->sin_addr.s_addr));
   }
 
+#if CONFIG_LWIP_IPV6
   // IPv6, but it might be IPv4 mapped address
   if (((struct sockaddr *)&addr)->sa_family == AF_INET6) {
     struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
@@ -600,6 +609,7 @@ IPAddress NetworkClient::remoteIP(int fd) const {
     }
   }
   log_e("NetworkClient::remoteIP Not AF_INET or AF_INET6?");
+#endif
   return (IPAddress(0, 0, 0, 0));
 }
 
@@ -630,6 +640,7 @@ IPAddress NetworkClient::localIP(int fd) const {
     return IPAddress((uint32_t)(s->sin_addr.s_addr));
   }
 
+#if CONFIG_LWIP_IPV6
   // IPv6, but it might be IPv4 mapped address
   if (((struct sockaddr *)&addr)->sa_family == AF_INET6) {
     struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *)&addr;
@@ -640,6 +651,7 @@ IPAddress NetworkClient::localIP(int fd) const {
     }
   }
   log_e("NetworkClient::localIP Not AF_INET or AF_INET6?");
+#endif
   return (IPAddress(0, 0, 0, 0));
 }
 

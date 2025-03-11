@@ -3,7 +3,8 @@
 #pragma once
 
 #include "soc/soc_caps.h"
-#if SOC_IEEE802154_SUPPORTED
+#include "sdkconfig.h"
+#if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -31,7 +32,7 @@
 class ZigbeeThermostat : public ZigbeeEP {
 public:
   ZigbeeThermostat(uint8_t endpoint);
-  ~ZigbeeThermostat();
+  ~ZigbeeThermostat() {}
 
   void onTempRecieve(void (*callback)(float)) {
     _on_temp_recieve = callback;
@@ -61,4 +62,4 @@ private:
   void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) override;
 };
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  // CONFIG_ZB_ENABLED

@@ -35,26 +35,21 @@
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "ZigbeeCore.h"
-#include "ep/ZigbeeColorDimmerSwitch.h"
+#include "Zigbee.h"
 
-/* Switch configuration */
-#define SWITCH_PIN             9  // ESP32-C6/H2 Boot button
+/* Zigbee color dimmer switch configuration */
 #define SWITCH_ENDPOINT_NUMBER 5
+uint8_t button = BOOT_PIN;
 
 /* Zigbee switch */
 ZigbeeColorDimmerSwitch zbSwitch = ZigbeeColorDimmerSwitch(SWITCH_ENDPOINT_NUMBER);
 
 /********************* Arduino functions **************************/
 void setup() {
-
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   //Init button switch
-  pinMode(SWITCH_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   //Optional: set Zigbee device name and model
   zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");
@@ -69,11 +64,15 @@ void setup() {
   Zigbee.setRebootOpenNetwork(180);
 
   //When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
-  Zigbee.begin(ZIGBEE_COORDINATOR);
+  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
 
   Serial.println("Waiting for Light to bound to the switch");
   //Wait for switch to bound to a light:
-  while (!zbSwitch.isBound()) {
+  while (!zbSwitch.bound()) {
     Serial.printf(".");
     delay(500);
   }
@@ -82,9 +81,9 @@ void setup() {
 
 void loop() {
   // Handle button switch in loop()
-  if (digitalRead(SWITCH_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
-    while (digitalRead(SWITCH_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
     }
     // Toggle light
@@ -143,6 +142,6 @@ void loop() {
   static uint32_t last_print = 0;
   if (millis() - last_print > 30000) {
     last_print = millis();
-    zbSwitch.printBoundDevices();
+    zbSwitch.printBoundDevices(Serial);
   }
 }

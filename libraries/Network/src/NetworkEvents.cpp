@@ -8,6 +8,10 @@
 #include "esp_task.h"
 #include "esp32-hal.h"
 
+#ifndef ARDUINO_NETWORK_EVENT_TASK_STACK_SIZE
+#define ARDUINO_NETWORK_EVENT_TASK_STACK_SIZE 4096
+#endif
+
 NetworkEvents::NetworkEvents() : _arduino_event_group(NULL), _arduino_event_queue(NULL), _arduino_event_task_handle(NULL) {}
 
 NetworkEvents::~NetworkEvents() {
@@ -61,8 +65,8 @@ bool NetworkEvents::initNetworkEvents() {
       [](void *self) {
         static_cast<NetworkEvents *>(self)->_checkForEvent();
       },
-      "arduino_events",  // label
-      4096,              // event task's stack size
+      "arduino_events",                       // label
+      ARDUINO_NETWORK_EVENT_TASK_STACK_SIZE,  // event task's stack size
       this, ESP_TASKD_EVENT_PRIO - 1, &_arduino_event_task_handle, ARDUINO_EVENT_RUNNING_CORE
     );
     if (!_arduino_event_task_handle) {
@@ -368,7 +372,7 @@ const char *NetworkEvents::eventName(arduino_event_id_t id) {
     case ARDUINO_EVENT_PPP_GOT_IP:       return "PPP_GOT_IP";
     case ARDUINO_EVENT_PPP_LOST_IP:      return "PPP_LOST_IP";
     case ARDUINO_EVENT_PPP_GOT_IP6:      return "PPP_GOT_IP6";
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
     case ARDUINO_EVENT_WIFI_OFF:                 return "WIFI_OFF";
     case ARDUINO_EVENT_WIFI_READY:               return "WIFI_READY";
     case ARDUINO_EVENT_WIFI_SCAN_DONE:           return "SCAN_DONE";

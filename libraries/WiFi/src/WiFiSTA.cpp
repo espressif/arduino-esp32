@@ -25,7 +25,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -63,6 +63,7 @@ wl_status_t WiFiSTAClass::status() {
   return STA.status();
 }
 
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
 wl_status_t WiFiSTAClass::begin(
   const char *wpa2_ssid, wpa2_auth_method_t method, const char *wpa2_identity, const char *wpa2_username, const char *wpa2_password, const char *ca_pem,
   const char *client_crt, const char *client_key, int ttls_phase2_type, int32_t channel, const uint8_t *bssid, bool connect
@@ -77,6 +78,7 @@ wl_status_t WiFiSTAClass::begin(
 
   return STA.status();
 }
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
 
 wl_status_t WiFiSTAClass::begin(const char *ssid, const char *passphrase, int32_t channel, const uint8_t *bssid, bool connect) {
   if (!STA.begin()) {
@@ -215,7 +217,7 @@ bool WiFiSTAClass::bandwidth(wifi_bandwidth_t bandwidth) {
  * @return true if STA is connected to an AP
  */
 bool WiFiSTAClass::isConnected() {
-  return STA.connected();
+  return STA.connected() && STA.hasIP();
 }
 
 /**
@@ -386,6 +388,7 @@ int8_t WiFiSTAClass::RSSI(void) {
   return STA.RSSI();
 }
 
+#if CONFIG_LWIP_IPV6
 /**
  * Enable IPv6 on the station interface.
  * Should be called before WiFi.begin()
@@ -411,6 +414,7 @@ IPAddress WiFiSTAClass::linkLocalIPv6() {
 IPAddress WiFiSTAClass::globalIPv6() {
   return STA.globalIPv6();
 }
+#endif
 
 bool WiFiSTAClass::_smartConfigStarted = false;
 bool WiFiSTAClass::_smartConfigDone = false;

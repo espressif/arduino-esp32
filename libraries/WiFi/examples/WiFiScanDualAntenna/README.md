@@ -17,10 +17,6 @@ This example is compatible with the ESP32-WROOM-DA.
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
 
-#### Using Platform IO
-
-* Select the COM port: `Devices` or set the `upload_port` option on the `platformio.ini` file.
-
 ## Example/Log Output
 
 ```

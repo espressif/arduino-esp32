@@ -1,3 +1,17 @@
+// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef LWIP_OPEN_SRC
 #define LWIP_OPEN_SRC
 #endif
@@ -15,7 +29,7 @@ ArduinoOTAClass::ArduinoOTAClass()
     _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL) {}
 
 ArduinoOTAClass::~ArduinoOTAClass() {
-  _udp_ota.stop();
+  end();
 }
 
 ArduinoOTAClass &ArduinoOTAClass::onStart(THandlerFunction fn) {
@@ -120,10 +134,12 @@ void ArduinoOTAClass::begin() {
     sprintf(tmp, "esp32-%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     _hostname = tmp;
   }
+#ifdef CONFIG_MDNS_MAX_INTERFACES
   if (_mdnsEnabled) {
     MDNS.begin(_hostname.c_str());
     MDNS.enableArduino(_port, (_password.length() > 0));
   }
+#endif
   _initialized = true;
   _state = OTA_IDLE;
   log_i("OTA server at: %s.local:%u", _hostname.c_str(), _port);
@@ -358,9 +374,11 @@ void ArduinoOTAClass::_runUpdate() {
 void ArduinoOTAClass::end() {
   _initialized = false;
   _udp_ota.stop();
+#ifdef CONFIG_MDNS_MAX_INTERFACES
   if (_mdnsEnabled) {
     MDNS.end();
   }
+#endif
   _state = OTA_IDLE;
   log_i("OTA server stopped.");
 }

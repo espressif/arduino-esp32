@@ -41,31 +41,28 @@ static const char WWW_Authenticate[] = "WWW-Authenticate";
 static const char Content_Length[] = "Content-Length";
 static const char ETAG_HEADER[] = "If-None-Match";
 
-WebServer::WebServer(IPAddress addr, int port)
-  : _corsEnabled(false), _server(addr, port), _currentMethod(HTTP_ANY), _currentVersion(0), _currentStatus(HC_NONE), _statusChange(0), _nullDelay(true),
-    _currentHandler(nullptr), _firstHandler(nullptr), _lastHandler(nullptr), _currentArgCount(0), _currentArgs(nullptr), _postArgsLen(0), _postArgs(nullptr),
-    _headerKeysCount(0), _currentHeaders(nullptr), _contentLength(0), _clientContentLength(0), _chunked(false) {
+WebServer::WebServer(IPAddress addr, int port) : _server(addr, port) {
   log_v("WebServer::Webserver(addr=%s, port=%d)", addr.toString().c_str(), port);
 }
 
-WebServer::WebServer(int port)
-  : _corsEnabled(false), _server(port), _currentMethod(HTTP_ANY), _currentVersion(0), _currentStatus(HC_NONE), _statusChange(0), _nullDelay(true),
-    _currentHandler(nullptr), _firstHandler(nullptr), _lastHandler(nullptr), _currentArgCount(0), _currentArgs(nullptr), _postArgsLen(0), _postArgs(nullptr),
-    _headerKeysCount(0), _currentHeaders(nullptr), _contentLength(0), _clientContentLength(0), _chunked(false) {
+WebServer::WebServer(int port) : _server(port) {
   log_v("WebServer::Webserver(port=%d)", port);
 }
 
 WebServer::~WebServer() {
   _server.close();
-  if (_currentHeaders) {
-    delete[] _currentHeaders;
-  }
+
+  _clearRequestHeaders();
+  _clearResponseHeaders();
+  delete _chain;
+
   RequestHandler *handler = _firstHandler;
   while (handler) {
     RequestHandler *next = handler->next();
     delete handler;
     handler = next;
   }
+  _firstHandler = nullptr;
 }
 
 void WebServer::begin() {
@@ -436,7 +433,17 @@ void WebServer::handleClient() {
           _currentClient.setTimeout(HTTP_MAX_SEND_WAIT); /* / 1000 removed, WifiClient setTimeout changed to ms */
           if (_parseRequest(_currentClient)) {
             _contentLength = CONTENT_LENGTH_NOT_SET;
-            _handleRequest();
+            _responseCode = 0;
+            _clearResponseHeaders();
+
+            // Run server-level middlewares
+            if (_chain) {
+              _chain->runChain(*this, [this]() {
+                return _handleRequest();
+              });
+            } else {
+              _handleRequest();
+            }
 
             if (_currentClient.isSSE()) {
               _currentStatus = HC_WAIT_CLOSE;
@@ -495,16 +502,22 @@ void WebServer::stop() {
 }
 
 void WebServer::sendHeader(const String &name, const String &value, bool first) {
-  String headerLine = name;
-  headerLine += F(": ");
-  headerLine += value;
-  headerLine += "\r\n";
+  RequestArgument *header = new RequestArgument();
+  header->key = name;
+  header->value = value;
 
-  if (first) {
-    _responseHeaders = headerLine + _responseHeaders;
+  if (!_responseHeaders || first) {
+    header->next = _responseHeaders;
+    _responseHeaders = header;
   } else {
-    _responseHeaders += headerLine;
+    RequestArgument *last = _responseHeaders;
+    while (last->next) {
+      last = last->next;
+    }
+    last->next = header;
   }
+
+  _responseHeaderCount++;
 }
 
 void WebServer::setContentLength(const size_t contentLength) {
@@ -529,11 +542,14 @@ void WebServer::enableETag(bool enable, ETagFunction fn) {
 }
 
 void WebServer::_prepareHeader(String &response, int code, const char *content_type, size_t contentLength) {
-  response = String(F("HTTP/1.")) + String(_currentVersion) + ' ';
-  response += String(code);
-  response += ' ';
-  response += _responseCodeToString(code);
-  response += "\r\n";
+  _responseCode = code;
+
+  response.concat(version());
+  response.concat(' ');
+  response.concat(String(code));
+  response.concat(' ');
+  response.concat(responseCodeToString(code));
+  response.concat(F("\r\n"));
 
   using namespace mime;
   if (!content_type) {
@@ -558,9 +574,14 @@ void WebServer::_prepareHeader(String &response, int code, const char *content_t
   }
   sendHeader(String(F("Connection")), String(F("close")));
 
-  response += _responseHeaders;
-  response += "\r\n";
-  _responseHeaders = "";
+  for (RequestArgument *header = _responseHeaders; header; header = header->next) {
+    response.concat(header->key);
+    response.concat(F(": "));
+    response.concat(header->value);
+    response.concat(F("\r\n"));
+  }
+
+  response.concat(F("\r\n"));
 }
 
 void WebServer::send(int code, const char *content_type, const String &content) {
@@ -568,9 +589,6 @@ void WebServer::send(int code, const char *content_type, const String &content) 
   // Can we assume the following?
   //if(code == 200 && content.length() == 0 && _contentLength == CONTENT_LENGTH_NOT_SET)
   //  _contentLength = CONTENT_LENGTH_UNKNOWN;
-  if (content.length() == 0) {
-    log_w("content length is zero");
-  }
   _prepareHeader(header, code, content_type, content.length());
   _currentClientWrite(header.c_str(), header.length());
   if (content.length()) {
@@ -728,39 +746,43 @@ bool WebServer::hasArg(const String &name) const {
 }
 
 String WebServer::header(const String &name) const {
-  for (int i = 0; i < _headerKeysCount; ++i) {
-    if (_currentHeaders[i].key.equalsIgnoreCase(name)) {
-      return _currentHeaders[i].value;
+  for (RequestArgument *current = _currentHeaders; current; current = current->next) {
+    if (current->key.equalsIgnoreCase(name)) {
+      return current->value;
     }
   }
   return "";
 }
 
 void WebServer::collectHeaders(const char *headerKeys[], const size_t headerKeysCount) {
-  _headerKeysCount = headerKeysCount + 2;
-  if (_currentHeaders) {
-    delete[] _currentHeaders;
-  }
-  _currentHeaders = new RequestArgument[_headerKeysCount];
-  _currentHeaders[0].key = FPSTR(AUTHORIZATION_HEADER);
-  _currentHeaders[1].key = FPSTR(ETAG_HEADER);
+  collectAllHeaders();
+  _collectAllHeaders = false;
+
+  _headerKeysCount += headerKeysCount;
+
+  RequestArgument *last = _currentHeaders->next;
+
   for (int i = 2; i < _headerKeysCount; i++) {
-    _currentHeaders[i].key = headerKeys[i - 2];
+    last->next = new RequestArgument();
+    last->next->key = headerKeys[i - 2];
+    last = last->next;
   }
 }
 
 String WebServer::header(int i) const {
-  if (i < _headerKeysCount) {
-    return _currentHeaders[i].value;
+  RequestArgument *current = _currentHeaders;
+  while (current && i--) {
+    current = current->next;
   }
-  return "";
+  return current ? current->value : emptyString;
 }
 
 String WebServer::headerName(int i) const {
-  if (i < _headerKeysCount) {
-    return _currentHeaders[i].key;
+  RequestArgument *current = _currentHeaders;
+  while (current && i--) {
+    current = current->next;
   }
-  return "";
+  return current ? current->key : emptyString;
 }
 
 int WebServer::headers() const {
@@ -768,12 +790,7 @@ int WebServer::headers() const {
 }
 
 bool WebServer::hasHeader(const String &name) const {
-  for (int i = 0; i < _headerKeysCount; ++i) {
-    if ((_currentHeaders[i].key.equalsIgnoreCase(name)) && (_currentHeaders[i].value.length() > 0)) {
-      return true;
-    }
-  }
-  return false;
+  return header(name).length() > 0;
 }
 
 String WebServer::hostHeader() const {
@@ -788,16 +805,17 @@ void WebServer::onNotFound(THandlerFunction fn) {
   _notFoundHandler = fn;
 }
 
-void WebServer::_handleRequest() {
+bool WebServer::_handleRequest() {
   bool handled = false;
-  if (!_currentHandler) {
-    log_e("request handler not found");
-  } else {
-    handled = _currentHandler->handle(*this, _currentMethod, _currentUri);
+  if (_currentHandler) {
+    handled = _currentHandler->process(*this, _currentMethod, _currentUri);
     if (!handled) {
       log_e("request handler failed to handle request");
     }
   }
+  // DO NOT LOG if _currentHandler == null !!
+  // This is is valid use case to handle any other requests
+  // Also, this is just causing log flooding
   if (!handled && _notFoundHandler) {
     _notFoundHandler();
     handled = true;
@@ -811,6 +829,7 @@ void WebServer::_handleRequest() {
     _finalizeResponse();
   }
   _currentUri = "";
+  return handled;
 }
 
 void WebServer::_finalizeResponse() {
@@ -819,7 +838,7 @@ void WebServer::_finalizeResponse() {
   }
 }
 
-String WebServer::_responseCodeToString(int code) {
+String WebServer::responseCodeToString(int code) {
   switch (code) {
     case 100: return F("Continue");
     case 101: return F("Switching Protocols");
@@ -863,4 +882,109 @@ String WebServer::_responseCodeToString(int code) {
     case 505: return F("HTTP Version not supported");
     default:  return F("");
   }
+}
+
+void WebServer::_clearResponseHeaders() {
+  _responseHeaderCount = 0;
+  RequestArgument *current = _responseHeaders;
+  while (current) {
+    RequestArgument *next = current->next;
+    delete current;
+    current = next;
+  }
+  _responseHeaders = nullptr;
+}
+
+void WebServer::_clearRequestHeaders() {
+  _headerKeysCount = 0;
+  RequestArgument *current = _currentHeaders;
+  while (current) {
+    RequestArgument *next = current->next;
+    delete current;
+    current = next;
+  }
+  _currentHeaders = nullptr;
+}
+
+void WebServer::collectAllHeaders() {
+  _clearRequestHeaders();
+
+  _currentHeaders = new RequestArgument();
+  _currentHeaders->key = FPSTR(AUTHORIZATION_HEADER);
+
+  _currentHeaders->next = new RequestArgument();
+  _currentHeaders->next->key = FPSTR(ETAG_HEADER);
+
+  _headerKeysCount = 2;
+  _collectAllHeaders = true;
+}
+
+const String &WebServer::responseHeader(String name) const {
+  for (RequestArgument *current = _responseHeaders; current; current = current->next) {
+    if (current->key.equalsIgnoreCase(name)) {
+      return current->value;
+    }
+  }
+  return emptyString;
+}
+
+const String &WebServer::responseHeader(int i) const {
+  RequestArgument *current = _responseHeaders;
+  while (current && i--) {
+    current = current->next;
+  }
+  return current ? current->value : emptyString;
+}
+
+const String &WebServer::responseHeaderName(int i) const {
+  RequestArgument *current = _responseHeaders;
+  while (current && i--) {
+    current = current->next;
+  }
+  return current ? current->key : emptyString;
+}
+
+bool WebServer::hasResponseHeader(const String &name) const {
+  return header(name).length() > 0;
+}
+
+int WebServer::clientContentLength() const {
+  return _clientContentLength;
+}
+
+const String WebServer::version() const {
+  String v;
+  v.reserve(8);
+  v.concat(F("HTTP/1."));
+  v.concat(_currentVersion);
+  return v;
+}
+int WebServer::responseCode() const {
+  return _responseCode;
+}
+int WebServer::responseHeaders() const {
+  return _responseHeaderCount;
+}
+
+WebServer &WebServer::addMiddleware(Middleware *middleware) {
+  if (!_chain) {
+    _chain = new MiddlewareChain();
+  }
+  _chain->addMiddleware(middleware);
+  return *this;
+}
+
+WebServer &WebServer::addMiddleware(Middleware::Function fn) {
+  if (!_chain) {
+    _chain = new MiddlewareChain();
+  }
+  _chain->addMiddleware(fn);
+  return *this;
+}
+
+WebServer &WebServer::removeMiddleware(Middleware *middleware) {
+  if (_chain) {
+    _chain->removeMiddleware(middleware);
+  }
+  return *this;
 }

@@ -22,6 +22,7 @@
 #define ARDUINO_CORE_BUILD
 
 #include "ETH.h"
+#if CONFIG_ETH_ENABLED
 #include "esp_system.h"
 #include "esp_event.h"
 #include "esp_eth.h"
@@ -30,7 +31,9 @@
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #if CONFIG_ETH_USE_ESP32_EMAC
+#if defined __has_include && __has_include("soc/emac_ext_struct.h")
 #include "soc/emac_ext_struct.h"
+#endif /* __has_include("soc/emac_ext_struct.h" */
 #include "soc/rtc.h"
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #include "esp32-hal-periman.h"
@@ -72,6 +75,7 @@ static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info) 
       log_e("Could not find ETH interface with that handle!");
       return;
     }
+#if CONFIG_LWIP_IPV6
     if (_ethernets[index]->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
       esp_err_t err = esp_netif_create_ip6_linklocal(_ethernets[index]->netif());
       if (err != ESP_OK) {
@@ -80,6 +84,7 @@ static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info) 
         log_v("Enabled IPv6 Link Local on %s", _ethernets[index]->desc());
       }
     }
+#endif
   }
 }
 
@@ -147,6 +152,42 @@ void ETHClass::setTaskStackSize(size_t size) {
 }
 
 #if CONFIG_ETH_USE_ESP32_EMAC
+#if CONFIG_IDF_TARGET_ESP32
+#define ETH_EMAC_DEFAULT_CONFIG() ETH_ESP32_EMAC_DEFAULT_CONFIG()
+#elif CONFIG_IDF_TARGET_ESP32P4
+// clang-format off
+#define ETH_EMAC_DEFAULT_CONFIG()                                                  \
+  {                                                                                \
+    .smi_gpio = {.mdc_num = 31, .mdio_num = 52},                                   \
+    .interface = EMAC_DATA_INTERFACE_RMII,                                         \
+    .clock_config = {                                                              \
+      .rmii = {                                                                    \
+        .clock_mode = EMAC_CLK_EXT_IN,                                             \
+        .clock_gpio = (emac_rmii_clock_gpio_t)ETH_RMII_CLK                         \
+      }                                                                            \
+    },                                                                             \
+    .dma_burst_len = ETH_DMA_BURST_LEN_32,                                         \
+    .intr_priority = 0,                                                            \
+    .emac_dataif_gpio = {                                                          \
+      .rmii = {                                                                    \
+        .tx_en_num = ETH_RMII_TX_EN,                                               \
+        .txd0_num = ETH_RMII_TX0,                                                  \
+        .txd1_num = ETH_RMII_TX1,                                                  \
+        .crs_dv_num = ETH_RMII_CRS_DV,                                             \
+        .rxd0_num = ETH_RMII_RX0,                                                  \
+        .rxd1_num = ETH_RMII_RX1_EN                                                \
+      }                                                                            \
+    },                                                                             \
+    .clock_config_out_in = {                                                       \
+      .rmii = {                                                                    \
+        .clock_mode = EMAC_CLK_EXT_IN,                                             \
+        .clock_gpio = (emac_rmii_clock_gpio_t) - 1                                 \
+      }                                                                            \
+    },                                                                             \
+  }
+#endif
+// clang-format on
+
 bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clock_mode) {
   esp_err_t ret = ESP_OK;
   if (_eth_index > 2) {
@@ -170,14 +211,23 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   Network.begin();
   _ethernets[_eth_index] = this;
 
-  eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
+#if CONFIG_IDF_TARGET_ESP32
+#undef DEFAULT_RMII_CLK_GPIO
+#define DEFAULT_RMII_CLK_GPIO (emac_rmii_clock_gpio_t)(0)
+#endif
+
+  eth_esp32_emac_config_t mac_config = ETH_EMAC_DEFAULT_CONFIG();
+#if CONFIG_IDF_TARGET_ESP32
   mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
   mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode)   ? EMAC_APPL_CLK_OUT_GPIO
                                             : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO
                                             : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO
                                                                 : EMAC_CLK_IN_GPIO;
-  mac_config.smi_mdc_gpio_num = digitalPinToGPIONumber(mdc);
-  mac_config.smi_mdio_gpio_num = digitalPinToGPIONumber(mdio);
+#elif CONFIG_IDF_TARGET_ESP32P4
+  mac_config.clock_config.rmii.clock_mode = (emac_rmii_clock_mode_t)clock_mode;
+#endif
+  mac_config.smi_gpio.mdc_num = digitalPinToGPIONumber(mdc);
+  mac_config.smi_gpio.mdio_num = digitalPinToGPIONumber(mdio);
 
   _pin_mcd = digitalPinToGPIONumber(mdc);
   _pin_mdio = digitalPinToGPIONumber(mdio);
@@ -221,8 +271,8 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   eth_mac_config.sw_reset_timeout_ms = 1000;
   eth_mac_config.rx_task_stack_size = _task_stack_size;
 
-  esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
-  if (mac == NULL) {
+  _mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
+  if (_mac == NULL) {
     log_e("esp_eth_mac_new_esp32 failed");
     return false;
   }
@@ -231,23 +281,25 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   phy_config.phy_addr = phy_addr;
   phy_config.reset_gpio_num = _pin_power;
 
-  esp_eth_phy_t *phy = NULL;
   switch (type) {
-    case ETH_PHY_LAN8720: phy = esp_eth_phy_new_lan87xx(&phy_config); break;
-    case ETH_PHY_TLK110:  phy = esp_eth_phy_new_ip101(&phy_config); break;
-    case ETH_PHY_RTL8201: phy = esp_eth_phy_new_rtl8201(&phy_config); break;
-    case ETH_PHY_DP83848: phy = esp_eth_phy_new_dp83848(&phy_config); break;
-    case ETH_PHY_KSZ8041: phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
-    case ETH_PHY_KSZ8081: phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+    case ETH_PHY_GENERIC: _phy = esp_eth_phy_new_generic(&phy_config); break;
+#endif
+    case ETH_PHY_LAN8720: _phy = esp_eth_phy_new_lan87xx(&phy_config); break;
+    case ETH_PHY_TLK110:  _phy = esp_eth_phy_new_ip101(&phy_config); break;
+    case ETH_PHY_RTL8201: _phy = esp_eth_phy_new_rtl8201(&phy_config); break;
+    case ETH_PHY_DP83848: _phy = esp_eth_phy_new_dp83848(&phy_config); break;
+    case ETH_PHY_KSZ8041: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+    case ETH_PHY_KSZ8081: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
     default:              log_e("Unsupported PHY %d", type); break;
   }
-  if (phy == NULL) {
+  if (_phy == NULL) {
     log_e("esp_eth_phy_new failed");
     return false;
   }
 
   _eth_handle = NULL;
-  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(mac, phy);
+  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(_mac, _phy);
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("Ethernet driver install failed: %d", ret);
@@ -893,7 +945,7 @@ void ETHClass::end(void) {
 #if ETH_SPI_SUPPORTS_CUSTOM
   _spi = NULL;
 #endif
-#if CONFIG_ETH_USE_ESP32_EMAC
+#if (CONFIG_ETH_USE_ESP32_EMAC && !defined(CONFIG_IDF_TARGET_ESP32P4))
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, empty_ethDetachBus);
@@ -957,6 +1009,18 @@ bool ETHClass::fullDuplex() const {
   return (link_duplex == ETH_DUPLEX_FULL);
 }
 
+bool ETHClass::setFullDuplex(bool on) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  eth_duplex_t link_duplex = on ? ETH_DUPLEX_FULL : ETH_DUPLEX_HALF;
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_DUPLEX_MODE, &link_duplex);
+  if (err != ESP_OK) {
+    log_e("Failed to set duplex mode: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
 bool ETHClass::autoNegotiation() const {
   if (_eth_handle == NULL) {
     return false;
@@ -964,6 +1028,17 @@ bool ETHClass::autoNegotiation() const {
   bool auto_nego;
   esp_eth_ioctl(_eth_handle, ETH_CMD_G_AUTONEGO, &auto_nego);
   return auto_nego;
+}
+
+bool ETHClass::setAutoNegotiation(bool on) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_AUTONEGO, &on);
+  if (err != ESP_OK) {
+    log_e("Failed to set auto negotiation: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
 }
 
 uint32_t ETHClass::phyAddr() const {
@@ -975,13 +1050,25 @@ uint32_t ETHClass::phyAddr() const {
   return phy_addr;
 }
 
-uint8_t ETHClass::linkSpeed() const {
+uint16_t ETHClass::linkSpeed() const {
   if (_eth_handle == NULL) {
     return 0;
   }
   eth_speed_t link_speed;
   esp_eth_ioctl(_eth_handle, ETH_CMD_G_SPEED, &link_speed);
   return (link_speed == ETH_SPEED_10M) ? 10 : 100;
+}
+
+bool ETHClass::setLinkSpeed(uint16_t speed) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  eth_speed_t link_speed = (speed == 10) ? ETH_SPEED_10M : ETH_SPEED_100M;
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_SPEED, &link_speed);
+  if (err != ESP_OK) {
+    log_e("Failed to set link speed: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
 }
 
 // void ETHClass::getMac(uint8_t* mac)
@@ -1007,3 +1094,5 @@ size_t ETHClass::printDriverInfo(Print &out) const {
 }
 
 ETHClass ETH;
+
+#endif /* CONFIG_ETH_ENABLED */

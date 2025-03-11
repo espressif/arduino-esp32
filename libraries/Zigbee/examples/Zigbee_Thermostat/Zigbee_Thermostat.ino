@@ -31,11 +31,11 @@
 #error "Zigbee coordinator mode is not selected in Tools->Zigbee mode"
 #endif
 
-#include "ZigbeeCore.h"
-#include "ep/ZigbeeThermostat.h"
+#include "Zigbee.h"
 
-#define BUTTON_PIN                 9  // Boot button for C6/H2
+/* Zigbee thermostat configuration */
 #define THERMOSTAT_ENDPOINT_NUMBER 5
+uint8_t button = BOOT_PIN;
 
 ZigbeeThermostat zbThermostat = ZigbeeThermostat(THERMOSTAT_ENDPOINT_NUMBER);
 
@@ -44,6 +44,8 @@ float sensor_temp;
 float sensor_max_temp;
 float sensor_min_temp;
 float sensor_tolerance;
+
+struct tm timeinfo = {};  // Time structure for Time cluster
 
 /****************** Temperature sensor handling *******************/
 void recieveSensorTemp(float temperature) {
@@ -60,12 +62,9 @@ void recieveSensorConfig(float min_temp, float max_temp, float tolerance) {
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
-  }
 
   // Init button switch
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(button, INPUT_PULLUP);
 
   // Set callback functions for temperature and configuration receive
   zbThermostat.onTempRecieve(recieveSensorTemp);
@@ -74,6 +73,19 @@ void setup() {
   //Optional: set Zigbee device name and model
   zbThermostat.setManufacturerAndModel("Espressif", "ZigbeeThermostat");
 
+  //Optional Time cluster configuration
+  //example time January 13, 2025 13:30:30 CET
+  timeinfo.tm_year = 2025 - 1900;  // = 2025
+  timeinfo.tm_mon = 0;             // January
+  timeinfo.tm_mday = 13;           // 13th
+  timeinfo.tm_hour = 12;           // 12 hours - 1 hour (CET)
+  timeinfo.tm_min = 30;            // 30 minutes
+  timeinfo.tm_sec = 30;            // 30 seconds
+  timeinfo.tm_isdst = -1;
+
+  // Set time and gmt offset (timezone in seconds -> CET = +3600 seconds)
+  zbThermostat.addTimeCluster(timeinfo, 3600);
+
   //Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbThermostat);
 
@@ -81,27 +93,30 @@ void setup() {
   Zigbee.setRebootOpenNetwork(180);
 
   // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
-  Zigbee.begin(ZIGBEE_COORDINATOR);
+  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to start!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  }
 
-  Serial.println("Waiting for Temperature sensor to bound to the switch");
-
-  //Wait for switch to bound to a light:
-  while (!zbThermostat.isBound()) {
+  Serial.println("Waiting for Temperature sensor to bound to the thermostat");
+  while (!zbThermostat.bound()) {
     Serial.printf(".");
     delay(500);
   }
 
+  Serial.println();
+
   // Get temperature sensor configuration
   zbThermostat.getSensorSettings();
-  Serial.println();
 }
 
 void loop() {
   // Handle button switch in loop()
-  if (digitalRead(BUTTON_PIN) == LOW) {  // Push button pressed
+  if (digitalRead(button) == LOW) {  // Push button pressed
 
     // Key debounce handling
-    while (digitalRead(BUTTON_PIN) == LOW) {
+    while (digitalRead(button) == LOW) {
       delay(50);
     }
 

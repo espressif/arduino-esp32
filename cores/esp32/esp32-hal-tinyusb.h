@@ -31,6 +31,21 @@ extern "C" {
 #define USB_ESPRESSIF_VID                0x303A
 #define USB_STRING_DESCRIPTOR_ARRAY_SIZE 10
 
+#ifndef CFG_TUD_ENDOINT_SIZE
+#if CONFIG_IDF_TARGET_ESP32P4
+#define CFG_TUD_ENDOINT_SIZE 512
+#else
+#define CFG_TUD_ENDOINT_SIZE 64
+#endif
+#endif
+#if CONFIG_IDF_TARGET_ESP32P4
+#define CFG_TUD_NUM_EPS    15
+#define CFG_TUD_NUM_IN_EPS 8
+#else
+#define CFG_TUD_NUM_EPS    6
+#define CFG_TUD_NUM_IN_EPS 5
+#endif
+
 typedef struct {
   uint16_t vid;
   uint16_t pid;
@@ -80,6 +95,7 @@ typedef enum {
   USB_INTERFACE_HID,
   USB_INTERFACE_VENDOR,
   USB_INTERFACE_CDC,
+  USB_INTERFACE_CDC2,
   USB_INTERFACE_MIDI,
   USB_INTERFACE_CUSTOM,
   USB_INTERFACE_MAX

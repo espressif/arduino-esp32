@@ -97,15 +97,27 @@ typedef enum {
 } hardwareSerial_error_t;
 
 #ifndef ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+#ifndef CONFIG_ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
 #define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE 2048
+#else
+#define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE CONFIG_ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+#endif
 #endif
 
 #ifndef ARDUINO_SERIAL_EVENT_TASK_PRIORITY
+#ifndef CONFIG_ARDUINO_SERIAL_EVENT_TASK_PRIORITY
 #define ARDUINO_SERIAL_EVENT_TASK_PRIORITY (configMAX_PRIORITIES - 1)
+#else
+#define ARDUINO_SERIAL_EVENT_TASK_PRIORITY CONFIG_ARDUINO_SERIAL_EVENT_TASK_PRIORITY
+#endif
 #endif
 
 #ifndef ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+#ifndef CONFIG_ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
 #define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE -1
+#else
+#define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE CONFIG_ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+#endif
 #endif
 
 // UART0 pins are defined by default by the bootloader.
@@ -125,6 +137,8 @@ typedef enum {
 #define SOC_RX0 (gpio_num_t)17
 #elif CONFIG_IDF_TARGET_ESP32H2
 #define SOC_RX0 (gpio_num_t)23
+#elif CONFIG_IDF_TARGET_ESP32P4
+#define SOC_RX0 (gpio_num_t)38
 #endif
 #endif
 
@@ -141,12 +155,14 @@ typedef enum {
 #define SOC_TX0 (gpio_num_t)16
 #elif CONFIG_IDF_TARGET_ESP32H2
 #define SOC_TX0 (gpio_num_t)24
+#elif CONFIG_IDF_TARGET_ESP32P4
+#define SOC_TX0 (gpio_num_t)37
 #endif
 #endif
 
 // Default pins for UART1 are arbitrary, and defined here for convenience.
 
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
 #ifndef RX1
 #if CONFIG_IDF_TARGET_ESP32
 #define RX1 (gpio_num_t)26
@@ -162,6 +178,8 @@ typedef enum {
 #define RX1 (gpio_num_t)4
 #elif CONFIG_IDF_TARGET_ESP32H2
 #define RX1 (gpio_num_t)0
+#elif CONFIG_IDF_TARGET_ESP32P4
+#define RX1 (gpio_num_t)11
 #endif
 #endif
 
@@ -180,13 +198,15 @@ typedef enum {
 #define TX1 (gpio_num_t)5
 #elif CONFIG_IDF_TARGET_ESP32H2
 #define TX1 (gpio_num_t)1
+#elif CONFIG_IDF_TARGET_ESP32P4
+#define TX1 (gpio_num_t)10
 #endif
 #endif
-#endif /* SOC_UART_NUM > 1 */
+#endif /* SOC_UART_HP_NUM > 1 */
 
 // Default pins for UART2 are arbitrary, and defined here for convenience.
 
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
 #ifndef RX2
 #if CONFIG_IDF_TARGET_ESP32
 #define RX2 (gpio_num_t)4
@@ -202,7 +222,17 @@ typedef enum {
 #define TX2 (gpio_num_t)20
 #endif
 #endif
-#endif /* SOC_UART_NUM > 2 */
+#endif /* SOC_UART_HP_NUM > 2 */
+
+#if SOC_UART_LP_NUM >= 1
+#ifndef LP_RX0
+#define LP_RX0 (gpio_num_t) LP_U0RXD_GPIO_NUM
+#endif
+
+#ifndef LP_TX0
+#define LP_TX0 (gpio_num_t) LP_U0TXD_GPIO_NUM
+#endif
+#endif /* SOC_UART_LP_NUM >= 1 */
 
 typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
@@ -251,7 +281,7 @@ public:
   // rxfifo_full_thrhd if the UART Flow Control Threshold in the UART FIFO (max 127)
   void begin(
     unsigned long baud, uint32_t config = SERIAL_8N1, int8_t rxPin = -1, int8_t txPin = -1, bool invert = false, unsigned long timeout_ms = 20000UL,
-    uint8_t rxfifo_full_thrhd = 112
+    uint8_t rxfifo_full_thrhd = 120
   );
   void end(void);
   void updateBaudRate(unsigned long baud);
@@ -362,6 +392,15 @@ extern HardwareSerial Serial1;
 #endif
 #if SOC_UART_NUM > 2
 extern HardwareSerial Serial2;
+#endif
+#if SOC_UART_NUM > 3
+extern HardwareSerial Serial3;
+#endif
+#if SOC_UART_NUM > 4
+extern HardwareSerial Serial4;
+#endif
+#if SOC_UART_NUM > 5
+extern HardwareSerial Serial5;
 #endif
 #endif  //!defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 
