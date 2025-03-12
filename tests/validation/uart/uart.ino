@@ -365,26 +365,28 @@ void change_pins_test(void) {
 
   if (TEST_UART_NUM == 1) {
     UARTTestConfig &config = *uart_test_configs[0];
-    // internal loopback causes UART BREAK on ESP32 and ESP32-S2
+    // internal loopback creates a BREAK on ESP32 and ESP32-S2
     // setting it before changing the pins solves it
-    uart_internal_loopback(config.uart_num, NEW_RX1);    
+    uart_internal_loopback(config.uart_num, NEW_RX1);
     config.serial.setPins(NEW_RX1, NEW_TX1);
     TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(config.uart_num));
     TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(config.uart_num));
-    config.transmit_and_check_msg("using new uart#1 pins");
+    config.transmit_and_check_msg("using new UART#1 pins");
   } else {
     for (int i = 0; i < TEST_UART_NUM; i++) {
       UARTTestConfig &config = *uart_test_configs[i];
       UARTTestConfig &next_uart = *uart_test_configs[(i + 1) % TEST_UART_NUM];
+      // internal loopback creates a BREAK on ESP32 and ESP32-S2
+      // setting it before changing the pins solves it
+      uart_internal_loopback(config.uart_num, next_uart.default_rx_pin);
       config.serial.setPins(next_uart.default_rx_pin, next_uart.default_tx_pin);
       TEST_ASSERT_EQUAL(uart_get_RxPin(config.uart_num), next_uart.default_rx_pin);
       TEST_ASSERT_EQUAL(uart_get_TxPin(config.uart_num), next_uart.default_tx_pin);
-
-      uart_internal_loopback(config.uart_num, next_uart.default_rx_pin);
-      config.transmit_and_check_msg("using new pins");
+      String msg = String("using UART#") + config.uart_num + " pins";
+      config.transmit_and_check_msg(msg.c_str());
     }
   }
-
+  
   Serial.println("Change pins test successful");
 }
 
