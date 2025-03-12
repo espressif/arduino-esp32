@@ -42,7 +42,7 @@ For more information and guidance on creating custom quirks, visit the [ZHA Devi
     - Action Type: ZHA Toolkit: Read Attribute
     - Setup the action:
       ```yaml
-        action: zha_toolkit.attr_read 
+        action: zha_toolkit.attr_read
         metadata: {}
         data:
             ieee: f0:f5:bd:ff:fe:0e:61:30 #set device IEEE address

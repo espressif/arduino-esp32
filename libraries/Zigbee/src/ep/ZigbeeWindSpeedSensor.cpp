@@ -8,7 +8,9 @@ esp_zb_cluster_list_t *zigbee_wind_speed_sensor_clusters_create(zigbee_wind_spee
   esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
   esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_wind_speed_measurement_cluster(cluster_list, esp_zb_wind_speed_measurement_cluster_create(wind_speed_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_list_add_wind_speed_measurement_cluster(
+    cluster_list, esp_zb_wind_speed_measurement_cluster_create(wind_speed_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE
+  );
   return cluster_list;
 }
 
@@ -19,9 +21,7 @@ ZigbeeWindSpeedSensor::ZigbeeWindSpeedSensor(uint8_t endpoint) : ZigbeeEP(endpoi
   zigbee_wind_speed_sensor_cfg_t windspeed_sensor_cfg = ZIGBEE_DEFAULT_WIND_SPEED_SENSOR_CONFIG();
   _cluster_list = zigbee_wind_speed_sensor_clusters_create(&windspeed_sensor_cfg);
 
-  _ep_config = {
-    .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0
-  };
+  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
 }
 
 static uint16_t zb_windspeed_to_u16(float windspeed) {
@@ -33,7 +33,7 @@ void ZigbeeWindSpeedSensor::setMinMaxValue(float min, float max) {
   uint16_t zb_max = zb_windspeed_to_u16(max);
   esp_zb_attribute_list_t *windspeed_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  // 
+  //
   esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&zb_min);
   esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&zb_max);
 }
@@ -73,7 +73,8 @@ void ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
   log_d("Setting windspeed to %d", zb_windspeed);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_ID, &zb_windspeed, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_ID,
+    &zb_windspeed, false
   );
   esp_zb_lock_release();
 }
