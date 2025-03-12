@@ -441,7 +441,10 @@ void periman_test(void) {
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    Wire.begin(config.default_rx_pin, config.default_tx_pin);
+    //Wire.begin(config.default_rx_pin, config.default_tx_pin);
+    pinMode(config.default_rx_pin, INPUT);
+    pinMode(config.default_tx_pin, OUTPUT);
+    
     config.recv_msg = "";
 
     log_d("Trying to send message using UART%d with I2C enabled", config.uart_num);
@@ -450,8 +453,10 @@ void periman_test(void) {
 
     log_d("Disabling I2C and re-enabling UART%d", config.uart_num);
 
-    config.serial.setPins(config.default_rx_pin, config.default_tx_pin);
+    // internal loopback creates a BREAK on ESP32 and ESP32-S2
+    // setting it before changing the pins solves it
     uart_internal_loopback(config.uart_num, config.default_rx_pin);
+    config.serial.setPins(config.default_rx_pin, config.default_tx_pin);
 
     log_d("Trying to send message using UART%d with I2C disabled", config.uart_num);
     config.transmit_and_check_msg("while I2C is disabled");
