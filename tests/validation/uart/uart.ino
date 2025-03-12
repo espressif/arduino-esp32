@@ -365,12 +365,13 @@ void change_pins_test(void) {
 
   if (TEST_UART_NUM == 1) {
     UARTTestConfig &config = *uart_test_configs[0];
+    // internal loopback causes UART BREAK on ESP32 and ESP32-S2
+    // setting it before changing the pins solves it
+    uart_internal_loopback(config.uart_num, NEW_RX1);    
     config.serial.setPins(NEW_RX1, NEW_TX1);
     TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(config.uart_num));
     TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(config.uart_num));
-
-    uart_internal_loopback(config.uart_num, NEW_RX1);
-    config.transmit_and_check_msg("using new pins");
+    config.transmit_and_check_msg("using new uart#1 pins");
   } else {
     for (int i = 0; i < TEST_UART_NUM; i++) {
       UARTTestConfig &config = *uart_test_configs[i];
