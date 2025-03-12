@@ -48,7 +48,7 @@ For more information and guidance on creating custom quirks, visit the [ZHA Devi
             ieee: f0:f5:bd:ff:fe:0e:61:30 #set device IEEE address
             endpoint: 10 #set windspeed device endpoint
             cluster: 1035 #use this windspeed cluster
-            attribute: 0 #read meaurement value
+            attribute: 0 #read measurement value
             state_id: input_number.wind_speed #save to created helper variable
             state_value_template: value/100 #use correct value format (convert u16 to float)
       ```
