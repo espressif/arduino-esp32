@@ -59,6 +59,13 @@ extern "C" {
 static esp_netif_t *esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
 // a static handle for event callback
 static network_event_handle_t evt_handle{0};
+static esp_event_handler_instance_t evt_wifi_handle{nullptr};
+#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
+static esp_event_handler_instance_t evt_sc_handle{nullptr};
+#if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
+static esp_event_handler_instance_t evt_nprov_handle{nullptr};
+#endif  // CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
+#endif  //!CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {
   if (interface < ESP_IF_MAX) {
@@ -71,149 +78,175 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
   arduino_event_t arduino_event;
   arduino_event.event_id = ARDUINO_EVENT_ANY;
 
-  /*
-	 * SCAN
-	 * */
-  if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_SCAN_DONE) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    wifi_event_sta_scan_done_t *event = (wifi_event_sta_scan_done_t *)event_data;
-    log_v("SCAN Done: ID: %u, Status: %u, Results: %u", event->scan_id, event->status, event->number);
-#endif
-    arduino_event.event_id = ARDUINO_EVENT_WIFI_SCAN_DONE;
-    memcpy(&arduino_event.event_info.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
-
-    /*
-	 * WPS
-	 * */
-  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_SUCCESS) {
-    arduino_event.event_id = ARDUINO_EVENT_WPS_ER_SUCCESS;
-  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_FAILED) {
-    arduino_event.event_id = ARDUINO_EVENT_WPS_ER_FAILED;
-    memcpy(&arduino_event.event_info.wps_fail_reason, event_data, sizeof(wifi_event_sta_wps_fail_reason_t));
-  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_TIMEOUT) {
-    arduino_event.event_id = ARDUINO_EVENT_WPS_ER_TIMEOUT;
-  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_PIN) {
-    arduino_event.event_id = ARDUINO_EVENT_WPS_ER_PIN;
-    memcpy(&arduino_event.event_info.wps_er_pin, event_data, sizeof(wifi_event_sta_wps_er_pin_t));
-  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_WPS_ER_PBC_OVERLAP) {
-    arduino_event.event_id = ARDUINO_EVENT_WPS_ER_PBC_OVERLAP;
-
-    /*
-	 * FTM
-	 * */
-  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_FTM_REPORT) {
-    arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
-    memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
+  if (event_base == WIFI_EVENT){
+    switch (event_id){
+      case WIFI_EVENT_STA_WPS_ER_SUCCESS :
+        Network.postEvent(ARDUINO_EVENT_WPS_ER_SUCCESS);
+        return;
+      case WIFI_EVENT_STA_WPS_ER_TIMEOUT :
+        Network.postEvent(ARDUINO_EVENT_WPS_ER_TIMEOUT);
+        return;
+      case WIFI_EVENT_STA_WPS_ER_PBC_OVERLAP :
+        Network.postEvent(ARDUINO_EVENT_WPS_ER_PBC_OVERLAP);
+        return;
+      case WIFI_EVENT_SCAN_DONE : {
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+        wifi_event_sta_scan_done_t *event = (wifi_event_sta_scan_done_t *)event_data;
+        log_v("SCAN Done: ID: %u, Status: %u, Results: %u", event->scan_id, event->status, event->number);
+        #endif
+        arduino_event.event_id = ARDUINO_EVENT_WIFI_SCAN_DONE;
+        memcpy(&arduino_event.event_info.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
+        break;
+      }
+      case WIFI_EVENT_STA_WPS_ER_FAILED :
+        arduino_event.event_id = ARDUINO_EVENT_WPS_ER_FAILED;
+        memcpy(&arduino_event.event_info.wps_fail_reason, event_data, sizeof(wifi_event_sta_wps_fail_reason_t));
+        break;
+      case WIFI_EVENT_STA_WPS_ER_PIN :
+        arduino_event.event_id = ARDUINO_EVENT_WPS_ER_PIN;
+        memcpy(&arduino_event.event_info.wps_fail_reason, event_data, sizeof(wifi_event_sta_wps_er_pin_t));
+        break;
+      case WIFI_EVENT_FTM_REPORT :
+        arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
+        memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
+        break;
+      default:
+        return;
+    }
+  }
 
 #if !CONFIG_ESP_WIFI_REMOTE_ENABLED
-    /*
-	 * SMART CONFIG
-	 * */
-  } else if (event_base == SC_EVENT && event_id == SC_EVENT_SCAN_DONE) {
-    log_v("SC Scan Done");
-    arduino_event.event_id = ARDUINO_EVENT_SC_SCAN_DONE;
-  } else if (event_base == SC_EVENT && event_id == SC_EVENT_FOUND_CHANNEL) {
-    log_v("SC Found Channel");
-    arduino_event.event_id = ARDUINO_EVENT_SC_FOUND_CHANNEL;
-  } else if (event_base == SC_EVENT && event_id == SC_EVENT_GOT_SSID_PSWD) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    smartconfig_event_got_ssid_pswd_t *event = (smartconfig_event_got_ssid_pswd_t *)event_data;
-    log_v("SC: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
-#endif
-    arduino_event.event_id = ARDUINO_EVENT_SC_GOT_SSID_PSWD;
-    memcpy(&arduino_event.event_info.sc_got_ssid_pswd, event_data, sizeof(smartconfig_event_got_ssid_pswd_t));
-
-  } else if (event_base == SC_EVENT && event_id == SC_EVENT_SEND_ACK_DONE) {
-    log_v("SC Send Ack Done");
-    arduino_event.event_id = ARDUINO_EVENT_SC_SEND_ACK_DONE;
+  if (event_base == SC_EVENT){
+    switch (event_id){
+      case SC_EVENT_SCAN_DONE :
+        log_v("SC Scan Done");
+        Network.postEvent(ARDUINO_EVENT_SC_SCAN_DONE);
+        return;
+      case SC_EVENT_FOUND_CHANNEL :
+        log_v("SC Found Channel");
+        Network.postEvent(ARDUINO_EVENT_SC_FOUND_CHANNEL);
+        return;
+      case SC_EVENT_GOT_SSID_PSWD : {
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+        smartconfig_event_got_ssid_pswd_t *event = (smartconfig_event_got_ssid_pswd_t *)event_data;
+        log_v("SC: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
+        #endif
+        arduino_event.event_id = ARDUINO_EVENT_SC_GOT_SSID_PSWD;
+        memcpy(&arduino_event.event_info.sc_got_ssid_pswd, event_data, sizeof(smartconfig_event_got_ssid_pswd_t));
+        break;
+      }
+      case SC_EVENT_SEND_ACK_DONE :
+        log_v("SC Send Ack Done");
+        Network.postEvent(ARDUINO_EVENT_SC_SEND_ACK_DONE);
+        return;
+      default:
+        return;
+    }
+  }
 
 #if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
-    /*
+  /*
 	 * Provisioning
-	 * */
-  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_INIT) {
-    log_v("Provisioning Initialized!");
-    arduino_event.event_id = ARDUINO_EVENT_PROV_INIT;
-  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_DEINIT) {
-    log_v("Provisioning Uninitialized!");
-    arduino_event.event_id = ARDUINO_EVENT_PROV_DEINIT;
-  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_START) {
-    log_v("Provisioning Start!");
-    arduino_event.event_id = ARDUINO_EVENT_PROV_START;
-  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_END) {
-    log_v("Provisioning End!");
-    network_prov_mgr_deinit();
-    arduino_event.event_id = ARDUINO_EVENT_PROV_END;
-  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_WIFI_CRED_RECV) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    wifi_sta_config_t *event = (wifi_sta_config_t *)event_data;
-    log_v("Provisioned Credentials: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
-#endif
-    arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_RECV;
-    memcpy(&arduino_event.event_info.prov_cred_recv, event_data, sizeof(wifi_sta_config_t));
-  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_WIFI_CRED_FAIL) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
-    network_prov_wifi_sta_fail_reason_t *reason = (network_prov_wifi_sta_fail_reason_t *)event_data;
-    log_e("Provisioning Failed: Reason : %s", (*reason == NETWORK_PROV_WIFI_STA_AUTH_ERROR) ? "Authentication Failed" : "AP Not Found");
-#endif
-    arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_FAIL;
-    memcpy(&arduino_event.event_info.prov_fail_reason, event_data, sizeof(network_prov_wifi_sta_fail_reason_t));
-  } else if (event_base == NETWORK_PROV_EVENT && event_id == NETWORK_PROV_WIFI_CRED_SUCCESS) {
-    log_v("Provisioning Success!");
-    arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_SUCCESS;
-#endif
-#endif
+   */
+  if (event_base == NETWORK_PROV_EVENT){
+    switch (event_id){
+      case NETWORK_PROV_INIT :
+        log_v("Provisioning Initialized!");
+        Network.postEvent(ARDUINO_EVENT_PROV_INIT);
+        return;
+      case NETWORK_PROV_DEINIT :
+        log_v("Provisioning Uninitialized!");
+        Network.postEvent(ARDUINO_EVENT_PROV_DEINIT);
+        return;
+      case NETWORK_PROV_START :
+        log_v("Provisioning Start!");
+        Network.postEvent(ARDUINO_EVENT_PROV_START);
+        return;
+      case NETWORK_PROV_END :
+        log_v("Provisioning End!");
+        network_prov_mgr_deinit();
+        Network.postEvent(ARDUINO_EVENT_PROV_END);
+        return;
+      case NETWORK_PROV_WIFI_CRED_RECV : {
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+        wifi_sta_config_t *event = (wifi_sta_config_t *)event_data;
+        log_v("Provisioned Credentials: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
+        #endif
+        arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_RECV;
+        memcpy(&arduino_event.event_info.prov_cred_recv, event_data, sizeof(wifi_sta_config_t));
+        break;
+      }
+      case NETWORK_PROV_WIFI_CRED_FAIL : {
+        #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+        network_prov_wifi_sta_fail_reason_t *reason = (network_prov_wifi_sta_fail_reason_t *)event_data;
+        log_e("Provisioning Failed: Reason : %s", (*reason == NETWORK_PROV_WIFI_STA_AUTH_ERROR) ? "Authentication Failed" : "AP Not Found");
+        #endif
+        arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_FAIL;
+        memcpy(&arduino_event.event_info.prov_fail_reason, event_data, sizeof(network_prov_wifi_sta_fail_reason_t));
+        break;
+      }
+      case NETWORK_PROV_WIFI_CRED_SUCCESS :
+        log_v("Provisioning Success!");
+        Network.postEvent(ARDUINO_EVENT_PROV_CRED_SUCCESS);
+        return;
+      default:
+        return;
+    }
   }
+#endif  // CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
+#endif  //!CONFIG_ESP_WIFI_REMOTE_ENABLED
 
-  if (arduino_event.event_id != ARDUINO_EVENT_ANY) {
-    Network.postEvent(&arduino_event);
-  }
+  Network.postEvent(&arduino_event);
 }
 
 static bool initWiFiEvents() {
-  if (esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
-    log_e("event_handler_instance_register for WIFI_EVENT Failed!");
-    return false;
+  bool result{true};
+
+  if (!evt_wifi_handle && esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, &evt_wifi_handle)) {
+    log_e("register for WIFI_EVENT Failed!");
+    result = false;
   }
 
 #if !CONFIG_ESP_WIFI_REMOTE_ENABLED
-  if (esp_event_handler_instance_register(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
-    log_e("event_handler_instance_register for SC_EVENT Failed!");
-    return false;
+  if (!evt_sc_handle && esp_event_handler_instance_register(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, &evt_sc_handle)) {
+    log_e("register for SC_EVENT Failed!");
+    result = false;
   }
 
 #if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
-  if (esp_event_handler_instance_register(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
-    log_e("event_handler_instance_register for NETWORK_PROV_EVENT Failed!");
-    return false;
+  if (!evt_nprov_handle && esp_event_handler_instance_register(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, &evt_nprov_handle)) {
+    log_e("register for NETWORK_PROV_EVENT Failed!");
+    result = false;
   }
 #endif
 #endif
 
-  return true;
+  return result;
 }
 
 static bool deinitWiFiEvents() {
-  if (esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
-    log_e("esp_event_handler_unregister for WIFI_EVENT Failed!");
-    return false;
+  bool result{true};
+
+  if (evt_wifi_handle && esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, evt_wifi_handle)) {
+    log_e("unregister for WIFI_EVENT Failed!");
+    result = false;
   }
 
 #if !CONFIG_ESP_WIFI_REMOTE_ENABLED
-  if (esp_event_handler_unregister(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
-    log_e("esp_event_handler_unregister for SC_EVENT Failed!");
-    return false;
+  if (evt_sc_handle && esp_event_handler_instance_unregister(SC_EVENT, ESP_EVENT_ANY_ID, evt_sc_handle)) {
+    log_e("unregister for SC_EVENT Failed!");
+    result = false;
   }
 
 #if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
-  if (esp_event_handler_unregister(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
-    log_e("esp_event_handler_unregister for NETWORK_PROV_EVENT Failed!");
-    return false;
+  if (evt_nprov_handle && esp_event_handler_instance_unregister(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, evt_nprov_handle)) {
+    log_e("unregister for NETWORK_PROV_EVENT Failed!");
+    result = false;
   }
 #endif
 #endif
 
-  return true;
+  return result;
 }
 
 /*
@@ -350,9 +383,7 @@ static bool wifiLowLevelDeinit() {
     }
     lowLevelInitDone = !(esp_wifi_deinit() == ESP_OK);
     if (!lowLevelInitDone) {
-      arduino_event_t arduino_event;
-      arduino_event.event_id = ARDUINO_EVENT_WIFI_OFF;
-      Network.postEvent(&arduino_event);
+      Network.postEvent(ARDUINO_EVENT_WIFI_OFF);
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
       if (hosted_initialized && esp_hosted_deinit() == ESP_OK) {
         hosted_initialized = false;
