@@ -162,7 +162,7 @@ void rtc_run_clock() {
   ds1307_get_time(&read_sec, &read_min, &read_hour, &read_day, &read_month, &read_year);
 
   //Check time
-  TEST_ASSERT_NOT_EQUAL(start_sec, read_sec); //Seconds should have changed
+  TEST_ASSERT_NOT_EQUAL(start_sec, read_sec);  //Seconds should have changed
   TEST_ASSERT_EQUAL(start_min, read_min);
   TEST_ASSERT_EQUAL(start_hour, read_hour);
   TEST_ASSERT_EQUAL(start_day, read_day);
