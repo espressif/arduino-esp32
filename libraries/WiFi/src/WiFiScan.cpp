@@ -160,15 +160,16 @@ int16_t WiFiScanClass::scanComplete() {
     return WiFiScanClass::_scanCount;
   }
 
-  if (WiFiGenericClass::getStatusBits() & WIFI_SCANNING_BIT) {
-    return WIFI_SCAN_RUNNING;
-  }
   // last one to avoid time affecting Async mode
   if (WiFiScanClass::_scanStarted
       && (millis() - WiFiScanClass::_scanStarted)
            > WiFiScanClass::_scanTimeout) {  //Check is scan was started and if the delay expired, return WIFI_SCAN_FAILED in this case
     WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
     return WIFI_SCAN_FAILED;
+  }
+
+  if (WiFiGenericClass::getStatusBits() & WIFI_SCANNING_BIT) {
+    return WIFI_SCAN_RUNNING;
   }
 
   return WIFI_SCAN_FAILED;
@@ -179,11 +180,12 @@ int16_t WiFiScanClass::scanComplete() {
  */
 void WiFiScanClass::scanDelete() {
   WiFiGenericClass::clearStatusBits(WIFI_SCAN_DONE_BIT);
+  WiFiGenericClass::clearStatusBits(WIFI_SCANNING_BIT);
   if (WiFiScanClass::_scanResult) {
     delete[] reinterpret_cast<wifi_ap_record_t *>(WiFiScanClass::_scanResult);
     WiFiScanClass::_scanResult = nullptr;
-    WiFiScanClass::_scanCount = 0;
   }
+  WiFiScanClass::_scanCount = 0;
 }
 
 /**
