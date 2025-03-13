@@ -57,14 +57,23 @@ public:
   String SSID(void) const;
   uint8_t stationCount();
 
-  void _onApEvent(int32_t event_id, void *event_data);
-
 protected:
   size_t printDriverInfo(Print &out) const;
 
   friend class WiFiGenericClass;
   bool onEnable();
   bool onDisable();
+
+private:
+  // Arduino events
+  network_event_handle_t _evt_handle{0};
+  // esp AP events
+  esp_event_handler_instance_t _ap_ev_instance{NULL};
+
+  // Arduino events
+  void _onApArduinoEvent(arduino_event_id_t event, const arduino_event_info_t *info);
+  // esp AP events
+  void _onApEvent(int32_t event_id, void *event_data);
 };
 
 // ----------------------------------------------------------------------------------------------
