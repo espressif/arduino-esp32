@@ -588,7 +588,7 @@ uart_t *uartBegin(
       UART_MUTEX_LOCK();
       //User may just want to change some parameters, such as baudrate, data length, parity, stop bits or pins
       if (uart->_baudrate != baudrate) {
-        if !uartSetBaudRate(uart, baudrate)) {
+        if (!uartSetBaudRate(uart, baudrate)) {
           log_e("UART%d changing baudrate failed.", uart_nr);
           retCode = false;
         } else {
