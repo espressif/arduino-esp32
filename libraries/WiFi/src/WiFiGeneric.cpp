@@ -75,9 +75,6 @@ esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {
 }
 
 static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-  arduino_event_t arduino_event;
-  arduino_event.event_id = ARDUINO_EVENT_ANY;
-
   if (event_base == WIFI_EVENT){
     switch (event_id){
       case WIFI_EVENT_STA_WPS_ER_SUCCESS :
@@ -94,22 +91,29 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
         wifi_event_sta_scan_done_t *event = (wifi_event_sta_scan_done_t *)event_data;
         log_v("SCAN Done: ID: %u, Status: %u, Results: %u", event->scan_id, event->status, event->number);
         #endif
-        arduino_event.event_id = ARDUINO_EVENT_WIFI_SCAN_DONE;
-        memcpy(&arduino_event.event_info.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
-        break;
+        arduino_event_info_t i;
+        memcpy(&i.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
+        Network.postEvent(ARDUINO_EVENT_WIFI_SCAN_DONE, &i);
+        return;
       }
-      case WIFI_EVENT_STA_WPS_ER_FAILED :
-        arduino_event.event_id = ARDUINO_EVENT_WPS_ER_FAILED;
-        memcpy(&arduino_event.event_info.wps_fail_reason, event_data, sizeof(wifi_event_sta_wps_fail_reason_t));
-        break;
-      case WIFI_EVENT_STA_WPS_ER_PIN :
-        arduino_event.event_id = ARDUINO_EVENT_WPS_ER_PIN;
-        memcpy(&arduino_event.event_info.wps_fail_reason, event_data, sizeof(wifi_event_sta_wps_er_pin_t));
-        break;
-      case WIFI_EVENT_FTM_REPORT :
-        arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
-        memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
-        break;
+      case WIFI_EVENT_STA_WPS_ER_FAILED : {
+        arduino_event_info_t i;
+        memcpy(&i.wps_fail_reason, event_data, sizeof(wifi_event_sta_wps_fail_reason_t));
+        Network.postEvent(ARDUINO_EVENT_WPS_ER_FAILED, &i);
+        return;
+      }
+      case WIFI_EVENT_STA_WPS_ER_PIN : {
+        arduino_event_info_t i;
+        memcpy(&i.wps_fail_reason, event_data, sizeof(wifi_event_sta_wps_er_pin_t));
+        Network.postEvent(ARDUINO_EVENT_WPS_ER_PIN, &i);
+        return;
+      }
+      case WIFI_EVENT_FTM_REPORT : {
+        arduino_event_info_t i;
+        memcpy(&i.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
+        Network.postEvent(ARDUINO_EVENT_WIFI_FTM_REPORT, &i);
+        return;
+      }
       default:
         return;
     }
@@ -131,9 +135,10 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
         smartconfig_event_got_ssid_pswd_t *event = (smartconfig_event_got_ssid_pswd_t *)event_data;
         log_v("SC: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
         #endif
-        arduino_event.event_id = ARDUINO_EVENT_SC_GOT_SSID_PSWD;
-        memcpy(&arduino_event.event_info.sc_got_ssid_pswd, event_data, sizeof(smartconfig_event_got_ssid_pswd_t));
-        break;
+        arduino_event_info_t i;
+        memcpy(&i.sc_got_ssid_pswd, event_data, sizeof(smartconfig_event_got_ssid_pswd_t));
+        Network.postEvent(ARDUINO_EVENT_SC_GOT_SSID_PSWD, &i);
+        return;
       }
       case SC_EVENT_SEND_ACK_DONE :
         log_v("SC Send Ack Done");
@@ -172,18 +177,20 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
         wifi_sta_config_t *event = (wifi_sta_config_t *)event_data;
         log_v("Provisioned Credentials: SSID: %s, Password: %s", (const char *)event->ssid, (const char *)event->password);
         #endif
-        arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_RECV;
-        memcpy(&arduino_event.event_info.prov_cred_recv, event_data, sizeof(wifi_sta_config_t));
-        break;
+        arduino_event_info_t i;
+        memcpy(&i.prov_cred_recv, event_data, sizeof(wifi_sta_config_t));
+        Network.postEvent(ARDUINO_EVENT_PROV_CRED_RECV, &i);
+        return;
       }
       case NETWORK_PROV_WIFI_CRED_FAIL : {
         #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
         network_prov_wifi_sta_fail_reason_t *reason = (network_prov_wifi_sta_fail_reason_t *)event_data;
         log_e("Provisioning Failed: Reason : %s", (*reason == NETWORK_PROV_WIFI_STA_AUTH_ERROR) ? "Authentication Failed" : "AP Not Found");
         #endif
-        arduino_event.event_id = ARDUINO_EVENT_PROV_CRED_FAIL;
-        memcpy(&arduino_event.event_info.prov_fail_reason, event_data, sizeof(network_prov_wifi_sta_fail_reason_t));
-        break;
+        arduino_event_info_t i;
+        memcpy(&i.prov_fail_reason, event_data, sizeof(network_prov_wifi_sta_fail_reason_t));
+        Network.postEvent(ARDUINO_EVENT_PROV_CRED_FAIL, &i);
+        return;
       }
       case NETWORK_PROV_WIFI_CRED_SUCCESS :
         log_v("Provisioning Success!");
@@ -195,8 +202,6 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
   }
 #endif  // CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
 #endif  //!CONFIG_ESP_WIFI_REMOTE_ENABLED
-
-  Network.postEvent(&arduino_event);
 }
 
 static bool initWiFiEvents() {
@@ -463,22 +468,18 @@ bool WiFiGenericClass::setHostname(const char *hostname) {
  * callback for WiFi events
  * @param arg
  */
-void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
-  if (!event) {
-    return;  //Null would crash this function
-  }
-
+void WiFiGenericClass::_eventCallback(arduino_event_id_t event, const arduino_event_info_t *info) {
   // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
-  if (event->event_id == ARDUINO_EVENT_WIFI_SCAN_DONE) {
+  if (event == ARDUINO_EVENT_WIFI_SCAN_DONE) {
     WiFiScanClass::_scanDone();
   }
 #if !CONFIG_ESP_WIFI_REMOTE_ENABLED
-  else if (event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
+  else if (event == ARDUINO_EVENT_SC_GOT_SSID_PSWD && info) {
     WiFi.begin(
-      (const char *)event->event_info.sc_got_ssid_pswd.ssid, (const char *)event->event_info.sc_got_ssid_pswd.password, 0,
-      ((event->event_info.sc_got_ssid_pswd.bssid_set == true) ? event->event_info.sc_got_ssid_pswd.bssid : NULL)
+      (const char *)info->sc_got_ssid_pswd.ssid, (const char *)info->sc_got_ssid_pswd.password, 0,
+      ((info->sc_got_ssid_pswd.bssid_set == true) ? info->sc_got_ssid_pswd.bssid : NULL)
     );
-  } else if (event->event_id == ARDUINO_EVENT_SC_SEND_ACK_DONE) {
+  } else if (event == ARDUINO_EVENT_SC_SEND_ACK_DONE) {
     esp_smartconfig_stop();
     WiFiSTAClass::_smartConfigDone = true;
   }

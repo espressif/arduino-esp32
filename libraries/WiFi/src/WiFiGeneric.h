@@ -145,7 +145,7 @@ protected:
   static int setStatusBits(int bits);
   static int clearStatusBits(int bits);
 
-  static void _eventCallback(arduino_event_t *event);
+  static void _eventCallback(arduino_event_id_t event, const arduino_event_info_t *info);
 
   friend class WiFiSTAClass;
   friend class WiFiScanClass;
