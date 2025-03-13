@@ -22,9 +22,6 @@
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp_netif.h"
 
-// a static handle for event callback
-static network_event_handle_t evt_handle{0};
-
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
 
 static size_t _wifi_strncpy(char *dst, const char *src, size_t dst_len) {
@@ -75,28 +72,19 @@ static bool softap_config_equal(const wifi_config_t &lhs, const wifi_config_t &r
   return true;
 }
 
-static APClass *_ap_network_if = NULL;
-
-static esp_event_handler_instance_t _ap_ev_instance = NULL;
-static void _ap_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-  if (event_base == WIFI_EVENT) {
-    ((APClass *)arg)->_onApEvent(event_id, event_data);
-  }
-}
-
-static void _onApArduinoEvent(arduino_event_t *ev) {
-  if (_ap_network_if == NULL || ev->event_id < ARDUINO_EVENT_WIFI_AP_START || ev->event_id > ARDUINO_EVENT_WIFI_AP_GOT_IP6) {
+void APClass::_onApArduinoEvent(arduino_event_id_t event, const arduino_event_info_t *info) {
+  if (event < ARDUINO_EVENT_WIFI_AP_START || event > ARDUINO_EVENT_WIFI_AP_GOT_IP6) {
     return;
   }
-  log_v("Arduino AP Event: %d - %s", ev->event_id, NetworkEvents::eventName(ev->event_id));
-  if (ev->event_id == ARDUINO_EVENT_WIFI_AP_START) {
+  log_v("Arduino AP Event: %d - %s", event, NetworkEvents::eventName(event));
+  if (event == ARDUINO_EVENT_WIFI_AP_START) {
 #if CONFIG_LWIP_IPV6
-    if (_ap_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
-      esp_err_t err = esp_netif_create_ip6_linklocal(_ap_network_if->netif());
+    if (getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
+      esp_err_t err = esp_netif_create_ip6_linklocal(netif());
       if (err != ESP_OK) {
         log_e("Failed to enable IPv6 Link Local on AP:  0x%x: %s", err, esp_err_to_name(err));
       } else {
-        log_v("Enabled IPv6 Link Local on %s", _ap_network_if->desc());
+        log_v("Enabled IPv6 Link Local on %s", desc());
       }
     }
 #endif
@@ -104,72 +92,85 @@ static void _onApArduinoEvent(arduino_event_t *ev) {
 }
 
 void APClass::_onApEvent(int32_t event_id, void *event_data) {
-  arduino_event_t arduino_event;
-  arduino_event.event_id = ARDUINO_EVENT_ANY;
-
-  if (event_id == WIFI_EVENT_AP_START) {
-    log_v("AP Started");
-    arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_START;
-    setStatusBits(ESP_NETIF_STARTED_BIT);
-  } else if (event_id == WIFI_EVENT_AP_STOP) {
-    log_v("AP Stopped");
-    arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STOP;
-    clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
-  } else if (event_id == WIFI_EVENT_AP_PROBEREQRECVED) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    wifi_event_ap_probe_req_rx_t *event = (wifi_event_ap_probe_req_rx_t *)event_data;
-    log_v("AP Probe Request: RSSI: %d, MAC: " MACSTR, event->rssi, MAC2STR(event->mac));
-#endif
-    arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED;
-    memcpy(&arduino_event.event_info.wifi_ap_probereqrecved, event_data, sizeof(wifi_event_ap_probe_req_rx_t));
-  } else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
-    log_v("AP Station Connected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
-#endif
-    arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STACONNECTED;
-    memcpy(&arduino_event.event_info.wifi_ap_staconnected, event_data, sizeof(wifi_event_ap_staconnected_t));
-    setStatusBits(ESP_NETIF_CONNECTED_BIT);
-  } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-    wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
-    log_v("AP Station Disconnected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
-#endif
-    arduino_event.event_id = ARDUINO_EVENT_WIFI_AP_STADISCONNECTED;
-    memcpy(&arduino_event.event_info.wifi_ap_stadisconnected, event_data, sizeof(wifi_event_ap_stadisconnected_t));
-    // If no more clients are left
-    wifi_sta_list_t clients;
-    if (esp_wifi_ap_get_sta_list(&clients) != ESP_OK || clients.num == 0) {
-      clearStatusBits(ESP_NETIF_CONNECTED_BIT);
+  switch (event_id){
+    case WIFI_EVENT_AP_START :
+      log_v("AP Started");
+      setStatusBits(ESP_NETIF_STARTED_BIT);
+      Network.postEvent(ARDUINO_EVENT_WIFI_AP_START);
+      return;
+    case WIFI_EVENT_AP_STOP :
+      log_v("AP Stopped");
+      clearStatusBits(ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
+      Network.postEvent(ARDUINO_EVENT_WIFI_AP_STOP);
+      return;
+    case WIFI_EVENT_AP_PROBEREQRECVED : {
+      #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+      wifi_event_ap_probe_req_rx_t *event = (wifi_event_ap_probe_req_rx_t *)event_data;
+      log_v("AP Probe Request: RSSI: %d, MAC: " MACSTR, event->rssi, MAC2STR(event->mac));
+      #endif
+      arduino_event_info_t i;
+      memcpy(&i.wifi_ap_probereqrecved, event_data, sizeof(wifi_event_ap_probe_req_rx_t));
+      Network.postEvent(ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED, &i);
+      return;
     }
-  } else {
-    return;
-  }
-
-  if (arduino_event.event_id != ARDUINO_EVENT_ANY) {
-    Network.postEvent(&arduino_event);
+    case WIFI_EVENT_AP_STACONNECTED : {
+      #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+      wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
+      log_v("AP Station Connected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
+      #endif
+      setStatusBits(ESP_NETIF_CONNECTED_BIT);
+      arduino_event_info_t i;
+      memcpy(&i.wifi_ap_staconnected, event_data, sizeof(wifi_event_ap_staconnected_t));
+      Network.postEvent(ARDUINO_EVENT_WIFI_AP_STACONNECTED, &i);
+      return;
+    }
+    case WIFI_EVENT_AP_STADISCONNECTED : {
+      #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+      wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
+      log_v("AP Station Disconnected: MAC: " MACSTR ", AID: %d", MAC2STR(event->mac), event->aid);
+      #endif
+      // If no more clients are left
+      wifi_sta_list_t clients;
+      if (esp_wifi_ap_get_sta_list(&clients) != ESP_OK || clients.num == 0) {
+        clearStatusBits(ESP_NETIF_CONNECTED_BIT);
+      }
+      arduino_event_info_t i;
+      memcpy(&i.wifi_ap_stadisconnected, event_data, sizeof(wifi_event_ap_stadisconnected_t));
+      Network.postEvent(ARDUINO_EVENT_WIFI_AP_STADISCONNECTED, &i);
+      return;
+    }
+    default :
+      return;
   }
 }
 
-APClass::APClass() {
-  _ap_network_if = this;
-}
+APClass::APClass() {}
 
 APClass::~APClass() {
   end();
-  _ap_network_if = NULL;
-  Network.removeEvent(evt_handle);
-  evt_handle = 0;
+  Network.removeEvent(_evt_handle);
+  if (_ap_ev_instance != NULL) {
+    esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, _ap_ev_instance);
+    _ap_ev_instance = NULL;
+  }
 }
 
 bool APClass::onEnable() {
-  if (_ap_ev_instance == NULL && esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &_ap_event_cb, this, &_ap_ev_instance)) {
-    log_e("event_handler_instance_register for WIFI_EVENT Failed!");
-    return false;
+  if (!_ap_ev_instance){
+    esp_err_t err = esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID,
+      [](void* self, esp_event_base_t base, int32_t id, void* data) { static_cast<APClass*>(self)->_onApEvent(id, data); },
+      this,
+      &_ap_ev_instance
+    );
+    if (err){
+      log_e("event_handler_instance_register for WIFI_EVENT Failed!");
+      return false;
+    }
   }
+
   if (_esp_netif == NULL) {
-    if (!evt_handle)
-      evt_handle = Network.onSysEvent(_onApArduinoEvent);
+    if (!_evt_handle)
+      _evt_handle = Network.onSysEvent([this](arduino_event_id_t event, const arduino_event_info_t *info){_onApArduinoEvent(event, info);});
     _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_AP);
     /* attach to receive events */
     initNetif(ESP_NETIF_ID_AP);
@@ -178,14 +179,14 @@ bool APClass::onEnable() {
 }
 
 bool APClass::onDisable() {
-  Network.removeEvent(evt_handle);
-  evt_handle = 0;
+  Network.removeEvent(_evt_handle);
+  _evt_handle = 0;
   // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
   // That would be done by WiFi.enableAP(false) if STA is not enabled, or when it gets disabled
   _esp_netif = NULL;
   destroyNetif();
   if (_ap_ev_instance != NULL) {
-    esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &_ap_event_cb);
+    esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, _ap_ev_instance);
     _ap_ev_instance = NULL;
   }
   return true;
