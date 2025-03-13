@@ -85,9 +85,6 @@ public:
 
   const char *disconnectReasonName(wifi_err_reason_t reason);
 
-  // Private Use
-  void _setStatus(wl_status_t status);
-  void _onStaEvent(int32_t event_id, void *event_data);
 
 protected:
   wifi_auth_mode_t _minSecurity;
@@ -101,6 +98,13 @@ protected:
   friend class WiFiGenericClass;
   bool onEnable();
   bool onDisable();
+
+private:
+  esp_event_handler_instance_t _sta_ev_instance{NULL};
+  network_event_handle_t _evt_handle{0};
+  void _onStaArduinoEvent(arduino_event_id_t event, const arduino_event_info_t *info);
+  void _setStatus(wl_status_t status);
+  void _onStaEvent(int32_t event_id, void *event_data);
 };
 
 // ----------------------------------------------------------------------------------------------
