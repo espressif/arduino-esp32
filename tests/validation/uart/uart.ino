@@ -1,9 +1,9 @@
 /* UART test
-
-   This test is using UART0 (Serial) only for reporting test status and helping with the auto
-   baudrate detection test.
-   The other serials are used for testing.
-*/
+ *
+ * This test is using UART0 (Serial) only for reporting test status and helping with the auto
+ * baudrate detection test.
+ * The other serials are used for testing.
+ */
 
 // Default pins:
 //          |  Name   | ESP32 | S2 | S3 | C3 | C6 | H2 | P4 |
@@ -15,18 +15,18 @@
 // UART2 TX |   TX2   |  25   | -- | 20 | -- | -- | -- | -- |
 
 /*
-   For each UART:
-
-             terminal
-            |       ^
-            v UART0 |
-            RX  ^  TX
-                |
-          report status
-                |
-           TX <---> RX
-              UARTx
-*/
+ * For each UART:
+ *
+ *           terminal
+ *          |       ^
+ *          v UART0 |
+ *          RX  ^  TX
+ *              |
+ *        report status
+ *              |
+ *         TX <---> RX
+ *            UARTx
+ */
 
 #include <vector>
 #include <unity.h>
@@ -41,58 +41,58 @@
 /* Utility classes */
 
 class UARTTestConfig {
-  public:
-    int uart_num;
-    HardwareSerial &serial;
-    int peeked_char;
-    int8_t default_rx_pin;
-    int8_t default_tx_pin;
-    String recv_msg;
+public:
+  int uart_num;
+  HardwareSerial &serial;
+  int peeked_char;
+  int8_t default_rx_pin;
+  int8_t default_tx_pin;
+  String recv_msg;
 
-    UARTTestConfig(int num, HardwareSerial &serial_ref, int8_t rx_pin, int8_t tx_pin)
-      : uart_num(num), serial(serial_ref), peeked_char(-1), default_rx_pin(rx_pin), default_tx_pin(tx_pin), recv_msg("") {}
+  UARTTestConfig(int num, HardwareSerial &serial_ref, int8_t rx_pin, int8_t tx_pin)
+    : uart_num(num), serial(serial_ref), peeked_char(-1), default_rx_pin(rx_pin), default_tx_pin(tx_pin), recv_msg("") {}
 
-    void begin(unsigned long baudrate) {
-      // pinMode will force enabing the internal pullup resistor (IDF 5.3.2 Change)
-      pinMode(default_rx_pin, INPUT_PULLUP);
-      serial.begin(baudrate, SERIAL_8N1, default_rx_pin, default_tx_pin);
-      while (!serial) {
-        delay(10);
-      }
+  void begin(unsigned long baudrate) {  
+    // pinMode will force enabing the internal pullup resistor (IDF 5.3.2 Change)
+    pinMode(default_rx_pin, INPUT_PULLUP);
+    serial.begin(baudrate, SERIAL_8N1, default_rx_pin, default_tx_pin);
+    while (!serial) {
+      delay(10);
     }
+  }
 
-    void end() {
-      serial.end();
-    }
+  void end() {
+    serial.end();
+  }
 
-    void reset_buffers() {
-      recv_msg = "";
-      peeked_char = -1;
-    }
+  void reset_buffers() {
+    recv_msg = "";
+    peeked_char = -1;
+  }
 
-    void transmit_and_check_msg(const String &msg_append, bool perform_assert = true) {
-      reset_buffers();
-      delay(100);
-      serial.print("Hello from Serial" + String(uart_num) + " " + msg_append);
-      serial.flush();
-      delay(100);
-      if (perform_assert) {
-        TEST_ASSERT_EQUAL_STRING(("Hello from Serial" + String(uart_num) + " " + msg_append).c_str(), recv_msg.c_str());
-        log_d("UART%d received message: %s\n", uart_num, recv_msg.c_str());
-      }
+  void transmit_and_check_msg(const String &msg_append, bool perform_assert = true) {
+    reset_buffers();
+    delay(100);
+    serial.print("Hello from Serial" + String(uart_num) + " " + msg_append);
+    serial.flush();
+    delay(100);
+    if (perform_assert) {
+      TEST_ASSERT_EQUAL_STRING(("Hello from Serial" + String(uart_num) + " " + msg_append).c_str(), recv_msg.c_str());
+      log_d("UART%d received message: %s\n", uart_num, recv_msg.c_str());
     }
+  }
 
-    void onReceive() {
-      char c;
-      size_t available = serial.available();
-      if (peeked_char == -1) {
-        peeked_char = serial.peek();
-      }
-      while (available--) {
-        c = (char)serial.read();
-        recv_msg += c;
-      }
+  void onReceive() {
+    char c;
+    size_t available = serial.available();
+    if (peeked_char == -1) {
+      peeked_char = serial.peek();
     }
+    while (available--) {
+      c = (char)serial.read();
+      recv_msg += c;
+    }
+  }
 };
 
 /* Utility global variables */
@@ -450,8 +450,8 @@ void periman_test(void) {
     TEST_ASSERT_EQUAL_STRING("", config.recv_msg.c_str());
 
     log_d("Disabling I2C and re-enabling UART%d", config.uart_num);
-    config.serial.setPins(config.default_rx_pin, config.default_tx_pin);
 
+    config.serial.setPins(config.default_rx_pin, config.default_tx_pin);
     uart_internal_loopback(config.uart_num, config.default_rx_pin);
 
     log_d("Trying to send message using UART%d with I2C disabled", config.uart_num);
