@@ -8,7 +8,16 @@
 
 #define ZB_INIT_TIMEOUT 30000  // 30 seconds
 
-extern "C" void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "zboss_api.h"
+extern zb_ret_t zb_nvram_write_dataset(zb_nvram_dataset_types_t t);                           // rejoin scanning workaround
+extern void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr); // sleepy device power mode workaround
+#ifdef __cplusplus
+}
+#endif
+
 static bool edBatteryPowered = false;
 
 ZigbeeCore::ZigbeeCore() {
@@ -289,6 +298,9 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
             extended_pan_id[0], esp_zb_get_pan_id(), esp_zb_get_current_channel(), esp_zb_get_short_address()
           );
           Zigbee._connected = true;
+          // Set channel mask and write to NVRAM, so that the device will re-join the network faster after reboot (scan only on the current channel)
+          esp_zb_set_channel_mask((1 << esp_zb_get_current_channel()));
+          zb_nvram_write_dataset(ZB_NVRAM_COMMON_DATA);
         } else {
           log_i("Network steering was not successful (status: %s)", esp_err_to_name(err_status));
           esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
