@@ -64,7 +64,7 @@ Currently, the Arduino ESP32 supports the following peripherals with Arduino API
 Notes
 ^^^^^
 
-(1) ESP32-P4 calibration schemes not supported yet in IDF and ADC Continous also lacks IDF support.
+(1) ESP32-P4 calibration schemes not supported yet in IDF and ADC Continuous also lacks IDF support.
 
 (2) SPI Ethernet is supported by all ESP32 families and RMII only for ESP32 and ESP32-P4.
 

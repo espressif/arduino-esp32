@@ -25,7 +25,7 @@ The ESP32 is divided by family:
 * ESP32-H2
     * BLE 5 and IEEE 802.15.4
 * ESP32-P4
-    * 400MHz Dual Core RISC-V CPU, 40MHz ULP Co-processor, single-precision FPU and AI extensions.
+    * 400 MHz Dual Core RISC-V CPU, 40 MHz ULP Co-processor, single-precision FPU and AI extensions.
 * ESP32-S2
     * Wi-Fi only
 * ESP32-S3
