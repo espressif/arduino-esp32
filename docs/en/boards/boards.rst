@@ -18,16 +18,18 @@ The ESP32 is divided by family:
 
 * ESP32
     * Wi-Fi, BT and BLE 4
-* ESP32-S2
-    * Wi-Fi only
-* ESP32-S3
-    * Wi-Fi and BLE 5
 * ESP32-C3
     * Wi-Fi and BLE 5
 * ESP32-C6
     * Wi-Fi, BLE 5 and IEEE 802.15.4
 * ESP32-H2
     * BLE 5 and IEEE 802.15.4
+* ESP32-P4
+    * 400 MHz Dual Core RISC-V CPU, 40 MHz ULP Co-processor, single-precision FPU and AI extensions.
+* ESP32-S2
+    * Wi-Fi only
+* ESP32-S3
+    * Wi-Fi and BLE 5
 
 For each family, we have SoC variants with some differentiation. The differences are more about the embedded flash and its size and the number of the cores (dual or single).
 
