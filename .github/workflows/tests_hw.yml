@@ -22,13 +22,18 @@ defaults:
 jobs:
   hardware-test:
     name: Hardware ${{ inputs.chip }} ${{ inputs.type }} tests
-    runs-on: [arduino, "${{ inputs.chip }}"]
+    runs-on: ["arduino", "${{ inputs.chip }}"]
     env:
       id: ${{ github.event.pull_request.number || github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ inputs.chip }}-${{ inputs.type }}
     container:
       image: python:3.10.1-bullseye
-      options: --privileged
+      options: --privileged --device-cgroup-rule="c 188:* rmw" --device-cgroup-rule="c 166:* rmw"
     steps:
+      - name: Clean workspace
+        run: |
+          rm -rf ./*
+          rm -rf ~/.arduino/tests
+
       - name: Check if already passed
         id: cache-results
         if: github.event.pull_request.number != null
@@ -81,7 +86,12 @@ jobs:
         with:
           name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
           path: |
-            ~/.arduino/tests
+            ~/.arduino/tests/${{ inputs.chip }}
+
+      - name: List binaries
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          ls -laR ~/.arduino/tests
 
       - name: Run Tests
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
