@@ -12,8 +12,8 @@
 extern "C" {
 #endif
 #include "zboss_api.h"
-extern zb_ret_t zb_nvram_write_dataset(zb_nvram_dataset_types_t t);                           // rejoin scanning workaround
-extern void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr); // sleepy device power mode workaround
+extern zb_ret_t zb_nvram_write_dataset(zb_nvram_dataset_types_t t);                            // rejoin scanning workaround
+extern void zb_set_ed_node_descriptor(bool power_src, bool rx_on_when_idle, bool alloc_addr);  // sleepy device power mode workaround
 #ifdef __cplusplus
 }
 #endif
