@@ -54,7 +54,9 @@ public:
 
   void begin(unsigned long baudrate) {  
     // pinMode will force enabing the internal pullup resistor (IDF 5.3.2 Change)
+  #ifdef ESP32 // Wokwi won't define it, therefore, it will ignore this line and pass Wokwi ESP32 CI
     pinMode(default_rx_pin, INPUT_PULLUP);
+  #endif
     serial.begin(baudrate, SERIAL_8N1, default_rx_pin, default_tx_pin);
     while (!serial) {
       delay(10);
