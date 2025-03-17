@@ -151,13 +151,13 @@ Set the build target(chip). ex. 'esp32s3'
 This build command will build for the ESP32-S3 target. You can specify other targets.
 
 * esp32
-* esp32s2
-* esp32s3
 * esp32c2
 * esp32c3
 * esp32c6
 * esp32h2
 * esp32p4
+* esp32s2
+* esp32s3
 
 Set Build Type
 ^^^^^^^^^^^^^^
