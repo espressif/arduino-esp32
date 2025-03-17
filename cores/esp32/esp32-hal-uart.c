@@ -587,7 +587,7 @@ uart_t *uartBegin(
       bool retCode = true;
       //User may just want to change some parameters, such as baudrate, data length, parity, stop bits or pins
       if (uart->_baudrate != baudrate) {
-      	retCode = uartSetBaudRate(uart, baudrate);
+        retCode = uartSetBaudRate(uart, baudrate);
       }
       UART_MUTEX_LOCK();
       uart_word_length_t data_bits = (config & 0xc) >> 2;
