@@ -52,7 +52,7 @@ public:
   UARTTestConfig(int num, HardwareSerial &serial_ref, int8_t rx_pin, int8_t tx_pin)
     : uart_num(num), serial(serial_ref), peeked_char(-1), default_rx_pin(rx_pin), default_tx_pin(tx_pin), recv_msg("") {}
 
-  void begin(unsigned long baudrate) {  
+  void begin(unsigned long baudrate) {
     // pinMode will force enabing the internal pullup resistor (IDF 5.3.2 Change)
     pinMode(default_rx_pin, INPUT_PULLUP);
     serial.begin(baudrate, SERIAL_8N1, default_rx_pin, default_tx_pin);
