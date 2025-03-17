@@ -66,6 +66,10 @@ bool setLightState(bool state, uint8_t brightness, uint16_t temperature_Mireds) 
     analogWrite(ledPin, brightness);
 #endif
   } else {
+#ifndef RGB_BUILTIN
+    // after analogWrite(), it is necessary to set the GPIO to digital mode first
+    pinMode(ledPin, OUTPUT);
+#endif
     digitalWrite(ledPin, LOW);
   }
   // store last Brightness and OnOff state for when the Light is restarted / power goes off
