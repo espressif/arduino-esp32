@@ -53,6 +53,8 @@ public:
     : uart_num(num), serial(serial_ref), peeked_char(-1), default_rx_pin(rx_pin), default_tx_pin(tx_pin), recv_msg("") {}
 
   void begin(unsigned long baudrate) {
+    // pinMode will force enabling the internal pullup resistor (IDF 5.3.2 Change)
+    pinMode(default_rx_pin, INPUT_PULLUP);
     serial.begin(baudrate, SERIAL_8N1, default_rx_pin, default_tx_pin);
     while (!serial) {
       delay(10);
@@ -365,6 +367,8 @@ void change_pins_test(void) {
 
   if (TEST_UART_NUM == 1) {
     UARTTestConfig &config = *uart_test_configs[0];
+    // pinMode will force enabling the internal pullup resistor (IDF 5.3.2 Change)
+    pinMode(NEW_RX1, INPUT_PULLUP);
     config.serial.setPins(NEW_RX1, NEW_TX1);
     TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(config.uart_num));
     TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(config.uart_num));
