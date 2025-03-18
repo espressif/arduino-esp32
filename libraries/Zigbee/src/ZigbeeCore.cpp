@@ -48,7 +48,10 @@ bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
   }
   _role = (zigbee_role_t)role_cfg->esp_zb_role;
   if (xSemaphoreTake(lock, _begin_timeout) != pdTRUE) {
-    log_e("ZigbeeCore begin timeout");
+    log_e("ZigbeeCore begin failed or timeout");
+    if(_role != ZIGBEE_COORDINATOR) { // Only End Device and Router can rejoin
+      resetChannelMask();
+    }
   }
   return started();
 }
@@ -81,7 +84,7 @@ bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
   }
   if (!status || xSemaphoreTake(lock, _begin_timeout) != pdTRUE) {
     log_e("ZigbeeCore begin failed or timeout");
-    if(role != ZIGBEE_COORDINATOR) { // Only End Device and Router can rejoin
+    if(_role != ZIGBEE_COORDINATOR) { // Only End Device and Router can rejoin
       resetChannelMask();
     }
   }
