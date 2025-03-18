@@ -28,6 +28,8 @@ typedef enum {
 #define ZB_SCAN_RUNNING (-1)
 #define ZB_SCAN_FAILED  (-2)
 
+#define ZB_BEGIN_TIMEOUT_DEFAULT 30000  // 30 seconds
+
 #define ZIGBEE_DEFAULT_ED_CONFIG()                                      \
   {                                                                     \
     .esp_zb_role = ESP_ZB_DEVICE_TYPE_ED, .install_code_policy = false, \
@@ -85,6 +87,7 @@ private:
   esp_zb_radio_config_t _radio_config;
   esp_zb_host_config_t _host_config;
   uint32_t _primary_channel_mask;
+  uint32_t _begin_timeout;
   int16_t _scan_status;
   uint8_t _scan_duration;
   bool _rx_on_when_idle;
@@ -134,6 +137,8 @@ public:
   esp_zb_host_config_t getHostConfig();
 
   void setPrimaryChannelMask(uint32_t mask);  // By default all channels are scanned (11-26) -> mask 0x07FFF800
+  void resetChannelMask();                    // Reset to default mask also in NVRAM
+
   void setScanDuration(uint8_t duration);     // Can be set from 1 - 4. 1 is fastest, 4 is slowest
   uint8_t getScanDuration() {
     return _scan_duration;
@@ -145,7 +150,9 @@ public:
   bool getRxOnWhenIdle() {
     return _rx_on_when_idle;
   }
-
+  void setTimeout(uint32_t timeout) {
+    _begin_timeout = timeout;
+  }
   void setRebootOpenNetwork(uint8_t time);
   void openNetwork(uint8_t time);
 
