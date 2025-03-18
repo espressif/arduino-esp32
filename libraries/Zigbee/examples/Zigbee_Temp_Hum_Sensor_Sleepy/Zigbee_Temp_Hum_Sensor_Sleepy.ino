@@ -107,7 +107,7 @@ void setup() {
   if (!Zigbee.begin(&zigbeeConfig, false)) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
-    ESP.restart(); // If Zigbee failed to start, reboot the device and try again 
+    ESP.restart();  // If Zigbee failed to start, reboot the device and try again
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {
