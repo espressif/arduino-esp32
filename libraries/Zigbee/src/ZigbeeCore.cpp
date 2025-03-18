@@ -50,7 +50,7 @@ bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
   if (xSemaphoreTake(lock, _begin_timeout) != pdTRUE) {
     log_e("ZigbeeCore begin failed or timeout");
     if(_role != ZIGBEE_COORDINATOR) { // Only End Device and Router can rejoin
-      resetChannelMask();
+      resetNVRAMChannelMask();
     }
   }
   return started();
@@ -85,7 +85,7 @@ bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
   if (!status || xSemaphoreTake(lock, _begin_timeout) != pdTRUE) {
     log_e("ZigbeeCore begin failed or timeout");
     if(_role != ZIGBEE_COORDINATOR) { // Only End Device and Router can rejoin
-      resetChannelMask();
+      resetNVRAMChannelMask();
     }
   }
   return started();
@@ -261,9 +261,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
             esp_zb_bdb_open_network(Zigbee._open_network);
           } else {
             // Save the channel mask to NVRAM in case of reboot which may be on a different channel after a change in the network
-            Zigbee.setPrimaryChannelMask(1 << esp_zb_get_current_channel());
-            esp_zb_set_channel_mask(1 << esp_zb_get_current_channel());
-            zb_nvram_write_dataset(ZB_NVRAM_COMMON_DATA);
+            Zigbee.setNVRAMChannelMask(1 << esp_zb_get_current_channel());
             Zigbee._connected = true;
           }
           Zigbee.searchBindings();
@@ -309,9 +307,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
           );
           Zigbee._connected = true;
           // Set channel mask and write to NVRAM, so that the device will re-join the network faster after reboot (scan only on the current channel)
-          Zigbee.setPrimaryChannelMask(1 << esp_zb_get_current_channel());
-          esp_zb_set_channel_mask(1 << esp_zb_get_current_channel());
-          zb_nvram_write_dataset(ZB_NVRAM_COMMON_DATA);
+          Zigbee.setNVRAMChannelMask(1 << esp_zb_get_current_channel());
         } else {
           log_i("Network steering was not successful (status: %s)", esp_err_to_name(err_status));
           esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
@@ -506,12 +502,20 @@ void ZigbeeCore::searchBindings() {
   esp_zb_zdo_binding_table_req(mb_req, bindingTableCb, (void *)mb_req);
 }
 
-void ZigbeeCore::resetChannelMask() {
+void ZigbeeCore::resetNVRAMChannelMask() {
   _primary_channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK;
   esp_zb_set_channel_mask(_primary_channel_mask);
   zb_nvram_write_dataset(ZB_NVRAM_COMMON_DATA);
   log_v("Channel mask reset to all channels");
 }
+
+void ZigbeeCore::setNVRAMChannelMask(uint32_t mask) {
+  _primary_channel_mask = mask;
+  esp_zb_set_channel_mask(_primary_channel_mask);
+  zb_nvram_write_dataset(ZB_NVRAM_COMMON_DATA);
+  log_v("Channel mask set to 0x%08x", mask);
+}
+
 // Function to convert enum value to string
 const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
   switch (deviceId) {

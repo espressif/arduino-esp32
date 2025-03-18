@@ -106,6 +106,8 @@ private:
   const char *getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
   void searchBindings();
   static void bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_info, void *user_ctx);
+  void resetNVRAMChannelMask(); // Reset to default mask also in NVRAM
+  void setNVRAMChannelMask(uint32_t mask); // Set channel mask in NVRAM
 
 public:
   ZigbeeCore();
@@ -137,7 +139,6 @@ public:
   esp_zb_host_config_t getHostConfig();
 
   void setPrimaryChannelMask(uint32_t mask);  // By default all channels are scanned (11-26) -> mask 0x07FFF800
-  void resetChannelMask();                    // Reset to default mask also in NVRAM
 
   void setScanDuration(uint8_t duration);     // Can be set from 1 - 4. 1 is fastest, 4 is slowest
   uint8_t getScanDuration() {
