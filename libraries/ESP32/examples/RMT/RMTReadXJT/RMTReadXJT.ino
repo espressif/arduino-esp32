@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates usage of RMT for receiving XJT D12 data
+ * @brief This example demonstrates usage of RMT for receiving XJT LR12 data
  *
  * The output is the RMT data read and processed
  *
@@ -21,7 +21,7 @@
 
 //
 // Note: This example uses a FrSKY device communication
-//          using XJT D12 protocol
+//          using XJT LR12 protocol
 //
 // ; 0 bit = 6us low/10us high
 // ; 1 bit = 14us low/10us high
