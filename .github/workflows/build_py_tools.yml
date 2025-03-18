@@ -30,16 +30,16 @@ jobs:
           echo "Make sure you are using a branch inside the repository and not a fork."
 
       - name: Verify Python Tools Changed
-        uses: tj-actions/changed-files@v41
         id: verify-changed-files
-        with:
-          fetch_depth: "2"
-          since_last_remote_commit: "true"
-          files: |
-            tools/get.py
-            tools/espota.py
-            tools/gen_esp32part.py
-            tools/gen_insights_package.py
+        run: |
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ^HEAD -- tools/get.py tools/espota.py tools/gen_esp32part.py tools/gen_insights_package.py | xargs)
+          echo "all_changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "any_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "any_changed=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: List all changed files
         shell: bash
         run: |
