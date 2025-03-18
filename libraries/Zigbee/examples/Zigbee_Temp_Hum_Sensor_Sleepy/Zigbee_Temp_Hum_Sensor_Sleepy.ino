@@ -77,7 +77,7 @@ void setup() {
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
 
   // Optional: set Zigbee device name and model
-  zbTempSensor.setManufacturerAndModel("Espressif", "SleepyZigbeeTempSensorTest");
+  zbTempSensor.setManufacturerAndModel("Espressif", "SleepyZigbeeTempSensor");
 
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
   zbTempSensor.setMinMaxValue(10, 50);
