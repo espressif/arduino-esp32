@@ -58,22 +58,7 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUM: ${{ github.event.pull_request.number }}
-          IS_PR: ${{ github.event_name == 'pull_request' }}
-          GITHUB_SHA: ${{ github.sha }}
-        run: |
-          if [[ $IS_PR != 'true' ]]; then
-              files_changed=$(gh api repos/espressif/arduino-esp32/commits/"$GITHUB_SHA" --jq '.files[].filename' | xargs)
-          else
-              files_changed=$(gh pr diff "$PR_NUM" --name-only | xargs)
-          fi
-          echo "all_changed_files=$files_changed" >> $GITHUB_OUTPUT
-          echo "Changed files:"
-          for file in $files_changed; do
-              echo "  $file"
-          done
+        uses: tj-actions/changed-files@v42.0.2
 
       - name: Run pre-commit hooks in changed files
         run: pre-commit run --color=always --show-diff-on-failure --files ${{ steps.changed-files.outputs.all_changed_files }}

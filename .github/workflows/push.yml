@@ -45,13 +45,12 @@ on:
       - "!.github/scripts/tests_*"
       - "!.github/scripts/upload_*"
       - "variants/esp32/**/*"
+      - "variants/esp32s2/**/*"
+      - "variants/esp32s3/**/*"
       - "variants/esp32c2/**/*"
       - "variants/esp32c3/**/*"
       - "variants/esp32c6/**/*"
       - "variants/esp32h2/**/*"
-      - "variants/esp32p4/**/*"
-      - "variants/esp32s2/**/*"
-      - "variants/esp32s3/**/*"
 
 concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
@@ -86,13 +85,58 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files_yaml: |
+            core:
+              - '.github/**'
+              - 'cores/**'
+              - 'package/**'
+              - 'tools/**'
+              - 'platform.txt'
+              - 'programmers.txt'
+              - "variants/esp32/**/*"
+              - "variants/esp32s2/**/*"
+              - "variants/esp32s3/**/*"
+              - "variants/esp32c3/**/*"
+              - "variants/esp32c6/**/*"
+              - "variants/esp32h2/**/*"
+            libraries:
+              - 'libraries/**/examples/**'
+              - 'libraries/**/src/**'
+            networking:
+              - 'libraries/Network/src/**'
+            fs:
+              - 'libraries/FS/src/**'
+            static_sketeches:
+              - 'libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino'
+              - 'libraries/BLE/examples/Server/Server.ino'
+              - 'libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino'
+              - 'libraries/Insights/examples/MinimalDiagnostics/MinimalDiagnostics.ino'
+              - 'libraries/NetworkClientSecure/src/**'
+              - 'libraries/BLE/src/**'
+              - 'libraries/Insights/src/**'
+            idf:
+              - 'idf_component.yml'
+              - 'Kconfig.projbuild'
+              - 'CMakeLists.txt'
+              - "variants/esp32c2/**/*"
+
       - name: Set chunks
         id: set-chunks
         env:
+          LIB_FILES: ${{ steps.changed-files.outputs.libraries_all_changed_files }}
           IS_PR: ${{ github.event_name == 'pull_request' }}
-          PR_NUM: ${{ github.event.pull_request.number }}
           MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_IDF: ${{ steps.changed-files.outputs.idf_any_changed == 'true' }}
+          BUILD_LIBRARIES: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
+          BUILD_STATIC_SKETCHES: ${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
+          FS_CHANGED: ${{ steps.changed-files.outputs.fs_any_changed == 'true' }}
+          NETWORKING_CHANGED: ${{ steps.changed-files.outputs.networking_any_changed == 'true' }}
+          CORE_CHANGED: ${{ steps.changed-files.outputs.core_any_changed == 'true' }}
+          LIB_CHANGED: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
         run: |
           bash ./.github/scripts/set_push_chunks.sh
 
