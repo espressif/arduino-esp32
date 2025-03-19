@@ -1390,10 +1390,10 @@ int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize) {
 uint16_t uart_get_max_rx_timeout(uint8_t uartNum) {
   if (uartNum >= SOC_UART_NUM) {
     log_e("UART%d is invalid. This device has %d UARTs, from 0 to %d.", uartNum, SOC_UART_NUM, SOC_UART_NUM - 1);
-    return (uint16_t) -1;
+    return (uint16_t)-1;
   }
   uint16_t tout_max_thresh = uart_ll_max_tout_thrd(UART_LL_GET_HW(uartNum));
-  uint8_t symbol_len = 1; // number of bits per symbol including start
+  uint8_t symbol_len = 1;  // number of bits per symbol including start
   uart_parity_t parity_mode;
   uart_stop_bits_t stop_bit;
   uart_word_length_t data_bit;
@@ -1403,7 +1403,7 @@ uint16_t uart_get_max_rx_timeout(uint8_t uartNum) {
   symbol_len += (data_bit < UART_DATA_BITS_MAX) ? (uint8_t)data_bit + 5 : 8;
   symbol_len += (stop_bit > UART_STOP_BITS_1) ? 2 : 1;
   symbol_len += (parity_mode > UART_PARITY_DISABLE) ? 1 : 0;
-  return (uint16_t) (tout_max_thresh / symbol_len);
+  return (uint16_t)(tout_max_thresh / symbol_len);
 }
 
 #endif /* SOC_UART_SUPPORTED */
