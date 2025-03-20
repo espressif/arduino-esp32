@@ -71,7 +71,7 @@ bool ZigbeeDimmableLight::setLight(bool state, uint8_t level) {
   esp_zb_lock_release();
 
   if (ret_state != ESP_ZB_ZCL_STATUS_SUCCESS || ret_level != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set light state and level");
+    log_e("Failed to set light state(0x%x) or level(0x%x)", ret_state, ret_level);
     return false;
   }
   return true;

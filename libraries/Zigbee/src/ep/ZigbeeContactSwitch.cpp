@@ -38,7 +38,7 @@ bool ZigbeeContactSwitch::setClosed() {
   );
   esp_zb_lock_release();
   if (ret != ESP_OK) {
-    log_e("Failed to set contact switch to closed");
+    log_e("Failed to set contact switch to closed: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   _zone_status = closed;
@@ -54,7 +54,7 @@ bool ZigbeeContactSwitch::setOpen() {
   );
   esp_zb_lock_release();
   if (ret != ESP_OK) {
-    log_e("Failed to set contact switch to open");
+    log_e("Failed to set contact switch to open: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   _zone_status = open;
@@ -79,7 +79,7 @@ bool ZigbeeContactSwitch::report() {
   esp_err_t ret = esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
   esp_zb_lock_release();
   if (ret != ESP_OK) {
-    log_e("Failed to send IAS Zone status changed notification");
+    log_e("Failed to send IAS Zone status changed notification: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   log_v("IAS Zone status changed notification sent");

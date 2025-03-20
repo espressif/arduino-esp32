@@ -47,7 +47,7 @@ bool ZigbeeLight::setLight(bool state) {
   esp_zb_lock_release();
 
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set light state");
+    log_e("Failed to set light state: 0x%x", ret);
     return false;
   }
   return true;

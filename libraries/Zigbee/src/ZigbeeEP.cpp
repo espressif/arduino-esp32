@@ -65,7 +65,7 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   esp_err_t ret_manufacturer = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
   esp_err_t ret_model = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
   if(ret_manufacturer != ESP_OK || ret_model != ESP_OK) {
-    log_e("Failed to set manufacturer and model");
+    log_e("Failed to set manufacturer (0x%x) or model (0x%x)", ret_manufacturer, ret_model);
     return false;
   }
   return true;
@@ -103,14 +103,14 @@ bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
   );
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set battery percentage");
+    log_e("Failed to set battery percentage: 0x%x", ret);
     return false;
   }
   log_v("Battery percentage updated");
   return true;
 }
 
-void ZigbeeEP::reportBatteryPercentage() {
+bool ZigbeeEP::reportBatteryPercentage() {
   /* Send report attributes command */
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
@@ -124,7 +124,7 @@ void ZigbeeEP::reportBatteryPercentage() {
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
   if(ret != ESP_OK) {
-    log_e("Failed to report battery percentage");
+    log_e("Failed to report battery percentage: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   log_v("Battery percentage reported");
@@ -287,7 +287,7 @@ bool ZigbeeEP::setTime(tm time) {
   ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set time");
+    log_e("Failed to set time: 0x%x", ret);
     return false;
   }
   return true;
@@ -300,7 +300,7 @@ bool ZigbeeEP::setTimezone(int32_t gmt_offset) {
   ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set timezone");
+    log_e("Failed to set timezone: 0x%x", ret);
     return false;
   }
   return true;

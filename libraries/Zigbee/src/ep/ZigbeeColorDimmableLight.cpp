@@ -156,7 +156,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   esp_zb_lock_release();
 
   if (ret_state != ESP_ZB_ZCL_STATUS_SUCCESS || ret_level != ESP_ZB_ZCL_STATUS_SUCCESS || ret_xy != ESP_ZB_ZCL_STATUS_SUCCESS || ret_y != ESP_ZB_ZCL_STATUS_SUCCESS || ret_hue != ESP_ZB_ZCL_STATUS_SUCCESS || ret_saturation != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set light attributes");
+    log_e("Failed to set light state(0x%x), level(0x%x), xy(0x%x), y(0x%x), hue(0x%x), saturation(0x%x)", ret_state, ret_level, ret_xy, ret_y, ret_hue, ret_saturation);
     return false;
   }
   return true;

@@ -35,11 +35,11 @@ bool ZigbeeWindSpeedSensor::setMinMaxValue(float min, float max) {
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret_min = esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&zb_min);
   if(ret_min != ESP_OK) {
-    log_e("Failed to set min value");
+    log_e("Failed to set min value: 0x%x: %s", ret_min, esp_err_to_name(ret_min));
   }
   esp_err_t ret_max = esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&zb_max);
   if(ret_max != ESP_OK) {
-    log_e("Failed to set max value");
+    log_e("Failed to set max value: 0x%x: %s", ret_max, esp_err_to_name(ret_max));
   }
   return ret_min == ESP_OK && ret_max == ESP_OK;
 }
@@ -51,7 +51,7 @@ bool ZigbeeWindSpeedSensor::setTolerance(float tolerance) {
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret = esp_zb_wind_speed_measurement_cluster_add_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
   if(ret != ESP_OK) {
-    log_e("Failed to set tolerance");
+    log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
   }
   return ret == ESP_OK;
 }
@@ -75,7 +75,7 @@ bool ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_int
   esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
   if(ret != ESP_OK) {
-    log_e("Failed to set reporting");
+    log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
   }
   return ret == ESP_OK;
 }
@@ -93,7 +93,7 @@ bool ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
   );
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set wind speed");
+    log_e("Failed to set wind speed: 0x%x", ret);
   }
   return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
@@ -112,7 +112,7 @@ bool ZigbeeWindSpeedSensor::reportWindSpeed() {
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
   if(ret != ESP_OK) {
-    log_e("Failed to send wind speed report");
+    log_e("Failed to send wind speed report: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   log_v("Wind speed measurement report sent");

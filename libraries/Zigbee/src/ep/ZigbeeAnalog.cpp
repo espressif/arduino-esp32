@@ -23,7 +23,7 @@ ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
 bool ZigbeeAnalog::addAnalogValue() {
   esp_err_t ret = esp_zb_cluster_list_add_analog_value_cluster(_cluster_list, esp_zb_analog_value_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
-    log_e("Failed to add Analog Value cluster");
+    log_e("Failed to add Analog Value cluster: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   _analog_clusters |= ANALOG_VALUE;
@@ -33,7 +33,7 @@ bool ZigbeeAnalog::addAnalogValue() {
 bool ZigbeeAnalog::addAnalogInput() {
   esp_err_t ret = esp_zb_cluster_list_add_analog_input_cluster(_cluster_list, esp_zb_analog_input_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
-    log_e("Failed to add Analog Input cluster");
+    log_e("Failed to add Analog Input cluster: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   _analog_clusters |= ANALOG_INPUT;
@@ -43,7 +43,7 @@ bool ZigbeeAnalog::addAnalogInput() {
 bool ZigbeeAnalog::addAnalogOutput() {
   esp_err_t ret = esp_zb_cluster_list_add_analog_output_cluster(_cluster_list, esp_zb_analog_output_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
-    log_e("Failed to add Analog Output cluster");
+    log_e("Failed to add Analog Output cluster: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   _analog_clusters |= ANALOG_OUTPUT;
@@ -85,7 +85,7 @@ bool ZigbeeAnalog::setAnalogValue(float analog) {
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set analog value");
+    log_e("Failed to set analog value: 0x%x", ret);
     return false;
   }
   return true;
@@ -104,7 +104,7 @@ bool ZigbeeAnalog::setAnalogInput(float analog) {
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set analog input");
+    log_e("Failed to set analog input: 0x%x", ret);
     return false;
   }
   return true;
@@ -124,7 +124,7 @@ bool ZigbeeAnalog::reportAnalogInput() {
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
   if (ret != ESP_OK) {
-    log_e("Failed to send Analog Input report");
+    log_e("Failed to send Analog Input report: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   log_v("Analog Input report sent");
@@ -151,7 +151,7 @@ bool ZigbeeAnalog::setAnalogInputReporting(uint16_t min_interval, uint16_t max_i
   esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
   if (ret != ESP_OK) {
-    log_e("Failed to set Analog Input reporting");
+    log_e("Failed to set Analog Input reporting: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   return true;
