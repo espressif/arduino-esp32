@@ -11,9 +11,11 @@ function run_test {
     local error=0
     local sdkconfig_path
     local extra_args
+    local test_type
 
     sketchdir=$(dirname "$sketch")
     sketchname=$(basename "$sketchdir")
+    test_type=$(basename "$(dirname "$sketchdir")")
 
     if [ "$options" -eq 0 ] && [ -f "$sketchdir"/ci.json ]; then
         len=$(jq -r --arg target "$target" '.fqbn[$target] | length' "$sketchdir"/ci.json)
@@ -25,9 +27,9 @@ function run_test {
     fi
 
     if [ "$len" -eq 1 ]; then
-        sdkconfig_path="$HOME/.arduino/tests/$sketchname/build.tmp/sdkconfig"
+        sdkconfig_path="$HOME/.arduino/tests/$target/$sketchname/build.tmp/sdkconfig"
     else
-        sdkconfig_path="$HOME/.arduino/tests/$sketchname/build0.tmp/sdkconfig"
+        sdkconfig_path="$HOME/.arduino/tests/$target/$sketchname/build0.tmp/sdkconfig"
     fi
 
     if [ -f "$sketchdir"/ci.json ]; then
@@ -43,22 +45,22 @@ function run_test {
     fi
 
     if [ ! -f "$sdkconfig_path" ]; then
-        printf "\033[93mSketch %s not built\nMight be due to missing target requirements or build failure\033[0m\n" "$sketchname"
+        printf "\033[93mSketch %s build not found in %s\nMight be due to missing target requirements or build failure\033[0m\n" "$(dirname "$sdkconfig_path")" "$sketchname"
         printf "\n\n\n"
         return 0
     fi
 
-    local right_target
-    right_target=$(grep -E "^CONFIG_IDF_TARGET=\"$target\"$" "$sdkconfig_path")
-    if [ -z "$right_target" ]; then
-        printf "\033[91mError: Sketch %s compiled for different target\n\033[0m\n" "$sketchname"
+    local compiled_target
+    compiled_target=$(grep -E "CONFIG_IDF_TARGET=" "$sdkconfig_path" | cut -d'"' -f2)
+    if [ "$compiled_target" != "$target" ]; then
+        printf "\033[91mError: Sketch %s compiled for %s, expected %s\033[0m\n" "$sketchname" "$compiled_target" "$target"
         printf "\n\n\n"
         return 1
     fi
 
     if [ "$len" -eq 1 ]; then
         # build_dir="$sketchdir/build"
-        build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
+        build_dir="$HOME/.arduino/tests/$target/$sketchname/build.tmp"
         report_file="$sketchdir/$target/$sketchname.xml"
     fi
 
@@ -81,7 +83,7 @@ function run_test {
 
         if [ "$len" -ne 1 ]; then
             # build_dir="$sketchdir/build$i"
-            build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
+            build_dir="$HOME/.arduino/tests/$target/$sketchname/build$i.tmp"
             report_file="$sketchdir/$target/$sketchname$i.xml"
         fi
 
@@ -113,14 +115,14 @@ function run_test {
         rm "$sketchdir"/diagram.json 2>/dev/null || true
 
         result=0
-        printf "\033[95mpytest \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "${extra_args[*]@Q}"
-        bash -c "set +e; pytest \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" ${extra_args[*]@Q}; exit \$?" || result=$?
+        printf "\033[95mpytest \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}"
+        bash -c "set +e; pytest \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q}; exit \$?" || result=$?
         printf "\n"
         if [ $result -ne 0 ]; then
             result=0
             printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
-            printf "\033[95mpytest \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "${extra_args[*]@Q}"
-            bash -c "set +e; pytest \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" ${extra_args[*]@Q}; exit \$?" || result=$?
+            printf "\033[95mpytest \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}"
+            bash -c "set +e; pytest \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q}; exit \$?" || result=$?
             printf "\n"
             if [ $result -ne 0 ]; then
                 printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$sketchname" "$i"

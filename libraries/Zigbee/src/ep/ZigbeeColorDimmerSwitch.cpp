@@ -1,5 +1,5 @@
 #include "ZigbeeColorDimmerSwitch.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 // Initialize the static instance pointer
 ZigbeeColorDimmerSwitch *ZigbeeColorDimmerSwitch::_instance = nullptr;
@@ -14,24 +14,6 @@ ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : ZigbeeEP(en
   _ep_config = {
     .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID, .app_device_version = 0
   };
-}
-
-void ZigbeeColorDimmerSwitch::calculateXY(uint8_t red, uint8_t green, uint8_t blue, uint16_t &x, uint16_t &y) {
-  // Convert RGB to XYZ
-  float r = (float)red / 255.0f;
-  float g = (float)green / 255.0f;
-  float b = (float)blue / 255.0f;
-
-  float X, Y, Z;
-  RGB_TO_XYZ(r, g, b, X, Y, Z);
-
-  // Convert XYZ to xy chromaticity coordinates
-  float color_x = X / (X + Y + Z);
-  float color_y = Y / (X + Y + Z);
-
-  // Convert normalized xy to 16-bit values
-  x = (uint16_t)(color_x * 65535.0f);
-  y = (uint16_t)(color_y * 65535.0f);
 }
 
 void ZigbeeColorDimmerSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
@@ -417,15 +399,13 @@ void ZigbeeColorDimmerSwitch::setLightLevel(uint8_t level, uint8_t endpoint, esp
 
 void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t blue) {
   if (_is_bound) {
-    //Convert RGB to XY
-    uint16_t color_x, color_y;
-    calculateXY(red, green, blue, color_x, color_y);
+    espXyColor_t xy_color = espRgbToXYColor(red, green, blue);
 
     esp_zb_zcl_color_move_to_color_cmd_t cmd_req;
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-    cmd_req.color_x = color_x;
-    cmd_req.color_y = color_y;
+    cmd_req.color_x = xy_color.x;
+    cmd_req.color_y = xy_color.y;
     cmd_req.transition_time = 0;
     log_v("Sending 'set light color' command");
     esp_zb_lock_acquire(portMAX_DELAY);
@@ -438,16 +418,14 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
 
 void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint16_t group_addr) {
   if (_is_bound) {
-    //Convert RGB to XY
-    uint16_t color_x, color_y;
-    calculateXY(red, green, blue, color_x, color_y);
+    espXyColor_t xy_color = espRgbToXYColor(red, green, blue);
 
     esp_zb_zcl_color_move_to_color_cmd_t cmd_req;
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
-    cmd_req.color_x = color_x;
-    cmd_req.color_y = color_y;
+    cmd_req.color_x = xy_color.x;
+    cmd_req.color_y = xy_color.y;
     cmd_req.transition_time = 0;
     log_v("Sending 'set light color' command to group address 0x%x", group_addr);
     esp_zb_lock_acquire(portMAX_DELAY);
@@ -460,17 +438,15 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
 
 void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, uint16_t short_addr) {
   if (_is_bound) {
-    //Convert RGB to XY
-    uint16_t color_x, color_y;
-    calculateXY(red, green, blue, color_x, color_y);
+    espXyColor_t xy_color = espRgbToXYColor(red, green, blue);
 
     esp_zb_zcl_color_move_to_color_cmd_t cmd_req;
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
-    cmd_req.color_x = color_x;
-    cmd_req.color_y = color_y;
+    cmd_req.color_x = xy_color.x;
+    cmd_req.color_y = xy_color.y;
     cmd_req.transition_time = 0;
     log_v("Sending 'set light color' command to endpoint %d, address 0x%x", endpoint, short_addr);
     esp_zb_lock_acquire(portMAX_DELAY);
@@ -483,17 +459,15 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
 
 void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
   if (_is_bound) {
-    //Convert RGB to XY
-    uint16_t color_x, color_y;
-    calculateXY(red, green, blue, color_x, color_y);
+    espXyColor_t xy_color = espRgbToXYColor(red, green, blue);
 
     esp_zb_zcl_color_move_to_color_cmd_t cmd_req;
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
     memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
-    cmd_req.color_x = color_x;
-    cmd_req.color_y = color_y;
+    cmd_req.color_x = xy_color.x;
+    cmd_req.color_y = xy_color.y;
     cmd_req.transition_time = 0;
     log_v(
       "Sending 'set light color' command to endpoint %d,  ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
@@ -507,4 +481,4 @@ void ZigbeeColorDimmerSwitch::setLightColor(uint8_t red, uint8_t green, uint8_t 
   }
 }
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

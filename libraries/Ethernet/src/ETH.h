@@ -23,6 +23,7 @@
 
 #ifndef _ETH_H_
 #define _ETH_H_
+#include "esp_idf_version.h"
 
 //
 // Example configurations for pins_arduino.h to allow starting with ETH.begin();
@@ -127,6 +128,10 @@ typedef emac_rmii_clock_mode_t eth_clock_mode_t;
 
 typedef enum {
 #if CONFIG_ETH_USE_ESP32_EMAC
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+  ETH_PHY_GENERIC,
+#define ETH_PHY_JL1101 ETH_PHY_GENERIC
+#endif
   ETH_PHY_LAN8720,
   ETH_PHY_TLK110,
   ETH_PHY_RTL8201,
@@ -187,8 +192,14 @@ public:
 
   // ETH Handle APIs
   bool fullDuplex() const;
-  uint8_t linkSpeed() const;
+  bool setFullDuplex(bool on);
+
+  uint16_t linkSpeed() const;
+  bool setLinkSpeed(uint16_t speed);  //10 or 100
+
   bool autoNegotiation() const;
+  bool setAutoNegotiation(bool on);
+
   uint32_t phyAddr() const;
 
   esp_eth_handle_t handle() const;

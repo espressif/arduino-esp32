@@ -281,6 +281,8 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     int64_t fr_end = esp_timer_get_time();
 
     int64_t frame_time = fr_end - last_frame;
+    last_frame = fr_end;
+
     frame_time /= 1000;
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
     uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);

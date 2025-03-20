@@ -1,0 +1,10 @@
+{
+  "fqbn_append": "PartitionScheme=zigbee_zczr_8MB,ZigbeeMode=zczr",
+  "requires": [
+    "CONFIG_ZB_ENABLED=y"
+  ],
+  "targets": {
+    "esp32c6": false,
+    "esp32h2": false
+  }
+}

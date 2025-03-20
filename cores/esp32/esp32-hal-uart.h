@@ -1,4 +1,4 @@
-// Copyright 2015-2023 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 #include "soc/soc_caps.h"
 #if SOC_UART_SUPPORTED
+#include "soc/uart_pins.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,7 +58,7 @@ void uartWriteBuf(uart_t *uart, const uint8_t *data, size_t len);
 void uartFlush(uart_t *uart);
 void uartFlushTxOnly(uart_t *uart, bool txOnly);
 
-void uartSetBaudRate(uart_t *uart, uint32_t baud_rate);
+bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t *uart);
 
 void uartSetRxInvert(uart_t *uart, bool invert);
@@ -114,6 +115,10 @@ void uart_internal_loopback(uint8_t uartNum, int8_t rxPin);
 void uart_send_break(uint8_t uartNum);
 // Sends a buffer and at the end of the stream, it generates BREAK in the line
 int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize);
+
+// UART RX Timeout (in UART Symbols) depends on the UART Clock Source and the SoC that is used
+// This is a helper function that calculates what is the maximum RX Timeout that a running UART IDF driver allows.
+uint16_t uart_get_max_rx_timeout(uint8_t uartNum);
 
 #ifdef __cplusplus
 }

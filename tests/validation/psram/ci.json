@@ -1,7 +1,6 @@
 {
   "platforms": {
-    "qemu": false,
-    "wokwi": false
+    "qemu": false
   },
   "requires": [
     "CONFIG_SPIRAM=y"

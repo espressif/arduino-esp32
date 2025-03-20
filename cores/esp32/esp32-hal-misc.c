@@ -25,7 +25,7 @@
 #include "esp_ota_ops.h"
 #endif  //CONFIG_APP_ROLLBACK_ENABLE
 #include "esp_private/startup_internal.h"
-#ifdef CONFIG_BT_ENABLED
+#if defined(CONFIG_BT_ENABLED) && SOC_BT_SUPPORTED
 #include "esp_bt.h"
 #endif  //CONFIG_BT_ENABLED
 #include <sys/time.h>
@@ -156,11 +156,13 @@ void enableCore0WDT() {
   }
 }
 
-void disableCore0WDT() {
+bool disableCore0WDT() {
   TaskHandle_t idle_0 = xTaskGetIdleTaskHandleForCore(0);
-  if (idle_0 == NULL || esp_task_wdt_delete(idle_0) != ESP_OK) {
+  if (idle_0 == NULL || esp_task_wdt_status(idle_0) || esp_task_wdt_delete(idle_0) != ESP_OK) {
     log_e("Failed to remove Core 0 IDLE task from WDT");
+    return false;
   }
+  return true;
 }
 
 #ifndef CONFIG_FREERTOS_UNICORE
@@ -171,11 +173,13 @@ void enableCore1WDT() {
   }
 }
 
-void disableCore1WDT() {
+bool disableCore1WDT() {
   TaskHandle_t idle_1 = xTaskGetIdleTaskHandleForCore(1);
-  if (idle_1 == NULL || esp_task_wdt_delete(idle_1) != ESP_OK) {
+  if (idle_1 == NULL || esp_task_wdt_status(idle_1) || esp_task_wdt_delete(idle_1) != ESP_OK) {
     log_e("Failed to remove Core 1 IDLE task from WDT");
+    return false;
   }
+  return true;
 }
 #endif
 
@@ -301,7 +305,7 @@ void initArduino() {
   if (err) {
     log_e("Failed to initialize NVS! Error: %u", err);
   }
-#ifdef CONFIG_BT_ENABLED
+#if defined(CONFIG_BT_ENABLED) && SOC_BT_SUPPORTED
   if (!btInUse()) {
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
   }

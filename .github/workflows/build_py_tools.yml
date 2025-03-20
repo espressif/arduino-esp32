@@ -12,7 +12,7 @@ on:
 jobs:
   find-changed-tools:
     name: Check if tools have been changed
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     outputs:
       any_changed: ${{ steps.verify-changed-files.outputs.any_changed }}
       all_changed_files: ${{ steps.verify-changed-files.outputs.all_changed_files }}
@@ -30,16 +30,16 @@ jobs:
           echo "Make sure you are using a branch inside the repository and not a fork."
 
       - name: Verify Python Tools Changed
-        uses: tj-actions/changed-files@v41
         id: verify-changed-files
-        with:
-          fetch_depth: "2"
-          since_last_remote_commit: "true"
-          files: |
-            tools/get.py
-            tools/espota.py
-            tools/gen_esp32part.py
-            tools/gen_insights_package.py
+        run: |
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ^HEAD -- tools/get.py tools/espota.py tools/gen_esp32part.py tools/gen_insights_package.py | xargs)
+          echo "all_changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "any_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "any_changed=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: List all changed files
         shell: bash
         run: |
@@ -55,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-20.04, ARM]
+        os: [windows-latest, macos-latest, ubuntu-latest, ubuntu-24.04-arm]
         include:
           - os: windows-latest
             TARGET: win64
@@ -64,14 +64,12 @@ jobs:
           - os: macos-latest
             TARGET: macos
             SEPARATOR: ":"
-          - os: ubuntu-20.04
+          - os: ubuntu-latest
             TARGET: linux-amd64
             SEPARATOR: ":"
-          - os: ARM
-            CONTAINER: python:3.8-bullseye
+          - os: ubuntu-24.04-arm
             TARGET: arm
             SEPARATOR: ":"
-    container: ${{ matrix.CONTAINER }} # use python container on ARM
     env:
       DISTPATH: pytools-${{ matrix.TARGET }}
       PIP_EXTRA_INDEX_URL: "https://dl.espressif.com/pypi"
@@ -96,8 +94,6 @@ jobs:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Set up Python 3.8
-        # Skip setting python on ARM because of missing compatibility: https://github.com/actions/setup-python/issues/108
-        if: matrix.os != 'ARM'
         uses: actions/setup-python@master
         with:
           python-version: 3.8
