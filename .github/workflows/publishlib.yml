@@ -44,12 +44,12 @@ jobs:
 
       - name: Read the pr_num file
         id: pr_num_reader
-        uses: juliangruber/read-file-action@v1
+        uses: juliangruber/read-file-action@b549046febe0fe86f8cb4f93c24e284433f9ab58 # v1.1.7
         with:
           path: ./artifacts/workflows/pr_num.txt
 
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@libs
+        uses: P-R-O-C-H-Y/report-size-deltas@256d1f13e4195cd7fd436d2f959e6dc4d5e4b406 # libs
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}

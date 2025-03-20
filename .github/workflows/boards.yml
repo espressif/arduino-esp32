@@ -22,10 +22,10 @@ jobs:
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup jq
-        uses: dcarbone/install-jq-action@v1.0.1
+        uses: dcarbone/install-jq-action@e397bd87438d72198f81efd21f876461183d383a # v3.0.1
 
       - name: Get board name
         run: bash .github/scripts/find_new_boards.sh ${{ github.repository }} ${{github.base_ref}}
@@ -47,7 +47,7 @@ jobs:
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Check if build.board is uppercase
         run: |
@@ -60,7 +60,7 @@ jobs:
           fi
 
       - name: Get libs cache
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
           path: |
@@ -73,7 +73,7 @@ jobs:
             ./tools/xtensa-*
 
       - name: Compile sketch
-        uses: P-R-O-C-H-Y/compile-sketches@main
+        uses: P-R-O-C-H-Y/compile-sketches@a62f069b92dc8f5053da4ac439ea6d1950cf6379 # main
         with:
           platforms: |
             ${{ env.REPOSITORY }}

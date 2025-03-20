@@ -18,7 +18,7 @@ jobs:
       all_changed_files: ${{ steps.verify-changed-files.outputs.all_changed_files }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 2
           ref: ${{ github.event.pull_request.head.ref }}
@@ -30,15 +30,16 @@ jobs:
           echo "Make sure you are using a branch inside the repository and not a fork."
 
       - name: Verify Python Tools Changed
+        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
         id: verify-changed-files
-        run: |
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r ^HEAD -- tools/get.py tools/espota.py tools/gen_esp32part.py tools/gen_insights_package.py | xargs)
-          echo "all_changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
-          if [ -n "$CHANGED_FILES" ]; then
-            echo "any_changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "any_changed=false" >> $GITHUB_OUTPUT
-          fi
+        with:
+          fetch_depth: "2"
+          since_last_remote_commit: "true"
+          files: |
+            tools/get.py
+            tools/espota.py
+            tools/gen_esp32part.py
+            tools/gen_insights_package.py
 
       - name: List all changed files
         shell: bash
@@ -88,25 +89,30 @@ jobs:
           for tool in ${{ env.CHANGED_TOOLS }}; do
             echo "tool $tool was changed"
           done
+
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ github.event.pull_request.head.ref }}
+
       - name: Set up Python 3.8
-        uses: actions/setup-python@master
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
         with:
           python-version: 3.8
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller requests
+
       - name: Build with PyInstaller
         shell: bash
         run: |
           for tool in ${{ env.CHANGED_TOOLS }}; do
             pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/$tool.py
           done
+
       - name: Sign binaries
         if: matrix.os == 'windows-latest'
         env:
@@ -119,12 +125,14 @@ jobs:
           {
             ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/$node.exe
           }
+
       - name: Test binaries
         shell: bash
         run: |
           for tool in ${{ env.CHANGED_TOOLS }}; do
             ./${{ env.DISTPATH }}/$tool${{ matrix.EXTEN }} -h
           done
+
       - name: Push binary to tools
         if: matrix.os == 'windows-latest'
         env:
@@ -135,8 +143,9 @@ jobs:
             cp -f ./${{ env.DISTPATH }}/$tool.exe tools/$tool.exe
           done
           bash .github/scripts/upload_py_tools.sh "${{ env.CHANGED_TOOLS }}"
+
       - name: Archive artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ env.DISTPATH }}
           path: ${{ env.DISTPATH }}

@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.event.client_payload.branch }}
 
@@ -32,13 +32,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.event.client_payload.branch }}
 
       - run: npm install
       - name: Setup jq
-        uses: dcarbone/install-jq-action@v1.0.1
+        uses: dcarbone/install-jq-action@e397bd87438d72198f81efd21f876461183d383a # v3.0.1
 
       - id: set-test-chunks
         name: Set Chunks
@@ -64,7 +64,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.event.client_payload.branch }}
 
@@ -74,7 +74,7 @@ jobs:
           FQBN: ${{ toJSON(matrix.chunk) }}
 
       - name: Compile sketch
-        uses: P-R-O-C-H-Y/compile-sketches@main
+        uses: P-R-O-C-H-Y/compile-sketches@a62f069b92dc8f5053da4ac439ea6d1950cf6379 # main
         with:
           platforms: |
             ${{ env.REPOSITORY }}

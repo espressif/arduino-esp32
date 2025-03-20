@@ -45,13 +45,13 @@ jobs:
           echo "Tag: $tag"
           echo "RELEASE_TAG=$tag" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ inputs.git_ref || env.RELEASE_TAG }}
           submodules: "recursive"
 
       - name: Upload components to the component registry
-        uses: espressif/upload-components-ci-action@v1
+        uses: espressif/upload-components-ci-action@b78a19fa5424714997596d3ecffa634aef8ae20b # v1.0.5
         with:
           name: arduino-esp32
           version: ${{ env.RELEASE_TAG }}

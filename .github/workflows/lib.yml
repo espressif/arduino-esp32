@@ -62,10 +62,10 @@ jobs:
     steps:
       # This step makes the contents of the repository available to the workflow
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Compile sketch
-        uses: P-R-O-C-H-Y/compile-sketches@main
+        uses: P-R-O-C-H-Y/compile-sketches@a62f069b92dc8f5053da4ac439ea6d1950cf6379 # main
         with:
           platforms: |
             ${{ env.REPOSITORY }}
@@ -80,7 +80,7 @@ jobs:
             - --warnings="all"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-${{ matrix.target }}
           path: ${{ env.SKETCHES_REPORTS_PATH }}
@@ -92,7 +92,7 @@ jobs:
     steps:
       # Check out repository
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ env.GITHUB_TOKEN }}
           fetch-depth: "0"
@@ -102,14 +102,14 @@ jobs:
 
       # This step is needed to get the size data produced by the compile jobs
       - name: Download sketches reports artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           pattern: ${{ env.SKETCHES_REPORTS_ARTIFACT_NAME }}-*
           merge-multiple: true
           path: ${{ env.SKETCHES_REPORTS_PATH }}
 
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@main
+        uses: P-R-O-C-H-Y/report-size-deltas@4a79caa6dcc3579024293638b97156106edc588e # main
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           destination-file: ${{ env.RESULT_LIBRARY_TEST_FILE }}
@@ -136,8 +136,9 @@ jobs:
         env:
           PR_NUM: ${{ github.event.number }}
         run: echo $PR_NUM > pr_num.txt
+
       - name: Upload PR number
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pr_number
           path: ./pr_num.txt
