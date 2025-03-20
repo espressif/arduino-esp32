@@ -29,38 +29,58 @@ void ZigbeeDoorWindowHandle::setIASClientEndpoint(uint8_t ep_number) {
   _ias_cie_endpoint = ep_number;
 }
 
-void ZigbeeDoorWindowHandle::setClosed() {
+bool ZigbeeDoorWindowHandle::setClosed() {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Door/Window handle to closed");
   uint8_t closed = 0;  // ALARM1 = 0, ALARM2 = 0
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &closed, false
   );
   esp_zb_lock_release();
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set door/window handle to closed");
+    return false;
+  }
   _zone_status = closed;
   report();
+  return true;
 }
 
-void ZigbeeDoorWindowHandle::setOpen() {
+bool ZigbeeDoorWindowHandle::setOpen() {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Door/Window handle to open");
   uint8_t open = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2;  // ALARM1 = 1, ALARM2 = 1
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false);
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false
+  );
   esp_zb_lock_release();
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set door/window handle to open");
+    return false;
+  }
   _zone_status = open;
   report();
+  return true;
 }
 
-void ZigbeeDoorWindowHandle::setTilted() {
+bool ZigbeeDoorWindowHandle::setTilted() {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Door/Window handle to tilted");
   uint8_t tilted = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1;  // ALARM1 = 1, ALARM2 = 0
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &tilted, false
   );
   esp_zb_lock_release();
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set door/window handle to tilted");
+    return false;
+  }
   _zone_status = tilted;
   report();
+  return true;
 }
 
 void ZigbeeDoorWindowHandle::report() {

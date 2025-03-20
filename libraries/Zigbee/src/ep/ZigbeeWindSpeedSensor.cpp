@@ -28,25 +28,35 @@ static uint16_t zb_windspeed_to_u16(float windspeed) {
   return (uint16_t)(windspeed * 100);
 }
 
-void ZigbeeWindSpeedSensor::setMinMaxValue(float min, float max) {
+bool ZigbeeWindSpeedSensor::setMinMaxValue(float min, float max) {
   uint16_t zb_min = zb_windspeed_to_u16(min);
   uint16_t zb_max = zb_windspeed_to_u16(max);
   esp_zb_attribute_list_t *windspeed_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  //
-  esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&zb_min);
-  esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&zb_max);
+  esp_err_t ret_min = esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&zb_min);
+  if(ret_min != ESP_OK) {
+    log_e("Failed to set min value");
+  }
+  esp_err_t ret_max = esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&zb_max);
+  if(ret_max != ESP_OK) {
+    log_e("Failed to set max value");
+  }
+  return ret_min == ESP_OK && ret_max == ESP_OK;
 }
 
-void ZigbeeWindSpeedSensor::setTolerance(float tolerance) {
+bool ZigbeeWindSpeedSensor::setTolerance(float tolerance) {
   // Convert tolerance to ZCL uint16_t
   uint16_t zb_tolerance = zb_windspeed_to_u16(tolerance);
   esp_zb_attribute_list_t *windspeed_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_wind_speed_measurement_cluster_add_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
+  esp_err_t ret = esp_zb_wind_speed_measurement_cluster_add_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
+  if(ret != ESP_OK) {
+    log_e("Failed to set tolerance");
+  }
+  return ret == ESP_OK;
 }
 
-void ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
+bool ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
   esp_zb_zcl_reporting_info_t reporting_info;
   memset(&reporting_info, 0, sizeof(esp_zb_zcl_reporting_info_t));
   reporting_info.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV;
@@ -62,24 +72,33 @@ void ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_int
   reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
   reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_update_reporting_info(&reporting_info);
+  esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
+  if(ret != ESP_OK) {
+    log_e("Failed to set reporting");
+  }
+  return ret == ESP_OK;
 }
 
-void ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
+bool ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   uint16_t zb_windspeed = zb_windspeed_to_u16(windspeed);
   log_v("Updating windspeed sensor value...");
   /* Update windspeed sensor measured value */
   log_d("Setting windspeed to %d", zb_windspeed);
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_ID,
     &zb_windspeed, false
   );
   esp_zb_lock_release();
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set wind speed");
+  }
+  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
 
-void ZigbeeWindSpeedSensor::reportWindSpeed() {
+bool ZigbeeWindSpeedSensor::reportWindSpeed() {
   /* Send report attributes command */
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
@@ -90,9 +109,14 @@ void ZigbeeWindSpeedSensor::reportWindSpeed() {
   report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
+  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
+  if(ret != ESP_OK) {
+    log_e("Failed to send wind speed report");
+    return false;
+  }
   log_v("Wind speed measurement report sent");
+  return true;
 }
 
 #endif  //CONFIG_ZB_ENABLED

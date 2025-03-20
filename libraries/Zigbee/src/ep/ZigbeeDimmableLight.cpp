@@ -1,4 +1,3 @@
-
 #include "ZigbeeDimmableLight.h"
 #if CONFIG_ZB_ENABLED
 
@@ -52,7 +51,7 @@ void ZigbeeDimmableLight::lightChanged() {
   }
 }
 
-void ZigbeeDimmableLight::setLight(bool state, uint8_t level) {
+bool ZigbeeDimmableLight::setLight(bool state, uint8_t level) {
   // Update all attributes
   _current_state = state;
   _current_level = level;
@@ -62,22 +61,28 @@ void ZigbeeDimmableLight::setLight(bool state, uint8_t level) {
   /* Update light clusters */
   esp_zb_lock_acquire(portMAX_DELAY);
   // set on/off state
-  esp_zb_zcl_set_attribute_val(
+  esp_zb_zcl_status_t ret_state = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false
   );
   // set level
-  esp_zb_zcl_set_attribute_val(
+  esp_zb_zcl_status_t ret_level = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
   );
   esp_zb_lock_release();
+
+  if (ret_state != ESP_ZB_ZCL_STATUS_SUCCESS || ret_level != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light state and level");
+    return false;
+  }
+  return true;
 }
 
-void ZigbeeDimmableLight::setLightState(bool state) {
-  setLight(state, _current_level);
+bool ZigbeeDimmableLight::setLightState(bool state) {
+  return setLight(state, _current_level);
 }
 
-void ZigbeeDimmableLight::setLightLevel(uint8_t level) {
-  setLight(_current_state, level);
+bool ZigbeeDimmableLight::setLightLevel(uint8_t level) {
+  return setLight(_current_state, level);
 }
 
 esp_zb_cluster_list_t *ZigbeeDimmableLight::zigbee_dimmable_light_clusters_create(zigbee_dimmable_light_cfg_t *light_cfg) {

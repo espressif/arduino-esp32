@@ -32,12 +32,12 @@ void ZigbeeEP::setVersion(uint8_t version) {
   _ep_config.app_device_version = version;
 }
 
-void ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
+bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   // Convert manufacturer to ZCL string
   size_t length = strlen(name);
   if (length > 32) {
     log_e("Manufacturer name is too long");
-    return;
+    return false;
   }
   // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
   char *zb_name = new char[length + 2];
@@ -53,7 +53,7 @@ void ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   if (length > 32) {
     log_e("Model name is too long");
     delete[] zb_name;
-    return;
+    return false;
   }
   char *zb_model = new char[length + 2];
   zb_model[0] = static_cast<char>(length);
@@ -62,8 +62,13 @@ void ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
 
   // Get the basic cluster and update the manufacturer and model attributes
   esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
-  esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
+  esp_err_t ret_manufacturer = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
+  esp_err_t ret_model = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
+  if(ret_manufacturer != ESP_OK || ret_model != ESP_OK) {
+    log_e("Failed to set manufacturer and model");
+    return false;
+  }
+  return true;
 }
 
 void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_percentage) {
@@ -72,6 +77,9 @@ void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_pe
 
   if (power_source == ZB_POWER_SOURCE_BATTERY) {
     // Add power config cluster and battery percentage attribute
+    if (battery_percentage > 100) {
+      battery_percentage = 100;
+    }
     battery_percentage = battery_percentage * 2;
     esp_zb_attribute_list_t *power_config_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG);
     esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&battery_percentage);
@@ -80,20 +88,26 @@ void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_pe
   _power_source = power_source;
 }
 
-void ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
+bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
   // 100% = 200 in decimal, 0% = 0
   // Convert percentage to 0-200 range
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   if (percentage > 100) {
     percentage = 100;
   }
   percentage = percentage * 2;
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &percentage,
     false
   );
   esp_zb_lock_release();
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set battery percentage");
+    return false;
+  }
   log_v("Battery percentage updated");
+  return true;
 }
 
 void ZigbeeEP::reportBatteryPercentage() {
@@ -107,9 +121,14 @@ void ZigbeeEP::reportBatteryPercentage() {
   report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
+  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
+  if(ret != ESP_OK) {
+    log_e("Failed to report battery percentage");
+    return false;
+  }
   log_v("Battery percentage reported");
+  return true;
 }
 
 char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
@@ -260,18 +279,31 @@ void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   esp_zb_cluster_list_add_time_cluster(_cluster_list, time_cluster_client, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
 }
 
-void ZigbeeEP::setTime(tm time) {
+bool ZigbeeEP::setTime(tm time) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   time_t utc_time = mktime(&time);
   log_d("Setting time to %lld", utc_time);
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
+  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
   esp_zb_lock_release();
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set time");
+    return false;
+  }
+  return true;
 }
 
-void ZigbeeEP::setTimezone(int32_t gmt_offset) {
+bool ZigbeeEP::setTimezone(int32_t gmt_offset) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
+  log_d("Setting timezone to %d", gmt_offset);
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
+  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
   esp_zb_lock_release();
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set timezone");
+    return false;
+  }
+  return true;
 }
 
 tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
@@ -410,11 +442,11 @@ void ZigbeeEP::addOTAClient(
   uint16_t ota_upgrade_server_addr = 0xffff;
   uint8_t ota_upgrade_server_ep = 0xff;
 
-  ESP_ERROR_CHECK(esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_CLIENT_DATA_ID, (void *)&variable_config));
-  ESP_ERROR_CHECK(esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ADDR_ID, (void *)&ota_upgrade_server_addr));
-  ESP_ERROR_CHECK(esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ENDPOINT_ID, (void *)&ota_upgrade_server_ep));
+  esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_CLIENT_DATA_ID, (void *)&variable_config);
+  esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ADDR_ID, (void *)&ota_upgrade_server_addr);
+  esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ENDPOINT_ID, (void *)&ota_upgrade_server_ep);
 
-  ESP_ERROR_CHECK(esp_zb_cluster_list_add_ota_cluster(_cluster_list, ota_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE));
+  esp_zb_cluster_list_add_ota_cluster(_cluster_list, ota_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
 }
 
 static void findOTAServer(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {

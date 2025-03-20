@@ -117,7 +117,7 @@ void ZigbeeColorDimmableLight::lightChanged() {
   }
 }
 
-void ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, uint8_t green, uint8_t blue) {
+bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, uint8_t green, uint8_t blue) {
   //Update all attributes
   _current_state = state;
   _current_level = level;
@@ -131,50 +131,56 @@ void ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   /* Update light clusters */
   esp_zb_lock_acquire(portMAX_DELAY);
   //set on/off state
-  esp_zb_zcl_set_attribute_val(
+  esp_zb_zcl_status_t ret_state = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false
   );
   //set level
-  esp_zb_zcl_set_attribute_val(
+  esp_zb_zcl_status_t ret_level = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
   );
   //set xy color
-  esp_zb_zcl_set_attribute_val(
+  esp_zb_zcl_status_t ret_xy = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID, &xy_color.x, false
   );
-  esp_zb_zcl_set_attribute_val(
+  esp_zb_zcl_status_t ret_y = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID, &xy_color.y, false
   );
   //set hsv color
   uint8_t hue = (uint8_t)hsv_color.h;
-  esp_zb_zcl_set_attribute_val(
+  esp_zb_zcl_status_t ret_hue = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, &hue, false
   );
-  esp_zb_zcl_set_attribute_val(
+  esp_zb_zcl_status_t ret_saturation = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, &hsv_color.s, false
   );
   esp_zb_lock_release();
+
+  if (ret_state != ESP_ZB_ZCL_STATUS_SUCCESS || ret_level != ESP_ZB_ZCL_STATUS_SUCCESS || ret_xy != ESP_ZB_ZCL_STATUS_SUCCESS || ret_y != ESP_ZB_ZCL_STATUS_SUCCESS || ret_hue != ESP_ZB_ZCL_STATUS_SUCCESS || ret_saturation != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light attributes");
+    return false;
+  }
+  return true;
 }
 
-void ZigbeeColorDimmableLight::setLightState(bool state) {
-  setLight(state, _current_level, _current_color.r, _current_color.g, _current_color.b);
+bool ZigbeeColorDimmableLight::setLightState(bool state) {
+  return setLight(state, _current_level, _current_color.r, _current_color.g, _current_color.b);
 }
 
-void ZigbeeColorDimmableLight::setLightLevel(uint8_t level) {
-  setLight(_current_state, level, _current_color.r, _current_color.g, _current_color.b);
+bool ZigbeeColorDimmableLight::setLightLevel(uint8_t level) {
+  return setLight(_current_state, level, _current_color.r, _current_color.g, _current_color.b);
 }
 
-void ZigbeeColorDimmableLight::setLightColor(uint8_t red, uint8_t green, uint8_t blue) {
-  setLight(_current_state, _current_level, red, green, blue);
+bool ZigbeeColorDimmableLight::setLightColor(uint8_t red, uint8_t green, uint8_t blue) {
+  return setLight(_current_state, _current_level, red, green, blue);
 }
 
-void ZigbeeColorDimmableLight::setLightColor(espRgbColor_t rgb_color) {
-  setLight(_current_state, _current_level, rgb_color.r, rgb_color.g, rgb_color.b);
+bool ZigbeeColorDimmableLight::setLightColor(espRgbColor_t rgb_color) {
+  return setLight(_current_state, _current_level, rgb_color.r, rgb_color.g, rgb_color.b);
 }
 
-void ZigbeeColorDimmableLight::setLightColor(espHsvColor_t hsv_color) {
+bool ZigbeeColorDimmableLight::setLightColor(espHsvColor_t hsv_color) {
   espRgbColor_t rgb_color = espHsvColorToRgbColor(hsv_color);
-  setLight(_current_state, _current_level, rgb_color.r, rgb_color.g, rgb_color.b);
+  return setLight(_current_state, _current_level, rgb_color.r, rgb_color.g, rgb_color.b);
 }
 
 #endif  // CONFIG_ZB_ENABLED

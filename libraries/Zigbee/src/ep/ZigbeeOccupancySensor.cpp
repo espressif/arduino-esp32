@@ -22,26 +22,38 @@ ZigbeeOccupancySensor::ZigbeeOccupancySensor(uint8_t endpoint) : ZigbeeEP(endpoi
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
 }
 
-void ZigbeeOccupancySensor::setSensorType(uint8_t sensor_type) {
+bool ZigbeeOccupancySensor::setSensorType(uint8_t sensor_type) {
   uint8_t sensor_type_bitmap = 1 << sensor_type;
   esp_zb_attribute_list_t *occupancy_sens_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_ID, (void *)&sensor_type);
-  esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_BITMAP_ID, (void *)&sensor_type_bitmap);
+  esp_err_t ret_type = esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_ID, (void *)&sensor_type);
+  if(ret_type != ESP_OK) {
+    log_e("Failed to set sensor type");
+  }
+  esp_err_t ret_bitmap = esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_BITMAP_ID, (void *)&sensor_type_bitmap);
+  if(ret_bitmap != ESP_OK) {
+    log_e("Failed to set sensor type bitmap");
+  }
+  return ret_type == ESP_OK && ret_bitmap == ESP_OK;
 }
 
-void ZigbeeOccupancySensor::setOccupancy(bool occupied) {
+bool ZigbeeOccupancySensor::setOccupancy(bool occupied) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Updating occupancy sensor value...");
   /* Update occupancy sensor value */
   log_d("Setting occupancy to %d", occupied);
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_ID, &occupied, false
   );
   esp_zb_lock_release();
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set occupancy");
+  }
+  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
 
-void ZigbeeOccupancySensor::report() {
+bool ZigbeeOccupancySensor::report() {
   /* Send report attributes command */
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
@@ -52,9 +64,14 @@ void ZigbeeOccupancySensor::report() {
   report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
+  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
+  if(ret != ESP_OK) {
+    log_e("Failed to send occupancy report");
+    return false;
+  }
   log_v("Occupancy report sent");
+  return true;
 }
 
 #endif  // CONFIG_ZB_ENABLED
