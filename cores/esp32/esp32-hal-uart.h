@@ -116,6 +116,10 @@ void uart_send_break(uint8_t uartNum);
 // Sends a buffer and at the end of the stream, it generates BREAK in the line
 int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize);
 
+// UART RX Timeout (in UART Symbols) depends on the UART Clock Source and the SoC that is used
+// This is a helper function that calculates what is the maximum RX Timeout that a running UART IDF driver allows.
+uint16_t uart_get_max_rx_timeout(uint8_t uartNum);
+
 #ifdef __cplusplus
 }
 #endif
