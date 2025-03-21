@@ -70,7 +70,7 @@ static void _ip_event_cb(void *arg, esp_event_base_t event_base, int32_t event_i
 
 void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
   arduino_event_t arduino_event;
-  arduino_event.event_id = ARDUINO_EVENT_MAX;
+  arduino_event.event_id = ARDUINO_EVENT_ANY;
   if (event_id == _got_ip_event_id) {
     setStatusBits(ESP_NETIF_HAS_IP_BIT);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
@@ -151,7 +151,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
 #endif
   }
 
-  if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
+  if (arduino_event.event_id != ARDUINO_EVENT_ANY) {
     Network.postEvent(&arduino_event);
   }
 }

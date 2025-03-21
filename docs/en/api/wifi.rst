@@ -61,7 +61,7 @@ Function pointer callback taking the event ID:
 .. code-block:: arduino
 
     typedef void (*WiFiEventCb)(arduino_event_id_t);
-    wifi_event_id_t onEvent(WiFiEventCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
+    wifi_event_id_t onEvent(WiFiEventCb, arduino_event_id_t = ARDUINO_EVENT_ANY);
 
 Function pointer callback taking an event-ID-and-info struct:
 
@@ -73,26 +73,26 @@ Function pointer callback taking an event-ID-and-info struct:
     } arduino_event_t;
 
     typedef void (*WiFiEventSysCb)(arduino_event_t *);
-    wifi_event_id_t onEvent(WiFiEventSysCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
+    wifi_event_id_t onEvent(WiFiEventSysCb, arduino_event_id_t = ARDUINO_EVENT_ANY);
 
 Callback using ``std::function`` taking event ID and info separately:
 
 .. code-block:: arduino
 
     typedef std::function<void(arduino_event_id_t, arduino_event_info_t)> WiFiEventFuncCb;
-    wifi_event_id_t onEvent(WiFiEventFuncCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
+    wifi_event_id_t onEvent(WiFiEventFuncCb, arduino_event_id_t = ARDUINO_EVENT_ANY);
 
 A similar set of functions are available to remove callbacks:
 
 .. code-block:: arduino
 
-    void removeEvent(WiFiEventCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
-    void removeEvent(WiFiEventSysCb, arduino_event_id_t = ARDUINO_EVENT_MAX);
-    void removeEvent(wifi_event_id_t = ARDUINO_EVENT_MAX);
+    void removeEvent(WiFiEventCb, arduino_event_id_t = ARDUINO_EVENT_ANY);
+    void removeEvent(WiFiEventSysCb, arduino_event_id_t = ARDUINO_EVENT_ANY);
+    void removeEvent(wifi_event_id_t = ARDUINO_EVENT_ANY);
 
 In all cases, the subscribing function accepts an optional event type to
 invoke the callback only for that specific event; with the default
-``ARDUINO_EVENT_MAX``, the callback will be invoked for all Wi-Fi events.
+``ARDUINO_EVENT_ANY``, the callback will be invoked for all Wi-Fi events.
 
 Any callback function is given the event type in a parameter.
 Some of the possible callback function formats also take an
